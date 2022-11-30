@@ -115,11 +115,12 @@ module TODO_unify_in_cst = struct
         e_proj ~loc { expr = acc; selection = Component_num index } ())
 
 
-  let update_rhs : (CST.expr -> AST.expr) -> CST.expr -> AST.upd_field list =
+  let update_rhs : (CST.expr -> AST.expr) -> CST.expr -> AST.expr AST.Update.field list =
    fun self rhs ->
+    (* here, having expressions as update rhs seems a little bit too much *)
     match rhs with
     | E_Record record_lhs ->
-      let f : (CST.expr, CST.expr) CST.field CST.reg -> AST.upd_field =
+      let f : (CST.expr, CST.expr) CST.field CST.reg -> AST.expr AST.Update.field =
        fun x ->
         match x.value with
         | CST.Complete { field_lhs; field_lens; field_rhs; attributes } ->
@@ -128,6 +129,7 @@ module TODO_unify_in_cst = struct
             List.map attributes ~f:(translate_attr_pascaligo <@ r_fst)
           in
           let field_lens =
+            let open AST.Update in
             match field_lens with
             | Lens_Id _ -> Lens_Id
             | Lens_Add _ -> Lens_Add
@@ -136,23 +138,23 @@ module TODO_unify_in_cst = struct
             | Lens_Div _ -> Lens_Div
             | Lens_Fun _ -> Lens_Fun
           in
-          let field_lhs : AST.expr AST.selection list =
+          let field_lhs : AST.expr AST.Selection.t list =
             match field_lhs with
             | CST.E_Var x ->
               let label = w_fst x in
-              [ AST.FieldName (Label.of_string label) ]
+              [ FieldName (Label.of_string label) ]
             | CST.E_Proj
                 { region
                 ; value = { record_or_tuple = CST.E_Var v; selector = _; field_path }
                 } ->
               List.map (nsepseq_to_list field_path) ~f:(function
-                  | FieldName name -> AST.FieldName (Label.of_string (w_fst name))
-                  | Component x -> AST.Component_num (w_fst x))
+                  | FieldName name -> Selection.FieldName (Label.of_string (w_fst name))
+                  | Component x -> Component_num (w_fst x))
             | x ->
               failwith "raise.error (expected_field_or_access @@ CST.expr_to_region x)"
           in
           let field_rhs = self field_rhs in
-          AST.Full_field { field_lhs; field_lens; field_rhs; attributes }
+          Full_field { field_lhs; field_lens; field_rhs; attributes }
         | CST.Punned { pun; attributes } ->
           let attributes =
             TODO_do_in_parsing.weird_attributes attributes;
@@ -309,7 +311,7 @@ and compile_pattern ~(raise : ('e, 'w) raise) : CST.pattern -> AST.pattern =
   | P_Record p ->
     let p, loc = r_split p in
     let fields =
-      let translate_field_assign : CST.field_pattern -> (Label.t, AST.pattern) AST.field
+      let translate_field_assign : CST.field_pattern -> (Label.t, AST.pattern) AST.Field.t
         = function
         | Punned { pun; attributes } ->
           TODO_do_in_parsing.weird_attributes attributes;
@@ -543,7 +545,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     let expr = self proj.record_or_tuple in
     TODO_unify_in_cst.nested_proj expr proj.field_path
   in
-  let compile_param_decl : CST.param_decl -> AST.param_decl =
+  let compile_param_decl : CST.param_decl -> (_,_) AST.Param.t =
    fun p ->
     let param_kind =
       match p.param_kind with
@@ -618,7 +620,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
   | E_Record record ->
     let record, loc = r_split record in
     let fields =
-      let translate_field_assign : (CST.expr, CST.expr) CST.field -> (_, expr) AST.field
+      let translate_field_assign : (CST.expr, CST.expr) CST.field -> (_, expr) AST.Field.t
         = function
         | Punned p -> Punned (TODO_do_in_parsing.expr_as_var p.pun)
         | Complete c ->
@@ -790,7 +792,7 @@ and compile_declaration ~(raise : ('e, 'w) raise) : CST.declaration -> AST.decla
     let fun_name = TODO_do_in_parsing.var ~loc:(w_snd d.fun_name) (w_fst d.fun_name) in
     let type_params = Option.map ~f:compile_type_params d.type_params in
     let parameters =
-      let compile_param_decl : CST.param_decl -> AST.param_decl =
+      let compile_param_decl : CST.param_decl -> (_,_) AST.Param.t =
        fun pd ->
         let param_kind =
           match pd.param_kind with

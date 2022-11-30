@@ -238,7 +238,7 @@ and compile_pattern ~(raise : ('e, 'w) raise) : CST.pattern -> AST.pattern =
       List.map
         ~f:(fun p ->
           let l = TODO_do_in_parsing.labelize_pattern p in
-          Punned l)
+          AST.Field.Punned l)
         (Utils.nsepseq_to_list record.inside)
     in
     Location.wrap ~loc (P_pun_record lps)
@@ -407,15 +407,15 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     let op, loc = w_split op in
     e_unary_op ~loc AST.{ operator = Location.wrap ~loc op; arg = self arg } ()
   in
-  let translate_selection_jsligo : CST.selection -> _ AST.selection =
+  let translate_selection_jsligo : CST.selection -> _ AST.Selection.t =
    fun sel ->
     match sel with
     | FieldName name ->
       let name = r_fst (r_fst name).value in
-      AST.FieldName (Label.of_string name)
+      FieldName (Label.of_string name)
     | Component comp ->
       let comp = self (r_fst comp).inside in
-      AST.Component_expr comp
+      Component_expr comp
   in
   return
   @@
@@ -483,28 +483,28 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     e_constr AST.{ constructor; element } ~loc ()
   | EArray items ->
     let items, loc = r_split items in
-    let items : AST.array =
-      let translate_array_item : CST.array_item -> AST.array_item = function
+    let items : expr AST.Array_repr.t=
+      let translate_array_item : CST.array_item -> expr AST.Array_repr.item = function
         | Expr_entry e -> Expr_entry (self e)
         | Rest_entry e -> Rest_entry (self (r_fst e).expr)
       in
-      Option.map items.inside ~f:(fun lst ->
+      Option.value_map items.inside ~default:[] ~f:(fun lst ->
           List.map ~f:translate_array_item (nsepseq_to_list lst))
     in
     e_array items ~loc ()
   | EObject obj ->
     let obj, loc = r_split obj in
-    let props : AST.object_ =
-      let translate_property : CST.property -> AST.property = function
+    let props : _ AST.Object_.t =
+      let translate_property : CST.property -> _ AST.Object_.property = function
         | Punned_property e ->
           let e = r_fst e in
-          AST.Punned_property (self e)
+          Punned_property (self e)
         | Property p ->
           let p = r_fst p in
-          AST.Property (self p.name, self p.value)
+          Property (self p.name, self p.value)
         | Property_rest p ->
           let p = r_fst p in
-          AST.Property_rest (self p.expr)
+          Property_rest (self p.expr)
       in
       nseq_map translate_property @@ nsepseq_to_nseq obj.inside
     in
@@ -524,11 +524,11 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     let parameters = self f.parameters in
     let lhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) f.lhs_type in
     let body =
-      let compile_body : CST.body -> AST.fun_block = function
+      let compile_body : CST.body -> (_,_) AST.Block_fun.fun_block = function
         | FunctionBody b ->
-          AST.FunctionBody
+          FunctionBody
             (nseq_map (compile_statement ~raise) @@ nsepseq_to_nseq (r_fst b).inside)
-        | ExpressionBody e -> AST.ExpressionBody (self e)
+        | ExpressionBody e -> ExpressionBody (self e)
       in
       compile_body f.body
     in
@@ -551,16 +551,16 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     let op, loc = r_split op in
     let expr1 = self expr1 in
     let op =
-      let translate_operator_jsligo : CST.operator -> AST.operator_jsligo = function
-        | Eq -> AST.Eq
+      let translate_operator_jsligo : CST.operator -> AST.Assign_jsligo.operator = function
+        | Eq -> Eq
         | Assignment_operator aop ->
-          AST.Assignment_operator
+          Assignment_operator
             (match aop with
-            | Times_eq -> AST.Times_eq
-            | Div_eq -> AST.Div_eq
-            | Min_eq -> AST.Min_eq
-            | Plus_eq -> AST.Plus_eq
-            | Mod_eq -> AST.Mod_eq)
+            | Times_eq -> Times_eq
+            | Div_eq -> Div_eq
+            | Min_eq -> Min_eq
+            | Plus_eq -> Plus_eq
+            | Mod_eq -> Mod_eq)
       in
       translate_operator_jsligo op
     in
@@ -569,9 +569,9 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
   | ETernary e ->
     let e, loc = r_split e in
     let test = self e.condition in
-    let truthy = self e.truthy in
-    let falsy = self e.falsy in
-    e_ternary { test; truthy; falsy } ~loc ()
+    let ifso = self e.truthy in
+    let ifnot = Some (self e.falsy) in
+    e_cond { test; ifso; ifnot } ~loc ()
 
 
 (* ========================== DECLARATIONS ================================= *)

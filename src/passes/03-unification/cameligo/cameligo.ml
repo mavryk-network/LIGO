@@ -13,7 +13,7 @@ module TODO_do_in_parsing = struct
   let mvar ~loc (var : string) = Ligo_prim.Module_var.of_input_var ~loc var
   let labelize x = Label.of_string x
 
-  let translate_selection (sel : CST.selection) : _ AST.selection =
+  let translate_selection (sel : CST.selection) : _ AST.Selection.t =
     (* could directly be a name for FieldName ?*)
     match sel with
     | FieldName name ->
@@ -103,12 +103,12 @@ module TODO_unify_in_cst = struct
   let update_rhs
       :  (CST.expr -> AST.expr)
       -> CST.field_path_assignment Region.reg CST.ne_injection Region.reg
-      -> AST.upd_field list
+      -> AST.expr AST.Update.field list
     =
    fun self { region; value = { compound = _; ne_elements; terminator = _; attributes } } ->
     let attributes = List.map (conv_attr attributes) ~f:fst in
     let x = nsepseq_to_list ne_elements in
-    let f : CST.field_path_assignment Region.reg -> AST.upd_field =
+    let f : CST.field_path_assignment Region.reg -> AST.expr AST.Update.field =
      fun fpa ->
       let fpa, loc = r_split fpa in
       match fpa with
@@ -116,7 +116,7 @@ module TODO_unify_in_cst = struct
         let field_rhs = self field_expr in
         let field_lhs =
           match field_path with
-          | Name v -> [ FieldName (Label.of_string (r_fst v)) ]
+          | Name v -> [ Selection.FieldName (Label.of_string (r_fst v)) ]
           | Path { region; value = { struct_name; selector; field_path } } ->
             List.map
               (nsepseq_to_list field_path)
@@ -128,18 +128,28 @@ module TODO_unify_in_cst = struct
     List.map x ~f
 
 
-  let fun_binder : AST.pattern list -> AST.param_decl list =
+  let fun_binder : AST.pattern list -> (pattern,type_expr) AST.Param.t list =
    fun ps ->
-    List.map ~f:(fun pattern -> { param_kind = `Const; pattern; param_type = None }) ps
-
+    (* use the same type as in other CST's *)
+    List.map ~f:(fun pattern -> AST.Param.{ param_kind = `Const; pattern; param_type = None }) ps
 
   let nested_sequence ~loc (lst : AST.expr nseq) : AST.expr =
+    (* could we have nested sequences ? OR non-nested for the other
+       here I took pascaligo as an example 
+    *)
     let hd, tl = lst in
     match tl with
     | [] -> hd
     | _ :: _ ->
       List.fold tl ~init:hd ~f:(fun acc expr ->
           e_sequence ~loc:(Location.cover acc.location expr.location) (acc, expr) ())
+
+  let mod_in_as_mod_expr binders =
+    (* having a module expression as mod_in rhs would be cool *)
+    m_path ~loc:Location.generated
+      (nseq_map (fun x -> TODO_do_in_parsing.mvar ~loc:(r_snd x) (r_fst x))
+      (nsepseq_to_nseq binders))
+      ()
 end
 
 (* ========================== TYPES ======================================== *)
@@ -284,7 +294,7 @@ let rec compile_pattern : CST.pattern -> AST.pattern =
   | PRecord p ->
     let p, loc = r_split p in
     let p =
-      let compile_field_pattern : CST.field_pattern -> (Label.t, AST.pattern) field =
+      let compile_field_pattern : CST.field_pattern -> (Label.t, AST.pattern) Field.t =
        fun fp ->
         Complete (TODO_do_in_parsing.labelize (r_fst fp.field_name), self fp.pattern)
       in
@@ -299,16 +309,6 @@ let rec compile_pattern : CST.pattern -> AST.pattern =
 
 
 (* ========================== EXPRESSIONS ================================== *)
-
-let translate_projection : CST.projection -> AST.projection_ =
- fun proj ->
-  let name, loc = r_split proj.struct_name in
-  let expr = e_variable (TODO_do_in_parsing.var ~loc name) ~loc () in
-  let field_path =
-    nseq_map TODO_do_in_parsing.translate_selection @@ nsepseq_to_nseq proj.field_path
-  in
-  { expr; field_path }
-
 
 let rec compile_expression ~raise : CST.expr -> AST.expr =
  fun e ->
@@ -328,15 +328,15 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
     let op, loc = w_split op in
     e_unary_op ~loc AST.{ operator = Location.wrap ~loc op; arg = self arg } ()
   in
-  let translate_field_assign (fa : CST.field_assign) : (_, AST.expr) AST.field =
+  let translate_field_assign (fa : CST.field_assign) : (_, AST.expr) AST.Field.t =
     match fa with
     | CST.Property fap ->
       let s = TODO_do_in_parsing.var ~loc:(r_snd fap.field_name) (r_fst fap.field_name) in
       let e = self fap.field_expr in
-      AST.Complete (s, e)
+      AST.Field.Complete (s, e)
     | Punned_property fn ->
       let s = TODO_do_in_parsing.var ~loc:(r_snd fn) (r_fst fn) in
-      AST.Punned s
+      AST.Field.Punned s
   in
   (* let translate_field_path_assignment : CST.field_path_assignment -> (path, expr) field =
     function
@@ -539,17 +539,17 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
   | EModIn mi ->
     let mi, loc = r_split mi in
     let ({ mod_decl = { name; module_; _ }; kwd_in = _; body } : CST.mod_in) = mi in
-    let module_name = r_fst name in
+    let module_name = TODO_do_in_parsing.mvar ~loc:(r_snd name) (r_fst name) in
     let rhs = compile_module ~raise module_ in
     let body = self body in
     e_modin { module_name; rhs; body } ~loc ()
   | EModAlias ma ->
     let ma, loc = r_split ma in
     let ({ mod_alias = { alias; binders; _ }; kwd_in = _; body } : CST.mod_alias) = ma in
-    let module_name = r_fst alias in
-    let binders = nseq_map r_fst @@ nsepseq_to_nseq binders in
+    let module_name = TODO_do_in_parsing.mvar ~loc:(r_snd alias) (r_fst alias) in
+    let rhs = TODO_unify_in_cst.mod_in_as_mod_expr binders in
     let body = self body in
-    e_modalias { module_name; binders; body } ~loc ()
+    e_modin { module_name; rhs; body } ~loc ()
   | ECodeInj ci ->
     let ci, loc = r_split ci in
     let language = r_fst @@ r_fst ci.language in
