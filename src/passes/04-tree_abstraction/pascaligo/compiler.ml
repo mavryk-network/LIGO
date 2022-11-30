@@ -450,7 +450,8 @@ let rec compile_expression
      fun { value = { param_kind; pattern; param_type }; region = _ } ->
       let var =
         match pattern with
-        | P_Var x -> compile_variable x        | x -> raise.error (unsuported_pattern_in_function @@ CST.pattern_to_region x)
+        | P_Var x -> compile_variable x
+        | x -> raise.error (unsuported_pattern_in_function @@ CST.pattern_to_region x)
       in
       let ascr = Option.map ~f:(compile_type_expression ~raise <@ snd) param_type in
       let mut_flag : Param.mutable_flag =
