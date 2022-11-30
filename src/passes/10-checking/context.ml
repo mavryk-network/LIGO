@@ -101,6 +101,7 @@ module Signature = struct
     | S_module (mvar1, sig1), S_module (mvar2, sig2) ->
       Module_var.equal mvar1 mvar2 && equal sig1 sig2
     | S_open sig1, S_open sig2 -> equal sig1 sig2
+    | S_include sig1, S_include sig2 -> equal sig1 sig2
     | _, _ -> false
 
 
@@ -258,14 +259,15 @@ let rec items_of_signature_item ?(nested = false) (sig_item : Signature.item) : 
   | S_type (tvar, type_) -> [ C_type (tvar, type_) ]
   | S_module (mvar, sig_) -> [ C_module (mvar, sig_) ]
   | S_open sig_ ->
+    (* Do not recursively add items from an open if we're already inside an open / include *)
     if nested
     then []
-    else List.map ~f:(items_of_signature_item ~nested:true) sig_ |> List.join
-  | S_include sig_ -> List.map ~f:(items_of_signature_item ~nested:true) sig_ |> List.join
+    else List.concat_map sig_ ~f:(items_of_signature_item ~nested:true)
+  | S_include sig_ -> List.concat_map sig_ ~f:(items_of_signature_item ~nested:true)
 
 
 let rec add_signature_item t (sig_item : Signature.item) =
-  List.fold_left ~f:(fun t ctx -> add t ctx) ~init:t @@ items_of_signature_item sig_item
+  List.fold_right ~f:(fun item t -> add t item) ~init:t @@ items_of_signature_item sig_item
 
 
 and add_open t mctx =
