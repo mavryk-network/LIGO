@@ -3,5 +3,5 @@
  (public_name ligo.ast_unified)
  (libraries LexerLib simple-utils ligo_prim temp_prim)
  (preprocess
-  (staged_pps ppx_import ppx_map ppx_woo ppx_deriving.eq ppx_compare ppx_hash
+  (staged_pps ppx_import ppx_map ppx_woo ppx_deriving.eq ppx_deriving.map ppx_compare ppx_hash
     ppx_deriving_yojson ppx_sexp_conv ppx_string)))

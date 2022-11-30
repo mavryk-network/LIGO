@@ -1,3 +1,4 @@
+[@@@warning "-30"]
 type operator = string Simple_utils.Location.wrap
 
 and 'expr binary_op =

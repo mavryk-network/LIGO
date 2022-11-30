@@ -1,3 +1,5 @@
+[@@@warning "-30"]
+
 type ('expr, 'statement) t =
   | ForMap of ('expr, 'statement) for_map
   | ForSetOrList of ('expr, 'statement) for_set_or_list

@@ -1,87 +1,92 @@
 open Types
 
-type expression_content = [%import: Types.expression_content]
+type ('a, 'b, 'c, 'd, 'e) expression_content_ = [%import: ('a, 'b, 'c, 'd, 'e) Types.expression_content_ ]
 [@@deriving
   ez
     { prefixes =
         [ ( "make_e"
-          , fun ?(loc = Location.generated) expression_content : expression ->
-              { expression_content; location = loc } )
-        ; ("get", fun x -> x.expression_content)
+          , fun ?(loc = Location.generated) content : Types.expr ->
+              { fp = Location.wrap ~loc content } )
+        ; ("get", fun (x:Types.expr) -> Location.unwrap x.fp)
         ]
     ; wrap_constructor =
-        ( "expression_content"
-        , fun expression_content ?loc () -> make_e ?loc expression_content )
-    ; wrap_get = "expression_content", get
+        ( "wrap_content"
+        , fun content ?loc -> make_e ?loc content )
+    ; wrap_get = "wrap_content", get
     }]
 
-type type_expression_content = [%import: Types.type_expression_content]
+(* type ty_expr = [%import: Types.ty_expr]
 [@@deriving
   ez
     { prefixes =
         [ ( "make_t"
-          , fun ?(loc = Location.generated) type_expression_content : type_expression ->
-              { type_expression_content; location = loc } )
-        ; ("get", fun x -> x.type_expression_content)
+          , fun ?(loc = Location.generated) content : ty_expr ->
+            { fp = Location.wrap ~loc content } )
+        ; ("get", fun x -> Location.unwrap x.fp)
         ]
     ; wrap_constructor =
-        ( "type_expression_content"
-        , fun type_expression_content ?loc () -> make_t ?loc type_expression_content )
-    ; wrap_get = "declaration_content", get
+        ( "wrap_content"
+        , fun content ?loc () -> make_t ?loc content)
+    ; wrap_get = "wrap_content", get
     }]
+*)
 
-type declaration_content = [%import: Types.declaration_content]
+type ('a, 'b, 'c, 'd, 'e) declaration_content_ = [%import: ('a, 'b, 'c, 'd, 'e) Types.declaration_content_ ]
+type ('a, 'b, 'c, 'd, 'e) declaration_content = ('a, 'b, 'c, 'd, 'e) declaration_content_
 [@@deriving
   ez
     { prefixes =
         [ ( "make_d"
-          , fun ?(loc = Location.generated) declaration_content : declaration ->
-              { declaration_content; location = loc } )
-        ; ("get", fun x -> x.declaration_content)
+          , fun ?(loc = Location.generated) content : declaration ->
+            { fp = Location.wrap ~loc content } )
+        (* ; ("get", fun (x:Types.declaration) -> Location.unwrap x.fp) *)
         ]
     ; wrap_constructor =
-        ( "declaration_content"
+        ( "wrap_content"
         , fun declaration_content ?loc () -> make_d ?loc declaration_content )
-    ; wrap_get = "declaration_content", get
+    ; wrap_get = "wrap_content", get
     }]
 
-type statement_content = [%import: Types.statement_content]
+type ('a,'b,'c) statement_content_ = [%import: ('a, 'b, 'c) Types.statement_content_ ]
+type ('a,'b,'c) statement_content = ('a,'b,'c) statement_content_
 [@@deriving
   ez
     { prefixes =
         [ ( "make_s"
-          , fun ?(loc = Location.generated) statement_content : statement ->
-              { statement_content; location = loc } )
-        ; ("get", fun x -> x.statement_content)
+          , fun ?(loc = Location.generated) content : statement ->
+            { fp = Location.wrap ~loc content } )
+        ; ("get", fun (x:Types.statement) -> Location.unwrap x.fp)
         ]
     ; wrap_constructor =
-        ( "statement_content"
+        ( "wrap_content"
         , fun statement_content ?loc () -> make_s ?loc statement_content )
-    ; wrap_get = "statement_content", get
+    ; wrap_get = "wrap_content", get
     }]
 
-type module_content = [%import: Types.module_content]
+(*
+
+type module_content = [%import: Types.mod_expr]
 [@@deriving
   ez
     { prefixes =
         [ ( "make_m"
-          , fun ?(loc = Location.generated) module_content : module_ ->
-              { module_content; location = loc } )
-        ; ("get", fun x -> x.module_content)
+          , fun ?(loc = Location.generated) content : mod_expr ->
+            { fp = Location.wrap ~loc content } )
+        ; ("get", fun x -> Location.unwrap x.fp)
         ]
     ; wrap_constructor =
         ("module_content", fun module_content ?loc () -> make_m ?loc module_content)
     ; wrap_get = "module_content", get
     }]
 
-type instruction_content = [%import: Types.instruction_content]
+type instruction_content = [%import: Types.instruction]
 [@@deriving
   ez
     { prefixes =
         [ ( "make_i"
-          , fun ?(loc = Location.generated) instruction_content : instruction ->
-              { instruction_content; location = loc } )
-        ; ("get", fun x -> x.instruction_content)
+          , fun ?(loc = Location.generated) content : instruction ->
+            { fp = Location.wrap ~loc content } )
+        ; ("get", fun x -> Location.unwrap x.fp)
         ]
     ; wrap_constructor =
         ( "instruction_content"
@@ -89,20 +94,20 @@ type instruction_content = [%import: Types.instruction_content]
     ; wrap_get = "instruction_content", get
     }]
 
-let e_literal ?loc l : expression = make_e ?loc @@ E_Literal l
+let e_literal ?loc l : expr = make_e ?loc @@ E_Literal l
 
-let e__type_ ?loc p : expression = make_e ?loc @@ E_Literal (Literal__type_ p)
+let e__type_ ?loc p : expr = make_e ?loc @@ E_Literal (Literal__type_ p)
   [@@map _type_, ("address", "signature", "key", "key_hash", "chain_id")]
 
 
-let e__type__z ?loc n : expression = make_e ?loc @@ E_Literal (Literal__type_ n)
+let e__type__z ?loc n : expr = make_e ?loc @@ E_Literal (Literal__type_ n)
   [@@map _type_, ("int", "nat", "timestamp", "mutez")]
 
 
-let e__type_ ?loc n : expression = e__type__z ?loc @@ Z.of_int n
+let e__type_ ?loc n : expr = e__type__z ?loc @@ Z.of_int n
   [@@map _type_, ("int", "nat", "timestamp", "mutez")]
 
 
-let e_unit ?loc () : expression = make_e ?loc @@ E_Literal Literal_unit
-let e_bytes_raw ?loc (b : bytes) : expression = make_e ?loc @@ E_Literal (Literal_bytes b)
-let e_bytes_hex ?loc b : expression = e_bytes_raw ?loc @@ Hex.to_bytes b
+let e_unit ?loc () : expr = make_e ?loc @@ E_Literal Literal_unit
+let e_bytes_raw ?loc (b : bytes) : expr = make_e ?loc @@ E_Literal (Literal_bytes b)
+let e_bytes_hex ?loc b : expr = e_bytes_raw ?loc @@ Hex.to_bytes b *)
