@@ -1994,6 +1994,93 @@
         
     )
 
+    (func $__ligo_internal__map_fold (param $set i32) (param $init i32) (param $fn i32) (param $C_SET_EMPTY i32) (result i32)
+        (local $left_child i32)
+        (local $right_child i32)
+        (local $temp i32)
+        (local $tuple i32)
+        local.get $set 
+        local.get $C_SET_EMPTY
+        i32.eq
+        if (result i32)
+            i32.const 0
+        else 
+            local.get $set 
+            i32.const 8
+            i32.add
+            i32.load
+            local.tee $left_child
+            if 
+                local.get $left_child
+                local.get $init
+                local.get $fn
+                local.get $C_SET_EMPTY
+                call $__ligo_internal__map_fold
+                local.set $init
+            end
+            
+            i32.const 12
+            call $malloc 
+            local.tee $tuple
+            global.get $__pair__tag
+            i32.store8
+            local.get $tuple
+            i32.const 4
+            i32.add
+            local.get $init            
+            i32.store
+            local.get $tuple
+            i32.const 8
+            i32.add 
+            
+            i32.const 12 
+            call $malloc 
+            local.tee $temp
+            global.get $__pair__tag
+            i32.store 
+
+            local.get $temp 
+            i32.const 4 
+            i32.add
+            local.get $set
+            i32.load
+            i32.store
+
+            local.get $temp 
+            i32.const 8
+            i32.add
+            local.get $set
+            i32.const 20 
+            i32.add
+            i32.load
+            i32.store
+
+            local.get $temp 
+
+            i32.store
+
+            local.get $tuple
+            local.get $fn
+            call_indirect 0 (type 0) 
+            local.set $init
+
+            local.get $set 
+            i32.const 12
+            i32.add
+            i32.load
+            local.tee $right_child
+            if
+                local.get $right_child
+                local.get $init
+                local.get $fn
+                local.get $C_SET_EMPTY
+                call $__ligo_internal__map_fold
+                local.set $init
+            end
+            local.get $init
+        end
+    )
+
     (func $__ligo_internal__set_fold_right (param $set i32) (param $init i32) (param $fn i32) (param $C_SET_EMPTY i32) (result i32)
         (local $left_child i32)
         (local $right_child i32)
@@ -2138,6 +2225,10 @@
         end
     )
     
+(func $__ligo_internal__map_map (param $list i32) (param $fn i32) (param $C_LIST_EMPTY i32) (result i32)
+    unreachable
+)
+
 
     (func $c_set_left_balancing 
         (param $child i32)

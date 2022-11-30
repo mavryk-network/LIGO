@@ -907,6 +907,22 @@ let rec expression ~raise
         ; call_s "__ligo_internal__list_map"
         ] )
   | E_iterator
+      ( C_MAP
+      , ((item_name, item_type), body)
+      , ({ type_expression = { type_content = T_map _; _ }; _ } as col) ) ->
+    let env = add_locals env [ var_to_string item_name, T.NumType I32Type ] in
+    let w, env, col = expression ~raise w env col in
+    let w, env, iter_body = expression ~raise w env body in
+    let iter_body_name = unique_name "iter_body" in
+    let w, required_args = add_function w iter_body_name (fun _ -> iter_body) in
+    ( w
+    , env
+    , col
+      @ [ func_symbol iter_body_name
+        ; data_symbol "C_LIST_EMPTY"
+        ; call_s "__ligo_internal__map_map"
+        ] )
+  | E_iterator
       ( C_ITER
       , ((item_name, item_type), body)
       , ({ type_expression = { type_content = T_list _; _ }; _ } as col) ) ->
@@ -972,6 +988,24 @@ let rec expression ~raise
       @ [ func_symbol fold_body_name
         ; data_symbol "C_SET_EMPTY"
         ; call_s "__ligo_internal__set_fold"
+        ] )
+  | E_fold
+      ( ((name, tv), body)
+      , ({ type_expression = { type_content = T_map _; _ }; _ } as col)
+      , initial ) ->
+    let fold_body_name = unique_name "fold_body" in
+    let env = add_locals env [ var_to_string name, T.NumType I32Type ] in
+    let w, env, col = expression ~raise w env col in
+    let w, env, init = expression ~raise w env initial in
+    let w, env, iter_body = expression ~raise w env body in
+    let w, required_args = add_function w fold_body_name (fun _ -> iter_body) in
+    ( w
+    , env
+    , col
+      @ init
+      @ [ func_symbol fold_body_name
+        ; data_symbol "C_SET_EMPTY"
+        ; call_s "__ligo_internal__map_fold"
         ] )
   | E_fold_right
       ( ((name, tv), body)

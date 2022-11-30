@@ -87,6 +87,13 @@ let mod_ =
       , "__ligo_internal__map_iter"
       , ([ NumType I32Type; NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
     ; ( "env"
+      , "__ligo_internal__map_map"
+      , ([ NumType I32Type; NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
+    ; ( "env"
+      , "__ligo_internal__map_fold"
+      , ( [ NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type ]
+        , [ NumType I32Type ] ) )
+    ; ( "env"
       , "__ligo_internal__map_add"
       , ( [ NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type ]
         , [ NumType I32Type ] ) )

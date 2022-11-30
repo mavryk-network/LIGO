@@ -191,6 +191,13 @@ let main ((_, _s):(parameter * storage)) =
     Some s -> log ("resulty2:" ^ string_of_int s ^ "\n")
   | None   -> log "niks2"
   in
+  
+  // let mx4 = Map.map (fun (_,f) -> f + 1) mx3 in
+  let _ = Map.iter (fun (a, b) -> log ("Changed map check2:" ^ string_of_int a ^ " = " ^ string_of_int b ^  "\n")) mx3 in
+
+  let sumx ((acc, (_, i)) : (int * (int * int))) : int = acc + i in
+  let a31 : int = Map.fold sumx mx3 0 in
+
   let a = 
     4 + 5 +  (* 9 *)
     40 / 5 + (* 9 + 8 = 17 *)
@@ -218,7 +225,7 @@ let main ((_, _s):(parameter * storage)) =
     a28 +   (* 754 + 6 = 760 *)
     a23 +     (* 484 + 2 = 762 *)
     a24 +     (*     + 7 = 769 *)
-
+    a31 +     (*     + 9 = 778 *)
     0
   in 
   let () =  log ("Result:" ^ string_of_int a ^ "\n") in
