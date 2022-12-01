@@ -138,16 +138,16 @@ let global_offset = ref 0l
  * Convert a Zarith number (used by LIGO and Tezos) to a wasm memory representation.
  *)
 let convert_to_memory
-    : S.region -> int32 -> string -> Z.t -> A.data_segment list * A.sym_info list
+    : S.region -> int -> string -> Z.t -> A.data_segment list * A.sym_info list
   =
  fun at header name z ->
   let z = Z.to_int32 z in
   let open Int32 in
   let data =
-    A.[ data ~offset:!global_offset ~init:{ name; detail = [ Int32 header; Int32 z ] } ]
+    A.[ data ~offset:!global_offset ~init:{ name; detail = [ Int8 header; Int32 z ] } ]
   in
-  let symbols = A.[ symbol_data ~name ~index:0l ~size:8l ~offset:!global_offset ] in
-  global_offset := !global_offset + 8l;
+  let symbols = A.[ symbol_data ~name ~index:0l ~size:5l ~offset:!global_offset ] in
+  global_offset := !global_offset + 5l;
   data, symbols
 
 
@@ -327,10 +327,10 @@ let rec expression ~raise
   *)
   match e.content with
   | E_literal Literal_unit -> w, env, [ const 0l ]
-  | E_literal (Literal_int z) -> int_like "Literal_int" 2l z
-  | E_literal (Literal_nat z) -> int_like "Literal_nat" 2l z
-  | E_literal (Literal_timestamp z) -> int_like "Literal_timestamp" 2l z
-  | E_literal (Literal_mutez z) -> int_like "Literal_mutez" 2l z
+  | E_literal (Literal_int z) -> int_like "Literal_int" 2 z
+  | E_literal (Literal_nat z) -> int_like "Literal_nat" 2 z
+  | E_literal (Literal_timestamp z) -> int_like "Literal_timestamp" 2 z
+  | E_literal (Literal_mutez z) -> int_like "Literal_mutez" 2 z
   | E_literal (Literal_string (Standard s)) -> string_like "Literal_string" 4l s
   | E_literal (Literal_string (Verbatim s)) -> string_like "Literal_string" 4l s
   | E_literal (Literal_bytes b) -> bytes_like "Literal_bytes" b
@@ -425,13 +425,13 @@ let rec expression ~raise
     let env = add_locals env [ size, T.NumType I32Type ] in
     ( w
     , env
-    , [ const 8l
+    , [ const 5l
       ; call_s "malloc"
       ; local_tee_s size
       ; const 2l
       ; store8
       ; local_get_s size
-      ; const 4l
+      ; const 1l
       ; i32_add
       ]
       @ s
@@ -1398,7 +1398,7 @@ let rec toplevel_bindings ~raise
   | E_let_in ({ content = E_literal (Literal_int z); _ }, _inline, ((name, _type), e2)) ->
     (* we convert these to in memory values *)
     let name = var_to_string name in
-    let data, symbols = convert_to_memory 0l name z in
+    let data, symbols = convert_to_memory 0 name z in
     toplevel_bindings
       ~raise
       e2

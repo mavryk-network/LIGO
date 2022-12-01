@@ -49,13 +49,13 @@
         i32.eq
         if (result i32)
             local.get $a 
-            i32.const 4 
+            i32.const 1
             i32.add 
             i32.load 
             local.set $a_value
 
             local.get $b
-            i32.const 4 
+            i32.const 1
             i32.add 
             i32.load 
             local.set $b_value
@@ -573,7 +573,7 @@
         i32.store8
 
         local.get $result
-        i32.const 4
+        i32.const 1
         i32.add
         local.get $set
         call $__ligo_internal__set_size_in
@@ -2667,10 +2667,10 @@
         i32.store8
 
         local.get $new_int
-        i32.const 4
+        i32.const 1
         i32.add
         local.get $value
-        i32.const 4
+        i32.const 1
         i32.add
         i32.load
         i32.store
@@ -2887,7 +2887,7 @@
         i32.eq
         if 
             local.get $return 
-            i32.const 4
+            i32.const 1
             i32.add
             i32.const 0 
             i32.store
@@ -2912,7 +2912,7 @@
                 br_if 0
             end
             local.get $return 
-            i32.const 4
+            i32.const 1
             i32.add
             local.get $counter
             i32.store

@@ -41,19 +41,19 @@ let bin_op
   let i32_add = i32_add at in
   let name = unique_name "bin_op" in
   ( Env.add_local env (name, T.NumType I32Type)
-  , [ const 8l
+  , [ const 5l
     ; call_s "malloc"
     ; local_tee_s name
     ; const 2l
     ; store8
     ; local_get_s name
-    ; const 4l
+    ; const 1l
     ; i32_add
     ]
     @ a
-    @ [ const 4l; i32_add; load ]
+    @ [ const 1l; i32_add; load ]
     @ b
-    @ [ const 4l; i32_add; load ]
+    @ [ const 1l; i32_add; load ]
     @ op at
     @ [ store; local_get_s name ] )
 
@@ -67,7 +67,7 @@ let compare_bin_op
   let load = load at in
   let const = const at in
   let i32_add = i32_add at in
-  env, a @ [ const 4l; i32_add; load ] @ b @ [ const 4l; i32_add; load ] @ op at
+  env, a @ [ const 1l; i32_add; load ] @ b @ [ const 1l; i32_add; load ] @ op at
 
 
 module Int = struct
@@ -86,12 +86,4 @@ module Int = struct
   let xor = bin_op (fun at -> [ i32_xor at ])
   let lsl_ = bin_op (fun at -> [ i32_lsl at ])
   let lsr_ = bin_op (fun at -> [ i32_lsr at ])
-
-  (* Comparator *)
-  let eq = compare_bin_op (fun at -> [ i32_eq at ])
-  let ne = compare_bin_op (fun at -> [ i32_ne at ])
-  let lt = compare_bin_op (fun at -> [ i32_lt at ])
-  let gt = compare_bin_op (fun at -> [ i32_gt at ])
-  let le = compare_bin_op (fun at -> [ i32_le at ])
-  let ge = compare_bin_op (fun at -> [ i32_ge at ])
 end
