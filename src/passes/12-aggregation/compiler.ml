@@ -152,6 +152,7 @@ module Scope : sig
   val find_value : t -> Value_var.t -> Path.t
   val find_type_ : t -> Type_var.t -> Path.t
   val find_module : t -> Module_var.t -> Path.t * t
+  val open_module : t -> t -> t
 
   val push_value
     :  t
@@ -254,6 +255,15 @@ end = struct
     ; decl_list
     ; name_map = PathVarMap.union (fun _ f _ -> Some f) name_map scope.name_map
     }
+
+
+  let open_module scope mod_scope =
+    let value = ValueVMap.union (fun _ _ v -> Some v) scope.value mod_scope.value in
+    let type_ = TypeVMap.union (fun _ _ v -> Some v) scope.type_ mod_scope.type_ in
+    let module_ =
+      ModuleVMap.union (fun _ _ v -> Some v) scope.module_ mod_scope.module_
+    in
+    { scope with value; type_; module_ }
 
 
   let get_declarations scope = scope.decl_list
@@ -519,11 +529,13 @@ and compile_declaration
     let scope = Scope.push_module scope module_binder path' mod_scope in
     scope, decl_list
   | D_open { module_ } ->
-    let mod_scope, _decl_list = compile_module_expr ~raise path scope module_ in
-    mod_scope, []
+    let mod_scope, decl_list = compile_module_expr ~raise path scope module_ in
+    let scope = Scope.open_module scope mod_scope in
+    scope, decl_list
   | D_include { module_ } ->
-    let mod_scope, _decl_list = compile_module_expr ~raise path scope module_ in
-    mod_scope, []
+    let mod_scope, decl_list = compile_module_expr ~raise path scope module_ in
+    let scope = Scope.open_module scope mod_scope in
+    scope, decl_list
 
 
 and compile_declaration_list
