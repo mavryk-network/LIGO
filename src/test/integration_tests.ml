@@ -556,7 +556,7 @@ let include_jsligo ~raise () : unit =
 
 
 let open_module ~raise () : unit =
-  let program = type_file ~raise "./contracts/open_modules.mligo" in
+  let program = type_file ~raise "./contracts/modules_and_free_vars/open_modules.mligo" in
   let () =
     expect_eq
       ~raise
@@ -564,6 +564,17 @@ let open_module ~raise () : unit =
       "main"
       (e_pair (e_unit ()) (e_int 0))
       (e_pair (e_list []) (e_int 2))
+  in
+  let program =
+    type_file ~raise "./contracts/modules_and_free_vars/open_module_nested.mligo"
+  in
+  let () =
+    expect_eq
+      ~raise
+      program
+      "main"
+      (e_pair (e_unit ()) (e_int 0))
+      (e_pair (e_list []) (e_int 1))
   in
   ()
 
