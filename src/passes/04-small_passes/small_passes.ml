@@ -31,7 +31,7 @@ let trivial_compile_program : I.program -> O.program =
   failwith "TODO12"
 
 
-let trivial_compile_expression : I.expression -> O.expression = fun _ -> failwith ""
+let trivial_compile_expression : I.expr -> O.expression = fun _ -> failwith ""
 
 let compile_with_passes
     : type a. syntax_todo:syntax -> a pass list -> a check list -> a -> a
@@ -65,7 +65,7 @@ let compile ~syntax_todo ~raise : I.program -> O.program =
     trivial_compile_program x
 
 
-let compile_expression ~syntax_todo ~raise : I.expression -> O.expression =
+let compile_expression ~syntax_todo ~raise : I.expr -> O.expression =
   let () = ignore raise in
   fun x ->
     let x = compile_with_passes ~syntax_todo [] [] x in

@@ -103,7 +103,6 @@ end
 (* ========================== TYPES ======================================== *)
 
 type 'self type_expression_ = 'self type_expression_content_ Location.wrap
-
 and 'self ty_expr_ = 'self type_expression_
 
 and 'self type_expression_content_ =
@@ -123,9 +122,10 @@ and 'self type_expression_content_ =
   | T_Record_raw of 'self option Non_linear_rows.t
   | T_Disc_union of 'self Non_linear_disc_rows.t
   | T_Attr of Attribute.t * 'self
+[@@deriving map, yojson]
 
 (* ========================== PATTERNS ===================================== *)
-and ('self, 'ty_expr) pattern_ = ('self, 'ty_expr) pattern_content_ Location.wrap
+type ('self, 'ty_expr) pattern_ = ('self, 'ty_expr) pattern_content_ Location.wrap
 
 and 'self list_pattern =
   | Cons of 'self * 'self
@@ -143,13 +143,12 @@ and ('self, 'ty_expr) pattern_content_ =
   | P_rest of Label.t
   | P_attr of Attribute.t * 'self
   | P_mod_access of (Mod_variable.t nseq, 'self) Mod_access.t
+[@@deriving map, yojson]
 
 (* ========================== INSTRUCTIONS ================================= *)
-and ('self, 'expr, 'pattern, 'statement) instruction_ =
+type ('self, 'expr, 'pattern, 'statement) instruction_ =
   ('self, 'expr, 'pattern, 'statement) instruction_content_ Location.wrap
 
-(* and instr_content = instruction_content *)
-(* and instr = instruction [@@deriving yojson] *)
 and ('self, 'expr, 'pattern, 'statement) instruction_content_ =
   | I_struct_assign of 'expr Struct_assign.t
   | I_Call of 'expr Instruction_call.t
@@ -167,21 +166,21 @@ and ('self, 'expr, 'pattern, 'statement) instruction_content_ =
   | I_Return of 'expr option
   | I_Switch of ('expr, 'statement) Switch.t
   | I_break
-[@@deriving map]
+[@@deriving map, yojson]
 
 (* ========================== STATEMENTS ========================= *)
-and ('self, 'instruction, 'declaration) statement_ =
+type ('self, 'instruction, 'declaration) statement_ =
   ('self, 'instruction, 'declaration) statement_content_ Location.wrap
 
 and ('self, 'instruction, 'declaration) statement_content_ =
   | S_Attr of (Attribute.t * 'self)
   | S_Instr of 'instruction
   | S_Decl of 'declaration
-
+[@@deriving map, yojson]
 (* and stmt = statement [@@deriving yojson] *)
 
 (* ========================== DECLARATIONS ================================= *)
-and ('self, 'expr, 'ty_expr, 'pattern, 'mod_expr) declaration_ =
+type ('self, 'expr, 'ty_expr, 'pattern, 'mod_expr) declaration_ =
   ('self, 'expr, 'ty_expr, 'pattern, 'mod_expr) declaration_content_ Location.wrap
 
 (* and decl_content = declaration_content *)
@@ -201,20 +200,25 @@ and ('self, 'expr, 'ty_expr, 'pattern, 'mod_expr) declaration_content_ =
   | D_Fun of ('ty_expr, 'expr, ('pattern, 'ty_expr) Param.t) Fun_decl.t
   | D_Type of 'ty_expr Type_decl.t
   | D_Module of 'mod_expr Mod_decl.t
+[@@deriving map, yojson]
 
 (* ========================== MODULES ====================================== *)
-and ('self, 'statement, 'declaration) mod_expr_ =
-  ('self, 'statement, 'declaration) mod_expr_content_ Location.wrap
-[@@deriving yojson]
+include struct
+  [@@@warning "-27"]
 
-and ('self, 'statement, 'declaration) mod_expr_content_ =
-  | M_Body_statements of 'statement nseq
-  | M_Body of 'declaration nseq
-  | M_Path of Ligo_prim.Module_var.t nseq
-  | M_Var of Ligo_prim.Module_var.t
+  type ('self, 'statement, 'declaration) mod_expr_ =
+    ('self, 'statement, 'declaration) mod_expr_content_ Location.wrap
+
+  and ('self, 'statement, 'declaration) mod_expr_content_ =
+    | M_Body_statements of 'statement nseq
+    | M_Body of 'declaration nseq
+    | M_Path of Ligo_prim.Module_var.t nseq
+    | M_Var of Ligo_prim.Module_var.t
+  [@@deriving map, yojson]
+end
 
 (* ========================== EXPRESSIONS ================================== *)
-and ('self, 'ty_expr, 'pattern, 'statement, 'mod_expr) expression_ =
+type ('self, 'ty_expr, 'pattern, 'statement, 'mod_expr) expression_ =
   ('self, 'ty_expr, 'pattern, 'statement, 'mod_expr) expression_content_ Location.wrap
 
 and ('self, 'ty_expr, 'pattern, 'statement, 'mod_expr) expr_ =
@@ -258,7 +262,7 @@ and ('self, 'ty_expr, 'pattern, 'statement, 'mod_expr) expression_content_ =
   | E_Sequence of ('self * 'self)
   | E_Block_with of ('self, 'statement) Block_with.t
   | E_AssignJsligo of 'self Assign_jsligo.t (* this is a very weird one .. *)
-
+[@@deriving map, yojson]
 (* ========================== PROGRAM ====================================== *)
 
 type ('self, 'declaration, 'instruction) program_entry_ =
@@ -266,31 +270,23 @@ type ('self, 'declaration, 'instruction) program_entry_ =
   | P_Declaration of 'declaration
   | P_Top_level_instruction of 'instruction
   | P_Directive of Directive.t
-
-and ('self, 'declaration, 'instruction) program_ =
-  ('self, 'declaration, 'instruction) program_entry_ list
-[@@deriving map,yojson]
+(* and ('self, 'declaration, 'instruction) program_ =
+  ('self, 'declaration, 'instruction) program_entry_ list *)
+[@@deriving map, yojson]
 
 (* fixpoints *)
 
 type ty_expr = { fp : ty_expr ty_expr_ }
 and pattern = { fp : (pattern, ty_expr) pattern_ }
-
-and instruction =
-  { fp : (instruction, expr, pattern, statement) instruction_ }
-
+and instruction = { fp : (instruction, expr, pattern, statement) instruction_ }
 and statement = { fp : (statement, instruction, declaration) statement_ }
-
-and declaration =
-  { fp : (declaration, expr, ty_expr, pattern, mod_expr) declaration_ }
-
+and declaration = { fp : (declaration, expr, ty_expr, pattern, mod_expr) declaration_ }
 and mod_expr = { fp : (mod_expr, statement, declaration) mod_expr_ }
+and expr = { fp : (expr, ty_expr, pattern, statement, mod_expr) expr_ }
+and program_entry = { fp : (program_entry, declaration, instruction) program_entry_ }
 
-and expr =
-  { fp : (expr, ty_expr, pattern, statement, mod_expr) expr_ }
-
-and program =
-  { fp : (program, declaration, instruction) program_ }
+(* one might wonder why ? go check `compile_toplevel_statement` unification of jsligo *)
+type program = program_entry list
 
 (* catamorphisms *)
 
@@ -320,54 +316,96 @@ let rec cata_expr
   and cata_pattern (x : pattern) : pattern =
     f_pattern (map_pattern_ cata_pattern cata_ty_expr x.fp)
   and cata_instruction (x : instruction) : instruction =
-    f_instruction (map_instruction_ cata_instruction self cata_pattern cata_statement x.fp)
+    f_instruction
+      (map_instruction_ cata_instruction self cata_pattern cata_statement x.fp)
   and cata_statement (x : statement) : statement =
     f_statement (map_statement_ cata_statement cata_instruction cata_declaration x.fp)
   and cata_declaration (x : declaration) : declaration =
     f_declaration
-      (map_declaration_ cata_declaration self cata_ty_expr cata_pattern cata_mod_expr x.fp)
+      (map_declaration_
+         cata_declaration
+         self
+         cata_ty_expr
+         cata_pattern
+         cata_mod_expr
+         x.fp)
   and cata_mod_expr (x : mod_expr) : mod_expr =
     f_mod_expr (map_mod_expr_ cata_mod_expr cata_statement cata_declaration x.fp)
   in
   f_expr (map_expr_ self cata_ty_expr cata_pattern cata_statement cata_mod_expr x.fp)
 
+
+let rec cata_program_entry
+    ~(f_program : (_, _, _) program_entry_ -> program_entry)
+    ~(f_expr : (_, _, _, _, _) expr_ -> expr)
+    ~(f_ty_expr : _ ty_expr_ -> ty_expr)
+    ~(f_pattern : (_, _) pattern_ -> pattern)
+    ~(f_statement : (_, _, _) statement_ -> statement)
+    ~(f_mod_expr : (_, _, _) mod_expr_ -> mod_expr)
+    ~(f_instruction : (_, _, _, _) instruction_ -> instruction)
+    ~(f_declaration : (_, _, _, _, _) declaration_ -> declaration)
+    (x : program_entry)
+    : program_entry
+  =
+  let self =
+    cata_program_entry
+      ~f_program
+      ~f_expr
+      ~f_ty_expr
+      ~f_pattern
+      ~f_statement
+      ~f_mod_expr
+      ~f_instruction
+      ~f_declaration
+  in
+  let rec cata_ty_expr (x : ty_expr) : ty_expr =
+    f_ty_expr (map_ty_expr_ cata_ty_expr x.fp)
+  and cata_expr (x : expr) : expr =
+    f_expr
+      (map_expr_ cata_expr cata_ty_expr cata_pattern cata_statement cata_mod_expr x.fp)
+  and cata_pattern (x : pattern) : pattern =
+    f_pattern (map_pattern_ cata_pattern cata_ty_expr x.fp)
+  and cata_instruction (x : instruction) : instruction =
+    f_instruction
+      (map_instruction_ cata_instruction cata_expr cata_pattern cata_statement x.fp)
+  and cata_statement (x : statement) : statement =
+    f_statement (map_statement_ cata_statement cata_instruction cata_declaration x.fp)
+  and cata_declaration (x : declaration) : declaration =
+    f_declaration
+      (map_declaration_
+         cata_declaration
+         cata_expr
+         cata_ty_expr
+         cata_pattern
+         cata_mod_expr
+         x.fp)
+  and cata_mod_expr (x : mod_expr) : mod_expr =
+    f_mod_expr (map_mod_expr_ cata_mod_expr cata_statement cata_declaration x.fp)
+  in
+  f_program (map_program_entry_ self cata_declaration cata_instruction x.fp)
+
+
 let rec cata_program
-  ~(f_program : (_,_,_) program_ -> program)
-  ~(f_expr : (_, _, _, _, _) expr_ -> expr)
-  ~(f_ty_expr : _ ty_expr_ -> ty_expr)
-  ~(f_pattern : (_, _) pattern_ -> pattern)
-  ~(f_statement : (_, _, _) statement_ -> statement)
-  ~(f_mod_expr : (_, _, _) mod_expr_ -> mod_expr)
-  ~(f_instruction : (_, _, _, _) instruction_ -> instruction)
-  ~(f_declaration : (_, _, _, _, _) declaration_ -> declaration)
-  (x : program)
-  : program
-=
-let self =
-  cata_program
-    ~f_program
-    ~f_expr
-    ~f_ty_expr
-    ~f_pattern
-    ~f_statement
-    ~f_mod_expr
-    ~f_instruction
-    ~f_declaration
-in
-let rec cata_ty_expr (x : ty_expr) : ty_expr =
-  f_ty_expr (map_ty_expr_ cata_ty_expr x.fp)
-and cata_expr (x : expr) : expr =
-  f_expr (map_expr_ cata_expr cata_ty_expr cata_pattern cata_statement cata_mod_expr x.fp)
-and cata_pattern (x : pattern) : pattern =
-  f_pattern (map_pattern_ cata_pattern cata_ty_expr x.fp)
-and cata_instruction (x : instruction) : instruction =
-  f_instruction (map_instruction_ cata_instruction cata_expr cata_pattern cata_statement x.fp)
-and cata_statement (x : statement) : statement =
-  f_statement (map_statement_ cata_statement cata_instruction cata_declaration x.fp)
-and cata_declaration (x : declaration) : declaration =
-  f_declaration
-    (map_declaration_ cata_declaration cata_expr cata_ty_expr cata_pattern cata_mod_expr x.fp)
-and cata_mod_expr (x : mod_expr) : mod_expr =
-  f_mod_expr (map_mod_expr_ cata_mod_expr cata_statement cata_declaration x.fp)
-in
-f_program (map_program_ self cata_declaration cata_instruction x.fp)
+    ~(f_program : (_, _, _) program_entry_ -> program_entry)
+    ~(f_expr : (_, _, _, _, _) expr_ -> expr)
+    ~(f_ty_expr : _ ty_expr_ -> ty_expr)
+    ~(f_pattern : (_, _) pattern_ -> pattern)
+    ~(f_statement : (_, _, _) statement_ -> statement)
+    ~(f_mod_expr : (_, _, _) mod_expr_ -> mod_expr)
+    ~(f_instruction : (_, _, _, _) instruction_ -> instruction)
+    ~(f_declaration : (_, _, _, _, _) declaration_ -> declaration)
+    (x : program)
+    : program
+  =
+  List.map
+    x
+    ~f:
+      (cata_program_entry
+         ~f_program
+         ~f_expr
+         ~f_ty_expr
+         ~f_pattern
+         ~f_statement
+         ~f_mod_expr
+         ~f_instruction
+         ~f_declaration)
