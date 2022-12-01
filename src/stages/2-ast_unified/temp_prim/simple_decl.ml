@@ -4,4 +4,4 @@ type ('binder, 'expr, 'ty_expr) t =
   ; rhs_type : 'ty_expr option
   ; let_rhs : 'expr
   }
-[@@deriving yojson, map]
+[@@deriving yojson, map, sexp]

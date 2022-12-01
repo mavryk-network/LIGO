@@ -100,6 +100,31 @@ module Variable_with_sexp = struct
     Sexp.List [ Sexp.Atom "Variable"; Sexplib0.Sexp.Atom s ]
 end
 
+module Constructor_with_sexp = struct
+  include Constructor 
+
+  (* let t_of_sexp : Sexp.t -> 'a t =
+   fun t -> Sexplib0.Sexp_conv_error.no_matching_variant_found "Unsupported sexp" t
+
+  let sexp_of_t : ('a -> Sexp.t) -> 'a t -> Sexplib0.Sexp.t =
+   fun sexp_of_elt t ->
+    Sexp.List
+      [ Sexp.Atom "Constructor"
+      ; Sexp.List [ Sexp.Atom "constructor" ; Label.sexp_of_t t.constructor ]
+      ; Sexp.List [ Sexp.Atom "element" ; sexp_of_elt t.element  ]
+      ] *)
+
+    let t_of_sexp = fun _ -> failwith "cannot enable sexp"
+    let sexp_of_t = fun _ -> failwith "cannot enable sexp"
+end
+
+module Raw_code_with_sexp = struct
+  include Raw_code
+  let t_of_sexp = fun _ -> failwith "cannot enable sexp"
+  let sexp_of_t = fun _ -> failwith "cannot enable sexp"
+end
+
+
 (* ========================================================================= *)
 (* ======== Polymorphic AST unified ======================================== *)
 (* ========================================================================= *)
@@ -155,12 +180,132 @@ type ('ty, 'p) pattern =
   ]
 [@@deriving map, sexp]
 
+type ('i, 'e, 'p, 's) instruction =
+  [ `I_struct_assign   of ( 'e Struct_assign.t                        ) Loc.t
+  | `I_Call            of ( 'e Instruction_call.t                     ) Loc.t
+  | `I_Case            of ( ('e, 'p, ('i, 's) Test_clause.t) Case.t   ) Loc.t
+  | `I_Cond            of ( ('e, ('i, 's) Test_clause.t) Cond.t       ) Loc.t
+  | `I_For             of ( ('e, 's) For_int.t                        ) Loc.t
+  | `I_ForIn           of ( ('e, 's) For_collection.t                 ) Loc.t
+  | `I_ForOf           of ( ('e, 's) For_of.t                         ) Loc.t
+  | `I_Patch           of ( 'e Patch.t                                ) Loc.t
+  | `I_Remove          of ( 'e Removal.t                              ) Loc.t
+  | `I_Skip            of ( unit                                      ) Loc.t
+  | `I_While           of ( ('e, 's) While.t                          ) Loc.t
+  | `I_Block           of ( 's Simple_utils.List.Ne.t                 ) Loc.t
+  | `I_Expr            of ( 'e                                        ) Loc.t
+  | `I_Return          of ( 'e option                                 ) Loc.t
+  | `I_Switch          of ( ('e, 's) Switch.t                         ) Loc.t
+  | `I_break           of ( unit                                      ) Loc.t
+  ]
+[@@deriving map, sexp]
+
+
+type ('s, 'i, 'd) statement =
+  [ `S_Attr            of ( (Attribute.t * 's)                        ) Loc.t
+  | `S_Instr           of ( 'i                                        ) Loc.t
+  | `S_Decl            of ( 'd                                        ) Loc.t
+  ]
+[@@deriving map, sexp]
+
+type ('d, 'e, 'te, 'p, 'm) declaration =
+  [ `D_Directive       of ( Directive.t                               ) Loc.t  
+  | `D_Attr            of ( (Attribute.t * 'd)                        ) Loc.t  
+  | `D_Import          of ( Import.t                                  ) Loc.t  
+  | `D_Export          of ( 'd                                        ) Loc.t  
+  | `D_Let             of ( ('e, 'p nseq, 'te) Let_decl.t             ) Loc.t  
+  | `D_Var             of ( ('p, 'e, 'te) Simple_decl.t               ) Loc.t  
+  | `D_Multi_var       of ( ('p, 'e, 'te) Simple_decl.t nseq          ) Loc.t  
+  | `D_Const           of ( ('p, 'e, 'te) Simple_decl.t               ) Loc.t  
+  | `D_Multi_const     of ( ('p, 'e, 'te) Simple_decl.t nseq          ) Loc.t  
+  | `D_Fun             of ( ('te, 'e, ('p, 'te) Param.t) Fun_decl.t   ) Loc.t  
+  | `D_Type            of ( 'te Type_decl.t                           ) Loc.t  
+  | `D_Module          of ( 'm Mod_decl.t                             ) Loc.t  
+  ]
+[@@deriving map, sexp]
+
+type ('s, 'd) module_expression =
+  [ `M_Body_statements of ( 's nseq                                   ) Loc.t
+  | `M_Body            of ( 'd nseq                                   ) Loc.t
+  | `M_Path            of ( Ligo_prim.Module_var.t nseq               ) Loc.t
+  | `M_Var             of ( Ligo_prim.Module_var.t                    ) Loc.t
+  ]
+[@@deriving map, sexp]
+
+type ('e, 'te, 'p, 's, 'm) expression =
+  [ `E_Attr            of ( (Attribute.t * 'e)                        ) Loc.t  
+  | `E_Literal         of ( Literal_value.t                           ) Loc.t  
+  (* | `E_Binary_op       of ( 'e Operators.binary_op                    ) Loc.t *)
+  (* | `E_Unary_op        of ( 'e Operators.unary_op                     ) Loc.t *)
+  | `E_variable        of ( Variable.t                                ) Loc.t  
+  | `E_RevApp          of ( 'e Rev_app.t                              ) Loc.t  
+  | `E_Tuple           of ( 'e nseq                                   ) Loc.t  
+  | `E_Record_pun      of ( (Variable.t, 'e) Field.t list             ) Loc.t  
+  | `E_Array           of ( 'e Array_repr.t                           ) Loc.t  
+  | `E_Object          of ( 'e Object_.t                              ) Loc.t  
+  | `E_List            of ( 'e list                                   ) Loc.t  
+  | `E_Proj            of ( 'e Projection.t                           ) Loc.t  
+  | `E_ModA            of ( (string, 'e) Mod_access.t                 ) Loc.t  
+  | `E_ModPath         of ( (string nseq, 'e) Mod_access.t            ) Loc.t
+  | `E_Update          of ( 'e Update.t                               ) Loc.t
+  | `E_Poly_fun        of ( ('e, 'te, 'p) Poly_fun.t                  ) Loc.t  
+  | `E_Block_fun       of ( ('e, 'te, 's) Block_fun.t                 ) Loc.t
+  | `E_Constr          of ( 'e option Constructor_with_sexp.t         ) Loc.t  
+  | `E_App             of ( ('e * 'e nseq option)                     ) Loc.t  
+  | `E_Call            of ( 'e * 'e nseq                              ) Loc.t  
+  | `E_Case            of ( ('e, 'p, 'e) Case.t                       ) Loc.t  
+  | `E_Annot           of ( ('e * 'te)                                ) Loc.t  
+  | `E_Cond            of ( ('e, 'e) Cond.t                           ) Loc.t  
+  | `E_Set             of ( 'e list                                   ) Loc.t  
+  | `E_MapLookup       of ( 'e Map_lookup.t                           ) Loc.t
+  | `E_Map             of ( ('e * 'e) list                            ) Loc.t
+  | `E_BigMap          of ( ('e * 'e) list                            ) Loc.t
+  | `E_Let_in          of ( ('p, 'e, 'te) Let_binding.t               ) Loc.t  
+  | `E_TypeIn          of ( ('e, 'te) Type_in.t                       ) Loc.t  
+  | `E_ModIn           of ( ('e, 'm) Mod_in.t                         ) Loc.t  
+  | `E_RawCode         of ( 'e Raw_code_with_sexp.t                   ) Loc.t
+  | `E_Sequence        of ( ('e * 'e)                                 ) Loc.t
+  | `E_Block_with      of ( ('e, 's) Block_with.t                     ) Loc.t
+  | `E_AssignJsligo    of ( 'e Assign_jsligo.t                        ) Loc.t  
+  ]
+[@@deriving map, sexp]
+
+type ('prog_entry, 'd, 'i) program_entry =
+  [ `P_Attr                   of ( Attribute.t * 'prog_entry          ) Loc.t
+  | `P_Declaration            of ( 'd                                 ) Loc.t
+  | `P_Top_level_instruction  of ( 'i                                 ) Loc.t
+  | `P_Directive              of ( Directive.t                        ) Loc.t
+  ]
+[@@deriving map, sexp]
+
+type ('prog_entry, 'd, 'i) program = ('prog_entry, 'd, 'i) program_entry list
+
 (* ========================================================================= *)
 (* ======== Fixpoints and fold ============================================= *)
 (* ========================================================================= *)
 
-type fix_type_expr = fix_type_expr type_expr
-and fix_pattern = (fix_type_expr, fix_pattern) pattern [@@deriving sexp]
+(* The use of shortcut name (e.g. 'fix_p') here is just to break long lines,
+   the short names are aliased to their full name right after below *)
+type fix_te = fix_te                                   type_expr
+and  fix_p  = (fix_te, fix_p)                          pattern 
+and  fix_i  = (fix_i, fix_e, fix_p, fix_s)             instruction
+and  fix_s  = (fix_s, fix_i, fix_d)                    statement
+and  fix_d  = (fix_d, fix_e, fix_te, fix_p, fix_m)     declaration
+and  fix_m  = (fix_s, fix_d)                           module_expression
+and  fix_e  = (fix_e, fix_te, fix_p, fix_s, fix_m)     expression
+and  fix_prog_entry = (fix_prog_entry, fix_d, fix_i) program_entry
+[@@deriving sexp]
+
+type fix_type_expr         = fix_te [@@deriving sexp]
+type fix_pattern           = fix_p  [@@deriving sexp]
+type fix_instruction       = fix_i  [@@deriving sexp]
+type fix_statement         = fix_s  [@@deriving sexp]
+type fix_declaration       = fix_d  [@@deriving sexp]
+type fix_module_expression = fix_m  [@@deriving sexp]
+type fix_expression        = fix_e  [@@deriving sexp]
+type fix_program_entry     = fix_prog_entry [@@deriving sexp]
+
+
 
 let rec fold_type_expr (f : 't type_expr -> 't) (t : fix_type_expr) : 't =
   f (map_type_expr (fold_type_expr f) t)

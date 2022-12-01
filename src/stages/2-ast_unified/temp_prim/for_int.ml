@@ -5,4 +5,4 @@ type ('expr, 'statement) t =
   ; step : 'expr option (* [1] if [None] *)
   ; block : 'statement Simple_utils.List.Ne.t
   }
-[@@deriving yojson, map]
+[@@deriving yojson, map, sexp]

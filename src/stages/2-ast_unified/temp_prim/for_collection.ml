@@ -16,4 +16,4 @@ and ('expr, 'statement) for_set_or_list =
   ; collection : 'expr
   ; block : 'statement Simple_utils.List.Ne.t
   }
-[@@deriving yojson, map]
+[@@deriving yojson, map, sexp]

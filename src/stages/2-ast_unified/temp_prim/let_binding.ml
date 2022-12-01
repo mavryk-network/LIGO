@@ -6,4 +6,4 @@ type ('pattern, 'expr, 'ty_expr) t =
   ; rhs : 'expr
   ; body : 'expr
   }
-[@@deriving yojson, map]
+[@@deriving yojson, map, sexp]

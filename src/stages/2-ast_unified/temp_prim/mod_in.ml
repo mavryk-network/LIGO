@@ -3,4 +3,4 @@ type ('expr, 'mod_expr) t =
   ; rhs : 'mod_expr
   ; body : 'expr
   }
-[@@deriving yojson, map]
+[@@deriving yojson, map, sexp]
