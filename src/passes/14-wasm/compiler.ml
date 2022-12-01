@@ -1337,6 +1337,27 @@ let rec toplevel_bindings ~raise
   let add_local = Env.add_local in
   let add_locals = Env.add_locals in
   match e.content with
+  | E_let_in
+      ({ content = E_constant { cons_name = C_TRUE; _ }; _ }, _inline, ((name, type_), e2))
+    ->
+    let name = var_to_string name in
+    let open Int32 in
+    let data = A.[ data ~offset:!global_offset ~init:{ name; detail = [ Int32 1l ] } ] in
+    let symbols = A.[ symbol_data ~name ~index:0l ~size:4l ~offset:!global_offset ] in
+    global_offset := !global_offset + 4l;
+    let w = { w with datas = w.datas @ data; symbols = w.symbols @ symbols } in
+    toplevel_bindings ~raise e2 entrypoint w
+  | E_let_in
+      ( { content = E_constant { cons_name = C_FALSE; _ }; _ }
+      , _inline
+      , ((name, type_), e2) ) ->
+    let name = var_to_string name in
+    let open Int32 in
+    let data = A.[ data ~offset:!global_offset ~init:{ name; detail = [ Int32 0l ] } ] in
+    let symbols = A.[ symbol_data ~name ~index:0l ~size:4l ~offset:!global_offset ] in
+    global_offset := !global_offset + 4l;
+    let w = { w with datas = w.datas @ data; symbols = w.symbols @ symbols } in
+    toplevel_bindings ~raise e2 entrypoint w
   | E_let_in ({ content = E_closure c; _ }, _inline, ((name, type_), e2)) ->
     let name = var_to_string name in
     let arguments, body = func c in

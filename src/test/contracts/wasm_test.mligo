@@ -14,6 +14,8 @@ let other_c a b =
 let other_c2 (a, b) = 
   a + b
 
+// let true = falsetrue
+
 let main ((_, _s):(parameter * storage)) =
   let _ = if (1, 2, "pleh") = (1, 2, "pleh") then 
     log ("hi dog\n")
@@ -192,12 +194,12 @@ let main ((_, _s):(parameter * storage)) =
   | None   -> log "niks2"
   in
   
-  // let mx4 = Map.map (fun (_,f) -> f + 1) mx3 in
-  let _ = Map.iter (fun (a, b) -> log ("Changed map check2:" ^ string_of_int a ^ " = " ^ string_of_int b ^  "\n")) mx3 in
+  let mx4 = Map.map (fun (_,f) -> f + 1) mx3 in
+  let _ = Map.iter (fun (a, b) -> log ("Changed map check2:" ^ string_of_int a ^ " = " ^ string_of_int b ^  "\n")) mx4 in
 
   let sumx ((acc, (_, i)) : (int * (int * int))) : int = acc + i in
-  let a31 : int = Map.fold sumx mx3 0 in
-
+  let a31 : int = Map.fold sumx mx4 0 in
+let a31 = 0 in
   let a = 
     4 + 5 +  (* 9 *)
     40 / 5 + (* 9 + 8 = 17 *)

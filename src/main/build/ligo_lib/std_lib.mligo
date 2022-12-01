@@ -203,7 +203,7 @@
     i32.const 4
     i32.add
     local.set "str_info"
-    
+
     local.get "str_info"
     local.set "str_size"
     local.get "str_info"
@@ -631,6 +631,7 @@ let abs (i : int) : nat = [%Michelson ({| { ABS } |} : int -> nat)] i
 let is_nat (i : int) : nat option = [%Michelson ({| { ISNAT } |} : int -> nat option)] i
 let true : bool = [%external ("TRUE")]
 let false : bool = [%external ("FALSE")]
+
 let unit : unit = [%external ("UNIT")]
 #if MICHELSON
   let int (type a) (v : a) : a external_int = [%Michelson ({| { INT } |} : a -> a external_int)] v

@@ -35,11 +35,7 @@ let error_ppformat
     | `Wasm_pass_invalid_utf8 l ->
       Format.fprintf f "@[<v>%a@.Invalid utf8. @]" Snippet.pp l
     | `Wasm_pass_not_supported e ->
-      Format.fprintf
-        f
-        "@[<v>%a@.Not supported/implemented at the moment. @]"
-        Mini_c.PP.expression
-        e)
+      Format.fprintf f "@[<v>Not supported:%a@. at the moment. @]" Mini_c.PP.expression e)
 
 
 let error_json : wasm_error -> Simple_utils.Error.t =
