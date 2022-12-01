@@ -805,7 +805,7 @@ and make_ast_func ~raise ?name env mut_flag arg body orig =
   typed_exp'
 
 
-and make_ast_record ~raise ~loc (map_ty : Ast_aggregated.t_sum) map =
+and make_ast_record ~raise ~loc (map_ty : Ast_aggregated.rows) map =
   let open Ligo_interpreter.Types in
   let kv_list =
     Ast_aggregated.Helpers.kv_list_of_t_record_or_tuple
@@ -1299,7 +1299,6 @@ let rec compile_value ~raise ~options ~loc
           k, v)
         map
     in
-    let map = List.sort ~compare:(fun (k1, _) (k2, _) -> Caml.compare k1 k2) map in
     let map =
       List.map
         ~f:(fun (k, v) -> Tezos_micheline.Micheline.Prim ((), "Elt", [ k; v ], []))
@@ -1326,7 +1325,6 @@ let rec compile_value ~raise ~options ~loc
           k, v)
         map
     in
-    let map = List.sort ~compare:(fun (k1, _) (k2, _) -> Caml.compare k1 k2) map in
     let map =
       List.map
         ~f:(fun (k, v) -> Tezos_micheline.Micheline.Prim ((), "Elt", [ k; v ], []))
