@@ -227,7 +227,7 @@ let main ((_, _s):(parameter * storage)) =
     a28 +   (* 754 + 6 = 760 *)
     a23 +     (* 484 + 2 = 762 *)
     a24 +     (*     + 7 = 769 *)
-    a31 +     (*     + 11 = 778 *)
+    a31 +     (*     + 11 = 780 *)
     0
   in 
   let () =  log ("Result:" ^ string_of_int a ^ "\n") in
