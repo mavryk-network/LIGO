@@ -2225,8 +2225,123 @@
         end
     )
     
-(func $__ligo_internal__map_map (param $list i32) (param $fn i32) (param $C_LIST_EMPTY i32) (result i32)
-    unreachable
+(func $__ligo_internal__map_map (param $set i32) (param $fn i32) (param $C_SET_EMPTY i32) (result i32)
+    (local $left_child i32)
+        (local $right_child i32)
+        (local $tuple i32)
+        (local $new_value i32)
+        (local $item i32)
+        local.get $set 
+        local.get $C_SET_EMPTY
+        i32.eq
+        if (result i32)
+            local.get $C_SET_EMPTY
+        else 
+            local.get $set 
+            i32.const 8
+            i32.add
+            i32.load
+            local.tee $left_child
+            if (result i32)
+                local.get $left_child
+                local.get $fn
+                local.get $C_SET_EMPTY
+                call $__ligo_internal__map_map
+            else
+                i32.const 0
+            end
+            local.set $left_child
+
+            ;; TODO: move key and value next to each other to avoid doing this
+            i32.const 12
+            call $malloc
+            local.set $tuple
+
+            local.get $tuple
+            global.get $__pair__tag
+            i32.store8
+
+            local.get $tuple
+            i32.const 4
+            i32.add
+            local.get $set 
+            i32.load
+            i32.store
+
+            local.get $tuple
+            i32.const 8
+            i32.add
+            local.get $set            
+            i32.const 20
+            i32.add
+            i32.load            
+            
+            i32.store
+            
+            local.get $tuple
+            local.get $fn
+            call_indirect 0 (type 0) 
+            local.set $new_value
+
+            local.get $set 
+            i32.const 12
+            i32.add
+            i32.load
+            local.tee $right_child
+            if (result i32)
+                local.get $right_child
+                local.get $fn
+                local.get $C_SET_EMPTY
+                call $__ligo_internal__map_map
+            else
+                i32.const 0
+            end
+            local.set $right_child
+
+            i32.const 24
+            call $malloc
+            local.tee $item             
+            local.get $set 
+            i32.load
+            i32.store
+
+            local.get $item 
+            i32.const 4 
+            i32.add 
+            i32.const 0 
+            i32.store
+
+            local.get $item 
+            i32.const 8
+            i32.add
+            local.get $left_child 
+            i32.store
+
+
+            local.get $item 
+            i32.const 12
+            i32.add
+            local.get $right_child 
+            i32.store
+            
+            local.get $item 
+            i32.const 16
+            i32.add
+            local.get $set 
+            i32.const 16
+            i32.add
+            i32.load
+            i32.store
+
+            local.get $item 
+            i32.const 20 
+            i32.add 
+            local.get $new_value
+            i32.store
+
+            local.get $item
+            
+        end
 )
 
 

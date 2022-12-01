@@ -199,7 +199,7 @@ let main ((_, _s):(parameter * storage)) =
 
   let sumx ((acc, (_, i)) : (int * (int * int))) : int = acc + i in
   let a31 : int = Map.fold sumx mx4 0 in
-let a31 = 0 in
+// let a31 = 0 in
   let a = 
     4 + 5 +  (* 9 *)
     40 / 5 + (* 9 + 8 = 17 *)
@@ -227,7 +227,7 @@ let a31 = 0 in
     a28 +   (* 754 + 6 = 760 *)
     a23 +     (* 484 + 2 = 762 *)
     a24 +     (*     + 7 = 769 *)
-    a31 +     (*     + 9 = 778 *)
+    a31 +     (*     + 11 = 778 *)
     0
   in 
   let () =  log ("Result:" ^ string_of_int a ^ "\n") in
