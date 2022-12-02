@@ -79,14 +79,14 @@
         end
       end
 
-      i32.const 8
+      i32.const 5
       call "malloc"
       local.tee "r"
       i32.const 2 ;; int tag
       i32.store8
       
       local.get "r"
-      i32.const 4
+      i32.const 1
       i32.add
       local.get "result"
       i32.const 1 

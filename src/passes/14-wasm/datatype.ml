@@ -16,9 +16,18 @@ let uni_op : (S.region -> A.instr list) -> Env.t -> A.instr list -> Env.t * A.in
   let store = store at in
   let local_tee_s = local_tee_s at in
   let local_get_s = local_get_s at in
+  let i32_add = i32_add at in
   let name = unique_name "uni_op" in
   ( Env.add_local env (name, T.NumType I32Type)
-  , [ const 4l; call_s "malloc"; local_tee_s name ]
+  , [ const 5l
+    ; call_s "malloc"
+    ; local_tee_s name
+    ; const 2l
+    ; store
+    ; local_get_s name
+    ; const 1l
+    ; i32_add
+    ]
     @ a
     @ [ load ]
     @ op at
@@ -44,7 +53,7 @@ let bin_op
   , [ const 5l
     ; call_s "malloc"
     ; local_tee_s name
-    ; const 2l
+    ; const 2l (* int tag *)
     ; store8
     ; local_get_s name
     ; const 1l

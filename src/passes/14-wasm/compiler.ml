@@ -257,10 +257,10 @@ let rec expression ~raise
     w, env, [ data_symbol name ]
   in
   let string_like name header s =
-    (* need the size of the string as well*)
     let name = unique_name name in
     let s_len = Int32.of_int_exn (String.length s) in
     let a_len = String.length s + 5 in
+    (* tag + size *)
     let a_len = Int32.of_int_exn a_len in
     let data =
       [ data
@@ -641,18 +641,18 @@ let rec expression ~raise
     let env = Env.add_local env (some, T.NumType I32Type) in
     ( w
     , env
-    , [ const 12l
+    , [ const 9l
       ; call_s "malloc"
       ; local_tee_s some
-      ; const 6l
+      ; const 6l (* option tag *)
       ; store8
       ; local_get_s some
-      ; const 4l
+      ; const 1l
       ; i32_add
       ; const 1l
       ; store
       ; local_get_s some
-      ; const 8l
+      ; const 5l
       ; i32_add
       ]
       @ arg
@@ -662,13 +662,13 @@ let rec expression ~raise
     let env = Env.add_local env (none, T.NumType I32Type) in
     ( w
     , env
-    , [ const 8l
+    , [ const 5l
       ; call_s "malloc"
       ; local_tee_s none
       ; const 6l
       ; store8
       ; local_get_s none
-      ; const 4l
+      ; const 1l
       ; i32_add
       ; const 0l
       ; store
@@ -1069,7 +1069,7 @@ let rec expression ~raise
     ( w
     , env
     , test
-      @ [ const 4l
+      @ [ const 1l
         ; i32_add
         ; local_set_s testing
         ; S.
@@ -1385,7 +1385,7 @@ let rec toplevel_bindings ~raise
   | E_let_in ({ content = E_literal (Literal_int z); _ }, _inline, ((name, _type), e2)) ->
     (* we convert these to in memory values *)
     let name = var_to_string name in
-    let data, symbols = convert_to_memory 0 name z in
+    let data, symbols = convert_to_memory 2 name z in
     toplevel_bindings
       ~raise
       e2
@@ -1432,13 +1432,14 @@ let rec toplevel_bindings ~raise
                         ; local_get_s "entrypoint_tuple"
                         ; call_s actual_name
                         ; local_tee_s "result"
-                        ; const 4l
+                        ; const 1l
                         ; i32_add
                         ; load
                         ; load
                         ; drop
-                        ; (* call_s "print"; *)
-                          local_get_s "result"
+                        ; local_get_s "result"
+                        ; drop
+                        ; const 0l
                         ]
                     }
               ; at

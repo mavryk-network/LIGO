@@ -14,8 +14,6 @@ let other_c a b =
 let other_c2 (a, b) = 
   a + b
 
-// let true = falsetrue
-
 let main ((_, _s):(parameter * storage)) =
   let _ = if (1, 2, "pleh") = (1, 2, "pleh") then 
     log ("hi dog\n")
@@ -29,8 +27,10 @@ let main ((_, _s):(parameter * storage)) =
   in
   let () = log ("wat: " ^ string_of_int 123456 ^ "\n") in
   let () = log ("foo " ^ "bar" ^ "!\n") in
+  let () = log (string_of_int (int (String.length "abcd")) ^ "\n") in
   let () = log ((String.sub 0n 200n "abcd") ^ "\n") in
   let () = log "oh hai" in
+  let () = log "oh hai2" in
   let b = [2; 3; 6] in
   let x = match b with
   | hd :: x :: y :: _  -> hd + x + y
@@ -103,13 +103,13 @@ let main ((_, _s):(parameter * storage)) =
   in
   let a18 = List.length [3; 4; 5; 6; 7] in
   let _ = log("List size:" ^ string_of_int (int(a18)) ^"\n") in
-(*
-           50
-      30 
-  20        40
-    25   35     45
+// (*
+//            50
+//       30 
+//   20        40
+//     25   35     45
       
-*)
+// *)
 
   let s1 = Set.literal [45; 35; 25; 20; 40; 30; 50] in
   let m1 = Map.literal [(3, 55); (5, 50)] in
@@ -178,10 +178,11 @@ let main ((_, _s):(parameter * storage)) =
   | None   -> log "niks"
   in
   let mx = Map.literal [(3, 1); (2, 4); (7, 8)] in
-  let mx2 = Map.update 2 (Some 99) mx in
+  let mx2 = Map.update 2 (Some 99) mx in  
+  let _ = Map.iter (fun (k, v) -> log (string_of_int k ^ " = " ^ string_of_int v ^ "\n")) mx2 in
   let _ = match (Map.find_opt 2 mx2) with 
-    Some s -> log ("resulty:" ^ string_of_int s ^ "\n")
-  | None   -> log "niks"
+    Some s -> log ("resulty: " ^ string_of_int s ^ "\n")
+  | None   -> log "resulty: niks \n"
   in
   let (old, mx3) = Map.get_and_update 2 None mx in 
   let _ = match old with 
