@@ -442,17 +442,7 @@ let rec expression ~raise
     let w, env, l2 = expression ~raise w env l2 in
     ( w
     , add_local env (cons, T.NumType I32Type)
-    , [ const 8l
-      ; call_s "malloc"
-      ; local_tee_s cons
-        (* const 5l; tuple *)
-        (* store8; *)
-
-        (* check if not 0 *)
-        (* local_get_s cons; *)
-        (* const 4l;
-        i32_add; *)
-      ]
+    , [ const 8l; call_s "malloc"; local_tee_s cons ]
       @ l1
       @ [ store; local_get_s cons; const 4l; i32_add ]
       @ l2
@@ -464,18 +454,18 @@ let rec expression ~raise
     let pair = unique_name "c_pair" in
     let env = add_locals env [ pair, T.NumType I32Type ] in
     let e =
-      [ const 12l
+      [ const 9l
       ; call_s "malloc"
       ; local_set_s pair
       ; local_get_s pair
       ; const 5l
       ; store8
       ; local_get_s pair
-      ; const 4l
+      ; const 1l
       ; i32_add
       ]
       @ e1
-      @ [ store; local_get_s pair; const 8l; i32_add ]
+      @ [ store; local_get_s pair; const 5l; i32_add ]
       @ e2
       @ [ store; local_get_s pair ]
     in
@@ -1250,7 +1240,7 @@ let rec expression ~raise
           ( add_local env (name, T.NumType I32Type)
           , all
             @ [ local_get_s tuple_name
-              ; const Int32.(4l * Int32.of_int_exn Int.(i + 1))
+              ; const Int32.(1l (* tag *) + (4l * Int32.of_int_exn Int.(i)))
               ; i32_add
               ; load
               ; local_set_s name
