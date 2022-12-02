@@ -244,12 +244,8 @@ and decompile_declaration : O.declaration -> I.declaration =
     let module_ = decompile_module_expr module_ in
     let module_attr = decompile_module_attributes module_attr in
     return @@ D_module { module_binder; module_; module_attr }
-  | D_open { module_ } ->
-    let module_ = decompile_module_expr module_ in
-    return @@ D_open { module_ }
-  | D_include { module_ } ->
-    let module_ = decompile_module_expr module_ in
-    return @@ D_include { module_ }
+  | D_open path -> return @@ D_open path
+  | D_include path -> return @@ D_include path
 
 
 and decompile_module_expr : O.module_expr -> I.module_expr =

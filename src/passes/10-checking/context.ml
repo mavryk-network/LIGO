@@ -257,9 +257,7 @@ let rec items_of_signature_item ?(nested = false) (sig_item : Signature.item) : 
   | S_module (mvar, sig_) -> [ C_module (mvar, sig_) ]
   | S_open sig_ ->
     (* Do not recursively add items from an open if we're already inside an open / include *)
-    if nested
-    then []
-    else List.concat_map (List.rev sig_) ~f:(items_of_signature_item ~nested:true)
+    if nested then [] else List.concat_map sig_ ~f:(items_of_signature_item ~nested:true)
 
 
 let rec add_signature_item t (sig_item : Signature.item) =

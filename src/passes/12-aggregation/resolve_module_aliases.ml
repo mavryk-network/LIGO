@@ -149,7 +149,7 @@ let rec expression path : Aliases.t -> AST.expression -> AST.expression =
     | Some rhs -> return @@ E_mod_in { module_binder; rhs; let_result })
   | E_module_accessor { module_path; element } ->
     let _, module_path =
-      List.fold ~init:(aliases, path) module_path ~f:(fun (a, _module_path) mvar ->
+      List.fold ~init:(aliases, path) module_path ~f:(fun (a, _path) mvar ->
           let aliases, path' = Aliases.get a mvar in
           let path = Aliases.diff_path path' path in
           aliases, path)
@@ -213,26 +213,24 @@ and compile_declaration path aliases (d : AST.declaration)
     | None -> return_n aliases
     | Some module_ ->
       return_s aliases @@ AST.D_module { module_binder; module_; module_attr })
-  | D_open { module_ } ->
-    let _mod_aliases, path, module_' = compile_module_expr path aliases module_ in
-    (match module_' with
-    | Some module_ -> return_s aliases @@ AST.D_open { module_ }
-    | None ->
-      return_s aliases
-      @@ AST.D_open
-           { module_ =
-               { module_ with wrap_content = M_module_path (List.Ne.of_list path) }
-           })
-  | D_include { module_ } ->
-    let _mod_aliases, path, module_' = compile_module_expr path aliases module_ in
-    (match module_' with
-    | Some module_ -> return_s aliases @@ AST.D_include { module_ }
-    | None ->
-      return_s aliases
-      @@ AST.D_include
-           { module_ =
-               { module_ with wrap_content = M_module_path (List.Ne.of_list path) }
-           })
+  | D_open (hd, tl) ->
+    let aliases', module_path =
+      List.fold ~init:(aliases, path) (hd :: tl) ~f:(fun (a, _module_path) mvar ->
+          let aliases, path' = Aliases.get a mvar in
+          aliases, path')
+    in
+    let aliases = Aliases.add aliases aliases' in
+    let module_path = Aliases.diff_path module_path path in
+    return_s aliases @@ AST.D_open (List.Ne.of_list @@ List.rev module_path)
+  | D_include (hd, tl) ->
+    let aliases', module_path =
+      List.fold ~init:(aliases, path) (hd :: tl) ~f:(fun (a, _module_path) mvar ->
+          let aliases, path' = Aliases.get a mvar in
+          aliases, path')
+    in
+    let aliases = Aliases.add aliases aliases' in
+    let module_path = Aliases.diff_path module_path path in
+    return_s aliases @@ AST.D_include (List.Ne.of_list @@ List.rev module_path)
 
 
 and compile_declaration_list path aliases (program : AST.program)

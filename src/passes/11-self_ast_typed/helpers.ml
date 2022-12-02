@@ -73,8 +73,8 @@ and fold_expression_in_module_expr : ('a -> expression -> 'a) -> 'a -> module_ex
         | D_value x -> self acc x.expr
         | D_irrefutable_match x -> self acc x.expr
         | D_module x -> fold_expression_in_module_expr self acc x.module_
-        | D_open x -> fold_expression_in_module_expr self acc x.module_
-        | D_include x -> fold_expression_in_module_expr self acc x.module_
+        | D_open _ -> acc
+        | D_include _ -> acc
         | D_type _ -> acc)
       ~init:acc
       decls
@@ -112,11 +112,11 @@ and fold_module : 'a folder -> 'a -> module_ -> 'a =
     | D_module { module_binder = _; module_; module_attr = _ } ->
       let res = fold_expression_in_module_expr f acc module_ in
       return @@ res
-    | D_open { module_ } ->
-      let res = fold_expression_in_module_expr f acc module_ in
+    | D_open _path ->
+      let res = acc in
       return @@ res
-    | D_include { module_ } ->
-      let res = fold_expression_in_module_expr f acc module_ in
+    | D_include _path ->
+      let res = acc in
       return @@ res
   in
   let res = List.fold ~f:aux ~init m in
@@ -248,12 +248,8 @@ and map_declaration m (x : declaration) =
   | D_module { module_binder; module_; module_attr } ->
     let module_ = map_expression_in_module_expr m module_ in
     return @@ D_module { module_binder; module_; module_attr }
-  | D_open { module_ } ->
-    let module_ = map_expression_in_module_expr m module_ in
-    return @@ D_open { module_ }
-  | D_include { module_ } ->
-    let module_ = map_expression_in_module_expr m module_ in
-    return @@ D_include { module_ }
+  | D_open path -> return @@ D_open path
+  | D_include path -> return @@ D_include path
 
 
 and map_decl m d = map_declaration m d
@@ -605,8 +601,7 @@ end = struct
       | D_module { module_binder = _; module_; module_attr = _ } ->
         get_fv_module_expr module_
       | D_type _t -> empty
-      | D_open { module_ } -> get_fv_module_expr module_
-      | D_include { module_ } -> get_fv_module_expr module_
+      | D_open _ | D_include _ -> empty
     in
     unions @@ List.map ~f:aux m
 

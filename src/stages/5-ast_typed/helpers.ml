@@ -370,14 +370,12 @@ and fold_map_declaration m acc (x : declaration) =
     let acc', module_ = (fold_map_expression_in_module_expr m) acc module_ in
     let wrap_content = D_module { module_binder; module_; module_attr } in
     acc', { x with wrap_content }
-  | D_open { module_ } ->
-    let acc', module_ = (fold_map_expression_in_module_expr m) acc module_ in
-    let wrap_content = D_open { module_ } in
-    acc', { x with wrap_content }
-  | D_include { module_ } ->
-    let acc', module_ = (fold_map_expression_in_module_expr m) acc module_ in
-    let wrap_content = D_include { module_ } in
-    acc', { x with wrap_content }
+  | D_open path ->
+    let wrap_content = D_open path in
+    acc, { x with wrap_content }
+  | D_include path ->
+    let wrap_content = D_include path in
+    acc, { x with wrap_content }
 
 
 and fold_map_decl m = fold_map_declaration m

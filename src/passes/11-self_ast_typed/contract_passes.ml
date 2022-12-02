@@ -240,6 +240,17 @@ and get_fv_module (env : env) acc = function
   | hd :: tl -> get_fv_module env (hd :: acc) tl
 
 
+and get_fv_module_path env path =
+  let rec push_env (name, name_lst) toto =
+    match name_lst with
+    | [] -> { empty_env with env = MVarMap.singleton name toto }
+    | hd :: tl ->
+      { empty_env with env = MVarMap.singleton name @@ push_env (hd, tl) toto }
+  in
+  let new_env = push_env path env in
+  new_env, path
+
+
 and get_fv_module_expr env x =
   match x.wrap_content with
   | M_struct prg ->
@@ -247,13 +258,7 @@ and get_fv_module_expr env x =
     let new_env, prg = get_fv_module env [] @@ List.rev prg in
     new_env, { x with wrap_content = M_struct prg }
   | M_module_path path ->
-    let rec push_env (name, name_lst) toto =
-      match name_lst with
-      | [] -> { empty_env with env = MVarMap.singleton name toto }
-      | hd :: tl ->
-        { empty_env with env = MVarMap.singleton name @@ push_env (hd, tl) toto }
-    in
-    let new_env = push_env path env in
+    let new_env, path = get_fv_module_path env path in
     new_env, { x with wrap_content = M_module_path path }
   | M_variable v ->
     let new_env = { empty_env with env = MVarMap.singleton v env } in
@@ -309,14 +314,14 @@ and get_fv_program (env : env) acc : program -> _ * program = function
         :: acc)
         tl
     | None -> get_fv_program env acc tl)
-  | ({ Location.wrap_content = D_open { module_ }; _ } as hd) :: tl ->
-    let new_env, module_ = get_fv_module_expr env module_ in
+  | ({ Location.wrap_content = D_open path; _ } as hd) :: tl ->
+    let new_env, path = get_fv_module_path env path in
     let env = merge_env env new_env in
-    get_fv_program env ({ hd with wrap_content = D_open { module_ } } :: acc) tl
-  | ({ Location.wrap_content = D_include { module_ }; _ } as hd) :: tl ->
-    let new_env, module_ = get_fv_module_expr env module_ in
+    get_fv_program env ({ hd with wrap_content = D_open path } :: acc) tl
+  | ({ Location.wrap_content = D_include path; _ } as hd) :: tl ->
+    let new_env, path = get_fv_module_path env path in
     let env = merge_env env new_env in
-    get_fv_program env ({ hd with wrap_content = D_include { module_ } } :: acc) tl
+    get_fv_program env ({ hd with wrap_content = D_include path } :: acc) tl
   | hd :: tl -> get_fv_program env (hd :: acc) tl
 
 
@@ -382,7 +387,12 @@ let remove_unused_for_views : program -> program =
             }
           in
           Some (lhs_env, rhs_env)
-        | D_value _ | D_irrefutable_match _ | D_type _ | D_module _ | D_open _ | D_include _ -> None)
+        | D_value _
+        | D_irrefutable_match _
+        | D_type _
+        | D_module _
+        | D_open _
+        | D_include _ -> None)
   in
   (* lhs_envs = variables bound by declaration ; rhs_envs = free variables in declaration rhs *)
   let lhs_envs, rhs_envs = List.unzip envs in

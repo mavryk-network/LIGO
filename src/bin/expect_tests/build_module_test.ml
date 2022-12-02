@@ -203,3 +203,18 @@ let%expect_test _ =
      24 | let x = B.A.a
 
      Module "B.A" not found. |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile"; "contract"; contract "wat2.mligo" ];
+  [%expect
+    {|
+    { parameter unit ;
+      storage int ;
+      code { DROP ;
+             PUSH int 1 ;
+             PUSH int 2 ;
+             DUP 2 ;
+             ADD ;
+             ADD ;
+             NIL operation ;
+             PAIR } } |}]

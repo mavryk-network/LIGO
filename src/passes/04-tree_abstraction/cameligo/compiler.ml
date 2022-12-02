@@ -942,17 +942,11 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration option =
     in
     return region @@ D_module { module_binder; module_; module_attr = [] }
   | ModuleOpen { value = { binders; _ }; region } ->
-    let module_ =
-      let path = List.Ne.map compile_mod_var @@ npseq_to_ne_list binders in
-      m_path ~loc:(Location.lift region) path
-    in
-    return region @@ D_open { module_ }
+    let path = List.Ne.map compile_mod_var @@ npseq_to_ne_list binders in
+    return region @@ D_open path
   | ModuleInclude { value = { binders; _ }; region } ->
-    let module_ =
-      let path = List.Ne.map compile_mod_var @@ npseq_to_ne_list binders in
-      m_path ~loc:(Location.lift region) path
-    in
-    return region @@ D_include { module_ }
+    let path = List.Ne.map compile_mod_var @@ npseq_to_ne_list binders in
+    return region @@ D_include path
   | Let { value = _kwd_let, kwd_rec, let_binding, attributes; region } ->
     let attr = compile_attributes attributes in
     let ({ type_params; binders; rhs_type; eq = _; let_rhs } : CST.let_binding) =

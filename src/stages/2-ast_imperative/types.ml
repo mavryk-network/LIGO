@@ -113,8 +113,8 @@ and declaration_content =
   | D_irrefutable_match of (expr, ty_expr option) Pattern_decl.t
   | D_type of ty_expr Type_decl.t
   | D_module of module_expr Module_decl.t
-  | D_open of module_expr Open_module.t
-  | D_include of module_expr Open_module.t
+  | D_open of Module_path.t
+  | D_include of Module_path.t
 
 and declaration = declaration_content Location.wrap
 and decl = declaration [@@deriving eq, compare, yojson, hash]

@@ -134,8 +134,8 @@ and declaration ppf (d : declaration) =
     Types.Pattern_decl.pp expression type_expression_option ppf pd
   | D_type td -> Types.Type_decl.pp type_expression ppf td
   | D_module md -> Types.Module_decl.pp module_expr ppf md
-  | D_open o -> Open_module.pp module_expr ppf o
-  | D_include o -> Open_module.pp module_expr ppf o
+  | D_open o -> Format.fprintf ppf "@[<2>open %a@.@]" Module_path.pp o
+  | D_include o -> Format.fprintf ppf "@[<2>include %a@.@]" Module_path.pp o
 
 
 and decl ppf d = declaration ppf d

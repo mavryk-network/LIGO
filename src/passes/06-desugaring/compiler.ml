@@ -417,12 +417,8 @@ and compile_declaration ~raise : I.declaration -> O.declaration =
     let module_ = compile_module_expr ~raise module_ in
     let module_attr = compile_module_attributes module_attr in
     return @@ D_module { module_binder; module_; module_attr }
-  | D_open { module_ } ->
-    let module_ = compile_module_expr ~raise module_ in
-    return @@ D_open { module_ }
-  | D_include { module_ } ->
-    let module_ = compile_module_expr ~raise module_ in
-    return @@ D_include { module_ }
+  | D_open path -> return @@ D_open path
+  | D_include path -> return @@ D_include path
 
 
 and compile_module_expr ~raise : I.module_expr -> O.module_expr =

@@ -233,12 +233,6 @@ and untype_declaration_module : _ O.Module_decl.t -> _ I.Module_decl.t =
   { module_binder; module_; module_attr }
 
 
-and untype_declaration_open : _ Open_module.t -> _ Open_module.t =
- fun { module_ } ->
-  let module_ = untype_module_expr module_ in
-  { module_ }
-
-
 and untype_declaration =
   let return (d : I.declaration_content) = d in
   fun (d : O.declaration_content) ->
@@ -255,12 +249,8 @@ and untype_declaration =
     | D_module dm ->
       let dm = untype_declaration_module dm in
       return @@ D_module dm
-    | D_open do_ ->
-      let do_ = untype_declaration_open do_ in
-      return @@ D_open do_
-    | D_include do_ ->
-      let do_ = untype_declaration_open do_ in
-      return @@ D_include do_
+    | D_open do_ -> return @@ D_open do_
+    | D_include do_ -> return @@ D_include do_
 
 
 and untype_decl : O.decl -> I.decl = fun d -> Location.map untype_declaration d

@@ -54,6 +54,7 @@ module List_expr = List_expr
 (* Module language *)
 module Module_var = Var.Module_var
 module Module_access = Module_access
+module Module_path = Module_path
 module Module_expr = Module_expr
 module Mod_in = Mod_in
 module Open_module = Open_module

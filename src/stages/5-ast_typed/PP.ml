@@ -223,8 +223,8 @@ and declaration ?(use_hidden = true) ppf (d : declaration) =
     if md.module_attr.hidden && use_hidden
     then ()
     else Types.Module_decl.pp module_expr ppf md
-  | D_open o -> Open_module.pp module_expr ppf o
-  | D_include o -> Open_module.pp module_expr ppf o
+  | D_open o -> Format.fprintf ppf "@[<2>open %a@.@]" Module_path.pp o
+  | D_include o -> Format.fprintf ppf "@[<2>include %a@.@]" Module_path.pp o
 
 
 and decl ppf d = declaration ppf d

@@ -178,5 +178,11 @@ and type_inst ppf { forall; type_ } =
 
 and option_inline ppf inline = if inline then fprintf ppf "[@inline]" else fprintf ppf ""
 
+and declaration ppf (d : declaration) =
+  match Location.unwrap d with
+  | D_value vd -> Types.Value_decl.pp expression type_expression ppf vd
+  | D_irrefutable_match pd -> Types.Pattern_decl.pp expression type_expression ppf pd
+
+
 let program ppf : program -> unit =
  fun (prg, exp) -> fprintf ppf "%a" expression Combinators.(context_apply prg exp)

@@ -574,7 +574,7 @@ let open_module ~raise () : unit =
       program
       "main"
       (e_pair (e_unit ()) (e_int 0))
-      (e_pair (e_list []) (e_int 1))
+      (e_pair (e_list []) (e_int 2))
   in
   ()
 

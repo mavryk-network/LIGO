@@ -6,7 +6,7 @@ end
 
 module A2 = struct
   module B = struct
-    let foo = 1
+    let foo = 2
   end
 end
 

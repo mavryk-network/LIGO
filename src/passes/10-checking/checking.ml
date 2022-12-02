@@ -1347,20 +1347,16 @@ and infer_declaration (decl : I.declaration)
         let%bind module_ = module_ in
         return @@ O.D_module { module_binder; module_; module_attr = { public; hidden } })
       [ S_module (module_binder, sig_) ]
-  | D_open { module_ } ->
-    let%bind sig_, module_ = infer_module_expr module_ in
-    const
-      E.(
-        let%bind module_ = module_ in
-        return @@ O.D_open { module_ })
-      [ S_open sig_ ]
-  | D_include { module_ } ->
-    let%bind sig_, module_ = infer_module_expr module_ in
-    const
-      E.(
-        let%bind module_ = module_ in
-        return @@ O.D_include { module_ })
-      sig_
+  | D_open path ->
+    let%bind sig_ =
+      Context.get_signature_exn path ~error:(unbound_module (List.Ne.to_list path))
+    in
+    const E.(return @@ O.D_open path) [ S_open sig_ ]
+  | D_include path ->
+    let%bind sig_ =
+      Context.get_signature_exn path ~error:(unbound_module (List.Ne.to_list path))
+    in
+    const E.(return @@ O.D_include path) sig_
 
 
 and infer_module (module_ : I.module_) : (Signature.t * O.module_ E.t, _, _) C.t =

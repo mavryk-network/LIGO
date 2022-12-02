@@ -76,12 +76,7 @@ let rec signature_of_module_expr
   | M_module_path path ->
     (match Context.get_signature ctx path with
     | Some sig_ -> sig_
-    | None ->
-      Format.kasprintf
-        failwith
-        "Unbounded signature path: %a"
-        Module_expr.pp_module_path
-        path)
+    | None -> Format.kasprintf failwith "Unbounded signature path: %a" Module_path.pp path)
 
 
 and signature_of_module : ctx:Context.t -> Ast_typed.module_ -> Context.Signature.t =
@@ -113,12 +108,22 @@ and signature_item_of_decl : ctx:Context.t -> Ast_typed.decl -> bool * Context.S
           Context.Signature.S_value (Binder.get_var b, encode @@ Binder.get_ascr b))
     in
     public, sigs
-  | D_open { module_ } ->
-    let sig_' = signature_of_module_expr ~ctx module_ in
+  | D_open path ->
+    let sig_' =
+      match Context.get_signature ctx path with
+      | Some sig_ -> sig_
+      | None ->
+        Format.kasprintf failwith "Unbounded signature path: %a" Module_path.pp path
+    in
     false, [ S_open sig_' ]
-  | D_include { module_ } ->
-    let sig_' = signature_of_module_expr ~ctx module_ in
-    true, sig_'
+  | D_include path ->
+    let sig_' =
+      match Context.get_signature ctx path with
+      | Some sig_ -> sig_
+      | None ->
+        Format.kasprintf failwith "Unbounded signature path: %a" Module_path.pp path
+    in
+    true, List.rev sig_'
 
 
 (* Load context from the outside declarations *)
@@ -138,17 +143,26 @@ let ctx_init ?env () =
         | D_module { module_binder; module_; module_attr = _ } ->
           let sig_ = signature_of_module_expr ~ctx module_ in
           Context.add_module ctx module_binder sig_
-        | D_open { module_ } ->
-          let sig_ = signature_of_module_expr ~ctx module_ in
+        | D_open path ->
+          let sig_ =
+            match Context.get_signature ctx path with
+            | Some sig_ -> sig_
+            | None ->
+              Format.kasprintf failwith "Unbounded signature path: %a" Module_path.pp path
+          in
           Context.add_open ctx sig_
-        | D_include { module_ } ->
-          let sig_ = signature_of_module_expr ~ctx module_ in
-          Context.add_include ctx sig_)
+        | D_include path ->
+          let sig_ =
+            match Context.get_signature ctx path with
+            | Some sig_ -> sig_
+            | None ->
+              Format.kasprintf failwith "Unbounded signature path: %a" Module_path.pp path
+          in
+          Context.add_open ctx sig_)
 
 
 let run_elab t ~raise ~options ?env () =
   let ctx = ctx_init ?env () in
-  (* Format.printf "@[Context:@.%a@]" Context.pp ctx; *)
   let ctx, pos = Context.mark ctx in
   let (ctx, subst), elab =
     t ~raise ~options ~loc:Location.generated (ctx, Substitution.empty)
@@ -349,7 +363,7 @@ module Context = struct
   let add (type a) items ~(on_exit : a exit) ~(in_ : (a, _, _) t) : (a, _, _) t =
    fun ~raise ~options ~loc (ctx, subst) ->
     let ctx, pos = Context.mark ctx in
-    let ctx = List.fold_right items ~init:ctx ~f:(fun item ctx -> Context.add ctx item) in
+    let ctx = List.fold_left items ~init:ctx ~f:(fun ctx item -> Context.add ctx item) in
     let (ctx, subst), result = in_ ~raise ~options ~loc (ctx, subst) in
     let ctx, subst', (result : a) =
       match on_exit, result with

@@ -189,12 +189,14 @@ and compile_declaration scope (d : AST.declaration) : Scope.t * AST.declaration 
     let mod_scope, module_ = compile_module_expr scope module_ in
     let scope, module_binder = Scope.new_module_var scope module_binder mod_scope in
     return scope @@ AST.D_module { module_binder; module_; module_attr }
-  | D_open { module_ } ->
-    let _mod_scope, module_ = compile_module_expr scope module_ in
-    return scope @@ AST.D_open { module_ }
-  | D_include { module_ } ->
-    let _mod_scope, module_ = compile_module_expr scope module_ in
-    return scope @@ AST.D_include { module_ }
+  | D_open (hd, tl) ->
+    let scope, hd = Scope.get_module_var scope hd in
+    let scope, tl = List.fold_map ~init:scope tl ~f:Scope.get_module_var in
+    return scope @@ AST.D_open (hd, tl)
+  | D_include (hd, tl) ->
+    let scope, hd = Scope.get_module_var scope hd in
+    let scope, tl = List.fold_map ~init:scope tl ~f:Scope.get_module_var in
+    return scope @@ AST.D_include (hd, tl)
 
 
 and compile_program scope (program : AST.program) : Scope.t * AST.program =
