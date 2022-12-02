@@ -441,7 +441,7 @@ let default_check_reduction : 'a -> bool = fun _ -> true
 let wrap_compile_t (core_compile : fix_type_expr -> fix_type_expr)
     : Passes.syntax -> fix_type_expr -> fix_type_expr
   =
-  let folders = {folders_default with ft = compile_t} in
+  let folders = {folders_default with ft = core_compile} in
  fun _syntax te -> fold_type_expr folders te
 
 
@@ -451,8 +451,8 @@ let wrap_compile_p
     : Passes.syntax -> fix_pattern -> fix_pattern
   =
   let folders = {folders_default with
-    ft = compile_t;
-    fp = compile_p }
+    ft = core_compile_t;
+    fp = core_compile_p }
   in
   fun _syntax p -> fold_pattern folders p
 
