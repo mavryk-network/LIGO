@@ -98,6 +98,12 @@ module Directive = struct
 
   let of_yojson : Yojson.Safe.t -> (t, string) Result.t =
    fun _ -> Error "JSON parsing of directive is not supported"
+
+  let sexp_of_t : t -> Sexp.t =
+    fun _t -> failwith "Directive to sexp conversion not supported"
+
+  let t_of_sexp : Sexp.t -> t =
+    fun _sexp -> failwith "Directive parsing from sexp is not supported"
 end
 [@@deriving sexp]
 
