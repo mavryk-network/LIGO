@@ -534,7 +534,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
   | ETypeIn ti ->
     let ti, loc = r_split ti in
     let ({ type_decl = { name; type_expr; _ }; kwd_in = _; body } : CST.type_in) = ti in
-    let type_binder = r_fst name in
+    let type_binder = TODO_do_in_parsing.tvar ~loc:(r_snd name) (r_fst name) in
     let rhs = compile_type_expression type_expr in
     let body = self body in
     e_typein { type_binder; rhs; body } ~loc
