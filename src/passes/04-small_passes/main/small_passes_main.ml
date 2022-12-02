@@ -1,5 +1,5 @@
 (* Name shortcuts *)
-module SP = Small_passes_lib.Small_passes
+module SP = Small_passes_lib.Passes
 module PE = Small_passes_lib.Pass_example
 module AST = Ast_unified
 

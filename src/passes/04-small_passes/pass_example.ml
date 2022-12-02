@@ -1,4 +1,5 @@
 module AST = Ast_unified
+module Directive = Ast_unified.Directive
 
 type 'a expr = AST.expr
 type fix_expr (*dummy ... after we have AST.types == polyvariants *)
@@ -432,22 +433,22 @@ let fold_program_entry     = fold_pe
 (* ======== Small passes and helpers ======================================= *)
 (* ========================================================================= *)
 
-let default_compile : Small_passes.syntax -> 'a -> 'a = fun _syntax a -> a
+let default_compile : Passes.syntax -> 'a -> 'a = fun _syntax a -> a
 let default_decompile = default_compile
 let default_check_reduction : 'a -> bool = fun _ -> true
 
 (* Helper used to factor out the common part of all passes' compile functions *)
-let wrap_compile_t (compile_t : fix_type_expr -> fix_type_expr)
-    : Small_passes.syntax -> fix_type_expr -> fix_type_expr
+let wrap_compile_t (core_compile : fix_type_expr -> fix_type_expr)
+    : Passes.syntax -> fix_type_expr -> fix_type_expr
   =
   let folders = {folders_default with ft = compile_t} in
  fun _syntax te -> fold_type_expr folders te
 
 
 let wrap_compile_p
-    (compile_t : fix_type_expr -> fix_type_expr)
-    (compile_p : fix_pattern -> fix_pattern)
-    : Small_passes.syntax -> fix_pattern -> fix_pattern
+    (core_compile_t : fix_type_expr -> fix_type_expr)
+    (core_compile_p : fix_pattern -> fix_pattern)
+    : Passes.syntax -> fix_pattern -> fix_pattern
   =
   let folders = {folders_default with
     ft = compile_t;
@@ -462,12 +463,12 @@ let make_pass
     ?(decompile = default_decompile)
     ?(check_reductions = default_check_reduction)
     (_ : unit)
-    : 'a Small_passes.pass
+    : 'a Passes.pass
   =
   { name; compile; decompile; check_reductions }
 
 
-let pass_t_arg : fix_type_expr Small_passes.pass =
+let pass_t_arg : fix_type_expr Passes.pass =
   let name = "pass_remove_t_arg" in
   let core_compile : fix_type_expr -> fix_type_expr = function
     | `T_Arg (s, loc) -> `T_Var (Ty_variable.of_input_var s, loc)
@@ -479,7 +480,7 @@ let pass_t_arg : fix_type_expr Small_passes.pass =
   { name; compile; decompile; check_reductions }
 
 
-let pass_t_named_fun : fix_type_expr Small_passes.pass =
+let pass_t_named_fun : fix_type_expr Passes.pass =
   let name = "pass_remove_t_named_fun" in
   let core_compile : fix_type_expr -> fix_type_expr = function
     | `T_Named_fun ((args, f), loc) ->

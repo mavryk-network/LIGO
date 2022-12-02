@@ -58,7 +58,7 @@ type ('a, 'b, 'c) statement_content_ = [%import: ('a, 'b, 'c) Types.statement_co
 [@@deriving
   ez
     { prefixes =
-        [ ( "make_s"
+        [ ("make_s"
           , fun ~loc content : statement ->
               { fp = (Location.wrap ~loc content : ('a, 'b, 'c) Types.statement_) } )
         ; ("get_s", fun (x : Types.statement) -> Location.unwrap x.fp)
@@ -86,7 +86,7 @@ type ('a, 'b, 'c, 'd) instruction_content_ =
 [@@deriving
   ez
     { prefixes =
-        [ ( "make_i"
+        [ ("make_i"
           , fun ~loc content : instruction ->
               { fp = Location.wrap ~loc content } )
         ; ("get_i", fun (x : Types.instruction) -> Location.unwrap x.fp)

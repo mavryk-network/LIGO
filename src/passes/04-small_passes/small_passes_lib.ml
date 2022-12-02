@@ -1,2 +1,2 @@
-module Small_passes = Small_passes
+module Passes = Passes
 module Pass_example = Pass_example
