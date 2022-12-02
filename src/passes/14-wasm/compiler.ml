@@ -260,12 +260,12 @@ let rec expression ~raise
     (* need the size of the string as well*)
     let name = unique_name name in
     let s_len = Int32.of_int_exn (String.length s) in
-    let a_len = String.length s + 2 in
+    let a_len = String.length s + 5 in
     let a_len = Int32.of_int_exn a_len in
     let data =
       [ data
           ~offset:!global_offset
-          ~init:{ name; detail = [ Int32 header; Int32 s_len; String s ] }
+          ~init:{ name; detail = [ Int8 header; Int32 s_len; String s ] }
       ]
     in
     let symbols = [ symbol_data ~name ~index:0l ~size:a_len ~offset:!global_offset ] in
@@ -331,14 +331,14 @@ let rec expression ~raise
   | E_literal (Literal_nat z) -> int_like "Literal_nat" 2 z
   | E_literal (Literal_timestamp z) -> int_like "Literal_timestamp" 2 z
   | E_literal (Literal_mutez z) -> int_like "Literal_mutez" 2 z
-  | E_literal (Literal_string (Standard s)) -> string_like "Literal_string" 4l s
-  | E_literal (Literal_string (Verbatim s)) -> string_like "Literal_string" 4l s
+  | E_literal (Literal_string (Standard s)) -> string_like "Literal_string" 4 s
+  | E_literal (Literal_string (Verbatim s)) -> string_like "Literal_string" 4 s
   | E_literal (Literal_bytes b) -> bytes_like "Literal_bytes" b
-  | E_literal (Literal_address s) -> string_like "Literal_address" 4l s
-  | E_literal (Literal_signature s) -> string_like "Literal_signature" 4l s
-  | E_literal (Literal_key s) -> string_like "Literal_key" 4l s
-  | E_literal (Literal_key_hash s) -> string_like "Literal_key_hash" 4l s
-  | E_literal (Literal_chain_id s) -> string_like "Literal_chain_id" 4l s
+  | E_literal (Literal_address s) -> string_like "Literal_address" 4 s
+  | E_literal (Literal_signature s) -> string_like "Literal_signature" 4 s
+  | E_literal (Literal_key s) -> string_like "Literal_key" 4 s
+  | E_literal (Literal_key_hash s) -> string_like "Literal_key_hash" 4 s
+  | E_literal (Literal_chain_id s) -> string_like "Literal_chain_id" 4 s
   | E_literal (Literal_operation b) -> bytes_like "Literal_operation" b
   | E_literal (Literal_bls12_381_g1 b) -> bytes_like "Literal_bls12_381_g1" b
   | E_literal (Literal_bls12_381_g2 b) -> bytes_like "Literal_bls12_381_g2" b
@@ -435,7 +435,7 @@ let rec expression ~raise
       ; i32_add
       ]
       @ s
-      @ [ const 4l; i32_add; load; store; local_get_s size ] )
+      @ [ const 1l; i32_add; load; store; local_get_s size ] )
   | E_constant { cons_name = C_CONS; arguments = [ l1; l2 ] } ->
     let cons = var_to_string (Value_var.fresh ~name:"C_CONS" ()) in
     let w, env, l1 = expression ~raise w env l1 in
@@ -480,13 +480,10 @@ let rec expression ~raise
       @ [ store; local_get_s pair ]
     in
     w, env, e
-    (* Datatype.Pair.create w env e1 e2 *)
   | E_constant { cons_name = C_CAR; arguments = [ cons ] } ->
-    (* TODO: move to Datatype.ml *)
     let w, env, cons = expression ~raise w env cons in
     w, env, cons @ [ const 4l; i32_add; load ]
   | E_constant { cons_name = C_CDR; arguments = [ cons ] } ->
-    (* TODO: move to Datatype.ml *)
     let w, env, cons = expression ~raise w env cons in
     w, env, cons @ [ const 8l; i32_add; load ]
   | E_constant { cons_name = C_TRUE; arguments = [] } -> w, env, [ const 1l ]

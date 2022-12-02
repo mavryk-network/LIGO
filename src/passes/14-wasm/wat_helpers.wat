@@ -82,24 +82,24 @@
             if (result i32)
                 ;; do a lexical comparison
                 local.get $a 
-                i32.const 4 
+                i32.const 1 
                 i32.add 
                 i32.load 
                 local.set $a_size
 
                 local.get $b
-                i32.const 4 
+                i32.const 1 
                 i32.add 
                 i32.load 
                 local.set $b_size
                 
                 local.get $a
-                i32.const 8
+                i32.const 5
                 i32.add 
                 local.set $a_value
 
                 local.get $b
-                i32.const 8
+                i32.const 5
                 i32.add 
                 local.set $b_value
 
@@ -2687,26 +2687,26 @@
       (local $new_string i32)
 
       local.get $left
-      i32.const 4
+      i32.const 1
       i32.add
       i32.load
       
       local.set $left_size
 
       local.get $left
-      i32.const 8
+      i32.const 5
       i32.add
       local.set $left_source
 
       local.get $right
-      i32.const 4
+      i32.const 1
       i32.add
       i32.load
       
       local.set $right_size
       
       local.get $right
-      i32.const 8
+      i32.const 5
       i32.add
       local.set $right_source
       
@@ -2716,7 +2716,7 @@
       local.set $new_size
       
       local.get $new_size
-      i32.const 8
+      i32.const 9
       i32.add
       call $malloc
       local.set $new_string
@@ -2726,20 +2726,20 @@
       i32.store8
 
       local.get $new_string
-      i32.const 4 
+      i32.const 1 
       i32.add
       local.get $new_size
       i32.store
 
       local.get $new_string
-      i32.const 8
+      i32.const 5
       i32.add
       local.get $left_source
       local.get $left_size
       memory.copy
 
       local.get $new_string
-      i32.const 8
+      i32.const 5
       i32.add
       local.get $left_size
       i32.add
@@ -2761,13 +2761,13 @@
 
         local.get $str
         i32.load
-        i32.const 4
+        i32.const 1
         i32.add
         
         local.tee $str_size
 
         local.get $offset
-        i32.const 4
+        i32.const 1
         i32.add
         i32.load
         local.tee $offset
@@ -2776,7 +2776,7 @@
             i32.const 0
         else             
             local.get $len
-            i32.const 4
+            i32.const 1
             i32.add
             i32.load
             local.set $len
@@ -2794,7 +2794,7 @@
             end
 
             local.get $len
-            i32.const 8
+            i32.const 9
             i32.add
             call $malloc
             local.set $new_string
@@ -2804,17 +2804,17 @@
             i32.store8
 
             local.get $new_string
-            i32.const 4
+            i32.const 1
             i32.add
             local.get $len
             i32.store
 
             local.get $new_string
-            i32.const 8
+            i32.const 5
             i32.add
 
             local.get $str
-            i32.const 8
+            i32.const 5
             i32.add
             local.get $offset 
             i32.add

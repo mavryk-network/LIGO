@@ -9,12 +9,12 @@
     local.set "str_info"
     
     local.get "str_info"
-    i32.const 4 
+    i32.const 1
     i32.add
     local.set "str_size"
 
     local.get "str_info"
-    i32.const 8
+    i32.const 5
     i32.add
     local.set "str"
 
@@ -134,7 +134,7 @@
       local.get "no_of_digits"
       i32.const 4
       i32.mul
-      i32.const 8
+      i32.const 5
       i32.add
       call "malloc"
       local.set "new_string"
@@ -144,7 +144,7 @@
       i32.store8
 
       local.get "new_string"
-      i32.const 4 
+      i32.const 1 
       i32.add
       local.get "no_of_digits" ;; size of new string
       i32.const 4
