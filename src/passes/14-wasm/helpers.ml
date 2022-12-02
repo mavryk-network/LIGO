@@ -100,6 +100,11 @@ let local_get_s at name = { it = LocalGet_symbol name; at }
 let local_get at index = { it = LocalGet { it = index; at }; at }
 let local_tee_s at name = { it = LocalTee_symbol name; at }
 let load at = { it = Load { ty = I32Type; align = 0; offset = 0l; pack = None }; at }
+
+let load8 at =
+  { it = Load { ty = I32Type; align = 0; offset = 0l; pack = Some (Pack8, ZX) }; at }
+
+
 let store at = { it = Store { ty = I32Type; align = 0; offset = 0l; pack = None }; at }
 
 let store8 at =

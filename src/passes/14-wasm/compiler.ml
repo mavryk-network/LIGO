@@ -680,13 +680,13 @@ let rec expression ~raise
     let w, env, a = expression ~raise w env a in
     ( w
     , env
-    , [ const 8l
+    , [ const 5l
       ; call_s "malloc"
       ; local_tee_s c_left
       ; const 7l
-      ; store
+      ; store8
       ; local_get_s c_left
-      ; const 4l
+      ; const 1l
       ; i32_add
       ]
       @ a
@@ -697,13 +697,13 @@ let rec expression ~raise
     let w, env, a = expression ~raise w env a in
     ( w
     , env
-    , [ const 8l
+    , [ const 5l
       ; call_s "malloc"
       ; local_tee_s c_right
       ; const 8l
-      ; store
+      ; store8
       ; local_get_s c_right
-      ; const 4l
+      ; const 1l
       ; i32_add
       ]
       @ a
@@ -1154,8 +1154,6 @@ let rec expression ~raise
     let w, env, matchee_e = expression ~raise w env matchee in
     let w, env, left_e = expression ~raise w env left in
     let w, env, right_e = expression ~raise w env right in
-    let return_type = Some (T.NumType I32Type) in
-    (* TODO properly get this *)
     ( w
     , env
     , matchee_e
@@ -1163,7 +1161,7 @@ let rec expression ~raise
         ; S.
             { it =
                 A.Block
-                  ( ValBlockType return_type
+                  ( ValBlockType (Some (T.NumType I32Type))
                   , [ { it =
                           A.Block
                             ( ValBlockType None
@@ -1171,7 +1169,7 @@ let rec expression ~raise
                               ; load
                               ; br_if 0l
                               ; local_get_s matchee_name
-                              ; const 4l
+                              ; const 1l
                               ; i32_add
                               ; load
                               ; local_set_s name_l
@@ -1182,7 +1180,7 @@ let rec expression ~raise
                       }
                     ]
                     @ [ local_get_s matchee_name
-                      ; const 4l
+                      ; const 1l
                       ; i32_add
                       ; load
                       ; local_set_s name_r
