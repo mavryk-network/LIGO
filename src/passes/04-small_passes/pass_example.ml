@@ -278,7 +278,6 @@ type ('prog_entry, 'd, 'i) program_entry =
   ]
 [@@deriving map, sexp]
 
-type ('prog_entry, 'd, 'i) program = ('prog_entry, 'd, 'i) program_entry list
 
 (* ========================================================================= *)
 (* ======== Fixpoints and fold ============================================= *)
@@ -286,41 +285,148 @@ type ('prog_entry, 'd, 'i) program = ('prog_entry, 'd, 'i) program_entry list
 
 (* The use of shortcut name (e.g. 'fix_p') here is just to break long lines,
    the short names are aliased to their full name right after below *)
-type fix_te = fix_te                                   type_expr
-and  fix_p  = (fix_te, fix_p)                          pattern 
+type fix_t  = fix_t                                    type_expr
+and  fix_p  = (fix_t , fix_p)                          pattern 
 and  fix_i  = (fix_i, fix_e, fix_p, fix_s)             instruction
 and  fix_s  = (fix_s, fix_i, fix_d)                    statement
-and  fix_d  = (fix_d, fix_e, fix_te, fix_p, fix_m)     declaration
+and  fix_d  = (fix_d, fix_e, fix_t , fix_p, fix_m)     declaration
 and  fix_m  = (fix_s, fix_d)                           module_expression
-and  fix_e  = (fix_e, fix_te, fix_p, fix_s, fix_m)     expression
-and  fix_prog_entry = (fix_prog_entry, fix_d, fix_i) program_entry
+and  fix_e  = (fix_e, fix_t , fix_p, fix_s, fix_m)     expression
+and  fix_pe = (fix_pe, fix_d, fix_i)                   program_entry
 [@@deriving sexp]
 
-type fix_type_expr         = fix_te [@@deriving sexp]
+type fix_type_expr         = fix_t  [@@deriving sexp]
 type fix_pattern           = fix_p  [@@deriving sexp]
 type fix_instruction       = fix_i  [@@deriving sexp]
 type fix_statement         = fix_s  [@@deriving sexp]
 type fix_declaration       = fix_d  [@@deriving sexp]
 type fix_module_expression = fix_m  [@@deriving sexp]
 type fix_expression        = fix_e  [@@deriving sexp]
-type fix_program_entry     = fix_prog_entry [@@deriving sexp]
+type fix_program_entry     = fix_pe [@@deriving sexp]
 
+(* These are all the functions you must specify when implementing a pass.
+   If you want a pass that modifies only patterns (for example),
+   you should only touch 'fp' and leave the others to the default value,
+   i.e. the identity function *)
+type ('t, 'p, 'i, 's, 'd, 'm, 'e, 'pe) folders =
+  { ft : 't                    type_expr          -> 't
+  ; fp : ('t, 'p)              pattern            -> 'p
+  ; fi : ('i, 'e, 'p, 's)      instruction        -> 'i
+  ; fs : ('s, 'i, 'd)          statement          -> 's
+  ; fd : ('d, 'e, 't, 'p, 'm)  declaration        -> 'd
+  ; fm : ('s, 'd)              module_expression  -> 'm
+  ; fe : ('e, 't, 'p, 's, 'm)  expression         -> 'e
+  ; fpe : ('pe, 'd, 'i)        program_entry      -> 'pe
+  }
 
+let folders_default =
+  { ft  = Fn.id
+  ; fp  = Fn.id
+  ; fi  = Fn.id
+  ; fs  = Fn.id
+  ; fd  = Fn.id
+  ; fm  = Fn.id
+  ; fe  = Fn.id
+  ; fpe = Fn.id
+  }
 
-let rec fold_type_expr (f : 't type_expr -> 't) (t : fix_type_expr) : 't =
-  f (map_type_expr (fold_type_expr f) t)
+(*
+  Below fold functions are mutually recursive
+  necause their types are mutually recursive.
+  For example,
+  expr can contain type_expr (so fold_e needs fold_te),
+  and type_expr can contain expr (so fold_te needs fold_e).
+*)
+let rec fold_t
+  (folders : ('t, 'p, 'i, 's, 'd, 'm, 'e, 'pe) folders)
+  (t : fix_type_expr)
+  : 't =
+  folders.ft (map_type_expr (fold_t folders) t)
 
-
-let rec fold_pattern
-    (ft : 't type_expr -> 't)
-    (fp : ('t, 'p) pattern -> 'p)
-    (p : fix_pattern)
-    : 'p
+and fold_p
+  (folders : ('t, 'p, 'i, 's, 'd, 'm, 'e, 'pe) folders)
+  (p : fix_pattern)
+  : 'p
   =
-  let fold_p : fix_pattern -> 'p = fold_pattern ft fp in
-  let fold_t : fix_type_expr -> 't = fold_type_expr ft in
-  fp (map_pattern fold_t fold_p p)
+  let fold_p = fold_p folders in
+  let fold_t = fold_t folders in
+  folders.fp (map_pattern fold_t fold_p p)
 
+and fold_i
+  (folders : ('t, 'p, 'i, 's, 'd, 'm, 'e, 'pe) folders)
+  (i : fix_instruction)
+  : 'i
+  =
+  let fold_p = fold_p folders in
+  let fold_i = fold_i folders in
+  let fold_s = fold_s folders in
+  let fold_e = fold_e folders in
+  folders.fi (map_instruction fold_i fold_e fold_p fold_s i)
+
+and fold_s
+  (folders : ('t, 'p, 'i, 's, 'd, 'm, 'e, 'pe) folders)
+  (s : fix_statement)
+  : 's
+  =
+  let fold_i = fold_i folders in
+  let fold_s = fold_s folders in
+  let fold_d = fold_d folders in
+  folders.fs (map_statement fold_s fold_i fold_d s)
+
+and fold_d
+  (folders : ('t, 'p, 'i, 's, 'd, 'm, 'e, 'pe) folders)
+  (d : fix_declaration)
+  : 'd
+  =
+  let fold_t = fold_t folders in
+  let fold_p = fold_p folders in
+  let fold_d = fold_d folders in
+  let fold_m = fold_m folders in
+  let fold_e = fold_e folders in
+  folders.fd (map_declaration fold_d fold_e fold_t fold_p fold_m d)
+
+and fold_m
+  (folders : ('t, 'p, 'i, 's, 'd, 'm, 'e, 'pe) folders)
+  (m : fix_module_expression)
+  : 'm
+  =
+  let fold_s = fold_s folders in
+  let fold_d = fold_d folders in
+  folders.fm (map_module_expression fold_s fold_d m)
+
+and fold_e
+  (folders : ('t, 'p, 'i, 's, 'd, 'm, 'e, 'pe) folders)
+  (e : fix_expression)
+  : 'e
+  =
+  let fold_t = fold_t folders in
+  let fold_p = fold_p folders in
+  let fold_s = fold_s folders in
+  let fold_m = fold_m folders in
+  let fold_e = fold_e folders in
+  folders.fe (map_expression fold_e fold_t fold_p fold_s fold_m e)
+
+and fold_pe
+  (folders : ('t, 'p, 'i, 's, 'd, 'm, 'e, 'pe) folders)
+  (pe : fix_program_entry)
+  : 'pe
+  =
+  let fold_i = fold_i folders in
+  let fold_d = fold_d folders in
+  let fold_pe = fold_pe folders in
+  folders.fpe (map_program_entry fold_pe fold_d fold_i pe)
+
+
+let fold_type_expr         = fold_t
+let fold_pattern           = fold_p
+let fold_instruction       = fold_i
+let fold_statement         = fold_s
+let fold_declaration       = fold_d
+let fold_module_expression = fold_m
+let fold_expression        = fold_e
+let fold_program_entry     = fold_pe
+
+ 
 
 (* ========================================================================= *)
 (* ======== Small passes and helpers ======================================= *)
@@ -331,18 +437,23 @@ let default_decompile = default_compile
 let default_check_reduction : 'a -> bool = fun _ -> true
 
 (* Helper used to factor out the common part of all passes' compile functions *)
-let wrap_compile_t (core_compile : fix_type_expr -> fix_type_expr)
+let wrap_compile_t (compile_t : fix_type_expr -> fix_type_expr)
     : Small_passes.syntax -> fix_type_expr -> fix_type_expr
   =
- fun _syntax te -> fold_type_expr core_compile te
+  let folders = {folders_default with ft = compile_t} in
+ fun _syntax te -> fold_type_expr folders te
 
 
 let wrap_compile_p
-    (core_compile_t : fix_type_expr -> fix_type_expr)
-    (core_compile_p : fix_pattern -> fix_pattern)
+    (compile_t : fix_type_expr -> fix_type_expr)
+    (compile_p : fix_pattern -> fix_pattern)
     : Small_passes.syntax -> fix_pattern -> fix_pattern
   =
- fun _syntax p -> fold_pattern core_compile_t core_compile_p p
+  let folders = {folders_default with
+    ft = compile_t;
+    fp = compile_p }
+  in
+  fun _syntax p -> fold_pattern folders p
 
 
 let make_pass
