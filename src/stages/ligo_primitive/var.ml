@@ -28,13 +28,12 @@ end
 
 module Internal () = struct
   module T = struct
-    type t =
+    type wrap_content =
       { name : string
-      ; counter : int
-      ; generated : bool
-      ; location :
-          (Location.t[@equal.ignore] [@compare.ignore] [@hash.ignore] [@sexp.opaque])
+      ; counter : int [@default 0] [@sexp_drop_default.equal]
+      ; generated : bool [@default false] [@sexp_drop_default.equal]
       }
+    and t = wrap_content Location.wrap
     [@@deriving equal, compare, yojson, hash, sexp]
   end
 
@@ -48,7 +47,7 @@ module Internal () = struct
       incr global_counter;
       !global_counter
     in
-    { name; counter; generated = true; location = loc }
+    Location.wrap ~loc { name; counter; generated = true }
 
 
   let fresh_like ?loc v =
@@ -56,8 +55,8 @@ module Internal () = struct
       incr global_counter;
       !global_counter
     in
-    let location = Option.value ~default:v.location loc in
-    { v with counter; location }
+    let loc = Option.value ~default:(Location.get_location v) loc in
+    Location.wrap ~loc { (Location.unwrap v) with counter }
 
 
   let exists_prefix = "^gen"
@@ -67,7 +66,7 @@ module Internal () = struct
   let of_input_var ?(loc = Location.dummy) name =
     if String.equal name "_"
     then fresh ~name ~loc ()
-    else { name; counter = 0; generated = false; location = loc }
+    else Location.wrap ~loc { name; counter = 0; generated = false }
 
 
   (* This exception indicates that some code tried to throw away the
@@ -76,33 +75,29 @@ module Internal () = struct
 
   (* TODO delete this *)
   let to_name_exn var =
-    if var.generated then raise Tried_to_unfreshen_variable else var.name
+    let {name; generated; _} = Location.unwrap var in
+    if generated then raise Tried_to_unfreshen_variable else name
 
 
   (* TODO remove this *)
-  let internal_get_name_and_counter var = var.name, var.counter
-  let get_location var = var.location
-  let set_location location var = { var with location }
-  let is_generated var = var.generated
+  let internal_get_name_and_counter var =
+    let {name; counter; _} = Location.unwrap var in name, counter
+  let get_location var = Location.get_location var
+  let set_location loc var = Location.wrap ~loc (Location.unwrap var)
+  let is_generated var = (Location.unwrap var).generated
 
-  let is_exists { name; generated; _ } =
-    (* String Hack for existentials. Used to avoid changes to [Ast_typed].
-       Future MR: Add explicit [T_exists] to [Ast_typed] *)
-    (* would be more safe to use a specific fields in the record *)
-    String.is_prefix name ~prefix:exists_prefix && generated
-
-
-  let is_name var name = String.equal var.name name
+  let is_name var name = String.equal (Location.unwrap var).name name
 
   (* PP *)
   let pp ppf v =
+    let v = Location.unwrap v in
     if v.counter <> 0
     then Format.fprintf ppf "%s#%d" v.name v.counter
     else Format.fprintf ppf "%s" v.name
 
 
   let _pp ppf v = Format.fprintf ppf "%s#%d" v.name v.counter
-  let wildcard = { name = "_"; counter = 0; location = Location.dummy; generated = false }
+  let wildcard = Location.wrap ~loc:Location.dummy { name = "_"; counter = 0; generated = false }
 
   include Comparable.Make (T)
 end

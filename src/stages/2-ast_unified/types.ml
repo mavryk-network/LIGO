@@ -80,7 +80,7 @@ module Let_binding = Temp_prim.Let_binding
 module Rev_app = Temp_prim.Rev_app
 module Z = Ligo_prim.Literal_value.Z
 
-type 'a nseq = 'a Simple_utils.List.Ne.t [@@deriving yojson, map]
+type 'a nseq = 'a Simple_utils.List.Ne.t [@@deriving yojson, map, sexp]
 
 (* The preprocessor directives are left unchanged during unification pass.
    So, the type of a directive is Preprocessor.Directive.t
@@ -131,7 +131,7 @@ and 'self type_expression_content_ =
   | T_Record_raw of 'self option Non_linear_rows.t
   | T_Disc_union of 'self Non_linear_disc_rows.t
   | T_Attr of Attribute.t * 'self
-[@@deriving map, yojson]
+[@@deriving map, yojson, sexp]
 
 (* ========================== PATTERNS ===================================== *)
 type ('self, 'ty_expr) pattern_ = ('self, 'ty_expr) pattern_content_ Location.wrap
@@ -152,7 +152,7 @@ and ('self, 'ty_expr) pattern_content_ =
   | P_rest of Label.t
   | P_attr of Attribute.t * 'self
   | P_mod_access of (Mod_variable.t nseq, 'self) Mod_access.t
-[@@deriving map, yojson]
+[@@deriving map, yojson, sexp]
 
 (* ========================== INSTRUCTIONS ================================= *)
 type ('self, 'expr, 'pattern, 'statement) instruction_ =
@@ -175,7 +175,7 @@ and ('self, 'expr, 'pattern, 'statement) instruction_content_ =
   | I_Return of 'expr option
   | I_Switch of ('expr, 'statement) Switch.t
   | I_break
-[@@deriving map, yojson]
+[@@deriving map, yojson, sexp]
 
 (* ========================== STATEMENTS ========================= *)
 type ('self, 'instruction, 'declaration) statement_ =
@@ -185,7 +185,7 @@ and ('self, 'instruction, 'declaration) statement_content_ =
   | S_Attr of (Attribute.t * 'self)
   | S_Instr of 'instruction
   | S_Decl of 'declaration
-[@@deriving map, yojson]
+[@@deriving map, yojson, sexp]
 (* and stmt = statement [@@deriving yojson] *)
 
 (* ========================== DECLARATIONS ================================= *)
@@ -209,7 +209,7 @@ and ('self, 'expr, 'ty_expr, 'pattern, 'mod_expr) declaration_content_ =
   | D_Fun of ('ty_expr, 'expr, ('pattern, 'ty_expr) Param.t) Fun_decl.t
   | D_Type of 'ty_expr Type_decl.t
   | D_Module of 'mod_expr Mod_decl.t
-[@@deriving map, yojson]
+[@@deriving map, yojson, sexp]
 
 (* ========================== MODULES ====================================== *)
 include struct
@@ -223,7 +223,7 @@ include struct
     | M_Body of 'declaration nseq
     | M_Path of Ligo_prim.Module_var.t nseq
     | M_Var of Ligo_prim.Module_var.t
-  [@@deriving map, yojson]
+  [@@deriving map, yojson, sexp]
 end
 
 (* ========================== EXPRESSIONS ================================== *)
@@ -272,7 +272,7 @@ and ('self, 'ty_expr, 'pattern, 'statement, 'mod_expr) expression_content_ =
   | E_Block_with of ('self, 'statement) Block_with.t (* { tata ; toto } with whatev *)
   | E_AssignJsligo of
       'self Assign_jsligo.t (* tata := toto ; which in reality return tata *)
-[@@deriving map, yojson]
+[@@deriving map, yojson, sexp]
 (* ========================== PROGRAM ====================================== *)
 
 type ('self, 'declaration, 'instruction) program_entry_ =
@@ -285,7 +285,7 @@ type ('self, 'declaration, 'instruction) program_entry_ =
 and it was annoying, see type `program` bellow *)
 (* and ('self, 'declaration, 'instruction) program_ =
   ('self, 'declaration, 'instruction) program_entry_ list *)
-[@@deriving map, yojson]
+[@@deriving map, yojson, sexp]
 
 (* fixpoints *)
 

@@ -1,16 +1,16 @@
 (* Name shortcuts *)
-module SP = Small_passes.Passes
-module PE = Small_passes.Pass_example
-module AST = Ast_unified
+(* module SP = Small_passes.Passes *)
+(* module PE = Small_passes.Pass_example *)
+(* module AST = Ast_unified *)
 
 (* Ligo_prim dependencies *)
 module Label = Ligo_prim.Label
 
-let () = Format.printf "Hello world from small_passes_main@."
+let () = Format.printf "SEcond Hello world from small_passes_main@."
 
 (* Some little tests *)
 
-let titi_1 : PE.fix_type_expr = `T_Arg ("titi", 42)
+(* let titi_1 : PE.fix_type_expr = `T_Arg ("titi", 42)
 
 let titi_2 : PE.fix_type_expr =
   let rhs : PE.fix_type_expr option AST.Types.Non_linear_rows.row_element =
@@ -187,4 +187,54 @@ let p_passes_list : PE.fix_pattern SP.pass list =
 
 
 let () = List.iter ~f:(test_input passes_list PE.sexp_of_fix_type_expr) inputs
-let () = List.iter ~f:(test_input p_passes_list PE.sexp_of_fix_pattern) p_inputs
+let () = List.iter ~f:(test_input p_passes_list PE.sexp_of_fix_pattern) p_inputs *)
+
+
+
+(* sexp test with ast unified *)
+
+(* let my_ty_expr : Ast_unified.ty_expr =
+  let loc = Ast_unified.Location.dummy in
+  let args : Ast_unified.ty_expr Ast_unified.Named_fun.fun_type_args =
+    [ { name = "arg_1"; type_expr = Ast_unified.t_var ~loc (Ast_unified.Ty_variable.of_input_var "a1")}
+    ; { name = "arg_2"; type_expr = Ast_unified.t_var ~loc (Ast_unified.Ty_variable.of_input_var "a2")}
+    ; { name = "arg_3"; type_expr = Ast_unified.t_var ~loc (Ast_unified.Ty_variable.of_input_var "a3")}
+    ]
+  in
+  let f : Ast_unified.ty_expr = Ast_unified.t_var ~loc (Ast_unified.Ty_variable.of_input_var "f") in
+  Ast_unified.t_named_fun (args, f) ~loc *)
+
+let my_ty_expr : Ast_unified.ty_expr =
+  Ast_unified.t_var ~loc:Ast_unified.Location.dummy (Ast_unified.Ty_variable.of_input_var "f")
+
+
+let my_e_unit : Ast_unified.expr = Ast_unified.e_unit ~loc:Ast_unified.Location.dummy
+
+let my_expr : Ast_unified.expr =
+  let open Ast_unified in
+  let type_in : (expr, ty_expr) Type_in.t =
+    { type_binder = "my_binder"
+    ; rhs = my_ty_expr
+    ; body = my_e_unit
+    }
+  in
+  e_typein ~loc:Location.dummy type_in 
+
+
+let my_sexp = Sexp.of_string {|
+  (E_TypeIn
+  ((type_binder my_binder)
+    (rhs (T_Var ((name f))))
+    (body (E_Literal Literal_unit))))
+|}
+
+
+let () =
+  let my_sexp : Sexp.t = Ast_unified.S_exp.sexp_of_expr my_expr in
+  Format.printf "Sexp test : %a@." (Sexp.pp_hum_indent 2) my_sexp
+
+
+let () =
+  let my_expr = Ast_unified.S_exp.expr_of_sexp my_sexp in
+  let my_sexp : Sexp.t = Ast_unified.S_exp.sexp_of_expr my_expr in
+  Format.printf "Sexp test et vice-versa : %a@." (Sexp.pp_hum_indent 2) my_sexp

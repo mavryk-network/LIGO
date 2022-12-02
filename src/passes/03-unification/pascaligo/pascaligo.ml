@@ -7,7 +7,6 @@ module Option = Simple_utils.Option
 module Region = Simple_utils.Region
 open AST (* Brings types and combinators functions *)
 
-module type X = module type of AST.Combinators
 
 let translate_attr_pascaligo : CST.Attr.t -> AST.Attribute.t =
  fun attr ->
@@ -59,7 +58,7 @@ module TODO_do_in_parsing = struct
     | None -> failwith "impossible ?"
 
 
-  let rec expr_as_var (e : CST.expr) : Ligo_prim.Value_var.t =
+  let expr_as_var (e : CST.expr) : Ligo_prim.Value_var.t =
     match e with
     | E_Var x -> Ligo_prim.Value_var.of_input_var ~loc:(w_snd x) (w_fst x)
     | _ -> failwith "would not make sense ? tofix"
@@ -85,8 +84,8 @@ module TODO_unify_in_cst = struct
       ForSetOrList (compile_for_set_or_list s), loc
 
 
-  let e_cat ~loc a b =
-    e_binary_op ~loc AST.{ operator = Location.wrap ~loc "^"; left = a; right = b }
+  (* let e_cat ~loc a b =
+    e_binary_op ~loc AST.{ operator = Location.wrap ~loc "^"; left = a; right = b } *)
 
 
   let e_string ~loc s =
@@ -99,7 +98,7 @@ module TODO_unify_in_cst = struct
 
   let better_as_binop ~loc kwd (left, right) =
     let operator = Location.wrap ~loc:(w_snd kwd) (w_fst kwd) in
-    e_binary_op ~loc AST.{ operator; left; right }
+    e_binary_op ~loc { operator; left; right }
 
 
   let nested_proj : AST.expr -> (CST.selection, CST.dot) nsepseq -> AST.expr =
@@ -143,13 +142,13 @@ module TODO_unify_in_cst = struct
               let label = w_fst x in
               [ FieldName (Label.of_string label) ]
             | CST.E_Proj
-                { region
-                ; value = { record_or_tuple = CST.E_Var v; selector = _; field_path }
+                { region=_
+                ; value = { record_or_tuple = CST.E_Var _; selector = _; field_path }
                 } ->
               List.map (nsepseq_to_list field_path) ~f:(function
                   | FieldName name -> Selection.FieldName (Label.of_string (w_fst name))
                   | Component x -> Component_num (w_fst x))
-            | x ->
+            | _x ->
               failwith "raise.error (expected_field_or_access @@ CST.expr_to_region x)"
           in
           let field_rhs = self field_rhs in
@@ -524,7 +523,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
   let self = compile_expression ~raise in
   let return e = e in
   let compile_bin_op (op : _ CST.bin_op CST.reg) =
-    let CST.{ op; arg1; arg2 }, loc = r_split op in
+    let CST.{ op; arg1; arg2 }, _loc = r_split op in
     let op, loc = w_split op in
     e_binary_op
       ~loc
@@ -532,7 +531,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
   in
   let compile_unary_op : string CST.wrap CST.un_op CST.reg -> AST.expr =
    fun op ->
-    let CST.{ op; arg }, loc = r_split op in
+    let CST.{ op; arg }, _loc = r_split op in
     let op, loc = w_split op in
     e_unary_op ~loc AST.{ operator = Location.wrap ~loc op; arg = self arg }
   in
@@ -559,7 +558,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     let var, loc = w_split var in
     e_variable (TODO_do_in_parsing.var ~loc var) ~loc
   | E_Par par ->
-    let par, loc = r_split par in
+    let par, _loc = r_split par in
     self par.inside
   | E_Bytes bytes_ ->
     let bytes_, loc = w_split bytes_ in
@@ -626,7 +625,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     in
     e_record_pun fields ~loc
   | E_Proj proj ->
-    let proj, loc = r_split proj in
+    let proj, _loc = r_split proj in
     translate_projection proj
   | E_ModPath ma ->
     let ma, loc = r_split ma in

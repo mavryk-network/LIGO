@@ -90,6 +90,7 @@ module TODO_unify_in_cst = struct
 
 
   let nested_sequence ~loc (lst : AST.expr nseq) : AST.expr =
+    let () = ignore loc in
     let hd, tl = lst in
     match tl with
     | [] -> hd
@@ -389,7 +390,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
   let return e = e in
   let compile_bin_op : string CST.wrap CST.bin_op CST.reg -> AST.expr =
    fun op ->
-    let CST.{ op; arg1; arg2 }, loc = r_split op in
+    let CST.{ op; arg1; arg2 }, _loc = r_split op in
     let op, loc = w_split op in
     e_binary_op
       ~loc
@@ -397,7 +398,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
   in
   let compile_unary_op : string CST.wrap CST.un_op CST.reg -> AST.expr =
    fun op ->
-    let CST.{ op; arg }, loc = r_split op in
+    let CST.{ op; arg }, _loc = r_split op in
     let op, loc = w_split op in
     e_unary_op ~loc AST.{ operator = Location.wrap ~loc op; arg = self arg }
   in
@@ -418,7 +419,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     let var, loc = r_split var in
     e_variable (TODO_do_in_parsing.var ~loc var) ~loc
   | EPar par ->
-    let par, loc = r_split par in
+    let par, _loc = r_split par in
     self par.inside
   | EUnit the_unit ->
     let _, loc = r_split the_unit in
@@ -474,7 +475,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     let (constr, arg_opt), loc = r_split constr in
     let constructor = Label.of_string constr.value in
     let element = Option.map ~f:self arg_opt in
-    e_constr AST.{ constructor; element } ~loc
+    e_constr { constructor; element } ~loc
   | EArray items ->
     let items, loc = r_split items in
     let items : expr AST.Array_repr.t =
@@ -571,7 +572,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
 
 (* ========================== DECLARATIONS ================================= *)
 
-let rec compile_toplevel_statement ~(raise : ('e, 'w) raise)
+let compile_toplevel_statement ~(raise : ('e, 'w) raise)
     : CST.toplevel_statement -> AST.program_entry
   =
  fun s ->

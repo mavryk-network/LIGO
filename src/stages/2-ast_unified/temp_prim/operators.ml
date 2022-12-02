@@ -11,4 +11,4 @@ and 'expr unary_op =
   { operator : operator
   ; arg : 'expr
   }
-[@@deriving yojson, map]
+[@@deriving yojson, map, sexp]

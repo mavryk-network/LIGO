@@ -1,5 +1,5 @@
 open Simple_utils.Utils
-open Simple_utils.Trace
+(* open Simple_utils.Trace *)
 open Unification_shared.Helpers
 module CST = Cst.Cameligo
 module AST = Ast_unified
@@ -97,7 +97,7 @@ module TODO_unify_in_cst = struct
     | Name name ->
       let loc = r_snd name in
       e_variable ~loc (TODO_do_in_parsing.var ~loc (r_fst name))
-    | Path { region; value } -> nested_proj value
+    | Path { region=_; value } -> nested_proj value
 
 
   let update_rhs
@@ -105,19 +105,19 @@ module TODO_unify_in_cst = struct
       -> CST.field_path_assignment Region.reg CST.ne_injection Region.reg
       -> AST.expr AST.Update.field list
     =
-   fun self { region; value = { compound = _; ne_elements; terminator = _; attributes } } ->
+   fun self { region=_; value = { compound = _; ne_elements; terminator = _; attributes } } ->
     let attributes = List.map (conv_attr attributes) ~f:fst in
     let x = nsepseq_to_list ne_elements in
     let f : CST.field_path_assignment Region.reg -> AST.expr AST.Update.field =
      fun fpa ->
-      let fpa, loc = r_split fpa in
+      let fpa, _loc = r_split fpa in
       match fpa with
       | Path_property { field_path; assignment = _; field_expr } ->
         let field_rhs = self field_expr in
         let field_lhs =
           match field_path with
           | Name v -> [ Selection.FieldName (Label.of_string (r_fst v)) ]
-          | Path { region; value = { struct_name; selector; field_path } } ->
+          | Path { region=_; value = { struct_name=_; selector=_; field_path } } ->
             List.map
               (nsepseq_to_list field_path)
               ~f:TODO_do_in_parsing.translate_selection
@@ -140,6 +140,7 @@ module TODO_unify_in_cst = struct
     (* could we have nested sequences ? OR non-nested for the other
        here I took pascaligo as an example 
     *)
+    let () = ignore loc in
     let hd, tl = lst in
     match tl with
     | [] -> hd
@@ -319,7 +320,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
   let self = compile_expression ~raise in
   let return e = e in
   let compile_bin_op (op : _ CST.bin_op CST.reg) =
-    let CST.{ op; arg1; arg2 }, loc = r_split op in
+    let CST.{ op; arg1; arg2 }, _loc = r_split op in
     let op, loc = w_split op in
     e_binary_op
       ~loc
@@ -327,7 +328,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
   in
   let compile_unary_op : string CST.wrap CST.un_op CST.reg -> AST.expr =
    fun op ->
-    let CST.{ op; arg }, loc = r_split op in
+    let CST.{ op; arg }, _loc = r_split op in
     let op, loc = w_split op in
     e_unary_op ~loc AST.{ operator = Location.wrap ~loc op; arg = self arg }
   in
@@ -381,7 +382,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
     e_variable (TODO_do_in_parsing.var ~loc name) ~loc
   (* we keep parenthesis so that the backward pass which add parenthesis is done only once for all syntaxes (?) *)
   | EPar par ->
-    let par, loc = r_split par in
+    let par, _loc = r_split par in
     self par.inside
   | EUnit unit_ ->
     let _, loc = r_split unit_ in
@@ -480,7 +481,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
     let (name, expr), loc = r_split constr in
     let constructor = Label.of_string (r_fst name) in
     let element = Option.map ~f:self expr in
-    e_constr AST.{ constructor; element } ~loc
+    e_constr {constructor; element} ~loc
   | ECase case ->
     let case, loc = r_split case in
     let expr = self case.expr in

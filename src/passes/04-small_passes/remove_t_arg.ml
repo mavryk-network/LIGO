@@ -15,3 +15,11 @@ let pass_t_arg : expr pass =
   let decompile _ = failwith "wait a little bit" in
   let check_reductions _expr = failwith "wait, use iter?" in
   { name = "pass_remove_t_arg"; compile; decompile; check_reductions }
+
+
+
+let%expect_test "addition" =
+  printf "%d" (1 + 2);
+  [%expect {| 4 |}]
+
+(* let%test_unit "addition" = [%test_result: int] (1 + 2) ~expect:4 *)
