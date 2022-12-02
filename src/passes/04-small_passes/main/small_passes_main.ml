@@ -1,6 +1,6 @@
 (* Name shortcuts *)
-module SP = Small_passes_lib.Passes
-module PE = Small_passes_lib.Pass_example
+module SP = Small_passes.Passes
+module PE = Small_passes.Pass_example
 module AST = Ast_unified
 
 (* Ligo_prim dependencies *)
@@ -168,7 +168,7 @@ let test_input
   Format.fprintf ppf "@.@{<bold>@{<underline>Test : %s@}@}@." test_name;
   print_sexp_with_header ppf sexp_of_t "Input" input;
   try
-    let output = SP.compile_with_passes ~syntax_todo:() passes [] input in
+    let output = Small_passes.compile_with_passes ~syntax_todo:() passes [] input in
     print_sexp_with_header ppf sexp_of_t "Output" output
   with
   | e -> Format.fprintf ppf "Exception : %s@." (Exn.to_string e)

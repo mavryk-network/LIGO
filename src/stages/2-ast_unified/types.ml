@@ -88,8 +88,8 @@ type 'a nseq = 'a Simple_utils.List.Ne.t [@@deriving yojson, map]
    However, the Directive module is augmented here with
    yojson functions for the yojson ppx to work correctly. *)
 module Directive = struct
-  include Preprocessor.Directive
-  [@@deriving sexp]
+  include Preprocessor.Directive [@@deriving sexp]
+
   let to_yojson : t -> Yojson.Safe.t =
    fun _ -> `String "JSON printing of directives is not supported"
 
@@ -99,11 +99,13 @@ module Directive = struct
   let of_yojson : Yojson.Safe.t -> (t, string) Result.t =
    fun _ -> Error "JSON parsing of directive is not supported"
 
+
   let sexp_of_t : t -> Sexp.t =
-    fun _t -> failwith "Directive to sexp conversion not supported"
+   fun _t -> failwith "Directive to sexp conversion not supported"
+
 
   let t_of_sexp : Sexp.t -> t =
-    fun _sexp -> failwith "Directive parsing from sexp is not supported"
+   fun _sexp -> failwith "Directive parsing from sexp is not supported"
 end
 [@@deriving sexp]
 
@@ -200,7 +202,7 @@ and ('self, 'expr, 'ty_expr, 'pattern, 'mod_expr) declaration_content_ =
   | D_Let of ('expr, 'pattern nseq, 'ty_expr) Let_decl.t
     (* let x = <..> ; let x (type a b) y (z:ty) = <..> *)
   | D_Var of ('pattern, 'expr, 'ty_expr) Simple_decl.t (* var x = y *)
-  | D_Multi_var of ('pattern, 'expr, 'ty_expr) Simple_decl.t nseq (* var x = y , z = w*)
+  | D_Multi_var of ('pattern, 'expr, 'ty_expr) Simple_decl.t nseq (* var x = y , z = w *)
   | D_Const of ('pattern, 'expr, 'ty_expr) Simple_decl.t (* const x = y *)
   | D_Multi_const of
       ('pattern, 'expr, 'ty_expr) Simple_decl.t nseq (* const x = y , z = w *)
@@ -267,8 +269,9 @@ and ('self, 'ty_expr, 'pattern, 'statement, 'mod_expr) expression_content_ =
   | E_ModIn of ('self, 'mod_expr) Mod_in.t (* module M = struct let x = 42 end in M.x *)
   | E_RawCode of 'self Raw_code.t
   | E_Sequence of ('self * 'self)
-  | E_Block_with of ('self, 'statement) Block_with.t
-  | E_AssignJsligo of 'self Assign_jsligo.t (* this is a very weird one .. *)
+  | E_Block_with of ('self, 'statement) Block_with.t (* { tata ; toto } with whatev *)
+  | E_AssignJsligo of
+      'self Assign_jsligo.t (* tata := toto ; which in reality return tata *)
 [@@deriving map, yojson]
 (* ========================== PROGRAM ====================================== *)
 
@@ -276,7 +279,10 @@ type ('self, 'declaration, 'instruction) program_entry_ =
   | P_Attr of Attribute.t * 'self
   | P_Declaration of 'declaration
   | P_Top_level_instruction of 'instruction
-  | P_Directive of Directive.t
+  | P_Preproc_directive of Directive.t
+
+(* would like to write that, but it makes unification using (_,_,_) program_entry_
+and it was annoying, see type `program` bellow *)
 (* and ('self, 'declaration, 'instruction) program_ =
   ('self, 'declaration, 'instruction) program_entry_ list *)
 [@@deriving map, yojson]

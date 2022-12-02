@@ -1,5 +1,4 @@
 open Types
-open Combinators
 
 (* These are all the functions you must specify when implementing a pass.
    If you want a pass that modifies only patterns (for example),
@@ -27,7 +26,6 @@ let defaults =
   ; declaration = (function | x -> { fp = x })
   ; program = (function | x -> { fp = x })
   }
-
 
 let rec cata_expr ~(f : folders) (x : expr) : expr =
   let self = cata_expr ~f in
@@ -82,6 +80,10 @@ let rec cata_program_entry ~(f : folders) (x : program_entry) : program_entry =
     f.mod_expr (map_mod_expr_ cata_mod_expr cata_statement cata_declaration x.fp)
   in
   f.program (map_program_entry_ self cata_declaration cata_instruction x.fp)
+
+(* we could factorize cata_expr and cata_program ; but I feel like those function are exactly those
+   we would like to generate someday, so I keep them as such
+*)
 
 let cata_program ~(f : folders) (x : program) : program =
   List.map x ~f:(cata_program_entry ~f)

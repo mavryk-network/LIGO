@@ -576,7 +576,7 @@ let rec compile_toplevel_statement ~(raise : ('e, 'w) raise)
   =
  fun s ->
   match s with
-  | Directive d -> program_entry (P_Directive d)
+  | Directive d -> program_entry (P_Preproc_directive d)
   | TopLevel (statement, _semicolon_opt) ->
     let statement = compile_statement ~raise statement in
     let rec aux s =
