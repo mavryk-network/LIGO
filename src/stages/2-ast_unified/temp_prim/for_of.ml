@@ -4,4 +4,4 @@ type ('expr, 'statement) t =
   ; expr : 'expr
   ; for_stmt : 'statement
   }
-[@@deriving yojson, map, sexp]
+[@@deriving yojson, map, iter, sexp]

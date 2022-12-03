@@ -6,4 +6,4 @@ and ('expr, 'statement) t =
   { switch_expr : 'expr
   ; switch_cases : ('expr, 'statement) case Simple_utils.List.Ne.t
   }
-[@@deriving yojson, map, sexp]
+[@@deriving yojson, map, iter, sexp]

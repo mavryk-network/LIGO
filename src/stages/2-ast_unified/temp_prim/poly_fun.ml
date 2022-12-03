@@ -4,4 +4,4 @@ type ('expr,'ty_expr,'pattern) t =
   ; ret_type : 'ty_expr option
   ; body : 'expr
   }
-[@@deriving yojson, map, sexp]
+[@@deriving yojson, map, iter, sexp]

@@ -1,4 +1,4 @@
-type t = Label of string [@@deriving eq, compare, yojson, hash, sexp]
+type t = Label of string [@@deriving eq, compare, yojson, hash, iter, sexp]
 
 let pp ppf (l : t) : unit =
   let (Label l) = l in

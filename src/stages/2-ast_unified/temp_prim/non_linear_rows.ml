@@ -1,5 +1,5 @@
 module type Row_lhs = sig
-  type t [@@deriving eq, compare, yojson, hash, sexp]
+  type t [@@deriving eq, compare, yojson, hash, iter, sexp]
 
   val of_string : string -> t
   val to_string : t -> string
@@ -11,10 +11,10 @@ module Make (Row_lhs : Row_lhs) = struct
     ; attributes : Attribute.t list
     ; decl_pos : int
     }
-  [@@deriving yojson, map, sexp]
+  [@@deriving yojson, map, iter, sexp]
 
-  type 'ty row = Row_lhs.t * 'ty row_element [@@deriving yojson, map, sexp]
-  type 'ty t = 'ty row list [@@deriving yojson, map, sexp]
+  type 'ty row = Row_lhs.t * 'ty row_element [@@deriving yojson, map, iter, sexp]
+  type 'ty t = 'ty row list [@@deriving yojson, map, iter, sexp]
 
   let make : type ty. (Row_lhs.t * ty * Attribute.t list) list -> ty t =
    fun lst ->

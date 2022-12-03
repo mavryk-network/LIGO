@@ -3,4 +3,4 @@ type 'expr t =
   ; patch_kind : [ `Map | `Record | `Set ]
   ; patch : 'expr
   }
-[@@deriving yojson, map, sexp]
+[@@deriving yojson, map, iter, sexp]

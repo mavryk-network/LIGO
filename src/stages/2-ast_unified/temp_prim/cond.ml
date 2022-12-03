@@ -3,4 +3,4 @@ type ('expr, 'branch) t =
   ; ifso : 'branch
   ; ifnot : 'branch option
   }
-[@@deriving yojson, map, sexp]
+[@@deriving yojson, map, iter, sexp]

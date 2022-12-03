@@ -21,4 +21,4 @@ and 'expr t =
   { structure : 'expr
   ; update : 'expr field list
   }
-[@@deriving yojson, map, sexp]
+[@@deriving yojson, map, iter, sexp]

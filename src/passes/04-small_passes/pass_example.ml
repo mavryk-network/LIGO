@@ -435,7 +435,7 @@ let fold_program_entry     = fold_pe
 
 let default_compile : Passes.syntax -> 'a -> 'a = fun _syntax a -> a
 let default_decompile = default_compile
-let default_check_reduction : 'a -> bool = fun _ -> true
+let default_check_reduction = fun ~raise:_ _ -> ()
 
 (* Helper used to factor out the common part of all passes' compile functions *)
 let wrap_compile_t (core_compile : fix_type_expr -> fix_type_expr)

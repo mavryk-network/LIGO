@@ -3,4 +3,4 @@ type ('pattern, 'ty_expr) t =
   ; pattern : 'pattern
   ; param_type : 'ty_expr option
   }
-[@@deriving yojson, map, sexp]
+[@@deriving yojson, map, iter, sexp]
