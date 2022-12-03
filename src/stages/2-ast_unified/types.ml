@@ -280,15 +280,15 @@ type ('self, 'declaration, 'instruction) program_entry_ =
   | P_Declaration of 'declaration
   | P_Top_level_instruction of 'instruction
   | P_Preproc_directive of Directive.t
-
-(* would like to write that, but it makes unification using (_,_,_) program_entry_
-and it was annoying, see type `program` bellow *)
+(*
+  would like to write that, but it makes unification using (_,_,_) program_entry_
+  and it was annoying, see type `program` bellow
+*)
 (* and ('self, 'declaration, 'instruction) program_ =
   ('self, 'declaration, 'instruction) program_entry_ list *)
 [@@deriving map, yojson, sexp]
 
-(* fixpoints *)
-
+(* fixpoints, they are mainly a trick to get '@@deriving map' to work *)
 type ty_expr = { fp : ty_expr ty_expr_ }
 and pattern = { fp : (pattern, ty_expr) pattern_ }
 and instruction = { fp : (instruction, expr, pattern, statement) instruction_ }
