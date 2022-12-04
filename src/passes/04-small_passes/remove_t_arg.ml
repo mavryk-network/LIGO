@@ -1,6 +1,5 @@
 open Ast_unified
 open Passes
-open Simple_utils.Trace
 
 let compile =
   let pass_ty : _ ty_expr_ -> ty_expr = function

@@ -21,7 +21,7 @@ let compile_with_passes : type a. a sub_pass list -> a -> a =
   prg
 
 
-let passes ~raise ~options = [ Remove_t_arg.pass ]
+let passes ~raise ~options = ignore (raise,options) ; [ Remove_t_arg.pass ]
 
 let compile_program ~raise ~options : I.program -> O.program =
  fun prg ->

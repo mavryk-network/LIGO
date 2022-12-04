@@ -13,9 +13,6 @@ type t =
   | File of Region.t (* file_location *)
   | Virtual of virtual_location
 
-let sexp_of_t : t -> Sexp.t = fun _ -> Sexp.Atom "location_toto"
-let t_of_sexp : Sexp.t -> t = fun _ -> Virtual "dummy_toto"
-
 let to_yojson = function
   | File reg  -> `List [`String "File"; Region.to_yojson reg]
   | Virtual v -> `List [`String "Virtual"; `String v]
