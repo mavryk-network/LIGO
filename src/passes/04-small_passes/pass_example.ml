@@ -433,13 +433,13 @@ let fold_program_entry     = fold_pe
 (* ======== Small passes and helpers ======================================= *)
 (* ========================================================================= *)
 
-let default_compile : Passes.syntax -> 'a -> 'a = fun _syntax a -> a
+let default_compile : Passes.options -> 'a -> 'a = fun _syntax a -> a
 let default_decompile = default_compile
 let default_check_reduction = fun ~raise:_ _ -> ()
 
 (* Helper used to factor out the common part of all passes' compile functions *)
 let wrap_compile_t (core_compile : fix_type_expr -> fix_type_expr)
-    : Passes.syntax -> fix_type_expr -> fix_type_expr
+    : Passes.options -> fix_type_expr -> fix_type_expr
   =
   let folders = {folders_default with ft = core_compile} in
  fun _syntax te -> fold_type_expr folders te
@@ -448,7 +448,7 @@ let wrap_compile_t (core_compile : fix_type_expr -> fix_type_expr)
 let wrap_compile_p
     (core_compile_t : fix_type_expr -> fix_type_expr)
     (core_compile_p : fix_pattern -> fix_pattern)
-    : Passes.syntax -> fix_pattern -> fix_pattern
+    : Passes.options -> fix_pattern -> fix_pattern
   =
   let folders = {folders_default with
     ft = core_compile_t;
@@ -457,7 +457,7 @@ let wrap_compile_p
   fun _syntax p -> fold_pattern folders p
 
 
-let make_pass
+(* let make_pass
     ~(name : string)
     ?(compile = default_compile)
     ?(decompile = default_decompile)
@@ -465,10 +465,10 @@ let make_pass
     (_ : unit)
     : 'a Passes.pass
   =
-  { name; compile; decompile; check_reductions }
+  { name; compile; decompile; check_reductions } *)
 
 
-let pass_t_arg : fix_type_expr Passes.pass =
+let pass_t_arg =
   let name = "pass_remove_t_arg" in
   let core_compile : fix_type_expr -> fix_type_expr = function
     | `T_Arg (s, loc) -> `T_Var (Ty_variable.of_input_var s, loc)
@@ -477,10 +477,11 @@ let pass_t_arg : fix_type_expr Passes.pass =
   let compile = wrap_compile_t core_compile in
   let decompile = default_decompile in
   let check_reductions = default_check_reduction in
-  { name; compile; decompile; check_reductions }
+  (* { name; compile; decompile; check_reductions } *)
+  ignore (name, compile, decompile, check_reductions )
 
 
-let pass_t_named_fun : fix_type_expr Passes.pass =
+let pass_t_named_fun =
   let name = "pass_remove_t_named_fun" in
   let core_compile : fix_type_expr -> fix_type_expr = function
     | `T_Named_fun ((args, f), loc) ->
@@ -497,7 +498,7 @@ let pass_t_named_fun : fix_type_expr Passes.pass =
   let compile = wrap_compile_t core_compile in
   let decompile = default_decompile in
   let check_reductions = default_check_reduction in
-  { name; compile; decompile; check_reductions }
+  ignore (name, compile, decompile, check_reductions )
 
 
 let pass_t_app_pascaligo =
@@ -513,7 +514,7 @@ let pass_t_app_pascaligo =
       | _ -> failwith "field 'constr' of T_App_pascaligo should be a T_Var")
     | _ as other -> other
   in
-  make_pass ~name ~compile ()
+  ignore (name, compile)
 
 
 let pass_t_app_michelson_types =
@@ -546,7 +547,7 @@ let pass_t_app_michelson_types =
       | _ -> t)
     | _ as common -> common
   in
-  make_pass ~name ~compile ()
+  ignore (name,compile)
 
 
 let pass_t_string_and_int_unsupported =
@@ -558,7 +559,8 @@ let pass_t_string_and_int_unsupported =
     | `T_String _ -> failwith "Invalid type T_String at this stage"
     | _ as other -> other
   in
-  make_pass ~name ~compile ()
+  (* make_pass ~name ~compile () *)
+  ignore (name,compile)
 
 
 (* First dummy passes on patterns *)
@@ -582,7 +584,8 @@ let pass_p_typed_toy =
     | _ as other -> other
   in
   let compile = wrap_compile_p compile_t compile_p in
-  make_pass ~name ~compile ()
+  (* make_pass ~name ~compile () *)
+  (name,compile)
 
 (* ========================================================================= *)
 (* ======== Small passes TODO list form list_passes.md ===================== *)

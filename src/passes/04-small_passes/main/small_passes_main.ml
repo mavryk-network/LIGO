@@ -213,7 +213,7 @@ let my_e_unit : Ast_unified.expr = Ast_unified.e_unit ~loc:Ast_unified.Location.
 let my_expr : Ast_unified.expr =
   let open Ast_unified in
   let type_in : (expr, ty_expr) Type_in.t =
-    { type_binder = "my_binder"
+    { type_binder = Ast_unified.Ty_variable.of_input_var "my_binder"
     ; rhs = my_ty_expr
     ; body = my_e_unit
     }
@@ -231,10 +231,11 @@ let my_sexp = Sexp.of_string {|
 
 let () =
   let my_sexp : Sexp.t = Ast_unified.S_exp.sexp_of_expr my_expr in
-  Format.printf "Sexp test : %a@." (Sexp.pp_hum_indent 2) my_sexp
+  Format.printf "Sexp test : %a@." (Sexp.pp_mach) my_sexp
+  (* Format.printf "Sexp test : %a@." (Sexp.pp_hum_indent 2) my_sexp *)
 
 
-let () =
+(* let () =
   let my_expr = Ast_unified.S_exp.expr_of_sexp my_sexp in
   let my_sexp : Sexp.t = Ast_unified.S_exp.sexp_of_expr my_expr in
-  Format.printf "Sexp test et vice-versa : %a@." (Sexp.pp_hum_indent 2) my_sexp
+  Format.printf "Sexp test et vice-versa : %a@." (Sexp.pp_hum_indent 2) my_sexp *)

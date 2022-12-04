@@ -29,7 +29,8 @@ module Catamorphism = struct
     ; program = (fun x -> { fp = x })
     }
 
-
+  (* we could factorize cata_expr and cata_program ; but I feel like those function are exactly those
+    we would like to generate someday, so I keep them as such *)
   let rec cata_expr ~(f : fold) (x : expr) : expr =
     let self = cata_expr ~f in
     let rec cata_ty_expr (x : ty_expr) : ty_expr =
@@ -84,9 +85,6 @@ module Catamorphism = struct
     in
     f.program (map_program_entry_ self cata_declaration cata_instruction x.fp)
 
-
-  (* we could factorize cata_expr and cata_program ; but I feel like those function are exactly those
-    we would like to generate someday, so I keep them as such *)
   let cata_program ~(f : fold) (x : program) : program =
     List.map x ~f:(cata_program_entry ~f)
 end
@@ -128,7 +126,20 @@ module Iter = struct
     ; declaration = ignore
     ; program = ignore
     }
-
+  
+  let combine_iteration : iter list -> iter = fun iters ->
+    let aux acc iter =
+      { expr = (fun x -> acc.expr x ; iter.expr x)
+      ; ty_expr = (fun x -> acc.ty_expr x ; iter.ty_expr x)
+      ; pattern = (fun x -> acc.pattern x ; iter.pattern x)
+      ; statement = (fun x -> acc.statement x ; iter.statement x)
+      ; mod_expr = (fun x -> acc.mod_expr x ; iter.mod_expr x)
+      ; instruction = (fun x -> acc.instruction x ; iter.instruction x)
+      ; declaration = (fun x -> acc.declaration x ; iter.declaration x)
+      ; program = (fun x -> acc.program x ; iter.program x)
+      }
+    in
+    List.fold ~init:defaults ~f:aux iters
 
   let rec iter_expr ~(f : iter) (x : expr) : unit =
     let self = iter_expr ~f in
@@ -144,4 +155,21 @@ module Iter = struct
       iter_mod_expr_ iter_mod_expr iter_statement iter_declaration x.fp
     in
     iter_expr_ self iter_ty_expr iter_pattern iter_statement iter_mod_expr x.fp
+
+  let rec iter_program_entry ~(f : iter) (x : program_entry) : unit =
+    let rec iter_expr (x : expr) : unit =
+      iter_expr_ iter_expr iter_ty_expr iter_pattern iter_statement iter_mod_expr x.fp
+    and iter_ty_expr (x : ty_expr) : unit = iter_ty_expr_ iter_ty_expr x.fp
+    and iter_pattern (x : pattern) : unit = iter_pattern_ iter_pattern iter_ty_expr x.fp
+    and iter_instruction (x : instruction) : unit =
+      iter_instruction_ iter_instruction iter_expr iter_pattern iter_statement x.fp
+    and iter_statement (x : statement) : unit =
+      iter_statement_ iter_statement iter_instruction iter_declaration x.fp
+    and iter_declaration (x : declaration) : unit =
+      iter_declaration_ iter_declaration iter_expr iter_ty_expr iter_pattern iter_mod_expr x.fp
+    and iter_mod_expr (x : mod_expr) : unit =
+      iter_mod_expr_ iter_mod_expr iter_statement iter_declaration x.fp
+    in
+    iter_program_entry_ (iter_program_entry ~f) iter_declaration iter_instruction x.fp
+  let iter_program ~f lst = List.iter ~f:(iter_program_entry ~f) lst
 end

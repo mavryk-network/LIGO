@@ -2,61 +2,36 @@ module I = Ast_unified
 module O = Ast_core
 module Passes = Passes
 module Pass_example = Pass_example
-
 open Passes
 
-let trivial_compile_program : I.program -> O.program =
- fun _ ->
-  (*
-     should be as trivial as:
- 
-     match x with
-     | I.Node_that_should_have_been_reducted _ -> failwith "impossible"
-     | I.Node_final_form x -> O.Final_form x    
-   *)
-  failwith "TODO12"
-
-
+let trivial_compile_program : I.program -> O.program = fun _ -> failwith "TODO12"
 let trivial_compile_expression : I.expr -> O.expression = fun _ -> failwith ""
 
-let compile_with_passes
-    : type a. syntax_todo:syntax -> a pass list -> a check list -> a -> a
-  =
- fun ~syntax_todo passes checks prg ->
-  let f : int -> a -> a pass -> a =
-   fun i prg pass ->
-    let prg = pass.compile syntax_todo prg in
-    (* if not (pass.check_reductions prg) *)
-    (* then failwith (Format.asprintf "pass number %d(%s) did not fully reduce" i pass.name); *)
-    prg
+let compile_with_passes : type a. a sub_pass list -> a -> a =
+ fun passes prg ->
+  let f : a * a dyn_reduction_check list -> a sub_pass -> a * a dyn_reduction_check list =
+   fun (prg, checks) pass ->
+    let prg = pass.forward prg in
+    (* checking all the reductions so far *)
+    let checks = pass.forward_check :: checks in
+    (combine_checks checks) prg;
+    prg, checks
   in
-  let prg = List.foldi passes ~init:prg ~f in
-  List.iter checks ~f:(fun check -> check.f syntax_todo prg);
-  List.iteri passes ~f:(fun i pass ->
-      (* if pass.check_reductions prg then *)
-        ()
-      (* else *)
-        (* failwith (Format.asprintf "pass number %d(%s) did not fully reduce" i pass.name) *)
-        );
+  let prg, _ = List.fold passes ~init:(prg, []) ~f in
   prg
 
 
-let compile ~syntax_todo ~raise : I.program -> O.program =
-  let () = ignore raise in
-  fun x ->
-    let x = compile_with_passes ~syntax_todo [] [] x in
-    (* TODO:
-    at this point, all the "passes" reductions must have happened and the compilation to the targetted AST should be trivial
-    add a [@final] on AST nodes that we accept as "trivially compiled" to detect errors
-  *)
-    trivial_compile_program x
+let passes ~raise ~options = [ Remove_t_arg.pass ]
 
-let compile_expression ~syntax_todo ~raise : I.expr -> O.expression =
-  let () = ignore raise in
-  fun x ->
-    let x = compile_with_passes ~syntax_todo
-      [Remove_t_arg.pass_t_arg]
-      []
-      x
-    in
-    trivial_compile_expression x
+let compile_program ~raise ~options : I.program -> O.program =
+ fun prg ->
+  let passes = passes ~raise ~options in
+  let prg = compile_with_passes (List.map ~f:(fun x -> x.program) passes) prg in
+  trivial_compile_program prg
+
+
+let compile_expression ~raise ~options : I.expr -> O.expression =
+ fun expr ->
+  let passes = passes ~raise ~options in
+  let expr = compile_with_passes (List.map ~f:(fun x -> x.expression) passes) expr in
+  trivial_compile_expression expr
