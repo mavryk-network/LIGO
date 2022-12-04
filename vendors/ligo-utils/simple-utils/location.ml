@@ -10,9 +10,11 @@ type virtual_location = string
   [@@deriving hash]
 
 type t =
-  | File of Region.t (* file_location *)
+  | File of (Region.t [@sexp.opaque]) (* file_location *)
   | Virtual of virtual_location
 
+let sexp_of_t _ = Sexp.Atom ""
+let t_of_sexp _ = Virtual ""
 let to_yojson = function
   | File reg  -> `List [`String "File"; Region.to_yojson reg]
   | Virtual v -> `List [`String "Virtual"; `String v]

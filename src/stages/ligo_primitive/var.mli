@@ -40,6 +40,7 @@ module Type_var : sig
   include VAR
 
   val is_name : t -> string -> bool
+  val is_exists : t -> bool
   val fresh_exists : ?loc:Location.t -> unit -> t
 end
 
