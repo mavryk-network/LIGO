@@ -134,6 +134,7 @@ library
     , nyan-interpolation-core
     , process
     , process-extras
+    , reflection
     , regex-tdfa
     , scientific
     , semver
