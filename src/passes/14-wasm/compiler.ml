@@ -488,26 +488,20 @@ let rec expression ~raise
   | E_constant { cons_name = C_FALSE; arguments = [] } -> w, env, [ const 0l ]
   (* Set *)
   | E_constant { cons_name = C_SET_EMPTY; arguments = [] } ->
-    w, env, [ data_symbol "C_SET_EMPTY" ]
+    w, env, [ const 12l (* C_SET_EMPTY *) ]
   | E_constant { cons_name = C_SET_LITERAL; arguments = [ e1 ] } ->
     host_call ~fn:"c_set_literal" ~response_size:4l ~instructions:[ e1 ]
   | E_constant { cons_name = C_SET_ADD; arguments = [ key; set ] } ->
     let w, env, key_e = expression ~raise w env key in
     let w, env, set_e = expression ~raise w env set in
-    ( w
-    , env
-    , set_e @ key_e @ [ data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_add" ] )
+    w, env, set_e @ key_e @ [ call_s "__ligo_internal__set_add" ]
   | E_constant { cons_name = C_SET_SIZE; arguments = [ s ] } ->
     let w, env, s = expression ~raise w env s in
     w, env, s @ [ call_s "__ligo_internal__set_size" ]
   | E_constant { cons_name = C_SET_REMOVE; arguments = [ item; set ] } ->
     let w, env, item_e = expression ~raise w env item in
     let w, env, set_e = expression ~raise w env set in
-    ( w
-    , env
-    , set_e
-      @ item_e
-      @ [ const 20l; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_remove" ] )
+    w, env, set_e @ item_e @ [ const 20l; call_s "__ligo_internal__set_remove" ]
   | E_constant { cons_name = C_SET_ITER; arguments = [ func; set ] } ->
     raise.error (not_supported e)
   | E_constant { cons_name = C_SET_FOLD; arguments = [ func; set; init ] } ->
@@ -517,19 +511,14 @@ let rec expression ~raise
   | E_constant { cons_name = C_SET_MEM; arguments = [ key; set ] } ->
     let w, env, key_e = expression ~raise w env key in
     let w, env, set_e = expression ~raise w env set in
-    ( w
-    , env
-    , set_e @ key_e @ [ data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_mem" ] )
+    w, env, set_e @ key_e @ [ call_s "__ligo_internal__set_mem" ]
   | E_constant { cons_name = C_SET_UPDATE; arguments = [ key; boolean; set ] } ->
     let w, env, key_e = expression ~raise w env key in
     let w, env, set_e = expression ~raise w env set in
     let w, env, boolean_e = expression ~raise w env boolean in
     ( w
     , env
-    , set_e
-      @ boolean_e
-      @ key_e
-      @ [ const 20l; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_update" ] )
+    , set_e @ boolean_e @ key_e @ [ const 20l; call_s "__ligo_internal__set_update" ] )
   (* List *)
   | E_constant { cons_name = C_LIST_EMPTY; arguments = [] } ->
     w, env, [ const 10l ] (* C_LIST_EMPTY *)
@@ -550,65 +539,41 @@ let rec expression ~raise
     raise.error (not_supported e)
   (* Maps *)
   | E_constant { cons_name = C_MAP_EMPTY; arguments = [] } ->
-    w, env, [ data_symbol "C_SET_EMPTY" ]
+    w, env, [ const 12l (* C_SET_EMPTY *) ]
   | E_constant { cons_name = C_MAP_LITERAL; arguments = [ e1 ] } ->
     raise.error (not_supported e)
   | E_constant { cons_name = C_MAP_ADD; arguments = [ key; value; map ] } ->
     let w, env, map_e = expression ~raise w env map in
     let w, env, key_e = expression ~raise w env key in
     let w, env, value_e = expression ~raise w env value in
-    ( w
-    , env
-    , map_e
-      @ key_e
-      @ value_e
-      @ [ data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__map_add" ] )
+    w, env, map_e @ key_e @ value_e @ [ call_s "__ligo_internal__map_add" ]
   | E_constant { cons_name = C_MAP_FIND_OPT; arguments = [ key; map ] } ->
     let w, env, key_e = expression ~raise w env key in
     let w, env, map_e = expression ~raise w env map in
-    ( w
-    , env
-    , map_e
-      @ key_e
-      @ [ data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__map_find_opt" ] )
+    w, env, map_e @ key_e @ [ call_s "__ligo_internal__map_find_opt" ]
   | E_constant { cons_name = C_MAP_SIZE; arguments = [ m ] } ->
     let w, env, m = expression ~raise w env m in
     w, env, m @ [ call_s "__ligo_internal__set_size" ]
   | E_constant { cons_name = C_MAP_REMOVE; arguments = [ key; map ] } ->
     let w, env, key_e = expression ~raise w env key in
     let w, env, map_e = expression ~raise w env map in
-    ( w
-    , env
-    , map_e
-      @ key_e
-      @ [ const 24l; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_remove" ] )
+    w, env, map_e @ key_e @ [ const 24l; call_s "__ligo_internal__set_remove" ]
   | E_constant { cons_name = C_MAP_MEM; arguments = [ key; set ] } ->
     let w, env, key_e = expression ~raise w env key in
     let w, env, set_e = expression ~raise w env set in
-    ( w
-    , env
-    , set_e @ key_e @ [ data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_mem" ] )
+    w, env, set_e @ key_e @ [ call_s "__ligo_internal__set_mem" ]
   | E_constant { cons_name = C_MAP_UPDATE; arguments = [ key; value; map ] } ->
     let w, env, key_e = expression ~raise w env key in
     let w, env, value_e = expression ~raise w env value in
     let w, env, map_e = expression ~raise w env map in
-    ( w
-    , env
-    , map_e
-      @ key_e
-      @ value_e
-      @ [ const 24l; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__map_update" ] )
+    w, env, map_e @ key_e @ value_e @ [ const 24l; call_s "__ligo_internal__map_update" ]
   | E_constant { cons_name = C_MAP_GET_AND_UPDATE; arguments = [ key; value; map ] } ->
     let w, env, key_e = expression ~raise w env key in
     let w, env, value_e = expression ~raise w env value in
     let w, env, map_e = expression ~raise w env map in
     ( w
     , env
-    , map_e
-      @ key_e
-      @ value_e
-      @ [ const 24l; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__map_get_update" ]
-    )
+    , map_e @ key_e @ value_e @ [ const 24l; call_s "__ligo_internal__map_get_update" ] )
   | E_constant { cons_name = C_MAP_ITER; arguments = [ func; map ] } ->
     raise.error (not_supported e)
   | E_constant { cons_name = C_MAP_MAP; arguments = [ func; map ] } ->
@@ -904,13 +869,7 @@ let rec expression ~raise
     let w, env, iter_body = expression ~raise w env body in
     let iter_body_name = unique_name "iter_body" in
     let w, required_args = add_function w iter_body_name (fun _ -> iter_body) in
-    ( w
-    , env
-    , col
-      @ [ func_symbol iter_body_name
-        ; data_symbol "C_SET_EMPTY"
-        ; call_s "__ligo_internal__map_map"
-        ] )
+    w, env, col @ [ func_symbol iter_body_name; call_s "__ligo_internal__map_map" ]
   | E_iterator
       ( C_ITER
       , ((item_name, item_type), body)
@@ -930,13 +889,7 @@ let rec expression ~raise
     let w, env, col = expression ~raise w env col in
     let iter_body_name = unique_name "iter_body" in
     let w, required_args = add_function w iter_body_name (fun _ -> iter_body) in
-    ( w
-    , env
-    , col
-      @ [ func_symbol iter_body_name
-        ; data_symbol "C_SET_EMPTY"
-        ; call_s "__ligo_internal__set_iter"
-        ] )
+    w, env, col @ [ func_symbol iter_body_name; call_s "__ligo_internal__set_iter" ]
   | E_iterator
       ( C_ITER
       , ((item_name, item_type), body)
@@ -946,13 +899,7 @@ let rec expression ~raise
     let w, env, col = expression ~raise w env col in
     let iter_body_name = unique_name "iter_body" in
     let w, required_args = add_function w iter_body_name (fun _ -> iter_body) in
-    ( w
-    , env
-    , col
-      @ [ func_symbol iter_body_name
-        ; data_symbol "C_SET_EMPTY"
-        ; call_s "__ligo_internal__map_iter"
-        ] )
+    w, env, col @ [ func_symbol iter_body_name; call_s "__ligo_internal__map_iter" ]
   | E_iterator (_, ((item_name, item_type), body), col) -> raise.error (not_supported e)
   | E_fold
       ( ((name, tv), body)
@@ -966,12 +913,7 @@ let rec expression ~raise
     let w, required_args = add_function w fold_body_name (fun _ -> iter_body) in
     ( w
     , env
-    , col
-      @ init
-      @ [ func_symbol fold_body_name
-        ; data_symbol "C_SET_EMPTY"
-        ; call_s "__ligo_internal__set_fold"
-        ] )
+    , col @ init @ [ func_symbol fold_body_name; call_s "__ligo_internal__set_fold" ] )
   | E_fold
       ( ((name, tv), body)
       , ({ type_expression = { type_content = T_map _; _ }; _ } as col)
@@ -984,12 +926,7 @@ let rec expression ~raise
     let w, required_args = add_function w fold_body_name (fun _ -> iter_body) in
     ( w
     , env
-    , col
-      @ init
-      @ [ func_symbol fold_body_name
-        ; data_symbol "C_SET_EMPTY"
-        ; call_s "__ligo_internal__map_fold"
-        ] )
+    , col @ init @ [ func_symbol fold_body_name; call_s "__ligo_internal__map_fold" ] )
   | E_fold_right
       ( ((name, tv), body)
       , (({ type_expression = { type_content = T_set _; _ }; _ } as col), elem_tv)
@@ -1004,10 +941,7 @@ let rec expression ~raise
     , env
     , col
       @ init
-      @ [ func_symbol fold_body_name
-        ; data_symbol "C_SET_EMPTY"
-        ; call_s "__ligo_internal__set_fold_right"
-        ] )
+      @ [ func_symbol fold_body_name; call_s "__ligo_internal__set_fold_right" ] )
   | E_fold
       ( ((name, tv), body)
       , ({ type_expression = { type_content = T_list _; _ }; _ } as col)

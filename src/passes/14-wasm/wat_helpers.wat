@@ -20,6 +20,9 @@
 
     (global $__list__tag   i32 (i32.const 9)) 
     (global $C_LIST_EMPTY   i32 (i32.const 10)) 
+    (global $__set__tag   i32 (i32.const 11)) 
+    (global $C_SET_EMPTY   i32 (i32.const 12)) 
+    (global $__map__tag   i32 (i32.const 13)) 
 
 ;; 9 - list
     
@@ -589,7 +592,7 @@
         local.get $result
     )
 
-    (func $__ligo_internal__set_mem (param $set i32) (param $m i32) (param $C_SET_EMPTY i32) (result i32)
+    (func $__ligo_internal__set_mem (param $set i32) (param $m i32) (result i32)
         (local $count i32)
         (local $left_child i32)
         (local $right_child i32)
@@ -599,7 +602,7 @@
         (local $comparison_result i32)
         
         local.get $set
-        local.get $C_SET_EMPTY
+        global.get $C_SET_EMPTY
         i32.eq
         if (result i32)        
             i32.const 0
@@ -657,7 +660,7 @@
         end
     )
 
-    (func $__ligo_internal__map_find_opt (param $set i32) (param $m i32) (param $C_SET_EMPTY i32) (result i32)
+    (func $__ligo_internal__map_find_opt (param $set i32) (param $m i32) (result i32)
         (local $count i32)
         (local $left_child i32)
         (local $right_child i32)
@@ -669,7 +672,7 @@
 
         
         local.get $set
-        local.get $C_SET_EMPTY
+        global.get $C_SET_EMPTY
         i32.eq
         if (result i32)  
                   
@@ -778,7 +781,7 @@
         end
     )
 
-   (func $__ligo_internal__set_add (param $set i32) (param $key i32) (param $C_SET_EMPTY i32) (result i32)
+   (func $__ligo_internal__set_add (param $set i32) (param $key i32) (result i32)
         (local $result i32)
         (local $new_item i32)
         (local $current_item i32)
@@ -789,7 +792,7 @@
         (local $right_child i32)
 
         local.get $set 
-        local.get $C_SET_EMPTY
+        global.get $C_SET_EMPTY
         i32.eq
         if (result i32)
             i32.const 20
@@ -919,7 +922,7 @@
         ;; i32.const 0
     )
 
-    (func $__ligo_internal__map_add (param $set i32) (param $key i32) (param $value i32) (param $C_SET_EMPTY i32) (result i32)
+    (func $__ligo_internal__map_add (param $set i32) (param $key i32) (param $value i32) (result i32)
         (local $result i32)
         (local $new_item i32)
         (local $current_item i32)
@@ -930,7 +933,7 @@
         (local $right_child i32)
 
         local.get $set 
-        local.get $C_SET_EMPTY
+        global.get $C_SET_EMPTY
         i32.eq
         if (result i32)
             i32.const 24
@@ -1120,7 +1123,7 @@
     )
     
 
-    (func $__ligo_internal__set_remove_in (param $set i32) (param $key i32) (param $SIZE i32) (param $C_SET_EMPTY i32) (result i32)
+    (func $__ligo_internal__set_remove_in (param $set i32) (param $key i32) (param $SIZE i32) (result i32)
         (local $compare_result i32)
         (local $result i32)
         (local $new_item i32)
@@ -1137,10 +1140,10 @@
         
 
         local.get $set 
-        local.get $C_SET_EMPTY
+        global.get $C_SET_EMPTY
         i32.eq 
         if (result i32)
-            local.get $C_SET_EMPTY
+            global.get $C_SET_EMPTY
             call $__ligo_internal__map_update_pair_no_previous
             
         else 
@@ -1646,34 +1649,31 @@
         end  
     )
 
-    (func $__ligo_internal__set_remove (param $set i32) (param $key i32) (param $SIZE i32) (param $C_SET_EMPTY i32) (result i32)
+    (func $__ligo_internal__set_remove (param $set i32) (param $key i32) (param $SIZE i32) (result i32)
         local.get $set 
         local.get $key
         local.get $SIZE
-        local.get $C_SET_EMPTY
         call $__ligo_internal__set_remove_in
         i32.const 5
         i32.add
         i32.load
     )
 
-    (func $__ligo_internal__set_update (param $set i32) (param $bool i32) (param $key i32) (param $SIZE i32) (param $C_SET_EMPTY i32) (result i32)
+    (func $__ligo_internal__set_update (param $set i32) (param $bool i32) (param $key i32) (param $SIZE i32) (result i32)
         local.get $bool
         if (result i32)
             local.get $set 
             local.get $key
-            local.get $C_SET_EMPTY
             call $__ligo_internal__set_add
         else
             local.get $set
             local.get $key
             local.get $SIZE
-            local.get $C_SET_EMPTY
             call $__ligo_internal__set_remove
         end
     )
 
-(func $__ligo_internal__map_update_in (param $set i32) (param $key i32) (param $value i32) (param $C_SET_EMPTY i32) (result i32)
+(func $__ligo_internal__map_update_in (param $set i32) (param $key i32) (param $value i32) (result i32)
         (local $result i32)
         (local $new_item i32)
         (local $current_item i32)
@@ -1686,7 +1686,7 @@
         (local $previous i32)
 
         local.get $set 
-        local.get $C_SET_EMPTY
+        global.get $C_SET_EMPTY
         i32.eq
         if (result i32)            
             local.get $result
@@ -1838,7 +1838,7 @@
         ;; local.get $result
     )
 
-    (func $__ligo_internal__map_update (param $map i32) (param $key i32) (param $value i32) (param $SIZE i32) (param $C_SET_EMPTY i32) (result i32)
+    (func $__ligo_internal__map_update (param $map i32) (param $key i32) (param $value i32) (param $SIZE i32) (result i32)
         local.get $value
         i32.const 1
         i32.add  
@@ -1853,7 +1853,6 @@
             i32.add  
             i32.load
             
-            local.get $C_SET_EMPTY
             call $__ligo_internal__map_update_in
             i32.const 5 
             i32.add
@@ -1862,12 +1861,11 @@
             local.get $map
             local.get $key
             local.get $SIZE
-            local.get $C_SET_EMPTY
             call $__ligo_internal__set_remove
         end
     )
 
-    (func $__ligo_internal__map_get_update (param $map i32) (param $key i32) (param $value i32) (param $SIZE i32) (param $C_SET_EMPTY i32) (result i32)
+    (func $__ligo_internal__map_get_update (param $map i32) (param $key i32) (param $value i32) (param $SIZE i32) (result i32)
         local.get $value
         i32.const 4 
         i32.add  
@@ -1881,23 +1879,21 @@
             i32.const 5
             i32.add  
             i32.load            
-            local.get $C_SET_EMPTY
             call $__ligo_internal__map_update_in
         else
             local.get $map
             local.get $key
             local.get $SIZE
-            local.get $C_SET_EMPTY
             call $__ligo_internal__set_remove_in
         end
     )
 
-    (func $__ligo_internal__set_iter (param $set i32) (param $fn i32) (param $C_SET_EMPTY i32) (result i32)
+    (func $__ligo_internal__set_iter (param $set i32) (param $fn i32) (result i32)
         (local $left_child i32)
         (local $right_child i32)
         (local $temp i32)
         local.get $set 
-        local.get $C_SET_EMPTY
+        global.get $C_SET_EMPTY
         i32.eq
         if (result i32)
             i32.const 0
@@ -1910,7 +1906,6 @@
             if (result i32)
                 local.get $left_child
                 local.get $fn
-                local.get $C_SET_EMPTY
                 call $__ligo_internal__set_iter
             else
                 i32.const 0
@@ -1931,7 +1926,6 @@
             if (result i32)
                 local.get $right_child
                 local.get $fn
-                local.get $C_SET_EMPTY
                 call $__ligo_internal__set_iter
             else
                 i32.const 0
@@ -1941,13 +1935,13 @@
         end
     )
 
-    (func $__ligo_internal__set_fold (param $set i32) (param $init i32) (param $fn i32) (param $C_SET_EMPTY i32) (result i32)
+    (func $__ligo_internal__set_fold (param $set i32) (param $init i32) (param $fn i32) (result i32)
         (local $left_child i32)
         (local $right_child i32)
         (local $temp i32)
         (local $tuple i32)
         local.get $set 
-        local.get $C_SET_EMPTY
+        global.get $C_SET_EMPTY
         i32.eq
         if (result i32)
             i32.const 0
@@ -1961,7 +1955,6 @@
                 local.get $left_child
                 local.get $init
                 local.get $fn
-                local.get $C_SET_EMPTY
                 call $__ligo_internal__set_fold
                 local.set $init
             end
@@ -1997,7 +1990,6 @@
                 local.get $right_child
                 local.get $init
                 local.get $fn
-                local.get $C_SET_EMPTY
                 call $__ligo_internal__set_fold
                 local.set $init
             end
@@ -2006,13 +1998,13 @@
         
     )
 
-    (func $__ligo_internal__map_fold (param $set i32) (param $init i32) (param $fn i32) (param $C_SET_EMPTY i32) (result i32)
+    (func $__ligo_internal__map_fold (param $set i32) (param $init i32) (param $fn i32) (result i32)
         (local $left_child i32)
         (local $right_child i32)
         (local $temp i32)
         (local $tuple i32)
         local.get $set 
-        local.get $C_SET_EMPTY
+        global.get $C_SET_EMPTY
         i32.eq
         if (result i32)
             i32.const 0
@@ -2026,7 +2018,6 @@
                 local.get $left_child
                 local.get $init
                 local.get $fn
-                local.get $C_SET_EMPTY
                 call $__ligo_internal__map_fold
                 local.set $init
             end
@@ -2085,7 +2076,6 @@
                 local.get $right_child
                 local.get $init
                 local.get $fn
-                local.get $C_SET_EMPTY
                 call $__ligo_internal__map_fold
                 local.set $init
             end
@@ -2093,13 +2083,13 @@
         end
     )
 
-    (func $__ligo_internal__set_fold_right (param $set i32) (param $init i32) (param $fn i32) (param $C_SET_EMPTY i32) (result i32)
+    (func $__ligo_internal__set_fold_right (param $set i32) (param $init i32) (param $fn i32) (result i32)
         (local $left_child i32)
         (local $right_child i32)
         (local $temp i32)
         (local $tuple i32)
         local.get $set 
-        local.get $C_SET_EMPTY
+        global.get $C_SET_EMPTY
         i32.eq
         if (result i32)
             i32.const 0
@@ -2113,7 +2103,6 @@
                 local.get $right_child
                 local.get $init
                 local.get $fn
-                local.get $C_SET_EMPTY
                 call $__ligo_internal__set_fold_right
                 local.set $init
             end
@@ -2150,7 +2139,6 @@
                 local.get $left_child
                 local.get $init
                 local.get $fn
-                local.get $C_SET_EMPTY
                 call $__ligo_internal__set_fold_right
                 local.set $init
             end
@@ -2163,12 +2151,12 @@
     )
     
 
-    (func $__ligo_internal__map_iter (param $set i32) (param $fn i32) (param $C_SET_EMPTY i32) (result i32)
+    (func $__ligo_internal__map_iter (param $set i32) (param $fn i32) (result i32)
         (local $left_child i32)
         (local $right_child i32)
         (local $tuple i32)
         local.get $set 
-        local.get $C_SET_EMPTY
+        global.get $C_SET_EMPTY
         i32.eq
         if (result i32)
             i32.const 0
@@ -2181,7 +2169,6 @@
             if (result i32)
                 local.get $left_child
                 local.get $fn
-                local.get $C_SET_EMPTY
                 call $__ligo_internal__map_iter
             else
                 i32.const 0
@@ -2228,7 +2215,6 @@
             if (result i32)
                 local.get $right_child
                 local.get $fn
-                local.get $C_SET_EMPTY
                 call $__ligo_internal__map_iter
             else
                 i32.const 0
@@ -2237,17 +2223,17 @@
         end
     )
     
-(func $__ligo_internal__map_map (param $set i32) (param $fn i32) (param $C_SET_EMPTY i32) (result i32)
+(func $__ligo_internal__map_map (param $set i32) (param $fn i32) (result i32)
     (local $left_child i32)
         (local $right_child i32)
         (local $tuple i32)
         (local $new_value i32)
         (local $item i32)
         local.get $set 
-        local.get $C_SET_EMPTY
+        global.get $C_SET_EMPTY
         i32.eq
         if (result i32)
-            local.get $C_SET_EMPTY
+            global.get $C_SET_EMPTY
         else 
             local.get $set 
             i32.const 8
@@ -2257,7 +2243,6 @@
             if (result i32)
                 local.get $left_child
                 local.get $fn
-                local.get $C_SET_EMPTY
                 call $__ligo_internal__map_map
             else
                 i32.const 0
@@ -2303,7 +2288,6 @@
             if (result i32)
                 local.get $right_child
                 local.get $fn
-                local.get $C_SET_EMPTY
                 call $__ligo_internal__map_map
             else
                 i32.const 0
@@ -2607,7 +2591,7 @@
     ;;     (local $comparison_value i32)
 
     ;;     local.get $rbt 
-    ;;     local.get $C_SET_EMPTY
+    ;;     global.get $C_SET_EMPTY
     ;;     i32.eq
     ;;     if 
     ;;         i32.const 20

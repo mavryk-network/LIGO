@@ -8,13 +8,7 @@ let at = no_region
 let mod_ : module_ =
   { it =
       { empty_module with
-        datas =
-          [ data ~offset:0l ~init:{ name = "C_SET_EMPTY"; detail = [ Int32 0l ] }
-            (* ; data ~offset:5l ~init:{ name = "C_LIST_EMPTY"; detail = [ Int8 9; Int32 0l ] } *)
-          ; data ~offset:4l ~init:{ name = "C_MAP_EMPTY"; detail = [ Int32 0l ] }
-          ; data ~offset:8l ~init:{ name = "C_BIG_MAP_EMPTY"; detail = [ Int32 0l ] }
-          ]
-      ; imports =
+        imports =
           [ import
               ~item:"__linear_memory"
               ~desc:(MemoryImport (MemoryType { min = 0l; max = None }))
@@ -22,13 +16,7 @@ let mod_ : module_ =
               ~item:"__stack_pointer"
               ~desc:(GlobalImport (GlobalType (NumType I32Type, Mutable)))
           ]
-      ; symbols =
-          [ symbol_data ~name:"C_SET_EMPTY" ~index:0l ~size:4l ~offset:0l
-            (* ; symbol_data ~name:"C_LIST_EMPTY" ~index:1l ~size:5l ~offset:4l *)
-          ; symbol_data ~name:"C_MAP_EMPTY" ~index:1l ~size:4l ~offset:4l
-          ; symbol_data ~name:"C_BIG_MAP_EMPTY" ~index:2l ~size:4l ~offset:8l
-          ; symbol_data ~name:"__heap_base" ~index:3l ~size:4l ~offset:12l
-          ]
+      ; symbols = [ symbol_data ~name:"__heap_base" ~index:0l ~size:4l ~offset:0l ]
       }
   ; at
   }
@@ -54,69 +42,49 @@ let mod_ =
       "env", "__ligo_internal__set_size", ([ NumType I32Type ], [ NumType I32Type ])
     ; ( "env"
       , "__ligo_internal__set_remove"
-      , ( [ NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type ]
-        , [ NumType I32Type ] ) )
+      , ([ NumType I32Type; NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
     ; ( "env"
       , "__ligo_internal__set_iter"
-      , ([ NumType I32Type; NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
+      , ([ NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
     ; ( "env"
       , "__ligo_internal__set_mem"
-      , ([ NumType I32Type; NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
+      , ([ NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
     ; ( "env"
       , "__ligo_internal__set_fold"
-      , ( [ NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type ]
-        , [ NumType I32Type ] ) )
-    ; ( "env"
-      , "__ligo_internal__set_fold_right"
-      , ( [ NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type ]
-        , [ NumType I32Type ] ) )
-    ; ( "env"
-      , "__ligo_internal__set_add"
       , ([ NumType I32Type; NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
     ; ( "env"
+      , "__ligo_internal__set_fold_right"
+      , ([ NumType I32Type; NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
+    ; ( "env"
+      , "__ligo_internal__set_add"
+      , ([ NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
+    ; ( "env"
       , "__ligo_internal__set_update"
-      , ( [ NumType I32Type
-          ; NumType I32Type
-          ; NumType I32Type
-          ; NumType I32Type
-          ; NumType I32Type
-          ]
+      , ( [ NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type ]
         , [ NumType I32Type ] ) )
     ; (* map *)
       ( "env"
       , "__ligo_internal__map_iter"
-      , ([ NumType I32Type; NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
+      , ([ NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
     ; ( "env"
       , "__ligo_internal__map_map"
-      , ([ NumType I32Type; NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
+      , ([ NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
     ; ( "env"
       , "__ligo_internal__map_fold"
-      , ( [ NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type ]
-        , [ NumType I32Type ] ) )
-    ; ( "env"
-      , "__ligo_internal__map_add"
-      , ( [ NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type ]
-        , [ NumType I32Type ] ) )
-    ; ( "env"
-      , "__ligo_internal__map_find_opt"
       , ([ NumType I32Type; NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
     ; ( "env"
+      , "__ligo_internal__map_add"
+      , ([ NumType I32Type; NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
+    ; ( "env"
+      , "__ligo_internal__map_find_opt"
+      , ([ NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
+    ; ( "env"
       , "__ligo_internal__map_update"
-      , ( [ NumType I32Type
-          ; NumType I32Type
-          ; NumType I32Type
-          ; NumType I32Type
-          ; NumType I32Type
-          ]
+      , ( [ NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type ]
         , [ NumType I32Type ] ) )
     ; ( "env"
       , "__ligo_internal__map_get_update"
-      , ( [ NumType I32Type
-          ; NumType I32Type
-          ; NumType I32Type
-          ; NumType I32Type
-          ; NumType I32Type
-          ]
+      , ( [ NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type ]
         , [ NumType I32Type ] ) )
     ; (* list *)
       ( "env"
@@ -142,4 +110,4 @@ let mod_ =
     ]
 
 
-let offset = 20l (* TODO: this needs to be made more robust *)
+let offset = 4l (* TODO: this needs to be made more robust *)
