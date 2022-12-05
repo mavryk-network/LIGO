@@ -501,7 +501,7 @@ let rec expression ~raise
   | E_constant { cons_name = C_SET_REMOVE; arguments = [ item; set ] } ->
     let w, env, item_e = expression ~raise w env item in
     let w, env, set_e = expression ~raise w env set in
-    w, env, set_e @ item_e @ [ const 20l; call_s "__ligo_internal__set_remove" ]
+    w, env, set_e @ item_e @ [ const 21l; call_s "__ligo_internal__set_remove" ]
   | E_constant { cons_name = C_SET_ITER; arguments = [ func; set ] } ->
     raise.error (not_supported e)
   | E_constant { cons_name = C_SET_FOLD; arguments = [ func; set; init ] } ->
@@ -518,7 +518,7 @@ let rec expression ~raise
     let w, env, boolean_e = expression ~raise w env boolean in
     ( w
     , env
-    , set_e @ boolean_e @ key_e @ [ const 20l; call_s "__ligo_internal__set_update" ] )
+    , set_e @ boolean_e @ key_e @ [ const 21l; call_s "__ligo_internal__set_update" ] )
   (* List *)
   | E_constant { cons_name = C_LIST_EMPTY; arguments = [] } ->
     w, env, [ const 10l ] (* C_LIST_EMPTY *)
@@ -557,7 +557,7 @@ let rec expression ~raise
   | E_constant { cons_name = C_MAP_REMOVE; arguments = [ key; map ] } ->
     let w, env, key_e = expression ~raise w env key in
     let w, env, map_e = expression ~raise w env map in
-    w, env, map_e @ key_e @ [ const 24l; call_s "__ligo_internal__set_remove" ]
+    w, env, map_e @ key_e @ [ const 25l; call_s "__ligo_internal__set_remove" ]
   | E_constant { cons_name = C_MAP_MEM; arguments = [ key; set ] } ->
     let w, env, key_e = expression ~raise w env key in
     let w, env, set_e = expression ~raise w env set in
@@ -566,14 +566,14 @@ let rec expression ~raise
     let w, env, key_e = expression ~raise w env key in
     let w, env, value_e = expression ~raise w env value in
     let w, env, map_e = expression ~raise w env map in
-    w, env, map_e @ key_e @ value_e @ [ const 24l; call_s "__ligo_internal__map_update" ]
+    w, env, map_e @ key_e @ value_e @ [ const 25l; call_s "__ligo_internal__map_update" ]
   | E_constant { cons_name = C_MAP_GET_AND_UPDATE; arguments = [ key; value; map ] } ->
     let w, env, key_e = expression ~raise w env key in
     let w, env, value_e = expression ~raise w env value in
     let w, env, map_e = expression ~raise w env map in
     ( w
     , env
-    , map_e @ key_e @ value_e @ [ const 24l; call_s "__ligo_internal__map_get_update" ] )
+    , map_e @ key_e @ value_e @ [ const 25l; call_s "__ligo_internal__map_get_update" ] )
   | E_constant { cons_name = C_MAP_ITER; arguments = [ func; map ] } ->
     raise.error (not_supported e)
   | E_constant { cons_name = C_MAP_MAP; arguments = [ func; map ] } ->
