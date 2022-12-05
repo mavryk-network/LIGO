@@ -10,9 +10,9 @@ let mod_ : module_ =
       { empty_module with
         datas =
           [ data ~offset:0l ~init:{ name = "C_SET_EMPTY"; detail = [ Int32 0l ] }
-          ; data ~offset:4l ~init:{ name = "C_LIST_EMPTY"; detail = [ Int32 0l ] }
-          ; data ~offset:8l ~init:{ name = "C_MAP_EMPTY"; detail = [ Int32 0l ] }
-          ; data ~offset:12l ~init:{ name = "C_BIG_MAP_EMPTY"; detail = [ Int32 0l ] }
+            (* ; data ~offset:5l ~init:{ name = "C_LIST_EMPTY"; detail = [ Int8 9; Int32 0l ] } *)
+          ; data ~offset:4l ~init:{ name = "C_MAP_EMPTY"; detail = [ Int32 0l ] }
+          ; data ~offset:8l ~init:{ name = "C_BIG_MAP_EMPTY"; detail = [ Int32 0l ] }
           ]
       ; imports =
           [ import
@@ -24,10 +24,10 @@ let mod_ : module_ =
           ]
       ; symbols =
           [ symbol_data ~name:"C_SET_EMPTY" ~index:0l ~size:4l ~offset:0l
-          ; symbol_data ~name:"C_LIST_EMPTY" ~index:1l ~size:4l ~offset:4l
-          ; symbol_data ~name:"C_MAP_EMPTY" ~index:2l ~size:4l ~offset:8l
-          ; symbol_data ~name:"C_BIG_MAP_EMPTY" ~index:3l ~size:4l ~offset:12l
-          ; symbol_data ~name:"__heap_base" ~index:4l ~size:4l ~offset:16l
+            (* ; symbol_data ~name:"C_LIST_EMPTY" ~index:1l ~size:5l ~offset:4l *)
+          ; symbol_data ~name:"C_MAP_EMPTY" ~index:1l ~size:4l ~offset:4l
+          ; symbol_data ~name:"C_BIG_MAP_EMPTY" ~index:2l ~size:4l ~offset:8l
+          ; symbol_data ~name:"__heap_base" ~index:3l ~size:4l ~offset:12l
           ]
       }
   ; at
@@ -121,21 +121,17 @@ let mod_ =
     ; (* list *)
       ( "env"
       , "__ligo_internal__list_map"
-      , ([ NumType I32Type; NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
-    ; ( "env"
-      , "__ligo_internal__list_size"
       , ([ NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
+    ; "env", "__ligo_internal__list_size", ([ NumType I32Type ], [ NumType I32Type ])
     ; ( "env"
       , "__ligo_internal__list_fold"
-      , ( [ NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type ]
-        , [ NumType I32Type ] ) )
+      , ([ NumType I32Type; NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
     ; ( "env"
       , "__ligo_internal__list_fold_right"
-      , ( [ NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type ]
-        , [ NumType I32Type ] ) )
+      , ([ NumType I32Type; NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
     ; ( "env"
       , "__ligo_internal__list_iter"
-      , ([ NumType I32Type; NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
+      , ([ NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
     ; (* string *)
       ( "env"
       , "__ligo_internal__string_concat"

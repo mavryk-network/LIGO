@@ -18,6 +18,10 @@
     (global $__left__tag    i32 (i32.const 7))  ;; can't we optimize this more? 
     (global $__right__tag   i32 (i32.const 8)) 
 
+    (global $__list__tag   i32 (i32.const 9)) 
+    (global $C_LIST_EMPTY   i32 (i32.const 10)) 
+
+;; 9 - list
     
 ;; Comparison only works on a class of types that we call comparable. The COMPARE instruction is defined in an ad hoc way for each comparable type, but the result of COMPARE is always an int, which can in turn be checked in a generic manner using the EQ, NEQ, LT, GT, LE and GE combinators.
 
@@ -2837,26 +2841,29 @@
         end
     )
 
-    (func $__ligo_internal__list_iter (param $list i32) (param $fn i32) (param $C_LIST_EMPTY i32) (result i32)
+    (func $__ligo_internal__list_iter (param $list i32) (param $fn i32) (result i32)
         (local $next_item i32)
         local.get $list 
-        local.get $C_LIST_EMPTY
+        global.get $C_LIST_EMPTY
         i32.eq
         if (result i32)
             i32.const 0
         else        
             loop 
                 local.get $list
-                i32.const 4
+                i32.const 5
                 i32.add
                 i32.load
                 local.set $next_item
 
-                local.get $list 
-                i32.load
-                local.set $list
+                ;; local.get $list 
+                ;; i32.load
+                ;; local.set $list
                 
                 local.get $list
+                i32.const 1 
+                i32.add
+                i32.load
                 local.get $fn
                 call_indirect 0 (type 0)
                 drop
@@ -2865,7 +2872,7 @@
                 local.set $list
 
                 local.get $next_item 
-                local.get $C_LIST_EMPTY
+                global.get $C_LIST_EMPTY
                 i32.ne
                 br_if 0
             end
@@ -2873,7 +2880,7 @@
         end
     )
 
-    (func $__ligo_internal__list_size (param $list i32) (param $C_LIST_EMPTY i32) (result i32)
+    (func $__ligo_internal__list_size (param $list i32) (result i32)
         (local $counter i32)
         (local $return i32)
 
@@ -2886,7 +2893,7 @@
         i32.store8
 
         local.get $list 
-        local.get $C_LIST_EMPTY
+        global.get $C_LIST_EMPTY
         i32.eq
         if 
             local.get $return 
@@ -2904,13 +2911,13 @@
                 local.set $counter 
 
                 local.get $list 
-                i32.const 4
+                i32.const 5
                 i32.add 
                 i32.load 
                 local.set $list 
 
                 local.get $list 
-                local.get $C_LIST_EMPTY
+                global.get $C_LIST_EMPTY
                 i32.ne 
                 br_if 0
             end
@@ -2924,7 +2931,7 @@
       
     )
 
-    (func $__ligo_internal__list_map (param $list i32) (param $fn i32) (param $C_LIST_EMPTY i32) (result i32)
+    (func $__ligo_internal__list_map (param $list i32) (param $fn i32) (result i32)
         (local $result_iter i32)
         (local $result i32)
         (local $next_item i32)
@@ -2933,13 +2940,16 @@
 
         local.get $list 
         if (result i32)
-            i32.const 8
+            i32.const 9
             call $malloc 
             local.tee $result_iter
+            global.get $__list__tag
+            i32.store
+            local.get $result_iter
             local.set $result
             loop (result i32)
                 local.get $list
-                i32.const 4
+                i32.const 5
                 i32.add
                 i32.load
                 local.set $next_item
@@ -2947,25 +2957,31 @@
                 local.get $next_item 
                 i32.load
                 if 
-                    i32.const 8 
+                    i32.const 9 
                     call $malloc 
                     local.set $result_iter_next
+                    local.get $result_iter_next
+                    global.get $__list__tag
+                    i32.store
                 else 
-                    local.get $C_LIST_EMPTY
+                    global.get $C_LIST_EMPTY
                     local.set $result_iter_next
                 end
                 local.get $result_iter
-
+                i32.const 1 
+                i32.add
 
 
                 local.get $list
+                i32.const 1 
+                i32.add
                 i32.load
                 local.get $fn
                 call_indirect 0 (type 0)
                 i32.store 
 
                 local.get $result_iter
-                i32.const 4 
+                i32.const 5 
                 i32.add 
                 local.get $result_iter_next
                 i32.store 
@@ -2985,17 +3001,17 @@
             end
 
         else 
-            local.get $C_LIST_EMPTY
+            global.get $C_LIST_EMPTY
         end
     )
 
-    (func $__ligo_internal__list_fold (param $list i32) (param $init i32)  (param $fn i32) (param $C_LIST_EMPTY i32) (result i32)
+    (func $__ligo_internal__list_fold (param $list i32) (param $init i32) (param $fn i32) (result i32)
         (local $next_item i32)
         (local $result i32)
         (local $tuple i32)
 
         local.get $list 
-        local.get $C_LIST_EMPTY
+        global.get $C_LIST_EMPTY
         i32.eq 
         if (result i32)
             local.get $init
@@ -3015,6 +3031,8 @@
                 i32.const 5
                 i32.add
                 local.get $list 
+                i32.const 1
+                i32.add
                 i32.load
                 i32.store
 
@@ -3027,7 +3045,7 @@
                 local.set $init 
 
                 local.get $list
-                i32.const 4
+                i32.const 5
                 i32.add
                 i32.load
                 local.set $next_item
@@ -3047,22 +3065,21 @@
         end
     )
 
-    (func $__ligo_internal__list_fold_right (param $list i32) (param $init i32) (param $fn i32) (param $C_LIST_EMPTY i32) (result i32)
+    (func $__ligo_internal__list_fold_right (param $list i32) (param $init i32) (param $fn i32) (result i32)
         (local $tuple i32)
 
         local.get $list 
-        local.get $C_LIST_EMPTY 
+        global.get $C_LIST_EMPTY 
         i32.eq
         if (result i32)
             local.get $init 
         else 
             local.get $list 
-            i32.const 4
+            i32.const 5
             i32.add
             i32.load
             local.get $init
             local.get $fn
-            local.get $C_LIST_EMPTY
             call $__ligo_internal__list_fold_right 
             local.set $init
 
@@ -3076,6 +3093,8 @@
             i32.const 1
             i32.add
             local.get $list 
+            i32.const 1 
+            i32.add
             i32.load
             i32.store
 

@@ -442,9 +442,17 @@ let rec expression ~raise
     let w, env, l2 = expression ~raise w env l2 in
     ( w
     , add_local env (cons, T.NumType I32Type)
-    , [ const 8l; call_s "malloc"; local_tee_s cons ]
+    , [ const 9l
+      ; call_s "malloc"
+      ; local_tee_s cons
+      ; const 9l (* list tag *)
+      ; store8
+      ; local_get_s cons
+      ; const 1l
+      ; i32_add
+      ]
       @ l1
-      @ [ store; local_get_s cons; const 4l; i32_add ]
+      @ [ store; local_get_s cons; const 5l; i32_add ]
       @ l2
       @ [ store; local_get_s cons ] )
   (* Pair *)
@@ -458,7 +466,7 @@ let rec expression ~raise
       ; call_s "malloc"
       ; local_set_s pair
       ; local_get_s pair
-      ; const 5l
+      ; const 5l (* pair tag *)
       ; store8
       ; local_get_s pair
       ; const 1l
@@ -524,7 +532,7 @@ let rec expression ~raise
       @ [ const 20l; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_update" ] )
   (* List *)
   | E_constant { cons_name = C_LIST_EMPTY; arguments = [] } ->
-    w, env, [ data_symbol "C_LIST_EMPTY" ]
+    w, env, [ const 10l ] (* C_LIST_EMPTY *)
   | E_constant { cons_name = C_LIST_LITERAL; arguments = [ e1 ] } ->
     raise.error (not_supported e)
   | E_constant { cons_name = C_LIST_ITER; arguments = [ func; list ] } ->
@@ -533,7 +541,7 @@ let rec expression ~raise
     raise.error (not_supported e)
   | E_constant { cons_name = C_LIST_SIZE; arguments = [ list_ ] } ->
     let w, env, list_e = expression ~raise w env list_ in
-    w, env, list_e @ [ data_symbol "C_LIST_EMPTY"; call_s "__ligo_internal__list_size" ]
+    w, env, list_e @ [ call_s "__ligo_internal__list_size" ]
   | E_constant { cons_name = C_LIST_FOLD; arguments = [ func; list; init ] } ->
     raise.error (not_supported e)
   | E_constant { cons_name = C_LIST_FOLD_LEFT; arguments = [ func; init; list ] } ->
@@ -886,13 +894,7 @@ let rec expression ~raise
     let w, env, iter_body = expression ~raise w env body in
     let iter_body_name = unique_name "iter_body" in
     let w, required_args = add_function w iter_body_name (fun _ -> iter_body) in
-    ( w
-    , env
-    , col
-      @ [ func_symbol iter_body_name
-        ; data_symbol "C_LIST_EMPTY"
-        ; call_s "__ligo_internal__list_map"
-        ] )
+    w, env, col @ [ func_symbol iter_body_name; call_s "__ligo_internal__list_map" ]
   | E_iterator
       ( C_MAP
       , ((item_name, item_type), body)
@@ -906,7 +908,7 @@ let rec expression ~raise
     , env
     , col
       @ [ func_symbol iter_body_name
-        ; data_symbol "C_LIST_EMPTY"
+        ; data_symbol "C_SET_EMPTY"
         ; call_s "__ligo_internal__map_map"
         ] )
   | E_iterator
@@ -918,13 +920,7 @@ let rec expression ~raise
     let w, env, iter_body = expression ~raise w env body in
     let iter_body_name = unique_name "iter_body" in
     let w, required_args = add_function w iter_body_name (fun _ -> iter_body) in
-    ( w
-    , env
-    , col
-      @ [ func_symbol iter_body_name
-        ; data_symbol "C_LIST_EMPTY"
-        ; call_s "__ligo_internal__list_iter"
-        ] )
+    w, env, col @ [ func_symbol iter_body_name; call_s "__ligo_internal__list_iter" ]
   | E_iterator
       ( C_ITER
       , ((item_name, item_type), body)
@@ -1024,12 +1020,7 @@ let rec expression ~raise
     let w, required_args = add_function w fold_body_name (fun _ -> iter_body) in
     ( w
     , env
-    , col
-      @ init
-      @ [ func_symbol fold_body_name
-        ; data_symbol "C_LIST_EMPTY"
-        ; call_s "__ligo_internal__list_fold"
-        ] )
+    , col @ init @ [ func_symbol fold_body_name; call_s "__ligo_internal__list_fold" ] )
   | E_fold
       (((name, tv), body), ({ type_expression = { type_content = _; _ }; _ } as col), init)
     -> raise.error (not_supported e)
@@ -1047,10 +1038,7 @@ let rec expression ~raise
     , env
     , col
       @ init
-      @ [ func_symbol fold_body_name
-        ; data_symbol "C_LIST_EMPTY"
-        ; call_s "__ligo_internal__list_fold_right"
-        ] )
+      @ [ func_symbol fold_body_name; call_s "__ligo_internal__list_fold_right" ] )
   | E_fold_right _ -> raise.error (not_supported e)
   | E_if_bool (test, t, f) ->
     let w, env, test = expression ~raise w env test in
@@ -1104,31 +1092,27 @@ let rec expression ~raise
     let w, env, matchee_e = expression ~raise w env matchee in
     let w, env, nil_e = expression ~raise w env nil in
     let w, env, cons_e = expression ~raise w env cons in
-    let return_type = Some (T.NumType I32Type) in
-    (* TODO properly get this *)
     ( w
     , env
     , matchee_e
       @ [ local_tee_s data
+        ; const 1l
+        ; i32_add
         ; load
         ; local_set_s hd
         ; local_get_s data
-        ; const 4l
+        ; const 5l
         ; i32_add
         ; load
         ; local_set_s tl
         ; S.
             { it =
                 A.Block
-                  ( ValBlockType return_type
+                  ( ValBlockType (Some (T.NumType I32Type))
                   , [ { it =
                           A.Block
                             ( ValBlockType None
-                            , [ local_get_s data
-                              ; data_symbol "C_LIST_EMPTY"
-                              ; i32_eq
-                              ; br_if 0l
-                              ]
+                            , [ local_get_s data; const 10l; i32_eq; br_if 0l ]
                               @ cons_e
                               @ [ br 1l ] )
                       ; at
