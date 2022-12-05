@@ -283,6 +283,7 @@ type contract_type =
 
 let fetch_contract_type ~raise : Value_var.t -> program -> contract_type =
  fun main_fname m ->
+  (* TODO: Remove duplicated code (see fetch_entry_type) *)
   let aux declt =
     match Location.unwrap declt with
     | D_value { binder = { var; _ }; expr; attr = _ }
@@ -321,27 +322,64 @@ let fetch_contract_type ~raise : Value_var.t -> program -> contract_type =
 (* get_shadowed_decl [prg] [predicate] returns the location of the last shadowed annotated top-level declaration of program [prg] if any
    [predicate] defines the annotation (or set of annotation) you want to match on
 *)
+
+module Shadowed = struct
+  module Map = Simple_utils.Map.Make (Module_var)
+
+  type t =
+    { top_level : Value_var.t list * Location.t list
+    ; module_ : t Map.t
+    }
+
+  let empty = { top_level = [], []; module_ = Map.empty }
+  let get_seen scope = fst scope.top_level
+  let get_locations scope = snd scope.top_level
+  let get_module scope var = Map.find var scope.module_
+
+  let add_seen scope x =
+    let seen, locs = scope.top_level in
+    { scope with top_level = x :: seen, locs }
+
+
+  let add_location scope x =
+    let seen, locs = scope.top_level in
+    { scope with top_level = seen, x :: locs }
+
+
+  let add_module scope mod_binder mod_scope =
+    { scope with module_ = Map.add mod_binder mod_scope scope.module_ }
+end
+
 let get_shadowed_decl : program -> (ValueAttr.t -> bool) -> Location.t option =
  fun prg predicate ->
-  let aux ((seen, shadows) : Value_var.t list * Location.t list) (x : declaration) =
-    match Location.unwrap x with
-    | D_value { binder; attr; _ } ->
-      (match List.find seen ~f:(Value_var.equal (Binder.get_var binder)) with
-      | Some x -> seen, Value_var.get_location x :: shadows
-      | None ->
-        if predicate attr then Binder.get_var binder :: seen, shadows else seen, shadows)
-    | D_irrefutable_match { pattern = { wrap_content = P_var binder; _ }; attr; _ } ->
-      (match List.find seen ~f:(Value_var.equal (Binder.get_var binder)) with
-      | Some x -> seen, Value_var.get_location x :: shadows
-      | None ->
-        if predicate attr then Binder.get_var binder :: seen, shadows else seen, shadows)
-    | D_irrefutable_match _ | D_type _ | D_module _ | D_open _ | D_include _ ->
-      seen, shadows
+  let f attr scope var =
+    match List.find (Shadowed.get_seen scope) ~f:(Value_var.equal var) with
+    | Some x -> Shadowed.add_location scope @@ Value_var.get_location x
+    | None -> if predicate attr then Shadowed.add_seen scope var else scope
   in
-  let _, shadows = List.fold ~f:aux ~init:([], []) prg in
-  match shadows with
-  | [] -> None
-  | hd :: _ -> Some hd
+  let rec aux (scope : Shadowed.t) (x : declaration) =
+    match Location.unwrap x with
+    | D_value { binder; attr; _ } -> f attr scope @@ Binder.get_var binder
+    | D_irrefutable_match { pattern = { wrap_content = P_var binder; _ }; attr; _ } ->
+      f attr scope @@ Binder.get_var binder
+    | D_module
+        { module_binder; module_ = { wrap_content = Module_expr.M_struct module_; _ }; _ }
+      ->
+      let mod_scope = List.fold ~f:aux ~init:Shadowed.empty module_ in
+      Shadowed.add_module scope module_binder mod_scope
+    | D_open path | D_include path ->
+      let mod_scope = List.Ne.fold_left ~f:Shadowed.get_module ~init:scope path in
+      let f scope var =
+        match List.find (Shadowed.get_seen scope) ~f:(Value_var.equal var) with
+        | Some x -> Shadowed.add_location scope @@ Value_var.get_location x
+        | None -> Shadowed.add_seen scope var
+      in
+      let scope = List.fold ~f ~init:scope (Shadowed.get_seen mod_scope) in
+      scope
+    | D_irrefutable_match _ | D_type _ | D_module _ -> scope
+  in
+  let scope = List.fold ~f:aux ~init:Shadowed.empty prg in
+  List.hd (Shadowed.get_locations scope)
 
 
 (* strip_view_annotations [p] remove all the [@view] annotation in top-level declarations of program [p] *)
