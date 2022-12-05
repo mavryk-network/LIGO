@@ -63,17 +63,6 @@ let peephole_program ~raise : program -> program =
       else aux vars types (mod_ :: mods) remaining
     | { wrap_content = D_open _; location = _ } :: remaining
     | { wrap_content = D_include _; location = _ } :: remaining ->
-      (*
-        let vars', types', mods' = self module_ in
-        let vars, types, mods = vars' @ vars, types' @ types, mods' @ mods in
-        (match
-           ( List.find_a_dup ~compare:Value_var.compare vars
-           , List.find_a_dup ~compare:Type_var.compare types
-           , List.find_a_dup ~compare:Module_var.compare mods )
-         with
-        | None, None, None -> aux vars types mods remaining
-        | _, _, _ -> raise.error @@ no_shadowing location)
-        *)
       aux vars types mods remaining
     | [] -> ()
   in
