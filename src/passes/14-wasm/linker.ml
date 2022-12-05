@@ -4,7 +4,7 @@
 let find_file name locations =
   let rec aux filename = function
     | [] ->
-      failwith "2Linker could not find: "
+      failwith "Linker could not find: "
       ^ name
       ^ ". Most likely it was not installed yet. "
     | dir :: dirs ->
