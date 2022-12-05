@@ -153,6 +153,7 @@ module Scope : sig
   val find_type_ : t -> Type_var.t -> Path.t
   val find_module : t -> Module_var.t -> Path.t * t
   val open_module : t -> Path.t -> t -> t
+  val include_module : t -> Path.t -> t -> t
 
   val push_value
     :  t
@@ -277,6 +278,7 @@ end = struct
     { scope with value; type_; module_; name_map }
 
 
+  let include_module = open_module
   let get_declarations scope = scope.decl_list
   let clean_declarations scope = { scope with decl_list = [] }
 
@@ -546,7 +548,7 @@ and compile_declaration
     return scope @@ decl_list
   | D_include (hd, tl) ->
     let mod_scope, decl_list = compile_module_path path scope (hd, tl) in
-    let scope = Scope.open_module scope (hd :: tl) mod_scope in
+    let scope = Scope.include_module scope (hd :: tl) mod_scope in
     return scope @@ decl_list
 
 

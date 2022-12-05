@@ -11,6 +11,8 @@ module Scope : sig
   val empty : t
   val new_module_var : t -> Module_var.t -> t -> t * Module_var.t
   val get_module_var : t -> Module_var.t -> t * Module_var.t
+  val open_module : t -> t -> t
+  val include_module : t -> t -> t
 end = struct
   module MMap = Simple_utils.Map.Make (Module_var)
 
@@ -32,6 +34,13 @@ end = struct
     (* The default value is for variable coming from other files *)
     Option.value ~default:(var, empty) @@ MMap.find_opt var map.module_
     |> fun (v, m) -> m, Module_var.(set_location @@ get_location var) v
+
+
+  let open_module scope mod_scope =
+    { module_ = MMap.union (fun _ v1 _ -> Some v1) scope.module_ mod_scope.module_ }
+
+
+  let include_module = open_module
 end
 
 let rec type_expression : Scope.t -> AST.type_expression -> AST.type_expression =
@@ -190,12 +199,14 @@ and compile_declaration scope (d : AST.declaration) : Scope.t * AST.declaration 
     let scope, module_binder = Scope.new_module_var scope module_binder mod_scope in
     return scope @@ AST.D_module { module_binder; module_; module_attr }
   | D_open (hd, tl) ->
-    let scope, hd = Scope.get_module_var scope hd in
-    let scope, tl = List.fold_map ~init:scope tl ~f:Scope.get_module_var in
+    let mod_scope, hd = Scope.get_module_var scope hd in
+    let mod_scope, tl = List.fold_map ~init:mod_scope tl ~f:Scope.get_module_var in
+    let scope = Scope.open_module scope mod_scope in
     return scope @@ AST.D_open (hd, tl)
   | D_include (hd, tl) ->
-    let scope, hd = Scope.get_module_var scope hd in
-    let scope, tl = List.fold_map ~init:scope tl ~f:Scope.get_module_var in
+    let mod_scope, hd = Scope.get_module_var scope hd in
+    let mod_scope, tl = List.fold_map ~init:mod_scope tl ~f:Scope.get_module_var in
+    let scope = Scope.include_module scope mod_scope in
     return scope @@ AST.D_include (hd, tl)
 
 
