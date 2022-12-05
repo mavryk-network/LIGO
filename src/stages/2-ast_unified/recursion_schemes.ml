@@ -30,27 +30,21 @@ module Catamorphism = struct
     =
    fun ~f x ->
     let self = cata_expr ~f in
-    let rec cata_ty_expr (x : ty_expr) : t = f.ty_expr (map_ty_expr_ cata_ty_expr x.fp)
+    let rec cata_ty_expr (x : ty_expr) : t = map_ty_expr_ cata_ty_expr x.fp |> f.ty_expr
     and cata_pattern (x : pattern) : p =
-      f.pattern (map_pattern_ cata_pattern cata_ty_expr x.fp)
+      map_pattern_ cata_pattern cata_ty_expr x.fp |> f.pattern
     and cata_instruction (x : instruction) : i =
-      f.instruction
-        (map_instruction_ cata_instruction self cata_pattern cata_statement x.fp)
+      map_instruction_ cata_instruction self cata_pattern cata_statement x.fp
+      |> f.instruction
     and cata_statement (x : statement) : s =
-      f.statement (map_statement_ cata_statement cata_instruction cata_declaration x.fp)
+      map_statement_ cata_statement cata_instruction cata_declaration x.fp |> f.statement
     and cata_declaration (x : declaration) : d =
-      f.declaration
-        (map_declaration_
-           cata_declaration
-           self
-           cata_ty_expr
-           cata_pattern
-           cata_mod_expr
-           x.fp)
+      map_declaration_ cata_declaration self cata_ty_expr cata_pattern cata_mod_expr x.fp
+      |> f.declaration
     and cata_mod_expr (x : mod_expr) : m =
-      f.mod_expr (map_mod_expr_ cata_mod_expr cata_statement cata_declaration x.fp)
+      map_mod_expr_ cata_mod_expr cata_statement cata_declaration x.fp |> f.mod_expr
     in
-    f.expr (map_expr_ self cata_ty_expr cata_pattern cata_statement cata_mod_expr x.fp)
+    map_expr_ self cata_ty_expr cata_pattern cata_statement cata_mod_expr x.fp |> f.expr
 
 
   let rec cata_program_entry
@@ -58,30 +52,30 @@ module Catamorphism = struct
     =
    fun ~f x ->
     let self = cata_program_entry ~f in
-    let rec cata_ty_expr (x : ty_expr) : t = f.ty_expr (map_ty_expr_ cata_ty_expr x.fp)
+    let rec cata_ty_expr (x : ty_expr) : t = map_ty_expr_ cata_ty_expr x.fp |> f.ty_expr
     and cata_expr (x : expr) : e =
-      f.expr
-        (map_expr_ cata_expr cata_ty_expr cata_pattern cata_statement cata_mod_expr x.fp)
+      map_expr_ cata_expr cata_ty_expr cata_pattern cata_statement cata_mod_expr x.fp
+      |> f.expr
     and cata_pattern (x : pattern) : p =
-      f.pattern (map_pattern_ cata_pattern cata_ty_expr x.fp)
+      map_pattern_ cata_pattern cata_ty_expr x.fp |> f.pattern
     and cata_instruction (x : instruction) : i =
-      f.instruction
-        (map_instruction_ cata_instruction cata_expr cata_pattern cata_statement x.fp)
+      map_instruction_ cata_instruction cata_expr cata_pattern cata_statement x.fp
+      |> f.instruction
     and cata_statement (x : statement) : s =
-      f.statement (map_statement_ cata_statement cata_instruction cata_declaration x.fp)
+      map_statement_ cata_statement cata_instruction cata_declaration x.fp |> f.statement
     and cata_declaration (x : declaration) : d =
-      f.declaration
-        (map_declaration_
-           cata_declaration
-           cata_expr
-           cata_ty_expr
-           cata_pattern
-           cata_mod_expr
-           x.fp)
+      map_declaration_
+        cata_declaration
+        cata_expr
+        cata_ty_expr
+        cata_pattern
+        cata_mod_expr
+        x.fp
+      |> f.declaration
     and cata_mod_expr (x : mod_expr) : m =
-      f.mod_expr (map_mod_expr_ cata_mod_expr cata_statement cata_declaration x.fp)
+      map_mod_expr_ cata_mod_expr cata_statement cata_declaration x.fp |> f.mod_expr
     in
-    f.program (map_program_entry_ self cata_declaration cata_instruction x.fp)
+    map_program_entry_ self cata_declaration cata_instruction x.fp |> f.program
 
 
   let cata_program ~f x = List.map x ~f:(cata_program_entry ~f)
@@ -110,7 +104,73 @@ module Anamorphism = struct
     ; program :
         'program_entry -> ('program_entry, 'declaration, 'instruction) program_entry_
     }
-  (* todo if needed *)
+
+  let rec ana_expr
+      : type e t p s m i d pe. f:(e, t, p, s, m, i, d, pe) unfold -> e -> expr
+    =
+   fun ~f x ->
+    let self = ana_expr ~f in
+    let rec ana_ty_expr (x : t) : ty_expr =
+      { fp = f.ty_expr x |> map_ty_expr_ ana_ty_expr }
+    and ana_pattern (x : p) : pattern =
+      { fp = f.pattern x |> map_pattern_ ana_pattern ana_ty_expr }
+    and ana_instruction (x : i) : instruction =
+      { fp =
+          f.instruction x
+          |> map_instruction_ ana_instruction self ana_pattern ana_statement
+      }
+    and ana_statement (x : s) : statement =
+      { fp = f.statement x |> map_statement_ ana_statement ana_instruction ana_declaration
+      }
+    and ana_declaration (x : d) : declaration =
+      { fp =
+          f.declaration x
+          |> map_declaration_ ana_declaration self ana_ty_expr ana_pattern ana_mod_expr
+      }
+    and ana_mod_expr (x : m) =
+      { fp = f.mod_expr x |> map_mod_expr_ ana_mod_expr ana_statement ana_declaration }
+    in
+    { fp = f.expr x |> map_expr_ self ana_ty_expr ana_pattern ana_statement ana_mod_expr }
+
+
+  let rec ana_program_entry
+      : type e t p s m i d pe. f:(e, t, p, s, m, i, d, pe) unfold -> pe -> program_entry
+    =
+   fun ~f x ->
+    let self = ana_program_entry ~f in
+    let rec ana_ty_expr (x : t) : ty_expr =
+      { fp = f.ty_expr x |> map_ty_expr_ ana_ty_expr }
+    and ana_expr (x : e) : expr =
+      { fp =
+          f.expr x
+          |> map_expr_ ana_expr ana_ty_expr ana_pattern ana_statement ana_mod_expr
+      }
+    and ana_pattern (x : p) : pattern =
+      { fp = f.pattern x |> map_pattern_ ana_pattern ana_ty_expr }
+    and ana_instruction (x : i) : instruction =
+      { fp =
+          f.instruction x
+          |> map_instruction_ ana_instruction ana_expr ana_pattern ana_statement
+      }
+    and ana_statement (x : s) : statement =
+      { fp = f.statement x |> map_statement_ ana_statement ana_instruction ana_declaration
+      }
+    and ana_declaration (x : d) : declaration =
+      { fp =
+          f.declaration x
+          |> map_declaration_
+               ana_declaration
+               ana_expr
+               ana_ty_expr
+               ana_pattern
+               ana_mod_expr
+      }
+    and ana_mod_expr (x : m) =
+      { fp = f.mod_expr x |> map_mod_expr_ ana_mod_expr ana_statement ana_declaration }
+    in
+    { fp = f.program x |> map_program_entry_ self ana_declaration ana_instruction }
+
+  let ana_program ~f x = List.map x ~f:(ana_program_entry ~f)
 end
 
 module Iter = struct

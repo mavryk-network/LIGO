@@ -21,6 +21,7 @@ module Import = Import
 module Let_decl = Let_decl
 module Simple_decl = Simple_decl
 module Fun_decl = Fun_decl
+module Type_abstraction_decl = Type_abstraction_decl
 module Type_decl = Type_decl
 module Mod_decl = Mod_decl
 module Operators = Operators

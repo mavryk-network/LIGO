@@ -1,5 +1,4 @@
 open Types
-open Simple_utils.Function
 
 let rec sexp_of_ty_expr (x : ty_expr) : Sexp.t =
   Types.sexp_of_ty_expr_ sexp_of_ty_expr x.fp
@@ -21,7 +20,13 @@ and sexp_of_expr : expr -> Sexp.t = fun e ->
     sexp_of_statement
     sexp_of_mod_expr
     e.fp
-
+and sexp_of_program_entry : program_entry -> Sexp.t = fun e ->
+  Types.sexp_of_program_entry_
+    sexp_of_program_entry
+    sexp_of_declaration
+    sexp_of_instruction
+    e.fp
+and sexp_of_program : program -> Sexp.t = fun p -> List.sexp_of_t sexp_of_program_entry p
 
 let rec ty_expr_of_sexp (s : Sexp.t) : ty_expr =
   { fp = (Types.ty_expr__of_sexp ty_expr_of_sexp s) }
@@ -45,5 +50,12 @@ and expr_of_sexp : Sexp.t -> expr = fun s ->
     s
   in
   { fp }
-
-let expr_of_string = expr_of_sexp <@ Sexp.of_string
+and program_entry_of_sexp : Sexp.t -> program_entry = fun s ->
+  let fp = Types.program_entry__of_sexp
+    program_entry_of_sexp
+    declaration_of_sexp
+    instruction_of_sexp
+    s
+  in
+  { fp }
+and program_of_sexp : Sexp.t -> program = fun p -> List.t_of_sexp program_entry_of_sexp p

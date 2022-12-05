@@ -30,13 +30,18 @@ module Internal () = struct
   module T = struct
     type t =
       { name : string
-      ; counter : int [@default 0] [@sexp_drop_default.equal]
-      ; generated : bool [@default false] [@sexp_drop_default.equal]
-      ; location : Location.t [@equal.ignore] [@compare.ignore] [@hash.ignore] [@default (Virtual "")] [@sexp_drop_default.equal]
+      ; counter : int
+      ; generated : bool
+      ; location : Location.t [@equal.ignore] [@compare.ignore] [@hash.ignore]
       }
-    [@@deriving equal, compare, yojson, hash, sexp]
+    [@@deriving equal, compare, yojson, hash]
+    let sexp_of_t ({name;counter=_;generated=_;location=_} : t) : Sexp.t =
+      Sexp.Atom name
+    let t_of_sexp : Sexp.t -> t = function
+      | Atom name -> {name = name ; generated = false ; counter = 0 ; location = Location.generated}
+      | (List _ as x) -> Sexplib.Conv_error.ptag_no_args "lol" x 
   end
-
+  
   include T
 
   let global_counter = ref 1

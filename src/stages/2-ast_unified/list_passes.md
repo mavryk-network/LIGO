@@ -1,3 +1,20 @@
+## pass 'type_asbtraction_declaration'
+  - remove : D_Type_absctration
+  - add    : D_Type
+
+    The goal is to remove the type parameters in the D_TypeDecl node
+    and inject them as T_Abstraction.
+    
+    D_TypeDecl
+      name : my_type_name
+      parameters : [ alpha ]
+      type_expression : T_xxx (T_arg alpha)
+    |->
+    D_Type
+      binder : my_type_name
+      type_expresion :
+        T_abstraction( (T_var alpha) , T_xxx (T_var alpha) )
+
 ## pass 'freeze_operator' : bin_op , ternop ?
   - remove : E_binary_op E_unary_op
   - remove : E_set_membership
@@ -35,7 +52,7 @@
 
   check that `e` is an int literal (for now we don't have partial exec) 
 
---
+---
 
 
   EObject
@@ -314,33 +331,6 @@
     
     The goal of this nanopass is to accumulate those attributes
     and perform the same check, and then remove the attributes.
-
-  E_CallJsligo
-  =============================================================================
-  pass 'e_call_jsligo'
-    remove : E_CallJsligo
-    add    : E_Call | ...
-
-    CST.Jsligo.E_Call represent classic function calls but also some special calls.
-    The classic calls will be converted to ASTU.E_Call,
-    the special calls will be converted into the correct ASTU node,
-    according to what's done in tree-abstraction.
-
-    Special calls are :
-
-    [.] Special calls to 'list'
-      | ECall {value=(EVar {value = "list"; _}, Multiple {value = {inside = (EArray {value = {inside = Some (Expr_entry e, [(_, Rest_entry {value = {expr; _}; _})]); _}; _}, []); _}; _}); region } ->
-      | ECall {value=(EVar {value = "list"; _}, Multiple {value = {inside = (EArray {value = {inside;lbracket=_;rbracket=_};region=_}, []); _}; _}); region } -> (
-    [.] Pattern matching
-      | ECall {value=(EVar {value = "match"; _}, Multiple {value = {inside = (input, [(_, EObject {value = {inside = fields; _}; region=finish})]); _}; _}); region=start} ->
-      | ECall {value=(EVar {value = "match"; _}, Multiple {value = {inside = (input, [(_, ECall {value = EVar {value="list"; _}, Multiple { value = {inside = (CST.EArray {value = {inside; _}; _}, _); _} ;_} ;_})]); _}; _}); region} ->
-    [.] ?
-      | ECall {value=(EVar var,args);region} ->
-    [X] pseudo-module call
-      | ECall ({value=(EModA {value={module_name;field=_;selector=_};region=_} as value,args);region} as call) when List.mem ~equal:String.(=) built_ins module_name.value -> (
-
-      Just convert it into ASTU.E_Call, a later nanopass will convert
-      pseudo-module-calls from all syntaxes into appropriate constants.
       
 
   E_Constr
@@ -426,24 +416,7 @@
     | EAssign _ as e ->
   
   
-  D_Type / T_Arg
-  =============================================================================
-  pass 'd_type'
-    remove : D_TypeDecl
-    add    : D_Type
 
-    The goal is to remove the type parameters in the D_TypeDecl node
-    and inject them as T_Abstraction.
-    
-    D_TypeDecl
-      name : my_type_name
-      parameters : [ alpha ]
-      type_expression : T_xxx (T_arg alpha)
-    |->
-    D_Type
-      binder : my_type_name
-      type_expresion :
-        T_abstraction( (T_var alpha) , T_xxx (T_var alpha) )
 
   D_Let
   =============================================================================

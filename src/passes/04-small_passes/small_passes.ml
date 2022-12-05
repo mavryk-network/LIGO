@@ -2,7 +2,7 @@ module I = Ast_unified
 module O = Ast_core
 open Passes.Pass_type
 
-let trivial_compile_program : I.program -> O.program = fun _ -> failwith "TODO12"
+let trivial_compile_program : I.program -> O.program = fun _ -> failwith ""
 let trivial_compile_expression : I.expr -> O.expression = fun _ -> failwith ""
 
 let compile_with_passes : type a. a sub_pass list -> a -> a =
@@ -19,7 +19,10 @@ let compile_with_passes : type a. a sub_pass list -> a -> a =
   prg
 
 
-let passes ~raise ~options = ignore (raise,options) ; [ Passes.Remove_t_arg.pass ]
+let passes ~(raise:(Passes.Errors.t,_) Simple_utils.Trace.raise) ~options = ignore (raise,options) ;
+  [ Passes.T_arg.pass
+  ; Passes.Type_abstraction_declaration.pass ~raise
+  ]
 
 let compile_program ~raise ~options : I.program -> O.program =
  fun prg ->

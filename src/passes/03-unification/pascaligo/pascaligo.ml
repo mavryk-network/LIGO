@@ -760,7 +760,7 @@ and compile_declaration ~(raise : ('e, 'w) raise) : CST.declaration -> AST.decla
         d.params
     in
     let type_expr = compile_type_expression ~raise d.type_expr in
-    d_type { name; params; type_expr } ~loc
+    d_type_abstraction { name; params; type_expr } ~loc
   | D_Const d ->
     let d, loc = r_split d in
     let type_params = Option.map ~f:compile_type_params d.type_params in

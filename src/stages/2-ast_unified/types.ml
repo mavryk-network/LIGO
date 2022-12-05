@@ -40,6 +40,8 @@ module Mod_in = Temp_prim.Mod_in
 module Block_fun = Temp_prim.Block_fun
 module Block_with = Temp_prim.Block_with
 module Assign_jsligo = Temp_prim.Assign_jsligo
+module Type_decl = Temp_prim.Type_decl
+module Abstraction = Ligo_prim.Abstraction
 
 module Empty_label = struct
   type t = unit [@@deriving eq, compare, yojson, iter, hash]
@@ -73,7 +75,7 @@ module Import = Temp_prim.Import
 module Let_decl = Temp_prim.Let_decl
 module Simple_decl = Temp_prim.Simple_decl
 module Fun_decl = Temp_prim.Fun_decl
-module Type_decl = Temp_prim.Type_decl
+module Type_abstraction_decl = Temp_prim.Type_abstraction_decl
 module Mod_decl = Temp_prim.Mod_decl
 module Operators = Temp_prim.Operators
 module Let_binding = Temp_prim.Let_binding
@@ -131,6 +133,9 @@ and 'self type_expression_content_ =
   | T_Record_raw of 'self option Non_linear_rows.t
   | T_Disc_union of 'self Non_linear_disc_rows.t
   | T_Attr of Attribute.t * 'self
+
+  (* \/ Bellow are nodes added through the passes \/ *)
+  | T_Abstraction of 'self Abstraction.t
 [@@deriving map, yojson, iter, sexp]
 
 (* ========================== PATTERNS ===================================== *)
@@ -207,8 +212,11 @@ and ('self, 'expr, 'ty_expr, 'pattern, 'mod_expr) declaration_content_ =
   | D_Multi_const of
       ('pattern, 'expr, 'ty_expr) Simple_decl.t nseq (* const x = y , z = w *)
   | D_Fun of ('ty_expr, 'expr, ('pattern, 'ty_expr) Param.t) Fun_decl.t
-  | D_Type of 'ty_expr Type_decl.t
+  | D_Type_abstraction of 'ty_expr Type_abstraction_decl.t
   | D_Module of 'mod_expr Mod_decl.t
+
+  (* \/ Bellow are nodes added through the passes \/ *)
+  | D_Type of 'ty_expr Type_decl.t [@only_interpreter]
 [@@deriving map, yojson, iter, sexp]
 
 (* ========================== MODULES ====================================== *)

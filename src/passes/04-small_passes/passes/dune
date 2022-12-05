@@ -5,7 +5,9 @@
   (backend bisect_ppx))
  (modules
   pass_type
-  remove_t_arg
+  errors
+  t_arg
+  type_abstraction_declaration
  )
  (libraries ast_unified)
  (inline_tests

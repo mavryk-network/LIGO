@@ -5,8 +5,9 @@ type options = unit (*remove pass it in files *)
 (* it's preferable to use the defined recursion schemes for code transformations
    but  *)
 type 'a code_transformation = 'a -> 'a
+
+(* to dynamically check if reduction happened, we will always use iter, this type feels wrong tho *)
 type 'a dyn_reduction_check = Iter.iter * (Iter.iter -> 'a -> unit)
-(* to dynamically check if reduction happened, we will always use iter*)
 
 type 'a sub_pass =
   { name : string
@@ -26,13 +27,34 @@ let combine_checks : 'a dyn_reduction_check list -> 'a -> unit =
   let combined_iter = Iter.combine_iteration iters in
   match checks with
   | [] -> fun _ -> ()
-  (* we always use iter, so it does not matter which function we take here ... *)
+  (* we always use iter, so it does not matter which function we take here ... feels wrong *)
   | (_, f) :: _ -> f combined_iter
 
 
 (* catamorphism mapping expressions to expressions, program to program .. *)
-type default_cata_pass = (expr,ty_expr,pattern,statement,mod_expr,instruction,declaration,program_entry) Ast_unified.Catamorphism.fold
-let idle_pass : default_cata_pass =
+type cata_pass =
+  ( expr
+  , ty_expr
+  , pattern
+  , statement
+  , mod_expr
+  , instruction
+  , declaration
+  , program_entry )
+  Ast_unified.Catamorphism.fold
+
+type ana_pass =
+  ( expr
+  , ty_expr
+  , pattern
+  , statement
+  , mod_expr
+  , instruction
+  , declaration
+  , program_entry )
+  Ast_unified.Anamorphism.unfold
+
+let idle_cata_pass : cata_pass =
   { expr = (fun x -> { fp = x })
   ; ty_expr = (fun x -> { fp = x })
   ; pattern = (fun x -> { fp = x })
@@ -42,22 +64,52 @@ let idle_pass : default_cata_pass =
   ; declaration = (fun x -> { fp = x })
   ; program = (fun x -> { fp = x })
   }
+
+
+let idle_ana_pass : ana_pass =
+  { expr = (fun { fp } -> fp)
+  ; ty_expr = (fun { fp } -> fp)
+  ; pattern = (fun { fp } -> fp)
+  ; statement = (fun { fp } -> fp)
+  ; mod_expr = (fun { fp } -> fp)
+  ; instruction = (fun { fp } -> fp)
+  ; declaration = (fun { fp } -> fp)
+  ; program = (fun { fp } -> fp)
+  }
+
+
 let cata_morph
     ~name
-    ~(compile : default_cata_pass)
-    ~(decompile : default_cata_pass)
+    ~(compile : [ `Cata of cata_pass | `Ana of ana_pass ])
+    ~(decompile : [ `Cata of cata_pass | `Ana of ana_pass ])
     ~(reduction_check : Ast_unified.Iter.iter)
     : pass
   =
   let expression =
-    let forward expr = Catamorphism.(cata_expr ~f:compile expr) in
-    let backward expr = Catamorphism.(cata_expr ~f:decompile expr) in
+    let forward expr =
+      match compile with
+      | `Cata pass -> Catamorphism.(cata_expr ~f:pass expr)
+      | `Ana pass -> Anamorphism.(ana_expr ~f:pass expr)
+    in
+    let backward expr =
+      match compile with
+      | `Cata pass -> Catamorphism.(cata_expr ~f:pass expr)
+      | `Ana pass -> Anamorphism.(ana_expr ~f:pass expr)
+    in
     let reduction_check = reduction_check, fun f expr -> Iter.(iter_expr ~f expr) in
     { name; forward; forward_check = reduction_check; backward }
   in
   let program =
-    let forward prg = Catamorphism.(cata_program ~f:compile prg) in
-    let backward prg = Catamorphism.(cata_program ~f:decompile prg) in
+    let forward expr =
+      match decompile with
+      | `Cata pass -> Catamorphism.(cata_program ~f:pass expr)
+      | `Ana pass -> Anamorphism.(ana_program ~f:pass expr)
+    in
+    let backward expr =
+      match decompile with
+      | `Cata pass -> Catamorphism.(cata_program ~f:pass expr)
+      | `Ana pass -> Anamorphism.(ana_program ~f:pass expr)
+    in
     let reduction_check = reduction_check, fun f prg -> Iter.(iter_program ~f prg) in
     { name; forward; forward_check = reduction_check; backward }
   in

@@ -614,7 +614,7 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration =
       Option.map ~f:compile_params d.params
     in
     let type_expr = compile_type_expression d.type_expr in
-    d_type { name; params; type_expr } ~loc
+    d_type_abstraction { name; params; type_expr } ~loc
   | ModuleDecl d ->
     let d, loc = r_split d in
     let name = TODO_do_in_parsing.mvar ~loc:(r_snd d.name) (r_fst d.name) in

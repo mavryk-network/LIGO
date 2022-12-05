@@ -64,7 +64,7 @@ module TODO_unify_in_cst = struct
   let test_clause_branch x = AST.Test_clause.ClauseBlock (List.Ne.singleton x)
   let let_as_decl ~loc x = s_decl ~loc (d_multi_var ~loc x)
   let const_as_decl ~loc x = s_decl ~loc (d_multi_const ~loc x)
-  let ty_as_decl ~loc x = s_decl ~loc (d_type ~loc x)
+  let ty_as_decl ~loc x = s_decl ~loc (d_type_abstraction ~loc x)
   let import_as_decl ~loc x = s_decl ~loc (d_import ~loc x)
 
   let namespace_decl ~loc name statements =
