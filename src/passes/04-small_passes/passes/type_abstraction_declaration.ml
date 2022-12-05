@@ -30,26 +30,32 @@ let reduction ~raise =
       | _ -> ())
   }
 
+
 let decompile =
   let pass_declaration ({ fp } : declaration) =
-      Location.map
-        (function
-          | (D_Type { name; type_expr } | D_Type_abstraction { name; type_expr ; params = None}) as d -> (
-            match get_t type_expr with
-            | T_Abstraction { ty_binder ; kind ; type_ } ->
-              ignore kind ; (* I guess that's normal ? *)
-              D_Type_abstraction {name ; params = Some (List.Ne.singleton ty_binder) ; type_expr = type_ }
-            | _ -> d
-          )
-          | D_Type_abstraction { name; type_expr ; params = Some params } as d -> (
-            match get_t type_expr with
-            | T_Abstraction { ty_binder ; kind ; type_ } ->
-              ignore kind ; (* I guess that's normal ? *)
-              D_Type_abstraction {name ; params = Some (List.Ne.cons ty_binder params) ; type_expr = type_ }
-            | _ -> d
-          )
-          | x -> x )
-        fp
+    Location.map
+      (function
+        | D_Type { name; type_expr }
+        | D_Type_abstraction { name; params = None; type_expr } ->
+          let params =
+            Catamorphism.cata_ty_expr
+              ~f:(fun x ->
+                match x with
+                | { wrap_content = T_Abstraction { ty_binder; kind = _; type_ = params } ; _ } -> ty_binder::params
+                | _ -> [])
+              type_expr
+          in
+          let tail =
+            Catamorphism.cata_ty_expr
+              ~f:(function
+                | { wrap_content = T_Abstraction { type_ ; _ } ; _ } -> type_
+                | { location = loc; wrap_content } -> make_t ~loc wrap_content)
+              type_expr
+          in
+          let params = List.Ne.of_list_opt params in
+          D_Type_abstraction {name ; params ; type_expr = tail }
+        | x -> x)
+      fp
   in
   `Ana { idle_ana_pass with declaration = pass_declaration }
 
@@ -57,42 +63,28 @@ let decompile =
 let pass ~raise =
   cata_morph ~name:__MODULE__ ~compile ~decompile ~reduction_check:(reduction ~raise)
 
-let%expect_test "lol" =
-  let b = Ty_variable.of_input_var "a" in
-  let bv : ty_expr = { fp = Location.wrap (T_Var b )} in
-  let type_ : ty_expr = {fp = Location.wrap (T_Prod (bv,[bv; bv]))} in
-  (* let toto = S_exp.sexp_of_ty_expr ({fp = Location.wrap (T_Abstraction {ty_binder = b ; kind = Type ; type_ })}) in *)
-  let toto = S_exp.sexp_of_declaration ({fp = Location.wrap (D_Type_abstraction {name = b ; params= Some (b,[b; b]) ; type_expr = type_ })}) in
-  let _ = Format.printf "%a" (Sexp.pp_hum_indent 2) toto in
-  [%expect
-    {|
-      (D_Type_abstraction
-        ((name a) (params ((a a a)))
-          (type_expr (T_Prod ((T_Var a) (T_Var a) (T_Var a))))))  |}]
 
-
-let%expect_test "addition" =
+let%expect_test "decompile" =
   let raise = raise_failwith "test" in
   let in_prg =
     S_exp.program_entry_of_sexp
     @@ Sexp.of_string
-    {|
+         {|
       (P_Declaration
-        (D_Type_abstraction (
+        (D_Type (
           (name my_t)
-          (params ((a b)))
-          (type_expr (
-            T_Prod (
-              (T_Var a)
-              (T_Var b)))))))
+          (type_expr
+            (T_Abstraction
+              ((ty_binder a) (kind Type) (type_ 
+              (T_Abstraction
+                ((ty_binder b) (kind Type) (type_ (T_Var whatever)))))))))))
     |}
   in
-  let out_expr = (pass ~raise).program.backward [in_prg] in
+  let out_expr = (pass ~raise).program.backward [ in_prg ] in
   let toto = S_exp.sexp_of_program out_expr in
   let _ = Format.printf "%a" (Sexp.pp_hum_indent 2) toto in
-  [%expect{|
+  [%expect
+    {|
     ((P_Declaration
        (D_Type_abstraction
-         ((name my_t) (params ((a b)))
-           (type_expr (T_Prod ((T_Var a) (T_Var b))))))))
-  |}]
+         ((name my_t) (params ((a b))) (type_expr (T_Var whatever)))))) |}]

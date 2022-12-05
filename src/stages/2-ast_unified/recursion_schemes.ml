@@ -24,6 +24,10 @@ module Catamorphism = struct
         ('program_entry, 'declaration, 'instruction) program_entry_ -> 'program_entry
     }
 
+  
+  let rec cata_ty_expr : type t. f:(t ty_expr_ -> t) -> ty_expr -> t
+  = fun ~f x -> map_ty_expr_ (cata_ty_expr ~f) x.fp |> f
+  
   (* we could factorize cata_expr and cata_program ; but I feel like those function are exactly those
     we would like to generate from algebras someday, so I keep them as such *)
   let rec cata_expr : type e t p s m i d pe. f:(e, t, p, s, m, i, d, pe) fold -> expr -> e
@@ -104,6 +108,9 @@ module Anamorphism = struct
     ; program :
         'program_entry -> ('program_entry, 'declaration, 'instruction) program_entry_
     }
+
+  let rec ana_ty_expr : type t. f:(t -> t ty_expr_) -> t -> ty_expr = fun ~f x ->
+    { fp = f x |> map_ty_expr_ (ana_ty_expr ~f) }
 
   let rec ana_expr
       : type e t p s m i d pe. f:(e, t, p, s, m, i, d, pe) unfold -> e -> expr
