@@ -24,16 +24,7 @@
     (global $C_SET_EMPTY   i32 (i32.const 12)) 
     (global $__map__tag   i32 (i32.const 13)) 
 
-;; 9 - list
-    
-;; Comparison only works on a class of types that we call comparable. The COMPARE instruction is defined in an ad hoc way for each comparable type, but the result of COMPARE is always an int, which can in turn be checked in a generic manner using the EQ, NEQ, LT, GT, LE and GE combinators.
-
-;; The result of COMPARE is 0 if the top two elements of the stack are equal, negative if the first element in the stack is less than the second, and positive otherwise.
-
-;; address values are compared as follows:
-;; addresses of implicit accounts are strictly less than addresses of originated accounts
-;; addresses of the same type are compared lexicographically
-
+;; not yet implemented: addressess
     (func $compare (param $a i32) (param $b i32) (result i32)
         (local $tag i32)
         (local $a_value i32)
@@ -46,8 +37,6 @@
         (local $a_char i32)
         (local $b_char i32)
         (local $temp i32)
-
-        
 
         local.get $a
         i32.load8_u
@@ -197,11 +186,8 @@
                                     end
                                 end
                             end
-
                         end
                     end 
-                    ;; 
-
                 end
             else 
                 local.get $tag
@@ -483,13 +469,18 @@
         local.get $size
         call $malloc
         local.tee $child 
-        i32.const 16
+        i32.const 17
         i32.add
         local.get $value 
         i32.store
 
+        local.get $child 
+        global.get $__set__tag
+        i32.store
 
         local.get $child 
+        i32.const 1 
+        i32.add
         local.get $parent
         i32.store
 
@@ -500,7 +491,7 @@
         i32.store
 
         local.get $child 
-        i32.const 12
+        i32.const 13
         i32.add
         i32.const 1
         i32.store
@@ -518,7 +509,7 @@
         (local $temp i32)
 
         local.get $set 
-        i32.const 4
+        i32.const 5
         i32.add
         i32.load
         local.set $left_child
@@ -535,7 +526,7 @@
             local.set $left_value
         end
         local.get $set 
-        i32.const 8
+        i32.const 9
         i32.add
         i32.load
         local.set $right_child
@@ -596,7 +587,7 @@
             loop (result i32)
                 local.get $m 
                 local.get $set
-                i32.const 16
+                i32.const 17
                 i32.add
                 i32.load                
                 call $compare
@@ -612,7 +603,7 @@
                     i32.eq
                     if  (result i32)
                         local.get $set 
-                        i32.const 4
+                        i32.const 5
                         i32.add
                         i32.load
                         local.tee $left_child
@@ -626,7 +617,7 @@
                         end
                     else 
                         local.get $set 
-                        i32.const 8
+                        i32.const 9
                         i32.add
                         i32.load
                         local.tee $right_child
@@ -677,7 +668,7 @@
             loop (result i32)
                 local.get $m 
                 local.get $set
-                i32.const 16
+                i32.const 17
                 i32.add
                 i32.load                
                 call $compare
@@ -702,7 +693,7 @@
                     i32.const 5
                     i32.add 
                     local.get $set
-                    i32.const 20
+                    i32.const 21
                     i32.add
                     i32.load   
                     ;; i32.load
@@ -715,7 +706,7 @@
                     i32.eq
                     if  (result i32)
                         local.get $set 
-                        i32.const 4
+                        i32.const 5
                         i32.add
                         i32.load
                         local.tee $left_child
@@ -739,7 +730,7 @@
                         end
                     else 
                         local.get $set 
-                        i32.const 8
+                        i32.const 9
                         i32.add
                         i32.load
                         local.tee $right_child
@@ -798,18 +789,25 @@
         global.get $C_SET_EMPTY
         i32.eq
         if (result i32)
-            i32.const 20
+            i32.const 21
             call $malloc 
             local.tee $result
-            i32.const 16
+            global.get $__set__tag
+            i32.store
+            local.get $result
+            i32.const 17
             i32.add
             local.get $key 
             i32.store           
             local.get $result
         else
-            i32.const 20
+            i32.const 21
             call $malloc 
             local.set $result 
+
+            local.get $result 
+            global.get $__set__tag
+            i32.store
 
             local.get $result 
             local.set $new_item
@@ -820,10 +818,16 @@
             loop (result i32)
                 local.get $new_item
                 local.get $current_item 
-                i32.const 20
+                i32.const 21
                 memory.copy 
 
                 local.get $new_item 
+                global.get $__set__tag
+                i32.store
+
+                local.get $new_item 
+                i32.const 1 
+                i32.add
                 local.get $parent
                 i32.store
 
@@ -832,7 +836,7 @@
                 
                 local.get $key
                 local.get $current_item
-                i32.const 16
+                i32.const 17
                 i32.add
                 i32.load             
                 call $compare
@@ -843,7 +847,7 @@
                     i32.eq 
                     if (result i32)
                         local.get $current_item
-                        i32.const 4
+                        i32.const 5
                         i32.add
                         i32.load
                         local.tee $left_child
@@ -852,19 +856,19 @@
                         if (result i32) 
                             local.get $key 
                             local.get $new_item 
-                            i32.const 4
-                            i32.const 20
+                            i32.const 5
+                            i32.const 21
                             call $c_set_add_insert_value
                             drop
                             local.get $result 
                             br 4
                         else
-                            i32.const 20
+                            i32.const 21
                             call $malloc
                             local.set $new_child
 
                             local.get $new_item
-                            i32.const 4 
+                            i32.const 5 
                             i32.add
                             local.get $new_child
                             i32.store 
@@ -879,7 +883,7 @@
                         end
                     else 
                         local.get $current_item
-                        i32.const 8
+                        i32.const 9
                         i32.add
                         i32.load
                         local.tee $right_child
@@ -888,19 +892,19 @@
                         if (result i32)
                             local.get $key 
                             local.get $new_item 
-                            i32.const 8 
-                            i32.const 20
+                            i32.const 9
+                            i32.const 21
                             call $c_set_add_insert_value
                             drop
                             local.get $result 
                             br 4
                         else
-                            i32.const 20 
+                            i32.const 21
                             call $malloc
                             local.set $new_child
 
                             local.get $new_item
-                            i32.const 8
+                            i32.const 9
                             i32.add
                             local.get $new_child
                             i32.store
@@ -938,23 +942,23 @@
         global.get $C_SET_EMPTY
         i32.eq
         if (result i32)
-            i32.const 24
+            i32.const 25
             call $malloc 
             local.tee $result
-            i32.const 16
+            i32.const 17
             i32.add
             local.get $key 
             i32.store         
 
             local.get $result 
-            i32.const 20
+            i32.const 21
             i32.add
             local.get $value
             i32.store
 
             local.get $result
         else
-            i32.const 24
+            i32.const 25
             call $malloc 
             local.set $result 
 
@@ -967,10 +971,16 @@
             loop (result i32)
                 local.get $new_item
                 local.get $current_item 
-                i32.const 24
+                i32.const 25
                 memory.copy 
 
                 local.get $new_item 
+                global.get $__map__tag
+                i32.store
+
+                local.get $new_item
+                i32.const 1
+                i32.add
                 local.get $parent
                 i32.store
 
@@ -981,7 +991,7 @@
                 
                 local.get $key
                 local.get $current_item
-                i32.const 16
+                i32.const 17
                 i32.add
                 i32.load             
                 call $compare
@@ -993,7 +1003,7 @@
                     if (result i32)
                         
                         local.get $current_item
-                        i32.const 4
+                        i32.const 5
                         i32.add
                         i32.load
                         local.tee $left_child
@@ -1002,22 +1012,22 @@
                         if (result i32) 
                             local.get $key 
                             local.get $new_item 
-                            i32.const 4
-                            i32.const 24
+                            i32.const 5
+                            i32.const 25
                             call $c_set_add_insert_value
-                            i32.const 20
+                            i32.const 21
                             i32.add
                             local.get $value 
                             i32.store
                             local.get $result 
                             br 4
                         else
-                            i32.const 24
+                            i32.const 25
                             call $malloc
                             local.set $new_child
 
                             local.get $new_item
-                            i32.const 4 
+                            i32.const 5 
                             i32.add
                             local.get $new_child
                             i32.store 
@@ -1032,7 +1042,7 @@
                         end
                     else 
                         local.get $current_item
-                        i32.const 8
+                        i32.const 9
                         i32.add
                         i32.load
                         local.tee $right_child
@@ -1041,22 +1051,22 @@
                         if (result i32)
                             local.get $key 
                             local.get $new_item 
-                            i32.const 8 
-                            i32.const 24
+                            i32.const 9
+                            i32.const 25
                             call $c_set_add_insert_value
-                            i32.const 20
+                            i32.const 21
                             i32.add
                             local.get $value 
                             i32.store
                             local.get $result 
                             br 4
                         else
-                            i32.const 24
+                            i32.const 25
                             call $malloc
                             local.set $new_child
 
                             local.get $new_item
-                            i32.const 8
+                            i32.const 9
                             i32.add
                             local.get $new_child
                             i32.store
@@ -1171,6 +1181,8 @@
                 memory.copy 
 
                 local.get $new_item 
+                i32.const 1 
+                i32.add
                 local.get $parent 
                 i32.store
 
@@ -1181,7 +1193,7 @@
                 local.set $parent
     
                 local.get $current_item 
-                i32.const 4
+                i32.const 5
                 i32.add 
                 i32.load 
                 local.set $left_child
@@ -1191,7 +1203,7 @@
                 i32.store
 
                 local.get $new_item 
-                i32.const 8
+                i32.const 9
                 i32.add 
                 i32.load 
                 local.set $right_child  
@@ -1203,7 +1215,7 @@
                 ;; do comparison of the nodes
                 local.get $key                                
                 local.get $new_item
-                i32.const 16
+                i32.const 17
                 i32.add
                 i32.load                
                 call $compare
@@ -1224,7 +1236,7 @@
                             local.set $new_child
 
                             local.get $new_item 
-                            i32.const 4
+                            i32.const 5
                             i32.add 
                             local.get $new_child
                             i32.store
@@ -1249,7 +1261,7 @@
                             local.set $new_child
 
                             local.get $new_item 
-                            i32.const 8
+                            i32.const 9
                             i32.add 
                             local.get $new_child
                             i32.store
@@ -1285,19 +1297,21 @@
                         memory.copy 
 
                         local.get $new_child
+                        i32.const 1 
+                        i32.add
                         local.get $new_item_parent
                         i32.store
 
                         ;; can replace with right_child
                         local.get $new_item_parent 
-                        i32.const 4
+                        i32.const 5
                         i32.add 
                         i32.load 
                         local.get $new_item 
                         i32.eq
                         if (result i32)
                             local.get $new_item_parent 
-                            i32.const 4
+                            i32.const 5
                             i32.add 
                             local.get $new_child 
                             i32.store
@@ -1320,7 +1334,7 @@
                             i32.add 
 
                             local.get $current_item
-                            i32.const 20 
+                            i32.const 21
                             i32.add
                             i32.load
 
@@ -1331,38 +1345,38 @@
                             call $__ligo_internal__map_update_pair
                         else 
                             local.get $new_item_parent 
-                            i32.const 8
+                            i32.const 9
                             i32.add 
                             local.get $new_child 
                             i32.store
 
                             
                             i32.const 9 
-                                call $malloc 
-                                local.tee $previous 
-                                global.get $__option__tag
-                                i32.store8
+                            call $malloc 
+                            local.tee $previous 
+                            global.get $__option__tag
+                            i32.store8
 
-                                local.get $previous
-                                i32.const 1
-                                i32.add 
-                                i32.const 1 
-                                i32.store
+                            local.get $previous
+                            i32.const 1
+                            i32.add 
+                            i32.const 1 
+                            i32.store
 
-                                local.get $previous
-                                i32.const 5
-                                i32.add 
+                            local.get $previous
+                            i32.const 5
+                            i32.add 
 
-                                local.get $current_item
-                                i32.const 20 
-                                i32.add
-                                i32.load
+                            local.get $current_item
+                            i32.const 21
+                            i32.add
+                            i32.load
 
-                                i32.store
+                            i32.store
 
-                                local.get $previous
-                                local.get $result
-                                call $__ligo_internal__map_update_pair
+                            local.get $previous
+                            local.get $result
+                            call $__ligo_internal__map_update_pair
                         end
                     else 
                         local.get $left_child
@@ -1388,14 +1402,14 @@
 
                             ;; can replace with left_child
                             local.get $new_item_parent 
-                            i32.const 4
+                            i32.const 5
                             i32.add 
                             i32.load 
                             local.get $new_item 
                             i32.eq
                             if (result i32)
                                 local.get $new_item_parent 
-                                i32.const 4
+                                i32.const 5
                                 i32.add 
                                 local.get $new_child 
                                 i32.store
@@ -1417,7 +1431,7 @@
                                 i32.add 
 
                                 local.get $current_item
-                                i32.const 20 
+                                i32.const 21
                                 i32.add
                                 i32.load
 
@@ -1428,7 +1442,7 @@
                                 call $__ligo_internal__map_update_pair
                             else 
                                 local.get $new_item_parent 
-                                i32.const 8 
+                                i32.const 9
                                 i32.add 
                                 local.get $new_child 
                                 i32.store
@@ -1451,7 +1465,7 @@
                                 i32.add 
 
                                 local.get $current_item
-                                i32.const 20 
+                                i32.const 21
                                 i32.add
                                 i32.load
 
@@ -1473,20 +1487,20 @@
                             if (result i32)
                                 ;; there is no child
                                 local.get $new_item_parent 
-                                i32.const 4
+                                i32.const 5
                                 i32.add 
                                 i32.load
                                 local.get $new_item
                                 i32.eq
                                 if 
                                     local.get $new_item_parent
-                                    i32.const 4 
+                                    i32.const 5
                                     i32.add 
                                     i32.const 0
                                     i32.store
                                 else 
                                     local.get $new_item_parent 
-                                    i32.const 8
+                                    i32.const 9
                                     i32.add 
                                     i32.const 0
                                     i32.store
@@ -1509,7 +1523,7 @@
                                 i32.add 
 
                                 local.get $current_item
-                                i32.const 20 
+                                i32.const 21 
                                 i32.add
                                 i32.load
 
@@ -1533,14 +1547,14 @@
                                 i32.store
 
                                 local.get $new_item
-                                i32.const 8
+                                i32.const 9
                                 i32.add 
                                 local.get $most_left
                                 i32.store
 
                                 loop                                   
                                     local.get $most_left
-                                    i32.const 4
+                                    i32.const 5
                                     i32.add
                                     i32.load 
                                     local.tee $temp
@@ -1558,11 +1572,13 @@
                                         local.set $parent
 
                                         local.get $new_child 
+                                        i32.const 1 
+                                        i32.add
                                         local.get $most_left 
                                         i32.store
 
                                         local.get $most_left
-                                        i32.const 4
+                                        i32.const 5
                                         i32.add 
                                         local.get $new_child
                                         i32.store
@@ -1588,19 +1604,19 @@
                                 local.get $check_left 
                                 if 
                                     local.get $parent 
-                                    i32.const 4 
+                                    i32.const 5
                                     i32.add 
                                     local.get $most_left 
-                                    i32.const 8
+                                    i32.const 9
                                     i32.add
                                     i32.load 
                                     i32.store
                                 else 
                                     local.get $parent 
-                                    i32.const 8
+                                    i32.const 9
                                     i32.add 
                                     local.get $most_left 
-                                    i32.const 8
+                                    i32.const 9
                                     i32.add
                                     i32.load 
                                     i32.store
@@ -1623,7 +1639,7 @@
                                 i32.add 
 
                                 local.get $current_item
-                                i32.const 20 
+                                i32.const 21
                                 i32.add
                                 i32.load
 
@@ -1684,7 +1700,7 @@
             local.get $result
             call $__ligo_internal__map_update_pair_no_previous
         else
-            i32.const 24
+            i32.const 25
             call $malloc 
             local.set $result 
 
@@ -1697,7 +1713,7 @@
             loop (result i32)
                 local.get $new_item
                 local.get $current_item 
-                i32.const 24
+                i32.const 25
                 memory.copy 
 
                 local.get $new_item 
@@ -1705,13 +1721,15 @@
                 i32.store
 
                 local.get $new_item 
+                i32.const 1 
+                i32.add
                 local.set $parent
 
                 
                 
                 local.get $key
                 local.get $current_item
-                i32.const 16
+                i32.const 17
                 i32.add
                 i32.load             
                 call $compare
@@ -1723,7 +1741,7 @@
                     if (result i32)
                         
                         local.get $current_item
-                        i32.const 4
+                        i32.const 5
                         i32.add
                         i32.load
                         local.tee $left_child
@@ -1735,12 +1753,12 @@
                             call $__ligo_internal__map_update_pair_no_previous
                             br 4
                         else
-                            i32.const 24
+                            i32.const 25
                             call $malloc
                             local.set $new_child
 
                             local.get $new_item
-                            i32.const 4 
+                            i32.const 5 
                             i32.add
                             local.get $new_child
                             i32.store 
@@ -1755,7 +1773,7 @@
                         end
                     else 
                         local.get $current_item
-                        i32.const 8
+                        i32.const 9
                         i32.add
                         i32.load
                         local.tee $right_child
@@ -1767,12 +1785,12 @@
                             call $__ligo_internal__map_update_pair_no_previous
                             br 4
                         else
-                            i32.const 24
+                            i32.const 25
                             call $malloc
                             local.set $new_child
 
                             local.get $new_item
-                            i32.const 8
+                            i32.const 9
                             i32.add
                             local.get $new_child
                             i32.store
@@ -1788,7 +1806,7 @@
                     end
                 else                              
                     local.get $new_item
-                    i32.const 20
+                    i32.const 21
                     i32.add
                     local.get $value 
                     i32.store
@@ -1811,7 +1829,7 @@
                     i32.add 
 
                     local.get $current_item
-                    i32.const 20 
+                    i32.const 21
                     i32.add
                     i32.load
 
@@ -1891,7 +1909,7 @@
             i32.const 0
         else 
             local.get $set 
-            i32.const 4
+            i32.const 5
             i32.add
             i32.load
             local.tee $left_child
@@ -1905,7 +1923,7 @@
             drop
 
             local.get $set
-            i32.const 16
+            i32.const 17
             i32.add
             i32.load
             local.get $fn
@@ -1913,7 +1931,7 @@
             drop
 
             local.get $set 
-            i32.const 8
+            i32.const 9
             i32.add
             i32.load
             local.tee $right_child
@@ -1941,7 +1959,7 @@
             i32.const 0
         else 
             local.get $set 
-            i32.const 4
+            i32.const 5
             i32.add
             i32.load
             local.tee $left_child
@@ -1967,7 +1985,7 @@
             i32.const 5
             i32.add 
             local.get $set
-            i32.const 16
+            i32.const 17
             i32.add ;; key
             i32.load
             i32.store
@@ -1978,7 +1996,7 @@
             local.set $init
 
             local.get $set 
-            i32.const 8
+            i32.const 9
             i32.add
             i32.load
             local.tee $right_child
@@ -2006,7 +2024,7 @@
             i32.const 0
         else 
             local.get $set 
-            i32.const 4
+            i32.const 5
             i32.add
             i32.load
             local.tee $left_child
@@ -2042,7 +2060,7 @@
             i32.const 1 
             i32.add
             local.get $set
-            i32.const 16
+            i32.const 17
             i32.add
             i32.load
             i32.store
@@ -2051,7 +2069,7 @@
             i32.const 5
             i32.add
             local.get $set
-            i32.const 20 
+            i32.const 21 
             i32.add
             i32.load
             i32.store
@@ -2066,7 +2084,7 @@
             local.set $init
 
             local.get $set 
-            i32.const 8
+            i32.const 9
             i32.add
             i32.load
             local.tee $right_child
@@ -2093,7 +2111,7 @@
             i32.const 0
         else 
             local.get $set 
-            i32.const 8
+            i32.const 9
             i32.add
             i32.load
             local.tee $right_child
@@ -2115,7 +2133,7 @@
             i32.const 1
             i32.add
             local.get $set
-            i32.const 16
+            i32.const 17
             i32.add
             i32.load          
             i32.store
@@ -2131,7 +2149,7 @@
             local.set $init
 
             local.get $set 
-            i32.const 4
+            i32.const 5
             i32.add
             i32.load
             local.tee $left_child
@@ -2162,7 +2180,7 @@
             i32.const 0
         else 
             local.get $set 
-            i32.const 4
+            i32.const 5
             i32.add
             i32.load
             local.tee $left_child
@@ -2188,7 +2206,7 @@
             i32.const 1
             i32.add
             local.get $set 
-            i32.const 16
+            i32.const 17
             i32.add
             i32.load
             i32.store
@@ -2198,7 +2216,7 @@
             i32.add
 
             local.get $set            
-            i32.const 20
+            i32.const 21
             i32.add
             i32.load
             
@@ -2210,7 +2228,7 @@
             drop
 
             local.get $set 
-            i32.const 8
+            i32.const 9
             i32.add
             i32.load
             local.tee $right_child
@@ -2238,7 +2256,7 @@
             global.get $C_SET_EMPTY
         else 
             local.get $set 
-            i32.const 4
+            i32.const 5
             i32.add
             i32.load
             local.tee $left_child
@@ -2251,7 +2269,6 @@
             end
             local.set $left_child
 
-            ;; TODO: move key and value next to each other to avoid doing this
             i32.const 9
             call $malloc
             local.set $tuple
@@ -2271,7 +2288,7 @@
             i32.const 5
             i32.add
             local.get $set            
-            i32.const 20
+            i32.const 21
             i32.add
             i32.load            
             
@@ -2283,7 +2300,7 @@
             local.set $new_value
 
             local.get $set 
-            i32.const 8
+            i32.const 9
             i32.add
             i32.load
             local.tee $right_child
@@ -2296,45 +2313,47 @@
             end
             local.set $right_child
 
-            i32.const 24
+            i32.const 25
             call $malloc
             local.tee $item   
-            i32.const 16
+            i32.const 17
             i32.add          
             local.get $set 
-            i32.const 16
+            i32.const 17
             i32.add
             i32.load
             i32.store
 
             local.get $item 
+            i32.const 1 
+            i32.add
             i32.const 0 
             i32.store
 
             local.get $item 
-            i32.const 4
+            i32.const 5
             i32.add
             local.get $left_child 
             i32.store
 
 
             local.get $item 
-            i32.const 8
+            i32.const 9
             i32.add
             local.get $right_child 
             i32.store
             
             local.get $item 
-            i32.const 12
+            i32.const 13
             i32.add
             local.get $set 
-            i32.const 12
+            i32.const 13
             i32.add
             i32.load
             i32.store
 
             local.get $item 
-            i32.const 20 
+            i32.const 21 
             i32.add 
             local.get $new_value
             i32.store

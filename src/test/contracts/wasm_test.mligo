@@ -117,9 +117,13 @@ let main ((_, _s):(parameter * storage)) =
   let a19: int = int xx in
   let a20 = Set.remove 30 s1 in
   let a21 = Map.remove 50 (Map.literal [(20, 1); (50, 2); (30, 3)]) in
+  let _ = Map.iter (fun (k, v) -> log ("zzzz:" ^ string_of_int k ^ " ="  ^ string_of_int v ^ "\n")) a21 in
   let a22 = Set.cardinal a20 in 
   let a24 = Set.cardinal s1 in
+  let _ = log ("a24 size:" ^ string_of_int (int a24) ^ "\n") in 
+  
   let a23 = Map.size a21 in 
+  let _ = log ("a23 size:" ^ string_of_int (int a23) ^ "\n") in 
   let a25 = String.length "12" in 
   let () = if a25 = 2n then 
      log "yes 2 "
