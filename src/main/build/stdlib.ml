@@ -100,10 +100,14 @@ let get : options:Compiler_options.t -> unit -> t =
   let lib = Ligo_lib.get () in
   let binder_curry = Ligo_prim.Module_var.fresh ~loc ~name:"Curry_lib" () in
   let binder_uncurry = Ligo_prim.Module_var.fresh ~loc ~name:"Uncurry_lib" () in
-  let curry_content_core = compile ~options (def "CURRY" ^ std ^ lib) in
+  let curry_content_core = compile ~options (def "CURRY" ^ backend ^ std ^ lib) in
+  print_endline "aaaaaa111";
   let curry_content_typed = type_ ~options curry_content_core in
+  print_endline "aaaaaa2222";
   let uncurry_content_core = compile ~options (def "UNCURRY" ^ backend ^ std ^ lib) in
+  print_endline "a1";
   let uncurry_content_typed = type_ ~options uncurry_content_core in
+  print_endline "a2";
   (* TODO: sanity check ? curry_content_typed and uncurry_content_typed should have the same signature modulo curry/uncurry style *)
   let typed_mod_def =
     let open Ligo_prim.Module_expr in

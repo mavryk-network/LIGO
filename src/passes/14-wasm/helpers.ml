@@ -15,8 +15,8 @@ let var_to_string name =
   name ^ "#" ^ string_of_int hash
 
 
-let unique_name name =
-  let unique_name = Value_var.fresh ~name () in
+let unique_name ~loc name =
+  let unique_name = Value_var.fresh ~loc ~name () in
   let name = var_to_string unique_name in
   name
 

@@ -386,7 +386,7 @@ and build_wasm_code ~raise
   =
  fun ~options entry_point file_name output_file ->
   let entry_point_orig = entry_point in
-  let entry_point = Value_var.of_input_var entry_point in
+  let entry_point = Value_var.of_input_var ~loc entry_point in
   let typed_prg = qualified_typed ~raise ~options Ligo_compile.Of_core.Env file_name in
   let typed_contract =
     trace ~raise self_ast_typed_tracer

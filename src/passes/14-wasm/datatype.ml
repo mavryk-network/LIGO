@@ -8,7 +8,6 @@ open Helpers
 
 let uni_op : (S.region -> A.instr list) -> Env.t -> A.instr list -> Env.t * A.instr list =
  fun op env a ->
-  (* TODO: allocate a block here for the result *)
   let at = S.no_region in
   let load = load at in
   let const = const at in
@@ -17,6 +16,7 @@ let uni_op : (S.region -> A.instr list) -> Env.t -> A.instr list -> Env.t * A.in
   let local_tee_s = local_tee_s at in
   let local_get_s = local_get_s at in
   let i32_add = i32_add at in
+  let unique_name = unique_name ~loc:Location.dummy in
   let name = unique_name "uni_op" in
   ( Env.add_local env (name, T.NumType I32Type)
   , [ const 5l
@@ -48,7 +48,7 @@ let bin_op
   let local_get_s = local_get_s at in
   let store8 = store8 at in
   let i32_add = i32_add at in
-  let name = unique_name "bin_op" in
+  let name = unique_name ~loc:Location.dummy "bin_op" in
   ( Env.add_local env (name, T.NumType I32Type)
   , [ const 5l
     ; call_s "malloc"

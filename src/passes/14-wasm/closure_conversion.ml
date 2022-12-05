@@ -60,7 +60,7 @@ let rec lift : env -> expression -> env * expression =
       | _ -> lift env2 a
     in
     let env, body = find_body env2 body in
-    let v = Value_var.fresh () ~name:"moved_function" in
+    let v = Value_var.fresh () ~loc:Location.dummy ~name:"moved_function" in
     let env =
       { env2 with
         variables = (v, e.type_expression) :: env.variables
@@ -332,7 +332,7 @@ let rec toplevel_inner : env -> string -> expression -> expression =
           (e1, inline, ((var_name, type_expression), toplevel_inner env entrypoint e2))
     }
   | E_closure _ as e1 ->
-    let ep = Value_var.of_input_var entrypoint in
+    let ep = Value_var.of_input_var ~loc:Location.dummy entrypoint in
     toplevel_inner
       env
       entrypoint

@@ -27,6 +27,7 @@ module Partial_call = struct
     let store = store at in
     let load = load at in
     let i32_add = i32_add at in
+    let unique_name = unique_name ~loc:Location.dummy in
     let func_alloc_name = unique_name "partial_call" in
     let env = Env.add_local env (func_alloc_name, NumType I32Type) in
     ( env
@@ -53,6 +54,7 @@ module Partial_call = struct
 
   let create_helper w at ~name ~no_of_args =
     let open A in
+    let unique_name = unique_name ~loc:Location.dummy in
     let func_name = unique_name ("helper_" ^ name) in
     let const = const at in
     let call_s = call_s at in
@@ -213,12 +215,13 @@ let rec expression ~raise
   let convert_to_memory = convert_to_memory at in
   let add_local = Env.add_local in
   let add_locals = Env.add_locals in
+  let unique_name = unique_name ~loc:Location.dummy in
   let host_call
       :  fn:string -> response_size:int32 -> instructions:I.expression list
       -> A.module_' * Env.t * A.instr list
     =
    fun ~fn ~response_size ~instructions ->
-    let new_value = var_to_string (Value_var.fresh ~name:fn ()) in
+    let new_value = var_to_string (Value_var.fresh ~loc:Location.dummy ~name:fn ()) in
     let w, env, e =
       List.fold_left
         ~f:(fun all (a : I.expression) ->
@@ -244,11 +247,6 @@ let rec expression ~raise
     let w, env, e2 = expression ~raise w env e2 in
     let env, e = op env e1 e2 in
     w, env, e
-  in
-  let unique_name name =
-    let unique_name = Value_var.fresh ~name () in
-    let name = var_to_string unique_name in
-    name
   in
   let int_like name header z =
     let name = unique_name name in
@@ -437,7 +435,7 @@ let rec expression ~raise
       @ s
       @ [ const 1l; i32_add; load; store; local_get_s size ] )
   | E_constant { cons_name = C_CONS; arguments = [ l1; l2 ] } ->
-    let cons = var_to_string (Value_var.fresh ~name:"C_CONS" ()) in
+    let cons = unique_name "C_CONS" in
     let w, env, l1 = expression ~raise w env l1 in
     let w, env, l2 = expression ~raise w env l2 in
     ( w
@@ -1116,7 +1114,7 @@ let rec expression ~raise
     let w, env, e2 = expression ~raise w env e2 in
     w, env, e1 @ [ local_set_s name ] @ e2
   | E_tuple el ->
-    let tuple_name = var_to_string (Value_var.fresh ~name:"let_tuple" ()) in
+    let tuple_name = unique_name "let_tuple" in
     let t =
       [ const (Int32.of_int_exn (List.length el))
       ; const 4l
@@ -1146,7 +1144,7 @@ let rec expression ~raise
     w, env, t @ e @ [ local_get_s tuple_name ]
   | E_let_tuple (tuple, (values, rhs)) ->
     let w, env, tuple = expression ~raise w env tuple in
-    let tuple_name = var_to_string (Value_var.fresh ~name:"let_tuple" ()) in
+    let tuple_name = unique_name "let_tuple" in
     let t = tuple @ [ local_set_s tuple_name ] in
     let env = add_local env (tuple_name, T.NumType I32Type) in
     let env, e =

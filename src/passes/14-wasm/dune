@@ -3,14 +3,7 @@
  (public_name ligo.wasm_pass)
  (preprocess
   (pps ppx_expect ppx_poly_constructor))
- (libraries
-  mini_c
-  WasmObjectFile
-  ligo_prim
-  ligo_runtime
-  ligo_wasi
-  cmm
-  ligo_wabt)
+ (libraries mini_c WasmObjectFile ligo_prim ligo_runtime ligo_wasi ligo_wabt)
  (flags
   (:standard
    -w
