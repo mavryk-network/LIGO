@@ -30,10 +30,22 @@ let combine_checks : 'a dyn_reduction_check list -> 'a -> unit =
   | (_, f) :: _ -> f combined_iter
 
 
+(* catamorphism mapping expressions to expressions, program to program .. *)
+type default_cata_pass = (expr,ty_expr,pattern,statement,mod_expr,instruction,declaration,program_entry) Ast_unified.Catamorphism.fold
+let idle_pass : default_cata_pass =
+  { expr = (fun x -> { fp = x })
+  ; ty_expr = (fun x -> { fp = x })
+  ; pattern = (fun x -> { fp = x })
+  ; statement = (fun x -> { fp = x })
+  ; mod_expr = (fun x -> { fp = x })
+  ; instruction = (fun x -> { fp = x })
+  ; declaration = (fun x -> { fp = x })
+  ; program = (fun x -> { fp = x })
+  }
 let cata_morph
     ~name
-    ~(compile : Ast_unified.Catamorphism.fold)
-    ~(decompile : Ast_unified.Catamorphism.fold)
+    ~(compile : default_cata_pass)
+    ~(decompile : default_cata_pass)
     ~(reduction_check : Ast_unified.Iter.iter)
     : pass
   =

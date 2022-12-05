@@ -288,7 +288,6 @@ type ('self, 'declaration, 'instruction) program_entry_ =
   ('self, 'declaration, 'instruction) program_entry_ list *)
 [@@deriving map, yojson, iter, sexp]
 
-(* fixpoints, they are mainly a trick to get '@@deriving map' to work *)
 type ty_expr = { fp : ty_expr ty_expr_ }
 and pattern = { fp : (pattern, ty_expr) pattern_ }
 and instruction = { fp : (instruction, expr, pattern, statement) instruction_ }

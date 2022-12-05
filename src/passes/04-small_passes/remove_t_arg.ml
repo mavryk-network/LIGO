@@ -8,11 +8,11 @@ let compile =
       t_var ~loc (Ty_variable.of_input_var (quote_var s))
     | { location = loc; wrap_content } -> make_t ~loc wrap_content
   in
-  { Catamorphism.defaults with ty_expr = pass_ty }
+  { idle_pass with ty_expr = pass_ty }
 
 
 let reduction_check = Iter.defaults
-let decompile = Catamorphism.defaults
+let decompile = idle_pass
 let pass = cata_morph ~name:__MODULE__ ~compile ~decompile ~reduction_check
 
 let%expect_test "addition" =
