@@ -1,7 +1,0 @@
-(executable
- (name small_passes_main)
- (libraries small_passes ast_unified ligo_prim)
- (modules Small_passes_main ansi))
- (rule
-  (alias tototo)
-  (action (run %{dep:./small_passes_main.exe})))

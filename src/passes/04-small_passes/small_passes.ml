@@ -1,8 +1,6 @@
 module I = Ast_unified
 module O = Ast_core
-module Passes = Passes
-module Pass_example = Pass_example
-open Passes
+open Passes.Pass_type
 
 let trivial_compile_program : I.program -> O.program = fun _ -> failwith "TODO12"
 let trivial_compile_expression : I.expr -> O.expression = fun _ -> failwith ""
@@ -21,7 +19,7 @@ let compile_with_passes : type a. a sub_pass list -> a -> a =
   prg
 
 
-let passes ~raise ~options = ignore (raise,options) ; [ Remove_t_arg.pass ]
+let passes ~raise ~options = ignore (raise,options) ; [ Passes.Remove_t_arg.pass ]
 
 let compile_program ~raise ~options : I.program -> O.program =
  fun prg ->

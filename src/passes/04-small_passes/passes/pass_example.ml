@@ -433,13 +433,13 @@ let fold_program_entry     = fold_pe
 (* ======== Small passes and helpers ======================================= *)
 (* ========================================================================= *)
 
-let default_compile : Passes.options -> 'a -> 'a = fun _syntax a -> a
+let default_compile : Pass_type.options -> 'a -> 'a = fun _syntax a -> a
 let default_decompile = default_compile
 let default_check_reduction = fun ~raise:_ _ -> ()
 
 (* Helper used to factor out the common part of all passes' compile functions *)
 let wrap_compile_t (core_compile : fix_type_expr -> fix_type_expr)
-    : Passes.options -> fix_type_expr -> fix_type_expr
+    : Pass_type.options -> fix_type_expr -> fix_type_expr
   =
   let folders = {folders_default with ft = core_compile} in
  fun _syntax te -> fold_type_expr folders te
@@ -448,7 +448,7 @@ let wrap_compile_t (core_compile : fix_type_expr -> fix_type_expr)
 let wrap_compile_p
     (core_compile_t : fix_type_expr -> fix_type_expr)
     (core_compile_p : fix_pattern -> fix_pattern)
-    : Passes.options -> fix_pattern -> fix_pattern
+    : Pass_type.options -> fix_pattern -> fix_pattern
   =
   let folders = {folders_default with
     ft = core_compile_t;

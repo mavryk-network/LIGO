@@ -1,5 +1,5 @@
 open Ast_unified
-open Passes
+open Pass_type
 
 let compile =
   let pass_ty : _ ty_expr_ -> ty_expr = function
