@@ -204,7 +204,11 @@ let main ((_, _s):(parameter * storage)) =
 
   let sumx ((acc, (_, i)) : (int * (int * int))) : int = acc + i in
   let a31 : int = Map.fold sumx mx4 0 in
-// let a31 = 0 in
+  let arrr = Bytes.concat 0x7070 0x7070 in
+  let _ = assert (arrr = 0x70707070) in
+  let _ = assert ( Bytes.sub 1n 2n 0xff7a7aff = 0x7a7a ) in
+  let _ = assert ((Option.unopt (Some 255)) = 255) in 
+  // should work: let _ = assert ((Option.unopt_with_error None "ooops") = 255) in   
   let a = 
     4 + 5 +  (* 9 *)
     40 / 5 + (* 9 + 8 = 17 *)

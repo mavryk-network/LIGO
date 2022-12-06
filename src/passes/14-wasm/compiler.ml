@@ -258,7 +258,6 @@ let rec expression ~raise
     let name = unique_name name in
     let s_len = Int32.of_int_exn (String.length s) in
     let a_len = String.length s + 5 in
-    (* tag + size *)
     let a_len = Int32.of_int_exn a_len in
     let data =
       [ data
@@ -271,58 +270,22 @@ let rec expression ~raise
     let w = { w with datas = w.datas @ data; symbols = w.symbols @ symbols } in
     w, env, [ data_symbol name ]
   in
-  let bytes_like name b =
+  let bytes_like name header b =
     let name = unique_name name in
-    let data = [ data ~offset:!global_offset ~init:{ name; detail = [ Bytes b ] } ] in
-    let symbols =
-      [ symbol_data
-          ~name
-          ~index:0l
-          ~size:(Int32.of_int_exn (Bytes.length b))
+    let s_len = Int32.of_int_exn (Bytes.length b) in
+    let a_len = Bytes.length b + 5 in
+    let a_len = Int32.of_int_exn a_len in
+    let data =
+      [ data
           ~offset:!global_offset
+          ~init:{ name; detail = [ Int8 header; Int32 s_len; Bytes b ] }
       ]
     in
-    (global_offset := Int32.(!global_offset + Int32.of_int_exn (Bytes.length b)));
+    let symbols = [ symbol_data ~name ~index:0l ~size:a_len ~offset:!global_offset ] in
+    (global_offset := Int32.(!global_offset + a_len));
     let w = { w with datas = w.datas @ data; symbols = w.symbols @ symbols } in
     w, env, [ data_symbol name ]
   in
-  (*
-    TODO: change/add tags to:
-
-    false     = 0
-    true      = 1
-    int       = 2
-    string    = 4
-    tuple     = 5
-    list      = 6 
-    set       = 7
-
-    TODO: improve tuple handling, currently mostly a pair
-
-    packaging format
-    ===
-    tag + info
-
-
-    ---
-
-    nat       = 3
-    timestamp = 4
-    mutez     = 5
-    string    = 6
-    bytes     = 7 
-    address   = 8
-    signature = 9
-    key       = 10
-    key_hash  = 11
-    chain_id  = 12
-    operation = 13
-    bls12_381_g1 = 14
-    bls12_381_g2 = 15
-    bls12_381_fr = 16
-    chest = 17
-    chest_key = 18
-  *)
   match e.content with
   | E_literal Literal_unit -> w, env, [ const 0l ]
   | E_literal (Literal_int z) -> int_like "Literal_int" 2 z
@@ -331,18 +294,18 @@ let rec expression ~raise
   | E_literal (Literal_mutez z) -> int_like "Literal_mutez" 2 z
   | E_literal (Literal_string (Standard s)) -> string_like "Literal_string" 4 s
   | E_literal (Literal_string (Verbatim s)) -> string_like "Literal_string" 4 s
-  | E_literal (Literal_bytes b) -> bytes_like "Literal_bytes" b
+  | E_literal (Literal_bytes b) -> bytes_like "Literal_bytes" 4 b
   | E_literal (Literal_address s) -> string_like "Literal_address" 4 s
   | E_literal (Literal_signature s) -> string_like "Literal_signature" 4 s
   | E_literal (Literal_key s) -> string_like "Literal_key" 4 s
   | E_literal (Literal_key_hash s) -> string_like "Literal_key_hash" 4 s
   | E_literal (Literal_chain_id s) -> string_like "Literal_chain_id" 4 s
-  | E_literal (Literal_operation b) -> bytes_like "Literal_operation" b
-  | E_literal (Literal_bls12_381_g1 b) -> bytes_like "Literal_bls12_381_g1" b
-  | E_literal (Literal_bls12_381_g2 b) -> bytes_like "Literal_bls12_381_g2" b
-  | E_literal (Literal_bls12_381_fr b) -> bytes_like "Literal_bls12_381_fr" b
-  | E_literal (Literal_chest b) -> bytes_like "Literal_chest" b
-  | E_literal (Literal_chest_key b) -> bytes_like "Literal_chest_key" b
+  | E_literal (Literal_operation b) -> bytes_like "Literal_operation" 4 b
+  | E_literal (Literal_bls12_381_g1 b) -> bytes_like "Literal_bls12_381_g1" 4 b
+  | E_literal (Literal_bls12_381_g2 b) -> bytes_like "Literal_bls12_381_g2" 4 b
+  | E_literal (Literal_bls12_381_fr b) -> bytes_like "Literal_bls12_381_fr" 4 b
+  | E_literal (Literal_chest b) -> bytes_like "Literal_chest" 4 b
+  | E_literal (Literal_chest_key b) -> bytes_like "Literal_chest_key" 4 b
   | E_closure { binder; body } -> raise.error (not_supported e)
   (* Loops *)
   | E_constant { cons_name = C_ITER; arguments = [ func; iter ] } ->
