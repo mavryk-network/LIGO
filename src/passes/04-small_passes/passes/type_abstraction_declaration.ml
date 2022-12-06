@@ -3,6 +3,17 @@ open Ast_unified
 open Pass_type
 open Simple_utils.Trace
 
+
+(* in expression;
+```
+let x =
+  type 'a t = 'a * 'a in
+  ((1,2) : int t)
+```
+
+this parses incorectly (the 'a binder is ignored) : See with christian
+*)
+
 let compile =
   let pass_declaration : _ declaration_ -> declaration = function
     | { location = loc
@@ -32,32 +43,27 @@ let reduction ~raise =
 
 
 let decompile =
-  let pass_declaration ({ fp } : declaration) =
-    Location.map
-      (function
-        | D_Type { name; type_expr }
-        | D_Type_abstraction { name; params = None; type_expr } ->
-          let params =
-            Catamorphism.cata_ty_expr
-              ~f:(fun x ->
-                match x with
-                | { wrap_content = T_Abstraction { ty_binder; kind = _; type_ = params } ; _ } -> ty_binder::params
-                | _ -> [])
-              type_expr
-          in
-          let tail =
-            Catamorphism.cata_ty_expr
-              ~f:(function
-                | { wrap_content = T_Abstraction { type_ ; _ } ; _ } -> type_
-                | { location = loc; wrap_content } -> make_t ~loc wrap_content)
-              type_expr
-          in
-          let params = List.Ne.of_list_opt params in
-          D_Type_abstraction {name ; params ; type_expr = tail }
-        | x -> x)
-      fp
+  (* let pass_ty  *)
+  let pass_declaration : _ declaration_ -> declaration =
+   fun decl ->
+    { fp =
+        Location.map
+          (function
+            | D_Type { name; type_expr }
+            | D_Type_abstraction { name; params = None; type_expr } ->
+              let rec aux tv e =
+                match get_t_abstraction e with
+                | None -> tv, e
+                | Some { ty_binder; kind = _ ; type_ } -> aux (tv @ [ty_binder]) type_
+              in
+              let params,tail = aux [] type_expr in
+              let params = List.Ne.of_list_opt params in
+              D_Type_abstraction { name; params; type_expr = tail }
+            | x -> x)
+          decl
+    }
   in
-  `Ana { idle_ana_pass with declaration = pass_declaration }
+  `Cata { idle_cata_pass with declaration = pass_declaration }
 
 
 let pass ~raise =
