@@ -14,37 +14,9 @@
     + f
       y
       z
-*)
 
-open Ligo_prim
-open Simple_utils
-
-module Defs = struct
-  type left = Type.t
-  type right = Type.t
-  type eq = unit
-  type diff = unit
-  type state = unit
-end
-
-module Define = Diffing.Define (Defs)
-
-let field_types_of_row (row : Type.row) : Type.t list =
-  row.fields
-  |> Record.to_list
-  |> List.map ~f:snd
-  |> List.map ~f:(fun (row_elem : Type.row_element) -> row_elem.associated_type)
-
-
-let field_types_array_of_row row = Array.of_list @@ List.rev @@ field_types_of_row row
-
-module rec Arg : sig
-  val weight : Define.change -> int
-  val test : unit -> Type.t -> Type.t -> (unit, unit) result
-  val update : Define.change -> unit -> unit
-end = struct
-  (*
-    The module will try to find the simplest diff between the two lists.
+    This module is based on the [Diffing] library.
+    It will try to find the simplest diff between the two lists.
     To find the simplest one, we tell it how costly is a change.
 
     For example,
@@ -69,7 +41,7 @@ end = struct
     In below example, there is a [string] added, and a [nat->int] change in the big tuple.
       from :          tuple1=(int * tez * int * nat)
       to   : string * tuple2=(int * tez * nat * nat) 
-             ^^^^^^                       ^^^
+              ^^^^^^                       ^^^
     Here, if all changes are weighted 1, then the diff would be :
       patch 1 : (CHANGE tuple1 to STRING), (ADD tuple2)
     However, we would rather like the following patch :
@@ -91,31 +63,53 @@ end = struct
       * For singleton types, weights of changes is 1
       * For tuples, weight of INSERT / DELETE is the length of the tuple
       * Weight of CHANGE tuple_a to tuple_b is the number of changes to do within the two tuples (see example 5. above)
+*)
 
-  *)
+open Ligo_prim
+open Simple_utils
 
+module Defs = struct
+  type left = Type.t
+  type right = Type.t
+  type eq = unit
+  type diff = unit
+  type state = unit
+end
+
+module Define = Diffing.Define (Defs)
+
+module Size = struct
+  let of_row (row : Type.row) = Record.LMap.cardinal row.fields
+
+  let of_type (t : Type.t) =
+    match t.content with
+    | T_record row -> of_row row
+    | _ -> 1
+end
+(* of Size *)
+
+module rec Arg : sig
+  val weight : Define.change -> int
+  val test : unit -> Type.t -> Type.t -> (unit, unit) result
+  val update : Define.change -> unit -> unit
+end = struct
   let rec weight : Define.change -> int = function
-    | Delete type_ | Insert type_ ->
-      (match type_.content with
-      | T_record row -> List.length @@ field_types_of_row row
-      | _ -> 1)
+    | Delete t | Insert t -> Size.of_type t
     | Keep _ -> 0
     | Change (type1, type2, _) ->
       (match type1.content, type2.content with
+      (* We consider the weight to change a record into another
+        as the weight of the diff between them,
+        so that "close" records are gather together in the diff *)
       | T_record row1, T_record row2 ->
-        (* We consider the weight to change a record into another
-             as the weight of the diff between them,
-             so that "close" records are gather together in the diff *)
-        let diff =
-          Diff.diff () (field_types_array_of_row row1) (field_types_array_of_row row2)
-        in
-        let diff_weights = List.map ~f:(fun change -> weight change) diff in
+        let patch = Patch.of_rows row1 row2 in
+        let diff_weights = List.map ~f:(fun change -> weight change) patch in
         let total_weight = List.fold ~init:0 ~f:( + ) diff_weights in
         total_weight
-      | T_record row, _ | _, T_record row ->
-        1 + (List.length @@ field_types_of_row row)
-        (* one single insertion + n removals (or the contrary) *)
-      | _ -> 1 + 1 (* one single insertion + one signle removal *))
+      (* one single insertion + n removals (or the contrary) *)
+      | T_record row, _ | _, T_record row -> 1 + Size.of_row row
+      (* one single insertion + one signle removal *)
+      | _ -> 1 + 1)
 
 
   let test : Defs.state -> Defs.left -> Defs.right -> (Defs.eq, Defs.diff) result =
@@ -127,32 +121,77 @@ end = struct
 
   let update : Define.change -> Defs.state -> Defs.state = fun _change _state -> ()
 end
+(* of Arg *)
 
-(*
-  The [Diff] module will compute the minimal list of changes between two lists of type_expressions,
-  using the above computation of "weights" of type_expression changes.
-*)
-and Diff : sig
-  val diff : unit -> Type.t array -> Type.t array -> Define.patch
-end =
-  Define.Simple (Arg)
+(* The [Patch] module will compute the minimal list of changes
+   between two lists of type_expressions,
+   using the above computation of "weights" of type_expression changes. *)
+and Patch : sig
+  val of_rows : Type.row -> Type.row -> Define.patch
+end = struct
+  (* generates the [diff] function :
+     val diff : unit -> Type.t array -> Type.t array -> Define.patch *)
+  include Define.Simple (Arg)
 
-type t = Define.patch
+  (* Note : When converting from list to arrays and vice versa,
+     we have to use List.rev to get the diff in the right order.
+     For example :   [int; nat] vs [int; tez]
+     should give :   [KEEP int; REPLACE nat BY tez]
+     and not         [REPLACE nat BY tez; KEEP int] *)
+  let of_rows (row1 : Type.row) (row2 : Type.row) : Define.patch =
+    let type_of_row_elt (e : Type.row_element) = e.associated_type in
+    let tarray_of_row (row : Type.row) : Type.t array =
+      row.fields
+      |> Record.to_list
+      |> List.map ~f:snd
+      |> List.map ~f:type_of_row_elt
+      |> List.rev
+      |> Array.of_list
+    in
+    List.rev @@ diff () (tarray_of_row row1) (tarray_of_row row2)
+end
+(* of Patch *)
 
-let diff : Type.t -> Type.t -> t =
+type t =
+  | Diff_change of Define.change (* single change *)
+  | Diff_patch of Define.patch (* list of changes (like a classic diff) *)
+  | Diff_record of t Record.t
+(* a record of diff for diffing records
+                                     rdiff[key] = diff r1[key] r2[key] *)
+
+let rec diff : Type.t -> Type.t -> t =
  fun type1 type2 ->
-  List.rev
-  @@
+  let self = diff in
   match type1.content, type2.content with
-  (* When the two types are records, call the [Diffing] to get the optimal diff *)
+  (* ---- Tuples (unlabeled records) --------------------- *)
+  (* Call the [Diffing] to get the optimal diff *)
   | T_record row1, T_record row2
     when Record.is_tuple row1.fields && Record.is_tuple row2.fields ->
-    Diff.diff () (field_types_array_of_row row1) (field_types_array_of_row row2)
-  (* TODO : Add record and variant types *)
-  (* For types like [tuple_a list option] vs. [tuple_b list option] for example,
-     the typer will explore the types recursively to pinpoint the mismatch,
-     and [diff] will be called on [tuple_a] vs [tuple_b] *)
-  | _ -> []
+    let patch = Patch.of_rows row1 row2 in
+    Diff_patch patch
+  (* ---- Records (labeled ones, not tuples) ------------- *)
+  (* We build a diff record dr, where dr[key] = diff of r1[key] r2[key] *)
+  | T_record row1, T_record row2 ->
+    let type_of_row_elt (e : Type.row_element) = e.associated_type in
+    let r1 : Type.t Record.t = Record.map row1.fields ~f:type_of_row_elt in
+    let r2 : Type.t Record.t = Record.map row2.fields ~f:type_of_row_elt in
+    let lmap_merge : Label.t -> Type.t option -> Type.t option -> t option =
+     fun _key t1_opt t2_opt ->
+      match t1_opt, t2_opt with
+      (* This case shouldn't happen in the record merge *)
+      | None, None -> None
+      (* If only the first record has an entry at this label,
+           it means it's been "deleted", from the record diff persepective *)
+      | Some t1, None -> Some (Diff_change (Delete t1))
+      (* ... and vice-versa *)
+      | None, Some t2 -> Some (Diff_change (Insert t2))
+      (* Otherwise, dr[key] = diff of r1[key] vs. r2[key] *)
+      | Some t1, Some t2 -> Some (self t1 t2)
+    in
+    let record : t Record.t = Record.LMap.merge lmap_merge r1 r2 in
+    Diff_record record
+  (* TODO : Add Variant types *)
+  | _ -> Diff_change (Change (type1, type2, ()))
 
 
 (* The [ANSI] module uses Ocaml Format's semantic tags to enable styling of output.
@@ -207,31 +246,66 @@ module ANSI = struct
     let old_fs = pp_get_formatter_stag_functions ppf () in
     pp_set_formatter_stag_functions ppf { old_fs with mark_open_stag; mark_close_stag }
 end
+(* ANSI *)
 
-let pp_list_newline pp_content ppf content =
-  PP_helpers.list_sep pp_content (PP_helpers.tag "@,") ppf content
-
-
-let _pp_te_debug ppf (type_ : Type.t) : unit =
-  Format.fprintf ppf "%a <hash:%d>" Type.pp type_ (Type.hash type_)
+module PP = struct
+  let pp_list_newline pp_content ppf content =
+    PP_helpers.list_sep pp_content (PP_helpers.tag "@,") ppf content
 
 
-let rec pp_change ~tbl ppf (c : Define.change) : unit =
-  let self = pp_change ~tbl in
-  match c with
-  | Delete l -> Format.fprintf ppf "@{<red>- %a@}" (Type.pp_with_name_tbl ~tbl) l
-  | Insert r -> Format.fprintf ppf "@{<green>+ %a@}" (Type.pp_with_name_tbl ~tbl) r
-  | Keep (l, _r, _eq) -> Format.fprintf ppf "  %a" (Type.pp_with_name_tbl ~tbl) l
-  | Change (l, r, _diff) -> pp_list_newline self ppf [ Delete l; Insert r ]
+  let _pp_te_debug ppf (type_ : Type.t) : unit =
+    Format.fprintf ppf "%a <hash:%d>" Type.pp type_ (Type.hash type_)
 
 
-let pp ~(no_color : bool) ~tbl ppf (patch : t) : unit =
-  if not no_color then ANSI.add_ansi_marking ppf;
-  match patch with
-  | [] -> Format.fprintf ppf ""
-  | _ ->
-    Format.fprintf
-      ppf
-      "@.@[<v>Difference between the types:@,%a@]"
-      (pp_list_newline (pp_change ~tbl))
-      patch
+  let pp_type ~tbl ppf (t : Type.t) =
+    Format.fprintf ppf "%a" (Type.pp_with_name_tbl ~tbl) t
+
+
+  let rec pp_change ~tbl ppf (c : Define.change) : unit =
+    let self = pp_change ~tbl in
+    match c with
+    | Delete l -> Format.fprintf ppf "@{<red>- %a@}" (pp_type ~tbl) l
+    | Insert r -> Format.fprintf ppf "@{<green>+ %a@}" (pp_type ~tbl) r
+    | Keep (l, _r, _eq) -> Format.fprintf ppf "  %a" (pp_type ~tbl) l
+    | Change (l, r, _diff) -> pp_list_newline self ppf [ Delete l; Insert r ]
+
+
+  let pp_patch ~tbl ppf (patch : Define.patch) =
+    match patch with
+    | [] -> Format.fprintf ppf ""
+    | _ -> Format.fprintf ppf "@[<v>%a@]" (pp_list_newline (pp_change ~tbl)) patch
+
+
+  let pp_record ~tbl (pp : Format.formatter -> t -> unit) ppf (r : t Record.t) =
+    let pp_type = pp_type ~tbl in
+    let _pp_type_prepend_field_name field_name ppf (t : Type.t) =
+      Format.fprintf ppf "<field '%s'> %a" field_name pp_type t
+    in
+    let pp_record_entry (label : Label.t) (diff : t) =
+      let label = Label.to_string label in
+      match diff with
+      | Diff_change (Delete t) ->
+        Format.fprintf ppf "@[@{<red>- field '%s' : %a@}@]," label pp_type t
+      | Diff_change (Insert t) ->
+        Format.fprintf ppf "@[@{<green>+ field '%s' : %a@}@," label pp_type t
+      | _ -> Format.fprintf ppf "@[<v 2>  field '%s' :@,%a@]@," label pp diff
+    in
+    Record.LMap.iter pp_record_entry r
+
+
+  let pp_diff ~(no_color : bool) ~tbl ppf (diff : t) : unit =
+    let rec aux ppf (diff : t) : unit =
+      let self = aux in
+      if not no_color then ANSI.add_ansi_marking ppf;
+      match diff with
+      | Diff_change c -> pp_change ~tbl ppf c
+      | Diff_patch p -> pp_patch ~tbl ppf p
+      | Diff_record r -> pp_record ~tbl self ppf r
+    in
+    match diff with
+    | Diff_change _ -> () (* Trivially short diff (int vs. nat) aren't displayed *)
+    | _ -> Format.fprintf ppf "@,@[<v>Difference between the types:@,%a@]" aux diff
+end
+(* of PP *)
+
+let pp = PP.pp_diff
