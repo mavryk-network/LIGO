@@ -14,11 +14,3 @@
       binder : my_type_name
       type_expresion :
         T_abstraction( (T_var alpha) , T_xxx (T_var alpha) )
-
-## pass 'freeze_operator' : bin_op , ternop ?
-  - remove : E_binary_op E_unary_op
-  - remove : E_set_membership
-  - add    : E_constant
-  
-  morph operators into hardcoded constants (later leave them be in the stdlib ?)
-  morph special syntax to constants
