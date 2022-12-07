@@ -107,6 +107,9 @@ let mod_ =
     ; ( "env"
       , "__ligo_internal__string_slice"
       , ([ NumType I32Type; NumType I32Type; NumType I32Type ], [ NumType I32Type ]) )
+    ; (* bytes*)
+      "env", "__ligo_internal__bytes_unpack", ([ NumType I32Type ], [ NumType I32Type ])
+    ; "env", "__ligo_internal__bytes_pack", ([ NumType I32Type ], [ NumType I32Type ])
     ]
 
 

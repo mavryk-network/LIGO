@@ -51,6 +51,11 @@
     let () = logx "" in 
     ()
 
+  let log_bytes (x: bytes): unit =
+    let logx : bytes -> unit = logx in
+    let () = logx x in 
+    ()
+    
   let no_of_digits (x: int): int = 
     [%Wasm ({|
       i32.const 1 
@@ -590,8 +595,19 @@ module Option = struct
 end
 
 module Bytes = struct
+#if MICHELSON
   let pack (type a) (v : a) : bytes = [%Michelson ({| { PACK } |} : a -> bytes)] v
   let unpack (type a) (b : bytes) : a option = [%Michelson (({| { UNPACK (type $0) } |} : bytes -> a option), (() : a))] b
+#endif
+#if WASM
+
+  let pack (type a) (v : a) :  bytes =
+    [%Wasm ({| call "__ligo_internal__bytes_pack" |} : a -> bytes )] v
+  
+  let unpack (type a) (v : bytes) :  a option =
+    [%Wasm ({| call "__ligo_internal__bytes_unpack" |} : bytes -> a option )] v
+
+#endif
   let length (b : bytes) : nat = [%external ("SIZE", b)]
 
 #if CURRY
@@ -604,6 +620,7 @@ module Bytes = struct
   let sub ((s, l, b) : nat * nat * bytes) : bytes = [%external ("SLICE", s, l, b)]
 #endif
 
+  let length (b : bytes) : nat = [%external ("SIZE", b)]
 end
 
 module Crypto = struct

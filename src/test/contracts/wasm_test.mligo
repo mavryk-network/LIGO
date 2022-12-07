@@ -1,5 +1,3 @@
-// import Bar from 'xxx';
-
 type parameter = int
 type storage = int
 
@@ -208,6 +206,37 @@ let main ((_, _s):(parameter * storage)) =
   let _ = assert (arrr = 0x70707070) in
   let _ = assert ( Bytes.sub 1n 2n 0xff7a7aff = 0x7a7a ) in
   let _ = assert ((Option.unopt (Some 255)) = 255) in 
+
+  let foofoo1 = Bytes.pack 45 in 
+  let _ = assert_with_error (foofoo1 = 0x05002d) "Bytes.pack 45 not working correctly.\n" in
+  let foofoo1 = Bytes.pack "a" in                        
+  let _ = assert_with_error (foofoo1 = 0x05010000000161) "Bytes.pack \"a\" not working correctly.\n" in
+  let foofoo1 = Bytes.pack "abcdefghijkl" in                        
+  let _ = assert_with_error (foofoo1 = 0x05010000000c6162636465666768696a6b6c) "Bytes.pack \"abcdefghijkl\" not working correctly.\n" in
+  // let foofoo1 = Bytes.pack 1200 in 
+  // let _ = assert_with_error (foofoo1 = 0x0500b012) "Bytes.pack 1200 not working correctly.\n" in
+  // let foofoo1 = Bytes.pack 200000 in 
+  // let _ = assert_with_error (foofoo1 = 0x050080b518) "Bytes.pack 200000 not working correctly.\n" in
+  // let foofoo1 = Bytes.pack 200000000 in 
+  // let _ = assert_with_error (foofoo1 = 0x05008088debe01) "Bytes.pack 200000000 not working correctly.\n" in
+  // let foofoo1 = Bytes.pack (1, 2) in 
+  // let _ = assert_with_error (foofoo1 = 0x05070700010002) "Bytes.pack (1,2) not working correctly.\n" in
+  // let foofoo1 = Bytes.pack (1, 2, 3, 4) in 
+  // let _ = assert_with_error (foofoo1 = 0x050707070700010002070700030004) "Bytes.pack (1,2,3,4) not working correctly.\n" in
+  // let foofoo1 = Bytes.pack [1; 2] in 
+  // let _ = assert_with_error (foofoo1 = 0x05020000000400010002) "Bytes.pack [1;2] not working correctly.\n" in
+  // let foofoo1 = Bytes.pack [1200; 2; 3; 4] in 
+  // let _ = assert_with_error (foofoo1 = 0x05020000000900b012000200030004) "Bytes.pack [1200; 2; 3; 4] not working correctly.\n" in
+  // let foofoo1 = Bytes.pack (Set.literal [1200; 2; 3; 4]) in 
+  // let _ = assert_with_error (foofoo1 = 0x05020000000900020003000400b012) "Bytes.pack (Set.literal [1200; 2; 3; 4]) not working correctly.\n" in
+  // let foofoo1 = Bytes.pack (Map.literal [(1, "a"); (2, "b"); (3, "c")]) in 
+  // let _ = assert_with_error (foofoo1 = 0x05020000001e070400010100000001610704000201000000016207040003010000000163) "Bytes.pack [Map.literal [(1, \"a\"); (2, \"b\"); (3, \"c\")] not working correctly.\n" in
+  // let foofoo2: int option = Bytes.unpack foofoo1 in
+  // let _ = match foofoo2 with 
+  //   Some s -> log ("Pack returned:" ^ string_of_int s ^ "\n")
+  // | None -> log "nothing was returned... \n"
+  // in
+
   // should work: let _ = assert ((Option.unopt_with_error None "ooops") = 255) in   
   let a = 
     4 + 5 +  (* 9 *)
