@@ -164,6 +164,15 @@ module TODO_unify_in_cst = struct
       in
       List.map (Utils.sepseq_to_list record_lhs.value.elements) ~f
     | _ -> failwith "raise.error (wrong_functional_updator @@ CST.expr_to_region x)"
+  
+  let nested_mod_access init lst= List.fold_right
+    ~init
+    ~f:(fun x acc -> e_moda ~loc:(get_e_loc acc) {module_path = x ; field = acc})
+    (List.Ne.to_list lst)
+  let tnested_mod_access init lst= List.fold_right
+    ~init
+    ~f:(fun x acc -> t_moda ~loc:(get_t_loc acc) {module_path = x ; field = acc})
+    (List.Ne.to_list lst)
 end
 
 let extract_type_params
@@ -219,7 +228,7 @@ let rec compile_type_expression ~(raise : ('e, 'w) raise) : CST.type_expr -> AST
         (nsepseq_to_nseq t.module_path)
     in
     let field : ty_expr = self t.field in
-    t_modpath { module_path; field } ~loc
+    TODO_unify_in_cst.tnested_mod_access field module_path
   | T_Par t -> self (r_fst t).inside
   | T_Record t ->
     let t, loc = r_split t in
@@ -596,16 +605,11 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
   | E_Equal eq -> compile_bin_op eq
   | E_Neq ne -> compile_bin_op ne
   | E_Call call ->
-    let (func, args), loc = r_split call in
+    let (func, (args : CST.call_args)), loc = r_split call in
     let func = self func in
-    let args : expr nseq =
+    let args : expr list =
       let args, loc = r_split args in
-      let compile_args : CST.expr list -> expr nseq = function
-        | [] -> e_unit ~loc, []
-        | [ e ] -> self e, []
-        | e :: es -> nseq_map self (e, es)
-      in
-      compile_args @@ sepseq_to_list args.inside
+      List.map ~f:self (sepseq_to_list args.inside)
     in
     e_call func args ~loc
   | E_Tuple lst ->
@@ -631,7 +635,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     let ma, loc = r_split ma in
     let module_path = nseq_map w_fst @@ nsepseq_to_nseq ma.module_path in
     let field = self ma.field in
-    e_modpath { module_path; field } ~loc
+    TODO_unify_in_cst.nested_mod_access field module_path
   | E_Update up ->
     let up, loc = r_split up in
     let structure = self up.structure in
@@ -650,12 +654,12 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     e_poly_fun { type_params; parameters; ret_type; body } ~loc
   | E_Ctor ctor ->
     let ctor, loc = w_split ctor in
-    e_constr AST.Constructor.{ constructor = Label.of_string ctor; element = None } ~loc
+    e_constr (Label.of_string ctor) ~loc
   | E_App app ->
     let (func, args), loc = r_split app in
     let func = self func in
     let args = Option.map ~f:(nseq_map self <@ extract_tuple) args in
-    e_app (func, args) ~loc
+    e_ctor_app (func, args) ~loc
   | E_Case case ->
     let case, loc = r_split case in
     let case = compile_case ~raise self case in
@@ -708,7 +712,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
       let compile_binding (b : CST.binding) = self b.key, self b.value in
       List.map ~f:(compile_binding <@ r_fst) @@ sepseq_to_list m.elements
     in
-    e_map elements ~loc
+    e_bigmap elements ~loc
   | E_CodeInj ci ->
     let ci, loc = r_split ci in
     let language = r_fst @@ r_fst ci.language in

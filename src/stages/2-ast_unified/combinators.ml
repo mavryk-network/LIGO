@@ -33,6 +33,7 @@ type 'a type_expression_content_ = [%import: 'a Types.type_expression_content_]
     { prefixes =
         [ ("make_t", fun ~loc content : ty_expr -> { fp = Location.wrap ~loc content })
         ; ("get_t", fun (x : Types.ty_expr) -> Location.unwrap x.fp)
+        ; ("get_t_loc", fun (x : Types.ty_expr) -> Location.get_location x.fp)
         ]
     ; wrap_constructor =
         ("type_expression_content_", fun ~loc content -> make_t ~loc content)

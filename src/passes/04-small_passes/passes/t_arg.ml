@@ -1,6 +1,8 @@
 open Ast_unified
 open Pass_type
 
+(* this pass is stupid, lol :D *)
+
 let compile =
   let pass_ty : _ ty_expr_ -> ty_expr = function
     | { location = loc; wrap_content = T_Arg s } ->

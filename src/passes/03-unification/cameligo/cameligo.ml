@@ -156,6 +156,11 @@ module TODO_unify_in_cst = struct
       (nseq_map
          (fun x -> TODO_do_in_parsing.mvar ~loc:(r_snd x) (r_fst x))
          (nsepseq_to_nseq binders))
+
+  let nested_ctor_application ~loc (constr:CST.constr) arg_opt =
+    let constructor = Label.of_string constr.value in
+    let element = Option.map ~f:(List.Ne.singleton) arg_opt in
+    e_ctor_app ~loc ((e_constr ~loc:(Location.lift constr.region) constructor), element)
 end
 
 (* ========================== TYPES ======================================== *)
@@ -446,7 +451,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
     let (func, args), loc = r_split call in
     let func = self func in
     let args = nseq_map self args in
-    e_call func args ~loc
+    e_call func (List.Ne.to_list args) ~loc
   | ETuple lst ->
     let npseq, loc = r_split lst in
     let nseq = nseq_map self (nsepseq_to_nseq npseq) in
@@ -479,9 +484,8 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
       ~loc
   | EConstr constr ->
     let (name, expr), loc = r_split constr in
-    let constructor = Label.of_string (r_fst name) in
     let element = Option.map ~f:self expr in
-    e_constr {constructor; element} ~loc
+    TODO_unify_in_cst.nested_ctor_application ~loc name element
   | ECase case ->
     let case, loc = r_split case in
     let expr = self case.expr in

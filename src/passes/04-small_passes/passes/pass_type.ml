@@ -10,14 +10,14 @@ type 'a code_transformation = 'a -> 'a
 type 'a dyn_reduction_check = Iter.iter * (Iter.iter -> 'a -> unit)
 
 type 'a sub_pass =
-  { name : string
-  ; forward : 'a code_transformation
+  { forward : 'a code_transformation
   ; forward_check : 'a dyn_reduction_check
   ; backward : 'a code_transformation
   }
 
 type pass =
-  { expression : expr sub_pass
+  { name : string
+  ; expression : expr sub_pass
   ; program : program sub_pass
   }
 
@@ -97,7 +97,7 @@ let cata_morph
       | `Ana pass -> Anamorphism.(ana_expr ~f:pass expr)
     in
     let reduction_check = reduction_check, fun f expr -> Iter.(iter_expr ~f expr) in
-    { name; forward; forward_check = reduction_check; backward }
+    { forward; forward_check = reduction_check; backward }
   in
   let program =
     let forward expr =
@@ -111,6 +111,6 @@ let cata_morph
       | `Ana pass -> Anamorphism.(ana_program ~f:pass expr)
     in
     let reduction_check = reduction_check, fun f prg -> Iter.(iter_program ~f prg) in
-    { name; forward; forward_check = reduction_check; backward }
+    { forward; forward_check = reduction_check; backward }
   in
-  { expression; program }
+  { name; expression; program }

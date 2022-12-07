@@ -97,6 +97,14 @@ module TODO_unify_in_cst = struct
     | _ :: _ ->
       List.fold tl ~init:hd ~f:(fun acc expr ->
           e_sequence ~loc:(Location.cover (get_e_loc acc) (get_e_loc expr)) (acc, expr))
+    
+  let nested_ctor_application ~loc (constr:CST.constr) arg_opt =
+    let constructor = Label.of_string constr.value in
+    let element = Option.map ~f:(List.Ne.singleton) arg_opt in
+    e_ctor_app ~loc ((e_constr ~loc:(Location.lift constr.region) constructor), element)
+
+  let sum_rhs_as_a_type ~loc self params =
+    Option.map ~f:(t_prod ~loc <@ List.Ne.map self <@ nsepseq_to_nseq <@ snd) params
 end
 
 let rec compile_val_binding ~(raise : ('e, 'w) raise)
@@ -132,13 +140,13 @@ and compile_type_expression ~(raise : ('e, 'w) raise) : CST.type_expr -> AST.ty_
        fun { tuple; attributes } ->
         let CST.{ constr; params } = (r_fst tuple).inside in
         ( TODO_do_in_parsing.labelize (r_fst constr)
-        , Option.map ~f:(List.map ~f:self <@ nsepseq_to_list <@ snd) params
+        , TODO_unify_in_cst.sum_rhs_as_a_type ~loc self params
         , List.map (TODO_unify_in_cst.conv_attr attributes) ~f:fst )
       in
       let lst = List.map (nsepseq_to_list (r_fst variants)) ~f:(destruct <@ r_fst) in
       TODO_unify_in_cst.compile_rows lst
     in
-    TODO_unify_in_cst.t_attach_attr attributes (t_arg_sum_raw variants ~loc)
+    TODO_unify_in_cst.t_attach_attr attributes (t_sum_raw variants ~loc)
   | TObject t ->
     let CST.{ ne_elements; attributes; _ }, loc = r_split t in
     let fields =
@@ -465,17 +473,16 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
   | ECall call ->
     let (expr, args), loc = r_split call in
     let expr = self expr in
-    let args : AST.expr nseq =
+    let args : AST.expr list =
       match args with
-      | Unit the_unit -> List.Ne.singleton @@ self (CST.EUnit the_unit)
-      | Multiple args -> List.Ne.map self @@ nsepseq_to_nseq (r_fst args).inside
+      | Unit the_unit -> []
+      | Multiple args -> List.map ~f:self (nsepseq_to_list (r_fst args).inside)
     in
     e_call expr args ~loc
   | EConstr constr ->
     let (constr, arg_opt), loc = r_split constr in
-    let constructor = Label.of_string constr.value in
     let element = Option.map ~f:self arg_opt in
-    e_constr { constructor; element } ~loc
+    TODO_unify_in_cst.nested_ctor_application ~loc constr element
   | EArray items ->
     let items, loc = r_split items in
     let items : expr AST.Array_repr.t =
