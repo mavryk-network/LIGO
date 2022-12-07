@@ -92,7 +92,7 @@ let cata_morph
       | `Ana pass -> Anamorphism.(ana_expr ~f:pass expr)
     in
     let backward expr =
-      match compile with
+      match decompile with
       | `Cata pass -> Catamorphism.(cata_expr ~f:pass expr)
       | `Ana pass -> Anamorphism.(ana_expr ~f:pass expr)
     in
@@ -101,7 +101,7 @@ let cata_morph
   in
   let program =
     let forward expr =
-      match decompile with
+      match compile with
       | `Cata pass -> Catamorphism.(cata_program ~f:pass expr)
       | `Ana pass -> Anamorphism.(ana_program ~f:pass expr)
     in
