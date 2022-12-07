@@ -8,6 +8,7 @@
   errors
   t_arg
   type_abstraction_declaration
+  named_fun
  )
  (libraries ast_unified)
  (inline_tests

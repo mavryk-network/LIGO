@@ -14,3 +14,7 @@
       binder : my_type_name
       type_expresion :
         T_abstraction( (T_var alpha) , T_xxx (T_var alpha) )
+
+## pass 'named_fun'
+
+drop named parameter in arrow type (jsligo)

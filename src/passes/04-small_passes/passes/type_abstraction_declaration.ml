@@ -87,8 +87,7 @@ let%expect_test "decompile" =
     |}
   in
   let out_expr = (pass ~raise).program.backward [ in_prg ] in
-  let toto = S_exp.sexp_of_program out_expr in
-  let _ = Format.printf "%a" (Sexp.pp_hum_indent 2) toto in
+  Format.printf "%a" (Sexp.pp_hum_indent 2) (S_exp.sexp_of_program out_expr);
   [%expect
     {|
     ((P_Declaration

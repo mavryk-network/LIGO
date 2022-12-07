@@ -22,6 +22,7 @@ let compile_with_passes : type a. a sub_pass list -> a -> a =
 let passes ~(raise:(Passes.Errors.t,_) Simple_utils.Trace.raise) ~options = ignore (raise,options) ;
   [ Passes.T_arg.pass
   ; Passes.Type_abstraction_declaration.pass ~raise
+  ; Passes.Named_fun.pass ~raise
   ]
 
 let compile_program ~raise ~options : I.program -> O.program =
