@@ -27,3 +27,49 @@ drop named parameter in arrow type (jsligo)
   morph special syntax to constants
 
   - `E_Call (E_Module "Map" | "BigMap" )`
+
+
+
+
+## pass 'hack_literalize_jsligo'
+
+- remove : .
+- add    : .
+
+also see Self_ast_imperative.Literals (for a check ?)
+
+if option.syntax == jsligo :
+They correspond to the following cases in the Jsligo abstractor :
+```
+| EAnnot {value = (EArith(Int i), _, TVar {value = "nat"; _}); region=_ } ->
+| EAnnot {value = (EArith(Int i), _, TVar {value = "tez"; _}); region=_ } ->
+| EAnnot {value = (EArith(Int i), _, TVar {value = "mutez"; _}); region=_ } ->
+| EAnnot {value = (ECodeInj {value = {language; code};_ }, kwd_as, type_expr); region} ->
+```
+
+## pass 'restrict_t_app'
+
+if T_App lhs should be a T_Var , else error
+
+
+## pass t_app_michelson_types
+
+Do an MR on dev ? or:
+<!-- remove : T_App ( "michelson_or" | "michelson_pair" | "sapling_state" )
+add    : AST_I.T_michelson_or
+| AST_I.T_michelson_pair
+| AST_I.T_sapling_state
+| AST_I.T_sapling_transaction
+needs  : - t_app_pascaligo -->
+
+  T_ModA
+  =============================================================================
+## pass 'restrict_module_access'
+
+note: note sure, after Open directive ? https://gitlab.com/ligolang/ligo/-/merge_requests/2149#note_1200301854
+
+- remove : -
+- add    : -
+
+`T_ModA (T_Var x)` -> OK
+`T_ModA (T_prod x y)` -> NOK
