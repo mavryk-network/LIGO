@@ -6,6 +6,7 @@
  (modules
   pass_type
   errors
+  unit_test_helpers
   t_arg
   type_abstraction_declaration
   named_fun
