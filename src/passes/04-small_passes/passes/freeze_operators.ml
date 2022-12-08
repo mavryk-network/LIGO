@@ -109,7 +109,7 @@ let compile ~syntax =
 
 let reduction ~raise =
   let fail () =
-    raise.error (wrong_reduction __MODULE__ "some binary/unary operators were not found")
+    raise.error (wrong_reduction __MODULE__)
   in
   { Iter.defaults with
     expr =
