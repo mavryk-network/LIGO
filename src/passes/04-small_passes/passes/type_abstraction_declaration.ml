@@ -36,7 +36,7 @@ let reduction ~raise =
     declaration =
       (function
       | { wrap_content = D_Type_abstraction _; _ } ->
-        raise.error (wrong_reduction __MODULE__ "type abs")
+        raise.error (wrong_reduction __MODULE__)
       | _ -> ())
   }
 

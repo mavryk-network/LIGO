@@ -6,10 +6,12 @@
  (modules
   pass_type
   errors
+  unit_test_helpers
   t_arg
   type_abstraction_declaration
   named_fun
   freeze_operators
+  restrict_t_app
  )
  (libraries ast_unified syntax_types)
  (inline_tests

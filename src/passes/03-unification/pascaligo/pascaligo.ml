@@ -218,7 +218,7 @@ let rec compile_type_expression ~(raise : ('e, 'w) raise) : CST.type_expr -> AST
     let (s, z), loc = w_split t in
     t_int s z ~loc
   | T_ModPath t ->
-    let t, loc = r_split t in
+    let t, _loc = r_split t in
     let module_path =
       List.Ne.map
         (fun t ->
@@ -607,7 +607,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     let (func, (args : CST.call_args)), loc = r_split call in
     let func = self func in
     let args : expr list =
-      let args, loc = r_split args in
+      let args, _loc = r_split args in
       List.map ~f:self (sepseq_to_list args.inside)
     in
     e_call func args ~loc
@@ -631,7 +631,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     let proj, _loc = r_split proj in
     translate_projection proj
   | E_ModPath ma ->
-    let ma, loc = r_split ma in
+    let ma, _loc = r_split ma in
     let module_path = nseq_map w_fst @@ nsepseq_to_nseq ma.module_path in
     let field = self ma.field in
     TODO_unify_in_cst.nested_mod_access field module_path

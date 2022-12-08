@@ -24,7 +24,7 @@ let compile =
       ty_expr =
         (function
         | { wrap_content = T_Named_fun _; _ } ->
-          raise.error (wrong_reduction __MODULE__ "named_fun")
+          raise.error (wrong_reduction __MODULE__)
         | _ -> ())
     }
 let decompile = `Cata idle_cata_pass
