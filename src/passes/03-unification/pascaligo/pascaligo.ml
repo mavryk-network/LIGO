@@ -97,8 +97,7 @@ module TODO_unify_in_cst = struct
 
 
   let better_as_binop ~loc kwd (left, right) =
-    let operator = Location.wrap ~loc:(w_snd kwd) (w_fst kwd) in
-    e_binary_op ~loc { operator; left; right }
+    e_binary_op ~loc { operator = Location.wrap ~loc:(w_snd kwd) Operators.SHARP ; left; right }
 
 
   let nested_proj : AST.expr -> (CST.selection, CST.dot) nsepseq -> AST.expr =
@@ -531,18 +530,18 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
  fun e ->
   let self = compile_expression ~raise in
   let return e = e in
-  let compile_bin_op (op : _ CST.bin_op CST.reg) =
+  let compile_bin_op (sign: AST.Operators.op) (op : _ CST.bin_op CST.reg) =
     let CST.{ op; arg1; arg2 }, _loc = r_split op in
-    let op, loc = w_split op in
+    let _, loc = w_split op in
     e_binary_op
       ~loc
-      AST.{ operator = Location.wrap ~loc op; left = self arg1; right = self arg2 }
+      AST.{ operator = Location.wrap ~loc sign; left = self arg1; right = self arg2 }
   in
-  let compile_unary_op : string CST.wrap CST.un_op CST.reg -> AST.expr =
+  let compile_unary_op (sign: AST.Operators.op) : string CST.wrap CST.un_op CST.reg -> AST.expr =
    fun op ->
     let CST.{ op; arg }, _loc = r_split op in
-    let op, loc = w_split op in
-    e_unary_op ~loc AST.{ operator = Location.wrap ~loc op; arg = self arg }
+    let _, loc = w_split op in
+    e_unary_op ~loc AST.{ operator = Location.wrap ~loc sign; arg = self arg }
   in
   let translate_projection : CST.projection -> AST.expr =
    fun proj ->
@@ -579,13 +578,13 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
   | E_Verbatim str ->
     let str, loc = w_split str in
     TODO_unify_in_cst.e_verbatim str ~loc
-  | E_Cat cat -> compile_bin_op cat
-  | E_Add plus -> compile_bin_op plus
-  | E_Sub minus -> compile_bin_op minus
-  | E_Mult times -> compile_bin_op times
-  | E_Div slash -> compile_bin_op slash
-  | E_Mod mod_ -> compile_bin_op mod_
-  | E_Neg minus -> compile_unary_op minus
+  | E_Cat cat -> compile_bin_op CARET cat
+  | E_Add plus -> compile_bin_op PLUS plus
+  | E_Sub minus -> compile_bin_op MINUS minus
+  | E_Mult times -> compile_bin_op STAR times
+  | E_Div slash -> compile_bin_op SLASH slash
+  | E_Mod mod_ -> compile_bin_op WORD_MOD mod_
+  | E_Neg minus -> compile_unary_op MINUS minus
   | E_Int i ->
     let (_, i), loc = w_split i in
     e_int_z ~loc i
@@ -595,15 +594,15 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
   | E_Mutez m ->
     let (_, m), loc = w_split m in
     e_mutez_z ~loc (Z.of_int64 m)
-  | E_Or or_ -> compile_bin_op or_
-  | E_And and_ -> compile_bin_op and_
-  | E_Not not_ -> compile_unary_op not_
-  | E_Lt lt -> compile_bin_op lt
-  | E_Leq le -> compile_bin_op le
-  | E_Gt gt -> compile_bin_op gt
-  | E_Geq ge -> compile_bin_op ge
-  | E_Equal eq -> compile_bin_op eq
-  | E_Neq ne -> compile_bin_op ne
+  | E_Or or_ -> compile_bin_op WORD_OR or_
+  | E_And and_ -> compile_bin_op WORD_AND and_
+  | E_Not not_ -> compile_unary_op WORD_NOT not_
+  | E_Lt lt -> compile_bin_op LT lt
+  | E_Leq le -> compile_bin_op LE le
+  | E_Gt gt -> compile_bin_op GT gt
+  | E_Geq ge -> compile_bin_op GE ge
+  | E_Equal eq -> compile_bin_op SEQ eq
+  | E_Neq ne -> compile_bin_op EQ_SLASH_EQ ne
   | E_Call call ->
     let (func, (args : CST.call_args)), loc = r_split call in
     let func = self func in

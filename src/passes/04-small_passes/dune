@@ -3,7 +3,7 @@
  (public_name ligo.small_passes)
  (instrumentation
   (backend bisect_ppx))
- (libraries ast_unified ast_core passes)
+ (libraries ast_unified ast_core passes compiler_options)
  (inline_tests
   (flags (-stop-on-error)))
  (preprocess

@@ -163,7 +163,7 @@ type constant' =
   | C_SUB_MUTEZ
   | C_OPTION_MAP
 [@@deriving
-  eq, compare, yojson, hash, print_constant, only_interpreter_tags, read_constant]
+  eq, compare, yojson, hash, print_constant, only_interpreter_tags, read_constant, sexp]
 
 type deprecated =
   { name : string
@@ -178,7 +178,7 @@ type 'e t =
   { cons_name : constant' (* this is in enum *)
   ; arguments : 'e list
   }
-[@@deriving eq, compare, yojson, hash, fold, map]
+[@@deriving eq, compare, yojson, hash, fold, map, iter, sexp]
 
 let pp f ppf { cons_name; arguments } =
   Format.fprintf

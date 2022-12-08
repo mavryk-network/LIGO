@@ -9,8 +9,9 @@
   t_arg
   type_abstraction_declaration
   named_fun
+  freeze_operators
  )
- (libraries ast_unified)
+ (libraries ast_unified syntax_types)
  (inline_tests
   (flags (-stop-on-error)))
  (preprocess

@@ -324,18 +324,18 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
  fun e ->
   let self = compile_expression ~raise in
   let return e = e in
-  let compile_bin_op (op : _ CST.bin_op CST.reg) =
+  let compile_bin_op (sign: AST.Operators.op) (op : _ CST.bin_op CST.reg) =
     let CST.{ op; arg1; arg2 }, _loc = r_split op in
-    let op, loc = w_split op in
+    let _, loc = w_split op in
     e_binary_op
       ~loc
-      AST.{ operator = Location.wrap ~loc op; left = self arg1; right = self arg2 }
+      AST.{ operator = Location.wrap ~loc sign; left = self arg1; right = self arg2 }
   in
-  let compile_unary_op : string CST.wrap CST.un_op CST.reg -> AST.expr =
+  let compile_unary_op (sign: AST.Operators.op) : string CST.wrap CST.un_op CST.reg -> AST.expr =
    fun op ->
     let CST.{ op; arg }, _loc = r_split op in
-    let op, loc = w_split op in
-    e_unary_op ~loc AST.{ operator = Location.wrap ~loc op; arg = self arg }
+    let _, loc = w_split op in
+    e_unary_op ~loc AST.{ operator = Location.wrap ~loc sign; arg = self arg }
   in
   let translate_field_assign (fa : CST.field_assign) : (_, AST.expr) AST.Field.t =
     match fa with
@@ -347,25 +347,6 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
       let s = TODO_do_in_parsing.var ~loc:(r_snd fn) (r_fst fn) in
       AST.Field.Punned s
   in
-  (* let translate_field_path_assignment : CST.field_path_assignment -> (path, expr) field =
-    function
-    | CST.Path_property p -> (
-      let path = translate_path p.field_path in
-      let expr = self p.field_expr in
-      AST.Complete (path, expr)
-    )
-    | CST.Path_punned_property p -> (
-      let name = r_fst p in
-      AST.Punned (AST.Name name)
-    )
-  in
-  let translate_update : CST.update -> AST.update_cameligo = fun up ->
-    let record_path = translate_path up.record in
-    let updates = r_fst up.updates in
-    let updates = nsepseq_to_nseq updates.ne_elements in
-    let updates = nseq_map (translate_field_path_assignment <@ r_fst) updates in
-    {record_path; updates}
-  in *)
   let compile_type_params : CST.type_params CST.par CST.reg -> Ligo_prim.Type_var.t nseq =
    fun tp ->
     let lst =
@@ -398,7 +379,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
     e_bytes_hex b ~loc
   | EString str ->
     (match str with
-    | Cat c -> compile_bin_op c
+    | Cat c -> compile_bin_op CARET c
     | String str ->
       let str, loc = r_split str in
       TODO_unify_in_cst.e_string str ~loc
@@ -407,17 +388,17 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
       TODO_unify_in_cst.e_verbatim str ~loc)
   | EArith arth ->
     (match arth with
-    | Add plus -> compile_bin_op plus
-    | Sub minus -> compile_bin_op minus
-    | Mult times -> compile_bin_op times
-    | Div slash -> compile_bin_op slash
-    | Mod mod_ -> compile_bin_op mod_
-    | Land land_ -> compile_bin_op land_
-    | Lor lor_ -> compile_bin_op lor_
-    | Lxor lxor_ -> compile_bin_op lxor_
-    | Lsl lsl_ -> compile_bin_op lsl_
-    | Lsr lsr_ -> compile_bin_op lsr_
-    | Neg minus -> compile_unary_op minus
+    | Add plus -> compile_bin_op PLUS plus
+    | Sub minus -> compile_bin_op MINUS minus
+    | Mult times -> compile_bin_op STAR times
+    | Div slash -> compile_bin_op SLASH slash
+    | Mod mod_ -> compile_bin_op PRCENT mod_
+    | Land land_ -> compile_bin_op WORD_LAND land_
+    | Lor lor_ -> compile_bin_op WORD_LOR lor_
+    | Lxor lxor_ -> compile_bin_op WORD_LXOR lxor_
+    | Lsl lsl_ -> compile_bin_op WORD_LSL lsl_
+    | Lsr lsr_ -> compile_bin_op WORD_LSR lsr_
+    | Neg minus -> compile_unary_op MINUS minus
     | Int i ->
       let (_, i), loc = r_split i in
       e_int_z ~loc i
@@ -431,17 +412,17 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
     (match logic with
     | BoolExpr be ->
       (match be with
-      | Or or_ -> compile_bin_op or_
-      | And and_ -> compile_bin_op and_
-      | Not not_ -> compile_unary_op not_)
+      | Or or_ -> compile_bin_op DPIPE or_
+      | And and_ -> compile_bin_op DAMPERSAND and_
+      | Not not_ -> compile_unary_op WORD_NOT not_)
     | CompExpr ce ->
       (match ce with
-      | Lt lt -> compile_bin_op lt
-      | Leq le -> compile_bin_op le
-      | Gt gt -> compile_bin_op gt
-      | Geq ge -> compile_bin_op ge
-      | Equal eq -> compile_bin_op eq
-      | Neq ne -> compile_bin_op ne))
+      | Lt lt -> compile_bin_op LT lt
+      | Leq le -> compile_bin_op LE le
+      | Gt gt -> compile_bin_op GT gt
+      | Geq ge -> compile_bin_op GE ge
+      | Equal eq -> compile_bin_op SEQ eq
+      | Neq ne -> compile_bin_op LTGT ne))
   | ERevApp ra ->
     let ra, loc = r_split ra in
     let x = self ra.arg1 in
@@ -510,7 +491,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
     e_cond { test; ifso; ifnot } ~loc
   | EList list ->
     (match list with
-    | ECons cons -> compile_bin_op cons
+    | ECons cons -> compile_bin_op DCOLON cons
     | EListComp listcomp ->
       let list, loc = r_split listcomp in
       let elements = List.map ~f:self @@ sepseq_to_list list.elements in

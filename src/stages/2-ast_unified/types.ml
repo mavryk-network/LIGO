@@ -130,7 +130,7 @@ and 'self type_expression_content_ =
   | T_Disc_union of 'self Non_linear_disc_rows.t
   | T_Attr of Attribute.t * 'self
 
-  (* \/ Bellow are nodes added through the passes \/ *)
+  (* \/ Below are nodes added through the passes \/ *)
   | T_Abstraction of 'self Abstraction.t [@only_interpreter]
 [@@deriving map, yojson, iter, sexp]
 
@@ -274,6 +274,9 @@ and ('self, 'ty_expr, 'pattern, 'statement, 'mod_expr) expression_content_ =
   | E_Block_with of ('self, 'statement) Block_with.t (* { tata ; toto } with whatev *)
   | E_AssignJsligo of
       'self Assign_jsligo.t (* tata := toto ; which in reality return tata *)
+
+  (*  \/ Below are nodes added through the passes \/*)
+  | E_constant of 'self Constant.t [@only_interpreter]
 [@@deriving map, iter, yojson, sexp]
 (* ========================== PROGRAM ====================================== *)
 

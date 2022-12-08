@@ -19,11 +19,19 @@ let compile_with_passes : type a. a sub_pass list -> a -> a =
   prg
 
 
-let passes ~(raise:(Passes.Errors.t,_) Simple_utils.Trace.raise) ~options = ignore (raise,options) ;
-  [ Passes.T_arg.pass
-  ; Passes.Type_abstraction_declaration.pass ~raise
-  ; Passes.Named_fun.pass ~raise
+let passes
+    ~(raise : (Passes.Errors.t, _) Simple_utils.Trace.raise)
+    ~(options : Compiler_options.t)
+  =
+  ignore (raise, options);
+  let open Passes in
+  let syntax = options.frontend.syntax in
+  [ T_arg.pass
+  ; Type_abstraction_declaration.pass ~raise
+  ; Named_fun.pass ~raise
+  ; Freeze_operators.pass ~raise ~syntax
   ]
+
 
 let compile_program ~raise ~options : I.program -> O.program =
  fun prg ->

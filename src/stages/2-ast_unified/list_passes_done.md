@@ -26,4 +26,3 @@ drop named parameter in arrow type (jsligo)
   morph operators into hardcoded constants (later leave them be in the stdlib ?)
   morph special syntax to constants
 
-  - `E_Call (E_Module "Map" | "BigMap" )`

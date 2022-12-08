@@ -525,13 +525,7 @@ and compile_expression ~raise : CST.expr -> AST.expr =
       { value =
           ( EVar { value = "list"; _ }
           , Multiple
-              { value =
-                  { inside =
-                      ( EArray
-                          { value = { inside; lbracket = _; rbracket = _ }; region = _ }
-                      , [] )
-                  ; _
-                  }
+              { value = { inside = EArray { value = { inside; _ }; region = _ }, []; _ }
               ; _
               } )
       ; region
