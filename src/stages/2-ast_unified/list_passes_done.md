@@ -18,3 +18,12 @@
 ## pass 'named_fun'
 
 drop named parameter in arrow type (jsligo)
+
+## pass 'freeze_operator' : bin_op , ternop ?
+  - remove : E_binary_op E_unary_op E_set_membership E_map_lookup E_Map E_BigMap
+  - add    : E_constant
+  
+  morph operators into hardcoded constants (later leave them be in the stdlib ?)
+  morph special syntax to constants
+
+  - `E_Call (E_Module "Map" | "BigMap" )`
