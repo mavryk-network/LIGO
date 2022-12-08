@@ -9,6 +9,7 @@
   t_arg
   type_abstraction_declaration
   named_fun
+  restrict_t_app
  )
  (libraries ast_unified)
  (inline_tests
