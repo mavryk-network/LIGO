@@ -3,7 +3,6 @@ open Ast_unified
 open Pass_type
 open Simple_utils.Trace
 
-
 (* in expression;
 ```
 let x =
@@ -43,7 +42,6 @@ let reduction ~raise =
 
 
 let decompile =
-  (* let pass_ty  *)
   let pass_declaration : _ declaration_ -> declaration =
    fun decl ->
     { fp =
@@ -54,9 +52,9 @@ let decompile =
               let rec aux tv e =
                 match get_t_abstraction e with
                 | None -> tv, e
-                | Some { ty_binder; kind = _ ; type_ } -> aux (tv @ [ty_binder]) type_
+                | Some { ty_binder; kind = _; type_ } -> aux (tv @ [ ty_binder ]) type_
               in
-              let params,tail = aux [] type_expr in
+              let params, tail = aux [] type_expr in
               let params = List.Ne.of_list_opt params in
               D_Type_abstraction { name; params; type_expr = tail }
             | x -> x)
@@ -73,23 +71,50 @@ let pass ~raise =
 let%expect_test "decompile" =
   let raise = raise_failwith "test" in
   let in_prg =
-    S_exp.program_entry_of_sexp
+    S_exp.program_of_sexp
     @@ Sexp.of_string
          {|
-      (P_Declaration
-        (D_Type (
-          (name my_t)
-          (type_expr
-            (T_Abstraction
-              ((ty_binder a) (kind Type) (type_ 
-              (T_Abstraction
-                ((ty_binder b) (kind Type) (type_ (T_Var whatever)))))))))))
-    |}
+          ((P_Declaration
+            (D_Type (
+              (name my_t)
+              (type_expr
+                (T_Abstraction
+                  ((ty_binder a) (kind Type) (type_ 
+                  (T_Abstraction
+                    ((ty_binder b) (kind Type) (type_ (T_Var whatever))))))))))))
+          |}
   in
-  let out_expr = (pass ~raise).program.backward [ in_prg ] in
+  let out_expr = (pass ~raise).program.backward in_prg in
   Format.printf "%a" (Sexp.pp_hum_indent 2) (S_exp.sexp_of_program out_expr);
   [%expect
     {|
     ((P_Declaration
        (D_Type_abstraction
-         ((name my_t) (params ((a b))) (type_expr (T_Var whatever)))))) |}]
+         ((name my_t) (params ((a b))) (type_expr (T_Var whatever))))))
+    |}]
+
+let%expect_test "compile" =
+  let raise = raise_failwith "test" in
+  let in_prg =
+    S_exp.program_of_sexp
+    @@ Sexp.of_string
+         {|
+        ((P_Declaration
+          (D_Type_abstraction
+            ((name my_t) (params ((a b))) (type_expr (T_Var whatever))))))
+        |}
+  in
+  let out_expr = (pass ~raise).program.forward in_prg in
+  Format.printf "%a" (Sexp.pp_hum_indent 2) (S_exp.sexp_of_program out_expr);
+  [%expect
+    {|
+    ((P_Declaration
+       (D_Type
+         ((name my_t)
+           (type_expr
+             (T_Abstraction
+               ((ty_binder a) (kind Type)
+                 (type_
+                   (T_Abstraction
+                     ((ty_binder b) (kind Type) (type_ (T_Var whatever)))))))))))) 
+    |}]
