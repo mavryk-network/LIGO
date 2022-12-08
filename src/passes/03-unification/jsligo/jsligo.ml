@@ -475,7 +475,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     let expr = self expr in
     let args : AST.expr list =
       match args with
-      | Unit the_unit -> []
+      | Unit _the_unit -> []
       | Multiple args -> List.map ~f:self (nsepseq_to_list (r_fst args).inside)
     in
     e_call expr args ~loc

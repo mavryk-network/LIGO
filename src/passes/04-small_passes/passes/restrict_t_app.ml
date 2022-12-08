@@ -5,7 +5,7 @@ open Errors
 module Location = Simple_utils.Location
 
 (*
-  if T_App lhs should be a T_Var , else error
+  if T_App lhs should be a T_Var or a T_Module_Access , else error
 *)
 
 let compile ~raise =
@@ -23,14 +23,12 @@ let compile ~raise =
 
 
 let reduction ~raise =
-  let ty_expr : _ ty_expr_ -> options =
-   fun t ->
-    match get_t_app_opt { fp = t } with
-    | Some t ->
-      (match get_t_var_opt t.constr with
-      | Some _ -> ()
-      | None -> raise.error (wrong_reduction __MODULE__ "named_fun"))
-    | None -> ()
+  let open Location in
+  let ty_expr : ty_expr ty_expr_ -> options = fun t ->
+  match t with
+  | { wrap_content = T_App { constr = { fp = { wrap_content = T_Var _; _} }; type_args=_ }; _ } -> ()
+  | { wrap_content = T_App { constr = { fp = { wrap_content = _; _} }; type_args=_ }; _ } -> raise.error (wrong_reduction __MODULE__)
+  | _ -> ()
   in
   { Iter.defaults with ty_expr }
 

@@ -7,7 +7,7 @@ open S_exp
 let stage = "small_passes"
 
 type t =
-  [ `Small_passes_wrong_reduction of string * string
+  [ `Small_passes_wrong_reduction of string
   | `Small_passes_expected_variable of ty_expr
   ]
 [@@deriving poly_constructor { prefix = "small_passes_" }, sexp]
@@ -21,8 +21,8 @@ let error_ppformat : display_format:string display_format -> Format.formatter ->
   | Dev -> Format.fprintf f "%a" (Sexp.pp_hum_indent 4) (sexp_of_t a)
   | Human_readable ->
     (match a with
-    | `Small_passes_wrong_reduction (pass, msg) ->
-      Format.fprintf f "@[<hv>Pass %s did not reduce: %s @]" pass msg
+    | `Small_passes_wrong_reduction pass ->
+      Format.fprintf f "@[<hv>Pass %s did not reduce.@]" pass
     | `Small_passes_expected_variable t ->
       Format.fprintf f "@[<hv>%a@.Expected a declaration name@]" Snippet.pp (get_t_loc t))
 
@@ -31,8 +31,8 @@ let error_json : t -> Simple_utils.Error.t =
  fun e ->
   let open Simple_utils.Error in
   match e with
-  | `Small_passes_wrong_reduction (pass, msg) ->
-    let message = Format.asprintf "@[<hv>Pass %s did not reduce: %s @]" pass msg in
+  | `Small_passes_wrong_reduction pass ->
+    let message = Format.asprintf "@[<hv>Pass %s did not reduce.@]" pass in
     let content = make_content ~message () in
     make ~stage ~content
   | `Small_passes_expected_variable t ->
