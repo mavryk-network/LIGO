@@ -773,7 +773,7 @@ and compile_declaration ~(raise : ('e, 'w) raise) : CST.declaration -> AST.decla
     d_const ~loc { pattern; type_params; rhs_type; let_rhs }
   | D_Attr d ->
     let (attr,decl), loc = r_split d in
-    let attr = translate_attr_pascaligo attr in
+    let attr = translate_attr_pascaligo (r_fst attr) in
     let decl = self decl in
     d_attr (attr, decl) ~loc
   | D_Fun d ->
