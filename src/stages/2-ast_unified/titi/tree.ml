@@ -69,7 +69,7 @@ module Order = struct
 
   (* given + , revert application ('left -> right' to 'right -> left') *)
   let rev_plus plus x y = plus y x
-
+  (* sounds very stupid *)
   let pre
       (fp' : ('a, 'a, 'a, 'a) program_ -> 'a)
       (fd' : ('a, 'a, 'a) decl_ -> 'a)
@@ -111,23 +111,8 @@ module Order = struct
     cata_program fp fd fe ft tree
 
 
-  (* let testos
-      (fp' : ('a, 'a, 'a, 'a) program_ -> 'a)
-      (fd' : ('a, 'a, 'a) decl_ -> 'a)
-      (fe' : ('a, 'a) expr_ -> 'a)
-      (ft' : 'a type_expr_ -> 'a)
-      ~(plus : 'a -> 'a -> 'a)
-      ~(neutral : 'a)
-      (tree: program)
-      : 'a
-    =
-    let fp'' x = fp' x 
-    cata_program fp' fd' fe' ft' tree *)
-
-
   let post ~plus = pre ~plus:(rev_plus plus)
 
-  (* the above is annoying , but could be generated easily *)
 end
 
 (* CLIENT-SIDE *)
