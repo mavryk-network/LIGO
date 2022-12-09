@@ -69,7 +69,7 @@ note: note sure, after Open directive ? https://gitlab.com/ligolang/ligo/-/merge
 `T_ModA (T_Var x)` -> OK
 `T_ModA (T_prod x y)` -> NOK
 
-## pass 'syntactic_hack'
+## pass 'list_as_function_call'
   
   - remove : -
   - add : -
@@ -77,7 +77,13 @@ note: note sure, after Open directive ? https://gitlab.com/ligolang/ligo/-/merge
   ONLY WHEN options.syntax == jsligo:
 
   `E_Call (list, [..])` |-> `E_literal (list ..)`
-  `E_Call (match, ..)` |-> `E_matching (..)`
   `E_Call ..` |-> `E_Call ..`
   
-  no need of a second node for that
+## pass 'match_as_function_call'
+  
+  - remove : -
+  - add : -
+  
+  ONLY WHEN options.syntax == jsligo:
+
+  `E_Call (match, ..)` |-> `E_matching (..)`
