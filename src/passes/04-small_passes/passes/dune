@@ -12,7 +12,7 @@
   named_fun
   freeze_operators
   restrict_t_app
-  syntactic_hack
+  list_as_function
  )
  (libraries ast_unified syntax_types)
  (inline_tests
