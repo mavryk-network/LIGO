@@ -108,9 +108,7 @@ let compile ~syntax =
 
 
 let reduction ~raise =
-  let fail () =
-    raise.error (wrong_reduction __MODULE__)
-  in
+  let fail () = raise.error (wrong_reduction __MODULE__) in
   { Iter.defaults with
     expr =
       (function
@@ -145,21 +143,17 @@ let pass ~raise ~syntax =
     ~reduction_check:(reduction ~raise)
 
 
+open Unit_test_helpers
+
 let%expect_test "compile" =
-  let raise = raise_failwith "test" in
-  let in_prg =
-    S_exp.program_of_sexp
-    @@ Sexp.of_string
-         {|
-          ((P_Declaration
-            (D_Const (
-              (pattern (P_var x))
-              (let_rhs
-                (E_Binary_op ((operator SLASH) (left (E_variable x)) (right (E_variable y)))))))))
-          |}
-  in
-  let out_expr = (pass ~raise ~syntax:(Some PascaLIGO)).program.forward in_prg in
-  Format.printf "%a" (Sexp.pp_hum_indent 2) (S_exp.sexp_of_program out_expr);
+  {|
+  ((P_Declaration
+    (D_Const (
+      (pattern (P_var x))
+      (let_rhs
+        (E_Binary_op ((operator SLASH) (left (E_variable x)) (right (E_variable y)))))))))
+  |}
+  |-> pass ~raise ~syntax:(Some PascaLIGO);
   [%expect
     {|
     ((P_Declaration
@@ -167,30 +161,25 @@ let%expect_test "compile" =
          ((pattern (P_var x))
            (let_rhs
              (E_constant
-               ((cons_name C_DIV) (arguments ((E_variable x) (E_variable y)))))))))) |}]
+               ((cons_name C_DIV) (arguments ((E_variable x) (E_variable y))))))))))
+    |}]
 
 let%expect_test "decompile" =
-  let raise = raise_failwith "test" in
-  let in_prg =
-    S_exp.program_of_sexp
-    @@ Sexp.of_string
-         {|
-          ((P_Declaration
-          (D_Const
-            ((pattern (P_var x))
-              (let_rhs
-                (E_constant
-                  ((cons_name C_DIV) (arguments ((E_variable x) (E_variable y)))))))))) 
-          |}
-  in
-  let out_expr = (pass ~raise ~syntax:(Some PascaLIGO)).program.backward in_prg in
-  Format.printf "%a" (Sexp.pp_hum_indent 2) (S_exp.sexp_of_program out_expr);
+  {|
+  ((P_Declaration
+  (D_Const
+    ((pattern (P_var x))
+      (let_rhs
+        (E_constant
+          ((cons_name C_DIV) (arguments ((E_variable x) (E_variable y)))))))))) 
+  |}
+  <-| pass ~raise ~syntax:(Some PascaLIGO);
   [%expect
     {|
-  ((P_Declaration
-     (D_Const
-       ((pattern (P_var x))
-         (let_rhs
-           (E_Binary_op
-             ((operator SLASH) (left (E_variable x)) (right (E_variable y)))))))))
+    ((P_Declaration
+       (D_Const
+         ((pattern (P_var x))
+           (let_rhs
+             (E_Binary_op
+               ((operator SLASH) (left (E_variable x)) (right (E_variable y)))))))))
     |}]
