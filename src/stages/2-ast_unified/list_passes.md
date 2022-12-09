@@ -128,18 +128,6 @@ note: we should have unpun at type level as well .. check later :)
 ```
 | E_Record_pun of (Variable.t, 'self) Field.t Record.t it's a map
 ```
-## pass 'nosyntax'
-  
-  - remove : -
-  - add : -
-
-  ONLY WHEN options.syntax == jsligo:
-
-  `E_Call (list, [..])` |-> `E_literal (list ..)`
-  `E_Call (match, ..)` |-> `E_matching (..)`
-  `E_Call ..` |-> `E_Call ..`
-  
-  no need of a second node for that
 
 ## pass 'array unify'
 
