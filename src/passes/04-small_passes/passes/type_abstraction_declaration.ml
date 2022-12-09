@@ -68,24 +68,20 @@ let pass ~raise =
   cata_morph ~name:__MODULE__ ~compile ~decompile ~reduction_check:(reduction ~raise)
 
 
+open Unit_test_helpers
+
 let%expect_test "decompile" =
-  let raise = raise_failwith "test" in
-  let in_prg =
-    S_exp.program_of_sexp
-    @@ Sexp.of_string
-         {|
-          ((P_Declaration
-            (D_Type (
-              (name my_t)
-              (type_expr
-                (T_Abstraction
-                  ((ty_binder a) (kind Type) (type_ 
-                  (T_Abstraction
-                    ((ty_binder b) (kind Type) (type_ (T_Var whatever))))))))))))
-          |}
-  in
-  let out_expr = (pass ~raise).program.backward in_prg in
-  Format.printf "%a" (Sexp.pp_hum_indent 2) (S_exp.sexp_of_program out_expr);
+  {|
+  ((P_Declaration
+    (D_Type (
+      (name my_t)
+      (type_expr
+        (T_Abstraction
+          ((ty_binder a) (kind Type) (type_ 
+          (T_Abstraction
+            ((ty_binder b) (kind Type) (type_ (T_Var whatever))))))))))))
+  |}
+  <-| pass ~raise;
   [%expect
     {|
     ((P_Declaration
@@ -94,18 +90,12 @@ let%expect_test "decompile" =
     |}]
 
 let%expect_test "compile" =
-  let raise = raise_failwith "test" in
-  let in_prg =
-    S_exp.program_of_sexp
-    @@ Sexp.of_string
-         {|
-        ((P_Declaration
-          (D_Type_abstraction
-            ((name my_t) (params ((a b))) (type_expr (T_Var whatever))))))
-        |}
-  in
-  let out_expr = (pass ~raise).program.forward in_prg in
-  Format.printf "%a" (Sexp.pp_hum_indent 2) (S_exp.sexp_of_program out_expr);
+  {|
+  ((P_Declaration
+    (D_Type_abstraction
+      ((name my_t) (params ((a b))) (type_expr (T_Var whatever))))))
+  |}
+  |-> pass ~raise;
   [%expect
     {|
     ((P_Declaration
@@ -116,5 +106,4 @@ let%expect_test "compile" =
                ((ty_binder a) (kind Type)
                  (type_
                    (T_Abstraction
-                     ((ty_binder b) (kind Type) (type_ (T_Var whatever)))))))))))) 
-    |}]
+                     ((ty_binder b) (kind Type) (type_ (T_Var whatever)))))))))))) |}]

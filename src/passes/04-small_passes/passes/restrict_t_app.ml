@@ -42,28 +42,22 @@ let pass ~raise =
     ~decompile
     ~reduction_check:(reduction ~raise)
 
+open Unit_test_helpers
+
 let%expect_test "compile_t_app_t_var" =
-  let raise = raise_failwith "test" in
-  let in_prg =
-    S_exp.program_of_sexp
-    @@ Sexp.of_string
-         {|
-          ((
-            P_Declaration (D_Type ((name t) (type_expr (
-              T_App (
-                (constr (T_Var my_var))
-                (type_args (
-                  (T_Var arg1)
-                  (T_Var arg2)
-                ))
-              )
-            ))))
-          ))
-    |}
-  in
-  let out_expr = (pass ~raise).program.forward in_prg in
-  let toto = S_exp.sexp_of_program out_expr in
-  let _ = Format.printf "%a" (Sexp.pp_hum_indent 2) toto in
+  {|
+  ((
+    P_Declaration (D_Type ((name t) (type_expr (
+      T_App (
+        (constr (T_Var my_var))
+        (type_args (
+          (T_Var arg1)
+          (T_Var arg2)
+        ))
+      )
+    ))))
+  ))
+  |} |-> pass ~raise ;
   [%expect
     {|
     ((P_Declaration
@@ -74,10 +68,7 @@ let%expect_test "compile_t_app_t_var" =
                ((constr (T_Var my_var)) (type_args ((T_Var arg1) (T_Var arg2)))))))))) |}]
 
 let%expect_test "compile_t_app_wrong" =
-  let in_prg =
-    S_exp.program_of_sexp
-    @@ Sexp.of_string
-         {|((
+  {|((
       P_Declaration (D_Type ((name t) (type_expr (
         T_App (
           (constr (T_Arg should_be_a_t_var))
@@ -87,10 +78,7 @@ let%expect_test "compile_t_app_wrong" =
           ))
         )
       ))))
-    ))|}
-  in
-  let f ~raise = (pass ~raise).program.forward in_prg in
-  Unit_test_helpers.expected_failure f;
+  ))|} |->! pass ;
   [%expect
     {|
     Err : (Small_passes_expected_variable

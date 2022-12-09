@@ -9,6 +9,7 @@ let stage = "small_passes"
 type t =
   [ `Small_passes_wrong_reduction of string
   | `Small_passes_expected_variable of ty_expr
+  | `Small_passes_array_rest_not_supported of expr
   ]
 [@@deriving poly_constructor { prefix = "small_passes_" }, sexp]
 
@@ -24,7 +25,12 @@ let error_ppformat : display_format:string display_format -> Format.formatter ->
     | `Small_passes_wrong_reduction pass ->
       Format.fprintf f "@[<hv>Pass %s did not reduce.@]" pass
     | `Small_passes_expected_variable t ->
-      Format.fprintf f "@[<hv>%a@.Expected a declaration name@]" Snippet.pp (get_t_loc t))
+      Format.fprintf f "@[<hv>%a@.Expected a declaration name@]" Snippet.pp (get_t_loc t)
+    | `Small_passes_array_rest_not_supported e ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Rest property not supported here.@]"
+        Snippet.pp (get_e_loc e))
 
 
 let error_json : t -> Simple_utils.Error.t =
@@ -38,4 +44,8 @@ let error_json : t -> Simple_utils.Error.t =
   | `Small_passes_expected_variable t ->
     let message = Format.asprintf "Expected a declaration name." in
     let content = make_content ~message ~location:(get_t_loc t) () in
+    make ~stage ~content
+  | `Small_passes_array_rest_not_supported e ->
+    let message = Format.asprintf "Rest property not supported here." in
+    let content = make_content ~message ~location:(get_e_loc e) () in
     make ~stage ~content

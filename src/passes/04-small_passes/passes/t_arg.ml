@@ -17,19 +17,14 @@ let reduction_check = Iter.defaults
 let decompile = `Cata idle_cata_pass
 let pass = cata_morph ~name:__MODULE__ ~compile ~decompile ~reduction_check
 
+open Unit_test_helpers
+
 let%expect_test "addition" =
-  let in_expr =
-    S_exp.expr_of_sexp
-    @@ Sexp.of_string
-         {|
-    (E_TypeIn
-    ((type_binder my_binder) (rhs (T_Arg f))
-      (body (E_Literal Literal_unit))))
-  |}
-  in
-  let out_expr = pass.expression.forward in_expr in
-  let toto = S_exp.sexp_of_expr out_expr in
-  let _ = Format.printf "%a" (Sexp.pp_hum_indent 2) toto in
+  {|
+    ((P_Declaration
+      (D_Type_abstraction ((name t) (params (x))
+        (type_expr (T_Arg x))))))
+  |} |-> pass ;
   [%expect{|
-    (E_TypeIn
-      ((type_binder my_binder) (rhs (T_Var 'f)) (body (E_Literal Literal_unit)))) |}]
+    ((P_Declaration
+       (D_Type_abstraction ((name t) (params ((x))) (type_expr (T_Var 'x)))))) |}]
