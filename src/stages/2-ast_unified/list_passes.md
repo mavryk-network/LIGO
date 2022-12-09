@@ -38,16 +38,6 @@ let <pattern> = (fun  ...)
 
   note: same for top-level let-ins (distinction between D_value & D_pattern)
 
-## structural assignments
-
-note: see path_of_lvalue in pascaligo abstractor
-- remove : I_Struct_assign ; I_Patch ; I_Remove
-- add    : -
-
-map["blabla"].x := toto
-|->
-...
-
 ## pass 'unify type 1'
 
   we have too much representation for units:
@@ -190,12 +180,30 @@ note: is there any reason why we would like E_App ? GADT ? where Ctor is a funct
 `E_AssignJsligo` |-> `E_block_with`
 (transitivity .. etc etc )
 
+## pass 'Switch to match'
+
+- remove : I_Switch
+- add :            
+
+`S_Swtich` -> `S_Decl (D_Const _ (E_matching ...))`
+
+## pass 'structural assignments'
+
+note: see path_of_lvalue in pascaligo abstractor
+- remove : I_Struct_assign ; I_Patch ; I_Remove
+- add    : -
+
+see pascaligo (path_of_lvalue)
+
+`S_Instr (I_struct_assign/path/remove ..)` |-> `S_decl (_ (..))`
+
 ## pass 'unstate'
 
-- remove : S_* ; E_Block_with ; E_Block_fun
+- remove : S_* ; E_Block_with ; E_Block_fun ; I_*
 - add : -
 
 you got it :) good luck
+S_Instr should only contain simple stuff like `I_While I_For_In I_For I_ForOf`
 
 ## pass 'unseq'
 

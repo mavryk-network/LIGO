@@ -69,7 +69,7 @@ note: note sure, after Open directive ? https://gitlab.com/ligolang/ligo/-/merge
 `T_ModA (T_Var x)` -> OK
 `T_ModA (T_prod x y)` -> NOK
 
-## pass 'nosyntax'
+## pass 'syntactic_hack'
   
   - remove : -
   - add : -
