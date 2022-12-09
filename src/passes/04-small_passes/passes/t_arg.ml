@@ -7,7 +7,7 @@ let compile =
   let pass_ty : _ ty_expr_ -> ty_expr = function
     | { location = loc; wrap_content = T_Arg s } ->
       let quote_var var = "'" ^ var in
-      t_var ~loc (Ty_variable.of_input_var (quote_var s))
+      t_var ~loc (Ty_variable.of_input_var ~loc (quote_var s))
     | { location = loc; wrap_content } -> make_t ~loc wrap_content
   in
   `Cata { idle_cata_pass with ty_expr = pass_ty }
