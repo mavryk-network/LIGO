@@ -1037,35 +1037,28 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let canonical = Tezos_micheline.Micheline.strip_locations m in
     let canonical = Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ -> failwith "Could not parse primitives from strings") @@
       Proto_alpha_utils.Memory_proto_alpha.Protocol.Michelson_v1_primitives.prims_of_strings canonical in
-    (* let map, _ = *)
-    (*   Proto_alpha_utils.Trace.trace_alpha_tzresult_lwt *)
-    (*     ~raise *)
-    (*     (Main_errors.typecheck_contract_tracer Environment.Protocols.in_use m) *)
-    (*   @@ *)
-      let legacy = true in
-      let type_map = ref [] in
-      let type_logger loc ~stack_ty_before ~stack_ty_after =
-        type_map := (loc, (stack_ty_before, stack_ty_after)) :: !type_map
-      in
-      let type_logger = Some type_logger in
-      let elab_conf = Tezos_raw_protocol.Script_ir_translator_config.make ~legacy ?type_logger () in
-      let canonical_ty = Tezos_micheline.Micheline.strip_locations code_ty in
-      let canonical_ty = Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ -> failwith "Could not parse primitives from strings") @@
-        Proto_alpha_utils.Memory_proto_alpha.Protocol.Michelson_v1_primitives.prims_of_strings canonical_ty in
-      let node_ty = Tezos_micheline.Micheline.inject_locations (fun l -> l) canonical_ty in
-      let node = Tezos_micheline.Micheline.inject_locations (fun l -> l) canonical in
-      let canonical_prims = Proto_alpha_utils.Memory_proto_alpha.Protocol.Michelson_v1_primitives.strings_of_prims canonical in
-      let node_canonical = Tezos_micheline.Micheline.inject_locations (fun c -> c) canonical_prims in
-      let Tezos_raw_protocol.Script_typed_ir.Ex_ty code_ty, _ = Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ -> failwith "Could not parse primitives from strings") @@ Tezos_raw_protocol.Script_ir_translator.parse_ty tezos_context ~legacy ~allow_lazy_storage:true ~allow_operation:true ~allow_contract:true ~allow_ticket:true node_ty in
-      let _ =
-Proto_alpha_utils.Trace.trace_alpha_tzresult_lwt ~raise (fun _ -> failwith "Could not parse primitives from strings") @@        Tezos_raw_protocol.Script_ir_translator.parse_data
-          tezos_context
-          ~elab_conf
-          ~allow_forged:true
-          code_ty
-          node in
-      (* in *)
-      (* Tezos_raw_protocol.Script_ir_translator.typecheck_code ~show_types:true ~legacy environment.tezos_context canonical in *)
+    let legacy = true in
+    let type_map = ref [] in
+    let type_logger loc ~stack_ty_before ~stack_ty_after =
+      type_map := (loc, (stack_ty_before, stack_ty_after)) :: !type_map
+    in
+    let type_logger = Some type_logger in
+    let elab_conf = Tezos_raw_protocol.Script_ir_translator_config.make ~legacy ?type_logger () in
+    let canonical_ty = Tezos_micheline.Micheline.strip_locations code_ty in
+    let canonical_ty = Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ -> failwith "Could not parse primitives from strings") @@
+      Proto_alpha_utils.Memory_proto_alpha.Protocol.Michelson_v1_primitives.prims_of_strings canonical_ty in
+    let node_ty = Tezos_micheline.Micheline.inject_locations (fun l -> l) canonical_ty in
+    let node = Tezos_micheline.Micheline.inject_locations (fun l -> l) canonical in
+    let canonical_prims = Proto_alpha_utils.Memory_proto_alpha.Protocol.Michelson_v1_primitives.strings_of_prims canonical in
+    let node_canonical = Tezos_micheline.Micheline.inject_locations (fun c -> c) canonical_prims in
+    let Tezos_raw_protocol.Script_typed_ir.Ex_ty code_ty, _ = Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ -> failwith "Could not parse primitives from strings") @@ Tezos_raw_protocol.Script_ir_translator.parse_ty tezos_context ~legacy ~allow_lazy_storage:true ~allow_operation:true ~allow_contract:true ~allow_ticket:true node_ty in
+    let _ =
+      Proto_alpha_utils.Trace.trace_alpha_tzresult_lwt ~raise (fun _ -> failwith "Could not parse primitives from strings") @@        Tezos_raw_protocol.Script_ir_translator.parse_data
+        tezos_context
+        ~elab_conf
+        ~allow_forged:true
+        code_ty
+        node in
     let oracle : _ -> _ = fun l ->
       let stack = fst @@ List.Assoc.find_exn (! type_map) ~equal:Caml.(=) l in
       let stack = List.map ~f:(Proto_alpha_utils.Memory_proto_alpha.Protocol.Michelson_v1_primitives.strings_of_prims) stack in
@@ -1076,7 +1069,6 @@ Proto_alpha_utils.Trace.trace_alpha_tzresult_lwt ~raise (fun _ -> failwith "Coul
         if Option.is_some v then
           print_endline (Format.asprintf "%a" Tezos_utils.Michelson.pp m)
         else ()) ms;
-    ignore ms ;
     return @@ v_unit ()
   | C_TEST_MUTATE_MICHELSON, _ -> fail @@ error_type ()
   | C_TEST_ADDRESS, [ V_Ct (C_contract { address; entrypoint = _ }) ] ->
