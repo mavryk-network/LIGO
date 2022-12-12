@@ -1031,10 +1031,51 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       Test operators
     >>>>>>>>
     *)
-  | C_TEST_MUTATE_MICHELSON, [ V_Michelson (Untyped_code m | Ty_code { micheline_repr = { code = m ; _ } ; _ }) ] ->
-    let ms = Michelson_backend.Mutation.generate ~oracle:() m in
-    List.iter ~f:(fun (m, _) ->
-        print_endline (Format.asprintf "%a" Tezos_utils.Michelson.pp m)) ms;
+  | C_TEST_MUTATE_MICHELSON, [ V_Michelson (Ty_code { micheline_repr = { code = m ; code_ty } ; _ }) ] ->
+    let>> tezos_context = Get_alpha_context () in
+    (* let environment = Proto_alpha_utils__.Init_proto_alpha.{ tezos_context ; identities = [] } in *)
+    let canonical = Tezos_micheline.Micheline.strip_locations m in
+    let canonical = Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ -> failwith "Could not parse primitives from strings") @@
+      Proto_alpha_utils.Memory_proto_alpha.Protocol.Michelson_v1_primitives.prims_of_strings canonical in
+    (* let map, _ = *)
+    (*   Proto_alpha_utils.Trace.trace_alpha_tzresult_lwt *)
+    (*     ~raise *)
+    (*     (Main_errors.typecheck_contract_tracer Environment.Protocols.in_use m) *)
+    (*   @@ *)
+      let legacy = true in
+      let type_map = ref [] in
+      let type_logger loc ~stack_ty_before ~stack_ty_after =
+        type_map := (loc, (stack_ty_before, stack_ty_after)) :: !type_map
+      in
+      let type_logger = Some type_logger in
+      let elab_conf = Tezos_raw_protocol.Script_ir_translator_config.make ~legacy ?type_logger () in
+      let canonical_ty = Tezos_micheline.Micheline.strip_locations code_ty in
+      let canonical_ty = Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ -> failwith "Could not parse primitives from strings") @@
+        Proto_alpha_utils.Memory_proto_alpha.Protocol.Michelson_v1_primitives.prims_of_strings canonical_ty in
+      let node_ty = Tezos_micheline.Micheline.inject_locations (fun l -> l) canonical_ty in
+      let node = Tezos_micheline.Micheline.inject_locations (fun l -> l) canonical in
+      let canonical_prims = Proto_alpha_utils.Memory_proto_alpha.Protocol.Michelson_v1_primitives.strings_of_prims canonical in
+      let node_canonical = Tezos_micheline.Micheline.inject_locations (fun c -> c) canonical_prims in
+      let Tezos_raw_protocol.Script_typed_ir.Ex_ty code_ty, _ = Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ -> failwith "Could not parse primitives from strings") @@ Tezos_raw_protocol.Script_ir_translator.parse_ty tezos_context ~legacy ~allow_lazy_storage:true ~allow_operation:true ~allow_contract:true ~allow_ticket:true node_ty in
+      let _ =
+Proto_alpha_utils.Trace.trace_alpha_tzresult_lwt ~raise (fun _ -> failwith "Could not parse primitives from strings") @@        Tezos_raw_protocol.Script_ir_translator.parse_data
+          tezos_context
+          ~elab_conf
+          ~allow_forged:true
+          code_ty
+          node in
+      (* in *)
+      (* Tezos_raw_protocol.Script_ir_translator.typecheck_code ~show_types:true ~legacy environment.tezos_context canonical in *)
+    let oracle : _ -> _ = fun l ->
+      let stack = fst @@ List.Assoc.find_exn (! type_map) ~equal:Caml.(=) l in
+      let stack = List.map ~f:(Proto_alpha_utils.Memory_proto_alpha.Protocol.Michelson_v1_primitives.strings_of_prims) stack in
+      let stack = List.map ~f:(Tezos_micheline.Micheline.inject_locations (fun l -> l)) stack in
+      stack in
+    let ms = Michelson_backend.Mutation.generate ~oracle node_canonical in
+    List.iter ~f:(fun (m, v) ->
+        if Option.is_some v then
+          print_endline (Format.asprintf "%a" Tezos_utils.Michelson.pp m)
+        else ()) ms;
     ignore ms ;
     return @@ v_unit ()
   | C_TEST_MUTATE_MICHELSON, _ -> fail @@ error_type ()

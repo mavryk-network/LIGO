@@ -27,9 +27,8 @@ module Mutation = struct
     [String.capitalize; String.uncapitalize; String.lowercase; String.uppercase; constn; double]
 
   type mutation_data = unit
-  type loc = unit
-  type oracle_typer = unit (* canonical_location -> (canonical_location, string) node list *)
-
+  type loc = canonical_location
+  type oracle_typer = canonical_location -> (canonical_location, string) node list
   let combine : 'a -> ('a * mutation_data option) list -> 'b -> ('b * mutation_data option) list -> ('a * 'b * mutation_data option) list =
     fun a al b bl ->
     List.map ~f:(fun (b, m) -> (a, b, m)) bl @ List.map ~f:(fun (a, m) -> (a, b, m)) al
@@ -67,6 +66,12 @@ module Mutation = struct
       let z_mut = t z in
       let mutation = if not String.(equal z_mut z) then Some () else None in
       return @@ (Prim (l, "PUSH", [ Prim (l1, "string", [], ann1) ; String (l2, z_mut) ], ann), mutation)
+    | Prim (l, "ADD", [ ], ann) ->
+      let stack = oracle l in
+      print_endline @@ "stack =";
+      List.iter ~f:(fun v -> print_endline @@ Format.asprintf "[ %a ]" Tezos_utils.Michelson.pp v) stack;
+      let mutation = Some () in
+      return @@ (Prim (l, "MUL", [ ], ann), mutation)
     | _ ->
       return @@ (code, None)
 end
