@@ -233,6 +233,8 @@
       "@opam/dune": "opam:3.4.1",
       "@opam/dune-configurator": "opam:3.4.1",
       "@opam/dune-rpc": "opam:3.4.1",
+      "@opam/dune-build-info": "opam:3.4.1",
+      "@opam/xdg": "opam:3.4.1",
       "esy-gmp": "esy-packages/esy-gmp#d687430bc25447529f2d215ca65c21a824cfef92",
       "@opam/terminal_size": "DiningPhilosophersCo/terminal_size:terminal_size.opam#4fa00d7e812a59e669bfc0392d6539252afa5fb",
       "@opam/mtime": {
@@ -292,12 +294,7 @@
           "build": ["true"]
         }
       },
-      "@opam/ocaml-lsp-server": {
-        "source": "no-source:",
-        "override": {
-          "build": ["true"]
-        }
-      },
+      "@opam/chrome-trace": "opam:3.3.1",
       "@opam/conf-rust": {
         "source": "no-source:",
         "override": {
