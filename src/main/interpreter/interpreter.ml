@@ -1033,7 +1033,6 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     *)
   | C_TEST_MUTATE_MICHELSON, [ V_Michelson (Ty_code { micheline_repr = { code = m ; code_ty } ; _ }) ] ->
     let>> tezos_context = Get_alpha_context () in
-    (* let environment = Proto_alpha_utils__.Init_proto_alpha.{ tezos_context ; identities = [] } in *)
     let canonical = Tezos_micheline.Micheline.strip_locations m in
     let canonical = Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ -> failwith "Could not parse primitives from strings") @@
       Proto_alpha_utils.Memory_proto_alpha.Protocol.Michelson_v1_primitives.prims_of_strings canonical in
@@ -1063,7 +1062,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       let stack = fst @@ List.Assoc.find_exn (! type_map) ~equal:Caml.(=) l in
       let stack = List.map ~f:(Proto_alpha_utils.Memory_proto_alpha.Protocol.Michelson_v1_primitives.strings_of_prims) stack in
       let stack = List.map ~f:(Tezos_micheline.Micheline.inject_locations (fun l -> l)) stack in
-      stack in
+      List.rev stack in
     let ms = Michelson_backend.Mutation.generate ~oracle node_canonical in
     List.iter ~f:(fun (m, v) ->
         if Option.is_some v then

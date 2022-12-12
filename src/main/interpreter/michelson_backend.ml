@@ -26,6 +26,39 @@ module Mutation = struct
     let double s = s ^ s in
     [String.capitalize; String.uncapitalize; String.lowercase; String.uppercase; constn; double]
 
+  (* Helpers for changing operators *)
+  let map_op op arguments =
+    let is_t_nat = function
+        Prim (_, "nat", _, _) -> true
+      | _ -> false in
+    let is_t_int = function
+        Prim (_, "int", _, _) -> true
+      | _ -> false in
+    let is_t_mutez = function
+        Prim (_, "mutez", _, _) -> true
+      | _ -> false in
+    let possible_const =
+      match arguments with
+      | e1 :: e2 :: _ ->
+        let t1 = e1 in
+        let t2 = e2 in
+        if is_t_nat t1 && is_t_nat t2
+        then [ "ADD"; "MUL"; "OR"; "AND"; "XOR" ]
+        else if is_t_int t1 && is_t_int t2
+        then [ "ADD"; "MUL"; "SUB" ]
+        else if is_t_mutez t1 && is_t_mutez t2
+        then [ "ADD"; "SUB" ]
+        else if is_t_int t1 && is_t_nat t2
+        then [ "ADD"; "MUL"; "SUB" ]
+        else if is_t_nat t1 && is_t_int t2
+        then [ "ADD"; "MUL"; "SUB" ]
+        else []
+      | _ -> []
+    in
+    if List.mem possible_const op ~equal:String.equal
+    then possible_const
+    else [ op ]
+
   type mutation_data = unit
   type loc = canonical_location
   type oracle_typer = canonical_location -> (canonical_location, string) node list
@@ -47,8 +80,8 @@ module Mutation = struct
     ignore oracle;
     match (code : _ node) with
     | Seq (l, ns) ->
-      let* ns, mutation = combine_list ns (List.map ~f:self ns) in
-      return @@ (Seq (l, ns), mutation)
+      let+ ns, mutation = combine_list ns (List.map ~f:self ns) in
+      (Seq (l, ns), mutation)
     | Prim (l, "PUSH", [ Prim (l1, "int", [], ann1) ; Int (l2, z) ], ann) ->
       let z = Z.to_int z in
       let* t = transform_int in
@@ -66,12 +99,11 @@ module Mutation = struct
       let z_mut = t z in
       let mutation = if not String.(equal z_mut z) then Some () else None in
       return @@ (Prim (l, "PUSH", [ Prim (l1, "string", [], ann1) ; String (l2, z_mut) ], ann), mutation)
-    | Prim (l, "ADD", [ ], ann) ->
-      let stack = oracle l in
-      print_endline @@ "stack =";
-      List.iter ~f:(fun v -> print_endline @@ Format.asprintf "[ %a ]" Tezos_utils.Michelson.pp v) stack;
-      let mutation = Some () in
-      return @@ (Prim (l, "MUL", [ ], ann), mutation)
+    | Prim (l, ("ADD"|"MUL"|"SUB" as op), [ ], ann) -> (
+      let* op_mut = map_op op (oracle l) in
+      let mutation = if not String.(equal op_mut op) then Some () else None in
+      return @@ (Prim (l, op_mut, [ ], ann), mutation)
+    )
     | _ ->
       return @@ (code, None)
 end
