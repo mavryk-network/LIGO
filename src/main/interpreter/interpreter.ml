@@ -1042,14 +1042,6 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
          .prims_of_strings
            canonical
     in
-    let legacy = true in
-    let type_map = ref [] in
-    let type_logger loc ~stack_ty_before ~stack_ty_after =
-      type_map := (loc, (stack_ty_before, stack_ty_after)) :: !type_map
-    in
-    let elab_conf =
-      Tezos_raw_protocol.Script_ir_translator_config.make ~legacy ~type_logger ()
-    in
     let canonical_ty = Tezos_micheline.Micheline.strip_locations code_ty in
     let canonical_ty =
       Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
@@ -1068,43 +1060,10 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let node_canonical =
       Tezos_micheline.Micheline.inject_locations (fun c -> c) canonical_prims
     in
-    let Tezos_raw_protocol.Script_typed_ir.Ex_ty code_ty, _ =
+    let oracle =
       Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
-          failwith "Could not parse primitives from strings")
-      @@ Tezos_raw_protocol.Script_ir_translator.parse_ty
-           tezos_context
-           ~legacy
-           ~allow_lazy_storage:true
-           ~allow_operation:true
-           ~allow_contract:true
-           ~allow_ticket:true
-           node_ty
-    in
-    let _ =
-      Proto_alpha_utils.Trace.trace_alpha_tzresult_lwt ~raise (fun _ ->
-          failwith "Could not parse primitives from strings")
-      @@ Tezos_raw_protocol.Script_ir_translator.parse_data
-           tezos_context
-           ~elab_conf
-           ~allow_forged:true
-           code_ty
-           node
-    in
-    let oracle : _ -> _ =
-     fun l ->
-      let stack = fst @@ List.Assoc.find_exn !type_map ~equal:Caml.( = ) l in
-      let stack =
-        List.map
-          ~f:
-            Proto_alpha_utils.Memory_proto_alpha.Protocol.Michelson_v1_primitives
-            .strings_of_prims
-          stack
-      in
-      let stack =
-        List.map ~f:(Tezos_micheline.Micheline.inject_locations (fun l -> l)) stack
-      in
-      List.rev stack
-    in
+          failwith "Could not type-check the contract code") @@
+      Proto_alpha_utils.Memory_proto_alpha.typecheck_map_code ~tezos_context ~code_ty:node_ty ~code:node in
     let ms = Michelson_backend.Mutation.generate ~oracle node_canonical in
     let ms = List.filter_map ~f:(function (m, Some _) -> Some m | _ -> None) ms in
     List.iter
