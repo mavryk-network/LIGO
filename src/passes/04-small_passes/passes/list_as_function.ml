@@ -103,6 +103,7 @@ let%expect_test "compile_cons" =
              (E_constant
                ((cons_name C_CONS) (arguments ((E_variable hd) (E_variable tl))))))))))
     |}]
+
 let%expect_test "compile_list" =
   {|
   ((P_Declaration
@@ -135,4 +136,47 @@ let%expect_test "compile_fail" =
   |->! pass ~syntax:(Some JsLIGO);
   [%expect {|
   Err : (Small_passes_array_rest_not_supported (E_variable tl1))
+  |}]
+
+let%expect_test "decompile_cons" =
+  {|
+  ((P_Declaration
+    (D_Const
+      ((pattern (P_var x))
+        (let_rhs
+          (E_constant
+            ((cons_name C_CONS) (arguments ((E_variable hd) (E_variable tl))))))))))
+  |}
+  <-| pass ~raise ~syntax:(Some JsLIGO);
+  [%expect
+    {|
+      ((P_Declaration
+         (D_Const
+           ((pattern (P_var x))
+             (let_rhs
+               (E_Call (E_variable list)
+                 ((E_Array
+                    ((Expr_entry (E_variable hd)) (Rest_entry (E_variable tl)))))))))))
+
+    |}]
+
+let%expect_test "decompile_list" =
+  {|
+  ((P_Declaration
+     (D_Const
+       ((pattern (P_var x))
+         (let_rhs (E_List ((E_variable a) (E_variable b) (E_variable c))))))))
+  |}
+  <-| pass ~raise ~syntax:(Some JsLIGO);
+  [%expect
+    {|
+      ((P_Declaration
+         (D_Const
+           ((pattern (P_var x))
+             (let_rhs
+               (E_Call (E_variable list)
+                 ((E_Array
+                    ((Expr_entry (E_variable a)) (Expr_entry (E_variable b))
+                      (Expr_entry (E_variable c)))))))))))
+
   |}]
