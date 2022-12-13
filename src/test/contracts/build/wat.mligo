@@ -7,5 +7,3 @@ include B
 
 let bar = foo + 2
 
-
-let toto = B.foo + 2

@@ -329,6 +329,7 @@ module MMap = Simple_utils.Map.Make (Module_var)
 
 type scope = { t : (scope * declaration option) MMap.t }
 
+(*
 let remove_unused ~raise : contract_pass_data -> program -> program =
  fun contract_pass_data prg ->
   (* Process declaration in reverse order *)
@@ -396,6 +397,119 @@ let remove_unused ~raise : contract_pass_data -> program -> program =
   in
   let _, module_ = get_fv_program env [ main_decl ] prg_decls in
   module_
+*)
+
+type scope = { t : (scope * Value_var.t list) MMap.t }
+
+let collect_binder_module_path (ms : scope) path =
+  Simple_utils.List.Ne.fold_left
+    ~init:(ms, [])
+    ~f:(fun (ms, _) b -> MMap.find b ms.t)
+    path
+
+
+let rec collect_binder_module_expr (ms : scope) (mexpr : module_expr) =
+  match mexpr.wrap_content with
+  | M_struct prg -> collect_binder_declarations ms prg
+  | M_variable var ->
+    let ms' = MMap.find var ms.t in
+    ms'
+  | M_module_path path -> collect_binder_module_path ms path
+
+
+and collect_binder_declarations (ms : scope) prg =
+  List.fold_left
+    ~f:(fun (ms, binders) d ->
+      match Location.unwrap d with
+      | D_value { binder = { var; _ }; _ } -> ms, var :: binders
+      | D_irrefutable_match { pattern = { wrap_content = P_var { var; _ }; _ }; _ } ->
+        ms, var :: binders
+      | D_irrefutable_match _ | D_type _ -> ms, binders
+      | D_module { module_binder; module_; _ } ->
+        let ms' = collect_binder_module_expr ms module_ in
+        { t = MMap.add module_binder ms' ms.t }, binders
+      | D_open path | D_include path ->
+        let ms', bs = collect_binder_module_path ms path in
+        { t = MMap.union (fun _ _ a -> Some a) ms.t ms'.t }, bs @ binders)
+    ~init:(ms, [])
+    prg
+
+
+let remove_unused ~raise : Value_var.t -> program -> program =
+ fun entrypoint prg ->
+  let rec aux ms (prg : program) top_level =
+    let self ms prg = aux ms prg false in
+    match prg with
+    | [] ->
+      raise.error
+        (Errors.corner_case
+        @@ Format.asprintf "Entrypoint '%a' not found" Value_var.pp entrypoint)
+    | ({ wrap_content = D_value { binder = { var; _ }; expr; _ }; location = _ } as d)
+      :: prg ->
+      let fv, _expr = get_fv expr in
+      (* check if this is the entrypoint *)
+      if top_level && Value_var.equal var entrypoint
+      then fv, [ d ]
+      else (
+        let fv', prg = self ms prg in
+        (* check that it is usefull*)
+        if VVarSet.mem var fv.used_var
+        then (
+          let fv' = { fv' with used_var = VVarSet.remove var fv'.used_var } in
+          let fv = merge_env fv fv' in
+          fv, d :: prg
+          (* drop because useless *))
+        else fv', prg)
+    | ({ wrap_content = D_irrefutable_match { pattern = irr; expr; _ }; location = _ } as
+      d)
+      :: prg ->
+      let fv, _expr = get_fv expr in
+      (* check if this is the entrypoint *)
+      (match Location.unwrap irr with
+      | P_var { var; _ } when top_level && Value_var.equal var entrypoint -> fv, [ d ]
+      | _ ->
+        (* check that it is usefull*)
+        let fv', prg = self ms prg in
+        let binders =
+          List.filter (Pattern.binders irr) ~f:(fun binder' ->
+              VVarSet.mem (Binder.get_var binder') fv'.used_var)
+        in
+        if List.is_empty binders
+        then (
+          let fv' =
+            List.fold binders ~init:fv ~f:(fun env binder' ->
+                { env with
+                  used_var = VVarSet.remove (Binder.get_var binder') env.used_var
+                })
+          in
+          let fv = merge_env fv' @@ fv in
+          fv, d :: prg
+          (* drop because useless *))
+        else fv', prg)
+    | ({ wrap_content = D_type _; location = _ } as d) :: prg ->
+      (* always keep ?*)
+      let fv, prg = self ms prg in
+      fv, d :: prg
+    | ({ wrap_content = D_module { module_binder; module_; module_attr }; location = _ }
+      as d)
+      :: prg ->
+      let ms, _binders = collect_binder_module_expr ms module_ in
+      let fv, prg = self ms prg in
+      let fv, mod_ = remove_unused_in_module_expr fv module_ in
+      (match mod_ with
+      | Some module_ ->
+        ( fv
+        , { d with wrap_content = D_module { module_binder; module_; module_attr } }
+          :: prg )
+      | None -> fv, prg)
+    | ({ wrap_content = D_open op; location = _ } as d) :: prg ->
+      let fv, prg = self ms prg in
+      fv, d :: prg
+    | ({ wrap_content = D_include inc; location = _ } as d) :: prg ->
+      let fv, prg = self ms prg in
+      fv, d :: prg
+  in
+  snd @@ aux ms prg true
 
 
 let remove_unused_for_views : program -> program =

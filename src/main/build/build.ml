@@ -303,6 +303,7 @@ let rec build_contract_aggregated ~raise
  fun ~options entry_point cli_views file_name ->
   let entry_point = Value_var.of_input_var entry_point in
   let typed_prg = qualified_typed ~raise ~options Ligo_compile.Of_core.Env file_name in
+  Format.printf "Typed program:@.%a@." (Ast_typed.PP.program ~use_hidden:false) typed_prg;
   let typed_contract =
     trace ~raise self_ast_typed_tracer
     @@ Ligo_compile.Of_core.specific_passes

@@ -632,8 +632,11 @@ and compile_module_path path scope (hd, tl) =
 
 
 let preprocess_program program =
+  Format.printf "Preprocessing program %a@." (I.PP.program ~use_hidden:false) program;
   let scope, program = Deduplicate_module_binders.program program in
+  Format.printf "Deduplicated %a@." (I.PP.program ~use_hidden:false) program;
   let aliases, program = Resolve_module_aliases.program program in
+  Format.printf "Resolved %a@." (I.PP.program ~use_hidden:false) program;
   scope, aliases, program
 
 

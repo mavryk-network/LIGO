@@ -4,4 +4,4 @@ let bar = Wat.bar
 let foo = Wat.foo
 
 
-let main (((),_) : unit * int) : operation list * int = [], foo + Wat.toto
+let main (((),_) : unit * int) : operation list * int = [], foo
