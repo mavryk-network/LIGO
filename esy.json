@@ -39,6 +39,8 @@
     },
     "license": "MIT",
     "dependencies": {
+      "@opam/js_of_ocaml": "*",
+      "@opam/js_of_ocaml-ppx": "*",
       "@opam/hacl-star-raw": "*",
       "@opam/tezos-rust-libs": "*",
       "esy-libev": "*",

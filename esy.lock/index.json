@@ -1,5 +1,5 @@
 {
-  "checksum": "8ee08a272fa97092d8fd5ef12c549c9d",
+  "checksum": "f0fe634e65a6a5b8268651cace91c73d",
   "root": "ligo@link-dev:./ligo.opam",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -82,6 +82,8 @@
         "@opam/menhir@opam:20211128@87f4be45",
         "@opam/lwt@opam:5.6.0@4f1604a8",
         "@opam/lambda-term@opam:3.3.1@ee145aff",
+        "@opam/js_of_ocaml-ppx@opam:4.1.0@ce4bc612",
+        "@opam/js_of_ocaml@opam:4.1.0@0c5084e9",
         "@opam/irmin-pack@opam:3.4.3@cfe8528f",
         "@opam/irmin@opam:3.4.3@dda03e8d",
         "@opam/hacl-star-raw@opam:0.4.1@20994502",
@@ -6341,6 +6343,34 @@
       ],
       "devDependencies": [
         "ocaml@4.14.0@d41d8cd9", "@opam/uri@opam:4.2.0@9c45eeb8",
+        "@opam/dune@opam:3.4.1@3f2f99f0"
+      ]
+    },
+    "@opam/js_of_ocaml-ppx@opam:4.1.0@ce4bc612": {
+      "id": "@opam/js_of_ocaml-ppx@opam:4.1.0@ce4bc612",
+      "name": "@opam/js_of_ocaml-ppx",
+      "version": "opam:4.1.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/sha256/91/91793f29a5af3deaba3f7d35ceab11e739cfe0a5cc30556f6201461a6d4236ef#sha256:91793f29a5af3deaba3f7d35ceab11e739cfe0a5cc30556f6201461a6d4236ef",
+          "archive:https://github.com/ocsigen/js_of_ocaml/releases/download/4.1.0/js_of_ocaml-4.1.0.tbz#sha256:91793f29a5af3deaba3f7d35ceab11e739cfe0a5cc30556f6201461a6d4236ef"
+        ],
+        "opam": {
+          "name": "js_of_ocaml-ppx",
+          "version": "4.1.0",
+          "path": "esy.lock/opam/js_of_ocaml-ppx.4.1.0"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.14.0@d41d8cd9", "@opam/ppxlib@opam:0.25.1@bd0b93cc",
+        "@opam/js_of_ocaml@opam:4.1.0@0c5084e9",
+        "@opam/dune@opam:3.4.1@3f2f99f0", "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@4.14.0@d41d8cd9", "@opam/ppxlib@opam:0.25.1@bd0b93cc",
+        "@opam/js_of_ocaml@opam:4.1.0@0c5084e9",
         "@opam/dune@opam:3.4.1@3f2f99f0"
       ]
     },
