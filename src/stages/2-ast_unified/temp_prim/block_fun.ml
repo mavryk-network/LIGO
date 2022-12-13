@@ -3,7 +3,7 @@ type ('expr, 'stmt) fun_block =
   | ExpressionBody of 'expr
 
 and ('expr, 'pattern, 'ty_expr, 'stmt) t =
-  { parameters : 'pattern Simple_utils.List.Ne.t
+  { parameters : 'pattern list
   ; lhs_type : 'ty_expr option
   ; body : ('expr, 'stmt) fun_block
   }

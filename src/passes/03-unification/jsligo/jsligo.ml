@@ -38,7 +38,7 @@ module TODO_do_in_parsing = struct
     in
     aux s
 
-  let rec pattern_of_expr compile_type : CST.expr -> AST.pattern nseq =
+  let rec pattern_of_expr compile_type : CST.expr -> AST.pattern list =
   (*
     this is the most troubling thing with jsligo: functions parameters is a single expression
     `<parameters:expr> : <lhs_type:type> => ..` (see EFun node bellow)
@@ -90,9 +90,10 @@ module TODO_do_in_parsing = struct
   | ESeq seq ->
     let lst,loc = r_split seq in
     (match lst with
-    | (hd,[]) -> List.Ne.singleton (aux hd)
-    | _ -> nseq_map aux (nsepseq_to_nseq lst))
-  | else_ -> List.Ne.singleton (aux else_)
+    | (hd,[]) -> [aux hd]
+    | _ -> List.map ~f:aux (nsepseq_to_list lst))
+  (* | EUnit _ -> [] *)
+  | else_ -> [aux else_]
 end
 
 module TODO_unify_in_cst = struct
