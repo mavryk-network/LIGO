@@ -1062,13 +1062,22 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     in
     let oracle =
       Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
-          failwith "Could not type-check the contract code") @@
-      Proto_alpha_utils.Memory_proto_alpha.typecheck_map_code ~tezos_context ~code_ty:node_ty ~code:node in
+          failwith "Could not type-check the contract code")
+      @@ Proto_alpha_utils.Memory_proto_alpha.typecheck_map_code
+           ~tezos_context
+           ~code_ty:node_ty
+           ~code:node
+    in
     let ms = Michelson_backend.Mutation.generate ~oracle node_canonical in
-    let ms = List.filter_map ~f:(function (m, Some _) -> Some m | _ -> None) ms in
+    let ms =
+      List.filter_map
+        ~f:(function
+          | m, Some _ -> Some m
+          | _ -> None)
+        ms
+    in
     List.iter
-      ~f:(fun m ->
-        print_endline (Format.asprintf "%a" Tezos_utils.Michelson.pp m))
+      ~f:(fun m -> print_endline (Format.asprintf "%a" Tezos_utils.Michelson.pp m))
       ms;
     return @@ v_unit ()
   | C_TEST_MUTATE_MICHELSON, _ -> fail @@ error_type ()
