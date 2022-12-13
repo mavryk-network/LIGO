@@ -1047,9 +1047,8 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let type_logger loc ~stack_ty_before ~stack_ty_after =
       type_map := (loc, (stack_ty_before, stack_ty_after)) :: !type_map
     in
-    let type_logger = Some type_logger in
     let elab_conf =
-      Tezos_raw_protocol.Script_ir_translator_config.make ~legacy ?type_logger ()
+      Tezos_raw_protocol.Script_ir_translator_config.make ~legacy ~type_logger ()
     in
     let canonical_ty = Tezos_micheline.Micheline.strip_locations code_ty in
     let canonical_ty =
@@ -1107,11 +1106,10 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       List.rev stack
     in
     let ms = Michelson_backend.Mutation.generate ~oracle node_canonical in
+    let ms = List.filter_map ~f:(function (m, Some _) -> Some m | _ -> None) ms in
     List.iter
-      ~f:(fun (m, v) ->
-        if Option.is_some v
-        then print_endline (Format.asprintf "%a" Tezos_utils.Michelson.pp m)
-        else ())
+      ~f:(fun m ->
+        print_endline (Format.asprintf "%a" Tezos_utils.Michelson.pp m))
       ms;
     return @@ v_unit ()
   | C_TEST_MUTATE_MICHELSON, _ -> fail @@ error_type ()
