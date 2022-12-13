@@ -1397,7 +1397,9 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
           (create ~mode_annot:[ Checked ] ~types:[ t_bool ~loc () ^~> t_bool ~loc () ]) )
     ; ( C_TEST_MUTATE_MICHELSON
       , of_type
-          (create ~mode_annot:[ Checked ] ~types:[ t_michelson_code ~loc () ^~> t_unit ~loc () ]) )
+          (create
+             ~mode_annot:[ Checked ]
+             ~types:[ t_michelson_code ~loc () ^~> t_unit ~loc () ]) )
     ; ( C_TEST_READ_CONTRACT_FROM_FILE
       , of_type
           (create

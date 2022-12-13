@@ -13,99 +13,140 @@ module Mutation = struct
     let incr n = n + 1 in
     let pred n = n - 1 in
     let prod n = 2 * n in
-    [const0; negative; incr; pred; prod]
+    [ const0; negative; incr; pred; prod ]
+
 
   let transform_nat =
     let const0 _ = 0 in
     let incr n = n + 1 in
     let prod n = 2 * n in
-    [const0; incr; prod]
+    [ const0; incr; prod ]
+
 
   let transform_string =
     let constn _ = "" in
     let double s = s ^ s in
-    [String.capitalize; String.uncapitalize; String.lowercase; String.uppercase; constn; double]
+    [ String.capitalize
+    ; String.uncapitalize
+    ; String.lowercase
+    ; String.uppercase
+    ; constn
+    ; double
+    ]
+
 
   (* Helpers for changing operators *)
   let map_op op arguments =
     let is_t_nat = function
-        Prim (_, "nat", _, _) -> true
-      | _ -> false in
-    let is_t_int = function
-        Prim (_, "int", _, _) -> true
-      | _ -> false in
-    let is_t_mutez = function
-        Prim (_, "mutez", _, _) -> true
-      | _ -> false in
-    let possible_const =
-      match arguments with
-      | e1 :: e2 :: _ ->
-        let t1 = e1 in
-        let t2 = e2 in
-        if is_t_nat t1 && is_t_nat t2
-        then [ "ADD"; "MUL"; "OR"; "AND"; "XOR" ]
-        else if is_t_int t1 && is_t_int t2
-        then [ "ADD"; "MUL"; "SUB" ]
-        else if is_t_mutez t1 && is_t_mutez t2
-        then [ "ADD"; "SUB" ]
-        else if is_t_int t1 && is_t_nat t2
-        then [ "ADD"; "MUL"; "SUB" ]
-        else if is_t_nat t1 && is_t_int t2
-        then [ "ADD"; "MUL"; "SUB" ]
-        else []
-      | _ -> []
+      | Prim (_, "nat", _, _) -> true
+      | _ -> false
     in
-    if List.mem possible_const op ~equal:String.equal
-    then possible_const
-    else [ op ]
+    let is_t_int = function
+      | Prim (_, "int", _, _) -> true
+      | _ -> false
+    in
+    let alts =
+      match op, arguments with
+      (* int, int *)
+      | "ADD", e1 :: e2 :: _ when is_t_int e1 && is_t_int e2 -> [ "MUL"; "SUB" ]
+      | "MUL", e1 :: e2 :: _ when is_t_int e1 && is_t_int e2 -> [ "ADD"; "SUB" ]
+      | "SUB", e1 :: e2 :: _ when is_t_int e1 && is_t_int e2 -> [ "ADD"; "MUL" ]
+      (* nat, nat *)
+      | "ADD", e1 :: e2 :: _ when is_t_nat e1 && is_t_nat e2 ->
+        [ "MUL"; "OR"; "AND"; "XOR" ]
+      | "MUL", e1 :: e2 :: _ when is_t_nat e1 && is_t_nat e2 ->
+        [ "ADD"; "OR"; "AND"; "XOR" ]
+      | "OR", e1 :: e2 :: _ when is_t_nat e1 && is_t_nat e2 ->
+        [ "ADD"; "MUL"; "AND"; "XOR" ]
+      | "AND", e1 :: e2 :: _ when is_t_nat e1 && is_t_nat e2 ->
+        [ "ADD"; "MUL"; "OR"; "XOR" ]
+      | "XOR", e1 :: e2 :: _ when is_t_nat e1 && is_t_nat e2 ->
+        [ "ADD"; "MUL"; "OR"; "AND" ]
+      (* nat, int *)
+      | "ADD", e1 :: e2 :: _ when is_t_nat e1 && is_t_int e2 -> [ "SUB"; "MUL" ]
+      | "SUB", e1 :: e2 :: _ when is_t_nat e1 && is_t_int e2 -> [ "ADD"; "MUL" ]
+      | "MUL", e1 :: e2 :: _ when is_t_nat e1 && is_t_int e2 -> [ "ADD"; "SUB" ]
+      (* int, nat *)
+      | "ADD", e1 :: e2 :: _ when is_t_int e1 && is_t_nat e2 -> [ "SUB"; "MUL" ]
+      | "SUB", e1 :: e2 :: _ when is_t_int e1 && is_t_nat e2 -> [ "ADD"; "MUL" ]
+      | "MUL", e1 :: e2 :: _ when is_t_int e1 && is_t_nat e2 -> [ "ADD"; "SUB" ]
+      (* compare *)
+      | "EQ", _ :: _ -> [ "NEQ"; "LT"; "GT"; "LE"; "GE" ]
+      | "NEQ", _ :: _ -> [ "EQ"; "LT"; "GT"; "LE"; "GE" ]
+      | "LT", _ :: _ -> [ "EQ"; "NEQ"; "GT"; "LE"; "GE" ]
+      | "GT", _ :: _ -> [ "EQ"; "NEQ"; "LT"; "LE"; "GE" ]
+      | "LE", _ :: _ -> [ "EQ"; "NEQ"; "LT"; "GT"; "GE" ]
+      | "GE", _ :: _ -> [ "EQ"; "NEQ"; "LT"; "GT"; "LE" ]
+      | _, _ -> []
+    in
+    op :: alts
+
 
   type mutation_data = unit
   type loc = canonical_location
   type oracle_typer = canonical_location -> (canonical_location, string) node list
-  let combine : 'a -> ('a * mutation_data option) list -> 'b -> ('b * mutation_data option) list -> ('a * 'b * mutation_data option) list =
-    fun a al b bl ->
-    List.map ~f:(fun (b, m) -> (a, b, m)) bl @ List.map ~f:(fun (a, m) -> (a, b, m)) al
 
-  let combine_list : 'a list -> (('a * mutation_data option) list) list -> ('a list * mutation_data option) list =
-    fun a al ->
-    List.concat @@ List.mapi ~f:(fun i ali ->
-      List.map ~f:(fun (v, m) -> (List.take a i @ [ v ] @ List.drop a (i + 1),  m)) ali) al
+  let combine
+      :  'a -> ('a * mutation_data option) list -> 'b -> ('b * mutation_data option) list
+      -> ('a * 'b * mutation_data option) list
+    =
+   fun a al b bl ->
+    List.map ~f:(fun (b, m) -> a, b, m) bl @ List.map ~f:(fun (a, m) -> a, b, m) al
 
-  let (let+) x f = List.map ~f x
-  let (let*) x f = List.concat (List.map ~f x)
-  let return x = [x]
 
-  let rec generate ~(oracle:oracle_typer) (code : loc michelson) : (loc michelson * mutation_data option) list =
+  let combine_list
+      :  'a list -> ('a * mutation_data option) list list
+      -> ('a list * mutation_data option) list
+    =
+   fun a al ->
+    List.concat
+    @@ List.mapi
+         ~f:(fun i ali ->
+           List.map ~f:(fun (v, m) -> List.take a i @ [ v ] @ List.drop a (i + 1), m) ali)
+         al
+
+
+  let ( let+ ) x f = List.map ~f x
+  let ( let* ) x f = List.concat (List.map ~f x)
+  let return x = [ x ]
+
+  let rec generate ~(oracle : oracle_typer) (code : loc michelson)
+      : (loc michelson * mutation_data option) list
+    =
     let self = generate ~oracle in
     ignore oracle;
     match (code : _ node) with
     | Seq (l, ns) ->
       let+ ns, mutation = combine_list ns (List.map ~f:self ns) in
-      (Seq (l, ns), mutation)
-    | Prim (l, "PUSH", [ Prim (l1, "int", [], ann1) ; Int (l2, z) ], ann) ->
+      Seq (l, ns), mutation
+    | Prim (l, "PUSH", [ Prim (l1, "int", [], ann1); Int (l2, z) ], ann) ->
       let z = Z.to_int z in
       let* t = transform_int in
       let z_mut = t z in
       let mutation = if z_mut <> z then Some () else None in
-      return @@ (Prim (l, "PUSH", [ Prim (l1, "int", [], ann1) ; Int (l2, Z.of_int z_mut) ], ann), mutation)
-    | Prim (l, "PUSH", [ Prim (l1, "nat", [], ann1) ; Int (l2, z) ], ann) ->
+      return
+      @@ ( Prim (l, "PUSH", [ Prim (l1, "int", [], ann1); Int (l2, Z.of_int z_mut) ], ann)
+         , mutation )
+    | Prim (l, "PUSH", [ Prim (l1, "nat", [], ann1); Int (l2, z) ], ann) ->
       let z = Z.to_int z in
       let* t = transform_nat in
       let z_mut = t z in
       let mutation = if z_mut <> z then Some () else None in
-      return @@ (Prim (l, "PUSH", [ Prim (l1, "nat", [], ann1) ; Int (l2, Z.of_int z_mut) ], ann), mutation)
-    | Prim (l, "PUSH", [ Prim (l1, "string", [], ann1) ; String (l2, z) ], ann) ->
+      return
+      @@ ( Prim (l, "PUSH", [ Prim (l1, "nat", [], ann1); Int (l2, Z.of_int z_mut) ], ann)
+         , mutation )
+    | Prim (l, "PUSH", [ Prim (l1, "string", [], ann1); String (l2, z) ], ann) ->
       let* t = transform_string in
       let z_mut = t z in
       let mutation = if not String.(equal z_mut z) then Some () else None in
-      return @@ (Prim (l, "PUSH", [ Prim (l1, "string", [], ann1) ; String (l2, z_mut) ], ann), mutation)
-    | Prim (l, ("ADD"|"MUL"|"SUB" as op), [ ], ann) -> (
+      return
+      @@ ( Prim (l, "PUSH", [ Prim (l1, "string", [], ann1); String (l2, z_mut) ], ann)
+         , mutation )
+    | Prim (l, op, [], ann) ->
       let* op_mut = map_op op (oracle l) in
       let mutation = if not String.(equal op_mut op) then Some () else None in
-      return @@ (Prim (l, op_mut, [ ], ann), mutation)
-    )
-    | _ ->
-      return @@ (code, None)
+      return @@ (Prim (l, op_mut, [], ann), mutation)
+    | _ -> return @@ (code, None)
 end
 
 let storage_retreival_dummy_ty = Tezos_utils.Michelson.prim "int"
