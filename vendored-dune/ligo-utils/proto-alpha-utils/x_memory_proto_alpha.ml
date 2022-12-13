@@ -374,7 +374,7 @@ let typecheck_map_code ~tezos_context ~code_ty ~code =
       let stack =
         List.map ~f:(Tezos_micheline.Micheline.inject_locations (fun l -> l)) stack
       in
-      List.rev stack
+      stack
   in
   Result.ok @@ oracle
 
