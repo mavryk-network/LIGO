@@ -114,7 +114,6 @@ module Mutation = struct
       : (loc michelson * mutation_data option) list
     =
     let self = generate ~oracle in
-    ignore oracle;
     match (code : _ node) with
     | Seq (l, ns) ->
       let+ ns, mutation = combine_list ns (List.map ~f:self ns) in
@@ -142,10 +141,13 @@ module Mutation = struct
       return
       @@ ( Prim (l, "PUSH", [ Prim (l1, "string", [], ann1); String (l2, z_mut) ], ann)
          , mutation )
-    | Prim (l, op, [], ann) ->
+    | Prim (l, ("ADD"|"MUL"|"SUB"|"OR"|"AND"|"XOR"|"EQ"|"NEQ"|"GT"|"LT"|"GE"|"LE" as op), [], ann) ->
       let* op_mut = map_op op (oracle l) in
       let mutation = if not String.(equal op_mut op) then Some () else None in
       return @@ (Prim (l, op_mut, [], ann), mutation)
+    | Prim (l, op, (_ :: _ as ns) , ann) ->
+      let+ ns, mutation = combine_list ns (List.map ~f:self ns) in
+      Prim (l, op, ns , ann), mutation
     | _ -> return @@ (code, None)
 end
 
