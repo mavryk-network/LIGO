@@ -1032,7 +1032,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     >>>>>>>>
     *)
   | ( C_TEST_MUTATE_MICHELSON
-    , [ V_Michelson (Ty_code { micheline_repr = { code = m; code_ty }; _ }) ] ) ->
+    , [ V_Michelson (Ty_code ({ micheline_repr = { code = m; code_ty }; _ } as ty_code)) ] ) ->
     let>> tezos_context = Get_alpha_context () in
     let canonical = Tezos_micheline.Micheline.strip_locations m in
     let canonical =
@@ -1072,14 +1072,11 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let ms =
       List.filter_map
         ~f:(function
-          | m, Some _ -> Some m
+          | m, Some _ -> Some (Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun x -> x) m)
           | _ -> None)
         ms
     in
-    List.iter
-      ~f:(fun m -> print_endline (Format.asprintf "%a" Tezos_utils.Michelson.pp m))
-      ms;
-    return @@ v_unit ()
+    return @@ v_list @@ List.map ~f:(fun code -> V_Michelson (Ty_code { ty_code with micheline_repr = { ty_code.micheline_repr with code } })) ms
   | C_TEST_MUTATE_MICHELSON, _ -> fail @@ error_type ()
   | C_TEST_ADDRESS, [ V_Ct (C_contract { address; entrypoint = _ }) ] ->
     return (V_Ct (C_address address))

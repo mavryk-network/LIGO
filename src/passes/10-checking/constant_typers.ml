@@ -1399,7 +1399,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
       , of_type
           (create
              ~mode_annot:[ Checked ]
-             ~types:[ t_michelson_code ~loc () ^~> t_unit ~loc () ]) )
+             ~types:[ t_michelson_code ~loc () ^~> t_list ~loc (t_michelson_code ~loc ()) () ]) )
     ; ( C_TEST_READ_CONTRACT_FROM_FILE
       , of_type
           (create
