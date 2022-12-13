@@ -255,11 +255,11 @@ and ('self, 'ty_expr, 'pattern, 'statement, 'mod_expr) expression_content_ =
   | E_Update of 'self Update.t
   | E_Poly_fun of
       ('self, 'ty_expr, 'pattern) Poly_fun.t (* (fun <type a b>(x, y) z -> x + y - z) *)
-  | E_Block_fun of ('self, 'ty_expr, 'statement) Block_fun.t
+  | E_Block_fun of ('self, 'pattern, 'ty_expr, 'statement) Block_fun.t
   | E_Constr of Label.t
   | E_Ctor_App of ('self * 'self nseq option) (* MyCtor (42, 43, 44), PascaLigo only *)
   | E_Call of 'self * 'self list (* f (x, y) ; f x y *)
-  | E_Case of ('self, 'pattern, 'self) Case.t (* match e with | A -> ... | B -> ... *)
+  | E_Match of ('self, 'pattern, 'self) Case.t (* match e with | A -> ... | B -> ... *)
   | E_Annot of ('self * 'ty_expr) (* 42 : int *)
   | E_Cond of ('self, 'self) Cond.t (* if b then 42 else 24 *)
   | E_Set of 'self list (* set [x; 1] *)

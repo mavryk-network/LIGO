@@ -476,7 +476,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
       in
       nseq_map (compile_case_clause <@ r_fst) @@ nsepseq_to_nseq @@ r_fst case.cases
     in
-    e_case { expr; cases } ~loc
+    e_match { expr; cases } ~loc
   | EAnnot annot ->
     let annot, loc = r_split annot in
     let e, _, te = annot.inside in

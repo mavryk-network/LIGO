@@ -37,6 +37,62 @@ module TODO_do_in_parsing = struct
       | S_Attr (attr, x) -> d_attr ~loc:(get_s_loc x) (attr, aux x)
     in
     aux s
+
+  let rec pattern_of_expr compile_type : CST.expr -> AST.pattern nseq =
+  (*
+    this is the most troubling thing with jsligo: functions parameters is a single expression
+    `<parameters:expr> : <lhs_type:type> => ..` (see EFun node bellow)
+     I believe they should really be parsed as a pattern list
+
+    note:
+      as of today, this is a value expression `([x ,...[y, ...z]]) => x`
+      while this is not a valid declaration `const [x ,...[y, ...z]] = toto`.
+      in the first case, it's an "expression as a pattern". In the second case, it's a
+      pattern
+  *)
+  let rec aux : CST.expr -> AST.pattern =
+    let self = aux in
+    function
+    | EPar x -> self x.value.inside
+    | EVar x ->
+      let v,loc = r_split x in
+      p_var ~loc (var ~loc v)
+    | EUnit x -> p_unit ~loc:(Location.lift x.region)
+    | EAnnot ea ->
+      let (expr, _as, type_expr), loc = r_split ea in
+      p_typed ~loc (compile_type type_expr) (self expr)
+    | EArray items ->
+      let items, loc = r_split items in
+      (match sepseq_to_list items.inside with
+      | [ Expr_entry hd; Rest_entry tl ] ->
+        (* [x ,...[y, ...z]] *)
+        (* see https://tezos-dev.slack.com/archives/GMHV0U3Q9/p1670929406569099 *)
+        p_list ~loc (Cons (self hd, self tl.value.expr))
+      | lst ->
+        p_tuple ~loc (List.map lst ~f:(function Expr_entry x -> self x | _ -> failwith "incorrect pattern"))
+      )
+    | EObject obj ->
+      let obj, loc = r_split obj in
+      let lst = nsepseq_to_list obj.inside in
+      let aux : CST.property -> (_,_) Field.t =
+        function
+        | Punned_property { value = EVar v ; _ } ->
+          Punned (Label.of_string v.value)
+        | Property { value = { name = EVar v; value; _ }; _ } ->
+          Complete (Label.of_string v.value, aux value)
+        | _ -> failwith "unrecognized pattern"
+      in
+      p_pun_record ~loc (List.map ~f:aux lst)
+    | _ -> failwith "unrecognized pattern"
+  in
+  function
+  | EPar x -> pattern_of_expr compile_type x.value.inside
+  | ESeq seq ->
+    let lst,loc = r_split seq in
+    (match lst with
+    | (hd,[]) -> List.Ne.singleton (aux hd)
+    | _ -> nseq_map aux (nsepseq_to_nseq lst))
+  | else_ -> List.Ne.singleton (aux else_)
 end
 
 module TODO_unify_in_cst = struct
@@ -523,7 +579,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     e_moda { module_path; field } ~loc
   | EFun f ->
     let f, loc = r_split f in
-    let parameters = self f.parameters in
+    let parameters = TODO_do_in_parsing.pattern_of_expr (compile_type_expression ~raise) f.parameters in (* this can be E_seq E_par *)
     let lhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) f.lhs_type in
     let body =
       let compile_body : CST.body -> (_, _) AST.Block_fun.fun_block = function
