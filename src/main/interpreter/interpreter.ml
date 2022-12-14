@@ -1034,36 +1034,34 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | ( C_TEST_MUTATE_MICHELSON
     , [ V_Michelson (Ty_code ({ micheline_repr = { code = m; code_ty }; _ } as ty_code)) ]
     ) ->
+    let open Proto_alpha_utils.Memory_proto_alpha in
     let>> tezos_context = Get_alpha_context () in
     let canonical =
       Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
           failwith "Could not parse primitives from strings")
-      @@ Proto_alpha_utils.Memory_proto_alpha.node_to_canonical m
+      @@ node_to_canonical m
     in
+    let node = Tezos_micheline.Micheline.inject_locations (fun l -> l) canonical in
     let canonical_ty =
       Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
           failwith "Could not parse primitives from strings")
-      @@ Proto_alpha_utils.Memory_proto_alpha.node_to_canonical code_ty
+      @@ node_to_canonical code_ty
     in
     let node_ty = Tezos_micheline.Micheline.inject_locations (fun l -> l) canonical_ty in
-    let node = Tezos_micheline.Micheline.inject_locations (fun l -> l) canonical in
     let oracle =
       Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
           failwith "Could not type-check the contract code")
-      @@ Proto_alpha_utils.Memory_proto_alpha.typecheck_oracle_code
+      @@ typecheck_oracle_code
            ~tezos_context
            ~code_ty:node_ty
            ~code:node
     in
-    let m = Proto_alpha_utils.Memory_proto_alpha.canonical_to_node canonical in
-    let ms = Michelson_backend.Mutation.generate ~oracle m in
+    let ms = Michelson_backend.Mutation.generate ~oracle (canonical_to_node canonical) in
     let ms =
-      List.filter_map
-        ~f:(function
-          | m, Some _ ->
-            Some (Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun x -> x) m)
-          | _ -> None)
-        ms
+      let f = function
+        | m, Some _ -> Some (Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun x -> x) m)
+        | _ -> None in
+      List.filter_map ~f ms
     in
     return
     @@ v_list
