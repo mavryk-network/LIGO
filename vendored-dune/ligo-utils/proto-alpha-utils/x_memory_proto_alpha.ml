@@ -341,10 +341,9 @@ let typecheck_map_contract ?(environment = dummy_environment ()) contract =
 
 let typecheck_map_code ~tezos_context ~code_ty ~code =
   let (let*) = Result.bind in
-  let legacy = true in
   let* Script_typed_ir.Ex_ty code_ty, _ = Script_ir_translator.parse_ty
     tezos_context
-    ~legacy
+    ~legacy:true
     ~allow_lazy_storage:true
     ~allow_operation:true
     ~allow_contract:true
@@ -355,7 +354,7 @@ let typecheck_map_code ~tezos_context ~code_ty ~code =
     type_map := (loc, (stack_ty_before, stack_ty_after)) :: !type_map
   in
   let elab_conf =
-    Script_ir_translator_config.make ~legacy ~type_logger ()
+    Script_ir_translator_config.make ~legacy:true ~type_logger ()
   in
   let* _ = Lwt_main.run @@ Script_ir_translator.parse_data
       tezos_context
