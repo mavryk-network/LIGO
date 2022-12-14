@@ -131,7 +131,7 @@ let strings_of_prims michelson =
 let canonical_to_node m =
     let open Tezos_micheline.Micheline in
     let x = Michelson_v1_primitives.strings_of_prims m in
-    inject_locations (fun _ -> 0) x
+    inject_locations (fun l -> l) x
 
 let node_to_canonical m =
     let open Tezos_micheline.Micheline in

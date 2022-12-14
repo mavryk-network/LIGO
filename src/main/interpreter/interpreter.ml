@@ -1046,14 +1046,6 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     in
     let node_ty = Tezos_micheline.Micheline.inject_locations (fun l -> l) canonical_ty in
     let node = Tezos_micheline.Micheline.inject_locations (fun l -> l) canonical in
-    let canonical_prims =
-      Proto_alpha_utils.Memory_proto_alpha.Protocol.Michelson_v1_primitives
-      .strings_of_prims
-        canonical
-    in
-    let node_canonical =
-      Tezos_micheline.Micheline.inject_locations (fun c -> c) canonical_prims
-    in
     let oracle =
       Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
           failwith "Could not type-check the contract code")
@@ -1062,7 +1054,8 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
            ~code_ty:node_ty
            ~code:node
     in
-    let ms = Michelson_backend.Mutation.generate ~oracle node_canonical in
+    let m = Proto_alpha_utils.Memory_proto_alpha.canonical_to_node canonical in
+    let ms = Michelson_backend.Mutation.generate ~oracle m in
     let ms =
       List.filter_map
         ~f:(function
