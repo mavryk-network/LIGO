@@ -3,10 +3,16 @@ module O = Ast_core
 open Passes.Pass_type
 module Errors = Passes.Errors
 
-let trivial_compile_program : I.program -> O.program = fun x ->
-  print_endline (Format.asprintf "program: %a" (Sexp.pp_hum_indent 2) (I.S_exp.sexp_of_program x)) ;
+let trivial_compile_program : I.program -> O.program =
+ fun x ->
+  print_endline
+    (Format.asprintf "program: %a" (Sexp.pp_hum_indent 2) (I.S_exp.sexp_of_program x));
   failwith "TODO: Everything is fine"
-let trivial_compile_expression : I.expr -> O.expression = fun _ -> failwith "TODO : Everything is fine"
+
+
+let trivial_compile_expression : I.expr -> O.expression =
+ fun _ -> failwith "TODO : Everything is fine"
+
 
 let compile_with_passes : type a. a sub_pass list -> a -> a =
  fun passes prg ->
@@ -27,7 +33,6 @@ let passes
     ~(syntax : Syntax_types.t)
   =
   let open Passes in
-  (* let syntax = options.frontend.syntax in *)
   [ T_arg.pass
   ; Type_abstraction_declaration.pass ~raise
   ; Named_fun.pass ~raise
