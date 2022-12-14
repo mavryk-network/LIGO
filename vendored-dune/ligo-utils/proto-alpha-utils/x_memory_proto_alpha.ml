@@ -128,6 +128,11 @@ let strings_of_prims michelson =
   let michelson = Michelson_v1_primitives.strings_of_prims michelson in
   Tezos_micheline.Micheline.root michelson
 
+let canonical_to_node m =
+    let open Tezos_micheline.Micheline in
+    let x = Michelson_v1_primitives.strings_of_prims m in
+    inject_locations (fun _ -> 0) x
+
 let node_to_canonical m =
     let open Tezos_micheline.Micheline in
     let x = inject_locations (fun _ -> 0) (strip_locations m) in
@@ -339,7 +344,7 @@ let typecheck_map_contract ?(environment = dummy_environment ()) contract =
   | Ok (map, _) -> Lwt_result_syntax.return @@ (map, contract)
   | Error errs -> Lwt.return @@ Error (Alpha_environment.wrap_tztrace errs)
 
-let typecheck_map_code ~tezos_context ~code_ty ~code =
+let typecheck_oracle_code ~tezos_context ~code_ty ~code =
   let (let*) = Result.bind in
   let* Script_typed_ir.Ex_ty code_ty, _ = Script_ir_translator.parse_ty
     tezos_context
@@ -365,15 +370,7 @@ let typecheck_map_code ~tezos_context ~code_ty ~code =
   let oracle : _ -> _ =
     fun l ->
       let stack = fst @@ List.Assoc.find_exn !type_map ~equal:Caml.( = ) l in
-      let stack =
-        List.map
-          ~f:Protocol.Michelson_v1_primitives.strings_of_prims
-          stack
-      in
-      let stack =
-        List.map ~f:(Tezos_micheline.Micheline.inject_locations (fun l -> l)) stack
-      in
-      stack
+      List.map ~f:canonical_to_node stack
   in
   Result.ok @@ oracle
 

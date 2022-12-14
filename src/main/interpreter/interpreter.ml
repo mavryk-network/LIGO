@@ -1057,7 +1057,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let oracle =
       Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
           failwith "Could not type-check the contract code")
-      @@ Proto_alpha_utils.Memory_proto_alpha.typecheck_map_code
+      @@ Proto_alpha_utils.Memory_proto_alpha.typecheck_oracle_code
            ~tezos_context
            ~code_ty:node_ty
            ~code:node
