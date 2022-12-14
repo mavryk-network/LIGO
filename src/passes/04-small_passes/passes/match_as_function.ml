@@ -119,3 +119,59 @@ let pass ~raise ~syntax =
     ~compile:(compile ~raise ~syntax)
     ~decompile:(decompile ~syntax)
     ~reduction_check:(reduction ~raise ~syntax)
+
+open Unit_test_helpers
+
+let%expect_test "compile_match_variant" =
+  {|
+  ((P_Declaration
+    (D_Const
+      ((pattern (P_var x))
+      (let_rhs
+        (E_Call (E_variable match)
+          ((E_variable x)
+            (E_Object
+              ((Property (E_variable One)
+                (E_Block_fun
+                  ((parameters
+                      ((P_typed (T_Var int) (P_var v)) (P_var w)))
+                    (lhs_type ())
+                    (body
+                      (ExpressionBody (E_variable v))))))
+                (Property (E_variable Two)
+                  (E_Block_fun
+                    ((parameters
+                      ((P_typed (T_Var int) (P_var n))))
+                      (lhs_type ())
+                      (body
+                        (ExpressionBody (E_variable n))))))
+                (Property (E_variable Three)
+                  (E_Block_fun
+                    ((parameters
+                      ((P_tuple ((P_var x) (P_var y)))))
+                      (lhs_type ())
+                      (body (ExpressionBody (E_variable x)))))))))))))))
+  |}
+  |-> pass ~raise ~syntax:(JsLIGO);
+  [%expect
+  {|
+  ((P_Declaration
+     (D_Const
+       ((pattern (P_var x))
+         (let_rhs
+           (E_Match
+             ((expr (E_variable x))
+               (cases
+                 (((pattern
+                     (P_variant (Label One)
+                       ((P_tuple ((P_typed (T_Var int) (P_var v)) (P_var w))))))
+                    (rhs (E_variable v)))
+                   ((pattern
+                      (P_variant (Label Two)
+                        ((P_tuple ((P_typed (T_Var int) (P_var n)))))))
+                     (rhs (E_variable n)))
+                   ((pattern
+                      (P_variant (Label Three)
+                        ((P_tuple ((P_tuple ((P_var x) (P_var y))))))))
+                     (rhs (E_variable x))))))))))))
+  |}]
