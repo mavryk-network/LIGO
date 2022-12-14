@@ -1483,6 +1483,24 @@ let print_ast =
   Command.basic ~summary ~readme
   @@ (f <$> source_file <*> syntax <*> display_format <*> no_colour)
 
+let print_ast_core_temp =
+  let f source_file syntax display_format self_pass project_root no_colour () =
+    let raw_options = Raw_options.make ~syntax ~self_pass ~project_root ~no_colour () in
+    return_result ~return @@ Api.Print.ast_core_temp raw_options source_file display_format
+  in
+  let summary =
+    "print the core ligo AST.\n\
+    \ Warning: Intended for development of LIGO and can break at any time."
+  in
+  let readme () = "This sub-command prints the source file in the AST core stage." in
+  Command.basic ~summary ~readme
+  @@ (f
+      <$> source_file
+      <*> syntax
+      <*> display_format
+      <*> self_pass
+      <*> project_root
+      <*> no_colour)
 
 let print_ast_core =
   let f source_file syntax display_format self_pass project_root no_colour () =
@@ -1704,6 +1722,7 @@ let print_group =
      ; "cst", print_cst
      ; "ast-imperative", print_ast
      ; "ast-core", print_ast_core
+     ; "ast-core-temp", print_ast_core_temp
      ; "ast-typed", print_ast_typed
      ; "ast-aggregated", print_ast_aggregated
      ; "ast-expanded", print_ast_expanded

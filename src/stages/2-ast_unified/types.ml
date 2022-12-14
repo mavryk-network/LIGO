@@ -102,7 +102,7 @@ module Directive = struct
 
 
   let sexp_of_t : t -> Sexp.t =
-   fun _t -> failwith "Directive to sexp conversion not supported"
+   fun _t -> Sexp.Atom "TODO: directive sexp generation is weird"
 
 
   let t_of_sexp : Sexp.t -> t =

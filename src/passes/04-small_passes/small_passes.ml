@@ -1,9 +1,12 @@
 module I = Ast_unified
 module O = Ast_core
 open Passes.Pass_type
+module Errors = Passes.Errors
 
-let trivial_compile_program : I.program -> O.program = fun _ -> failwith ""
-let trivial_compile_expression : I.expr -> O.expression = fun _ -> failwith ""
+let trivial_compile_program : I.program -> O.program = fun x ->
+  print_endline (Format.asprintf "program: %a" (Sexp.pp_hum_indent 2) (I.S_exp.sexp_of_program x)) ;
+  failwith "TODO: Everything is fine"
+let trivial_compile_expression : I.expr -> O.expression = fun _ -> failwith "TODO : Everything is fine"
 
 let compile_with_passes : type a. a sub_pass list -> a -> a =
  fun passes prg ->
@@ -21,11 +24,10 @@ let compile_with_passes : type a. a sub_pass list -> a -> a =
 
 let passes
     ~(raise : (Passes.Errors.t, _) Simple_utils.Trace.raise)
-    ~(options : Compiler_options.t)
+    ~(syntax : Syntax_types.t)
   =
-  ignore (raise, options);
   let open Passes in
-  let syntax = options.frontend.syntax in
+  (* let syntax = options.frontend.syntax in *)
   [ T_arg.pass
   ; Type_abstraction_declaration.pass ~raise
   ; Named_fun.pass ~raise
@@ -35,15 +37,15 @@ let passes
   ]
 
 
-let compile_program ~raise ~options : I.program -> O.program =
+let compile_program ~raise ~syntax : I.program -> O.program =
  fun prg ->
-  let passes = passes ~raise ~options in
+  let passes = passes ~raise ~syntax in
   let prg = compile_with_passes (List.map ~f:(fun x -> x.program) passes) prg in
   trivial_compile_program prg
 
 
-let compile_expression ~raise ~options : I.expr -> O.expression =
+let compile_expression ~raise ~syntax : I.expr -> O.expression =
  fun expr ->
-  let passes = passes ~raise ~options in
+  let passes = passes ~raise ~syntax in
   let expr = compile_with_passes (List.map ~f:(fun x -> x.expression) passes) expr in
   trivial_compile_expression expr

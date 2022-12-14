@@ -32,14 +32,14 @@ let compile ~raise ~syntax =
       | _ -> same)
     | _ -> same
   in
-  if Option.equal Syntax_types.equal syntax (Some JsLIGO)
+  if Syntax_types.equal syntax (JsLIGO)
   then `Cata { idle_cata_pass with expr = pass_expr }
   else `Cata idle_cata_pass
 
 
 let reduction ~raise ~syntax =
   let fail () = raise.error (wrong_reduction __MODULE__) in
-  if Option.equal Syntax_types.equal syntax (Some JsLIGO)
+  if Syntax_types.equal syntax (JsLIGO)
   then
     { Iter.defaults with
       expr =
@@ -68,7 +68,7 @@ let decompile ~syntax =
         [ e_array ~loc (List.map ~f:(fun x -> Array_repr.Expr_entry x) elements) ]
     | _ -> same
   in
-  if Option.equal Syntax_types.equal syntax (Some JsLIGO)
+  if Syntax_types.equal syntax JsLIGO
   then `Cata { idle_cata_pass with expr = pass_expr }
   else `Cata idle_cata_pass
 
@@ -93,7 +93,7 @@ let%expect_test "compile_cons" =
              ((E_Array
                 ((Expr_entry (E_variable hd)) (Rest_entry (E_variable tl)))))))))))
   |}
-  |-> pass ~raise ~syntax:(Some JsLIGO);
+  |-> pass ~raise ~syntax:(JsLIGO);
   [%expect
     {|
     ((P_Declaration
@@ -114,7 +114,7 @@ let%expect_test "compile_list" =
              ((E_Array
                 ((Expr_entry (E_variable a)) (Expr_entry (E_variable b)) (Expr_entry (E_variable c)))))))))))
   |}
-  |-> pass ~raise ~syntax:(Some JsLIGO);
+  |-> pass ~raise ~syntax:(JsLIGO);
   [%expect
     {|
   ((P_Declaration
@@ -133,7 +133,7 @@ let%expect_test "compile_fail" =
              ((E_Array
                 ((Expr_entry (E_variable hd)) (Rest_entry (E_variable tl1)) (Rest_entry (E_variable tl2)))))))))))
   |}
-  |->! pass ~syntax:(Some JsLIGO);
+  |->! pass ~syntax:(JsLIGO);
   [%expect {|
   Err : (Small_passes_array_rest_not_supported (E_variable tl1))
   |}]
@@ -147,7 +147,7 @@ let%expect_test "decompile_cons" =
           (E_constant
             ((cons_name C_CONS) (arguments ((E_variable hd) (E_variable tl))))))))))
   |}
-  <-| pass ~raise ~syntax:(Some JsLIGO);
+  <-| pass ~raise ~syntax:(JsLIGO);
   [%expect
     {|
       ((P_Declaration
@@ -167,7 +167,7 @@ let%expect_test "decompile_list" =
        ((pattern (P_var x))
          (let_rhs (E_List ((E_variable a) (E_variable b) (E_variable c))))))))
   |}
-  <-| pass ~raise ~syntax:(Some JsLIGO);
+  <-| pass ~raise ~syntax:(JsLIGO);
   [%expect
     {|
       ((P_Declaration

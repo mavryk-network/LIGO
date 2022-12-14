@@ -5,14 +5,14 @@ module Region = Simple_utils.Region
 
 let stage = "unification"
 
-type unification_error =
+type t =
   [ `Unification_unsupported_syntax of string
   | `Unification_other_error of string
   ]
 [@@deriving poly_constructor { prefix = "unification_" }]
 
 let error_ppformat
-    :  display_format:string display_format -> Format.formatter -> unification_error
+    :  display_format:string display_format -> Format.formatter -> t
     -> unit
   =
  fun ~display_format f err ->
@@ -28,7 +28,7 @@ let error_ppformat
       Format.fprintf f "@[<hv>Error during unification stage: %s.@]" msg)
 
 
-let error_json : unification_error -> Simple_utils.Error.t =
+let error_json : t -> Simple_utils.Error.t =
  fun e ->
   let open Simple_utils.Error in
   match e with

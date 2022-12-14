@@ -344,6 +344,8 @@ let rec error_ppformat
         errs
     | `Preproc_tracer e -> Preprocessing.Errors.error_ppformat ~display_format f e
     | `Parser_tracer e -> Parsing.Errors.error_ppformat ~display_format f e
+    | `Unification_tracer e -> List.iter ~f:(Unification.Errors.error_ppformat ~display_format f) e
+    | `Small_passes_tracer e -> Small_passes.Errors.error_ppformat ~display_format f e
     | `Pretty_tracer _e -> () (*no error in this pass*)
     | `Cit_pascaligo_tracer e ->
       List.iter ~f:(Tree_abstraction.Pascaligo.Errors.error_ppformat ~display_format f) e
@@ -682,6 +684,8 @@ let rec error_json : Types.all -> Simple_utils.Error.t list =
     [ make ~stage:"top-level glue" ~content ]
   | `Preproc_tracer e -> [ Preprocessing.Errors.error_json e ]
   | `Parser_tracer e -> [ Parsing.Errors.error_json e ]
+  | `Unification_tracer e -> List.map ~f:Unification.Errors.error_json e
+  | `Small_passes_tracer e -> [ Small_passes.Errors.error_json e ]
   | `Pretty_tracer _ ->
     let content = make_content ~message:"Pretty printing tracer" () in
     [ make ~stage:"pretty" ~content ]

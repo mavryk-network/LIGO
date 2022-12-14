@@ -77,6 +77,20 @@ let ast (raw_options : Raw_options.t) source_file display_format () =
   Compile.Utils.to_imperative ~raise ~options ~meta c_unit source_file
 
 
+let ast_core_temp (raw_options : Raw_options.t) source_file display_format () =
+  format_result ~display_format Ast_core.Formatter.program_format
+  @@ fun ~raise ->
+  let syntax =
+    Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
+  in
+  let options = Compiler_options.make ~raw_options ~syntax () in
+  let meta = Compile.Of_source.extract_meta syntax in
+  let c_unit, _ =
+    Compile.Of_source.preprocess_file ~raise ~options:options.frontend ~meta source_file
+  in
+  Compile.Utils.to_core_temp ~raise ~options ~meta c_unit source_file
+
+
 let ast_core (raw_options : Raw_options.t) source_file display_format () =
   format_result ~display_format Ast_core.Formatter.program_format
   @@ fun ~raise ->

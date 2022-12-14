@@ -93,13 +93,13 @@ let compile ~raise ~syntax =
       | _ -> same)
     | _ -> same
   in
-  if Option.equal Syntax_types.equal syntax (Some JsLIGO)
+  if Syntax_types.equal syntax JsLIGO
   then `Cata { idle_cata_pass with expr = pass_expr }
   else `Cata idle_cata_pass
 
 let reduction ~raise ~syntax =
     let fail () = raise.error (wrong_reduction __MODULE__) in
-    if Option.equal Syntax_types.equal syntax (Some JsLIGO)
+    if Syntax_types.equal syntax JsLIGO
     then
       { Iter.defaults with
         expr =

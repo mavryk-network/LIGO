@@ -10,7 +10,7 @@ open Errors
 let mapping_binop ~syntax : (Operators.op * Ligo_prim.Constant.constant') list =
   let open Syntax_types in
   match syntax with
-  | Some CameLIGO ->
+  | CameLIGO ->
     [ PLUS, C_POLYMORPHIC_ADD
     ; MINUS, C_POLYMORPHIC_SUB
     ; STAR, C_MUL
@@ -30,7 +30,7 @@ let mapping_binop ~syntax : (Operators.op * Ligo_prim.Constant.constant') list =
     ; WORD_LAND, C_AND
     ; DCOLON, C_CONS
     ]
-  | Some JsLIGO ->
+  | JsLIGO ->
     [ PLUS, C_POLYMORPHIC_ADD
     ; MINUS, C_POLYMORPHIC_SUB
     ; STAR, C_MUL
@@ -45,7 +45,7 @@ let mapping_binop ~syntax : (Operators.op * Ligo_prim.Constant.constant') list =
     ; DEQ, C_EQ
     ; EQ_SLASH_EQ, C_NEQ
     ]
-  | Some PascaLIGO ->
+  | PascaLIGO ->
     [ SHARP, C_CONS
     ; CARET, C_CONCAT
     ; PLUS, C_ADD
@@ -62,15 +62,15 @@ let mapping_binop ~syntax : (Operators.op * Ligo_prim.Constant.constant') list =
     ; SEQ, C_EQ
     ; EQ_SLASH_EQ, C_NEQ
     ]
-  | _ -> [] (* :) *)
+  | ReasonLIGO -> failwith "deprecated reason"
 
 
 let mapping_unop ~syntax : (Operators.op * Ligo_prim.Constant.constant') list =
   let open Syntax_types in
   match syntax with
-  | Some CameLIGO -> [ MINUS, C_NEG; WORD_NOT, C_NOT ]
-  | Some JsLIGO -> [ MINUS, C_NEG; EX_MARK, C_NOT ]
-  | Some PascaLIGO -> [ MINUS, C_NEG; WORD_NOT, C_NOT ]
+  | CameLIGO -> [ MINUS, C_NEG; WORD_NOT, C_NOT ]
+  | JsLIGO -> [ MINUS, C_NEG; EX_MARK, C_NOT ]
+  | PascaLIGO -> [ MINUS, C_NEG; WORD_NOT, C_NOT ]
   | _ -> [] (* :) *)
 
 
@@ -153,7 +153,7 @@ let%expect_test "compile" =
       (let_rhs
         (E_Binary_op ((operator SLASH) (left (E_variable x)) (right (E_variable y)))))))))
   |}
-  |-> pass ~raise ~syntax:(Some PascaLIGO);
+  |-> pass ~raise ~syntax:(PascaLIGO);
   [%expect
     {|
     ((P_Declaration
@@ -173,7 +173,7 @@ let%expect_test "decompile" =
         (E_constant
           ((cons_name C_DIV) (arguments ((E_variable x) (E_variable y)))))))))) 
   |}
-  <-| pass ~raise ~syntax:(Some PascaLIGO);
+  <-| pass ~raise ~syntax:(PascaLIGO);
   [%expect
     {|
     ((P_Declaration

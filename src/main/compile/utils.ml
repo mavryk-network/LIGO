@@ -11,6 +11,8 @@ let to_imperative
   let imperative = Of_c_unit.compile ~raise ~meta c_unit file_path in
   imperative
 
+let to_core_temp ~raise ~options ~meta (c_unit : Buffer.t) file_path =
+  Of_c_unit.compile_temp ~raise ~meta c_unit file_path
 
 let to_core ~raise ~options ~meta (c_unit : Buffer.t) file_path =
   let imperative = to_imperative ~raise ~options ~meta c_unit file_path in
