@@ -1031,6 +1031,95 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       Test operators
     >>>>>>>>
     *)
+  | ( C_TEST_MUTATE_MICHELSON
+    , [ V_Michelson (Ty_code ({ micheline_repr = { code = m; code_ty }; _ } as ty_code)) ]
+    ) ->
+    let open Proto_alpha_utils.Memory_proto_alpha in
+    let>> tezos_context = Get_alpha_context () in
+    let canonical =
+      Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
+          failwith "Could not parse primitives from strings")
+      @@ node_to_canonical m
+    in
+    let node = Tezos_micheline.Micheline.inject_locations (fun l -> l) canonical in
+    let canonical_ty =
+      Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
+          failwith "Could not parse primitives from strings")
+      @@ node_to_canonical code_ty
+    in
+    let node_ty = Tezos_micheline.Micheline.inject_locations (fun l -> l) canonical_ty in
+    let oracle =
+      Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
+          failwith "Could not type-check the contract code")
+      @@ typecheck_oracle_code ~tezos_context ~code_ty:node_ty ~code:node
+    in
+    let ms = Michelson_backend.Mutation.generate ~oracle (canonical_to_node canonical) in
+    let ms =
+      let f = function
+        | m, Some _ ->
+          Some (Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun x -> x) m)
+        | _ -> None
+      in
+      List.filter_map ~f ms
+    in
+    return
+    @@ v_list
+    @@ List.map
+         ~f:(fun code ->
+           V_Michelson
+             (Ty_code
+                { ty_code with micheline_repr = { ty_code.micheline_repr with code } }))
+         ms
+  | C_TEST_MUTATE_MICHELSON, _ -> fail @@ error_type ()
+  | C_TEST_MUTATE_MICHELSON_CONTRACT, [ V_Michelson_contract m ] ->
+    let open Proto_alpha_utils.Memory_proto_alpha in
+    let open Tezos_micheline.Micheline in
+    let>> tezos_context = Get_alpha_context () in
+    let canonical =
+      Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
+          failwith "Could not parse primitives from strings")
+      @@ node_to_canonical m
+    in
+    let node = inject_locations (fun l -> l) canonical in
+    let l_root, parameter, storage, code, rest =
+      match node with
+      | Seq (l, parameter :: storage :: code :: rest) -> l, parameter, storage, code, rest
+      | _ -> failwith "Expected a contract"
+    in
+    let oracle =
+      Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
+          failwith "Could not type-check the contract code")
+      @@ typecheck_oracle_contract ~tezos_context ~contract:node
+    in
+    let code =
+      map_node (fun l -> l) Protocol.Michelson_v1_primitives.string_of_prim code
+    in
+    let ms = Michelson_backend.Mutation.generate ~oracle code in
+    let ms =
+      let f = function
+        | code, Some _ ->
+          let parameter =
+            map_node
+              (fun l -> l)
+              Protocol.Michelson_v1_primitives.string_of_prim
+              parameter
+          in
+          let storage =
+            map_node (fun l -> l) Protocol.Michelson_v1_primitives.string_of_prim storage
+          in
+          let rest =
+            List.map
+              ~f:(map_node (fun l -> l) Protocol.Michelson_v1_primitives.string_of_prim)
+              rest
+          in
+          let contract = Seq (l_root, parameter :: storage :: code :: rest) in
+          Some (Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun x -> x) contract)
+        | _ -> None
+      in
+      List.filter_map ~f ms
+    in
+    return @@ v_list @@ List.map ~f:(fun code -> V_Michelson_contract code) ms
+  | C_TEST_MUTATE_MICHELSON_CONTRACT, _ -> fail @@ error_type ()
   | C_TEST_ADDRESS, [ V_Ct (C_contract { address; entrypoint = _ }) ] ->
     return (V_Ct (C_address address))
   | C_TEST_ADDRESS, _ -> fail @@ error_type ()

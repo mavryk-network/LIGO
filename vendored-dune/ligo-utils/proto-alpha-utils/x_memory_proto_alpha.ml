@@ -128,6 +128,11 @@ let strings_of_prims michelson =
   let michelson = Michelson_v1_primitives.strings_of_prims michelson in
   Tezos_micheline.Micheline.root michelson
 
+let canonical_to_node m =
+    let open Tezos_micheline.Micheline in
+    let x = Michelson_v1_primitives.strings_of_prims m in
+    inject_locations (fun l -> l) x
+
 let node_to_canonical m =
     let open Tezos_micheline.Micheline in
     let x = inject_locations (fun _ -> 0) (strip_locations m) in
@@ -338,6 +343,47 @@ let typecheck_map_contract ?(environment = dummy_environment ()) contract =
   match x with
   | Ok (map, _) -> Lwt_result_syntax.return @@ (map, contract)
   | Error errs -> Lwt.return @@ Error (Alpha_environment.wrap_tztrace errs)
+
+let typecheck_oracle_contract ~tezos_context ~contract =
+  let (let*) = Result.bind in
+  let contract' = Tezos_micheline.Micheline.strip_locations contract in
+  let* map, _ = Lwt_main.run @@ Script_ir_translator.typecheck_code ~show_types:true ~legacy:false tezos_context contract' in
+  let oracle : _ -> _ =
+    fun l ->
+      let stack = fst @@ List.Assoc.find_exn map ~equal:Caml.( = ) l in
+      List.map ~f:canonical_to_node stack
+  in
+  Result.ok @@ oracle
+
+let typecheck_oracle_code ~tezos_context ~code_ty ~code =
+  let (let*) = Result.bind in
+  let* Script_typed_ir.Ex_ty code_ty, _ = Script_ir_translator.parse_ty
+    tezos_context
+    ~legacy:true
+    ~allow_lazy_storage:true
+    ~allow_operation:true
+    ~allow_contract:true
+    ~allow_ticket:true
+    code_ty in
+  let type_map = ref [] in
+  let type_logger loc ~stack_ty_before ~stack_ty_after =
+    type_map := (loc, (stack_ty_before, stack_ty_after)) :: !type_map
+  in
+  let elab_conf =
+    Script_ir_translator_config.make ~legacy:true ~type_logger ()
+  in
+  let* _ = Lwt_main.run @@ Script_ir_translator.parse_data
+      tezos_context
+      ~elab_conf
+      ~allow_forged:true
+      code_ty
+      code in
+  let oracle : _ -> _ =
+    fun l ->
+      let stack = fst @@ List.Assoc.find_exn !type_map ~equal:Caml.( = ) l in
+      List.map ~f:canonical_to_node stack
+  in
+  Result.ok @@ oracle
 
 type 'a interpret_res =
   | Succeed of 'a

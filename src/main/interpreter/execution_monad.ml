@@ -9,6 +9,7 @@ module LC = Ligo_interpreter.Combinators
 module Exc = Ligo_interpreter_exc
 module Tezos_protocol = Memory_proto_alpha
 module Tezos_protocol_env = Memory_proto_alpha.Alpha_environment
+module Tezos_raw_protocol = Memory_proto_alpha.Raw_protocol
 module Tezos_client = Memory_proto_alpha.Client
 module Location = Simple_utils.Location
 module ModRes = Preprocessor.ModRes
@@ -103,6 +104,7 @@ module Command = struct
         Location.t * Z.t option * LT.calltrace * LT.value * LT.value
         -> unit tezos_command
     | Get_state : unit -> Tezos_state.context tezos_command
+    | Get_alpha_context : unit -> Tezos_raw_protocol.Alpha_context.t tezos_command
     | External_call :
         Location.t
         * Ligo_interpreter.Types.calltrace
@@ -316,6 +318,9 @@ module Command = struct
       in
       (), ctxt
     | Get_state () -> ctxt, ctxt
+    | Get_alpha_context () ->
+      let tezos_context = Tezos_state.get_alpha_context ~raise ctxt in
+      tezos_context, ctxt
     | External_call (loc, calltrace, { address; entrypoint }, param, amt) ->
       let entrypoint =
         Option.map ~f:(fun x -> Michelson_backend.entrypoint_of_string x) entrypoint
