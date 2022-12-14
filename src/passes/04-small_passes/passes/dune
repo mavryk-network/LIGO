@@ -14,6 +14,7 @@
   restrict_t_app
   list_as_function
   match_as_function
+  hack_literalize_jsligo
  )
  (libraries ast_unified syntax_types)
  (inline_tests
