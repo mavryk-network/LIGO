@@ -1441,19 +1441,36 @@ and compile_statement ?(wrap = false) ~raise : CST.statement -> statement_result
                   ~f:(fun { constructor; _ } -> Poly.(constructor = v.value))
                   data
               in
-              let ty =
+              let arg, ty =
                 if a.has_payload
                 then (
                   let b = Binder.make (compile_variable payload) None in
                   let arg = Pattern.P_var b in
-                  Location.wrap ~loc arg)
-                else Location.wrap ~loc Pattern.P_unit
+                  Some arg, Location.wrap ~loc arg)
+                else None, Location.wrap ~loc Pattern.P_unit
               in
               let pattern = Location.wrap ~loc (Pattern.P_variant (Label v.value, ty)) in
-              Match_expr.
-                { pattern
-                ; body = compile_statements_to_expression ~loc ~raise statements
-                }
+              let body = compile_statements_to_expression ~loc ~raise statements in
+              let body =
+                match arg with
+                | Some _arg ->
+                  let pattern =
+                    Location.wrap
+                      ~loc
+                      (Pattern.P_var
+                         (Binder.make
+                            (compile_variable { value = "_"; region = Region.ghost })
+                            None))
+                  in
+                  e_let_in
+                    ~loc
+                    pattern
+                    []
+                    (e_variable ~loc (compile_variable payload))
+                    body
+                | None -> body
+              in
+              Match_expr.{ pattern; body }
             | Switch_case { expr = EString (String _); statements = None; _ } ->
               raise.error @@ case_break_disc s'.region
             | _ -> raise.error unexpected)
