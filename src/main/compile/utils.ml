@@ -12,6 +12,7 @@ let to_imperative
   imperative
 
 let to_core_temp ~raise ~options ~meta (c_unit : Buffer.t) file_path =
+  ignore options;
   Of_c_unit.compile_temp ~raise ~meta c_unit file_path
 
 let to_core ~raise ~options ~meta (c_unit : Buffer.t) file_path =

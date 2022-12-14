@@ -89,7 +89,7 @@ module TODO_do_in_parsing = struct
   function
   | EPar x -> pattern_of_expr compile_type x.value.inside
   | ESeq seq ->
-    let lst,loc = r_split seq in
+    let lst,_ = r_split seq in
     (match lst with
     | (hd,[]) -> [aux hd]
     | _ -> List.map ~f:aux (nsepseq_to_list lst))

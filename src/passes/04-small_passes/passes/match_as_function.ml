@@ -111,7 +111,7 @@ let reduction ~raise ~syntax =
       }
     else Iter.defaults
   
-let decompile ~syntax = `Cata idle_cata_pass (* TODO *)
+let decompile ~syntax = ignore syntax ; `Cata idle_cata_pass (* TODO *)
 
 let pass ~raise ~syntax =
   cata_morph

@@ -641,7 +641,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     let update = TODO_unify_in_cst.update_rhs self up.update in
     e_update { structure; update } ~loc
   | E_Fun f ->
-    let CST.(f), loc = r_split f in
+    let f, loc = r_split f in
     let type_params = Option.map ~f:extract_type_params f.type_params in
     let parameters =
       List.map ~f:(compile_param_decl <@ r_fst)
