@@ -64,6 +64,7 @@ module TODO_do_in_parsing = struct
     | EArray items ->
       let items, loc = r_split items in
       (match sepseq_to_list items.inside with
+      | [] -> p_list ~loc (List [])
       | [ Expr_entry hd; Rest_entry tl ] ->
         (* [x ,...[y, ...z]] *)
         (* see https://tezos-dev.slack.com/archives/GMHV0U3Q9/p1670929406569099 *)

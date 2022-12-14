@@ -13,6 +13,7 @@
   freeze_operators
   restrict_t_app
   list_as_function
+  match_as_function
  )
  (libraries ast_unified syntax_types)
  (inline_tests
