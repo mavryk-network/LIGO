@@ -34,6 +34,7 @@ let passes
   ; Freeze_operators.pass ~raise ~syntax
   ; List_as_function.pass ~raise ~syntax
   ; Match_as_function.pass ~raise ~syntax
+  ; Hack_literalize_jsligo.pass ~raise ~syntax
   ]
 
 
