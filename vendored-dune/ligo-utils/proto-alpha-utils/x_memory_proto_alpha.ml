@@ -344,6 +344,17 @@ let typecheck_map_contract ?(environment = dummy_environment ()) contract =
   | Ok (map, _) -> Lwt_result_syntax.return @@ (map, contract)
   | Error errs -> Lwt.return @@ Error (Alpha_environment.wrap_tztrace errs)
 
+let typecheck_oracle_contract ~tezos_context ~contract =
+  let (let*) = Result.bind in
+  let contract' = Tezos_micheline.Micheline.strip_locations contract in
+  let* map, _ = Lwt_main.run @@ Script_ir_translator.typecheck_code ~show_types:true ~legacy:false tezos_context contract' in
+  let oracle : _ -> _ =
+    fun l ->
+      let stack = fst @@ List.Assoc.find_exn map ~equal:Caml.( = ) l in
+      List.map ~f:canonical_to_node stack
+  in
+  Result.ok @@ oracle
+
 let typecheck_oracle_code ~tezos_context ~code_ty ~code =
   let (let*) = Result.bind in
   let* Script_typed_ir.Ex_ty code_ty, _ = Script_ir_translator.parse_ty
