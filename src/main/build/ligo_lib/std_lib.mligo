@@ -588,6 +588,36 @@ module Test = struct
       | Continue -> mutation_nth acc (n + 1n)
       | Passed (b, m) -> mutation_nth ((b, m) :: acc) (n + 1n) in
     mutation_nth ([] : (b * mutation) list) 0n
+  let mutate_program (m : michelson_program) : michelson_program list = [%external ("TEST_MUTATE_MICHELSON", m)]
+  let mutate_contract (m : michelson_contract) : michelson_contract list = [%external ("TEST_MUTATE_MICHELSON_CONTRACT", m)]
+  let originate_contract_and_mutate (type b) (c : michelson_contract) (s : michelson_program) (t : tez)
+                                    (tester : address * michelson_contract * int -> b) : b option =
+    let wrap_tester (f : michelson_contract) : b =
+      let a = originate_contract f s t in
+      let c = size f in
+      tester (a, f, c) in
+    let try_with (type a) (v : unit -> a) (c : unit -> a) = [%external ("TEST_TRY_WITH", v, c)] in
+    type ret_code = Passed of b | Continue | Stop in
+    let muts : michelson_contract list = mutate_contract c in
+    let rec nth (n : nat) (muts : michelson_contract list) : michelson_contract option =
+      match muts with
+      | [] -> None
+      | (mut :: muts) ->
+        if n = 0n then
+	  Some mut
+	else
+	  nth (abs (n - 1)) muts in
+    let rec mutation_nth (n : nat) : b option =
+      let mutated = nth n muts in
+      let curr = match mutated with
+        | Some v -> try_with (fun (_ : unit) -> let b = wrap_tester v in Passed b) (fun (_ : unit) -> Continue)
+        | None -> Stop in
+      match curr with
+      | Stop -> None
+      | Continue -> mutation_nth (n + 1n)
+      | Passed b -> Some b in
+    mutation_nth 0n
+
 #endif
 
 #if UNCURRY
