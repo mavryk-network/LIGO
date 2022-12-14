@@ -15,6 +15,7 @@
   list_as_function
   match_as_function
   hack_literalize_jsligo
+  t_app_michelson_types
  )
  (libraries ast_unified syntax_types)
  (inline_tests

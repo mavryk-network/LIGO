@@ -132,6 +132,10 @@ and 'self type_expression_content_ =
 
   (* \/ Below are nodes added through the passes \/ *)
   | T_Abstraction of 'self Abstraction.t [@only_interpreter]
+  | T_Michelson_or of 'self * string * 'self * string
+  | T_Michelson_pair of 'self * string * 'self * string
+  | T_Sapling_state of string * Z.t
+  | T_Sapling_transaction of string * Z.t
 [@@deriving map, yojson, iter, sexp]
 
 (* ========================== PATTERNS ===================================== *)
