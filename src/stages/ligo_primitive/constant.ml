@@ -156,6 +156,7 @@ type constant' =
   | C_TEST_TRY_WITH [@only_interpreter]
   | C_TEST_SET_PRINT_VALUES [@only_interpreter]
   | C_TEST_MUTATE_MICHELSON [@only_interpreter]
+  | C_TEST_MUTATE_MICHELSON_CONTRACT [@only_interpreter]
   (* New with EDO*)
   | C_GLOBAL_CONSTANT [@pure]
   (* JsLIGO *)
