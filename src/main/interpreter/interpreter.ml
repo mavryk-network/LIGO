@@ -1034,21 +1034,15 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | ( C_TEST_MUTATE_MICHELSON
     , [ V_Michelson (Ty_code ({ micheline_repr = { code = m; code_ty }; _ } as ty_code)) ] ) ->
     let>> tezos_context = Get_alpha_context () in
-    let canonical = Tezos_micheline.Micheline.strip_locations m in
     let canonical =
       Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
           failwith "Could not parse primitives from strings")
-      @@ Proto_alpha_utils.Memory_proto_alpha.Protocol.Michelson_v1_primitives
-         .prims_of_strings
-           canonical
+      @@ Proto_alpha_utils.Memory_proto_alpha.node_to_canonical m
     in
-    let canonical_ty = Tezos_micheline.Micheline.strip_locations code_ty in
     let canonical_ty =
       Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
           failwith "Could not parse primitives from strings")
-      @@ Proto_alpha_utils.Memory_proto_alpha.Protocol.Michelson_v1_primitives
-         .prims_of_strings
-           canonical_ty
+      @@ Proto_alpha_utils.Memory_proto_alpha.node_to_canonical code_ty
     in
     let node_ty = Tezos_micheline.Micheline.inject_locations (fun l -> l) canonical_ty in
     let node = Tezos_micheline.Micheline.inject_locations (fun l -> l) canonical in
