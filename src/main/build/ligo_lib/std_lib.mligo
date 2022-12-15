@@ -597,26 +597,17 @@ module Test = struct
       let c = size f in
       tester (a, f, c) in
     let try_with (type a) (v : unit -> a) (c : unit -> a) = [%external ("TEST_TRY_WITH", v, c)] in
-    type ret_code = Passed of b | Continue | Stop in
+    type ret_code = Passed of b | Continue of michelson_contract list | Stop in
     let muts : michelson_contract list = mutate_contract c in
-    let rec nth (n : nat) (muts : michelson_contract list) : michelson_contract option =
-      match muts with
-      | [] -> None
-      | (mut :: muts) ->
-        if n = 0n then
-	  Some mut
-	else
-	  nth (abs (n - 1)) muts in
-    let rec mutation_nth (n : nat) : b option =
-      let mutated = nth n muts in
-      let curr = match mutated with
-        | Some v -> try_with (fun (_ : unit) -> let b = wrap_tester v in Passed b) (fun (_ : unit) -> Continue)
-        | None -> Stop in
+    let rec mutation_nth (muts : michelson_contract list) : b option =
+      let curr = match muts with
+	| v :: muts -> try_with (fun (_ : unit) -> let b = wrap_tester v in Passed b) (fun (_ : unit) -> Continue muts)
+        | [] -> Stop in
       match curr with
       | Stop -> None
-      | Continue -> mutation_nth (n + 1n)
+      | Continue muts -> mutation_nth muts
       | Passed b -> Some b in
-    mutation_nth 0n
+    mutation_nth muts
 
 #endif
 
