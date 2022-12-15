@@ -253,8 +253,7 @@ let decimal    = (natural as integral) '.' (natural as fractional)
 let small      = ['a'-'z']
 let capital    = ['A'-'Z']
 let letter     = small | capital
-let ident      = small (letter | '_' | digit)*
-               | '_' (letter | '_' (letter | digit) | digit)+
+let ident      = (small | '_'+ (letter | digit)) (letter | '_' | digit)*
 let ext_ident  = (letter | digit | '_')+
 let uident     = capital (letter | '_' | digit)*
 let string     = [^'"' '\\' '\n']*  (* For #include and attributes *)
