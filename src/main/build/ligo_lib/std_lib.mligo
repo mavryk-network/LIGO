@@ -752,6 +752,43 @@ module Test = struct
       | Continue -> mutation_nth acc (n + 1n)
       | Passed (b, m) -> mutation_nth ((b, m) :: acc) (n + 1n) in
     mutation_nth ([] : (b * mutation) list) 0n
+  let mutate_program (m : michelson_program) : michelson_program list = [%external ("TEST_MUTATE_MICHELSON", m)]
+  let mutate_contract (m : michelson_contract) : michelson_contract list = [%external ("TEST_MUTATE_MICHELSON_CONTRACT", m)]
+  let originate_contract_and_mutate (type b) ((c, s, t, tester) : michelson_contract * michelson_program * tez * (address * michelson_contract * int -> b)) : b option =
+    let wrap_tester (f : michelson_contract) : b =
+      let a = originate_contract (f, s, t) in
+      let c = size f in
+      tester (a, f, c) in
+    let try_with (type a) (v : unit -> a) (c : unit -> a) = [%external ("TEST_TRY_WITH", v, c)] in
+    type ret_code = Passed of b | Continue of michelson_contract list | Stop in
+    let muts : michelson_contract list = mutate_contract c in
+    let rec mutation_nth (muts : michelson_contract list) : b option =
+      let curr = match muts with
+	| v :: muts -> try_with (fun (_ : unit) -> let b = wrap_tester v in Passed b) (fun (_ : unit) -> Continue muts)
+        | [] -> Stop in
+      match curr with
+      | Stop -> None
+      | Continue muts -> mutation_nth muts
+      | Passed b -> Some b in
+    mutation_nth muts
+  let originate_contract_and_mutate_all (type b) ((c, s, t, tester) : michelson_contract * michelson_program * tez * (address * michelson_contract * int -> b)) : b list =
+    let wrap_tester (f : michelson_contract) : b =
+      let a = originate_contract (f, s, t) in
+      let c = size f in
+      tester (a, f, c) in
+    let try_with (type a) (v : unit -> a) (c : unit -> a) = [%external ("TEST_TRY_WITH", v, c)] in
+    type ret_code = Passed of (b * michelson_contract list) | Continue of michelson_contract list | Stop in
+    let muts : michelson_contract list = mutate_contract c in
+    let rec mutation_nth (acc : b list) (muts : michelson_contract list) : b list =
+      let curr = match muts with
+	| v :: muts -> try_with (fun (_ : unit) -> let b = wrap_tester v in Passed (b, muts)) (fun (_ : unit) -> Continue muts)
+        | [] -> Stop in
+      match curr with
+      | Stop -> acc
+      | Continue muts -> mutation_nth acc muts
+      | Passed (b, muts) -> mutation_nth (b :: acc) muts in
+    mutation_nth [] muts
+
 #endif
 
   let assert (b : bool) : unit = if b then () else failwith "failed assertion"
