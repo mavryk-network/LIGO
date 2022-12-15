@@ -1,0 +1,22 @@
+// a test to ensure no warning is given when 
+type entrypoint =
+  { kind: "Test" }
+| { kind: "Retest", arg: int }
+
+type storage = {
+  m: map<unit, int>
+}
+
+const initial_storage = { m: Map.empty }
+
+type return_ = [list<operation>, storage];
+
+const main = (action : entrypoint, storage : storage): return_ => {
+  switch (action.kind) {
+    case "Test":
+      let storage = {...storage, m: Map.add (unit, 1, storage.m)};
+      return [list([]), storage];
+    case "Retest":
+      return [list([]), storage];
+  }
+}

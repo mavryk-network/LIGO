@@ -25,15 +25,37 @@ let has_constructor (variants : disc_variant list) (variant_name : string) : boo
   aux variants
 
 
-let find_disc_union (variants : string list) =
+let find_disc_union ~raise (region : Region.t) (variants : string list) =
+  ignore raise;
+  ignore region;
   let variants_length = List.length variants in
   let rec aux = function
-    | item :: tl when List.length item = variants_length ->
-      let is_disc_union =
-        List.fold_left ~f:(fun a i -> a && has_constructor item i) ~init:true variants
+    | item :: tl ->
+      let found_items =
+        List.fold_left
+          ~f:(fun a i -> if has_constructor item i then i :: a else a)
+          ~init:[]
+          variants
       in
-      if is_disc_union then Some item else aux tl
-    | _ :: tl -> aux tl
+      let no_of_found_items = List.length found_items in
+      let item_length = List.length item in
+      if item_length = variants_length
+      then Some item
+      else if no_of_found_items > 0
+      then (
+        let missing_items =
+          List.fold_left
+            ~f:(fun a i ->
+              match i with
+              | { constructor; _ }
+                when not (List.mem found_items constructor ~equal:String.equal) ->
+                constructor :: a
+              | _ -> a)
+            ~init:[]
+            item
+        in
+        raise.error @@ missing_cases missing_items region)
+      else aux tl
     | [] -> None
   in
   aux !disc_unions
@@ -70,7 +92,7 @@ let find_variant (fields : (string * string) list) =
   aux !disc_unions
 
 
-let is_discriminated_union (a : CST.switch Region.reg) =
+let is_discriminated_union ~raise (a : CST.switch Region.reg) =
   if Poly.(!disc_unions = [])
   then None
   else (
@@ -85,7 +107,7 @@ let is_discriminated_union (a : CST.switch Region.reg) =
     then None
     else
       (* check if length is the same and if one disc_union type is correct *)
-      find_disc_union values)
+      find_disc_union ~raise a.region values)
 
 
 let find_disc_obj (a : CST.object_expr) =

@@ -1408,7 +1408,7 @@ and compile_statement ?(wrap = false) ~raise : CST.statement -> statement_result
     binding x
   | SSwitch s' ->
     let s, loc = r_split s' in
-    (match Discriminated_union.is_discriminated_union s' with
+    (match Discriminated_union.is_discriminated_union ~raise s' with
     | Some data ->
       (* here we turn the switch statement into a simple form of pattern matching *)
       let matchee, payload =

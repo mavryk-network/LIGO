@@ -3258,3 +3258,32 @@ let%expect_test _ =
 
     Invalid type for entrypoint "main".
     The parameter type "funtype 'a : * . list ('a)" of the entrypoint function must not contain polymorphic variables. |}]
+
+(* Give no warning when a case payload is not used *)
+let%expect_test _ =
+  run_ligo_good [ "compile"; "contract"; contract "no_warning.jsligo" ];
+  [%expect
+    {|
+    { parameter (or (int %retest) (unit %test)) ;
+      storage (map unit int) ;
+      code { UNPAIR ;
+             IF_LEFT { DROP } { DROP ; PUSH int 1 ; SOME ; UNIT ; UPDATE } ;
+             NIL operation ;
+             PAIR } } |}]
+
+(* Give no warning when a case payload is not used *)
+let%expect_test _ =
+  run_ligo_bad [ "compile"; "contract"; bad_contract "disc_missing_case.jsligo" ];
+  [%expect
+    {|
+    File "../../test/contracts/negative/disc_missing_case.jsligo", line 15, character 2 to line 21, character 3:
+     14 | const main = (action : entrypoint, storage : storage): return_ => {
+     15 |   switch (action.kind) {
+     16 |     case "Test":
+     17 |       let storage = {...storage, m: Map.add (unit, 1, storage.m)};
+     18 |       return [list([]), storage];
+     19 |     // case "Retest":
+     20 |     //   return [list([]), storage];
+     21 |   }
+     22 | }
+    Missing the following cases for this switch statement: Retest. |}]

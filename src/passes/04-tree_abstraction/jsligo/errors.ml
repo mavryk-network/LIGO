@@ -36,6 +36,7 @@ type abs_error =
   | `Concrete_jsligo_expected_an_int of Raw.expr
   | `Concrete_jsligo_invalid_list_pattern_match of Raw.array_item list
   | `Concrete_jsligo_no_shared_fields of Region.t
+  | `Concrete_jsligo_missing_cases of string list * Region.t
   | `Concrete_jsligo_unexpected
   | `Concrete_jsligo_wrong_matchee_disc of Region.t
   | `Concrete_jsligo_case_break_disc of Region.t
@@ -221,6 +222,13 @@ let error_ppformat
          value.@]"
         Snippet.pp_lift
         r
+    | `Concrete_jsligo_missing_cases (m, r) ->
+      Format.fprintf
+        f
+        "@[<hv>%aMissing the following cases for this switch statement: %s. @]"
+        Snippet.pp_lift
+        r
+        (String.concat m ?sep:(Some ", "))
     | `Concrete_jsligo_unexpected -> Format.fprintf f "@[<hv>Unexpected error.@]"
     | `Concrete_jsligo_wrong_matchee_disc r ->
       Format.fprintf
@@ -418,6 +426,11 @@ let error_json : abs_error -> Simple_utils.Error.t =
       Format.sprintf
         "All the objects are expected to have a shared field with an unique value."
     in
+    let location = Location.lift r in
+    let content = make_content ~message ~location () in
+    make ~stage ~content
+  | `Concrete_jsligo_missing_cases (m, r) ->
+    let message = Format.sprintf "Missing cases: %s." (String.concat m ~sep:",") in
     let location = Location.lift r in
     let content = make_content ~message ~location () in
     make ~stage ~content
