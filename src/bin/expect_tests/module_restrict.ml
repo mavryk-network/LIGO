@@ -48,7 +48,7 @@ let%expect_test _ =
     [ "print"; "ast-imperative"; bad_test "module_parametric_type_access.ligo" ];
   [%expect
     {|
-  File "../../test/contracts/negative/module_parametric_type_access.ligo", line 5, characters 16-19:
+  File "../../test/contracts/negative/module_parametric_type_access.ligo", line 5, characters 12-19:
     4 |
     5 | type fii is Foo.foo (int)
 

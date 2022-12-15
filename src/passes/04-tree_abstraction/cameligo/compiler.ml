@@ -89,92 +89,17 @@ let rec compile_type_expression ~raise : CST.type_expr -> AST.type_expression =
     let lst = List.map ~f:self lst in
     return @@ t_tuple ~loc lst
   | TApp app ->
-    let get_t_string_singleton_opt = function
-      | CST.TString s -> Some s.value
-      | _ -> None
-    in
-    let get_t_int_singleton_opt = function
-      | CST.TInt x ->
-        let _, z = x.value in
-        Some z
-      | _ -> None
-    in
-    let get_t_var_singleton_opt = function
-      | CST.TVar var ->
-        let name, loc = r_split var in
-        let v = Type_var.of_input_var ~loc name in
-        Some (t_variable ~loc v)
-      | _ -> None
-    in
     let (operator, args), loc = r_split app in
     let args =
       match args with
       | CArg x -> [ x ]
       | CArgTuple args -> npseq_to_list args.value.inside
     in
-    (* this is a bad design, michelson_or and pair should be an operator
-       see AnnotType *)
-    (match operator.value with
-    | "michelson_or" ->
-      (match args with
-      | [ a; b; c; d ] ->
-        let b' =
-          trace_option ~raise (michelson_type_wrong te operator.value)
-          @@ get_t_string_singleton_opt b
-        in
-        let d' =
-          trace_option ~raise (michelson_type_wrong te operator.value)
-          @@ get_t_string_singleton_opt d
-        in
-        let a' = self a in
-        let c' = self c in
-        return @@ t_michelson_or ~loc a' b' c' d'
-      | _ -> raise.error @@ michelson_type_wrong_arity loc operator.value)
-    | "michelson_pair" ->
-      (match args with
-      | [ a; b; c; d ] ->
-        let b' =
-          trace_option ~raise (michelson_type_wrong te operator.value)
-          @@ get_t_string_singleton_opt b
-        in
-        let d' =
-          trace_option ~raise (michelson_type_wrong te operator.value)
-          @@ get_t_string_singleton_opt d
-        in
-        let a' = self a in
-        let c' = self c in
-        return @@ t_michelson_pair ~loc a' b' c' d'
-      | _ -> raise.error @@ michelson_type_wrong_arity loc operator.value)
-    | "sapling_state" ->
-      (match args with
-      | [ (a : CST.type_expr) ] ->
-        let sloc = Location.lift @@ Raw.type_expr_to_region a in
-        (match get_t_int_singleton_opt a with
-        | Some a' ->
-          let singleton = t_singleton ~loc:sloc (Literal_int a') in
-          return @@ t_sapling_state ~loc singleton
-        | None ->
-          (match get_t_var_singleton_opt a with
-          | Some v -> return @@ t_sapling_state ~loc v
-          | None -> raise.error (michelson_type_wrong te operator.value)))
-      | _ -> raise.error @@ michelson_type_wrong_arity loc operator.value)
-    | "sapling_transaction" ->
-      (match args with
-      | [ (a : CST.type_expr) ] ->
-        let sloc = Location.lift @@ Raw.type_expr_to_region a in
-        (match get_t_int_singleton_opt a with
-        | Some a' ->
-          let singleton = t_singleton ~loc:sloc (Literal_int a') in
-          return @@ t_sapling_transaction ~loc singleton
-        | None ->
-          (match get_t_var_singleton_opt a with
-          | Some v -> return @@ t_sapling_transaction ~loc v
-          | None -> raise.error (michelson_type_wrong te operator.value)))
-      | _ -> raise.error @@ michelson_type_wrong_arity loc operator.value)
-    | _ ->
-      let operator = Type_var.of_input_var ~loc operator.value in
-      let lst = List.map ~f:self args in
-      return @@ t_app ~loc operator lst)
+    let operator =
+      Type_var.of_input_var ~loc:(Location.lift operator.region) operator.value
+    in
+    let lst = List.map ~f:self args in
+    return @@ t_app ~loc operator lst
   | TFun func ->
     let (input_type, _, output_type), loc = r_split func in
     let input_type = self input_type in
@@ -187,9 +112,14 @@ let rec compile_type_expression ~raise : CST.type_expr -> AST.type_expression =
   | TVar var ->
     let name, loc = r_split var in
     let v = Type_var.of_input_var ~loc name in
-    return @@ t_variable ~loc v
-  | TString _s -> raise.error @@ unsupported_string_singleton te
-  | TInt _s -> raise.error @@ unsupported_string_singleton te
+    return (t_variable ~loc v)
+  | TString s ->
+    return
+      (t_singleton
+         ~loc:(Location.lift s.region)
+         (Literal_string (Simple_utils.Ligo_string.standard s.value)))
+  | TInt i ->
+    return @@ t_singleton ~loc:(Location.lift i.region) (Literal_int (snd i.value))
   | TArg var ->
     let quoted_var, loc = r_split var in
     let v = Type_var.of_input_var ~loc (quote_var quoted_var.name.value) in

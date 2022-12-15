@@ -136,6 +136,19 @@ let t_abstraction2 ~loc name kind_l kind_r : type_expression =
     }
     ()
 
+let n_t_abstraction ~loc name (kinds : Kind.t list) : type_expression =
+  let varkind = List.mapi kinds ~f:(fun i kind -> (kind,Type_var.fresh ~loc ~name:("_"^string_of_int i) ())) in
+  let type_ =
+    t_constant
+      ~loc
+      name
+      (List.map ~f:(fun (_,tvar) -> t_variable ~loc tvar ()) varkind)
+  in
+  List.fold_right varkind ~init:type_ ~f:(fun (kind,ty_binder) acc ->
+    t_abstraction
+      ~loc
+      { ty_binder ; kind ; type_ = acc }
+      ())
 
 let t_for_all ty_binder kind type_ = t_for_all { ty_binder; kind; type_ } ()
 

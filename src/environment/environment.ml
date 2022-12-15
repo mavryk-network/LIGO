@@ -64,6 +64,7 @@ let to_core_program (env : core) : S.program = List.rev env
 
 (* This is an stdlib *)
 let star = Kind.Type
+let singleton = Kind.Singleton
 
 (*
   Make sure all the type value laoded in the environment have a `Ast_core` value attached to them (`type_meta` field of `type_expression`)
@@ -95,13 +96,15 @@ let michelson_base : (Type_var.t * type_expression) list =
   ; v_map ~loc, t_abstraction2 ~loc Map star star
   ; v_set ~loc, t_abstraction1 ~loc Set star
   ; v_contract ~loc, t_abstraction1 ~loc Contract star
-  ; v_michelson_or ~loc, t_abstraction2 ~loc Michelson_or star star
-  ; v_michelson_pair ~loc, t_abstraction2 ~loc Michelson_pair star star
+  ; ( v_michelson_or ~loc
+    , n_t_abstraction ~loc Michelson_or [ star; singleton; star; singleton ] )
+  ; ( v_michelson_pair ~loc
+    , n_t_abstraction ~loc Michelson_pair [ star; singleton; star; singleton ] )
   ; v_chain_id ~loc, t_chain_id ~loc ()
   ; v_baker_hash ~loc, t_baker_hash ~loc ()
   ; v_pvss_key ~loc, t_pvss_key ~loc ()
-  ; v_sapling_state ~loc, t_abstraction1 ~loc Sapling_state star
-  ; v_sapling_trasaction ~loc, t_abstraction1 ~loc Sapling_transaction star
+  ; v_sapling_state ~loc, t_abstraction1 ~loc Sapling_state singleton
+  ; v_sapling_trasaction ~loc, t_abstraction1 ~loc Sapling_transaction singleton
   ; v_baker_operation ~loc, t_constant ~loc Baker_operation []
   ; v_bls12_381_g1 ~loc, t_bls12_381_g1 ~loc ()
   ; v_bls12_381_g2 ~loc, t_bls12_381_g2 ~loc ()

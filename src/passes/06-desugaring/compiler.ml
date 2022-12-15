@@ -1,6 +1,4 @@
 module Location = Simple_utils.Location
-open Simple_utils.Trace
-open Errors
 open Ligo_prim
 module I = Ast_imperative
 module O = Ast_core
@@ -79,28 +77,6 @@ let rec compile_type_expression ~raise (type_ : I.type_expression) : O.type_expr
     let arr = Arrow.map compile_type_expression arr in
     return @@ T_arrow arr
   | I.T_variable type_variable -> return @@ T_variable type_variable
-  | I.T_app { type_operator; arguments = [ l; r ] }
-    when Type_var.equal (Literal_types.v_michelson_or ~loc) type_operator ->
-    let l, l_ann =
-      trace_option ~raise (corner_case "not an annotated type") @@ I.get_t_annoted l
-    in
-    let r, r_ann =
-      trace_option ~raise (corner_case "not an annotated type") @@ I.get_t_annoted r
-    in
-    let l = compile_type_expression l in
-    let r = compile_type_expression r in
-    O.t_michelson_sum ~loc l l_ann r r_ann
-  | I.T_app { type_operator; arguments = [ l; r ] }
-    when Type_var.equal (Literal_types.v_michelson_pair ~loc) type_operator ->
-    let l, l_ann =
-      trace_option ~raise (corner_case "not an annotated type") @@ I.get_t_annoted l
-    in
-    let r, r_ann =
-      trace_option ~raise (corner_case "not an annotated type") @@ I.get_t_annoted r
-    in
-    let l = compile_type_expression l in
-    let r = compile_type_expression r in
-    O.t_michelson_pair ~loc l l_ann r r_ann
   | I.T_app type_app ->
     let type_app = Type_app.map compile_type_expression type_app in
     return @@ T_app type_app

@@ -80,24 +80,8 @@ let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "michelson_or_tree.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/michelson_or_tree.mligo", line 6, characters 10-16:
-      5 |
-      6 | let main (action, store : unit * storage) : return =
-      7 |   let foo = (M_right (M_left 1 : inner_storage) : storage) in
-    :
-    Warning: unused variable "action".
-    Hint: replace it by "_action" to prevent this warning.
-
-    File "../../test/contracts/michelson_or_tree.mligo", line 6, characters 18-23:
-      5 |
-      6 | let main (action, store : unit * storage) : return =
-      7 |   let foo = (M_right (M_left 1 : inner_storage) : storage) in
-    :
-    Warning: unused variable "store".
-    Hint: replace it by "_store" to prevent this warning.
-
     { parameter unit ;
-      storage (or (int %three) (or %four (int %one) (nat %two))) ;
+      storage (or int (or int nat)) ;
       code { DROP ; PUSH int 1 ; LEFT nat ; RIGHT int ; NIL operation ; PAIR } } |}]
 
 let%expect_test _ =
@@ -133,5 +117,5 @@ let%expect_test _ =
     Hint: replace it by "_store" to prevent this warning.
 
     { parameter unit ;
-      storage (or (int %three) (or (int %one) (nat %two))) ;
+      storage (or int (or int nat)) ;
       code { DROP ; PUSH int 1 ; LEFT nat ; RIGHT int ; NIL operation ; PAIR } } |}]

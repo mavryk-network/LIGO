@@ -112,81 +112,12 @@ let rec compile_type_expression
     t_sum_ez_attr ~loc ~attr (List.map ~f cases)
   | T_App { region; value = type_constant, args } ->
     let loc = Location.lift region in
-    let get_t_string_singleton_opt = function
-      | CST.T_String s -> Some s#payload
-      | _ -> None
-    in
-    let get_t_int_singleton_opt = function
-      | CST.T_Int x ->
-        let _, z = x#payload in
-        Some z
-      | _ -> None
-    in
     (match type_constant with
-    | T_Var v when String.equal v#payload "michelson_or" ->
-      let lst = npseq_to_list args.value.inside in
-      (match lst with
-      | [ a; b; c; d ] ->
-        let b' =
-          trace_option ~raise (michelson_type_wrong te v#payload)
-          @@ get_t_string_singleton_opt b
-        in
-        let d' =
-          trace_option ~raise (michelson_type_wrong te v#payload)
-          @@ get_t_string_singleton_opt d
-        in
-        let a' = self a in
-        let c' = self c in
-        t_michelson_or ~loc a' b' c' d'
-      | _ -> raise.error @@ michelson_type_wrong_arity loc v#payload)
-    | T_Var v when String.equal v#payload "michelson_pair" ->
-      let lst = npseq_to_list args.value.inside in
-      (match lst with
-      | [ a; b; c; d ] ->
-        let b' =
-          trace_option ~raise (michelson_type_wrong te v#payload)
-          @@ get_t_string_singleton_opt b
-        in
-        let d' =
-          trace_option ~raise (michelson_type_wrong te v#payload)
-          @@ get_t_string_singleton_opt d
-        in
-        let a' = self a in
-        let c' = self c in
-        t_michelson_pair ~loc a' b' c' d'
-      | _ -> raise.error @@ michelson_type_wrong_arity loc v#payload)
-    | T_Var v when String.equal v#payload "sapling_state" ->
-      let lst = npseq_to_list args.value.inside in
-      (match lst with
-      | [ (a : CST.type_expr) ] ->
-        let sloc = Location.lift @@ Raw.type_expr_to_region a in
-        let a' =
-          trace_option ~raise (michelson_type_wrong te v#payload)
-          @@ get_t_int_singleton_opt a
-        in
-        let singleton = t_singleton ~loc:sloc (Literal_int a') in
-        t_sapling_state ~loc singleton
-      | _ -> raise.error @@ michelson_type_wrong_arity loc v#payload)
-    | T_Var v when String.equal v#payload "sapling_transaction" ->
-      let lst = npseq_to_list args.value.inside in
-      (match lst with
-      | [ (a : CST.type_expr) ] ->
-        let sloc = Location.lift @@ CST.type_expr_to_region a in
-        let a' =
-          trace_option ~raise (michelson_type_wrong te v#payload)
-          @@ get_t_int_singleton_opt a
-        in
-        let singleton = t_singleton ~loc:sloc (Literal_int a') in
-        t_sapling_transaction ~loc singleton
-      | _ -> raise.error @@ michelson_type_wrong_arity loc v#payload)
     | T_Var type_var ->
       let operator = compile_type_var type_var in
       let lst = npseq_to_list args.value.inside in
       let lst = List.map ~f:self lst in
       t_app ~loc operator lst
-    | T_ModPath x ->
-      raise.error
-        (expected_variable (Location.lift @@ CST.type_expr_to_region x.value.field))
     | _ ->
       raise.error
         (expected_variable (Location.lift @@ CST.type_expr_to_region type_constant)))
@@ -227,7 +158,12 @@ let rec compile_type_expression
     in
     let lst = List.map ~f elements in
     t_record_ez_attr ~loc:(Location.lift region) ~attr:(compile_attributes attr) lst
-  | T_Int _ | T_String _ -> raise.error @@ unsupported_string_singleton te
+  | T_String s ->
+    let s, loc = w_split s in
+    t_singleton ~loc (Literal_string (Simple_utils.Ligo_string.standard s))
+  | T_Int i ->
+    let i, loc = w_split i in
+    t_singleton ~loc (Literal_int (snd i))
 
 
 let rec compile_expression

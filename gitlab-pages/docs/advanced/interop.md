@@ -381,10 +381,10 @@ type z_or = michelson_or(unit, "z", y_or, "other")
 <Syntax syntax="jsligo">
 
 ```jsligo
-type w_and_v = michelson_pair<[int, "w", nat, "v"]>;
-type x_and = michelson_pair<[string, "x", w_and_v, "other"]>;
-type y_or = michelson_or<[unit, "y", x_and, "other"]>;
-type z_or = michelson_or<[unit, "z", y_or, "other"]>;
+type w_and_v = michelson_pair<int, "w", nat, "v">;
+type x_and = michelson_pair<string, "x", w_and_v, "other">;
+type y_or = michelson_or<unit, "y", x_and, "other">;
+type z_or = michelson_or<unit, "z", y_or, "other">;
 ```
 
 </Syntax>
@@ -670,10 +670,10 @@ type z_to_v =
 | ["W"]
 | ["V"];
 
-type w_or_v = michelson_or<[unit, "w", unit, "v"]>;
-type x_or = michelson_or<[unit, "x", w_or_v, "other"]>;
-type y_or = michelson_or<[unit, "y", x_or, "other"]>;
-type z_or = michelson_or<[unit, "z", y_or, "other"]>;
+type w_or_v = michelson_or<unit, "w", unit, "v">;
+type x_or = michelson_or<unit, "x", w_or_v, "other">;
+type y_or = michelson_or<unit, "y", x_or, "other">;
+type z_or = michelson_or<unit, "z", y_or, "other">;
 
 type test = {
   z: string,

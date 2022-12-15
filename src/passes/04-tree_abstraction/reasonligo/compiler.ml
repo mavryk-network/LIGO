@@ -80,82 +80,11 @@ let rec compile_type_expression ~raise : CST.type_expr -> type_expression =
     let lst = List.map ~f:self lst in
     return @@ t_tuple ~loc lst
   | TApp app ->
-    let get_t_string_singleton_opt = function
-      | CST.TString s -> Some s.value
-      | _ -> None
-    in
-    let get_t_int_singleton_opt = function
-      | CST.TInt x ->
-        let _, z = x.value in
-        Some z
-      | _ -> None
-    in
     let (operator, args), loc = r_split app in
-    (* this is a bad design, michelson_or and pair should be an operator
-       see AnnotType *)
-    let tloc = Location.lift (CST.type_expr_to_region te) in
-    (match operator.value with
-    | "michelson_or" ->
-      let lst = npseq_to_list args.value.inside in
-      (match lst with
-      | [ a; b; c; d ] ->
-        let b' =
-          trace_option ~raise (michelson_type_wrong tloc operator.value)
-          @@ get_t_string_singleton_opt b
-        in
-        let d' =
-          trace_option ~raise (michelson_type_wrong tloc operator.value)
-          @@ get_t_string_singleton_opt d
-        in
-        let a' = self a in
-        let c' = self c in
-        return @@ t_michelson_or ~loc a' b' c' d'
-      | _ -> raise.error @@ michelson_type_wrong_arity loc operator.value)
-    | "michelson_pair" ->
-      let lst = npseq_to_list args.value.inside in
-      (match lst with
-      | [ a; b; c; d ] ->
-        let b' =
-          trace_option ~raise (michelson_type_wrong tloc operator.value)
-          @@ get_t_string_singleton_opt b
-        in
-        let d' =
-          trace_option ~raise (michelson_type_wrong tloc operator.value)
-          @@ get_t_string_singleton_opt d
-        in
-        let a' = self a in
-        let c' = self c in
-        return @@ t_michelson_pair ~loc a' b' c' d'
-      | _ -> raise.error @@ michelson_type_wrong_arity loc operator.value)
-    | "sapling_state" ->
-      let lst = npseq_to_list args.value.inside in
-      (match lst with
-      | [ (a : CST.type_expr) ] ->
-        let sloc = Location.lift @@ Raw.type_expr_to_region a in
-        let a' =
-          trace_option ~raise (michelson_type_wrong tloc operator.value)
-          @@ get_t_int_singleton_opt a
-        in
-        let singleton = t_singleton ~loc:sloc (Literal_int a') in
-        return @@ t_sapling_state ~loc singleton
-      | _ -> raise.error @@ michelson_type_wrong_arity loc operator.value)
-    | "sapling_transaction" ->
-      let lst = npseq_to_list args.value.inside in
-      (match lst with
-      | [ (a : CST.type_expr) ] ->
-        let sloc = Location.lift @@ Raw.type_expr_to_region a in
-        let a' =
-          trace_option ~raise (michelson_type_wrong tloc operator.value)
-          @@ get_t_int_singleton_opt a
-        in
-        let singleton = t_singleton ~loc:sloc (Literal_int a') in
-        return @@ t_sapling_transaction ~loc singleton
-      | _ -> raise.error @@ michelson_type_wrong_arity loc operator.value)
-    | _ ->
-      let operators = compile_type_var operator in
-      let lst = npseq_to_list args.value.inside in
-      let lst = List.map ~f:self lst in
-      return @@ t_app ~loc operators lst)
+    let operators = compile_type_var operator in
+    let lst = npseq_to_list args.value.inside in
+    let lst = List.map ~f:self lst in
+    return @@ t_app ~loc operators lst
   | TFun func ->
     let (input_type, _, output_type), loc = r_split func in
     let input_type = self input_type in
@@ -169,8 +98,12 @@ let rec compile_type_expression ~raise : CST.type_expr -> type_expression =
     let name, loc = r_split var in
     let v = Type_var.of_input_var ~loc name in
     return @@ t_variable ~loc v
-  | TString _s -> raise.error @@ unsupported_string_singleton te
-  | TInt _s -> raise.error @@ unsupported_string_singleton te
+  | TString s ->
+    let s, loc = r_split s in
+    t_singleton ~loc (Literal_string (Simple_utils.Ligo_string.standard s))
+  | TInt i ->
+    let i, loc = r_split i in
+    t_singleton ~loc (Literal_int (snd i))
   | TModA ma ->
     let ma, loc = r_split ma in
     let module_name = compile_mod_var ma.module_name in

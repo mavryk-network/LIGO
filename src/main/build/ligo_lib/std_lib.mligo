@@ -1,5 +1,8 @@
 let failwith (type a b) = [%Michelson ({|{ FAILWITH }|} : a -> b)]
 
+type ('l_ty,'l_annot,'r_ty,'r_annot) michelson_pair = 'l_ty * 'r_ty
+type ('l_ty,'l_annot,'r_ty,'r_annot) michelson_or = M_left of 'l_ty | M_right of 'r_ty
+
 module Tezos = struct
 
   let get_balance (_u : unit) : tez = [%Michelson ({| { DROP ; BALANCE } |} : unit -> tez)] ()

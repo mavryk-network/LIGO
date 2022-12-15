@@ -113,101 +113,10 @@ module Compile_type = struct
     | lst -> t_tuple ~loc lst
 
 
-  and compile_sapling ~raise : type_compiler_opt =
-   fun te ->
-    match te with
-    | TApp app ->
-      let (operator, args), loc = r_split app in
-      (match operator.value with
-      | "sapling_state" ->
-        let lst = npseq_to_list args.value.inside in
-        (match lst with
-        | [ (a : CST.type_expr) ] ->
-          let sloc = Location.lift @@ Raw.type_expr_to_region a in
-          let a' =
-            trace_option ~raise (michelson_type_wrong te operator.value)
-            @@ get_t_int_singleton_opt a
-          in
-          let singleton = t_singleton ~loc:sloc (Literal_int a') in
-          Some (t_sapling_state ~loc singleton)
-        | _ -> raise.error @@ michelson_type_wrong_arity loc operator.value)
-      | "sapling_transaction" ->
-        let lst = npseq_to_list args.value.inside in
-        (match lst with
-        | [ (a : CST.type_expr) ] ->
-          let sloc = Location.lift @@ Raw.type_expr_to_region a in
-          let a' =
-            trace_option ~raise (michelson_type_wrong te operator.value)
-            @@ get_t_int_singleton_opt a
-          in
-          let singleton = t_singleton ~loc:sloc (Literal_int a') in
-          Some (t_sapling_transaction ~loc singleton)
-        | _ -> raise.error @@ michelson_type_wrong_arity loc operator.value)
-      | _ -> None)
-    | _ -> None
-
-
-  (* this is a bad design, michelson_or and pair should be an operator
-  see AnnotType *)
-  and compile_michelson_pair_or ~raise : type_compiler_opt =
-   fun te ->
-    match te with
-    | TApp app ->
-      let (operator, args), loc = r_split app in
-      (match operator.value with
-      | "michelson_or" ->
-        let lst = npseq_to_list args.value.inside in
-        let lst =
-          match lst with
-          | [ TProd a ] -> npseq_to_list a.inside.value.inside
-          | _ -> raise.error @@ michelson_type_wrong_arity loc operator.value
-        in
-        (match lst with
-        | [ a; b; c; d ] ->
-          let b' =
-            trace_option ~raise (michelson_type_wrong te operator.value)
-            @@ get_t_string_singleton_opt b
-          in
-          let d' =
-            trace_option ~raise (michelson_type_wrong te operator.value)
-            @@ get_t_string_singleton_opt d
-          in
-          let a' = compile_type_expression ~raise a in
-          let c' = compile_type_expression ~raise c in
-          Some (t_michelson_or ~loc a' b' c' d')
-        | _ -> raise.error @@ michelson_type_wrong_arity loc operator.value)
-      | "michelson_pair" ->
-        let lst = npseq_to_list args.value.inside in
-        let lst =
-          match lst with
-          | [ TProd a ] -> npseq_to_list a.inside.value.inside
-          | _ -> raise.error @@ michelson_type_wrong_arity loc operator.value
-        in
-        (match lst with
-        | [ a; b; c; d ] ->
-          let b' =
-            trace_option ~raise (michelson_type_wrong te operator.value)
-            @@ get_t_string_singleton_opt b
-          in
-          let d' =
-            trace_option ~raise (michelson_type_wrong te operator.value)
-            @@ get_t_string_singleton_opt d
-          in
-          let a' = compile_type_expression ~raise a in
-          let c' = compile_type_expression ~raise c in
-          Some (t_michelson_pair ~loc a' b' c' d')
-        | _ -> raise.error @@ michelson_type_wrong_arity loc operator.value)
-      | _ -> None)
-    | _ -> None
-
-
   and compile_type_expression ~raise : CST.type_expr -> type_expression =
    fun te ->
     let self = compile_type_expression ~raise in
     let return te = te in
-    (* This is not efficient. It would make more sense to split each type_compiler in their own match branch. *)
-    try_type_compilers [ compile_sapling ~raise; compile_michelson_pair_or ~raise ] te
-    @@ fun () ->
     let region = CST.type_expr_to_region te in
     match te with
     | TSum sum ->
@@ -286,8 +195,12 @@ module Compile_type = struct
       let name, loc = r_split var in
       let v = Type_var.of_input_var ~loc name in
       return @@ t_variable ~loc v
-    | TString _s -> raise.error @@ unsupported_string_singleton te
-    | TInt _s -> raise.error @@ unsupported_string_singleton te
+    | TString s ->
+      let s, loc = r_split s in
+      t_singleton ~loc (Literal_string (Simple_utils.Ligo_string.standard s))
+    | TInt i ->
+      let i, loc = r_split i in
+      t_singleton ~loc (Literal_int (snd i))
     | TModA ma ->
       let ma, loc = r_split ma in
       let module_name = compile_mod_var ma.module_name in
