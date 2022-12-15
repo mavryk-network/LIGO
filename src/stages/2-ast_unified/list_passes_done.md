@@ -87,3 +87,10 @@ note: note sure, after Open directive ? https://gitlab.com/ligolang/ligo/-/merge
   ONLY WHEN options.syntax == jsligo:
 
   `E_Call (match, ..)` |-> `E_matching (..)`
+
+## pass 'rev_app'
+
+- remove : E_RevApp
+- add : -
+
+`E_RevApp(x, f)` |-> `E_Application (f x)`

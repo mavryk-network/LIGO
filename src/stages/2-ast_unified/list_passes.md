@@ -152,13 +152,6 @@ IF option.syntax == cameligo :
 IF option.syntax == jsligo, pascaligo :
 `E_Fun a b c ret body` |-> `E_lambda a (E_lambda b (E_lambda c (E_Annot body)))`
 
-## pass 'rev_app'
-
-- remove : E_RevApp
-- add : -
-
-`E_RevApp(x, f)` |-> `E_Application (f x)`
-
 ## pass 'constructor_app'
 
 note: maybe one day, we won't need it anymore ? and see constructor as a function
