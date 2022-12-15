@@ -94,3 +94,10 @@ note: note sure, after Open directive ? https://gitlab.com/ligolang/ligo/-/merge
 - add : -
 
 `E_RevApp(x, f)` |-> `E_Application (f x)`
+
+## pass 'Switch_to_match'
+
+- remove : I_Switch
+- add :            
+
+`S_Swtich` -> `S_Decl (D_Const _ (E_matching ...))`
