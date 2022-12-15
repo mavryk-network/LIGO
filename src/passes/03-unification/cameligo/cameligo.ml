@@ -117,7 +117,8 @@ module TODO_unify_in_cst = struct
         let field_lhs =
           match field_path with
           | Name v -> [ Selection.FieldName (Label.of_string (r_fst v)) ]
-          | Path { region=_; value = { struct_name=_; selector=_; field_path } } ->
+          | Path { region=_; value = { struct_name; selector=_; field_path } } ->
+            Selection.FieldName (Label.of_string (r_fst struct_name)) ::
             List.map
               (nsepseq_to_list field_path)
               ~f:TODO_do_in_parsing.translate_selection
