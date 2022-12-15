@@ -7,9 +7,9 @@
  (libraries
   ;; LIGO
   lexing_shared
-  menhir_pascaligo_tokens
-  lexing_pascaligo_self_tokens
-  lexing_pascaligo_self_units
+  mh_psc_tokens
+  lx_psc_self_tokens
+  lx_psc_self_units
   ;; Third party
   str
   hex))
@@ -26,20 +26,6 @@
   ;; Third party
   str)
  (modules Version LexerMain))
-
-;; --------------------------------------------------------------------
-;; Build of the unlexer (for covering the error states of the LR
-;; automaton)
-
-(executable
- (name Unlexer)
- (libraries
-  ;; LIGO
-  lexing_shared
-  lexing_pascaligo
-  ;; Third party
-  str)
- (modules Unlexer))
 
 ;; --------------------------------------------------------------------
 ;; Build of the version source (for the user, as a CLI option)

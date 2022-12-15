@@ -1,10 +1,10 @@
 (ocamllex md)
 
 (executables
- (names test doc_test repl_test parser_negative_tests vendors_test
+ (names test doc_test repl_test vendors_test
    contract_test get_scope_tests)
- (libraries simple-utils tezos-memory-proto-alpha ligo bos repl interpreter
-   alcotest tezos-utils tezos-crypto ligo_api core_unix.filename_unix))
+ (libraries simple-utils tezos-memory-proto-alpha ligo ligo.unix bos repl
+   interpreter alcotest tezos-utils tezos-crypto ligo_api))
 
 (rule
  (alias doc-test)
@@ -27,14 +27,6 @@
  (deps
   (source_tree ../../gitlab-pages/docs)
   (source_tree projects)))
-
-(rule
- (alias parser-negative-tests)
- (action
-  (run ./parser_negative_tests.exe))
- (deps ../passes/02-parsing/pascaligo/all.ligo
-   ../passes/02-parsing/cameligo/all.mligo
-   ../passes/02-parsing/reasonligo/all.religo))
 
 (rule
  (alias ligo-test)
@@ -106,7 +98,7 @@
   (alias vendors_test)
   (alias ligo-test)
   (alias doc-test)
-  (alias parser-negative-tests)
+;;  (alias parser-negative-tests)
   (alias repl-test)
   (alias contract_test)
   (alias error-recovery/recovery-test)
