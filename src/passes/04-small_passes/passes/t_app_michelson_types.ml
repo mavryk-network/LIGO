@@ -43,16 +43,16 @@ let compile ~raise =
               let tv1 = t_var ~loc:(Ty_variable.get_location v1) v1 in
               let tv2 = t_var ~loc:(Ty_variable.get_location v2) v2 in
               make_t tv1 s1 tv2 s2
-            | _ -> raise.error @@ michelson_type_wrong name loc)
-          | _ -> raise.error @@ michelson_type_wrong_arity name loc
+            | _ -> raise.error @@ michelson_type_wrong name constr)
+          | _ -> raise.error @@ michelson_type_wrong_arity name constr
         in
         let make_sapling name make_t =
           match type_args with
           | t1, [] ->
             (match get_t t1 with
             | T_Int (s, z) -> make_t s z
-            | _ -> raise.error @@ michelson_type_wrong name loc)
-          | _ -> raise.error @@ michelson_type_wrong_arity name loc
+            | _ -> raise.error @@ michelson_type_wrong name constr)
+          | _ -> raise.error @@ michelson_type_wrong_arity name constr
         in
         if Ty_variable.is_name tv "michelson_or"
         then make_michelson_type "michelson_or" (t_michelson_or ~loc)
@@ -168,7 +168,9 @@ let%expect_test "compile_michelson_or_wrong_arity" =
                  ((T_String w) (T_Var nat) (T_String v))))))))))
   |}
   |->! pass;
-  [%expect {| Err : (Small_passes_michelson_type_wrong_arity (michelson_or "")) |}]
+  [%expect {|
+    Err : (Small_passes_michelson_type_wrong_arity
+              (michelson_or (T_Var michelson_or))) |}]
 
 let%expect_test "compile_michelson_or_type_wrong" =
   {|
@@ -182,4 +184,4 @@ let%expect_test "compile_michelson_or_type_wrong" =
                  ((T_Var int) (T_Var tez) (T_Var nat) (T_String v))))))))))
   |}
   |->! pass;
-  [%expect {| Err : (Small_passes_michelson_type_wrong (michelson_or "")) |}]
+  [%expect {| Err : (Small_passes_michelson_type_wrong (michelson_or (T_Var michelson_or))) |}]
