@@ -608,6 +608,24 @@ module Test = struct
       | Continue muts -> mutation_nth muts
       | Passed b -> Some b in
     mutation_nth muts
+  let originate_contract_and_mutate_all (type b) (c : michelson_contract) (s : michelson_program) (t : tez)
+                                    (tester : address * michelson_contract * int -> b) : b list =
+    let wrap_tester (f : michelson_contract) : b =
+      let a = originate_contract f s t in
+      let c = size f in
+      tester (a, f, c) in
+    let try_with (type a) (v : unit -> a) (c : unit -> a) = [%external ("TEST_TRY_WITH", v, c)] in
+    type ret_code = Passed of (b * michelson_contract list) | Continue of michelson_contract list | Stop in
+    let muts : michelson_contract list = mutate_contract c in
+    let rec mutation_nth (acc : b list) (muts : michelson_contract list) : b list =
+      let curr = match muts with
+	| v :: muts -> try_with (fun (_ : unit) -> let b = wrap_tester v in Passed (b, muts)) (fun (_ : unit) -> Continue muts)
+        | [] -> Stop in
+      match curr with
+      | Stop -> acc
+      | Continue muts -> mutation_nth acc muts
+      | Passed (b, muts) -> mutation_nth (b :: acc) muts in
+    mutation_nth [] muts
 
 #endif
 
