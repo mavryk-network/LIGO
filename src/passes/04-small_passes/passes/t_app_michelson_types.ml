@@ -71,7 +71,22 @@ let compile ~raise =
 
 let reduction ~raise =
   let () = ignore raise in
-  Iter.defaults
+  let ty_expr : ty_expr ty_expr_ -> unit =
+   fun te_ ->
+    match Location.unwrap te_ with
+    | T_App { constr; type_args=_ } ->
+      (match get_t constr with
+      | T_Var tv ->
+        if Ty_variable.is_name tv "michelson_or"
+           || Ty_variable.is_name tv "michelson_pair"
+           || Ty_variable.is_name tv "sapling_state"
+           || Ty_variable.is_name tv "sapling_transaction"
+        then raise.error (wrong_reduction __MODULE__)
+        else ()
+      | _ -> ())
+    | _ -> ()
+  in
+  { Iter.defaults with ty_expr }
 
 
 let decompile = `Cata idle_cata_pass
