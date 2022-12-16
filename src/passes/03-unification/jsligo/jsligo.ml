@@ -124,9 +124,16 @@ module TODO_unify_in_cst = struct
   let const_as_decl ~loc x = s_decl ~loc (d_multi_const ~loc x)
   let ty_as_decl ~loc x = s_decl ~loc (d_type_abstraction ~loc x)
   let import_as_decl ~loc x = s_decl ~loc (d_import ~loc x)
+  
+  let rec statement_to_program_entry s =
+    match get_s s with
+    | S_Attr (attr, x) -> program_entry (PE_Attr (attr, statement_to_program_entry x))
+    | S_Instr instr -> program_entry (PE_Top_level_instruction instr)
+    | S_Decl declaration -> program_entry (PE_Declaration declaration)
 
-  let namespace_decl ~loc name statements =
-    s_decl ~loc (d_module ~loc { name; mod_expr = m_body_statements ~loc statements })
+  let namespace_decl ~loc name (statements: statement nseq) =
+    let pes = nseq_map statement_to_program_entry statements in
+    s_decl ~loc (d_module ~loc { name; mod_expr = m_body ~loc pes })
 
 
   let i_expr ~loc expr =
@@ -408,8 +415,8 @@ and compile_statement ~(raise : ('e, 'w) raise) : CST.statement -> AST.statement
       (TODO_unify_in_cst.ty_as_decl ~loc { name; params; type_expr })
   | SSwitch s ->
     let s, loc = r_split s in
-    let switch_expr = compile_expression ~raise s.expr in
-    let switch_cases =
+    let switchee = compile_expression ~raise s.expr in
+    let cases =
       let translate_statements_opt =
         Option.map ~f:(List.Ne.map self <@ nsepseq_to_nseq)
       in
@@ -424,7 +431,7 @@ and compile_statement ~(raise : ('e, 'w) raise) : CST.statement -> AST.statement
       in
       List.Ne.map translate_switch_case s.cases
     in
-    TODO_unify_in_cst.instr_as_stmt ~loc (i_switch { switch_expr; switch_cases } ~loc)
+    TODO_unify_in_cst.instr_as_stmt ~loc (i_switch { switchee; cases } ~loc)
   | SBreak s ->
     let _, loc = w_split s in
     TODO_unify_in_cst.instr_as_stmt ~loc (i_break ~loc)
@@ -642,17 +649,10 @@ let compile_toplevel_statement ~(raise : ('e, 'w) raise)
   =
  fun s ->
   match s with
-  | Directive d -> program_entry (P_Preproc_directive d)
+  | Directive d -> program_entry (PE_Preproc_directive d)
   | TopLevel (statement, _semicolon_opt) ->
     let statement = compile_statement ~raise statement in
-    let rec aux s =
-      match get_s s with
-      | S_Attr (attr, x) -> program_entry (P_Attr (attr, aux x))
-      | S_Instr instr -> program_entry (P_Top_level_instruction instr)
-      | S_Decl declaration -> program_entry (P_Declaration declaration)
-    in
-    aux statement
-
+    TODO_unify_in_cst.statement_to_program_entry statement
 
 let compile_program ~raise : CST.t -> AST.program =
  fun t ->

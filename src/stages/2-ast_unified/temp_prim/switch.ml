@@ -3,7 +3,7 @@ type ('expr, 'statement) case =
   | Switch_default_case of 'statement Simple_utils.List.Ne.t option
 
 and ('expr, 'statement) t =
-  { switch_expr : 'expr
-  ; switch_cases : ('expr, 'statement) case Simple_utils.List.Ne.t
+  { switchee : 'expr
+  ; cases : ('expr, 'statement) case Simple_utils.List.Ne.t
   }
 [@@deriving yojson, map, iter, sexp]

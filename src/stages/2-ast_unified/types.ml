@@ -223,12 +223,11 @@ and ('self, 'expr, 'ty_expr, 'pattern, 'mod_expr) declaration_content_ =
 include struct
   [@@@warning "-27"]
 
-  type ('self, 'statement, 'declaration) mod_expr_ =
-    ('self, 'statement, 'declaration) mod_expr_content_ Location.wrap
+  type ('self, 'program_entry) mod_expr_ =
+    ('self, 'program_entry) mod_expr_content_ Location.wrap
 
-  and ('self, 'statement, 'declaration) mod_expr_content_ =
-    | M_Body_statements of 'statement nseq
-    | M_Body of 'declaration nseq
+  and ('self, 'program_entry) mod_expr_content_ =
+    | M_Body of 'program_entry nseq
     | M_Path of Ligo_prim.Module_var.t nseq
     | M_Var of Ligo_prim.Module_var.t
   [@@deriving map, iter, yojson, sexp]
@@ -285,10 +284,10 @@ and ('self, 'ty_expr, 'pattern, 'statement, 'mod_expr) expression_content_ =
 (* ========================== PROGRAM ====================================== *)
 
 type ('self, 'declaration, 'instruction) program_entry_ =
-  | P_Attr of Attribute.t * 'self
-  | P_Declaration of 'declaration
-  | P_Top_level_instruction of 'instruction
-  | P_Preproc_directive of Directive.t
+  | PE_Attr of Attribute.t * 'self
+  | PE_Declaration of 'declaration
+  | PE_Top_level_instruction of 'instruction
+  | PE_Preproc_directive of Directive.t
 (*
   would like to write that, but it makes unification using (_,_,_) program_entry_
   and it was annoying, see type `program` bellow
@@ -302,7 +301,7 @@ and pattern = { fp : (pattern, ty_expr) pattern_ }
 and instruction = { fp : (instruction, expr, pattern, statement) instruction_ }
 and statement = { fp : (statement, instruction, declaration) statement_ }
 and declaration = { fp : (declaration, expr, ty_expr, pattern, mod_expr) declaration_ }
-and mod_expr = { fp : (mod_expr, statement, declaration) mod_expr_ }
+and mod_expr = { fp : (mod_expr, program_entry) mod_expr_ }
 and expr = { fp : (expr, ty_expr, pattern, statement, mod_expr) expr_ }
 and program_entry = { fp : (program_entry, declaration, instruction) program_entry_ }
 

@@ -70,7 +70,7 @@ type ('a, 'b, 'c) statement_content_ = [%import: ('a, 'b, 'c) Types.statement_co
     ; wrap_get = "statement_content_", get_s
     }]
 
-type ('a, 'b, 'c) mod_expr_content_ = [%import: ('a, 'b, 'c) Types.mod_expr_content_]
+type ('a, 'b) mod_expr_content_ = [%import: ('a, 'b) Types.mod_expr_content_]
 [@@deriving
   ez
     { prefixes =
@@ -97,6 +97,22 @@ type ('a, 'b, 'c, 'd) instruction_content_ =
         , fun instruction_content ~loc -> make_i ~loc instruction_content )
     ; wrap_get = "instruction_content_", get_i
     }]
+
+type ('a, 'b, 'c) program_entry_ =
+  [%import: ('a, 'b, 'c) Types.program_entry_]
+  [@@deriving
+    ez
+      { prefixes =
+          [ ("make_pe"
+            , fun content : program_entry ->
+                { fp = content } )
+          ; ("get_pe", fun (x : Types.program_entry) -> x.fp)
+          ]
+      ; wrap_constructor =
+          ( "program_entry_"
+          , fun c -> make_pe c )
+      ; wrap_get = "program_entry_", get_pe
+      }]
 
 let e_literal ~loc l : expr = make_e ~loc @@ E_Literal l
 

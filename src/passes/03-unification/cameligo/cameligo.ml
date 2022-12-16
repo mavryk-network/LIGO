@@ -162,6 +162,8 @@ module TODO_unify_in_cst = struct
     let constructor = Label.of_string constr.value in
     let element = Option.map ~f:(List.Ne.singleton) arg_opt in
     e_ctor_app ~loc ((e_constr ~loc:(Location.lift constr.region) constructor), element)
+
+  let declarations_as_program decls = nseq_map (pe_declaration) decls
 end
 
 (* ========================== TYPES ======================================== *)
@@ -625,7 +627,7 @@ and compile_module ~raise : CST.t -> AST.mod_expr =
     let locations = nseq_map get_d_loc ds in
     List.Ne.fold_left locations ~init:Location.dummy ~f:Location.cover
   in
-  m_body ds ~loc
+  m_body (TODO_unify_in_cst.declarations_as_program ds) ~loc
 
 
 let compile_program ~raise : CST.ast -> AST.program =
@@ -633,4 +635,4 @@ let compile_program ~raise : CST.ast -> AST.program =
   nseq_to_list t.decl
   |> List.map ~f:(fun a ~raise -> compile_declaration ~raise a)
   |> Simple_utils.Trace.collect ~raise
-  |> List.map ~f:(fun x -> program_entry (P_Declaration x))
+  |> List.map ~f:(fun x -> program_entry (PE_Declaration x))

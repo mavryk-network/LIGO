@@ -15,7 +15,7 @@ module Catamorphism = struct
     ; ty_expr : 'ty_expr ty_expr_ -> 'ty_expr
     ; pattern : ('pattern, 'ty_expr) pattern_ -> 'pattern
     ; statement : ('statement, 'instruction, 'declaration) statement_ -> 'statement
-    ; mod_expr : ('mod_expr, 'statement, 'declaration) mod_expr_ -> 'mod_expr
+    ; mod_expr : ('mod_expr, 'program_entry) mod_expr_ -> 'mod_expr
     ; instruction :
         ('instruction, 'expr, 'pattern, 'statement) instruction_ -> 'instruction
     ; declaration :
@@ -24,7 +24,7 @@ module Catamorphism = struct
         ('program_entry, 'declaration, 'instruction) program_entry_ -> 'program_entry
     }
 
-  
+  (* TODO: cleanup, write separated cata.;*)
   let rec cata_ty_expr : type t. f:(t ty_expr_ -> t) -> ty_expr -> t
   = fun ~f x -> map_ty_expr_ (cata_ty_expr ~f) x.fp |> f
   
@@ -46,7 +46,9 @@ module Catamorphism = struct
       map_declaration_ cata_declaration self cata_ty_expr cata_pattern cata_mod_expr x.fp
       |> f.declaration
     and cata_mod_expr (x : mod_expr) : m =
-      map_mod_expr_ cata_mod_expr cata_statement cata_declaration x.fp |> f.mod_expr
+      map_mod_expr_ cata_mod_expr cata_program_entry x.fp |> f.mod_expr
+    and cata_program_entry (x: program_entry) : pe =
+      map_program_entry_ cata_program_entry cata_declaration cata_instruction x.fp |> f.program
     in
     map_expr_ self cata_ty_expr cata_pattern cata_statement cata_mod_expr x.fp |> f.expr
 
@@ -77,7 +79,7 @@ module Catamorphism = struct
         x.fp
       |> f.declaration
     and cata_mod_expr (x : mod_expr) : m =
-      map_mod_expr_ cata_mod_expr cata_statement cata_declaration x.fp |> f.mod_expr
+      map_mod_expr_ cata_mod_expr self x.fp |> f.mod_expr
     in
     map_program_entry_ self cata_declaration cata_instruction x.fp |> f.program
 
@@ -100,7 +102,7 @@ module Anamorphism = struct
     ; ty_expr : 'ty_expr -> 'ty_expr ty_expr_
     ; pattern : 'pattern -> ('pattern, 'ty_expr) pattern_
     ; statement : 'statement -> ('statement, 'instruction, 'declaration) statement_
-    ; mod_expr : 'mod_expr -> ('mod_expr, 'statement, 'declaration) mod_expr_
+    ; mod_expr : 'mod_expr -> ('mod_expr, 'program_entry) mod_expr_
     ; instruction :
         'instruction -> ('instruction, 'expr, 'pattern, 'statement) instruction_
     ; declaration :
@@ -135,7 +137,9 @@ module Anamorphism = struct
           |> map_declaration_ ana_declaration self ana_ty_expr ana_pattern ana_mod_expr
       }
     and ana_mod_expr (x : m) =
-      { fp = f.mod_expr x |> map_mod_expr_ ana_mod_expr ana_statement ana_declaration }
+      { fp = f.mod_expr x |> map_mod_expr_ ana_mod_expr ana_program_entry }
+    and ana_program_entry (x : pe) =
+      { fp = f.program x |> map_program_entry_ ana_program_entry ana_declaration ana_instruction }
     in
     { fp = f.expr x |> map_expr_ self ana_ty_expr ana_pattern ana_statement ana_mod_expr }
 
@@ -173,7 +177,7 @@ module Anamorphism = struct
                ana_mod_expr
       }
     and ana_mod_expr (x : m) =
-      { fp = f.mod_expr x |> map_mod_expr_ ana_mod_expr ana_statement ana_declaration }
+      { fp = f.mod_expr x |> map_mod_expr_ ana_mod_expr self }
     in
     { fp = f.program x |> map_program_entry_ self ana_declaration ana_instruction }
 
@@ -186,7 +190,7 @@ module Iter = struct
     ; ty_expr : ty_expr ty_expr_ -> unit
     ; pattern : (pattern, ty_expr) pattern_ -> unit
     ; statement : (statement, instruction, declaration) statement_ -> unit
-    ; mod_expr : (mod_expr, statement, declaration) mod_expr_ -> unit
+    ; mod_expr : (mod_expr, program_entry) mod_expr_ -> unit
     ; instruction : (instruction, expr, pattern, statement) instruction_ -> unit
     ; declaration : (declaration, expr, ty_expr, pattern, mod_expr) declaration_ -> unit
     ; program : (program_entry, declaration, instruction) program_entry_ -> unit
@@ -255,7 +259,9 @@ module Iter = struct
     and iter_declaration (x : declaration) : unit =
       iter_declaration_ iter_declaration self iter_ty_expr iter_pattern iter_mod_expr x.fp
     and iter_mod_expr (x : mod_expr) : unit =
-      iter_mod_expr_ iter_mod_expr iter_statement iter_declaration x.fp
+      iter_mod_expr_ iter_mod_expr iter_program_entry x.fp
+    and iter_program_entry (x : program_entry) : unit =
+      iter_program_entry_ iter_program_entry iter_declaration iter_instruction x.fp
     in
     iter_expr_ self iter_ty_expr iter_pattern iter_statement iter_mod_expr x.fp
 
@@ -278,7 +284,7 @@ module Iter = struct
         iter_mod_expr
         x.fp
     and iter_mod_expr (x : mod_expr) : unit =
-      iter_mod_expr_ iter_mod_expr iter_statement iter_declaration x.fp
+      iter_mod_expr_ iter_mod_expr (iter_program_entry ~f)  x.fp
     in
     iter_program_entry_ (iter_program_entry ~f) iter_declaration iter_instruction x.fp
 

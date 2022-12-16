@@ -172,6 +172,8 @@ module TODO_unify_in_cst = struct
     ~init
     ~f:(fun x acc -> t_moda ~loc:(get_t_loc acc) {module_path = x ; field = acc})
     (List.Ne.to_list lst)
+
+  let declarations_as_program decls = nseq_map (pe_declaration) decls
 end
 
 let extract_type_params
@@ -820,7 +822,7 @@ and compile_module ~(raise : ('e, 'w) raise) : CST.module_expr -> AST.mod_expr =
   | M_Body m ->
     let m, loc = r_split m in
     let ds = nseq_map (compile_declaration ~raise) m.declarations in
-    m_body ds ~loc
+    m_body (TODO_unify_in_cst.declarations_as_program ds) ~loc
   | M_Path m ->
     let m, loc = r_split m in
     let module_path =
@@ -842,4 +844,4 @@ let compile_program ~raise : CST.t -> AST.program =
   nseq_to_list t.decl
   |> List.map ~f:(fun a ~raise -> compile_declaration ~raise a)
   |> Simple_utils.Trace.collect ~raise
-  |> List.map ~f:(fun x -> AST.program_entry @@ P_Declaration x)
+  |> List.map ~f:(fun x -> AST.program_entry @@ PE_Declaration x)
