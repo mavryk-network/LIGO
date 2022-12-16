@@ -124,7 +124,7 @@ open Unit_test_helpers
 
 let%expect_test "compile_match_variant" =
   {|
-  ((P_Declaration
+  ((PE_Declaration
     (D_Const
       ((pattern (P_var x))
       (let_rhs
@@ -155,7 +155,7 @@ let%expect_test "compile_match_variant" =
   |-> pass ~raise ~syntax:(JsLIGO);
   [%expect
   {|
-  ((P_Declaration
+  ((PE_Declaration
      (D_Const
        ((pattern (P_var x))
          (let_rhs

@@ -98,7 +98,7 @@ open Unit_test_helpers
 
 let%expect_test "number_42_as_nat" =
   {|
-  ((P_Declaration
+  ((PE_Declaration
     (D_Var (
       (pattern (P_var y))
       (let_rhs (
@@ -113,12 +113,12 @@ let%expect_test "number_42_as_nat" =
   |-> pass ~raise ~syntax:JsLIGO;
   [%expect
     {|
-    ((P_Declaration
+    ((PE_Declaration
        (D_Var ((pattern (P_var y)) (let_rhs (E_Literal (Literal_nat 42))))))) |}]
 
 let%expect_test "number_42_as_mutez" =
   {|
-  ((P_Declaration
+  ((PE_Declaration
     (D_Var (
       (pattern (P_var y))
       (let_rhs (
@@ -133,12 +133,12 @@ let%expect_test "number_42_as_mutez" =
   |-> pass ~raise ~syntax:JsLIGO;
   [%expect
     {|
-    ((P_Declaration
+    ((PE_Declaration
        (D_Var ((pattern (P_var y)) (let_rhs (E_Literal (Literal_mutez 42))))))) |}]
 
 let%expect_test "number_42_as_tez" =
   {|
-  ((P_Declaration
+  ((PE_Declaration
     (D_Var (
       (pattern (P_var y))
       (let_rhs (
@@ -153,13 +153,13 @@ let%expect_test "number_42_as_tez" =
   |-> pass ~raise ~syntax:JsLIGO;
   [%expect
     {|
-    ((P_Declaration
+    ((PE_Declaration
        (D_Var
          ((pattern (P_var y)) (let_rhs (E_Literal (Literal_mutez 42000000))))))) |}]
 
 let%expect_test "code_inj" =
   {|
-  ((P_Declaration
+  ((PE_Declaration
     (D_Var (
       (pattern (P_var y))
       (let_rhs
@@ -180,7 +180,7 @@ let%expect_test "code_inj" =
   |-> pass ~raise ~syntax:JsLIGO;
   [%expect
     {|
-    ((P_Declaration
+    ((PE_Declaration
        (D_Var
          ((pattern (P_var y))
            (let_rhs

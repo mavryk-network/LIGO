@@ -51,7 +51,7 @@ open Unit_test_helpers
 
 let%expect_test "compile_rev_app_simple" =
   {|
-  ((P_Declaration
+  ((PE_Declaration
     (D_Let
       ((is_rec false) (type_params ()) (pattern ((P_var res)))
         (rhs_type ())
@@ -60,14 +60,14 @@ let%expect_test "compile_rev_app_simple" =
   |-> pass ~raise;
   [%expect
     {|
-    ((P_Declaration
+    ((PE_Declaration
        (D_Let
          ((is_rec false) (type_params ()) (pattern ((P_var res))) (rhs_type ())
            (let_rhs (E_Call (E_variable f) ((E_variable x)))))))) |}]
 
 let%expect_test "compile_rev_app_successive" =
   {|
-  ((P_Declaration
+  ((PE_Declaration
     (D_Let
       ((is_rec false) (type_params ()) (pattern ((P_var res)))
         (rhs_type ())
@@ -84,7 +84,7 @@ let%expect_test "compile_rev_app_successive" =
   |-> pass ~raise;
   [%expect
     {|
-    ((P_Declaration
+    ((PE_Declaration
        (D_Let
          ((is_rec false) (type_params ()) (pattern ((P_var res))) (rhs_type ())
            (let_rhs
@@ -94,7 +94,7 @@ let%expect_test "compile_rev_app_successive" =
 
 let%expect_test "compile_rev_app_precedence" =
   {|
-  ((P_Declaration
+  ((PE_Declaration
     (D_Let
       ((is_rec false) (type_params ()) (pattern ((P_var res)))
         (rhs_type ())
@@ -110,7 +110,7 @@ let%expect_test "compile_rev_app_precedence" =
   |-> pass ~raise;
   [%expect
     {|
-    ((P_Declaration
+    ((PE_Declaration
        (D_Let
          ((is_rec false) (type_params ()) (pattern ((P_var res))) (rhs_type ())
            (let_rhs

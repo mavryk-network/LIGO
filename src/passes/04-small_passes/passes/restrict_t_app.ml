@@ -47,7 +47,7 @@ open Unit_test_helpers
 let%expect_test "compile_t_app_t_var" =
   {|
   ((
-    P_Declaration (D_Type ((name t) (type_expr (
+    PE_Declaration (D_Type ((name t) (type_expr (
       T_App (
         (constr (T_Var my_var))
         (type_args (
@@ -60,7 +60,7 @@ let%expect_test "compile_t_app_t_var" =
   |} |-> pass ~raise ;
   [%expect
     {|
-    ((P_Declaration
+    ((PE_Declaration
        (D_Type
          ((name t)
            (type_expr
@@ -69,7 +69,7 @@ let%expect_test "compile_t_app_t_var" =
 
 let%expect_test "compile_t_app_wrong" =
   {|((
-      P_Declaration (D_Type ((name t) (type_expr (
+      PE_Declaration (D_Type ((name t) (type_expr (
         T_App (
           (constr (T_Arg should_be_a_t_var))
           (type_args (

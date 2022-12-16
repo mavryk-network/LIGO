@@ -103,7 +103,7 @@ open Unit_test_helpers
 
 let%expect_test "compile_michelson_pair" =
   {|
-  ((P_Declaration
+  ((PE_Declaration
     (D_Type
       ((name t_string)
         (type_expr
@@ -115,14 +115,14 @@ let%expect_test "compile_michelson_pair" =
   |-> pass ~raise;
   [%expect
     {|
-    ((P_Declaration
+    ((PE_Declaration
        (D_Type
          ((name t_string)
            (type_expr (T_Michelson_pair (T_Var int) w (T_Var nat) v)))))) |}]
 
 let%expect_test "compile_michelson_or" =
   {|
-  ((P_Declaration
+  ((PE_Declaration
      (D_Type
        ((name t_string)
          (type_expr
@@ -134,14 +134,14 @@ let%expect_test "compile_michelson_or" =
   |-> pass ~raise;
   [%expect
     {|
-    ((P_Declaration
+    ((PE_Declaration
        (D_Type
          ((name t_string)
            (type_expr (T_Michelson_or (T_Var int) w (T_Var nat) v)))))) |}]
 
 let%expect_test "compile_sapling_state" =
   {|
-  ((P_Declaration
+  ((PE_Declaration
   (D_Type
     ((name my_sapling)
       (type_expr
@@ -152,12 +152,12 @@ let%expect_test "compile_sapling_state" =
   |-> pass ~raise;
   [%expect
     {|
-    ((P_Declaration
+    ((PE_Declaration
        (D_Type ((name my_sapling) (type_expr (T_Sapling_state 8 8)))))) |}]
 
 let%expect_test "compile_sapling_transaction" =
   {|
-  ((P_Declaration
+  ((PE_Declaration
      (D_Type
        ((name my_sapling)
          (type_expr
@@ -168,12 +168,12 @@ let%expect_test "compile_sapling_transaction" =
   |-> pass ~raise;
   [%expect
     {|
-    ((P_Declaration
+    ((PE_Declaration
        (D_Type ((name my_sapling) (type_expr (T_Sapling_transaction 12 12)))))) |}]
 
 let%expect_test "compile_michelson_or_wrong_arity" =
   {|
-  ((P_Declaration
+  ((PE_Declaration
      (D_Type
        ((name t_string)
          (type_expr
@@ -189,7 +189,7 @@ let%expect_test "compile_michelson_or_wrong_arity" =
 
 let%expect_test "compile_michelson_or_type_wrong" =
   {|
-  ((P_Declaration
+  ((PE_Declaration
      (D_Type
        ((name t_string)
          (type_expr

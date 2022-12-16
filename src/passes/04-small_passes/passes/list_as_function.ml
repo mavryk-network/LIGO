@@ -85,7 +85,7 @@ open Unit_test_helpers
 
 let%expect_test "compile_cons" =
   {|
-  ((P_Declaration
+  ((PE_Declaration
      (D_Const
        ((pattern (P_var x))
          (let_rhs
@@ -96,7 +96,7 @@ let%expect_test "compile_cons" =
   |-> pass ~raise ~syntax:(JsLIGO);
   [%expect
     {|
-    ((P_Declaration
+    ((PE_Declaration
        (D_Const
          ((pattern (P_var x))
            (let_rhs
@@ -106,7 +106,7 @@ let%expect_test "compile_cons" =
 
 let%expect_test "compile_list" =
   {|
-  ((P_Declaration
+  ((PE_Declaration
      (D_Const
        ((pattern (P_var x))
          (let_rhs
@@ -117,7 +117,7 @@ let%expect_test "compile_list" =
   |-> pass ~raise ~syntax:(JsLIGO);
   [%expect
     {|
-  ((P_Declaration
+  ((PE_Declaration
      (D_Const
        ((pattern (P_var x))
          (let_rhs (E_List ((E_variable a) (E_variable b) (E_variable c))))))))
@@ -125,7 +125,7 @@ let%expect_test "compile_list" =
 
 let%expect_test "compile_fail" =
   {|
-  ((P_Declaration
+  ((PE_Declaration
      (D_Const
        ((pattern (P_var x))
          (let_rhs
@@ -140,7 +140,7 @@ let%expect_test "compile_fail" =
 
 let%expect_test "decompile_cons" =
   {|
-  ((P_Declaration
+  ((PE_Declaration
     (D_Const
       ((pattern (P_var x))
         (let_rhs
@@ -150,7 +150,7 @@ let%expect_test "decompile_cons" =
   <-| pass ~raise ~syntax:(JsLIGO);
   [%expect
     {|
-      ((P_Declaration
+      ((PE_Declaration
          (D_Const
            ((pattern (P_var x))
              (let_rhs
@@ -162,7 +162,7 @@ let%expect_test "decompile_cons" =
 
 let%expect_test "decompile_list" =
   {|
-  ((P_Declaration
+  ((PE_Declaration
      (D_Const
        ((pattern (P_var x))
          (let_rhs (E_List ((E_variable a) (E_variable b) (E_variable c))))))))
@@ -170,7 +170,7 @@ let%expect_test "decompile_list" =
   <-| pass ~raise ~syntax:(JsLIGO);
   [%expect
     {|
-      ((P_Declaration
+      ((PE_Declaration
          (D_Const
            ((pattern (P_var x))
              (let_rhs

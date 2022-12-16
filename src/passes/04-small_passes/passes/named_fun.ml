@@ -38,7 +38,7 @@ open Unit_test_helpers
 
 let%expect_test "compile" =
   {|
-    ((P_Declaration
+    ((PE_Declaration
       (D_Type
         ( (name t)
           (type_expr
@@ -49,7 +49,7 @@ let%expect_test "compile" =
   |-> pass ~raise;
   [%expect
     {|
-    ((P_Declaration
+    ((PE_Declaration
        (D_Type
          ((name t)
            (type_expr (T_Fun ((T_Var int) (T_Fun ((T_Var string) (T_Var nat)))))))))) |}]

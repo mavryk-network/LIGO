@@ -21,10 +21,10 @@ open Unit_test_helpers
 
 let%expect_test "addition" =
   {|
-    ((P_Declaration
+    ((PE_Declaration
       (D_Type_abstraction ((name t) (params (x))
         (type_expr (T_Arg x))))))
   |} |-> pass ;
   [%expect{|
-    ((P_Declaration
+    ((PE_Declaration
        (D_Type_abstraction ((name t) (params ((x))) (type_expr (T_Var 'x)))))) |}]

@@ -72,7 +72,7 @@ open Unit_test_helpers
 
 let%expect_test "decompile" =
   {|
-  ((P_Declaration
+  ((PE_Declaration
     (D_Type (
       (name my_t)
       (type_expr
@@ -84,21 +84,21 @@ let%expect_test "decompile" =
   <-| pass ~raise;
   [%expect
     {|
-    ((P_Declaration
+    ((PE_Declaration
        (D_Type_abstraction
          ((name my_t) (params ((a b))) (type_expr (T_Var whatever))))))
     |}]
 
 let%expect_test "compile" =
   {|
-  ((P_Declaration
+  ((PE_Declaration
     (D_Type_abstraction
       ((name my_t) (params ((a b))) (type_expr (T_Var whatever))))))
   |}
   |-> pass ~raise;
   [%expect
     {|
-    ((P_Declaration
+    ((PE_Declaration
        (D_Type
          ((name my_t)
            (type_expr

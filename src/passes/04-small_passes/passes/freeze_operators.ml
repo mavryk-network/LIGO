@@ -147,7 +147,7 @@ open Unit_test_helpers
 
 let%expect_test "compile" =
   {|
-  ((P_Declaration
+  ((PE_Declaration
     (D_Const (
       (pattern (P_var x))
       (let_rhs
@@ -156,7 +156,7 @@ let%expect_test "compile" =
   |-> pass ~raise ~syntax:(PascaLIGO);
   [%expect
     {|
-    ((P_Declaration
+    ((PE_Declaration
        (D_Const
          ((pattern (P_var x))
            (let_rhs
@@ -166,7 +166,7 @@ let%expect_test "compile" =
 
 let%expect_test "decompile" =
   {|
-  ((P_Declaration
+  ((PE_Declaration
   (D_Const
     ((pattern (P_var x))
       (let_rhs
@@ -176,7 +176,7 @@ let%expect_test "decompile" =
   <-| pass ~raise ~syntax:(PascaLIGO);
   [%expect
     {|
-    ((P_Declaration
+    ((PE_Declaration
        (D_Const
          ((pattern (P_var x))
            (let_rhs
