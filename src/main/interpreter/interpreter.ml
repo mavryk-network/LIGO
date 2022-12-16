@@ -1035,19 +1035,20 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     , [ V_Michelson (Ty_code ({ micheline_repr = { code = m; code_ty }; _ } as ty_code)) ]
     ) ->
     let open Proto_alpha_utils.Memory_proto_alpha in
+    let open Tezos_micheline.Micheline in
     let>> tezos_context = Get_alpha_context () in
     let canonical =
       Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
           failwith "Could not parse primitives from strings")
       @@ node_to_canonical m
     in
-    let node = Tezos_micheline.Micheline.inject_locations (fun l -> l) canonical in
+    let node = inject_locations (fun l -> l) canonical in
     let canonical_ty =
       Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
           failwith "Could not parse primitives from strings")
       @@ node_to_canonical code_ty
     in
-    let node_ty = Tezos_micheline.Micheline.inject_locations (fun l -> l) canonical_ty in
+    let node_ty = inject_locations (fun l -> l) canonical_ty in
     let oracle =
       Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
           failwith "Could not type-check the contract code")
@@ -1057,7 +1058,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let ms =
       let f = function
         | m, Some _ ->
-          Some (Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun x -> x) m)
+          Some (map_node (fun _ -> ()) (fun x -> x) m)
         | _ -> None
       in
       List.filter_map ~f ms
@@ -1074,6 +1075,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_TEST_MUTATE_MICHELSON_CONTRACT, [ V_Michelson_contract m ] ->
     let open Proto_alpha_utils.Memory_proto_alpha in
     let open Tezos_micheline.Micheline in
+    let open Protocol.Michelson_v1_primitives in
     let>> tezos_context = Get_alpha_context () in
     let canonical =
       Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
@@ -1092,7 +1094,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       @@ typecheck_oracle_contract ~tezos_context ~contract:node
     in
     let code =
-      map_node (fun l -> l) Protocol.Michelson_v1_primitives.string_of_prim code
+      map_node (fun l -> l) string_of_prim code
     in
     let ms = Michelson_backend.Mutation.generate ~oracle code in
     let ms =
@@ -1101,19 +1103,19 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
           let parameter =
             map_node
               (fun l -> l)
-              Protocol.Michelson_v1_primitives.string_of_prim
+              string_of_prim
               parameter
           in
           let storage =
-            map_node (fun l -> l) Protocol.Michelson_v1_primitives.string_of_prim storage
+            map_node (fun l -> l) string_of_prim storage
           in
           let rest =
             List.map
-              ~f:(map_node (fun l -> l) Protocol.Michelson_v1_primitives.string_of_prim)
+              ~f:(map_node (fun l -> l) string_of_prim)
               rest
           in
           let contract = Seq (l_root, parameter :: storage :: code :: rest) in
-          Some (Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun x -> x) contract)
+          Some (map_node (fun _ -> ()) (fun x -> x) contract)
         | _ -> None
       in
       List.filter_map ~f ms
