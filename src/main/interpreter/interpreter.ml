@@ -1039,19 +1039,19 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let>> tezos_context = Get_alpha_context () in
     let canonical =
       Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
-          failwith "Could not parse primitives from strings")
+          Errors.generic_error ~calltrace loc "Michelson parsing: could not parse primitives from strings")
       @@ node_to_canonical m
     in
     let node = inject_locations (fun l -> l) canonical in
     let canonical_ty =
       Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
-          failwith "Could not parse primitives from strings")
+          Errors.generic_error ~calltrace loc "Michelson parsing: could not parse primitives from strings")
       @@ node_to_canonical code_ty
     in
     let node_ty = inject_locations (fun l -> l) canonical_ty in
     let oracle =
       Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
-          failwith "Could not type-check the contract code")
+          Errors.generic_error ~calltrace loc "Michelson type-checking: could not type-check the contract code")
       @@ typecheck_oracle_code ~tezos_context ~code_ty:node_ty ~code:node
     in
     let ms = Michelson_backend.Mutation.generate ~oracle (canonical_to_node canonical) in
@@ -1079,18 +1079,18 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let>> tezos_context = Get_alpha_context () in
     let canonical =
       Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
-          failwith "Could not parse primitives from strings")
+          Errors.generic_error ~calltrace loc "Michelson parsing: could not parse primitives from strings")
       @@ node_to_canonical m
     in
     let node = inject_locations (fun l -> l) canonical in
     let l_root, parameter, storage, code, rest =
       match node with
       | Seq (l, parameter :: storage :: code :: rest) -> l, parameter, storage, code, rest
-      | _ -> failwith "Expected a contract"
+      | _ -> raise.error @@ Errors.generic_error ~calltrace loc "Michelson parsing: a non-contract"
     in
     let oracle =
       Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
-          failwith "Could not type-check the contract code")
+          Errors.generic_error ~calltrace loc "Michelson type-checking: could not type-check the contract code")
       @@ typecheck_oracle_contract ~tezos_context ~contract:node
     in
     let code =
