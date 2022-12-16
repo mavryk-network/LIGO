@@ -190,14 +190,6 @@ see pascaligo (path_of_lvalue)
 
 you got it :) good luck
 S_Instr should only contain simple stuff like `I_While I_For_In I_For I_ForOf`
-
-## pass 'unseq'
-
-- remove : E_Sequence
-- add : -
-
-`E_Sequence` -> `E_let_in`
-
   
 ## pass 'enum_attributes'
   - remove : E_Attr (string to string) D_attr P_attr

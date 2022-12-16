@@ -101,3 +101,11 @@ note: note sure, after Open directive ? https://gitlab.com/ligolang/ligo/-/merge
 - add :            
 
 `S_Swtich` -> `S_Decl (D_Const _ (E_matching ...))`
+
+## pass 'unseq'
+
+- remove : E_Sequence
+- add : -
+
+`E_Sequence` -> `E_let_in`
+
