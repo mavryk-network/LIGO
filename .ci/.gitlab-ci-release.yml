@@ -351,6 +351,20 @@ update-gitpod-ligo-version:
 # Related to the update of AUR ligo-bin packet
 #######################################################################
 
+build_debpkg_env_vars:
+  stage: pretooling
+  script:
+    - DEB_PKG_URL="$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/raw/ligo.deb"
+    - echo "DEB_PKG_URL=${DEB_PKG_URL}" >> debpkgurl.env
+  artifacts:
+    reports:
+      dotenv: debpkgurl.env
+  rules:
+    - if: ($CI_COMMIT_BRANCH =~ /^release/ )
+      when: always
+    - if: ($CI_COMMIT_BRANCH =~ /^release/ && $DRY_RUN_RELEASE != null)
+      when: always
+
 update-aur-ligo-bin:
   stage: release
   variables:
@@ -360,6 +374,8 @@ update-aur-ligo-bin:
     project: ligolang/aur-ligo-bin
   needs:
     - job: build_release_env_vars
+      artifacts: true
+    - job: build_debpkg_env_vars
       artifacts: true
   rules:
     - if: ($CI_COMMIT_BRANCH =~ /^release/ &&  $TRIGGER_DOC_UPDATE != null )
