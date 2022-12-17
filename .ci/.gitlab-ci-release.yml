@@ -327,6 +327,7 @@ create-doc-update-MR:
       when: always
     - if: ($CI_COMMIT_BRANCH =~ /^release/ && $DRY_RUN_RELEASE != null)
       when: always
+
 #######################################################################
 # Following script is executed when pipeline has executed Tag process
 # Related to the update of Gitpod
@@ -338,6 +339,25 @@ update-gitpod-ligo-version:
     RELEASE_VERSION: "${RELEASE_VERSION}"
   trigger:
     project: ligolang/template-ligo
+  needs:
+    - job: build_release_env_vars
+      artifacts: true
+  rules:
+    - if: ($CI_COMMIT_BRANCH =~ /^release/ &&  $TRIGGER_DOC_UPDATE != null )
+      when: always
+
+#######################################################################
+# Following script is executed when pipeline has executed Tag process
+# Related to the update of AUR ligo-bin packet
+#######################################################################
+
+update-aur-ligo-bin:
+  stage: release
+  variables:
+    RELEASE_VERSION: "${RELEASE_VERSION}"
+    DEB_PKG_URL: "${DEB_PKG_URL}"
+  trigger:
+    project: ligolang/aur-ligo-bin
   needs:
     - job: build_release_env_vars
       artifacts: true
