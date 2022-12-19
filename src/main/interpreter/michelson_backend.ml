@@ -1741,32 +1741,42 @@ let compare_michelson ~raise loc a b =
   in
   Caml.compare code code'
 
+
 let mutate_typed_michelson ~raise ~loc ~calltrace ~tezos_context code code_ty =
   let open Proto_alpha_utils.Memory_proto_alpha in
   let open Tezos_micheline.Micheline in
   let canonical =
     Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
-        Errors.generic_error ~calltrace loc "Michelson parsing: could not parse primitives from strings")
+        Errors.generic_error
+          ~calltrace
+          loc
+          "Michelson parsing: could not parse primitives from strings")
     @@ node_to_canonical code
   in
   let node = inject_locations (fun l -> l) canonical in
   let canonical_ty =
     Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
-        Errors.generic_error ~calltrace loc "Michelson parsing: could not parse primitives from strings")
+        Errors.generic_error
+          ~calltrace
+          loc
+          "Michelson parsing: could not parse primitives from strings")
     @@ node_to_canonical code_ty
   in
   let node_ty = inject_locations (fun l -> l) canonical_ty in
   let oracle =
     Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
-        Errors.generic_error ~calltrace loc "Michelson type-checking: could not type-check the contract code")
+        Errors.generic_error
+          ~calltrace
+          loc
+          "Michelson type-checking: could not type-check the contract code")
     @@ typecheck_oracle_code ~tezos_context ~code_ty:node_ty ~code:node
   in
   let f = function
-    | m, Some _ ->
-      Some (map_node (fun _ -> ()) (fun x -> x) m)
+    | m, Some _ -> Some (map_node (fun _ -> ()) (fun x -> x) m)
     | _ -> None
   in
   Mutation.generate ~oracle (canonical_to_node canonical) |> List.filter_map ~f
+
 
 let mutate_contract_michelson ~raise ~loc ~calltrace ~tezos_context contract =
   let open Proto_alpha_utils.Memory_proto_alpha in
@@ -1774,39 +1784,34 @@ let mutate_contract_michelson ~raise ~loc ~calltrace ~tezos_context contract =
   let open Protocol.Michelson_v1_primitives in
   let canonical =
     Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
-        Errors.generic_error ~calltrace loc "Michelson parsing: could not parse primitives from strings")
+        Errors.generic_error
+          ~calltrace
+          loc
+          "Michelson parsing: could not parse primitives from strings")
     @@ node_to_canonical contract
   in
   let node = inject_locations (fun l -> l) canonical in
   let l_root, parameter, storage, code, rest =
     match node with
     | Seq (l, parameter :: storage :: code :: rest) -> l, parameter, storage, code, rest
-    | _ -> raise.error @@ Errors.generic_error ~calltrace loc "Michelson parsing: a non-contract"
+    | _ ->
+      raise.error
+      @@ Errors.generic_error ~calltrace loc "Michelson parsing: a non-contract"
   in
   let oracle =
     Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
-        Errors.generic_error ~calltrace loc "Michelson type-checking: could not type-check the contract code")
+        Errors.generic_error
+          ~calltrace
+          loc
+          "Michelson type-checking: could not type-check the contract code")
     @@ typecheck_oracle_contract ~tezos_context ~contract:node
   in
-  let code =
-    map_node (fun l -> l) string_of_prim code
-  in
+  let code = map_node (fun l -> l) string_of_prim code in
   let f = function
     | code, Some _ ->
-      let parameter =
-        map_node
-          (fun l -> l)
-          string_of_prim
-          parameter
-      in
-      let storage =
-        map_node (fun l -> l) string_of_prim storage
-      in
-      let rest =
-        List.map
-          ~f:(map_node (fun l -> l) string_of_prim)
-          rest
-      in
+      let parameter = map_node (fun l -> l) string_of_prim parameter in
+      let storage = map_node (fun l -> l) string_of_prim storage in
+      let rest = List.map ~f:(map_node (fun l -> l) string_of_prim) rest in
       let contract = Seq (l_root, parameter :: storage :: code :: rest) in
       Some (map_node (fun _ -> ()) (fun x -> x) contract)
     | _ -> None
