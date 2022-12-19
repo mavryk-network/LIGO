@@ -85,8 +85,8 @@ let%expect_test "decompile" =
   [%expect
     {|
     ((PE_Declaration
-       (D_Type_abstraction
-         ((name my_t) (params ((a b))) (type_expr (T_Var whatever))))))
+      (D_Type_abstraction
+       ((name my_t) (params ((a b))) (type_expr (T_Var whatever))))))
     |}]
 
 let%expect_test "compile" =
@@ -99,11 +99,10 @@ let%expect_test "compile" =
   [%expect
     {|
     ((PE_Declaration
-       (D_Type
-         ((name my_t)
-           (type_expr
-             (T_Abstraction
-               ((ty_binder a) (kind Type)
-                 (type_
-                   (T_Abstraction
-                     ((ty_binder b) (kind Type) (type_ (T_Var whatever)))))))))))) |}]
+      (D_Type
+       ((name my_t)
+        (type_expr
+         (T_Abstraction
+          ((ty_binder a) (kind Type)
+           (type_
+            (T_Abstraction ((ty_binder b) (kind Type) (type_ (T_Var whatever)))))))))))) |}]

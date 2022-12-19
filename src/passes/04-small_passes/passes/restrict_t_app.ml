@@ -61,11 +61,11 @@ let%expect_test "compile_t_app_t_var" =
   [%expect
     {|
     ((PE_Declaration
-       (D_Type
-         ((name t)
-           (type_expr
-             (T_App
-               ((constr (T_Var my_var)) (type_args ((T_Var arg1) (T_Var arg2)))))))))) |}]
+      (D_Type
+       ((name t)
+        (type_expr
+         (T_App
+          ((constr (T_Var my_var)) (type_args ((T_Var arg1) (T_Var arg2)))))))))) |}]
 
 let%expect_test "compile_t_app_wrong" =
   {|((

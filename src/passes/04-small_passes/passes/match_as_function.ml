@@ -156,22 +156,22 @@ let%expect_test "compile_match_variant" =
   [%expect
   {|
   ((PE_Declaration
-     (D_Const
-       ((pattern (P_var x))
-         (let_rhs
-           (E_Match
-             ((expr (E_variable x))
-               (cases
-                 (((pattern
-                     (P_variant (Label One)
-                       ((P_tuple ((P_typed (T_Var int) (P_var v)) (P_var w))))))
-                    (rhs (E_variable v)))
-                   ((pattern
-                      (P_variant (Label Two)
-                        ((P_tuple ((P_typed (T_Var int) (P_var n)))))))
-                     (rhs (E_variable n)))
-                   ((pattern
-                      (P_variant (Label Three)
-                        ((P_tuple ((P_tuple ((P_var x) (P_var y))))))))
-                     (rhs (E_variable x))))))))))))
+    (D_Const
+     ((pattern (P_var x))
+      (let_rhs
+       (E_Match
+        ((expr (E_variable x))
+         (cases
+          (((pattern
+             (P_variant (Label One)
+              ((P_tuple ((P_typed (T_Var int) (P_var v)) (P_var w))))))
+            (rhs (E_variable v)))
+           ((pattern
+             (P_variant (Label Two)
+              ((P_tuple ((P_typed (T_Var int) (P_var n)))))))
+            (rhs (E_variable n)))
+           ((pattern
+             (P_variant (Label Three)
+              ((P_tuple ((P_tuple ((P_var x) (P_var y))))))))
+            (rhs (E_variable x))))))))))))
   |}]

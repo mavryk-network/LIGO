@@ -116,9 +116,9 @@ let%expect_test "compile_michelson_pair" =
   [%expect
     {|
     ((PE_Declaration
-       (D_Type
-         ((name t_string)
-           (type_expr (T_Michelson_pair (T_Var int) w (T_Var nat) v)))))) |}]
+      (D_Type
+       ((name t_string)
+        (type_expr (T_Michelson_pair (T_Var int) w (T_Var nat) v)))))) |}]
 
 let%expect_test "compile_michelson_or" =
   {|
@@ -135,9 +135,8 @@ let%expect_test "compile_michelson_or" =
   [%expect
     {|
     ((PE_Declaration
-       (D_Type
-         ((name t_string)
-           (type_expr (T_Michelson_or (T_Var int) w (T_Var nat) v)))))) |}]
+      (D_Type
+       ((name t_string) (type_expr (T_Michelson_or (T_Var int) w (T_Var nat) v)))))) |}]
 
 let%expect_test "compile_sapling_state" =
   {|
@@ -153,7 +152,7 @@ let%expect_test "compile_sapling_state" =
   [%expect
     {|
     ((PE_Declaration
-       (D_Type ((name my_sapling) (type_expr (T_Sapling_state 8 8)))))) |}]
+      (D_Type ((name my_sapling) (type_expr (T_Sapling_state 8 8)))))) |}]
 
 let%expect_test "compile_sapling_transaction" =
   {|
@@ -169,7 +168,7 @@ let%expect_test "compile_sapling_transaction" =
   [%expect
     {|
     ((PE_Declaration
-       (D_Type ((name my_sapling) (type_expr (T_Sapling_transaction 12 12)))))) |}]
+      (D_Type ((name my_sapling) (type_expr (T_Sapling_transaction 12 12)))))) |}]
 
 let%expect_test "compile_michelson_or_wrong_arity" =
   {|

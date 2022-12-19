@@ -183,7 +183,7 @@ let const_name (Const c) = c
 
 type 'e t =
   { cons_name : constant' (* this is in enum *)
-  ; arguments : 'e list
+  ; arguments : 'e list [@sexp.list]
   }
 [@@deriving eq, compare, yojson, hash, fold, map, iter, sexp]
 

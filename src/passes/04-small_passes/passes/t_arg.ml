@@ -27,4 +27,4 @@ let%expect_test "addition" =
   |} |-> pass ;
   [%expect{|
     ((PE_Declaration
-       (D_Type_abstraction ((name t) (params ((x))) (type_expr (T_Var 'x)))))) |}]
+      (D_Type_abstraction ((name t) (params ((x))) (type_expr (T_Var 'x)))))) |}]

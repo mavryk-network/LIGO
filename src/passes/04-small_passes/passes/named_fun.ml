@@ -50,6 +50,6 @@ let%expect_test "compile" =
   [%expect
     {|
     ((PE_Declaration
-       (D_Type
-         ((name t)
-           (type_expr (T_Fun ((T_Var int) (T_Fun ((T_Var string) (T_Var nat)))))))))) |}]
+      (D_Type
+       ((name t)
+        (type_expr (T_Fun ((T_Var int) (T_Fun ((T_Var string) (T_Var nat)))))))))) |}]

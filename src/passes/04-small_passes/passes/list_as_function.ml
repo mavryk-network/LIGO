@@ -97,11 +97,11 @@ let%expect_test "compile_cons" =
   [%expect
     {|
     ((PE_Declaration
-       (D_Const
-         ((pattern (P_var x))
-           (let_rhs
-             (E_constant
-               ((cons_name C_CONS) (arguments ((E_variable hd) (E_variable tl))))))))))
+      (D_Const
+       ((pattern (P_var x))
+        (let_rhs
+         (E_constant
+          ((cons_name C_CONS) (arguments ((E_variable hd) (E_variable tl))))))))))
     |}]
 
 let%expect_test "compile_list" =
@@ -118,9 +118,9 @@ let%expect_test "compile_list" =
   [%expect
     {|
   ((PE_Declaration
-     (D_Const
-       ((pattern (P_var x))
-         (let_rhs (E_List ((E_variable a) (E_variable b) (E_variable c))))))))
+    (D_Const
+     ((pattern (P_var x))
+      (let_rhs (E_List ((E_variable a) (E_variable b) (E_variable c))))))))
   |}]
 
 let%expect_test "compile_fail" =
@@ -151,12 +151,11 @@ let%expect_test "decompile_cons" =
   [%expect
     {|
       ((PE_Declaration
-         (D_Const
-           ((pattern (P_var x))
-             (let_rhs
-               (E_Call (E_variable list)
-                 ((E_Array
-                    ((Expr_entry (E_variable hd)) (Rest_entry (E_variable tl)))))))))))
+        (D_Const
+         ((pattern (P_var x))
+          (let_rhs
+           (E_Call (E_variable list)
+            ((E_Array ((Expr_entry (E_variable hd)) (Rest_entry (E_variable tl)))))))))))
 
     |}]
 
@@ -171,12 +170,12 @@ let%expect_test "decompile_list" =
   [%expect
     {|
       ((PE_Declaration
-         (D_Const
-           ((pattern (P_var x))
-             (let_rhs
-               (E_Call (E_variable list)
-                 ((E_Array
-                    ((Expr_entry (E_variable a)) (Expr_entry (E_variable b))
-                      (Expr_entry (E_variable c)))))))))))
+        (D_Const
+         ((pattern (P_var x))
+          (let_rhs
+           (E_Call (E_variable list)
+            ((E_Array
+              ((Expr_entry (E_variable a)) (Expr_entry (E_variable b))
+               (Expr_entry (E_variable c)))))))))))
 
   |}]

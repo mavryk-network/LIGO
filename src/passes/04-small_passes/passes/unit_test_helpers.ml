@@ -33,13 +33,13 @@ let expected_failure_bwd (input : string) (pass : raise:_ -> Pass_type.pass) : u
 let expected_sucess_fwd (input : string) (pass : Pass_type.pass) : unit =
   let in_prg = prg_of_string input in
   let out_expr = pass.program.forward in_prg in
-  Format.printf "%a" (Sexp.pp_hum_indent 2) (S_exp.sexp_of_program out_expr)
+  Format.printf "%a" Sexp.pp_hum (S_exp.sexp_of_program out_expr)
 
 
 let expected_sucess_bwd (input : string) (pass : Pass_type.pass) : unit =
   let in_prg = prg_of_string input in
   let out_expr = pass.program.backward in_prg in
-  Format.printf "%a" (Sexp.pp_hum_indent 2) (S_exp.sexp_of_program out_expr)
+  Format.printf "%a" Sexp.pp_hum (S_exp.sexp_of_program out_expr)
 
 
 let ( |-> ) = expected_sucess_fwd

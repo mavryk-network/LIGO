@@ -114,7 +114,7 @@ let%expect_test "number_42_as_nat" =
   [%expect
     {|
     ((PE_Declaration
-       (D_Var ((pattern (P_var y)) (let_rhs (E_Literal (Literal_nat 42))))))) |}]
+      (D_Var ((pattern (P_var y)) (let_rhs (E_Literal (Literal_nat 42))))))) |}]
 
 let%expect_test "number_42_as_mutez" =
   {|
@@ -134,7 +134,7 @@ let%expect_test "number_42_as_mutez" =
   [%expect
     {|
     ((PE_Declaration
-       (D_Var ((pattern (P_var y)) (let_rhs (E_Literal (Literal_mutez 42))))))) |}]
+      (D_Var ((pattern (P_var y)) (let_rhs (E_Literal (Literal_mutez 42))))))) |}]
 
 let%expect_test "number_42_as_tez" =
   {|
@@ -154,8 +154,8 @@ let%expect_test "number_42_as_tez" =
   [%expect
     {|
     ((PE_Declaration
-       (D_Var
-         ((pattern (P_var y)) (let_rhs (E_Literal (Literal_mutez 42000000))))))) |}]
+      (D_Var
+       ((pattern (P_var y)) (let_rhs (E_Literal (Literal_mutez 42000000))))))) |}]
 
 let%expect_test "code_inj" =
   {|
@@ -181,12 +181,12 @@ let%expect_test "code_inj" =
   [%expect
     {|
     ((PE_Declaration
-       (D_Var
-         ((pattern (P_var y))
-           (let_rhs
-             (E_RawCode
-               ((language Michelson)
-                 (code
-                   (E_Annot
-                     ((E_Literal (Literal_string (Verbatim "{ UNPAIR ; ADD }")))
-                       (T_Fun ((T_Prod ((T_Var nat) (T_Var nat))) (T_Var nat))))))))))))) |}]
+      (D_Var
+       ((pattern (P_var y))
+        (let_rhs
+         (E_RawCode
+          ((language Michelson)
+           (code
+            (E_Annot
+             ((E_Literal (Literal_string (Verbatim "{ UNPAIR ; ADD }")))
+              (T_Fun ((T_Prod ((T_Var nat) (T_Var nat))) (T_Var nat))))))))))))) |}]
