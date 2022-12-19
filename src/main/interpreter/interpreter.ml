@@ -1032,37 +1032,10 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     >>>>>>>>
     *)
   | ( C_TEST_MUTATE_MICHELSON
-    , [ V_Michelson (Ty_code ({ micheline_repr = { code = m; code_ty }; _ } as ty_code)) ]
+    , [ V_Michelson (Ty_code ({ micheline_repr = { code ; code_ty }; _ } as ty_code)) ]
     ) ->
-    let open Proto_alpha_utils.Memory_proto_alpha in
-    let open Tezos_micheline.Micheline in
     let>> tezos_context = Get_alpha_context () in
-    let canonical =
-      Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
-          Errors.generic_error ~calltrace loc "Michelson parsing: could not parse primitives from strings")
-      @@ node_to_canonical m
-    in
-    let node = inject_locations (fun l -> l) canonical in
-    let canonical_ty =
-      Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
-          Errors.generic_error ~calltrace loc "Michelson parsing: could not parse primitives from strings")
-      @@ node_to_canonical code_ty
-    in
-    let node_ty = inject_locations (fun l -> l) canonical_ty in
-    let oracle =
-      Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
-          Errors.generic_error ~calltrace loc "Michelson type-checking: could not type-check the contract code")
-      @@ typecheck_oracle_code ~tezos_context ~code_ty:node_ty ~code:node
-    in
-    let ms = Michelson_backend.Mutation.generate ~oracle (canonical_to_node canonical) in
-    let ms =
-      let f = function
-        | m, Some _ ->
-          Some (map_node (fun _ -> ()) (fun x -> x) m)
-        | _ -> None
-      in
-      List.filter_map ~f ms
-    in
+    let muts = Michelson_backend.mutate_typed_michelson ~raise ~loc ~calltrace ~tezos_context code code_ty in
     return
     @@ v_list
     @@ List.map
@@ -1070,7 +1043,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
            V_Michelson
              (Ty_code
                 { ty_code with micheline_repr = { ty_code.micheline_repr with code } }))
-         ms
+         muts
   | C_TEST_MUTATE_MICHELSON, _ -> fail @@ error_type ()
   | C_TEST_MUTATE_MICHELSON_CONTRACT, [ V_Michelson_contract m ] ->
     let open Proto_alpha_utils.Memory_proto_alpha in

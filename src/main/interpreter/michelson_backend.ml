@@ -1740,3 +1740,30 @@ let compare_michelson ~raise loc a b =
     @@ LC.get_michelson_expr b
   in
   Caml.compare code code'
+
+let mutate_typed_michelson ~raise ~loc ~calltrace ~tezos_context code code_ty =
+  let open Proto_alpha_utils.Memory_proto_alpha in
+  let open Tezos_micheline.Micheline in
+  let canonical =
+    Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
+        Errors.generic_error ~calltrace loc "Michelson parsing: could not parse primitives from strings")
+    @@ node_to_canonical code
+  in
+  let node = inject_locations (fun l -> l) canonical in
+  let canonical_ty =
+    Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
+        Errors.generic_error ~calltrace loc "Michelson parsing: could not parse primitives from strings")
+    @@ node_to_canonical code_ty
+  in
+  let node_ty = inject_locations (fun l -> l) canonical_ty in
+  let oracle =
+    Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
+        Errors.generic_error ~calltrace loc "Michelson type-checking: could not type-check the contract code")
+    @@ typecheck_oracle_code ~tezos_context ~code_ty:node_ty ~code:node
+  in
+  let f = function
+    | m, Some _ ->
+      Some (map_node (fun _ -> ()) (fun x -> x) m)
+    | _ -> None
+  in
+  Mutation.generate ~oracle (canonical_to_node canonical) |> List.filter_map ~f
