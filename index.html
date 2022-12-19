@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf8" />
+    <title>jsoo</title>
+    <!-- <script src="./threads.js"></script> -->
+    <!-- <script src="./blst.js"></script>
+	 <script>
+	 _BLS12381()
+         .then(function (BLS12381) {
+         this._BLS12381 = BLS12381;
+         })
+         .catch((e) => console.log(e));
+	 </script>
+	 <script src="./bls12-runtime.js"></script> -->
+    <!-- <script src="./runtime-generated.js"></script>
+	 <script src="./random.js"></script>
+	 <script src="./evercrypt.js"></script> -->
+    <script src="/_build/default/src/bin/js_main.bc.runtime.js"></script>
+    <script src="/_build/default/src/bin/js_main.bc.js"></script>
+  </head>
+  <body>
+    <h1>In browser Ligo compiler</h1>
+    <button id="compile" type="button">Compile</button>
+    <h2>Ligo</h2>
+    <select id="syntax">
+      <option value="jsligo">JsLigo</option>
+      <option value="mligo">Cameligo</option>
+    </select>
+    <div id="ligo"></div>
+    <h2>Michelson</h2>
+    <div id="michelson"></div>
+    <script src="editor.bundle.js"></script>
+  </body>
+</html>
