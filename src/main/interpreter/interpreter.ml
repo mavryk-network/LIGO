@@ -1045,55 +1045,10 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
                 { ty_code with micheline_repr = { ty_code.micheline_repr with code } }))
          muts
   | C_TEST_MUTATE_MICHELSON, _ -> fail @@ error_type ()
-  | C_TEST_MUTATE_MICHELSON_CONTRACT, [ V_Michelson_contract m ] ->
-    let open Proto_alpha_utils.Memory_proto_alpha in
-    let open Tezos_micheline.Micheline in
-    let open Protocol.Michelson_v1_primitives in
+  | C_TEST_MUTATE_MICHELSON_CONTRACT, [ V_Michelson_contract contract ] ->
     let>> tezos_context = Get_alpha_context () in
-    let canonical =
-      Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
-          Errors.generic_error ~calltrace loc "Michelson parsing: could not parse primitives from strings")
-      @@ node_to_canonical m
-    in
-    let node = inject_locations (fun l -> l) canonical in
-    let l_root, parameter, storage, code, rest =
-      match node with
-      | Seq (l, parameter :: storage :: code :: rest) -> l, parameter, storage, code, rest
-      | _ -> raise.error @@ Errors.generic_error ~calltrace loc "Michelson parsing: a non-contract"
-    in
-    let oracle =
-      Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
-          Errors.generic_error ~calltrace loc "Michelson type-checking: could not type-check the contract code")
-      @@ typecheck_oracle_contract ~tezos_context ~contract:node
-    in
-    let code =
-      map_node (fun l -> l) string_of_prim code
-    in
-    let ms = Michelson_backend.Mutation.generate ~oracle code in
-    let ms =
-      let f = function
-        | code, Some _ ->
-          let parameter =
-            map_node
-              (fun l -> l)
-              string_of_prim
-              parameter
-          in
-          let storage =
-            map_node (fun l -> l) string_of_prim storage
-          in
-          let rest =
-            List.map
-              ~f:(map_node (fun l -> l) string_of_prim)
-              rest
-          in
-          let contract = Seq (l_root, parameter :: storage :: code :: rest) in
-          Some (map_node (fun _ -> ()) (fun x -> x) contract)
-        | _ -> None
-      in
-      List.filter_map ~f ms
-    in
-    return @@ v_list @@ List.map ~f:(fun code -> V_Michelson_contract code) ms
+    let muts = Michelson_backend.mutate_contract_michelson ~raise ~loc ~calltrace ~tezos_context contract in
+    return @@ v_list @@ List.map ~f:(fun code -> V_Michelson_contract code) muts
   | C_TEST_MUTATE_MICHELSON_CONTRACT, _ -> fail @@ error_type ()
   | C_TEST_ADDRESS, [ V_Ct (C_contract { address; entrypoint = _ }) ] ->
     return (V_Ct (C_address address))
