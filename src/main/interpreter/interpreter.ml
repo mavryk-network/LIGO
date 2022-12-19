@@ -1036,14 +1036,12 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     ) ->
     let>> tezos_context = Get_alpha_context () in
     let muts = Michelson_backend.mutate_typed_michelson ~raise ~loc ~calltrace ~tezos_context code code_ty in
+    let wrap code = V_Michelson
+             (Ty_code
+                { ty_code with micheline_repr = { ty_code.micheline_repr with code } }) in
     return
     @@ v_list
-    @@ List.map
-         ~f:(fun code ->
-           V_Michelson
-             (Ty_code
-                { ty_code with micheline_repr = { ty_code.micheline_repr with code } }))
-         muts
+    @@ List.map ~f:wrap muts
   | C_TEST_MUTATE_MICHELSON, _ -> fail @@ error_type ()
   | C_TEST_MUTATE_MICHELSON_CONTRACT, [ V_Michelson_contract contract ] ->
     let>> tezos_context = Get_alpha_context () in
