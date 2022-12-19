@@ -38,7 +38,7 @@ module Path = struct
 end
 
 type source =
-  | Text of string * Syntax_types.t
+  | Text of string (* Syntax_types.t *)
   | File of Path.t
 
 let contract
@@ -63,7 +63,9 @@ let contract
     in
     let syntax =
       match source with
-      | Text (_source_code, syntax) -> syntax
+      | Text _source_code ->
+        Syntax_types.CameLIGO
+        (* TODO(prometheansacrifice) This must come from js_main.ml *)
       | File source_file ->
         Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
     in
@@ -84,8 +86,7 @@ let contract
   let source =
     match source with
     | File filename -> BuildSystem.Source_input.From_file filename
-    | Text (source_code, _syntax) ->
-      BuildSystem.Source_input.(Raw { id = ""; code = source_code })
+    | Text source_code -> BuildSystem.Source_input.(Raw { id = ""; code = source_code })
   in
   let code, views = Build.build_contract ~raise ~options entry_point views source in
   let file_constants = read_file_constants ~raise file_constants in
