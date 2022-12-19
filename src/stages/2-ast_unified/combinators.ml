@@ -9,21 +9,18 @@ type ('a, 'b, 'c, 'd, 'e) expression_content_ =
         ; ("get_e", fun (x : Types.expr) -> Location.unwrap x.fp)
         ; ("get_e_loc", fun (x : Types.expr) -> Location.get_location x.fp)
         ]
-    ; wrap_constructor =
-        ("expression_content_", fun ~loc content -> make_e ~loc content)
+    ; wrap_constructor = ("expression_content_", fun ~loc content -> make_e ~loc content)
     ; wrap_get = "expression_content_", get_e
     }]
 
-type ('a, 'b) pattern_content_ =
-  [%import: ('a, 'b) Types.pattern_content_]
+type ('a, 'b) pattern_content_ = [%import: ('a, 'b) Types.pattern_content_]
 [@@deriving
   ez
     { prefixes =
         [ ("make_p", fun ~loc content : pattern -> { fp = Location.wrap ~loc content })
         ; ("get_p", fun (x : Types.pattern) -> Location.unwrap x.fp)
         ]
-    ; wrap_constructor =
-        ("pattern_content_", fun ~loc content -> make_p ~loc content)
+    ; wrap_constructor = ("pattern_content_", fun ~loc content -> make_p ~loc content)
     ; wrap_get = "pattern_content_", get_p
     }]
 
@@ -59,7 +56,7 @@ type ('a, 'b, 'c) statement_content_ = [%import: ('a, 'b, 'c) Types.statement_co
 [@@deriving
   ez
     { prefixes =
-        [ ("make_s"
+        [ ( "make_s"
           , fun ~loc content : statement ->
               { fp = (Location.wrap ~loc content : ('a, 'b, 'c) Types.statement_) } )
         ; ("get_s", fun (x : Types.statement) -> Location.unwrap x.fp)
@@ -87,9 +84,7 @@ type ('a, 'b, 'c, 'd) instruction_content_ =
 [@@deriving
   ez
     { prefixes =
-        [ ("make_i"
-          , fun ~loc content : instruction ->
-              { fp = Location.wrap ~loc content } )
+        [ ("make_i", fun ~loc content : instruction -> { fp = Location.wrap ~loc content })
         ; ("get_i", fun (x : Types.instruction) -> Location.unwrap x.fp)
         ]
     ; wrap_constructor =
@@ -98,21 +93,16 @@ type ('a, 'b, 'c, 'd) instruction_content_ =
     ; wrap_get = "instruction_content_", get_i
     }]
 
-type ('a, 'b, 'c) program_entry_ =
-  [%import: ('a, 'b, 'c) Types.program_entry_]
-  [@@deriving
-    ez
-      { prefixes =
-          [ ("make_pe"
-            , fun content : program_entry ->
-                { fp = content } )
-          ; ("get_pe", fun (x : Types.program_entry) -> x.fp)
-          ]
-      ; wrap_constructor =
-          ( "program_entry_"
-          , fun c -> make_pe c )
-      ; wrap_get = "program_entry_", get_pe
-      }]
+type ('a, 'b, 'c) program_entry_ = [%import: ('a, 'b, 'c) Types.program_entry_]
+[@@deriving
+  ez
+    { prefixes =
+        [ ("make_pe", fun content : program_entry -> { fp = content })
+        ; ("get_pe", fun (x : Types.program_entry) -> x.fp)
+        ]
+    ; wrap_constructor = ("program_entry_", fun c -> make_pe c)
+    ; wrap_get = "program_entry_", get_pe
+    }]
 
 let e_literal ~loc l : expr = make_e ~loc @@ E_Literal l
 
@@ -127,9 +117,23 @@ let e__type__z ~loc n : expr = make_e ~loc @@ E_Literal (Literal__type_ n)
 let e__type_ ~loc n : expr = e__type__z ~loc @@ Z.of_int n
   [@@map _type_, ("int", "nat", "timestamp", "mutez")]
 
-
+let e_false ~loc = e_constant ~loc { cons_name = C_FALSE ; arguments = [ ] }
 let e_unit ~loc : expr = make_e ~loc @@ E_Literal Literal_unit
 let e_bytes_raw ~loc (b : bytes) : expr = make_e ~loc @@ E_Literal (Literal_bytes b)
 let e_bytes_hex ~loc b : expr = e_bytes_raw ~loc @@ Hex.to_bytes b
+
+let simpl_var_decl ~loc v let_rhs =
+  s_decl
+    ~loc
+    (d_var ~loc { type_params = None; pattern = p_var ~loc v; rhs_type = None; let_rhs })
+
+
+let simpl_const_decl ~loc v let_rhs =
+  s_decl
+    ~loc
+    (d_const
+       ~loc
+       { type_params = None; pattern = p_var ~loc v; rhs_type = None; let_rhs })
+
 
 let program_entry p : program_entry = { fp = p }

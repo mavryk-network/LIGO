@@ -17,6 +17,7 @@
   hack_literalize_jsligo
   t_app_michelson_types
   e_rev_app
+  reduce_switch
  )
  (libraries ast_unified syntax_types)
  (inline_tests

@@ -5,8 +5,6 @@ module Errors = Passes.Errors
 
 let trivial_compile_program : I.program -> O.program =
  fun x ->
-  print_endline
-    (Format.asprintf "program: %a" (Sexp.pp_hum_indent 2) (I.S_exp.sexp_of_program x));
   failwith "TODO: Everything is fine"
 
 
@@ -42,6 +40,7 @@ let passes
   ; Hack_literalize_jsligo.pass ~raise ~syntax
   ; Restrict_t_app.pass ~raise
   ; T_app_michelson_types.pass ~raise
+  ; Reduce_switch.pass ~raise
   ; E_rev_app.pass ~raise
   ]
 
@@ -49,6 +48,7 @@ let passes
 let compile_program ~raise ~syntax : I.program -> O.program =
  fun prg ->
   let passes = passes ~raise ~syntax in
+  print_endline (Format.asprintf "%a" (Sexp.pp_hum_indent 2) (I.S_exp.sexp_of_program prg));
   let prg = compile_with_passes (List.map ~f:(fun x -> x.program) passes) prg in
   trivial_compile_program prg
 
