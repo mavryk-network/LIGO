@@ -10,15 +10,6 @@ Into a dedicated node :
 needs  : - t_app_pascaligo -->
 *)
 
-(* let open Location in
-  let ty_expr : ty_expr ty_expr_ -> options = fun t ->
-  match t with
-  | { wrap_content = T_App { constr = { fp = { wrap_content = T_Var _; _} }; type_args=_ }; _ } -> ()
-  | { wrap_content = T_App { constr = { fp = { wrap_content = _; _} }; type_args=_ }; _ } -> raise.error (wrong_reduction __MODULE__)
-  | _ -> ()
-  in
-  { Iter.defaults with ty_expr } *)
-
 open Ast_unified
 open Pass_type
 open Simple_utils.Trace

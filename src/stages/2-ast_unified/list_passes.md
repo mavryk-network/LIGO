@@ -208,3 +208,10 @@ S_Instr should only contain simple stuff like `I_While I_For_In I_For I_ForOf`
 
 
 See handling of TDisc in JsLIGO abstractor AND GOOD LUCK
+
+## pass 'unreachable code'
+
+- remove : -
+- add : -
+
+emit warning on unreachable code (after break in switch statements; after returns)
