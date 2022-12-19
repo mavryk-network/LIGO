@@ -1147,6 +1147,43 @@ failure and mutation involved will be added to the list to be
 returned.
 
 <SyntaxTitle syntax="pascaligo">
+val originate_contract_and_mutate&lt;b&gt; : michelson_contract -> michelson_program -> tez -> (address * michelson_contract * int -> b) -> option (b)
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val originate_contract_and_mutate : michelson_contract -> michelson_program -> tez -> (address * michelson_contract * int -> 'b) -> ('b) option
+</SyntaxTitle>
+<SyntaxTitle syntax="reasonligo">
+let originate_contract_and_mutate : (michelson_contract, michelson_program, tez, ((address, michelson_contract, int) => 'b)) => option ('b)
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+let originate_contract_and_mutate : (contract: michelson_contract, init: michelson_program, balance: tez, (tester: (originated_address: address, code: michelson_contract, size: int) => 'b)) => option&lt;&apos;b&gt;
+</SyntaxTitle>
+
+Given a Michelson contract, an initial storage and balance, it will
+originate mutants of the contract and pass the result to the function
+(last argument). On the first case of non failure when running the
+function on a mutation, the value involved will be returned.
+
+<SyntaxTitle syntax="pascaligo">
+val originate_contract_and_mutate_all&lt;b&gt; : michelson_contract -> michelson_program -> tez -> (address * michelson_contract * int -> b) -> list (b)
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val originate_contract_and_mutate_all : michelson_contract -> michelson_program -> tez -> (address * michelson_contract * int -> 'b) -> ('b) list
+</SyntaxTitle>
+<SyntaxTitle syntax="reasonligo">
+let originate_contract_and_mutate_all : (michelson_contract, michelson_program, tez, ((address, michelson_contract, int) => 'b)) => list ('b)
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+let originate_contract_and_mutate_all : (contract: michelson_contract, init: michelson_program, balance: tez, (tester: (originated_address: address, code: michelson_contract, size: int) => 'b)) => list&lt;&apos;b&gt;
+</SyntaxTitle>
+
+Given a Michelson contract, an initial storage and balance, it will
+originate mutants of the contract and pass the result to the function
+(last argument). In case no failure arises when running the function
+on a mutation, the failure involved will be added to the list to be
+returned.
+
+<SyntaxTitle syntax="pascaligo">
 val save_mutation : string -> mutation -> option (string)
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
