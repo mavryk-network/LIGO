@@ -84,13 +84,11 @@ let reduction ~raise =
   { Iter.defaults with expr }
 
 
-let decompile = `Cata idle_cata_pass
-
 let pass ~raise ~syntax =
   cata_morph
     ~name:__MODULE__
     ~compile:(compile ~raise ~syntax)
-    ~decompile
+    ~decompile:`None
     ~reduction_check:(reduction ~raise)
 
 

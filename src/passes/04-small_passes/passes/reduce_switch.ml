@@ -165,7 +165,7 @@ let pass ~raise =
   cata_morph
     ~name:__MODULE__
     ~compile
-    ~decompile:(`Cata idle_cata_pass)
+    ~decompile:`None
     ~reduction_check:(reduction ~raise)
 
 
@@ -226,116 +226,116 @@ let%expect_test "compile" =
     {|
     ((PE_Declaration
       (D_Const
-      ((pattern (P_var f))
+       ((pattern (P_var f))
         (let_rhs
-        (E_Block_fun
+         (E_Block_fun
           ((parameters ((P_var n))) (lhs_type ())
-          (body
+           (body
             (FunctionBody
-            ((S_Attr
-              (((key private) (value ()))
+             ((S_Attr
+               (((key private) (value ()))
                 (S_Decl
-                (D_Var
+                 (D_Var
                   ((pattern (P_var output))
-                  (let_rhs (E_Literal (Literal_int 0))))))))
+                   (let_rhs (E_Literal (Literal_int 0))))))))
               (S_Instr
-              (I_Block
+               (I_Block
                 ((S_Decl
                   (D_Const
-                  ((pattern (P_var g0))
+                   ((pattern (P_var g0))
                     (let_rhs
-                    (E_constant
+                     (E_constant
                       ((cons_name C_OR)
-                      (arguments
+                       (arguments
                         ((E_constant
                           ((cons_name C_EQ)
-                          (arguments
+                           (arguments
                             ((E_variable n) (E_Literal (Literal_int 1))))))
-                        (E_constant
+                         (E_constant
                           ((cons_name C_OR)
-                          (arguments
+                           (arguments
                             ((E_constant
                               ((cons_name C_EQ)
-                              (arguments
+                               (arguments
                                 ((E_variable n) (E_Literal (Literal_int 2))))))
-                            (E_variable fallthrough)))))))))))))
-                (S_Instr
+                             (E_variable fallthrough)))))))))))))
+                 (S_Instr
                   (I_Cond
-                  ((test
-                    (E_constant
+                   ((test
+                     (E_constant
                       ((cons_name C_OR)
-                      (arguments ((E_variable fallthrough) (E_variable g0))))))
+                       (arguments ((E_variable fallthrough) (E_variable g0))))))
                     (ifso
-                    (ClauseBlock
+                     (ClauseBlock
                       ((S_Instr
                         (I_Expr
-                        (E_AssignJsligo
+                         (E_AssignJsligo
                           ((expr1 (E_variable output))
-                          (op (Assignment_operator Plus_eq))
-                          (expr2 (E_Literal (Literal_int 1)))))))))))))
-                (S_Decl
+                           (op (Assignment_operator Plus_eq))
+                           (expr2 (E_Literal (Literal_int 1)))))))))))))
+                 (S_Decl
                   (D_Const
-                  ((pattern (P_var g1))
+                   ((pattern (P_var g1))
                     (let_rhs
-                    (E_constant
+                     (E_constant
                       ((cons_name C_OR)
-                      (arguments
+                       (arguments
                         ((E_constant
                           ((cons_name C_EQ)
-                          (arguments
+                           (arguments
                             ((E_variable n) (E_Literal (Literal_int 3))))))
-                        (E_constant
+                         (E_constant
                           ((cons_name C_OR)
-                          (arguments
+                           (arguments
                             ((E_constant
                               ((cons_name C_EQ)
-                              (arguments
+                               (arguments
                                 ((E_variable n) (E_Literal (Literal_int 4))))))
-                            (E_variable fallthrough)))))))))))))
-                (S_Instr
+                             (E_variable fallthrough)))))))))))))
+                 (S_Instr
                   (I_Cond
-                  ((test
-                    (E_constant
+                   ((test
+                     (E_constant
                       ((cons_name C_OR)
-                      (arguments ((E_variable fallthrough) (E_variable g1))))))
+                       (arguments ((E_variable fallthrough) (E_variable g1))))))
                     (ifso
-                    (ClauseBlock
+                     (ClauseBlock
                       ((S_Instr
                         (I_Expr
-                        (E_AssignJsligo
+                         (E_AssignJsligo
                           ((expr1 (E_variable output))
-                          (op (Assignment_operator Plus_eq))
-                          (expr2 (E_Literal (Literal_int 2)))))))
-                      (S_Instr
+                           (op (Assignment_operator Plus_eq))
+                           (expr2 (E_Literal (Literal_int 2)))))))
+                       (S_Instr
                         (I_struct_assign
-                        ((lhs_expr (E_variable fallthrough))
+                         ((lhs_expr (E_variable fallthrough))
                           (rhs_expr (E_constant ((cons_name C_FALSE)))))))))))))
-                (S_Instr
+                 (S_Instr
                   (I_Cond
-                  ((test
-                    (E_constant
+                   ((test
+                     (E_constant
                       ((cons_name C_OR)
-                      (arguments
+                       (arguments
                         ((E_variable fallthrough)
-                        (E_constant
+                         (E_constant
                           ((cons_name C_NOT)
-                          (arguments
+                           (arguments
                             ((E_constant
                               ((cons_name C_OR)
-                              (arguments
+                               (arguments
                                 ((E_variable g1)
-                                (E_constant
+                                 (E_constant
                                   ((cons_name C_OR)
-                                  (arguments
+                                   (arguments
                                     ((E_variable g0)
-                                    (E_constant ((cons_name C_FALSE))))))))))))))))))))
+                                     (E_constant ((cons_name C_FALSE))))))))))))))))))))
                     (ifso
-                    (ClauseBlock
+                     (ClauseBlock
                       ((S_Instr
                         (I_Expr
-                        (E_AssignJsligo
+                         (E_AssignJsligo
                           ((expr1 (E_variable output))
-                          (op (Assignment_operator Plus_eq))
-                          (expr2 (E_Literal (Literal_int 3))))))))))))))))
+                           (op (Assignment_operator Plus_eq))
+                           (expr2 (E_Literal (Literal_int 3))))))))))))))))
               (S_Instr (I_Return ((E_variable output))))))))))))))
   |}]

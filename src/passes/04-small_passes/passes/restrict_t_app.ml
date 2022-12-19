@@ -33,13 +33,11 @@ let reduction ~raise =
   { Iter.defaults with ty_expr }
 
 
-let decompile = `Cata idle_cata_pass
-
 let pass ~raise =
   cata_morph
     ~name:__MODULE__
     ~compile:(compile ~raise)
-    ~decompile
+    ~decompile:`None
     ~reduction_check:(reduction ~raise)
 
 open Unit_test_helpers

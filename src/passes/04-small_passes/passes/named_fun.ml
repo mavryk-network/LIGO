@@ -27,11 +27,8 @@ let reduction ~raise =
       | _ -> ())
   }
 
-
-let decompile = `Cata idle_cata_pass
-
 let pass ~raise =
-  cata_morph ~name:__MODULE__ ~compile ~decompile ~reduction_check:(reduction ~raise)
+  cata_morph ~name:__MODULE__ ~compile ~decompile:`None ~reduction_check:(reduction ~raise)
 
 
 open Unit_test_helpers

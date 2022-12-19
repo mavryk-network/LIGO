@@ -14,7 +14,7 @@ let compile =
 
 
 let reduction_check = Iter.defaults
-let decompile = `Cata idle_cata_pass
+let decompile = `None
 let pass = cata_morph ~name:__MODULE__ ~compile ~decompile ~reduction_check
 
 open Unit_test_helpers

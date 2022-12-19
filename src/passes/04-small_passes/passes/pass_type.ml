@@ -80,8 +80,8 @@ let idle_ana_pass : ana_pass =
 
 let cata_morph
     ~name
-    ~(compile : [ `Cata of cata_pass | `Ana of ana_pass ])
-    ~(decompile : [ `Cata of cata_pass | `Ana of ana_pass ])
+    ~(compile : [ `Cata of cata_pass | `Ana of ana_pass | `None ])
+    ~(decompile : [ `Cata of cata_pass | `Ana of ana_pass | `None ])
     ~(reduction_check : Ast_unified.Iter.iter)
     : pass
   =
@@ -90,25 +90,29 @@ let cata_morph
       match compile with
       | `Cata pass -> Catamorphism.(cata_expr ~f:pass expr)
       | `Ana pass -> Anamorphism.(ana_expr ~f:pass expr)
+      | `None -> expr
     in
     let backward expr =
       match decompile with
       | `Cata pass -> Catamorphism.(cata_expr ~f:pass expr)
       | `Ana pass -> Anamorphism.(ana_expr ~f:pass expr)
+      | `None -> expr
     in
     let reduction_check = reduction_check, fun f expr -> Iter.(iter_expr ~f expr) in
     { forward; forward_check = reduction_check; backward }
   in
   let program =
-    let forward expr =
+    let forward prg =
       match compile with
-      | `Cata pass -> Catamorphism.(cata_program ~f:pass expr)
-      | `Ana pass -> Anamorphism.(ana_program ~f:pass expr)
+      | `Cata pass -> Catamorphism.(cata_program ~f:pass prg)
+      | `Ana pass -> Anamorphism.(ana_program ~f:pass prg)
+      | `None -> prg
     in
-    let backward expr =
+    let backward prg =
       match decompile with
-      | `Cata pass -> Catamorphism.(cata_program ~f:pass expr)
-      | `Ana pass -> Anamorphism.(ana_program ~f:pass expr)
+      | `Cata pass -> Catamorphism.(cata_program ~f:pass prg)
+      | `Ana pass -> Anamorphism.(ana_program ~f:pass prg)
+      | `None -> prg
     in
     let reduction_check = reduction_check, fun f prg -> Iter.(iter_program ~f prg) in
     { forward; forward_check = reduction_check; backward }

@@ -4,7 +4,7 @@ open Passes.Pass_type
 module Errors = Passes.Errors
 
 let trivial_compile_program : I.program -> O.program =
- fun x ->
+ fun _ ->
   failwith "TODO: Everything is fine"
 
 
