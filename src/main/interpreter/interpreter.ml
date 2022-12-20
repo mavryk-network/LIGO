@@ -1032,7 +1032,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     >>>>>>>>
     *)
   | ( C_TEST_MUTATE_MICHELSON
-    , [ V_Michelson (Ty_code ({ micheline_repr = { code; code_ty }; _ } as ty_code)) ] )
+    , [ V_Michelson (Ty_code { micheline_repr = { code; code_ty }; ast_ty }) ] )
     ->
     let>> tezos_context = Get_alpha_context () in
     let muts =
@@ -1045,8 +1045,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
         code_ty
     in
     let wrap code =
-      V_Michelson
-        (Ty_code { ty_code with micheline_repr = { ty_code.micheline_repr with code } })
+      v_michelson_typed code ast_ty code_ty
     in
     return @@ v_list @@ List.map ~f:wrap muts
   | C_TEST_MUTATE_MICHELSON, _ -> fail @@ error_type ()
@@ -1060,7 +1059,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
         ~tezos_context
         contract
     in
-    return @@ v_list @@ List.map ~f:(fun code -> V_Michelson_contract code) muts
+    return @@ v_list @@ List.map ~f:v_michelson_contract muts
   | C_TEST_MUTATE_MICHELSON_CONTRACT, _ -> fail @@ error_type ()
   | C_TEST_ADDRESS, [ V_Ct (C_contract { address; entrypoint = _ }) ] ->
     return (V_Ct (C_address address))
