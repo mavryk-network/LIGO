@@ -347,54 +347,6 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_mutate_contract.mligo" ];
   [%expect
     {|
-    File "./test_mutate_contract.mligo", line 37, characters 4-18:
-     36 |     let () = Test.log v in
-     37 |     assert (false) in
-     38 |   Test.log (Test.originate_contract_and_mutate_all c (Test.eval 0) 0tez tester)
-
-    You are using Michelson failwith primitive (loaded from standard library).
-    Consider using `Test.failwith` for throwing a testing framework failure.
-
-    File "./test_mutate_contract.mligo", line 37, characters 4-18:
-     36 |     let () = Test.log v in
-     37 |     assert (false) in
-     38 |   Test.log (Test.originate_contract_and_mutate_all c (Test.eval 0) 0tez tester)
-
-    You are using Michelson failwith primitive (loaded from standard library).
-    Consider using `Test.failwith` for throwing a testing framework failure.
-
-    File "./test_mutate_contract.mligo", line 37, characters 4-18:
-     36 |     let () = Test.log v in
-     37 |     assert (false) in
-     38 |   Test.log (Test.originate_contract_and_mutate_all c (Test.eval 0) 0tez tester)
-
-    You are using Michelson failwith primitive (loaded from standard library).
-    Consider using `Test.failwith` for throwing a testing framework failure.
-
-    File "./test_mutate_contract.mligo", line 37, characters 4-18:
-     36 |     let () = Test.log v in
-     37 |     assert (false) in
-     38 |   Test.log (Test.originate_contract_and_mutate_all c (Test.eval 0) 0tez tester)
-
-    You are using Michelson failwith primitive (loaded from standard library).
-    Consider using `Test.failwith` for throwing a testing framework failure.
-
-    File "./test_mutate_contract.mligo", line 37, characters 4-18:
-     36 |     let () = Test.log v in
-     37 |     assert (false) in
-     38 |   Test.log (Test.originate_contract_and_mutate_all c (Test.eval 0) 0tez tester)
-
-    You are using Michelson failwith primitive (loaded from standard library).
-    Consider using `Test.failwith` for throwing a testing framework failure.
-
-    File "./test_mutate_contract.mligo", line 37, characters 4-18:
-     36 |     let () = Test.log v in
-     37 |     assert (false) in
-     38 |   Test.log (Test.originate_contract_and_mutate_all c (Test.eval 0) 0tez tester)
-
-    You are using Michelson failwith primitive (loaded from standard library).
-    Consider using `Test.failwith` for throwing a testing framework failure.
-
     { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
       storage int ;
       code { UNPAIR ;
@@ -407,42 +359,42 @@ let%expect_test _ =
              IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int -1 } ;
              NIL operation ;
              PAIR } }
-    (KT1H7zueuG3FAkoN65zYP42doZVrQvHSn8cR , { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
       storage int ;
       code { UNPAIR ;
              IF_LEFT { IF_LEFT { SWAP ; ADD } { ADD } } { DROP 2 ; PUSH int 0 } ;
              NIL operation ;
-             PAIR } } , 114)
-    (KT1GPEjvUiEGMb5FLC4f69ci7fVjW2pp1Ved , { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+             PAIR } }
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
       storage int ;
       code { UNPAIR ;
              IF_LEFT { IF_LEFT { SWAP ; MUL } { ADD } } { DROP 2 ; PUSH int 0 } ;
              NIL operation ;
-             PAIR } } , 114)
-    (KT1TCECm8CrUcdDos2U7bxkyAHrYb42Geyq2 , { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+             PAIR } }
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
       storage int ;
       code { UNPAIR ;
              IF_LEFT { IF_LEFT { SWAP ; SUB } { MUL } } { DROP 2 ; PUSH int 0 } ;
              NIL operation ;
-             PAIR } } , 114)
-    (KT1AJG9Mm9p1GivtKXu8M1Q1jtAwYQREYw7p , { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+             PAIR } }
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
       storage int ;
       code { UNPAIR ;
              IF_LEFT { IF_LEFT { SWAP ; SUB } { SUB } } { DROP 2 ; PUSH int 0 } ;
              NIL operation ;
-             PAIR } } , 114)
-    (KT1Fzh7kEY9AAZXpbNMjTEemBF6gB6MnZpKZ , { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+             PAIR } }
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
       storage int ;
       code { UNPAIR ;
              IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int 1 } ;
              NIL operation ;
-             PAIR } } , 114)
-    (KT1Pp2VVCSH7CfHN62kYhtGmAA8NVhBAftS7 , { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+             PAIR } }
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
       storage int ;
       code { UNPAIR ;
              IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int -1 } ;
              NIL operation ;
-             PAIR } } , 114)
+             PAIR } }
     []
     Everything at the top-level was executed.
     - test_incr exited with value <fun>.
