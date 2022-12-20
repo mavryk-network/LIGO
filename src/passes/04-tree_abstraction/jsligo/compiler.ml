@@ -11,9 +11,6 @@ open AST
 let nseq_to_list (hd, tl) = hd :: tl
 let npseq_to_list (hd, tl) = hd :: List.map ~f:snd tl
 let npseq_to_ne_list (hd, tl) = hd, List.map ~f:snd tl
-
-open Predefined.Tree_abstraction
-
 let r_split = Location.r_split
 
 let compile_variable var =
@@ -1156,18 +1153,6 @@ and merge_statement_results ~raise
     Return a
 
 
-and is_failwith_call = function
-  | { expression_content = E_constant { cons_name; _ }; _ } ->
-    String.equal "failwith" @@ constant_to_string cons_name
-  | { expression_content = E_ascription { anno_expr; _ }; _ } ->
-    is_failwith_call anno_expr
-  | { expression_content =
-        E_application { lamb = { expression_content = E_variable v; _ }; _ }
-    ; _
-    } -> Value_var.is_name v "failwith"
-  | _ -> false
-
-
 and filter_private (attributes : CST.attributes) =
   List.filter ~f:(fun v -> not @@ String.equal v.value "private") attributes
 
@@ -1354,9 +1339,6 @@ and compile_statement ?(wrap = false) ~raise : CST.statement -> statement_result
     let else_clause = Option.map ~f:(fun (_, s) -> self ~wrap:false s) cond.ifnot in
     let compile_clause = function
       | Binding e -> expr, e @@ e_unit ~loc ()
-      | Expr e when is_failwith_call e ->
-        raise.warning (`Jsligo_deprecated_failwith_no_return e.location);
-        return, e
       | Expr e -> expr, e_sequence ~loc e (e_unit ~loc ())
       | Break b -> return, e_sequence ~loc b (e_unit ~loc ())
       | Return r -> return, r
@@ -1429,9 +1411,9 @@ and compile_statement ?(wrap = false) ~raise : CST.statement -> statement_result
           | None -> ())
         | (_ as s), _ -> raise.error @@ case_break_disc (CST.statement_to_region s)
       in
-      let cases =
-        List.map
-          ~f:(fun f ->
+      let st, cases =
+        List.fold_left
+          ~f:(fun (r, all) f ->
             match f with
             | Switch_case { expr = EString (String v); statements = Some statements; _ }
               ->
@@ -1450,16 +1432,25 @@ and compile_statement ?(wrap = false) ~raise : CST.statement -> statement_result
                 else Location.wrap ~loc Pattern.P_unit
               in
               let pattern = Location.wrap ~loc (Pattern.P_variant (Label v.value, ty)) in
-              Match_expr.
-                { pattern
-                ; body = compile_statements_to_expression ~loc ~raise statements
-                }
+              let statement_result = compile_statements ~raise statements in
+              let r =
+                match r with
+                | Some r -> Some r
+                | None -> Some statement_result
+              in
+              ( r
+              , Match_expr.
+                  { pattern; body = statement_result_to_expression ~loc statement_result }
+                :: all )
             | Switch_case { expr = EString (String _); statements = None; _ } ->
               raise.error @@ case_break_disc s'.region
             | _ -> raise.error unexpected)
+          ~init:(None, [])
           (nseq_to_list s.cases)
       in
-      expr (e_matching ~loc matchee cases)
+      (match st with
+      | Some (Return _) -> return (e_matching ~loc matchee cases)
+      | _ -> expr (e_matching ~loc matchee cases))
     | None ->
       (* a switch statement based on if-else statements *)
       let switch_expr = self_expr s.expr in
@@ -1548,6 +1539,7 @@ and compile_statement ?(wrap = false) ~raise : CST.statement -> statement_result
               let e = e_sequence ~loc e update_vars_break in
               Binding (fun x -> e_sequence ~loc (e_cond ~loc test e (e_unit ~loc ())) x)
             | Return e ->
+              (* Return e *)
               Binding
                 (fun x ->
                   match x with
@@ -1574,6 +1566,7 @@ and compile_statement ?(wrap = false) ~raise : CST.statement -> statement_result
               Binding
                 (fun x -> e_sequence ~loc (e_cond ~loc default_cond e (e_unit ~loc ())) x)
             | Return e ->
+              (* Return e *)
               Binding
                 (fun x ->
                   match x with
@@ -1582,8 +1575,13 @@ and compile_statement ?(wrap = false) ~raise : CST.statement -> statement_result
           in
           statements
       in
+      (* let o = *)
       List.fold_left cases ~init:initial ~f:(fun acc case ->
-          merge_statement_results ~raise acc (process_case case)))
+          merge_statement_results ~raise acc (process_case case))
+      (* in
+      match o with 
+        Binding e -> Binding e
+      | _ as e -> e     *))
   | SBreak b -> Break (e_unit ~loc:(Location.lift b#region) ())
   | SType ti ->
     let ti, loc = r_split ti in
@@ -1634,7 +1632,11 @@ and statement_result_to_expression ~loc : statement_result -> AST.expression =
  fun statement_result ->
   match statement_result with
   | Binding b -> b (e_unit ~loc ())
-  | Expr e -> e
+  | Expr e ->
+    let pattern =
+      Location.wrap ~loc (Pattern.P_var (Binder.make (Value_var.fresh ~loc ()) None))
+    in
+    e_let_in ~loc pattern [] e (e_unit ~loc ())
   | Break r | Return r -> r
 
 
