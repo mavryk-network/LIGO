@@ -197,28 +197,22 @@ let%expect_test "compile" =
                 (Switch_case
                  (E_Literal (Literal_int 2))
                  (((S_Instr
-                    (I_Expr
-                     (E_AssignJsligo
-                      ((expr1 (E_variable output))
-                       (op (Assignment_operator Plus_eq))
-                       (expr2 (E_Literal (Literal_int 1))))))))))
+                    (I_Struct_assign
+                      ((lhs_expr (E_variable output))
+                       (rhs_expr (E_Literal (Literal_int 1)))))))))
                 (Switch_case (E_Literal (Literal_int 3)) ())
                 (Switch_case
                  (E_Literal (Literal_int 4))
                  (((S_Instr
-                    (I_Expr
-                     (E_AssignJsligo
-                      ((expr1 (E_variable output))
-                       (op (Assignment_operator Plus_eq))
-                       (expr2 (E_Literal (Literal_int 2)))))))
+                     (I_Struct_assign
+                      ((lhs_expr (E_variable output))
+                       (rhs_expr (E_Literal (Literal_int 2))))))
                    (S_Instr I_break))))
                 (Switch_default_case
                  (((S_Instr
-                    (I_Expr
-                     (E_AssignJsligo
-                      ((expr1 (E_variable output))
-                       (op (Assignment_operator Plus_eq))
-                       (expr2 (E_Literal (Literal_int 3)))))))))))))))
+                     (I_Struct_assign
+                      ((lhs_expr (E_variable output))
+                       (rhs_expr (E_Literal (Literal_int 3))))))))))))))
            (S_Instr (I_Return ((E_variable output))))))))))))))
 
   |}
@@ -269,11 +263,9 @@ let%expect_test "compile" =
                     (ifso
                      (ClauseBlock
                       ((S_Instr
-                        (I_Expr
-                         (E_AssignJsligo
-                          ((expr1 (E_variable output))
-                           (op (Assignment_operator Plus_eq))
-                           (expr2 (E_Literal (Literal_int 1)))))))))))))
+                        (I_Struct_assign
+                         ((lhs_expr (E_variable output))
+                          (rhs_expr (E_Literal (Literal_int 1))))))))))))
                  (S_Decl
                   (D_Const
                    ((pattern (P_var g1))
@@ -302,13 +294,11 @@ let%expect_test "compile" =
                     (ifso
                      (ClauseBlock
                       ((S_Instr
-                        (I_Expr
-                         (E_AssignJsligo
-                          ((expr1 (E_variable output))
-                           (op (Assignment_operator Plus_eq))
-                           (expr2 (E_Literal (Literal_int 2)))))))
+                        (I_Struct_assign
+                         ((lhs_expr (E_variable output))
+                          (rhs_expr (E_Literal (Literal_int 2))))))
                        (S_Instr
-                        (I_struct_assign
+                        (I_Struct_assign
                          ((lhs_expr (E_variable fallthrough))
                           (rhs_expr (E_constant ((cons_name C_FALSE)))))))))))))
                  (S_Instr
@@ -333,10 +323,8 @@ let%expect_test "compile" =
                     (ifso
                      (ClauseBlock
                       ((S_Instr
-                        (I_Expr
-                         (E_AssignJsligo
-                          ((expr1 (E_variable output))
-                           (op (Assignment_operator Plus_eq))
-                           (expr2 (E_Literal (Literal_int 3))))))))))))))))
+                        (I_Struct_assign
+                         ((lhs_expr (E_variable output))
+                          (rhs_expr (E_Literal (Literal_int 3)))))))))))))))
               (S_Instr (I_Return ((E_variable output))))))))))))))
   |}]
