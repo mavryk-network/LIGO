@@ -1427,7 +1427,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_TEST_REGISTER_CONSTANT, _ -> fail @@ error_type ()
   | C_TEST_CONSTANT_TO_MICHELSON, [ V_Ct (C_string m) ] ->
     let>> s = Constant_to_Michelson (loc, calltrace, m) in
-    return @@ V_Michelson (Untyped_code s)
+    return @@ v_michelson_untyped s
   | C_TEST_CONSTANT_TO_MICHELSON, _ -> fail @@ error_type ()
   | C_TEST_REGISTER_FILE_CONSTANTS, [ V_Ct (C_string path) ] ->
     let>> v = Register_file_constants (loc, calltrace, path) in
@@ -1815,7 +1815,7 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
         | m -> m
       in
       let code = Tezos_utils.Michelson.map replace code in
-      return @@ V_Michelson (Ty_code { micheline_repr = { code; code_ty }; ast_ty })
+      return @@ v_michelson_typed code ast_ty code_ty
     | _ ->
       raise.error
       @@ Errors.generic_error
@@ -1832,7 +1832,7 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
       let code, code_ty =
         Michelson_backend.parse_raw_michelson_code ~raise exp_as_string ast_ty
       in
-      return @@ V_Michelson (Ty_code { micheline_repr = { code; code_ty }; ast_ty })
+      return @@ v_michelson_typed code ast_ty code_ty
     | _ ->
       raise.error
       @@ Errors.generic_error
