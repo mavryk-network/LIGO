@@ -1032,8 +1032,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     >>>>>>>>
     *)
   | ( C_TEST_MUTATE_MICHELSON
-    , [ V_Michelson (Ty_code { micheline_repr = { code; code_ty }; ast_ty }) ] )
-    ->
+    , [ V_Michelson (Ty_code { micheline_repr = { code; code_ty }; ast_ty }) ] ) ->
     let>> tezos_context = Get_alpha_context () in
     let muts =
       Michelson_backend.mutate_typed_michelson
@@ -1044,9 +1043,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
         code
         code_ty
     in
-    let wrap code =
-      v_michelson_typed code ast_ty code_ty
-    in
+    let wrap code = v_michelson_typed code ast_ty code_ty in
     return @@ v_list @@ List.map ~f:wrap muts
   | C_TEST_MUTATE_MICHELSON, _ -> fail @@ error_type ()
   | C_TEST_MUTATE_MICHELSON_CONTRACT, [ V_Michelson_contract contract ] ->
