@@ -42,17 +42,18 @@ let group_cases cases : group list * default_case =
       groups
   in
   let cases =
+    (* aggregate groups value and statement *)
     List.map cases ~f:(fun lst ->
-        let rec aux (values, stmts) = function
+        let rec agg (values, stmts) = function
           | Switch_default_case _ :: _ -> impossible ()
-          | Switch_case (value, None) :: tl -> aux (value :: values, stmts) tl
+          | Switch_case (value, None) :: tl -> agg (value :: values, stmts) tl
           | Switch_case (value, Some stmts) :: tl ->
             if List.is_empty tl
             then value :: values, List.Ne.to_list stmts
             else impossible ()
           | [] -> values, stmts
         in
-        let case_values, body = aux ([], []) lst in
+        let case_values, body = agg ([], []) lst in
         { case_values; body = List.Ne.of_list body })
   in
   let default =
@@ -144,9 +145,9 @@ let switch_to_decl loc switchee cases =
 
 let compile =
   let pass_declaration : _ instruction_ -> instruction = function
-    | { location = loc; wrap_content = I_Switch { switchee; cases } } ->
+    | { wrap_content = I_Switch { switchee; cases } ; location = loc } ->
       i_block ~loc (switch_to_decl loc switchee cases)
-    | { location = loc; wrap_content } -> make_i ~loc wrap_content
+    | { wrap_content ; location = loc } -> make_i ~loc wrap_content
   in
   `Cata { idle_cata_pass with instruction = pass_declaration }
 
