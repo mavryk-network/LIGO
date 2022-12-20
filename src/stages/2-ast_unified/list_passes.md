@@ -173,16 +173,6 @@ note: is there any reason why we would like E_App ? GADT ? where Ctor is a funct
 `E_AssignJsligo` |-> `E_block_with`
 (transitivity .. etc etc )
 
-## pass 'structural assignments'
-
-note: see path_of_lvalue in pascaligo abstractor
-- remove : I_Struct_assign ; I_Patch ; I_Remove
-- add    : -
-
-see pascaligo (path_of_lvalue)
-
-`S_Instr (I_struct_assign/path/remove ..)` |-> `S_decl (_ (..))`
-
 ## pass 'unstate'
 
 - remove : S_* ; E_Block_with ; E_Block_fun ; I_*

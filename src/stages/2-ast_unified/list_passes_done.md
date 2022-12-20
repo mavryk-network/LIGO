@@ -109,3 +109,12 @@ note: note sure, after Open directive ? https://gitlab.com/ligolang/ligo/-/merge
 
 `E_Sequence` -> `E_let_in`
 
+## pass 'structural assignments'
+
+note: see path_of_lvalue in pascaligo abstractor
+- remove : I_Struct_assign ; I_Patch ; I_Remove
+- add    : -
+
+see pascaligo (path_of_lvalue)
+
+`S_Instr (I_struct_assign/path/remove ..)` |-> `S_decl (_ (..))`
