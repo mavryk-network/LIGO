@@ -1,12 +1,3 @@
-let mutate (m : michelson_program) : michelson_program list = [%external ("TEST_MUTATE_MICHELSON", m)]
-let mutate_contract (m : michelson_contract) : michelson_contract list = [%external ("TEST_MUTATE_MICHELSON_CONTRACT", m)]
-
-(*
-let test_mutate =
-  let f = Test.eval (fun (x : int) -> if (x > 10) then x + 1n + String.length "jeje" else 4) in
-  List.iter (fun (m : michelson_program) -> Test.log (m, (Test.decompile m : int -> int) 11)) (mutate f)
-*)
-
 let test_incr (c : michelson_contract) =
   type parameter = Increment of int | Decrement of int | Reset in
   let addr = Test.originate_contract c (Test.eval 2) 0tez in
@@ -37,7 +28,7 @@ let test_contract (c : michelson_contract) =
 
 let test_mutate_contract =
   let c = Test.read_contract_from_file "incr.tz" in
-  List.iter test_contract (mutate_contract c)
+  List.iter test_contract (Test.mutate_contract c)
 
 let test_eh =
   let c = Test.read_contract_from_file "incr.tz" in
