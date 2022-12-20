@@ -32,7 +32,7 @@ let test_mutate_contract =
 
 let test_eh =
   let c = Test.read_contract_from_file "incr.tz" in
-  let tester v =
-    let () = Test.log v in
-    assert (false) in
+  let tester (_, c, _) =
+    let () = Test.log c in
+    Test.assert (false) in
   Test.log (Test.originate_contract_and_mutate_all c (Test.eval 0) 0tez tester)
