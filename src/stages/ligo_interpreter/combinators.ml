@@ -39,6 +39,8 @@ let v_michelson_typed : mcode -> Ast_aggregated.type_expression -> mcode -> valu
 
 let v_michelson_untyped : mcode -> value = fun c -> V_Michelson (Untyped_code c)
 let v_michelson_contract : mcode -> value = fun c -> V_Michelson_contract c
+let v_ast_contract : Ast_aggregated.expression -> (Value_var.t list * expression) option -> value = fun main views -> V_Ast_contract { main ; views }
+let v_contract : Contract.t -> string option -> value = fun address entrypoint -> V_Ct (C_contract { address ; entrypoint })
 
 let v_key_hash : Tezos_crypto.Signature.public_key_hash -> value =
  fun v -> V_Ct (C_key_hash v)
