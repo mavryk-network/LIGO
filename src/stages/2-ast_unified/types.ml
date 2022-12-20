@@ -164,7 +164,7 @@ type ('self, 'expr, 'pattern, 'statement) instruction_ =
   ('self, 'expr, 'pattern, 'statement) instruction_content_ Location.wrap
 
 and ('self, 'expr, 'pattern, 'statement) instruction_content_ =
-  | I_struct_assign of 'expr Struct_assign.t
+  | I_Struct_assign of 'expr Struct_assign.t
   | I_Call of 'expr Instruction_call.t
   | I_Case of ('expr, 'pattern, ('self, 'statement) Test_clause.t) Case.t
   | I_Cond of ('expr, ('self, 'statement) Test_clause.t) Cond.t
