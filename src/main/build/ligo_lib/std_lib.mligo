@@ -427,6 +427,8 @@ module Test = struct
 (* one day we might be able to write  `[@private] let print_values : ref bool = true` or something *)
   let set_print_values (_ : unit) : unit = let _ = [%external ("TEST_SET_PRINT_VALUES", true)] in ()
   let unset_print_values (_ : unit) : unit = let _ = [%external ("TEST_SET_PRINT_VALUES", false)] in ()
+  let mutate_michelson (m : michelson_program) : michelson_program list = [%external ("TEST_MUTATE_MICHELSON", m)]
+  let mutate_contract (m : michelson_contract) : michelson_contract list = [%external ("TEST_MUTATE_MICHELSON_CONTRACT", m)]
 
   module PBT = struct
     let gen (type a) : a pbt_gen = [%external ("TEST_RANDOM", false)]
@@ -588,8 +590,6 @@ module Test = struct
       | Continue -> mutation_nth acc (n + 1n)
       | Passed (b, m) -> mutation_nth ((b, m) :: acc) (n + 1n) in
     mutation_nth ([] : (b * mutation) list) 0n
-  let mutate_program (m : michelson_program) : michelson_program list = [%external ("TEST_MUTATE_MICHELSON", m)]
-  let mutate_contract (m : michelson_contract) : michelson_contract list = [%external ("TEST_MUTATE_MICHELSON_CONTRACT", m)]
   let originate_contract_and_mutate (type b) (c : michelson_contract) (s : michelson_program) (t : tez)
                                     (tester : address * michelson_contract * int -> b) : b option =
     let wrap_tester (f : michelson_contract) : b =
@@ -752,8 +752,6 @@ module Test = struct
       | Continue -> mutation_nth acc (n + 1n)
       | Passed (b, m) -> mutation_nth ((b, m) :: acc) (n + 1n) in
     mutation_nth ([] : (b * mutation) list) 0n
-  let mutate_program (m : michelson_program) : michelson_program list = [%external ("TEST_MUTATE_MICHELSON", m)]
-  let mutate_contract (m : michelson_contract) : michelson_contract list = [%external ("TEST_MUTATE_MICHELSON_CONTRACT", m)]
   let originate_contract_and_mutate (type b) ((c, s, t, tester) : michelson_contract * michelson_program * tez * (address * michelson_contract * int -> b)) : b option =
     let wrap_tester (f : michelson_contract) : b =
       let a = originate_contract (f, s, t) in
