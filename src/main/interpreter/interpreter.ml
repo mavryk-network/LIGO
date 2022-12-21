@@ -438,7 +438,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_NONE, _ -> fail @@ error_type ()
   | C_UNIT, [] -> return @@ v_unit ()
   | C_UNIT, _ -> fail @@ error_type ()
-  | C_NIL, [] -> return @@ V_List []
+  | C_NIL, [] -> return @@ v_list []
   | C_NIL, _ -> fail @@ error_type ()
   | C_TRUE, [] -> return @@ v_bool true
   | C_TRUE, _ -> fail @@ error_type ()
@@ -505,7 +505,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     | None -> return @@ v_none ())
   | C_SUB, _ -> fail @@ error_type ()
   | C_SUB_MUTEZ, _ -> fail @@ error_type ()
-  | C_CONS, [ v; V_List vl ] -> return @@ V_List (v :: vl)
+  | C_CONS, [ v; V_List vl ] -> return @@ v_list (v :: vl)
   | C_CONS, _ -> fail @@ error_type ()
   | C_ADD, [ V_Ct (C_int64 a); V_Ct (C_int64 b) ] -> return @@ v_int64 Int64.(a + b)
   | C_ADD, [ V_Ct (C_int a); V_Ct (C_int b) ]
@@ -655,7 +655,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     | Some v -> return @@ v_nat v
     | None -> fail @@ Errors.meta_lang_eval loc calltrace (v_string "Overflow"))
   | C_LSR, _ -> fail @@ error_type ()
-  | C_LIST_EMPTY, [] -> return @@ V_List []
+  | C_LIST_EMPTY, [] -> return @@ v_list []
   | C_LIST_EMPTY, _ -> fail @@ error_type ()
   | ( C_LIST_MAP
     , [ V_Func_val { arg_binder; arg_mut_flag; body; env; rec_name = _; orig_lambda = _ }
@@ -673,7 +673,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
               eval_ligo body calltrace env'))
         elts
     in
-    return (V_List elts)
+    return (v_list elts)
   | C_LIST_MAP, _ -> fail @@ error_type ()
   | ( C_MAP_MAP
     , [ V_Func_val { arg_binder; arg_mut_flag; body; env; rec_name = _; orig_lambda = _ }
