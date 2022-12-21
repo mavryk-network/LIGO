@@ -91,7 +91,7 @@
 
 (executable
  (name js_main)
- (flags -g)
+ (flags (:standard -g))
  (js_of_ocaml
   ; (javascript_files threads.js bls12-runtime.js blst.js runtime-generated.js helper.js random.js evercrypt.js)
   (javascript_files threads.js)
