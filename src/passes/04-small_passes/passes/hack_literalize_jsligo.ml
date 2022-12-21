@@ -67,7 +67,7 @@ let compile ~raise ~syntax =
 
 
 let reduction ~raise =
-  let expr : _ expr_ -> options =
+  let expr : _ expr_ -> unit =
    fun e ->
     match Location.unwrap e with
     | E_Annot (e, t) ->

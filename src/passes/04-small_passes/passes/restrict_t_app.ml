@@ -24,7 +24,7 @@ let compile ~raise =
 
 let reduction ~raise =
   let open Location in
-  let ty_expr : ty_expr ty_expr_ -> options = fun t ->
+  let ty_expr : ty_expr ty_expr_ -> unit = fun t ->
   match t with
   | { wrap_content = T_App { constr = { fp = { wrap_content = T_Var _; _} }; type_args=_ }; _ } -> ()
   | { wrap_content = T_App { constr = { fp = { wrap_content = _; _} }; type_args=_ }; _ } -> raise.error (wrong_reduction __MODULE__)
