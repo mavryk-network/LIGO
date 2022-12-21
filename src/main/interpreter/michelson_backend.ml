@@ -140,7 +140,8 @@ module Mutation = struct
       let z_mut = t z in
       let mutation = if z_mut <> z then Some () else None in
       return
-      @@ ( Prim (l, "PUSH", [ Prim (l1, "mutez", [], ann1); Int (l2, Z.of_int z_mut) ], ann)
+      @@ ( Prim
+             (l, "PUSH", [ Prim (l1, "mutez", [], ann1); Int (l2, Z.of_int z_mut) ], ann)
          , mutation )
     | Prim (l, "PUSH", [ Prim (l1, "string", [], ann1); String (l2, z) ], ann) ->
       let* t = transform_string in

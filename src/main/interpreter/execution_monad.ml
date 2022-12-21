@@ -358,9 +358,7 @@ module Command = struct
         | Ecoproto_error (Script_interpreter.Reject (_, x, _)) :: _ ->
           let code = Tezos_state.canonical_to_ligo x in
           let code_ty = Michelson_backend.storage_retreival_dummy_ty in
-          let v =
-            LC.v_michelson_typed code (Ast_aggregated.t_int ~loc ()) code_ty
-          in
+          let v = LC.v_michelson_typed code (Ast_aggregated.t_int ~loc ()) code_ty in
           let rej = LC.v_ctor "Rejected" (LC.v_pair (v, contract_failing)) in
           fail_ctor rej, ctxt
         | Ecoproto_error (Script_interpreter.Bad_contract_parameter _addr) :: _ ->
@@ -408,8 +406,7 @@ module Command = struct
         match
           List.Assoc.find ~equal:Tezos_state.equal_account ctxt.internals.storage_tys addr
         with
-        | Some ast_ty ->
-          LC.v_michelson_typed storage ast_ty ty
+        | Some ast_ty -> LC.v_michelson_typed storage ast_ty ty
         | None -> LC.v_michelson_untyped storage
       in
       ret, ctxt
@@ -494,12 +491,12 @@ module Command = struct
         | Fail x -> raise.error @@ Errors.target_lang_failwith loc [] x
       in
       let expr, expr_ty = clean_locations expr, clean_locations expr_ty in
-      let ret =
-        LC.v_michelson_typed expr f.body.type_expression expr_ty
-      in
+      let ret = LC.v_michelson_typed expr f.body.type_expression expr_ty in
       ret, ctxt
     | Eval (loc, v, expr_ty) ->
-      let LT.{ micheline_repr = { code ; code_ty } ; ast_ty } = Michelson_backend.compile_value ~raise ~options ~loc v expr_ty in
+      let LT.{ micheline_repr = { code; code_ty }; ast_ty } =
+        Michelson_backend.compile_value ~raise ~options ~loc v expr_ty
+      in
       LC.v_michelson_typed code ast_ty code_ty, ctxt
     | Run_Michelson (loc, calltrace, func, result_ty, value, value_ty) ->
       (match
@@ -590,8 +587,7 @@ module Command = struct
       ret, ctxt
     | To_contract (loc, v, entrypoint, _ty_expr) ->
       (match v with
-      | LT.V_Typed_address address ->
-        LC.v_contract address entrypoint, ctxt
+      | LT.V_Typed_address address -> LC.v_contract address entrypoint, ctxt
       | _ -> raise.error @@ Errors.generic_error loc "Should be caught by the typer")
     | Check_storage_address (loc, addr, ty) ->
       let ligo_ty =
@@ -651,9 +647,7 @@ module Command = struct
           in
           Tezos_state.get_account ~raise ~loc ~calltrace pkh
         in
-        let record =
-          LC.(v_triple (v_address x, v_key pk, v_string sk))
-        in
+        let record = LC.(v_triple (v_address x, v_key pk, v_string sk)) in
         record, ctxt
       | None ->
         raise.error (Errors.generic_error loc "This bootstrap account do not exist"))
