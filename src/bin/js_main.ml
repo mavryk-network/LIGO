@@ -57,7 +57,6 @@ let main source =
   let display_format = Simple_utils.Display.human_readable in
   let michelson_format = `Text in
   let michelson_comments = [ `Source ] in
-  let project_root = None in
   let raw_options =
     Raw_options.make
       ~entry_point
