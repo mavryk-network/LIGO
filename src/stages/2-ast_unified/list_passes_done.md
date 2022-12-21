@@ -95,12 +95,14 @@ note: note sure, after Open directive ? https://gitlab.com/ligolang/ligo/-/merge
 
 `E_RevApp(x, f)` |-> `E_Application (f x)`
 
-## pass 'Switch_to_match'
+## pass 'reduce_switch'
 
 - remove : I_Switch
 - add :            
 
-`S_Swtich` -> `S_Decl (D_Const _ (E_matching ...))`
+`I_Switch` -> `S_block (S_cond..)`
+
+warns in case of statements after break
 
 ## pass 'unseq'
 
@@ -117,9 +119,27 @@ note: see path_of_lvalue in pascaligo abstractor
 
 `S_Instr (I_struct_assign/path/remove ..)` |-> `S_decl (_ (..))`
 
-## pass 'unreachable code'
+## pass 'return'
 
 - remove : -
 - add : -
 
-emit warning on unreachable code (after break in switch statements; after returns)
+emit warning on unreachable code (after returns)
+handle weird cases like:
+```
+const g = n => {
+  let output = n;
+
+  {
+    output += 1 ;
+    if (n > 2) {
+      return (output + 12)
+    } else {
+      output += 2;
+    }
+    output += 2;
+  }
+
+  return output
+}
+```
