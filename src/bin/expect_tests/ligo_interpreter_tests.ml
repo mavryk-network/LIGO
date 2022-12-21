@@ -344,6 +344,67 @@ let%expect_test _ =
     )]. |}]
 
 let%expect_test _ =
+  run_ligo_good [ "run"; "test"; test "test_mutate_contract.mligo" ];
+  [%expect
+    {|
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+      storage int ;
+      code { UNPAIR ;
+             IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int 1 } ;
+             NIL operation ;
+             PAIR } }
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+      storage int ;
+      code { UNPAIR ;
+             IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int -1 } ;
+             NIL operation ;
+             PAIR } }
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+      storage int ;
+      code { UNPAIR ;
+             IF_LEFT { IF_LEFT { SWAP ; ADD } { ADD } } { DROP 2 ; PUSH int 0 } ;
+             NIL operation ;
+             PAIR } }
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+      storage int ;
+      code { UNPAIR ;
+             IF_LEFT { IF_LEFT { SWAP ; MUL } { ADD } } { DROP 2 ; PUSH int 0 } ;
+             NIL operation ;
+             PAIR } }
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+      storage int ;
+      code { UNPAIR ;
+             IF_LEFT { IF_LEFT { SWAP ; SUB } { MUL } } { DROP 2 ; PUSH int 0 } ;
+             NIL operation ;
+             PAIR } }
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+      storage int ;
+      code { UNPAIR ;
+             IF_LEFT { IF_LEFT { SWAP ; SUB } { SUB } } { DROP 2 ; PUSH int 0 } ;
+             NIL operation ;
+             PAIR } }
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+      storage int ;
+      code { UNPAIR ;
+             IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int 1 } ;
+             NIL operation ;
+             PAIR } }
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+      storage int ;
+      code { UNPAIR ;
+             IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int -1 } ;
+             NIL operation ;
+             PAIR } }
+    []
+    Everything at the top-level was executed.
+    - test_incr exited with value <fun>.
+    - test_decr exited with value <fun>.
+    - test_reset exited with value <fun>.
+    - test_contract exited with value <fun>.
+    - test_mutate_contract exited with value ().
+    - test_eh exited with value (). |}]
+
+let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "iteration.jsligo" ];
   [%expect
     {|

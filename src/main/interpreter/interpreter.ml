@@ -438,7 +438,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_NONE, _ -> fail @@ error_type ()
   | C_UNIT, [] -> return @@ v_unit ()
   | C_UNIT, _ -> fail @@ error_type ()
-  | C_NIL, [] -> return @@ V_List []
+  | C_NIL, [] -> return @@ v_list []
   | C_NIL, _ -> fail @@ error_type ()
   | C_TRUE, [] -> return @@ v_bool true
   | C_TRUE, _ -> fail @@ error_type ()
@@ -505,7 +505,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     | None -> return @@ v_none ())
   | C_SUB, _ -> fail @@ error_type ()
   | C_SUB_MUTEZ, _ -> fail @@ error_type ()
-  | C_CONS, [ v; V_List vl ] -> return @@ V_List (v :: vl)
+  | C_CONS, [ v; V_List vl ] -> return @@ v_list (v :: vl)
   | C_CONS, _ -> fail @@ error_type ()
   | C_ADD, [ V_Ct (C_int64 a); V_Ct (C_int64 b) ] -> return @@ v_int64 Int64.(a + b)
   | C_ADD, [ V_Ct (C_int a); V_Ct (C_int b) ]
@@ -655,7 +655,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     | Some v -> return @@ v_nat v
     | None -> fail @@ Errors.meta_lang_eval loc calltrace (v_string "Overflow"))
   | C_LSR, _ -> fail @@ error_type ()
-  | C_LIST_EMPTY, [] -> return @@ V_List []
+  | C_LIST_EMPTY, [] -> return @@ v_list []
   | C_LIST_EMPTY, _ -> fail @@ error_type ()
   | ( C_LIST_MAP
     , [ V_Func_val { arg_binder; arg_mut_flag; body; env; rec_name = _; orig_lambda = _ }
@@ -673,7 +673,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
               eval_ligo body calltrace env'))
         elts
     in
-    return (V_List elts)
+    return (v_list elts)
   | C_LIST_MAP, _ -> fail @@ error_type ()
   | ( C_MAP_MAP
     , [ V_Func_val { arg_binder; arg_mut_flag; body; env; rec_name = _; orig_lambda = _ }
@@ -1031,6 +1031,33 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       Test operators
     >>>>>>>>
     *)
+  | ( C_TEST_MUTATE_MICHELSON
+    , [ V_Michelson (Ty_code { micheline_repr = { code; code_ty }; ast_ty }) ] ) ->
+    let>> tezos_context = Get_alpha_context () in
+    let muts =
+      Michelson_backend.mutate_typed_michelson
+        ~raise
+        ~loc
+        ~calltrace
+        ~tezos_context
+        code
+        code_ty
+    in
+    let wrap code = v_michelson_typed code ast_ty code_ty in
+    return @@ v_list @@ List.map ~f:wrap muts
+  | C_TEST_MUTATE_MICHELSON, _ -> fail @@ error_type ()
+  | C_TEST_MUTATE_MICHELSON_CONTRACT, [ V_Michelson_contract contract ] ->
+    let>> tezos_context = Get_alpha_context () in
+    let muts =
+      Michelson_backend.mutate_contract_michelson
+        ~raise
+        ~loc
+        ~calltrace
+        ~tezos_context
+        contract
+    in
+    return @@ v_list @@ List.map ~f:v_michelson_contract muts
+  | C_TEST_MUTATE_MICHELSON_CONTRACT, _ -> fail @@ error_type ()
   | C_TEST_ADDRESS, [ V_Ct (C_contract { address; entrypoint = _ }) ] ->
     return (V_Ct (C_address address))
   | C_TEST_ADDRESS, _ -> fail @@ error_type ()
@@ -1397,7 +1424,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_TEST_REGISTER_CONSTANT, _ -> fail @@ error_type ()
   | C_TEST_CONSTANT_TO_MICHELSON, [ V_Ct (C_string m) ] ->
     let>> s = Constant_to_Michelson (loc, calltrace, m) in
-    return @@ V_Michelson (Untyped_code s)
+    return @@ v_michelson_untyped s
   | C_TEST_CONSTANT_TO_MICHELSON, _ -> fail @@ error_type ()
   | C_TEST_REGISTER_FILE_CONSTANTS, [ V_Ct (C_string path) ] ->
     let>> v = Register_file_constants (loc, calltrace, path) in
@@ -1785,7 +1812,7 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
         | m -> m
       in
       let code = Tezos_utils.Michelson.map replace code in
-      return @@ V_Michelson (Ty_code { micheline_repr = { code; code_ty }; ast_ty })
+      return @@ v_michelson_typed code ast_ty code_ty
     | _ ->
       raise.error
       @@ Errors.generic_error
@@ -1802,7 +1829,7 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
       let code, code_ty =
         Michelson_backend.parse_raw_michelson_code ~raise exp_as_string ast_ty
       in
-      return @@ V_Michelson (Ty_code { micheline_repr = { code; code_ty }; ast_ty })
+      return @@ v_michelson_typed code ast_ty code_ty
     | _ ->
       raise.error
       @@ Errors.generic_error

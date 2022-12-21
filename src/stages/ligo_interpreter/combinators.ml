@@ -32,6 +32,24 @@ let v_bls12_381_g2 : Bls12_381.G2.t -> value = fun v -> V_Ct (C_bls12_381_g2 v)
 let v_bls12_381_fr : Bls12_381.Fr.t -> value = fun v -> V_Ct (C_bls12_381_fr v)
 let v_chain_id : Chain_id.t -> value = fun c -> V_Ct (C_chain_id c)
 
+let v_michelson_typed : mcode -> Ast_aggregated.type_expression -> mcode -> value =
+ fun code ast_ty code_ty ->
+  V_Michelson (Ty_code { ast_ty; micheline_repr = { code; code_ty } })
+
+
+let v_michelson_untyped : mcode -> value = fun c -> V_Michelson (Untyped_code c)
+let v_michelson_contract : mcode -> value = fun c -> V_Michelson_contract c
+
+let v_ast_contract
+    : Ast_aggregated.expression -> (Value_var.t list * expression) option -> value
+  =
+ fun main views -> V_Ast_contract { main; views }
+
+
+let v_contract : Contract.t -> string option -> value =
+ fun address entrypoint -> V_Ct (C_contract { address; entrypoint })
+
+
 let v_key_hash : Tezos_crypto.Signature.public_key_hash -> value =
  fun v -> V_Ct (C_key_hash v)
 

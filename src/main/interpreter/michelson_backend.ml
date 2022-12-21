@@ -3,6 +3,178 @@ module Var = Simple_utils.Var
 open Simple_utils.Trace
 open Simple_utils.Option
 
+module Mutation = struct
+  open Tezos_utils.Michelson
+  open Tezos_utils.Micheline.Micheline
+
+  let transform_int =
+    let const0 _ = 0 in
+    let negative n = -n in
+    let incr n = n + 1 in
+    let pred n = n - 1 in
+    let prod n = 2 * n in
+    [ const0; negative; incr; pred; prod ]
+
+
+  let transform_nat =
+    let const0 _ = 0 in
+    let incr n = n + 1 in
+    let prod n = 2 * n in
+    [ const0; incr; prod ]
+
+
+  let transform_string =
+    let constn _ = "" in
+    let double s = s ^ s in
+    [ String.capitalize
+    ; String.uncapitalize
+    ; String.lowercase
+    ; String.uppercase
+    ; constn
+    ; double
+    ]
+
+
+  (* Helpers for changing operators *)
+  let map_op op arguments =
+    let is_t_nat = function
+      | Prim (_, "nat", _, _) -> true
+      | _ -> false
+    in
+    let is_t_int = function
+      | Prim (_, "int", _, _) -> true
+      | _ -> false
+    in
+    let alts =
+      match op, arguments with
+      (* int, int *)
+      | "ADD", e1 :: e2 :: _ when is_t_int e1 && is_t_int e2 -> [ "MUL"; "SUB" ]
+      | "MUL", e1 :: e2 :: _ when is_t_int e1 && is_t_int e2 -> [ "ADD"; "SUB" ]
+      | "SUB", e1 :: e2 :: _ when is_t_int e1 && is_t_int e2 -> [ "ADD"; "MUL" ]
+      (* nat, nat *)
+      | "ADD", e1 :: e2 :: _ when is_t_nat e1 && is_t_nat e2 ->
+        [ "MUL"; "OR"; "AND"; "XOR" ]
+      | "MUL", e1 :: e2 :: _ when is_t_nat e1 && is_t_nat e2 ->
+        [ "ADD"; "OR"; "AND"; "XOR" ]
+      | "OR", e1 :: e2 :: _ when is_t_nat e1 && is_t_nat e2 ->
+        [ "ADD"; "MUL"; "AND"; "XOR" ]
+      | "AND", e1 :: e2 :: _ when is_t_nat e1 && is_t_nat e2 ->
+        [ "ADD"; "MUL"; "OR"; "XOR" ]
+      | "XOR", e1 :: e2 :: _ when is_t_nat e1 && is_t_nat e2 ->
+        [ "ADD"; "MUL"; "OR"; "AND" ]
+      (* nat, int *)
+      | "ADD", e1 :: e2 :: _ when is_t_nat e1 && is_t_int e2 -> [ "SUB"; "MUL" ]
+      | "SUB", e1 :: e2 :: _ when is_t_nat e1 && is_t_int e2 -> [ "ADD"; "MUL" ]
+      | "MUL", e1 :: e2 :: _ when is_t_nat e1 && is_t_int e2 -> [ "ADD"; "SUB" ]
+      (* int, nat *)
+      | "ADD", e1 :: e2 :: _ when is_t_int e1 && is_t_nat e2 -> [ "SUB"; "MUL" ]
+      | "SUB", e1 :: e2 :: _ when is_t_int e1 && is_t_nat e2 -> [ "ADD"; "MUL" ]
+      | "MUL", e1 :: e2 :: _ when is_t_int e1 && is_t_nat e2 -> [ "ADD"; "SUB" ]
+      (* compare *)
+      | "EQ", _ :: _ -> [ "NEQ"; "LT"; "GT"; "LE"; "GE" ]
+      | "NEQ", _ :: _ -> [ "EQ"; "LT"; "GT"; "LE"; "GE" ]
+      | "LT", _ :: _ -> [ "EQ"; "NEQ"; "GT"; "LE"; "GE" ]
+      | "GT", _ :: _ -> [ "EQ"; "NEQ"; "LT"; "LE"; "GE" ]
+      | "LE", _ :: _ -> [ "EQ"; "NEQ"; "LT"; "GT"; "GE" ]
+      | "GE", _ :: _ -> [ "EQ"; "NEQ"; "LT"; "GT"; "LE" ]
+      | _, _ -> []
+    in
+    op :: alts
+
+
+  type mutation_data = unit
+  type loc = canonical_location
+  type oracle_typer = canonical_location -> (canonical_location, string) node list
+
+  let combine
+      :  'a -> ('a * mutation_data option) list -> 'b -> ('b * mutation_data option) list
+      -> ('a * 'b * mutation_data option) list
+    =
+   fun a al b bl ->
+    List.map ~f:(fun (b, m) -> a, b, m) bl @ List.map ~f:(fun (a, m) -> a, b, m) al
+
+
+  let combine_list
+      :  'a list -> ('a * mutation_data option) list list
+      -> ('a list * mutation_data option) list
+    =
+   fun a al ->
+    List.concat
+    @@ List.mapi
+         ~f:(fun i ali ->
+           List.map ~f:(fun (v, m) -> List.take a i @ [ v ] @ List.drop a (i + 1), m) ali)
+         al
+
+
+  let ( let+ ) x f = List.map ~f x
+  let ( let* ) x f = List.concat (List.map ~f x)
+  let return x = [ x ]
+
+  let rec generate ~(oracle : oracle_typer) (code : loc michelson)
+      : (loc michelson * mutation_data option) list
+    =
+    let self = generate ~oracle in
+    match (code : _ node) with
+    | Seq (l, ns) ->
+      let+ ns, mutation = combine_list ns (List.map ~f:self ns) in
+      Seq (l, ns), mutation
+    | Prim (l, "PUSH", [ Prim (l1, "int", [], ann1); Int (l2, z) ], ann) ->
+      let z = Z.to_int z in
+      let* t = transform_int in
+      let z_mut = t z in
+      let mutation = if z_mut <> z then Some () else None in
+      return
+      @@ ( Prim (l, "PUSH", [ Prim (l1, "int", [], ann1); Int (l2, Z.of_int z_mut) ], ann)
+         , mutation )
+    | Prim (l, "PUSH", [ Prim (l1, "nat", [], ann1); Int (l2, z) ], ann) ->
+      let z = Z.to_int z in
+      let* t = transform_nat in
+      let z_mut = t z in
+      let mutation = if z_mut <> z then Some () else None in
+      return
+      @@ ( Prim (l, "PUSH", [ Prim (l1, "nat", [], ann1); Int (l2, Z.of_int z_mut) ], ann)
+         , mutation )
+    | Prim (l, "PUSH", [ Prim (l1, "mutez", [], ann1); Int (l2, z) ], ann) ->
+      let z = Z.to_int z in
+      let* t = transform_nat in
+      let z_mut = t z in
+      let mutation = if z_mut <> z then Some () else None in
+      return
+      @@ ( Prim
+             (l, "PUSH", [ Prim (l1, "mutez", [], ann1); Int (l2, Z.of_int z_mut) ], ann)
+         , mutation )
+    | Prim (l, "PUSH", [ Prim (l1, "string", [], ann1); String (l2, z) ], ann) ->
+      let* t = transform_string in
+      let z_mut = t z in
+      let mutation = if not String.(equal z_mut z) then Some () else None in
+      return
+      @@ ( Prim (l, "PUSH", [ Prim (l1, "string", [], ann1); String (l2, z_mut) ], ann)
+         , mutation )
+    | Prim
+        ( l
+        , (( "ADD"
+           | "MUL"
+           | "SUB"
+           | "OR"
+           | "AND"
+           | "XOR"
+           | "EQ"
+           | "NEQ"
+           | "GT"
+           | "LT"
+           | "GE"
+           | "LE" ) as op)
+        , []
+        , ann ) ->
+      let* op_mut = map_op op (oracle l) in
+      let mutation = if not String.(equal op_mut op) then Some () else None in
+      return @@ (Prim (l, op_mut, [], ann), mutation)
+    | Prim (l, op, (_ :: _ as ns), ann) ->
+      let+ ns, mutation = combine_list ns (List.map ~f:self ns) in
+      Prim (l, op, ns, ann), mutation
+    | _ -> return @@ (code, None)
+end
+
 let storage_retreival_dummy_ty = Tezos_utils.Michelson.prim "int"
 
 let int_of_mutez t =
@@ -1577,3 +1749,80 @@ let compare_michelson ~raise loc a b =
     @@ LC.get_michelson_expr b
   in
   Caml.compare code code'
+
+
+let mutate_typed_michelson ~raise ~loc ~calltrace ~tezos_context code code_ty =
+  let open Proto_alpha_utils.Memory_proto_alpha in
+  let open Tezos_micheline.Micheline in
+  let canonical =
+    Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
+        Errors.generic_error
+          ~calltrace
+          loc
+          "Michelson parsing: could not parse primitives from strings")
+    @@ node_to_canonical code
+  in
+  let node = inject_locations (fun l -> l) canonical in
+  let canonical_ty =
+    Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
+        Errors.generic_error
+          ~calltrace
+          loc
+          "Michelson parsing: could not parse primitives from strings")
+    @@ node_to_canonical code_ty
+  in
+  let node_ty = inject_locations (fun l -> l) canonical_ty in
+  let oracle =
+    Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
+        Errors.generic_error
+          ~calltrace
+          loc
+          "Michelson type-checking: could not type-check the contract code")
+    @@ typecheck_oracle_code ~tezos_context ~code_ty:node_ty ~code:node
+  in
+  let f = function
+    | m, Some _ -> Some (map_node (fun _ -> ()) (fun x -> x) m)
+    | _ -> None
+  in
+  Mutation.generate ~oracle (canonical_to_node canonical) |> List.filter_map ~f
+
+
+let mutate_contract_michelson ~raise ~loc ~calltrace ~tezos_context contract =
+  let open Proto_alpha_utils.Memory_proto_alpha in
+  let open Tezos_micheline.Micheline in
+  let open Protocol.Michelson_v1_primitives in
+  let canonical =
+    Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
+        Errors.generic_error
+          ~calltrace
+          loc
+          "Michelson parsing: could not parse primitives from strings")
+    @@ node_to_canonical contract
+  in
+  let node = inject_locations (fun l -> l) canonical in
+  let l_root, parameter, storage, code, rest =
+    match node with
+    | Seq (l, parameter :: storage :: code :: rest) -> l, parameter, storage, code, rest
+    | _ ->
+      raise.error
+      @@ Errors.generic_error ~calltrace loc "Michelson parsing: a non-contract"
+  in
+  let oracle =
+    Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
+        Errors.generic_error
+          ~calltrace
+          loc
+          "Michelson type-checking: could not type-check the contract code")
+    @@ typecheck_oracle_contract ~tezos_context ~contract:node
+  in
+  let code = map_node (fun l -> l) string_of_prim code in
+  let f = function
+    | code, Some _ ->
+      let parameter = map_node (fun l -> l) string_of_prim parameter in
+      let storage = map_node (fun l -> l) string_of_prim storage in
+      let rest = List.map ~f:(map_node (fun l -> l) string_of_prim) rest in
+      let contract = Seq (l_root, parameter :: storage :: code :: rest) in
+      Some (map_node (fun _ -> ()) (fun x -> x) contract)
+    | _ -> None
+  in
+  Mutation.generate ~oracle code |> List.filter_map ~f
