@@ -3,16 +3,19 @@
   <head>
     <meta charset="utf8" />
     <title>jsoo</title>
-    <!-- <script src="./threads.js"></script> -->
-    <!-- <script src="./blst.js"></script>
-	 <script>
-	 _BLS12381()
-         .then(function (BLS12381) {
-         this._BLS12381 = BLS12381;
-         })
-         .catch((e) => console.log(e));
-	 </script>
-	 <script src="./bls12-runtime.js"></script> -->
+    <script src="/_build/default/src/bin/blst_bindings_stubs.js"></script>
+    <script src="/_build/default/src/bin/caml_fft_stubs.js"></script>
+    <script src="/_build/default/src/bin/runtime_helper.js"></script>
+    <script src="/_build/default/src/bin/bigstring.js"></script>
+    <script src="/_build/default/src/bin/cstruct.js"></script>
+    <script src="/_build/default/src/bin/blst.js"></script>
+    <script>
+      _BLS12381()
+        .then(function (BLS12381) {
+          this._BLS12381 = BLS12381;
+        })
+        .catch((e) => console.log(e));
+    </script>
     <!-- <script src="./runtime-generated.js"></script>
 	 <script src="./random.js"></script>
 	 <script src="./evercrypt.js"></script> -->
