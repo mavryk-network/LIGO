@@ -150,6 +150,9 @@ IF option.syntax == cameligo :
 `E_Call (f a b c)` |-> `E_Application (E_Application (E_Application (f a) b) c)`
 
 IF option.syntax == jsligo, pascaligo :
+`E_Fun a b c ret body` |-> `E_lambda (E_tuple (a,b,c)) (E_Annot body)`
+
+IF option.syntax == cameligo:
 `E_Fun a b c ret body` |-> `E_lambda a (E_lambda b (E_lambda c (E_Annot body)))`
 
 ## pass 'constructor_app'
@@ -199,9 +202,3 @@ S_Instr should only contain simple stuff like `I_While I_For_In I_For I_ForOf`
 
 See handling of TDisc in JsLIGO abstractor AND GOOD LUCK
 
-## pass 'unreachable code'
-
-- remove : -
-- add : -
-
-emit warning on unreachable code (after break in switch statements; after returns)

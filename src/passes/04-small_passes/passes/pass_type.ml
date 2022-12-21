@@ -1,7 +1,5 @@
 open Ast_unified
 
-type options = unit (*remove pass it in files *)
-
 (* it's preferable to use the defined recursion schemes for code transformations
    but  *)
 type 'a code_transformation = 'a -> 'a

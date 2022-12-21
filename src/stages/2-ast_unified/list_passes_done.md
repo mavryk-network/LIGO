@@ -116,3 +116,10 @@ note: see path_of_lvalue in pascaligo abstractor
 - add    : I_assign (variable,expr)
 
 `S_Instr (I_struct_assign/path/remove ..)` |-> `S_decl (_ (..))`
+
+## pass 'unreachable code'
+
+- remove : -
+- add : -
+
+emit warning on unreachable code (after break in switch statements; after returns)
