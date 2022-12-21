@@ -70,7 +70,7 @@ let group_cases cases : group list * default_case =
   
   if any statement follows the break instruction, emits a warning.
 *)
-let until_break ~loc ft stmts =
+let until_break ~raise ~loc ft stmts =
   let f x =
     match get_s x with
     | S_Instr x ->
@@ -82,16 +82,16 @@ let until_break ~loc ft stmts =
   let bef, aft = List.split_while ~f (List.Ne.to_list stmts) in
   List.Ne.of_list
     (match aft with
-    | [] -> bef
-    | [ _ ] | _ ->
-      (* if aft do not contain only one instruction (break), the following ones are unreachable.
-         a dedicated pass warns the user
-      *)
+    | [] ->
       bef
-      @ [ s_instr ~loc (i_struct_assign ~loc { lhs_expr = ft; rhs_expr = e_false ~loc }) ])
+      @ [ s_instr ~loc (i_struct_assign ~loc { lhs_expr = ft; rhs_expr = e_true ~loc }) ]
+    | [ _ ] ->
+      bef
+      @ [ s_instr ~loc (i_struct_assign ~loc { lhs_expr = ft; rhs_expr = e_false ~loc }) ]
+    | unreachables -> raise.error (statement_after_break unreachables))
 
 
-let switch_to_decl loc switchee cases =
+let switch_to_decl ~raise loc switchee cases =
   let open Test_clause in
   let eq a b = e_constant ~loc { cons_name = C_EQ; arguments = [ a; b ] } in
   let or_ a b = e_constant ~loc { cons_name = C_OR; arguments = [ a; b ] } in
@@ -119,7 +119,7 @@ let switch_to_decl loc switchee cases =
           `if (ft || gN) then <statement> ; ft = <true/false>`
         *)
         let cond =
-          let ifso = ClauseBlock (until_break ~loc ft_var group.body) in
+          let ifso = ClauseBlock (until_break ~raise ~loc ft_var group.body) in
           s_instr ~loc (i_cond ~loc { test = or_ ft_var test_var; ifso; ifnot = None })
         in
         test_var, [ test_decl; cond ])
@@ -143,11 +143,11 @@ let switch_to_decl loc switchee cases =
   List.Ne.of_list (case_statements @ default_statement)
 
 
-let compile =
+let compile ~raise =
   let pass_declaration : _ instruction_ -> instruction = function
-    | { wrap_content = I_Switch { switchee; cases } ; location = loc } ->
-      i_block ~loc (switch_to_decl loc switchee cases)
-    | { wrap_content ; location = loc } -> make_i ~loc wrap_content
+    | { wrap_content = I_Switch { switchee; cases }; location = loc } ->
+      i_block ~loc (switch_to_decl ~raise loc switchee cases)
+    | { wrap_content; location = loc } -> make_i ~loc wrap_content
   in
   `Cata { idle_cata_pass with instruction = pass_declaration }
 
@@ -165,7 +165,7 @@ let reduction ~raise =
 let pass ~raise =
   cata_morph
     ~name:__MODULE__
-    ~compile
+    ~compile:(compile ~raise)
     ~decompile:`None
     ~reduction_check:(reduction ~raise)
 

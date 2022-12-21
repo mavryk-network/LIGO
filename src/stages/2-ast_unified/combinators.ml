@@ -119,6 +119,7 @@ let e__type_ ~loc n : expr = e__type__z ~loc @@ Z.of_int n
 
 
 let e_false ~loc = e_constant ~loc { cons_name = C_FALSE; arguments = [] }
+let e_true ~loc = e_constant ~loc { cons_name = C_TRUE; arguments = [] }
 let e_unit ~loc : expr = make_e ~loc @@ E_Literal Literal_unit
 let e_bytes_raw ~loc (b : bytes) : expr = make_e ~loc @@ E_Literal (Literal_bytes b)
 let e_bytes_hex ~loc b : expr = e_bytes_raw ~loc @@ Hex.to_bytes b

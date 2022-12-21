@@ -67,7 +67,7 @@ let list_to_matching_clause ~raise : expr -> (pattern, expr) Case.clause =
  fun e ->
   match get_e e with
   | E_Block_fun { parameters = [ pattern ]; lhs_type; body } ->
-    ignore lhs_type;
+    ignore lhs_type; (* TODO: warning here, this type is ignored *)
     let rhs = block_to_expr body in
     { pattern; rhs }
   | _ -> raise.error (invalid_list_pattern_match (get_e_loc e))

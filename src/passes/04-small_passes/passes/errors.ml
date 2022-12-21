@@ -16,6 +16,7 @@ type t =
   | `Small_passes_michelson_type_wrong_arity of string * ty_expr
   | `Small_passes_michelson_type_wrong of string * ty_expr
   | `Small_passes_wrong_lvalue of expr
+  | `Small_passes_statement_after_break of statement list
   ]
 [@@deriving poly_constructor { prefix = "small_passes_" }, sexp]
 
@@ -74,7 +75,13 @@ let error_ppformat : display_format:string display_format -> Format.formatter ->
         f
         "@[<hv>%a@.Expected a field name or an accessor@]"
         Snippet.pp
-        (get_e_loc e))
+        (get_e_loc e)
+    | `Small_passes_statement_after_break slst ->
+      let loc =
+        List.fold slst ~init:Location.generated ~f:(fun acc el ->
+            Location.cover acc (get_s_loc el))
+      in
+      Format.fprintf f "@[<hv>%a@.Illegal statements after break@]" Snippet.pp loc)
 
 
 let error_json : t -> Simple_utils.Error.t =
@@ -133,5 +140,13 @@ let error_json : t -> Simple_utils.Error.t =
   | `Small_passes_wrong_lvalue e ->
     let message = "Expected a field name or an accessor" in
     let location = get_e_loc e in
+    let content = make_content ~message ~location () in
+    make ~stage ~content
+  | `Small_passes_statement_after_break slst ->
+    let location =
+      List.fold slst ~init:Location.generated ~f:(fun acc el ->
+          Location.cover acc (get_s_loc el))
+    in
+    let message = "Illegal statements after break" in
     let content = make_content ~message ~location () in
     make ~stage ~content
