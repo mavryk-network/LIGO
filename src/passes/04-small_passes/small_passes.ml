@@ -34,6 +34,7 @@ let passes
   [ T_arg.pass
   ; Type_abstraction_declaration.pass ~raise
   ; Named_fun.pass ~raise
+  ; E_rev_app.pass ~raise
   ; Freeze_operators.pass ~raise ~syntax
   ; List_as_function.pass ~raise ~syntax
   ; Match_as_function.pass ~raise ~syntax
@@ -41,7 +42,7 @@ let passes
   ; Restrict_t_app.pass ~raise
   ; T_app_michelson_types.pass ~raise
   ; Reduce_switch.pass ~raise
-  ; E_rev_app.pass ~raise
+  ; Structural_assignments.pass ~raise
   ]
 
 

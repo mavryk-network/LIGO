@@ -151,7 +151,8 @@ module TODO_unify_in_cst = struct
               failwith "raise.error (expected_field_or_access @@ CST.expr_to_region x)"
           in
           let field_rhs = self field_rhs in
-          Full_field { field_lhs; field_lens; field_rhs; attributes }
+          TODO_do_in_parsing.weird_attributes attributes ;
+          Full_field { field_lhs; field_lens; field_rhs}
         | CST.Punned { pun; attributes } ->
           let attributes =
             TODO_do_in_parsing.weird_attributes attributes;

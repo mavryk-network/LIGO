@@ -23,7 +23,9 @@ module TODO_do_in_parsing = struct
       let index, _ = r_split comp in
       Component_num index
 
-
+  let weird_attributes _ =
+    (* I don't know what to do with those attributes *)
+    ()
   let empty_sequence () = failwith "should a sequence be allowed to be empty ?"
 end
 
@@ -123,7 +125,8 @@ module TODO_unify_in_cst = struct
               (nsepseq_to_list field_path)
               ~f:TODO_do_in_parsing.translate_selection
         in
-        Full_field { field_lhs; field_lens = Lens_Id; field_rhs; attributes }
+        TODO_do_in_parsing.weird_attributes attributes ;
+        Full_field { field_lhs; field_lens = Lens_Id; field_rhs }
       | Path_punned_property pun -> Pun (Label.of_string (r_fst pun), attributes)
     in
     List.map x ~f

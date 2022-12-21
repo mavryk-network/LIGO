@@ -113,8 +113,6 @@ note: note sure, after Open directive ? https://gitlab.com/ligolang/ligo/-/merge
 
 note: see path_of_lvalue in pascaligo abstractor
 - remove : I_Struct_assign ; I_Patch ; I_Remove
-- add    : -
-
-see pascaligo (path_of_lvalue)
+- add    : I_assign (variable,expr)
 
 `S_Instr (I_struct_assign/path/remove ..)` |-> `S_decl (_ (..))`

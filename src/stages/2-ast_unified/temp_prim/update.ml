@@ -10,7 +10,6 @@ and 'expr full_field =
   { field_lhs : 'expr Selection.t list
   ; field_lens : field_lens
   ; field_rhs : 'expr
-  ; attributes : Attribute.t list
   }
 
 and 'expr field =

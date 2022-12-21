@@ -117,7 +117,8 @@ let e__type__z ~loc n : expr = make_e ~loc @@ E_Literal (Literal__type_ n)
 let e__type_ ~loc n : expr = e__type__z ~loc @@ Z.of_int n
   [@@map _type_, ("int", "nat", "timestamp", "mutez")]
 
-let e_false ~loc = e_constant ~loc { cons_name = C_FALSE ; arguments = [ ] }
+
+let e_false ~loc = e_constant ~loc { cons_name = C_FALSE; arguments = [] }
 let e_unit ~loc : expr = make_e ~loc @@ E_Literal Literal_unit
 let e_bytes_raw ~loc (b : bytes) : expr = make_e ~loc @@ E_Literal (Literal_bytes b)
 let e_bytes_hex ~loc b : expr = e_bytes_raw ~loc @@ Hex.to_bytes b
@@ -137,3 +138,44 @@ let simpl_const_decl ~loc v let_rhs =
 
 
 let program_entry p : program_entry = { fp = p }
+
+(* might generate those uh ? *)
+include struct
+  let e_map_find_opt ~loc k map =
+    e_constant ~loc { cons_name = C_MAP_FIND_OPT; arguments = [ k; map ] }
+
+
+  let e_map_add ~loc k v old =
+    e_constant ~loc { cons_name = C_MAP_ADD; arguments = [ k; v; old ] }
+
+
+  let e_set_remove ~loc ele set =
+    e_constant ~loc { cons_name = C_SET_REMOVE; arguments = [ ele; set ] }
+
+
+  let e_map_remove ~loc ele map =
+    e_constant ~loc { cons_name = C_MAP_REMOVE; arguments = [ ele; map ] }
+
+
+  let e_set_add ~loc ele set =
+    e_constant ~loc { cons_name = C_SET_ADD; arguments = [ ele; set ] }
+end
+
+let e_unopt ~loc matchee none_body (var_some, some_body) =
+  let some_case =
+    let pattern = p_variant ~loc (Label "Some") (Some (p_var ~loc var_some)) in
+    Case.{ pattern; rhs = some_body }
+  in
+  let none_case =
+    let pattern = p_variant ~loc (Label "None") None in
+    Case.{ pattern; rhs = none_body }
+  in
+  e_match ~loc { expr = matchee; cases = some_case, [ none_case ] }
+
+
+let e_record_update ~loc structure accesses field_rhs =
+  e_update
+    ~loc
+    { structure
+    ; update = [ Full_field { field_lhs = accesses; field_lens = Lens_Id; field_rhs } ]
+    }

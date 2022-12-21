@@ -180,6 +180,9 @@ and ('self, 'expr, 'pattern, 'statement) instruction_content_ =
   | I_Return of 'expr option
   | I_Switch of ('expr, 'statement) Switch.t
   | I_break
+
+  (*  \/ Below are nodes added through the passes \/*)
+  | I_Assign of Variable.t * 'expr
 [@@deriving map, yojson, iter, sexp]
 
 (* ========================== STATEMENTS ========================= *)

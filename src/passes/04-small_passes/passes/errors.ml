@@ -15,6 +15,7 @@ type t =
   | `Small_passes_invalid_list_pattern_match of Location.t
   | `Small_passes_michelson_type_wrong_arity of string * ty_expr
   | `Small_passes_michelson_type_wrong of string * ty_expr
+  | `Small_passes_wrong_lvalue of expr
   ]
 [@@deriving poly_constructor { prefix = "small_passes_" }, sexp]
 
@@ -35,38 +36,45 @@ let error_ppformat : display_format:string display_format -> Format.formatter ->
       Format.fprintf
         f
         "@[<hv>%a@.Rest property not supported here.@]"
-        Snippet.pp (get_e_loc e)
+        Snippet.pp
+        (get_e_loc e)
     | `Small_passes_invalid_case e ->
       Format.fprintf
-      f
-      "@[<hv>%a@.Invalid field value. An anonymous arrow function was expected, \
-       eg. `None: () => foo`.@]"
-      Snippet.pp (get_e_loc e)
+        f
+        "@[<hv>%a@.Invalid field value. An anonymous arrow function was expected, eg. \
+         `None: () => foo`.@]"
+        Snippet.pp
+        (get_e_loc e)
     | `Small_passes_unsupported_match_object_property e ->
       Format.fprintf
-      f
-      "@[<hv>%a@.Unsupported pattern match object property.@]"
-      Snippet.pp (get_e_loc e)
+        f
+        "@[<hv>%a@.Unsupported pattern match object property.@]"
+        Snippet.pp
+        (get_e_loc e)
     | `Small_passes_invalid_list_pattern_match loc ->
-      Format.fprintf
-      f
-      "@[<hv>%a@.Invalid list pattern matching.@]"
-      Snippet.pp loc
+      Format.fprintf f "@[<hv>%a@.Invalid list pattern matching.@]" Snippet.pp loc
     | `Small_passes_michelson_type_wrong_arity (name, t) ->
       Format.fprintf
-      f 
-      "[@<hv>%a@.Invalid \"%s\" type.@.An even number of 2 or more arguments is expected, where \
-       each odd item is a type annotated by the following string.@]"
-       Snippet.pp (get_t_loc t)
-       name
+        f
+        "[@<hv>%a@.Invalid \"%s\" type.@.An even number of 2 or more arguments is \
+         expected, where each odd item is a type annotated by the following string.@]"
+        Snippet.pp
+        (get_t_loc t)
+        name
     | `Small_passes_michelson_type_wrong (name, t) ->
       Format.fprintf
-      f
-      "[@<hv>%a@.Invalid \"%s\" type.@.At this point, an annotation, in the form of a string, is \
-       expected for the preceding type.@]"
-      Snippet.pp (get_t_loc t)
-      name
-    )
+        f
+        "[@<hv>%a@.Invalid \"%s\" type.@.At this point, an annotation, in the form of a \
+         string, is expected for the preceding type.@]"
+        Snippet.pp
+        (get_t_loc t)
+        name
+    | `Small_passes_wrong_lvalue e ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Expected a field name or an accessor@]"
+        Snippet.pp
+        (get_e_loc e))
 
 
 let error_json : t -> Simple_utils.Error.t =
@@ -87,8 +95,8 @@ let error_json : t -> Simple_utils.Error.t =
     make ~stage ~content
   | `Small_passes_invalid_case e ->
     let message =
-        "Invalid field value. An anonymous arrow function was expected, eg. `None: \
-          () => foo`."
+      "Invalid field value. An anonymous arrow function was expected, eg. `None: () => \
+       foo`."
     in
     let location = get_e_loc e in
     let content = make_content ~message ~location () in
@@ -102,16 +110,28 @@ let error_json : t -> Simple_utils.Error.t =
     let message = "Invalid list pattern matching" in
     let content = make_content ~message ~location:loc () in
     make ~stage ~content
-
   | `Small_passes_michelson_type_wrong_arity (name, t) ->
-    let message = Format.sprintf "Invalid \"%s\" type.@.An even number of 2 or more arguments is expected, where \
-      each odd item is a type annotated by the following string." name in
+    let message =
+      Format.sprintf
+        "Invalid \"%s\" type.@.An even number of 2 or more arguments is expected, where \
+         each odd item is a type annotated by the following string."
+        name
+    in
     let location = get_t_loc t in
     let content = make_content ~message ~location () in
     make ~stage ~content
   | `Small_passes_michelson_type_wrong (name, t) ->
-    let message = Format.sprintf "Invalid \"%s\" type.@.At this point, an annotation, in the form of a string, is \
-       expected for the preceding type." name in
+    let message =
+      Format.sprintf
+        "Invalid \"%s\" type.@.At this point, an annotation, in the form of a string, is \
+         expected for the preceding type."
+        name
+    in
     let location = get_t_loc t in
+    let content = make_content ~message ~location () in
+    make ~stage ~content
+  | `Small_passes_wrong_lvalue e ->
+    let message = "Expected a field name or an accessor" in
+    let location = get_e_loc e in
     let content = make_content ~message ~location () in
     make ~stage ~content
