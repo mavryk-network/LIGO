@@ -1331,7 +1331,7 @@ and compile_statement ?(wrap = false) ~raise : CST.statement -> statement_result
     | Return _ -> return @@ let_in var
     | Expr _ -> expr @@ let_in var
     | Break _ -> Break (let_in var)
-    | Binding _ -> Binding let_in)
+    | Binding b -> Binding (fun f -> e_let_in ~loc block_binder [] (b f) var))
   | SCond cond ->
     let cond, loc = r_split cond in
     let test = self_expr cond.test.inside in
