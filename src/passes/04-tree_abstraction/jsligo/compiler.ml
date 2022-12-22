@@ -404,6 +404,7 @@ let arguments_to_expr_nseq (args : CST.arguments) : CST.expr Utils.nseq * Locati
 
 type statement_result =
   | Binding of (AST.expression -> AST.expression)
+  | Binding_return of (AST.expression -> AST.expression)
   | Expr of AST.expression
   | Break of AST.expression
   | Return of AST.expression
@@ -1126,15 +1127,21 @@ and merge_statement_results ~raise
   | Binding a, Expr b -> Expr (a b)
   | Binding a, Break b -> Break (a @@ e_unit ~loc:b.location ())
   | Binding a, Return b -> Return (a b)
+  | Binding a, Binding_return b -> Binding_return (a <@ b)
+  | Binding_return a, Binding b -> Binding (a <@ b)
+  | Binding_return a, Expr b -> Expr (a b)
+  | Binding_return a, Break b -> Break (a @@ e_unit ~loc:b.location ())
+  | Binding_return a, Return b -> Return (a b)
   | Expr a, Binding b -> Binding (e_sequence ~loc:a.location a <@ b)
   | Expr a, Expr b -> Expr (e_sequence ~loc:b.location a b)
   | Expr a, Break _ -> Break a
   | Expr a, Return b -> Return (e_sequence ~loc:a.location a b)
+  | Expr a, Binding_return b -> Binding_return (e_sequence ~loc:a.location a <@ b)
   (* In a block, any statement after a [break] or [return] is considered unreachable *)
   | Break a, Expr b | Break a, Break b | Break a, Return b ->
     raise.warning (`Jsligo_unreachable_code b.location);
     Break a
-  | Break a, Binding b ->
+  | Break a, Binding_return b | Break a, Binding b ->
     let x = b @@ e_unit ~loc:a.location () in
     raise.warning (`Jsligo_unreachable_code x.location);
     Break a
@@ -1144,13 +1151,14 @@ and merge_statement_results ~raise
   | Return a, Expr x ->
     raise.warning (`Jsligo_unreachable_code x.location);
     Return a
-  | Return a, Binding b ->
+  | Return a, Binding_return b | Return a, Binding b ->
     let x = b @@ e_unit ~loc:a.location () in
     raise.warning (`Jsligo_unreachable_code x.location);
     Return a
   | Return a, Break b ->
     raise.warning (`Jsligo_unreachable_code b.location);
     Return a
+  | Binding_return a, Binding_return b -> Binding_return (a <@ b)
 
 
 and filter_private (attributes : CST.attributes) =
@@ -1331,14 +1339,16 @@ and compile_statement ?(wrap = false) ~raise : CST.statement -> statement_result
     | Return _ -> return @@ let_in var
     | Expr _ -> expr @@ let_in var
     | Break _ -> Break (let_in var)
-    | Binding b -> Binding (fun f -> e_let_in ~loc block_binder [] (b f) var))
+    (* | Binding b -> Binding (fun f -> e_let_in ~loc block_binder [] (b f) var)) *)
+    | Binding_return b -> Binding (fun f -> e_let_in ~loc block_binder [] (b f) var)
+    | Binding _ -> Binding let_in)
   | SCond cond ->
     let cond, loc = r_split cond in
     let test = self_expr cond.test.inside in
     let then_clause = self ~wrap:false cond.ifso in
     let else_clause = Option.map ~f:(fun (_, s) -> self ~wrap:false s) cond.ifnot in
     let compile_clause = function
-      | Binding e -> expr, e @@ e_unit ~loc ()
+      | Binding e | Binding_return e -> expr, e @@ e_unit ~loc ()
       | Expr e -> expr, e_sequence ~loc e (e_unit ~loc ())
       | Break b -> return, e_sequence ~loc b (e_unit ~loc ())
       | Return r -> return, r
@@ -1355,7 +1365,8 @@ and compile_statement ?(wrap = false) ~raise : CST.statement -> statement_result
       | _ -> n (e_cond ~loc test then_clause else_clause))
     | None ->
       (match then_clause_orig with
-      | Return _ -> Binding (fun else_clause -> e_cond ~loc test then_clause else_clause)
+      | Return _ ->
+        Binding_return (fun else_clause -> e_cond ~loc test then_clause else_clause)
       | _ -> Expr (e_cond ~loc test then_clause (e_unit ~loc ()))))
   | SReturn { value = { expr; _ }; region } ->
     (match expr with
@@ -1526,7 +1537,7 @@ and compile_statement ?(wrap = false) ~raise : CST.statement -> statement_result
           let statements = self_statements statements in
           let statements =
             match statements with
-            | Binding s ->
+            | Binding_return s | Binding s ->
               Binding
                 (fun x ->
                   let e = e_sequence ~loc found_case_assign_true (s (e_unit ~loc ())) in
@@ -1556,7 +1567,7 @@ and compile_statement ?(wrap = false) ~raise : CST.statement -> statement_result
           let statements = self_statements statements in
           let statements =
             match statements with
-            | Binding s ->
+            | Binding s | Binding_return s ->
               Binding
                 (fun x ->
                   let e = e_sequence ~loc found_case_assign_true (s (e_unit ~loc ())) in
@@ -1631,7 +1642,7 @@ and compile_statement ?(wrap = false) ~raise : CST.statement -> statement_result
 and statement_result_to_expression ~loc : statement_result -> AST.expression =
  fun statement_result ->
   match statement_result with
-  | Binding b -> b (e_unit ~loc ())
+  | Binding b | Binding_return b -> b (e_unit ~loc ())
   | Expr e ->
     let pattern =
       Location.wrap ~loc (Pattern.P_var (Binder.make (Value_var.fresh ~loc ()) None))
