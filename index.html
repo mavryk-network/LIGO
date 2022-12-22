@@ -12,6 +12,10 @@
     <script src="/_build/default/src/bin/stdint2.js"></script>
     <script src="/_build/default/src/bin/bls12-polynomial.js"></script>
     <script src="/_build/default/src/bin/secp256k1.js"></script>
+    <script src="/_build/default/src/bin/loader.js"></script>
+    <script src="/_build/default/src/bin/shell.js"></script>
+    <script src="/_build/default/src/bin/api.js"></script>
+    <script src="/_build/default/src/bin/digestif.js"></script>
     <script>
       _BLS12381()
         .then(function (BLS12381) {
@@ -23,6 +27,11 @@
           this._SECP256K1 = _SECP256K1;
         })
         .catch((e) => console.log(e));
+
+      HaclWasm.getInitializedHaclModule().then(function (loaded) {
+        console.log("hacl loaded");
+        this._HACL = loaded;
+      });
     </script>
     <!-- <script src="./runtime-generated.js"></script>
 	 <script src="./random.js"></script>
