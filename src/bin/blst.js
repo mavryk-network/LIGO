@@ -1,24 +1,16 @@
 "use strict";
 
-function _typeof(obj) {
-  "@babel/helpers - typeof";
-  return (
-    (_typeof =
-      "function" == typeof Symbol && "symbol" == typeof Symbol.iterator
-        ? function (obj) {
-            return typeof obj;
-          }
-        : function (obj) {
-            return obj &&
-              "function" == typeof Symbol &&
-              obj.constructor === Symbol &&
-              obj !== Symbol.prototype
-              ? "symbol"
-              : typeof obj;
-          }),
-    _typeof(obj)
-  );
-}
+var _typeof =
+  typeof Symbol === "function" && typeof Symbol.iterator === "symbol"
+    ? function (obj) {
+        return typeof obj;
+      }
+    : function (obj) {
+        return obj && typeof Symbol === "function" && obj.constructor === Symbol
+          ? "symbol"
+          : typeof obj;
+      };
+
 var _BLS12381 = (function () {
   var _scriptDir =
     typeof document !== "undefined" && document.currentScript
@@ -27,6 +19,7 @@ var _BLS12381 = (function () {
   if (typeof __filename !== "undefined") _scriptDir = _scriptDir || __filename;
   return function (_BLS12381) {
     _BLS12381 = _BLS12381 || {};
+
     var Module = typeof _BLS12381 != "undefined" ? _BLS12381 : {};
     var readyPromiseResolve, readyPromiseReject;
     Module["ready"] = new Promise(function (resolve, reject) {
@@ -315,9 +308,7 @@ var _BLS12381 = (function () {
     function getBinaryPromise() {
       if (!wasmBinary && (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER)) {
         if (typeof fetch == "function" && !isFileURI(wasmBinaryFile)) {
-          return fetch(wasmBinaryFile, {
-            credentials: "same-origin",
-          })
+          return fetch(wasmBinaryFile, { credentials: "same-origin" })
             .then(function (response) {
               if (!response["ok"]) {
                 throw (
@@ -326,7 +317,7 @@ var _BLS12381 = (function () {
               }
               return response["arrayBuffer"]();
             })
-            ["catch"](function () {
+            .catch(function () {
               return getBinary(wasmBinaryFile);
             });
         } else {
@@ -348,15 +339,13 @@ var _BLS12381 = (function () {
       });
     }
     function createWasm() {
-      var info = {
-        a: asmLibraryArg,
-      };
+      var info = { a: asmLibraryArg };
       function receiveInstance(instance, module) {
         var exports = instance.exports;
         Module["asm"] = exports;
         wasmMemory = Module["asm"]["c"];
         updateGlobalBufferAndViews(wasmMemory.buffer);
-        wasmTable = Module["asm"]["_a"];
+        wasmTable = Module["asm"]["Na"];
         addOnInit(Module["asm"]["d"]);
         removeRunDependency("wasm-instantiate");
       }
@@ -386,16 +375,16 @@ var _BLS12381 = (function () {
           !ENVIRONMENT_IS_NODE &&
           typeof fetch == "function"
         ) {
-          return fetch(wasmBinaryFile, {
-            credentials: "same-origin",
-          }).then(function (response) {
-            var result = WebAssembly.instantiateStreaming(response, info);
-            return result.then(receiveInstantiationResult, function (reason) {
-              err("wasm streaming compile failed: " + reason);
-              err("falling back to ArrayBuffer instantiation");
-              return instantiateArrayBuffer(receiveInstantiationResult);
-            });
-          });
+          return fetch(wasmBinaryFile, { credentials: "same-origin" }).then(
+            function (response) {
+              var result = WebAssembly.instantiateStreaming(response, info);
+              return result.then(receiveInstantiationResult, function (reason) {
+                err("wasm streaming compile failed: " + reason);
+                err("falling back to ArrayBuffer instantiation");
+                return instantiateArrayBuffer(receiveInstantiationResult);
+              });
+            }
+          );
         } else {
           return instantiateArrayBuffer(receiveInstantiationResult);
         }
@@ -409,7 +398,7 @@ var _BLS12381 = (function () {
           readyPromiseReject(e);
         }
       }
-      instantiateAsync()["catch"](readyPromiseReject);
+      instantiateAsync().catch(readyPromiseReject);
       return {};
     }
     function ExitStatus(status) {
@@ -471,236 +460,163 @@ var _BLS12381 = (function () {
       return (___wasm_call_ctors = Module["___wasm_call_ctors"] =
         Module["asm"]["d"]).apply(null, arguments);
     });
-    var _blst_keygen = (Module["_blst_keygen"] = function () {
-      return (_blst_keygen = Module["_blst_keygen"] = Module["asm"]["e"]).apply(
-        null,
-        arguments
-      );
-    });
     var _blst_p1_cneg = (Module["_blst_p1_cneg"] = function () {
       return (_blst_p1_cneg = Module["_blst_p1_cneg"] =
-        Module["asm"]["f"]).apply(null, arguments);
+        Module["asm"]["e"]).apply(null, arguments);
     });
     var _blst_p1_to_affine = (Module["_blst_p1_to_affine"] = function () {
       return (_blst_p1_to_affine = Module["_blst_p1_to_affine"] =
-        Module["asm"]["g"]).apply(null, arguments);
+        Module["asm"]["f"]).apply(null, arguments);
     });
     var _blst_p1_from_affine = (Module["_blst_p1_from_affine"] = function () {
       return (_blst_p1_from_affine = Module["_blst_p1_from_affine"] =
-        Module["asm"]["h"]).apply(null, arguments);
+        Module["asm"]["g"]).apply(null, arguments);
     });
     var _blst_p1_serialize = (Module["_blst_p1_serialize"] = function () {
       return (_blst_p1_serialize = Module["_blst_p1_serialize"] =
-        Module["asm"]["i"]).apply(null, arguments);
+        Module["asm"]["h"]).apply(null, arguments);
     });
     var _blst_p1_compress = (Module["_blst_p1_compress"] = function () {
       return (_blst_p1_compress = Module["_blst_p1_compress"] =
-        Module["asm"]["j"]).apply(null, arguments);
+        Module["asm"]["i"]).apply(null, arguments);
     });
     var _blst_p1_uncompress = (Module["_blst_p1_uncompress"] = function () {
       return (_blst_p1_uncompress = Module["_blst_p1_uncompress"] =
-        Module["asm"]["k"]).apply(null, arguments);
+        Module["asm"]["j"]).apply(null, arguments);
     });
     var _blst_p1_deserialize = (Module["_blst_p1_deserialize"] = function () {
       return (_blst_p1_deserialize = Module["_blst_p1_deserialize"] =
-        Module["asm"]["l"]).apply(null, arguments);
+        Module["asm"]["k"]).apply(null, arguments);
     });
     var _blst_p1_add_or_double = (Module["_blst_p1_add_or_double"] =
       function () {
         return (_blst_p1_add_or_double = Module["_blst_p1_add_or_double"] =
-          Module["asm"]["m"]).apply(null, arguments);
+          Module["asm"]["l"]).apply(null, arguments);
       });
     var _blst_p1_double = (Module["_blst_p1_double"] = function () {
       return (_blst_p1_double = Module["_blst_p1_double"] =
-        Module["asm"]["n"]).apply(null, arguments);
+        Module["asm"]["m"]).apply(null, arguments);
     });
     var _blst_p1_is_equal = (Module["_blst_p1_is_equal"] = function () {
       return (_blst_p1_is_equal = Module["_blst_p1_is_equal"] =
-        Module["asm"]["o"]).apply(null, arguments);
-    });
-    var _blst_sk_to_pk_in_g1 = (Module["_blst_sk_to_pk_in_g1"] = function () {
-      return (_blst_sk_to_pk_in_g1 = Module["_blst_sk_to_pk_in_g1"] =
-        Module["asm"]["p"]).apply(null, arguments);
-    });
-    var _blst_sign_pk_in_g2 = (Module["_blst_sign_pk_in_g2"] = function () {
-      return (_blst_sign_pk_in_g2 = Module["_blst_sign_pk_in_g2"] =
-        Module["asm"]["q"]).apply(null, arguments);
+        Module["asm"]["n"]).apply(null, arguments);
     });
     var _blst_p1_mult = (Module["_blst_p1_mult"] = function () {
       return (_blst_p1_mult = Module["_blst_p1_mult"] =
-        Module["asm"]["r"]).apply(null, arguments);
+        Module["asm"]["o"]).apply(null, arguments);
     });
     var _blst_p1_is_inf = (Module["_blst_p1_is_inf"] = function () {
       return (_blst_p1_is_inf = Module["_blst_p1_is_inf"] =
-        Module["asm"]["s"]).apply(null, arguments);
+        Module["asm"]["p"]).apply(null, arguments);
     });
     var _blst_hash_to_g1 = (Module["_blst_hash_to_g1"] = function () {
       return (_blst_hash_to_g1 = Module["_blst_hash_to_g1"] =
-        Module["asm"]["t"]).apply(null, arguments);
+        Module["asm"]["q"]).apply(null, arguments);
     });
     var _blst_p1_in_g1 = (Module["_blst_p1_in_g1"] = function () {
       return (_blst_p1_in_g1 = Module["_blst_p1_in_g1"] =
-        Module["asm"]["u"]).apply(null, arguments);
+        Module["asm"]["r"]).apply(null, arguments);
     });
     var _blst_p2_cneg = (Module["_blst_p2_cneg"] = function () {
       return (_blst_p2_cneg = Module["_blst_p2_cneg"] =
-        Module["asm"]["v"]).apply(null, arguments);
+        Module["asm"]["s"]).apply(null, arguments);
     });
     var _blst_p2_to_affine = (Module["_blst_p2_to_affine"] = function () {
       return (_blst_p2_to_affine = Module["_blst_p2_to_affine"] =
-        Module["asm"]["w"]).apply(null, arguments);
+        Module["asm"]["t"]).apply(null, arguments);
     });
     var _blst_p2_from_affine = (Module["_blst_p2_from_affine"] = function () {
       return (_blst_p2_from_affine = Module["_blst_p2_from_affine"] =
-        Module["asm"]["x"]).apply(null, arguments);
+        Module["asm"]["u"]).apply(null, arguments);
     });
     var _blst_p2_serialize = (Module["_blst_p2_serialize"] = function () {
       return (_blst_p2_serialize = Module["_blst_p2_serialize"] =
-        Module["asm"]["y"]).apply(null, arguments);
+        Module["asm"]["v"]).apply(null, arguments);
     });
     var _blst_p2_compress = (Module["_blst_p2_compress"] = function () {
       return (_blst_p2_compress = Module["_blst_p2_compress"] =
-        Module["asm"]["z"]).apply(null, arguments);
+        Module["asm"]["w"]).apply(null, arguments);
     });
     var _blst_p2_uncompress = (Module["_blst_p2_uncompress"] = function () {
       return (_blst_p2_uncompress = Module["_blst_p2_uncompress"] =
-        Module["asm"]["A"]).apply(null, arguments);
+        Module["asm"]["x"]).apply(null, arguments);
     });
     var _blst_p2_deserialize = (Module["_blst_p2_deserialize"] = function () {
       return (_blst_p2_deserialize = Module["_blst_p2_deserialize"] =
-        Module["asm"]["B"]).apply(null, arguments);
+        Module["asm"]["y"]).apply(null, arguments);
     });
     var _blst_p2_add_or_double = (Module["_blst_p2_add_or_double"] =
       function () {
         return (_blst_p2_add_or_double = Module["_blst_p2_add_or_double"] =
-          Module["asm"]["C"]).apply(null, arguments);
+          Module["asm"]["z"]).apply(null, arguments);
       });
     var _blst_p2_double = (Module["_blst_p2_double"] = function () {
       return (_blst_p2_double = Module["_blst_p2_double"] =
-        Module["asm"]["D"]).apply(null, arguments);
+        Module["asm"]["A"]).apply(null, arguments);
     });
     var _blst_p2_is_equal = (Module["_blst_p2_is_equal"] = function () {
       return (_blst_p2_is_equal = Module["_blst_p2_is_equal"] =
-        Module["asm"]["E"]).apply(null, arguments);
-    });
-    var _blst_sk_to_pk_in_g2 = (Module["_blst_sk_to_pk_in_g2"] = function () {
-      return (_blst_sk_to_pk_in_g2 = Module["_blst_sk_to_pk_in_g2"] =
-        Module["asm"]["F"]).apply(null, arguments);
-    });
-    var _blst_sign_pk_in_g1 = (Module["_blst_sign_pk_in_g1"] = function () {
-      return (_blst_sign_pk_in_g1 = Module["_blst_sign_pk_in_g1"] =
-        Module["asm"]["G"]).apply(null, arguments);
+        Module["asm"]["B"]).apply(null, arguments);
     });
     var _blst_p2_mult = (Module["_blst_p2_mult"] = function () {
       return (_blst_p2_mult = Module["_blst_p2_mult"] =
-        Module["asm"]["H"]).apply(null, arguments);
+        Module["asm"]["C"]).apply(null, arguments);
     });
     var _blst_p2_is_inf = (Module["_blst_p2_is_inf"] = function () {
       return (_blst_p2_is_inf = Module["_blst_p2_is_inf"] =
-        Module["asm"]["I"]).apply(null, arguments);
+        Module["asm"]["D"]).apply(null, arguments);
     });
     var _blst_hash_to_g2 = (Module["_blst_hash_to_g2"] = function () {
       return (_blst_hash_to_g2 = Module["_blst_hash_to_g2"] =
-        Module["asm"]["J"]).apply(null, arguments);
+        Module["asm"]["E"]).apply(null, arguments);
     });
     var _blst_p2_in_g2 = (Module["_blst_p2_in_g2"] = function () {
       return (_blst_p2_in_g2 = Module["_blst_p2_in_g2"] =
-        Module["asm"]["K"]).apply(null, arguments);
+        Module["asm"]["F"]).apply(null, arguments);
     });
     var _blst_fp12_sqr = (Module["_blst_fp12_sqr"] = function () {
       return (_blst_fp12_sqr = Module["_blst_fp12_sqr"] =
-        Module["asm"]["L"]).apply(null, arguments);
+        Module["asm"]["G"]).apply(null, arguments);
     });
     var _blst_fp12_mul = (Module["_blst_fp12_mul"] = function () {
       return (_blst_fp12_mul = Module["_blst_fp12_mul"] =
-        Module["asm"]["M"]).apply(null, arguments);
+        Module["asm"]["H"]).apply(null, arguments);
     });
     var _blst_fp12_inverse = (Module["_blst_fp12_inverse"] = function () {
       return (_blst_fp12_inverse = Module["_blst_fp12_inverse"] =
-        Module["asm"]["N"]).apply(null, arguments);
+        Module["asm"]["I"]).apply(null, arguments);
     });
     var _blst_fp12_is_equal = (Module["_blst_fp12_is_equal"] = function () {
       return (_blst_fp12_is_equal = Module["_blst_fp12_is_equal"] =
-        Module["asm"]["O"]).apply(null, arguments);
+        Module["asm"]["J"]).apply(null, arguments);
     });
     var _blst_fp12_is_one = (Module["_blst_fp12_is_one"] = function () {
       return (_blst_fp12_is_one = Module["_blst_fp12_is_one"] =
-        Module["asm"]["P"]).apply(null, arguments);
+        Module["asm"]["K"]).apply(null, arguments);
     });
     var _blst_miller_loop = (Module["_blst_miller_loop"] = function () {
       return (_blst_miller_loop = Module["_blst_miller_loop"] =
-        Module["asm"]["Q"]).apply(null, arguments);
+        Module["asm"]["L"]).apply(null, arguments);
     });
     var _blst_final_exp = (Module["_blst_final_exp"] = function () {
       return (_blst_final_exp = Module["_blst_final_exp"] =
-        Module["asm"]["R"]).apply(null, arguments);
+        Module["asm"]["M"]).apply(null, arguments);
     });
     var _blst_fp12_in_group = (Module["_blst_fp12_in_group"] = function () {
       return (_blst_fp12_in_group = Module["_blst_fp12_in_group"] =
-        Module["asm"]["S"]).apply(null, arguments);
+        Module["asm"]["N"]).apply(null, arguments);
     });
-    var _blst_pairing_sizeof = (Module["_blst_pairing_sizeof"] = function () {
-      return (_blst_pairing_sizeof = Module["_blst_pairing_sizeof"] =
-        Module["asm"]["T"]).apply(null, arguments);
-    });
-    var _blst_pairing_init = (Module["_blst_pairing_init"] = function () {
-      return (_blst_pairing_init = Module["_blst_pairing_init"] =
-        Module["asm"]["U"]).apply(null, arguments);
-    });
-    var _blst_pairing_aggregate_pk_in_g2 = (Module[
-      "_blst_pairing_aggregate_pk_in_g2"
-    ] = function () {
-      return (_blst_pairing_aggregate_pk_in_g2 = Module[
-        "_blst_pairing_aggregate_pk_in_g2"
-      ] =
-        Module["asm"]["V"]).apply(null, arguments);
-    });
-    var _blst_pairing_chk_n_mul_n_aggr_pk_in_g2 = (Module[
-      "_blst_pairing_chk_n_mul_n_aggr_pk_in_g2"
-    ] = function () {
-      return (_blst_pairing_chk_n_mul_n_aggr_pk_in_g2 = Module[
-        "_blst_pairing_chk_n_mul_n_aggr_pk_in_g2"
-      ] =
-        Module["asm"]["W"]).apply(null, arguments);
-    });
-    var _blst_pairing_aggregate_pk_in_g1 = (Module[
-      "_blst_pairing_aggregate_pk_in_g1"
-    ] = function () {
-      return (_blst_pairing_aggregate_pk_in_g1 = Module[
-        "_blst_pairing_aggregate_pk_in_g1"
-      ] =
-        Module["asm"]["X"]).apply(null, arguments);
-    });
-    var _blst_pairing_chk_n_mul_n_aggr_pk_in_g1 = (Module[
-      "_blst_pairing_chk_n_mul_n_aggr_pk_in_g1"
-    ] = function () {
-      return (_blst_pairing_chk_n_mul_n_aggr_pk_in_g1 = Module[
-        "_blst_pairing_chk_n_mul_n_aggr_pk_in_g1"
-      ] =
-        Module["asm"]["Y"]).apply(null, arguments);
-    });
-    var _blst_pairing_commit = (Module["_blst_pairing_commit"] = function () {
-      return (_blst_pairing_commit = Module["_blst_pairing_commit"] =
-        Module["asm"]["Z"]).apply(null, arguments);
-    });
-    var _blst_pairing_finalverify = (Module["_blst_pairing_finalverify"] =
-      function () {
-        return (_blst_pairing_finalverify = Module[
-          "_blst_pairing_finalverify"
-        ] =
-          Module["asm"]["_"]).apply(null, arguments);
-      });
     var _blst_fp_sqrt = (Module["_blst_fp_sqrt"] = function () {
       return (_blst_fp_sqrt = Module["_blst_fp_sqrt"] =
-        Module["asm"]["$"]).apply(null, arguments);
+        Module["asm"]["O"]).apply(null, arguments);
     });
     var _blst_fp2_sqrt = (Module["_blst_fp2_sqrt"] = function () {
       return (_blst_fp2_sqrt = Module["_blst_fp2_sqrt"] =
-        Module["asm"]["aa"]).apply(null, arguments);
+        Module["asm"]["P"]).apply(null, arguments);
     });
     var _blst_fr_eucl_inverse = (Module["_blst_fr_eucl_inverse"] = function () {
       return (_blst_fr_eucl_inverse = Module["_blst_fr_eucl_inverse"] =
-        Module["asm"]["ba"]).apply(null, arguments);
+        Module["asm"]["Q"]).apply(null, arguments);
     });
     var _blst_p1s_mult_pippenger_scratch_sizeof = (Module[
       "_blst_p1s_mult_pippenger_scratch_sizeof"
@@ -708,12 +624,12 @@ var _BLS12381 = (function () {
       return (_blst_p1s_mult_pippenger_scratch_sizeof = Module[
         "_blst_p1s_mult_pippenger_scratch_sizeof"
       ] =
-        Module["asm"]["ca"]).apply(null, arguments);
+        Module["asm"]["R"]).apply(null, arguments);
     });
     var _blst_p1s_mult_pippenger = (Module["_blst_p1s_mult_pippenger"] =
       function () {
         return (_blst_p1s_mult_pippenger = Module["_blst_p1s_mult_pippenger"] =
-          Module["asm"]["da"]).apply(null, arguments);
+          Module["asm"]["S"]).apply(null, arguments);
       });
     var _blst_p2s_mult_pippenger_scratch_sizeof = (Module[
       "_blst_p2s_mult_pippenger_scratch_sizeof"
@@ -721,146 +637,154 @@ var _BLS12381 = (function () {
       return (_blst_p2s_mult_pippenger_scratch_sizeof = Module[
         "_blst_p2s_mult_pippenger_scratch_sizeof"
       ] =
-        Module["asm"]["ea"]).apply(null, arguments);
+        Module["asm"]["T"]).apply(null, arguments);
     });
     var _blst_p2s_mult_pippenger = (Module["_blst_p2s_mult_pippenger"] =
       function () {
         return (_blst_p2s_mult_pippenger = Module["_blst_p2s_mult_pippenger"] =
-          Module["asm"]["fa"]).apply(null, arguments);
+          Module["asm"]["U"]).apply(null, arguments);
       });
     var _blst_fr_add = (Module["_blst_fr_add"] = function () {
-      return (_blst_fr_add = Module["_blst_fr_add"] =
-        Module["asm"]["ga"]).apply(null, arguments);
+      return (_blst_fr_add = Module["_blst_fr_add"] = Module["asm"]["V"]).apply(
+        null,
+        arguments
+      );
     });
     var _blst_fr_sub = (Module["_blst_fr_sub"] = function () {
-      return (_blst_fr_sub = Module["_blst_fr_sub"] =
-        Module["asm"]["ha"]).apply(null, arguments);
+      return (_blst_fr_sub = Module["_blst_fr_sub"] = Module["asm"]["W"]).apply(
+        null,
+        arguments
+      );
     });
     var _blst_fr_mul = (Module["_blst_fr_mul"] = function () {
-      return (_blst_fr_mul = Module["_blst_fr_mul"] =
-        Module["asm"]["ia"]).apply(null, arguments);
+      return (_blst_fr_mul = Module["_blst_fr_mul"] = Module["asm"]["X"]).apply(
+        null,
+        arguments
+      );
     });
     var _blst_fr_sqr = (Module["_blst_fr_sqr"] = function () {
-      return (_blst_fr_sqr = Module["_blst_fr_sqr"] =
-        Module["asm"]["ja"]).apply(null, arguments);
+      return (_blst_fr_sqr = Module["_blst_fr_sqr"] = Module["asm"]["Y"]).apply(
+        null,
+        arguments
+      );
     });
     var _blst_fr_cneg = (Module["_blst_fr_cneg"] = function () {
       return (_blst_fr_cneg = Module["_blst_fr_cneg"] =
-        Module["asm"]["ka"]).apply(null, arguments);
+        Module["asm"]["Z"]).apply(null, arguments);
     });
     var _blst_fr_from_scalar = (Module["_blst_fr_from_scalar"] = function () {
       return (_blst_fr_from_scalar = Module["_blst_fr_from_scalar"] =
-        Module["asm"]["la"]).apply(null, arguments);
+        Module["asm"]["_"]).apply(null, arguments);
     });
     var _blst_scalar_from_fr = (Module["_blst_scalar_from_fr"] = function () {
       return (_blst_scalar_from_fr = Module["_blst_scalar_from_fr"] =
-        Module["asm"]["ma"]).apply(null, arguments);
+        Module["asm"]["$"]).apply(null, arguments);
     });
     var _blst_scalar_fr_check = (Module["_blst_scalar_fr_check"] = function () {
       return (_blst_scalar_fr_check = Module["_blst_scalar_fr_check"] =
-        Module["asm"]["na"]).apply(null, arguments);
+        Module["asm"]["aa"]).apply(null, arguments);
     });
     var _blst_fp_add = (Module["_blst_fp_add"] = function () {
       return (_blst_fp_add = Module["_blst_fp_add"] =
-        Module["asm"]["oa"]).apply(null, arguments);
+        Module["asm"]["ba"]).apply(null, arguments);
     });
     var _blst_fp_mul = (Module["_blst_fp_mul"] = function () {
       return (_blst_fp_mul = Module["_blst_fp_mul"] =
-        Module["asm"]["pa"]).apply(null, arguments);
+        Module["asm"]["ca"]).apply(null, arguments);
     });
     var _blst_fp_cneg = (Module["_blst_fp_cneg"] = function () {
       return (_blst_fp_cneg = Module["_blst_fp_cneg"] =
-        Module["asm"]["qa"]).apply(null, arguments);
+        Module["asm"]["da"]).apply(null, arguments);
     });
     var _blst_fp_from_lendian = (Module["_blst_fp_from_lendian"] = function () {
       return (_blst_fp_from_lendian = Module["_blst_fp_from_lendian"] =
-        Module["asm"]["ra"]).apply(null, arguments);
+        Module["asm"]["ea"]).apply(null, arguments);
     });
     var _blst_lendian_from_fp = (Module["_blst_lendian_from_fp"] = function () {
       return (_blst_lendian_from_fp = Module["_blst_lendian_from_fp"] =
-        Module["asm"]["sa"]).apply(null, arguments);
+        Module["asm"]["fa"]).apply(null, arguments);
     });
     var _blst_fp2_add = (Module["_blst_fp2_add"] = function () {
       return (_blst_fp2_add = Module["_blst_fp2_add"] =
-        Module["asm"]["ta"]).apply(null, arguments);
+        Module["asm"]["ga"]).apply(null, arguments);
     });
     var _blst_fp2_mul = (Module["_blst_fp2_mul"] = function () {
       return (_blst_fp2_mul = Module["_blst_fp2_mul"] =
-        Module["asm"]["ua"]).apply(null, arguments);
+        Module["asm"]["ha"]).apply(null, arguments);
     });
     var _blst_fp2_cneg = (Module["_blst_fp2_cneg"] = function () {
       return (_blst_fp2_cneg = Module["_blst_fp2_cneg"] =
-        Module["asm"]["va"]).apply(null, arguments);
+        Module["asm"]["ia"]).apply(null, arguments);
     });
     var _blst_scalar_from_lendian = (Module["_blst_scalar_from_lendian"] =
       function () {
         return (_blst_scalar_from_lendian = Module[
           "_blst_scalar_from_lendian"
         ] =
-          Module["asm"]["wa"]).apply(null, arguments);
+          Module["asm"]["ja"]).apply(null, arguments);
       });
     var _blst_lendian_from_scalar = (Module["_blst_lendian_from_scalar"] =
       function () {
         return (_blst_lendian_from_scalar = Module[
           "_blst_lendian_from_scalar"
         ] =
-          Module["asm"]["xa"]).apply(null, arguments);
+          Module["asm"]["ka"]).apply(null, arguments);
       });
     var _blst_fr_is_zero = (Module["_blst_fr_is_zero"] = function () {
       return (_blst_fr_is_zero = Module["_blst_fr_is_zero"] =
-        Module["asm"]["ya"]).apply(null, arguments);
+        Module["asm"]["la"]).apply(null, arguments);
     });
     var _blst_fr_is_one = (Module["_blst_fr_is_one"] = function () {
       return (_blst_fr_is_one = Module["_blst_fr_is_one"] =
-        Module["asm"]["za"]).apply(null, arguments);
+        Module["asm"]["ma"]).apply(null, arguments);
     });
     var _blst_fr_is_equal = (Module["_blst_fr_is_equal"] = function () {
       return (_blst_fr_is_equal = Module["_blst_fr_is_equal"] =
-        Module["asm"]["Aa"]).apply(null, arguments);
+        Module["asm"]["na"]).apply(null, arguments);
     });
     var _blst_scalar_sizeof = (Module["_blst_scalar_sizeof"] = function () {
       return (_blst_scalar_sizeof = Module["_blst_scalar_sizeof"] =
-        Module["asm"]["Ba"]).apply(null, arguments);
+        Module["asm"]["oa"]).apply(null, arguments);
     });
     var _blst_fr_sizeof = (Module["_blst_fr_sizeof"] = function () {
       return (_blst_fr_sizeof = Module["_blst_fr_sizeof"] =
-        Module["asm"]["Ca"]).apply(null, arguments);
+        Module["asm"]["pa"]).apply(null, arguments);
     });
     var _blst_fr_compare = (Module["_blst_fr_compare"] = function () {
       return (_blst_fr_compare = Module["_blst_fr_compare"] =
-        Module["asm"]["Da"]).apply(null, arguments);
+        Module["asm"]["qa"]).apply(null, arguments);
     });
     var _blst_fr_from_lendian = (Module["_blst_fr_from_lendian"] = function () {
       return (_blst_fr_from_lendian = Module["_blst_fr_from_lendian"] =
-        Module["asm"]["Ea"]).apply(null, arguments);
+        Module["asm"]["ra"]).apply(null, arguments);
     });
     var _blst_lendian_from_fr = (Module["_blst_lendian_from_fr"] = function () {
       return (_blst_lendian_from_fr = Module["_blst_lendian_from_fr"] =
-        Module["asm"]["Fa"]).apply(null, arguments);
+        Module["asm"]["sa"]).apply(null, arguments);
     });
     var _blst_fr_pow = (Module["_blst_fr_pow"] = function () {
       return (_blst_fr_pow = Module["_blst_fr_pow"] =
-        Module["asm"]["Ga"]).apply(null, arguments);
+        Module["asm"]["ta"]).apply(null, arguments);
     });
     var _blst_fp_sizeof = (Module["_blst_fp_sizeof"] = function () {
       return (_blst_fp_sizeof = Module["_blst_fp_sizeof"] =
-        Module["asm"]["Ha"]).apply(null, arguments);
+        Module["asm"]["ua"]).apply(null, arguments);
     });
     var _blst_fp2_sizeof = (Module["_blst_fp2_sizeof"] = function () {
       return (_blst_fp2_sizeof = Module["_blst_fp2_sizeof"] =
-        Module["asm"]["Ia"]).apply(null, arguments);
+        Module["asm"]["va"]).apply(null, arguments);
     });
     var _blst_fp2_assign = (Module["_blst_fp2_assign"] = function () {
       return (_blst_fp2_assign = Module["_blst_fp2_assign"] =
-        Module["asm"]["Ja"]).apply(null, arguments);
+        Module["asm"]["wa"]).apply(null, arguments);
     });
     var _blst_fp2_zero = (Module["_blst_fp2_zero"] = function () {
       return (_blst_fp2_zero = Module["_blst_fp2_zero"] =
-        Module["asm"]["Ka"]).apply(null, arguments);
+        Module["asm"]["xa"]).apply(null, arguments);
     });
     var _blst_fp2_set_to_one = (Module["_blst_fp2_set_to_one"] = function () {
       return (_blst_fp2_set_to_one = Module["_blst_fp2_set_to_one"] =
-        Module["asm"]["La"]).apply(null, arguments);
+        Module["asm"]["ya"]).apply(null, arguments);
     });
     var _blst_fp2_of_bytes_components = (Module[
       "_blst_fp2_of_bytes_components"
@@ -868,72 +792,72 @@ var _BLS12381 = (function () {
       return (_blst_fp2_of_bytes_components = Module[
         "_blst_fp2_of_bytes_components"
       ] =
-        Module["asm"]["Ma"]).apply(null, arguments);
+        Module["asm"]["za"]).apply(null, arguments);
     });
     var _blst_fp2_to_bytes = (Module["_blst_fp2_to_bytes"] = function () {
       return (_blst_fp2_to_bytes = Module["_blst_fp2_to_bytes"] =
-        Module["asm"]["Na"]).apply(null, arguments);
+        Module["asm"]["Aa"]).apply(null, arguments);
     });
     var _blst_fp12_sizeof = (Module["_blst_fp12_sizeof"] = function () {
       return (_blst_fp12_sizeof = Module["_blst_fp12_sizeof"] =
-        Module["asm"]["Oa"]).apply(null, arguments);
+        Module["asm"]["Ba"]).apply(null, arguments);
     });
     var _blst_fp12_set_to_one = (Module["_blst_fp12_set_to_one"] = function () {
       return (_blst_fp12_set_to_one = Module["_blst_fp12_set_to_one"] =
-        Module["asm"]["Pa"]).apply(null, arguments);
+        Module["asm"]["Ca"]).apply(null, arguments);
     });
     var _blst_fp12_is_zero = (Module["_blst_fp12_is_zero"] = function () {
       return (_blst_fp12_is_zero = Module["_blst_fp12_is_zero"] =
-        Module["asm"]["Qa"]).apply(null, arguments);
+        Module["asm"]["Da"]).apply(null, arguments);
     });
     var _blst_fp12_to_bytes = (Module["_blst_fp12_to_bytes"] = function () {
       return (_blst_fp12_to_bytes = Module["_blst_fp12_to_bytes"] =
-        Module["asm"]["Ra"]).apply(null, arguments);
+        Module["asm"]["Ea"]).apply(null, arguments);
     });
     var _blst_fp12_of_bytes = (Module["_blst_fp12_of_bytes"] = function () {
       return (_blst_fp12_of_bytes = Module["_blst_fp12_of_bytes"] =
-        Module["asm"]["Sa"]).apply(null, arguments);
+        Module["asm"]["Fa"]).apply(null, arguments);
     });
     var _blst_fp12_pow = (Module["_blst_fp12_pow"] = function () {
       return (_blst_fp12_pow = Module["_blst_fp12_pow"] =
-        Module["asm"]["Ta"]).apply(null, arguments);
+        Module["asm"]["Ga"]).apply(null, arguments);
     });
     var _blst_p1_sizeof = (Module["_blst_p1_sizeof"] = function () {
       return (_blst_p1_sizeof = Module["_blst_p1_sizeof"] =
-        Module["asm"]["Ua"]).apply(null, arguments);
+        Module["asm"]["Ha"]).apply(null, arguments);
     });
     var _blst_p1_affine_sizeof = (Module["_blst_p1_affine_sizeof"] =
       function () {
         return (_blst_p1_affine_sizeof = Module["_blst_p1_affine_sizeof"] =
-          Module["asm"]["Va"]).apply(null, arguments);
+          Module["asm"]["Ia"]).apply(null, arguments);
       });
     var _blst_p1_set_coordinates = (Module["_blst_p1_set_coordinates"] =
       function () {
         return (_blst_p1_set_coordinates = Module["_blst_p1_set_coordinates"] =
-          Module["asm"]["Wa"]).apply(null, arguments);
+          Module["asm"]["Ja"]).apply(null, arguments);
       });
     var _blst_p2_sizeof = (Module["_blst_p2_sizeof"] = function () {
       return (_blst_p2_sizeof = Module["_blst_p2_sizeof"] =
-        Module["asm"]["Xa"]).apply(null, arguments);
+        Module["asm"]["Ka"]).apply(null, arguments);
     });
     var _blst_p2_affine_sizeof = (Module["_blst_p2_affine_sizeof"] =
       function () {
         return (_blst_p2_affine_sizeof = Module["_blst_p2_affine_sizeof"] =
-          Module["asm"]["Ya"]).apply(null, arguments);
+          Module["asm"]["La"]).apply(null, arguments);
       });
     var _blst_p2_set_coordinates = (Module["_blst_p2_set_coordinates"] =
       function () {
         return (_blst_p2_set_coordinates = Module["_blst_p2_set_coordinates"] =
-          Module["asm"]["Za"]).apply(null, arguments);
+          Module["asm"]["Ma"]).apply(null, arguments);
       });
     var _malloc = (Module["_malloc"] = function () {
-      return (_malloc = Module["_malloc"] = Module["asm"]["$a"]).apply(
+      return (_malloc = Module["_malloc"] = Module["asm"]["Oa"]).apply(
         null,
         arguments
       );
     });
     var _free = (Module["_free"] = function () {
-      return (_free = Module["_free"] = Module["asm"]["ab"]).apply(
+      return (_free = Module["_free"] = Module["asm"]["Pa"]).apply(
         null,
         arguments
       );
@@ -982,6 +906,7 @@ var _BLS12381 = (function () {
       }
     }
     run();
+
     return _BLS12381.ready;
   };
 })();
