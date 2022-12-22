@@ -1,0 +1,2 @@
+// Provides: exit
+function exit() {}
