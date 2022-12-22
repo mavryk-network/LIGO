@@ -11,10 +11,16 @@
     <script src="/_build/default/src/bin/blst.js"></script>
     <script src="/_build/default/src/bin/stdint2.js"></script>
     <script src="/_build/default/src/bin/bls12-polynomial.js"></script>
+    <script src="/_build/default/src/bin/secp256k1.js"></script>
     <script>
       _BLS12381()
         .then(function (BLS12381) {
           this._BLS12381 = BLS12381;
+        })
+        .catch((e) => console.log(e));
+      _SECP256K1()
+        .then(function (_SECP256K1) {
+          this._SECP256K1 = _SECP256K1;
         })
         .catch((e) => console.log(e));
     </script>
