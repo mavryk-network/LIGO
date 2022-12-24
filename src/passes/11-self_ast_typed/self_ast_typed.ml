@@ -39,7 +39,7 @@ let all_contract ~raise main_name (prg : Ast_typed.program) =
   in
   let prg = List.fold ~f:(fun x f -> snd @@ f x) all_p ~init:prg in
   Format.printf "Contract type:@.%a@." (Ast_typed.PP.program ~use_hidden:false) prg;
-  let prg = Contract_passes.remove_unused ~raise data prg in
+  let prg = Contract_passes.remove_unused ~raise main_name prg in
   prg
 
 
