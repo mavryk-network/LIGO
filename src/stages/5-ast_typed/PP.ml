@@ -205,7 +205,7 @@ and type_inst ppf { forall; type_ } =
 
 and option_inline ppf inline = if inline then fprintf ppf "[@inline]" else fprintf ppf ""
 
-and declaration ?(use_hidden = true) ppf (d : declaration) =
+and declaration ?(use_hidden = false) ppf (d : declaration) =
   match Location.unwrap d with
   | D_value vd ->
     if vd.attr.hidden && use_hidden
