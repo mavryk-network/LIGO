@@ -511,7 +511,9 @@ let rec remove_unused_in_module_expr ms binder (fv : FreeVar.t) (mexpr : module_
   match mexpr.wrap_content with
   | M_struct prg ->
     let fv, prg = remove_unused_in_declaration_list ms ~fv prg in
-    return fv @@ M_struct prg
+    (match prg with
+    | [] -> fv, None
+    | _ -> return fv @@ M_struct prg)
   | M_variable var ->
     (match FreeVar.handle_alias fv (var, []) binder with
     | Some fv -> return fv @@ M_variable var
@@ -570,6 +572,12 @@ and remove_unused_in_declaration_list (ms : scope) ?fv (prg : module_)
     :: prg ->
     let ms, _binders = collect_binder_module_expr ms module_ in
     let fv, prg = self ms prg in
+    Format.printf
+      "remove_unused_in_module %a with fv %a@."
+      Module_var.pp
+      module_binder
+      FreeVar.pp
+      fv;
     let fv, mod_ = remove_unused_in_module_expr ms module_binder fv module_ in
     (match mod_ with
     | Some module_ ->
@@ -617,13 +625,13 @@ let remove_unused ~raise : Value_var.t -> program -> program =
         (* get free variable from the rest of the program *)
         let fv', prg = self ms prg in
         (* check that it is usefull*)
-        if VVarSet.mem var fv.free
+        if VVarSet.mem var fv'.free
         then (
           let fv' = { fv' with free = VVarSet.remove var fv'.free } in
           let fv = FreeVar.merge fv fv' in
           fv, d :: prg
           (* drop because useless *))
-        else fv', prg)
+        else FreeVar.merge fv' fv, prg)
     | ({ wrap_content = D_irrefutable_match { pattern = irr; expr; _ }; location = _ } as
       d)
       :: prg ->
@@ -642,13 +650,13 @@ let remove_unused ~raise : Value_var.t -> program -> program =
         if List.is_empty binders
         then (
           let fv' =
-            List.fold binders ~init:fv ~f:(fun env binder' ->
+            List.fold binders ~init:fv' ~f:(fun env binder' ->
                 { env with free = VVarSet.remove (Binder.get_var binder') env.free })
           in
-          let fv = FreeVar.merge fv' @@ fv in
+          let fv = FreeVar.merge fv' fv in
           fv, d :: prg
           (* drop because useless *))
-        else fv', prg)
+        else FreeVar.merge fv' fv, prg)
     | ({ wrap_content = D_type _; location = _ } as d) :: prg ->
       (* always keep ?*)
       let fv, prg = self ms prg in
