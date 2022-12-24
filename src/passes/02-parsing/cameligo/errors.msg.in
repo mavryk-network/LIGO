@@ -2,7 +2,7 @@ interactive_expr: Begin Fun WILD ARROW Bytes SEMI
 ##
 ## Ends in an error in state: 988.
 ##
-## sequence -> Begin series . End [ With Verbatim VBAR UIdent Type Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Open Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int Include In Ident GT GE End Else EQ EOF Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
+## sequence -> Begin series . End [ With Verbatim VBAR UIdent Type Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## Begin series
@@ -11,13 +11,13 @@ interactive_expr: Begin Fun WILD ARROW Bytes SEMI
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 332, spurious reduction of production call_expr_level -> core_expr
-## In state 340, spurious reduction of production unary_expr_level -> call_expr_level
-## In state 321, spurious reduction of production shift_expr_level -> unary_expr_level
-## In state 350, spurious reduction of production mult_expr_level -> shift_expr_level
-## In state 356, spurious reduction of production add_expr_level -> mult_expr_level
-## In state 397, spurious reduction of production cons_expr_level -> add_expr_level
-## In state 384, spurious reduction of production cat_expr_level -> cons_expr_level
+## In state 330, spurious reduction of production call_expr_level -> core_expr
+## In state 338, spurious reduction of production unary_expr_level -> call_expr_level
+## In state 319, spurious reduction of production shift_expr_level -> unary_expr_level
+## In state 348, spurious reduction of production mult_expr_level -> shift_expr_level
+## In state 354, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 395, spurious reduction of production cons_expr_level -> add_expr_level
+## In state 382, spurious reduction of production cat_expr_level -> cons_expr_level
 ## In state 419, spurious reduction of production comp_expr_level -> cat_expr_level
 ## In state 426, spurious reduction of production conj_expr_level -> comp_expr_level
 ## In state 435, spurious reduction of production disj_expr_level -> conj_expr_level
@@ -3989,23 +3989,24 @@ interactive_expr: Verbatim EQ With
 ## The known suffix of the stack is as follows:
 ## comp_expr_level EQ
 ##
-interactive_expr: Verbatim GE With
-##
-## Ends in an error in state: 415.
-##
-## bin_op(comp_expr_level,GE,cat_expr_level) -> comp_expr_level GE . cat_expr_level [ With VBAR Type Then SEMI RPAR REV_APP RBRACKET RBRACE Or Open NE Module Let LT LE Include In GT GE End Else EQ EOF Directive COMMA COLON BOOL_OR BOOL_AND Attr ]
-##
-## The known suffix of the stack is as follows:
-## comp_expr_level GE
-##
 interactive_expr: Verbatim GT With
 ##
 ## Ends in an error in state: 413.
 ##
-## bin_op(comp_expr_level,GT,cat_expr_level) -> comp_expr_level GT . cat_expr_level [ With VBAR Type Then SEMI RPAR REV_APP RBRACKET RBRACE Or Open NE Module Let LT LE Include In GT GE End Else EQ EOF Directive COMMA COLON BOOL_OR BOOL_AND Attr ]
+## bin_op(comp_expr_level,GT,cat_expr_level) -> comp_expr_level GT . cat_expr_level [ With VBAR Type Then SEMI RPAR REV_APP RBRACKET RBRACE Or NE Module Let LT LE In GT End Else EQ EOF Directive COMMA COLON BOOL_OR BOOL_AND Attr ]
+## ge -> GT . ZWSP EQ [ Verbatim UIdent String Not Nat Mutez MINUS Lang LPAR LBRACKET LBRACE Int Ident Bytes Begin ]
 ##
 ## The known suffix of the stack is as follows:
 ## comp_expr_level GT
+##
+interactive_expr: Bytes GT ZWSP EQ ZWSP
+##
+## Ends in an error in state: 417.
+##
+## bin_op(comp_expr_level,ge,cat_expr_level) -> comp_expr_level ge . cat_expr_level [ With VBAR Type Then SEMI RPAR REV_APP RBRACKET RBRACE Or NE Module Let LT LE In GT End Else EQ EOF Directive COMMA COLON BOOL_OR BOOL_AND Attr ]
+##
+## The known suffix of the stack is as follows:
+## comp_expr_level ge
 ##
 interactive_expr: Verbatim LE With
 ##
@@ -9488,3 +9489,15 @@ contract: Include With
 
 Ill-formed module inclusion.
 At this point, a module name is expected.
+
+interactive_expr: Bytes GT ZWSP ZWSP
+##
+## Ends in an error in state: 412.
+##
+## ge -> GT ZWSP . EQ [ Verbatim UIdent String Not Nat Mutez MINUS Lang LPAR LBRACKET LBRACE Int Ident Bytes Begin ]
+##
+## The known suffix of the stack is as follows:
+## GT ZWSP
+##
+
+This syntax error should not happen. Please report to the developpers.

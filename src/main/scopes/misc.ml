@@ -28,6 +28,7 @@ let rec extract_variable_types
   let aux : bindings_map -> Ast_typed.expression -> bindings_map =
    fun env exp ->
     let return = add env in
+    let loc = exp.location in
     match exp.expression_content with
     | E_literal _
     | E_application _
@@ -61,7 +62,7 @@ let rec extract_variable_types
         | _ -> failwith "rec fun does not have type arrow"
       in
       return [ fun_name, fun_type; Param.get_var binder, in_t ]
-    | E_let_in { let_binder; rhs = _; _ } ->
+    | E_let_mut_in { let_binder; rhs = _; _ } | E_let_in { let_binder; rhs = _; _ } ->
       return
       @@ List.map
            ~f:(fun binder -> Binder.get_var binder, Binder.get_ascr binder)
@@ -75,8 +76,6 @@ let rec extract_variable_types
       in
       return bindings
     | E_module_accessor { element = e; _ } -> return [ e, exp.type_expression ]
-    (* TODO, is this semantically correct? *)
-    | E_let_mut_in _ -> return []
     | E_for { binder; start; _ } -> return [ binder, start.type_expression ]
     | E_for_each { fe_binder = binder1, Some binder2; collection; _ } ->
       let key_type, val_type = Ast_typed.get_t_map_exn collection.type_expression in
@@ -90,7 +89,7 @@ let rec extract_variable_types
       else if Ast_typed.is_t_map type_
       then (
         let k, v = Ast_typed.get_t_map_exn type_ in
-        return [ binder, Ast_typed.t_pair k v ])
+        return [ binder, Ast_typed.t_pair ~loc k v ])
       else failwith "E_for_each type with 1 binder should have map, set or list type"
   in
   match decl with

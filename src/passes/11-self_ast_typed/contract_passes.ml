@@ -454,7 +454,6 @@ let remove_unused ~raise : contract_pass_data -> program -> program =
 *)
 
 let collect_binder_module_path (ms : scope) path =
-  Format.eprintf "collect_binder_module_path %a@." Module_path.pp path;
   Simple_utils.List.Ne.fold_left
     ~init:(ms, [])
     ~f:(fun (ms, _) b ->
@@ -536,13 +535,13 @@ and remove_unused_in_declaration_list (ms : scope) ?fv (prg : module_)
     (* check if this is the entrypoint *)
     let fv', prg = self ms prg in
     (* check that it is usefull*)
-    if VVarSet.mem var fv.free
+    if VVarSet.mem var fv'.free
     then (
       let fv' = { fv' with free = VVarSet.remove var fv'.free } in
       let fv = FreeVar.merge fv fv' in
       fv, d :: prg
       (* drop because useless *))
-    else fv', prg
+    else FreeVar.merge fv fv', prg
   | ({ wrap_content = D_irrefutable_match { pattern = irr; expr; _ }; location = _ } as d)
     :: prg ->
     let fv, _expr = get_fv expr in
@@ -556,13 +555,13 @@ and remove_unused_in_declaration_list (ms : scope) ?fv (prg : module_)
     if List.is_empty binders
     then (
       let fv' =
-        List.fold binders ~init:fv ~f:(fun env binder' ->
+        List.fold binders ~init:fv' ~f:(fun env binder' ->
             { env with free = VVarSet.remove (Binder.get_var binder') env.free })
       in
       let fv = FreeVar.merge fv' @@ fv in
       fv, d :: prg
       (* drop because useless *))
-    else fv', prg
+    else FreeVar.merge fv' fv, prg
   | ({ wrap_content = D_type _; location = _ } as d) :: prg ->
     (* always keep ?*)
     let fv, prg = self ms prg in
@@ -572,12 +571,6 @@ and remove_unused_in_declaration_list (ms : scope) ?fv (prg : module_)
     :: prg ->
     let ms, _binders = collect_binder_module_expr ms module_ in
     let fv, prg = self ms prg in
-    Format.printf
-      "remove_unused_in_module %a with fv %a@."
-      Module_var.pp
-      module_binder
-      FreeVar.pp
-      fv;
     let fv, mod_ = remove_unused_in_module_expr ms module_binder fv module_ in
     (match mod_ with
     | Some module_ ->
@@ -667,6 +660,12 @@ let remove_unused ~raise : Value_var.t -> program -> program =
       let ms' = collect_binder_module_expr ms module_ in
       let ms = { t = MVarMap.add module_binder ms' ms.t } in
       let fv, prg = self ms prg in
+      Format.printf
+        "remove_unused_in_module %a with fv %a@."
+        Module_var.pp
+        module_binder
+        FreeVar.pp
+        fv;
       let fv, mod_ = remove_unused_in_module_expr ms module_binder fv module_ in
       (match mod_ with
       | Some module_ ->

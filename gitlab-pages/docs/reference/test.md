@@ -580,7 +580,8 @@ let to_json: 'a => string
 <SyntaxTitle syntax="jsligo">
 let to_json = (a: 'a) => string
 </SyntaxTitle>
-Convert a value to its JSON representation (as a string).
+
+Convert a value to its JSON representation (as a string). A JSON schema is available [here](values.schema.json).
 
 <SyntaxTitle syntax="pascaligo">
 val print : string -> unit
@@ -980,7 +981,7 @@ stack `[ v_mich ]`.
 
 ```pascaligo test-ligo group=test_run
 type some_r is
-  [@layout:comb]
+  [@layout comb]
   record [
     one   : int;
     two   : nat;
@@ -1001,11 +1002,18 @@ const test_example = {
 <Syntax syntax="cameligo">
 
 ```cameligo test-ligo group=test_run
-type some_r = [@layout:comb] { one : int ; two : nat ; three : string ; four : bytes ; five : unit }
+type some_r = [@layout comb] {
+  one : int;
+  two : nat;
+  three : string;
+  four : bytes;
+  five : unit
+}
+
 let f = fun (x : some_r) -> x.one
 
 let test_example =
-  Test.run (fun (x : (int * nat * string * bytes * unit)) -> f ({ one = x.0 ; two = x.1 ; three = x.2 ; four = x.3 ; five = x.4 }))
+  Test.run (fun (x : int * nat * string * bytes * unit) -> f ({ one = x.0 ; two = x.1 ; three = x.2 ; four = x.3 ; five = x.4 }))
            (1 + 3 + 2, 1n + 2n, "a" ^ "b", 0xFF00, ())
 ```
 
@@ -1013,7 +1021,7 @@ let test_example =
 <Syntax syntax="reasonligo">
 
 ```reasonligo test-ligo group=test_run
-type some_r = [@layout:comb] { one : int , two : nat , three : string , four : bytes , five : unit };
+type some_r = [@layout comb] { one : int , two : nat , three : string , four : bytes , five : unit };
 let f = (x: some_r) => x.one;
 
 let test_example =
@@ -1025,7 +1033,7 @@ let test_example =
 <Syntax syntax="jsligo">
 
 ```jsligo test-ligo group=test_run
-type some_r = [@layout:comb] { one : int , two : nat , three : string , four : bytes , five : unit };
+type some_r = [@layout comb] { one : int , two : nat , three : string , four : bytes , five : unit };
 let f = (x: some_r) : int => x.one;
 
 let test_example =

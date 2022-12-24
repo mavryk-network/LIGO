@@ -16,16 +16,16 @@ type interpreter_error = Errors.interpreter_error
    if that fails it tries to resolve it as a relative path w.r.t. directory of [source_file]
    if that fails it tries to resolve it as a package path using [mod_res] *)
 let resolve_contract_file ~mod_res ~source_file ~contract_file =
-  match Sys_unix.file_exists contract_file with
-  | `Yes -> contract_file
-  | `No | `Unknown ->
+  match Caml.Sys.file_exists contract_file with
+  | true -> contract_file
+  | false ->
     (match source_file with
     | Some source_file ->
       let d = Filename.dirname source_file in
       let s = Filename.concat d contract_file in
-      (match Sys_unix.file_exists s with
-      | `Yes -> s
-      | `No | `Unknown -> ModRes.Helpers.resolve ~file:contract_file mod_res)
+      (match Caml.Sys.file_exists s with
+      | true -> s
+      | false -> ModRes.Helpers.resolve ~file:contract_file mod_res)
     | None -> ModRes.Helpers.resolve ~file:contract_file mod_res)
 
 
@@ -116,7 +116,7 @@ let rec pattern_env_extend_ ~(attributes : ValueAttr.t) ~(mut : bool)
   | P_tuple tups, V_Record vf ->
     let pf = List.mapi ~f:(fun i x -> Label.of_int i, x) tups in
     let* lst =
-      match List.zip pf (Record.to_list vf) with
+      match List.zip pf (Record.tuple_of_record vf) with
       | Ok pf -> return pf
       | Unequal_lengths -> fail @@ error_type ()
     in
@@ -691,7 +691,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
             env
             arg_binder
             arg_mut_flag
-            (AST.t_pair k_ty v_ty, v_pair (k, v))
+            (AST.t_pair ~loc k_ty v_ty, v_pair (k, v))
             ~in_:(fun env ->
               let* v' = eval_ligo body calltrace env in
               return @@ (k, v')))
@@ -730,7 +730,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
           env
           arg_binder
           arg_mut_flag
-          (AST.t_pair k_ty v_ty, v_pair kv)
+          (AST.t_pair ~loc k_ty v_ty, v_pair kv)
           ~in_:(fun env -> eval_ligo body calltrace env))
       ~init:(v_unit ())
       elts
@@ -773,7 +773,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
           env
           arg_binder
           arg_mut_flag
-          (AST.t_pair acc_ty ty, fold_args)
+          (AST.t_pair ~loc acc_ty ty, fold_args)
           ~in_:(fun env' -> eval_ligo body calltrace env'))
       ~init
       elts
@@ -801,7 +801,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
           env
           arg_binder
           arg_mut_flag
-          (AST.t_pair acc_ty ty, fold_args)
+          (AST.t_pair ~loc acc_ty ty, fold_args)
           ~in_:(fun env' -> eval_ligo body calltrace env'))
       ~init
       elts
@@ -828,7 +828,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
           env
           arg_binder
           arg_mut_flag
-          (AST.(t_pair acc_ty ty), fold_args)
+          (AST.(t_pair ~loc acc_ty ty), fold_args)
           ~in_:(fun env' -> eval_ligo body calltrace env'))
       ~init
       elts
@@ -853,7 +853,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
           env
           arg_binder
           arg_mut_flag
-          (AST.t_pair ty acc_ty, fold_args)
+          (AST.t_pair ~loc ty acc_ty, fold_args)
           ~in_:(fun env' -> eval_ligo body calltrace env'))
       init
       elts
@@ -880,22 +880,33 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
           env
           arg_binder
           arg_mut_flag
-          (AST.(t_pair acc_ty (t_pair k_ty v_ty)), fold_args)
+          (AST.(t_pair ~loc acc_ty (t_pair ~loc k_ty v_ty)), fold_args)
           ~in_:(fun env' -> eval_ligo body calltrace env'))
       ~init
       kvs
   | C_MAP_FOLD, _ -> fail @@ error_type ()
   | C_MAP_ADD, [ k; v; V_Map kvs ] ->
-    return (V_Map ((k, v) :: List.Assoc.remove ~equal:LC.equal_value kvs k))
+    let compare (k1, _) (k2, _) = LC.compare_value k1 k2 in
+    return
+      (V_Map
+         (List.dedup_and_sort ~compare
+         @@ ((k, v) :: List.Assoc.remove ~equal:LC.equal_value kvs k)))
   | C_MAP_ADD, _ -> fail @@ error_type ()
   | C_MAP_REMOVE, [ k; V_Map kvs ] ->
     return @@ V_Map (List.Assoc.remove ~equal:LC.equal_value kvs k)
   | C_MAP_REMOVE, _ -> fail @@ error_type ()
   | C_MAP_UPDATE, [ k; option; V_Map kvs ] ->
+    let compare (k1, _) (k2, _) = LC.compare_value k1 k2 in
     (match LC.get_option option with
     | Some (Some v) ->
-      return @@ V_Map ((k, v) :: List.Assoc.remove ~equal:LC.equal_value kvs k)
-    | Some None -> return @@ V_Map (List.Assoc.remove ~equal:LC.equal_value kvs k)
+      return
+      @@ V_Map
+           (List.dedup_and_sort ~compare
+           @@ ((k, v) :: List.Assoc.remove ~equal:LC.equal_value kvs k))
+    | Some None ->
+      return
+      @@ V_Map
+           (List.dedup_and_sort ~compare @@ List.Assoc.remove ~equal:LC.equal_value kvs k)
     | _ -> assert false)
   | C_MAP_UPDATE, _ -> fail @@ error_type ()
   | C_MAP_MEM, [ k; V_Map kvs ] ->
@@ -903,6 +914,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_MAP_MEM, _ -> fail @@ error_type ()
   | C_BIG_MAP_GET_AND_UPDATE, [ k; option; V_Map kvs ]
   | C_MAP_GET_AND_UPDATE, [ k; option; V_Map kvs ] ->
+    let compare (k1, _) (k2, _) = LC.compare_value k1 k2 in
     let old_value = List.Assoc.find ~equal:LC.equal_value kvs k in
     let old_value =
       match old_value with
@@ -913,7 +925,10 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     | Some (Some v) ->
       return
       @@ v_pair
-           (old_value, V_Map ((k, v) :: List.Assoc.remove ~equal:LC.equal_value kvs k))
+           ( old_value
+           , V_Map
+               (List.dedup_and_sort ~compare
+               @@ ((k, v) :: List.Assoc.remove ~equal:LC.equal_value kvs k)) )
     | Some None ->
       return @@ v_pair (old_value, V_Map (List.Assoc.remove ~equal:LC.equal_value kvs k))
     | None -> assert false)
@@ -941,7 +956,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
           env
           arg_binder
           arg_mut_flag
-          (AST.(t_pair acc_ty ty), fold_args)
+          (AST.(t_pair ~loc acc_ty ty), fold_args)
           ~in_:(fun env' -> eval_ligo body calltrace env'))
       init
       elts
@@ -1212,8 +1227,8 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let id = Fuzz.Ast_aggregated.get_mutation_id mutation in
     let file_path = reg#file in
     (try
-       let odir = Sys_unix.getcwd () in
-       let () = Sys_unix.chdir dir in
+       let odir = Caml.Sys.getcwd () in
+       let () = Caml.Sys.chdir dir in
        let file_path = Filename.basename file_path in
        let file_path =
          Caml.Filename.remove_extension file_path
@@ -1223,7 +1238,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
        in
        let out_chan = Out_channel.create file_path in
        let () = Caml.Buffer.output_buffer out_chan file_contents in
-       let () = Sys_unix.chdir odir in
+       let () = Caml.Sys.chdir odir in
        return (v_some (v_string file_path))
      with
     | Sys_error _ -> return (v_none ()))
@@ -1509,6 +1524,7 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
     then fail (Errors.meta_lang_eval term.location calltrace (v_string "Out of fuel"))
     else return ()
   in
+  let loc = term.location in
   match term.expression_content with
   | E_application { lamb = f; args } ->
     let* f' = eval_ligo f calltrace env in
@@ -1891,7 +1907,7 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
         if Z.geq curr final
         then return @@ v_unit ()
         else (
-          let env = Env.extend env binder (AST.t_int (), V_Ct (C_int curr)) in
+          let env = Env.extend env binder (AST.t_int ~loc (), V_Ct (C_int curr)) in
           let* _ = eval_ligo f_body calltrace env in
           loop (Z.add curr incr))
       in
@@ -1939,6 +1955,7 @@ let eval_test ~raise ~steps ~options : Ast_typed.program -> bool * (string * val
      declaration and in the end, gather all of them together *)
   let aux decl r =
     let ds, defs = r in
+    let loc = Location.get_location decl in
     match decl.Location.wrap_content with
     | Ast_typed.D_irrefutable_match
         { pattern = { wrap_content = P_var binder; _ }; expr; _ }
@@ -1947,7 +1964,7 @@ let eval_test ~raise ~steps ~options : Ast_typed.program -> bool * (string * val
       if (not (Value_var.is_generated var))
          && Base.String.is_prefix (Value_var.to_name_exn var) ~prefix:"test"
       then (
-        let expr = Ast_typed.(e_a_variable var expr.type_expression) in
+        let expr = Ast_typed.(e_a_variable ~loc var expr.type_expression) in
         (* TODO: check that variables are unique, as they are ignored *)
         decl :: ds, (binder, expr.type_expression) :: defs)
       else decl :: ds, defs
@@ -1956,11 +1973,13 @@ let eval_test ~raise ~steps ~options : Ast_typed.program -> bool * (string * val
   let decl_lst, lst = List.fold_right ~f:aux ~init:([], []) decl_lst in
   (* Compile new context *)
   let f (n, t) r =
-    let s, _ = Value_var.internal_get_name_and_counter @@ Binder.get_var n in
-    Record.LMap.add (Label s) (Ast_typed.e_a_variable (Binder.get_var n) t) r
+    let var = Binder.get_var n in
+    let loc = Value_var.get_location var in
+    let s, _ = Value_var.internal_get_name_and_counter var in
+    Record.LMap.add (Label s) (Ast_typed.e_a_variable ~loc var t) r
   in
   let map = List.fold_right lst ~f ~init:Record.LMap.empty in
-  let expr = Ast_typed.e_a_record map in
+  let expr = Ast_typed.e_a_record ~loc:Location.dummy map in
   match eval_expression ~raise ~steps ~options decl_lst expr with
   | b, V_Record m ->
     let f (n, _) r =

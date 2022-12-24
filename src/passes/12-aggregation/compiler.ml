@@ -490,6 +490,7 @@ and compile_declaration
     (d : I.declaration)
   =
   let return scope decl_list = scope, decl_list in
+  let loc = d.location in
   match Location.unwrap d with
   | D_value { binder; expr; attr } ->
     let attr =
@@ -504,7 +505,7 @@ and compile_declaration
     let scope = Scope.push_value scope binder expr.type_expression attr path in
     let scope, var = Scope.add_path_to_var scope path @@ Binder.get_var binder in
     let binder = Binder.set_var binder var in
-    return scope @@ O.context_decl binder expr attr
+    return scope @@ O.context_decl ~loc binder expr attr
   | D_irrefutable_match { pattern; expr; attr } ->
     let attr =
       { attr with
@@ -528,7 +529,7 @@ and compile_declaration
         scope
         pattern
     in
-    return scope @@ O.context_decl_pattern pattern expr attr
+    return scope @@ O.context_decl_pattern ~loc pattern expr attr
   | D_type _ -> scope, O.context_id
   | D_module { module_binder; module_; module_attr } ->
     let module_attr : O.ModuleAttr.t =
@@ -543,11 +544,11 @@ and compile_declaration
     let scope = Scope.push_module scope module_binder path' mod_scope in
     return scope @@ decl_list
   | D_open (hd, tl) ->
-    let mod_scope, decl_list = compile_module_path path scope (hd, tl) in
+    let mod_scope, decl_list = compile_module_path path scope ~loc (hd, tl) in
     let scope = Scope.open_module scope (hd :: tl) mod_scope in
     return scope @@ decl_list
   | D_include (hd, tl) ->
-    let mod_scope, decl_list = compile_module_path path scope (hd, tl) in
+    let mod_scope, decl_list = compile_module_path path scope ~loc (hd, tl) in
     let scope = Scope.include_module scope (hd :: tl) mod_scope in
     return scope @@ decl_list
 
@@ -579,7 +580,7 @@ and compile_module ~raise ~super_attr (path : Path.t) scope (program : I.module_
   scope, current
 
 
-and get_declarations_from_scope scope new_path old_path =
+and get_declarations_from_scope ~loc scope new_path old_path =
   let dcls = Scope.get_declarations scope in
   let module_ =
     List.fold_left ~init:O.context_id dcls ~f:(fun f dcl ->
@@ -587,16 +588,18 @@ and get_declarations_from_scope scope new_path old_path =
         | Value (binder, ty, attr) ->
           let variable =
             O.e_a_variable
+              ~loc
               (snd @@ Scope.add_path_to_var scope old_path @@ Binder.get_var binder)
               ty
           in
           let _, var = Scope.add_path_to_var scope new_path @@ Binder.get_var binder in
-          O.(context_append (context_decl (Binder.set_var binder var) variable attr) f)
+          O.(
+            context_append (context_decl ~loc (Binder.set_var binder var) variable attr) f)
         | Module var ->
           let _, scope = Scope.find_module scope var in
           let old_path = Path.add_to_path old_path var in
           let new_path = Path.add_to_path new_path var in
-          let module_ = get_declarations_from_scope scope new_path old_path in
+          let module_ = get_declarations_from_scope ~loc scope new_path old_path in
           O.context_append module_ f)
   in
   module_
@@ -606,6 +609,7 @@ and compile_module_expr ~raise ?(module_attr = { public = true; hidden = false }
     : Path.t -> Scope.t -> I.module_expr -> Scope.t * O.context
   =
  fun path scope mexpr ->
+  let loc = mexpr.location in
   let super_attr : O.ModuleAttr.t =
     { public = module_attr.public; hidden = module_attr.hidden }
   in
@@ -617,17 +621,17 @@ and compile_module_expr ~raise ?(module_attr = { public = true; hidden = false }
     scope, module_
   | M_variable v ->
     let path_b, scope = Scope.find_module scope v in
-    let module_ = get_declarations_from_scope scope path path_b in
+    let module_ = get_declarations_from_scope ~loc scope path path_b in
     scope, module_
-  | M_module_path path' -> compile_module_path path scope path'
+  | M_module_path path' -> compile_module_path ~loc path scope path'
 
 
-and compile_module_path path scope (hd, tl) =
+and compile_module_path ~loc path scope (hd, tl) =
   let old_path, scope = Scope.find_module scope hd in
   let old_path, scope =
     List.fold_left ~f:(fun (_, s) -> Scope.find_module s) ~init:(old_path, scope) tl
   in
-  let module_ = get_declarations_from_scope scope path old_path in
+  let module_ = get_declarations_from_scope ~loc scope path old_path in
   scope, module_
 
 

@@ -2,7 +2,7 @@ open Simple_utils.Trace
 open Test_helpers
 open Main_errors
 
-let () = Core_unix.putenv ~key:"LIGO_FORCE_NEW_TYPER" ~data:"false"
+let () = Ligo_unix.putenv ~key:"LIGO_FORCE_NEW_TYPER" ~data:"false"
 
 type syntax = string
 type group_name = string
@@ -167,7 +167,7 @@ let compile_groups ~raise filename grp_list =
           ~raise
           ~options:options.middle_end
           typed
-          (Ast_typed.e_a_unit ())
+          (Ast_typed.e_a_unit ~loc ())
       in
       let expanded =
         Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_with_unit
@@ -193,7 +193,7 @@ let compile ~raise filename () =
 
 let get_all_md_files () =
   let exclude_files = [ "./gitlab-pages/docs/demo/ligo-snippet.md" ] in
-  let ic = Core_unix.open_process_in "find ./gitlab-pages/docs -iname \"*.md\"" in
+  let ic = Ligo_unix.open_process_in "find ./gitlab-pages/docs -iname \"*.md\"" in
   let all_input = ref [] in
   let () =
     try
@@ -211,7 +211,7 @@ let get_all_md_files () =
 
 
 let main =
-  Sys_unix.chdir "../..";
+  Caml.Sys.chdir "../..";
   test_suite "Markdown files"
   @@ List.map
        ~f:(fun md_file ->

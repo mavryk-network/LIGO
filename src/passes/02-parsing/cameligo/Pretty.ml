@@ -59,7 +59,7 @@ and pp_attribute (node : Attr.t reg) =
   let key, val_opt = node.value in
   let thread = string "[@" ^^ string key in
   let thread = match val_opt with
-                 Some String value ->
+                 Some (String value | Ident value) ->
                    group (thread ^/^ nest 2 (string value))
                | None -> thread in
   let thread = thread ^^ string "]"

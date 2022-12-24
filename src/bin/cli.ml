@@ -4,6 +4,32 @@ module Raw_options = Compiler_options.Raw_options
 
 let is_dev = ref true
 
+let create_arg_type ?key of_string =
+  Core.Command.Arg_type.create ?key of_string ~complete:(fun _ ~part ->
+      let completions =
+        (* `compgen -f` handles some fiddly things nicely, e.g. completing "foo" and
+         "foo/" appropriately. *)
+        let command = sprintf "bash -c 'compgen -f %s'" part in
+        let chan_in = Ligo_unix.open_process_in command in
+        let completions = In_channel.input_lines chan_in in
+        ignore (Ligo_unix.close_process_in chan_in);
+        List.map (List.sort ~compare:String.compare completions) ~f:(fun comp ->
+            match Caml.Sys.is_directory comp with
+            | true -> comp ^ "/"
+            | _ -> comp)
+      in
+      match completions with
+      | [ dir ] when String.is_suffix dir ~suffix:"/" ->
+        (* If the only match is a directory, we fake out bash here by creating a bogus
+         entry, which the user will never see - it forces bash to push the completion
+         out to the slash. Then when the user hits tab again, they will be at the end
+         of the line, at the directory with a slash and completion will continue into
+         the subdirectory.
+      *)
+        [ dir; dir ^ "x" ]
+      | _ -> completions)
+
+
 let entry_point =
   let open Command.Param in
   let name = "e" in
@@ -15,7 +41,7 @@ let entry_point =
 let source_file =
   let name = "SOURCE_FILE" in
   let _doc = "the path to the smart contract file." in
-  Command.Param.(anon (name %: Filename_unix.arg_type))
+  Command.Param.(anon (name %: create_arg_type Fn.id))
 
 
 let package_name =
@@ -399,6 +425,13 @@ let self_pass =
   flag ~doc name no_arg
 
 
+let dry_run_flag =
+  let open Command.Param in
+  let name = "--dry-run" in
+  let doc = "don't publish changes to LIGO registry." in
+  flag ~doc name no_arg
+
+
 let project_root =
   let open Command.Param in
   let name = "--project-root" in
@@ -431,7 +464,7 @@ let ligo_registry =
 let ligorc_path =
   let open Command.Param in
   let name = "--ligorc-path" in
-  let doc = "PATH path to gobal .ligorc file." in
+  let doc = "PATH path to .ligorc file." in
   let spec = optional_with_default Constants.ligo_rc_path string in
   flag ~doc name spec
 
@@ -440,7 +473,7 @@ let ligo_bin_path =
   let open Command.Param in
   let name = "--ligo-bin-path" in
   let doc = "PATH path to LIGO executable." in
-  let spec = optional_with_default "ligo" string in
+  let spec = optional_with_default Caml.Sys.executable_name string in
   flag ~doc name spec
 
 
@@ -859,9 +892,19 @@ let transpile_group =
 
 (** Mutate commands *)
 let mutate_cst =
-  let f source_file syntax protocol_version libraries display_format seed generator () =
+  let f
+      source_file
+      syntax
+      protocol_version
+      libraries
+      display_format
+      seed
+      generator
+      project_root
+      ()
+    =
     let raw_options =
-      Raw_options.make ~syntax ~protocol_version ~libraries ~generator ()
+      Raw_options.make ~syntax ~protocol_version ~libraries ~generator ~project_root ()
     in
     return_result ~return
     @@ Api.Mutate.mutate_cst raw_options source_file display_format seed
@@ -881,13 +924,24 @@ let mutate_cst =
     <*> libraries
     <*> display_format
     <*> seed
-    <*> generator)
+    <*> generator
+    <*> project_root)
 
 
 let mutate_ast =
-  let f source_file syntax protocol_version libraries display_format seed generator () =
+  let f
+      source_file
+      syntax
+      protocol_version
+      libraries
+      display_format
+      seed
+      generator
+      project_root
+      ()
+    =
     let raw_options =
-      Raw_options.make ~syntax ~protocol_version ~libraries ~generator ()
+      Raw_options.make ~syntax ~protocol_version ~libraries ~generator ~project_root ()
     in
     return_result ~return
     @@ Api.Mutate.mutate_ast raw_options source_file display_format seed
@@ -907,7 +961,8 @@ let mutate_ast =
     <*> libraries
     <*> display_format
     <*> seed
-    <*> generator)
+    <*> generator
+    <*> project_root)
 
 
 let mutate_group =
@@ -953,6 +1008,53 @@ let test =
     (f
     <$> source_file
     <*> syntax
+    <*> steps
+    <*> cli_expr_inj
+    <*> display_format
+    <*> warn
+    <*> project_root
+    <*> warn_unused_rec)
+
+
+let test_expr =
+  let f
+      syntax
+      expr
+      source_file
+      steps
+      cli_expr_inj
+      display_format
+      show_warnings
+      project_root
+      warn_unused_rec
+      ()
+    =
+    let raw_options =
+      Raw_options.make
+        ~syntax
+        ~steps
+        ~project_root
+        ~warn_unused_rec
+        ~cli_expr_inj
+        ~test:true
+        ()
+    in
+    return_result ~return ~show_warnings
+    @@ Api.Run.test_expression raw_options expr source_file display_format
+  in
+  let summary = "test a expression with the LIGO test framework." in
+  let readme () =
+    "This sub-command tests a LIGO contract using a LIGO interpreter. Still under \
+     development, there are features that are work in progress and are subject to \
+     change. No real test procedure should rely on this sub-command alone."
+  in
+  Command.basic
+    ~summary
+    ~readme
+    (f
+    <$> req_syntax
+    <*> expression ""
+    <*> init_file
     <*> steps
     <*> cli_expr_inj
     <*> display_format
@@ -1225,6 +1327,7 @@ let run_group =
   Command.group
     ~summary:"compile and interpret ligo code"
     [ "test", test
+    ; "test-expr", test_expr
     ; "dry-run", dry_run
     ; "evaluate-call", evaluate_call
     ; "evaluate-expr", evaluate_expr
@@ -1234,8 +1337,8 @@ let run_group =
 
 (** Info commands *)
 let list_declarations =
-  let f source_file only_ep syntax display_format () =
-    let raw_options = Raw_options.make ~only_ep ~syntax () in
+  let f source_file only_ep syntax display_format project_root () =
+    let raw_options = Raw_options.make ~only_ep ~syntax ~project_root () in
     return_result ~return
     @@ Api.Info.list_declarations raw_options source_file display_format
   in
@@ -1247,7 +1350,7 @@ let list_declarations =
   Command.basic
     ~summary
     ~readme
-    (f <$> source_file <*> only_ep <*> syntax <*> display_format)
+    (f <$> source_file <*> only_ep <*> syntax <*> display_format <*> project_root)
 
 
 let measure_contract =
@@ -1364,8 +1467,10 @@ let preprocessed =
 
 
 let pretty_print =
-  let f source_file syntax display_format warning_as_error no_colour () =
-    let raw_options = Raw_options.make ~syntax ~warning_as_error ~no_colour () in
+  let f source_file syntax display_format warning_as_error no_colour project_root () =
+    let raw_options =
+      Raw_options.make ~syntax ~warning_as_error ~no_colour ~project_root ()
+    in
     return_result ~return @@ Api.Print.pretty_print raw_options source_file display_format
   in
   let summary = "pretty-print the source file." in
@@ -1375,7 +1480,13 @@ let pretty_print =
      it cannot be determined)."
   in
   Command.basic ~summary ~readme
-  @@ (f <$> source_file <*> syntax <*> display_format <*> werror <*> no_colour)
+  @@ (f
+     <$> source_file
+     <*> syntax
+     <*> display_format
+     <*> werror
+     <*> no_colour
+     <*> project_root)
 
 
 let print_graph =
@@ -1397,8 +1508,8 @@ let print_graph =
 
 
 let print_cst =
-  let f source_file syntax display_format no_colour () =
-    let raw_options = Raw_options.make ~syntax ~no_colour () in
+  let f source_file syntax display_format no_colour project_root () =
+    let raw_options = Raw_options.make ~syntax ~no_colour ~project_root () in
     return_result ~return @@ Api.Print.cst raw_options source_file display_format
   in
   let summary =
@@ -1409,12 +1520,12 @@ let print_cst =
      preprocessing and parsing."
   in
   Command.basic ~summary ~readme
-  @@ (f <$> source_file <*> syntax <*> display_format <*> no_colour)
+  @@ (f <$> source_file <*> syntax <*> display_format <*> no_colour <*> project_root)
 
 
 let print_ast =
-  let f source_file syntax display_format no_colour () =
-    let raw_options = Raw_options.make ~syntax ~no_colour () in
+  let f source_file syntax display_format no_colour project_root () =
+    let raw_options = Raw_options.make ~syntax ~no_colour ~project_root () in
     return_result ~return @@ Api.Print.ast raw_options source_file display_format
   in
   let summary =
@@ -1426,7 +1537,7 @@ let print_ast =
      desugaring step is applied."
   in
   Command.basic ~summary ~readme
-  @@ (f <$> source_file <*> syntax <*> display_format <*> no_colour)
+  @@ (f <$> source_file <*> syntax <*> display_format <*> no_colour <*> project_root)
 
 
 let print_ast_core =
@@ -1772,11 +1883,20 @@ let publish =
     "[BETA] Packs the pacakage directory contents into a tarball and uploads it to the \
      registry server"
   in
-  let f ligo_registry ligorc_path project_root () =
+  let f ligo_registry ligorc_path project_root dry_run ligo_bin_path () =
     return_result ~return
-    @@ fun () -> Publish.publish ~ligo_registry ~ligorc_path ~project_root
+    @@ fun () ->
+    Publish.publish ~ligo_registry ~ligorc_path ~project_root ~dry_run ~ligo_bin_path
   in
-  Command.basic ~summary ~readme (f <$> ligo_registry <*> ligorc_path <*> project_root)
+  Command.basic
+    ~summary
+    ~readme
+    (f
+    <$> ligo_registry
+    <*> ligorc_path
+    <*> project_root
+    <*> dry_run_flag
+    <*> ligo_bin_path)
 
 
 let add_user =
@@ -1836,7 +1956,7 @@ let run ?argv () =
       "Protocol built-in: %s"
       Environment.Protocols.(variant_to_string in_use)
   in
-  Command_unix.run ~build_info ~version:Version.version ?argv main;
+  Command_unx.run ~build_info ~version:Version.version ?argv main;
   (* Effect to error code *)
   match !return with
   | Done -> 0

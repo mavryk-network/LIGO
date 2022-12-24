@@ -1,3 +1,4 @@
+module Location = Simple_utils.Location
 open Simple_utils.Trace
 open Ligo_prim
 
@@ -5,12 +6,14 @@ open Ligo_prim
 
 module ModRes = Preprocessor.ModRes
 
+let loc = Location.repl
+
 let get_declarations_core (core_prg : Ast_core.program) =
   (* Note: This hack is needed because when some file is `#import`ed the `module_binder` is
      the absolute file path, and the REPL prints an absolute file path which is confusing
      So we ignore the module declarations which which have their module_binder as some absolute path.
      The imported module name will still be printed by the REPL as it is added as a module alias.
-     Reference: https://gitlab.com/ligolang/ligo/-/blob/c8ae194e97341dc717549c9f50c743bcea855a33/vendors/BuildSystem/BuildSystem.ml#L113-121
+     Reference: https://gitlab.com/ligolang/ligo/-/blob/c8ae194e97341dc717549c9f50c743bcea855a33/vendored-dune/BuildSystem/BuildSystem.ml#L113-121
   *)
   let ignore_module_variable_which_is_absolute_path module_variable =
     let module_variable =
@@ -43,7 +46,7 @@ let get_declarations_typed (typed_prg : Ast_typed.program) =
        ~f:
          Ast_typed.(
            fun (a : declaration) ->
-             Simple_utils.Location.unwrap a
+             Location.unwrap a
              |> function
              | D_value a when not a.attr.hidden ->
                Option.return @@ [ `Value (Binder.get_var a.binder) ]
@@ -222,13 +225,13 @@ let import_file ~raise ~raw_options state file_name module_name =
   let options = Compiler_options.set_init_env options state.env in
   let module_ =
     let prg = Build.qualified_typed ~raise ~options Env file_name in
-    Simple_utils.Location.wrap (Module_expr.M_struct prg)
+    Location.wrap ~loc (Module_expr.M_struct prg)
   in
   let module_ =
     Ast_typed.
-      [ Simple_utils.Location.wrap
+      [ Location.wrap ~loc
         @@ D_module
-             { module_binder = Module_var.of_input_var module_name
+             { module_binder = Module_var.of_input_var ~loc module_name
              ; module_
              ; module_attr = { public = true; hidden = false }
              }
@@ -451,4 +454,4 @@ let main
     Lwt_main.run (LTerm.fprintls term (LTerm_text.eval [ S welcome_msg ]));
     (try loop ~raw_options syntax display_format term history state 1 with
     | LTerm_read_line.Interrupt -> Ok ("", "")
-    | Sys_unix.Break -> Ok ("", ""))
+    | Caml.Sys.Break -> Ok ("", ""))

@@ -2,7 +2,6 @@ open Ligo_prim
 module Errors = Errors
 module Helpers = Helpers
 
-let reset_counter () = Monomorphisation.poly_counter_reset ()
 let expression_obj ~raise e = Obj_ligo.check_obj_ligo ~raise e
 
 let eta_reduce : Ast_aggregated.expression -> Ast_aggregated.expression option =
@@ -89,11 +88,12 @@ let rec thunk e =
 
 
 let remove_check_self : Ast_aggregated.expression -> Ast_aggregated.expression =
-  let f e =
+  let f (e : Ast_aggregated.expression) =
     let open Ast_aggregated in
+    let loc = e.location in
     match e.expression_content, Ast_aggregated.get_t_option e.type_expression with
     | E_constant { cons_name = C_CHECK_SELF; arguments = [ _ ] }, Some t ->
-      Ast_aggregated.e_a_none t
+      Ast_aggregated.e_a_none ~loc t
     | _ -> e
   in
   Helpers.map_expression f

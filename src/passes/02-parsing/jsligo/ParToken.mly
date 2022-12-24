@@ -21,7 +21,7 @@
     and filename  = Region.wrap_ghost "_none_"
     and flag      = None in
     let open Directive in
-    PP_Linemarker (new mk_line_directive region linenum filename flag)
+    PP_Linemarker (mk_line_directive region linenum filename flag)
 
  (*
   let mk_lang region =
@@ -110,7 +110,6 @@
 %token <string Wrap.t> LT       "<"   [@recover.expr Token.wrap_lt       $loc]
 %token <string Wrap.t> GT       ">"   [@recover.expr Token.wrap_gt       $loc]
 %token <string Wrap.t> LE       "<="  [@recover.expr Token.wrap_le       $loc]
-%token <string Wrap.t> GE       ">="  [@recover.expr Token.wrap_ge       $loc]
 %token <string Wrap.t> PLUS_EQ  "+="  [@recover.expr Token.wrap_plus_eq  $loc]
 %token <string Wrap.t> MINUS_EQ "-="  [@recover.expr Token.wrap_minus_eq $loc]
 %token <string Wrap.t> MULT_EQ  "*="  [@recover.expr Token.wrap_mult_eq  $loc]

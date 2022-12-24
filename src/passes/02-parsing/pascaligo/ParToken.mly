@@ -21,7 +21,7 @@
     and filename  = Region.wrap_ghost "_none_"
     and flag      = None in
     let open Directive in
-    PP_Linemarker (new mk_line_directive region linenum filename flag)
+    PP_Linemarker (mk_line_directive region linenum filename flag)
 
   let mk_lang region =
     Region.{value = {value="Ghost_lang"; region}; region}
@@ -79,7 +79,6 @@
 %token <string Wrap.t> LT       "<"   [@recover.expr Token.wrap_lt       $loc]
 %token <string Wrap.t> LE       "<="  [@recover.expr Token.wrap_le       $loc]
 %token <string Wrap.t> GT       ">"   [@recover.expr Token.wrap_gt       $loc]
-%token <string Wrap.t> GE       ">="  [@recover.expr Token.wrap_ge       $loc]
 %token <string Wrap.t> NE       "=/=" [@recover.expr Token.wrap_ne       $loc]
 %token <string Wrap.t> PLUS     "+"   [@recover.expr Token.wrap_plus     $loc]
 %token <string Wrap.t> MINUS    "-"   [@recover.expr Token.wrap_minus    $loc]
@@ -132,6 +131,10 @@
 %token <string Wrap.t> While     "while"     [@recover.expr Token.wrap_while     $loc]
 %token <string Wrap.t> With      "with"      [@recover.expr Token.wrap_with      $loc]
 %token <string Wrap.t> Module    "module"    [@recover.expr Token.wrap_module    $loc]
+
+(* Virtual tokens *)
+
+%token <string Wrap.t> ZWSP [@recover.expr Token.wrap_zwsp $loc]
 
 (* End of File *)
 

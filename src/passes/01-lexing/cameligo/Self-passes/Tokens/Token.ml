@@ -28,7 +28,7 @@ module T =
        redefine manually here (by type [t]) but the second one we need
        to satisfy Menhir's Inspection API.  *)
 
-    include Menhir_cameligo_tokens.MenhirToken
+    include Mh_ml_tokens.MenhirToken
 
     (* TOKENS *)
 
@@ -76,7 +76,6 @@ module T =
     | LT       of lexeme Wrap.t  (* <  *)
     | GT       of lexeme Wrap.t  (* >  *)
     | LE       of lexeme Wrap.t  (* <= *)
-    | GE       of lexeme Wrap.t  (* >= *)
     | BOOL_OR  of lexeme Wrap.t  (* || *)
     | BOOL_AND of lexeme Wrap.t  (* && *)
     | QUOTE    of lexeme Wrap.t  (* '  *)
@@ -109,6 +108,10 @@ module T =
     | Then      of lexeme Wrap.t  (* then   *)
     | Type      of lexeme Wrap.t  (* type   *)
     | With      of lexeme Wrap.t  (* with   *)
+
+    (* Virtual tokens *)
+
+    | ZWSP of lexeme Wrap.t  (* Zero-Width SPace *)
 
     (* End-Of-File *)
 
@@ -163,7 +166,6 @@ module T =
     | LT       t
     | GT       t
     | LE       t
-    | GE       t
     | BOOL_OR  t
     | BOOL_AND t
     | QUOTE    t
@@ -196,6 +198,10 @@ module T =
     | Then   t
     | Type   t
     | With   t -> t#payload
+
+    (* Virtual tokens *)
+
+    | ZWSP _ -> ""
 
     (* End-Of-File *)
 
@@ -412,7 +418,6 @@ module T =
     let mk_LT       region = LT       (wrap_lt       region)
     let mk_GT       region = GT       (wrap_gt       region)
     let mk_LE       region = LE       (wrap_le       region)
-    let mk_GE       region = GE       (wrap_ge       region)
     let mk_BOOL_OR  region = BOOL_OR  (wrap_bool_or  region)
     let mk_BOOL_AND region = BOOL_AND (wrap_bool_and region)
     let mk_QUOTE    region = QUOTE    (wrap_quote    region)
@@ -445,7 +450,6 @@ module T =
       mk_LT;
       mk_GT;
       mk_LE;
-      mk_GE;
       mk_BOOL_OR;
       mk_BOOL_AND;
       mk_QUOTE;
@@ -519,7 +523,6 @@ module T =
     let ghost_LT       = LT       ghost_lt
     let ghost_GT       = GT       ghost_gt
     let ghost_LE       = LE       ghost_le
-    let ghost_GE       = GE       ghost_ge
     let ghost_BOOL_OR  = BOOL_OR  ghost_bool_or
     let ghost_BOOL_AND = BOOL_AND ghost_bool_and
     let ghost_QUOTE    = QUOTE    ghost_quote
@@ -569,6 +572,13 @@ module T =
     let ghost_Attr   k v = Attr     (ghost_attr k v)
     let ghost_Lang     l = Lang     (ghost_lang l)
 
+    (* VIRTUAL TOKENS *)
+
+    let wrap_zwsp      = wrap ""
+    let ghost_zwsp     = wrap_zwsp Region.ghost
+    let mk_ZWSP region = ZWSP (wrap_zwsp region)
+    let ghost_ZWSP     = mk_ZWSP Region.ghost
+
     (* END-OF-FILE TOKEN *)
 
     let wrap_eof      = wrap ""
@@ -617,7 +627,6 @@ module T =
     | "LT"       -> ghost_lt#payload
     | "GT"       -> ghost_gt#payload
     | "LE"       -> ghost_le#payload
-    | "GE"       -> ghost_ge#payload
     | "BOOL_OR"  -> ghost_bool_or#payload
     | "BOOL_AND" -> ghost_bool_and#payload
     | "QUOTE"    -> ghost_quote#payload
@@ -650,6 +659,10 @@ module T =
     | "Then"   -> ghost_then#payload
     | "Type"   -> ghost_type#payload
     | "With"   -> ghost_with#payload
+
+    (* Virtual tokens *)
+
+    | "ZWSP" -> ""
 
     (* End-Of-File *)
 
@@ -721,7 +734,6 @@ module T =
     | LT       t -> t#region, "LT"
     | GT       t -> t#region, "GT"
     | LE       t -> t#region, "LE"
-    | GE       t -> t#region, "GE"
     | BOOL_OR  t -> t#region, "BOOL_OR"
     | BOOL_AND t -> t#region, "BOOL_AND"
     | QUOTE    t -> t#region, "QUOTE"
@@ -754,6 +766,10 @@ module T =
     | Then   t -> t#region, "Then"
     | Type   t -> t#region, "Type"
     | With   t -> t#region, "With"
+
+    (* Virtual tokens *)
+
+    | ZWSP   t -> t#region, "ZWSP"
 
     (* End-Of-File *)
 
@@ -890,7 +906,6 @@ module T =
     | LT _
     | GT _
     | LE _
-    | GE _
     | BOOL_OR _
     | BOOL_AND _ -> true
     | _ -> false

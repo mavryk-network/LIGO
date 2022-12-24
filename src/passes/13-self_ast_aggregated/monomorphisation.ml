@@ -3,14 +3,7 @@ module AST = Ast_aggregated
 open Ligo_prim
 
 let fold_map_expression = AST.Helpers.fold_map_expression
-let to_name_safe v = fst (Value_var.internal_get_name_and_counter v)
-let poly_counter = ref 0
-let poly_counter_reset () = poly_counter := 0
-
-let poly_name v =
-  poly_counter := !poly_counter + 1;
-  Value_var.of_input_var ("poly_" ^ to_name_safe v ^ "_" ^ string_of_int !poly_counter)
-
+let poly_name ~loc v = Value_var.fresh_like ~loc v
 
 module Instance = struct
   (* This is a polymorphic instance of the polymorphic function (or value) lid *)
@@ -89,6 +82,7 @@ let apply_table_expr table (expr : AST.expression) =
   let (), e =
     fold_map_expression
       (fun () e ->
+        let loc = e.location in
         let e = { e with type_expression = apply_table_type e.type_expression } in
         let return expression_content = true, (), { e with expression_content } in
         match e.expression_content with
@@ -120,7 +114,7 @@ let apply_table_expr table (expr : AST.expression) =
           let expr =
             List.fold2_exn
               ~init:e
-              ~f:(fun e (_v, t) u -> AST.e_a_type_inst e t u)
+              ~f:(fun e (_v, t) u -> AST.e_a_type_inst ~loc e t u)
               (List.rev table)
               types
           in
@@ -288,6 +282,7 @@ let rec mono_polymorphic_expression ~raise
  fun data expr ->
   let self = mono_polymorphic_expression ~raise in
   let return ec = { expr with expression_content = ec } in
+  let loc = expr.location in
   match expr.expression_content with
   | E_variable _ | E_literal _ | E_raw_code _ | E_deref _ -> data, expr
   | E_constant { cons_name; arguments } ->
@@ -304,20 +299,25 @@ let rec mono_polymorphic_expression ~raise
   | E_lambda { binder; output_type; result } ->
     let data, result = self data result in
     data, return (E_lambda { binder; output_type; result })
-  | E_type_abstraction { type_binder; result } ->
-    ignore (type_binder, result);
+  | E_type_abstraction { type_binder = _; result } ->
     raise.Trace.error
-      (Errors.corner_case
-         "Monomorphisation: E_type_abstraction found in unexpected position")
+      (Errors.monomorphisation_unexpected_type_abs expr.type_expression result)
   | E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } } ->
     let data, result = self data result in
     ( data
     , return
         (E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } }) )
   | E_let_in { let_binder; rhs; let_result; attributes } ->
+    let () =
+      match AST.Combinators.get_t_arrow rhs.type_expression with
+      | Some { type1 = _; type2 } when AST.Combinators.is_t_for_all type2 ->
+        raise.Trace.error
+          (Errors.monomorphisation_unexpected_type_abs rhs.type_expression expr)
+      | _ -> ()
+    in
     let rhs =
       Trace.trace_option ~raise (Errors.monomorphisation_non_for_all rhs)
-      @@ AST.Combinators.forall_expand_opt rhs
+      @@ AST.Combinators.forall_expand_opt ~loc rhs
     in
     let type_vars, rhs = AST.Combinators.get_type_abstractions rhs in
     let data, let_result = self data let_result in
@@ -358,7 +358,8 @@ let rec mono_polymorphic_expression ~raise
       let rhs = { rhs with type_expression = type_ } in
       ( data
       , AST.e_a_let_in
-          (AST.Pattern.var (Binder.make let_binder rhs.type_expression))
+          ~loc
+          (AST.Pattern.var ~loc (Binder.make let_binder rhs.type_expression))
           rhs
           let_result
           { attributes with hidden = false } )
@@ -409,10 +410,10 @@ let rec mono_polymorphic_expression ~raise
     let type_instances, lid = aux [] expr in
     let type_ = expr.type_expression in
     let vid, data =
-      let vid = poly_name lid in
+      let vid = poly_name ~loc lid in
       vid, Data.instance_add lid { vid; type_instances; type_ } data
     in
-    data, AST.e_a_variable vid type_
+    data, AST.e_a_variable ~loc vid type_
   | E_assign { binder; expression } ->
     let data, expression = self data expression in
     data, return (E_assign { binder; expression })
