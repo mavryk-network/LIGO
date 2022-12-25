@@ -339,6 +339,17 @@ module Shadowed = struct
     ; module_ : t Map.t
     }
 
+  let rec pp ppf { top_level; module_ } =
+    Format.fprintf
+      ppf
+      "@[<v 2>top_level:@ %a@ module_:@ %a@]"
+      (Format.pp_print_list ~pp_sep:Format.pp_print_space Value_var.pp)
+      (fst top_level)
+      (Format.pp_print_list ~pp_sep:Format.pp_print_space (fun ppf (k, v) ->
+           Format.fprintf ppf "%a:@ %a" Module_var.pp k pp v))
+      (Map.bindings module_)
+
+
   let empty = { top_level = [], []; module_ = Map.empty }
   let get_seen scope = fst scope.top_level
   let get_locations scope = snd scope.top_level
@@ -375,6 +386,18 @@ let get_shadowed_decl : program -> (ValueAttr.t -> bool) -> Location.t option =
       ->
       let mod_scope = List.fold ~f:aux ~init:Shadowed.empty module_ in
       Shadowed.add_module scope module_binder mod_scope
+    | D_module
+        { module_binder; module_ = { wrap_content = Module_expr.M_variable var; _ }; _ }
+      ->
+      let mod_scope = Shadowed.get_module scope var in
+      Shadowed.add_module scope module_binder mod_scope
+    | D_module
+        { module_binder
+        ; module_ = { wrap_content = Module_expr.M_module_path path; _ }
+        ; _
+        } ->
+      let mod_scopre = List.Ne.fold_left ~f:Shadowed.get_module ~init:scope path in
+      Shadowed.add_module scope module_binder mod_scopre
     | D_open path | D_include path ->
       let mod_scope = List.Ne.fold_left ~f:Shadowed.get_module ~init:scope path in
       let f scope var =
@@ -384,7 +407,7 @@ let get_shadowed_decl : program -> (ValueAttr.t -> bool) -> Location.t option =
       in
       let scope = List.fold ~f ~init:scope (Shadowed.get_seen mod_scope) in
       scope
-    | D_irrefutable_match _ | D_type _ | D_module _ -> scope
+    | D_irrefutable_match _ | D_type _ -> scope
   in
   let scope = List.fold ~f:aux ~init:Shadowed.empty prg in
   List.hd (Shadowed.get_locations scope)
