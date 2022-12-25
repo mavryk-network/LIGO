@@ -210,11 +210,4 @@ let%expect_test _ =
     {|
     { parameter unit ;
       storage int ;
-      code { DROP ;
-             PUSH int 1 ;
-             PUSH int 2 ;
-             DUP 2 ;
-             ADD ;
-             ADD ;
-             NIL operation ;
-             PAIR } } |}]
+      code { DROP ; PUSH int 1 ; NIL operation ; PAIR } } |}]

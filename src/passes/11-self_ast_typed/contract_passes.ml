@@ -13,12 +13,12 @@ module MVarMap = Simple_utils.Map.Make (Module_var)
 
 type scope = { t : (scope * Value_var.t list) MVarMap.t }
 
-let rec pp_scope ppf scope =
+let pp_scope ppf scope =
   Format.fprintf
     ppf
     "{%a}"
-    (Simple_utils.PP_helpers.list_sep_d (fun ppf (k, (s, _l)) ->
-         Format.fprintf ppf "%a => (%a,_)" Module_var.pp k pp_scope s))
+    (Simple_utils.PP_helpers.list_sep_d (fun ppf (k, (_s, _l)) ->
+         Format.fprintf ppf "%a => (_,_)" Module_var.pp k))
     (MVarMap.to_kv_list scope.t)
 
 
@@ -80,12 +80,6 @@ module FreeVar = struct
 
 
   let lift fv (ms : scope) op =
-    Format.printf
-      "Lifting %a with scope %a@."
-      (Simple_utils.PP_helpers.list_sep_d Module_var.pp)
-      (Simple_utils.List.Ne.to_list op)
-      pp_scope
-      ms;
     let _, opened_binder =
       Simple_utils.List.Ne.fold_left
         ~f:(fun (ms, _) var ->
@@ -384,76 +378,6 @@ and get_fv_program (fv : FreeVar.t) acc : program -> _ * program = function
   | hd :: tl -> get_fv_program fv (hd :: acc) tl
 
 
-(*
-let remove_unused ~raise : contract_pass_data -> program -> program =
- fun contract_pass_data prg ->
-  (* Process declaration in reverse order *)
-  let rec scan (scope : scope) (decl : declaration) =
-    match decl.wrap_content with
-    | D_value { binder = { var; _ }; _ }
-    | D_irrefutable_match { pattern = { wrap_content = P_var { var; _ }; _ }; _ } ->
-      scope, (decl, not (Value_var.equal var contract_pass_data.main_name))
-    | D_irrefutable_match _ | D_type _ -> scope, (decl, true)
-    | D_module { module_binder; module_; _ } ->
-      scan_module_expr scope decl module_binder module_
-    | D_open path | D_include path -> scan_module_path scope decl path
-  and scan_module_expr scope decl module_binder (mexpr : module_expr) =
-    match mexpr.wrap_content with
-    | M_struct prg ->
-      let scanned, list = List.fold_map ~f:scan ~init:scope prg in
-      let list = List.drop_while ~f:(fun (_, b) -> Bool.equal true b) @@ List.rev list in
-      let list, _ = List.unzip list in
-      { t = MVarMap.add module_binder (scanned, List.hd list) scope.t }, (decl, true)
-    | M_variable var ->
-      let scanned, res = scan_module_path scope decl (var, []) in
-      { t = MVarMap.union (fun _ _ a -> Some a) scope.t scanned.t }, res
-    | M_module_path path ->
-      let scanned, res = scan_module_path scope decl path in
-      { t = MVarMap.union (fun _ _ a -> Some a) scope.t scanned.t }, res
-  and scan_module_path scope decl path =
-    let mod_scope, res =
-      Simple_utils.List.Ne.fold_left
-        ~f:(fun (s, _b) b -> MVarMap.find b s.t)
-        ~init:(scope, None)
-        path
-    in
-    ( { t = MVarMap.union (fun _ _ a -> Some a) scope.t mod_scope.t }
-    , (decl, Option.is_none res) )
-  in
-  let scope, prg_decls = List.fold_map ~f:scan ~init:{ t = MVarMap.empty } prg in
-  (* Remove the definition after the main entry_point (can't be relevant), mostly remove the test *)
-  let prg_decls = List.rev prg_decls |> List.drop_while ~f:snd |> List.map ~f:fst in
-  let main_decl, prg_decls =
-    trace_option ~raise (Errors.corner_case "Entrypoint not found")
-    @@ Simple_utils.List.uncons prg_decls
-  in
-  let env =
-    trace_option ~raise (Errors.corner_case "Entrypoint not found")
-    @@
-    let rec aux decl =
-      match Location.unwrap decl with
-      | D_value dc ->
-        let env, _ = get_fv dc.expr in
-        Some env
-      | D_irrefutable_match dc ->
-        let env, _ = get_fv dc.expr in
-        Some env
-      | D_open path | D_include path ->
-        let _scope, decl =
-          Simple_utils.List.Ne.fold_left
-            ~f:(fun (s, _d) p -> MVarMap.find p s.t)
-            ~init:(scope, None)
-            path
-        in
-        Option.map ~f:aux decl |> Option.join
-      | D_type _ | D_module _ -> None
-    in
-    aux main_decl
-  in
-  let _, module_ = get_fv_program env [ main_decl ] prg_decls in
-  module_
-*)
-
 let collect_binder_module_path (ms : scope) path =
   Simple_utils.List.Ne.fold_left
     ~init:(ms, [])
@@ -473,7 +397,7 @@ let collect_binder_module_path (ms : scope) path =
 
 let rec collect_binder_module_expr (ms : scope) (mexpr : module_expr) =
   match mexpr.wrap_content with
-  | M_struct prg -> collect_binder_declarations prg
+  | M_struct prg -> collect_binder_declarations ms prg
   | M_variable var ->
     let ms' =
       Option.value_or_thunk
@@ -484,7 +408,7 @@ let rec collect_binder_module_expr (ms : scope) (mexpr : module_expr) =
   | M_module_path path -> collect_binder_module_path ms path
 
 
-and collect_binder_declarations prg =
+and collect_binder_declarations ms prg =
   List.fold_left
     ~f:(fun (ms, binders) d ->
       match Location.unwrap d with
@@ -498,11 +422,15 @@ and collect_binder_declarations prg =
       | D_open path | D_include path ->
         let ms', bs = collect_binder_module_path ms path in
         { t = MVarMap.union (fun _ _ a -> Some a) ms.t ms'.t }, bs @ binders)
-    ~init:({ t = MVarMap.empty }, [])
+    ~init:(ms, [])
     prg
 
 
-let rec remove_unused_in_module_expr ms binder (fv : FreeVar.t) (mexpr : module_expr)
+let rec remove_unused_in_module_expr
+    (ms : scope)
+    binder
+    (fv : FreeVar.t)
+    (mexpr : module_expr)
     : FreeVar.t * module_expr option
   =
   let return fv wrap_content : _ * module_expr option =
@@ -512,17 +440,23 @@ let rec remove_unused_in_module_expr ms binder (fv : FreeVar.t) (mexpr : module_
   | M_struct prg ->
     (match FreeVar.get_module_opt fv binder with
     | Some fv' ->
-      let fv', prg = remove_unused_in_declaration_list ms ~fv:fv' prg in
-      let fv = FreeVar.add_module fv binder fv' in
+      let fv', prg =
+        remove_unused_in_declaration_list (fst @@ MVarMap.find binder ms.t) ~fv:fv' prg
+      in
+      let fv = FreeVar.merge fv fv' in
       return fv @@ M_struct prg
     | None -> fv, None)
   | M_variable var ->
     (match FreeVar.handle_alias fv (var, []) binder with
-    | Some fv -> return fv @@ M_variable var
+    | Some fv' ->
+      let fv = FreeVar.merge fv fv' in
+      return fv @@ M_variable var
     | None -> fv, None)
   | M_module_path path ->
     (match FreeVar.handle_alias fv path binder with
-    | Some fv -> return fv @@ M_module_path path
+    | Some fv' ->
+      let fv = FreeVar.merge fv fv' in
+      return fv @@ M_module_path path
     | None -> fv, None)
 
 
@@ -537,7 +471,6 @@ and remove_unused_in_declaration_list (ms : scope) ~fv (prg : module_)
     (* check if this is the entrypoint *)
     let fv', prg = self ms ~fv prg in
     let fv, _expr = get_fv expr in
-    Format.printf "remove decl : %a with fv %a@." Value_var.pp var FreeVar.pp fv';
     (* check that it is usefull*)
     (* check that it is usefull*)
     if VVarSet.mem var fv'.free
@@ -574,19 +507,12 @@ and remove_unused_in_declaration_list (ms : scope) ~fv (prg : module_)
   | ({ wrap_content = D_module { module_binder; module_; module_attr }; location = _ } as
     d)
     :: prg ->
-    let ms, _binders = collect_binder_module_expr ms module_ in
+    let ms' = collect_binder_module_expr ms module_ in
+    let ms = { t = MVarMap.add module_binder ms' ms.t } in
     let fv', prg = self ms ~fv prg in
-    Format.printf
-      "remove_unused_in_module %a with fv %a@."
-      Module_var.pp
-      module_binder
-      FreeVar.pp
-      fv';
     let fv, mod_ = remove_unused_in_module_expr ms module_binder fv' module_ in
     (match mod_ with
     | Some module_ ->
-      Format.printf "found used in module %a@." Module_var.pp module_binder;
-      Format.printf "module_expr %a@." Ast_typed.PP.module_expr module_;
       ( FreeVar.merge fv fv'
       , { d with wrap_content = D_module { module_binder; module_; module_attr } } :: prg
       )
@@ -630,7 +556,6 @@ let remove_unused ~raise : Value_var.t -> program -> program =
       else (
         (* get free variable from the rest of the program *)
         let fv', prg = self ms prg in
-        Format.printf "remove decl : %a with fv %a@." Value_var.pp var FreeVar.pp fv';
         (* check that it is usefull*)
         if VVarSet.mem var fv'.free
         then (
@@ -674,12 +599,6 @@ let remove_unused ~raise : Value_var.t -> program -> program =
       let ms' = collect_binder_module_expr ms module_ in
       let ms = { t = MVarMap.add module_binder ms' ms.t } in
       let fv', prg = self ms prg in
-      Format.printf
-        "remove_unused_in_module %a with fv %a@."
-        Module_var.pp
-        module_binder
-        FreeVar.pp
-        fv';
       let fv, mod_ = remove_unused_in_module_expr ms module_binder fv' module_ in
       (match mod_ with
       | Some module_ ->

@@ -5,5 +5,4 @@ end
 
 include B
 
-let bar = foo + 2
 
