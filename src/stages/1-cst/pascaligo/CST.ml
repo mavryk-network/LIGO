@@ -26,9 +26,8 @@ type lexeme = string
 
 (* Keywords of PascaLIGO *)
 
-(* IMPORTANT: The types are sorted alphabetically, except the generic
-   [keyword]. If you add or modify some, please make sure they remain
-   in order. *)
+(* IMPORTANT: The types are sorted alphabetically. If you add or
+   modify some, please make sure they remain in order. *)
 
 type kwd_and       = lexeme wrap
 type kwd_begin     = lexeme wrap
@@ -114,9 +113,7 @@ type variable    = lexeme wrap
 type module_name = lexeme wrap
 type field_name  = lexeme wrap
 type ctor        = lexeme wrap
-
 type language    = lexeme reg   (* Not [wrap] *)
-
 type attribute   = Attr.t reg
 
 (* Parentheses *)
@@ -161,11 +158,11 @@ and declarations = declaration nseq
 
 and declaration =
   D_Attr      of (attribute * declaration) reg
-| D_Const     of const_decl   reg
+| D_Const     of const_decl reg
 | D_Directive of Directive.t
-| D_Fun       of fun_decl     reg
-| D_Module    of module_decl  reg
-| D_Type      of type_decl    reg
+| D_Fun       of fun_decl reg
+| D_Module    of module_decl reg
+| D_Type      of type_decl reg
 
 (* Constant declaration *)
 
