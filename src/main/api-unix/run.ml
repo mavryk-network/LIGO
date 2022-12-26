@@ -1,3 +1,4 @@
+open Ligo_api_common
 open Api_helpers
 open Simple_utils
 module Compile = Ligo_compile
@@ -28,7 +29,7 @@ let test (raw_options : Raw_options.t) source_file display_format () =
   let typed =
     Build.qualified_typed ~raise ~options Env (Build.Source_input.From_file source_file)
   in
-  Interpreter.eval_test ~raise ~steps ~options typed
+  Interpreter_unix.eval_test ~raise ~steps ~options typed
 
 
 let test_expression (raw_options : Raw_options.t) expr source_file display_format () =
@@ -59,7 +60,7 @@ let test_expression (raw_options : Raw_options.t) expr source_file display_forma
     Option.value_map source_file ~f ~default
   in
   let typed = Ligo_compile.Utils.type_expression ~raise ~options syntax expr init_prg in
-  let b, v = Interpreter.eval_expression ~raise ~steps ~options init_prg typed in
+  let b, v = Interpreter_unix.eval_expression ~raise ~steps ~options init_prg typed in
   b, [ "eval", v ]
 
 

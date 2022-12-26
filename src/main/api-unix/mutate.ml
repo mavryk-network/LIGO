@@ -1,3 +1,4 @@
+open Ligo_api_common
 open Api_helpers
 open Simple_utils.Trace
 module Compile = Ligo_compile

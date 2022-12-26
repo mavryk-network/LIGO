@@ -1,3 +1,5 @@
+open Interpreter
+
 type interpreter_error = Errors.interpreter_error
 
 val eval_expression

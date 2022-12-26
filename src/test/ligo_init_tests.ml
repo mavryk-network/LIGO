@@ -22,7 +22,7 @@ let folder_existence_state fpath ~should_exist ~raise:_ =
 
 let clone_and_check ~no_colour ~kind ~template ?project_name_opt () =
   let result =
-    Ligo_api.Ligo_init.new_project
+    Ligo_api_unix.Ligo_init.new_project
       ~version:"mock"
       ~kind
       ~project_name_opt
@@ -98,7 +98,7 @@ let test_init_project_with_unexisting_template_raise_exception ~no_colour ~raise
           Hint: Use the option --template \"TEMPLATE_NAME\" \n\n\
           Please select a template from the following list: \n\
           - %s"
-         (String.concat ~sep:"\n- " (Ligo_api.Ligo_init.list' ~kind:`CONTRACT)))
+         (String.concat ~sep:"\n- " (Ligo_api_unix.Ligo_init.list' ~kind:`CONTRACT)))
       err
 
 
@@ -156,12 +156,12 @@ let expected_library_list =
 
 
 let test_init_list_template_contract_template_with_format ~raise:_ () =
-  let result_list = Ligo_api.Ligo_init.list' ~kind:`CONTRACT in
+  let result_list = Ligo_api_unix.Ligo_init.list' ~kind:`CONTRACT in
   assert (List.equal String.equal expected_contract_list result_list)
 
 
 let test_init_list_template_library_template_with_format ~raise:_ () =
-  let result_list = Ligo_api.Ligo_init.list' ~kind:`LIBRARY in
+  let result_list = Ligo_api_unix.Ligo_init.list' ~kind:`LIBRARY in
   assert (List.equal String.equal expected_library_list result_list)
 
 
@@ -170,7 +170,7 @@ let test_init_list_template_contract_template ~no_colour ~raise:_ () =
     "list of projects:\n" ^ String.concat ~sep:"\n" expected_contract_list ^ "\n"
   in
   let result_list =
-    Ligo_api.Ligo_init.list
+    Ligo_api_unix.Ligo_init.list
       ~kind:`CONTRACT
       ~display_format:Display.human_readable
       ~no_colour

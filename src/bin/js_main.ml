@@ -1,5 +1,5 @@
 open Js_of_ocaml
-module Api = Ligo_api
+module Api = Ligo_api_js
 module Default_options = Compiler_options.Default_options
 module Raw_options = Compiler_options.Raw_options
 

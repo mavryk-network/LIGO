@@ -477,7 +477,7 @@ let ligo_bin_path =
   flag ~doc name spec
 
 
-module Api = Ligo_api
+module Api = Ligo_api_unix
 
 let ( <*> ) = Command.Param.( <*> )
 let ( <$> ) f a = Command.Param.return f <*> a
@@ -1779,10 +1779,10 @@ let init_library =
     if template_list
     then
       return_result ~return
-      @@ Ligo_api.Ligo_init.list ~kind:`LIBRARY ~display_format ~no_colour
+      @@ Ligo_api_unix.Ligo_init.list ~kind:`LIBRARY ~display_format ~no_colour
     else
       return_result ~return
-      @@ Ligo_api.Ligo_init.new_project
+      @@ Ligo_api_unix.Ligo_init.new_project
            ~version:Version.version
            ~kind:`LIBRARY
            ~project_name_opt:project_name
@@ -1805,10 +1805,10 @@ let init_contract =
     if template_list
     then
       return_result ~return
-      @@ Ligo_api.Ligo_init.list ~kind:`CONTRACT ~display_format ~no_colour
+      @@ Ligo_api_unix.Ligo_init.list ~kind:`CONTRACT ~display_format ~no_colour
     else
       return_result ~return
-      @@ Ligo_api.Ligo_init.new_project
+      @@ Ligo_api_unix.Ligo_init.new_project
            ~version:Version.version
            ~kind:`CONTRACT
            ~project_name_opt:project_name

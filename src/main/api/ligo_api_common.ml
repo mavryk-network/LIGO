@@ -8,8 +8,8 @@ let dump_changelog display_format no_colour () =
 
 module Compile = Compile
 module Transpile = Transpile
-module Run = Run
 module Info = Info
 module Print = Print
-module Mutate = Mutate
 module Ligo_init = Ligo_init
+module Api_helpers = Api_helpers
+module Formatter = Formatter

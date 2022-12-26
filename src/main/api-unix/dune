@@ -1,0 +1,6 @@
+(library
+ (name ligo_api_unix)
+ (public_name ligo.api-unix)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries ligo.api-common interpreter_unix))

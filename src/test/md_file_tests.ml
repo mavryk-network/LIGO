@@ -154,7 +154,7 @@ let compile_groups ~raise filename grp_list =
       let typed = Build.qualified_typed_str ~raise ~options contents in
       (* Format.printf "Typed AST: %a\n" (Ast_typed.PP.program ~use_hidden:true) typed; *)
       let (_ : bool * (group_name * Ligo_interpreter.Types.value) list) =
-        Interpreter.eval_test ~options ~raise ~steps:5000 typed
+        Interpreter_unix.eval_test ~options ~raise ~steps:5000 typed
       in
       ()
     | Object ->
