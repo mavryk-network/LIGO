@@ -230,6 +230,7 @@ test-suite ligo-debugger-test
       Test.Breakpoints
       Test.DebugInfo
       Test.DelayedValues
+      Test.Functions
       Test.LigoCall
       Test.Navigation
       Test.Pretty

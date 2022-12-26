@@ -3,7 +3,8 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module Language.LIGO.Debugger.Functions
-  ( LambdaMeta (..)
+  ( LambdaMeta
+  , LambdaMeta' (..)
   , LambdaEvent (..)
   , lmEventsL
   , matchesUniqueLambdaName
@@ -111,12 +112,12 @@ stripSuffixLambdaEvent = \case
   LambdaApplied arg -> LambdaApplied arg
   LambdaNamed named -> LambdaNamed (stripSuffixLambdaNamedInfo named)
 
--- | A meta that we carry along with lambda values when
--- interpreting a contract.
+-- | This type is a stepping stone to getting meta which we will carry along
+-- with lambdas - 'LambdaMeta'.
 --
--- This type is pretty raw on itself, but we provide numerious smart getters.
-newtype LambdaMeta = LambdaMeta
-  { lmEvents :: [LambdaEvent 'Unique]
+-- Unlike 'LambdaMeta', this type allows for different variables naming.
+newtype LambdaMeta' u = LambdaMeta
+  { lmEvents :: [LambdaEvent u]
     -- ^ Events that happened to the related lambda, last event goes first.
     --
     -- Considering a general case, usually lifetime of a lambda with many
@@ -152,36 +153,37 @@ newtype LambdaMeta = LambdaMeta
   } deriving stock (Show, Generic)
     deriving anyclass (NFData)
 
-makeLensesWith postfixLFields ''LambdaMeta
+makeLensesWith postfixLFields ''LambdaMeta'
 
-instance ForInternalUse => Buildable LambdaMeta where
+instance (SingI u, ForInternalUse) => Buildable (LambdaMeta' u) where
   build LambdaMeta{..} =
     [int||
     LambdaMeta
       variables: #{toList lmEvents}|]
 
-instance Default LambdaMeta where
+instance Default (LambdaMeta' u) where
   def = LambdaMeta []
 
-instance AsEmpty LambdaMeta where
+instance AsEmpty (LambdaMeta' u) where
   _Empty = prism def \case{ LambdaMeta [] -> Right (); other -> Left other }
 
 -- | All function names, the most recent one goes first.
-lmAllFuncNames :: LambdaMeta -> [Name 'Unique]
+lmAllFuncNames :: LambdaMeta' u -> [Name u]
 lmAllFuncNames = fmap lniName . mapMaybe (preview _LambdaNamed) . lmEvents
 
 -- | The last known name of the lambda.
-lmActualFuncName :: LambdaMeta -> LambdaName 'Unique
+lmActualFuncName :: LambdaMeta' u -> LambdaName u
 lmActualFuncName = maybe LNameUnknown LName . safeHead . reverse . lmAllFuncNames
 
 -- | The original name of the lambda.
-lmOriginalFuncName :: LambdaMeta -> LambdaName 'Unique
+lmOriginalFuncName :: LambdaMeta' u -> LambdaName u
 lmOriginalFuncName = maybe LNameUnknown LName . safeHead . lmAllFuncNames
 
 -- | Return a list where each entry contains:
 --
 -- * Name of the lambda (maybe partially applied) and its type.
--- * Arguments that were passed to that lambda since the time it got that name - in direct order.
+-- * Arguments that were passed to that lambda since the time it got that name
+--   - in direct order.
 --
 -- In this outer list, more recently assigned names go first.
 --
@@ -197,13 +199,19 @@ lmOriginalFuncName = maybe LNameUnknown LName . safeHead . lmAllFuncNames
 --
 -- If any applications took place before the first name was assigned to the lambda,
 -- those are ignored as non-interesting.
-lmGroupByName :: LambdaMeta -> [(LambdaNamedInfo 'Unique, [LambdaArg])]
+lmGroupByName :: LambdaMeta' u -> [(LambdaNamedInfo u, [LambdaArg])]
 lmGroupByName (LambdaMeta events) = go [] [] events
   where
   go resAcc argsAcc = \case
     LambdaApplied arg : evs -> go resAcc (arg : argsAcc) evs
-    LambdaNamed info : evs -> go ((info, reverse argsAcc) : resAcc) [] evs
+    LambdaNamed info : evs -> go ((info, argsAcc) : resAcc) [] evs
     [] -> reverse resAcc
+
+-- | A meta that we carry along with lambda values when
+-- interpreting a contract.
+--
+-- This type is pretty raw on itself, but we provide numerious smart getters.
+type LambdaMeta = LambdaMeta' 'Unique
 
 -- | A lens for accessing the meta of a lambda.
 --

@@ -7,7 +7,8 @@ module Language.LIGO.Debugger.Snapshots
   , InterpretEvent (..)
   , statusExpressionEvaluatedP
   , InterpretSnapshot (..)
-  , LambdaMeta (..)
+  , LambdaMeta
+  , LambdaMeta' (..)
   , ContractEnv
   , CollectorState (..)
   , InterpretHistory (..)

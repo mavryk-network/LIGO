@@ -390,7 +390,7 @@ testLambdas = testGroup "lambdas"
       M.lookup 5 referredVars @?= Nothing
       M.lookup 4 referredVars @?= Just
         [ defaultVariable
-            { nameVariable = "func"
+            { nameVariable = "<fun>"
             , valueVariable = "add11"
             , typeVariable = "type of add11"
             , variablesReferenceVariable = 3
@@ -398,7 +398,7 @@ testLambdas = testGroup "lambdas"
         ]
       M.lookup 3 referredVars @?= Just
         [ defaultVariable
-            { nameVariable = "func"
+            { nameVariable = "<fun>"
             , valueVariable = "addTwo"
             , typeVariable = "type of addTwo"
             , variablesReferenceVariable = 2
@@ -412,7 +412,7 @@ testLambdas = testGroup "lambdas"
         ]
       M.lookup 2 referredVars @?= Just
         [ defaultVariable
-            { nameVariable = "func"
+            { nameVariable = "<fun>"
             , valueVariable = "add2"
             , typeVariable = "type of add2"
             , variablesReferenceVariable = 1
@@ -420,7 +420,7 @@ testLambdas = testGroup "lambdas"
         ]
       M.lookup 1 referredVars @?= Just
         [ defaultVariable
-            { nameVariable = "func"
+            { nameVariable = "<fun>"
             , valueVariable = "add"
             , typeVariable = "type of add"
             }
@@ -463,7 +463,7 @@ testLambdas = testGroup "lambdas"
       M.lookup 2 referredVars @?= Nothing
       M.lookup 1 referredVars @?= Just
         [ defaultVariable
-            { nameVariable = "func"
+            { nameVariable = "<fun>"
             , valueVariable = "add"
             , typeVariable = "type of add"
             , variablesReferenceVariable = 0
