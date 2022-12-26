@@ -890,84 +890,6 @@ let transpile_group =
   @@ [ "contract", transpile_contract; "expression", transpile_expression ]
 
 
-(** Mutate commands *)
-let mutate_cst =
-  let f
-      source_file
-      syntax
-      protocol_version
-      libraries
-      display_format
-      seed
-      generator
-      project_root
-      ()
-    =
-    let raw_options =
-      Raw_options.make ~syntax ~protocol_version ~libraries ~generator ~project_root ()
-    in
-    return_result ~return
-    @@ Api.Mutate.mutate_cst raw_options source_file display_format seed
-  in
-  let summary = "return a mutated version for a given file." in
-  let readme () =
-    "This sub-command returns a mutated version for a given file. It does not use the \
-     build system."
-  in
-  Command.basic
-    ~summary
-    ~readme
-    (f
-    <$> source_file
-    <*> syntax
-    <*> protocol_version
-    <*> libraries
-    <*> display_format
-    <*> seed
-    <*> generator
-    <*> project_root)
-
-
-let mutate_ast =
-  let f
-      source_file
-      syntax
-      protocol_version
-      libraries
-      display_format
-      seed
-      generator
-      project_root
-      ()
-    =
-    let raw_options =
-      Raw_options.make ~syntax ~protocol_version ~libraries ~generator ~project_root ()
-    in
-    return_result ~return
-    @@ Api.Mutate.mutate_ast raw_options source_file display_format seed
-  in
-  let summary = "return a mutated version for a given file." in
-  let readme () =
-    "This sub-command returns a mutated version for a given file. It does not use the \
-     build system."
-  in
-  Command.basic
-    ~summary
-    ~readme
-    (f
-    <$> source_file
-    <*> syntax
-    <*> protocol_version
-    <*> libraries
-    <*> display_format
-    <*> seed
-    <*> generator
-    <*> project_root)
-
-
-let mutate_group =
-  let summary = "create mutants of a ligo file" in
-  Command.group ~summary @@ [ "cst", mutate_cst; "ast", mutate_ast ]
 
 
 (** Run commands *)
@@ -1937,7 +1859,6 @@ let main =
      ; "transpile", transpile_group
      ; "run", run_group
      ; "info", info_group
-     ; "mutate", mutate_group
      ; "repl", repl
      ; "init", init_group
      ; "changelog", changelog

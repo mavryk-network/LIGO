@@ -52,7 +52,7 @@ const test_increment = (() => {
 let main source =
   let entry_point = "main" in
   let views = Default_options.views in
-  let syntax = "cameligo" in
+  let syntax = "jsligo" in
   let protocol_version = "lima" in
   let display_format = Simple_utils.Display.human_readable in
   let michelson_format = `Text in

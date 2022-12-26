@@ -400,7 +400,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     :  Location.t -> calltrace -> AST.type_expression -> env -> Constant.constant'
     -> (value * AST.type_expression * Location.t) list -> value Monad.t
   =
- fun loc calltrace expr_ty env c operands ->
+  fun loc calltrace expr_ty _env c operands ->
   let open Constant in
   let open Monad in
   let eval_ligo = eval_ligo ~raise ~steps ~options in
@@ -1194,55 +1194,9 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       return x
     | None -> fail @@ error_type ())
   | C_TEST_LAST_EVENTS, _ -> fail @@ error_type ()
-  | C_TEST_MUTATE_CONTRACT, [ V_Ct (C_nat n); (V_Ast_contract { main; views } as v) ] ->
-    let* () = check_value v in
-    let v = Mutation.mutate_some_contract ~raise n main in
-    (match v with
-    | None -> return (v_none ())
-    | Some (main, m) ->
-      return
-      @@ v_some
-           (V_Record
-              (Record.LMap.of_list
-                 [ Label "0", V_Ast_contract { main; views }; Label "1", V_Mutation m ])))
   | C_TEST_MUTATE_CONTRACT, _ -> fail @@ error_type ()
-  | C_TEST_MUTATE_VALUE, [ V_Ct (C_nat n); v ] ->
-    let* () = check_value v in
-    let value_ty = nth_type 1 in
-    (match
-       Mutation.mutate_some_value ~raise ?syntax:options.frontend.syntax loc n v value_ty
-     with
-    | None -> return @@ v_none ()
-    | Some (e, m) ->
-      let* v = eval_ligo e calltrace env in
-      return
-      @@ v_some (V_Record (Record.LMap.of_list [ Label "0", v; Label "1", V_Mutation m ])))
-  | C_TEST_MUTATE_VALUE, _ -> fail @@ error_type ()
-  | C_TEST_SAVE_MUTATION, [ V_Ct (C_string dir); V_Mutation ((loc, _, _) as mutation) ] ->
-    let* reg =
-      monad_option (Errors.generic_error loc "Not a valid mutation")
-      @@ Location.get_file loc
-    in
-    let file_contents = Fuzz.Ast_aggregated.buffer_of_mutation mutation in
-    let id = Fuzz.Ast_aggregated.get_mutation_id mutation in
-    let file_path = reg#file in
-    (try
-       let odir = Caml.Sys.getcwd () in
-       let () = Caml.Sys.chdir dir in
-       let file_path = Filename.basename file_path in
-       let file_path =
-         Caml.Filename.remove_extension file_path
-         ^ "."
-         ^ id
-         ^ Caml.Filename.extension file_path
-       in
-       let out_chan = Out_channel.create file_path in
-       let () = Caml.Buffer.output_buffer out_chan file_contents in
-       let () = Caml.Sys.chdir odir in
-       return (v_some (v_string file_path))
-     with
-    | Sys_error _ -> return (v_none ()))
-  | C_TEST_SAVE_MUTATION, _ -> fail @@ error_type ()
+  | C_TEST_MUTATE_VALUE, _ ->fail @@ error_type ()
+  | C_TEST_SAVE_MUTATION, _ ->fail @@ error_type ()
   | C_TEST_TO_CONTRACT, [ addr ] ->
     let contract_ty = nth_type 0 in
     let>> code = To_contract (loc, addr, None, contract_ty) in
@@ -1321,18 +1275,6 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     in
     return (v_typed_address address)
   | C_TEST_NTH_BOOTSTRAP_TYPED_ADDRESS, _ -> fail @@ error_type ()
-  | C_TEST_RANDOM, [ V_Ct (C_bool small) ] ->
-    let* gen_type =
-      monad_option (Errors.generic_error loc "Expected typed address")
-      @@ AST.get_t_gen expr_ty
-    in
-    let>> (ctxt : Tezos_state.context) = Get_state () in
-    let known_addresses =
-      ctxt.internals.bootstrapped
-      @ List.concat (List.map ~f:snd ctxt.transduced.last_originations)
-    in
-    let generator = Mutation.value_gen ~raise ~small ~known_addresses gen_type in
-    return (V_Gen { generator; gen_type })
   | C_TEST_RANDOM, _ -> fail @@ error_type ()
   | C_TEST_GENERATOR_EVAL, [ V_Gen { generator; gen_type = _ } ] ->
     let v = QCheck.Gen.generate1 generator in

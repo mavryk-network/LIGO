@@ -46,4 +46,4 @@ let write ligorc =
   Out_channel.write_all path ~data:entries
 
 
-let registry_key = Str.global_replace (Str.regexp "\\(https?://\\)") ""
+let registry_key = fun _ -> "" (* Str.global_replace (Str.regexp "\\(https?://\\)") "" *)

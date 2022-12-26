@@ -4,6 +4,6 @@
  (instrumentation
   (backend bisect_ppx))
  (libraries simple-utils proto-alpha-utils tezos-utils ast_aggregated
-   ligo_prim qcheck)
+   ligo_prim )
  (preprocess
   (pps ppx_deriving_yojson)))
