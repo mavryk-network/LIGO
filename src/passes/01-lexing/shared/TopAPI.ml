@@ -264,11 +264,13 @@ module Make
               std, preprocessed, Scan.from_lexbuf ~file lexbuf
         else
           (* Running only the lexer *)
-          let result =
+          let scan_result =
             if String.(file = "") then
-              Scan.from_channel In_channel.stdin
+              match Lexbuf.from_input input with
+                | Ok (source_lexbuf, _) -> Scan.from_lexbuf source_lexbuf
+                | _ -> failwith "blah!"
             else Scan.from_file file in
-          Std.empty, None, result
+          Std.empty, None, scan_result
       in
       match result with
         Stdlib.Error {used_units; message} ->
