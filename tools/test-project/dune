@@ -1,0 +1,8 @@
+(executable
+  (name TestProject)
+  (public_name TestProject)
+  (modules
+    TestProject)
+  (libraries
+    ligo linol linol-lwt lsp ligo.api ligo.compiler_options)
+)
