@@ -1,4 +1,8 @@
+(* Menhir specification of the parser of CameLIGO *)
+
 %{
+(* START HEADER *)
+
 (* START HEADER *)
 
 [@@@warning "-42"]
@@ -9,19 +13,46 @@ open Simple_utils.Region
 
 (* LIGO dependencies *)
 
-module CST = Cst_cameligo.CST
+module CST = Cst_pascaligo.CST
 open! CST
 module Wrap = Lexing_shared.Wrap
 
-(* Utilities *)
+(* UTILITIES
 
-let unwrap wrap = Region.{region=wrap#region; value=wrap#payload}
-let wrap   = Wrap.wrap
+   The following functions help build CST nodes. When they are
+   complicated, like [mk_mod_path], it is because the grammar rule had
+   to be written in a certain way to remain LR, and that way did not
+   make it easy in the semantic action to collate the information into
+   CST nodes. *)
 
-let mk_wild region =
-  let variable = {value="_"; region} in
-  let value = {variable; attributes=[]}
-  in {region; value}
+let mk_reg region value = Region.{region; value}
+
+let apply_type_ctor token args =
+  let {region; value = {lpar; inside; rpar}} = args in
+  let tuple  = mk_reg region {lpar; inside=inside,[]; rpar}
+  and region = cover token#region args.region
+  in mk_reg region (T_Var token, tuple)
+
+let apply_map token args =
+  let region = cover token#region args.region
+  in mk_reg region (T_Var token, args)
+
+let mk_mod_path :
+  (module_name * dot) Utils.nseq * 'a ->
+  ('a -> Region.t) ->
+  'a CST.module_path Region.reg =
+  fun (nseq, field) to_region ->
+    let (first, sep), tail = nseq in
+    let rec trans (seq, prev_sep as acc) = function
+      [] -> acc
+    | (item, next_sep) :: others ->
+        trans ((prev_sep, item) :: seq, next_sep) others in
+    let list, last_dot = trans ([], sep) tail in
+    let module_path = first, List.rev list in
+    let region = CST.nseq_to_region (fun (x,_) -> x#region) nseq in
+    let region = Region.cover region (to_region field)
+    and value = {module_path; selector=last_dot; field}
+    in {value; region}
 
 (* END HEADER *)
 %}
@@ -85,12 +116,24 @@ let mk_wild region =
 
 (* Compound constructs *)
 
+(* Compound constructs *)
+
 par(X):
   "(" X ")" {
-    let lpar = $1 in
-    let rpar = $3 in
-    let region = cover lpar#region rpar#region
-    and value  = {lpar; inside=$2; rpar}
+    let region = cover $1#region $3#region
+    and value  = {lpar=$1; inside=$2; rpar=$3}
+    in {region; value} }
+
+brackets(X):
+  "[" X "]" {
+    let region = cover $1#region $3#region
+    and value  = {lbracket=$1; inside=$2; rbracket=$3}
+    in {region; value} }
+
+brackes(X):
+  "{" X "}" {
+    let region = cover $1#region $3#region
+    and value  = {lbrace=$1; inside=$2; rbrace=$3}
     in {region; value} }
 
 (* Sequences
@@ -106,26 +149,25 @@ par(X):
    corresponding to the semantic actions of those rules.
  *)
 
-(* Possibly empty sequence of items *)
-
-seq(item):
-  (**)           {     [] }
-| item seq(item) { $1::$2 }
-
 (* Non-empty sequence of items *)
 
-nseq(item):
-  item seq(item) { $1,$2 }
+nseq(X):
+  X         { $1, [] }
+| X nseq(X) { let hd,tl = $2 in $1, hd::tl }
 
 (* Non-empty separated sequence of items *)
 
-nsepseq(item,sep):
-  item                       {                        $1, [] }
-| item sep nsepseq(item,sep) { let h,t = $3 in $1, ($2,h)::t }
+nsepseq(X,Sep):
+  X                    {                 $1,        [] }
+| X Sep nsepseq(X,Sep) { let h,t = $3 in $1, ($2,h)::t }
 
 (* The rule [sep_or_term(item,sep)] ("separated or terminated list")
    parses a non-empty list of items separated by [sep], and optionally
-   terminated by [sep]. *)
+   terminated by [sep]. The following rules were inspired by the
+   following blog post by Pottier:
+
+   http://gallium.inria.fr/blog/lr-lists/
+*)
 
 sep_or_term_list(item,sep):
   nsepseq(item,sep) {
@@ -140,77 +182,129 @@ sep_or_term_list(item,sep):
     let list, term = trans ([],sep) tail
     in (first, List.rev list), Some term }
 
-(* Helpers *)
-
-%inline variable    : "<ident>"  { unwrap $1 }
-%inline type_name   : "<ident>"  { unwrap $1 }
-%inline field_name  : "<ident>"  { unwrap $1 }
-%inline struct_name : "<ident>"  { unwrap $1 }
-%inline module_name : "<uident>" { unwrap $1 }
-
 (* Non-empty comma-separated values (at least two values) *)
 
 tuple(item):
   item "," nsepseq(item,",") { let h,t = $3 in $1, ($2,h)::t }
 
-(* Possibly empty semicolon-separated values between brackets *)
+(* Lists *)
 
 list_of(item):
-  "[" sep_or_term_list(item,";")? "]" {
-    let lbracket = $1 in
-    let rbracket = $3 in
-    let compound = Some (Brackets (lbracket,rbracket))
-    and region = cover lbracket#region rbracket#region in
-    let elements, terminator =
-      match $2 with
-        None -> None, None
-      | Some (elements, terminator) ->
-          Some elements, terminator in
-    let value = {compound; elements; terminator}
+  brackets(option(sep_or_term_list(item,";") { fst $1 })) { $1 }
+
+(* Aliasing and inlining some tokens *)
+
+%inline variable        : "<ident>"  { $1 }
+%inline module_name     : "<uident>" { unwrap $1 }
+%inline field_name      : "<ident>"  { $1 }
+%inline ctor            : "<uident>" { $1 }
+%inline record_or_tuple : "<ident>"  { $1 }
+
+(* Unary operators *)
+
+unary_op(op,arg):
+  op arg {
+    let region = cover $1#region (expr_to_region $2)
+    and value  = {op=$1; arg=$2}
     in {region; value} }
 
-(* Main *)
+(* Binary operators *)
+
+bin_op(arg1,op,arg2):
+  arg1 op arg2 {
+    let start  = expr_to_region $1
+    and stop   = expr_to_region $3 in
+    let region = cover start stop
+    and value  = {arg1=$1; op=$2; arg2=$3}
+    in {region; value} }
+
+(* Attributes *)
+
+%inline
+attributes:
+  ioption(nseq("[@attr]") { Utils.nseq_to_list $1 }) {
+    match $1 with None -> [] | Some list -> list }
+
+(* ENTRY *)
 
 contract:
-  module_ EOF { {$1 with eof=$2} }
+  nseq(top_declaration) EOF { {decl=$1; eof=$2} }
 
-module_:
-  nseq(declaration) { {decl=$1; eof=wrap "" Region.ghost} }
+top_declaration:
+  declaration   { $1 }
+| "<directive>" { D_Directive $1 } (* Only at top-level *)
 
 declaration:
-  type_decl       {    TypeDecl $1 }
-| let_declaration {         Let $1 }
-| module_decl     {  ModuleDecl $1 }
-| module_alias    { ModuleAlias $1 }
-| "<directive>"   {   Directive $1 }
+  type_decl   { D_Type   $1 }
+| let_decl    { D_Let    $1 }
+| module_decl { D_Module $1 }
+| attr_decl   { D_Attr   $1 }
+
+(* Attributed declarations *)
+
+attr_decl:
+ "[@attr]" declaration {
+    let stop   = decl_to_region $2 in
+    let region = cover $1.region stop
+    in {region; value = ($1,$2)} }
 
 (* Type declarations *)
 
 type_decl:
-  "type" ioption(quoted_type_params) type_name "=" type_expr {
-    let kwd_type = $1 in
-    let region = cover kwd_type#region (type_expr_to_region $5) in
-    let value  = {kwd_type;
-                  params    = $2;
-                  name      = $3;
-                  eq        = $4;
-                  type_expr = $5;
-                  }
+  "type" ioption(type_vars) type_name "=" type_expr {
+    let region = cover $1#region (type_expr_to_region $5)
+    and value  = {kwd_type=$1; params=$2; name=$3; eq=$4; type_expr=$5}
     in {region; value} }
 
-quoted_type_params:
-  type_var             { QParam      $1 }
-| par(tuple(type_var)) { QParamTuple $1 }
+type_vars:
+  type_var             { TV_Single $1 }
+| par(tuple(type_var)) { TV_Tuple  $1 }
 
 type_var:
   "'" variable {
-    let quote = $1 in
-    let region = cover quote#region $2.region
-    and value = {quote; name=$2}
-    in {region; value} }
+    let region = cover $1#region $2#region
+    in {region; value = ($1,$2)}
+  }
+| "_" { $1 }
+
+(* Top-level value declarations *)
+
+let_decl:
+  "let" ioption("rec") let_binding {
+    let stop   = expr_to_region $3.let_rhs in
+    let region = cover $1#region stop
+    in {region; value = ($1,$2,$3)} }
+
+let_binding:
+  var_pattern type_parameters parameters let_rhs_type "=" expr {
+    let binders = Utils.nseq_cons (PVar $1) $3 in
+    {binders; type_params=$2; rhs_type=$4; eq=$5; let_rhs=$6}
+  }
+| irrefutable type_parameters let_rhs_type "=" expr {
+    {binders=$1,[]; type_params=$2; rhs_type=$3; eq=$4; let_rhs=$5} }
+
+%inline let_rhs_type:
+  ioption(type_annotation(type_expr)) { $1 }
+
+(* The %inline solves a shift/reduce conflict: *)
+
+%inline type_parameters:
+  ioption(par(type_param_list)) { $1 }
+
+type_param_list:
+  "type" nseq(variable) { {kwd_type=$1; type_vars=$2} }
+
+parameters:
+  nseq(core_irrefutable) { $1 }
+
+type_annotation(right_type_expr):
+  ":" right_type_expr { $1,$2 }
+
+
+
 
 module_decl:
-  "module" module_name "=" "struct" module_ "end" {
+  "module" module_name "=" "struct" nseq(declaration)? "end" {
     let kwd_module = $1 in
     let eq = $3 in
     let kwd_struct = $4 in
@@ -296,6 +390,11 @@ sum_type(right_type_expr):
     let value  = {variants=$3; attributes=$1; lead_vbar = Some $2}
     in TSum {region; value} }
 
+%inline
+attributes:
+  ioption(nseq("[@attr]") { Utils.nseq_to_list $1 }) {
+    match $1 with None -> [] | Some list -> list }
+
 (* Always use [ioption] at the end of a rule *)
 
 variant(right_type_expr):
@@ -344,64 +443,6 @@ field_decl:
     and value  = {field_name=$2; colon; field_type=$4; attributes=$1}
     in {region; value} }
 
-(* Top-level definitions
-
-   Note how we did not write:
-
-   let_declaration:
-     seq("[@attr]") "let" ioption("rec") let_binding { ... }
-
-   because this leads to an error state with an LR item of the form
-
-   let_declaration -> seq("[@attr]") . "let" ioption("rec") let_binding [ ... ]
-
-   with a spurious reduction on [seq("[@attr]")]. As a consequence the
-   message about the past becomes awkward, along the lines of "if the
-   attributes (if any) are complete". To avoid that phrasing, we use
-   the following trick: use [ioption] and [nseq] instead of [seq] in
-   the rule [attributes]. *)
-
-let_declaration:
-  attributes "let" ioption("rec") let_binding {
-    let attributes = $1
-    and kwd_let    = $2
-    and kwd_rec    = $3
-    and binding    = $4 in
-    let value      = kwd_let, kwd_rec, binding, attributes in
-    let stop       = expr_to_region binding.let_rhs in
-    let region     = cover kwd_let#region stop
-    in {region; value} }
-
-%inline
-attributes:
-  ioption(nseq("[@attr]") { Utils.nseq_to_list $1 }) {
-    match $1 with None -> [] | Some list -> list }
-
-let_binding:
-  var_pattern type_parameters parameters let_rhs_type "=" expr {
-    let binders = Utils.nseq_cons (PVar $1) $3 in
-    {binders; type_params=$2; rhs_type=$4; eq=$5; let_rhs=$6}
-  }
-| irrefutable type_parameters let_rhs_type "=" expr {
-    {binders=$1,[]; type_params=$2; rhs_type=$3; eq=$4; let_rhs=$5} }
-
-%inline let_rhs_type:
-  ioption(type_annotation(type_expr)) { $1 }
-
-(* The %inline solves a shift/reduce conflict: *)
-
-%inline type_parameters:
-  ioption(par(type_param_list)) { $1 }
-
-type_param_list:
-  "type" nseq(variable) { {kwd_type=$1; type_vars=$2} }
-
-parameters:
-  nseq(core_irrefutable) { $1 }
-
-type_annotation(right_type_expr):
-  ":" right_type_expr { $1,$2 }
-
 (* PATTERNS *)
 
 (* Irrefutable Patterns *)
@@ -423,7 +464,6 @@ core_irrefutable:
 | par(typed_irrefutable)
 | par(irrefutable)            { PPar    $1 }
 | ctor_irrefutable            { $1 }
-(* TODO: int, nat, bytes etc.? *)
 
 var_pattern:
   attributes "<ident>" {
@@ -442,7 +482,7 @@ typed_irrefutable:
 
 ctor_irrefutable:
   par(non_const_ctor_irrefutable) {    PPar $1 }
-| const_ctor_pattern           { PConstr $1 }
+| const_ctor_pattern              { PConstr $1 }
 
 const_ctor_pattern:
   "<uident>" {

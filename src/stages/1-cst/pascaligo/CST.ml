@@ -627,7 +627,7 @@ and 'a un_op = {
   arg : expr
 }
 
-(* Code injection.  Note how the field [language] wraps a region in
+(* Code injection. Note how the field [language] wraps a region in
    another: the outermost region covers the header "[%<language>" and
    the innermost covers the <language>. *)
 

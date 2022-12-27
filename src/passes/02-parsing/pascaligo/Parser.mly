@@ -1,84 +1,4 @@
-(* Menhir specification of the parser of PascaLIGO
-
-   "Beaucoup de mal durable est souvent fait par les choses provisoires."
-                                              Victor Hugo, 11 Sept. 1848
-                         http://classes.bnf.fr/laicite/anthologie/32.htm
-
-   About Menhir:
-     http://gallium.inria.fr/blog/parser-construction-menhir-appetizers/
-     http://gallium.inria.fr/~fpottier/menhir/manual.pdf
-
-   When laying out rules for the same non-terminal, we use the closing
-   brace of a rule to separate it from the next by being on its own
-   line, like so:
-
-     foo:
-       .... { ...
-       }
-     | ... { ... }
-
-   When there are many rules for the same terminal, we present the
-   rules for the non-terminals involved in a left-right prefix manner
-   (a.k.a depth-first traversal in an algorithmic context). For
-   example:
-
-     foo:
-       bar { ... }
-     | baz { ... }
-
-     bar:
-       zoo { ... }
-
-     zoo:
-       A { ... }
-
-     baz:
-       B { ... }
-
-   When you change the grammar, take some time to see if you cannot
-   remove a reduction on error (%on_error_reduce) that is related to
-   your change.
-
-   Write comments. Inside them, escape text by writing it between
-   square brackets, following the ocamldoc convention.
-
-   Please avoid writing a leading vertical bar, like
-
-     foo:
-       | bar {}
-
-   The above is equivalent to
-
-     foo:
-       bar {}
-
-   but people could think it means
-
-     for:
-       {} | bar {}
-
-   because Menhir enables the sharing of semantic actions. (By the
-   way, the leading vertical bar is the only cause of an LR conflict
-   in the grammar of Menhir itself (personal communication to
-   Rinderknecht by Pottier, June 23, 2006).
-
-     We do not rely on predefined Menhir symbols, like
-   [$symbolstartpos], to help determine the regions (that is, source
-   locations) of our tokens and subtrees of our CST. One reason is
-   that the semantic of [$symbolstartpos] is that of ocamlyacc, and
-   this does not blend well with nullable prefixes of rules. That is
-   why we use [Region.cover] to compute the region in the source that
-   corresponds to any given CST node. This is more verbose than
-   letting Menhir ask the lexer buffer with an awkward semantic, but
-   we are 100% in control.
-
-     A note on terminology: I sometimes use words taken from the
-   context of formal logic or programming theory. For example:
-   https://en.wikipedia.org/wiki/Extensional_and_intensional_definitions
-
-     We always define and write values of type [Region.t] by stating
-   the region first, like so: [{region; value}], and we always use
-   name punning. *)
+(* Menhir specification of the parser of PascaLIGO *)
 
 %{
 (* START HEADER *)
@@ -335,7 +255,7 @@ nsepseq(X,Sep):
 
 (* The rule [sep_or_term(item,sep)] ("separated or terminated list")
    parses a non-empty list of items separated by [sep], and optionally
-   terminated by [sep]. The follwing rules were inspired by the
+   terminated by [sep]. The following rules were inspired by the
    following blog post by Pottier:
 
    http://gallium.inria.fr/blog/lr-lists/
@@ -1441,7 +1361,7 @@ fun_arg: expr { $1 }
 typed_expr:
   disj_expr_level type_annotation { $1,$2 }
 
-(* Function updates for records *)
+(* Functional updates of records *)
 
 update_expr:
   core_expr "with" core_expr {

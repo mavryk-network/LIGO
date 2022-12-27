@@ -104,13 +104,11 @@ type ctor        = lexeme wrap
 type language    = lexeme reg   (* Not [wrap] *)
 type attribute   = Attr.t reg
 
-(* Parentheses *)
+(* Parentheses, braces, brackets *)
 
-type 'a par = {
-  lpar   : lpar;
-  inside : 'a;
-  rpar   : rpar
-}
+type 'a par      = {lpar: lpar; inside: 'a; rpar: rpar}
+type 'a braces   = {lbrace: lbrace; inside: 'a; rbrace: rbrace}
+type 'a brackets = {lbracket: lbracket; inside: 'a; rbracket: rbracket}
 
 (* The Abstract Syntax Tree *)
 
@@ -138,8 +136,9 @@ and declaration =
 and let_decl = kwd_let * kwd_rec option * let_binding
 
 and let_binding = {
+  name        : pattern;
   type_params : type_params par reg option;
-  binders     : pattern nseq;
+  val_params  : pattern seq;
   rhs_type    : (colon * type_expr) option;
   eq          : equal;
   let_rhs     : expr
@@ -147,10 +146,7 @@ and let_binding = {
 
 (* Type parameters *)
 
-and type_params = {
-  kwd_type  : kwd_type;
-  type_vars : variable nseq
-}
+and type_params = kwd_type * variable nseq
 
 (* Module declaration *)
 
@@ -184,17 +180,17 @@ and 'a module_path = {
 
 and type_decl = {
   kwd_type  : kwd_type;
-  name      : variable;
   params    : type_vars option;
+  name      : variable;
   eq        : equal;
   type_expr : type_expr
 }
 
 and type_vars =
   TV_Single of type_var
-| TV_Tuple  of type_var tuple
+| TV_Tuple  of type_var tuple par
 
-and type_var = (quote * variable) reg
+and type_var = (quote * variable) reg  (* 'a, 'b, 'c etc. *)
 
 and 'a tuple = ('a, comma) nsepseq par reg
 
@@ -229,12 +225,7 @@ and cartesian = (type_expr, times) nsepseq reg
 
 (* Record type *)
 
-and 'a record = {
-  lbrace     : lbrace;
-  elements   : ('a, semi) sepseq;
-  terminator : semi option;
-  rbrace     : rbrace
-}
+and 'a record = ('a, semi) sepseq braces
 
 and field_decl = {
   field_name : field_name;
@@ -274,7 +265,7 @@ and pattern =
 | P_Mutez    of (lexeme * Int64.t) wrap             (*      5mutez *)
 | P_Nat      of (lexeme * Z.t) wrap                 (*          4n *)
 | P_Par      of pattern par reg                     (*      (C, 4) *)
-| P_Record   of field_pattern reg record reg        (*    {x=y; z} *)
+| P_Record   of record_pattern reg                  (*    {x=y; z} *)
 | P_String   of lexeme wrap                         (*    "string" *)
 | P_Tuple    of pattern tuple                       (*      (1, x) *)
 | P_Typed    of typed_pattern reg                   (*   (x : int) *)
@@ -284,20 +275,35 @@ and pattern =
 
 (* List pattern *)
 
-and 'a list_ = {
-  lbracket   : lbracket;
-  elements   : ('a, semi) sepseq;
-  terminator : semi option;
-  rbracket   : rbracket
+and 'a list_ = ('a, semi) sepseq brackets
+
+(* Record pattern with lenses *)
+
+and record_pattern = (field_name, pattern) field reg record
+
+and ('lhs, 'rhs) field =
+  Punned   of 'lhs punned
+| Complete of ('lhs, 'rhs) full_field
+
+and 'lhs punned = {
+  pun        : 'lhs;
+  attributes : attribute list
 }
 
-(* Record pattern *)
-
-and field_pattern = {
-  field_name : field_name;
-  eq         : equal;
-  pattern    : pattern
+and ('lhs, 'rhs) full_field = {
+  field_lhs  : 'lhs;
+  field_lens : field_lens;
+  field_rhs  : 'rhs;
+  attributes : attribute list
 }
+
+and field_lens =
+  Lens_Id   of assign
+| Lens_Add  of plus_eq
+| Lens_Sub  of minus_eq
+| Lens_Mult of times_eq
+| Lens_Div  of slash_eq
+| Lens_Fun  of vbar_eq
 
 (* Typed pattern *)
 
@@ -333,7 +339,7 @@ and expr =
 | E_Gt       of gt bin_op reg                (* x > y               *)
 | E_Int      of (lexeme * Z.t) wrap          (* 42                  *)
 | E_Land     of kwd_land bin_op reg          (* x land y            *)
-| E_LetIn    of let_in reg
+| E_LetIn    of let_in reg                   (* let x = e1 in e2    *)
 | E_Leq      of leq bin_op reg               (* x <= y              *)
 | E_List     of expr list_ reg               (* [f x; 5]            *)
 | E_Lor      of kwd_lor bin_op reg           (* x lor y             *)
@@ -354,18 +360,23 @@ and expr =
 | E_Or       of kwd_or bin_op reg            (* x or y              *)
 | E_Par      of expr par reg                 (* (x - M.y)           *)
 | E_Proj     of projection reg               (* e.x.1               *)
-| E_Record   of field_assign reg record reg  (* {x=y; z}            *)
+| E_Record   of record_expr reg              (* {x=y; z}            *)
 | E_String   of lexeme wrap                  (* "string"            *)
 | E_Sub      of minus bin_op reg             (* a - b               *)
 | E_Tuple    of expr tuple                   (* (1, x)              *)
 | E_Typed    of typed_expr par reg           (* (x : int)           *)
 | E_TypeIn   of type_in reg                  (* type t = u in e     *)
 | E_Unit     of the_unit reg                 (* ()                  *)
-| E_Update   of update reg                   (* {x with y=z}        *)
+| E_Update   of update braces reg            (* {x with y=z}        *)
 | E_Var      of variable                     (* x                   *)
 | E_Verbatim of lexeme wrap                  (* {|foo|}             *)
 | E_Seq      of sequence_expr reg            (* x; 3                *)
-| E_RevApp   of rev_app bin_op reg           (* x |> f |> g y       *)
+| E_RevApp   of rev_app bin_op reg           (* y |> f |> g x       *)
+
+(* Binary and unary arithmetic operators *)
+
+and 'a bin_op = {arg1: expr; op: 'a; arg2: expr}
+and 'a  un_op = {op: 'a; arg: expr}
 
 (* Typed expression *)
 
@@ -374,120 +385,96 @@ and typed_expr = expr * type_annotation
 (* Sequence expression *)
 
 and 'a sequence_expr = {
-  compound   : compound option;
-  elements   : (expr, semi) sepseq;
-  terminator : semi option
+  compound : compound option;
+  elements : (expr, semi) sepseq
 }
 
 and compound =
   BeginEnd of kwd_begin * kwd_end
-| Braces   of lbrace * rbrace
+| Parens   of lpar * rpar          (* TODO in parser *)
 
-(* Binary and unary arithmetic operators *)
-
-and 'a bin_op = {
-  op   : 'a;
-  arg1 : expr;
-  arg2 : expr
-}
-
-and 'a un_op = {
-  op  : 'a;
-  arg : expr
-}
-
-and 'a module_access = {
-  module_name : module_name;
-  selector    : dot;
-  field       : 'a;
-}
+(* Projection *)
 
 and projection = {
-  struct_name : variable;
-  selector    : dot;
-  field_path  : (selection, dot) nsepseq
+  record_or_tuple : expr;
+  selector        : dot;
+  field_path      : (selection, dot) nsepseq
 }
 
 and selection =
-  FieldName of variable
-| Component of (string * Z.t) reg
+  FieldName of field_name
+| Component of (lexeme * Z.t) wrap
 
-and field_assign =
-  Property of field_assign_property
-| Punned_property of field_name
+(* Record expression *)
 
-and field_assign_property = {
-  field_name : field_name;
-  assignment : equal;
-  field_expr : expr
-}
+and record_expr = (field_name, expr) field reg record
+
+(* Functional update of records *)
 
 and update = {
-  lbrace   : lbrace;
-  record   : path;
+  record   : expr;
   kwd_with : kwd_with;
-  updates  : field_path_assignment reg ne_injection reg;
-  rbrace   : rbrace
-}
-
-and field_path_assignment =
-  Path_property of field_path_assignment_property
-| Path_punned_property of field_name
-
-and field_path_assignment_property =  {
-  field_path : path;
-  assignment : equal;
-  field_expr : expr
+  updates  : ((path, expr) field reg, semi) nsepseq;
 }
 
 and path =
   Name of variable
 | Path of projection reg
 
-and 'a match_ = {
+(* Pattern matching *)
+
+and 'rhs match_ = {
   kwd_match : kwd_match;
   expr      : expr;
   kwd_with  : kwd_with;
   lead_vbar : vbar option;
-  clauses   : ('a match_clause reg, vbar) nsepseq
+  clauses   : ('rhs match_clause reg, vbar) nsepseq
 }
 
-and 'a match_clause = {
+and 'rhs match_clause = {
   pattern : pattern;
   arrow   : arrow;
-  rhs     : 'a
+  rhs     : 'rhs
 }
+
+(* Local value definition *)
 
 and let_in = {
   kwd_let    : kwd_let;
   kwd_rec    : kwd_rec option;
   binding    : let_binding;
   kwd_in     : kwd_in;
-  body       : expr;
-  attributes : attribute list
+  body       : expr
 }
 
+(* Local type definition *)
+
 and type_in = {
-  type_decl  : type_decl;
-  kwd_in     : kwd_in;
-  body       : expr;
+  type_decl : type_decl;
+  kwd_in    : kwd_in;
+  body      : expr
 }
+
+(* Local module definition *)
 
 and module_in = {
   mod_decl : module_decl;
   kwd_in   : kwd_in;
-  body     : expr;
+  body     : expr
 }
+
+(* Functional expression (a.k.a. lambda) *)
 
 and fun_expr = {
   kwd_fun     : kwd_fun;
   type_params : type_params par reg option;
   binders     : pattern nseq;
-  rhs_type    : (colon * type_expr) option;
+  rhs_type    : type_annotation option;
   arrow       : arrow;
-  body        : expr;
-  attributes  : attribute list
+  body        : expr
 }
+
+(* Conditional expression *)
 
 and cond_expr = {
   kwd_if   : kwd_if;
@@ -497,17 +484,17 @@ and cond_expr = {
   ifnot    : (kwd_else * expr) option
 }
 
-(* Code injection.  Note how the field [language] wraps a region in
+(* Code injection. Note how the field [language] wraps a region in
    another: the outermost region covers the header "[%<language>" and
    the innermost covers the <language>. *)
 
 and code_inj = {
   language : language reg;
   code     : expr;
-  rbracket : rbracket;
+  rbracket : rbracket
 }
 
-(* Projecting regions from some nodes of the AST *)
+(* Projecting regions from some nodes of the CST *)
 
 let rec last to_region = function
     [] -> Region.ghost
@@ -518,83 +505,100 @@ let nsepseq_to_region to_region (hd,tl) =
   let reg (_, item) = to_region item in
   Region.cover (to_region hd) (last reg tl)
 
-let type_expr_to_region = function
-  TProd   {region; _}
-| TSum    {region; _}
-| TRecord {region; _}
-| TApp    {region; _}
-| TFun    {region; _}
-| TPar    {region; _}
-| TString {region; _}
-| TInt    {region; _}
-| TVar    {region; _}
-| TModA   {region; _}
-| TArg    {region; _}
- -> region
+let rec type_expr_to_region = function
+  T_Arg     {region; _}
+| T_App     {region; _} -> region
+| T_Attr    (_, e) -> type_expr_to_region e
+| T_Cart    {region; _}
+| T_Fun     {region; _} -> region
+| T_Int     w -> w#region
+| T_ModPath {region; _}
+| T_Par     {region; _}
+| T_Record  {region; _} -> region
+| T_String  w -> w#region
+| T_Variant {region; _} -> region
+| T_Var     w -> w#region
 
-let list_pattern_to_region = function
-  PListComp {region; _} | PCons {region; _} -> region
+let rec pattern_to_region = function
+  P_App      {region; _} -> region
+| P_Attr     (_, p) -> pattern_to_region p
+| P_Bytes    {region; _}
+| P_Cons     {region; _} -> region
+| P_Ctor     w -> w#region
+| P_Int      {region; _}
+| P_List     {region; _}
+| P_ModPath  {region; _} -> region
+| P_Mutez    w -> w#region
+| P_Nat      w -> w#region
+| P_Par      {region; _}
+| P_Record   {region; _} -> region
+| P_String   w -> w#region
+| P_Tuple    {region; _}
+| P_Typed    {region; _} -> region
+| P_Var      w -> w#region
+| P_Verbatim w -> w#region
+| P_Unit     {region; _} -> region
 
-let pattern_to_region = function
-| PList p -> list_pattern_to_region p
-| PConstr {region; _}
-| PUnit {region;_}
-| PTuple {region;_} | PVar {region;_}
-| PInt {region;_}
-| PString {region;_} | PVerbatim {region;_}
-| PPar {region;_}
-| PRecord {region; _} | PTyped {region; _}
-| PNat {region; _} | PBytes {region; _}
-  -> region
-
-let bool_expr_to_region = function
-  Or {region;_} | And {region;_} | Not {region;_} -> region
-
-let comp_expr_to_region = function
-  Lt {region;_} | Leq {region;_}
-| Gt {region;_} | Geq {region;_}
-| Neq {region;_} | Equal {region;_} -> region
-
-let logic_expr_to_region = function
-  BoolExpr e -> bool_expr_to_region e
-| CompExpr e -> comp_expr_to_region e
-
-let arith_expr_to_region = function
-  Add {region;_} | Sub {region;_} | Mult {region;_}
-| Div {region;_} | Mod {region;_} | Land {region;_}
-| Lor {region;_} | Lxor {region;_} | Lsl {region;_} | Lsr {region;_}
-| Neg {region;_} | Int {region;_} | Mutez {region; _}
-| Nat {region; _} -> region
-
-let string_expr_to_region = function
-  Verbatim {region;_} | String {region;_} | Cat {region;_} -> region
-
-let list_expr_to_region = function
-  ECons {region; _} | EListComp {region; _} -> region
-
-let expr_to_region = function
-  ELogic e -> logic_expr_to_region e
-| EArith e -> arith_expr_to_region e
-| EString e -> string_expr_to_region e
-| EList e -> list_expr_to_region e
-| EConstr {region; _}
-| EAnnot {region;_ } | ELetIn {region;_}   | EFun {region;_}
-| ETypeIn {region;_ }| EModIn {region;_}   | EModAlias {region;_}
-| ECond {region;_}   | ETuple {region;_}   | ECase {region;_}
-| ECall {region;_}   | EVar {region; _}    | EProj {region; _}
-| EUnit {region;_}   | EPar {region;_}     | EBytes {region; _}
-| ESeq {region; _}   | ERecord {region; _} | EUpdate {region; _}
-| EModA {region; _} | ECodeInj {region; _}
-| ERevApp {region; _} -> region
+let rec expr_to_region = function
+  E_Add      {region; _}
+| E_And      {region; _}
+| E_App      {region; _} -> region
+| E_Attr     (_, e) -> expr_to_region e
+| E_Bytes    w -> w#region
+| E_Cat      {region; _}
+| E_CodeInj  {region; _}
+| E_Cond     {region; _} -> region
+| E_Ctor     w -> w#region
+| E_Cons     {region; _}
+| E_Div      {region; _}
+| E_Equal    {region; _}
+| E_Fun      {region; _}
+| E_Geq      {region; _}
+| E_Gt       {region; _} -> region
+| E_Int      w -> w#region
+| E_Land     {region; _}
+| E_LetIn    {region; _}
+| E_Leq      {region; _}
+| E_List     {region; _}
+| E_Lor      {region; _}
+| E_Lsl      {region; _}
+| E_Lsr      {region; _}
+| E_Lt       {region; _}
+| E_Lxor     {region; _}
+| E_Match    {region; _}
+| E_Mod      {region; _}
+| E_ModIn    {region; _}
+| E_ModPath  {region; _}
+| E_Mult     {region; _} -> region
+| E_Mutez    w -> w#region
+| E_Nat      w -> w#region
+| E_Neg      {region; _}
+| E_Neq      {region; _}
+| E_Not      {region; _}
+| E_Or       {region; _}
+| E_Par      {region; _}
+| E_Proj     {region; _}
+| E_Record   {region; _} -> region
+| E_String   w -> w#region
+| E_Sub      {region; _}
+| E_Tuple    {region; _}
+| E_Typed    {region; _}
+| E_TypeIn   {region; _}
+| E_Unit     {region; _}
+| E_Update   {region; _} -> region
+| E_Var      w -> w#region
+| E_Verbatim w -> w#region
+| E_Seq      {region; _}
+| E_RevApp   {region; _} -> region
 
 let selection_to_region = function
-  FieldName f -> f.region
-| Component c -> c.region
+  FieldName v -> v#region
+| Component c -> c#region
 
 let path_to_region = function
-  Name var -> var.region
-| Path {region; _} -> region
+  Name v -> v#region
+| Path p -> p.region
 
-let type_ctor_arg_to_region = function
-  CArg  t -> type_expr_to_region t
-| CArgTuple t -> t.region
+let type_ctor_args_to_region = function
+  TC_Single t -> type_expr_to_region t
+| TC_Tuple  t -> t.region
