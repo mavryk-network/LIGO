@@ -160,17 +160,26 @@ let get : options:Compiler_options.t -> unit -> t =
 
 
 let get ~options : t =
+  let () = print_endline "start <<<<<<<<<<<<" in
   if options.Compiler_options.middle_end.no_stdlib
   then empty
   else
+  let () = print_endline "start <<<<<<<<<<<<" in
     let open Cache in
+  let () = print_endline "start <<<<<<<<<<<<" in
     let k = build_key ~options in
+  let () = print_endline "start <<<<<<<<<<<<" in
     match LanguageMap.find_opt k @@ !cache_ref with
     | None ->
+  let () = print_endline "some start <<<<<<<<<<<<" in
       let lib = get ~options () in
+  let () = print_endline "some start after get <<<<<<<<<<<<" in
       cache_ref := LanguageMap.add k lib @@ !cache_ref;
+  let () = print_endline "some start after cache_ref <<<<<<<<<<<<" in
       lib
-    | Some typed -> typed
+    | Some typed ->
+  let () = print_endline "none start <<<<<<<<<<<<" in
+       typed
 
 
 let select_prelude_core (stx : Syntax_types.t) (lib : t) : Ast_core.program =

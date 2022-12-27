@@ -98,6 +98,7 @@ let build_contract ~raise
      ?tezos_context
      compiled
      views ->
+ let () = print_endline ">>>>>> before views =" in
   let views =
     List.map
       ~f:(fun (name, view) ->
@@ -109,11 +110,13 @@ let build_contract ~raise
         Value_var.to_name_exn name, view_param_ty, ret_ty, view.expr)
       views
   in
+  let () = print_endline ">>>>>> before param_ty" in
   let param_ty, storage_ty =
     trace_option ~raise main_entrypoint_not_a_function
     @@ Self_michelson.fetch_contract_ty_inputs compiled.expr_ty
   in
   let expr = compiled.expr in
+  let () = print_endline ">>>>>> before michelson.lcontract" in
   let contract =
     Michelson.lcontract dummy dummy param_ty dummy storage_ty dummy expr dummy views
   in
@@ -209,7 +212,6 @@ let build_contract ~raise
            contract'
     in
     contract)
-
 
 let measure ~raise m =
   Trace.trace_tzresult_lwt ~raise main_could_not_serialize

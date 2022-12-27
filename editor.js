@@ -62,7 +62,9 @@ let michelsonEditor = new EditorView({
   parent: document.getElementById("michelson"),
 });
 
+let count = 0;
 document.getElementById("compile").addEventListener("click", function () {
+  console.log("Called", ++count, "times");
   let michelson = compile.main(ligoEditor.state.doc.toJSON().join("\n"));
   console.log(michelson);
   michelsonEditor.setState(

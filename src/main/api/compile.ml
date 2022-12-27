@@ -62,7 +62,7 @@ let contract
     in
     let syntax =
       match source with
-      | Text (_source_code) -> Syntax_types.CameLIGO (* TODO(prometheansacrifice) This must come from js_main.ml *)
+      | Text (_source_code) -> Syntax_types.JsLIGO (* TODO(prometheansacrifice) This must come from js_main.ml *)
       | File source_file -> Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
     in
     let has_env_comments = has_env_comments michelson_comments in
@@ -81,9 +81,10 @@ let contract
   let Compiler_options.{ entry_point; _ } = options.frontend in
   let source = match source with
     | File filename -> BuildSystem.Source_input.From_file filename
-    | Text source_code -> BuildSystem.Source_input.(Raw { id = ""; code = source_code })
+    | Text source_code -> BuildSystem.Source_input.(Raw { id = "foo.jsligo"; code = source_code }) (* TODO(prometheansacrifice) This must come from js_main.ml *)
   in
   let code, views = Build.build_contract ~raise ~options entry_point views source in
+  let () = print_endline ">>>>>> after build.build_contract" in
   let file_constants = read_file_constants ~raise file_constants in
   let constants = constants @ file_constants in
   Ligo_compile.Of_michelson.build_contract

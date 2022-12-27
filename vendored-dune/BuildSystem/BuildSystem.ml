@@ -51,7 +51,6 @@ module Make (M : M) =
   type env = M.AST.environment
   type 'a build_error = ('a, error) result
 
-
   let dependency_graph : code_input -> graph =
     fun code_input ->
     let rec dfs (acc:M.file_name) (dep_g,vertices) (code_input,mangled_name) =
@@ -168,6 +167,7 @@ module Make (M : M) =
 
   let compile_qualified : code_input -> ast build_error =
     fun code_input ->
+   let () = print_endline "inside compile_qualified" in
       let deps = dependency_graph code_input in
       let file_name = Source_input.id_of_code_input code_input in
       match solve_graph deps file_name with
@@ -177,5 +177,8 @@ module Make (M : M) =
         let contract = M.lib_ast () @ contract in
         Ok contract
       | Error e -> Error e
+
+
+
   end
 

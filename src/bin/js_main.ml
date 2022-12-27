@@ -12,13 +12,8 @@ type parameter =
 | ["Decrement", int]
 | ["Reset"];
 
-/* Two entrypoints */
-
 const add = (store: storage, delta: int) => store + delta;
 const sub = (store: storage, delta: int) => store - delta;
-
-/* Main access point that dispatches to the entrypoints according to
-   the smart contract parameter. */
 
 const main = (action: parameter, store: storage) : [ list<operation> , storage ] => {
  return [
@@ -29,22 +24,6 @@ const main = (action: parameter, store: storage) : [ list<operation> , storage ]
     Reset:     ()  => 0}))
   ]
 };
-
-/* Tests for main access point */
-
-const test_initial_storage = (() => {
-  let initial_storage = 42;
-  let [taddr, _, _] = Test.originate(main, initial_storage, 0 as tez);
-  return assert(Test.get_storage(taddr) == initial_storage)
-}) ();
-
-const test_increment = (() => {
-  let initial_storage = 42;
-  let [taddr, _, _] = Test.originate(main, initial_storage, 0 as tez);
-  let contr = Test.to_contract(taddr);
-  let _ = Test.transfer_to_contract_exn(contr, (Increment (1)), 1 as mutez);
-  return assert(Test.get_storage(taddr) == initial_storage + 1);
-}) ();
 
 |}
 
@@ -63,10 +42,10 @@ let main source =
       ~syntax
       ~views
       ~protocol_version
-      ~disable_michelson_typechecking: false
+      ~disable_michelson_typechecking: true
       ~experimental_disable_optimizations_for_debugging: false
       ~enable_typed_opt: false
-      ~no_stdlib: false
+      ~no_stdlib: true
       ~warning_as_error: false
       ~no_colour: true
       ~constants: Default_options.constants

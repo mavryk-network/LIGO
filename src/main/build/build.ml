@@ -150,7 +150,7 @@ module Infer (Params : Params) = struct
    fun () file_name meta c_unit ->
     let module_ = Ligo_compile.Utils.to_core ~raise ~options ~meta c_unit file_name in
     let module_ =
-      let syntax = Syntax.of_string_opt ~raise (Syntax_name "auto") (Some file_name) in
+      let syntax = Syntax.of_string_opt ~raise (Syntax_name "auto") (Some "foo.mligo") in
       Helpers.inject_declaration ~options ~raise syntax module_
     in
     let is_syntax_switch = not (Syntax_types.equal top_level_syntax meta.syntax) in
@@ -226,14 +226,19 @@ let qualified_core ~raise
     : options:Compiler_options.t -> Source_input.code_input -> Ast_core.program
   =
  fun ~options source ->
+   let () = print_endline ">>>>>>> 11111111" in
   let open Build_core (struct
     let raise = raise
     let options = options
+   let () = print_endline ">>>>>>> before stdlib get" 
     let std_lib = Stdlib.get ~options
-    let top_level_syntax = match source with
-      | From_file filename -> get_top_level_syntax ~options ~filename ()
-      | Raw _ -> Syntax_types.CameLIGO
+   let () = print_endline ">>>>>>> after stdlib get" 
+   let top_level_syntax = Syntax_types.JsLIGO
+      (*                       match source with *)
+      (* | From_file filename -> get_top_level_syntax ~options ~filename () *)
+      (* | Raw _ -> Syntax_types.JsLIGO *)
   end) in
+   let () = print_endline ">>>>>>> before compile_qualified" in
   trace ~raise build_error_tracer
   @@ from_result (compile_qualified source)
 
@@ -252,6 +257,7 @@ let qualified_typed ~raise
     end) in
     let prg = trace ~raise build_error_tracer @@ from_result (compile_qualified (Source_input.From_file filename)) in *)
   let prg = qualified_core ~raise ~options source in
+  let () = print_endline "after compile_qualified" in
   Ligo_compile.Of_core.typecheck ~raise ~options form prg
 
 
@@ -315,6 +321,7 @@ let rec build_contract_aggregated ~raise
          (Ligo_compile.Of_core.Contract entry_point)
          typed_prg
   in
+  let ()  = print_endline "before typed_views" in
   let typed_views =
     let form =
       let command_line_views =
@@ -327,6 +334,7 @@ let rec build_contract_aggregated ~raise
     trace ~raise self_ast_typed_tracer
     @@ Ligo_compile.Of_core.specific_passes form typed_prg
   in
+  let ()  = print_endline "after typed_views" in
   let aggregated =
     Ligo_compile.Of_typed.apply_to_entrypoint_contract
       ~raise
@@ -335,7 +343,9 @@ let rec build_contract_aggregated ~raise
       typed_contract
       entry_point
   in
+  let ()  = print_endline "before build_aggr_views" in
   let agg_views = build_aggregated_views ~raise ~options typed_views in
+  let ()  = print_endline "after build_aggr_views" in
   let parameter_ty, storage_ty =
     trace_option
       ~raise
@@ -357,11 +367,15 @@ and build_contract_stacking ~raise
        * ((Value_var.t * Stacking.compiled_expression) list * _)
   =
  fun ~options entry_point cli_views source ->
+  let () = print_endline ">>>>>> before build_contract_aggregated" in
   let _, aggregated, agg_views =
     build_contract_aggregated ~raise ~options entry_point cli_views source
   in
+  let () = print_endline ">>>>>> before compile expression" in
   let expanded = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+  let () = print_endline ">>>>>> before compile_expression expanded" in
   let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
+  let () = print_endline ">>>>>> before of_mini_c compile_contract" in
   let contract = Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c in
   let views = build_views ~raise ~options agg_views in
   (contract, aggregated), (views, agg_views)

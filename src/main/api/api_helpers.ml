@@ -52,3 +52,26 @@ let format_result
     | Error (e, _w) -> Error e
   in
   toplevel ~warning_as_error ~display_format (Displayable { value; format }) res
+
+let format_result_minimal
+    :  ?warning_as_error:bool -> display_format:ex_display_format -> 'value format
+    -> (raise:(Main_errors.all, Main_warnings.all) Trace.raise -> 'value) -> _
+  =
+ fun ?(warning_as_error = false) ~display_format: _ _value_format value ->
+  ignore(warning_as_error);
+  let res = Trace.to_stdlib_result @@ value in
+  let _value_without_warnings =
+    match res with
+    | Ok (v, _w) -> Ok v
+    | Error (e, _w) -> Error e
+  in
+  let as_str : string = "WIP" in
+  let warns_str = "" in
+  let value =
+    match res with
+    | Ok (v, _w) -> Ok v
+    | Error (e, _w) -> Error e
+  in
+  match value with
+  | Ok _ -> Ok (as_str, warns_str)
+  | Error _ -> Error (as_str, warns_str)

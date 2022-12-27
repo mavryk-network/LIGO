@@ -30,6 +30,7 @@ let typecheck ~raise ~(options : Compiler_options.t) (cform : form) (p : Ast_cor
          ~env:options.middle_end.init_env
          p
   in
+   let () = print_endline "after type_program" in
   let applied =
     trace ~raise self_ast_typed_tracer
     @@ fun ~raise ->
@@ -41,6 +42,7 @@ let typecheck ~raise ~(options : Compiler_options.t) (cform : form) (p : Ast_cor
     in
     specific_passes ~raise cform selfed
   in
+   let () = print_endline "after applied <<<" in
   applied
 
 

@@ -26,3 +26,4 @@ let format_result
   in
   let status_is_ok = Option.is_some info in
   if status_is_ok then Ok (result_as_str, "") else Error (result_as_str, "")
+
