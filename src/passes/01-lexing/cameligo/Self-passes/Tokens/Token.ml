@@ -80,6 +80,11 @@ module T =
     | BOOL_AND of lexeme Wrap.t  (* && *)
     | QUOTE    of lexeme Wrap.t  (* '  *)
     | REV_APP  of lexeme Wrap.t  (* |> *)
+    | PLUS_EQ  of lexeme Wrap.t  (* += *)
+    | MINUS_EQ of lexeme Wrap.t  (* -= *)
+    | TIMES_EQ of lexeme Wrap.t  (* *= *)
+    | SLASH_EQ of lexeme Wrap.t  (* /= *)
+    | VBAR_EQ  of lexeme Wrap.t  (* |= *)
 
     (* Keywords *)
 
@@ -168,6 +173,11 @@ module T =
     | BOOL_AND t
     | QUOTE    t
     | REV_APP  t
+    | PLUS_EQ  t
+    | MINUS_EQ t
+    | TIMES_EQ t
+    | SLASH_EQ t
+    | VBAR_EQ  t
 
     (* Keywords *)
 
@@ -377,6 +387,12 @@ module T =
     let wrap_bool_and = wrap "&&"
     let wrap_quote    = wrap "'"
     let wrap_rev_app  = wrap "|>"
+    let wrap_ass      = wrap ":="
+    let wrap_plus_eq  = wrap "+="
+    let wrap_minus_eq = wrap "-="
+    let wrap_times_eq = wrap "*="
+    let wrap_slash_eq = wrap "/="
+    let wrap_vbar_eq  = wrap "|="
 
     (* Smart constructors *)
 
@@ -408,6 +424,11 @@ module T =
     let mk_BOOL_AND region = BOOL_AND (wrap_bool_and region)
     let mk_QUOTE    region = QUOTE    (wrap_quote    region)
     let mk_REV_APP  region = REV_APP  (wrap_rev_app  region)
+    let mk_PLUS_EQ  region = PLUS_EQ  (wrap_plus_eq  region)
+    let mk_MINUS_EQ region = MINUS_EQ (wrap_minus_eq region)
+    let mk_TIMES_EQ region = TIMES_EQ (wrap_times_eq region)
+    let mk_SLASH_EQ region = SLASH_EQ (wrap_slash_eq region)
+    let mk_VBAR_EQ  region = VBAR_EQ  (wrap_vbar_eq  region)
 
     (* All symbol smart constructors *)
 
@@ -439,7 +460,12 @@ module T =
       mk_BOOL_OR;
       mk_BOOL_AND;
       mk_QUOTE;
-      mk_REV_APP
+      mk_REV_APP;
+      mk_PLUS_EQ;
+      mk_MINUS_EQ;
+      mk_TIMES_EQ;
+      mk_SLASH_EQ;
+      mk_VBAR_EQ
     ]
 
     (* All symbols *)
@@ -484,6 +510,11 @@ module T =
     let ghost_bool_and = wrap_bool_and Region.ghost
     let ghost_quote    = wrap_quote    Region.ghost
     let ghost_rev_app  = wrap_rev_app  Region.ghost
+    let ghost_plus_eq  = wrap_plus_eq  Region.ghost
+    let ghost_minus_eq = wrap_minus_eq Region.ghost
+    let ghost_times_eq = wrap_times_eq Region.ghost
+    let ghost_slash_eq = wrap_slash_eq Region.ghost
+    let ghost_vbar_eq  = wrap_vbar_eq  Region.ghost
 
     let ghost_ARROW    = ARROW    ghost_semi
     let ghost_CONS     = CONS     ghost_cons
@@ -513,7 +544,11 @@ module T =
     let ghost_BOOL_AND = BOOL_AND ghost_bool_and
     let ghost_QUOTE    = QUOTE    ghost_quote
     let ghost_REV_APP  = REV_APP  ghost_rev_app
-
+    let ghost_PLUS_EQ  = PLUS_EQ  ghost_plus_eq
+    let ghost_MINUS_EQ = MINUS_EQ ghost_minus_eq
+    let ghost_TIMES_EQ = TIMES_EQ ghost_times_eq
+    let ghost_SLASH_EQ = SLASH_EQ ghost_slash_eq
+    let ghost_VBAR_EQ  = VBAR_EQ  ghost_vbar_eq
 
     (* OTHER GHOST TOKENS *)
 
@@ -617,6 +652,11 @@ module T =
     | "BOOL_AND" -> ghost_bool_and#payload
     | "QUOTE"    -> ghost_quote#payload
     | "REV_APP"  -> ghost_rev_app#payload
+    | "PLUS_EQ"  -> ghost_plus_eq#payload
+    | "MINUS_EQ" -> ghost_minus_eq#payload
+    | "TIMES_EQ" -> ghost_times_eq#payload
+    | "SLASH_EQ" -> ghost_slash_eq#payload
+    | "VBAR_EQ"  -> ghost_vbar_eq#payload
 
     (* Keywords *)
 
@@ -722,6 +762,11 @@ module T =
     | BOOL_AND t -> t#region, "BOOL_AND"
     | QUOTE    t -> t#region, "QUOTE"
     | REV_APP  t -> t#region, "REV_APP"
+    | PLUS_EQ  t -> t#region, "PLUS_EQ"
+    | MINUS_EQ t -> t#region, "MINUS_EQ"
+    | TIMES_EQ t -> t#region, "TIMES_EQ"
+    | SLASH_EQ t -> t#region, "SLASH_EQ"
+    | VBAR_EQ  t -> t#region, "VBAR_EQ"
 
     (* Keywords *)
 
@@ -882,14 +927,20 @@ module T =
     | COLON _
     | DOT _
     | WILD _
-    | REV_APP _
     | EQ _
     | NE _
     | LT _
     | GT _
     | LE _
     | BOOL_OR _
-    | BOOL_AND _ -> true
+    | BOOL_AND _
+    | REV_APP _
+    | PLUS_EQ _
+    | MINUS_EQ _
+    | TIMES_EQ _
+    | SLASH_EQ _
+    | VBAR_EQ _
+      -> true
     | _ -> false
 
     (* Verbatim strings *)
