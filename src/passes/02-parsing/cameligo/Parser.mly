@@ -248,7 +248,7 @@ attr_decl:
     let region = cover $1.region stop
     in {region; value = ($1,$2)} }
 
-(* Type declarations *)
+(* Top-level type declarations *)
 
 type_decl:
   "type" ioption(type_vars) type_name "=" type_expr {
@@ -276,23 +276,21 @@ let_decl:
     in {region; value = ($1,$2,$3)} }
 
 let_binding:
-  var_pattern type_parameters parameters let_rhs_type "=" expr {
+  var_pattern type_params parameters rhs_type "=" expr {
     let binders = Utils.nseq_cons (PVar $1) $3 in
     {binders; type_params=$2; rhs_type=$4; eq=$5; let_rhs=$6}
   }
-| irrefutable type_parameters let_rhs_type "=" expr {
+| irrefutable type_params rhs_type "=" expr {
     {binders=$1,[]; type_params=$2; rhs_type=$3; eq=$4; let_rhs=$5} }
 
-%inline let_rhs_type:
+%inline rhs_type:
   ioption(type_annotation(type_expr)) { $1 }
 
 (* The %inline solves a shift/reduce conflict: *)
 
-%inline type_parameters:
-  ioption(par(type_param_list)) { $1 }
-
-type_param_list:
-  "type" nseq(variable) { {kwd_type=$1; type_vars=$2} }
+%inline
+type_params:
+  ioption(par("type" nseq(variable) { $1,$2 })) { $1 }
 
 parameters:
   nseq(core_irrefutable) { $1 }
@@ -316,18 +314,6 @@ module_decl:
                   kwd_struct;
                   module_     = $5;
                   kwd_end}
-    in {region; value} }
-
-module_alias:
-  "module" module_name "=" nsepseq(module_name,".") {
-    let kwd_module = $1 in
-    let eq = $3 in
-    let stop   = nsepseq_to_region (fun x -> x.region) $4 in
-    let region = cover kwd_module#region stop in
-    let value  = {kwd_module;
-                  alias       = $2;
-                  eq;
-                  binders     = $4}
     in {region; value} }
 
 type_expr:

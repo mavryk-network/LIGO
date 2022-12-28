@@ -27,7 +27,7 @@ type state = Tree.state
 open CST (* THE ONLY GLOBAL OPENING *)
 
 (* UTILITIES *)
-
+(*
 let sprintf  = Printf.sprintf
 
 let compact state (region: Region.t) =
@@ -816,18 +816,20 @@ and print_variant state {constr; arg; attributes=attr} =
   let () = if not (List.is_empty attr) then
              print_attributes (state#pad arity rank) attr
   in ()
-
+     *)
 (* PRINTING (client-slide) *)
 
 type ('src, 'dst) printer = Tree.state -> 'src -> 'dst
 
-let print_to_buffer state cst = print_cst state cst; state#buffer
+let print_to_buffer state cst = failwith "Print.print_to_buffer"
+  (*print_cst state cst; state#buffer*)
 
-let print_to_string state cst =
-  Buffer.contents (print_to_buffer state cst)
+let print_to_string state cst = failwith "Print.print_to_string"
+(*  Buffer.contents (print_to_buffer state cst)*)
 
 let print_pattern_to_string state pattern =
-  print_pattern state pattern; Buffer.contents state#buffer
+  failwith "Print.print_pattern_to_string"
+  (*  print_pattern state pattern; Buffer.contents state#buffer*)
 
 (* Aliases *)
 

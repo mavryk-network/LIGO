@@ -90,6 +90,11 @@ type semi     = lexeme wrap  (* ;  *)
 type slash    = lexeme wrap  (* /  *)
 type times    = lexeme wrap  (* *  *)
 type vbar     = lexeme wrap  (* |  *)
+type plus_eq  = lexeme wrap  (* += *)
+type minus_eq = lexeme wrap  (* -= *)
+type times_eq = lexeme wrap  (* *= *)
+type slash_eq = lexeme wrap  (* /= *)
+type vbar_eq  = lexeme wrap  (* |= *)
 
 (* End-of-File *)
 
@@ -136,10 +141,9 @@ and declaration =
 and let_decl = kwd_let * kwd_rec option * let_binding
 
 and let_binding = {
-  name        : pattern;
+  binders     : pattern nseq;
   type_params : type_params par reg option;
-  val_params  : pattern seq;
-  rhs_type    : (colon * type_expr) option;
+  rhs_type    : type_annotation option;
   eq          : equal;
   let_rhs     : expr
 }
@@ -164,7 +168,7 @@ and module_expr =
 
 and module_body = {
   kwd_struct   : kwd_struct;
-  declarations : declarations;
+  declarations : declaration list;
   kwd_end      : kwd_end
 }
 
@@ -298,7 +302,7 @@ and ('lhs, 'rhs) full_field = {
 }
 
 and field_lens =
-  Lens_Id   of assign
+  Lens_Id   of equal
 | Lens_Add  of plus_eq
 | Lens_Sub  of minus_eq
 | Lens_Mult of times_eq
@@ -384,7 +388,7 @@ and typed_expr = expr * type_annotation
 
 (* Sequence expression *)
 
-and 'a sequence_expr = {
+and sequence_expr = {
   compound : compound option;
   elements : (expr, semi) sepseq
 }
