@@ -1,0 +1,7 @@
+
+author: er433
+description: "\\nNew functions for doing mutation testing directly on `michelson_contract`:\\n\\n`Test.originate_contract_and_mutate : michelson_contract -> michelson_program -> tez -> (address * michelson_contract * int -> 'b) -> 'b option``Test.originate_contract_and_mutate_all : michelson_contract -> michelson_program -> tez -> (address * michelson_contract * int -> 'b) -> 'b list`\\n"
+merge_request: '2211'
+title: "Testing framework: implement mutation on `michelson_contract`"
+type: added
+            
