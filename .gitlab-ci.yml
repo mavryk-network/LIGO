@@ -46,7 +46,6 @@ esy-windows:
     # - $env:GIT_TRACE = 1
     # - $env:GIT_TRACE_PACKET = 1
     - git config http.postBuffer 1048576000
-    - npm i -g @esy-nightly/esy --force
     - $env:PATH = 'C:\Program Files (x86)\NSIS;C:\Program Files\Git\bin;C:\Users\gitlabrunner\AppData\Roaming\npm;' + $env:PATH
     - $env:HOME = 'C:/Users/gitlabrunner'
     - git submodule foreach --recursive git reset --hard; git submodule update --init --recursive # ensure previously applied patch is removed
