@@ -584,6 +584,33 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
         | _ ->
           raise.error (raw_michelson_must_be_seq ae.location code)
     )
+  | E_raw_code { language = "michelson"; code} ->
+    let type_anno  = get_type code in
+    let type_anno' = compile_type ~raise type_anno in
+    let vals = get_e_applications code in
+    let code = List.hd_exn vals in
+    let code = trace_option ~raise (corner_case ~loc:__LOC__ "could not get a string") @@ get_a_string code in
+    let args = List.tl_exn vals in
+    let args = List.map ~f:(self) args in
+    let open Tezos_micheline in
+    let orig_code = code in
+    let (code, errs) = Micheline_parser.tokenize code in
+    (match errs with
+    | _ :: _ -> raise.error (could_not_parse_raw_michelson ae.location orig_code)
+    | [] ->
+      let (code, errs) = Micheline_parser.parse_expression ~check:false code in
+      match errs with
+      | _ :: _ -> raise.error (could_not_parse_raw_michelson ae.location orig_code)
+      | [] ->
+        let code = Micheline.strip_locations code in
+        (* hmm *)
+        let code = Micheline.inject_locations (fun _ -> Location.generated) code in
+        match code with
+        | Seq (_, code) ->
+          return ~tv:type_anno' @@ E_raw_michelson (code, args)
+        | _ ->
+          raise.error (raw_michelson_must_be_seq ae.location code)
+    )
   | E_raw_code { language; code} ->
     let backend = Backend.Michelson.name in
     let () =
