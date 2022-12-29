@@ -7,7 +7,7 @@ let self_in_lambdas ~raise : expression -> expression =
     match e.content with
     | E_closure {binder=_ ; body} ->
       let f = fun ~raise e -> match e.content with
-        | E_raw_michelson (code, _) ->
+        | E_raw_michelson (code, _, _) ->
           let code = Tezos_utils.Michelson.lseq Location.generated code in
           let code = Tezos_micheline.Micheline.(map_node (fun _ -> ()) (fun x -> x) code) in
           if Tezos_utils.Michelson.has_prim "SELF" code then

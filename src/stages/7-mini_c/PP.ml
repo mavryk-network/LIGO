@@ -254,7 +254,7 @@ and expression_content ppf (e : expression_content) =
       name
       expression
       body
-  | E_raw_michelson (code, _) ->
+  | E_raw_michelson (code, _, _) ->
     let open Tezos_micheline in
     let code = Micheline.Seq (Location.generated, code) in
     let code = Micheline.strip_locations code in
