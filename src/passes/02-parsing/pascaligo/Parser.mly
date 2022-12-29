@@ -545,7 +545,8 @@ field_decl:
    message about a type annotation in all contexts.) *)
 
 %inline
-type_annotation: ":" type_expr { $1,$2 }
+type_annotation:
+  ":" type_expr { $1,$2 }
 
 (* Constant declarations *)
 

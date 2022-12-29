@@ -194,7 +194,7 @@ and type_vars =
   TV_Single of type_var
 | TV_Tuple  of type_var tuple par
 
-and type_var = (quote * variable) reg  (* 'a, 'b, 'c etc. *)
+and type_var = (quote option * variable) reg  (* 'a or ' a or _ *)
 
 and 'a tuple = ('a, comma) nsepseq par reg
 
@@ -602,7 +602,3 @@ let selection_to_region = function
 let path_to_region = function
   Name v -> v#region
 | Path p -> p.region
-
-let type_ctor_args_to_region = function
-  TC_Single t -> type_expr_to_region t
-| TC_Tuple  t -> t.region

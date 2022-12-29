@@ -54,6 +54,25 @@ let mk_mod_path :
     and value = {module_path; selector=last_dot; field}
     in {value; region}
 
+(* Hooking attributes, if any *)
+
+let rec hook mk_attr attrs node =
+  match attrs with
+    []            -> node
+  | attr :: attrs -> mk_attr attr @@ hook mk_attr attrs node
+
+let hook_E_Attr = hook @@ fun a e -> E_Attr (a,e)
+let hook_T_Attr = hook @@ fun a t -> T_Attr (a,t)
+let hook_S_Attr = hook @@ fun a s -> S_Attr (a,s)
+
+(* Making a list of attributes from a pattern *)
+
+let get_attributes (node : CST.pattern) =
+  let rec aux attrs = function
+    P_Attr (attr, pattern) -> aux (attr::attrs) pattern
+  | pattern                -> List.rev attrs, pattern
+  in aux [] node
+
 (* END HEADER *)
 %}
 
@@ -192,10 +211,15 @@ tuple(item):
 list_of(item):
   brackets(option(sep_or_term_list(item,";") { fst $1 })) { $1 }
 
+(* Braces of *)
+
+braces_of(item):
+  braces(option(sep_or_term_list(item,";") { fst $1 })) { $1 }
+
 (* Aliasing and inlining some tokens *)
 
 %inline variable        : "<ident>"  { $1 }
-%inline module_name     : "<uident>" { unwrap $1 }
+%inline module_name     : "<uident>" { $1 }
 %inline field_name      : "<ident>"  { $1 }
 %inline ctor            : "<uident>" { $1 }
 %inline record_or_tuple : "<ident>"  { $1 }
@@ -263,9 +287,170 @@ type_vars:
 type_var:
   "'" variable {
     let region = cover $1#region $2#region
-    in {region; value = ($1,$2)}
+    in {region; value = Some $1, $2}
   }
-| "_" { $1 }
+| "_" { {$1 with value = None, $1} }
+
+(* Type expressions *)
+
+type_expr:
+  fun_type_level | variant_type(fun_type_level) { $1 }
+
+(* The following subgrammar is _stratified_ in the usual manner to
+   build in the grammar the different priorities between the syntactic
+   categories. Associativity is implemented by making a rule
+   left-recursive or right-recursive. This is the same technique often
+   used to handle arithmetic and Boolean expressions, for instance,
+   without resorting to Menhir annotations. *)
+
+(* Functional type expressions *)
+
+(* The recursivity to the right of the rule [fun_type_level] enforces
+   the right-associativity of the arrow type constructor. So "a -> b
+   -> c" is parsed as "a -> (b -> c)". *)
+
+fun_type_level:
+  cartesian_level "->" fun_type_level {
+    let start  = type_expr_to_region $1
+    and stop   = type_expr_to_region $3 in
+    let region = cover start stop in
+    TFun {region; value = $1,$2,$3}
+  }
+| cartesian_level { $1 }
+
+(* Cartesian products *)
+
+cartesian_level:
+  core_type "*" nsepseq(core_type,"*") {
+    let value  = Utils.nsepseq_cons $1 $2 $3 in
+    let region = nsepseq_to_region type_expr_to_region value
+    in TProd {region; value}
+  }
+| core_type { $1 }
+
+(* Core types *)
+
+core_type:
+  "<string>"      { T_String $1 }
+| "<int>"         { T_Int    $1 }
+| "_" | type_name { T_Var    $1 }
+| type_ctor_app   { T_App    $1 }
+| record_type     { T_Record $1 }
+| par(type_expr)  { T_Par    $1 }
+| type_var        { T_Arg    $1 }
+| qualified_type
+| attr_type       { $1 }
+
+(* Attributed core types *)
+
+attr_type:
+  "[@attr]" core_type { T_Attr ($1,$2) }
+
+(* Variant types.
+   We parameterise the variants by the kind of type expression that
+   may occur at the rightmost side of a sentence. This enables to use
+   [variant_type] in contexts that allow different types to avoid LR
+   conflicts. For example, if the return type of a lambda is a
+   functional type, parentheses are mandatory. *)
+
+variant_type(right_type_expr):
+  nsepseq(variant(right_type_expr),"|") {
+    let region = nsepseq_to_region (fun x -> x.region) $1
+    and value  = {lead_vbar=None; variants=$1}
+    in T_Variant {region; value}
+  }
+| attributes "|" nsepseq(variant(right_type_expr),"|") {
+    let region = nsepseq_to_region (fun x -> x.region) $3
+    and value  = {lead_vbar = Some $2; variants=$3} in
+    let t_expr = T_Variant {region; value}
+    in hook_T_Attr $1 t_expr }
+
+(* Always use [ioption] at the end of a rule *)
+
+variant(right_type_expr):
+  attributes "<uident>" ioption(of_type(right_type_expr)) {
+    let stop   = match $3 with
+                  None -> $2#region
+                | Some (_, t) -> type_expr_to_region t in
+    let region = cover $2#region stop
+    and value  = {ctor; ctor_args=$3; attributes=$1}
+    in {region; value} }
+
+of_type(right_type_expr):
+  "of" right_type_expr { $1,$2 }
+
+(* Type constructor applications *)
+
+type_ctor_app:
+  core_type type_name {
+    let region = cover (type_expr_to_region $1) $2#region
+    in mk_reg region ($2, TC_Single $1)
+  }
+| par(tuple(type_expr)) type_name {
+    let region = cover $1.region $2#region
+    in mk_reg region ($2, TC_Tuple $1) }
+
+(* Record types *)
+
+record_type:
+  braces_of(field_decl) { $1 }
+
+(* When the type annotation is missing in a field declaration, the
+   type of the field is the name of the field. *)
+
+field_decl:
+  attributes field_name ioption(type_annotation) {
+    let stop = match $3 with
+                        None -> $2#region
+               | Some (_, t) -> type_expr_to_region t in
+    let region = match $1 with
+                         [] -> cover $2#region stop
+                 | start::_ -> cover start.region stop
+    and value = {attributes=$1; field_name=$2; field_type=$3}
+    in {region; value} }
+
+(* Type qualifications
+
+   The rule [module_path] is parameterised by what is derived after a
+   series of selections of modules inside modules (nested modules),
+   like [A.B.C.D]. For example, here, we want to qualify ("select") a
+   type in a module, so the parameter is [type_name], because only
+   types defined at top-level are in the scope (that is, any type
+   declaration inside blocks is not). Then we can derive
+   [A.B.C.D.t]. Notice that, in the semantic action of
+   [type_in_module] we call the function [mk_mod_path] to reorganise
+   the steps of the path and thus fit our CST. That complicated step
+   is necessary because we need an LR(1) grammar. Indeed, rule
+   [module_path] is right-recursive, yielding the reverse order of
+   selection: "A.(B.(C))" instead of the expected "((A).B).C": the
+   function [mk_mod_path] the semantic action of [type_in_module]
+   reverses that path. We could have chosen to leave the associativity
+   unspecified, like so:
+
+     type_in_module(type_expr):
+       nsepseq(module_name,".") "." type_expr { ... }
+
+   Unfortunately, this creates a shift/reduce conflict (on "."),
+   whence our more involved solution. *)
+
+qualified_type:
+  type_in_module(type_ctor) type_tuple {
+    let region = cover (type_expr_to_region $1) $2.region
+    in T_App {region; value=$1,$2}
+  }
+| type_in_module(type_name      { T_Var $1 })
+| type_in_module(par(type_expr) { T_Par $1 }) { $1 }
+
+type_in_module(type_expr):
+  module_path(type_expr) {
+    T_ModPath (mk_mod_path $1 type_expr_to_region) }
+
+module_path(selected):
+  module_name "." module_path(selected) {
+    let (head, tail), selected = $3 in
+    (($1,$2), head::tail), selected
+  }
+| module_name "." selected { (($1,$2), []), $3 }
 
 (* Top-level value declarations *)
 
@@ -273,7 +458,7 @@ let_decl:
   "let" ioption("rec") let_binding {
     let stop   = expr_to_region $3.let_rhs in
     let region = cover $1#region stop
-    in {region; value = ($1,$2,$3)} }
+    in mk_reg region ($1,$2,$3) }
 
 let_binding:
   var_pattern type_params parameters rhs_type "=" expr {
@@ -281,153 +466,50 @@ let_binding:
     {binders; type_params=$2; rhs_type=$4; eq=$5; let_rhs=$6}
   }
 | irrefutable type_params rhs_type "=" expr {
-    {binders=$1,[]; type_params=$2; rhs_type=$3; eq=$4; let_rhs=$5} }
-
-%inline rhs_type:
-  ioption(type_annotation(type_expr)) { $1 }
-
-(* The %inline solves a shift/reduce conflict: *)
+    {binders=($1,[]); type_params=$2; rhs_type=$3; eq=$4; let_rhs=$5} }
 
 %inline
+rhs_type:
+  ioption(type_annotation(type_expr)) { $1 }
+
+type_annotation(right_type_expr):
+  ":" right_type_expr { $1,$2 }
+
+%inline (* This %inline solves a shift/reduce conflict. *)
 type_params:
   ioption(par("type" nseq(variable) { $1,$2 })) { $1 }
 
 parameters:
   nseq(core_irrefutable) { $1 }
 
-type_annotation(right_type_expr):
-  ":" right_type_expr { $1,$2 }
-
-
-
+(* Top-level module declaration *)
 
 module_decl:
-  "module" module_name "=" "struct" nseq(declaration)? "end" {
-    let kwd_module = $1 in
-    let eq = $3 in
-    let kwd_struct = $4 in
-    let kwd_end = $6 in
-    let region = cover kwd_module#region kwd_end#region in
-    let value  = {kwd_module;
-                  name        = $2;
-                  eq;
-                  kwd_struct;
-                  module_     = $5;
-                  kwd_end}
+  "module" module_name "=" module_expr {
+    let region = cover $1#region $4#region
+    and value  = {kwd_module=$1; name=$2; eq=$3; module_expr=$4}
     in {region; value} }
 
-type_expr:
-  fun_type_level | sum_type(fun_type_level) { $1 }
+module_expr:
+  structure                { M_Body $1 }
+| module_name              { M_Var  $1 }
+| module_path(module_name) {
+    M_Path (mk_mod_path $1 (fun x -> x#region)) }
 
-fun_type_level:
-  prod_type_level "->" fun_type_level {
-    let arrow = $2 in
-    let start  = type_expr_to_region $1
-    and stop   = type_expr_to_region $3 in
-    let region = cover start stop in
-    TFun {region; value=$1,arrow,$3} }
-| prod_type_level { $1 }
+structure:
+  "struct" nseq(declaration)? "end" {
+    {kwd_struct=$1; declarations=$2; kwd_end=$3} }
 
-prod_type_level:
-  core_type "*" nsepseq(core_type,"*") {
-    let times = $2 in
-    let value  = Utils.nsepseq_cons $1 times $3 in
-    let region = nsepseq_to_region type_expr_to_region value
-    in TProd {region; value} }
-| core_type { $1 }
-
-core_type:
-  "<string>"       { TString (unwrap $1) }
-| "<int>"          {    TInt (unwrap $1) }
-| "_"              { TVar {value="_"; region=$1#region} }
-| type_name        {    TVar $1 }
-| module_access_t  {   TModA $1 }
-| type_ctor_app    {    TApp $1 }
-| record_type      { TRecord $1 }
-| type_var         {    TArg $1 }
-| par(type_expr)   {    TPar $1 }
-
-type_ctor_app:
-  type_ctor_arg type_name {
-    let start  = type_ctor_arg_to_region $1
-    and stop   = $2.region in
-    let region = cover start stop
-    and value  = $2, $1
-    in {region; value} }
-
-type_ctor_arg:
-  core_type             { CArg      $1 }
-| par(tuple(type_expr)) { CArgTuple $1 }
-
-(* Sum types. We parameterise the variants by the kind of type
-   expression that may occur at the rightmost side of a sentence. This
-   enables to use [sum_type] in contexts that allow different types to
-   avoid LR conflicts. For example, if the return type of a lambda is
-   a functional type, parentheses are mandatory. *)
-
-sum_type(right_type_expr):
-  nsepseq(variant(right_type_expr),"|") {
-    let region = nsepseq_to_region (fun x -> x.region) $1 in
-    let value  = {variants=$1; attributes=[]; lead_vbar=None}
-    in TSum {region; value}
+module_path(selected):
+  module_name "." module_path(selected) {
+    let (head, tail), selected = $3 in
+    (($1,$2), head::tail), selected
   }
-| attributes "|" nsepseq(variant(right_type_expr),"|") {
-    let region = nsepseq_to_region (fun x -> x.region) $3 in
-    let value  = {variants=$3; attributes=$1; lead_vbar = Some $2}
-    in TSum {region; value} }
+| module_name "." selected { (($1,$2), []), $3 }
 
-%inline
-attributes:
-  ioption(nseq("[@attr]") { Utils.nseq_to_list $1 }) {
-    match $1 with None -> [] | Some list -> list }
 
-(* Always use [ioption] at the end of a rule *)
 
-variant(right_type_expr):
-  attributes "<uident>" ioption(of_type(right_type_expr)) {
-    let constr = unwrap $2 in
-    let stop   = match $3 with
-                   None -> constr.region
-                | Some (_, t) -> type_expr_to_region t in
-    let region = cover constr.region stop
-    and value  = {constr; arg=$3; attributes=$1}
-    in {region; value} }
 
-of_type(right_type_expr):
-  "of" right_type_expr { $1, $2 }
-
-record_type:
-  attributes "{" sep_or_term_list(field_decl,";") "}" {
-    let lbrace = $2 in
-    let rbrace = $4 in
-    let fields, terminator = $3 in
-    let region = cover lbrace#region rbrace#region
-    and value = {
-      compound = Some (Braces (lbrace,lbrace));
-      ne_elements = fields;
-      terminator;
-      attributes=$1}
-    in {region; value} }
-
-module_access_t :
-  module_name "." module_var_t {
-    let start       = $1.region in
-    let stop        = type_expr_to_region $3 in
-    let region      = cover start stop in
-    let value       = {module_name=$1; selector=$2; field=$3}
-    in {region; value} }
-
-module_var_t:
-  module_access_t  { TModA $1 }
-| field_name       { TVar  $1 }
-
-field_decl:
-  attributes field_name ":" type_expr {
-    let colon = $3 in
-    let stop   = type_expr_to_region $4 in
-    let region = cover $2.region stop
-    and value  = {field_name=$2; colon; field_type=$4; attributes=$1}
-    in {region; value} }
 
 (* PATTERNS *)
 
@@ -443,8 +525,7 @@ irrefutable:
 
 %inline
 core_irrefutable:
-  "_"                         { PVar    (mk_wild $1#region) }
-| var_pattern                 { PVar    $1 }
+  "_" | var_pattern           { PVar    $1 }
 | unit                        { PUnit   $1 }
 | record_pattern(irrefutable) { PRecord $1 }
 | par(typed_irrefutable)
@@ -472,15 +553,15 @@ ctor_irrefutable:
 
 const_ctor_pattern:
   "<uident>" {
-    let constr = unwrap $1 in
-    {constr with value = constr,None} }
+    let ctor = unwrap $1 in
+    {ctor with value = ctor,None} }
 
 non_const_ctor_irrefutable:
   "<uident>" core_irrefutable {
-    let constr = unwrap $1 in
+    let ctor = unwrap $1 in
     let stop   = pattern_to_region $2 in
-    let region = cover constr.region stop
-    and value  = constr, Some $2 in
+    let region = cover ctor.region stop
+    and value  = ctor, Some $2 in
     PConstr {region; value} }
 
 (* General Patterns *)
@@ -554,12 +635,12 @@ field_pattern(rhs_pattern):
 
 ctor_pattern:
   "<uident>" ioption(core_pattern) {
-    let constr = unwrap $1 in
+    let ctor = unwrap $1 in
     let region =
       match $2 with
-        None -> constr.region
-      | Some stop -> cover constr.region (pattern_to_region stop)
-    in {region; value = (constr,$2)} }
+        None -> ctor.region
+      | Some stop -> cover ctor.region (pattern_to_region stop)
+    in {region; value = (ctor,$2)} }
 
 unit:
   "(" ")" { {region = cover $1#region $2#region; value = $1,$2} }
@@ -728,7 +809,7 @@ fun_expr(right_expr):
   ioption(type_annotation(lambda_app_type)) { $1 }
 
 lambda_app_type:
-  prod_type_level | sum_type(prod_type_level) { $1 }
+  cartesian_level | variant_type(cartesian_level) { $1 }
 
 disj_expr_level:
   bin_op(disj_expr_level, "||", conj_expr_level)
@@ -823,16 +904,16 @@ call_expr_level:
 
 ctor_expr:
   "<uident>" argument {
-    let constr = unwrap $1 in
-    let region = cover constr.region (expr_to_region $2)
-    in EConstr {region; value = (constr, Some $2)}
+    let ctor = unwrap $1 in
+    let region = cover ctor.region (expr_to_region $2)
+    in EConstr {region; value = (ctor, Some $2)}
   }
 | const_ctor_expr { $1 }
 
 const_ctor_expr:
   "<uident>" {
-    let constr = unwrap $1 in
-    EConstr {constr with value=(constr,None)} }
+    let ctor = unwrap $1 in
+    EConstr {ctor with value=(ctor,None)} }
 
 arguments:
   argument           { $1,[]                      }
