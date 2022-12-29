@@ -212,7 +212,7 @@ let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.enviro
   | E_update (e1, i, e2, n) ->
     let args = translate_args [e2; e1] env in
     E_update (meta, args, int_to_nat i, int_to_nat n)
-  | E_raw_michelson (code, args, []) ->
+  | E_raw_michelson (code, args, None) ->
     let args = List.map ~f:(fun e -> (translate_expression e env, Stacking.To_micheline.translate_type (translate_type e.type_expression))) args in
     (* maybe should move type into syntax? *)
     let (a, b) = match Mini_c.get_t_function ty with
@@ -252,15 +252,11 @@ let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.enviro
     in
     let code = List.map ~f:(Tezos_utils.Michelson.map replace) code in
     E_raw_michelson (meta, translate_type a, translate_type b, code)
-  | E_raw_michelson (code, _, args') ->
-    (* let args' = List.map ~f:(fun e -> translate_expression e env) args' in *)
+  | E_raw_michelson (code, _, Some args') ->
     let args' = translate_args args' env in
     let wipe_locations l e =
       Tezos_micheline.Micheline.(inject_locations (fun _ -> l) (strip_locations e)) in
     let code = List.map ~f:(wipe_locations nil) code in
-    (* let code = List.map ~f:(Tezos_utils.Michelson.map replace) code in *)
-    (* let (mich, args) = translate_constant ~raise ~proto meta constant expr.type_expression env in *)
-    (* O.E_inline_michelson (meta, mich, args) *)
     E_inline_michelson (meta, code, args')
   | E_global_constant (hash, args) ->
     let args = translate_args args env in

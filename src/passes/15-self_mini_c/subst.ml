@@ -106,7 +106,7 @@ let rec replace : expression -> var_name -> var_name -> expression =
     return @@ E_update (expr, i, update, n)
   | E_raw_michelson (code, args, args') ->
     let args = List.map ~f:replace args in
-    let args' = List.map ~f:replace args' in
+    let args' = Option.map ~f:(List.map ~f:replace) args' in
     return @@ E_raw_michelson (code, args, args')
   | E_global_constant (hash, args) ->
     let args = List.map ~f:replace args in
@@ -281,7 +281,7 @@ let rec subst_expression : body:expression -> x:var_name -> expr:expression -> e
   )
   | E_raw_michelson (code, args, args') ->
     let args = List.map ~f:self args in
-    let args' = List.map ~f:self args' in
+    let args' = Option.map ~f:(List.map ~f:self) args' in
     return @@ E_raw_michelson (code, args, args')
   | E_literal _ ->
     return_id

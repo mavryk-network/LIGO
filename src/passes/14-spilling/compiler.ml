@@ -580,7 +580,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
         let code = Micheline.inject_locations (fun _ -> Location.generated) code in
         match code with
         | Seq (_, code) ->
-          return ~tv:type_anno' @@ E_raw_michelson (code, args, [])
+          return ~tv:type_anno' @@ E_raw_michelson (code, args, None)
         | _ ->
           raise.error (raw_michelson_must_be_seq ae.location code)
     )
@@ -588,6 +588,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
     let type_anno  = get_type code in
     let type_anno' = compile_type ~raise type_anno in
     let vals = get_e_applications code in
+    let vals = match vals with [] -> [code] | vals -> vals in
     let code = List.hd_exn vals in
     let code = trace_option ~raise (corner_case ~loc:__LOC__ "could not get a string") @@ get_a_string code in
     let args = List.tl_exn vals in
@@ -607,7 +608,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
         let code = Micheline.inject_locations (fun _ -> Location.generated) code in
         match code with
         | Seq (_, code) ->
-          return ~tv:type_anno' @@ E_raw_michelson (code, [], args)
+          return ~tv:type_anno' @@ E_raw_michelson (code, [], Some args)
         | _ ->
           raise.error (raw_michelson_must_be_seq ae.location code)
     )
@@ -636,7 +637,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
         let code = Micheline.inject_locations (fun _ -> Location.generated) code in
         match code with
         | Seq (_, code) ->
-          return ~tv:type_anno' @@ E_raw_michelson (code, [], [])
+          return ~tv:type_anno' @@ E_raw_michelson (code, [], None)
         | _ ->
           raise.error (raw_michelson_must_be_seq ae.location code)
     )

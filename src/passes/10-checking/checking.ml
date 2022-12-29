@@ -434,8 +434,9 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
     in
     let%bind let_result = lift let_result res_type in
     return (res_type, let_result)
-  | E_raw_code { language = "michelson"; code = { expression_content; _ } } ->
+  | E_raw_code { language = "michelson"; code = ({ expression_content; _ } as code) } ->
     let vals = I.get_e_applications expression_content in
+    let vals = match vals with [] -> [code] | vals -> vals in
     let code = List.hd_exn vals in
     let args = List.tl_exn vals in
     let%bind code, code_type =
