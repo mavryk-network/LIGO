@@ -10,16 +10,16 @@ let () = Ligo_unix.putenv ~key:"TERM" ~data:"dumb"
 let%expect_test _ =
   run_ligo_good [ "info"; "measure-contract"; contract "coase.ligo" ];
   [%expect {|
-    1097 bytes |}];
+    1101 bytes |}];
   run_ligo_good [ "info"; "measure-contract"; contract "multisig.ligo" ];
   [%expect {|
     533 bytes |}];
   run_ligo_good [ "info"; "measure-contract"; contract "multisig-v2.ligo" ];
   [%expect {|
-    1509 bytes |}];
+    1491 bytes |}];
   run_ligo_good [ "info"; "measure-contract"; contract "vote.mligo" ];
   [%expect {|
-    420 bytes |}];
+    408 bytes |}];
   run_ligo_good
     [ "compile"
     ; "parameter"
@@ -294,12 +294,12 @@ let%expect_test _ =
                      SENDER ;
                      CONTRACT unit ;
                      IF_NONE { PUSH string "sell_single: No contract." ; FAILWITH } {} ;
-                     SWAP ;
-                     UNIT ;
-                     TRANSFER_TOKENS ;
-                     SWAP ;
+                     DIG 2 ;
                      NIL operation ;
                      DIG 2 ;
+                     DIG 3 ;
+                     UNIT ;
+                     TRANSFER_TOKENS ;
                      CONS } }
                { SWAP ;
                  DUP ;
@@ -492,10 +492,8 @@ let%expect_test _ =
                          GET ;
                          IF_NONE { PUSH string "MAP FIND" ; FAILWITH } {} ;
                          ADD ;
-                         SENDER ;
-                         SWAP ;
                          SOME ;
-                         SWAP ;
+                         SENDER ;
                          UPDATE ;
                          PAIR ;
                          PAIR ;
@@ -504,9 +502,8 @@ let%expect_test _ =
                          PAIR ;
                          SWAP ;
                          EMPTY_SET address ;
-                         SENDER ;
                          PUSH bool True ;
-                         SWAP ;
+                         SENDER ;
                          UPDATE }
                        { DUP ;
                          SENDER ;
@@ -533,10 +530,8 @@ let%expect_test _ =
                               GET ;
                               IF_NONE { PUSH string "MAP FIND" ; FAILWITH } {} ;
                               ADD ;
-                              SENDER ;
-                              SWAP ;
                               SOME ;
-                              SWAP ;
+                              SENDER ;
                               UPDATE ;
                               PAIR ;
                               PAIR ;
@@ -544,9 +539,8 @@ let%expect_test _ =
                               CAR ;
                               PAIR ;
                               DUG 2 } ;
-                         SENDER ;
                          PUSH bool True ;
-                         SWAP ;
+                         SENDER ;
                          UPDATE } ;
                      DUP 3 ;
                      CDR ;
@@ -696,9 +690,8 @@ let%expect_test _ =
                  IF_NONE
                    { DROP }
                    { DUP ;
-                     SENDER ;
                      PUSH bool False ;
-                     SWAP ;
+                     SENDER ;
                      UPDATE ;
                      DUP ;
                      SIZE ;
@@ -728,10 +721,8 @@ let%expect_test _ =
                           IF_NONE { PUSH string "MAP FIND" ; FAILWITH } {} ;
                           SUB ;
                           ABS ;
-                          SENDER ;
-                          SWAP ;
                           SOME ;
-                          SWAP ;
+                          SENDER ;
                           UPDATE ;
                           PAIR ;
                           PAIR ;
@@ -823,22 +814,20 @@ let%expect_test _ =
              CAR ;
              PAIR ;
              PAIR }
-           { SENDER ;
-             SWAP ;
-             IF_LEFT
+           { IF_LEFT
                { DROP ;
-                 DUP 2 ;
+                 DUP ;
                  CDR ;
-                 DUP 3 ;
+                 DUP 2 ;
                  CAR ;
                  CDR ;
                  PUSH nat 1 ;
-                 DUP 5 ;
+                 DUP 4 ;
                  CAR ;
                  CAR ;
                  CDR ;
                  ADD ;
-                 DIG 4 ;
+                 DIG 3 ;
                  CAR ;
                  CAR ;
                  CAR ;
@@ -846,15 +835,15 @@ let%expect_test _ =
                  PAIR }
                { DROP ;
                  PUSH nat 1 ;
-                 DUP 3 ;
+                 DUP 2 ;
                  CDR ;
                  CDR ;
                  ADD ;
-                 DUP 3 ;
+                 DUP 2 ;
                  CDR ;
                  CAR ;
                  PAIR ;
-                 DIG 2 ;
+                 SWAP ;
                  CAR } ;
              PAIR ;
              DUP ;
@@ -863,9 +852,8 @@ let%expect_test _ =
              DUP 2 ;
              CDR ;
              CAR ;
-             DIG 3 ;
              PUSH bool True ;
-             SWAP ;
+             SENDER ;
              UPDATE ;
              PAIR ;
              SWAP ;
@@ -929,12 +917,12 @@ let%expect_test _ =
                  CDR ;
                  DUP 4 ;
                  GET 3 ;
-                 DUP ;
-                 DIG 2 ;
+                 SWAP ;
                  SUB ;
                  ISNAT ;
                  IF_NONE { PUSH string "not enough tickets" ; FAILWITH } {} ;
-                 SWAP ;
+                 DUP 4 ;
+                 GET 3 ;
                  PAIR ;
                  SWAP ;
                  SPLIT_TICKET ;
@@ -947,16 +935,14 @@ let%expect_test _ =
                      GET 4 ;
                      GET_AND_UPDATE ;
                      DROP ;
-                     DIG 2 ;
-                     CAR ;
-                     PUSH mutez 0 ;
                      DIG 3 ;
-                     TRANSFER_TOKENS ;
-                     SWAP ;
-                     DIG 2 ;
                      PAIR ;
                      NIL operation ;
-                     DIG 2 ;
+                     DIG 3 ;
+                     CAR ;
+                     PUSH mutez 0 ;
+                     DIG 4 ;
+                     TRANSFER_TOKENS ;
                      CONS ;
                      PAIR } } } } } |}]
 
@@ -1004,14 +990,13 @@ Hint: replace it by "_ticket" to prevent this warning.
              UNIT ;
              TICKET ;
              IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
-             SWAP ;
+             DIG 2 ;
+             NIL operation ;
+             DIG 3 ;
              CAR ;
              PUSH mutez 0 ;
-             DIG 2 ;
+             DIG 4 ;
              TRANSFER_TOKENS ;
-             SWAP ;
-             NIL operation ;
-             DIG 2 ;
              CONS } ;
          PAIR } } |}]
 
@@ -1651,12 +1636,12 @@ let%expect_test _ =
       storage nat ;
       code { CDR ;
              SELF %toto ;
-             PUSH mutez 300000000 ;
-             PUSH int 2 ;
-             TRANSFER_TOKENS ;
              SWAP ;
              NIL operation ;
              DIG 2 ;
+             PUSH mutez 300000000 ;
+             PUSH int 2 ;
+             TRANSFER_TOKENS ;
              CONS ;
              PAIR } } |}];
   run_ligo_good [ "compile"; "contract"; contract "self_without_entrypoint.ligo" ];
@@ -1674,12 +1659,12 @@ let%expect_test _ =
       storage nat ;
       code { CDR ;
              SELF %default ;
-             PUSH mutez 300000000 ;
-             PUSH int 2 ;
-             TRANSFER_TOKENS ;
              SWAP ;
              NIL operation ;
              DIG 2 ;
+             PUSH mutez 300000000 ;
+             PUSH int 2 ;
+             TRANSFER_TOKENS ;
              CONS ;
              PAIR } } |}];
   run_ligo_bad [ "compile"; "contract"; bad_contract "self_bad_entrypoint_format.ligo" ];
@@ -1968,12 +1953,12 @@ let%expect_test _ =
       storage unit ;
       code { DROP ;
              SELF %foo ;
-             PUSH mutez 0 ;
-             UNIT ;
-             TRANSFER_TOKENS ;
              UNIT ;
              NIL operation ;
              DIG 2 ;
+             PUSH mutez 0 ;
+             UNIT ;
+             TRANSFER_TOKENS ;
              CONS ;
              PAIR } } |}]
 
@@ -2250,12 +2235,12 @@ let%expect_test _ =
                      CDR ;
                      DUP 4 ;
                      GET 3 ;
-                     DUP ;
-                     DIG 2 ;
+                     SWAP ;
                      SUB ;
                      ISNAT ;
                      IF_NONE { PUSH string "not enough tickets" ; FAILWITH } {} ;
-                     SWAP ;
+                     DUP 4 ;
+                     GET 3 ;
                      PAIR ;
                      SWAP ;
                      SPLIT_TICKET ;
@@ -2268,16 +2253,14 @@ let%expect_test _ =
                          GET 4 ;
                          GET_AND_UPDATE ;
                          DROP ;
-                         DIG 2 ;
-                         CAR ;
-                         PUSH mutez 0 ;
                          DIG 3 ;
-                         TRANSFER_TOKENS ;
-                         SWAP ;
-                         DIG 2 ;
                          PAIR ;
                          NIL operation ;
-                         DIG 2 ;
+                         DIG 3 ;
+                         CAR ;
+                         PUSH mutez 0 ;
+                         DIG 4 ;
+                         TRANSFER_TOKENS ;
                          CONS ;
                          PAIR } } } } } |}]
 
@@ -3518,12 +3501,12 @@ let%expect_test _ =
              CONTRACT %Upper unit ;
              IF_NONE
                { PUSH string "lol" ; FAILWITH }
-               { PUSH mutez 0 ;
-                 UNIT ;
-                 TRANSFER_TOKENS ;
-                 UNIT ;
+               { UNIT ;
                  NIL operation ;
                  DIG 2 ;
+                 PUSH mutez 0 ;
+                 UNIT ;
+                 TRANSFER_TOKENS ;
                  CONS ;
                  PAIR } } } |}]
 
@@ -3585,9 +3568,9 @@ let%expect_test _ =
   storage (pair nat nat) ;
   code { CAR ;
          HASH_KEY ;
-         VOTING_POWER ;
          TOTAL_VOTING_POWER ;
          SWAP ;
+         VOTING_POWER ;
          PAIR ;
          NIL operation ;
          PAIR } } |}]
@@ -3681,10 +3664,9 @@ let%expect_test _ =
     ];
   [%expect
     {|
-{ PUSH string "contract not found" ;
-  SENDER ;
+{ SENDER ;
   CONTRACT unit ;
-  IF_NONE { FAILWITH } { SWAP ; DROP } ;
+  IF_NONE { PUSH string "contract not found" ; FAILWITH } {} ;
   SWAP ;
   NIL operation ;
   DIG 2 ;

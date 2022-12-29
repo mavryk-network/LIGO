@@ -1563,8 +1563,7 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
           , calltrace
           , code
           , term.type_expression
-          , args'
-          , args.type_expression )
+          , [ args' , args.type_expression ] )
       in
       return v
     | _ ->
@@ -1791,6 +1790,33 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
       @@ Errors.generic_error
            term.location
            "Embedded raw code can only have a functional type")
+  | E_raw_code { language = "michelson"; code } ->
+    let open AST in
+    let vals = get_e_applications code in
+    let vals = match vals with [] -> [code] | vals -> vals in
+    let code = List.hd_exn vals in
+    let code = trace_option ~raise (Errors.generic_error term.location "could not get a string") @@ get_a_string code in
+    let args = List.tl_exn vals in
+    let* args =
+      Monad.bind_map_list
+        (fun (ae : AST.expression) ->
+          let* value = eval_ligo ae calltrace env in
+          return @@ (value, ae.type_expression))
+        args
+    in
+    let ast_ty = term.type_expression in
+    let code, _code_ty =
+      Michelson_backend.parse_raw_michelson_code ~raise code ast_ty
+    in
+    let>> v =
+      Run_Michelson
+        ( term.location
+        , calltrace
+        , code
+        , term.type_expression
+        , args )
+    in
+    return @@ v
   | E_raw_code { language; code } ->
     let open AST in
     (match code.expression_content with
