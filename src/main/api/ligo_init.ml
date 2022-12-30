@@ -17,8 +17,8 @@ let idregex = Str.regexp "[0-9]+\\.[0-9]+\\.[0-9]+"
 let contract_template_url_map =
   Map.of_alist_exn
     (module String)
-    [ "NFT-factory-cameligo", "https://github.com/ligolang/NFT-factory-cameligo"
-    ; "NFT-factory-jsligo", "https://github.com/ligolang/NFT-factory-jsligo"
+    [ "nft-factory-cameligo", "https://github.com/ligolang/NFT-factory-cameligo"
+    ; "nft-factory-jsligo", "https://github.com/ligolang/NFT-factory-jsligo"
     ; "randomness-cameligo", "https://github.com/ligolang/randomness-cameligo"
     ; "randomness-jsligo", "https://github.com/ligolang/randomness-jsligo"
     ; "shifumi-cameligo", "https://github.com/ligolang/shifumi-cameligo"
@@ -69,7 +69,7 @@ let new_project'
     ~version
   =
   let project_url =
-    match Map.find (determine_map ~kind) template with
+    match Map.find (determine_map ~kind) (String.lowercase_ascii template) with
     | Some e -> e
     | None -> raise.error (`Ligo_init_unrecognized_template (list' ~kind))
   in
