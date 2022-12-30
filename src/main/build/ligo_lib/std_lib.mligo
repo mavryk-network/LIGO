@@ -12,15 +12,15 @@ module Tezos = struct
   let get_chain_id (_u : unit) : chain_id = [%michelson ({| { CHAIN_ID } |} : chain_id)]
   let get_total_voting_power (_u : unit) : nat = [%michelson ({| { TOTAL_VOTING_POWER } |} : nat)]
   let get_min_block_time (_u : unit) : nat = [%michelson ({| { MIN_BLOCK_TIME } |} : nat)]
-  let voting_power (kh : key_hash) : nat = [%michelson ({| { VOTING_POWER } |} : key_hash -> nat) kh]
-  let address (type a) (c : a contract) : address = [%michelson ({| { ADDRESS } |} : a contract -> address) c]
-  let implicit_account (kh : key_hash) : unit contract = [%michelson ({| { IMPLICIT_ACCOUNT } |} : key_hash -> unit contract) kh]
+  let voting_power (kh : key_hash) : nat = [%michelson ({| { VOTING_POWER } |} kh : nat)]
+  let address (type a) (c : a contract) : address = [%michelson ({| { ADDRESS } |} c : address)]
+  let implicit_account (kh : key_hash) : unit contract = [%michelson ({| { IMPLICIT_ACCOUNT } |} kh : unit contract)]
   let join_tickets (type a) (t : a ticket * a ticket) : (a ticket) option = [%Michelson ({| { JOIN_TICKETS } |} : a ticket * a ticket -> a ticket option)] t
   let read_ticket (type a) (t : a ticket) : (address * (a * nat)) * a ticket =
     [%Michelson ({| { READ_TICKET ; PAIR } |} : a ticket -> (address * (a * nat)) * a ticket)] t
-  let never (type a) (n : never) : a = [%michelson ({| { NEVER } |} : never -> a) n]
+  let never (type a) (n : never) : a = [%michelson ({| { NEVER } |} n : a)]
   let pairing_check (l : (bls12_381_g1 * bls12_381_g2) list) : bool = [%Michelson ({| { PAIRING_CHECK } |} : (bls12_381_g1 * bls12_381_g2) list -> bool)] l
-  let set_delegate (o : key_hash option) : operation = [%michelson ({| { SET_DELEGATE } |} : key_hash option -> operation) o]
+  let set_delegate (o : key_hash option) : operation = [%michelson ({| { SET_DELEGATE } |} o : operation)]
   [@inline] [@thunk] let self (type a) (s : string) : a contract =
     let _ : a option = [%external ("CHECK_SELF", s)] in
     [%Michelson (({| { DROP ; SELF (annot $0) } |} : unit -> a contract), (s : string))] ()
@@ -38,21 +38,21 @@ module Tezos = struct
     let v = get_contract_opt a in
     match v with | None -> failwith s | Some c -> c
 #if KATHMANDU
-  let create_ticket (type a) (v : a) (n : nat) : a ticket = [%michelson ({| { TICKET } |} : a -> nat -> a ticket) v n]
+  let create_ticket (type a) (v : a) (n : nat) : a ticket = [%michelson ({| { TICKET } |} v n : a ticket)]
 #endif
 #if LIMA
-  let create_ticket (type a) (v : a) (n : nat) : (a ticket) option = [%michelson ({| { TICKET } |} : a -> nat -> (a ticket) option) v n]
+  let create_ticket (type a) (v : a) (n : nat) : (a ticket) option = [%michelson ({| { TICKET } |} v n : (a ticket) option)]
 #endif
   let transaction (type a) (a : a) (mu : tez) (c : a contract) : operation =
-    [%michelson ({| { TRANSFER_TOKENS } |} : a -> tez -> a contract -> operation) a mu c]
+    [%michelson ({| { TRANSFER_TOKENS } |} a mu c : operation)]
 #if KATHMANDU
   let open_chest (ck : chest_key) (c : chest) (n : nat) : chest_opening_result =
-    [%michelson ({| { OPEN_CHEST ; IF_LEFT { RIGHT (or unit unit) } { IF { PUSH unit Unit ; LEFT unit ; LEFT bytes } { PUSH unit Unit ; RIGHT unit ; LEFT bytes } } } |} : chest_key -> chest -> nat -> chest_opening_result) ck c n]
+    [%michelson ({| { OPEN_CHEST ; IF_LEFT { RIGHT (or unit unit) } { IF { PUSH unit Unit ; LEFT unit ; LEFT bytes } { PUSH unit Unit ; RIGHT unit ; LEFT bytes } } } |} ck c n : chest_opening_result)]
 #endif
   [@inline] [@thunk] let call_view (type a b) (s : string) (x : a) (a : address)  : b option =
     [%Michelson (({| { UNPAIR ; VIEW (litstr $0) (type $1) } |} : a * address -> b option), (s : string), (() : b))] (x, a)
   let split_ticket (type a) (t : a ticket) (p : nat * nat) : (a ticket * a ticket) option =
-    [%michelson ({| { SPLIT_TICKET } |} : a ticket -> (nat * nat) -> (a ticket * a ticket) option) t p]
+    [%michelson ({| { SPLIT_TICKET } |} t p : (a ticket * a ticket) option)]
   [@inline] [@thunk] let create_contract (type p s) (f : p * s -> operation list * s) (kh : key_hash option) (t : tez) (s : s) : (operation * address) =
       [%external ("CREATE_CONTRACT", f, kh, t, s)]
   [@inline] [@thunk] let get_entrypoint_opt (type p) (e : string) (a : address) : p contract option =
@@ -64,7 +64,7 @@ module Tezos = struct
   [@inline] [@thunk] let emit (type a) (s : string) (v : a) : operation =
     let _ : unit = [%external ("CHECK_EMIT_EVENT", s, v)] in
     [%Michelson (({| { EMIT (annot $0) (type $1) } |} : a -> operation), (s : string), (() : a))] v
-  [@inline] [@thunk] let sapling_verify_update (type sap_a) (t : sap_a sapling_transaction) (s : sap_a sapling_state) : (bytes * (int * sap_a sapling_state)) option = [%michelson ({| { SAPLING_VERIFY_UPDATE } |} : (sap_a sapling_transaction) -> (sap_a sapling_state) -> (bytes * (int * sap_a sapling_state)) option) t s]
+  [@inline] [@thunk] let sapling_verify_update (type sap_a) (t : sap_a sapling_transaction) (s : sap_a sapling_state) : (bytes * (int * sap_a sapling_state)) option = [%michelson ({| { SAPLING_VERIFY_UPDATE } |} t s : (bytes * (int * sap_a sapling_state)) option)]
 #endif
 
 #if UNCURRY
@@ -72,21 +72,21 @@ module Tezos = struct
     let v = get_contract_opt a in
     match v with | None -> failwith s | Some c -> c
 #if KATHMANDU
-  let create_ticket (type a) ((v, n) : a * nat) : a ticket = [%michelson ({| { TICKET } |} : a -> nat -> a ticket) v n]
+  let create_ticket (type a) ((v, n) : a * nat) : a ticket = [%michelson ({| { TICKET } |} v n : a ticket)]
 #endif
 #if LIMA
-  let create_ticket (type a) ((v, n) : a * nat) : (a ticket) option = [%michelson ({| { TICKET } |} : a -> nat -> (a ticket) option) v n]
+  let create_ticket (type a) ((v, n) : a * nat) : (a ticket) option = [%michelson ({| { TICKET } |} v n : (a ticket) option)]
 #endif
   let transaction (type a) ((a, mu, c) : a * tez * a contract) : operation =
-    [%michelson ({| { TRANSFER_TOKENS } |} : a -> tez -> a contract -> operation) a mu c]
+    [%michelson ({| { TRANSFER_TOKENS } |} a mu c : operation)]
 #if KATHMANDU
   let open_chest ((ck, c, n) : chest_key * chest * nat) : chest_opening_result =
-    [%michelson ({| { OPEN_CHEST ; IF_LEFT { RIGHT (or unit unit) } { IF { PUSH unit Unit ; LEFT unit ; LEFT bytes } { PUSH unit Unit ; RIGHT unit ; LEFT bytes } } } |} : chest_key -> chest -> nat -> chest_opening_result) ck c n]
+    [%michelson ({| { OPEN_CHEST ; IF_LEFT { RIGHT (or unit unit) } { IF { PUSH unit Unit ; LEFT unit ; LEFT bytes } { PUSH unit Unit ; RIGHT unit ; LEFT bytes } } } |} ck c n : chest_opening_result)]
 #endif
   [@inline] [@thunk] let call_view (type a b) (p : string * a * address)  : b option =
     [%Michelson (({| { UNPAIR ; VIEW (litstr $0) (type $1) } |} : a * address -> b option), (p.0 : string), (() : b))] (p.1, p.2)
   let split_ticket (type a) ((t, p) : (a ticket) * (nat * nat)) : (a ticket * a ticket) option =
-    [%michelson ({| { SPLIT_TICKET } |} : a ticket -> (nat * nat) -> (a ticket * a ticket) option) t p]
+    [%michelson ({| { SPLIT_TICKET } |} t p : (a ticket * a ticket) option)]
   [@inline] [@thunk] let create_contract (type p s) ((f, kh, t, s) : (p * s -> operation list * s) * key_hash option * tez * s) : (operation * address) =
       [%external ("CREATE_CONTRACT", f, kh, t, s)]
   [@inline] [@thunk] let get_entrypoint_opt (type p) (p : string * address) : p contract option =
@@ -98,7 +98,7 @@ module Tezos = struct
   [@inline] [@thunk] let emit (type a) (p : string * a) : operation =
     let _ : unit = [%external ("CHECK_EMIT_EVENT", p.0, p.1)] in
     [%Michelson (({| { EMIT (annot $0) (type $1) } |} : a -> operation), (p.0 : string), (() : a))] p.1
-  [@inline] [@thunk] let sapling_verify_update (type sap_a) ((t, s) : sap_a sapling_transaction * sap_a sapling_state) : (bytes * (int * sap_a sapling_state)) option = [%michelson ({| { SAPLING_VERIFY_UPDATE } |} : (sap_a sapling_transaction) -> (sap_a sapling_state) -> (bytes * (int * sap_a sapling_state)) option) t s]
+  [@inline] [@thunk] let sapling_verify_update (type sap_a) ((t, s) : sap_a sapling_transaction * sap_a sapling_state) : (bytes * (int * sap_a sapling_state)) option = [%michelson ({| { SAPLING_VERIFY_UPDATE } |} t s : (bytes * (int * sap_a sapling_state)) option)]
 #endif
 
 end
@@ -294,11 +294,11 @@ module Crypto = struct
   let hash_key (k : key) : key_hash = [%Michelson ({| { HASH_KEY } |} : key -> key_hash)] k
 
 #if CURRY
-  let check (k : key) (s : signature) (b : bytes) : bool = [%michelson ({| { CHECK_SIGNATURE } |} : key -> signature -> bytes -> bool) k s b]
+  let check (k : key) (s : signature) (b : bytes) : bool = [%michelson ({| { CHECK_SIGNATURE } |} k s b : bool)]
 #endif
 
 #if UNCURRY
-  let check ((k, s, b) : key * signature * bytes) : bool = [%michelson ({| { CHECK_SIGNATURE } |} : key -> signature -> bytes -> bool) k s b]
+  let check ((k, s, b) : key * signature * bytes) : bool = [%michelson ({| { CHECK_SIGNATURE } |} k s b : bool)]
 #endif
 
 end

@@ -434,33 +434,42 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
     in
     let%bind let_result = lift let_result res_type in
     return (res_type, let_result)
-  | E_raw_code { language = "michelson"; code = ({ expression_content; _ } as code) } ->
-    let vals = I.get_e_applications expression_content in
+  | E_raw_code { language = "michelson"; code } ->
+    let%bind code, result_type =
+      raise_opt ~error:not_annotated @@ I.get_e_ascription code.expression_content
+    in
+    let vals = I.get_e_applications code.expression_content in
     let vals = match vals with [] -> [code] | vals -> vals in
     let code = List.hd_exn vals in
     let args = List.tl_exn vals in
-    let%bind code, code_type =
-      raise_opt ~error:not_annotated @@ I.get_e_ascription code.expression_content
-    in
+    (* let%bind code, code_type = *)
+    (*   raise_opt ~error:not_annotated @@ I.get_e_ascription code.expression_content *)
+    (* in *)
     let%bind args =
       List.fold_right
         ~f:(fun expr result ->
           let%bind list = result in
-          let%bind _expr_type, expr = infer expr in
-          let list = expr :: list in
+          let%bind expr_type, expr = infer expr in
+          let list = (expr_type, expr) :: list in
           return list)
         ~init:(return [])
         args
     in
-    let%bind code_type = evaluate_type code_type in
+    (* let%bind code_type = evaluate_type code_type in *)
     let%bind _, code = infer code in
     let%bind loc = loc () in
-    let result_type : Type.t = Type.get_arrows_result code_type in
+    (* let result_type : Type.t = Type.get_arrows_result code_type in *)
+    let%bind result_type = evaluate_type result_type in
+    let rec build_func_type args =
+      match args with
+      | [] -> result_type
+      | (arg_type, _) :: args -> Type.t_arrow ~loc { type1 = arg_type ; type2 = build_func_type args } () in
+    let func_type = build_func_type args in
     const
       E.(
         let%bind code = code
-        and code_type = decode code_type
-        and args = all args in
+        and code_type = decode func_type
+        and args = all @@ List.map ~f:snd args in
         let code = { code with type_expression = code_type } in
         let code = O.e_a_applications ~loc code args in
         return
