@@ -41,10 +41,8 @@ let list_declarations (raw_options : Raw_options.t) source_file display_format (
   let declarations = Compile.Of_typed.list_declarations raw_options.only_ep prg in
   source_file, declarations
 
-
-let get_scope (raw_options : Raw_options.t) source_file display_format () =
-  Scopes.Api_helper.format_result ~display_format
-  @@ fun ~raise ->
+let get_scope_raw (raw_options : Raw_options.t) source_file () =
+  fun ~raise ->
   let syntax =
     Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
   in
@@ -57,3 +55,15 @@ let get_scope (raw_options : Raw_options.t) source_file display_format () =
   let lib = Build.Stdlib.get ~options in
   let stdlib = Build.Stdlib.select_lib_typed syntax lib in
   Scopes.scopes ~options:options.middle_end ~with_types ~stdlib core_prg
+
+let get_scope (raw_options : Raw_options.t) source_file display_format () =
+  Scopes.Api_helper.format_result ~display_format
+  @@ get_scope_raw raw_options source_file ()
+
+let get_scope_trace (raw_options : Raw_options.t) source_file () =
+  Trace.try_with
+  ~fast_fail:false
+  (fun ~raise ~catch ->
+    let v = get_scope_raw raw_options source_file () ~raise in
+    catch.errors (), catch.warnings (), Some v)
+  (fun ~catch e -> e :: catch.errors (), catch.warnings (), None)

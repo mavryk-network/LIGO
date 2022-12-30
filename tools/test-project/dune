@@ -4,5 +4,5 @@
   (modules
     TestProject)
   (libraries
-    ligo linol linol-lwt lsp ligo.api ligo.compiler_options)
+    ligo linol linol-lwt lsp ligo.main ligo.api ligo.compiler_options ligo.scopes)
 )

@@ -1,4 +1,7 @@
 module Ligo = Ligo
+module Scopes = Scopes
+
+module LSet = Set.Make(Simple_utils.Location)
 (* This file is free software, part of linol. See file "LICENSE" for more information *)
 
 (* Some user code
@@ -82,7 +85,7 @@ class lsp_server =
       Hashtbl.remove buffers d.uri;
       Linol_lwt.return ()
 
-    method on_req_hove ~notify_back:_ ~id:_ ~uri:_ ~(pos : Lsp.Types.Position.t) ~workDoneToken:_
+    method on_req_hover_w_o_state ~notify_back:_ ~id:_ ~uri:_ ~(pos : Lsp.Types.Position.t) ~workDoneToken:_
         : Lsp.Types.Hover.t option Linol_lwt.Jsonrpc2.IO.t =
       let marked_string : Lsp.Types.MarkedString.t = {
         value = "Hover on line: " ^ Int.to_string (pos.line) ^ " character: " ^ Int.to_string (pos.character)  ;
@@ -92,13 +95,93 @@ class lsp_server =
       let dummy_hover = Lsp.Types.Hover.create ~contents:dummy_content () in
       Linol_lwt.Jsonrpc2.IO.return (Some dummy_hover)
 
+    method on_req_definition_w_o_state  ~notify_back:_ ~id:_ ~uri:uri ~(pos : Lsp.Types.Position.t)
+        ~workDoneToken:_ ~partialResultToken:_
+         : Lsp.Types.Locations.t option Linol_lwt.Jsonrpc2.IO.t =
+        let compiler_options = Compiler_options.Raw_options.make () in
+        let file_path = Lsp.Uri.to_path uri in
+        let _, _, defs = Ligo_api.Info.get_scope_trace compiler_options file_path () in
+        let line_diff = 1 in
+        let character_diff = 0 in
+        let pos_to_position (pos: Simple_utils.Pos.t) =
+          Lsp.Types.Position.create ~line:(pos#line - line_diff) ~character:(pos#point_num - pos#point_bol - character_diff)
+        in
+        let region_to_range (region: Simple_utils.Region.t) =
+          Lsp.Types.Range.create ~start:(pos_to_position region#start) ~end_:(pos_to_position region#stop)
+        in
+        let position_le (position_l: Lsp.Types.Position.t) (position_r: Lsp.Types.Position.t) :Bool.t =
+          position_l.line < position_r.line
+          || (position_l.line = position_r.line
+            && position_l.character <= position_r.character)
+        in
+        let is_position_in_range (position: Lsp.Types.Position.t) (range: Lsp.Types.Range.t) : Bool.t =
+          position_le range.start position
+          && position_le position range.end_
+        in
+        let check_pos (ref:Simple_utils.Location.t) = match ref with
+          | File reg -> let range = region_to_range reg in
+                        if is_position_in_range pos range
+                        then true
+                        else false
+          | Virtual _ -> false
+        in
+        let find_def (def: Scopes.def) =
+          begin match def with
+            | Variable vdef ->
+              if LSet.exists check_pos vdef.references
+              then
+                match vdef.range with
+                  | File region -> Some region
+                  | _ -> None
+              else None
+            | Type tdef ->
+              if LSet.exists check_pos tdef.references
+              then
+                match tdef.range with
+                  | File region -> Some region
+                  | _ -> None
+              else None
+            | Module mdef ->
+              if LSet.exists check_pos mdef.references
+              then
+                match mdef.range with
+                  | File region -> Some region
+                  | _ -> None
+              else None
+          end
+        in
+        (* let position_to_string (position :Lsp.Types.Position.t) =
+          "Position { line: " ^ Int.to_string position.line
+          ^ ", character: " ^ Int.to_string position.character
+          ^ " }"
+        in
+        let range_to_string (range :Lsp.Types.Range.t) =
+          "Range { start: " ^ position_to_string range.start
+          ^ ", end: " ^ position_to_string range.end_
+          ^ " }"
+        in *)
+        begin match defs with
+          | Some (defs, _) ->
+            begin match List.find_map find_def defs with
+              | Some region ->
+                let x = `Location [Lsp.Types.Location.create ~uri:(Lsp.Types.DocumentUri.of_path region#file) ~range:(region_to_range region)] in
+                Linol_lwt.Jsonrpc2.IO.return @@ Some x
+              | _ ->
+                Linol_lwt.Jsonrpc2.IO.return None
+            end
+          | _ ->
+            Linol_lwt.Jsonrpc2.IO.return None
+        end
+
     method! config_hover = Some (`Bool true)
     method config_formatting = Some (`Bool true)
+    method! config_definition = Some (`Bool true)
 
     method! config_modify_capabilities (c:Lsp.Types.ServerCapabilities.t) : Lsp.Types.ServerCapabilities.t =
       {c with
         hoverProvider = self#config_hover;
-        documentFormattingProvider = self#config_formatting
+        documentFormattingProvider = self#config_formatting;
+        definitionProvider = self#config_definition
       }
 
     method! on_request
@@ -123,10 +206,18 @@ class lsp_server =
               Linol_lwt.Jsonrpc2.IO.return (Some [formatted_text])
             | Error _ -> Linol_lwt.Jsonrpc2.IO.return None
           end
+        | Lsp.Client_request.TextDocumentDefinition {
+            textDocument; position; workDoneToken; partialResultToken;
+          } ->
+          let uri = textDocument.uri in
+          let notify_back = new Linol_lwt.Jsonrpc2.notify_back ~uri ~notify_back () in
+          self#on_req_definition_w_o_state ~notify_back ~id
+                ~workDoneToken ~partialResultToken
+                ~uri ~pos:position
         | Lsp.Client_request.TextDocumentHover { textDocument; position; workDoneToken } ->
             let uri = textDocument.uri in
             let notify_back = new Linol_lwt.Jsonrpc2.notify_back ~uri ~notify_back () in
-            self#on_req_hove ~notify_back ~id ~uri ~pos:position ~workDoneToken
+            self#on_req_hover_w_o_state ~notify_back ~id ~uri ~pos:position ~workDoneToken
         | _ -> super#on_request ~notify_back ~id r
     end
   end
