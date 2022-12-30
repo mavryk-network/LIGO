@@ -1536,13 +1536,22 @@ let run_michelson_func_
   =
   let open Ligo_interpreter.Types in
   let run_options = make_options ~raise (Some ctxt) in
-  let args = List.map ~f:(fun (arg, arg_ty) ->
-      let { micheline_repr = { code = arg; code_ty = arg_ty }; _ } =
-        compile_value ~raise ~options ~loc arg arg_ty
-      in
-      (arg, arg_ty)) args in
+  let args =
+    List.map
+      ~f:(fun (arg, arg_ty) ->
+        let { micheline_repr = { code = arg; code_ty = arg_ty }; _ } =
+          compile_value ~raise ~options ~loc arg arg_ty
+        in
+        arg, arg_ty)
+      args
+  in
   let result_ty_ = compile_type ~raise result_ty in
-  let args = List.fold_right ~f:(fun (arg, arg_ty) pushes -> Tezos_utils.Michelson.i_push arg_ty arg :: pushes) ~init:[] args in
+  let args =
+    List.fold_right
+      ~f:(fun (arg, arg_ty) pushes -> Tezos_utils.Michelson.i_push arg_ty arg :: pushes)
+      ~init:[]
+      args
+  in
   let args = List.rev args in
   let func =
     match code with

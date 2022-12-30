@@ -430,17 +430,16 @@ let get_e_tuple t =
 
 let get_e_application t =
   match t with
-  | E_application { lamb ; args } -> Some (lamb, args)
+  | E_application { lamb; args } -> Some (lamb, args)
   | _ -> None
 
 
 let rec get_e_applications t =
   match get_e_application t with
-  | Some (lamb, args) -> (
-      match get_e_applications lamb.expression_content with
-      | [] -> [lamb; args]
-      | apps -> apps @ [args]
-    )
+  | Some (lamb, args) ->
+    (match get_e_applications lamb.expression_content with
+    | [] -> [ lamb; args ]
+    | apps -> apps @ [ args ])
   | None -> []
 
 

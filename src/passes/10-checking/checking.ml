@@ -439,7 +439,11 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
       raise_opt ~error:not_annotated @@ I.get_e_ascription code.expression_content
     in
     let vals = I.get_e_applications code.expression_content in
-    let vals = match vals with [] -> [code] | vals -> vals in
+    let vals =
+      match vals with
+      | [] -> [ code ]
+      | vals -> vals
+    in
     let code = List.hd_exn vals in
     let args = List.tl_exn vals in
     let%bind args =
@@ -458,7 +462,9 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
     let rec build_func_type args =
       match args with
       | [] -> result_type
-      | (arg_type, _) :: args -> Type.t_arrow ~loc { type1 = arg_type ; type2 = build_func_type args } () in
+      | (arg_type, _) :: args ->
+        Type.t_arrow ~loc { type1 = arg_type; type2 = build_func_type args } ()
+    in
     let func_type = build_func_type args in
     const
       E.(
@@ -467,8 +473,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
         and args = all @@ List.map ~f:snd args in
         let code = { code with type_expression = code_type } in
         let code = O.e_a_applications ~loc code args in
-        return
-        @@ O.E_raw_code { language = "michelson"; code })
+        return @@ O.E_raw_code { language = "michelson"; code })
       result_type
   | E_raw_code { language; code = { expression_content; _ } }
     when Option.is_some (I.get_e_tuple expression_content) ->

@@ -647,9 +647,12 @@ let ez_e_a_record ~loc ?layout r =
 
 let e_a_variable ~loc v ty = e_variable ~loc v ty
 let e_a_application ~loc lamb args t = e_application ~loc { lamb; args } t
+
 let e_a_application_exn ~loc lamb args =
-  let Arrow.{ type1 = _ ; type2 } = get_t_arrow_exn lamb.type_expression in
+  let Arrow.{ type1 = _; type2 } = get_t_arrow_exn lamb.type_expression in
   e_application ~loc { lamb; args } type2
+
+
 let e_a_lambda ~loc l in_ty out_ty = e_lambda ~loc l (t_arrow ~loc in_ty out_ty ())
 let e_a_recursive ~loc l = e_recursive ~loc l l.fun_type
 
@@ -660,9 +663,11 @@ let e_a_let_in ~loc let_binder rhs let_result attributes =
 let rec e_a_applications ~loc lamb args : expression =
   match args with
   | [] -> lamb
-  | (args :: argss) ->
-    e_a_application_exn ~loc (e_a_applications ~loc lamb argss) args
-let e_a_applications ~loc lamb args : expression = e_a_applications ~loc lamb (List.rev args)
+  | args :: argss -> e_a_application_exn ~loc (e_a_applications ~loc lamb argss) args
+
+
+let e_a_applications ~loc lamb args : expression =
+  e_a_applications ~loc lamb (List.rev args)
 
 
 let e_a_raw_code ~loc language code t = e_raw_code ~loc { language; code } t

@@ -679,12 +679,12 @@ let get_type_abstractions (e : expression) =
 
 let rec get_e_applications t =
   match get_e_application t with
-  | Some { lamb ; args } -> (
-      match get_e_applications lamb with
-      | [] -> [lamb; args]
-      | apps -> apps @ [args]
-    )
+  | Some { lamb; args } ->
+    (match get_e_applications lamb with
+    | [] -> [ lamb; args ]
+    | apps -> apps @ [ args ])
   | None -> []
+
 
 (* This function re-builds a term prefixed with E_type_abstraction:
    given an expression e and a list of type variables [t1; ...; tn],
