@@ -442,9 +442,6 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
     let vals = match vals with [] -> [code] | vals -> vals in
     let code = List.hd_exn vals in
     let args = List.tl_exn vals in
-    (* let%bind code, code_type = *)
-    (*   raise_opt ~error:not_annotated @@ I.get_e_ascription code.expression_content *)
-    (* in *)
     let%bind args =
       List.fold_right
         ~f:(fun expr result ->
@@ -455,10 +452,8 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
         ~init:(return [])
         args
     in
-    (* let%bind code_type = evaluate_type code_type in *)
     let%bind _, code = infer code in
     let%bind loc = loc () in
-    (* let result_type : Type.t = Type.get_arrows_result code_type in *)
     let%bind result_type = evaluate_type result_type in
     let rec build_func_type args =
       match args with
