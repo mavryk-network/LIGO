@@ -1021,7 +1021,6 @@ fun_expr(right_expr):
                   ret_type=$4; kwd_is=$5; return=$6}
     in {region; value} }
 
-
 (* Resuming stratification of [base_expr] with Boolean expressions *)
 
 disj_expr_level:
