@@ -71,7 +71,6 @@ data RioEnv = RioEnv
   -- ^ Stores the user's choice (or lack of) in how the project should be indexed.
   , reBuildGraph :: MVar (Includes FilePath)
   -- ^ Represents the build graph for all files that were looked up.
-  , reLigo :: IORef (Maybe (Pool LigoProcess))
   -- ^ The spawned LIGO processes. This might be 'Nothing' in case the daemon
   -- was not initialized yet.
   }

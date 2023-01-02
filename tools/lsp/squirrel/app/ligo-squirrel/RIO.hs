@@ -34,7 +34,6 @@ newRioEnv = do
   reTempFiles <- newIO
   reIndexOpts <- newEmptyMVar
   reBuildGraph <- newMVar G.empty
-  reLigo <- newIORef Nothing
   pure RioEnv {..}
 
 initializeRio :: RIO ()

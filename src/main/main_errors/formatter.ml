@@ -101,8 +101,8 @@ let rec error_ppformat
     | `Main_invalid_syntax_name syntax ->
       Format.fprintf
         f
-        "@[<hv>Invalid syntax option: '%s'. @.Use 'pascaligo', 'cameligo', 'reasonligo', \
-         or 'jsligo'. @]"
+        "@[<hv>Invalid syntax option: '%s'. @.Use 'pascaligo', 'cameligo', or 'jsligo'. \
+         @]"
         syntax
     | `Main_invalid_dialect_name syntax ->
       Format.fprintf
@@ -120,8 +120,7 @@ let rec error_ppformat
       Format.fprintf
         f
         "@[<hv>Invalid file extension '%s'. @.Use '.ligo' for PascaLIGO, '.mligo' for \
-         CameLIGO, '.religo' for ReasonLIGO, '.jsligo' for JsLIGO, or the --syntax \
-         option.@]"
+         CameLIGO, '.jsligo' for JsLIGO, or the --syntax option.@]"
         extension
     | `Main_unparse_tracer errs ->
       let errs =
@@ -349,8 +348,6 @@ let rec error_ppformat
       List.iter ~f:(Tree_abstraction.Pascaligo.Errors.error_ppformat ~display_format f) e
     | `Cit_cameligo_tracer e ->
       List.iter ~f:(Tree_abstraction.Cameligo.Errors.error_ppformat ~display_format f) e
-    | `Cit_reasonligo_tracer e ->
-      List.iter ~f:(Tree_abstraction.Reasonligo.Errors.error_ppformat ~display_format f) e
     | `Cit_jsligo_tracer e ->
       List.iter ~f:(Tree_abstraction.Jsligo.Errors.error_ppformat ~display_format f) e
     | `Self_ast_imperative_tracer e ->
@@ -687,8 +684,6 @@ let rec error_json : Types.all -> Simple_utils.Error.t list =
     [ make ~stage:"pretty" ~content ]
   | `Cit_pascaligo_tracer e -> List.map ~f:Tree_abstraction.Pascaligo.Errors.error_json e
   | `Cit_cameligo_tracer e -> List.map ~f:Tree_abstraction.Cameligo.Errors.error_json e
-  | `Cit_reasonligo_tracer e ->
-    List.map ~f:Tree_abstraction.Reasonligo.Errors.error_json e
   | `Cit_jsligo_tracer e -> List.map ~f:Tree_abstraction.Jsligo.Errors.error_json e
   | `Self_ast_imperative_tracer e -> [ Self_ast_imperative.Errors.error_json e ]
   | `Desugaring_tracer e -> [ Desugaring.Errors.error_json e ]

@@ -1240,10 +1240,6 @@ export const getExamples = (
         name: `.workspaces/${name}/contracts/Increment.ligo`,
         content: incrementL,
       },
-      contractR: {
-        name: `.workspaces/${name}/contracts/Increment.religo`,
-        content: incrementR,
-      },
       contractJ: {
         name: `.workspaces/${name}/contracts/Increment.jsligo`,
         content: incrementJ,
@@ -1256,10 +1252,6 @@ export const getExamples = (
       storageL: {
         name: `.workspaces/${name}/storages/Storage.ligo`,
         content: incrementLStorage,
-      },
-      storageR: {
-        name: `.workspaces/${name}/storages/Storage.religo`,
-        content: incrementRStorage,
       },
       storageJ: {
         name: `.workspaces/${name}/storages/Storage.jsligo`,
@@ -1280,10 +1272,6 @@ export const getExamples = (
         content: idM,
       },
       contractL: { name: `.workspaces/${name}/contracts/ID.ligo`, content: idL },
-      contractR: {
-        name: `.workspaces/${name}/contracts/ID.religo`,
-        content: idR,
-      },
       contractJ: {
         name: `.workspaces/${name}/contracts/ID.jsligo`,
         content: idJ,
@@ -1296,10 +1284,6 @@ export const getExamples = (
       storageL: {
         name: `.workspaces/${name}/storages/Storage.ligo`,
         content: idLStorage,
-      },
-      storageR: {
-        name: `.workspaces/${name}/storages/Storage.religo`,
-        content: idRStorage,
       },
       storageJ: {
         name: `.workspaces/${name}/storages/Storage.jsligo`,
@@ -1323,10 +1307,6 @@ export const getExamples = (
         name: `.workspaces/${name}/contracts/Hashlock.ligo`,
         content: hashlockL,
       },
-      contractR: {
-        name: `.workspaces/${name}/contracts/Hashlock.religo`,
-        content: hashlockR,
-      },
       contractJ: {
         name: `.workspaces/${name}/contracts/Hashlock.jsligo`,
         content: hashlockJ,
@@ -1339,10 +1319,6 @@ export const getExamples = (
       storageL: {
         name: `.workspaces/${name}/storages/Storage.ligo`,
         content: hashlockLStorage,
-      },
-      storageR: {
-        name: `.workspaces/${name}/storages/Storage.religo`,
-        content: hashlockRStorage,
       },
       storageJ: {
         name: `.workspaces/${name}/storages/Storage.jsligo`,
