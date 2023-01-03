@@ -371,7 +371,7 @@ and expr =
 | E_Typed    of typed_expr par reg           (* (x : int)           *)
 | E_TypeIn   of type_in reg                  (* type t = u in e     *)
 | E_Unit     of the_unit reg                 (* ()                  *)
-| E_Update   of update braces reg            (* {x with y=z}        *)
+| E_Update   of update_expr braces reg       (* {x with y=z}        *)
 | E_Var      of variable                     (* x                   *)
 | E_Verbatim of lexeme wrap                  (* {|foo|}             *)
 | E_Seq      of sequence_expr reg            (* x; 3                *)
@@ -415,10 +415,10 @@ and record_expr = (field_name, expr) field reg record
 
 (* Functional update of records *)
 
-and update = {
+and update_expr = {
   record   : expr;
   kwd_with : kwd_with;
-  updates  : ((path, expr) field reg, semi) nsepseq;
+  updates  : ((path, expr) field reg, semi) nsepseq
 }
 
 and path =

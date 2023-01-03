@@ -211,9 +211,9 @@ tuple(item):
 list_of(item):
   brackets(option(sep_or_term_list(item,";") { fst $1 })) { $1 }
 
-(* Braces of *)
+(* Records *)
 
-braces_of(item):
+record(item):
   braces(option(sep_or_term_list(item,";") { fst $1 })) { $1 }
 
 (* Aliasing and inlining some tokens *)
@@ -393,7 +393,7 @@ type_ctor_app:
 (* Record types *)
 
 record_type:
-  braces_of(field_decl) { $1 }
+  record(field_decl) { $1 }
 
 (* When the type annotation is missing in a field declaration, the
    type of the field is the name of the field. *)
@@ -650,7 +650,7 @@ typed_pattern:
 (* Record patterns *)
 
 record_pattern(rhs_pattern):
-  braces_of(sep_or_term_list(field_pattern(rhs_pattern),";") { $1 }) { $1 }
+  record(field_pattern(rhs_pattern)) { $1 }
 
 field_pattern(rhs_pattern):
   atributes field_lhs_pattern {
@@ -916,10 +916,13 @@ core_expr:
 | ctor_app_expr   { E_App      $1 }
 | par(typed_expr) { E_Typed    $1 }
 | attr_expr       { E_Attr     $1 }
+| sequence_expr   { E_Seq      $1 }
+| record_update   { E_Update   $1 }
+
+
+| path_expr       { $1 }
 
 | module_access_e   { EModA $1 }
-| sequence          { ESeq $1 }
-| update_record     { EUpdate $1 }
 
 (* Attributed expression *)
 
@@ -934,102 +937,123 @@ code_inj:
     and value  = {language=$1; code=$2; rbracket=$3}
     in {region; value} }
 
+(* Typed expression *)
+
 typed_expr:
   expr ":" type_expr { $1,$2,$3 }
 
-projection:
-  struct_name "." nsepseq(selection,".") {
-    let start  = $1.region in
+(* Path expressions
+
+   A path expression is a construct that qualifies unambiguously a
+   value or type. When maintaining this subgrammar, be wary of not
+   introducing a regression. Here are the currently possible cases:
+
+      * a single variable: "a" or "@0" or "@let" etc.
+      * a single variable in a nested module: "A.B.a"
+      * nested fields and compoments from a variable: "a.0.1.b"
+      * same within a nested module: "A.B.a.0.1.b"
+      * nested fields and components from an expression: "(e).a.0.1.b"
+ *)
+
+path_expr:
+  module_path(selected) { E_ModPath (mk_mod_path $1 expr_to_region) }
+| local_path            { $1 }
+
+selected:
+  field_path { $1        }
+| ctor       { E_Ctor $1 }
+
+field_path:
+  record_or_tuple "." nsepseq(selection,".") {
     let stop   = nsepseq_to_region selection_to_region $3 in
-    let region = cover start stop in
-    let value  = {struct_name=$1; selector=$2; field_path=$3}
-    in {region; value} }
+    let region = cover $1#region stop
+    and value  = {record_or_tuple=(E_Var $1); selector=$2;
+                  field_path=$3}
+    in E_Proj {region; value}
+  }
+| par(expr) { E_Par $1 }
+| variable  { E_Var $1 }
 
-module_access_e:
-  module_name "." module_var_e {
-    let start       = $1.region in
-    let stop        = expr_to_region $3 in
-    let region      = cover start stop in
-    let value       = {module_name=$1; selector=$2; field=$3}
-    in {region; value} }
+selection:
+  field_name { FieldName $1 } (* Can be a component, e.g. "@1" *)
+| "<int>"    { Component $1 }
 
-module_var_e:
-  module_access_e   { EModA $1 }
-| "or"              { EVar {value="or"; region=$1#region} }
-| field_name        { EVar  $1 }
-| projection        { EProj $1 }
+local_path:
+  par(expr) "." nsepseq(selection,".") {
+    let record_or_tuple = E_Par $1 in
+    let stop   = nsepseq_to_region selection_to_region $3 in
+    let region = cover $1.region stop
+    and value  = {record_or_tuple; selector=$2; field_path=$3}
+    in E_Proj {region; value}
+  }
+| field_path { $1 }
 
 selection:
   field_name { FieldName $1 }
 | "<int>"    { Component (unwrap $1) }
 
+(* Record expression *)
+
 record_expr:
-  "{" sep_or_term_list(field_assignment,";") "}" {
-    let lbrace = $1 in
-    let rbrace = $3 in
-    let ne_elements, terminator = $2 in
-    let region = cover lbrace#region rbrace#region in
-    let value  = {compound = Some (Braces (lbrace,rbrace));
-                  ne_elements;
-                  terminator;
-                  attributes=[]}
+  record(field_assignment,";") { $1 }
+
+field_assignment:
+  attributes field_name {
+    let region = $1.region
+    and value  = Punned_property $1
+      in {region; value}
+  }
+  | attributes field_name "=" expr {
+
+
+
+
+    let region = cover $1.region (expr_to_region $3)
+    and value  = Property {field_name=$1; assignment=$2; field_expr=$3}
     in {region; value} }
 
-update_record:
-  "{" path "with" sep_or_term_list(field_path_assignment,";") "}" {
-    let lbrace = $1 in
-    let kwd_with = $3 in
-    let rbrace = $5 in
-    let region = cover lbrace#region rbrace#region in
-    let ne_elements, terminator = $4 in
-    let value = {
-      lbrace;
-      record   = $2;
-      kwd_with;
-      updates  = {value = {compound = None;
-                           ne_elements;
-                           terminator;
-                           attributes=[]};
-                  region = cover kwd_with#region rbrace#region};
-      rbrace}
-    in {region; value} }
+(* Record (functional) update *)
+
+record_update:
+  braces(update_expr) { $1 }
+
+update_expr:
+  core_expr "with" sep_or_term_list(field_path_assignment,";") {
+    {record=$1; kwd_with=$2; updates = fst $3} }
 
 field_path_assignment:
   field_name {
      let region = $1.region
-      and value  = Path_punned_property $1
-        in {region; value}
+     and value  = Path_punned_property $1
+     in {region; value}
   }
 | path "=" expr {
     let region = cover (path_to_region $1) (expr_to_region $3)
     and value  = Path_property {field_path=$1; assignment=$2; field_expr=$3}
     in {region; value} }
 
-field_assignment:
-  field_name {
-    let region = $1.region
-    and value  = Punned_property $1
-      in {region; value}
-  }
-| field_name "=" expr {
-    let region = cover $1.region (expr_to_region $3)
-    and value  = Property {field_name=$1; assignment=$2; field_expr=$3}
-    in {region; value} }
-
 path:
- "<ident>"   { Name (unwrap $1) }
+ "<ident>"   { Name $1 }
 | projection { Path $1 }
 
-(* Sequences *)
+projection:
+  record_or_tuple "." nsepseq(selection,".") {
+    let start  = $1.region in
+    let stop   = nsepseq_to_region selection_to_region $3 in
+    let region = cover start stop in
+    let value  = {struct_name=$1; selector=$2; field_path=$3}
+    in {region; value} }
 
-sequence:
+(* Sequence expression *)
+
+(* TODO Add support for ["(" series ")"]
+   (LR conflicts to solve). See CST *)
+
+sequence_expr:
   "begin" ioption(series) "end" {
-    let begin_ = $1 in
-    let end_ = $3 in
-    let region   = cover begin_#region end_#region
-    and compound = Some (BeginEnd (begin_,end_)) in
-    let elements = $2 in
-    let value    = {compound; elements; terminator=None}
+    let region   = cover $1#region end_#region
+    and compound = Some (BeginEnd ($1,$3)) in
+    let value    = {compound; elements=$2}
     in {region; value} }
 
 series:
@@ -1044,24 +1068,13 @@ last_expr:
 | tuple_expr { $1 }
 
 let_in_sequence:
-  attributes "let" ioption("rec") let_binding "in" series  {
-    let seq      = $6 in
-    let stop     = nsepseq_to_region expr_to_region seq in
-    let kwd_let  = $2 in
-    let kwd_rec  = $3 in
-    let kwd_in   = $5 in
-    let region   = cover kwd_let#region stop in
-    let compound = None in
-    let elements = Some seq in
-    let value    = {compound; elements; terminator=None} in
-    let body     = ESeq {region; value} in
-    let value    = {attributes = $1;
-                    kwd_let;
-                    kwd_rec;
-                    binding    = $4;
-                    kwd_in;
-                    body}
-    in ELetIn {region; value} }
+  "let" ioption("rec") let_binding "in" series {
+    let stop   = nsepseq_to_region expr_to_region $5 in
+    let region = cover $1#region stop in
+    let value  = {compound=None; elements=$5} in
+    let body   = E_Seq {region; value} in
+    let value  = {kwd_let=$1; kwd_rec=$2; binding=$3; kwd_in=$4; body}
+    in E_LetIn {region; value} }
 
 seq_expr:
-  disj_expr_level | if_then_else (seq_expr) { $1 }
+  disj_expr_level | if_then_else(seq_expr) { $1 }
