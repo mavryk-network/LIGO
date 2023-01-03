@@ -188,8 +188,7 @@ let pp
         Ast_aggregated.PP.type_expression
         got
         Ast_aggregated.PP.type_expression
-        expected
-    
+        expected)
 
 
 let to_warning : all -> Simple_utils.Warning.t =
@@ -350,6 +349,7 @@ let to_warning : all -> Simple_utils.Warning.t =
     in
     let content = make_content ~message ~location () in
     make ~stage:"aggregation" ~content
+
 
 let to_json : all -> Yojson.Safe.t =
  fun w ->
