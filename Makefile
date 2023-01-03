@@ -53,6 +53,9 @@ install:
 node_modules/@prometheansacrifice/ocaml-bls12-381/dist/blst.wasm: package.json
 	npm i
 
+node_modules/@prometheansacrifice/hacl-wasm/*.wasm: package.json
+	npm i
+
 node_modules: package.json package-lock.json
 	npm i
 
@@ -65,7 +68,7 @@ _build/default/src/bin/js_main.bc.js: ./src/bin/js_main.ml
 
 WEB_STAGING_AREA = $(TMPDIR)/ligo-ide
 
-demo-webide-start: tools/webide-new/ligo-webide-frontend/ligo-ide/public/favicon.ico _demo-webide_build/demo-webide.bundle.js ./node_modules/@prometheansacrifice/ocaml-bls12-381/dist/blst.wasm index.html _build/default/src/bin/js_main.bc.js
+demo-webide-start: node_modules/@prometheansacrifice/hacl-wasm/*.wasm tools/webide-new/ligo-webide-frontend/ligo-ide/public/favicon.ico _demo-webide_build/demo-webide.bundle.js ./node_modules/@prometheansacrifice/ocaml-bls12-381/dist/blst.wasm index.html _build/default/src/bin/js_main.bc.js
 	rm -rf $(WEB_STAGING_AREA)
 	mkdir $(WEB_STAGING_AREA)
 	cp _build/default/src/bin/js_main.bc.runtime.js $(WEB_STAGING_AREA) # TODO(prometheansacrifice): this is only needed for dev builds

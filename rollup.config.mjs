@@ -1,6 +1,7 @@
 import commonjs from "@rollup/plugin-commonjs";
 import resolve from "@rollup/plugin-node-resolve";
-import nodePolyfills from 'rollup-plugin-polyfill-node';
+import nodePolyfills from "rollup-plugin-polyfill-node";
+import json from "@rollup/plugin-json";
 
 export default {
   input: "./demo-webide.js",
@@ -8,5 +9,5 @@ export default {
     file: "./_demo-webide_build/demo-webide.bundle.js",
     format: "iife",
   },
-  plugins: [commonjs(), resolve(), nodePolyfills( /* options */ ),],
+  plugins: [json(), commonjs(), resolve(), nodePolyfills(/* options */)],
 };

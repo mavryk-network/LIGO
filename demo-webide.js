@@ -2,11 +2,14 @@ import { EditorState } from "@codemirror/state";
 import { EditorView, basicSetup } from "codemirror";
 import { javascript } from "@codemirror/lang-javascript";
 import _BLS12381 from "@prometheansacrifice/ocaml-bls12-381";
+import HaclWasm from "@prometheansacrifice/hacl-wasm";
 import * as Editor from "./editor";
 
 async function initialize() {
   let BLS12381 = await _BLS12381();
   window._BLS12381 = BLS12381;
+  let loaded = await HaclWasm.getInitializedHaclModule();
+  window._HACL = loaded;
 }
 
 initialize().then(() => {
