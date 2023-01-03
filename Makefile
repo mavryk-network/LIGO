@@ -49,3 +49,26 @@ coverage:
 
 install:
 	cp _build/install/default/bin/ligo /usr/local/bin/ligo
+
+node_modules/@prometheansacrifice/ocaml-bls12-381/dist/blst.wasm: package.json
+	npm i
+
+node_modules: package.json package-lock.json
+	npm i
+
+_demo-webide_build/demo-webide.bundle.js: node_modules ./demo-webide.js ./rollup.config.mjs
+	npm run build
+
+_build/default/src/bin/js_main.bc.js: ./src/bin/js_main.ml
+	opam exec -- dune build $^
+
+
+WEB_STAGING_AREA = $(TMPDIR)/ligo-ide
+
+demo-webide-start: tools/webide-new/ligo-webide-frontend/ligo-ide/public/favicon.ico _demo-webide_build/demo-webide.bundle.js ./node_modules/@prometheansacrifice/ocaml-bls12-381/dist/blst.wasm index.html _build/default/src/bin/js_main.bc.js
+	rm -rf $(WEB_STAGING_AREA)
+	mkdir $(WEB_STAGING_AREA)
+	cp _build/default/src/bin/js_main.bc.runtime.js $(WEB_STAGING_AREA) # TODO(prometheansacrifice): this is only needed for dev builds
+	cp $^ $(WEB_STAGING_AREA)/
+	python -m http.server -d $(WEB_STAGING_AREA)
+

@@ -2,10 +2,11 @@ import { EditorState } from "@codemirror/state";
 import { EditorView, basicSetup } from "codemirror";
 import { javascript } from "@codemirror/lang-javascript";
 
-let ligoEditor = new EditorView({
-  state: EditorState.create({
-    extensions: [basicSetup, javascript()],
-    doc: `
+export function initialize() {
+  let ligoEditor = new EditorView({
+    state: EditorState.create({
+      extensions: [basicSetup, javascript()],
+      doc: `
 type storage = int
 
 type parameter =
@@ -42,27 +43,16 @@ let test_increment =
  let _ = Test.transfer_to_contract_exn contr (Increment 1) 1mutez in
  assert (Test.get_storage taddr = initial_storage + 1)
 `,
-  }),
-  parent: document.getElementById("ligo"),
-});
+    }),
+    parent: document.getElementById("ligo"),
+  });
 
-let michelsonEditor = new EditorView({
-  state: EditorState.create({
-    extensions: [basicSetup, javascript()],
-    doc: `
+  return new EditorView({
+    state: EditorState.create({
+      extensions: [basicSetup, javascript()],
+      doc: `
 `,
-  }),
-  parent: document.getElementById("michelson"),
-});
-
-document.getElementById("compile").addEventListener("click", function () {
-  let michelson = compile.main(ligoEditor.state.doc.toJSON().join("\n"));
-  console.log(michelson);
-  michelsonEditor.setState(
-    EditorState.create({
-      extensions: [basicSetup],
-      doc: michelson,
-    })
-  );
-  // console.log(compile.main());
-});
+    }),
+    parent: document.getElementById("michelson"),
+  });
+}
