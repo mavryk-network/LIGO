@@ -21,10 +21,10 @@ let main source syntax =
       ~syntax
       ~views
       ~protocol_version
-      ~disable_michelson_typechecking:false
+      ~disable_michelson_typechecking:true
       ~experimental_disable_optimizations_for_debugging:false
       ~enable_typed_opt:false
-      ~no_stdlib:false
+      ~no_stdlib:true
       ~warning_as_error:false
       ~no_colour:true
       ~constants:Default_options.constants
