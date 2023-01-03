@@ -7,8 +7,7 @@ export function initialize() {
     state: EditorState.create({
       extensions: [basicSetup, javascript()],
       doc: `
-
-type storage = int;
+type storage = int
 
 type parameter =
 | ["Increment", int]
