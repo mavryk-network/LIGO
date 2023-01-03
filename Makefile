@@ -71,8 +71,8 @@ node_modules: package.json package-lock.json
 _demo-webide_build/demo-webide.bundle.js: node_modules ./demo-webide.js ./rollup.config.mjs
 	npm run build
 
-_build/default/src/bin/js_main.bc.js: ./src/bin/js_main.ml
-	opam exec -- dune build $^
+_build/default/src/bin/js_main.bc.js: ./src/bin/js_main.ml ./src/bin/dune
+	opam exec -- dune build $(<:.ml=.bc.js)
 
 
 WEB_STAGING_AREA = $(TMPDIR)/ligo-ide
