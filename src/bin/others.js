@@ -252,3 +252,9 @@ function caml_fatal_uncaught_exception(err) {
   // console.log(err.stack);
   // throw err;
 }
+
+// Provides: ocaml_mtime_clock_elapsed_ns
+function ocaml_mtime_clock_elapsed_ns() {}
+
+// Provides: unix_gethostname
+function unix_gethostname() {}
