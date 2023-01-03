@@ -24,7 +24,7 @@ async function loadJSBundle(path) {
   });
 }
 
-let editor = Editor.initialize();
+let { ligoEditor, michelsonEditor } = Editor.initialize();
 initialize().then(async () => {
   console.log("All WASM dependencies loaded");
   await loadJSBundle("/js_main.bc.runtime.js");
@@ -32,7 +32,7 @@ initialize().then(async () => {
   document.getElementById("compile").addEventListener("click", function () {
     let michelson = compile.main(ligoEditor.state.doc.toJSON().join("\n"));
     console.log(michelson);
-    editor.setState(
+    michelsonEditor.setState(
       EditorState.create({
         extensions: [basicSetup],
         doc: michelson,
