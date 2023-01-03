@@ -13,7 +13,7 @@ module AST.Skeleton
   , Lang (..)
   , allLangs
   , langExtension
-  , reasonLIGOKeywords, cameLIGOKeywords, pascaLIGOKeywords, jsLIGOKeywords
+  , cameLIGOKeywords, pascaLIGOKeywords, jsLIGOKeywords
   , Name (..), QualifiedName (..), Pattern (..), RecordFieldPattern (..)
   , Constant (..), FieldAssignment (..), MapBinding (..), Alt (..), Expr (..)
   , Collection (..), TField (..), Variant (..), Type (..), Binding (..)
@@ -93,7 +93,6 @@ langExtension :: Lang -> FilePath
 langExtension = \case
   Pascal -> ".pligo"
   Caml -> ".mligo"
-  Reason -> ".religo"
   Js -> ".jsligo"
 
 pascaLIGOKeywords :: HashSet Text
