@@ -83,5 +83,9 @@ build-demo-webide: node_modules/@prometheansacrifice/secp256k1-wasm/src/secp256k
 	mkdir $(WEB_STAGING_AREA)
 	cp _build/default/src/bin/js_main.bc.runtime.js $(WEB_STAGING_AREA) # TODO(prometheansacrifice): this is only needed for dev builds
 	cp $^ $(WEB_STAGING_AREA)/
+
+
+demo-webide-start:
+	make build-demo-webide
 	python -m http.server -d $(WEB_STAGING_AREA)
 
