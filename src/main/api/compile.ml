@@ -86,7 +86,7 @@ let contract
   let source =
     match source with
     | File filename -> BuildSystem.Source_input.From_file filename
-    | Text source_code -> BuildSystem.Source_input.(Raw { id = ""; code = source_code })
+    | Text source_code -> BuildSystem.Source_input.(Raw { id = "foo.jsligo"; code = source_code })
   in
   let code, views = Build.build_contract ~raise ~options entry_point views source in
   let file_constants = read_file_constants ~raise file_constants in
