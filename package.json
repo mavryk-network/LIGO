@@ -7,7 +7,8 @@
     "@codemirror/state": "*",
     "@prometheansacrifice/ocaml-bls12-381": "*",
     "codemirror": "*",
-    "@prometheansacrifice/hacl-wasm": "*"
+    "@prometheansacrifice/hacl-wasm": "*",
+    "@prometheansacrifice/secp256k1-wasm": "*"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^24.0.0",
