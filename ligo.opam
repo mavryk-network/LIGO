@@ -18,6 +18,8 @@ depends: [
   "ocamlfind" { build }
   "dune" { build & >= "2.7.1" }
   "alcotest" { with-test }
+  "js_of_ocaml"
+  "js_of_ocaml-ppx"
   # Pipelinye
   "ocamlgraph"
   "menhir" { = "20211128" }
