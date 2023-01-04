@@ -436,6 +436,15 @@ invariants =
     , driDef = Just (interval 1 18 19)
     , driRefs = [interval 1 21 22, interval 1 50 51]
     }
+  , DefinitionReferenceInvariant
+    { driFile = contractsDir </> "parametric.jsligo"
+    , driDesc = "Parametric types, can find references of a type variable (a) with the same name as a term"
+    , driDef = Just (interval 1 12 13)
+    -- FIXME (#1547): Some references are missing. Uncomment the following line
+    -- when it will be fixed:
+    --, driRefs = [interval 1 19 20, interval 1 25 26, interval 1 34 35, interval 1 46 47]
+    , driRefs = [interval 1 34 35, interval 1 46 47]
+    }
   ]
 
 findDefinitionAndGoToReferencesCorrespondence
