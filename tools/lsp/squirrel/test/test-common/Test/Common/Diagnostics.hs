@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
 module Test.Common.Diagnostics
   ( simpleTest
+  , treeDoesNotContainNameTest
   , parseDiagnosticsDriver
   ) where
 
@@ -58,6 +59,34 @@ simpleTest = do
       , mgCompilerMsgs = compilerMsgs
       , mgFallbackMsgs = []
       }
+    }
+
+-- LIGO-474 regression test
+treeDoesNotContainNameTest :: IO DiagnosticTest
+treeDoesNotContainNameTest = do
+  dtFile <- makeAbsolute $ inputDir </> "LIGO-474.mligo"
+  let
+    msgGroup = MessageGroup
+      { mgParserMsgs =
+        [ Message (Unrecognized "") SeverityError (mkRange (2, 7) (2, 7) dtFile)
+        ]
+      , mgCompilerMsgs =
+        [ Message
+          (FromLIGO "Ill-formed type declaration.\nAt this point, one of the following is expected:\n  * the name of the type being defined;\n  * a quoted type parameter, like 'a;\n  * a tuple of quoted type parameters, like ('a, 'b).\n")
+          SeverityError
+          (mkRange (2, 9) (2, 10) dtFile)
+        ]
+      , mgFallbackMsgs =
+        [ Message
+          (FromLanguageServer "Expected to find a type name, but got `(ERROR \"Unrecognized: \" [])`")
+          SeverityError
+          (mkRange (2, 7) (2, 7) dtFile)
+        ]
+      }
+  pure DiagnosticTest
+    { dtFile
+    , dtAllMsgs = msgGroup
+    , dtFilteredMsgs = msgGroup
     }
 
 inputDir :: FilePath
