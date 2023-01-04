@@ -3,24 +3,8 @@
  (public_name ligo.api-common)
  (instrumentation
   (backend bisect_ppx))
- (libraries simple-utils ligo.decompile ligo.scopes build ligo.run bos
+ (libraries simple-utils ligo.decompile ligo.scopes build interpreter bos
    cli_helpers))
-
-; (library
-;  (name ligo_api_common_unix)
-;  (modules ligo_api_common_unix)
-;  (public_name ligo.api-common.unix)
-;  (instrumentation
-;   (backend bisect_ppx))
-;  (libraries ligo_api_common  interpreter_unix))
-
-; (library
-;  (name ligo_api_common_js)
-;  (modules ligo_api_common_js)
-;  (public_name ligo.api-common.js)
-;  (instrumentation
-;   (backend bisect_ppx))
-;  (libraries ligo_api_common  interpreter_js))
 
 (rule
  (targets changelog.ml)
