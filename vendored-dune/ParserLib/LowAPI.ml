@@ -31,7 +31,8 @@ module type LEXER =
 
     type message = string Region.reg
 
-    val scan_token : no_colour:bool -> Lexing.lexbuf -> (token, message) result
+    val scan_token :
+      no_colour:bool -> Lexing.lexbuf -> (token, message) result
 
     val used_tokens : unit -> token list (* Scanned tokens *)
 
@@ -171,7 +172,8 @@ module Make (Lexer  : LEXER)
 
     (* THE MONOLITHIC API *)
 
-    let mono_menhir ~no_colour lexbuf_of source : (Parser.tree, pass_error) result =
+    let mono_menhir ~no_colour lexbuf_of source
+        : (Parser.tree, pass_error) result =
       let lexbuf = lexbuf_of source in
       let menhir_lexer = menhir_lexer ~no_colour in
       try Stdlib.Ok (Parser.main menhir_lexer lexbuf) with
@@ -180,9 +182,14 @@ module Make (Lexer  : LEXER)
       | Parser.Error -> (* Menhir exception *)
           Error (Parsing (wrap_parse_error ~no_colour lexbuf "Syntax error."))
 
-    let mono_from_lexbuf  ~no_colour = mono_menhir ~no_colour (fun x -> x)
-    let mono_from_channel ~no_colour = mono_menhir ~no_colour Lexing.from_channel
-    let mono_from_string  ~no_colour = mono_menhir ~no_colour Lexing.from_string
+    let mono_from_lexbuf ~no_colour =
+      mono_menhir ~no_colour (fun x -> x)
+
+    let mono_from_channel ~no_colour =
+      mono_menhir ~no_colour Lexing.from_channel
+
+    let mono_from_string ~no_colour =
+      mono_menhir ~no_colour Lexing.from_string
 
     type file_path = string
 
@@ -283,7 +290,7 @@ module Make (Lexer  : LEXER)
 
     let to_pos (mode : [`Byte | `Point]) (pos : Lexing.position)
         : Simple_utils.Pos.t =
-      (* Note: [Pos.from_byte (Lexing.dummy_pos) != Pos.ghost] *)
+      (* Note: [Pos.from_byte (Lexing.dummy_pos) <> Pos.ghost] *)
       if Caml.(pos = Lexing.dummy_pos) then
           Pos.ghost
       else
@@ -339,12 +346,18 @@ module Make (Lexer  : LEXER)
       let tree =
         try Stdlib.Ok (interpreter parser) with
           LexingError error -> Error (Lexing error)
-        | ParsingError msg  -> Error (Parsing (wrap_parse_error ~no_colour lexbuf msg))
+        | ParsingError msg  ->
+            Error (Parsing (wrap_parse_error ~no_colour lexbuf msg))
       in (flush_all (); tree)
 
-    let incr_from_lexbuf  ~no_colour = incr_menhir ~no_colour (fun x -> x)
-    let incr_from_channel ~no_colour = incr_menhir ~no_colour Lexing.from_channel
-    let incr_from_string  ~no_colour = incr_menhir ~no_colour Lexing.from_string
+    let incr_from_lexbuf ~no_colour =
+      incr_menhir ~no_colour (fun x -> x)
+
+    let incr_from_channel ~no_colour =
+      incr_menhir ~no_colour Lexing.from_channel
+
+    let incr_from_string ~no_colour =
+      incr_menhir ~no_colour Lexing.from_string
 
     let incr_from_file ~no_colour (module ParErr : PAR_ERR) path =
       match lexbuf_from_file path with
@@ -582,9 +595,14 @@ module Make (Lexer  : LEXER)
       let result       = interpreter parser
       in (flush_all (); result)
 
-    let recov_from_lexbuf  ~no_colour = incr_menhir_recovery ~no_colour (fun x -> x)
-    let recov_from_channel ~no_colour = incr_menhir_recovery ~no_colour Lexing.from_channel
-    let recov_from_string ~no_colour  = incr_menhir_recovery ~no_colour Lexing.from_string
+    let recov_from_lexbuf ~no_colour =
+      incr_menhir_recovery ~no_colour (fun x -> x)
+
+    let recov_from_channel ~no_colour =
+      incr_menhir_recovery ~no_colour Lexing.from_channel
+
+    let recov_from_string ~no_colour =
+      incr_menhir_recovery ~no_colour Lexing.from_string
 
     let recov_from_file ~no_colour (module ParErr : PAR_ERR) path =
       match lexbuf_from_file path with

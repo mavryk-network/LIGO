@@ -1,12 +1,12 @@
 (* Displaying code snippets in error messages *)
 
-(* Strings containing OCaml code need to be escaped before printed out
-   to the terminal, but OCaml escaping function for strings escapes
-   the double quotes, so we need to unescape those. *)
+(* Strings containing OCaml code need to be escaped before being
+   printed out to the terminal, but OCaml escaping function for
+   strings escapes the double quotes, so we need to unescape those. *)
 
 let escape s =
   let escaped = String.escaped s in
-  let regexp = Str.regexp "\\\\\"" in
+  let regexp  = Str.regexp "\\\\\"" in (* Right? ;-) *)
   Str.global_replace regexp "\"" escaped
 
 let fprintf = Format.fprintf
