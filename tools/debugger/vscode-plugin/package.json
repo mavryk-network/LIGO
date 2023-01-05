@@ -27,7 +27,6 @@
         "onDebugResolve:jsligo",
         "onCommand:extension.ligo-debugger.switchSteppingGranularity"
     ],
-
     "icon": "logo.png",
     "main": "./out/extension",
     "contributes": {
@@ -49,9 +48,6 @@
             },
             {
                 "language": "mligo"
-            },
-            {
-                "language": "religo"
             },
             {
                 "language": "jsligo"
@@ -78,15 +74,6 @@
                 ]
             },
             {
-                "id": "religo",
-                "aliases": [
-                    "ReasonLIGO"
-                ],
-                "extensions": [
-                    ".religo"
-                ]
-            },
-            {
                 "id": "jsligo",
                 "aliases": [
                     "JsLIGO"
@@ -103,7 +90,6 @@
                 "languages": [
                     "ligo",
                     "mligo",
-                    "religo",
                     "jsligo"
                 ],
                 "configurationAttributes": {
