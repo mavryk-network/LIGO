@@ -280,8 +280,6 @@ let property_expr_end_jsligo: Core.regexp = {
   vim      = "\\(,\\|})\\@=";
 }
 
-(* follow(field_assignment) = RBRACE COMMA *)
-
 let int_literal_match: Core.regexp = {
   emacs    = "\\\\b\\\\([0-9]+\\\\)\\\\b";
   textmate = "\\b([0-9]+)\\b";
@@ -484,10 +482,3 @@ let type_annotation_field_end_ligo: Core.regexp = {
   textmate = "(?=;|\\])";
   vim      = "\\(;\\|\\]\\)\\@=";
 }
-
-(* follow(type_annotation) = RPAR RBRACE EQ COMMA ARROW *)
-
-(*
-  follow(type_decl) = Type SEMI RBRACE Module Let EOF Directive Attr
-  Heads-up for extra tokens: RPAR and COMMA. This is for parametric types.
-*)
