@@ -23,7 +23,6 @@
     "activationEvents": [
         "onDebugResolve:ligo",
         "onDebugResolve:mligo",
-        "onDebugResolve:religo",
         "onDebugResolve:jsligo",
         "onCommand:extension.ligo-debugger.switchSteppingGranularity"
     ],
