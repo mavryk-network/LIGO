@@ -13,7 +13,7 @@ open Simple_utils.Region
 
 (* LIGO dependencies *)
 
-module CST = Cst_pascaligo.CST
+module CST = Cst_cameligo.CST
 open! CST
 module Wrap = Lexing_shared.Wrap
 
@@ -63,7 +63,6 @@ let rec hook mk_attr attrs node =
 
 let hook_E_Attr = hook @@ fun a e -> E_Attr (a,e)
 let hook_T_Attr = hook @@ fun a t -> T_Attr (a,t)
-let hook_S_Attr = hook @@ fun a s -> S_Attr (a,s)
 
 (* Making a list of attributes from a pattern *)
 
@@ -168,11 +167,16 @@ braces(X):
    static control-flow graph. See module [Utils] for the types
    corresponding to the semantic actions of those rules. *)
 
+(* Possibly empty sequence of items *)
+
+seq(item):
+  (**)           {     [] }
+| item seq(item) { $1::$2 }
+
 (* Non-empty sequence of items *)
 
-nseq(X):
-  X         { $1, [] }
-| X nseq(X) { let hd,tl = $2 in $1, hd::tl }
+nseq(item):
+  item seq(item) { $1,$2 }
 
 (* Non-empty separated sequence of items *)
 
@@ -287,15 +291,14 @@ type_vars:
 | par(tuple(type_var)) { TV_Tuple  $1 }
 
 type_var:
-  quoted_type_var {
-    let quote, var = $1 in
-    let region = cover quote#region var#region
-    in {region; value = Some quote, var}
-  }
-| "_" { {$1 with value = None, $1} }
+  quoted_type_var { $1 }
+| "_"             { {region=$1#region; value = (None, $1)} }
 
 quoted_type_var:
-  "'" variable { $1,$2 }
+  "'" variable {
+    let region = cover $1#region $2#region
+    and value  = Some $1, $2
+    in {region; value} }
 
 (* Type expressions *)
 
@@ -320,7 +323,7 @@ fun_type_level:
     let start  = type_expr_to_region $1
     and stop   = type_expr_to_region $3 in
     let region = cover start stop in
-    TFun {region; value = $1,$2,$3}
+    T_Fun {region; value = $1,$2,$3}
   }
 | cartesian_level { $1 }
 
@@ -330,7 +333,7 @@ cartesian_level:
   core_type "*" nsepseq(core_type,"*") {
     let value  = Utils.nsepseq_cons $1 $2 $3 in
     let region = nsepseq_to_region type_expr_to_region value
-    in TProd {region; value}
+    in T_Cart {region; value}
   }
 | core_type { $1 }
 
@@ -348,14 +351,7 @@ no_attr_type:
 | record_type     { T_Record $1 }
 | par(type_expr)  { T_Par    $1 }
 | quoted_type_var { T_Arg    $1 }
-(*| attr_type       { T_Attr   $1 }*)
 | qualified_type  { $1 }
-
-(* Attributed core types *)
-(*
-attr_type:
-  "[@attr]" core_type { $1,$2 }
-*)
 
 (* Variant types.
 
@@ -374,7 +370,7 @@ variant_type(right_type_expr):
           let stop = CST.nseq_to_region (fun (_,v) -> v.region) long
           in cover $1.region stop, Utils.nseq_to_list long in
     let value = {lead_vbar = None; variants = ($1, tail)}
-    in T_Sum {region; value}
+    in T_Variant {region; value}
    }
 | attributes long_variants(right_type_expr) {
     (* Attributes of the variant type *)
@@ -382,7 +378,7 @@ variant_type(right_type_expr):
     let (lead_vbar, short_variant), list = $2 in
     let variants  = short_variant, list in
     let value     = {lead_vbar = Some lead_vbar; variants} in
-    let type_expr = T_Sum {region; value}
+    let type_expr = T_Variant {region; value}
     in hook_T_Attr $1 type_expr }
 
 long_variants(right_type_expr):
@@ -413,7 +409,7 @@ of_type(right_type_expr):
 type_ctor_app:
   type_ctor_arg type_ctor {
     let region = type_ctor_arg_to_region $1
-    in mk_reg region ($2,$1) }
+    in mk_reg region (T_Var $2, $1) }
 
 type_ctor_arg:
   no_attr_type          { TC_Single $1 }
@@ -463,8 +459,10 @@ field_decl:
    whence our more involved solution. *)
 
 qualified_type:
-  type_ctor_arg type_in_module(type_ctor) {
-    let region = cover (type_expr_to_region $1) $2.region
+  type_ctor_arg type_in_module(type_ctor { T_Var $1 }) {
+    let start  = type_ctor_arg_to_region $1
+    and stop   = type_expr_to_region $2 in
+    let region = cover start stop
     in T_App {region; value=$2,$1}
   }
 | type_in_module(type_name      { T_Var $1 })
@@ -491,7 +489,7 @@ let_decl:
 
 let_binding:
   var_pattern type_params parameters rhs_type "=" expr {
-    let binders = Utils.nseq_cons (PVar $1) $3 in
+    let binders = Utils.nseq_cons $1 $3 in
     {binders; type_params=$2; rhs_type=$4; eq=$5; let_rhs=$6}
   }
 | irrefutable type_params rhs_type "=" expr {
@@ -515,7 +513,7 @@ parameters:
 
 module_decl:
   "module" module_name "=" module_expr {
-    let region = cover $1#region $4#region
+    let region = cover $1#region (module_expr_to_region $4)
     and value  = {kwd_module=$1; name=$2; eq=$3; module_expr=$4}
     in {region; value} }
 
@@ -526,8 +524,10 @@ module_expr:
     M_Path (mk_mod_path $1 (fun x -> x#region)) }
 
 structure:
-  "struct" nseq(declaration)? "end" {
-    {kwd_struct=$1; declarations=$2; kwd_end=$3} }
+  "struct" seq(declaration) "end" {
+    let region = cover $1#region $3#region
+    and value  = {kwd_struct=$1; declarations=$2; kwd_end=$3}
+    in {region; value} }
 
 (* PATTERNS *)
 
@@ -537,23 +537,24 @@ structure:
 irrefutable:
   tuple(core_irrefutable) {
     let region = nsepseq_to_region pattern_to_region $1
-    in PTuple {region; value=$1}
+    in P_Tuple {region; value=$1}
   }
 | core_irrefutable { $1 }
 
 %inline
 core_irrefutable:
-  "_" | var_pattern           { P_Var    $1 }
-| unit                        { P_Unit   $1 }
+  unit                        { P_Unit   $1 }
 | record_pattern(irrefutable) { P_Record $1 }
-| par(typed_irrefutable)
-| par(irrefutable)            { P_Par    $1 }
+| par(in_core_irrefutable)    { P_Par    $1 }
+| var_pattern
 | ctor_irrefutable            { $1 }
 
 var_pattern:
-  attributes "<ident>" {
-    let value = {attributes=$1; variable=$2}
-    in {$2 with value} }
+  "_" | variable        { P_Var       $1 }
+| "[@attr]" var_pattern { P_Attr ($1,$2) }
+
+in_core_irrefutable:
+  typed_irrefutable | irrefutable { $1 }
 
 typed_irrefutable:
   irrefutable type_annotation(type_expr) {
@@ -564,28 +565,24 @@ typed_irrefutable:
     in P_Typed {region; value} }
 
 ctor_irrefutable:
-  par(non_const_ctor_irrefutable) {    PPar $1 }
-| const_ctor_pattern              { PConstr $1 }
+  par(non_const_ctor_irrefutable) { P_Par  $1 }
+| const_ctor_pattern              { P_Ctor $1 }
 
 const_ctor_pattern:
-  "<uident>" {
-    let ctor = unwrap $1 in
-    {ctor with value = ctor,None} }
+  ctor { $1 }
 
 non_const_ctor_irrefutable:
-  "<uident>" core_irrefutable {
-    let ctor = unwrap $1 in
-    let stop   = pattern_to_region $2 in
-    let region = cover ctor.region stop
-    and value  = ctor, Some $2 in
-    PConstr {region; value} }
+  ctor core_irrefutable {
+    let region = cover $1#region (pattern_to_region $2)
+    and value  = P_Ctor $1, Some $2
+    in P_App {region; value} }
 
 (* General Patterns *)
 
 pattern:
   tuple(cons_pattern_level) {
     let region = nsepseq_to_region pattern_to_region $1
-    in PTuple {region; value=$1} }
+    in P_Tuple {region; value=$1} }
 | cons_pattern_level { $1 }
 
 cons_pattern_level:
@@ -594,7 +591,7 @@ cons_pattern_level:
     let colons = $2 in
     let stop   = pattern_to_region $3 in
     let region = cover start stop in
-    PList (PCons {region; value=$1,colons,$3}) }
+    P_Cons {region; value=$1,colons,$3} }
 | core_pattern { $1 }
 
 core_pattern:
@@ -627,9 +624,10 @@ attr_pattern:
 
 qualified_pattern:
   pattern_in_module(ctor { P_Ctor $1 }) core_pattern {
-    let region = cover (pattern_to_region $1) $2.region
-    and value  = $1, Some $2
-    in P_App {region; value}
+    let start  = pattern_to_region $1
+    and stop   = pattern_to_region $2 in
+    let region = cover start stop
+    in P_App {region; value = ($1, Some $2)}
   }
 | pattern_in_module(variable        { P_Var $1 })
 | pattern_in_module(par(in_pattern) { P_Par $1 }) { $1 }
@@ -647,7 +645,7 @@ list_pattern:
 
 ctor_app_pattern:
   ctor core_pattern {
-    let region = cover ctor#region (pattern_to_region $2)
+    let region = cover $1#region (pattern_to_region $2)
     in mk_reg region (P_Ctor $1, Some $2)
   }
 | ctor { {region=$1#region; value = (P_Ctor $1, None)} }
@@ -669,19 +667,19 @@ record_pattern(rhs_pattern):
 
 field_pattern(rhs_pattern):
   attributes field_lhs_pattern {
-    let region = pattern_to_region $1
+    let region = pattern_to_region $2
     and value  = {attributes=$1; pun=$2}
     in Punned {region; value}
   }
 | attributes field_lhs_pattern "=" rhs_pattern {
-    let start  = pattern_to_region $1
-    and stop   = pattern_to_region $3 in
+    let start  = pattern_to_region $2
+    and stop   = pattern_to_region $4 in
     let region = cover start stop
     and value  = {attributes=$1; field_lhs=$2; lens=$3; field_rhs=$4}
     in Complete {region; value} }
 
 field_lhs_pattern:
-  field_name | "_" { $1 }
+  field_name | "_" { P_Var $1 }
 
 (* Unit (value and pattern) *)
 
@@ -962,7 +960,7 @@ code_inj:
 (* Typed expression *)
 
 typed_expr:
-  expr ":" type_expr { $1,$2,$3 }
+  expr type_annotation(type_expr) { $1,$2 }
 
 (* Path expressions
 
@@ -1002,10 +1000,9 @@ selection:
 
 local_path:
   par(expr) "." nsepseq(selection,".") {
-    let record_or_tuple = E_Par $1 in
     let stop   = nsepseq_to_region selection_to_region $3 in
     let region = cover $1.region stop
-    and value  = {record_or_tuple; selector=$2; field_path=$3}
+    and value  = {record_or_tuple=(E_Par $1); selector=$2; field_path=$3}
     in E_Proj {region; value}
   }
 | field_path { $1 }
@@ -1018,13 +1015,13 @@ record_expr:
 field_assignment:
   attributes field_name "=" expr {
     let region = cover $2#region (expr_to_region $4)
-    and value =
-      Complete {attributes=$1; field_lhs=$2; lens=$3; field_rhs=$4}
-    in {region; value}
+    and value  = {attributes=$1; field_lhs = Name $2;
+                  lens=$3; field_rhs=$4}
+    in Complete {region; value}
   }
 | attributes field_name {
-    let value = Punned {attributes=$1; pun=$2}
-    in {$2 with value} }
+    let value = {attributes=$1; pun = Name $2}
+    in Punned {region=$2#region; value} }
 
 (* Functional updates of records *)
 
@@ -1037,14 +1034,13 @@ update_expr:
 
 field_path_assignment:
   attributes field_name {
-    let value = Punned {attributes=$1; pun=$2}
-    in {$2 with value}
+    let value = {attributes=$1; pun = Name $2}
+    in Punned {region = $2#region; value}
   }
 | attributes path field_lens expr {
     let region = cover (path_to_region $2) (expr_to_region $4)
-    and value =
-      Complete {attributes=$1; field_lhs=$2; lens=$3; field_rhs=$4}
-    in {region; value} }
+    and value  = {attributes=$1; field_lhs=$2; lens=$3; field_rhs=$4}
+    in Complete {region; value} }
 
 field_lens:
   "="  { Lens_Id   $1 }
@@ -1060,10 +1056,9 @@ path:
 
 projection:
   record_or_tuple "." nsepseq(selection,".") {
-    let start  = $1.region in
     let stop   = nsepseq_to_region selection_to_region $3 in
-    let region = cover start stop in
-    let value  = {struct_name=$1; selector=$2; field_path=$3}
+    let region = cover $1#region stop in
+    let value  = {record_or_tuple=(E_Var $1); selector=$2; field_path=$3}
     in {region; value} }
 
 (* Sequence expression *)
@@ -1073,7 +1068,7 @@ projection:
 
 sequence_expr:
   "begin" ioption(series) "end" {
-    let region   = cover $1#region end_#region
+    let region   = cover $1#region $3#region
     and compound = Some (BeginEnd ($1,$3)) in
     let value    = {compound; elements=$2}
     in {region; value} }
@@ -1090,12 +1085,13 @@ last_expr:
 | tuple_expr { $1 }
 
 let_in_sequence:
-  "let" ioption("rec") let_binding "in" series {
-    let stop   = nsepseq_to_region expr_to_region $5 in
-    let region = cover $1#region stop in
-    let value  = {compound=None; elements=$5} in
+  attributes "let" ioption("rec") let_binding "in" series {
+    let stop   = nsepseq_to_region expr_to_region $6 in
+    let region = cover $2#region stop in
+    let value  = {compound=None; elements = Some $6} in
     let body   = E_Seq {region; value} in
-    let value  = {kwd_let=$1; kwd_rec=$2; binding=$3; kwd_in=$4; body}
+    let value  = {attributes=$1; kwd_let=$2; kwd_rec=$3;
+                  binding=$4; kwd_in=$5; body}
     in E_LetIn {region; value} }
 
 seq_expr:
