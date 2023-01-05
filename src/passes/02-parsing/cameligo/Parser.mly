@@ -77,10 +77,10 @@ let get_attributes (node : CST.pattern) =
 %}
 
 (* Reductions on error *)
-
+(*
 %on_error_reduce seq_expr
 %on_error_reduce nsepseq(selection,DOT)
-%on_error_reduce call_expr_level
+%on_error_reduce app_expr_level
 %on_error_reduce add_expr_level
 %on_error_reduce cons_expr_level
 %on_error_reduce cat_expr_level
@@ -114,12 +114,13 @@ let get_attributes (node : CST.pattern) =
 %on_error_reduce pattern
 %on_error_reduce nsepseq(core_irrefutable,COMMA)
 %on_error_reduce variant(fun_type_level)
-%on_error_reduce variant(prod_type_level)
+%on_error_reduce variant(cartesian_level)
 %on_error_reduce nsepseq(variant(fun_type_level),VBAR)
-%on_error_reduce nsepseq(variant(prod_type_level),VBAR)
+%on_error_reduce nsepseq(variant(cartesian_level),VBAR)
 %on_error_reduce nsepseq(core_type,TIMES)
 %on_error_reduce fun_type_level
-%on_error_reduce prod_type_level
+%on_error_reduce cartesian_level
+*)
 
 (* See [ParToken.mly] for the definition of tokens. *)
 
@@ -149,7 +150,7 @@ brackets(X):
     and value  = {lbracket=$1; inside=$2; rbracket=$3}
     in {region; value} }
 
-brackes(X):
+braces(X):
   "{" X "}" {
     let region = cover $1#region $3#region
     and value  = {lbrace=$1; inside=$2; rbrace=$3}
@@ -165,8 +166,7 @@ brackes(X):
    [X]) and the rest of the sequence (possibly empty). This way, the
    OCaml typechecker can keep track of this information along the
    static control-flow graph. See module [Utils] for the types
-   corresponding to the semantic actions of those rules.
- *)
+   corresponding to the semantic actions of those rules. *)
 
 (* Non-empty sequence of items *)
 
@@ -221,6 +221,8 @@ record(item):
 %inline variable        : "<ident>"  { $1 }
 %inline module_name     : "<uident>" { $1 }
 %inline field_name      : "<ident>"  { $1 }
+%inline type_name       : "<ident>"  { $1 }
+%inline type_ctor       : "<ident>"  { $1 }
 %inline ctor            : "<uident>" { $1 }
 %inline record_or_tuple : "<ident>"  { $1 }
 
@@ -285,11 +287,15 @@ type_vars:
 | par(tuple(type_var)) { TV_Tuple  $1 }
 
 type_var:
-  "'" variable {
-    let region = cover $1#region $2#region
-    in {region; value = Some $1, $2}
+  quoted_type_var {
+    let quote, var = $1 in
+    let region = cover quote#region var#region
+    in {region; value = Some quote, var}
   }
 | "_" { {$1 with value = None, $1} }
+
+quoted_type_var:
+  "'" variable { $1,$2 }
 
 (* Type expressions *)
 
@@ -331,22 +337,28 @@ cartesian_level:
 (* Core types *)
 
 core_type:
+  "[@attr]" core_type { T_Attr ($1,$2) }
+| no_attr_type        { $1 }
+
+no_attr_type:
   "<string>"      { T_String $1 }
 | "<int>"         { T_Int    $1 }
 | "_" | type_name { T_Var    $1 }
 | type_ctor_app   { T_App    $1 }
 | record_type     { T_Record $1 }
 | par(type_expr)  { T_Par    $1 }
-| type_var        { T_Arg    $1 }
-| qualified_type
-| attr_type       { $1          }
+| quoted_type_var { T_Arg    $1 }
+(*| attr_type       { T_Attr   $1 }*)
+| qualified_type  { $1 }
 
 (* Attributed core types *)
-
+(*
 attr_type:
-  "[@attr]" core_type { T_Attr ($1,$2) }
+  "[@attr]" core_type { $1,$2 }
+*)
 
 (* Variant types.
+
    We parameterise the variants by the kind of type expression that
    may occur at the rightmost side of a sentence. This enables to use
    [variant_type] in contexts that allow different types to avoid LR
@@ -354,26 +366,43 @@ attr_type:
    functional type, parentheses are mandatory. *)
 
 variant_type(right_type_expr):
-  nsepseq(variant(right_type_expr),"|") {
-    let region = nsepseq_to_region (fun x -> x.region) $1
-    and value  = {lead_vbar=None; variants=$1}
-    in T_Variant {region; value}
+  short_variant(right_type_expr) ioption(long_variants(right_type_expr)) {
+    let region, tail =
+      match $2 with
+        None -> $1.region, []
+      | Some long ->
+          let stop = CST.nseq_to_region (fun (_,v) -> v.region) long
+          in cover $1.region stop, Utils.nseq_to_list long in
+    let value = {lead_vbar = None; variants = ($1, tail)}
+    in T_Sum {region; value}
+   }
+| attributes long_variants(right_type_expr) {
+    (* Attributes of the variant type *)
+    let region    = CST.nseq_to_region (fun (_,v) -> v.region) $2 in
+    let (lead_vbar, short_variant), list = $2 in
+    let variants  = short_variant, list in
+    let value     = {lead_vbar = Some lead_vbar; variants} in
+    let type_expr = T_Sum {region; value}
+    in hook_T_Attr $1 type_expr }
+
+long_variants(right_type_expr):
+  nseq(long_variant(right_type_expr)) { $1 }
+
+long_variant(right_type_expr):
+  "|" short_variant(right_type_expr) { $1,$2 }
+
+short_variant(right_type_expr):
+  "[@attr]" short_variant(right_type_expr) {
+    let {region; value} = $2 in
+    let value = {value with attributes = $1 :: value.attributes}
+    in {region; value }
   }
-| attributes "|" nsepseq(variant(right_type_expr),"|") {
-    let region = nsepseq_to_region (fun x -> x.region) $3
-    and value  = {lead_vbar = Some $2; variants=$3} in
-    let t_expr = T_Variant {region; value}
-    in hook_T_Attr $1 t_expr }
-
-(* Always use [ioption] at the end of a rule *)
-
-variant(right_type_expr):
-  attributes "<uident>" ioption(of_type(right_type_expr)) {
-    let stop   = match $3 with
-                  None -> $2#region
-                | Some (_, t) -> type_expr_to_region t in
-    let region = cover $2#region stop
-    and value  = {ctor; ctor_args=$3; attributes=$1}
+| ctor ioption(of_type(right_type_expr)) {
+    let stop   = match $2 with
+                   None -> $1#region
+                 | Some (_, t) -> type_expr_to_region t in
+    let region = cover $1#region stop
+    and value  = {ctor=$1; ctor_args=$2; attributes=[]}
     in {region; value} }
 
 of_type(right_type_expr):
@@ -382,13 +411,13 @@ of_type(right_type_expr):
 (* Type constructor applications *)
 
 type_ctor_app:
-  core_type type_name {
-    let region = cover (type_expr_to_region $1) $2#region
-    in mk_reg region ($2, TC_Single $1)
-  }
-| par(tuple(type_expr)) type_name {
-    let region = cover $1.region $2#region
-    in mk_reg region ($2, TC_Tuple $1) }
+  type_ctor_arg type_ctor {
+    let region = type_ctor_arg_to_region $1
+    in mk_reg region ($2,$1) }
+
+type_ctor_arg:
+  no_attr_type          { TC_Single $1 }
+| par(tuple(type_expr)) { TC_Tuple  $1 }
 
 (* Record types *)
 
@@ -399,7 +428,7 @@ record_type:
    type of the field is the name of the field. *)
 
 field_decl:
-  attributes field_name ioption(type_annotation) {
+  attributes field_name ioption(type_annotation(type_expr)) {
     let stop = match $3 with
                         None -> $2#region
                | Some (_, t) -> type_expr_to_region t in
@@ -434,9 +463,9 @@ field_decl:
    whence our more involved solution. *)
 
 qualified_type:
-  type_in_module(type_ctor) type_tuple {
+  type_ctor_arg type_in_module(type_ctor) {
     let region = cover (type_expr_to_region $1) $2.region
-    in T_App {region; value=$1,$2}
+    in T_App {region; value=$2,$1}
   }
 | type_in_module(type_name      { T_Var $1 })
 | type_in_module(par(type_expr) { T_Par $1 }) { $1 }
@@ -500,13 +529,6 @@ structure:
   "struct" nseq(declaration)? "end" {
     {kwd_struct=$1; declarations=$2; kwd_end=$3} }
 
-module_path(selected):
-  module_name "." module_path(selected) {
-    let (head, tail), selected = $3 in
-    (($1,$2), head::tail), selected
-  }
-| module_name "." selected { (($1,$2), []), $3 }
-
 (* PATTERNS *)
 
 (* Irrefutable Patterns *)
@@ -530,9 +552,8 @@ core_irrefutable:
 
 var_pattern:
   attributes "<ident>" {
-    let variable = unwrap $2 in
-    let value = {variable; attributes=$1}
-    in {variable with value} }
+    let value = {attributes=$1; variable=$2}
+    in {$2 with value} }
 
 typed_irrefutable:
   irrefutable type_annotation(type_expr) {
@@ -595,7 +616,7 @@ core_pattern:
 (* Parenthesised patterns *)
 
 in_pattern:
-  pattern | typed_pattern { $1 }
+  par(pattern | typed_pattern { $1 }) { $1 }
 
 (* Attributed patterns *)
 
@@ -605,7 +626,7 @@ attr_pattern:
 (* Qualified patterns (patterns modulo module paths) *)
 
 qualified_pattern:
-  pattern_in_module(ctor { P_Ctor $1 }) tuple(pattern) {
+  pattern_in_module(ctor { P_Ctor $1 }) core_pattern {
     let region = cover (pattern_to_region $1) $2.region
     and value  = $1, Some $2
     in P_App {region; value}
@@ -622,25 +643,19 @@ pattern_in_module(pattern):
 list_pattern:
   list_of(cons_pattern_level) { $1 }
 
-(* Constructed patterns
-
-   Note that we do not use [tuple_pattern] because tuples must have at
-   least two components. We also use [ctor_param] instead of
-   [pattern], in order to distinguish constructor parameters and tuple
-   patterns in the syntax erro messages. *)
+(* Constructed patterns *)
 
 ctor_app_pattern:
-  ctor par(nsepseq(ctor_param,",")) {
-    mk_reg (cover $1#region $2.region) (P_Ctor $1, Some $2)
+  ctor core_pattern {
+    let region = cover ctor#region (pattern_to_region $2)
+    in mk_reg region (P_Ctor $1, Some $2)
   }
 | ctor { {region=$1#region; value = (P_Ctor $1, None)} }
-
-ctor_param: pattern { $1 }
 
 (* Typed patterns *)
 
 typed_pattern:
-  pattern type_annotation {
+  pattern type_annotation(type_expr) {
     let start  = pattern_to_region $1
     and stop   = type_expr_to_region (snd $2) in
     let region = cover start stop
@@ -653,7 +668,7 @@ record_pattern(rhs_pattern):
   record(field_pattern(rhs_pattern)) { $1 }
 
 field_pattern(rhs_pattern):
-  atributes field_lhs_pattern {
+  attributes field_lhs_pattern {
     let region = pattern_to_region $1
     and value  = {attributes=$1; pun=$2}
     in Punned {region; value}
@@ -662,8 +677,7 @@ field_pattern(rhs_pattern):
     let start  = pattern_to_region $1
     and stop   = pattern_to_region $3 in
     let region = cover start stop
-    and value  = {attributes=$1; field_lhs=$2;
-                  field_lens = (Lens_Id $3); field_rhs=$4}
+    and value  = {attributes=$1; field_lhs=$2; lens=$3; field_rhs=$4}
     in Complete {region; value} }
 
 field_lhs_pattern:
@@ -693,7 +707,6 @@ base_expr(right_expr):
 | let_in_expr(right_expr)
 | local_type_decl(right_expr)
 | local_module_decl(right_expr)
-| local_module_alias(right_expr)
 | fun_expr(right_expr)
 | disj_expr_level { $1 }
 
@@ -797,13 +810,14 @@ local_module_decl(right_expr):
 (* Functional expression (a.k.a. lambda) *)
 
 fun_expr(right_expr):
-  "fun" type_parameters nseq(core_irrefutable) ret_type "->" right_expr {
-    let region = cover $1#region (expr_to_region $6) in
-    let value  = {kwd_fun=$1; type_params=$2; binders=$3;
+  "fun" type_params nseq(core_irrefutable) ret_type "->" right_expr {
+    let region = cover $1#region (expr_to_region $6)
+    and value  = {kwd_fun=$1; type_params=$2; binders=$3;
                   rhs_type=$4; arrow=$5; body=$6}
     in E_Fun {region; value} }
 
-%inline ret_type:
+%inline
+ret_type:
   ioption(type_annotation(lambda_app_type)) { $1 }
 
 lambda_app_type:
@@ -844,7 +858,7 @@ cons_expr_level:
 add_expr_level:
   bin_op(add_expr_level, "+", mult_expr_level)     { E_Add $1 }
 | bin_op(add_expr_level, "-", mult_expr_level)     { E_Sub $1 }
-| mult_expr_level                                  { $1 }
+| mult_expr_level                                  { $1       }
 
 mult_expr_level:
   bin_op(mult_expr_level, "*",    shift_expr_level) { E_Mult $1 }
@@ -861,34 +875,48 @@ shift_expr_level:
 | unary_expr_level                                  { $1       }
 
 unary_expr_level:
-  unary_op("-",   call_expr_level) { E_Neg $1 }
-| unary_op("not", call_expr_level) { E_Not $1 }
-| call_expr_level                  { $1       }
+  unary_op("-",   app_expr_level) { E_Neg $1 }
+| unary_op("not", app_expr_level) { E_Not $1 }
+| app_expr_level                  { $1       }
 
-call_expr_level:
-  call_expr | ctor_app_expr | core_expr { $1 }
+app_expr_level:
+  app_expr | core_expr { $1 }
+
+(* Applications *)
+
+app_expr:
+  core_expr arguments {
+    let start  = expr_to_region $1 in
+    let stop   = match $2 with
+                   e, [] -> expr_to_region e
+                 | _, tl -> last expr_to_region tl in
+    let region = cover start stop
+    in E_App {region; value=($1,$2)} }
+
+arguments:
+  nseq(no_attr_expr) { $1 }
+
+(*
+app_expr:
+  call_expr | ctor_app_expr { $1 }
 
 (* Constructed expressions *)
 
 ctor_app_expr:
-  "<uident>" argument {
+  ctor argument {
     let region = cover ctor.region (expr_to_region $2)
-    and value = E_Ctor $1, $2
+    and value  = E_Ctor $1, $2
     in E_App {region; value}
   }
-| jconst_ctor_expr { $1 }
-
-const_ctor_expr:
-  "<uident>" { E_Ctor $1 }
-
-arguments:
-  argument           { $1,[]                      }
-| argument arguments { let h,t = $2 in ($1, h::t) }
+| const_ctor_expr { $1 }
 
 argument:
   core_expr | const_ctor_expr { $1 }
 
-(* Call expressions *)
+const_ctor_expr:
+  ctor { E_Ctor $1 }
+
+(* Function calls *)
 
 call_expr:
   core_expr arguments {
@@ -898,10 +926,15 @@ call_expr:
                  | _, tl -> last expr_to_region tl in
     let region = cover start stop
     in E_App {region; value=($1,$2)} }
+*)
 
 (* Core expressions *)
 
 core_expr:
+  "[@attr]" core_expr { E_Attr ($1,$2) }
+| no_attr_expr        { $1 }
+
+no_attr_expr:
   "<int>"         { E_Int      $1 }
 | "<nat>"         { E_Nat      $1 }
 | "<mutez>"       { E_Mutez    $1 }
@@ -909,25 +942,14 @@ core_expr:
 | "<verbatim>"    { E_Verbatim $1 }
 | "<bytes>"       { E_Bytes    $1 }
 | unit            { E_Unit     $1 }
-| tuple(expr)     { E_Tuple    $1 }
 | list_of(expr)   { E_List     $1 }
 | record_expr     { E_Record   $1 }
 | code_inj        { E_CodeInj  $1 }
-| ctor_app_expr   { E_App      $1 }
 | par(typed_expr) { E_Typed    $1 }
-| attr_expr       { E_Attr     $1 }
 | sequence_expr   { E_Seq      $1 }
 | record_update   { E_Update   $1 }
-
-
+| ctor            { E_Ctor     $1 }
 | path_expr       { $1 }
-
-| module_access_e   { EModA $1 }
-
-(* Attributed expression *)
-
-attr_expr:
-  "[@attr]" core_expr  { $1,$2 }
 
 (* Code injection *)
 
@@ -988,49 +1010,49 @@ local_path:
   }
 | field_path { $1 }
 
-selection:
-  field_name { FieldName $1 }
-| "<int>"    { Component (unwrap $1) }
-
 (* Record expression *)
 
 record_expr:
-  record(field_assignment,";") { $1 }
+  record(field_assignment) { $1 }
 
 field_assignment:
-  attributes field_name {
-    let region = $1.region
-    and value  = Punned_property $1
-      in {region; value}
+  attributes field_name "=" expr {
+    let region = cover $2#region (expr_to_region $4)
+    and value =
+      Complete {attributes=$1; field_lhs=$2; lens=$3; field_rhs=$4}
+    in {region; value}
   }
-  | attributes field_name "=" expr {
+| attributes field_name {
+    let value = Punned {attributes=$1; pun=$2}
+    in {$2 with value} }
 
-
-
-
-    let region = cover $1.region (expr_to_region $3)
-    and value  = Property {field_name=$1; assignment=$2; field_expr=$3}
-    in {region; value} }
-
-(* Record (functional) update *)
+(* Functional updates of records *)
 
 record_update:
   braces(update_expr) { $1 }
 
 update_expr:
-  core_expr "with" sep_or_term_list(field_path_assignment,";") {
+  no_attr_expr "with" sep_or_term_list(field_path_assignment,";") {
     {record=$1; kwd_with=$2; updates = fst $3} }
 
 field_path_assignment:
-  field_name {
-     let region = $1.region
-     and value  = Path_punned_property $1
-     in {region; value}
+  attributes field_name {
+    let value = Punned {attributes=$1; pun=$2}
+    in {$2 with value}
   }
-| path "=" expr {
-    let region = cover (path_to_region $1) (expr_to_region $3)
-    and value  = Path_property {field_path=$1; assignment=$2; field_expr=$3}
+| attributes path field_lens expr {
+    let region = cover (path_to_region $2) (expr_to_region $4)
+    and value =
+      Complete {attributes=$1; field_lhs=$2; lens=$3; field_rhs=$4}
     in {region; value} }
+
+field_lens:
+  "="  { Lens_Id   $1 }
+| "+=" { Lens_Add  $1 }
+| "-=" { Lens_Sub  $1 }
+| "*=" { Lens_Mult $1 }
+| "/=" { Lens_Div  $1 }
+| "|=" { Lens_Fun  $1 }
 
 path:
  "<ident>"   { Name $1 }
@@ -1046,7 +1068,7 @@ projection:
 
 (* Sequence expression *)
 
-(* TODO Add support for ["(" series ")"]
+(* TODO Add support for production ["(" series ")"]
    (LR conflicts to solve). See CST *)
 
 sequence_expr:

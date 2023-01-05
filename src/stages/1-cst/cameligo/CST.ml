@@ -192,7 +192,7 @@ and type_decl = {
 
 and type_vars =
   TV_Single of type_var
-| TV_Tuple  of type_var tuple par
+| TV_Tuple  of type_var tuple par reg
 
 and type_var = (quote option * variable) reg  (* 'a or ' a or _ *)
 
@@ -204,8 +204,8 @@ and 'a tuple = ('a, comma) nsepseq par reg
    add or modify some, please make sure they remain in order. *)
 
 and type_expr =
-  T_Arg     of type_var reg                        (*              'a *)
-| T_App     of (type_expr * type_ctor_args) reg    (*     M.t (x,y,z) *)
+  T_App     of (type_expr * type_ctor_arg) reg     (*     M.t (x,y,z) *)
+| T_Arg     of type_var reg                        (*              'a *)
 | T_Attr    of (attribute * type_expr)             (*          [@a] x *)
 | T_Cart    of cartesian                           (*     x * (y * z) *)
 | T_Fun     of (type_expr * arrow * type_expr) reg (*          x -> y *)
@@ -219,9 +219,9 @@ and type_expr =
 
 (* Type application *)
 
-and type_ctor_args =
+and type_ctor_arg =
   TC_Single of type_expr
-| TC_Tuple  of type_expr tuple
+| TC_Tuple  of type_expr tuple par reg
 
 (* Cartesian type *)
 
@@ -232,9 +232,9 @@ and cartesian = (type_expr, times) nsepseq reg
 and 'a record = ('a, semi) sepseq braces
 
 and field_decl = {
+  attributes : attribute list;
   field_name : field_name;
-  field_type : type_annotation option; (* Type punning if [None] *)
-  attributes : attribute list
+  field_type : type_annotation option (* Type punning if [None] *)
 }
 
 and type_annotation = colon * type_expr
@@ -247,9 +247,9 @@ and variant_type = {
 }
 
 and variant = {
+  attributes : attribute list;
   ctor       : ctor;
-  ctor_args  : (kwd_of * type_expr) option;
-  attributes : attribute list
+  ctor_args  : (kwd_of * type_expr) option
 }
 
 (* PATTERNS *)
@@ -281,33 +281,25 @@ and pattern =
 
 and 'a list_ = ('a, semi) sepseq brackets
 
-(* Record pattern with lenses *)
+(* Record pattern *)
 
-and record_pattern = (field_name, pattern) field reg record
+and record_pattern = (field_name, equal, pattern) field reg record
 
-and ('lhs, 'rhs) field =
+and ('lhs, 'lens, 'rhs) field =
   Punned   of 'lhs punned
-| Complete of ('lhs, 'rhs) full_field
+| Complete of ('lhs, 'lens, 'rhs) full_field
 
 and 'lhs punned = {
+  attributes : attribute list;
   pun        : 'lhs;
-  attributes : attribute list
 }
 
-and ('lhs, 'rhs) full_field = {
+and ('lhs, 'lens, 'rhs) full_field = {
+  attributes : attribute list;
   field_lhs  : 'lhs;
-  field_lens : field_lens;
-  field_rhs  : 'rhs;
-  attributes : attribute list
+  lens       : 'lens;
+  field_rhs  : 'rhs
 }
-
-and field_lens =
-  Lens_Id   of equal
-| Lens_Add  of plus_eq
-| Lens_Sub  of minus_eq
-| Lens_Mult of times_eq
-| Lens_Div  of slash_eq
-| Lens_Fun  of vbar_eq
 
 (* Typed pattern *)
 
@@ -327,9 +319,9 @@ and the_unit = lpar * rpar
 
 and expr =
   E_Add      of plus bin_op reg              (* x + y               *)
-| E_And      of kwd_and bin_op reg           (* x and y             *)
+| E_And      of kwd_and bin_op reg           (* x && y              *)
 | E_App      of (expr * expr nseq) reg       (* f x y               *)
-| E_Attr     of (attribute * expr)           (* [@a] (x,y)          *)
+| E_Attr     of (attribute * expr)           (* [@a] e              *)
 | E_Bytes    of (lexeme * Hex.t) wrap        (* 0xFFFA              *)
 | E_Cat      of cat bin_op reg               (* "Hello" ^ world     *)
 | E_CodeInj  of code_inj reg
@@ -354,12 +346,12 @@ and expr =
 | E_Match    of expr match_ reg              (* match e with p -> i *)
 | E_Mod      of kwd_mod bin_op reg           (* x mod n             *)
 | E_ModIn    of module_in reg                (* module M = N in e   *)
-| E_ModPath  of expr module_path reg         (* M.N.x               *)
+| E_ModPath  of expr module_path reg         (* M.N.x.0             *)
 | E_Mult     of times bin_op reg             (* x * y               *)
 | E_Mutez    of (lexeme * Int64.t) wrap      (* 5mutez              *)
 | E_Nat      of (lexeme * Z.t) wrap          (* 4n                  *)
 | E_Neg      of minus un_op reg              (* -a                  *)
-| E_Neq      of neq bin_op reg               (* x =/= y             *)
+| E_Neq      of neq bin_op reg               (* x <> y              *)
 | E_Not      of kwd_not un_op reg            (* not x               *)
 | E_Or       of kwd_or bin_op reg            (* x or y              *)
 | E_Par      of expr par reg                 (* (x - M.y)           *)
@@ -411,19 +403,27 @@ and selection =
 
 (* Record expression *)
 
-and record_expr = (field_name, expr) field reg record
+and record_expr = (field_name, equal, expr) field reg record
 
 (* Functional update of records *)
 
 and update_expr = {
   record   : expr;
   kwd_with : kwd_with;
-  updates  : ((path, expr) field reg, semi) nsepseq
+  updates  : ((path, lens, expr) field reg, semi) nsepseq
 }
 
 and path =
   Name of variable
 | Path of projection reg
+
+and lens =
+  Lens_Id   of equal
+| Lens_Add  of plus_eq
+| Lens_Sub  of minus_eq
+| Lens_Mult of times_eq
+| Lens_Div  of slash_eq
+| Lens_Fun  of vbar_eq
 
 (* Pattern matching *)
 
@@ -602,3 +602,7 @@ let selection_to_region = function
 let path_to_region = function
   Name v -> v#region
 | Path p -> p.region
+
+let type_ctor_arg_to_region = function
+  TC_Single e -> type_expr_to_region e
+| TC_Tuple  p -> p.region
