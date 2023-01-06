@@ -606,14 +606,14 @@ core_pattern:
 | list_pattern                 { P_List     $1 }
 | ctor_app_pattern             { P_App      $1 }
 | record_pattern(core_pattern) { P_Record   $1 }
-| in_pattern                   { P_Par      $1 }
 | attr_pattern                 { P_Attr     $1 }
+| in_pattern
 | qualified_pattern            { $1            }
 
 (* Parenthesised patterns *)
 
 in_pattern:
-  par(pattern | typed_pattern { $1 }) { $1 }
+  par(pattern | typed_pattern { $1 }) { P_Par $1 }
 
 (* Attributed patterns *)
 
@@ -629,8 +629,8 @@ qualified_pattern:
     let region = cover start stop
     in P_App {region; value = ($1, Some $2)}
   }
-| pattern_in_module(variable        { P_Var $1 })
-| pattern_in_module(par(in_pattern) { P_Par $1 }) { $1 }
+| pattern_in_module(variable   { P_Var $1 })
+| pattern_in_module(in_pattern { $1 }) { $1 }
 
 pattern_in_module(pattern):
   module_path(pattern) {
@@ -666,25 +666,23 @@ record_pattern(rhs_pattern):
   record(field_pattern(rhs_pattern)) { $1 }
 
 field_pattern(rhs_pattern):
-  attributes field_lhs_pattern {
-    let region = pattern_to_region $2
-    and value  = {attributes=$1; pun=$2}
-    in Punned {region; value}
+  attributes field_pattern_lhs {
+    let value = {attributes=$1; pun=$2}
+    in Punned {region = $2#region; value}
   }
-| attributes field_lhs_pattern "=" rhs_pattern {
-    let start  = pattern_to_region $2
-    and stop   = pattern_to_region $4 in
-    let region = cover start stop
+| attributes field_pattern_lhs "=" rhs_pattern {
+    let stop   = pattern_to_region $4 in
+    let region = cover $2#region stop
     and value  = {attributes=$1; field_lhs=$2; lens=$3; field_rhs=$4}
     in Complete {region; value} }
 
-field_lhs_pattern:
-  field_name | "_" { P_Var $1 }
+field_pattern_lhs:
+  field_name | "_" { $1 }
 
 (* Unit (value and pattern) *)
 
 unit:
-  "(" ")" { {region = cover $1#region $2#region; value = $1,$2} }
+  "(" ")" { {region = cover $1#region $2#region; value = ($1,$2)} }
 
 (* EXPRESSIONS *)
 
@@ -1015,12 +1013,11 @@ record_expr:
 field_assignment:
   attributes field_name "=" expr {
     let region = cover $2#region (expr_to_region $4)
-    and value  = {attributes=$1; field_lhs = Name $2;
-                  lens=$3; field_rhs=$4}
+    and value  = {attributes=$1; field_lhs=$2; lens=$3; field_rhs=$4}
     in Complete {region; value}
   }
 | attributes field_name {
-    let value = {attributes=$1; pun = Name $2}
+    let value = {attributes=$1; pun=$2}
     in Punned {region=$2#region; value} }
 
 (* Functional updates of records *)
@@ -1035,11 +1032,10 @@ update_expr:
 field_path_assignment:
   attributes field_name {
     let value = {attributes=$1; pun = Name $2}
-    in Punned {region = $2#region; value}
-  }
+    in Punned {region = $2#region; value} }
 | attributes path field_lens expr {
     let region = cover (path_to_region $2) (expr_to_region $4)
-    and value  = {attributes=$1; field_lhs=$2; lens=$3; field_rhs=$4}
+    and value = {attributes=$1; field_lhs=$2; lens=$3; field_rhs=$4}
     in Complete {region; value} }
 
 field_lens:
