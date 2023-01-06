@@ -27,16 +27,6 @@ module Wrap = Lexing_shared.Wrap
 
 let mk_reg region value = Region.{region; value}
 
-let apply_type_ctor token args =
-  let {region; value = {lpar; inside; rpar}} = args in
-  let tuple  = mk_reg region {lpar; inside=inside,[]; rpar}
-  and region = cover token#region args.region
-  in mk_reg region (T_Var token, tuple)
-
-let apply_map token args =
-  let region = cover token#region args.region
-  in mk_reg region (T_Var token, args)
-
 let mk_mod_path :
   (module_name * dot) Utils.nseq * 'a ->
   ('a -> Region.t) ->
@@ -63,14 +53,6 @@ let rec hook mk_attr attrs node =
 
 let hook_E_Attr = hook @@ fun a e -> E_Attr (a,e)
 let hook_T_Attr = hook @@ fun a t -> T_Attr (a,t)
-
-(* Making a list of attributes from a pattern *)
-
-let get_attributes (node : CST.pattern) =
-  let rec aux attrs = function
-    P_Attr (attr, pattern) -> aux (attr::attrs) pattern
-  | pattern                -> List.rev attrs, pattern
-  in aux [] node
 
 (* END HEADER *)
 %}
@@ -690,21 +672,26 @@ interactive_expr:
   expr EOF { $1 }
 
 expr:
-  base_cond__open(expr) | match_expr(base_cond) { $1 }
+  attributes match_expr(base_cond) { hook_E_Attr $1 $2 }
+| base_cond__open(expr)            { $1 } (* Next stratum *)
 
 base_cond__open(right_expr):
-  base_expr(right_expr) | conditional(right_expr) { $1 }
+  attributes conditional(right_expr) { hook_E_Attr $1 $2 }
+| base_expr(right_expr)              { $1 } (* Next stratum *)
 
 base_cond:
-  base_cond__open(base_cond) { $1 }
+  base_cond__open(base_cond) { $1 } (* Tying the knot *)
 
 base_expr(right_expr):
-  tuple_expr
-| let_in_expr(right_expr)
+  attributes right_opened_expr(right_expr) { hook_E_Attr $1 $2 }
+| tuple_expr
+| disj_expr_level { $1 } (* Next stratum *)
+
+right_opened_expr(right_expr):
+  let_in_expr(right_expr)
 | local_type_decl(right_expr)
 | local_module_decl(right_expr)
-| fun_expr(right_expr)
-| disj_expr_level { $1 }
+| fun_expr(right_expr) { $1 }
 
 (* Tuple expression *)
 
@@ -781,10 +768,9 @@ match_clause(right_expr):
 (* Local value declaration *)
 
 let_in_expr(right_expr):
-  attributes "let" ioption("rec") let_binding "in" right_expr {
-    let region = cover $2#region (expr_to_region $6)
-    and value  = {attributes=$1; kwd_let=$2; kwd_rec=$3;
-                  binding=$4; kwd_in=$5; body=$6}
+  "let" ioption("rec") let_binding "in" right_expr {
+    let region = cover $1#region (expr_to_region $5)
+    and value  = {kwd_let=$1; kwd_rec=$2; binding=$3; kwd_in=$4; body=$5}
     in E_LetIn {region; value} }
 
 (* Local type declaration *)
@@ -1086,9 +1072,9 @@ let_in_sequence:
     let region = cover $2#region stop in
     let value  = {compound=None; elements = Some $6} in
     let body   = E_Seq {region; value} in
-    let value  = {attributes=$1; kwd_let=$2; kwd_rec=$3;
-                  binding=$4; kwd_in=$5; body}
-    in E_LetIn {region; value} }
+    let value  = {kwd_let=$2; kwd_rec=$3; binding=$4; kwd_in=$5; body} in
+    let let_in = E_LetIn {region; value}
+    in hook_E_Attr $1 let_in }
 
 seq_expr:
   disj_expr_level | if_then_else(seq_expr) { $1 }

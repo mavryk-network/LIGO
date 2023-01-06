@@ -447,12 +447,11 @@ and 'rhs match_clause = {
 (* Local value definition *)
 
 and let_in = {
-  attributes : attribute list;
-  kwd_let    : kwd_let;
-  kwd_rec    : kwd_rec option;
-  binding    : let_binding;
-  kwd_in     : kwd_in;
-  body       : expr
+  kwd_let : kwd_let;
+  kwd_rec : kwd_rec option;
+  binding : let_binding;
+  kwd_in  : kwd_in;
+  body    : expr
 }
 
 (* Local type definition *)
