@@ -328,7 +328,7 @@ core_type:
 no_attr_type:
   "<string>"      { T_String $1 }
 | "<int>"         { T_Int    $1 }
-| "_" | type_name { T_Var    $1 }
+| type_name       { T_Var    $1 } (* Removed "_" *)
 | type_ctor_app   { T_App    $1 }
 | record_type     { T_Record $1 }
 | par(type_expr)  { T_Par    $1 }
