@@ -12,7 +12,7 @@ let try_with f in_prg =
       Format.fprintf
         Format.std_formatter
         "Err : %a"
-        Errors.(error_ppformat ~display_format:Dev)
+        Errors.(error_ppformat ~display_format:Dev ~no_colour:false)
         e)
 
 

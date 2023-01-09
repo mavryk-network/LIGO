@@ -62,7 +62,6 @@ let mapping_binop ~syntax : (Operators.op * Ligo_prim.Constant.constant') list =
     ; SEQ, C_EQ
     ; EQ_SLASH_EQ, C_NEQ
     ]
-  | ReasonLIGO -> failwith "deprecated reason"
 
 
 let mapping_unop ~syntax : (Operators.op * Ligo_prim.Constant.constant') list =
@@ -71,7 +70,6 @@ let mapping_unop ~syntax : (Operators.op * Ligo_prim.Constant.constant') list =
   | CameLIGO -> [ MINUS, C_NEG; WORD_NOT, C_NOT ]
   | JsLIGO -> [ MINUS, C_NEG; EX_MARK, C_NOT ]
   | PascaLIGO -> [ MINUS, C_NEG; WORD_NOT, C_NOT ]
-  | _ -> [] (* :) *)
 
 
 let get_constant_of_operator mapping ~syntax k : Ligo_prim.Constant.constant' option =

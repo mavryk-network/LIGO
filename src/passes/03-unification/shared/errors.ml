@@ -12,10 +12,11 @@ type t =
 [@@deriving poly_constructor { prefix = "unification_" }]
 
 let error_ppformat
-    :  display_format:string display_format -> Format.formatter -> t
+    :  display_format:string display_format -> no_colour:bool -> Format.formatter -> t
     -> unit
   =
- fun ~display_format f err ->
+ fun ~display_format ~no_colour f err ->
+  ignore no_colour ;
   match display_format with
   | Human_readable | Dev ->
     (match err with

@@ -11,7 +11,7 @@ open AST (* Brings types and combinators functions *)
 let translate_attr_pascaligo : CST.Attr.t -> AST.Attribute.t =
  fun attr ->
   let key, value = attr in
-  let value : string option = Option.map ~f:(fun (CST.Attr.String s) -> s) value in
+  let value : string option = Option.map ~f:(function (String s) -> s | Ident _ -> failwith "mmh ?") value in
   { key; value }
 
 

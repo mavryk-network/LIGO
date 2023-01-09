@@ -36,7 +36,8 @@ module TODO_unify_in_cst = struct
         let value : string option =
           Option.map
             ~f:(function
-              | String x -> x)
+              | String x -> x
+              | Ident _ -> failwith "l")
             value_opt
         in
         Temp_prim.Attribute.{ key; value }, loc)

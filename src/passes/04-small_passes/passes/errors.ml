@@ -20,9 +20,10 @@ type t =
   ]
 [@@deriving poly_constructor { prefix = "small_passes_" }, sexp]
 
-let error_ppformat : display_format:string display_format -> Format.formatter -> t -> unit
+let error_ppformat : display_format:string display_format -> no_colour:bool -> Format.formatter -> t -> unit
   =
- fun ~display_format f a ->
+ fun ~display_format ~no_colour f a ->
+  let snippet_pp = Snippet.pp ~no_colour in
   match display_format with
   (* For unit tests of small passes, we print the sexp of the full value
      because we don't have location. *)
@@ -32,34 +33,34 @@ let error_ppformat : display_format:string display_format -> Format.formatter ->
     | `Small_passes_wrong_reduction pass ->
       Format.fprintf f "@[<hv>Pass %s did not reduce.@]" pass
     | `Small_passes_expected_variable t ->
-      Format.fprintf f "@[<hv>%a@.Expected a declaration name@]" Snippet.pp (get_t_loc t)
+      Format.fprintf f "@[<hv>%a@.Expected a declaration name@]" snippet_pp (get_t_loc t)
     | `Small_passes_array_rest_not_supported e ->
       Format.fprintf
         f
         "@[<hv>%a@.Rest property not supported here.@]"
-        Snippet.pp
+        snippet_pp
         (get_e_loc e)
     | `Small_passes_invalid_case e ->
       Format.fprintf
         f
         "@[<hv>%a@.Invalid field value. An anonymous arrow function was expected, eg. \
          `None: () => foo`.@]"
-        Snippet.pp
+        snippet_pp
         (get_e_loc e)
     | `Small_passes_unsupported_match_object_property e ->
       Format.fprintf
         f
         "@[<hv>%a@.Unsupported pattern match object property.@]"
-        Snippet.pp
+        snippet_pp
         (get_e_loc e)
     | `Small_passes_invalid_list_pattern_match loc ->
-      Format.fprintf f "@[<hv>%a@.Invalid list pattern matching.@]" Snippet.pp loc
+      Format.fprintf f "@[<hv>%a@.Invalid list pattern matching.@]" snippet_pp loc
     | `Small_passes_michelson_type_wrong_arity (name, t) ->
       Format.fprintf
         f
         "[@<hv>%a@.Invalid \"%s\" type.@.An even number of 2 or more arguments is \
          expected, where each odd item is a type annotated by the following string.@]"
-        Snippet.pp
+        snippet_pp
         (get_t_loc t)
         name
     | `Small_passes_michelson_type_wrong (name, t) ->
@@ -67,21 +68,21 @@ let error_ppformat : display_format:string display_format -> Format.formatter ->
         f
         "[@<hv>%a@.Invalid \"%s\" type.@.At this point, an annotation, in the form of a \
          string, is expected for the preceding type.@]"
-        Snippet.pp
+        snippet_pp
         (get_t_loc t)
         name
     | `Small_passes_wrong_lvalue e ->
       Format.fprintf
         f
         "@[<hv>%a@.Expected a field name or an accessor@]"
-        Snippet.pp
+        snippet_pp
         (get_e_loc e)
     | `Small_passes_statement_after_break slst ->
       let loc =
         List.fold slst ~init:Location.generated ~f:(fun acc el ->
             Location.cover acc (get_s_loc el))
       in
-      Format.fprintf f "@[<hv>%a@.Illegal statements after break@]" Snippet.pp loc)
+      Format.fprintf f "@[<hv>%a@.Illegal statements after break@]" snippet_pp loc)
 
 
 let error_json : t -> Simple_utils.Error.t =

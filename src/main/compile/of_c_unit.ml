@@ -17,7 +17,6 @@ let compile_temp ~(raise : (Main_errors.all, Main_warnings.all) Simple_utils.Tra
     | CameLIGO ->
       let raw = trace ~raise parser_tracer (Parsing.Cameligo.parse_file c_unit source_filename) in
       trace ~raise unification_tracer (Unification.Cameligo.compile_program raw)
-    | ReasonLIGO -> failwith "will be deprecated"
     | JsLIGO ->
       let raw = trace ~raise parser_tracer (Parsing.Jsligo.parse_file c_unit source_filename) in
       trace ~raise unification_tracer (Unification.Jsligo.compile_program raw)

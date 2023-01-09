@@ -94,7 +94,10 @@ let ast (raw_options : Raw_options.t) source_file display_format () =
 
 
 let ast_core_temp (raw_options : Raw_options.t) source_file display_format () =
-  format_result ~display_format Ast_core.Formatter.program_format
+  format_result
+    ~display_format
+    ~no_colour:raw_options.no_colour
+    Ast_core.Formatter.program_format
   @@ fun ~raise ->
   let syntax =
     Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
