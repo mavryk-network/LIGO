@@ -1,3 +1,251 @@
+contract: Let UIdent COLON VBAR UIdent VBAR UIdent Of Ident TIMES Ident ZWSP
+##
+## Ends in an error in state: 66.
+##
+## seq(long_variant(fun_type_level)) -> long_variant(fun_type_level) . seq(long_variant(fun_type_level)) [ Type SEMI RPAR RBRACE Module Let In End EQ EOF Directive COMMA Attr ]
+##
+## The known suffix of the stack is as follows:
+## long_variant(fun_type_level)
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 53, spurious reduction of production core_type -> no_attr_type
+## In state 76, spurious reduction of production nsepseq(core_type,TIMES) -> core_type
+## In state 75, spurious reduction of production cartesian_level -> core_type TIMES nsepseq(core_type,TIMES)
+## In state 79, spurious reduction of production fun_type_level -> cartesian_level
+## In state 114, spurious reduction of production of_type(fun_type_level) -> Of fun_type_level
+## In state 24, spurious reduction of production short_variant(fun_type_level) -> UIdent of_type(fun_type_level)
+## In state 116, spurious reduction of production long_variant(fun_type_level) -> VBAR short_variant(fun_type_level)
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+interactive_expr: Begin Match Ident With UIdent ARROW Ident COMMA Bytes ZWSP
+##
+## Ends in an error in state: 868.
+##
+## cases(base_cond) -> cases(base_cond) . VBAR match_clause(base_cond) [ VBAR ]
+## cases(last_expr) -> cases(base_cond) . VBAR match_clause(last_expr) [ End ]
+##
+## The known suffix of the stack is as follows:
+## cases(base_cond)
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 345, spurious reduction of production app_expr_level -> core_expr
+## In state 354, spurious reduction of production unary_expr_level -> app_expr_level
+## In state 341, spurious reduction of production shift_expr_level -> unary_expr_level
+## In state 362, spurious reduction of production mult_expr_level -> shift_expr_level
+## In state 368, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 404, spurious reduction of production cons_expr_level -> add_expr_level
+## In state 391, spurious reduction of production cat_expr_level -> cons_expr_level
+## In state 428, spurious reduction of production comp_expr_level -> cat_expr_level
+## In state 435, spurious reduction of production conj_expr_level -> comp_expr_level
+## In state 444, spurious reduction of production disj_expr_level -> conj_expr_level
+## In state 441, spurious reduction of production nsepseq(disj_expr_level,COMMA) -> disj_expr_level
+## In state 440, spurious reduction of production tuple(disj_expr_level) -> disj_expr_level COMMA nsepseq(disj_expr_level,COMMA)
+## In state 361, spurious reduction of production tuple_expr -> tuple(disj_expr_level)
+## In state 774, spurious reduction of production base_expr(base_cond) -> tuple_expr
+## In state 645, spurious reduction of production base_cond__open(base_cond) -> base_expr(base_cond)
+## In state 646, spurious reduction of production base_cond -> base_cond__open(base_cond)
+## In state 757, spurious reduction of production match_clause(base_cond) -> pattern ARROW base_cond
+## In state 759, spurious reduction of production cases(base_cond) -> match_clause(base_cond)
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+interactive_expr: If Ident Then Ident VBAR
+##
+## Ends in an error in state: 923.
+##
+## if_then_else(expr) -> If expr Then closed_expr . Else expr [ With Type Then SEMI RPAR RBRACKET RBRACE Module Let In End EOF Directive COLON Attr ]
+##
+## The known suffix of the stack is as follows:
+## If expr Then closed_expr
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 259, spurious reduction of production field_path -> Ident
+## In state 333, spurious reduction of production local_path -> field_path
+## In state 331, spurious reduction of production path_expr -> local_path
+## In state 324, spurious reduction of production no_attr_expr -> path_expr
+## In state 329, spurious reduction of production core_expr -> no_attr_expr
+## In state 345, spurious reduction of production app_expr_level -> core_expr
+## In state 354, spurious reduction of production unary_expr_level -> app_expr_level
+## In state 341, spurious reduction of production shift_expr_level -> unary_expr_level
+## In state 362, spurious reduction of production mult_expr_level -> shift_expr_level
+## In state 368, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 404, spurious reduction of production cons_expr_level -> add_expr_level
+## In state 391, spurious reduction of production cat_expr_level -> cons_expr_level
+## In state 428, spurious reduction of production comp_expr_level -> cat_expr_level
+## In state 435, spurious reduction of production conj_expr_level -> comp_expr_level
+## In state 444, spurious reduction of production disj_expr_level -> conj_expr_level
+## In state 908, spurious reduction of production base_expr(closed_expr) -> disj_expr_level
+## In state 644, spurious reduction of production base_if_then_else__open(closed_expr) -> base_expr(closed_expr)
+## In state 643, spurious reduction of production closed_expr -> base_if_then_else__open(closed_expr)
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+interactive_expr: If Ident Then If Ident Then Ident VBAR
+##
+## Ends in an error in state: 916.
+##
+## if_then_else(closed_expr) -> If expr Then closed_expr . Else closed_expr [ Else ]
+## if_then_else(expr) -> If expr Then closed_expr . Else expr [ With Type Then SEMI RPAR RBRACKET RBRACE Module Let In End EOF Directive COLON Attr ]
+##
+## The known suffix of the stack is as follows:
+## If expr Then closed_expr
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 259, spurious reduction of production field_path -> Ident
+## In state 333, spurious reduction of production local_path -> field_path
+## In state 331, spurious reduction of production path_expr -> local_path
+## In state 324, spurious reduction of production no_attr_expr -> path_expr
+## In state 329, spurious reduction of production core_expr -> no_attr_expr
+## In state 345, spurious reduction of production app_expr_level -> core_expr
+## In state 354, spurious reduction of production unary_expr_level -> app_expr_level
+## In state 341, spurious reduction of production shift_expr_level -> unary_expr_level
+## In state 362, spurious reduction of production mult_expr_level -> shift_expr_level
+## In state 368, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 404, spurious reduction of production cons_expr_level -> add_expr_level
+## In state 391, spurious reduction of production cat_expr_level -> cons_expr_level
+## In state 428, spurious reduction of production comp_expr_level -> cat_expr_level
+## In state 435, spurious reduction of production conj_expr_level -> comp_expr_level
+## In state 444, spurious reduction of production disj_expr_level -> conj_expr_level
+## In state 908, spurious reduction of production base_expr(closed_expr) -> disj_expr_level
+## In state 644, spurious reduction of production base_if_then_else__open(closed_expr) -> base_expr(closed_expr)
+## In state 643, spurious reduction of production closed_expr -> base_if_then_else__open(closed_expr)
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+interactive_expr: Begin Match Ident With UIdent ARROW If Ident Then Ident MINUS Bytes ZWSP
+##
+## Ends in an error in state: 765.
+##
+## if_then_else(base_cond) -> If expr Then closed_expr . Else base_cond [ VBAR ]
+## if_then_else(seq_expr) -> If expr Then closed_expr . Else seq_expr [ SEMI End ]
+##
+## The known suffix of the stack is as follows:
+## If expr Then closed_expr
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 345, spurious reduction of production app_expr_level -> core_expr
+## In state 354, spurious reduction of production unary_expr_level -> app_expr_level
+## In state 341, spurious reduction of production shift_expr_level -> unary_expr_level
+## In state 362, spurious reduction of production mult_expr_level -> shift_expr_level
+## In state 408, spurious reduction of production bin_op(add_expr_level,MINUS,mult_expr_level) -> add_expr_level MINUS mult_expr_level
+## In state 402, spurious reduction of production add_expr_level -> bin_op(add_expr_level,MINUS,mult_expr_level)
+## In state 404, spurious reduction of production cons_expr_level -> add_expr_level
+## In state 391, spurious reduction of production cat_expr_level -> cons_expr_level
+## In state 428, spurious reduction of production comp_expr_level -> cat_expr_level
+## In state 435, spurious reduction of production conj_expr_level -> comp_expr_level
+## In state 444, spurious reduction of production disj_expr_level -> conj_expr_level
+## In state 640, spurious reduction of production base_expr(closed_expr) -> disj_expr_level
+## In state 644, spurious reduction of production base_if_then_else__open(closed_expr) -> base_expr(closed_expr)
+## In state 643, spurious reduction of production closed_expr -> base_if_then_else__open(closed_expr)
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+interactive_expr: If Ident Then Match Ident With UIdent ARROW If Ident Then Ident MINUS Bytes ZWSP
+##
+## Ends in an error in state: 717.
+##
+## if_then_else(base_cond) -> If expr Then closed_expr . Else base_cond [ With VBAR Type Then SEMI RPAR RBRACKET RBRACE Module Let In End EOF Directive COLON Attr ]
+## if_then_else(base_if_then_else) -> If expr Then closed_expr . Else base_if_then_else [ Else ]
+##
+## The known suffix of the stack is as follows:
+## If expr Then closed_expr
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 345, spurious reduction of production app_expr_level -> core_expr
+## In state 354, spurious reduction of production unary_expr_level -> app_expr_level
+## In state 341, spurious reduction of production shift_expr_level -> unary_expr_level
+## In state 362, spurious reduction of production mult_expr_level -> shift_expr_level
+## In state 408, spurious reduction of production bin_op(add_expr_level,MINUS,mult_expr_level) -> add_expr_level MINUS mult_expr_level
+## In state 402, spurious reduction of production add_expr_level -> bin_op(add_expr_level,MINUS,mult_expr_level)
+## In state 404, spurious reduction of production cons_expr_level -> add_expr_level
+## In state 391, spurious reduction of production cat_expr_level -> cons_expr_level
+## In state 428, spurious reduction of production comp_expr_level -> cat_expr_level
+## In state 435, spurious reduction of production conj_expr_level -> comp_expr_level
+## In state 444, spurious reduction of production disj_expr_level -> conj_expr_level
+## In state 640, spurious reduction of production base_expr(closed_expr) -> disj_expr_level
+## In state 644, spurious reduction of production base_if_then_else__open(closed_expr) -> base_expr(closed_expr)
+## In state 643, spurious reduction of production closed_expr -> base_if_then_else__open(closed_expr)
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+interactive_expr: Match Ident With UIdent ARROW If Ident Then If Ident Then Ident MINUS Bytes ZWSP
+##
+## Ends in an error in state: 710.
+##
+## if_then_else(base_cond) -> If expr Then closed_expr . Else base_cond [ With VBAR Type Then SEMI RPAR RBRACKET RBRACE Module Let In End EOF Directive COLON Attr ]
+## if_then_else(closed_expr) -> If expr Then closed_expr . Else closed_expr [ Else ]
+##
+## The known suffix of the stack is as follows:
+## If expr Then closed_expr
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 345, spurious reduction of production app_expr_level -> core_expr
+## In state 354, spurious reduction of production unary_expr_level -> app_expr_level
+## In state 341, spurious reduction of production shift_expr_level -> unary_expr_level
+## In state 362, spurious reduction of production mult_expr_level -> shift_expr_level
+## In state 408, spurious reduction of production bin_op(add_expr_level,MINUS,mult_expr_level) -> add_expr_level MINUS mult_expr_level
+## In state 402, spurious reduction of production add_expr_level -> bin_op(add_expr_level,MINUS,mult_expr_level)
+## In state 404, spurious reduction of production cons_expr_level -> add_expr_level
+## In state 391, spurious reduction of production cat_expr_level -> cons_expr_level
+## In state 428, spurious reduction of production comp_expr_level -> cat_expr_level
+## In state 435, spurious reduction of production conj_expr_level -> comp_expr_level
+## In state 444, spurious reduction of production disj_expr_level -> conj_expr_level
+## In state 640, spurious reduction of production base_expr(closed_expr) -> disj_expr_level
+## In state 644, spurious reduction of production base_if_then_else__open(closed_expr) -> base_expr(closed_expr)
+## In state 643, spurious reduction of production closed_expr -> base_if_then_else__open(closed_expr)
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+interactive_expr: Fun LPAR Type Ident RPAR UIdent COLON Ident VBAR
+##
+## Ends in an error in state: 875.
+##
+## fun_expr(expr) -> Fun par(__anonymous_7) nseq(core_irrefutable) type_annotation(lambda_app_type) . ARROW expr [ With Type Then SEMI RPAR RBRACKET RBRACE Module Let In End EOF Directive COLON Attr ]
+##
+## The known suffix of the stack is as follows:
+## Fun par(__anonymous_7) nseq(core_irrefutable) type_annotation(lambda_app_type)
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 53, spurious reduction of production core_type -> no_attr_type
+## In state 72, spurious reduction of production cartesian_level -> core_type
+## In state 312, spurious reduction of production lambda_app_type -> cartesian_level
+## In state 311, spurious reduction of production type_annotation(lambda_app_type) -> COLON lambda_app_type
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
 interactive_expr: Begin Fun WILD ARROW Bytes SEMI
 ##
 ## Ends in an error in state: 872.
@@ -886,16 +1134,12 @@ interactive_expr: Begin If Verbatim Then If Verbatim Then Verbatim COMMA Bytes W
 ##
 interactive_expr: Begin If Verbatim Then Verbatim With
 ##
-## Ends in an error in state: 808.
+## Ends in an error in state: 819.
 ##
-## base_expr(closed_expr) -> disj_expr_level . [ Else ]
-## bin_op(disj_expr_level,BOOL_OR,conj_expr_level) -> disj_expr_level . BOOL_OR conj_expr_level [ REV_APP Or Else COMMA BOOL_OR ]
-## bin_op(disj_expr_level,Or,conj_expr_level) -> disj_expr_level . Or conj_expr_level [ REV_APP Or Else COMMA BOOL_OR ]
-## bin_op(disj_expr_level,REV_APP,conj_expr_level) -> disj_expr_level . REV_APP conj_expr_level [ REV_APP Or Else COMMA BOOL_OR ]
-## tuple(disj_expr_level) -> disj_expr_level . COMMA nsepseq(disj_expr_level,COMMA) [ Else ]
+## if_then_else(seq_expr) -> If expr Then closed_expr . Else seq_expr [ SEMI End ]
 ##
 ## The known suffix of the stack is as follows:
-## disj_expr_level
+## If expr Then closed_expr
 ##
 ## WARNING: This example involves spurious reductions.
 ## This implies that, although the LR(1) items shown above provide an
@@ -911,45 +1155,36 @@ interactive_expr: Begin If Verbatim Then Verbatim With
 ## In state 428, spurious reduction of production comp_expr_level -> cat_expr_level
 ## In state 435, spurious reduction of production conj_expr_level -> comp_expr_level
 ## In state 444, spurious reduction of production disj_expr_level -> conj_expr_level
-##
-interactive_expr: If Verbatim Then Verbatim VBAR
-##
-## Ends in an error in state: 908.
-##
-## base_expr(closed_expr) -> disj_expr_level . [ Else ]
-## base_expr(expr) -> disj_expr_level . [ With Type Then SEMI RPAR RBRACKET RBRACE Module Let In End EOF Directive COLON Attr ]
-## bin_op(disj_expr_level,BOOL_OR,conj_expr_level) -> disj_expr_level . BOOL_OR conj_expr_level [ With Type Then SEMI RPAR REV_APP RBRACKET RBRACE Or Module Let In End Else EOF Directive COMMA COLON BOOL_OR Attr ]
-## bin_op(disj_expr_level,Or,conj_expr_level) -> disj_expr_level . Or conj_expr_level [ With Type Then SEMI RPAR REV_APP RBRACKET RBRACE Or Module Let In End Else EOF Directive COMMA COLON BOOL_OR Attr ]
-## bin_op(disj_expr_level,REV_APP,conj_expr_level) -> disj_expr_level . REV_APP conj_expr_level [ With Type Then SEMI RPAR REV_APP RBRACKET RBRACE Or Module Let In End Else EOF Directive COMMA COLON BOOL_OR Attr ]
-## tuple(disj_expr_level) -> disj_expr_level . COMMA nsepseq(disj_expr_level,COMMA) [ With Type Then SEMI RPAR RBRACKET RBRACE Module Let In End Else EOF Directive COLON Attr ]
-##
-## The known suffix of the stack is as follows:
-## disj_expr_level
-##
-## WARNING: This example involves spurious reductions.
-## This implies that, although the LR(1) items shown above provide an
-## accurate view of the past (what has been recognized so far), they
-## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 345, spurious reduction of production app_expr_level -> core_expr
-## In state 354, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 341, spurious reduction of production shift_expr_level -> unary_expr_level
-## In state 362, spurious reduction of production mult_expr_level -> shift_expr_level
-## In state 368, spurious reduction of production add_expr_level -> mult_expr_level
-## In state 404, spurious reduction of production cons_expr_level -> add_expr_level
-## In state 391, spurious reduction of production cat_expr_level -> cons_expr_level
-## In state 428, spurious reduction of production comp_expr_level -> cat_expr_level
-## In state 435, spurious reduction of production conj_expr_level -> comp_expr_level
-## In state 444, spurious reduction of production disj_expr_level -> conj_expr_level
+## In state 808, spurious reduction of production base_expr(closed_expr) -> disj_expr_level
+## In state 644, spurious reduction of production base_if_then_else__open(closed_expr) -> base_expr(closed_expr)
+## In state 643, spurious reduction of production closed_expr -> base_if_then_else__open(closed_expr)
 ##
 interactive_expr: Match Verbatim With WILD ARROW If Verbatim Then Verbatim WILD
 ##
-## Ends in an error in state: 345.
+## Ends in an error in state: 648.
 ##
-## app_expr -> core_expr . arguments [ With VBAR Type Then TIMES SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or NE Module Mod MINUS Lxor Lsr Lsl Lor Let Land LT LE In GT End Else EQ EOF Directive CONS COMMA COLON CARET BOOL_OR BOOL_AND Attr ]
-## app_expr_level -> core_expr . [ With VBAR Type Then TIMES SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or NE Module Mod MINUS Lxor Lsr Lsl Lor Let Land LT LE In GT End Else EQ EOF Directive CONS COMMA COLON CARET BOOL_OR BOOL_AND Attr ]
+## if_then_else(base_cond) -> If expr Then closed_expr . Else base_cond [ With VBAR Type Then SEMI RPAR RBRACKET RBRACE Module Let In End EOF Directive COLON Attr ]
 ##
 ## The known suffix of the stack is as follows:
-## core_expr
+## If expr Then closed_expr
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 345, spurious reduction of production app_expr_level -> core_expr
+## In state 354, spurious reduction of production unary_expr_level -> app_expr_level
+## In state 341, spurious reduction of production shift_expr_level -> unary_expr_level
+## In state 362, spurious reduction of production mult_expr_level -> shift_expr_level
+## In state 368, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 404, spurious reduction of production cons_expr_level -> add_expr_level
+## In state 391, spurious reduction of production cat_expr_level -> cons_expr_level
+## In state 428, spurious reduction of production comp_expr_level -> cat_expr_level
+## In state 435, spurious reduction of production conj_expr_level -> comp_expr_level
+## In state 444, spurious reduction of production disj_expr_level -> conj_expr_level
+## In state 640, spurious reduction of production base_expr(closed_expr) -> disj_expr_level
+## In state 644, spurious reduction of production base_if_then_else__open(closed_expr) -> base_expr(closed_expr)
+## In state 643, spurious reduction of production closed_expr -> base_if_then_else__open(closed_expr)
 ##
 
 Ill-formed complete conditional expression.
@@ -2082,35 +2317,6 @@ Ill-formed pattern matching.
 At this point, if the expression is complete, then the keyword 'with'
 is expected, followed by matching cases.
 
-interactive_expr: Begin Match Verbatim With WILD ARROW Verbatim With
-##
-## Ends in an error in state: 769.
-##
-## base_expr(base_cond) -> disj_expr_level . [ VBAR ]
-## bin_op(disj_expr_level,BOOL_OR,conj_expr_level) -> disj_expr_level . BOOL_OR conj_expr_level [ VBAR SEMI REV_APP Or End COMMA BOOL_OR ]
-## bin_op(disj_expr_level,Or,conj_expr_level) -> disj_expr_level . Or conj_expr_level [ VBAR SEMI REV_APP Or End COMMA BOOL_OR ]
-## bin_op(disj_expr_level,REV_APP,conj_expr_level) -> disj_expr_level . REV_APP conj_expr_level [ VBAR SEMI REV_APP Or End COMMA BOOL_OR ]
-## seq_expr -> disj_expr_level . [ SEMI End ]
-## tuple(disj_expr_level) -> disj_expr_level . COMMA nsepseq(disj_expr_level,COMMA) [ VBAR End ]
-##
-## The known suffix of the stack is as follows:
-## disj_expr_level
-##
-## WARNING: This example involves spurious reductions.
-## This implies that, although the LR(1) items shown above provide an
-## accurate view of the past (what has been recognized so far), they
-## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 345, spurious reduction of production app_expr_level -> core_expr
-## In state 354, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 341, spurious reduction of production shift_expr_level -> unary_expr_level
-## In state 362, spurious reduction of production mult_expr_level -> shift_expr_level
-## In state 368, spurious reduction of production add_expr_level -> mult_expr_level
-## In state 404, spurious reduction of production cons_expr_level -> add_expr_level
-## In state 391, spurious reduction of production cat_expr_level -> cons_expr_level
-## In state 428, spurious reduction of production comp_expr_level -> cat_expr_level
-## In state 435, spurious reduction of production conj_expr_level -> comp_expr_level
-## In state 444, spurious reduction of production disj_expr_level -> conj_expr_level
-##
 interactive_expr: Begin If Verbatim Then Match Verbatim With WILD ARROW Bytes With
 ##
 ## Ends in an error in state: 761.
@@ -2146,23 +2352,6 @@ Ill-formed pattern matching.
 At this point, if the case is complete, a vertical bar '|' is
 expected, followed by another case starting with a pattern.
 
-interactive_expr: Match Verbatim With WILD CONS Bytes SEMI
-##
-## Ends in an error in state: 533.
-##
-## pattern -> cons_pattern_level . [ RPAR COLON ARROW ]
-## tuple(cons_pattern_level) -> cons_pattern_level . COMMA nsepseq(cons_pattern_level,COMMA) [ RPAR COLON ARROW ]
-##
-## The known suffix of the stack is as follows:
-## cons_pattern_level
-##
-## WARNING: This example involves spurious reductions.
-## This implies that, although the LR(1) items shown above provide an
-## accurate view of the past (what has been recognized so far), they
-## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 517, spurious reduction of production cons_pattern_level -> core_pattern
-## In state 519, spurious reduction of production cons_pattern_level -> core_pattern CONS cons_pattern_level
-##
 interactive_expr: Begin Match Verbatim With WILD RPAR
 ##
 ## Ends in an error in state: 548.
@@ -2261,16 +2450,13 @@ semicolon ';'.
 
 interactive_expr: Begin Verbatim With
 ##
-## Ends in an error in state: 836.
+## Ends in an error in state: 782.
 ##
-## bin_op(disj_expr_level,BOOL_OR,conj_expr_level) -> disj_expr_level . BOOL_OR conj_expr_level [ SEMI REV_APP Or End COMMA BOOL_OR ]
-## bin_op(disj_expr_level,Or,conj_expr_level) -> disj_expr_level . Or conj_expr_level [ SEMI REV_APP Or End COMMA BOOL_OR ]
-## bin_op(disj_expr_level,REV_APP,conj_expr_level) -> disj_expr_level . REV_APP conj_expr_level [ SEMI REV_APP Or End COMMA BOOL_OR ]
-## seq_expr -> disj_expr_level . [ SEMI End ]
-## tuple(disj_expr_level) -> disj_expr_level . COMMA nsepseq(disj_expr_level,COMMA) [ End ]
+## last_expr -> seq_expr . [ End ]
+## series -> seq_expr . SEMI series [ End ]
 ##
 ## The known suffix of the stack is as follows:
-## disj_expr_level
+## seq_expr
 ##
 ## WARNING: This example involves spurious reductions.
 ## This implies that, although the LR(1) items shown above provide an
@@ -2286,6 +2472,7 @@ interactive_expr: Begin Verbatim With
 ## In state 428, spurious reduction of production comp_expr_level -> cat_expr_level
 ## In state 435, spurious reduction of production conj_expr_level -> comp_expr_level
 ## In state 444, spurious reduction of production disj_expr_level -> conj_expr_level
+## In state 836, spurious reduction of production seq_expr -> disj_expr_level
 ##
 
 Ill-formed sequence of expressions.
@@ -2550,29 +2737,6 @@ At this point, one of the following is expected:
   * an assignment symbol '=', followed by an expression;
   * a semicolon ';', followed by another assignment;
   * a closing brace, if the assignments are complete.
-
-interactive_expr: LBRACE Ident WILD
-##
-## Ends in an error in state: 256.
-##
-## field_assignment -> Ident . EQ expr [ SEMI RBRACE ]
-## field_assignment -> Ident . [ SEMI RBRACE ]
-## field_path -> Ident . DOT nsepseq(selection,DOT) [ With ]
-## field_path -> Ident . [ With ]
-##
-## The known suffix of the stack is as follows:
-## Ident
-##
-
-Ill-formed record expression or record update.
-At this point, one of the following is expected:
-  * a semicolon ';', followed by another assignment;
-  * the assignment symbol '=' followed by an expression, if defining
-    a record (as opposed to a record update);
-  * the keyword 'with' followed by field updates (assignments);
-  * the selection symbol '.' if the record to update is not fully
-    qualified.
-  * a closing brace, if the record update is complete.
 
 interactive_expr: LBRACE Ident With Ident DOT Ident With
 ##
@@ -3079,43 +3243,6 @@ interactive_expr: Verbatim CONS With
 Ill-formed list expression.
 At this point, an expression of type list is expected.
 
-interactive_expr: UIdent DOT UIdent With
-##
-## Ends in an error in state: 1071.
-##
-## interactive_expr -> expr . EOF [ # ]
-##
-## The known suffix of the stack is as follows:
-## expr
-##
-## WARNING: This example involves spurious reductions.
-## This implies that, although the LR(1) items shown above provide an
-## accurate view of the past (what has been recognized so far), they
-## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 238, spurious reduction of production selected -> UIdent
-## In state 1018, spurious reduction of production module_path(selected) -> UIdent DOT selected
-## In state 330, spurious reduction of production path_expr -> module_path(selected)
-## In state 324, spurious reduction of production no_attr_expr -> path_expr
-## In state 329, spurious reduction of production core_expr -> no_attr_expr
-## In state 345, spurious reduction of production app_expr_level -> core_expr
-## In state 354, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 341, spurious reduction of production shift_expr_level -> unary_expr_level
-## In state 362, spurious reduction of production mult_expr_level -> shift_expr_level
-## In state 368, spurious reduction of production add_expr_level -> mult_expr_level
-## In state 404, spurious reduction of production cons_expr_level -> add_expr_level
-## In state 391, spurious reduction of production cat_expr_level -> cons_expr_level
-## In state 428, spurious reduction of production comp_expr_level -> cat_expr_level
-## In state 435, spurious reduction of production conj_expr_level -> comp_expr_level
-## In state 444, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 389, spurious reduction of production base_expr(expr) -> disj_expr_level
-## In state 451, spurious reduction of production base_cond__open(expr) -> base_expr(expr)
-## In state 452, spurious reduction of production expr -> base_cond__open(expr)
-##
-
-Ill-formed selection of a value from a module.
-At this point, the selection symbol '.' is expected, followed by the
-qualified name of a value.
-
 contract: Let Ident WILD COLON String VBAR
 ##
 ## Ends in an error in state: 1029.
@@ -3153,16 +3280,6 @@ contract: Let WILD COLON Ident VBAR
 ## In state 79, spurious reduction of production fun_type_level -> cartesian_level
 ## In state 71, spurious reduction of production type_expr -> fun_type_level
 ## In state 60, spurious reduction of production type_annotation(type_expr) -> COLON type_expr
-##
-contract: Let LPAR RPAR COLON Ident With
-##
-## Ends in an error in state: 53.
-##
-## core_type -> no_attr_type . [ VBAR Type TIMES SEMI RPAR RBRACE Module Let In End EQ EOF Directive COMMA Attr ARROW ]
-## type_ctor_arg -> no_attr_type . [ UIdent Ident ]
-##
-## The known suffix of the stack is as follows:
-## no_attr_type
 ##
 
 Ill-formed value declaration.
@@ -3240,13 +3357,20 @@ parenthesis ')' is expected.
 
 contract: Let LPAR WILD COMMA Ident With
 ##
-## Ends in an error in state: 153.
+## Ends in an error in state: 213.
 ##
-## nsepseq(core_irrefutable,COMMA) -> var_pattern . [ SEMI RPAR RBRACE LPAR EQ COLON ]
-## nsepseq(core_irrefutable,COMMA) -> var_pattern . COMMA nsepseq(core_irrefutable,COMMA) [ SEMI RPAR RBRACE LPAR EQ COLON ]
+## in_core_irrefutable -> tuple(core_irrefutable) . [ RPAR ]
+## typed_irrefutable -> tuple(core_irrefutable) . type_annotation(type_expr) [ RPAR ]
 ##
 ## The known suffix of the stack is as follows:
-## var_pattern
+## tuple(core_irrefutable)
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 153, spurious reduction of production nsepseq(core_irrefutable,COMMA) -> var_pattern
+## In state 172, spurious reduction of production tuple(core_irrefutable) -> var_pattern COMMA nsepseq(core_irrefutable,COMMA)
 ##
 
 Ill-formed parenthesised pattern.
@@ -3509,25 +3633,6 @@ At this point, one of the following is expected:
   * the name of the type being defined;
   * a quoted type parameter, like 'a;
   * a tuple of quoted type parameters, like ('a, 'b).
-
-interactive_expr: Type Ident EQ UIdent With
-##
-## Ends in an error in state: 23.
-##
-## module_path(__anonymous_5) -> UIdent . DOT module_path(__anonymous_5) [ UIdent Type TIMES SEMI RPAR RBRACE Module Let In Ident End EQ EOF Directive COMMA Attr ARROW ]
-## module_path(__anonymous_5) -> UIdent . DOT Ident [ UIdent Type TIMES SEMI RPAR RBRACE Module Let In Ident End EQ EOF Directive COMMA Attr ARROW ]
-## module_path(__anonymous_6) -> UIdent . DOT module_path(__anonymous_6) [ UIdent Type TIMES SEMI RPAR RBRACE Module Let In Ident End EQ EOF Directive COMMA Attr ARROW ]
-## module_path(__anonymous_6) -> UIdent . DOT par(type_expr) [ UIdent Type TIMES SEMI RPAR RBRACE Module Let In Ident End EQ EOF Directive COMMA Attr ARROW ]
-## short_variant(fun_type_level) -> UIdent . [ VBAR Type SEMI RPAR RBRACE Module Let In End EQ EOF Directive COMMA Attr ]
-## short_variant(fun_type_level) -> UIdent . of_type(fun_type_level) [ VBAR Type SEMI RPAR RBRACE Module Let In End EQ EOF Directive COMMA Attr ]
-##
-## The known suffix of the stack is as follows:
-## UIdent
-##
-
-Ill-formed local type declaration.
-At this point, if the type expression is complete, the keyword 'in' is
-expected, followed by an expression.
 
 contract: Directive With
 ##
@@ -3882,13 +3987,20 @@ At this point, one of the following is expected:
 
 interactive_expr: Match Verbatim With LBRACKET WILD With
 ##
-## Ends in an error in state: 517.
+## Ends in an error in state: 520.
 ##
-## cons_pattern_level -> core_pattern . CONS cons_pattern_level [ SEMI RPAR RBRACKET COMMA COLON ARROW ]
-## cons_pattern_level -> core_pattern . [ SEMI RPAR RBRACKET COMMA COLON ARROW ]
+## nsepseq(cons_pattern_level,SEMI) -> cons_pattern_level . [ RBRACKET ]
+## nsepseq(cons_pattern_level,SEMI) -> cons_pattern_level . SEMI nsepseq(cons_pattern_level,SEMI) [ RBRACKET ]
+## nseq(__anonymous_0(cons_pattern_level,SEMI)) -> cons_pattern_level . SEMI seq(__anonymous_0(cons_pattern_level,SEMI)) [ RBRACKET ]
 ##
 ## The known suffix of the stack is as follows:
-## core_pattern
+## cons_pattern_level
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 517, spurious reduction of production cons_pattern_level -> core_pattern
 ##
 
 Ill-formed list of patterns.
@@ -6021,13 +6133,19 @@ This syntax error should not happen. Please report to the developpers.
 
 contract: Let UIdent COLON VBAR UIdent ZWSP
 ##
-## Ends in an error in state: 18.
+## Ends in an error in state: 64.
 ##
-## short_variant(fun_type_level) -> UIdent . [ VBAR Type SEMI RPAR RBRACE Module Let In End EQ EOF Directive COMMA Attr ]
-## short_variant(fun_type_level) -> UIdent . of_type(fun_type_level) [ VBAR Type SEMI RPAR RBRACE Module Let In End EQ EOF Directive COMMA Attr ]
+## nseq(long_variant(fun_type_level)) -> long_variant(fun_type_level) . seq(long_variant(fun_type_level)) [ Type SEMI RPAR RBRACE Module Let In End EQ EOF Directive COMMA Attr ]
 ##
 ## The known suffix of the stack is as follows:
-## UIdent
+## long_variant(fun_type_level)
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 18, spurious reduction of production short_variant(fun_type_level) -> UIdent
+## In state 116, spurious reduction of production long_variant(fun_type_level) -> VBAR short_variant(fun_type_level)
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -6149,34 +6267,6 @@ contract: Let UIdent COLON UIdent DOT LPAR Ident VBAR
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-contract: Module UIdent EQ UIdent ZWSP
-##
-## Ends in an error in state: 127.
-##
-## module_expr -> UIdent . [ Type Module Let In End EOF Directive Attr ]
-## module_path(module_name) -> UIdent . DOT module_path(module_name) [ Type Module Let In End EOF Directive Attr ]
-## module_path(module_name) -> UIdent . DOT UIdent [ Type Module Let In End EOF Directive Attr ]
-##
-## The known suffix of the stack is as follows:
-## UIdent
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-contract: Module UIdent EQ UIdent DOT UIdent ZWSP
-##
-## Ends in an error in state: 129.
-##
-## module_path(module_name) -> UIdent . DOT module_path(module_name) [ Type Module Let In End EOF Directive Attr ]
-## module_path(module_name) -> UIdent . DOT UIdent [ Type Module Let In End EOF Directive Attr ]
-## module_path(module_name) -> UIdent DOT UIdent . [ Type Module Let In End EOF Directive Attr ]
-##
-## The known suffix of the stack is as follows:
-## UIdent DOT UIdent
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
 contract: Let LBRACE Attr Ident ZWSP
 ##
 ## Ends in an error in state: 146.
@@ -6221,58 +6311,6 @@ contract: Let LBRACE Attr Ident EQ Ident ZWSP
 ##
 ## The known suffix of the stack is as follows:
 ## nseq(Attr) field_pattern_lhs EQ var_pattern
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-contract: Let UIdent COMMA LPAR RPAR ZWSP
-##
-## Ends in an error in state: 155.
-##
-## nsepseq(core_irrefutable,COMMA) -> unit . [ SEMI RPAR RBRACE LPAR EQ COLON ]
-## nsepseq(core_irrefutable,COMMA) -> unit . COMMA nsepseq(core_irrefutable,COMMA) [ SEMI RPAR RBRACE LPAR EQ COLON ]
-##
-## The known suffix of the stack is as follows:
-## unit
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-contract: Let UIdent COMMA LBRACE RBRACE ZWSP
-##
-## Ends in an error in state: 157.
-##
-## nsepseq(core_irrefutable,COMMA) -> record_pattern(irrefutable) . [ SEMI RPAR RBRACE LPAR EQ COLON ]
-## nsepseq(core_irrefutable,COMMA) -> record_pattern(irrefutable) . COMMA nsepseq(core_irrefutable,COMMA) [ SEMI RPAR RBRACE LPAR EQ COLON ]
-##
-## The known suffix of the stack is as follows:
-## record_pattern(irrefutable)
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-contract: Let UIdent COMMA LPAR UIdent RPAR ZWSP
-##
-## Ends in an error in state: 161.
-##
-## nsepseq(core_irrefutable,COMMA) -> par(in_core_irrefutable) . [ SEMI RPAR RBRACE LPAR EQ COLON ]
-## nsepseq(core_irrefutable,COMMA) -> par(in_core_irrefutable) . COMMA nsepseq(core_irrefutable,COMMA) [ SEMI RPAR RBRACE LPAR EQ COLON ]
-##
-## The known suffix of the stack is as follows:
-## par(in_core_irrefutable)
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-contract: Let UIdent COMMA UIdent ZWSP
-##
-## Ends in an error in state: 164.
-##
-## nsepseq(core_irrefutable,COMMA) -> ctor_irrefutable . [ SEMI RPAR RBRACE LPAR EQ COLON ]
-## nsepseq(core_irrefutable,COMMA) -> ctor_irrefutable . COMMA nsepseq(core_irrefutable,COMMA) [ SEMI RPAR RBRACE LPAR EQ COLON ]
-##
-## The known suffix of the stack is as follows:
-## ctor_irrefutable
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -6373,26 +6411,6 @@ contract: Let LBRACE Ident SEMI Ident EQ UIdent COMMA UIdent LPAR
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-contract: Let LPAR UIdent COMMA UIdent SEMI
-##
-## Ends in an error in state: 213.
-##
-## in_core_irrefutable -> tuple(core_irrefutable) . [ RPAR ]
-## typed_irrefutable -> tuple(core_irrefutable) . type_annotation(type_expr) [ RPAR ]
-##
-## The known suffix of the stack is as follows:
-## tuple(core_irrefutable)
-##
-## WARNING: This example involves spurious reductions.
-## This implies that, although the LR(1) items shown above provide an
-## accurate view of the past (what has been recognized so far), they
-## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 164, spurious reduction of production nsepseq(core_irrefutable,COMMA) -> ctor_irrefutable
-## In state 185, spurious reduction of production tuple(core_irrefutable) -> ctor_irrefutable COMMA nsepseq(core_irrefutable,COMMA)
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
 contract: Let LPAR LPAR UIdent UIdent RPAR ZWSP
 ##
 ## Ends in an error in state: 223.
@@ -6403,34 +6421,6 @@ contract: Let LPAR LPAR UIdent UIdent RPAR ZWSP
 ##
 ## The known suffix of the stack is as follows:
 ## ctor_irrefutable
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-interactive_expr: UIdent ZWSP
-##
-## Ends in an error in state: 236.
-##
-## module_path(selected) -> UIdent . DOT module_path(selected) [ With Verbatim VBAR UIdent Type Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
-## module_path(selected) -> UIdent . DOT selected [ With Verbatim VBAR UIdent Type Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
-## no_attr_expr -> UIdent . [ With Verbatim VBAR UIdent Type Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
-##
-## The known suffix of the stack is as follows:
-## UIdent
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-interactive_expr: UIdent DOT UIdent ZWSP
-##
-## Ends in an error in state: 238.
-##
-## module_path(selected) -> UIdent . DOT module_path(selected) [ With Verbatim VBAR UIdent Type Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
-## module_path(selected) -> UIdent . DOT selected [ With Verbatim VBAR UIdent Type Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
-## selected -> UIdent . [ With Verbatim VBAR UIdent Type Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
-##
-## The known suffix of the stack is as follows:
-## UIdent
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -6455,32 +6445,6 @@ contract: Let UIdent LPAR ZWSP
 ##
 ## The known suffix of the stack is as follows:
 ## LPAR
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-interactive_expr: Ident ZWSP
-##
-## Ends in an error in state: 259.
-##
-## field_path -> Ident . DOT nsepseq(selection,DOT) [ With Verbatim VBAR UIdent Type Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
-## field_path -> Ident . [ With Verbatim VBAR UIdent Type Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
-##
-## The known suffix of the stack is as follows:
-## Ident
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-interactive_expr: Ident DOT Ident ZWSP
-##
-## Ends in an error in state: 263.
-##
-## nsepseq(selection,DOT) -> selection . [ With Verbatim VBAR_EQ VBAR UIdent Type Then TIMES_EQ TIMES String SLASH_EQ SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS_EQ PLUS Or Nat NE Mutez Module Mod MINUS_EQ MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
-## nsepseq(selection,DOT) -> selection . DOT nsepseq(selection,DOT) [ With Verbatim VBAR_EQ VBAR UIdent Type Then TIMES_EQ TIMES String SLASH_EQ SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS_EQ PLUS Or Nat NE Mutez Module Mod MINUS_EQ MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
-##
-## The known suffix of the stack is as follows:
-## selection
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -6634,13 +6598,35 @@ interactive_expr: Attr Attr ZWSP
 
 interactive_expr: LPAR Ident RPAR ZWSP
 ##
-## Ends in an error in state: 326.
+## Ends in an error in state: 1071.
 ##
-## field_path -> par(expr) . [ With Verbatim VBAR UIdent Type Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
-## local_path -> par(expr) . DOT nsepseq(selection,DOT) [ With Verbatim VBAR UIdent Type Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
+## interactive_expr -> expr . EOF [ # ]
 ##
 ## The known suffix of the stack is as follows:
-## par(expr)
+## expr
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 326, spurious reduction of production field_path -> par(expr)
+## In state 333, spurious reduction of production local_path -> field_path
+## In state 331, spurious reduction of production path_expr -> local_path
+## In state 324, spurious reduction of production no_attr_expr -> path_expr
+## In state 329, spurious reduction of production core_expr -> no_attr_expr
+## In state 345, spurious reduction of production app_expr_level -> core_expr
+## In state 354, spurious reduction of production unary_expr_level -> app_expr_level
+## In state 341, spurious reduction of production shift_expr_level -> unary_expr_level
+## In state 362, spurious reduction of production mult_expr_level -> shift_expr_level
+## In state 368, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 404, spurious reduction of production cons_expr_level -> add_expr_level
+## In state 391, spurious reduction of production cat_expr_level -> cons_expr_level
+## In state 428, spurious reduction of production comp_expr_level -> cat_expr_level
+## In state 435, spurious reduction of production conj_expr_level -> comp_expr_level
+## In state 444, spurious reduction of production disj_expr_level -> conj_expr_level
+## In state 389, spurious reduction of production base_expr(expr) -> disj_expr_level
+## In state 451, spurious reduction of production base_cond__open(expr) -> base_expr(expr)
+## In state 452, spurious reduction of production expr -> base_cond__open(expr)
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -6715,57 +6701,23 @@ interactive_expr: Type Ident EQ Ident Type
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-interactive_expr: Ident VBAR
+interactive_expr: Match Ident With UIdent ZWSP
 ##
-## Ends in an error in state: 389.
+## Ends in an error in state: 533.
 ##
-## base_expr(expr) -> disj_expr_level . [ With Type Then SEMI RPAR RBRACKET RBRACE Module Let In End EOF Directive COLON Attr ]
-## bin_op(disj_expr_level,BOOL_OR,conj_expr_level) -> disj_expr_level . BOOL_OR conj_expr_level [ With Type Then SEMI RPAR REV_APP RBRACKET RBRACE Or Module Let In End EOF Directive COMMA COLON BOOL_OR Attr ]
-## bin_op(disj_expr_level,Or,conj_expr_level) -> disj_expr_level . Or conj_expr_level [ With Type Then SEMI RPAR REV_APP RBRACKET RBRACE Or Module Let In End EOF Directive COMMA COLON BOOL_OR Attr ]
-## bin_op(disj_expr_level,REV_APP,conj_expr_level) -> disj_expr_level . REV_APP conj_expr_level [ With Type Then SEMI RPAR REV_APP RBRACKET RBRACE Or Module Let In End EOF Directive COMMA COLON BOOL_OR Attr ]
-## tuple(disj_expr_level) -> disj_expr_level . COMMA nsepseq(disj_expr_level,COMMA) [ With Type Then SEMI RPAR RBRACKET RBRACE Module Let In End EOF Directive COLON Attr ]
+## pattern -> cons_pattern_level . [ RPAR COLON ARROW ]
+## tuple(cons_pattern_level) -> cons_pattern_level . COMMA nsepseq(cons_pattern_level,COMMA) [ RPAR COLON ARROW ]
 ##
 ## The known suffix of the stack is as follows:
-## disj_expr_level
+## cons_pattern_level
 ##
 ## WARNING: This example involves spurious reductions.
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 259, spurious reduction of production field_path -> Ident
-## In state 333, spurious reduction of production local_path -> field_path
-## In state 331, spurious reduction of production path_expr -> local_path
-## In state 324, spurious reduction of production no_attr_expr -> path_expr
-## In state 329, spurious reduction of production core_expr -> no_attr_expr
-## In state 345, spurious reduction of production app_expr_level -> core_expr
-## In state 354, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 341, spurious reduction of production shift_expr_level -> unary_expr_level
-## In state 362, spurious reduction of production mult_expr_level -> shift_expr_level
-## In state 368, spurious reduction of production add_expr_level -> mult_expr_level
-## In state 404, spurious reduction of production cons_expr_level -> add_expr_level
-## In state 391, spurious reduction of production cat_expr_level -> cons_expr_level
-## In state 428, spurious reduction of production comp_expr_level -> cat_expr_level
-## In state 435, spurious reduction of production conj_expr_level -> comp_expr_level
-## In state 444, spurious reduction of production disj_expr_level -> conj_expr_level
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-interactive_expr: Match Ident With UIdent ZWSP
-##
-## Ends in an error in state: 462.
-##
-## ctor_app_pattern -> UIdent . core_pattern [ SEMI RPAR RBRACKET RBRACE CONS COMMA COLON ARROW ]
-## ctor_app_pattern -> UIdent . [ SEMI RPAR RBRACKET RBRACE CONS COMMA COLON ARROW ]
-## module_path(__anonymous_10) -> UIdent . DOT module_path(__anonymous_10) [ SEMI RPAR RBRACKET RBRACE CONS COMMA COLON ARROW ]
-## module_path(__anonymous_10) -> UIdent . DOT Ident [ SEMI RPAR RBRACKET RBRACE CONS COMMA COLON ARROW ]
-## module_path(__anonymous_11) -> UIdent . DOT module_path(__anonymous_11) [ SEMI RPAR RBRACKET RBRACE CONS COMMA COLON ARROW ]
-## module_path(__anonymous_11) -> UIdent . DOT in_pattern [ SEMI RPAR RBRACKET RBRACE CONS COMMA COLON ARROW ]
-## module_path(__anonymous_9) -> UIdent . DOT module_path(__anonymous_9) [ WILD Verbatim UIdent String Nat Mutez LPAR LBRACKET LBRACE Int Ident Bytes Attr ]
-## module_path(__anonymous_9) -> UIdent . DOT UIdent [ WILD Verbatim UIdent String Nat Mutez LPAR LBRACKET LBRACE Int Ident Bytes Attr ]
-##
-## The known suffix of the stack is as follows:
-## UIdent
+## In state 462, spurious reduction of production ctor_app_pattern -> UIdent
+## In state 494, spurious reduction of production core_pattern -> ctor_app_pattern
+## In state 517, spurious reduction of production cons_pattern_level -> core_pattern
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -6803,28 +6755,6 @@ interactive_expr: Match Ident With Attr ZWSP
 ##
 ## The known suffix of the stack is as follows:
 ## Attr
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-interactive_expr: Match Ident With LBRACKET UIdent RPAR
-##
-## Ends in an error in state: 520.
-##
-## nsepseq(cons_pattern_level,SEMI) -> cons_pattern_level . [ RBRACKET ]
-## nsepseq(cons_pattern_level,SEMI) -> cons_pattern_level . SEMI nsepseq(cons_pattern_level,SEMI) [ RBRACKET ]
-## nseq(__anonymous_0(cons_pattern_level,SEMI)) -> cons_pattern_level . SEMI seq(__anonymous_0(cons_pattern_level,SEMI)) [ RBRACKET ]
-##
-## The known suffix of the stack is as follows:
-## cons_pattern_level
-##
-## WARNING: This example involves spurious reductions.
-## This implies that, although the LR(1) items shown above provide an
-## accurate view of the past (what has been recognized so far), they
-## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 462, spurious reduction of production ctor_app_pattern -> UIdent
-## In state 494, spurious reduction of production core_pattern -> ctor_app_pattern
-## In state 517, spurious reduction of production cons_pattern_level -> core_pattern
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -6936,18 +6866,19 @@ interactive_expr: Match Ident With UIdent DOT ZWSP
 
 interactive_expr: Match Ident With UIdent DOT UIdent ZWSP
 ##
-## Ends in an error in state: 540.
+## Ends in an error in state: 484.
 ##
-## module_path(__anonymous_10) -> UIdent . DOT module_path(__anonymous_10) [ SEMI RPAR RBRACKET RBRACE CONS COMMA COLON ARROW ]
-## module_path(__anonymous_10) -> UIdent . DOT Ident [ SEMI RPAR RBRACKET RBRACE CONS COMMA COLON ARROW ]
-## module_path(__anonymous_11) -> UIdent . DOT module_path(__anonymous_11) [ SEMI RPAR RBRACKET RBRACE CONS COMMA COLON ARROW ]
-## module_path(__anonymous_11) -> UIdent . DOT in_pattern [ SEMI RPAR RBRACKET RBRACE CONS COMMA COLON ARROW ]
-## module_path(__anonymous_9) -> UIdent . DOT module_path(__anonymous_9) [ WILD Verbatim UIdent String Nat Mutez LPAR LBRACKET LBRACE Int Ident Bytes Attr ]
-## module_path(__anonymous_9) -> UIdent . DOT UIdent [ WILD Verbatim UIdent String Nat Mutez LPAR LBRACKET LBRACE Int Ident Bytes Attr ]
-## module_path(__anonymous_9) -> UIdent DOT UIdent . [ WILD Verbatim UIdent String Nat Mutez LPAR LBRACKET LBRACE Int Ident Bytes Attr ]
+## qualified_pattern -> pattern_in_module(__anonymous_9) . core_pattern [ SEMI RPAR RBRACKET RBRACE CONS COMMA COLON ARROW ]
 ##
 ## The known suffix of the stack is as follows:
-## UIdent DOT UIdent
+## pattern_in_module(__anonymous_9)
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 540, spurious reduction of production module_path(__anonymous_9) -> UIdent DOT UIdent
+## In state 488, spurious reduction of production pattern_in_module(__anonymous_9) -> module_path(__anonymous_9)
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -7247,42 +7178,6 @@ interactive_expr: Match Ident With UIdent ARROW Fun UIdent COLON Ident VBAR
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-interactive_expr: Match Ident With UIdent ARROW Ident Else
-##
-## Ends in an error in state: 665.
-##
-## base_expr(base_cond) -> disj_expr_level . [ With VBAR Type Then SEMI RPAR RBRACKET RBRACE Module Let In End EOF Directive COLON Attr ]
-## bin_op(disj_expr_level,BOOL_OR,conj_expr_level) -> disj_expr_level . BOOL_OR conj_expr_level [ With VBAR Type Then SEMI RPAR REV_APP RBRACKET RBRACE Or Module Let In End EOF Directive COMMA COLON BOOL_OR Attr ]
-## bin_op(disj_expr_level,Or,conj_expr_level) -> disj_expr_level . Or conj_expr_level [ With VBAR Type Then SEMI RPAR REV_APP RBRACKET RBRACE Or Module Let In End EOF Directive COMMA COLON BOOL_OR Attr ]
-## bin_op(disj_expr_level,REV_APP,conj_expr_level) -> disj_expr_level . REV_APP conj_expr_level [ With VBAR Type Then SEMI RPAR REV_APP RBRACKET RBRACE Or Module Let In End EOF Directive COMMA COLON BOOL_OR Attr ]
-## tuple(disj_expr_level) -> disj_expr_level . COMMA nsepseq(disj_expr_level,COMMA) [ With VBAR Type Then SEMI RPAR RBRACKET RBRACE Module Let In End EOF Directive COLON Attr ]
-##
-## The known suffix of the stack is as follows:
-## disj_expr_level
-##
-## WARNING: This example involves spurious reductions.
-## This implies that, although the LR(1) items shown above provide an
-## accurate view of the past (what has been recognized so far), they
-## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 259, spurious reduction of production field_path -> Ident
-## In state 333, spurious reduction of production local_path -> field_path
-## In state 331, spurious reduction of production path_expr -> local_path
-## In state 324, spurious reduction of production no_attr_expr -> path_expr
-## In state 329, spurious reduction of production core_expr -> no_attr_expr
-## In state 345, spurious reduction of production app_expr_level -> core_expr
-## In state 354, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 341, spurious reduction of production shift_expr_level -> unary_expr_level
-## In state 362, spurious reduction of production mult_expr_level -> shift_expr_level
-## In state 368, spurious reduction of production add_expr_level -> mult_expr_level
-## In state 404, spurious reduction of production cons_expr_level -> add_expr_level
-## In state 391, spurious reduction of production cat_expr_level -> cons_expr_level
-## In state 428, spurious reduction of production comp_expr_level -> cat_expr_level
-## In state 435, spurious reduction of production conj_expr_level -> comp_expr_level
-## In state 444, spurious reduction of production disj_expr_level -> conj_expr_level
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
 contract: Let UIdent COLON Ident Type
 ##
 ## Ends in an error in state: 684.
@@ -7459,42 +7354,6 @@ interactive_expr: If Ident Then Match Ident With UIdent ARROW Fun UIdent COLON I
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-interactive_expr: Begin Match Ident With UIdent ARROW Ident COMMA Ident Type
-##
-## Ends in an error in state: 774.
-##
-## base_expr(base_cond) -> tuple_expr . [ VBAR ]
-## last_expr -> tuple_expr . [ End ]
-##
-## The known suffix of the stack is as follows:
-## tuple_expr
-##
-## WARNING: This example involves spurious reductions.
-## This implies that, although the LR(1) items shown above provide an
-## accurate view of the past (what has been recognized so far), they
-## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 259, spurious reduction of production field_path -> Ident
-## In state 333, spurious reduction of production local_path -> field_path
-## In state 331, spurious reduction of production path_expr -> local_path
-## In state 324, spurious reduction of production no_attr_expr -> path_expr
-## In state 329, spurious reduction of production core_expr -> no_attr_expr
-## In state 345, spurious reduction of production app_expr_level -> core_expr
-## In state 354, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 341, spurious reduction of production shift_expr_level -> unary_expr_level
-## In state 362, spurious reduction of production mult_expr_level -> shift_expr_level
-## In state 368, spurious reduction of production add_expr_level -> mult_expr_level
-## In state 404, spurious reduction of production cons_expr_level -> add_expr_level
-## In state 391, spurious reduction of production cat_expr_level -> cons_expr_level
-## In state 428, spurious reduction of production comp_expr_level -> cat_expr_level
-## In state 435, spurious reduction of production conj_expr_level -> comp_expr_level
-## In state 444, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 441, spurious reduction of production nsepseq(disj_expr_level,COMMA) -> disj_expr_level
-## In state 440, spurious reduction of production tuple(disj_expr_level) -> disj_expr_level COMMA nsepseq(disj_expr_level,COMMA)
-## In state 361, spurious reduction of production tuple_expr -> tuple(disj_expr_level)
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
 interactive_expr: Begin Match Ident With UIdent ARROW Attr Match
 ##
 ## Ends in an error in state: 776.
@@ -7596,79 +7455,6 @@ interactive_expr: Begin If Ident Then Fun UIdent COLON Ident VBAR
 ## In state 72, spurious reduction of production cartesian_level -> core_type
 ## In state 312, spurious reduction of production lambda_app_type -> cartesian_level
 ## In state 311, spurious reduction of production type_annotation(lambda_app_type) -> COLON lambda_app_type
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-interactive_expr: Begin If Ident Then Ident COMMA Ident VBAR
-##
-## Ends in an error in state: 819.
-##
-## if_then_else(seq_expr) -> If expr Then closed_expr . Else seq_expr [ SEMI End ]
-##
-## The known suffix of the stack is as follows:
-## If expr Then closed_expr
-##
-## WARNING: This example involves spurious reductions.
-## This implies that, although the LR(1) items shown above provide an
-## accurate view of the past (what has been recognized so far), they
-## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 259, spurious reduction of production field_path -> Ident
-## In state 333, spurious reduction of production local_path -> field_path
-## In state 331, spurious reduction of production path_expr -> local_path
-## In state 324, spurious reduction of production no_attr_expr -> path_expr
-## In state 329, spurious reduction of production core_expr -> no_attr_expr
-## In state 345, spurious reduction of production app_expr_level -> core_expr
-## In state 354, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 341, spurious reduction of production shift_expr_level -> unary_expr_level
-## In state 362, spurious reduction of production mult_expr_level -> shift_expr_level
-## In state 368, spurious reduction of production add_expr_level -> mult_expr_level
-## In state 404, spurious reduction of production cons_expr_level -> add_expr_level
-## In state 391, spurious reduction of production cat_expr_level -> cons_expr_level
-## In state 428, spurious reduction of production comp_expr_level -> cat_expr_level
-## In state 435, spurious reduction of production conj_expr_level -> comp_expr_level
-## In state 444, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 441, spurious reduction of production nsepseq(disj_expr_level,COMMA) -> disj_expr_level
-## In state 440, spurious reduction of production tuple(disj_expr_level) -> disj_expr_level COMMA nsepseq(disj_expr_level,COMMA)
-## In state 361, spurious reduction of production tuple_expr -> tuple(disj_expr_level)
-## In state 804, spurious reduction of production base_expr(closed_expr) -> tuple_expr
-## In state 644, spurious reduction of production base_if_then_else__open(closed_expr) -> base_expr(closed_expr)
-## In state 643, spurious reduction of production closed_expr -> base_if_then_else__open(closed_expr)
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-interactive_expr: Begin If Ident Then Ident Else Ident VBAR
-##
-## Ends in an error in state: 821.
-##
-## bin_op(disj_expr_level,BOOL_OR,conj_expr_level) -> disj_expr_level . BOOL_OR conj_expr_level [ SEMI REV_APP Or End BOOL_OR ]
-## bin_op(disj_expr_level,Or,conj_expr_level) -> disj_expr_level . Or conj_expr_level [ SEMI REV_APP Or End BOOL_OR ]
-## bin_op(disj_expr_level,REV_APP,conj_expr_level) -> disj_expr_level . REV_APP conj_expr_level [ SEMI REV_APP Or End BOOL_OR ]
-## seq_expr -> disj_expr_level . [ SEMI End ]
-##
-## The known suffix of the stack is as follows:
-## disj_expr_level
-##
-## WARNING: This example involves spurious reductions.
-## This implies that, although the LR(1) items shown above provide an
-## accurate view of the past (what has been recognized so far), they
-## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 259, spurious reduction of production field_path -> Ident
-## In state 333, spurious reduction of production local_path -> field_path
-## In state 331, spurious reduction of production path_expr -> local_path
-## In state 324, spurious reduction of production no_attr_expr -> path_expr
-## In state 329, spurious reduction of production core_expr -> no_attr_expr
-## In state 345, spurious reduction of production app_expr_level -> core_expr
-## In state 354, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 341, spurious reduction of production shift_expr_level -> unary_expr_level
-## In state 362, spurious reduction of production mult_expr_level -> shift_expr_level
-## In state 368, spurious reduction of production add_expr_level -> mult_expr_level
-## In state 404, spurious reduction of production cons_expr_level -> add_expr_level
-## In state 391, spurious reduction of production cat_expr_level -> cons_expr_level
-## In state 428, spurious reduction of production comp_expr_level -> cat_expr_level
-## In state 435, spurious reduction of production conj_expr_level -> comp_expr_level
-## In state 444, spurious reduction of production disj_expr_level -> conj_expr_level
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -7779,69 +7565,6 @@ interactive_expr: Begin Fun UIdent COLON Ident VBAR
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-interactive_expr: Begin Match Ident With UIdent ARROW If Ident Then Ident Type
-##
-## Ends in an error in state: 868.
-##
-## cases(base_cond) -> cases(base_cond) . VBAR match_clause(base_cond) [ VBAR ]
-## cases(last_expr) -> cases(base_cond) . VBAR match_clause(last_expr) [ End ]
-##
-## The known suffix of the stack is as follows:
-## cases(base_cond)
-##
-## WARNING: This example involves spurious reductions.
-## This implies that, although the LR(1) items shown above provide an
-## accurate view of the past (what has been recognized so far), they
-## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 259, spurious reduction of production field_path -> Ident
-## In state 333, spurious reduction of production local_path -> field_path
-## In state 331, spurious reduction of production path_expr -> local_path
-## In state 324, spurious reduction of production no_attr_expr -> path_expr
-## In state 329, spurious reduction of production core_expr -> no_attr_expr
-## In state 345, spurious reduction of production app_expr_level -> core_expr
-## In state 354, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 341, spurious reduction of production shift_expr_level -> unary_expr_level
-## In state 362, spurious reduction of production mult_expr_level -> shift_expr_level
-## In state 368, spurious reduction of production add_expr_level -> mult_expr_level
-## In state 404, spurious reduction of production cons_expr_level -> add_expr_level
-## In state 391, spurious reduction of production cat_expr_level -> cons_expr_level
-## In state 428, spurious reduction of production comp_expr_level -> cat_expr_level
-## In state 435, spurious reduction of production conj_expr_level -> comp_expr_level
-## In state 444, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 640, spurious reduction of production base_expr(base_cond) -> disj_expr_level
-## In state 645, spurious reduction of production base_cond__open(base_cond) -> base_expr(base_cond)
-## In state 646, spurious reduction of production base_cond -> base_cond__open(base_cond)
-## In state 697, spurious reduction of production if_then(base_cond) -> If expr Then base_cond
-## In state 637, spurious reduction of production conditional(base_cond) -> if_then(base_cond)
-## In state 641, spurious reduction of production base_cond__open(base_cond) -> conditional(base_cond)
-## In state 646, spurious reduction of production base_cond -> base_cond__open(base_cond)
-## In state 757, spurious reduction of production match_clause(base_cond) -> pattern ARROW base_cond
-## In state 759, spurious reduction of production cases(base_cond) -> match_clause(base_cond)
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-interactive_expr: Fun LPAR Type Ident RPAR UIdent COLON Ident VBAR
-##
-## Ends in an error in state: 875.
-##
-## fun_expr(expr) -> Fun par(__anonymous_7) nseq(core_irrefutable) type_annotation(lambda_app_type) . ARROW expr [ With Type Then SEMI RPAR RBRACKET RBRACE Module Let In End EOF Directive COLON Attr ]
-##
-## The known suffix of the stack is as follows:
-## Fun par(__anonymous_7) nseq(core_irrefutable) type_annotation(lambda_app_type)
-##
-## WARNING: This example involves spurious reductions.
-## This implies that, although the LR(1) items shown above provide an
-## accurate view of the past (what has been recognized so far), they
-## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 53, spurious reduction of production core_type -> no_attr_type
-## In state 72, spurious reduction of production cartesian_level -> core_type
-## In state 312, spurious reduction of production lambda_app_type -> cartesian_level
-## In state 311, spurious reduction of production type_annotation(lambda_app_type) -> COLON lambda_app_type
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
 interactive_expr: Fun UIdent COLON Ident VBAR
 ##
 ## Ends in an error in state: 881.
@@ -7859,52 +7582,6 @@ interactive_expr: Fun UIdent COLON Ident VBAR
 ## In state 72, spurious reduction of production cartesian_level -> core_type
 ## In state 312, spurious reduction of production lambda_app_type -> cartesian_level
 ## In state 311, spurious reduction of production type_annotation(lambda_app_type) -> COLON lambda_app_type
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-interactive_expr: If Ident Then Match Ident With UIdent ARROW Attr If Ident Then Ident Else Ident COMMA Ident Else
-##
-## Ends in an error in state: 890.
-##
-## cases(base_cond) -> cases(base_cond) . VBAR match_clause(base_cond) [ With VBAR Type Then SEMI RPAR RBRACKET RBRACE Module Let In End EOF Directive COLON Attr ]
-## cases(base_if_then_else) -> cases(base_cond) . VBAR match_clause(base_if_then_else) [ Else ]
-## match_expr(base_cond) -> Match expr With option(VBAR) cases(base_cond) . [ With Type Then SEMI RPAR RBRACKET RBRACE Module Let In End EOF Directive COLON Attr ]
-##
-## The known suffix of the stack is as follows:
-## Match expr With option(VBAR) cases(base_cond)
-##
-## WARNING: This example involves spurious reductions.
-## This implies that, although the LR(1) items shown above provide an
-## accurate view of the past (what has been recognized so far), they
-## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 259, spurious reduction of production field_path -> Ident
-## In state 333, spurious reduction of production local_path -> field_path
-## In state 331, spurious reduction of production path_expr -> local_path
-## In state 324, spurious reduction of production no_attr_expr -> path_expr
-## In state 329, spurious reduction of production core_expr -> no_attr_expr
-## In state 345, spurious reduction of production app_expr_level -> core_expr
-## In state 354, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 341, spurious reduction of production shift_expr_level -> unary_expr_level
-## In state 362, spurious reduction of production mult_expr_level -> shift_expr_level
-## In state 368, spurious reduction of production add_expr_level -> mult_expr_level
-## In state 404, spurious reduction of production cons_expr_level -> add_expr_level
-## In state 391, spurious reduction of production cat_expr_level -> cons_expr_level
-## In state 428, spurious reduction of production comp_expr_level -> cat_expr_level
-## In state 435, spurious reduction of production conj_expr_level -> comp_expr_level
-## In state 444, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 441, spurious reduction of production nsepseq(disj_expr_level,COMMA) -> disj_expr_level
-## In state 440, spurious reduction of production tuple(disj_expr_level) -> disj_expr_level COMMA nsepseq(disj_expr_level,COMMA)
-## In state 361, spurious reduction of production tuple_expr -> tuple(disj_expr_level)
-## In state 660, spurious reduction of production base_expr(base_cond) -> tuple_expr
-## In state 645, spurious reduction of production base_cond__open(base_cond) -> base_expr(base_cond)
-## In state 646, spurious reduction of production base_cond -> base_cond__open(base_cond)
-## In state 696, spurious reduction of production if_then_else(base_cond) -> If expr Then closed_expr Else base_cond
-## In state 636, spurious reduction of production conditional(base_cond) -> if_then_else(base_cond)
-## In state 666, spurious reduction of production base_cond__open(base_cond) -> nseq(Attr) conditional(base_cond)
-## In state 646, spurious reduction of production base_cond -> base_cond__open(base_cond)
-## In state 757, spurious reduction of production match_clause(base_cond) -> pattern ARROW base_cond
-## In state 759, spurious reduction of production cases(base_cond) -> match_clause(base_cond)
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -7928,42 +7605,6 @@ interactive_expr: If Ident Then Type Ident EQ Ident Type
 ## In state 79, spurious reduction of production fun_type_level -> cartesian_level
 ## In state 71, spurious reduction of production type_expr -> fun_type_level
 ## In state 117, spurious reduction of production type_decl -> Type Ident EQ type_expr
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-interactive_expr: If Ident Then Ident COMMA Ident VBAR
-##
-## Ends in an error in state: 904.
-##
-## base_expr(closed_expr) -> tuple_expr . [ Else ]
-## base_expr(expr) -> tuple_expr . [ With Type Then SEMI RPAR RBRACKET RBRACE Module Let In End EOF Directive COLON Attr ]
-##
-## The known suffix of the stack is as follows:
-## tuple_expr
-##
-## WARNING: This example involves spurious reductions.
-## This implies that, although the LR(1) items shown above provide an
-## accurate view of the past (what has been recognized so far), they
-## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 259, spurious reduction of production field_path -> Ident
-## In state 333, spurious reduction of production local_path -> field_path
-## In state 331, spurious reduction of production path_expr -> local_path
-## In state 324, spurious reduction of production no_attr_expr -> path_expr
-## In state 329, spurious reduction of production core_expr -> no_attr_expr
-## In state 345, spurious reduction of production app_expr_level -> core_expr
-## In state 354, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 341, spurious reduction of production shift_expr_level -> unary_expr_level
-## In state 362, spurious reduction of production mult_expr_level -> shift_expr_level
-## In state 368, spurious reduction of production add_expr_level -> mult_expr_level
-## In state 404, spurious reduction of production cons_expr_level -> add_expr_level
-## In state 391, spurious reduction of production cat_expr_level -> cons_expr_level
-## In state 428, spurious reduction of production comp_expr_level -> cat_expr_level
-## In state 435, spurious reduction of production conj_expr_level -> comp_expr_level
-## In state 444, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 441, spurious reduction of production nsepseq(disj_expr_level,COMMA) -> disj_expr_level
-## In state 440, spurious reduction of production tuple(disj_expr_level) -> disj_expr_level COMMA nsepseq(disj_expr_level,COMMA)
-## In state 361, spurious reduction of production tuple_expr -> tuple(disj_expr_level)
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -8196,47 +7837,6 @@ interactive_expr: Match Ident With UIdent RPAR
 ## In state 494, spurious reduction of production core_pattern -> ctor_app_pattern
 ## In state 517, spurious reduction of production cons_pattern_level -> core_pattern
 ## In state 533, spurious reduction of production pattern -> cons_pattern_level
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-interactive_expr: Match Ident With UIdent ARROW Ident COMMA Ident Else
-##
-## Ends in an error in state: 1012.
-##
-## cases(base_cond) -> cases(base_cond) . VBAR match_clause(base_cond) [ With VBAR Type Then SEMI RPAR RBRACKET RBRACE Module Let In End EOF Directive COLON Attr ]
-## match_expr(base_cond) -> Match expr With option(VBAR) cases(base_cond) . [ With Type Then SEMI RPAR RBRACKET RBRACE Module Let In End EOF Directive COLON Attr ]
-##
-## The known suffix of the stack is as follows:
-## Match expr With option(VBAR) cases(base_cond)
-##
-## WARNING: This example involves spurious reductions.
-## This implies that, although the LR(1) items shown above provide an
-## accurate view of the past (what has been recognized so far), they
-## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 259, spurious reduction of production field_path -> Ident
-## In state 333, spurious reduction of production local_path -> field_path
-## In state 331, spurious reduction of production path_expr -> local_path
-## In state 324, spurious reduction of production no_attr_expr -> path_expr
-## In state 329, spurious reduction of production core_expr -> no_attr_expr
-## In state 345, spurious reduction of production app_expr_level -> core_expr
-## In state 354, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 341, spurious reduction of production shift_expr_level -> unary_expr_level
-## In state 362, spurious reduction of production mult_expr_level -> shift_expr_level
-## In state 368, spurious reduction of production add_expr_level -> mult_expr_level
-## In state 404, spurious reduction of production cons_expr_level -> add_expr_level
-## In state 391, spurious reduction of production cat_expr_level -> cons_expr_level
-## In state 428, spurious reduction of production comp_expr_level -> cat_expr_level
-## In state 435, spurious reduction of production conj_expr_level -> comp_expr_level
-## In state 444, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 441, spurious reduction of production nsepseq(disj_expr_level,COMMA) -> disj_expr_level
-## In state 440, spurious reduction of production tuple(disj_expr_level) -> disj_expr_level COMMA nsepseq(disj_expr_level,COMMA)
-## In state 361, spurious reduction of production tuple_expr -> tuple(disj_expr_level)
-## In state 660, spurious reduction of production base_expr(base_cond) -> tuple_expr
-## In state 645, spurious reduction of production base_cond__open(base_cond) -> base_expr(base_cond)
-## In state 646, spurious reduction of production base_cond -> base_cond__open(base_cond)
-## In state 757, spurious reduction of production match_clause(base_cond) -> pattern ARROW base_cond
-## In state 759, spurious reduction of production cases(base_cond) -> match_clause(base_cond)
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>

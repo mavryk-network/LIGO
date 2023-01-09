@@ -3,8 +3,6 @@
 %{
 (* START HEADER *)
 
-(* START HEADER *)
-
 [@@@warning "-42"]
 
 (* Vendors dependencies *)
@@ -58,50 +56,42 @@ let hook_T_Attr = hook @@ fun a t -> T_Attr (a,t)
 %}
 
 (* Reductions on error *)
-(*
-%on_error_reduce seq_expr
-%on_error_reduce nsepseq(selection,DOT)
+
+%on_error_reduce base_expr(expr)
 %on_error_reduce app_expr_level
-%on_error_reduce add_expr_level
+%on_error_reduce shift_expr_level
+%on_error_reduce bin_op(add_expr_level,MINUS,mult_expr_level)
+%on_error_reduce bin_op(add_expr_level,PLUS,mult_expr_level)
 %on_error_reduce cons_expr_level
 %on_error_reduce cat_expr_level
+%on_error_reduce bin_op(conj_expr_level,BOOL_AND,comp_expr_level)
+%on_error_reduce bin_op(disj_expr_level,REV_APP,conj_expr_level)
+%on_error_reduce base_expr(base_cond)
+%on_error_reduce match_expr(base_cond)
+%on_error_reduce bin_op(disj_expr_level,BOOL_OR,conj_expr_level)
+%on_error_reduce nsepseq(disj_expr_level,COMMA)
+%on_error_reduce bin_op(disj_expr_level,Or,conj_expr_level)
 %on_error_reduce disj_expr_level
 %on_error_reduce conj_expr_level
-%on_error_reduce shift_expr_level
-%on_error_reduce bin_op(disj_expr_level,BOOL_OR,conj_expr_level)
-%on_error_reduce bin_op(disj_expr_level,Or,conj_expr_level)
-%on_error_reduce bin_op(disj_expr_level,REV_APP,conj_expr_level)
-%on_error_reduce bin_op(conj_expr_level,BOOL_AND,comp_expr_level)
-%on_error_reduce bin_op(comp_expr_level,ge,cat_expr_level)
-%on_error_reduce bin_op(add_expr_level,PLUS,mult_expr_level)
-%on_error_reduce bin_op(add_expr_level,MINUS,mult_expr_level)
-%on_error_reduce base_expr(expr)
-%on_error_reduce base_expr(base_cond)
 %on_error_reduce base_expr(closed_expr)
-%on_error_reduce module_var_e
-%on_error_reduce module_var_t
-%on_error_reduce nsepseq(module_name,DOT)
-%on_error_reduce core_expr
-%on_error_reduce match_expr(base_cond)
-%on_error_reduce ctor_expr
-%on_error_reduce nsepseq(disj_expr_level,COMMA)
-%on_error_reduce const_ctor_expr
-%on_error_reduce const_ctor_pattern
-%on_error_reduce arguments
-%on_error_reduce seq(Attr)
-%on_error_reduce ctor_pattern
-%on_error_reduce cons_pattern_level
-%on_error_reduce nsepseq(cons_pattern_level,COMMA)
-%on_error_reduce pattern
-%on_error_reduce nsepseq(core_irrefutable,COMMA)
-%on_error_reduce variant(fun_type_level)
-%on_error_reduce variant(cartesian_level)
-%on_error_reduce nsepseq(variant(fun_type_level),VBAR)
-%on_error_reduce nsepseq(variant(cartesian_level),VBAR)
+%on_error_reduce add_expr_level
+%on_error_reduce seq_expr
+%on_error_reduce core_type
 %on_error_reduce nsepseq(core_type,TIMES)
 %on_error_reduce fun_type_level
+%on_error_reduce variant_type(fun_type_level)
 %on_error_reduce cartesian_level
-*)
+%on_error_reduce short_variant(fun_type_level)
+%on_error_reduce nsepseq(core_irrefutable,COMMA)
+%on_error_reduce cons_pattern_level
+%on_error_reduce module_expr
+%on_error_reduce module_path(module_name)
+%on_error_reduce no_attr_expr
+%on_error_reduce selected
+%on_error_reduce field_path
+%on_error_reduce nsepseq(selection,DOT)
+%on_error_reduce ctor_app_pattern
+%on_error_reduce module_path(__anonymous_9)
 
 (* See [ParToken.mly] for the definition of tokens. *)
 
