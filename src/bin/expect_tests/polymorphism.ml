@@ -73,44 +73,6 @@ let%expect_test _ =
   run_ligo_good
     [ "compile"
     ; "expression"
-    ; "reasonligo"
-    ; "(zip([1,2,3]))([4n,5n,6n])"
-    ; "--init-file"
-    ; test "comb.religo"
-    ];
-  [%expect
-    {|
-    Reasonligo is depreacted, support will be dropped in a few versions.
-
-    Reasonligo is depreacted, support will be dropped in a few versions.
-
-    Reasonligo is depreacted, support will be dropped in a few versions.
-
-    { Pair 1 4 ; Pair 2 5 ; Pair 3 6 } |}]
-
-let%expect_test _ =
-  run_ligo_good
-    [ "compile"
-    ; "expression"
-    ; "reasonligo"
-    ; "(zip((zip([1,2,3]))([4n,5n,6n])))([\"a\",\"b\",\"c\"])"
-    ; "--init-file"
-    ; test "comb.religo"
-    ];
-  [%expect
-    {|
-    Reasonligo is depreacted, support will be dropped in a few versions.
-
-    Reasonligo is depreacted, support will be dropped in a few versions.
-
-    Reasonligo is depreacted, support will be dropped in a few versions.
-
-    { Pair (Pair 1 4) "a" ; Pair (Pair 2 5) "b" ; Pair (Pair 3 6) "c" } |}]
-
-let%expect_test _ =
-  run_ligo_good
-    [ "compile"
-    ; "expression"
     ; "jsligo"
     ; "(zip(list([1,2,3])))(list([(4 as nat),(5 as nat),(6 as nat)]))"
     ; "--init-file"
@@ -307,19 +269,6 @@ let%expect_test _ =
   run_ligo_good
     [ "compile"; "expression"; "cameligo"; "bar"; "--init-file"; test "modules.mligo" ];
   [%expect {|
-    (Pair (Some 1) (Some "hello")) |}]
-
-let%expect_test _ =
-  run_ligo_good
-    [ "compile"; "expression"; "reasonligo"; "bar"; "--init-file"; test "modules.religo" ];
-  [%expect
-    {|
-    Reasonligo is depreacted, support will be dropped in a few versions.
-
-    Reasonligo is depreacted, support will be dropped in a few versions.
-
-    Reasonligo is depreacted, support will be dropped in a few versions.
-
     (Pair (Some 1) (Some "hello")) |}]
 
 let%expect_test _ =
@@ -532,6 +481,24 @@ let%expect_test _ =
     Type "_a" not found. |}]
 
 let%expect_test _ =
+  run_ligo_bad
+    [ "compile"
+    ; "expression"
+    ; "cameligo"
+    ; "f"
+    ; "--init-file"
+    ; test "annotate_arrow.mligo"
+    ];
+  [%expect
+    {|
+    File "./annotate_arrow.mligo", line 1, characters 0-36:
+      1 | let f (_:unit) (_:nat option) = None
+
+    Cannot monomorphise the expression.
+    The inferred type was "unit -> ∀ a . option (nat) -> option (a)".
+    Hint: Try adding additional annotations. |}]
+
+let%expect_test _ =
   run_ligo_bad [ "print"; "ast-typed"; test "constants.mligo" ];
   [%expect
     {|
@@ -654,11 +621,13 @@ let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; test "monomorphisation_fail.mligo" ];
   [%expect
     {|
-    File "./monomorphisation_fail.mligo", line 3, characters 58-63:
+    File "./monomorphisation_fail.mligo", line 1, characters 0-28:
+      1 | let f (_ : unit) s = ([], s)
       2 |
-      3 | let main ((p, s) : unit * unit) : operation list * unit = f p s
 
-    Cannot monomorphise the expression. |}]
+    Cannot monomorphise the expression.
+    The inferred type was "unit -> ∀ a . ∀ b . a -> ( list (b) * a )".
+    Hint: Try adding additional annotations. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; test "monomorphisation_fail2.mligo" ];

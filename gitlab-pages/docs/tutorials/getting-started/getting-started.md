@@ -23,10 +23,10 @@ Alternatively, you can decide to use our [webide](https://ide.ligolang.org/). Th
 
 The `ligo` executable is statically linked. It should run on most modern Linux distributions.
 
-You can get the rolling release [here](https://gitlab.com/ligolang/ligo/-/jobs/3438281030/artifacts/raw/ligo), make it executable, and you are done!
+You can get the rolling release [here](https://gitlab.com/ligolang/ligo/-/jobs/3553205311/artifacts/raw/ligo), make it executable, and you are done!
 
 ```zsh
-wget https://gitlab.com/ligolang/ligo/-/jobs/3438281030/artifacts/raw/ligo
+wget https://gitlab.com/ligolang/ligo/-/jobs/3553205311/artifacts/raw/ligo
 chmod +x ./ligo
 ```
 
@@ -49,33 +49,33 @@ brew install ligolang/ligo/ligo
 ### Debian Linux package installation
 
 A `.deb` package containing the static `ligo` executable is also available.
-First, download [the package](https://gitlab.com/ligolang/ligo/-/jobs/3438281030/artifacts/raw/ligo.deb), and then install using: 
+First, download [the package](https://gitlab.com/ligolang/ligo/-/jobs/3553205311/artifacts/raw/ligo.deb), and then install using: 
 
 ```zsh
 sudo apt install ./ligo.deb
 ```
 
 ### Dockerised installation
-If you've [installed 🐳 Docker](https://docs.docker.com/install/), you can run the latest [LIGO release 0.57.0](https://ligolang.org/docs/next/intro/changelog):
+If you've [installed 🐳 Docker](https://docs.docker.com/install/), you can run the latest [LIGO release 0.59.0](https://ligolang.org/docs/next/intro/changelog):
 
 Linux or OSX:
 > ```sh
-> docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.57.0
+> docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.59.0
 > ```
 > For convenience you can alias the above command
 > ```sh
-> alias ligo="docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.57.0"
+> alias ligo="docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.59.0"
 > ```
 > To make this `alias` persistent across terminal sessions you need to configure your shell.     
 > Here is a [good link](https://www.tecmint.com/create-alias-in-linux/) with the steps on how to do that.
 
 Windows:
 > ```dos
-> docker run --rm -v "%CD%":/cd -w /cd ligolang/ligo:0.57.0`
+> docker run --rm -v "%CD%":/cd -w /cd ligolang/ligo:0.59.0`
 > ```
 > For convenience you can alias the above command
 > ```dos
-> doskey ligo=docker run --rm -v "%CD%":/cd -w /cd ligolang/ligo:0.57.0 $*
+> doskey ligo=docker run --rm -v "%CD%":/cd -w /cd ligolang/ligo:0.59.0 $*
 > ```
 > To make the alias persistent across terminal sessions you need to add the `doskey` to the Windows Registry.  
 > Follow [this stackoverflow answer](https://stackoverflow.com/a/21040825) for the steps on how to do that.
@@ -112,7 +112,7 @@ Or run one of the older versions found on [DockerHub](https://hub.docker.com/r/l
 
 In this section and the following one we will use a simple smart-contract that is present as example on our webide. We will cover the ligo language and smart-contract development in the following tutorials.
 
-First, create a `ligo_tutorial` folder on your computer. Then download and put the contract in this folder. It is available in [Pascaligo](https://gitlab.com/ligolang/ligo/-/raw/dev/src/test/contracts/increment.ligo), [Cameligo](https://gitlab.com/ligolang/ligo/-/raw/dev/src/test/contracts/increment.mligo), [Reasonligo](https://gitlab.com/ligolang/ligo/-/raw/dev/src/test/contracts/increment.religo) and [Jsligo](https://gitlab.com/ligolang/ligo/-/raw/dev/src/test/contracts/increment.jsligo)
+First, create a `ligo_tutorial` folder on your computer. Then download and put the contract in this folder. It is available in [Pascaligo](https://gitlab.com/ligolang/ligo/-/raw/dev/src/test/contracts/increment.ligo), [Cameligo](https://gitlab.com/ligolang/ligo/-/raw/dev/src/test/contracts/increment.mligo) and [Jsligo](https://gitlab.com/ligolang/ligo/-/raw/dev/src/test/contracts/increment.jsligo)
 
 <Syntax syntax="pascaligo">
 
@@ -174,36 +174,7 @@ let main (action, store : parameter * storage) : operation list * storage =
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-Open your editor in the folder and the file `increment.religo` in the editor. You should have this code
-
-```reasonligo test-ligo group=a
-type storage = int;
-
-type parameter =
-  Increment (int)
-| Decrement (int)
-| Reset;
-
-// Two entrypoints
-
-let add = ((store, delta) : (storage, int)) => store + delta;
-let sub = ((store, delta) : (storage, int)) => store - delta;
-
-/* Main access point that dispatches to the entrypoints according to
-   the smart contract parameter. */
-let main = ((action, store) : (parameter, storage)) : (list (operation), storage) => {
- ([],    // No operations
- (switch (action) {
-  | Increment (n) => add ((store, n))
-  | Decrement (n) => sub ((store, n))
-  | Reset         => 0}))
-};
-
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 Open your editor in the folder and the file `increment.jsligo` in the editor. You should have this code
@@ -251,13 +222,7 @@ ligo compile contract increment.mligo -o increment.tz
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```zsh
-ligo compile contract increment.religo -o increment.tz
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```zsh
@@ -292,13 +257,7 @@ As we can never underline enough the importance of tests in the context of smart
   ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-  ```zsh
-  ligo run interpret "<code>" --init-file increment.religo
-  ```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
   ```zsh
@@ -324,13 +283,7 @@ As we can never underline enough the importance of tests in the context of smart
   ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-  ```zsh
-  ligo run interpret "add(10,32)" --init-file increment.religo
-  ```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
   ```zsh
@@ -357,13 +310,7 @@ As we can never underline enough the importance of tests in the context of smart
   ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-  ```zsh
-  ligo run dry-run increment.religo "Increment(32)" "10"
-  ```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
   ```zsh
@@ -409,21 +356,7 @@ const test_increment = {
     assert (Test.get_storage(taddr) = initial_storage + 32)
   ```
 </Syntax>
-<Syntax syntax="reasonligo">
 
-  Add the following line at the end of `increment.religo`
-
-```reasonligo test-ligo group=a
-let test_increment = {
-  let initial_storage = 10;
-  let (taddr, _, _) = Test.originate(main, initial_storage, 0tez);
-  let contr = Test.to_contract(taddr);
-  let _ = Test.transfer_to_contract_exn(contr, (Increment (1)), 1mutez);
-  assert (Test.get_storage(taddr) == initial_storage + 1)
-};
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
   Add the following line at the end of `increment.jsligo`
@@ -457,13 +390,7 @@ const test_increment = (() : unit => {
   ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-  ```zsh
-  ligo run test increment.religo
-  ```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
   ```zsh
@@ -544,13 +471,7 @@ const test_increment = (() : unit => {
   ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-  ```zsh
-  ligo compile parameter increment.religo "Increment (32)"
-  ```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
   ```zsh
