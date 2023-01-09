@@ -19,6 +19,7 @@
   e_rev_app
   reduce_switch
   structural_assignments
+  returns
  )
  (libraries ast_unified syntax_types)
  (inline_tests

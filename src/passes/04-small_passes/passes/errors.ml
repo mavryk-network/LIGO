@@ -17,6 +17,7 @@ type t =
   | `Small_passes_michelson_type_wrong of string * ty_expr
   | `Small_passes_wrong_lvalue of expr
   | `Small_passes_statement_after_break of statement list
+  | `Small_passes_unsupported_return of statement list
   ]
 [@@deriving poly_constructor { prefix = "small_passes_" }, sexp]
 
@@ -82,7 +83,11 @@ let error_ppformat : display_format:string display_format -> no_colour:bool -> F
         List.fold slst ~init:Location.generated ~f:(fun acc el ->
             Location.cover acc (get_s_loc el))
       in
-      Format.fprintf f "@[<hv>%a@.Illegal statements after break@]" snippet_pp loc)
+      Format.fprintf f "@[<hv>%a@.Illegal statements after break@]" snippet_pp loc
+    | `Small_passes_unsupported_return stmts ->
+      let loc = stmts |> List.map ~f:get_s_loc |> List.fold ~init:Location.generated ~f:Location.cover in
+      Format.fprintf f "@[<hv>%a@.Return statement is currently not supported in this position@]" snippet_pp loc)
+
 
 
 let error_json : t -> Simple_utils.Error.t =
@@ -139,15 +144,17 @@ let error_json : t -> Simple_utils.Error.t =
     let content = make_content ~message ~location () in
     make ~stage ~content
   | `Small_passes_wrong_lvalue e ->
-    let message = "Expected a field name or an accessor" in
     let location = get_e_loc e in
-    let content = make_content ~message ~location () in
+    let content = make_content ~message:"Expected a field name or an accessor" ~location () in
     make ~stage ~content
   | `Small_passes_statement_after_break slst ->
     let location =
       List.fold slst ~init:Location.generated ~f:(fun acc el ->
           Location.cover acc (get_s_loc el))
     in
-    let message = "Illegal statements after break" in
-    let content = make_content ~message ~location () in
+    let content = make_content ~message:"Illegal statements after break" ~location () in
+    make ~stage ~content
+  | `Small_passes_unsupported_return stmts ->
+    let location = stmts |> List.map ~f:get_s_loc |> List.fold ~init:Location.generated ~f:Location.cover in
+    let content = make_content ~message:"Return statement is currently not supported in this position" ~location () in
     make ~stage ~content
