@@ -265,7 +265,11 @@ let%expect_test "compile" =
                       ((S_Instr
                         (I_Struct_assign
                          ((lhs_expr (E_variable output))
-                          (rhs_expr (E_Literal (Literal_int 1))))))))))))
+                          (rhs_expr (E_Literal (Literal_int 1))))))
+                       (S_Instr
+                        (I_Struct_assign
+                         ((lhs_expr (E_variable fallthrough))
+                          (rhs_expr (E_constant ((cons_name C_TRUE)))))))))))))
                  (S_Decl
                   (D_Const
                    ((pattern (P_var g1))
