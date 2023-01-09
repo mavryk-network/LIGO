@@ -139,16 +139,11 @@ braces(X):
    static control-flow graph. See module [Utils] for the types
    corresponding to the semantic actions of those rules. *)
 
-(* Possibly empty sequence of items *)
-
-seq(item):
-  (**)           {     [] }
-| item seq(item) { $1::$2 }
-
 (* Non-empty sequence of items *)
 
-nseq(item):
-  item seq(item) { $1,$2 }
+nseq(X):
+  X         { $1, [] }
+| X nseq(X) { let hd,tl = $2 in $1, hd::tl }
 
 (* Non-empty separated sequence of items *)
 
@@ -496,7 +491,7 @@ module_expr:
     M_Path (mk_mod_path $1 (fun x -> x#region)) }
 
 structure:
-  "struct" seq(declaration) "end" {
+  "struct" ioption(nseq(declaration)) "end" {
     let region = cover $1#region $3#region
     and value  = {kwd_struct=$1; declarations=$2; kwd_end=$3}
     in {region; value} }
