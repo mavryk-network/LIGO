@@ -143,3 +143,11 @@ const g = n => {
   return output
 }
 ```
+
+## pass 'unstate'
+
+- remove : S_* ; E_Block_with ; E_Block_fun ; I_*
+- add : -
+
+you got it :) good luck
+S_Instr should only contain simple stuff like `I_While I_For_In I_For I_ForOf`

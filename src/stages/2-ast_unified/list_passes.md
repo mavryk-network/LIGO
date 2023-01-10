@@ -175,14 +175,6 @@ note: is there any reason why we would like E_App ? GADT ? where Ctor is a funct
 
 `E_AssignJsligo` |-> `E_block_with`
 (transitivity .. etc etc )
-
-## pass 'unstate'
-
-- remove : S_* ; E_Block_with ; E_Block_fun ; I_*
-- add : -
-
-you got it :) good luck
-S_Instr should only contain simple stuff like `I_While I_For_In I_For I_ForOf`
   
 ## pass 'enum_attributes'
   - remove : E_Attr (string to string) D_attr P_attr
