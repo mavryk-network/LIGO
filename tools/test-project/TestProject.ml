@@ -19,22 +19,67 @@ module LSet = Set.Make(Simple_utils.Location)
      of a document are expected to be able to return.
 *)
 
-type get_scope_info = Main_errors.all list
-                      * Main_warnings.all list
-                      * (Scopes.def list * Scopes.scopes) option
+type get_scope_info =
+    Main_errors.all list
+  * Main_warnings.all list
+  * (Scopes.def list * Scopes.scopes) option
 
-let diagnostics (_state : get_scope_info) : Lsp.Types.Diagnostic.t list =
-  let dummy_start = Lsp.Types.Position.create ~character:1 ~line:1 in
-  let dummy_end = Lsp.Types.Position.create ~character:5 ~line:3 in
-  let dummy_range = Lsp.Types.Range.create ~end_:dummy_end ~start:dummy_start in
-  let dummy_diag = Lsp.Types.Diagnostic.create ~message:"Dummy diagnostics!" ~range:dummy_range () in
-  [dummy_diag]
-
-let get_scope ~uri:uri =
+let get_scope : Lsp.Uri.t -> get_scope_info =
+fun uri ->
   let compiler_options = Compiler_options.Raw_options.make () in
   let file_path = Lsp.Uri.to_path uri in
   Ligo_api.Info.get_scope_trace compiler_options file_path ()
 
+let with_get_scope_info : type r.
+     (Lsp.Types.DocumentUri.t, get_scope_info) Hashtbl.t
+  -> Lsp.Uri.t
+  -> (get_scope_info -> r option Linol_lwt.Jsonrpc2.IO.t)
+  -> r option Linol_lwt.Jsonrpc2.IO.t =
+fun get_scope_buffers uri f ->
+  begin match Hashtbl.find_opt get_scope_buffers uri with
+    | None -> Linol_lwt.Jsonrpc2.IO.return None
+    | Some x -> f x
+  end
+
+let pos_to_position (pos: Simple_utils.Pos.t) =
+  let line_diff = 1 in
+  let character_diff = 0 in
+  Lsp.Types.Position.create ~line:(pos#line - line_diff) ~character:(pos#point_num - pos#point_bol - character_diff)
+
+let region_to_range (region: Simple_utils.Region.t) =
+  Lsp.Types.Range.create ~start:(pos_to_position region#start) ~end_:(pos_to_position region#stop)
+
+let position_le (position_l: Lsp.Types.Position.t) (position_r: Lsp.Types.Position.t) :Bool.t =
+  position_l.line < position_r.line
+  || (position_l.line = position_r.line
+    && position_l.character <= position_r.character)
+
+let is_position_in_range (position: Lsp.Types.Position.t) (range: Lsp.Types.Range.t) : Bool.t =
+  position_le range.start position
+  && position_le position range.end_
+
+
+
+let get_references : Scopes.def -> LSet.t =
+function
+  | Variable vdef -> vdef.references
+  | Type tdef -> tdef.references
+  | Module mdef -> mdef.references
+
+let get_range : Scopes.def -> Simple_utils.Location.t =
+  function
+    | Variable vdef -> vdef.range
+    | Type tdef -> tdef.range
+    | Module mdef -> mdef.range
+
+let is_reference : Lsp.Types.Position.t -> Scopes.def -> bool =
+fun pos defintion ->
+  let check_pos : Simple_utils.Location.t -> bool =
+  function
+    | File reg -> is_position_in_range pos @@ region_to_range reg
+    | Virtual _ -> false
+  in
+  LSet.exists check_pos @@ get_references defintion
 
 (* Lsp server class
 
@@ -60,28 +105,35 @@ class lsp_server =
        - store the state resulting from the processing
        - return the diagnostics from the new state
     *)
-    method private _on_doc
-        ~(notify_back:Linol_lwt.Jsonrpc2.notify_back)
-        (uri:Lsp.Types.DocumentUri.t) (_contents:string) =
-      let new_state = get_scope ~uri in
-      Hashtbl.replace get_scope_buffers uri new_state;
-      let diags = diagnostics new_state in
+    method private _on_doc :
+      Linol_lwt.Jsonrpc2.notify_back
+      -> Lsp.Types.DocumentUri.t
+      -> string
+      -> unit Linol_lwt.Jsonrpc2.IO.t =
+    fun notify_back uri _contents ->
       let open Linol_lwt in
       let* () = notify_back#send_log_msg ~type_:Info "Welcome!!!" in
       let message = ShowMessageParams.create ~message:"WELCOME NOTIFICATION!!!" ~type_:Info in
       let* () = notify_back#send_notification (ShowMessage message) in
-      let* () = notify_back#send_diagnostic diags in
-      Lwt.return ()
+
+      let new_state = get_scope uri in
+      Hashtbl.replace get_scope_buffers uri new_state;
+
+      let dummy_start = Lsp.Types.Position.create ~character:1 ~line:1 in
+      let dummy_end = Lsp.Types.Position.create ~character:5 ~line:3 in
+      let dummy_range = Lsp.Types.Range.create ~end_:dummy_end ~start:dummy_start in
+      let dummy_diag = Lsp.Types.Diagnostic.create ~message:"Dummy diagnostics!" ~range:dummy_range () in
+      notify_back#send_diagnostic [dummy_diag]
 
     (* We now override the [on_notify_doc_did_open] method that will be called
        by the server each time a new document is opened. *)
     method on_notif_doc_did_open ~notify_back d ~content : unit Linol_lwt.t =
-      self#_on_doc ~notify_back d.uri content
+      self#_on_doc notify_back d.uri content
 
     (* Similarly, we also override the [on_notify_doc_did_change] method that will be called
        by the server each time a new document is opened. *)
     method on_notif_doc_did_change ~notify_back d _c ~old_content:_old ~new_content =
-      self#_on_doc ~notify_back d.uri new_content
+      self#_on_doc notify_back d.uri new_content
 
     (* On document closes, we remove the state associated to the file from the global
        hashtable state, to avoid leaking memory. *)
@@ -89,9 +141,11 @@ class lsp_server =
       Hashtbl.remove get_scope_buffers d.uri;
       Linol_lwt.return ()
 
-    method on_req_hover_ ~notify_back:_ ~id:_ ~uri:_ ~(pos : Lsp.Types.Position.t) ~workDoneToken:_
-        ~get_scope_info:_
-        : Lsp.Types.Hover.t option Linol_lwt.Jsonrpc2.IO.t =
+    method on_req_hover_ :
+         Lsp.Types.Position.t
+      -> get_scope_info
+      -> Lsp.Types.Hover.t option Linol_lwt.Jsonrpc2.IO.t =
+    fun pos _ ->
       let marked_string : Lsp.Types.MarkedString.t = {
         value = "Hover on line: " ^ Int.to_string (pos.line) ^ " character: " ^ Int.to_string (pos.character)  ;
         language = None
@@ -100,101 +154,61 @@ class lsp_server =
       let dummy_hover = Lsp.Types.Hover.create ~contents:dummy_content () in
       Linol_lwt.Jsonrpc2.IO.return (Some dummy_hover)
 
-    method on_req_formatting_ ~notify_back:notify_back ~id:_ ~uri:uri ~get_scope_info:_
-        : Lsp.Types.TextEdit.t list option Linol_lwt.Jsonrpc2.IO.t =
-        let open Linol_lwt in
-        let* () = notify_back#send_log_msg ~type_:MessageType.Info @@ "Formatting request on " ^ Lsp.Uri.to_path uri in
-        let compiler_options = Compiler_options.Raw_options.make () in
-        let file_path = Lsp.Uri.to_path uri in
-        let display_format = Simple_utils.Display.human_readable in
-        let text = Ligo_api.Print.pretty_print compiler_options file_path display_format () in
-        begin match text with
-          | Ok (result, _) ->
-            let file_start = Lsp.Types.Position.create ~character:0 ~line:0 in
-            let file_end = Lsp.Types.Position.create ~character:0 ~line:1000000000 in
-            let whole_file_range = Lsp.Types.Range.create ~end_:file_end ~start:file_start in
-            let formatted_text = Lsp.Types.TextEdit.create ~newText:result ~range:whole_file_range in
-            Linol_lwt.Jsonrpc2.IO.return (Some [formatted_text])
-          | Error _ -> Linol_lwt.Jsonrpc2.IO.return None
-        end
+    method on_req_formatting_ :
+         Linol_lwt.Jsonrpc2.notify_back
+      -> Lsp.Uri.t
+      -> Lsp.Types.TextEdit.t list option Linol_lwt.Jsonrpc2.IO.t =
+    fun notify_back uri ->
+      let open Linol_lwt in
+      let* () = notify_back#send_log_msg ~type_:MessageType.Info @@ "Formatting request on " ^ Lsp.Uri.to_path uri in
+      let compiler_options = Compiler_options.Raw_options.make () in
+      let file_path = Lsp.Uri.to_path uri in
+      let display_format = Simple_utils.Display.human_readable in
+      let text = Ligo_api.Print.pretty_print compiler_options file_path display_format () in
+      begin match text with
+        | Ok (result, _) ->
+          let file_start = Lsp.Types.Position.create ~character:0 ~line:0 in
+          let file_end = Lsp.Types.Position.create ~character:0 ~line:1000000000 in
+          let whole_file_range = Lsp.Types.Range.create ~end_:file_end ~start:file_start in
+          let formatted_text = Lsp.Types.TextEdit.create ~newText:result ~range:whole_file_range in
+          Linol_lwt.Jsonrpc2.IO.return (Some [formatted_text])
+        | Error _ -> Linol_lwt.Jsonrpc2.IO.return None
+      end
 
-    method on_req_definition_  ~notify_back:_ ~id:_ ~uri:uri ~(pos : Lsp.Types.Position.t)
-        ~workDoneToken:_ ~partialResultToken:_
-        ~get_scope_info:_ : Lsp.Types.Locations.t option Linol_lwt.Jsonrpc2.IO.t =
-        let compiler_options = Compiler_options.Raw_options.make () in
-        let file_path = Lsp.Uri.to_path uri in
-        let _, _, defs = Ligo_api.Info.get_scope_trace compiler_options file_path () in
-        let line_diff = 1 in
-        let character_diff = 0 in
-        let pos_to_position (pos: Simple_utils.Pos.t) =
-          Lsp.Types.Position.create ~line:(pos#line - line_diff) ~character:(pos#point_num - pos#point_bol - character_diff)
-        in
-        let region_to_range (region: Simple_utils.Region.t) =
-          Lsp.Types.Range.create ~start:(pos_to_position region#start) ~end_:(pos_to_position region#stop)
-        in
-        let position_le (position_l: Lsp.Types.Position.t) (position_r: Lsp.Types.Position.t) :Bool.t =
-          position_l.line < position_r.line
-          || (position_l.line = position_r.line
-            && position_l.character <= position_r.character)
-        in
-        let is_position_in_range (position: Lsp.Types.Position.t) (range: Lsp.Types.Range.t) : Bool.t =
-          position_le range.start position
-          && position_le position range.end_
-        in
-        let check_pos (ref:Simple_utils.Location.t) = match ref with
-          | File reg -> let range = region_to_range reg in
-                        if is_position_in_range pos range
-                        then true
-                        else false
-          | Virtual _ -> false
-        in
-        let find_def (def: Scopes.def) =
-          begin match def with
-            | Variable vdef ->
-              if LSet.exists check_pos vdef.references
-              then
-                match vdef.range with
-                  | File region -> Some region
-                  | _ -> None
-              else None
-            | Type tdef ->
-              if LSet.exists check_pos tdef.references
-              then
-                match tdef.range with
-                  | File region -> Some region
-                  | _ -> None
-              else None
-            | Module mdef ->
-              if LSet.exists check_pos mdef.references
-              then
-                match mdef.range with
-                  | File region -> Some region
-                  | _ -> None
-              else None
+    method on_req_definition_ :
+         Linol_lwt.Jsonrpc2.notify_back
+      -> Jsonrpc.Id.t
+      -> Lsp.Uri.t
+      -> Lsp.Types.Position.t
+      -> get_scope_info
+      -> Lsp.Types.Locations.t option Linol_lwt.Jsonrpc2.IO.t =
+    fun _ _ _ pos (_, _, defs) ->
+      (* let position_to_string (position :Lsp.Types.Position.t) =
+        "Position { line: " ^ Int.to_string position.line
+        ^ ", character: " ^ Int.to_string position.character
+        ^ " }"
+      in
+      let range_to_string (range :Lsp.Types.Range.t) =
+        "Range { start: " ^ position_to_string range.start
+        ^ ", end: " ^ position_to_string range.end_
+        ^ " }"
+      in *)
+      begin match defs with
+        | Some (defs, _) ->
+          begin match Option.map get_range @@ List.find_opt (is_reference pos) defs with
+            | Some (File region) ->
+              let x = `Location [
+                Lsp.Types.Location.create
+                  ~uri:(Lsp.Types.DocumentUri.of_path region#file)
+                  ~range:(region_to_range region)
+                ] in
+              Linol_lwt.Jsonrpc2.IO.return @@ Some x
+            | _ ->
+              Linol_lwt.Jsonrpc2.IO.return None
           end
-        in
-        (* let position_to_string (position :Lsp.Types.Position.t) =
-          "Position { line: " ^ Int.to_string position.line
-          ^ ", character: " ^ Int.to_string position.character
-          ^ " }"
-        in
-        let range_to_string (range :Lsp.Types.Range.t) =
-          "Range { start: " ^ position_to_string range.start
-          ^ ", end: " ^ position_to_string range.end_
-          ^ " }"
-        in *)
-        begin match defs with
-          | Some (defs, _) ->
-            begin match List.find_map find_def defs with
-              | Some region ->
-                let x = `Location [Lsp.Types.Location.create ~uri:(Lsp.Types.DocumentUri.of_path region#file) ~range:(region_to_range region)] in
-                Linol_lwt.Jsonrpc2.IO.return @@ Some x
-              | _ ->
-                Linol_lwt.Jsonrpc2.IO.return None
-            end
-          | _ ->
-            Linol_lwt.Jsonrpc2.IO.return None
-        end
+        | _ ->
+          Linol_lwt.Jsonrpc2.IO.return None
+      end
 
     method! config_hover = Some (`Bool true)
     method config_formatting = Some (`Bool true)
@@ -207,41 +221,28 @@ class lsp_server =
         definitionProvider = self#config_definition
       }
 
-    method! on_request
-    : type r. notify_back:_ -> id:Linol_lwt.Jsonrpc2.Req_id.t -> r Lsp.Client_request.t -> r Linol_lwt.Jsonrpc2.IO.t
-    = fun ~notify_back ~id (r:_ Lsp.Client_request.t) ->
+    method! on_request : type r.
+        notify_back:_
+      -> id:Linol_lwt.Jsonrpc2.Req_id.t
+      -> r Lsp.Client_request.t
+      -> r Linol_lwt.Jsonrpc2.IO.t =
+    fun ~notify_back ~id (r:_ Lsp.Client_request.t) ->
       begin match r with
         | Lsp.Client_request.TextDocumentFormatting {textDocument; _} ->
           let uri = textDocument.uri in
           let notify_back = new Linol_lwt.Jsonrpc2.notify_back ~uri ~notify_back () in
-          begin match Hashtbl.find_opt get_scope_buffers uri with
-            | None -> Linol_lwt.Jsonrpc2.IO.return None
-            | Some get_scope_info ->
-              self#on_req_formatting_ ~notify_back ~id
-                    ~uri ~get_scope_info
-          end
-        | Lsp.Client_request.TextDocumentDefinition {
-            textDocument; position; workDoneToken; partialResultToken;
-          } ->
+          self#on_req_formatting_ notify_back uri
+
+        | Lsp.Client_request.TextDocumentDefinition { textDocument; position; _} ->
           let uri = textDocument.uri in
           let notify_back = new Linol_lwt.Jsonrpc2.notify_back ~uri ~notify_back () in
-          begin match Hashtbl.find_opt get_scope_buffers uri with
-            | None -> Linol_lwt.Jsonrpc2.IO.return None
-            | Some get_scope_info ->
-              self#on_req_definition_ ~notify_back ~id
-                    ~workDoneToken ~partialResultToken
-                    ~uri ~pos:position ~get_scope_info
-          end
-        | Lsp.Client_request.TextDocumentHover { textDocument; position; workDoneToken } ->
-            let uri = textDocument.uri in
-            let notify_back = new Linol_lwt.Jsonrpc2.notify_back ~uri ~notify_back () in
-            begin match Hashtbl.find_opt get_scope_buffers uri with
-            | None -> Linol_lwt.Jsonrpc2.IO.return None
-            | Some get_scope_info ->
-              self#on_req_hover_ ~notify_back ~id
-                    ~workDoneToken ~uri ~pos:position
-                    ~get_scope_info
-            end
+          with_get_scope_info get_scope_buffers uri (
+            self#on_req_definition_ notify_back id uri position)
+
+        | Lsp.Client_request.TextDocumentHover { textDocument; position; _ } ->
+          let uri = textDocument.uri in
+          (* let notify_back = new Linol_lwt.Jsonrpc2.notify_back ~uri ~notify_back () in *)
+          with_get_scope_info get_scope_buffers uri (self#on_req_hover_ position)
         | _ -> super#on_request ~notify_back ~id r
     end
   end
