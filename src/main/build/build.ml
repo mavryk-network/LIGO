@@ -234,7 +234,7 @@ let qualified_core ~raise
     let top_level_syntax =
       match source with
       | From_file filename -> get_top_level_syntax ~options ~filename ()
-      | Raw _ -> Syntax_types.CameLIGO
+      | Raw { id; _ } -> get_top_level_syntax ~options ~filename:id ()
   end) in
   trace ~raise build_error_tracer @@ from_result (compile_qualified source)
 
