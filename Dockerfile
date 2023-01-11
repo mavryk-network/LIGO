@@ -45,13 +45,8 @@ COPY tools/ligo-syntax-highlighting ligo-syntax-highlighting
 
 # JSOO
 COPY Makefile /ligo
-COPY package.json /ligo
-COPY package-lock.json /ligo
-COPY rollup.config.mjs /ligo
 COPY tools/webide-new/ligo-webide-frontend/ligo-ide/public/favicon.ico /ligo/tools/webide-new/ligo-webide-frontend/ligo-ide/public/favicon.ico
-COPY demo-webide.js /ligo/demo-webide.js
-COPY editor.js /ligo/editor.js
-COPY index.html /ligo/index.html
+COPY ./jsoo /ligo/jsoo
 
 # Run tests
 RUN opam exec -- dune build @check \
