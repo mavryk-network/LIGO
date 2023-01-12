@@ -2036,7 +2036,7 @@ interactive_expr: Verbatim Or With
 Ill-formed Boolean expression.
 At this point, a Boolean expression is expected.
 Hint: You may want to check the priority and associativity of
-operators, or use parentheses.
+operators, or use parentheses around what you think is the expression.
 
 interactive_expr: Verbatim EQ With
 ##

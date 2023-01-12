@@ -723,7 +723,7 @@ closed_expr:
 (* Pattern matching *)
 
 match_expr(right_expr):
-  "match" expr "with" "|"? cases(right_expr) {
+  "match" expr "with" ioption("|") cases(right_expr) {
     let clauses : ('a match_clause reg, vbar) Utils.nsepseq reg = {
       value  = Utils.nsepseq_rev $5;
       region = nsepseq_to_region (fun x -> x.region) $5}
