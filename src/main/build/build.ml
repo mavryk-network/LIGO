@@ -204,6 +204,20 @@ let unqualified_core ~raise
   trace ~raise build_error_tracer
   @@ from_result (compile_unqualified (Source_input.From_file filename))
 
+let unqualified_core_raw_input ~raise
+  : options:Compiler_options.t -> Source_input.raw_input -> Ast_core.program
+  =
+  fun ~options input ->
+  let std_lib = Stdlib.get ~options in
+  let open Build_core (struct
+    let raise = raise
+    let options = options
+    let std_lib = std_lib
+    let top_level_syntax = get_top_level_syntax ~options ~filename:input.id ()
+  end) in
+  trace ~raise build_error_tracer
+  @@ from_result (compile_unqualified (Source_input.Raw input))
+
 
 let unqualified_typed ~raise
     :  options:Compiler_options.t -> Ligo_compile.Of_core.form -> Source_input.file_name

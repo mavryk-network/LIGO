@@ -41,26 +41,36 @@ let list_declarations (raw_options : Raw_options.t) source_file display_format (
   let declarations = Compile.Of_typed.list_declarations raw_options.only_ep prg in
   source_file, declarations
 
-let get_scope_raw (raw_options : Raw_options.t) source_file () =
+let get_scope_raw (raw_options : Raw_options.t) (source_file:BuildSystem.Source_input.code_input) () =
   fun ~raise ->
+  let file_name =
+    match source_file with
+      | From_file file_name -> file_name
+      | Raw {id; _} -> id
+  in
   let syntax =
-    Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
+    Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some file_name)
   in
   let protocol_version =
     Helpers.protocol_to_variant ~raise raw_options.protocol_version
   in
   let options = Compiler_options.make ~raw_options ~syntax ~protocol_version () in
   let Compiler_options.{ with_types; _ } = options.tools in
-  let core_prg = Build.unqualified_core ~raise ~options source_file in
+  let core_prg =
+    begin match source_file with
+      | From_file file_name -> Build.unqualified_core ~raise ~options file_name
+      | Raw file -> Build.unqualified_core_raw_input ~raise ~options file
+    end
+  in
   let lib = Build.Stdlib.get ~options in
   let stdlib = Build.Stdlib.select_lib_typed syntax lib in
   Scopes.scopes ~options:options.middle_end ~with_types ~stdlib core_prg
 
 let get_scope (raw_options : Raw_options.t) source_file display_format () =
   Scopes.Api_helper.format_result ~display_format
-  @@ get_scope_raw raw_options source_file ()
+  @@ get_scope_raw raw_options (From_file source_file) ()
 
-let get_scope_trace (raw_options : Raw_options.t) source_file () =
+let get_scope_trace (raw_options : Raw_options.t) (source_file:BuildSystem.Source_input.code_input) () =
   Trace.try_with
   ~fast_fail:false
   (fun ~raise ~catch ->

@@ -24,11 +24,11 @@ type get_scope_info =
   * Main_warnings.all list
   * (Scopes.def list * Scopes.scopes) option
 
-let get_scope : Lsp.Uri.t -> get_scope_info =
-fun uri ->
+let get_scope : Lsp.Uri.t -> string -> get_scope_info =
+fun uri source ->
   let compiler_options = Compiler_options.Raw_options.make () in
   let file_path = Lsp.Uri.to_path uri in
-  Ligo_api.Info.get_scope_trace compiler_options file_path ()
+  Ligo_api.Info.get_scope_trace compiler_options (Raw { id = file_path; code = source }) ()
 
 let with_get_scope_info : type r.
      (Lsp.Types.DocumentUri.t, get_scope_info) Hashtbl.t
@@ -120,13 +120,13 @@ class lsp_server =
       -> Lsp.Types.DocumentUri.t
       -> string
       -> unit Linol_lwt.Jsonrpc2.IO.t =
-    fun notify_back uri _contents ->
+    fun notify_back uri contents ->
       let open Linol_lwt in
       let* () = notify_back#send_log_msg ~type_:Info "Welcome!!!" in
       let message = ShowMessageParams.create ~message:"WELCOME NOTIFICATION!!!" ~type_:Info in
       let* () = notify_back#send_notification (ShowMessage message) in
 
-      let new_state = get_scope uri in
+      let new_state = get_scope uri contents in
       Hashtbl.replace get_scope_buffers uri new_state;
 
       let dummy_start = Lsp.Types.Position.create ~character:1 ~line:1 in
@@ -147,8 +147,10 @@ class lsp_server =
 
     (* On document closes, we remove the state associated to the file from the global
        hashtable state, to avoid leaking memory. *)
-    method on_notif_doc_did_close ~notify_back:_ d : unit Linol_lwt.t =
+    method on_notif_doc_did_close ~notify_back d : unit Linol_lwt.t =
       Hashtbl.remove get_scope_buffers d.uri;
+      let open Linol_lwt in
+      let* () = notify_back#send_log_msg ~type_:Info "Closed!!!" in
       Linol_lwt.return ()
 
     method on_req_hover_ :
