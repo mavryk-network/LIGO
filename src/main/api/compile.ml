@@ -108,6 +108,7 @@ let expression
     expression
     init_file
     display_format
+    no_colour
     michelson_format
     ()
   =
@@ -115,7 +116,7 @@ let expression
   format_result
     ~warning_as_error
     ~display_format
-    ~no_colour:raw_options.no_colour
+    ~no_colour
     (Formatter.Michelson_formatter.michelson_format michelson_format [])
   @@ fun ~raise ->
   let syntax = Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) init_file in
@@ -160,12 +161,13 @@ let expression
     Run.evaluate_expression ~raise ~options compiled_exp.expr compiled_exp.expr_ty)
 
 
-let constant (raw_options : Raw_options.t) constants init_file display_format () =
+let constant (raw_options : Raw_options.t) constants init_file display_format no_colour ()
+  =
   let warning_as_error = raw_options.warning_as_error in
   format_result
     ~warning_as_error
     ~display_format
-    ~no_colour:raw_options.no_colour
+    ~no_colour
     Formatter.Michelson_formatter.michelson_constant_format
   @@ fun ~raise ->
   let syntax = Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) init_file in
@@ -203,6 +205,7 @@ let parameter
     source
     now
     display_format
+    no_colour
     michelson_format
     ()
   =
@@ -210,7 +213,7 @@ let parameter
   format_result
     ~warning_as_error
     ~display_format
-    ~no_colour:raw_options.no_colour
+    ~no_colour
     (Formatter.Michelson_formatter.michelson_format michelson_format [])
   @@ fun ~raise ->
   let protocol_version =
@@ -336,6 +339,7 @@ let storage
     source
     now
     display_format
+    no_colour
     michelson_format
     ()
   =
@@ -343,7 +347,7 @@ let storage
   format_result
     ~warning_as_error
     ~display_format
-    ~no_colour:raw_options.no_colour
+    ~no_colour
     (Formatter.Michelson_formatter.michelson_format michelson_format [])
   @@ fun ~raise ->
   let protocol_version =
