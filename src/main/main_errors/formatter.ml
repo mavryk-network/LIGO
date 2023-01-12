@@ -90,8 +90,8 @@ let rec error_ppformat
     | `Main_invalid_syntax_name syntax ->
       Format.fprintf
         f
-        "@[<hv>Invalid syntax option: '%s'. @.Use 'pascaligo', 'cameligo', 'reasonligo', \
-         or 'jsligo'. @]"
+        "@[<hv>Invalid syntax option: '%s'. @.Use 'pascaligo', 'cameligo', or 'jsligo'. \
+         @]"
         syntax
     | `Main_invalid_dialect_name syntax ->
       Format.fprintf
@@ -109,8 +109,7 @@ let rec error_ppformat
       Format.fprintf
         f
         "@[<hv>Invalid file extension '%s'. @.Use '.ligo' for PascaLIGO, '.mligo' for \
-         CameLIGO, '.religo' for ReasonLIGO, '.jsligo' for JsLIGO, or the --syntax \
-         option.@]"
+         CameLIGO, '.jsligo' for JsLIGO, or the --syntax option.@]"
         extension
     | `Main_unparse_tracer errs ->
       let errs =
@@ -343,11 +342,6 @@ let rec error_ppformat
       List.iter
         ~f:(Tree_abstraction.Cameligo.Errors.error_ppformat ~display_format ~no_colour f)
         e
-    | `Cit_reasonligo_tracer e ->
-      List.iter
-        ~f:
-          (Tree_abstraction.Reasonligo.Errors.error_ppformat ~display_format ~no_colour f)
-        e
     | `Cit_jsligo_tracer e ->
       List.iter
         ~f:(Tree_abstraction.Jsligo.Errors.error_ppformat ~display_format ~no_colour f)
@@ -547,8 +541,11 @@ let rec error_ppformat
         "Error: Unrecognized template\n\
          Hint: Use the option --template \"TEMPLATE_NAME\" \n\n\
          Please select a template from the following list: \n\
-         - %s"
-      @@ String.concat ~sep:"\n- " lststr)
+         - %s\n\
+         Or check if template exists on LIGO registry.\n"
+      @@ String.concat ~sep:"\n- " lststr
+    | `Ligo_init_registry_template_error e -> Format.fprintf f "@[<hv>@.%s@.@]" e
+    | `Ligo_init_git_template_error e -> Format.fprintf f "@[<hv>@.%s@.@]" e)
 
 
 let rec error_json : Types.all -> Simple_utils.Error.t list =
@@ -685,8 +682,6 @@ let rec error_json : Types.all -> Simple_utils.Error.t list =
     [ make ~stage:"pretty" ~content ]
   | `Cit_pascaligo_tracer e -> List.map ~f:Tree_abstraction.Pascaligo.Errors.error_json e
   | `Cit_cameligo_tracer e -> List.map ~f:Tree_abstraction.Cameligo.Errors.error_json e
-  | `Cit_reasonligo_tracer e ->
-    List.map ~f:Tree_abstraction.Reasonligo.Errors.error_json e
   | `Cit_jsligo_tracer e -> List.map ~f:Tree_abstraction.Jsligo.Errors.error_json e
   | `Self_ast_imperative_tracer e -> [ Self_ast_imperative.Errors.error_json e ]
   | `Desugaring_tracer e -> [ Desugaring.Errors.error_json e ]
@@ -715,7 +710,13 @@ let rec error_json : Types.all -> Simple_utils.Error.t list =
   | `Main_decompile_typed e -> [ Checking.Errors.error_json e ]
   | `Ligo_init_unrecognized_template _lsttr ->
     let content = make_content ~message:"Ligo init tracer" () in
-    [ make ~stage:"typer" ~content ]
+    [ make ~stage:"init" ~content ]
+  | `Ligo_init_registry_template_error _ ->
+    let content = make_content ~message:"Ligo init tracer" () in
+    [ make ~stage:"init" ~content ]
+  | `Ligo_init_git_template_error _ ->
+    let content = make_content ~message:"Ligo init tracer" () in
+    [ make ~stage:"init" ~content ]
   | `Repl_unexpected ->
     let content = make_content ~message:"REPL tracer" () in
     [ make ~stage:"repl" ~content ]
