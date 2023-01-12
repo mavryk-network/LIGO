@@ -57,6 +57,10 @@ let hook_T_Attr = hook @@ fun a t -> T_Attr (a,t)
 
 (* Reductions on error *)
 
+%on_error_reduce pattern
+%on_error_reduce nsepseq(cons_pattern_level,COMMA)
+%on_error_reduce variable
+%on_error_reduce ctor
 %on_error_reduce base_expr(expr)
 %on_error_reduce app_expr_level
 %on_error_reduce shift_expr_level
@@ -92,6 +96,8 @@ let hook_T_Attr = hook @@ fun a t -> T_Attr (a,t)
 %on_error_reduce nsepseq(selection,DOT)
 %on_error_reduce ctor_app_pattern
 %on_error_reduce module_path(__anonymous_9)
+%on_error_reduce nseq(long_variant(fun_type_level))
+%on_error_reduce nseq(no_attr_expr)
 
 (* See [ParToken.mly] for the definition of tokens. *)
 
@@ -189,13 +195,14 @@ record(item):
 
 (* Aliasing and inlining some tokens *)
 
-%inline variable        : "<ident>"  { $1 }
-%inline module_name     : "<uident>" { $1 }
-%inline field_name      : "<ident>"  { $1 }
-%inline type_name       : "<ident>"  { $1 }
-%inline type_ctor       : "<ident>"  { $1 }
-%inline ctor            : "<uident>" { $1 }
-%inline record_or_tuple : "<ident>"  { $1 }
+variable        : "<ident>"  { $1 }
+record_name     : "<ident>"  { $1 }
+module_name     : "<uident>" { $1 }
+field_name      : "<ident>"  { $1 }
+type_name       : "<ident>"  { $1 }
+type_ctor       : "<ident>"  { $1 }
+ctor            : "<uident>" { $1 }
+record_or_tuple : "<ident>"  { $1 }
 
 (* Unary operators *)
 
@@ -1018,8 +1025,8 @@ field_lens:
 | "|=" { Lens_Fun  $1 }
 
 path:
- "<ident>"   { Name $1 }
-| projection { Path $1 }
+  record_name { Name $1 }
+| projection  { Path $1 }
 
 projection:
   record_or_tuple "." nsepseq(selection,".") {

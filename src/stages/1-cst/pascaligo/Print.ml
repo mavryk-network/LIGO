@@ -1,5 +1,13 @@
 (* PRINTING THE CST *)
 
+(* This module produces an arborescent, textual representation of a
+   subset of the Concrete Abstract Tree (CST). It aims at a readable
+   format with the most relevant nodes, with source locations. This
+   functionality is most useful when testing the parser, for example,
+   checking that a particular node corresponding to an operator has
+   the expected associativity with the same kind, or the expected
+   priority over another. *)
+
 [@@@coverage exclude_file]
 
 (* Vendor dependencies *)
@@ -119,7 +127,6 @@ and print_declaration state = function
 | D_Directive d -> print_D_Directive state d
 | D_Fun       d -> print_D_Fun       state d
 | D_Module    d -> print_D_Module    state d
-(*| D_ModAlias  d -> print_D_ModAlias  state d*)
 | D_Type      d -> print_D_Type      state d
 
 (* Attributed declaration *)

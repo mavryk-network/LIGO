@@ -5008,7 +5008,7 @@ interactive_expr: Record LBRACKET UIdent With
 ## UIdent
 ##
 
-Ill-formed qualified pattern.
+Ill-formed record expression or record patch.
 At this point, the selection operator '.' is expected.
 
 interactive_expr: Record LBRACKET UIdent DOT With
