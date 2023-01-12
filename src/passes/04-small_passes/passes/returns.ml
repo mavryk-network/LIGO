@@ -58,9 +58,9 @@ let compile ~raise =
               ; _
               }
           | I_ForIn (ForMap { block; _ })
-          | I_ForIn (ForSetOrList { block; _ })
-          | I_Cond { ifso = ClauseBlock block; _ }
-          | I_Cond { ifnot = Some (ClauseBlock block); _ } ) as i
+          | I_ForIn (ForSetOrList { block; _ })) as i
+          (* | I_Cond { ifso = ClauseBlock block; _ }
+          | I_Cond { ifnot = Some (ClauseBlock block); _ } ) as i *)
       ; location = loc
       } ->
       if List.exists ~f:is_s_return (List.Ne.to_list block)

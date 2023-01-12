@@ -20,6 +20,7 @@
   reduce_switch
   structural_assignments
   returns
+  unstate
  )
  (libraries ast_unified syntax_types)
  (inline_tests

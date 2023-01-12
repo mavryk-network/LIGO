@@ -86,6 +86,7 @@ type ('a, 'b, 'c, 'd) instruction_content_ =
     { prefixes =
         [ ("make_i", fun ~loc content : instruction -> { fp = Location.wrap ~loc content })
         ; ("get_i", fun (x : Types.instruction) -> Location.unwrap x.fp)
+        ; ("get_i_loc", fun (x : Types.instruction) -> Location.get_location x.fp)
         ]
     ; wrap_constructor =
         ( "instruction_content_"
