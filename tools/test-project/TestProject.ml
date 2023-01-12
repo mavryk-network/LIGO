@@ -33,11 +33,12 @@ fun uri ->
 let with_get_scope_info : type r.
      (Lsp.Types.DocumentUri.t, get_scope_info) Hashtbl.t
   -> Lsp.Uri.t
-  -> (get_scope_info -> r option Linol_lwt.Jsonrpc2.IO.t)
-  -> r option Linol_lwt.Jsonrpc2.IO.t =
-fun get_scope_buffers uri f ->
+  -> r
+  -> (get_scope_info -> r Linol_lwt.Jsonrpc2.IO.t)
+  -> r Linol_lwt.Jsonrpc2.IO.t =
+fun get_scope_buffers uri default f ->
   begin match Hashtbl.find_opt get_scope_buffers uri with
-    | None -> Linol_lwt.Jsonrpc2.IO.return None
+    | None -> Linol_lwt.Jsonrpc2.IO.return default
     | Some x -> f x
   end
 
@@ -58,13 +59,22 @@ let is_position_in_range (position: Lsp.Types.Position.t) (range: Lsp.Types.Rang
   position_le range.start position
   && position_le position range.end_
 
+(* let position_to_string (position :Lsp.Types.Position.t) =
+  "Position { line: " ^ Int.to_string position.line
+  ^ ", character: " ^ Int.to_string position.character
+  ^ " }"
 
+let range_to_string (range :Lsp.Types.Range.t) =
+  "Range { start: " ^ position_to_string range.start
+  ^ ", end: " ^ position_to_string range.end_
+  ^ " }"
+ *)
 
 let get_references : Scopes.def -> LSet.t =
 function
-  | Variable vdef -> vdef.references
-  | Type tdef -> tdef.references
-  | Module mdef -> mdef.references
+  | Variable vdef -> LSet.add vdef.range vdef.references
+  | Type tdef ->  LSet.add tdef.range tdef.references
+  | Module mdef ->  LSet.add mdef.range mdef.references
 
 let get_range : Scopes.def -> Simple_utils.Location.t =
   function
@@ -183,16 +193,6 @@ class lsp_server =
       -> get_scope_info
       -> Lsp.Types.Locations.t option Linol_lwt.Jsonrpc2.IO.t =
     fun _ _ _ pos (_, _, defs) ->
-      (* let position_to_string (position :Lsp.Types.Position.t) =
-        "Position { line: " ^ Int.to_string position.line
-        ^ ", character: " ^ Int.to_string position.character
-        ^ " }"
-      in
-      let range_to_string (range :Lsp.Types.Range.t) =
-        "Range { start: " ^ position_to_string range.start
-        ^ ", end: " ^ position_to_string range.end_
-        ^ " }"
-      in *)
       begin match defs with
         | Some (defs, _) ->
           begin match Option.map get_range @@ List.find_opt (is_reference pos) defs with
@@ -210,15 +210,52 @@ class lsp_server =
           Linol_lwt.Jsonrpc2.IO.return None
       end
 
+    method on_req_rename_ :
+       string
+    -> Lsp.Types.Position.t
+    -> get_scope_info
+    -> Lsp.Types.WorkspaceEdit.t Linol_lwt.Jsonrpc2.IO.t =
+    fun new_name pos (_, _, defs) ->
+      begin match defs with
+        | Some (defs, _) ->
+          begin match Option.map get_range @@ List.find_opt (is_reference pos) defs with
+            | Some location ->
+              let foo file (_, _, defs) res =
+                begin match defs with
+                  | Some (defs, _) ->
+                    let edits = defs
+                      |> List.filter_map (
+                          fun def ->
+                            if Simple_utils.Location.equal (get_range def) location
+                            then Some (LSet.elements @@ get_references def)
+                            else None
+                        )
+                      |> List.flatten
+                      |> List.filter_map (function
+                        | Simple_utils.Location.File region -> Some (Lsp.Types.TextEdit.create ~range:(region_to_range region) ~newText:new_name)
+                        | Simple_utils.Location.Virtual _ ->  None)
+                    in
+                    (file , edits) :: res
+                    | None -> res
+                end in
+              let changes = Hashtbl.fold foo get_scope_buffers [] in
+              Linol_lwt.Jsonrpc2.IO.return @@ Lsp.Types.WorkspaceEdit.create ~changes:changes ()
+            | None -> Linol_lwt.Jsonrpc2.IO.return @@ Lsp.Types.WorkspaceEdit.create ()
+          end
+        | None -> Linol_lwt.Jsonrpc2.IO.return @@ Lsp.Types.WorkspaceEdit.create ()
+      end
+
     method! config_hover = Some (`Bool true)
     method config_formatting = Some (`Bool true)
     method! config_definition = Some (`Bool true)
+    method config_rename = Some (`Bool true)
 
     method! config_modify_capabilities (c:Lsp.Types.ServerCapabilities.t) : Lsp.Types.ServerCapabilities.t =
       {c with
         hoverProvider = self#config_hover;
         documentFormattingProvider = self#config_formatting;
-        definitionProvider = self#config_definition
+        definitionProvider = self#config_definition;
+        renameProvider = self#config_rename
       }
 
     method! on_request : type r.
@@ -236,13 +273,21 @@ class lsp_server =
         | Lsp.Client_request.TextDocumentDefinition { textDocument; position; _} ->
           let uri = textDocument.uri in
           let notify_back = new Linol_lwt.Jsonrpc2.notify_back ~uri ~notify_back () in
-          with_get_scope_info get_scope_buffers uri (
-            self#on_req_definition_ notify_back id uri position)
+          with_get_scope_info get_scope_buffers uri None
+            (self#on_req_definition_ notify_back id uri position)
 
         | Lsp.Client_request.TextDocumentHover { textDocument; position; _ } ->
           let uri = textDocument.uri in
           (* let notify_back = new Linol_lwt.Jsonrpc2.notify_back ~uri ~notify_back () in *)
-          with_get_scope_info get_scope_buffers uri (self#on_req_hover_ position)
+          with_get_scope_info get_scope_buffers uri None (self#on_req_hover_ position)
+
+        | Lsp.Client_request.TextDocumentRename {newName; position; textDocument; _} ->
+          let uri = textDocument.uri in
+          let _notify_back = new Linol_lwt.Jsonrpc2.notify_back ~uri ~notify_back () in
+          with_get_scope_info get_scope_buffers uri
+            (Lsp.Types.WorkspaceEdit.create ())
+            (self#on_req_rename_ newName position)
+
         | _ -> super#on_request ~notify_back ~id r
     end
   end
