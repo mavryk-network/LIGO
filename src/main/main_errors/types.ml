@@ -32,7 +32,6 @@ type all =
   | `Pretty_tracer of Parsing.Errors.t
   | `Cit_pascaligo_tracer of Tree_abstraction.Pascaligo.Errors.abs_error list
   | `Cit_cameligo_tracer of Tree_abstraction.Cameligo.Errors.abs_error list
-  | `Cit_reasonligo_tracer of Tree_abstraction.Reasonligo.Errors.abs_error list
   | `Cit_jsligo_tracer of Tree_abstraction.Jsligo.Errors.abs_error list
   | `Self_ast_imperative_tracer of Self_ast_imperative.Errors.self_ast_imperative_error
   | `Desugaring_tracer of Desugaring.Errors.desugaring_error
@@ -45,6 +44,8 @@ type all =
   | `Scoping_tracer of Scoping.Errors.scoping_error
   | `Stacking_tracer of Stacking.Errors.stacking_error
   | `Ligo_init_unrecognized_template of string list
+  | `Ligo_init_registry_template_error of string
+  | `Ligo_init_git_template_error of string
   | (* | `Main_interpreter of Interpreter.interpreter_error *)
     `Main_interpret_test_entry_not_found of
     string

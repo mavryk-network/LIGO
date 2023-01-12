@@ -200,8 +200,7 @@ let try_declaration ~raise ~raw_options state s =
         | (`Parser_tracer _ : Main_errors.all)
         | (`Cit_jsligo_tracer _ : Main_errors.all)
         | (`Cit_pascaligo_tracer _ : Main_errors.all)
-        | (`Cit_cameligo_tracer _ : Main_errors.all)
-        | (`Cit_reasonligo_tracer _ : Main_errors.all) ->
+        | (`Cit_cameligo_tracer _ : Main_errors.all) ->
           try_eval ~raise ~raw_options state s
         | e -> raise.error e)
   with
@@ -407,6 +406,7 @@ let rec loop ~raw_options syntax display_format term history state n =
 let main
     (raw_options : Raw_options.t)
     display_format
+    no_colour
     now
     amount
     balance
@@ -444,7 +444,7 @@ let main
       | None -> state
       | Some file_name ->
         let c = use_file state ~raw_options file_name in
-        let _, state, _ = eval (Ex_display_format Dev) raw_options.no_colour state c in
+        let _, state, _ = eval (Ex_display_format Dev) no_colour state c in
         state
     in
     Lwt_main.run (LTerm.fprintls term (LTerm_text.eval [ S welcome_msg ]));
