@@ -10,6 +10,5 @@ module Compile = Compile
 module Transpile = Transpile
 module Info = Info
 module Print = Print
-module Ligo_init = Ligo_init
 module Api_helpers = Api_helpers
 module Formatter = Formatter
