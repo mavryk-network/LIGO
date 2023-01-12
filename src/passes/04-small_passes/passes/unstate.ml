@@ -147,10 +147,8 @@ and instr : instruction -> Statement_result.t =
     | Return _ -> res
     | Binding f -> Binding (fun x -> sequence (f (e_unit ~loc)) x)
     | Control_flow (_ : Statement_result.t -> expr) ->
-      (* will go wrong because of shadowing :
-        const g = (n:int) => {
-        let output = n;
-        
+      (*
+      will go wrong because of shadowing :
         {
           let x = 1 ;
           output += x ;
@@ -162,7 +160,6 @@ and instr : instruction -> Statement_result.t =
         }
         
         return output + x // x should not be visible here
-      }
       *)
       failwith "not supported")
   | I_Skip -> Binding Fun.id
