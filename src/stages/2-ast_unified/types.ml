@@ -38,6 +38,7 @@ module Type_in = Temp_prim.Type_in
 module Mod_in = Temp_prim.Mod_in
 module Block_fun = Temp_prim.Block_fun
 module Block_with = Temp_prim.Block_with
+module Assign = Ligo_prim.Assign
 module Assign_jsligo = Temp_prim.Assign_jsligo
 module Type_decl = Temp_prim.Type_decl
 module Abstraction = Ligo_prim.Abstraction
@@ -281,7 +282,8 @@ and ('self, 'ty_expr, 'pattern, 'statement, 'mod_expr) expression_content_ =
   | E_AssignJsligo of
       'self Assign_jsligo.t (* tata := toto ; which in reality return tata *)
 
-  (*  \/ Below are nodes added through the passes \/*)
+  (*  \/ Below are nodes added through the passes \/ *)
+  | E_assign of ('self, 'ty_expr option) Assign.t
   | E_constant of 'self Constant.t [@only_interpreter]
   | E_let_mut_in of ('pattern, 'self, 'ty_expr) Let_binding.t [@only_interpreter]
 [@@deriving map, iter, yojson, sexp]

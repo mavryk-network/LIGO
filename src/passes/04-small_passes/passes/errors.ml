@@ -75,7 +75,7 @@ let error_ppformat : display_format:string display_format -> no_colour:bool -> F
     | `Small_passes_wrong_lvalue e ->
       Format.fprintf
         f
-        "@[<hv>%a@.Expected a field name or an accessor@]"
+        "@[<hv>%a@.Unsupported lvalue@]"
         snippet_pp
         (get_e_loc e)
     | `Small_passes_statement_after_break slst ->

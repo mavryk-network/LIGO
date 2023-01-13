@@ -43,6 +43,7 @@ let passes
   ; T_app_michelson_types.pass ~raise
   ; Reduce_switch.pass ~raise
   ; Structural_assignments.pass ~raise
+  ; Assign_transitivity.pass ~raise
   ; Returns.pass ~raise
   ]
 

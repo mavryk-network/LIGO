@@ -21,6 +21,7 @@
   structural_assignments
   returns
   unstate
+  assign_transitivity
  )
  (libraries ast_unified syntax_types)
  (inline_tests

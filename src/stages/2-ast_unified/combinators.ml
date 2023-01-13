@@ -181,3 +181,14 @@ let e_record_update ~loc structure accesses field_rhs =
     { structure
     ; update = [ Full_field { field_lhs = accesses; field_lens = Lens_Id; field_rhs } ]
     }
+
+let sequence rhs body =
+  e_let_in
+    ~loc:(Location.cover (get_e_loc rhs) (get_e_loc body))
+    { is_rec = false
+    ; type_params = None
+    ; lhs = List.Ne.singleton @@ p_unit ~loc:Location.generated
+    ; rhs_type = None
+    ; rhs
+    ; body
+  }

@@ -168,13 +168,6 @@ note: is there any reason why we would like E_App ? GADT ? where Ctor is a funct
 `E_Ctor_App A` |-> `E_Constructor A unit`
 `E_Ctor_App A (foo bar baz))` |-> `E_Constructor A (E_tuple (foo bar baz))`
 
-## pass 'AssignJsligo'
-
-- remove : E_AssignJsligo
-- add: -
-
-`E_AssignJsligo` |-> `E_block_with`
-(transitivity .. etc etc )
   
 ## pass 'enum_attributes'
   - remove : E_Attr (string to string) D_attr P_attr

@@ -119,6 +119,13 @@ note: see path_of_lvalue in pascaligo abstractor
 
 `S_Instr (I_struct_assign/path/remove ..)` |-> `S_decl (_ (..))`
 
+## pass 'assign transitivity'
+
+- remove : E_AssignJsligo
+- add: E_Assign
+
+unsure that `a := b` in jsligo is equal to `b`
+
 ## pass 'return'
 
 - remove : -
