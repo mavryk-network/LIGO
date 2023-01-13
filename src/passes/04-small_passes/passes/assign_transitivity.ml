@@ -1,7 +1,7 @@
 open Ast_unified
 open Pass_type
 open Simple_utils.Trace
-open Simple_utils
+(* open Simple_utils *)
 open Errors
 module Location = Simple_utils.Location
 
@@ -30,7 +30,7 @@ let computation ~raise ~loc l r op =
       in
       computation op
   in
-  assign res, res
+  assign res, v
 
 
 let compile ~raise =
@@ -39,8 +39,8 @@ let compile ~raise =
     let loc = Location.get_location e in
     match Location.unwrap e with
     | E_AssignJsligo { expr1; op; expr2 } ->
-      let assignment, res = computation ~raise ~loc expr1 expr2 op in
-      sequence assignment res
+      let assignment, v = computation ~raise ~loc expr1 expr2 op in
+      sequence assignment (e_variable ~loc:(get_e_loc expr1) v)
     | e -> make_e ~loc e
   in
   `Cata { idle_cata_pass with expr }

@@ -5,26 +5,39 @@ open Simple_utils
 open Errors
 module Location = Simple_utils.Location
 
-module Statement_result : sig
+module Statement_result = struct
+  (* a statement result is the temporary representation of a statement, awaiting to be morphed into an expression *)
   type t =
-    | Binding of (expr -> expr)
+    (* terminal statement *)
     | Return of expr
-    | Control_flow of (t -> expr)
-
-  val merge : t -> t -> t
-  val to_expression : loc:Location.t -> t -> expr
-end = struct
-  type t =
+    (* continuation to elaborate bindings such as `let X = Y in <>` ; `let () = X in <>`
+       from declarative statement *)
     | Binding of (expr -> expr)
-    | Return of expr
-    (* at the time we are elaborating a control flow statement
-      (if _ then X else Y ; case _ with _ -> X | _ -> Y)
+    (* continuation to elaborate conditional expression such as `if T then X else Y` ; `case x with P1 -> X | P2 -> Y`
+      from control flow statements.
+      It operates on a statement result so that each statement in the original branches can be merged
+      within the client logic : sometimes one branch is terminal 
 
-      the next statement results (t) are merged within the continuation
-      to ensure return in control flow branches are terminal
+      those 2 statements:
+      ```
+      if (T) { return } else { x += 1 } ;
+      return
+      ```
+
+      will result in 2 statement results:
+      ```
+      [ Control_flow (<hole> -> if (T) then <merge Return <hole>> else <merge (Binding ..) <hole> ;
+      ; Return
+      ]
+      ```
+      since the merge happens within the control flow continuation, it allowed the positive branch to ignore any
+      in incoming results (`<merge Return <hole>>` is always `Return`)
+      
+      if the control_flow was operating on an expression, it would be hard to decide if an expression is terminal
     *)
     | Control_flow of (t -> expr)
 
+  (* merge two consecutive statement result *)
   let rec merge : t -> t -> t =
    fun bef aft ->
     let open Simple_utils.Function in
@@ -36,6 +49,9 @@ end = struct
     | Return a, _ -> Return a
 
 
+  let merge_block : t List.Ne.t -> t = fun (hd, tl) -> List.fold ~f:merge ~init:hd tl
+
+  (* morph a statement_result into an expression *)
   let to_expression ~loc : t -> expr =
    fun statement_result ->
     match statement_result with
@@ -43,18 +59,6 @@ end = struct
     | Return r -> r
     | Control_flow f -> f (Return (e_unit ~loc))
 end
-
-let sequence a b =
-  e_let_in
-    ~loc:(Location.cover (get_e_loc a) (get_e_loc b))
-    { is_rec = false
-    ; type_params = None
-    ; lhs = List.Ne.singleton @@ p_unit ~loc:Location.generated
-    ; rhs_type = None
-    ; rhs = a
-    ; body = b
-    }
-
 
 (* temprorary until pass 'expand_polymorphism' is written and E_fun added *)
 let e_fun ~loc x = e_poly_fun ~loc x
@@ -135,38 +139,41 @@ let rec decl : declaration -> Statement_result.t =
   | D_Type_abstraction _ -> failwith "removed"
 
 
-and instr : instruction -> Statement_result.t =
+and instr ~raise : instruction -> Statement_result.t =
  fun i ->
   let loc = get_i_loc i in
   match get_i i with
   | I_Return expr_opt -> Return (Option.value expr_opt ~default:(e_unit ~loc))
   | I_Block block ->
-    let init, stmts = List.Ne.map statement block in
-    let res = List.fold ~init ~f:Statement_result.merge stmts in
-    (match res with
-    | Return _ -> res
-    | Binding f -> Binding (fun x -> sequence (f (e_unit ~loc)) x)
-    | Control_flow (_ : Statement_result.t -> expr) ->
-      (*
-      will go wrong because of shadowing :
+    (match Statement_result.merge_block (List.Ne.map (statement ~raise) block) with
+    | Binding f -> Binding (fun hole -> sequence (f (e_unit ~loc)) hole)
+    | Return _ as res -> res
+    | Control_flow _ ->
+      raise.error (unsupported_control_flow (List.Ne.to_list block))
+      (* AS in :
+      ```jsligo  
+      const g = (n:int) => {
+        let output = n;
+        
         {
           let x = 1 ;
           output += x ;
           if (n > 1) {
             return (output + 12)
           } else {
-            output += 2;
+            output += x;
           }
         }
         
         return output + x // x should not be visible here
-      *)
-      failwith "not supported")
+      }
+      ```
+      *))
   | I_Skip -> Binding Fun.id
   | I_Call (f, args) -> Binding (fun x -> sequence (e_call ~loc f args) x)
   | I_Case { expr; cases } ->
     Control_flow
-      (fun x ->
+      (fun hole ->
         let f
             :  (pattern, (instruction, statement) Test_clause.t) Case.clause
             -> (pattern, expr) Case.clause
@@ -174,10 +181,11 @@ and instr : instruction -> Statement_result.t =
          fun { pattern; rhs } ->
           let branch_result =
             match rhs with
-            | ClauseInstr instruction -> Statement_result.merge (instr instruction) x
+            | ClauseInstr instruction ->
+              Statement_result.merge (instr ~raise instruction) hole
             | ClauseBlock block ->
-              let init, stmts = List.Ne.map statement block in
-              List.fold ~init ~f:Statement_result.merge (stmts @ [ x ])
+              Statement_result.merge_block
+                List.Ne.(append (map (statement ~raise) block) (singleton hole))
           in
           { pattern; rhs = Statement_result.to_expression ~loc branch_result }
         in
@@ -190,10 +198,11 @@ and instr : instruction -> Statement_result.t =
          fun clause ->
           let branch_result =
             match clause with
-            | ClauseInstr instruction -> Statement_result.merge (instr instruction) hole
+            | ClauseInstr instruction ->
+              Statement_result.merge (instr ~raise instruction) hole
             | ClauseBlock block ->
-              let init, stmts = List.Ne.map statement block in
-              List.fold ~init ~f:Statement_result.merge (stmts @ [ hole ])
+              Statement_result.merge_block
+                List.Ne.(append (map (statement ~raise) block) (singleton hole))
           in
           Statement_result.to_expression ~loc branch_result
         in
@@ -208,24 +217,30 @@ and instr : instruction -> Statement_result.t =
                    ~f
                    ifnot)
           })
-  | I_For _ | I_ForIn _ | I_ForOf _ | I_Patch _ | I_Remove _ | I_While _ | I_Expr _
-  | I_Assign (_, _) -> failwith "<hole> -> let () = assign x y in <hole>"
+  | I_Assign (v, e) ->
+    Binding
+      (fun hole ->
+        sequence
+          (e_assign ~loc { binder = Ligo_prim.Binder.make v None; expression = e })
+          hole)
+  | I_Expr { fp = { wrap_content = E_AssignJsligo _; _ } } -> failwith "removed"
+  | I_Expr e -> Binding (fun hole -> sequence e hole)
+  | I_For _ | I_ForIn _ | I_ForOf _ | I_Patch _ | I_Remove _ | I_While _ ->
+    failwith "not supported"
   | I_Struct_assign _ | I_Switch _ | I_break -> failwith "removed"
 
 
-and statement : statement -> Statement_result.t =
+and statement ~raise : statement -> Statement_result.t =
  fun s ->
   match get_s s with
   | S_Attr (attr, x) ->
-    let s = statement x in
-    (* unsure about the following (need testing) *)
+    let s = statement ~raise x in
     Statement_result.merge (Binding (fun x -> e_attr ~loc:(get_e_loc x) (attr, x))) s
-  | S_Instr i -> instr i
+  | S_Instr i -> instr ~raise i
   | S_Decl d -> decl d
 
 
 let compile ~raise =
-  ignore raise;
   let expr : _ expr_ -> expr =
    fun e ->
     let loc = Location.get_location e in
@@ -237,17 +252,17 @@ let compile ~raise =
           parameters
       in
       e_poly_fun ~loc { type_params = None; parameters; ret_type = lhs_type; body }
-    | E_Block_fun { parameters; lhs_type; body = FunctionBody (init, stmts) } ->
+    | E_Block_fun { parameters; lhs_type; body = FunctionBody block } ->
       let body =
         let loc =
-          List.fold
+          List.Ne.fold_left
             ~init:Location.generated
-            ~f:Location.cover
-            (List.map ~f:get_s_loc ([ init ] @ stmts))
+            ~f:(fun acc s -> Location.cover acc (get_s_loc s))
+            block
         in
-        let init = statement init in
-        let stmts = List.map ~f:statement stmts in
-        let statement_result = List.fold ~init ~f:Statement_result.merge stmts in
+        let statement_result =
+          Statement_result.merge_block (List.Ne.map (statement ~raise) block)
+        in
         Statement_result.to_expression ~loc statement_result
       in
       let parameters =
@@ -258,8 +273,11 @@ let compile ~raise =
       e_poly_fun ~loc { type_params = None; parameters; ret_type = lhs_type; body }
     | E_Block_with { block; expr } ->
       let statement_result =
-        let init, stmts = List.Ne.map statement block in
-        List.fold ~init ~f:Statement_result.merge (stmts @ [ Return expr ])
+        Statement_result.merge_block
+          List.Ne.(
+            append
+              (map (statement ~raise) block)
+              (singleton (Statement_result.Return expr)))
       in
       Statement_result.to_expression ~loc statement_result
     | e -> make_e ~loc e
@@ -268,14 +286,14 @@ let compile ~raise =
 
 
 let reduction ~raise =
-  let fail _ = raise.error (wrong_reduction __MODULE__) in
+  let fail () = raise.error (wrong_reduction __MODULE__) in
   { Iter.defaults with
-    instruction = fail
-  ; statement = fail
+    instruction = (fun _ -> fail ())
+  ; statement = (fun _ -> fail ())
   ; expr =
       (function
-      | { wrap_content = E_Block_fun _; _ } -> raise.error (wrong_reduction __MODULE__)
-      | { wrap_content = E_Block_with _; _ } -> raise.error (wrong_reduction __MODULE__)
+      | { wrap_content = E_Block_fun _; _ } -> fail ()
+      | { wrap_content = E_Block_with _; _ } -> fail ()
       | _ -> ())
   }
 
@@ -285,4 +303,146 @@ let pass ~raise =
     ~name:__MODULE__
     ~compile:(compile ~raise)
     ~decompile:`None (* for now ? *)
-    ~reduction_check:Iter.defaults
+    ~reduction_check:(reduction ~raise)
+
+
+open Unit_test_helpers
+
+let%expect_test "unsupported case" =
+  {|
+  ((PE_Declaration
+    (D_Const
+    ((pattern (P_var g))
+      (let_rhs
+      (E_Block_fun
+        ((parameters ((P_var n))) (lhs_type ())
+        (body
+          (FunctionBody
+          ((S_Decl
+            (D_Var ((pattern (P_var output)) (let_rhs (E_variable n)))))
+            (S_Instr
+            (I_Block
+              ((S_Decl
+                (D_Var
+                ((pattern (P_var x)) (let_rhs (E_Literal (Literal_int 1))))))
+              (S_Instr
+                (I_Expr
+                (E_Let_in
+                  ((lhs (P_unit))
+                  (rhs
+                    (E_assign
+                    ((binder ((var output) (ascr ())))
+                      (expression
+                      (E_constant
+                        ((cons_name C_POLYMORPHIC_ADD)
+                        (arguments ((E_variable output) (E_variable x)))))))))
+                  (body (E_variable output))))))
+              (S_Instr
+                (I_Cond
+                ((test
+                  (E_Binary_op
+                    ((operator GT) (left (E_variable n))
+                    (right (E_Literal (Literal_int 1))))))
+                  (ifso
+                  (ClauseBlock
+                    ((S_Instr
+                      (I_Block
+                      ((S_Instr
+                        (I_Return
+                          ((E_Binary_op
+                            ((operator PLUS) (left (E_variable output))
+                            (right (E_Literal (Literal_int 12))))))))))))))
+                  (ifnot
+                  (ClauseBlock
+                    ((S_Instr
+                      (I_Block
+                      ((S_Instr
+                        (I_Expr
+                          (E_Let_in
+                          ((lhs (P_unit))
+                            (rhs
+                            (E_assign
+                              ((binder ((var output) (ascr ())))
+                              (expression
+                                (E_constant
+                                ((cons_name C_POLYMORPHIC_ADD)
+                                  (arguments
+                                  ((E_variable output) (E_variable x)))))))))
+                            (body (E_variable output))))))))))))))))))
+            (S_Instr
+            (I_Return
+              ((E_Binary_op
+                ((operator PLUS) (left (E_variable output))
+                (right (E_variable x)))))))))))))))))
+  |}
+  |->! pass;
+  [%expect
+    {|
+    Err : (Small_passes_unsupported_control_flow
+              ((S_Decl
+                   (D_Var
+                       ((pattern (P_var x))
+                           (let_rhs (E_Literal (Literal_int 1))))))
+                  (S_Instr
+                      (I_Expr
+                          (E_Let_in
+                              ((lhs (P_unit))
+                                  (rhs
+                                      (E_assign
+                                          ((binder ((var output) (ascr ())))
+                                              (expression
+                                                  (E_constant
+                                                      ((cons_name
+                                                           C_POLYMORPHIC_ADD)
+                                                          (arguments
+                                                              ((E_variable
+                                                                   output)
+                                                                  (E_variable x)))))))))
+                                  (body (E_variable output))))))
+                  (S_Instr
+                      (I_Cond
+                          ((test
+                               (E_Binary_op
+                                   ((operator GT) (left (E_variable n))
+                                       (right (E_Literal (Literal_int 1))))))
+                              (ifso
+                                  (ClauseBlock
+                                      ((S_Instr
+                                           (I_Block
+                                               ((S_Instr
+                                                    (I_Return
+                                                        ((E_Binary_op
+                                                             ((operator PLUS)
+                                                                 (left
+                                                                     (E_variable
+                                                                        output))
+                                                                 (right
+                                                                     (E_Literal
+                                                                        (Literal_int
+                                                                        12))))))))))))))
+                              (ifnot
+                                  (ClauseBlock
+                                      ((S_Instr
+                                           (I_Block
+                                               ((S_Instr
+                                                    (I_Expr
+                                                        (E_Let_in
+                                                            ((lhs (P_unit))
+                                                                (rhs
+                                                                    (E_assign
+                                                                        ((binder
+                                                                        ((var
+                                                                        output)
+                                                                        (ascr ())))
+                                                                        (expression
+                                                                        (E_constant
+                                                                        ((cons_name
+                                                                        C_POLYMORPHIC_ADD)
+                                                                        (arguments
+                                                                        ((E_variable
+                                                                        output)
+                                                                        (E_variable
+                                                                        x)))))))))
+                                                                (body
+                                                                    (E_variable
+                                                                        output))))))))))))))))) |}]

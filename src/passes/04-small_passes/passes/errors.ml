@@ -18,10 +18,13 @@ type t =
   | `Small_passes_wrong_lvalue of expr
   | `Small_passes_statement_after_break of statement list
   | `Small_passes_unsupported_return of statement list
+  | `Small_passes_unsupported_control_flow of statement list
   ]
 [@@deriving poly_constructor { prefix = "small_passes_" }, sexp]
 
-let error_ppformat : display_format:string display_format -> no_colour:bool -> Format.formatter -> t -> unit
+let error_ppformat
+    :  display_format:string display_format -> no_colour:bool -> Format.formatter -> t
+    -> unit
   =
  fun ~display_format ~no_colour f a ->
   let snippet_pp = Snippet.pp ~no_colour in
@@ -73,11 +76,7 @@ let error_ppformat : display_format:string display_format -> no_colour:bool -> F
         (get_t_loc t)
         name
     | `Small_passes_wrong_lvalue e ->
-      Format.fprintf
-        f
-        "@[<hv>%a@.Unsupported lvalue@]"
-        snippet_pp
-        (get_e_loc e)
+      Format.fprintf f "@[<hv>%a@.Unsupported lvalue@]" snippet_pp (get_e_loc e)
     | `Small_passes_statement_after_break slst ->
       let loc =
         List.fold slst ~init:Location.generated ~f:(fun acc el ->
@@ -85,9 +84,26 @@ let error_ppformat : display_format:string display_format -> no_colour:bool -> F
       in
       Format.fprintf f "@[<hv>%a@.Illegal statements after break@]" snippet_pp loc
     | `Small_passes_unsupported_return stmts ->
-      let loc = stmts |> List.map ~f:get_s_loc |> List.fold ~init:Location.generated ~f:Location.cover in
-      Format.fprintf f "@[<hv>%a@.Return statement is currently not supported in this position@]" snippet_pp loc)
-
+      let loc =
+        stmts
+        |> List.map ~f:get_s_loc
+        |> List.fold ~init:Location.generated ~f:Location.cover
+      in
+      Format.fprintf
+        f
+        "@[<hv>%a@.Return statement is currently not supported in this position@]"
+        snippet_pp
+        loc
+    | `Small_passes_unsupported_control_flow block ->
+      let loc =
+        List.fold block ~init:Location.generated ~f:(fun acc el ->
+            Location.cover acc (get_s_loc el))
+      in
+      Format.fprintf
+        f
+        "@[<hv>%a@.Control flow is not supported within sub-blocks@]"
+        snippet_pp
+        loc)
 
 
 let error_json : t -> Simple_utils.Error.t =
@@ -145,7 +161,9 @@ let error_json : t -> Simple_utils.Error.t =
     make ~stage ~content
   | `Small_passes_wrong_lvalue e ->
     let location = get_e_loc e in
-    let content = make_content ~message:"Expected a field name or an accessor" ~location () in
+    let content =
+      make_content ~message:"Expected a field name or an accessor" ~location ()
+    in
     make ~stage ~content
   | `Small_passes_statement_after_break slst ->
     let location =
@@ -155,6 +173,25 @@ let error_json : t -> Simple_utils.Error.t =
     let content = make_content ~message:"Illegal statements after break" ~location () in
     make ~stage ~content
   | `Small_passes_unsupported_return stmts ->
-    let location = stmts |> List.map ~f:get_s_loc |> List.fold ~init:Location.generated ~f:Location.cover in
-    let content = make_content ~message:"Return statement is currently not supported in this position" ~location () in
+    let location =
+      stmts
+      |> List.map ~f:get_s_loc
+      |> List.fold ~init:Location.generated ~f:Location.cover
+    in
+    let content =
+      make_content
+        ~message:"Return statement is currently not supported in this position"
+        ~location
+        ()
+    in
+    make ~stage ~content
+  | `Small_passes_unsupported_control_flow stmts ->
+    let location =
+      stmts
+      |> List.map ~f:get_s_loc
+      |> List.fold ~init:Location.generated ~f:Location.cover
+    in
+    let content =
+      make_content ~message:"Control flow is not supported within sub-blocks" ~location ()
+    in
     make ~stage ~content

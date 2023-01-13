@@ -51,8 +51,8 @@ let passes
 let compile_program ~raise ~syntax : I.program -> O.program =
  fun prg ->
   let passes = passes ~raise ~syntax in
-  print_endline (Format.asprintf "%a" (Sexp.pp_hum_indent 2) (I.S_exp.sexp_of_program prg));
   let prg = compile_with_passes (List.map ~f:(fun x -> x.program) passes) prg in
+  print_endline (Format.asprintf "%a" (Sexp.pp_hum_indent 2) (I.S_exp.sexp_of_program prg));
   trivial_compile_program prg
 
 
