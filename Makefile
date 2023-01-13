@@ -49,3 +49,14 @@ coverage:
 
 install:
 	cp _build/install/default/bin/ligo /usr/local/bin/ligo
+
+_build/default/src/bin/js_main.bc.js: ./src/bin/js_main.ml ./src/bin/dune
+	opam exec -- dune build $(<:.ml=.bc.js)
+
+
+.PHONY: build-demo-webide demo-webide-start
+build-demo-webide: 
+	make -C jsoo $@
+
+demo-webide-start:
+	make -C jsoo $@

@@ -1,10 +1,10 @@
 (library
- (name ligo_api)
- (public_name ligo.api)
+ (name ligo_api_common)
+ (public_name ligo.api-common)
  (instrumentation
   (backend bisect_ppx))
- (libraries simple-utils ligo build interpreter bos cli_helpers
-   cohttp-lwt-unix tar tar-unix decompress.gz))
+ (libraries simple-utils ligo.decompile ligo.scopes build interpreter bos
+   cli_helpers tar decompress.gz))
 
 (rule
  (targets changelog.ml)

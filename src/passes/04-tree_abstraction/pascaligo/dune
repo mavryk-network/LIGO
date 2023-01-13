@@ -6,7 +6,6 @@
  (libraries
   ;; Vendor
   simple-utils
-  tezos-utils
   ;; LIGO
   cst
   lexing_shared

@@ -33,9 +33,17 @@ let read_file_constants ~raise file_constants =
       raise.Trace.error (`Main_cannot_parse_global_constants (fn, s)))
 
 
+module Path = struct
+  type t = string
+end
+
+type source =
+  | Text of string * Syntax_types.t
+  | File of Path.t
+
 let contract
     (raw_options : Raw_options.t)
-    source_file
+    source
     display_format
     michelson_code_format
     michelson_comments
@@ -55,7 +63,10 @@ let contract
       Helpers.protocol_to_variant ~raise raw_options.protocol_version
     in
     let syntax =
-      Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
+      match source with
+      | Text (_source_code, syntax) -> syntax
+      | File source_file ->
+        Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
     in
     let has_env_comments = has_env_comments michelson_comments in
     Compiler_options.make ~raw_options ~syntax ~protocol_version ~has_env_comments ()
@@ -71,7 +82,14 @@ let contract
     options.backend
   in
   let Compiler_options.{ entry_point; _ } = options.frontend in
-  let code, views = Build.build_contract ~raise ~options entry_point views source_file in
+  let source =
+    match source with
+    | File filename -> BuildSystem.Source_input.From_file filename
+    | Text (source_code, syntax) ->
+      BuildSystem.Source_input.(
+        Raw { id = "foo" ^ Syntax.to_ext syntax; code = source_code })
+  in
+  let code, views = Build.build_contract ~raise ~options entry_point views source in
   let file_constants = read_file_constants ~raise file_constants in
   let constants = constants @ file_constants in
   Ligo_compile.Of_michelson.build_contract
@@ -217,7 +235,9 @@ let parameter
   let file_constants = read_file_constants ~raise file_constants in
   let constants = constants @ file_constants in
   let entry_point = Value_var.of_input_var ~loc entry_point in
-  let app_typed_prg = Build.qualified_typed ~raise ~options Env source_file in
+  let app_typed_prg =
+    Build.qualified_typed ~raise ~options Env (Build.Source_input.From_file source_file)
+  in
   let Self_ast_typed.Helpers.{ parameter = parameter_ty; storage = _ } =
     Trace.trace ~raise Main_errors.self_ast_typed_tracer
     @@ Self_ast_typed.Helpers.fetch_contract_type entry_point app_typed_prg
@@ -350,7 +370,11 @@ let storage
   let constants = constants @ file_constants in
   let entry_point = Value_var.of_input_var ~loc entry_point in
   let app_typed_prg =
-    Build.qualified_typed ~raise ~options Ligo_compile.Of_core.Env source_file
+    Build.qualified_typed
+      ~raise
+      ~options
+      Ligo_compile.Of_core.Env
+      (Build.Source_input.From_file source_file)
   in
   let Self_ast_typed.Helpers.{ parameter = _; storage = storage_ty } =
     Trace.trace ~raise Main_errors.self_ast_typed_tracer

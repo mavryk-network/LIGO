@@ -23,3 +23,5 @@ env/
 _esy
 node_modules
 /src/main/build/ligo_lib/loaded.ml
+
+_demo-webide_build/demo-webide.bundle.js

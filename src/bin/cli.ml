@@ -465,7 +465,7 @@ let ligorc_path =
   let open Command.Param in
   let name = "--ligorc-path" in
   let doc = "PATH path to .ligorc file." in
-  let spec = optional_with_default Constants.ligo_rc_path string in
+  let spec = optional_with_default (Constants.ligo_rc_path ()) string in
   flag ~doc name spec
 
 
@@ -477,7 +477,7 @@ let ligo_bin_path =
   flag ~doc name spec
 
 
-module Api = Ligo_api
+module Api = Ligo_api_unix
 
 let ( <*> ) = Command.Param.( <*> )
 let ( <$> ) f a = Command.Param.return f <*> a
@@ -532,7 +532,7 @@ let compile_file =
     return_result ~return ~show_warnings ?output_file
     @@ Api.Compile.contract
          raw_options
-         source_file
+         (Api.Compile.File source_file)
          display_format
          michelson_format
          michelson_comments
@@ -1832,10 +1832,10 @@ let init_library =
     if template_list
     then
       return_result ~return
-      @@ Ligo_api.Ligo_init.list ~kind:`LIBRARY ~display_format ~no_colour
+      @@ Ligo_api_unix.Ligo_init.list ~kind:`LIBRARY ~display_format ~no_colour
     else
       return_result ~return
-      @@ Ligo_api.Ligo_init.new_project
+      @@ Ligo_api_unix.Ligo_init.new_project
            ~version:Version.version
            ~kind:`LIBRARY
            ~project_name_opt:project_name
@@ -1865,10 +1865,10 @@ let init_contract =
     if template_list
     then
       return_result ~return
-      @@ Ligo_api.Ligo_init.list ~kind:`CONTRACT ~display_format ~no_colour
+      @@ Ligo_api_unix.Ligo_init.list ~kind:`CONTRACT ~display_format ~no_colour
     else
       return_result ~return
-      @@ Ligo_api.Ligo_init.new_project
+      @@ Ligo_api_unix.Ligo_init.new_project
            ~version:Version.version
            ~kind:`CONTRACT
            ~project_name_opt:project_name
