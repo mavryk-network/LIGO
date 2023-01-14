@@ -336,7 +336,8 @@ no_attr_type:
    functional type, parentheses are mandatory. *)
 
 variant_type(right_type_expr):
-  short_variant(right_type_expr) ioption(long_variants(right_type_expr)) {
+  short_variant(right_type_expr)
+  ioption(long_variants(right_type_expr)) {
     let region, tail =
       match $2 with
         None -> $1.region, []
@@ -398,7 +399,7 @@ record_type:
    type of the field is the name of the field. *)
 
 field_decl:
-  attributes field_name ioption(type_annotation(type_expr)) {
+  field_decl_attr field_name ioption(type_annotation(type_expr)) {
     let stop = match $3 with
                         None -> $2#region
                | Some (_, t) -> type_expr_to_region t in
@@ -407,6 +408,9 @@ field_decl:
                  | start::_ -> cover start.region stop
     and value = {attributes=$1; field_name=$2; field_type=$3}
     in {region; value} }
+
+field_decl_attr:
+  attributes { $1 }
 
 (* Type qualifications
 
@@ -462,11 +466,15 @@ let_decl:
     in mk_reg region ($1,$2,$3) }
 
 let_binding:
+  fun_decl | non_fun_decl { $1 }
+
+fun_decl:
   var_pattern type_params parameters rhs_type "=" expr {
     let binders = Utils.nseq_cons $1 $3 in
-    {binders; type_params=$2; rhs_type=$4; eq=$5; let_rhs=$6}
-  }
-| irrefutable type_params rhs_type "=" expr {
+    {binders; type_params=$2; rhs_type=$4; eq=$5; let_rhs=$6} }
+
+non_fun_decl:
+  irrefutable type_params rhs_type "=" expr {
     {binders=($1,[]); type_params=$2; rhs_type=$3; eq=$4; let_rhs=$5} }
 
 %inline
@@ -640,18 +648,17 @@ record_pattern(rhs_pattern):
   record(field_pattern(rhs_pattern)) { $1 }
 
 field_pattern(rhs_pattern):
-  attributes field_pattern_lhs {
-    let value = {attributes=$1; pun=$2}
-    in Punned {region = $2#region; value}
+  nseq("[@attr]") field_name {
+    Punned {$2 with value = {attributes=$1; pun=$2}}
   }
-| attributes field_pattern_lhs "=" rhs_pattern {
+| field_name | "_" {
+    Punned {$1 with value = {attributes=[]; pun=$1}}
+  }
+| attributes field_name "=" rhs_pattern {
     let stop   = pattern_to_region $4 in
     let region = cover $2#region stop
     and value  = {attributes=$1; field_lhs=$2; lens=$3; field_rhs=$4}
     in Complete {region; value} }
-
-field_pattern_lhs:
-  field_name | "_" { $1 }
 
 (* Unit (value and pattern) *)
 
