@@ -249,27 +249,20 @@ let compile ~raise =
     let loc = Location.get_location e in
     match Location.unwrap e with
     | E_Block_fun ({ body = FunctionBody block ; _ } as block_fun) ->
-      let block = get_b block in
       let body =
-        let loc =
-          List.Ne.fold_left
-            ~init:Location.generated
-            ~f:(fun acc s -> Location.cover acc (get_s_loc s))
-            block
-        in
+        let loc = get_b_loc block in
         let statement_result =
-          Statement_result.merge_block (List.Ne.map (statement ~raise) block)
+          Statement_result.merge_block (List.Ne.map (statement ~raise) (get_b block))
         in
         Statement_result.to_expression ~loc statement_result
       in
       e_block_fun ~loc ({block_fun with body = ExpressionBody body})
     | E_Block_with { block; expr } ->
-      let block = get_b block in
       let statement_result =
         Statement_result.merge_block
           List.Ne.(
             append
-              (map (statement ~raise) block)
+              (map (statement ~raise) (get_b block))
               (singleton (Statement_result.Return expr)))
       in
       Statement_result.to_expression ~loc statement_result
