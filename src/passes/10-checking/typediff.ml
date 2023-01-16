@@ -68,6 +68,9 @@
 open Ligo_prim
 open Simple_utils
 
+(* In this module, we just specify what we're diffing.
+   Here we're diffing types.
+   So on the left and right of the diff, we have [Type.t] *)
 module Defs = struct
   type left = Type.t
   type right = Type.t
@@ -78,6 +81,9 @@ end
 
 module Define = Diffing.Define (Defs)
 
+(* This module contains function to give the "size" of a change.
+   For example, the size of adding/removing a tuple is the number of elements it contains
+   This is used to compute weights of changes below. *)
 module Size = struct
   let of_row (row : Type.row) = Record.LMap.cardinal row.fields
 
@@ -88,6 +94,10 @@ module Size = struct
 end
 (* of Size *)
 
+(* Here we define the weight of a change.
+   This is used by the [Diffing] algorithm to get the minimal diff
+   between two lists of types.
+   *)
 module rec Arg : sig
   val weight : Define.change -> int
   val test : unit -> Type.t -> Type.t -> (unit, unit) result
@@ -100,7 +110,7 @@ end = struct
       (match type1.content, type2.content with
       (* We consider the weight to change a record into another
         as the weight of the diff between them,
-        so that "close" records are gather together in the diff *)
+        so that "close" records are gathered together in the diff *)
       | T_record row1, T_record row2 ->
         let patch = Patch.of_rows row1 row2 in
         let diff_weights = List.map ~f:(fun change -> weight change) patch in
@@ -159,6 +169,8 @@ type t =
 (* a record of diff for diffing records
                                      rdiff[key] = diff r1[key] r2[key] *)
 
+
+(* This is the main function, getting the diff between two types *)
 let rec diff : Type.t -> Type.t -> t =
  fun type1 type2 ->
   let self = diff in
