@@ -68,7 +68,7 @@ let generate_impl ~ctxt (_rec_flag, type_declarations) =
   List.map type_declarations ~f:(fun (td : type_declaration) ->
       match td with
       | { ptype_kind = Ptype_abstract | Ptype_record _ | Ptype_open; _ } ->
-        Location.raise_errorf ~loc "Cannot derive accessors for non variant types"
+        []
       | { ptype_kind = Ptype_variant constructors; _ } ->
         List.map constructors ~f:constructor_impl)
   |> List.map ~f:(func_of_cases ~loc)
