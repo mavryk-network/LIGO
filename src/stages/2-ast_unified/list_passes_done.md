@@ -150,11 +150,14 @@ const g = n => {
   return output
 }
 ```
+## pass
+
+- remove : D_multi_var , D_multi_const
+- add : -
 
 ## pass 'unstate'
 
 - remove : S_* ; E_Block_with ; E_Block_fun ; I_*
 - add : E_sequence
 
-you got it :) good luck
 S_Instr should only contain simple stuff like `I_While I_For_In I_For I_ForOf`

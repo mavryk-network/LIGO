@@ -11,10 +11,6 @@ D_Export -> D_attr "private"/"public"
 
 convert statements to declaration when possible, or throw error
 
-## multi lets
-
-- remove : D_multi_var , D_multi_const
-
 compile mutli var/const declarations to single var/const declaration
 
 ## simplify let_syntax
@@ -51,24 +47,6 @@ let <pattern> = (fun  ...)
   - type unit = ()
 
   unify them all under a comon repr, should we do that ??
-
-<!-- ## pass tuple_singleton (should we ?)
-
-  if option.syntax == jsligo:
-  - add : .
-  - remove : .
-
-  `T_Prod a` |-> `T_Var a` OR `T_Prod a Unit`
-  `E_Tuple a` |-> `E_Var a` OR `E_Tuple a Unit`
-  `P_tuple a` |-> `P_var a` OR `P_tuple a Unit`
-
-  what happens for
-  ```jsligo
-  (* jsligo *)
-  let x = [y] (* as a tuple singleton *)
-  let foo = x[0]
-  ```
-  `E_Proj (x 0)` |-> `E_Var x` if x is singleton ? -->
 
 ## pass 'end statements'
 
