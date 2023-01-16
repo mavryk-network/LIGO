@@ -1,7 +1,6 @@
 open Ast_unified
 open Pass_type
 open Simple_utils.Trace
-(* open Simple_utils *)
 open Errors
 module Location = Simple_utils.Location
 

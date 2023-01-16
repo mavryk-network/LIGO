@@ -77,7 +77,6 @@ let rec decl : declaration -> Statement_result.t =
         e_modin
           ~loc:(get_e_loc x)
           { module_name = alias; rhs = m_path ~loc module_path; body = x })
-  | D_Import (Import_all_as _ | Import_selected _) -> failwith "not supported"
   | D_Export d ->
     (* weird .. *)
     decl (d_attr ~loc (Attribute.{ key = "public"; value = None }, d))
@@ -135,8 +134,9 @@ let rec decl : declaration -> Statement_result.t =
         e_typein
           ~loc:(Location.cover loc (get_e_loc x))
           { type_binder = name; rhs = type_expr; body = x })
-  | D_Multi_var _ | D_Multi_const _ -> failwith "removed"
-  | D_Type_abstraction _ -> failwith "removed"
+  | D_Import (Import_all_as _ | Import_selected _) -> failwith "not supported"
+  | D_Multi_var _ | D_Multi_const _ -> failwith "multi vars removed"
+  | D_Type_abstraction _ -> failwith "type abs removed"
 
 
 and instr ~raise : instruction -> Statement_result.t =

@@ -22,6 +22,7 @@
   returns
   unstate
   assign_transitivity
+  multi_bindings
  )
  (libraries ast_unified syntax_types)
  (inline_tests

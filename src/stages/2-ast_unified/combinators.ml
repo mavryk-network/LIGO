@@ -19,6 +19,7 @@ type ('a, 'b) pattern_content_ = [%import: ('a, 'b) Types.pattern_content_]
     { prefixes =
         [ ("make_p", fun ~loc content : pattern -> { fp = Location.wrap ~loc content })
         ; ("get_p", fun (x : Types.pattern) -> Location.unwrap x.fp)
+        ; ("get_p_loc", fun (x : Types.pattern) -> Location.get_location x.fp)
         ]
     ; wrap_constructor = ("pattern_content_", fun ~loc content -> make_p ~loc content)
     ; wrap_get = "pattern_content_", get_p

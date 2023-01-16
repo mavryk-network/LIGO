@@ -178,7 +178,7 @@ and ('self, 'expr, 'pattern, 'statement) instruction_content_ =
   | I_While of ('expr, 'statement) While.t
   | I_Block of 'statement Simple_utils.List.Ne.t
   | I_Expr of 'expr
-  | I_Return of 'expr option
+  | I_Return of 'expr option [@sexp.option]
   | I_Switch of ('expr, 'statement) Switch.t
   | I_break
 
@@ -313,3 +313,13 @@ and program_entry = { fp : (program_entry, declaration, instruction) program_ent
 
 (* one might wonder why ? go check `compile_toplevel_statement` unification of jsligo *)
 type program = program_entry list
+
+
+(*
+TODO:
+
+have a type block = statement List.Ne.T
+have a type program = program_entry list
+
+some nanopass (going from one statement/program_entry to multiple ones) will be slightly easier to write
+*)

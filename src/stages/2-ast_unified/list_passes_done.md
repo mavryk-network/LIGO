@@ -150,7 +150,7 @@ const g = n => {
   return output
 }
 ```
-## pass
+## pass 'multi_bindings'
 
 - remove : D_multi_var , D_multi_const
 - add : -

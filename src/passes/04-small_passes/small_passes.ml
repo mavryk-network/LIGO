@@ -41,10 +41,12 @@ let passes
   ; Hack_literalize_jsligo.pass ~raise ~syntax
   ; Restrict_t_app.pass ~raise
   ; T_app_michelson_types.pass ~raise
+  ; Multi_bindings.pass ~raise
   ; Reduce_switch.pass ~raise
   ; Structural_assignments.pass ~raise
   ; Assign_transitivity.pass ~raise
   ; Returns.pass ~raise
+  ; Unstate.pass ~raise
   ]
 
 

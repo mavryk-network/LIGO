@@ -393,7 +393,6 @@ and compile_statement ~(raise : ('e, 'w) raise) : CST.statement -> AST.statement
     let bindings =
       List.Ne.map (compile_val_binding ~raise <@ r_fst) (nsepseq_to_nseq bindings)
     in
-    (* let decl_stmts = List.Ne.map (TODO_unify_in_cst.let_as_decl ~loc) bindings in *)
     TODO_unify_in_cst.s_attach_attr
       attributes
       (TODO_unify_in_cst.let_as_decl ~loc bindings)
