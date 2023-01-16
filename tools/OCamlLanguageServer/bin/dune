@@ -1,0 +1,5 @@
+(executable
+ (public_name OCamlLanguageServer)
+ (name main)
+ (libraries
+    linol server OCamlLanguageServer))

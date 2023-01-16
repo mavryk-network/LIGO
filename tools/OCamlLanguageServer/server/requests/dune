@@ -1,0 +1,7 @@
+(library
+ (name requests)
+ (libraries
+  lsp
+  ligo_interface
+  utils
+  ligo.compiler_options))

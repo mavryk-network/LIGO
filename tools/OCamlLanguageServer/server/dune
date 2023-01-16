@@ -1,0 +1,10 @@
+(library
+ (name server)
+ (libraries
+  ligo_interface
+  utils
+  linol-lwt
+  lsp
+  requests
+ )
+)

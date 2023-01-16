@@ -59,7 +59,12 @@ let get_scope_raw (raw_options : Raw_options.t) (source_file:BuildSystem.Source_
   let core_prg =
     begin match source_file with
       | From_file file_name -> Build.unqualified_core ~raise ~options file_name
-      | Raw file -> Build.unqualified_core_raw_input ~raise ~options file
+      | Raw ({ id ; _ } as file) ->
+        let pwd = Caml.Sys.getcwd () in
+        let () = Ligo_unix.chdir (Filename.dirname id) in
+        let x = Build.unqualified_core_raw_input ~raise ~options file in
+        let () = Ligo_unix.chdir pwd in
+        x
     end
   in
   let lib = Build.Stdlib.get ~options in

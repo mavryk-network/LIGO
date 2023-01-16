@@ -1,0 +1,7 @@
+(library
+ (name ligo_interface)
+ (libraries
+  lsp
+  linol-lwt
+  ligo.api
+  ligo.compiler_options))
