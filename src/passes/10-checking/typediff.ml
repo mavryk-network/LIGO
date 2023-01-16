@@ -154,8 +154,7 @@ end = struct
       row.fields
       |> Record.to_list
       |> List.map ~f:snd
-      |> List.map ~f:type_of_row_elt
-      |> List.rev
+      |> List.rev_map ~f:type_of_row_elt
       |> Array.of_list
     in
     List.rev @@ diff () (tarray_of_row row1) (tarray_of_row row2)
@@ -296,10 +295,11 @@ module PP = struct
     let pp_record_entry (label : Label.t) (diff : t) =
       let label = Label.to_string label in
       match diff with
-      | Diff_change (Delete t) ->
+      (* Not sure if we want this format, but let's keep it commented for now just in case *)
+      (* | Diff_change (Delete t) ->
         Format.fprintf ppf "@[@{<red>- field '%s' : %a@}@]," label pp_type t
       | Diff_change (Insert t) ->
-        Format.fprintf ppf "@[@{<green>+ field '%s' : %a@}@," label pp_type t
+        Format.fprintf ppf "@[@{<green>+ field '%s' : %a@}@," label pp_type t *)
       | _ -> Format.fprintf ppf "@[<v 2>  field '%s' :@,%a@]@," label pp diff
     in
     Record.LMap.iter pp_record_entry r
