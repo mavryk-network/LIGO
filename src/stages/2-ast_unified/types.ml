@@ -328,5 +328,7 @@ have a type program = program_entry list
 
 some nanopass (going from one statement/program_entry to multiple ones) will be slightly easier to write
 *)
-let aaa_ = (is_not_initial : _ expression_content_ -> bool)
-let azeazeaze = (is_not_initial : _ mod_expr_content_ -> bool)
+let what1 = (is_not_initial : _ expression_content_ -> bool)
+let what2 = (is_not_initial : _ mod_expr_content_ -> bool)
+let what3 = (is_not_initial : _ instruction_ -> bool)
+let what3 = (is_not_initial : _ program_entry_ -> bool)
