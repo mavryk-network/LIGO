@@ -723,7 +723,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     let code = self ci.code in
     e_rawcode { language; code } ~loc
   | E_Block be ->
-    let CST.{block ; expr}, loc = r_split be in
+    let CST.{block ; expr ; _}, loc = r_split be in
     let block =
       let (b,loc) = r_split block in
       let block = nseq_map (compile_statement ~raise) @@ nsepseq_to_nseq b.statements in

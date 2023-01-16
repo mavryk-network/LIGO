@@ -131,12 +131,12 @@ and 'self type_expression_content_ =
   | T_Disc_union of 'self Non_linear_disc_rows.t
   | T_Attr of Attribute.t * 'self
   (* \/ Below are nodes added through the passes \/ *)
-  | T_Abstraction of 'self Abstraction.t [@only_interpreter]
-  | T_Michelson_or of 'self * string * 'self * string
-  | T_Michelson_pair of 'self * string * 'self * string
-  | T_Sapling_state of string * Z.t
-  | T_Sapling_transaction of string * Z.t
-[@@deriving map, yojson, iter, sexp]
+  | T_Abstraction of 'self Abstraction.t [@not_initial]
+  | T_Michelson_or of 'self * string * 'self * string [@not_initial]
+  | T_Michelson_pair of 'self * string * 'self * string [@not_initial]
+  | T_Sapling_state of string * Z.t [@not_initial]
+  | T_Sapling_transaction of string * Z.t [@not_initial]
+[@@deriving map, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "ty_expr" }]
 
 (* ========================== PATTERNS ===================================== *)
 type ('self, 'ty_expr) pattern_ = ('self, 'ty_expr) pattern_content_ Location.wrap
@@ -157,7 +157,7 @@ and ('self, 'ty_expr) pattern_content_ =
   | P_rest of Label.t
   | P_attr of Attribute.t * 'self
   | P_mod_access of (Mod_variable.t nseq, 'self) Mod_access.t
-[@@deriving map, yojson, iter, sexp]
+[@@deriving map, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "pattern" }]
 
 (* ========================== INSTRUCTIONS ================================= *)
 type ('self, 'expr, 'pattern, 'statement, 'block) instruction_ =
@@ -181,8 +181,9 @@ and ('self, 'expr, 'pattern, 'statement, 'block) instruction_content_ =
   | I_Switch of ('expr, 'block) Switch.t
   | I_break
   (*  \/ Below are nodes added through the passes \/*)
-  | I_Assign of Variable.t * 'expr
-[@@deriving map, yojson, iter, sexp]
+  | I_Assign of Variable.t * 'expr [@not_initial]
+[@@deriving
+  map, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "instruction" }]
 
 (* ========================== STATEMENTS ========================= *)
 type ('self, 'instruction, 'declaration) statement_ =
@@ -192,7 +193,7 @@ and ('self, 'instruction, 'declaration) statement_content_ =
   | S_Attr of (Attribute.t * 'self)
   | S_Instr of 'instruction
   | S_Decl of 'declaration
-[@@deriving map, yojson, iter, sexp]
+[@@deriving map, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "statement" }]
 (* and stmt = statement [@@deriving yojson] *)
 
 (* ========================== BLOCKS ======================================= *)
@@ -226,8 +227,9 @@ and ('self, 'expr, 'ty_expr, 'pattern, 'mod_expr) declaration_content_ =
   | D_Type_abstraction of 'ty_expr Type_abstraction_decl.t
   | D_Module of 'mod_expr Mod_decl.t
   (*  \/ Below are nodes added through the passes \/*)
-  | D_Type of 'ty_expr Type_decl.t [@only_interpreter]
-[@@deriving map, yojson, iter, sexp]
+  | D_Type of 'ty_expr Type_decl.t [@not_initial]
+[@@deriving
+  map, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "declaration" }]
 
 (* ========================== MODULES ====================================== *)
 include struct
@@ -240,7 +242,7 @@ include struct
     | M_Body of 'program_entry nseq
     | M_Path of Ligo_prim.Module_var.t nseq
     | M_Var of Ligo_prim.Module_var.t
-  [@@deriving map, iter, yojson, sexp]
+  [@@deriving map, iter, yojson, sexp, is { tags = [ "not_initial" ]; name = "mod_expr" }]
 end
 
 (* ========================== EXPRESSIONS ================================== *)
@@ -288,10 +290,10 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_AssignJsligo of
       'self Assign_jsligo.t (* tata := toto ; which in reality return tata *)
   (*  \/ Below are nodes added through the passes \/ *)
-  | E_assign of ('self, 'ty_expr option) Assign.t
-  | E_constant of 'self Constant.t [@only_interpreter]
-  | E_let_mut_in of ('pattern, 'self, 'ty_expr) Let_binding.t [@only_interpreter]
-[@@deriving map, iter, yojson, sexp]
+  | E_assign of ('self, 'ty_expr option) Assign.t [@not_initial]
+  | E_constant of 'self Constant.t [@not_initial]
+  | E_let_mut_in of ('pattern, 'self, 'ty_expr) Let_binding.t [@not_initial]
+[@@deriving map, iter, yojson, sexp, is { tags = [ "not_initial" ]; name = "expr" }]
 (* ========================== PROGRAM ====================================== *)
 
 type ('self, 'declaration, 'instruction) program_entry_ =
@@ -305,7 +307,8 @@ type ('self, 'declaration, 'instruction) program_entry_ =
 *)
 (* and ('self, 'declaration, 'instruction) program_ =
   ('self, 'declaration, 'instruction) program_entry_ list *)
-[@@deriving map, yojson, iter, sexp]
+[@@deriving
+  map, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "program_entry" }]
 
 type ty_expr = { fp : ty_expr ty_expr_ }
 and pattern = { fp : (pattern, ty_expr) pattern_ }
@@ -323,7 +326,6 @@ type program = program_entry list
 (*
 TODO:
 
-have a type block = statement List.Ne.T
 have a type program = program_entry list
 
 some nanopass (going from one statement/program_entry to multiple ones) will be slightly easier to write

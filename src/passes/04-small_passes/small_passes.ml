@@ -31,7 +31,8 @@ let passes
     ~(syntax : Syntax_types.t)
   =
   let open Passes in
-  [ T_arg.pass
+  [ Initial_node_check.pass ~raise
+  ; T_arg.pass
   ; Type_abstraction_declaration.pass ~raise
   ; Named_fun.pass ~raise
   ; E_rev_app.pass ~raise

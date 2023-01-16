@@ -23,6 +23,7 @@
   unstate
   assign_transitivity
   multi_bindings
+  initial_node_check
  )
  (libraries ast_unified syntax_types)
  (inline_tests
