@@ -11,8 +11,6 @@ D_Export -> D_attr "private"/"public"
 
 convert statements to declaration when possible, or throw error
 
-compile mutli var/const declarations to single var/const declaration
-
 ## simplify let_syntax
 
 - remove : D_Let , E_Let_in
@@ -48,11 +46,6 @@ let <pattern> = (fun  ...)
 
   unify them all under a comon repr, should we do that ??
 
-## pass 'end statements'
-
-- remove : I_Expr
-
-I_expr can be I_call or I_*
 
 ## pass 'expand_polymorphism'
 
@@ -69,7 +62,7 @@ I_expr can be I_call or I_*
   - remove : E_proj (.. Component_expr e)
   - add : ..
 
-  check that `e` is an int literal (for now we don't have partial exec) 
+  morph it to a C_MAP_GET_FORCE / C_MAP_GET ? (not sure which one; might depend on the syntax)
 
 ## pass 'object_jsligo'
   
