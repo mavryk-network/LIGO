@@ -38,8 +38,9 @@ module TODO_do_in_parsing = struct
     in
     aux s
 
+
   let rec pattern_of_expr compile_type : CST.expr -> AST.pattern list =
-  (*
+    (*
     this is the most troubling thing with jsligo: functions parameters is a single expression
     `<parameters:expr> : <lhs_type:type> => ..` (see EFun node bellow)
      I believe they should really be parsed as a pattern list
@@ -50,51 +51,52 @@ module TODO_do_in_parsing = struct
       in the first case, it's an "expression as a pattern". In the second case, it's a
       pattern
   *)
-  let rec aux : CST.expr -> AST.pattern =
-    let self = aux in
+    let rec aux : CST.expr -> AST.pattern =
+      let self = aux in
+      function
+      | EPar x -> self x.value.inside
+      | EVar x ->
+        let v, loc = r_split x in
+        p_var ~loc (var ~loc v)
+      | EUnit x -> p_unit ~loc:(Location.lift x.region)
+      | EAnnot ea ->
+        let (expr, _as, type_expr), loc = r_split ea in
+        p_typed ~loc (compile_type type_expr) (self expr)
+      | EArray items ->
+        let items, loc = r_split items in
+        (match sepseq_to_list items.inside with
+        | [] -> p_list ~loc (List [])
+        | [ Expr_entry hd; Rest_entry tl ] ->
+          (* [x ,...[y, ...z]] *)
+          (* see https://tezos-dev.slack.com/archives/GMHV0U3Q9/p1670929406569099 *)
+          p_list ~loc (Cons (self hd, self tl.value.expr))
+        | lst ->
+          p_tuple
+            ~loc
+            (List.map lst ~f:(function
+                | Expr_entry x -> self x
+                | _ -> failwith "incorrect pattern")))
+      | EObject obj ->
+        let obj, loc = r_split obj in
+        let lst = nsepseq_to_list obj.inside in
+        let aux : CST.property -> (_, _) Field.t = function
+          | Punned_property { value = EVar v; _ } -> Punned (Label.of_string v.value)
+          | Property { value = { name = EVar v; value; _ }; _ } ->
+            Complete (Label.of_string v.value, aux value)
+          | _ -> failwith "unrecognized pattern"
+        in
+        p_pun_record ~loc (List.map ~f:aux lst)
+      | _ -> failwith "unrecognized pattern"
+    in
     function
-    | EPar x -> self x.value.inside
-    | EVar x ->
-      let v,loc = r_split x in
-      p_var ~loc (var ~loc v)
-    | EUnit x -> p_unit ~loc:(Location.lift x.region)
-    | EAnnot ea ->
-      let (expr, _as, type_expr), loc = r_split ea in
-      p_typed ~loc (compile_type type_expr) (self expr)
-    | EArray items ->
-      let items, loc = r_split items in
-      (match sepseq_to_list items.inside with
-      | [] -> p_list ~loc (List [])
-      | [ Expr_entry hd; Rest_entry tl ] ->
-        (* [x ,...[y, ...z]] *)
-        (* see https://tezos-dev.slack.com/archives/GMHV0U3Q9/p1670929406569099 *)
-        p_list ~loc (Cons (self hd, self tl.value.expr))
-      | lst ->
-        p_tuple ~loc (List.map lst ~f:(function Expr_entry x -> self x | _ -> failwith "incorrect pattern"))
-      )
-    | EObject obj ->
-      let obj, loc = r_split obj in
-      let lst = nsepseq_to_list obj.inside in
-      let aux : CST.property -> (_,_) Field.t =
-        function
-        | Punned_property { value = EVar v ; _ } ->
-          Punned (Label.of_string v.value)
-        | Property { value = { name = EVar v; value; _ }; _ } ->
-          Complete (Label.of_string v.value, aux value)
-        | _ -> failwith "unrecognized pattern"
-      in
-      p_pun_record ~loc (List.map ~f:aux lst)
-    | _ -> failwith "unrecognized pattern"
-  in
-  function
-  | EPar x -> pattern_of_expr compile_type x.value.inside
-  | ESeq seq ->
-    let lst,_ = r_split seq in
-    (match lst with
-    | (hd,[]) -> [aux hd]
-    | _ -> List.map ~f:aux (nsepseq_to_list lst))
-  (* | EUnit _ -> [] *)
-  | else_ -> [aux else_]
+    | EPar x -> pattern_of_expr compile_type x.value.inside
+    | ESeq seq ->
+      let lst, _ = r_split seq in
+      (match lst with
+      | hd, [] -> [ aux hd ]
+      | _ -> List.map ~f:aux (nsepseq_to_list lst))
+    (* | EUnit _ -> [] *)
+    | else_ -> [ aux else_ ]
 end
 
 module TODO_unify_in_cst = struct
@@ -119,19 +121,24 @@ module TODO_unify_in_cst = struct
   let compile_rows = Non_linear_rows.make
   let compile_disc_rows = Non_linear_disc_rows.make
   let instr_as_stmt ~loc (x : AST.instruction) = AST.s_instr ~loc x
-  let test_clause_branch x = AST.Test_clause.ClauseBlock (List.Ne.singleton x)
+
+  let test_clause_branch x =
+    AST.Test_clause.ClauseBlock (make_b ~loc:(get_s_loc x) (List.Ne.singleton x))
+
+
   let let_as_decl ~loc x = s_decl ~loc (d_multi_var ~loc x)
   let const_as_decl ~loc x = s_decl ~loc (d_multi_const ~loc x)
   let ty_as_decl ~loc x = s_decl ~loc (d_type_abstraction ~loc x)
   let import_as_decl ~loc x = s_decl ~loc (d_import ~loc x)
-  
+
   let rec statement_to_program_entry s =
     match get_s s with
     | S_Attr (attr, x) -> program_entry (PE_Attr (attr, statement_to_program_entry x))
     | S_Instr instr -> program_entry (PE_Top_level_instruction instr)
     | S_Decl declaration -> program_entry (PE_Declaration declaration)
 
-  let namespace_decl ~loc name (statements: statement nseq) =
+
+  let namespace_decl ~loc name (statements : statement nseq) =
     let pes = nseq_map statement_to_program_entry statements in
     s_decl ~loc (d_module ~loc { name; mod_expr = m_body ~loc pes })
 
@@ -162,11 +169,13 @@ module TODO_unify_in_cst = struct
     | _ :: _ ->
       List.fold tl ~init:hd ~f:(fun acc expr ->
           e_sequence ~loc:(Location.cover (get_e_loc acc) (get_e_loc expr)) (acc, expr))
-    
-  let nested_ctor_application ~loc (constr:CST.constr) arg_opt =
+
+
+  let nested_ctor_application ~loc (constr : CST.constr) arg_opt =
     let constructor = Label.of_string constr.value in
-    let element = Option.map ~f:(List.Ne.singleton) arg_opt in
-    e_ctor_app ~loc ((e_constr ~loc:(Location.lift constr.region) constructor), element)
+    let element = Option.map ~f:List.Ne.singleton arg_opt in
+    e_ctor_app ~loc (e_constr ~loc:(Location.lift constr.region) constructor, element)
+
 
   let sum_rhs_as_a_type ~loc self params =
     Option.map ~f:(t_prod ~loc <@ List.Ne.map self <@ nsepseq_to_nseq <@ snd) params
@@ -371,7 +380,8 @@ and compile_statement ~(raise : ('e, 'w) raise) : CST.statement -> AST.statement
   | SBlock s ->
     let s, loc = r_split s in
     let statements = List.Ne.map self @@ nsepseq_to_nseq s.inside in
-    TODO_unify_in_cst.instr_as_stmt ~loc (i_block ~loc statements)
+    let block = make_b ~loc statements in
+    TODO_unify_in_cst.instr_as_stmt ~loc (i_block ~loc block)
   | SExpr s ->
     let expr = compile_expression ~raise s in
     let loc = get_e_loc expr in
@@ -417,7 +427,9 @@ and compile_statement ~(raise : ('e, 'w) raise) : CST.statement -> AST.statement
     let switchee = compile_expression ~raise s.expr in
     let cases =
       let translate_statements_opt =
-        Option.map ~f:(List.Ne.map self <@ nsepseq_to_nseq)
+        Option.map ~f:(fun x ->
+            let stmts = List.Ne.map self (nsepseq_to_nseq x) in
+            block_of_statements stmts)
       in
       let translate_switch_case : CST.switch_case -> (_, _) AST.Switch.case = function
         | CST.Switch_case c ->
@@ -437,7 +449,11 @@ and compile_statement ~(raise : ('e, 'w) raise) : CST.statement -> AST.statement
   | SWhile s ->
     let s, loc = r_split s in
     let cond = compile_expression ~raise s.expr in
-    let while_body = List.Ne.singleton (self s.statement) in
+    let while_body =
+      make_b
+        ~loc:(Location.lift @@ CST.statement_to_region s.statement)
+        (List.Ne.singleton (self s.statement))
+    in
     TODO_unify_in_cst.instr_as_stmt ~loc (i_while { cond; block = while_body } ~loc)
   | SForOf s ->
     let CST.{ index_kind; index; expr; statement; _ }, loc = r_split s in
@@ -460,7 +476,9 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
  fun e ->
   let self = compile_expression ~raise in
   let return e = e in
-  let compile_bin_op (sign: AST.Operators.op) : string CST.wrap CST.bin_op CST.reg -> AST.expr =
+  let compile_bin_op (sign : AST.Operators.op)
+      : string CST.wrap CST.bin_op CST.reg -> AST.expr
+    =
    fun op ->
     let CST.{ op; arg1; arg2 }, _loc = r_split op in
     let _, loc = w_split op in
@@ -468,7 +486,9 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
       ~loc
       AST.{ operator = Location.wrap ~loc sign; left = self arg1; right = self arg2 }
   in
-  let compile_unary_op (sign: AST.Operators.op) : string CST.wrap CST.un_op CST.reg -> AST.expr =
+  let compile_unary_op (sign : AST.Operators.op)
+      : string CST.wrap CST.un_op CST.reg -> AST.expr
+    =
    fun op ->
     let CST.{ op; arg }, _loc = r_split op in
     let _, loc = w_split op in
@@ -587,13 +607,17 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     e_moda { module_path; field } ~loc
   | EFun f ->
     let f, loc = r_split f in
-    let parameters = TODO_do_in_parsing.pattern_of_expr (compile_type_expression ~raise) f.parameters in (* this can be E_seq E_par *)
+    let parameters =
+      TODO_do_in_parsing.pattern_of_expr (compile_type_expression ~raise) f.parameters
+    in
+    (* this can be E_seq E_par *)
     let lhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) f.lhs_type in
     let body =
       let compile_body : CST.body -> (_, _) AST.Block_fun.fun_block = function
         | FunctionBody b ->
-          FunctionBody
-            (nseq_map (compile_statement ~raise) @@ nsepseq_to_nseq (r_fst b).inside)
+          let stmts,loc = r_split b in
+          let stmts = nseq_map (compile_statement ~raise) @@ nsepseq_to_nseq stmts.inside in
+          FunctionBody (make_b ~loc stmts)
         | ExpressionBody e -> ExpressionBody (self e)
       in
       compile_body f.body
@@ -652,6 +676,7 @@ let compile_toplevel_statement ~(raise : ('e, 'w) raise)
   | TopLevel (statement, _semicolon_opt) ->
     let statement = compile_statement ~raise statement in
     TODO_unify_in_cst.statement_to_program_entry statement
+
 
 let compile_program ~raise : CST.t -> AST.program =
  fun t ->

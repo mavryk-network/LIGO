@@ -1,5 +1,5 @@
-type ('expr, 'stmt) t =
-  { block : 'stmt Simple_utils.List.Ne.t
+type ('expr, 'block) t =
+  { block : 'block
   ; expr : 'expr
   }
 [@@deriving yojson, map, iter, sexp]

@@ -23,8 +23,9 @@ let is_s_return : statement -> bool =
   | _ -> false
 
 
-let unreachable_code ~raise : statement List.Ne.t -> unit =
- fun stmts ->
+let unreachable_code ~raise : _ block_ -> unit =
+ fun block ->
+  let stmts = Location.unwrap block in
   let f (has_returned, unreachable) x =
     match get_s x with
     | S_Instr i when is_return i ->
@@ -40,10 +41,11 @@ let unreachable_code ~raise : statement List.Ne.t -> unit =
 
 
 let compile ~raise =
-  let instruction : (_, _, _, statement) instruction_ -> instruction = function
-    | { wrap_content = I_Block stmts; location = loc } ->
-      unreachable_code ~raise stmts;
-      make_i ~loc (I_Block stmts)
+  let block : _ block_ -> block = fun b ->
+    unreachable_code ~raise b;
+    make_b ~loc:b.location b.wrap_content
+  in
+  let instruction : (_, _, _, statement, block) instruction_ -> instruction = function
     | { wrap_content =
           ( I_While { block; _ }
           | I_For { block; _ }
@@ -58,24 +60,16 @@ let compile ~raise =
               ; _
               }
           | I_ForIn (ForMap { block; _ })
-          | I_ForIn (ForSetOrList { block; _ })) as i
-          (* | I_Cond { ifso = ClauseBlock block; _ }
-          | I_Cond { ifnot = Some (ClauseBlock block); _ } ) as i *)
+          | I_ForIn (ForSetOrList { block; _ }) ) as i
       ; location = loc
       } ->
+      let block = get_b block in
       if List.exists ~f:is_s_return (List.Ne.to_list block)
       then raise.error (unsupported_return (List.Ne.to_list block))
       else make_i ~loc i
     | { wrap_content; location = loc } -> make_i ~loc wrap_content
   in
-  let expr : _ expr_ -> expr = function
-    | { wrap_content = E_Block_fun { body = FunctionBody block; _ } as e; location = loc }
-      ->
-      unreachable_code ~raise block;
-      make_e ~loc e
-    | { wrap_content; location = loc } -> make_e ~loc wrap_content
-  in
-  `Cata { idle_cata_pass with instruction; expr }
+  `Cata { idle_cata_pass with instruction; block }
 
 
 let pass ~raise =

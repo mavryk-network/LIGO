@@ -8,10 +8,10 @@ module Location = Simple_utils.Location
 (* Pattern matching for JsLIGO is implemented as a 'built-in function' as
     JavaScript and TypeScript don't have native pattern matching. *)
 
-let block_to_expr : (expr, statement) Block_fun.fun_block -> expr = function
+let block_to_expr : (expr, block) Block_fun.fun_block -> expr = function
   | ExpressionBody body -> body
   | FunctionBody stmts ->
-    let last_s, stmts = Simple_utils.List.Ne.rev stmts in
+    let last_s, stmts = Simple_utils.List.Ne.rev (get_b stmts) in
     let last =
       let loc = get_s_loc last_s in
       match get_s last_s with
@@ -32,7 +32,7 @@ let block_to_expr : (expr, statement) Block_fun.fun_block -> expr = function
       in
       match List.rev stmts with
       | [] -> last
-      | hd :: tl -> e_block_with ~loc { block = hd, tl; expr = last }
+      | hd :: tl -> e_block_with ~loc { block = block_of_statements (hd, tl); expr = last }
     in
     body
 

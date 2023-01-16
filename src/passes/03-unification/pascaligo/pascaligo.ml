@@ -356,12 +356,14 @@ and compile_pattern ~(raise : ('e, 'w) raise) : CST.pattern -> AST.pattern =
 
 (* ========================== INSTRUCTIONS ================================= *)
 
-and compile_block ~(raise : ('e, 'w) raise) : CST.block -> AST.statement nseq =
- fun b -> List.Ne.map (compile_statement ~raise) @@ nsepseq_to_nseq b.statements
+and compile_block ~(raise : ('e, 'w) raise) : CST.block -> AST.block =
+ fun b ->
+  let stmts = List.Ne.map (compile_statement ~raise) @@ nsepseq_to_nseq b.statements in
+  block_of_statements stmts
 
 
 and compile_test_clause
-    : raise:_ -> CST.test_clause -> (instruction, statement) AST.Test_clause.t
+    : raise:_ -> CST.test_clause -> (instruction, block) AST.Test_clause.t
   =
  fun ~raise c ->
   match c with
@@ -721,12 +723,13 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     let code = self ci.code in
     e_rawcode { language; code } ~loc
   | E_Block be ->
-    let be, loc = r_split be in
+    let CST.{block ; expr}, loc = r_split be in
     let block =
-      nseq_map (compile_statement ~raise) @@ nsepseq_to_nseq (r_fst be.block).statements
+      let (b,loc) = r_split block in
+      let block = nseq_map (compile_statement ~raise) @@ nsepseq_to_nseq b.statements in
+      make_b ~loc block
     in
-    let expr = self be.expr in
-    e_block_with { block; expr } ~loc
+    e_block_with { block ; expr = self expr } ~loc
   | E_Nil nil ->
     let _, loc = w_split nil in
     e_list [] ~loc

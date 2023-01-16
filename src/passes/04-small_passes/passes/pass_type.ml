@@ -35,6 +35,7 @@ type cata_pass =
   , ty_expr
   , pattern
   , statement
+  , block
   , mod_expr
   , instruction
   , declaration
@@ -46,6 +47,7 @@ type ana_pass =
   , ty_expr
   , pattern
   , statement
+  , block
   , mod_expr
   , instruction
   , declaration
@@ -57,6 +59,7 @@ let idle_cata_pass : cata_pass =
   ; ty_expr = (fun x -> { fp = x })
   ; pattern = (fun x -> { fp = x })
   ; statement = (fun x -> { fp = x })
+  ; block = (fun x -> { fp = x })
   ; mod_expr = (fun x -> { fp = x })
   ; instruction = (fun x -> { fp = x })
   ; declaration = (fun x -> { fp = x })
@@ -69,17 +72,18 @@ let idle_ana_pass : ana_pass =
   ; ty_expr = (fun { fp } -> fp)
   ; pattern = (fun { fp } -> fp)
   ; statement = (fun { fp } -> fp)
+  ; block = (fun { fp } -> fp)
   ; mod_expr = (fun { fp } -> fp)
   ; instruction = (fun { fp } -> fp)
   ; declaration = (fun { fp } -> fp)
   ; program = (fun { fp } -> fp)
   }
 
-
+type pass_kind = [ `Cata of cata_pass | `Ana of ana_pass | `None ]
 let cata_morph
     ~name
-    ~(compile : [ `Cata of cata_pass | `Ana of ana_pass | `None ])
-    ~(decompile : [ `Cata of cata_pass | `Ana of ana_pass | `None ])
+    ~(compile : pass_kind)
+    ~(decompile : pass_kind)
     ~(reduction_check : Ast_unified.Iter.iter)
     : pass
   =

@@ -1,19 +1,19 @@
 [@@@warning "-30"]
 
-type ('expr, 'statement) t =
-  | ForMap of ('expr, 'statement) for_map
-  | ForSetOrList of ('expr, 'statement) for_set_or_list
+type ('expr, 'block) t =
+  | ForMap of ('expr, 'block) for_map
+  | ForSetOrList of ('expr, 'block) for_set_or_list
 
-and ('expr, 'statement) for_map =
+and ('expr, 'block) for_map =
   { binding : Ligo_prim.Value_var.t * Ligo_prim.Value_var.t
   ; collection : 'expr
-  ; block : 'statement Simple_utils.List.Ne.t
+  ; block : 'block
   }
 
-and ('expr, 'statement) for_set_or_list =
+and ('expr, 'block) for_set_or_list =
   { var : Ligo_prim.Value_var.t
   ; for_kind : [ `Set | `List ]
   ; collection : 'expr
-  ; block : 'statement Simple_utils.List.Ne.t
+  ; block : 'block
   }
 [@@deriving yojson, map, iter, sexp]

@@ -162,6 +162,12 @@ note: is there any reason why we would like E_App ? GADT ? where Ctor is a funct
 - remove : T_Disc [("a", Some b); ("c", Some d); ("e", None)]
 - add    : -
 
+## pass 'block fun to poly_fun'
+
+- remove : E_Block_fun
+- add : -
+
+unify with polyfun
 
 See handling of TDisc in JsLIGO abstractor AND GOOD LUCK
 

@@ -33,7 +33,7 @@ let wrap_multi_bindings
   | _ -> [ default ]
 
 
-let singlify_block : statement List.Ne.t -> statement List.Ne.t =
+let singlify_block : _ block_ -> block =
  fun block ->
   let f : statement -> statement list -> statement list =
    fun s acc ->
@@ -54,7 +54,8 @@ let singlify_block : statement List.Ne.t -> statement List.Ne.t =
       decls @ acc
     | _ -> s :: acc
   in
-  List.Ne.of_list @@ List.fold_right ~f ~init:[] (List.Ne.to_list block)
+  let stmts = List.Ne.to_list (Location.unwrap block) in
+  block_of_statements (List.Ne.of_list (List.fold_right ~f ~init:[] stmts))
 
 
 let singlify_program : program -> program =
@@ -84,25 +85,6 @@ let singlify_program : program -> program =
 
 
 let compile =
-  let expr : _ expr_ -> expr =
-   fun e ->
-    let loc = Location.get_location e in
-    match Location.unwrap e with
-    | E_Block_fun { parameters; lhs_type; body = FunctionBody block } ->
-      e_block_fun
-        ~loc
-        { parameters; lhs_type; body = FunctionBody (singlify_block block) }
-    | E_Block_with { block; expr } ->
-      e_block_with ~loc { block = singlify_block block; expr }
-    | e -> make_e ~loc e
-  in
-  let instruction : _ instruction_ -> instruction =
-   fun i ->
-    let loc = Location.get_location i in
-    match Location.unwrap i with
-    | I_Block block -> i_block ~loc (singlify_block block)
-    | i -> make_i ~loc i
-  in
   let mod_expr : _ mod_expr_ -> mod_expr =
    fun m ->
     let loc = Location.get_location m in
@@ -110,7 +92,7 @@ let compile =
     | M_Body prg -> m_body ~loc (List.Ne.of_list (singlify_program (List.Ne.to_list prg)))
     | m -> make_m ~loc m
   in
-  `Cata { idle_cata_pass with expr; mod_expr; instruction }
+  `Cata { idle_cata_pass with mod_expr ; block = singlify_block }
 
 
 let reduction ~raise =

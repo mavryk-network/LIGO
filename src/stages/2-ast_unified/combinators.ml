@@ -68,6 +68,16 @@ type ('a, 'b, 'c) statement_content_ = [%import: ('a, 'b, 'c) Types.statement_co
     ; wrap_get = "statement_content_", get_s
     }]
 
+type ('a, 'b) block_ = [%import: ('a, 'b) Types.block_]
+[@@deriving
+  ez
+    { prefixes =
+        [ ("make_b", fun ~loc content : block -> { fp = Location.wrap ~loc content })
+        ; ("get_b", fun (x : Types.block) -> Location.unwrap x.fp)
+        ; ("get_b_loc", fun (x : Types.block) -> Location.get_location x.fp)
+        ]
+    }]
+
 type ('a, 'b) mod_expr_content_ = [%import: ('a, 'b) Types.mod_expr_content_]
 [@@deriving
   ez
@@ -80,8 +90,8 @@ type ('a, 'b) mod_expr_content_ = [%import: ('a, 'b) Types.mod_expr_content_]
     ; wrap_get = "mod_expr_content_", get_m
     }]
 
-type ('a, 'b, 'c, 'd) instruction_content_ =
-  [%import: ('a, 'b, 'c, 'd) Types.instruction_content_]
+type ('a, 'b, 'c, 'd, 'e) instruction_content_ =
+  [%import: ('a, 'b, 'c, 'd, 'e) Types.instruction_content_]
 [@@deriving
   ez
     { prefixes =
@@ -183,6 +193,7 @@ let e_record_update ~loc structure accesses field_rhs =
     ; update = [ Full_field { field_lhs = accesses; field_lens = Lens_Id; field_rhs } ]
     }
 
+
 let sequence rhs body =
   e_let_in
     ~loc:(Location.cover (get_e_loc rhs) (get_e_loc body))
@@ -192,4 +203,13 @@ let sequence rhs body =
     ; rhs_type = None
     ; rhs
     ; body
-  }
+    }
+
+let block_of_statements stmts =
+  let loc =
+    List.Ne.fold_left
+      ~init:Location.generated
+      ~f:Location.cover
+      (List.Ne.map get_s_loc stmts)
+  in
+  make_b ~loc stmts

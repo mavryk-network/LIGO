@@ -145,6 +145,7 @@ and instr ~raise : instruction -> Statement_result.t =
   match get_i i with
   | I_Return expr_opt -> Return (Option.value expr_opt ~default:(e_unit ~loc))
   | I_Block block ->
+    let block = get_b block in
     (match Statement_result.merge_block (List.Ne.map (statement ~raise) block) with
     | Binding f -> Binding (fun hole -> sequence (f (e_unit ~loc)) hole)
     | Return _ as res -> res
@@ -175,7 +176,7 @@ and instr ~raise : instruction -> Statement_result.t =
     Control_flow
       (fun hole ->
         let f
-            :  (pattern, (instruction, statement) Test_clause.t) Case.clause
+            :  (pattern, (instruction, block) Test_clause.t) Case.clause
             -> (pattern, expr) Case.clause
           =
          fun { pattern; rhs } ->
@@ -184,6 +185,7 @@ and instr ~raise : instruction -> Statement_result.t =
             | ClauseInstr instruction ->
               Statement_result.merge (instr ~raise instruction) hole
             | ClauseBlock block ->
+              let block = get_b block in
               Statement_result.merge_block
                 List.Ne.(append (map (statement ~raise) block) (singleton hole))
           in
@@ -194,13 +196,14 @@ and instr ~raise : instruction -> Statement_result.t =
   | I_Cond { test; ifso; ifnot } ->
     Control_flow
       (fun hole ->
-        let f : (instruction, statement) Test_clause.t -> expr =
+        let f : (instruction, block) Test_clause.t -> expr =
          fun clause ->
           let branch_result =
             match clause with
             | ClauseInstr instruction ->
               Statement_result.merge (instr ~raise instruction) hole
             | ClauseBlock block ->
+              let block = get_b block in
               Statement_result.merge_block
                 List.Ne.(append (map (statement ~raise) block) (singleton hole))
           in
@@ -241,18 +244,12 @@ and statement ~raise : statement -> Statement_result.t =
 
 
 let compile ~raise =
-  let expr : _ expr_ -> expr =
+  let expr : (_,_,_,_,_) expr_ -> expr =
    fun e ->
     let loc = Location.get_location e in
     match Location.unwrap e with
-    | E_Block_fun { parameters; lhs_type; body = ExpressionBody body } ->
-      let parameters =
-        List.map
-          ~f:(fun pattern -> Param.{ param_kind = `Const; pattern; param_type = None })
-          parameters
-      in
-      e_poly_fun ~loc { type_params = None; parameters; ret_type = lhs_type; body }
-    | E_Block_fun { parameters; lhs_type; body = FunctionBody block } ->
+    | E_Block_fun ({ body = FunctionBody block ; _ } as block_fun) ->
+      let block = get_b block in
       let body =
         let loc =
           List.Ne.fold_left
@@ -265,13 +262,9 @@ let compile ~raise =
         in
         Statement_result.to_expression ~loc statement_result
       in
-      let parameters =
-        List.map
-          ~f:(fun pattern -> Param.{ param_kind = `Const; pattern; param_type = None })
-          parameters
-      in
-      e_poly_fun ~loc { type_params = None; parameters; ret_type = lhs_type; body }
+      e_block_fun ~loc ({block_fun with body = ExpressionBody body})
     | E_Block_with { block; expr } ->
+      let block = get_b block in
       let statement_result =
         Statement_result.merge_block
           List.Ne.(
@@ -290,9 +283,10 @@ let reduction ~raise =
   { Iter.defaults with
     instruction = (fun _ -> fail ())
   ; statement = (fun _ -> fail ())
+  ; block = (fun _ -> fail ())
   ; expr =
       (function
-      | { wrap_content = E_Block_fun _; _ } -> fail ()
+      | { wrap_content = E_Block_fun { body = FunctionBody _ ; _ }; _ } -> fail ()
       | { wrap_content = E_Block_with _; _ } -> fail ()
       | _ -> ())
   }

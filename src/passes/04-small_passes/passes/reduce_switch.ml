@@ -7,10 +7,10 @@ module Location = Simple_utils.Location
 
 type group =
   { case_values : expr list
-  ; body : statement List.Ne.t
+  ; body : block
   }
 
-type default_case = statement List.Ne.t option
+type default_case = block option
 
 (*
   [group_cases] groups each consecutive group cases that are not followed by statements.
@@ -21,7 +21,7 @@ type default_case = statement List.Ne.t option
 *)
 let group_cases cases : group list * default_case =
   let open Switch in
-  let impossible () = failwith "imposible: parser won't parse" in
+  let impossible () = failwith "imposible: parser wouldn't parse" in
   let groups =
     let break x y =
       match x, y with
@@ -47,14 +47,14 @@ let group_cases cases : group list * default_case =
         let rec agg (values, stmts) = function
           | Switch_default_case _ :: _ -> impossible ()
           | Switch_case (value, None) :: tl -> agg (value :: values, stmts) tl
-          | Switch_case (value, Some stmts) :: tl ->
+          | Switch_case (value, Some block) :: tl ->
             if List.is_empty tl
-            then value :: values, List.Ne.to_list stmts
+            then value :: values, List.Ne.to_list (get_b block)
             else impossible ()
           | [] -> values, stmts
         in
         let case_values, body = agg ([], []) lst in
-        { case_values; body = List.Ne.of_list body })
+        { case_values; body = block_of_statements (List.Ne.of_list body) })
   in
   let default =
     match default with
@@ -66,11 +66,13 @@ let group_cases cases : group list * default_case =
 
 
 (* return all the statements before a break instruction, and append
-  a true/false assignment on ft (depending on the presence of a break statement)
+  a true/false assignment on the ft (fallthrough) variable.
+  if no return statement is present : `ft := true` otherwise `ft := false`
   
   if any statement follows the break instruction, emits a warning.
 *)
-let until_break ~raise ~loc ft stmts =
+let until_break ~raise ~loc ft block =
+  let stmts = get_b block in
   let f x =
     match get_s x with
     | S_Instr x ->
@@ -80,15 +82,20 @@ let until_break ~raise ~loc ft stmts =
     | _ -> true
   in
   let bef, aft = List.split_while ~f (List.Ne.to_list stmts) in
-  List.Ne.of_list
-    (match aft with
-    | [] ->
-      bef
-      @ [ s_instr ~loc (i_struct_assign ~loc { lhs_expr = ft; rhs_expr = e_true ~loc }) ]
-    | [ _ ] ->
-      bef
-      @ [ s_instr ~loc (i_struct_assign ~loc { lhs_expr = ft; rhs_expr = e_false ~loc }) ]
-    | unreachables -> raise.error (statement_after_break unreachables))
+  block_of_statements
+  @@ List.Ne.of_list
+       (match aft with
+       | [] ->
+         bef
+         @ [ s_instr ~loc (i_struct_assign ~loc { lhs_expr = ft; rhs_expr = e_true ~loc })
+           ]
+       | [ _return ] ->
+         bef
+         @ [ s_instr
+               ~loc
+               (i_struct_assign ~loc { lhs_expr = ft; rhs_expr = e_false ~loc })
+           ]
+       | unreachables -> raise.error (statement_after_break unreachables))
 
 
 let switch_to_decl ~raise loc switchee cases =
@@ -140,7 +147,7 @@ let switch_to_decl ~raise loc switchee cases =
         ])
   in
   let case_statements = List.concat (List.map ~f:snd grouped_switch_cases) in
-  List.Ne.of_list (case_statements @ default_statement)
+  block_of_statements @@ List.Ne.of_list (case_statements @ default_statement)
 
 
 let compile ~raise =

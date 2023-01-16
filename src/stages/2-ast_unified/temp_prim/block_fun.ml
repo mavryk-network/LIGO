@@ -1,10 +1,10 @@
-type ('expr, 'stmt) fun_block =
-  | FunctionBody of 'stmt Simple_utils.List.Ne.t
+type ('expr, 'block) fun_block =
+  | FunctionBody of 'block
   | ExpressionBody of 'expr
 
-and ('expr, 'pattern, 'ty_expr, 'stmt) t =
+and ('expr, 'pattern, 'ty_expr, 'block) t =
   { parameters : 'pattern list
   ; lhs_type : 'ty_expr option
-  ; body : ('expr, 'stmt) fun_block
+  ; body : ('expr, 'block) fun_block
   }
 [@@deriving yojson, map, iter, sexp]

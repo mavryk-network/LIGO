@@ -1,5 +1,5 @@
-type ('expr, 'statement) t =
+type ('expr, 'block) t =
   { cond : 'expr
-  ; block : 'statement Simple_utils.List.Ne.t
+  ; block : 'block
   }
 [@@deriving yojson, map, iter, sexp]

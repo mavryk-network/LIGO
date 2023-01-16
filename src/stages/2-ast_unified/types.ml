@@ -130,7 +130,6 @@ and 'self type_expression_content_ =
   | T_Record_raw of 'self option Non_linear_rows.t
   | T_Disc_union of 'self Non_linear_disc_rows.t
   | T_Attr of Attribute.t * 'self
-
   (* \/ Below are nodes added through the passes \/ *)
   | T_Abstraction of 'self Abstraction.t [@only_interpreter]
   | T_Michelson_or of 'self * string * 'self * string
@@ -161,27 +160,26 @@ and ('self, 'ty_expr) pattern_content_ =
 [@@deriving map, yojson, iter, sexp]
 
 (* ========================== INSTRUCTIONS ================================= *)
-type ('self, 'expr, 'pattern, 'statement) instruction_ =
-  ('self, 'expr, 'pattern, 'statement) instruction_content_ Location.wrap
+type ('self, 'expr, 'pattern, 'statement, 'block) instruction_ =
+  ('self, 'expr, 'pattern, 'statement, 'block) instruction_content_ Location.wrap
 
-and ('self, 'expr, 'pattern, 'statement) instruction_content_ =
+and ('self, 'expr, 'pattern, 'statement, 'block) instruction_content_ =
   | I_Struct_assign of 'expr Struct_assign.t
   | I_Call of 'expr Instruction_call.t
-  | I_Case of ('expr, 'pattern, ('self, 'statement) Test_clause.t) Case.t
-  | I_Cond of ('expr, ('self, 'statement) Test_clause.t) Cond.t
-  | I_For of ('expr, 'statement) For_int.t
-  | I_ForIn of ('expr, 'statement) For_collection.t
+  | I_Case of ('expr, 'pattern, ('self, 'block) Test_clause.t) Case.t
+  | I_Cond of ('expr, ('self, 'block) Test_clause.t) Cond.t
+  | I_For of ('expr, 'block) For_int.t
+  | I_ForIn of ('expr, 'block) For_collection.t
   | I_ForOf of ('expr, 'statement) For_of.t
   | I_Patch of 'expr Patch.t
   | I_Remove of 'expr Removal.t
   | I_Skip
-  | I_While of ('expr, 'statement) While.t
-  | I_Block of 'statement Simple_utils.List.Ne.t
+  | I_While of ('expr, 'block) While.t
+  | I_Block of 'block
   | I_Expr of 'expr
   | I_Return of 'expr option [@sexp.option]
-  | I_Switch of ('expr, 'statement) Switch.t
+  | I_Switch of ('expr, 'block) Switch.t
   | I_break
-
   (*  \/ Below are nodes added through the passes \/*)
   | I_Assign of Variable.t * 'expr
 [@@deriving map, yojson, iter, sexp]
@@ -196,6 +194,15 @@ and ('self, 'instruction, 'declaration) statement_content_ =
   | S_Decl of 'declaration
 [@@deriving map, yojson, iter, sexp]
 (* and stmt = statement [@@deriving yojson] *)
+
+(* ========================== BLOCKS ======================================= *)
+
+include struct
+  [@@@warning "-27"]
+
+  type ('self, 'statement) block_ = 'statement Simple_utils.List.Ne.t Location.wrap
+  [@@deriving map, yojson, iter, sexp]
+end
 
 (* ========================== DECLARATIONS ================================= *)
 type ('self, 'expr, 'ty_expr, 'pattern, 'mod_expr) declaration_ =
@@ -218,7 +225,6 @@ and ('self, 'expr, 'ty_expr, 'pattern, 'mod_expr) declaration_content_ =
   | D_Fun of ('ty_expr, 'expr, ('pattern, 'ty_expr) Param.t) Fun_decl.t
   | D_Type_abstraction of 'ty_expr Type_abstraction_decl.t
   | D_Module of 'mod_expr Mod_decl.t
-
   (*  \/ Below are nodes added through the passes \/*)
   | D_Type of 'ty_expr Type_decl.t [@only_interpreter]
 [@@deriving map, yojson, iter, sexp]
@@ -238,13 +244,13 @@ include struct
 end
 
 (* ========================== EXPRESSIONS ================================== *)
-type ('self, 'ty_expr, 'pattern, 'statement, 'mod_expr) expression_ =
-  ('self, 'ty_expr, 'pattern, 'statement, 'mod_expr) expression_content_ Location.wrap
+type ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_ =
+  ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ Location.wrap
 
-and ('self, 'ty_expr, 'pattern, 'statement, 'mod_expr) expr_ =
-  ('self, 'ty_expr, 'pattern, 'statement, 'mod_expr) expression_
+and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expr_ =
+  ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_
 
-and ('self, 'ty_expr, 'pattern, 'statement, 'mod_expr) expression_content_ =
+and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_Attr of (Attribute.t * 'self) (* [@a] (x,y)      *)
   | E_Literal of Literal_value.t (* 42, 10tez *)
   | E_Binary_op of 'self Operators.binary_op
@@ -262,7 +268,7 @@ and ('self, 'ty_expr, 'pattern, 'statement, 'mod_expr) expression_content_ =
   | E_Update of 'self Update.t
   | E_Poly_fun of
       ('self, 'ty_expr, 'pattern) Poly_fun.t (* (fun <type a b>(x, y) z -> x + y - z) *)
-  | E_Block_fun of ('self, 'pattern, 'ty_expr, 'statement) Block_fun.t
+  | E_Block_fun of ('self, 'pattern, 'ty_expr, 'block) Block_fun.t
   | E_Constr of Label.t
   | E_Ctor_App of ('self * 'self nseq option) (* MyCtor (42, 43, 44), PascaLigo only *)
   | E_Call of 'self * 'self list (* f (x, y) ; f x y *)
@@ -278,10 +284,9 @@ and ('self, 'ty_expr, 'pattern, 'statement, 'mod_expr) expression_content_ =
   | E_ModIn of ('self, 'mod_expr) Mod_in.t (* module M = struct let x = 42 end in M.x *)
   | E_RawCode of 'self Raw_code.t
   | E_Sequence of ('self * 'self)
-  | E_Block_with of ('self, 'statement) Block_with.t (* { tata ; toto } with whatev *)
+  | E_Block_with of ('self, 'block) Block_with.t (* { tata ; toto } with whatev *)
   | E_AssignJsligo of
       'self Assign_jsligo.t (* tata := toto ; which in reality return tata *)
-
   (*  \/ Below are nodes added through the passes \/ *)
   | E_assign of ('self, 'ty_expr option) Assign.t
   | E_constant of 'self Constant.t [@only_interpreter]
@@ -304,16 +309,16 @@ type ('self, 'declaration, 'instruction) program_entry_ =
 
 type ty_expr = { fp : ty_expr ty_expr_ }
 and pattern = { fp : (pattern, ty_expr) pattern_ }
-and instruction = { fp : (instruction, expr, pattern, statement) instruction_ }
+and instruction = { fp : (instruction, expr, pattern, statement, block) instruction_ }
 and statement = { fp : (statement, instruction, declaration) statement_ }
+and block = { fp : (block, statement) block_ }
 and declaration = { fp : (declaration, expr, ty_expr, pattern, mod_expr) declaration_ }
 and mod_expr = { fp : (mod_expr, program_entry) mod_expr_ }
-and expr = { fp : (expr, ty_expr, pattern, statement, mod_expr) expr_ }
+and expr = { fp : (expr, ty_expr, pattern, block, mod_expr) expr_ }
 and program_entry = { fp : (program_entry, declaration, instruction) program_entry_ }
 
 (* one might wonder why ? go check `compile_toplevel_statement` unification of jsligo *)
 type program = program_entry list
-
 
 (*
 TODO:

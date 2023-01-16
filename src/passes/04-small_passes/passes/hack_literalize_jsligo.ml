@@ -36,7 +36,7 @@ They correspond to the following cases in the Jsligo abstractor :
 let compile ~raise ~syntax =
   let () = ignore raise in
   (* TODO : Retrict pass to JsLIGO syntax *)
-  let pass_expr : (expr, ty_expr, pattern, statement, mod_expr) expr_ -> expr =
+  let pass_expr : (expr, ty_expr, pattern, block, mod_expr) expr_ -> expr =
    fun expr ->
     let loc = Location.get_location expr in
     let expr = Location.unwrap expr in
