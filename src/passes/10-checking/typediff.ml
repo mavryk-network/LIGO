@@ -202,7 +202,10 @@ let rec diff : Type.t -> Type.t -> t =
     let record : t Record.t = Record.LMap.merge lmap_merge r1 r2 in
     Diff_record record
   (* TODO : Add Variant types *)
-  | _ -> Diff_change (Change (type1, type2, ()))
+  | _ ->
+      if Type.equal type1 type2
+      then  Diff_change (Keep (type1, type2, ()))
+      else  Diff_change (Change (type1, type2, ()))
 
 
 (* The [ANSI] module uses Ocaml Format's semantic tags to enable styling of output.
