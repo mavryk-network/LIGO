@@ -59,7 +59,7 @@ let generate_impl
     List.map type_declarations ~f:(fun (td : type_declaration) ->
         match td with
         | { ptype_kind = Ptype_abstract | Ptype_record _ | Ptype_open; _ } ->
-          Location.raise_errorf ~loc "Cannot derive accessors for non variant types"
+          "",[]
         | { ptype_kind = Ptype_variant constructors; ptype_name; _ } ->
           let prefix =
             match name with
