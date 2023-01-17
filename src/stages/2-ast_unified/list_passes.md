@@ -164,9 +164,3 @@ unify with polyfun
 
 See handling of TDisc in JsLIGO abstractor AND GOOD LUCK
 
-## pass 'imperative for'
-
-- remove : I_ForOf _
-- add : -
-
-morph for of in forIn with a prepended variable introduction if `Var

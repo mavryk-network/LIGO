@@ -69,6 +69,13 @@ note: note sure, after Open directive ? https://gitlab.com/ligolang/ligo/-/merge
 `T_ModA (T_Var x)` -> OK
 `T_ModA (T_prod x y)` -> NOK
 
+## pass 'loop_variable'
+
+- remove : I_ForOf _
+- add : -
+
+morph for of in forIn with a prepended variable introduction if `Var
+
 ## pass 'list_as_function_call'
   
   - remove : -

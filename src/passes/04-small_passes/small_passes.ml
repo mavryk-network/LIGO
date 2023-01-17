@@ -43,6 +43,7 @@ let passes
   ; Restrict_t_app.pass ~raise
   ; T_app_michelson_types.pass ~raise
   ; Multi_bindings.pass ~raise
+  ; Loop_variable.pass ~raise
   ; Reduce_switch.pass ~raise
   ; Structural_assignments.pass ~raise
   ; Assign_transitivity.pass ~raise
