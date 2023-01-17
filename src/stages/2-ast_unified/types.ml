@@ -292,7 +292,7 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_While of ('self, 'self) While.t
   | E_For of ('self, 'self) For_int.t
   | E_For_in of ('pattern, 'self, 'self) For_collection.t
-  | E_Seq of 'self list
+  | E_Seq of 'self list (* begin a ; a () ; x := y end *)
   (*  \/ Below are nodes added through the passes \/ *)
   | E_constant of 'self Constant.t [@not_initial]
 [@@deriving map, iter, yojson, sexp, is { tags = [ "not_initial" ]; name = "expr" }]
