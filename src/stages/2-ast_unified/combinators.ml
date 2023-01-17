@@ -194,7 +194,7 @@ let e_record_update ~loc structure accesses field_rhs =
     }
 
 
-let sequence rhs body =
+let let_unit_in rhs body =
   e_let_in
     ~loc:(Location.cover (get_e_loc rhs) (get_e_loc body))
     { is_rec = false

@@ -39,7 +39,7 @@ let compile ~raise =
     match Location.unwrap e with
     | E_AssignJsligo { expr1; op; expr2 } ->
       let assignment, v = computation ~raise ~loc expr1 expr2 op in
-      sequence assignment (e_variable ~loc:(get_e_loc expr1) v)
+      let_unit_in assignment (e_variable ~loc:(get_e_loc expr1) v)
     | e -> make_e ~loc e
   in
   `Cata { idle_cata_pass with expr }

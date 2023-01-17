@@ -5,6 +5,13 @@ open Simple_utils
 open Errors
 module Location = Simple_utils.Location
 
+(* Note 1: interesting, this pass is too verbose because we can't just morph blocks to expressions .. 
+   which would only be possible if we had "real" nanopass (as in, one type for each intermediary AST)
+
+  Note 2: the following is a translation of the old code in abstractors (modified to take AST unified as input)
+  re-implementing at some point is necessary (see unsupported_control_flow)
+*)
+
 module Statement_result = struct
   (* a statement result is the temporary representation of a statement, awaiting to be morphed into an expression *)
   type t =
@@ -147,7 +154,7 @@ and instr ~raise : instruction -> Statement_result.t =
   | I_Block block ->
     let block = get_b block in
     (match Statement_result.merge_block (List.Ne.map (statement ~raise) block) with
-    | Binding f -> Binding (fun hole -> sequence (f (e_unit ~loc)) hole)
+    | Binding f -> Binding (fun hole -> let_unit_in (f (e_unit ~loc)) hole)
     | Return _ as res -> res
     | Control_flow _ ->
       raise.error (unsupported_control_flow (List.Ne.to_list block))
@@ -171,7 +178,7 @@ and instr ~raise : instruction -> Statement_result.t =
       ```
       *))
   | I_Skip -> Binding Fun.id
-  | I_Call (f, args) -> Binding (fun x -> sequence (e_call ~loc f args) x)
+  | I_Call (f, args) -> Binding (fun x -> let_unit_in (e_call ~loc f args) x)
   | I_Case { expr; cases } ->
     Control_flow
       (fun hole ->
@@ -223,14 +230,29 @@ and instr ~raise : instruction -> Statement_result.t =
   | I_Assign (v, e) ->
     Binding
       (fun hole ->
-        sequence
+        let_unit_in
           (e_assign ~loc { binder = Ligo_prim.Binder.make v None; expression = e })
           hole)
   | I_Expr { fp = { wrap_content = E_AssignJsligo _; _ } } -> failwith "removed"
-  | I_Expr e -> Binding (fun hole -> sequence e hole)
-  | I_For _ | I_ForIn _ | I_ForOf _ | I_While _ ->
-    failwith "not supported"
-  | I_Struct_assign _ | I_Remove _ | I_Patch _ | I_Switch _ | I_break -> failwith "removed"
+  | I_Expr e -> Binding (fun hole -> let_unit_in e hole)
+  | I_For for_ ->
+    let for_ = For_int.map Fun.id (block_to_expression ~raise) for_ in
+    Binding (fun hole -> let_unit_in (e_for ~loc for_) hole)
+  | I_ForIn for_ ->
+    let for_ =
+      For_collection.map Fun.id Fun.id (block_to_expression ~raise) for_ in
+    Binding (fun hole -> let_unit_in (e_for_in ~loc for_) hole)
+  | I_While w ->
+    let w = While.map Fun.id (block_to_expression ~raise) w in
+    Binding (fun hole -> let_unit_in (e_while ~loc w) hole)
+  | I_Struct_assign _ | I_Remove _ | I_Patch _ | I_Switch _ | I_break | I_ForOf _ ->
+    failwith "removed"
+
+
+and block_to_expression ~raise block =
+  Statement_result.(
+    to_expression ~loc:(get_b_loc block)
+    @@ merge_block (List.Ne.map (statement ~raise) (get_b block)))
 
 
 and statement ~raise : statement -> Statement_result.t =
@@ -244,28 +266,15 @@ and statement ~raise : statement -> Statement_result.t =
 
 
 let compile ~raise =
-  let expr : (_,_,_,_,_) expr_ -> expr =
+  let expr : (_, _, _, _, _) expr_ -> expr =
    fun e ->
     let loc = Location.get_location e in
     match Location.unwrap e with
     | E_Block_fun ({ body = FunctionBody block ; _ } as block_fun) ->
-      let body =
-        let loc = get_b_loc block in
-        let statement_result =
-          Statement_result.merge_block (List.Ne.map (statement ~raise) (get_b block))
-        in
-        Statement_result.to_expression ~loc statement_result
-      in
+      let body = block_to_expression ~raise block in
       e_block_fun ~loc ({block_fun with body = ExpressionBody body})
     | E_Block_with { block; expr } ->
-      let statement_result =
-        Statement_result.merge_block
-          List.Ne.(
-            append
-              (map (statement ~raise) (get_b block))
-              (singleton (Statement_result.Return expr)))
-      in
-      Statement_result.to_expression ~loc statement_result
+      let_unit_in (block_to_expression ~raise block) expr
     | e -> make_e ~loc e
   in
   `Cata { idle_cata_pass with expr }
@@ -279,7 +288,7 @@ let reduction ~raise =
   ; block = (fun _ -> fail ())
   ; expr =
       (function
-      | { wrap_content = E_Block_fun { body = FunctionBody _ ; _ }; _ } -> fail ()
+      | { wrap_content = E_Block_fun { body = FunctionBody _; _ }; _ } -> fail ()
       | { wrap_content = E_Block_with _; _ } -> fail ()
       | _ -> ())
   }
@@ -317,7 +326,7 @@ let%expect_test "unsupported case" =
                 (E_Let_in
                   ((lhs (P_unit))
                   (rhs
-                    (E_assign
+                    (E_Assign
                     ((binder ((var output) (ascr ())))
                       (expression
                       (E_constant
@@ -348,7 +357,7 @@ let%expect_test "unsupported case" =
                           (E_Let_in
                           ((lhs (P_unit))
                             (rhs
-                            (E_assign
+                            (E_Assign
                               ((binder ((var output) (ascr ())))
                               (expression
                                 (E_constant
@@ -375,7 +384,7 @@ let%expect_test "unsupported case" =
                           (E_Let_in
                               ((lhs (P_unit))
                                   (rhs
-                                      (E_assign
+                                      (E_Assign
                                           ((binder ((var output) (ascr ())))
                                               (expression
                                                   (E_constant
@@ -416,7 +425,7 @@ let%expect_test "unsupported case" =
                                                         (E_Let_in
                                                             ((lhs (P_unit))
                                                                 (rhs
-                                                                    (E_assign
+                                                                    (E_Assign
                                                                         ((binder
                                                                         ((var
                                                                         output)

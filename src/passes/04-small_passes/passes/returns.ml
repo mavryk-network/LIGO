@@ -41,7 +41,8 @@ let unreachable_code ~raise : _ block_ -> unit =
 
 
 let compile ~raise =
-  let block : _ block_ -> block = fun b ->
+  let block : _ block_ -> block =
+   fun b ->
     unreachable_code ~raise b;
     make_b ~loc:b.location b.wrap_content
   in
@@ -69,7 +70,15 @@ let compile ~raise =
       else make_i ~loc i
     | { wrap_content; location = loc } -> make_i ~loc wrap_content
   in
-  `Cata { idle_cata_pass with instruction; block }
+  let expr : _ expr_ -> expr = function
+    | { wrap_content = E_Block_with { block; expr = _ } as e; location = loc } ->
+      let block = get_b block in
+      if List.exists ~f:is_s_return (List.Ne.to_list block)
+      then raise.error (unsupported_return (List.Ne.to_list block))
+      else make_e ~loc e
+    | { wrap_content; location = loc } -> make_e ~loc wrap_content
+  in
+  `Cata { idle_cata_pass with instruction; block; expr }
 
 
 let pass ~raise =
