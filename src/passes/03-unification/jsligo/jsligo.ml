@@ -160,17 +160,6 @@ module TODO_unify_in_cst = struct
   let e_verbatim ~loc s =
     e_literal ~loc (Literal_string (Simple_utils.Ligo_string.Verbatim s))
 
-
-  let nested_sequence ~loc (lst : AST.expr nseq) : AST.expr =
-    let () = ignore loc in
-    let hd, tl = lst in
-    match tl with
-    | [] -> hd
-    | _ :: _ ->
-      List.fold tl ~init:hd ~f:(fun acc expr ->
-          e_sequence ~loc:(Location.cover (get_e_loc acc) (get_e_loc expr)) (acc, expr))
-
-
   let nested_ctor_application ~loc (constr : CST.constr) arg_opt =
     let constructor = Label.of_string constr.value in
     let element = Option.map ~f:List.Ne.singleton arg_opt in
@@ -636,7 +625,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
   | ESeq seq ->
     let seq, loc = r_split seq in
     let seq = nseq_map self (nsepseq_to_nseq seq) in
-    TODO_unify_in_cst.nested_sequence ~loc seq
+    e_sequence ~loc (List.Ne.to_list seq)
   | EAssign (expr1, op, expr2) ->
     let op, loc = r_split op in
     let expr1 = self expr1 in

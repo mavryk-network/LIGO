@@ -283,7 +283,6 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_TypeIn of ('self, 'ty_expr) Type_in.t (* type t = int in let x : t = 42 *)
   | E_ModIn of ('self, 'mod_expr) Mod_in.t (* module M = struct let x = 42 end in M.x *)
   | E_RawCode of 'self Raw_code.t
-  | E_Sequence of ('self * 'self)
   | E_Block_with of ('self, 'block) Block_with.t (* { tata ; toto } with whatev *)
   | E_AssignJsligo of
       'self Assign_jsligo.t (* x := y ; which has the type of x/y *)
@@ -292,7 +291,7 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_While of ('self, 'self) While.t
   | E_For of ('self, 'self) For_int.t
   | E_For_in of ('pattern, 'self, 'self) For_collection.t
-  | E_Seq of 'self list (* begin a ; a () ; x := y end *)
+  | E_Sequence of 'self list (* begin a ; a () ; x := y end *)
   (*  \/ Below are nodes added through the passes \/ *)
   | E_constant of 'self Constant.t [@not_initial]
 [@@deriving map, iter, yojson, sexp, is { tags = [ "not_initial" ]; name = "expr" }]

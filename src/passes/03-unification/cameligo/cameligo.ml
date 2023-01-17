@@ -146,19 +146,6 @@ module TODO_unify_in_cst = struct
       ps
 
 
-  let nested_sequence ~loc (lst : AST.expr nseq) : AST.expr =
-    (* could we have nested sequences ? OR non-nested for the other
-       here I took pascaligo as an example 
-    *)
-    let () = ignore loc in
-    let hd, tl = lst in
-    match tl with
-    | [] -> hd
-    | _ :: _ ->
-      List.fold tl ~init:hd ~f:(fun acc expr ->
-          e_sequence ~loc:(Location.cover (get_e_loc acc) (get_e_loc expr)) (acc, expr))
-
-
   let mod_in_as_mod_expr binders =
     (* having a module expression as mod_in rhs would be cool *)
     m_path
@@ -569,7 +556,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
     | None -> TODO_do_in_parsing.empty_sequence ()
     | Some nelst ->
       let seq = nseq_map self (nsepseq_to_nseq nelst) in
-      TODO_unify_in_cst.nested_sequence ~loc seq)
+      e_sequence ~loc (List.Ne.to_list seq))
   | ELetMutIn mut ->
     let CST.{ binding; body; attributes }, loc = r_split mut in
     let CST.{ type_params; binders; rhs_type; let_rhs; _ } = binding in
@@ -616,7 +603,7 @@ and compile_seq_expr ~raise : (CST.expr, _) nsepseq option -> AST.expr =
       ~f:(List.map ~f:(compile_expression ~raise) <@ nsepseq_to_list)
       x
   in
-  e_seq
+  e_sequence
     ~loc:
       (List.fold ~init:Location.generated ~f:Location.cover (List.map ~f:get_e_loc lst))
     lst
