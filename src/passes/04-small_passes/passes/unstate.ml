@@ -326,7 +326,7 @@ let%expect_test "unsupported case" =
                 (E_Let_in
                   ((lhs (P_unit))
                   (rhs
-                    (E_Assign
+                    (E_Assign_unitary
                     ((binder ((var output) (ascr ())))
                       (expression
                       (E_constant
@@ -357,7 +357,7 @@ let%expect_test "unsupported case" =
                           (E_Let_in
                           ((lhs (P_unit))
                             (rhs
-                            (E_Assign
+                            (E_Assign_unitary
                               ((binder ((var output) (ascr ())))
                               (expression
                                 (E_constant
@@ -384,7 +384,7 @@ let%expect_test "unsupported case" =
                           (E_Let_in
                               ((lhs (P_unit))
                                   (rhs
-                                      (E_Assign
+                                      (E_Assign_unitary
                                           ((binder ((var output) (ascr ())))
                                               (expression
                                                   (E_constant
@@ -425,7 +425,7 @@ let%expect_test "unsupported case" =
                                                         (E_Let_in
                                                             ((lhs (P_unit))
                                                                 (rhs
-                                                                    (E_Assign
+                                                                    (E_Assign_unitary
                                                                         ((binder
                                                                         ((var
                                                                         output)
