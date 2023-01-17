@@ -25,6 +25,7 @@
   multi_bindings
   initial_node_check
   loop_variable
+  top_level_restriction
  )
  (libraries ast_unified syntax_types)
  (inline_tests

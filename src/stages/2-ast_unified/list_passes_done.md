@@ -15,6 +15,12 @@
       type_expresion :
         T_abstraction( (T_var alpha) , T_xxx (T_var alpha) )
 
+## pass 'top_level_restriction'
+
+- remove : PE_Top_level_instruction
+
+instruction not supported yet at top level
+
 ## pass 'named_fun'
 
 drop named parameter in arrow type (jsligo)

@@ -32,6 +32,7 @@ let passes
   =
   let open Passes in
   [ Initial_node_check.pass ~raise
+  ; Top_level_restriction.pass ~raise
   ; T_arg.pass
   ; Type_abstraction_declaration.pass ~raise
   ; Named_fun.pass ~raise

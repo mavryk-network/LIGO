@@ -5,12 +5,6 @@
 
 D_Export -> D_attr "private"/"public"
 
-## restrict_top_level
-
-- remove : M_Body_statements
-
-convert statements to declaration when possible, or throw error
-
 ## simplify let_syntax
 
 - remove : D_Let , E_Let_in
@@ -155,6 +149,8 @@ note: is there any reason why we would like E_App ? GADT ? where Ctor is a funct
 - remove : T_Disc [("a", Some b); ("c", Some d); ("e", None)]
 - add    : -
 
+See handling of TDisc in JsLIGO abstractor AND GOOD LUCK
+
 ## pass 'block fun to poly_fun'
 
 - remove : E_Block_fun
@@ -162,5 +158,4 @@ note: is there any reason why we would like E_App ? GADT ? where Ctor is a funct
 
 unify with polyfun
 
-See handling of TDisc in JsLIGO abstractor AND GOOD LUCK
 

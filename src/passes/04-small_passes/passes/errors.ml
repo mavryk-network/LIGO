@@ -19,6 +19,7 @@ type t =
   | `Small_passes_statement_after_break of statement list
   | `Small_passes_unsupported_return of statement list
   | `Small_passes_unsupported_control_flow of statement list
+  | `Small_passes_unsupported_top_level_statement of instruction
   ]
 [@@deriving poly_constructor { prefix = "small_passes_" }, sexp]
 
@@ -103,7 +104,10 @@ let error_ppformat
         f
         "@[<hv>%a@.Control flow is not supported within sub-blocks@]"
         snippet_pp
-        loc)
+        loc
+    | `Small_passes_unsupported_top_level_statement i ->
+      let loc = get_i_loc i in
+      Format.fprintf f "@[<hv>%a@.Unsupported top-level statement@]" snippet_pp loc)
 
 
 let error_json : t -> Simple_utils.Error.t =
@@ -194,4 +198,8 @@ let error_json : t -> Simple_utils.Error.t =
     let content =
       make_content ~message:"Control flow is not supported within sub-blocks" ~location ()
     in
+    make ~stage ~content
+  | `Small_passes_unsupported_top_level_statement i ->
+    let location = get_i_loc i in
+    let content = make_content ~message:"Unsupported top-level statement" ~location () in
     make ~stage ~content
