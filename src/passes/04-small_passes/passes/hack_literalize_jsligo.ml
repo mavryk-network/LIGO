@@ -6,31 +6,12 @@ open Syntax_types
 
 (* 
 This pass handles the special cases of type annotation in JsLIGO.
-These are the cases where a CST.E_Annot doesn't just become a AST.E_Annot
+These are the cases where a E_Annot remain a E_Annot
 
-1. The first such case is nat and tez annotations.
-
-In JsLIGO, the difference between int, nat and tez is done by annotating the literal :
-  let _x1 = 42;         // CST : EArith(Int 42)
-  let _x2 = 42 as int;  // CST : EAnnot (EArith(Int 42), TVar int)
-  let _x3 = 42 as nat;  // CST : EAnnot (EArith(Int 42), TVar nat)
-  let _x4 = 42 as tez;  // CST : EAnnot (EArith(Int 42), TVar tez) 
- 
-These are all (Int 42) with a different type annotation,
-and they have to be converted to the right literal
+1. The first such case is nat and tez/mutez annotations.
 
 2. The second case is type annotation of code injection.
-
-TODO
-
-----
-also see Self_ast_imperative.Literals (for a check ?)
-if option.syntax == jsligo :
-They correspond to the following cases in the Jsligo abstractor :
-| EAnnot {value = (EArith(Int i), _, TVar {value = "nat"; _}); region=_ } ->
-| EAnnot {value = (EArith(Int i), _, TVar {value = "tez"; _}); region=_ } ->
-| EAnnot {value = (EArith(Int i), _, TVar {value = "mutez"; _}); region=_ } ->
-| EAnnot {value = (ECodeInj {value = {language; code};_ }, kwd_as, type_expr); region} ->   
+  
 *)
 
 let compile ~raise ~syntax =
