@@ -39,7 +39,7 @@ module Mod_in = Temp_prim.Mod_in
 module Block_fun = Temp_prim.Block_fun
 module Block_with = Temp_prim.Block_with
 module Assign = Ligo_prim.Assign
-module Assign_jsligo = Temp_prim.Assign_jsligo
+module Assign_chainable = Temp_prim.Assign_chainable
 module Type_decl = Temp_prim.Type_decl
 module Abstraction = Ligo_prim.Abstraction
 
@@ -284,10 +284,10 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_ModIn of ('self, 'mod_expr) Mod_in.t (* module M = struct let x = 42 end in M.x *)
   | E_RawCode of 'self Raw_code.t
   | E_Block_with of ('self, 'block) Block_with.t (* { tata ; toto } with whatev *)
-  | E_AssignJsligo of
-      'self Assign_jsligo.t (* x := y ; which has the type of x/y *)
+  | E_Assign_chainable of
+      'self Assign_chainable.t (* x := y ; which has the type of x/y *)
   | E_Let_mut_in of ('pattern, 'self, 'ty_expr) Let_binding.t (* let mut x = 1 *)
-  | E_Assign of ('self, 'ty_expr option) Assign.t (* x := y ; which has type unit *)
+  | E_Assign_unitary of ('self, 'ty_expr option) Assign.t (* x := y ; which has type unit *)
   | E_While of ('self, 'self) While.t
   | E_For of ('self, 'self) For_int.t
   | E_For_in of ('pattern, 'self, 'self) For_collection.t

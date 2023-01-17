@@ -572,7 +572,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
   | EAssign ass ->
     let CST.{ binder; ass = _; expr }, loc = r_split ass in
     let var = TODO_do_in_parsing.var ~loc:(r_snd binder) (r_fst binder) in
-    e_assign ~loc { binder = Ligo_prim.Binder.make var None; expression = self expr }
+    e_assign_unitary ~loc { binder = Ligo_prim.Binder.make var None; expression = self expr }
   | EWhile wh ->
     let CST.{ cond; body }, loc = r_split wh in
     let body = compile_seq_expr ~raise body.seq_expr in

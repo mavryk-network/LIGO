@@ -231,9 +231,9 @@ and instr ~raise : instruction -> Statement_result.t =
     Binding
       (fun hole ->
         let_unit_in
-          (e_assign ~loc { binder = Ligo_prim.Binder.make v None; expression = e })
+          (e_assign_unitary ~loc { binder = Ligo_prim.Binder.make v None; expression = e })
           hole)
-  | I_Expr { fp = { wrap_content = E_AssignJsligo _; _ } } -> failwith "removed"
+  | I_Expr { fp = { wrap_content = E_Assign_chainable _; _ } } -> failwith "removed"
   | I_Expr e -> Binding (fun hole -> let_unit_in e hole)
   | I_For for_ ->
     let for_ = For_int.map Fun.id (block_to_expression ~raise) for_ in

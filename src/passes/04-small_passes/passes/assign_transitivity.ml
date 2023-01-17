@@ -5,14 +5,14 @@ open Errors
 module Location = Simple_utils.Location
 
 let computation ~raise ~loc l r op =
-  let open Assign_jsligo in
+  let open Assign_chainable in
   let v =
     match get_e_variable l with
     | Some x -> x
     | None -> raise.error (wrong_lvalue l)
   in
   let assign r =
-    e_assign ~loc { binder = Ligo_prim.Binder.make v None; expression = r }
+    e_assign_unitary ~loc { binder = Ligo_prim.Binder.make v None; expression = r }
   in
   let res =
     match op with
@@ -37,7 +37,7 @@ let compile ~raise =
    fun e ->
     let loc = Location.get_location e in
     match Location.unwrap e with
-    | E_AssignJsligo { expr1; op; expr2 } ->
+    | E_Assign_chainable { expr1; op; expr2 } ->
       let assignment, v = computation ~raise ~loc expr1 expr2 op in
       let_unit_in assignment (e_variable ~loc:(get_e_loc expr1) v)
     | e -> make_e ~loc e
@@ -49,7 +49,7 @@ let reduction ~raise =
   { Iter.defaults with
     expr =
       (function
-      | { wrap_content = E_AssignJsligo _; _ } -> raise.error (wrong_reduction __MODULE__)
+      | { wrap_content = E_Assign_chainable _; _ } -> raise.error (wrong_reduction __MODULE__)
       | _ -> ())
   }
 

@@ -40,5 +40,5 @@ module Type_in = Type_in
 module Mod_in = Mod_in
 module Block_fun = Block_fun
 module Block_with = Block_with
-module Assign_jsligo = Assign_jsligo
+module Assign_chainable = Assign_chainable
 

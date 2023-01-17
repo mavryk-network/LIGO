@@ -630,7 +630,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     let op, loc = r_split op in
     let expr1 = self expr1 in
     let op =
-      let translate_operator_jsligo : CST.operator -> AST.Assign_jsligo.operator
+      let translate_operator_jsligo : CST.operator -> AST.Assign_chainable.operator
         = function
         | Eq -> Eq
         | Assignment_operator aop ->
@@ -645,7 +645,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
       translate_operator_jsligo op
     in
     let expr2 = self expr2 in
-    e_assignjsligo { expr1; op; expr2 } ~loc
+    e_assign_chainable { expr1; op; expr2 } ~loc
   | ETernary e ->
     let e, loc = r_split e in
     let test = self e.condition in
