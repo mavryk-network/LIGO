@@ -13,12 +13,12 @@ fun location defs ->
   |> List.filter_map (
     fun def ->
       if Location.equal (Utils.get_location def) location
-      then Some (LSet.elements @@ Utils.get_references def)
+      then Some (LSet.elements @@ Utils.get_and_filter_references ((=) location) def)
       else None)
   |> List.flatten
   |> List.filter_map (function
     | Location.File region -> Some (Utils.region_to_range region)
-    | Location.Virtual _ ->  None)
+    | Location.Virtual _ -> None)
 
 let get_all_references :
      Location.t

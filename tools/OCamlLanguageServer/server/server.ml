@@ -1,28 +1,12 @@
 module LSet = Set.Make (Simple_utils.Location)
 open Ligo_interface
 open Utils
+open Utils.Maybe
 
 (* open Types *)
 open Linol_lwt
 open Linol_lwt.Jsonrpc2
 open Lsp
-
-module Maybe = struct
-  include Option
-
-  let ( let@ ) = bind
-
-  let traverse : ('a -> 'b IO.t) -> 'a t -> 'b t IO.t =
-   fun f -> function
-    | None -> IO.return None
-    | Some x ->
-      IO.(
-        let* t = f x in
-        return (Some t))
-
-
-  let sequence : 'a IO.t t -> 'a t IO.t = fun x -> traverse Fun.id x
-end
 
 (* This file is free software, part of linol. See file "LICENSE" for more information *)
 
@@ -105,8 +89,8 @@ class lsp_server =
             let value = List.map Main_errors.Formatter.error_json errors |> List.concat in
             notify_back#send_log_msg
               ~type_:Info
-              ("There are errors"
-              ^ String.concat "\n"
+              ("There are errors:\n *"
+              ^ String.concat "\n *"
               @@ List.map (fun (x : Simple_utils.Error.t) -> x.content.message) value)
         in
         let* () =
@@ -177,62 +161,60 @@ class lsp_server =
           IO.return (Some [ formatted_text ])
         | Error _ -> IO.return None
 
-    method on_req_definition_ : Position.t -> get_scope_info -> Locations.t option IO.t =
-      fun pos (_, _, defs) ->
+    method on_req_definition_ : Position.t -> DocumentUri.t -> get_scope_info -> Locations.t option IO.t =
+      fun pos uri (_, _, defs) ->
         IO.return
           (let open Maybe in
           let@ defs, _ = defs in
           let@ region =
-            Option.map get_location @@ Requests.Definition.get_definition pos defs
+            Option.map get_location @@ Requests.Definition.get_definition pos (uri_location_cmp uri) defs
           in
           match region with
           | File region -> Some (`Location [ region_to_location region ])
           | Virtual _ -> None)
 
-    method on_req_rename_ : string -> Position.t -> get_scope_info -> WorkspaceEdit.t IO.t
+    method on_req_rename_ : string -> Position.t -> DocumentUri.t -> get_scope_info -> WorkspaceEdit.t IO.t
         =
-      fun new_name pos (_, _, defs) ->
-        match defs with
-        | Some (defs, _) ->
-          (match Requests.Definition.get_definition pos defs with
-          | Some definition ->
-            let references =
-              Requests.References.get_all_references
-                (get_location definition)
-                get_scope_buffers
-            in
-            let changes =
-              List.map
-                (fun (file, ranges) ->
-                  file, List.map (Requests.Rename.rename_reference new_name) ranges)
-                references
-            in
-            IO.return @@ WorkspaceEdit.create ~changes ()
-          | None -> IO.return @@ WorkspaceEdit.create ())
-        | None -> IO.return @@ WorkspaceEdit.create ()
+      fun new_name pos uri (_, _, defs) ->
+        IO.return (
+        Option.value (
+        let open Maybe in
+        let@ (defs, _) = defs in
+        let@ definition = Requests.Definition.get_definition pos (uri_location_cmp uri) defs in
+        let references =
+          Requests.References.get_all_references
+            (get_location definition)
+            get_scope_buffers
+        in
+        let changes =
+          List.map
+            (fun (file, ranges) ->
+              file, List.map (Requests.Rename.rename_reference new_name) ranges)
+            references
+        in
+        Some (WorkspaceEdit.create ~changes ()))
+        ~default:(WorkspaceEdit.create ()))
 
     method on_req_references_
-        : Position.t -> get_scope_info -> Location.t list option IO.t =
-      fun pos (_, _, defs) ->
-        match defs with
-        | Some (defs, _) ->
-          (match Requests.Definition.get_definition pos defs with
-          | Some definition ->
-            let references =
-              Requests.References.get_all_references
-                (get_location definition)
-                get_scope_buffers
-            in
-            let locations =
-              List.flatten
-              @@ List.map
-                   (fun (file, ranges) ->
-                     List.map (fun range -> Location.create ~uri:file ~range) ranges)
-                   references
-            in
-            IO.return @@ Some locations
-          | None -> IO.return None)
-        | None -> IO.return None
+        : Position.t -> DocumentUri.t -> get_scope_info -> Location.t list option IO.t =
+      fun pos uri (_, _, defs) ->
+        IO.return
+        (let open Maybe in
+        let@ defs, _ = defs in
+        let@ definition = Requests.Definition.get_definition pos (uri_location_cmp uri) defs in
+        let references =
+          Requests.References.get_all_references
+            (get_location definition)
+            get_scope_buffers
+        in
+        let locations =
+          List.flatten
+          @@ List.map
+               (fun (file, ranges) ->
+                 List.map (fun range -> Location.create ~uri:file ~range) ranges)
+               references
+        in
+        Some locations)
 
     method! config_hover = Some (`Bool true)
     method config_formatting = Some (`Bool true)
@@ -267,7 +249,7 @@ class lsp_server =
             get_scope_buffers
             uri
             None
-            (self#on_req_definition_ position)
+            (self#on_req_definition_ position uri)
         | Client_request.TextDocumentHover { textDocument; position; _ } ->
           let uri = textDocument.uri in
           (* let notify_back = new notify_back ~uri ~notify_back () in *)
@@ -279,7 +261,7 @@ class lsp_server =
             get_scope_buffers
             uri
             (WorkspaceEdit.create ())
-            (self#on_req_rename_ newName position)
+            (self#on_req_rename_ newName position uri)
         | Client_request.TextDocumentReferences { position; textDocument; _ } ->
           let uri = textDocument.uri in
           (* let notify_back = new notify_back ~uri ~notify_back () in *)
@@ -287,6 +269,6 @@ class lsp_server =
             get_scope_buffers
             uri
             None
-            (self#on_req_references_ position)
+            (self#on_req_references_ position uri)
         | _ -> super#on_request ~notify_back ~id r
   end
