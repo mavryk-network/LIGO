@@ -5,7 +5,7 @@ open Simple_utils
 open Errors
 module Location = Simple_utils.Location
 
-let compile ~raise =
+let compile =
   let expr : (expr, ty_expr, pattern, _, _) expr_ -> expr =
    fun e ->
     let loc = Location.get_location e in
@@ -34,6 +34,6 @@ let reduction ~raise =
 let pass ~raise =
   cata_morph
     ~name:__MODULE__
-    ~compile:(compile ~raise)
+    ~compile
     ~decompile:`None (* for now ? *)
     ~reduction_check:(reduction ~raise)
