@@ -1,0 +1,17 @@
+{
+  "name": "ligojs-example",
+  "scripts": {
+    "build": "rollup -c ./rollup.config.mjs"
+  },
+  "dependencies": {
+    "ligolang": "latest"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^24.0.0",
+    "@rollup/plugin-json": "^6.0.0",
+    "@rollup/plugin-node-resolve": "*",
+    "@web/rollup-plugin-import-meta-assets": "^1.0.7",
+    "rollup": "*",
+    "rollup-plugin-polyfill-node": "^0.11.0"
+  }
+}
