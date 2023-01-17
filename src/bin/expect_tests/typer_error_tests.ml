@@ -730,7 +730,16 @@ let%expect_test _ =
 
     Invalid type(s)
     Cannot unify "record[bar -> ( nat * string ) , foo -> int , third_field -> tez]" with "
-    record[bar -> ( nat * nat ) , foo -> int]". |}]
+    record[bar -> ( nat * nat ) , foo -> int]".
+    Difference between the types:
+      field 'bar' :
+        nat
+      - string
+      + nat
+      field 'foo' :
+        int
+      field 'third_field' :
+      - tez |}]
 
 (*
   In this case, the typer will stop at the first mismatch
