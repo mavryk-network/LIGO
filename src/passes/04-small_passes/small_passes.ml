@@ -50,6 +50,7 @@ let passes
   ; Assign_transitivity.pass ~raise
   ; Returns.pass ~raise
   ; Unstate.pass ~raise
+  ; Unify_fun.pass ~raise
   ]
 
 

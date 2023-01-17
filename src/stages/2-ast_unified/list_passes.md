@@ -1,11 +1,11 @@
 
-## attribify
+## pass 'export_declaration'
 
 - remove : D_Export
 
 D_Export -> D_attr "private"/"public"
 
-## simplify let_syntax
+## pass 'let_syntax'
 
 - remove : D_Let , E_Let_in
 - add    : D_irrefutable_match
@@ -151,11 +151,6 @@ note: is there any reason why we would like E_App ? GADT ? where Ctor is a funct
 
 See handling of TDisc in JsLIGO abstractor AND GOOD LUCK
 
-## pass 'block fun to poly_fun'
 
-- remove : E_Block_fun
-- add : -
-
-unify with polyfun
 
 

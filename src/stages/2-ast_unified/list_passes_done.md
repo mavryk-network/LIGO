@@ -174,3 +174,10 @@ const g = n => {
 - add : E_sequence
 
 S_Instr should only contain simple stuff like `I_While I_For_In I_For I_ForOf`
+
+## pass 'unify_fun'
+
+- remove : E_Block_fun
+- add : -
+
+unify with polyfun
