@@ -5,6 +5,20 @@ let%expect_test _ =
     [ "compile"
     ; "contract"
     ; "--no-color"
+    ; "../../test/contracts/negative/let_mut.mligo"
+    ];
+  [%expect
+    {|
+    File "../../test/contracts/negative/let_mut.mligo", line 4, characters 13-14:
+      3 |   let f = fun _ ->
+      4 |     let () = i := i + 1 in
+      5 |     i
+
+    Invalid capture of mutable variable "i" |}];
+  run_ligo_bad
+    [ "compile"
+    ; "contract"
+    ; "--no-color"
     ; "../../test/contracts/negative/error_function_annotation_1.mligo"
     ];
   [%expect
@@ -61,6 +75,42 @@ let%expect_test _ =
       1 | let rec unvalid (n:int):int =
       2 |     let res = unvalid (n) in
       3 |     res + 1
+
+    Recursive call not in tail position.
+    The value of a recursive call must be immediately returned by the defined function. |}];
+  run_ligo_bad
+    [ "compile"
+    ; "contract"
+    ; "--no-color"
+    ; "../../test/contracts/negative/error_no_tail_recursive_function.jsligo"
+    ; "--entry-point"
+    ; "unvalid"
+    ];
+  [%expect
+    {|
+    File "../../test/contracts/negative/error_no_tail_recursive_function.jsligo", line 5, character 2 to line 7, character 3:
+      4 |   let total = 0;
+      5 |   for (const i of l) {
+      6 |     total = total + wrong(i)
+      7 |   }
+      8 |   return total;
+
+    Recursive call not in tail position.
+    The value of a recursive call must be immediately returned by the defined function. |}];
+  run_ligo_bad
+    [ "compile"
+    ; "contract"
+    ; "--no-color"
+    ; "../../test/contracts/negative/error_no_tail_recursive_function2.mligo"
+    ; "--entry-point"
+    ; "unvalid"
+    ];
+  [%expect
+    {|
+    File "../../test/contracts/negative/error_no_tail_recursive_function2.mligo", line 3, characters 10-13:
+      2 |   let rec loop (xs : int list) : int =
+      3 |     loop (foo xs :: xs)
+      4 |   in
 
     Recursive call not in tail position.
     The value of a recursive call must be immediately returned by the defined function. |}];
@@ -300,7 +350,9 @@ let%expect_test _ =
       2 |
       3 | let main (x,y:bool * bool) = ([] : operation list), (None : option)
 
-    Constructor "None" not found. |}]
+    Invalid type(s)
+    Cannot unify "option (^a)" with "int".
+    Hint: "^a" represent placeholder type(s). |}]
 
 let%expect_test _ =
   run_ligo_bad

@@ -297,11 +297,12 @@ let get_mut =
     hashable
     (module Value_var)
     (fun t var ->
-      let rec loop = function
-        | C_value (var', Mutable, type_) :: _ when Value_var.equal var var' -> Some type_
-        | C_mut_lock _ :: _ -> None
-        | _ :: items -> loop items
-        | [] -> None
+      let rec loop ?(locked = false) = function
+        | C_value (var', Mutable, type_) :: _ when Value_var.equal var var' ->
+          if locked then Error `Mut_var_captured else Ok type_
+        | C_mut_lock _ :: items -> loop ~locked:true items
+        | _ :: items -> loop ~locked items
+        | [] -> Error `Not_found
       in
       loop t)
 
@@ -1014,6 +1015,14 @@ module Hashes = struct
     else (
       let rec hash_types : type a. (a, path:Module_var.t list -> unit) contextual =
        fun t ~to_type_map ~to_module_map ~path ->
+        let path =
+          match path with
+          | [] -> []
+          | mv :: _
+            when Module_var.is_name mv "Curry_lib" || Module_var.is_name mv "Uncurry_lib"
+            -> []
+          | _ -> path
+        in
         let types = Map.to_alist @@ to_type_map t in
         let modules = Map.to_alist @@ to_module_map t in
         List.iter (List.rev types) ~f:(fun (v, t) ->
