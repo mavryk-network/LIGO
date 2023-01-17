@@ -82,8 +82,6 @@ module Let_binding = Temp_prim.Let_binding
 module Rev_app = Temp_prim.Rev_app
 module Z = Ligo_prim.Literal_value.Z
 
-type 'a nseq = 'a Simple_utils.List.Ne.t [@@deriving yojson, map, iter, sexp]
-
 (* The preprocessor directives are left unchanged during unification pass.
    So, the type of a directive is Preprocessor.Directive.t
    in both the CST and here in the AST unified.
@@ -156,7 +154,7 @@ and ('self, 'ty_expr) pattern_content_ =
   | P_pun_record of (Label.t, 'self) Field.t list
   | P_rest of Label.t
   | P_attr of Attribute.t * 'self
-  | P_mod_access of (Mod_variable.t nseq, 'self) Mod_access.t
+  | P_mod_access of (Mod_variable.t Simple_utils.List.Ne.t, 'self) Mod_access.t
 [@@deriving map, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "pattern" }]
 
 (* ========================== INSTRUCTIONS ================================= *)
@@ -169,7 +167,7 @@ and ('self, 'expr, 'pattern, 'statement, 'block) instruction_content_ =
   | I_Case of ('expr, 'pattern, ('self, 'block) Test_clause.t) Case.t
   | I_Cond of ('expr, ('self, 'block) Test_clause.t) Cond.t
   | I_For of ('expr, 'block) For_int.t
-  | I_ForIn of ('expr, 'block) For_collection.t
+  | I_ForIn of ('pattern, 'expr, 'block) For_collection.t
   | I_ForOf of ('expr, 'statement) For_of.t
   | I_Patch of 'expr Patch.t
   | I_Remove of 'expr Removal.t
@@ -216,13 +214,13 @@ and ('self, 'expr, 'ty_expr, 'pattern, 'mod_expr) declaration_content_ =
   | D_Attr of (Attribute.t * 'self)
   | D_Import of Import.t
   | D_Export of 'self
-  | D_Let of ('expr, 'pattern nseq, 'ty_expr) Let_decl.t
+  | D_Let of ('expr, 'pattern Simple_utils.List.Ne.t, 'ty_expr) Let_decl.t
     (* let x = <..> ; let x (type a b) y (z:ty) = <..> *)
   | D_Var of ('pattern, 'expr, 'ty_expr) Simple_decl.t (* var x = y *)
-  | D_Multi_var of ('pattern, 'expr, 'ty_expr) Simple_decl.t nseq (* var x = y , z = w *)
+  | D_Multi_var of ('pattern, 'expr, 'ty_expr) Simple_decl.t Simple_utils.List.Ne.t (* var x = y , z = w *)
   | D_Const of ('pattern, 'expr, 'ty_expr) Simple_decl.t (* const x = y *)
   | D_Multi_const of
-      ('pattern, 'expr, 'ty_expr) Simple_decl.t nseq (* const x = y , z = w *)
+      ('pattern, 'expr, 'ty_expr) Simple_decl.t Simple_utils.List.Ne.t (* const x = y , z = w *)
   | D_Fun of ('ty_expr, 'expr, ('pattern, 'ty_expr) Param.t) Fun_decl.t
   | D_Type_abstraction of 'ty_expr Type_abstraction_decl.t
   | D_Module of 'mod_expr Mod_decl.t
@@ -239,8 +237,8 @@ include struct
     ('self, 'program_entry) mod_expr_content_ Location.wrap
 
   and ('self, 'program_entry) mod_expr_content_ =
-    | M_Body of 'program_entry nseq
-    | M_Path of Ligo_prim.Module_var.t nseq
+    | M_Body of 'program_entry Simple_utils.List.Ne.t
+    | M_Path of Ligo_prim.Module_var.t Simple_utils.List.Ne.t
     | M_Var of Ligo_prim.Module_var.t
   [@@deriving map, iter, yojson, sexp, is { tags = [ "not_initial" ]; name = "mod_expr" }]
 end
@@ -259,7 +257,7 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_Unary_op of 'self Operators.unary_op
   | E_variable of Variable.t (* x *)
   | E_RevApp of 'self Rev_app.t (* x |> f *)
-  | E_Tuple of 'self nseq (* (x, y, z) *)
+  | E_Tuple of 'self Simple_utils.List.Ne.t (* (x, y, z) *)
   | E_Record_pun of (Variable.t, 'self) Field.t list (* { x = 10; y; z } *)
   | E_Array of
       'self Array_repr.t (* [1, 2, 3] , [42] , [] , [2 ...3] (specific to jsligo) *)
@@ -272,7 +270,7 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
       ('self, 'ty_expr, 'pattern) Poly_fun.t (* (fun <type a b>(x, y) z -> x + y - z) *)
   | E_Block_fun of ('self, 'pattern, 'ty_expr, 'block) Block_fun.t
   | E_Constr of Label.t
-  | E_Ctor_App of ('self * 'self nseq option) (* MyCtor (42, 43, 44), PascaLigo only *)
+  | E_Ctor_App of ('self * 'self Simple_utils.List.Ne.t option) (* MyCtor (42, 43, 44), PascaLigo only *)
   | E_Call of 'self * 'self list (* f (x, y) ; f x y *)
   | E_Match of ('self, 'pattern, 'self) Case.t (* match e with | A -> ... | B -> ... *)
   | E_Annot of ('self * 'ty_expr) (* 42 : int *)
@@ -288,11 +286,15 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_Sequence of ('self * 'self)
   | E_Block_with of ('self, 'block) Block_with.t (* { tata ; toto } with whatev *)
   | E_AssignJsligo of
-      'self Assign_jsligo.t (* tata := toto ; which in reality return tata *)
+      'self Assign_jsligo.t (* x := y ; which has the type of x/y *)
+  | E_Let_mut_in of ('pattern, 'self, 'ty_expr) Let_binding.t (* let mut x = 1 *)
+  | E_Assign of ('self, 'ty_expr option) Assign.t (* x := y ; which has type unit *)
+  | E_While of ('self, 'self) While.t
+  | E_For of ('self, 'self) For_int.t
+  | E_For_in of ('pattern, 'self, 'self) For_collection.t
+  | E_Seq of 'self list
   (*  \/ Below are nodes added through the passes \/ *)
-  | E_assign of ('self, 'ty_expr option) Assign.t [@not_initial]
   | E_constant of 'self Constant.t [@not_initial]
-  | E_let_mut_in of ('pattern, 'self, 'ty_expr) Let_binding.t [@not_initial]
 [@@deriving map, iter, yojson, sexp, is { tags = [ "not_initial" ]; name = "expr" }]
 (* ========================== PROGRAM ====================================== *)
 

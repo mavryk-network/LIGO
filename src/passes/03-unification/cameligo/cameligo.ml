@@ -1,4 +1,5 @@
 open Simple_utils.Utils
+
 (* open Simple_utils.Trace *)
 open Unification_shared.Helpers
 module CST = Cst.Cameligo
@@ -23,9 +24,12 @@ module TODO_do_in_parsing = struct
       let index, _ = r_split comp in
       Component_num index
 
+
   let weird_attributes _ =
     (* I don't know what to do with those attributes *)
     ()
+
+
   let empty_sequence () = failwith "should a sequence be allowed to be empty ?"
 end
 
@@ -100,7 +104,7 @@ module TODO_unify_in_cst = struct
     | Name name ->
       let loc = r_snd name in
       e_variable ~loc (TODO_do_in_parsing.var ~loc (r_fst name))
-    | Path { region=_; value } -> nested_proj value
+    | Path { region = _; value } -> nested_proj value
 
 
   let update_rhs
@@ -108,7 +112,8 @@ module TODO_unify_in_cst = struct
       -> CST.field_path_assignment Region.reg CST.ne_injection Region.reg
       -> AST.expr AST.Update.field list
     =
-   fun self { region=_; value = { compound = _; ne_elements; terminator = _; attributes } } ->
+   fun self
+       { region = _; value = { compound = _; ne_elements; terminator = _; attributes } } ->
     let attributes = List.map (conv_attr attributes) ~f:fst in
     let x = nsepseq_to_list ne_elements in
     let f : CST.field_path_assignment Region.reg -> AST.expr AST.Update.field =
@@ -120,13 +125,13 @@ module TODO_unify_in_cst = struct
         let field_lhs =
           match field_path with
           | Name v -> [ Selection.FieldName (Label.of_string (r_fst v)) ]
-          | Path { region=_; value = { struct_name; selector=_; field_path } } ->
-            Selection.FieldName (Label.of_string (r_fst struct_name)) ::
-            List.map
-              (nsepseq_to_list field_path)
-              ~f:TODO_do_in_parsing.translate_selection
+          | Path { region = _; value = { struct_name; selector = _; field_path } } ->
+            Selection.FieldName (Label.of_string (r_fst struct_name))
+            :: List.map
+                 (nsepseq_to_list field_path)
+                 ~f:TODO_do_in_parsing.translate_selection
         in
-        TODO_do_in_parsing.weird_attributes attributes ;
+        TODO_do_in_parsing.weird_attributes attributes;
         Full_field { field_lhs; field_lens = Lens_Id; field_rhs }
       | Path_punned_property pun -> Pun (Label.of_string (r_fst pun), attributes)
     in
@@ -162,15 +167,21 @@ module TODO_unify_in_cst = struct
          (fun x -> TODO_do_in_parsing.mvar ~loc:(r_snd x) (r_fst x))
          (nsepseq_to_nseq binders))
 
-  let nested_ctor_application ~loc (constr:CST.constr) arg_opt =
+
+  let nested_ctor_application ~loc (constr : CST.constr) arg_opt =
     let constructor = Label.of_string constr.value in
-    let element = Option.map ~f:(List.Ne.singleton) arg_opt in
-    e_ctor_app ~loc ((e_constr ~loc:(Location.lift constr.region) constructor), element)
+    let element = Option.map ~f:List.Ne.singleton arg_opt in
+    e_ctor_app ~loc (e_constr ~loc:(Location.lift constr.region) constructor, element)
 
-  let declarations_as_program decls = nseq_map (pe_declaration) decls
+
+  let declarations_as_program decls = nseq_map pe_declaration decls
+
+  let for_step ~loc (x : CST.direction) =
+    match x with
+    | To _ -> None
+    | Downto _ ->
+      Some (e_literal ~loc (Ligo_prim.Literal_value.Literal_int (Z.of_int (-1))))
 end
-
-(* ========================== TYPES ======================================== *)
 
 let rec compile_type_expression : CST.type_expr -> AST.ty_expr =
  fun te ->
@@ -331,14 +342,16 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
  fun e ->
   let self = compile_expression ~raise in
   let return e = e in
-  let compile_bin_op (sign: AST.Operators.op) (op : _ CST.bin_op CST.reg) =
+  let compile_bin_op (sign : AST.Operators.op) (op : _ CST.bin_op CST.reg) =
     let CST.{ op; arg1; arg2 }, _loc = r_split op in
     let _, loc = w_split op in
     e_binary_op
       ~loc
       AST.{ operator = Location.wrap ~loc sign; left = self arg1; right = self arg2 }
   in
-  let compile_unary_op (sign: AST.Operators.op) : string CST.wrap CST.un_op CST.reg -> AST.expr =
+  let compile_unary_op (sign : AST.Operators.op)
+      : string CST.wrap CST.un_op CST.reg -> AST.expr
+    =
    fun op ->
     let CST.{ op; arg }, _loc = r_split op in
     let _, loc = w_split op in
@@ -557,6 +570,56 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
     | Some nelst ->
       let seq = nseq_map self (nsepseq_to_nseq nelst) in
       TODO_unify_in_cst.nested_sequence ~loc seq)
+  | ELetMutIn mut ->
+    let CST.{ binding; body; attributes }, loc = r_split mut in
+    let CST.{ type_params; binders; rhs_type; let_rhs; _ } = binding in
+    e_let_mut_in
+      ~loc
+      { is_rec = false
+      ; type_params = Option.map ~f:compile_type_params type_params
+      ; lhs = List.Ne.map compile_pattern binders
+      ; rhs_type = Option.map ~f:(compile_type_expression <@ snd) rhs_type
+      ; rhs = self let_rhs
+      ; body = self body
+      }
+  | EAssign ass ->
+    let CST.{ binder; ass = _; expr }, loc = r_split ass in
+    let var = TODO_do_in_parsing.var ~loc:(r_snd binder) (r_fst binder) in
+    e_assign ~loc { binder = Ligo_prim.Binder.make var None; expression = self expr }
+  | EWhile wh ->
+    let CST.{ cond; body }, loc = r_split wh in
+    let body = compile_seq_expr ~raise body.seq_expr in
+    e_while ~loc { cond = self cond; block = body }
+  | EForIn for_ ->
+    let CST.{ pattern; collection; body; _ }, loc = r_split for_ in
+    let block = compile_seq_expr ~raise body.seq_expr in
+    e_for_in
+      ~loc
+      (ForAny { pattern = compile_pattern pattern; collection = self collection; block })
+  | EFor for_ ->
+    let CST.{ index; bound1; direction; bound2; body }, loc = r_split for_ in
+    let block = compile_seq_expr ~raise body.seq_expr in
+    let index =
+      let CST.{ variable = v; attributes }, loc = r_split index in
+      TODO_do_in_parsing.weird_attributes attributes;
+      TODO_do_in_parsing.var ~loc:(r_snd v) (r_fst v)
+    in
+    let step = TODO_unify_in_cst.for_step ~loc direction in
+    e_for ~loc { index; init = self bound1; bound = self bound2; step; block }
+
+
+and compile_seq_expr ~raise : (CST.expr, _) nsepseq option -> AST.expr =
+ fun x ->
+  let lst =
+    Option.value_map
+      ~default:[]
+      ~f:(List.map ~f:(compile_expression ~raise) <@ nsepseq_to_list)
+      x
+  in
+  e_seq
+    ~loc:
+      (List.fold ~init:Location.generated ~f:Location.cover (List.map ~f:get_e_loc lst))
+    lst
 
 
 and compile_declaration ~raise : CST.declaration -> AST.declaration =

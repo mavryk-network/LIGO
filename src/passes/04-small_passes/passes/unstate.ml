@@ -228,9 +228,9 @@ and instr ~raise : instruction -> Statement_result.t =
           hole)
   | I_Expr { fp = { wrap_content = E_AssignJsligo _; _ } } -> failwith "removed"
   | I_Expr e -> Binding (fun hole -> sequence e hole)
-  | I_For _ | I_ForIn _ | I_ForOf _ | I_Patch _ | I_Remove _ | I_While _ ->
+  | I_For _ | I_ForIn _ | I_ForOf _ | I_While _ ->
     failwith "not supported"
-  | I_Struct_assign _ | I_Switch _ | I_break -> failwith "removed"
+  | I_Struct_assign _ | I_Remove _ | I_Patch _ | I_Switch _ | I_break -> failwith "removed"
 
 
 and statement ~raise : statement -> Statement_result.t =
