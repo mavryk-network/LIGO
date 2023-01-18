@@ -1,0 +1,54 @@
+opam-version: "2.0"
+name: "OCamlLanguageServer"
+version: "~dev"
+synopsis: "A short synopsis"
+description: "A longer description"
+maintainer: "Maintainer Name"
+authors: "Author Name"
+license: "MIT"
+tags: ["topics" "to describe" "your" "project"]
+homepage:
+  "https://marketplace.visualstudio.com/items?itemName=ligolang-publish.ligo-vscode"
+doc: "https://url/to/documentation"
+bug-reports: "https://gitlab.com/ligolang/issues"
+depends: [
+  "astring" {= "0.8.5" & with-doc}
+  "base-bigarray" {= "base"}
+  "base-threads" {= "base"}
+  "base-unix" {= "base"}
+  "camlp-streams" {= "5.0.1" & with-doc}
+  "cmdliner" {= "1.1.0" & with-doc}
+  "cppo" {= "1.6.9" & with-doc}
+  "dune" {= "3.4.1"}
+  "fmt" {= "0.9.0" & with-doc}
+  "fpath" {= "0.7.3" & with-doc}
+  "ocaml" {= "4.14.0"}
+  "ocaml-base-compiler" {= "4.14.0"}
+  "ocaml-config" {= "2"}
+  "ocaml-options-vanilla" {= "1"}
+  "ocamlbuild" {= "0.14.2" & with-doc}
+  "ocamlfind" {= "1.9.5" & with-doc}
+  "odoc" {= "2.1.1" & with-doc}
+  "odoc-parser" {= "1.0.1" & with-doc}
+  "re" {= "1.10.4" & with-doc}
+  "result" {= "1.5" & with-doc}
+  "seq" {= "base" & with-doc}
+  "topkg" {= "1.0.5" & with-doc}
+  "tyxml" {= "4.5.0" & with-doc}
+  "uutf" {= "1.0.3" & with-doc}
+]
+build: [
+  ["dune" "subst"] {dev}
+  [
+    "dune"
+    "build"
+    "-p"
+    name
+    "-j"
+    jobs
+    "@install"
+    "@runtest" {with-test}
+    "@doc" {with-doc}
+  ]
+]
+dev-repo: "git+https://gitlab.com/ligolang/ligo.git"

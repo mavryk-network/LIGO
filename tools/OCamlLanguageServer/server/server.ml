@@ -161,66 +161,117 @@ class lsp_server =
           IO.return (Some [ formatted_text ])
         | Error _ -> IO.return None
 
-    method on_req_definition_ : Position.t -> DocumentUri.t -> get_scope_info -> Locations.t option IO.t =
+    method on_req_definition_
+        : Position.t -> DocumentUri.t -> get_scope_info -> Locations.t option IO.t =
       fun pos uri (_, _, defs) ->
         IO.return
           (let open Maybe in
           let@ defs, _ = defs in
           let@ region =
-            Option.map get_location @@ Requests.Definition.get_definition pos (uri_location_cmp uri) defs
+            Option.map get_location
+            @@ Requests.Definition.get_definition pos (uri_location_cmp uri) defs
           in
           match region with
           | File region -> Some (`Location [ region_to_location region ])
           | Virtual _ -> None)
 
-    method on_req_rename_ : string -> Position.t -> DocumentUri.t -> get_scope_info -> WorkspaceEdit.t IO.t
+    method on_req_type_definition_
+        : notify_back -> Position.t -> DocumentUri.t -> get_scope_info -> Locations.t option IO.t =
+      fun _ pos uri (_, _, defs) ->
+        IO.return
+          (let open Maybe in
+          let@ defs, _ = defs in
+          let@ definition = Requests.Definition.get_definition pos (uri_location_cmp uri) defs in
+          let@ location =
+            match definition with
+            (* It's a term: find its type now. *)
+            | Variable vdef ->
+              (match vdef.t with
+              | Core ty -> Some ty.location
+              | Resolved ty -> Option.map (fun v -> Ligo_prim.Type_var.get_location v) ty.orig_var
+              | Unresolved -> None
+              )
+            (* Just replicate the behavior of definition if it's already a type. *)
+            | Type tdef -> Some tdef.range
+            (* Modules have no type definition. *)
+            | Module _mdef -> None
+          in
+          let@ region = Utils.position_of_location location in
+          let@ type_definition = Requests.Definition.get_definition region (uri_location_cmp uri) defs in
+          let@ location =
+            match type_definition with
+            | Variable _vdef -> None
+            | Type tdef -> Some tdef.range
+            | Module _mdef -> None
+          in
+          match location with
+          | File region -> Some (`Location [ region_to_location region ])
+          | Virtual _ -> None)
+
+    method on_req_rename_
+        : string -> Position.t -> DocumentUri.t -> get_scope_info -> WorkspaceEdit.t IO.t
         =
       fun new_name pos uri (_, _, defs) ->
-        IO.return (
-        Option.value (
-        let open Maybe in
-        let@ (defs, _) = defs in
-        let@ definition = Requests.Definition.get_definition pos (uri_location_cmp uri) defs in
-        let references =
-          Requests.References.get_all_references
-            (get_location definition)
-            get_scope_buffers
-        in
-        let changes =
-          List.map
-            (fun (file, ranges) ->
-              file, List.map (Requests.Rename.rename_reference new_name) ranges)
-            references
-        in
-        Some (WorkspaceEdit.create ~changes ()))
-        ~default:(WorkspaceEdit.create ()))
+        IO.return
+          (Option.value
+             (let open Maybe in
+             let@ defs, _ = defs in
+             let@ definition =
+               Requests.Definition.get_definition pos (uri_location_cmp uri) defs
+             in
+             let references =
+               Requests.References.get_all_references
+                 (get_location definition)
+                 get_scope_buffers
+             in
+             let changes =
+               List.map
+                 (fun (file, ranges) ->
+                   file, List.map (Requests.Rename.rename_reference new_name) ranges)
+                 references
+             in
+             Some (WorkspaceEdit.create ~changes ()))
+             ~default:(WorkspaceEdit.create ()))
 
     method on_req_references_
-        : Position.t -> DocumentUri.t -> get_scope_info -> Location.t list option IO.t =
-      fun pos uri (_, _, defs) ->
-        IO.return
-        (let open Maybe in
-        let@ defs, _ = defs in
-        let@ definition = Requests.Definition.get_definition pos (uri_location_cmp uri) defs in
-        let references =
-          Requests.References.get_all_references
-            (get_location definition)
-            get_scope_buffers
-        in
-        let locations =
-          List.flatten
-          @@ List.map
-               (fun (file, ranges) ->
-                 List.map (fun range -> Location.create ~uri:file ~range) ranges)
-               references
-        in
-        Some locations)
+        : notify_back
+          -> Position.t
+          -> DocumentUri.t
+          -> get_scope_info
+          -> Location.t list option IO.t =
+      fun notify_back pos uri (_, _, defs) ->
+        let open Maybe in
+        sequence
+          (let@ defs, _ = defs in
+           let@ definition =
+             Requests.Definition.get_definition pos (uri_location_cmp uri) defs
+           in
+           let references =
+             Requests.References.get_all_references
+               (get_location definition)
+               get_scope_buffers
+           in
+           let@ _ =
+             Some
+               (notify_back#send_log_msg ~type_:MessageType.Info
+               @@ "On references request on "
+               ^ DocumentUri.to_path uri)
+           in
+           let locations =
+             List.flatten
+             @@ List.map
+                  (fun (file, ranges) ->
+                    List.map (fun range -> Location.create ~uri:file ~range) ranges)
+                  references
+           in
+           Some (IO.return locations))
 
     method! config_hover = Some (`Bool true)
     method config_formatting = Some (`Bool true)
     method! config_definition = Some (`Bool true)
     method config_rename = Some (`Bool true)
     method config_references = Some (`Bool true)
+    method config_type_definition = Some (`Bool true)
 
     method! config_modify_capabilities (c : ServerCapabilities.t) : ServerCapabilities.t =
       { c with
@@ -229,6 +280,7 @@ class lsp_server =
       ; definitionProvider = self#config_definition
       ; renameProvider = self#config_rename
       ; referencesProvider = self#config_references
+      ; typeDefinitionProvider = self#config_type_definition
       }
 
     method! on_request
@@ -264,11 +316,19 @@ class lsp_server =
             (self#on_req_rename_ newName position uri)
         | Client_request.TextDocumentReferences { position; textDocument; _ } ->
           let uri = textDocument.uri in
-          (* let notify_back = new notify_back ~uri ~notify_back () in *)
+          let notify_back = new notify_back ~uri ~notify_back () in
           with_get_scope_info
             get_scope_buffers
             uri
             None
-            (self#on_req_references_ position uri)
+            (self#on_req_references_ notify_back position uri)
+        | Client_request.TextDocumentTypeDefinition { textDocument; position; _ } ->
+          let uri = textDocument.uri in
+          let notify_back = new notify_back ~uri ~notify_back () in
+          with_get_scope_info
+            get_scope_buffers
+            uri
+            None
+            (self#on_req_type_definition_ notify_back position uri)
         | _ -> super#on_request ~notify_back ~id r
   end

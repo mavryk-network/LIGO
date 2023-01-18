@@ -28,6 +28,12 @@ let region_to_location : Region.t -> Lsp.Types.Location.t =
     ~range:(region_to_range region)
 
 
+let position_of_location (l : Location.t) : Position.t option =
+  match l with
+  | Location.Virtual _ -> None
+  | File region -> Some (pos_to_position region#start)
+
+
 let position_le (position_l : Position.t) (position_r : Position.t) : Bool.t =
   position_l.line < position_r.line
   || (position_l.line = position_r.line && position_l.character <= position_r.character)
