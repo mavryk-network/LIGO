@@ -3,3 +3,6 @@
 	url = https://github.com/ligolang/tezos-ligo.git
 	branch = v15.0-ligo+windows
 
+[submodule "y"]
+	path = vendored-dune/linol
+	url = git@github.com:c-cube/linol.git

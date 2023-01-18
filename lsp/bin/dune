@@ -1,0 +1,6 @@
+(executable
+ (name main)
+ (public_name lsp.exe)
+ (package ligo)
+ (libraries
+    linol server OCamlLanguageServer))

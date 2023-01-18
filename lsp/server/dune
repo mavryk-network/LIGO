@@ -1,0 +1,9 @@
+(library
+ (name server)
+ (libraries
+  utils
+  linol-lwt
+  lsp
+  requests
+ )
+)
