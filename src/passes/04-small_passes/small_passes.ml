@@ -11,6 +11,7 @@ let passes
   [ Initial_node_check.pass ~raise
   ; Top_level_restriction.pass ~raise
   ; T_arg.pass
+  ; Constructor_application.pass ~raise
   ; Type_abstraction_declaration.pass ~raise
   ; Named_fun.pass ~raise
   ; E_rev_app.pass ~raise

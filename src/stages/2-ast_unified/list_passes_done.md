@@ -47,6 +47,18 @@ They correspond to the following cases in the Jsligo abstractor :
 | EAnnot {value = (EArith(Int i), _, TVar {value = "mutez"; _}); region=_ } ->
 | EAnnot {value = (ECodeInj {value = {language; code};_ }, kwd_as, type_expr); region} ->
 ```
+## pass 'constructor_application'
+
+note: maybe one day, we won't need it anymore ? and see constructor as a function
+or something?
+note: is there any reason why we would like E_App ? GADT ? where Ctor is a function?
+
+- remove : E_Ctor_App , E_constr
+- add    : E_Constructor (bad names)
+
+`E_Ctor_App A foo` |-> `E_Constructor A foo`
+`E_Ctor_App A` |-> `E_Constructor A unit`
+`E_Ctor_App A (foo bar baz))` |-> `E_Constructor A (E_tuple (foo bar baz))`
 
 ## pass 'restrict_t_app'
 

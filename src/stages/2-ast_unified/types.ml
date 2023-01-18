@@ -24,6 +24,7 @@ module Module_access = Ligo_prim.Module_access
 module Literal_value = Ligo_prim.Literal_value
 module Raw_code = Ligo_prim.Raw_code
 module Constant = Ligo_prim.Constant
+module Constructor = Ligo_prim.Constructor
 module Non_linear_rows = Temp_prim.Non_linear_rows (Label)
 module Field = Temp_prim.Field
 module Array_repr = Temp_prim.Array_repr
@@ -294,6 +295,7 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_Sequence of 'self list (* begin a ; a () ; x := y end *)
   (*  \/ Below are nodes added through the passes \/ *)
   | E_constant of 'self Constant.t [@not_initial]
+  | E_Constructor of 'self Constructor.t [@not_initial]
 [@@deriving map, iter, yojson, sexp, is { tags = [ "not_initial" ]; name = "expr" }]
 (* ========================== PROGRAM ====================================== *)
 

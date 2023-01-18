@@ -120,21 +120,9 @@ IF option.syntax == jsligo, pascaligo :
 IF option.syntax == cameligo:
 `E_Fun a b c ret body` |-> `E_lambda a (E_lambda b (E_lambda c (E_Annot body)))`
 
-## pass 'constructor_app'
-
-note: maybe one day, we won't need it anymore ? and see constructor as a function
-or something?
-note: is there any reason why we would like E_App ? GADT ? where Ctor is a function?
-
-- remove : E_Ctor_App , E_constr
-- add    : E_Constructor (bad names)
-
-`E_Ctor_App A foo` |-> `E_Constructor A foo`
-`E_Ctor_App A` |-> `E_Constructor A unit`
-`E_Ctor_App A (foo bar baz))` |-> `E_Constructor A (E_tuple (foo bar baz))`
 
   
-## pass 'enum_attributes'
+## pass 'enum_attributes' TODO AT THE END ..
   - remove : E_Attr (string to string) D_attr P_attr
   - add : E_AttrEnum ((Annot | LAyout | ..)) D_attrenum P_attrEnum
 

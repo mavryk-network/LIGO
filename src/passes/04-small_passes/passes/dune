@@ -27,6 +27,7 @@
   loop_variable
   top_level_restriction
   unify_fun
+  constructor_application
  )
  (libraries ast_unified syntax_types)
  (inline_tests
