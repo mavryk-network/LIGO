@@ -26,7 +26,7 @@ module Tezos = struct
   let set_delegate (o : key_hash option) : operation = [%michelson ({| { SET_DELEGATE } |} o : operation)]
   [@inline] [@thunk] let self (type a) (s : string) : a contract =
     let _ : a option = [%external ("CHECK_SELF", s)] in
-    [%Michelson (({| { DROP ; SELF (annot $0) } |} : unit -> a contract), (s : string))] ()
+    [%michelson ({| { SELF (annot $0) } |} (s : string) : a contract)]
   [@inline] [@thunk] let constant (type a) (s : string) : a = [%external ("GLOBAL_CONSTANT", s)]
   [@inline] [@thunk] let sapling_empty_state (type sap_a) : sap_a sapling_state =
     [%Michelson (({| { DROP ; SAPLING_EMPTY_STATE (type $0) } |} : unit -> sap_a sapling_state), (() : sap_a))] ()

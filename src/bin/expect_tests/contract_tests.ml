@@ -1224,7 +1224,8 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; bad_contract "self_in_lambda.mligo" ];
   [%expect
-    {| "Tezos.self" must be used directly and cannot be used via another function. |}]
+    {|
+      "Tezos.self" must be used directly and cannot be used via another function. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; bad_contract "not_comparable.mligo" ];
@@ -1622,10 +1623,8 @@ let%expect_test _ =
     { parameter (or (unit %default) (int %toto)) ;
       storage nat ;
       code { CDR ;
-             SELF %toto ;
-             SWAP ;
              NIL operation ;
-             DIG 2 ;
+             SELF %toto ;
              PUSH mutez 300000000 ;
              PUSH int 2 ;
              TRANSFER_TOKENS ;
@@ -1645,10 +1644,8 @@ let%expect_test _ =
     { parameter int ;
       storage nat ;
       code { CDR ;
-             SELF %default ;
-             SWAP ;
              NIL operation ;
-             DIG 2 ;
+             SELF %default ;
              PUSH mutez 300000000 ;
              PUSH int 2 ;
              TRANSFER_TOKENS ;
@@ -1857,10 +1854,9 @@ let%expect_test _ =
     { parameter (or (unit %foo) (unit %b)) ;
       storage unit ;
       code { DROP ;
-             SELF %foo ;
              UNIT ;
              NIL operation ;
-             DIG 2 ;
+             SELF %foo ;
              PUSH mutez 0 ;
              UNIT ;
              TRANSFER_TOKENS ;

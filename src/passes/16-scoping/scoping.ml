@@ -253,10 +253,46 @@ let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.enviro
     let code = List.map ~f:(Tezos_utils.Michelson.map replace) code in
     E_raw_michelson (meta, translate_type a, translate_type b, code)
   | E_raw_michelson (code, _, Some args') ->
-    let args' = translate_args args' env in
+    let args = List.map ~f:(fun e -> (translate_expression e env, Stacking.To_micheline.translate_type (translate_type e.type_expression))) args' in
     let wipe_locations l e =
       Tezos_micheline.Micheline.(inject_locations (fun _ -> l) (strip_locations e)) in
     let code = List.map ~f:(wipe_locations nil) code in
+    let used = ref [] in
+    let replace m = let open Tezos_micheline.Micheline in match m with
+     | Prim (_, s, [], [id]) when String.equal "type" s && String.is_prefix ~prefix:"$" id ->
+       let id = String.chop_prefix_exn ~prefix:"$" id in
+       let id = Int.of_string id in
+       used := id :: ! used;
+       (match List.nth args id with
+        | None -> internal_error __LOC__ (Format.sprintf "could not resolve (type %d)" id)
+        | Some (_, t) -> t)
+     | Prim (_, s, [], [id]) when String.equal "litstr" s && String.is_prefix ~prefix:"$" id ->
+       let id = String.chop_prefix_exn ~prefix:"$" id in
+       let id = Int.of_string id in
+       used := id :: ! used;
+       (match List.nth args id with
+        | Some (E_literal (m, Literal_string s), _) -> String (m, Ligo_string.extract s)
+        | _ -> internal_error __LOC__ (Format.sprintf "could not resolve (litstr %d)" id))
+     | Prim (a, b, c, d) ->
+       let open Tezos_micheline.Micheline in
+       let f arg (c, d) =
+         match arg with
+         | Prim (_, s, [], [id]) when String.equal "annot" s && String.is_prefix ~prefix:"$" id ->
+           let id = String.chop_prefix_exn ~prefix:"$" id in
+           let id = Int.of_string id in
+           used := id :: ! used;
+           let annot = match List.nth args id with
+             | Some (E_literal (_, Literal_string s), _) -> Ligo_string.extract s
+             | _ -> internal_error __LOC__ (Format.sprintf "could not resolve (annot %d)" id) in
+           c, annot :: d
+         | m -> m :: c, d in
+       let c, d = List.fold_right ~f ~init:([], d) c in
+       Prim (a, b, c, d)
+     | m -> m
+    in
+    let code = List.map ~f:(Tezos_utils.Michelson.map replace) code in
+    let args' = List.filter_mapi ~f:(fun i v -> if not (List.mem (! used) i ~equal:Caml.(=)) then Some v else None) args' in
+    let args' = translate_args args' env in
     E_inline_michelson (meta, code, args')
   | E_global_constant (hash, args) ->
     let args = translate_args args env in
