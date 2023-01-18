@@ -71,7 +71,7 @@ let <pattern> = (fun  ...)
   `E_Object { a , b }` |-> `E_record_pun ..`
   `E_object { a , ...r}` | `E_object {...r, a}` |-> `E_Update ..`
 
-## pass 'record_linar_and_pun'
+## pass 'linear_record'
 
 - remove: E_Record_pun , T_Record_raw
 - add: E_record , T_record
