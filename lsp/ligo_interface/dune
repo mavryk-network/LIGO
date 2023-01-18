@@ -1,5 +1,6 @@
 (library
  (name ligo_interface)
+  (public_name ligo.lsp.ligo_interface)
  (libraries
   lsp
   linol-lwt

@@ -1,9 +1,10 @@
 (library
  (name server)
+ (public_name ligo.lsp.server)
  (libraries
-  utils
+  ligo.lsp.utils
   linol-lwt
   lsp
-  requests
+  ligo.lsp.requests
  )
 )

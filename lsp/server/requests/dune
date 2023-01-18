@@ -1,5 +1,6 @@
 (library
  (name requests)
+  (public_name ligo.lsp.requests)
  (libraries
   lsp
   ligo_interface

@@ -1,2 +1,3 @@
 (library
+  (public_name ligo.lsp.lib)
  (name OCamlLanguageServer))

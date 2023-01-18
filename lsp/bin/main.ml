@@ -15,4 +15,4 @@ let run () =
     exit 1
 
   (* Finally, we actually run the server *)
-let () = run ()
+(* let () = run () *)
