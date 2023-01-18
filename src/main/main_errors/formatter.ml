@@ -4,9 +4,13 @@ module Location = Simple_utils.Location
 module PP_helpers = Simple_utils.PP_helpers
 
 let rec error_ppformat
-    : display_format:string display_format -> Format.formatter -> Types.all -> unit
+    :  display_format:string display_format -> no_colour:bool -> Format.formatter
+    -> Types.all -> unit
   =
- fun ~display_format f a ->
+ fun ~display_format ~no_colour f a ->
+  let self = error_ppformat ~display_format ~no_colour in
+  let snippet_pp = Snippet.pp ~no_colour in
+  let pp_value = Ligo_interpreter.PP.pp_value ~no_colour in
   let is_dummy_location loc =
     Location.is_dummy_or_generated loc
     ||
@@ -17,16 +21,12 @@ let rec error_ppformat
   match display_format with
   | Human_readable | Dev ->
     (match a with
-    | `Build_error_tracer err -> BuildSystem.Errors.error_ppformat ~display_format f err
+    | `Build_error_tracer err ->
+      BuildSystem.Errors.error_ppformat ~display_format ~no_colour f err
     | `Test_err_tracer (name, err) ->
-      Format.fprintf f "@[<hv>Test '%s'@ %a@]" name (error_ppformat ~display_format) err
+      Format.fprintf f "@[<hv>Test '%s'@ %a@]" name self err
     | `Test_run_tracer (ep, err) ->
-      Format.fprintf
-        f
-        "@[<hv>Running entrypoint '%s'@ %a@]"
-        ep
-        (error_ppformat ~display_format)
-        err
+      Format.fprintf f "@[<hv>Running entrypoint '%s'@ %a@]" ep self err
     | `Test_expect_tracer (expected, actual) ->
       Format.fprintf
         f
@@ -36,22 +36,11 @@ let rec error_ppformat
         Ast_core.PP.expression
         actual
     | `Test_expect_n_tracer (i, err) ->
-      Format.fprintf f "@[<hv>Expect n=%d@ %a@]" i (error_ppformat ~display_format) err
+      Format.fprintf f "@[<hv>Expect n=%d@ %a@]" i self err
     | `Test_expect_exp_tracer (e, err) ->
-      Format.fprintf
-        f
-        "@[<hv>Expect %a@ %a@]"
-        Ast_core.PP.expression
-        e
-        (error_ppformat ~display_format)
-        err
+      Format.fprintf f "@[<hv>Expect %a@ %a@]" Ast_core.PP.expression e self err
     | `Test_expect_eq_n_tracer (i, err) ->
-      Format.fprintf
-        f
-        "@[<hv>Expected eq_n=%d@ %a@]"
-        i
-        (error_ppformat ~display_format)
-        err
+      Format.fprintf f "@[<hv>Expected eq_n=%d@ %a@]" i self err
     | `Test_internal loc -> Format.fprintf f "@[<hv>Internal error:@ %s@]" loc
     | `Test_internal_msg (loc, msg) ->
       Format.fprintf f "@[<hv>Internal error:@ %s@ %s@]" loc msg
@@ -79,7 +68,7 @@ let rec error_ppformat
         sep
         prg
         sep
-        (error_ppformat ~display_format)
+        self
         err
         sep
     | `Test_expected_to_fail -> Format.fprintf f "test was expected to fail but did not"
@@ -101,8 +90,8 @@ let rec error_ppformat
     | `Main_invalid_syntax_name syntax ->
       Format.fprintf
         f
-        "@[<hv>Invalid syntax option: '%s'. @.Use 'pascaligo', 'cameligo', 'reasonligo', \
-         or 'jsligo'. @]"
+        "@[<hv>Invalid syntax option: '%s'. @.Use 'pascaligo', 'cameligo', or 'jsligo'. \
+         @]"
         syntax
     | `Main_invalid_dialect_name syntax ->
       Format.fprintf
@@ -120,8 +109,7 @@ let rec error_ppformat
       Format.fprintf
         f
         "@[<hv>Invalid file extension '%s'. @.Use '.ligo' for PascaLIGO, '.mligo' for \
-         CameLIGO, '.religo' for ReasonLIGO, '.jsligo' for JsLIGO, or the --syntax \
-         option.@]"
+         CameLIGO, '.jsligo' for JsLIGO, or the --syntax option.@]"
         extension
     | `Main_unparse_tracer errs ->
       let errs =
@@ -193,14 +181,14 @@ let rec error_ppformat
         f
         "@[<hv>Invalid command line argument. @.The provided parameter does not have the \
          correct type for the given entrypoint.@ %a@]"
-        (error_ppformat ~display_format)
+        self
         err
     | `Check_typed_arguments_tracer (Simple_utils.Runned_result.Check_storage, err) ->
       Format.fprintf
         f
         "@[<hv>Invalid command line argument. @.The provided storage does not have the \
          correct type for the contract.@ %a@]"
-        (error_ppformat ~display_format)
+        self
         err
     | `Main_unknown -> Format.fprintf f "@[<v>An unknown error occurred.@]"
     | `Main_execution_failed v ->
@@ -342,34 +330,42 @@ let rec error_ppformat
            ~show_source:true
            ?parsed:None)
         errs
-    | `Preproc_tracer e -> Preprocessing.Errors.error_ppformat ~display_format f e
-    | `Parser_tracer e -> Parsing.Errors.error_ppformat ~display_format f e
+    | `Preproc_tracer e ->
+      Preprocessing.Errors.error_ppformat ~display_format ~no_colour f e
+    | `Parser_tracer e -> Parsing.Errors.error_ppformat ~no_colour ~display_format f e
     | `Pretty_tracer _e -> () (*no error in this pass*)
     | `Cit_pascaligo_tracer e ->
-      List.iter ~f:(Tree_abstraction.Pascaligo.Errors.error_ppformat ~display_format f) e
+      List.iter
+        ~f:(Tree_abstraction.Pascaligo.Errors.error_ppformat ~display_format ~no_colour f)
+        e
     | `Cit_cameligo_tracer e ->
-      List.iter ~f:(Tree_abstraction.Cameligo.Errors.error_ppformat ~display_format f) e
-    | `Cit_reasonligo_tracer e ->
-      List.iter ~f:(Tree_abstraction.Reasonligo.Errors.error_ppformat ~display_format f) e
+      List.iter
+        ~f:(Tree_abstraction.Cameligo.Errors.error_ppformat ~display_format ~no_colour f)
+        e
     | `Cit_jsligo_tracer e ->
-      List.iter ~f:(Tree_abstraction.Jsligo.Errors.error_ppformat ~display_format f) e
+      List.iter
+        ~f:(Tree_abstraction.Jsligo.Errors.error_ppformat ~display_format ~no_colour f)
+        e
     | `Self_ast_imperative_tracer e ->
-      Self_ast_imperative.Errors.error_ppformat ~display_format f e
+      Self_ast_imperative.Errors.error_ppformat ~display_format ~no_colour f e
     | `Desugaring_tracer e -> Desugaring.Errors.error_ppformat ~display_format f e
-    | `Checking_tracer e -> Checking.Errors.error_ppformat ~display_format f e
-    | `Self_ast_typed_tracer e -> Self_ast_typed.Errors.error_ppformat ~display_format f e
-    | `Aggregation_tracer e -> Aggregation.Errors.error_ppformat ~display_format f e
+    | `Checking_tracer e -> Checking.Errors.error_ppformat ~display_format ~no_colour f e
+    | `Self_ast_typed_tracer e ->
+      Self_ast_typed.Errors.error_ppformat ~display_format ~no_colour f e
+    | `Aggregation_tracer e ->
+      Aggregation.Errors.error_ppformat ~display_format ~no_colour f e
     | `Self_ast_aggregated_tracer e ->
-      Self_ast_aggregated.Errors.error_ppformat ~display_format f e
-    | `Self_mini_c_tracer e -> Self_mini_c.Errors.error_ppformat ~display_format f e
-    | `Spilling_tracer e -> Spilling.Errors.error_ppformat ~display_format f e
+      Self_ast_aggregated.Errors.error_ppformat ~display_format ~no_colour f e
+    | `Self_mini_c_tracer e ->
+      Self_mini_c.Errors.error_ppformat ~display_format ~no_colour f e
+    | `Spilling_tracer e -> Spilling.Errors.error_ppformat ~display_format ~no_colour f e
     | `Scoping_tracer e -> Scoping.Errors.error_ppformat ~display_format f e
     | `Stacking_tracer e -> Stacking.Errors.error_ppformat ~display_format f e
     | `Main_interpret_not_enough_initial_accounts (loc, max) ->
       Format.fprintf
         f
         "@[<hv>%a@. baker account initial balance must at least reach %a tez @]"
-        Snippet.pp
+        snippet_pp
         loc
         Memory_proto_alpha.Protocol.Alpha_context.Tez.pp
         max
@@ -379,7 +375,7 @@ let rec error_ppformat
       Format.fprintf
         f
         "@[<v 4>%a@.An uncaught error occured:@.%a@]"
-        Snippet.pp
+        snippet_pp
         loc
         (Memory_proto_alpha.Client.Michelson_v1_error_reporter.report_errors
            ~details:true
@@ -392,7 +388,7 @@ let rec error_ppformat
         Format.fprintf
           f
           "@[<v 4>%a@.An uncaught error occured:@.%a@.Trace:@.%a@]"
-          Snippet.pp
+          snippet_pp
           loc
           (Memory_proto_alpha.Client.Michelson_v1_error_reporter.report_errors
              ~details:true
@@ -405,14 +401,14 @@ let rec error_ppformat
         Format.fprintf
           f
           "@[<v 4>%a@.An uncaught error occured:@.%a@.Trace:@.%a@.%a@]"
-          Snippet.pp
+          snippet_pp
           loc
           (Memory_proto_alpha.Client.Michelson_v1_error_reporter.report_errors
              ~details:true
              ~show_source:true
              ?parsed:None)
           errs
-          Snippet.pp
+          snippet_pp
           (List.hd_exn calltrace)
           (PP_helpers.list_sep_d Location.pp)
           (List.tl_exn calltrace)
@@ -420,7 +416,7 @@ let rec error_ppformat
       Format.fprintf
         f
         "@[<v 4>%a@.An uncaught error occured:@.Failwith: %a@]"
-        Snippet.pp
+        snippet_pp
         loc
         Tezos_utils.Michelson.pp
         v
@@ -430,7 +426,7 @@ let rec error_ppformat
         Format.fprintf
           f
           "@[<v 4>%a@.An uncaught error occured:@.Failwith: %a@.Trace:@.%a@]"
-          Snippet.pp
+          snippet_pp
           loc
           Tezos_utils.Michelson.pp
           v
@@ -440,11 +436,11 @@ let rec error_ppformat
         Format.fprintf
           f
           "@[<v 4>%a@.An uncaught error occured:@.Failwith: %a@.Trace:@.%a@.%a@]"
-          Snippet.pp
+          snippet_pp
           loc
           Tezos_utils.Michelson.pp
           v
-          Snippet.pp
+          snippet_pp
           (List.hd_exn calltrace)
           (PP_helpers.list_sep_d Location.pp)
           (List.tl_exn calltrace)
@@ -453,19 +449,19 @@ let rec error_ppformat
         f
         "@[<hv>%a@.We need at least two boostrap accounts for the default source and \
          baker@]"
-        Snippet.pp
+        snippet_pp
         loc
     | `Main_interpret_meta_lang_eval (loc, [], reason) ->
-      Format.fprintf f "@[<hv>%a@.%a@]" Snippet.pp loc Ligo_interpreter.PP.pp_value reason
+      Format.fprintf f "@[<hv>%a@.%a@]" snippet_pp loc pp_value reason
     | `Main_interpret_meta_lang_eval (loc, calltrace, reason) ->
       if (not (is_dummy_location loc)) || List.is_empty calltrace
       then
         Format.fprintf
           f
           "@[<hv>%a@.%a@.Trace:@.%a@]"
-          Snippet.pp
+          snippet_pp
           loc
-          Ligo_interpreter.PP.pp_value
+          pp_value
           reason
           (PP_helpers.list_sep_d Location.pp)
           calltrace
@@ -473,31 +469,25 @@ let rec error_ppformat
         Format.fprintf
           f
           "@[<hv>%a@.%a@.Trace:@.%a@.%a@]"
-          Snippet.pp
+          snippet_pp
           loc
-          Ligo_interpreter.PP.pp_value
+          pp_value
           reason
-          Snippet.pp
+          snippet_pp
           (List.hd_exn calltrace)
           (PP_helpers.list_sep_d Location.pp)
           (List.tl_exn calltrace)
     | `Main_interpret_meta_lang_failwith (loc, [], value) ->
-      Format.fprintf
-        f
-        "@[<hv>%a@.Test failed with %a@]"
-        Snippet.pp
-        loc
-        Ligo_interpreter.PP.pp_value
-        value
+      Format.fprintf f "@[<hv>%a@.Test failed with %a@]" snippet_pp loc pp_value value
     | `Main_interpret_meta_lang_failwith (loc, calltrace, value) ->
       if (not (is_dummy_location loc)) || List.is_empty calltrace
       then
         Format.fprintf
           f
           "@[<hv>%a@.Test failed with %a@.Trace:@.%a@]"
-          Snippet.pp
+          snippet_pp
           loc
-          Ligo_interpreter.PP.pp_value
+          pp_value
           value
           (PP_helpers.list_sep_d Location.pp)
           calltrace
@@ -505,21 +495,21 @@ let rec error_ppformat
         Format.fprintf
           f
           "@[<hv>%a@.Test failed with %a@.Trace:@.%a@.%a@]"
-          Snippet.pp
+          snippet_pp
           loc
-          Ligo_interpreter.PP.pp_value
+          pp_value
           value
-          Snippet.pp
+          snippet_pp
           (List.hd_exn calltrace)
           (PP_helpers.list_sep_d Location.pp)
           (List.tl_exn calltrace)
     | `Main_interpret_generic (loc, desc) ->
-      Format.fprintf f "@[<hv>%a@.%s@]" Snippet.pp loc desc
+      Format.fprintf f "@[<hv>%a@.%s@]" snippet_pp loc desc
     | `Main_interpret_literal (loc, l) ->
       Format.fprintf
         f
         "@[<hv>%a@.Invalid interpretation of literal: %a@]"
-        Snippet.pp
+        snippet_pp
         loc
         Ligo_prim.Literal_value.pp
         l
@@ -527,11 +517,13 @@ let rec error_ppformat
       Format.fprintf
         f
         "@[<hv>%a@.Module are not handled in interpreter yet@]"
-        Snippet.pp
+        snippet_pp
         loc
     | `Main_decompile_michelson e -> Stacking.Errors.error_ppformat ~display_format f e
-    | `Main_decompile_mini_c e -> Spilling.Errors.error_ppformat ~display_format f e
-    | `Main_decompile_typed e -> Checking.Errors.error_ppformat ~display_format f e
+    | `Main_decompile_mini_c e ->
+      Spilling.Errors.error_ppformat ~display_format ~no_colour f e
+    | `Main_decompile_typed e ->
+      Checking.Errors.error_ppformat ~display_format ~no_colour f e
     | `Main_view_rule_violated loc ->
       Format.fprintf
         f
@@ -540,7 +532,7 @@ let rec error_ppformat
          be used because they are stateful (expect in lambdas)\n\
         \      - Tezos.self can't be used because the entry-point does not make sense in \
          a view@.@]"
-        Snippet.pp
+        snippet_pp
         loc
     | `Repl_unexpected -> Format.fprintf f "unexpected error, missing expression?"
     | `Ligo_init_unrecognized_template lststr ->
@@ -549,8 +541,11 @@ let rec error_ppformat
         "Error: Unrecognized template\n\
          Hint: Use the option --template \"TEMPLATE_NAME\" \n\n\
          Please select a template from the following list: \n\
-         - %s"
-      @@ String.concat ~sep:"\n- " lststr)
+         - %s\n\
+         Or check if template exists on LIGO registry.\n"
+      @@ String.concat ~sep:"\n- " lststr
+    | `Ligo_init_registry_template_error e -> Format.fprintf f "@[<hv>@.%s@.@]" e
+    | `Ligo_init_git_template_error e -> Format.fprintf f "@[<hv>@.%s@.@]" e)
 
 
 let rec error_json : Types.all -> Simple_utils.Error.t list =
@@ -687,8 +682,6 @@ let rec error_json : Types.all -> Simple_utils.Error.t list =
     [ make ~stage:"pretty" ~content ]
   | `Cit_pascaligo_tracer e -> List.map ~f:Tree_abstraction.Pascaligo.Errors.error_json e
   | `Cit_cameligo_tracer e -> List.map ~f:Tree_abstraction.Cameligo.Errors.error_json e
-  | `Cit_reasonligo_tracer e ->
-    List.map ~f:Tree_abstraction.Reasonligo.Errors.error_json e
   | `Cit_jsligo_tracer e -> List.map ~f:Tree_abstraction.Jsligo.Errors.error_json e
   | `Self_ast_imperative_tracer e -> [ Self_ast_imperative.Errors.error_json e ]
   | `Desugaring_tracer e -> [ Desugaring.Errors.error_json e ]
@@ -717,7 +710,13 @@ let rec error_json : Types.all -> Simple_utils.Error.t list =
   | `Main_decompile_typed e -> [ Checking.Errors.error_json e ]
   | `Ligo_init_unrecognized_template _lsttr ->
     let content = make_content ~message:"Ligo init tracer" () in
-    [ make ~stage:"typer" ~content ]
+    [ make ~stage:"init" ~content ]
+  | `Ligo_init_registry_template_error _ ->
+    let content = make_content ~message:"Ligo init tracer" () in
+    [ make ~stage:"init" ~content ]
+  | `Ligo_init_git_template_error _ ->
+    let content = make_content ~message:"Ligo init tracer" () in
+    [ make ~stage:"init" ~content ]
   | `Repl_unexpected ->
     let content = make_content ~message:"REPL tracer" () in
     [ make ~stage:"repl" ~content ]

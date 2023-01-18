@@ -67,8 +67,6 @@
   (glob_files error-recovery/simple/jsligo/original/*.jsligo)
   (glob_files error-recovery/simple/pascaligo/*.ligo)
   (glob_files error-recovery/simple/pascaligo/original/*.ligo)
-  (glob_files error-recovery/simple/reasonligo/*.religo)
-  (glob_files error-recovery/simple/reasonligo/original/*.religo)
   (glob_files error-recovery/multiple_errors/*))
  (action
   (run ./get_scope_tests.exe -q -c)))
@@ -85,8 +83,6 @@
   (glob_files error-recovery/simple/jsligo/original/*.jsligo)
   (glob_files error-recovery/simple/pascaligo/*.ligo)
   (glob_files error-recovery/simple/pascaligo/original/*.ligo)
-  (glob_files error-recovery/simple/reasonligo/*.religo)
-  (glob_files error-recovery/simple/reasonligo/original/*.religo)
   (glob_files error-recovery/multiple_errors/*))
  (action
   (run ./get_scope_tests.exe -c)))

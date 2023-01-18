@@ -1,7 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
 module Test.Common.Diagnostics
-  ( DiagnosticSource (..)
-  , simpleTest
+  ( simpleTest
   , treeDoesNotContainNameTest
   , parseDiagnosticsDriver
   ) where
@@ -11,7 +10,7 @@ import System.FilePath ((</>))
 import UnliftIO.Directory (makeAbsolute)
 
 import AST.Parser (collectAllErrors, parseWithScopes)
-import AST.Scope (Fallback, FromCompiler, Standard)
+import AST.Scope (KnownScopingSystem (..), ScopingSystem (..))
 import Diagnostic (Message (..), MessageDetail (..), Severity (..), filterDiagnostics)
 import Range
 
@@ -20,10 +19,6 @@ import Test.Common.FixedExpectations (shouldMatchList)
 import Test.Common.Util (ScopeTester)
 import Test.Tasty.HUnit (Assertion)
 
-data DiagnosticSource impl where
-  CompilerSource :: DiagnosticSource FromCompiler
-  FallbackSource :: DiagnosticSource Fallback
-  StandardSource :: DiagnosticSource Standard
 
 data MessageGroup = MessageGroup
   { mgParserMsgs   :: [Message]
@@ -69,22 +64,23 @@ simpleTest = do
 -- LIGO-474 regression test
 treeDoesNotContainNameTest :: IO DiagnosticTest
 treeDoesNotContainNameTest = do
-  dtFile <- makeAbsolute $ inputDir </> "LIGO-474.religo"
+  dtFile <- makeAbsolute $ inputDir </> "LIGO-474.mligo"
   let
     msgGroup = MessageGroup
       { mgParserMsgs =
-        [ Message (Unexpected "r") SeverityError (mkRange (1, 17) (1, 18) dtFile)
+        [ Message (Unrecognized "") SeverityError (mkRange (2, 7) (2, 7) dtFile)
         ]
       , mgCompilerMsgs =
-        [ Message (FromLIGO "Syntax error #200.") SeverityError (mkRange (1, 14) (1, 16) dtFile)
-        , Message (FromLIGO "Syntax error #233.") SeverityError (mkRange (1, 17) (1, 18) dtFile)
-        , Message
-          (FromLIGO "Reasonligo is depreacted, support will be dropped in a few versions.@")
-          SeverityWarning
-          (mkRange (0, 0) (0, 0) "")
+        [ Message
+          (FromLIGO "Ill-formed type declaration.\nAt this point, one of the following is expected:\n  * the name of the type being defined;\n  * a quoted type parameter, like 'a;\n  * a tuple of quoted type parameters, like ('a, 'b).\n")
+          SeverityError
+          (mkRange (2, 9) (2, 10) dtFile)
         ]
       , mgFallbackMsgs =
-        [ Message (FromLanguageServer "Expected to find a name, but got `42`") SeverityError (mkRange (1, 14) (1, 16) dtFile)
+        [ Message
+          (FromLanguageServer "Expected to find a type name, but got `(* Unrecognized:  *)`")
+          SeverityError
+          (mkRange (2, 7) (2, 7) dtFile)
         ]
       }
   pure DiagnosticTest
@@ -102,17 +98,16 @@ mkRange (a, b) (c, d) = Range (a, b, 0) (c, d, 0)
 -- | Try to parse a file, and check that the proper error messages are generated.
 parseDiagnosticsDriver
   :: forall impl
-   . (HasCallStack, ScopeTester impl)
-  => DiagnosticSource impl
-  -> DiagnosticTest
+   . (HasCallStack, ScopeTester impl, KnownScopingSystem impl)
+  => DiagnosticTest
   -> Assertion
-parseDiagnosticsDriver source (DiagnosticTest file expectedAllMsgs expectedFilteredMsgs) = do
+parseDiagnosticsDriver (DiagnosticTest file expectedAllMsgs expectedFilteredMsgs) = do
   contract <- parseWithScopes @impl file
   let
-    catMsgs (MessageGroup parser fromCompiler fallback) = parser <> case source of
-      CompilerSource -> fromCompiler
-      FallbackSource -> fallback
-      StandardSource -> fallback <> fromCompiler
+    catMsgs (MessageGroup parser fromCompiler fallback) = parser <> case knownScopingSystem @impl of
+      CompilerScopes -> fromCompiler
+      FallbackScopes -> fallback
+      StandardScopes -> fallback <> fromCompiler
     -- FIXME (LIGO-507): Remove duplicated diagnostics.
     msgs = ordNub $ collectAllErrors contract
   msgs `shouldMatchList` catMsgs expectedAllMsgs

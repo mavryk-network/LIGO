@@ -15,26 +15,32 @@ import Language.LSP.Server qualified as S
 import Language.LSP.Types qualified as J
 import StmContainers.Map (newIO)
 
-import AST (Standard)
+import AST (Fallback, FromCompiler, ScopingSystem (..), Standard)
 import ASTMap qualified
 import Cli qualified
 import Config (Config (..))
 import Log (LogT, i)
 import Log qualified
 import RIO.Document qualified (load)
-import RIO.Indexing (indexOptionsPath)
+import RIO.Indexing (IndexOptions (..), indexOptionsPath)
 import RIO.Registration qualified
 import RIO.Types (OpenDocument (..), RIO (..), RioEnv (..))
 
 newRioEnv :: IO RioEnv
 newRioEnv = do
-  reCache <- ASTMap.empty $ RIO.Document.load @Standard
+  reCache <- ASTMap.empty $ \doc -> do
+    scopes <- _cScopingSystem <$> S.getConfig
+    case scopes of
+      FallbackScopes -> RIO.Document.load @Fallback doc
+      StandardScopes -> RIO.Document.load @Standard doc
+      CompilerScopes -> RIO.Document.load @FromCompiler doc
   reOpenDocs <- newIO
-  reIncludes <- newMVar G.empty
+  reIncludes <- newTVarIO G.empty
   reTempFiles <- newIO
-  reIndexOpts <- newEmptyMVar
-  reBuildGraph <- newMVar G.empty
+  reIndexOpts <- newTVarIO IndexOptionsNotSetYet
+  reBuildGraph <- newTVarIO G.empty
   reLigo <- newIORef Nothing
+  reActiveFile <- newTVarIO Nothing
   pure RioEnv {..}
 
 initializeRio :: RIO ()
@@ -43,7 +49,7 @@ initializeRio = do
   RIO.Registration.registerFileWatcher
 
   ligo <- asks reLigo
-  let getRootDir = fmap (indexOptionsPath =<<) (tryReadMVar =<< asks reIndexOpts)
+  let getRootDir = fmap indexOptionsPath . readTVarIO =<< asks reIndexOpts
   writeIORef ligo . Just =<< Cli.startLigoDaemon getRootDir
 
 shutdownRio :: RIO ()
@@ -95,6 +101,11 @@ setConfigFromJSON value =
       unless (_cLigoBinaryPath oldConfig == _cLigoBinaryPath newConfig) do
         $Log.debug [i|Restarting LIGO daemon with #{_cLigoBinaryPath newConfig}|]
         Cli.cleanupLigoDaemon
+
+      -- Scoping system was changed, so we interrupt old scoping threads and clear old cache
+      unless (_cScopingSystem oldConfig == _cScopingSystem newConfig) do
+        ASTMap.reset =<< asks reCache
+
     Error err -> $Log.warning [i|Could not parse config #{err}|]
 
 run :: (S.LanguageContextEnv Config, RioEnv) -> RIO a -> LogT IO a

@@ -109,7 +109,8 @@ let%expect_test _ =
     - test_check exited with value ().
     - test_int_bls exited with value ().
     - test_not exited with value ().
-    - test_chain_id exited with value (). |}]
+    - test_chain_id exited with value ().
+    - test_concats exited with value (). |}]
 
 let%expect_test _ =
   (* This tests a possible regression on the way modules are evaluated. It is possible that the number of element in the environment explodes. *)
@@ -918,6 +919,18 @@ let%expect_test _ =
 
 let () = Caml.Sys.chdir pwd
 let bad_test n = bad_test ("/interpreter_tests/" ^ n)
+
+let%expect_test _ =
+  run_ligo_bad [ "run"; "test"; bad_test "test_capture_meta_type.mligo" ];
+  [%expect
+    {|
+    File "../../test/contracts/negative//interpreter_tests/test_capture_meta_type.mligo", line 12, characters 26-27:
+     11 |
+     12 | let f = fun (_ : unit) -> v.x
+     13 |
+
+    Invalid usage of a Test type: typed_address (unit ,
+    unit) in record[x -> int , y -> typed_address (unit , unit)] cannot be translated to Michelson. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_random.mligo" ];

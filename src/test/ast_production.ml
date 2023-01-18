@@ -2,27 +2,29 @@ open Simple_utils.Trace
 open Test_helpers
 open Main_errors
 
-let wrap_test_w name f =
+let wrap_test_w ~no_colour name f =
   try_with
     (fun ~raise ~catch ->
       let () = f ~raise () in
       List.iter ~f:(fun w ->
-          Format.printf "%a\n" (Main_warnings.pp ~display_format:Dev) w)
+          Format.printf "%a\n" (Main_warnings.pp ~display_format:Dev ~no_colour) w)
       @@ catch.warnings ())
     (fun ~catch error ->
       let value = Error (test_err_tracer name error) in
       let format = Display.bind_format test_format Formatter.error_format in
       let disp = Simple_utils.Display.Displayable { value; format } in
-      let s = Simple_utils.Display.convert ~display_format:Dev disp in
+      let s = Simple_utils.Display.convert ~display_format:Dev ~no_colour disp in
       List.iter ~f:(fun w ->
-          Format.printf "%a\n" (Main_warnings.pp ~display_format:Dev) w)
+          Format.printf "%a\n" (Main_warnings.pp ~display_format:Dev ~no_colour) w)
       @@ catch.warnings ();
       Format.printf "%s\n" s;
       Stdlib.raise Alcotest.Test_error)
 
 
 let test_case name test =
-  Test (Alcotest.test_case name `Quick @@ fun () -> wrap_test_w name test)
+  let options = Test_helpers.options in
+  let no_colour = options.tools.no_colour in
+  Test (Alcotest.test_case name `Quick @@ fun () -> wrap_test_w ~no_colour name test)
 
 
 let comp_file_ ~raise f test syntax () =
@@ -138,7 +140,6 @@ let typed_prod =
     ; type_file "modules_and_free_vars/nested_modules.mligo"
     ; type_file "modules_and_free_vars/module_with_free_vars.mligo"
     ; type_file "modules_and_free_vars/nested_modules_with_free_vars.mligo"
-    ; type_file "deep_pattern_matching/pm_test.religo"
     ; type_tfile "pattern_match4.jsligo"
     ; type_file "layout.pligo"
     ; lex_file "add_semi.jsligo" (* not sure about this one *)
@@ -157,12 +158,10 @@ let core_prod =
     ; comp_file "vars_consts/multiple_vars.ligo"
     ; comp_file "vars_consts/multiple_vars.jsligo"
     ; comp_file "letin.mligo"
-    ; comp_file "letin.religo"
     ; comp_file "type_puning.ligo"
     ; comp_file "polymorphism/annotate.mligo"
     ; comp_file "deep_pattern_matching/list_pattern.ligo"
     ; comp_file "deep_pattern_matching/list_pattern.mligo"
-    ; comp_file "deep_pattern_matching/list_pattern.religo"
     ]
 
 
@@ -227,12 +226,4 @@ let contract_prod =
     ; compile_file_ "top_level_patterns/contracts/pascaligo/ticket_tuple.ligo"
     ; compile_file_ "top_level_patterns/contracts/pascaligo/tuple_record.ligo"
     ; compile_file_ "top_level_patterns/contracts/pascaligo/tuple.ligo"
-    ; compile_file_ "top_level_patterns/contracts/reasonligo/nested_record.religo"
-    ; compile_file_ "top_level_patterns/contracts/reasonligo/nested_tuple.religo"
-    ; compile_file_ "top_level_patterns/contracts/reasonligo/record_tuple.religo"
-    ; compile_file_ "top_level_patterns/contracts/reasonligo/record.religo"
-    ; compile_file_ "top_level_patterns/contracts/reasonligo/ticket_record.religo"
-    ; compile_file_ "top_level_patterns/contracts/reasonligo/ticket_tuple.religo"
-    ; compile_file_ "top_level_patterns/contracts/reasonligo/tuple_record.religo"
-    ; mini_c_file "top_level_patterns/contracts/reasonligo/tuple.religo"
     ]

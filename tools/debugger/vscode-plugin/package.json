@@ -4,7 +4,7 @@
     "description": "VSCode debugger extension for LIGO.",
     "author": "Serokell",
     "license": "MIT",
-    "version": "0.0.5",
+    "version": "0.0.7",
     "repository": {
         "type": "git",
         "url": "https://gitlab.com/ligolang/ligo"
@@ -23,9 +23,10 @@
     "activationEvents": [
         "onDebugResolve:ligo",
         "onDebugResolve:mligo",
-        "onDebugResolve:religo",
-        "onDebugResolve:jsligo"
+        "onDebugResolve:jsligo",
+        "onCommand:extension.ligo-debugger.switchSteppingGranularity"
     ],
+
     "icon": "logo.png",
     "main": "./out/extension",
     "contributes": {
@@ -47,9 +48,6 @@
             },
             {
                 "language": "mligo"
-            },
-            {
-                "language": "religo"
             },
             {
                 "language": "jsligo"
@@ -76,15 +74,6 @@
                 ]
             },
             {
-                "id": "religo",
-                "aliases": [
-                    "ReasonLIGO"
-                ],
-                "extensions": [
-                    ".religo"
-                ]
-            },
-            {
                 "id": "jsligo",
                 "aliases": [
                     "JsLIGO"
@@ -101,7 +90,6 @@
                 "languages": [
                     "ligo",
                     "mligo",
-                    "religo",
                     "jsligo"
                 ],
                 "configurationAttributes": {
@@ -269,6 +257,13 @@
                         }
                     }
                 ]
+            }
+        ],
+        "commands": [
+            {
+                "command": "extension.ligo-debugger.switchSteppingGranularity",
+                "title": "Debug: Switch stepping granularity",
+                "description": "Changes granularity used by StepIn and other buttons"
             }
         ]
     },

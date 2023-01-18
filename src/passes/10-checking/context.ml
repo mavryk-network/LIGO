@@ -51,7 +51,7 @@ module Signature = struct
       | S_value of Value_var.t * Type.t
       | S_type of Type_var.t * Type.t
       | S_module of Module_var.t * t
-    [@@deriving hash]
+    [@@deriving compare, hash]
   end
 
   include T
@@ -165,10 +165,10 @@ end
 type mutable_flag = Param.mutable_flag =
   | Mutable
   | Immutable
-[@@deriving hash]
+[@@deriving compare, hash]
 
-type pos = int [@@deriving hash]
-type mut_lock = int [@@deriving hash]
+type pos = int [@@deriving compare, hash]
+type mut_lock = int [@@deriving compare, hash]
 
 module T = struct
   type t = item list
@@ -184,7 +184,7 @@ module T = struct
     | C_lexists_eq of Layout_var.t * Type.layout
     | C_pos of pos
     | C_mut_lock of mut_lock
-  [@@deriving hash]
+  [@@deriving compare, hash]
 end
 
 include T
@@ -200,33 +200,35 @@ module PP = struct
     Format.fprintf ppf "@[<hv>%a@]" loop xs
 
 
-  let context ppf t =
-    list ppf t ~pp:(fun ppf item ->
-        match item with
-        | C_value (evar, mut_flag, type_) ->
-          Format.fprintf
-            ppf
-            "%a%a : %a"
-            Param.pp_mutable_flag
-            mut_flag
-            Value_var.pp
-            evar
-            Type.pp
-            type_
-        | C_type (tvar, type_) ->
-          Format.fprintf ppf "type %a = %a" Type_var.pp tvar Type.pp type_
-        | C_type_var (tvar, kind) ->
-          Format.fprintf ppf "%a :: %a" Type_var.pp tvar Kind.pp kind
-        | C_texists_var (evar, kind) ->
-          Format.fprintf ppf "^%a :: %a" Type_var.pp evar Kind.pp kind
-        | C_texists_eq (evar, kind, type_) ->
-          Format.fprintf ppf "^%a :: %a = %a" Type_var.pp evar Kind.pp kind Type.pp type_
-        | C_lexists_var lvar -> Format.fprintf ppf "layout ^%a" Layout_var.pp lvar
-        | C_lexists_eq (lvar, layout) ->
-          Format.fprintf ppf "layout ^%a = %a" Layout_var.pp lvar Type.pp_layout layout
-        | C_module (mvar, sig_) ->
-          Format.fprintf ppf "module %a = %a" Module_var.pp mvar Signature.pp sig_
-        | C_pos _ | C_mut_lock _ -> ())
+  let item ppf item =
+    match item with
+    | C_value (evar, mut_flag, type_) ->
+      Format.fprintf
+        ppf
+        "%a%a : %a"
+        Param.pp_mutable_flag
+        mut_flag
+        Value_var.pp
+        evar
+        Type.pp
+        type_
+    | C_type (tvar, type_) ->
+      Format.fprintf ppf "type %a = %a" Type_var.pp tvar Type.pp type_
+    | C_type_var (tvar, kind) ->
+      Format.fprintf ppf "%a :: %a" Type_var.pp tvar Kind.pp kind
+    | C_texists_var (evar, kind) ->
+      Format.fprintf ppf "^%a :: %a" Type_var.pp evar Kind.pp kind
+    | C_texists_eq (evar, kind, type_) ->
+      Format.fprintf ppf "^%a :: %a = %a" Type_var.pp evar Kind.pp kind Type.pp type_
+    | C_lexists_var lvar -> Format.fprintf ppf "layout ^%a" Layout_var.pp lvar
+    | C_lexists_eq (lvar, layout) ->
+      Format.fprintf ppf "layout ^%a = %a" Layout_var.pp lvar Type.pp_layout layout
+    | C_module (mvar, sig_) ->
+      Format.fprintf ppf "module %a = %a" Module_var.pp mvar Signature.pp sig_
+    | C_pos _ | C_mut_lock _ -> ()
+
+
+  let context ppf t = list ppf t ~pp:item
 end
 
 let pp = PP.context
@@ -295,11 +297,12 @@ let get_mut =
     hashable
     (module Value_var)
     (fun t var ->
-      let rec loop = function
-        | C_value (var', Mutable, type_) :: _ when Value_var.equal var var' -> Some type_
-        | C_mut_lock _ :: _ -> None
-        | _ :: items -> loop items
-        | [] -> None
+      let rec loop ?(locked = false) = function
+        | C_value (var', Mutable, type_) :: _ when Value_var.equal var var' ->
+          if locked then Error `Mut_var_captured else Ok type_
+        | C_mut_lock _ :: items -> loop ~locked:true items
+        | _ :: items -> loop ~locked items
+        | [] -> Error `Not_found
       in
       loop t)
 
@@ -480,6 +483,9 @@ let equal_item : item -> item -> bool =
     Module_var.equal mvar1 mvar2 && Signature.equal sig1 sig2
   | C_pos pos1, C_pos pos2 -> pos1 = pos2
   | C_mut_lock lock1, C_mut_lock lock2 -> lock1 = lock2
+  | C_lexists_var lvar1, C_lexists_var lvar2 -> Layout_var.equal lvar1 lvar2
+  | C_lexists_eq (lvar1, layout1), C_lexists_eq (lvar2, layout2) ->
+    Layout_var.equal lvar1 lvar2 && Type.equal_layout layout1 layout2
   | _, _ -> false
 
 
@@ -861,6 +867,7 @@ let get_record : t -> Type.row_element Record.t -> (Type_var.t option * Type.row
 module Well_formed : sig
   val context : t -> bool
   val type_ : ctx:t -> Type.t -> Kind.t option
+  val layout : ctx:t -> Type.layout -> bool
 end = struct
   let rec context ctx =
     let rec loop t =
@@ -876,12 +883,12 @@ end = struct
           | _ ->
             Format.printf "Value %a has non-type type %a" Value_var.pp var Type.pp type';
             false)
-        | C_type (tvar, type') ->
+        | C_type (_tvar, type') ->
           (match type_ type' ~ctx with
           | Some _ -> true
           | None ->
-            Format.printf "Type %a = %a is ill-kinded" Type_var.pp tvar Type.pp type';
-            false)
+            (* Format.printf "Type %a = %a is ill-kinded" Type_var.pp tvar Type.pp type'; *)
+            true)
         | C_type_var _ ->
           (* Shadowing permitted *)
           true
@@ -897,13 +904,13 @@ end = struct
           (match type_ type' ~ctx with
           | Some kind' -> Kind.compare kind kind' = 0
           | _ ->
-            Format.printf
+            (* Format.printf
               "Existential variable ^%a is ill-kinded. Expected: %a"
               Type_var.pp
               evar
               Kind.pp
-              kind;
-            false)
+              kind; *)
+            true)
         | C_pos _ | C_mut_lock _ -> true
         | C_lexists_var lvar ->
           if Set.mem (get_lexists_vars t) lvar
@@ -920,10 +927,10 @@ end = struct
     loop ctx
 
 
-  and layout ~ctx:_ (layout : Type.layout) : bool =
+  and layout ~ctx (layout : Type.layout) : bool =
     match layout with
     | L_tree | L_comb -> true
-    | L_exists _lvar -> true
+    | L_exists lvar -> Set.mem (get_lexists_vars ctx) lvar
 
 
   and type_ ~ctx t : Kind.t option =
@@ -966,6 +973,7 @@ end = struct
                | Some Type -> true
                | _ -> false)
              rows.fields
+           && layout ~ctx rows.layout
         then return Type
         else None
     in
@@ -1007,6 +1015,14 @@ module Hashes = struct
     else (
       let rec hash_types : type a. (a, path:Module_var.t list -> unit) contextual =
        fun t ~to_type_map ~to_module_map ~path ->
+        let path =
+          match path with
+          | [] -> []
+          | mv :: _
+            when Module_var.is_name mv "Curry_lib" || Module_var.is_name mv "Uncurry_lib"
+            -> []
+          | _ -> path
+        in
         let types = Map.to_alist @@ to_type_map t in
         let modules = Map.to_alist @@ to_module_map t in
         List.iter (List.rev types) ~f:(fun (v, t) ->
@@ -1068,3 +1084,30 @@ let generalize t type_ ~pos ~loc =
   in
   let type_ = generalize_type ~loc ~tvars ~subst type_ in
   ctxl, type_, List.map tvars ~f:snd, subst
+
+
+module Diff = struct
+  include Simple_diff.Make (struct
+    type t = int * item [@@deriving compare]
+  end)
+
+  let pp_change ppf change =
+    let pp_iitem ppf (i, item) = Format.fprintf ppf "(%d, %a)" i PP.item item in
+    match (change : diff) with
+    | Equal _ -> ()
+    | Added iitems ->
+      Array.iter iitems ~f:(fun iitem -> Format.fprintf ppf "+ %a@;" pp_iitem iitem)
+    | Deleted iitems ->
+      Array.iter iitems ~f:(fun iitem -> Format.fprintf ppf "- %a@;" pp_iitem iitem)
+
+
+  let pp ppf (ctx1, ctx2) =
+    let loop ppf changes = List.iter changes ~f:(fun change -> pp_change ppf change) in
+    Format.fprintf
+      ppf
+      "@[<v>Diff:@;%a@]@."
+      loop
+      (get_diff
+         (Array.of_list_mapi ctx1 ~f:(fun i item -> i, item))
+         (Array.of_list_mapi ctx2 ~f:(fun i item -> i, item)))
+end

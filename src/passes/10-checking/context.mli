@@ -68,7 +68,7 @@ val get_value
   -> (mutable_flag * Type.t, [> `Mut_var_captured | `Not_found ]) result
 
 val get_imm : t -> Value_var.t -> Type.t option
-val get_mut : t -> Value_var.t -> Type.t option
+val get_mut : t -> Value_var.t -> (Type.t, [> `Mut_var_captured | `Not_found ]) result
 val get_type : t -> Type_var.t -> Type.t option
 val get_module : t -> Module_var.t -> Signature.t option
 val get_type_vars : t -> Type_var.Set.t
@@ -113,6 +113,7 @@ val get_sum : t -> Label.t -> (Type_var.t * Type_var.t list * Type.t * Type.t) l
 module Well_formed : sig
   val context : t -> bool
   val type_ : ctx:t -> Type.t -> Kind.t option
+  val layout : ctx:t -> Type.layout -> bool
 end
 
 module Apply : sig
@@ -127,4 +128,8 @@ module Hashes : sig
   val set_context : t -> unit
   val hash_types : unit -> unit
   val find_type : Type.t -> (Module_var.t list * Type_var.t) option
+end
+
+module Diff : sig
+  val pp : Format.formatter -> t * t -> unit
 end

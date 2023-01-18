@@ -184,7 +184,6 @@ completeKeyword pos tree@(SomeLIGO dialect _) = do
     keywords = case dialect of
       Caml   -> cameLIGOKeywords
       Pascal -> pascaLIGOKeywords
-      Reason -> reasonLIGOKeywords
       Js     -> jsLIGOKeywords
 
 completeFieldTypeAware
@@ -287,6 +286,7 @@ completeFromTSpec TypeDeclSpecifics {_tdsInit} = case _tdsInit of
   ArrowType _ _ -> CiFunction
   VariableType _ -> CiTypeParameter
   ParenType t -> completeFromTSpec t
+  UnresolvedType -> CiVariable
 
 defCompletionItem :: Text -> CompletionItem
 defCompletionItem label = CompletionItem

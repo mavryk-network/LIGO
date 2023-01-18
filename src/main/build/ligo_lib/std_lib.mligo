@@ -1,5 +1,8 @@
 let failwith (type a b) = [%Michelson ({|{ FAILWITH }|} : a -> b)]
 
+type bool = True | False
+type 'a option = Some of 'a | None
+
 module Tezos = struct
 
   let get_balance (_u : unit) : tez = [%michelson ({| { BALANCE } |} : tez)]
@@ -240,6 +243,7 @@ end
 
 module String = struct
   let length (b : string) : nat = [%external ("SIZE", b)]
+  let concats (bs : string list) : string = [%external ("CONCATS", bs)]
 
 #if CURRY
   let concat (b1 : string) (b2 : string) : string = [%external ("CONCAT", b1, b2)]
@@ -269,6 +273,7 @@ module Option = struct
 end
 
 module Bytes = struct
+  let concats (bs : bytes list) : bytes = [%external ("CONCATS", bs)]
   let pack (type a) (v : a) : bytes = [%Michelson ({| { PACK } |} : a -> bytes)] v
   let unpack (type a) (b : bytes) : a option = [%Michelson (({| { UNPACK (type $0) } |} : bytes -> a option), (() : a))] b
   let length (b : bytes) : nat = [%external ("SIZE", b)]
@@ -308,8 +313,8 @@ let assert_some (type a) (v : a option) : unit = match v with | None -> failwith
 let assert_none (type a) (v : a option) : unit = match v with | None -> () | Some _ -> failwith "failed assert none"
 let abs (i : int) : nat = [%Michelson ({| { ABS } |} : int -> nat)] i
 let is_nat (i : int) : nat option = [%Michelson ({| { ISNAT } |} : int -> nat option)] i
-let true : bool = [%external ("TRUE")]
-let false : bool = [%external ("FALSE")]
+let true : bool = True
+let false : bool = False
 let unit : unit = [%external ("UNIT")]
 let int (type a) (v : a) : a external_int = [%Michelson ({| { INT } |} : a -> a external_int)] v
 let ignore (type a) (_ : a) : unit = ()

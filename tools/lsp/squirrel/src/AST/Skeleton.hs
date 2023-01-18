@@ -11,7 +11,9 @@ module AST.Skeleton
   , Tree'
   , RawLigoList
   , Lang (..)
-  , reasonLIGOKeywords, cameLIGOKeywords, pascaLIGOKeywords, jsLIGOKeywords
+  , allLangs
+  , langExtension
+  , cameLIGOKeywords, pascaLIGOKeywords, jsLIGOKeywords
   , Name (..), QualifiedName (..), Pattern (..), RecordFieldPattern (..)
   , Constant (..), FieldAssignment (..), MapBinding (..), Alt (..), Expr (..)
   , Collection (..), TField (..), Variant (..), Type (..), Binding (..)
@@ -19,7 +21,7 @@ module AST.Skeleton
   , Verbatim (..), Error (..), Ctor (..), NameDecl (..), Preprocessor (..)
   , PreprocessorCommand (..), ModuleName (..), ModuleAccess (..), Attr (..)
   , QuotedTypeParams (..), PatchableExpr (..), CaseOrDefaultStm (..)
-
+  , pattern ErrorTypeUnresolved
   , getLIGO
   , setLIGO
   , nestedLIGO
@@ -36,7 +38,7 @@ import Text.Show qualified
 import Duplo.Pretty (PP (..), Pretty (..))
 import Duplo.Tree (Tree)
 
-import Diagnostic (MessageDetail)
+import Diagnostic (MessageDetail (..))
 import Product (Product)
 
 data SomeLIGO xs = SomeLIGO Lang (LIGO xs)
@@ -62,7 +64,7 @@ instance Pretty (LIGO xs) => Pretty (SomeLIGO xs) where
 
 -- | The AST for Pascali... wait. It is, em, universal one.
 --
---   TODO: Rename; add stuff if CamelLIGO/ReasonLIGO needs something.
+--   TODO: Rename; add stuff if CamelLIGO needs something.
 type LIGO xs = Tree' RawLigoList xs
 type Tree' fs xs = Tree fs (Product xs)
 
@@ -77,9 +79,21 @@ type RawLigoList =
 data Lang
   = Pascal
   | Caml
-  | Reason
   | Js
-  deriving stock Show
+  deriving stock (Show, Eq, Enum, Bounded)
+
+allLangs :: [Lang]
+allLangs = [minBound .. maxBound]
+
+-- | Get file extension by LIGO language.
+--
+-- If the language matches multiple file extensions, a specific one of them
+-- will be returned.
+langExtension :: Lang -> FilePath
+langExtension = \case
+  Pascal -> ".pligo"
+  Caml -> ".mligo"
+  Js -> ".jsligo"
 
 pascaLIGOKeywords :: HashSet Text
 pascaLIGOKeywords = HashSet.fromList
@@ -94,12 +108,6 @@ cameLIGOKeywords = HashSet.fromList
   [ "in", "struct", "begin", "end", "match", "with", "rec", "if", "then", "else"
   , "let", "module", "type", "of", "fun", "or", "mod", "land", "lor", "lxor"
   , "lsl", "lsr", "not"
-  ]
-
-reasonLIGOKeywords :: HashSet Text
-reasonLIGOKeywords = HashSet.fromList
-  [ "rec", "if", "else", "switch", "let", "module", "type", "or", "mod", "land"
-  , "lor", "lxor", "lsl", "lsr"
   ]
 
 jsLIGOKeywords :: HashSet Text
@@ -117,10 +125,10 @@ newtype RawContract it
   deriving Eq1 via DefaultEq1DeriveFor1List
 
 data Binding it
-  = BFunction     IsRec it [it] [it] (Maybe it) it -- ^ (Name) (TypeVariableName) (Parameters) (Type) (Expr)
+  = BFunction     IsRec it [it] [it] (Maybe it) it -- ^ (IsRec) (Name) (TypeVariableName) (Parameters) (Type) (Expr)
   | BParameter    it (Maybe it) -- ^ (Pattern) (Type)
   | BVar          it [it] (Maybe it) (Maybe it) -- ^ (Pattern) (TypeVariableName) (Type) (Expr)
-  | BConst        it [it] (Maybe it) (Maybe it) -- ^ (Pattern) (TypeVariableName) (Type) (Expr)
+  | BConst        IsRec it [it] (Maybe it) (Maybe it) -- ^ (IsRec) (Pattern) (TypeVariableName) (Type) (Expr)
   | BTypeDecl     it (Maybe it) it -- ^ (Name) (Maybe (QuotedTypeParams)) (Type)
   | BAttribute    it -- ^ (Name)
   | BInclude      it
@@ -134,6 +142,11 @@ data QuotedTypeParams it
   | QuotedTypeParams [it]  -- ^ [TypeVariableName]
   deriving stock (Generic, Eq, Functor, Foldable, Traversable)
 
+-- | Whether a binding is recursive ('True') or not ('False'). Some dialects such
+-- as PascaLIGO and CameLIGO allow the user to specify whether a function should
+-- be recursive or not using the @recursive@ or @rec@ keywords, respectively.
+--
+-- In JsLIGO, functions are always recursive.
 type IsRec = Bool
 
 data Type it
@@ -271,7 +284,7 @@ data RecordFieldPattern it
   deriving stock (Generic, Eq, Functor, Foldable, Traversable)
 
 data ModuleAccess it = ModuleAccess
-  { maPath  :: [it] -- [Name]
+  { maPath  :: [it] -- [ModuleName]
   , maField :: it -- Accessor
   }
   deriving stock (Generic, Eq, Functor, Foldable, Traversable)
@@ -326,6 +339,9 @@ newtype Attr it = Attr Text
 
 data Error it = Error MessageDetail [it]
   deriving stock (Generic, Eq, Functor, Foldable, Traversable)
+
+pattern ErrorTypeUnresolved :: Error it
+pattern ErrorTypeUnresolved = Error (FromLIGO "unresolved type given") []
 
 --------------------------------------------------------------------------------
 

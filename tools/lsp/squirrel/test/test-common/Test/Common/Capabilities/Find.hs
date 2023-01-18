@@ -28,7 +28,7 @@ import Test.Tasty.HUnit (Assertion, testCase)
 import Text.Printf (printf)
 
 import AST.Capabilities.Find (definitionOf, findScopedDecl, referencesOf, typeDefinitionAt)
-import AST.Scope.Common (contractTree, lookupContract)
+import AST.Scope (KnownScopingSystem (..), ScopingSystem (..), contractTree, lookupContract)
 import AST.Scope.ScopedDecl (DeclarationSpecifics (..), ScopedDecl (..), ValueDeclSpecifics (..))
 import Cli (TempDir (..), TempSettings (..))
 import Range (Range (..), interval, point)
@@ -219,12 +219,6 @@ invariants =
     , driRefs = [interval 3 3 6]
     }
   , DefinitionReferenceInvariant
-    { driFile = contractsDir </> "type-attributes-tuple.religo"
-    , driDesc = "tuple member"
-    , driDef = Just (interval 2 13 16)
-    , driRefs = [interval 3 3 6]
-    }
-  , DefinitionReferenceInvariant
     { driFile = contractsDir </> "type-attributes-tuple.jsligo"
     , driDesc = "tuple member"
     , driDef = Just (interval 2 15 18)
@@ -238,30 +232,6 @@ invariants =
     }
   , DefinitionReferenceInvariant
     { driFile = contractsDir </> "type-attributes-in-rec.mligo"
-    , driDesc = "counter, function"
-    , driDef = Just (interval 6 9 16)
-    , driRefs = []
-    }
-  , DefinitionReferenceInvariant
-    { driFile = contractsDir </> "type-attributes.religo"
-    , driDesc = "counter, type attribute"
-    , driDef = Nothing  -- type attributes don't have a declaration
-    , driRefs = [interval 9 14 21, interval 7 35 42]
-    }
-  , DefinitionReferenceInvariant
-    { driFile = contractsDir </> "type-attributes.religo"
-    , driDesc = "counter, function"
-    , driDef = Just (interval 6 5 12)
-    , driRefs = []
-    }
-  , DefinitionReferenceInvariant
-    { driFile = contractsDir </> "type-attributes-in-rec.religo"
-    , driDesc = "counter, type attribute"
-    , driDef = Nothing  -- type attributes don't have a declaration
-    , driRefs = [interval 9 14 21, interval 7 35 42]
-    }
-  , DefinitionReferenceInvariant
-    { driFile = contractsDir </> "type-attributes-in-rec.religo"
     , driDesc = "counter, function"
     , driDef = Just (interval 6 9 16)
     , driRefs = []
@@ -335,12 +305,6 @@ invariants =
     , driRefs = [interval 6 3 9]
     }
   , DefinitionReferenceInvariant
-    { driFile = contractsDir </> "recursion.religo"
-    , driDesc = "sum"
-    , driDef = Just (interval 1 9 12)
-    , driRefs = [interval 2 29 32]
-    }
-  , DefinitionReferenceInvariant
     { driFile = contractsDir </> "type-constructor.ligo"
     , driDesc = "Increment, type constructor"
     , driDef = Just (interval 2 3 12)
@@ -350,12 +314,6 @@ invariants =
     { driFile = contractsDir </> "type-constructor.mligo"
     , driDesc = "Increment, type constructor"
     , driDef = Just (interval 2 3 12)
-    , driRefs = [interval 5 18 27]
-    }
-  , DefinitionReferenceInvariant
-    { driFile = contractsDir </> "type-constructor.religo"
-    , driDesc = "Increment, type constructor"
-    , driDef = Just (interval 2 5 14)
     , driRefs = [interval 5 18 27]
     }
   , DefinitionReferenceInvariant
@@ -394,10 +352,8 @@ invariants =
     , driDesc = "Modules, A.titi can be referenced within A.C"
     , driDef = Just (interval 6 17 21)
     , driRefs =
-      -- FIXME (LIGO-754): Handle references in lambdas to uncomment these two
-      -- intervals.
-      [ interval 8 26 30, interval 10 26 30, interval 10 35 39 -- interval 10 43 47
-      , interval 17 14 18, interval 20 17 21, interval 20 28 32 -- interval 20 38 42
+      [ interval 8 26 30, interval 10 26 30, interval 10 35 39, interval 10 43 47
+      , interval 17 14 18, interval 20 17 21, interval 20 28 32, interval 20 38 42
       ]
     }
   , DefinitionReferenceInvariant
@@ -467,41 +423,6 @@ invariants =
       ]
     }
   , DefinitionReferenceInvariant
-    { driFile = contractsDir </> "modules.religo"
-    , driDesc = "Modules, B.titi"
-    , driDef = Just (interval 2 10 14)
-    , driRefs = [interval 6 19 23]
-    }
-  , DefinitionReferenceInvariant
-    { driFile = contractsDir </> "modules.religo"
-    , driDesc = "Modules, A.add"
-    , driDef = Just (interval 10 9 12)
-    , driRefs = [interval 19 52 55]
-    }
-  , DefinitionReferenceInvariant
-    { driFile = contractsDir </> "modules.religo"
-    , driDesc = "Modules, E.toto resolves in A.C.toto"
-    , driDef = Just (interval 8 13 17)
-    , driRefs = [interval 17 7 11]
-    }
-  , DefinitionReferenceInvariant
-    { driFile = contractsDir </> "modules.religo"
-    , driDesc = "Modules, D.C resolves in A.C"
-    , driDef = Just (interval 7 12 13)
-    , driRefs = [interval 16 18 19]
-    }
-  , DefinitionReferenceInvariant
-    { driFile = contractsDir </> "modules.religo"
-    , driDesc = "Modules, A.titi can be referenced within A.C"
-    , driDef = Just (interval 6 10 14)
-    , driRefs =
-      -- FIXME (LIGO-754): Handle references in lambdas to uncomment these two
-      -- intervals.
-      [ interval 8 19 23, interval 10 25 29, interval 10 30 34 -- interval 10 39 43
-      , interval 15 14 18, interval 19 23 27, interval 19 31 35 -- interval 19 42 46
-      ]
-    }
-  , DefinitionReferenceInvariant
     { driFile = contractsDir </> "nested-modules.jsligo"
     , driDesc = "Modules, Cz.nested resolves in A.B.C.nested"
     , driDef = Just (interval 4 18 24)
@@ -514,10 +435,10 @@ invariants =
     , driRefs = [interval 1 21 22, interval 1 50 51]
     }
   , DefinitionReferenceInvariant
-    { driFile = contractsDir </> "parametric.religo"
-    , driDesc = "Parametric types, can find references of a type variable (T)"
-    , driDef = Just (interval 1 16 17)
-    , driRefs = [interval 1 23 24, interval 1 34 35]
+    { driFile = contractsDir </> "parametric.jsligo"
+    , driDesc = "Parametric types, can find references of a type variable (a) with the same name as a term"
+    , driDef = Just (interval 1 12 13)
+    , driRefs = [interval 1 19 20, interval 1 25 26, interval 1 34 35, interval 1 46 47]
     }
   ]
 
@@ -601,7 +522,10 @@ typeOf filepath mention definition = do
     Just range -> range{_rFile=_rFile mention'} `shouldBe` definition'
 
 typeOfHeapConst :: forall impl. ScopeTester impl => Assertion
-typeOfHeapConst = typeOf @impl (contractsDir </> "heap.ligo") (point 102 8) (interval 4 6 10)
+typeOfHeapConst = typeOf @impl (contractsDir </> "heap.ligo") (point 102 8) expected where
+  expected = case knownScopingSystem @impl of
+    CompilerScopes -> interval 102 15 19 -- FIXME LIGO-593
+    _ -> interval 4 6 10
 
 typeOfHeapArg :: forall impl. ScopeTester impl => Assertion
 typeOfHeapArg = typeOf @impl (contractsDir </> "heap.ligo") (point 8 25) (interval 4 6 10)

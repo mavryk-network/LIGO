@@ -1,4 +1,6 @@
--- | ligo version: 0.51.0
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
+-- | ligo version: 0.59.0
 -- | The definition of type as is represented in ligo JSON output
 
 module Cli.Json
@@ -16,7 +18,7 @@ module Cli.Json
   , LigoTypeContent (..)
   , LigoTypeExpression (..)
   , LigoTableField (..)
-  , LigoTypeVariable (..)
+  , LigoVariable (..), LigoTypeVariable, LigoModuleVariable
   , LigoTypeSum
   , LigoTypeRecord
   , LigoTypeArrow (..)
@@ -32,16 +34,18 @@ module Cli.Json
   , fromLigoRangeOrDef
   , fromLigoErrorToMsg
   , fromLigoTypeFull
-  , mkLigoError
-  )
-where
+  ) where
 
 import Prelude hiding (Element, Product (..), sum)
+import Unsafe qualified
 
 import Control.Lens (_head)
 import Data.Aeson.KeyMap (toAscList)
 import Data.Aeson.Types hiding (Error)
 import Data.Char (isUpper, toLower)
+import Data.Data
+  (ConstrRep (IntConstr), Data, constrRep, dataTypeOf, gunfold, mkIntType, mkIntegralConstr,
+  toConstr)
 import Data.Foldable qualified (toList)
 import Data.HashMap.Strict qualified as HM
 import Data.List qualified as List
@@ -53,7 +57,7 @@ import Language.LSP.Types qualified as J
 import AST.Skeleton hiding (CString)
 import Diagnostic (Message (..), MessageDetail (FromLIGO), Severity (..))
 import Duplo.Lattice (leq)
-import Duplo.Pretty (Pretty (..), text, (<+>))
+import Duplo.Pretty (Pretty (..), text, (<+>), (<.>))
 import Duplo.Tree (Apply, Cofree (..), Element, Tree, extract, inject)
 import Parser (CodeSource (..), Info)
 import Product (Product (..), getElem, putElem)
@@ -232,7 +236,7 @@ data LigoTypeExpression = LigoTypeExpression
     -- | `"orig_var"`
   , _lteOrigVar     :: Maybe LigoTypeVariable
   }
-  deriving stock (Generic, Show, Eq)
+  deriving stock (Generic, Show, Eq, Data)
   deriving anyclass (NFData)
   deriving (FromJSON) via LigoJSON 3 LigoTypeExpression
 
@@ -275,22 +279,22 @@ data LigoTypeContent
   ---- 5th stage specific
   | -- `"t_constant"`
     LTCConstant LigoTypeConstant
-  deriving stock (Generic, Show, Eq)
+  deriving stock (Generic, Show, Eq, Data)
   deriving anyclass (NFData)
 
 data LigoTypeApp = LigoTypeApp
   { _ltaTypeOperator :: LigoTypeVariable
   , _ltaArguments    :: [LigoTypeExpression]
   }
-  deriving stock (Generic, Show, Eq)
+  deriving stock (Generic, Show, Eq, Data)
   deriving anyclass (NFData)
   deriving (FromJSON) via LigoJSON 3 LigoTypeApp
 
 data LigoTypeModuleAccessor = LigoTypeModuleAccessor
-  { _ltmaModulePath :: Value -- TODO not used
-  , _ltmaElement    :: Value -- TODO not used
+  { _ltmaModulePath :: [LigoModuleVariable]
+  , _ltmaElement    :: LigoTypeVariable
   }
-  deriving stock (Generic, Show, Eq)
+  deriving stock (Generic, Show, Eq, Data)
   deriving anyclass (NFData)
   deriving (FromJSON) via LigoJSON 4 LigoTypeModuleAccessor
 
@@ -301,7 +305,7 @@ data LigoTypeTable = LigoTypeTable
   { _lttFields :: HM.HashMap Text LigoTableField
   , _lttLayout  :: Value -- TODO not used
   }
-  deriving stock (Generic, Show, Eq)
+  deriving stock (Generic, Show, Eq, Data)
   deriving anyclass (NFData)
   deriving (FromJSON) via LigoJSON 3 LigoTypeTable
 
@@ -310,7 +314,7 @@ data LigoTypeConstant = LigoTypeConstant
   , _ltcLanguage   :: Text
   , _ltcInjection  :: NonEmpty Text
   }
-  deriving stock (Generic, Show, Eq)
+  deriving stock (Generic, Show, Eq, Data)
   deriving anyclass (NFData)
   deriving (FromJSON) via LigoJSON 3 LigoTypeConstant
 
@@ -319,25 +323,28 @@ data LigoTypeArrow = LigoTypeArrow
   { _ltaType2 :: LigoTypeExpression
   , _ltaType1 :: LigoTypeExpression
   }
-  deriving stock (Generic, Show, Eq)
+  deriving stock (Generic, Show, Eq, Data)
   deriving anyclass (NFData)
   deriving (FromJSON) via LigoJSON 3 LigoTypeArrow
 
-data LigoTypeVariable = LigoTypeVariable
-  { _ltvName      :: Text
-  , _ltvCounter   :: Int
-  , _ltvGenerated :: Bool
-  , _ltvLocation  :: LigoRange
+data LigoVariable = LigoVariable
+  { _lvName      :: Text
+  , _lvCounter   :: Int
+  , _lvGenerated :: Bool
+  , _lvLocation  :: LigoRange
   }
-  deriving stock (Generic, Show, Eq)
+  deriving stock (Generic, Show, Eq, Data)
   deriving anyclass (NFData)
-  deriving (FromJSON) via LigoJSON 3 LigoTypeVariable
+  deriving (FromJSON) via LigoJSON 2 LigoVariable
+
+type LigoTypeVariable = LigoVariable
+type LigoModuleVariable = LigoVariable
 
 data LigoTypeForAll = LigoTypeForAll
   { _ltfaTyBinder :: LigoTypeVariable
   , _ltfaType_    :: LigoTypeExpression
   }
-  deriving stock (Generic, Show, Eq)
+  deriving stock (Generic, Show, Eq, Data)
   deriving anyclass (NFData)
   deriving (FromJSON) via LigoJSON 4 LigoTypeForAll
 
@@ -355,7 +362,7 @@ data LigoTableField = LigoTableField
   , -- | The type itself.
     _ltfAssociatedType :: LigoTypeExpression
   }
-  deriving stock (Generic, Show, Eq)
+  deriving stock (Generic, Show, Eq, Data)
   deriving anyclass (NFData)
   deriving (FromJSON) via LigoJSON 3 LigoTableField
 
@@ -366,14 +373,14 @@ data LigoTableField = LigoTableField
 data LigoRange
   = LRVirtual Text
   | LRFile LigoFileRange
-  deriving stock (Eq, Generic, Show)
+  deriving stock (Eq, Generic, Show, Data)
   deriving anyclass (NFData)
 
 data LigoFileRange = LigoFileRange
   { _lfrStart :: LigoRangeInner
   , _lfrStop  :: LigoRangeInner
   }
-  deriving stock (Eq, Generic, Show)
+  deriving stock (Eq, Generic, Show, Data)
   deriving anyclass (NFData)
   deriving (FromJSON) via LigoJSON 3 LigoFileRange
 
@@ -386,7 +393,7 @@ data LigoRangeInner = LigoRangeInner
   , _lriPointNum :: J.UInt
   , _lriPointBol :: J.UInt
   }
-  deriving stock (Eq, Generic, Show)
+  deriving stock (Eq, Generic, Show, Data)
   deriving anyclass (NFData)
   deriving (FromJSON) via LigoJSON 3 LigoRangeInner
 
@@ -400,13 +407,22 @@ data LigoByte = LigoByte
   , _lbPosBol   :: J.UInt
   , _lbPosCnum  :: J.UInt
   }
-  deriving stock (Eq, Generic, Show)
+  deriving stock (Eq, Generic, Show, Data)
   deriving anyclass (NFData)
   deriving (FromJSON) via LigoJSON 2 LigoByte
 
 ----------------------------------------------------------------------------
 -- Instances
 ----------------------------------------------------------------------------
+
+-- We need this instance to derive @Data@ for types
+-- that contain this @UInt@.
+instance Data J.UInt where
+  gunfold _ z c = case constrRep c of
+    IntConstr x -> z (Unsafe.fromIntegral x)
+    _ -> error "Expected IntConstr in gunfold"
+  toConstr val = mkIntegralConstr (dataTypeOf val) val
+  dataTypeOf _ = mkIntType "UInt"
 
 newtype LigoJSON (n :: Nat) a = LigoJSON a
 
@@ -452,11 +468,11 @@ instance FromJSON LigoRange where
 
 instance Pretty LigoError where
   pp (LigoError status stage (LigoErrorContent msg at)) = mconcat
-    [ pp status <+> " in ", text $ Debug.show stage
+    [ pp status <+> "in" <+> text (Debug.show stage)
     , case at of
-        Nothing -> mempty
-        Just at' -> text "\n\nat: " <> pp (fromLigoRangeOrDef at')
-    , text "\n\n" <> pp msg
+        Nothing -> ":\n"
+        Just at' -> " at" <+> pp (fromLigoRangeOrDef at') <.> ":\n"
+    , pp msg
     ]
 
 ----------------------------------------------------------------------------
@@ -516,6 +532,7 @@ mbFromLigoRange
 fromLigoRangeOrDef :: LigoRange -> Range
 fromLigoRangeOrDef = fromMaybe (point 0 0) . mbFromLigoRange
 
+data NameKind = NameType | NameField FieldKind | NameModule
 data FieldKind = FieldSum | FieldProduct
 
 -- | Reconstruct `LIGO` tree out of `LigoTypeFull`.
@@ -523,7 +540,7 @@ fromLigoTypeFull :: LigoTypeFull -> LIGO Info
 fromLigoTypeFull = \case
   LTFCore lte     -> fromLigoTypeExpression lte
   LTFResolved lte -> fromLigoTypeExpression lte
-  LTFUnresolved   -> mkLigoError defaultState "unresolved type given"
+  LTFUnresolved   -> mkLigoError defaultState "unresolved"
 
 fromLigoTypeExpression :: LigoTypeExpression -> LIGO Info
 fromLigoTypeExpression
@@ -540,7 +557,7 @@ fromLigoType st = \case
     -- See: https://gitlab.com/ligolang/ligo/-/issues/1478
     fromLigoConstant (head _ltcInjection & over _head toLower) _ltcParameters
 
-  LTCVariable variable -> fromLigoPrimitive Nothing $ _ltvName variable
+  LTCVariable variable -> fromLigoVariable variable
 
   LTCRecord record ->
     let record' = fromLigoTable FieldProduct record in
@@ -551,32 +568,39 @@ fromLigoType st = \case
       [] -> mkErr "malformed sum type, please report this as a bug"
       v : vs -> make' (st, TSum (v :| vs))
 
-  LTCSingleton      _ -> mkErr "unsupported type `Singleton`"      -- TODO not used
-  LTCAbstraction    _ -> mkErr "unsupported type `Abstraction`"    -- TODO not used
+  LTCSingleton      _ -> mkErr "unsupported type Singleton"      -- TODO not used
+  LTCAbstraction    _ -> mkErr "unsupported type Abstraction"    -- TODO not used
 
   LTCForAll LigoTypeForAll{..} ->
     let tyVar = fromLigoTypeExpression _ltfaType_ in
     make' (st, TVariable tyVar)
 
-  LTCModuleAccessor _ -> mkErr "unsupported type `ModuleAccessor`" -- TODO not used
+  LTCModuleAccessor LigoTypeModuleAccessor{..} ->
+    let path = map (fromLigoPrimitive NameModule . _lvName) _ltmaModulePath in
+    let element = fromLigoVariable _ltmaElement in
+    make' (st, ModuleAccess path element)
 
   LTCApp LigoTypeApp{..} ->
-    let n = fromLigoPrimitive Nothing (_ltvName _ltaTypeOperator) in
+    let n = fromLigoVariable _ltaTypeOperator in
     let p = fromLigoTypeExpression <$> _ltaArguments in
     make' (st, TApply n p)
 
   LTCArrow LigoTypeArrow {..} ->
     make' (st, TArrow (fromLigoTypeExpression _ltaType1) (fromLigoTypeExpression _ltaType2))
   where
-    fromLigoPrimitive :: Maybe FieldKind -> Text -> LIGO Info
-    fromLigoPrimitive = \case
-      Just FieldSum     -> make' . (st,) . Ctor
-      Just FieldProduct -> make' . (st,) . FieldName
-      Nothing           -> make' . (st,) . TypeName
+    fromLigoVariable :: LigoVariable -> LIGO Info
+    fromLigoVariable = fromLigoPrimitive NameType . _lvName
 
-    fromLigoConstant name [] = fromLigoPrimitive Nothing name
+    fromLigoPrimitive :: NameKind -> Text -> LIGO Info
+    fromLigoPrimitive = \case
+      NameType -> make' . (st,) . TypeName
+      NameField FieldSum -> make' . (st,) . Ctor
+      NameField FieldProduct -> make' . (st,) . FieldName
+      NameModule -> make' . (st,) . ModuleName
+
+    fromLigoConstant name [] = fromLigoPrimitive NameType name
     fromLigoConstant name params =
-      let n = fromLigoPrimitive Nothing name in
+      let n = fromLigoPrimitive NameType name in
       let p = fromLigoTypeExpression <$> params in
       make' (st, TApply n p)
 
@@ -589,7 +613,7 @@ fromLigoType st = \case
       -> LigoTableField
       -> LIGO Info
     fromLigoTableField fieldKind name LigoTableField {..} =
-      let n = fromLigoPrimitive (Just fieldKind) name in
+      let n = fromLigoPrimitive (NameField fieldKind) name in
       -- FIXME: Type annotation is optional.
       let type' = Just $ fromLigoTypeExpression _ltfAssociatedType in
       case fieldKind of

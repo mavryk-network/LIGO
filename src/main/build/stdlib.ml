@@ -54,6 +54,8 @@ module Cache = struct
 end
 
 let compile ~options x =
+  let open Compiler_options in
+  let no_colour : bool = options.tools.no_colour in
   match
     Simple_utils.Trace.to_stdlib_result
       (Ligo_compile.Utils.core_program_string ~options CameLIGO x)
@@ -63,13 +65,15 @@ let compile ~options x =
     let error_msg =
       Format.asprintf
         "%a"
-        (Main_errors.Formatter.error_ppformat ~display_format:Human_readable)
+        (Main_errors.Formatter.error_ppformat ~display_format:Human_readable ~no_colour)
         e
     in
     failwith ("Error compiling the stdlib: " ^ error_msg)
 
 
 let type_ ~options x =
+  let open Compiler_options in
+  let no_colour = options.tools.no_colour in
   match
     Simple_utils.Trace.to_stdlib_result (Ligo_compile.Of_core.typecheck ~options Env x)
   with
@@ -78,7 +82,7 @@ let type_ ~options x =
     let error_msg =
       Format.asprintf
         "%a"
-        (Main_errors.Formatter.error_ppformat ~display_format:Human_readable)
+        (Main_errors.Formatter.error_ppformat ~display_format:Human_readable ~no_colour)
         e
     in
     failwith ("Error typing the stdlib: " ^ error_msg)
@@ -176,16 +180,16 @@ let get ~options : t =
 let select_prelude_core (stx : Syntax_types.t) (lib : t) : Ast_core.program =
   match stx with
   | CameLIGO -> lib.curry.prelude_core
-  | PascaLIGO | JsLIGO | ReasonLIGO -> lib.uncurry.prelude_core
+  | PascaLIGO | JsLIGO -> lib.uncurry.prelude_core
 
 
 let select_prelude_typed (stx : Syntax_types.t) (lib : t) : Ast_typed.program =
   match stx with
   | CameLIGO -> lib.curry.prelude_typed
-  | PascaLIGO | JsLIGO | ReasonLIGO -> lib.uncurry.prelude_typed
+  | PascaLIGO | JsLIGO -> lib.uncurry.prelude_typed
 
 
 let select_lib_typed (stx : Syntax_types.t) (lib : t) : Ast_typed.program =
   match stx with
   | CameLIGO -> lib.curry.content_typed
-  | PascaLIGO | JsLIGO | ReasonLIGO -> lib.uncurry.content_typed
+  | PascaLIGO | JsLIGO -> lib.uncurry.content_typed

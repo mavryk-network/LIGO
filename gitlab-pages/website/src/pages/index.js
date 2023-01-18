@@ -62,10 +62,6 @@ Prism.languages = {
     ],
     punctuation: /\(\.|\.\)|[()\[\]:;,.]/,
   },
-  reasonligo: {
-    ...Prism.languages.reason,
-    comment: [/(^|[^\\])\/\*[\s\S]*?\*\//, /\(\*[\s\S]*?\*\)/, /\/\/.*/],
-  },
   cameligo: {
     ...Prism.languages.ocaml,
     comment: [/(^|[^\\])\/\*[\s\S]*?\*\//, /\(\*[\s\S]*?\*\)/, /\/\/.*/],
@@ -77,8 +73,8 @@ export default function Home() {
   const { siteConfig } = useDocusaurusContext();
   return (
     <Layout
-      title={`Hello from ${siteConfig.title}`}
-      description="Description will go into a meta tag in <head />"
+      title={`${siteConfig.title}`}
+      description="A friendly Smart Contract Language for Tezos"
     >
       <main>
         <div
