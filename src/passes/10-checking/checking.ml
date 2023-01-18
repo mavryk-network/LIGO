@@ -478,7 +478,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
     in
     let%bind _, code = infer code in
     let%bind loc = loc () in
-    let%bind result_type = evaluate_type result_type in
+    let%bind result_type = evaluate_type_with_default_layout result_type in
     let rec build_func_type args =
       match args with
       | [] -> result_type
