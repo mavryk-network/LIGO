@@ -40,6 +40,7 @@ type abs_error =
   | `Concrete_jsligo_wrong_matchee_disc of Region.t
   | `Concrete_jsligo_case_break_disc of Region.t
   | `Concrete_jsligo_not_implemented of Region.t
+  | `Concrete_jsligo_invalid_mutez_type of Raw.type_expr
   ]
 [@@deriving poly_constructor { prefix = "concrete_jsligo_" }]
 
@@ -239,7 +240,14 @@ let error_ppformat
         snippet_pp_lift
         r
     | `Concrete_jsligo_not_implemented r ->
-      Format.fprintf f "@[<hv>%aThis has not been implemented yet. @]" snippet_pp_lift r)
+      Format.fprintf f "@[<hv>%aThis has not been implemented yet. @]" snippet_pp_lift r
+    | `Concrete_jsligo_invalid_mutez_type te ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.mutez is not a valid type in jsligo. @.Hint: mutez is supported only \
+         in literasl e.g. 10 as mutez @]"
+        snippet_pp_lift
+        (Raw.type_expr_to_region te))
 
 
 let error_json : abs_error -> Simple_utils.Error.t =
@@ -445,5 +453,10 @@ let error_json : abs_error -> Simple_utils.Error.t =
   | `Concrete_jsligo_not_implemented r ->
     let message = Format.sprintf "This has not been implemented yet." in
     let location = Location.lift r in
+    let content = make_content ~message ~location () in
+    make ~stage ~content
+  | `Concrete_jsligo_invalid_mutez_type te ->
+    let message = Format.sprintf "mutez is not a valid type in jsligo." in
+    let location = Location.lift (Raw.type_expr_to_region te) in
     let content = make_content ~message ~location () in
     make ~stage ~content

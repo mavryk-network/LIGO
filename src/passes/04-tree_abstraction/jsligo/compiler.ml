@@ -279,6 +279,7 @@ module Compile_type = struct
       let par, _ = r_split par in
       let type_expr = par.inside in
       self type_expr
+    | TVar { value = "mutez"; _ } -> raise.error @@ invalid_mutez_type te
     | TVar var ->
       let name, loc = r_split var in
       let v = Type_var.of_input_var ~loc name in
