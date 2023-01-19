@@ -244,8 +244,8 @@ let error_ppformat
     | `Concrete_jsligo_invalid_mutez_type te ->
       Format.fprintf
         f
-        "@[<hv>%a@.mutez is not a valid type in jsligo. @.Hint: mutez is supported only \
-         in literals, e.g. (10 as mutez) @]"
+        "@[<hv>%a@.\"mutez\" is not a valid type in jsligo. @.Hint: \"mutez\" is \
+         supported only in literals, e.g. (10 as mutez) @]"
         snippet_pp_lift
         (Raw.type_expr_to_region te))
 
@@ -456,7 +456,7 @@ let error_json : abs_error -> Simple_utils.Error.t =
     let content = make_content ~message ~location () in
     make ~stage ~content
   | `Concrete_jsligo_invalid_mutez_type te ->
-    let message = Format.sprintf "mutez is not a valid type in jsligo." in
+    let message = Format.sprintf "\"mutez\" is not a valid type in jsligo." in
     let location = Location.lift (Raw.type_expr_to_region te) in
     let content = make_content ~message ~location () in
     make ~stage ~content

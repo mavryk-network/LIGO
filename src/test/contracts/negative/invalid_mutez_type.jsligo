@@ -1,0 +1,8 @@
+type parameter = int
+type storage = int
+type return_ = [parameter, storage]
+
+const main = ([action, store] : [parameter, storage]) : return_ => {
+ const inc = 1 ;
+ return [list([]), store + (inc as mutez)]
+}

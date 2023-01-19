@@ -3721,6 +3721,18 @@ let%expect_test _ =
     An entrypoint must of type "parameter * storage -> operation list * storage".
   |}]
 
+let%expect_test _ =
+  run_ligo_bad [ "compile"; "contract"; bad_contract "invalid_mutez_type.jsligo" ];
+  [%expect {|
+    File "../../test/contracts/negative/invalid_mutez_type.jsligo", line 7, characters 35-40:
+      6 |  const inc = 1 ;
+      7 |  return [list([]), store + (inc as mutez)]
+      8 | }
+
+    "mutez" is not a valid type in jsligo.
+    Hint: "mutez" is supported only in literasl e.g. 10 as mutez
+  |}]
+
 (* ignore in JsLIGO *)
 let%expect_test _ =
   run_ligo_good
@@ -3849,7 +3861,8 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "disc_union_vbar.jsligo" ];
-  [%expect {|
+  [%expect
+    {|
     { parameter
         (pair (pair (option %lord address) (string %name))
               (or %planetType (or (unit %gaseous) (unit %other)) (unit %tellurian))) ;
