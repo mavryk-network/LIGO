@@ -245,7 +245,7 @@ let error_ppformat
       Format.fprintf
         f
         "@[<hv>%a@.mutez is not a valid type in jsligo. @.Hint: mutez is supported only \
-         in literasl e.g. 10 as mutez @]"
+         in literals, e.g. (10 as mutez) @]"
         snippet_pp_lift
         (Raw.type_expr_to_region te))
 
