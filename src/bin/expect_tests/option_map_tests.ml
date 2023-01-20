@@ -8,7 +8,11 @@ let%expect_test _ =
       storage (option int) ;
       code { CDR ;
              MAP { PUSH string "foo" ; PAIR } ;
-             MAP { CDR } ;
+             LAMBDA (pair string int) int { CDR } ;
+             SWAP ;
+             MAP { DUP 2 ; SWAP ; EXEC } ;
+             SWAP ;
+             DROP ;
              NIL operation ;
              PAIR } } |}]
 
@@ -27,7 +31,11 @@ let%expect_test _ =
       storage (option int) ;
       code { CDR ;
              MAP { PUSH string "foo" ; PAIR } ;
-             MAP { CDR } ;
+             LAMBDA (pair string int) int { CDR } ;
+             SWAP ;
+             MAP { DUP 2 ; SWAP ; EXEC } ;
+             SWAP ;
+             DROP ;
              NIL operation ;
              PAIR } } |}]
 

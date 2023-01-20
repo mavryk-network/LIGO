@@ -5,8 +5,8 @@ let test_lambda_call =
 
 let test_higher_order1 =
   let a = 2 in
-  let foo = fun (i : int) (j : int) (_k : int) -> a + i + j + 0 in
-  let bar = (foo 1 2) in
+  let foo = fun (i : int) -> fun (j : int) -> fun (_k : int) -> a + i + j + 0 in
+  let bar = (foo 1) 2 in
   assert (bar 3 = 5)
 
 let test_higher_order2 =
@@ -20,7 +20,7 @@ let test_higher_order2 =
 
 let test_higher_order3 =
   let foo = fun (i : int) -> i + 1 in
-  let bar = fun (f : int -> int) (i : int) -> f i + 1 in
+  let bar = fun (f : int -> int) -> fun (i : int) -> f i + 1 in
   let baz : int -> int = bar foo
   in
   assert (baz 3 = 5)

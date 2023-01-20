@@ -804,7 +804,7 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_tickets_and_bigmaps.mligo" ];
   [%expect
     {|
-    Success (3504n)
+    Success (3505n)
     Everything at the top-level was executed.
     - test_one exited with value (). |}]
 
@@ -1204,5 +1204,4 @@ let%expect_test _ =
     An uncaught error occured:
     Failwith: "foo"
     Trace:
-    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66 ,
     File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66 |}]

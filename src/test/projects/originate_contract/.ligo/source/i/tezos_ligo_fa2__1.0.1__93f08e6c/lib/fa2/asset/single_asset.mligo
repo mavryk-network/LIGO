@@ -134,7 +134,7 @@ type transfer = transfer_from list
 let transfer : transfer * storage -> operation list * storage =
    fun (t:transfer) (s:storage) ->
    (* This function process the "tx" list. Since all transfer share the same "from_" address, we use a se *)
-   let process_atomic_transfer (from_:address) (ledger, t:Ledger.t * atomic_trans) =
+   let process_atomic_transfer = fun (from_:address) (ledger, t:Ledger.t * atomic_trans) ->
       let {to_;amount=amount_} = t in
       let ()     = Operators.assert_authorisation s.operators from_ in
       let ledger = Ledger.decrease_token_amount_for_user ledger from_ amount_ in
@@ -247,6 +247,6 @@ let update_ops : update_operators -> storage -> operation list * storage =
 
 type parameter = [@layout:comb] | Transfer of transfer | Balance_of of balance_of | Update_operators of update_operators
 let main ((p,s):(parameter * storage)) = match p with
-   Transfer         p -> transfer   p s
-|  Balance_of       p -> balance_of p s
-|  Update_operators p -> update_ops p s
+   Transfer         p -> transfer   (p,s)
+|  Balance_of       p -> balance_of (p,s)
+|  Update_operators p -> update_ops (p,s)
