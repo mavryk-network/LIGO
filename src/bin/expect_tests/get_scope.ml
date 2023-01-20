@@ -4,7 +4,14 @@ let gs s = "../../test/contracts/get_scope_tests/" ^ s
 
 let%expect_test _ =
   run_ligo_good
-    [ "info"; "get-scope"; gs "lambda_letin.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "lambda_letin.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -70,7 +77,14 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good
-    [ "info"; "get-scope"; gs "letin.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "letin.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -130,7 +144,14 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good
-    [ "info"; "get-scope"; gs "lambda.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "lambda.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -173,7 +194,14 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good
-    [ "info"; "get-scope"; gs "match.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "match.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -272,7 +300,15 @@ let%expect_test _ =
     Module definitions: |}]
 
 let%expect_test _ =
-  run_ligo_good [ "info"; "get-scope"; gs "rec.mligo"; "--format"; "dev"; "--with-types" ];
+  run_ligo_good
+    [ "info"
+    ; "get-scope"
+    ; gs "rec.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -376,7 +412,14 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good
-    [ "info"; "get-scope"; gs "shadowing.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "shadowing.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -435,7 +478,14 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good
-    [ "info"; "get-scope"; gs "records.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "records.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -495,7 +545,14 @@ let%expect_test _ =
     references: []
     Module definitions: |}];
   run_ligo_good
-    [ "info"; "get-scope"; gs "constant.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "constant.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -543,7 +600,14 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good
-    [ "info"; "get-scope"; gs "application.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "application.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -593,7 +657,14 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good
-    [ "info"; "get-scope"; gs "include.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "include.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -672,6 +743,7 @@ let%expect_test _ =
     ; "--format"
     ; "dev"
     ; "--with-types"
+    ; "--no-stdlib"
     ];
   [%expect
     {|
@@ -721,7 +793,14 @@ let%expect_test _ =
     references: []
     Module definitions: |}];
   run_ligo_good
-    [ "info"; "get-scope"; gs "nominal_types.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "nominal_types.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -779,7 +858,14 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good
-    [ "info"; "get-scope"; gs "module.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "module.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -855,7 +941,14 @@ let%expect_test _ =
     references:
       File "../../test/contracts/get_scope_tests/module.mligo", line 16, characters 4-5 |}];
   run_ligo_good
-    [ "info"; "get-scope"; gs "module2.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "module2.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -964,7 +1057,14 @@ let%expect_test _ =
     references:
       File "../../test/contracts/get_scope_tests/module2.mligo", line 19, characters 9-10 |}];
   run_ligo_good
-    [ "info"; "get-scope"; gs "module3.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "module3.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -1170,7 +1270,14 @@ let%expect_test _ =
       File "../../test/contracts/get_scope_tests/module3.mligo", line 32, characters 13-14 ,
       File "../../test/contracts/get_scope_tests/module3.mligo", line 33, characters 13-14 |}];
   run_ligo_good
-    [ "info"; "get-scope"; gs "module4.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "module4.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -1208,7 +1315,14 @@ let%expect_test _ =
     references:
       File "../../test/contracts/get_scope_tests/module4.mligo", line 6, characters 4-5 |}];
   run_ligo_good
-    [ "info"; "get-scope"; gs "module5.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "module5.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -1365,6 +1479,7 @@ let%expect_test _ =
     ; "--format"
     ; "dev"
     ; "--with-types"
+    ; "--no-stdlib"
     ];
   [%expect
     {|
@@ -1434,7 +1549,14 @@ let%expect_test _ =
       Content: Alias: A#1
       references: [] |}];
   run_ligo_good
-    [ "info"; "get-scope"; gs "types.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "types.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
       Scopes:
@@ -1625,7 +1747,14 @@ let%expect_test _ =
         File "../../test/contracts/get_scope_tests/types.mligo", line 21, characters 8-9 ,
         File "../../test/contracts/get_scope_tests/types.mligo", line 23, characters 11-12 |}];
   run_ligo_good
-    [ "info"; "get-scope"; gs "local_type.ligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "local_type.ligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -1674,4 +1803,62 @@ let%expect_test _ =
     references:
       File "../../test/contracts/get_scope_tests/local_type.ligo", line 4, characters 26-30 ,
       File "../../test/contracts/get_scope_tests/local_type.ligo", line 4, characters 34-38
-    Module definitions: |}]
+    Module definitions: |}];
+  run_ligo_good
+    [ "info"
+    ; "get-scope"
+    ; gs "import_x.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
+  [%expect
+    {|
+    Scopes:
+    [ X#4 Mangled_module_____________________test__contracts__get_scope_tests__x____mligo#3 x#2 y#1 x#0  ] File "../../test/contracts/get_scope_tests/import_x.mligo", line 3, characters 8-13
+    [ x#0  ] File "../../test/contracts/get_scope_tests/x.mligo", line 3, characters 8-9
+    [ y#1 x#0  ] File "../../test/contracts/get_scope_tests/x.mligo", line 4, characters 14-15
+    [ y#1 x#0  ] File "../../test/contracts/get_scope_tests/x.mligo", line 4, characters 22-24
+
+    Variable definitions:
+    (z#5 -> z)
+    Range: File "../../test/contracts/get_scope_tests/import_x.mligo", line 3, characters 4-5
+    Body Range: File "../../test/contracts/get_scope_tests/import_x.mligo", line 3, characters 8-13
+    Content: |resolved: int|
+    references: []
+    Type definitions:
+    Module definitions:
+    (Mangled_module_____________________test__contracts__get_scope_tests__x____mligo#3 -> Mangled_module_____________________test__contracts__get_scope_tests__x____mligo)
+    Range:
+    Body Range:
+    Content: Members: Variable definitions:
+                      (x#2 -> x)
+                      Range: File "../../test/contracts/get_scope_tests/x.mligo", line 4, characters 4-5
+                      Body Range: File "../../test/contracts/get_scope_tests/x.mligo", line 4, characters 8-25
+                      Content: |resolved: x|
+                      references:
+                        File "../../test/contracts/get_scope_tests/import_x.mligo", line 3, characters 8-13
+                      (y#1 -> y)
+                      Range: File "../../test/contracts/get_scope_tests/x.mligo", line 3, characters 4-5
+                      Body Range: File "../../test/contracts/get_scope_tests/x.mligo", line 3, characters 8-9
+                      Content: |resolved: int|
+                      references:
+                        File "../../test/contracts/get_scope_tests/x.mligo", line 4, characters 14-15
+                      Type definitions:
+                      (x#0 -> x)
+                      Range: File "../../test/contracts/get_scope_tests/x.mligo", line 1, characters 5-6
+                      Body Range: File "../../test/contracts/get_scope_tests/x.mligo", line 1, characters 9-33
+                      Content: : |record[a -> int , b -> string]|
+                      references: []
+                      Module definitions:
+
+    references:
+      File "../../test/contracts/get_scope_tests/import_x.mligo", line 1, characters 11-90
+
+    (X#4 -> X)
+    Range: File "../../test/contracts/get_scope_tests/import_x.mligo", line 1, characters 7-8
+    Body Range: File "../../test/contracts/get_scope_tests/import_x.mligo", line 1, characters 11-90
+    Content: Alias: Mangled_module_____________________test__contracts__get_scope_tests__x____mligo#3
+    references:
+      File "../../test/contracts/get_scope_tests/import_x.mligo", line 3, characters 8-9 |}]
