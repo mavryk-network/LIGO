@@ -267,7 +267,7 @@ module Option = struct
 
 #if UNCURRY
   let unopt_with_error (type a) ((v, s) : (a option) * string) : a = match v with | Some v -> v | None -> failwith s
-  [@thunk] let map (type a b) ((f, v) : (a -> b) * (a option)) : b option = [%external ("OPTION_MAP", f, v)]
+  [@thunk] let map (type a b) (p : (a -> b) * (a option)) : b option = [%external ("OPTION_MAP", p.0, p.1)]
 #endif
 
 end
