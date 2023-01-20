@@ -288,9 +288,28 @@ let e_matching ~loc a b : expression =
 
 let e_matching_tuple ~loc matchee (binders : _ Binder.t list) body : expression =
   let pv_lst =
-    List.map ~f:(fun (b : _ Binder.t) -> Location.wrap ~loc @@ Pattern.P_var b) binders
+    List.map
+      ~f:(fun (b : _ Binder.t) ->
+        Location.wrap
+          ~loc:
+            (Location.cover
+               (Option.value_map
+                  ~f:(fun (t : type_expression) -> t.location)
+                  ~default:Location.generated
+                  (Binder.get_ascr b))
+               (Binder.get_loc b))
+        @@ Pattern.P_var b)
+      binders
   in
-  let pattern = Location.wrap ~loc @@ Pattern.P_tuple pv_lst in
+  let pattern =
+    let loc =
+      List.fold
+        ~init:Location.generated
+        ~f:Location.cover
+        (List.map ~f:Location.get_location pv_lst)
+    in
+    Location.wrap ~loc @@ Pattern.P_tuple pv_lst
+  in
   let cases = [ Types.Match_expr.{ pattern; body } ] in
   make_e ~loc @@ E_matching { matchee; cases }
 
