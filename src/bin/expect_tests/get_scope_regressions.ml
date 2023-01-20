@@ -141,7 +141,7 @@ let%expect_test _ =
     Variable definitions:
     (f#2 -> f)
     Range: File "../../test/contracts/get_scope_tests/regressions/wrong_reference1.mligo", line 2, characters 4-5
-    Body Range: File "../../test/contracts/get_scope_tests/regressions/wrong_reference1.mligo", line 2, characters 6-7
+    Body Range: File "../../test/contracts/get_scope_tests/regressions/wrong_reference1.mligo", line 2, characters 10-11
     Content: |resolved: ∀ gen#6 : * . gen#6 -> int|
     references: []
     (g#3 -> g)
