@@ -340,29 +340,29 @@ let%expect_test _ =
     ];
   [%expect
     {|
-    File "./use_monad.jsligo", line 32, character 0 to line 38, character 5:
+    File "./use_monad.jsligo", line 32, character 0 to line 38, character 6:
      31 |
      32 | let solve = (n : int) : t<[int, int, int]> =>
-     33 |   (M.bind(triples(n)))(([x, y, z] : [int, int, int]) : t<[int, int, int]> => {
+     33 |   (M.bind as (p:[t<[int, int, int]>, (b:[int, int, int]) => t<[int, int, int]>]) => t<[int, int, int]>)(triples(n),(([x, y, z] : [int, int, int]) : t<[int, int, int]> => {
      34 |   if (x * x + y * y == z * z) {
      35 |     return M.ret([x, y, z]);
      36 |   } else {
      37 |     return (M.mzero as t<[int, int, int]>);
-     38 |   }});
+     38 |   }}));
 
     Toplevel let declaration are silently change to const declaration.
 
-    File "./use_monad.jsligo", line 22, character 0 to line 30, character 6:
+    File "./use_monad.jsligo", line 22, character 0 to line 30, character 8:
      21 |
      22 | let triples = (n : int) : t<[int, int, int]> =>
-     23 |   (M.bind(interval([1, n])))((x : int) : t<[int, int, int]> =>
-     24 |   (M.bind(interval([1, n])))((y : int) : t<[int, int, int]> => {
+     23 |   (M.bind as (p:[t<int>, (b:int) => t<[int, int, int]>]) => t<[int, int, int]>)(interval([1, n]), ((x : int) : t<[int, int, int]> =>
+     24 |   (M.bind as (p:[t<int>, (b:int) => t<[int, int, int]>]) => t<[int, int, int]>)(interval([1, n]), ((y : int) : t<[int, int, int]> => {
      25 |     if (x <= y) {
-     26 |       return (M.bind(interval([1, n])))((z : int) : t<[int, int, int]> => M.ret([x, y, z]))
+     26 |       return (M.bind as (p:[t<int>, (b:int) => t<[int, int, int]>]) => t<[int, int, int]>)(interval([1, n]), ((z : int) : t<[int, int, int]> => M.ret([x, y, z])))
      27 |     } else {
      28 |       return (M.mzero as t<[int, int, int]>)
      29 |     }
-     30 |    }))
+     30 |    }))))
      31 |
 
     Toplevel let declaration are silently change to const declaration.
@@ -374,7 +374,7 @@ let%expect_test _ =
      13 |     if (c < x) {
      14 |       return acc;
      15 |     } else {
-     16 |       return aux([x, c - 1, (M.mplus(M.ret(c)))(acc)]);
+     16 |       return aux([x, c - 1, M.mplus(M.ret(c),acc)]);
      17 |     }
      18 |   };
      19 |   return aux([x, y, (M.mzero as t<int>)]);
@@ -390,7 +390,7 @@ let%expect_test _ =
     [ "compile"
     ; "expression"
     ; "cameligo"
-    ; "map (fun (f : (string -> int -> int)) -> f \"hello\" 4) (uhms : (string -> int -> \
+    ; "map (fun (f : (string -> int -> int)) -> (f \"hello\") 4) (uhms : (string -> int -> \
        int) list)"
     ; "--init-file"
     ; test "map.mligo"
@@ -481,24 +481,6 @@ let%expect_test _ =
     Type "_a" not found. |}]
 
 let%expect_test _ =
-  run_ligo_bad
-    [ "compile"
-    ; "expression"
-    ; "cameligo"
-    ; "f"
-    ; "--init-file"
-    ; test "annotate_arrow.mligo"
-    ];
-  [%expect
-    {|
-    File "./annotate_arrow.mligo", line 1, characters 0-36:
-      1 | let f (_:unit) (_:nat option) = None
-
-    Cannot monomorphise the expression.
-    The inferred type was "unit -> ∀ a . option (nat) -> option (a)".
-    Hint: Try adding additional annotations. |}]
-
-let%expect_test _ =
   run_ligo_bad [ "print"; "ast-typed"; test "constants.mligo" ];
   [%expect
     {|
@@ -520,32 +502,17 @@ let%expect_test _ =
     ];
   [%expect
     {|
-    { LAMBDA
-        (pair bool string)
-        string
-        { UNPAIR ;
-          SWAP ;
-          PUSH int 2 ;
-          PUSH int 40 ;
-          ADD ;
-          SWAP ;
-          DIG 2 ;
-          IF { LAMBDA
-                 string
-                 (lambda int string)
-                 { LAMBDA (pair string int) string { CAR } ; DUP 2 ; APPLY ; SWAP ; DROP } }
-             { LAMBDA
-                 string
-                 (lambda int string)
-                 { LAMBDA (pair string int) string { CAR } ; DUP 2 ; APPLY ; SWAP ; DROP } } ;
-          SWAP ;
-          EXEC ;
-          SWAP ;
-          EXEC } ;
-      DUP 2 ;
-      APPLY ;
+    { UNPAIR ;
+      PUSH int 2 ;
+      PUSH int 40 ;
+      ADD ;
+      DIG 2 ;
+      PAIR ;
       SWAP ;
-      DROP } |}]
+      IF { LAMBDA (pair string int) string { CAR } }
+         { LAMBDA (pair string int) string { CAR } } ;
+      SWAP ;
+      EXEC } |}]
 
 let%expect_test _ =
   run_ligo_bad
@@ -616,18 +583,6 @@ let%expect_test _ =
     Underspecified type "list (^a)".
     Please add additional annotations.
     Hint: "^a" represent placeholder type(s). |}]
-
-let%expect_test _ =
-  run_ligo_bad [ "compile"; "contract"; test "monomorphisation_fail.mligo" ];
-  [%expect
-    {|
-    File "./monomorphisation_fail.mligo", line 1, characters 0-28:
-      1 | let f (_ : unit) s = ([], s)
-      2 |
-
-    Cannot monomorphise the expression.
-    The inferred type was "unit -> ∀ a . ∀ b . a -> ( list (b) * a )".
-    Hint: Try adding additional annotations. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; test "monomorphisation_fail2.mligo" ];

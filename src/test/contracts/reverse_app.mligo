@@ -40,7 +40,7 @@ let test =
 let test =
   let a = h (gg 42n (f x))
   in
-  let b = x |> f |> gg 42n |> h
+  let b = x |> f |> (fun z -> gg 42n z) |> h
   in
   assert (a = b)
 

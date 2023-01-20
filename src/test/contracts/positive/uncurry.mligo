@@ -18,20 +18,20 @@ let diff (x : int) (y : int) (z : int) =
 
 (* thwarting inlining optimisation below, we should add [@inline never] *)
 let main (p, s : int * int) : operation list * int =
-  let f1 = add3 p p in
+  let f1 = fun z -> add3 p p z in
   let s = f1 s + f1 s in
-  let f2 = add3 p p in
+  let f2 = fun z -> add3 p p z in
   let s = f2 s + f2 s in
   let s = add4 p p p s + add4 p p p s in
-  let g1 = weird2 p (add3 p p) in
+  let g1 = weird2 p (fun z -> add3 p p z) in
   let s = g1 s + g1 s in
-  let g2 = weird2 p (add3 p p) in
+  let g2 = weird2 p (fun z -> add3 p p z) in
   let s = g2 s + g2 s in
-  let h1 (s : int) = weird2b p (add3 p p) s in
+  let h1 (s : int) = (weird2b p (fun z -> add3 p p z)) s in
   let s = h1 s + h1 s + s in
-  let h2 (s : int) = weird2b p (add3 p p) s in
+  let h2 (s : int) = (weird2b p (fun z -> add3 p p z)) s in
   let s = h2 s + h2 s + s in
-  let k1 = diff p p in
+  let k1 = fun z -> diff p p z in
   let s = k1 s + k1 s in
   let k2 (s : int) = diff p p s in
   let s = k2 s + k2 s in

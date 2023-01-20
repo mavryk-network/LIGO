@@ -151,9 +151,9 @@ Here is how you define a basic function that accepts two integers and
 returns an integer as well:
 
 ```cameligo group=b
-let add (a, b : int * int) : int = a + b             // Uncurried
-let add_curry (a : int) (b : int) : int = add (a, b) // Curried
-let increment : int -> int = add_curry 1             // Partial application
+let add (a, b : int * int) : int = a + b                     // Uncurried
+let add_curry = fun (a : int) -> fun (b : int) -> add (a, b) // Curried
+let increment : int -> int = add_curry 1                     // Partial application
 ```
 
 You can run the `increment` function defined above using the LIGO

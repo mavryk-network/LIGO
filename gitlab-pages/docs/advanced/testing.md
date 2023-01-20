@@ -364,7 +364,7 @@ type 'v proxy_address = (('v * nat) * address , unit) typed_address
 
 let init_transfer (type vt whole_p) (mk_param: vt ticket -> whole_p) : vt proxy_address =
   let proxy_transfer : ((vt * nat) * address) * unit -> operation list * unit =
-    proxy_transfer_contract mk_param
+    fun z -> proxy_transfer_contract mk_param z
   in
   let (taddr_proxy, _, _) = Test.originate proxy_transfer () 1tez in
   taddr_proxy
@@ -380,7 +380,7 @@ let originate (type vt whole_s vp)
     (mk_storage : vt ticket -> whole_s)
     (contract: vp * whole_s -> operation list * whole_s) : address =
   let proxy_origination : (vt * nat) * address option -> operation list * address option =
-    proxy_originate_contract mk_storage contract
+    fun z -> proxy_originate_contract mk_storage contract z
   in
   let (taddr_proxy, _, _) = Test.originate proxy_origination (None : address option) 1tez in
   let _ = Test.transfer_to_contract_exn (Test.to_contract taddr_proxy) ticket_info 0tez in

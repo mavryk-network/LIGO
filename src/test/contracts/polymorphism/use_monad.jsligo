@@ -13,26 +13,26 @@ let interval = ([x,y] : [int, int]) : t<int> => {
     if (c < x) {
       return acc;
     } else {
-      return aux([x, c - 1, (M.mplus(M.ret(c)))(acc)]);
+      return aux([x, c - 1, M.mplus(M.ret(c),acc)]);
     }
   };
   return aux([x, y, (M.mzero as t<int>)]);
 };
 
 let triples = (n : int) : t<[int, int, int]> =>
-  (M.bind(interval([1, n])))((x : int) : t<[int, int, int]> =>
-  (M.bind(interval([1, n])))((y : int) : t<[int, int, int]> => {
+  (M.bind as (p:[t<int>, (b:int) => t<[int, int, int]>]) => t<[int, int, int]>)(interval([1, n]), ((x : int) : t<[int, int, int]> =>
+  (M.bind as (p:[t<int>, (b:int) => t<[int, int, int]>]) => t<[int, int, int]>)(interval([1, n]), ((y : int) : t<[int, int, int]> => {
     if (x <= y) {
-      return (M.bind(interval([1, n])))((z : int) : t<[int, int, int]> => M.ret([x, y, z]))
+      return (M.bind as (p:[t<int>, (b:int) => t<[int, int, int]>]) => t<[int, int, int]>)(interval([1, n]), ((z : int) : t<[int, int, int]> => M.ret([x, y, z])))
     } else {
       return (M.mzero as t<[int, int, int]>)
     }
-   }))
+   }))))
 
 let solve = (n : int) : t<[int, int, int]> =>
-  (M.bind(triples(n)))(([x, y, z] : [int, int, int]) : t<[int, int, int]> => {
+  (M.bind as (p:[t<[int, int, int]>, (b:[int, int, int]) => t<[int, int, int]>]) => t<[int, int, int]>)(triples(n),(([x, y, z] : [int, int, int]) : t<[int, int, int]> => {
   if (x * x + y * y == z * z) {
     return M.ret([x, y, z]);
   } else {
     return (M.mzero as t<[int, int, int]>);
-  }});
+  }}));

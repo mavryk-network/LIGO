@@ -8,4 +8,4 @@ let nested (type a) =
   in x
 
 let main (_ : unit * unit) : operation list * unit =
-  [], (nested 0 "test" 12 : unit)
+  [], (((nested 0) "test") 12 : unit)

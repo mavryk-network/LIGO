@@ -439,7 +439,7 @@ let f (x : int) = x * 3 + 2
 let ct = Test.register_constant (Test.eval f)
 
 let main ((), store : parameter * storage) : return =
- [], (Tezos.constant ct store)
+ [], (Tezos.constant ct : int -> int) store
 
 let test =
   let (taddr, _, _) = Test.originate main 1 0tez in
