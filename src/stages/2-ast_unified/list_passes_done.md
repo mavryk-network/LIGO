@@ -74,6 +74,22 @@ note: is there any reason why we would like E_App ? GADT ? where Ctor is a funct
   `E_Object { a , b }` |-> `E_record_pun ..`
   `E_object { a , ...r}` | `E_object {...r, a}` |-> `E_Update ..`
 
+## pass 'array_to_tuple'
+
+  - remove : E_array
+  - add : .
+  ```
+  [1 , ..x] |-> error
+  [1 , 2 , 3] |-> TUPLE (1,2,3)
+  ```
+
+  The 'tuple_singleton' nanopass ensures E_Tuple never contains 1 element only ?
+
+  ```
+  [] |-> TUPLE ()
+  [ x ] |-> TUPLE x
+  ```
+
 ## pass 'restrict_t_app'
 
 if T_App lhs should be a T_Var , else error

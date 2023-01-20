@@ -12,12 +12,13 @@ let passes
   ; Top_level_restriction.pass ~raise
   ; T_arg.pass
   ; Constructor_application.pass ~raise
-  ; Object_to_record.pass ~raise
   ; Type_abstraction_declaration.pass ~raise
   ; Named_fun.pass ~raise
   ; E_rev_app.pass ~raise
   ; Freeze_operators.pass ~raise ~syntax
   ; List_as_function.pass ~raise ~syntax
+  ; Object_to_record.pass ~raise ~syntax
+  ; Array_to_tuple.pass ~raise ~syntax
   ; Match_as_function.pass ~raise ~syntax
   ; Hack_literalize_jsligo.pass ~raise ~syntax
   ; Restrict_t_app.pass ~raise

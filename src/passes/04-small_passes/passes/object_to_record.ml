@@ -10,6 +10,7 @@ let is_field = function
   | Object_.Property_rest _ -> false
   | _ -> true
 
+
 let label_of_var x = Label.of_string @@ Variable.to_name_exn x
 
 let field_of_property ~raise : expr Object_.property -> (Variable.t, expr) Field.t =
@@ -47,7 +48,7 @@ let field_update_of_property ~raise : expr Object_.property -> expr Update.field
   | Property_rest x -> raise.error @@ unsupported_rest_property x
 
 
-let compile ~raise =
+let compile ~raise ~syntax =
   let expr : (expr, ty_expr, pattern, _, _) expr_ -> expr =
    fun e ->
     let loc = Location.get_location e in
@@ -60,7 +61,9 @@ let compile ~raise =
       e_record_pun ~loc (List.Ne.to_list fields)
     | e -> make_e ~loc e
   in
-  `Cata { idle_cata_pass with expr }
+  if Syntax_types.equal syntax JsLIGO
+  then `Cata { idle_cata_pass with expr }
+  else `Cata idle_cata_pass
 
 
 let reduction ~raise =
@@ -72,9 +75,9 @@ let reduction ~raise =
   }
 
 
-let pass ~raise =
+let pass ~raise ~syntax =
   cata_morph
     ~name:__MODULE__
-    ~compile:(compile ~raise)
-    ~decompile:`None (* for now ? *)
+    ~compile:(compile ~raise ~syntax)
+    ~decompile:`None (* TODO*)
     ~reduction_check:(reduction ~raise)

@@ -26,20 +26,6 @@ let <pattern> = (fun  ...)
 
   note: same for top-level let-ins (distinction between D_value & D_pattern)
 
-## pass 'unify type 1'
-
-  we have too much representation for units:
-  - Unit as E_Ctor Unit
-  - () as E_tuple ()
-  - () as E_literal (E_unit)
-  - [%external UNIT] as E_raw_code
-
-  same for types:
-  - type unit = Unit
-  - type unit = ()
-
-  unify them all under a comon repr, should we do that ??
-
 
 ## pass 'expand_polymorphism'
 
@@ -72,25 +58,6 @@ note: we should have unpun at type level as well .. check later :)
 ```
 | E_Record_pun of (Variable.t, 'self) Field.t Record.t it's a map
 ```
-
-## pass 'array unify'
-
-  - remove : E_array
-  - add : .
-  ```
-  [1 , ..x] |-> error
-  list([1, 2]) |-> [ 1 ; 2 ]
-  list(1, ..x)) |-> 1::x
-  [1 , 2 , 3] |-> TUPLE (1,2,3)
-  list([]) |-> []
-  ```
-
-  The 'tuple_singleton' nanopass ensures E_Tuple never contains 1 element only ?
-
-  ```
-  [] |-> TUPLE ()
-  [ x ] |-> TUPLE x
-  ```
 
 ## pass 'decide curry'
 

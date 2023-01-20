@@ -29,6 +29,7 @@
   unify_fun
   constructor_application
   object_to_record
+  array_to_tuple
  )
  (libraries ast_unified syntax_types)
  (inline_tests
