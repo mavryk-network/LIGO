@@ -90,8 +90,8 @@ module Tezos = struct
     [%Michelson (({| { UNPAIR ; VIEW (litstr $0) (type $1) } |} : a * address -> b option), (p.0 : string), (() : b))] (p.1, p.2)
   let split_ticket (type a) ((t, p) : (a ticket) * (nat * nat)) : (a ticket * a ticket) option =
     [%Michelson ({| { UNPAIR ; SPLIT_TICKET } |} : a ticket * (nat * nat) -> (a ticket * a ticket) option)] (t, p)
-  [@inline] [@thunk] let create_contract (type p s) ((f, kh, t, s) : (p * s -> operation list * s) * key_hash option * tez * s) : (operation * address) =
-      [%external ("CREATE_CONTRACT", f, kh, t, s)]
+  [@inline] [@thunk] let create_contract (type p s) (p : (p * s -> operation list * s) * key_hash option * tez * s) : (operation * address) =
+    [%external ("CREATE_CONTRACT", p.0, p.1, p.2, p.3)]
   [@inline] [@thunk] let get_entrypoint_opt (type p) (p : string * address) : p contract option =
     let _ : unit = [%external ("CHECK_ENTRYPOINT", p.0)] in
     [%Michelson (({| { CONTRACT (annot $0) (type $1) } |} : address -> (p contract) option), (p.0 : string), (() : p))] p.1
