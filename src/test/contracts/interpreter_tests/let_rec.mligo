@@ -12,4 +12,4 @@ let fibo_no_rec_kwd : int -> int =
     in
     fibo (n, 1)
 
-let test = fibo 100 1 = fibo_no_rec_kwd 100
+let test = (fibo 100) 1 = fibo_no_rec_kwd 100
