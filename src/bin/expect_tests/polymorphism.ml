@@ -390,8 +390,8 @@ let%expect_test _ =
     [ "compile"
     ; "expression"
     ; "cameligo"
-    ; "map (fun (f : (string -> int -> int)) -> (f \"hello\") 4) (uhms : (string -> int -> \
-       int) list)"
+    ; "map (fun (f : (string -> int -> int)) -> (f \"hello\") 4) (uhms : (string -> int \
+       -> int) list)"
     ; "--init-file"
     ; test "map.mligo"
     ];

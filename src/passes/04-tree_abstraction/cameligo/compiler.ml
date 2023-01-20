@@ -331,16 +331,14 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
     let var, loc_var = r_split var in
     let func = e_variable_ez ~loc:loc_var var in
     (match List.Ne.map self args with
-     | (arg, []) -> return @@ e_application ~loc func arg
-     | (arg, args) ->
-       return @@ e_application ~loc func @@ e_tuple ~loc (arg :: args))
+    | arg, [] -> return @@ e_application ~loc func arg
+    | arg, args -> return @@ e_application ~loc func @@ e_tuple ~loc (arg :: args))
   | ECall call ->
     let (func, args), loc = r_split call in
     let func = self func in
     (match List.Ne.map self args with
-     | (arg, []) -> return @@ e_application ~loc func arg
-     | (arg, args) ->
-       return @@ e_application ~loc func @@ e_tuple ~loc (arg :: args))
+    | arg, [] -> return @@ e_application ~loc func arg
+    | arg, args -> return @@ e_application ~loc func @@ e_tuple ~loc (arg :: args))
   | ETuple lst ->
     let lst, loc = r_split lst in
     let lst = npseq_to_ne_list lst in
@@ -436,23 +434,27 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
     let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) rhs_type in
     let binders = List.Ne.(to_list @@ map (compile_parameter ~raise) binders) in
     let body = self body in
-    let expr = (match binders with
-        | [] -> body
-        | [(binder, fun_)] ->
-          let expr = fun_ body in
-          e_lambda ~loc binder rhs_type expr
-        | _ ->
-          let funs = List.map ~f:snd binders in
-          let expr = List.fold_right ~init:body ~f:(fun fun_ body -> fun_ body) funs in
-          let binders = List.map ~f:fst binders in
-          let binders = List.map ~f:(fun x -> Binder.make (Param.get_var x) (Param.get_ascr x)) binders in
-          let var = Value_var.fresh ~loc () in
-          let expr = e_matching_tuple ~loc (e_variable ~loc var) binders @@ expr in
-          let tuple_type = List.map ~f:(Binder.get_ascr) binders in
-          let tuple_type = Option.all tuple_type in
-          let tuple_type = Option.map ~f:(t_tuple ~loc) tuple_type in
-          let param = Param.make var tuple_type in
-          e_lambda ~loc param rhs_type @@ expr) in
+    let expr =
+      match binders with
+      | [] -> body
+      | [ (binder, fun_) ] ->
+        let expr = fun_ body in
+        e_lambda ~loc binder rhs_type expr
+      | _ ->
+        let funs = List.map ~f:snd binders in
+        let expr = List.fold_right ~init:body ~f:(fun fun_ body -> fun_ body) funs in
+        let binders = List.map ~f:fst binders in
+        let binders =
+          List.map ~f:(fun x -> Binder.make (Param.get_var x) (Param.get_ascr x)) binders
+        in
+        let var = Value_var.fresh ~loc () in
+        let expr = e_matching_tuple ~loc (e_variable ~loc var) binders @@ expr in
+        let tuple_type = List.map ~f:Binder.get_ascr binders in
+        let tuple_type = Option.all tuple_type in
+        let tuple_type = Option.map ~f:(t_tuple ~loc) tuple_type in
+        let param = Param.make var tuple_type in
+        e_lambda ~loc param rhs_type @@ expr
+    in
     return expr
   | EConstr constr ->
     let (constr, args_o), loc = r_split constr in
@@ -567,25 +569,31 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
       let binders = List.map ~f:(compile_parameter ~raise) binders in
       let loc = let_rhs.location in
       let let_binder, fun_ = compile_binder ~raise pattern in
-      let let_rhs, rhs_type = (match binders with
-          | [] -> let_rhs, rhs_type
-          | [(binder, fun_)] ->
-            let expr = fun_ let_rhs in
-            let fun_type = Option.map2 ~f:(t_arrow ~loc) (Param.get_ascr binder) rhs_type in
-            e_lambda ~loc binder rhs_type expr, fun_type
-          | _ ->
-            let funs = List.map ~f:snd binders in
-            let expr = List.fold_right ~init:let_rhs ~f:(fun fun_ body -> fun_ body) funs in
-            let binders = List.map ~f:fst binders in
-            let binders = List.map ~f:(fun x -> Binder.make (Param.get_var x) (Param.get_ascr x)) binders in
-            let var = Value_var.fresh ~loc () in
-            let expr = e_matching_tuple ~loc (e_variable ~loc var) binders @@ expr in
-            let tuple_type = List.map ~f:(Binder.get_ascr) binders in
-            let tuple_type = Option.all tuple_type in
-            let tuple_type = Option.map ~f:(t_tuple ~loc) tuple_type in
-            let fun_type = Option.map2 ~f:(t_arrow ~loc) tuple_type rhs_type in
-            let param = Param.make var tuple_type in
-            e_lambda ~loc param rhs_type @@ expr, fun_type) in
+      let let_rhs, rhs_type =
+        match binders with
+        | [] -> let_rhs, rhs_type
+        | [ (binder, fun_) ] ->
+          let expr = fun_ let_rhs in
+          let fun_type = Option.map2 ~f:(t_arrow ~loc) (Param.get_ascr binder) rhs_type in
+          e_lambda ~loc binder rhs_type expr, fun_type
+        | _ ->
+          let funs = List.map ~f:snd binders in
+          let expr = List.fold_right ~init:let_rhs ~f:(fun fun_ body -> fun_ body) funs in
+          let binders = List.map ~f:fst binders in
+          let binders =
+            List.map
+              ~f:(fun x -> Binder.make (Param.get_var x) (Param.get_ascr x))
+              binders
+          in
+          let var = Value_var.fresh ~loc () in
+          let expr = e_matching_tuple ~loc (e_variable ~loc var) binders @@ expr in
+          let tuple_type = List.map ~f:Binder.get_ascr binders in
+          let tuple_type = Option.all tuple_type in
+          let tuple_type = Option.map ~f:(t_tuple ~loc) tuple_type in
+          let fun_type = Option.map2 ~f:(t_arrow ~loc) tuple_type rhs_type in
+          let param = Param.make var tuple_type in
+          e_lambda ~loc param rhs_type @@ expr, fun_type
+      in
       (* This handle polymorphic annotation *)
       let rhs_type : type_expression option =
         Option.map rhs_type ~f:(fun rhs_type ->
@@ -1120,25 +1128,31 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration option =
       let binders = args in
       let binders = List.map ~f:(compile_parameter ~raise) binders in
       let loc = let_rhs.location in
-      let let_rhs, rhs_type = (match binders with
-          | [] -> let_rhs, rhs_type
-          | [(binder, fun_)] ->
-            let expr = fun_ let_rhs in
-            let fun_type = Option.map2 ~f:(t_arrow ~loc) (Param.get_ascr binder) rhs_type in
-            e_lambda ~loc binder rhs_type expr, fun_type
-          | _ ->
-            let funs = List.map ~f:snd binders in
-            let expr = List.fold_right ~init:let_rhs ~f:(fun fun_ body -> fun_ body) funs in
-            let binders = List.map ~f:fst binders in
-            let binders = List.map ~f:(fun x -> Binder.make (Param.get_var x) (Param.get_ascr x)) binders in
-            let var = Value_var.fresh ~loc () in
-            let expr = e_matching_tuple ~loc (e_variable ~loc var) binders @@ expr in
-            let tuple_type = List.map ~f:(Binder.get_ascr) binders in
-            let tuple_type = Option.all tuple_type in
-            let tuple_type = Option.map ~f:(t_tuple ~loc) tuple_type in
-            let param = Param.make var tuple_type in
-            let fun_type = Option.map2 ~f:(t_arrow ~loc) tuple_type rhs_type in
-            e_lambda ~loc param rhs_type @@ expr, fun_type) in
+      let let_rhs, rhs_type =
+        match binders with
+        | [] -> let_rhs, rhs_type
+        | [ (binder, fun_) ] ->
+          let expr = fun_ let_rhs in
+          let fun_type = Option.map2 ~f:(t_arrow ~loc) (Param.get_ascr binder) rhs_type in
+          e_lambda ~loc binder rhs_type expr, fun_type
+        | _ ->
+          let funs = List.map ~f:snd binders in
+          let expr = List.fold_right ~init:let_rhs ~f:(fun fun_ body -> fun_ body) funs in
+          let binders = List.map ~f:fst binders in
+          let binders =
+            List.map
+              ~f:(fun x -> Binder.make (Param.get_var x) (Param.get_ascr x))
+              binders
+          in
+          let var = Value_var.fresh ~loc () in
+          let expr = e_matching_tuple ~loc (e_variable ~loc var) binders @@ expr in
+          let tuple_type = List.map ~f:Binder.get_ascr binders in
+          let tuple_type = Option.all tuple_type in
+          let tuple_type = Option.map ~f:(t_tuple ~loc) tuple_type in
+          let param = Param.make var tuple_type in
+          let fun_type = Option.map2 ~f:(t_arrow ~loc) tuple_type rhs_type in
+          e_lambda ~loc param rhs_type @@ expr, fun_type
+      in
       let binder, _fun_ = compile_binder ~raise pattern in
       (* This handle polymorphic annotation *)
       let rhs_type : type_expression option =

@@ -1724,7 +1724,8 @@ let%expect_test _ =
     ; "cameligo"
     ];
   [%expect.unreachable]
-[@@expect.uncaught_exn {|
+  [@@expect.uncaught_exn
+    {|
   (* CR expect_test_collector: This test expectation appears to contain a backtrace.
      This is strongly discouraged as backtraces are fragile.
      Please change this test to not include a backtrace. *)
@@ -3864,7 +3865,8 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "disc_union_vbar.jsligo" ];
-  [%expect {|
+  [%expect
+    {|
     { parameter
         (pair (pair (option %lord address) (string %name))
               (or %planetType (or (unit %gaseous) (unit %other)) (unit %tellurian))) ;
