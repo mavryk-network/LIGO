@@ -330,21 +330,17 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
     let loc = Location.lift region in
     let var, loc_var = r_split var in
     let func = e_variable_ez ~loc:loc_var var in
-    let args = List.map ~f:self @@ nseq_to_list args in
-    (match args with
-     | [] -> failwith "nope1?"
-     | [arg] -> return @@ e_application ~loc func arg
-     | args ->
-       return @@ e_application ~loc func @@ e_tuple ~loc args)
+    (match List.Ne.map self args with
+     | (arg, []) -> return @@ e_application ~loc func arg
+     | (arg, args) ->
+       return @@ e_application ~loc func @@ e_tuple ~loc (arg :: args))
   | ECall call ->
     let (func, args), loc = r_split call in
     let func = self func in
-    let args = List.map ~f:self @@ nseq_to_list args in
-    (match args with
-     | [] -> failwith "nope2?"
-     | [arg] -> return @@ e_application ~loc func arg
-     | args ->
-       return @@ e_application ~loc func @@ e_tuple ~loc args)
+    (match List.Ne.map self args with
+     | (arg, []) -> return @@ e_application ~loc func arg
+     | (arg, args) ->
+       return @@ e_application ~loc func @@ e_tuple ~loc (arg :: args))
   | ETuple lst ->
     let lst, loc = r_split lst in
     let lst = npseq_to_ne_list lst in
@@ -1156,8 +1152,8 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration option =
                   ~init:rhs_type
                   type_vars))
       in
-      let binder = Binder.map (Fn.const rhs_type) binder in
       (* This handle the recursion *)
+      let binder = Binder.map (Fn.const rhs_type) binder in
       let let_rhs =
         match kwd_rec with
         | Some reg ->
