@@ -28,6 +28,7 @@
   top_level_restriction
   unify_fun
   constructor_application
+  object_to_record
  )
  (libraries ast_unified syntax_types)
  (inline_tests

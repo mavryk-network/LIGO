@@ -558,7 +558,8 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
       let seq = nseq_map self (nsepseq_to_nseq nelst) in
       e_sequence ~loc (List.Ne.to_list seq))
   | ELetMutIn mut ->
-    let CST.{ binding; body; attributes }, loc = r_split mut in
+    let CST.{ binding; body; attributes ; _ }, loc = r_split mut in
+    let _ = TODO_do_in_parsing.weird_attributes attributes in
     let CST.{ type_params; binders; rhs_type; let_rhs; _ } = binding in
     e_let_mut_in
       ~loc
@@ -574,7 +575,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
     let var = TODO_do_in_parsing.var ~loc:(r_snd binder) (r_fst binder) in
     e_assign_unitary ~loc { binder = Ligo_prim.Binder.make var None; expression = self expr }
   | EWhile wh ->
-    let CST.{ cond; body }, loc = r_split wh in
+    let CST.{ cond; body ; _ }, loc = r_split wh in
     let body = compile_seq_expr ~raise body.seq_expr in
     e_while ~loc { cond = self cond; block = body }
   | EForIn for_ ->
@@ -584,10 +585,10 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
       ~loc
       (ForAny { pattern = compile_pattern pattern; collection = self collection; block })
   | EFor for_ ->
-    let CST.{ index; bound1; direction; bound2; body }, loc = r_split for_ in
+    let CST.{ index; bound1; direction; bound2; body ; _ }, loc = r_split for_ in
     let block = compile_seq_expr ~raise body.seq_expr in
     let index =
-      let CST.{ variable = v; attributes }, loc = r_split index in
+      let CST.{ variable = v; attributes }, _ = r_split index in
       TODO_do_in_parsing.weird_attributes attributes;
       TODO_do_in_parsing.var ~loc:(r_snd v) (r_fst v)
     in

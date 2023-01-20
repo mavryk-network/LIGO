@@ -20,6 +20,9 @@ type t =
   | `Small_passes_unsupported_return of statement list
   | `Small_passes_unsupported_control_flow of statement list
   | `Small_passes_unsupported_top_level_statement of instruction
+  | `Small_passes_unsupported_object_field of expr
+  | `Small_passes_unsupported_update of expr
+  | `Small_passes_unsupported_rest_property of expr
   ]
 [@@deriving poly_constructor { prefix = "small_passes_" }, sexp]
 
@@ -107,7 +110,13 @@ let error_ppformat
         loc
     | `Small_passes_unsupported_top_level_statement i ->
       let loc = get_i_loc i in
-      Format.fprintf f "@[<hv>%a@.Unsupported top-level statement@]" snippet_pp loc)
+      Format.fprintf f "@[<hv>%a@.Unsupported top-level statement@]" snippet_pp loc
+    | `Small_passes_unsupported_object_field e ->
+      Format.fprintf f "@[<hv>%a@.Unsupported object field@]" snippet_pp (get_e_loc e)
+    | `Small_passes_unsupported_update e ->
+      Format.fprintf f "@[<hv>%a@.Unsupported update@]" snippet_pp (get_e_loc e)
+    | `Small_passes_unsupported_rest_property e ->
+      Format.fprintf f "@[<hv>%a@.Unsupported rest property@]" snippet_pp (get_e_loc e))
 
 
 let error_json : t -> Simple_utils.Error.t =
@@ -202,4 +211,16 @@ let error_json : t -> Simple_utils.Error.t =
   | `Small_passes_unsupported_top_level_statement i ->
     let location = get_i_loc i in
     let content = make_content ~message:"Unsupported top-level statement" ~location () in
+    make ~stage ~content
+  | `Small_passes_unsupported_object_field e ->
+    let location = get_e_loc e in
+    let content = make_content ~message:"Unsupported object field" ~location () in
+    make ~stage ~content
+  | `Small_passes_unsupported_update e ->
+    let location = get_e_loc e in
+    let content = make_content ~message:"Unsupported update" ~location () in
+    make ~stage ~content
+  | `Small_passes_unsupported_rest_property e ->
+    let location = get_e_loc e in
+    let content = make_content ~message:"Unsupported rest property" ~location () in
     make ~stage ~content

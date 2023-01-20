@@ -12,6 +12,7 @@ let passes
   ; Top_level_restriction.pass ~raise
   ; T_arg.pass
   ; Constructor_application.pass ~raise
+  ; Object_to_record.pass ~raise
   ; Type_abstraction_declaration.pass ~raise
   ; Named_fun.pass ~raise
   ; E_rev_app.pass ~raise

@@ -58,18 +58,7 @@ let <pattern> = (fun  ...)
 
   morph it to a C_MAP_GET_FORCE / C_MAP_GET ? (not sure which one; might depend on the syntax)
 
-## pass 'object_jsligo'
-  
-  - remove : E_Object
-  - add : ..
 
-  note: in JS, `{...my_rec1 , x : 111 }` would be an update if `x` exists in `my_rec1`
-        or would create a value of another type `{ <fields of myrec1> , x : 111}` if not.
-        Unfortunately, we have no way to do that in LIGO, so we always perform the update.
-
-  `E_Object { a : 1 , b : "2"}` |-> `E_Record_pun ..`
-  `E_Object { a , b }` |-> `E_record_pun ..`
-  `E_object { a , ...r}` | `E_object {...r, a}` |-> `E_Update ..`
 
 ## pass 'linear_record'
 

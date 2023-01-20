@@ -60,6 +60,20 @@ note: is there any reason why we would like E_App ? GADT ? where Ctor is a funct
 `E_Ctor_App A` |-> `E_Constructor A unit`
 `E_Ctor_App A (foo bar baz))` |-> `E_Constructor A (E_tuple (foo bar baz))`
 
+
+## pass 'object_jsligo'
+  
+  - remove : E_Object
+  - add : ..
+
+  note: in JS, `{...my_rec1 , x : 111 }` would be an update if `x` exists in `my_rec1`
+        or would create a value of another type `{ <fields of myrec1> , x : 111}` if not.
+        Unfortunately, we have no way to do that in LIGO, so we always perform the update.
+
+  `E_Object { a : 1 , b : "2"}` |-> `E_Record_pun ..`
+  `E_Object { a , b }` |-> `E_record_pun ..`
+  `E_object { a , ...r}` | `E_object {...r, a}` |-> `E_Update ..`
+
 ## pass 'restrict_t_app'
 
 if T_App lhs should be a T_Var , else error
