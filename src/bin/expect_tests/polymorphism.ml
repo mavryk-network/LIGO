@@ -340,25 +340,26 @@ let%expect_test _ =
     ];
   [%expect
     {|
-    File "./use_monad.jsligo", line 32, character 0 to line 38, character 6:
+    File "./use_monad.jsligo", line 32, character 0 to line 39, character 6:
      31 |
      32 | let solve = (n : int) : t<[int, int, int]> =>
-     33 |   (M.bind as (p:[t<[int, int, int]>, (b:[int, int, int]) => t<[int, int, int]>]) => t<[int, int, int]>)(triples(n),(([x, y, z] : [int, int, int]) : t<[int, int, int]> => {
-     34 |   if (x * x + y * y == z * z) {
-     35 |     return M.ret([x, y, z]);
-     36 |   } else {
-     37 |     return (M.mzero as t<[int, int, int]>);
-     38 |   }}));
+     33 |   M.bind(triples(n),(p => {
+     34 |   let [x, y, z] = p;
+     35 |   if (x * x + y * y == z * z) {
+     36 |     return M.ret([x, y, z]);
+     37 |   } else {
+     38 |     return (M.mzero as t<[int, int, int]>);
+     39 |   }}));
 
     Toplevel let declaration are silently change to const declaration.
 
     File "./use_monad.jsligo", line 22, character 0 to line 30, character 8:
      21 |
      22 | let triples = (n : int) : t<[int, int, int]> =>
-     23 |   (M.bind as (p:[t<int>, (b:int) => t<[int, int, int]>]) => t<[int, int, int]>)(interval([1, n]), ((x : int) : t<[int, int, int]> =>
-     24 |   (M.bind as (p:[t<int>, (b:int) => t<[int, int, int]>]) => t<[int, int, int]>)(interval([1, n]), ((y : int) : t<[int, int, int]> => {
+     23 |   M.bind(interval([1, n]), (x =>
+     24 |   M.bind(interval([1, n]), (y => {
      25 |     if (x <= y) {
-     26 |       return (M.bind as (p:[t<int>, (b:int) => t<[int, int, int]>]) => t<[int, int, int]>)(interval([1, n]), ((z : int) : t<[int, int, int]> => M.ret([x, y, z])))
+     26 |       return M.bind(interval([1, n]), (z => M.ret([x, y, z])))
      27 |     } else {
      28 |       return (M.mzero as t<[int, int, int]>)
      29 |     }

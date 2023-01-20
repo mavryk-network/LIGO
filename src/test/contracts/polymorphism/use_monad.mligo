@@ -14,13 +14,13 @@ let interval (x : int) (y : int) =
   r (y, (M.mzero : int t))
 
 let triples (n : int) =
-  (M.bind : int t * (int -> (int * int * int) t) -> (int * int * int) t) (interval 1 n) (fun (x : int) ->
-  (M.bind : int t * (int -> (int * int * int) t) -> (int * int * int) t) (interval 1 n) (fun (y : int) ->
-  (M.bind : int t * (int -> (int * int * int) t) -> (int * int * int) t) (interval 1 n) (fun (z : int) ->
+  M.bind (interval 1 n) (fun x ->
+  M.bind (interval 1 n) (fun y ->
+  M.bind (interval 1 n) (fun z ->
   M.ret (x, y, z)))) (* List of all triples (x,y,z) with x,y,z in [1,n] *)
 
 let solve (n : int) =
-  (M.bind : (int * int * int) t * (int * int * int -> (int * int * int) t) -> (int * int * int) t) (triples n) (fun ((x, y, z) : int * int * int) ->
+  M.bind (triples n) (fun (x, y, z) ->
   if (x * x + y * y = z * z) then
     M.ret (x, y, z)
   else

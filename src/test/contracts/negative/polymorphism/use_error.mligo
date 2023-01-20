@@ -3,8 +3,8 @@
 type t = M.t
 
 let foo (x : int t) (y : int t) =
-  (M.bind : int t * (int -> int t) -> int t) x (fun (x : int) ->
-  (M.bind : int t * (int -> int t) -> int t) y (fun (y : int) ->
+  M.bind x (fun x ->
+  M.bind y (fun y ->
   if (y = 0) then
     (M.fail "Division by zero" : int t)
   else
