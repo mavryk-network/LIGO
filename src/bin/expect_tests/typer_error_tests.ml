@@ -38,6 +38,10 @@ let%expect_test _ =
     ];
   [%expect
     {|
+    File "../../test/contracts/negative/error_function_annotation_2.mligo", line 1, characters 14-43:
+      1 | let f : int = fun (x, y : int*int) -> x + y
+      2 | let g (x, y : int * int) : int = f (x, y)
+
     Invalid type(s)
     Cannot unify "( int * int ) -> int" with "int". |}];
   run_ligo_bad
@@ -797,6 +801,11 @@ let%expect_test _ =
     ];
   [%expect
     {|
+    File "../../test/contracts/negative/typer_unify_error_diff/arrow_vs_arrow.mligo", line 3, characters 46-66:
+      2 | let main (_p, s : int * int) : operation list * int =
+      3 |   let  x : int -> nat -> nat -> tez        = (fun _x _y _z -> 1tez) in
+      4 |   let _y : int -> int -> int -> int -> nat = x in
+
     Invalid type(s)
     Cannot unify "( ^a * ^b * ^c )" with "int".
     Hint: "^a", "^b", "^c" represent placeholder type(s). |}]

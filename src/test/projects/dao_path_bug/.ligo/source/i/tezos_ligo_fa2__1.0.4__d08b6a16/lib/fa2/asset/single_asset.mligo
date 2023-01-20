@@ -129,7 +129,7 @@ type transfer_from = {
 }
 type transfer = transfer_from list
 
-let transfer : transfer -> storage -> operation list * storage = 
+let transfer : transfer * storage -> operation list * storage =
    fun (t:transfer) (s:storage) -> 
    (* This function process the "tx" list. Since all transfer share the same "from_" address, we use a se *)
    let process_atomic_transfer (from_:address) (ledger, t:Ledger.t * atomic_trans) =
@@ -141,7 +141,7 @@ let transfer : transfer -> storage -> operation list * storage =
    in
    let process_single_transfer (ledger, t:Ledger.t * transfer_from ) =
       let {from_;tx} = t in
-      let ledger     = List.fold_left (process_atomic_transfer from_) ledger tx in
+      let ledger     = List.fold_left (fun z -> process_atomic_transfer from_ z) ledger tx in
       ledger
    in
    let ledger = List.fold_left process_single_transfer s.ledger t in
@@ -165,7 +165,7 @@ type balance_of = [@layout:comb] {
    callback : callback list contract;
 }
 
-let balance_of : balance_of -> storage -> operation list * storage = 
+let balance_of : balance_of * storage -> operation list * storage =
    fun (b: balance_of) (s: storage) -> 
    let {requests;callback} = b in
    let get_balance_info (request : request) : callback =
@@ -224,7 +224,7 @@ operator of A, C cannot transfer tokens that are owned by A, on behalf of B.
 
 
 *)
-let update_ops : update_operators -> storage -> operation list * storage = 
+let update_ops : update_operators * storage -> operation list * storage =
    fun (updates: update_operators) (s: storage) -> 
    let update_operator (operators,update : Operators.t * unit_update) = match update with 
       Add_operator    {owner=owner;operator=operator;token_id=_token_id} -> Operators.add_operator    operators owner operator
