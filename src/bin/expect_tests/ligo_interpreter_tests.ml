@@ -804,7 +804,7 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_tickets_and_bigmaps.mligo" ];
   [%expect
     {|
-    Success (3504n)
+    Success (3505n)
     Everything at the top-level was executed.
     - test_one exited with value (). |}]
 
@@ -938,7 +938,7 @@ let%expect_test _ =
     {|
     File "../../test/contracts/negative//interpreter_tests/test_random.mligo", line 6, characters 46-58:
       5 |   (* We generate the property *)
-      6 |   let test = PBT.make_test (PBT.gen_small : ((int contract) list) pbt_gen) (fun (xs : (int contract) list) -> List.length xs = 42n) in
+      6 |   let test = PBT.make_test (PBT.gen_small : ((int contract) list) pbt_gen) (fun xs -> List.length xs = 42n) in
       7 |   (* And run it *)
 
     Generator for type contract (int) is not implemented. For now, only unit, string, bytes, address, int, nat, tez, records, sums, lists, sets, maps and big_maps can be generated. |}]
@@ -1204,5 +1204,4 @@ let%expect_test _ =
     An uncaught error occured:
     Failwith: "foo"
     Trace:
-    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66 ,
     File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66 |}]
