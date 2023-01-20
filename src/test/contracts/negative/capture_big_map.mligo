@@ -9,7 +9,7 @@ module Impl = struct
     supply: nat
   }
 
-  let supply (ledger:l) (_:nat) = 
+  let supply (ledger:l) = fun (_:nat) ->
     ledger.supply
 
   let ledger_module (data: l) : l interface = { 
@@ -20,5 +20,5 @@ end
 
 let main (_, storage: unit * Impl.l) : operation list * Impl.l = 
   let ledger_module = Impl.ledger_module storage in
-  let _ = ledger_module.supply ledger_module.data 0n in
+  let _ = (ledger_module.supply ledger_module.data) 0n in
   [], storage
