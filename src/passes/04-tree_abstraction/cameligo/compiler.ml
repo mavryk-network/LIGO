@@ -444,19 +444,19 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
         | [] -> body
         | [(binder, fun_)] ->
           let expr = fun_ body in
-          e_lambda ~loc:Location.generated binder rhs_type expr
+          e_lambda ~loc binder rhs_type expr
         | _ ->
           let funs = List.map ~f:snd binders in
           let expr = List.fold_right ~init:body ~f:(fun fun_ body -> fun_ body) funs in
           let binders = List.map ~f:fst binders in
           let binders = List.map ~f:(fun x -> Binder.make (Param.get_var x) (Param.get_ascr x)) binders in
-          let var = Value_var.fresh ~loc:Location.generated () in
-          let expr = e_matching_tuple ~loc:Location.generated (e_variable ~loc:Location.generated var) binders @@ expr in
+          let var = Value_var.fresh ~loc () in
+          let expr = e_matching_tuple ~loc (e_variable ~loc var) binders @@ expr in
           let tuple_type = List.map ~f:(Binder.get_ascr) binders in
           let tuple_type = Option.all tuple_type in
-          let tuple_type = Option.map ~f:(t_tuple ~loc:Location.generated) tuple_type in
+          let tuple_type = Option.map ~f:(t_tuple ~loc) tuple_type in
           let param = Param.make var tuple_type in
-          e_lambda ~loc:Location.generated param rhs_type @@ expr) in
+          e_lambda ~loc param rhs_type @@ expr) in
     return expr
   | EConstr constr ->
     let (constr, args_o), loc = r_split constr in
@@ -569,26 +569,27 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
       (* function *)
       let binders = args in
       let binders = List.map ~f:(compile_parameter ~raise) binders in
+      let loc = let_rhs.location in
       let let_binder, fun_ = compile_binder ~raise pattern in
       let let_rhs, rhs_type = (match binders with
           | [] -> let_rhs, rhs_type
           | [(binder, fun_)] ->
             let expr = fun_ let_rhs in
-            let fun_type = Option.map2 ~f:(t_arrow ~loc:Location.generated) (Param.get_ascr binder) rhs_type in
-            e_lambda ~loc:Location.generated binder rhs_type expr, fun_type
+            let fun_type = Option.map2 ~f:(t_arrow ~loc) (Param.get_ascr binder) rhs_type in
+            e_lambda ~loc binder rhs_type expr, fun_type
           | _ ->
             let funs = List.map ~f:snd binders in
             let expr = List.fold_right ~init:let_rhs ~f:(fun fun_ body -> fun_ body) funs in
             let binders = List.map ~f:fst binders in
             let binders = List.map ~f:(fun x -> Binder.make (Param.get_var x) (Param.get_ascr x)) binders in
-            let var = Value_var.fresh ~loc:Location.generated () in
-            let expr = e_matching_tuple ~loc:Location.generated (e_variable ~loc:Location.generated var) binders @@ expr in
+            let var = Value_var.fresh ~loc () in
+            let expr = e_matching_tuple ~loc (e_variable ~loc var) binders @@ expr in
             let tuple_type = List.map ~f:(Binder.get_ascr) binders in
             let tuple_type = Option.all tuple_type in
-            let tuple_type = Option.map ~f:(t_tuple ~loc:Location.generated) tuple_type in
-            let fun_type = Option.map2 ~f:(t_arrow ~loc:Location.generated) tuple_type rhs_type in
+            let tuple_type = Option.map ~f:(t_tuple ~loc) tuple_type in
+            let fun_type = Option.map2 ~f:(t_arrow ~loc) tuple_type rhs_type in
             let param = Param.make var tuple_type in
-            e_lambda ~loc:Location.generated param rhs_type @@ expr, fun_type) in
+            e_lambda ~loc param rhs_type @@ expr, fun_type) in
       (* This handle polymorphic annotation *)
       let rhs_type : type_expression option =
         Option.map rhs_type ~f:(fun rhs_type ->
@@ -1122,25 +1123,26 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration option =
       (* function *)
       let binders = args in
       let binders = List.map ~f:(compile_parameter ~raise) binders in
+      let loc = let_rhs.location in
       let let_rhs, rhs_type = (match binders with
           | [] -> let_rhs, rhs_type
           | [(binder, fun_)] ->
             let expr = fun_ let_rhs in
-            let fun_type = Option.map2 ~f:(t_arrow ~loc:Location.generated) (Param.get_ascr binder) rhs_type in
-            e_lambda ~loc:Location.generated binder rhs_type expr, fun_type
+            let fun_type = Option.map2 ~f:(t_arrow ~loc) (Param.get_ascr binder) rhs_type in
+            e_lambda ~loc binder rhs_type expr, fun_type
           | _ ->
             let funs = List.map ~f:snd binders in
             let expr = List.fold_right ~init:let_rhs ~f:(fun fun_ body -> fun_ body) funs in
             let binders = List.map ~f:fst binders in
             let binders = List.map ~f:(fun x -> Binder.make (Param.get_var x) (Param.get_ascr x)) binders in
-            let var = Value_var.fresh ~loc:Location.generated () in
-            let expr = e_matching_tuple ~loc:Location.generated (e_variable ~loc:Location.generated var) binders @@ expr in
+            let var = Value_var.fresh ~loc () in
+            let expr = e_matching_tuple ~loc (e_variable ~loc var) binders @@ expr in
             let tuple_type = List.map ~f:(Binder.get_ascr) binders in
             let tuple_type = Option.all tuple_type in
-            let tuple_type = Option.map ~f:(t_tuple ~loc:Location.generated) tuple_type in
+            let tuple_type = Option.map ~f:(t_tuple ~loc) tuple_type in
             let param = Param.make var tuple_type in
-            let fun_type = Option.map2 ~f:(t_arrow ~loc:Location.generated) tuple_type rhs_type in
-            e_lambda ~loc:Location.generated param rhs_type @@ expr, fun_type) in
+            let fun_type = Option.map2 ~f:(t_arrow ~loc) tuple_type rhs_type in
+            e_lambda ~loc param rhs_type @@ expr, fun_type) in
       let binder, _fun_ = compile_binder ~raise pattern in
       (* This handle polymorphic annotation *)
       let rhs_type : type_expression option =
