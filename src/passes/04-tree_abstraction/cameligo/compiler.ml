@@ -440,15 +440,14 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
       match binders with
       | [] -> body
       | [ (binder, fun_) ] ->
-        let expr = fun_ body in
-        e_lambda ~loc binder rhs_type expr
+        e_lambda ~loc binder rhs_type @@ fun_ body
       | _ ->
-        let funs = List.map ~f:snd binders in
-        let expr = List.fold_right ~init:body ~f:(fun fun_ body -> fun_ body) funs in
-        let binders = List.map ~f:fst binders in
-        let binders =
-          List.map ~f:(fun x -> Binder.make (Param.get_var x) (Param.get_ascr x)) binders
-        in
+        let binders, expr =
+          let f (param, fun_) (binders, expr) =
+            let binder = Binder.make (Param.get_var param) (Param.get_ascr param) in
+            (binder :: binders, fun_ expr)
+          in
+          List.fold_right ~init:([], body) ~f binders in
         let var = Value_var.fresh ~loc () in
         let expr = e_matching_tuple ~loc (e_variable ~loc var) binders @@ expr in
         let tuple_type = List.map ~f:Binder.get_ascr binders in
@@ -579,14 +578,12 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
           let fun_type = Option.map2 ~f:(t_arrow ~loc) (Param.get_ascr binder) rhs_type in
           e_lambda ~loc binder rhs_type expr, fun_type
         | _ ->
-          let funs = List.map ~f:snd binders in
-          let expr = List.fold_right ~init:let_rhs ~f:(fun fun_ body -> fun_ body) funs in
-          let binders = List.map ~f:fst binders in
-          let binders =
-            List.map
-              ~f:(fun x -> Binder.make (Param.get_var x) (Param.get_ascr x))
-              binders
-          in
+          let binders, expr =
+            let f (param, fun_) (binders, expr) =
+              let binder = Binder.make (Param.get_var param) (Param.get_ascr param) in
+              (binder :: binders, fun_ expr)
+            in
+            List.fold_right ~init:([], let_rhs) ~f binders in
           let var = Value_var.fresh ~loc () in
           let expr = e_matching_tuple ~loc (e_variable ~loc var) binders @@ expr in
           let tuple_type = List.map ~f:Binder.get_ascr binders in
@@ -1138,14 +1135,12 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration option =
           let fun_type = Option.map2 ~f:(t_arrow ~loc) (Param.get_ascr binder) rhs_type in
           e_lambda ~loc binder rhs_type expr, fun_type
         | _ ->
-          let funs = List.map ~f:snd binders in
-          let expr = List.fold_right ~init:let_rhs ~f:(fun fun_ body -> fun_ body) funs in
-          let binders = List.map ~f:fst binders in
-          let binders =
-            List.map
-              ~f:(fun x -> Binder.make (Param.get_var x) (Param.get_ascr x))
-              binders
-          in
+          let binders, expr =
+            let f (param, fun_) (binders, expr) =
+              let binder = Binder.make (Param.get_var param) (Param.get_ascr param) in
+              (binder :: binders, fun_ expr)
+            in
+            List.fold_right ~init:([], let_rhs) ~f binders in
           let var = Value_var.fresh ~loc () in
           let expr = e_matching_tuple ~loc (e_variable ~loc var) binders @@ expr in
           let tuple_type = List.map ~f:Binder.get_ascr binders in
