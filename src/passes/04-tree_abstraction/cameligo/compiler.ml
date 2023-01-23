@@ -330,15 +330,17 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
     let loc = Location.lift region in
     let var, loc_var = r_split var in
     let func = e_variable_ez ~loc:loc_var var in
-    (match List.Ne.map self args with
-    | arg, [] -> return @@ e_application ~loc func arg
-    | arg, args -> return @@ e_application ~loc func @@ e_tuple ~loc (arg :: args))
+    let arg = match List.Ne.map self args with
+      | arg, [] -> arg
+      | arg, args -> e_tuple ~loc (arg :: args) in
+    return @@ e_application ~loc func arg
   | ECall call ->
     let (func, args), loc = r_split call in
     let func = self func in
-    (match List.Ne.map self args with
-    | arg, [] -> return @@ e_application ~loc func arg
-    | arg, args -> return @@ e_application ~loc func @@ e_tuple ~loc (arg :: args))
+    let arg = match List.Ne.map self args with
+      | arg, [] -> arg
+      | arg, args -> e_tuple ~loc (arg :: args) in
+    return @@ e_application ~loc func arg
   | ETuple lst ->
     let lst, loc = r_split lst in
     let lst = npseq_to_ne_list lst in
