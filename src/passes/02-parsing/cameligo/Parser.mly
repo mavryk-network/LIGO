@@ -52,7 +52,7 @@ let mk_wild region =
 %on_error_reduce module_var_t
 %on_error_reduce nsepseq(module_name,DOT)
 %on_error_reduce core_expr
-%on_error_reduce match_expr(base_cond)
+%on_error_reduce try_or_match_expr(base_cond)
 %on_error_reduce ctor_expr
 %on_error_reduce nsepseq(disj_expr_level,COMMA)
 %on_error_reduce const_ctor_expr
@@ -143,11 +143,12 @@ sep_or_term_list(item,sep):
 
 (* Helpers *)
 
-%inline variable    : "<ident>"  { unwrap $1 }
-%inline type_name   : "<ident>"  { unwrap $1 }
-%inline field_name  : "<ident>"  { unwrap $1 }
-%inline struct_name : "<ident>"  { unwrap $1 }
-%inline module_name : "<uident>" { unwrap $1 }
+%inline variable      : "<ident>"  { unwrap $1 }
+%inline type_name     : "<ident>"  { unwrap $1 }
+%inline field_name    : "<ident>"  { unwrap $1 }
+%inline struct_name   : "<ident>"  { unwrap $1 }
+%inline module_name   : "<uident>" { unwrap $1 }
+%inline contract_name : "<uident>" { unwrap $1 }
 
 (* Non-empty comma-separated values (at least two values) *)
 
@@ -267,6 +268,10 @@ core_type:
 | record_type      { TRecord $1 }
 | type_var         {    TArg $1 }
 | par(type_expr)   {    TPar $1 }
+| contract_sig     { $1 }
+
+contract_sig:
+  "type" "of" contract_name { failwith "contract_sig" }
 
 type_ctor_app:
   type_ctor_arg type_name {
@@ -372,6 +377,8 @@ let_declaration:
     let stop       = expr_to_region binding.let_rhs in
     let region     = cover kwd_let#region stop
     in {region; value} }
+| attributes "let" "entry" let_binding { failwith "let_declaration_1" }
+| attributes "let" "view"  let_binding { failwith "let_declaration_2" }
 
 %inline
 attributes:
@@ -545,7 +552,7 @@ interactive_expr:
   expr EOF { $1 }
 
 expr:
-  base_cond__open(expr) | match_expr(base_cond) { $1 }
+  base_cond__open(expr) | try_or_match_expr(base_cond) { $1 }
 
 base_cond__open(x):
   base_expr(x) | conditional(x) { $1 }
@@ -571,7 +578,7 @@ for_expr:
 | for_in_expr { $1 }
 
 for_int_expr:
-  "for" index "=" expr direction expr block { 
+  "for" index "=" expr direction expr block {
     let kwd_for  = $1 in
     let equal    = $3 in
     let stop     = $7.kwd_done#region in
@@ -594,7 +601,7 @@ direction:
 | "downto" { Downto $1 }
 
 block:
-  "do" ioption(series) "done" { 
+  "do" ioption(series) "done" {
     let kwd_do    = $1 in
     let kwd_done  = $3 in
     let value     = {kwd_do;
@@ -603,7 +610,7 @@ block:
     in value }
 
 for_in_expr:
-  "for" pattern "in" expr block { 
+  "for" pattern "in" expr block {
     let kwd_for  = $1 in
     let kwd_in   = $3 in
     let stop     = $5.kwd_done#region in
@@ -616,7 +623,7 @@ for_in_expr:
     in EForIn {region; value} }
 
 while_expr:
-  "while" expr block { 
+  "while" expr block {
     let kwd_while = $1 in
     let stop      = $3.kwd_done#region in
     let region    = cover kwd_while#region stop in
@@ -664,10 +671,10 @@ base_if_then_else:
 
 closed_expr:
   base_if_then_else__open(closed_expr)
-| match_expr(base_if_then_else) { $1 }
+| try_or_match_expr(base_if_then_else) { $1 }
 
-match_expr(right_expr):
-  "match" expr "with" "|"? cases(right_expr) {
+try_or_match_expr(right_expr):
+  try_or_match expr "with" "|"? cases(right_expr) {
     let kwd_match = $1 in
     let kwd_with = $3 in
     let lead_vbar = $4 in
@@ -685,6 +692,9 @@ match_expr(right_expr):
                   lead_vbar;
                   cases}
     in ECase {region; value} }
+
+try_or_match:
+  "try" | "match" { failwith "try_or_match" (* $1 *) }
 
 cases(right_expr):
   case_clause(right_expr) {
@@ -944,6 +954,8 @@ call_expr:
                  | _,  l -> last expr_to_region l in
     let region = cover start stop in
     ECall {region; value=$1,$2} }
+| "contract" par(typed_expr) { failwith "call_expr_1" }
+| "originate" contract_name arguments { failwith "call_expr_2" }
 
 core_expr:
   "<int>"                             {               EArith (Int (unwrap $1)) }
@@ -980,6 +992,7 @@ projection:
     let region = cover start stop in
     let value  = {struct_name=$1; selector=$2; field_path=$3}
     in {region; value} }
+| par(expr) "." nsepseq(selection,".") { failwith "projection" }
 
 module_access_e:
   module_name "." module_var_e {
@@ -1060,8 +1073,8 @@ path:
 
 sequence:
   "begin" ioption(series) "end" {
-    let begin_ = $1 in
-    let end_ = $3 in
+    let begin_   = $1 in
+    let end_     = $3 in
     let region   = cover begin_#region end_#region
     and compound = Some (BeginEnd (begin_,end_)) in
     let elements = $2 in
@@ -1075,7 +1088,7 @@ series:
 last_expr:
   seq_expr
 | fun_expr(last_expr)
-| match_expr(last_expr)
+| try_or_match_expr(last_expr)
 | let_in_sequence { $1 }
 
 let_in_sequence:
