@@ -605,8 +605,8 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
                   ~init:rhs_type
                   type_vars))
       in
-      (* This handle the recursion *)
       let let_binder = Binder.map (Fn.const rhs_type) let_binder in
+      (* This handle the recursion *)
       let let_rhs =
         match kwd_rec with
         | Some reg ->
@@ -1163,8 +1163,8 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration option =
                   ~init:rhs_type
                   type_vars))
       in
-      (* This handle the recursion *)
       let binder = Binder.map (Fn.const rhs_type) binder in
+      (* This handle the recursion *)
       let let_rhs =
         match kwd_rec with
         | Some reg ->
