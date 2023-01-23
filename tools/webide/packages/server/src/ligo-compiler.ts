@@ -148,6 +148,7 @@ export class LigoCompiler {
         syntax,
         '--protocol',
         protocol,
+        '--no-color',
       ]);
       return result;
     } finally {
