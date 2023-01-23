@@ -76,8 +76,8 @@ let mk_wild region =
 
 (* Entry points *)
 
-%start contract interactive_expr
-%type <CST.t> contract
+%start program interactive_expr
+%type <CST.t> program
 %type <CST.expr> interactive_expr
 
 %%
@@ -173,7 +173,7 @@ list_of(item):
 
 (* Main *)
 
-contract:
+program:
   module_ EOF { {$1 with eof=$2} }
 
 module_:
@@ -181,10 +181,11 @@ module_:
 
 declaration:
   type_decl       {    TypeDecl $1 }
-| let_declaration {         Let $1 }
+| let_decl        {         Let $1 }
 | module_decl     {  ModuleDecl $1 }
 | module_alias    { ModuleAlias $1 }
 | "<directive>"   {   Directive $1 }
+| contract_decl   { failwith "declaration" }
 
 (* Type declarations *)
 
@@ -210,6 +211,27 @@ type_var:
     let region = cover quote#region $2.region
     and value = {quote; name=$2}
     in {region; value} }
+
+(* Contracts *)
+
+contract_decl:
+  "contract" contract_name "=" "struct" ioption(nseq(contract)) "end" {
+    failwith "contract_decl" }
+
+contract:
+  let_decl   { failwith "contract_1" }
+| entry_decl { failwith "contract_2" }
+| view_decl  { failwith "contract_3" }
+
+entry_decl:
+  attributes "let" "entry" var_pattern parameters let_rhs_type "=" expr {
+    failwith "entry_decl" }
+
+view_decl:
+  attributes "let" "view" var_pattern parameters let_rhs_type "=" expr {
+    failwith "view_decl" }
+
+(* Modules *)
 
 module_decl:
   "module" module_name "=" "struct" module_ "end" {
@@ -268,10 +290,6 @@ core_type:
 | record_type      { TRecord $1 }
 | type_var         {    TArg $1 }
 | par(type_expr)   {    TPar $1 }
-| contract_sig     { $1 }
-
-contract_sig:
-  "type" "of" contract_name { failwith "contract_sig" }
 
 type_ctor_app:
   type_ctor_arg type_name {
@@ -354,7 +372,7 @@ field_decl:
 
    Note how we did not write:
 
-   let_declaration:
+   let_decl:
      seq("[@attr]") "let" ioption("rec") let_binding { ... }
 
    because this leads to an error state with an LR item of the form
@@ -367,7 +385,7 @@ field_decl:
    the following trick: use [ioption] and [nseq] instead of [seq] in
    the rule [attributes]. *)
 
-let_declaration:
+let_decl:
   attributes "let" ioption("rec") let_binding {
     let attributes = $1
     and kwd_let    = $2
@@ -377,8 +395,6 @@ let_declaration:
     let stop       = expr_to_region binding.let_rhs in
     let region     = cover kwd_let#region stop
     in {region; value} }
-| attributes "let" "entry" let_binding { failwith "let_declaration_1" }
-| attributes "let" "view"  let_binding { failwith "let_declaration_2" }
 
 %inline
 attributes:
@@ -386,12 +402,16 @@ attributes:
     match $1 with None -> [] | Some list -> list }
 
 let_binding:
+  fun_decl | non_fun_decl { $1 }
+
+fun_decl:
   var_pattern type_parameters parameters let_rhs_type "=" expr {
     let binders = Utils.nseq_cons (PVar $1) $3 in
-    {binders; type_params=$2; rhs_type=$4; eq=$5; let_rhs=$6}
-  }
-| irrefutable type_parameters let_rhs_type "=" expr {
-    {binders=$1,[]; type_params=$2; rhs_type=$3; eq=$4; let_rhs=$5} }
+    {binders; type_params=$2; rhs_type=$4; eq=$5; let_rhs=$6} }
+
+non_fun_decl:
+  irrefutable type_parameters let_rhs_type "=" expr {
+    {binders=($1,[]); type_params=$2; rhs_type=$3; eq=$4; let_rhs=$5} }
 
 %inline let_rhs_type:
   ioption(type_annotation(type_expr)) { $1 }
@@ -674,7 +694,7 @@ closed_expr:
 | try_or_match_expr(base_if_then_else) { $1 }
 
 try_or_match_expr(right_expr):
-  try_or_match expr "with" "|"? cases(right_expr) {
+  "match" expr "with" "|"? cases(right_expr) {
     let kwd_match = $1 in
     let kwd_with = $3 in
     let lead_vbar = $4 in
@@ -691,10 +711,10 @@ try_or_match_expr(right_expr):
                   kwd_with;
                   lead_vbar;
                   cases}
-    in ECase {region; value} }
-
-try_or_match:
-  "try" | "match" { failwith "try_or_match" (* $1 *) }
+    in ECase {region; value}
+  }
+| "try" expr "with" "|"? cases(right_expr) {
+    failwith "try_or_match_expr" }
 
 cases(right_expr):
   case_clause(right_expr) {
@@ -954,27 +974,35 @@ call_expr:
                  | _,  l -> last expr_to_region l in
     let region = cover start stop in
     ECall {region; value=$1,$2} }
-| "contract" par(typed_expr) { failwith "call_expr_1" }
+| "contract" par(address_cast) { failwith "call_expr_1" }
 | "originate" contract_name arguments { failwith "call_expr_2" }
 
+address_cast:
+  address ":" "type" "of" contract_name { failwith "address_cast" }
+
+address:
+  "<string>"
+| "<ident>"
+| module_access_e { $1 }
+
 core_expr:
-  "<int>"                             {               EArith (Int (unwrap $1)) }
-| "<mutez>"                           {             EArith (Mutez  (unwrap $1)) }
-| "<nat>"                             {               EArith (Nat  (unwrap $1)) }
-| "<bytes>"                           {                     EBytes (unwrap $1) }
-| "<ident>"                           {                       EVar (unwrap $1) }
-| projection                          {                      EProj $1 }
-| module_access_e                     {                      EModA $1 }
-| "<string>"                          {           EString (String (unwrap $1))}
-| "<verbatim>"                        {         EString (Verbatim (unwrap $1)) }
-| unit                                {                      EUnit $1 }
-| list_of(expr)                       {          EList (EListComp $1) }
-| sequence                            {                       ESeq $1 }
-| record_expr                         {                    ERecord $1 }
-| update_record                       {                    EUpdate $1 }
-| code_inj                            {                   ECodeInj $1 }
-| par(expr)                           {                       EPar $1 }
-| par(typed_expr)                     {                     EAnnot $1 }
+  "<int>"             {               EArith (Int (unwrap $1)) }
+| "<mutez>"           {             EArith (Mutez  (unwrap $1)) }
+| "<nat>"             {               EArith (Nat  (unwrap $1)) }
+| "<bytes>"           {                     EBytes (unwrap $1) }
+| "<ident>"           {                       EVar (unwrap $1) }
+| projection          {                      EProj $1 }
+| module_access_e     {                      EModA $1 }
+| "<string>"          {           EString (String (unwrap $1))}
+| "<verbatim>"        {         EString (Verbatim (unwrap $1)) }
+| unit                {                      EUnit $1 }
+| list_of(expr)       {          EList (EListComp $1) }
+| sequence            {                       ESeq $1 }
+| record_expr         {                    ERecord $1 }
+| update_record       {                    EUpdate $1 }
+| code_inj            {                   ECodeInj $1 }
+| par(expr)           {                       EPar $1 }
+| par(typed_expr)     {                     EAnnot $1 }
 
 code_inj:
   "[%lang" expr "]" {
