@@ -185,7 +185,9 @@ declaration:
 | module_decl     {  ModuleDecl $1 }
 | module_alias    { ModuleAlias $1 }
 | "<directive>"   {   Directive $1 }
-| contract_decl   { failwith "declaration" }
+| contract_decl   { 
+    (* TODO: Contracts *)
+    assert false }
 
 (* Type declarations *)
 
@@ -216,20 +218,29 @@ type_var:
 
 contract_decl:
   "contract" contract_name "=" "struct" ioption(nseq(contract)) "end" {
-    failwith "contract_decl" }
+    (* TODO: Contracts *)
+    assert false }
 
 contract:
-  let_decl   { failwith "contract_1" }
-| entry_decl { failwith "contract_2" }
-| view_decl  { failwith "contract_3" }
+  let_decl   { 
+    (* TODO: Contracts *)
+    assert false }
+| entry_decl { 
+    (* TODO: Contracts *)
+    assert false }
+| view_decl  { 
+    (* TODO: Contracts *)
+    assert false }
 
 entry_decl:
   attributes "let" "entry" var_pattern parameters let_rhs_type "=" expr {
-    failwith "entry_decl" }
+    (* TODO: Contracts *)
+    assert false }
 
 view_decl:
   attributes "let" "view" var_pattern parameters let_rhs_type "=" expr {
-    failwith "view_decl" }
+    (* TODO: Contracts *)
+    assert false }
 
 (* Modules *)
 
@@ -714,7 +725,8 @@ try_or_match_expr(right_expr):
     in ECase {region; value}
   }
 | "try" expr "with" "|"? cases(right_expr) {
-    failwith "try_or_match_expr" }
+    (* TODO: Contracts *)
+    assert false }
 
 cases(right_expr):
   case_clause(right_expr) {
@@ -974,16 +986,24 @@ call_expr:
                  | _,  l -> last expr_to_region l in
     let region = cover start stop in
     ECall {region; value=$1,$2} }
-| "contract" par(address_cast) { failwith "call_expr_1" }
-| "originate" contract_name arguments { failwith "call_expr_2" }
+| "contract" par(address_cast) { 
+    (* TODO: Contracts *)
+    assert false }
+| "originate" contract_name arguments { 
+    (* TODO: Contracts *)
+    assert false }
 
 address_cast:
-  address ":" "type" "of" contract_name { failwith "address_cast" }
+  address ":" "type" "of" contract_name { 
+    (* TODO: Contracts *)
+    assert false }
 
 address:
   "<string>"
 | "<ident>"
-| module_access_e { $1 }
+| module_access_e { 
+    (* TODO: Contracts *)
+    assert false }
 
 core_expr:
   "<int>"             {               EArith (Int (unwrap $1)) }
@@ -1020,7 +1040,9 @@ projection:
     let region = cover start stop in
     let value  = {struct_name=$1; selector=$2; field_path=$3}
     in {region; value} }
-| par(expr) "." nsepseq(selection,".") { failwith "projection" }
+| par(expr) "." nsepseq(selection,".") { 
+    (* TODO: Contracts *)
+    assert false }
 
 module_access_e:
   module_name "." module_var_e {
