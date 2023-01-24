@@ -301,7 +301,8 @@ let now =
 
 let no_colour =
   let open Command.Param in
-  let name = "--no-color" in (* Using the american standard for the CLI *)
+  let name = "--no-color" in
+  (* Using the american standard for the CLI *)
   let doc = "disable coloring in CLI output" in
   flag ~doc name no_arg
 
@@ -477,7 +478,7 @@ let ligo_bin_path =
   flag ~doc name spec
 
 
-module Api = Ligo_api_unix
+module Api = Ligo_api
 
 let ( <*> ) = Command.Param.( <*> )
 let ( <$> ) f a = Command.Param.return f <*> a
@@ -925,7 +926,7 @@ let mutate_cst =
       Raw_options.make ~syntax ~protocol_version ~libraries ~generator ~project_root ()
     in
     return_result ~return
-    @@ Api.Mutate.mutate_cst raw_options source_file display_format seed no_colour
+    @@ Api.Mutate.mutate_cst raw_options source_file display_format seed ~no_colour
   in
   let summary = "return a mutated version for a given file." in
   let readme () =
@@ -964,7 +965,7 @@ let mutate_ast =
       Raw_options.make ~syntax ~protocol_version ~libraries ~generator ~project_root ()
     in
     return_result ~return
-    @@ Api.Mutate.mutate_ast raw_options source_file display_format seed no_colour
+    @@ Api.Mutate.mutate_ast raw_options source_file display_format seed ~no_colour
   in
   let summary = "return a mutated version for a given file." in
   let readme () =
@@ -1832,10 +1833,10 @@ let init_library =
     if template_list
     then
       return_result ~return
-      @@ Ligo_api_unix.Ligo_init.list ~kind:`LIBRARY ~display_format ~no_colour
+      @@ Ligo_api.Ligo_init.list ~kind:`LIBRARY ~display_format ~no_colour
     else
       return_result ~return
-      @@ Ligo_api_unix.Ligo_init.new_project
+      @@ Ligo_api.Ligo_init.new_project
            ~version:Version.version
            ~kind:`LIBRARY
            ~project_name_opt:project_name
@@ -1865,10 +1866,10 @@ let init_contract =
     if template_list
     then
       return_result ~return
-      @@ Ligo_api_unix.Ligo_init.list ~kind:`CONTRACT ~display_format ~no_colour
+      @@ Ligo_api.Ligo_init.list ~kind:`CONTRACT ~display_format ~no_colour
     else
       return_result ~return
-      @@ Ligo_api_unix.Ligo_init.new_project
+      @@ Ligo_api.Ligo_init.new_project
            ~version:Version.version
            ~kind:`CONTRACT
            ~project_name_opt:project_name

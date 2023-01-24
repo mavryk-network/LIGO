@@ -5,8 +5,8 @@ module Compile = Ligo_compile
 module Helpers = Ligo_compile.Helpers
 module Raw_options = Compiler_options.Raw_options
 
-let mutate_ast (raw_options : Raw_options.t) source_file display_format _seed () =
-  format_result ~display_format Parsing.Formatter.ppx_format
+let mutate_ast (raw_options : Raw_options.t) source_file display_format _seed ~no_colour () =
+  format_result ~no_colour ~display_format Parsing.Formatter.ppx_format
   @@ fun ~raise ->
   let protocol_version =
     Helpers.protocol_to_variant ~raise raw_options.protocol_version
@@ -29,8 +29,8 @@ let mutate_ast (raw_options : Raw_options.t) source_file display_format _seed ()
   buffer
 
 
-let mutate_cst (raw_options : Raw_options.t) source_file display_format _seed () =
-  format_result ~display_format Parsing.Formatter.ppx_format
+let mutate_cst (raw_options : Raw_options.t) source_file display_format _seed ~no_colour () =
+  format_result ~no_colour ~display_format Parsing.Formatter.ppx_format
   @@ fun ~raise ->
   let protocol_version =
     Helpers.protocol_to_variant ~raise raw_options.protocol_version

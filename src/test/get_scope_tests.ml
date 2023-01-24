@@ -1,6 +1,6 @@
 open Simple_utils.Display
 module Scopes = Ligo_main.Main.Scopes.Api_helper
-module InfoApi = Ligo_api_unix.Info
+module InfoApi = Ligo_api.Info
 module Raw_options = Compiler_options.Raw_options
 
 let schema = "../main/scopes/schema.json"

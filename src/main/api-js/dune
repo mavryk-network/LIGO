@@ -3,4 +3,5 @@
  (public_name ligo.api-js)
  (instrumentation
   (backend bisect_ppx))
- (libraries ligo.api-common ligo.run))
+ (libraries ligo.api-common ligo.run)
+ (implements ligo_api))

@@ -1,10 +1,26 @@
 (library
+ (name ligo_api)
+ (public_name ligo.ligo_api)
+ (libraries ligo_api_common compiler_options simple-utils)
+ (virtual_modules ligo_api)
+ (modules ligo_api))
+
+(library
  (name ligo_api_common)
  (public_name ligo.api-common)
  (instrumentation
   (backend bisect_ppx))
- (libraries simple-utils ligo.decompile ligo.scopes build interpreter bos
-   cli_helpers tar decompress.gz))
+ (libraries
+  simple-utils
+  ligo.decompile
+  ligo.scopes
+  build
+  interpreter
+  bos
+  cli_helpers
+  tar
+  decompress.gz)
+ (modules :standard \ ligo_api))
 
 (rule
  (targets changelog.ml)
@@ -13,5 +29,7 @@
  (action
   (with-stdout-to
    changelog.ml
-   (run "sh" "-c"
-     "printf 'let changelog = {changelog|%s|changelog}' \"$(cat ${CHANGELOG_PATH:-../../../gitlab-pages/docs/intro/changelog.md})\""))))
+   (run
+    "sh"
+    "-c"
+    "printf 'let changelog = {changelog|%s|changelog}' \"$(cat ${CHANGELOG_PATH:-../../../gitlab-pages/docs/intro/changelog.md})\""))))
