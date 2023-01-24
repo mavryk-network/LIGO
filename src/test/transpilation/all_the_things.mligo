@@ -21,16 +21,16 @@ type approve = {
 type getAllowance = {
   owner    : address;
   spender  : address;
-  callback : nat contract;
+  callback : nat @contract;
 }
 
 type getBalance = {
   owner    : address;
-  callback : nat contract;
+  callback : nat @contract;
 }
 
 type getTotalSupply = {
-  callback : nat contract;
+  callback : nat @contract;
 }
 
 type action =
@@ -108,7 +108,7 @@ let main (a,s:action * storage) =
   |  GetBalance p -> getBalance (p,s)
   |  GetTotalSupply p -> getTotalSupply (p,s)
 let main (p : key_hash) =
-  let c : unit contract = Tezos.implicit_account p
+  let c : unit @contract = Tezos.implicit_account p
   in Tezos.address c
 let check_ (p : unit) : int = if Tezos.get_amount () = 100tez then 42 else 0
 (* should return a constant function *)
@@ -306,11 +306,11 @@ let some (o : unit option) =
   assert_some o
 [@inline] let x = 1
 [@inline] let foo (a : int): int =
-  ([@inline] let test = 2 + a in test)
+  ([@inline] let @test = 2 + a in @test)
 [@inline][@other] let y = 1
 let bar (b : int): int =
-  [@inline][@foo][@bar] let test = fun (z : int) -> 2 + b + z in
-  test b
+  [@inline][@foo][@bar] let @test = fun (z : int) -> 2 + b + z in
+  @test b
 (*
 This test makes sure that the balance is accessible in CameLIGO.
 
@@ -411,7 +411,7 @@ let example : bool =
     0x05010000000568656c6c6f
 (* Test whether closures capture variables in CameLIGO *)
 
-let test (k : int) : int =
+let @test (k : int) : int =
   let j : int = k + 5 in
   let close : int -> int = fun (i : int) -> i + j in
   let j : int = 20 (* Shadow original variable *)
@@ -553,13 +553,13 @@ type return = operation list * storage
 
 let attempt (p, store : param * storage) : return =
   (* if p.attempt <> store.challenge then failwith "Failed challenge" else *)
-  let contract : unit contract =
-    match (Tezos.get_contract_opt Tezos.get_sender () : unit contract option) with
-      Some contract -> contract
-    | None ->  (failwith "No contract" : unit contract)
+  let @contract : unit @contract =
+    match (Tezos.get_@contract_opt Tezos.get_sender () : unit @contract option) with
+      Some @contract -> @contract
+    | None ->  (failwith "No contract" : unit @contract)
   in
   let transfer : operation =
-    Tezos.transaction (unit, contract, 10.00tez) in
+    Tezos.transaction (unit, @contract, 10.00tez) in
   let store : storage = {challenge = p.new_challenge}
   in ([] : operation list), store
 type commit = {
@@ -830,11 +830,11 @@ let main (action, storage : action * storage) : return =
   | Update_details ud -> update_details (ud, storage)
   | Skip -> skip ((), storage)
 let main2 (p : key_hash) (s : unit) =
-  let c : unit contract = Tezos.implicit_account p
+  let c : unit @contract = Tezos.implicit_account p
   in ([] : operation list), unit
 
 let main (p,s : key_hash * unit) = main2 p s
-let main (kh : key_hash) : unit contract = Tezos.implicit_account kh
+let main (kh : key_hash) : unit @contract = Tezos.implicit_account kh
 // Demonstrate CameLIGO inclusion statements, see includer.mligo
 
 let foo : int = 144
@@ -1650,7 +1650,7 @@ Goes with ticket_wallet.mligo.
 
 type mint_parameter =
   [@layout comb]
-  {destination : unit ticket contract;
+  {destination : unit ticket @contract;
    amount : nat}
 
 type parameter =
@@ -1690,7 +1690,7 @@ Goes with ticket_builder.mligo.
 
 type send_parameter =
   [@layout comb]
-  {destination : unit ticket contract;
+  {destination : unit ticket @contract;
    amount : nat;
    ticketer : address}
 
