@@ -28,21 +28,24 @@ async function loadJSBundle(path) {
 }
 
 let { ligoEditor, michelsonEditor } = Editor.initialize();
+function handleClick(compile) {
+  let michelson = compile.main(
+    ligoEditor.state.doc.toJSON().join("\n"),
+    document.getElementById("syntax").value
+  );
+  console.log(michelson);
+  michelsonEditor.setState(
+    EditorState.create({
+      extensions: [basicSetup],
+      doc: michelson,
+    })
+  );
+}
+
 initialize().then(async () => {
   console.log("All WASM dependencies loaded");
   await loadJSBundle("/js_main.bc.runtime.js");
   await loadJSBundle("/js_main.bc.js");
-  document.getElementById("compile").addEventListener("click", function () {
-    let michelson = compile.main(
-      ligoEditor.state.doc.toJSON().join("\n"),
-      document.getElementById("syntax").value
-    );
-    console.log(michelson);
-    michelsonEditor.setState(
-      EditorState.create({
-        extensions: [basicSetup],
-        doc: michelson,
-      })
-    );
-  });
+  document.getElementById("compile").addEventListener("click", handleClick);
+  handleClick(window.compile);
 });
