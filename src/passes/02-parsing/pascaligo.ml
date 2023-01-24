@@ -24,6 +24,14 @@ module PascaligoParser =
     module CST = CST
     include Parser
 
+    let program = contract
+
+    module Incremental = 
+      struct
+        include Incremental
+        let program = contract
+      end
+
     module Recovery = Parsing_pascaligo.RecoverParser
   end
 

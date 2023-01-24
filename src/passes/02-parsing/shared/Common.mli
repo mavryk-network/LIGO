@@ -92,7 +92,7 @@ module type LIGO_PARSER =
     val interactive_expr :
       (Lexing.lexbuf -> token) -> Lexing.lexbuf -> CST.expr
 
-    val contract :
+    val program :
       (Lexing.lexbuf -> token) -> Lexing.lexbuf -> CST.t
 
     (* The monolithic API. *)
@@ -107,7 +107,7 @@ module type LIGO_PARSER =
         val interactive_expr :
           Lexing.position -> CST.expr MenhirInterpreter.checkpoint
 
-        val contract :
+        val program :
           Lexing.position -> CST.t MenhirInterpreter.checkpoint
       end
 

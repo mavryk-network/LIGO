@@ -53,11 +53,11 @@ module Parser =
     include Parsing_cameligo.Parser
     type tree = CST.t
 
-    let main = contract
+    let main = program
 
     module Incremental =
       struct
-        let main = Incremental.contract
+        let main = Incremental.program
       end
 
     module Recovery = Parsing_cameligo.RecoverParser
