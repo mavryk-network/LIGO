@@ -33,14 +33,7 @@ let main source syntax =
       ~warn_unused_rec:true
       ()
   in
-  (match
-    Api.Print.cst
-    ~syntax:syntax_v
-    raw_options
-    (`Raw source)
-    display_format
-    ()
-  with
+  (match Api.Print.cst ~syntax:syntax_v raw_options (`Raw source) display_format () with
   | Ok (a, b) ->
     print_endline a;
     print_endline b

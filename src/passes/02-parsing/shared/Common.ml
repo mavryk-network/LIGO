@@ -18,6 +18,13 @@ module Token    = Lexing_shared.Token
 module Pipeline = Lexing_shared.Pipeline
 module LexerAPI = Lexing_shared.TopAPI
 
+type path = string
+type source =
+  [
+  | `Raw of string
+  | `File of path
+  ]
+
 (* Local dependencies *)
 
 
@@ -375,3 +382,4 @@ module MakePretty (CST    : CST)
 
     let pretty_print_type_expr = print_type_expr
   end
+

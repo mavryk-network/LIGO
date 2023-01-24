@@ -136,11 +136,27 @@ let pretty_print ?(preprocess = false) ~raise ~options ~meta file_path =
   Of_c_unit.pretty_print ~preprocess ~raise ~meta buffer file_path
 
 
-let pretty_print_cst ?(preprocess = true) ~raise ~options ~meta file_path =
+let pretty_print_cst
+    ?(preprocess = true)
+    ~raise
+    ~options
+    ~meta
+    (source : Parsing_shared.Common.source)
+  =
   ignore preprocess;
   let buffer =
     if preprocess
-    then fst @@ Of_source.preprocess_file ~raise ~options ~meta file_path
-    else buffer_from_path file_path
+    then (
+      match source with
+      | `Raw code -> fst @@ Of_source.preprocess_string ~raise ~options ~meta code
+      | `File file_path ->
+        fst @@ Of_source.preprocess_file ~raise ~options ~meta file_path)
+    else (
+      match source with
+      | `Raw code ->
+        let buffer = Buffer.create 0 in
+        Buffer.add_string buffer code;
+        buffer
+      | `File file_path -> buffer_from_path file_path)
   in
-  Of_c_unit.pretty_print_cst ~raise ~meta buffer file_path
+  Of_c_unit.pretty_print_cst ~raise ~meta buffer source

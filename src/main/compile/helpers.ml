@@ -181,14 +181,14 @@ let pretty_print_pascaligo_cst = Parsing.Pascaligo.pretty_print_cst
 let pretty_print_cameligo_cst = Parsing.Cameligo.pretty_print_cst
 let pretty_print_jsligo_cst = Parsing.Jsligo.pretty_print_cst
 
-let pretty_print_cst ~raise ~(meta : meta) buffer file_path =
+let pretty_print_cst ~raise ~(meta : meta) buffer source =
   let print =
     match meta.syntax with
     | PascaLIGO -> pretty_print_pascaligo_cst
     | CameLIGO -> pretty_print_cameligo_cst
     | JsLIGO -> pretty_print_jsligo_cst
   in
-  trace ~raise parser_tracer @@ print buffer file_path
+  trace ~raise parser_tracer @@ print buffer source
 
 
 let pretty_print_pascaligo = Parsing.Pascaligo.pretty_print_file

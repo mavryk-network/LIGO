@@ -44,4 +44,4 @@ val pretty_print_type_expr  : CST.type_expr -> Buffer.t
    that its contents originally comes from a file. *)
 
 val pretty_print_file : (file_path -> Buffer.t) parser
-val pretty_print_cst  : (file_path -> Buffer.t) parser
+val pretty_print_cst  : (Parsing_shared.Common.source -> Buffer.t) parser

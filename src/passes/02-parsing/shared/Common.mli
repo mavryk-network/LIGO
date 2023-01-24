@@ -10,6 +10,12 @@ module Config      = Preprocessor.Config
 module Options     = ParserLib.Options
 module type PARSER = ParserLib.LowAPI.PARSER
 
+type path = string
+type source =
+  [
+  | `Raw of string
+  | `File of path 
+  ]
 (* Internal dependencies *)
 
 module Token    = Lexing_shared.Token

@@ -40,16 +40,21 @@ type raise = (Errors.t, Main_warnings.all) Trace.raise
 let pretty_print_file ?preprocess ~raise buffer file_path =
   parse_file ?preprocess ~raise buffer file_path |> pretty_print
 
-let pretty_print_cst ?preprocess ~raise buffer file_path =
+let pretty_print_cst ?preprocess ~raise buffer (source: Parsing_shared.Common.source) =
   let module PreprocParams =
     Preprocessor.CLI.MakeDefault (Config) in
   let module LexerParams =
     LexerLib.CLI.MakeDefault (PreprocParams) in
   let module Options = LexerParams.Options in
-  let tree   = parse_file ?preprocess ~raise buffer file_path in
+  let tree   =
+    match source with
+    | `Raw _code -> parse_string ?preprocess ~raise buffer
+    | `File file_path -> parse_file ?preprocess ~raise buffer file_path
+  in
   let buffer = Buffer.create 59 in
   let state  = Tree.mk_state
                  ~buffer
                  ~offsets:Options.offsets
                  Options.mode
   in Cst_cameligo.Print.to_buffer state tree
+

@@ -57,14 +57,24 @@ let preprocess (raw_options : Raw_options.t) source_file display_format () =
   Compile.Of_source.preprocess_file ~raise ~options:options.frontend ~meta source_file
 
 
-let cst (raw_options : Raw_options.t) source_file display_format () =
+let cst
+    (raw_options : Raw_options.t)
+    ?syntax
+    (source : [ `Raw of string | `File of string ])
+    display_format
+    ()
+  =
   format_result
     ~display_format
     ~no_colour:raw_options.no_colour
     Parsing.Formatter.ppx_format
   @@ fun ~raise ->
   let syntax =
-    Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
+    match syntax, source with
+    | Some v, _ -> v
+    | None, `File source ->
+      Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source)
+    | None, `Raw _ -> failwith "API expected syntax along with raw source"
   in
   let options = Compiler_options.make ~raw_options ~syntax () in
   let meta = Compile.Of_source.extract_meta syntax in
@@ -73,7 +83,7 @@ let cst (raw_options : Raw_options.t) source_file display_format () =
     ~raise
     ~options:options.frontend
     ~meta
-    source_file
+    source
 
 
 let ast (raw_options : Raw_options.t) source_file display_format () =
