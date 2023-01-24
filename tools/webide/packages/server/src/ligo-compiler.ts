@@ -173,6 +173,7 @@ export class LigoCompiler {
         name,
         '--protocol',
         protocol,
+        '--no-color',
       ]);
 
       return result;
@@ -221,6 +222,7 @@ export class LigoCompiler {
         syntax,
         '--protocol',
         protocol,
+        '--no-color',
       ]);
 
       return result;
@@ -251,6 +253,7 @@ export class LigoCompiler {
         syntax,
         '--protocol',
         protocol,
+        '--no-color',
       ]);
       return result;
     } finally {
@@ -271,6 +274,7 @@ export class LigoCompiler {
         entrypoint,
         '--protocol',
         protocol,
+        '--no-color',
       ]);
       return result;
     } finally {
@@ -298,6 +302,7 @@ export class LigoCompiler {
         syntax,
         '--protocol',
         protocol,
+        '--no-color',
       ]);
       return result;
     } finally {
