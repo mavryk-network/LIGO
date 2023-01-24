@@ -20,6 +20,9 @@ async function loadJSBundle(path) {
     script.onload = function () {
       resolve();
     };
+    script.onerror = function (e) {
+      reject(e);
+    };
     document.head.appendChild(script);
   });
 }
