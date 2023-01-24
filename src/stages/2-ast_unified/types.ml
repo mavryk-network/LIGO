@@ -42,6 +42,11 @@ module Block_with = Temp_prim.Block_with
 module Assign = Ligo_prim.Assign
 module Assign_chainable = Temp_prim.Assign_chainable
 module Type_decl = Temp_prim.Type_decl
+
+(* Pattern_decl: to keep vs Ligo_prim (functor mess) *)
+module Pattern_decl = Temp_prim.Pattern_decl
+module Simple_let_in = Temp_prim.Simple_let_in
+module Recursive = Temp_prim.Recursive
 module Abstraction = Ligo_prim.Abstraction
 
 module Empty_label = struct
@@ -218,15 +223,17 @@ and ('self, 'expr, 'ty_expr, 'pattern, 'mod_expr) declaration_content_ =
   | D_Let of ('expr, 'pattern Simple_utils.List.Ne.t, 'ty_expr) Let_decl.t
     (* let x = <..> ; let x (type a b) y (z:ty) = <..> *)
   | D_Var of ('pattern, 'expr, 'ty_expr) Simple_decl.t (* var x = y *)
-  | D_Multi_var of ('pattern, 'expr, 'ty_expr) Simple_decl.t Simple_utils.List.Ne.t (* var x = y , z = w *)
+  | D_Multi_var of ('pattern, 'expr, 'ty_expr) Simple_decl.t Simple_utils.List.Ne.t
+    (* var x = y , z = w *)
   | D_Const of ('pattern, 'expr, 'ty_expr) Simple_decl.t (* const x = y *)
-  | D_Multi_const of
-      ('pattern, 'expr, 'ty_expr) Simple_decl.t Simple_utils.List.Ne.t (* const x = y , z = w *)
+  | D_Multi_const of ('pattern, 'expr, 'ty_expr) Simple_decl.t Simple_utils.List.Ne.t
+    (* const x = y , z = w *)
   | D_Fun of ('ty_expr, 'expr, ('pattern, 'ty_expr) Param.t) Fun_decl.t
   | D_Type_abstraction of 'ty_expr Type_abstraction_decl.t
   | D_Module of 'mod_expr Mod_decl.t
   (*  \/ Below are nodes added through the passes \/*)
   | D_Type of 'ty_expr Type_decl.t [@not_initial]
+  | D_irrefutable_match of ('expr, 'pattern) Pattern_decl.t [@not_initial]
 [@@deriving
   map, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "declaration" }]
 
@@ -271,7 +278,8 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
       ('self, 'ty_expr, 'pattern) Poly_fun.t (* (fun <type a b>(x, y) z -> x + y - z) *)
   | E_Block_fun of ('self, 'pattern, 'ty_expr, 'block) Block_fun.t
   | E_Constr of Label.t
-  | E_Ctor_App of ('self * 'self Simple_utils.List.Ne.t option) (* MyCtor (42, 43, 44), PascaLigo only *)
+  | E_Ctor_App of ('self * 'self Simple_utils.List.Ne.t option)
+    (* MyCtor (42, 43, 44), PascaLigo only *)
   | E_Call of 'self * 'self list (* f (x, y) ; f x y *)
   | E_Match of ('self, 'pattern, 'self) Case.t (* match e with | A -> ... | B -> ... *)
   | E_Annot of ('self * 'ty_expr) (* 42 : int *)
@@ -288,7 +296,8 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_Assign_chainable of
       'self Assign_chainable.t (* x := y ; which has the type of x/y *)
   | E_Let_mut_in of ('pattern, 'self, 'ty_expr) Let_binding.t (* let mut x = 1 *)
-  | E_Assign_unitary of ('self, 'ty_expr option) Assign.t (* x := y ; which has type unit *)
+  | E_Assign_unitary of
+      ('self, 'ty_expr option) Assign.t (* x := y ; which has type unit *)
   | E_While of ('self, 'self) While.t
   | E_For of ('self, 'self) For_int.t
   | E_For_in of ('pattern, 'self, 'self) For_collection.t
@@ -296,6 +305,9 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   (*  \/ Below are nodes added through the passes \/ *)
   | E_constant of 'self Constant.t [@not_initial]
   | E_Constructor of 'self Constructor.t [@not_initial]
+  | E_Simple_let_in of ('self, 'pattern) Simple_let_in.t [@not_initial]
+  | E_Poly_recursive of ('self, unit, ('self, 'ty_expr, 'pattern) Poly_fun.t) Recursive.t
+      [@not_initial]
 [@@deriving map, iter, yojson, sexp, is { tags = [ "not_initial" ]; name = "expr" }]
 (* ========================== PROGRAM ====================================== *)
 

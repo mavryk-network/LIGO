@@ -223,3 +223,24 @@ S_Instr should only contain simple stuff like `I_While I_For_In I_For I_ForOf`
 - add : -
 
 unify with polyfun
+
+## pass 'let_syntax'
+
+- remove : D_Let , E_Let_in
+- add    : D_irrefutable_match
+
+```
+let <pattern list> <type params> : <type> = ..
+|->
+let <pattern> = (fun  ...)
+```
+  annotations in case of <pattern> needs to be propagated to lhs
+  let <pattern> : <ty> = <rhs> in .. |-> let <pattern> = <rhs> : <ty>
+
+  the rest are function with <pattern> being a variable pattern (possibly with type params, args ..)
+
+  let <pattern> (type <type_params>) <param> : <ty> = <rhs> in ..
+  |->
+  let <pattern> : <forall_type> = \/ <type_params> -> <rhs>
+
+  note: same for top-level let-ins (distinction between D_value & D_pattern)

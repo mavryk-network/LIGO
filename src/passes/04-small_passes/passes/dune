@@ -30,6 +30,7 @@
   constructor_application
   object_to_record
   array_to_tuple
+  let_syntax
  )
  (libraries ast_unified syntax_types)
  (inline_tests

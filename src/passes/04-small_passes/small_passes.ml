@@ -30,6 +30,7 @@ let passes
   ; Assign_transitivity.pass ~raise
   ; Returns.pass ~raise
   ; Unstate.pass ~raise
+  ; Let_syntax.pass ~raise
   ; Unify_fun.pass ~raise
   ]
 

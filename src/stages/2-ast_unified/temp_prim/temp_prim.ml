@@ -41,4 +41,6 @@ module Mod_in = Mod_in
 module Block_fun = Block_fun
 module Block_with = Block_with
 module Assign_chainable = Assign_chainable
-
+module Pattern_decl = Pattern_decl
+module Simple_let_in = Simple_let_in
+module Recursive = Recursive

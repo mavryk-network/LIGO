@@ -144,6 +144,13 @@ let rec decl : declaration -> Statement_result.t =
   | D_Import (Import_all_as _ | Import_selected _) -> failwith "not supported"
   | D_Multi_var _ | D_Multi_const _ -> failwith "multi vars removed"
   | D_Type_abstraction _ -> failwith "type abs removed"
+  | D_irrefutable_match { pattern; expr } ->
+    let lhs = List.Ne.singleton pattern in
+    Binding
+    (fun x ->
+      e_let_in
+        ~loc:(Location.cover loc (get_e_loc x))
+        { is_rec = false ; type_params = None; lhs ; rhs_type = None; rhs = expr; body = x })
 
 
 and instr ~raise : instruction -> Statement_result.t =
