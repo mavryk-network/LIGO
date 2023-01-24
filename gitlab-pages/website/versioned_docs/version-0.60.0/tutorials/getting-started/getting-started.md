@@ -108,7 +108,13 @@ Or run one of the older versions found on [DockerHub](https://hub.docker.com/r/l
 
   * On MacOsX, the software is distributed through a [brew](https://brew.sh/) formula with `brew install tezos`.
 
-# Building a smart-contract.
+## Building a smart-contract.
+
+### From a template
+
+Rather you're curious to see how to make NFT or randomness in LIGO, or you want to have an example for a more complex architecture, you can have a look in [this collection of templates](https://packages.ligolang.org/contracts) made by the LIGO team.
+
+### From scratch
 
 In this section and the following one we will use a simple smart-contract that is present as example on our webide. We will cover the ligo language and smart-contract development in the following tutorials.
 
@@ -502,12 +508,12 @@ const test_increment = (() : unit => {
 
 For deploying the contract on Tezos, we will use the `tezos-client` interface like we did on the previous section.
 
-First, you will need an account address. You can get one for testing at the [faucet](https://teztnets.xyz/ghostnet-faucet).
+First, you will need an account address. You can get one for testing at the [faucet](https://faucet.marigold.dev/).
 Download the json file and place it in the `ligo_tutorial` folder. $!$ The account that you get from the faucet are only temporary
 
 Then we are going to point the client on a Tezos node
 ```zsh
-tezos-client --endpoint https://rpc.ghostnet.teztnets.xyz config update
+tezos-client --endpoint https://ghostnet.tezos.marigold.dev/ config update
 ```
 This is the testnet, which is a separate network from Tezos, use for testing.
 
