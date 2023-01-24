@@ -420,7 +420,6 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
   | EFun func ->
     (* todo : make it in common with let function *)
     let func, loc = r_split func in
-    ignore loc;
     let ({ binders
          ; rhs_type
          ; body
@@ -450,9 +449,9 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
           List.fold_right ~init:([], body) ~f binders in
         let var = Value_var.fresh ~loc () in
         let expr = e_matching_tuple ~loc (e_variable ~loc var) binders @@ expr in
-        let tuple_type = List.map ~f:Binder.get_ascr binders in
-        let tuple_type = Option.all tuple_type in
-        let tuple_type = Option.map ~f:(t_tuple ~loc) tuple_type in
+        let tuple_types = Option.all @@ List.map ~f:Binder.get_ascr binders in
+        let loc_type = Option.(value ~default:loc @@ map ~f:(fun t -> t.location) rhs_type) in
+        let tuple_type = Option.map ~f:(t_tuple ~loc:loc_type) tuple_types in
         let param = Param.make var tuple_type in
         e_lambda ~loc param rhs_type @@ expr
     in
@@ -586,10 +585,10 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
             List.fold_right ~init:([], let_rhs) ~f binders in
           let var = Value_var.fresh ~loc () in
           let expr = e_matching_tuple ~loc (e_variable ~loc var) binders @@ expr in
-          let tuple_type = List.map ~f:Binder.get_ascr binders in
-          let tuple_type = Option.all tuple_type in
-          let tuple_type = Option.map ~f:(t_tuple ~loc) tuple_type in
-          let fun_type = Option.map2 ~f:(t_arrow ~loc) tuple_type rhs_type in
+          let tuple_types = Option.all @@ List.map ~f:Binder.get_ascr binders in
+          let loc_type = Option.(value ~default:loc @@ map ~f:(fun t -> t.location) rhs_type) in
+          let tuple_type = Option.map ~f:(t_tuple ~loc:loc_type) tuple_types in
+          let fun_type = Option.map2 ~f:(t_arrow ~loc:loc_type) tuple_type rhs_type in
           let param = Param.make var tuple_type in
           e_lambda ~loc param rhs_type @@ expr, fun_type
       in
@@ -1143,11 +1142,11 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration option =
             List.fold_right ~init:([], let_rhs) ~f binders in
           let var = Value_var.fresh ~loc () in
           let expr = e_matching_tuple ~loc (e_variable ~loc var) binders @@ expr in
-          let tuple_type = List.map ~f:Binder.get_ascr binders in
-          let tuple_type = Option.all tuple_type in
-          let tuple_type = Option.map ~f:(t_tuple ~loc) tuple_type in
+          let tuple_types = Option.all @@ List.map ~f:Binder.get_ascr binders in
+          let loc_type = Option.(value ~default:loc @@ map ~f:(fun t -> t.location) rhs_type) in
+          let tuple_type = Option.map ~f:(t_tuple ~loc:loc_type) tuple_types in
           let param = Param.make var tuple_type in
-          let fun_type = Option.map2 ~f:(t_arrow ~loc) tuple_type rhs_type in
+          let fun_type = Option.map2 ~f:(t_arrow ~loc:loc_type) tuple_type rhs_type in
           e_lambda ~loc param rhs_type @@ expr, fun_type
       in
       let binder, _fun_ = compile_binder ~raise pattern in

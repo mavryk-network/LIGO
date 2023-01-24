@@ -7,7 +7,7 @@ type self_ast_aggregated_error =
   [ `Self_ast_aggregated_expected_obj_ligo of Location.t
   | `Self_ast_aggregated_expected_obj_ligo_type of
     Location.t * Ast_aggregated.type_expression * Ast_aggregated.type_expression
-  | `Self_ast_aggregated_polymorphism_unresolved of Location.t
+  | `Self_ast_aggregated_polymorphism_unresolved of Location.t * Ast_aggregated.type_expression
   | `Self_ast_aggregated_monomorphisation_non_var of Ast_aggregated.expression
   | `Self_ast_aggregated_monomorphisation_non_for_all of Ast_aggregated.expression
   | `Self_ast_aggregated_monomorphisation_unexpected_type_abs of
@@ -59,12 +59,14 @@ let error_ppformat
         local
         Ast_aggregated.PP.type_expression
         global
-    | `Self_ast_aggregated_polymorphism_unresolved loc ->
+    | `Self_ast_aggregated_polymorphism_unresolved (loc, t) ->
       Format.fprintf
         f
-        "@[<hv>%a@.Can't infer the type of this value, please add a type annotation.@]"
+        "@[<hv>%a@.Cannot monomorphise the type (%a) of this value.@.Hint: Try addding a type annotation.@]"
         snippet_pp
         loc
+        pp_type
+        t
     | `Self_ast_aggregated_monomorphisation_non_var expr
     | `Self_ast_aggregated_monomorphisation_non_for_all expr ->
       if Location.is_dummy_or_generated expr.location
@@ -195,8 +197,8 @@ let error_json : self_ast_aggregated_error -> Simple_utils.Error.t =
     in
     let content = make_content ~message ~location () in
     make ~stage ~content
-  | `Self_ast_aggregated_polymorphism_unresolved location ->
-    let message = "Can't infer the type of this value, please add a type annotation." in
+  | `Self_ast_aggregated_polymorphism_unresolved (location, _t) ->
+    let message = "Cannot monomorphise the type of this value, please add a type annotation." in
     let content = make_content ~message ~location () in
     make ~stage ~content
   | `Self_ast_aggregated_monomorphisation_non_var expr
