@@ -482,6 +482,20 @@ let%expect_test _ =
     Type "_a" not found. |}]
 
 let%expect_test _ =
+  run_ligo_bad
+    [ "compile"
+    ; "expression"
+    ; "cameligo"
+    ; "f"
+    ; "--init-file"
+    ; test "annotate_arrow.mligo"
+    ];
+  [%expect
+    {|
+    Cannot monomorphise the type (∀ a . ( unit * option (nat) ) -> option (a)) of this value.
+    Hint: Try addding a type annotation. |}]
+
+let%expect_test _ =
   run_ligo_bad [ "print"; "ast-typed"; test "constants.mligo" ];
   [%expect
     {|
