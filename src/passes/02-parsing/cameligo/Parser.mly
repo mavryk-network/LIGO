@@ -185,7 +185,7 @@ declaration:
 | module_decl     {  ModuleDecl $1 }
 | module_alias    { ModuleAlias $1 }
 | "<directive>"   {   Directive $1 }
-| contract_decl   { 
+| contract_decl   {
     (* TODO: Contracts *)
     assert false }
 
@@ -222,13 +222,13 @@ contract_decl:
     assert false }
 
 contract:
-  let_decl   { 
+  let_decl   {
     (* TODO: Contracts *)
     assert false }
-| entry_decl { 
+| entry_decl {
     (* TODO: Contracts *)
     assert false }
-| view_decl  { 
+| view_decl  {
     (* TODO: Contracts *)
     assert false }
 
@@ -986,22 +986,15 @@ call_expr:
                  | _,  l -> last expr_to_region l in
     let region = cover start stop in
     ECall {region; value=$1,$2} }
-| "contract" par(address_cast) { 
+| par("contract" address_cast { assert false } ) {
     (* TODO: Contracts *)
     assert false }
-| "originate" contract_name arguments { 
+| "originate" contract_name arguments {
     (* TODO: Contracts *)
     assert false }
 
 address_cast:
-  address ":" "type" "of" contract_name { 
-    (* TODO: Contracts *)
-    assert false }
-
-address:
-  "<string>"
-| "<ident>"
-| module_access_e { 
+  core_expr ":" "type" "of" contract_name {
     (* TODO: Contracts *)
     assert false }
 
@@ -1040,7 +1033,7 @@ projection:
     let region = cover start stop in
     let value  = {struct_name=$1; selector=$2; field_path=$3}
     in {region; value} }
-| par(expr) "." nsepseq(selection,".") { 
+| par(expr) "." nsepseq(selection,".") {
     (* TODO: Contracts *)
     assert false }
 
