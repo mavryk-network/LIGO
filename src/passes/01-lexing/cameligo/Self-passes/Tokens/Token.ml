@@ -269,7 +269,6 @@ module T =
     let wrap_struct    = wrap "struct"
     let wrap_test      = wrap "test"
     let wrap_then      = wrap "then"
-    let wrap_test      = wrap "test"
     let wrap_to        = wrap "to"
     let wrap_try       = wrap "try"
     let wrap_type      = wrap "type"
@@ -854,7 +853,7 @@ module T =
     (* Keywords *)
 
     | Begin     t -> t#region, "Begin"
-    | Contract  t -> r#region, "Contract"
+    | Contract  t -> t#region, "Contract"
     | Do        t -> t#region, "Do"
     | Done      t -> t#region, "Done"
     | Downto    t -> t#region, "Downto"
