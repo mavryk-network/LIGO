@@ -192,9 +192,9 @@ module Make (Options : Options.S) (Token : Token.S) =
 
     (* Identifiers *)
 
-    let mk_ident state buffer =
+    let mk_ident (kind: Token.id_kind) state buffer =
       let state, Region.{region; value} = state#sync buffer in
-      let token = Token.mk_ident value region
+      let token = Token.mk_ident kind value region
       in token, state
 
     (* Attributes *)
@@ -271,7 +271,7 @@ let small     = ['a'-'z']
 let capital   = ['A'-'Z']
 let letter    = small | capital
 let ident     = (small | '_'+ (letter | digit)) (letter | '_' | digit)*
-let ext_ident = '@' (letter | digit | '_')+
+let esc_ident = '@' (letter | digit | '_')+
 let uident    = capital (letter | '_' | digit)*
 
 let string    = '"' [^ '"' '\\' '\n']* '"' as value
@@ -326,7 +326,8 @@ rule scan state = parse
 
 | "[@" str_attr "]"  { mk_str_attr key ?value state lexbuf }
 | "[@" id_attr  "]"  { mk_id_attr  key ?value state lexbuf }
-| ident | ext_ident  { mk_ident               state lexbuf }
+| ident              { mk_ident Token.Plain   state lexbuf }
+| esc_ident          { mk_ident Token.Escaped state lexbuf }
 | uident             { mk_uident              state lexbuf }
 | bytes              { mk_bytes bytes         state lexbuf }
 | nat "n"            { mk_nat   nat           state lexbuf }

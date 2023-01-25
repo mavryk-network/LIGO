@@ -67,7 +67,7 @@ module Make (Token : TOKEN) =
                   else fail acc region Missing_break
              else
                if   is_bytes token
-               then if   is_int next || is_hex next
+               then if   is_int next || start_with_hex next
                     then fail acc region Odd_lengthed_bytes
                     else
                       if   is_sym next || is_eof next
