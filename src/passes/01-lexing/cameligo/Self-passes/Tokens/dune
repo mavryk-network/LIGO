@@ -12,7 +12,7 @@
   ;; LIGO
   lexing_shared
   mh_ml_tokens)
- (modules Token Self))
+ (modules Self))
 
 ;; --------------------------------------------------------------------
 ;; Build the type ['a terminal] to complete the inspection API of
@@ -29,7 +29,7 @@
 (library
  (name mh_ml_tokens)
  (public_name ligo.lexing.mh_ml_tokens)
- (modules MenhirToken)
+ (modules Token MenhirToken)
  (libraries
   ;; LIGO
   lexing_shared
