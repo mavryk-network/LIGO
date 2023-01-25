@@ -55,7 +55,7 @@
 %token        <(string * Z.t) Wrap.t> Int       "<int>"       [@recover.expr mk_int       $loc]
 %token        <(string * Z.t) Wrap.t> Nat       "<nat>"       [@recover.expr mk_nat       $loc]
 %token    <(string * Int64.t) Wrap.t> Mutez     "<mutez>"     [@recover.expr mk_mutez     $loc]
-%token      <id_kind * string Wrap.t> Ident     "<ident>"     [@recover.expr mk_ident     $loc] [@recover.cost 900]
+%token      <Token.id_kind * string Wrap.t> Ident     "<ident>"     [@recover.expr mk_ident     $loc] [@recover.cost 900]
 %token                <string Wrap.t> UIdent    "<uident>"    [@recover.expr mk_uident    $loc]
 %token            <Attr.t Region.reg> Attr      "[@attr]"     [@recover.expr mk_attr      $loc]
 %token <string Region.reg Region.reg> Lang      "[%lang"      [@recover.expr mk_lang      $loc]
