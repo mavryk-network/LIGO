@@ -32,6 +32,7 @@ let passes
   ; Unstate.pass ~raise
   ; Let_syntax.pass ~raise
   ; Unify_fun.pass ~raise
+  ; Generalize_functions.pass ~raise
   ]
 
 

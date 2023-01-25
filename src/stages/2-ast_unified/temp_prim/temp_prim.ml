@@ -44,3 +44,4 @@ module Assign_chainable = Assign_chainable
 module Pattern_decl = Pattern_decl
 module Simple_let_in = Simple_let_in
 module Recursive = Recursive
+module Type_abstraction = Type_abstraction

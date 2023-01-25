@@ -28,16 +28,6 @@ note: we should have unpun at type level as well .. check later :)
 ```
 | E_Record_pun of (Variable.t, 'self) Field.t Record.t it's a map
 ```
-## pass 'expand_polymorphism'
-
-  - remove : E_Poly_fun D_Fun
-  - add : E_Fun of param list * body , E_Abstraction , E_recursive
-
-  `E_Poly_fun (type at bt) (var a : at) (const b : bt) : ret -> ...`
-  |-> `E_Abstraction (at (E_Abstraction bt (E_Fun (var a : at) (const b : bt) : ret) -> ...))`
-
-  `D_Fun rec f (type at bt) (var a : at) (const b : bt) : ret -> body`
-  |-> `D_Const (P_var f) None = E_recursive (E_Abstraction (at (E_Abstraction bt (E_Fun (var a : at) (const b : bt) : ret))`
 
 ## pass 'function_representation'
 

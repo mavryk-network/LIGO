@@ -42,6 +42,7 @@ module Block_with = Temp_prim.Block_with
 module Assign = Ligo_prim.Assign
 module Assign_chainable = Temp_prim.Assign_chainable
 module Type_decl = Temp_prim.Type_decl
+module Type_abstraction = Temp_prim.Type_abstraction
 
 (* Pattern_decl: to keep vs Ligo_prim (functor mess) *)
 module Pattern_decl = Temp_prim.Pattern_decl
@@ -306,8 +307,10 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_constant of 'self Constant.t [@not_initial]
   | E_Constructor of 'self Constructor.t [@not_initial]
   | E_Simple_let_in of ('self, 'pattern) Simple_let_in.t [@not_initial]
-  | E_Poly_recursive of ('self, unit, ('self, 'ty_expr, 'pattern) Poly_fun.t) Recursive.t
+  | E_Poly_recursive of ('ty_expr list, ('self, 'ty_expr, 'pattern) Poly_fun.t) Recursive.t
       [@not_initial]
+  | E_Abstraction of 'self Type_abstraction.t [@not_initial]
+  | E_Fun of ('pattern,'ty_expr) Param.t list * 'self [@not_initial]
 [@@deriving map, iter, yojson, sexp, is { tags = [ "not_initial" ]; name = "expr" }]
 (* ========================== PROGRAM ====================================== *)
 

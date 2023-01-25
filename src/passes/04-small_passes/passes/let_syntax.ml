@@ -7,17 +7,18 @@ module Location = Simple_utils.Location
 
 (* this pass handle the let-syntax, e.g:
   let f (type a b) x y : t = ..
+  let rec f (type a b) x y : t = ..
   let v : t = ..
   let f x y = ..
 
   In essence, discriminating functions binding from a regular binding (match)
 *)
 
-let compile_let_rhs ~loc is_rec fun_pattern type_params parameters rhs_type body =
+let compile_let_rhs ~raise ~loc is_rec fun_pattern type_params parameters rhs_type body =
   let fun_name =
     match get_p fun_pattern with
     | P_var x -> x
-    | _ -> failwith "unexpect let binding"
+    | _ -> failwith "impossible parsing?"
   in
   let parameters =
     List.map parameters ~f:(fun pattern ->
@@ -26,11 +27,22 @@ let compile_let_rhs ~loc is_rec fun_pattern type_params parameters rhs_type body
   let fun_ = Poly_fun.{ type_params; parameters; ret_type = rhs_type; body } in
   (* Note: fun_type is not yet generalized, for now it has unit type *)
   if is_rec
-  then e_poly_recursive ~loc Recursive.{ fun_name; fun_type = (); lambda = fun_ }
+  then (
+    let param_types_opt =
+      List.map parameters ~f:(fun Param.{ pattern; param_type; _ } ->
+          let default = Option.map ~f:fst (get_p_typed pattern) in
+          Option.value ~default param_type)
+    in
+    let fun_type =
+      List.map param_types_opt ~f:(function
+          | Some x -> x
+          | None -> raise.error (recursive_no_annot body))
+    in
+    e_poly_recursive ~loc Recursive.{ fun_name; fun_type; lambda = fun_ })
   else e_poly_fun ~loc fun_
 
 
-let compile =
+let compile ~raise =
   let expr : _ expr_ -> expr =
    fun e ->
     let loc = Location.get_location e in
@@ -42,10 +54,9 @@ let compile =
             e_annot ~loc:(get_e_loc rhs) (rhs, t))
       in
       e_simple_let_in ~loc { binder; rhs; let_result = body }
-    | E_Let_in { is_rec; type_params; lhs = fun_pattern, parameters; rhs_type; rhs; body }
-      ->
+    | E_Let_in { is_rec; type_params; lhs = fun_pattern, params; rhs_type; rhs; body } ->
       let rhs =
-        compile_let_rhs ~loc is_rec fun_pattern type_params parameters rhs_type rhs
+        compile_let_rhs ~raise ~loc is_rec fun_pattern type_params params rhs_type rhs
       in
       e_simple_let_in ~loc { binder = fun_pattern; rhs; let_result = body }
     | e -> make_e ~loc e
@@ -62,10 +73,9 @@ let compile =
             e_annot ~loc:(get_e_loc let_rhs) (let_rhs, t))
       in
       d_irrefutable_match ~loc { pattern; expr }
-    | D_Let { is_rec; type_params; pattern = fun_pattern, parameters; rhs_type; let_rhs }
-      ->
+    | D_Let { is_rec; type_params; pattern = fun_pattern, params; rhs_type; let_rhs } ->
       let rhs =
-        compile_let_rhs ~loc is_rec fun_pattern type_params parameters rhs_type let_rhs
+        compile_let_rhs ~raise ~loc is_rec fun_pattern type_params params rhs_type let_rhs
       in
       (* TODO: wait, why d_const has type_params ??? *)
       d_const
@@ -92,6 +102,6 @@ let reduction ~raise =
 let pass ~raise =
   cata_morph
     ~name:__MODULE__
-    ~compile
+    ~compile:(compile ~raise)
     ~decompile:`None (* for now ? *)
     ~reduction_check:(reduction ~raise)

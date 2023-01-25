@@ -23,6 +23,7 @@ type t =
   | `Small_passes_unsupported_object_field of expr
   | `Small_passes_unsupported_update of expr
   | `Small_passes_unsupported_rest_property of expr
+  | `Small_passes_recursive_no_annot of expr
   ]
 [@@deriving poly_constructor { prefix = "small_passes_" }, sexp]
 
@@ -116,7 +117,14 @@ let error_ppformat
     | `Small_passes_unsupported_update e ->
       Format.fprintf f "@[<hv>%a@.Unsupported update@]" snippet_pp (get_e_loc e)
     | `Small_passes_unsupported_rest_property e ->
-      Format.fprintf f "@[<hv>%a@.Unsupported rest property@]" snippet_pp (get_e_loc e))
+      Format.fprintf f "@[<hv>%a@.Unsupported rest property@]" snippet_pp (get_e_loc e)
+    | `Small_passes_recursive_no_annot e ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Invalid function declaration. Recursive functions are required to \
+         have a type annotation@]"
+        snippet_pp
+        (get_e_loc e))
 
 
 let error_json : t -> Simple_utils.Error.t =
@@ -223,4 +231,13 @@ let error_json : t -> Simple_utils.Error.t =
   | `Small_passes_unsupported_rest_property e ->
     let location = get_e_loc e in
     let content = make_content ~message:"Unsupported rest property" ~location () in
+    make ~stage ~content
+  | `Small_passes_recursive_no_annot e ->
+    let location = get_e_loc e in
+    let content =
+      make_content
+        ~message:"Recursive functions are required to have a type annotation"
+        ~location
+        ()
+    in
     make ~stage ~content

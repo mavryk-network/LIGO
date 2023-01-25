@@ -244,3 +244,14 @@ let <pattern> = (fun  ...)
   let <pattern> : <forall_type> = \/ <type_params> -> <rhs>
 
   note: same for top-level let-ins (distinction between D_value & D_pattern)
+
+## pass 'generalize_functions'
+
+  - remove : E_Poly_fun D_Fun
+  - add : E_Fun of param list * body , E_Abstraction , E_recursive
+
+  `E_Poly_fun (type at bt) (var a : at) (const b : bt) : ret -> ...`
+  |-> `E_Abstraction (at (E_Abstraction bt (E_Fun (var a : at) (const b : bt) : ret) -> ...))`
+
+  `D_Fun rec f (type at bt) (var a : at) (const b : bt) : ret -> body`
+  |-> `D_Const (P_var f) None = E_recursive (E_Abstraction (at (E_Abstraction bt (E_Fun (var a : at) (const b : bt) : ret))`
