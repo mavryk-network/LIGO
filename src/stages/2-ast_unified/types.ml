@@ -25,6 +25,8 @@ module Literal_value = Ligo_prim.Literal_value
 module Raw_code = Ligo_prim.Raw_code
 module Constant = Ligo_prim.Constant
 module Constructor = Ligo_prim.Constructor
+module Lambda = Ligo_prim.Lambda
+module Application = Ligo_prim.Application
 module Non_linear_rows = Temp_prim.Non_linear_rows (Label)
 module Field = Temp_prim.Field
 module Array_repr = Temp_prim.Array_repr
@@ -309,8 +311,12 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_Simple_let_in of ('self, 'pattern) Simple_let_in.t [@not_initial]
   | E_Poly_recursive of ('ty_expr list, ('self, 'ty_expr, 'pattern) Poly_fun.t) Recursive.t
       [@not_initial]
+  | E_Recursive of ('ty_expr , ('self, 'ty_expr option) Lambda.t) Recursive.t
+      [@not_initial]
+  | E_Lambda of ('self, 'ty_expr option) Lambda.t [@not_initial]
   | E_Abstraction of 'self Type_abstraction.t [@not_initial]
   | E_Fun of ('pattern,'ty_expr) Param.t list * 'self [@not_initial]
+  | E_Application of 'self Application.t
 [@@deriving map, iter, yojson, sexp, is { tags = [ "not_initial" ]; name = "expr" }]
 (* ========================== PROGRAM ====================================== *)
 

@@ -25,7 +25,6 @@ let compile_let_rhs ~raise ~loc is_rec fun_pattern type_params parameters rhs_ty
         Param.{ param_kind = `Const; pattern; param_type = None })
   in
   let fun_ = Poly_fun.{ type_params; parameters; ret_type = rhs_type; body } in
-  (* Note: fun_type is not yet generalized, for now it has unit type *)
   if is_rec
   then (
     let param_types_opt =

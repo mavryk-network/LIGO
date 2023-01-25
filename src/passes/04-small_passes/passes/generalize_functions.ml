@@ -19,6 +19,12 @@ let compile =
     | E_Poly_fun ({ type_params = Some ty_params; _ } as pf) ->
       let body = generalize ty_params pf.body in
       e_poly_fun ~loc { pf with body }
+    | E_Poly_recursive ({ lambda = { type_params = Some ty_params; _ } as pf; _ } as x) ->
+      let lambda =
+        let body = generalize ty_params pf.body in
+        { pf with body }
+      in
+      e_poly_recursive ~loc { x with lambda }
     | e -> make_e ~loc e
   in
   let declaration : _ declaration_ -> declaration =
@@ -40,13 +46,17 @@ let reduction ~raise =
   { Iter.defaults with
     expr =
       (function
-      | { wrap_content = E_Poly_fun { type_params = Some _ }; _ } ->
-        raise.error (wrong_reduction __MODULE__)
+      | { wrap_content =
+            ( E_Poly_fun { type_params = Some _ }
+            | E_Poly_recursive { lambda = { type_params = Some _; _ }; _ } )
+        ; _
+        } -> raise.error (wrong_reduction __MODULE__)
       | _ -> ())
   ; declaration =
       (function
-      | { wrap_content = D_Var { type_params = Some _ }; _ } -> raise.error (wrong_reduction __MODULE__)
-      | { wrap_content = D_Const { type_params = Some _ }; _ } -> raise.error (wrong_reduction __MODULE__)
+      | { wrap_content = D_Var { type_params = Some _ } | D_Const { type_params = Some _ }
+        ; _
+        } -> raise.error (wrong_reduction __MODULE__)
       | _ -> ())
   }
 

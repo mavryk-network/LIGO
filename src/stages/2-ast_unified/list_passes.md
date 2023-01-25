@@ -29,22 +29,6 @@ note: we should have unpun at type level as well .. check later :)
 | E_Record_pun of (Variable.t, 'self) Field.t Record.t it's a map
 ```
 
-## pass 'function_representation'
-
-- remove : E_Call, E_Fun
-- add : E_Application of (expr, expr) , E_Lambda
-
-IF option.syntax == jsligo, pascaligo :
-`E_Call f ()`      |-> `E_Application f (E_literal (E_unit))`
-`E_Call (f a b c)` |-> `E_Application (a,b,c)`
-IF option.syntax == cameligo :
-`E_Call (f a b c)` |-> `E_Application (E_Application (E_Application (f a) b) c)`
-
-IF option.syntax == jsligo, pascaligo :
-`E_Fun a b c ret body` |-> `E_lambda (E_tuple (a,b,c)) (E_Annot body)`
-
-IF option.syntax == cameligo:
-`E_Fun a b c ret body` |-> `E_lambda a (E_lambda b (E_lambda c (E_Annot body)))`
 
 
 ## pass 'enum_attributes' TODO AT THE END ..

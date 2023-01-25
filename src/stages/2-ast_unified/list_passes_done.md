@@ -255,3 +255,21 @@ let <pattern> = (fun  ...)
 
   `D_Fun rec f (type at bt) (var a : at) (const b : bt) : ret -> body`
   |-> `D_Const (P_var f) None = E_recursive (E_Abstraction (at (E_Abstraction bt (E_Fun (var a : at) (const b : bt) : ret))`
+
+
+## pass 'curry'
+
+- remove : E_Call, E_Fun
+- add : E_Application of (expr, expr) , E_Lambda
+
+IF option.syntax == jsligo, pascaligo :
+`E_Call f ()`      |-> `E_Application f (E_literal (E_unit))`
+`E_Call (f a b c)` |-> `E_Application (a,b,c)`
+IF option.syntax == cameligo :
+`E_Call (f a b c)` |-> `E_Application (E_Application (E_Application (f a) b) c)`
+
+IF option.syntax == jsligo, pascaligo :
+`E_Fun a b c ret body` |-> `E_lambda (E_tuple (a,b,c)) (E_Annot body)`
+
+IF option.syntax == cameligo:
+`E_Fun a b c ret body` |-> `E_lambda a (E_lambda b (E_lambda c (E_Annot body)))`
