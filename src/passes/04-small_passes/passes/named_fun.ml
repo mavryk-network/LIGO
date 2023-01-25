@@ -40,7 +40,7 @@ let%expect_test "compile" =
         ( (name t)
           (type_expr
             (T_Named_fun
-              ((((name foo) (type_expr (T_Var int))) ((name bar) (type_expr (T_Var string))))
+              ((((name (foo)) (type_expr (T_Var int))) ((name (bar)) (type_expr (T_Var string))))
                 (T_Var nat))))))))
   |}
   |-> pass ~raise;

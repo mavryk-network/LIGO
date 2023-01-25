@@ -47,14 +47,14 @@ let reduction ~raise =
     expr =
       (function
       | { wrap_content =
-            ( E_Poly_fun { type_params = Some _ }
+            ( E_Poly_fun { type_params = Some _ ; _ }
             | E_Poly_recursive { lambda = { type_params = Some _; _ }; _ } )
         ; _
         } -> raise.error (wrong_reduction __MODULE__)
       | _ -> ())
   ; declaration =
       (function
-      | { wrap_content = D_Var { type_params = Some _ } | D_Const { type_params = Some _ }
+      | { wrap_content = D_Var { type_params = Some _ ; _ } | D_Const { type_params = Some _ ; _}
         ; _
         } -> raise.error (wrong_reduction __MODULE__)
       | _ -> ())

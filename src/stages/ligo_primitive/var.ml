@@ -39,7 +39,7 @@ module Internal () = struct
       Sexp.Atom name
     let t_of_sexp : Sexp.t -> t = function
       | Atom name -> {name = name ; generated = false ; counter = 0 ; location = Location.generated}
-      | (List _ as x) -> Sexplib.Conv_error.ptag_no_args "lol" x 
+      | (List _ as x) -> Sexplib.Conv_error.ptag_no_args "can't be a list" x 
   end
   
   include T
