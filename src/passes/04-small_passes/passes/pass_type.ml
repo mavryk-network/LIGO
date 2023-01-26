@@ -79,7 +79,7 @@ let idle_ana_pass : ana_pass =
   ; program = (fun { fp } -> fp)
   }
 
-type pass_kind = [ `Cata of cata_pass | `Ana of ana_pass | `None ]
+type pass_kind = [ `Cata of cata_pass | `Ana of ana_pass | `Check of Iter.iter | `None ]
 let cata_morph
     ~name
     ~(compile : pass_kind)
@@ -92,12 +92,14 @@ let cata_morph
       match compile with
       | `Cata pass -> Catamorphism.(cata_expr ~f:pass expr)
       | `Ana pass -> Anamorphism.(ana_expr ~f:pass expr)
+      | `Check pass -> Iter.iter_expr ~f:pass expr ; expr
       | `None -> expr
     in
     let backward expr =
       match decompile with
       | `Cata pass -> Catamorphism.(cata_expr ~f:pass expr)
       | `Ana pass -> Anamorphism.(ana_expr ~f:pass expr)
+      | `Check pass -> Iter.iter_expr ~f:pass expr ; expr
       | `None -> expr
     in
     let reduction_check = reduction_check, fun f expr -> Iter.(iter_expr ~f expr) in
@@ -108,12 +110,14 @@ let cata_morph
       match compile with
       | `Cata pass -> Catamorphism.(cata_program ~f:pass prg)
       | `Ana pass -> Anamorphism.(ana_program ~f:pass prg)
+      | `Check pass -> Iter.iter_program ~f:pass prg ; prg
       | `None -> prg
     in
     let backward prg =
       match decompile with
       | `Cata pass -> Catamorphism.(cata_program ~f:pass prg)
       | `Ana pass -> Anamorphism.(ana_program ~f:pass prg)
+      | `Check pass -> Iter.iter_program ~f:pass prg ; prg
       | `None -> prg
     in
     let reduction_check = reduction_check, fun f prg -> Iter.(iter_program ~f prg) in

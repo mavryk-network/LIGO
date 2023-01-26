@@ -24,6 +24,8 @@ type t =
   | `Small_passes_unsupported_update of expr
   | `Small_passes_unsupported_rest_property of expr
   | `Small_passes_recursive_no_annot of expr
+  | `Small_passes_non_linear_pattern of (pattern, ty_expr) pattern_
+  | `Small_passes_non_linear_type of ty_expr ty_expr_
   ]
 [@@deriving poly_constructor { prefix = "small_passes_" }, sexp]
 
@@ -124,7 +126,19 @@ let error_ppformat
         "@[<hv>%a@.Invalid function declaration. Recursive functions are required to \
          have a type annotation@]"
         snippet_pp
-        (get_e_loc e))
+        (get_e_loc e)
+    | `Small_passes_non_linear_pattern p ->
+      Format.fprintf
+        f
+        "@[<v>%a@.Repeated variable in pattern.@.Hint: Change the name.@]"
+        snippet_pp
+        (Location.get_location p)
+    | `Small_passes_non_linear_type t ->
+      Format.fprintf
+        f
+        "@[<v>%a@.Repeated type variable in type.@.Hint: Change the name.@]"
+        snippet_pp
+        (Location.get_location t))
 
 
 let error_json : t -> Simple_utils.Error.t =
@@ -240,4 +254,16 @@ let error_json : t -> Simple_utils.Error.t =
         ~location
         ()
     in
+    make ~stage ~content
+  | `Small_passes_non_linear_pattern p ->
+    let message =
+      Format.sprintf "Repeated variable in pattern.@.Hint: Change the name."
+    in
+    let content = make_content ~message ~location:(Location.get_location p) () in
+    make ~stage ~content
+  | `Small_passes_non_linear_type t ->
+    let message =
+      Format.sprintf "Repeated type variable in type.@.Hint: Change the name."
+    in
+    let content = make_content ~message ~location:(Location.get_location t) () in
     make ~stage ~content

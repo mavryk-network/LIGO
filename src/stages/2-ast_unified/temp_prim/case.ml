@@ -7,4 +7,4 @@ and ('expr, 'pattern, 'branch) t =
   { expr : 'expr
   ; cases : ('pattern, 'branch) clause Simple_utils.List.Ne.t
   }
-[@@deriving yojson, map, iter, sexp]
+[@@deriving yojson, map, iter, fold, sexp]

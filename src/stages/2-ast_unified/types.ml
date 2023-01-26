@@ -27,6 +27,7 @@ module Constant = Ligo_prim.Constant
 module Constructor = Ligo_prim.Constructor
 module Lambda = Ligo_prim.Lambda
 module Application = Ligo_prim.Application
+module Record = Ligo_prim.Record
 module Non_linear_rows = Temp_prim.Non_linear_rows (Label)
 module Field = Temp_prim.Field
 module Array_repr = Temp_prim.Array_repr
@@ -143,7 +144,7 @@ and 'self type_expression_content_ =
   | T_Michelson_pair of 'self * string * 'self * string [@not_initial]
   | T_Sapling_state of string * Z.t [@not_initial]
   | T_Sapling_transaction of string * Z.t [@not_initial]
-[@@deriving map, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "ty_expr" }]
+[@@deriving map, fold, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "ty_expr" }]
 
 (* ========================== PATTERNS ===================================== *)
 type ('self, 'ty_expr) pattern_ = ('self, 'ty_expr) pattern_content_ Location.wrap
@@ -164,7 +165,7 @@ and ('self, 'ty_expr) pattern_content_ =
   | P_rest of Label.t
   | P_attr of Attribute.t * 'self
   | P_mod_access of (Mod_variable.t Simple_utils.List.Ne.t, 'self) Mod_access.t
-[@@deriving map, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "pattern" }]
+[@@deriving map, fold, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "pattern" }]
 
 (* ========================== INSTRUCTIONS ================================= *)
 type ('self, 'expr, 'pattern, 'statement, 'block) instruction_ =
@@ -190,7 +191,7 @@ and ('self, 'expr, 'pattern, 'statement, 'block) instruction_content_ =
   (*  \/ Below are nodes added through the passes \/*)
   | I_Assign of Variable.t * 'expr [@not_initial]
 [@@deriving
-  map, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "instruction" }]
+  map, fold, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "instruction" }]
 
 (* ========================== STATEMENTS ========================= *)
 type ('self, 'instruction, 'declaration) statement_ =
@@ -238,7 +239,7 @@ and ('self, 'expr, 'ty_expr, 'pattern, 'mod_expr) declaration_content_ =
   | D_Type of 'ty_expr Type_decl.t [@not_initial]
   | D_irrefutable_match of ('expr, 'pattern) Pattern_decl.t [@not_initial]
 [@@deriving
-  map, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "declaration" }]
+  map, fold, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "declaration" }]
 
 (* ========================== MODULES ====================================== *)
 include struct
@@ -317,7 +318,7 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_Abstraction of 'self Type_abstraction.t [@not_initial]
   | E_Fun of ('pattern,'ty_expr) Param.t list * 'self [@not_initial]
   | E_Application of 'self Application.t
-[@@deriving map, iter, yojson, sexp, is { tags = [ "not_initial" ]; name = "expr" }]
+[@@deriving map, fold, iter, yojson, sexp, is { tags = [ "not_initial" ]; name = "expr" }]
 (* ========================== PROGRAM ====================================== *)
 
 type ('self, 'declaration, 'instruction) program_entry_ =

@@ -3,4 +3,4 @@ type 'expr t =
   ; remove_kind : [ `Set | `Map ]
   ; collection : 'expr
   }
-[@@deriving yojson, map, iter, sexp]
+[@@deriving yojson, map, iter, fold, sexp]

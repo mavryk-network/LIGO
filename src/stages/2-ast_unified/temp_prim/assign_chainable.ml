@@ -14,4 +14,4 @@ and 'expr t =
   ; op : operator
   ; expr2 : 'expr
   }
-[@@deriving yojson, map, iter, sexp]
+[@@deriving yojson, map, iter, fold, sexp]

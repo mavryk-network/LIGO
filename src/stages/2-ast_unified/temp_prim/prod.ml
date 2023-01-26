@@ -1,1 +1,1 @@
-type 'ty t = 'ty Simple_utils.List.Ne.t [@@deriving yojson, map, iter, sexp]
+type 'ty t = 'ty Simple_utils.List.Ne.t [@@deriving yojson, map, iter, fold, sexp]

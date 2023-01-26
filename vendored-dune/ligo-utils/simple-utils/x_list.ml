@@ -51,7 +51,7 @@ let repeat x n =
 module Ne = struct
 
   type 'a t = 'a * 'a list
-    [@@deriving eq,compare,yojson,hash,sexp]
+    [@@deriving eq,compare,yojson,hash,sexp,fold]
 
   let sexp_of_t (f: 'a -> Sexp.t) ((hd,tl):'a t) : Sexp.t = List.sexp_of_t f (hd::tl)
   let t_of_sexp : type a . (Sexp.t -> a) -> Sexp.t -> a t = fun f x ->

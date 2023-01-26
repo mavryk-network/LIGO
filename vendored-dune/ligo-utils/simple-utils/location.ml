@@ -72,7 +72,7 @@ let is_virtual = function
 type 'a wrap = {
   wrap_content : 'a ;
   location : t [@hash.ignore] ;
-} [@@deriving eq,compare,yojson,hash,iter,map]
+} [@@deriving eq,compare,yojson,hash,iter,map,fold]
 
 let sexp_of_wrap : ('a -> Sexp.t) -> 'a wrap -> Sexp.t =
   fun sexp_of_content { wrap_content ; location=_} ->

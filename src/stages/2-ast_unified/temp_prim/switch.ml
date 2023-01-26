@@ -6,4 +6,4 @@ and ('expr, 'block) t =
   { switchee : 'expr
   ; cases : ('expr, 'block) case Simple_utils.List.Ne.t
   }
-[@@deriving yojson, map, iter, sexp]
+[@@deriving yojson, map, iter, fold, sexp]

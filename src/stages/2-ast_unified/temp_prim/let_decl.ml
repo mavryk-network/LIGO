@@ -5,4 +5,4 @@ type ('expr, 'lhs, 'ty_expr) t =
   ; rhs_type : 'ty_expr option
   ; let_rhs : 'expr
   }
-[@@deriving yojson, map, iter, sexp]
+[@@deriving yojson, map, iter, fold, sexp]

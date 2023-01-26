@@ -1,1 +1,1 @@
-type 'expr t = 'expr * 'expr list [@@deriving yojson, map, iter, sexp]
+type 'expr t = 'expr * 'expr list [@@deriving yojson, map, iter, fold, sexp]

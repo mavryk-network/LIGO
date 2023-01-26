@@ -15,22 +15,6 @@ D_Export -> D_attr "private"/"public"
   morph it to a C_MAP_GET_FORCE / C_MAP_GET ? (not sure which one; might depend on the syntax)
 
 
-
-## pass 'linear_record'
-
-- remove: E_Record_pun , T_Record_raw
-- add: E_record , T_record
-
-note: we should have unpun at type level as well .. check later :)
-`E_record_pun { x ; a = 1}` |-> `E_Record { x = x ; a = 1}`
-+ check linearity
-
-```
-| E_Record_pun of (Variable.t, 'self) Field.t Record.t it's a map
-```
-
-
-
 ## pass 'enum_attributes' TODO AT THE END ..
   - remove : E_Attr (string to string) D_attr P_attr
   - add : E_AttrEnum ((Annot | LAyout | ..)) D_attrenum P_attrEnum
@@ -48,6 +32,7 @@ note: we should have unpun at type level as well .. check later :)
 
 See handling of TDisc in JsLIGO abstractor AND GOOD LUCK
 
+## pass 'external_hack'
 
-
+see self_ast_imperative
 

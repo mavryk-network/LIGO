@@ -15,6 +15,20 @@
       type_expresion :
         T_abstraction( (T_var alpha) , T_xxx (T_var alpha) )
 
+## pass 'linearity'
+
+- remove: E_Record_pun , T_Record_raw
+- add: E_record , T_record
+
+note: we should have unpun at type level as well .. check later :)
+`E_record_pun { x ; a = 1}` |-> `E_Record { x = x ; a = 1}`
++ check linearity
+
+```
+| E_Record_pun of (Variable.t, 'self) Field.t Record.t it's a map
+```
+
+
 ## pass 'top_level_restriction'
 
 - remove : PE_Top_level_instruction

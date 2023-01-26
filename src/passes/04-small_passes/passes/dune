@@ -33,6 +33,7 @@
   let_syntax
   generalize_functions
   curry
+  linearity
  )
  (libraries ast_unified syntax_types)
  (inline_tests
