@@ -15,6 +15,11 @@
       type_expresion :
         T_abstraction( (T_var alpha) , T_xxx (T_var alpha) )
 
+
+## pass 'external_hack'
+
+see self_ast_imperative
+
 ## pass 'linearity'
 
 - remove: E_Record_pun , T_Record_raw

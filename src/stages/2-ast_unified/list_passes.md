@@ -32,7 +32,4 @@ D_Export -> D_attr "private"/"public"
 
 See handling of TDisc in JsLIGO abstractor AND GOOD LUCK
 
-## pass 'external_hack'
-
-see self_ast_imperative
 
