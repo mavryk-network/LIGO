@@ -11,7 +11,16 @@ let generalize ty_params init =
       e_abstraction ~loc Type_abstraction.{ type_binder; result })
 
 
-let compile =
+let ret_type_from_parameters ~raise parameters body =
+  let param_types_opt =
+    List.map parameters ~f:(fun Param.{ pattern; param_type; _ } -> get_p_typed pattern)
+  in
+  List.map param_types_opt ~f:(function
+      | Some (ty, pattern) -> ty
+      | None -> raise.error (recursive_no_annot body))
+
+
+let compile ~raise =
   let expr : _ expr_ -> expr =
    fun e ->
     let loc = Location.get_location e in
@@ -37,6 +46,28 @@ let compile =
     | D_Const ({ type_params = Some ty_params; _ } as x) ->
       let let_rhs = generalize ty_params x.let_rhs in
       d_const ~loc { x with let_rhs }
+    | D_Fun
+        { is_rec; fun_name; type_params = Some ty_params; parameters; ret_type; return }
+      ->
+      let let_rhs =
+        let body = generalize ty_params return in
+        if is_rec
+        then (
+          let fun_type = ret_type_from_parameters ~raise parameters return in
+          e_poly_recursive
+            ~loc:(get_e_loc return)
+            { fun_name
+            ; fun_type
+            ; lambda = { type_params = None; parameters; ret_type; body }
+            })
+        else
+          e_poly_fun
+            ~loc:(get_e_loc return)
+            { type_params = None; parameters; ret_type; body }
+      in
+      d_const
+        ~loc
+        { type_params = None; pattern = p_var ~loc fun_name; rhs_type = None; let_rhs }
     | d -> make_d ~loc d
   in
   `Cata { idle_cata_pass with expr; declaration }
@@ -47,14 +78,17 @@ let reduction ~raise =
     expr =
       (function
       | { wrap_content =
-            ( E_Poly_fun { type_params = Some _ ; _ }
+            ( E_Poly_fun { type_params = Some _; _ }
             | E_Poly_recursive { lambda = { type_params = Some _; _ }; _ } )
         ; _
         } -> raise.error (wrong_reduction __MODULE__)
       | _ -> ())
   ; declaration =
       (function
-      | { wrap_content = D_Var { type_params = Some _ ; _ } | D_Const { type_params = Some _ ; _}
+      | { wrap_content =
+            ( D_Var { type_params = Some _; _ }
+            | D_Const { type_params = Some _; _ }
+            | D_Fun _ )
         ; _
         } -> raise.error (wrong_reduction __MODULE__)
       | _ -> ())
@@ -64,6 +98,6 @@ let reduction ~raise =
 let pass ~raise =
   cata_morph
     ~name:__MODULE__
-    ~compile
+    ~compile:(compile ~raise)
     ~decompile:`None (* for now ? *)
     ~reduction_check:(reduction ~raise)

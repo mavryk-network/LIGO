@@ -34,7 +34,7 @@ let reduction ~raise =
   { Iter.defaults with
     declaration =
       (function
-      | { wrap_content = D_Import (Import_all_as _ | Import_selected _); _ } ->
+      | { wrap_content = D_Import _; _ } ->
         raise.error (wrong_reduction __MODULE__)
       | _ -> ())
   }
