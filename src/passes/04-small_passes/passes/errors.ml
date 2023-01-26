@@ -20,6 +20,7 @@ type t =
   | `Small_passes_unsupported_return of statement list
   | `Small_passes_unsupported_control_flow of statement list
   | `Small_passes_unsupported_top_level_statement of instruction
+  | `Small_passes_unsupported_import of declaration
   | `Small_passes_unsupported_object_field of expr
   | `Small_passes_unsupported_update of expr
   | `Small_passes_unsupported_rest_property of expr
@@ -114,6 +115,9 @@ let error_ppformat
     | `Small_passes_unsupported_top_level_statement i ->
       let loc = get_i_loc i in
       Format.fprintf f "@[<hv>%a@.Unsupported top-level statement@]" snippet_pp loc
+    | `Small_passes_unsupported_import d ->
+      let loc = get_d_loc d in
+      Format.fprintf f "@[<hv>%a@.Unsupported import directive@]" snippet_pp loc
     | `Small_passes_unsupported_object_field e ->
       Format.fprintf f "@[<hv>%a@.Unsupported object field@]" snippet_pp (get_e_loc e)
     | `Small_passes_unsupported_update e ->
@@ -233,6 +237,10 @@ let error_json : t -> Simple_utils.Error.t =
   | `Small_passes_unsupported_top_level_statement i ->
     let location = get_i_loc i in
     let content = make_content ~message:"Unsupported top-level statement" ~location () in
+    make ~stage ~content
+  | `Small_passes_unsupported_import d ->
+    let location = get_d_loc d in
+    let content = make_content ~message:"Unsupported import directive" ~location () in
     make ~stage ~content
   | `Small_passes_unsupported_object_field e ->
     let location = get_e_loc e in

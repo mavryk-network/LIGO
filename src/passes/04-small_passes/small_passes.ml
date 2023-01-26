@@ -10,6 +10,7 @@ let passes
   let open Passes in
   [ Initial_node_check.pass ~raise
   ; Top_level_restriction.pass ~raise
+  ; Import_restriction.pass ~raise
   ; External_hack.pass
   ; Export_declaration.pass ~raise
   ; Linearity.pass ~raise

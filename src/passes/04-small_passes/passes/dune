@@ -36,6 +36,7 @@
   linearity
   external_hack
   export_declaration
+  import_restriction
  )
  (libraries ast_unified syntax_types)
  (inline_tests
