@@ -1,15 +1,5 @@
 
 
-
-
-## pass 'restrict proj'
-
-  - remove : E_proj (.. Component_expr e)
-  - add : ..
-
-  morph it to a C_MAP_GET_FORCE / C_MAP_GET ? (not sure which one; might depend on the syntax)
-
-
  
 ## pass 'discriminated union'
 

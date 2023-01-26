@@ -4,6 +4,7 @@ open Simple_utils.Trace
 open Simple_utils
 open Errors
 module Location = Simple_utils.Location
+
 (*
   this pass morph "structural assignments" where lhs is an expression,
   to simple assigments where lhs is a variable.
@@ -95,7 +96,7 @@ let compile_assignment
 
 
 let compile ~raise =
-  let pass_declaration : _ instruction_ -> instruction =
+  let instruction : _ instruction_ -> instruction =
    fun i ->
     let loc = Location.get_location i in
     match Location.unwrap i with
@@ -160,7 +161,7 @@ let compile ~raise =
       compile_assignment ~loc ~last_proj_update ~lhs:v ~path ~default_rhs
     | x -> make_i ~loc x
   in
-  `Cata { idle_cata_pass with instruction = pass_declaration }
+  `Cata { idle_cata_pass with instruction }
 
 
 let reduction ~raise =
