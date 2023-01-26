@@ -16,6 +16,12 @@
         T_abstraction( (T_var alpha) , T_xxx (T_var alpha) )
 
 
+## pass 'export_declaration'
+
+- remove : D_Export
+
+D_Export -> D_attr "private"/"public"
+
 ## pass 'external_hack'
 
 see self_ast_imperative

@@ -35,6 +35,7 @@
   curry
   linearity
   external_hack
+  export_declaration
  )
  (libraries ast_unified syntax_types)
  (inline_tests

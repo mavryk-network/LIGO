@@ -11,6 +11,7 @@ let passes
   [ Initial_node_check.pass ~raise
   ; Top_level_restriction.pass ~raise
   ; External_hack.pass
+  ; Export_declaration.pass ~raise
   ; Linearity.pass ~raise
   ; T_arg.pass
   ; Constructor_application.pass ~raise

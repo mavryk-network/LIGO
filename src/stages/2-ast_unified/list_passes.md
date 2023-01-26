@@ -1,9 +1,4 @@
 
-## pass 'export_declaration'
-
-- remove : D_Export
-
-D_Export -> D_attr "private"/"public"
 
 
 
