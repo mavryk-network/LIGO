@@ -309,10 +309,10 @@ Contracts & Accounts
 let destinationAddress : address =
   ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
 
-let contract : unit contract =
-  match (Tezos.get_contract_opt (Tezos.get_sender ()) : unit contract option) with
-    Some contract -> contract
-    | None -> (failwith "no contract" : unit contract)
+let @contract : unit @contract =
+  match (Tezos.get_contract_opt (Tezos.get_sender ()) : unit @contract option) with
+    Some @contract -> @contract
+    | None -> (failwith "no contract" : unit @contract)
 ```
 
 </div>
@@ -324,7 +324,7 @@ Transactions
 ```cameligo group=tezos_specific
 
 let payment : operation =
-  Tezos.transaction unit 100mutez contract
+  Tezos.transaction unit 100mutez @contract
 
 ```
 
@@ -658,10 +658,10 @@ Contracts & Accounts
 let destinationAddress: address =
   "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address;
 
-let contract : contract<unit> =
-  match (Tezos.get_contract_opt(Tezos.get_sender()) as option<contract<unit>>, {
-    Some: (contract: contract<unit>) => contract,
-    None: () => (failwith("no contract") as contract<unit>)
+let @contract : @contract<unit> =
+  match (Tezos.get_contract_opt(Tezos.get_sender()) as option<@contract<unit>>, {
+    Some: (@contract: @contract<unit>) => @contract,
+    None: () => (failwith("no contract") as @contract<unit>)
   })
 ```
 
@@ -674,7 +674,7 @@ Transactions
 ```jsligo group=tezos_specific
 
 let payment: operation =
-  Tezos.transaction(unit, 100 as mutez, contract);
+  Tezos.transaction(unit, 100 as mutez, @contract);
 
 ```
 

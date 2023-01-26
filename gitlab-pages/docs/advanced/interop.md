@@ -333,7 +333,7 @@ type x_or = (unit, "x", w_or_v, "other") michelson_or
 type y_or = (unit, "y", x_or, "other") michelson_or
 type z_or = (unit, "z", y_or, "other") michelson_or
 
-type test = {
+type @test = {
   z: string;
   y: int;
   x: string;
@@ -390,7 +390,7 @@ type x_or = michelson_or<[unit, "x", w_or_v, "other"]>;
 type y_or = michelson_or<[unit, "y", x_or, "other"]>;
 type z_or = michelson_or<[unit, "z", y_or, "other"]>;
 
-type test = {
+type @test = {
   z: string,
   y: int,
   x: string,
@@ -493,12 +493,12 @@ type parameter = int
 type x = Left of int
 
 let main (p, s: parameter * storage): operation list * storage =
-  let contract =
+  let @contract =
     match Tezos.get_entrypoint_opt "%left" ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx": address) with
     | Some c -> c
     | None -> failwith "contract does not match"
   in
-  [Tezos.transaction (Left 2) 2mutez contract], s
+  [Tezos.transaction (Left 2) 2mutez @contract], s
 ```
 
 </Syntax>

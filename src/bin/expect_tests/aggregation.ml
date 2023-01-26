@@ -32,7 +32,7 @@ let%expect_test _ =
     [ "compile"
     ; "expression"
     ; "cameligo"
-    ; "test"
+    ; "@test"
     ; "--init-file"
     ; contract "bug_locally_bound_vars.mligo"
     ];
@@ -56,7 +56,7 @@ let%expect_test _ =
     [ "compile"
     ; "expression"
     ; "cameligo"
-    ; "test"
+    ; "@test"
     ; "--init-file"
     ; contract "bug_locally_bound_vars2.mligo"
     ];
@@ -68,7 +68,7 @@ let%expect_test _ =
     [ "compile"
     ; "expression"
     ; "cameligo"
-    ; "test"
+    ; "@test"
     ; "--init-file"
     ; contract "bug_locally_bound_vars3.mligo"
     ];
@@ -80,7 +80,7 @@ let%expect_test _ =
     [ "compile"
     ; "expression"
     ; "cameligo"
-    ; "test"
+    ; "@test"
     ; "--init-file"
     ; contract "bug_locally_bound_vars4.mligo"
     ];

@@ -9,7 +9,7 @@ const main = ( [p,_] : [param , [string , address]] ) : [list<operation> , [stri
 };
 
 const test_transfer_to_contract_ = () : unit => {
-  let [main_taddr, _ , _] = Test.originate (main, ["bye",Test.nth_bootstrap_account (1)], 1 as mutez) ;
+  let [main_taddr, _ , _] = Test.@originate (main, ["bye",Test.nth_bootstrap_account (1)], 1 as mutez) ;
   let main_addr = Tezos.address (Test.to_contract (main_taddr)) ;
 
   /* mk_param is executed __by the proxy contract__ */

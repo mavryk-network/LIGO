@@ -1,7 +1,7 @@
 #include "./contract_under_test/fail_contract.mligo"
 
-let test =
-  let (typed_addr,_code,_) = Test.originate main () 0tez in
+let @test =
+  let (typed_addr,_code,_) = Test.@originate main () 0tez in
   let contr = Test.to_contract typed_addr in
   let addr = Tezos.address contr in
 

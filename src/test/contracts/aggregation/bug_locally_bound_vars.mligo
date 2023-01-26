@@ -5,5 +5,5 @@ module Foo = struct
     | None -> 42
 end
 
-let test = Foo.foo (Some 42)
+let @test = Foo.foo (Some 42)
 let test2 = Foo.x

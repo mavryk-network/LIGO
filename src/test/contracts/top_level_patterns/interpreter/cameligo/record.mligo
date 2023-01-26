@@ -8,7 +8,7 @@ let f () =
 let { a ; b ; c } = f ()
 let { a = a1 ; b = b1 ; c = c1 } = { a = 1n ; b = 1 ; c = "Hello" }
 
-let test =
+let @test =
   begin
     assert (a = a1);
     assert (b = b1);

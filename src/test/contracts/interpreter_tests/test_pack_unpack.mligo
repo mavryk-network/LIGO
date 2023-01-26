@@ -1,9 +1,9 @@
 let main ((b, _) : bytes * bytes) : operation list * bytes =
   ([] : operation list), b
 
-let test =
+let @test =
   let b = Bytes.pack 42n in
-  let (ta, _, _) = Test.originate main b 0tez in
+  let (ta, _, _) = Test.@originate main b 0tez in
   let () = assert ((Bytes.unpack (Test.get_storage ta) : nat option) = Some 42n) in
   let c = Test.to_contract ta in
   let b = Bytes.pack "bonjour" in

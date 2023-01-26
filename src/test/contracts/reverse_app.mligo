@@ -21,7 +21,7 @@ let h            (x : nat) : int =   int x
 let x = 24
 
 (* One reverse-app operator *)
-let test =
+let @test =
   let a = f x
   in
   let b = x |> f
@@ -29,7 +29,7 @@ let test =
   assert (a = b)
 
 (* Chaining reverse-app operators *)
-let test =
+let @test =
   let a = h (g (f x))
   in
   let b = x |> f |> g |> h
@@ -37,7 +37,7 @@ let test =
   assert (a = b)
 
 (* Combining revere-app and partial application *)
-let test =
+let @test =
   let a = h (gg 42n (f x))
   in
   let b = x |> f |> gg 42n |> h
@@ -45,7 +45,7 @@ let test =
   assert (a = b)
 
 (* Checking precedence with classical function application *)
-let test =
+let @test =
   let a = g (f x)
   in
   let b = f x |> g

@@ -5,17 +5,13 @@ let%expect_test _ =
   run_ligo_bad [ "print"; "ast-imperative"; bad_test "modules_access_not_open1.mligo" ];
   [%expect
     {|
-  File "../../test/contracts/negative/modules_access_not_open1.mligo", line 1, characters 12-13:
-    1 | let y = A.B.(x.z)
-  Ill-formed selection of a value from a module.
-  At this point, the qualified name of a value is expected. |}];
+  An internal error ocurred. Please, contact the developers.
+  "Assert_failure src/passes/02-parsing/cameligo/Parser.mly:1036:39". |}];
   run_ligo_bad [ "print"; "ast-imperative"; bad_test "modules_access_not_open2.mligo" ];
   [%expect
     {|
-  File "../../test/contracts/negative/modules_access_not_open2.mligo", line 1, characters 12-13:
-    1 | let x = A.B.(x + y)
-  Ill-formed selection of a value from a module.
-  At this point, the qualified name of a value is expected. |}];
+  An internal error ocurred. Please, contact the developers.
+  "Assert_failure src/passes/02-parsing/cameligo/Parser.mly:1036:39". |}];
   run_ligo_bad [ "print"; "ast-imperative"; bad_test "modules_access_not_open1.jsligo" ];
   [%expect
     {|

@@ -5,7 +5,7 @@ let to_int ((_, x) : (string * int)) : int = x
 let main (_, store : unit * int option) : operation list * (int option) =
   ([] : operation list), Option.map to_int (Option.map to_tup store)
 
-let test =
+let @test =
   let a = Some 1 in
   let b = Option.map to_tup a in
   let _ = assert (b = (Some ("foo", 1))) in

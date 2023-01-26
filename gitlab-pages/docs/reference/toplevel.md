@@ -71,11 +71,11 @@ type bytes
 </SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
-type 'param contract
+type 'param @contract
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-type contract&lt;&apos;param&gt;
+type @contract&lt;&apos;param&gt;
 </SyntaxTitle>
 
 A typed contract.

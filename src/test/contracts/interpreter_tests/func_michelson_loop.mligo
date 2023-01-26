@@ -1,1 +1,1 @@
-let test = [%Michelson ({|{ }|} : unit -> unit)] ()
+let @test = [%Michelson ({|{ }|} : unit -> unit)] ()

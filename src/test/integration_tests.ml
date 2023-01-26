@@ -134,7 +134,7 @@ let closure_mligo ~raise () : unit =
   let _ =
     let input = e_int ~loc 0 in
     let expected = e_int ~loc 25 in
-    expect_eq ~raise program "test" input expected
+    expect_eq ~raise program "@test" input expected
   in
   ()
 

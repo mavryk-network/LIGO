@@ -61,64 +61,56 @@ let%expect_test _ =
   [%expect
     {|
     "Once"
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+    Everything at the top-level was executed. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test_ "cameligo/nested_tuple.mligo" ];
   [%expect
     {|
     "Once"
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+    Everything at the top-level was executed. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test_ "cameligo/record_tuple.mligo" ];
   [%expect
     {|
     "Once"
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+    Everything at the top-level was executed. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test_ "cameligo/tuple_record.mligo" ];
   [%expect
     {|
     "Once"
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+    Everything at the top-level was executed. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test_ "cameligo/record.mligo" ];
   [%expect
     {|
     "Once"
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+    Everything at the top-level was executed. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test_ "cameligo/tuple.mligo" ];
   [%expect
     {|
     "Once"
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+    Everything at the top-level was executed. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test_ "cameligo/constr_tuple_destructuring.mligo" ];
   [%expect
     {|
       "Once"
-      Everything at the top-level was executed.
-      - test exited with value (). |}]
+      Everything at the top-level was executed. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test_ "cameligo/constr_record_destructuring.mligo" ];
   [%expect
     {|
     "Once"
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+    Everything at the top-level was executed. |}]
 
 (* Negative - linearity *)
 
@@ -319,7 +311,7 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts/top_level_patterns/negative/cameligo/constr_let_in.mligo", line 4, character 2 to line 5, character 4:
-      3 | let test =
+      3 | let @test =
       4 |   let B = B in
       5 |   ()
 
@@ -332,7 +324,7 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts/top_level_patterns/negative/cameligo/constr_let_in2.mligo", line 2, character 2 to line 3, character 4:
-      1 | let test =
+      1 | let @test =
       2 |   let True = true in
       3 |   42
 

@@ -8,7 +8,7 @@ Goes with ticket_wallet.mligo.
 
 type mint_parameter =
   [@layout comb]
-  {destination : unit ticket contract;
+  {destination : unit ticket @contract;
    amount : nat}
 
 type parameter =

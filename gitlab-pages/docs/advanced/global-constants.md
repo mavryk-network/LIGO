@@ -328,8 +328,8 @@ let ct = Test.register_constant (Test.eval f)
 let main ((), store : parameter * storage) : return =
  [], (Tezos.constant ct store)
 
-let test =
-  let (taddr, _, _) = Test.originate main 1 0tez in
+let @test =
+  let (taddr, _, _) = Test.@originate main 1 0tez in
   let ctr = Test.to_contract taddr in
   let _ = Test.transfer_to_contract_exn ctr () 0tez in
   assert (Test.get_storage taddr = 5)
@@ -351,7 +351,7 @@ const main = (p: parameter, s: storage) : [list<operation>, storage] =>
   [list([]), Tezos.constant(ct)(s)];
 
 const _test = () => {
-  let [taddr, _, _] = Test.originate(main, 1, (0 as tez));
+  let [taddr, _, _] = Test.@originate(main, 1, (0 as tez));
   let ctr = Test.to_contract(taddr);
   let _ = Test.transfer_to_contract_exn(ctr, unit, (0 as tez));
   assert (Test.get_storage(taddr) == 5);

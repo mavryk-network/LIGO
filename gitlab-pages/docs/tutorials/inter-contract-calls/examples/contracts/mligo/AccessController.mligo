@@ -7,7 +7,7 @@
 *)
 
 type parameter =
-  Call of unit -> operation | IsWhitelisted of address * (bool contract)
+  Call of unit -> operation | IsWhitelisted of address * (bool @contract)
 
 type storage = {senders_whitelist : address set}
 

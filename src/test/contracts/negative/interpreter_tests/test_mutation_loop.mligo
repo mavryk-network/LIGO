@@ -8,7 +8,7 @@ let rec my_rec_fun (rounds : int) : unit =
 let run_my_function (f : int -> unit) = 
     f 10
 
-let test = 
+let @test = 
     run_my_function my_rec_fun
 
 let test_mutation = 

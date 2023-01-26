@@ -288,7 +288,7 @@ let dest = ("KT19wgxcuXG9VH4Af5Tpm1vqEKdaMFpznXT3" : address)
 let proxy (action, store : parameter * storage) : return =
   let counter : parameter contract =
     match Tezos.get_contract_opt (dest) with
-      Some contract -> contract
+      Some @contract -> @contract
     | None -> failwith "Contract not found."
   in
   (* Reuse the parameter in the subsequent
@@ -330,7 +330,7 @@ const dest = "KT19wgxcuXG9VH4Af5Tpm1vqEKdaMFpznXT3" as address;
 const proxy = (action: parameter, store: storage): return_ => {
   let counter =
     match (Tezos.get_contract_opt(dest), {
-      Some: contract => contract,
+      Some: @contract => @contract,
       None: () => failwith("Contract not found.")
     });
   /* Reuse the parameter in the subsequent

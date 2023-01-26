@@ -8,7 +8,7 @@ let test_transfer =
   let storage = { tokens = Big_map.literal [(sender_, 100n); (from_, 100n); (to_, 100n)];
                   allowances = Big_map.literal [({ owner = from_; spender = sender_ }, 100n)];
                   total_supply = 300n } in
-  let (typed_addr, _, _) = Test.originate main storage 0tez in
+  let (typed_addr, _, _) = Test.@originate main storage 0tez in
   let contr = Test.to_contract typed_addr in
   let parameter = Transfer { address_from = from_; address_to = to_; value = 10n } in
   let () = Test.set_source sender_ in
@@ -28,7 +28,7 @@ let test_transfer_not_e_allowance =
   let storage = { tokens = Big_map.literal [(sender_, 100n); (from_, 100n); (to_, 100n)];
                   allowances = Big_map.literal [({ owner = from_; spender = sender_ }, 0n)];
                   total_supply = 300n } in
-  let (typed_addr, _, _) = Test.originate main storage 0tez in
+  let (typed_addr, _, _) = Test.@originate main storage 0tez in
   let contr = Test.to_contract typed_addr in
   let parameter = Transfer { address_from = from_; address_to = to_; value = 10n } in
   let () = Test.set_source sender_ in
@@ -45,7 +45,7 @@ let test_transfer_not_e_balance =
   let storage = { tokens = Big_map.literal [(sender_, 100n); (from_, 0n); (to_, 100n)];
                   allowances = Big_map.literal [({ owner = from_; spender = sender_ }, 100n)];
                   total_supply = 300n } in
-  let (typed_addr, _, _) = Test.originate main storage 0tez in
+  let (typed_addr, _, _) = Test.@originate main storage 0tez in
   let contr = Test.to_contract typed_addr in
   let parameter = Transfer { address_from = from_; address_to = to_; value = 10n } in
   let () = Test.set_source sender_ in
@@ -62,7 +62,7 @@ let test_approve =
   let storage = { tokens = Big_map.literal [(sender_, 100n); (from_, 100n); (to_, 100n)];
                   allowances = Big_map.literal [({ owner = sender_; spender = from_ }, 0n)];
                   total_supply = 300n } in
-  let (typed_addr, _, _) = Test.originate main storage 0tez in
+  let (typed_addr, _, _) = Test.@originate main storage 0tez in
   let contr = Test.to_contract typed_addr in
   let parameter = Approve { spender = from_; value = 100n } in
   let () = Test.set_source sender_ in
@@ -82,7 +82,7 @@ let test_approve_unsafe =
   let storage = { tokens = Big_map.literal [(sender_, 100n); (from_, 100n); (to_, 100n)];
                   allowances = Big_map.literal [({ owner = sender_; spender = from_ }, 100n)];
                   total_supply = 300n } in
-  let (typed_addr, _, _) = Test.originate main storage 0tez in
+  let (typed_addr, _, _) = Test.@originate main storage 0tez in
   let contr = Test.to_contract typed_addr in
   let parameter = Approve { spender = from_; value = 100n } in
   let () = Test.set_source sender_ in
@@ -97,12 +97,12 @@ let test_get_allowance =
   let sender_ = Test.nth_bootstrap_account 0 in
   let from_ = Test.nth_bootstrap_account 1 in
   let to_ = Test.nth_bootstrap_account 2 in
-  let (dummy_typed_addr, _, _) = Test.originate dummy_contract 0n 0tez in
+  let (dummy_typed_addr, _, _) = Test.@originate dummy_contract 0n 0tez in
   let dummy_typed_contr = Test.to_contract dummy_typed_addr in
   let storage = { tokens = Big_map.literal [(sender_, 100n); (from_, 100n); (to_, 100n)];
                   allowances = Big_map.literal [({ owner = from_; spender = sender_ }, 100n)];
                   total_supply = 300n } in
-  let (typed_addr, _, _) = Test.originate main storage 0tez in
+  let (typed_addr, _, _) = Test.@originate main storage 0tez in
   let contr = Test.to_contract typed_addr in
   let parameter = GetAllowance { request = { owner = from_; spender = sender_} ; callback = dummy_typed_contr } in
   let () = Test.set_source sender_ in
@@ -122,12 +122,12 @@ let test_get_balance =
   let sender_ = Test.nth_bootstrap_account 0 in
   let from_ = Test.nth_bootstrap_account 1 in
   let to_ = Test.nth_bootstrap_account 2 in
-  let (dummy_typed_addr, _, _) = Test.originate dummy_contract 0n 0tez in
+  let (dummy_typed_addr, _, _) = Test.@originate dummy_contract 0n 0tez in
   let dummy_typed_contr = Test.to_contract dummy_typed_addr in
   let storage = { tokens = Big_map.literal [(sender_, 100n); (from_, 100n); (to_, 100n)];
                   allowances = Big_map.literal [({ owner = sender_; spender = from_ }, 100n)];
                   total_supply = 300n } in
-  let (typed_addr, _, _) = Test.originate main storage 0tez in
+  let (typed_addr, _, _) = Test.@originate main storage 0tez in
   let contr = Test.to_contract typed_addr in
   let parameter = GetBalance { owner = from_ ; callback = dummy_typed_contr } in
   let () = Test.set_source sender_ in
@@ -147,12 +147,12 @@ let test_get_total_supply =
   let sender_ = Test.nth_bootstrap_account 0 in
   let from_ = Test.nth_bootstrap_account 1 in
   let to_ = Test.nth_bootstrap_account 2 in
-  let (dummy_typed_addr, _, _) = Test.originate dummy_contract 0n 0tez in
+  let (dummy_typed_addr, _, _) = Test.@originate dummy_contract 0n 0tez in
   let dummy_typed_contr = Test.to_contract dummy_typed_addr in
   let storage = { tokens = Big_map.literal [(sender_, 100n); (from_, 100n); (to_, 100n)];
                   allowances = Big_map.literal [({ owner = sender_; spender = from_ }, 100n)];
                   total_supply = 300n } in
-  let (typed_addr, _, _) = Test.originate main storage 0tez in
+  let (typed_addr, _, _) = Test.@originate main storage 0tez in
   let contr = Test.to_contract typed_addr in
   let parameter = GetTotalSupply { callback = dummy_typed_contr; request = () } in
   let () = Test.set_source sender_ in

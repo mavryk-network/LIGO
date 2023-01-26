@@ -1,6 +1,6 @@
 let cut = "./contract_under_test/views_contract.mligo"
 
-let test =
+let @test =
   let _baker = Test.nth_bootstrap_account 0 in
   let _src = Test.nth_bootstrap_account 1 in
   let init_storage = Test.eval 0 in

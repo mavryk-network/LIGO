@@ -8,7 +8,7 @@ let balances : balances =
   Map.literal [ (a1 , 10tz ) ; (a2, 100tz ) ; (a3, 1000tz ) ]
 
 (*PART 2*)
-let test =
+let @test =
   List.iter
     (fun ((threshold , expected_size) : tez * nat) ->
       let tester (balances, threshold : balances * tez) = Map.size (balances_under balances threshold) in

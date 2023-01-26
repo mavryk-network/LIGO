@@ -144,9 +144,9 @@ and we write some tests for our smart contract in `main.test.mligo`
 
 let test =
     let storage = Test.compile_value [1; 2; 3] in
-    let (addr, _, _) = Test.originate_from_file "./main.mligo" "main" ([] : string list) storage 0tez in
+    let (addr, _, _) = Test.@originate_from_file "./main.mligo" "main" ([] : string list) storage 0tez in
     let taddr : (parameter, storage) typed_address = Test.cast_address addr in
-    let contr : parameter contract = Test.to_contract taddr in
+    let contr : parameter @contract = Test.to_contract taddr in
     let _ = Test.transfer_to_contract_exn contr Reverse 1mutez in
     assert (Test.get_storage taddr = [3; 2; 1])
 
@@ -161,8 +161,8 @@ let test =
 
 const test = (() => {
     let storage = Test.compile_value(list([1, 2, 3]));
-    let [addr, _, _] = Test.originate_from_file("./main.jsligo", "main", (list([]) as list<string>), storage, 0 as tez);    let taddr : typed_address<parameter, storage> = Test.cast_address(addr);
-    let contr : contract<parameter> = Test.to_contract(taddr);
+    let [addr, _, _] = Test.@originate_from_file("./main.jsligo", "main", (list([]) as list<string>), storage, 0 as tez);    let taddr : typed_address<parameter, storage> = Test.cast_address(addr);
+    let contr : @contract<parameter> = Test.to_contract(taddr);
     let _ = Test.transfer_to_contract_exn(contr, Reverse(), 1 as mutez);
     assert (Test.get_storage(taddr) == list([3, 2, 1]))
 })();
@@ -596,7 +596,7 @@ Also,
 #import "package_name/increment.mligo"
 
 let test =
-  Test.originate ... Increment.main ...
+  Test.@originate ... Increment.main ...
 ```
 <br/>
 

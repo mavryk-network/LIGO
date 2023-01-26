@@ -20,7 +20,7 @@ let initial_storage =
     lqtAddress = ("tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" : address) ;
   }
 
-let test =
+let @test =
   assert (initial_storage = initial_storage)
 
 // Nested values::

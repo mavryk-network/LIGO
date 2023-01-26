@@ -9,10 +9,10 @@ let originate_record () =
         taddr = taddr ;
     }
 
-let test =
+let @test =
     let r = originate_record () in
     let packed = Bytes.pack (fun() -> 
-        match (Tezos.get_entrypoint_opt "%transfer" r.addr : unit contract option) with
+        match (Tezos.get_entrypoint_opt "%transfer" r.addr : unit @contract option) with
           Some(c) -> let op = Tezos.transaction () 0mutez c in [op]
         | None ->  ([] : operation list)
     ) in

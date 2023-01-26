@@ -3,4 +3,4 @@ module Foo = struct
   let foo (z : int * unit) : int = match z with (x, _u) -> x
 end
 
-let test = Foo.foo (42, unit)
+let @test = Foo.foo (42, unit)

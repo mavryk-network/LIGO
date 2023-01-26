@@ -11,11 +11,11 @@ let check_new_origination (src :address) : address =
     )
     | None -> (failwith "source did not originate anything" : address)
 
-let test =
+let @test =
   let _baker = Test.nth_bootstrap_account 0 in
   let src = Test.nth_bootstrap_account 1 in
 
-  let (typed_addr, _code, size) = Test.originate main (None : storage) 0tez in
+  let (typed_addr, _code, size) = Test.@originate main (None : storage) 0tez in
   let () = assert ((None : storage) = (Test.get_storage typed_addr : storage)) in
   let () = assert (size < 300) in
   let new_account1 = check_new_origination src in

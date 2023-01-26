@@ -467,13 +467,13 @@ let assert_string_failure (res : test_exec_result) (expected : string) =
   | Fail _ -> failwith "contract failed for an unknown reason"
   | Success _ -> failwith "bad price check"
 
-let test =
+let @test =
   (* originate the contract with a initial storage *)
   let init_storage = Map.literal [
       (1n, { current_stock = 50n ; max_price = 50tez }) ;
       (2n, { current_stock = 20n ; max_price = 75tez }) ; ]
   in
-  let (pedro_taco_shop_ta, _code, _size) = Test.originate buy_taco init_storage 0tez in
+  let (pedro_taco_shop_ta, _code, _size) = Test.@originate buy_taco init_storage 0tez in
   (* Convert typed_address to contract *)
   let pedro_taco_shop_ctr = Test.to_contract pedro_taco_shop_ta in
   (* Convert contract to address *)
@@ -529,12 +529,12 @@ let assert_string_failure = ([res,expected] : [test_exec_result, string]) => {
   } );
 } ;
 
-let test = ((_: unit): unit => {
+let @test = ((_: unit): unit => {
   /* Originate the contract with a initial storage */
   let init_storage = Map.literal (list([
       [1 as nat, { current_stock : 50 as nat, max_price : 50 as tez }],
       [2 as nat, { current_stock : 20 as nat, max_price : 75 as tez }] ])) ;
-  let [pedro_taco_shop_ta, _code, _size] = Test.originate (buy_taco, init_storage, 0 as tez) ;
+  let [pedro_taco_shop_ta, _code, _size] = Test.@originate (buy_taco, init_storage, 0 as tez) ;
   /* Convert typed_address to contract */
   let pedro_taco_shop_ctr = Test.to_contract (pedro_taco_shop_ta);
   /* Convert contract to address */

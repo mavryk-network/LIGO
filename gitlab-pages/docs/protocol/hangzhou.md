@@ -137,11 +137,11 @@ let main (p, _ : parameter * storage) : return =
 
 let test =
   let init_storage : bytes = 0x00 in
-  let addr, _, _ = Test.originate main init_storage 0tez in
+  let addr, _, _ = Test.@originate main init_storage 0tez in
   let payload = 0x0101
   in
   let test_open (cc : chest_key * chest) (expected : bytes) : unit =
-    let x : parameter contract = Test.to_contract addr in
+    let x : parameter @contract = Test.to_contract addr in
     let _ = Test.transfer_to_contract_exn x cc 0tez in
     let s = Test.get_storage addr in
     assert (s = expected)

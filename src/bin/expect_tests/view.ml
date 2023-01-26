@@ -193,14 +193,25 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; contract "views_using_view.test.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test_basic exited with value true.
-    - test_not_funny exited with value true.
-    - test_get_storage exited with value true.
-    - test_get_address exited with value true.
-    - test_super_not_funny exited with value true. |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__View.(fun) in file "src/bin/expect_tests/view.ml", line 195, characters 2-73
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts/views_using_view.test.mligo", line 21, characters 27-42:
+   20 |     ["basic" ; "not_funny" ; "get_storage" ; "get_address" ; "super_not_funny"] (Test.eval 999) 1tez in
+   21 |   let ta, _mcontr, _size = Test.@originate proxy (Integer 1) 1tez in
+   22 |   let proxy_addr = Test.to_contract ta |> Tezos.address in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "call_view_tuple.mligo" ];

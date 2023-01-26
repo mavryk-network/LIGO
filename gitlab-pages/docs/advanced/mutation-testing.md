@@ -45,7 +45,7 @@ let simple_tests (f : int -> int) =
   let () = assert (Test.michelson_equal (Test.run f 2) (Test.eval 4))
   in ()
 
-let test = simple_tests twice
+let @test = simple_tests twice
 ```
 
 </Syntax>
@@ -378,12 +378,12 @@ the entrypoint `Increment(7)` works as intended on an initial storage
 
 let originate_and_test (mainf : parameter * storage -> return) =
   let initial_storage = 7 in
-  let (taddr, _, _) = Test.originate mainf initial_storage 0tez in
+  let (taddr, _, _) = Test.@originate mainf initial_storage 0tez in
   let contr = Test.to_contract taddr in
   let _ = Test.transfer_to_contract_exn contr (Increment 7) 1mutez in
   assert (Test.get_storage taddr = initial_storage + 7)
 
-let test = originate_and_test main
+let @test = originate_and_test main
 ```
 
 </Syntax>
@@ -395,7 +395,7 @@ let test = originate_and_test main
 
 const originate_and_test = (mainf : ((p: parameter, s: storage) => return_)) : unit => {
   let initial_storage = 5 as int;
-  let [taddr, _, _] = Test.originate(mainf, initial_storage, 0 as tez);
+  let [taddr, _, _] = Test.@originate(mainf, initial_storage, 0 as tez);
   let contr = Test.to_contract(taddr);
   let _ = Test.transfer_to_contract_exn(contr, (Increment (7)), 1 as mutez);
   assert (Test.get_storage(taddr) == initial_storage + 7);
@@ -490,7 +490,7 @@ to the `Decrement` entrypoint in the test above:
 ```cameligo skip
 let originate_and_test (mainf : parameter * storage -> return) =
   let initial_storage = 7 in
-  let (taddr, _, _) = Test.originate mainf initial_storage 0tez in
+  let (taddr, _, _) = Test.@originate mainf initial_storage 0tez in
   let contr = Test.to_contract taddr in
   let _ = Test.transfer_to_contract_exn contr (Increment (7)) 1mutez in
   let _ = Test.transfer_to_contract_exn contr (Decrement (3)) 1mutez in
@@ -504,7 +504,7 @@ let originate_and_test (mainf : parameter * storage -> return) =
 ```jsligo skip
 const originate_and_test = (mainf : ((p: parameter, s: storage) => return_)) : unit => {
   let initial_storage = 5 as int;
-  let [taddr, _, _] = Test.originate(mainf, initial_storage, 0 as tez);
+  let [taddr, _, _] = Test.@originate(mainf, initial_storage, 0 as tez);
   let contr = Test.to_contract(taddr);
   let _ = Test.transfer_to_contract_exn(contr, (Increment (7)), 1 as mutez);
   let _ = Test.transfer_to_contract_exn(contr, (Decrement (3)), 1 as mutez);

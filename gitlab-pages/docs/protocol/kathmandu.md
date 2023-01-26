@@ -51,7 +51,7 @@ let main (p,_ : (int*int) * unit ) =
   [Tezos.emit "%foo" p ; Tezos.emit "%foo" p.0],()
 
 let test_foo =
-  let (ta, _, _) = Test.originate main () 0tez in
+  let (ta, _, _) = Test.@originate main () 0tez in
   let _ = Test.transfer_to_contract_exn (Test.to_contract ta) (1,2) 0tez in
   (Test.get_last_events_from ta "foo" : (int*int) list),(Test.get_last_events_from ta "foo" : int list)
 ```
@@ -67,7 +67,7 @@ let main = ([p, _] : [[int, int], unit]) => {
   };
 
 let test = (() : [list<[int,int]>, list<int>] => {
-  let [ta, _, _] = Test.originate(main, unit, 0 as tez);
+  let [ta, _, _] = Test.@originate(main, unit, 0 as tez);
   let _ = Test.transfer_to_contract_exn(Test.to_contract(ta), [1,2], 0 as tez);
   return [Test.get_last_events_from(ta, "foo") as list<[int, int]>, Test.get_last_events_from(ta, "foo") as list<int>];
 }) ();

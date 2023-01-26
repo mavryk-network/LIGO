@@ -164,10 +164,10 @@ contract with no parameters, or an implicit account.
 
 ```cameligo group=ex1
 let ownerAddress : address = ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV" : address)
-let receiver : unit contract =
-  match (Tezos.get_contract_opt ownerAddress : unit contract option) with
-    Some (contract) -> contract
-  | None -> (failwith "Not a contract" : unit contract)
+let receiver : unit @contract =
+  match (Tezos.get_contract_opt ownerAddress : unit @contract option) with
+    Some (@contract) -> @contract
+  | None -> (failwith "Not a contract" : unit @contract)
 ```
 
 </Syntax>
@@ -176,10 +176,10 @@ let receiver : unit contract =
 
 ```jsligo group=ex1
 let ownerAddress = ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV" as address)
-let receiver : contract<unit> =
-  match ((Tezos.get_contract_opt(ownerAddress) as option<contract<unit>>), {
-    Some: (contract : contract<unit>) => contract,
-    None: () => (failwith ("Not a contract") as contract<unit>)
+let receiver : @contract<unit> =
+  match ((Tezos.get_contract_opt(ownerAddress) as option<@contract<unit>>), {
+    Some: (@contract : @contract<unit>) => @contract,
+    None: () => (failwith ("Not a contract") as @contract<unit>)
   })
 ```
 
@@ -257,10 +257,10 @@ let buy_taco (taco_kind_index, taco_shop_storage : nat * taco_shop_storage) : re
   // Update the storage with the refreshed taco_kind
   let taco_shop_storage = Map.update taco_kind_index (Some taco_kind) taco_shop_storage in
 
-  let receiver : unit contract =
-    match (Tezos.get_contract_opt ownerAddress: unit contract option) with
-      Some (contract) -> contract
-    | None -> (failwith ("Not a contract") : unit contract)
+  let receiver : unit @contract =
+    match (Tezos.get_contract_opt ownerAddress: unit @contract option) with
+      Some (@contract) -> @contract
+    | None -> (failwith ("Not a contract") : unit @contract)
   in
 
   let payoutOperation : operation = Tezos.transaction () (Tezos.get_amount ()) receiver in
@@ -308,10 +308,10 @@ let buy_taco = ([taco_kind_index, taco_shop_storage] : [nat, taco_shop_storage])
   // Update the storage with the refreshed taco_kind
   let taco_shop_storage = Map.update (taco_kind_index, Some(taco_kind_), taco_shop_storage);
 
-  let receiver : contract<unit> =
-    match ((Tezos.get_contract_opt (ownerAddress) as option<contract<unit>>), {
-      Some: (contract : contract<unit>) => contract,
-      None: () => (failwith ("Not a contract") as contract<unit>)
+  let receiver : @contract<unit> =
+    match ((Tezos.get_contract_opt (ownerAddress) as option<@contract<unit>>), {
+      Some: (@contract : @contract<unit>) => @contract,
+      None: () => (failwith ("Not a contract") as @contract<unit>)
   });
 
   let payoutOperation : operation = Tezos.transaction (unit, Tezos.get_amount (), receiver);
@@ -376,15 +376,15 @@ sum from each taco purchase.
 let ownerAddress : address = ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV" : address)
 let donationAddress : address = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
 
-let receiver : unit contract =
-  match ((Tezos.get_contract_opt ownerAddress) : unit contract option) with
-    Some contract -> contract
-  | None -> ((failwith "Not a contract") : unit contract)
+let receiver : unit @contract =
+  match ((Tezos.get_contract_opt ownerAddress) : unit @contract option) with
+    Some @contract -> @contract
+  | None -> ((failwith "Not a contract") : unit @contract)
 
-let donationReceiver : unit contract  =
-  match ((Tezos.get_contract_opt donationAddress) : unit contract option) with
-    Some contract -> contract
-  | None -> ((failwith "Not a contract") : unit contract)
+let donationReceiver : unit @contract  =
+  match ((Tezos.get_contract_opt donationAddress) : unit @contract option) with
+    Some @contract -> @contract
+  | None -> ((failwith "Not a contract") : unit @contract)
 
 let donationAmount : tez = (Tezos.get_amount ()) / 10n
 
@@ -405,16 +405,16 @@ let operations : operation list =
 let ownerAddress = ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV" as address)
 let donationAddress = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address)
 
-let receiver : contract<unit> =
-  match (((Tezos.get_contract_opt (ownerAddress)) as option<contract<unit>>), {
-    Some: (contract : contract<unit>) => contract,
-    None: () => ((failwith ("Not a contract")) as contract<unit>)
+let receiver : @contract<unit> =
+  match (((Tezos.get_contract_opt (ownerAddress)) as option<@contract<unit>>), {
+    Some: (@contract : @contract<unit>) => @contract,
+    None: () => ((failwith ("Not a contract")) as @contract<unit>)
   });
 
-let donationReceiver : contract<unit>  =
-  match (((Tezos.get_contract_opt (donationAddress)) as option<contract<unit>>), {
-    Some: (contract : contract<unit>) => contract,
-    None: () => ((failwith ("Not a contract")) as contract<unit>)
+let donationReceiver : @contract<unit>  =
+  match (((Tezos.get_contract_opt (donationAddress)) as option<@contract<unit>>), {
+    Some: (@contract : @contract<unit>) => @contract,
+    None: () => ((failwith ("Not a contract")) as @contract<unit>)
   })
 
 let donationAmount = ((Tezos.get_amount ()) / (10 as nat)) as tez;

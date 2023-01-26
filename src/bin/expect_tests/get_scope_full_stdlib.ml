@@ -173,12 +173,12 @@ let%expect_test _ =
       File "", line 23, characters 56-73 ,
       File "", line 28, characters 24-39 ,
       File "", line 30, characters 12-20 ,
-      File "", line 35, characters 67-86 ,
+      File "", line 35, characters 67-87 ,
       File "", line 49, characters 49-66 ,
       File "", line 57, characters 84-92 ,
       File "", line 59, characters 61-89 ,
       File "", line 61, characters 92-107 ,
-      File "", line 63, characters 82-99 ,
+      File "", line 63, characters 82-100 ,
       File "", line 72, characters 120-164 ,
       File "", line 137, characters 37-45 ,
       File "", line 138, characters 45-53 ,
@@ -260,7 +260,7 @@ let%expect_test _ =
     Content: : |sum[Fail -> test_exec_error , Success -> nat]|
     references:
       File "", line 482, characters 65-81 ,
-      File "", line 499, characters 73-89
+      File "", line 499, characters 74-90
     (unforged_ticket#337 -> unforged_ticket)
     Range: File "", line 358, characters 8-23
     Body Range: File "", line 358, characters 0-91
@@ -972,8 +972,8 @@ let%expect_test _ =
                       b)|
                       references: []
                       (originate#537 -> originate)
-                      Range: File "", line 519, characters 6-15
-                      Body Range: File "", line 519, characters 16-26
+                      Range: File "", line 519, characters 6-16
+                      Body Range: File "", line 519, characters 17-27
                       Content: |core: ∀ p : * . ∀ s : * . ( p * s ) ->
                       ( list (operation) * s ) -> s -> tez -> ( typed_address (p , s) * michelson_contract * int )|
                       references: []
@@ -1117,15 +1117,15 @@ let%expect_test _ =
                       Range: File "", line 377, characters 6-17
                       Body Range: File "", line 377, characters 18-28
                       Content: |core: ∀ p : * . ∀ s : * . typed_address (p ,
-                      s) -> contract (p)|
+                      s) -> @contract (p)|
                       references:
-                        File "", line 410, characters 25-36 ,
+                        File "", line 410, characters 26-37 ,
                         File "", line 475, characters 30-41
                       (to_entrypoint#524 -> to_entrypoint)
                       Range: File "", line 510, characters 6-19
                       Body Range: File "", line 510, characters 20-32
                       Content: |core: ∀ a : * . ∀ b : * . ∀ c : * . string -> typed_address (a ,
-                      b) -> contract (c)|
+                      b) -> @contract (c)|
                       references: []
                       (to_json#407 -> to_json)
                       Range: File "", line 408, characters 6-13
@@ -1144,7 +1144,7 @@ let%expect_test _ =
                       (to_typed_address#393 -> to_typed_address)
                       Range: File "", line 401, characters 6-22
                       Body Range: File "", line 401, characters 23-33
-                      Content: |core: ∀ a : * . ∀ b : * . contract (a) -> typed_address (a ,
+                      Content: |core: ∀ a : * . ∀ b : * . @contract (a) -> typed_address (a ,
                       b)|
                       references: []
                       (transfer#460 -> transfer)
@@ -1160,12 +1160,12 @@ let%expect_test _ =
                       (transfer_to_contract#510 -> transfer_to_contract)
                       Range: File "", line 499, characters 6-26
                       Body Range: File "", line 499, characters 27-35
-                      Content: |core: ∀ p : * . contract (p) -> p -> tez -> test_exec_result|
+                      Content: |core: ∀ p : * . @contract (p) -> p -> tez -> test_exec_result|
                       references: []
                       (transfer_to_contract_exn#517 -> transfer_to_contract_exn)
                       Range: File "", line 504, characters 6-30
                       Body Range: File "", line 504, characters 31-39
-                      Content: |core: ∀ p : * . contract (p) -> p -> tez -> nat|
+                      Content: |core: ∀ p : * . @contract (p) -> p -> tez -> nat|
                       references: []
                       (unset_print_values#431 -> unset_print_values)
                       Range: File "", line 436, characters 6-24
@@ -1215,7 +1215,7 @@ let%expect_test _ =
                       (address#26 -> address)
                       Range: File "", line 21, characters 6-13
                       Body Range: File "", line 21, characters 14-22
-                      Content: |core: ∀ a : * . contract (a) -> address|
+                      Content: |core: ∀ a : * . @contract (a) -> address|
                       references: File "", line 475, characters 21-28
                       (call_view#65 -> call_view)
                       Range: File "", line 57, characters 25-34
@@ -1262,29 +1262,29 @@ let%expect_test _ =
                       (get_contract#49 -> get_contract)
                       Range: File "", line 37, characters 25-37
                       Body Range: File "", line 37, characters 38-46
-                      Content: |core: ∀ a : * . address -> contract (a)|
+                      Content: |core: ∀ a : * . address -> @contract (a)|
                       references: []
                       (get_contract_opt#45 -> get_contract_opt)
                       Range: File "", line 35, characters 25-41
                       Body Range: File "", line 35, characters 42-50
-                      Content: |core: ∀ p : * . address -> option (contract (p))|
+                      Content: |core: ∀ p : * . address -> option (@contract (p))|
                       references:
                         File "", line 38, characters 12-28 ,
                         File "", line 43, characters 12-28
                       (get_contract_with_error#54 -> get_contract_with_error)
                       Range: File "", line 42, characters 6-29
                       Body Range: File "", line 42, characters 30-38
-                      Content: |core: ∀ a : * . address -> string -> contract (a)|
+                      Content: |core: ∀ a : * . address -> string -> @contract (a)|
                       references: []
                       (get_entrypoint#81 -> get_entrypoint)
                       Range: File "", line 66, characters 25-39
                       Body Range: File "", line 66, characters 40-48
-                      Content: |core: ∀ p : * . string -> address -> contract (p)|
+                      Content: |core: ∀ p : * . string -> address -> @contract (p)|
                       references: []
                       (get_entrypoint_opt#76 -> get_entrypoint_opt)
                       Range: File "", line 63, characters 25-43
                       Body Range: File "", line 63, characters 44-52
-                      Content: |core: ∀ p : * . string -> address -> option (contract (p))|
+                      Content: |core: ∀ p : * . string -> address -> option (@contract (p))|
                       references: File "", line 67, characters 12-30
                       (get_level#14 -> get_level)
                       Range: File "", line 15, characters 6-15
@@ -1324,7 +1324,7 @@ let%expect_test _ =
                       (implicit_account#28 -> implicit_account)
                       Range: File "", line 22, characters 6-22
                       Body Range: File "", line 22, characters 24-26
-                      Content: |core: key_hash -> contract (unit)|
+                      Content: |core: key_hash -> @contract (unit)|
                       references: []
                       (join_tickets#30 -> join_tickets)
                       Range: File "", line 23, characters 6-18
@@ -1360,7 +1360,7 @@ let%expect_test _ =
                       (self#40 -> self)
                       Range: File "", line 29, characters 25-29
                       Body Range: File "", line 29, characters 30-38
-                      Content: |core: ∀ a : * . string -> contract (a)|
+                      Content: |core: ∀ a : * . string -> @contract (a)|
                       references: []
                       (set_delegate#38 -> set_delegate)
                       Range: File "", line 28, characters 6-18
@@ -1376,7 +1376,7 @@ let%expect_test _ =
                       (transaction#61 -> transaction)
                       Range: File "", line 51, characters 6-17
                       Body Range: File "", line 51, characters 18-26
-                      Content: |core: ∀ a : * . a -> tez -> contract (a) -> operation|
+                      Content: |core: ∀ a : * . a -> tez -> @contract (a) -> operation|
                       references: []
                       (voting_power#24 -> voting_power)
                       Range: File "", line 20, characters 6-18

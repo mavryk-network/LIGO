@@ -531,7 +531,7 @@ let treasury (p, s : unit * storage) =
   let beneficiaryOpt = Tezos.get_entrypoint_opt "%handleTransfer" s.beneficiaryAddress in
   let beneficiary =
     match beneficiaryOpt with
-      Some contract -> contract
+      Some @contract -> @contract
     | None -> failwith "Beneficiary does not exist" in
 
   // Then we prepare the internal operation we want to perform
@@ -556,7 +556,7 @@ let treasury = (p : unit, s : storage) => {
   let beneficiaryOpt = Tezos.get_entrypoint_opt("%handleTransfer", s.beneficiaryAddress);
   let beneficiary =
     match(beneficiaryOpt, {
-     Some: contract => contract,
+     Some: @contract => @contract,
      None: () => failwith("Beneficiary does not exist")
     });
 

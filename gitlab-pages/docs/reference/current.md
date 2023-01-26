@@ -178,11 +178,11 @@ let main = (p : unit) => Tezos.get_sender ();
 </Syntax>
 
 <SyntaxTitle syntax="cameligo">
-val address : 'a contract -> address
+val address : 'a @contract -> address
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let address: (contract: contract&lt;&apos;a&gt;) => address
+let address: (@contract: @contract&lt;&apos;a&gt;) => address
 </SyntaxTitle>
 
 Get the address associated with a value of type `contract`.
@@ -238,11 +238,11 @@ let main = (p : unit) => Tezos.get_self_address();
 </Syntax>
 
 <SyntaxTitle syntax="cameligo">
-val self : string -> 'a contract
+val self : string -> 'a @contract
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let self: (entrypoint: string) => contract&lt;&apos;a&gt;
+let self: (entrypoint: string) => @contract&lt;&apos;a&gt;
 </SyntaxTitle>
 
 Typecast the currently running contract with an entrypoint annotation.
@@ -266,7 +266,7 @@ let main = (p: unit) => Tezos.self("%default");
 </Syntax>
 
 <SyntaxTitle syntax="cameligo">
-val implicit_account : key_hash -> 'a contract
+val implicit_account : key_hash -> 'a @contract
 </SyntaxTitle>
 
 Get the default contract associated with an on-chain key-pair. This
@@ -397,11 +397,11 @@ let main = (ignore: unit, storage: storage):[list<operation>, storage] => {
 </Syntax>
 
 <SyntaxTitle syntax="cameligo">
-val transaction : 'param -> mutez -> 'param contract -> operation
+val transaction : 'param -> mutez -> 'param @contract -> operation
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let transaction: (action: &apos;param, amount: mutez, contract: contract&lt;&apos;param&gt;) => operation
+let transaction: (action: &apos;param, amount: mutez, @contract: @contract&lt;&apos;param&gt;) => operation
 </SyntaxTitle>
 
 Transfer `tez` to an account, or run code of another smart contract.
@@ -438,11 +438,11 @@ The operation fails when:
 Use `None` to withdraw the current delegate.
 
 <SyntaxTitle syntax="cameligo">
-val get_contract_opt : address -> 'param contract option
+val get_contract_opt : address -> 'param @contract option
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let get_contract_opt : (a: address) => option&lt;contract&lt;&apos;param&gt;&gt;
+let get_contract_opt : (a: address) => option&lt;@contract&lt;&apos;param&gt;&gt;
 </SyntaxTitle>
 
 Get a contract from an address.
@@ -451,11 +451,11 @@ When no contract is found or the contract doesn't match the type,
 `None` is returned.
 
 <SyntaxTitle syntax="cameligo">
-val get_contract_with_error : address -> string -> 'param contract
+val get_contract_with_error : address -> string -> 'param @contract
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let get_contract_with_error : (a: address,s: string) => contract&lt;&apos;param&gt;&gt;
+let get_contract_with_error : (a: address,s: string) => @contract&lt;&apos;param&gt;&gt;
 </SyntaxTitle>
 
 Get a contract from an address.
@@ -463,11 +463,11 @@ Get a contract from an address.
 When no contract is found, fail with the provided string
 
 <SyntaxTitle syntax="cameligo">
-val get_entrypoint_opt : string -> address -> 'param contract option
+val get_entrypoint_opt : string -> address -> 'param @contract option
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let get_entrypoint_opt: (entrypoint: string, a: address) => option&lt;contract&lt;&apos;param&gt;&gt;
+let get_entrypoint_opt: (entrypoint: string, a: address) => option&lt;@contract&lt;&apos;param&gt;&gt;
 </SyntaxTitle>
 
 Get a contract from an address and entrypoint.

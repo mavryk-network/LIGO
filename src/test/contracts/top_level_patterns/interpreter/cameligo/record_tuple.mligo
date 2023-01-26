@@ -27,7 +27,7 @@ let
   ; c = ("Hello", 3 , 3n ) 
   }
 
-let test =
+let @test =
   begin
     assert ((a1 + b2 + c3) = (a4 + b5 + c6));
     assert ((b1 + a2 + c2) = (a5 + b4 + c5));

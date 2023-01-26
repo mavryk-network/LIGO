@@ -18,7 +18,7 @@ let to_tez (i:nat) : michelson_program =
     [%cameligo ({| $i * 1tez |} : ligo_program)]
     [("i", Test.compile_value (i) )]
 
-let test =
+let @test =
   List.iter
     (fun ((threshold , expected_size) : nat * nat) ->
       let expected_size = Test.compile_value expected_size in

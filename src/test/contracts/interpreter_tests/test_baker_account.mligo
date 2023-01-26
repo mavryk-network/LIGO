@@ -1,7 +1,7 @@
 
 let main ((p, s) : int * int) : operation list * int = ([] : operation list), p + s
 
-let test =
+let @test =
   let acc = Test.new_account () in
   let () = Test.baker_account acc (None : tez option) in
   let () = Test.reset_state 2n ([] : tez list) in
@@ -12,7 +12,7 @@ let test =
   let () = Test.log(Test.get_balance a) in
   let () = Test.log(Test.get_voting_power pkh) in
   let () = Test.set_baker a in
-  let (ta, _, _) = Test.originate main 41 5tez in
+  let (ta, _, _) = Test.@originate main 41 5tez in
   let () = Test.log "BALANCE AND VOTING POWER AFTER ORIGINATE" in
   let () = Test.log(Test.get_balance a) in
   let () = Test.log(Test.get_voting_power pkh) in

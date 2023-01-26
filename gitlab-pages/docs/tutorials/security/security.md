@@ -29,8 +29,8 @@ type storage = {owner : address; transactionLog : transaction list}
 let send (dst, @amount : address * tez) =
   let callee = Tezos.get_contract_opt dst in
   match callee with
-    Some contract ->
-      let op = Tezos.transaction () @amount contract in
+    Some @contract ->
+      let op = Tezos.transaction () @amount @contract in
       Outgoing (dst, @amount), [op]
   | None -> (failwith "Could not send tokens" : transaction * operation list)
 
@@ -137,7 +137,7 @@ It is quite hard to repeat this attack on Tezos, where the contract storage is a
 ```cameligo
 type storage = {beneficiary : address; balances : (address, tez) map}
 
-type parameter = tez * (unit contract)
+type parameter = tez * (unit @contract)
 
 let withdraw (param, s : parameter * storage) =
   let @amount, beneficiary = param in
@@ -207,8 +207,8 @@ let send_rewards (beneficiary_addr : address) =
     Tezos.get_contract_opt beneficiary_addr in
   let beneficiary =
     match maybe_contract with
-      Some contract -> contract
-    | None -> (failwith "CONTRACT_NOT_FOUND" : unit contract) in
+      Some @contract -> @contract
+    | None -> (failwith "CONTRACT_NOT_FOUND" : unit @contract) in
   Tezos.transaction () 5000000mutez beneficiary
 
 let main (p, s : unit * storage) =

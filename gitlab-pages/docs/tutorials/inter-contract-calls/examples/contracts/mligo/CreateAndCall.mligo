@@ -12,7 +12,7 @@ let create_and_call (st : address list) =
     Tezos.transaction
       (addr, 41)
       0tez
-      (Tezos.self "%callback" : (address * int) contract)
+      (Tezos.self "%callback" : (address * int) @contract)
   in [create_op; call_op], addr :: st
 
 // At this point, we can be sure that the contract is originated
@@ -22,12 +22,12 @@ let create_and_call (st : address list) =
 // other contracts on our behalf.
 let call_counter (addr, n : address * int) =
   let u = assert (Tezos.get_sender () = Tezos.get_self_address ()) in
-  let callee_opt : int contract option =
+  let callee_opt : int @contract option =
     Tezos.get_contract_opt addr in
   let callee =
     match callee_opt with
-    | Some contract -> contract
-    | None -> (failwith "Could not find contract" : int contract)
+    | Some @contract -> @contract
+    | None -> (failwith "Could not find contract" : int @contract)
   in Tezos.transaction n 0tez callee
 
 type parameter =

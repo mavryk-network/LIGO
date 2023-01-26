@@ -119,11 +119,11 @@ type unforged_ticket &lt;s&gt; = &#x007b; ticketer : address, value : s, amount 
 A type for decompiling tickets.
 
 <SyntaxTitle syntax="cameligo">
-val to_contract : ('param, 'storage) typed_address -> 'param contract
+val to_contract : ('param, 'storage) typed_address -> 'param @contract
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let to_contract = (account: typed_address &lt;&apos;param, &apos;storage&gt;) => contract &lt;&apos;param&gt;
+let to_contract = (account: typed_address &lt;&apos;param, &apos;storage&gt;) => @contract &lt;&apos;param&gt;
 </SyntaxTitle>
 
 Get the contract corresponding to the default entrypoint of a typed
@@ -132,11 +132,11 @@ default entrypoint (generally `'param`, but this might differ if
 `'param` includes a "default" entrypoint).
 
 <SyntaxTitle syntax="cameligo">
-val to_entrypoint : string -> ('param, 'storage) typed_address -> 'e contract
+val to_entrypoint : string -> ('param, 'storage) typed_address -> 'e @contract
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let to_entrypoint = (entrypoint: string, account: typed_address &lt;&apos;param, &apos;storage&gt;) => contract &lt;&apos;e&gt;
+let to_entrypoint = (entrypoint: string, account: typed_address &lt;&apos;param, &apos;storage&gt;) => @contract &lt;&apos;e&gt;
 </SyntaxTitle>
 
 Get the contract corresponding to an entrypoint of a typed address:
@@ -158,8 +158,8 @@ Originate a contract with a path to the contract file, an entrypoint, and a list
 <Syntax syntax="cameligo">
 
 ```cameligo skip
-let addr, contract, size =
-  Test.originate_from_file testme_test "main" [] init_storage 0tez
+let addr, @contract, size =
+  Test.@originate_from_file testme_test "main" [] init_storage 0tez
 ...
 ```
 
@@ -168,7 +168,7 @@ let addr, contract, size =
 <Syntax syntax="jsligo">
 
 ```jsligo skip
-let [addr, contract, size] = Test.originate_from_file(testme_test, "main", list([]), init_storage, 0 as tez);
+let [addr, @contract, size] = Test.@originate_from_file(testme_test, "main", list([]), init_storage, 0 as tez);
 ```
 
 </Syntax>
@@ -184,11 +184,11 @@ let compile_contract_from_file = (filepath: string, entrypoint: string, views: l
 Compiles a contract with a path to the contract file, an entrypoint, and a list of views.
 
 <SyntaxTitle syntax="cameligo">
-val originate : ('param * 'storage -> operation list * 'storage) -> 'storage -> tez -> (('param, 'storage) typed_address * michelson_contract * int)
+val @originate : ('param * 'storage -> operation list * 'storage) -> 'storage -> tez -> (('param, 'storage) typed_address * michelson_contract * int)
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let originate = (contract: ('param, 'storage) => (list &lt;operation&gt;, &apos;storage), init: 'storage, balance: tez) => [typed_address &lt;&apos;param, &apos;storage&gt;, michelson_contract, int]
+let @originate = (@contract: ('param, 'storage) => (list &lt;operation&gt;, &apos;storage), init: 'storage, balance: tez) => [typed_address &lt;&apos;param, &apos;storage&gt;, michelson_contract, int]
 </SyntaxTitle>
 
 Originate a contract with an entrypoint function, initial storage and initial balance.
@@ -240,7 +240,7 @@ val set_source : address -> unit
 <SyntaxTitle syntax="jsligo">
 let set_source = (source: address) => unit
 </SyntaxTitle>
-Set the source for `Test.transfer` and `Test.originate`.
+Set the source for `Test.transfer` and `Test.@originate`.
 
 <SyntaxTitle syntax="cameligo">
 val set_baker_policy : test_baker_policy -> unit
@@ -250,7 +250,7 @@ val set_baker_policy : test_baker_policy -> unit
 let set_baker_policy = (policy: test_baker_policy) => unit
 </SyntaxTitle>
 
-Force the baking policy for `Test.transfer` and `Test.originate`. By
+Force the baking policy for `Test.transfer` and `Test.@originate`. By
 default, the first bootstrapped account.
 
 <SyntaxTitle syntax="cameligo">
@@ -261,7 +261,7 @@ val set_baker : address -> unit
 let set_baker = (source: address) => unit
 </SyntaxTitle>
 
-Force the baker for `Test.transfer` and `Test.originate`, implemented
+Force the baker for `Test.transfer` and `Test.@originate`, implemented
 using `Test.set_baker_policy` with `By_account`. By default, the first
 bootstrapped account.
 
@@ -288,11 +288,11 @@ let transfer_exn = (addr: address, parameter: michelson_program, amount: tez) =>
 Similar as `Test.transfer`, but fails when anything goes wrong.
 
 <SyntaxTitle syntax="cameligo">
-val transfer_to_contract : 'param contract -> 'param -> tez -> test_exec_result
+val transfer_to_contract : 'param @contract -> 'param -> tez -> test_exec_result
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let transfer_to_contract = (addr: contract&lt;&apos;p&gt;, param: &apos;p, amount: tez) => test_exec_result
+let transfer_to_contract = (addr: @contract&lt;&apos;p&gt;, param: &apos;p, amount: tez) => test_exec_result
 </SyntaxTitle>
 
 Bake a transaction by sending an amount of tez with a parameter from
@@ -300,11 +300,11 @@ the current source to a contract.  Returns the amount of gas consumed
 by the execution of the contract.
 
 <SyntaxTitle syntax="cameligo">
-val transfer_to_contract_exn : 'p contract -> 'p -> tez -> nat
+val transfer_to_contract_exn : 'p @contract -> 'p -> tez -> nat
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let transfer_to_contract_exn = (addr: contract&lt;&apos;p&gt;, parameter: &apos;p, amount: tez) => nat
+let transfer_to_contract_exn = (addr: @contract&lt;&apos;p&gt;, parameter: &apos;p, amount: tez) => nat
 </SyntaxTitle>
 
 Similar as `Test.transfer_to_contract`, but fails when anything goes wrong.
@@ -615,7 +615,7 @@ val bootstrap_contract : tez -> ('param * 'storage -> operation list * 'storage)
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let bootstrap_contract = (balance: tez, contract: ('param, 'storage) => (list &lt;operation&gt;, &apos;storage), init: 'storage) => unit
+let bootstrap_contract = (balance: tez, @contract: ('param, 'storage) => (list &lt;operation&gt;, &apos;storage), init: 'storage) => unit
 </SyntaxTitle>
 
 Setup a bootstrap contract with an entrypoint function, initial

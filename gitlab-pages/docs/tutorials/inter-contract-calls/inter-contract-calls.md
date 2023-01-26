@@ -43,7 +43,7 @@ let main (destination_addr, _ : parameter * storage) =
   let maybe_contract = Tezos.get_contract_opt destination_addr in
   let destination_contract =
     match maybe_contract with
-      Some contract -> contract
+      Some @contract -> @contract
     | None -> failwith "Contract does not exist" in
   let op = Tezos.transaction () (Tezos.get_amount ()) destination_contract in
   [op], ()
@@ -69,7 +69,7 @@ type storage = address
 
 let get_contract (addr : address) =
   match Tezos.get_contract_opt addr with
-    Some contract -> contract
+    Some @contract -> @contract
   | None -> failwith "Callee does not exist"
 
 let main (param, callee_addr : parameter * storage) =
@@ -147,11 +147,11 @@ type storage = address
 
 let get_add_entrypoint (addr : address) =
   match Tezos.get_entrypoint_opt "%add" addr with
-    Some contract -> contract
+    Some @contract -> @contract
   | None -> failwith "The entrypoint does not exist"
 
 let main (param, callee_addr : parameter * storage) =
-  let add : int contract = get_add_entrypoint (callee_addr) in
+  let add : int @contract = get_add_entrypoint (callee_addr) in
   let op = Tezos.transaction param 0mutez add in
   [op], callee_addr
 ```
@@ -260,7 +260,7 @@ Let us look at a simple access control contract with a "view" entrypoint:
 (* examples/contracts/mligo/AccessController.mligo *)
 
 type parameter =
-  Call of unit -> operation | IsWhitelisted of address * (bool contract)
+  Call of unit -> operation | IsWhitelisted of address * (bool @contract)
 
 type storage = {senders_whitelist : address set}
 

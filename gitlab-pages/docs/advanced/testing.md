@@ -38,7 +38,7 @@ testing library.
 
 > Note: The LIGO interpreter uses the [same library that Tezos internally uses for testing](https://gitlab.com/tezos/tezos/-/tree/master/src/proto_alpha/lib_protocol/test/helpers).
 
-The function `Test.originate` allows to deploy a contract in the
+The function `Test.@originate` allows to deploy a contract in the
 testing environment. It takes a contract, which is represented as a
 function of type `'parameter * 'storage -> operation list * 'storage`,
 an initial storage of type `'storage`, and an initial balance for the
@@ -123,9 +123,9 @@ storage is in fact the one which we started with:
 ```cameligo test-ligo group=frontpage
 // This continues testnew.mligo
 
-let test =
+let @test =
   let initial_storage = 42 in
-  let taddr, _, _ = Test.originate main initial_storage 0tez in
+  let taddr, _, _ = Test.@originate main initial_storage 0tez in
   assert (Test.get_storage taddr = initial_storage)
 ```
 
@@ -138,11 +138,11 @@ let test =
 
 let _test = () : bool => {
   let initial_storage = 42 as int;
-  let [taddr, _, _] = Test.originate(main, initial_storage, 0 as tez);
+  let [taddr, _, _] = Test.@originate(main, initial_storage, 0 as tez);
   return (Test.get_storage(taddr) == initial_storage);
 };
 
-let test = _test();
+let @test = _test();
 ```
 
 </Syntax>
@@ -197,7 +197,7 @@ increments the storage after deployment, we also print the gas consumption:
 
 let test2 =
   let initial_storage = 42 in
-  let taddr, _, _ = Test.originate main initial_storage 0tez in
+  let taddr, _, _ = Test.@originate main initial_storage 0tez in
   let contr = Test.to_contract taddr in
   let gas_cons = Test.transfer_to_contract_exn contr (Increment (1)) 1mutez in
   let () = Test.log ("gas consumption",gas_cons) in
@@ -213,7 +213,7 @@ let test2 =
 
 let _test2 = () : bool => {
   let initial_storage = 42 as int;
-  let [taddr, _, _] = Test.originate(main, initial_storage, 0 as tez);
+  let [taddr, _, _] = Test.@originate(main, initial_storage, 0 as tez);
   let contr = Test.to_contract(taddr);
   let gas_cons = Test.transfer_to_contract_exn(contr, (Increment (1)), 1 as mutez);
   let _ = Test.log(["gas consumption", gas_cons]);
@@ -237,7 +237,7 @@ and then show you how to handle it.
 
 There is two kind of operations in the protocol : external and internal.
 `internal operations` are those created by smart contracts and `external operations` are those created from outside the chain
-(e.g. using `Test.originate` or `tezos-client` for instance) [more information here](https://tezos.gitlab.io/active/michelson.html#semantics-of-smart-contracts-and-transactions)
+(e.g. using `Test.@originate` or `tezos-client` for instance) [more information here](https://tezos.gitlab.io/active/michelson.html#semantics-of-smart-contracts-and-transactions)
 
 In the protocol, both external and internal `transfer`/`origination` operations contains a piece of michelson code representing the `parameter`/`initial storage`.
 Now imagine you have a value of type `parameter_ty`/`storage_ty` containing a ticket, that you want to transfer or originate,
@@ -270,7 +270,7 @@ Here is the proposed interface for creating proxy-contracts:
   let ((v,amt),dst_addr) = p in
   let ticket = Option.unopt (Tezos.create_ticket v amt) in
   let tx_param = mk_param ticket in
-  let c : whole_p contract = Tezos.get_contract_with_error dst_addr "Testing proxy: you provided a wrong address" in
+  let c : whole_p @contract = Tezos.get_contract_with_error dst_addr "Testing proxy: you provided a wrong address" in
   let op = Tezos.transaction tx_param 1mutez c in
   [op], ()
 
@@ -293,7 +293,7 @@ let init_transfer (type vt whole_p) (mk_param: vt ticket -> whole_p) : vt proxy_
   let proxy_transfer : ((vt * nat) * address) * unit -> operation list * unit =
     proxy_transfer_contract mk_param
   in
-  let (taddr_proxy, _, _) = Test.originate proxy_transfer () 1tez in
+  let (taddr_proxy, _, _) = Test.@originate proxy_transfer () 1tez in
   taddr_proxy
 
 let transfer (type vt)
@@ -302,14 +302,14 @@ let transfer (type vt)
   let ticket_info, dst_addr = info in
   Test.transfer_to_contract (Test.to_contract taddr_proxy) (ticket_info , dst_addr) 1mutez
 
-let originate (type vt whole_s vp)
+let @originate (type vt whole_s vp)
     (ticket_info : vt * nat)
     (mk_storage : vt ticket -> whole_s)
-    (contract: vp * whole_s -> operation list * whole_s) : address =
+    (@contract: vp * whole_s -> operation list * whole_s) : address =
   let proxy_origination : (vt * nat) * address option -> operation list * address option =
-    proxy_originate_contract mk_storage contract
+    proxy_originate_contract mk_storage @contract
   in
-  let (taddr_proxy, _, _) = Test.originate proxy_origination (None : address option) 1tez in
+  let (taddr_proxy, _, _) = Test.@originate proxy_origination (None : address option) 1tez in
   let _ = Test.transfer_to_contract_exn (Test.to_contract taddr_proxy) ticket_info 0tez in
   match Test.get_storage taddr_proxy with
   | Some addr ->
@@ -335,7 +335,7 @@ const proxy_transfer_contract :
     const [[v,amt],dst_addr] = p ;
     const ticket = Option.unopt (Tezos.create_ticket (v, amt)) ;
     const tx_param = mk_param (ticket) ;
-    const c : contract<whole_p> =
+    const c : @contract<whole_p> =
       Tezos.get_contract_with_error (dst_addr, "Testing proxy: you provided a wrong address") ;
     const op = Tezos.transaction (tx_param, 1 as mutez, c) ;
     return ([ list([op]), unit ])
@@ -372,7 +372,7 @@ const init_transfer :
     const proxy_transfer : ((x : ([[[vt , nat] , address] , unit])) => [list<operation> , unit]) =
       proxy_transfer_contract (mk_param)
     ;
-    const [taddr_proxy, _, _] = Test.originate (proxy_transfer, unit, 1 as tez) ;
+    const [taddr_proxy, _, _] = Test.@originate (proxy_transfer, unit, 1 as tez) ;
     return taddr_proxy
   };
 
@@ -387,10 +387,10 @@ const transfer :
 
 const originate : <vt, whole_s, vp>
     (x : [ [vt , nat] , (t:ticket<vt>) => whole_s, (ps:[vp , whole_s]) => [list<operation> , whole_s] ]) => address =
-  ([ ticket_info , mk_storage , contract] : [ [vt , nat] , (t:ticket<vt>) => whole_s, (ps:[vp , whole_s]) => [list<operation> , whole_s] ] ) => {
+  ([ ticket_info , mk_storage , @contract] : [ [vt , nat] , (t:ticket<vt>) => whole_s, (ps:[vp , whole_s]) => [list<operation> , whole_s] ] ) => {
       const proxy_origination : (x : ([[vt , nat] , option<address>])) => [list<operation> , option<address>] =
-        proxy_originate_contract (mk_storage, contract) ;
-      const [taddr_proxy, _, _] = Test.originate (proxy_origination, (None () as option<address> ),1 as tez) ;
+        proxy_originate_contract (mk_storage, @contract) ;
+      const [taddr_proxy, _, _] = Test.@originate (proxy_origination, (None () as option<address> ),1 as tez) ;
       const _ = Test.transfer_to_contract_exn (Test.to_contract (taddr_proxy), ticket_info, 0 as tez) ;
       return match (Test.get_storage (taddr_proxy), {
         Some: (addr:address) => {
@@ -461,7 +461,7 @@ let main ( (p,_) : param * (string * address)) : operation list * (string * addr
   [] , (v, Tezos.get_sender ())
 
 let test_transfer_to_contract =
-  let (main_taddr, _ , _) = Test.originate main ("bye",Test.nth_bootstrap_account 1) 1mutez in
+  let (main_taddr, _ , _) = Test.@originate main ("bye",Test.nth_bootstrap_account 1) 1mutez in
   let main_addr = Tezos.address (Test.to_contract main_taddr) in
 
   (* Use this address everytime you want to send tickets from the same proxy-contract *)
@@ -505,7 +505,7 @@ const main = (p: param, _: [string , address]) : [list<operation> , [string , ad
 };
 
 const test_transfer_to_contract_ = () : unit => {
-  let [main_taddr, _ , _] = Test.originate (main, ["bye",Test.nth_bootstrap_account (1)], 1 as mutez) ;
+  let [main_taddr, _ , _] = Test.@originate (main, ["bye",Test.nth_bootstrap_account (1)], 1 as mutez) ;
   let main_addr = Tezos.address (Test.to_contract (main_taddr)) ;
 
   /* mk_param is executed __by the proxy contract__ */
@@ -760,7 +760,7 @@ We also print the actual and expected sizes for good measure.
 <Syntax syntax="cameligo">
 
 ```cameligo test-ligo group=rmv_bal_test
-let test =
+let @test =
   List.iter
     (fun ((threshold , expected_size) : tez * nat) ->
       let tester (balances, threshold : balances * tez) = Map.size (balances_under balances threshold) in
@@ -778,7 +778,7 @@ let test =
 <Syntax syntax="jsligo">
 
 ```jsligo test-ligo group=rmv_bal_test
-let test =
+let @test =
   List.iter
     ( ([threshold , expected_size] : [tez , nat]) : unit => {
       let tester = ([balances, threshold] : [balances, tez]) : nat => Map.size (balances_under (balances, threshold));
@@ -971,7 +971,7 @@ let main (p,_ : (int*int) * unit ) =
   [Tezos.emit "%foo" p ; Tezos.emit "%foo" p.0],()
 
 let test_foo =
-  let (ta, _, _) = Test.originate main () 0tez in
+  let (ta, _, _) = Test.@originate main () 0tez in
   let _ = Test.transfer_to_contract_exn (Test.to_contract ta) (1,2) 0tez in
   (Test.get_last_events_from ta "foo" : (int*int) list),(Test.get_last_events_from ta "foo" : int list)
 ```
@@ -986,8 +986,8 @@ let main = ([p, _] : [[int, int], unit]) => {
   return [list([op1, op2]), unit];
   };
 
-let test = (() : [list<[int,int]>, list<int>] => {
-  let [ta, _, _] = Test.originate(main, unit, 0 as tez);
+let @test = (() : [list<[int,int]>, list<int>] => {
+  let [ta, _, _] = Test.@originate(main, unit, 0 as tez);
   let _ = Test.transfer_to_contract_exn(Test.to_contract(ta), [1,2], 0 as tez);
   return [Test.get_last_events_from(ta, "foo") as list<[int, int]>, Test.get_last_events_from(ta, "foo") as list<int>];
 }) ();

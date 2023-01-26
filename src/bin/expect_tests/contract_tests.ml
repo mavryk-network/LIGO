@@ -323,7 +323,7 @@ let%expect_test _ =
     [ "compile"
     ; "expression"
     ; "cameligo"
-    ; "fun (x : operation -> int contract) -> fun (y : int) -> x"
+    ; "fun (x : operation -> int @contract) -> fun (y : int) -> x"
     ];
   [%expect
     {|
@@ -2368,7 +2368,7 @@ let%expect_test _ =
     [ "compile"
     ; "expression"
     ; "cameligo"
-    ; "test"
+    ; "@test"
     ; "--init-file"
     ; contract "pairing_check.mligo"
     ];

@@ -1,3 +1,3 @@
 #import "ligo-breathalyzer" "Breath"
 
-let test = Breath.Logger.log Trace "Hello World" 
+let @test = Breath.Logger.log Trace "Hello World" 
