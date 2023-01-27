@@ -929,11 +929,16 @@ const_ctor_expr:
     EConstr {constr with value=(constr,None)} }
 
 arguments:
-  argument           { $1,[]                      }
-| argument arguments { let h,t = $2 in ($1, h::t) }
+  call_argument           { $1,[]                      }
+| call_argument arguments { let h,t = $2 in ($1, h::t) }
 
 argument:
   core_expr
+| const_ctor_expr { $1 }
+
+call_argument:
+  "_"             { EVar {value="_"; region=$1#region} }
+| core_expr
 | const_ctor_expr { $1 }
 
 call_expr:

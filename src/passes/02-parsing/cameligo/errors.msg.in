@@ -1956,7 +1956,7 @@ interactive_expr: If Verbatim Then Verbatim VBAR
 ## In state 687, spurious reduction of production base_if_then_else__open(closed_expr) -> base_expr(closed_expr)
 ## In state 686, spurious reduction of production closed_expr -> base_if_then_else__open(closed_expr)
 ##
-interactive_expr: Match Verbatim With WILD ARROW If Verbatim Then Verbatim WILD
+interactive_expr: Match Verbatim With WILD ARROW If Verbatim Then Verbatim DOT
 ##
 ## Ends in an error in state: 989.
 ##
