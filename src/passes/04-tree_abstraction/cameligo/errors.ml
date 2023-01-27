@@ -15,6 +15,8 @@ type abs_error =
   | `Concrete_cameligo_michelson_type_wrong of Raw.type_expr * string
   | `Concrete_cameligo_michelson_type_wrong_arity of Location.t * string
   | `Concrete_cameligo_recursion_on_non_function of Location.t
+  | `Concrete_cameligo_invalid_partial_application_more of Location.t
+  | `Concrete_cameligo_invalid_partial_application_single of Location.t
   | `Concrete_cameligo_missing_funarg_annotation of Raw.variable
   | `Concrete_cameligo_funarg_tuple_type_mismatch of
     Region.t * Raw.pattern * Raw.type_expr
@@ -64,6 +66,18 @@ let error_ppformat
       Format.fprintf
         f
         "@[<hv>%a@.Invalid let declaration.@.Only functions can be recursive. @]"
+        snippet_pp
+        reg
+    | `Concrete_cameligo_invalid_partial_application_more reg ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Invalid partial application.@.Only calls with more than one argument are valid. @]"
+        snippet_pp
+        reg
+    | `Concrete_cameligo_invalid_partial_application_single reg ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Invalid partial application.@.Only a single usage of `_` is valid. @]"
         snippet_pp
         reg
     | `Concrete_cameligo_michelson_type_wrong (texpr, name) ->
@@ -152,6 +166,14 @@ let error_json : abs_error -> Simple_utils.Error.t =
     make ~stage ~content
   | `Concrete_cameligo_recursion_on_non_function location ->
     let message = "Invalid let declaration.@.Only functions can be recursive." in
+    let content = make_content ~message ~location () in
+    make ~stage ~content
+  | `Concrete_cameligo_invalid_partial_application_more location ->
+    let message = "Invalid partial application.@.Only calls with more than one argument are valid." in
+    let content = make_content ~message ~location () in
+    make ~stage ~content
+  | `Concrete_cameligo_invalid_partial_application_single location ->
+    let message = "Invalid partial application.@.Only a single usage of `_` is valid." in
     let content = make_content ~message ~location () in
     make ~stage ~content
   | `Concrete_cameligo_michelson_type_wrong (texpr, name) ->

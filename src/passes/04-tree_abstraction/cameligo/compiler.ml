@@ -330,17 +330,13 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
     let loc = Location.lift region in
     let var, loc_var = r_split var in
     let func = e_variable_ez ~loc:loc_var var in
-    let arg = match List.Ne.map self args with
-      | arg, [] -> arg
-      | arg, args -> e_tuple ~loc (arg :: args) in
-    return @@ e_application ~loc func arg
+    let wrap, arg = compile_arguments ~raise ~loc args in
+    return @@ wrap @@ e_application ~loc func arg
   | ECall call ->
     let (func, args), loc = r_split call in
     let func = self func in
-    let arg = match List.Ne.map self args with
-      | arg, [] -> arg
-      | arg, args -> e_tuple ~loc (arg :: args) in
-    return @@ e_application ~loc func arg
+    let wrap, arg = compile_arguments ~raise ~loc args in
+    return @@ wrap @@ e_application ~loc func arg
   | ETuple lst ->
     let lst, loc = r_split lst in
     let lst = npseq_to_ne_list lst in
@@ -764,6 +760,38 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
     let cond = compile_expression ~raise cond in
     let body = compile_loop_body ~raise body in
     return @@ e_while ~loc cond body
+
+
+and compile_arguments ~raise ~loc args =
+  let find_wild (e : expression) =
+    match e.expression_content with
+    | E_variable v when Value_var.is_name v "_" -> true
+    | _ -> false in
+  match List.Ne.map (compile_expression ~raise) args with
+  | arg, [] ->
+    if find_wild arg then
+      raise.error (invalid_partial_application_more arg.location)
+    else
+      (fun x -> x), arg
+  | arg, args ->
+    let f arg (wrap, args) =
+      if find_wild arg then
+        if Option.is_some wrap then
+          raise.error (invalid_partial_application_single arg.location)
+        else
+        begin
+          let z = Value_var.fresh ~loc () in
+          let wrap body =
+            e_lambda ~loc (Param.make z None) None body
+          in
+          let arg = { arg with expression_content = E_variable z } in
+          (Some wrap, arg :: args)
+        end
+      else
+        (wrap, arg :: args) in
+    let wrap, args = List.fold_right ~f ~init:(None, []) (arg :: args) in
+    let wrap = Option.value ~default:(fun x -> x) wrap in
+    wrap, e_tuple ~loc args
 
 
 and compile_loop_body ~raise CST.{ kwd_do; seq_expr; kwd_done } =
