@@ -103,8 +103,22 @@ let compile ~syntax =
         else t_fun ~loc (t_prod ~loc (List.Ne.of_list tys), ret)
       in
       (match get_e_lambda lambda_ with
-      | None -> failwith "impossible"
-      | Some lambda -> e_recursive ~loc { fun_name; fun_type; lambda })
+      | Some
+          { binder = { mut_flag; forced_flag; binder }
+          ; output_type = Some output_type
+          ; result
+          } ->
+        let ascr =
+          match Ligo_prim.Binder.get_ascr binder with
+          | Some x -> x
+          | None -> failwith "impossible"
+        in
+        let binder =
+          Ligo_prim.Param.
+            { mut_flag; forced_flag; binder = Ligo_prim.Binder.set_ascr binder ascr }
+        in
+        e_recursive ~loc { fun_name; fun_type; lambda = { binder; output_type; result } }
+      | _ -> failwith "impossible")
     | E_Call (f, args) ->
       if is_curry syntax
       then

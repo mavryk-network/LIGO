@@ -137,18 +137,9 @@ let compile ~raise =
         | E_Record_pun kl, `Record ->
           (* TODO: looks stupid, do the record_pun -> record pas before ?*)
           let f acc = function
-            | Field.Punned v ->
-              e_record_update
-                ~loc
-                acc
-                [ FieldName (Label.of_string (Variable.to_name_exn v)) ]
-                (e_variable ~loc v)
-            | Complete (v, expr) ->
-              e_record_update
-                ~loc
-                acc
-                [ FieldName (Label.of_string (Variable.to_name_exn v)) ]
-                expr
+            | Field.Punned l ->
+              e_record_update ~loc acc [ FieldName l ] (e_variable ~loc v)
+            | Complete (l, expr) -> e_record_update ~loc acc [ FieldName l ] expr
           in
           ( (fun last_proj -> List.fold kl ~f ~init:last_proj)
           , List.fold kl ~f ~init:(e_variable ~loc v) )

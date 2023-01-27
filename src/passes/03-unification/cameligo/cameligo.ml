@@ -347,11 +347,11 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
   let translate_field_assign (fa : CST.field_assign) : (_, AST.expr) AST.Field.t =
     match fa with
     | CST.Property fap ->
-      let s = TODO_do_in_parsing.var ~loc:(r_snd fap.field_name) (r_fst fap.field_name) in
+      let s = TODO_do_in_parsing.labelize (r_fst fap.field_name) in
       let e = self fap.field_expr in
       AST.Field.Complete (s, e)
     | Punned_property fn ->
-      let s = TODO_do_in_parsing.var ~loc:(r_snd fn) (r_fst fn) in
+      let s = TODO_do_in_parsing.labelize (r_fst fn) in
       AST.Field.Punned s
   in
   let compile_type_params : CST.type_params CST.par CST.reg -> Ligo_prim.Type_var.t nseq =
@@ -453,7 +453,10 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
   | EProj proj -> TODO_unify_in_cst.nested_proj (r_fst proj)
   | EModA ma ->
     let ma, loc = r_split ma in
-    let module_path = r_fst ma.module_name in
+    let module_path =
+      Simple_utils.List.Ne.singleton
+      @@ TODO_do_in_parsing.mvar ~loc:(r_snd ma.module_name) (r_fst ma.module_name)
+    in
     let field = self ma.field in
     e_moda { module_path; field } ~loc
   | EUpdate up ->
@@ -558,7 +561,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
       let seq = nseq_map self (nsepseq_to_nseq nelst) in
       e_sequence ~loc (List.Ne.to_list seq))
   | ELetMutIn mut ->
-    let CST.{ binding; body; attributes ; _ }, loc = r_split mut in
+    let CST.{ binding; body; attributes; _ }, loc = r_split mut in
     let _ = TODO_do_in_parsing.weird_attributes attributes in
     let CST.{ type_params; binders; rhs_type; let_rhs; _ } = binding in
     e_let_mut_in
@@ -573,9 +576,11 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
   | EAssign ass ->
     let CST.{ binder; ass = _; expr }, loc = r_split ass in
     let var = TODO_do_in_parsing.var ~loc:(r_snd binder) (r_fst binder) in
-    e_assign_unitary ~loc { binder = Ligo_prim.Binder.make var None; expression = self expr }
+    e_assign_unitary
+      ~loc
+      { binder = Ligo_prim.Binder.make var None; expression = self expr }
   | EWhile wh ->
-    let CST.{ cond; body ; _ }, loc = r_split wh in
+    let CST.{ cond; body; _ }, loc = r_split wh in
     let body = compile_seq_expr ~raise body.seq_expr in
     e_while ~loc { cond = self cond; block = body }
   | EForIn for_ ->
@@ -585,7 +590,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
       ~loc
       (ForAny { pattern = compile_pattern pattern; collection = self collection; block })
   | EFor for_ ->
-    let CST.{ index; bound1; direction; bound2; body ; _ }, loc = r_split for_ in
+    let CST.{ index; bound1; direction; bound2; body; _ }, loc = r_split for_ in
     let block = compile_seq_expr ~raise body.seq_expr in
     let index =
       let CST.{ variable = v; attributes }, _ = r_split index in

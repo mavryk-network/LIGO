@@ -8,15 +8,15 @@ module Location = Simple_utils.Location
 let generalize ty_params init =
   let loc = get_e_loc init in
   List.Ne.fold_right ty_params ~init ~f:(fun type_binder result ->
-      e_abstraction ~loc Type_abstraction.{ type_binder; result })
+      e_type_abstraction ~loc Type_abstraction.{ type_binder; result })
 
 
-let ret_type_from_parameters ~raise parameters body =
+let fun_type_from_parameters ~raise parameters body =
   let param_types_opt =
-    List.map parameters ~f:(fun Param.{ pattern; param_type; _ } -> get_p_typed pattern)
+    List.map parameters ~f:(fun Param.{ pattern; _ } -> get_p_typed pattern)
   in
   List.map param_types_opt ~f:(function
-      | Some (ty, pattern) -> ty
+      | Some (ty, _) -> ty
       | None -> raise.error (recursive_no_annot body))
 
 
@@ -53,7 +53,7 @@ let compile ~raise =
         let body = generalize ty_params return in
         if is_rec
         then (
-          let fun_type = ret_type_from_parameters ~raise parameters return in
+          let fun_type = fun_type_from_parameters ~raise parameters return in
           e_poly_recursive
             ~loc:(get_e_loc return)
             { fun_name

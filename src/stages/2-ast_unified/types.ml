@@ -140,11 +140,8 @@ and 'self type_expression_content_ =
   | T_Attr of Attribute.t * 'self
   (* \/ Below are nodes added through the passes \/ *)
   | T_Abstraction of 'self Abstraction.t [@not_initial]
-  | T_Michelson_or of 'self * string * 'self * string [@not_initial]
-  | T_Michelson_pair of 'self * string * 'self * string [@not_initial]
-  | T_Sapling_state of string * Z.t [@not_initial]
-  | T_Sapling_transaction of string * Z.t [@not_initial]
-[@@deriving map, fold, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "ty_expr" }]
+[@@deriving
+  map, fold, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "ty_expr" }]
 
 (* ========================== PATTERNS ===================================== *)
 type ('self, 'ty_expr) pattern_ = ('self, 'ty_expr) pattern_content_ Location.wrap
@@ -165,7 +162,8 @@ and ('self, 'ty_expr) pattern_content_ =
   | P_rest of Label.t
   | P_attr of Attribute.t * 'self
   | P_mod_access of (Mod_variable.t Simple_utils.List.Ne.t, 'self) Mod_access.t
-[@@deriving map, fold, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "pattern" }]
+[@@deriving
+  map, fold, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "pattern" }]
 
 (* ========================== INSTRUCTIONS ================================= *)
 type ('self, 'expr, 'pattern, 'statement, 'block) instruction_ =
@@ -270,13 +268,13 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_variable of Variable.t (* x *)
   | E_RevApp of 'self Rev_app.t (* x |> f *)
   | E_Tuple of 'self Simple_utils.List.Ne.t (* (x, y, z) *)
-  | E_Record_pun of (Variable.t, 'self) Field.t list (* { x = 10; y; z } *)
+  | E_Record_pun of (Label.t, 'self) Field.t list (* { x = 10; y; z } *)
   | E_Array of
       'self Array_repr.t (* [1, 2, 3] , [42] , [] , [2 ...3] (specific to jsligo) *)
   | E_Object of 'self Object_.t (* {a : 1, b : 2}  ; { a ... n } *)
   | E_List of 'self list (* [ 1; 2; 3; 4; 5] *)
   | E_Proj of 'self Projection.t (* x.y.1   y is a field name, 1 is a tuple component *)
-  | E_ModA of (string, 'self) Mod_access.t (* M.N.a *)
+  | E_ModA of (Mod_variable.t Simple_utils.List.Ne.t, 'self) Mod_access.t (* M.N.a *)
   | E_Update of 'self Update.t
   | E_Poly_fun of
       ('self, 'ty_expr, 'pattern) Poly_fun.t (* (fun <type a b>(x, y) z -> x + y - z) *)
@@ -310,13 +308,11 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_constant of 'self Constant.t [@not_initial]
   | E_Constructor of 'self Constructor.t [@not_initial]
   | E_Simple_let_in of ('self, 'pattern) Simple_let_in.t [@not_initial]
-  | E_Poly_recursive of ('ty_expr list, ('self, 'ty_expr, 'pattern) Poly_fun.t) Recursive.t
-      [@not_initial]
-  | E_Recursive of ('ty_expr , ('self, 'ty_expr option) Lambda.t) Recursive.t
-      [@not_initial]
+  | E_Poly_recursive of
+      ('ty_expr list, ('self, 'ty_expr, 'pattern) Poly_fun.t) Recursive.t [@not_initial]
+  | E_Recursive of ('ty_expr, ('self, 'ty_expr) Lambda.t) Recursive.t [@not_initial]
   | E_Lambda of ('self, 'ty_expr option) Lambda.t [@not_initial]
-  | E_Abstraction of 'self Type_abstraction.t [@not_initial]
-  | E_Fun of ('pattern,'ty_expr) Param.t list * 'self [@not_initial]
+  | E_Type_abstraction of 'self Type_abstraction.t [@not_initial]
   | E_Application of 'self Application.t
 [@@deriving map, fold, iter, yojson, sexp, is { tags = [ "not_initial" ]; name = "expr" }]
 (* ========================== PROGRAM ====================================== *)

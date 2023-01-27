@@ -7,11 +7,16 @@ module Option = Simple_utils.Option
 module Region = Simple_utils.Region
 open AST (* Brings types and combinators functions *)
 
-
 let translate_attr_pascaligo : CST.Attr.t -> AST.Attribute.t =
  fun attr ->
   let key, value = attr in
-  let value : string option = Option.map ~f:(function (String s) -> s | Ident _ -> failwith "mmh ?") value in
+  let value : string option =
+    Option.map
+      ~f:(function
+        | String s -> s
+        | Ident _ -> failwith "mmh ?")
+      value
+  in
   { key; value }
 
 
@@ -58,9 +63,9 @@ module TODO_do_in_parsing = struct
     | None -> failwith "impossible ?"
 
 
-  let expr_as_var (e : CST.expr) : Ligo_prim.Value_var.t =
+  let label_as_var (e : CST.expr) : Label.t =
     match e with
-    | E_Var x -> Ligo_prim.Value_var.of_input_var ~loc:(w_snd x) (w_fst x)
+    | E_Var x -> Label.of_string (w_fst x)
     | _ -> failwith "would not make sense ? tofix"
 end
 
@@ -87,7 +92,6 @@ module TODO_unify_in_cst = struct
   (* let e_cat ~loc a b =
     e_binary_op ~loc AST.{ operator = Location.wrap ~loc "^"; left = a; right = b } *)
 
-
   let e_string ~loc s =
     e_literal ~loc (Literal_string (Simple_utils.Ligo_string.Standard s))
 
@@ -97,7 +101,9 @@ module TODO_unify_in_cst = struct
 
 
   let better_as_binop ~loc kwd (left, right) =
-    e_binary_op ~loc { operator = Location.wrap ~loc:(w_snd kwd) Operators.SHARP ; left; right }
+    e_binary_op
+      ~loc
+      { operator = Location.wrap ~loc:(w_snd kwd) Operators.SHARP; left; right }
 
 
   let nested_proj : AST.expr -> (CST.selection, CST.dot) nsepseq -> AST.expr =
@@ -141,7 +147,7 @@ module TODO_unify_in_cst = struct
               let label = w_fst x in
               [ FieldName (Label.of_string label) ]
             | CST.E_Proj
-                { region=_
+                { region = _
                 ; value = { record_or_tuple = CST.E_Var _; selector = _; field_path }
                 } ->
               List.map (nsepseq_to_list field_path) ~f:(function
@@ -151,8 +157,8 @@ module TODO_unify_in_cst = struct
               failwith "raise.error (expected_field_or_access @@ CST.expr_to_region x)"
           in
           let field_rhs = self field_rhs in
-          TODO_do_in_parsing.weird_attributes attributes ;
-          Full_field { field_lhs; field_lens; field_rhs}
+          TODO_do_in_parsing.weird_attributes attributes;
+          Full_field { field_lhs; field_lens; field_rhs }
         | CST.Punned { pun; attributes } ->
           let attributes =
             TODO_do_in_parsing.weird_attributes attributes;
@@ -164,17 +170,23 @@ module TODO_unify_in_cst = struct
       in
       List.map (Utils.sepseq_to_list record_lhs.value.elements) ~f
     | _ -> failwith "raise.error (wrong_functional_updator @@ CST.expr_to_region x)"
-  
-  let nested_mod_access init lst= List.fold_right
-    ~init
-    ~f:(fun x acc -> e_moda ~loc:(get_e_loc acc) {module_path = x ; field = acc})
-    (List.Ne.to_list lst)
-  let tnested_mod_access init lst= List.fold_right
-    ~init
-    ~f:(fun x acc -> t_moda ~loc:(get_t_loc acc) {module_path = x ; field = acc})
-    (List.Ne.to_list lst)
 
-  let declarations_as_program decls = nseq_map (pe_declaration) decls
+
+  let nested_mod_access init lst =
+    List.fold_right
+      ~init
+      ~f:(fun x acc -> e_moda ~loc:(get_e_loc acc) { module_path = x; field = acc })
+      (List.Ne.to_list lst)
+
+
+  let tnested_mod_access init lst =
+    List.fold_right
+      ~init
+      ~f:(fun x acc -> t_moda ~loc:(get_t_loc acc) { module_path = x; field = acc })
+      (List.Ne.to_list lst)
+
+
+  let declarations_as_program decls = nseq_map pe_declaration decls
 end
 
 let extract_type_params
@@ -535,14 +547,16 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
  fun e ->
   let self = compile_expression ~raise in
   let return e = e in
-  let compile_bin_op (sign: AST.Operators.op) (op : _ CST.bin_op CST.reg) =
+  let compile_bin_op (sign : AST.Operators.op) (op : _ CST.bin_op CST.reg) =
     let CST.{ op; arg1; arg2 }, _loc = r_split op in
     let _, loc = w_split op in
     e_binary_op
       ~loc
       AST.{ operator = Location.wrap ~loc sign; left = self arg1; right = self arg2 }
   in
-  let compile_unary_op (sign: AST.Operators.op) : string CST.wrap CST.un_op CST.reg -> AST.expr =
+  let compile_unary_op (sign : AST.Operators.op)
+      : string CST.wrap CST.un_op CST.reg -> AST.expr
+    =
    fun op ->
     let CST.{ op; arg }, _loc = r_split op in
     let _, loc = w_split op in
@@ -625,9 +639,9 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     let fields =
       let translate_field_assign : (CST.expr, CST.expr) CST.field -> (_, expr) AST.Field.t
         = function
-        | Punned p -> Punned (TODO_do_in_parsing.expr_as_var p.pun)
+        | Punned p -> Punned (TODO_do_in_parsing.label_as_var p.pun)
         | Complete c ->
-          Complete (TODO_do_in_parsing.expr_as_var c.field_lhs, self c.field_rhs)
+          Complete (TODO_do_in_parsing.label_as_var c.field_lhs, self c.field_rhs)
       in
       List.map ~f:(translate_field_assign <@ r_fst) @@ sepseq_to_list record.elements
     in
@@ -636,10 +650,14 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     let proj, _loc = r_split proj in
     translate_projection proj
   | E_ModPath ma ->
-    let ma, _loc = r_split ma in
-    let module_path = nseq_map w_fst @@ nsepseq_to_nseq ma.module_path in
+    let ma, loc = r_split ma in
+    let module_path =
+      nseq_map (fun x -> TODO_do_in_parsing.mvar ~loc:(w_snd x) (w_fst x))
+      @@ nsepseq_to_nseq ma.module_path
+    in
     let field = self ma.field in
-    TODO_unify_in_cst.nested_mod_access field module_path
+    (* TODO_unify_in_cst.nested_mod_access field module_path *)
+    e_moda ~loc { module_path ; field }
   | E_Update up ->
     let up, loc = r_split up in
     let structure = self up.structure in
@@ -723,13 +741,13 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     let code = self ci.code in
     e_rawcode { language; code } ~loc
   | E_Block be ->
-    let CST.{block ; expr ; _}, loc = r_split be in
+    let CST.{ block; expr; _ }, loc = r_split be in
     let block =
-      let (b,loc) = r_split block in
+      let b, loc = r_split block in
       let block = nseq_map (compile_statement ~raise) @@ nsepseq_to_nseq b.statements in
       make_b ~loc block
     in
-    e_block_with { block ; expr = self expr } ~loc
+    e_block_with { block; expr = self expr } ~loc
   | E_Nil nil ->
     let _, loc = w_split nil in
     e_list [] ~loc
@@ -778,7 +796,7 @@ and compile_declaration ~(raise : ('e, 'w) raise) : CST.declaration -> AST.decla
     let let_rhs = compile_expression ~raise d.init in
     d_const ~loc { pattern; type_params; rhs_type; let_rhs }
   | D_Attr d ->
-    let (attr,decl), loc = r_split d in
+    let (attr, decl), loc = r_split d in
     let attr = translate_attr_pascaligo (r_fst attr) in
     let decl = self decl in
     d_attr (attr, decl) ~loc

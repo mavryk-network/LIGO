@@ -13,16 +13,16 @@ let is_field = function
 
 let label_of_var x = Label.of_string @@ Variable.to_name_exn x
 
-let field_of_property ~raise : expr Object_.property -> (Variable.t, expr) Field.t =
+let field_of_property ~raise : expr Object_.property -> (Label.t, expr) Field.t =
  fun p ->
   match p with
   | Property (l, r) ->
     (match get_e l with
-    | E_variable v -> Complete (v, r)
+    | E_variable v -> Complete (Label.of_string (Variable.to_name_exn v), r)
     | _ -> raise.error @@ unsupported_object_field l)
   | Punned_property x ->
     (match get_e x with
-    | E_variable v -> Punned v
+    | E_variable v -> Punned (Label.of_string (Variable.to_name_exn v))
     | _ -> raise.error @@ unsupported_object_field x)
   | Property_rest x -> raise.error @@ unsupported_rest_property x
 

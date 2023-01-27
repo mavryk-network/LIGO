@@ -160,6 +160,7 @@ module TODO_unify_in_cst = struct
   let e_verbatim ~loc s =
     e_literal ~loc (Literal_string (Simple_utils.Ligo_string.Verbatim s))
 
+
   let nested_ctor_application ~loc (constr : CST.constr) arg_opt =
     let constructor = Label.of_string constr.value in
     let element = Option.map ~f:List.Ne.singleton arg_opt in
@@ -591,7 +592,10 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     e_proj { expr; selection } ~loc
   | EModA ma ->
     let ma, loc = r_split ma in
-    let module_path = r_fst ma.module_name in
+    let module_path =
+      Simple_utils.List.Ne.singleton
+      @@ TODO_do_in_parsing.mvar ~loc:(r_snd ma.module_name) (r_fst ma.module_name)
+    in
     let field = self ma.field in
     e_moda { module_path; field } ~loc
   | EFun f ->
@@ -604,8 +608,10 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     let body =
       let compile_body : CST.body -> (_, _) AST.Block_fun.fun_block = function
         | FunctionBody b ->
-          let stmts,loc = r_split b in
-          let stmts = nseq_map (compile_statement ~raise) @@ nsepseq_to_nseq stmts.inside in
+          let stmts, loc = r_split b in
+          let stmts =
+            nseq_map (compile_statement ~raise) @@ nsepseq_to_nseq stmts.inside
+          in
           FunctionBody (make_b ~loc stmts)
         | ExpressionBody e -> ExpressionBody (self e)
       in

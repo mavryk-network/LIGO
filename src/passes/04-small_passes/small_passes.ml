@@ -41,13 +41,8 @@ let passes
   ]
 
 
-let trivial_compile_program : I.program -> O.program =
- fun _ -> failwith "TODO: Everything is fine"
-
-
-let trivial_compile_expression : I.expr -> O.expression =
- fun _ -> failwith "TODO : Everything is fine"
-
+let trivial_compile_program : I.program -> O.program = Trivial.conv_program
+let trivial_compile_expression : I.expr -> O.expression = Trivial.conv_expr
 
 let compile_with_passes : type a. a sub_pass list -> a -> a =
  fun passes prg ->
@@ -67,7 +62,7 @@ let compile_program ~raise ~syntax : I.program -> O.program =
  fun prg ->
   let passes = passes ~raise ~syntax in
   print_endline
-  (Format.asprintf "%a" (Sexp.pp_hum_indent 2) (I.S_exp.sexp_of_program prg));
+    (Format.asprintf "%a" (Sexp.pp_hum_indent 2) (I.S_exp.sexp_of_program prg));
   let prg = compile_with_passes (List.map ~f:(fun x -> x.program) passes) prg in
   print_endline
     (Format.asprintf "%a" (Sexp.pp_hum_indent 2) (I.S_exp.sexp_of_program prg));
