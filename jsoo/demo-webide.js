@@ -28,7 +28,7 @@ async function loadJSBundle(path) {
 }
 
 let { ligoEditor, michelsonEditor } = Editor.initialize();
-function handleClick(compile) {
+function handleCompileClick(compile) {
   let michelson = compile.main(
     ligoEditor.state.doc.toJSON().join("\n"),
     document.getElementById("syntax").value
@@ -42,10 +42,28 @@ function handleClick(compile) {
   );
 }
 
+function handlePrintCSTClick(compile) {
+  let cst = compile.print(
+    ligoEditor.state.doc.toJSON().join("\n"),
+    document.getElementById("syntax").value
+  );
+  michelsonEditor.setState(
+    EditorState.create({
+      extensions: [basicSetup],
+      doc: cst,
+    })
+  );
+}
+
 initialize().then(async () => {
   console.log("All WASM dependencies loaded");
   await loadJSBundle("/js_main.bc.runtime.js");
   await loadJSBundle("/js_main.bc.js");
-  document.getElementById("compile").addEventListener("click", handleClick);
-  handleClick(window.compile);
+  document
+    .getElementById("compile")
+    .addEventListener("click", () => handleCompileClick(window.compile));
+  document
+    .getElementById("print-cst")
+    .addEventListener("click", () => handlePrintCSTClick(window.compile));
+  handlePrintCSTClick(window.compile);
 });

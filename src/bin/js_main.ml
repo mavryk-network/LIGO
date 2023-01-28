@@ -61,6 +61,45 @@ let main source syntax =
     "<failed>"
 
 
+let print_cst source syntax =
+  let entry_point = "main" in
+  let views = Default_options.views in
+  let syntax_v =
+    match Syntax.of_ext_opt (Some syntax) with
+    | Some v -> v
+    | None -> failwith ("Invalid syntax " ^ syntax)
+  in
+  let protocol_version = "lima" in
+  let display_format = Simple_utils.Display.human_readable in
+  let raw_options =
+    Raw_options.make
+      ~entry_point
+      ~syntax
+      ~views
+      ~protocol_version
+      ~disable_michelson_typechecking:true
+      ~experimental_disable_optimizations_for_debugging:false
+      ~enable_typed_opt:false
+      ~no_stdlib:true
+      ~warning_as_error:false
+      ~no_colour:true
+      ~constants:Default_options.constants
+      ~file_constants:None
+      ~project_root:None
+      ~warn_unused_rec:true
+      ()
+  in
+  match Api.Print.cst ~syntax:syntax_v raw_options (`Raw source) display_format () with
+  | Ok (a, b) ->
+    print_endline a;
+    print_endline b;
+    a
+  | Error (a, b) ->
+    print_endline "error";
+    print_endline a;
+    print_endline b;
+    "failed"
+
 let _ =
   Js.export
     "compile"
@@ -70,4 +109,9 @@ let _ =
          let syntax = Js.to_string syntax in
          let michelson = main code syntax in
          Js.string michelson
+       method print_cst code syntax =
+         let code = Js.to_string code in
+         let syntax = Js.to_string syntax in
+         let cst = print_cst code syntax in
+         Js.string cst
     end)
