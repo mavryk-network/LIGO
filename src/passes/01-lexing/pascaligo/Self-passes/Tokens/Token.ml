@@ -45,8 +45,9 @@ module T =
     | Int      of (lexeme * Z.t) Wrap.t
     | Nat      of (lexeme * Z.t) Wrap.t
     | Mutez    of (lexeme * Int64.t) Wrap.t
-    | Ident    of lexeme Wrap.t
-    | UIdent   of lexeme Wrap.t
+    | Ident    of lexeme Wrap.t  (* x  *)
+    | EIdent   of lexeme Wrap.t  (* @x *)
+    | UIdent   of lexeme Wrap.t  (* X  *)
     | Lang     of lexeme Region.reg Region.reg
     | Attr     of Attr.t Region.reg
 
@@ -148,6 +149,7 @@ module T =
     | Int t
     | Nat t      -> fst t#payload
     | Mutez t    -> fst t#payload
+    | EIdent t   -> "@" ^ t#payload
     | Ident t
     | UIdent t   -> t#payload
     | Attr t     -> Attr.to_lexeme t.Region.value
@@ -622,14 +624,10 @@ module T =
 
     (* IMPORTANT: These values cannot be exported in Token.mli *)
 
-    let wrap_string   s = Wrap.wrap s
-    let wrap_verbatim s = Wrap.wrap s
-    let wrap_bytes    b = Wrap.wrap ("0x" ^ Hex.show b, b)
-    let wrap_int      z = Wrap.wrap (Z.to_string z, z)
-    let wrap_nat      z = Wrap.wrap (Z.to_string z ^ "n", z)
-    let wrap_mutez    i = Wrap.wrap (Int64.to_string i ^ "mutez", i)
-    let wrap_ident    i = Wrap.wrap i
-    let wrap_uident   c = Wrap.wrap c
+    let wrap_bytes b = Wrap.wrap ("0x" ^ Hex.show b, b)
+    let wrap_int   z = Wrap.wrap (Z.to_string z, z)
+    let wrap_nat   z = Wrap.wrap (Z.to_string z ^ "n", z)
+    let wrap_mutez i = Wrap.wrap (Int64.to_string i ^ "mutez", i)
 
     let wrap_attr key value region =
       Region.{value = (key, value); region}
@@ -639,16 +637,16 @@ module T =
       let lang_reg = Region.make ~start ~stop:region#stop in
       Region.{region; value = {value=lang; region=lang_reg}}
 
-    let ghost_string   s = wrap_string   s   Region.ghost
-    let ghost_verbatim s = wrap_verbatim s   Region.ghost
-    let ghost_bytes    b = wrap_bytes    b   Region.ghost
-    let ghost_int      z = wrap_int      z   Region.ghost
-    let ghost_nat      z = wrap_nat      z   Region.ghost
-    let ghost_mutez    i = wrap_mutez    i   Region.ghost
-    let ghost_ident    i = wrap_ident    i   Region.ghost
-    let ghost_uident   c = wrap_uident   c   Region.ghost
-    let ghost_attr   k v = wrap_attr     k v Region.ghost
-    let ghost_lang     l = wrap_lang     l   Region.ghost
+    let ghost_string   s = wrap       s   Region.ghost
+    let ghost_verbatim s = wrap       s   Region.ghost
+    let ghost_bytes    b = wrap_bytes b   Region.ghost
+    let ghost_int      z = wrap_int   z   Region.ghost
+    let ghost_nat      z = wrap_nat   z   Region.ghost
+    let ghost_mutez    i = wrap_mutez i   Region.ghost
+    let ghost_ident    i = wrap       i   Region.ghost
+    let ghost_uident   c = wrap       c   Region.ghost
+    let ghost_attr   k v = wrap_attr  k v Region.ghost
+    let ghost_lang     l = wrap_lang  l   Region.ghost
 
     let ghost_String   s = String   (ghost_string s)
     let ghost_Verbatim s = Verbatim (ghost_verbatim s)
@@ -657,6 +655,7 @@ module T =
     let ghost_Nat      z = Nat      (ghost_nat z)
     let ghost_Mutez    i = Mutez    (ghost_mutez i)
     let ghost_Ident    i = Ident    (ghost_ident i)
+    let ghost_EIdent   i = EIdent   (ghost_ident i)
     let ghost_UIdent   c = UIdent   (ghost_uident c)
     let ghost_Attr   k v = Attr     (ghost_attr k v)
     let ghost_Lang     l = Lang     (ghost_lang l)
@@ -674,107 +673,6 @@ module T =
     let mk_EOF region = EOF (wrap_eof region)
     let ghost_eof     = wrap_eof Region.ghost
     let ghost_EOF     = mk_EOF Region.ghost
-
-    (* FROM TOKEN STRINGS TO LEXEMES *)
-
-    let concrete = function
-      (* Literals *)
-
-      "Ident"    -> "x"
-    | "UIdent"   -> "C"
-    | "Int"      -> "1"
-    | "Nat"      -> "1n"
-    | "Mutez"    -> "1mutez"
-    | "String"   -> "\"a string\""
-    | "Verbatim" -> "{|verbatim|}"
-    | "Bytes"    -> "0xAA"
-    | "Attr"     -> "[@attr]"
-    | "Lang"     -> "[%Michelson"
-
-    (* Symbols *)
-
-    | "SEMI"     -> ghost_semi#payload
-    | "COMMA"    -> ghost_comma#payload
-    | "LPAR"     -> ghost_lpar#payload
-    | "RPAR"     -> ghost_rpar#payload
-    | "LBRACE"   -> ghost_lbrace#payload
-    | "RBRACE"   -> ghost_rbrace#payload
-    | "LBRACKET" -> ghost_lbracket#payload
-    | "RBRACKET" -> ghost_rbracket#payload
-    | "SHARP"    -> ghost_sharp#payload
-    | "VBAR"     -> ghost_vbar#payload
-    | "ARROW"    -> ghost_arrow#payload
-    | "ASS"      -> ghost_ass#payload
-    | "EQ"       -> ghost_eq#payload
-    | "COLON"    -> ghost_colon#payload
-    | "LT"       -> ghost_lt#payload
-    | "LE"       -> ghost_le#payload
-    | "GT"       -> ghost_gt#payload
-    | "NE"       -> ghost_ne#payload
-    | "PLUS"     -> ghost_plus#payload
-    | "MINUS"    -> ghost_minus#payload
-    | "SLASH"    -> ghost_slash#payload
-    | "TIMES"    -> ghost_times#payload
-    | "DOT"      -> ghost_dot#payload
-    | "WILD"     -> ghost_wild#payload
-    | "CARET"    -> ghost_caret#payload
-    | "PLUS_EQ"  -> ghost_plus_eq#payload
-    | "MINUS_EQ" -> ghost_minus_eq#payload
-    | "TIMES_EQ" -> ghost_times_eq#payload
-    | "SLASH_EQ" -> ghost_slash_eq#payload
-    | "VBAR_EQ"  -> ghost_vbar_eq#payload
-
-    (* Keywords *)
-
-    | "And"       -> ghost_and#payload
-    | "Begin"     -> ghost_begin#payload
-    | "BigMap"    -> ghost_big_map#payload
-    | "Block"     -> ghost_block#payload
-    | "Case"      -> ghost_case#payload
-    | "Const"     -> ghost_const#payload
-    | "Contains"  -> ghost_contains#payload
-    | "Else"      -> ghost_else#payload
-    | "End"       -> ghost_end#payload
-    | "For"       -> ghost_for#payload
-    | "From"      -> ghost_from#payload
-    | "Function"  -> ghost_function#payload
-    | "If"        -> ghost_if#payload
-    | "In"        -> ghost_in#payload
-    | "Is"        -> ghost_is#payload
-    | "List"      -> ghost_list#payload
-    | "Map"       -> ghost_map#payload
-    | "Mod"       -> ghost_mod#payload
-    | "Module"    -> ghost_module#payload
-    | "Nil"       -> ghost_nil#payload
-    | "Not"       -> ghost_not#payload
-    | "Of"        -> ghost_of#payload
-    | "Or"        -> ghost_or#payload
-    | "Patch"     -> ghost_patch#payload
-    | "Record"    -> ghost_record#payload
-    | "Recursive" -> ghost_recursive#payload
-    | "Remove"    -> ghost_remove#payload
-    | "Set"       -> ghost_set#payload
-    | "Skip"      -> ghost_skip#payload
-    | "Step"      -> ghost_step#payload
-    | "Then"      -> ghost_then#payload
-    | "To"        -> ghost_to#payload
-    | "Type"      -> ghost_type#payload
-    | "Var"       -> ghost_var#payload
-    | "While"     -> ghost_while#payload
-    | "With"      -> ghost_with#payload
-
-    (* Virtual tokens *)
-
-    | "ZWSP" -> ""
-
-    (* End-Of-File *)
-
-    | "EOF" -> ghost_eof#payload
-
-    (* This case should not happen! *)
-
-    | _  -> "\\Unknown" (* Backslash meant to trigger an error *)
-
 
     (* FROM TOKENS TO TOKEN STRINGS AND REGIONS *)
 
@@ -804,6 +702,8 @@ module T =
         t#region, sprintf "Mutez (%S, %s)" s (Int64.to_string n)
     | Ident t ->
         t#region, sprintf "Ident %S" t#payload
+    | EIdent t ->
+        t#region, sprintf "EIdent %S" t#payload
     | UIdent t ->
         t#region, sprintf "UIdent %S" t#payload
     | Attr {region; value} ->
@@ -965,6 +865,8 @@ module T =
         Some mk_kwd -> mk_kwd region
       |        None -> Ident (wrap value region)
 
+    let mk_eident value region = EIdent (wrap value region)
+
     (* Constructors/Modules *)
 
     let mk_uident value region = UIdent (wrap value region)
@@ -986,12 +888,15 @@ module T =
     let is_bytes  = function Bytes  _ -> true | _ -> false
     let is_eof    = function EOF    _ -> true | _ -> false
 
-    let hex_digits = ["A"; "B"; "C"; "D"; "E"; "F";
-                      "a"; "b"; "c"; "d"; "e"; "f"]
+    let hex_digits = ['A'; 'B'; 'C'; 'D'; 'E'; 'F';
+                      'a'; 'b'; 'c'; 'd'; 'e'; 'f']
 
-    let is_hex = function
-      UIdent t | Ident t ->
-        List.mem hex_digits t#payload ~equal:String.equal
+    let start_with_hex = function
+      UIdent t | Ident t -> (
+        try
+          let first = String.get t#payload 0 in
+          List.mem hex_digits first ~equal:Char.equal
+        with Invalid_argument _ -> false)
     | _ -> false
 
     let is_sym = function

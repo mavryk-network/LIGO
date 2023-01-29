@@ -356,12 +356,14 @@ sep_or_term_list(item,sep):
 
 (* Aliasing and inlining some tokens *)
 
-%inline variable        : "<ident>"  { $1 }
-%inline type_name       : "<ident>"  { $1 }
-%inline type_ctor       : "<ident>"  { T_Var $1 }
-%inline fun_name        : "<ident>"  { $1 }
-%inline field_name      : "<ident>"  { $1 }
-%inline record_or_tuple : "<ident>"  { $1 }
+gen_ident: "<ident>" | "<eident>" { $1 }
+
+%inline variable        : gen_ident  { $1 }
+%inline type_name       : gen_ident  { $1 }
+%inline type_ctor       : gen_ident  { T_Var $1 }
+%inline fun_name        : gen_ident  { $1 }
+%inline field_name      : gen_ident  { $1 }
+%inline record_or_tuple : gen_ident  { $1 }
 %inline module_name     : "<uident>" { $1 }
 %inline ctor            : "<uident>" { $1 }
 

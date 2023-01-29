@@ -154,6 +154,7 @@ everything_else:
 | "<bytes>"         { Bytes $1     }
 | "<int>"           { Int $1       }
 | "<ident>"         { Ident $1     }
+| "<eident>"        { EIdent $1    }
 | "<uident>"        { UIdent $1    }
 | "[@attr]"         { Attr $1      }
 

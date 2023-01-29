@@ -45,8 +45,9 @@ module T =
     | Int      of (lexeme * Z.t) Wrap.t
     | Nat      of (lexeme * Z.t) Wrap.t
     | Mutez    of (lexeme * Int64.t) Wrap.t
-    | Ident    of lexeme Wrap.t
-    | UIdent   of lexeme Wrap.t
+    | Ident    of lexeme Wrap.t  (* x  *)
+    | EIdent   of lexeme Wrap.t  (* @x *)
+    | UIdent   of lexeme Wrap.t  (* X  *)
     | Lang     of lexeme Region.reg Region.reg
     | Attr     of Attr.t Region.reg
 
@@ -169,6 +170,7 @@ module T =
     | Int t
     | Nat t      -> fst t#payload
     | Mutez t    -> fst t#payload
+    | EIdent t   -> "@" ^ t#payload
     | Ident t
     | UIdent t   -> t#payload
     | Attr t     -> Attr.to_lexeme t.Region.value
@@ -751,14 +753,10 @@ module T =
 
     (* IMPORTANT: These values cannot be exported in Token.mli *)
 
-    let wrap_string   s = Wrap.wrap s
-    let wrap_verbatim s = Wrap.wrap s
-    let wrap_bytes    b = Wrap.wrap ("0x" ^ Hex.show b, b)
-    let wrap_int      z = Wrap.wrap (Z.to_string z, z)
-    let wrap_nat      z = Wrap.wrap (Z.to_string z ^ "n", z)
-    let wrap_mutez    i = Wrap.wrap (Int64.to_string i ^ "mutez", i)
-    let wrap_ident    i = Wrap.wrap i
-    let wrap_uident   c = Wrap.wrap c
+    let wrap_bytes b = Wrap.wrap ("0x" ^ Hex.show b, b)
+    let wrap_int   z = Wrap.wrap (Z.to_string z, z)
+    let wrap_nat   z = Wrap.wrap (Z.to_string z ^ "n", z)
+    let wrap_mutez i = Wrap.wrap (Int64.to_string i ^ "mutez", i)
 
     let wrap_attr key value region =
       Region.{value = (key, value); region}
@@ -768,16 +766,16 @@ module T =
       let lang_reg = Region.make ~start ~stop:region#stop in
       Region.{region; value = {value=lang; region=lang_reg}}
 
-    let ghost_string   s = wrap_string   s   Region.ghost
-    let ghost_verbatim s = wrap_verbatim s   Region.ghost
-    let ghost_bytes    b = wrap_bytes    b   Region.ghost
-    let ghost_int      z = wrap_int      z   Region.ghost
-    let ghost_nat      z = wrap_nat      z   Region.ghost
-    let ghost_mutez    i = wrap_mutez    i   Region.ghost
-    let ghost_ident    i = wrap_ident    i   Region.ghost
-    let ghost_uident   c = wrap_uident   c   Region.ghost
-    let ghost_attr   k v = wrap_attr     k v Region.ghost
-    let ghost_lang     l = wrap_lang     l   Region.ghost
+    let ghost_string   s = wrap       s   Region.ghost
+    let ghost_verbatim s = wrap       s   Region.ghost
+    let ghost_bytes    b = wrap_bytes b   Region.ghost
+    let ghost_int      z = wrap_int   z   Region.ghost
+    let ghost_nat      z = wrap_nat   z   Region.ghost
+    let ghost_mutez    i = wrap_mutez i   Region.ghost
+    let ghost_ident    i = wrap       i   Region.ghost
+    let ghost_uident   c = wrap       c   Region.ghost
+    let ghost_attr   k v = wrap_attr  k v Region.ghost
+    let ghost_lang     l = wrap_lang  l   Region.ghost
 
     let ghost_String   s = String   (ghost_string s)
     let ghost_Verbatim s = Verbatim (ghost_verbatim s)
@@ -977,6 +975,8 @@ module T =
         t#region, sprintf "Mutez (%S, %s)" s (Int64.to_string n)
     | Ident t ->
         t#region, sprintf "Ident %S" t#payload
+    | EIdent t ->
+        t#region, sprintf "EIdent %S" t#payload
     | UIdent t ->
         t#region, sprintf "UIdent %S" t#payload
     | Attr {region; value} ->
@@ -1160,6 +1160,8 @@ module T =
         Some mk_kwd -> mk_kwd region
       |        None -> Ident (wrap value region)
 
+    let mk_eident value region = EIdent (wrap value region)
+
     (* Constructors/Modules *)
 
     let mk_uident value region = UIdent (wrap value region)
@@ -1181,12 +1183,15 @@ module T =
     let is_bytes  = function Bytes  _ -> true | _ -> false
     let is_eof    = function EOF    _ -> true | _ -> false
 
-    let hex_digits = ["A"; "B"; "C"; "D"; "E"; "F";
-                      "a"; "b"; "c"; "d"; "e"; "f"]
+    let hex_digits = ['A'; 'B'; 'C'; 'D'; 'E'; 'F';
+                      'a'; 'b'; 'c'; 'd'; 'e'; 'f']
 
-    let is_hex = function
-      UIdent t | Ident t ->
-        List.mem hex_digits t#payload ~equal:String.equal
+    let start_with_hex = function
+      UIdent t | Ident t -> (
+        try
+          let first = String.get t#payload 0 in
+          List.mem hex_digits first ~equal:Char.equal
+        with Invalid_argument _ -> false)
     | _ -> false
 
     let is_sym = function

@@ -143,10 +143,12 @@ sep_or_term_list(item,sep):
 
 (* Helpers *)
 
-%inline variable      : "<ident>"  { unwrap $1 }
-%inline type_name     : "<ident>"  { unwrap $1 }
-%inline field_name    : "<ident>"  { unwrap $1 }
-%inline struct_name   : "<ident>"  { unwrap $1 }
+gen_ident: "<ident>" | "<eident>" { $1 }
+
+%inline variable      : gen_ident  { unwrap $1 }
+%inline type_name     : gen_ident  { unwrap $1 }
+%inline field_name    : gen_ident  { unwrap $1 }
+%inline struct_name   : gen_ident  { unwrap $1 }
 %inline module_name   : "<uident>" { unwrap $1 }
 %inline contract_name : "<uident>" { unwrap $1 }
 
@@ -465,8 +467,8 @@ core_irrefutable:
 (* TODO: int, nat, bytes etc.? *)
 
 var_pattern:
-  attributes "<ident>" {
-    let variable = unwrap $2 in
+  attributes variable {
+    let variable = $2 in
     let value = {variable; attributes=$1}
     in {variable with value} }
 
@@ -1003,7 +1005,7 @@ core_expr:
 | "<mutez>"           {             EArith (Mutez  (unwrap $1)) }
 | "<nat>"             {               EArith (Nat  (unwrap $1)) }
 | "<bytes>"           {                     EBytes (unwrap $1) }
-| "<ident>"           {                       EVar (unwrap $1) }
+| variable            {                       EVar $1 }
 | projection          {                      EProj $1 }
 | module_access_e     {                      EModA $1 }
 | "<string>"          {           EString (String (unwrap $1))}
@@ -1109,7 +1111,7 @@ field_assignment:
     in {region; value} }
 
 path:
- "<ident>"   { Name (unwrap $1) }
+  variable   { Name $1 }
 | projection { Path $1 }
 
 (* Sequences *)

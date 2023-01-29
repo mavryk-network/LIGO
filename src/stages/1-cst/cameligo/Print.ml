@@ -37,24 +37,23 @@ let print_attribute state (node : Attr.t reg) =
   let key, val_opt = node.value in
   match val_opt with
     None ->
-      Tree.print_unary state "<attribute>" Tree.print_node key
+      Tree.make_unary state "<attribute>" Tree.make_node key
   | Some (String value | Ident value) ->
       let children = [
-        Tree.mk_child Tree.print_node key;
-        Tree.mk_child Tree.print_node value]
-      in Tree.print state "<attributes>" children
+        Tree.mk_child Tree.make_node key;
+        Tree.mk_child Tree.make_node value]
+      in Tree.make state "<attributes>" children
 
 type label = Tree.label
 
 let print_list :
-  state -> ?region:Region.t -> label -> 'a Tree.printer -> 'a list -> unit =
+  state -> ?region:Region.t -> label -> 'a Tree.makeer -> 'a list -> unit =
   fun state ?region label print list ->
     let children = List.map ~f:(Tree.mk_child print) list
-    in Tree.print ?region state label children
+    in Tree.make ?region state label children
 
 let print_attributes state (node : Attr.attribute reg list) =
   print_list state "<attributes>" print_attribute node
-
 
 (* Pretty-printing the CST *)
 
@@ -371,18 +370,18 @@ and print_for_in_loop state
 
 and print_while_loop state
     { kwd_while = _; cond; body } =
-  let () = 
+  let () =
     let state = state#pad 2 0 in
     print_node state "<cond>";
     print_expr (state#pad 1 0) cond
   in
-  let () = 
+  let () =
     let state = state#pad 2 1 in
     print_node state "<body>";
     print_loop_body (state#pad 1 0) body
   in
   ()
-  
+
 and print_expr state = function
   ECase {value; region} ->
     print_loc_node state "ECase" region;
@@ -476,7 +475,7 @@ and print_expr state = function
     print_loc_node state "EWhile" region;
     print_while_loop state value
 
-and print_assign state (assign : CST.assign) = 
+and print_assign state (assign : CST.assign) =
   let { binder; ass = _; expr } = assign in
   let () =
     let state = state#pad 2 0 in
@@ -487,7 +486,7 @@ and print_assign state (assign : CST.assign) =
     let state = state#pad 2 1 in
     print_node state "<expr>";
     print_expr (state#pad 1 0) expr
-  in 
+  in
   ()
 
 and print_module_access :

@@ -57,7 +57,6 @@ module type S =
     val to_lexeme : token -> lexeme
     val to_string : offsets:bool -> [`Byte | `Point] -> token -> string
     val to_region : token -> Region.t
-    val concrete  : string -> lexeme
 
     (* INJECTIONS *)
 
@@ -115,6 +114,7 @@ module type S =
     (* Others *)
 
     val mk_ident    : lexeme -> Region.t -> token
+    val mk_eident   : lexeme -> Region.t -> token
     val mk_string   : lexeme -> Region.t -> token
     val mk_verbatim : lexeme -> Region.t -> token
     val mk_uident   : lexeme -> Region.t -> token
@@ -125,9 +125,10 @@ module type S =
     val is_int    : token -> bool
     val is_string : token -> bool
     val is_bytes  : token -> bool
-    val is_hex    : token -> bool
     val is_sym    : token -> bool
     val is_eof    : token -> bool
+
+    val start_with_hex : token -> bool
 
     (* Verbatim strings *)
 

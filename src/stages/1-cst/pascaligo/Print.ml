@@ -27,6 +27,7 @@ type ('a, 'sep) nsepseq = ('a, 'sep) Utils.nsepseq
 let print_list :
   state -> ?region:Region.t -> label -> 'a Tree.printer -> 'a list -> unit =
   fun state ?region label print list ->
+  (*    if Caml.(list <> []) then *) (* TODO *)
     let children = List.map ~f:(Tree.mk_child print) list
     in Tree.print ?region state label children
 
@@ -292,7 +293,7 @@ and print_T_Attr state (node : attribute * type_expr) =
 
 and print_T_Cart state (node : cartesian) =
   let first, sep, others = node.value in
-  let seq = Utils.nsepseq_cons first sep others in
+  let seq = Utilsn.sepseq_cons first sep others in
   print_nsepseq state "T_Cart" print_type_expr seq
 
 (* Functional types *)

@@ -7,6 +7,9 @@ open! Region
 open! PPrint
 module Option = Simple_utils.Option
 module List = Core.List
+module Attr = Lexing_shared.Attr
+
+let sprintf = Printf.sprintf
 
 let pp_braces printer (node : 'a braces reg) =
   let inside = node.value.inside
@@ -23,7 +26,7 @@ let pp_nsepseq :
     and sep   = string sep ^^ break 1
     in separate_map sep printer elems
 
-let rec print cst =
+let rec print (cst: CST.t) =
     Utils.nseq_to_list cst.statements
   |> List.map ~f:pp_toplevel_statement
   |> separate_map hardline group
@@ -61,7 +64,7 @@ and pp_SBlock stmt =
 and pp_for_of {value; _} =
   string "for" ^^ string "("
   ^^ pp_index_kind value.index_kind
-  ^^ string value.index.value
+  ^^ string value.index#payload
   ^^ string " of "
   ^^ pp_expr value.expr
   ^^ string ")"
@@ -78,15 +81,15 @@ and pp_import (node : CST.import Region.reg) =
   let {value; _} : CST.import Region.reg = node in
   match value with
     Import_rename value ->
-    string "import " ^^ string value.alias.value
+    string "import " ^^ string value.alias#payload
     ^^ string " = "
-    ^^ pp_nsepseq "." (fun a -> string a.Region.value) value.module_path
+    ^^ pp_nsepseq "." (fun a -> string a#payload) value.module_path
   | Import_all_as value ->
-    string "import " ^^ string "*" ^^ string " as " ^^ string value.alias.value
+    string "import " ^^ string "*" ^^ string " as " ^^ string value.alias#payload
     ^^ string " from "
     ^^ pp_string value.module_path
   | Import_selected value ->
-    let pp_idents = pp_nsepseq "," pp_ident in
+    let pp_idents = pp_nsepseq "," pp_wrapped_ident in
     string "import " ^^
     group (pp_braces pp_idents value.imported) ^^
     string " from "
@@ -100,11 +103,12 @@ and pp_namespace ?top {value = (_, name, statements, attributes); _} =
     Some true -> true
   | _ -> false
   in
-  let is_private = List.exists ~f:(fun a -> String.equal a.value "private") attributes in
+  let is_private =
+    List.exists ~f:(fun a -> String.equal (fst a.value) "private") attributes in
   let attributes  = filter_private attributes in
   let pp_statements = pp_nsepseq ";" pp_statement in
   (if List.is_empty attributes then empty else pp_attributes attributes) ^^
-  string "namespace " ^^ string name.value
+  string "namespace " ^^ string name#payload
   ^^ (if ((top && is_private) || not top) then string "" else string "export ")
   ^^ group (pp_braces pp_statements statements)
 
@@ -122,7 +126,9 @@ and pp_return {value = {expr; _}; _} =
   | None -> string "return"
 
 and filter_private (attributes: CST.attributes) : CST.attributes =
-  List.filter ~f:(fun (v: CST.attribute) -> not (String.equal v.value "private")) attributes
+  List.filter
+    ~f:(fun (v: CST.attribute) -> not (String.equal (fst v.value) "private"))
+    attributes
 
 and pp_let ?top (node : let_decl reg) =
   let {attributes; bindings; _} : let_decl = node.value in
@@ -130,7 +136,8 @@ and pp_let ?top (node : let_decl reg) =
     Some true -> true
   | _ -> false
   in
-  let is_private = List.exists ~f:(fun a -> String.equal a.value "private") attributes in
+  let is_private =
+    List.exists ~f:(fun a -> String.equal (fst a.value) "private") attributes in
   let attributes  = filter_private attributes in
   (if List.is_empty attributes then empty else pp_attributes attributes)
      ^^ (if ((top && is_private) || not top) then string "" else string "export ")
@@ -179,7 +186,7 @@ and pp_case = function
 and pp_type {value; _} =
   let ({name; params; type_expr; _}: type_decl) = value
   in
-  string "type " ^^ string name.value
+  string "type " ^^ string name#payload
   ^^ pp_type_params params
   ^^ string " ="
   ^^ group (nest 2 (break 1 ^^ pp_type_expr type_expr))
@@ -189,15 +196,16 @@ and pp_type_params = function
 | Some {value; _} ->
    string "<" ^^ nest 1 (pp_nsepseq "," pp_ident value.inside) ^^ string ">"
 
-and pp_ident (node : string Region.reg) = string node.value
+and pp_ident (node : variable) = string node#payload
+
+and pp_wrapped_ident (node : string wrap) = string node#payload
 
 and pp_string s = string "\"" ^^ pp_ident s ^^ string "\""
 
 and pp_verbatim s = string "`" ^^ pp_ident s ^^ string "`"
 
-and pp_bytes (byte: (string * Hex.t) reg)  =
-  let _, hex = byte.Region.value
-  in string ("0x" ^ Hex.show hex)
+and pp_bytes (node: (string * Hex.t) wrap)  =
+  string ("0x" ^ Hex.show (snd node#payload))
 
 and pp_expr = function
   EFun     e -> pp_fun e
@@ -248,7 +256,7 @@ and pp_array_item = function
 
 and pp_constr_expr {value; _} =
   let constr, arg = value in
-  let constr = string constr.value in
+  let constr = string constr#payload in
   match arg with
       None -> constr ^^ string "()"
   | Some e -> prefix 2 1 constr (string "(" ^^ pp_expr e ^^ string ")")
@@ -333,8 +341,8 @@ and pp_arith_expr = function
 | Neg   e -> string "-" ^^ pp_expr e.value.arg
 | Int   e -> pp_int e
 
-and pp_int {value; _} =
-  string (Z.to_string (snd value))
+and pp_int (node : (lexeme * Z.t) wrap) =
+  string (Z.to_string (snd node#payload))
 
 and pp_par_expr value =
   string "(" ^^ nest 1 (pp_expr value.inside ^^ string ")")
@@ -439,19 +447,23 @@ and pp_variant_comp (node: variant_comp) =
 and pp_attributes = function
   [] -> empty
 | attr ->
-  let make s = string "@" ^^ string s.Region.value ^^ string " "
-  in
-  string "/* " ^^ concat_map make attr ^^ string "*/ "
+    let make attr =
+      let key, value_opt = attr.value in
+      match value_opt with
+        None -> string (sprintf "@%s" key)
+      | Some Attr.String value -> string (sprintf "@%s %s" key value)
+      | Some Attr.Ident  value -> string (sprintf "@%s %s" key value)
+    in string "/* " ^^ concat_map make attr ^^ string "*/ "
 
 and pp_object_type fields = group (pp_ne_injection pp_field_decl fields)
 
 and pp_field_decl {value; _} =
   let {field_name; field_type; attributes; _} = value in
   let attr = pp_attributes attributes in
-  let name = if List.is_empty attributes then pp_ident field_name
-             else attr ^/^ pp_ident field_name in
+  let name = if List.is_empty attributes then pp_wrapped_ident field_name
+             else attr ^/^ pp_wrapped_ident field_name in
   match field_type with
-    TVar v when String.equal v.value field_name.value -> name
+    TVar v when String.equal v#payload field_name#payload -> name
   | _ -> let t_expr = pp_type_expr field_type
         in prefix 2 1 (name ^^ string ":") t_expr
 
