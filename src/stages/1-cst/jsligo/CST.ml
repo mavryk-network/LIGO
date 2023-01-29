@@ -73,7 +73,7 @@ type bool_and = lexeme wrap  (* "&&" *)
 (* Comparisons *)
 
 type negate    = lexeme wrap  (* "!"  *)
-type equal_cmp = lexeme wrap  (* "=="  *)
+type equal_cmp = lexeme wrap  (* "==" *)
 type neq       = lexeme wrap  (* "!=" *)
 type lt        = lexeme wrap  (* "<"  *)
 type gt        = lexeme wrap  (* ">"  *)
@@ -106,16 +106,18 @@ type eof = lexeme wrap
 
 (* Literals *)
 
-type variable     = string reg
-type fun_name     = string reg
-type type_name    = string reg
-type type_var     = string reg
-type type_constr  = string reg
-type constr       = string reg
-type attribute    = string reg
-type field_name   = string reg
-type module_name  = string reg
+type variable    = lexeme wrap
+type fun_name    = lexeme wrap
+type type_name   = lexeme wrap
+type type_var    = lexeme wrap
+type type_constr = lexeme wrap
+type constr      = lexeme wrap
+type field_name  = lexeme wrap
+type module_name = lexeme wrap
 
+type language    = lexeme reg   (* Not [wrap] *)
+
+type attribute   = Attr.t reg
 
 (* Parentheses *)
 
@@ -152,10 +154,12 @@ type t = {
   eof        : eof
 }
 
+and cst = t
+
 and toplevel_statements = toplevel_statement nseq
 
 and toplevel_statement =
-  TopLevel  of statement * semi option
+  TopLevel  of (statement * semi option)
 | Directive of Directive.t
 
 and ast = t
@@ -165,11 +169,11 @@ and attributes = attribute list
 (* Non-recursive values *)
 
 and val_binding = {
-  binders    : pattern;
+  binders     : pattern;
   type_params : type_generics option;
-  lhs_type   : (colon * type_expr) option;
-  eq         : equal;
-  expr       : expr
+  lhs_type    : (colon * type_expr) option;
+  eq          : equal;
+  expr        : expr
 }
 
 and type_generics = (variable, comma) nsepseq chevrons reg
@@ -205,8 +209,8 @@ and type_expr =
 | TFun    of (fun_type_args * arrow * type_expr) reg
 | TPar    of type_expr par reg
 | TVar    of variable
-| TString of lexeme reg
-| TInt    of (lexeme * Z.t) reg
+| TString of lexeme wrap
+| TInt    of (lexeme * Z.t) wrap
 | TModA   of type_expr module_access reg
 | TDisc   of (obj_type, vbar) nsepseq
 
@@ -230,8 +234,8 @@ and sum_type = {
 }
 
 and variant = {
-  tuple        : variant_comp brackets reg;
-  attributes   : attributes
+  tuple      : variant_comp brackets reg;
+  attributes : attributes
 }
 
 and variant_comp = {
@@ -247,14 +251,14 @@ and field_decl = {
 }
 
 and rest_pattern = {
-  ellipsis  : ellipsis;
-  rest      : variable
+  ellipsis : ellipsis;
+  rest     : variable
 }
 
 and assign_pattern = {
-  property  : variable;
-  eq        : equal;
-  value     : expr
+  property : variable;
+  eq       : equal;
+  value    : expr
 }
 
 and destruct = {
@@ -282,8 +286,8 @@ and var_pattern = {
 }
 
 and string_expr =
-  String   of string reg
-| Verbatim of string reg
+  String   of lexeme wrap
+| Verbatim of lexeme wrap
 
 and return = {
   kwd_return: kwd_return;
@@ -296,22 +300,26 @@ and switch = {
   expr        : expr;
   rpar        : rpar;
   lbrace      : lbrace;
-  cases       : switch_case nseq;
+  cases       : case nseq;
   rbrace      : rbrace;
 }
 
-and switch_case =
-  Switch_case of {
-    kwd_case    : kwd_case;
-    expr        : expr;
-    colon       : colon;
-    statements  : statements option;
-  }
-| Switch_default_case of {
-    kwd_default : kwd_default;
-    colon       : colon;
-    statements  : statements option;
-  }
+and case =
+  Switch_case         of switch_case
+| Switch_default_case of switch_default_case
+
+and switch_case = {
+  kwd_case   : kwd_case;
+  expr       : expr;
+  colon      : colon;
+  statements : statements option
+}
+
+and switch_default_case = {
+  kwd_default : kwd_default;
+  colon       : colon;
+  statements  : statements option
+}
 
 and array_item_rest = {
   ellipsis : ellipsis;
@@ -347,12 +355,12 @@ and expr =
 | ELogic   of logic_expr
 | EArith   of arith_expr
 | ECall    of (expr * arguments) reg
-| EBytes   of (string * Hex.t) reg
+| EBytes   of (lexeme * Hex.t) wrap
 | EArray   of (array_item, comma) sepseq brackets reg
 | EObject  of object_expr
 | EString  of string_expr
 | EProj    of projection reg
-| EAssign  of expr * operator reg * expr
+| EAssign  of (expr * operator reg * expr)
 | EConstr  of (constr * expr option) reg
 | EAnnot   of annot_expr reg
 | EUnit    of the_unit reg
@@ -390,14 +398,14 @@ and statement =
 | SType       of type_decl reg
 | SSwitch     of switch reg
 | SBreak      of kwd_break
-| SNamespace  of namespace_statement
+| SNamespace  of namespace_statement reg
 | SExport     of (kwd_export * statement) reg
 | SImport     of import reg
-| SWhile      of while_stmt reg
 | SForOf      of for_of reg
+| SWhile      of while_stmt reg
 
 and namespace_statement =
-  (kwd_namespace * module_name * statements braces reg * attributes) reg
+  kwd_namespace * module_name * statements braces reg * attributes
 
 and while_stmt = {
   kwd_while: kwd_while;
@@ -423,27 +431,32 @@ and index_kind = [
 | `Const of kwd_const]
 
 and import =
-  Import_rename of {
-    kwd_import   : kwd_import;
-    alias        : module_name;
-    equal        : equal;
-    module_path  : (module_name, dot) nsepseq
-  }
-| Import_all_as of {
-    kwd_import   : kwd_import;
-    times        : times;
-    kwd_as       : kwd_as;
-    alias        : module_name;
-    kwd_from     : kwd_from;
-    module_path  : string reg
-  }
-| Import_selected of {
-    kwd_import   : kwd_import;
-    imported     : (field_name, comma) nsepseq braces reg;
-    kwd_from      : kwd_from;
-    module_path  : string reg
-  }
+  Import_rename   of import_rename
+| Import_all_as   of import_all_as
+| Import_selected of import_selected
 
+and import_rename = {
+  kwd_import  : kwd_import;
+  alias       : module_name;
+  equal       : equal;
+  module_path : (module_name, dot) nsepseq
+}
+
+and import_all_as = {
+  kwd_import  : kwd_import;
+  times       : times;
+  kwd_as      : kwd_as;
+  alias       : module_name;
+  kwd_from    : kwd_from;
+  module_path : string wrap
+}
+
+and import_selected = {
+  kwd_import  : kwd_import;
+  imported    : (field_name, comma) nsepseq braces reg;
+  kwd_from    : kwd_from;
+  module_path : string wrap
+}
 
 and statements = (statement, semi) nsepseq
 
@@ -477,7 +490,7 @@ and arith_expr =
 | Div   of slash bin_op reg
 | Mod   of modulo bin_op reg
 | Neg   of minus un_op reg
-| Int   of (string * Z.t) reg
+| Int   of (lexeme * Z.t) wrap
 
 and logic_expr =
   BoolExpr of bool_expr
@@ -541,7 +554,7 @@ and fun_expr = {
   parameters : expr;
   lhs_type   : (colon * type_expr) option;
   arrow      : arrow;
-  body       : body;
+  body       : body
 }
 
 and cond_statement = {
@@ -556,7 +569,7 @@ and cond_statement = {
    the innermost covers the <language>. *)
 
 and code_inj = {
-  language : string reg;
+  language : lexeme wrap;
   code     : expr;
 }
 
@@ -580,17 +593,18 @@ let type_expr_to_region = function
 | TObject {region; _}
 | TApp    {region; _}
 | TFun    {region; _}
-| TPar    {region; _}
-| TString {region; _}
-| TVar    {region; _}
-| TModA   {region; _}
-| TInt    {region; _} -> region
+| TPar    {region; _} -> region
+| TString t
+| TVar    t -> t#region
+| TModA   {region; _} -> region
+| TInt    t -> t#region
 | TDisc   reg -> nsepseq_to_region (fun a -> a.Region.region) reg
 
 let pattern_to_region = function
-  PRest {region;_ }   | PAssign {region ;_ }
-| PVar {region ;_ }    | PConstr {region; _ } | PDestruct {region ;_ }
+  PRest {region;_ }    | PAssign {region ;_ }
+| PVar {region ;_ }    | PDestruct {region ;_ }
 | PObject {region ;_ } | PArray {region; _} -> region
+| PConstr p -> p#region
 
 let bool_expr_to_region = function
   Or {region;_} | And {region;_}
@@ -607,11 +621,11 @@ let logic_expr_to_region = function
 
 let arith_expr_to_region = function
   Add {region;_} | Sub {region;_} | Mult {region;_}
-| Div {region;_} | Mod {region;_} | Neg {region;_}
-| Int {region;_} -> region
+| Div {region;_} | Mod {region;_} | Neg {region;_} -> region
+| Int e -> e#region
 
 let string_expr_to_region = function
-  Verbatim {region;_} | String {region;_} -> region
+  Verbatim w | String w -> w#region
 
 let rec expr_to_region = function
   ELogic e -> logic_expr_to_region e
@@ -621,10 +635,12 @@ let rec expr_to_region = function
     Region.cover (expr_to_region f) (expr_to_region e)
 | EConstr {region; _}
 | EAnnot {region;_ } | EFun {region;_}
-| ECall {region;_}   | EVar {region; _}    | EProj {region; _}
-| EUnit {region;_}   | EPar {region;_}     | EBytes {region; _}
+| ECall {region;_}   | EProj {region; _}
+| EUnit {region;_}   | EPar {region;_}
 | ESeq {region; _}   | EObject {region; _} | EArray { region; _}
 | ECodeInj {region; _} | EModA { region; _} | ETernary {region; _} -> region
+| EBytes v -> v#region
+| EVar v -> v#region
 
 let statement_to_region = function
   SBreak b -> b#region
