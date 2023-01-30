@@ -26,91 +26,93 @@ open Utils
 type lexeme = string [@@deriving yojson]
 let wrap_to_yojson = Wrap.to_yojson
 let wrap_of_yojson = Wrap.of_yojson
+let reg_to_yojson = Region.reg_to_yojson
+let reg_of_yojson = Region.reg_of_yojson
 
 (* Keywords of CameLIGO *)
 
-type keyword       = lexeme wrap
-type kwd_and       = lexeme wrap
-type kwd_begin     = lexeme wrap
-type kwd_else      = lexeme wrap
-type kwd_end       = lexeme wrap
-type kwd_false     = lexeme wrap
-type kwd_fun       = lexeme wrap
-type kwd_rec       = lexeme wrap
-type kwd_if        = lexeme wrap
-type kwd_in        = lexeme wrap
-type kwd_let       = lexeme wrap
-type kwd_match     = lexeme wrap
-type kwd_mod       = lexeme wrap
-type kwd_land      = lexeme wrap
-type kwd_lor       = lexeme wrap
-type kwd_lxor      = lexeme wrap
-type kwd_lsl       = lexeme wrap
-type kwd_lsr       = lexeme wrap
-type kwd_not       = lexeme wrap
-type kwd_of        = lexeme wrap
-type kwd_or        = lexeme wrap
-type kwd_then      = lexeme wrap
-type kwd_true      = lexeme wrap
-type kwd_type      = lexeme wrap
-type kwd_with      = lexeme wrap
-type kwd_module    = lexeme wrap
-type kwd_struct    = lexeme wrap
+type keyword       = lexeme wrap [@@deriving yojson]
+type kwd_and       = lexeme wrap [@@deriving yojson]
+type kwd_begin     = lexeme wrap [@@deriving yojson]
+type kwd_else      = lexeme wrap [@@deriving yojson]
+type kwd_end       = lexeme wrap [@@deriving yojson]
+type kwd_false     = lexeme wrap [@@deriving yojson]
+type kwd_fun       = lexeme wrap [@@deriving yojson]
+type kwd_rec       = lexeme wrap [@@deriving yojson]
+type kwd_if        = lexeme wrap [@@deriving yojson]
+type kwd_in        = lexeme wrap [@@deriving yojson]
+type kwd_let       = lexeme wrap [@@deriving yojson]
+type kwd_match     = lexeme wrap [@@deriving yojson]
+type kwd_mod       = lexeme wrap [@@deriving yojson]
+type kwd_land      = lexeme wrap [@@deriving yojson]
+type kwd_lor       = lexeme wrap [@@deriving yojson]
+type kwd_lxor      = lexeme wrap [@@deriving yojson]
+type kwd_lsl       = lexeme wrap [@@deriving yojson]
+type kwd_lsr       = lexeme wrap [@@deriving yojson]
+type kwd_not       = lexeme wrap [@@deriving yojson]
+type kwd_of        = lexeme wrap [@@deriving yojson]
+type kwd_or        = lexeme wrap [@@deriving yojson]
+type kwd_then      = lexeme wrap [@@deriving yojson]
+type kwd_true      = lexeme wrap [@@deriving yojson]
+type kwd_type      = lexeme wrap [@@deriving yojson]
+type kwd_with      = lexeme wrap [@@deriving yojson]
+type kwd_module    = lexeme wrap [@@deriving yojson]
+type kwd_struct    = lexeme wrap [@@deriving yojson]
 
 (* Symbols *)
 
-type arrow    = lexeme wrap  (* "->" *)
-type cons     = lexeme wrap  (* "::" *)
-type cat      = lexeme wrap  (* "^"  *)
-type append   = lexeme wrap  (* "@"  *)
-type dot      = lexeme wrap  (* "."  *)
+type arrow    = lexeme wrap [@@deriving yojson]  (* "->" *)
+type cons     = lexeme wrap [@@deriving yojson]  (* "::" *)
+type cat      = lexeme wrap [@@deriving yojson]  (* "^"  *)
+type append   = lexeme wrap [@@deriving yojson]  (* "@"  *)
+type dot      = lexeme wrap [@@deriving yojson]  (* "."  *)
 
 (* Arithmetic operators *)
 
-type minus    = lexeme wrap  (* "-" *)
-type plus     = lexeme wrap  (* "+" *)
-type slash    = lexeme wrap  (* "/" *)
-type times    = lexeme wrap  (* "*" *)
+type minus    = lexeme wrap [@@deriving yojson]  (* "-" *)
+type plus     = lexeme wrap [@@deriving yojson]  (* "+" *)
+type slash    = lexeme wrap [@@deriving yojson]  (* "/" *)
+type times    = lexeme wrap [@@deriving yojson]  (* "*" *)
 
 (* Boolean operators *)
 
-type bool_or  = lexeme wrap  (* "||" *)
-type bool_and = lexeme wrap  (* "&&" *)
+type bool_or  = lexeme wrap [@@deriving yojson]  (* "||" *)
+type bool_and = lexeme wrap [@@deriving yojson]  (* "&&" *)
 
 (* Reverse application *)
 
-type rev_app = lexeme wrap (* "|>" *)
+type rev_app = lexeme wrap [@@deriving yojson] (* "|>" *)
 
 (* Comparisons *)
 
-type equal = lexeme wrap  (* "="  *)
-type neq   = lexeme wrap  (* "<>" *)
-type lt    = lexeme wrap  (* "<"  *)
-type gt    = lexeme wrap  (* ">"  *)
-type leq   = lexeme wrap  (* "=<" *)
-type geq   = lexeme wrap  (* ">=" *)
+type equal = lexeme wrap [@@deriving yojson]  (* "="  *)
+type neq   = lexeme wrap [@@deriving yojson]  (* "<>" *)
+type lt    = lexeme wrap [@@deriving yojson]  (* "<"  *)
+type gt    = lexeme wrap [@@deriving yojson]  (* ">"  *)
+type leq   = lexeme wrap [@@deriving yojson]  (* "=<" *)
+type geq   = lexeme wrap [@@deriving yojson]  (* ">=" *)
 
 (* Compounds *)
 
-type lpar     = lexeme wrap  (* "(" *)
-type rpar     = lexeme wrap  (* ")" *)
-type lbracket = lexeme wrap  (* "[" *)
-type rbracket = lexeme wrap  (* "]" *)
-type lbrace   = lexeme wrap  (* "{" *)
-type rbrace   = lexeme wrap  (* "}" *)
+type lpar     = lexeme wrap [@@deriving yojson]  (* "(" *)
+type rpar     = lexeme wrap [@@deriving yojson]  (* ")" *)
+type lbracket = lexeme wrap [@@deriving yojson]  (* "[" *)
+type rbracket = lexeme wrap [@@deriving yojson]  (* "]" *)
+type lbrace   = lexeme wrap [@@deriving yojson]  (* "{" *)
+type rbrace   = lexeme wrap [@@deriving yojson]  (* "}" *)
 
 (* Separators *)
 
-type comma = lexeme wrap  (* "," *)
-type semi  = lexeme wrap  (* ";" *)
-type vbar  = lexeme wrap  (* "|" *)
-type colon = lexeme wrap  (* ":" *)
+type comma = lexeme wrap [@@deriving yojson]  (* "," *)
+type semi  = lexeme wrap [@@deriving yojson]  (* ";" *)
+type vbar  = lexeme wrap [@@deriving yojson]  (* "|" *)
+type colon = lexeme wrap [@@deriving yojson]  (* ":" *)
 
-type quote = lexeme wrap  (* "'" *)
+type quote = lexeme wrap [@@deriving yojson]  (* "'" *)
 
 (* Wildcard *)
 
-type wild = lexeme wrap  (* "_" *)
+type wild = lexeme wrap [@@deriving yojson]  (* "_" *)
 
 (* Virtual tokens *)
 
@@ -118,17 +120,17 @@ type eof = lexeme wrap [@@deriving yojson]
 
 (* Literals *)
 
-type variable    = string reg
-type module_name = string reg
-type fun_name    = string reg
-type type_name   = string reg
-type field_name  = string reg
-type type_constr = string reg
-type constr      = string reg
-type type_param  = string reg
+type variable    = string reg [@@deriving yojson]
+type module_name = string reg [@@deriving yojson]
+type fun_name    = string reg [@@deriving yojson]
+type type_name   = string reg [@@deriving yojson]
+type field_name  = string reg [@@deriving yojson]
+type type_constr = string reg [@@deriving yojson]
+type constr      = string reg [@@deriving yojson]
+type type_param  = string reg [@@deriving yojson]
 
-type attribute   = Attr.t
-type attributes  = Attr.attribute reg list
+type attribute   = Attr.t [@@deriving yojson]
+type attributes  = Attr.attribute reg list [@@deriving yojson]
 
 (* Parentheses *)
 
@@ -136,9 +138,30 @@ type 'a par = {
   lpar   : lpar;
   inside : 'a;
   rpar   : rpar
-}
+} [@@deriving yojson]
 
 type the_unit = lpar * rpar
+
+let nsepseq_to_yojson value_to_yojson sep_to_yojson (hd, sep, tl) =
+  `List [value_to_yojson hd; `List (List.map ~f:(fun x -> (`List [sep_to_yojson sep; value_to_yojson x])) tl)]
+
+let nsepseq_of_yojson value_of_yojson sep_of_yojson (yojson: Yojson.Safe.t) =
+  match yojson with
+    `List [hd; `List tl] ->
+     let yojsons = List.map ~f:(fun x ->
+                       match x with
+                       | `List [sep; tl] -> (match sep_of_yojson sep, value_of_yojson tl with
+                                             | Ok sep, Ok tl -> Ok (sep, tl)
+                                             | _ -> Error "nsepseq_of_yojson failed")  
+                       | _ -> Error "nsepseq_of_yojson failed") tl in
+    let tl = List.fold_right ~f:(fun v acc -> match v, acc with
+                                              | Ok (sep, v), Ok l -> Ok ((sep, v) :: l)
+                                              | _, (Error _ as e) -> e 
+                                              | Error _ as e, _ -> e) yojsons ~init: (Ok []) in
+    (match value_of_yojson hd, tl with
+     | Ok hd, Ok tl -> Ok (hd, tl)
+     | _ -> Error "nseq_of_yojson failed")
+  | _ -> Error "nseq_of_yojson failed"
 
 let nseq_to_yojson value_to_yojson (hd, tl) =
   `List [value_to_yojson hd; `List (List.map ~f:value_to_yojson tl)]

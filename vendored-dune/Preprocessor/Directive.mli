@@ -64,8 +64,8 @@ type bool_expr = <
   trailing_comment : string Region.reg option
 >
 
-type if_directive   = bool_expr
-type elif_directive = bool_expr
+type if_directive   = bool_expr [@@deriving yojson]
+type elif_directive = bool_expr [@@deriving yojson]
 
 val mk_bool_expr :
   ?trailing_comment:message Region.reg ->
@@ -83,8 +83,8 @@ type symbol = <
   trailing_comment : message Region.reg option
 >
 
-type define_directive = symbol
-type undef_directive  = symbol
+type define_directive = symbol [@@deriving yojson]
+type undef_directive  = symbol [@@deriving yojson]
 
 val mk_symbol :
   ?trailing_comment:message Region.reg ->
@@ -97,7 +97,7 @@ val mk_symbol :
    [msg] is the argument of "#error" (characters on a single line),
    with its region. *)
 
-type error_directive = Region.t * string Region.reg
+type error_directive = Region.t * string Region.reg [@@deriving yojson]
 
 (* Linemarkers (line directives) *)
 
@@ -110,7 +110,7 @@ type error_directive = Region.t * string Region.reg
    and the return from a file (after its inclusion has been
    processed). *)
 
-type flag  = Push | Pop
+type flag  = Push | Pop [@@deriving yojson]
 
 type line_directive = <
   region    : Region.t;
@@ -118,6 +118,7 @@ type line_directive = <
   file_path : string Region.reg;
   flag      : flag Region.reg option
 >
+[@@deriving yojson]
 
 val mk_line_directive :
   Region.t ->
@@ -139,6 +140,7 @@ type t =
 | PP_Undef      of undef_directive
 | PP_Error      of error_directive
 | PP_Linemarker of line_directive
+[@@deriving yojson]
 
 (* PROJECTIONS *)
 

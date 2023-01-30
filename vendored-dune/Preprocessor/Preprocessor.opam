@@ -12,7 +12,7 @@ homepage     : "https://gitlab.com/ligolang/Preprocessor"
 bug-reports  : "https://gitlab.com/ligolang/Preprocessor/issues"
 # If you change the dependencies, run `opam lock` in the root
 depends      : ["dune" "base" "ocaml" "simple-utils" "uutf"
-                "menhir" "GetoptLib" "fpath"]
+                "menhir" "GetoptLib" "fpath" "ppx_deriving_yojson"]
 build        : [
                 [ "dune" "build" "-p" name "-j" jobs ]
                ]

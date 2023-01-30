@@ -7,6 +7,7 @@
      Status Config Options Error
      State Version CLI Env LowAPI TopAPI ModRes
      Directive E_Lexer E_Parser E_AST E_Lexer)
+     (preprocess (pps ppx_deriving_yojson))
   (modules_without_implementation
      Config Status)
   (private_modules
@@ -17,6 +18,7 @@
     GetoptLib
     ;; Third party
     str
+    yojson
     fpath
     uutf
     )
