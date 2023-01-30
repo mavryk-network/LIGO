@@ -95,9 +95,9 @@ depends: [
   "irmin" {= "3.5.0"}
   "irmin-pack" {= "3.5.0"}
   "jane-street-headers" {= "v0.15.0"}
-  "js_of_ocaml" {= "4.1.0"}
-  "js_of_ocaml-compiler" {= "4.1.0"}
-  "js_of_ocaml-ppx" {= "4.1.0"}
+  "js_of_ocaml" {= "5.0.1"}
+  "js_of_ocaml-compiler" {= "5.0.1"}
+  "js_of_ocaml-ppx" {= "5.0.1"}
   "json-data-encoding" {= "0.12.1"}
   "json-data-encoding-bson" {= "0.12.1"}
   "jsonm" {= "1.0.1"}
