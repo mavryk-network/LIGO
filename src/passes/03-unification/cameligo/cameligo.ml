@@ -115,6 +115,7 @@ module TODO_unify_in_cst = struct
    fun self
        { region = _; value = { compound = _; ne_elements; terminator = _; attributes } } ->
     let attributes = List.map (conv_attr attributes) ~f:fst in
+    TODO_do_in_parsing.weird_attributes attributes;
     let x = nsepseq_to_list ne_elements in
     let f : CST.field_path_assignment Region.reg -> AST.expr AST.Update.field =
      fun fpa ->
@@ -131,9 +132,8 @@ module TODO_unify_in_cst = struct
                  (nsepseq_to_list field_path)
                  ~f:TODO_do_in_parsing.translate_selection
         in
-        TODO_do_in_parsing.weird_attributes attributes;
         Full_field { field_lhs; field_lens = Lens_Id; field_rhs }
-      | Path_punned_property pun -> Pun (Label.of_string (r_fst pun), attributes)
+      | Path_punned_property pun -> Pun (Label.of_string (r_fst pun))
     in
     List.map x ~f
 

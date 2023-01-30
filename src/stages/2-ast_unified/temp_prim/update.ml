@@ -13,7 +13,7 @@ and 'expr full_field =
   }
 
 and 'expr field =
-  | Pun of Ligo_prim.Label.t * Attribute.t list
+  | Pun of Ligo_prim.Label.t
   | Full_field of 'expr full_field
 
 and 'expr t =

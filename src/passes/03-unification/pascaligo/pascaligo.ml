@@ -160,12 +160,9 @@ module TODO_unify_in_cst = struct
           TODO_do_in_parsing.weird_attributes attributes;
           Full_field { field_lhs; field_lens; field_rhs }
         | CST.Punned { pun; attributes } ->
-          let attributes =
-            TODO_do_in_parsing.weird_attributes attributes;
-            List.map attributes ~f:(translate_attr_pascaligo <@ r_fst)
-          in
+          TODO_do_in_parsing.weird_attributes attributes ;
           (match pun with
-          | CST.E_Var v -> Pun (Label.of_string (w_fst v), attributes)
+          | CST.E_Var v -> Pun (Label.of_string (w_fst v))
           | _ -> failwith "pun should be a string/label directly ?")
       in
       List.map (Utils.sepseq_to_list record_lhs.value.elements) ~f

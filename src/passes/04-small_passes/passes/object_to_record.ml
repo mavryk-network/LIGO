@@ -43,7 +43,7 @@ let field_update_of_property ~raise : expr Object_.property -> expr Update.field
       raise.error @@ unsupported_update l)
   | Punned_property x ->
     (match get_e x with
-    | E_variable x -> Pun (label_of_var x, [])
+    | E_variable x -> Pun (label_of_var x)
     | _ -> raise.error @@ unsupported_update x)
   | Property_rest x -> raise.error @@ unsupported_rest_property x
 
