@@ -1145,7 +1145,7 @@ comp_expr_level:
 | cat_expr_level                                 { $1 }
 
 ge:
-  ">" ZWSP "=" { Wrap.wrap ">=" (cover $1#region $3#region) }
+  ">" ZWSP "=" { Wrap.wrap ">=" (fun s -> `String s) (cover $1#region $3#region) }
 
 (* Concatenation *)
 

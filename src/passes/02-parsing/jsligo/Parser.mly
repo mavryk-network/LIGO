@@ -113,7 +113,7 @@ gt:
   ">" ioption(ZWSP) { $1 }
 
 ge:
-  ">" ZWSP "=" { Wrap.wrap ">=" (cover $1#region $3#region) }
+  ">" ZWSP "=" { Wrap.wrap ">=" (fun s -> `String s) (cover $1#region $3#region) }
 
 %inline brackets(X):
   "[" X "]" {

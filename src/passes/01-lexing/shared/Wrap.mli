@@ -16,7 +16,6 @@ type 'payload wrap = <
   region     : Region.t;
 
   set_attributes : attributes -> 'payload wrap;
-  payload_to_yojson : 'payload -> Yojson.Safe.t
 >
 
 type 'a t = 'a wrap
@@ -26,4 +25,5 @@ val make : ?attributes:attributes -> 'a -> ('a -> Yojson.Safe.t) -> Region.t -> 
 
 val ghost : 'a -> ('a -> Yojson.Safe.t) -> 'a wrap
 
-val to_yojson : ('payload -> Yojson.Safe.t) -> 'a t -> Yojson.Safe.t
+val to_yojson : ('a -> Yojson.Safe.t) -> 'a t -> Yojson.Safe.t
+val of_yojson : (Yojson.Safe.t -> ('a, string) Result.t) -> Yojson.Safe.t -> ('a wrap, string) Result.t

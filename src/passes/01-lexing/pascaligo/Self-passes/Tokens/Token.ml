@@ -626,7 +626,7 @@ module T =
     let wrap_string   s = Wrap.wrap s (fun s -> `String s)
     let wrap_verbatim s = Wrap.wrap s (fun s -> `String s)
     let wrap_bytes    b = Wrap.wrap ("0x" ^ Hex.show b, b) (fun (s, _) -> `String s)
-    let wrap_int      z = Wrap.wrap (Z.to_string z, z) (fun (l, z) -> `Int (Z.to_int z))
+    let wrap_int      z = Wrap.wrap (Z.to_string z, z) (fun (_, z) -> `Int (Z.to_int z))
     let wrap_nat      z = Wrap.wrap (Z.to_string z ^ "n", z) (fun (_, z) -> `Int (Z.to_int z))
     let wrap_mutez    i = Wrap.wrap (Int64.to_string i ^ "mutez", i) (fun (l, _) -> `String l)
     let wrap_ident    i = Wrap.wrap i (fun i -> `String i)
@@ -944,7 +944,7 @@ module T =
     type mutez_err = Wrong_mutez_syntax of string (* Not PascaLIGO *)
 
     let mk_mutez nat ~suffix int64 region =
-      Ok (Mutez (wrap (nat ^ suffix, int64) region))
+      Ok (Mutez (Wrap.wrap (nat ^ suffix, int64) (fun (l, _) -> `String l) region))
 
     (* End-Of-File *)
 

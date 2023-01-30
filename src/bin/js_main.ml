@@ -100,6 +100,7 @@ let print_cst source syntax =
     print_endline b;
     "failed"
 
+
 let _ =
   Js.export
     "compile"
@@ -109,6 +110,7 @@ let _ =
          let syntax = Js.to_string syntax in
          let michelson = main code syntax in
          Js.string michelson
+
        method print_cst code syntax =
          let code = Js.to_string code in
          let syntax = Js.to_string syntax in

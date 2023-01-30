@@ -23,7 +23,9 @@ open Utils
 
 (* Lexemes *)
 
-type lexeme = string
+type lexeme = string [@@deriving yojson]
+let wrap_to_yojson = Wrap.to_yojson
+let wrap_of_yojson = Wrap.of_yojson
 
 (* Keywords of CameLIGO *)
 
@@ -112,7 +114,7 @@ type wild = lexeme wrap  (* "_" *)
 
 (* Virtual tokens *)
 
-type eof = lexeme wrap
+type eof = lexeme wrap [@@deriving yojson]
 
 (* Literals *)
 
@@ -140,11 +142,11 @@ type the_unit = lpar * rpar
 
 (* The Abstract Syntax Tree *)
 
-[@@deriving yojson]
 type t = {
   decl : declaration nseq;
   eof  : eof
-}
+} [@@deriving yojson]
+
 
 and ast = t
 
@@ -153,12 +155,13 @@ and declaration =
 | TypeDecl    of type_decl    reg
 | ModuleDecl  of module_decl  reg
 | ModuleAlias of module_alias reg
-| Directive   of Directive.t
+| Directive   of Directive.t [@@deriving yojson]
+
 
 (* Non-recursive values *)
 
 and let_decl =
-  (kwd_let * kwd_rec option * let_binding * attributes)
+  (kwd_let * kwd_rec option * let_binding * attributes) [@@deriving yojson]
 
 and let_binding = {
   type_params : type_params par reg option;
@@ -166,12 +169,12 @@ and let_binding = {
   rhs_type    : (colon * type_expr) option;
   eq          : equal;
   let_rhs     : expr
-}
+} [@@deriving yojson]
 
 and type_params = {
   kwd_type  : kwd_type;
   type_vars : variable nseq
-}
+} [@@deriving yojson]
 
 (* Type declarations *)
 
@@ -181,16 +184,16 @@ and type_decl = {
   params     : type_vars option;
   eq         : equal;
   type_expr  : type_expr
-}
+} [@@deriving yojson]
 
 and type_vars =
   QParam      of type_var reg
-| QParamTuple of (type_var reg, comma) nsepseq par reg
+| QParamTuple of (type_var reg, comma) nsepseq par reg [@@deriving yojson]
 
 and type_var = {
   quote : quote;
   name  : variable
-}
+} [@@deriving yojson]
 
 and module_decl = {
   kwd_module : kwd_module;
@@ -199,14 +202,14 @@ and module_decl = {
   kwd_struct : kwd_struct;
   module_    : t;
   kwd_end    : kwd_end;
-}
+} [@@deriving yojson]
 
 and module_alias = {
   kwd_module : kwd_module;
   alias      : module_name;
   eq         : equal;
   binders    : (module_name, dot) nsepseq;
-}
+} [@@deriving yojson]
 
 and type_expr =
   TProd   of cartesian
@@ -219,32 +222,32 @@ and type_expr =
 | TString of lexeme reg
 | TInt    of (lexeme * Z.t) reg
 | TModA   of type_expr module_access reg
-| TArg    of type_var reg
+| TArg    of type_var reg [@@deriving yojson]
 
 and type_constr_arg =
   CArg      of type_expr
-| CArgTuple of (type_expr, comma) nsepseq par reg
+| CArgTuple of (type_expr, comma) nsepseq par reg [@@deriving yojson]
 
-and cartesian = (type_expr, times) nsepseq reg
+and cartesian = (type_expr, times) nsepseq reg [@@deriving yojson]
 
 and sum_type = {
   lead_vbar  : vbar option;
   variants   : (variant reg, vbar) nsepseq;
   attributes : attributes
-}
+} [@@deriving yojson]
 
 and variant = {
   constr     : constr;
   arg        : (kwd_of * type_expr) option;
   attributes : attributes
-}
+} [@@deriving yojson]
 
 and field_decl = {
   field_name : field_name;
   colon      : colon;
   field_type : type_expr;
   attributes : attributes
-}
+} [@@deriving yojson]
 
 and pattern =
   PConstr   of (constr * pattern option) reg
@@ -259,16 +262,16 @@ and pattern =
 | PTuple    of (pattern, comma) nsepseq reg
 | PPar      of pattern par reg
 | PRecord   of field_pattern reg ne_injection reg
-| PTyped    of typed_pattern reg
+| PTyped    of typed_pattern reg [@@deriving yojson]
 
 and var_pattern = {
   variable   : variable;
   attributes : attributes
-}
+} [@@deriving yojson]
 
 and list_pattern =
   PListComp of pattern injection reg
-| PCons     of (pattern * cons * pattern) reg
+| PCons     of (pattern * cons * pattern) reg [@@deriving yojson]
 
 and typed_pattern = {
   pattern   : pattern;
@@ -596,3 +599,4 @@ let type_ctor_arg_to_region = function
 | CArgTuple t -> t.region
 
 let lpar_to_yojson = Wrap.to_yojson
+
