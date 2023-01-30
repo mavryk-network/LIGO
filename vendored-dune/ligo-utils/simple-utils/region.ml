@@ -45,7 +45,7 @@ type region = t
 
 (* A convenience *)
 
-type 'a reg = {region : t; value : 'a}
+type 'a reg = {region : t; value : 'a; }
 
 (* Injections *)
 
@@ -212,3 +212,19 @@ let of_yojson = fun t ->
 (*         ("is_ghost", Region.is_ghost_to_yojson region#is_ghost); *)
 (*     ]) *)
 
+
+let reg_to_yojson value_to_yojson reg =
+  let { region; value; } = reg in
+  `Assoc ([
+        ("region", to_yojson region);
+        ("value", value_to_yojson value);
+    ])
+
+let reg_of_yojson value_of_yojson (yojson: Yojson.Safe.t) = match yojson with
+  | `Assoc ([ ("region", region); ("value", value) ]) ->
+     (match of_yojson region, value_of_yojson value with
+     | Ok region, Ok value -> Ok { region; value }
+     | _ ->
+        Error "of_yojson failed for region or value")
+  | _ ->
+     Utils.error_yojson_format "{region: t, value: 'value}"

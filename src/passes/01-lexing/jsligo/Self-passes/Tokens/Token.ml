@@ -14,7 +14,7 @@ module Attr = Lexing_shared.Attr
 
 let sprintf = Printf.sprintf
 
-let wrap = Wrap.wrap
+let wrap lexeme = Wrap.wrap lexeme (fun x -> `String x)
 
 module T =
   struct
@@ -666,14 +666,14 @@ module T =
 
     (* IMPORTANT: These values cannot be exported in Token.mli *)
 
-    let wrap_string   s = Wrap.wrap s
-    let wrap_verbatim s = Wrap.wrap s
-    let wrap_bytes    b = Wrap.wrap ("0x" ^ Hex.show b, b)
-    let wrap_int      z = Wrap.wrap (Z.to_string z, z)
+    let wrap_string   s = Wrap.wrap s (fun s -> `String s)
+    let wrap_verbatim s = Wrap.wrap s (fun s -> `String s)
+    let wrap_bytes    b = Wrap.wrap ("0x" ^ Hex.show b, b) (fun (str_rep, _) -> `String str_rep)
+    let wrap_int      z = Wrap.wrap (Z.to_string z, z) (fun (_, z) -> `Int (Z.to_int z))
 (*  let wrap_nat      z = Wrap.wrap (Z.to_string z ^ "n", z)
     let wrap_mutez    i = Wrap.wrap (Int64.to_string i ^ "mutez", i) *)
-    let wrap_ident    i = Wrap.wrap i
-    let wrap_uident   c = Wrap.wrap c
+    let wrap_ident    i = Wrap.wrap i (fun i -> `String i)
+    let wrap_uident   c = Wrap.wrap c (fun u -> `String u)
 
     let wrap_attr key value region =
       Region.{value = (key, value); region}
@@ -707,12 +707,12 @@ module T =
 
     (* COMMENTS *)
 
-    let wrap_block_com  c    = Wrap.wrap c
+    let wrap_block_com  c    = Wrap.wrap c (fun c -> `String c)
     let ghost_block_com c    = wrap_block_com c Region.ghost
     let mk_BlockCom c region = BlockCom (wrap_block_com c region)
     let ghost_BlockCom c     = mk_BlockCom c Region.ghost
 
-    let wrap_line_com c     = Wrap.wrap c
+    let wrap_line_com c     = Wrap.wrap c (fun c -> `String c)
     let ghost_line_com c    = wrap_line_com c Region.ghost
     let mk_LineCom c region = LineCom (wrap_line_com c region)
     let ghost_LineCom c     = mk_LineCom c Region.ghost
@@ -1009,11 +1009,11 @@ module T =
     (* Bytes *)
 
     let mk_bytes lexeme bytes region =
-      Bytes (wrap ("0x" ^ lexeme, `Hex bytes) region)
+      Bytes (Wrap.wrap ("0x" ^ lexeme, `Hex bytes) (fun (l, _) -> `String ("0x" ^ l)) region)
 
     (* Integers *)
 
-    let mk_int lexeme z region = Int (wrap (lexeme, z) region)
+    let mk_int lexeme z region = Int (Wrap.wrap (lexeme, z) (fun (_, z) -> `Int (Z.to_int z)) region)
 
     (* Natural numbers *)
 
@@ -1031,7 +1031,7 @@ module T =
 
     (* End-Of-File *)
 
-    let mk_eof region = EOF (wrap "" region)
+    let mk_eof region = EOF (Wrap.wrap "" (fun _ -> `String "") region)
 
     (* Symbols *)
 

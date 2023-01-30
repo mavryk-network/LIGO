@@ -15,12 +15,15 @@ type 'payload wrap = <
   attributes : attributes;
   region     : Region.t;
 
-  set_attributes : attributes -> 'payload wrap
+  set_attributes : attributes -> 'payload wrap;
+  payload_to_yojson : 'payload -> Yojson.Safe.t
 >
 
 type 'a t = 'a wrap
 
-val wrap : ?attributes:attributes -> 'a -> Region.t -> 'a wrap
-val make : ?attributes:attributes -> 'a -> Region.t -> 'a wrap
+val wrap : ?attributes:attributes -> 'a -> ('a -> Yojson.Safe.t) -> Region.t -> 'a wrap
+val make : ?attributes:attributes -> 'a -> ('a -> Yojson.Safe.t) -> Region.t -> 'a wrap
 
-val ghost : 'a -> 'a wrap
+val ghost : 'a -> ('a -> Yojson.Safe.t) -> 'a wrap
+
+val to_yojson : ('payload -> Yojson.Safe.t) -> 'a t -> Yojson.Safe.t

@@ -35,7 +35,7 @@ module Region = Simple_utils.Region
 open Token
 open State
 
-let es6fun_token = ES6FUN (Wrap.wrap "=>" Region.ghost)
+let es6fun_token = ES6FUN (Wrap.wrap "=>" (fun s -> `String s) Region.ghost)
 let handle_state state =
   let rec aux remaining inject_before =
     match remaining with

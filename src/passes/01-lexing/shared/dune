@@ -12,6 +12,7 @@
  (modules_without_implementation Token)
  (instrumentation
   (backend bisect_ppx))
+ (preprocess (pps ppx_deriving_yojson))
  (libraries
   ;; Vendors
   simple-utils
@@ -21,5 +22,6 @@
   preprocessing_shared
   main_warnings
   ;; Third party
+  yojson
   zarith
   str))

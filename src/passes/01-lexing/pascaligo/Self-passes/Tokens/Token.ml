@@ -14,7 +14,7 @@ module Attr = Lexing_shared.Attr
 
 let sprintf = Printf.sprintf
 
-let wrap = Wrap.wrap
+let wrap_lexeme = Wrap.wrap
 
 module T =
   struct
@@ -235,6 +235,7 @@ module T =
 
     (* KEYWORDS *)
 
+    let wrap lexeme = Wrap.wrap lexeme (fun s -> `String s)
     let wrap_and       = wrap "and"
     let wrap_begin     = wrap "begin"
     let wrap_big_map   = wrap "big_map"
@@ -622,14 +623,14 @@ module T =
 
     (* IMPORTANT: These values cannot be exported in Token.mli *)
 
-    let wrap_string   s = Wrap.wrap s
-    let wrap_verbatim s = Wrap.wrap s
-    let wrap_bytes    b = Wrap.wrap ("0x" ^ Hex.show b, b)
-    let wrap_int      z = Wrap.wrap (Z.to_string z, z)
-    let wrap_nat      z = Wrap.wrap (Z.to_string z ^ "n", z)
-    let wrap_mutez    i = Wrap.wrap (Int64.to_string i ^ "mutez", i)
-    let wrap_ident    i = Wrap.wrap i
-    let wrap_uident   c = Wrap.wrap c
+    let wrap_string   s = Wrap.wrap s (fun s -> `String s)
+    let wrap_verbatim s = Wrap.wrap s (fun s -> `String s)
+    let wrap_bytes    b = Wrap.wrap ("0x" ^ Hex.show b, b) (fun (s, _) -> `String s)
+    let wrap_int      z = Wrap.wrap (Z.to_string z, z) (fun (l, z) -> `Int (Z.to_int z))
+    let wrap_nat      z = Wrap.wrap (Z.to_string z ^ "n", z) (fun (_, z) -> `Int (Z.to_int z))
+    let wrap_mutez    i = Wrap.wrap (Int64.to_string i ^ "mutez", i) (fun (l, _) -> `String l)
+    let wrap_ident    i = Wrap.wrap i (fun i -> `String i)
+    let wrap_uident   c = Wrap.wrap c (fun i -> `String i)
 
     let wrap_attr key value region =
       Region.{value = (key, value); region}
@@ -926,17 +927,17 @@ module T =
     (* Bytes *)
 
     let mk_bytes lexeme bytes region =
-      Bytes (wrap ("0x" ^ lexeme, `Hex bytes) region)
+      Bytes (Wrap.wrap ("0x" ^ lexeme, `Hex bytes) (fun (lexeme, _) -> `String ("0x" ^ lexeme)) region)
 
     (* Integers *)
 
-    let mk_int lexeme z region = Int (wrap (lexeme, z) region)
+    let mk_int lexeme z region = Int (Wrap.wrap (lexeme, z) (fun (_, z) -> `Int (Z.to_int z)) region)
 
     (* Natural numbers *)
 
     type nat_err = Wrong_nat_syntax of string (* Not PascaLIGO *)
 
-    let mk_nat nat z region = Ok (Nat (wrap (nat ^ "n", z) region))
+    let mk_nat nat z region = Ok (Nat (Wrap.wrap (nat ^ "n", z) (fun (_, z) -> `Int (Z.to_int z)) region))
 
     (* Mutez *)
 

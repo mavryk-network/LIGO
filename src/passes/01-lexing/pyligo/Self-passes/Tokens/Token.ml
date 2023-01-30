@@ -14,8 +14,6 @@ module Attr = Lexing_shared.Attr
 
 let sprintf = Printf.sprintf
 
-let wrap = Wrap.wrap
-
 module T =
   struct
     (* A lexeme is the concrete syntax of a token *)
@@ -278,6 +276,7 @@ module T =
 
     (* KEYWORDS *)
 
+    let wrap token = Wrap.wrap token (fun x -> `String x)
     let wrap_and      = wrap "and"
     let wrap_as       = wrap "as"
     let wrap_assert   = wrap "assert"
@@ -751,14 +750,14 @@ module T =
 
     (* IMPORTANT: These values cannot be exported in Token.mli *)
 
-    let wrap_string   s = Wrap.wrap s
-    let wrap_verbatim s = Wrap.wrap s
-    let wrap_bytes    b = Wrap.wrap ("0x" ^ Hex.show b, b)
-    let wrap_int      z = Wrap.wrap (Z.to_string z, z)
-    let wrap_nat      z = Wrap.wrap (Z.to_string z ^ "n", z)
-    let wrap_mutez    i = Wrap.wrap (Int64.to_string i ^ "mutez", i)
-    let wrap_ident    i = Wrap.wrap i
-    let wrap_uident   c = Wrap.wrap c
+    let wrap_string   s = wrap s
+    let wrap_verbatim s = wrap s
+    let wrap_bytes    b = Wrap.wrap ("0x" ^ Hex.show b, b) (fun (str_rep, _) -> `String str_rep)
+    let wrap_int      z = Wrap.wrap (Z.to_string z, z) (fun (str_rep, _) -> `String str_rep)
+    let wrap_nat      z = Wrap.wrap (Z.to_string z ^ "n", z) (fun (str_rep, _) -> `String str_rep)
+    let wrap_mutez    i = Wrap.wrap (Int64.to_string i ^ "mutez", i) (fun (str_rep, _) -> `String str_rep)
+    let wrap_ident    i = wrap i
+    let wrap_uident   c = wrap c
 
     let wrap_attr key value region =
       Region.{value = (key, value); region}
@@ -794,7 +793,7 @@ module T =
 
     (* Blocks of statements *)
 
-    let wrap_begin      = wrap ""
+    let wrap_begin      = wrap "" 
     let ghost_begin     = wrap_begin Region.ghost
     let mk_BEGIN region = BEGIN (wrap_begin region)
     let ghost_BEGIN     = mk_BEGIN Region.ghost
@@ -806,26 +805,26 @@ module T =
 
     (* Indentations *)
 
-    let wrap_indent = wrap 2 (* TODO *)
-    let mk_INDENT Region.{value; region} = INDENT (wrap value region)
+    let wrap_indent = Wrap.wrap 2 (fun x -> `Int x) (* TODO *)
+    let mk_INDENT Region.{value; region} = INDENT (Wrap.wrap value (fun i -> `Int i) region)
 
     (* Top-level *)
 
-    let wrap_top_level      = wrap ()
+    let wrap_top_level      = Wrap.wrap () (fun () -> `Null)
     let ghost_top_level     = wrap_top_level Region.ghost
     let mk_TOP_LEVEL region = TOP_LEVEL (wrap_top_level region)
     let ghost_TOP_LEVEL     = mk_TOP_LEVEL Region.ghost
 
     (* Zero-Width SPace *)
 
-    let wrap_zwsp      = wrap ()
+    let wrap_zwsp      = Wrap.wrap () (fun () -> `Null)
     let ghost_zswp     = wrap_zwsp Region.ghost
     let mk_ZWSP region = ZWSP (wrap_zwsp region)
     let ghost_ZWSP     = mk_ZWSP Region.ghost
 
     (* END-OF-FILE TOKEN *)
 
-    let wrap_eof      = wrap ""
+    let wrap_eof      = Wrap.wrap "" (fun _ -> `String "")
     let mk_EOF region = EOF (wrap_eof region)
     let ghost_eof     = wrap_eof Region.ghost
     let ghost_EOF     = mk_EOF Region.ghost
@@ -1121,28 +1120,29 @@ module T =
     (* Bytes *)
 
     let mk_bytes lexeme bytes region =
-      Bytes (wrap ("0x" ^ lexeme, `Hex bytes) region)
+      let str_rep = "0x" ^ lexeme in
+      Bytes (Wrap.wrap (str_rep, `Hex bytes) (fun (str_rep, _) -> `String str_rep) region)
 
     (* Integers *)
 
-    let mk_int lexeme z region = Int (wrap (lexeme, z) region)
+    let mk_int lexeme z region = Int (Wrap.wrap (lexeme, z) (fun (_, z) -> `Int (Z.to_int z)) region)
 
     (* Natural numbers *)
 
     type nat_err = Wrong_nat_syntax of string (* Not PyLIGO *)
 
-    let mk_nat nat z region = Ok (Nat (wrap (nat ^ "n", z) region))
+    let mk_nat nat z region = Ok (Nat (Wrap.wrap (nat ^ "n", z) (fun (_, z) -> `Int (Z.to_int z)) region))
 
     (* Mutez *)
 
     type mutez_err = Wrong_mutez_syntax of string (* Not PyLIGO *)
 
     let mk_mutez nat ~suffix int64 region =
-      Ok (Mutez (wrap (nat ^ suffix, int64) region))
+      Ok (Mutez (Wrap.wrap (nat ^ suffix, int64) (fun (l, _) -> `String l) region))
 
     (* End-Of-File *)
 
-    let mk_eof region = EOF (wrap "" region)
+    let mk_eof region = EOF (Wrap.wrap "" (fun _ -> `String "") region)
 
     (* Symbols *)
 

@@ -3,7 +3,6 @@
 (* To disable warning about multiply-defined record labels. *)
 
 [@@@warning "-30-40-42"]
-
 (* Vendor dependencies *)
 
 module Directive = Preprocessor.Directive
@@ -141,6 +140,7 @@ type the_unit = lpar * rpar
 
 (* The Abstract Syntax Tree *)
 
+[@@deriving yojson]
 type t = {
   decl : declaration nseq;
   eof  : eof
@@ -594,3 +594,5 @@ let path_to_region = function
 let type_ctor_arg_to_region = function
   CArg  t -> type_expr_to_region t
 | CArgTuple t -> t.region
+
+let lpar_to_yojson = Wrap.to_yojson

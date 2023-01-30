@@ -19,7 +19,7 @@ let unwrap wrap = Region.{value=wrap#payload; region=wrap#region}
 
 let wrap = Wrap.wrap
 
-let ghost = wrap "" ghost
+let ghost = wrap "" (fun _ -> `String "") ghost
 
 let mk_wild region =
   let variable = {value="_"; region} in
