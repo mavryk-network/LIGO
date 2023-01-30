@@ -54,7 +54,6 @@
        convention as [to_string], except that the resulting string is
        shorter (usually for debugging or tracing).
  *)
-
 type t = <
   start : Pos.t;
   stop  : Pos.t;

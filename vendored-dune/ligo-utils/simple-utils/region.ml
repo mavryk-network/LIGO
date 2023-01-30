@@ -6,6 +6,12 @@ let sprintf = Printf.sprintf
 
 (* The object type for regions *)
 
+type file = string [@@deriving yojson]
+type pos = Pos.t * Pos.t [@@deriving yojson]
+type byte_pos = Lexing.position * Lexing.position
+
+type is_ghost = bool [@@deriving yojson]
+
 type t = <
   start : Pos.t;
   stop  : Pos.t;
@@ -18,13 +24,13 @@ type t = <
 
   (* Getters *)
 
-  file      : string;
-  pos       : Pos.t * Pos.t;
-  byte_pos  : Lexing.position * Lexing.position;
+  file      : file;
+  pos       : pos;
+  byte_pos  : byte_pos;
 
   (* Predicates *)
 
-  is_ghost : bool;
+  is_ghost : is_ghost;
 
   (* Conversions to [string] *)
 
@@ -35,6 +41,7 @@ type t = <
 (* A synonym *)
 
 type region = t
+
 
 (* A convenience *)
 
@@ -194,3 +201,14 @@ let of_yojson = fun t ->
        | (Error _ as e), _ | _, (Error _ as e) -> e)
   | _ ->
      Utils.error_yojson_format "{start: Pos.t, stop: Pos.t}"
+
+(* let to_yojson region = *)
+(*   `Assoc ([ *)
+(*         ("start", Pos.to_yojson region#start); *)
+(*         ("stop",  Pos.to_yojson region#stop); *)
+(*         ("file", Region.file_to_yojson region#file); *)
+(*         ("pos", Region.pos_to_yojson region#pos); *)
+(*         ("byte_pos", Region.byte_pos_to_yojson region#byte_pos); *)
+(*         ("is_ghost", Region.is_ghost_to_yojson region#is_ghost); *)
+(*     ]) *)
+
