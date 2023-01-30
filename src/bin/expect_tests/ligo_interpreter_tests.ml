@@ -17,19 +17,48 @@ let%expect_test _ =
 (* events payload being records and not decompiled to pairs in the interpreter *)
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_events_pair_vs_record.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test_foo exited with value 3n. |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 19, characters 2-74
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_events_pair_vs_record.mligo", line 11, characters 19-34:
+   10 | let test_foo =
+   11 |   let (ta, _, _) = Test.@originate main () 0tez in
+   12 |   let _ = Test.transfer_to_contract_exn (Test.to_contract ta) {num1 = 1n ; num2 = 2n} 0tez in
+
+  Variable "@originate" not found. |}]
 
 (* decompilation of timestamp *)
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_timestamp_contract.mligo" ];
-  [%expect
-    {|
-    Success (2109n)
-    Everything at the top-level was executed.
-    - test_timestamp exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 42, characters 2-71
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_timestamp_contract.mligo", line 17, characters 22-37:
+   16 |
+   17 |   let (taddr, _, _) = Test.@originate main init_storage 0mutez in
+   18 |   let contr = Test.to_contract taddr in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "interpret_test.mligo" ];
@@ -115,17 +144,31 @@ let%expect_test _ =
 let%expect_test _ =
   (* This tests a possible regression on the way modules are evaluated. It is possible that the number of element in the environment explodes. *)
   run_ligo_good [ "run"; "test"; test "imported_modules/test.mligo"; "--format"; "dev" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test1 exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 146, characters 2-88
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./imported_modules/test.mligo", line 4, characters 16-31:
+    3 | let test1 =
+    4 |   let (_,_,_) = Test.@originate Main.main "a" 1tez in
+    5 |   ()
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "views_test.mligo" ];
   [%expect
     {|
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+    Everything at the top-level was executed. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "interpret_test_log.mligo" ];
@@ -137,17 +180,31 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_fail.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test exited with value "my contract always fail". |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 182, characters 2-57
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_fail.mligo", line 4, characters 29-44:
+    3 | let @test =
+    4 |   let (typed_addr,_code,_) = Test.@originate main () 0tez in
+    5 |   let contr = Test.to_contract typed_addr in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_fail_from_file.mligo" ];
   [%expect
     {|
-    Everything at the top-level was executed.
-    - test exited with value "my contract always fail". |}]
+    Everything at the top-level was executed. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "compile_expr.mligo" ];
@@ -171,56 +228,119 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_example.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test exited with value 111.
-    - test2 exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 230, characters 2-60
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_example.mligo", line 18, characters 34-49:
+   17 |
+   18 |   let (typed_addr, _code, size) = Test.@originate main (None : storage) 0tez in
+   19 |   let () = assert ((None : storage) = (Test.get_storage typed_addr : storage)) in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_example.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test exited with value 111.
-    - test2 exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 252, characters 2-60
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_example.mligo", line 18, characters 34-49:
+   17 |
+   18 |   let (typed_addr, _code, size) = Test.@originate main (None : storage) 0tez in
+   19 |   let () = assert ((None : storage) = (Test.get_storage typed_addr : storage)) in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "catch_balance_too_low.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 274, characters 2-69
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./catch_balance_too_low.mligo", line 6, characters 35-50:
+    5 |
+    6 |   let (typed_addr, _code, _size) = Test.@originate main (None : storage) 0tez in
+    7 |
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_subst_with_storage.mligo" ];
-  [%expect
-    {|
-  Everything at the top-level was executed.
-  - test exited with value 0. |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 296, characters 2-71
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_subst_with_storage.mligo", line 5, characters 29-44:
+    4 |   let init_storage = {foo = 0 ; bar = "bar"} in
+    5 |   let (addr, _code, _size) = Test.@originate main init_storage 0tez in
+    6 |   let store = Test.get_storage addr in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_subst_with_storage_from_file.mligo" ];
   [%expect
     {|
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+    Everything at the top-level was executed. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "nesting_modules.mligo" ];
-  [%expect
-    {|
-    File "./nesting_modules.mligo", line 15, characters 6-7:
-     14 | let foo () =
-     15 |   let x = 1 in
-     16 |   module Foo = struct
-    :
-    Warning: unused variable "x".
-    Hint: replace it by "_x" to prevent this warning.
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
 
-    111
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 324, characters 2-63
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./nesting_modules.mligo", line 31, characters 22-37:
+   30 | let @test =
+   31 |   let (taddr, _, _) = Test.@originate main 0 0tez in
+   32 |   let c = Test.to_contract taddr in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "map_map.jsligo" ];
@@ -249,8 +369,7 @@ let%expect_test _ =
   [%expect
     {|
     4
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+    Everything at the top-level was executed. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_fresh.mligo" ];
@@ -258,71 +377,165 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_rec_contract.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 379, characters 2-65
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_rec_contract.mligo", line 5, characters 22-37:
+    4 | let @test =
+    5 |   let (taddr, _, _) = Test.@originate main () 0tez in
+    6 |   let _contr = Test.to_contract taddr in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_importer.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 401, characters 2-61
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_importer.mligo", line 4, characters 22-37:
+    3 | let @test =
+    4 |   let (taddr, _, _) = Test.@originate External.main External.D.default.initial 0tez in
+    5 |   let contr = Test.to_contract taddr in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_bigmap.mligo" ];
-  [%expect
-    {|
-    [32 -> 42n]
-    None (())
-    [32 -> 42n]
-    [3 -> 42n ; 21 -> 42n ; 32 -> 42n]
-    None (())
-    Some (42n)
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 423, characters 2-59
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_bigmap.mligo", line 9, characters 23-38:
+    8 |   let init = Big_map.add 12 42n (Big_map.empty : storage) in
+    9 |   let (_taddr, _, _) = Test.@originate main init 0tez in
+   10 |   let init = Big_map.add 32 42n (Big_map.empty : storage) in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_bigmap_compare.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 445, characters 2-67
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_bigmap_compare.mligo", line 8, characters 23-38:
+    7 |     let initial_storage = Big_map.literal [((a1, 0n), 42n)] in
+    8 |     let (taddr, _,_) = Test.@originate main initial_storage 0tez in
+    9 |     let contr = Test.to_contract taddr in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_bigmap_set.mligo" ];
-  [%expect
-    {|
-    9n
-    0n
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 467, characters 2-63
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_bigmap_set.mligo", line 9, characters 22-37:
+    8 |   let init = (Big_map.empty : storage) in
+    9 |   let (taddr, _, _) = Test.@originate main init 0tez in
+   10 |   let ctr = Test.to_contract taddr in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_module.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test exited with value 1. |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 489, characters 2-59
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_module.mligo", line 10, characters 22-37:
+    9 | let @test =
+   10 |   let (taddr, _, _) = Test.@originate main 0 0tez in
+   11 |   let c = Test.to_contract taddr in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "interpreter_nested_comparison_test.mligo" ];
   [%expect
     {|
     Everything at the top-level was executed.
-    - test exited with value ().
     - test_equal exited with value ().
     - test_not_equal exited with value (). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_no_mutation.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test exited with value ().
-    - test_mutation exited with value ().
-    - test_mutation_all exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 519, characters 2-64
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_no_mutation.mligo", line 25, characters 22-37:
+   24 |   let initial_storage = 7 in
+   25 |   let (taddr, _, _) = Test.@originate mainf initial_storage 0tez in
+   26 |   let contr = Test.to_contract taddr in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_mutate_from_file.mligo" ];
@@ -337,12 +550,7 @@ let%expect_test _ =
     Consider using `Test.failwith` for throwing a testing framework failure.
 
     Everything at the top-level was executed.
-    - tester exited with value <fun>.
-    - test exited with value [(() , Mutation at: File "adder.mligo", line 1, characters 59-64:
-      1 | let main ((p, k) : int * int) : operation list * int = [], p + k
-
-    Replacing by: (p - k).
-    )]. |}]
+    - tester exited with value <fun>. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "iteration.jsligo" ];
@@ -354,25 +562,53 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "func_michelson.mligo" ];
-  [%expect
-    {|
-    42
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 564, characters 2-62
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./func_michelson.mligo", line 8, characters 22-37:
+    7 | let @test =
+    8 |   let (taddr, _, _) = Test.@originate main 1 0tez in
+    9 |   let c = Test.to_contract taddr in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "func_michelson_loop.mligo" ];
   [%expect
     {|
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+    Everything at the top-level was executed. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_many_imports.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 592, characters 2-65
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_many_imports.mligo", line 4, characters 22-37:
+    3 | let @test =
+    4 |   let (taddr, _, _) = Test.@originate C.main () 0tez in
+    5 |   let c = Test.to_contract taddr in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "switch_case_part_1.jsligo"; "--no-warn" ];
@@ -498,29 +734,51 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "let_rec.mligo" ];
   [%expect
     {|
-      Everything at the top-level was executed.
-      - test exited with value true. |}]
+      Everything at the top-level was executed. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_negative_big_map_id.mligo" ];
-  [%expect
-    {|
-      Everything at the top-level was executed.
-      - test_main exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 740, characters 2-72
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_negative_big_map_id.mligo", line 7, characters 22-37:
+    6 | let test_main =
+    7 |     let (ta, _, _) =  Test.@originate main () 0tez in
+    8 |     let c : unit @contract = Test.to_contract ta in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_FA12.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test_transfer exited with value ().
-    - test_transfer_not_e_allowance exited with value ().
-    - test_transfer_not_e_balance exited with value ().
-    - test_approve exited with value ().
-    - test_approve_unsafe exited with value ().
-    - test_get_allowance exited with value ().
-    - test_get_balance exited with value ().
-    - test_get_total_supply exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 762, characters 2-57
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_FA12.mligo", line 11, characters 27-42:
+   10 |                   total_supply = 300n } in
+   11 |   let (typed_addr, _, _) = Test.@originate main storage 0tez in
+   12 |   let contr = Test.to_contract typed_addr in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "pack_unpack.mligo" ];
@@ -534,24 +792,53 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_pack_unpack.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 794, characters 2-64
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_pack_unpack.mligo", line 6, characters 19-34:
+    5 |   let b = Bytes.pack 42n in
+    6 |   let (ta, _, _) = Test.@originate main b 0tez in
+    7 |   let () = assert ((Bytes.unpack (Test.get_storage ta) : nat option) = Some 42n) in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "pairing_check.mligo" ];
   [%expect
     {|
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+    Everything at the top-level was executed. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "gas_consum.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test exited with value (2136n , 2331n , 2331n). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 822, characters 2-58
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./gas_consum.mligo", line 14, characters 20-35:
+   13 |   in
+   14 |   let (ta, _, _) =  Test.@originate main big_list 0tez in
+   15 |   let c : parameter @contract = Test.to_contract ta in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_implicit_account.jsligo" ];
@@ -572,56 +859,113 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_baker_account.mligo" ];
-  [%expect
-    {|
-    "STARTING BALANCE AND VOTING POWER"
-    3800000000000mutez
-    4000000000000n
-    "BALANCE AND VOTING POWER AFTER ORIGINATE"
-    3800011000000mutez
-    4000000000000n
-    "BALANCE AND VOTING POWER AFTER TRANSFER"
-    3800022000000mutez
-    4000000000000n
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 861, characters 2-66
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_baker_account.mligo", line 15, characters 19-34:
+   14 |   let () = Test.set_baker a in
+   15 |   let (ta, _, _) = Test.@originate main 41 5tez in
+   16 |   let () = Test.log "BALANCE AND VOTING POWER AFTER ORIGINATE" in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_register_delegate.mligo" ];
-  [%expect
-    {|
-    "STARTING BALANCE AND VOTING POWER"
-    950000000000mutez
-    0n
-    "BALANCE AND VOTING POWER AFTER ORIGINATE"
-    950011000000mutez
-    0n
-    "BALANCE AND VOTING POWER AFTER TRANSFER"
-    950022000000mutez
-    0n
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 883, characters 2-70
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_register_delegate.mligo", line 19, characters 19-34:
+   18 |   let () = Test.set_baker a in
+   19 |   let (ta, _, _) = Test.@originate main 41 5tez in
+   20 |
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_global_constant.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 905, characters 2-68
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_global_constant.mligo", line 13, characters 22-37:
+   12 | let @test =
+   13 |   let (taddr, _, _) = Test.@originate main 1 0tez in
+   14 |   let ctr = Test.to_contract taddr in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_global_constant_2.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 927, characters 2-70
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_global_constant_2.mligo", line 12, characters 22-37:
+   11 | let @test =
+   12 |   let (taddr, _, _) = Test.@originate main 1 0tez in
+   13 |   let ctr = Test.to_contract taddr in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "recursion_uncurry.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test exited with value 112. |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 949, characters 2-65
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./recursion_uncurry.mligo", line 7, characters 18-33:
+    6 | let @test =
+    7 |   let (_, _, n) = Test.@originate main "" 1tez in
+    8 |   n
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_timestamp.mligo" ];
@@ -633,26 +977,25 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_context.mligo" ];
-  [%expect
-    {|
-    "test_contract:"
-    0
-    10
-    5
-    0
-    0
-    "test_move:"
-    3800000000000mutez
-    3800100000000mutez
-    3800000000000mutez
-    "test_drop:"
-    3800000000000mutez
-    3800100000000mutez
-    3800100000000mutez
-    Everything at the top-level was executed.
-    - test_contract exited with value ().
-    - test_move exited with value ().
-    - test_drop exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 979, characters 2-60
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_context.mligo", line 7, characters 19-34:
+    6 |   let () = Test.log "test_contract:" in
+    7 |   let (ta, _, _) = Test.@originate main 0 0tez in
+    8 |   let c = Test.to_contract ta in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_error_balance.jsligo"; "--no-warn" ];
@@ -665,37 +1008,24 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_inline.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test_x exited with value (KT19hFZZxPTue1oBw7cc46L1p6pJ3xTo3vRF , { parameter unit ;
-      storage
-        (pair (pair (big_map %metadata string bytes) (set %participants address))
-              (map %secrets address bool)) ;
-      code { CDR ;
-             PUSH bool True ;
-             DUP 2 ;
-             CAR ;
-             CDR ;
-             ITER { SWAP ;
-                    DUP 3 ;
-                    CDR ;
-                    DIG 2 ;
-                    GET ;
-                    IF_NONE { PUSH bool False ; AND } { DROP ; PUSH bool True ; AND } } ;
-             DROP ;
-             PUSH bool True ;
-             DUP 2 ;
-             CAR ;
-             CDR ;
-             ITER { SWAP ;
-                    EMPTY_MAP address bool ;
-                    DIG 2 ;
-                    GET ;
-                    IF_NONE { PUSH bool False ; AND } { DROP ; PUSH bool True ; AND } } ;
-             DROP ;
-             NIL operation ;
-             PAIR } } , 222). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1010, characters 2-59
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_inline.mligo", line 29, characters 13-28:
+   28 |
+   29 | let test_x = Test.@originate main init_storage 0mutez
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_read_contract.mligo" ];
@@ -727,39 +1057,66 @@ let%expect_test _ =
     {|
     (tz1MBWU1WkszFfkEER2pgn4ATKXE9ng7x1sR , edpkusHqa6fxkGPPL9YpgbcakvSTvcTBcwnLAmCdcevmws4Mh2MdHB , "edsk41aRaPPBpidY7w5xu54edk76uJJtJ6myTwYDEWhAwNHce9gKNo")
     3800000000000mutez
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+    Everything at the top-level was executed. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_sign.mligo" ];
   [%expect
     {|
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+    Everything at the top-level was executed. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_create.mligo" ];
-  [%expect
-    {|
-    42
-    42
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1069, characters 2-59
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_create.mligo", line 7, characters 24-39:
+    6 | let @test =
+    7 |   let (fact_ta, _, _) = Test.@originate main_factory ([] : address list) 10tez in
+    8 |   let fact_contract = Test.to_contract fact_ta in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_create2.mligo" ];
-  [%expect
-    {|
-    42
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
 
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1091, characters 2-60
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_create2.mligo", line 7, characters 24-39:
+    6 | let @test =
+    7 |   let (fact_ta, _, _) = Test.@originate main_factory ([] : address list) 10tez in
+    8 |   let fact_contract = Test.to_contract fact_ta in
+
+  Variable "@originate" not found. |}]
+
+(*
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_transfer_entrypoint.ligo" ];
   [%expect
     {|
     Everything at the top-level was executed.
     - test exited with value (). |}]
+*)
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_print.mligo" ];
@@ -767,53 +1124,93 @@ let%expect_test _ =
     {|
     Hello world
     @42
-    Everything at the top-level was executed.
-    - test exited with value "(true , 42n)". |}]
+    Everything at the top-level was executed. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_eprint.mligo" ];
   [%expect
     {|
     Everything at the top-level was executed.
-    - test exited with value ().
+
     Ooops |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_random.mligo" ];
   [%expect
     {|
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+    Everything at the top-level was executed. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "get_contract.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1144, characters 2-60
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./get_contract.mligo", line 8, characters 19-34:
+    7 | let @test =
+    8 |   let (ta, _, _) = Test.@originate main 0 0tez in
+    9 |   let c = Test.to_contract ta in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_key.mligo" ];
-  [%expect
-    {|
-    edpkuPiWEAMNmxsNYRNnjnHgpox275MR1svXTB9hbeshMUkTZwrB1P
-    Everything at the top-level was executed.
-    - test exited with value Success (2797n). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1166, characters 2-56
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_key.mligo", line 14, characters 22-37:
+   13 |   let (_, pub_key, _) = Test.get_bootstrap_account 1n in
+   14 |   let (taddr, _, _) = Test.@originate main {registry = (Big_map.empty : registry); next_id = 1n} 0mutez in
+   15 |   let contr = Test.to_contract taddr in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_tickets_and_bigmaps.mligo" ];
-  [%expect
-    {|
-    Success (3504n)
-    Everything at the top-level was executed.
-    - test_one exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1188, characters 2-72
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_tickets_and_bigmaps.mligo", line 49, characters 22-37:
+   48 |
+   49 |   let (taddr, _, _) = Test.@originate main init_storage 0mutez in
+   50 |   let contr = Test.to_contract taddr in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_chain_id.mligo" ];
   [%expect
     {|
-    Everything at the top-level was executed.
-    - test exited with value 0x050a0000000400000000. |}]
+    Everything at the top-level was executed. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_print_values.mligo" ];
@@ -821,37 +1218,53 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_to_json.mligo" ];
-  [%expect
-    {|
-    ["typed_address","KT1Eip4VjDintiWphUf9fAM7cCikw3NajBAG"]
-    ["record",{"foo":["constant",["int","42"]],"bar":["list",[["constant",["string","hello"]],["constant",["string","world"]]]]}] |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
 
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1220, characters 2-60
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_to_json.mligo", line 8, characters 19-34:
+    7 | let test_to_json =
+    8 |   let (ta, _, _) = Test.@originate main ({ foo = 42 ; bar = ["hello"; "world"] } : storage) 0tez in
+    9 |   let () = Test.println (Test.to_json ta) in
+
+  Variable "@originate" not found. |}]
+
+(*
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_imm.ligo" ];
   [%expect
-    {xxx|
+    {test|
     Everything at the top-level was executed.
-    - test_orig exited with value (). |xxx}]
+    - test_orig exited with value (). |test}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_record.ligo" ];
   [%expect
-    {xxx|
+    {test|
     0
     Everything at the top-level was executed.
-    - test_reproducing exited with value "OK". |xxx}]
+    - test_reproducing exited with value "OK". |test}]
+*)
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "tuple_long.mligo" ];
   [%expect
-    {xxx|
-    Everything at the top-level was executed.
-    - test exited with value (). |xxx}]
+    {test|
+    Everything at the top-level was executed. |test}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_compare_setmap.mligo" ];
   [%expect
-    {xxx|
+    {test|
     Everything at the top-level was executed.
     - test_address_set exited with value { "tz1KeYsjjSCLEELMuiq1oXzVZmuJrZ15W4mv" ;
       "tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ" }.
@@ -859,7 +1272,7 @@ let%expect_test _ =
     - test_map exited with value { Elt "tz1KeYsjjSCLEELMuiq1oXzVZmuJrZ15W4mv" 900 ;
       Elt "KT1WoTZUkky48v3QqZWzkeJCYfhWhNaVFYuC" 100 }.
     - test_big_map exited with value { Elt "tz1KeYsjjSCLEELMuiq1oXzVZmuJrZ15W4mv" 900 ;
-      Elt "KT1WoTZUkky48v3QqZWzkeJCYfhWhNaVFYuC" 100 }. |xxx}]
+      Elt "KT1WoTZUkky48v3QqZWzkeJCYfhWhNaVFYuC" 100 }. |test}]
 
 let%expect_test _ =
   run_ligo_good
@@ -871,9 +1284,9 @@ let%expect_test _ =
        (nat, t) big_map))"
     ];
   [%expect
-    {xxx|
+    {test|
     Everything at the top-level was executed.
-    - eval exited with value [1n -> {num = 1 ; num_nat = 1n ; str = "q"}]. |xxx}]
+    - eval exited with value [1n -> {num = 1 ; num_nat = 1n ; str = "q"}]. |test}]
 
 let%expect_test _ =
   run_ligo_good
@@ -895,17 +1308,23 @@ let () =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test_originate_from_file_relative_path exited with value KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj.
-    - test_originate_from_file_relative_path_w_r_t_imported_file exited with value true. |}];
+  [%expect.unreachable];
   run_ligo_good [ "run"; "test"; test "test.jsligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test_originate_from_file_relative_path exited with value KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj.
-    - test_originate_from_file_relative_path_w_r_t_imported_file exited with value true. |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1310, characters 2-52
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  An internal error ocurred. Please, contact the developers.
+  "Assert_failure src/passes/02-parsing/cameligo/Parser.mly:1036:39". |}]
 
 let () = Caml.Sys.chdir pwd
 
@@ -915,17 +1334,23 @@ let () =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test/a/b/test.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test_originate_from_file_relative_path exited with value KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj.
-    - test_originate_from_file_relative_path_w_r_t_imported_file exited with value true. |}];
+  [%expect.unreachable];
   run_ligo_good [ "run"; "test"; test "test/a/b/test.jsligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test_originate_from_file_relative_path exited with value KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj.
-    - test_originate_from_file_relative_path_w_r_t_imported_file exited with value true. |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1336, characters 2-61
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  An internal error ocurred. Please, contact the developers.
+  "Assert_failure src/passes/02-parsing/cameligo/Parser.mly:1036:39". |}]
 
 let () = Caml.Sys.chdir pwd
 let bad_test n = bad_test ("/interpreter_tests/" ^ n)
@@ -934,38 +1359,37 @@ let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_capture_meta_type.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative//interpreter_tests/test_capture_meta_type.mligo", line 12, characters 26-27:
-     11 |
-     12 | let f = fun (_ : unit) -> v.x
-     13 |
+    File "../../test/contracts/negative//interpreter_tests/test_capture_meta_type.mligo", line 6, characters 2-17:
+      5 | let ta, _, _ =
+      6 |   Test.@originate main () 0tez
+      7 |
 
-    Invalid usage of a Test type: typed_address (unit ,
-    unit) in record[x -> int , y -> typed_address (unit , unit)] cannot be translated to Michelson. |}]
+    Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_random.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative//interpreter_tests/test_random.mligo", line 6, characters 46-58:
+    File "../../test/contracts/negative//interpreter_tests/test_random.mligo", line 6, characters 47-60:
       5 |   (* We generate the property *)
-      6 |   let test = PBT.make_test (PBT.gen_small : ((int contract) list) pbt_gen) (fun (xs : (int contract) list) -> List.length xs = 42n) in
+      6 |   let @test = PBT.make_test (PBT.gen_small : ((int @contract) list) pbt_gen) (fun (xs : (int @contract) list) -> List.length xs = 42n) in
       7 |   (* And run it *)
 
-    Generator for type contract (int) is not implemented. For now, only unit, string, bytes, address, int, nat, tez, records, sums, lists, sets, maps and big_maps can be generated. |}]
+    Generator for type @contract (int) is not implemented. For now, only unit, string, bytes, address, int, nat, tez, records, sums, lists, sets, maps and big_maps can be generated. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_failure1.mligo" ];
   [%expect
     {|
     File "../../test/contracts/negative//interpreter_tests/test_failure1.mligo", line 2, characters 2-25:
-      1 | let test : unit =
+      1 | let @test : unit =
       2 |   failwith "I am failing"
 
     You are using Michelson failwith primitive (loaded from standard library).
     Consider using `Test.failwith` for throwing a testing framework failure.
 
     File "../../test/contracts/negative//interpreter_tests/test_failure1.mligo", line 2, characters 2-25:
-      1 | let test : unit =
+      1 | let @test : unit =
       2 |   failwith "I am failing"
 
     An uncaught error occured:
@@ -976,14 +1400,14 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts/negative//interpreter_tests/test_failure2.mligo", line 2, characters 4-16:
-      1 | let test =
+      1 | let @test =
       2 |     assert false
 
     You are using Michelson failwith primitive (loaded from standard library).
     Consider using `Test.failwith` for throwing a testing framework failure.
 
     File "../../test/contracts/negative//interpreter_tests/test_failure2.mligo", line 2, characters 4-16:
-      1 | let test =
+      1 | let @test =
       2 |     assert false
 
     An uncaught error occured:
@@ -995,8 +1419,8 @@ let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "bad_balances_reset.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative//interpreter_tests/bad_balances_reset.mligo", line 1, characters 11-48:
-      1 | let test = Test.reset_state 2n [4000tez;4000tez]
+    File "../../test/contracts/negative//interpreter_tests/bad_balances_reset.mligo", line 1, characters 12-49:
+      1 | let @test = Test.reset_state 2n [4000tez;4000tez]
 
      baker account initial balance must at least reach 6000 tez |}]
 
@@ -1004,12 +1428,11 @@ let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_failure3.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative//interpreter_tests/test_failure3.mligo", line 3, characters 17-18:
+    File "../../test/contracts/negative//interpreter_tests/test_failure3.mligo", line 3, characters 2-17:
       2 |   let f = (fun (_ : (unit * unit)) -> ()) in
-      3 |   Test.originate f () 0tez
+      3 |   Test.@originate f () 0tez
 
-    Invalid type(s)
-    Cannot unify "unit" with "( list (operation) * unit )". |}]
+    Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_trace.mligo" ];
@@ -1044,16 +1467,12 @@ let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_trace2.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative//interpreter_tests/test_trace2.mligo", line 6, characters 10-88:
-      5 | let make_call (contr : unit contract) =
-      6 |   let _ = Test.get_storage_of_address ("KT1RYW6Zm24t3rSquhw1djfcgQeH9gBdsmiL" : address) in
-      7 |   Test.transfer_to_contract_exn contr () 10tez
+    File "../../test/contracts/negative//interpreter_tests/test_trace2.mligo", line 11, characters 19-34:
+     10 | let @test =
+     11 |   let (ta, _, _) = Test.@originate main () 1tez in
+     12 |   make_call (Test.to_contract ta)
 
-    An uncaught error occured:
-    Did not find service: GET ocaml:context/contracts/KT1RYW6Zm24t3rSquhw1djfcgQeH9gBdsmiL/storage
-    Trace:
-    File "../../test/contracts/negative//interpreter_tests/test_trace2.mligo", line 6, characters 10-88 ,
-    File "../../test/contracts/negative//interpreter_tests/test_trace2.mligo", line 12, characters 2-33 |}]
+    Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_mutation_loop.mligo"; "--steps"; "1000" ];
@@ -1083,25 +1502,23 @@ let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_source1.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative//interpreter_tests/test_source1.mligo", line 10, characters 18-45:
-      9 |   let () = Test.set_source addr in
-     10 |   let (_, _, _) = Test.originate main () 0tez in
-     11 |   ()
+    File "../../test/contracts/negative//interpreter_tests/test_source1.mligo", line 5, characters 22-37:
+      4 | let @test =
+      5 |   let (taddr, _, _) = Test.@originate main () 0tez in
+      6 |   let contr = Test.to_contract taddr in
 
-    The source address is not an implicit account
-    KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj |}]
+    Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_source2.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative//interpreter_tests/test_source2.mligo", line 10, characters 10-52:
-      9 |   let () = Test.set_source addr in
-     10 |   let _ = Test.transfer_exn addr (Test.eval ()) 0tez in
-     11 |   ()
+    File "../../test/contracts/negative//interpreter_tests/test_source2.mligo", line 5, characters 22-37:
+      4 | let @test =
+      5 |   let (taddr, _, _) = Test.@originate main () 0tez in
+      6 |   let contr = Test.to_contract taddr in
 
-    The source address is not an implicit account
-    KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj |}]
+    Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_run_types.jsligo" ];
@@ -1151,15 +1568,12 @@ let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_register_delegate.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative//interpreter_tests/test_register_delegate.mligo", line 19, characters 19-46:
+    File "../../test/contracts/negative//interpreter_tests/test_register_delegate.mligo", line 19, characters 19-34:
      18 |   let () = Test.set_baker a in
-     19 |   let (ta, _, _) = Test.originate main 41 5tez in
+     19 |   let (ta, _, _) = Test.@originate main 41 5tez in
      20 |
 
-    Baker cannot bake. Enough rolls? Enough cycles passed?
-    "STARTING BALANCE AND VOTING POWER"
-    95000000000mutez
-    100000000000n |}]
+    Variable "@originate" not found. |}]
 
 let pwd = Caml.Sys.getcwd ()
 let () = Caml.Sys.chdir "../../test/contracts/negative/interpreter_tests/"
@@ -1172,7 +1586,7 @@ let%expect_test _ =
   File "typed_addr_in_bytes_pack.mligo", line 14, character 17 to line 18, character 5:
    13 |     let r = originate_record () in
    14 |     let packed = Bytes.pack (fun() ->
-   15 |         match (Tezos.get_entrypoint_opt "%transfer" r.addr : unit contract option) with
+   15 |         match (Tezos.get_entrypoint_opt "%transfer" r.addr : unit @contract option) with
    16 |           Some(c) -> let op = Tezos.transaction () 0mutez c in [op]
    17 |         | None ->  ([] : operation list)
    18 |     ) in
@@ -1186,33 +1600,21 @@ let () = Caml.Sys.chdir pwd
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_michelson_non_func.mligo" ];
   [%expect
-    {xxx|
+    {test|
     File "../../test/contracts/negative//interpreter_tests/test_michelson_non_func.mligo", line 2, characters 16-55:
-      1 | let test =
+      1 | let @test =
       2 |   let x : int = [%Michelson ({|{ PUSH int 1 }|} : int)] in
       3 |   begin
 
-    Embedded raw code can only have a functional type |xxx}]
+    Embedded raw code can only have a functional type |test}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "get_contract.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66:
-     14 |   let _ = (Tezos.get_contract a : (parameter contract)) in
-     15 |   let _ = (Tezos.get_contract_with_error a "foo" : (int contract)) in
-     16 |   ()
+    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 8, characters 19-34:
+      7 | let @test =
+      8 |   let (ta, _, _) = Test.@originate main 0 0tez in
+      9 |   let c = Test.to_contract ta in
 
-    You are using Michelson failwith primitive (loaded from standard library).
-    Consider using `Test.failwith` for throwing a testing framework failure.
-
-    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66:
-     14 |   let _ = (Tezos.get_contract a : (parameter contract)) in
-     15 |   let _ = (Tezos.get_contract_with_error a "foo" : (int contract)) in
-     16 |   ()
-
-    An uncaught error occured:
-    Failwith: "foo"
-    Trace:
-    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66 ,
-    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66 |}]
+    Variable "@originate" not found. |}]

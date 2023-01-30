@@ -1,5 +1,5 @@
  let main ( p : begin ) =
- let c : unit contract = Tezos . implicit_account p
+ let c : unit @contract = Tezos . implicit_account p
  in Tezos . address c
 
 (*

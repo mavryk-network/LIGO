@@ -1,5 +1,5 @@
 type foo = A | B
 
-let test =
+let @test =
   let B = B in
   ()

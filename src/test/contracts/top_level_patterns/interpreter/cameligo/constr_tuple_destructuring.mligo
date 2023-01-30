@@ -6,5 +6,5 @@ let f () =
 
 let (a, ((Foo x), c)) = f ()
 
-let test = 
+let @test = 
   assert ((a + x + String.length c) = 6)

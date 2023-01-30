@@ -46,7 +46,7 @@ let test_one =
       tickets = (Big_map.empty: (address, unit ticket) big_map);
   } in
 
-  let (taddr, _, _) = Test.originate main init_storage 0mutez in
+  let (taddr, _, _) = Test.@originate main init_storage 0mutez in
   let contr = Test.to_contract taddr in
   let r = Test.transfer_to_contract contr () 1tez in
   Test.log (r)

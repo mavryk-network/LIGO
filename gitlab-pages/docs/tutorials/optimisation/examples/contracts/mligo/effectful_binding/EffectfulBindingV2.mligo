@@ -9,9 +9,9 @@ let some_contract = ("KT1WhG8rMaC1azBJApBHW2JJdhWuhvemw4Zf" : address)
 (* Calls to a function can be inlined *)
 [@inline]
 let target_exists () =
-  let c : int contract option = Tezos.get_contract_opt some_contract in
+  let c : int @contract option = Tezos.get_contract_opt some_contract in
   match c with
-    Some contract -> true
+    Some @contract -> true
   | None -> false
 
 type parameter = Increment | IncrementIfEmpty | IncrementIfExists

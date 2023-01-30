@@ -3,7 +3,7 @@ type param =
   | B of unit
 
 let main (_,_ : param * unit) : operation list * unit =
-  let c = (Tezos.self("%a") : unit contract) in
+  let c = (Tezos.self("%a") : unit @contract) in
   let op = Tezos.transaction () 0mutez c in
   ([op] : operation list), ()
   

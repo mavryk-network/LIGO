@@ -17,17 +17,17 @@ type allowance_key =
 type getAllowance =
   [@layout comb]
   { request : allowance_key;
-    callback : nat contract }
+    callback : nat @contract }
 
 type getBalance =
   [@layout comb]
   { owner : address;
-    callback : nat contract }
+    callback : nat @contract }
 
 type getTotalSupply =
   [@layout comb]
   { request : unit ;
-    callback : nat contract }
+    callback : nat @contract }
 
 type tokens = (address, nat) big_map
 type allowances = (allowance_key, nat) big_map

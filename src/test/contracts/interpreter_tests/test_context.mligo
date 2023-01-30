@@ -4,7 +4,7 @@ let main ((k, i) : int * int) : operation list * int =
 
 let test_contract =
   let () = Test.log "test_contract:" in
-  let (ta, _, _) = Test.originate main 0 0tez in
+  let (ta, _, _) = Test.@originate main 0 0tez in
   let c = Test.to_contract ta in
   let () = Test.log (Test.get_storage ta) in
   let () = Test.save_context () in

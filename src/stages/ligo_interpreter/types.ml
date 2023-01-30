@@ -91,7 +91,7 @@ type constant_val =
   | C_address of Contract.t
       (*should be represented as michelson data ? not convenient *)
       [@name "address"]
-  | C_contract of contract [@name "contract"]
+  | C_contract of contract [@name "@contract"]
   | C_key_hash of Public_key_hash.t [@name "key_hash"]
   | C_key of Public_key.t [@name "key"]
   | C_signature of Signature.t [@name "signature"]

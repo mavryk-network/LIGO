@@ -14,7 +14,7 @@ let boot () =
 
   let init_storage = ("2022-01-01t10:10:10Z" : timestamp) in
 
-  let (taddr, _, _) = Test.originate main init_storage 0mutez in
+  let (taddr, _, _) = Test.@originate main init_storage 0mutez in
   let contr = Test.to_contract taddr in
   let addr = Tezos.address contr in
   {addr = addr; taddr = taddr; contr = contr}

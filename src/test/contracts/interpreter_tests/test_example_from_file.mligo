@@ -12,7 +12,7 @@ let check_new_origination (src :address) : address =
     )
     | None -> (failwith "source did not originate anything" : address)
 
-let test =
+let @test =
   let baker = Test.nth_bootstrap_account 0 in
   let src = Test.nth_bootstrap_account 1 in
 

@@ -162,7 +162,7 @@ type callback = [@layout:comb] {
 
 type balance_of = [@layout:comb] {
    requests : request list;
-   callback : callback list contract;
+   callback : callback list @contract;
 }
 
 let balance_of : balance_of -> storage -> operation list * storage = 

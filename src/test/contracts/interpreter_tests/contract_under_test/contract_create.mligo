@@ -9,7 +9,7 @@ let main (action, store : parameter * storage) : return =
         | None -> (failwith 1 : address)
         | Some a -> a
       in
-      let c : nat contract option = Tezos.get_contract_opt a in
+      let c : nat @contract option = Tezos.get_contract_opt a in
       let ops = match c with
           Some (c) -> [ Tezos.transaction 1n 10tez c ]
         | None     -> (failwith 2 : operation list)

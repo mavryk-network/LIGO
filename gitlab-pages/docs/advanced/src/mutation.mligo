@@ -9,7 +9,7 @@ let simple_tests (f : int -> int) =
   let () = assert (Test.michelson_equal (Test.run f 1) (Test.eval 2)) in
   ()
 
-let test = simple_tests twice
+let @test = simple_tests twice
 
 let test_mutation =
   match Test.mutation_test twice simple_tests with

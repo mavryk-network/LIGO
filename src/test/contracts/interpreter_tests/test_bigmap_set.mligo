@@ -4,9 +4,9 @@ type storage = (int, nat -> nat) big_map
 let main ((k,v), s : (int * (nat -> nat)) * storage) : operation list * storage =
   ([] : operation list), Big_map.add k v s
 
-let test =
+let @test =
   let init = (Big_map.empty : storage) in
-  let (taddr, _, _) = Test.originate main init 0tez in
+  let (taddr, _, _) = Test.@originate main init 0tez in
   let ctr = Test.to_contract taddr in
   let y : nat = 1n in
   let _ = Test.transfer_to_contract_exn ctr (21, (fun (x : nat) -> x * 2n + y)) 0tez in

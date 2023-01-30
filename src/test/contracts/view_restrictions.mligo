@@ -14,6 +14,6 @@ let ok_view ((),_: unit * int) : int -> operation * address =
   f
 
 (* self forbidden anyway *)
-let bad_view2 ((),_: unit * int) : unit contract =
-  let x : unit contract = Tezos.self "%default" in
+let bad_view2 ((),_: unit * int) : unit @contract =
+  let x : unit @contract = Tezos.self "%default" in
   x

@@ -22,12 +22,12 @@ let main (action, store : parameter * storage) : return =
 
 let originate_and_test (mainf : parameter * storage -> return) =
   let initial_storage = 7 in
-  let (taddr, _, _) = Test.originate mainf initial_storage 0tez in
+  let (taddr, _, _) = Test.@originate mainf initial_storage 0tez in
   let contr = Test.to_contract taddr in
   let _ = Test.transfer_to_contract_exn contr (Increment (7)) 1mutez in
   Test.assert (Test.get_storage taddr = initial_storage + 7)
 
-let test = originate_and_test main
+let @test = originate_and_test main
 
 let test_mutation =
   match Test.mutation_test main originate_and_test with

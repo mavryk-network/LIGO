@@ -8,7 +8,7 @@
 
  type send_parameter =
  [@layout comb]
- { destination : unit ticket contract ;
+ { destination : unit ticket @contract ;
  amount : nat ;
  ticketer : address }
 

@@ -7,7 +7,7 @@ let (a, b, c) = f ()
 
 let (a1, b1, c1) = (1n, 1, "Hello")
 
-let test =
+let @test =
   begin
     assert (a = a1);
     assert (b = b1);

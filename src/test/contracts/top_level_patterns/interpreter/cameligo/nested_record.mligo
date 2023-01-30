@@ -24,7 +24,7 @@ let { a = { c = c4 ; d = d4 ; e = e4 }
     ; c = { c = 3n ; d = 3 ; e = "L" }
     }
 
-let test =
+let @test =
     begin
         assert ((c1 + c2 + c3) = (c4 + c5 + c6));
         assert ((d1 + d2 + d3) = (d4 + d5 + d6));

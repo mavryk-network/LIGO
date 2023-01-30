@@ -1,5 +1,5 @@
 
-let test =
+let @test =
   let () = Test.print "Hello " in
   let () = Test.println "world" in
   let () = Test.print (Option.unopt (Test.chr 64n)) in

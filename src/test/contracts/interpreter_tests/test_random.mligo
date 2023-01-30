@@ -9,10 +9,10 @@ let almost_id (xs : int list) =
   else xs
 
 (* Let's check if it really is *)
-let test =
+let @test =
   (* We generate the property *)
-  let test = PBT.make_test (PBT.gen_small : (int list) pbt_gen) (fun (xs : int list) -> almost_id xs = xs) in
+  let @test = PBT.make_test (PBT.gen_small : (int list) pbt_gen) (fun (xs : int list) -> almost_id xs = xs) in
   (* And run it *)
-  match PBT.run test 10n with
+  match PBT.run @test 10n with
   | Fail _counter_example -> ()
   | Success -> ()

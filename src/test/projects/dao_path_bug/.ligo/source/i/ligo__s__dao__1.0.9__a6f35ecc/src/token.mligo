@@ -2,8 +2,8 @@
 
 type t = address
 
-let get_transfer_entrypoint (addr : address) : FA2.transfer contract =
-    match (Tezos.get_entrypoint_opt "%transfer" addr : FA2.transfer contract option) with
+let get_transfer_entrypoint (addr : address) : FA2.transfer @contract =
+    match (Tezos.get_entrypoint_opt "%transfer" addr : FA2.transfer @contract option) with
         None -> failwith "receiver_not_found"
         | Some c -> c
 

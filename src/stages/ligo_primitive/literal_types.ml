@@ -64,7 +64,7 @@ let to_string = function
   | Map -> "map"
   | Big_map -> "big_map"
   | Set -> "set"
-  | Contract -> "contract"
+  | Contract -> "@contract"
   | Michelson_or -> "michelson_or"
   | Michelson_pair -> "michelson_pair"
   | Baker_hash -> "baker_hash"
@@ -109,7 +109,7 @@ let of_string = function
   | "map" -> Map
   | "big_map" -> Big_map
   | "set" -> Set
-  | "contract" -> Contract
+  | "@contract" -> Contract
   | "michelson_or" -> Michelson_or
   | "michelson_pair" -> Michelson_pair
   | "baker_hash" -> Baker_hash

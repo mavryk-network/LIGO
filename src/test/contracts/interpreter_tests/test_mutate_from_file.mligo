@@ -7,7 +7,7 @@ let tester ((a, _, _) : address * michelson_contract * int) : unit =
   let () = assert (Test.get_storage_of_address a = (Test.eval 1)) in
   ()
 
-let test =
+let @test =
     let fn = "adder.mligo" in
     let e = "main" in
     let v = ([] : string list) in

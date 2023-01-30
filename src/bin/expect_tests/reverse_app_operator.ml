@@ -4,11 +4,7 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "reverse_app.mligo" ];
   [%expect
     {|
-    Everything at the top-level was executed.
-    - test exited with value ().
-    - test exited with value ().
-    - test exited with value ().
-    - test exited with value (). |}]
+    Everything at the top-level was executed. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; bad_test "error_reverse_app.mligo" ];

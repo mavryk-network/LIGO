@@ -9,7 +9,7 @@ const proxy_transfer_contract :
     const [[v,amt],dst_addr] = p ;
     const ticket = Option.unopt (Tezos.create_ticket (v, amt)) ;
     const tx_param = mk_param (ticket) ;
-    const c : contract<whole_p> =
+    const c : @contract<whole_p> =
       Tezos.get_contract_with_error (dst_addr, "Testing proxy: you provided a wrong address") ;
     const op = Tezos.transaction (tx_param, 1 as mutez, c) ;
     return ([ list([op]), unit ])
@@ -46,7 +46,7 @@ const init_transfer :
     const proxy_transfer : ((x : ([[[vt , nat] , address] , unit])) => [list<operation> , unit]) =
       proxy_transfer_contract (mk_param)
     ;
-    const [taddr_proxy, _, _] = Test.originate (proxy_transfer, unit, 1 as tez) ;
+    const [taddr_proxy, _, _] = Test.@originate (proxy_transfer, unit, 1 as tez) ;
     return taddr_proxy
   };
 
@@ -64,7 +64,7 @@ const originate : <vt, whole_s, vp>
   ([ ticket_info , mk_storage , contract] : [ [vt , nat] , (t:ticket<vt>) => whole_s, (ps:[vp , whole_s]) => [list<operation> , whole_s] ] ) => {
       const proxy_origination : (x : ([[vt , nat] , option<address>])) => [list<operation> , option<address>] =
         proxy_originate_contract (mk_storage, contract) ;
-      const [taddr_proxy, _, _] = Test.originate (proxy_origination, (None () as option<address> ),1 as tez) ;
+      const [taddr_proxy, _, _] = Test.@originate (proxy_origination, (None () as option<address> ),1 as tez) ;
       const _ = Test.transfer_to_contract_exn (Test.to_contract (taddr_proxy), ticket_info, 0 as tez) ;
       return match (Test.get_storage (taddr_proxy), {
         Some: (addr:address) => {

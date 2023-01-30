@@ -9,8 +9,8 @@ let ct : string = Test.register_constant (Test.eval f)
 let main ((), store : parameter * storage) : return =
  ([] : operation list), ((Tezos.constant ct : int -> int) store)
 
-let test =
-  let (taddr, _, _) = Test.originate main 1 0tez in
+let @test =
+  let (taddr, _, _) = Test.@originate main 1 0tez in
   let ctr = Test.to_contract taddr in
   let _ = Test.transfer_to_contract_exn ctr () 0tez in
   assert (Test.get_storage taddr = 5)

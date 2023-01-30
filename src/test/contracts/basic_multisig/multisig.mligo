@@ -57,7 +57,7 @@ let main (p, s : parameter * storage) : return =
         (failwith ("Not enough signatures passed the check") : storage)
       else {s with counter = s.counter + 1n}
     in
-    let contract_opt : payload contract option = Tezos.get_contract_opt(c_address) in
+    let contract_opt : payload @contract option = Tezos.get_contract_opt(c_address) in
     let op = match contract_opt with
         Some (c) -> [Tezos.transaction payload 0tez c]
       | None     -> (failwith ("Contract not found") : operation list)

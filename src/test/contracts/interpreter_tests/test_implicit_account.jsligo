@@ -1,6 +1,6 @@
 const initAccount = ([accList, k]: [list<address>, key]) : list<address> => {
     let hk : key_hash = Crypto.hash_key(k);
-    let c : contract<unit> = Tezos.implicit_account(hk);
+    let c : @contract<unit> = Tezos.implicit_account(hk);
     let a : address = Tezos.address(c);
     Test.log(Test.get_balance(a));
     let _n = Test.transfer_to_contract_exn(c, unit, (123 as mutez));

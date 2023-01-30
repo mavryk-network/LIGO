@@ -9,29 +9,17 @@ In the context of testing framework,
 if you want to convert an address to a contract,
 you need to convert `address` to `typed_address` using `Test.cast_address`.
 
-Then convert `typed_address` to `contract` using `Test.to_contract`
+Then convert `typed_address` to `contract` using
+`Test.to_contract`. For example:
 
-example:
-
-<Syntax syntax="pascaligo">
-
-```pascaligo test-ligo group=addr2contract
-const test = {
-  const addr = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address);
-  const taddr : typed_address(unit, unit) = Test.cast_address (addr);
-  const contract : contract(unit) = Test.to_contract (taddr);
-} with contract;
-```
-
-</Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo test-ligo group=addr2contract
-let test =
+let @test =
   let addr = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address) in
   let taddr : (unit, unit) typed_address = Test.cast_address addr in
-  let contract : (unit) contract = Test.to_contract taddr in
-  contract
+  let @contract : (unit) @contract = Test.to_contract taddr in
+  @contract
 ```
 
 </Syntax>
@@ -39,11 +27,11 @@ let test =
 <Syntax syntax="jsligo">
 
 ```jsligo test-ligo group=addr2contract
-const _test = () : contract<unit> => {
+const _test = () : @contract<unit> => {
   const addr = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address);
   const taddr : typed_address<unit,unit> = Test.cast_address(addr);
-  const contract : contract<unit> = Test.to_contract(taddr);
-  return contract;
+  const @contract : @contract<unit> = Test.to_contract(taddr);
+  return @contract;
 }
 const test = _test();
 ```
