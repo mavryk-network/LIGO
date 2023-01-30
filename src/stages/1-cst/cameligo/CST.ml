@@ -140,6 +140,22 @@ type 'a par = {
 
 type the_unit = lpar * rpar
 
+let nseq_to_yojson value_to_yojson (hd, tl) =
+  `List [value_to_yojson hd; `List (List.map ~f:value_to_yojson tl)]
+
+let nseq_of_yojson value_of_yojson (yojson: Yojson.Safe.t) =
+  match yojson with
+    `List [hd; `List tl] ->
+    let yojsons = List.map ~f:value_of_yojson tl in
+    let tl = List.fold_right ~f:(fun v acc -> match v, acc with
+                                              | Ok v, Ok l -> Ok (v :: l)
+                                              | _, (Error _ as e) -> e 
+                                              | Error _ as e, _ -> e) yojsons ~init: (Ok []) in
+    (match value_of_yojson hd, tl with
+     | Ok hd, Ok tl -> Ok (hd, tl)
+     | _ -> Error "nseq_of_yojson failed")
+  | _ -> Error "nseq_of_yojson failed"
+
 (* The Abstract Syntax Tree *)
 
 type t = {
