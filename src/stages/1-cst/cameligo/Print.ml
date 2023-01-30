@@ -16,226 +16,236 @@ module Directive = Preprocessor.Directive
 module Utils     = Simple_utils.Utils
 module Region    = Simple_utils.Region
 
-open! Region (* TODO: Remove *)
-
 (* Internal dependencies *)
 
+module Attr = Lexing_shared.Attr
 module Tree = Cst_shared.Tree
-
-type state = Tree.state
 
 open CST (* THE ONLY GLOBAL OPENING *)
 
 (* UTILITIES *)
 
-let sprintf  = Printf.sprintf
-
-let compact state (region: Region.t) =
-  region#compact ~offsets:state#offsets state#mode
+type ('a, 'sep) nsepseq = ('a, 'sep) Utils.nsepseq
+type ('a, 'sep)  sepseq = ('a, 'sep) Utils.sepseq
 
 let print_attribute state (node : Attr.t reg) =
   let key, val_opt = node.value in
   match val_opt with
     None ->
-      Tree.make_unary state "<attribute>" Tree.make_node key
-  | Some (String value | Ident value) ->
-      let children = [
-        Tree.mk_child Tree.make_node key;
-        Tree.mk_child Tree.make_node value]
-      in Tree.make state "<attributes>" children
+      Tree.(make_unary state "<attribute>" make_node key)
+  | Some String value ->
+      let children = Tree.[
+        mk_child make_node key;
+        mk_child make_node (Printf.sprintf "%S" value)]
+      in Tree.make state "<attribute>" children
+  | Some Ident value ->
+      let children = Tree.[
+        mk_child make_node key;
+        mk_child make_node value]
+      in Tree.make state "<attribute>" children
 
-type label = Tree.label
+let mk_children_attr (node : Attr.t reg list) =
+  Tree.mk_children_list print_attribute ~root:"<attributes>" node
 
-let print_list :
-  state -> ?region:Region.t -> label -> 'a Tree.makeer -> 'a list -> unit =
-  fun state ?region label print list ->
-    let children = List.map ~f:(Tree.mk_child print) list
-    in Tree.make ?region state label children
+(* Preprocessing directives *)
 
-let print_attributes state (node : Attr.attribute reg list) =
-  print_list state "<attributes>" print_attribute node
+let print_Directive state (node : Directive.t) =
+  let region, string = Directive.project node in
+  Tree.(make_unary state "Directive" make_node ~region string)
 
-(* Pretty-printing the CST *)
+(* PRINTING THE CST *)
 
-let print_ident state {value=name; region} =
-  let reg  = compact state region in
-  let node = sprintf "%s%s (%s)\n" state#pad_path name reg
-  in Buffer.add_string state#buffer node
+let rec print_cst state (node: cst) =
+  Tree.of_nseq state "<cst>" print_declaration node.decl
 
-let print_node state name =
-  let node = sprintf "%s%s\n" state#pad_path name
-  in Buffer.add_string state#buffer node
-
-let print_string state {value=name; region} =
-  let reg  = compact state region in
-  let node = sprintf "%s%S (%s)\n" state#pad_path name reg
-  in Buffer.add_string state#buffer node
-
-let print_verbatim state {value=name; region} =
-  let reg  = compact state region in
-  let node = sprintf "%s{|%s|} (%s)\n" state#pad_path name reg
-  in Buffer.add_string state#buffer node
-
-let print_loc_node state name region =
-  print_ident state {value=name; region}
-
-let rec print_cst state {decl; _} =
-  let apply len rank =
-    print_declaration (state#pad len rank) in
-  let decls = Utils.nseq_to_list decl in
-  print_node state "<ast>";
-  List.iteri ~f:(List.length decls |> apply) decls
+(* DECLARATIONS *)
 
 and print_declaration state = function
-  Let {value = (_kwd_let, kwd_rec, let_binding, attr); region} ->
-    print_loc_node state "Let" region;
-    (if Option.is_some kwd_rec then print_node (state#pad 0 0) "rec"); (* Hack *)
-    print_let_binding state let_binding attr
-| TypeDecl {value; region} ->
-    print_loc_node  state "TypeDecl" region;
-    print_type_decl state value
-| ModuleDecl {value; region} ->
-    print_loc_node    state "ModuleDecl" region;
-    print_module_decl state value
-| ModuleAlias {value; region} ->
-    print_loc_node     state "ModuleDecl" region;
-    print_module_alias state value
-| Directive dir ->
-    let region, string = Directive.project dir in
-    print_loc_node state "Directive" region;
-    print_node     (state#pad 1 0) string
+  Let         d -> print_Let         state d
+| TypeDecl    d -> print_TypeDecl    state d
+| ModuleDecl  d -> print_ModuleDecl  state d
+| ModuleAlias d -> print_ModuleAlias state d
+| Directive   d -> print_Directive   state d
 
-and print_let_binding state node attr =
-  let {binders; type_params; rhs_type; let_rhs; _} = node in
-  let arity =
-    match type_params, rhs_type with
-      None,   None   -> 2
-    | Some _, None
-    | None,   Some _ -> 3
-    | Some _, Some _ -> 4 in
-  let arity = if List.is_empty attr then arity else arity+1 in
-  let rank = 0 in
-  let rank =
-    match type_params with
-      None -> rank
-    | Some params ->
-        let state = state#pad arity rank in
-        print_node state "<type_params>";
-        print_type_params state params; rank+1 in
-  let rank =
-    let state = state#pad arity rank in
-    print_node    state "<binders>";
-    print_binders state binders; rank+1 in
-  let rank =
-    match rhs_type with
-      None -> rank
-    | Some (_, type_expr) ->
-        let state = state#pad arity rank in
-        print_node state "<rhs type>";
-        print_type_expr (state#pad 1 0) type_expr;
-        rank+1 in
-  let rank =
-    let state = state#pad arity rank in
-    print_node state "<rhs>";
-    print_expr (state#pad 1 0) let_rhs;
-    rank+1 in
-  let () =
-    if not (List.is_empty attr) then
-      let state = state#pad arity rank
-      in print_attributes state attr
-  in ()
+(* Value declarations *)
 
-and print_binders state patterns =
-  let patterns       = Utils.nseq_to_list patterns in
-  let arity          = List.length patterns in
-  let apply len rank = print_pattern (state#pad len rank)
-  in List.iteri ~f:(apply arity) patterns
+and print_Let state (node: let_decl reg) =
+  let Region.{region; value} = node in
+  let _, kwd_rec, let_binding, attr = value in
+  let {type_params; binders; rhs_type; let_rhs; _} = let_binding in
 
-and print_type_params state (node : type_params par reg) =
-  let {value={inside; _}; _} = node in
-  let vars = Utils.nseq_to_list inside.type_vars in
-  let arity = List.length vars in
-  let apply len rank = print_ident (state#pad len rank)
-  in List.iteri ~f:(apply arity) vars
+  let print_type_params state (node: type_params par reg) =
+    let Region.{region; value} = node in
+    Tree.of_nseq state ~region "<type parameters>" value.inside in
 
-and print_type_decl state decl =
-  let arity = if Option.is_none decl.params then 2 else 3 in
-  let rank =
-    print_ident (state#pad arity 0) decl.name; 1 in
-  let rank =
-    match decl.params with
-      Some params ->
-        print_type_vars (state#pad arity rank) params; rank+1
-    | None -> rank in
-  print_type_expr (state#pad arity rank) decl.type_expr
+  let children = Tree.[
+    mk_child_opt make_literal          kwd_rec;
+    mk_child_opt print_type_params     type_params;
+    mk_child     print_binders         binders;
+    mk_child_opt print_type_annotation rhs_type;
+    mk_child     print_expr            let_rhs]
+  in Tree.make ~region state "Let" children
 
-and print_type_vars state = function
-  QParam p -> print_type_var (state#pad 1 0) p
-| QParamTuple p ->
-    let {value = {inside; _}; _} = p in
-    let type_vars = Utils.nsepseq_to_list inside in
-    let arity = List.length type_vars in
-    let apply len rank = print_type_var (state#pad len rank)
-    in List.iteri ~f:(apply arity) type_vars
+and print_binders state (node: pattern nseq) =
+  Tree.of_nseq state "<binders>" print_pattern node in
 
-and print_type_var state (node : type_var reg) =
-  print_ident state {node with value = "'" ^ node.value.name.value}
+and print_type_annotation state (_, type_expr) =
+  Tree.make_unary state "<type>" print_type_expr type_expr
 
-and print_module_decl state decl =
-  print_ident     (state#pad 2 0) decl.name;
-  print_cst       (state#pad 2 1) decl.module_
+(* Type declaration *)
 
-and print_module_alias state decl =
-  let binders        = Utils.nsepseq_to_list decl.binders in
-  let len            = List.length binders in
-  let apply len rank = print_ident (state#pad len rank) in
-  print_ident (state#pad (1+len) 0) decl.alias;
-  List.iteri ~f:(apply len) binders
+and print_TypeDecl state (node: type_decl reg) =
+  let Region.{value; region} = node in
+  let {name; params; type_expr; _} = value in
 
-and print_pvar state {value; _} =
-  let {variable; attributes} = value in
-  if List.is_empty attributes then
-    print_ident state variable
-  else
-    (print_node       state "PVar";
-     print_ident      (state#pad 2 0) variable;
-     print_attributes (state#pad 2 1) attributes)
+  let print_QParam state (node: type_var reg) =
+    let Region.{value; region} = node in
+    Tree.make_unary state ~region "QParam" print_type_var value
+
+  and print_QParamTuple state (node: (type_var reg, comma) nsepseq par reg) =
+    let Region.{value; region} = node in
+    Tree.of_nsepseq state ~region state "QParamTuple" value.inside
+
+  let print_type_vars state = function
+    QParam      tv -> print_QParam state tv
+  | QParamTuple tv -> print_QParamTuple state tv in
+
+  let children = Tree.[
+    mk_child     make_literal    name;
+    mk_child_opt print_type_vars params;
+    mk_child     print_type_expr type_expr]
+  in Tree.make ~region state "TypeDecl" children
+
+and print_type_var state (node: type_var) =
+  Tree.make_literal state ("'" ^ node.name)
+
+(* Module declaration *)
+
+and print_ModuleDecl state (node: module_decl reg) =
+  let Region.{value; region} = node in
+  let children = Tree.[
+    mk_child make_literal value.name;
+    mk_child print_cst    value.module_]
+  in Tree.make state ~region "ModuleDecl" children
+
+(* Module aliases *)
+
+and print_ModuleAlias state (node: module_alias reg) =
+  let Region.{value; region} = node in
+
+  let print_path state (node: (module_name, dot) nsepseq) =
+    Tree.of_nsepseq state "<path>" make_literal node in
+
+  let children = Tree.[
+    mk_child make_literal value.alias;
+    mk_child print_path   value.binders]
+  in Tree.make state ~region "ModuleAlias" children
+
+(* PATTERNS *)
 
 and print_pattern state = function
-  PConstr p ->
-    print_node state "PConstr";
-    print_constr_pattern (state#pad 1 0) p
-| PVar p -> print_pvar state p
-| PInt i ->
-    print_node state "PInt";
-    print_int  state i
-| PNat n ->
-    print_node state "PNat";
-    print_int  state n
-| PBytes b ->
-    print_node  state "PBytes";
-    print_bytes state b
-| PString s ->
-    print_node   state "PString";
-    print_string (state#pad 1 0) s
-| PVerbatim v ->
-    print_node   state "PVerbatim";
-    print_verbatim (state#pad 1 0) v
-| PUnit {region; _} ->
-    print_loc_node state "PUnit" region
-| PList plist ->
-    print_node state "PList";
-    print_list_pattern (state#pad 1 0) plist
-| PTuple t ->
-    print_loc_node state "PTuple" t.region;
-    print_tuple_pattern (state#pad 1 0) t.value
-| PPar {value; _} ->
+  PConstr   p -> print_PConstr   state p
+| PVar      p -> print_PVar      state p
+| PInt      p -> print_PInt      state p
+| PNat      p -> print_PNat      state p
+| PBytes    p -> print_PBytes    state p
+| PString   p -> print_PString   state p
+| PVerbatim p -> print_PVerbatim state p
+| PUnit     p -> print_PUnit     state p
+| PList     p -> print_PList     state p
+| PTuple    p -> print_PTuple    state p
+| PPar      p -> print_PPar      state p
+| PRecord   p -> print_PRecord   state p
+| PTyped    p -> print_PTyped    state p
+
+(* Application of a data constructor as a pattern *)
+
+and print_PConstr state (node: (constr * pattern option) reg) =
+  let Region.{region; value} = node in
+  let ctor, args_opt = value in
+  let children = Tree.[
+    mk_child     make_literal ctor;
+    mk_child_opt print_pattern args_opt]
+  in Tree.make state ~region "PConstr" children
+
+(* Pattern variable *)
+
+and print_PVar state (node: var_pattern reg) =
+  let Region.{region; value} = node in
+  let children = Tree.(mk_child make_literal value.variable)
+                 :: mk_children_attr value.attributes
+  in Tree.make state ~region "PVar" children
+
+(* Integer in patterns *)
+
+and print_PInt state (node : (lexeme * Z.t) wrap) =
+  Tree.make_int "PInt" state node
+
+(* Natural numbers in patterns *)
+
+and print_PNat state (node : (lexeme * Z.t) wrap) =
+  Tree.make_int "PNat" state node
+
+(* Bytes as literals in patterns *)
+
+and print_PBytes state (node : (lexeme * Hex.t) wrap) =
+  Tree.make_bytes "PBytes" state node
+
+(* String literals as patterns *)
+
+and print_PString state (node : lexeme wrap) =
+  Tree.(make_unary state "PString" make_string node)
+
+(* A verbatim string in patterns *)
+
+and print_PVerbatim state (node : lexeme wrap) =
+  Tree.(make_unary state "PVerbatim" make_string node)
+
+(* Unit pattern *)
+
+and print_PUnit state (node: the_unit reg) =
+  let Region.{region; value} = node in
+  Tree.make_node state ~region "()"
+
+(* List patterns *)
+
+and print_PList state = function
+  PListComp p -> print_PListComp state p
+| PCons     p -> print_PConst    state p
+
+and print_ListComp state (node: pattern injection reg) =
+  print_injection print_pattern state node.value
+
+and print_PCons state (node: (pattern * cons * pattern) reg) =
+  let Region.{region; value} = node in
+  let hd_pattern, _, tl_pattern = value in
+  let children = Tree.[
+    mk_child print_pattern hd_pattern;
+    mk_child print_pattern tl_pattern]
+  in Tree.make state ~region "PCons" children
+
+and print_injection :
+  type a.a Tree.printer -> Tree.state -> a injection -> unit =
+  fun print state inj -> Tree.of_sepseq state print inj
+
+(* Tuple patterns *)
+
+and print_PTuple state (node: (pattern, comma) nsepseq reg) =
+  print_loc_node state "PTuple" t.region;
+  print_tuple_pattern (state#pad 1 0) t.value
+
+and print_PPar state (node: pattern par reg) =
+{value; _} ->
     print_node state "PPar";
     print_pattern (state#pad 1 0) value.inside
-| PRecord {value; _} ->
+
+and print_PRecord state (node: field_pattern reg ne_injection reg) =
+  {value; _} ->
     print_node state "PRecord";
     print_ne_injection print_field_pattern state value
-| PTyped {value; _} ->
+
+and print_PTyped state (node: typed_pattern reg) =
+{value; _} ->
     print_node state "PTyped";
     print_typed_pattern state value
 
@@ -253,25 +263,6 @@ and print_tuple_pattern state tuple =
   let apply len rank = print_pattern (state#pad len rank)
   in List.iteri ~f:(apply length) patterns
 
-and print_list_pattern state = function
-  PCons {value; region} ->
-    let pat1, _, pat2 = value in
-    print_loc_node state "PCons" region;
-    print_pattern  (state#pad 2 0) pat1;
-    print_pattern  (state#pad 2 1) pat2
-| PListComp {value; region} ->
-    print_loc_node state "PListComp" region;
-    if Option.is_none value.elements
-    then print_node (state#pad 1 0) "<nil>"
-    else print_injection print_pattern state value
-
-and print_injection :
-  'a.(state -> 'a -> unit) -> state -> 'a injection -> unit =
-  fun printer state inj ->
-    let elements       = Utils.sepseq_to_list inj.elements in
-    let length         = List.length elements in
-    let apply len rank = printer (state#pad len rank)
-    in List.iteri ~f:(apply length) elements
 
 and print_ne_injection :
   'a.(state -> 'a -> unit) -> state -> 'a ne_injection -> unit =
@@ -318,7 +309,7 @@ and print_direction state direction =
   match direction with
   | To kwd | Downto kwd -> print_loc_node state kwd#payload kwd#region
 
-and print_index state index = print_pvar state index
+and print_index state index = print_PVar state index
 
 and print_for_loop state
     { kwd_for = _; index; equal = _; bound1; direction; bound2; body } =

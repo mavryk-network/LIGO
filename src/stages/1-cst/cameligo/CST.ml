@@ -125,14 +125,14 @@ type eof = lexeme wrap
 
 (* Literals *)
 
-type variable    = string reg
-type module_name = string reg
-type fun_name    = string reg
-type type_name   = string reg
-type field_name  = string reg
-type type_constr = string reg
-type constr      = string reg
-type type_param  = string reg
+type variable    = lexeme wrap
+type module_name = lexeme wrap
+type fun_name    = lexeme wrap
+type type_name   = lexeme wrap
+type field_name  = lexeme wrap
+type type_constr = lexeme wrap
+type constr      = lexeme wrap
+type type_param  = lexeme wrap
 
 type attribute   = Attr.t
 type attributes  = Attr.attribute reg list
@@ -154,7 +154,7 @@ type t = {
   eof  : eof
 }
 
-and ast = t
+and cst = t
 
 and declaration =
   Let         of let_decl     reg
@@ -261,8 +261,8 @@ and pattern =
 | PInt      of (lexeme * Z.t) reg
 | PNat      of (lexeme * Z.t) reg
 | PBytes    of (lexeme * Hex.t) reg
-| PString   of string reg
-| PVerbatim of string reg
+| PString   of lexeme wrap
+| PVerbatim of lexeme wrap
 | PList     of list_pattern
 | PTuple    of (pattern, comma) nsepseq reg
 | PPar      of pattern par reg
@@ -356,8 +356,8 @@ and list_expr =
 
 and string_expr =
   Cat      of cat bin_op reg
-| String   of string reg
-| Verbatim of string reg
+| String   of lexeme wrap
+| Verbatim of lexeme wrap
 
 and arith_expr =
   Add   of plus bin_op reg
@@ -421,8 +421,8 @@ and selection =
   FieldName of variable
 | Component of (string * Z.t) reg
 
-and field_assign = 
-  Property of field_assign_property 
+and field_assign =
+  Property of field_assign_property
 | Punned_property of field_name
 
 and field_assign_property = {
@@ -439,7 +439,7 @@ and update = {
   rbrace   : rbrace
 }
 
-and field_path_assignment = 
+and field_path_assignment =
   Path_property of field_path_assignment_property
 | Path_punned_property of field_name
 
@@ -538,21 +538,21 @@ and while_loop = {
 }
 
 and for_in_loop = {
-  kwd_for     : kwd_for;
-  pattern     : pattern;
-  kwd_in      : kwd_in;
-  collection  : expr;
-  body        : loop_body
+  kwd_for    : kwd_for;
+  pattern    : pattern;
+  kwd_in     : kwd_in;
+  collection : expr;
+  body       : loop_body
 }
 
-and direction = 
-  | To of kwd_to
-  | Downto of kwd_downto
+and direction =
+  To     of kwd_to
+| Downto of kwd_downto
 
 and loop_body = {
-  kwd_do    : kwd_do;
-  seq_expr  : (expr, semi) nsepseq option;
-  kwd_done  : kwd_done
+  kwd_do   : kwd_do;
+  seq_expr : (expr, semi) nsepseq option;
+  kwd_done : kwd_done
 }
 
 (* Code injection.  Note how the field [language] wraps a region in
