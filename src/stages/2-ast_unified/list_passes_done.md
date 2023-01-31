@@ -15,6 +15,14 @@
       type_expresion :
         T_abstraction( (T_var alpha) , T_xxx (T_var alpha) )
 
+## pass 'pattern rest'
+
+- remove : P_rest
+- add : -
+??
+
+
+
 ## pass 'restrict pattern'
 
 - remove : P_literal _
@@ -328,3 +336,11 @@ e_proj in structural_assignments, needs to be replaced
 - add : -
 
 convert tuple as records
+
+
+## pass 'cond to match'
+
+- remove : E_cond
+- add : -
+
+morh conds to match on True/False

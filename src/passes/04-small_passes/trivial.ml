@@ -171,16 +171,6 @@ let expr
   | E_ModIn { module_name; rhs; body } ->
     ret @@ E_mod_in { module_binder = module_name; rhs; let_result = body }
   | E_RawCode x -> ret @@ E_raw_code x
-  | E_Let_mut_in
-      { is_rec = false; type_params = None; lhs = lhs, []; rhs_type = _; rhs; body } ->
-    (* TODO: remove once we have E_simple_let_mut_in *)
-    ret
-    @@ E_let_mut_in
-         { let_binder = lhs
-         ; rhs
-         ; let_result = body
-         ; attributes = O.ValueAttr.default_attributes
-         }
   | E_Assign_unitary x -> ret @@ E_assign x
   | E_While { cond; block } -> ret @@ E_while { cond; body = block }
   | E_For { index; init; bound; step = Some incr; block } ->
@@ -224,6 +214,15 @@ let expr
   | E_record_update { struct_; label; update } ->
     ret @@ E_update { struct_; path = label; update }
   | E_record_access { struct_; label } -> ret @@ E_accessor { struct_; path = label }
+  | E_Let_mut_in
+      { is_rec = false; type_params = None; lhs = let_binder, []; rhs_type; rhs; body } ->
+    let let_result =
+      Option.value_map rhs_type ~default:rhs ~f:(fun ty ->
+          ret @@ E_ascription { anno_expr = rhs; type_annotation = ty })
+    in
+    ret
+    @@ E_let_mut_in
+         { let_binder; rhs; let_result; attributes = O.ValueAttr.default_attributes }
   | E_Poly_fun _
   | E_Let_in _
   | E_Block_fun _
@@ -234,7 +233,6 @@ let expr
   | E_Ctor_App _
   | E_Call (_, _)
   | E_Attr (_, _)
-  | E_Let_mut_in _
   | E_Unary_op _
   | E_Block_with _
   | E_Poly_recursive _
@@ -242,17 +240,18 @@ let expr
   | E_Proj _
   | E_Update _
   | E_Module_open_in _
+  | E_Cond _
+  | E_Let_mut_in _
+  | E_Tuple _
   | E_RevApp _ -> invariant "expr"
   | E_MapLookup _
-  | E_Cond _
   | E_Map _
   | E_BigMap _
   | E_Sequence _
   | E_List _
   | E_Set _
   | E_For _
-  | E_For_in _
-  | E_Tuple _ -> failwith "TODO: pass"
+  | E_For_in _ -> failwith "TODO: pass"
 
 
 let ty_expr : O.type_expression I.ty_expr_ -> O.type_expression =

@@ -1,43 +1,23 @@
 
 
-## pass 'not sure it's a pass'
-
-E_let_mut_in still got : 
-- lhs as a list
-- type params
-- rhs_type
-- is_rec
-
-must handle it in some existing pass (forgot which ones)
-
-emit E_simple_let_mut_in
-
 ## pass 'e_for'
 
 e_for default incr ( = 1 )
 
-## pass 'pattern rest'
+## pass 'reduce sequence'
 
-- remove : P_rest
+- remove : E_sequence
 - add : -
-??
-
-
 
 ## pass 'container'
 
-- remove :  E_Map _ | E_BigMap _ | E_Sequence _ | E_List _ | E_Set _
+- remove :  E_Map _ | E_BigMap _ | E_List _ | E_Set _
             | E_MapLookup _
 - add : -
 
 constantize containers
 
-## pass 'cond to match'
 
-- remove : E_cond
-- add : -
-
-morh conds to match on True/False
 
 ## pass 'for_each_restrict'
 
