@@ -15,6 +15,12 @@
       type_expresion :
         T_abstraction( (T_var alpha) , T_xxx (T_var alpha) )
 
+## pass 'restrict pattern'
+
+- remove : P_literal _
+- add : -
+
+unsupported pattern
 
 ## pass 'export_declaration'
 

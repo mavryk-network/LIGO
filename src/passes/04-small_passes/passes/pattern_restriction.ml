@@ -5,11 +5,11 @@ open Errors
 module Location = Simple_utils.Location
 
 let compile ~raise =
-  let program : _ program_entry_ -> unit = function
-    | PE_Top_level_instruction i -> raise.error (unsupported_top_level_statement i)
+  let pattern : _ pattern_ -> unit = function
+    | {wrap_content = P_literal _ ; _} as p -> raise.error (unsupported_pattern_type p)
     | _ -> ()
   in
-  `Check { Iter.defaults with program }
+  `Check { Iter.defaults with pattern }
 
 
 let pass ~raise =

@@ -27,6 +27,7 @@ type t =
   | `Small_passes_recursive_no_annot of expr
   | `Small_passes_non_linear_pattern of (pattern, ty_expr) pattern_
   | `Small_passes_non_linear_type of ty_expr ty_expr_
+  | `Small_passes_unsupported_pattern_type of (pattern, ty_expr) pattern_
   ]
 [@@deriving poly_constructor { prefix = "small_passes_" }, sexp]
 
@@ -142,7 +143,18 @@ let error_ppformat
         f
         "@[<v>%a@.Repeated type variable in type.@.Hint: Change the name.@]"
         snippet_pp
-        (Location.get_location t))
+        (Location.get_location t)
+    | `Small_passes_unsupported_pattern_type p ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Invalid pattern matching.@.  If this is pattern matching over \
+         Booleans, then \"true\" or \"false\" is expected.@.  If this is pattern \
+         matching on a list, then one of the following is expected:@.    * an empty list \
+         pattern \"[]\";@.    * a cons list pattern \"[head, ...tail]\".@.  If this is \
+         pattern matching over variants, then a constructor of a variant is \
+         expected.@.@.  Other forms of pattern matching are not (yet) supported. @]"
+        snippet_pp
+        (Location.get_location p))
 
 
 let error_json : t -> Simple_utils.Error.t =
@@ -274,4 +286,8 @@ let error_json : t -> Simple_utils.Error.t =
       Format.sprintf "Repeated type variable in type.@.Hint: Change the name."
     in
     let content = make_content ~message ~location:(Location.get_location t) () in
+    make ~stage ~content
+  | `Small_passes_unsupported_pattern_type p ->
+    let message = Format.sprintf "Unsupported pattern type" in
+    let content = make_content ~message ~location:(Location.get_location p) () in
     make ~stage ~content

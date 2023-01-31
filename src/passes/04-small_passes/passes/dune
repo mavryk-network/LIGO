@@ -39,6 +39,7 @@
   import_restriction
   projections
   tuple_as_record
+  pattern_restriction
  )
  (libraries ast_unified syntax_types)
  (inline_tests
