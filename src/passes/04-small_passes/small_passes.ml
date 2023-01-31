@@ -39,6 +39,7 @@ let passes
   ; Unify_fun.pass ~raise
   ; Generalize_functions.pass ~raise
   ; Curry.pass ~raise ~syntax
+  ; Tuple_as_record.pass ~raise
   ]
 
 

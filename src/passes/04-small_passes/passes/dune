@@ -38,6 +38,7 @@
   export_declaration
   import_restriction
   projections
+  tuple_as_record
  )
  (libraries ast_unified syntax_types)
  (inline_tests

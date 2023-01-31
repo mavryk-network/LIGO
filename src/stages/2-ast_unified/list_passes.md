@@ -26,12 +26,7 @@ e_for default incr ( = 1 )
 - add : -
 ??
 
-## pass 'tuple_as_record'
 
-- remove : T_tuple _
--  add : -
-
-convert tuple as records
 
 ## pass 'restrict type_modA'
 

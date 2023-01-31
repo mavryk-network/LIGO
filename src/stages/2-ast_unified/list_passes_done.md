@@ -310,3 +310,10 @@ IF option.syntax == cameligo:
 - add : E_record_access
 
 e_proj in structural_assignments, needs to be replaced
+
+## pass 'tuple_as_record'
+
+- remove : T_tuple E_tuple
+- add : -
+
+convert tuple as records
