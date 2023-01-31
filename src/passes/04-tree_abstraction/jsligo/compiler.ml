@@ -435,7 +435,38 @@ and compile_tuple_expression_list ~raise ~loc:_ tuple_expr =
 
 and compile_arguments ~raise (args : CST.arguments) =
   let args, loc = arguments_to_expr_nseq args in
-  compile_tuple_expression_list ~raise ~loc args
+  let args = compile_tuple_expression_list ~raise ~loc args in
+  let find_wild (e : expression) =
+    match e.expression_content with
+    | E_variable v when Value_var.is_name v "_" -> true
+    | _ -> false in
+  match args with
+  | [] ->
+    (fun x -> x), []
+  | [arg] ->
+    if find_wild arg then
+      raise.error (invalid_partial_application_more arg.location)
+    else
+      (fun x -> x), [arg]
+  | arg :: args ->
+    let f arg (wrap, args) =
+      if find_wild arg then
+        if Option.is_some wrap then
+          raise.error (invalid_partial_application_single arg.location)
+        else
+        begin
+          let z = Value_var.fresh ~loc () in
+          let wrap body =
+            e_lambda ~loc (Param.make z None) None body
+          in
+          let arg = { arg with expression_content = E_variable z } in
+          (Some wrap, arg :: args)
+        end
+      else
+        (wrap, arg :: args) in
+    let wrap, args = List.fold_right ~f ~init:(None, []) (arg :: args) in
+    let wrap = Option.value ~default:(fun x -> x) wrap in
+    wrap, args
 
 
 and compile_bin_op ~raise (op_type : Constant.constant') (op : _ CST.bin_op CST.reg) =
@@ -761,9 +792,15 @@ and compile_expression ~raise : CST.expr -> AST.expr =
     let loc = Location.lift region in
     let var, loc_var = r_split var in
     let func = e_variable_ez ~loc:loc_var var in
-    let args = compile_arguments ~raise args in
+    let wrap, args = compile_arguments ~raise args in
     let f arg e = e_application ~loc e arg in
-    return @@ List.fold_right ~f ~init:func (List.rev args)
+    return @@ wrap @@ List.fold_right ~f ~init:func (List.rev args)
+  | ECall call ->
+    let (func, args), loc = r_split call in
+    let func = self func in
+    let wrap, args = compile_arguments ~raise args in
+    let f arg e = e_application ~loc e arg in
+    return @@ wrap @@ List.fold_right ~f ~init:func (List.rev args)
   | EConstr constr ->
     let (constr, args_o), loc = r_split constr in
     let args_o =
@@ -773,13 +810,6 @@ and compile_expression ~raise : CST.expr -> AST.expr =
       Option.value ~default:(e_unit ~loc:(Location.lift constr.region) ()) args_o
     in
     return @@ e_constructor ~loc constr.value args
-  | ECall call ->
-    let (func, args), loc = r_split call in
-    let func = self func in
-    let args = compile_arguments ~raise args in
-    let f arg e = e_application ~loc e arg in
-    let e = List.fold_right ~f ~init:func (List.rev args) in
-    return @@ e
   | EArray items ->
     let items, loc = r_split items in
     let items =

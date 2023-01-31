@@ -40,6 +40,8 @@ type abs_error =
   | `Concrete_jsligo_wrong_matchee_disc of Region.t
   | `Concrete_jsligo_case_break_disc of Region.t
   | `Concrete_jsligo_not_implemented of Region.t
+  | `Concrete_jsligo_invalid_partial_application_more of Location.t
+  | `Concrete_jsligo_invalid_partial_application_single of Location.t
   ]
 [@@deriving poly_constructor { prefix = "concrete_jsligo_" }]
 
@@ -239,7 +241,19 @@ let error_ppformat
         snippet_pp_lift
         r
     | `Concrete_jsligo_not_implemented r ->
-      Format.fprintf f "@[<hv>%aThis has not been implemented yet. @]" snippet_pp_lift r)
+      Format.fprintf f "@[<hv>%aThis has not been implemented yet. @]" snippet_pp_lift r
+    | `Concrete_jsligo_invalid_partial_application_more reg ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Invalid partial application.@.Only calls with more than one argument are valid. @]"
+        snippet_pp
+        reg
+    | `Concrete_jsligo_invalid_partial_application_single reg ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Invalid partial application.@.Only a single usage of `_` is valid. @]"
+        snippet_pp
+        reg)
 
 
 let error_json : abs_error -> Simple_utils.Error.t =
@@ -445,5 +459,13 @@ let error_json : abs_error -> Simple_utils.Error.t =
   | `Concrete_jsligo_not_implemented r ->
     let message = Format.sprintf "This has not been implemented yet." in
     let location = Location.lift r in
+    let content = make_content ~message ~location () in
+    make ~stage ~content
+  | `Concrete_jsligo_invalid_partial_application_more location ->
+    let message = "Invalid partial application.@.Only calls with more than one argument are valid." in
+    let content = make_content ~message ~location () in
+    make ~stage ~content
+  | `Concrete_jsligo_invalid_partial_application_single location ->
+    let message = "Invalid partial application.@.Only a single usage of `_` is valid." in
     let content = make_content ~message ~location () in
     make ~stage ~content
