@@ -278,29 +278,46 @@ module Iter = struct
 
   let rec iter_expr ~(f : iter) (x : expr) : unit =
     let self = iter_expr ~f in
-    let rec iter_ty_expr (x : ty_expr) : unit = iter_ty_expr_ iter_ty_expr x.fp
-    and iter_pattern (x : pattern) : unit = iter_pattern_ iter_pattern iter_ty_expr x.fp
+    let rec iter_ty_expr (x : ty_expr) : unit = f.ty_expr x.fp
+    and iter_pattern (x : pattern) : unit =
+      f.pattern x.fp;
+      iter_pattern_ iter_pattern iter_ty_expr x.fp
     and iter_instruction (x : instruction) : unit =
+      f.instruction x.fp;
       iter_instruction_ iter_instruction self iter_pattern iter_statement iter_block x.fp
     and iter_statement (x : statement) : unit =
+      f.statement x.fp;
       iter_statement_ iter_statement iter_instruction iter_declaration x.fp
-    and iter_block (x : block) : unit = iter_block_ iter_block iter_statement x.fp
+    and iter_block (x : block) : unit =
+      f.block x.fp;
+      iter_block_ iter_block iter_statement x.fp
     and iter_declaration (x : declaration) : unit =
+      f.declaration x.fp;
       iter_declaration_ iter_declaration self iter_ty_expr iter_pattern iter_mod_expr x.fp
     and iter_mod_expr (x : mod_expr) : unit =
+      f.mod_expr x.fp;
       iter_mod_expr_ iter_mod_expr iter_program_entry x.fp
     and iter_program_entry (x : program_entry) : unit =
+      f.program x.fp;
+      iter_program_entry_ iter_program_entry iter_declaration iter_instruction x.fp;
       iter_program_entry_ iter_program_entry iter_declaration iter_instruction x.fp
     in
+    f.expr x.fp;
     iter_expr_ self iter_ty_expr iter_pattern iter_block iter_mod_expr x.fp
 
 
   let rec iter_program_entry ~(f : iter) (x : program_entry) : unit =
     let rec iter_expr (x : expr) : unit =
+      f.expr x.fp;
       iter_expr_ iter_expr iter_ty_expr iter_pattern iter_block iter_mod_expr x.fp
-    and iter_ty_expr (x : ty_expr) : unit = iter_ty_expr_ iter_ty_expr x.fp
-    and iter_pattern (x : pattern) : unit = iter_pattern_ iter_pattern iter_ty_expr x.fp
+    and iter_ty_expr (x : ty_expr) : unit =
+      f.ty_expr x.fp;
+      iter_ty_expr_ iter_ty_expr x.fp
+    and iter_pattern (x : pattern) : unit =
+      f.pattern x.fp;
+      iter_pattern_ iter_pattern iter_ty_expr x.fp
     and iter_instruction (x : instruction) : unit =
+      f.instruction x.fp;
       iter_instruction_
         iter_instruction
         iter_expr
@@ -309,9 +326,13 @@ module Iter = struct
         iter_block
         x.fp
     and iter_statement (x : statement) : unit =
+      f.statement x.fp;
       iter_statement_ iter_statement iter_instruction iter_declaration x.fp
-    and iter_block (x : block) : unit = iter_block_ iter_block iter_statement x.fp
+    and iter_block (x : block) : unit =
+      f.block x.fp;
+      iter_block_ iter_block iter_statement x.fp
     and iter_declaration (x : declaration) : unit =
+      f.declaration x.fp;
       iter_declaration_
         iter_declaration
         iter_expr
@@ -320,8 +341,10 @@ module Iter = struct
         iter_mod_expr
         x.fp
     and iter_mod_expr (x : mod_expr) : unit =
+      f.mod_expr x.fp;
       iter_mod_expr_ iter_mod_expr (iter_program_entry ~f) x.fp
     in
+    f.program x.fp;
     iter_program_entry_ (iter_program_entry ~f) iter_declaration iter_instruction x.fp
 
 
