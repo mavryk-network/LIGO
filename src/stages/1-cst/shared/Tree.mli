@@ -117,12 +117,15 @@ val mk_children_nsepseq :
 val mk_children_sepseq :
   'a printer -> ?root:root -> ('a,_) Utils.sepseq -> child list
 
+val mk_children_nseq :
+  'a printer -> ?root:root -> 'a Utils.nseq -> child list
+
 (* PRINTING LISTS AND SEQUENCES *)
 
 (* The call [of_list ?region state ?root print list] prints a tree of
    root [root] and whose children correspond to [list]. If there are
    no children, the tree is a node. This can also happen with
-   [of_sepseq], but not [of_nsepseq]. *)
+   [of_sepseq], but neither [of_nsepseq] nor [of_nseq]. *)
 
 val of_list :
   ?region:Region.t

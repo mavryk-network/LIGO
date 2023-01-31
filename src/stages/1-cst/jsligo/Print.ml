@@ -108,9 +108,8 @@ and print_SCond state (node: cond_statement reg) =
 
 and print_SReturn state (node: return reg) =
   let Region.{value; region} = node in
-  match value.expr with
-    Some e -> Tree.make_unary ~region state "SReturn" print_expr e
-  | None   -> Tree.make_node  ~region state "SReturn"
+  let children = Tree.[mk_child_opt print_expr value.expr]
+  in Tree.make ~region state "SReturn" children
 
 (* Value declaration *)
 
@@ -178,14 +177,10 @@ and print_SSwitch state (node: switch reg) =
   let Region.{value; region} = node in
 
   let print_subject_expr state (node: expr) =
-    Tree.make_unary state "<subject>" print_expr node
+    Tree.make_unary state "<subject>" print_expr node in
 
-  and print_cases state (node: case Utils.nseq) =
-    Tree.of_nseq state "<cases>" print_case node in
-
-  let children = Tree.[
-    mk_child print_subject_expr value.expr;
-    mk_child print_cases        value.cases]
+  let children = Tree.(mk_child print_subject_expr value.expr
+                       :: mk_children_nseq print_case value.cases)
   in Tree.make state ~region "SSwitch" children
 
 and print_case state = function
@@ -193,11 +188,8 @@ and print_case state = function
 | Switch_default_case c -> print_Switch_default_case state c
 
 and print_Switch_case state (node: switch_case) =
-  let print_case_lhs state (node: expr) =
-    Tree.make_unary state "<case>" print_expr node in
-
   let children = Tree.[
-    mk_child     print_case_lhs   node.expr;
+    mk_child     print_expr       node.expr;
     mk_child_opt print_statements node.statements]
   in Tree.make state "Switch_case" children
 

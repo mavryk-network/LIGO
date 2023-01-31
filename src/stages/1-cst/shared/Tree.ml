@@ -119,6 +119,9 @@ let mk_children_nsepseq print ?root =
 let mk_children_sepseq print ?root =
   mk_children_list print ?root <@ Utils.sepseq_to_list
 
+let mk_children_nseq print ?root =
+  mk_children_list print ?root <@ Utils.nseq_to_list
+
 (* PRINTING UNARY TREES *)
 
 let make_unary ?region state root print node =

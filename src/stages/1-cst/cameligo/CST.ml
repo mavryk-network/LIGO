@@ -224,8 +224,8 @@ and type_expr =
 | TFun    of (type_expr * arrow * type_expr) reg
 | TPar    of type_expr par reg
 | TVar    of variable
-| TString of lexeme reg
-| TInt    of (lexeme * Z.t) reg
+| TString of lexeme wrap
+| TInt    of (lexeme * Z.t) wrap
 | TModA   of type_expr module_access reg
 | TArg    of type_var reg
 
@@ -258,9 +258,9 @@ and pattern =
   PConstr   of (constr * pattern option) reg
 | PUnit     of the_unit reg
 | PVar      of var_pattern reg
-| PInt      of (lexeme * Z.t) reg
-| PNat      of (lexeme * Z.t) reg
-| PBytes    of (lexeme * Hex.t) reg
+| PInt      of (lexeme * Z.t) wrap
+| PNat      of (lexeme * Z.t) wrap
+| PBytes    of (lexeme * Hex.t) wrap
 | PString   of lexeme wrap
 | PVerbatim of lexeme wrap
 | PList     of list_pattern
@@ -297,7 +297,7 @@ and assign = {
 }
 
 and expr =
-  ECase     of expr case reg
+  ECase     of case reg
 | ECond     of cond_expr reg
 | EAnnot    of annot_expr par reg
 | ELogic    of logic_expr
@@ -311,7 +311,7 @@ and expr =
 | EUpdate   of update reg
 | EVar      of variable
 | ECall     of (expr * expr nseq) reg
-| EBytes    of (string * Hex.t) reg
+| EBytes    of (lexeme * Hex.t) wrap
 | EUnit     of the_unit reg
 | ETuple    of (expr, comma) nsepseq reg
 | EPar      of expr par reg
@@ -352,7 +352,6 @@ and compound =
 and list_expr =
   ECons     of cons bin_op reg
 | EListComp of expr injection reg
-  (*| Append of (expr * append * expr) reg*)
 
 and string_expr =
   Cat      of cat bin_op reg
@@ -371,9 +370,9 @@ and arith_expr =
 | Lsl   of kwd_lsl bin_op reg
 | Lsr   of kwd_lsr bin_op reg
 | Neg   of minus un_op reg
-| Int   of (string * Z.t) reg
-| Nat   of (string * Z.t) reg
-| Mutez of (string * Int64.t) reg
+| Int   of (lexeme * Z.t) wrap
+| Nat   of (lexeme * Z.t) wrap
+| Mutez of (lexeme * Int64.t) wrap
 
 and logic_expr =
   BoolExpr of bool_expr
@@ -419,7 +418,7 @@ and projection = {
 
 and selection =
   FieldName of variable
-| Component of (string * Z.t) reg
+| Component of (lexeme * Z.t) wrap
 
 and field_assign =
   Property of field_assign_property
@@ -453,18 +452,18 @@ and path =
   Name of variable
 | Path of projection reg
 
-and 'a case = {
+and case = {
   kwd_match : kwd_match;
   expr      : expr;
   kwd_with  : kwd_with;
   lead_vbar : vbar option;
-  cases     : ('a case_clause reg, vbar) nsepseq reg
+  cases     : (case_clause reg, vbar) nsepseq reg
 }
 
-and 'a case_clause = {
+and case_clause = {
   pattern : pattern;
   arrow   : arrow;
-  rhs     : 'a
+  rhs     : expr
 }
 
 and let_in = {
@@ -582,10 +581,10 @@ let type_expr_to_region = function
 | TRecord {region; _}
 | TApp    {region; _}
 | TFun    {region; _}
-| TPar    {region; _}
-| TString {region; _}
-| TInt    {region; _}
-| TVar    {region; _}
+| TPar    {region; _} -> region
+| TString e -> e#region
+| TInt    e -> e#region
+| TVar    e -> e#region
 | TModA   {region; _}
 | TArg    {region; _}
  -> region
@@ -597,13 +596,16 @@ let pattern_to_region = function
 | PList p -> list_pattern_to_region p
 | PConstr {region; _}
 | PUnit {region;_}
-| PTuple {region;_} | PVar {region;_}
-| PInt {region;_}
-| PString {region;_} | PVerbatim {region;_}
+| PTuple {region;_}
+| PVar {region;_} -> region
+| PInt p -> p#region
+| PString p -> p#region
+| PVerbatim p -> p#region
 | PPar {region;_}
-| PRecord {region; _} | PTyped {region; _}
-| PNat {region; _} | PBytes {region; _}
-  -> region
+| PRecord {region; _}
+| PTyped {region; _} -> region
+| PNat p -> p#region
+| PBytes p -> p#region
 
 let bool_expr_to_region = function
   Or {region;_} | And {region;_} | Not {region;_} -> region
@@ -621,11 +623,15 @@ let arith_expr_to_region = function
   Add {region;_} | Sub {region;_} | Mult {region;_}
 | Div {region;_} | Mod {region;_} | Land {region;_}
 | Lor {region;_} | Lxor {region;_} | Lsl {region;_} | Lsr {region;_}
-| Neg {region;_} | Int {region;_} | Mutez {region; _}
-| Nat {region; _} -> region
+| Neg {region;_} -> region
+| Int e -> e#region
+| Mutez e -> e#region
+| Nat e -> e#region
 
 let string_expr_to_region = function
-  Verbatim {region;_} | String {region;_} | Cat {region;_} -> region
+  Verbatim e
+| String e -> e#region
+| Cat {region;_} -> region
 
 let list_expr_to_region = function
   ECons {region; _} | EListComp {region; _} -> region
@@ -639,19 +645,23 @@ let expr_to_region = function
 | EAnnot {region;_ } | ELetIn {region;_}   | EFun {region;_}
 | ETypeIn {region;_ }| EModIn {region;_}   | EModAlias {region;_}
 | ECond {region;_}   | ETuple {region;_}   | ECase {region;_}
-| ECall {region;_}   | EVar {region; _}    | EProj {region; _}
-| EUnit {region;_}   | EPar {region;_}     | EBytes {region; _}
+| ECall {region;_} -> region
+| EVar e -> e#region
+| EProj {region; _}
+| EUnit {region;_}
+| EPar {region;_} -> region
+| EBytes e -> e#region
 | ESeq {region; _}   | ERecord {region; _} | EUpdate {region; _}
 | EModA {region; _} | ECodeInj {region; _} | ELetMutIn {region; _}
 | ERevApp {region; _} | EAssign {region; _} | EFor {region; _}
 | EWhile {region; _} | EForIn {region; _} -> region
 
 let selection_to_region = function
-  FieldName f -> f.region
-| Component c -> c.region
+  FieldName f -> f#region
+| Component c -> c#region
 
 let path_to_region = function
-  Name var -> var.region
+  Name var -> var#region
 | Path {region; _} -> region
 
 let type_ctor_arg_to_region = function
