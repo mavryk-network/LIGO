@@ -402,7 +402,8 @@
         "override": {
           "build": "true"
         }
-      }
+      },
+      "@opam/linol": "git+https://github.com/c-cube/linol.git"
     }
   }
 }
