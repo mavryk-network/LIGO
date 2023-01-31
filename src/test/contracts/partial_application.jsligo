@@ -1,0 +1,8 @@
+const f = (x : int, y : int) : int => x + y;
+
+const g = f(4, _);
+
+const h = f(_, 5);
+
+const x = g(1);
+const y = h(2);

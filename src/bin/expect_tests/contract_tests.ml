@@ -298,6 +298,12 @@ let%expect_test _ =
         code { DROP ; UNIT ; NIL operation ; PAIR } } |}]
 
 let%expect_test _ =
+  run_ligo_good [ "compile"; "expression"; "jsligo"; "x + y"; "--init-file"; contract "partial_application.jsligo" ];
+  [%expect
+    {|
+      12 |}]
+
+let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; bad_contract "capture_big_map.mligo" ];
   [%expect
     {|
