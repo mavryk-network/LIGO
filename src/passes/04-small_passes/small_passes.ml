@@ -38,6 +38,7 @@ let passes
   ; Assign_transitivity.pass ~raise
   ; Returns.pass ~raise
   ; Unstate.pass ~raise
+  ; Reduce_sequence.pass ~raise
   ; Let_syntax.pass ~raise
   ; Unify_fun.pass ~raise
   ; Generalize_functions.pass ~raise

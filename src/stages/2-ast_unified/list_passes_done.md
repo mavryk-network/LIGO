@@ -270,6 +270,11 @@ const g = n => {
 
 S_Instr should only contain simple stuff like `I_While I_For_In I_For I_ForOf`
 
+## pass 'reduce sequence'
+
+- remove : E_sequence
+- add : -
+
 ## pass 'unify_fun'
 
 - remove : E_Block_fun

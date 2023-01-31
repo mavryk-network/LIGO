@@ -43,10 +43,8 @@ let reduction ~raise =
   { Iter.defaults with
     expr =
       (function
-      | { wrap_content =
-            E_MapLookup _ | E_Map _ | E_BigMap _ | E_Sequence _ | E_List _ | E_Set _
-        ; _
-        } -> raise.error (wrong_reduction __MODULE__)
+      | { wrap_content = E_MapLookup _ | E_Map _ | E_BigMap _ | E_List _ | E_Set _; _ } ->
+        raise.error (wrong_reduction __MODULE__)
       | _ -> ())
   }
 
