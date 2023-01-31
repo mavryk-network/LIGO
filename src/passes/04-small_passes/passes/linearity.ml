@@ -16,19 +16,23 @@ let unlinear_pattern pattern : bool =
   is_some @@ List.find_a_dup binders ~compare:Variable.compare
 
 
-let unlinear_type ty : bool =
-  let binders =
-    fold_type_expression_content_
-      (fun acc p -> Option.value_map (get_t_var p) ~default:acc ~f:(fun x -> x :: acc))
-      []
-      (Location.unwrap ty)
-  in
-  is_some @@ List.find_a_dup binders ~compare:Ty_variable.compare
-
+let unlinear_type compare vars : bool = is_some @@ List.find_a_dup vars ~compare
 
 let compile ~raise =
-  let pattern : _ pattern_ -> unit = fun p -> if unlinear_pattern p then raise.error (non_linear_pattern p) in
-  let ty_expr : _ ty_expr_ -> unit = fun ty -> if unlinear_type ty then raise.error (non_linear_type ty) in
+  let pattern : _ pattern_ -> unit =
+   fun p -> if unlinear_pattern p then raise.error (non_linear_pattern p)
+  in
+  let ty_expr : _ ty_expr_ -> unit =
+   fun ty ->
+    match Location.unwrap ty with
+    | T_Named_fun (args, _) ->
+      if unlinear_type Ty_variable.compare (List.filter_map args ~f:(fun x -> x.name))
+      then raise.error (non_linear_type ty)
+    | T_Record_raw rows | T_Sum_raw rows ->
+      if unlinear_type Label.compare (List.map rows ~f:fst)
+      then raise.error (non_linear_type ty)
+    | _ -> ()
+  in
   `Check { Iter.defaults with pattern; ty_expr }
 
 

@@ -45,13 +45,6 @@ only variable on the right A.t
 
 constantize containers
 
-## pass 'e_update with lens'
-
-- remove E_Update
-- add : E_Simple_update
-
-mmeeh
-
 ## pass 'cond to match'
 
 - remove : E_cond

@@ -234,7 +234,7 @@ and compile_type_expression ~(raise : ('e, 'w) raise) : CST.type_expr -> AST.ty_
     let fun_type_args =
       let compile_fun_type_arg : CST.fun_type_arg -> _ AST.Named_fun.fun_type_arg =
        fun fta ->
-        let name = TODO_do_in_parsing.var ~loc:(r_snd fta.name) (r_fst fta.name) in
+        let name = TODO_do_in_parsing.tvar ~loc:(r_snd fta.name) (r_fst fta.name) in
         let type_expr = self fta.type_expr in
         { name = Some name; type_expr }
       in

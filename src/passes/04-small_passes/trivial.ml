@@ -4,7 +4,7 @@ module Location = Simple_utils.Location
 open Simple_utils
 
 let invariant () = failwith "impossible: have been reduced"
-let ignored_attribute () = failwith "ignored attribute"
+let ignored_attribute s = failwith ("ignored attribute "^s)
 
 type statement = unit
 type block = unit
@@ -41,7 +41,7 @@ let conv_vdecl_attr : O.ValueAttr.t -> I.Attribute.t -> O.ValueAttr.t =
   | { key = "private"; value = None } -> { o_attr with public = false }
   | { key = "hidden"; value = None } -> { o_attr with hidden = false }
   | { key = "thunk"; value = None } -> { o_attr with thunk = false }
-  | _ -> ignored_attribute ()
+  | _ -> ignored_attribute "vdecl"
 
 
 let conv_exp_attr : O.ValueAttr.t -> I.Attribute.t -> O.ValueAttr.t =
@@ -50,7 +50,7 @@ let conv_exp_attr : O.ValueAttr.t -> I.Attribute.t -> O.ValueAttr.t =
   | { key = "inline"; value = None } -> { o_attr with inline = true }
   | { key = "no_mutation"; value = None } -> { o_attr with no_mutation = true }
   | { key = "thunk"; value = None } -> { o_attr with thunk = false }
-  | _ -> ignored_attribute ()
+  | _ -> ignored_attribute "exp"
 
 
 let conv_modtydecl_attr : O.TypeOrModuleAttr.t -> I.Attribute.t -> O.TypeOrModuleAttr.t =
@@ -58,12 +58,20 @@ let conv_modtydecl_attr : O.TypeOrModuleAttr.t -> I.Attribute.t -> O.TypeOrModul
   match i_attr with
   | { key = "private"; value = None } -> { o_attr with public = false }
   | { key = "hidden"; value = None } -> { o_attr with hidden = false }
-  | _ -> ignored_attribute ()
+  | _ -> ignored_attribute "modty"
 
+let conv_layout_attr : Ligo_prim.Layout.t option -> I.Attribute.t -> Ligo_prim.Layout.t option =
+  fun o_attr i_attr ->
+    match (o_attr , i_attr) with
+    | Some _ , _ignored_attr -> ignored_attribute "layout"
+    | None , { key = "layout"; value = Some "comb" } -> Some L_tree
+    | None , { key = "layout"; value = Some "tree" } -> Some L_comb
+    | _ -> ignored_attribute "layout"
 
 let conv_row_attr : I.Attribute.t list -> string option = function
+  | [] -> None
   | [ { key = "annot"; value = Some annot } ] -> Some annot
-  | _ -> ignored_attribute ()
+  | _ -> ignored_attribute "row"
 
 
 let declaration
@@ -215,6 +223,10 @@ let expr
   | E_Application x -> ret @@ E_application x
   | E_Type_abstraction { type_binder; result } ->
     ret @@ E_type_abstraction { type_binder; result }
+  | E_record_update { struct_ ; label ; update} ->
+    ret @@ E_update { struct_ ; path = label ; update }
+  | E_record_access { struct_ ; label } ->
+    ret @@ E_accessor { struct_ ; path = label }
   | E_Poly_fun _
   | E_Let_in _
   | E_Block_fun _
@@ -230,11 +242,11 @@ let expr
   | E_Block_with _
   | E_Poly_recursive _
   | E_Assign_chainable _
+  | E_Proj _
+  | E_Update _
   | E_RevApp _ -> invariant ()
   | E_MapLookup _
   | E_Cond _
-  | E_Update _
-  | E_Proj _
   | E_Map _
   | E_BigMap _
   | E_Sequence _
@@ -242,7 +254,7 @@ let expr
   | E_Set _
   | E_For _
   | E_For_in _
-  | E_Tuple _ -> (* need pass .. :) *) invariant ()
+  | E_Tuple _ -> failwith "TODO: pass"
 
 
 let ty_expr : O.type_expression I.ty_expr_ -> O.type_expression =
@@ -250,13 +262,10 @@ let ty_expr : O.type_expression I.ty_expr_ -> O.type_expression =
   let location = Location.get_location t in
   let ret type_content : O.type_expression = O.{ type_content; sugar = None; location } in
   match Location.unwrap t with
-  | T_Attr (attr, O.{ type_content = T_sum _; _ }) ->
-    ignore attr;
-    failwith "l"
-  | T_Attr (attr, O.{ type_content = T_record _; _ }) ->
-    ignore attr;
-    failwith "l"
-  | T_Attr _ -> ignored_attribute ()
+  | T_Attr (attr, O.{ type_content = T_sum x; _ }) ->
+    ret @@ T_sum { x with layout = conv_layout_attr x.layout attr}
+  | T_Attr (attr, O.{ type_content = T_record x; _ }) ->
+    ret @@ T_record { x with layout = conv_layout_attr x.layout attr}
   | T_Var v -> ret @@ T_variable v
   | T_App { constr; type_args } ->
     (match constr with
@@ -309,10 +318,11 @@ let ty_expr : O.type_expression I.ty_expr_ -> O.type_expression =
     in
     ret @@ T_record { fields; layout = None }
   | T_Abstraction abs -> ret @@ T_abstraction abs
-  | T_Disc_union _ -> invariant ()
-  | T_Arg _ -> invariant ()
-  | T_Prod _ -> invariant ()
-  | T_Named_fun _ -> invariant ()
+  | T_Disc_union _ 
+  | T_Arg _ 
+  | T_Prod _ 
+  | T_Named_fun _ 
+  | T_Attr _
   | T_ModA _ -> invariant ()
 
 

@@ -18,7 +18,7 @@
   t_app_michelson_types
   e_rev_app
   reduce_switch
-  structural_assignments
+  structural_updates
   returns
   unstate
   assign_transitivity
@@ -37,6 +37,7 @@
   external_hack
   export_declaration
   import_restriction
+  projections
  )
  (libraries ast_unified syntax_types)
  (inline_tests

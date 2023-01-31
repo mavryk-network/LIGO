@@ -46,6 +46,8 @@ module Assign = Ligo_prim.Assign
 module Assign_chainable = Temp_prim.Assign_chainable
 module Type_decl = Temp_prim.Type_decl
 module Type_abstraction = Temp_prim.Type_abstraction
+module Record_update = Temp_prim.Record_update
+module Record_access = Temp_prim.Record_access
 
 (* Pattern_decl: to keep vs Ligo_prim (functor mess) *)
 module Pattern_decl = Temp_prim.Pattern_decl
@@ -313,7 +315,9 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_Recursive of ('ty_expr, ('self, 'ty_expr) Lambda.t) Recursive.t [@not_initial]
   | E_Lambda of ('self, 'ty_expr option) Lambda.t [@not_initial]
   | E_Type_abstraction of 'self Type_abstraction.t [@not_initial]
-  | E_Application of 'self Application.t
+  | E_Application of 'self Application.t [@not_initial]
+  | E_record_update of 'self Record_update.t [@not_initial]
+  | E_record_access of 'self Record_access.t [@not_initial]
 [@@deriving map, fold, iter, yojson, sexp, is { tags = [ "not_initial" ]; name = "expr" }]
 (* ========================== PROGRAM ====================================== *)
 

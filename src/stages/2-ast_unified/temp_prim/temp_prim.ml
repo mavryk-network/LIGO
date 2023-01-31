@@ -45,3 +45,5 @@ module Pattern_decl = Pattern_decl
 module Simple_let_in = Simple_let_in
 module Recursive = Recursive
 module Type_abstraction = Type_abstraction
+module Record_update = Record_update
+module Record_access = Record_access

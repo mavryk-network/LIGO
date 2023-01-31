@@ -186,14 +186,6 @@ let e_unopt ~loc matchee none_body (var_some, some_body) =
   e_match ~loc { expr = matchee; cases = some_case, [ none_case ] }
 
 
-let e_record_update ~loc structure accesses field_rhs =
-  e_update
-    ~loc
-    { structure
-    ; update = [ Full_field { field_lhs = accesses; field_lens = Lens_Id; field_rhs } ]
-    }
-
-
 let let_unit_in rhs body =
   e_let_in
     ~loc:(Location.cover (get_e_loc rhs) (get_e_loc body))

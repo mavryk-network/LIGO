@@ -298,3 +298,15 @@ IF option.syntax == jsligo, pascaligo :
 
 IF option.syntax == cameligo:
 `E_Fun a b c ret body` |-> `E_lambda a (E_lambda b (E_lambda c (E_Annot body)))`
+
+## pass 'e_update with lens'
+
+- remove E_Update
+- add : E_record_update
+
+## pass 'record_access'
+
+- remove : E_proj
+- add : E_record_access
+
+e_proj in structural_assignments, needs to be replaced

@@ -88,7 +88,7 @@ let reduction ~raise =
       | { wrap_content =
             ( D_Var { type_params = Some _; _ }
             | D_Const { type_params = Some _; _ }
-            | D_Fun _ )
+            | D_Fun { type_params = Some _; _ } )
         ; _
         } -> raise.error (wrong_reduction __MODULE__)
       | _ -> ())
