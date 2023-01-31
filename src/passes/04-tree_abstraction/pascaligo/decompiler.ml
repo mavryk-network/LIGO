@@ -45,7 +45,7 @@ let brackets a =
   CST.{ lbracket = Token.ghost_lbracket; inside = a; rbracket = Token.ghost_rbracket }
 
 
-let prefix_colon a = Wrap.ghost "", a
+let prefix_colon a = Wrap.ghost "" (fun s -> `String s), a
 let terminator = Some Token.ghost_semi
 let lead_vbar = terminator
 let enclosing_brackets = Token.ghost_lbracket, Token.ghost_rbracket
@@ -103,10 +103,10 @@ let decompile_variable_abs (type a) (module X : X_var with type t = a) : a -> CS
   if String.contains var '#'
   then (
     let var = String.split ~on:'#' var in
-    Wrap.ghost @@ "gen__" ^ String.concat var)
+    Wrap.ghost ("gen__" ^ String.concat var) (fun s -> `String s))
   else if String.length var > 4 && (String.equal "gen__" @@ String.sub var ~pos:0 ~len:5)
-  then Wrap.ghost @@ "user__" ^ var
-  else Wrap.ghost var
+  then Wrap.ghost ("user__" ^ var) (fun s -> `String s)
+  else Wrap.ghost var (fun s -> `String s)
 
 
 let decompile_variable = decompile_variable_abs (module Value_var)
@@ -123,7 +123,7 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr =
         ( Label.Label c
         , ({ associated_type; attributes = row_attr; _ } : _ Rows.row_element) )
       =
-      let ctor = Wrap.ghost c in
+      let ctor = Wrap.ghost c (fun s -> `String s) in
       let arg = decompile_type_expr associated_type in
       let ctor_args = Some (Token.ghost_of, arg) in
       let attributes : CST.attribute list =
@@ -142,7 +142,7 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr =
         ( Label.Label c
         , ({ associated_type; attributes = field_attr; _ } : _ Rows.row_element) )
       =
-      let field_name = Wrap.ghost c in
+      let field_name = Wrap.ghost c (fun s -> `String s) in
       let field_type = decompile_type_expr associated_type in
       let field_attr = Shared_helpers.decompile_attributes field_attr in
       let field : CST.field_decl =
@@ -171,7 +171,7 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr =
   | T_arrow { type1; type2 } ->
     let type1 = decompile_type_expr type1 in
     let type2 = decompile_type_expr type2 in
-    let arrow = type1, Wrap.ghost "", type2 in
+    let arrow = type1, Wrap.ghost "" (fun s -> `String s), type2 in
     return @@ CST.T_Fun (Region.wrap_ghost arrow)
   | T_variable variable ->
     let v = decompile_type_var variable in
@@ -180,7 +180,7 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr =
     let v = CST.T_Var (decompile_type_var type_operator) in
     let lst = List.map ~f:decompile_type_expr arguments in
     let lst = list_to_nsepseq ~sep:Token.ghost_comma lst in
-    let lst : _ CST.par = { lpar = Wrap.ghost ""; inside = lst; rpar = Wrap.ghost "" } in
+    let lst : _ CST.par = { lpar = Wrap.ghost "" (fun s -> `String s); inside = lst; rpar = Wrap.ghost "" (fun s -> `String s)} in
     return @@ CST.T_App (Region.wrap_ghost (v, Region.wrap_ghost lst))
   | T_annoted _annot -> failwith "TODO: decompile T_annoted"
   | T_module_accessor { module_path; element } ->
@@ -193,11 +193,11 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr =
   | T_singleton x ->
     (match x with
     | Literal_int i ->
-      let z : CST.type_expr = CST.T_Int (Wrap.ghost ("", i)) in
+      let z : CST.type_expr = CST.T_Int (Wrap.ghost ("", i) (fun (s, _) -> `String s)) in
       return z
     | Literal_string s ->
       let z : CST.type_expr =
-        CST.T_String (Wrap.ghost (Simple_utils.Ligo_string.extract s))
+        CST.T_String (Wrap.ghost (Simple_utils.Ligo_string.extract s) (fun s -> `String s))
       in
       return z
     | _ -> failwith "unsupported singleton")
@@ -252,7 +252,7 @@ let rec decompile_expression : AST.expression -> CST.expr =
     (match block with
     | Some block ->
       let block = Region.wrap_ghost block in
-      CST.E_Block (Region.wrap_ghost @@ CST.{ block; kwd_with = Wrap.ghost ""; expr })
+      CST.E_Block (Region.wrap_ghost @@ CST.{ block; kwd_with = Wrap.ghost "" (fun s -> `String s); expr })
     | None -> expr)
   | None ->
     failwith
@@ -290,7 +290,7 @@ and decompile_pattern : AST.type_expression option AST.Pattern.t -> CST.pattern 
     | _ -> false
   in
   match pattern.wrap_content with
-  | P_unit -> CST.P_Ctor (Wrap.ghost "Unit")
+  | P_unit -> CST.P_Ctor (Wrap.ghost "Unit" (fun s -> `String s))
   | P_var v ->
     let name = decompile_variable @@ Binder.get_var v in
     CST.P_Var name
@@ -318,7 +318,7 @@ and decompile_pattern : AST.type_expression option AST.Pattern.t -> CST.pattern 
           let p = Region.wrap_ghost (par p) in
           Some p)
       in
-      let constr = CST.P_Ctor (Wrap.ghost constructor) in
+      let constr = CST.P_Ctor (Wrap.ghost constructor (fun s -> `String s)) in
       CST.P_App (Region.wrap_ghost (constr, p)))
   | P_tuple lst ->
     let pl = List.map ~f:decompile_pattern lst in
@@ -329,7 +329,7 @@ and decompile_pattern : AST.type_expression option AST.Pattern.t -> CST.pattern 
       let field_rhs = decompile_pattern pattern in
       let full_field =
         CST.Complete
-          { field_lhs = CST.P_Var (Wrap.ghost label)
+          { field_lhs = CST.P_Var (Wrap.ghost label (fun s -> `String s))
           ; field_lens = Lens_Id Token.ghost_eq
           ; field_rhs
           ; attributes = []
@@ -386,7 +386,7 @@ and decompile_eos
     let var = decompile_variable name in
     return_expr @@ CST.E_Var var
   | E_constant { cons_name; arguments } ->
-    let expr = CST.E_Var (Wrap.ghost (Predefined.constant_to_string cons_name)) in
+    let expr = CST.E_Var (Wrap.ghost (Predefined.constant_to_string cons_name) (fun s -> `String s)) in
     (match arguments with
     | [] -> return_expr @@ expr
     | _ ->
@@ -399,9 +399,9 @@ and decompile_eos
     (* TODO: Check these new cases coming from dev *)
     (match literal with
     | Literal_unit ->
-      return_expr @@ CST.E_App (Region.wrap_ghost (CST.E_Ctor (Wrap.ghost "Unit"), None))
-    | Literal_int i -> return_expr @@ CST.E_Int (Wrap.ghost (Z.to_string i, i))
-    | Literal_nat n -> return_expr @@ CST.E_Nat (Wrap.ghost (Z.to_string n, n))
+      return_expr @@ CST.E_App (Region.wrap_ghost (CST.E_Ctor (Wrap.ghost "Unit" (fun s -> `String s)), None))
+    | Literal_int i -> return_expr @@ CST.E_Int (Wrap.ghost (Z.to_string i, i) (fun (s, _) -> `String s))
+    | Literal_nat n -> return_expr @@ CST.E_Nat (Wrap.ghost (Z.to_string n, n) (fun (s, _) -> `String s))
     | Literal_timestamp time ->
       let time =
         Tezos_utils.Time.Protocol.to_notation
@@ -410,31 +410,31 @@ and decompile_eos
       in
       (* TODO combinators for CSTs. *)
       let ty = decompile_type_expr @@ AST.t_timestamp ~loc () in
-      let time = CST.E_String (Wrap.ghost time) in
+      let time = CST.E_String (Wrap.ghost time (fun s -> `String s)) in
       return_typed time ty
     | Literal_mutez mtez ->
       let str = Z.to_string mtez in
-      return_expr @@ CST.E_Mutez (Wrap.ghost (str, Z.to_int64 mtez))
-    | Literal_string (Standard str) -> return_expr @@ CST.E_String (Wrap.ghost str)
-    | Literal_string (Verbatim ver) -> return_expr @@ CST.E_Verbatim (Wrap.ghost ver)
+      return_expr @@ CST.E_Mutez (Wrap.ghost (str, Z.to_int64 mtez) (fun (s, _) -> `String s))
+    | Literal_string (Standard str) -> return_expr @@ CST.E_String (Wrap.ghost str (fun s -> `String s))
+    | Literal_string (Verbatim ver) -> return_expr @@ CST.E_Verbatim (Wrap.ghost ver (fun s -> `String s))
     | Literal_bytes b ->
       let b = Hex.of_bytes b in
       let s = Hex.to_string b in
-      return_expr @@ CST.E_Bytes (Wrap.ghost (s, b))
+      return_expr @@ CST.E_Bytes (Wrap.ghost (s, b) (fun (s, _) -> `String s))
     | Literal_address addr ->
-      let addr = CST.E_String (Wrap.ghost addr) in
+      let addr = CST.E_String (Wrap.ghost addr (fun s -> `String s)) in
       let ty = decompile_type_expr @@ AST.t_address ~loc () in
       return_typed addr ty
     | Literal_signature sign ->
-      let sign = CST.E_String (Wrap.ghost sign) in
+      let sign = CST.E_String (Wrap.ghost sign (fun s -> `String s)) in
       let ty = decompile_type_expr @@ AST.t_signature ~loc () in
       return_typed sign ty
     | Literal_key k ->
-      let k = CST.E_String (Wrap.ghost k) in
+      let k = CST.E_String (Wrap.ghost k (fun s -> `String s)) in
       let ty = decompile_type_expr @@ AST.t_key ~loc () in
       return_typed k ty
     | Literal_key_hash kh ->
-      let kh = CST.E_String (Wrap.ghost kh) in
+      let kh = CST.E_String (Wrap.ghost kh (fun s -> `String s)) in
       let ty = decompile_type_expr @@ AST.t_key_hash ~loc () in
       return_typed kh ty
     | Literal_chain_id _ | Literal_operation _ ->
@@ -443,19 +443,19 @@ and decompile_eos
     | Literal_bls12_381_g1 b ->
       let b = Hex.of_bytes b in
       let s = Hex.to_string b in
-      let b = CST.E_Bytes (Wrap.ghost (s, b)) in
+      let b = CST.E_Bytes (Wrap.ghost (s, b) (fun (s, _) -> `String s)) in
       let ty = decompile_type_expr @@ AST.t_bls12_381_g1 ~loc () in
       return_typed b ty
     | Literal_bls12_381_g2 b ->
       let b = Hex.of_bytes b in
       let s = Hex.to_string b in
-      let b = CST.E_Bytes (Wrap.ghost (s, b)) in
+      let b = CST.E_Bytes (Wrap.ghost (s, b) (fun (s, _) -> `String s)) in
       let ty = decompile_type_expr @@ AST.t_bls12_381_g2 ~loc () in
       return_typed b ty
     | Literal_bls12_381_fr b ->
       let b = Hex.of_bytes b in
       let s = Hex.to_string b in
-      let b = CST.E_Bytes (Wrap.ghost (s, b)) in
+      let b = CST.E_Bytes (Wrap.ghost (s, b) (fun (s, _) -> `String s)) in
       let ty = decompile_type_expr @@ AST.t_bls12_381_fr ~loc () in
       return_typed b ty
     | Literal_chest _ | Literal_chest_key _ ->
@@ -473,7 +473,7 @@ and decompile_eos
       ; type_params = None
       ; parameters
       ; ret_type
-      ; kwd_is = Wrap.ghost ""
+      ; kwd_is = Wrap.ghost "" (fun s -> `String s)
       ; return
       }
     in
@@ -532,7 +532,7 @@ and decompile_eos
     let module_expr = decompile_module_expression rhs in
     let module_decl : CST.module_decl =
       { kwd_module = Token.ghost_module
-      ; name = Wrap.ghost (Module_var.to_name_exn module_binder)
+      ; name = Wrap.ghost (Module_var.to_name_exn module_binder) (fun s -> `String s)
       ; kwd_is = Token.ghost_is
       ; module_expr
       ; terminator
@@ -553,7 +553,7 @@ and decompile_eos
     return_expr @@ CST.E_CodeInj (Region.wrap_ghost ci)
   | E_constructor { constructor; element } ->
     let (Label constr) = constructor in
-    let constr = Wrap.ghost constr in
+    let constr = Wrap.ghost constr (fun s -> `String s) in
     let element = decompile_to_tuple_expr @@ get_e_tuple element in
     return_expr_with_par
     @@ CST.E_App (Region.wrap_ghost (CST.E_Ctor constr, Some element))
@@ -603,7 +603,7 @@ and decompile_eos
       return_inst @@ CST.I_Case (Region.wrap_ghost cases))
   | E_record struct_ ->
     let aux (Label.Label str, expr) =
-      let field_name = Wrap.ghost str in
+      let field_name = Wrap.ghost str (fun s -> `String s) in
       let field_rhs = decompile_expression expr in
       let field : (CST.expr, CST.expr) CST.field =
         Complete
@@ -665,8 +665,8 @@ and decompile_eos
     let structure =
       let aux (access : AST.expression Access_path.access) =
         match access with
-        | Access_record field -> CST.FieldName (Wrap.ghost field)
-        | Access_tuple z -> CST.Component (Wrap.ghost (Z.to_string z, z))
+        | Access_record field -> CST.FieldName (Wrap.ghost field  (fun s -> `String s))
+        | Access_tuple z -> CST.Component (Wrap.ghost (Z.to_string z, z) (fun (s, _) -> `String s) )
         | Access_map _ -> failwith "map access in struct_ update"
       in
       let field_path = list_to_nsepseq ~sep:Token.ghost_dot (List.map ~f:aux path) in
@@ -759,7 +759,7 @@ and decompile_eos
     let init = decompile_expression start in
     let bound = decompile_expression final in
     let step = decompile_expression incr in
-    let step = Some (Wrap.ghost "", step) in
+    let step = Some (Wrap.ghost "" (fun s -> `String s), step) in
     let block, _next = decompile_to_block f_body in
     let block = Region.wrap_ghost @@ Option.value ~default:empty_block block in
     let for_int : CST.for_int =
@@ -941,8 +941,8 @@ and decompile_to_path : Value_var.t -> _ Access_path.t -> CST.expr =
 and decompile_to_selection : _ Access_path.access -> CST.selection =
  fun access ->
   match access with
-  | Access_tuple index -> CST.Component (Wrap.ghost (Z.to_string index, index))
-  | Access_record str -> CST.FieldName (Wrap.ghost str)
+  | Access_tuple index -> CST.Component (Wrap.ghost (Z.to_string index, index) (fun (s, _) -> `String s))
+  | Access_record str -> CST.FieldName (Wrap.ghost str (fun s -> `String s))
   | Access_map _ ->
     failwith "Can't decompile access_map to selection" (* TODO : REMOVE THIS!! *)
 
@@ -1055,7 +1055,7 @@ and decompile_declaration : AST.declaration -> CST.declaration =
     let module_attr = Shared_helpers.decompile_attributes module_attr in
     let module_decl : CST.module_decl =
       { kwd_module = Token.ghost_module
-      ; name = Wrap.ghost (Module_var.to_name_exn module_binder)
+      ; name = Wrap.ghost (Module_var.to_name_exn module_binder) (fun s -> `String s)
       ; kwd_is = Token.ghost_is
       ; module_expr = decompile_module_expression module_
       ; terminator
@@ -1091,12 +1091,12 @@ and decompile_module_expression : AST.module_expr -> CST.module_expr =
     let module_path =
       nelist_to_npseq ~sep:Token.ghost_dot
       @@ List.Ne.map
-           (fun (x : Module_var.t) -> Wrap.ghost (Module_var.to_name_exn x))
+           (fun (x : Module_var.t) -> Wrap.ghost (Module_var.to_name_exn x) (fun s -> `String s))
            (hd, tl')
     in
-    let field = Wrap.ghost (Module_var.to_name_exn field) in
+    let field = Wrap.ghost (Module_var.to_name_exn field) (fun s -> `String s) in
     CST.(M_Path (Region.wrap_ghost { module_path; field; selector = Token.ghost_dot }))
-  | M_variable v -> CST.M_Var (Wrap.ghost (Module_var.to_name_exn v))
+  | M_variable v -> CST.M_Var (Wrap.ghost (Module_var.to_name_exn v) (fun s -> `String s))
 
 
 and decompile_declarations : AST.program -> CST.declaration Utils.nseq =

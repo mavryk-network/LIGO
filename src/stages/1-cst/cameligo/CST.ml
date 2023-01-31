@@ -140,10 +140,25 @@ type 'a par = {
   rpar   : rpar
 } [@@deriving yojson]
 
-type the_unit = lpar * rpar
+type the_unit = lpar * rpar [@@deriving yojson]
 
-let nsepseq_to_yojson value_to_yojson sep_to_yojson (hd, sep, tl) =
-  `List [value_to_yojson hd; `List (List.map ~f:(fun x -> (`List [sep_to_yojson sep; value_to_yojson x])) tl)]
+
+module Z = struct
+  include Z
+  let to_yojson z = `Int (Z.to_int z)
+  let of_yojson (y:Yojson.Safe.t) = match y with `Int i -> Ok (Z.of_int i) | _ -> Error "Z.of_yojson failed"
+end
+
+module Hex = struct
+  include Hex
+  let to_yojson hex = `String (Hex.to_string hex)
+  let of_yojson (y:Yojson.Safe.t) = match y with
+      `String s -> Ok (Hex.of_string s)
+    | _ -> Error "Hex.of_yojson failed"
+end
+
+let nsepseq_to_yojson value_to_yojson sep_to_yojson (hd, tl) =
+  `List [value_to_yojson hd; `List (List.map ~f:(fun (sep, x) -> (`List [sep_to_yojson sep; value_to_yojson x])) tl)]
 
 let nsepseq_of_yojson value_of_yojson sep_of_yojson (yojson: Yojson.Safe.t) =
   match yojson with
@@ -162,6 +177,17 @@ let nsepseq_of_yojson value_of_yojson sep_of_yojson (yojson: Yojson.Safe.t) =
      | Ok hd, Ok tl -> Ok (hd, tl)
      | _ -> Error "nseq_of_yojson failed")
   | _ -> Error "nseq_of_yojson failed"
+
+let sepseq_to_yojson value_to_yojson sep_to_yojson = function
+  | None -> `Null
+  | Some nsepseq -> nsepseq_to_yojson value_to_yojson sep_to_yojson nsepseq
+
+let sepseq_of_yojson value_of_yojson sep_of_yojson (yojson:Yojson.Safe.t) = match yojson with
+  | `Null -> Ok None
+  | yojson -> match nsepseq_of_yojson value_of_yojson sep_of_yojson yojson with
+              | Ok v -> Ok (Some v)
+              | Error _ as e -> e
+
 
 let nseq_to_yojson value_to_yojson (hd, tl) =
   `List [value_to_yojson hd; `List (List.map ~f:value_to_yojson tl)]

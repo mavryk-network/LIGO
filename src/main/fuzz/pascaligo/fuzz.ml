@@ -22,6 +22,12 @@ let comp_bin_op_ctor =
   let neq op = E_Neq op in
   [ lt; leq; gt; geq; equal; neq ]
 
+(* TODO remove *)
+module Wrap = struct
+  include Wrap
+  let wrap ?(attributes=[]) payload region =
+    Wrap.wrap ~attributes payload (Obj.magic 0) region
+end
 
 module Mutator (M : Monad) = struct
   open Monad_context (M)
