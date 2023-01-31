@@ -246,7 +246,7 @@ let rec compile_type_expression : CST.type_expr -> AST.ty_expr =
       TODO_do_in_parsing.mvar ~loc x
     in
     let field = self t.field in
-    t_moda { module_path; field } ~loc
+    t_module_open_in { module_path; field } ~loc
   | TArg t ->
     let t, loc = r_split t in
     let t = r_fst t.name in
@@ -458,7 +458,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
       @@ TODO_do_in_parsing.mvar ~loc:(r_snd ma.module_name) (r_fst ma.module_name)
     in
     let field = self ma.field in
-    e_moda { module_path; field } ~loc
+    e_module_open_in { module_path; field } ~loc
   | EUpdate up ->
     let up, loc = r_split up in
     let structure = TODO_unify_in_cst.update_lhs up.record in

@@ -22,6 +22,11 @@
 
 unsupported pattern
 
+## pass 'restrict module opens'
+
+only variable on the right A.t
+
+
 ## pass 'export_declaration'
 
 - remove : D_Export

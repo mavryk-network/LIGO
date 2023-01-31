@@ -1,8 +1,4 @@
-## pass 'restrict pattern'
 
-- remove : P_literal _
-
-unsupported pattern
 
 ## pass 'not sure it's a pass'
 
@@ -27,10 +23,6 @@ e_for default incr ( = 1 )
 ??
 
 
-
-## pass 'restrict type_modA'
-
-only variable on the right A.t
 
 ## pass 'container'
 

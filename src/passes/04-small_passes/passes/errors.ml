@@ -28,6 +28,7 @@ type t =
   | `Small_passes_non_linear_pattern of (pattern, ty_expr) pattern_
   | `Small_passes_non_linear_type of ty_expr ty_expr_
   | `Small_passes_unsupported_pattern_type of (pattern, ty_expr) pattern_
+  | `Small_passes_unsupported_module_access of [ `Type of ty_expr | `Expr of expr ]
   ]
 [@@deriving poly_constructor { prefix = "small_passes_" }, sexp]
 
@@ -154,7 +155,16 @@ let error_ppformat
          pattern matching over variants, then a constructor of a variant is \
          expected.@.@.  Other forms of pattern matching are not (yet) supported. @]"
         snippet_pp
-        (Location.get_location p))
+        (Location.get_location p)
+    | `Small_passes_unsupported_module_access access ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Invalid access. A variable is expected @]"
+        snippet_pp
+        ((function
+           | `Expr e -> get_e_loc e
+           | `Type t -> get_t_loc t)
+           access))
 
 
 let error_json : t -> Simple_utils.Error.t =
@@ -290,4 +300,14 @@ let error_json : t -> Simple_utils.Error.t =
   | `Small_passes_unsupported_pattern_type p ->
     let message = Format.sprintf "Unsupported pattern type" in
     let content = make_content ~message ~location:(Location.get_location p) () in
+    make ~stage ~content
+  | `Small_passes_unsupported_module_access access ->
+    let message = "Invalid access. A variable is expected" in
+    let location =
+      (function
+        | `Expr e -> get_e_loc e
+        | `Type t -> get_t_loc t)
+        access
+    in
+    let content = make_content ~message ~location () in
     make ~stage ~content

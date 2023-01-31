@@ -259,7 +259,7 @@ and compile_type_expression ~(raise : ('e, 'w) raise) : CST.type_expr -> AST.ty_
       TODO_do_in_parsing.mvar ~loc x
     in
     let field = self t.field in
-    t_moda { module_path; field } ~loc
+    t_module_open_in { module_path; field } ~loc
   | TDisc t ->
     let loc = TODO_do_in_parsing.t_disc_locs t in
     let fields =
@@ -597,7 +597,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
       @@ TODO_do_in_parsing.mvar ~loc:(r_snd ma.module_name) (r_fst ma.module_name)
     in
     let field = self ma.field in
-    e_moda { module_path; field } ~loc
+    e_module_open_in { module_path; field } ~loc
   | EFun f ->
     let f, loc = r_split f in
     let parameters =

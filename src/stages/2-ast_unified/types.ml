@@ -134,7 +134,7 @@ and 'self type_expression_content_ =
   | T_Named_fun of 'self Named_fun.t
   | T_String of string
   | T_Int of string * Z.t
-  | T_ModA of (Mod_variable.t, 'self) Mod_access.t
+  | T_Module_open_in of (Mod_variable.t, 'self) Mod_access.t
   | T_Arg of string
   | T_Sum_raw of 'self option Non_linear_rows.t
   | T_Record_raw of 'self option Non_linear_rows.t
@@ -142,6 +142,7 @@ and 'self type_expression_content_ =
   | T_Attr of Attribute.t * 'self
   (* \/ Below are nodes added through the passes \/ *)
   | T_Abstraction of 'self Abstraction.t [@not_initial]
+  | T_module_access of (Mod_variable.t, Ty_variable.t) Mod_access.t [@not_initial]
 [@@deriving
   map, fold, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "ty_expr" }]
 
@@ -276,7 +277,8 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_Object of 'self Object_.t (* {a : 1, b : 2}  ; { a ... n } *)
   | E_List of 'self list (* [ 1; 2; 3; 4; 5] *)
   | E_Proj of 'self Projection.t (* x.y.1   y is a field name, 1 is a tuple component *)
-  | E_ModA of (Mod_variable.t Simple_utils.List.Ne.t, 'self) Mod_access.t (* M.N.a *)
+  | E_Module_open_in of
+      (Mod_variable.t Simple_utils.List.Ne.t, 'self) Mod_access.t (* M.N.a *)
   | E_Update of 'self Update.t
   | E_Poly_fun of
       ('self, 'ty_expr, 'pattern) Poly_fun.t (* (fun <type a b>(x, y) z -> x + y - z) *)
@@ -318,6 +320,8 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_Application of 'self Application.t [@not_initial]
   | E_record_update of 'self Record_update.t [@not_initial]
   | E_record_access of 'self Record_access.t [@not_initial]
+  | E_module_access of (Mod_variable.t Simple_utils.List.Ne.t, Variable.t) Mod_access.t
+      [@not_initial]
 [@@deriving map, fold, iter, yojson, sexp, is { tags = [ "not_initial" ]; name = "expr" }]
 (* ========================== PROGRAM ====================================== *)
 

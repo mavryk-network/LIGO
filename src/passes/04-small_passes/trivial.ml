@@ -4,7 +4,7 @@ module Location = Simple_utils.Location
 open Simple_utils
 
 let invariant str = failwith (Format.asprintf "impossible: %s have been reduced" str)
-let ignored_attribute s = failwith ("ignored attribute "^s)
+let ignored_attribute s = failwith ("ignored attribute " ^ s)
 
 type statement = unit
 type block = unit
@@ -60,13 +60,17 @@ let conv_modtydecl_attr : O.TypeOrModuleAttr.t -> I.Attribute.t -> O.TypeOrModul
   | { key = "hidden"; value = None } -> { o_attr with hidden = false }
   | _ -> ignored_attribute "modty"
 
-let conv_layout_attr : Ligo_prim.Layout.t option -> I.Attribute.t -> Ligo_prim.Layout.t option =
-  fun o_attr i_attr ->
-    match (o_attr , i_attr) with
-    | Some _ , _ignored_attr -> ignored_attribute "layout"
-    | None , { key = "layout"; value = Some "comb" } -> Some L_tree
-    | None , { key = "layout"; value = Some "tree" } -> Some L_comb
-    | _ -> ignored_attribute "layout"
+
+let conv_layout_attr
+    : Ligo_prim.Layout.t option -> I.Attribute.t -> Ligo_prim.Layout.t option
+  =
+ fun o_attr i_attr ->
+  match o_attr, i_attr with
+  | Some _, _ignored_attr -> ignored_attribute "layout"
+  | None, { key = "layout"; value = Some "comb" } -> Some L_tree
+  | None, { key = "layout"; value = Some "tree" } -> Some L_comb
+  | _ -> ignored_attribute "layout"
+
 
 let conv_row_attr : I.Attribute.t list -> string option = function
   | [] -> None
@@ -149,15 +153,9 @@ let expr
         fields
     in
     ret @@ E_record (Ligo_prim.Record.of_list x)
-  | E_ModA { module_path; field } ->
-    let todo_restrict_pass =
-      match O.get_e_variable field with
-      | Some x -> x
-      | None -> invariant "row"
-    in
+  | E_module_access { module_path; field } ->
     ret
-    @@ E_module_accessor
-         { module_path = List.Ne.to_list module_path; element = todo_restrict_pass }
+    @@ E_module_accessor { module_path = List.Ne.to_list module_path; element = field }
   | E_Match { expr; cases } ->
     ret
     @@ E_matching
@@ -223,10 +221,9 @@ let expr
   | E_Application x -> ret @@ E_application x
   | E_Type_abstraction { type_binder; result } ->
     ret @@ E_type_abstraction { type_binder; result }
-  | E_record_update { struct_ ; label ; update} ->
-    ret @@ E_update { struct_ ; path = label ; update }
-  | E_record_access { struct_ ; label } ->
-    ret @@ E_accessor { struct_ ; path = label }
+  | E_record_update { struct_; label; update } ->
+    ret @@ E_update { struct_; path = label; update }
+  | E_record_access { struct_; label } -> ret @@ E_accessor { struct_; path = label }
   | E_Poly_fun _
   | E_Let_in _
   | E_Block_fun _
@@ -244,6 +241,7 @@ let expr
   | E_Assign_chainable _
   | E_Proj _
   | E_Update _
+  | E_Module_open_in _
   | E_RevApp _ -> invariant "expr"
   | E_MapLookup _
   | E_Cond _
@@ -263,9 +261,9 @@ let ty_expr : O.type_expression I.ty_expr_ -> O.type_expression =
   let ret type_content : O.type_expression = O.{ type_content; sugar = None; location } in
   match Location.unwrap t with
   | T_Attr (attr, O.{ type_content = T_sum x; _ }) ->
-    ret @@ T_sum { x with layout = conv_layout_attr x.layout attr}
+    ret @@ T_sum { x with layout = conv_layout_attr x.layout attr }
   | T_Attr (attr, O.{ type_content = T_record x; _ }) ->
-    ret @@ T_record { x with layout = conv_layout_attr x.layout attr}
+    ret @@ T_record { x with layout = conv_layout_attr x.layout attr }
   | T_Var v -> ret @@ T_variable v
   | T_App { constr; type_args } ->
     (match constr with
@@ -275,8 +273,8 @@ let ty_expr : O.type_expression I.ty_expr_ -> O.type_expression =
   | T_Fun (type1, type2) -> ret @@ T_arrow { type1; type2 }
   | T_String str -> ret @@ T_singleton (Literal_string (Ligo_string.standard str))
   | T_Int (_, x) -> ret @@ T_singleton (Literal_int x)
-  | T_ModA { module_path; field = { type_content = T_variable element; _ } } ->
-    ret @@ T_module_accessor { module_path = [ module_path ]; element }
+  | T_module_access { module_path; field } ->
+    ret @@ T_module_accessor { module_path = [ module_path ]; element = field }
   | T_Sum_raw lst ->
     let fields : O.row_element Ligo_prim.Record.t =
       Ligo_prim.Record.of_list
@@ -318,12 +316,8 @@ let ty_expr : O.type_expression I.ty_expr_ -> O.type_expression =
     in
     ret @@ T_record { fields; layout = None }
   | T_Abstraction abs -> ret @@ T_abstraction abs
-  | T_Disc_union _ 
-  | T_Arg _ 
-  | T_Prod _ 
-  | T_Named_fun _ 
-  | T_Attr _
-  | T_ModA _ -> invariant "type"
+  | T_Disc_union _ | T_Arg _ | T_Prod _ | T_Named_fun _ | T_Attr _ | T_Module_open_in _ ->
+    invariant "type"
 
 
 let pattern
@@ -361,7 +355,8 @@ let pattern
         lst
     in
     ret @@ P_record (Ligo_prim.Record.of_list lst)
-  | P_mod_access _ | P_rest _ | P_pun_record _ | P_typed _ | P_literal _ -> invariant "pattern"
+  | P_mod_access _ | P_rest _ | P_pun_record _ | P_typed _ | P_literal _ ->
+    invariant "pattern"
 
 
 let statement : _ I.statement_ -> statement = fun _ -> invariant "stmt"

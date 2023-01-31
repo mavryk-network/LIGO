@@ -172,14 +172,14 @@ module TODO_unify_in_cst = struct
   let nested_mod_access init lst =
     List.fold_right
       ~init
-      ~f:(fun x acc -> e_moda ~loc:(get_e_loc acc) { module_path = x; field = acc })
+      ~f:(fun x acc -> e_module_open_in ~loc:(get_e_loc acc) { module_path = x; field = acc })
       (List.Ne.to_list lst)
 
 
   let tnested_mod_access init lst =
     List.fold_right
       ~init
-      ~f:(fun x acc -> t_moda ~loc:(get_t_loc acc) { module_path = x; field = acc })
+      ~f:(fun x acc -> t_module_open_in ~loc:(get_t_loc acc) { module_path = x; field = acc })
       (List.Ne.to_list lst)
 
 
@@ -654,7 +654,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     in
     let field = self ma.field in
     (* TODO_unify_in_cst.nested_mod_access field module_path *)
-    e_moda ~loc { module_path ; field }
+    e_module_open_in ~loc { module_path ; field }
   | E_Update up ->
     let up, loc = r_split up in
     let structure = self up.structure in

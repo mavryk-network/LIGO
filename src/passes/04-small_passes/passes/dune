@@ -40,6 +40,7 @@
   projections
   tuple_as_record
   pattern_restriction
+  module_open_restriction
  )
  (libraries ast_unified syntax_types)
  (inline_tests

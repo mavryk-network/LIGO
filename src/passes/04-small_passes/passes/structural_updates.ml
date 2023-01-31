@@ -46,7 +46,7 @@ let path_of_lvalue ~raise : expr -> Variable.t * expr Selection.t list =
         List.map ~f:(fun e -> Selection.Component_expr e) (List.Ne.to_list keys)
       in
       aux map (sels @ cpath)
-    | E_ModA _ -> (* maybe in future ? *) raise.error (wrong_lvalue expr)
+    | E_Module_open_in _ -> (* maybe in future ? *) raise.error (wrong_lvalue expr)
     | _ -> raise.error (wrong_lvalue expr)
   in
   aux expr []
