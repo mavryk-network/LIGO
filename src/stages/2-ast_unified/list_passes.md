@@ -9,17 +9,8 @@ e_for default incr ( = 1 )
 - remove : E_sequence
 - add : -
 
-## pass 'container'
 
-- remove :  E_Map _ | E_BigMap _ | E_List _ | E_Set _
-            | E_MapLookup _
-- add : -
-
-constantize containers
-
-
-
-## pass 'for_each_restrict'
+## pass 'for_each_restrict' maybe ?
 
 ForAny { pattern ; _ } ; pattern must be a variable (temporary until we get smart )
 

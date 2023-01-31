@@ -76,6 +76,15 @@ drop named parameter in arrow type (jsligo)
   morph operators into hardcoded constants (later leave them be in the stdlib ?)
   morph special syntax to constants
 
+## pass 'freeze container'
+
+- remove :  E_Map _ | E_BigMap _ | E_List _ | E_Set _
+            | E_MapLookup _
+- add : -
+
+constantize containers
+
+
 ## pass 'hack_literalize_jsligo'
 
 - remove : .

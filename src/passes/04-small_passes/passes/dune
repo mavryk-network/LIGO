@@ -42,6 +42,7 @@
   pattern_restriction
   module_open_restriction
   if_as_pattern_match
+  freeze_containers
  )
  (libraries ast_unified syntax_types)
  (inline_tests

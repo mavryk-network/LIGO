@@ -22,6 +22,7 @@ let passes
   ; Named_fun.pass ~raise
   ; E_rev_app.pass ~raise
   ; Freeze_operators.pass ~raise ~syntax
+  ; Freeze_containers.pass ~raise
   ; List_as_function.pass ~raise ~syntax
   ; Object_to_record.pass ~raise ~syntax
   ; Array_to_tuple.pass ~raise ~syntax

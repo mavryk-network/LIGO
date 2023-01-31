@@ -223,6 +223,14 @@ let expr
     ret
     @@ E_let_mut_in
          { let_binder; rhs; let_result; attributes = O.ValueAttr.default_attributes }
+  | E_MapLookup _
+  | E_Map _
+  | E_BigMap _
+  | E_Sequence _
+  | E_List _
+  | E_Set _
+  | E_For _
+  | E_For_in _
   | E_Poly_fun _
   | E_Let_in _
   | E_Block_fun _
@@ -244,14 +252,6 @@ let expr
   | E_Let_mut_in _
   | E_Tuple _
   | E_RevApp _ -> invariant "expr"
-  | E_MapLookup _
-  | E_Map _
-  | E_BigMap _
-  | E_Sequence _
-  | E_List _
-  | E_Set _
-  | E_For _
-  | E_For_in _ -> failwith "TODO: pass"
 
 
 let ty_expr : O.type_expression I.ty_expr_ -> O.type_expression =
