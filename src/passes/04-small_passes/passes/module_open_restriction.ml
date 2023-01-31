@@ -28,9 +28,24 @@ let compile ~raise =
   `Cata { idle_cata_pass with expr; ty_expr }
 
 
+let reduction ~raise =
+  { Iter.defaults with
+    expr =
+      (function
+      | { wrap_content = E_Module_open_in _; _ } ->
+        raise.error (wrong_reduction __MODULE__)
+      | _ -> ())
+  ; ty_expr =
+      (function
+      | { wrap_content = T_Module_open_in _; _ } ->
+        raise.error (wrong_reduction __MODULE__)
+      | _ -> ())
+  }
+
+
 let pass ~raise =
   cata_morph
     ~name:__MODULE__
     ~compile:(compile ~raise)
     ~decompile:`None
-    ~reduction_check:Iter.defaults
+    ~reduction_check:(reduction ~raise)
