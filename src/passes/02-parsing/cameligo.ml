@@ -53,3 +53,18 @@ let pretty_print_cst ?preprocess ~raise buffer file_path =
                  ~offsets:Options.offsets
                  Options.mode
   in Cst_cameligo.Print.to_buffer state tree
+
+let get_cst ?preprocess buffer file_path : CST.t Cst_type.cst_type option =
+  (* let module PreprocParams =
+    Preprocessor.CLI.MakeDefault (Config) in
+  let module LexerParams =
+    LexerLib.CLI.MakeDefault (PreprocParams) in
+  let module Options = LexerParams.Options in *)
+  let tree   = Trace.to_option @@ parse_file ?preprocess buffer file_path in
+  Option.map ~f:(fun tree -> Cst_type.Cameligo_type tree) tree
+  (* let buffer = Buffer.create 59 in
+  let state  = Tree.mk_state
+                  ~buffer
+                  ~offsets:Options.offsets
+                  Options.mode
+  in Cst_cameligo.Print.to_buffer state tree *)

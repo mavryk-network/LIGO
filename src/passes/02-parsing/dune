@@ -1,6 +1,14 @@
 ;; Build of all LIGO parsers as a library
 
 (library
+ (name cst_type)
+ (public_name ligo.parsing_cst_type)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries cst)
+ (modules Cst_type))
+
+(library
  (name parsing)
  (public_name ligo.parsing)
  (instrumentation
@@ -13,5 +21,6 @@
   parsing_cameligo
   parsing_jsligo
   preprocessing_cameligo
-  preprocessing_jsligo)
+  preprocessing_jsligo
+  cst_type)
  (modules Parsing Errors Cameligo Jsligo))

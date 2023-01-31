@@ -24,4 +24,5 @@ let compile_contract_input ~raise
 
 
 let pretty_print_cst = pretty_print_cst
+let get_cst = pretty_print_cst
 let pretty_print = pretty_print

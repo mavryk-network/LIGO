@@ -48,3 +48,4 @@ val pretty_print_type_expr  : CST.type_expr -> Buffer.t
 
 val pretty_print_file : (file_path -> Buffer.t) parser
 val pretty_print_cst  : (file_path -> Buffer.t) parser
+val get_cst : ?preprocess:bool -> Buffer.t -> file_path -> (CST.t Cst_type.cst_type) option

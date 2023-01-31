@@ -156,6 +156,14 @@ let pretty_print_cst ~raise ~(meta : meta) buffer file_path =
   in
   trace ~raise parser_tracer @@ print buffer file_path
 
+let get_cst ~raise ?preprocess ~(meta : meta) buffer file_path =
+  let print : type a. (a Parsing.Cst_type.cst_type) option =
+    match meta.syntax with
+    | CameLIGO -> Parsing.Cameligo.get_cst ?preprocess buffer file_path
+    | JsLIGO -> Parsing.Jsligo.get_cst ?preprocess buffer file_path
+  in
+  print
+
 
 let pretty_print_cameligo = Parsing.Cameligo.pretty_print_file
 let pretty_print_jsligo = Parsing.Jsligo.pretty_print_file
