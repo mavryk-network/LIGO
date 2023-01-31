@@ -45,8 +45,6 @@ publish_npm_windows_x86:
       when: always
     - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
       when: always
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
   script:
     - |      
       if [[ $CI_COMMIT_REF_NAME == "dev" ]]; then
@@ -119,6 +117,8 @@ esy-macos-m1:
     - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
       when: always
     - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+      when: always
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
       when: always
   script:
     - mkdir -p ~/.npm
