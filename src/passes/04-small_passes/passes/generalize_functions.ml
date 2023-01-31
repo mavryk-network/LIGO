@@ -46,24 +46,28 @@ let compile ~raise =
     | D_Const ({ type_params = Some ty_params; _ } as x) ->
       let let_rhs = generalize ty_params x.let_rhs in
       d_const ~loc { x with let_rhs }
-    | D_Fun
-        { is_rec; fun_name; type_params = Some ty_params; parameters; ret_type; return }
-      ->
+    | D_Fun { is_rec; fun_name; type_params; parameters; ret_type; return } ->
       let let_rhs =
-        let body = generalize ty_params return in
-        if is_rec
-        then (
-          let fun_type = fun_type_from_parameters ~raise parameters return in
-          e_poly_recursive
-            ~loc:(get_e_loc return)
-            { fun_name
-            ; fun_type
-            ; lambda = { type_params = None; parameters; ret_type; body }
-            })
-        else
+        match type_params with
+        | Some ty_params ->
+          let body = generalize ty_params return in
+          if is_rec
+          then (
+            let fun_type = fun_type_from_parameters ~raise parameters return in
+            e_poly_recursive
+              ~loc:(get_e_loc return)
+              { fun_name
+              ; fun_type
+              ; lambda = { type_params = None; parameters; ret_type; body }
+              })
+          else
+            e_poly_fun
+              ~loc:(get_e_loc return)
+              { type_params = None; parameters; ret_type; body }
+        | None ->
           e_poly_fun
             ~loc:(get_e_loc return)
-            { type_params = None; parameters; ret_type; body }
+            { type_params = None; parameters; ret_type; body = return }
       in
       d_const
         ~loc
@@ -88,7 +92,7 @@ let reduction ~raise =
       | { wrap_content =
             ( D_Var { type_params = Some _; _ }
             | D_Const { type_params = Some _; _ }
-            | D_Fun { type_params = Some _; _ } )
+            | D_Fun _ )
         ; _
         } -> raise.error (wrong_reduction __MODULE__)
       | _ -> ())

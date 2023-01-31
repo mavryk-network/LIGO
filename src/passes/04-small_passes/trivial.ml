@@ -3,7 +3,7 @@ module I = Ast_unified
 module Location = Simple_utils.Location
 open Simple_utils
 
-let invariant () = failwith "impossible: have been reduced"
+let invariant str = failwith (Format.asprintf "impossible: %s have been reduced" str)
 let ignored_attribute s = failwith ("ignored attribute "^s)
 
 type statement = unit
@@ -118,7 +118,7 @@ let declaration
     ret @@ D_irrefutable_match { pattern; expr; attr = O.ValueAttr.default_attributes }
   | D_Let _ | D_Import _ | D_Export _ | D_Var _ | D_Multi_const _ | D_Multi_var _
   | D_Const { type_params = Some _; _ }
-  | D_Fun _ | D_Type_abstraction _ -> invariant ()
+  | D_Fun _ | D_Type_abstraction _ -> invariant "decl"
 
 
 let expr
@@ -145,7 +145,7 @@ let expr
       List.map
         ~f:(function
           | Complete (l, r) -> l, r
-          | Punned _ -> invariant ())
+          | Punned _ -> invariant "row")
         fields
     in
     ret @@ E_record (Ligo_prim.Record.of_list x)
@@ -153,7 +153,7 @@ let expr
     let todo_restrict_pass =
       match O.get_e_variable field with
       | Some x -> x
-      | None -> invariant ()
+      | None -> invariant "row"
     in
     ret
     @@ E_module_accessor
@@ -244,7 +244,7 @@ let expr
   | E_Assign_chainable _
   | E_Proj _
   | E_Update _
-  | E_RevApp _ -> invariant ()
+  | E_RevApp _ -> invariant "expr"
   | E_MapLookup _
   | E_Cond _
   | E_Map _
@@ -271,7 +271,7 @@ let ty_expr : O.type_expression I.ty_expr_ -> O.type_expression =
     (match constr with
     | { type_content = T_variable type_operator; _ } ->
       ret @@ T_app { type_operator; arguments = List.Ne.to_list type_args }
-    | _ -> invariant ())
+    | _ -> invariant "type")
   | T_Fun (type1, type2) -> ret @@ T_arrow { type1; type2 }
   | T_String str -> ret @@ T_singleton (Literal_string (Ligo_string.standard str))
   | T_Int (_, x) -> ret @@ T_singleton (Literal_int x)
@@ -323,7 +323,7 @@ let ty_expr : O.type_expression I.ty_expr_ -> O.type_expression =
   | T_Prod _ 
   | T_Named_fun _ 
   | T_Attr _
-  | T_ModA _ -> invariant ()
+  | T_ModA _ -> invariant "type"
 
 
 let pattern
@@ -357,16 +357,16 @@ let pattern
       List.map
         ~f:(function
           | Complete x -> x
-          | Punned _ -> invariant ())
+          | Punned _ -> invariant "pattern")
         lst
     in
     ret @@ P_record (Ligo_prim.Record.of_list lst)
-  | P_mod_access _ | P_rest _ | P_pun_record _ | P_typed _ | P_literal _ -> invariant ()
+  | P_mod_access _ | P_rest _ | P_pun_record _ | P_typed _ | P_literal _ -> invariant "pattern"
 
 
-let statement : _ I.statement_ -> statement = fun _ -> invariant ()
-let block : _ I.block_ -> statement = fun _ -> invariant ()
-let instruction : _ I.instruction_ -> instruction = fun _ -> invariant ()
+let statement : _ I.statement_ -> statement = fun _ -> invariant "stmt"
+let block : _ I.block_ -> statement = fun _ -> invariant "block"
+let instruction : _ I.instruction_ -> instruction = fun _ -> invariant "instr"
 
 let program : (O.declaration, O.declaration, unit) I.program_entry_ -> O.declaration =
   let ret location wrap_content : O.declaration = { wrap_content; location } in
@@ -381,7 +381,7 @@ let program : (O.declaration, O.declaration, unit) I.program_entry_ -> O.declara
     ret location
     @@ D_module { x with module_attr = conv_modtydecl_attr x.module_attr attr }
   | PE_Declaration d -> d
-  | PE_Top_level_instruction _ -> invariant ()
+  | PE_Top_level_instruction _ -> invariant "pe"
   | PE_Preproc_directive _ -> Location.wrap ~loc:Location.generated (dummy_top_level ())
 
 
