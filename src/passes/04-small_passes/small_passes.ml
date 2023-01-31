@@ -42,6 +42,7 @@ let passes
   ; Generalize_functions.pass ~raise
   ; Curry.pass ~raise ~syntax
   ; Tuple_as_record.pass ~raise
+  ; If_as_pattern_match.pass ~raise
   ]
 
 
