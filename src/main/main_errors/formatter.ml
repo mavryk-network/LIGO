@@ -333,7 +333,7 @@ let rec error_ppformat
     | `Preproc_tracer e -> Preprocessing.Errors.error_ppformat ~display_format ~no_colour f e
     | `Parser_tracer e -> Parsing.Errors.error_ppformat ~display_format ~no_colour f e
     | `Unification_tracer e -> List.iter ~f:(Unification.Errors.error_ppformat ~display_format ~no_colour f) e
-    | `Small_passes_tracer e -> Small_passes.Errors.error_ppformat ~display_format ~no_colour f e
+    | `Nanopasses_tracer e -> Nanopasses.Errors.error_ppformat ~display_format ~no_colour f e
     | `Pretty_tracer _e -> () (*no error in this pass*)
     | `Cit_pascaligo_tracer e ->
       List.iter
@@ -679,7 +679,7 @@ let rec error_json : Types.all -> Simple_utils.Error.t list =
   | `Preproc_tracer e -> [ Preprocessing.Errors.error_json e ]
   | `Parser_tracer e -> [ Parsing.Errors.error_json e ]
   | `Unification_tracer e -> List.map ~f:Unification.Errors.error_json e
-  | `Small_passes_tracer e -> [ Small_passes.Errors.error_json e ]
+  | `Nanopasses_tracer e -> [ Nanopasses.Errors.error_json e ]
   | `Pretty_tracer _ ->
     let content = make_content ~message:"Pretty printing tracer" () in
     [ make ~stage:"pretty" ~content ]

@@ -4,7 +4,7 @@ open Simple_utils.Trace
 open Errors
 module Location = Simple_utils.Location
 
-let compile ~raise =
+let compile =
   let expr : _ expr_ -> expr =
    fun e ->
     let loc = Location.get_location e in
@@ -23,7 +23,7 @@ let compile ~raise =
         ~init
     in
     match Location.unwrap e with
-    | E_MapLookup { map; keys } -> failwith "this node will go with pascaligo .."
+    | E_MapLookup _ -> failwith "this node will go with pascaligo ..?"
     | E_Map kvlst ->
       let lst = mk_pair_list kvlst in
       op C_MAP_LITERAL [ lst ]
@@ -52,6 +52,6 @@ let reduction ~raise =
 let pass ~raise =
   cata_morph
     ~name:__MODULE__
-    ~compile:(compile ~raise)
+    ~compile
     ~decompile:`None
     ~reduction_check:(reduction ~raise)

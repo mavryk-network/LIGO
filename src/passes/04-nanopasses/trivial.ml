@@ -216,13 +216,17 @@ let expr
   | E_record_access { struct_; label } -> ret @@ E_accessor { struct_; path = label }
   | E_Let_mut_in
       { is_rec = false; type_params = None; lhs = let_binder, []; rhs_type; rhs; body } ->
-    let let_result =
+    let rhs =
       Option.value_map rhs_type ~default:rhs ~f:(fun ty ->
           ret @@ E_ascription { anno_expr = rhs; type_annotation = ty })
     in
     ret
     @@ E_let_mut_in
-         { let_binder; rhs; let_result; attributes = O.ValueAttr.default_attributes }
+         { let_binder
+         ; rhs
+         ; let_result = body
+         ; attributes = O.ValueAttr.default_attributes
+         }
   | E_MapLookup _
   | E_Map _
   | E_BigMap _

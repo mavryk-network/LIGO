@@ -8,5 +8,5 @@
    proto-pre-alpha-utils preprocessing parsing cst tree_abstraction
    ast_imperative self_ast_imperative desugaring ast_core checking ast_typed ast_unified
    self_ast_typed expansion spilling mini_c self_mini_c scoping stacking unification
-   self_michelson aggregation ast_aggregated self_ast_aggregated small_passes
+   self_michelson aggregation ast_aggregated self_ast_aggregated nanopasses
    compiler_options syntax))

@@ -21,7 +21,7 @@ let compile_temp ~(raise : (Main_errors.all, Main_warnings.all) Simple_utils.Tra
       let raw = trace ~raise parser_tracer (Parsing.Jsligo.parse_file c_unit source_filename) in
       trace ~raise unification_tracer (Unification.Jsligo.compile_program raw)
   in
-  trace ~raise small_passes_tracer (Small_passes.compile_program ~syntax:meta.syntax unified)
+  trace ~raise nanopasses_tracer (Nanopasses.compile_program ~syntax:meta.syntax unified)
 
 let compile_expression ~raise = parse_and_abstract_expression ~raise
 

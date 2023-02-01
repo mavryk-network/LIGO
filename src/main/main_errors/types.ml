@@ -28,7 +28,7 @@ type all =
   | `Preproc_tracer of Preprocessing.Errors.t
   | `Parser_tracer of Parsing.Errors.t
   | `Unification_tracer of Unification.Errors.t list
-  | `Small_passes_tracer of Small_passes.Errors.t
+  | `Nanopasses_tracer of Nanopasses.Errors.t
   | `Pretty_tracer of Parsing.Errors.t
   | `Cit_pascaligo_tracer of Tree_abstraction.Pascaligo.Errors.abs_error list
   | `Cit_cameligo_tracer of Tree_abstraction.Cameligo.Errors.abs_error list
