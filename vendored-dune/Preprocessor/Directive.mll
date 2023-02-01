@@ -52,8 +52,8 @@ let mk_string (p : char list) : string =
 
 type file_path   = string [@@deriving yojson]
 type module_name = string [@@deriving yojson]
-type message     = string
-type variable    = string
+type message     = string [@@deriving yojson]
+type variable    = string [@@deriving yojson]
 type flag        = Push | Pop [@@deriving yojson]
 
 (* Endings of preprocessing directives *)
@@ -174,6 +174,12 @@ let mk_import ?trailing_comment dir_region file_path module_name =
 
 (* #if and #elif *)
 
+type bool_expr = <
+                   region           : Region.t;
+                 expression       : E_AST.t;
+                 trailing_comment : string Region.reg option
+
+                    >
 let bool_expr_to_yojson v =
   `Assoc ([
 ("region", Region.to_yojson v#region);
@@ -198,18 +204,12 @@ string_reg_option_of_yojson trailing_comment_y
     method trailing_comment : message Region.reg option = trailing_comment
      end)
     | _ ->
-     error_yojson_format "{}"
+     error_yojson_format "{region, expression, trailing_comment}"
 
-type bool_expr = <
-                   region           : Region.t;
-                 expression       : E_AST.t;
-                 trailing_comment : string Region.reg option
-
-                    >
                                       
 
-type if_directive   = bool_expr
-type elif_directive = bool_expr
+type if_directive   = bool_expr [@@deriving yojson]
+type elif_directive = bool_expr [@@deriving yojson]
 
 let mk_bool_expr ?trailing_comment dir_region expr =
   object
@@ -220,14 +220,42 @@ let mk_bool_expr ?trailing_comment dir_region expr =
 
 (* #define and #undef *)
 
-type symbol = <
-  region           : Region.t;
-  symbol           : variable Region.reg;
-  trailing_comment : message Region.reg option
->
+let symbol_to_yojson  v =
+  `Assoc ([
+("region", Region.to_yojson v#region);
+("symbol",  Region.reg_to_yojson variable_to_yojson v#symbol);
+("trailing_comment", string_reg_option_to_yojson v#trailing_comment);
+    ])
 
-type define_directive = symbol
-type undef_directive  = symbol
+let symbol_of_yojson  (yojson: Yojson.Safe.t) = match yojson with
+  | `Assoc ([
+("region", region_y);
+("symbol", symbol_y);
+("trailing_comment", trailing_comment_y)
+    ]) ->
+     (match
+Region.of_yojson region_y,
+Region.reg_of_yojson variable_of_yojson symbol_y,
+string_reg_option_of_yojson trailing_comment_y
+      with
+      | Ok region, Ok symbol, Ok trailing_comment -> Ok object
+    method region           : Region.t = region
+    method symbol       : variable Region.reg = symbol
+    method trailing_comment : message Region.reg option = trailing_comment
+     end)
+
+    | _ ->
+     error_yojson_format "{region, symbol, trailing_comment}"
+
+type symbol = <
+                region           : Region.t;
+              symbol           : variable Region.reg;
+              trailing_comment : message Region.reg option
+                                 >
+                                   
+
+type define_directive = symbol [@@deriving yojson]
+type undef_directive  = symbol [@@deriving yojson]
 
 let mk_symbol ?trailing_comment dir_region sym =
   object
@@ -238,7 +266,7 @@ let mk_symbol ?trailing_comment dir_region sym =
 
 (* #error *)
 
-type error_directive = Region.t * string Region.reg
+type error_directive = Region.t * string Region.reg [@@deriving yojson]
 
 (* Linemarkers (line directives) *)
 
@@ -310,7 +338,7 @@ type t =
 | PP_Define     of define_directive
 | PP_Undef      of undef_directive
 | PP_Error      of error_directive
-| PP_Linemarker of line_directive
+| PP_Linemarker of line_directive [@@deriving yojson]
 
 (* PROJECTIONS *)
 

@@ -9,8 +9,8 @@ module Pos    = Simple_utils.Pos
 
 type file_path   = string [@@deriving yojson]
 type module_name = string [@@deriving yojson]
-type message     = string
-type variable    = string
+type message     = string [@@deriving yojson]
+type variable    = string [@@deriving yojson]
 
 (* Endings of preprocessing directives *)
 
@@ -83,8 +83,8 @@ type symbol = <
   trailing_comment : message Region.reg option
 >
 
-type define_directive = symbol
-type undef_directive  = symbol
+type define_directive = symbol [@@deriving yojson]
+type undef_directive  = symbol [@@deriving yojson]
 
 val mk_symbol :
   ?trailing_comment:message Region.reg ->
