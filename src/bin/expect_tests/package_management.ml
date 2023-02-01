@@ -12,25 +12,10 @@ let%expect_test _ =
     ; "originate_contract"
     ; "--no-warn"
     ];
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Package_management.(fun) in file "src/bin/expect_tests/package_management.ml", line 7, characters 2-152
-  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
-
-  Trailing output
-  ---------------
-  File "/Users/ajob410/tezos/ligo/_build/default/src/test/projects/originate_contract/.ligo/source/i/tezos_ligo_fa2__1.0.1__93f08e6c/test/fa2/single_asset.test.mligo", line 103, characters 21-36:
-  102 |   let () = Test.set_source op1 in
-  103 |   let (t_addr,_,_) = Test.@originate FA2_single_asset.main initial_storage 0tez in
-  104 |   let contr = Test.to_contract t_addr in
-
-  Variable "@originate" not found. |}]
+  [%expect
+    {|
+    Everything at the top-level was executed.
+    - test exited with value KT1DgZV34oZABXSaXiRm5nDxR7pGtMnsvtDd(None). |}]
 
 let%expect_test _ =
   run_ligo_good

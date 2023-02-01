@@ -531,25 +531,11 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_no_mutation.mligo" ];
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 519, characters 2-64
-  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
-
-  Trailing output
-  ---------------
-  File "./test_no_mutation.mligo", line 25, characters 22-37:
-   24 |   let initial_storage = 7 in
-   25 |   let (taddr, _, _) = Test.@originate mainf initial_storage 0tez in
-   26 |   let contr = Test.to_contract taddr in
-
-  Variable "@originate" not found. |}]
+  [%expect{|
+    Everything at the top-level was executed.
+    - test exited with value ().
+    - test_mutation exited with value ().
+    - test_mutation_all exited with value (). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_mutate_from_file.mligo" ];
@@ -1027,24 +1013,39 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_inline.mligo" ];
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1010, characters 2-59
-  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
-
-  Trailing output
-  ---------------
-  File "./test_inline.mligo", line 29, characters 13-28:
-   28 |
-   29 | let test_x = Test.@originate main init_storage 0mutez
-
-  Variable "@originate" not found. |}]
+  [%expect
+    {|
+    Everything at the top-level was executed.
+    - test_x exited with value (KT1WxkuJtr9rxYaziDJY7gHA83H3BUbEn1G1 , { parameter unit ;
+      storage
+        (pair (pair (big_map %metadata string bytes) (set %participants address))
+              (map %secrets address bool)) ;
+      code { CDR ;
+             PUSH bool True ;
+             PUSH bool False ;
+             DUP 2 ;
+             DUP 4 ;
+             CAR ;
+             CDR ;
+             ITER { SWAP ;
+                    DUP 5 ;
+                    CDR ;
+                    DIG 2 ;
+                    GET ;
+                    IF_NONE { DUP 2 ; AND } { DROP ; DUP 3 ; AND } } ;
+             DROP ;
+             DUP 2 ;
+             DUP 4 ;
+             CAR ;
+             CDR ;
+             ITER { SWAP ;
+                    EMPTY_MAP address bool ;
+                    DIG 2 ;
+                    GET ;
+                    IF_NONE { DUP 2 ; AND } { DROP ; DUP 3 ; AND } } ;
+             DROP 3 ;
+             NIL operation ;
+             PAIR } } , 224). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_read_contract.mligo" ];
@@ -1302,6 +1303,24 @@ let%expect_test _ =
       [ "test_x", [ "constant", [ "int", "65" ] ] ],
       [ "test_y", [ "constant", [ "string", "hello" ] ] ]
     ] |xxx}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test"; test "record_field_assign.jsligo" ];
+  [%expect
+    {|
+      Everything at the top-level was executed.
+      - test_simple_record_assign exited with value ().
+      - test_nested_record_assign_level1 exited with value ().
+      - test_nested_record_assign_level2 exited with value ().
+      - test_record_assign_var exited with value ().
+      - test_nested_record_assign_var_level1 exited with value ().
+      - test_nested_record_assign_var_level2 exited with value ().
+      - test_nested_record_assign_var_level2_expr exited with value ().
+      - test_nested_record_assign_var_level2_record_access exited with value ().
+      - test_nested_record_assign_var_level2_module_member exited with value ().
+      - test_nested_record_assign_var_level2_module_record_member exited with value ().
+      - test_nested_record_assign_var_level2_lambda exited with value ().
+      - test_nested_record_assign_var_level2_lambda_app exited with value (). |}]
 
 (* do not remove that :) *)
 let () = Caml.Sys.chdir pwd
@@ -1599,6 +1618,28 @@ let%expect_test _ =
   Cannot decompile value KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj of type typed_address (unit ,
   unit) |}]
 
+let%expect_test _ =
+  run_ligo_bad [ "run"; "test"; "bad_record_field_assign1.jsligo" ];
+  [%expect
+    {|
+    File "bad_record_field_assign1.jsligo", line 9, characters 2-12:
+      8 |   let p = { x : [1, 2, 3, 4] };
+      9 |   p.x[3] = 5;
+     10 |   assert(p.x[3] == 5)
+
+    Not supported assignment. |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "run"; "test"; "bad_record_field_assign2.jsligo" ];
+  [%expect
+    {|
+    File "bad_record_field_assign2.jsligo", line 9, characters 2-15:
+      8 |   let p = { x : { z : 1 } };
+      9 |   p.x["z"] = 10;
+     10 |   assert(p.x["z"] == 10);
+
+    Not supported assignment. |}]
+
 let () = Caml.Sys.chdir pwd
 
 let%expect_test _ =
@@ -1621,4 +1662,8 @@ let%expect_test _ =
       8 |   let (ta, _, _) = Test.@originate main 0 0tez in
       9 |   let c = Test.to_contract ta in
 
-    Variable "@originate" not found. |}]
+    An uncaught error occured:
+    Failwith: "foo"
+    Trace:
+    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66 ,
+    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66 |}]
