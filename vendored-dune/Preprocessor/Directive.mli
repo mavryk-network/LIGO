@@ -110,7 +110,7 @@ type error_directive = Region.t * string Region.reg [@@deriving yojson]
    and the return from a file (after its inclusion has been
    processed). *)
 
-type flag  = Push | Pop
+type flag  = Push | Pop [@@deriving yojson]
 
 type line_directive = <
   region    : Region.t;

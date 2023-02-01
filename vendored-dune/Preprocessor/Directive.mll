@@ -54,7 +54,7 @@ type file_path   = string [@@deriving yojson]
 type module_name = string [@@deriving yojson]
 type message     = string
 type variable    = string
-type flag        = Push | Pop
+type flag        = Push | Pop [@@deriving yojson]
 
 (* Endings of preprocessing directives *)
 
@@ -76,6 +76,16 @@ let string_reg_option_of_yojson (yojson: Yojson.Safe.t) = match yojson with
   | string_reg_y -> (match Region.reg_of_yojson file_path_of_yojson string_reg_y with
                     | Ok string_reg -> Ok (Some string_reg)
                     | Error e -> Error "Could not parse string_reg option from json")
+
+let flag_reg_option_to_yojson = function
+  | Some flag_reg -> Region.reg_to_yojson flag_to_yojson flag_reg
+  | None -> `Null
+
+let flag_reg_option_of_yojson (yojson: Yojson.Safe.t) = match yojson with
+  | `Null -> Ok None
+  | flag_reg_y -> (match Region.reg_of_yojson flag_of_yojson flag_reg_y with
+                    | Ok flag_reg -> Ok (Some flag_reg)
+                    | Error e -> Error "Could not parse flag_reg option from json")
 
 let include_directive_to_yojson  v =
   `Assoc ([
@@ -232,11 +242,52 @@ type error_directive = Region.t * string Region.reg
 
 (* Linemarkers (line directives) *)
 
+let int_to_yojson i = `Int i
+let int_of_yojson (y: Yojson.Safe.t) = match y with
+    `Int i -> Ok i
+  | _ -> Error "Failed to parse int"
+
+let string_to_yojson s = `String s
+let string_of_yojson (y: Yojson.Safe.t) = match y with
+    `String s -> Ok s
+  | _ -> Error "Failed to parse string"
+
+
+
+let line_directive_to_yojson  v =
+  `Assoc ([
+("region", Region.to_yojson v#region);
+("linenum", Region.reg_to_yojson int_to_yojson v#linenum);
+("file_path", Region.reg_to_yojson string_to_yojson v#file_path);
+("flag", flag_reg_option_to_yojson v#flag);
+    ])
+
+let line_directive_of_yojson  (yojson: Yojson.Safe.t) = match yojson with
+  | `Assoc ([
+("region", region_y);
+("linenum", linenum_y);
+("file_path", file_path_y);
+("flag", flag_y);
+    ]) -> (match
+     Region.of_yojson region_y,
+Region.reg_of_yojson int_of_yojson linenum_y,
+Region.reg_of_yojson string_of_yojson file_path_y,
+flag_reg_option_of_yojson flag_y          with
+          | Ok region, Ok linenum, Ok file_path, Ok flag -> Ok   object
+    method region    : Region.t = region
+    method linenum   : int Region.reg = linenum
+    method file_path : string Region.reg = file_path
+    method flag      : flag Region.reg option = flag
+  end
+)
+    | _ ->
+     error_yojson_format "{region, linenum, file_path, flag}"
+
 type line_directive = <
-  region    : Region.t;
-  linenum   : int Region.reg;
-  file_path : string Region.reg;
-  flag      : flag Region.reg option
+                        region    : Region.t;
+                      linenum   : int Region.reg;
+                      file_path : string Region.reg;
+                      flag      : flag Region.reg option
 >
 
 let mk_line_directive dir_region linenum file_path flag =
