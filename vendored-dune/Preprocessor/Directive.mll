@@ -51,7 +51,7 @@ let mk_string (p : char list) : string =
 (* DIRECTIVES *)
 
 type file_path   = string [@@deriving yojson]
-type module_name = string
+type module_name = string [@@deriving yojson]
 type message     = string
 type variable    = string
 type flag        = Push | Pop
@@ -92,11 +92,12 @@ let include_directive_of_yojson  (yojson: Yojson.Safe.t) = match yojson with
         Region.of_yojson region_y,
         Region.reg_of_yojson file_path_of_yojson file_path_y,
         string_reg_option_of_yojson trailing_comment_y with
-      | Ok region, Ok file_path, Ok trailing_comment -> Ok object
-    method region           : Region.t = region
-    method file_path        : file_path Region.reg = file_path
-    method trailing_comment : message Region.reg option = trailing_comment
-    end
+      | Ok region, Ok file_path, Ok trailing_comment ->
+         Ok object
+             method region           : Region.t = region
+             method file_path        : file_path Region.reg = file_path
+             method trailing_comment : message Region.reg option = trailing_comment
+           end
       | _ -> error_yojson_format "{ region, file_path, trailing_comment}")
   | _ ->
      error_yojson_format "{ region, file_path, trailing_comment}"
@@ -115,12 +116,43 @@ let mk_include ?trailing_comment dir_region file_path =
 
 (* #import *)
 
+let import_directive_to_yojson  v =
+  `Assoc ([
+        ("region", Region.to_yojson v#region);
+        ("file_path", Region.reg_to_yojson file_path_to_yojson v#file_path);
+        ("module_name", Region.reg_to_yojson module_name_to_yojson v#module_name);
+        ("trailing_comment", string_reg_option_to_yojson v#trailing_comment)
+    ])
+
+let import_directive_of_yojson  (yojson: Yojson.Safe.t) = match yojson with
+  | `Assoc [ ("region", region_y);
+             ("file_path", file_path_y);
+             ("module_name", module_name_y);
+             ("trailing_comment", trailing_comment_y)] ->
+     (match
+        Region.of_yojson region_y,
+        Region.reg_of_yojson file_path_of_yojson file_path_y,
+        Region.reg_of_yojson module_name_of_yojson module_name_y,
+        string_reg_option_of_yojson trailing_comment_y with
+      | Ok region, Ok file_path, Ok module_name, Ok trailing_comment ->
+         Ok object
+             method region           : Region.t = region
+             method file_path        : file_path Region.reg = file_path
+             method module_name      : module_name Region.reg = module_name
+             method trailing_comment : message Region.reg option = trailing_comment
+           end
+      | _ -> error_yojson_format "{ region, file_path, module_name, trailing_comment}")
+    | _ ->
+     error_yojson_format "{region, file_path, module_name, trailing_comment}"
+
 type import_directive = <
-  region           : Region.t;
-  file_path        : file_path Region.reg;
-  module_name      : module_name Region.reg;
-  trailing_comment : message Region.reg option
->
+                          region           : Region.t;
+                        file_path        : file_path Region.reg;
+                        module_name      : module_name Region.reg;
+                        trailing_comment : message Region.reg option
+
+                    >
+                                             
 
 let mk_import ?trailing_comment dir_region file_path module_name =
   object
@@ -132,11 +164,39 @@ let mk_import ?trailing_comment dir_region file_path module_name =
 
 (* #if and #elif *)
 
+let bool_expr_to_yojson v =
+  `Assoc ([
+("region", Region.to_yojson v#region);
+("expression", E_AST.to_yojson v#expression);
+("trailing_comment", string_reg_option_to_yojson v#trailing_comment);
+    ])
+
+let bool_expr_of_yojson  (yojson: Yojson.Safe.t) = match yojson with
+  | `Assoc ([
+("region", region_y);
+("expression", expression_y);
+("trailing_comment", trailing_comment_y)
+    ]) ->
+     (match
+Region.of_yojson region_y,
+E_AST.of_yojson expression_y,
+string_reg_option_of_yojson trailing_comment_y
+      with
+      | Ok region, Ok expression, Ok trailing_comment -> Ok object
+    method region           : Region.t = region
+    method expression       : E_AST.t = expression
+    method trailing_comment : message Region.reg option = trailing_comment
+     end)
+    | _ ->
+     error_yojson_format "{}"
+
 type bool_expr = <
-  region           : Region.t;
-  expression       : E_AST.t;
-  trailing_comment : string Region.reg option
->
+                   region           : Region.t;
+                 expression       : E_AST.t;
+                 trailing_comment : string Region.reg option
+
+                    >
+                                      
 
 type if_directive   = bool_expr
 type elif_directive = bool_expr

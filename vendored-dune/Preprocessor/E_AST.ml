@@ -16,7 +16,7 @@ type t =
 | True   of Region.t
 | False  of Region.t
 | Ident  of string Region.reg
-| Parens of t Region.reg
+| Parens of t Region.reg [@@deriving yojson]
 
 (* Projecting the regions *)
 

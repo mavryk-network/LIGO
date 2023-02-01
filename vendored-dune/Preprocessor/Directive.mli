@@ -7,8 +7,8 @@ module Pos    = Simple_utils.Pos
 
 (* DIRECTIVES *)
 
-type file_path   = string
-type module_name = string
+type file_path   = string [@@deriving yojson]
+type module_name = string [@@deriving yojson]
 type message     = string
 type variable    = string
 
