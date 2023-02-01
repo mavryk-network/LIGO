@@ -1567,7 +1567,7 @@ let print_graph =
 let print_cst =
   let f source_file syntax display_format no_colour project_root () =
     let raw_options = Raw_options.make ~syntax ~no_colour ~project_root () in
-    return_result ~return @@ Api.Print.cst raw_options (`File source_file)  display_format
+    return_result ~return @@ Api.Print.cst raw_options (`File source_file) display_format
   in
   let summary =
     "print the CST.\nWarning: Intended for development of LIGO and can break at any time."

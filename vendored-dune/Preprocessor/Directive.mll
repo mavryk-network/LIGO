@@ -50,7 +50,7 @@ let mk_string (p : char list) : string =
 
 (* DIRECTIVES *)
 
-type file_path   = string
+type file_path   = string [@@deriving yojson]
 type module_name = string
 type message     = string
 type variable    = string
@@ -64,12 +64,48 @@ type ending = [
 
 (* #include *)
 
-type include_directive = <
-  region           : Region.t;
-  file_path        : file_path Region.reg;
-  trailing_comment : string Region.reg option
->
+let error_yojson_format format =
+  Error ("Invalid JSON value.\nAn object with the following specification is expected:" ^ format)
 
+let string_reg_option_to_yojson = function
+  | Some string_reg -> Region.reg_to_yojson file_path_to_yojson string_reg
+  | None -> `Null
+
+let string_reg_option_of_yojson (yojson: Yojson.Safe.t) = match yojson with
+  | `Null -> Ok None
+  | string_reg_y -> (match Region.reg_of_yojson file_path_of_yojson string_reg_y with
+                    | Ok string_reg -> Ok (Some string_reg)
+                    | Error e -> Error "Could not parse string_reg option from json")
+
+let include_directive_to_yojson  v =
+  `Assoc ([
+        ("region", Region.to_yojson v#region);
+        ("file_path", Region.reg_to_yojson file_path_to_yojson v#file_path);
+        ("trailing_comment", string_reg_option_to_yojson v#trailing_comment)
+    ])
+
+let include_directive_of_yojson  (yojson: Yojson.Safe.t) = match yojson with
+  | `Assoc [ ("region", region_y);
+             ("file_path", file_path_y);
+             ("trailing_comment", trailing_comment_y)] ->
+     (match
+        Region.of_yojson region_y,
+        Region.reg_of_yojson file_path_of_yojson file_path_y,
+        string_reg_option_of_yojson trailing_comment_y with
+      | Ok region, Ok file_path, Ok trailing_comment -> Ok object
+    method region           : Region.t = region
+    method file_path        : file_path Region.reg = file_path
+    method trailing_comment : message Region.reg option = trailing_comment
+    end
+      | _ -> error_yojson_format "{ region, file_path, trailing_comment}")
+  | _ ->
+     error_yojson_format "{ region, file_path, trailing_comment}"
+
+type include_directive = <
+                         region           : Region.t;
+                         file_path        : file_path Region.reg;
+                         trailing_comment : string Region.reg option
+                                            >
 let mk_include ?trailing_comment dir_region file_path =
   object
     method region           : Region.t = dir_region

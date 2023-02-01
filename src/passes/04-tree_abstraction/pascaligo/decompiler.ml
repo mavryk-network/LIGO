@@ -180,7 +180,12 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr =
     let v = CST.T_Var (decompile_type_var type_operator) in
     let lst = List.map ~f:decompile_type_expr arguments in
     let lst = list_to_nsepseq ~sep:Token.ghost_comma lst in
-    let lst : _ CST.par = { lpar = Wrap.ghost "" (fun s -> `String s); inside = lst; rpar = Wrap.ghost "" (fun s -> `String s)} in
+    let lst : _ CST.par =
+      { lpar = Wrap.ghost "" (fun s -> `String s)
+      ; inside = lst
+      ; rpar = Wrap.ghost "" (fun s -> `String s)
+      }
+    in
     return @@ CST.T_App (Region.wrap_ghost (v, Region.wrap_ghost lst))
   | T_annoted _annot -> failwith "TODO: decompile T_annoted"
   | T_module_accessor { module_path; element } ->
@@ -197,7 +202,8 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr =
       return z
     | Literal_string s ->
       let z : CST.type_expr =
-        CST.T_String (Wrap.ghost (Simple_utils.Ligo_string.extract s) (fun s -> `String s))
+        CST.T_String
+          (Wrap.ghost (Simple_utils.Ligo_string.extract s) (fun s -> `String s))
       in
       return z
     | _ -> failwith "unsupported singleton")
@@ -252,7 +258,9 @@ let rec decompile_expression : AST.expression -> CST.expr =
     (match block with
     | Some block ->
       let block = Region.wrap_ghost block in
-      CST.E_Block (Region.wrap_ghost @@ CST.{ block; kwd_with = Wrap.ghost "" (fun s -> `String s); expr })
+      CST.E_Block
+        (Region.wrap_ghost
+        @@ CST.{ block; kwd_with = Wrap.ghost "" (fun s -> `String s); expr })
     | None -> expr)
   | None ->
     failwith
@@ -386,7 +394,10 @@ and decompile_eos
     let var = decompile_variable name in
     return_expr @@ CST.E_Var var
   | E_constant { cons_name; arguments } ->
-    let expr = CST.E_Var (Wrap.ghost (Predefined.constant_to_string cons_name) (fun s -> `String s)) in
+    let expr =
+      CST.E_Var
+        (Wrap.ghost (Predefined.constant_to_string cons_name) (fun s -> `String s))
+    in
     (match arguments with
     | [] -> return_expr @@ expr
     | _ ->
@@ -399,9 +410,13 @@ and decompile_eos
     (* TODO: Check these new cases coming from dev *)
     (match literal with
     | Literal_unit ->
-      return_expr @@ CST.E_App (Region.wrap_ghost (CST.E_Ctor (Wrap.ghost "Unit" (fun s -> `String s)), None))
-    | Literal_int i -> return_expr @@ CST.E_Int (Wrap.ghost (Z.to_string i, i) (fun (s, _) -> `String s))
-    | Literal_nat n -> return_expr @@ CST.E_Nat (Wrap.ghost (Z.to_string n, n) (fun (s, _) -> `String s))
+      return_expr
+      @@ CST.E_App
+           (Region.wrap_ghost (CST.E_Ctor (Wrap.ghost "Unit" (fun s -> `String s)), None))
+    | Literal_int i ->
+      return_expr @@ CST.E_Int (Wrap.ghost (Z.to_string i, i) (fun (s, _) -> `String s))
+    | Literal_nat n ->
+      return_expr @@ CST.E_Nat (Wrap.ghost (Z.to_string n, n) (fun (s, _) -> `String s))
     | Literal_timestamp time ->
       let time =
         Tezos_utils.Time.Protocol.to_notation
@@ -414,9 +429,12 @@ and decompile_eos
       return_typed time ty
     | Literal_mutez mtez ->
       let str = Z.to_string mtez in
-      return_expr @@ CST.E_Mutez (Wrap.ghost (str, Z.to_int64 mtez) (fun (s, _) -> `String s))
-    | Literal_string (Standard str) -> return_expr @@ CST.E_String (Wrap.ghost str (fun s -> `String s))
-    | Literal_string (Verbatim ver) -> return_expr @@ CST.E_Verbatim (Wrap.ghost ver (fun s -> `String s))
+      return_expr
+      @@ CST.E_Mutez (Wrap.ghost (str, Z.to_int64 mtez) (fun (s, _) -> `String s))
+    | Literal_string (Standard str) ->
+      return_expr @@ CST.E_String (Wrap.ghost str (fun s -> `String s))
+    | Literal_string (Verbatim ver) ->
+      return_expr @@ CST.E_Verbatim (Wrap.ghost ver (fun s -> `String s))
     | Literal_bytes b ->
       let b = Hex.of_bytes b in
       let s = Hex.to_string b in
@@ -665,8 +683,9 @@ and decompile_eos
     let structure =
       let aux (access : AST.expression Access_path.access) =
         match access with
-        | Access_record field -> CST.FieldName (Wrap.ghost field  (fun s -> `String s))
-        | Access_tuple z -> CST.Component (Wrap.ghost (Z.to_string z, z) (fun (s, _) -> `String s) )
+        | Access_record field -> CST.FieldName (Wrap.ghost field (fun s -> `String s))
+        | Access_tuple z ->
+          CST.Component (Wrap.ghost (Z.to_string z, z) (fun (s, _) -> `String s))
         | Access_map _ -> failwith "map access in struct_ update"
       in
       let field_path = list_to_nsepseq ~sep:Token.ghost_dot (List.map ~f:aux path) in
@@ -941,7 +960,8 @@ and decompile_to_path : Value_var.t -> _ Access_path.t -> CST.expr =
 and decompile_to_selection : _ Access_path.access -> CST.selection =
  fun access ->
   match access with
-  | Access_tuple index -> CST.Component (Wrap.ghost (Z.to_string index, index) (fun (s, _) -> `String s))
+  | Access_tuple index ->
+    CST.Component (Wrap.ghost (Z.to_string index, index) (fun (s, _) -> `String s))
   | Access_record str -> CST.FieldName (Wrap.ghost str (fun s -> `String s))
   | Access_map _ ->
     failwith "Can't decompile access_map to selection" (* TODO : REMOVE THIS!! *)
@@ -1091,7 +1111,8 @@ and decompile_module_expression : AST.module_expr -> CST.module_expr =
     let module_path =
       nelist_to_npseq ~sep:Token.ghost_dot
       @@ List.Ne.map
-           (fun (x : Module_var.t) -> Wrap.ghost (Module_var.to_name_exn x) (fun s -> `String s))
+           (fun (x : Module_var.t) ->
+             Wrap.ghost (Module_var.to_name_exn x) (fun s -> `String s))
            (hd, tl')
     in
     let field = Wrap.ghost (Module_var.to_name_exn field) (fun s -> `String s) in
