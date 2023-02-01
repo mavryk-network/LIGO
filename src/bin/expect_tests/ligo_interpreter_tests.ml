@@ -4,6 +4,20 @@ let test basename = "./" ^ basename
 let pwd = Caml.Sys.getcwd ()
 let () = Caml.Sys.chdir "../../test/contracts/interpreter_tests/"
 
+(* tests replacing Hashlock tests *)
+let%expect_test _ =
+  run_ligo_good [ "run"; "test"; test "test_hashlock.mligo" ];
+  [%expect
+    {|
+    Everything at the top-level was executed.
+    - test_commit exited with value ().
+    - test_reveal_no_commit exited with value ().
+    - test_reveal_young_commit exited with value ().
+    - test_reveal_breaks_commit exited with value ().
+    - test_reveal_wrong_commit exited with value ().
+    - test_reveal_no_reuse exited with value ().
+    - test_reveal exited with value (). |}]
+
 (* test comparison on sum/record types *)
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_compare.mligo" ];
@@ -550,7 +564,12 @@ let%expect_test _ =
     Consider using `Test.failwith` for throwing a testing framework failure.
 
     Everything at the top-level was executed.
-    - tester exited with value <fun>. |}]
+    - tester exited with value <fun>.
+    - test exited with value [(() , Mutation at: File "adder.mligo", line 1, characters 58-63:
+      1 | let main (p : int) (k : int) : operation list * int = [], p + k
+
+    Replacing by: (p - k).
+    )]. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "iteration.jsligo" ];
@@ -1164,25 +1183,11 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_key.mligo" ];
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1166, characters 2-56
-  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
-
-  Trailing output
-  ---------------
-  File "./test_key.mligo", line 14, characters 22-37:
-   13 |   let (_, pub_key, _) = Test.get_bootstrap_account 1n in
-   14 |   let (taddr, _, _) = Test.@originate main {registry = (Big_map.empty : registry); next_id = 1n} 0mutez in
-   15 |   let contr = Test.to_contract taddr in
-
-  Variable "@originate" not found. |}]
+  [%expect
+    {|
+    edpkuPiWEAMNmxsNYRNnjnHgpox275MR1svXTB9hbeshMUkTZwrB1P
+    Everything at the top-level was executed.
+    - test exited with value Success (2799n). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_tickets_and_bigmaps.mligo" ];
@@ -1429,7 +1434,7 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts/negative//interpreter_tests/test_failure3.mligo", line 3, characters 2-17:
-      2 |   let f = (fun (_ : (unit * unit)) -> ()) in
+      2 |   let f = (fun (_ : unit) (_ : unit) -> ()) in
       3 |   Test.@originate f () 0tez
 
     Variable "@originate" not found. |}]
@@ -1529,8 +1534,7 @@ let%expect_test _ =
       2 | const bar = Test.run(foo, {property: "toto"});
       3 |
 
-    Invalid type(s)
-    Cannot unify "record[property -> string]" with "record[field -> int]". |}]
+    Mismatching record labels. Expected record of type "record[field -> int]". |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_run_types2.jsligo" ];

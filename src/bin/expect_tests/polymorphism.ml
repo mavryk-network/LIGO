@@ -425,7 +425,7 @@ let%expect_test _ =
   [%expect
     {|
     Everything at the top-level was executed.
-    - test exited with value 51. |}]
+    - test exited with value 55. |}]
 
 let%expect_test _ =
   run_ligo_good
@@ -571,7 +571,7 @@ let%expect_test _ =
   [%expect
     {xxx|
     File "./unresolved/contract2.mligo", line 4, characters 13-15:
-      3 | let main (_, _ : int list * nat) : (operation list * nat) =
+      3 | let main (_ : int list) (_ : nat) : (operation list * nat) =
       4 |     [], (one [])
 
     Underspecified type "^a".

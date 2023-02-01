@@ -102,13 +102,42 @@ let apply (entry_point : string) (param : Ast_core.expression) : Ast_core.expres
   applied
 
 
+let apply_twice
+    (entry_point : string)
+    (param1 : Ast_core.expression)
+    (param2 : Ast_core.expression)
+    : Ast_core.expression
+  =
+  let name = Value_var.of_input_var ~loc:Location.dummy entry_point in
+  let entry_point_var : Ast_core.expression =
+    { expression_content = Ast_core.E_variable name
+    ; sugar = None
+    ; location = Virtual "generated entry-point variable"
+    }
+  in
+  let applied : Ast_core.expression =
+    { expression_content =
+        Ast_core.E_application { lamb = entry_point_var; args = param1 }
+    ; sugar = None
+    ; location = Virtual "generated application"
+    }
+  in
+  let applied : Ast_core.expression =
+    { expression_content = Ast_core.E_application { lamb = applied; args = param2 }
+    ; sugar = None
+    ; location = Virtual "generated application"
+    }
+  in
+  applied
+
+
 let list_declarations (m : Ast_core.program) : Value_var.t list =
   List.fold_left
     ~f:(fun prev el ->
       let open Location in
       match (el.wrap_content : Ast_core.declaration_content) with
       | D_value { binder; _ } -> Binder.get_var binder :: prev
-      | D_irrefutable_match _ | D_type _ | D_module _ -> prev)
+      | D_irrefutable_match _ | D_type _ | D_module _ | D_contract _ -> prev)
     ~init:[]
     m
 
@@ -121,7 +150,7 @@ let list_lhs_pattern_declarations (m : Ast_core.program) : Value_var.t list =
         let binders = Ast_core.Pattern.binders pattern in
         let vars = List.map binders ~f:Binder.get_var in
         vars @ prev
-      | D_value _ | D_type _ | D_module _ -> prev)
+      | D_value _ | D_type _ | D_module _ | D_contract _ -> prev)
     ~init:[]
     m
 
@@ -132,7 +161,7 @@ let list_type_declarations (m : Ast_core.program) : Type_var.t list =
       let open Location in
       match (el.wrap_content : Ast_core.declaration_content) with
       | D_type { type_binder; type_attr; _ } when type_attr.public -> type_binder :: prev
-      | D_value _ | D_irrefutable_match _ | D_module _ | D_type _ -> prev)
+      | D_value _ | D_irrefutable_match _ | D_module _ | D_type _ | D_contract _ -> prev)
     ~init:[]
     m
 
@@ -143,6 +172,6 @@ let list_mod_declarations (m : Ast_core.program) : Module_var.t list =
       let open Location in
       match (el.wrap_content : Ast_core.declaration_content) with
       | D_module { module_binder; _ } -> module_binder :: prev
-      | D_value _ | D_irrefutable_match _ | D_type _ -> prev)
+      | D_value _ | D_irrefutable_match _ | D_type _ | D_contract _ -> prev)
     ~init:[]
     m

@@ -1,6 +1,6 @@
 let id (type a) (x : a) : a = x
 
-let main (m, n : int * int) : operation list * int =
+let main (m : int) (n : int) : operation list * int =
   ([] : operation list), (id n) + (id m)
 
 let @test =

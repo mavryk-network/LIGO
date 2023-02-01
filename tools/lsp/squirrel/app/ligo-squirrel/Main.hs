@@ -8,11 +8,13 @@ import Control.Lens (folded, to)
 import Data.Aeson qualified as Aeson
 import Data.Default (def)
 import Data.Set qualified as Set
+import Debug.TimeStats qualified as TimeStats
 import Focus qualified
 import Language.LSP.Logging as L
 import Language.LSP.Server qualified as S
 import Language.LSP.Types qualified as J
 import Language.LSP.Types.Lens qualified as J
+import Language.LSP.Util (filePathToNormalizedUri, sendError)
 import Prettyprinter qualified as PP
 import StmContainers.Map qualified as StmMap
 import System.Exit (ExitCode (ExitFailure))
@@ -26,21 +28,22 @@ import Cli (TempSettings, getLigoVersionSafe)
 import Config (Config (..))
 import Debug qualified (show)
 import Extension (isLigoFile)
-import Language.LSP.Util (filePathToNormalizedUri, sendError)
 import Log (i)
 import Log qualified
 import Range (Range (..), fromLspPosition, fromLspPositionUri, fromLspRange, toLspRange)
 import RIO qualified
 import RIO.Diagnostic qualified as Diagnostic
 import RIO.Document qualified as Document
-import RIO.Indexing (getIndexDirectory)
 import RIO.Indexing qualified as Indexing
-import RIO.Types (RIO, RioEnv (..))
-import Util (foldMapM, toLocation)
+import RIO.Types (LoadEffort (..), RIO, RioEnv (..))
+import Util (enableTimestats, foldMapM, timestatsEnvFlag, toLocation)
 import Util.Graph (traverseAM)
 
 main :: IO ()
-main = exit =<< mainLoop
+main = do
+  -- if LIGO_LSP_TIMESTATS is nonempty during compilation, we globally enable timestats
+  when timestatsEnvFlag enableTimestats
+  exit =<< mainLoop
 
 mainLoop :: IO Int
 mainLoop =
@@ -134,21 +137,35 @@ mainLoop =
       Colog.filterBySeverity Colog.Error Colog.getSeverity
       $ Colog.cmap (fmap (Debug.show . PP.pretty)) L.logToLogMessage
 
+handleN
+  :: forall (a :: J.Method 'J.FromClient 'J.Notification) .
+  J.SMethod a -> S.Handler RIO a -> S.Handlers RIO
+handleN method handler = S.notificationHandler method $
+  \notif -> TimeStats.measureM ("N: " <> show method) $ do
+    handler notif
+
 handleWithActiveFileUpdateN
   :: forall (a :: J.Method 'J.FromClient 'J.Notification) doc.
   (J.HasTextDocument (J.MessageParams a) doc, J.HasUri doc J.Uri)
   => J.SMethod a -> S.Handler RIO a -> S.Handlers RIO
 handleWithActiveFileUpdateN method handler = S.notificationHandler method $
-  \notif -> do
+  \notif -> TimeStats.measureM ("N: " <> show method) $ do
     handleNewActiveFile notif
     handler notif
+
+handleR
+  :: forall (a :: J.Method 'J.FromClient 'J.Request) .
+  J.SMethod a -> S.Handler RIO a -> S.Handlers RIO
+handleR method handler = S.requestHandler method $
+  \resp req -> TimeStats.measureM ("R: " <> show method) $ do
+    handler resp req
 
 handleWithActiveFileUpdateR
   :: forall (a :: J.Method 'J.FromClient 'J.Request) doc.
   ( J.HasTextDocument (J.MessageParams a) doc, J.HasUri doc J.Uri)
   => J.SMethod a -> S.Handler RIO a -> S.Handlers RIO
 handleWithActiveFileUpdateR method handler = S.requestHandler method $
-  \resp req -> do
+  \resp req -> TimeStats.measureM ("R: " <> show method) $ do
     handleNewActiveFile resp
     handler resp req
 
@@ -168,20 +185,20 @@ handleNewActiveFile message = do
       changed = previousActiveFile /= Just fileFromNotif
   when changed $ do
     atomically $ writeTVar activeFileVar (Just fileFromNotif)
-    void . getIndexDirectory . J.fromNormalizedFilePath $ fileFromNotif
+    void . Indexing.getIndexDirectory Document.initializeBuildGraph . J.fromNormalizedFilePath $ fileFromNotif
   -- reindexing in case this file belong to different ligo project.
 
 handlers :: S.Handlers RIO
 handlers = mconcat
-  [ S.notificationHandler J.SInitialized handleInitialized
+  [ handleN J.SInitialized handleInitialized
 
-  , S.requestHandler J.SShutdown handleShutdown
+  , handleR J.SShutdown handleShutdown
 
   , handleWithActiveFileUpdateN J.STextDocumentDidOpen handleDidOpenTextDocument
   , handleWithActiveFileUpdateN J.STextDocumentDidChange handleDidChangeTextDocument
   , handleWithActiveFileUpdateN J.STextDocumentDidSave handleDidSaveTextDocument
 
-  , S.notificationHandler J.STextDocumentDidClose handleDidCloseTextDocument
+  , handleN J.STextDocumentDidClose handleDidCloseTextDocument
 
   , handleWithActiveFileUpdateR J.STextDocumentDefinition  handleDefinitionRequest
   , handleWithActiveFileUpdateR J.STextDocumentTypeDefinition  handleTypeDefinitionRequest
@@ -200,13 +217,13 @@ handlers = mconcat
   , handleWithActiveFileUpdateR J.STextDocumentCodeAction  handleTextDocumentCodeAction
   , handleWithActiveFileUpdateR J.STextDocumentSignatureHelp  handleSignatureHelpRequest
 
-  , S.notificationHandler J.SCancelRequest (\_msg -> pass)
-  , S.notificationHandler J.SWorkspaceDidChangeConfiguration handleDidChangeConfiguration
-  , S.notificationHandler J.SWorkspaceDidChangeWatchedFiles handleDidChangeWatchedFiles
+  , handleN J.SCancelRequest (\_msg -> pass)
+  , handleN J.SWorkspaceDidChangeConfiguration handleDidChangeConfiguration
+  , handleN J.SWorkspaceDidChangeWatchedFiles handleDidChangeWatchedFiles
 
-  , S.requestHandler (J.SCustomMethod "buildGraph") handleCustomMethod'BuildGraph
-  , S.requestHandler (J.SCustomMethod "indexDirectory") handleCustomMethod'IndexDirectory
-  , S.requestHandler (J.SCustomMethod "isDirty") handleCustomMethod'IsDirty
+  , handleR (J.SCustomMethod "buildGraph") handleCustomMethod'BuildGraph
+  , handleR (J.SCustomMethod "indexDirectory") handleCustomMethod'IndexDirectory
+  , handleR (J.SCustomMethod "isDirty") handleCustomMethod'IsDirty
   ]
 
 handleInitialized :: S.Handler RIO 'J.Initialized
@@ -225,7 +242,7 @@ handleDidOpenTextDocument notif = do
   openDocs <- asks reOpenDocs
   atomically $ StmMap.insert RIO.OpenDocument{odIsDirty = False} uri openDocs
 
-  doc <- Document.forceFetch Document.BestEffort uri
+  doc <- Document.fetch Document.BestEffort NoLoading uri
   Diagnostic.collectErrors doc (Just ver)
 
 handleDidChangeTextDocument :: S.Handler RIO 'J.TextDocumentDidChange
@@ -235,7 +252,7 @@ handleDidChangeTextDocument notif = do
   openDocs <- asks reOpenDocs
   atomically $ StmMap.focus (Focus.adjust \openDoc -> openDoc{RIO.odIsDirty = True}) uri openDocs
 
-  void $ Document.forceFetchAndNotify notify Document.LeastEffort uri
+  void $ Document.forceFetchAndNotify notify Document.LeastEffort NoLoading uri
   where
     uri = notif^.J.params.J.textDocument.J.uri.to J.toNormalizedUri
 
@@ -258,7 +275,7 @@ handleDidCloseTextDocument :: S.Handler RIO 'J.TextDocumentDidClose
 handleDidCloseTextDocument notif = do
   let uri = notif^.J.params.J.textDocument.J.uri.to J.toNormalizedUri
 
-  doc <- Document.fetch Document.LeastEffort uri
+  doc <- Document.fetch Document.LeastEffort NoLoading uri
   files <- Document.wccForFilePath (contractFile doc)
   let nuris = map filePathToNormalizedUri $ G.vertexList files
 
@@ -277,7 +294,7 @@ handleDefinitionRequest :: S.Handler RIO 'J.TextDocumentDefinition
 handleDefinitionRequest req respond = do
     let uri = req ^. J.params . J.textDocument . J.uri
         pos = fromLspPosition $ req ^. J.params . J.position
-    tree <- contractTree <$> Document.fetch Document.LeastEffort (J.toNormalizedUri uri)
+    tree <- contractTree <$> Document.fetch Document.LeastEffort DirectLoading (J.toNormalizedUri uri)
     let location = case AST.definitionOf pos tree of
           Just defPos -> [toLocation defPos]
           Nothing     -> []
@@ -288,7 +305,7 @@ handleTypeDefinitionRequest :: S.Handler RIO 'J.TextDocumentTypeDefinition
 handleTypeDefinitionRequest req respond = do
     let uri = req ^. J.params . J.textDocument . J.uri
         pos = req ^. J.params . J.position . to fromLspPosition
-    tree <- contractTree <$> Document.fetch Document.LeastEffort (J.toNormalizedUri uri)
+    tree <- contractTree <$> Document.fetch Document.LeastEffort DirectLoading (J.toNormalizedUri uri)
     let wrapAndRespond = respond . Right . J.InR . J.InL . J.List
     let definition = case AST.typeDefinitionAt pos tree of
           Just defPos -> [J.Location uri $ toLspRange defPos]
@@ -329,7 +346,7 @@ handleDocumentRangeFormattingRequest req respond = do
 handleFindReferencesRequest :: S.Handler RIO 'J.TextDocumentReferences
 handleFindReferencesRequest req respond = do
     let (_, nuri, pos) = getUriPos req
-    tree <- contractTree <$> Document.fetch Document.NormalEffort nuri
+    tree <- contractTree <$> Document.fetch Document.NormalEffort FullLoading nuri
     let locations = case AST.referencesOf pos tree of
           Just refs -> toLocation <$> refs
           Nothing   -> []
@@ -339,7 +356,7 @@ handleFindReferencesRequest req respond = do
 handleDocumentHighlightRequest :: S.Handler RIO 'J.TextDocumentDocumentHighlight
 handleDocumentHighlightRequest req respond = do
     let (_, nuri, pos) = getUriPos req
-    tree <- contractTree <$> Document.fetch Document.NormalEffort nuri
+    tree <- contractTree <$> Document.fetch Document.NormalEffort NoLoading nuri
     let locations = case AST.referencesOf pos tree of
           Just refs -> toLocation <$> refs
           Nothing -> []
@@ -352,7 +369,7 @@ handleCompletionRequest :: S.Handler RIO 'J.TextDocumentCompletion
 handleCompletionRequest req respond = do
     let uri = req ^. J.params . J.textDocument . J.uri . to J.toNormalizedUri
     let pos = fromLspPosition $ req ^. J.params . J.position
-    FindContract source tree _ <- Document.fetch Document.LeastEffort uri
+    FindContract source tree _ <- Document.fetch Document.LeastEffort DirectLoading uri
     graphVar <- asks reBuildGraph
     graph <- readTVarIO graphVar
     listCompl <- withCompleterM (CompleterEnv pos tree source graph) complete
@@ -363,14 +380,14 @@ handleSignatureHelpRequest :: S.Handler RIO 'J.TextDocumentSignatureHelp
 handleSignatureHelpRequest req respond = do
   let uri = req ^. J.params . J.textDocument . J.uri
       pos = req ^. J.params . J.position & fromLspPosition
-  tree <- contractTree <$> Document.fetch Document.LeastEffort (J.toNormalizedUri uri)
+  tree <- contractTree <$> Document.fetch Document.LeastEffort DirectLoading (J.toNormalizedUri uri)
   let signatureHelp = getSignatureHelp (tree ^. nestedLIGO) pos
   respond . Right $ signatureHelp
 
 handleFoldingRangeRequest :: S.Handler RIO 'J.TextDocumentFoldingRange
 handleFoldingRangeRequest req respond = do
     let uri = req ^. J.params . J.textDocument . J.uri . to J.toNormalizedUri
-    tree <- contractTree <$> Document.fetch Document.LeastEffort uri
+    tree <- contractTree <$> Document.fetch Document.LeastEffort NoLoading uri
     let actions = foldingAST (tree ^. nestedLIGO)
     respond . Right . J.List $ toFoldingRange <$> actions
 
@@ -380,7 +397,7 @@ handleTextDocumentCodeAction req respond = do
       uri = req ^. J.params . J.textDocument . J.uri . to J.toNormalizedUri
       r = req ^. J.params . J.range . to fromLspRange
       con = req ^. J.params . J.context
-    tree <- contractTree <$> Document.fetch Document.LeastEffort uri
+    tree <- contractTree <$> Document.fetch Document.LeastEffort NoLoading uri
     let actions = collectCodeActions r con (J.fromNormalizedUri uri) tree
     let response = Right . J.List . fmap J.InR $ actions
     respond response
@@ -389,14 +406,14 @@ handleSelectionRangeRequest :: S.Handler RIO 'J.TextDocumentSelectionRange
 handleSelectionRangeRequest req respond = do
     let uri = req ^. J.params . J.textDocument . J.uri . to J.toNormalizedUri
     let positions = req ^. J.params . J.positions ^.. folded
-    tree <- contractTree <$> Document.fetch Document.NormalEffort uri
+    tree <- contractTree <$> Document.fetch Document.NormalEffort NoLoading uri
     let results = map (findSelectionRange (tree ^. nestedLIGO)) positions
     respond . Right . J.List $ results
 
 handleDocumentLinkRequest :: S.Handler RIO 'J.TextDocumentDocumentLink
 handleDocumentLinkRequest req respond = do
   let uri = req ^. J.params . J.textDocument . J.uri . to J.toNormalizedUri
-  contractInfo <- Document.fetch Document.LeastEffort uri
+  contractInfo <- Document.fetch Document.LeastEffort NoLoading uri
   collected <-
     getDocumentLinks
       (contractFile contractInfo)
@@ -406,7 +423,7 @@ handleDocumentLinkRequest req respond = do
 handleDocumentSymbolsRequest :: S.Handler RIO 'J.TextDocumentDocumentSymbol
 handleDocumentSymbolsRequest req respond = do
     let uri = req ^. J.params . J.textDocument . J.uri . to J.toNormalizedUri
-    tree <- contractTree <$> Document.fetch Document.LeastEffort uri
+    tree <- contractTree <$> Document.fetch Document.LeastEffort NoLoading uri
     let result = extractDocumentSymbols (J.fromNormalizedUri uri) tree
     respond . Right . J.InR . J.List $ result
 
@@ -414,7 +431,7 @@ handleHoverRequest :: S.Handler RIO 'J.TextDocumentHover
 handleHoverRequest req respond = do
     let uri = req ^. J.params . J.textDocument . J.uri . to J.toNormalizedUri
         pos = fromLspPosition $ req ^. J.params . J.position
-    tree <- contractTree <$> Document.fetch Document.LeastEffort uri
+    tree <- contractTree <$> Document.fetch Document.LeastEffort DirectLoading uri
     respond . Right $ hoverDecl pos tree
 
 handleRenameRequest :: S.Handler RIO 'J.TextDocumentRename
@@ -422,7 +439,7 @@ handleRenameRequest req respond = do
     let (_, nuri, pos) = getUriPos req
     let newName = req ^. J.params . J.newName
 
-    tree <- contractTree <$> Document.fetch Document.NormalEffort nuri
+    FindContract (Source fp _ _) tree _ <- Document.fetch Document.NormalEffort FullLoading nuri
 
     case renameDeclarationAt pos tree newName of
       Nothing -> do
@@ -449,14 +466,14 @@ handleRenameRequest req respond = do
               , _documentChanges = Nothing
               , _changeAnnotations = Nothing
               }
-        Document.invalidate nuri
+        Document.invalidateWccFiles fp
         respond . Right $ response
 
 handlePrepareRenameRequest :: S.Handler RIO 'J.TextDocumentPrepareRename
 handlePrepareRenameRequest req respond = do
     let (_, nuri, pos) = getUriPos req
 
-    tree <- contractTree <$> Document.fetch Document.NormalEffort nuri
+    tree <- contractTree <$> Document.fetch Document.NormalEffort NoLoading nuri
 
     respond . Right . fmap (J.InL . toLspRange) $ prepareRenameDeclarationAt pos tree
 
@@ -475,8 +492,14 @@ handleDidChangeWatchedFiles notif = do
       let fp = J.fromNormalizedFilePath nfp
       -- We don't want to react on changes within the temporary directory.
       when (Document.tempDirTemplate `notElem` splitDirectories fp) $
-        bool Indexing.handleProjectFileChanged Document.handleLigoFileChanged (isLigoFile fp) nfp change
+        bool
+          (Indexing.handleProjectFileChanged Document.initializeBuildGraph)
+          Document.handleLigoFileChanged
+          (isLigoFile fp)
+          nfp
+          change
 
+-- | Indexes the project and extracts the full build graph. For testing.
 handleCustomMethod'BuildGraph
   :: S.Handler RIO ('J.CustomMethod :: J.Method 'J.FromClient 'J.Request)
 handleCustomMethod'BuildGraph req respond =
@@ -488,6 +511,8 @@ handleCustomMethod'BuildGraph req respond =
       let msg = [i|This message expects Null, but got #{other}|]
       respond $ Left $ J.ResponseError J.InvalidParams msg Nothing
 
+-- | Return the indexing options of the project, or 'Aeson.Null' if they weren't
+-- set. For testing.
 handleCustomMethod'IndexDirectory
   :: S.Handler RIO ('J.CustomMethod :: J.Method 'J.FromClient 'J.Request)
 handleCustomMethod'IndexDirectory _req respond = do
@@ -496,7 +521,7 @@ handleCustomMethod'IndexDirectory _req respond = do
   respond $ Right $ maybe Aeson.Null (Aeson.String . toText) pathM
 
 -- | Handles whether a document is clean ('False') or dirty ('True'). If the
--- provided file doesn't exist, returns null.
+-- provided file doesn't exist, returns 'Aeson.Null'. For testing.
 handleCustomMethod'IsDirty
   :: S.Handler RIO ('J.CustomMethod :: J.Method 'J.FromClient 'J.Request)
 handleCustomMethod'IsDirty req respond =
