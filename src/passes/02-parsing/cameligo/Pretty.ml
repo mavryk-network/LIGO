@@ -10,6 +10,30 @@ open! PPrint
 module Option = Simple_utils.Option
 module Token  = Lexing_cameligo.Token
 
+(* PRINTING LITERALS *)
+
+let pp_bytes (node : (lexeme * Hex.t) wrap) =
+  string ("0x" ^ Hex.show (snd node#payload))
+
+let pp_mutez (node : (lexeme * Int64.t) wrap) =
+  Int64.to_string (snd node#payload) ^ "mutez" |> string
+
+let pp_ident (node : variable) = string node#payload
+
+let pp_string (node : lexeme wrap) =
+  string "\"" ^^ pp_ident node ^^ string "\""
+
+let pp_verbatim (node : lexeme wrap) =
+  string "{|" ^^ pp_ident node ^^ string "|}"
+
+let pp_int (node : (lexeme * Z.t) wrap) =
+  string (Z.to_string (snd node#payload))
+
+and pp_nat (node : (lexeme * Z.t) wrap) =
+  string (Z.to_string (snd node#payload) ^ "n")
+
+(* HIGHER-ORDER PRINTERS *)
+
 let pp_par printer {value; _} =
   string "(" ^^ nest 1 (printer value.inside ^^ string ")")
 
@@ -28,18 +52,6 @@ and pp_declaration = function
 | ModuleDecl  decl -> pp_module_decl  decl ^^ hardline
 | ModuleAlias decl -> pp_module_alias decl ^^ hardline
 | Directive   dir  -> string (Directive.to_lexeme dir).Region.value
-
-(* Variables *)
-
-and pp_ident t = string t.value
-
-(* Strings *)
-
-and pp_string s = string "\"" ^^ pp_ident s ^^ string "\""
-
-(* Verbatim strings *)
-
-and pp_verbatim s = string "{|" ^^ pp_ident s ^^ string "|}"
 
 (* Value declarations *)
 
@@ -116,15 +128,6 @@ and pp_pconstr {value; _} =
   | constr, Some pat ->
       prefix 4 1 (pp_ident constr) (pp_pattern pat)
 
-and pp_int {value; _} =
-  string (Z.to_string (snd value))
-
-and pp_nat {value; _} =
-  string (Z.to_string (snd value) ^ "n")
-
-and pp_bytes {value; _} =
-  string ("0x" ^ Hex.show (snd value))
-
 and pp_ppar p = pp_par pp_pattern p
 
 and pp_plist = function
@@ -187,9 +190,9 @@ and pp_module_alias decl =
   string "module " ^^ pp_ident alias ^^ string " ="
   ^^ group (nest 0 (break 1 ^^ pp_nsepseq "." pp_ident binders))
 
-and pp_assign assign = 
+and pp_assign assign =
   let {binder; ass = _; expr} = assign.value in
-  prefix 2 1 (pp_ident binder ^^ string " :=") (pp_expr expr) 
+  prefix 2 1 (pp_ident binder ^^ string " :=") (pp_expr expr)
 
 and pp_expr = function
   ECase       e -> pp_case_expr e
@@ -240,13 +243,13 @@ and pp_loop_body { kwd_do = _; seq_expr; kwd_done = _ } =
           (Utils.nsepseq_to_list exprs)
     | None -> empty
   in
-  string "do" 
-  ^^ nest 2 (hardline ^^ seq_expr) ^^ hardline 
+  string "do"
+  ^^ nest 2 (hardline ^^ seq_expr) ^^ hardline
   ^^ string "done"
 
 
 and pp_for_loop {value; _} =
-  string "for " 
+  string "for "
   ^^ pp_index value.index
   ^^ string " = "
   ^^ pp_expr value.bound1
@@ -257,7 +260,7 @@ and pp_for_loop {value; _} =
   ^^ space
   ^^ pp_loop_body value.body
 
-and pp_for_in_loop {value; _} = 
+and pp_for_in_loop {value; _} =
   string "for "
   ^^ pp_pattern value.pattern
   ^^ string " in "
@@ -265,8 +268,8 @@ and pp_for_in_loop {value; _} =
   ^^ space
   ^^ pp_loop_body value.body
 
-and pp_while_loop {value; _} = 
-  string "while " 
+and pp_while_loop {value; _} =
+  string "while "
   ^^ pp_expr value.cond
   ^^ space
   ^^ pp_loop_body value.body
@@ -347,9 +350,6 @@ and pp_arith_expr = function
 | Nat   e -> pp_nat e
 | Mutez e -> pp_mutez e
 
-and pp_mutez {value; _} =
-  Int64.to_string (snd value) ^ "mutez" |> string
-
 and pp_string_expr = function
      Cat e -> pp_bin_op "^" e
 | String e -> pp_string e
@@ -378,7 +378,7 @@ and pp_compound = function
 
 and pp_constr_expr {value; _} =
   let constr, arg = value in
-  let constr = string constr.value in
+  let constr = string constr#payload in
   match arg with
       None -> constr
   | Some e -> prefix 2 1 constr (pp_expr e)
@@ -430,8 +430,8 @@ and pp_module_access :
     group (pp_ident module_name ^^ string "." ^^ break 0 ^^ f field)
 
 and pp_selection = function
-  FieldName v   -> string v.value
-| Component cmp -> cmp.value |> snd |> Z.to_string |> string
+  FieldName v   -> string v#payload
+| Component cmp -> cmp#payload |> snd |> Z.to_string |> string
 
 and pp_update {value; _} =
   let {record; updates; _} = value in
@@ -490,14 +490,14 @@ and pp_let_in {value; _} =
 and pp_let_mut_in {value; _} =
   let {binding; body; attributes=attr; kwd_mut = _; _} = value in
   let let_str = string "let mut " in
-  let let_str = 
-    if List.is_empty attr then let_str 
+  let let_str =
+    if List.is_empty attr then let_str
     else pp_attributes attr ^/^ let_str
   in
-  let_str 
-  ^^ pp_let_binding binding 
-  ^^ string " in" 
-  ^^ hardline 
+  let_str
+  ^^ pp_let_binding binding
+  ^^ string " in"
+  ^^ hardline
   ^^ group (pp_expr body)
 
 and pp_type_in {value; _} =
@@ -563,9 +563,11 @@ and pp_type_expr = function
 | TModA t    -> pp_module_access pp_type_expr t
 | TArg t     -> pp_quoted_param t
 
-and pp_quoted_param param =
-  let quoted = {param with value = "'" ^ param.value.name.value}
-  in pp_ident quoted
+and pp_quoted_param (param: type_var reg) =
+  let Region.{region; value} = param in
+  let quoted = "'" ^ value.name#payload in
+  let variable = Wrap.make quoted region
+  in pp_ident variable
 
 and pp_cartesian {value; _} =
   let head, tail = value in
@@ -636,7 +638,7 @@ and pp_ctor_arg_tuple {value; _} =
       pp_type_expr head ^^ string "," ^^ app (h :: tail)
     in string "(" ^^ nest 1 (components ^^ string ")")
 
-and pp_type_constr constr = string constr.value
+and pp_type_constr (constr: lexeme Wrap.t) = string constr#payload
 
 and pp_fun_type {value; _} =
   let lhs, _, rhs = value in
