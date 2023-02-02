@@ -4,13 +4,15 @@ module Test.LigoCall
 
 import Prelude hiding (try)
 
+import Unsafe qualified
+
 import Data.Text qualified as T
 import Fmt (pretty)
 import Test.Tasty (TestTree, testGroup)
 import Test.Util
 import Test.Util.Options (minor)
+import Text.Interpolation.Nyan
 import UnliftIO.Exception (try)
-import Unsafe qualified
 
 import Morley.Michelson.Parser (MichelsonSource (MSName))
 import Morley.Michelson.Text (mt)
@@ -86,6 +88,15 @@ test_EntrypointsCollection = testGroup "Getting entrypoints"
 
       EntrypointsList res <- getAvailableEntrypoints file
       res @?= []
+
+    -- Regression from #1459
+  , testGroup "Can detect at least one entrypoint in each dialect" do
+      lang <- allLangs
+      let file = contractsDir </> "simple-ops" <.> langExtension lang
+
+      pure $ testCase [int||For #{file}|] do
+        EntrypointsList res <- getAvailableEntrypoints file
+        res @? not . null
   ]
 
 test_Versions :: TestTree
