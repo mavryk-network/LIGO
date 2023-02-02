@@ -1,4 +1,4 @@
-const main = ([_, s] : [unit, int]) : [list<operation>, int] => {
+let main = ([_, s] : [unit, int]) : [list<operation>, int] => {
   let s2 = 0;
 
   if (s > 10) {
