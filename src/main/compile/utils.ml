@@ -137,11 +137,14 @@ let pretty_print ?(preprocess = false) ~raise ~options ~meta file_path =
 
 
 type _ cst =
-  | Pascaligo_cst: Parsing.Pascaligo.CST.t -> Parsing.Pascaligo.CST.t cst
-  | Jsligo_cst: Parsing.Jsligo.CST.t -> Parsing.Jsligo.CST.t cst
-  | Cameligo_cst: Parsing.Cameligo.CST.t -> Parsing.Cameligo.CST.t cst
+  | Pascaligo_cst : Parsing.Pascaligo.CST.t -> Parsing.Pascaligo.CST.t cst
+  | Jsligo_cst : Parsing.Jsligo.CST.t -> Parsing.Jsligo.CST.t cst
+  | Cameligo_cst : Parsing.Cameligo.CST.t -> Parsing.Cameligo.CST.t cst
 
-let make_pascaligo_cst: Parsing.Pascaligo.CST.t -> Parsing.Pascaligo.CST.t cst = fun cst -> Pascaligo_cst cst
+let make_pascaligo_cst : Parsing.Pascaligo.CST.t -> Parsing.Pascaligo.CST.t cst =
+ fun cst -> Pascaligo_cst cst
+
+
 let make_jsligo_cst cst = Jsligo_cst cst
 let make_cameligo_cst cst = Cameligo_cst cst
 
@@ -152,7 +155,7 @@ let make_cameligo_cst cst = Cameligo_cst cst
 (* options:Compiler_options.frontend -> *)
 (* meta:Helpers.meta -> Parsing_shared.Common.source -> a cst *)
 (* = fun *)
-      
+
 (*       ?(preprocess = true) *)
 (*       ~raise *)
 (*       ~options *)

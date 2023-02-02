@@ -65,95 +65,82 @@ let cst
     ()
   =
   let (Simple_utils.Display.Ex_display_format display_format) = display_format in
-  let k = fun ~raise ->
-  let open Simple_utils.Display in
-  let open Compile.Utils in
-  let syntax =
-    match syntax, source with
-    | Some v, _ -> v
-    | None, `File source ->
-      Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source)
-    | None, `Raw _ -> failwith "API expected syntax along with raw source"
-  in
-  let meta = Compile.Of_source.extract_meta syntax in
-  let k: raise:((Parsing.Errors.t, Main_warnings.all) Trace.raise) -> 'a = fun ~raise ->
-  let preprocess = false in
-  let buffer =
-    match source with
-      | `Raw code ->
-         let buffer = Buffer.create 0 in
-         Buffer.add_string buffer code;
-         buffer
-      | `File file_path -> buffer_from_path file_path
-  in
-  match source, meta.syntax with
-  | `Raw _code, PascaLIGO  ->
-     let cst = Parsing.Pascaligo.parse_string ~preprocess ~raise buffer in
-     (match display_format with
-      | Json -> Yojson.Safe.pretty_to_string @@ `String "TODO"
-      | Dev
-      | Human_readable ->
-       let buf = Parsing.Pascaligo.pretty_print_cst_cst cst in
-       Format.asprintf "%s" (Buffer.contents buf) )
-  | `File file_path, PascaLIGO  ->  
-     let cst = Parsing.Pascaligo.parse_file ~preprocess ~raise buffer file_path in
-     (match display_format with
-      | Json -> Yojson.Safe.pretty_to_string @@ `String "TODO"
-      | Dev
-      | Human_readable ->
-       let buf = Parsing.Pascaligo.pretty_print_cst_cst cst in
-       Format.asprintf "%s" (Buffer.contents buf))
-  | `File file_path, CameLIGO ->
-     let cst = Parsing.Cameligo.parse_file ~preprocess ~raise buffer file_path in
-     (match display_format with
-      | Json -> Yojson.Safe.pretty_to_string @@ Parsing.Cameligo.CST.to_yojson cst
-      | Dev
-      | Human_readable ->
-       let buf = Parsing.Cameligo.pretty_print_cst_cst cst in
-       Format.asprintf "%s" (Buffer.contents buf))
-  | `Raw _code, CameLIGO ->
-     let cst = Parsing.Cameligo.parse_string ~preprocess ~raise buffer in
-     (match display_format with
-      | Json -> Yojson.Safe.pretty_to_string @@ Parsing.Cameligo.CST.to_yojson cst
-      | Dev
-      | Human_readable ->
-       let buf = Parsing.Cameligo.pretty_print_cst_cst cst in
-       Format.asprintf "%s" (Buffer.contents buf))
-  | `Raw _code, JsLIGO ->
-     let cst = Parsing.Jsligo.parse_string ~preprocess ~raise buffer in
-     (match display_format with
-      | Json -> Yojson.Safe.pretty_to_string @@ `String "TODO"
-      | Dev
-      | Human_readable ->
-       let buf = Parsing.Jsligo.pretty_print_cst_cst cst in
-       Format.asprintf "%s" (Buffer.contents buf))
-  | `File file_path, JsLIGO ->
-     let cst = Parsing.Jsligo.parse_file ~preprocess ~raise buffer file_path in
-     (match display_format with
-      | Json -> Yojson.Safe.pretty_to_string @@ `String "TODO"
-      | Dev
-      | Human_readable ->
-       let buf = Parsing.Jsligo.pretty_print_cst_cst cst in
-       Format.asprintf "%s" (Buffer.contents buf))
-
-
-
-
-
-
-
-
-  
-  in
-  match Trace.to_stdlib_result @@ k with
-  | Ok v -> v
-  | Error (e, _) -> raise.error (`Pretty_tracer e)
+  let k ~raise =
+    let open Simple_utils.Display in
+    let open Compile.Utils in
+    let syntax =
+      match syntax, source with
+      | Some v, _ -> v
+      | None, `File source ->
+        Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source)
+      | None, `Raw _ -> failwith "API expected syntax along with raw source"
+    in
+    let meta = Compile.Of_source.extract_meta syntax in
+    let k : raise:(Parsing.Errors.t, Main_warnings.all) Trace.raise -> 'a =
+     fun ~raise ->
+      let preprocess = false in
+      let buffer =
+        match source with
+        | `Raw code ->
+          let buffer = Buffer.create 0 in
+          Buffer.add_string buffer code;
+          buffer
+        | `File file_path -> buffer_from_path file_path
+      in
+      match source, meta.syntax with
+      | `Raw _code, PascaLIGO ->
+        let cst = Parsing.Pascaligo.parse_string ~preprocess ~raise buffer in
+        (match display_format with
+        | Json -> Yojson.Safe.pretty_to_string @@ `String "TODO"
+        | Dev | Human_readable ->
+          let buf = Parsing.Pascaligo.pretty_print_cst_cst cst in
+          Format.asprintf "%s" (Buffer.contents buf))
+      | `File file_path, PascaLIGO ->
+        let cst = Parsing.Pascaligo.parse_file ~preprocess ~raise buffer file_path in
+        (match display_format with
+        | Json -> Yojson.Safe.pretty_to_string @@ `String "TODO"
+        | Dev | Human_readable ->
+          let buf = Parsing.Pascaligo.pretty_print_cst_cst cst in
+          Format.asprintf "%s" (Buffer.contents buf))
+      | `File file_path, CameLIGO ->
+        let cst = Parsing.Cameligo.parse_file ~preprocess ~raise buffer file_path in
+        (match display_format with
+        | Json -> Yojson.Safe.pretty_to_string @@ Parsing.Cameligo.CST.to_yojson cst
+        | Dev | Human_readable ->
+          let buf = Parsing.Cameligo.pretty_print_cst_cst cst in
+          Format.asprintf "%s" (Buffer.contents buf))
+      | `Raw _code, CameLIGO ->
+        let cst = Parsing.Cameligo.parse_string ~preprocess ~raise buffer in
+        (match display_format with
+        | Json -> Yojson.Safe.pretty_to_string @@ Parsing.Cameligo.CST.to_yojson cst
+        | Dev | Human_readable ->
+          let buf = Parsing.Cameligo.pretty_print_cst_cst cst in
+          Format.asprintf "%s" (Buffer.contents buf))
+      | `Raw _code, JsLIGO ->
+        let cst = Parsing.Jsligo.parse_string ~preprocess ~raise buffer in
+        (match display_format with
+        | Json -> Yojson.Safe.pretty_to_string @@ `String "TODO"
+        | Dev | Human_readable ->
+          let buf = Parsing.Jsligo.pretty_print_cst_cst cst in
+          Format.asprintf "%s" (Buffer.contents buf))
+      | `File file_path, JsLIGO ->
+        let cst = Parsing.Jsligo.parse_file ~preprocess ~raise buffer file_path in
+        (match display_format with
+        | Json -> Yojson.Safe.pretty_to_string @@ `String "TODO"
+        | Dev | Human_readable ->
+          let buf = Parsing.Jsligo.pretty_print_cst_cst cst in
+          Format.asprintf "%s" (Buffer.contents buf))
+    in
+    match Trace.to_stdlib_result @@ k with
+    | Ok v -> v
+    | Error (e, _) -> raise.error (`Pretty_tracer e)
   in
   let value = Trace.to_stdlib_result @@ k in
   match value with
   | Ok ((v, _), _) -> Ok (v, "")
-  | Error (_e, _) -> (* Main_errors.Formatter.error_ppformat ~display_format ~no_colour:false "%s" e *) Error ("error TODO", "")
-
+  | Error (_e, _) ->
+    (* Main_errors.Formatter.error_ppformat ~display_format ~no_colour:false "%s" e *)
+    Error ("error TODO", "")
 
 
 let ast (raw_options : Raw_options.t) source_file display_format () =

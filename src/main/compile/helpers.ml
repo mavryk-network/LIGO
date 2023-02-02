@@ -203,5 +203,3 @@ let pretty_print ?preprocess ~raise ~(meta : meta) buffer file_path =
     | JsLIGO -> pretty_print_jsligo
   in
   trace ~raise parser_tracer @@ print ?preprocess buffer file_path
-
-  
