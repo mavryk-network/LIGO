@@ -325,9 +325,9 @@ let rec compile_pattern : CST.pattern -> AST.pattern =
 
 (* ========================== EXPRESSIONS ================================== *)
 
-let rec compile_expression ~raise : CST.expr -> AST.expr =
+let rec compile_expression : CST.expr -> AST.expr =
  fun e ->
-  let self = compile_expression ~raise in
+  let self = compile_expression in
   let return e = e in
   let compile_bin_op (sign : AST.Operators.op) (op : _ CST.bin_op CST.reg) =
     let CST.{ op; arg1; arg2 }, _loc = r_split op in
@@ -538,7 +538,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
     let mi, loc = r_split mi in
     let ({ mod_decl = { name; module_; _ }; kwd_in = _; body } : CST.mod_in) = mi in
     let module_name = TODO_do_in_parsing.mvar ~loc:(r_snd name) (r_fst name) in
-    let rhs = compile_module ~raise module_ in
+    let rhs = compile_module module_ in
     let body = self body in
     e_modin { module_name; rhs; body } ~loc
   | EModAlias ma ->
@@ -581,17 +581,17 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
       { binder = Ligo_prim.Binder.make var None; expression = self expr }
   | EWhile wh ->
     let CST.{ cond; body; _ }, loc = r_split wh in
-    let body = compile_seq_expr ~raise body.seq_expr in
+    let body = compile_seq_expr body.seq_expr in
     e_while ~loc { cond = self cond; block = body }
   | EForIn for_ ->
     let CST.{ pattern; collection; body; _ }, loc = r_split for_ in
-    let block = compile_seq_expr ~raise body.seq_expr in
+    let block = compile_seq_expr body.seq_expr in
     e_for_in
       ~loc
       (ForAny { pattern = compile_pattern pattern; collection = self collection; block })
   | EFor for_ ->
     let CST.{ index; bound1; direction; bound2; body; _ }, loc = r_split for_ in
-    let block = compile_seq_expr ~raise body.seq_expr in
+    let block = compile_seq_expr body.seq_expr in
     let index =
       let CST.{ variable = v; attributes }, _ = r_split index in
       TODO_do_in_parsing.weird_attributes attributes;
@@ -601,13 +601,10 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
     e_for ~loc { index; init = self bound1; bound = self bound2; step; block }
 
 
-and compile_seq_expr ~raise : (CST.expr, _) nsepseq option -> AST.expr =
+and compile_seq_expr : (CST.expr, _) nsepseq option -> AST.expr =
  fun x ->
   let lst =
-    Option.value_map
-      ~default:[]
-      ~f:(List.map ~f:(compile_expression ~raise) <@ nsepseq_to_list)
-      x
+    Option.value_map ~default:[] ~f:(List.map ~f:compile_expression <@ nsepseq_to_list) x
   in
   e_sequence
     ~loc:
@@ -615,7 +612,7 @@ and compile_seq_expr ~raise : (CST.expr, _) nsepseq option -> AST.expr =
     lst
 
 
-and compile_declaration ~raise : CST.declaration -> AST.declaration =
+and compile_declaration : CST.declaration -> AST.declaration =
  fun decl ->
   match decl with
   | Directive d ->
@@ -639,7 +636,7 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration =
     in
     let pattern = nseq_map compile_pattern e.binders in
     let rhs_type = Option.map ~f:(compile_type_expression <@ snd) e.rhs_type in
-    let let_rhs = compile_expression ~raise e.let_rhs in
+    let let_rhs = compile_expression e.let_rhs in
     TODO_unify_in_cst.d_attach_attr
       attributes
       (d_let ~loc { is_rec; type_params; pattern; rhs_type; let_rhs })
@@ -666,7 +663,7 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration =
   | ModuleDecl d ->
     let d, loc = r_split d in
     let name = TODO_do_in_parsing.mvar ~loc:(r_snd d.name) (r_fst d.name) in
-    let mod_expr = compile_module ~raise d.module_ in
+    let mod_expr = compile_module d.module_ in
     d_module { name; mod_expr } ~loc
   | ModuleAlias d ->
     let d, loc = r_split d in
@@ -679,9 +676,9 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration =
     TODO_unify_in_cst.module_alias alias binders ~loc
 
 
-and compile_module ~raise : CST.t -> AST.mod_expr =
+and compile_module : CST.t -> AST.mod_expr =
  fun m ->
-  let ds : AST.declaration nseq = nseq_map (compile_declaration ~raise) m.decl in
+  let ds : AST.declaration nseq = nseq_map compile_declaration m.decl in
   let loc =
     (* The region of the module is the union of all its declarations' regions *)
     let locations = nseq_map get_d_loc ds in
@@ -690,9 +687,8 @@ and compile_module ~raise : CST.t -> AST.mod_expr =
   m_body (TODO_unify_in_cst.declarations_as_program ds) ~loc
 
 
-let compile_program ~raise : CST.ast -> AST.program =
+let compile_program : CST.ast -> AST.program =
  fun t ->
   nseq_to_list t.decl
-  |> List.map ~f:(fun a ~raise -> compile_declaration ~raise a)
-  |> Simple_utils.Trace.collect ~raise
+  |> List.map ~f:(fun a -> compile_declaration a)
   |> List.map ~f:(fun x -> program_entry (PE_Declaration x))

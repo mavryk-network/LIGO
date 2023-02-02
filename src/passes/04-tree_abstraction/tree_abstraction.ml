@@ -1,3 +1,3 @@
-module Cameligo = Cameligo
+(* module Cameligo = Cameligo
 module Pascaligo = Pascaligo
-module Jsligo = Jsligo
+module Jsligo = Jsligo *)

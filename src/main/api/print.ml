@@ -80,7 +80,7 @@ let ast (raw_options : Raw_options.t) source_file display_format () =
   format_result
     ~display_format
     ~no_colour:raw_options.no_colour
-    Ast_imperative.Formatter.program_format
+    Ast_unified.Formatter.program_format
   @@ fun ~raise ->
   let syntax =
     Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
@@ -90,7 +90,7 @@ let ast (raw_options : Raw_options.t) source_file display_format () =
   let c_unit, _ =
     Compile.Of_source.preprocess_file ~raise ~options:options.frontend ~meta source_file
   in
-  Compile.Utils.to_imperative ~raise ~options ~meta c_unit source_file
+  Compile.Utils.to_unified ~raise ~options ~meta c_unit source_file
 
 
 let ast_core_temp (raw_options : Raw_options.t) source_file display_format () =

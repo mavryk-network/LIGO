@@ -263,7 +263,8 @@ and decompile_module : O.module_ -> I.module_ = fun m -> List.map ~f:decompile_d
 let decompile_program = List.map ~f:decompile_declaration
 
 let decompile_pattern_to_string ~syntax pattern =
-  let pattern = O.Pattern.map (Option.map ~f:decompile_type_expression) pattern in
+  ignore (syntax,pattern) ; failwith "TODO: remove desugaring"
+  (* let pattern = O.Pattern.map (Option.map ~f:decompile_type_expression) pattern in
   let pattern = decompile_pattern pattern in
   let s =
     match syntax with
@@ -273,4 +274,4 @@ let decompile_pattern_to_string ~syntax pattern =
     | Some PascaLIGO -> Tree_abstraction.Pascaligo.decompile_pattern_to_string pattern
     | None -> Tree_abstraction.Cameligo.decompile_pattern_to_string pattern
   in
-  s
+  s *)

@@ -1,6 +1,5 @@
-open Helpers_ast_imperative
 open Ligo_prim.Constant
-open Ast_imperative
+open Ast_unified
 include Fuzz_shared.Monad
 
 (* Helpers for swapping operators *)
@@ -52,7 +51,6 @@ let transform_string =
 
 module Mutator (M : Monad) = struct
   open Monad_context (M)
-  open Fold_helpers (M)
   open Ligo_prim.Literal_value
 
   let mutate_literal = function
@@ -79,27 +77,56 @@ module Mutator (M : Monad) = struct
     | l -> return l
 
 
-  let mutate_constant ({ cons_name; arguments = _ } as const) =
+  let mutate_constant cons_name =
     match cons_name with
-    | Const c when List.exists ~f:(fun l -> List.mem l c ~equal:Caml.( = )) op_class ->
+    | c when List.exists ~f:(fun l -> List.mem l c ~equal:Caml.( = )) op_class ->
       let ops = find_class c op_class in
-      let mapper x = return { const with cons_name = Const x } in
+      let mapper x = return x in
       oneof @@ List.map ~f:mapper ops
-    | _ -> return const
+    | _ -> return cons_name
 
+  let unwrap : 'a M.t -> 'a =
+    fun x -> let (_,x) = get_one x in x 
 
-  let mutate_expression (expr : expression) =
-    match expr.expression_content with
-    | E_literal l ->
+  let mutate_expression (expr : (expr M.t, ty_expr M.t, pattern M.t,block M.t, mod_expr M.t) expr_) : expr M.t =
+    let loc = Location.get_location expr in
+    match Location.unwrap expr with
+    | E_Literal l ->
       let* l = mutate_literal l in
-      return { expr with expression_content = E_literal l }
-    | E_constant c ->
-      let* c = mutate_constant c in
-      return { expr with expression_content = E_constant c }
-    | _ -> return expr
-
+      return (e_literal ~loc l)
+    | E_constant { cons_name; arguments } ->
+      let* c = mutate_constant cons_name in
+      let* arguments = bind_list arguments in
+      return (e_constant ~loc { cons_name; arguments })
+    | _ ->
+      let fp = map_expression_ unwrap unwrap unwrap unwrap unwrap expr in
+      return ({fp } : expr)
 
   let mutate_program ?n (p : program) =
-    let rndmod_ = map_program (Expression mutate_expression) p in
-    get_one ?n rndmod_
+    ignore (n,p) ; failwith "wait a bit"
+    (* let open Catamorphism in
+    let rndmod_ =
+      cata_program
+        ~f:(mutpass mutate_expression)
+        p
+    in
+    get_one ?n (bind_list rndmod_) *)
 end
+(* 
+
+Error: This expression has type
+         
+(instruction t, expr t, pattern t, statement t, block t) Ast_unified.Types.instruction_ =
+(instruction t, expr t, pattern t, statement t, block t) instruction_content_ Location.wrap
+       
+
+but an expression was expected of type
+
+(instruction t, (expr t, ty_expr t, pattern t, block t, mod_expr t) Ast_unified.Types.expression_, 'a t, 'b t, 'c t) instruction_content_ Location.wrap
+       
+       
+         Type expr t is not compatible with type
+         (expr t, ty_expr t, pattern t, block t, mod_expr t)
+         Ast_unified.Types.expression_ =
+           (expr t, ty_expr t, pattern t, block t, mod_expr t)
+           expression_content_ Location.wrap *)

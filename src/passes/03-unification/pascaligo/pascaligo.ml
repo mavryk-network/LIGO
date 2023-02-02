@@ -160,7 +160,7 @@ module TODO_unify_in_cst = struct
           TODO_do_in_parsing.weird_attributes attributes;
           Full_field { field_lhs; field_lens; field_rhs }
         | CST.Punned { pun; attributes } ->
-          TODO_do_in_parsing.weird_attributes attributes ;
+          TODO_do_in_parsing.weird_attributes attributes;
           (match pun with
           | CST.E_Var v -> Pun (Label.of_string (w_fst v))
           | _ -> failwith "pun should be a string/label directly ?")
@@ -172,14 +172,16 @@ module TODO_unify_in_cst = struct
   let nested_mod_access init lst =
     List.fold_right
       ~init
-      ~f:(fun x acc -> e_module_open_in ~loc:(get_e_loc acc) { module_path = x; field = acc })
+      ~f:(fun x acc ->
+        e_module_open_in ~loc:(get_e_loc acc) { module_path = x; field = acc })
       (List.Ne.to_list lst)
 
 
   let tnested_mod_access init lst =
     List.fold_right
       ~init
-      ~f:(fun x acc -> t_module_open_in ~loc:(get_t_loc acc) { module_path = x; field = acc })
+      ~f:(fun x acc ->
+        t_module_open_in ~loc:(get_t_loc acc) { module_path = x; field = acc })
       (List.Ne.to_list lst)
 
 
@@ -199,9 +201,9 @@ let extract_type_params
 
 (* ========================== TYPES ======================================== *)
 
-let rec compile_type_expression ~(raise : ('e, 'w) raise) : CST.type_expr -> AST.ty_expr =
+let rec compile_type_expression : CST.type_expr -> AST.ty_expr =
  fun te ->
-  let self = compile_type_expression ~raise in
+  let self = compile_type_expression in
   match te with
   | T_App t ->
     let (te, ttuple), loc = r_split t in
@@ -275,9 +277,9 @@ let rec compile_type_expression ~(raise : ('e, 'w) raise) : CST.type_expr -> AST
 
 (* ========================== PATTERNS ===================================== *)
 
-and compile_pattern ~(raise : ('e, 'w) raise) : CST.pattern -> AST.pattern =
+and compile_pattern : CST.pattern -> AST.pattern =
  fun p ->
-  let self = compile_pattern ~raise in
+  let self = compile_pattern in
   match p with
   | P_Ctor p -> TODO_do_in_parsing.need_rework p "never emited alone"
   | P_App p -> TODO_do_in_parsing.extract_arg_from_app self p
@@ -353,7 +355,7 @@ and compile_pattern ~(raise : ('e, 'w) raise) : CST.pattern -> AST.pattern =
   | P_Typed p ->
     let p, loc = r_split p in
     let ptrn = self p.pattern in
-    let ty = compile_type_expression ~raise @@ snd p.type_annot in
+    let ty = compile_type_expression @@ snd p.type_annot in
     p_typed ~loc ty ptrn
   | P_Var p ->
     let s, loc = w_split p in
@@ -365,62 +367,56 @@ and compile_pattern ~(raise : ('e, 'w) raise) : CST.pattern -> AST.pattern =
 
 (* ========================== INSTRUCTIONS ================================= *)
 
-and compile_block ~(raise : ('e, 'w) raise) : CST.block -> AST.block =
+and compile_block : CST.block -> AST.block =
  fun b ->
-  let stmts = List.Ne.map (compile_statement ~raise) @@ nsepseq_to_nseq b.statements in
+  let stmts = List.Ne.map compile_statement @@ nsepseq_to_nseq b.statements in
   block_of_statements stmts
 
 
-and compile_test_clause
-    : raise:_ -> CST.test_clause -> (instruction, block) AST.Test_clause.t
-  =
- fun ~raise c ->
+and compile_test_clause : CST.test_clause -> (instruction, block) AST.Test_clause.t =
+ fun c ->
   match c with
-  | CST.ClauseInstr i -> ClauseInstr (compile_instruction ~raise i)
-  | CST.ClauseBlock b -> ClauseBlock (compile_block ~raise @@ r_fst b)
+  | CST.ClauseInstr i -> ClauseInstr (compile_instruction i)
+  | CST.ClauseBlock b -> ClauseBlock (compile_block @@ r_fst b)
 
 
 and compile_case_clause
-    : type a b. raise:_ -> (a -> b) -> a CST.case_clause -> (_, b) AST.Case.clause
+    : type a b. (a -> b) -> a CST.case_clause -> (_, b) AST.Case.clause
   =
- fun ~raise f c ->
-  let pattern = compile_pattern ~raise c.pattern in
+ fun f c ->
+  let pattern = compile_pattern c.pattern in
   let rhs = f c.rhs in
   { pattern; rhs }
 
 
-and compile_case : type a b. raise:_ -> (a -> b) -> a CST.case -> (_, _, b) AST.Case.t =
- fun ~raise f c ->
-  let expr = compile_expression ~raise c.expr in
-  let cases =
-    List.Ne.map (compile_case_clause ~raise f <@ r_fst) @@ nsepseq_to_nseq c.cases
-  in
+and compile_case : type a b. (a -> b) -> a CST.case -> (_, _, b) AST.Case.t =
+ fun f c ->
+  let expr = compile_expression c.expr in
+  let cases = List.Ne.map (compile_case_clause f <@ r_fst) @@ nsepseq_to_nseq c.cases in
   { expr; cases }
 
 
-and compile_cond :
-      'a 'b. raise:_ -> ('a -> 'b) -> 'a CST.conditional -> (_, 'b) AST.Cond.t
-  =
- fun ~raise f c ->
-  let test = compile_expression ~raise c.test in
+and compile_cond : 'a 'b. ('a -> 'b) -> 'a CST.conditional -> (_, 'b) AST.Cond.t =
+ fun f c ->
+  let test = compile_expression c.test in
   let ifso = f c.if_so in
   let ifnot = Option.map ~f:(f <@ snd) c.if_not in
   { test; ifso; ifnot }
 
 
-and compile_for_map ~raise : CST.for_map -> (_, _) AST.For_collection.for_map =
+and compile_for_map : CST.for_map -> (_, _) AST.For_collection.for_map =
  fun m ->
   let binding =
     let k, _, v = m.binding in
     ( TODO_do_in_parsing.var ~loc:(w_snd k) (w_fst k)
     , TODO_do_in_parsing.var ~loc:(w_snd v) (w_fst v) )
   in
-  let collection = compile_expression ~raise m.collection in
-  let block = compile_block ~raise @@ r_fst m.block in
+  let collection = compile_expression m.collection in
+  let block = compile_block @@ r_fst m.block in
   { binding; collection; block }
 
 
-and compile_for_set_or_list ~raise
+and compile_for_set_or_list
     : CST.for_set_or_list -> (_, _) AST.For_collection.for_set_or_list
   =
  fun s ->
@@ -430,14 +426,14 @@ and compile_for_set_or_list ~raise
     | `Set _ -> `Set
     | `List _ -> `List
   in
-  let collection = compile_expression ~raise s.collection in
-  let block = compile_block ~raise (r_fst s.block) in
+  let collection = compile_expression s.collection in
+  let block = compile_block (r_fst s.block) in
   { var; for_kind; collection; block }
 
 
-and compile_instruction ~(raise : ('e, 'w) raise) : CST.instruction -> AST.instruction =
+and compile_instruction : CST.instruction -> AST.instruction =
  fun i ->
-  let compile_expr = compile_expression ~raise in
+  let compile_expr = compile_expression in
   match i with
   | I_Assign i ->
     let i, loc = r_split i in
@@ -447,18 +443,18 @@ and compile_instruction ~(raise : ('e, 'w) raise) : CST.instruction -> AST.instr
   | I_Call i ->
     let i, loc = r_split i in
     let f, args = i in
-    let f = compile_expression ~raise f in
+    let f = compile_expr f in
     let args : expr list =
       List.map ~f:compile_expr @@ sepseq_to_list (r_fst args).inside
     in
     i_call ~loc (f, args)
   | I_Case i ->
     let i, loc = r_split i in
-    let i = compile_case ~raise (compile_test_clause ~raise) i in
+    let i = compile_case compile_test_clause i in
     i_case i ~loc
   | I_Cond i ->
     let i, loc = r_split i in
-    let i = compile_cond ~raise (compile_test_clause ~raise) i in
+    let i = compile_cond compile_test_clause i in
     i_cond i ~loc
   | I_For i ->
     let i, loc = r_split i in
@@ -466,12 +462,10 @@ and compile_instruction ~(raise : ('e, 'w) raise) : CST.instruction -> AST.instr
     let init = compile_expr i.init in
     let bound = compile_expr i.bound in
     let step = Option.map ~f:(compile_expr <@ snd) i.step in
-    let block = compile_block ~raise @@ r_fst i.block in
+    let block = compile_block @@ r_fst i.block in
     i_for ~loc { index; init; bound; step; block }
   | I_ForIn i ->
-    let i, loc =
-      TODO_unify_in_cst.for_in (compile_for_map ~raise) (compile_for_set_or_list ~raise) i
-    in
+    let i, loc = TODO_unify_in_cst.for_in compile_for_map compile_for_set_or_list i in
     i_forin i ~loc
   | I_Patch i ->
     let i, loc = r_split i in
@@ -500,15 +494,15 @@ and compile_instruction ~(raise : ('e, 'w) raise) : CST.instruction -> AST.instr
   | I_While i ->
     let i, loc = r_split i in
     let cond = compile_expr i.cond in
-    let block = compile_block ~raise @@ r_fst i.block in
+    let block = compile_block @@ r_fst i.block in
     i_while { cond; block } ~loc
 
 
 (* ========================== STATEMENTS ================================= *)
 
-and compile_statement ~raise : CST.statement -> AST.statement =
+and compile_statement : CST.statement -> AST.statement =
  fun s ->
-  let self = compile_statement ~raise in
+  let self = compile_statement in
   match s with
   | S_Attr (attr, stmt) ->
     let attr, loc = r_split attr in
@@ -516,19 +510,19 @@ and compile_statement ~raise : CST.statement -> AST.statement =
     let stmt = self stmt in
     s_attr ~loc (attr, stmt)
   | S_Decl s ->
-    let s = compile_declaration ~raise s in
+    let s = compile_declaration s in
     let loc = s.fp.location in
     s_decl s ~loc
   | S_Instr s ->
-    let s = compile_instruction ~raise s in
+    let s = compile_instruction s in
     let loc = s.fp.location in
     s_instr s ~loc
   | S_VarDecl s ->
     let s, loc = r_split s in
-    let pattern = compile_pattern ~raise s.pattern in
+    let pattern = compile_pattern s.pattern in
     let type_params = Option.map ~f:extract_type_params s.type_params in
-    let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) s.var_type in
-    let let_rhs = compile_expression ~raise s.init in
+    let rhs_type = Option.map ~f:(compile_type_expression <@ snd) s.var_type in
+    let let_rhs = compile_expression s.init in
     TODO_unify_in_cst.vardecl_as_decl ~loc { pattern; type_params; rhs_type; let_rhs }
 
 
@@ -540,9 +534,9 @@ and extract_tuple : 'a. ('a, CST.comma) nsepseq CST.par CST.reg -> 'a nseq =
 
 and extract_key : 'a. 'a CST.brackets CST.reg -> 'a = fun k -> (r_fst k).inside
 
-and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
+and compile_expression : CST.expr -> AST.expr =
  fun e ->
-  let self = compile_expression ~raise in
+  let self = compile_expression in
   let return e = e in
   let compile_bin_op (sign : AST.Operators.op) (op : _ CST.bin_op CST.reg) =
     let CST.{ op; arg1; arg2 }, _loc = r_split op in
@@ -571,8 +565,8 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
       | `Var _ -> `Var
       | `Const _ -> `Const
     in
-    let pattern = compile_pattern ~raise p.pattern in
-    let param_type = Option.map ~f:(compile_type_expression ~raise <@ snd) p.param_type in
+    let pattern = compile_pattern p.pattern in
+    let param_type = Option.map ~f:(compile_type_expression <@ snd) p.param_type in
     { param_kind; pattern; param_type }
   in
   return
@@ -654,7 +648,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     in
     let field = self ma.field in
     (* TODO_unify_in_cst.nested_mod_access field module_path *)
-    e_module_open_in ~loc { module_path ; field }
+    e_module_open_in ~loc { module_path; field }
   | E_Update up ->
     let up, loc = r_split up in
     let structure = self up.structure in
@@ -668,7 +662,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
       @@ sepseq_to_list
       @@ (r_fst f.parameters).inside
     in
-    let ret_type = Option.map ~f:(compile_type_expression ~raise <@ snd) f.ret_type in
+    let ret_type = Option.map ~f:(compile_type_expression <@ snd) f.ret_type in
     let body = self f.return in
     e_poly_fun { type_params; parameters; ret_type; body } ~loc
   | E_Ctor ctor ->
@@ -681,13 +675,13 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     e_ctor_app (func, args) ~loc
   | E_Case case ->
     let case, loc = r_split case in
-    let cases = compile_case ~raise self case in
+    let cases = compile_case self case in
     e_match cases ~loc
   | E_Typed annot ->
     let annot, loc = r_split annot in
     let e, (_, te) = annot.inside in
     let e = self e in
-    let te = compile_type_expression ~raise te in
+    let te = compile_type_expression te in
     e_annot (e, te) ~loc
   | E_Cond cond ->
     let cond, loc = r_split cond in
@@ -741,7 +735,7 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
     let CST.{ block; expr; _ }, loc = r_split be in
     let block =
       let b, loc = r_split block in
-      let block = nseq_map (compile_statement ~raise) @@ nsepseq_to_nseq b.statements in
+      let block = nseq_map compile_statement @@ nsepseq_to_nseq b.statements in
       make_b ~loc block
     in
     e_block_with { block; expr = self expr } ~loc
@@ -757,9 +751,9 @@ and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
 
 (* ========================== DECLARATIONS ================================= *)
 
-and compile_declaration ~(raise : ('e, 'w) raise) : CST.declaration -> AST.declaration =
+and compile_declaration : CST.declaration -> AST.declaration =
  fun decl ->
-  let self = compile_declaration ~raise in
+  let self = compile_declaration in
   let compile_type_params
       : CST.type_params CST.chevrons Region.reg -> AST.Ty_variable.t nseq
     =
@@ -783,14 +777,14 @@ and compile_declaration ~(raise : ('e, 'w) raise) : CST.declaration -> AST.decla
             (nsepseq_to_nseq (r_fst tp).inside))
         d.params
     in
-    let type_expr = compile_type_expression ~raise d.type_expr in
+    let type_expr = compile_type_expression d.type_expr in
     d_type_abstraction { name; params; type_expr } ~loc
   | D_Const d ->
     let d, loc = r_split d in
     let type_params = Option.map ~f:compile_type_params d.type_params in
-    let pattern = compile_pattern ~raise d.pattern in
-    let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) d.const_type in
-    let let_rhs = compile_expression ~raise d.init in
+    let pattern = compile_pattern d.pattern in
+    let rhs_type = Option.map ~f:(compile_type_expression <@ snd) d.const_type in
+    let let_rhs = compile_expression d.init in
     d_const ~loc { pattern; type_params; rhs_type; let_rhs }
   | D_Attr d ->
     let (attr, decl), loc = r_split d in
@@ -814,33 +808,31 @@ and compile_declaration ~(raise : ('e, 'w) raise) : CST.declaration -> AST.decla
           | `Const _ -> `Const
           | `Var _ -> `Var
         in
-        let pattern = compile_pattern ~raise pd.pattern in
-        let param_type =
-          Option.map ~f:(compile_type_expression ~raise <@ snd) pd.param_type
-        in
+        let pattern = compile_pattern pd.pattern in
+        let param_type = Option.map ~f:(compile_type_expression <@ snd) pd.param_type in
         { param_kind; pattern; param_type }
       in
       List.map ~f:(compile_param_decl <@ r_fst)
       @@ sepseq_to_list (r_fst d.parameters).inside
     in
-    let ret_type = Option.map ~f:(compile_type_expression ~raise <@ snd) d.ret_type in
-    let return = compile_expression ~raise d.return in
+    let ret_type = Option.map ~f:(compile_type_expression <@ snd) d.ret_type in
+    let return = compile_expression d.return in
     d_fun { is_rec; fun_name; type_params; parameters; ret_type; return } ~loc
   | D_Module d ->
     let d, loc = r_split d in
     let name = TODO_do_in_parsing.mvar ~loc:(w_snd d.name) (w_fst d.name) in
-    let mod_expr = compile_module ~raise d.module_expr in
+    let mod_expr = compile_module d.module_expr in
     d_module { name; mod_expr } ~loc
 
 
 (* ========================== MODULES ===================================== *)
 
-and compile_module ~(raise : ('e, 'w) raise) : CST.module_expr -> AST.mod_expr =
+and compile_module : CST.module_expr -> AST.mod_expr =
  fun m ->
   match m with
   | M_Body m ->
     let m, loc = r_split m in
-    let ds = nseq_map (compile_declaration ~raise) m.declarations in
+    let ds = nseq_map compile_declaration m.declarations in
     m_body (TODO_unify_in_cst.declarations_as_program ds) ~loc
   | M_Path m ->
     let m, loc = r_split m in
@@ -858,9 +850,8 @@ and compile_module ~(raise : ('e, 'w) raise) : CST.module_expr -> AST.mod_expr =
 
 
 (* ========================== PROGRAM ===================================== *)
-let compile_program ~raise : CST.t -> AST.program =
+let compile_program : CST.t -> AST.program =
  fun t ->
   nseq_to_list t.decl
-  |> List.map ~f:(fun a ~raise -> compile_declaration ~raise a)
-  |> Simple_utils.Trace.collect ~raise
+  |> List.map ~f:(fun a -> compile_declaration a)
   |> List.map ~f:(fun x -> AST.program_entry @@ PE_Declaration x)

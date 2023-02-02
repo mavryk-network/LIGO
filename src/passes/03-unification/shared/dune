@@ -9,4 +9,4 @@
   simple-utils)
  (preprocess
   (pps ppx_poly_constructor))
- (modules Helpers Errors))
+ (modules Helpers))
