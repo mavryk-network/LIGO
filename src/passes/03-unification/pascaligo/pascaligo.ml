@@ -1,5 +1,4 @@
 open Simple_utils.Utils
-open Simple_utils.Trace
 open Unification_shared.Helpers
 module CST = Cst.Pascaligo
 module AST = Ast_unified
@@ -167,14 +166,6 @@ module TODO_unify_in_cst = struct
       in
       List.map (Utils.sepseq_to_list record_lhs.value.elements) ~f
     | _ -> failwith "raise.error (wrong_functional_updator @@ CST.expr_to_region x)"
-
-
-  let nested_mod_access init lst =
-    List.fold_right
-      ~init
-      ~f:(fun x acc ->
-        e_module_open_in ~loc:(get_e_loc acc) { module_path = x; field = acc })
-      (List.Ne.to_list lst)
 
 
   let tnested_mod_access init lst =

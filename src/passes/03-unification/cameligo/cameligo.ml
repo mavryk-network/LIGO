@@ -41,7 +41,7 @@ module TODO_unify_in_cst = struct
           Option.map
             ~f:(function
               | String x -> x
-              | Ident _ -> failwith "l")
+              | Ident x -> x)
             value_opt
         in
         Temp_prim.Attribute.{ key; value }, loc)

@@ -1,5 +1,4 @@
 open Simple_utils.Display
-open Types
 
 let program_ppformat ~display_format ~no_colour f p =
   (* The [no_colour] option is provided to all [_ppformat] functions by default,

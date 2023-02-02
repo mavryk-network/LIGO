@@ -1,5 +1,4 @@
 open Simple_utils.Utils
-open Simple_utils.Trace
 open Unification_shared.Helpers
 module CST = Cst.Jsligo
 module AST = Ast_unified
