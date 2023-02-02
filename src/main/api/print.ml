@@ -145,9 +145,15 @@ let cst
 
   
   in
-  Trace.to_stdlib_result @@ k in
-  let result = Trace.to_stdlib_result @@ k in
-  result
+  match Trace.to_stdlib_result @@ k with
+  | Ok v -> v
+  | Error (e, _) -> raise.error (`Pretty_tracer e)
+  in
+  let value = Trace.to_stdlib_result @@ k in
+  match value with
+  | Ok ((v, _), _) -> Ok (v, "")
+  | Error (_e, _) -> (* Main_errors.Formatter.error_ppformat ~display_format ~no_colour:false "%s" e *) Error ("error TODO", "")
+
 
 
 let ast (raw_options : Raw_options.t) source_file display_format () =
