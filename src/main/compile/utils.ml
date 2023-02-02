@@ -136,27 +136,48 @@ let pretty_print ?(preprocess = false) ~raise ~options ~meta file_path =
   Of_c_unit.pretty_print ~preprocess ~raise ~meta buffer file_path
 
 
-let pretty_print_cst
-    ?(preprocess = true)
-    ~raise
-    ~options
-    ~meta
-    (source : Parsing_shared.Common.source)
-  =
-  ignore preprocess;
-  let buffer =
-    if preprocess
-    then (
-      match source with
-      | `Raw code -> fst @@ Of_source.preprocess_string ~raise ~options ~meta code
-      | `File file_path ->
-        fst @@ Of_source.preprocess_file ~raise ~options ~meta file_path)
-    else (
-      match source with
-      | `Raw code ->
-        let buffer = Buffer.create 0 in
-        Buffer.add_string buffer code;
-        buffer
-      | `File file_path -> buffer_from_path file_path)
-  in
-  Of_c_unit.pretty_print_cst ~raise ~meta buffer source
+type _ cst =
+  | Pascaligo_cst: Parsing.Pascaligo.CST.t -> Parsing.Pascaligo.CST.t cst
+  | Jsligo_cst: Parsing.Jsligo.CST.t -> Parsing.Jsligo.CST.t cst
+  | Cameligo_cst: Parsing.Cameligo.CST.t -> Parsing.Cameligo.CST.t cst
+
+let make_pascaligo_cst: Parsing.Pascaligo.CST.t -> Parsing.Pascaligo.CST.t cst = fun cst -> Pascaligo_cst cst
+let make_jsligo_cst cst = Jsligo_cst cst
+let make_cameligo_cst cst = Cameligo_cst cst
+
+(* let pretty_print_cst: *)
+(*       type a. *)
+(* ?preprocess:bool -> *)
+(* raise:([> `Preproc_tracer of Preprocessing.Errors.t ], Main_warnings.all) Trace.raise -> *)
+(* options:Compiler_options.frontend -> *)
+(* meta:Helpers.meta -> Parsing_shared.Common.source -> a cst *)
+(* = fun *)
+      
+(*       ?(preprocess = true) *)
+(*       ~raise *)
+(*       ~options *)
+(*       ~meta *)
+(*       (source : Parsing_shared.Common.source) *)
+(*   -> *)
+(*   let buffer = *)
+(*     if preprocess *)
+(*     then ( *)
+(*       match source with *)
+(*       | `Raw code -> fst @@ Of_source.preprocess_string ~raise ~options ~meta code *)
+(*       | `File file_path -> *)
+(*          fst @@ Of_source.preprocess_file ~raise ~options ~meta file_path) *)
+(*     else ( *)
+(*       match source with *)
+(*       | `Raw code -> *)
+(*          let buffer = Buffer.create 0 in *)
+(*          Buffer.add_string buffer code; *)
+(*          buffer *)
+(*       | `File file_path -> buffer_from_path file_path) *)
+(*   in *)
+(*   match source, meta.syntax with *)
+(*   | `Raw _code, PascaLIGO  ->  Pascaligo_cst (Parsing.Pascaligo.parse_string ~preprocess ~raise:(Obj.magic raise) buffer) *)
+(*   | `Raw _code, PascaLIGO  ->  Pascaligo_cst (Parsing.Pascaligo.parse_string ~preprocess ~raise:(Obj.magic raise) buffer) *)
+(*   | `File file_path, CameLIGO ->  Cameligo_cst (Parsing.Cameligo.parse_file ~preprocess ~raise:(Obj.magic raise) buffer file_path) *)
+(*   | `File file_path, CameLIGO ->  Cameligo_cst (Parsing.Cameligo.parse_file ~preprocess ~raise:(Obj.magic raise) buffer file_path) *)
+(*   | `Raw _code, JsLIGO  -> Jsligo_cst (Parsing.Jsligo.parse_string ~preprocess ~raise:(Obj.magic raise) buffer) *)
+(*   | `File file_path, JsLIGO ->  Jsligo_cst ( Parsing.Jsligo.parse_file ~preprocess ~raise:(Obj.magic raise) buffer file_path) *)

@@ -57,3 +57,16 @@ let pretty_print_cst ?preprocess ~raise buffer (source: Parsing_shared.Common.so
                  ~offsets:Options.offsets
                  Options.mode
   in Cst_jsligo.Print.to_buffer state tree
+
+let pretty_print_cst_cst tree =
+  let module PreprocParams =
+    Preprocessor.CLI.MakeDefault (Config) in
+  let module LexerParams =
+    LexerLib.CLI.MakeDefault (PreprocParams) in
+  let module Options = LexerParams.Options in
+  let buffer = Buffer.create 59 in
+  let state  = Tree.mk_state
+                 ~buffer
+                 ~offsets:Options.offsets
+                 Options.mode
+  in Cst_jsligo.Print.to_buffer state tree
