@@ -97,7 +97,7 @@ module Mutator (M : Monad) = struct
     | E_constant { cons_name; arguments } ->
       let* c = mutate_constant cons_name in
       let* arguments = bind_list arguments in
-      return (e_constant ~loc { cons_name; arguments })
+      return (e_constant ~loc { cons_name = c; arguments })
     | _ ->
       let fp = map_expression_ unwrap unwrap unwrap unwrap unwrap expr in
       return ({fp } : expr)

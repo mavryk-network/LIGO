@@ -16,7 +16,7 @@ let compile ~raise =
   ; mod_expr = check mod_expr_is_not_initial
   ; instruction = check instruction_is_not_initial
   ; declaration = check declaration_is_not_initial
-  ; program = (fun x -> if program_entry_is_not_initial x then failwith "l")
+  ; program = (fun x -> if program_entry_is_not_initial x then failwith "Unification emit forbidden nodes")
   }
 
 let pass ~raise =
