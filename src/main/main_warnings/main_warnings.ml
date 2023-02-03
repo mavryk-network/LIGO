@@ -16,11 +16,6 @@ type all =
   | `Self_ast_imperative_warning_layout of Location.t * Label.t
   | `Self_ast_imperative_warning_deprecated_polymorphic_variable of
     Location.t * Type_var.t
-  | `Self_ast_imperative_warning_deprecated_constant of
-    Location.t
-    * Ast_imperative.expression
-    * Ast_imperative.expression
-    * Ast_imperative.type_expression
   | `Main_view_ignored of Location.t
   | `Michelson_typecheck_failed_with_different_protocol of
     Environment.Protocols.t * Tezos_error_monad.Error_monad.error list
@@ -146,19 +141,6 @@ let pp
         loc
         Type_var.pp
         name
-    | `Self_ast_imperative_warning_deprecated_constant (l, curr, alt, ty) ->
-      Format.fprintf
-        f
-        "@[<hv>%a@ Warning: the constant %a is soon to be deprecated. Use instead %a : \
-         %a. @]"
-        snippet_pp
-        l
-        Ast_imperative.PP.expression
-        curr
-        Ast_imperative.PP.expression
-        alt
-        Ast_imperative.PP.type_expression
-        ty
     | `Jsligo_deprecated_failwith_no_return loc ->
       Format.fprintf
         f
@@ -303,19 +285,6 @@ let to_warning : all -> Simple_utils.Warning.t =
         variable
     in
     let content = make_content ~message ~location ~variable () in
-    make ~stage:"abstractor" ~content
-  | `Self_ast_imperative_warning_deprecated_constant (location, curr, alt, ty) ->
-    let message =
-      Format.asprintf
-        "Warning: the constant %a is soon to be deprecated. Use instead %a : %a."
-        Ast_imperative.PP.expression
-        curr
-        Ast_imperative.PP.expression
-        alt
-        Ast_imperative.PP.type_expression
-        ty
-    in
-    let content = make_content ~message ~location () in
     make ~stage:"abstractor" ~content
   | `Jsligo_deprecated_failwith_no_return location ->
     let message =

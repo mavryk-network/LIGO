@@ -40,7 +40,7 @@ let mutate_ast (raw_options : Raw_options.t) source_file display_format seed no_
   let _, imperative_prg = Fuzzer.mutate_program ?n:seed unified in
   let syntax = Syntax.to_string meta.syntax in
   let buffer =
-    Decompile.Of_imperative.decompile ~raise imperative_prg (Syntax_name syntax)
+    Decompile.Of_unified.decompile ~raise imperative_prg (Syntax_name syntax)
   in
   buffer
 

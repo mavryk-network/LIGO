@@ -6,4 +6,4 @@ type ('ty_expr, 'body, 'param) t =
   ; ret_type : 'ty_expr option
   ; return : 'body
   }
-[@@deriving yojson, map, iter, fold, sexp]
+[@@deriving yojson, map, iter, fold, sexp, eq, compare, hash]

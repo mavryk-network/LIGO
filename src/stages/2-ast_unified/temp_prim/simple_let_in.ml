@@ -3,4 +3,4 @@ type ('expr,'pattern) t =
 ; rhs : 'expr
 ; let_result : 'expr
 }
-[@@deriving eq, compare, yojson, iter, fold, map, sexp]
+[@@deriving eq, compare, yojson, iter, fold, map, sexp, eq, compare, hash]

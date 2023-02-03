@@ -15,7 +15,7 @@ let contract source_file new_syntax syntax display_format no_colour () =
   let core = Compile.Utils.to_core ~raise ~options ~meta c_unit source_file in
   let imperative = Decompile.Of_core.decompile core in
   let buffer =
-    Decompile.Of_imperative.decompile ~raise imperative (Syntax_name new_syntax)
+    Decompile.Of_unified.decompile ~raise imperative (Syntax_name new_syntax)
   in
   buffer
 
@@ -35,5 +35,5 @@ let expression expression new_syntax syntax display_format no_colour () =
   (* Decompiling chain *)
   let n_syntax = Syntax.of_string_opt ~raise (Syntax_name new_syntax) None in
   let imperative = Decompile.Of_core.decompile_expression core in
-  let buffer = Decompile.Of_imperative.decompile_expression imperative n_syntax in
+  let buffer = Decompile.Of_unified.decompile_expression imperative n_syntax in
   buffer

@@ -22,4 +22,4 @@ and ('expr, 'block) for_set_or_list =
   ; collection : 'expr
   ; block : 'block
   }
-[@@deriving yojson, map, iter, fold, sexp]
+[@@deriving yojson, map, iter, fold, sexp, eq, compare, hash]

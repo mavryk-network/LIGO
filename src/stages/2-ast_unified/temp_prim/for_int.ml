@@ -5,4 +5,4 @@ type ('expr, 'block) t =
   ; step : 'expr option (* [1] if [None] *)
   ; block : 'block
   }
-[@@deriving yojson, map, iter, fold, sexp]
+[@@deriving yojson, map, iter, fold, sexp, eq, compare, hash]

@@ -1,17 +1,4 @@
 [@@@warning "-30"]
-(*
-  Warning 30 is triggered on multiply-defined record labels
-  For example :
-    type record_a = { body : type_a ; foo : int }
-    type record_b = { body : type_b ; bar : string } 
-  Here, both record_a and record_b have a field called [body].
-  It triggers warning 30.
-
-  CAREFUL : If record labels are defined multiple times,
-  they should always the same type.
-  Otherwise, this causes several errors with the json ppx.
-  (in above example, record_a's body and record_b's body should have the same type)
-*)
 
 module Temp_prim = Temp_prim
 module Location = Simple_utils.Location
@@ -118,6 +105,10 @@ module Directive = struct
 
   let t_of_sexp : Sexp.t -> t =
    fun _sexp -> failwith "Directive parsing from sexp is not supported"
+
+  let equal _ _ = failwith "Not supported equal"
+  let compare _ _ = failwith "Not supported compare"
+  let hash_fold_t _ _ = failwith "Not supported hash_fold_t"
 end
 [@@deriving sexp]
 
@@ -144,7 +135,7 @@ and 'self type_expression_content_ =
   | T_Abstraction of 'self Abstraction.t [@not_initial]
   | T_module_access of (Mod_variable.t, Ty_variable.t) Mod_access.t [@not_initial]
 [@@deriving
-  map, fold, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "ty_expr" }]
+  map, fold, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "ty_expr" } , eq ,compare, hash]
 
 (* ========================== PATTERNS ===================================== *)
 type ('self, 'ty_expr) pattern_ = ('self, 'ty_expr) pattern_content_ Location.wrap
@@ -166,7 +157,7 @@ and ('self, 'ty_expr) pattern_content_ =
   | P_attr of Attribute.t * 'self
   | P_mod_access of (Mod_variable.t Simple_utils.List.Ne.t, 'self) Mod_access.t
 [@@deriving
-  map, fold, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "pattern" }]
+  map, fold, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "pattern" }, eq, compare, hash]
 
 (* ========================== INSTRUCTIONS ================================= *)
 type ('self, 'expr, 'pattern, 'statement, 'block) instruction_ =
@@ -192,7 +183,7 @@ and ('self, 'expr, 'pattern, 'statement, 'block) instruction_content_ =
   (*  \/ Below are nodes added through the passes \/*)
   | I_Assign of Variable.t * 'expr [@not_initial]
 [@@deriving
-  map, fold, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "instruction" }]
+  map, fold, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "instruction" }, eq, compare, hash]
 
 (* ========================== STATEMENTS ========================= *)
 type ('self, 'instruction, 'declaration) statement_ =
@@ -202,7 +193,7 @@ and ('self, 'instruction, 'declaration) statement_content_ =
   | S_Attr of (Attribute.t * 'self)
   | S_Instr of 'instruction
   | S_Decl of 'declaration
-[@@deriving map, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "statement" }]
+[@@deriving map, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "statement" }, eq, compare, hash]
 (* and stmt = statement [@@deriving yojson] *)
 
 (* ========================== BLOCKS ======================================= *)
@@ -211,15 +202,13 @@ include struct
   [@@@warning "-27"]
 
   type ('self, 'statement) block_ = 'statement Simple_utils.List.Ne.t Location.wrap
-  [@@deriving map, yojson, iter, sexp]
+  [@@deriving map, yojson, iter, sexp, eq, compare, hash]
 end
 
 (* ========================== DECLARATIONS ================================= *)
 type ('self, 'expr, 'ty_expr, 'pattern, 'mod_expr) declaration_ =
   ('self, 'expr, 'ty_expr, 'pattern, 'mod_expr) declaration_content_ Location.wrap
 
-(* and decl_content = declaration_content *)
-(* and decl = declaration [@@deriving yojson] *)
 and ('self, 'expr, 'ty_expr, 'pattern, 'mod_expr) declaration_content_ =
   | D_Directive of Directive.t
   | D_Attr of (Attribute.t * 'self)
@@ -240,7 +229,7 @@ and ('self, 'expr, 'ty_expr, 'pattern, 'mod_expr) declaration_content_ =
   | D_Type of 'ty_expr Type_decl.t [@not_initial]
   | D_irrefutable_match of ('expr, 'pattern) Pattern_decl.t [@not_initial]
 [@@deriving
-  map, fold, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "declaration" }]
+  map, fold, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "declaration" }, eq, compare, hash]
 
 (* ========================== MODULES ====================================== *)
 include struct
@@ -253,7 +242,7 @@ include struct
     | M_Body of 'program_entry Simple_utils.List.Ne.t
     | M_Path of Ligo_prim.Module_var.t Simple_utils.List.Ne.t
     | M_Var of Ligo_prim.Module_var.t
-  [@@deriving map, iter, yojson, sexp, is { tags = [ "not_initial" ]; name = "mod_expr" }]
+  [@@deriving map, iter, yojson, sexp, is { tags = [ "not_initial" ]; name = "mod_expr" }, eq, compare, hash]
 end
 
 (* ========================== EXPRESSIONS ================================== *)
@@ -322,7 +311,7 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_record_access of 'self Record_access.t [@not_initial]
   | E_module_access of (Mod_variable.t Simple_utils.List.Ne.t, Variable.t) Mod_access.t
       [@not_initial]
-[@@deriving map, fold, iter, yojson, sexp, is { tags = [ "not_initial" ]; name = "expr" }]
+[@@deriving map, fold, iter, yojson, sexp, is { tags = [ "not_initial" ]; name = "expr" }, eq, compare, hash]
 (* ========================== PROGRAM ====================================== *)
 
 type ('self, 'declaration, 'instruction) program_entry_ =
@@ -330,14 +319,14 @@ type ('self, 'declaration, 'instruction) program_entry_ =
   | PE_Declaration of 'declaration
   | PE_Top_level_instruction of 'instruction
   | PE_Preproc_directive of Directive.t
+[@@deriving
+  map, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "program_entry" }, eq, compare, hash]
 (*
   would like to write that, but it makes unification using (_,_,_) program_entry_
   and it was annoying, see type `program` bellow
 *)
 (* and ('self, 'declaration, 'instruction) program_ =
   ('self, 'declaration, 'instruction) program_entry_ list *)
-[@@deriving
-  map, yojson, iter, sexp, is { tags = [ "not_initial" ]; name = "program_entry" }]
 
 type ty_expr = { fp : ty_expr ty_expr_ }
 and pattern = { fp : (pattern, ty_expr) pattern_ }
@@ -348,7 +337,7 @@ and declaration = { fp : (declaration, expr, ty_expr, pattern, mod_expr) declara
 and mod_expr = { fp : (mod_expr, program_entry) mod_expr_ }
 and expr = { fp : (expr, ty_expr, pattern, block, mod_expr) expr_ }
 and program_entry = { fp : (program_entry, declaration, instruction) program_entry_ }
-
+[@@deriving eq, compare, hash]
 (* one might wonder why ? go check `compile_toplevel_statement` unification of jsligo *)
 type program = program_entry list
 
@@ -359,3 +348,9 @@ have a type program = program_entry list
 
 some nanopass (going from one statement/program_entry to multiple ones) will be slightly easier to write
 *)
+
+(* type 'a t = 'a Ppx_deriving_yojson_runtime.error_or 
+let rec ty_expr_to_yojson x = ty_expr__to_yojson ty_expr_to_yojson x.fp
+let rec ty_expr_of_yojson (x:Yojson.Safe.t) : ty_expr Ppx_deriving_yojson_runtime.error_or =
+failwith "l" *)
+

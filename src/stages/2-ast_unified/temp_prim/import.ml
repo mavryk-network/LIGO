@@ -11,4 +11,4 @@ type t =
       { imported : Ligo_prim.Value_var.t Simple_utils.List.Ne.t
       ; module_str : string
       }
-[@@deriving yojson, map, iter, fold, sexp]
+[@@deriving yojson, map, iter, fold, sexp, eq, compare, hash]

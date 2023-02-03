@@ -7,4 +7,4 @@ and ('expr, 'pattern, 'ty_expr, 'block) t =
   ; lhs_type : 'ty_expr option
   ; body : ('expr, 'block) fun_block
   }
-[@@deriving yojson, map, iter, fold, sexp]
+[@@deriving yojson, map, iter, fold, sexp, eq, compare, hash]

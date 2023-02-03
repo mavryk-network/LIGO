@@ -47,7 +47,8 @@ let passes
   ; If_as_pattern_match.pass ~raise
   ]
 
-
+let decompile_program : O.program -> I.program = fun _ -> failwith "TODO: trivial decompile nanopasses"
+let decompile_expression : O.expression -> I.expr = fun _ -> failwith "TODO: trivial decompile nanopasses"
 let trivial_compile_program : I.program -> O.program = Trivial.conv_program
 let trivial_compile_expression : I.expr -> O.expression = Trivial.conv_expr
 

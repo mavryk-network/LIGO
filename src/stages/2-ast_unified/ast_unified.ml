@@ -1,5 +1,6 @@
 include Types
 include Combinators
+include Yojson_conv
 module Types = Types
 module Combinators = Combinators
 module Formatter = Formatter

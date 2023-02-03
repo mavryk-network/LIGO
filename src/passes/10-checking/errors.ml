@@ -215,7 +215,8 @@ let error_ppformat
         List.fold ps ~init:"" ~f:(fun s p ->
             let s' =
               let p = Untyper.untype_pattern p in
-              Desugaring.Decompiler.decompile_pattern_to_string ~syntax p
+              ignore p ; "TODO, decompile pattern to string .. "
+              (* Desugaring.Decompiler.decompile_pattern_to_string ~syntax p *)
             in
             s ^ "- " ^ s' ^ "\n")
       in
@@ -572,7 +573,8 @@ let error_json : typer_error -> Simple_utils.Error.t =
       List.fold ps ~init:"" ~f:(fun s p ->
           let s' =
             let p = Untyper.untype_pattern p in
-            Desugaring.Decompiler.decompile_pattern_to_string ~syntax p
+            ignore p ; "TODO, decompile pattern to string .. "
+            (* Desugaring.Decompiler.decompile_pattern_to_string ~syntax p *)
           in
           s ^ "- " ^ s' ^ "\n")
     in

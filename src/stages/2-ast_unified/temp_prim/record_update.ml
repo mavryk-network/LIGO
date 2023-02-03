@@ -3,4 +3,4 @@ type 'e t =
   ; label : Ligo_prim.Label.t
   ; update : 'e
   }
-[@@deriving yojson, map, iter, fold, sexp]
+[@@deriving yojson, map, iter, fold, sexp, eq, compare, hash]

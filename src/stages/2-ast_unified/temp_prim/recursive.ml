@@ -3,4 +3,4 @@ type ('ty_expr, 'lambda) t =
   ; fun_type : 'ty_expr
   ; lambda : 'lambda
   }
-[@@deriving eq, compare, yojson, sexp, fold, iter, map]
+[@@deriving eq, compare, yojson, sexp, fold, iter, map, hash]

@@ -65,7 +65,7 @@ let expression_to_string ~syntax aggregated =
   let typed = Aggregation.decompile aggregated in
   let core = Decompile.Of_typed.decompile_expression typed in
   let imperative = Decompile.Of_core.decompile_expression core in
-  let buffer = Decompile.Of_imperative.decompile_expression imperative syntax in
+  let buffer = Decompile.Of_unified.decompile_expression imperative syntax in
   Buffer.contents buffer
 
 
