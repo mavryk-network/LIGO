@@ -8,6 +8,11 @@ e_for default incr ( = 1 )
 
 ForAny { pattern ; _ } ; pattern must be a variable (temporary until we get smart )
 
+
+## pass 'no shadowing'
+
+no shadowing for jsligo
+
 ## pass 'discriminated union'
 
 - remove : T_Disc [("a", Some b); ("c", Some d); ("e", None)]
