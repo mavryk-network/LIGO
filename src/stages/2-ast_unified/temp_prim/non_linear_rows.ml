@@ -1,5 +1,5 @@
 module type Row_lhs = sig
-  type t [@@deriving eq, compare, yojson, hash, iter, sexp, eq, compare, hash]
+  type t [@@deriving eq, compare, yojson, hash, iter, sexp, compare, hash]
 
   val of_string : string -> t
   val to_string : t -> string

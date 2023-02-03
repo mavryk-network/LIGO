@@ -31,7 +31,7 @@ type op =
   | EX_MARK (* ! *)
   | DCOLON (* :: *)
 
-and operator = op Simple_utils.Location.wrap [@@deriving compare, equal, yojson, map, fold, iter, sexp, eq, compare, hash]
+and operator = op Simple_utils.Location.wrap [@@deriving compare, equal, yojson, map, fold, iter, sexp, compare, hash]
 
 type 'expr binary_op =
   { operator : operator
