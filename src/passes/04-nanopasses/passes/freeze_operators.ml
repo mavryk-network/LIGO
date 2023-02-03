@@ -3,6 +3,9 @@ open Ast_unified
 open Pass_type
 open Errors
 
+let todo_error operator =
+  failwith (Format.asprintf "error operator: %s" (Sexp.to_string @@ Operators.sexp_of_operator operator))
+
 (*
   notes:
     - in the future (), we could imagine those mapping to be defined in the stdlib
@@ -29,6 +32,7 @@ let mapping_binop ~syntax : (Operators.op * Ligo_prim.Constant.constant') list =
     ; WORD_LXOR, C_XOR
     ; WORD_LAND, C_AND
     ; DCOLON, C_CONS
+    ; CARET , C_CONCAT
     ]
   | JsLIGO ->
     [ PLUS, C_POLYMORPHIC_ADD
@@ -93,13 +97,13 @@ let compile ~syntax =
          get_constant_of_operator mapping_binop ~syntax (Location.unwrap operator)
        with
       | Some cons_name -> e_constant ~loc { cons_name; arguments = [ left; right ] }
-      | None -> make_e ~loc e.wrap_content)
+      | None -> todo_error operator)
     | E_Unary_op { operator; arg } ->
       (match
          get_constant_of_operator mapping_binop ~syntax (Location.unwrap operator)
        with
       | Some cons_name -> e_constant ~loc { cons_name; arguments = [ arg ] }
-      | None -> make_e ~loc e.wrap_content)
+      | None -> todo_error operator)
     | x -> make_e ~loc x
   in
   `Cata { idle_cata_pass with expr = pass_expr }
