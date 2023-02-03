@@ -132,10 +132,16 @@ let e__type_ ~loc n : expr = e__type__z ~loc @@ Z.of_int n
 
 let e_false ~loc = e_constant ~loc { cons_name = C_FALSE; arguments = [] }
 let e_true ~loc = e_constant ~loc { cons_name = C_TRUE; arguments = [] }
+let e_bool ~loc b = if b then e_true ~loc else e_false ~loc
+
+let e_string ~loc str : expr =
+  make_e ~loc @@ E_Literal (Literal_string (Simple_utils.Ligo_string.standard str))
+
+
 let e_unit ~loc : expr = make_e ~loc @@ E_Literal Literal_unit
 let e_bytes_raw ~loc (b : bytes) : expr = make_e ~loc @@ E_Literal (Literal_bytes b)
 let e_bytes_hex ~loc b : expr = e_bytes_raw ~loc @@ Hex.to_bytes b
-
+let e_bytes_string ~loc (s : string) : expr = e_bytes_hex ~loc @@ Hex.of_string s
 let simpl_var_decl ~loc v let_rhs =
   s_decl
     ~loc
@@ -197,6 +203,7 @@ let let_unit_in rhs body =
     ; body
     }
 
+
 let block_of_statements stmts =
   let loc =
     List.Ne.fold_left
@@ -205,3 +212,59 @@ let block_of_statements stmts =
       (List.Ne.map get_s_loc stmts)
   in
   make_b ~loc stmts
+
+let e_pair ~loc l r = e_tuple ~loc (Simple_utils.List.Ne.of_list [l;r])
+
+
+let e_record_ez ~loc (lst : (string * expr) list) =
+  e_record_pun ~loc
+  @@ List.map lst ~f:(fun (l, e) -> Field.Complete (Label.of_string l, e))
+
+
+let e_lambda_ez ~loc var ?ascr ?mut_flag output_type result : expr =
+  e_lambda ~loc { binder = Ligo_prim.Param.make ?mut_flag var ascr; output_type; result }
+
+let e_variable_ez ~loc str = e_variable ~loc (Variable.of_input_var ~loc str)
+
+let tv__type_ ~loc () : ty_expr =
+  let open Ligo_prim.Literal_types in
+  t_var ~loc (v__type_ ~loc)
+  [@@map
+    _type_
+    , ( "string"
+      , "bytes"
+      , "int"
+      , "operation"
+      , "nat"
+      , "tez"
+      , "unit"
+      , "address"
+      , "signature"
+      , "key"
+      , "key_hash"
+      , "timestamp"
+      , "bls12_381_g1"
+      , "bls12_381_g2"
+      , "bls12_381_fr"
+      , "chain_id"
+      , "set"
+      , "contract"
+      , "option"
+      , "list"
+      , "map" )]
+
+
+let t__type_ ~loc t : ty_expr =
+  t_app
+    ~loc
+    { constr = tv__type_ ~loc (); type_args = Simple_utils.List.Ne.of_list [ t ] }
+  [@@map _type_, ("list", "set", "contract", "option")]
+
+let t__type_ ~loc t1 t2 : ty_expr =
+  t_app
+    ~loc
+    { constr = tv__type_ ~loc (); type_args = Simple_utils.List.Ne.of_list [ t1 ; t2 ] }
+  [@@map _type_, ("map")]
+
+let e_none ~loc = e_constructor ~loc {constructor = Label.of_string "None"; element = e_unit ~loc}
+let e_some element = e_constructor {constructor = Label.of_string "Some"; element}

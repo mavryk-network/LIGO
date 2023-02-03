@@ -9,6 +9,7 @@ let compile ~raise ~meta c_unit (source_filename : string) : Ast_unified.program
 
 let compile_temp
     ~(raise : (Main_errors.all, Main_warnings.all) Simple_utils.Trace.raise)
+    ~options
     ~meta
     c_unit
     (source_filename : string)
@@ -34,7 +35,7 @@ let compile_temp
       in
       Unification.Jsligo.compile_program raw
   in
-  trace ~raise nanopasses_tracer (Nanopasses.compile_program ~syntax:meta.syntax unified)
+  trace ~raise nanopasses_tracer (Nanopasses.compile_program ~options unified)
 
 
 let compile_expression ~raise = parse_and_abstract_expression ~raise

@@ -1,5 +1,5 @@
 open Test_helpers
-open Ast_imperative
+open Ast_unified
 
 let get_program = get_program "./contracts/id.ligo"
 let compile_main ~raise () = Test_helpers.compile_main ~raise "./contracts/id.ligo" ()
@@ -26,7 +26,7 @@ let buy_id ~raise () =
   let storage =
     e_record_ez
       ~loc
-      [ "identities", e_big_map ~loc [ e_int ~loc 0, id_details_1 ]
+      [ "identities", e_bigmap ~loc [ e_int ~loc 0, id_details_1 ]
       ; "next_id", e_int ~loc 1
       ; "name_price", e_mutez ~loc 1000000
       ; "skip_price", e_mutez ~loc 1000000
@@ -60,7 +60,7 @@ let buy_id ~raise () =
     e_record_ez
       ~loc
       [ ( "identities"
-        , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
+        , e_bigmap ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
       ; "name_price", e_mutez ~loc 1000000
       ; "skip_price", e_mutez ~loc 1000000
@@ -93,7 +93,7 @@ let buy_id_sender_addr ~raise () =
   let storage =
     e_record_ez
       ~loc
-      [ "identities", e_big_map ~loc [ e_int ~loc 0, id_details_1 ]
+      [ "identities", e_bigmap ~loc [ e_int ~loc 0, id_details_1 ]
       ; "next_id", e_int ~loc 1
       ; "name_price", e_mutez ~loc 1000000
       ; "skip_price", e_mutez ~loc 1000000
@@ -120,14 +120,14 @@ let buy_id_sender_addr ~raise () =
     e_record_ez
       ~loc
       [ "profile", owner_website
-      ; "initial_controller", e_typed_none ~loc (t_address ~loc ())
+      ; "initial_controller", e_none ~loc
       ]
   in
   let new_storage =
     e_record_ez
       ~loc
       [ ( "identities"
-        , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
+        , e_bigmap ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
       ; "name_price", e_mutez ~loc 1000000
       ; "skip_price", e_mutez ~loc 1000000
@@ -161,7 +161,7 @@ let buy_id_wrong_amount ~raise () =
   let storage =
     e_record_ez
       ~loc
-      [ "identities", e_big_map ~loc [ e_int ~loc 0, id_details_1 ]
+      [ "identities", e_bigmap ~loc [ e_int ~loc 0, id_details_1 ]
       ; "next_id", e_int ~loc 1
       ; "name_price", e_mutez ~loc 1000000
       ; "skip_price", e_mutez ~loc 1000000
@@ -236,7 +236,7 @@ let update_details_owner ~raise () =
     e_record_ez
       ~loc
       [ ( "identities"
-        , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
+        , e_bigmap ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
       ; "name_price", e_mutez ~loc 1000000
       ; "skip_price", e_mutez ~loc 1000000
@@ -246,7 +246,7 @@ let update_details_owner ~raise () =
     e_record_ez
       ~loc
       [ ( "identities"
-        , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2_diff ] )
+        , e_bigmap ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2_diff ] )
       ; "next_id", e_int ~loc 2
       ; "name_price", e_mutez ~loc 1000000
       ; "skip_price", e_mutez ~loc 1000000
@@ -315,7 +315,7 @@ let update_details_controller ~raise () =
     e_record_ez
       ~loc
       [ ( "identities"
-        , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
+        , e_bigmap ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
       ; "name_price", e_mutez ~loc 1000000
       ; "skip_price", e_mutez ~loc 1000000
@@ -325,7 +325,7 @@ let update_details_controller ~raise () =
     e_record_ez
       ~loc
       [ ( "identities"
-        , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2_diff ] )
+        , e_bigmap ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2_diff ] )
       ; "next_id", e_int ~loc 2
       ; "name_price", e_mutez ~loc 1000000
       ; "skip_price", e_mutez ~loc 1000000
@@ -387,7 +387,7 @@ let update_details_nonexistent ~raise () =
     e_record_ez
       ~loc
       [ ( "identities"
-        , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
+        , e_bigmap ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
       ; "name_price", e_mutez ~loc 1000000
       ; "skip_price", e_mutez ~loc 1000000
@@ -448,7 +448,7 @@ let update_details_wrong_addr ~raise () =
     e_record_ez
       ~loc
       [ ( "identities"
-        , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
+        , e_bigmap ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
       ; "name_price", e_mutez ~loc 1000000
       ; "skip_price", e_mutez ~loc 1000000
@@ -510,7 +510,7 @@ let update_details_unchanged ~raise () =
     e_record_ez
       ~loc
       [ ( "identities"
-        , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
+        , e_bigmap ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
       ; "name_price", e_mutez ~loc 1000000
       ; "skip_price", e_mutez ~loc 1000000
@@ -520,8 +520,8 @@ let update_details_unchanged ~raise () =
     e_record_ez
       ~loc
       [ "id", e_int ~loc 1
-      ; "new_profile", e_typed_none ~loc (t_bytes ~loc ())
-      ; "new_controller", e_typed_none ~loc (t_address ~loc ())
+      ; "new_profile", e_none ~loc
+      ; "new_controller", e_none ~loc
       ]
   in
   let () =
@@ -578,7 +578,7 @@ let update_owner ~raise () =
     e_record_ez
       ~loc
       [ ( "identities"
-        , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
+        , e_bigmap ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
       ; "name_price", e_mutez ~loc 1000000
       ; "skip_price", e_mutez ~loc 1000000
@@ -588,7 +588,7 @@ let update_owner ~raise () =
     e_record_ez
       ~loc
       [ ( "identities"
-        , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2_diff ] )
+        , e_bigmap ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2_diff ] )
       ; "next_id", e_int ~loc 2
       ; "name_price", e_mutez ~loc 1000000
       ; "skip_price", e_mutez ~loc 1000000
@@ -644,7 +644,7 @@ let update_owner_nonexistent ~raise () =
     e_record_ez
       ~loc
       [ ( "identities"
-        , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
+        , e_bigmap ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
       ; "name_price", e_mutez ~loc 1000000
       ; "skip_price", e_mutez ~loc 1000000
@@ -700,7 +700,7 @@ let update_owner_wrong_addr ~raise () =
     e_record_ez
       ~loc
       [ ( "identities"
-        , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
+        , e_bigmap ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
       ; "name_price", e_mutez ~loc 1000000
       ; "skip_price", e_mutez ~loc 1000000
@@ -755,7 +755,7 @@ let skip ~raise () =
     e_record_ez
       ~loc
       [ ( "identities"
-        , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
+        , e_bigmap ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
       ; "name_price", e_mutez ~loc 1000000
       ; "skip_price", e_mutez ~loc 1000000
@@ -765,7 +765,7 @@ let skip ~raise () =
     e_record_ez
       ~loc
       [ ( "identities"
-        , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
+        , e_bigmap ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 3
       ; "name_price", e_mutez ~loc 1000000
       ; "skip_price", e_mutez ~loc 1000000
@@ -777,7 +777,7 @@ let skip ~raise () =
       ~options
       program
       "skip_"
-      (e_pair ~loc (e_unit ~loc ()) storage)
+      (e_pair ~loc (e_unit ~loc) storage)
       (e_pair ~loc (e_list ~loc []) new_storage)
   in
   ()
@@ -818,7 +818,7 @@ let skip_wrong_amount ~raise () =
     e_record_ez
       ~loc
       [ ( "identities"
-        , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
+        , e_bigmap ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
       ; "name_price", e_mutez ~loc 1000000
       ; "skip_price", e_mutez ~loc 1000000
@@ -830,7 +830,7 @@ let skip_wrong_amount ~raise () =
       ~options
       program
       "skip_"
-      (e_pair ~loc (e_unit ~loc ()) storage)
+      (e_pair ~loc (e_unit ~loc) storage)
       "Incorrect amount paid."
   in
   ()

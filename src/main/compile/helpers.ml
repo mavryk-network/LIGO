@@ -52,12 +52,19 @@ let preprocess_string
 
 type file_path = string
 
-let parse_and_abstract_pascaligo ~(raise : (Main_errors.all, Main_warnings.all) Simple_utils.Trace.raise) buffer file_path =
+let parse_and_abstract_pascaligo
+    ~(raise : (Main_errors.all, Main_warnings.all) Simple_utils.Trace.raise)
+    buffer
+    file_path
+  =
   let raw = trace ~raise parser_tracer @@ Parsing.Pascaligo.parse_file buffer file_path in
   Unification.Pascaligo.compile_program raw
 
 
-let parse_and_abstract_expression_pascaligo ~(raise : (Main_errors.all, Main_warnings.all) Simple_utils.Trace.raise) buffer =
+let parse_and_abstract_expression_pascaligo
+    ~(raise : (Main_errors.all, Main_warnings.all) Simple_utils.Trace.raise)
+    buffer
+  =
   let raw = trace ~raise parser_tracer @@ Parsing.Pascaligo.parse_expression buffer in
   Unification.Pascaligo.compile_expression raw
 
@@ -92,7 +99,12 @@ let parse_and_abstract ~raise ~(meta : meta) buffer file_path : Ast_unified.prog
   parse_and_abstract ~raise buffer file_path
 
 
-let parse_and_abstract_expression ~(raise : (Main_errors.all, Main_warnings.all) Simple_utils.Trace.raise) ~(meta : meta) buffer : Ast_unified.expr =
+let parse_and_abstract_expression
+    ~(raise : (Main_errors.all, Main_warnings.all) Simple_utils.Trace.raise)
+    ~(meta : meta)
+    buffer
+    : Ast_unified.expr
+  =
   let parse_and_abstract =
     match meta.syntax with
     | PascaLIGO -> parse_and_abstract_expression_pascaligo

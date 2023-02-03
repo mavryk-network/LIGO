@@ -156,18 +156,18 @@ let get_program f ?st =
 
 
 let expression_to_core ~raise expression =
-  let core = Ligo_compile.Of_imperative.compile_expression ~raise expression in
+  let core = Ligo_compile.Of_unified.compile_expression ~raise ~options expression in
   core
 
 
 let pack_payload
     ~raise
     (program : Ast_typed.program)
-    (payload : Ast_imperative.expression)
+    (payload : Ast_unified.expr)
     : bytes
   =
   let code =
-    let core = Ligo_compile.Of_imperative.compile_expression ~raise payload in
+    let core = Ligo_compile.Of_unified.compile_expression ~raise ~options payload in
     let typed =
       Ligo_compile.Of_core.compile_expression ~raise ~options ~init_prog:program core
     in
@@ -188,7 +188,7 @@ let pack_payload
 let sign_message
     ~raise
     (program : Ast_typed.program)
-    (payload : Ast_imperative.expression)
+    (payload : Ast_unified.expr)
     sk
     : string
   =
@@ -247,11 +247,11 @@ let typed_program_with_imperative_input_to_michelson
     ~raise
     (program : Ast_typed.program)
     (entry_point : string)
-    (input : Ast_imperative.expression)
+    (input : Ast_unified.expr)
     : Stacking.compiled_expression * Ast_aggregated.type_expression
   =
   Printexc.record_backtrace true;
-  let core = Ligo_compile.Of_imperative.compile_expression ~raise input in
+  let core = Ligo_compile.Of_unified.compile_expression ~raise ~options input in
   let app = Ligo_compile.Of_core.apply entry_point core in
   let typed_app =
     Ligo_compile.Of_core.compile_expression ~raise ~options ~init_prog:program app
@@ -275,7 +275,7 @@ let run_typed_program_with_imperative_input
     ?options
     (program : Ast_typed.program)
     (entry_point : string)
-    (input : Ast_imperative.expression)
+    (input : Ast_unified.expr)
     : Ast_core.expression
   =
   let michelson_program, ty =
@@ -475,7 +475,7 @@ let expect_n_pos_small ?options = expect_n_aux ?options [ 0; 2; 10 ]
 let expect_n_strict_pos_small ?options = expect_n_aux ?options [ 2; 10 ]
 
 let expect_eq_b ~raise program entry_point make_expected =
-  let open Ast_imperative in
+  let open Ast_unified in
   let aux b =
     let input = e_bool ~loc b in
     let expected = make_expected b in
@@ -486,12 +486,12 @@ let expect_eq_b ~raise program entry_point make_expected =
 
 
 let expect_eq_n_int a b c =
-  let open Ast_imperative in
+  let open Ast_unified in
   expect_eq_n a b (e_int ~loc) (fun n -> e_int ~loc (c n))
 
 
 let expect_eq_b_bool a b c =
-  let open Ast_imperative in
+  let open Ast_unified in
   expect_eq_b a b (fun bool -> e_bool ~loc (c bool))
 
 

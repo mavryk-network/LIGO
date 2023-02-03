@@ -65,8 +65,14 @@ let compile_with_passes : type a. a sub_pass list -> a -> a =
   prg
 
 
-let compile_program ~raise ~syntax : I.program -> O.program =
+let extract_options : Compiler_options.t -> Syntax_types.t =
+  fun options ->
+    let syntax = match options.frontend.syntax with None -> Syntax_types.CameLIGO | Some s -> s in
+    syntax
+
+let compile_program ~raise ~(options: Compiler_options.t) : I.program -> O.program =
  fun prg ->
+  let syntax = extract_options options in
   let passes = passes ~raise ~syntax in
   (* print_endline
     (Format.asprintf "%a" (Sexp.pp_hum_indent 2) (I.S_exp.sexp_of_program prg)); *)
@@ -76,8 +82,9 @@ let compile_program ~raise ~syntax : I.program -> O.program =
   trivial_compile_program prg
 
 
-let compile_expression ~raise ~syntax : I.expr -> O.expression =
+let compile_expression ~raise ~(options: Compiler_options.t) : I.expr -> O.expression =
  fun expr ->
+  let syntax = extract_options options in
   let passes = passes ~raise ~syntax in
   let expr = compile_with_passes (List.map ~f:(fun x -> x.expression) passes) expr in
   trivial_compile_expression expr

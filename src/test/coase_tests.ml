@@ -7,33 +7,17 @@ open Main_errors
 let get_program = get_program "./contracts/coase.ligo"
 let compile_main ~raise () = Test_helpers.compile_main ~raise "./contracts/coase.ligo" ()
 
-open Ast_imperative
+open Ast_unified
 
 let card owner = e_record_ez ~loc [ "card_owner", owner; "card_pattern", e_nat ~loc 0 ]
-
-let card_ty =
-  t_record_ez ~loc [ "card_owner", t_address ~loc (); "card_pattern", t_nat ~loc () ]
-
-
 let card_ez owner = card (e_address ~loc owner)
-
-let make_cards assoc_lst =
-  let card_id_ty = t_nat ~loc () in
-  e_typed_map ~loc assoc_lst card_id_ty card_ty
-
-
+let make_cards assoc_lst = e_map ~loc assoc_lst
 let card_pattern (coeff, qtt) = e_record_ez ~loc [ "coefficient", coeff; "quantity", qtt ]
-
-let card_pattern_ty =
-  t_record_ez ~loc [ "coefficient", t_tez ~loc (); "quantity", t_nat ~loc () ]
-
-
 let card_pattern_ez (coeff, qtt) = card_pattern (e_mutez ~loc coeff, e_nat ~loc qtt)
 
 let make_card_patterns lst =
-  let card_pattern_id_ty = t_nat ~loc () in
   let assoc_lst = List.mapi ~f:(fun i x -> e_nat ~loc i, x) lst in
-  e_typed_map ~loc assoc_lst card_pattern_id_ty card_pattern_ty
+  e_map ~loc assoc_lst
 
 
 let storage cards_patterns cards next_id =
@@ -79,7 +63,7 @@ let buy ~raise () =
       e_pair ~loc buy_action storage
     in
     let make_expected n =
-      let ops = e_typed_list ~loc [] (t_operation ~loc ()) in
+      let ops = e_list ~loc [] in
       let storage =
         let cards =
           cards_ez first_owner n
@@ -124,12 +108,16 @@ let dispatch_buy ~raise () =
   let () =
     let make_input n =
       let buy_action = e_record_ez ~loc [ "card_to_buy", e_nat ~loc 0 ] in
-      let action = e_constructor ~loc "Buy_single" buy_action in
+      let action =
+        e_constructor
+          ~loc
+          { constructor = Label.of_string "Buy_single"; element = buy_action }
+      in
       let storage = basic 100 1000 (cards_ez first_owner n) (2 * n) in
       e_pair ~loc action storage
     in
     let make_expected n =
-      let ops = e_typed_list ~loc [] (t_operation ~loc ()) in
+      let ops = e_list ~loc [] in
       let storage =
         let cards =
           cards_ez first_owner n
@@ -182,7 +170,7 @@ let transfer ~raise () =
       e_pair ~loc transfer_action storage
     in
     let make_expected n =
-      let ops = e_typed_list ~loc [] (t_operation ~loc ()) in
+      let ops = e_list ~loc [] in
       let storage =
         let cards =
           let new_card = card_ez second_owner in

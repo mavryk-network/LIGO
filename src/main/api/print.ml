@@ -90,7 +90,7 @@ let ast (raw_options : Raw_options.t) source_file display_format () =
   let c_unit, _ =
     Compile.Of_source.preprocess_file ~raise ~options:options.frontend ~meta source_file
   in
-  Compile.Utils.to_unified ~raise ~options ~meta c_unit source_file
+  Compile.Utils.to_unified ~raise ~meta c_unit source_file
 
 
 let ast_core_temp (raw_options : Raw_options.t) source_file display_format () =

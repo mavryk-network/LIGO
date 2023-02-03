@@ -2,7 +2,7 @@ module Var = Simple_utils.Var
 open Simple_utils.Trace
 open Test_helpers
 open Ligo_prim
-open Ast_imperative
+open Ast_unified
 open Main_errors
 module Alpha_context = Memory_proto_alpha.Protocol.Alpha_context
 
@@ -12,7 +12,7 @@ let compile_main ~raise () =
   Test_helpers.compile_main ~raise "./contracts/hashlock.mligo" ()
 
 
-let call msg = e_constructor ~loc "Call" msg
+let call msg = e_constructor ~loc { constructor = Label.of_string "Call"; element = msg }
 
 let mk_time ~raise st =
   match Memory_proto_alpha.Protocol.Script_timestamp.of_string st with
@@ -33,14 +33,14 @@ let first_committer, first_contract =
   Protocol.Alpha_context.Contract.to_b58check kt, kt
 
 
-let empty_op_list = e_typed_list ~loc [] (t_operation ~loc ())
+let empty_op_list = e_list ~loc []
 
 let empty_message =
   e_lambda_ez
     ~loc
     (Value_var.of_input_var ~loc "arguments")
-    ~ascr:(t_unit ~loc ())
-    (Some (t_list ~loc (t_operation ~loc ())))
+    ~ascr:(tv_unit ~loc ())
+    (Some (t_list ~loc (tv_operation ~loc ())))
     empty_op_list
 
 
@@ -65,20 +65,14 @@ let commit ~raise () =
       (sha_256_hash
          (BytesLabels.concat ~sep:BytesLabels.empty [ test_hash_raw; packed_sender ]))
   in
-  let pre_commits =
-    e_typed_big_map
-      ~loc
-      []
-      (t_address ~loc ())
-      (t_record_ez ~loc [ "date", t_timestamp ~loc (); "salted_hash", t_bytes ~loc () ])
-  in
+  let pre_commits = e_bigmap ~loc [] in
   let init_storage = storage test_hash true pre_commits in
   let commit =
     e_record_ez
       ~loc
       [ "date", e_timestamp_z ~loc (to_sec lock_time); "salted_hash", salted_hash ]
   in
-  let post_commits = e_big_map ~loc [ e_address ~loc first_committer, commit ] in
+  let post_commits = e_bigmap ~loc [ e_address ~loc first_committer, commit ] in
   let post_storage = storage test_hash true post_commits in
   expect_eq
     ~raise
@@ -100,13 +94,7 @@ let reveal_no_commit ~raise () =
   in
   let test_hash_raw = sha_256_hash (Bytes.of_string "hello world") in
   let test_hash = e_bytes_raw ~loc test_hash_raw in
-  let pre_commits =
-    e_typed_big_map
-      ~loc
-      []
-      (t_address ~loc ())
-      (t_record_ez ~loc [ "date", t_timestamp ~loc (); "salted_hash", t_bytes ~loc () ])
-  in
+  let pre_commits = e_bigmap ~loc [] in
   let init_storage = storage test_hash true pre_commits in
   expect_string_failwith
     ~raise
@@ -141,7 +129,7 @@ let reveal_young_commit ~raise () =
       ~loc
       [ "date", e_timestamp_z ~loc (to_sec lock_time); "salted_hash", salted_hash ]
   in
-  let commits = e_big_map ~loc [ e_address ~loc first_committer, commit ] in
+  let commits = e_bigmap ~loc [ e_address ~loc first_committer, commit ] in
   let init_storage = storage test_hash true commits in
   let options =
     Proto_alpha_utils.Memory_proto_alpha.(
@@ -182,7 +170,7 @@ let reveal_breaks_commit ~raise () =
       ~loc
       [ "date", e_timestamp_z ~loc (to_sec now); "salted_hash", salted_hash ]
   in
-  let commits = e_big_map ~loc [ e_address ~loc first_committer, commit ] in
+  let commits = e_bigmap ~loc [ e_address ~loc first_committer, commit ] in
   let init_storage = storage test_hash true commits in
   let options =
     Proto_alpha_utils.Memory_proto_alpha.(
@@ -221,7 +209,7 @@ let reveal_wrong_commit ~raise () =
       ~loc
       [ "date", e_timestamp_z ~loc (to_sec now); "salted_hash", salted_hash ]
   in
-  let commits = e_big_map ~loc [ e_address ~loc first_committer, commit ] in
+  let commits = e_bigmap ~loc [ e_address ~loc first_committer, commit ] in
   let init_storage = storage test_hash true commits in
   let options =
     Proto_alpha_utils.Memory_proto_alpha.(
@@ -260,7 +248,7 @@ let reveal_no_reuse ~raise () =
       ~loc
       [ "date", e_timestamp_z ~loc (to_sec now); "salted_hash", salted_hash ]
   in
-  let commits = e_big_map ~loc [ e_address ~loc first_committer, commit ] in
+  let commits = e_bigmap ~loc [ e_address ~loc first_committer, commit ] in
   let init_storage = storage test_hash false commits in
   let options =
     Proto_alpha_utils.Memory_proto_alpha.(
@@ -301,7 +289,7 @@ let reveal ~raise () =
       ~loc
       [ "date", e_timestamp_z ~loc (to_sec now); "salted_hash", salted_hash ]
   in
-  let commits = e_big_map ~loc [ e_address ~loc first_committer, commit ] in
+  let commits = e_bigmap ~loc [ e_address ~loc first_committer, commit ] in
   let init_storage = storage test_hash true commits in
   let post_storage = storage test_hash false commits in
   let options =

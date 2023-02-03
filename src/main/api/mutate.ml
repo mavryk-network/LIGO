@@ -35,7 +35,7 @@ let mutate_ast (raw_options : Raw_options.t) source_file display_format seed no_
     Compile.Of_source.preprocess_file ~raise ~options:options.frontend ~meta source_file
   in
   let unified =
-    Compile.Utils.to_unified ~raise ~options ~meta c_unit source_file
+    Compile.Utils.to_unified ~raise ~meta c_unit source_file
   in
   let _, imperative_prg = Fuzzer.mutate_program ?n:seed unified in
   let syntax = Syntax.to_string meta.syntax in

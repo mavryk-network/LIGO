@@ -2,23 +2,20 @@ module Trace = Simple_utils.Trace
 
 let to_unified
     ~(raise : (Main_errors.all, Main_warnings.all) Trace.raise)
-    ~options
     ~meta
     (c_unit : Buffer.t)
     file_path
   =
-  let () = ignore options in
   Of_c_unit.compile ~raise ~meta c_unit file_path
 
 
 let to_core_temp ~raise ~options ~meta (c_unit : Buffer.t) file_path =
-  ignore options;
-  Of_c_unit.compile_temp ~raise ~meta c_unit file_path
+  Of_c_unit.compile_temp ~raise ~options ~meta c_unit file_path
 
 
 let to_core ~raise ~options ~meta (c_unit : Buffer.t) file_path =
-  let unified = to_unified ~raise ~options ~meta c_unit file_path in
-  Of_unified.compile ~raise ~meta unified
+  let unified = to_unified ~raise ~meta c_unit file_path in
+  Of_unified.compile ~raise ~options unified
 
 
 let type_file ~raise ~(options : Compiler_options.t) f stx form : Ast_typed.program =
@@ -40,15 +37,15 @@ let compile_file ~raise ~options f stx ep =
   contract
 
 
-let core_expression_string ~raise syntax expression =
+let core_expression_string ~raise ~options syntax expression =
   let meta = Of_source.make_meta_from_syntax syntax in
   let c_unit_exp, _ = Of_source.compile_string_without_preproc expression in
   let unified = Of_c_unit.compile_expression ~raise ~meta c_unit_exp in
-  Of_unified.compile_expression ~raise ~meta unified
+  Of_unified.compile_expression ~raise ~options unified
 
 
 let type_expression_string ~raise ~options syntax expression init_prog =
-  let core_exp = core_expression_string ~raise syntax expression in
+  let core_exp = core_expression_string ~raise ~options syntax expression in
   Of_core.compile_expression ~raise ~options ~init_prog core_exp
 
 
@@ -62,7 +59,7 @@ let core_program_string ~raise ~options syntax expression =
       expression
   in
   let unified = Of_c_unit.compile_string ~raise ~meta c_unit in
-  Of_unified.compile ~raise ~meta unified
+  Of_unified.compile ~raise ~options unified
 
 
 let type_program_string ~raise ~options syntax expression =
@@ -82,7 +79,7 @@ let type_expression ~raise ~options ?annotation syntax expression init_prog =
       expression
   in
   let unified = Of_c_unit.compile_expression ~raise ~meta c_unit_exp in
-  let core_exp = Of_unified.compile_expression ~raise ~meta unified in
+  let core_exp = Of_unified.compile_expression ~raise ~options unified in
   let core_exp =
     match annotation with
     | None -> core_exp
@@ -98,7 +95,7 @@ let compile_contract_input ~raise ~options parameter storage syntax init_prog =
     Of_source.compile_contract_input ~raise ~options ~meta parameter storage
   in
   let unified = Of_c_unit.compile_contract_input ~raise ~meta parameter storage in
-  let core = Of_unified.compile_expression ~raise ~meta unified in
+  let core = Of_unified.compile_expression ~raise ~options unified in
   let typed = Of_core.compile_expression ~raise ~options ~init_prog core in
   let aggregated =
     Of_typed.compile_expression_in_context
