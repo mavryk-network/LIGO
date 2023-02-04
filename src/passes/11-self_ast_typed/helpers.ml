@@ -61,6 +61,9 @@ let rec fold_expression : 'a folder -> 'a -> expression -> 'a =
   | E_for f -> For_loop.fold self init f
   | E_for_each fe -> For_each_loop.fold self init fe
   | E_while w -> While_loop.fold self init w
+  | E_originate _ | E_contract_call_entry _ | E_contract_call_view _ ->
+    (* TODO: Contracts *)
+    assert false
 
 
 and fold_expression_in_module_expr : ('a -> expression -> 'a) -> 'a -> module_expr -> 'a =
@@ -73,7 +76,10 @@ and fold_expression_in_module_expr : ('a -> expression -> 'a) -> 'a -> module_ex
         | D_value x -> self acc x.expr
         | D_irrefutable_match x -> self acc x.expr
         | D_module x -> fold_expression_in_module_expr self acc x.module_
-        | D_type _ -> acc)
+        | D_type _ -> acc
+        | D_contract _ ->
+          (* TODO: Contracts *)
+          assert false)
       ~init:acc
       decls
   | M_module_path _ -> acc
@@ -110,6 +116,9 @@ and fold_module : 'a folder -> 'a -> module_ -> 'a =
     | D_module { module_binder = _; module_; module_attr = _ } ->
       let res = fold_expression_in_module_expr f acc module_ in
       return @@ res
+    | D_contract _ ->
+      (* TODO: Contracts *)
+      assert false
   in
   let res = List.fold ~f:aux ~init m in
   res
@@ -134,6 +143,9 @@ let rec iter_type_expression : ty_mapper -> type_expression -> unit =
   | T_singleton _ -> ()
   | T_abstraction x -> self x.type_
   | T_for_all x -> self x.type_
+  | T_typed_address _ | T_storage _ | T_contract _ ->
+    (* TODO: Contracts *)
+    assert false
 
 
 type 'err mapper = expression -> expression
@@ -206,6 +218,9 @@ let rec map_expression : 'err mapper -> expression -> expression =
     let let_result = self let_result in
     return @@ E_let_mut_in { let_binder; rhs; let_result; attributes }
   | (E_deref _ | E_literal _ | E_variable _ | E_raw_code _) as e' -> return e'
+  | E_originate _ | E_contract_call_entry _ | E_contract_call_view _ ->
+    (* TODO: Contracts *)
+    assert false
 
 
 and map_expression_in_module_expr
@@ -240,6 +255,9 @@ and map_declaration m (x : declaration) =
   | D_module { module_binder; module_; module_attr } ->
     let module_ = map_expression_in_module_expr m module_ in
     return @@ D_module { module_binder; module_; module_attr }
+  | D_contract _ ->
+    (* TODO: Contracts *)
+    assert false
 
 
 and map_decl m d = map_declaration m d
@@ -257,6 +275,9 @@ let fetch_entry_type ~raise : string -> program -> type_expression * Location.t 
     | D_irrefutable_match { pattern = { wrap_content = P_var binder; _ }; expr; attr = _ }
       -> if Value_var.is_name (Binder.get_var binder) main_fname then Some expr else None
     | D_irrefutable_match _ | D_type _ | D_module _ -> None
+    | D_contract _ ->
+      (* TODO: Contracts *)
+      assert false
   in
   let main_decl_opt = List.find_map ~f:aux @@ List.rev m in
   let expr =
@@ -320,6 +341,9 @@ let fetch_contract_type ~raise
           , Some (Binder.get_var binder, expr) ))
       else return ()
     | D_irrefutable_match _ | D_type _ | D_module _ | D_value _ -> return ()
+    | D_contract _ ->
+      (* TODO: Contract *)
+      assert false
   in
   let m, main_decl_opt = List.fold_right ~f:aux ~init:([], None) m in
   let main_decl =
@@ -374,6 +398,9 @@ let get_shadowed_decl : program -> (ValueAttr.t -> bool) -> Location.t option =
       | None ->
         if predicate attr then Binder.get_var binder :: seen, shadows else seen, shadows)
     | D_irrefutable_match _ | D_type _ | D_module _ -> seen, shadows
+    | D_contract _ ->
+      (* TODO: Contracts *)
+      assert false
   in
   let _, shadows = List.fold ~f:aux ~init:([], []) prg in
   match shadows with
@@ -393,6 +420,9 @@ let strip_view_annotations : program -> program =
         wrap_content = D_irrefutable_match { decl with attr = { attr with view = false } }
       }
     | D_module _ | D_type _ | D_value _ | D_irrefutable_match _ -> x
+    | D_contract _ ->
+      (* TODO: Contracts *)
+      assert false
   in
   List.map ~f:aux m
 
@@ -444,7 +474,10 @@ let annotate_with_view ~raise : string list -> Ast_typed.program -> Ast_typed.pr
             in
             decorated :: prg, List.remove_element ~compare:String.compare found views
           | None -> continue)
-        | D_irrefutable_match _ | D_type _ | D_module _ -> continue)
+        | D_irrefutable_match _ | D_type _ | D_module _ -> continue
+        | D_contract _ ->
+          (* TODO: Contracts *)
+          assert false)
   in
   let () =
     match not_found with
@@ -597,6 +630,9 @@ end = struct
         List.fold binders ~init:fv2 ~f:(fun fv2 b -> VarSet.remove (Binder.get_var b) fv2)
       in
       merge (self rhs) { modVarSet; moduleEnv; varSet; mutSet = fv2 }
+    | E_originate _ | E_contract_call_entry _ | E_contract_call_view _ ->
+      (* TODO: Contracts *)
+      assert false
 
 
   and get_fv_cases : _ Match_expr.match_case list -> moduleEnv' =
@@ -636,6 +672,9 @@ end = struct
       | D_module { module_binder = _; module_; module_attr = _ } ->
         get_fv_module_expr module_
       | D_type _t -> empty
+      | D_contract _ ->
+        (* TODO: Contracts *)
+        assert false
     in
     unions @@ List.map ~f:aux m
 
