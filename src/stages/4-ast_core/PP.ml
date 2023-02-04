@@ -69,6 +69,9 @@ and type_content : formatter -> type_content -> unit =
   | T_singleton x -> Literal_value.pp ppf x
   | T_abstraction x -> Abstraction.pp_type_abs type_expression ppf x
   | T_for_all x -> Abstraction.pp_forall type_expression ppf x
+  | T_typed_address address -> Address.pp type_expression ppf address
+  | T_storage storage -> Storage.pp type_expression ppf storage
+  | T_contract sig_ -> Contract_signature.pp type_expression ppf sig_
 
 
 and row : formatter -> row_element -> unit =
