@@ -91,6 +91,9 @@ let rec extract_variable_types
         let k, v = Ast_typed.get_t_map_exn type_ in
         return [ binder, Ast_typed.t_pair ~loc k v ])
       else failwith "E_for_each type with 1 binder should have map, set or list type"
+    | E_originate _ | E_contract_call_entry _ | E_contract_call_view _ ->
+      (* TODO: Contracts *)
+      assert false
   in
   match decl with
   | D_value { attr = { hidden = true; _ }; _ } -> prev
@@ -112,6 +115,9 @@ let rec extract_variable_types
     | M_struct ds ->
       List.fold_left ds ~init:prev ~f:(fun prev d ->
           extract_variable_types prev d.wrap_content))
+  | D_contract _ ->
+    (* TODO: Contracts *)
+    assert false
 
 
 let resolve_if : with_types:bool -> bindings_map -> Value_var.t -> type_case =
