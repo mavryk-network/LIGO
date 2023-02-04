@@ -72,8 +72,8 @@ let reduction ~raise =
       | T_Var tv ->
         if Ty_variable.is_name tv "michelson_or"
            || Ty_variable.is_name tv "michelson_pair"
-           || Ty_variable.is_name tv "sapling_state"
-           || Ty_variable.is_name tv "sapling_transaction"
+           (* || Ty_variable.is_name tv "sapling_state"
+           || Ty_variable.is_name tv "sapling_transaction" *)
         then raise.error (wrong_reduction __MODULE__)
         else ()
       | _ -> ())
