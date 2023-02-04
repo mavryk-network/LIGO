@@ -126,7 +126,7 @@ let get_aliases_prelude
     match Location.unwrap d with
     | D_module { module_binder; module_attr; _ }
       when TypeOrModuleAttr.(module_attr.public) -> module_binder :: acc
-    | D_type _ | D_module _ | D_value _ | D_irrefutable_match _ -> acc
+    | D_type _ | D_module _ | D_value _ | D_irrefutable_match _ | D_contract _ -> acc
   in
   let get_val_bindings acc d =
     let open Ast_typed in
@@ -135,13 +135,13 @@ let get_aliases_prelude
     | D_irrefutable_match { pattern; attr; _ } when ValueAttr.(attr.public) ->
       let binders = Pattern.binders pattern in
       binders @ acc
-    | D_type _ | D_module _ | D_value _ | D_irrefutable_match _ -> acc
+    | D_type _ | D_module _ | D_value _ | D_irrefutable_match _ | D_contract _ -> acc
   in
   let get_ty_bindings acc d =
     let open Ast_typed in
     match Location.unwrap d with
     | D_type { type_binder; type_attr; _ } when type_attr.public -> type_binder :: acc
-    | D_type _ | D_module _ | D_value _ | D_irrefutable_match _ -> acc
+    | D_type _ | D_module _ | D_value _ | D_irrefutable_match _ | D_contract _ -> acc
   in
   let module_attr = Ast_core.TypeOrModuleAttr.{ public = true; hidden = true } in
   let attr =
