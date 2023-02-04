@@ -27,11 +27,11 @@ let compile ~raise =
     match Location.unwrap e with
     | E_Poly_fun ({ type_params = Some ty_params; _ } as pf) ->
       let body = generalize ty_params pf.body in
-      e_poly_fun ~loc { pf with body }
+      e_poly_fun ~loc { pf with body ; type_params = None }
     | E_Poly_recursive ({ lambda = { type_params = Some ty_params; _ } as pf; _ } as x) ->
       let lambda =
         let body = generalize ty_params pf.body in
-        { pf with body }
+        { pf with body ; type_params = None }
       in
       e_poly_recursive ~loc { x with lambda }
     | e -> make_e ~loc e
@@ -42,10 +42,10 @@ let compile ~raise =
     match Location.unwrap e with
     | D_Var ({ type_params = Some ty_params; _ } as x) ->
       let let_rhs = generalize ty_params x.let_rhs in
-      d_var ~loc { x with let_rhs }
+      d_var ~loc { x with let_rhs ; type_params = None }
     | D_Const ({ type_params = Some ty_params; _ } as x) ->
       let let_rhs = generalize ty_params x.let_rhs in
-      d_const ~loc { x with let_rhs }
+      d_const ~loc { x with let_rhs ; type_params = None }
     | D_Fun { is_rec; fun_name; type_params; parameters; ret_type; return } ->
       let let_rhs =
         match type_params with
