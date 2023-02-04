@@ -51,6 +51,9 @@ let check_view_type ~raise
     | T_singleton _ -> ()
     | T_abstraction x -> self x.type_
     | T_for_all x -> self x.type_
+    | T_typed_address _ | T_storage _ | T_contract _ ->
+      (* TODO: Contracts *)
+      assert false
   in
   let () = type_check (type_view_io_out view_loc return) return in
   let () = type_check (type_view_io_in view_loc arg) arg in

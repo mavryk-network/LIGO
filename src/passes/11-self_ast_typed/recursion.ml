@@ -51,6 +51,9 @@ let rec check_recursive_call ~raise : Value_var.t -> bool -> expression -> unit 
   (* Loops *)
   | E_for _ | E_for_each _ | E_while _ ->
     raise.error (recursive_call_is_only_allowed_as_the_last_operation n e.location)
+  | E_originate _ | E_contract_call_entry _ | E_contract_call_view _ ->
+    (* TODO: Contracts *)
+    assert false
 
 
 and check_recursive_call_in_matching ~raise n final_path ms =

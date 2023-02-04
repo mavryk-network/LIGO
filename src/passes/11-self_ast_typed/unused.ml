@@ -112,6 +112,9 @@ let rec defuse_of_expr defuse expr : defuse =
       ]
   | E_while { cond; body } ->
     defuse_unions defuse [ defuse_of_expr defuse cond; defuse_of_expr defuse body ]
+  | E_originate _ | E_contract_call_entry _ | E_contract_call_view _ ->
+    (* TODO: Contracts *)
+    assert false
 
 
 and defuse_of_lambda defuse { binder; output_type = _; result } =
@@ -185,6 +188,9 @@ and unused_declaration ~raise (x : declaration) =
   | D_module { module_; module_binder = _; module_attr = _ } ->
     let _ = unused_map_module_expr ~raise module_ in
     ()
+  | D_contract _ ->
+    (* TODO: Contracts *)
+    assert false
 
 
 and unused_decl ~raise x = unused_declaration ~raise x
