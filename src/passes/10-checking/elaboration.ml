@@ -26,6 +26,8 @@ let all_lmap_unit (lmap : unit t Record.LMap.t) : unit t =
  fun ~raise subst -> Record.LMap.iter (fun _label t -> t ~raise subst) lmap
 
 
+let all_opt opt : _ t = fun ~raise subst -> Option.map opt ~f:(fun t -> t ~raise subst)
+
 include Let_syntax
 
 let rec decode (type_ : Type.t) ~raise subst =
@@ -63,6 +65,15 @@ let rec decode (type_ : Type.t) ~raise subst =
   | I.T_record row ->
     let row = decode_row row in
     return @@ O.T_record row
+  | I.T_storage storage ->
+    let storage = decode_storage storage ~raise subst in
+    return @@ O.T_storage storage
+  | I.T_typed_address address ->
+    let address = decode_address address ~raise subst in
+    return @@ O.T_typed_address address
+  | I.T_contract ctype ->
+    let ctype = decode_contract_type ctype ~raise subst in
+    return @@ O.T_contract ctype
 
 
 and decode_layout (layout : Type.layout) ~raise subst =
@@ -86,6 +97,18 @@ and decode_row ({ fields; layout } : Type.row) ~raise subst =
   in
   let layout = decode_layout layout ~raise subst in
   O.{ fields; layout }
+
+
+and decode_storage storage ~raise subst =
+  Storage.map (fun type_ -> decode type_ ~raise subst) storage
+
+
+and decode_address address ~raise subst =
+  Address.map (fun type_ -> decode type_ ~raise subst) address
+
+
+and decode_contract_type ctype ~raise subst =
+  Contract_type.map (fun type_ -> decode type_ ~raise subst) ctype
 
 
 let decode type_ ~raise subst =

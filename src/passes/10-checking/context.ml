@@ -45,98 +45,183 @@ end
 
 module Signature = struct
   module T = struct
-    type t = item list
+    type module_ [@@deriving equal, compare, hash]
+    type contract [@@deriving equal, compare, hash]
 
-    and item =
-      | S_value of Value_var.t * Type.t
-      | S_type of Type_var.t * Type.t
-      | S_module of Module_var.t * t
-    [@@deriving compare, hash]
+    type 'a t = 'a item list
+
+    and _ item =
+      | S_value : Value_var.t * Type.t -> 'a item
+      | S_type : Type_var.t * Type.t -> 'a item
+      | S_module : Module_var.t * module_ t -> 'a item
+      | S_contract : Contract_var.t * contract t -> 'a item
+      | S_entry : Value_var.t * Type.t Entry_type.t -> contract item
+      | S_view : Value_var.t * Type.t View_type.t -> contract item
+    [@@deriving hash]
+
+    let rec equal_item : type a. (a -> a -> bool) -> a item -> a item -> bool =
+     fun _phantom_eq item1 item2 ->
+      match item1, item2 with
+      | S_value (var1, type1), S_value (var2, type2) ->
+        Value_var.equal var1 var2 && Type.equal type1 type2
+      | S_type (tvar1, type1), S_type (tvar2, type2) ->
+        Type_var.equal tvar1 tvar2 && Type.equal type1 type2
+      | S_module (mvar1, sig1), S_module (mvar2, sig2) ->
+        Module_var.equal mvar1 mvar2 && equal equal_module_ sig1 sig2
+      | S_contract (cvar1, sig1), S_contract (cvar2, sig2) ->
+        Contract_var.equal cvar1 cvar2 && equal equal_contract sig1 sig2
+      | S_entry (var1, entry_type1), S_entry (var2, entry_type2) ->
+        Value_var.equal var1 var2 && Entry_type.equal Type.equal entry_type1 entry_type2
+      | S_view (var1, view_type1), S_view (var2, view_type2) ->
+        Value_var.equal var1 var2 && View_type.equal Type.equal view_type1 view_type2
+      | _, _ -> false
+
+
+    and equal : type a. (a -> a -> bool) -> a t -> a t -> bool =
+     fun eq t1 t2 -> List.equal (equal_item eq) t1 t2
+
+
+    let item_tag : type a. a item -> int = function
+      | S_value _ -> 0
+      | S_type _ -> 1
+      | S_module _ -> 2
+      | S_contract _ -> 3
+      | S_entry _ -> 4
+      | S_view _ -> 5
+
+
+    let rec compare_item : type a. (a -> a -> int) -> a item -> a item -> int =
+     fun _phantom_compare item1 item2 ->
+      match item1, item2 with
+      | S_value (var1, type1), S_value (var2, type2) ->
+        [%compare: Value_var.t * Type.t] (var1, type1) (var2, type2)
+      | S_type (tvar1, type1), S_type (tvar2, type2) ->
+        [%compare: Type_var.t * Type.t] (tvar1, type1) (tvar2, type2)
+      | S_module (mvar1, sig1), S_module (mvar2, sig2) ->
+        [%compare: Module_var.t * module_ t] (mvar1, sig1) (mvar2, sig2)
+      | S_contract (cvar1, sig1), S_contract (cvar2, sig2) ->
+        [%compare: Contract_var.t * contract t] (cvar1, sig1) (cvar2, sig2)
+      | S_entry (var1, entry_type1), S_entry (var2, entry_type2) ->
+        [%compare: Value_var.t * Type.t Entry_type.t]
+          (var1, entry_type1)
+          (var2, entry_type2)
+      | S_view (var1, view_type1), S_view (var2, view_type2) ->
+        [%compare: Value_var.t * Type.t View_type.t] (var1, view_type1) (var2, view_type2)
+      | item1, item2 -> Int.compare (item_tag item1) (item_tag item2)
+
+
+    and compare : type a. (a -> a -> int) -> a t -> a t -> int =
+     fun compare_a t1 t2 -> List.compare (compare_item compare_a) t1 t2
+
+
+    type m = module_ t [@@deriving equal, compare, hash]
+    type c = contract t [@@deriving equal, compare, hash]
   end
 
   include T
 
-  let hashable : t hashable = (module Phys_hashable (T))
   let find_map t ~f = List.find_map (List.rev t) ~f
 
-  let get_value =
-    memoize2
-      hashable
-      (module Value_var)
-      (fun t var ->
-        (find_map t ~f:(function
-            | S_value (var', type_) when Value_var.equal var var' -> Some type_
-            | _ -> None) [@landmark "get_value"]))
+  let get_value t var =
+    (find_map t ~f:(function
+        | S_value (var', type_) when Value_var.equal var var' -> Some type_
+        | _ -> None) [@landmark "get_value"])
 
 
-  let get_type =
-    memoize2
-      hashable
-      (module Type_var)
-      (fun t tvar ->
-        (find_map t ~f:(function
-            | S_type (tvar', type_) when Type_var.equal tvar tvar' -> Some type_
-            | _ -> None) [@landmark "get_type"]))
+  let get_type t tvar =
+    (find_map t ~f:(function
+        | S_type (tvar', type_) when Type_var.equal tvar tvar' -> Some type_
+        | _ -> None) [@landmark "get_type"])
 
 
-  let get_module =
-    memoize2
-      hashable
-      (module Module_var)
-      (fun t mvar ->
-        (find_map t ~f:(function
-            | S_module (mvar', sig_) when Module_var.equal mvar mvar' -> Some sig_
-            | _ -> None) [@landmark "get_module"]))
+  let get_module t mvar =
+    (find_map t ~f:(function
+        | S_module (mvar', sig_) when Module_var.equal mvar mvar' -> Some sig_
+        | _ -> None) [@landmark "get_module"])
 
 
-  let rec equal_item : item -> item -> bool =
-   fun item1 item2 ->
-    match item1, item2 with
-    | S_value (var1, type1), S_value (var2, type2) ->
-      Value_var.equal var1 var2 && Type.equal type1 type2
-    | S_type (tvar1, type1), S_type (tvar2, type2) ->
-      Type_var.equal tvar1 tvar2 && Type.equal type1 type2
-    | S_module (mvar1, sig1), S_module (mvar2, sig2) ->
-      Module_var.equal mvar1 mvar2 && equal sig1 sig2
-    | _, _ -> false
+  let get_contract t cvar =
+    (find_map t ~f:(function
+        | S_contract (cvar', sig_) when Contract_var.equal cvar cvar' -> Some sig_
+        | _ -> None) [@landmark "get_contract"])
 
 
-  and equal t1 t2 = List.equal equal_item t1 t2
+  let get_entry t var =
+    (find_map t ~f:(function
+        | S_entry (var', entry_type) when Value_var.equal var var' -> Some entry_type
+        | _ -> None) [@landmark "get_entry"])
 
-  let to_type_mapi =
+
+  let get_view t var =
+    (find_map t ~f:(function
+        | S_view (var', view_type) when Value_var.equal var var' -> Some view_type
+        | _ -> None) [@landmark "get_view"])
+
+
+  let get_entry_or_view t var =
+    match get_entry t var, get_view t var with
+    | None, None -> Error `Not_found
+    | Some entry_type, None -> Ok (`Entry entry_type)
+    | None, Some view_type -> Ok (`View view_type)
+    | Some _, Some _ -> Error `Both_found
+
+
+  let get_contract_storage t =
+    get_type t (Type_var.of_input_var ~loc:Location.env "storage")
+
+
+  let to_contract_type t =
+    let open Result.Let_syntax in
+    let%bind storage =
+      Result.of_option (get_contract_storage t) ~error:`Undefined_storage
+    in
+    let entry_points, views =
+      List.fold
+        t
+        ~init:Value_var.Map.(empty, empty)
+        ~f:(fun ((entry_points, views) as acc) item ->
+          match item with
+          | S_entry (var, entry_type) ->
+            Map.set entry_points ~key:var ~data:entry_type, views
+          | S_view (var, view_type) ->
+            entry_points, Map.set views ~key:var ~data:view_type
+          | _ -> acc)
+    in
+    if Map.is_empty entry_points
+    then Error `No_entry_point
+    else return Contract_type.{ storage; views; entry_points }
+
+
+  let to_type_mapi t =
     let next = ref 0 in
-    memoize hashable (fun t ->
-        (List.fold_right t ~init:Type_var.Map.empty ~f:(fun item map ->
-             Int.incr next;
-             match item with
-             | S_type (tvar, type_) -> Map.set map ~key:tvar ~data:(!next, type_)
-             | _ -> map) [@landmark "to_type_mapi"]))
+    (List.fold_right t ~init:Type_var.Map.empty ~f:(fun item map ->
+         Int.incr next;
+         match item with
+         | S_type (tvar, type_) -> Map.set map ~key:tvar ~data:(!next, type_)
+         | _ -> map) [@landmark "to_type_mapi"])
 
 
-  let to_module_mapi =
+  let to_module_mapi t =
     let next = ref 0 in
-    memoize hashable (fun t ->
-        (List.fold_right t ~init:Module_var.Map.empty ~f:(fun item map ->
-             Int.incr next;
-             match item with
-             | S_module (mvar, t) -> Map.set map ~key:mvar ~data:(!next, t)
-             | _ -> map) [@landmark "to_module_map"]))
+    (List.fold_right t ~init:Module_var.Map.empty ~f:(fun item map ->
+         Int.incr next;
+         match item with
+         | S_module (mvar, t) -> Map.set map ~key:mvar ~data:(!next, t)
+         | _ -> map) [@landmark "to_module_map"])
 
 
-  let to_type_map =
-    memoize hashable (fun t ->
-        (List.fold_right t ~init:Type_var.Map.empty ~f:(fun item map ->
-             match item with
-             | S_type (tvar, type_) -> Map.set map ~key:tvar ~data:type_
-             | _ -> map) [@landmark "to_type_map"]))
+  let to_type_map t =
+    (List.fold_right t ~init:Type_var.Map.empty ~f:(fun item map ->
+         match item with
+         | S_type (tvar, type_) -> Map.set map ~key:tvar ~data:type_
+         | _ -> map) [@landmark "to_type_map"])
 
 
-  let to_module_map =
-    memoize hashable (fun t ->
-        (List.fold_right t ~init:Module_var.Map.empty ~f:(fun item map ->
-             match item with
-             | S_module (mvar, t) -> Map.set map ~key:mvar ~data:t
-             | _ -> map) [@landmark "to_module_map"]))
+  let to_module_map t =
+    (List.fold_right t ~init:Module_var.Map.empty ~f:(fun item map ->
+         match item with
+         | S_module (mvar, t) -> Map.set map ~key:mvar ~data:t
+         | _ -> map) [@landmark "to_module_map"])
 
 
   include struct
@@ -148,7 +233,8 @@ module Signature = struct
       Format.fprintf ppf "@[<v>%a@]" loop xs
 
 
-    let rec pp_item ppf item =
+    let rec pp_item : type a. Format.formatter -> a item -> unit =
+     fun ppf item ->
       match item with
       | S_value (var, type_) ->
         Format.fprintf ppf "%a : %a" Value_var.pp var Type.pp type_
@@ -156,19 +242,38 @@ module Signature = struct
         Format.fprintf ppf "type %a = %a" Type_var.pp tvar Type.pp type_
       | S_module (mvar, sig_) ->
         Format.fprintf ppf "module %a = %a" Module_var.pp mvar pp sig_
+      | S_contract (cvar, sig_) ->
+        Format.fprintf ppf "contract %a = %a" Contract_var.pp cvar pp sig_
+      | S_entry (var, entry_type) ->
+        Format.fprintf
+          ppf
+          "entry %a : %a"
+          Value_var.pp
+          var
+          (Entry_type.pp Type.pp)
+          entry_type
+      | S_view (var, view_type) ->
+        Format.fprintf
+          ppf
+          "view %a : %a"
+          Value_var.pp
+          var
+          (View_type.pp Type.pp)
+          view_type
 
 
-    and pp ppf t = Format.fprintf ppf "@[<v>sig@,%a@,end@]" (list ~pp:pp_item) t
+    and pp : type a. Format.formatter -> a t -> unit =
+     fun ppf t -> Format.fprintf ppf "@[<v>sig@,%a@,end@]" (list ~pp:pp_item) t
   end
 end
 
 type mutable_flag = Param.mutable_flag =
   | Mutable
   | Immutable
-[@@deriving compare, hash]
+[@@deriving equal, compare, hash]
 
-type pos = int [@@deriving compare, hash]
-type mut_lock = int [@@deriving compare, hash]
+type pos = int [@@deriving equal, compare, hash]
+type mut_lock = int [@@deriving equal, compare, hash]
 
 module T = struct
   type t = item list
@@ -177,14 +282,15 @@ module T = struct
     | C_value of Value_var.t * mutable_flag * Type.t
     | C_type of Type_var.t * Type.t
     | C_type_var of Type_var.t * Kind.t
-    | C_module of Module_var.t * Signature.t
+    | C_module of Module_var.t * Signature.m
+    | C_contract of Contract_var.t * Signature.c
     | C_texists_var of Type_var.t * Kind.t
     | C_texists_eq of Type_var.t * Kind.t * Type.t
     | C_lexists_var of Layout_var.t
     | C_lexists_eq of Layout_var.t * Type.layout
     | C_pos of pos
     | C_mut_lock of mut_lock
-  [@@deriving compare, hash]
+  [@@deriving equal, compare, hash]
 end
 
 include T
@@ -226,6 +332,8 @@ module PP = struct
     | C_module (mvar, sig_) ->
       Format.fprintf ppf "module %a = %a" Module_var.pp mvar Signature.pp sig_
     | C_pos _ | C_mut_lock _ -> ()
+    | C_contract (cvar, sig_) ->
+      Format.fprintf ppf "contract %a = %a" Contract_var.pp cvar Signature.pp sig_
 
 
   let context ppf t = list ppf t ~pp:item
@@ -248,19 +356,24 @@ let add_type_var t tvar kind = t |:: C_type_var (tvar, kind)
 let add_texists_var t tvar kind = t |:: C_texists_var (tvar, kind)
 let add_module t mvar mctx = t |:: C_module (mvar, mctx)
 let add_lexists_var t lvar = t |:: C_lexists_var lvar
+let add_contract t cvar sig_ = t |:: C_contract (cvar, sig_)
 
-let item_of_signature_item (sig_item : Signature.item) : item =
+let item_of_signature_item (type a) (sig_item : a Signature.item) : item option =
   match sig_item with
-  | S_value (var, type_) -> C_value (var, Immutable, type_)
-  | S_type (tvar, type_) -> C_type (tvar, type_)
-  | S_module (mvar, sig_) -> C_module (mvar, sig_)
+  | S_value (var, type_) -> Some (C_value (var, Immutable, type_))
+  | S_type (tvar, type_) -> Some (C_type (tvar, type_))
+  | S_module (mvar, sig_) -> Some (C_module (mvar, sig_))
+  | S_contract (cvar, sig_) -> Some (C_contract (cvar, sig_))
+  | S_entry _ | S_view _ -> None
 
 
-let add_signature_item t (sig_item : Signature.item) =
-  add t (item_of_signature_item sig_item)
+let add_signature_item (type a) t (sig_item : a Signature.item) =
+  match item_of_signature_item sig_item with
+  | Some sig_item -> add t sig_item
+  | None -> t
 
 
-let add_signature_items t (sig_items : Signature.item list) =
+let add_signature_items (type a) t (sig_items : a Signature.item list) =
   List.fold ~f:add_signature_item ~init:t (List.rev sig_items)
 
 
@@ -325,6 +438,16 @@ let get_module =
       (List.find_map t ~f:(function
           | C_module (mvar', mctx) when Module_var.equal mvar mvar' -> Some mctx
           | _ -> None) [@landmark "get_module"]))
+
+
+let get_contract =
+  memoize2
+    hashable
+    (module Contract_var)
+    (fun t cvar ->
+      (List.find_map t ~f:(function
+          | C_contract (cvar', sig_) when Contract_var.equal cvar cvar' -> Some sig_
+          | _ -> None) [@landmark "get_contract"]))
 
 
 let get_type_vars =
@@ -433,6 +556,15 @@ module Apply = struct
     | T_for_all for_all ->
       let for_all = Abstraction.map apply for_all in
       return @@ T_for_all for_all
+    | T_storage storage ->
+      let storage = Storage.map apply storage in
+      return @@ T_storage storage
+    | T_typed_address address ->
+      let address = Address.map apply address in
+      return @@ T_typed_address address
+    | T_contract ctype ->
+      let ctype = Contract_type.map apply ctype in
+      return @@ T_contract ctype
 
 
   and row ctx (t : Type.row) : Type.row =
@@ -454,40 +586,23 @@ module Apply = struct
       | None -> t)
 
 
-  let rec sig_item ctx (sig_item : Signature.item) : Signature.item =
+  let rec sig_item : type a. t -> a Signature.item -> a Signature.item =
+   fun ctx sig_item ->
     match sig_item with
     | S_type (tvar, type') -> S_type (tvar, type_ ctx type')
     | S_value (var, type') -> S_value (var, type_ ctx type')
     | S_module (mvar, sig') -> S_module (mvar, sig_ ctx sig')
+    | S_contract (cvar, sig') -> S_contract (cvar, sig_ ctx sig')
+    | S_entry (var, entry_type) -> S_entry (var, Entry_type.map (type_ ctx) entry_type)
+    | S_view (var, view_type) -> S_view (var, View_type.map (type_ ctx) view_type)
 
 
-  and sig_ ctx (sig_ : Signature.t) : Signature.t = List.map sig_ ~f:(sig_item ctx)
+  and sig_ : type a. t -> a Signature.t -> a Signature.t =
+   fun ctx sig_ -> List.map sig_ ~f:(sig_item ctx)
+
+
+  let contract_sig ctx sig_ = Contract_signature.map (type_ ctx) sig_
 end
-
-let equal_item : item -> item -> bool =
- fun item1 item2 ->
-  match item1, item2 with
-  | C_value (var1, mut_flag1, type1), C_value (var2, mut_flag2, type2) ->
-    Value_var.equal var1 var2
-    && Param.equal_mutable_flag mut_flag1 mut_flag2
-    && Type.equal type1 type2
-  | C_type (tvar1, type1), C_type (tvar2, type2) ->
-    Type_var.equal tvar1 tvar2 && Type.equal type1 type2
-  | C_type_var (tvar1, kind1), C_type_var (tvar2, kind2) ->
-    Type_var.equal tvar1 tvar2 && Kind.equal kind1 kind2
-  | C_texists_var (tvar1, kind1), C_texists_var (tvar2, kind2) ->
-    Type_var.equal tvar1 tvar2 && Kind.equal kind1 kind2
-  | C_texists_eq (evar1, kind1, type1), C_texists_eq (evar2, kind2, type2) ->
-    Type_var.equal evar1 evar2 && Kind.equal kind1 kind2 && Type.equal type1 type2
-  | C_module (mvar1, sig1), C_module (mvar2, sig2) ->
-    Module_var.equal mvar1 mvar2 && Signature.equal sig1 sig2
-  | C_pos pos1, C_pos pos2 -> pos1 = pos2
-  | C_mut_lock lock1, C_mut_lock lock2 -> lock1 = lock2
-  | C_lexists_var lvar1, C_lexists_var lvar2 -> Layout_var.equal lvar1 lvar2
-  | C_lexists_eq (lvar1, layout1), C_lexists_eq (lvar2, layout2) ->
-    Layout_var.equal lvar1 lvar2 && Type.equal_layout layout1 layout2
-  | _, _ -> false
-
 
 let drop_until t ~f =
   let rec loop t =
@@ -649,15 +764,30 @@ let to_module_mapi =
 
 let get_signature t ((local_module, path) : Module_var.t List.Ne.t) =
   let open Option.Let_syntax in
-  List.fold path ~init:(get_module t local_module) ~f:(fun sig_ mvar ->
+  List.fold
+    path
+    ~init:(get_module t local_module)
+    ~f:(fun (sig_ : Signature.m option) mvar ->
       let%bind sig_ = sig_ in
       Signature.get_module sig_ mvar)
+
+
+let get_contract_signature
+    t
+    ({ module_path; element = cvar } : Contract_var.t Module_access.t)
+  =
+  let open Option.Let_syntax in
+  match module_path with
+  | [] -> get_contract t cvar
+  | local_module :: path ->
+    let%bind sig_ = get_signature t (local_module, path) in
+    Signature.get_contract sig_ cvar
 
 
 type ('a, 'ret) contextual =
   'a
   -> to_type_map:('a -> Type.t Type_var.Map.t)
-  -> to_module_map:('a -> Signature.t Module_var.Map.t)
+  -> to_module_map:('a -> Signature.m Module_var.Map.t)
   -> 'ret
 
 let ctx_contextual f t = f t ~to_type_map ~to_module_map
@@ -685,7 +815,7 @@ let get_module_types : t -> (Type_var.t * Type.t) list =
     List.map ~f:(fun (tvar, (_, type_)) -> tvar, type_) sorted_list
   in
   memoize hashable (fun ctx ->
-      let rec signature : Signature.t -> (Type_var.t, int * Type.t) List.Assoc.t =
+      let rec signature : Signature.m -> (Type_var.t, int * Type.t) List.Assoc.t =
        fun sig_ ->
         (* Types in the current signature *)
         let local_types = Map.to_alist @@ Signature.to_type_mapi sig_ in
@@ -922,7 +1052,8 @@ end = struct
           (not (Set.mem (get_lexists_vars t) lvar)) && layout layout_ ~ctx
         | C_module (_mvar, sig_) ->
           (* Shadowing permitted *)
-          signature ~ctx sig_)
+          signature ~ctx sig_
+        | C_contract (_cvar, sig_) -> signature ~ctx sig_)
     in
     loop ctx
 
@@ -976,18 +1107,45 @@ end = struct
            && layout ~ctx rows.layout
         then return Type
         else None
+      | T_typed_address { contract } | T_storage { contract } ->
+        (match%bind loop contract with
+        | Contract -> Some Type
+        | _ -> None)
+      | T_contract ctype -> if contract_type ~ctx ctype then return Contract else None
     in
     loop t ~ctx
 
 
-  and signature ~ctx sig_ =
+  and contract_type ~ctx { Contract_type.storage; views; entry_points } =
+    (match type_ ~ctx storage with
+    | Some Type -> true
+    | _ -> false)
+    && Map.for_all views ~f:(view_type ~ctx)
+    && Map.for_all entry_points ~f:(entry_type ~ctx)
+
+
+  and entry_type ~ctx { Entry_type.param_type } =
+    match type_ ~ctx param_type with
+    | Some Type -> true
+    | _ -> false
+
+
+  and view_type ~ctx { View_type.param_type; return_type } =
+    match type_ ~ctx param_type, type_ ~ctx return_type with
+    | Some Type, Some Type -> true
+    | _ -> false
+
+
+  and signature : type a. ctx:t -> a Signature.t -> bool =
+   fun ~ctx sig_ ->
     match sig_ with
     | [] -> true
     | item :: sig_ ->
       signature_item ~ctx item && signature ~ctx:(add_signature_item ctx item) sig_
 
 
-  and signature_item ~ctx (sig_item : Signature.item) =
+  and signature_item : type a. ctx:t -> a Signature.item -> bool =
+   fun ~ctx sig_item ->
     match sig_item with
     | S_value (_var, type') ->
       (match type_ ~ctx type' with
@@ -998,6 +1156,9 @@ end = struct
       | Some _ -> true
       | _ -> false)
     | S_module (_mvar, sig_) -> signature ~ctx sig_
+    | S_contract (_var, sig_) -> signature ~ctx sig_
+    | S_entry (_var, entry_type') -> entry_type ~ctx entry_type'
+    | S_view (_var, view_type') -> view_type ~ctx view_type'
 end
 
 module Hashes = struct

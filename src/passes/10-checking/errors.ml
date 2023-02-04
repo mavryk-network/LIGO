@@ -53,6 +53,15 @@ let rec type_mapper ~f (t : Type.t) =
   | T_abstraction abs ->
     let abs = Abstraction.map (type_mapper ~f) abs in
     return @@ T_abstraction abs
+  | T_storage storage ->
+    let storage = Storage.map (type_mapper ~f) storage in
+    return @@ T_storage storage
+  | T_typed_address address ->
+    let address = Address.map (type_mapper ~f) address in
+    return @@ T_typed_address address
+  | T_contract ctype ->
+    let ctype = Contract_type.map (type_mapper ~f) ctype in
+    return @@ T_contract ctype
   | _ -> t
 
 
@@ -103,6 +112,8 @@ type typer_error =
   | `Typer_cannot_unify_diff_layout of
     Type.t * Type.t * Type.layout * Type.layout * Location.t
   | `Typer_cannot_unify of bool * Type.t * Type.t * Location.t
+  | `Typer_cannot_unify_contract_type of
+    bool * Type.t Contract_type.t * Type.t Contract_type.t * Location.t
   | `Typer_assert_equal of
     Ast_typed.type_expression * Ast_typed.type_expression * Location.t
   | `Typer_unbound_module of Module_var.t list * Location.t
@@ -130,6 +141,14 @@ type typer_error =
   | `Typer_uncomparable_types of Type.t * Type.t * Location.t
   | `Typer_comparator_composed of Type.t * Location.t
   | `Typer_cannot_decode_texists of Type.t * Location.t
+  | `Typer_undefined_storage of Location.t
+  | `Typer_no_entry_point of Location.t
+  | `Typer_unbound_contract of Contract_var.t Module_access.t * Location.t
+  | `Typer_unbound_contract_variable of Contract_var.t * Location.t
+  | `Typer_invalid_arguments_for_contract_call of int * int * Location.t
+  | `Typer_unbound_entry_or_view of Value_var.t * Location.t
+  | `Typer_ambiguous_contract_call of Value_var.t * Location.t
+  | `Typer_expected_address_type of Type.t * Location.t
   ]
 [@@deriving poly_constructor { prefix = "typer_" }]
 
@@ -244,6 +263,18 @@ let error_ppformat
         (Typediff.diff type1 type2)
         (pp_texists_hint ())
         [ type1; type2 ]
+    | `Typer_cannot_unify_contract_type (_no_color, ctype1, ctype2, loc) ->
+      let ctype1 = Contract_type.map type_improve ctype1 in
+      let ctype2 = Contract_type.map type_improve ctype2 in
+      Format.fprintf
+        f
+        "@[<hv>%a@.Invalid type(s)@.Cannot unify \"%a\" with \"%a\".@]"
+        snippet_pp
+        loc
+        (Contract_type.pp pp_type)
+        ctype1
+        (Contract_type.pp pp_type)
+        ctype2
     | `Typer_cannot_unify_diff_layout (type1, type2, layout1, layout2, loc) ->
       let type1 = type_improve type1 in
       let type2 = type_improve type2 in
@@ -513,7 +544,69 @@ let error_ppformat
         pp_type
         lit_type
         (pp_texists_hint ~requires_annotations:true ())
-        [ expected_type; lit_type ])
+        [ expected_type; lit_type ]
+    | `Typer_undefined_storage loc ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.The contract storage type is undefined.@]"
+        snippet_pp
+        loc
+    | `Typer_unbound_contract (path, loc) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Contract \"%a\" not found.@]"
+        snippet_pp
+        loc
+        (Module_access.pp Contract_var.pp)
+        path
+    | `Typer_no_entry_point loc ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.The contract doesn't define an entrypoint.@]"
+        snippet_pp
+        loc
+    | `Typer_unbound_contract_variable (cvar, loc) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Contract \"%a\" not found.@]"
+        snippet_pp
+        loc
+        Contract_var.pp
+        cvar
+    | `Typer_invalid_arguments_for_contract_call (expected, recieved, loc) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Contract view or entry point is applied to a wrong number of \
+         arguments, expected %i but got %i.@]"
+        snippet_pp
+        loc
+        expected
+        recieved
+    | `Typer_expected_address_type (recieved, loc) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Expected an addressable type, but got \"%a\".@]"
+        snippet_pp
+        loc
+        pp_type
+        recieved
+    | `Typer_ambiguous_contract_call (method_, loc) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Ambiguous contract call.@.Contract call for \"%a\" could either be a \
+         entrypoint or a view.@]"
+        snippet_pp
+        loc
+        Value_var.pp
+        method_
+    | `Typer_unbound_entry_or_view (method_, loc) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Entrypoint or view \"%a\" not found.@]"
+        snippet_pp
+        loc
+        Value_var.pp
+        method_)
 
 
 let error_json : typer_error -> Simple_utils.Error.t =
@@ -596,6 +689,17 @@ let error_json : typer_error -> Simple_utils.Error.t =
         type1
         Type.pp
         type2
+    in
+    let content = make_content ~message ~location:loc () in
+    make ~stage ~content
+  | `Typer_cannot_unify_contract_type (_, ctype1, ctype2, loc) ->
+    let message =
+      Format.asprintf
+        "@[Invalid type(s)@.Cannot unify %a with %a.@]"
+        (Contract_type.pp Type.pp)
+        ctype1
+        (Contract_type.pp Type.pp)
+        ctype2
     in
     let content = make_content ~message ~location:loc () in
     make ~stage ~content
@@ -823,6 +927,59 @@ let error_json : typer_error -> Simple_utils.Error.t =
         expected_type
         Type.pp
         lit_type
+    in
+    let content = make_content ~message ~location:loc () in
+    make ~stage ~content
+  | `Typer_unbound_contract (path, loc) ->
+    let message =
+      Format.asprintf
+        "@[Contract \"%a\" not found.@]"
+        (Module_access.pp Contract_var.pp)
+        path
+    in
+    let content = make_content ~message ~location:loc () in
+    make ~stage ~content
+  | `Typer_no_entry_point loc ->
+    let message = "@[The contract doesn't define an entrypoint.@]" in
+    let content = make_content ~message ~location:loc () in
+    make ~stage ~content
+  | `Typer_unbound_contract_variable (cvar, loc) ->
+    let message = Format.asprintf "@[Contract \"%a\" not found.@]" Contract_var.pp cvar in
+    let content = make_content ~message ~location:loc () in
+    make ~stage ~content
+  | `Typer_invalid_arguments_for_contract_call (expected, recieved, loc) ->
+    let message =
+      Format.asprintf
+        "@[Contract view or entry point is applied to a wrong number of arguments, \
+         expected %i but got %i.@]"
+        expected
+        recieved
+    in
+    let content = make_content ~message ~location:loc () in
+    make ~stage ~content
+  | `Typer_undefined_storage loc ->
+    let message = Format.asprintf "@[The contract storage type is undefined.@]" in
+    let content = make_content ~message ~location:loc () in
+    make ~stage ~content
+  | `Typer_expected_address_type (recieved, loc) ->
+    let message =
+      Format.asprintf "@[Expected an addressable type, but got \"%a\".@]" Type.pp recieved
+    in
+    let content = make_content ~message ~location:loc () in
+    make ~stage ~content
+  | `Typer_ambiguous_contract_call (method_, loc) ->
+    let message =
+      Format.asprintf
+        "@[Ambiguous contract call@.Contract call for \"%a\" could either be an \
+         entrypoint or a view.@]"
+        Value_var.pp
+        method_
+    in
+    let content = make_content ~message ~location:loc () in
+    make ~stage ~content
+  | `Typer_unbound_entry_or_view (method_, loc) ->
+    let message =
+      Format.asprintf "@[Entrypoint or view \"%a\" not found.@]" Value_var.pp method_
     in
     let content = make_content ~message ~location:loc () in
     make ~stage ~content

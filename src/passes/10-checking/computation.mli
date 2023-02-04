@@ -9,8 +9,15 @@ type ('a, 'err, 'wrn) t
 
 include Monad.S3 with type ('a, 'err, 'wrn) t := ('a, 'err, 'wrn) t
 
+val all_map
+  :  ('k, ('v, 'err, 'wrn) t, 'cmp) Map.t
+  -> comparator:('k, 'cmp) Map.comparator
+  -> (('k, 'v, 'cmp) Map.t, 'err, 'wrn) t
+
+val all_map_unit : ('k, (unit, 'err, 'wrn) t, 'cmp) Map.t -> (unit, 'err, 'wrn) t
 val all_lmap : ('a, 'err, 'wrn) t Record.LMap.t -> ('a Record.LMap.t, 'err, 'wrn) t
 val all_lmap_unit : (unit, 'err, 'wrn) t Record.LMap.t -> (unit, 'err, 'wrn) t
+val all_opt : ('a, 'err, 'wrn) t option -> ('a option, 'err, 'wrn) t
 
 (** {1 Location Handling} *)
 
@@ -94,8 +101,9 @@ type 'a exit =
           and applies any dropped equations to the returned type.
           
           Hint: You probably want to use this when exiting the scope during inference. *)
-  | Lift_sig : (Context.Signature.t * 'a) exit
+  | Lift_sig : ('b Context.Signature.t * 'a) exit
       (** Similar to [Lift_type] but for signatures. *)
+  | Lift_contract_sig : (Type.t Contract_signature.t * 'a) exit
 
 module Context : sig
   module Signature = Context.Signature
@@ -172,22 +180,38 @@ module Context : sig
   (** [get_module mvar] returns signature of the module [mvar].
       Returning [None] if not found in the current context. *)
 
-  val get_module : Module_var.t -> (Signature.t option, 'err, 'wrn) t
+  val get_module : Module_var.t -> (Signature.m option, 'err, 'wrn) t
 
   val get_module_exn
     :  Module_var.t
     -> error:'err Errors.with_loc
-    -> (Signature.t, 'err, 'wrn) t
+    -> (Signature.m, 'err, 'wrn) t
+
+  val get_contract : Contract_var.t -> (Signature.c option, 'err, 'wrn) t
+
+  val get_contract_exn
+    :  Contract_var.t
+    -> error:'err Errors.with_loc
+    -> (Signature.c, 'err, 'wrn) t
+
+  val get_contract_signature
+    :  Contract_var.t Module_access.t
+    -> (Signature.c option, 'err, 'wrn) t
+
+  val get_contract_signature_exn
+    :  Contract_var.t Module_access.t
+    -> error:'err Errors.with_loc
+    -> (Signature.c, 'err, 'wrn) t
 
   (** [get_signature path] returns the signature of the module path [path].
       Returning [None] if not found in the current context. *)
 
-  val get_signature : Module_var.t List.Ne.t -> (Signature.t option, 'err, 'wrn) t
+  val get_signature : Module_var.t List.Ne.t -> (Signature.m option, 'err, 'wrn) t
 
   val get_signature_exn
     :  Module_var.t List.Ne.t
     -> error:'err Errors.with_loc
-    -> (Signature.t, 'err, 'wrn) t
+    -> (Signature.m, 'err, 'wrn) t
 
   (** [get_sum constr] returns a list of [(type_name, type_params, constr_type, sum_type)] for any sum type in the context
       containing [constr].
@@ -280,16 +304,16 @@ val def_type_var
 (** [def_module modules ~on_exit ~in_] binds the module bindings [modules] in 
     computation [in_]. *)
 val def_module
-  :  (Module_var.t * Context.Signature.t) list
+  :  (Module_var.t * Context.Signature.m) list
   -> on_exit:'a exit
   -> in_:('a, 'err, 'wrn) t
   -> ('a, 'err, 'wrn) t
 
 val def_sig_item
-  :  Context.Signature.item list
-  -> on_exit:'a exit
-  -> in_:('a, 'err, 'wrn) t
-  -> ('a, 'err, 'wrn) t
+  :  'a Context.Signature.item list
+  -> on_exit:'b exit
+  -> in_:('b, 'err, 'wrn) t
+  -> ('b, 'err, 'wrn) t
 
 val generalize
   :  (Type.t * 'a, 'err, 'wrn) t
@@ -304,6 +328,8 @@ type unify_error =
   | `Typer_ill_formed_type of Type.t * Location.t
   | `Typer_occurs_check_failed of Type_var.t * Type.t * Location.t
   | `Typer_unbound_texists_var of Type_var.t * Location.t
+  | `Typer_cannot_unify_contract_type of
+    bool * Type.t Contract_type.t * Type.t Contract_type.t * Location.t
   ]
 
 (** [unify_texists tvar type_] unifies the existential (unification) variable [tvar] with the type [type_]. *)
@@ -313,6 +339,11 @@ val unify_texists : Type_var.t -> Type.t -> (unit, [> unify_error ], 'wrn) t
     
     Hint: In general, use [unify] over [subtype]. *)
 val unify : Type.t -> Type.t -> (unit, [> unify_error ], 'wrn) t
+
+val unify_contract_type
+  :  Type.t Contract_type.t
+  -> Type.t Contract_type.t
+  -> (unit, [> unify_error ], 'wrn) t
 
 type subtype_error = unify_error
 

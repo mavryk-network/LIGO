@@ -155,6 +155,49 @@ let rec evaluate_type ~default_layout (type_ : I.type_expression)
         ~in_:(evaluate_type ~default_layout type_ >>| fun type_ -> type_, ())
     in
     const @@ T_for_all { ty_binder; kind; type_ }
+  | T_typed_address { contract } ->
+    let%bind contract = evaluate_type ~default_layout contract in
+    const @@ T_typed_address { contract }
+  | T_storage { contract } ->
+    let%bind contract = evaluate_type ~default_layout contract in
+    (match contract.content with
+    | T_contract ctype -> lift @@ ctype.storage
+    | _ -> const @@ T_storage { contract })
+  | T_contract sig_ ->
+    let%bind sig_ = evaluate_contract_sig ~default_layout sig_ in
+    let%bind contract_type =
+      raise_result ~error:(function
+          | `Undefined_storage -> undefined_storage
+          | `No_entry_point -> no_entry_point)
+      @@ Contract_signature.to_contract_type sig_
+    in
+    const @@ T_contract contract_type
+
+
+and evaluate_contract_sig ~default_layout (sig_ : I.type_expression Contract_signature.t) =
+  let open C in
+  let open Let_syntax in
+  let open Contract_signature in
+  match sig_ with
+  | [] -> return []
+  | C_type { binder; type_ } :: sig_ ->
+    let%bind type_ = evaluate_type_with_default_layout type_ in
+    let%bind sig_, () =
+      def_type
+        [ binder, type_ ]
+        ~on_exit:Lift_contract_sig
+        ~in_:(evaluate_contract_sig ~default_layout sig_ >>| fun sig_ -> sig_, ())
+    in
+    return @@ (C_type { binder; type_ } :: sig_)
+  | C_entry { binder; entry_type = { param_type } } :: sig_ ->
+    let%bind param_type = evaluate_type ~default_layout param_type in
+    let%bind sig_ = evaluate_contract_sig ~default_layout sig_ in
+    return @@ (C_entry { binder; entry_type = { param_type } } :: sig_)
+  | C_view { binder; view_type = { param_type; return_type } } :: sig_ ->
+    let%bind param_type = evaluate_type ~default_layout param_type in
+    let%bind return_type = evaluate_type ~default_layout return_type in
+    let%bind sig_ = evaluate_contract_sig ~default_layout sig_ in
+    return @@ (C_view { binder; view_type = { param_type; return_type } } :: sig_)
 
 
 and evaluate_row ~default_layout ({ fields; layout } : I.rows)
@@ -188,12 +231,12 @@ and evaluate_row_elem ~default_layout (row_elem : I.row_element)
   { row_elem with associated_type }
 
 
-let evaluate_type_with_lexists type_ =
+and evaluate_type_with_lexists type_ =
   let open C in
   evaluate_type ~default_layout:lexists type_
 
 
-let evaluate_type_with_default_layout type_ =
+and evaluate_type_with_default_layout type_ =
   let open C in
   evaluate_type ~default_layout:(fun () -> return Type.default_layout) type_
 
@@ -772,9 +815,118 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
         and body = body in
         return @@ O.E_while { cond; body })
       t_unit
-  | E_originate _ | E_contract_call _ ->
-    (* TODO: Contracts *)
-    assert false
+  | E_originate { contract; storage; key_hash; tez } ->
+    let%bind sig_ =
+      Context.get_contract_exn contract ~error:(unbound_contract_variable contract)
+    in
+    let%bind contract_type =
+      Signature.to_contract_type sig_
+      |> raise_result ~error:(function
+             | `Undefined_storage -> undefined_storage
+             | `No_entry_point -> no_entry_point)
+    in
+    let%bind t_key_hash = create_type Type.t_key_hash in
+    let%bind t_tez = create_type Type.t_tez in
+    let%bind storage = check storage contract_type.storage in
+    let%bind key_hash = check key_hash t_key_hash in
+    let%bind tez = check tez t_tez in
+    (* Construct result type: [operation * contract_type typed_address] *)
+    let%bind t_contract = create_type @@ Type.t_contract_ contract_type in
+    let%bind t_address = create_type (Type.t_typed_address_ { contract = t_contract }) in
+    let%bind t_operation = create_type Type.t_operation in
+    let%bind t_result = create_type @@ Type.t_pair t_operation t_address in
+    const
+      E.(
+        let%bind storage = storage
+        and key_hash = key_hash
+        and tez = tez in
+        return @@ O.E_originate { contract; storage; key_hash; tez })
+      t_result
+  | E_contract_call { contract; address; method_; params; on_none } ->
+    let%bind address_type, address = infer address in
+    let%bind address_type = Context.tapply address_type in
+    let%bind contract_sig =
+      Context.get_contract_exn contract ~error:(unbound_contract_variable contract)
+    in
+    let%bind sig_ =
+      match address_type.content with
+      | _ when Type.is_t_address address_type -> return contract_sig
+      | T_typed_address { contract = { content = T_contract recieved_contract_type; _ } }
+        ->
+        let%bind expected_contract_type =
+          Signature.to_contract_type contract_sig
+          |> raise_result ~error:(function
+                 | `No_entry_point -> no_entry_point
+                 | `Undefined_storage -> undefined_storage)
+        in
+        let%bind () = unify_contract_type recieved_contract_type expected_contract_type in
+        (* In future -- might return a different signature (i.e missing an entrypoint, etc) *)
+        return contract_sig
+      | _ -> raise (expected_address_type address_type)
+    in
+    let%bind entry_or_view =
+      Signature.get_entry_or_view sig_ method_
+      |> raise_result ~error:(function
+             | `Not_found -> unbound_entry_or_view method_
+             | `Both_found -> ambiguous_contract_call method_)
+    in
+    (match entry_or_view, params with
+    | `Entry { Entry_type.param_type }, [ param; tez ] ->
+      let%bind t_tez = create_type Type.t_tez in
+      let%bind t_operation = create_type Type.t_operation in
+      let%bind param = check param param_type in
+      let%bind tez = check tez t_tez in
+      let%bind on_none =
+        on_none |> Option.map ~f:(fun on_none -> check on_none t_operation) |> all_opt
+      in
+      const
+        E.(
+          let%bind address = address
+          and on_none = E.all_opt on_none
+          and param = param
+          and tez = tez
+          and param_type = decode param_type in
+          return
+          @@ O.E_contract_call_entry
+               { contract
+               ; address
+               ; entry = method_
+               ; param
+               ; tez
+               ; on_none
+               ; entry_type = { param_type }
+               })
+        t_operation
+    | `View { View_type.param_type; return_type }, [ param ] ->
+      let%bind param = check param param_type in
+      let%bind on_none =
+        on_none
+        |> Option.map ~f:(fun on_none ->
+               let%bind return_type = Context.tapply return_type in
+               check on_none return_type)
+        |> all_opt
+      in
+      const
+        E.(
+          let%bind address = address
+          and param = param
+          and on_none = E.all_opt on_none
+          and param_type = decode param_type
+          and return_type = decode return_type in
+          return
+          @@ O.E_contract_call_view
+               { contract
+               ; address
+               ; view = method_
+               ; param
+               ; on_none
+               ; view_type = { param_type; return_type }
+               })
+        return_type
+    | `View _, params ->
+      raise (invalid_arguments_for_contract_call 1 (List.length params))
+    | `Entry _, params ->
+      raise (invalid_arguments_for_contract_call 2 (List.length params)))
 
 
 and check_lambda
@@ -1280,7 +1432,7 @@ and compile_match (matchee : O.expression E.t) cases matchee_type
 
 
 and infer_module_expr (mod_expr : I.module_expr)
-    : (Signature.t * O.module_expr E.t, _, _) C.t
+    : (Signature.m * O.module_expr E.t, _, _) C.t
   =
   let open C in
   let open Let_syntax in
@@ -1315,16 +1467,218 @@ and infer_module_expr (mod_expr : I.module_expr)
     const E.(return @@ M.M_variable mvar) sig_
 
 
-and infer_declaration (decl : I.declaration)
-    : (Signature.item list * O.declaration E.t, _, _) C.t
+and infer_contract (contract : I.contract) : (Signature.c * O.contract E.t, _, _) C.t =
+  let open C in
+  let open Let_syntax in
+  let rec loop ~has_storage ~has_entry_point (contract : I.contract) =
+    match contract with
+    | [] ->
+      if not has_storage
+      then raise undefined_storage
+      else if not has_entry_point
+      then raise no_entry_point
+      else return ([], E.return [])
+    | decl :: contract ->
+      let has_storage =
+        match decl.wrap_content with
+        | C_type { type_binder; _ } -> Type_var.is_name type_binder "storage"
+        | _ -> has_storage
+      in
+      let has_entry_point =
+        match decl.wrap_content with
+        | C_entry _ -> true
+        | _ -> has_entry_point
+      in
+      let%bind sig_, decl = infer_contract_declaration decl in
+      let%bind tl_sig_, decls =
+        def_sig_item
+          sig_
+          ~on_exit:Lift_sig
+          ~in_:(loop ~has_storage ~has_entry_point contract)
+      in
+      return
+        ( sig_ @ tl_sig_
+        , E.(
+            let%bind decl = decl
+            and decls = decls in
+            return (decl :: decls)) )
+  in
+  loop ~has_storage:false ~has_entry_point:false contract
+
+
+and entry_type storage : (Type.t * Type.t, _, _) C.t =
+  let open C in
+  let open Let_syntax in
+  (* Code for creating the type: [storage * ^param -> operation list * storage] *)
+  let%bind param_type = exists Type in
+  let%bind t_operation = create_type Type.t_operation in
+  let%bind t_operation_list = create_type @@ Type.t_list t_operation in
+  let%bind t_storage_param = create_type @@ Type.t_pair storage param_type in
+  let%bind t_op_list_storage = create_type @@ Type.t_pair t_operation_list storage in
+  let%bind t =
+    create_type @@ Type.t_arrow { type1 = t_storage_param; type2 = t_op_list_storage }
+  in
+  return (param_type, t)
+
+
+and view_type storage : (Type.t * Type.t * Type.t, _, _) C.t =
+  let open C in
+  let open Let_syntax in
+  (* Code for creating the type: [storage * ^param -> ^result] *)
+  let%bind param_type = exists Type in
+  let%bind result_type = exists Type in
+  let%bind t_storage_param = create_type @@ Type.t_pair storage param_type in
+  let%bind t =
+    create_type @@ Type.t_arrow { type1 = t_storage_param; type2 = result_type }
+  in
+  return (param_type, result_type, t)
+
+
+and infer_contract_declaration (decl : I.contract_declaration)
+    : (Signature.c * O.contract_declaration E.t, _, _) C.t
   =
   let open C in
   let open Let_syntax in
   let%bind syntax = Options.syntax () in
-  let const content (sig_item : Signature.item list) =
+  let const content (items : Signature.c) =
     let%bind loc = loc () in
     return
-      ( sig_item
+      ( items
+      , E.(
+          let%bind content = content in
+          return (Location.wrap ~loc content : O.contract_declaration)) )
+  in
+  let storage () =
+    Context.get_type_exn
+      (Type_var.of_input_var ~loc:Location.env "storage")
+      ~error:undefined_storage
+  in
+  set_loc decl.location
+  @@
+  match decl.wrap_content with
+  | C_irrefutable_match { pattern; expr; attr } ->
+    let%bind matchee_type, expr = infer_expression expr in
+    let attr = infer_value_attr attr in
+    let%bind matchee_type = Context.tapply matchee_type in
+    let%bind frags, pattern =
+      With_frag.run @@ check_pattern ~mut:false pattern matchee_type
+    in
+    const
+      E.(
+        let%bind expr = expr
+        and pattern = pattern in
+        let%bind () = check_let_annomalies ~syntax pattern expr.type_expression in
+        return @@ O.C_irrefutable_match { pattern; expr; attr })
+      (List.map ~f:(fun (v, _, ty) -> Context.Signature.S_value (v, ty)) frags)
+  | C_type { type_binder; type_expr; type_attr = { public; hidden } } ->
+    let%bind type_expr = evaluate_type_with_default_layout type_expr in
+    let type_expr = { type_expr with orig_var = Some type_binder } in
+    const
+      E.(
+        let%bind type_expr = decode type_expr in
+        return @@ O.C_type { type_binder; type_expr; type_attr = { public; hidden } })
+      [ S_type (type_binder, type_expr) ]
+  | C_value { binder; attr; expr } ->
+    let var = Binder.get_var binder in
+    let ascr = Binder.get_ascr binder in
+    let%bind expr =
+      let%map loc = loc () in
+      Option.value_map ascr ~default:expr ~f:(fun ascr -> I.e_ascription ~loc expr ascr)
+    in
+    let%bind expr_type, expr = infer_expression expr in
+    let attr = infer_value_attr attr in
+    const
+      E.(
+        let%bind expr_type = decode expr_type
+        and expr = expr in
+        return @@ O.C_value { binder = Binder.set_ascr binder expr_type; expr; attr })
+      [ S_value (var, expr_type) ]
+  | C_module { module_binder; module_; module_attr = { public; hidden } } ->
+    let%bind sig_, module_ = infer_module_expr module_ in
+    const
+      E.(
+        let%bind module_ = module_ in
+        return @@ O.C_module { module_binder; module_; module_attr = { public; hidden } })
+      [ S_module (module_binder, sig_) ]
+  | C_contract { contract_binder; contract; contract_attr = { public; hidden } } ->
+    let%bind sig_, contract = infer_contract_expr contract in
+    const
+      E.(
+        let%bind contract = contract in
+        return
+        @@ O.C_contract { contract_binder; contract; contract_attr = { public; hidden } })
+      [ S_contract (contract_binder, sig_) ]
+  | C_entry { binder; expr; attr } ->
+    let%bind storage = storage () in
+    let%bind param_type, entry_type = entry_type storage in
+    let%bind expr = check_expression expr entry_type in
+    let attr = infer_value_attr attr in
+    const
+      E.(
+        let%bind entry_type = decode entry_type
+        and expr = expr in
+        return @@ O.C_entry { binder = Binder.set_ascr binder entry_type; expr; attr })
+      [ S_entry (Binder.get_var binder, Entry_type.{ param_type }) ]
+  | C_view { binder; expr; attr } ->
+    let%bind storage = storage () in
+    let%bind param_type, return_type, view_type = view_type storage in
+    let%bind expr = check_expression expr view_type in
+    let attr = infer_value_attr attr in
+    const
+      E.(
+        let%bind view_type = decode view_type
+        and expr = expr in
+        return @@ O.C_entry { binder = Binder.set_ascr binder view_type; expr; attr })
+      [ S_view (Binder.get_var binder, View_type.{ param_type; return_type }) ]
+
+
+and infer_contract_expr (contract_expr : I.contract_expr)
+    : (Signature.c * O.contract_expr E.t, _, _) C.t
+  =
+  let open C in
+  let open Let_syntax in
+  let module Ce = Contract_expr in
+  let const content sig_ =
+    let%bind loc = loc () in
+    return
+    @@ ( sig_
+       , E.(
+           let%bind content = content in
+           return (Location.wrap ~loc content : O.contract_expr)) )
+  in
+  set_loc contract_expr.location
+  @@
+  match contract_expr.wrap_content with
+  | C_struct decls ->
+    let%bind sig_, decls = infer_contract decls in
+    const
+      E.(
+        let%bind decls = decls in
+        return @@ Ce.C_struct decls)
+      sig_
+  | C_module_path path ->
+    (* Check we can access every element in [path] *)
+    let%bind sig_ =
+      Context.get_contract_signature_exn path ~error:(unbound_contract path)
+    in
+    const E.(return @@ Ce.C_module_path path) sig_
+  | C_variable cvar ->
+    (* Check we can access [mvar] *)
+    let%bind sig_ =
+      Context.get_contract_exn cvar ~error:(unbound_contract_variable cvar)
+    in
+    const E.(return @@ Ce.C_variable cvar) sig_
+
+
+and infer_declaration (decl : I.declaration) : (Signature.m * O.declaration E.t, _, _) C.t
+  =
+  let open C in
+  let open Let_syntax in
+  let%bind syntax = Options.syntax () in
+  let const content (items : Signature.m) =
+    let%bind loc = loc () in
+    return
+      ( items
       , E.(
           let%bind content = content in
           return (Location.wrap ~loc content : O.declaration)) )
@@ -1376,12 +1730,17 @@ and infer_declaration (decl : I.declaration)
         let%bind module_ = module_ in
         return @@ O.D_module { module_binder; module_; module_attr = { public; hidden } })
       [ S_module (module_binder, sig_) ]
-  | D_contract _ ->
-    (* TODO: Contracts *)
-    assert false
+  | D_contract { contract_binder; contract; contract_attr = { public; hidden } } ->
+    let%bind sig_, contract = infer_contract_expr contract in
+    const
+      E.(
+        let%bind contract = contract in
+        return
+        @@ O.D_contract { contract_binder; contract; contract_attr = { public; hidden } })
+      [ S_contract (contract_binder, sig_) ]
 
 
-and infer_module (module_ : I.module_) : (Signature.t * O.module_ E.t, _, _) C.t =
+and infer_module (module_ : I.module_) : (Signature.m * O.module_ E.t, _, _) C.t =
   let open C in
   let open Let_syntax in
   match module_ with

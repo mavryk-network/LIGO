@@ -45,6 +45,16 @@ let rec untype_type_expression (t : O.type_expression) : I.type_expression =
   | O.T_for_all x ->
     let x = Abstraction.map self x in
     return @@ T_for_all x
+  | O.T_typed_address address ->
+    let address = Address.map self address in
+    return @@ T_typed_address address
+  | O.T_storage storage ->
+    let storage = Storage.map self storage in
+    return @@ T_storage storage
+  | O.T_contract contract_type ->
+    let contract_type = Contract_type.map self contract_type in
+    let contract_sig = Contract_signature.of_contract_type ~loc contract_type in
+    return @@ T_contract contract_sig
 
 
 let untype_type_expression_option x = Option.return @@ untype_type_expression x
@@ -142,6 +152,34 @@ and untype_expression_content ~loc (ec : O.expression_content) : I.expression =
       self forall
     | _ ->
       failwith "Impossible case: cannot untype a type instance of a non polymorphic type")
+  | O.E_originate originate ->
+    let originate = Originate.map self originate in
+    return @@ I.make_e ~loc (E_originate originate)
+  | O.E_contract_call_view call ->
+    let { Contract_call.View.contract; address; view; param; on_none; view_type = _ } =
+      Contract_call.View.map self self_type call
+    in
+    let call =
+      Contract_call.{ contract; address; method_ = view; params = [ param ]; on_none }
+    in
+    return @@ I.make_e ~loc (E_contract_call call)
+  | O.E_contract_call_entry call ->
+    let { Contract_call.Entry.contract
+        ; address
+        ; entry
+        ; param
+        ; tez
+        ; on_none
+        ; entry_type = _
+        }
+      =
+      Contract_call.Entry.map self self_type call
+    in
+    let call =
+      Contract_call.
+        { contract; address; method_ = entry; params = [ param; tez ]; on_none }
+    in
+    return @@ I.make_e ~loc (E_contract_call call)
 
 
 and untype_match_expr
@@ -196,6 +234,17 @@ and untype_module_expr : O.module_expr -> I.module_expr =
   | M_variable v -> return (M_variable v)
 
 
+and untype_contract_expr : O.contract_expr -> I.contract_expr =
+ fun contract_expr ->
+  let return wrap_content : I.contract_expr = { contract_expr with wrap_content } in
+  match contract_expr.wrap_content with
+  | C_struct decls ->
+    let decls = untype_contract decls in
+    return @@ C_struct decls
+  | C_module_path path -> return @@ C_module_path path
+  | C_variable cvar -> return @@ C_variable cvar
+
+
 and untype_declaration_constant
     : (O.expression -> I.expression) -> _ O.Value_decl.t -> _ I.Value_decl.t
   =
@@ -234,6 +283,12 @@ and untype_declaration_module : _ O.Module_decl.t -> _ I.Module_decl.t =
   { module_binder; module_; module_attr }
 
 
+and untype_declaration_contract : _ O.Contract_decl.t -> _ I.Contract_decl.t =
+ fun { contract_binder; contract; contract_attr = { public; hidden } } ->
+  let contract = untype_contract_expr contract in
+  { contract_binder; contract; contract_attr = { public; hidden } }
+
+
 and untype_declaration =
   let return (d : I.declaration_content) = d in
   fun (d : O.declaration_content) ->
@@ -250,10 +305,45 @@ and untype_declaration =
     | D_module dm ->
       let dm = untype_declaration_module dm in
       return @@ D_module dm
+    | D_contract contract_decl ->
+      let contract_decl = untype_declaration_contract contract_decl in
+      return @@ D_contract contract_decl
+
+
+and untype_contract_declaration : O.contract_declaration -> I.contract_declaration =
+ fun decl ->
+  let return wrap_content : I.contract_declaration = { decl with wrap_content } in
+  let untype_declaration_value = untype_declaration_constant untype_expression in
+  match decl.wrap_content with
+  | C_value value_decl ->
+    let value_decl = untype_declaration_value value_decl in
+    return @@ C_value value_decl
+  | C_irrefutable_match pat_decl ->
+    let pat_decl = untype_declaration_pattern untype_expression pat_decl in
+    return @@ C_irrefutable_match pat_decl
+  | C_type type_decl ->
+    let type_decl = untype_declaration_type type_decl in
+    return @@ C_type type_decl
+  | C_module mod_decl ->
+    let mod_decl = untype_declaration_module mod_decl in
+    return @@ C_module mod_decl
+  | C_contract contract_decl ->
+    let contract_decl = untype_declaration_contract contract_decl in
+    return @@ C_contract contract_decl
+  | C_entry value_decl ->
+    let value_decl = untype_declaration_value value_decl in
+    return @@ C_entry value_decl
+  | C_view value_decl ->
+    let value_decl = untype_declaration_value value_decl in
+    return @@ C_view value_decl
 
 
 and untype_decl : O.decl -> I.decl = fun d -> Location.map untype_declaration d
 and untype_module : O.module_ -> I.module_ = fun p -> List.map ~f:untype_decl p
+
+and untype_contract : O.contract -> I.contract =
+ fun contract -> List.map ~f:untype_contract_declaration contract
+
 
 and untype_program : O.program -> I.program =
  fun p -> List.map ~f:(Location.map untype_declaration) p
