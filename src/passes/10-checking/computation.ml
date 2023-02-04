@@ -45,6 +45,15 @@ let rec encode (type_ : Ast_typed.type_expression) : Type.t =
   | T_record row ->
     let row = encode_row row in
     return @@ T_record row
+  | T_typed_address address ->
+    let address = Address.map encode address in
+    return @@ T_typed_address address
+  | T_storage storage ->
+    let storage = Storage.map encode storage in
+    return @@ T_storage storage
+  | T_contract ctype ->
+    let ctype = Contract_type.map encode ctype in
+    return @@ T_contract ctype
 
 
 and encode_row ({ fields; layout } : Ast_typed.rows) : Type.row =
@@ -63,8 +72,13 @@ and encode_layout (layout : Layout.t) : Type.layout =
   | L_comb -> L_comb
 
 
+let get_storage ctx =
+  Option.value_exn ~here:[%here]
+  @@ Context.get_type ctx (Type_var.of_input_var ~loc:Location.env "storage")
+
+
 let rec signature_of_module_expr
-    : ctx:Context.t -> Ast_typed.module_expr -> Context.Signature.t
+    : ctx:Context.t -> Ast_typed.module_expr -> Context.Signature.m
   =
  fun ~ctx mod_expr ->
   match mod_expr.wrap_content with
@@ -84,7 +98,31 @@ let rec signature_of_module_expr
         path)
 
 
-and signature_of_module : ctx:Context.t -> Ast_typed.module_ -> Context.Signature.t =
+and signature_of_contract_expr
+    : ctx:Context.t -> Ast_typed.contract_expr -> Context.Signature.c
+  =
+ fun ~ctx contract_expr ->
+  match contract_expr.wrap_content with
+  | C_struct decls -> signature_of_contract ~ctx decls
+  | C_variable cvar ->
+    (match Context.get_contract ctx cvar with
+    | Some sig_ -> sig_
+    | None ->
+      failwith
+        "Checking.Computation.contract_signature_of_contract_expr: Unbounded contract")
+  | C_module_path path ->
+    (match Context.get_contract_signature ctx path with
+    | Some sig_ -> sig_
+    | None ->
+      Format.kasprintf
+        failwith
+        "Checking.Computation.contract_signature_of_contract_expr: Unbounded signature \
+         path: %a"
+        (Module_access.pp Contract_var.pp)
+        path)
+
+
+and signature_of_module : ctx:Context.t -> Ast_typed.module_ -> Context.Signature.m =
  fun ~ctx module_ ->
   match module_ with
   | [] -> []
@@ -96,7 +134,56 @@ and signature_of_module : ctx:Context.t -> Ast_typed.module_ -> Context.Signatur
     if public then sig_decl @ sig_ else sig_
 
 
-and signature_item_of_decl : ctx:Context.t -> Ast_typed.decl -> bool * Context.Signature.t
+and signature_of_contract : ctx:Context.t -> Ast_typed.contract -> Context.Signature.c =
+ fun ~ctx contract ->
+  match contract with
+  | [] -> []
+  | decl :: contract ->
+    let public, sig_decl = signature_item_of_contract_decl ~ctx decl in
+    let sig_ =
+      signature_of_contract ~ctx:(Context.add_signature_items ctx sig_decl) contract
+    in
+    if public then sig_decl @ sig_ else sig_
+
+
+and signature_item_of_contract_decl
+    : ctx:Context.t -> Ast_typed.contract_declaration -> bool * Context.Signature.c
+  =
+ fun ~ctx decl ->
+  match Location.unwrap decl with
+  | C_value { binder; expr; attr = { public; _ } } ->
+    public, [ S_value (Binder.get_var binder, encode expr.type_expression) ]
+  | C_type { type_binder = tvar; type_expr = type_; type_attr = { public; _ } } ->
+    public, [ S_type (tvar, encode type_) ]
+  | C_module { module_binder = mvar; module_; module_attr = { public; _ } } ->
+    let sig_' = signature_of_module_expr ~ctx module_ in
+    public, [ S_module (mvar, sig_') ]
+  | C_irrefutable_match { pattern; expr = _; attr = { public; _ } } ->
+    let sigs =
+      List.map (Ast_typed.Pattern.binders pattern) ~f:(fun b ->
+          Context.Signature.S_value (Binder.get_var b, encode @@ Binder.get_ascr b))
+    in
+    public, sigs
+  | C_contract { contract_binder = cvar; contract; contract_attr = { public; _ } } ->
+    let sig_ = signature_of_contract_expr ~ctx contract in
+    public, [ S_contract (cvar, sig_) ]
+  | C_entry { binder; expr; attr = _ } ->
+    let storage = get_storage ctx in
+    let entry_type =
+      Option.value_exn ~here:[%here]
+      @@ Type.to_entry_type ~storage (encode expr.type_expression)
+    in
+    true, [ S_entry (Binder.get_var binder, entry_type) ]
+  | C_view { binder; expr; attr = _ } ->
+    let storage = get_storage ctx in
+    let view_type =
+      Option.value_exn ~here:[%here]
+      @@ Type.to_view_type ~storage (encode expr.type_expression)
+    in
+    true, [ S_view (Binder.get_var binder, view_type) ]
+
+
+and signature_item_of_decl : ctx:Context.t -> Ast_typed.decl -> bool * Context.Signature.m
   =
  fun ~ctx decl ->
   match Location.unwrap decl with
@@ -113,6 +200,9 @@ and signature_item_of_decl : ctx:Context.t -> Ast_typed.decl -> bool * Context.S
           Context.Signature.S_value (Binder.get_var b, encode @@ Binder.get_ascr b))
     in
     public, sigs
+  | D_contract { contract_binder = cvar; contract; contract_attr = { public; _ } } ->
+    let sig_ = signature_of_contract_expr ~ctx contract in
+    public, [ S_contract (cvar, sig_) ]
 
 
 (* Load context from the outside declarations *)
@@ -131,7 +221,10 @@ let ctx_init ?env () =
           Context.add_type ctx type_binder (encode type_expr)
         | D_module { module_binder; module_; module_attr = _ } ->
           let sig_ = signature_of_module_expr ~ctx module_ in
-          Context.add_module ctx module_binder sig_)
+          Context.add_module ctx module_binder sig_
+        | D_contract { contract_binder; contract; contract_attr = _ } ->
+          let sig_ = signature_of_contract_expr ~ctx contract in
+          Context.add_contract ctx contract_binder sig_)
 
 
 let run_elab t ~raise ~options ~loc ?env () =
@@ -156,6 +249,43 @@ include Monad.Make3 (struct
 
   let map = `Define_using_bind
 end)
+
+let all_map
+    (type k v cmp)
+    (map : (k, (v, 'err, 'wrn) t, cmp) Map.t)
+    ~(comparator : (k, cmp) Map.comparator)
+    : ((k, v, cmp) Map.t, 'err, 'wrn) t
+  =
+ fun ~raise ~options ~loc state ->
+  let state, map =
+    Map.fold
+      map
+      ~init:(state, Map.empty comparator)
+      ~f:(fun ~key ~data:t (state, map) ->
+        let state, data = t ~raise ~options ~loc state in
+        state, Map.set map ~key ~data)
+  in
+  state, map
+
+
+let all_map_unit map : (unit, _, _) t =
+ fun ~raise ~options ~loc state ->
+  let state =
+    Map.fold map ~init:state ~f:(fun ~key:_ ~data:t state ->
+        let state, () = t ~raise ~options ~loc state in
+        state)
+  in
+  state, ()
+
+
+let all_opt opt : (_, _, _) t =
+ fun ~raise ~options ~loc state ->
+  match opt with
+  | Some t ->
+    let state, x = t ~raise ~options ~loc state in
+    state, Some x
+  | None -> state, None
+
 
 let all_lmap (lmap : ('a, 'err, 'wrn) t Record.LMap.t) : ('a Record.LMap.t, 'err, 'wrn) t =
  fun ~raise ~options ~loc state ->
@@ -259,7 +389,8 @@ end
 type 'a exit =
   | Drop : 'a exit
   | Lift_type : (Type.t * 'a) exit
-  | Lift_sig : (Context.Signature.t * 'a) exit
+  | Lift_sig : ('b Context.Signature.t * 'a) exit
+  | Lift_contract_sig : (Type.t Contract_signature.t * 'a) exit
 
 module Context_ = Context
 
@@ -327,6 +458,11 @@ module Context = struct
           Context.unlock (ctx, sig_) ~on_exit:(Lift Context.Apply.sig_) ~lock
         in
         ctx, subst', (sig_, result)
+      | Lift_contract_sig, (sig_, result) ->
+        let (ctx, sig_), subst' =
+          Context.unlock (ctx, sig_) ~on_exit:(Lift Context.Apply.contract_sig) ~lock
+        in
+        ctx, subst', (sig_, result)
     in
     let subst = Substitution.merge subst subst' in
     (ctx, subst), result
@@ -350,6 +486,11 @@ module Context = struct
       | Lift_sig, (sig_, result) ->
         let (ctx, sig_), subst' =
           Context.drop_until (ctx, sig_) ~on_exit:(Lift Context.Apply.sig_) ~pos
+        in
+        ctx, subst', (sig_, result)
+      | Lift_contract_sig, (sig_, result) ->
+        let (ctx, sig_), subst' =
+          Context.drop_until (ctx, sig_) ~on_exit:(Lift Context.Apply.contract_sig) ~pos
         in
         ctx, subst', (sig_, result)
     in
@@ -395,6 +536,17 @@ module Context = struct
   let get_signature_exn path ~error : _ t = get_signature path >>= raise_opt ~error
   let get_module mvar : _ t = lift_ctx (fun ctx -> Context.get_module ctx mvar)
   let get_module_exn mvar ~error : _ t = get_module mvar >>= raise_opt ~error
+  let get_contract cvar : _ t = lift_ctx (fun ctx -> Context.get_contract ctx cvar)
+  let get_contract_exn cvar ~error : _ t = get_contract cvar >>= raise_opt ~error
+
+  let get_contract_signature path : _ t =
+    lift_ctx (fun ctx -> Context.get_contract_signature ctx path)
+
+
+  let get_contract_signature_exn path ~error : _ t =
+    get_contract_signature path >>= raise_opt ~error
+
+
   let get_sum constr : _ t = lift_ctx (fun ctx -> Context.get_sum ctx constr)
   let get_record fields : _ t = lift_ctx (fun ctx -> Context.get_record ctx fields)
 
@@ -460,6 +612,9 @@ let occurs_check ~tvar (type_ : Type.t) =
           loop associated_type)
         rows.fields
     | T_singleton _ -> ()
+    | T_storage storage -> Storage.iter loop storage
+    | T_typed_address address -> Address.iter loop address
+    | T_contract ctype -> Contract_type.iter loop ctype
   in
   loop type_
 
@@ -488,6 +643,8 @@ let rec lift ~(mode : Mode.t) ~kind ~tvar (type_ : Type.t) : (Type.t, _, _) t =
   let open Let_syntax in
   let lift ~mode type_ = lift ~mode ~kind ~tvar type_ in
   let lift_row row = lift_row ~kind ~tvar row in
+  let lift_view_type view_type = lift_view_type ~kind ~tvar view_type in
+  let lift_entry_type entry_type = lift_entry_type ~kind ~tvar entry_type in
   let const content = return { type_ with content } in
   match type_.content with
   | T_variable tvar' -> const @@ T_variable tvar'
@@ -542,6 +699,36 @@ let rec lift ~(mode : Mode.t) ~kind ~tvar (type_ : Type.t) : (Type.t, _, _) t =
     in
     const @@ T_construct { construct with parameters }
   | T_singleton _ -> return type_
+  | T_typed_address { contract } ->
+    let%bind contract = lift ~mode:Invariant contract in
+    const @@ T_typed_address { contract }
+  | T_storage { contract } ->
+    let%bind contract = lift ~mode:Invariant contract in
+    const @@ T_storage { contract }
+  | T_contract { storage; views; entry_points } ->
+    let%bind storage = lift ~mode:Invariant storage in
+    let%bind views =
+      views |> Map.map ~f:lift_view_type |> all_map ~comparator:(module Value_var)
+    in
+    let%bind entry_points =
+      entry_points |> Map.map ~f:lift_entry_type |> all_map ~comparator:(module Value_var)
+    in
+    const @@ T_contract { storage; views; entry_points }
+
+
+and lift_view_type ~kind ~tvar View_type.{ param_type; return_type } =
+  let open Let_syntax in
+  let%bind param_type = Context.tapply param_type >>= lift ~mode:Invariant ~kind ~tvar in
+  let%bind return_type =
+    Context.tapply return_type >>= lift ~mode:Invariant ~kind ~tvar
+  in
+  return { View_type.param_type; return_type }
+
+
+and lift_entry_type ~kind ~tvar Entry_type.{ param_type } =
+  let open Let_syntax in
+  let%bind param_type = Context.tapply param_type >>= lift ~mode:Invariant ~kind ~tvar in
+  return { Entry_type.param_type }
 
 
 and lift_row ~kind ~tvar ({ fields; layout } : Type.row) : (Type.row, _, _) t =
@@ -597,15 +784,23 @@ type unify_error =
   | `Typer_ill_formed_type of Type.t * Location.t
   | `Typer_occurs_check_failed of Type_var.t * Type.t * Location.t
   | `Typer_unbound_texists_var of Type_var.t * Location.t
+  | `Typer_cannot_unify_contract_type of
+    bool * Type.t Contract_type.t * Type.t Contract_type.t * Location.t
   ]
+
+let unify_map ~fail ~unify map1 map2 =
+  if Set.equal (Map.key_set map1) (Map.key_set map2)
+  then
+    map1
+    |> Map.mapi ~f:(fun ~key ~data:t1 ->
+           let t2 = Map.find_exn map2 key in
+           unify t1 t2)
+    |> all_map_unit
+  else fail ()
+
 
 let rec unify (type1 : Type.t) (type2 : Type.t) =
   let open Let_syntax in
-  let unify_ type1 type2 =
-    let%bind type1 = Context.tapply type1 in
-    let%bind type2 = Context.tapply type2 in
-    unify type1 type2
-  in
   let fail () =
     let%bind no_color = Options.no_color () in
     raise (cannot_unify no_color type1 type2)
@@ -647,7 +842,57 @@ let rec unify (type1 : Type.t) (type2 : Type.t) =
            let row_elem2 = Record.LMap.find label fields2 in
            unify_ row_elem1.associated_type row_elem2.associated_type)
     |> all_lmap_unit
+  | T_typed_address { contract = contract1 }, T_typed_address { contract = contract2 }
+  | T_storage { contract = contract1 }, T_storage { contract = contract2 } ->
+    unify contract1 contract2
+  (* Beta-redex the contract storage *)
+  | T_storage { contract = { content = T_contract ctype; _ } }, _ ->
+    unify ctype.storage type2
+  | _, T_storage { contract = { content = T_contract ctype; _ } } ->
+    unify type1 ctype.storage
+  (* Unsafe coercion between typed and untyped addresses *)
+  | T_typed_address _, _ when Type.is_t_address type2 -> return ()
+  | _, T_typed_address _ when Type.is_t_address type1 -> return ()
+  | T_contract contract_type1, T_contract contract_type2 ->
+    unify_contract_type contract_type1 contract_type2
   | _ -> fail ()
+
+
+and unify_contract_type
+    ({ Contract_type.storage = storage1; views = views1; entry_points = entry_points1 } as
+    type1)
+    ({ Contract_type.storage = storage2; views = views2; entry_points = entry_points2 } as
+    type2)
+  =
+  let open Let_syntax in
+  let fail () =
+    let%bind no_color = Options.no_color () in
+    raise (cannot_unify_contract_type no_color type1 type2)
+  in
+  let%bind () = unify storage1 storage2 in
+  let%bind () = unify_map ~fail ~unify:unify_view_type views1 views2 in
+  unify_map ~fail ~unify:unify_entry_type entry_points1 entry_points2
+
+
+and unify_ type1 type2 =
+  let open Let_syntax in
+  let%bind type1 = Context.tapply type1 in
+  let%bind type2 = Context.tapply type2 in
+  unify type1 type2
+
+
+and unify_view_type : _ View_type.t -> _ View_type.t -> _ =
+ fun { View_type.param_type = param_type1; return_type = return_type1 }
+     { View_type.param_type = param_type2; return_type = return_type2 } ->
+  let open Let_syntax in
+  let%bind () = unify_ param_type1 param_type2 in
+  unify_ return_type1 return_type2
+
+
+and unify_entry_type : _ Entry_type.t -> _ Entry_type.t -> _ =
+ fun ({ param_type = param_type1 } : _ Entry_type.t)
+     ({ param_type = param_type2 } : _ Entry_type.t) ->
+  unify_ param_type1 param_type2
 
 
 type subtype_error = unify_error
@@ -780,8 +1025,13 @@ let def_type_var bindings ~on_exit ~in_ =
     ~on_exit
 
 
-let def_sig_item sig_items ~on_exit ~in_ =
-  Context.add (List.map sig_items ~f:Context_.item_of_signature_item) ~in_ ~on_exit
+let def_sig_item
+    (type a b)
+    (sig_items : a Context.Signature.item list)
+    ~(on_exit : b exit)
+    ~in_
+  =
+  Context.add (List.filter_map sig_items ~f:Context_.item_of_signature_item) ~in_ ~on_exit
 
 
 let assert_ cond ~error =

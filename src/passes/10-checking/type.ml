@@ -21,6 +21,9 @@ and content =
   | T_singleton of Literal_value.t
   | T_abstraction of t Abstraction.t
   | T_for_all of t Abstraction.t
+  | T_typed_address of t Address.t
+  | T_storage of t Storage.t
+  | T_contract of t Contract_type.t
 [@@deriving
   yojson
   , ez
@@ -55,6 +58,9 @@ and layout =
   | L_exists of Layout_var.t
 [@@deriving yojson, equal, sexp, compare, hash]
 
+let t_contract_ = t_contract
+let t_typed_address_ = t_typed_address
+
 type constr = loc:Location.t -> ?meta:Ast_core.type_expression -> unit -> t
 
 let rec free_vars t =
@@ -68,6 +74,12 @@ let rec free_vars t =
   | T_for_all abs | T_abstraction abs ->
     abs |> Abstraction.map free_vars |> Abstraction.fold Set.union Set.empty
   | T_singleton _ -> Set.empty
+  | T_storage storage ->
+    storage |> Storage.map free_vars |> Storage.fold Set.union Set.empty
+  | T_typed_address address ->
+    address |> Address.map free_vars |> Address.fold Set.union Set.empty
+  | T_contract ctype ->
+    ctype |> Contract_type.map free_vars |> Contract_type.fold Set.union Set.empty
 
 
 and free_vars_row { fields; _ } =
@@ -88,6 +100,12 @@ let rec orig_vars t =
   | T_arrow arr -> arr |> Arrow.map orig_vars |> Arrow.fold Set.union Set.empty
   | T_for_all abs | T_abstraction abs ->
     abs |> Abstraction.map orig_vars |> Abstraction.fold Set.union Set.empty
+  | T_storage storage ->
+    storage |> Storage.map free_vars |> Storage.fold Set.union Set.empty
+  | T_typed_address address ->
+    address |> Address.map free_vars |> Address.fold Set.union Set.empty
+  | T_contract ctype ->
+    ctype |> Contract_type.map free_vars |> Contract_type.fold Set.union Set.empty
 
 
 and orig_vars_row { fields; _ } =
@@ -101,6 +119,9 @@ let rec subst ?(free_vars = Type_var.Set.empty) t ~tvar ~type_ =
   let subst t = subst t ~free_vars ~tvar ~type_ in
   let subst_abstraction abs = subst_abstraction abs ~free_vars ~tvar ~type_ in
   let subst_row row = subst_row row ~free_vars ~tvar ~type_ in
+  let subst_address address = subst_address address ~free_vars ~tvar ~type_ in
+  let subst_storage storage = subst_storage storage ~free_vars ~tvar ~type_ in
+  let subst_contract_type ctype = subst_contract_type ctype ~free_vars ~tvar ~type_ in
   let return content = { t with content } in
   match t.content with
   | T_variable tvar' ->
@@ -125,6 +146,15 @@ let rec subst ?(free_vars = Type_var.Set.empty) t ~tvar ~type_ =
   | T_for_all abs ->
     let abs = subst_abstraction abs in
     return @@ T_for_all abs
+  | T_typed_address address ->
+    let address = subst_address address in
+    return @@ T_typed_address address
+  | T_storage storage ->
+    let storage = subst_storage storage in
+    return @@ T_storage storage
+  | T_contract ctype ->
+    let ctype = subst_contract_type ctype in
+    return @@ T_contract ctype
 
 
 and subst_var t ~tvar ~tvar' =
@@ -161,6 +191,18 @@ and subst_row_elem ?(free_vars = Type_var.Set.empty) row_elem ~tvar ~type_ =
   Rows.map_row_element_mini_c (subst ~free_vars ~tvar ~type_) row_elem
 
 
+and subst_address ?(free_vars = Type_var.Set.empty) address ~tvar ~type_ =
+  Address.map (subst ~free_vars ~tvar ~type_) address
+
+
+and subst_storage ?(free_vars = Type_var.Set.empty) storage ~tvar ~type_ =
+  Storage.map (subst ~free_vars ~tvar ~type_) storage
+
+
+and subst_contract_type ?(free_vars = Type_var.Set.empty) ctype ~tvar ~type_ =
+  Contract_type.map (subst ~free_vars ~tvar ~type_) ctype
+
+
 let subst t ~tvar ~type_ =
   let free_vars = free_vars t in
   subst ~free_vars t ~tvar ~type_
@@ -176,6 +218,9 @@ let rec fold : type a. t -> init:a -> f:(a -> t -> a) -> a =
   | T_sum row | T_record row -> fold_row row ~init ~f
   | T_arrow arr -> Arrow.fold fold init arr
   | T_abstraction abs | T_for_all abs -> Abstraction.fold fold init abs
+  | T_storage storage -> Storage.fold fold init storage
+  | T_typed_address address -> Address.fold fold init address
+  | T_contract ctype -> Contract_type.fold fold init ctype
 
 
 and fold_row : type a. row -> init:a -> f:(a -> t -> a) -> a =
@@ -539,7 +584,10 @@ let rec pp ~name_of_tvar ~name_of_exists ppf t =
         ppf
         "%a"
         (pp_tuple_or_record_sep_type (pp_row_elem ~name_of_tvar ~name_of_exists))
-        row.fields)
+        row.fields
+    | T_storage storage -> Storage.pp pp ppf storage
+    | T_typed_address address -> Address.pp pp ppf address
+    | T_contract ctype -> Contract_type.pp pp ppf ctype)
 
 
 and pp_construct ~name_of_tvar ~name_of_exists ppf { constructor; parameters; _ } =
@@ -609,3 +657,55 @@ let pp_with_name_tbl ~tbl ppf t =
 let pp =
   let name_of tvar = Format.asprintf "%a" Type_var.pp tvar in
   pp ~name_of_tvar:name_of ~name_of_exists:name_of
+
+
+let get_t_pair t =
+  match t.content with
+  | T_record row ->
+    (match Record.tuple_of_record row.fields with
+    | [ (_, fst); (_, snd) ] -> Some (fst.associated_type, snd.associated_type)
+    | _ -> None)
+  | _ -> None
+
+
+let get_t_construct t constr =
+  match t.content with
+  | T_construct { language = _; constructor; parameters }
+    when Literal_types.equal constructor constr -> Some parameters
+  | _ -> None
+
+
+let is_t_nullary_construct t constr =
+  match get_t_construct t constr with
+  | Some [] -> true
+  | _ -> false
+
+
+let is_t_address t = is_t_nullary_construct t Literal_types.Address
+
+let is_t_list_operation t =
+  match get_t_list t with
+  | Some op_t -> is_t_nullary_construct op_t Literal_types.Operation
+  | None -> false
+
+
+let to_entry_type ~storage type_ =
+  match type_.content with
+  | T_arrow { type1; type2 } ->
+    (match get_t_pair type1, get_t_pair type2 with
+    | Some (storage_type1, param_type), Some (operations_type, storage_type2)
+      when equal storage_type1 storage
+           && equal storage_type2 storage
+           && is_t_list_operation operations_type -> Some Entry_type.{ param_type }
+    | _, _ -> None)
+  | _ -> None
+
+
+let to_view_type ~storage type_ =
+  match type_.content with
+  | T_arrow { type1; type2 } ->
+    (match get_t_pair type1 with
+    | Some (storage_type, param_type) when equal storage storage_type ->
+      Some View_type.{ param_type; return_type = type2 }
+    | _ -> None)
+  | _ -> None
