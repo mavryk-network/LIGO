@@ -41,7 +41,8 @@ function handleCompileClick(compile) {
   let ir = getIR();
   switch (ir) {
     case "cst":
-      compileFn = compile.load.bind(compile);
+      compileFn = compile.loadCst.bind(compile);
+      break;
     default:
       compileFn = compile.main.bind(compile);
   }

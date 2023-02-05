@@ -33,14 +33,6 @@ let main source syntax =
       ~warn_unused_rec:true
       ()
   in
-  (match Api.Print.cst ~syntax:syntax_v raw_options (`Raw source) display_format () with
-  | Ok (a, b) ->
-    print_endline a;
-    print_endline b
-  | Error (a, b) ->
-    print_endline "error";
-    print_endline a;
-    print_endline b);
   match
     Api.Compile.contract
       raw_options
@@ -167,7 +159,7 @@ let _ =
          let cst = print_cst code syntax in
          Js.string cst
 
-       method load_cst code syntax =
+       method loadCst code syntax =
          let code = Js.to_string code in
          let syntax = Js.to_string syntax in
          let cst = load_cst code syntax in
