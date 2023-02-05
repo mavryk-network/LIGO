@@ -6,6 +6,14 @@ import HaclWasm from "@prometheansacrifice/hacl-wasm";
 import _SECP256K1 from "@prometheansacrifice/secp256k1-wasm";
 import * as Editor from "./editor";
 
+function getSyntax() {
+  return document.getElementById("syntax").value;
+}
+
+function getIR() {
+  return document.getElementById("ir").value;
+}
+
 async function initialize() {
   window._BLS12381 = await _BLS12381();
   window._HACL = await HaclWasm.getInitializedHaclModule();
@@ -29,9 +37,18 @@ async function loadJSBundle(path) {
 
 let { ligoEditor, michelsonEditor } = Editor.initialize();
 function handleCompileClick(compile) {
-  let michelson = compile.main(
+  let compileFn;
+  let ir = getIR();
+  switch (ir) {
+    case "cst":
+      compileFn = compile.load.bind(compile);
+    default:
+      compileFn = compile.main.bind(compile);
+  }
+
+  let michelson = compileFn(
     ligoEditor.state.doc.toJSON().join("\n"),
-    document.getElementById("syntax").value
+    getSyntax()
   );
   console.log(michelson);
   michelsonEditor.setState(
@@ -43,10 +60,8 @@ function handleCompileClick(compile) {
 }
 
 function handlePrintCSTClick(compile) {
-  let cst = compile.print(
-    ligoEditor.state.doc.toJSON().join("\n"),
-    document.getElementById("syntax").value
-  );
+  let syntax = getSyntax();
+  let cst = compile.print(ligoEditor.state.doc.toJSON().join("\n"));
   michelsonEditor.setState(
     EditorState.create({
       extensions: [basicSetup],

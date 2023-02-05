@@ -139,21 +139,27 @@ let cst
   match value with
   | Ok ((v, _), _) -> Ok (v, "")
   | Error (e, _) ->
-     (match display_format with
-        | Json -> 
-           let str =
-             Format.asprintf "%a"
-               (Main_errors.Formatter.error_ppformat ~display_format:Human_readable ~no_colour:false)
-               e
-           in
-           Error ("error: " ^ str, "")
-        | Dev | Human_readable ->
-           let str =
-             Format.asprintf "%a"
-               (Main_errors.Formatter.error_ppformat ~display_format:Human_readable ~no_colour:false)
-               e
-           in
-           Error ("error: " ^ str, ""))
+    (match display_format with
+    | Json ->
+      let str =
+        Format.asprintf
+          "%a"
+          (Main_errors.Formatter.error_ppformat
+             ~display_format:Human_readable
+             ~no_colour:false)
+          e
+      in
+      Error ("error: " ^ str, "")
+    | Dev | Human_readable ->
+      let str =
+        Format.asprintf
+          "%a"
+          (Main_errors.Formatter.error_ppformat
+             ~display_format:Human_readable
+             ~no_colour:false)
+          e
+      in
+      Error ("error: " ^ str, ""))
 
 
 let ast (raw_options : Raw_options.t) source_file display_format () =
