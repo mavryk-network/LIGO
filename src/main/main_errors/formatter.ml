@@ -579,8 +579,8 @@ let rec error_json : Types.all -> Simple_utils.Error.t list =
   | `Main_invalid_generator_name _ ->
     let content = make_content ~message:"bad generator name" () in
     [ make ~stage:"command line interpreter" ~content ]
-  | `Main_invalid_syntax_name _ ->
-    let content = make_content ~message:"bad syntax name" () in
+  | `Main_invalid_syntax_name msg ->
+    let content = make_content ~message:("bad syntax name: " ^ msg) () in
     [ make ~stage:"command line interpreter" ~content ]
   | `Main_invalid_dialect_name _ ->
     let content = make_content ~message:"bad dialect name" () in
