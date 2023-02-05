@@ -165,3 +165,6 @@ let main =
             schema_test_negative ~with_types:true ~speed:`Slow file ~expected_status:None)
       )
     ]
+
+
+let () = ignore main
