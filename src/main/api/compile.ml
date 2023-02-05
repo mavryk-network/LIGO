@@ -125,7 +125,7 @@ let cst
     | File _filename -> None
     | Text (_source_code, _syntax) -> Some "foo.mligo"
   in
-  let syntax = Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) file_name in
+  let syntax = Syntax.of_string_opt ~raise (Syntax_name "cameligo") file_name in
   let options =
     let protocol_version =
       Helpers.protocol_to_variant ~raise raw_options.protocol_version
