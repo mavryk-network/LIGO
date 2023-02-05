@@ -93,10 +93,21 @@
  (name js_main)
  (flags -g)
  (js_of_ocaml
-  (javascript_files threads.js others.js bls12-polynomial.js stdint.js
-    digestif.js))
- (libraries core zarith_stubs_js integers_stubs_js ctypes_stubs_js
-   ligo_api_js js_of_ocaml)
+  (link_flags
+   (:include ../configurator/jsoo-flags.sexp))
+  (javascript_files
+   threads.js
+   others.js
+   bls12-polynomial.js
+   stdint.js
+   digestif.js))
+ (libraries
+  core
+  zarith_stubs_js
+  integers_stubs_js
+  ctypes_stubs_js
+  ligo_api_js
+  js_of_ocaml)
  (modes js)
  (preprocess
   (pps js_of_ocaml-ppx))

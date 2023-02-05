@@ -32,5 +32,6 @@ build-demo-webide: node_modules/@prometheansacrifice/secp256k1-wasm/src/secp256k
 
 demo-webide-start:
 	make build-demo-webide
+	cp -R ../_build $(WEB_STAGING_AREA)
 	python -m http.server -d $(WEB_STAGING_AREA)
 
