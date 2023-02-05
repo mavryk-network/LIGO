@@ -25,6 +25,24 @@ let type_file ~raise ~(options : Compiler_options.t) f stx form : Ast_typed.prog
   let typed = Of_core.typecheck ~raise ~options form core in
   typed
 
+let compile_cst_string ~raise ~(options: Compiler_options.t) source syntax =
+  let meta = Of_source.extract_meta syntax in
+  (* no need to preprocess, because these are already preprocessed CST JSONs *)
+  let imperative = Of_c_unit.compile_cst_string ~raise ~meta source in
+  let core = Of_imperative.compile ~raise imperative in
+  let loc = Main_errors.Location.test in
+  let ep = Ligo_prim.Value_var.of_input_var ~loc "main" in
+  let form = Of_core.Contract ep in
+  let typed = Of_core.typecheck ~raise ~options form core in
+  let aggregated =
+    Of_typed.apply_to_entrypoint_contract ~raise ~options:options.middle_end typed ep
+  in
+  let expanded = Of_aggregated.compile_expression ~raise aggregated in
+  let mini_c = Of_expanded.compile_expression ~raise expanded in
+  let michelson = Of_mini_c.compile_contract ~raise ~options mini_c in
+  let contract = Of_michelson.build_contract ~raise michelson in
+  contract
+
 
 let compile_file ~raise ~options f stx ep =
   let typed = type_file ~raise ~options f stx @@ Contract ep in
@@ -36,7 +54,6 @@ let compile_file ~raise ~options f stx ep =
   let michelson = Of_mini_c.compile_contract ~raise ~options mini_c in
   let contract = Of_michelson.build_contract ~raise michelson in
   contract
-
 
 let core_expression_string ~raise syntax expression =
   let meta = Of_source.make_meta_from_syntax syntax in

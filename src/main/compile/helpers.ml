@@ -77,6 +77,11 @@ let parse_and_abstract_cameligo ~raise buffer file_path =
   in
   imperative
 
+let abstract_cameligo ~raise raw =
+  let imperative =
+    trace ~raise cit_cameligo_tracer @@ Tree_abstraction.Cameligo.compile_program raw
+  in
+  imperative
 
 let parse_and_abstract_expression_cameligo ~raise buffer =
   let raw = trace ~raise parser_tracer @@ Parsing.Cameligo.parse_expression buffer in
@@ -112,6 +117,24 @@ let parse_and_abstract ~raise ~(meta : meta) buffer file_path : Ast_imperative.p
     | JsLIGO -> parse_and_abstract_jsligo
   in
   let abstracted = parse_and_abstract ~raise buffer file_path in
+  let js_style_no_shadowing = Syntax_types.equal meta.syntax JsLIGO in
+  let applied =
+    trace ~raise self_ast_imperative_tracer
+    @@ Self_ast_imperative.all_program abstracted ~js_style_no_shadowing
+  in
+  applied
+
+let abstract ~(raise: _ raise) ~(meta : meta) buffer : Ast_imperative.program =
+  let yojson = Yojson.Safe.from_string buffer in
+  let (abstract, cst) =
+    match meta.syntax with
+    | PascaLIGO -> raise.error (`Main_invalid_syntax_name "abstract(): pascaligo not supported")
+    | CameLIGO -> (match Parsing.Cameligo.CST.of_yojson yojson with
+                  | Ok cst -> (abstract_cameligo, cst) 
+                  | Error _ -> raise.error (`Main_invalid_syntax_name "abstract(): yojson from string failed"))
+    | JsLIGO -> raise.error (`Main_invalid_syntax_name "abstract(): pascaligo not supported")
+  in
+  let abstracted = abstract ~raise cst in
   let js_style_no_shadowing = Syntax_types.equal meta.syntax JsLIGO in
   let applied =
     trace ~raise self_ast_imperative_tracer

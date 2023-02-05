@@ -70,7 +70,7 @@ let print_cst source syntax =
     | None -> failwith ("Invalid syntax " ^ syntax)
   in
   let protocol_version = "lima" in
-  let display_format = Simple_utils.Display.human_readable in
+  let display_format = Simple_utils.Display.json in
   let raw_options =
     Raw_options.make
       ~entry_point

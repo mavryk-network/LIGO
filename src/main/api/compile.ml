@@ -103,6 +103,37 @@ let contract
     views
 
 
+let cst
+    (raw_options : Raw_options.t)
+    source
+    _syntax
+    _display_format
+    _michelson_code_format
+    michelson_comments
+    ()
+  =
+  Trace.to_stdlib_result
+  @@ fun ~raise ->
+      let file_name = 
+  match source with
+  | File _filename ->  None
+  | Text (_source_code, _syntax) -> Some "foo.mligo"
+    in
+    let syntax =
+      Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) file_name
+    in
+let options =
+    let protocol_version =
+      Helpers.protocol_to_variant ~raise raw_options.protocol_version
+    in
+    let has_env_comments = has_env_comments michelson_comments in
+    Compiler_options.make ~raw_options ~syntax ~protocol_version ~has_env_comments ()
+  in
+  match source with
+  | File _filename -> raise.error (`Main_invalid_syntax_name  "file path not supported by api.compile_cst")
+  | Text (source_code, syntax) -> Ligo_compile.Utils.compile_cst_string ~raise ~options source_code syntax
+
+
 let expression
     (raw_options : Raw_options.t)
     expression
