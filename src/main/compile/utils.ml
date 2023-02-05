@@ -25,7 +25,8 @@ let type_file ~raise ~(options : Compiler_options.t) f stx form : Ast_typed.prog
   let typed = Of_core.typecheck ~raise ~options form core in
   typed
 
-let compile_cst_string ~raise ~(options: Compiler_options.t) source syntax =
+
+let compile_cst_string ~raise ~(options : Compiler_options.t) source syntax =
   let meta = Of_source.extract_meta syntax in
   (* no need to preprocess, because these are already preprocessed CST JSONs *)
   let imperative = Of_c_unit.compile_cst_string ~raise ~meta source in
@@ -54,6 +55,7 @@ let compile_file ~raise ~options f stx ep =
   let michelson = Of_mini_c.compile_contract ~raise ~options mini_c in
   let contract = Of_michelson.build_contract ~raise michelson in
   contract
+
 
 let core_expression_string ~raise syntax expression =
   let meta = Of_source.make_meta_from_syntax syntax in

@@ -106,23 +106,27 @@ let contract
 let cst
     (raw_options : Raw_options.t)
     source
-    _syntax
-    _display_format
-    _michelson_code_format
+    display_format
+    michelson_code_format
     michelson_comments
     ()
   =
-  Trace.to_stdlib_result
+  let warning_as_error = raw_options.warning_as_error in
+  format_result
+    ~warning_as_error
+    ~display_format
+    ~no_colour:raw_options.no_colour
+    (Formatter.Michelson_formatter.michelson_format
+       michelson_code_format
+       michelson_comments)
   @@ fun ~raise ->
-      let file_name = 
-  match source with
-  | File _filename ->  None
-  | Text (_source_code, _syntax) -> Some "foo.mligo"
-    in
-    let syntax =
-      Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) file_name
-    in
-let options =
+  let file_name =
+    match source with
+    | File _filename -> None
+    | Text (_source_code, _syntax) -> Some "foo.mligo"
+  in
+  let syntax = Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) file_name in
+  let options =
     let protocol_version =
       Helpers.protocol_to_variant ~raise raw_options.protocol_version
     in
@@ -130,8 +134,33 @@ let options =
     Compiler_options.make ~raw_options ~syntax ~protocol_version ~has_env_comments ()
   in
   match source with
-  | File _filename -> raise.error (`Main_invalid_syntax_name  "file path not supported by api.compile_cst")
-  | Text (source_code, syntax) -> Ligo_compile.Utils.compile_cst_string ~raise ~options source_code syntax
+  | File filename ->
+    let read_whole_file filename =
+      let ch = In_channel.create filename in
+      let[@warning "-3"] s =
+        really_input_string
+          ch
+          (ch |> In_channel.length |> Int64.to_int |> Stdlib.Option.get)
+      in
+      In_channel.close ch;
+      s
+    in
+    let source_code = read_whole_file filename in
+    Ligo_compile.Utils.compile_cst_string
+      ~raise
+      ~options
+      ~protocol_version:options.middle_end.protocol_version
+      source_code
+      syntax
+      []
+  | Text (source_code, syntax) ->
+    Ligo_compile.Utils.compile_cst_string
+      ~raise
+      ~options
+      ~protocol_version:options.middle_end.protocol_version
+      source_code
+      syntax
+      []
 
 
 let expression

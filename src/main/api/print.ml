@@ -138,9 +138,22 @@ let cst
   let value = Trace.to_stdlib_result @@ k in
   match value with
   | Ok ((v, _), _) -> Ok (v, "")
-  | Error (_e, _) ->
-    (* Main_errors.Formatter.error_ppformat ~display_format ~no_colour:false "%s" e *)
-    Error ("error TODO", "")
+  | Error (e, _) ->
+     (match display_format with
+        | Json -> 
+           let str =
+             Format.asprintf "%a"
+               (Main_errors.Formatter.error_ppformat ~display_format:Human_readable ~no_colour:false)
+               e
+           in
+           Error ("error: " ^ str, "")
+        | Dev | Human_readable ->
+           let str =
+             Format.asprintf "%a"
+               (Main_errors.Formatter.error_ppformat ~display_format:Human_readable ~no_colour:false)
+               e
+           in
+           Error ("error: " ^ str, ""))
 
 
 let ast (raw_options : Raw_options.t) source_file display_format () =
