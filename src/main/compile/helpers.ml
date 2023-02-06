@@ -136,10 +136,10 @@ let abstract ~(raise : _ raise) ~(meta : meta) buffer : Ast_imperative.program =
     | CameLIGO ->
       (match Parsing.Cameligo.CST.of_yojson yojson with
       | Ok cst -> abstract_cameligo, cst
-      | Error _ ->
-        raise.error (`Main_invalid_syntax_name "abstract(): yojson from string failed"))
-    | JsLIGO ->
-      raise.error (`Main_invalid_syntax_name "abstract(): pascaligo not supported")
+      | Error e ->
+        raise.error
+          (`Main_invalid_syntax_name ("abstract(): yojson from string failed: " ^ e)))
+    | JsLIGO -> raise.error (`Main_invalid_syntax_name "abstract(): jsligo not supported")
   in
   let abstracted = abstract ~raise cst in
   let js_style_no_shadowing = Syntax_types.equal meta.syntax JsLIGO in
