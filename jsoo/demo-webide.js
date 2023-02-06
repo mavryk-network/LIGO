@@ -79,5 +79,7 @@ initialize().then(async () => {
   document
     .getElementById("print-cst")
     .addEventListener("click", () => handlePrintCSTClick(window.compile));
-  handlePrintCSTClick(window.compile);
+
+  // test area. Put stuff you'd like to run immediately on browser reload. Useful for quicker dev cycle
+  handleCompileClick(window.compile);
 });
