@@ -46,12 +46,10 @@ function handleCompileClick(compile) {
     default:
       compileFn = compile.main.bind(compile);
   }
-
   let michelson = compileFn(
     ligoEditor.state.doc.toJSON().join("\n"),
     getSyntax()
   );
-  console.log(michelson);
   michelsonEditor.setState(
     EditorState.create({
       extensions: [basicSetup],
