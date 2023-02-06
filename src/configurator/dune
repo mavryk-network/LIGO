@@ -1,0 +1,9 @@
+(executable
+ (name config)
+ (modules config)
+ (libraries dune-configurator core))
+
+(rule
+ (targets jsoo-flags.sexp)
+ (action
+  (run ./config.exe)))
