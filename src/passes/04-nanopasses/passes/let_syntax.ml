@@ -33,7 +33,7 @@ let compile_let_rhs ~raise ~loc is_rec fun_pattern type_params parameters rhs_ty
           Option.value ~default param_type)
     in
     let fun_type =
-      List.map param_types_opt ~f:(function
+      List.map (param_types_opt @ [ rhs_type ]) ~f:(function
           | Some x -> x
           | None -> raise.error (recursive_no_annot body))
     in
@@ -76,7 +76,6 @@ let compile ~raise =
       let rhs =
         compile_let_rhs ~raise ~loc is_rec fun_pattern type_params params rhs_type let_rhs
       in
-      (* TODO: wait, why d_const has type_params ??? *)
       d_const
         ~loc
         Simple_decl.{ type_params = None; pattern = fun_pattern; rhs_type; let_rhs = rhs }

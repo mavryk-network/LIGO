@@ -31,13 +31,27 @@ let mut_flag = function
   | `Const -> Ligo_prim.Param.Immutable
 
 
+let get_var_or_ty_pattern pattern =
+  let ty, pattern =
+    match get_p_typed pattern with
+    | Some (ty, pattern) -> Some ty, pattern
+    | None -> None, pattern
+  in
+  ty, get_p_var pattern
+
+
+(* compile_poly_fun_curry [parameters] [ret_type] [body] build a curried lambda sequence
+  based on [parameters]. In case of complex pattern (something else than a variable pattern),
+  the parameter will be bound to [body] using a let in construction. *)
 let compile_poly_fun_curry ~loc parameters ret_type body =
   fst
   @@ List.fold_right
        parameters
        ~init:(body, ret_type)
        ~f:(fun Param.{ param_kind; pattern; param_type } (acc, output_type) ->
-         match get_p_var pattern with
+         let pattern_ty_opt, v_opt = get_var_or_ty_pattern pattern in
+         let param_type = Option.bind_eager_or param_type pattern_ty_opt in
+         match v_opt with
          | Some v ->
            let binder =
              Ligo_prim.Param.make ~mut_flag:(mut_flag param_kind) v param_type
@@ -45,6 +59,7 @@ let compile_poly_fun_curry ~loc parameters ret_type body =
            e_lambda ~loc Lambda.{ binder; output_type; result = acc }, None
          | None ->
            let fresh_binder = Variable.fresh ~loc:(get_p_loc pattern) () in
+           (* TODO , here we need to inspect acc for \/ abstraction, and push the letin in in case *)
            let result =
              e_simple_let_in
                ~loc:(get_e_loc body)
@@ -74,7 +89,7 @@ let compile_poly_fun_uncurry ~loc parameters ret_type body =
   e_lambda ~loc Lambda.{ binder; output_type = ret_type; result }
 
 
-let compile ~syntax =
+let compile ~raise ~syntax =
   let expr : _ expr_ -> expr =
    fun e ->
     let loc = Location.get_location e in
@@ -111,14 +126,14 @@ let compile ~syntax =
         let ascr =
           match Ligo_prim.Binder.get_ascr binder with
           | Some x -> x
-          | None -> failwith "impossible"
+          | None -> raise.error (recursive_no_annot body)
         in
         let binder =
           Ligo_prim.Param.
             { mut_flag; forced_flag; binder = Ligo_prim.Binder.set_ascr binder ascr }
         in
         e_recursive ~loc { fun_name; fun_type; lambda = { binder; output_type; result } }
-      | _ -> failwith "impossible")
+      | _ -> failwith "impossible2")
     | E_Call (f, args) ->
       if is_curry syntax
       then
@@ -159,6 +174,6 @@ let reduction ~raise =
 let pass ~raise ~syntax =
   cata_morph
     ~name:__MODULE__
-    ~compile:(compile ~syntax)
+    ~compile:(compile ~raise ~syntax)
     ~decompile:`None (* for now ? *)
     ~reduction_check:(reduction ~raise)
