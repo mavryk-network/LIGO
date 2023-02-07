@@ -213,6 +213,10 @@ type test_exec_error =
 
 type test_exec_result = Success of nat | Fail of test_exec_error
 
+type unit_test_result =
+  | Ok of michelson_program
+  | Failed of michelson_program
+
 type test_baker_policy =
   | By_round of int
   | By_account of address
@@ -225,7 +229,14 @@ type 's unforged_ticket = [@layout:comb] { ticketer : address ; value : 's ; amo
 
 module Test = struct
 
-  let run (type a b) (f : a -> b) (v : a) : michelson_program = [%external ("TEST_RUN", f, v)]
+  let to_string (type a) (v : a) : string = [%external ("TEST_TO_STRING", v, 0)]
+  let run_unit (type a b) (f : a -> b) (v : a) : unit_test_result =
+    [%external ("TEST_RUN", f, v)]
+  let run (type a b) (f : a -> b) (v : a) : michelson_program =
+    match run_unit f v with
+    | Ok v -> v
+    | Failed v -> failwith ("Uncaught error: Failwith "^(to_string v))
+
   let eval (type a) (x : a) : michelson_program = run (fun (x : a) -> x) x
 
   let compile_value (type a) (x : a) : michelson_program = eval x
@@ -261,7 +272,6 @@ module Test = struct
   let restore_context (u : unit) : unit = [%external ("TEST_POP_CONTEXT", u)]
   let save_context (u : unit) : unit = [%external ("TEST_PUSH_CONTEXT", u)]
   let drop_context (u : unit) : unit = [%external ("TEST_DROP_CONTEXT", u)]
-  let to_string (type a) (v : a) : string = [%external ("TEST_TO_STRING", v, 0)]
   let to_json (type a) (v : a) : string = [%external ("TEST_TO_STRING", v, 1)]
   let get_storage (type p s) (t : (p, s) typed_address) : s =
     let c : p contract = to_contract t in

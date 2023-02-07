@@ -126,7 +126,10 @@ module Command = struct
     | Read_contract_from_file :
         Location.t * LT.calltrace * string
         -> LT.value tezos_command
-    | Run : Location.t * LT.func_val * LT.value -> LT.value tezos_command
+    | Run :
+        Location.t * LT.func_val * LT.value
+        -> [ `Ok of LT.value| `NOk of LT.value ]
+           tezos_command
     | Eval :
         Location.t * LT.value * Ast_aggregated.type_expression
         -> LT.value tezos_command
@@ -490,20 +493,26 @@ module Command = struct
           func_code.expr_ty
           arg_code
       in
-      let expr_ty, expr =
-        match runres with
-        | Success x -> x
-        | Fail x -> raise.error @@ Errors.target_lang_failwith loc [] x
+      let res = match runres with
+        | Success (expr_ty, expr) ->
+          let expr, expr_ty = clean_locations expr, clean_locations expr_ty in
+          let ret =
+            LT.V_Michelson
+              (Ty_code
+                 { micheline_repr = { code = expr; code_ty = expr_ty }
+                 ; ast_ty = f.body.type_expression
+                 })
+          in
+          `Ok ret
+        | Fail v ->
+          let v = clean_locations v in
+          let ret =
+            LT.V_Michelson
+              (Untyped_code v)
+          in
+          `NOk ret
       in
-      let expr, expr_ty = clean_locations expr, clean_locations expr_ty in
-      let ret =
-        LT.V_Michelson
-          (Ty_code
-             { micheline_repr = { code = expr; code_ty = expr_ty }
-             ; ast_ty = f.body.type_expression
-             })
-      in
-      ret, ctxt
+      (res , ctxt )
     | Eval (loc, v, expr_ty) ->
       let value = Michelson_backend.compile_value ~raise ~options ~loc v expr_ty in
       LT.V_Michelson (Ty_code value), ctxt

@@ -1257,7 +1257,15 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
           @@ fun b ->
           create
             ~mode_annot:[ Checked; Inferred ]
-            ~types:[ (a @-> b) ^-> a ^~> t_michelson_code ~loc () ]) )
+            ~types:
+              [ (a @-> b)
+                ^-> a
+                ^~> t_unit_exec
+                      (t_michelson_code ~loc ())
+                      (t_michelson_code ~loc ())
+                      ~loc
+                      ()
+              ]) )
     ; ( C_TEST_DECOMPILE
       , of_type
           (for_all "a"
