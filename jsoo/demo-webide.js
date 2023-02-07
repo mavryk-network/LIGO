@@ -69,6 +69,28 @@ function handlePrintCSTClick(compile) {
   );
 }
 
+async function handleFileUpload(e) {
+  let { files } = e.target;
+
+  if (files.length < 1) {
+    console.error("No files selected");
+    return;
+  }
+
+  let { type } = files[0];
+
+  if (type === "" || type === "application/json") {
+    ligoEditor.setState(
+      EditorState.create({
+        extensions: [basicSetup],
+        doc: await files[0].text(),
+      })
+    );
+  } else {
+    alert("Unrecognised file type");
+  }
+}
+
 initialize().then(async () => {
   console.log("All WASM dependencies loaded");
   await loadJSBundle("/js_main.bc.runtime.js");
@@ -78,7 +100,10 @@ initialize().then(async () => {
     .addEventListener("click", () => handleCompileClick(window.compile));
   document
     .getElementById("print-cst")
-    .addEventListener("click", () => handlePrintCSTClick(window.compile));
+    .addEventListener("change", () => handlePrintCSTClick(window.compile));
+  document
+    .getElementById("source-file")
+    .addEventListener("change", handleFileUpload);
 
   // test area. Put stuff you'd like to run immediately on browser reload. Useful for quicker dev cycle
   handleCompileClick(window.compile);
