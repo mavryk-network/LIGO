@@ -220,6 +220,122 @@ let cst
   (* translate_json_result value display_format *)
 
 
+let ast_typed
+    (raw_options : Raw_options.t)
+    source
+    display_format
+    michelson_code_format
+    michelson_comments
+    ()
+  =
+  let translate_json_result value display_format =
+    let (Simple_utils.Display.Ex_display_format display_format) = display_format in
+    match value with
+    | Ok (v, _) -> Ok (v, "")
+    | Error (e, _) ->
+      let open Simple_utils.Display in
+      (match display_format with
+      | Json ->
+        let str =
+          Format.asprintf
+            "%a"
+            (Main_errors.Formatter.error_ppformat
+               ~display_format:Human_readable
+               ~no_colour:false)
+            e
+        in
+        Error ("error: " ^ str, "")
+      | Dev | Human_readable ->
+        let str =
+          Format.asprintf
+            "%a"
+            (Main_errors.Formatter.error_ppformat
+               ~display_format:Human_readable
+               ~no_colour:false)
+            e
+        in
+        Error ("error: " ^ str, ""))
+  in
+  let translate_michelson_result value _display_format = value in
+  let format_michelson_result k =
+    let warning_as_error = raw_options.warning_as_error in
+    format_result
+      ~warning_as_error
+      ~display_format
+      ~no_colour:raw_options.no_colour
+      (Formatter.Michelson_formatter.michelson_format
+         michelson_code_format
+         michelson_comments)
+    @@ k
+  in
+  let format_json_result k = Trace.to_stdlib_result k in
+  ignore format_json_result;
+  ignore translate_json_result;
+  let value =
+    format_michelson_result
+    @@ fun ~raise ->
+    let compile source_code syntax =
+      let options =
+        let protocol_version =
+          Helpers.protocol_to_variant ~raise raw_options.protocol_version
+        in
+        let has_env_comments = has_env_comments michelson_comments in
+        Compiler_options.make ~raw_options ~syntax ~protocol_version ~has_env_comments ()
+      in
+      Ligo_compile.Utils.compile_ast_typed_string
+        ~raise
+        ~options
+        ~protocol_version:options.middle_end.protocol_version
+        source_code
+        []
+    in
+    let json_to_and_from source_code syntax =
+      let yojson = Yojson.Safe.from_string source_code in
+      let open Syntax_types in
+      match syntax with
+      | PascaLIGO ->
+        raise.error (`Main_invalid_syntax_name "type_program(): pascaligo not supported")
+      | CameLIGO ->
+        (match Ast_typed.Types.program_of_yojson yojson with
+        | Ok ast_typed -> Yojson.Safe.to_string @@ Ast_typed.Types.program_to_yojson ast_typed
+        | Error e ->
+          raise.error
+            (`Main_invalid_syntax_name ("type_program(): yojson from string failed: " ^ e)))
+      | JsLIGO ->
+        raise.error (`Main_invalid_syntax_name "type_program(): jsligo not supported")
+    in
+    ignore json_to_and_from;
+    let file_name =
+      match source with
+      | File _filename -> None
+      | Text (_source_code, _syntax) -> Some "foo.mligo"
+    in
+    let syntax = Syntax.of_string_opt ~raise (Syntax_name "cameligo") file_name in
+    let source_code =
+      match source with
+      | File filename ->
+        let read_whole_file filename =
+          let ch = In_channel.create filename in
+          let[@warning "-3"] s =
+            really_input_string
+              ch
+              (ch |> In_channel.length |> Int64.to_int |> Stdlib.Option.get)
+          in
+          In_channel.close ch;
+          s
+        in
+        read_whole_file filename
+      | Text (source_code, _syntax) -> source_code
+    in
+    (* Let's try simply json stringifying it back instead of sending it to the compiler pipelines *)
+    (* json_to_and_from source_code syntax *)
+    (* compile to michelson *)
+    compile source_code syntax
+  in
+  translate_michelson_result value display_format
+  (* translate_json_result value display_format *)
+
+
 let expression
     (raw_options : Raw_options.t)
     expression

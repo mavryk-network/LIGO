@@ -4,6 +4,8 @@ open Helpers
 type c_unit = Buffer.t
 
 let compile_cst_string ~raise ~meta (source : string) = abstract ~raise ~meta source
+let compile_ast_typed_string ~raise (source : string) = type_program_string ~raise source
+
 
 let compile ~raise ~meta c_unit (source_filename : string) : Ast_imperative.program =
   parse_and_abstract ~raise ~meta c_unit source_filename
