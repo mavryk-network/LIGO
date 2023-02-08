@@ -12,7 +12,7 @@ let toplevel
     match t with
     | Human_readable -> convert ~display_format:t ~no_colour disp
     | Dev -> convert ~display_format:t ~no_colour disp
-    | Json -> Yojson.Safe.pretty_to_string @@ convert ~display_format:t ~no_colour disp
+    | Json -> Yojson.Safe.to_string @@ convert ~display_format:t ~no_colour disp
   in
   let warns =
     match value with
@@ -28,7 +28,7 @@ let toplevel
             ~no_colour
             (Displayable { value; format = Main_warnings.format })
         | Json ->
-          Yojson.Safe.pretty_to_string
+          Yojson.Safe.to_string
           @@ convert
                ~display_format:t
                ~no_colour
