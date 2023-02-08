@@ -131,10 +131,12 @@ let type_program_string ~(raise : _ raise) buffer : Ast_typed.program =
   let yojson = Yojson.Safe.from_string buffer in
   match Ast_typed.Types.program_of_yojson yojson with
   | Ok ast_typed -> ast_typed
-  | Error e -> 
-         raise.error
-          (`Main_invalid_syntax_name ("type_program_string(): yojson from string failed: " ^ e))
- 
+  | Error e ->
+    raise.error
+      (`Main_invalid_syntax_name
+        ("type_program_string(): yojson from string failed: " ^ e))
+
+
 let abstract ~(raise : _ raise) ~(meta : meta) buffer : Ast_imperative.program =
   let yojson = Yojson.Safe.from_string buffer in
   let abstract, cst =

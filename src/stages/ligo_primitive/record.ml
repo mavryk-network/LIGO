@@ -9,7 +9,19 @@ module LMap = struct
     `Assoc lst'
 
 
-  let of_yojson _f _lmap = failwith "TODO"
+  let of_yojson v_of_yojson (lmap : Yojson.Safe.t) : ('a t, string) result =
+    match lmap with
+    | `Assoc lst ->
+      let f (k, v_yojson) =
+        ( Label.of_string k
+        , match v_of_yojson v_yojson with
+          | Ok v -> v
+          | Error _ -> failwith "Failed to parse LMap with yojson" )
+      in
+      Ok (of_list (List.map ~f lst))
+    | _ -> Error "Failed to parse LMap with yojson"
+
+
   let sexp_of_t _ _ = failwith "todo"
   let t_of_sexp _ _ = failwith "todo"
 end

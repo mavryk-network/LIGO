@@ -217,8 +217,9 @@ let cst
     compile source_code syntax
   in
   translate_michelson_result value display_format
-  (* translate_json_result value display_format *)
 
+
+(* translate_json_result value display_format *)
 
 let ast_typed
     (raw_options : Raw_options.t)
@@ -297,10 +298,12 @@ let ast_typed
         raise.error (`Main_invalid_syntax_name "type_program(): pascaligo not supported")
       | CameLIGO ->
         (match Ast_typed.Types.program_of_yojson yojson with
-        | Ok ast_typed -> Yojson.Safe.to_string @@ Ast_typed.Types.program_to_yojson ast_typed
+        | Ok ast_typed ->
+          Yojson.Safe.to_string @@ Ast_typed.Types.program_to_yojson ast_typed
         | Error e ->
           raise.error
-            (`Main_invalid_syntax_name ("type_program(): yojson from string failed: " ^ e)))
+            (`Main_invalid_syntax_name
+              ("type_program(): yojson from string failed: " ^ e)))
       | JsLIGO ->
         raise.error (`Main_invalid_syntax_name "type_program(): jsligo not supported")
     in
@@ -333,8 +336,9 @@ let ast_typed
     compile source_code syntax
   in
   translate_michelson_result value display_format
-  (* translate_json_result value display_format *)
 
+
+(* translate_json_result value display_format *)
 
 let expression
     (raw_options : Raw_options.t)

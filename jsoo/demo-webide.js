@@ -43,6 +43,9 @@ function handleCompileClick(compile) {
     case "cst":
       compileFn = compile.loadCst.bind(compile);
       break;
+    case "ast-typed":
+      compileFn = compile.loadAstTyped.bind(compile);
+      break;
     default:
       compileFn = compile.main.bind(compile);
   }

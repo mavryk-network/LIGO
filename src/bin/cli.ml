@@ -652,6 +652,88 @@ let compile_cst =
     <*> warn_unused_rec)
 
 
+let compile_ast_typed =
+  let f
+      source_file
+      entry_point
+      views
+      syntax
+      protocol_version
+      display_format
+      disable_michelson_typechecking
+      experimental_disable_optimizations_for_debugging
+      enable_typed_opt
+      no_stdlib
+      michelson_format
+      output_file
+      show_warnings
+      warning_as_error
+      no_colour
+      michelson_comments
+      constants
+      file_constants
+      project_root
+      warn_unused_rec
+      ()
+    =
+    let raw_options =
+      Raw_options.make
+        ~entry_point
+        ~syntax
+        ~views
+        ~protocol_version
+        ~disable_michelson_typechecking
+        ~experimental_disable_optimizations_for_debugging
+        ~enable_typed_opt
+        ~no_stdlib
+        ~warning_as_error
+        ~no_colour
+        ~constants
+        ~file_constants
+        ~project_root
+        ~warn_unused_rec
+        ()
+    in
+    return_result ~return ~show_warnings ?output_file
+    @@ Api.Compile.ast_typed
+         raw_options
+         (Api.Compile.File source_file)
+         display_format
+         michelson_format
+         michelson_comments
+  in
+  let summary = "compile an ast_typed json file." in
+  let readme () =
+    "This sub-command compiles a ast_typed json file to Michelson code. It expects a \
+     source file and an entrypoint function that has the type of a contract: \"parameter \
+     * storage -> operations list * storage\"."
+  in
+  Command.basic
+    ~summary
+    ~readme
+    (f
+    <$> source_file
+    <*> entry_point
+    <*> on_chain_views
+    <*> syntax
+    <*> protocol_version
+    <*> display_format
+    <*> disable_michelson_typechecking
+    <*> experimental_disable_optimizations_for_debugging
+    <*> enable_michelson_typed_opt
+    <*> no_stdlib
+    <*> michelson_code_format
+    <*> output_file
+    <*> warn
+    <*> werror
+    <*> no_colour
+    <*> michelson_comments
+    <*> constants
+    <*> file_constants
+    <*> project_root
+    <*> warn_unused_rec)
+
+
 let compile_parameter =
   let f
       source_file
@@ -939,6 +1021,7 @@ let compile_group =
   Command.group ~summary:"compile a ligo program to michelson"
   @@ [ "contract", compile_file
      ; "cst", compile_cst
+     ; "ast-typed", compile_ast_typed
      ; "expression", compile_expression
      ; "parameter", compile_parameter
      ; "storage", compile_storage
