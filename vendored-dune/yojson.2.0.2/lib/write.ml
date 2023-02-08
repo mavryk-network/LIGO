@@ -289,17 +289,22 @@ let rec write_json ob (x : t) =
 
 and write_assoc ob l =
   let f_elt ob (s, x) =
-    match x with
-    | `Null | `Bool false -> ()
-#ifdef STRING
-    | `String "" -> ()
-    | `String _ as x 
-#endif
-    | x -> 
     write_string ob s;
     Buffer.add_char ob ':';
     write_json ob x
   in
+  let f (s, x) =
+    match x with
+#ifdef INT
+    | `Int 0
+#endif
+#ifdef STRING
+    | `String "" 
+#endif
+    | `Null | `Bool false -> false
+    | _ as x -> true
+  in
+  let l = List.filter f l in
   Buffer.add_char ob '{';
   iter2 f_elt f_sep ob l;
   Buffer.add_char ob '}';
