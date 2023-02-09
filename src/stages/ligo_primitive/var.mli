@@ -1,7 +1,7 @@
 module Location = Simple_utils.Location
 
 module type VAR = sig
-  type t [@@deriving compare, yojson, hash, sexp]
+  type t [@@deriving compare, hash, sexp]
 
   (* Create a compiler generated variable *)
   val reset_counter : unit -> unit
@@ -22,6 +22,8 @@ module type VAR = sig
 
   (* Prints vars as %s or %s#%d *)
   val pp : Format.formatter -> t -> unit
+  val to_yojson : t -> Yojson.Safe.t
+  val of_yojson : Yojson.Safe.t -> (t, string) result
 
   include Comparable.S with type t := t
 end
