@@ -783,5 +783,6 @@ let fetch_views_in_program
         , (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
           :: views ))
     | D_irrefutable_match _ | D_type _ | D_module _ | D_value _ -> return ()
+    | D_contract _ -> assert false
   in
   List.fold_right ~f:aux ~init:([], []) prog

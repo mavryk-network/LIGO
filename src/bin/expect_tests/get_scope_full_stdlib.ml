@@ -1406,12 +1406,12 @@ let%expect_test _ =
                       (sapling_empty_state#43 -> sapling_empty_state)
                       Range: File "", line 32, characters 25-44
                       Body Range: File "", line 32, characters 45-57
-                      Content: |core: ∀ sap_a : + . sapling_state (sap_a)|
+                      Content: |core: ∀ sap_a : singleton . sapling_state (sap_a)|
                       references: []
                       (sapling_verify_update#95 -> sapling_verify_update)
                       Range: File "", line 73, characters 25-46
                       Body Range: File "", line 73, characters 47-59
-                      Content: |core: ∀ sap_a : + . sapling_transaction (sap_a) -> sapling_state (sap_a) -> option (
+                      Content: |core: ∀ sap_a : singleton . sapling_transaction (sap_a) -> sapling_state (sap_a) -> option (
                       ( bytes * ( int * sapling_state (sap_a) ) ))|
                       references: []
                       (self#40 -> self)
