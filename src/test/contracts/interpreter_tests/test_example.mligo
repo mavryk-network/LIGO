@@ -60,7 +60,7 @@ let test2 =
   let () = Test.set_baker bsa2 in
   // some balance tests:
   let tz = fun (n:nat) ->
-    Test.run (fun (x : unit -> nat) -> x () * 1mutez) (fun (_ : unit) -> n)
+    Test.run_exn (fun (x : unit -> nat) -> x () * 1mutez) (fun (_ : unit) -> n)
   in
   let () = assert ((Test.get_balance bsa0) = 7600tez) in
   let () = assert ((Test.get_balance bsa1) = 2mutez) in

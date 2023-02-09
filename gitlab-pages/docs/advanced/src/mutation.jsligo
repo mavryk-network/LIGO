@@ -2,11 +2,11 @@ let twice = (x : int) : int => x + x;
 
 let simple_tests = (f : ((input: int) => int)) : unit => {
   /* Test 1 */
-  assert (Test.michelson_equal(Test.run(f, 0), Test.eval(0)));
+  assert (Test.michelson_equal(Test.run_exn(f, 0), Test.eval(0)));
   /* Test 2 */
-  assert (Test.michelson_equal(Test.run(f, 2), Test.eval(4)));
+  assert (Test.michelson_equal(Test.run_exn(f, 2), Test.eval(4)));
   /* Test 3 */
-  assert (Test.michelson_equal(Test.run(f, 1), Test.eval(2)));
+  assert (Test.michelson_equal(Test.run_exn(f, 1), Test.eval(2)));
 };
 
 let test = simple_tests(twice);

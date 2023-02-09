@@ -16,21 +16,21 @@ let test =
   let baker = Test.nth_bootstrap_account 0 in
   let src = Test.nth_bootstrap_account 1 in
 
-  let init_storage = Test.run (fun () -> (None : storage)) () in
+  let init_storage = Test.run_exn (fun () -> (None : storage)) () in
   let (addr, code, size) = Test.originate_from_file cut "main" ([] : string list) init_storage 0tez in
   let () = assert (Test.michelson_equal init_storage (Test.get_storage_of_address addr)) in
   let () = assert (size < 300) in
   let new_account1 = check_new_origination src in
 
-  let param = Test.run (fun () -> (Two : parameter)) () in
+  let param = Test.run_exn (fun () -> (Two : parameter)) () in
   let _ = Test.transfer_exn addr param 10tez in
   let new_account2 = check_new_origination new_account1 in
   let new_storage = Test.get_storage_of_address addr in
-  let expected_new_storage = Test.run (fun (x : address) -> Some x) new_account2 in
+  let expected_new_storage = Test.run_exn (fun (x : address) -> Some x) new_account2 in
   let () = assert (Test.michelson_equal new_storage expected_new_storage) in
 
 
-  let param = Test.run (fun () -> (One : parameter)) () in
+  let param = Test.run_exn (fun () -> (One : parameter)) () in
   match (Test.transfer addr param 10tez : test_exec_result) with
   | Success _ -> (failwith "contract did not fail" : michelson_program)
   | Fail x -> (
@@ -63,7 +63,7 @@ let test2 =
   let () = Test.set_baker bsa2 in
   // some balance tests:
   let tz = fun (n:nat) ->
-    Test.run (fun (n:nat) -> n * 1mutez) n
+    Test.run_exn (fun (n:nat) -> n * 1mutez) n
   in
   let () = assert (Test.michelson_equal (Test.compile_value (Test.get_balance bsa0)) (tz 7600_000_000n)) in
   let () = assert (Test.michelson_equal (Test.compile_value (Test.get_balance bsa1)) (tz 100n)) in
