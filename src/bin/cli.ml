@@ -2224,6 +2224,7 @@ let run ?argv () =
     let message msg =
       Format.eprintf "An internal error ocurred. Please, contact the developers.@.";
       if !is_dev then Format.eprintf "%s.@." msg;
+      Format.eprintf "%s" (Printexc.get_backtrace ());
       Format.pp_print_flush Format.err_formatter ();
       2
     in
