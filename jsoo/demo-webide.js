@@ -49,6 +49,7 @@ function handleCompileClick(compile) {
     default:
       compileFn = compile.main.bind(compile);
   }
+  console.log("compiling");
   let michelson = compileFn(
     ligoEditor.state.doc.toJSON().join("\n"),
     getSyntax()
