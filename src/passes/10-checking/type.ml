@@ -293,6 +293,8 @@ let t_bool ~loc ?meta () =
 let t_option t ~loc ?meta () =
   t_sum_ez ~loc ?meta [ "Some", t; "None", t_unit ~loc () ] ()
 
+let t_unit_exec data err ~loc ?meta () =
+  t_sum_ez ~loc ?meta [ "Ok", data; "Failed", err ] ()
 
 let t_mutez = t_tez
 

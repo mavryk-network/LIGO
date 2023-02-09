@@ -739,10 +739,10 @@ Our simple test loop will call `balances_under` with the compiled map
 defined above, get the size of the resulting map and compare it to an
 expected value with `Test.michelson_equal`.
 
-The call to `balance_under` and the computation of the size of the resulting map is achieved through the primitive `Test.run`.
+The call to `balance_under` and the computation of the size of the resulting map is achieved through the primitive `Test.run_exn`.
 This primitive runs a function on an input, translating both (function and input)
 to Michelson before running on the Michelson interpreter.
-More concretely `Test.run f v` performs the following:
+More concretely `Test.run_exn f v` performs the following:
 
 1. Compiles the function argument `f` to Michelson `f_mich`
 2. Compiles the value argument `v` (which was already evaluated) to Michelson `v_mich`
@@ -759,7 +759,7 @@ let test =
   List.iter
     (fun ((threshold , expected_size) : tez * nat) ->
       let tester (balances, threshold : balances * tez) = Map.size (balances_under balances threshold) in
-      let size = Test.run tester (balances, threshold) in
+      let size = Test.run_exn tester (balances, threshold) in
       let expected_size = Test.eval expected_size in
       let () = Test.log ("expected", expected_size) in
       let () = Test.log ("actual",size) in
@@ -777,7 +777,7 @@ let test =
   List.iter
     ( ([threshold , expected_size] : [tez , nat]) : unit => {
       let tester = ([balances, threshold] : [balances, tez]) : nat => Map.size (balances_under (balances, threshold));
-      let size = Test.run(tester, [balances, threshold]);
+      let size = Test.run_exn(tester, [balances, threshold]);
       let expected_size_ = Test.eval(expected_size) ;
       let unit_ = Test.log (["expected", expected_size]) ;
       let unit__ = Test.log (["actual",size]) ;

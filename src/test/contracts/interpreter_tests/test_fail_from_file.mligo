@@ -3,7 +3,7 @@ let under_test = "./contract_under_test/fail_contract.mligo"
 
 let test =
   let vunit = Test.compile_value () in
-  let _vfail = Test.run (fun () -> fail_data) () in
+  let _vfail = Test.run_exn (fun () -> fail_data) () in
   let (addr,_code,_) = Test.originate_from_file under_test "main" ([] : string list) vunit 0tez in
 
   match Test.transfer addr vunit 10tez with

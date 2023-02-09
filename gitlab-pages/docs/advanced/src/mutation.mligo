@@ -2,11 +2,11 @@ let twice (x : int) = x + x
 
 let simple_tests (f : int -> int) =
   (* Test 1 *)
-  let () = assert (Test.michelson_equal (Test.run f 0) (Test.eval 0)) in
+  let () = assert (Test.michelson_equal (Test.run_exn f 0) (Test.eval 0)) in
   (* Test 2 *)
-  let () = assert (Test.michelson_equal (Test.run f 2) (Test.eval 4)) in
+  let () = assert (Test.michelson_equal (Test.run_exn f 2) (Test.eval 4)) in
   (* Test 3 *)
-  let () = assert (Test.michelson_equal (Test.run f 1) (Test.eval 2)) in
+  let () = assert (Test.michelson_equal (Test.run_exn f 1) (Test.eval 2)) in
   ()
 
 let test = simple_tests twice

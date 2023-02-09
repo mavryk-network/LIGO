@@ -457,6 +457,10 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       let>> a = State_error_to_value e in
       return a
   in
+  let return_unit_exec = function
+    | `Ok v -> return  (LC.v_ctor "Ok" v)
+    | `NOk v -> return (LC.v_ctor "Failed" v)
+  in
   let source_file = get_file_from_location loc in
   match c, operands with
   (* nullary *)
@@ -1298,7 +1302,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let* () = check_value (V_Func_val f) in
     let* () = check_value v in
     let>> code = Run (loc, f, v) in
-    return code
+    return_unit_exec code
   | C_TEST_RUN, _ -> fail @@ error_type ()
   | ( C_TEST_DECOMPILE
     , [ V_Michelson (Ty_code { micheline_repr = { code_ty; code }; ast_ty }) ] ) ->

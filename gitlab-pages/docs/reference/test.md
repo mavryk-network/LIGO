@@ -60,6 +60,22 @@ A test error:
   - The `Other` case wraps all the other possible reasons. Its argument is a string representation of the tezos_client error
 
 <SyntaxTitle syntax="cameligo">
+type run_result =
+  | Ok of michelson_program
+  | Failed of michelson_program
+</SyntaxTitle>
+
+<SyntaxTitle syntax="jsligo">
+type run_result =
+  ["Ok", michelson_program]
+| ["Failed", michelson_program]
+</SyntaxTitle>
+
+A run result:
+  - The `Ok` case mean code ran correctly and returned the associated value
+  - The `Failed` case mean code failed with the associated value
+
+<SyntaxTitle syntax="cameligo">
 type test_exec_result =
   Success of nat
 | Fail of test_exec_error
@@ -686,11 +702,21 @@ Compile a LIGO value to Michelson. Currently it is a renaming of
 `compile_value`.
 
 <SyntaxTitle syntax="cameligo">
-val run : ('a -> 'b) -> 'a -> michelson_program
+val run : ('a -> 'b) -> 'a -> run_result
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let run = (func: ('a => 'b), value: 'a) => michelson_program
+let run = (func: ('a => 'b), value: 'a) => run_result
+</SyntaxTitle>
+
+Run a function on an input
+
+<SyntaxTitle syntax="cameligo">
+val run_exn : ('a -> 'b) -> 'a -> michelson_program
+</SyntaxTitle>
+
+<SyntaxTitle syntax="jsligo">
+let run_exn = (func: ('a => 'b), value: 'a) => michelson_program
 </SyntaxTitle>
 
 Run a function on an input, all in Michelson. More concretely: a)
@@ -713,7 +739,7 @@ type some_r = [@layout comb] {
 let f = fun (x : some_r) -> x.one
 
 let test_example =
-  Test.run (fun (x : int * nat * string * bytes * unit) -> f ({ one = x.0 ; two = x.1 ; three = x.2 ; four = x.3 ; five = x.4 }))
+  Test.run_exn (fun (x : int * nat * string * bytes * unit) -> f ({ one = x.0 ; two = x.1 ; three = x.2 ; four = x.3 ; five = x.4 }))
            (1 + 3 + 2, 1n + 2n, "a" ^ "b", 0xFF00, ())
 ```
 
@@ -726,7 +752,7 @@ type some_r = [@layout comb] { one : int , two : nat , three : string , four : b
 let f = (x: some_r) : int => x.one;
 
 let test_example =
-  Test.run (((x : [int, nat, string, bytes, unit]) => f ({ one : x[0] , two : x[1] , three : x[2] , four : x[3] , five : x[4] })),
+  Test.run_exn (((x : [int, nat, string, bytes, unit]) => f ({ one : x[0] , two : x[1] , three : x[2] , four : x[3] , five : x[4] })),
            [1 + 3 + 2, ((1 as nat) + (2 as nat)), ("a" + "b"), 0xFF00, unit]);
 ```
 
