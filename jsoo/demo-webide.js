@@ -110,5 +110,5 @@ initialize().then(async () => {
     .addEventListener("change", handleFileUpload);
 
   // test area. Put stuff you'd like to run immediately on browser reload. Useful for quicker dev cycle
-  handleCompileClick(window.compile);
+  // handleCompileClick(window.compile);
 });
