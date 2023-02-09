@@ -293,18 +293,18 @@ and write_assoc ob l =
     Buffer.add_char ob ':';
     write_json ob x
   in
-  let f (s, x) =
-    match x with
-#ifdef INT
-    | `Int 0
-#endif
-#ifdef STRING
-    | `String "" 
-#endif
-    | `Null | `Bool false -> false
-    | _ as x -> true
-  in
-  let l = List.filter f l in
+(*   let f (s, x) = *)
+(*     match x with *)
+(* #ifdef INT *)
+(*     | `Int 0 *)
+(* #endif *)
+(* #ifdef STRING *)
+(*     | `String ""  *)
+(* #endif *)
+(*     | `Null | `Bool false -> false *)
+(*     | _ as x -> true *)
+(*   in *)
+(*   let l = List.filter f l in *)
   Buffer.add_char ob '{';
   iter2 f_elt f_sep ob l;
   Buffer.add_char ob '}';
