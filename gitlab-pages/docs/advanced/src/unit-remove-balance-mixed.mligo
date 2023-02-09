@@ -12,7 +12,7 @@ let test =
   List.iter
     (fun ((threshold , expected_size) : tez * nat) ->
       let tester (balances, threshold : balances * tez) = Map.size (balances_under balances threshold) in
-      let size = Test.run tester (balances, threshold) in
+      let size = Test.run_exn tester (balances, threshold) in
       let expected_size = Test.eval expected_size in
       let () = Test.log ("expected", expected_size) in
       let () = Test.log ("actual",size) in

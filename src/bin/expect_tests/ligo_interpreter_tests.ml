@@ -1150,9 +1150,9 @@ let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_run_types.jsligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative//interpreter_tests/test_run_types.jsligo", line 2, characters 26-44:
+    File "../../test/contracts/negative//interpreter_tests/test_run_types.jsligo", line 2, characters 30-48:
       1 | const foo = (x: {field: int}): {field: int} => {return x};
-      2 | const bar = Test.run(foo, {property: "toto"});
+      2 | const bar = Test.run_exn(foo, {property: "toto"});
       3 |
 
     Mismatching record labels. Expected record of type "record[field -> int]". |}]
@@ -1161,9 +1161,9 @@ let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_run_types2.jsligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative//interpreter_tests/test_run_types2.jsligo", line 2, characters 26-32:
+    File "../../test/contracts/negative//interpreter_tests/test_run_types2.jsligo", line 2, characters 30-36:
       1 | const foo = (x:  {b:int}):  {b:int} => {return x};
-      2 | const bar = Test.run(foo, "toto");
+      2 | const bar = Test.run_exn(foo, "toto");
 
     Invalid type(s)
     Cannot unify "string" with "record[b -> int]". |}]
@@ -1172,9 +1172,9 @@ let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_run_types3.jsligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative//interpreter_tests/test_run_types3.jsligo", line 2, characters 26-41:
+    File "../../test/contracts/negative//interpreter_tests/test_run_types3.jsligo", line 2, characters 30-45:
       1 | const foo = (x: int): int => {return x};
-      2 | const bar = Test.run(foo, {field: "toto"});
+      2 | const bar = Test.run_exn(foo, {field: "toto"});
 
     Invalid type(s)
     Cannot unify "record[field -> string]" with "int". |}]

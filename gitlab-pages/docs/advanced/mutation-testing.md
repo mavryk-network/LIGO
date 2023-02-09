@@ -40,9 +40,9 @@ the following tests:
 ```cameligo test-ligo group=frontpage
 let simple_tests (f : int -> int) =
   (* Test 1 *)
-  let () = assert (Test.michelson_equal (Test.run f 0) (Test.eval 0)) in
+  let () = assert (Test.michelson_equal (Test.run_exn f 0) (Test.eval 0)) in
   (* Test 2 *)
-  let () = assert (Test.michelson_equal (Test.run f 2) (Test.eval 4))
+  let () = assert (Test.michelson_equal (Test.run_exn f 2) (Test.eval 4))
   in ()
 
 let test = simple_tests twice
@@ -55,9 +55,9 @@ let test = simple_tests twice
 ```jsligo test-ligo group=frontpage
 const simple_tests = (f : ((input: int) => int)) : unit => {
   /* Test 1 */
-  assert (Test.michelson_equal(Test.run(f, 0), Test.eval(0)));
+  assert (Test.michelson_equal(Test.run_exn(f, 0), Test.eval(0)));
   /* Test 2 */
-  assert (Test.michelson_equal(Test.run(f, 2), Test.eval(4)));
+  assert (Test.michelson_equal(Test.run_exn(f, 2), Test.eval(4)));
 };
 
 const test = simple_tests(twice);
@@ -246,11 +246,11 @@ test:
 ```cameligo skip
 let simple_tests (f : int -> int) =
   (* Test 1 *)
-  let () = assert (Test.michelson_equal (Test.run f 0) (Test.eval 0)) in
+  let () = assert (Test.michelson_equal (Test.run_exn f 0) (Test.eval 0)) in
   (* Test 2 *)
-  let () = assert (Test.michelson_equal (Test.run f 2) (Test.eval 4)) in
+  let () = assert (Test.michelson_equal (Test.run_exn f 2) (Test.eval 4)) in
   (* Test 3 *)
-  let () = assert (Test.michelson_equal (Test.run f 1) (Test.eval 2))
+  let () = assert (Test.michelson_equal (Test.run_exn f 1) (Test.eval 2))
   in ()
 ```
 
@@ -261,11 +261,11 @@ let simple_tests (f : int -> int) =
 ```jsligo skip
 const simple_tests = (f : ((input: int) => int)) : unit => {
   /* Test 1 */
-  assert (Test.michelson_equal(Test.run(f, 0), Test.eval(0)));
+  assert (Test.michelson_equal(Test.run_exn(f, 0), Test.eval(0)));
   /* Test 2 */
-  assert (Test.michelson_equal(Test.run(f, 2), Test.eval(4)));
+  assert (Test.michelson_equal(Test.run_exn(f, 2), Test.eval(4)));
   /* Test 3 */
-  assert (Test.michelson_equal(Test.run(f, 1), Test.eval(2)));
+  assert (Test.michelson_equal(Test.run_exn(f, 1), Test.eval(2)));
 };
 ```
 
