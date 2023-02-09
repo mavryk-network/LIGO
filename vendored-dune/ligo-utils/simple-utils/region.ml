@@ -182,10 +182,7 @@ let cover r1 r2 =
             else make ~start:r2#start ~stop:r1#stop
 
 let to_yojson f =
-  `Assoc [
-      ("start", Pos.to_yojson f#start) ;
-      ("stop",  Pos.to_yojson f#stop) ;
-    ]
+  `List [ Pos.to_yojson f#start; Pos.to_yojson f#stop]
 
 let to_human_yojson f =
   `Assoc [
@@ -195,7 +192,7 @@ let to_human_yojson f =
 
 let of_yojson = fun t ->
   match t with
-    `Assoc [("start", start); ("stop", stop)] ->
+    `List [start; stop] ->
       (match Pos.of_yojson start, Pos.of_yojson stop with
          Ok start, Ok stop -> Ok (make ~start ~stop)
        | (Error _ as e), _ | _, (Error _ as e) -> e)
