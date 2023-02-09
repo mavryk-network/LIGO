@@ -213,7 +213,7 @@ type test_exec_error =
 
 type test_exec_result = Success of nat | Fail of test_exec_error
 
-type unit_test_result =
+type run_result =
   | Ok of michelson_program
   | Failed of michelson_program
 
@@ -230,7 +230,7 @@ type 's unforged_ticket = [@layout:comb] { ticketer : address ; value : 's ; amo
 module Test = struct
 
   let to_string (type a) (v : a) : string = [%external ("TEST_TO_STRING", v, 0)]
-  let run (type a b) (f : a -> b) (v : a) : unit_test_result =
+  let run (type a b) (f : a -> b) (v : a) : run_result =
     [%external ("TEST_RUN", f, v)]
   let run_exn (type a b) (f : a -> b) (v : a) : michelson_program =
     match run f v with
