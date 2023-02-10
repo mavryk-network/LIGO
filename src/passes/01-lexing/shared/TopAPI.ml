@@ -265,9 +265,13 @@ module Make
         else
           (* Running only the lexer *)
           let result =
-            if String.(file = "") then
-              Scan.from_channel In_channel.stdin
-            else Scan.from_file file in
+            match input with
+              File    file            -> Scan.from_file file
+            | Buffer  (_, buf)        -> Scan.from_buffer buf 
+            | String  (_, string)     -> Scan.from_string string
+            | Channel (_, in_channel) -> Scan.from_channel in_channel
+            | Lexbuf  (_, lexbuf)     -> Scan.from_lexbuf lexbuf 
+          in
           Std.empty, None, result
       in
       match result with

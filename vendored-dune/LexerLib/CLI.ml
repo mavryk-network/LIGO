@@ -77,7 +77,7 @@ module Make (PreprocParams: Preprocessor.CLI.PARAMETERS) : PARAMETERS =
 
     let print_string = function
       None -> "None"
-    | Some s -> Printf.sprintf "Some %S"
+    | Some s -> Printf.sprintf "Some %S" s
 
     let set_string str =
       if Caml.(!string = None)
@@ -89,14 +89,14 @@ module Make (PreprocParams: Preprocessor.CLI.PARAMETERS) : PARAMETERS =
        See [GetoptLib.Getopt] for the layout of the command line and
        the specification of the options. *)
 
-    let specs =a
+    let specs =
       Getopt.[
         noshort, "copy",         set copy true, None;
         noshort, "tokens",       set tokens true, None;
         noshort, "units",        set units true, None;
         noshort, "bytes",        set bytes true, None;
         noshort, "preprocess",   set preprocess true, None;
-        noshort, "string",       set string None, Some set_string;
+        noshort, "string",       None, Some set_string;
         noshort, "post",         None, Some post_arg;
         noshort, "print-passes", set print_passes true, None;
         noshort, "cli",          set cli true, None;
@@ -234,6 +234,7 @@ module Make (PreprocParams: Preprocessor.CLI.PARAMETERS) : PARAMETERS =
         let preprocess   = preprocess
         let mode         = mode
         let command      = command
+        let string       = string
         let print_passes = print_passes
       end
 
