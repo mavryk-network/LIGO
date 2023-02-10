@@ -17,11 +17,12 @@ type approve = {spender : address; value : nat}
 type getAllowance =
   {owner : address;
    spender : address;
-   callback : nat contract}
+   callback : nat @contract}
 
-type getBalance = {owner : address; callback : nat contract}
+type getBalance =
+  {owner : address; callback : nat @contract}
 
-type getTotalSupply = {callback : nat contract}
+type getTotalSupply = {callback : nat @contract}
 
 type action =
   Transfer of transfer | Approve of approve
@@ -132,7 +133,7 @@ let main (a, s : action * storage) =
   | GetTotalSupply p -> getTotalSupply (p, s)
 
 let main (p : key_hash) =
-  let c : unit contract = Tezos.implicit_account p in
+  let c : unit @contract = Tezos.implicit_account p in
   Tezos.address c
 
 let check_ (p : unit) : int =
@@ -346,8 +347,8 @@ let x = 1
 [@inline]
 let foo (a : int) : int =
   ([@inline]
-   let test = 2 + a in
-   test)
+   let @test = 2 + a in
+   @test)
 
 [@inline]
 [@other]
@@ -357,8 +358,8 @@ let bar (b : int) : int =
   [@inline]
   [@foo]
   [@bar]
-  let test = fun (z : int) -> 2 + b + z in
-  test b
+  let @test = fun (z : int) -> 2 + b + z in
+  @test b
 
 type parameter = unit
 
@@ -456,7 +457,7 @@ let example : bool =
      : signature)
     0x05010000000568656c6c6f
 
-let test (k : int) : int =
+let @test (k : int) : int =
   let j : int = k + 5 in
   let close : int -> int = fun (i : int) -> i + j in
   let j : int = 20 in
@@ -624,14 +625,14 @@ type param = {new_challenge : string; attempt : string}
 type return = operation list * storage
 
 let attempt (p, store : param * storage) : return =
-  let contract : unit contract =
-    match (Tezos.get_contract_opt Tezos.get_sender ()
-           : unit contract option)
+  let @contract : unit @contract =
+    match (Tezos.get_ @contract_opt Tezos.get_sender ()
+           : unit @contract option)
     with
-      Some contract -> contract
-    | None -> (failwith "No contract" : unit contract) in
+      Some @contract -> @contract
+    | None -> (failwith "No contract" : unit @contract) in
   let transfer : operation =
-    Tezos.transaction (unit, contract, 10000000mutez) in
+    Tezos.transaction (unit, @contract, 10000000mutez) in
   let store : storage = {challenge = p.new_challenge} in
   ([] : operation list), store
 
@@ -878,12 +879,12 @@ let main (action, storage : action * storage) : return =
   | Skip -> skip ((), storage)
 
 let main2 (p : key_hash) (s : unit) =
-  let c : unit contract = Tezos.implicit_account p in
+  let c : unit @contract = Tezos.implicit_account p in
   ([] : operation list), unit
 
 let main (p, s : key_hash * unit) = main2 p s
 
-let main (kh : key_hash) : unit contract =
+let main (kh : key_hash) : unit @contract =
   Tezos.implicit_account kh
 
 let foo : int = 144
@@ -1702,7 +1703,7 @@ let add_more_tez : tez =
 
 type mint_parameter =
   [@layout comb]
-  {destination : unit ticket contract;
+  {destination : unit ticket @contract;
    amount : nat}
 
 type parameter =
@@ -1736,7 +1737,7 @@ let main (arg : parameter * storage)
 
 type send_parameter =
   [@layout comb]
-  {destination : unit ticket contract;
+  {destination : unit ticket @contract;
    amount : nat;
    ticketer : address}
 

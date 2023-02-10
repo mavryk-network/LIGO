@@ -41,9 +41,9 @@ module Mutator (M : Monad) = struct
     match expr with
     | EAnnot
         { value =
-            { inside = _, _, TVar { value = "address"; region = _ }; lpar = _; rpar = _ }
+            { inside = _, _, TVar vaddress; lpar = _; rpar = _ }
         ; region = _
-        } -> false_return expr
+        } when String.equal vaddress#payload "address" -> false_return expr
     | EArith (Add op)
     | EArith (Sub op)
     | EArith (Mult op)
@@ -51,21 +51,24 @@ module Mutator (M : Monad) = struct
     | EArith (Mod op) ->
       let* ctor = arith_bin_op_ctor |> map_return |> oneof in
       return (EArith (ctor op))
-    | EArith (Int { value = s, z; region }) ->
+    | EArith (Int vint) ->
+      let (s, z), region = vint#payload, vint#region in
       let* z = mutate_int (Z.to_int z) in
       let* f = transform_int |> map_return |> oneof in
       let z = f z in
-      return (EArith (Int { value = s, Z.of_int z; region }))
-    | EArith (Nat { value = s, z; region }) ->
+      return (EArith (Int (Wrap.make (s, Z.of_int z) region)))
+    | EArith (Nat vnat) ->
+      let (s, z), region = vnat#payload, vnat#region in
       let* z = mutate_nat (Z.to_int z) in
       let* f = transform_nat |> map_return |> oneof in
       let z = f z in
-      return (EArith (Nat { value = s, Z.of_int z; region }))
-    | EArith (Mutez { value = s, z; region }) ->
+      return (EArith (Nat (Wrap.make (s, Z.of_int z) region)))
+    | EArith (Mutez vmutez) ->
+      let (s, z), region = vmutez#payload, vmutez#region in
       let* z = mutate_nat (Z.to_int @@ Z.of_int64 z) in
       let* f = transform_nat |> map_return |> oneof in
       let z = f z in
-      return (EArith (Mutez { value = s, Int64.of_int z; region }))
+      return (EArith (Mutez (Wrap.make (s, Int.to_int64 z) region)))
     | ELogic (BoolExpr (Or op)) | ELogic (BoolExpr (And op)) ->
       let* ctor = bool_bin_op_ctor |> map_return |> oneof in
       return (ELogic (BoolExpr (ctor op)))
@@ -77,11 +80,12 @@ module Mutator (M : Monad) = struct
     | ELogic (CompExpr (Neq op)) ->
       let* ctor = comp_bin_op_ctor |> map_return |> oneof in
       return (ELogic (CompExpr (ctor op)))
-    | EString (String { value = s; region }) ->
+    | EString (String vs) ->
+      let s, region = vs#payload, vs#region in
       let* s = mutate_string s in
       let* f = oneof (map_return transform_string) in
       let s = f s in
-      return (EString (String { value = s; region }))
+      return (EString (String (Wrap.make s region)))
     | _ -> return expr
 
 

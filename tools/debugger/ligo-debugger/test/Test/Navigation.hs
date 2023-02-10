@@ -16,13 +16,13 @@ import Text.Interpolation.Nyan
 
 import Morley.Debugger.Core
   (Direction (..), MovementResult (..), NavigableSnapshot (getExecutedPosition),
-  SourceLocation (..), frozen, getCurMethodBlockLevel, getFutureSnapshotsNum, moveTill,
-  switchBreakpoint)
+  SourceLocation' (..), SrcLoc (..), curSnapshot, frozen, getCurMethodBlockLevel,
+  getFutureSnapshotsNum, moveTill, switchBreakpoint)
 import Morley.Debugger.DAP.Types (StepCommand' (..))
-import Morley.Michelson.ErrorPos (Pos (..), SrcPos (..))
 import Morley.Michelson.Parser.Types (MichelsonSource (..))
 
 import Language.LIGO.Debugger.Navigate
+import Language.LIGO.Debugger.Snapshots
 
 import Test.Util
 import Test.Util.Golden
@@ -72,6 +72,40 @@ test_StepIn_golden = testGroup "StepIn" do
 
       ]
 
+test_Seq_node_doesn't_have_location :: TestTree
+test_Seq_node_doesn't_have_location =
+  let
+    runData = ContractRunData
+      { crdProgram = contractsDir </> "seq-nodes-without-locations.mligo"
+      , crdEntrypoint = Nothing
+      , crdParam = ()
+      , crdStorage = 0 :: Integer
+      }
+
+    doStep = processLigoStep (CStepIn GExpExt)
+  in goldenTestWithSnapshots
+      "seq nodes dont have expression locations in snapshots"
+      "StepIn"
+      runData
+      (dumpAllSnapshotsWithStep doStep)
+
+test_top_level_function_with_preprocessor_don't_have_locations :: TestTree
+test_top_level_function_with_preprocessor_don't_have_locations =
+  let
+    runData = ContractRunData
+      { crdProgram = contractsDir </> "contract-with-preprocessor.mligo"
+      , crdEntrypoint = Nothing
+      , crdParam = ()
+      , crdStorage = 0 :: Integer
+      }
+
+    doStep = processLigoStep (CStepIn GExpExt)
+  in goldenTestWithSnapshots
+      "top-level functions with preprocessor don't have expression locations in snapshots"
+      "StepIn"
+      runData
+      (dumpAllSnapshotsWithStep doStep)
+
 test_Next_golden :: TestTree
 test_Next_golden = testGroup "Next" do
   gran <- allLigoStepGranularities
@@ -83,7 +117,7 @@ test_Next_golden = testGroup "Next" do
         do
           dumpAllSnapshotsWithStep $
             doStep <* do
-              Just (SourceLocation _ (SrcPos (Pos line) _) _) <-
+              Just (SourceLocation _ (SrcLoc line _) _) <-
                 lift $ frozen getExecutedPosition
               when (gran == GStmt && line < 10) do
                 liftIO $ assertFailure [int||
@@ -111,7 +145,7 @@ test_Next_golden = testGroup "Next" do
           do
             switchBreakpoint
               (MSFile $ crdProgram $ basicCaseRun Caml)
-              (SrcPos (Pos 1) (Pos 0))
+              (SrcLoc 1 0)
             [int||Enabled breakpoint within `f`, but not within `g`|]
             dumpAllSnapshotsWithStep doStep
 
@@ -154,10 +188,10 @@ test_StepOut_golden = testGroup "StepOut" do
         do
           switchBreakpoint
             (MSFile $ crdProgram $ basicCaseRun Caml)
-            (SrcPos (Pos 1) (Pos 0))
+            (SrcLoc 1 0)
           switchBreakpoint
             (MSFile $ crdProgram $ basicCaseRun Caml)
-            (SrcPos (Pos 2) (Pos 0))
+            (SrcLoc 2 0)
           processLigoStep (CContinue Forward)
           [int||Should be within `f` now:|]
           dumpCurSnapshot
@@ -180,10 +214,12 @@ test_Continue_golden = testGroup "Continue"
       do
         switchBreakpoint
           (MSFile $ crdProgram $ basicCaseRun Caml)
-          (SrcPos (Pos 11) (Pos 0))
+          (SrcLoc 11 0)
         [int||Breakpoint is set at `f` & `g` call|]
         dumpAllSnapshotsWithStep doStep
   ]
+
+{-# ANN test_StepBackReversed ("HLint: ignore Redundant <$>" :: Text) #-}
 
 test_StepBackReversed :: IO TestTree
 test_StepBackReversed = fmap (testGroup "Step back is the opposite to Next") $
@@ -221,6 +257,13 @@ test_StepBackReversed = fmap (testGroup "Step back is the opposite to Next") $
           stepsNum <- liftProp . forAll $
             Gen.integral (Range.constant 0 futureSnapshotsNum)
           replicateM_ stepsNum $ processLigoStep (CStepIn granularity)
+
+        isStatus <$> frozen curSnapshot >>= \case
+          -- This property doesn't hold for @GStmt@ granularity
+          -- in case of stopping at function call.
+          InterpretRunning (EventExpressionPreview FunctionCall)
+            | granularity == GStmt -> liftProp discard
+          _ -> pass
 
         startPos <- frozen getExecutedPosition
         annotateShow startPos

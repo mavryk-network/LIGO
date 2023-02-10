@@ -359,9 +359,9 @@ let%expect_test _ =
     ];
   [%expect
     {|
-    File "../../test/contracts/negative/will_be_ignored.mligo", line 7, characters 47-63:
+    File "../../test/contracts/negative/will_be_ignored.mligo", line 7, characters 48-64:
       6 |      let receiver : @contract =
-      7 |       match (Tezos.get_contract_opt(s.owner) : @contract option) with
+      7 |       match (Tezos.get_contract_opt (s.owner) : @contract option) with
       8 |         Some (@contract) -> @contract
 
     Invalid type
@@ -558,7 +558,11 @@ let%expect_test _ =
       5 |   //       ^^^^^^         ^^^         ^^^            ^^^
 
     Invalid type(s)
-    Cannot unify "( string * int * nat * tez * string * int )" with "( tez * int * tez * nat * string )".
+    Cannot unify "( string * int * nat * tez * string * int )" with "( tez *
+                                                                       int *
+                                                                       tez *
+                                                                       nat *
+                                                                       string )".
     Difference between the types:
     - string
     + tez
@@ -585,7 +589,15 @@ let%expect_test _ =
       5 | //               ^^^   ^^^^^^               ^^^^^^^         ^^^
 
     Invalid type(s)
-    Cannot unify "( int * nat * int * nat * int * nat )" with "( int * tez * string * nat * int * address * int * tez * nat )".
+    Cannot unify "( int * nat * int * nat * int * nat )" with "( int *
+                                                                 tez *
+                                                                 string *
+                                                                 nat *
+                                                                 int *
+                                                                 address *
+                                                                 int *
+                                                                 tez *
+                                                                 nat )".
     Difference between the types:
       int
     + tez
@@ -649,7 +661,13 @@ let%expect_test _ =
       5 |   //             ^^^^^^                ^^^    ^^^^^^         ^^^^^^^
 
     Invalid type(s)
-    Cannot unify "( int * string * ( nat * tez * nat ) * tez )" with "( int * ( nat * tez * int ) * string * tez * address )".
+    Cannot unify "( int * string * ( nat * tez * nat ) * tez )" with "( int *
+                                                                        ( nat *
+                                                                        tez *
+                                                                        int ) *
+                                                                        string *
+                                                                        tez *
+                                                                        address )".
     Difference between the types:
       int
     - string
@@ -720,7 +738,11 @@ let%expect_test _ =
       5 |   //       ^^^^^^         ^^^         ^^^            ^^^
 
     Invalid type(s)
-    Cannot unify "( string * int * nat * int * string * int )" with "( tez * int * tez * nat * string )".
+    Cannot unify "( string * int * nat * int * string * int )" with "( tez *
+                                                                       int *
+                                                                       tez *
+                                                                       nat *
+                                                                       string )".
     Difference between the types:
     - string
     + tez
@@ -781,8 +803,10 @@ let%expect_test _ =
       5 |   //                                ^^^^^^    ^^^^^^^^^^^^^^^^^
 
     Invalid type(s)
-    Cannot unify "record[bar -> ( nat * string ) , foo -> int , third_field -> tez]" with "
-    record[bar -> ( nat * nat ) , foo -> int]". |}]
+    Cannot unify "record[bar -> ( nat * string ) ,
+                         foo -> int ,
+                         third_field -> tez]" with "record[bar -> ( nat * nat ) ,
+                                                           foo -> int]". |}]
 
 (*
   In this case, the typer will stop at the first mismatch

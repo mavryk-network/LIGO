@@ -15,21 +15,11 @@ let rec untype_type_expression (t : O.type_expression) : I.type_expression =
   let return t = I.make_t ~loc t in
   match t.type_content with
   | O.T_sum { fields; layout } ->
-    let aux ({ associated_type; michelson_annotation; decl_pos } : O.row_element) =
-      let associated_type = self associated_type in
-      let v' = ({ associated_type; michelson_annotation; decl_pos } : I.row_element) in
-      v'
-    in
-    let x' = Record.map ~f:aux fields in
-    return @@ I.T_sum { fields = x'; layout = Some layout }
+    let fields = Map.map fields ~f:self in
+    return @@ I.T_sum { fields; layout = Some layout }
   | O.T_record { fields; layout } ->
-    let aux ({ associated_type; michelson_annotation; decl_pos } : O.row_element) =
-      let associated_type = self associated_type in
-      let v' = ({ associated_type; michelson_annotation; decl_pos } : I.row_element) in
-      v'
-    in
-    let x' = Record.map ~f:aux fields in
-    return @@ I.T_record { fields = x'; layout = Some layout }
+    let fields = Map.map fields ~f:self in
+    return @@ I.T_record { fields; layout = Some layout }
   | O.T_variable name -> return @@ I.T_variable name
   | O.T_arrow arr ->
     let arr = Arrow.map self arr in
@@ -37,7 +27,8 @@ let rec untype_type_expression (t : O.type_expression) : I.type_expression =
   | O.T_constant { language = _; injection; parameters } ->
     let arguments = List.map ~f:self parameters in
     let type_operator = Type_var.of_input_var ~loc (Literal_types.to_string injection) in
-    return @@ I.T_app { type_operator; arguments }
+    return
+    @@ I.T_app { type_operator = Module_access.make_el @@ type_operator; arguments }
   | O.T_singleton l -> return @@ I.T_singleton l
   | O.T_abstraction x ->
     let x = Abstraction.map self x in

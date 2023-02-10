@@ -6,12 +6,12 @@ let%expect_test _ =
   [%expect
     {|
   An internal error ocurred. Please, contact the developers.
-  "Assert_failure src/passes/02-parsing/cameligo/Parser.mly:1036:39". |}];
+  "Assert_failure src/passes/02-parsing/cameligo/Parser.mly:1047:39". |}];
   run_ligo_bad [ "print"; "ast-imperative"; bad_test "modules_access_not_open2.mligo" ];
   [%expect
     {|
   An internal error ocurred. Please, contact the developers.
-  "Assert_failure src/passes/02-parsing/cameligo/Parser.mly:1036:39". |}];
+  "Assert_failure src/passes/02-parsing/cameligo/Parser.mly:1047:39". |}];
   run_ligo_bad [ "print"; "ast-imperative"; bad_test "modules_access_not_open1.jsligo" ];
   [%expect
     {|

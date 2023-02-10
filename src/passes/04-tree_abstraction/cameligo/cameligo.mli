@@ -12,9 +12,10 @@ val compile_expression
 
 val compile_program
   :  raise:(Errors.abs_error list, Main_warnings.all) raise
-  -> CST.ast
+  -> CST.t
   -> AST.program
 
 val decompile_expression : AST.expr -> CST.expr
-val decompile_program : AST.program -> CST.ast
+val decompile_program : AST.program -> CST.t
 val decompile_pattern_to_string : AST.type_expression option AST.Pattern.t -> string
+val decompile_type_expression_to_string : AST.type_expression -> string

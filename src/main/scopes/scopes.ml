@@ -9,6 +9,7 @@ module Api_helper = Api_helper
 module LSet = Types.LSet
 module Location = Simple_utils.Location
 module Trace = Simple_utils.Trace
+module Types = Types
 
 [@@@landmark "auto"]
 
@@ -25,6 +26,7 @@ type scopes = Types.scopes
 type typing_env =
   { type_env : Environment.t
   ; bindings : Misc.bindings_map
+  ; decls : Ast_typed.declaration list
   }
 
 let rec drop_last : 'a list -> 'a * 'a list =
@@ -49,6 +51,54 @@ let set_core_type_if_possible
   | _ -> binders, expr
 
 
+let collect_warns_and_errs
+    ~(raise : (Main_errors.all, Main_warnings.all) Trace.raise)
+    tracer
+    (e, ws)
+  =
+  let () = List.iter ws ~f:raise.warning in
+  raise.log_error (tracer e)
+
+
+let checking
+    ~(raise : (Main_errors.all, Main_warnings.all) Trace.raise)
+    ~options
+    tenv
+    decl
+  =
+  let typed_prg =
+    Simple_utils.Trace.to_stdlib_result
+    @@ Checking.type_declaration ~options ~env:tenv.type_env decl
+  in
+  Result.(
+    match typed_prg with
+    | Ok (decl, ws) ->
+      let module AST = Ast_typed in
+      let bindings = Misc.extract_variable_types tenv.bindings decl.wrap_content in
+      let type_env = Environment.add_declaration decl tenv.type_env in
+      let decls = tenv.decls @ [ decl ] in
+      let () = List.iter ws ~f:raise.warning in
+      { type_env; bindings; decls }
+    | Error (e, ws) ->
+      collect_warns_and_errs ~raise Main_errors.checking_tracer (e, ws);
+      tenv)
+
+
+let checking_self_pass
+    ~(raise : (Main_errors.all, Main_warnings.all) Trace.raise)
+    ~(options : Compiler_options.middle_end)
+    tenv
+  =
+  match
+    let warn_unused_rec = options.warn_unused_rec in
+    Simple_utils.Trace.to_stdlib_result
+    @@ Self_ast_typed.all_program ~warn_unused_rec tenv.decls
+  with
+  | Ok (_, ws) -> List.iter ws ~f:raise.warning
+  | Error (e, ws) ->
+    collect_warns_and_errs ~raise Main_errors.self_ast_typed_tracer (e, ws)
+
+
 let update_typing_env
     :  raise:(Main_errors.all, Main_warnings.all) Trace.raise -> with_types:bool
     -> options:Compiler_options.middle_end -> typing_env -> AST.declaration -> typing_env
@@ -56,21 +106,9 @@ let update_typing_env
  fun ~raise ~with_types ~options tenv decl ->
   match with_types with
   | true ->
-    let typed_prg =
-      Simple_utils.Trace.to_stdlib_result
-      @@ Checking.type_declaration ~options ~env:tenv.type_env decl
-    in
-    (match typed_prg with
-    | Ok (decl, ws) ->
-      let module AST = Ast_typed in
-      let bindings = Misc.extract_variable_types tenv.bindings decl.wrap_content in
-      let type_env = Environment.add_declaration decl tenv.type_env in
-      let () = List.iter ws ~f:raise.warning in
-      { type_env; bindings }
-    | Error (e, ws) ->
-      let () = List.iter ws ~f:raise.warning in
-      let () = raise.log_error (Main_errors.checking_tracer e) in
-      tenv)
+    let tenv = checking ~raise ~options tenv decl in
+    let () = checking_self_pass ~raise ~options tenv in
+    tenv
   | false -> tenv
 
 
@@ -211,11 +249,14 @@ let rec find_type_references : AST.type_expression -> reference list =
     [ Type t ]
   | T_sum { fields; layout = _ } | T_record { fields; layout = _ } ->
     Record.fold fields ~init:[] ~f:(fun refs row ->
-        let t_refs = find_type_references row.associated_type in
+        let t_refs = find_type_references row in
         refs @ t_refs)
   | T_arrow { type1; type2 } -> find_type_references type1 @ find_type_references type2
   | T_app { type_operator; arguments } ->
-    let type_operator = TVar.set_location te.location type_operator in
+    (* TODO: unignore the path on `type_operator`, update `ModuleAccessType`? *)
+    let type_operator =
+      TVar.set_location te.location (Module_access.get_el @@ type_operator)
+    in
     let t_refs = List.concat @@ List.map arguments ~f:find_type_references in
     Type type_operator :: t_refs
   | T_module_accessor { module_path; element } ->
@@ -372,13 +413,13 @@ let rec expression ~raise
     defs_body @ defs_coll @ defs, refs_body @ refs_coll, tenv, scopes
   | E_record e_lable_map ->
     let defs, refs, tenv, scopes =
-      Record.LMap.fold
-        (fun _ e (defs, refs, tenv, scopes) ->
+      Record.fold
+        e_lable_map
+        ~init:([], [], tenv, [])
+        ~f:(fun (defs, refs, tenv, scopes) e ->
           let defs', refs', tenv, scopes' = expression tenv e in
           let scopes' = merge_same_scopes scopes' in
           defs' @ defs, refs' @ refs, tenv, merge_same_scopes scopes @ scopes')
-        e_lable_map
-        ([], [], tenv, [])
     in
     defs, refs, tenv, scopes
   | E_assign { binder; expression = e } ->
@@ -554,7 +595,7 @@ and module_expression ~raise
   match m.wrap_content with
   | M_struct decls ->
     let defs, refs, tenv, scopes =
-      (* [update_tenv] is [false] because [update_typing_env] already types 
+      (* [update_tenv] is [false] because [update_typing_env] already types
          nested modules, so we only need to call it at toplevel declarations. *)
       declarations ~raise ~update_tenv:false ~with_types ~options tenv decls
     in
@@ -720,7 +761,9 @@ let stdlib_defs ~raise
   if no_stdlib
   then []
   else (
-    let tenv = { type_env = options.init_env; bindings = Misc.Bindings_map.empty } in
+    let tenv =
+      { type_env = options.init_env; bindings = Misc.Bindings_map.empty; decls = [] }
+    in
     let stdlib_defs, _, _, _ =
       declarations ~raise ~with_types:false ~options tenv stdlib_core
     in
@@ -736,7 +779,7 @@ let scopes
   let () = reset_counter () in
   let stdlib, stdlib_core = stdlib in
   let type_env = Environment.append options.init_env stdlib in
-  let tenv = { type_env; bindings = Misc.Bindings_map.empty } in
+  let tenv = { type_env; bindings = Misc.Bindings_map.empty; decls = [] } in
   let defs, scopes =
     let stdlib_defs = stdlib_defs ~raise ~options stdlib_core in
     let defs, _, _, scopes =

@@ -28,15 +28,15 @@
 
   (* Ghost semantic values for inserted tokens *)
 
-  let mk_string   = Token.wrap_string   "ghost string"
-  let mk_verbatim = Token.wrap_verbatim "ghost verbatim"
-  let mk_bytes    = Token.wrap_bytes    (Hex.of_string "Ghost bytes")
-  let mk_int      = Token.wrap_int      Z.zero
-  let mk_nat      = Token.wrap_nat      Z.zero
-  let mk_mutez    = Token.wrap_mutez    Int64.zero
-  let mk_ident    = Token.wrap_ident    "ghost_ident"
-  let mk_uident   = Token.wrap_uident   "Ghost_uident"
-  let mk_attr     = Token.wrap_attr     "ghost_attr" None
+  let mk_string   = Token.wrap       "ghost string"
+  let mk_verbatim = Token.wrap       "ghost verbatim"
+  let mk_bytes    = Token.wrap_bytes (Hex.of_string "Ghost bytes")
+  let mk_int      = Token.wrap_int   Z.zero
+  let mk_nat      = Token.wrap_nat   Z.zero
+  let mk_mutez    = Token.wrap_mutez Int64.zero
+  let mk_ident    = Token.wrap       "ghost_ident"
+  let mk_uident   = Token.wrap       "Ghost_uident"
+  let mk_attr     = Token.wrap_attr  "ghost_attr" None
 ]
 
 (* Make the recovery pay more attention to the number of synthesized

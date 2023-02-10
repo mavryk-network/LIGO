@@ -383,7 +383,7 @@ module Fold_helpers (M : Monad) = struct
     ok @@ { cases with value }
 
 
-  and case_clause self (case_clause : _ case_clause reg) =
+  and case_clause self (case_clause : case_clause reg) =
     let { pattern = _; arrow = _; rhs } = case_clause.value in
     let* rhs = self rhs in
     let value = { case_clause.value with rhs } in

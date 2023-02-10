@@ -76,7 +76,7 @@ let is_discriminated_union (a : CST.switch Region.reg) =
   else (
     let rec switch_fields (check, result) = function
       | CST.Switch_case { expr = EString (String s); _ } :: remaining ->
-        switch_fields (check, s.value :: result) remaining
+        switch_fields (check, s#payload :: result) remaining
       | _ :: _ -> false, []
       | [] -> check, List.rev result
     in
@@ -92,9 +92,9 @@ let find_disc_obj (a : CST.object_expr) =
   let rec aux fields = function
     | CST.Property { value = { name = EVar v; value; _ }; _ } :: remaining ->
       aux
-        (( v.value
+        (( v#payload
          , match value with
-           | EString (String { value = s; _ }) -> s
+           | EString (String s) -> s#payload
            | _ -> "" )
         :: fields)
         remaining
@@ -113,16 +113,16 @@ let get_shared_field ~raise (n : (CST.obj_type, CST.vbar) Utils.nsepseq) =
         Utils.nsepseq_foldl
           (fun shared_fields ({ value; _ } : CST.field_decl Region.reg) ->
             let field_type = value.field_type in
-            let field_name = value.field_name.value in
+            let field_name = value.field_name#payload in
             match shared_fields, field_type with
-            | [], TString s -> (field_name, s.value) :: shared_fields
+            | [], TString s -> (field_name, s#payload) :: shared_fields
             | _ :: _, TString s
               when List.mem
                      shared_fields
-                     (field_name, s.value)
+                     (field_name, s#payload)
                      ~equal:(fun (a, a_value) (b, b_value) ->
                        String.equal a b && not (String.equal a_value b_value)) ->
-              (field_name, s.value) :: shared_fields
+              (field_name, s#payload) :: shared_fields
             | _ -> shared_fields)
           shared_fields
           fields)

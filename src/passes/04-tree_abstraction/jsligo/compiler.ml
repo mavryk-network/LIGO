@@ -12,19 +12,20 @@ let nseq_to_list (hd, tl) = hd :: tl
 let npseq_to_list (hd, tl) = hd :: List.map ~f:snd tl
 let npseq_to_ne_list (hd, tl) = hd, List.map ~f:snd tl
 let r_split = Location.r_split
+let w_split v = v#payload, Location.File v#region
 
 let compile_variable var =
-  let var, loc = r_split var in
+  let var, loc = w_split var in
   Value_var.of_input_var ~loc var
 
 
 let compile_type_var var =
-  let var, loc = r_split var in
+  let var, loc = w_split var in
   Type_var.of_input_var ~loc var
 
 
 let compile_mod_var var =
-  let var, loc = r_split var in
+  let var, loc = w_split var in
   Module_var.of_input_var ~loc var
 
 
@@ -59,13 +60,13 @@ module Compile_type = struct
 
   let rec get_t_int_singleton_opt = function
     | CST.TInt x ->
-      let _, z = x.value in
+      let _, z = x#payload in
       Some z
     | _ -> None
 
 
   and get_t_string_singleton_opt = function
-    | CST.TString s -> Some s.value
+    | CST.TString s -> Some s#payload
     | _ -> None
 
 
@@ -116,31 +117,31 @@ module Compile_type = struct
     match te with
     | TApp app ->
       let (operator, args), loc = r_split app in
-      (match operator.value with
+      (match operator#payload with
       | "sapling_state" ->
         let lst = npseq_to_list args.value.inside in
         (match lst with
         | [ (a : CST.type_expr) ] ->
           let sloc = Location.lift @@ Raw.type_expr_to_region a in
           let a' =
-            trace_option ~raise (michelson_type_wrong te operator.value)
+            trace_option ~raise (michelson_type_wrong te operator#payload)
             @@ get_t_int_singleton_opt a
           in
           let singleton = t_singleton ~loc:sloc (Literal_int a') in
           Some (t_sapling_state ~loc singleton)
-        | _ -> raise.error @@ michelson_type_wrong_arity loc operator.value)
+        | _ -> raise.error @@ michelson_type_wrong_arity loc operator#payload)
       | "sapling_transaction" ->
         let lst = npseq_to_list args.value.inside in
         (match lst with
         | [ (a : CST.type_expr) ] ->
           let sloc = Location.lift @@ Raw.type_expr_to_region a in
           let a' =
-            trace_option ~raise (michelson_type_wrong te operator.value)
+            trace_option ~raise (michelson_type_wrong te operator#payload)
             @@ get_t_int_singleton_opt a
           in
           let singleton = t_singleton ~loc:sloc (Literal_int a') in
           Some (t_sapling_transaction ~loc singleton)
-        | _ -> raise.error @@ michelson_type_wrong_arity loc operator.value)
+        | _ -> raise.error @@ michelson_type_wrong_arity loc operator#payload)
       | _ -> None)
     | _ -> None
 
@@ -152,49 +153,49 @@ module Compile_type = struct
     match te with
     | TApp app ->
       let (operator, args), loc = r_split app in
-      (match operator.value with
+      (match operator#payload with
       | "michelson_or" ->
         let lst = npseq_to_list args.value.inside in
         let lst =
           match lst with
           | [ TProd a ] -> npseq_to_list a.inside.value.inside
-          | _ -> raise.error @@ michelson_type_wrong_arity loc operator.value
+          | _ -> raise.error @@ michelson_type_wrong_arity loc operator#payload
         in
         (match lst with
         | [ a; b; c; d ] ->
           let b' =
-            trace_option ~raise (michelson_type_wrong te operator.value)
+            trace_option ~raise (michelson_type_wrong te operator#payload)
             @@ get_t_string_singleton_opt b
           in
           let d' =
-            trace_option ~raise (michelson_type_wrong te operator.value)
+            trace_option ~raise (michelson_type_wrong te operator#payload)
             @@ get_t_string_singleton_opt d
           in
           let a' = compile_type_expression ~raise a in
           let c' = compile_type_expression ~raise c in
           Some (t_michelson_or ~loc a' b' c' d')
-        | _ -> raise.error @@ michelson_type_wrong_arity loc operator.value)
+        | _ -> raise.error @@ michelson_type_wrong_arity loc operator#payload)
       | "michelson_pair" ->
         let lst = npseq_to_list args.value.inside in
         let lst =
           match lst with
           | [ TProd a ] -> npseq_to_list a.inside.value.inside
-          | _ -> raise.error @@ michelson_type_wrong_arity loc operator.value
+          | _ -> raise.error @@ michelson_type_wrong_arity loc operator#payload
         in
         (match lst with
         | [ a; b; c; d ] ->
           let b' =
-            trace_option ~raise (michelson_type_wrong te operator.value)
+            trace_option ~raise (michelson_type_wrong te operator#payload)
             @@ get_t_string_singleton_opt b
           in
           let d' =
-            trace_option ~raise (michelson_type_wrong te operator.value)
+            trace_option ~raise (michelson_type_wrong te operator#payload)
             @@ get_t_string_singleton_opt d
           in
           let a' = compile_type_expression ~raise a in
           let c' = compile_type_expression ~raise c in
           Some (t_michelson_pair ~loc a' b' c' d')
-        | _ -> raise.error @@ michelson_type_wrong_arity loc operator.value)
+        | _ -> raise.error @@ michelson_type_wrong_arity loc operator#payload)
       | _ -> None)
     | _ -> None
 
@@ -241,7 +242,7 @@ module Compile_type = struct
         in
         let attributes = compile_attributes variant.attributes in
         let constructor, type_expr, variant_attr =
-          variant_comp.constr.value, te, attributes
+          variant_comp.constr#payload, te, attributes
         in
         (* type_expression_to_constructor ~raise v in *)
         constructor, type_expr, variant_attr
@@ -256,7 +257,7 @@ module Compile_type = struct
         let f, _ = r_split field in
         let type_expr = self f.field_type in
         let field_attr = compile_attributes f.attributes in
-        return @@ (f.field_name.value, type_expr, field_attr)
+        return @@ (f.field_name#payload, type_expr, field_attr)
       in
       let fields = List.map ~f:aux lst in
       return @@ t_record_ez_attr ~loc ~attr:attributes fields
@@ -270,7 +271,7 @@ module Compile_type = struct
       let operator = compile_type_var operator in
       let lst = npseq_to_list args.value.inside in
       let lst = List.map ~f:self lst in
-      return @@ t_app ~loc operator lst
+      return @@ t_app ~loc (Module_access.make_el @@ operator) lst
     | TFun func ->
       let (input_type, _, output_type), loc = r_split func in
       let input_types = compile_type_function_args ~raise input_type in
@@ -287,7 +288,7 @@ module Compile_type = struct
       let type_expr = par.inside in
       self type_expr
     | TVar var ->
-      let name, loc = r_split var in
+      let name, loc = w_split var in
       let v = Type_var.of_input_var ~loc name in
       return @@ t_variable ~loc v
     | TString _s -> raise.error @@ unsupported_string_singleton te
@@ -301,9 +302,15 @@ module Compile_type = struct
         | TVar v ->
           let accessed_el = compile_type_var v in
           t_module_accessor ~loc acc accessed_el
+        | TApp app ->
+          let (operator, args), loc = r_split app in
+          let operator = compile_type_var operator in
+          let lst = npseq_to_list args.value.inside in
+          let lst = List.map ~f:self lst in
+          return @@ t_app ~loc (Module_access.make acc operator) lst
         | TModA ma ->
           aux
-            (acc @ [ Module_var.of_input_var ~loc ma.value.module_name.value ])
+            (acc @ [ Module_var.of_input_var ~loc ma.value.module_name#payload ])
             ma.value.field
         | _ -> raise.error (expected_a_variable (CST.type_expr_to_region ma.field))
       in
@@ -317,7 +324,7 @@ module Compile_type = struct
             (* split into constructor and fields *)
             let constructor, fields =
               List.partition_map (npseq_to_list obj.value.ne_elements) ~f:(fun x ->
-                  if String.equal x.value.field_name.value shared_field
+                  if String.equal x.value.field_name#payload shared_field
                   then (
                     let t = x.value.field_type in
                     match t with
@@ -327,7 +334,7 @@ module Compile_type = struct
             in
             let constructor =
               match constructor with
-              | hd :: _ -> hd.value
+              | hd :: _ -> hd#payload
               | _ -> raise.error @@ no_shared_fields obj.region
             in
             (* create the object type without the constructor field *)
@@ -343,7 +350,7 @@ module Compile_type = struct
                 self obj
               | [] -> t_unit ~loc ()
             in
-            let fields = List.map ~f:(fun x -> x.value.field_name.value) fields in
+            let fields = List.map ~f:(fun x -> x.value.field_name#payload) fields in
             constructor, type_expr, fields)
           n
       in
@@ -380,7 +387,7 @@ let expression_to_variable ~raise : CST.expr -> CST.variable = function
 
 
 let compile_expression_to_int ~raise : CST.expr -> Z.t = function
-  | EArith (Int i) -> snd i.value
+  | EArith (Int i) -> snd i#payload
   | _ as e -> raise.error @@ expected_an_int e
 
 
@@ -389,7 +396,7 @@ let compile_selection ~raise : CST.selection -> _ Access_path.access * Location.
   match selection with
   | FieldName name ->
     let name, loc = r_split name in
-    Access_record name.value.value, loc
+    Access_record (name.value)#payload, loc
   | Component comp ->
     let index_expr, loc = r_split comp in
     let index = compile_expression_to_int ~raise index_expr.inside in
@@ -461,23 +468,23 @@ and compile_expression ~raise : CST.expr -> AST.expr =
   let return e = e in
   match e with
   | EVar var ->
-    let var, loc = r_split var in
+    let var, loc = w_split var in
     return @@ e_variable_ez ~loc var
   | EPar par -> self par.value.inside
   | EUnit the_unit ->
     let loc = Location.lift the_unit.region in
     return @@ e_unit ~loc ()
   | EBytes bytes ->
-    let bytes, loc = r_split bytes in
+    let bytes, loc = w_split bytes in
     let _s, b = bytes in
     return @@ e_bytes_hex ~loc b
   | EString str ->
     (match str with
     | String str ->
-      let str, loc = r_split str in
+      let str, loc = w_split str in
       return @@ e_string ~loc str
     | Verbatim str ->
-      let str, loc = r_split str in
+      let str, loc = w_split str in
       return @@ e_verbatim ~loc str)
   | EArith arth ->
     (match arth with
@@ -488,7 +495,7 @@ and compile_expression ~raise : CST.expr -> AST.expr =
     | Mod mod_ -> compile_bin_op ~raise C_MOD mod_
     | Neg minus -> compile_un_op ~raise C_NEG minus
     | Int i ->
-      let (_, i), loc = r_split i in
+      let (_, i), loc = w_split i in
       return @@ e_int_z ~loc i)
   | ELogic logic ->
     (match logic with
@@ -507,7 +514,7 @@ and compile_expression ~raise : CST.expr -> AST.expr =
       | Neq ne -> compile_bin_op ~raise C_NEQ ne))
   | ECall
       { value =
-          ( EVar { value = "list"; _ }
+          ( EVar vlist
           , Multiple
               { value =
                   { inside =
@@ -527,14 +534,14 @@ and compile_expression ~raise : CST.expr -> AST.expr =
               ; _
               } )
       ; region
-      } ->
+      } when String.equal vlist#payload "list" ->
     let loc = Location.lift region in
     let a = self e in
     let b = self expr in
     return @@ e_constant ~loc (Const C_CONS) [ a; b ]
   | ECall
       { value =
-          ( EVar { value = "list"; _ }
+          ( EVar vlist
           , Multiple
               { value =
                   { inside =
@@ -546,7 +553,7 @@ and compile_expression ~raise : CST.expr -> AST.expr =
               ; _
               } )
       ; region
-      } ->
+      } when String.equal vlist#payload "list" ->
     let loc = Location.lift region in
     let items =
       match inside with
@@ -564,7 +571,7 @@ and compile_expression ~raise : CST.expr -> AST.expr =
     return @@ e_list ~loc lst
   | ECall
       { value =
-          ( EVar { value = "match"; _ }
+          ( EVar vmatch
           , Multiple
               { value =
                   { inside =
@@ -576,13 +583,13 @@ and compile_expression ~raise : CST.expr -> AST.expr =
               ; _
               } )
       ; region = start
-      } ->
+      } when String.equal vmatch#payload "match" ->
     (* Pattern matching for JsLIGO is implemented as a 'built-in function' as
        JavaScript and TypeScript don't have native pattern matching. *)
     let fields' = Utils.nsepseq_to_list fields in
     let compile_simple_pattern p =
       let rec aux = function
-        | CST.EVar v -> Some (compile_variable v), v.region
+        | CST.EVar v -> Some (compile_variable v), v#region
         | EPar par -> aux par.value.inside
         | ESeq { value = hd, []; _ } -> aux hd
         | EAnnot { value = a, _, _; _ } -> aux a
@@ -592,15 +599,15 @@ and compile_expression ~raise : CST.expr -> AST.expr =
       aux p
     in
     let compile_constr_pattern = function
-      | CST.Property { value = { name = EVar { value = constr; region }; value; _ }; _ }
+      | CST.Property { value = { name = EVar vname; value; _ }; _ }
         ->
         (match value with
         | EFun { value = { parameters; body; _ }; _ } ->
-          let loc = Location.lift region in
+          let loc = Location.lift vname#region in
           let parameters_opt, parameters_region = compile_simple_pattern parameters in
           let expr = compile_function_body_to_expression ~loc ~raise body in
-          region, (Label.of_string constr, parameters_opt, parameters_region), expr
-        | _ as e -> raise.error @@ invalid_case constr e (* TODO: improve error message *))
+          vname#region, (Label.of_string vname#payload, parameters_opt, parameters_region), expr
+        | _ as e -> raise.error @@ invalid_case vname#payload e (* TODO: improve error message *))
       | _ as f -> raise.error @@ unsupported_match_object_property f
     in
     let loc1 = Location.lift start in
@@ -628,7 +635,7 @@ and compile_expression ~raise : CST.expr -> AST.expr =
     e_matching ~loc matchee cases
   | ECall
       { value =
-          ( EVar { value = "match"; _ }
+          ( EVar vmatch
           , Multiple
               { value =
                   { inside =
@@ -636,7 +643,7 @@ and compile_expression ~raise : CST.expr -> AST.expr =
                       , [ ( _
                           , ECall
                               { value =
-                                  ( EVar { value = "list"; _ }
+                                  ( EVar vlist
                                   , Multiple
                                       { value =
                                           { inside =
@@ -653,7 +660,7 @@ and compile_expression ~raise : CST.expr -> AST.expr =
               ; _
               } )
       ; region
-      } ->
+      } when String.equal vmatch#payload "match" && String.equal vlist#payload "list" ->
     let args =
       match inside with
       | Some inside -> Utils.nsepseq_to_list inside
@@ -759,7 +766,7 @@ and compile_expression ~raise : CST.expr -> AST.expr =
     | _ -> raise.error @@ invalid_list_pattern_match args)
   | ECall { value = EVar var, args; region } ->
     let loc = Location.lift region in
-    let var, loc_var = r_split var in
+    let var, loc_var = w_split var in
     let func = e_variable_ez ~loc:loc_var var in
     let args = compile_arguments ~raise args in
     let f arg e = e_application ~loc e arg in
@@ -770,9 +777,9 @@ and compile_expression ~raise : CST.expr -> AST.expr =
       Option.map ~f:(compile_tuple_expression ~loc ~raise <@ List.Ne.singleton) args_o
     in
     let args =
-      Option.value ~default:(e_unit ~loc:(Location.lift constr.region) ()) args_o
+      Option.value ~default:(e_unit ~loc:(Location.lift constr#region) ()) args_o
     in
-    return @@ e_constructor ~loc constr.value args
+    return @@ e_constructor ~loc constr#payload args
   | ECall call ->
     let (func, args), loc = r_split call in
     let func = self func in
@@ -798,10 +805,10 @@ and compile_expression ~raise : CST.expr -> AST.expr =
       match p with
       | CST.Punned_property { value = EVar v as evar; region } ->
         let expr = self evar in
-        [ Access_path.Access_record v.value ], expr, Location.lift region
+        [ Access_path.Access_record v#payload ], expr, Location.lift region
       | Property { value = { name = EVar name; value; _ }; region } ->
         let expr = self value in
-        [ Access_record name.value ], expr, Location.lift region
+        [ Access_record name#payload ], expr, Location.lift region
       | Property_rest _ -> raise.error @@ rest_not_supported_here p
       | _ -> raise.error @@ property_not_supported p
     in
@@ -818,8 +825,8 @@ and compile_expression ~raise : CST.expr -> AST.expr =
         Utils.nsepseq_foldl
           (fun a i ->
             match i with
-            | CST.Property { value = { value = EString (String { value = s; _ }); _ }; _ }
-              when String.equal s constructor -> a
+            | CST.Property { value = { value = EString (String svalue); _ }; _ }
+              when String.equal svalue#payload constructor -> a
             | _ -> (Token.wrap_comma Region.ghost, i) :: a)
           []
           obj.inside
@@ -841,12 +848,12 @@ and compile_expression ~raise : CST.expr -> AST.expr =
         | Punned_property prop ->
           let prop, loc = r_split prop in
           let var = expression_to_variable ~raise prop in
-          var.value, e_variable ~loc (compile_variable var)
+          var#payload, e_variable ~loc (compile_variable var)
         | Property prop2 ->
           let prop2, _ = r_split prop2 in
           let var = expression_to_variable ~raise prop2.name in
           let expr = self prop2.value in
-          var.value, expr
+          var#payload, expr
         | Property_rest _ -> raise.error @@ rest_not_supported_here fa
       in
       let obj = List.map ~f:aux @@ npseq_to_list obj.inside in
@@ -866,11 +873,11 @@ and compile_expression ~raise : CST.expr -> AST.expr =
         return @@ e_module_accessor ~loc acc accessed_el
       | EModA ma ->
         aux
-          (acc @ [ Module_var.of_input_var ~loc ma.value.module_name.value ])
+          (acc @ [ Module_var.of_input_var ~loc ma.value.module_name#payload ])
           ma.value.field
       | _ -> raise.error (expected_a_variable (CST.expr_to_region ma.field))
     in
-    aux [ Module_var.of_input_var ~loc ma.module_name.value ] ma.field
+    aux [ Module_var.of_input_var ~loc ma.module_name#payload ] ma.field
   | EFun func ->
     let func, loc = r_split func in
     let ({ parameters; lhs_type; body; arrow = _ } : CST.fun_expr) = func in
@@ -893,15 +900,15 @@ and compile_expression ~raise : CST.expr -> AST.expr =
     in
     let _, expr = aux binders expr in
     return @@ expr
-  | EAnnot { value = EArith (Int i), _, TVar { value = "nat"; _ }; region = _ } ->
-    let (_, i), loc = r_split i in
+  | EAnnot { value = EArith (Int i), _, TVar vnat; region = _ } when String.equal vnat#payload "nat" ->
+    let (_, i), loc = w_split i in
     return @@ e_nat_z ~loc i
-  | EAnnot { value = EArith (Int i), _, TVar { value = "tez"; _ }; region = _ } ->
-    let (_, i), loc = r_split i in
+  | EAnnot { value = EArith (Int i), _, TVar vtez; region = _ } when String.equal vtez#payload "tez" ->
+    let (_, i), loc = w_split i in
     let mutez = Z.mul (Z.of_int 1_000_000) i in
     return @@ e_mutez_z ~loc mutez
-  | EAnnot { value = EArith (Int i), _, TVar { value = "mutez"; _ }; region = _ } ->
-    let (_, i), loc = r_split i in
+  | EAnnot { value = EArith (Int i), _, TVar vmutez; region = _ } when String.equal vmutez#payload "mutez" ->
+    let (_, i), loc = w_split i in
     return @@ e_mutez_z ~loc i
   | EAnnot
       { value = ECodeInj { value = { language; code }; _ }, kwd_as, type_expr; region } ->
@@ -918,7 +925,7 @@ and compile_expression ~raise : CST.expr -> AST.expr =
     return @@ e_annotation ~loc expr ty
   | ECodeInj ci ->
     let ci, loc = r_split ci in
-    let language, _ = r_split ci.language in
+    let language, _ = w_split ci.language in
     let code = self ci.code in
     return @@ e_raw_code ~loc language code
   | ESeq seq ->
@@ -937,8 +944,8 @@ and compile_expression ~raise : CST.expr -> AST.expr =
     let e1 = self (EAssign (e1, op, ev)) in
     let loc = Location.cover e1.location e2.location in
     e_sequence ~loc e2 e1
-  | EAssign ((EVar { value; region } as e1), op, e2) ->
-    let loc = Location.lift region in
+  | EAssign ((EVar v as e1), op, e2) ->
+    let loc = Location.lift v#region in
     let outer_loc = Location.lift op.region in
     let e2x =
       match op.value with
@@ -976,10 +983,10 @@ and compile_expression ~raise : CST.expr -> AST.expr =
         e2x
         (e_assign
            ~loc:outer_loc
-           (Binder.make (Value_var.of_input_var ~loc value) None)
+           (Binder.make (Value_var.of_input_var ~loc v#payload) None)
            (e_accessor ~loc expr [ sels ]))
     | _ ->
-      e_assign ~loc:outer_loc (Binder.make (Value_var.of_input_var ~loc value) None) e2x)
+      e_assign ~loc:outer_loc (Binder.make (Value_var.of_input_var ~loc v#payload) None) e2x)
   | EAssign (e1, ({ value = Eq; _ } as op), (EAssign ((EProj _ as eproj), _, _) as e2)) ->
     let e2 = self e2 in
     let e1 = CST.EAssign (e1, op, eproj) in
@@ -989,7 +996,7 @@ and compile_expression ~raise : CST.expr -> AST.expr =
   | EAssign
       ( EProj
           { value =
-              { expr = EVar { value = evar_value; _ }
+              { expr = EVar evar
               ; selection =
                   Component { value = { inside = EArith (Int _); _ }; _ } as selection
               }
@@ -1000,8 +1007,8 @@ and compile_expression ~raise : CST.expr -> AST.expr =
     let e2 = self e2 in
     let loc = Location.lift op.region in
     let sels, _ = compile_selection ~raise selection in
-    e_assign_ez ~loc evar_value
-    @@ e_update ~loc (e_variable_ez ~loc evar_value) [ sels ] e2
+    e_assign_ez ~loc evar#payload
+    @@ e_update ~loc (e_variable_ez ~loc evar#payload) [ sels ] e2
   (*  This case correspond to record field update instruction.
       For example :
         p.id = 42
@@ -1099,8 +1106,8 @@ and compile_expression ~raise : CST.expr -> AST.expr =
           | FieldName fn ->
             let fn : CST.selection_field_name = fn.value in
             let fn : CST.variable = fn.value in
-            let fn_val : string = fn.value in
-            let fn_loc : Location.t = Location.lift fn.region in
+            let fn_val : string = fn#payload in
+            let fn_loc : Location.t = Location.lift fn#region in
             proj.expr, (fn_val, fn_loc)
           | Component _ -> raise.error @@ expected_a_field_name proj.selection (* TODO : Maybe we could support tuple projections too ? *)
         in
@@ -1126,8 +1133,8 @@ and compile_expression ~raise : CST.expr -> AST.expr =
       (* TODO: Handle EModA for M.x.y = 1 *)
       (* Terminal case *)
       | EVar toplevel_record_name ->
-        let rname = toplevel_record_name.value in
-        let rloc = Location.lift toplevel_record_name.region in
+        let rname = toplevel_record_name#payload in
+        let rloc = Location.lift toplevel_record_name#region in
         let e_out = final_value in
         let path_acc_out = List.Ne.rev ((rname, rloc), path_acc_in) in
         e_out, path_acc_out
@@ -1171,7 +1178,7 @@ and compile_pattern ~raise : CST.pattern -> AST.ty_expr option Pattern.t =
       List.map ~f:(fun p ->
           let l =
             match p with
-            | CST.PVar var -> Label.of_string var.value.variable.value
+            | CST.PVar var -> Label.of_string var.value.variable#payload
             | _ -> raise.error @@ unsupported_pattern_type p
           in
           l, compile_pattern ~raise p)
@@ -1249,11 +1256,11 @@ and compile_parameter ~raise
     let aux (p : CST.property) (binder_lst, fun_') =
       match p with
       | Punned_property { value = EVar v as value; _ } ->
-        let field_name = v.value in
+        let field_name = v#payload in
         let binder, fun_ = compile_parameter ~raise ~const value in
         (field_name, binder) :: binder_lst, fun_ <@ fun_'
       | Property { value = { name = EVar v; value; _ }; _ } ->
-        let field_name = v.value in
+        let field_name = v#payload in
         let binder, fun_ = compile_parameter ~raise ~const value in
         (field_name, binder) :: binder_lst, fun_ <@ fun_'
       | _ -> raise.error @@ not_a_valid_parameter (CST.EObject obj')
@@ -1620,7 +1627,7 @@ and compile_statement ?(wrap = false) ~raise : CST.statement -> statement_result
               check_return statements;
               let a =
                 List.find_exn
-                  ~f:(fun { constructor; _ } -> Poly.(constructor = v.value))
+                  ~f:(fun { constructor; _ } -> Poly.(constructor = v#payload))
                   data
               in
               let ty =
@@ -1631,7 +1638,7 @@ and compile_statement ?(wrap = false) ~raise : CST.statement -> statement_result
                   Location.wrap ~loc arg)
                 else Location.wrap ~loc Pattern.P_unit
               in
-              let pattern = Location.wrap ~loc (Pattern.P_variant (Label v.value, ty)) in
+              let pattern = Location.wrap ~loc (Pattern.P_variant (Label v#payload, ty)) in
               let statement_result = compile_statements ~raise statements in
               let r =
                 match r with

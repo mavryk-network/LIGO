@@ -7,16 +7,21 @@ let () = Caml.Sys.chdir "../../test/contracts/interpreter_tests/"
 (* tests replacing Hashlock tests *)
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_hashlock.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test_commit exited with value ().
-    - test_reveal_no_commit exited with value ().
-    - test_reveal_young_commit exited with value ().
-    - test_reveal_breaks_commit exited with value ().
-    - test_reveal_wrong_commit exited with value ().
-    - test_reveal_no_reuse exited with value ().
-    - test_reveal exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 9, characters 2-61
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  An internal error ocurred. Please, contact the developers.
+  "Assert_failure src/passes/02-parsing/cameligo/Parser.mly:1003:38". |}]
 
 (* test comparison on sum/record types *)
 let%expect_test _ =
@@ -39,7 +44,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 19, characters 2-74
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 38, characters 2-74
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -62,7 +67,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 42, characters 2-71
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 61, characters 2-71
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -166,7 +171,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 146, characters 2-88
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 165, characters 2-88
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -202,7 +207,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 182, characters 2-57
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 201, characters 2-57
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -250,7 +255,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 230, characters 2-60
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 249, characters 2-60
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -272,7 +277,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 252, characters 2-60
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 271, characters 2-60
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -294,7 +299,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 274, characters 2-69
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 293, characters 2-69
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -316,7 +321,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 296, characters 2-71
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 315, characters 2-71
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -344,7 +349,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 324, characters 2-63
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 343, characters 2-63
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -399,7 +404,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 379, characters 2-65
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 398, characters 2-65
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -421,7 +426,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 401, characters 2-61
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 420, characters 2-61
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -443,7 +448,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 423, characters 2-59
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 442, characters 2-59
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -465,7 +470,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 445, characters 2-67
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 464, characters 2-67
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -487,7 +492,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 467, characters 2-63
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 486, characters 2-63
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -509,7 +514,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 489, characters 2-59
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 508, characters 2-59
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -531,11 +536,25 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_no_mutation.mligo" ];
-  [%expect{|
-    Everything at the top-level was executed.
-    - test exited with value ().
-    - test_mutation exited with value ().
-    - test_mutation_all exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 538, characters 2-64
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_no_mutation.mligo", line 25, characters 22-37:
+   24 |   let initial_storage = 7 in
+   25 |   let (taddr, _, _) = Test.@originate mainf initial_storage 0tez in
+   26 |   let contr = Test.to_contract taddr in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_mutate_from_file.mligo" ];
@@ -550,12 +569,7 @@ let%expect_test _ =
     Consider using `Test.failwith` for throwing a testing framework failure.
 
     Everything at the top-level was executed.
-    - tester exited with value <fun>.
-    - test exited with value [(() , Mutation at: File "adder.mligo", line 1, characters 58-63:
-      1 | let main (p : int) (k : int) : operation list * int = [], p + k
-
-    Replacing by: (p - k).
-    )]. |}]
+    - tester exited with value <fun>. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "iteration.jsligo" ];
@@ -575,7 +589,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 564, characters 2-62
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 583, characters 2-62
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -603,7 +617,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 592, characters 2-65
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 611, characters 2-65
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -751,7 +765,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 740, characters 2-72
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 759, characters 2-72
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -773,7 +787,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 762, characters 2-57
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 781, characters 2-57
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -805,7 +819,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 794, characters 2-64
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 813, characters 2-64
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -833,7 +847,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 822, characters 2-58
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 841, characters 2-58
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -872,7 +886,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 861, characters 2-66
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 880, characters 2-66
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -894,7 +908,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 883, characters 2-70
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 902, characters 2-70
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -916,7 +930,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 905, characters 2-68
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 924, characters 2-68
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -938,7 +952,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 927, characters 2-70
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 946, characters 2-70
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -960,7 +974,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 949, characters 2-65
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 968, characters 2-65
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -990,7 +1004,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 979, characters 2-60
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 998, characters 2-60
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -1013,39 +1027,24 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_inline.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test_x exited with value (KT1WxkuJtr9rxYaziDJY7gHA83H3BUbEn1G1 , { parameter unit ;
-      storage
-        (pair (pair (big_map %metadata string bytes) (set %participants address))
-              (map %secrets address bool)) ;
-      code { CDR ;
-             PUSH bool True ;
-             PUSH bool False ;
-             DUP 2 ;
-             DUP 4 ;
-             CAR ;
-             CDR ;
-             ITER { SWAP ;
-                    DUP 5 ;
-                    CDR ;
-                    DIG 2 ;
-                    GET ;
-                    IF_NONE { DUP 2 ; AND } { DROP ; DUP 3 ; AND } } ;
-             DROP ;
-             DUP 2 ;
-             DUP 4 ;
-             CAR ;
-             CDR ;
-             ITER { SWAP ;
-                    EMPTY_MAP address bool ;
-                    DIG 2 ;
-                    GET ;
-                    IF_NONE { DUP 2 ; AND } { DROP ; DUP 3 ; AND } } ;
-             DROP 3 ;
-             NIL operation ;
-             PAIR } } , 224). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1029, characters 2-59
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_inline.mligo", line 29, characters 13-28:
+   28 |
+   29 | let test_x = Test.@originate main init_storage 0mutez
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_read_contract.mligo" ];
@@ -1095,7 +1094,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1069, characters 2-59
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1088, characters 2-59
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -1117,7 +1116,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1091, characters 2-60
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1110, characters 2-60
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -1170,7 +1169,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1144, characters 2-60
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1163, characters 2-60
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -1184,11 +1183,25 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_key.mligo" ];
-  [%expect
-    {|
-    edpkuPiWEAMNmxsNYRNnjnHgpox275MR1svXTB9hbeshMUkTZwrB1P
-    Everything at the top-level was executed.
-    - test exited with value Success (2799n). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1185, characters 2-56
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_key.mligo", line 14, characters 22-37:
+   13 |   let (_, pub_key, _) = Test.get_bootstrap_account 1n in
+   14 |   let (taddr, _, _) = Test.@originate main {registry = (Big_map.empty : registry); next_id = 1n} 0mutez in
+   15 |   let contr = Test.to_contract taddr in
+
+  Variable "@originate" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_tickets_and_bigmaps.mligo" ];
@@ -1200,7 +1213,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1188, characters 2-72
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1207, characters 2-72
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -1232,7 +1245,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1220, characters 2-60
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1239, characters 2-60
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -1342,13 +1355,13 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1310, characters 2-52
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1347, characters 2-52
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
   ---------------
   An internal error ocurred. Please, contact the developers.
-  "Assert_failure src/passes/02-parsing/cameligo/Parser.mly:1036:39". |}]
+  "Assert_failure src/passes/02-parsing/cameligo/Parser.mly:1047:39". |}]
 
 let () = Caml.Sys.chdir pwd
 
@@ -1368,13 +1381,13 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1336, characters 2-61
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1373, characters 2-61
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
   ---------------
   An internal error ocurred. Please, contact the developers.
-  "Assert_failure src/passes/02-parsing/cameligo/Parser.mly:1036:39". |}]
+  "Assert_failure src/passes/02-parsing/cameligo/Parser.mly:1047:39". |}]
 
 let () = Caml.Sys.chdir pwd
 let bad_test n = bad_test ("/interpreter_tests/" ^ n)
@@ -1662,8 +1675,4 @@ let%expect_test _ =
       8 |   let (ta, _, _) = Test.@originate main 0 0tez in
       9 |   let c = Test.to_contract ta in
 
-    An uncaught error occured:
-    Failwith: "foo"
-    Trace:
-    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66 ,
-    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66 |}]
+    Variable "@originate" not found. |}]

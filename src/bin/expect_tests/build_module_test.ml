@@ -167,15 +167,13 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; contract "C1.mligo" ];
   [%expect
     {|
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+    Everything at the top-level was executed. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; contract "C_test.mligo" ];
   [%expect
     {|
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+    Everything at the top-level was executed. |}]
 
 let%expect_test _ =
   run_ligo_good

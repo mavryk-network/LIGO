@@ -14,8 +14,7 @@ let%expect_test _ =
     ];
   [%expect
     {|
-    Everything at the top-level was executed.
-    - test exited with value KT1DgZV34oZABXSaXiRm5nDxR7pGtMnsvtDd(None). |}]
+    Everything at the top-level was executed. |}]
 
 let%expect_test _ =
   run_ligo_good
@@ -47,147 +46,51 @@ let () = Caml.Sys.chdir "using_scope_pkg_project"
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; "src/a/b/c/contract.test.mligo"; "--project-root"; "." ];
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Package_management.(fun) in file "src/bin/expect_tests/package_management.ml", line 64, characters 2-89
-  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
-
-  Trailing output
-  ---------------
-  File "src/a/b/c/contract.test.mligo", line 5, characters 20-35:
-    4 |   let initial_storage = [1 ; 2 ; 3] in
-    5 |   let (taddr,_,_) = Test.@originate C.main initial_storage 0tez in
-    6 |   let contr = Test.to_contract taddr in
-
-  Variable "@originate" not found. |}]
+  [%expect{|
+    Everything at the top-level was executed.
+    - test_originate exited with value (). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; "src/a/b/c/contract.test.mligo" ];
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Package_management.(fun) in file "src/bin/expect_tests/package_management.ml", line 86, characters 2-66
-  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
-
-  Trailing output
-  ---------------
-  File "src/a/b/c/contract.test.mligo", line 5, characters 20-35:
-    4 |   let initial_storage = [1 ; 2 ; 3] in
-    5 |   let (taddr,_,_) = Test.@originate C.main initial_storage 0tez in
-    6 |   let contr = Test.to_contract taddr in
-
-  Variable "@originate" not found. |}]
+  [%expect{|
+    Everything at the top-level was executed.
+    - test_originate exited with value (). |}]
 
 let () = Caml.Sys.chdir pwd
 let () = Caml.Sys.chdir "using_scope_pkg_project/src/a/b/c"
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; "contract.test.mligo" ];
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Package_management.(fun) in file "src/bin/expect_tests/package_management.ml", line 111, characters 2-56
-  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
-
-  Trailing output
-  ---------------
-  File "contract.test.mligo", line 5, characters 20-35:
-    4 |   let initial_storage = [1 ; 2 ; 3] in
-    5 |   let (taddr,_,_) = Test.@originate C.main initial_storage 0tez in
-    6 |   let contr = Test.to_contract taddr in
-
-  Variable "@originate" not found. |}]
+  [%expect{|
+    Everything at the top-level was executed.
+    - test_originate exited with value (). |}]
 
 let () = Caml.Sys.chdir pwd
 let () = Caml.Sys.chdir "using_scope_pkg_project/src/a/b"
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; "c/contract.test.mligo" ];
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Package_management.(fun) in file "src/bin/expect_tests/package_management.ml", line 136, characters 2-58
-  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
-
-  Trailing output
-  ---------------
-  File "c/contract.test.mligo", line 5, characters 20-35:
-    4 |   let initial_storage = [1 ; 2 ; 3] in
-    5 |   let (taddr,_,_) = Test.@originate C.main initial_storage 0tez in
-    6 |   let contr = Test.to_contract taddr in
-
-  Variable "@originate" not found. |}]
+  [%expect{|
+    Everything at the top-level was executed.
+    - test_originate exited with value (). |}]
 
 let () = Caml.Sys.chdir pwd
 let () = Caml.Sys.chdir "using_scope_pkg_project/src/a"
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; "b/c/contract.test.mligo" ];
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Package_management.(fun) in file "src/bin/expect_tests/package_management.ml", line 161, characters 2-60
-  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
-
-  Trailing output
-  ---------------
-  File "b/c/contract.test.mligo", line 5, characters 20-35:
-    4 |   let initial_storage = [1 ; 2 ; 3] in
-    5 |   let (taddr,_,_) = Test.@originate C.main initial_storage 0tez in
-    6 |   let contr = Test.to_contract taddr in
-
-  Variable "@originate" not found. |}]
+  [%expect{|
+    Everything at the top-level was executed.
+    - test_originate exited with value (). |}]
 
 let () = Caml.Sys.chdir pwd
 let () = Caml.Sys.chdir "using_scope_pkg_project/src"
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; "a/b/c/contract.test.mligo" ];
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Package_management.(fun) in file "src/bin/expect_tests/package_management.ml", line 186, characters 2-62
-  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
-
-  Trailing output
-  ---------------
-  File "a/b/c/contract.test.mligo", line 5, characters 20-35:
-    4 |   let initial_storage = [1 ; 2 ; 3] in
-    5 |   let (taddr,_,_) = Test.@originate C.main initial_storage 0tez in
-    6 |   let contr = Test.to_contract taddr in
-
-  Variable "@originate" not found. |}]
+  [%expect{|
+    Everything at the top-level was executed.
+    - test_originate exited with value (). |}]
 
 let () = Caml.Sys.chdir pwd
 
@@ -199,25 +102,9 @@ let%expect_test _ =
     ; "--project-root"
     ; "using_scope_pkg_project"
     ];
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 34, characters 25-47
-  Called from Cli_expect_tests__Package_management.(fun) in file "src/bin/expect_tests/package_management.ml", line 210, characters 2-163
-  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
-
-  Trailing output
-  ---------------
-  File "using_scope_pkg_project/src/a/b/c/contract.test.mligo", line 5, characters 20-35:
-    4 |   let initial_storage = [1 ; 2 ; 3] in
-    5 |   let (taddr,_,_) = Test.@originate C.main initial_storage 0tez in
-    6 |   let contr = Test.to_contract taddr in
-
-  Variable "@originate" not found. |}]
+  [%expect{|
+    Everything at the top-level was executed.
+    - test_originate exited with value (). |}]
 
 let%expect_test _ =
   run_ligo_good

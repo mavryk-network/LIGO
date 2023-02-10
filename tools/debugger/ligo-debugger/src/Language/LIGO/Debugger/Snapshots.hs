@@ -3,6 +3,7 @@ module Language.LIGO.Debugger.Snapshots
   ( StackItem (..)
   , StackFrame (..)
   , InterpretStatus (..)
+  , EventExpressionReason (..)
   , InterpretEvent (..)
   , statusExpressionEvaluatedP
   , InterpretSnapshot (..)
@@ -56,17 +57,18 @@ import Data.List.NonEmpty (cons)
 import Data.Vinyl (Rec (..))
 import Duplo (layer)
 import Fmt (Buildable (..), genericF, pretty)
-import Parser (Info)
+import Morley.Michelson.ErrorPos (ErrorSrcPos (ErrorSrcPos))
+import Parser (ParsedInfo)
 import Range (HasRange (getRange), Range (..))
 import Text.Interpolation.Nyan
 import UnliftIO (MonadUnliftIO, throwIO)
 
+import Morley.Debugger.Core.Common (fromCanonicalLoc)
 import Morley.Debugger.Core.Navigate
-  (Direction (Backward), MovementResult (ReachedBoundary), NavigableSnapshot (..),
+  (Direction (Backward), MovementResult (HitBoundary), NavigableSnapshot (..),
   NavigableSnapshotWithMethods (..), SnapshotEdgeStatus (..), curSnapshot, frozen, moveRaw,
   unfreezeLocally)
 import Morley.Debugger.Core.Snapshots (DebuggerFailure, InterpretHistory (..))
-import Morley.Michelson.ErrorPos (ErrorSrcPos (ErrorSrcPos))
 import Morley.Michelson.Interpret
   (ContractEnv, InstrRunner, InterpreterState, InterpreterStateMonad (..),
   MichelsonFailed (MichelsonFailedWith), MichelsonFailureWithStack (mfwsErrorSrcPos, mfwsFailed),
@@ -135,6 +137,16 @@ instance Buildable InterpretStatus where
     InterpretTerminatedOk -> "terminated ok"
     InterpretFailed err -> "failed with " <> build err
 
+-- | Type of the expression that we met.
+data EventExpressionReason
+  -- | Just a regular expression. We'll stop at it
+  -- only with at least @GExp@ granularity
+  = GeneralExpression
+  -- | Function call. We stop at it always while
+  -- using @StepIn@ action.
+  | FunctionCall
+  deriving stock (Show, Eq)
+
 -- | An interesting event in interpreter that is worth a snapshot.
 data InterpretEvent
     -- | Start of the new statement.
@@ -147,7 +159,7 @@ data InterpretEvent
     -- 2. There are failing expressions.
     --
     -- If stopping at such events is undesired, they can be easily skipped later.
-  | EventExpressionPreview
+  | EventExpressionPreview EventExpressionReason
 
     -- | We have evaluated expression, with the given result.
     --
@@ -164,8 +176,10 @@ instance Buildable InterpretEvent where
   build = \case
     EventFacedStatement ->
       "faced statement"
-    EventExpressionPreview ->
+    EventExpressionPreview GeneralExpression ->
       "upon expression"
+    EventExpressionPreview FunctionCall ->
+      "upon function call"
     EventExpressionEvaluated mval ->
       "expression evaluated (" <> maybe "-" build mval <> ")"
 
@@ -189,7 +203,7 @@ instance NavigableSnapshot (InterpretSnapshot u) where
     return . Just $ ligoRangeToSourceLocation locRange
   getLastExecutedPosition = unfreezeLocally do
     moveRaw Backward >>= \case
-      ReachedBoundary -> return Nothing
+      HitBoundary -> return Nothing
       _ -> frozen getExecutedPosition
 
   pickSnapshotEdgeStatus is = case isStatus is of
@@ -220,7 +234,7 @@ data CollectorState m = CollectorState
   , csLastRecordedSnapshot :: Maybe (InterpretSnapshot 'Unique)
     -- ^ Last recorded snapshot.
     -- We can pick @[operation] * storage@ value from it.
-  , csParsedFiles :: HashMap FilePath (LIGO Info)
+  , csParsedFiles :: HashMap FilePath (LIGO ParsedInfo)
     -- ^ Parsed contracts.
   , csRecordedRanges :: HashSet LigoRange
     -- ^ Ranges of recorded statement snapshots.
@@ -316,8 +330,8 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
     michFailureHandler :: MichelsonFailureWithStack DebuggerFailure -> CollectingEvalOp m a
     michFailureHandler err = use csLastRangeMbL >>= \case
       Nothing -> throwError err
-      Just (ligoPositionToSrcPos . lrStart -> lastSrcPos)
-        -> throwError err { mfwsErrorSrcPos = ErrorSrcPos lastSrcPos }
+      Just (ligoPositionToSrcLoc . lrStart -> lastSrcLoc)
+        -> throwError err { mfwsErrorSrcPos = ErrorSrcPos $ fromCanonicalLoc lastSrcLoc }
 
     -- What is done upon executing instruction.
     preExecutedStage
@@ -337,7 +351,12 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
           contracts <- use csParsedFilesL
 
           unless (shouldIgnoreMeta loc instr contracts) do
-            recordSnapshot loc EventExpressionPreview
+            let eventExpressionReason =
+                  if isLocationForFunctionCall loc contracts
+                  then FunctionCall
+                  else GeneralExpression
+
+            recordSnapshot loc (EventExpressionPreview eventExpressionReason)
 
         whenJust liiEnvironment \env -> do
           -- Here stripping occurs, as the second list keeps the entire stack,
@@ -498,10 +517,10 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
       statements <- filterAndReverseStatements $ spineAtPoint range parsedLigo
       pure $ rangeToLigoRange . getRange <$> statements
       where
-        filterAndReverseStatements :: [LIGO Info] -> CollectingEvalOp m [LIGO Info]
+        filterAndReverseStatements :: [LIGO ParsedInfo] -> CollectingEvalOp m [LIGO ParsedInfo]
         filterAndReverseStatements = go []
           where
-            go :: [LIGO Info] -> [LIGO Info] -> CollectingEvalOp m [LIGO Info]
+            go :: [LIGO ParsedInfo] -> [LIGO ParsedInfo] -> CollectingEvalOp m [LIGO ParsedInfo]
             go acc nodes =
               tryToProcessLigoStatement
                 (`decide` acc)
@@ -509,7 +528,7 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
                 (pure acc)
                 nodes
 
-            decide :: LIGO Info -> [LIGO Info] -> [LIGO Info] -> CollectingEvalOp m [LIGO Info]
+            decide :: LIGO ParsedInfo -> [LIGO ParsedInfo] -> [LIGO ParsedInfo] -> CollectingEvalOp m [LIGO ParsedInfo]
             decide x acc xs = do
               let accept = go (x : acc) xs
               let deny = go acc xs
@@ -647,7 +666,7 @@ collectInterpretSnapshots
   -> Value arg
   -> Value st
   -> ContractEnv
-  -> HashMap FilePath (LIGO Info)
+  -> HashMap FilePath (LIGO ParsedInfo)
   -> (String -> m ())
   -> m (InterpretHistory (InterpretSnapshot 'Unique))
 collectInterpretSnapshots mainFile entrypoint Contract{..} epc param initStore env parsedContracts logger =

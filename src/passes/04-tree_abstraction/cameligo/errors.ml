@@ -87,8 +87,8 @@ let error_ppformat
         f
         "@[<hv>%a@.Missing a type annotation for argument \"%s\". @]"
         snippet_pp_lift
-        v.region
-        v.value
+        v#region
+        v#payload
     | `Concrete_cameligo_funarg_tuple_type_mismatch (region, pattern, texpr) ->
       let p = Parsing.pretty_print_pattern pattern |> Buffer.contents in
       let t = Parsing.pretty_print_type_expr texpr |> Buffer.contents in
@@ -175,9 +175,9 @@ let error_json : abs_error -> Simple_utils.Error.t =
     make ~stage ~content
   | `Concrete_cameligo_missing_funarg_annotation v ->
     let message =
-      Format.sprintf "Missing a type annotation for argument \"%s\"." v.value
+      Format.sprintf "Missing a type annotation for argument \"%s\"." v#payload
     in
-    let location = Location.lift v.region in
+    let location = Location.lift v#region in
     let content = make_content ~message ~location () in
     make ~stage ~content
   | `Concrete_cameligo_funarg_tuple_type_mismatch (region, pattern, texpr) ->
