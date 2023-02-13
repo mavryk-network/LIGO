@@ -94,7 +94,7 @@ and fold_module : 'a folder -> 'a -> module_ -> 'a =
         { binder = _
         ; expr
         ; attr =
-            { inline = _; no_mutation = _; view = _; public = _; hidden = _; thunk = _ }
+            { inline = _; no_mutation = _; view = _; public = _; hidden = _; thunk = _; entry = _ }
         } ->
       let res = fold_expression f acc expr in
       return @@ res
@@ -102,7 +102,7 @@ and fold_module : 'a folder -> 'a -> module_ -> 'a =
         { pattern = _
         ; expr
         ; attr =
-            { inline = _; no_mutation = _; view = _; public = _; hidden = _; thunk = _ }
+            { inline = _; no_mutation = _; view = _; public = _; hidden = _; thunk = _; entry = _ }
         } ->
       let res = fold_expression f acc expr in
       return @@ res

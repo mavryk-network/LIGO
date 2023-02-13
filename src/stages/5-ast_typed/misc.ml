@@ -233,7 +233,7 @@ let get_entry (lst : program) (name : Value_var.t) : expression option =
         { binder
         ; expr
         ; attr =
-            { inline = _; no_mutation = _; view = _; public = _; hidden = _; thunk = _ }
+            { inline = _; no_mutation = _; view = _; public = _; hidden = _; thunk = _; entry = _ }
         } -> if Binder.apply (Value_var.equal name) binder then Some expr else None
     | D_irrefutable_match _ | D_type _ | D_module _ -> None
   in

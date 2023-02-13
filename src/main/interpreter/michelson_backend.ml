@@ -165,6 +165,7 @@ let add_ast_env
         ; public = false
         ; hidden = false
         ; thunk = false
+        ; entry = false
         }
     else e
   in

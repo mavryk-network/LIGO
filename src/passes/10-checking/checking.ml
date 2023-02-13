@@ -196,8 +196,8 @@ let evaluate_type_with_default_layout type_ =
 
 
 let infer_value_attr : I.ValueAttr.t -> O.ValueAttr.t =
- fun { inline; no_mutation; view; public; hidden; thunk } ->
-  { inline; no_mutation; view; public; hidden; thunk }
+ fun { inline; no_mutation; view; public; hidden; thunk; entry } ->
+  { inline; no_mutation; view; public; hidden; thunk; entry }
 
 
 let infer_literal lit : (Type.t * O.expression E.t, _, _) C.t =
