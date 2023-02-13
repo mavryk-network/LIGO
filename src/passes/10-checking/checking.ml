@@ -1338,6 +1338,7 @@ and infer_declaration (decl : I.declaration)
       [ S_value (var, expr_type, Context.Attr.of_core_attr attr) ]
   | D_module { module_binder; module_; module_attr = { public; hidden } } ->
     let%bind sig_, module_ = infer_module_expr module_ in
+    let%bind sig_ = Generator.make_main_signature sig_ in
     const
       E.(
         let%bind module_ = module_ in
