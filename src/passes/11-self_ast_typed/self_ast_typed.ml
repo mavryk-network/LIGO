@@ -2,6 +2,8 @@ module Errors = Errors
 module Helpers = Helpers
 open Ligo_prim
 
+let get_final_entrypoint_name = Make_entry_point.get_final_entrypoint_name
+
 let all_program_passes ~raise ~warn_unused_rec =
   [ Unused.unused_map_program ~raise
   ; Muchused.muchused_map_program ~raise
@@ -23,6 +25,7 @@ let contract_passes ~raise =
 
 
 let all_program ~raise ~warn_unused_rec init =
+  let init = Make_entry_point.make_main_module ~raise init in
   List.fold ~f:( |> ) (all_program_passes ~raise ~warn_unused_rec) ~init
 
 
@@ -30,7 +33,9 @@ let all_expression ~raise ~warn_unused_rec init =
   List.fold ~f:( |> ) (all_expression_passes ~raise ~warn_unused_rec) ~init
 
 
-let all_contract ~raise main_name (prg : Ast_typed.program) =
+let all_contract ~raise entrypoints (prg : Ast_typed.program) =
+  let main_name, prg = Make_entry_point.program ~raise entrypoints prg in
+  (* print_endline (Format.asprintf "%a" (fun fmt p -> Ast_typed.PP.program fmt p) prg); *)
   let prg, main_name, contract_type = Helpers.fetch_contract_type ~raise main_name prg in
   let data : Contract_passes.contract_pass_data = { contract_type; main_name } in
   let all_p =
@@ -39,10 +44,10 @@ let all_contract ~raise main_name (prg : Ast_typed.program) =
   in
   let prg = List.fold ~f:(fun x f -> snd @@ f x) all_p ~init:prg in
   let prg = Contract_passes.remove_unused ~raise data prg in
-  prg
+  Some (main_name, contract_type), prg
 
 
-let all_view ~raise command_line_views main_name prg =
+let all_view ~raise command_line_views main_name contract_type prg =
   let () =
     (* detects whether a declared view (passed with --views command line option) overwrites an annotated view ([@view] let ..) *)
     let user_views = Ast_typed.Helpers.get_views prg in
@@ -68,7 +73,6 @@ let all_view ~raise command_line_views main_name prg =
       Helpers.strip_view_annotations prg
       |> Helpers.annotate_with_view ~raise command_line_views
   in
-  let prg, main_name, contract_type = Helpers.fetch_contract_type ~raise main_name prg in
   let f decl =
     match Ast_typed.Helpers.fetch_view_type decl with
     | None -> ()

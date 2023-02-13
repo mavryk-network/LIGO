@@ -4,20 +4,21 @@ open Ligo_prim
 module Location = Simple_utils.Location
 
 type form =
-  | Contract of Value_var.t
+  | Contract of Value_var.t list
   | View of
       { command_line_views : string list option
             (* views declared as command line arguments if any *)
       ; contract_entry : Value_var.t (* contract main function name                     *)
+      ; contract_type : Self_ast_typed.Helpers.contract_type
       }
   | Env
 
 let specific_passes ~raise cform prg =
   match cform with
   | Contract entrypoint -> Self_ast_typed.all_contract ~raise entrypoint prg
-  | View { command_line_views; contract_entry } ->
-    Self_ast_typed.all_view ~raise command_line_views contract_entry prg
-  | Env -> prg
+  | View { command_line_views; contract_entry; contract_type } ->
+    None, Self_ast_typed.all_view ~raise command_line_views contract_entry contract_type prg
+  | Env -> None, prg
 
 
 let typecheck ~raise ~(options : Compiler_options.t) (cform : form) (p : Ast_core.program)
@@ -30,7 +31,7 @@ let typecheck ~raise ~(options : Compiler_options.t) (cform : form) (p : Ast_cor
          ~env:options.middle_end.init_env
          p
   in
-  let applied =
+  let _, applied =
     trace ~raise self_ast_typed_tracer
     @@ fun ~raise ->
     let selfed =
@@ -85,10 +86,9 @@ let compile_program ~raise ~(options : Compiler_options.t) (prg : Ast_core.progr
   applied
 
 
-let apply (entry_point : string) (param : Ast_core.expression) : Ast_core.expression =
-  let name = Value_var.of_input_var ~loc:Location.dummy entry_point in
+let apply (entry_point : Value_var.t) (param : Ast_core.expression) : Ast_core.expression =
   let entry_point_var : Ast_core.expression =
-    { expression_content = Ast_core.E_variable name
+    { expression_content = Ast_core.E_variable entry_point
     ; sugar = None
     ; location = Virtual "generated entry-point variable"
     }

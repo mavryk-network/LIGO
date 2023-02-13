@@ -368,7 +368,7 @@ let compile_contract_ast ~raise ~options ~tezos_context main views =
 
 
 let compile_contract_file ~raise ~options source_file entry_point declared_views =
-  let aggregated, views =
+  let _, aggregated, views =
     Build.build_contract_meta_ligo ~raise ~options entry_point declared_views source_file
   in
   aggregated, views

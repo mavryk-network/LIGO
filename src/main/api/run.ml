@@ -90,7 +90,7 @@ let dry_run
   in
   let options = Compiler_options.make ~protocol_version ~syntax ~raw_options () in
   let Compiler_options.{ entry_point; _ } = options.frontend in
-  let entry_point = Value_var.of_input_var ~loc:Location.dummy entry_point in
+  let entry_point = List.map ~f:(Value_var.of_input_var ~loc:Location.dummy) entry_point in
   let typed_prg = Build.qualified_typed ~raise ~options Env source_file in
   let aggregated_prg =
     Compile.Of_typed.apply_to_entrypoint_contract
@@ -206,6 +206,8 @@ let evaluate_call
   in
   let Compiler_options.{ entry_point; _ } = options.frontend in
   let init_prog = Build.qualified_typed ~raise Env ~options source_file in
+  let entry_point = List.map ~f:(Value_var.of_input_var ~loc:Location.generated) entry_point in
+  let entry_point = Self_ast_typed.get_final_entrypoint_name ~raise entry_point init_prog in
   let meta = Compile.Of_source.extract_meta syntax in
   let c_unit_param, _ =
     Compile.Of_source.preprocess_string ~raise ~options:options.frontend ~meta parameter
@@ -262,6 +264,7 @@ let evaluate_expr
     Compiler_options.make ~protocol_version ~raw_options ~syntax ()
   in
   let Compiler_options.{ entry_point; _ } = options.frontend in
+  let entry_point = List.hd_exn entry_point in
   let mini_c_exp, typed_exp =
     Build.build_expression ~raise ~options syntax entry_point (Some source_file)
   in

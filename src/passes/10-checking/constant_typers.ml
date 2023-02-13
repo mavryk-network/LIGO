@@ -254,7 +254,7 @@ module Annot = struct
     let return ret_type = { for_alls = []; arg_types = []; ret_type }
     let ( ^~> ) arg_type ret_type = { for_alls = []; arg_types = [ arg_type ]; ret_type }
     let ( ^-> ) arg_type type_ = { type_ with arg_types = arg_type :: type_.arg_types }
-    let ( @-> ) t1 t2 = Type.t_arrow ~loc { type1 = t1; type2 = t2 } ()
+    let ( @-> ) t1 t2 = Type.t_arrow ~loc t1 t2 ()
   end
 end
 

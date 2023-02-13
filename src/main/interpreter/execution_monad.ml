@@ -424,7 +424,7 @@ module Command = struct
         raise.error
         @@ Errors.generic_error Location.generated "Trying to measure a non-contract")
     | Compile_contract_from_file (source_file, entry_point, views, _mutation) ->
-      let options = Compiler_options.set_entry_point options entry_point in
+      let options = Compiler_options.set_entry_point options [entry_point] in
       let options = Compiler_options.set_views options views in
       let options = Compiler_options.set_test_flag options false in
       let main, views =
@@ -432,7 +432,7 @@ module Command = struct
           ~raise
           ~options
           source_file
-          entry_point
+          [entry_point]
           views
       in
       LT.V_Ast_contract { main; views }, ctxt

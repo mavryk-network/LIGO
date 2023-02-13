@@ -239,7 +239,6 @@ let get_entry (lst : program) (name : Value_var.t) : expression option =
   in
   List.find_map ~f:aux (List.rev lst)
 
-
 let get_type_of_contract ty =
   match ty with
   | T_arrow { type1; type2 } ->
@@ -255,3 +254,30 @@ let get_type_of_contract ty =
       return (parameter, storage)
     | _ -> None)
   | _ -> None
+
+let get_entry_form ty =
+  let open Combinators in
+  let open Simple_utils.Option in
+  let* { type1 ; type2 } = get_t_arrow ty in
+  let* parameter, storage = get_t_pair type1 in
+  let* op_list, storage' = get_t_pair type2 in
+  let* () = assert_t_list_operation op_list in
+  let* () = assert_type_expression_eq (storage, storage') in
+  return (parameter, storage)
+
+let build_entry_type p_ty s_ty =
+  let open Combinators in
+  let loc = Location.generated in
+  t_arrow ~loc (t_pair ~loc p_ty s_ty) (t_pair ~loc (t_list ~loc (t_operation ~loc ())) s_ty) ()
+
+
+let parameter_from_entrypoints : (Value_var.t * type_expression) List.Ne.t -> (type_expression * type_expression, [> `Not_entry_point_form of Types.type_expression | `Storage_does_not_match of Value_var.t * Types.type_expression * Value_var.t * Types.type_expression ]) result =
+  fun ((entrypoint, entrypoint_type), rest) ->
+  let open Result in
+  let* parameter, storage = Result.of_option ~error:(`Not_entry_point_form entrypoint_type) @@ get_entry_form entrypoint_type in
+  let* parameter_list = List.fold_result ~init:[Value_var.to_name_exn entrypoint,parameter] ~f:(fun parameters (ep, ep_type) ->
+      let* parameter_, storage_ = Result.of_option ~error:(`Not_entry_point_form ep_type) @@ get_entry_form ep_type in
+      let* () = Result.of_option ~error:(`Storage_does_not_match (entrypoint, storage, ep, storage_)) @@
+        assert_type_expression_eq (storage_,storage) in
+      return ((Value_var.to_name_exn ep, parameter_)::parameters)) rest in
+  return (Combinators.t_sum_ez ~loc:Location.generated ~layout:Combinators.default_layout parameter_list, storage)

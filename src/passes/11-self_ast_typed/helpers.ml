@@ -644,3 +644,125 @@ end = struct
     let fmutvs = VarSet.fold (fun v r -> v :: r) mutSet [] in
     fmv, fv, fmutvs
 end
+
+
+
+module Declaration_mapper = struct
+  type 'err mapper = declaration -> declaration
+  let rec map_expression : 'err mapper -> expression -> expression = fun f e ->
+    let self = map_expression f in
+    let return expression_content = { e with expression_content } in
+    match e.expression_content with
+    | E_matching {matchee=e;cases} -> (
+        let e' = self e in
+        let cases' = map_cases f cases in
+        return @@ E_matching {matchee=e';cases=cases'}
+      )
+    | E_accessor {struct_; path} -> (
+        let struct_ = self struct_ in
+        return @@ E_accessor {struct_; path}
+      )
+    | E_record m -> (
+        let m' = Record.map ~f:self m in
+        return @@ E_record m'
+      )
+    | E_update {struct_; path; update} -> (
+        let struct_ = self struct_ in
+        let update = self update in
+        return @@ E_update {struct_;path;update}
+      )
+    | E_constructor c -> (
+        let e' = self c.element in
+        return @@ E_constructor {c with element = e'}
+      )
+    | E_application {lamb; args} -> (
+        let ab = (lamb, args) in
+        let (a,b) = Pair.map ~f:self ab in
+        return @@ E_application {lamb=a;args=b}
+      )
+    | E_let_in { let_binder ; rhs ; let_result; attributes } -> (
+        let rhs = self rhs in
+        let let_result = self let_result in
+        return @@ E_let_in { let_binder ; rhs ; let_result; attributes }
+      )
+    | E_mod_in { module_binder ; rhs ; let_result } -> (
+        let rhs = map_expression_in_module_expr f rhs in
+        let let_result = self let_result in
+        return @@ E_mod_in { module_binder ; rhs ; let_result }
+      )
+    | E_lambda { binder ; output_type ; result } -> (
+        let result = self result in
+        return @@ E_lambda { binder ; output_type ; result }
+      )
+    | E_type_abstraction ta -> (
+        let ta = Type_abs.map self ta in
+        return @@ E_type_abstraction ta
+      )
+    | E_type_inst { forall ; type_ } -> (
+        let forall = self forall in
+        return @@ E_type_inst { forall ; type_ }
+      )
+    | E_recursive { fun_name; fun_type; lambda = {binder;output_type;result}} -> (
+        let result = self result in
+        return @@ E_recursive { fun_name; fun_type; lambda = {binder;output_type;result}}
+      )
+    | E_constant c -> (
+        let args = List.map ~f:self c.arguments in
+        return @@ E_constant {c with arguments=args}
+      )
+    | E_module_accessor ma-> return @@ E_module_accessor ma
+    | E_assign a ->
+      let a = Assign.map self (fun a -> a) a in
+      return @@ E_assign a
+    | E_for f ->
+      let f = For_loop.map self f in
+      return @@ E_for f
+    | E_for_each fe ->
+      let fe = For_each_loop.map self fe in
+      return @@ E_for_each fe
+    | E_while w ->
+      let w = While_loop.map self w in
+      return @@ E_while w
+    | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
+      let rhs = self rhs in
+      let let_result = self let_result in
+      return @@ E_let_mut_in { let_binder; rhs; let_result; attributes }
+    | E_deref _
+    | E_literal _ | E_variable _ | E_raw_code _ as e' -> return e'
+
+  and map_expression_in_module_expr : (declaration -> declaration) -> module_expr -> module_expr = fun f x ->
+    let return wrap_content : module_expr = { x with wrap_content } in
+    match x.wrap_content with
+    | M_struct decls ->
+      let decls = map_module f decls in
+      return (M_struct decls)
+    | M_module_path _ -> x
+    | M_variable _ -> x
+
+  and map_cases : 'err mapper -> _ Match_expr.match_case list -> _ Match_expr.match_case list = fun f m ->
+    List.map m ~f:(Match_expr.map_match_case (map_expression f) (fun t -> t))
+
+  and map_declaration f = fun (x : declaration) ->
+    let return (d : declaration_content) = { x with wrap_content=d} in
+    let x = f x in
+    match Location.unwrap x with
+    | D_value {binder; expr ; attr} -> (
+        let expr = map_expression f expr in
+        return @@ D_value {binder; expr ; attr}
+      )
+    | D_type t -> return @@ D_type t
+    | D_module {module_binder;module_;module_attr} ->
+      let module_ = map_expression_in_module_expr f module_ in
+      return @@ D_module {module_binder; module_; module_attr}
+    | D_irrefutable_match { pattern ; expr ; attr } -> (
+        let expr = map_expression f expr in
+        return @@ D_irrefutable_match { pattern ; expr ; attr }
+      )
+
+  and map_decl m d = map_declaration m d
+  and map_module : 'err mapper -> module_ -> module_ = fun m ->
+    List.map ~f:(map_decl m)
+
+  and map_program : 'err mapper -> program -> program = fun m ->
+    List.map ~f:(map_declaration m)
+end

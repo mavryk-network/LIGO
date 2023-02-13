@@ -293,6 +293,8 @@ let t_bool ~loc ?meta () =
 let t_option t ~loc ?meta () =
   t_sum_ez ~loc ?meta [ "Some", t; "None", t_unit ~loc () ] ()
 
+let t_arrow param result ~loc ?meta () : t =
+  t_arrow ~loc ?meta { type1 = param; type2 = result } ()
 
 let t_mutez = t_tez
 
@@ -375,6 +377,14 @@ let get_t_option (t : t) : t option =
     if Set.length keys = 2 && Set.mem keys some && Set.mem keys none
     then Map.find fields some
     else None
+  | _ -> None
+
+let get_t_pair (t : t) : (t * t) option =
+  match t.content with
+  | T_record m ->
+    (match Row.to_tuple m with
+    | [ t1; t2 ] -> Some (t1, t2)
+    | _ -> None)
   | _ -> None
 
 
@@ -558,3 +568,33 @@ let pp_with_name_tbl ~tbl ppf t =
 let pp =
   let name_of tvar = Format.asprintf "%a" Type_var.pp tvar in
   pp ~name_of_tvar:name_of ~name_of_exists:name_of
+
+(* Helpers for generators *)
+
+let get_entry_form ty =
+  let equal_t = equal in
+  let open Simple_utils.Option in
+  let* { type1 ; type2 } = get_t_arrow ty in
+  let* parameter, storage = get_t_pair type1 in
+  let* op_list, storage' = get_t_pair type2 in
+  let* op = get_t_list op_list in
+  let* () = if equal_t (t_operation ~loc:Location.generated ()) op then return () else None in
+  let* () = if equal_t storage storage' then return () else None  in
+  return (parameter, storage)
+
+let build_entry_type p_ty s_ty =
+  let loc = Location.generated in
+  t_arrow ~loc (t_pair ~loc p_ty s_ty ()) (t_pair ~loc (t_list ~loc (t_operation ~loc ()) ()) s_ty ()) ()
+
+
+let parameter_from_entrypoints : (Value_var.t * t) Simple_utils.List.Ne.t -> (t * t, [> `Not_entry_point_form of t | `Storage_does_not_match of Value_var.t * t * Value_var.t * t ]) result =
+  fun ((entrypoint, entrypoint_type), rest) ->
+  let equal_t = equal in
+  let open Result.Let_syntax in
+  let%bind parameter, storage = Result.of_option ~error:(`Not_entry_point_form entrypoint_type) @@ get_entry_form entrypoint_type in
+  let%bind parameter_list = List.fold_result ~init:[Value_var.to_name_exn entrypoint,parameter] ~f:(fun parameters (ep, ep_type) ->
+      let%bind parameter_, storage_ = Result.of_option ~error:(`Not_entry_point_form ep_type) @@ get_entry_form ep_type in
+      let%bind () = Result.of_option ~error:(`Storage_does_not_match (entrypoint, storage, ep, storage_)) @@
+        if equal_t storage_ storage then Some () else None in
+      return ((Value_var.to_name_exn ep, parameter_)::parameters)) rest in
+  return (t_sum_ez ~loc:Location.generated ~layout:default_layout parameter_list (), storage)
