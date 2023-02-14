@@ -307,9 +307,9 @@ let strengthen_prog prog embedding =
     null
     (* hmm, I believe these are not used by strengthen_prog. they can
        probably be removed somehow from the extraction? *)
-    (fun _ _ -> failwith "TODO")
-    (fun _ _ -> failwith "TODO")
-    (fun _ _ -> failwith "TODO")
+    (fun _ _ -> failwith "TODO 1<<<")
+    (fun _ _ -> failwith "TODO 2<<<")
+    (fun _ _ -> failwith "TODO 3<<<")
     strengthen_meta
     prog1
     embedding in

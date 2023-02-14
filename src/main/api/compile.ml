@@ -40,6 +40,7 @@ end
 type source =
   | Text of string * Syntax_types.t
   | File of Path.t
+  | Json of Yojson.Safe.t 
 
 let contract
     (raw_options : Raw_options.t)
@@ -67,6 +68,7 @@ let contract
       | Text (_source_code, syntax) -> syntax
       | File source_file ->
         Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
+      | Json _ -> raise.error (`Main_invalid_syntax_name "Syntax cannot be detected from json file.")
     in
     let has_env_comments = has_env_comments michelson_comments in
     Compiler_options.make ~raw_options ~syntax ~protocol_version ~has_env_comments ()
@@ -84,6 +86,7 @@ let contract
   let Compiler_options.{ entry_point; _ } = options.frontend in
   let source =
     match source with
+    | Json _ -> raise.error (`Main_invalid_syntax_name "Cannot compile contract in json format")
     | File filename -> BuildSystem.Source_input.From_file filename
     | Text (source_code, syntax) ->
       BuildSystem.Source_input.(
@@ -191,12 +194,14 @@ let cst
     ignore json_to_and_from;
     let file_name =
       match source with
+      | Json _ -> None
       | File _filename -> None
       | Text (_source_code, _syntax) -> Some "foo.mligo"
     in
     let syntax = Syntax.of_string_opt ~raise (Syntax_name "cameligo") file_name in
     let source_code =
       match source with
+      | Json _ -> raise.error (`Main_invalid_syntax_name "TODO compile from yojson directly")
       | File filename ->
         let read_whole_file filename =
           let ch = In_channel.create filename in
@@ -290,6 +295,21 @@ let ast_typed
         source_code
         []
     in
+    let compile_yojson source_yojson syntax =
+      let options =
+        let protocol_version =
+          Helpers.protocol_to_variant ~raise raw_options.protocol_version
+        in
+        let has_env_comments = has_env_comments michelson_comments in
+        Compiler_options.make ~raw_options ~syntax ~protocol_version ~has_env_comments ()
+      in
+      Ligo_compile.Utils.compile_ast_typed_yojson
+        ~raise
+        ~options
+        ~protocol_version:options.middle_end.protocol_version
+        source_yojson
+        []
+    in
     let json_to_and_from source_code syntax =
       let yojson = Yojson.Safe.from_string source_code in
       let open Syntax_types in
@@ -310,12 +330,13 @@ let ast_typed
     ignore json_to_and_from;
     let file_name =
       match source with
+      | Json _ -> Some "foo.mligo"
       | File _filename -> None
       | Text (_source_code, _syntax) -> Some "foo.mligo"
     in
     let syntax = Syntax.of_string_opt ~raise (Syntax_name "cameligo") file_name in
-    let source_code =
       match source with
+      | Json source_yojson -> compile_yojson source_yojson syntax
       | File filename ->
         let read_whole_file filename =
           let ch = In_channel.create filename in
@@ -327,13 +348,16 @@ let ast_typed
           In_channel.close ch;
           s
         in
-        read_whole_file filename
-      | Text (source_code, _syntax) -> source_code
-    in
+        let source_code = read_whole_file filename in
     (* Let's try simply json stringifying it back instead of sending it to the compiler pipelines *)
     (* json_to_and_from source_code syntax *)
     (* compile to michelson *)
-    compile source_code syntax
+       compile source_code syntax
+      | Text (source_code, _syntax) -> 
+    (* Let's try simply json stringifying it back instead of sending it to the compiler pipelines *)
+    (* json_to_and_from source_code syntax *)
+    (* compile to michelson *)
+       compile source_code syntax
   in
   translate_michelson_result value display_format
 

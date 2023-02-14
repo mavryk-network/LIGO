@@ -22,7 +22,7 @@
 
      * The call [region#shift_one_uchar n] is similar to
        [region#shift_bytes n], except that it assumes that [n] is the
-       number of bytes making up one unicode point.
+       number of bytes making up one unicode oint.
 
      * The call [region#set_file f] sets the file name to be [f].
 

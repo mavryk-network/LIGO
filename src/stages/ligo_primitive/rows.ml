@@ -9,7 +9,7 @@ module LMap = struct
     `Assoc lst'
 
 
-  let of_yojson _f _lmap = failwith "TODO"
+  let of_yojson _f _lmap = failwith "TODO ligo primitive"
   let sexp_of_t _ _ = failwith "todo"
   let t_of_sexp _ _ = failwith "todo"
 end

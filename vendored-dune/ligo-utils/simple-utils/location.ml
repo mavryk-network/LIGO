@@ -81,11 +81,12 @@ let wrap_of_yojson f = function
     (match (wrap_content,location) with
     | Ok wrap_content, Ok location ->
       Ok {wrap_content;location}
+    | Ok _, _ -> Error "failed to parse location"
+    | Error e, Ok _ -> failwith ("failed to parse wrap_content:  " ^ e)
     | _ ->
-     Utils.error_yojson_format "{wrap_content: 'a; location: location}"
-     )
+     Utils.error_yojson_format "{wrap_content: 'a; location: location}")
   | _ ->
-     Utils.error_yojson_format "{wrap_content: 'a; location: location}"
+     Utils.error_yojson_format "{wrap_content: 'a; location: location}. Didn't receive Assoc"
 
 
 let compare_wrap compare_content { wrap_content = wca ; location = la } { wrap_content = wcb ; location = lb } =
