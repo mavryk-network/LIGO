@@ -118,6 +118,7 @@ end = struct
     | C_entry { binder = _; expr; attr = _ } | C_view { binder = _; expr; attr = _ } ->
       get_fv_expr expr
     | C_type _t -> VarSet.empty
+    | _ -> assert false
 
 
   and get_fv_contract : contract_declaration list -> VarSet.t =
