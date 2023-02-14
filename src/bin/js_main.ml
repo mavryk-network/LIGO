@@ -1,4 +1,5 @@
 open Js_of_ocaml
+open Js_from_json
 module Api = Ligo_api_js
 module Default_options = Compiler_options.Default_options
 module Raw_options = Compiler_options.Raw_options
@@ -143,14 +144,9 @@ let load_cst source syntax =
     "failed"
 
 
-let load_ast_typed source syntax =
+let load_ast_typed yojson syntax =
   let entry_point = "main" in
   let views = Default_options.views in
-  let syntax_v =
-    match Syntax.of_ext_opt (Some syntax) with
-    | Some v -> v
-    | None -> failwith ("Invalid syntax " ^ syntax)
-  in
   let protocol_version = "lima" in
   let raw_options =
     Raw_options.make
@@ -176,7 +172,7 @@ let load_ast_typed source syntax =
   match
     Api.Compile.ast_typed
       raw_options
-      (Api.Compile.Text (source, syntax_v))
+      (Api.Compile.Json yojson)
       display_format
       michelson_format
       michelson_comments
@@ -215,9 +211,11 @@ let _ =
          let cst = load_cst code syntax in
          Js.string cst
 
-       method loadAstTyped code syntax =
-         let code = Js.to_string code in
+       method loadAstTyped ops syntax =
+         let yojson =
+           ops |> Js.to_array |> Array.to_list |> Compile.run |> Compile.toYojson
+         in
          let syntax = Js.to_string syntax in
-         let michelson = load_ast_typed code syntax in
+         let michelson = load_ast_typed yojson syntax in
          Js.string michelson
     end)

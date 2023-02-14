@@ -19,7 +19,8 @@ module Path : sig
   val ofString : string -> t
 
   type component =
-    [ `ArrayIndex of int
+    [ `Root
+    | `ArrayIndex of int
     | `AssocKey of string
     ]
 
@@ -30,37 +31,48 @@ module Path : sig
   val componentOfString : string -> component
   val componentToString : component -> string
 end = struct
-  type t = string list
-
   type component =
-    [ `ArrayIndex of int
+    [ `Root
+    | `ArrayIndex of int
     | `AssocKey of string
     ]
 
-  let ofString input = String.split_on_char '.' input
-  let toString input = String.concat ("." [@reason.raw_literal "."]) input
+  type t = component list
 
   let componentOfString str =
-    try `ArrayIndex (str |> int_of_string) with
-    | _ -> `AssocKey str
+    let regexp = Str.regexp "\\[\\([0-9]+\\)\\]" in
+    match str, Str.string_match regexp str 0 with
+    | "", _ -> `Root
+    | _, true ->
+      let index_str = Str.matched_group 1 str in
+      (try `ArrayIndex (index_str |> int_of_string) with
+      | _ -> failwith "For some reason, matched [...] pattern didn't get an integer?")
+    | _, false -> `AssocKey str
 
 
   let componentToString = function
-    | `ArrayIndex i -> string_of_int i
+    | `ArrayIndex i -> Printf.sprintf "[%s]" (string_of_int i)
+    | `Root -> ""
     | `AssocKey k -> k
+
+
+  let ofString input = String.split_on_char '.' input |> List.map componentOfString
+
+  let toString input =
+    input |> List.map componentToString |> String.concat ("." [@reason.raw_literal "."])
 
 
   let root = function
     | [] -> None
-    | [ "" ] -> None
-    | "" :: a :: rest -> Option.some @@ componentOfString a
+    | [ `Root ] -> None
+    | `Root :: a :: rest -> Some a
     | _ -> None
 
 
   let base = function
     | [] -> None
-    | [ "" ] -> None
-    | "" :: rest ->
+    | [ `Root ] -> None
+    | `Root :: rest ->
       let skipLast l =
         let counter = ref (-1) in
         let f item acc =
@@ -69,19 +81,19 @@ end = struct
         in
         List.fold_right f l []
       in
-      Option.some @@ ("" :: skipLast rest)
+      Option.some @@ (`Root :: skipLast rest)
     | _ -> None
 
 
   let last = function
     | [] -> None
-    | [ "" ] -> None
-    | "" :: rest ->
+    | [ `Root ] -> None
+    | `Root :: rest ->
       let last l =
         let counter = ref (-1) in
         let f item acc =
           counter := !counter + 1;
-          if !counter = 0 then Some (item |> componentOfString) [@explicit_arity] else acc
+          if !counter = 0 then Some item [@explicit_arity] else acc
         in
         List.fold_right f l None
       in
@@ -91,12 +103,8 @@ end = struct
 
   let rec descend ~f ~init path =
     match path with
-    | "" :: rest -> descend ~f ~init rest
+    | `Root :: rest -> descend ~f ~init rest
     | hd :: rest ->
-      let hd =
-        try `ArrayIndex (int_of_string hd) with
-        | _ -> `AssocKey hd
-      in
       let init = f init hd in
       descend ~f ~init rest
     | [] -> init
@@ -128,6 +136,8 @@ module Compile = struct
       | ((Some ((List accArray) [@explicit_arity])) [@explicit_arity]), `ArrayIndex i ->
         (try Some accArray.(i) [@explicit_arity] with
         | Invalid_argument _ -> None)
+      | ((Some ((Assoc tbl) [@explicit_arity])) [@explicit_arity]), `Root ->
+        Hashtbl.find_opt tbl ""
       | ((Some ((Assoc tbl) [@explicit_arity])) [@explicit_arity]), `AssocKey key ->
         Hashtbl.find_opt tbl key
       | _ -> None
@@ -247,8 +257,8 @@ module Compile = struct
           |> Js.float_of_number
           |> int_of_float
         in
-        (match type_ == ("array" [@reason.raw_literal "array"]) with
-        | true -> List (Array.make size (Obj.magic 0)) [@explicit_arity]
+        (match type_ = ("array" [@reason.raw_literal "array"]) with
+        | true -> List (Array.make size (Int 0 [@explicit_arity])) [@explicit_arity]
         | false -> Assoc (Hashtbl.create size) [@explicit_arity])
       | unrecognisedString ->
         failwith (("got " [@reason.raw_literal "got "]) ^ unrecognisedString)

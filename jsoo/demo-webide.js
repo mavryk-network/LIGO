@@ -6,6 +6,65 @@ import HaclWasm from "@prometheansacrifice/hacl-wasm";
 import _SECP256K1 from "@prometheansacrifice/secp256k1-wasm";
 import * as Editor from "./editor";
 
+function JSONToOps(json) {
+  // @ts-ignore
+  let queue = [{ path: "", json: json }];
+  function keyToPath(parent, key) {
+    return typeof key === "number" ? `${parent}.[${key}]` : `${parent}.${key}`;
+  }
+  let ops = [];
+  while (queue.length > 0) {
+    let entry = queue.shift();
+    if (!entry) {
+      throw new Error(
+        "Weird that queue length wasn't 0, but shift() returned undefined"
+      );
+    }
+    let { path, json } = entry;
+    if (typeof json === "object" && json instanceof Array) {
+      // Ideally, it could have been just,
+      // ops.push({ op: "SET", path, v: [] });
+      // But, in the OCaml layer, we need to appropriate initialise
+      // the array with enough space. So, we pass down the size of
+      // the array too.
+      ops.push({ op: "SET", path, v: { type: "array", length: json.length } });
+      // This can be optimised. Hence, keeping the logic duplicated.
+      Object.keys(json).forEach(function (key) {
+        // @ts-ignore
+        let value = json[key];
+        let childPath = keyToPath(path, +key);
+        queue.push({ path: childPath, json: value });
+      });
+    } else if (typeof json === "object" && json === null) {
+      // Noop
+    } else if (typeof json === "object") {
+      // Ideally, it could have been just,
+      // ops.push({ op: "SET", path, v: {} });
+      // But, in the OCaml layer, we need to appropriate initialise
+      // the hashtbl with enough space. So, we pass down the size of
+      // the object in terms of number of key-value pairs too.
+      ops.push({
+        op: "SET",
+        path,
+        v: { type: "object", length: Object.keys(json).length },
+      });
+      Object.keys(json).forEach(function (key) {
+        // @ts-ignore
+        let value = json[key];
+        let childPath = keyToPath(path, key);
+        queue.push({ path: childPath, json: value });
+      });
+    } else if (typeof json === "number" || typeof json === "string") {
+      if (path === "") {
+        throw new Error("Cant have root json as number or string");
+      }
+      ops.push({ op: "SET", path, v: json });
+    } else {
+    }
+  }
+  return ops;
+}
+
 function getSyntax() {
   return document.getElementById("syntax").value;
 }
@@ -37,29 +96,49 @@ async function loadJSBundle(path) {
 
 let { ligoEditor, michelsonEditor } = Editor.initialize();
 function handleCompileClick(compile) {
-  let compileFn;
+  let compileFn, michelson;
+  console.log("compiling");
   let ir = getIR();
   switch (ir) {
     case "cst":
       compileFn = compile.loadCst.bind(compile);
+      michelson = compileFn(
+        ligoEditor.state.doc.toJSON().join("\n"),
+        getSyntax()
+      );
+      michelsonEditor.setState(
+        EditorState.create({
+          extensions: [basicSetup],
+          doc: michelson,
+        })
+      );
       break;
     case "ast-typed":
       compileFn = compile.loadAstTyped.bind(compile);
+      michelson = compileFn(
+        JSONToOps(JSON.parse(ligoEditor.state.doc.toJSON().join("\n"))),
+        getSyntax()
+      );
+      michelsonEditor.setState(
+        EditorState.create({
+          extensions: [basicSetup],
+          doc: michelson,
+        })
+      );
       break;
     default:
       compileFn = compile.main.bind(compile);
+      michelson = compileFn(
+        ligoEditor.state.doc.toJSON().join("\n"),
+        getSyntax()
+      );
+      michelsonEditor.setState(
+        EditorState.create({
+          extensions: [basicSetup],
+          doc: michelson,
+        })
+      );
   }
-  console.log("compiling");
-  let michelson = compileFn(
-    ligoEditor.state.doc.toJSON().join("\n"),
-    getSyntax()
-  );
-  michelsonEditor.setState(
-    EditorState.create({
-      extensions: [basicSetup],
-      doc: michelson,
-    })
-  );
 }
 
 function handlePrintCSTClick(compile) {
