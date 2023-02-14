@@ -2,6 +2,32 @@ module Location = Simple_utils.Location
 module PP = Simple_utils.PP_helpers
 open Ligo_prim
 
+module Layout = struct
+  type t =
+    | L_concrete of Layout.t
+    | L_exists of Layout_var.t
+  [@@deriving yojson, equal, sexp, compare, hash]
+
+  type field = Layout.field =
+    { name : Label.t
+    ; annot : string option
+    }
+
+  let fields = function
+    | L_concrete layout -> Some (Layout.fields layout)
+    | L_exists _lvar -> None
+
+
+  let default fields = L_concrete (Layout.default fields)
+
+  let pp ppf t =
+    match t with
+    | L_concrete layout -> Layout.pp ppf layout
+    | L_exists lvar -> Format.fprintf ppf "^%a" Layout_var.pp lvar
+end
+
+module Row = Row.Make (Layout)
+
 type meta = Ast_core.type_expression option [@@deriving yojson]
 
 type t =
@@ -39,23 +65,14 @@ and content =
       ; default_get = `Option
       }]
 
-and row =
-  { fields : row_element Record.t
-  ; layout : layout
-  }
-
-and row_element = t Rows.row_element_mini_c
+and row = t Row.t
+and layout = Layout.t
 
 and construct =
   { language : string
   ; constructor : Literal_types.t
   ; parameters : t list
   }
-
-and layout =
-  | L_comb
-  | L_tree
-  | L_exists of Layout_var.t
 [@@deriving yojson, equal, sexp, compare, hash]
 
 let t_contract_ = t_contract
@@ -82,12 +99,9 @@ let rec free_vars t =
     ctype |> Contract_type.map free_vars |> Contract_type.fold Set.union Set.empty
 
 
-and free_vars_row { fields; _ } =
-  Record.fold fields ~init:Type_var.Set.empty ~f:(fun fvs row_elem ->
-      Set.union (free_vars_row_elem row_elem) fvs)
+and free_vars_row row =
+  Row.fold (fun fvs row_elem -> Set.union (free_vars row_elem) fvs) Type_var.Set.empty row
 
-
-and free_vars_row_elem row_elem = free_vars row_elem.associated_type
 
 let rec orig_vars t =
   let module Set = Type_var.Set in
@@ -108,12 +122,9 @@ let rec orig_vars t =
     ctype |> Contract_type.map free_vars |> Contract_type.fold Set.union Set.empty
 
 
-and orig_vars_row { fields; _ } =
-  Record.fold fields ~init:Type_var.Set.empty ~f:(fun ovs row_elem ->
-      Set.union (orig_vars_row_elem row_elem) ovs)
+and orig_vars_row row =
+  Row.fold (fun ovs row_elem -> Set.union (orig_vars row_elem) ovs) Type_var.Set.empty row
 
-
-and orig_vars_row_elem row_elem = orig_vars row_elem.associated_type
 
 let rec subst ?(free_vars = Type_var.Set.empty) t ~tvar ~type_ =
   let subst t = subst t ~free_vars ~tvar ~type_ in
@@ -183,12 +194,8 @@ and subst_abstraction
   else { ty_binder; kind; type_ = subst type_ }
 
 
-and subst_row ?(free_vars = Type_var.Set.empty) { fields; layout } ~tvar ~type_ =
-  { fields = Record.map fields ~f:(subst_row_elem ~free_vars ~tvar ~type_); layout }
-
-
-and subst_row_elem ?(free_vars = Type_var.Set.empty) row_elem ~tvar ~type_ =
-  Rows.map_row_element_mini_c (subst ~free_vars ~tvar ~type_) row_elem
+and subst_row ?(free_vars = Type_var.Set.empty) row ~tvar ~type_ =
+  Row.map (subst ~free_vars ~tvar ~type_) row
 
 
 and subst_address ?(free_vars = Type_var.Set.empty) address ~tvar ~type_ =
@@ -224,15 +231,7 @@ let rec fold : type a. t -> init:a -> f:(a -> t -> a) -> a =
 
 
 and fold_row : type a. row -> init:a -> f:(a -> t -> a) -> a =
- fun { fields; _ } ~init ~f ->
-  Record.LMap.fold
-    (fun _label row_elem init -> fold_row_elem row_elem ~init ~f)
-    fields
-    init
-
-
-and fold_row_elem : type a. row_element -> init:a -> f:(a -> t -> a) -> a =
- fun row_elem ~init ~f -> f init row_elem.associated_type
+ fun row ~init ~f -> Row.fold f init row
 
 
 let destruct_type_abstraction t =
@@ -251,7 +250,16 @@ let texists_vars t =
       | _ -> texists_vars)
 
 
-let default_layout = L_tree
+let default_layout = Layout.default
+
+let default_layout_from_field_set fields =
+  default_layout
+    (fields |> Set.to_list |> List.map ~f:(fun name -> { Layout.name; annot = None }))
+
+
+let fields_with_no_annot fields =
+  List.map ~f:(fun (name, _) -> Layout.{ name; annot = None }) fields
+
 
 let t_construct constructor parameters ~loc ?meta () : t =
   make_t
@@ -306,15 +314,9 @@ let t__type_ t t' ~loc ?meta () : t =
 
 
 let row_ez fields ?(layout = default_layout) () =
-  let fields =
-    fields
-    |> List.mapi ~f:(fun i (x, y) ->
-           ( Label.of_string x
-           , ({ associated_type = y; michelson_annotation = None; decl_pos = i }
-               : row_element) ))
-    |> Record.of_list
-  in
-  { fields; layout }
+  let fields = List.map fields ~f:(fun (name, type_) -> Label.of_string name, type_) in
+  let layout = layout @@ fields_with_no_annot fields in
+  Row.of_alist_exn ~layout fields
 
 
 let t_record_ez fields ~loc ?meta ?layout () =
@@ -409,19 +411,15 @@ let get_t_bool t : unit option =
   Option.some_if (equal_content t.content t_bool.content) ()
 
 
-let get_t_option t =
-  let l_none = Label.of_string "None" in
-  let l_some = Label.of_string "Some" in
+let get_t_option (t : t) : t option =
+  let some = Label.of_string "Some" in
+  let none = Label.of_string "None" in
   match t.content with
   | T_sum { fields; _ } ->
-    let keys = Record.LMap.keys fields in
-    (match keys with
-    | [ a; b ]
-      when (Label.equal a l_none && Label.equal b l_some)
-           || (Label.equal a l_some && Label.equal b l_none) ->
-      let some = Record.LMap.find l_some fields in
-      Some some.Rows.associated_type
-    | _ -> None)
+    let keys = Map.key_set fields in
+    if Set.length keys = 2 && Set.mem keys some && Set.mem keys none
+    then Map.find fields some
+    else None
   | _ -> None
 
 
@@ -521,42 +519,7 @@ end = struct
   end
 end
 
-let pp_layout ppf layout =
-  match layout with
-  | L_comb -> Format.fprintf ppf "comb"
-  | L_tree -> Format.fprintf ppf "tree"
-  | L_exists lvar -> Format.fprintf ppf "^%a" Layout_var.pp lvar
-
-
-let pp_lmap_sep value sep ppf lmap =
-  let lst = List.sort ~compare:(fun (a, _) (b, _) -> Label.compare a b) lmap in
-  let new_pp ppf (k, v) = Format.fprintf ppf "@[<h>%a -> %a@]" Label.pp k value v in
-  Format.fprintf ppf "%a" (PP.list_sep new_pp sep) lst
-
-
-let pp_lmap_sep_d x = pp_lmap_sep x (PP.tag " ,@ ")
-
-let pp_record_sep value sep ppf (m : 'a Record.t) =
-  let lst = Record.LMap.to_kv_list m in
-  Format.fprintf ppf "%a" (pp_lmap_sep value sep) lst
-
-
-let pp_tuple_sep value sep ppf m =
-  assert (Record.is_tuple m);
-  let lst = Record.tuple_of_record m in
-  let new_pp ppf (_, v) = Format.fprintf ppf "%a" value v in
-  Format.fprintf ppf "%a" (PP.list_sep new_pp sep) lst
-
-
-let pp_tuple_or_record_sep_t value format_record sep_record format_tuple sep_tuple ppf m =
-  if Record.is_tuple m
-  then Format.fprintf ppf format_tuple (pp_tuple_sep value (PP.tag sep_tuple)) m
-  else Format.fprintf ppf format_record (pp_record_sep value (PP.tag sep_record)) m
-
-
-let pp_tuple_or_record_sep_type value =
-  pp_tuple_or_record_sep_t value "@[<h>record[%a]@]" " ,@ " "@[<h>( %a )@]" " *@ "
-
+let pp_layout = Layout.pp
 
 let rec pp ~name_of_tvar ~name_of_exists ppf t =
   let pp = pp ~name_of_tvar ~name_of_exists in
@@ -573,18 +536,8 @@ let rec pp ~name_of_tvar ~name_of_exists ppf t =
     | T_singleton lit -> Literal_value.pp ppf lit
     | T_abstraction abs -> pp_type_abs ~name_of_tvar ~name_of_exists ppf abs
     | T_for_all for_all -> pp_forall ~name_of_tvar ~name_of_exists ppf for_all
-    | T_sum row ->
-      Format.fprintf
-        ppf
-        "@[<h>sum[%a]@]"
-        (pp_lmap_sep_d (pp_row_elem ~name_of_tvar ~name_of_exists))
-        (Record.LMap.to_kv_list_rev row.fields)
-    | T_record row ->
-      Format.fprintf
-        ppf
-        "%a"
-        (pp_tuple_or_record_sep_type (pp_row_elem ~name_of_tvar ~name_of_exists))
-        row.fields
+    | T_sum row -> Row.PP.sum_type pp (fun _ _ -> ()) ppf row
+    | T_record row -> Row.PP.record_type pp (fun _ _ -> ()) ppf row
     | T_storage storage -> Storage.pp pp ppf storage
     | T_typed_address address -> Address.pp pp ppf address
     | T_contract ctype -> Contract_type.pp pp ppf ctype)
@@ -597,10 +550,6 @@ and pp_construct ~name_of_tvar ~name_of_exists ppf { constructor; parameters; _ 
     (Literal_types.to_string constructor)
     (PP.list_sep_d_par (pp ~name_of_tvar ~name_of_exists))
     parameters
-
-
-and pp_row_elem ~name_of_tvar ~name_of_exists ppf (row_elem : row_element) =
-  pp ~name_of_tvar ~name_of_exists ppf row_elem.associated_type
 
 
 and pp_forall
@@ -663,7 +612,7 @@ let get_t_pair t =
   match t.content with
   | T_record row ->
     (match Record.tuple_of_record row.fields with
-    | [ (_, fst); (_, snd) ] -> Some (fst.associated_type, snd.associated_type)
+    | [ (_, fst); (_, snd) ] -> Some (fst, snd)
     | _ -> None)
   | _ -> None
 

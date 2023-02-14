@@ -8,8 +8,8 @@ type warning = Main_warnings.all
 
 include Monad.S with type 'a t := 'a t
 
-val all_lmap : 'a t Record.LMap.t -> 'a Record.LMap.t t
-val all_lmap_unit : unit t Record.LMap.t -> unit t
+val all_lmap : 'a t Record.t -> 'a Record.t t
+val all_lmap_unit : unit t Record.t -> unit t
 val all_opt : 'a t option -> 'a option t
 
 include module type of Let_syntax

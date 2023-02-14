@@ -44,7 +44,7 @@ let rec decompile_type_expression (type_ : O.type_expression) : I.type_expressio
     (match type_.type_content with
     | O.T_variable type_variable -> return @@ T_variable type_variable
     | O.T_app tc ->
-      let tc = Type_app.map self tc in
+      let tc = Type_app.map (fun path -> path) self tc in
       return @@ I.T_app tc
     | O.T_sum row ->
       (* Bug: this type sum could be a michelson_or, we should use is_michelson_or *)
@@ -71,21 +71,15 @@ let rec decompile_type_expression (type_ : O.type_expression) : I.type_expressio
       assert false)
 
 
-and decompile_row ({ fields; layout } : O.rows) : _ I.non_linear_rows =
+and decompile_row ({ fields; layout = _ } : O.row) : _ I.non_linear_rows =
   let fields =
     fields
-    |> Record.map
-         ~f:(fun
-              ({ associated_type; decl_pos; michelson_annotation } :
-                _ Rows.row_element_mini_c)
-            ->
-           let associated_type = decompile_type_expression associated_type in
-           let attributes = decompile_row_elem_attributes michelson_annotation in
-           ({ associated_type; attributes; decl_pos } : _ Rows.row_element))
+    |> Record.map ~f:(fun ty ->
+           Ast_imperative.
+             { associated_type = decompile_type_expression ty; row_elem_attributes = [] })
     |> Record.to_list
   in
-  let attributes = decompile_row_attributes layout in
-  { fields; attributes }
+  { fields; attributes = [] }
 
 
 let rec decompile_expression (expr : O.expression) : I.expression =
@@ -340,14 +334,16 @@ and decompile_contract contract = List.map ~f:decompile_contract_declaration con
 
 let decompile_program = List.map ~f:decompile_declaration
 
-let decompile_pattern_to_string ~syntax pattern =
+let decompile_pattern_to_string ~(syntax : Syntax_types.t option) pattern =
   let pattern = O.Pattern.map (Option.map ~f:decompile_type_expression) pattern in
   let pattern = decompile_pattern pattern in
-  let s =
-    match syntax with
-    | Some Syntax_types.JsLIGO ->
-      Tree_abstraction.Jsligo.decompile_pattern_to_string pattern
-    | Some CameLIGO -> Tree_abstraction.Cameligo.decompile_pattern_to_string pattern
-    | None -> Tree_abstraction.Cameligo.decompile_pattern_to_string pattern
-  in
-  s
+  match syntax with
+  | Some JsLIGO -> Tree_abstraction.Jsligo.decompile_pattern_to_string pattern
+  | Some CameLIGO | None -> Tree_abstraction.Cameligo.decompile_pattern_to_string pattern
+
+
+let decompile_type_expression_to_string ~(syntax : Syntax_types.t) te =
+  let te = decompile_type_expression te in
+  match syntax with
+  | JsLIGO -> Tree_abstraction.Jsligo.decompile_type_expression_to_string te
+  | CameLIGO -> Tree_abstraction.Cameligo.decompile_type_expression_to_string te

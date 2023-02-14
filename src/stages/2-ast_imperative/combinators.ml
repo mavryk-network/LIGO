@@ -77,21 +77,23 @@ let t__type_ ~loc () : type_expression = t_variable ~loc (v__type_ ~loc)
       , "chain_id" )]
 
 
-let t__type_ ~loc t : type_expression = t_app ~loc (v__type_ ~loc) [ t ]
+let t__type_ ~loc t : type_expression =
+  t_app ~loc (Module_access.make_el @@ v__type_ ~loc) [ t ]
   [@@map _type_, ("list", "set", "contract")]
 
 
-let t__type_ ~loc t t' : type_expression = t_app ~loc (v__type_ ~loc) [ t; t' ]
+let t__type_ ~loc t t' : type_expression =
+  t_app ~loc (Module_access.make_el @@ v__type_ ~loc) [ t; t' ]
   [@@map _type_, ("map", "big_map")]
 
 
 let t_record ~loc struct_ : type_expression = make_t ~loc @@ T_record struct_
 
 let t_record_ez_attr ~loc ?(attr = []) fields =
-  let aux i (name, t_expr, attributes) =
-    Label.of_string name, Rows.{ associated_type = t_expr; decl_pos = i; attributes }
+  let aux (name, t_expr, row_elem_attributes) =
+    Label.of_string name, { associated_type = t_expr; row_elem_attributes }
   in
-  let fields = List.mapi ~f:aux fields in
+  let fields = List.map ~f:aux fields in
   t_record ~loc { fields; attributes = attr }
 
 
@@ -106,10 +108,10 @@ let t_pair ~loc (a, b) : type_expression = t_tuple ~loc [ a; b ]
 let t_sum ~loc sum : type_expression = make_t ~loc @@ T_sum sum
 
 let t_sum_ez_attr ~loc ?(attr = []) fields =
-  let aux i (name, t_expr, attributes) =
-    Label.of_string name, Rows.{ associated_type = t_expr; decl_pos = i; attributes }
+  let aux (name, t_expr, row_elem_attributes) =
+    Label.of_string name, { associated_type = t_expr; row_elem_attributes }
   in
-  let fields = List.mapi ~f:aux fields in
+  let fields = List.map ~f:aux fields in
   t_sum ~loc { fields; attributes = attr }
 
 
@@ -134,17 +136,25 @@ let t_for_all ~loc ty_binder kind type_ : type_expression =
 
 
 let t_michelson_or ~loc l l_ann r r_ann : type_expression =
-  t_app ~loc (v_michelson_or ~loc) [ t_annoted ~loc l l_ann; t_annoted ~loc r r_ann ]
+  t_app
+    ~loc
+    (Module_access.make_el @@ v_michelson_or ~loc)
+    [ t_annoted ~loc l l_ann; t_annoted ~loc r r_ann ]
 
 
 let t_michelson_pair ~loc l l_ann r r_ann : type_expression =
-  t_app ~loc (v_michelson_pair ~loc) [ t_annoted ~loc l l_ann; t_annoted ~loc r r_ann ]
+  t_app
+    ~loc
+    (Module_access.make_el @@ v_michelson_pair ~loc)
+    [ t_annoted ~loc l l_ann; t_annoted ~loc r r_ann ]
 
 
-let t_sapling_state ~loc a : type_expression = t_app ~loc (v_sapling_state ~loc) [ a ]
+let t_sapling_state ~loc a : type_expression =
+  t_app ~loc (Module_access.make_el @@ v_sapling_state ~loc) [ a ]
+
 
 let t_sapling_transaction ~loc a : type_expression =
-  t_app ~loc (v_sapling_trasaction ~loc) [ a ]
+  t_app ~loc (Module_access.make_el @@ v_sapling_trasaction ~loc) [ a ]
 
 
 let get_t_annoted te =
@@ -537,3 +547,14 @@ let destruct_for_alls (t : type_expression) =
     | _ -> type_vars, t
   in
   destruct_for_alls [] t
+
+
+(* /\ a -> /\ b -> /\ c -> e => [a ; b ; c], e*)
+let destruct_e_type_abstrctions (e : expression) : Type_var.t list * expression =
+  let rec destruct_e_type_abstrctions type_vars (e : expression) =
+    match e.expression_content with
+    | E_type_abstraction { type_binder; result } ->
+      destruct_e_type_abstrctions (type_vars @ [ type_binder ]) result
+    | _ -> type_vars, e
+  in
+  destruct_e_type_abstrctions [] e

@@ -15,8 +15,8 @@ val all_map
   -> (('k, 'v, 'cmp) Map.t, 'err, 'wrn) t
 
 val all_map_unit : ('k, (unit, 'err, 'wrn) t, 'cmp) Map.t -> (unit, 'err, 'wrn) t
-val all_lmap : ('a, 'err, 'wrn) t Record.LMap.t -> ('a Record.LMap.t, 'err, 'wrn) t
-val all_lmap_unit : (unit, 'err, 'wrn) t Record.LMap.t -> (unit, 'err, 'wrn) t
+val all_lmap : ('a, 'err, 'wrn) t Record.t -> ('a Record.t, 'err, 'wrn) t
+val all_lmap_unit : (unit, 'err, 'wrn) t Record.t -> (unit, 'err, 'wrn) t
 val all_opt : ('a, 'err, 'wrn) t option -> ('a option, 'err, 'wrn) t
 
 (** {1 Location Handling} *)
@@ -237,7 +237,7 @@ module Context : sig
   (** [get_record record_type] returns the record type defined in the context that instantiates
       to [record_type].  *)
   val get_record
-    :  Type.row_element Record.t
+    :  Type.t Label.Map.t
     -> ((Type_var.t option * Type.row) option, 'err, 'wrn) t
 
   (** [lock ~on_exit ~in_] adds a local fitch-style lock for mutable variables to 
@@ -267,7 +267,7 @@ val exists : Kind.t -> (Type.t, 'err, 'wrn) t
 val for_all : Kind.t -> (Type.t, 'err, 'wrn) t
 
 (** [lexists ()] create a new existential layout variable *)
-val lexists : unit -> (Type.layout, 'err, 'wrn) t
+val lexists : Label.Set.t -> (Type.layout, 'err, 'wrn) t
 
 (** [create_type constr] returns a created type using the [constr] function
     with the location automatically provided *)
@@ -389,8 +389,8 @@ module With_frag : sig
     -> Type.constr
     -> (Type.t, 'err, 'wrn) t
 
-  val all_lmap : ('a, 'err, 'wrn) t Record.LMap.t -> ('a Record.LMap.t, 'err, 'wrn) t
-  val all_lmap_unit : (unit, 'err, 'wrn) t Record.LMap.t -> (unit, 'err, 'wrn) t
+  val all_lmap : ('a, 'err, 'wrn) t Label.Map.t -> ('a Label.Map.t, 'err, 'wrn) t
+  val all_lmap_unit : (unit, 'err, 'wrn) t Label.Map.t -> (unit, 'err, 'wrn) t
   val loc : unit -> (Location.t, 'err, 'wrn) t
   val set_loc : Location.t -> ('a, 'err, 'wrn) t -> ('a, 'err, 'wrn) t
 
@@ -411,14 +411,14 @@ module With_frag : sig
       -> ((Type_var.t * Type_var.t list * Type.t * Type.t) list, 'err, 'wrn) t
 
     val get_record
-      :  Type.row_element Record.t
+      :  Type.t Label.Map.t
       -> ((Type_var.t option * Type.row) option, 'err, 'wrn) t
 
     val tapply : Type.t -> (Type.t, 'err, 'wrn) t
   end
 
   val exists : Kind.t -> (Type.t, 'err, 'wrn) t
-  val lexists : unit -> (Type.layout, 'err, 'wrn) t
+  val lexists : Label.Set.t -> (Type.layout, 'err, 'wrn) t
   val unify : Type.t -> Type.t -> (unit, [> unify_error ], 'wrn) t
 
   val subtype

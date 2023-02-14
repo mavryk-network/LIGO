@@ -4,6 +4,7 @@ open Trace
 open Errors
 module List = Simple_utils.List
 open Ligo_prim
+module Row = Type.Row
 
 module State = struct
   type t = Context.t * Substitution.t
@@ -56,21 +57,13 @@ let rec encode (type_ : Ast_typed.type_expression) : Type.t =
     return @@ T_contract ctype
 
 
-and encode_row ({ fields; layout } : Ast_typed.rows) : Type.row =
-  let fields = Record.map ~f:encode_row_elem fields in
+and encode_row ({ fields; layout } : Ast_typed.row) : Type.row =
+  let fields = Map.map ~f:encode fields in
   let layout = encode_layout layout in
-  { Type.fields; layout }
+  Row.{ fields; layout }
 
 
-and encode_row_elem (row_elem : Ast_typed.row_element) : Type.row_element =
-  Rows.map_row_element_mini_c encode row_elem
-
-
-and encode_layout (layout : Layout.t) : Type.layout =
-  match layout with
-  | L_tree -> L_tree
-  | L_comb -> L_comb
-
+and encode_layout (layout : Layout.t) : Type.layout = L_concrete layout
 
 let get_storage ctx =
   Option.value_exn ~here:[%here]
@@ -287,21 +280,21 @@ let all_opt opt : (_, _, _) t =
   | None -> state, None
 
 
-let all_lmap (lmap : ('a, 'err, 'wrn) t Record.LMap.t) : ('a Record.LMap.t, 'err, 'wrn) t =
+let all_lmap (lmap : ('a, 'err, 'wrn) t Record.t) : ('a Record.t, 'err, 'wrn) t =
  fun ~raise ~options ~loc state ->
-  Record.LMap.fold_map lmap ~init:state ~f:(fun _label t state ->
+  Label.Map.fold_map lmap ~init:state ~f:(fun ~key:_label ~data:t state ->
       t ~raise ~options ~loc state)
 
 
-let all_lmap_unit (lmap : (unit, 'err, 'wrn) t Record.LMap.t) : (unit, 'err, 'wrn) t =
+let all_lmap_unit (lmap : (unit, 'err, 'wrn) t Label.Map.t) : (unit, 'err, 'wrn) t =
  fun ~raise ~options ~loc state ->
   let state =
-    Record.LMap.fold
-      (fun _label t state ->
+    Label.Map.fold
+      ~f:(fun ~key:_label ~data:t state ->
         let state, () = t ~raise ~options ~loc state in
         state)
       lmap
-      state
+      ~init:state
   in
   state, ()
 
@@ -350,7 +343,7 @@ let fresh_lexists () =
   let open Let_syntax in
   let%bind loc = loc () in
   let lvar = Layout_var.fresh ~loc () in
-  return (lvar, Type.L_exists lvar)
+  return (lvar, Type.Layout.L_exists lvar)
 
 
 let fresh_texists () =
@@ -411,11 +404,11 @@ module Context = struct
     else return t
 
 
-  let lift_lvar ~at ~lvar' layout =
+  let lift_lvar ~at ~lvar' ~fields layout =
     lift_var
       ~get_vars:Context.get_lexists_vars
-      ~add_var:Context.add_lexists_var
-      ~add_eq:Context.add_lexists_eq
+      ~add_var:(fun ctx lvar' -> Context.add_lexists_var ctx lvar' fields)
+      ~add_eq:(fun ctx lvar' layout -> Context.add_lexists_eq ctx lvar' fields layout)
       ~at
       ~fresh:fresh_lexists
       ~var':lvar'
@@ -555,9 +548,9 @@ module Context = struct
     (Context.add_texists_eq ctx tvar kind type_, subst), ()
 
 
-  let add_lexists_eq lvar layout : _ t =
+  let add_lexists_eq lvar fields layout : _ t =
    fun ~raise:_ ~options:_ ~loc:_ (ctx, subst) ->
-    (Context.add_lexists_eq ctx lvar layout, subst), ()
+    (Context.add_lexists_eq ctx lvar fields layout, subst), ()
 
 
   module Apply = struct
@@ -606,11 +599,7 @@ let occurs_check ~tvar (type_ : Type.t) =
       loop type2
     | T_for_all { type_; _ } | T_abstraction { type_; _ } -> loop type_
     | T_construct { parameters; _ } -> List.iter parameters ~f:loop
-    | T_record rows | T_sum rows ->
-      Record.LMap.iter
-        (fun _label ({ associated_type; _ } : _ Rows.row_element_mini_c) ->
-          loop associated_type)
-        rows.fields
+    | T_record row | T_sum row -> Map.iter row.fields ~f:loop
     | T_singleton _ -> ()
     | T_storage storage -> Storage.iter loop storage
     | T_typed_address address -> Address.iter loop address
@@ -632,11 +621,11 @@ module Mode = struct
     | Invariant -> Invariant
 end
 
-let lift_layout ~at (layout : Type.layout) : (Type.layout, _, _) t =
+let lift_layout ~at ~fields (layout : Type.layout) : (Type.layout, _, _) t =
   let open Let_syntax in
   match layout with
-  | L_tree | L_comb -> return layout
-  | L_exists lvar' -> Context.lift_lvar ~at ~lvar' layout
+  | L_concrete _ -> return layout
+  | L_exists lvar' -> Context.lift_lvar ~at ~lvar' ~fields layout
 
 
 let rec lift ~(mode : Mode.t) ~kind ~tvar (type_ : Type.t) : (Type.t, _, _) t =
@@ -733,17 +722,16 @@ and lift_entry_type ~kind ~tvar Entry_type.{ param_type } =
 
 and lift_row ~kind ~tvar ({ fields; layout } : Type.row) : (Type.row, _, _) t =
   let open Let_syntax in
-  let%bind layout = lift_layout ~at:(C_texists_var (tvar, kind)) layout in
+  let%bind layout =
+    lift_layout ~at:(C_texists_var (tvar, kind)) ~fields:(Map.key_set fields) layout
+  in
   let%bind fields =
     fields
-    |> Record.map ~f:(fun (row_elem : Type.row_element) ->
-           let%map associated_type =
-             Context.tapply row_elem.associated_type >>= lift ~mode:Invariant ~kind ~tvar
-           in
-           { row_elem with associated_type })
+    |> Map.map ~f:(fun row_elem ->
+           Context.tapply row_elem >>= lift ~mode:Invariant ~kind ~tvar)
     |> all_lmap
   in
-  return { Type.fields; layout }
+  return { Type.Row.fields; layout }
 
 
 let unify_texists tvar type_ =
@@ -759,23 +747,19 @@ let unify_texists tvar type_ =
   else raise_l ~loc:type_.location (ill_formed_type type_)
 
 
-let unify_layout type1 type2 (layout1 : Type.layout) (layout2 : Type.layout) =
+let unify_layout type1 type2 ~fields (layout1 : Type.layout) (layout2 : Type.layout) =
   let open Let_syntax in
   match layout1, layout2 with
-  | L_comb, L_tree | L_tree, L_comb ->
+  | L_concrete layout1, L_concrete layout2 when Layout.equal layout1 layout2 -> return ()
+  | L_concrete _, L_concrete _ ->
     raise (cannot_unify_diff_layout type1 type2 layout1 layout2)
-  | L_comb, L_comb | L_tree, L_tree -> return ()
   | L_exists lvar1, L_exists lvar2 when Layout_var.equal lvar1 lvar2 -> return ()
   | L_exists lvar, layout | layout, L_exists lvar ->
-    let%bind layout = lift_layout ~at:(C_lexists_var lvar) layout in
-    Context.add_lexists_eq lvar layout
+    let%bind layout = lift_layout ~at:(C_lexists_var (lvar, fields)) ~fields layout in
+    Context.add_lexists_eq lvar fields layout
 
 
-let equal_domains lmap1 lmap2 =
-  let open Record in
-  (* One day this will be removed when we use [Core] maps *)
-  LSet.(equal (of_list (LMap.keys lmap1)) (of_list (LMap.keys lmap2)))
-
+let equal_domains lmap1 lmap2 = Set.equal (Map.key_set lmap1) (Map.key_set lmap2)
 
 type unify_error =
   [ `Typer_cannot_unify of bool * Type.t * Type.t * Location.t
@@ -835,12 +819,15 @@ let rec unify (type1 : Type.t) (type2 : Type.t) =
   | ( T_record { fields = fields1; layout = layout1 }
     , T_record { fields = fields2; layout = layout2 } )
     when equal_domains fields1 fields2 ->
-    let%bind () = unify_layout type1 type2 layout1 layout2 in
+    (* Invariant [Map.key_set fields1 = Map.key_set fields2] *)
+    let%bind () =
+      unify_layout type1 type2 ~fields:(Map.key_set fields1) layout1 layout2
+    in
     (* TODO: This should be replaced by [map2] or smth *)
     fields1
-    |> Record.LMap.mapi (fun label (row_elem1 : Type.row_element) ->
-           let row_elem2 = Record.LMap.find label fields2 in
-           unify_ row_elem1.associated_type row_elem2.associated_type)
+    |> Map.mapi ~f:(fun ~key:label ~data:row_elem1 ->
+           let row_elem2 = Map.find_exn fields2 label in
+           unify_ row_elem1 row_elem2)
     |> all_lmap_unit
   | T_typed_address { contract = contract1 }, T_typed_address { contract = contract2 }
   | T_storage { contract = contract1 }, T_storage { contract = contract2 } ->
@@ -989,10 +976,10 @@ let for_all kind =
   return (Type.t_variable ~loc:(Type_var.get_location tvar) tvar ())
 
 
-let lexists () =
+let lexists fields =
   let open Let_syntax in
   let%bind lvar, layout = fresh_lexists () in
-  let%bind () = Context.push [ C_lexists_var lvar ] in
+  let%bind () = Context.push [ C_lexists_var (lvar, fields) ] in
   return layout
 
 
@@ -1109,27 +1096,28 @@ module With_frag = struct
     let map = `Define_using_bind
   end)
 
-  let all_lmap (lmap : ('a, 'err, 'wrn) t Record.LMap.t)
-      : ('a Record.LMap.t, 'err, 'wrn) t
-    =
+  let all_lmap (lmap : ('a, 'err, 'wrn) t Label.Map.t) : ('a Label.Map.t, 'err, 'wrn) t =
    fun ~raise ~options ~loc state ->
     let (state, frag), lmap =
-      Record.LMap.fold_map lmap ~init:(state, []) ~f:(fun _label t (state, frag) ->
+      Label.Map.fold_map
+        lmap
+        ~init:(state, [])
+        ~f:(fun ~key:_label ~data:t (state, frag) ->
           let state, (frag', result) = t ~raise ~options ~loc state in
           (state, frag @ frag'), result)
     in
     state, (frag, lmap)
 
 
-  let all_lmap_unit (lmap : (unit, 'err, 'wrn) t Record.LMap.t) : (unit, 'err, 'wrn) t =
+  let all_lmap_unit (lmap : (unit, 'err, 'wrn) t Label.Map.t) : (unit, 'err, 'wrn) t =
    fun ~raise ~options ~loc state ->
     let state, frag =
-      Record.LMap.fold
-        (fun _label t (state, frag) ->
+      Label.Map.fold
+        ~f:(fun ~key:_label ~data:t (state, frag) ->
           let state, (frag', ()) = t ~raise ~options ~loc state in
           state, frag @ frag')
         lmap
-        (state, [])
+        ~init:(state, [])
     in
     state, (frag, ())
 
@@ -1151,7 +1139,7 @@ module With_frag = struct
   end
 
   let exists kind = lift (exists kind)
-  let lexists () = lift (lexists ())
+  let lexists fields = lift (lexists fields)
   let unify type1 type2 = lift (unify type1 type2)
   let subtype ~received ~expected = lift (subtype ~received ~expected)
 end
