@@ -129,13 +129,11 @@ and declaration_content =
   | D_module of module_expr Module_decl.t
   | D_contract of contract_expr Contract_decl.t
 
+(* Contract specific declarations *)
 and contract_declaration_content =
   | C_value of (expr, ty_expr option) Value_decl.t
   | C_irrefutable_match of (expr, ty_expr option) Pattern_decl.t
   | C_type of ty_expr Type_decl.t
-  | C_module of module_expr Module_decl.t
-  (* Contract specific declarations *)
-  | C_contract of contract_expr Contract_decl.t
   | C_entry of (expr, ty_expr option) Value_decl.t
   | C_view of (expr, ty_expr option) Value_decl.t
 

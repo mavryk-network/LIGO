@@ -495,12 +495,6 @@ and compile_contract_declaration ~raise : I.contract_declaration -> O.contract_d
   | C_type type_decl ->
     let type_decl = compile_type_decl ~raise type_decl in
     return @@ C_type type_decl
-  | C_module module_decl ->
-    let module_decl = compile_module_decl ~raise module_decl in
-    return @@ C_module module_decl
-  | C_contract contract_decl ->
-    let contract_decl = compile_contract_decl ~raise contract_decl in
-    return @@ C_contract contract_decl
   | C_entry value_decl ->
     let value_decl = compile_value_decl ~raise value_decl in
     return @@ C_entry value_decl

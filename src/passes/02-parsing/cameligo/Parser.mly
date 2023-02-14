@@ -194,14 +194,12 @@ module_:
   nseq(declaration) { {decl=$1; eof = Wrap.make "" Region.ghost} }
 
 declaration:
-  type_decl       {    TypeDecl $1 }
-| let_decl        {         Let $1 }
-| module_decl     {  ModuleDecl $1 }
-| module_alias    { ModuleAlias $1 }
-| "<directive>"   {   Directive $1 }
-| contract_decl   {
-    (* TODO: Contracts *)
-    assert false }
+  type_decl       {     TypeDecl $1 }
+| let_decl        {          Let $1 }
+| module_decl     {   ModuleDecl $1 }
+| module_alias    {  ModuleAlias $1 }
+| contract_decl   { ContractDecl $1 }
+| "<directive>"   {    Directive $1 }
 
 (* Type declarations *)
 
@@ -232,29 +230,57 @@ type_var:
 
 contract_decl:
   "contract" contract_name "=" "struct" ioption(nseq(contract)) "end" {
-    (* TODO: Contracts *)
-    assert false }
+    let kwd_contract = $1 in
+    let eq = $3 in
+    let kwd_struct = $4 in
+    let kwd_end = $6 in
+    let region = cover kwd_contract#region kwd_end#region in
+    let value  = {kwd_contract;
+                  name        = $2;
+                  eq;
+                  kwd_struct;
+                  module_     = $5;
+                  kwd_end}
+    in {region; value} }
 
 contract:
-  let_decl   {
-    (* TODO: Contracts *)
-    assert false }
-| entry_decl {
-    (* TODO: Contracts *)
-    assert false }
-| view_decl  {
-    (* TODO: Contracts *)
-    assert false }
+  let_decl   { ContractLet $1 }
+| type_decl  { ContractType $1 }
+| entry_decl { ContractEntry $1 }
+| view_decl  { ContractView $1 }
 
 entry_decl:
   attributes "let" "entry" var_pattern parameters let_rhs_type "=" expr {
-    (* TODO: Contracts *)
-    assert false }
+    let kwd_let = $2
+    and rhs = $8 in
+    let value      = { kwd_let;
+                       kwd_entry = $3;
+                       name = $4 ;
+                       parameters = $5 ;
+                       ret_type = $6 ;
+                       rhs
+                      }
+    in
+    let stop       = expr_to_region rhs in
+    let region     = cover kwd_let#region stop
+    in {region; value} }
+
 
 view_decl:
   attributes "let" "view" var_pattern parameters let_rhs_type "=" expr {
-    (* TODO: Contracts *)
-    assert false }
+    let kwd_let = $2
+    and rhs = $8 in
+    let value      = { kwd_let;
+                       kwd_view = $3;
+                       name = $4 ;
+                       parameters = $5 ;
+                       ret_type = $6 ;
+                       rhs
+                      }
+    in
+    let stop       = expr_to_region rhs in
+    let region     = cover kwd_let#region stop
+    in {region; value} }
 
 (* Modules *)
 

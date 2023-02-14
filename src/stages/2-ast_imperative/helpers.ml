@@ -115,15 +115,9 @@ end = struct
   and get_fv_contract_decl : contract_declaration -> VarSet.t =
    fun decl ->
     match Location.unwrap decl with
-    | C_entry { binder = _; expr; attr = _ }
-    | C_view { binder = _; expr; attr = _ }
-    | C_value { binder = _; expr; attr = _ } -> get_fv_expr expr
-    | C_irrefutable_match { pattern = _; expr; attr = _ } -> get_fv_expr expr
+    | C_entry { binder = _; expr; attr = _ } | C_view { binder = _; expr; attr = _ } ->
+      get_fv_expr expr
     | C_type _t -> VarSet.empty
-    | C_module { module_binder = _; module_; module_attr = _ } ->
-      get_fv_module_expr module_.wrap_content
-    | C_contract { contract_binder = _; contract; contract_attr = _ } ->
-      get_fv_contract_expr contract
 
 
   and get_fv_contract : contract_declaration list -> VarSet.t =

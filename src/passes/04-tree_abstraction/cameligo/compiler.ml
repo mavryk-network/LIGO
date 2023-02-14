@@ -644,7 +644,9 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
         let aux : CST.type_var Region.reg -> AST.type_expression -> AST.type_expression =
          fun param type_ ->
           let param, ploc = r_split param in
-          let ty_binder = Type_var.of_input_var ~loc:ploc (quote_var param.name#payload) in
+          let ty_binder =
+            Type_var.of_input_var ~loc:ploc (quote_var param.name#payload)
+          in
           t_abstraction ~loc:ploc ty_binder Type type_
         in
         List.fold_right ~f:aux ~init:rhs lst
@@ -1020,31 +1022,222 @@ and compile_parameter ~raise : CST.pattern -> _ Param.t * (_ -> _) =
   | _ -> raise.error @@ unsupported_pattern_type [ pattern ]
 
 
+and compile_let_decl
+    ~raise
+    ({ value = _kwd_let, kwd_rec, let_binding, attributes; region } :
+      CST.let_decl Region.reg)
+    : [ `Irrefutable of (expression, type_expression option) Types.Pattern_decl.t
+      | `Value of (expression, type_expression option) Types.Value_decl.t
+      ]
+  =
+  let attr = compile_attributes attributes in
+  let ({ type_params; binders; rhs_type; eq = _; let_rhs } : CST.let_binding) =
+    let_binding
+  in
+  let type_params =
+    match type_params with
+    | Some _ -> type_params
+    | None -> None
+  in
+  let pattern, args = binders in
+  let let_rhs = compile_expression ~raise let_rhs in
+  let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) rhs_type in
+  (*
+    function :
+      let (type a b) x = ..
+      let x foo bar = ..
+      let (type a b) foo bar = ..
+    not function:
+      let x = ..
+      let (x,y) = ..
+    *)
+  match kwd_rec, args, type_params with
+  | None, [], None ->
+    (* not function *)
+    (*
+        let x : ty = body
+        let x = (body : ty)
+      *)
+    let attr = compile_attributes attributes in
+    let pattern = compile_pattern ~raise pattern in
+    (match Location.unwrap pattern with
+    | P_var binder ->
+      let loc = pattern.location in
+      let binder = Binder.set_ascr binder rhs_type in
+      let pattern = Location.wrap ~loc (AST.Pattern.P_var binder) in
+      (* For patterns, we annotate the rhs : let <pattern> : <type> = <expr> |-> let <pattern> = <expr> : <type> *)
+      let let_rhs =
+        Option.value_map rhs_type ~default:let_rhs ~f:(fun ty ->
+            e_annotation ~loc:let_rhs.location let_rhs ty)
+      in
+      `Irrefutable { pattern; attr; expr = let_rhs }
+    | _ ->
+      (* For patterns, we annotate the rhs : let <pattern> : <type> = <expr> |-> let <pattern> = <expr> : <type> *)
+      let let_rhs =
+        Option.value_map rhs_type ~default:let_rhs ~f:(fun ty ->
+            e_annotation ~loc:let_rhs.location let_rhs ty)
+      in
+      `Irrefutable { pattern; attr; expr = let_rhs })
+  | _, _, _ ->
+    (* function *)
+    let binder, _fun_ = compile_binder ~raise pattern in
+    let params = List.map ~f:(compile_parameter ~raise) args in
+    (* collect type annotation for let function declaration *)
+    let let_rhs, rhs_type =
+      List.fold_right
+        ~init:(let_rhs, rhs_type)
+        ~f:(fun (b, fun_) (e, a) ->
+          ( e_lambda ~loc:(Value_var.get_location @@ Param.get_var b) b a @@ fun_ e
+          , Option.map2 ~f:(t_arrow ~loc:e.location) (Param.get_ascr b) a ))
+        params
+    in
+    (* This handle polymorphic annotation *)
+    let rhs_type : type_expression option =
+      Option.map rhs_type ~f:(fun rhs_type ->
+          Option.value_map type_params ~default:rhs_type ~f:(fun tp ->
+              let tp, loc = r_split tp in
+              let tp = tp.inside in
+              let type_vars = List.Ne.map compile_type_var tp.type_vars in
+              List.Ne.fold_right
+                ~f:(fun tvar t -> t_for_all ~loc tvar Type t)
+                ~init:rhs_type
+                type_vars))
+    in
+    let binder = Binder.map (Fn.const rhs_type) binder in
+    (* This handle the recursion *)
+    let let_rhs =
+      match kwd_rec with
+      | Some reg ->
+        let fun_type =
+          trace_option ~raise (untyped_recursive_fun reg#region) @@ rhs_type
+        in
+        let _, fun_type = destruct_for_alls fun_type in
+        let rec get_first_non_annotation e =
+          Option.value_map ~default:e ~f:(fun e ->
+              get_first_non_annotation e.Ascription.anno_expr)
+          @@ get_e_annotation e
+        in
+        let lambda =
+          trace_option ~raise (recursion_on_non_function @@ Location.lift region)
+          @@ get_e_lambda
+          @@ (get_first_non_annotation let_rhs).expression_content
+        in
+        let Arrow.{ type1; type2 } = get_t_arrow_exn fun_type in
+        let lambda =
+          Lambda.
+            { lambda with
+              binder = Param.map (Fn.const type1) lambda.binder
+            ; output_type = type2
+            }
+        in
+        e_recursive
+          ~loc:(Location.lift reg#region)
+          (Binder.get_var binder)
+          fun_type
+          lambda
+      | None -> let_rhs
+    in
+    (* This handle polymorphic functions (type abstraction) *)
+    let let_rhs =
+      Option.value_map
+        ~default:let_rhs
+        ~f:(fun tp ->
+          let tp, loc = r_split tp in
+          let tp : CST.type_params = tp.inside in
+          let type_vars = List.Ne.map compile_type_var tp.type_vars in
+          List.Ne.fold_right ~f:(fun t e -> e_type_abs ~loc t e) ~init:let_rhs type_vars)
+        type_params
+    in
+    `Value { binder; attr; expr = let_rhs }
+
+
+and compile_type_decl
+    ~raise
+    ({ value = { name; type_expr; params; kwd_type = _; eq = _ }; region } :
+      CST.type_decl Region.reg)
+    : type_expression Types.Type_decl.t
+  =
+  let name, loc = w_split name in
+  let type_expr =
+    let rhs = compile_type_expression ~raise type_expr in
+    match params with
+    | None -> rhs
+    | Some x ->
+      let lst = type_vars_to_list x in
+      let aux : CST.type_var Region.reg -> AST.type_expression -> AST.type_expression =
+       fun param type_ ->
+        let param, ploc = r_split param in
+        let ty_binder = Type_var.of_input_var ~loc:ploc (quote_var param.name#payload) in
+        t_abstraction ~loc:(Location.lift region) ty_binder Type type_
+      in
+      List.fold_right ~f:aux ~init:rhs lst
+  in
+  { type_binder = Type_var.of_input_var ~loc name; type_expr; type_attr = [] }
+
+
+and compile_entry_or_view ~raise (name, parameters, ret_type, rhs) =
+  let _, binder = compile_var_pattern name in
+  let rhs = compile_expression ~raise rhs in
+  let ret_type =
+    Option.map ret_type ~f:(fun (_, ty) -> compile_type_expression ~raise ty)
+  in
+  let expr =
+    let lst = parameters |> List.Ne.map (compile_parameter ~raise) |> List.Ne.to_list in
+    let loc = Location.dummy in
+    let rec aux lst acc : AST.expression =
+      match lst with
+      | [] -> acc
+      | [ (param, cont) ] -> e_lambda ~loc param ret_type (cont acc)
+      | (param, cont) :: tl -> e_lambda ~loc param None (aux tl (cont acc))
+    in
+    aux lst rhs
+  in
+  Value_decl.{ binder; expr; attr = [] }
+
+
+and compile_contract_var : CST.module_name -> Contract_var.t =
+ fun var ->
+  let var, loc = w_split var in
+  Contract_var.of_input_var ~loc var
+
+
+and compile_contract ~raise : CST.contract -> AST.contract_declaration =
+  let return reg decl = Location.wrap ~loc:(Location.lift reg) decl in
+  function
+  | ContractLet let_ ->
+    let binding =
+      match compile_let_decl ~raise let_ with
+      | `Value x -> C_value x
+      | `Irrefutable x -> C_irrefutable_match x
+    in
+    return let_.region binding
+  | ContractType td -> return td.region (C_type (compile_type_decl ~raise td))
+  | ContractEntry { region; value = { name; parameters; ret_type; rhs; _ } } ->
+    let entry = compile_entry_or_view ~raise (name, parameters, ret_type, rhs) in
+    return region (C_entry entry)
+  | ContractView { region; value = { name; parameters; ret_type; rhs } } ->
+    let view = compile_entry_or_view ~raise (name, parameters, ret_type, rhs) in
+    return region (C_view view)
+
+
 and compile_declaration ~raise : CST.declaration -> AST.declaration option =
  fun decl ->
   let return reg decl = Some (Location.wrap ~loc:(Location.lift reg) decl) in
   let skip = None in
   match decl with
   | Directive _ -> skip (* Directives are not propagated to the AST *)
-  | TypeDecl { value = { name; type_expr; params; kwd_type = _; eq = _ }; region } ->
-    let name, loc = w_split name in
-    let type_expr =
-      let rhs = compile_type_expression ~raise type_expr in
-      match params with
-      | None -> rhs
-      | Some x ->
-        let lst = type_vars_to_list x in
-        let aux : CST.type_var Region.reg -> AST.type_expression -> AST.type_expression =
-         fun param type_ ->
-          let param, ploc = r_split param in
-          let ty_binder = Type_var.of_input_var ~loc:ploc (quote_var param.name#payload) in
-          t_abstraction ~loc:(Location.lift region) ty_binder Type type_
-        in
-        List.fold_right ~f:aux ~init:rhs lst
+  | ContractDecl
+      { region
+      ; value = { kwd_contract = _; name; eq = _; kwd_struct = _; module_; kwd_end = _ }
+      } ->
+    let contract_binder = compile_contract_var name in
+    let content = Option.value_map module_ ~default:[] ~f:Simple_utils.List.Ne.to_list in
+    let contract =
+      Location.wrap ~loc:(Location.lift region)
+      @@ Contract_expr.C_struct (List.map ~f:(compile_contract ~raise) content)
     in
-    return
-      region
-      (D_type { type_binder = Type_var.of_input_var ~loc name; type_expr; type_attr = [] })
+    return region (D_contract { contract_binder; contract; contract_attr = [] })
+  | TypeDecl td -> return td.region (D_type (compile_type_decl ~raise td))
   | ModuleDecl { value = { kwd_module; name; module_; kwd_end; _ }; region } ->
     let module_binder = compile_mod_var name in
     let module_ =
@@ -1062,126 +1255,13 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration option =
       m_path ~loc path (* wrong location *)
     in
     return region (D_module { module_binder; module_; module_attr = [] })
-  | Let { value = _kwd_let, kwd_rec, let_binding, attributes; region } ->
-    let attr = compile_attributes attributes in
-    let ({ type_params; binders; rhs_type; eq = _; let_rhs } : CST.let_binding) =
-      let_binding
+  | Let l ->
+    let binding =
+      match compile_let_decl ~raise l with
+      | `Value x -> D_value x
+      | `Irrefutable x -> D_irrefutable_match x
     in
-    let type_params =
-      match type_params with
-      | Some _ -> type_params
-      | None -> None
-    in
-    let pattern, args = binders in
-    let let_rhs = compile_expression ~raise let_rhs in
-    let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) rhs_type in
-    (*
-    function :
-      let (type a b) x = ..
-      let x foo bar = ..
-      let (type a b) foo bar = ..
-    not function:
-      let x = ..
-      let (x,y) = ..
-    *)
-    (match kwd_rec, args, type_params with
-    | None, [], None ->
-      (* not function *)
-      (*
-        let x : ty = body
-        let x = (body : ty)
-      *)
-      let attr = compile_attributes attributes in
-      let pattern = compile_pattern ~raise pattern in
-      (match Location.unwrap pattern with
-      | P_var binder ->
-        let loc = pattern.location in
-        let binder = Binder.set_ascr binder rhs_type in
-        let pattern = Location.wrap ~loc (AST.Pattern.P_var binder) in
-        (* For patterns, we annotate the rhs : let <pattern> : <type> = <expr> |-> let <pattern> = <expr> : <type> *)
-        let let_rhs =
-          Option.value_map rhs_type ~default:let_rhs ~f:(fun ty ->
-              e_annotation ~loc:let_rhs.location let_rhs ty)
-        in
-        return region (D_irrefutable_match { pattern; attr; expr = let_rhs })
-      | _ ->
-        (* For patterns, we annotate the rhs : let <pattern> : <type> = <expr> |-> let <pattern> = <expr> : <type> *)
-        let let_rhs =
-          Option.value_map rhs_type ~default:let_rhs ~f:(fun ty ->
-              e_annotation ~loc:let_rhs.location let_rhs ty)
-        in
-        return region (D_irrefutable_match { pattern; attr; expr = let_rhs }))
-    | _, _, _ ->
-      (* function *)
-      let binder, _fun_ = compile_binder ~raise pattern in
-      let params = List.map ~f:(compile_parameter ~raise) args in
-      (* collect type annotation for let function declaration *)
-      let let_rhs, rhs_type =
-        List.fold_right
-          ~init:(let_rhs, rhs_type)
-          ~f:(fun (b, fun_) (e, a) ->
-            ( e_lambda ~loc:(Value_var.get_location @@ Param.get_var b) b a @@ fun_ e
-            , Option.map2 ~f:(t_arrow ~loc:e.location) (Param.get_ascr b) a ))
-          params
-      in
-      (* This handle polymorphic annotation *)
-      let rhs_type : type_expression option =
-        Option.map rhs_type ~f:(fun rhs_type ->
-            Option.value_map type_params ~default:rhs_type ~f:(fun tp ->
-                let tp, loc = r_split tp in
-                let tp = tp.inside in
-                let type_vars = List.Ne.map compile_type_var tp.type_vars in
-                List.Ne.fold_right
-                  ~f:(fun tvar t -> t_for_all ~loc tvar Type t)
-                  ~init:rhs_type
-                  type_vars))
-      in
-      let binder = Binder.map (Fn.const rhs_type) binder in
-      (* This handle the recursion *)
-      let let_rhs =
-        match kwd_rec with
-        | Some reg ->
-          let fun_type =
-            trace_option ~raise (untyped_recursive_fun reg#region) @@ rhs_type
-          in
-          let _, fun_type = destruct_for_alls fun_type in
-          let rec get_first_non_annotation e =
-            Option.value_map ~default:e ~f:(fun e ->
-                get_first_non_annotation e.Ascription.anno_expr)
-            @@ get_e_annotation e
-          in
-          let lambda =
-            trace_option ~raise (recursion_on_non_function @@ Location.lift region)
-            @@ get_e_lambda
-            @@ (get_first_non_annotation let_rhs).expression_content
-          in
-          let Arrow.{ type1; type2 } = get_t_arrow_exn fun_type in
-          let lambda =
-            Lambda.
-              { lambda with
-                binder = Param.map (Fn.const type1) lambda.binder
-              ; output_type = type2
-              }
-          in
-          e_recursive
-            ~loc:(Location.lift reg#region)
-            (Binder.get_var binder)
-            fun_type
-            lambda
-        | None -> let_rhs
-      in
-      (* This handle polymorphic functions (type abstraction) *)
-      let let_rhs =
-        Option.value_map
-          ~default:let_rhs
-          ~f:(fun tp ->
-            let tp, loc = r_split tp in
-            let tp : CST.type_params = tp.inside in
-            let type_vars = List.Ne.map compile_type_var tp.type_vars in
-            List.Ne.fold_right ~f:(fun t e -> e_type_abs ~loc t e) ~init:let_rhs type_vars)
-          type_params
-      in
-      return region @@ D_value { binder; attr; expr = let_rhs })
+    return l.region binding
 
 
 and compile_module ~raise : CST.t -> AST.module_ =

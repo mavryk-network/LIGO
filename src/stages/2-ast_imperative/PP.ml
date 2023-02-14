@@ -137,14 +137,11 @@ and declaration ppf (d : declaration) =
 
 and contract_declaration ppf (contract_decl : contract_declaration) =
   match Location.unwrap contract_decl with
-  | C_value vd -> Types.Value_decl.pp expression type_expression_option ppf vd
-  | C_irrefutable_match pd ->
-    Types.Pattern_decl.pp expression type_expression_option ppf pd
   | C_type td -> Types.Type_decl.pp type_expression ppf td
-  | C_module md -> Types.Module_decl.pp module_expr ppf md
-  | C_contract contract_decl -> Contract_decl.pp contract_expr ppf contract_decl
   | C_entry vd -> Value_decl.pp_entry expression type_expression_option ppf vd
   | C_view vd -> Value_decl.pp_view expression type_expression_option ppf vd
+  | C_irrefutable_match im -> Types.Pattern_decl.pp expression type_expression_option ppf im
+  | C_value vd -> Types.Value_decl.pp expression type_expression_option ppf vd
 
 
 and decl ppf d = declaration ppf d

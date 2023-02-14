@@ -290,11 +290,9 @@ and decompile_contract_declaration : O.contract_declaration -> I.contract_declar
     let type_decl = decompile_type_decl type_decl in
     return @@ C_type type_decl
   | C_module module_decl ->
-    let module_decl = decompile_module_decl module_decl in
-    return @@ C_module module_decl
+    assert false
   | C_contract contract_decl ->
-    let contract_decl = decompile_contract_decl contract_decl in
-    return @@ C_contract contract_decl
+    assert false
   | C_entry value_decl ->
     let value_decl = decompile_value_decl value_decl in
     return @@ C_entry value_decl

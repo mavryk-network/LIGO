@@ -65,6 +65,7 @@ and print_declaration state = function
 | TypeDecl    d -> print_TypeDecl    state d
 | ModuleDecl  d -> print_ModuleDecl  state d
 | ModuleAlias d -> print_ModuleAlias state d
+| ContractDecl _ -> ()
 | Directive   d -> print_Directive   state d
 
 (* Value declarations *)

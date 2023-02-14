@@ -51,7 +51,14 @@ and pp_declaration = function
 | TypeDecl    decl -> pp_type_decl    decl ^^ hardline
 | ModuleDecl  decl -> pp_module_decl  decl ^^ hardline
 | ModuleAlias decl -> pp_module_alias decl ^^ hardline
+| ContractDecl decl -> pp_contract_decl decl ^^ hardline
 | Directive   dir  -> string (Directive.to_lexeme dir).Region.value
+
+and pp_contract = function
+  ContractLet decl -> pp_let_decl decl ^^ hardline
+| ContractType decl -> pp_type_decl decl ^^ hardline
+| ContractEntry decl -> pp_entry_decl decl ^^ hardline
+| ContractView decl -> pp_view_decl decl ^^ hardline
 
 (* Value declarations *)
 
@@ -65,6 +72,24 @@ and pp_let_decl {value; _} =
                 else pp_attributes attr ^/^ let_str
   in let_str ^^ pp_let_binding binding
 
+and pp_entry_decl { value ; _ } =
+  let ({name; parameters; ret_type; rhs; _} : entry_decl) = value in
+  let let_str = string "let entry " in
+  let thread = pp_pvar name ^/^ pp_nseq pp_pattern parameters in
+  let lhs = thread ^^ match ret_type with
+              None -> empty
+            | Some (_, e) -> group (break 1 ^^ string ":  " ^^ pp_type_expr e)
+  in let_str ^^ prefix 2 1 (lhs ^^ string " =") (pp_expr rhs)
+  
+and pp_view_decl { value ; _ } =
+  let ({name; parameters; ret_type; rhs; _} : view_decl) = value in
+  let let_str = string "let view " in
+  let thread = pp_pvar name ^/^ pp_nseq pp_pattern parameters in
+  let lhs = thread ^^ match ret_type with
+              None -> empty
+            | Some (_, e) -> group (break 1 ^^ string ":  " ^^ pp_type_expr e)
+  in let_str ^^ prefix 2 1 (lhs ^^ string " =") (pp_expr rhs)
+  
 and pp_attribute (node : Attr.t reg) =
   let key, val_opt = node.value in
   let thread = string "[@" ^^ string key in
@@ -189,6 +214,14 @@ and pp_module_alias decl =
   let {alias; binders; _} = decl.value in
   string "module " ^^ pp_ident alias ^^ string " ="
   ^^ group (nest 0 (break 1 ^^ pp_nsepseq "." pp_ident binders))
+
+and pp_contract_decl decl =
+  let ({name; module_; _} : contract_decl) = decl.value in
+  let module_ = Option.value_map ~default:[] ~f:Utils.nseq_to_list module_ in
+  let print cst = cst |> List.map ~f:pp_contract |> separate_map hardline group in
+  string "contract " ^^ pp_ident name ^^ string " =" ^^ string " struct"
+  ^^ group (nest 0 (break 1 ^^ print module_))
+  ^^ string " end"
 
 and pp_assign assign =
   let {binder; ass = _; expr} = assign.value in

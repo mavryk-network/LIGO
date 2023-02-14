@@ -39,6 +39,8 @@ type kwd_rec       = lexeme wrap
 type kwd_if        = lexeme wrap
 type kwd_in        = lexeme wrap
 type kwd_let       = lexeme wrap
+type kwd_entry     = lexeme wrap
+type kwd_view      = lexeme wrap
 type kwd_match     = lexeme wrap
 type kwd_mod       = lexeme wrap
 type kwd_land      = lexeme wrap
@@ -54,6 +56,7 @@ type kwd_true      = lexeme wrap
 type kwd_type      = lexeme wrap
 type kwd_with      = lexeme wrap
 type kwd_module    = lexeme wrap
+type kwd_contract  = lexeme wrap
 type kwd_struct    = lexeme wrap
 type kwd_mut       = lexeme wrap
 type kwd_for       = lexeme wrap
@@ -157,13 +160,47 @@ type t = {
 and cst = t
 
 and declaration =
-  Let         of let_decl     reg
-| TypeDecl    of type_decl    reg
-| ModuleDecl  of module_decl  reg
-| ModuleAlias of module_alias reg
-| Directive   of Directive.t
+  Let          of let_decl     reg
+| TypeDecl     of type_decl    reg
+| ModuleDecl   of module_decl  reg
+| ModuleAlias  of module_alias reg
+| Directive    of Directive.t
+| ContractDecl of contract_decl reg
+
+and contract =
+| ContractLet of let_decl reg
+| ContractType of type_decl reg
+| ContractEntry of entry_decl reg
+| ContractView of view_decl reg
 
 (* Non-recursive values *)
+
+and contract_decl = {
+  kwd_contract : kwd_contract;
+  name       : module_name;
+  eq         : equal;
+  kwd_struct : kwd_struct;
+  module_    : contract nseq option;
+  kwd_end    : kwd_end;
+}
+
+and entry_decl = {
+  kwd_let : kwd_let ;
+  kwd_entry : kwd_entry ;
+  name : var_pattern reg ;
+  parameters : pattern nseq ;
+  ret_type : (colon * type_expr) option ;
+  rhs : expr ;
+}
+
+and view_decl = {
+  kwd_let : kwd_let ;
+  kwd_view : kwd_view ;
+  name : var_pattern reg ;
+  parameters : pattern nseq ;
+  ret_type : (colon * type_expr) option ;
+  rhs : expr ;
+}
 
 and let_decl =
   (kwd_let * kwd_rec option * let_binding * attributes)
