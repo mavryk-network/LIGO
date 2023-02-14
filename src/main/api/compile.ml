@@ -40,7 +40,7 @@ end
 type source =
   | Text of string * Syntax_types.t
   | File of Path.t
-  | Json of Yojson.Safe.t 
+  | Json of Yojson.Safe.t
 
 let contract
     (raw_options : Raw_options.t)
@@ -68,7 +68,9 @@ let contract
       | Text (_source_code, syntax) -> syntax
       | File source_file ->
         Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
-      | Json _ -> raise.error (`Main_invalid_syntax_name "Syntax cannot be detected from json file.")
+      | Json _ ->
+        raise.error
+          (`Main_invalid_syntax_name "Syntax cannot be detected from json file.")
     in
     let has_env_comments = has_env_comments michelson_comments in
     Compiler_options.make ~raw_options ~syntax ~protocol_version ~has_env_comments ()
@@ -86,7 +88,8 @@ let contract
   let Compiler_options.{ entry_point; _ } = options.frontend in
   let source =
     match source with
-    | Json _ -> raise.error (`Main_invalid_syntax_name "Cannot compile contract in json format")
+    | Json _ ->
+      raise.error (`Main_invalid_syntax_name "Cannot compile contract in json format")
     | File filename -> BuildSystem.Source_input.From_file filename
     | Text (source_code, syntax) ->
       BuildSystem.Source_input.(
@@ -201,7 +204,8 @@ let cst
     let syntax = Syntax.of_string_opt ~raise (Syntax_name "cameligo") file_name in
     let source_code =
       match source with
-      | Json _ -> raise.error (`Main_invalid_syntax_name "TODO compile from yojson directly")
+      | Json _ ->
+        raise.error (`Main_invalid_syntax_name "TODO compile from yojson directly")
       | File filename ->
         let read_whole_file filename =
           let ch = In_channel.create filename in
@@ -335,29 +339,29 @@ let ast_typed
       | Text (_source_code, _syntax) -> Some "foo.mligo"
     in
     let syntax = Syntax.of_string_opt ~raise (Syntax_name "cameligo") file_name in
-      match source with
-      | Json source_yojson -> compile_yojson source_yojson syntax
-      | File filename ->
-        let read_whole_file filename =
-          let ch = In_channel.create filename in
-          let[@warning "-3"] s =
-            really_input_string
-              ch
-              (ch |> In_channel.length |> Int64.to_int |> Stdlib.Option.get)
-          in
-          In_channel.close ch;
-          s
+    match source with
+    | Json source_yojson -> compile_yojson source_yojson syntax
+    | File filename ->
+      let read_whole_file filename =
+        let ch = In_channel.create filename in
+        let[@warning "-3"] s =
+          really_input_string
+            ch
+            (ch |> In_channel.length |> Int64.to_int |> Stdlib.Option.get)
         in
-        let source_code = read_whole_file filename in
-    (* Let's try simply json stringifying it back instead of sending it to the compiler pipelines *)
-    (* json_to_and_from source_code syntax *)
-    (* compile to michelson *)
-       compile source_code syntax
-      | Text (source_code, _syntax) -> 
-    (* Let's try simply json stringifying it back instead of sending it to the compiler pipelines *)
-    (* json_to_and_from source_code syntax *)
-    (* compile to michelson *)
-       compile source_code syntax
+        In_channel.close ch;
+        s
+      in
+      let source_code = read_whole_file filename in
+      (* Let's try simply json stringifying it back instead of sending it to the compiler pipelines *)
+      (* json_to_and_from source_code syntax *)
+      (* compile to michelson *)
+      compile source_code syntax
+    | Text (source_code, _syntax) ->
+      (* Let's try simply json stringifying it back instead of sending it to the compiler pipelines *)
+      (* json_to_and_from source_code syntax *)
+      (* compile to michelson *)
+      compile source_code syntax
   in
   translate_michelson_result value display_format
 

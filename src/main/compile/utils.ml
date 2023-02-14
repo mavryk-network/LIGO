@@ -59,6 +59,7 @@ let compile_ast_typed_string ~raise ~(options : Compiler_options.t) source =
   let contract = Of_michelson.build_contract ~raise michelson in
   contract
 
+
 let compile_ast_typed_yojson ~raise ~(options : Compiler_options.t) yojson =
   (* no need to preprocess -> parse -> abstract and imperative, because these are already done in ast_typed JSONs *)
   let typed = Of_c_unit.compile_ast_typed_yojson ~raise yojson in
