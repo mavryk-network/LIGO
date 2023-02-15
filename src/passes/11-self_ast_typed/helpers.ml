@@ -240,6 +240,16 @@ and map_expression_in_module_expr
   | M_variable _ -> x
 
 
+and map_expression_in_contract_expr
+    : (expression -> expression) -> contract_expr -> contract_expr
+  =
+ fun self x ->
+  let return wrap_content : contract_expr = { x with wrap_content } in
+  match x.wrap_content with
+  | C_struct s -> return @@ C_struct (map_contract self s)
+  | (C_variable _ | C_module_path _) as c -> return c
+
+
 and map_cases
     : 'err mapper -> _ Match_expr.match_case list -> _ Match_expr.match_case list
   =
@@ -259,13 +269,41 @@ and map_declaration m (x : declaration) =
   | D_module { module_binder; module_; module_attr } ->
     let module_ = map_expression_in_module_expr m module_ in
     return @@ D_module { module_binder; module_; module_attr }
-  | D_contract _ ->
+  | D_contract { contract_binder; contract; contract_attr } ->
     (* TODO: Contracts *)
-    assert false
+    return @@ D_contract { contract_binder; contract; contract_attr }
+
+
+and map_contract_decl m (x : contract_declaration) =
+  let return content = Location.map (fun _ -> content) x in
+  match x.wrap_content with
+  | C_value { binder; expr; attr } ->
+    let expr = map_expression m expr in
+    return @@ C_value { binder; expr; attr }
+  | C_irrefutable_match { pattern; expr; attr } ->
+    let expr = map_expression m expr in
+    return @@ C_irrefutable_match { pattern; expr; attr }
+  | C_module { module_binder; module_; module_attr } ->
+    let module_ = map_expression_in_module_expr m module_ in
+    return @@ C_module { module_binder; module_; module_attr }
+  | C_contract { contract_binder; contract; contract_attr } ->
+    let contract = map_expression_in_contract_expr m contract in
+    return @@ C_contract { contract_binder; contract; contract_attr }
+  | C_entry { binder; expr; attr } ->
+    let expr = map_expression m expr in
+    return @@ C_entry { binder; expr; attr }
+  | C_view { binder; expr; attr } ->
+    let expr = map_expression m expr in
+    return @@ C_view { binder; expr; attr }
+  | C_type _ -> x
 
 
 and map_decl m d = map_declaration m d
 and map_module : 'err mapper -> module_ -> module_ = fun m -> List.map ~f:(map_decl m)
+
+and map_contract : 'err mapper -> contract -> contract =
+ fun c -> List.map ~f:(map_contract_decl c)
+
 
 and map_program : 'err mapper -> program -> program =
  fun m -> List.map ~f:(map_declaration m)

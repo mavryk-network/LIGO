@@ -178,7 +178,7 @@ and defuse_of_declaration defuse (decl : declaration) : defuse =
   | D_type _ -> defuse, []
   | D_module { module_; module_binder = _; module_attr = _ } ->
     defuse_of_module_expr defuse module_
-  | D_contract _ -> assert false
+  | D_contract _ -> defuse, []
 
 
 let defuse_of_declaration defuse decl =

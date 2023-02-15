@@ -315,7 +315,7 @@ and muchuse_declaration (x : declaration) s =
   | D_module { module_; module_binder; module_attr = _ } ->
     muchuse_module_expr s module_binder module_
   | D_type _ -> s
-  | D_contract _ -> assert false
+  | D_contract _ -> s
 
 
 and muchused_declarations (muchuse : muchuse) = function

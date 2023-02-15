@@ -226,7 +226,6 @@ and evaluate_row ~default_layout ({ fields; layout } : I.row) : (Type.row, 'err,
 
 and evaluate_layout (layout : Layout.t) : Type.layout = L_concrete layout
 
-
 and evaluate_type_with_default_layout type_ =
   let open C in
   evaluate_type
@@ -1476,10 +1475,12 @@ and entry_type storage : (Type.t * Type.t, _, _) C.t =
   let%bind param_type = exists Type in
   let%bind t_operation = create_type Type.t_operation in
   let%bind t_operation_list = create_type @@ Type.t_list t_operation in
-  let%bind t_storage_param = create_type @@ Type.t_pair storage param_type in
   let%bind t_op_list_storage = create_type @@ Type.t_pair t_operation_list storage in
   let%bind t =
-    create_type @@ Type.t_arrow { type1 = t_storage_param; type2 = t_op_list_storage }
+    let%bind type2 =
+      create_type @@ Type.t_arrow { type1 = storage; type2 = t_op_list_storage }
+    in
+    create_type @@ Type.t_arrow { type1 = param_type; type2 }
   in
   return (param_type, t)
 
@@ -1490,9 +1491,11 @@ and view_type storage : (Type.t * Type.t * Type.t, _, _) C.t =
   (* Code for creating the type: [storage * ^param -> ^result] *)
   let%bind param_type = exists Type in
   let%bind result_type = exists Type in
-  let%bind t_storage_param = create_type @@ Type.t_pair storage param_type in
   let%bind t =
-    create_type @@ Type.t_arrow { type1 = t_storage_param; type2 = result_type }
+    let%bind type2 =
+      create_type @@ Type.t_arrow { type1 = storage; type2 = result_type }
+    in
+    create_type @@ Type.t_arrow { type1 = param_type; type2 }
   in
   return (param_type, result_type, t)
 
@@ -1591,7 +1594,7 @@ and infer_contract_declaration (decl : I.contract_declaration)
       E.(
         let%bind view_type = decode view_type
         and expr = expr in
-        return @@ O.C_entry { binder = Binder.set_ascr binder view_type; expr; attr })
+        return @@ O.C_view { binder = Binder.set_ascr binder view_type; expr; attr })
       [ S_view (Binder.get_var binder, View_type.{ param_type; return_type }) ]
 
 
