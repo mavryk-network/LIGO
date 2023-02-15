@@ -849,7 +849,7 @@ fun_expr:
 | ioption(type_generics) ES6FUN "(" ")"
   ioption(type_annotation) "=>" body {
     let start      = match $1 with
-                       None   -> $3.region
+                       None   -> $3#region
                      | Some p -> p.region in
     let region     = cover start (body_to_region $7) in
     let parameters = EUnit {region; value = ($3,$4)} in
