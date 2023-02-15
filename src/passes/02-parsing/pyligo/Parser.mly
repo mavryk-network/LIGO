@@ -154,13 +154,14 @@ tuple(item):
 
 (* Aliasing and inlining some tokens *)
 
-%inline
-variable    : "<ident>"  { $1 }
-fun_name    : "<ident>"  { $1 }
-member_name : "<ident>"  { $1 }
-module_name : "<ident>"  { $1 }
-type_name   : "<ident>"  { $1 }
+gen_ident: "<ident>" | "<eident>" { $1 }
 
+%inline
+variable    : gen_ident  { $1 }
+fun_name    : gen_ident  { $1 }
+member_name : gen_ident  { $1 }
+module_name : gen_ident  { $1 }
+type_name   : gen_ident  { $1 }
 class_name  : "<uident>" { $1 }
 
 (* Unary operators *)
