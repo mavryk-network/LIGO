@@ -57,6 +57,15 @@ module Apply = struct
     | T_for_all for_all ->
       let for_all = Abstraction.map apply for_all in
       return @@ T_for_all for_all
+    | T_storage storage ->
+      let storage = Storage.map apply storage in
+      return @@ T_storage storage
+    | T_typed_address address ->
+      let address = Address.map apply address in
+      return @@ T_typed_address address
+    | T_contract ctype ->
+      let ctype = Contract_type.map apply ctype in
+      return @@ T_contract ctype
 
 
   and row subst (t : Type.row) : Type.row =

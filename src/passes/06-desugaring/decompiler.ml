@@ -65,7 +65,10 @@ let rec decompile_type_expression (type_ : O.type_expression) : I.type_expressio
       return @@ I.T_abstraction abs
     | O.T_for_all for_all ->
       let for_all = Abstraction.map decompile_type_expression for_all in
-      return @@ I.T_for_all for_all)
+      return @@ I.T_for_all for_all
+    | O.T_typed_address _ | O.T_storage _ | O.T_contract _ ->
+      (* TODO: Contracts *)
+      assert false)
 
 
 and decompile_row ({ fields; layout = _ } : O.row) : _ I.non_linear_rows =
@@ -289,9 +292,9 @@ and decompile_contract_declaration : O.contract_declaration -> I.contract_declar
   | C_type type_decl ->
     let type_decl = decompile_type_decl type_decl in
     return @@ C_type type_decl
-  | C_module module_decl ->
+  | C_module _ ->
     assert false
-  | C_contract contract_decl ->
+  | C_contract _ ->
     assert false
   | C_entry value_decl ->
     let value_decl = decompile_value_decl value_decl in

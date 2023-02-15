@@ -61,6 +61,9 @@ let rec type_expression : Scope.t -> AST.type_expression -> AST.type_expression 
   | T_for_all { ty_binder; kind; type_ } ->
     let type_ = self type_ in
     return @@ T_for_all { ty_binder; kind; type_ }
+  | T_typed_address _ | T_storage _ | T_contract _ ->
+    (* TODO: Contracts *)
+    assert false
 
 
 let rec expression : Scope.t -> AST.expression -> AST.expression =
@@ -145,6 +148,9 @@ let rec expression : Scope.t -> AST.expression -> AST.expression =
   | E_while while_loop ->
     let while_loop = While_loop.map self while_loop in
     return @@ E_while while_loop
+  | E_originate _ | E_contract_call_entry _ | E_contract_call_view _ ->
+    (* TODO: Contracts *)
+    assert false
 
 
 and matching_cases
@@ -174,6 +180,9 @@ and compile_declaration scope (d : AST.declaration) : Scope.t * AST.declaration 
     let mod_scope, module_ = compile_module_expr scope module_ in
     let scope, module_binder = Scope.new_module_var scope module_binder mod_scope in
     return scope @@ AST.D_module { module_binder; module_; module_attr }
+  | D_contract _ ->
+    (* TODO: Contracts *)
+    assert false
 
 
 and compile_program scope (program : AST.program) : Scope.t * AST.program =

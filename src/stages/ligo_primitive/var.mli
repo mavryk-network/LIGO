@@ -1,5 +1,8 @@
 module Location = Simple_utils.Location
 
+type 'a of_yojson = Yojson.Safe.t -> ('a, string) Result.t
+type 'a to_yojson = 'a -> Yojson.Safe.t
+
 module type VAR = sig
   type t [@@deriving compare, yojson, hash, sexp]
 
@@ -24,6 +27,14 @@ module type VAR = sig
   val pp : Format.formatter -> t -> unit
 
   include Comparable.S with type t := t
+
+  module Map : sig
+    include module type of Map
+
+    val hash_fold_t : 'a Hash.folder -> 'a t Hash.folder
+    val to_yojson : 'a to_yojson -> 'a t to_yojson
+    val of_yojson : 'a of_yojson -> 'a t of_yojson
+  end
 end
 
 module Value_var : sig

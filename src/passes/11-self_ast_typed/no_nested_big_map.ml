@@ -25,6 +25,9 @@ let rec check_no_nested_bigmap ~raise is_in_bigmap e =
   | T_singleton _ -> ()
   | T_abstraction x -> check_no_nested_bigmap ~raise is_in_bigmap x.type_
   | T_for_all x -> check_no_nested_bigmap ~raise is_in_bigmap x.type_
+  | T_typed_address _ | T_storage _ | T_contract _ ->
+    (* TODO: Contracts *)
+    assert false
 
 
 let self_typing ~raise

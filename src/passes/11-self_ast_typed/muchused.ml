@@ -87,6 +87,9 @@ let rec is_dup (t : type_expression) =
       ; _
       } -> false
   | T_singleton _ -> false
+  | T_typed_address _ | T_storage _ | T_contract _ ->
+    (* TODO: Contracts *)
+    assert false
 
 
 let muchuse_union (x, a) (y, b) = M.union (fun _ x y -> Some (x + y)) x y, a @ b
@@ -209,6 +212,9 @@ let rec muchuse_of_expr expr : muchuse =
       ]
   | E_while { cond; body } ->
     muchuse_unions [ muchuse_of_expr cond; muchuse_of_expr body ]
+  | E_originate _ | E_contract_call_entry _ | E_contract_call_view _ ->
+    (* TODO: Contracts *)
+    assert false
 
 
 and muchuse_of_lambda t { binder; output_type = _; result } =
@@ -270,6 +276,9 @@ and get_all_declarations (module_name : Module_var.t)
             in
             name, Binder.get_ascr binder)
       | D_type _ | D_module _ -> []
+      | D_contract _ ->
+        (* TODO: Contracts *)
+        assert false
     in
     m |> List.map ~f:aux |> List.concat
 
@@ -306,6 +315,7 @@ and muchuse_declaration (x : declaration) s =
   | D_module { module_; module_binder; module_attr = _ } ->
     muchuse_module_expr s module_binder module_
   | D_type _ -> s
+  | D_contract _ -> assert false
 
 
 and muchused_declarations (muchuse : muchuse) = function

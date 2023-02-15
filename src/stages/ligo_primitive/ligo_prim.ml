@@ -72,6 +72,12 @@ module Pattern_decl (Pattern : Pattern.S) (Attr : Declaration.Attr) =
 module Contract_var = Var.Contract_var
 module Originate = Originate
 module Contract_call = Contract_call
+module View_type = View_type
+module Entry_type = Entry_type
+module Contract_type = Contract_type
+module Contract_signature = Contract_signature
+module Address = Address
+module Storage = Storage
 
 (* Misc *)
 module Error = Error
