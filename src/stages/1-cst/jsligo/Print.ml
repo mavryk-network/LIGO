@@ -128,11 +128,6 @@ and print_val_binding state (node: val_binding reg) =
   let print_binders state (node: pattern) =
     Tree.make_unary state "<binders>" print_pattern node
 
-  and print_type_params state (node: type_generics) =
-    let Region.{region; value} = node in
-    let seq = value.inside in
-    Tree.(of_nsepseq state ~region "<parameters>" make_literal seq)
-
   and print_rhs state (node: expr) =
     Tree.make_unary state "<rhs>" print_expr node in
 
@@ -142,6 +137,11 @@ and print_val_binding state (node: val_binding reg) =
     mk_child_opt print_type_annotation value.lhs_type;
     mk_child     print_rhs             value.expr]
   in Tree.make state ~region "<binding>" children
+
+and print_type_params state (node: type_generics) =
+  let Region.{region; value} = node in
+  let seq = value.inside in
+  Tree.(of_nsepseq state ~region "<parameters>" make_literal seq)
 
 and print_type_annotation state (_, type_expr) =
   Tree.make_unary state "<type>" print_type_expr type_expr
@@ -530,6 +530,7 @@ and print_EFun state (node: fun_expr reg) =
   | ExpressionBody e -> print_ExpressionBody state e in
 
   let children = Tree.[
+    mk_child_opt print_type_params     value.type_params;
     mk_child     print_fun_param       value.parameters;
     mk_child_opt print_type_annotation value.lhs_type;
     mk_child     print_body            value.body]

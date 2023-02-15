@@ -551,10 +551,11 @@ and body =
 | ExpressionBody of expr
 
 and fun_expr = {
-  parameters : expr;
-  lhs_type   : (colon * type_expr) option;
-  arrow      : arrow;
-  body       : body
+  type_params : type_generics option;
+  parameters  : expr;
+  lhs_type    : (colon * type_expr) option;
+  arrow       : arrow;
+  body        : body
 }
 
 and cond_statement = {
