@@ -226,11 +226,8 @@ and evaluate_row ~default_layout ({ fields; layout } : I.row) : (Type.row, 'err,
 
 and evaluate_layout (layout : Layout.t) : Type.layout = L_concrete layout
 
-(* let evaluate_type_with_lexists type_ = *)
-(*   let open C in *)
-(*   evaluate_type ~default_layout:lexists type_ *)
 
-let evaluate_type_with_default_layout type_ =
+and evaluate_type_with_default_layout type_ =
   let open C in
   evaluate_type
     ~default_layout:(fun fields -> return @@ Type.default_layout_from_field_set fields)
