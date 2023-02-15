@@ -387,8 +387,12 @@ let expression_to_variable ~raise : CST.expr -> CST.variable = function
 
 
 let compile_component_to_access ~raise : CST.expr -> _ Access_path.access = function
-  | EArith (Int i) -> Access_tuple (snd i.value)
-  | EString (String s) -> Access_record s.value
+  | EArith (Int i) ->
+    let i,_ = w_split i in
+    Access_tuple (snd i)
+  | EString (String s) ->
+    let s,_ = w_split s in
+    Access_record s
   | _ as e -> raise.error @@ expected_an_int_or_string e
 
 
@@ -1087,8 +1091,7 @@ and compile_expression ~raise : CST.expr -> AST.expr =
         match path with
         | [] -> final_value
         | sel :: path' ->
-          let make_e_update (reg : Region.t) (path : _ Access_path.t) =
-            let loc = Location.lift reg in
+          let make_e_update (loc : Location.t) (path : _ Access_path.t) =
             let struct_ = old_record in
             let update =
               let rec_struct_ = e_accessor ~loc struct_ path in
@@ -1099,22 +1102,24 @@ and compile_expression ~raise : CST.expr -> AST.expr =
           (match sel with
           | FieldName
               { region = _
-              ; value = { dot = _; value = { region = freg; value = fname } }
-              } -> make_e_update freg [ Access_path.Access_record fname ]
+              ; value = { dot = _; value }
+              } ->
+                let fname,freg = w_split value in
+                make_e_update freg [ Access_path.Access_record fname ]
           | Component { value = { inside = expr; _ }; region = reg } ->
             let access = compile_component_to_access ~raise expr in
-            make_e_update reg [ access ])
+            make_e_update (Location.lift reg) [ access ])
       in
       let old_record =
-        e_variable_ez ~loc:(Location.lift toplevel_record.region) toplevel_record.value
+        e_variable_ez ~loc:(Location.lift toplevel_record#region) toplevel_record#payload
       in
       aux old_record (List.Ne.to_list path)
     in
     (* 3. Forge the toplevel E_Assign expression *)
     let e_update = update_of_path path in
     let binder : _ Binder.t =
-      let loc = Location.lift toplevel_record.region in
-      let var = Value_var.of_input_var ~loc toplevel_record.value in
+      let loc = Location.lift toplevel_record#region in
+      let var = Value_var.of_input_var ~loc toplevel_record#payload in
       Binder.make var None
     in
     let eassign_reg =

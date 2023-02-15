@@ -424,10 +424,9 @@ module Fold_helpers (M : Monad) = struct
       let* module_ = self_module module_ in
       let value = { value with module_ } in
       return @@ ModuleDecl { value; region }
-    | ModuleAlias { value; region } ->
-      let { kwd_module = _; alias = _; eq = _; binders = _ } = value in
-      return @@ ModuleAlias { value; region }
+    | ModuleAlias _ as d -> return d
     | Directive _ as d -> return d
+    | ContractDecl _ -> assert false
 
 
   and map_module : mapper -> Cst.Cameligo.t -> Cst.Cameligo.t monad =

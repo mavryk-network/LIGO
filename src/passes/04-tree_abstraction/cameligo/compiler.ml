@@ -1031,6 +1031,7 @@ and compile_let_decl
       | `Value of (expression, type_expression option) Types.Value_decl.t
       ]
   =
+  let CST.{ type_params; binders; rhs_type; let_rhs; _ } = let_binding in
   let type_params =
     match type_params with
     | Some _ -> type_params
@@ -1039,6 +1040,7 @@ and compile_let_decl
   let pattern, args = binders in
   let let_rhs = compile_expression ~raise let_rhs in
   let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) rhs_type in
+  let attr = compile_attributes attributes in
   (*
   function :
     let (type a b) x = ..
@@ -1048,14 +1050,13 @@ and compile_let_decl
     let x = ..
     let (x,y) = ..
   *)
-  (match kwd_rec, args, type_params with
+  match kwd_rec, args, type_params with
   | None, [], None ->
     (* not function *)
     (*
       let x : ty = body
       let x = (body : ty)
     *)
-    let attr = compile_attributes attributes in
     let pattern = compile_pattern ~raise pattern in
     (match Location.unwrap pattern with
     | P_var binder ->
@@ -1146,7 +1147,7 @@ and compile_let_decl
           List.Ne.fold_right ~f:(fun t e -> e_type_abs ~loc t e) ~init:let_rhs type_vars)
         type_params
     in
-    `Value { binder; attr; expr = let_rhs })
+    `Value { binder; attr; expr = let_rhs }
 
 
 and compile_type_decl
@@ -1213,7 +1214,7 @@ and compile_contract ~raise : CST.contract -> AST.contract_declaration =
   | ContractEntry { region; value = { name; parameters; ret_type; rhs; _ } } ->
     let entry = compile_entry_or_view ~raise (name, parameters, ret_type, rhs) in
     return region (C_entry entry)
-  | ContractView { region; value = { name; parameters; ret_type; rhs } } ->
+  | ContractView { region; value = { name; parameters; ret_type; rhs ; _  } } ->
     let view = compile_entry_or_view ~raise (name, parameters, ret_type, rhs) in
     return region (C_view view)
 
