@@ -52,6 +52,21 @@ module Free_type_variables = struct
     | T_for_all { ty_binder; type_; _ } ->
       let v = self type_ in
       VarSet.remove ty_binder v
+    | T_typed_address address ->
+      Address.fold
+        (fun var_set type_ -> VarSet.union var_set (self type_))
+        VarSet.empty
+        address
+    | T_storage storage ->
+      Storage.fold
+        (fun var_set type_ -> VarSet.union var_set (self type_))
+        VarSet.empty
+        storage
+    | T_contract sig_ ->
+      Contract_signature.fold
+        (fun var_set type_ -> VarSet.union var_set (self type_))
+        VarSet.empty
+        sig_
 
 
   let type_expression : Type_var.t list -> type_expression -> Type_var.t list =

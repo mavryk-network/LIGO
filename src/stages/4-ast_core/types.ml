@@ -22,6 +22,10 @@ type type_content =
   | T_singleton of Literal_value.t
   | T_abstraction of ty_expr Abstraction.t
   | T_for_all of ty_expr Abstraction.t
+  (* Contracts *)
+  | T_typed_address of ty_expr Address.t
+  | T_storage of ty_expr Storage.t
+  | T_contract of ty_expr Contract_signature.t
 
 and row = type_expression Row.t
 

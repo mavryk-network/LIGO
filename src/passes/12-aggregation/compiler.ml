@@ -320,6 +320,9 @@ let rec compile_type_expression ~raise path scope (type_expression : I.type_expr
   | T_for_all { ty_binder; kind; type_ } ->
     let type_ = self type_ in
     return @@ T_for_all { ty_binder; kind; type_ }
+  | T_typed_address _ | T_storage _ | T_contract _ ->
+    (* TODO: Contracts *)
+    assert false
 
 
 let rec compile_expression ~raise path scope (expr : I.expression) =
@@ -461,6 +464,9 @@ let rec compile_expression ~raise path scope (expr : I.expression) =
   | E_while while_loop ->
     let while_loop = While_loop.map self while_loop in
     return @@ E_while while_loop
+  | E_originate _ | E_contract_call_entry _ | E_contract_call_view _ ->
+    (* TODO: Contracts *)
+    assert false
 
 
 and compile_declaration
@@ -523,6 +529,9 @@ and compile_declaration
     in
     let scope = Scope.push_module scope module_binder path' mod_scope in
     scope, decl_list
+  | D_contract _ ->
+    (* TODO: Contracts *)
+    assert false
 
 
 and compile_declaration_list

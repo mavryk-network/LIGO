@@ -1594,6 +1594,7 @@ let super_counter_contract ~raise f : unit =
   expect_eq_n_twice ~raise program "main" make_input make_expected
 
 
+
 (*
 let dispatch_counter_contract ~raise () : unit =
   let program = type_file ~raise "./contracts/dispatch-counter.ligo" in
@@ -1947,6 +1948,7 @@ let lambda2 ~raise f : unit =
   expect_eq_twice ~raise program "main" (e_unit ~loc ()) (e_unit ~loc ()) make_expected
 
 
+
 (* Why was this test not used below? -- Christian
 
 let fibo_mligo ~raise () : unit =
@@ -1986,6 +1988,7 @@ let website2_ligo ~raise f : unit =
     e_pair ~loc (e_typed_list ~loc [] (t_operation ~loc ())) (e_int ~loc (op 42 n))
   in
   expect_eq_n_twice ~raise program "main" make_input make_expected
+
 
 
 (*

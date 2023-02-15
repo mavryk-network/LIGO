@@ -78,6 +78,9 @@ let rec type_expression : Aliases.t -> AST.type_expression -> AST.type_expressio
   | T_for_all { ty_binder; kind; type_ } ->
     let type_ = self type_ in
     return @@ T_for_all { ty_binder; kind; type_ }
+  | T_typed_address _ | T_storage _ | T_contract _ ->
+    (* TODO: Contracts *)
+    assert false
 
 
 let rec expression path : Aliases.t -> AST.expression -> AST.expression =
@@ -168,6 +171,9 @@ let rec expression path : Aliases.t -> AST.expression -> AST.expression =
   | E_while while_loop ->
     let while_loop = While_loop.map self while_loop in
     return @@ E_while while_loop
+  | E_originate _ | E_contract_call_entry _ | E_contract_call_view _ ->
+    (* TODO: Contracts *)
+    assert false
 
 
 and matching_cases path
@@ -206,6 +212,9 @@ and compile_declaration path aliases (d : AST.declaration)
     | None -> return_n aliases
     | Some module_ ->
       return_s aliases @@ AST.D_module { module_binder; module_; module_attr })
+  | D_contract _ ->
+    (* TODO: Contracts *)
+    assert false
 
 
 and compile_declaration_list path aliases (program : AST.program)

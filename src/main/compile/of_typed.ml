@@ -165,7 +165,7 @@ let list_declarations (only_ep : bool) (m : Ast_typed.program) : Value_var.t lis
           then Binder.get_var binder :: prev
           else prev
         else Binder.get_var binder :: prev
-      | D_value _ | D_irrefutable_match _ | D_type _ | D_module _ -> prev)
+      | D_value _ | D_irrefutable_match _ | D_type _ | D_module _ | D_contract _ -> prev)
     ~init:[]
     m
 

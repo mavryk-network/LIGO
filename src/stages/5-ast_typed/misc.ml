@@ -61,6 +61,14 @@ module Free_variables = struct
       let b' = union [ binder; binder' ] b in
       unions [ self collection; expression b' fe_body ]
     | E_while { cond; body } -> union (self cond) (self body)
+    | E_originate { contract = _; storage; key_hash; tez } ->
+      unions [ self storage; self key_hash; self tez ]
+    | E_contract_call_entry
+        { contract = _; address; entry = _; param; tez; on_none; entry_type = _ } ->
+      [ address; param; tez ] @ Option.to_list on_none |> List.map ~f:self |> unions
+    | E_contract_call_view
+        { contract = _; address; view = _; param; on_none; view_type = _ } ->
+      [ address; param ] @ Option.to_list on_none |> List.map ~f:self |> unions
 
 
   and lambda : bindings -> (expr, ty_expr) Lambda.t -> bindings =
@@ -124,6 +132,7 @@ let rec assert_type_expression_eq ((a, b) : type_expression * type_expression)
     : unit option
   =
   let open Option in
+  let equal t1 t2 = Option.is_some (assert_type_expression_eq (t1, t2)) in
   match a.type_content, b.type_content with
   | ( T_constant { language = la; injection = ia; parameters = lsta }
     , T_constant { language = lb; injection = ib; parameters = lstb } ) ->
@@ -166,6 +175,15 @@ let rec assert_type_expression_eq ((a, b) : type_expression * type_expression)
     >>= fun _ -> Some (assert (Kind.equal a.kind b.kind))
   | T_abstraction _, _ -> None
   | T_for_all _, _ -> None
+  (* Why isn't this derived?? *)
+  | T_typed_address address1, T_typed_address address2
+    when Address.equal equal address1 address2 -> Some ()
+  | T_typed_address _, _ -> None
+  | T_storage storage1, T_storage storage2 when Storage.equal equal storage1 storage2 ->
+    Some ()
+  | T_storage _, _ -> None
+  | T_contract sig1, T_contract sig2 when Contract_type.equal equal sig1 sig2 -> Some ()
+  | T_contract _, _ -> None
 
 
 and type_expression_eq ab = Option.is_some @@ assert_type_expression_eq ab
@@ -235,7 +253,7 @@ let get_entry (lst : program) (name : Value_var.t) : expression option =
         ; attr =
             { inline = _; no_mutation = _; view = _; public = _; hidden = _; thunk = _ }
         } -> if Binder.apply (Value_var.equal name) binder then Some expr else None
-    | D_irrefutable_match _ | D_type _ | D_module _ -> None
+    | D_irrefutable_match _ | D_type _ | D_module _ | D_contract _ -> None
   in
   List.find_map ~f:aux (List.rev lst)
 

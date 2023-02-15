@@ -269,6 +269,9 @@ let rec find_type_references : AST.type_expression -> reference list =
         match r with
         | Type tv -> not @@ TVar.equal tv ty_binder
         | Variable _ | ModuleAccess _ | ModuleAlias _ | ModuleAccessType _ -> true)
+  | T_typed_address _ | T_storage _ | T_contract _ ->
+    (* TODO: Contracts *)
+    assert false
 
 
 let find_binder_type_references : AST.type_expression option Binder.t -> reference list =

@@ -178,7 +178,7 @@ let%expect_test _ =
      69 | let warn_me = BA 42
      70 | let warn_me = BB 42
 
-    Warning: The type of "BA(42)" is ambiguous: Inferred type is "tb" but could be of type "ta".
+    Warning: The type of "BA(42)" is ambiguous: Inferred type is "ta" but could be of type "tb".
     Hint: You might want to add a type annotation.
 
     File "../../test/contracts/warning_sum_types.mligo", line 70, characters 14-19:
@@ -210,7 +210,7 @@ let%expect_test _ =
      74 | let warn_me = AN 42 (* TODO : It should infer ta and warn about tn and not the contrary *)
      75 | let warn_me = NN 42
 
-    Warning: The type of "AN(42)" is ambiguous: Inferred type is "tn" but could be of type "ta".
+    Warning: The type of "AN(42)" is ambiguous: Inferred type is "ta" but could be of type "tn".
     Hint: You might want to add a type annotation.
 
     File "../../test/contracts/warning_sum_types.mligo", line 75, characters 14-19:

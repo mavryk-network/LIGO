@@ -292,6 +292,19 @@ let rec fold_map_expression : 'a fold_mapper -> 'a -> expression -> 'a * express
     | E_while w ->
       let res, w = While_loop.fold_map self init w in
       res, return @@ E_while w
+    | E_originate originate ->
+      let res, originate = Originate.fold_map self init originate in
+      res, return @@ E_originate originate
+    | E_contract_call_entry contract_call ->
+      let res, contract_call =
+        Contract_call.Entry.fold_map self self_type init contract_call
+      in
+      res, return @@ E_contract_call_entry contract_call
+    | E_contract_call_view contract_call ->
+      let res, contract_call =
+        Contract_call.View.fold_map self self_type init contract_call
+      in
+      res, return @@ E_contract_call_view contract_call
     | (E_deref _ | E_literal _ | E_variable _ | E_module_accessor _) as e' ->
       init, return e')
 
@@ -314,6 +327,7 @@ and fold_map_cases
 
 
 and fold_map_declaration m acc (x : declaration) =
+  let return wrap_content = { x with wrap_content } in
   match Location.unwrap x with
   | D_value { binder; expr; attr } ->
     let acc', expr = fold_map_expression m acc expr in
@@ -330,6 +344,46 @@ and fold_map_declaration m acc (x : declaration) =
     let acc', module_ = (fold_map_expression_in_module_expr m) acc module_ in
     let wrap_content = D_module { module_binder; module_; module_attr } in
     acc', { x with wrap_content }
+  | D_contract { contract_binder; contract; contract_attr } ->
+    let res, contract = fold_map_expression_in_contract_expr m acc contract in
+    res, return @@ D_contract { contract_binder; contract; contract_attr }
+
+
+and fold_map_expression_in_contract_expr mapper acc (contract_expr : contract_expr) =
+  let return wrap_content = { contract_expr with wrap_content } in
+  match contract_expr.wrap_content with
+  | C_struct decls ->
+    let res, decls = fold_map_contract mapper acc decls in
+    res, return @@ Contract_expr.C_struct decls
+  | C_module_path _ | C_variable _ -> acc, contract_expr
+
+
+and fold_map_contract mapper init contract =
+  List.fold_map contract ~f:(fold_map_contract_declaration mapper) ~init
+
+
+and fold_map_contract_declaration mapper init (contract_decl : contract_declaration) =
+  let return wrap_content = { contract_decl with wrap_content } in
+  match Location.unwrap contract_decl with
+  | C_value { binder; expr; attr } ->
+    let res, expr = fold_map_expression mapper init expr in
+    res, return @@ C_value { binder; expr; attr }
+  | C_irrefutable_match { pattern; expr; attr } ->
+    let res, expr = fold_map_expression mapper init expr in
+    res, return @@ C_irrefutable_match { pattern; expr; attr }
+  | C_type _ -> init, contract_decl
+  | C_module { module_binder; module_; module_attr } ->
+    let res, module_ = fold_map_expression_in_module_expr mapper init module_ in
+    res, return @@ C_module { module_binder; module_; module_attr }
+  | C_contract { contract_binder; contract; contract_attr } ->
+    let res, contract = fold_map_expression_in_contract_expr mapper init contract in
+    res, return @@ C_contract { contract_binder; contract; contract_attr }
+  | C_entry { binder; expr; attr } ->
+    let res, expr = fold_map_expression mapper init expr in
+    res, return @@ C_entry { binder; expr; attr }
+  | C_view { binder; expr; attr } ->
+    let res, expr = fold_map_expression mapper init expr in
+    res, return @@ C_view { binder; expr; attr }
 
 
 and fold_map_decl m = fold_map_declaration m
@@ -361,6 +415,7 @@ let rec fold_type_expression
  fun te ~init ~f ->
   let self te = fold_type_expression te ~f in
   let init = f init te in
+  let self' init te = self te ~init in
   match te.type_content with
   | T_variable _ -> init
   | T_constant { parameters; _ } -> List.fold parameters ~init ~f
@@ -368,6 +423,9 @@ let rec fold_type_expression
   | T_arrow { type1; type2 } -> self type2 ~init:(self type1 ~init)
   | T_singleton _ -> init
   | T_abstraction { type_; _ } | T_for_all { type_; _ } -> self type_ ~init
+  | T_typed_address address -> Address.fold self' init address
+  | T_storage storage -> Storage.fold self' init storage
+  | T_contract type_ -> Contract_type.fold self' init type_
 
 
 (* An [IdMap] is a [Map] augmented with an [id] field (which is wrapped around the map [value] field).
@@ -542,7 +600,7 @@ let get_views : program -> (Value_var.t * Location.t) list =
       let var = Binder.get_var binder in
       (var, Value_var.get_location var) :: acc
     (* TODO: exhaustive here ... *)
-    | D_type _ | D_module _ | D_value _ | D_irrefutable_match _ -> acc
+    | D_type _ | D_module _ | D_value _ | D_irrefutable_match _ | D_contract _ -> acc
   in
   List.fold_right ~init:[] ~f p
 
@@ -554,7 +612,7 @@ let fetch_view_type : declaration -> (type_expression * type_expression Binder.t
   | D_irrefutable_match { pattern = { wrap_content = P_var binder; _ }; expr; attr }
     when attr.view ->
     Some (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
-  | D_value _ | D_irrefutable_match _ | D_type _ | D_module _ -> None
+  | D_value _ | D_irrefutable_match _ | D_type _ | D_module _ | D_contract _ -> None
 
 
 (* Wrap a variable `f` of type `parameter -> storage -> return`
@@ -678,5 +736,6 @@ let fetch_views_in_program
         , (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
           :: views ))
     | D_irrefutable_match _ | D_type _ | D_module _ | D_value _ -> return ()
+    | D_contract _ -> assert false
   in
   List.fold_right ~f:aux ~init:([], []) prog

@@ -172,6 +172,9 @@ and get_fv expr =
     in
     return (merge_env coll_env body_env)
     @@ E_for_each { fe_binder; collection; collection_type; fe_body }
+  | E_originate _ | E_contract_call_entry _ | E_contract_call_view _ ->
+    (* TODO: Contracts *)
+    assert false
 
 
 and get_fv_cases : _ Match_expr.match_case list -> env * _ Match_expr.match_case list =
@@ -322,6 +325,9 @@ let remove_unused ~raise : contract_pass_data -> program -> program =
     | D_irrefutable_match { pattern = { wrap_content = P_var { var; _ }; _ }; _ } ->
       not (Value_var.equal var contract_pass_data.main_name)
     | D_irrefutable_match _ | D_type _ | D_module _ -> true
+    | D_contract _ ->
+      (* TODO: Contracts *)
+      assert false
   in
   (* Remove the definition after the main entry_point (can't be relevant), mostly remove the test *)
   let prg_decls = List.drop_while prg_decls ~f:aux in
@@ -340,6 +346,9 @@ let remove_unused ~raise : contract_pass_data -> program -> program =
       let env, _ = get_fv dc.expr in
       Some env
     | D_type _ | D_module _ -> None
+    | D_contract _ ->
+      (* TODO: Contracts *)
+      assert false
   in
   let _, module_ = get_fv_program env [ main_decl ] prg_decls in
   module_
@@ -352,6 +361,9 @@ let remove_unused_for_views : program -> program =
     match decl.wrap_content with
     | D_value { attr; _ } | D_irrefutable_match { attr; _ } -> attr.view
     | D_type _ | D_module _ -> false
+    | D_contract _ ->
+      (* TODO: Contracts *)
+      assert false
   in
   (* Remove the definition after the last view (can't be relevant), mostly remove the test *)
   let prg_decls = List.drop_while (List.rev prg) ~f:(fun x -> not (is_view x)) in
@@ -374,7 +386,10 @@ let remove_unused_for_views : program -> program =
             }
           in
           Some (lhs_env, rhs_env)
-        | D_value _ | D_irrefutable_match _ | D_type _ | D_module _ -> None)
+        | D_value _ | D_irrefutable_match _ | D_type _ | D_module _ -> None
+        | D_contract _ ->
+          (* TODO: Contracts *)
+          assert false)
   in
   (* lhs_envs = variables bound by declaration ; rhs_envs = free variables in declaration rhs *)
   let lhs_envs, rhs_envs = List.unzip envs in

@@ -113,6 +113,9 @@ let rec defuse_of_expr defuse expr : defuse =
       ]
   | E_while { cond; body } ->
     defuse_unions defuse [ defuse_of_expr defuse cond; defuse_of_expr defuse body ]
+  | E_originate _ | E_contract_call_entry _ | E_contract_call_view _ ->
+    (* TODO: Contracts *)
+    assert false
 
 
 and defuse_of_lambda defuse { binder; output_type = _; result } =
@@ -175,6 +178,7 @@ and defuse_of_declaration defuse (decl : declaration) : defuse =
   | D_type _ -> defuse, []
   | D_module { module_; module_binder = _; module_attr = _ } ->
     defuse_of_module_expr defuse module_
+  | D_contract _ -> assert false
 
 
 let defuse_of_declaration defuse decl =

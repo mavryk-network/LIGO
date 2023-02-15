@@ -21,6 +21,9 @@ let rec type_content : formatter -> type_content -> unit =
   | T_singleton x -> Literal_value.pp ppf x
   | T_abstraction x -> Abstraction.pp_type_abs type_expression ppf x
   | T_for_all x -> Abstraction.pp_forall type_expression ppf x
+  | T_storage storage -> Storage.pp type_expression ppf storage
+  | T_typed_address address -> Address.pp type_expression ppf address
+  | T_contract type_ -> Contract_type.pp type_expression ppf type_
 
 
 (* and row : formatter -> row_element -> unit =
@@ -72,6 +75,9 @@ let rec type_content_orig : formatter -> type_content -> unit =
   | T_singleton x -> Literal_value.pp ppf x
   | T_abstraction x -> Abstraction.pp_type_abs type_expression ppf x
   | T_for_all x -> Abstraction.pp_forall type_expression ppf x
+  | T_storage storage -> Storage.pp type_expression ppf storage
+  | T_contract sig_ -> Contract_type.pp type_expression ppf sig_
+  | T_typed_address address -> Address.pp type_expression ppf address
 
 
 and type_expression_orig ppf (te : type_expression) : unit =
@@ -151,6 +157,11 @@ and expression_content ppf (ec : expression_content) =
   | E_for for_loop -> For_loop.pp expression ppf for_loop
   | E_for_each for_each -> For_each_loop.pp expression ppf for_each
   | E_while while_loop -> While_loop.pp expression ppf while_loop
+  | E_originate originate -> Originate.pp expression ppf originate
+  | E_contract_call_entry contract_call ->
+    Contract_call.Entry.pp expression type_expression ppf contract_call
+  | E_contract_call_view contract_call ->
+    Contract_call.View.pp expression type_expression ppf contract_call
 
 
 and type_inst ppf { forall; type_ } =
@@ -177,6 +188,25 @@ and declaration ?(use_hidden = true) ppf (d : declaration) =
     if md.module_attr.hidden && use_hidden
     then ()
     else Types.Module_decl.pp module_expr ppf md
+  | D_contract contract_decl ->
+    if contract_decl.contract_attr.hidden && use_hidden
+    then ()
+    else Contract_decl.pp contract_expr ppf contract_decl
+
+
+and contract_declaration ppf (contract_decl : contract_declaration) =
+  match Location.unwrap contract_decl with
+  | C_value vd -> Types.Value_decl.pp expression type_expression ppf vd
+  | C_irrefutable_match pd -> Types.Pattern_decl.pp expression type_expression ppf pd
+  | C_type td -> Types.Type_decl.pp type_expression ppf td
+  | C_module md -> Types.Module_decl.pp module_expr ppf md
+  | C_contract contract_decl -> Contract_decl.pp contract_expr ppf contract_decl
+  | C_entry vd -> Value_decl.pp_entry expression type_expression ppf vd
+  | C_view vd -> Value_decl.pp_view expression type_expression ppf vd
+
+
+and contract_expr ppf (ce : contract_expr) =
+  Location.pp_wrap (Contract_expr.pp contract_declaration) ppf ce
 
 
 and decl ppf d = declaration ppf d

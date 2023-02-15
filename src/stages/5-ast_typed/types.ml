@@ -20,6 +20,10 @@ and type_content =
   | T_singleton of Literal_value.t
   | T_abstraction of ty_expr Abstraction.t
   | T_for_all of ty_expr Abstraction.t
+  (* Contracts *)
+  | T_typed_address of ty_expr Address.t
+  | T_storage of ty_expr Storage.t
+  | T_contract of ty_expr Contract_type.t
 
 and type_injection =
   { language : string
@@ -53,6 +57,7 @@ module Pattern = Linear_pattern
 module Match_expr = Match_expr.Make (Pattern)
 module Let_in = Let_in.Make (Pattern) (ValueAttr)
 module Pattern_decl = Pattern_decl (Pattern) (ValueAttr)
+module Contract_decl = Contract_decl (TypeOrModuleAttr)
 
 type expression_content =
   (* Base *)
@@ -83,6 +88,10 @@ type expression_content =
   | E_for of expr For_loop.t
   | E_for_each of expr For_each_loop.t
   | E_while of expr While_loop.t
+  (* Contracts *)
+  | E_originate of expr Originate.t
+  | E_contract_call_entry of (expr, ty_expr) Contract_call.Entry.t
+  | E_contract_call_view of (expr, ty_expr) Contract_call.View.t
 
 and type_inst =
   { forall : expression
@@ -102,10 +111,27 @@ and declaration_content =
   | D_irrefutable_match of (expr, ty_expr) Pattern_decl.t
   | D_type of ty_expr Type_decl.t
   | D_module of module_expr Module_decl.t
+  | D_contract of contract_expr Contract_decl.t
+
+and contract_declaration_content =
+  | C_value of (expr, ty_expr) Value_decl.t
+  | C_irrefutable_match of (expr, ty_expr) Pattern_decl.t
+  | C_type of ty_expr Type_decl.t
+  | C_module of module_expr Module_decl.t
+  (* Contract specific declarations *)
+  | C_contract of contract_expr Contract_decl.t
+  | C_entry of (expr, ty_expr) Value_decl.t
+  | C_view of (expr, ty_expr) Value_decl.t
 
 and declaration = declaration_content Location.wrap
 and decl = declaration [@@deriving eq, compare, yojson, hash]
-and module_expr = decl Module_expr.t Location.wrap [@@deriving eq, compare, yojson, hash]
+and module_expr = decl Module_expr.t Location.wrap
+and contract_declaration = contract_declaration_content Location.wrap
+and contract_expr_content = contract_declaration Contract_expr.t
+
+and contract_expr = contract_expr_content Location.wrap
+[@@deriving eq, compare, yojson, hash]
 
 type module_ = decl list [@@deriving eq, compare, yojson, hash]
+type contract = contract_declaration list [@@deriving equal, compare, yojson, hash]
 type program = declaration list [@@deriving eq, compare, yojson, hash]
