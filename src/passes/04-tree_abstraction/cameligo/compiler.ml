@@ -610,6 +610,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
           in
           e_recursive
             ~loc:(Location.lift reg#region)
+            ~force_lambdarec:(List.mem ~equal:String.equal let_attr "lambdarec")
             (Binder.get_var let_binder)
             fun_type
             lambda
@@ -1030,10 +1031,6 @@ and compile_let_decl
       | `Value of (expression, type_expression option) Types.Value_decl.t
       ]
   =
-  let attr = compile_attributes attributes in
-  let ({ type_params; binders; rhs_type; eq = _; let_rhs } : CST.let_binding) =
-    let_binding
-  in
   let type_params =
     match type_params with
     | Some _ -> type_params
@@ -1043,21 +1040,21 @@ and compile_let_decl
   let let_rhs = compile_expression ~raise let_rhs in
   let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) rhs_type in
   (*
-    function :
-      let (type a b) x = ..
-      let x foo bar = ..
-      let (type a b) foo bar = ..
-    not function:
-      let x = ..
-      let (x,y) = ..
-    *)
-  match kwd_rec, args, type_params with
+  function :
+    let (type a b) x = ..
+    let x foo bar = ..
+    let (type a b) foo bar = ..
+  not function:
+    let x = ..
+    let (x,y) = ..
+  *)
+  (match kwd_rec, args, type_params with
   | None, [], None ->
     (* not function *)
     (*
-        let x : ty = body
-        let x = (body : ty)
-      *)
+      let x : ty = body
+      let x = (body : ty)
+    *)
     let attr = compile_attributes attributes in
     let pattern = compile_pattern ~raise pattern in
     (match Location.unwrap pattern with
@@ -1132,6 +1129,7 @@ and compile_let_decl
         in
         e_recursive
           ~loc:(Location.lift reg#region)
+          ~force_lambdarec:(List.mem ~equal:String.equal attr "lambdarec")
           (Binder.get_var binder)
           fun_type
           lambda
@@ -1148,7 +1146,7 @@ and compile_let_decl
           List.Ne.fold_right ~f:(fun t e -> e_type_abs ~loc t e) ~init:let_rhs type_vars)
         type_params
     in
-    `Value { binder; attr; expr = let_rhs }
+    `Value { binder; attr; expr = let_rhs })
 
 
 and compile_type_decl

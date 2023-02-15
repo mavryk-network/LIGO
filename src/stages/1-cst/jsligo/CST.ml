@@ -552,10 +552,10 @@ and body =
 
 and fun_expr = {
   type_params : type_generics option;
-  parameters  : expr;
-  lhs_type    : (colon * type_expr) option;
-  arrow       : arrow;
-  body        : body
+  parameters : expr;
+  lhs_type   : (colon * type_expr) option;
+  arrow      : arrow;
+  body       : body;
 }
 
 and cond_statement = {
