@@ -9,19 +9,20 @@ open Ligo_prim
 let default_entrypoint = "main"
 let default_entrypoint_var = Value_var.of_input_var ~loc:Location.generated default_entrypoint
 let default_views = "views"
-let default_views_var = Value_var.of_input_var ~loc:Location.generated default_entrypoint
+let default_views_var = Value_var.of_input_var ~loc:Location.generated default_views
 
-let program_sig_ : Signature.t -> ((Signature.item * Signature.item) option, _, _) C.t =
+let program_sig_ : Signature.t -> (Signature.item list, _, _) C.t =
   fun sig_ ->
   let is_entry s = match s with
     | Signature.S_value (var, ty, attr) when attr.entry -> Some (var, ty)
     | _ -> None in
-  let is_view s = match s with
-    | Signature.S_value (var, ty, attr) when attr.view -> Some (var, ty)
-    | _ -> None in
+  (* let is_view s = match s with *)
+  (*   | Signature.S_value (var, ty, attr) when attr.view -> Some (var, ty) *)
+  (*   | _ -> None in *)
+  (* let views = List.filter_map ~f:is_view sig_ in *)
   let open C.Let_syntax in
   match List.Ne.of_list_opt @@ List.filter_map ~f:is_entry sig_ with
-  | None -> return None
+  | None -> return []
   | Some entries ->
     let%bind parameter_type, storage_type =
       match Type.parameter_from_entrypoints entries with
@@ -47,10 +48,11 @@ let program_sig_ : Signature.t -> ((Signature.item * Signature.item) option, _, 
     let parameter_type_decl = Signature.S_type (type_binder, parameter_type) in
     let contract_type = Type.build_entry_type parameter_type storage_type in
     let contract_decl = Signature.S_value (default_entrypoint_var, contract_type, Context.Attr.default) in
-    return (Some (parameter_type_decl, contract_decl))
+    let views_type = Type.t_views ~loc:Location.generated storage_type () in
+    let views_decl = Signature.S_value (default_views_var, views_type, Context.Attr.default) in
+    return [parameter_type_decl; contract_decl; views_decl]
  
 let make_main_signature (sig_ : Signature.t) =
   let open C.Let_syntax in
-  match%bind program_sig_ sig_ with
-  | None -> return sig_
-  | Some (type_decl, main_decl) -> return @@ sig_ @  [type_decl; main_decl]
+  let%bind postfix = program_sig_ sig_ in
+  return @@ sig_ @ postfix

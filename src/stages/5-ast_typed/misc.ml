@@ -119,7 +119,6 @@ let assert_no_type_vars (t : type_expression) : unit option =
   in
   Helpers.fold_type_expression t ~init:(Some ()) ~f
 
-
 let rec assert_type_expression_eq ((a, b) : type_expression * type_expression)
     : unit option
   =
@@ -255,15 +254,15 @@ let get_type_of_contract ty =
     | _ -> None)
   | _ -> None
 
-let get_entry_form ty =
-  let open Combinators in
-  let open Simple_utils.Option in
-  let* { type1 ; type2 } = get_t_arrow ty in
-  let* parameter, storage = get_t_pair type1 in
-  let* op_list, storage' = get_t_pair type2 in
-  let* () = assert_t_list_operation op_list in
-  let* () = assert_type_expression_eq (storage, storage') in
-  return (parameter, storage)
+(* let get_entry_form ty = *)
+(*   let open Combinators in *)
+(*   let open Simple_utils.Option in *)
+(*   let* { type1 ; type2 } = get_t_arrow ty in *)
+(*   let* parameter, storage = get_t_pair type1 in *)
+(*   let* op_list, storage' = get_t_pair type2 in *)
+(*   let* () = assert_t_list_operation op_list in *)
+(*   let* () = assert_type_expression_eq (storage, storage') in *)
+(*   return (parameter, storage) *)
 
 let build_entry_type p_ty s_ty =
   let open Combinators in
@@ -271,12 +270,43 @@ let build_entry_type p_ty s_ty =
   t_arrow ~loc (t_pair ~loc p_ty s_ty) (t_pair ~loc (t_list ~loc (t_operation ~loc ())) s_ty) ()
 
 
+let should_uncurry_entry entry_ty =
+  let is_t_list_operation listop = Option.is_some @@ Combinators.assert_t_list_operation listop in
+  match Combinators.get_t_arrow entry_ty with
+  | Some { type1 = tin; type2 = return } ->
+    (match Combinators.get_t_tuple tin, Combinators.get_t_tuple return with
+     | Some [parameter ; storage], Some [ listop; storage' ] ->
+       if (is_t_list_operation listop && type_expression_eq (storage, storage')) then
+         `No (parameter, storage)
+       else
+         `Bad
+     | _ ->
+       let parameter = tin in
+       (match Combinators.get_t_arrow return with
+        | Some { type1 = storage; type2 = return } ->
+          (match Combinators.get_t_pair return with
+           | Some (listop, storage') ->
+             if (is_t_list_operation listop && type_expression_eq (storage, storage')) then
+               `Yes (parameter, storage)
+             else
+               `Bad
+           | _ -> `Bad)
+      | None -> `Bad))
+  | None -> `Bad
+
+
 let parameter_from_entrypoints : (Value_var.t * type_expression) List.Ne.t -> (type_expression * type_expression, [> `Not_entry_point_form of Types.type_expression | `Storage_does_not_match of Value_var.t * Types.type_expression * Value_var.t * Types.type_expression ]) result =
   fun ((entrypoint, entrypoint_type), rest) ->
   let open Result in
-  let* parameter, storage = Result.of_option ~error:(`Not_entry_point_form entrypoint_type) @@ get_entry_form entrypoint_type in
+  let* parameter, storage =
+    match should_uncurry_entry entrypoint_type with
+    | `Yes (parameter, storage) | `No (parameter, storage) -> Result.Ok (parameter, storage)
+    | `Bad -> Result.Error (`Not_entry_point_form entrypoint_type) in
   let* parameter_list = List.fold_result ~init:[Value_var.to_name_exn entrypoint,parameter] ~f:(fun parameters (ep, ep_type) ->
-      let* parameter_, storage_ = Result.of_option ~error:(`Not_entry_point_form ep_type) @@ get_entry_form ep_type in
+      let* parameter_, storage_ =
+        match should_uncurry_entry ep_type with
+        | `Yes (parameter, storage) | `No (parameter, storage) -> Result.Ok (parameter, storage)
+        | `Bad -> Result.Error (`Not_entry_point_form entrypoint_type) in
       let* () = Result.of_option ~error:(`Storage_does_not_match (entrypoint, storage, ep, storage_)) @@
         assert_type_expression_eq (storage_,storage) in
       return ((Value_var.to_name_exn ep, parameter_)::parameters)) rest in

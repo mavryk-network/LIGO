@@ -35,7 +35,6 @@ let all_expression ~raise ~warn_unused_rec init =
 
 let all_contract ~raise entrypoints (prg : Ast_typed.program) =
   let main_name, prg = Make_entry_point.program ~raise entrypoints prg in
-  (* print_endline (Format.asprintf "%a" (fun fmt p -> Ast_typed.PP.program fmt p) prg); *)
   let prg, main_name, contract_type = Helpers.fetch_contract_type ~raise main_name prg in
   let data : Contract_passes.contract_pass_data = { contract_type; main_name } in
   let all_p =

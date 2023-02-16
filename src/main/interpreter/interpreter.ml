@@ -352,7 +352,8 @@ let rec apply_comparison ~no_colour ~raise
       | V_Ast_contract _
       | V_Gen _
       | V_Location _
-      | V_Typed_address _ )
+      | V_Typed_address _
+      | V_Views _)
     , ( V_Ct _
       | V_List _
       | V_Record _
@@ -366,7 +367,8 @@ let rec apply_comparison ~no_colour ~raise
       | V_Ast_contract _
       | V_Gen _
       | V_Location _
-      | V_Typed_address _ ) ) ->
+      | V_Typed_address _
+      | V_Views _) ) ->
     let msg =
       Format.asprintf
         "Different value types, cannot be compared: %a"
@@ -1191,7 +1193,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_TEST_BOOTSTRAP_CONTRACT, [ V_Ct (C_mutez z); contract; storage ] ->
     let contract_ty = nth_type 1 in
     let storage_ty = nth_type 2 in
-    let>> code = Compile_contract (loc, contract) in
+    let>> code = Compile_contract (loc, contract, v_list []) in
     let>> storage = Eval (loc, storage, storage_ty) in
     let>> () = Bootstrap_contract (Z.to_int z, code, storage, contract_ty) in
     return @@ v_unit ()
@@ -1323,8 +1325,8 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let>> v = Decompile (code, code_ty, expr_ty) in
     return v
   | C_TEST_DECOMPILE, _ -> fail @@ error_type ()
-  | C_TEST_COMPILE_CONTRACT, [ contract ] ->
-    let>> code = Compile_contract (loc, contract) in
+  | C_TEST_COMPILE_CONTRACT, [ contract ; views ] ->
+    let>> code = Compile_contract (loc, contract, views) in
     return @@ code
   | C_TEST_COMPILE_CONTRACT, _ -> fail @@ error_type ()
   | C_TEST_COMPILE_AST_CONTRACT, [ contract ] ->
@@ -1478,6 +1480,12 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let@ b = Set_print_values b in
     return @@ v_bool b
   | C_TEST_SET_PRINT_VALUES, _ -> fail @@ error_type ()
+  | C_TEST_NIL_VIEWS, [ V_Ct (C_unit) ] ->
+    return @@ v_views []
+  | C_TEST_NIL_VIEWS, _ -> fail @@ error_type ()
+  | C_TEST_CONS_VIEWS, [ V_Ct (C_string n) ; V_Func_val f ; V_Views vs ] ->
+    return @@ v_views @@ (n, f) :: vs
+  | C_TEST_CONS_VIEWS, _ -> fail @@ error_type ()
   | C_POLYMORPHIC_ADD, _ ->
     fail @@ Errors.generic_error loc "POLYMORPHIC_ADD is solved in checking."
   | C_POLYMORPHIC_SUB, _ ->
@@ -1500,7 +1508,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       | C_BIG_MAP
       | C_BIG_MAP_LITERAL
       | C_CREATE_CONTRACT
-      | C_GLOBAL_CONSTANT )
+      | C_GLOBAL_CONSTANT)
     , _ ) -> fail @@ Errors.generic_error loc "Unbound primitive."
 
 

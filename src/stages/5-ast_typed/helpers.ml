@@ -614,7 +614,7 @@ let uncurry_wrap ~loc ~type_ var =
   some @@ expr
 
 
-let should_curry_view view_ty =
+let should_uncurry_view view_ty =
   match Combinators.get_t_arrow view_ty with
   | Some { type1 = tin; type2 = return } ->
     (match Combinators.get_t_tuple tin with
@@ -624,7 +624,6 @@ let should_curry_view view_ty =
       | Some { type1 = storage; type2 = return } -> `Yes (tin, storage, return)
       | None -> `Bad))
   | None -> `Bad
-
 
 let fetch_views_in_program
     : program -> program * (type_expression * type_expression Binder.t) list
@@ -636,7 +635,7 @@ let fetch_views_in_program
     match Location.unwrap declt with
     | D_value ({ binder; expr; attr } as dvalue) when attr.view ->
       let var = Binder.get_var binder in
-      (match should_curry_view expr.type_expression with
+      (match should_uncurry_view expr.type_expression with
       | `Yes _ ->
         let expr =
           Option.value_exn @@ uncurry_wrap ~loc ~type_:expr.type_expression var
@@ -658,7 +657,7 @@ let fetch_views_in_program
         dirref)
       when attr.view ->
       let var = Binder.get_var binder in
-      (match should_curry_view expr.type_expression with
+      (match should_uncurry_view expr.type_expression with
       | `Yes _ ->
         let expr =
           Option.value_exn @@ uncurry_wrap ~loc ~type_:expr.type_expression var
