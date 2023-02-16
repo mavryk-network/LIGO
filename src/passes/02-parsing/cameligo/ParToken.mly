@@ -124,6 +124,7 @@
 %token <string Wrap.t> While  "while"  [@recover.expr Token.wrap_while   $loc]
 %token <string Wrap.t> With   "with"   [@recover.expr Token.wrap_with    $loc]
 %token <string Wrap.t> Mut    "mut"    [@recover.expr Token.wrap_mut     $loc]
+%token <string Wrap.t> Contract "$contract" [@recover.expr Token.wrap_contract     $loc]
 
 (* Virtual tokens *)
 

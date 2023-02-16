@@ -62,6 +62,7 @@ type kwd_to        = lexeme wrap
 type kwd_downto    = lexeme wrap
 type kwd_do        = lexeme wrap
 type kwd_done      = lexeme wrap
+type kwd_contract  = lexeme wrap
 
 (* Symbols *)
 
@@ -328,6 +329,7 @@ and expr =
 | EWhile    of while_loop reg
 | EFor      of for_loop reg
 | EForIn    of for_in_loop reg
+| EContract of ((module_name, dot) nsepseq) reg
 
 and annot_expr = expr * colon * type_expr
 
@@ -644,7 +646,7 @@ let expr_to_region = function
 | ESeq {region; _}   | ERecord {region; _} | EUpdate {region; _}
 | EModA {region; _} | ECodeInj {region; _} | ELetMutIn {region; _}
 | ERevApp {region; _} | EAssign {region; _} | EFor {region; _}
-| EWhile {region; _} | EForIn {region; _} -> region
+| EWhile {region; _} | EForIn {region; _} | EContract {region; _} -> region
 
 let selection_to_region = function
   FieldName f -> f.region

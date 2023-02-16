@@ -327,6 +327,7 @@ rule scan state = parse
 | "[@" str_attr "]"  { mk_str_attr key ?value state lexbuf }
 | "[@" id_attr  "]"  { mk_id_attr  key ?value state lexbuf }
 | ident | ext_ident  { mk_ident               state lexbuf }
+| "$contract"        { mk_ident               state lexbuf }
 | uident             { mk_uident              state lexbuf }
 | bytes              { mk_bytes bytes         state lexbuf }
 | nat "n"            { mk_nat   nat           state lexbuf }

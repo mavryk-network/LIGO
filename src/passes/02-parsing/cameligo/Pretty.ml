@@ -223,6 +223,7 @@ and pp_expr = function
 | EFor        e -> pp_for_loop e
 | EForIn      e -> pp_for_in_loop e
 | EWhile      e -> pp_while_loop e
+| EContract   e -> pp_contract e
 
 and pp_direction = function
   | To _ -> string "to"
@@ -270,6 +271,11 @@ and pp_while_loop {value; _} =
   ^^ pp_expr value.cond
   ^^ space
   ^^ pp_loop_body value.body
+
+and pp_contract {value; _} =
+  string "($contract "
+  ^^ group (nest 0 (break 1 ^^ pp_nsepseq "." pp_ident value))
+  ^^ string ")"
 
 and pp_rev_app e = pp_bin_op "|>" e
 

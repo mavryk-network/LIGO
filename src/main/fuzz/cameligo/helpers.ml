@@ -371,6 +371,8 @@ module Fold_helpers (M : Monad) = struct
       let* body = map_loop_body ~f value.body in
       let value = { value with collection; body } in
       return @@ EForIn { value; region }
+    | EContract { value; region } ->
+      return @@ EContract { value; region }
 
 
   and map_loop_body (loop_body : loop_body) ~f =

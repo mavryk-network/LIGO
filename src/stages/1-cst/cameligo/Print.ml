@@ -475,6 +475,12 @@ and print_expr state = function
 | EWhile {value; region} ->
     print_loc_node state "EWhile" region;
     print_while_loop state value
+| EContract {value; region} ->
+    print_loc_node state "EContract" region;
+    let binders        = Utils.nsepseq_to_list value in
+    let len            = List.length binders in
+    let apply len rank = print_ident (state#pad len rank) in
+    List.iteri ~f:(apply len) binders
 
 and print_assign state (assign : CST.assign) = 
   let { binder; ass = _; expr } = assign in
