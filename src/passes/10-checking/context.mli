@@ -3,7 +3,10 @@ open Simple_utils
 open Ligo_prim
 
 module Attr : sig
-  type t = { entry : bool ; view : bool }
+  type t =
+    { entry : bool
+    ; view : bool
+    }
   [@@deriving compare, hash, equal]
 
   val default : t

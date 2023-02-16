@@ -260,7 +260,14 @@ let t_michelson_code = t_michelson_program
 let t__type_ t ~loc ?meta () : t = t_construct ~loc ?meta Literal_types._type_ [ t ] ()
   [@@map
     _type_
-    , ("list", "set", "contract", "ticket", "sapling_state", "sapling_transaction", "gen", "views")]
+    , ( "list"
+      , "set"
+      , "contract"
+      , "ticket"
+      , "sapling_state"
+      , "sapling_transaction"
+      , "gen"
+      , "views" )]
 
 
 let t__type_ t t' ~loc ?meta () : t =
@@ -293,8 +300,10 @@ let t_bool ~loc ?meta () =
 let t_option t ~loc ?meta () =
   t_sum_ez ~loc ?meta [ "Some", t; "None", t_unit ~loc () ] ()
 
+
 let t_arrow param result ~loc ?meta () : t =
   t_arrow ~loc ?meta { type1 = param; type2 = result } ()
+
 
 let t_mutez = t_tez
 
@@ -367,11 +376,13 @@ let get_t_bool t : unit option =
   let t_bool = t_bool ~loc:t.location () in
   Option.some_if (equal_content t.content t_bool.content) ()
 
+
 let get_t_tuple (t : t) : t list option =
   let tuple_of_record row = Row.to_tuple row in
   match t.content with
   | T_record row -> Some (tuple_of_record row)
   | _ -> None
+
 
 let get_t_option (t : t) : t option =
   let some = Label.of_string "Some" in
@@ -383,6 +394,7 @@ let get_t_option (t : t) : t option =
     then Map.find fields some
     else None
   | _ -> None
+
 
 let get_t_pair (t : t) : (t * t) option =
   match t.content with
@@ -574,22 +586,31 @@ let pp =
   let name_of tvar = Format.asprintf "%a" Type_var.pp tvar in
   pp ~name_of_tvar:name_of ~name_of_exists:name_of
 
+
 (* Helpers for generators *)
 
 let get_entry_form ty =
   let equal_t = equal in
   let open Simple_utils.Option in
-  let* { type1 ; type2 } = get_t_arrow ty in
+  let* { type1; type2 } = get_t_arrow ty in
   let* parameter, storage = get_t_pair type1 in
   let* op_list, storage' = get_t_pair type2 in
   let* op = get_t_list op_list in
-  let* () = if equal_t (t_operation ~loc:Location.generated ()) op then return () else None in
-  let* () = if equal_t storage storage' then return () else None  in
+  let* () =
+    if equal_t (t_operation ~loc:Location.generated ()) op then return () else None
+  in
+  let* () = if equal_t storage storage' then return () else None in
   return (parameter, storage)
+
 
 let build_entry_type p_ty s_ty =
   let loc = Location.generated in
-  t_arrow ~loc (t_pair ~loc p_ty s_ty ()) (t_pair ~loc (t_list ~loc (t_operation ~loc ()) ()) s_ty ()) ()
+  t_arrow
+    ~loc
+    (t_pair ~loc p_ty s_ty ())
+    (t_pair ~loc (t_list ~loc (t_operation ~loc ()) ()) s_ty ())
+    ()
+
 
 let get_t_inj (t : t) (v : Literal_types.t) : t list option =
   match t.content with
@@ -603,48 +624,70 @@ let get_t_base_inj (t : t) (v : Literal_types.t) : unit option =
   | Some [] -> Some ()
   | _ -> None
 
+
 let assert_t_list_operation (t : t) : unit option =
   match get_t_list t with
   | Some t' -> get_t_base_inj t' Literal_types.Operation
   | None -> None
+
 
 let should_uncurry_entry entry_ty =
   let is_t_list_operation listop = Option.is_some @@ assert_t_list_operation listop in
   match get_t_arrow entry_ty with
   | Some { type1 = tin; type2 = return } ->
     (match get_t_tuple tin, get_t_tuple return with
-     | Some [parameter ; storage], Some [ listop; storage' ] ->
-       if (is_t_list_operation listop && equal storage storage') then
-         `No (parameter, storage)
-       else
-         `Bad
-     | _ ->
-       let parameter = tin in
-       (match get_t_arrow return with
-        | Some { type1 = storage; type2 = return } ->
-          (match get_t_pair return with
-           | Some (listop, storage') ->
-             if (is_t_list_operation listop && equal storage storage') then
-               `Yes (parameter, storage)
-             else
-               `Bad
-           | _ -> `Bad)
+    | Some [ parameter; storage ], Some [ listop; storage' ] ->
+      if is_t_list_operation listop && equal storage storage'
+      then `No (parameter, storage)
+      else `Bad
+    | _ ->
+      let parameter = tin in
+      (match get_t_arrow return with
+      | Some { type1 = storage; type2 = return } ->
+        (match get_t_pair return with
+        | Some (listop, storage') ->
+          if is_t_list_operation listop && equal storage storage'
+          then `Yes (parameter, storage)
+          else `Bad
+        | _ -> `Bad)
       | None -> `Bad))
   | None -> `Bad
 
 
-let parameter_from_entrypoints : (Value_var.t * t) Simple_utils.List.Ne.t -> (t * t, [> `Not_entry_point_form of t | `Storage_does_not_match of Value_var.t * t * Value_var.t * t ]) result =
-  fun ((entrypoint, entrypoint_type), rest) ->
+let parameter_from_entrypoints
+    :  (Value_var.t * t) Simple_utils.List.Ne.t
+    -> ( t * t
+       , [> `Not_entry_point_form of t
+         | `Storage_does_not_match of Value_var.t * t * Value_var.t * t
+         ] )
+       result
+  =
+ fun ((entrypoint, entrypoint_type), rest) ->
   let equal_t = equal in
   let open Result.Let_syntax in
-  let%bind parameter, storage = match should_uncurry_entry entrypoint_type with
-    | `Yes (parameter, storage) | `No (parameter, storage) -> Result.Ok (parameter, storage)
-    | `Bad -> Result.Error (`Not_entry_point_form entrypoint_type) in
-  let%bind parameter_list = List.fold_result ~init:[Value_var.to_name_exn entrypoint,parameter] ~f:(fun parameters (ep, ep_type) ->
-      let%bind parameter_, storage_ = match should_uncurry_entry ep_type with
-        | `Yes (parameter, storage) | `No (parameter, storage) -> Result.Ok (parameter, storage)
-        | `Bad -> Result.Error (`Not_entry_point_form entrypoint_type) in
-      let%bind () = Result.of_option ~error:(`Storage_does_not_match (entrypoint, storage, ep, storage_)) @@
-        if equal_t storage_ storage then Some () else None in
-      return ((Value_var.to_name_exn ep, parameter_)::parameters)) rest in
-  return (t_sum_ez ~loc:Location.generated ~layout:default_layout parameter_list (), storage)
+  let%bind parameter, storage =
+    match should_uncurry_entry entrypoint_type with
+    | `Yes (parameter, storage) | `No (parameter, storage) ->
+      Result.Ok (parameter, storage)
+    | `Bad -> Result.Error (`Not_entry_point_form entrypoint_type)
+  in
+  let%bind parameter_list =
+    List.fold_result
+      ~init:[ Value_var.to_name_exn entrypoint, parameter ]
+      ~f:(fun parameters (ep, ep_type) ->
+        let%bind parameter_, storage_ =
+          match should_uncurry_entry ep_type with
+          | `Yes (parameter, storage) | `No (parameter, storage) ->
+            Result.Ok (parameter, storage)
+          | `Bad -> Result.Error (`Not_entry_point_form entrypoint_type)
+        in
+        let%bind () =
+          Result.of_option
+            ~error:(`Storage_does_not_match (entrypoint, storage, ep, storage_))
+          @@ if equal_t storage_ storage then Some () else None
+        in
+        return ((Value_var.to_name_exn ep, parameter_) :: parameters))
+      rest
+  in
+  return
+    (t_sum_ez ~loc:Location.generated ~layout:default_layout parameter_list (), storage)

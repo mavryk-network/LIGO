@@ -171,7 +171,7 @@ and value =
   | V_Gen of gen [@name "generator"]
   | V_Location of location [@name "location"]
   | V_Typed_address of Contract.t
-  (* This is a copy of C_address in constant *) [@name "typed_address"]
+      (* This is a copy of C_address in constant *) [@name "typed_address"]
   | V_Views of (string * func_val) list
 [@@deriving yojson]
 

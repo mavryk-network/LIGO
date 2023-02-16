@@ -17,7 +17,8 @@ let specific_passes ~raise cform prg =
   match cform with
   | Contract entrypoint -> Self_ast_typed.all_contract ~raise entrypoint prg
   | View { command_line_views; contract_entry; contract_type } ->
-    None, Self_ast_typed.all_view ~raise command_line_views contract_entry contract_type prg
+    ( None
+    , Self_ast_typed.all_view ~raise command_line_views contract_entry contract_type prg )
   | Env -> None, prg
 
 

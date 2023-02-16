@@ -625,6 +625,7 @@ let should_uncurry_view view_ty =
       | None -> `Bad))
   | None -> `Bad
 
+
 let fetch_views_in_program
     : program -> program * (type_expression * type_expression Binder.t) list
   =

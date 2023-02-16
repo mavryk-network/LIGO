@@ -71,7 +71,9 @@ let contract
     options.backend
   in
   let Compiler_options.{ entry_point; _ } = options.frontend in
-  let _, code, views = Build.build_contract ~raise ~options entry_point views source_file in
+  let _, code, views =
+    Build.build_contract ~raise ~options entry_point views source_file
+  in
   let file_constants = read_file_constants ~raise file_constants in
   let constants = constants @ file_constants in
   Ligo_compile.Of_michelson.build_contract
@@ -218,7 +220,10 @@ let parameter
   let constants = constants @ file_constants in
   let entry_point = List.map ~f:(Value_var.of_input_var ~loc) entry_point in
   let app_typed_prg = Build.qualified_typed ~raise ~options Env source_file in
-  let entry_point      = Self_ast_typed.get_final_entrypoint_name ~raise entry_point app_typed_prg in  let ( app_typed_prg
+  let entry_point =
+    Self_ast_typed.get_final_entrypoint_name ~raise entry_point app_typed_prg
+  in
+  let ( app_typed_prg
       , entry_point
       , Self_ast_typed.Helpers.{ parameter = parameter_ty; storage = _ } )
     =
@@ -264,7 +269,7 @@ let parameter
         ~raise
         ~options:options.middle_end
         app_typed_prg
-        [entry_point]
+        [ entry_point ]
     in
     let expanded =
       Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_contract
@@ -355,7 +360,9 @@ let storage
   let app_typed_prg =
     Build.qualified_typed ~raise ~options Ligo_compile.Of_core.Env source_file
   in
-  let entry_point      = Self_ast_typed.get_final_entrypoint_name ~raise entry_point app_typed_prg in
+  let entry_point =
+    Self_ast_typed.get_final_entrypoint_name ~raise entry_point app_typed_prg
+  in
   let ( app_typed_prg
       , entry_point
       , Self_ast_typed.Helpers.{ parameter = _; storage = storage_ty } )
@@ -402,7 +409,7 @@ let storage
         ~raise
         ~options:options.middle_end
         app_typed_prg
-        [entry_point]
+        [ entry_point ]
     in
     let expanded =
       Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_contract

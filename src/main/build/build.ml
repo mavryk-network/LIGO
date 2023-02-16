@@ -297,14 +297,22 @@ let build_expression ~raise
 
 
 let rec build_contract_aggregated ~raise
-    : options:Compiler_options.t -> string list -> string list -> Source_input.file_name -> _
+    :  options:Compiler_options.t -> string list -> string list -> Source_input.file_name
+    -> _
   =
  fun ~options entry_points cli_views file_name ->
   let entry_points = List.map ~f:(Value_var.of_input_var ~loc) entry_points in
   let typed_prg = qualified_typed ~raise ~options Ligo_compile.Of_core.Env file_name in
-  let entry_point = trace ~raise self_ast_typed_tracer @@ Self_ast_typed.get_final_entrypoint_name entry_points typed_prg in
+  let entry_point =
+    trace ~raise self_ast_typed_tracer
+    @@ Self_ast_typed.get_final_entrypoint_name entry_points typed_prg
+  in
   let contract_info, typed_contract =
-      trace ~raise self_ast_typed_tracer @@ Ligo_compile.Of_core.specific_passes (Ligo_compile.Of_core.Contract entry_points) typed_prg in
+    trace ~raise self_ast_typed_tracer
+    @@ Ligo_compile.Of_core.specific_passes
+         (Ligo_compile.Of_core.Contract entry_points)
+         typed_prg
+  in
   let _, contract_type = Option.value_exn contract_info in
   let _, typed_views =
     let form =
@@ -313,7 +321,8 @@ let rec build_contract_aggregated ~raise
         | [] -> None
         | x -> Some x
       in
-      Ligo_compile.Of_core.View { command_line_views; contract_entry = entry_point; contract_type }
+      Ligo_compile.Of_core.View
+        { command_line_views; contract_entry = entry_point; contract_type }
     in
     trace ~raise self_ast_typed_tracer
     @@ Ligo_compile.Of_core.specific_passes form typed_prg
@@ -344,7 +353,8 @@ let rec build_contract_aggregated ~raise
 
 and build_contract_stacking ~raise
     :  options:Compiler_options.t -> string list -> string list -> Source_input.file_name
-    -> _ * (Stacking.compiled_expression * _)
+    -> _
+       * (Stacking.compiled_expression * _)
        * ((Value_var.t * Stacking.compiled_expression) list * _)
   =
  fun ~options entry_points cli_views file_name ->

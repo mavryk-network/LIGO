@@ -44,16 +44,18 @@ module Phys_hashable (T : T) = struct
 end
 
 module Attr = struct
-  type t = { entry : bool ; view : bool }
+  type t =
+    { entry : bool
+    ; view : bool
+    }
   [@@deriving compare, hash, equal]
 
-  let default = { entry = false ; view = false }
-  let of_core_attr ({ entry ; view ; _ } : Ast_core.ValueAttr.t) = { entry ; view }
+  let default = { entry = false; view = false }
+  let of_core_attr ({ entry; view; _ } : Ast_core.ValueAttr.t) = { entry; view }
 end
 
 module Signature = struct
   module T = struct
-    
     type t = item list
 
     and item =
@@ -74,7 +76,8 @@ module Signature = struct
       (module Value_var)
       (fun t var ->
         (find_map t ~f:(function
-             | S_value (var', type_, attr) when Value_var.equal var var' -> Some (type_, attr)
+            | S_value (var', type_, attr) when Value_var.equal var var' ->
+              Some (type_, attr)
             | _ -> None) [@landmark "get_value"]))
 
 
@@ -263,7 +266,11 @@ let of_list items = List.rev items
 let ( |:: ) = add
 let ( |@ ) = join
 let add_value t var mut_flag type_ attr = t |:: C_value (var, mut_flag, type_, attr)
-let add_imm t var ?(attr = Attr.default) type_ = t |:: C_value (var, Immutable, type_, attr)
+
+let add_imm t var ?(attr = Attr.default) type_ =
+  t |:: C_value (var, Immutable, type_, attr)
+
+
 let add_mut t var type_ = t |:: C_value (var, Mutable, type_, Attr.default)
 let add_type t tvar type_ = t |:: C_type (tvar, type_)
 let add_type_var t tvar kind = t |:: C_type_var (tvar, kind)
@@ -310,7 +317,8 @@ let get_imm =
     (module Value_var)
     (fun t var ->
       List.find_map t ~f:(function
-          | C_value (var', Immutable, type_, attr) when Value_var.equal var var' -> Some (type_, attr)
+          | C_value (var', Immutable, type_, attr) when Value_var.equal var var' ->
+            Some (type_, attr)
           | _ -> None))
 
 

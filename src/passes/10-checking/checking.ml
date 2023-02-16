@@ -674,7 +674,10 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
     let%bind incr = check incr t_int in
     let%bind final = check final t_int in
     let%bind f_body =
-      def [ binder, Immutable, t_int, Context.Attr.default ] ~on_exit:Drop ~in_:(check f_body t_unit)
+      def
+        [ binder, Immutable, t_int, Context.Attr.default ]
+        ~on_exit:Drop
+        ~in_:(check f_body t_unit)
     in
     const
       E.(
@@ -699,7 +702,9 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
     in
     let%bind fe_body =
       def
-        [ key_binder, Immutable, key_type, Context.Attr.default; val_binder, Immutable, val_type, Context.Attr.default ]
+        [ key_binder, Immutable, key_type, Context.Attr.default
+        ; val_binder, Immutable, val_type, Context.Attr.default
+        ]
         ~on_exit:Drop
         ~in_:(check fe_body t_unit)
     in
@@ -735,7 +740,10 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
           ~with_:(fun _ -> get_t_map type_)
     in
     let%bind fe_body =
-      def [ binder, Immutable, binder_type, Context.Attr.default ] ~on_exit:Drop ~in_:(check fe_body t_unit)
+      def
+        [ binder, Immutable, binder_type, Context.Attr.default ]
+        ~on_exit:Drop
+        ~in_:(check fe_body t_unit)
     in
     const
       E.(
@@ -787,7 +795,11 @@ and check_lambda
       ~on_exit:Drop
       ~in_:
         (def
-           [ Param.get_var binder, Param.get_mut_flag binder, arg_type, Context.Attr.default ]
+           [ ( Param.get_var binder
+             , Param.get_mut_flag binder
+             , arg_type
+             , Context.Attr.default )
+           ]
            ~on_exit:Drop
            ~in_:(check_expression result ret_type))
   in
@@ -831,13 +843,15 @@ and infer_lambda ({ binder; output_type = ret_ascr; result } : _ Lambda.t)
           in
           let%bind ret_type, result =
             def
-              [ Param.get_var binder, Param.get_mut_flag binder, arg_type, Context.Attr.default ]
+              [ ( Param.get_var binder
+                , Param.get_mut_flag binder
+                , arg_type
+                , Context.Attr.default )
+              ]
               ~on_exit:Lift_type
               ~in_:(infer_expression result)
           in
-          let%bind type_ =
-            create_type @@ Type.t_arrow arg_type ret_type
-          in
+          let%bind type_ = create_type @@ Type.t_arrow arg_type ret_type in
           const
             E.(
               let%bind result = result
@@ -1218,7 +1232,8 @@ and def_frag
  fun frag ~on_exit ~in_ ->
   let open C in
   def
-    (List.map frag ~f:(fun (var, mut_flag, type_) -> var, mut_flag, type_, Context.Attr.default))
+    (List.map frag ~f:(fun (var, mut_flag, type_) ->
+         var, mut_flag, type_, Context.Attr.default))
     ~on_exit
     ~in_
 
@@ -1311,7 +1326,10 @@ and infer_declaration (decl : I.declaration)
         and pattern = pattern in
         let%bind () = check_let_annomalies ~syntax pattern expr.type_expression in
         return @@ O.D_irrefutable_match { pattern; expr; attr })
-      (List.map ~f:(fun (v, _, ty) -> Context.Signature.S_value (v, ty, Context.Attr.of_core_attr attr)) frags)
+      (List.map
+         ~f:(fun (v, _, ty) ->
+           Context.Signature.S_value (v, ty, Context.Attr.of_core_attr attr))
+         frags)
   | D_type { type_binder; type_expr; type_attr = { public; hidden } } ->
     let%bind type_expr = evaluate_type_with_default_layout type_expr in
     let type_expr = { type_expr with orig_var = Some type_binder } in

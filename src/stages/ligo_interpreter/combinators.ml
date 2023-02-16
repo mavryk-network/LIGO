@@ -431,7 +431,7 @@ let rec compare_value (v : value) (v' : value) : int =
       | V_Gen _
       | V_Location _
       | V_Typed_address _
-      | V_Views _)
+      | V_Views _ )
     , ( V_Ct _
       | V_List _
       | V_Record _
@@ -446,7 +446,7 @@ let rec compare_value (v : value) (v' : value) : int =
       | V_Gen _
       | V_Location _
       | V_Typed_address _
-      | V_Views _) ) -> Int.compare (tag_value v) (tag_value v')
+      | V_Views _ ) ) -> Int.compare (tag_value v) (tag_value v')
 
 
 let equal_constant_val (c : constant_val) (c' : constant_val) : bool =

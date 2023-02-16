@@ -94,7 +94,8 @@ and signature_item_of_decl : ctx:Context.t -> Ast_typed.decl -> bool * Context.S
  fun ~ctx decl ->
   match Location.unwrap decl with
   | D_value { binder; expr; attr = { public; entry; view; _ } } ->
-    public, [ S_value (Binder.get_var binder, encode expr.type_expression, { entry ; view }) ]
+    ( public
+    , [ S_value (Binder.get_var binder, encode expr.type_expression, { entry; view }) ] )
   | D_type { type_binder = tvar; type_expr = type_; type_attr = { public; _ } } ->
     public, [ S_type (tvar, encode type_) ]
   | D_module { module_binder = mvar; module_; module_attr = { public; _ } } ->
@@ -103,7 +104,8 @@ and signature_item_of_decl : ctx:Context.t -> Ast_typed.decl -> bool * Context.S
   | D_irrefutable_match { pattern; expr = _; attr = { public; entry; view; _ } } ->
     let sigs =
       List.map (Ast_typed.Pattern.binders pattern) ~f:(fun b ->
-          Context.Signature.S_value (Binder.get_var b, encode @@ Binder.get_ascr b, { entry ; view }))
+          Context.Signature.S_value
+            (Binder.get_var b, encode @@ Binder.get_ascr b, { entry; view }))
     in
     public, sigs
 
