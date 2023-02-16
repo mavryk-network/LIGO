@@ -713,9 +713,9 @@ module Declaration_mapper = struct
         let forall = self forall in
         return @@ E_type_inst { forall ; type_ }
       )
-    | E_recursive { fun_name; fun_type; lambda = {binder;output_type;result}} -> (
+    | E_recursive { fun_name; fun_type; lambda = {binder;output_type;result} ; force_lambdarec } -> (
         let result = self result in
-        return @@ E_recursive { fun_name; fun_type; lambda = {binder;output_type;result}}
+        return @@ E_recursive { fun_name; fun_type; lambda = {binder;output_type;result} ; force_lambdarec }
       )
     | E_constant c -> (
         let args = List.map ~f:self c.arguments in
