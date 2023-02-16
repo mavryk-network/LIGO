@@ -7,10 +7,7 @@ type 'value op =
 
 let debugEnabled = false
 let debug msg = if debugEnabled then print_endline msg
-
-let isInteger : Js.number Js.t -> bool Js.t =
-  Js.Unsafe.js_expr ("Number.isInteger" [@reason.raw_literal "Number.isInteger"])
-
+let isInteger : Js.number Js.t -> bool Js.t = Js.Unsafe.js_expr "Number.isInteger"
 
 module Path : sig
   type t
@@ -57,10 +54,7 @@ end = struct
 
 
   let ofString input = String.split_on_char '.' input |> List.map componentOfString
-
-  let toString input =
-    input |> List.map componentToString |> String.concat ("." [@reason.raw_literal "."])
-
+  let toString input = input |> List.map componentToString |> String.concat "."
 
   let root = function
     | [] -> None
@@ -128,7 +122,7 @@ module Compile = struct
       `Assoc (Hashtbl.fold f tbl [])
 
 
-  let rec toString v = v |> toYojson |> Yojson.Safe.to_string
+  let rec toString (v : json) : string = v |> toYojson |> Yojson.Safe.to_string
 
   let resolvePathAndSetValue path json acc =
     let f acc component =
@@ -154,17 +148,13 @@ module Compile = struct
                                                           "Base is Assoc but key is an \
                                                            array index: "])
           ^ Path.toString fullPath
-          ^ (" json: " [@reason.raw_literal " json: "])
+          ^ " json: "
           ^ toString json
-          ^ (" last: " [@reason.raw_literal " last: "])
+          ^ " last: "
           ^ string_of_int lastComponent)
       | ( ((Some ((Assoc tbl) [@explicit_arity])) [@explicit_arity])
         , ((Some (`AssocKey lastComponent)) [@explicit_arity]) ) ->
-        debug
-          (("Setting path: " [@reason.raw_literal "Setting path: "])
-          ^ Path.toString basePath
-          ^ (" last: " [@reason.raw_literal " last: "])
-          ^ lastComponent);
+        debug ("Setting path: " ^ Path.toString basePath ^ " last: " ^ lastComponent);
         Hashtbl.add tbl lastComponent json;
         acc
       | ( ((Some ((List arr) [@explicit_arity])) [@explicit_arity])
@@ -178,11 +168,7 @@ module Compile = struct
           raise e);
         acc
       | ((Some json) [@explicit_arity]), None ->
-        failwith
-          (("lastComponent is None: " [@reason.raw_literal "lastComponent is None: "])
-          ^ Path.toString fullPath
-          ^ (" " [@reason.raw_literal " "])
-          ^ toString json)
+        failwith ("lastComponent is None: " ^ Path.toString fullPath ^ " " ^ toString json)
       | ((Some json) [@explicit_arity]), ((Some component) [@explicit_arity]) ->
         failwith
           (("Path resolved to json primitive value. Not Assoc or List: " [@reason.raw_literal
@@ -194,25 +180,62 @@ module Compile = struct
                                                                             Assoc or \
                                                                             List: "])
           ^ Path.toString fullPath
-          ^ (" json: " [@reason.raw_literal " json: "])
+          ^ " json: "
           ^ toString json
-          ^ (" last: " [@reason.raw_literal " last: "])
+          ^ " last: "
           ^ Path.componentToString component)
-      | None, _ ->
-        failwith
-          (("Path doesn't exist: " [@reason.raw_literal "Path doesn't exist: "])
-          ^ Path.toString fullPath))
+      | None, _ -> failwith ("Path doesn't exist: " ^ Path.toString fullPath))
     | None -> acc
+
+
+  let json_key = "json_so_far"
+  let file_index_key = "fileIndex"
+  let op_index_key = "opIndex"
+
+  let with_store f =
+    let storage = Dom_html.window##.localStorage in
+    let f s =
+      (* anything useful goes here *)
+      f s
+    in
+    Js.Optdef.map storage f
+
+
+  let store (json : json) (file_index : int) (op_index : int) : unit =
+    ignore
+    @@ with_store (fun s ->
+           s##setItem (Js.string json_key) (Marshal.to_string json [] |> Js.string);
+           s##setItem (Js.string file_index_key) (string_of_int file_index |> Js.string);
+           s##setItem (Js.string op_index_key) (string_of_int op_index |> Js.string))
+
+
+  let store_get () : json option * int * int =
+    let r =
+      with_store (fun s ->
+          ( (match Js.Opt.to_option @@ s##getItem (Js.string json_key) with
+            | Some marshalled_json ->
+              let str = marshalled_json |> Js.to_string in
+              let json : json = Marshal.from_string str 0 in
+              Some json
+            | None -> None)
+          , (match Js.Opt.to_option @@ s##getItem (Js.string file_index_key) with
+            | None -> 0
+            | Some v -> v |> Js.to_string |> int_of_string)
+          , match Js.Opt.to_option @@ s##getItem (Js.string op_index_key) with
+            | None -> 0
+            | Some v -> v |> Js.to_string |> int_of_string ))
+    in
+    match Js.Optdef.to_option r with
+    | None -> failwith "No localStorage"
+    | Some v -> v
 
 
   let run ops =
     let f acc item =
-      let path =
-        Js.Unsafe.get item ("path" [@reason.raw_literal "path"]) |> Js.to_string
-      in
-      let v = Js.Unsafe.get item ("v" [@reason.raw_literal "v"]) in
+      let path = Js.Unsafe.get item "path" |> Js.to_string in
+      let v = Js.Unsafe.get item "v" in
       match v |> Js.typeof |> Js.to_string with
-      | ("number" [@reason.raw_literal "number"]) ->
+      | "number" ->
         let n = Js.float_of_number v in
         let jsonNumber =
           match isInteger v |> Js.to_bool with
@@ -220,55 +243,98 @@ module Compile = struct
           | false -> Float n [@explicit_arity]
         in
         resolvePathAndSetValue path jsonNumber acc
-      | ("string" [@reason.raw_literal "string"]) ->
+      | "string" ->
         resolvePathAndSetValue path (String (Js.to_string v) [@explicit_arity]) acc
-      | ("object" [@reason.raw_literal "object"]) ->
-        let type_ =
-          Js.Unsafe.get v ("type" [@reason.raw_literal "type"]) |> Js.to_string
-        in
-        let size =
-          Js.Unsafe.get v ("length" [@reason.raw_literal "length"])
-          |> Js.float_of_number
-          |> int_of_float
-        in
+      | "object" ->
+        let type_ = Js.Unsafe.get v "type" |> Js.to_string in
+        let size = Js.Unsafe.get v "length" |> Js.float_of_number |> int_of_float in
         let jsonValue =
-          match type_ = ("array" [@reason.raw_literal "array"]) with
+          match type_ = "array" with
           | true -> List (Array.make size (Int 0 [@explicit_arity])) [@explicit_arity]
           | false -> Assoc (Hashtbl.create size) [@explicit_arity]
         in
         resolvePathAndSetValue path jsonValue acc
-      | unrecognisedString ->
-        failwith (("got " [@reason.raw_literal "got "]) ^ unrecognisedString)
+      | unrecognisedString -> failwith ("got " ^ unrecognisedString)
     in
     let head = List.hd ops in
-    let v = Js.Unsafe.get head ("v" [@reason.raw_literal "v"]) in
+    let v = Js.Unsafe.get head "v" in
     let init =
       match v |> Js.typeof |> Js.to_string with
-      | ("number" [@reason.raw_literal "number"]) ->
-        failwith ("non sense" [@reason.raw_literal "non sense"])
-      | ("string" [@reason.raw_literal "string"]) ->
-        failwith ("non sense" [@reason.raw_literal "non sense"])
-      | ("object" [@reason.raw_literal "object"]) ->
-        let type_ =
-          Js.Unsafe.get v ("type" [@reason.raw_literal "type"]) |> Js.to_string
-        in
-        let size =
-          Js.Unsafe.get v ("length" [@reason.raw_literal "length"])
-          |> Js.float_of_number
-          |> int_of_float
-        in
-        (match type_ = ("array" [@reason.raw_literal "array"]) with
+      | "number" -> failwith "non sense"
+      | "string" -> failwith "non sense"
+      | "object" ->
+        let type_ = Js.Unsafe.get v "type" |> Js.to_string in
+        let size = Js.Unsafe.get v "length" |> Js.float_of_number |> int_of_float in
+        (match type_ = "array" with
         | true -> List (Array.make size (Int 0 [@explicit_arity])) [@explicit_arity]
         | false -> Assoc (Hashtbl.create size) [@explicit_arity])
-      | unrecognisedString ->
-        failwith (("got " [@reason.raw_literal "got "]) ^ unrecognisedString)
+      | unrecognisedString -> failwith ("got " ^ unrecognisedString)
     in
     List.fold_left f init ops
+
+
+  let acc_ref : json option ref =
+    match store_get () with
+    | Some json, _, _ -> ref (Some json)
+    | None, _, _ -> ref None
+
+
+  let incremental op file_index op_index =
+    let path = Js.Unsafe.get op "path" |> Js.to_string in
+    let v = Js.Unsafe.get op "v" in
+    match !acc_ref with
+    | None ->
+      (match v |> Js.typeof |> Js.to_string with
+      | "number" -> failwith "non sense"
+      | "string" -> failwith "non sense"
+      | "object" ->
+        let type_ = Js.Unsafe.get v "type" |> Js.to_string in
+        let size = Js.Unsafe.get v "length" |> Js.float_of_number |> int_of_float in
+        (match type_ = "array" with
+        | true ->
+          acc_ref
+            := Option.some
+               @@ (List (Array.make size (Int 0 [@explicit_arity])) [@explicit_arity])
+        | false ->
+          acc_ref := Option.some @@ (Assoc (Hashtbl.create size) [@explicit_arity]))
+      | unrecognisedString -> failwith ("got " ^ unrecognisedString))
+    | Some acc ->
+      let json =
+        match v |> Js.typeof |> Js.to_string with
+        | "number" ->
+          let n = Js.float_of_number v in
+          let jsonNumber =
+            match isInteger v |> Js.to_bool with
+            | true -> Int (n |> int_of_float) [@explicit_arity]
+            | false -> Float n [@explicit_arity]
+          in
+          resolvePathAndSetValue path jsonNumber acc
+        | "string" ->
+          resolvePathAndSetValue path (String (Js.to_string v) [@explicit_arity]) acc
+        | "object" ->
+          let type_ = Js.Unsafe.get v "type" |> Js.to_string in
+          let size = Js.Unsafe.get v "length" |> Js.float_of_number |> int_of_float in
+          let jsonValue =
+            match type_ = "array" with
+            | true -> List (Array.make size (Int 0 [@explicit_arity])) [@explicit_arity]
+            | false -> Assoc (Hashtbl.create size) [@explicit_arity]
+          in
+          resolvePathAndSetValue path jsonValue acc
+        | unrecognisedString -> failwith ("got " ^ unrecognisedString)
+      in
+      acc_ref := Option.some @@ json;
+      store json file_index op_index
+
+
+  let serializeYojson () : string =
+    match !acc_ref with
+    | None -> failwith "acc_ref is None. incremental() hasn't been run yet"
+    | Some acc -> toString acc
 end
 
 let _ =
   Js.export
-    ("ocaml" [@reason.raw_literal "ocaml"])
+    "ocaml"
     [%js
       object
         method compile ops =
@@ -281,4 +347,16 @@ let _ =
             |> print_endline
           with
           | e -> print_endline (Printexc.to_string e)
+
+        method compileIncremental op fileIndex opIndex =
+          let file_index = fileIndex |> Js.float_of_number |> int_of_float in
+          let op_index = opIndex |> Js.float_of_number |> int_of_float in
+          try Compile.incremental op file_index op_index with
+          | e -> print_endline (Printexc.to_string e)
+
+        method toString () =
+          try () |> Compile.serializeYojson |> Js.string with
+          | e ->
+            print_endline (Printexc.to_string e);
+            Js.string ""
       end]

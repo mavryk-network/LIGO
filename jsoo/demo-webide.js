@@ -6,6 +6,74 @@ import HaclWasm from "@prometheansacrifice/hacl-wasm";
 import _SECP256K1 from "@prometheansacrifice/secp256k1-wasm";
 import * as Editor from "./editor";
 
+async function validateFileUpload(e) {
+  let { files } = e.target;
+
+  if (files.length < 1) {
+    console.error("No files selected");
+    return false;
+  }
+
+  let { type } = files[0];
+
+  if (type === "" || type === "application/json") {
+    return true;
+  } else {
+    alert("Unrecognised file type");
+    return false;
+  }
+}
+
+let incrementalOps = [];
+
+function updateProgress(completed, total) {
+  document.getElementById("progress").innerHTML = `${completed}/${total}`;
+}
+
+let stopIncreCompilation = false;
+async function handleIncrementalOpsFileUpload(e) {
+  let compileFn = ocaml.compileIncremental.bind(window.ocaml);
+  if (!validateFileUpload(e)) {
+    return;
+  }
+
+  let { files } = e.target;
+  console.log("Got files", files);
+  function indexFromFilename(a) {
+    return parseInt(a.match(/ops-([0-9]+).minified.json/)[1]);
+  }
+
+  files = Array.from(files).sort((x, y) => {
+    return indexFromFilename(x.name) - indexFromFilename(y.name);
+  });
+
+  let fileIndex = +(localStorage.getItem("fileIndex") || 0);
+  let opIndex = +(localStorage.getItem("opIndex") || 0);
+  for (let i = fileIndex; i < files.length; i++) {
+    console.log("Receiving file", i + 1);
+    console.log(files[i]);
+    let json = await files[i].text();
+    let jsonLength = json.length;
+    console.log("Parsing");
+    let jsonEntries = JSON.parse(json);
+    for (let jsonI = opIndex; jsonI < jsonEntries.length; ++jsonI) {
+      let jsonEntry = jsonEntries[jsonI];
+      console.log("compiling in OCaml layer", i, jsonI);
+      compileFn(jsonEntry, i, jsonI);
+      updateProgress(jsonI, jsonLength);
+
+      if (stopIncreCompilation) {
+        break;
+      }
+    }
+    if (stopIncreCompilation) {
+      break;
+    }
+    console.log("done");
+  }
+  console.log(ocaml.toString().call());
+}
+
 function JSONToOps(json) {
   // @ts-ignore
   let queue = [{ path: "", json: json }];
@@ -115,10 +183,20 @@ function handleCompileClick(compile) {
       break;
     case "ast-typed":
       compileFn = compile.loadAstTyped.bind(compile);
-      michelson = compileFn(
-        JSONToOps(JSON.parse(ligoEditor.state.doc.toJSON().join("\n"))),
-        getSyntax()
+      console.log("started json ops");
+      // let ops = JSONToOps(JSON.parse(ligoEditor.state.doc.toJSON().join("\n")));
+      console.log("completed json ops");
+      michelson = compileFn(ops, getSyntax());
+      michelsonEditor.setState(
+        EditorState.create({
+          extensions: [basicSetup],
+          doc: michelson,
+        })
       );
+      break;
+    case "ast-typed-json-ops":
+      compileFn = compile.loadAstTyped.bind(compile);
+      michelson = compileFn(incrementalOps, getSyntax());
       michelsonEditor.setState(
         EditorState.create({
           extensions: [basicSetup],
@@ -187,7 +265,9 @@ initialize().then(async () => {
   document
     .getElementById("source-file")
     .addEventListener("change", handleFileUpload);
-
+  document
+    .getElementById("json-ops-file")
+    .addEventListener("change", handleIncrementalOpsFileUpload);
   // test area. Put stuff you'd like to run immediately on browser reload. Useful for quicker dev cycle
   // handleCompileClick(window.compile);
 });
