@@ -7,13 +7,15 @@ open O.Combinators
 open Ligo_prim
 
 let default_entrypoint = "main"
-
 let default_entrypoint_var =
   Value_var.of_input_var ~loc:Location.generated default_entrypoint
 
 
 let default_views = "views"
 let default_views_var = Value_var.of_input_var ~loc:Location.generated default_views
+
+let default_contract = "contract"
+let default_contract_var = Value_var.of_input_var ~loc:Location.generated default_contract
 
 let program_sig_ : Signature.t -> (Signature.item list, _, _) C.t =
  fun sig_ ->
@@ -22,10 +24,6 @@ let program_sig_ : Signature.t -> (Signature.item list, _, _) C.t =
     | Signature.S_value (var, ty, attr) when attr.entry -> Some (var, ty)
     | _ -> None
   in
-  (* let is_view s = match s with *)
-  (*   | Signature.S_value (var, ty, attr) when attr.view -> Some (var, ty) *)
-  (*   | _ -> None in *)
-  (* let views = List.filter_map ~f:is_view sig_ in *)
   let open C.Let_syntax in
   match List.Ne.of_list_opt @@ List.filter_map ~f:is_entry sig_ with
   | None -> return []
@@ -61,7 +59,11 @@ let program_sig_ : Signature.t -> (Signature.item list, _, _) C.t =
     let views_decl =
       Signature.S_value (default_views_var, views_type, Context.Attr.default)
     in
-    return [ parameter_type_decl; contract_decl; views_decl ]
+    let mcontract_type = Type.t_pair ~loc:Location.generated contract_type views_type () in
+    let mcontract_decl =
+      Signature.S_value (default_contract_var, mcontract_type, Context.Attr.default)
+    in
+    return [ parameter_type_decl; contract_decl; views_decl; mcontract_decl ]
 
 
 let make_main_signature (sig_ : Signature.t) =

@@ -500,11 +500,11 @@ let ez_e_record (lst : (Label.t * expression) list) : expression_content =
 
 let e__ct_ () : expression_content = E_constant { cons_name = C__CT_; arguments = [] }
   [@@map
-    _ct_, ("none", "nil", "set_empty", "map_empty", "big_map_empty", "test_nil_views")]
+    _ct_, ("none", "nil", "set_empty", "map_empty", "big_map_empty")]
 
 
 let e__ct_ p : expression_content = E_constant { cons_name = C__CT_; arguments = [ p ] }
-  [@@map _ct_, "some"]
+  [@@map _ct_, ("some", "test_nil_views")]
 
 
 let e__ct_ p p' : expression_content =
@@ -619,7 +619,7 @@ let e_a_mod_in ~loc module_binder rhs let_result =
 (* Constants *)
 let e_a_nil ~loc t = make_e ~loc (e_nil ()) (t_list ~loc t)
 let e_a_cons ~loc hd tl = make_e ~loc (e_cons hd tl) (t_list ~loc hd.type_expression)
-let e_a_test_nil_views ~loc s = make_e ~loc (e_test_nil_views ()) (t_views ~loc s)
+let e_a_test_nil_views ~loc s = make_e ~loc (e_test_nil_views (e_a_unit ~loc ())) (t_views ~loc s)
 
 let e_a_test_cons_views ~loc s name hd tl =
   make_e ~loc (e_test_cons_views name hd tl) (t_views ~loc s)

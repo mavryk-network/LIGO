@@ -673,7 +673,7 @@ let parameter_from_entrypoints
   in
   let%bind parameter_list =
     List.fold_result
-      ~init:[ Value_var.to_name_exn entrypoint, parameter ]
+      ~init:[ String.capitalize (Value_var.to_name_exn entrypoint), parameter ]
       ~f:(fun parameters (ep, ep_type) ->
         let%bind parameter_, storage_ =
           match should_uncurry_entry ep_type with
@@ -686,7 +686,7 @@ let parameter_from_entrypoints
             ~error:(`Storage_does_not_match (entrypoint, storage, ep, storage_))
           @@ if equal_t storage_ storage then Some () else None
         in
-        return ((Value_var.to_name_exn ep, parameter_) :: parameters))
+        return ((String.capitalize (Value_var.to_name_exn ep), parameter_) :: parameters))
       rest
   in
   return

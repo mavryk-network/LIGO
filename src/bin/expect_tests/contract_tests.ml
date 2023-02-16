@@ -499,7 +499,7 @@ File "../../test/contracts/negative/create_contract_toplevel.mligo", line 4, cha
   8 |     "un"
   9 |   in
 
-Not all free variables could be inlined in Tezos.create_contract usage: gen#182. |}];
+Not all free variables could be inlined in Tezos.create_contract usage: gen#181. |}];
   run_ligo_good [ "compile"; "contract"; contract "create_contract_var.mligo" ];
   [%expect
     {|
@@ -580,7 +580,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#182.
      11 |     "un"
      12 |   in
 
-    Not all free variables could be inlined in Tezos.create_contract usage: gen#183. |}];
+    Not all free variables could be inlined in Tezos.create_contract usage: gen#182. |}];
   run_ligo_bad [ "compile"; "contract"; bad_contract "create_contract_no_inline.mligo" ];
   [%expect
     {|
@@ -629,7 +629,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#182.
       9 |   let (op, addr) = Tezos.create_contract dummy_contract ((None: key_hash option)) 300tz 1 in
      10 |   let toto : operation list = [ op ] in
 
-    Not all free variables could be inlined in Tezos.create_contract usage: foo#200. |}];
+    Not all free variables could be inlined in Tezos.create_contract usage: foo#199. |}];
   run_ligo_good [ "compile"; "contract"; contract "create_contract.mligo" ];
   [%expect
     {|
@@ -1249,30 +1249,30 @@ let%expect_test _ =
                  LAMBDA
                    unit
                    unit
-                   { { /* x#149 */ } ;
+                   { { /* x#148 */ } ;
                      { /* File "../../test/contracts/noop.mligo", line 2, characters 9-10 */ } } } ;
-               { /* f#148, _ */ } ;
+               { /* f#147, _ */ } ;
                { /* File "../../test/contracts/noop.mligo", line 3, character 2 to line 6, character 28 */
                  { /* File "../../test/contracts/noop.mligo", line 3, characters 18-21 */
                    SWAP ;
                    { /* File "../../test/contracts/noop.mligo", line 3, characters 18-19 */ DUP 2 } ;
                    SWAP ;
                    EXEC } ;
-                 { /* s2#150, f#148 */ } ;
+                 { /* s2#149, f#147 */ } ;
                  { /* File "../../test/contracts/noop.mligo", line 4, character 2 to line 6, character 28 */
                    { /* File "../../test/contracts/noop.mligo", line 4, characters 18-22 */
                      { /* File "../../test/contracts/noop.mligo", line 4, characters 20-22 */ } ;
                      { /* File "../../test/contracts/noop.mligo", line 4, characters 18-19 */ DUP 2 } ;
                      SWAP ;
                      EXEC } ;
-                   { /* s3#151, f#148 */ } ;
+                   { /* s3#150, f#147 */ } ;
                    { /* File "../../test/contracts/noop.mligo", line 5, character 2 to line 6, character 28 */
                      { /* File "../../test/contracts/noop.mligo", line 5, characters 10-14 */
                        { /* File "../../test/contracts/noop.mligo", line 5, characters 12-14 */ } ;
                        { /* File "../../test/contracts/noop.mligo", line 5, characters 10-11 */ SWAP } ;
                        SWAP ;
                        EXEC } ;
-                     { /* s#152 */ } ;
+                     { /* s#151 */ } ;
                      { /* File "../../test/contracts/noop.mligo", line 6, characters 3-27 */
                        { /* File "../../test/contracts/noop.mligo", line 6, characters 26-27 */ } ;
                        { /* File "../../test/contracts/noop.mligo", line 6, characters 3-24 */
@@ -2832,7 +2832,7 @@ let%expect_test _ =
                     "stop":
                       { "file": "../../test/contracts/noop.mligo", "line": "2",
                         "col": "10" } }, "source_type": "8" }, {}, {}, {}, {},
-              { "environment": [ { "name": "x#149", "source_type": "1" } ] },
+              { "environment": [ { "name": "x#148", "source_type": "1" } ] },
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "2",
@@ -2841,7 +2841,7 @@ let%expect_test _ =
                       { "file": "../../test/contracts/noop.mligo", "line": "2",
                         "col": "10" } }, "source_type": "2" },
               { "environment":
-                  [ { "name": "f#148", "source_type": "8" },
+                  [ { "name": "f#147", "source_type": "8" },
                     { "source_type": "0" } ] },
               { "location":
                   { "start":
@@ -2865,8 +2865,8 @@ let%expect_test _ =
                       { "file": "../../test/contracts/noop.mligo", "line": "3",
                         "col": "19" } }, "source_type": "8" }, {}, {}, {}, {},
               { "environment":
-                  [ { "name": "s2#150", "source_type": "3" },
-                    { "name": "f#148", "source_type": "8" } ] },
+                  [ { "name": "s2#149", "source_type": "3" },
+                    { "name": "f#147", "source_type": "8" } ] },
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "4",
@@ -2896,8 +2896,8 @@ let%expect_test _ =
                       { "file": "../../test/contracts/noop.mligo", "line": "4",
                         "col": "19" } }, "source_type": "8" }, {}, {}, {}, {},
               { "environment":
-                  [ { "name": "s3#151", "source_type": "4" },
-                    { "name": "f#148", "source_type": "8" } ] },
+                  [ { "name": "s3#150", "source_type": "4" },
+                    { "name": "f#147", "source_type": "8" } ] },
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "5",
@@ -2926,7 +2926,7 @@ let%expect_test _ =
                     "stop":
                       { "file": "../../test/contracts/noop.mligo", "line": "5",
                         "col": "11" } }, "source_type": "8" }, {}, {}, {},
-              { "environment": [ { "name": "s#152", "source_type": "2" } ] },
+              { "environment": [ { "name": "s#151", "source_type": "2" } ] },
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "6",

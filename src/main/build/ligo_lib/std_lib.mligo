@@ -373,7 +373,7 @@ module Test = struct
     let c = size f in
     let a : (p, s) typed_address = cast_address a in
     (a, f, c)
-  let originate_uncurried_views (type p s) (f : p * s -> operation list * s) (vs : s views) (s : s) (t : tez) : ((p, s) typed_address * michelson_contract * int) =
+  let originate_module (type p s) ((f, vs) : (p * s -> operation list * s) * s views) (s : s) (t : tez) : ((p, s) typed_address * michelson_contract * int) =
     let f = compile_contract_with_views f vs in
     let s = eval s in
     let a = originate_contract f s t in

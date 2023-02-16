@@ -264,16 +264,6 @@ let get_type_of_contract ty =
   | _ -> None
 
 
-(* let get_entry_form ty = *)
-(*   let open Combinators in *)
-(*   let open Simple_utils.Option in *)
-(*   let* { type1 ; type2 } = get_t_arrow ty in *)
-(*   let* parameter, storage = get_t_pair type1 in *)
-(*   let* op_list, storage' = get_t_pair type2 in *)
-(*   let* () = assert_t_list_operation op_list in *)
-(*   let* () = assert_type_expression_eq (storage, storage') in *)
-(*   return (parameter, storage) *)
-
 let build_entry_type p_ty s_ty =
   let open Combinators in
   let loc = Location.generated in
@@ -328,7 +318,7 @@ let parameter_from_entrypoints
   in
   let* parameter_list =
     List.fold_result
-      ~init:[ Value_var.to_name_exn entrypoint, parameter ]
+      ~init:[ String.capitalize (Value_var.to_name_exn entrypoint), parameter ]
       ~f:(fun parameters (ep, ep_type) ->
         let* parameter_, storage_ =
           match should_uncurry_entry ep_type with
@@ -341,7 +331,7 @@ let parameter_from_entrypoints
             ~error:(`Storage_does_not_match (entrypoint, storage, ep, storage_))
           @@ assert_type_expression_eq (storage_, storage)
         in
-        return ((Value_var.to_name_exn ep, parameter_) :: parameters))
+        return ((String.capitalize (Value_var.to_name_exn ep), parameter_) :: parameters))
       rest
   in
   return
