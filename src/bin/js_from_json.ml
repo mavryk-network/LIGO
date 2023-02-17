@@ -107,6 +107,8 @@ end
 module Compile = struct
   type json =
     | Int of int
+    | Bool of bool
+    | Null
     | Float of float
     | String of string
     | List of json array
@@ -115,11 +117,28 @@ module Compile = struct
   let rec toYojson = function
     | ((Int i) [@explicit_arity]) -> `Int i
     | ((Float f) [@explicit_arity]) -> `Float f
+    | Null -> `Null
+    | ((Bool s) [@explicit_arity]) -> `Bool s
     | ((String s) [@explicit_arity]) -> `String s
     | ((List arr) [@explicit_arity]) -> `List (arr |> Array.map toYojson |> Array.to_list)
     | ((Assoc tbl) [@explicit_arity]) ->
       let f k v acc = (k, toYojson v) :: acc in
       `Assoc (Hashtbl.fold f tbl [])
+
+
+  let rec ofYojson = function
+    | `Int i -> Int i
+    | `Bool b -> Bool b
+    | `Null -> Null
+    | `String s -> String s
+    | `Float f -> Float f
+    | `List l -> List (l |> List.map ofYojson |> Array.of_list)
+    | `Assoc kvPairs ->
+      let f acc (k, v) =
+        Hashtbl.add acc k (ofYojson v);
+        acc
+      in
+      Assoc (List.fold_left f (Hashtbl.create 20) kvPairs)
 
 
   let rec toString (v : json) : string = v |> toYojson |> Yojson.Safe.to_string
@@ -204,7 +223,7 @@ module Compile = struct
   let store (json : json) (file_index : int) (op_index : int) : unit =
     ignore
     @@ with_store (fun s ->
-           s##setItem (Js.string json_key) (Marshal.to_string json [] |> Js.string);
+           s##setItem (Js.string json_key) (toString json |> Js.string);
            s##setItem (Js.string file_index_key) (string_of_int file_index |> Js.string);
            s##setItem (Js.string op_index_key) (string_of_int op_index |> Js.string))
 
@@ -213,10 +232,16 @@ module Compile = struct
     let r =
       with_store (fun s ->
           ( (match Js.Opt.to_option @@ s##getItem (Js.string json_key) with
-            | Some marshalled_json ->
-              let str = marshalled_json |> Js.to_string in
-              let json : json = Marshal.from_string str 0 in
-              Some json
+            | Some str_json ->
+              let str = str_json |> Js.to_string in
+              print_endline str;
+              (try
+                 let json : Yojson.Basic.t = Yojson.Basic.from_string str in
+                 Option.some @@ ofYojson json
+               with
+              | e ->
+                print_endline @@ Printexc.to_string e;
+                None)
             | None -> None)
           , (match Js.Opt.to_option @@ s##getItem (Js.string file_index_key) with
             | None -> 0
@@ -323,7 +348,7 @@ module Compile = struct
         | unrecognisedString -> failwith ("got " ^ unrecognisedString)
       in
       acc_ref := Option.some @@ json;
-      store json file_index op_index
+      if op_index mod 1000 = 0 then store json file_index op_index
 
 
   let serializeYojson () : string =
@@ -359,4 +384,11 @@ let _ =
           | e ->
             print_endline (Printexc.to_string e);
             Js.string ""
+
+        method readJsonFromLocalStorage () =
+          match Compile.store_get () with
+          | Some json, file_index, op_index ->
+            print_endline @@ Compile.toString json;
+            Printf.printf "Having read file no %d and op no %d" file_index op_index
+          | None, _, _ -> print_endline "No json found in localStorage"
       end]

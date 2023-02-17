@@ -58,7 +58,9 @@ async function handleIncrementalOpsFileUpload(e) {
     let jsonEntries = JSON.parse(json);
     for (let jsonI = opIndex; jsonI < jsonEntries.length; ++jsonI) {
       let jsonEntry = jsonEntries[jsonI];
-      console.log("compiling in OCaml layer", i, jsonI);
+      if (jsonI % 1000 === 0) {
+        console.log("compiling in OCaml layer", i, jsonI);
+      }
       compileFn(jsonEntry, i, jsonI);
       updateProgress(jsonI, jsonLength);
 
@@ -183,10 +185,8 @@ function handleCompileClick(compile) {
       break;
     case "ast-typed":
       compileFn = compile.loadAstTyped.bind(compile);
-      console.log("started json ops");
-      // let ops = JSONToOps(JSON.parse(ligoEditor.state.doc.toJSON().join("\n")));
-      console.log("completed json ops");
-      michelson = compileFn(ops, getSyntax());
+      let code = ligoEditor.state.doc.toJSON().join("\n");
+      michelson = compileFn(code, getSyntax());
       michelsonEditor.setState(
         EditorState.create({
           extensions: [basicSetup],
@@ -195,7 +195,7 @@ function handleCompileClick(compile) {
       );
       break;
     case "ast-typed-json-ops":
-      compileFn = compile.loadAstTyped.bind(compile);
+      compileFn = compile.loadAstTypedOps.bind(compile);
       michelson = compileFn(incrementalOps, getSyntax());
       michelsonEditor.setState(
         EditorState.create({

@@ -144,7 +144,57 @@ let load_cst source syntax =
     "failed"
 
 
-let load_ast_typed yojson syntax =
+let load_ast_typed code syntax =
+  let syntax_v =
+    match Syntax.of_ext_opt (Some syntax) with
+    | Some v -> v
+    | None -> failwith ("Invalid syntax " ^ syntax)
+  in
+  let entry_point = "main" in
+  let views = Default_options.views in
+  let protocol_version = "lima" in
+  let raw_options =
+    Raw_options.make
+      ~entry_point
+      ~syntax
+      ~views
+      ~protocol_version
+      ~disable_michelson_typechecking:true
+      ~experimental_disable_optimizations_for_debugging:false
+      ~enable_typed_opt:false
+      ~no_stdlib:true
+      ~warning_as_error:false
+      ~no_colour:true
+      ~constants:Default_options.constants
+      ~file_constants:None
+      ~project_root:None
+      ~warn_unused_rec:true
+      ()
+  in
+  let display_format = Simple_utils.Display.json in
+  let michelson_format = `Text in
+  let michelson_comments = [ `Source ] in
+  match
+    Api.Compile.ast_typed
+      raw_options
+      (Api.Compile.Text (code, syntax_v))
+      display_format
+      michelson_format
+      michelson_comments
+      ()
+  with
+  | Ok (a, b) ->
+    print_endline a;
+    print_endline b;
+    a
+  | Error (a, b) ->
+    print_endline "error";
+    print_endline a;
+    print_endline b;
+    "failed"
+
+
+let load_ast_typed_yojson yojson syntax =
   let entry_point = "main" in
   let views = Default_options.views in
   let protocol_version = "lima" in
@@ -211,11 +261,16 @@ let _ =
          let cst = load_cst code syntax in
          Js.string cst
 
-       method loadAstTyped ops syntax =
+       method loadAstTyped code syntax =
+         let syntax = Js.to_string syntax in
+         let michelson = load_ast_typed code syntax in
+         Js.string michelson
+
+       method loadAstTypedOps ops syntax =
          let yojson =
            ops |> Js.to_array |> Array.to_list |> Compile.run |> Compile.toYojson
          in
          let syntax = Js.to_string syntax in
-         let michelson = load_ast_typed yojson syntax in
+         let michelson = load_ast_typed_yojson yojson syntax in
          Js.string michelson
     end)
