@@ -2,13 +2,13 @@ open Simple_utils.Trace
 open Errors
 open Ligo_prim
 
-let default_input_entrypoint = "main"
-let default_input_entrypoint_var =
-  Value_var.of_input_var ~loc:Location.generated default_input_entrypoint
-
-let default_entrypoint = "$main"
+let default_entrypoint = "main"
 let default_entrypoint_var =
   Value_var.of_input_var ~loc:Location.generated default_entrypoint
+
+let default_built_entrypoint = "$main"
+let default_built_entrypoint_var =
+  Value_var.of_input_var ~loc:Location.generated default_built_entrypoint
 
 let default_views = "$views"
 let default_views_var = Value_var.of_input_var ~loc:Location.generated default_views
@@ -181,7 +181,7 @@ let program ~raise : Ast_typed.module_ -> Ast_typed.declaration list =
           parameter_type
           storage_type
       in
-      let binder = Binder.make default_entrypoint_var expr.type_expression in
+      let binder = Binder.make default_built_entrypoint_var expr.type_expression in
       Location.wrap ~loc
       @@ Ast_typed.D_value
            { binder
@@ -318,7 +318,7 @@ let make_main_entrypoint ~raise
           parameter_type
           storage_type
       in
-      let binder = Binder.make default_entrypoint_var expr.type_expression in
+      let binder = Binder.make default_built_entrypoint_var expr.type_expression in
       Location.wrap ~loc
       @@ Ast_typed.D_value
            { binder
@@ -335,7 +335,7 @@ let make_main_entrypoint ~raise
            }
     in
     let prg = prg @ [ entrypoint_type_decl; entrypoint_function_decl ] in
-    default_entrypoint_var, prg
+    default_built_entrypoint_var, prg
 
 
 let program ~raise
@@ -357,7 +357,7 @@ let program ~raise
     make_main_entrypoint ~raise (hd, tl) prg
   (* Second from annotations *)
   | [], hd :: tl -> make_main_entrypoint ~raise (hd, tl) prg
-  | [], [] -> default_input_entrypoint_var, prg
+  | [], [] -> default_entrypoint_var, prg
 
 
 let get_final_entrypoint_name ~raise
@@ -377,7 +377,8 @@ let get_final_entrypoint_name ~raise
     in
     hd
   | [], [ hd ] -> hd
-  | [], _ -> default_input_entrypoint_var
+  | [], [] -> default_entrypoint_var
+  | [], _ -> default_built_entrypoint_var
   | lst, _ ->
     let () =
       List.iter
@@ -386,4 +387,4 @@ let get_final_entrypoint_name ~raise
           then raise.warning (`Main_entry_ignored (Value_var.get_location var)))
         annoted_entry_points
     in
-    default_entrypoint_var
+    default_built_entrypoint_var

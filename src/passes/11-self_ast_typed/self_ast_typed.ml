@@ -3,6 +3,7 @@ module Helpers = Helpers
 open Ligo_prim
 
 let get_final_entrypoint_name = Make_entry_point.get_final_entrypoint_name
+let make_entry_point_program = Make_entry_point.program
 
 let all_program_passes ~raise ~warn_unused_rec =
   [ Unused.unused_map_program ~raise

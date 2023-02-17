@@ -220,9 +220,12 @@ let parameter
   let constants = constants @ file_constants in
   let entry_point = List.map ~f:(Value_var.of_input_var ~loc) entry_point in
   let app_typed_prg = Build.qualified_typed ~raise ~options Env source_file in
-  let entry_point =
-    Self_ast_typed.get_final_entrypoint_name ~raise entry_point app_typed_prg
-  in
+  let entry_point, app_typed_prg =
+    Trace.trace ~raise Main_errors.self_ast_typed_tracer
+    @@ fun ~raise ->
+    let main_name, prg = Self_ast_typed.make_entry_point_program ~raise entry_point app_typed_prg in
+    let prg, main_name, _ = Self_ast_typed.Helpers.fetch_contract_type ~raise main_name prg in
+    main_name, prg in
   let ( app_typed_prg
       , entry_point
       , Self_ast_typed.Helpers.{ parameter = parameter_ty; storage = _ } )
@@ -269,7 +272,7 @@ let parameter
         ~raise
         ~options:options.middle_end
         app_typed_prg
-        [ entry_point ]
+        (`Use_this entry_point)
     in
     let expanded =
       Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_contract
@@ -360,9 +363,12 @@ let storage
   let app_typed_prg =
     Build.qualified_typed ~raise ~options Ligo_compile.Of_core.Env source_file
   in
-  let entry_point =
-    Self_ast_typed.get_final_entrypoint_name ~raise entry_point app_typed_prg
-  in
+  let entry_point, app_typed_prg =
+    Trace.trace ~raise Main_errors.self_ast_typed_tracer
+    @@ fun ~raise ->
+    let main_name, prg = Self_ast_typed.make_entry_point_program ~raise entry_point app_typed_prg in
+    let prg, main_name, _ = Self_ast_typed.Helpers.fetch_contract_type ~raise main_name prg in
+    main_name, prg in
   let ( app_typed_prg
       , entry_point
       , Self_ast_typed.Helpers.{ parameter = _; storage = storage_ty } )
@@ -409,7 +415,7 @@ let storage
         ~raise
         ~options:options.middle_end
         app_typed_prg
-        [ entry_point ]
+        (`Use_this entry_point)
     in
     let expanded =
       Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_contract

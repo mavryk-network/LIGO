@@ -333,7 +333,7 @@ let rec build_contract_aggregated ~raise
       ~options:options.middle_end
       ~contract_pass:true
       typed_contract
-      entry_points
+      (`Get_final entry_points)
   in
   let agg_views = build_aggregated_views ~raise ~options typed_views in
   let parameter_ty, storage_ty =

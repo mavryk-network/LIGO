@@ -61,11 +61,16 @@ let compile_expression ~raise ~options : Ast_typed.expression -> Ast_aggregated.
 
 
 let apply_to_entrypoint_contract ~raise ~options ?(contract_pass = false)
-    : Ast_typed.program -> Value_var.t list -> Ast_aggregated.expression
+    : Ast_typed.program -> [`Get_final of Value_var.t list|`Use_this of Value_var.t] -> Ast_aggregated.expression
   =
  fun prg entrypoints ->
   let loc = Location.dummy in
-  let entrypoint = Self_ast_typed.get_final_entrypoint_name ~raise entrypoints prg in
+  let entrypoint =
+    match entrypoints with
+    | `Get_final entrypoints ->
+      Self_ast_typed.get_final_entrypoint_name ~raise entrypoints prg
+    | `Use_this entrypoint -> entrypoint
+  in
   let prg, entrypoint, Self_ast_typed.Helpers.{ parameter = p_ty; storage = s_ty } =
     trace ~raise self_ast_typed_tracer
     @@ Self_ast_typed.Helpers.fetch_contract_type entrypoint prg

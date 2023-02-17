@@ -99,7 +99,7 @@ let dry_run
       ~raise
       ~options:options.middle_end
       typed_prg
-      entry_point
+      (`Get_final entry_point)
   in
   let expanded_prg = Compile.Of_aggregated.compile_expression ~raise aggregated_prg in
   let mini_c_prg = Compile.Of_expanded.compile_expression ~raise expanded_prg in

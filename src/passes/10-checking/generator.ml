@@ -6,9 +6,9 @@ module C = Computation
 open O.Combinators
 open Ligo_prim
 
-let default_entrypoint = "$main"
-let default_entrypoint_var =
-  Value_var.of_input_var ~loc:Location.generated default_entrypoint
+let default_built_entrypoint = "$main"
+let default_built_entrypoint_var =
+  Value_var.of_input_var ~loc:Location.generated default_built_entrypoint
 
 
 let default_views = "$views"
@@ -53,7 +53,7 @@ let program_sig_ : Signature.t -> (Signature.item list, _, _) C.t =
     let parameter_type_decl = Signature.S_type (type_binder, parameter_type) in
     let contract_type = Type.build_entry_type parameter_type storage_type in
     let contract_decl =
-      Signature.S_value (default_entrypoint_var, contract_type, Context.Attr.default)
+      Signature.S_value (default_built_entrypoint_var, contract_type, Context.Attr.default)
     in
     let views_type = Type.t_views ~loc:Location.generated storage_type () in
     let views_decl =
