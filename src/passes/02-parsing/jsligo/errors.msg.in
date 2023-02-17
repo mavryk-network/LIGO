@@ -584,15 +584,6 @@ contract: If LPAR ZWSP
 Ill-formed conditional statement.
 At this point, the condition is expected as an expression.
 
-contract: Import UIdent EQ UIdent DOT ZWSP
-##
-## Ends in an error in state: 357.
-##
-## nsepseq(module_name,DOT) -> UIdent DOT . nsepseq(module_name,DOT) [ SEMI RBRACE Else EOF Default Case ]
-##
-## The known suffix of the stack is as follows:
-## UIdent DOT
-##
 contract: Import UIdent EQ ZWSP
 ##
 ## Ends in an error in state: 355.
@@ -3469,3 +3460,58 @@ contract: LT Ident GT ES6FUN ZWSP
 
 Ill-formed functional expression.
 At this point, the value parameters are expected between parentheses.
+
+contract: Contract ZWSP
+##
+## Ends in an error in state: 168.
+##
+## call_expr -> Contract . LPAR nsepseq(module_name,DOT) RPAR [ TIMES SLASH SEMI RPAR REM_EQ REM RBRACKET RBRACE QMARK PLUS_EQ PLUS NE MULT_EQ MINUS_EQ MINUS LT LPAR LE GT Else EQ2 EQ EOF Default DIV_EQ Case COMMA COLON BOOL_OR BOOL_AND As ]
+##
+## The known suffix of the stack is as follows:
+## Contract
+##
+contract: Contract LPAR ZWSP
+##
+## Ends in an error in state: 169.
+##
+## call_expr -> Contract LPAR . nsepseq(module_name,DOT) RPAR [ TIMES SLASH SEMI RPAR REM_EQ REM RBRACKET RBRACE QMARK PLUS_EQ PLUS NE MULT_EQ MINUS_EQ MINUS LT LPAR LE GT Else EQ2 EQ EOF Default DIV_EQ Case COMMA COLON BOOL_OR BOOL_AND As ]
+##
+## The known suffix of the stack is as follows:
+## Contract LPAR
+##
+
+Ill-formed module as contract.
+At this point, the qualified name of the module is expected.
+
+contract: Contract LPAR UIdent DOT ZWSP
+##
+## Ends in an error in state: 171.
+##
+## nsepseq(module_name,DOT) -> UIdent DOT . nsepseq(module_name,DOT) [ SEMI RPAR RBRACE Else EOF Default Case ]
+##
+## The known suffix of the stack is as follows:
+## UIdent DOT
+##
+
+Ill-formed module path.
+At this point, the name of another module is expected.
+
+contract: Contract LPAR UIdent ZWSP
+##
+## Ends in an error in state: 173.
+##
+## call_expr -> Contract LPAR nsepseq(module_name,DOT) . RPAR [ TIMES SLASH SEMI RPAR REM_EQ REM RBRACKET RBRACE QMARK PLUS_EQ PLUS NE MULT_EQ MINUS_EQ MINUS LT LPAR LE GT Else EQ2 EQ EOF Default DIV_EQ Case COMMA COLON BOOL_OR BOOL_AND As ]
+##
+## The known suffix of the stack is as follows:
+## Contract LPAR nsepseq(module_name,DOT)
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 170, spurious reduction of production nsepseq(module_name,DOT) -> UIdent
+##
+
+Ill-formed module as contract.
+At this point, if the expression denoting the module complete,
+a closing parenthesis ')' is expected.

@@ -10609,3 +10609,16 @@ interactive_expr: Bytes GT ZWSP ZWSP
 ##
 
 This syntax error should not happen. Please report to the developpers.
+
+interactive_expr: Contract ZWSP
+##
+## Ends in an error in state: 281.
+##
+## call_expr -> Contract . nsepseq(module_name,DOT) [ With VBAR Type To Then TIMES SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or NE Module Mod MINUS Lxor Lsr Lsl Lor Let Land LT LE In GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET BOOL_OR BOOL_AND Attr ]
+##
+## The known suffix of the stack is as follows:
+## Contract
+##
+
+Ill-formed module as contract.
+At this point, the qualified name of the module is expected.
