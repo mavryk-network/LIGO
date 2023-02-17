@@ -1133,7 +1133,7 @@ and compile_expression ~raise : CST.expr -> AST.expr =
       List.Ne.map compile_mod_var @@ npseq_to_ne_list value
     in
     let module_ = List.Ne.to_list module_ in
-    e_module_accessor ~loc module_ (Value_var.of_input_var ~loc "contract")
+    e_module_accessor ~loc module_ (Value_var.of_input_var ~loc "$contract")
 
 
 and compile_pattern ~raise : CST.pattern -> AST.ty_expr option Pattern.t =

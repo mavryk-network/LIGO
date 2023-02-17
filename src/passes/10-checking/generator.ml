@@ -6,15 +6,15 @@ module C = Computation
 open O.Combinators
 open Ligo_prim
 
-let default_entrypoint = "main"
+let default_entrypoint = "$main"
 let default_entrypoint_var =
   Value_var.of_input_var ~loc:Location.generated default_entrypoint
 
 
-let default_views = "views"
+let default_views = "$views"
 let default_views_var = Value_var.of_input_var ~loc:Location.generated default_views
 
-let default_contract = "contract"
+let default_contract = "$contract"
 let default_contract_var = Value_var.of_input_var ~loc:Location.generated default_contract
 
 let program_sig_ : Signature.t -> (Signature.item list, _, _) C.t =
