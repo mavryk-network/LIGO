@@ -61,7 +61,8 @@ let compile_expression ~raise ~options : Ast_typed.expression -> Ast_aggregated.
 
 
 let apply_to_entrypoint_contract ~raise ~options ?(contract_pass = false)
-    : Ast_typed.program -> [`Get_final of Value_var.t list|`Use_this of Value_var.t] -> Ast_aggregated.expression
+    :  Ast_typed.program -> [ `Get_final of Value_var.t list | `Use_this of Value_var.t ]
+    -> Ast_aggregated.expression
   =
  fun prg entrypoints ->
   let loc = Location.dummy in

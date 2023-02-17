@@ -223,9 +223,14 @@ let parameter
   let entry_point, app_typed_prg =
     Trace.trace ~raise Main_errors.self_ast_typed_tracer
     @@ fun ~raise ->
-    let main_name, prg = Self_ast_typed.make_entry_point_program ~raise entry_point app_typed_prg in
-    let prg, main_name, _ = Self_ast_typed.Helpers.fetch_contract_type ~raise main_name prg in
-    main_name, prg in
+    let main_name, prg =
+      Self_ast_typed.make_entry_point_program ~raise entry_point app_typed_prg
+    in
+    let prg, main_name, _ =
+      Self_ast_typed.Helpers.fetch_contract_type ~raise main_name prg
+    in
+    main_name, prg
+  in
   let ( app_typed_prg
       , entry_point
       , Self_ast_typed.Helpers.{ parameter = parameter_ty; storage = _ } )
@@ -366,9 +371,14 @@ let storage
   let entry_point, app_typed_prg =
     Trace.trace ~raise Main_errors.self_ast_typed_tracer
     @@ fun ~raise ->
-    let main_name, prg = Self_ast_typed.make_entry_point_program ~raise entry_point app_typed_prg in
-    let prg, main_name, _ = Self_ast_typed.Helpers.fetch_contract_type ~raise main_name prg in
-    main_name, prg in
+    let main_name, prg =
+      Self_ast_typed.make_entry_point_program ~raise entry_point app_typed_prg
+    in
+    let prg, main_name, _ =
+      Self_ast_typed.Helpers.fetch_contract_type ~raise main_name prg
+    in
+    main_name, prg
+  in
   let ( app_typed_prg
       , entry_point
       , Self_ast_typed.Helpers.{ parameter = _; storage = storage_ty } )

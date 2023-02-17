@@ -3,17 +3,19 @@ open Errors
 open Ligo_prim
 
 let default_entrypoint = "main"
+
 let default_entrypoint_var =
   Value_var.of_input_var ~loc:Location.generated default_entrypoint
 
+
 let default_built_entrypoint = "$main"
+
 let default_built_entrypoint_var =
   Value_var.of_input_var ~loc:Location.generated default_built_entrypoint
 
+
 let default_views = "$views"
 let default_views_var = Value_var.of_input_var ~loc:Location.generated default_views
-
-
 let default_contract = "$contract"
 let default_contract_var = Value_var.of_input_var ~loc:Location.generated default_contract
 
@@ -64,7 +66,9 @@ let create_entrypoint_function_expr entrypoints parameter_type storage_type =
   let oplst_storage = t_pair ~loc (t_list ~loc @@ t_operation ~loc ()) storage_type in
   let cases =
     List.map entrypoints ~f:(fun (entrypoint, entrypoint_type) ->
-        let constructor = Label.of_string (String.capitalize (Value_var.to_name_exn entrypoint)) in
+        let constructor =
+          Label.of_string (String.capitalize (Value_var.to_name_exn entrypoint))
+        in
         let pattern = Value_var.fresh ~name:"pattern" ~loc () in
         let body =
           match Misc.should_uncurry_entry entrypoint_type with
@@ -182,41 +186,41 @@ let program ~raise : Ast_typed.module_ -> Ast_typed.declaration list =
           storage_type
       in
       let binder = Binder.make default_built_entrypoint_var expr.type_expression in
-      Location.wrap ~loc
-      @@ Ast_typed.D_value
-           { binder
-           ; expr
-           ; attr =
-               { inline = false
-               ; no_mutation = false
-               ; entry = false
-               ; view = false
-               ; public = true
-               ; thunk = false
-               ; hidden = false
-               }
-           },
-      Ast_typed.e_a_variable ~loc (Binder.get_var binder) expr.type_expression
+      ( Location.wrap ~loc
+        @@ Ast_typed.D_value
+             { binder
+             ; expr
+             ; attr =
+                 { inline = false
+                 ; no_mutation = false
+                 ; entry = false
+                 ; view = false
+                 ; public = true
+                 ; thunk = false
+                 ; hidden = false
+                 }
+             }
+      , Ast_typed.e_a_variable ~loc (Binder.get_var binder) expr.type_expression )
     in
     let views = get_views_of_module module_ in
     let views_decl, views_var =
       let expr = create_views_function_expr ~loc views storage_type in
       let binder = Binder.make default_views_var expr.type_expression in
-      Location.wrap ~loc
-      @@ Ast_typed.D_value
-           { binder
-           ; expr
-           ; attr =
-               { inline = false
-               ; no_mutation = false
-               ; entry = false
-               ; view = false
-               ; public = true
-               ; thunk = false
-               ; hidden = false
-               }
-           },
-      Ast_typed.e_a_variable ~loc (Binder.get_var binder) expr.type_expression
+      ( Location.wrap ~loc
+        @@ Ast_typed.D_value
+             { binder
+             ; expr
+             ; attr =
+                 { inline = false
+                 ; no_mutation = false
+                 ; entry = false
+                 ; view = false
+                 ; public = true
+                 ; thunk = false
+                 ; hidden = false
+                 }
+             }
+      , Ast_typed.e_a_variable ~loc (Binder.get_var binder) expr.type_expression )
     in
     let contract_decl =
       let expr = Ast_typed.e_a_pair ~loc entrypoint_var views_var in

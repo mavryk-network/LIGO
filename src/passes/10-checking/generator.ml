@@ -7,13 +7,13 @@ open O.Combinators
 open Ligo_prim
 
 let default_built_entrypoint = "$main"
+
 let default_built_entrypoint_var =
   Value_var.of_input_var ~loc:Location.generated default_built_entrypoint
 
 
 let default_views = "$views"
 let default_views_var = Value_var.of_input_var ~loc:Location.generated default_views
-
 let default_contract = "$contract"
 let default_contract_var = Value_var.of_input_var ~loc:Location.generated default_contract
 
@@ -59,7 +59,9 @@ let program_sig_ : Signature.t -> (Signature.item list, _, _) C.t =
     let views_decl =
       Signature.S_value (default_views_var, views_type, Context.Attr.default)
     in
-    let mcontract_type = Type.t_pair ~loc:Location.generated contract_type views_type () in
+    let mcontract_type =
+      Type.t_pair ~loc:Location.generated contract_type views_type ()
+    in
     let mcontract_decl =
       Signature.S_value (default_contract_var, mcontract_type, Context.Attr.default)
     in

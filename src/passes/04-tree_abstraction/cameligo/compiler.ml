@@ -740,11 +740,9 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
     let cond = compile_expression ~raise cond in
     let body = compile_loop_body ~raise body in
     return @@ e_while ~loc cond body
-  | EContract {value; region} ->
+  | EContract { value; region } ->
     let loc = Location.lift region in
-    let module_ =
-      List.Ne.map compile_mod_var @@ npseq_to_ne_list value
-    in
+    let module_ = List.Ne.map compile_mod_var @@ npseq_to_ne_list value in
     let module_ = List.Ne.to_list module_ in
     e_module_accessor ~loc module_ (Value_var.of_input_var ~loc "$contract")
 

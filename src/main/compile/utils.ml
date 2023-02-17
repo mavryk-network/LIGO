@@ -29,7 +29,11 @@ let type_file ~raise ~(options : Compiler_options.t) f stx form : Ast_typed.prog
 let compile_file ~raise ~options f stx ep =
   let typed = type_file ~raise ~options f stx @@ Contract ep in
   let aggregated =
-    Of_typed.apply_to_entrypoint_contract ~raise ~options:options.middle_end typed (`Get_final ep)
+    Of_typed.apply_to_entrypoint_contract
+      ~raise
+      ~options:options.middle_end
+      typed
+      (`Get_final ep)
   in
   let expanded = Of_aggregated.compile_expression ~raise aggregated in
   let mini_c = Of_expanded.compile_expression ~raise expanded in

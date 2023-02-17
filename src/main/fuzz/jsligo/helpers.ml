@@ -312,8 +312,8 @@ module Fold_helpers (M : Monad) = struct
       let* truthy = self value.truthy in
       let* falsy = self value.falsy in
       return @@ ETernary { value = { value with condition; truthy; falsy }; region }
-    | EContract { value; region } ->
-      return @@ EContract { value; region }
+    | EContract { value; region } -> return @@ EContract { value; region }
+
 
   and map_statement : mapper -> statement -> statement monad =
    fun f s ->
