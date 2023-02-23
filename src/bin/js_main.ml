@@ -112,7 +112,7 @@ let load_cst source syntax =
       ~disable_michelson_typechecking:true
       ~experimental_disable_optimizations_for_debugging:false
       ~enable_typed_opt:false
-      ~no_stdlib:true
+      ~no_stdlib:false
       ~warning_as_error:false
       ~no_colour:true
       ~constants:Default_options.constants

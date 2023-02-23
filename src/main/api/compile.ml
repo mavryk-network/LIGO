@@ -171,7 +171,7 @@ let cst
         let has_env_comments = has_env_comments michelson_comments in
         Compiler_options.make ~raw_options ~syntax ~protocol_version ~has_env_comments ()
       in
-      Ligo_compile.Utils.compile_cst_string
+      Build.compile_cst_string
         ~raise
         ~options
         ~protocol_version:options.middle_end.protocol_version

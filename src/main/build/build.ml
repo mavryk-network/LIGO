@@ -451,3 +451,46 @@ and build_views ~raise
         (List.map ~f:snd michelsons)
     in
     michelsons
+
+let compile_cst_string ~raise ~(options : Compiler_options.t) source syntax =
+  let open Ligo_compile in
+  (* let std_lib = Stdlib.get ~options in *)
+  (* let file_name = Some "foo.mligo" in *)
+  (* let top_level_syntax = Syntax.of_string_opt ~raise (Syntax_name "cameligo") file_name in *)
+  (* let stdlib_typed = std_lib.typed_mod_def @ Stdlib.select_prelude_typed top_level_syntax std_lib in *)
+  let meta = Of_source.extract_meta syntax in
+  (* no need to preprocess, because these are already preprocessed CST JSONs *)
+  let imperative = Of_c_unit.compile_cst_string ~raise ~meta source in
+  let core = Of_imperative.compile ~raise imperative in
+  let loc = Main_errors.Location.test in
+  let ep = Ligo_prim.Value_var.of_input_var ~loc "main" in
+  let form = Of_core.Contract ep in
+  let typed = Of_core.typecheck ~raise ~options form core in
+  (* let typed = stdlib_typed @ typed in *)
+  let aggregated =
+    Of_typed.apply_to_entrypoint_contract ~raise ~options:options.middle_end typed ep
+  in
+  let expanded = Of_aggregated.compile_expression ~raise aggregated in
+  let mini_c = Of_expanded.compile_expression ~raise expanded in
+  let michelson = Of_mini_c.compile_contract ~raise ~options mini_c in
+  let contract = Of_michelson.build_contract ~disable_typecheck:true ~raise michelson in
+  contract
+
+type raise = (Parsing.Cameligo.Errors.t, Main_warnings.all) Trace.raise
+type 'a parser = ?preprocess:bool -> raise:raise -> Buffer.t -> 'a
+let parse_string_to_cst: Parsing.Cameligo.CST.t parser = fun ?preprocess ~raise buffer ->
+  let prg_cst = Parsing.Cameligo.parse_string ?preprocess ~raise buffer in
+  let stdlib_buf = Buffer.create 1000 in
+  let () = Buffer.add_string stdlib_buf (Ligo_lib.get ()) in
+  let stdlib_cst = Parsing.Cameligo.parse_string ?preprocess ~raise stdlib_buf in
+  Parsing.Cameligo.CST.concat prg_cst stdlib_cst
+
+let parse_file_to_cst: (string -> Parsing.Cameligo.CST.t) parser = fun ?preprocess ~raise buffer file_name ->
+  let stdlib_str = Ligo_lib.get () in
+  let def str = "#define " ^ str ^ "\n" in
+  let stdlib_str  = (def "LIMA") ^ (def "CURRY") ^ stdlib_str in
+  let stdlib_buf = Buffer.create 100 in
+  Buffer.add_string stdlib_buf stdlib_str;
+  Buffer.add_buffer stdlib_buf buffer;
+  Parsing.Cameligo.parse_file ?preprocess ~raise stdlib_buf file_name
+

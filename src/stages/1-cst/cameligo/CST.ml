@@ -665,3 +665,11 @@ let type_ctor_arg_to_region = function
 
 let lpar_to_yojson = Wrap.to_yojson
 
+let concat (a: t) (b: t) =
+  let open Simple_utils.Utils in
+  let f ai acc =
+    nseq_cons ai acc
+  in
+  let decl = nseq_foldr f a.decl b.decl in
+  let { eof; _ } = b in (* Hacky! *)
+  { decl; eof }

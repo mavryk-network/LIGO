@@ -78,7 +78,7 @@ let cst
     let meta = Compile.Of_source.extract_meta syntax in
     let k : raise:(Parsing.Errors.t, Main_warnings.all) Trace.raise -> 'a =
      fun ~raise ->
-      let preprocess = false in
+      let preprocess = true in
       let buffer =
         match source with
         | `Raw code ->
@@ -103,14 +103,14 @@ let cst
           let buf = Parsing.Pascaligo.pretty_print_cst_cst cst in
           Format.asprintf "%s" (Buffer.contents buf))
       | `File file_path, CameLIGO ->
-        let cst = Parsing.Cameligo.parse_file ~preprocess ~raise buffer file_path in
+        let cst = Build.parse_file_to_cst ~preprocess ~raise buffer file_path in
         (match display_format with
         | Json -> Yojson.Safe.pretty_to_string @@ Parsing.Cameligo.CST.to_yojson cst
         | Dev | Human_readable ->
           let buf = Parsing.Cameligo.pretty_print_cst_cst cst in
           Format.asprintf "%s" (Buffer.contents buf))
       | `Raw _code, CameLIGO ->
-        let cst = Parsing.Cameligo.parse_string ~preprocess ~raise buffer in
+        let cst = Build.parse_string_to_cst ~preprocess ~raise buffer in
         (match display_format with
         | Json -> Yojson.Safe.pretty_to_string @@ Parsing.Cameligo.CST.to_yojson cst
         | Dev | Human_readable ->

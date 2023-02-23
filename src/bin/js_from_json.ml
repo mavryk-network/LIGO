@@ -298,10 +298,10 @@ module Compile = struct
     List.fold_left f init ops
 
 
-  let acc_ref : json option ref =
-    match store_get () with
-    | Some json, _, _ -> ref (Some json)
-    | None, _, _ -> ref None
+  let acc_ref : json option ref = ref None
+    (* match store_get () with *)
+    (* | Some json, _, _ -> ref (Some json) *)
+    (* | None, _, _ -> ref None *)
 
 
   let incremental op file_index op_index =
