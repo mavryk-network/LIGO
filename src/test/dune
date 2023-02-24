@@ -1,10 +1,26 @@
 (ocamllex md)
 
 (executables
- (names test doc_test repl_test vendors_test contract_test get_scope_tests
-   lsp_test)
- (libraries simple-utils tezos-memory-proto-alpha ligo ligo.unix bos repl
-   interpreter alcotest tezos-utils tezos-crypto ligo_api lsp_test_requests))
+ (names
+  test
+  doc_test
+  repl_test
+  vendors_test
+  contract_test
+  get_scope_tests
+  lsp_test)
+ (libraries
+  simple-utils
+  tezos-memory-proto-alpha
+  ligo
+  ligo.unix
+  bos
+  repl
+  interpreter
+  alcotest
+  tezos-crypto
+  ligo_api
+  lsp_test_requests))
 
 (rule
  (alias doc-test)
