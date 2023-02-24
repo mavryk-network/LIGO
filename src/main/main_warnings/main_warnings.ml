@@ -22,8 +22,7 @@ type all =
     * Ast_imperative.expression
     * Ast_imperative.type_expression
   | `Main_view_ignored of Location.t
-  | `Michelson_typecheck_failed_with_different_protocol of
-    Environment.Protocols.t * Tezos_error_monad.Error_monad.error list
+  | `Michelson_typecheck_failed_with_different_protocol of Environment.Protocols.t
   | `Jsligo_deprecated_failwith_no_return of Location.t
   | `Jsligo_deprecated_toplevel_let of Location.t
   | `Jsligo_unreachable_code of Location.t
@@ -52,20 +51,15 @@ let pp
          failure.@.@]"
         snippet_pp
         loc
-    | `Michelson_typecheck_failed_with_different_protocol (user_proto, errs) ->
+    | `Michelson_typecheck_failed_with_different_protocol user_proto ->
       let open Environment.Protocols in
       Format.fprintf
         f
         "@[<hv>Warning: Error(s) occurred while type checking the produced michelson \
-         contract:@.%a@.Note: You compiled your contract with protocol %s although we \
+         contract. Note: You compiled your contract with protocol %s although we \
          internally use protocol %s to typecheck the produced Michelson contract@.so you \
          might want to ignore this error if related to a breaking change in protocol \
          %s@.@]"
-        (Memory_proto_alpha.Client.Michelson_v1_error_reporter.report_errors
-           ~details:true
-           ~show_source:true
-           ?parsed:None)
-        errs
         (variant_to_string user_proto)
         (variant_to_string in_use)
         (variant_to_string in_use)
@@ -204,20 +198,15 @@ let to_warning : all -> Simple_utils.Warning.t =
     in
     let content = make_content ~message ~location () in
     make ~stage:"testing framework" ~content
-  | `Michelson_typecheck_failed_with_different_protocol (user_proto, errs) ->
+  | `Michelson_typecheck_failed_with_different_protocol user_proto ->
     let open Environment.Protocols in
     let message =
       Format.asprintf
         "@[<hv>Warning: Error(s) occurred while type checking the produced michelson \
-         contract:@.%a@.Note: You compiled your contract with protocol %s although we \
+         contract.Note: You compiled your contract with protocol %s although we \
          internally use protocol %s to typecheck the produced Michelson contract@.so you \
          might want to ignore this error if related to a breaking change in protocol \
          %s@.@]"
-        (Memory_proto_alpha.Client.Michelson_v1_error_reporter.report_errors
-           ~details:true
-           ~show_source:true
-           ?parsed:None)
-        errs
         (variant_to_string user_proto)
         (variant_to_string in_use)
         (variant_to_string in_use)
