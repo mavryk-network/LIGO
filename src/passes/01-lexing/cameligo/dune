@@ -36,3 +36,20 @@
   (with-stdout-to
    Version.ml
    (run "sh" "-c" "printf 'let version = \"%s\"' \"${LIGO_VERSION}\""))))
+
+(executable
+ (name CameligoLexerJS)
+ (flags -g)
+ (js_of_ocaml
+  (link_flags "--source-map-root=%{project_root}"))
+ (modes js)
+ (libraries
+  ;; LIGO
+  preprocessing_cameligo
+  lexing_shared
+  lexing_cameligo
+  ;; Third party
+  str)
+ (preprocess
+  (pps js_of_ocaml-ppx))
+ (modules CameligoLexerJS))

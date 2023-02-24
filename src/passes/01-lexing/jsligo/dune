@@ -40,7 +40,7 @@
 ;; Build of standalone lexer JS bundle
 
 (executable
- (name LexerJS)
+ (name JsligoLexerJS)
  (flags -g)
  (js_of_ocaml
   (link_flags "--source-map-root=%{project_root}"))
@@ -58,4 +58,4 @@
   str)
  (preprocess
   (pps js_of_ocaml-ppx))
- (modules LexerJS))
+ (modules JsligoLexerJS))

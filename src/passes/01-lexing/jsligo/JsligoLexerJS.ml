@@ -29,20 +29,21 @@ module API =
 open API
 
 let main source =
-  let std = 
-  fst (scan_all_tokens ~no_colour:true source)
-    in
-      let () = Std.(add_nl std.out) in
-      let () = Std.(add_nl std.err) in
-      Printf.printf  "%s%!" (Std.string_of std.out);
-      Printf.eprintf "%s%!" (Std.string_of std.err)
+  let (std, tokens) = scan_all_tokens ~no_colour:true source in
+  let () = Std.(add_nl std.out) in
+  let () = Std.(add_nl std.err) in
+  Printf.printf  "%s%!" (Std.string_of std.out);
+  Printf.eprintf "%s%!" (Std.string_of std.err);
+  tokens
 
 
 let _ =
   Js.export
-    "ligo"
+    "ligoJS"
     (object%js
-       method lexer code syntax =
+       method jsligoLexer code =
          let code = Js.to_string code in
-         main (String ("foo.jsligo", code))
+         match main (String ("foo.jsligo", code)) with
+         | Ok tokens -> tokens |> List.map Token.to_lexeme |> List.iter print_endline
+         | Error e -> print_endline "err"
     end)
