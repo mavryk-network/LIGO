@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf8" />
+    <title><%= htmlWebpackPlugin.options.title %></title>
+  </head>
+  <body>
+    <h1>In browser Ligo Lexer</h1>
+    <button id="lex" type="button">Lex</button>
+    <h2>Ligo</h2>
+    <select id="syntax">
+      <option value="mligo">Cameligo</option>
+      <option value="jsligo">JsLigo</option>
+    </select>
+    <input type="file" id="source-file" />
+    <div id="ligo"></div>
+    <h2>Lexer Tokens</h2>
+    <div id="lexer-tokens"></div>
+    <!-- script tag for app.bundle.js will be added by HtmlWebpackPlugin -->
+  </body>
+</html>
