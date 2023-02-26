@@ -30,11 +30,11 @@ module type S =
       message    : message
     }
 
+    val read_units : file:string -> Lexing.lexbuf -> (units, error) result
     (* Instances *)
 
     type instance = {
       input      : Lexbuf.input;
-      read_units : Lexing.lexbuf -> (units, error) result;
       lexbuf     : Lexing.lexbuf;
       close      : Lexbuf.close
     }

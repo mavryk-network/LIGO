@@ -47,11 +47,12 @@ module type S =
       message    : message
     }
 
+    val read_units : file:string -> Lexing.lexbuf -> (units, error) result
+
     (* Instances *)
 
     type instance = {
       input      : Lexbuf.input;
-      read_units : Lexing.lexbuf -> (units, error) result;
       lexbuf     : Lexing.lexbuf;
       close      : Lexbuf.close
     }
@@ -235,21 +236,9 @@ module Make (Config : Config.S) (Client : Client.S) =
 
     type instance = {
       input      : Lexbuf.input;
-      read_units : Lexing.lexbuf -> (units, error) result;
       lexbuf     : Lexing.lexbuf;
       close      : Lexbuf.close
     }
-
-    (* The main function *)
-
-    let open_stream scan input : (instance, message) result =
-      let file = Lexbuf.file_from_input input in
-      let read_units lexbuf =
-        let state  = State.empty ~file in
-        let* state = scan state lexbuf in
-        Ok (List.rev state#lexical_units) in
-      let* lexbuf, close = Lexbuf.from_input input
-      in Ok {read_units; input; lexbuf; close}
 
     (* Reading UTF-8 encoded characters *)
 
@@ -558,13 +547,25 @@ and init state = parse
 
 {
 (* START TRAILER *)
+    let read_units ~file lexbuf =
+      let state  = State.empty ~file in
+      let* state = scan state lexbuf in
+      Ok (List.rev state#lexical_units)
 
-    let open_stream : Lexbuf.input -> (instance, message) result =
-      let first_call = ref true in
-      let scan state =
+    let first_call = ref true
+
+    let scan state =
         (if !first_call then (first_call := false; init) else scan)
         state
-      in open_stream scan
+
+    (* The main function *)
+    let open_stream input : (instance, message) result =
+      let file = Lexbuf.file_from_input input in
+      let* lexbuf, close = Lexbuf.from_input input
+      in Ok {input; lexbuf; close}
+
+    let open_stream : Lexbuf.input -> (instance, message) result =
+      open_stream
 
   end (* of functor [Make] *)
 (* END TRAILER *)
