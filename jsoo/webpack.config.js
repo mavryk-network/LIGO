@@ -6,6 +6,7 @@ const distPath = path.resolve(__dirname, "dist");
 
 module.exports = {
   resolve: {
+    extensions: [".ts", ".js"],
     fallback: {
       path: require.resolve("path-browserify"),
       stream: require.resolve("stream-browserify"),
