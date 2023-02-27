@@ -44,6 +44,6 @@ let _ =
        method cameligoLexer code =
          let code = Js.to_string code in
          match main (String ("foo.mligo", code)) with
-         | Ok tokens -> tokens |> List.map Token.to_lexeme |> List.iter print_endline
-         | Error e -> print_endline "err"
+         | Ok tokens -> tokens |> List.map ~f:Token.to_lexeme |> List.iter ~f:print_endline
+         | Error _e -> print_endline "err"
     end)

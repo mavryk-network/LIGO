@@ -39,8 +39,11 @@
 
 (executable
  (name CameligoLexerJS)
- (flags -g)
+ (ocamlc_flags (:standard) -g)
+ (link_flags (:standard) -g)
  (js_of_ocaml
+  (flags "--pretty" "--debug-info")
+  ; (flags "--opt=3")
   (link_flags "--source-map-root=%{project_root}"))
  (modes js)
  (libraries

@@ -93,6 +93,8 @@ async function main() {
   console.log('All WASM dependencies loaded');
   document.getElementById('source-file')?.addEventListener('change', handleFileUpload);
   document.getElementById('lex')?.addEventListener('click', handleCompileClick);
+
+  handleCompileClick();
 }
 
 main();
