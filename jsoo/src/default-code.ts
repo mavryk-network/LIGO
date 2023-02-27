@@ -1,13 +1,4 @@
-import { EditorState } from "@codemirror/state";
-import { EditorView, basicSetup } from "codemirror";
-import { javascript } from "@codemirror/lang-javascript";
-
-export function initialize() {
-  let ligoEditor = new EditorView({
-    state: EditorState.create({
-      extensions: [basicSetup, javascript()],
-      doc: `
-
+let defaultJsLigo = `
 type storage = int;
 
 type parameter =
@@ -32,9 +23,14 @@ const main = (action: parameter, store: storage) : [ list<operation> , storage ]
     Reset:     ()  => 0}))
   ]
 };
-`,
-    }),
-    parent: document.getElementById("ligo"),
-  });
-  return { ligoEditor };
+`;
+
+export async function jsligo(): Promise<string> {
+  return Promise.resolve(defaultJsLigo);
+}
+
+export async function cameligo(): Promise<string> {
+  let r = await fetch("/nft.mligo");
+  let code = r.text();
+  return code;
 }
