@@ -17,7 +17,7 @@ let measure_contract (raw_options : Raw_options.t) source_file display_format no
     Helpers.protocol_to_variant ~raise raw_options.protocol_version
   in
   let syntax =
-    Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
+    Syntax.of_string_opt ~raise ~deprecated:raw_options.deprecated (Syntax_name raw_options.syntax) (Some source_file)
   in
   let options = Compiler_options.make ~protocol_version ~raw_options ~syntax () in
   let Compiler_options.{ entry_point; _ } = options.frontend in
@@ -46,7 +46,7 @@ let list_declarations
   format_result ~display_format ~no_colour Formatter.declarations_format
   @@ fun ~raise ->
   let syntax =
-    Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
+    Syntax.of_string_opt ~raise ~deprecated:raw_options.deprecated (Syntax_name raw_options.syntax) (Some source_file)
   in
   let options = Compiler_options.make ~raw_options ~syntax () in
   let prg = Build.qualified_typed ~raise Env ~options source_file in
@@ -68,7 +68,7 @@ let get_scope_raw
   in
   let syntax =
     Syntax.of_string_opt
-      ~support_pascaligo:true
+      ~deprecated:true
       ~raise
       (Syntax_name raw_options.syntax)
       (Some file_name)

@@ -15,7 +15,7 @@ let pretty_print (raw_options : Raw_options.t) source_file display_format () =
     Parsing.Formatter.ppx_format
   @@ fun ~raise ->
   let syntax =
-    Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
+    Syntax.of_string_opt ~raise ~deprecated:raw_options.deprecated (Syntax_name raw_options.syntax) (Some source_file)
   in
   let options = Compiler_options.make ~raw_options ~syntax () in
   let meta = Compile.Of_source.extract_meta syntax in
@@ -34,7 +34,7 @@ let dependency_graph (raw_options : Raw_options.t) source_file display_format ()
     BuildSystem.Formatter.graph_format
   @@ fun ~raise ->
   let syntax =
-    Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
+    Syntax.of_string_opt ~raise ~deprecated:raw_options.deprecated (Syntax_name raw_options.syntax) (Some source_file)
   in
   let options = Compiler_options.make ~raw_options ~syntax () in
   let g, _ = Build.dependency_graph ~raise ~options Env source_file in
@@ -50,7 +50,7 @@ let preprocess (raw_options : Raw_options.t) source_file display_format () =
   fst
   @@
   let syntax =
-    Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
+    Syntax.of_string_opt ~raise ~deprecated:raw_options.deprecated (Syntax_name raw_options.syntax) (Some source_file)
   in
   let options = Compiler_options.make ~raw_options ~syntax () in
   let meta = Compile.Of_source.extract_meta syntax in
@@ -64,7 +64,7 @@ let cst (raw_options : Raw_options.t) source_file display_format () =
     Parsing.Formatter.ppx_format
   @@ fun ~raise ->
   let syntax =
-    Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
+    Syntax.of_string_opt ~raise ~deprecated:raw_options.deprecated (Syntax_name raw_options.syntax) (Some source_file)
   in
   let options = Compiler_options.make ~raw_options ~syntax () in
   let meta = Compile.Of_source.extract_meta syntax in
@@ -83,7 +83,7 @@ let ast (raw_options : Raw_options.t) source_file display_format () =
     Ast_imperative.Formatter.program_format
   @@ fun ~raise ->
   let syntax =
-    Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
+    Syntax.of_string_opt ~raise ~deprecated:raw_options.deprecated (Syntax_name raw_options.syntax) (Some source_file)
   in
   let options = Compiler_options.make ~raw_options ~syntax () in
   let meta = Compile.Of_source.extract_meta syntax in
@@ -100,7 +100,7 @@ let ast_core (raw_options : Raw_options.t) source_file display_format () =
     Ast_core.Formatter.program_format
   @@ fun ~raise ->
   let syntax =
-    Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
+    Syntax.of_string_opt ~raise ~deprecated:raw_options.deprecated (Syntax_name raw_options.syntax) (Some source_file)
   in
   let options = Compiler_options.make ~raw_options ~syntax () in
   let meta = Compile.Of_source.extract_meta syntax in
@@ -120,7 +120,7 @@ let ast_typed (raw_options : Raw_options.t) source_file display_format () =
   let options =
     (* TODO: options should be computed outside of the API *)
     let syntax =
-      Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
+      Syntax.of_string_opt ~raise ~deprecated:raw_options.deprecated (Syntax_name raw_options.syntax) (Some source_file)
     in
     let protocol_version =
       Helpers.protocol_to_variant ~raise raw_options.protocol_version
@@ -150,7 +150,7 @@ let ast_aggregated (raw_options : Raw_options.t) source_file display_format () =
   let options =
     (* TODO: options should be computed outside of the API *)
     let syntax =
-      Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
+      Syntax.of_string_opt ~raise ~deprecated:raw_options.deprecated (Syntax_name raw_options.syntax) (Some source_file)
     in
     let protocol_version =
       Helpers.protocol_to_variant ~raise raw_options.protocol_version
@@ -173,7 +173,7 @@ let ast_expanded (raw_options : Raw_options.t) source_file display_format no_col
   let options =
     (* TODO: options should be computed outside of the API *)
     let syntax =
-      Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
+      Syntax.of_string_opt ~raise ~deprecated:raw_options.deprecated (Syntax_name raw_options.syntax) (Some source_file)
     in
     let protocol_version =
       Helpers.protocol_to_variant ~raise raw_options.protocol_version
@@ -202,7 +202,7 @@ let mini_c (raw_options : Raw_options.t) source_file display_format optimize () 
   let options =
     (* TODO: options should be computed outside of the API *)
     let syntax =
-      Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
+      Syntax.of_string_opt ~raise ~deprecated:raw_options.deprecated (Syntax_name raw_options.syntax) (Some source_file)
     in
     let protocol_version =
       Helpers.protocol_to_variant ~raise raw_options.protocol_version

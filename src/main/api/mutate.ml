@@ -27,7 +27,7 @@ let mutate_ast (raw_options : Raw_options.t) source_file display_format seed no_
     Helpers.protocol_to_variant ~raise raw_options.protocol_version
   in
   let syntax =
-    Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
+    Syntax.of_string_opt ~raise ~deprecated:raw_options.deprecated (Syntax_name raw_options.syntax) (Some source_file)
   in
   let options = Compiler_options.make ~raw_options ~syntax ~protocol_version () in
   let meta = Compile.Of_source.extract_meta syntax in
@@ -40,7 +40,7 @@ let mutate_ast (raw_options : Raw_options.t) source_file display_format seed no_
   let _, imperative_prg = Fuzzer.mutate_program ?n:seed imperative_prg in
   let syntax = Syntax.to_string meta.syntax in
   let buffer =
-    Decompile.Of_imperative.decompile ~raise imperative_prg (Syntax_name syntax)
+    Decompile.Of_imperative.decompile ~raise ~deprecated:raw_options.deprecated imperative_prg (Syntax_name syntax)
   in
   buffer
 
@@ -59,7 +59,7 @@ let mutate_cst (raw_options : Raw_options.t) source_file display_format seed no_
     Helpers.protocol_to_variant ~raise raw_options.protocol_version
   in
   let syntax =
-    Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
+    Syntax.of_string_opt ~raise ~deprecated:raw_options.deprecated (Syntax_name raw_options.syntax) (Some source_file)
   in
   let options = Compiler_options.make ~raw_options ~syntax ~protocol_version () in
   let meta = Compile.Of_source.extract_meta syntax in
