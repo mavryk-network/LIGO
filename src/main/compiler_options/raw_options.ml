@@ -108,8 +108,9 @@ let make
   =
   { (* Formatter *)
     warning_as_error
-  ; no_colour (* Supported features *)
-  ; deprecated
+  ; no_colour
+  ; (* Supported features *)
+    deprecated
   ; (* Warnings *)
     warn_unused_rec
   ; (* Frontend *)
