@@ -3212,15 +3212,15 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_bad [ "compile"; "expression"; "pascaligo"; "1 + 1" ];
-  [%expect{|
+  [%expect
+    {|
     Invalid syntax.
     PascaLIGO is deprecated.
     Hint: You can enable its support using the --deprecated flag. |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "expression"; "pascaligo"; "1 + 1"; "--deprecated" ];
-  [%expect
-    {|
+  [%expect {|
     2 |}]
 
 (* Test compiling a contract with a get_entrypoint_opt to a capitalized entrypoint *)

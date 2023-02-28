@@ -14,7 +14,10 @@ let get_syntax ~raise ~support_pascaligo syntax loc =
       let file = r#file in
       let syntax =
         Simple_utils.Trace.to_stdlib_result
-          (Syntax.of_string_opt ~support_pascaligo (Syntax_types.Syntax_name "auto") (Some file))
+          (Syntax.of_string_opt
+             ~support_pascaligo
+             (Syntax_types.Syntax_name "auto")
+             (Some file))
       in
       (match syntax with
       | Ok (r, _) -> r

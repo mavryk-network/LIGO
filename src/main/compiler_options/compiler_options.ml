@@ -52,8 +52,7 @@ type backend =
   ; no_colour : bool
   }
 
-type common =
-  { deprecated : bool }
+type common = { deprecated : bool }
 
 type t =
   { frontend : frontend
@@ -123,9 +122,7 @@ let make
     ; no_colour = raw_options.no_colour
     }
   in
-  let common =
-    { deprecated = raw_options.deprecated }
-  in
+  let common = { deprecated = raw_options.deprecated } in
   { frontend; tools; test_framework; middle_end; backend; common }
 
 

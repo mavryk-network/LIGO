@@ -946,7 +946,14 @@ let mutate_cst =
       ()
     =
     let raw_options =
-      Raw_options.make ~syntax ~protocol_version ~libraries ~generator ~project_root ~deprecated ()
+      Raw_options.make
+        ~syntax
+        ~protocol_version
+        ~libraries
+        ~generator
+        ~project_root
+        ~deprecated
+        ()
     in
     return_result ~return
     @@ Api.Mutate.mutate_cst raw_options source_file display_format seed no_colour
@@ -987,7 +994,14 @@ let mutate_ast =
       ()
     =
     let raw_options =
-      Raw_options.make ~syntax ~protocol_version ~libraries ~generator ~project_root ~deprecated ()
+      Raw_options.make
+        ~syntax
+        ~protocol_version
+        ~libraries
+        ~generator
+        ~project_root
+        ~deprecated
+        ()
     in
     return_result ~return
     @@ Api.Mutate.mutate_ast raw_options source_file display_format seed no_colour
@@ -1362,7 +1376,13 @@ let interpret =
       ()
     =
     let raw_options =
-      Raw_options.make ~syntax ~protocol_version ~project_root ~deprecated ~warn_unused_rec ()
+      Raw_options.make
+        ~syntax
+        ~protocol_version
+        ~project_root
+        ~deprecated
+        ~warn_unused_rec
+        ()
     in
     return_result ~return
     @@ Api.Run.interpret
@@ -1557,7 +1577,9 @@ let info_group =
 (** Print commands *)
 let preprocessed =
   let f source_file syntax libraries display_format project_root no_colour deprecated () =
-    let raw_options = Raw_options.make ~syntax ~libraries ~project_root ~no_colour ~deprecated () in
+    let raw_options =
+      Raw_options.make ~syntax ~libraries ~project_root ~no_colour ~deprecated ()
+    in
     return_result ~return @@ Api.Print.preprocess raw_options source_file display_format
   in
   let summary =
@@ -1583,7 +1605,16 @@ let preprocessed =
 
 
 let pretty_print =
-  let f source_file syntax display_format warning_as_error no_colour deprecated project_root () =
+  let f
+      source_file
+      syntax
+      display_format
+      warning_as_error
+      no_colour
+      deprecated
+      project_root
+      ()
+    =
     let raw_options =
       Raw_options.make ~syntax ~warning_as_error ~no_colour ~project_root ~deprecated ()
     in
@@ -1621,7 +1652,13 @@ let print_graph =
      explores all imported source files (recursively) following a DFS strategy."
   in
   Command.basic ~summary ~readme
-  @@ (f <$> source_file <*> syntax <*> display_format <*> project_root <*> no_colour <*> deprecated)
+  @@ (f
+     <$> source_file
+     <*> syntax
+     <*> display_format
+     <*> project_root
+     <*> no_colour
+     <*> deprecated)
 
 
 let print_cst =
@@ -1637,7 +1674,13 @@ let print_cst =
      preprocessing and parsing."
   in
   Command.basic ~summary ~readme
-  @@ (f <$> source_file <*> syntax <*> display_format <*> no_colour <*> deprecated <*> project_root)
+  @@ (f
+     <$> source_file
+     <*> syntax
+     <*> display_format
+     <*> no_colour
+     <*> deprecated
+     <*> project_root)
 
 
 let print_ast =
@@ -1654,12 +1697,20 @@ let print_ast =
      desugaring step is applied."
   in
   Command.basic ~summary ~readme
-  @@ (f <$> source_file <*> syntax <*> display_format <*> no_colour <*> deprecated <*> project_root)
+  @@ (f
+     <$> source_file
+     <*> syntax
+     <*> display_format
+     <*> no_colour
+     <*> deprecated
+     <*> project_root)
 
 
 let print_ast_core =
   let f source_file syntax display_format self_pass project_root no_colour deprecated () =
-    let raw_options = Raw_options.make ~syntax ~self_pass ~project_root ~no_colour ~deprecated () in
+    let raw_options =
+      Raw_options.make ~syntax ~self_pass ~project_root ~no_colour ~deprecated ()
+    in
     return_result ~return @@ Api.Print.ast_core raw_options source_file display_format
   in
   let summary =
@@ -1999,7 +2050,9 @@ let repl =
       project_root
       ()
     =
-    let raw_options = Raw_options.make ~syntax ~protocol_version ~project_root ~deprecated () in
+    let raw_options =
+      Raw_options.make ~syntax ~protocol_version ~project_root ~deprecated ()
+    in
     return_result ~return
     @@ Repl.main
          raw_options

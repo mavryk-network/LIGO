@@ -173,7 +173,10 @@ let get_top_level_syntax ~options ?filename () : Syntax_types.t =
   | None ->
     (match
        Trace.to_option
-       @@ Syntax.of_string_opt ~support_pascaligo:options.common.deprecated (Syntax_name "auto") filename
+       @@ Syntax.of_string_opt
+            ~support_pascaligo:options.common.deprecated
+            (Syntax_name "auto")
+            filename
      with
     | Some x -> x
     | None -> failwith "Top-level syntax not found")

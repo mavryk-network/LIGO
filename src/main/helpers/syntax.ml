@@ -9,7 +9,8 @@ let file_name_to_variant ~raise ~support_pascaligo sf : t =
   | ".mligo" -> CameLIGO
   | ".jsligo" -> JsLIGO
   | (".ligo" | ".pligo") when support_pascaligo -> PascaLIGO
-  | (".ligo" | ".pligo") when not support_pascaligo -> raise.error (main_deprecated_pascaligo_filename sf)
+  | (".ligo" | ".pligo") when not support_pascaligo ->
+    raise.error (main_deprecated_pascaligo_filename sf)
   | _ -> raise.error (main_invalid_extension sf)
 
 
@@ -23,11 +24,12 @@ let of_ext_opt ~support_pascaligo = function
 
 let of_string_opt ~raise ~support_pascaligo (Syntax_name syntax) source =
   match syntax, source with
-  | "auto", Some sf ->  file_name_to_variant ~support_pascaligo ~raise sf
+  | "auto", Some sf -> file_name_to_variant ~support_pascaligo ~raise sf
   | ("cameligo" | "CameLIGO"), _ -> CameLIGO
   | ("jsligo" | "JsLIGO"), _ -> JsLIGO
   | ("pascaligo" | "PascaLIGO"), _ when support_pascaligo -> PascaLIGO
-  | ("pascaligo" | "PascaLIGO"), _ when not support_pascaligo -> raise.error (main_deprecated_pascaligo_syntax ())
+  | ("pascaligo" | "PascaLIGO"), _ when not support_pascaligo ->
+    raise.error (main_deprecated_pascaligo_syntax ())
   | _ -> raise.error (main_invalid_syntax_name syntax)
 
 

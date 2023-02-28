@@ -113,15 +113,14 @@ let rec error_ppformat
     | `Main_deprecated_pascaligo_filename filename ->
       Format.fprintf
         f
-        "@[<hv>Invalid file extension for '%s'.@.PascaLIGO is \
-         deprecated.@.Hint: You can enable its support using the \
-         --deprecated flag.@]"
+        "@[<hv>Invalid file extension for '%s'.@.PascaLIGO is deprecated.@.Hint: You can \
+         enable its support using the --deprecated flag.@]"
         filename
     | `Main_deprecated_pascaligo_syntax () ->
       Format.fprintf
         f
-        "@[<hv>Invalid syntax.@.PascaLIGO is deprecated.@.Hint: You \
-         can enable its support using the --deprecated flag.@]"
+        "@[<hv>Invalid syntax.@.PascaLIGO is deprecated.@.Hint: You can enable its \
+         support using the --deprecated flag.@]"
     | `Main_unparse_tracer errs ->
       let errs =
         List.map
