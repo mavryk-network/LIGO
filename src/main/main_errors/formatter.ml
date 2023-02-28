@@ -113,7 +113,7 @@ let rec error_ppformat
     | `Main_deprecated_pascaligo_filename filename ->
       Format.fprintf
         f
-        "@[<hv>Invalid file extension '%s'.@.PascaLIGO is \
+        "@[<hv>Invalid file extension for '%s'.@.PascaLIGO is \
          deprecated.@.Hint: You can enable its support using the \
          --deprecated flag.@]"
         filename

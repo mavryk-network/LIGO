@@ -3,8 +3,9 @@ open Trace
 open Main_errors
 open Syntax_types
 
-let file_extension_to_variant ~raise ~support_pascaligo sf : t =
-  match sf with
+let file_name_to_variant ~raise ~support_pascaligo sf : t =
+  let ext = Caml.Filename.extension sf in
+  match ext with
   | ".mligo" -> CameLIGO
   | ".jsligo" -> JsLIGO
   | (".ligo" | ".pligo") when support_pascaligo -> PascaLIGO
@@ -22,9 +23,7 @@ let of_ext_opt ~support_pascaligo = function
 
 let of_string_opt ~raise ~support_pascaligo (Syntax_name syntax) source =
   match syntax, source with
-  | "auto", Some sf ->
-    let ext = Caml.Filename.extension sf in
-    file_extension_to_variant ~support_pascaligo ~raise ext
+  | "auto", Some sf ->  file_name_to_variant ~support_pascaligo ~raise sf
   | ("cameligo" | "CameLIGO"), _ -> CameLIGO
   | ("jsligo" | "JsLIGO"), _ -> JsLIGO
   | ("pascaligo" | "PascaLIGO"), _ when support_pascaligo -> PascaLIGO
