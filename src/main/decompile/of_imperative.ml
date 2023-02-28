@@ -1,8 +1,7 @@
 open Helpers
 open Ast_imperative
 
-let decompile ~raise ~deprecated (m : program) syntax : _ =
-  let syntax = Syntax.of_string_opt ~raise ~deprecated syntax None in
+let decompile (m : program) syntax : _ =
   specialise_and_print syntax m
 
 
