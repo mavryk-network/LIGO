@@ -1994,11 +1994,12 @@ let repl =
       now
       display_format
       no_colour
+      deprecated
       init_file
       project_root
       ()
     =
-    let raw_options = Raw_options.make ~syntax ~protocol_version ~project_root () in
+    let raw_options = Raw_options.make ~syntax ~protocol_version ~project_root ~deprecated () in
     return_result ~return
     @@ Repl.main
          raw_options
@@ -2026,6 +2027,7 @@ let repl =
     <*> now
     <*> display_format
     <*> no_colour
+    <*> deprecated
     <*> init_file
     <*> project_root)
 
