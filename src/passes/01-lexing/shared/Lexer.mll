@@ -420,6 +420,25 @@ module Make (Config: Config.S) (Token : Token.S) =
              raise @@ ScanOneMoreTime (state, hash_state)
 
 
+
+    let scan_utf8_wrap scan_utf8 callback thread state lexbuf =
+      let ()  = Lexbuf.rollback lexbuf in
+      let len = thread#length in
+      match scan_utf8 thread state lexbuf with
+        Stdlib.Ok (thread, state) ->
+          let delta = thread#length - len in
+          let stop  = state#pos#shift_one_uchar delta
+          in callback thread (state#set_pos stop) lexbuf
+      | Error (thread, state, error) ->
+          let delta  = thread#length - len in
+          let stop   = state#pos#shift_one_uchar delta in
+          let region = Region.make ~start:state#pos ~stop
+          in fail state region error
+
+    let open_block thread state =
+      Stdlib.Error (thread, state, LexerLib.Error.Unterminated_comment)
+
+
 (* END HEADER *)
 }
 
@@ -581,21 +600,21 @@ rule scan state = parse
 | block_comment_opening {
 
 
-    scan (state#push_space        lexbuf) lexbuf
 
 
-  (*   let lexeme = Lexing.lexeme lexbuf in *)
-  (*   match Config.block with *)
-  (*     Some block when String.(block#opening = lexeme) -> *)
-  (*       let state, Region.{region; _} = state#sync lexbuf in *)
-  (*       let thread = Thread.make ~opening:region in *)
-  (*       let thread = thread#push_string lexeme in *)
-  (*       let* thread, state = in_block block thread state lexbuf *)
-  (*       in scan (state#push_block thread) lexbuf *)
-  (*   | Some _ | None -> *)
-  (* let ()     = Lexbuf.rollback lexbuf in *)
-  (* let* state = dialect_scan state lexbuf *)
-  (* in scan state lexbuf *)
+    let lexeme = Lexing.lexeme lexbuf in
+    match Config.block with
+      Some block when String.(block#opening = lexeme) ->
+        let state, Region.{region; _} = state#sync lexbuf in
+        let thread = Thread.make ~opening:region in
+        let thread = thread#push_string lexeme in
+        let* thread, state = in_block block thread state lexbuf
+        in scan (state#push_block thread) lexbuf
+    | Some _ | None ->
+  let ()     = Lexbuf.rollback lexbuf in
+  let token, state = dialect_scan state lexbuf in
+  let state = state#push_token token in
+  scan state lexbuf
 
 
     }
@@ -709,62 +728,58 @@ rule scan state = parse
 
 and in_block block thread state = parse
   string_delimiter {
-    scan (state#push_space        lexbuf) lexbuf
-    (* let lexeme = Lexing.lexeme lexbuf in *)
-    (* match Config.string with *)
-    (*   Some delimiter when String.(delimiter = lexeme) -> *)
-    (*     let opening = thread#opening in *)
-    (*     let state, Region.{region; _} = state#sync lexbuf in *)
-    (*     let thread = thread#push_string lexeme in *)
-    (*     let thread = thread#set_opening region in *)
-    (*     let* thread, state = in_string thread state lexbuf in *)
-    (*     let thread = thread#push_string lexeme in *)
-    (*     let thread = thread#set_opening opening *)
-    (*     in in_block block thread state lexbuf *)
-    (* | Some _ | None -> *)
-    (*     scan_utf8_wrap (scan_utf8 open_block) (in_block block) *)
-    (*       thread state lexbuf *)
+    let lexeme = Lexing.lexeme lexbuf in
+    match Config.string with
+      Some delimiter when String.(delimiter = lexeme) ->
+        let opening = thread#opening in
+        let state, Region.{region; _} = state#sync lexbuf in
+        let thread = thread#push_string lexeme in
+        let thread = thread#set_opening region in
+        let* thread, state = in_string thread state lexbuf in
+        let thread = thread#push_string lexeme in
+        let thread = thread#set_opening opening
+        in in_block block thread state lexbuf
+    | Some _ | None ->
+        scan_utf8_wrap (scan_utf8 open_block) (in_block block)
+          thread state lexbuf
 
 
   }
 
 | block_comment_opening {
 
-scan (state#push_space        lexbuf) lexbuf
 
-    (* let lexeme = Lexing.lexeme lexbuf in *)
-    (* if   String.(block#opening = lexeme) *)
-    (* then let opening = thread#opening in *)
-    (*      let state, Region.{region; _} = state#sync lexbuf in *)
-    (*      let thread = thread#push_string lexeme in *)
-    (*      let thread = thread#set_opening region in *)
-    (*      let* thread, state = in_block block thread state lexbuf in *)
-    (*      let thread = thread#set_opening opening *)
-    (*      in in_block block thread state lexbuf *)
-    (* else scan_utf8_wrap (scan_utf8 open_block) (in_block block) *)
-    (*        thread state lexbuf *)
+    let lexeme = Lexing.lexeme lexbuf in
+    if   String.(block#opening = lexeme)
+    then let opening = thread#opening in
+         let state, Region.{region; _} = state#sync lexbuf in
+         let thread = thread#push_string lexeme in
+         let thread = thread#set_opening region in
+         let* thread, state = in_block block thread state lexbuf in
+         let thread = thread#set_opening opening
+         in in_block block thread state lexbuf
+    else scan_utf8_wrap (scan_utf8 open_block) (in_block block)
+           thread state lexbuf
 
 
 }
 
 | block_comment_closing {
-scan (state#push_space        lexbuf) lexbuf
-    (* let state, Region.{value=lexeme; _} = state#sync lexbuf in *)
-    (* if   String.(block#closing = lexeme) *)
-    (* then Ok (thread#push_string lexeme, state) *)
-    (* else scan_utf8_wrap (scan_utf8 open_block) *)
-    (*                     (in_block block) *)
-    (*                     thread state lexbuf *)
+    let state, Region.{value=lexeme; _} = state#sync lexbuf in
+    if   String.(block#closing = lexeme)
+    then Ok (thread#push_string lexeme, state)
+    else scan_utf8_wrap (scan_utf8 open_block)
+                        (in_block block)
+                        thread state lexbuf
 
 }
 | nl as nl {
 
-    scan (state#push_space        lexbuf) lexbuf
 
 
-    (* let thread = thread#push_string nl *)
-    (* and state  = state#newline lexbuf *)
-    (*     in in_block block thread state lexbuf *)
+    let thread = thread#push_string nl
+    and state  = state#newline lexbuf
+        in in_block block thread state lexbuf
 
           }
 
@@ -772,11 +787,10 @@ scan (state#push_space        lexbuf) lexbuf
 
 | _ {
 
-    scan (state#push_space        lexbuf) lexbuf
 
-(* scan_utf8_wrap (scan_utf8 open_block) *)
-(*                      (in_block block) *)
-(*                      thread state lexbuf *)
+scan_utf8_wrap (scan_utf8 open_block)
+                     (in_block block)
+                     thread state lexbuf
 
 
 }
@@ -787,18 +801,14 @@ and in_line thread state = parse
   nl as nl { let state = state#push_line thread in
              Ok (state#push_newline None lexbuf) }
 | eof      { Ok (state#push_line thread) }
-| _        {
+| _ { let scan_utf8 = scan_utf8 (fun thread state -> Ok (thread, state)) in
+      scan_utf8_wrap scan_utf8 in_line thread state lexbuf }
 
-(* let* state = scan_utf8_wrap scan_utf8 thread state lexbuf in in_line thread state lexbuf *)
-     scan (state#push_space        lexbuf) lexbuf 
-
-
-}
 
 (* Scanning UTF-8 encoded characters *)
 
-and scan_utf8 thread state = parse
-  eof { Ok (thread, state)}
+and scan_utf8 if_eof thread state = parse
+  eof { if_eof thread state}
 | _   { let lexeme = Lexing.lexeme lexbuf in
         let thread = thread#push_string lexeme in
         let     () = state#supply (Bytes.of_string lexeme) 0 1 in
@@ -807,8 +817,7 @@ and scan_utf8 thread state = parse
         | `Malformed _
         | `End         -> Error (thread, state,
                                  LexerLib.Error.Invalid_utf8_sequence)
-        | `Await       -> Error (thread, state,
-                                 LexerLib.Error.Invalid_utf8_sequence) (* scan_utf8 thread state lexbuf *) }
+        | `Await       ->  scan_utf8 if_eof thread state lexbuf }
 
 (* Scanning strings *)
 
