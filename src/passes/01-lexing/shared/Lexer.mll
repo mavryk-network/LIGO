@@ -4,7 +4,7 @@
 {
 (* START HEADER *)
 
-[@@@warning "-42"]
+[@@@warning "-42-33-26-27"]
 
 (* OCaml Stdlib *)
 
@@ -17,20 +17,77 @@ module Region    = Simple_utils.Region
 module Lexbuf    = Simple_utils.Lexbuf
 module Options   = LexerLib.Options   (* For instantiation only *)
 module Unit      = LexerLib.Unit      (* For instantiation only *)
-module Client    = LexerLib.Client    (* For the interface only *)
 module Directive = Preprocessor.Directive (* For verbatim only  *)
 module State     = LexerLib.State
 module Thread    = LexerLib.Thread
+module Config    = Preprocessor.Config
+
+
+(* UTILITIES *)
+
+let (let*) : ('a, 'e) result -> ('a -> ('b, 'e) result) -> ('b, 'e) result =
+  fun r f ->
+    match r with
+      Ok x         -> f x
+    | Error _ as e -> e
+
+(* Lexer specification for LIGO, to be processed by [ocamllex].
+
+   The underlying design principles are:
+
+     (1) provide precise error messages with hints as how to fix the
+         issue, which is achieved by consulting the lexical
+         right-context of lexemes;
+
+     (2) be as independent as possible from the LIGO version, so
+         upgrades have as little impact as possible on this
+         specification: this is achieved by using the most general
+         regular expressions to match the lexing buffer and broadly
+         distinguish the syntactic categories, and then delegating a
+         finer, second analysis to an external module making the
+         tokens (hence a functor below);
+
+     (3) support unit testing (lexing of the whole input with debug
+         traces).
+
+     A limitation to the independence with respect to the LIGO version
+   lies in the errors that the external module building the tokens
+   (which may be version-dependent) may have to report. Indeed these
+   errors have to be contextualised by the lexer in terms of input
+   source regions, so useful error messages can be printed, therefore
+   they are part of the signature [Token.S] that parameterises the
+   functor generated here. For instance, if, in a future release of
+   LIGO, new tokens are added, and the recognition of their lexemes
+   entails new errors, the signature [Token.S] will have to be
+   augmented and this lexer specification changed. However, in
+   practice, it is more likely that instructions or types will be
+   added, instead of new kinds of tokens. *)
 
 (* The functorised interface *)
 
-module Make (Options : Options.S) (Token : Token.S) =
+(* THE FUNCTOR *)
+
+module Make (Config: Config.S) (Token : Token.S) =
   struct
     type token = Token.t
+    exception ScanOneMoreTime of token State.t * token State.t
+    type lex_unit = token Unit.t
+
+    type units = lex_unit list
+
+    (* Errors *)
+
+    type message = string Region.reg
+
+    type error = {
+      used_units : units;
+      message    : message
+    }
+
 
     (* ERRORS *)
 
-    type error =
+    type dialect_lexer_error =
       Unexpected_character of char
     | Non_canonical_zero
     | Invalid_symbol of string
@@ -76,11 +133,9 @@ module Make (Options : Options.S) (Token : Token.S) =
 
     (* Raising the exception for lexical errors *)
 
-    type message = string Region.reg
-
     exception Error of message
 
-    let fail (region: Region.t) error =
+    let dialect_lexer_fail (region: Region.t) error =
       let msg = error_to_string error in
       raise (Error Region.{value=msg; region})
 
@@ -119,7 +174,7 @@ module Make (Options : Options.S) (Token : Token.S) =
       let lexeme = value in
       let z = Z.of_string lexeme in
       if   Z.equal z Z.zero && String.(lexeme <> "0")
-      then fail region Non_canonical_zero
+      then dialect_lexer_fail region Non_canonical_zero
       else let token = Token.mk_int lexeme z region
            in token, state
 
@@ -129,26 +184,26 @@ module Make (Options : Options.S) (Token : Token.S) =
       let state, Region.{region; _} = state#sync buffer
       and z = Z.of_string nat in
       if   Z.equal z Z.zero && String.(nat <> "0")
-      then fail region Non_canonical_zero
+      then dialect_lexer_fail region Non_canonical_zero
       else match Token.mk_nat nat z region with
              Ok token -> token, state
            | Error Token.Wrong_nat_syntax hint ->
-               fail region (Wrong_nat_syntax hint)
+               dialect_lexer_fail region (Wrong_nat_syntax hint)
 
     (* Mutez *)
 
     let mk_mutez nat state buffer =
       let state, Region.{region; _} = state#sync buffer in
       match Int64.of_string_opt nat with
-        None -> fail region Overflow_mutez
+        None -> dialect_lexer_fail region Overflow_mutez
       | Some mutez_64 ->
           if   Int64.equal mutez_64 Int64.zero && String.(nat <> "0")
-          then fail region Non_canonical_zero
+          then dialect_lexer_fail region Non_canonical_zero
           else let suffix = "mutez" in
                match Token.mk_mutez nat ~suffix mutez_64 region with
                  Ok token -> token, state
                | Error Token.Wrong_mutez_syntax hint ->
-                   fail region (Wrong_mutez_syntax hint)
+                   dialect_lexer_fail region (Wrong_mutez_syntax hint)
 
     (* Integral Tez (internally converted to mutez) *)
 
@@ -158,12 +213,12 @@ module Make (Options : Options.S) (Token : Token.S) =
       try
         let mutez_64 = Z.to_int64 mutez in
         if   Int64.equal mutez_64 Int64.zero && String.(nat <> "0")
-        then fail region Non_canonical_zero
+        then dialect_lexer_fail region Non_canonical_zero
         else match Token.mk_mutez nat ~suffix mutez_64 region with
                Ok token -> token, state
              | Error Token.Wrong_mutez_syntax hint ->
-                 fail region (Wrong_mutez_syntax hint)
-      with Z.Overflow -> fail region Overflow_mutez
+                 dialect_lexer_fail region (Wrong_mutez_syntax hint)
+      with Z.Overflow -> dialect_lexer_fail region Overflow_mutez
 
     (* Tez as a decimal number (internally converted to mutez) *)
 
@@ -181,14 +236,14 @@ module Make (Options : Options.S) (Token : Token.S) =
           let mutez_64 = Z.to_int64 (Q.num q_mutez) in
           if   Int64.equal mutez_64 Int64.zero
                && String.(integral <> "0" || fractional <> "0")
-          then fail region Non_canonical_zero
+          then dialect_lexer_fail region Non_canonical_zero
           else let lexeme = integral ^ "." ^ fractional in
                match Token.mk_mutez lexeme ~suffix mutez_64 region with
                  Ok token -> token, state
                | Error Token.Wrong_mutez_syntax hint ->
-                   fail region (Wrong_mutez_syntax hint)
-        with Z.Overflow -> fail region Overflow_mutez
-      else fail region Underflow_mutez
+                   dialect_lexer_fail region (Wrong_mutez_syntax hint)
+        with Z.Overflow -> dialect_lexer_fail region Overflow_mutez
+      else dialect_lexer_fail region Underflow_mutez
 
     (* Identifiers *)
 
@@ -235,7 +290,7 @@ module Make (Options : Options.S) (Token : Token.S) =
       match Token.mk_lang lang region with
         Ok token -> token, state
       | Error Token.Wrong_lang_syntax hint ->
-          fail region (Wrong_lang_syntax hint)
+          dialect_lexer_fail region (Wrong_lang_syntax hint)
 
     (* Symbols *)
 
@@ -244,7 +299,7 @@ module Make (Options : Options.S) (Token : Token.S) =
       match Token.mk_sym value region with
         Ok token -> token, state
       | Error Token.Invalid_symbol string ->
-          fail region (Invalid_symbol string)
+          dialect_lexer_fail region (Invalid_symbol string)
 
     (* End-of-File *)
 
@@ -252,6 +307,118 @@ module Make (Options : Options.S) (Token : Token.S) =
       let state, Region.{region; _} = state#sync buffer in
       let token = Token.mk_eof region
       in token, state
+
+    (* Auxiliary functions for preprocessing directives *)
+
+    let handle_ending state lexbuf = function
+      `EOL (state', ending) ->
+         (state#push_newline (Some ending) lexbuf)#set_pos state'#pos
+    | `EOF (state', (region: Region.t)) ->
+         (state#push_token (Token.mk_eof region))#set_pos state'#pos
+
+    (* Failure *)
+
+    let fail state region error =
+      let value      = LexerLib.Error.to_string error in
+      let message    = Region.{value; region} in
+      let used_units = List.rev state#lexical_units
+      in Stdlib.Error {used_units; message}
+
+
+    let scan_dir scan state lexbuf =
+      let state, Region.{region; _} = state#sync lexbuf in
+      let state' = new Preprocessor.State.t state#pos in
+      match scan region#start state' lexbuf with
+        Stdlib.Error (region, err) ->
+          fail state region (LexerLib.Error.Invalid_directive err)
+      | Ok (state', _, dir, ending) ->
+          let state = state#set_pos state'#pos in
+          let state = state#push_directive dir in
+          let state = handle_ending state lexbuf ending in
+          Ok state
+    
+
+    let scan_if   = scan_dir
+    let scan_elif = scan_dir
+
+    let scan_else scan state lexbuf =
+      let state, Region.{region; _} = state#sync lexbuf in
+      let state' = new Preprocessor.State.t state#pos in
+      let _, dir, ending = scan region#start state' lexbuf in
+      let state = state#push_directive dir in
+      handle_ending state lexbuf ending
+
+    let scan_endif = scan_else
+
+    let scan_linemarker linenum state lexbuf =
+      (* We save the state and position before the lexing buffer was
+         matched. *)
+
+      let hash_state = state in
+
+      (* We syncronise the logical state with the matched string *)
+
+      let state, Region.{region; _} = state#sync lexbuf in
+
+      (* We determine the regon of the line number *)
+
+      let length   = String.length linenum in
+      let start    = region#stop#shift_bytes (-length) in
+      let line_reg = Region.make ~start ~stop:region#stop in
+      let linenum  = Region.{region=line_reg; value=linenum} in
+      (* We make a preprocessing state and scan the expected
+         linemarker. *)
+
+      let preproc_state = new Preprocessor.State.t state#pos in
+
+      match Directive.scan_linemarker
+              hash_state#pos linenum preproc_state lexbuf
+      with
+        Stdlib.Error (region, error) ->
+          fail hash_state region (LexerLib.Error.Invalid_directive error)
+
+      | Ok (preproc_state, args, directive, ending) ->
+          (* We use the current position (after reading the linemarker)
+             of the preprocessing state [preproc_state] to reset the
+             position of saved lexing state [hash_state]. (Remember that
+             positions contain the file name.) We push the linemarker in
+             that updated lexing state. *)
+
+          let state = hash_state#set_pos preproc_state#pos in
+          let state = state#push_directive directive in
+          let state = state#push_newline None lexbuf in
+
+          let arg_file = args#file_path.Region.value in
+
+          let push state =
+            let pos   = state#pos in
+            let pos   = pos#set_file arg_file in
+            let pos   = pos#set_line args#linenum.Region.value in
+            let pos   = pos#reset_cnum in
+            let state = state#set_pos pos in
+            let ()    = Lexbuf.reset_file arg_file lexbuf
+            in state in
+
+          match args#flag with
+            Some Region.{value=Directive.Pop; _} ->
+              (* The linemarker has been produced by the end of the
+                 preprocessing of an #include directive. We assume that
+                 the user never writes one, otherwise preprocessing
+                 may fail. More precisely, we assume that each [Push]
+                 (below) is associate to one [Pop] (this case). *)
+              Lexbuf.reset_file arg_file lexbuf;
+              Ok state
+
+          | None ->
+              (* The linemarker is the one generated at the start of
+                 the file or one written by the user. *)
+             let state = push state in
+             Ok state
+
+          | Some Region.{value=Directive.Push; _} ->
+             let state = push state in
+             raise @@ ScanOneMoreTime (state, hash_state)
+
 
 (* END HEADER *)
 }
@@ -308,13 +475,408 @@ let symbol =
 |     jsligo_sym
 |     pyligo_sym
 
-(* RULES *)
+(* START LEXER DEFINITION *)
+
+(* NAMED REGULAR EXPRESSIONS *)
+
+let utf8_bom = "\xEF\xBB\xBF" (* Byte Order Mark for UTF-8 *)
+let nl       = ['\n' '\r'] | "\r\n"
+let blank    = ' ' | '\t'
+let digit   = ['0'-'9']
+let natural = digit | digit+ digit (* Linemarkers *)
+
+(* Comment delimiters *)
+
+let pascaligo_block_comment_opening  = "(*"
+let pascaligo_block_comment_closing  = "*)"
+let pascaligo_line_comment_opening   = "//"
+
+let cameligo_block_comment_opening   = "(*"
+let cameligo_block_comment_closing   = "*)"
+let cameligo_line_comment_opening    = "//"
+
+let jsligo_block_comment_opening     = "/*"
+let jsligo_block_comment_closing     = "*/"
+let jsligo_line_comment_opening      = "//"
+
+let pyligo_block_comment_opening     = "/*"
+let pyligo_block_comment_closing     = "*/"
+let pyligo_line_comment_opening      = "##"
+
+let block_comment_opening =
+   pascaligo_block_comment_opening
+|   cameligo_block_comment_opening
+|     jsligo_block_comment_opening
+|     pyligo_block_comment_opening
+
+let block_comment_closing =
+   pascaligo_block_comment_closing
+|   cameligo_block_comment_closing
+|     jsligo_block_comment_closing
+|     pyligo_block_comment_closing
+
+let line_comment_opening =
+   pascaligo_line_comment_opening
+|   cameligo_line_comment_opening
+|     jsligo_line_comment_opening
+|     pyligo_line_comment_opening
+
+(* String delimiters *)
+
+let  pascaligo_string_delimiter = "\""
+let   cameligo_string_delimiter = "\""
+let     jsligo_string_delimiter = "\""
+let     pyligo_string_delimiter = "\""
+
+let string_delimiter =
+   pascaligo_string_delimiter
+|   cameligo_string_delimiter
+|     jsligo_string_delimiter
+|     pyligo_string_delimiter
+
+(* Preprocessing directives *)
+
+let directive =
+  "include"
+| "import"
+| "if"
+| "elif"
+| "else"
+| "endif"
+| "define"
+| "undef"
+| "error"
+
+(* RULES (SCANNERS) *)
+
+rule scan state = parse
+  (* Markup *)
+
+  nl    { scan (state#push_newline None lexbuf) lexbuf }
+| ' '+  { scan (state#push_space        lexbuf) lexbuf }
+| '\t'+ { scan (state#push_tabs         lexbuf) lexbuf }
+
+  (* Strings *)
+
+| string_delimiter {
+    let lexeme = Lexing.lexeme lexbuf in
+    match Config.string with
+      Some delimiter when String.(delimiter = lexeme) ->
+        let state, Region.{region; _} = state#sync lexbuf in
+        let thread = Thread.make ~opening:region in
+        let* thread, state = in_string thread state lexbuf in
+        let token = mk_string thread
+        in scan (state#push_token token) lexbuf
+    | Some _ | None ->
+  let ()     = Lexbuf.rollback lexbuf in
+  let token, state = dialect_scan state lexbuf in
+  let state = state#push_token token in
+  scan state lexbuf
+
+
+    }
+
+  (* Comments *)
+
+| block_comment_opening {
+
+
+    scan (state#push_space        lexbuf) lexbuf
+
+
+  (*   let lexeme = Lexing.lexeme lexbuf in *)
+  (*   match Config.block with *)
+  (*     Some block when String.(block#opening = lexeme) -> *)
+  (*       let state, Region.{region; _} = state#sync lexbuf in *)
+  (*       let thread = Thread.make ~opening:region in *)
+  (*       let thread = thread#push_string lexeme in *)
+  (*       let* thread, state = in_block block thread state lexbuf *)
+  (*       in scan (state#push_block thread) lexbuf *)
+  (*   | Some _ | None -> *)
+  (* let ()     = Lexbuf.rollback lexbuf in *)
+  (* let* state = dialect_scan state lexbuf *)
+  (* in scan state lexbuf *)
+
+
+    }
+
+| line_comment_opening {
+    let lexeme = Lexing.lexeme lexbuf in
+    match Config.line with
+      Some opening when String.(opening = lexeme) ->
+        let state, Region.{region; _} = state#sync lexbuf in
+        let thread = Thread.make ~opening:region in
+        let thread = thread#push_string lexeme in
+        let* state = in_line thread state lexbuf
+        in scan state lexbuf
+    | Some _ | None ->
+  let ()     = Lexbuf.rollback lexbuf in
+  let token, state = dialect_scan state lexbuf in
+  let state = state#push_token token in
+  scan state lexbuf
+    }
+
+| '#' blank* (directive as id) {
+    match id with
+      "include" ->
+       let* state = scan_dir  Directive.scan_include state lexbuf in
+       scan state lexbuf
+
+    | "import" ->
+        let* state = scan_dir  Directive.scan_import  state lexbuf in
+       scan state lexbuf
+
+    | "if" ->
+      let* state =  scan_if   Directive.scan_if      state lexbuf in
+       scan state lexbuf
+
+    | "elif" ->
+        let* state = scan_elif  Directive.scan_elif    state lexbuf in
+       scan state lexbuf
+
+    | "else" ->
+        let state = scan_else  Directive.scan_else    state lexbuf in
+       scan state lexbuf
+
+    | "endif" ->
+        let state = scan_endif Directive.scan_endif   state lexbuf in
+       scan state lexbuf
+
+    | "define" ->
+        let* state = scan_dir  Directive.scan_define  state lexbuf in
+       scan state lexbuf
+
+    | "undef" ->
+        let* state = scan_dir  Directive.scan_undef   state lexbuf in
+       scan state lexbuf
+
+    | "error" ->
+        let* state = scan_dir  Directive.scan_error   state lexbuf in
+       scan state lexbuf
+
+    | _ ->
+  let ()     = Lexbuf.rollback lexbuf in
+  let token, state = dialect_scan state lexbuf in
+  let state = state#push_token token in
+  scan state lexbuf
+
+               }
+
+  (* Linemarkers preprocessing directives (from #include) *)
+
+| '#' blank* (natural as linenum) {
+                 try scan_linemarker linenum state lexbuf with
+                 | ScanOneMoreTime (state, hash_state) ->
+              (* The linemarker has been produced by the start of the
+                 preprocessing of an #include directive. See case above
+                 ([Pop]).
+
+                   We call recursively [callback] to scan until a
+                 linemarker with a flag "2" is found, that is, the case
+                 [Pop] above. Between a [Push] linemarker and a [Pop],
+                 we assume that we scan the contents of the included
+                 file. *)
+                    let* state = scan state lexbuf in
+              (* The contents of the included file was scanned
+                 successfully, that is, the case [Pop] above was
+                 hit. We restore the position saved at the start of
+                 this semantic action, that is, just before the "#" of
+                 the [Push] linemarker. With that position committed
+                 to the state, we call recursively [callback] to
+                 resume scanning the rest of the file corresponding to
+                 what was just after the original #include. *)
+                    Ok (state#set_pos hash_state#pos)
+
+
+               }
+
+  (* End-of-File: we return the final state *)
+
+| eof {let token, state = dialect_scan state lexbuf in
+ Ok (state#push_token token)}
+
+  (* Other tokens *)
+
+| _ {
+  let ()     = Lexbuf.rollback lexbuf in
+  let token, state = dialect_scan state lexbuf in
+  let state = state#push_token token in
+  scan state lexbuf
+
+}
+
+(* Block comments *)
+
+and in_block block thread state = parse
+  string_delimiter {
+    scan (state#push_space        lexbuf) lexbuf
+    (* let lexeme = Lexing.lexeme lexbuf in *)
+    (* match Config.string with *)
+    (*   Some delimiter when String.(delimiter = lexeme) -> *)
+    (*     let opening = thread#opening in *)
+    (*     let state, Region.{region; _} = state#sync lexbuf in *)
+    (*     let thread = thread#push_string lexeme in *)
+    (*     let thread = thread#set_opening region in *)
+    (*     let* thread, state = in_string thread state lexbuf in *)
+    (*     let thread = thread#push_string lexeme in *)
+    (*     let thread = thread#set_opening opening *)
+    (*     in in_block block thread state lexbuf *)
+    (* | Some _ | None -> *)
+    (*     scan_utf8_wrap (scan_utf8 open_block) (in_block block) *)
+    (*       thread state lexbuf *)
+
+
+  }
+
+| block_comment_opening {
+
+scan (state#push_space        lexbuf) lexbuf
+
+    (* let lexeme = Lexing.lexeme lexbuf in *)
+    (* if   String.(block#opening = lexeme) *)
+    (* then let opening = thread#opening in *)
+    (*      let state, Region.{region; _} = state#sync lexbuf in *)
+    (*      let thread = thread#push_string lexeme in *)
+    (*      let thread = thread#set_opening region in *)
+    (*      let* thread, state = in_block block thread state lexbuf in *)
+    (*      let thread = thread#set_opening opening *)
+    (*      in in_block block thread state lexbuf *)
+    (* else scan_utf8_wrap (scan_utf8 open_block) (in_block block) *)
+    (*        thread state lexbuf *)
+
+
+}
+
+| block_comment_closing {
+scan (state#push_space        lexbuf) lexbuf
+    (* let state, Region.{value=lexeme; _} = state#sync lexbuf in *)
+    (* if   String.(block#closing = lexeme) *)
+    (* then Ok (thread#push_string lexeme, state) *)
+    (* else scan_utf8_wrap (scan_utf8 open_block) *)
+    (*                     (in_block block) *)
+    (*                     thread state lexbuf *)
+
+}
+| nl as nl {
+
+    scan (state#push_space        lexbuf) lexbuf
+
+
+    (* let thread = thread#push_string nl *)
+    (* and state  = state#newline lexbuf *)
+    (*     in in_block block thread state lexbuf *)
+
+          }
+
+| eof { fail state thread#opening LexerLib.Error.Unterminated_comment }
+
+| _ {
+
+    scan (state#push_space        lexbuf) lexbuf
+
+(* scan_utf8_wrap (scan_utf8 open_block) *)
+(*                      (in_block block) *)
+(*                      thread state lexbuf *)
+
+
+}
+
+(* Line comments *)
+
+and in_line thread state = parse
+  nl as nl { let state = state#push_line thread in
+             Ok (state#push_newline None lexbuf) }
+| eof      { Ok (state#push_line thread) }
+| _        {
+
+(* let* state = scan_utf8_wrap scan_utf8 thread state lexbuf in in_line thread state lexbuf *)
+     scan (state#push_space        lexbuf) lexbuf 
+
+
+}
+
+(* Scanning UTF-8 encoded characters *)
+
+and scan_utf8 thread state = parse
+  eof { Ok (thread, state)}
+| _   { let lexeme = Lexing.lexeme lexbuf in
+        let thread = thread#push_string lexeme in
+        let     () = state#supply (Bytes.of_string lexeme) 0 1 in
+        match Uutf.decode state#decoder with
+          `Uchar _     -> Ok (thread, state)
+        | `Malformed _
+        | `End         -> Error (thread, state,
+                                 LexerLib.Error.Invalid_utf8_sequence)
+        | `Await       -> Error (thread, state,
+                                 LexerLib.Error.Invalid_utf8_sequence) (* scan_utf8 thread state lexbuf *) }
+
+(* Scanning strings *)
+
+and in_string thread state = parse
+  string_delimiter {
+         let state, Region.{value; region} = state#sync lexbuf in
+         let lexeme = value in
+         match Config.string with
+           Some delimiter when String.(delimiter = lexeme) ->
+             (* Closing the string *)
+             Ok (thread#set_closing region, state)
+         | Some _ | None -> (* Still inside the string *)
+             let thread = thread#push_string lexeme
+             in in_string thread state lexbuf }
+| '\\' { let state, Region.{region; _} = state#sync lexbuf
+         in unescape region thread state lexbuf }
+| nl   { fail state thread#opening LexerLib.Error.Newline_in_string }
+| eof  { fail state thread#opening LexerLib.Error.Unterminated_string }
+| ['\000' - '\031'] | ['\128' - '\255'] as c
+           (* Control characters and 8-bit ASCII *)
+       { let _, Region.{region; _} = state#sync lexbuf in
+         fail state region (LexerLib.Error.Invalid_character_in_string c) }
+| _    { let state, Region.{value; _} = state#sync lexbuf in
+         in_string (thread#push_string value) state lexbuf }
+
+and unescape backslash thread state = parse
+  string_delimiter {
+         let state, Region.{value=lexeme; _} = state#sync lexbuf in
+         let interpretation =
+           match Config.string with
+             Some delimiter when String.(delimiter = lexeme) ->
+               lexeme (* E.g. unescaped \" into " *)
+           | Some _ | None -> "\\" ^ lexeme (* verbatim *) in
+         let thread = thread#push_string interpretation
+         in in_string thread state lexbuf }
+| 'n'  { let state, _ = state#sync lexbuf
+         (* Unescaped "\n" into '\010': *)
+         and thread = thread#push_char '\n'
+         in in_string thread state lexbuf }
+| '\\' { let state, Region.{value=lexeme; _} = state#sync lexbuf in
+         (* Unescaped "\\" into '\\': *)
+         let thread = thread#push_string lexeme
+         in in_string thread state lexbuf }
+| _    { let _, Region.{region; _} = state#sync lexbuf in
+         let region = Region.cover backslash region in
+         fail state region Undefined_escape_sequence }
+
+(* Scanner called first *)
+
+and init state = parse
+  utf8_bom { scan (state#push_bom lexbuf) lexbuf       }
+               | eof      {
+
+  let token, state = dialect_scan state lexbuf in
+ Ok (state#push_token token) 
+
+              }
+| _        { Lexbuf.rollback lexbuf; scan state lexbuf }
+(* END LEXER DEFINITION *)
+
+
+(* DIALECT RULES *)
 
 (* The scanner [scan] has a parameter [state] that is threaded through
    recursive calls. We start with the special cases so if they fail in
    their semantic actions, the normal cases can be tried next. *)
 
-rule scan state = parse
+and dialect_scan state = parse
   "`" | "{|" as lexeme {
     let verb_open, verb_close = Token.verbatim_delimiters in
     if String.(lexeme = verb_open) then
@@ -322,7 +884,7 @@ rule scan state = parse
       let thread = Thread.make ~opening:region
       in scan_verbatim verb_close thread state lexbuf
          |> mk_verbatim
-    else mk_sym state lexbuf }
+    else (mk_sym state lexbuf): token * token State.t }
 
 | "[@" str_attr "]"  { mk_str_attr key ?value state lexbuf }
 | "[@" id_attr  "]"  { mk_id_attr  key ?value state lexbuf }
@@ -340,7 +902,7 @@ rule scan state = parse
                                           tez state lexbuf }
 
 | _ as c { let _, Region.{region; _} = state#sync lexbuf
-           in fail region (Unexpected_character c) }
+           in dialect_lexer_fail region (Unexpected_character c) }
 
 (* Attribute scanning for JsLIGO. Accumulator [acc] is list of
    previous tokens in reverse order. *)
@@ -369,7 +931,7 @@ and scan_blanks state = parse
 and scan_eof acc state = parse
   blank* eof { acc }
 | _          { let _, Region.{region; _} = state#sync lexbuf
-               in fail region Unterminated_comment }
+               in dialect_lexer_fail region Unterminated_comment }
 
 and block_comment_attr acc state = parse
   "/*" blank* { let state = state#sync lexbuf |> fst in
@@ -379,7 +941,7 @@ and block_comment_attr acc state = parse
 and scan_close acc state = parse
   blank* "*/" eof { acc }
 | eof | _ { let _, Region.{region; _} = state#sync lexbuf
-            in fail region Unterminated_comment }
+            in dialect_lexer_fail region Unterminated_comment }
 
 (* Scanning verbatim strings with or without inclusion of Michelson
    code *)
@@ -397,7 +959,7 @@ and scan_verbatim verb_close thread state = parse
     (match Directive.scan_linemarker
              hash_state#pos linenum preproc_state lexbuf
      with Stdlib.Error (region, error) ->
-            fail region (Invalid_directive error)
+            dialect_lexer_fail region (Invalid_directive error)
         | Ok _ ->
             let state = hash_state#newline lexbuf in
             scan_verbatim verb_close thread state lexbuf) }
@@ -416,28 +978,37 @@ and scan_verbatim verb_close thread state = parse
         and thread = thread#push_string nl in
         scan_verbatim verb_close thread state lexbuf }
 
-| eof { fail thread#opening (Unterminated_verbatim verb_close) }
+| eof { dialect_lexer_fail thread#opening (Unterminated_verbatim verb_close) }
 
 | _   { let lexeme   = Lexing.lexeme lexbuf in
         let state, _ = state#sync lexbuf
         and thread   = thread#push_string lexeme in
         scan_verbatim verb_close thread state lexbuf }
 
+
 (* END LEXER DEFINITION *)
 
 {
 (* START TRAILER *)
+
+    type instance = {
+      input      : Lexbuf.input;
+      lexbuf     : Lexing.lexbuf;
+      close      : Lexbuf.close
+    }
+
 
     type lexer =
       token State.t ->
       Lexing.lexbuf ->
       (token * token State.t, message) Stdlib.result
 
-    let handle scan state lexbuf =
-      try Stdlib.Ok (scan state lexbuf) with
+
+    let handle dialect_scan state lexbuf =
+      try Stdlib.Ok (dialect_scan state lexbuf) with
         Error msg -> Stdlib.Error msg
 
-    let callback state = handle scan state
+    let callback state = handle dialect_scan state
 
     let mk_eof = Token.mk_eof (* For EOFs from the preprocessor *)
 
@@ -454,6 +1025,48 @@ and scan_verbatim verb_close thread state = parse
     let block_comment_attr acc lexbuf =
       handle (block_comment_attr acc) (mk_state lexbuf) lexbuf
 
+    (* Lexing the input given a lexer instance *)
+    let first_call = ref true
+    let scan state =
+        (if !first_call then (first_call := false; init) else scan)
+        state
+
+    let read_units ~file lexbuf =
+      let state  = State.empty ~file in
+      let* state = scan state lexbuf in
+      Ok (List.rev state#lexical_units)
+
+
+    let scan_all_units: file:string -> (instance, message) result -> (Token.t Unit.t list, error) result = fun ~file res ->
+      match res with
+      | Stdlib.Error message ->
+        (* Caml.flush_all (); *) Error ({used_units=[]; message}: error)
+      | Ok {lexbuf; close; _} ->
+        let result = read_units ~file lexbuf
+        in ((* Caml.flush_all (); *) close (); (result: (token Unit.t list, error) result))
+
+    (* The main function *)
+    let open_stream input : (instance, message) result =
+      let file = Lexbuf.file_from_input input in
+      let* lexbuf, close = Lexbuf.from_input input
+      in Ok {input; lexbuf; close}
+
+
+    (* Lexing all lexical units from various sources *)
+
+    let from_lexbuf ?(file="") lexbuf =
+      Core.(open_stream (Lexbuf (file, lexbuf))) |> scan_all_units ~file
+
+    let from_channel ?(file="") channel =
+      Core.(open_stream (Channel (file, channel))) |> scan_all_units ~file
+
+    let from_string ?(file="") string =
+      Core.(open_stream (String (file, string))) |> scan_all_units ~file
+
+    let from_buffer ?(file="") buffer =
+      Core.(open_stream (Buffer (file, buffer))) |> scan_all_units ~file
+
+    let from_file file = Core.(open_stream (File file)) |> scan_all_units ~file
   end (* of functor [Make] in HEADER *)
 (* END TRAILER *)
 }

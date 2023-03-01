@@ -1,8 +1,8 @@
 (* Vendors dependencies *)
+[@@@warning "-42-33-26-27"]
 
 module Trace   = Simple_utils.Trace
 module Config  = Preprocessor.Config
-module Options = LexerLib.Options
 module CLI     = LexerLib.CLI
 
 (* Signature *)
@@ -64,8 +64,7 @@ module Make (Config : Config.S) (Token : Token.S) =
 
     (* Partially instantiating the final lexer *)
 
-    module Scan (Options : Options.S) =
-      LexerLib.LowAPI.Make (Config) (Lexer.Make (Options) (Token))
+    module Scan = Lexer.Make (Config) (Token)
 
     (* Filtering out the markup *)
 
@@ -88,14 +87,7 @@ module Make (Config : Config.S) (Token : Token.S) =
     (* Lexing a file *)
 
     let from_file ~(raise:raise) dirs' file =
-      let module Options =
-        struct
-          include Default.Options
-          (* We shadow the defaults: *)
-          let input = Some file
-          let dirs = dirs'
-        end in
-      let open Scan (Options) in
+      let open Scan in
       match from_file file with
         Ok units -> filter_tokens units
       | Error {message; _} -> raise.error @@ Errors.generic message
@@ -105,14 +97,7 @@ module Make (Config : Config.S) (Token : Token.S) =
     (* Lexing a string *)
 
     let from_string ?file ~(raise:raise) dirs' string =
-      let module Options =
-        struct
-          include Default.Options
-          (* We shadow the defaults: *)
-          let input = file
-          let dirs = dirs'
-        end in
-     let open Scan (Options) in
+     let open Scan in
      match from_string ?file string with
        Ok units -> filter_tokens units
      | Error {message; _} -> raise.error @@ Errors.generic message
@@ -122,14 +107,7 @@ module Make (Config : Config.S) (Token : Token.S) =
     (* Lexing a string buffer *)
 
     let from_buffer ?file ~(raise:raise) dirs' buffer =
-     let module Options =
-        struct
-          include Default.Options
-          (* We shadow the defaults: *)
-          let input = file
-          let dirs  = dirs'
-        end in
-     let open Scan (Options) in
+     let open Scan in
      let file = Option.value file ~default:"" in
      match from_buffer ~file buffer with
        Ok units -> filter_tokens units
@@ -140,14 +118,7 @@ module Make (Config : Config.S) (Token : Token.S) =
     (* Lexing an input channel *)
 
     let from_channel ?file ~(raise:raise) dirs' channel =
-      let module Options =
-        struct
-          include Default.Options
-          (* We shadow the defaults: *)
-          let input = file
-          let dirs = dirs'
-        end in
-     let open Scan (Options) in
+     let open Scan in
      match from_channel ?file channel with
        Ok units -> filter_tokens units
      | Error {message; _} -> raise.error @@ Errors.generic message

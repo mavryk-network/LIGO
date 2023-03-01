@@ -8,6 +8,7 @@
  (name lexing_shared)
  (public_name ligo.lexing.shared)
  (modules
+  Client
   Errors
   Warnings
   Formatter
@@ -19,7 +20,7 @@
   Lexer
   Pipeline
   TopAPI)
- (modules_without_implementation Token)
+ (modules_without_implementation Token Client)
  (instrumentation
   (backend bisect_ppx))
  (libraries

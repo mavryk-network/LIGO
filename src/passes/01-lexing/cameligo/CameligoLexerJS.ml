@@ -29,11 +29,11 @@ module API =
 open API
 
 let main source =
-  let (std, tokens) = scan_all_tokens ~no_colour:true source in
-  let () = Std.(add_nl std.out) in
-  let () = Std.(add_nl std.err) in
-  Printf.printf  "%s%!" (Std.string_of std.out);
-  Printf.eprintf "%s%!" (Std.string_of std.err);
+  let (_std, tokens) = scan_all_tokens ~no_colour:true source in
+  (* let () = Std.(add_nl std.out) in *)
+  (* let () = Std.(add_nl std.err) in *)
+  (* Printf.printf  "%s%!" (Std.string_of std.out); *)
+  (* Printf.eprintf "%s%!" (Std.string_of std.err); *)
   tokens
 
 

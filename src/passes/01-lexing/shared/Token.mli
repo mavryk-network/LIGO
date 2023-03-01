@@ -133,3 +133,5 @@ module type S =
 
     val verbatim_delimiters : string * string
   end
+
+include S

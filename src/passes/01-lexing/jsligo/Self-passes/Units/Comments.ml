@@ -5,7 +5,6 @@
 
 module Region    = Simple_utils.Region
 module Std       = Simple_utils.Std
-module Core      = LexerLib.Core
 module Markup    = LexerLib.Markup
 module Directive = Preprocessor.Directive
 module Unit      = LexerLib.Unit
