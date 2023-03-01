@@ -18,11 +18,7 @@ let test (raw_options : Raw_options.t) source_file display_format no_colour () =
     Helpers.protocol_to_variant ~raise raw_options.protocol_version
   in
   let syntax =
-    Syntax.of_string_opt
-      ~raise
-      ~support_pascaligo:raw_options.deprecated
-      (Syntax_name raw_options.syntax)
-      (Some source_file)
+    Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
   in
   let options = Compiler_options.make ~protocol_version ~syntax ~raw_options () in
   let Compiler_options.{ steps; _ } = options.test_framework in
@@ -50,13 +46,7 @@ let test_expression
   let protocol_version =
     Helpers.protocol_to_variant ~raise raw_options.protocol_version
   in
-  let syntax =
-    Syntax.of_string_opt
-      ~raise
-      ~support_pascaligo:raw_options.deprecated
-      (Syntax_name raw_options.syntax)
-      source_file
-  in
+  let syntax = Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) source_file in
   let options = Compiler_options.make ~protocol_version ~syntax ~raw_options () in
   let Compiler_options.{ steps; _ } = options.test_framework in
   let module Stdlib = Build.Stdlib in
@@ -99,11 +89,7 @@ let dry_run
     Helpers.protocol_to_variant ~raise raw_options.protocol_version
   in
   let syntax =
-    Syntax.of_string_opt
-      ~raise
-      ~support_pascaligo:raw_options.deprecated
-      (Syntax_name raw_options.syntax)
-      (Some source_file)
+    Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
   in
   let options = Compiler_options.make ~protocol_version ~syntax ~raw_options () in
   let Compiler_options.{ entry_point; _ } = options.frontend in
@@ -172,13 +158,7 @@ let interpret
   =
   format_result ~display_format ~no_colour Decompile.Formatter.expression_format
   @@ fun ~raise ->
-  let syntax =
-    Syntax.of_string_opt
-      ~raise
-      ~support_pascaligo:raw_options.deprecated
-      (Syntax_name raw_options.syntax)
-      init_file
-  in
+  let syntax = Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) init_file in
   let options =
     let protocol_version =
       Helpers.protocol_to_variant ~raise raw_options.protocol_version
@@ -221,11 +201,7 @@ let evaluate_call
     Decompile.Formatter.expression_format
   @@ fun ~raise ->
   let syntax =
-    Syntax.of_string_opt
-      ~raise
-      ~support_pascaligo:raw_options.deprecated
-      (Syntax_name raw_options.syntax)
-      (Some source_file)
+    Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
   in
   let options =
     let protocol_version =
@@ -284,11 +260,7 @@ let evaluate_expr
     Decompile.Formatter.expression_format
   @@ fun ~raise ->
   let syntax =
-    Syntax.of_string_opt
-      ~raise
-      ~support_pascaligo:raw_options.deprecated
-      (Syntax_name raw_options.syntax)
-      (Some source_file)
+    Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
   in
   let options =
     let protocol_version =

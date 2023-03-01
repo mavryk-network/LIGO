@@ -2,8 +2,6 @@ type t =
   { (* Formatter *)
     warning_as_error : bool
   ; no_colour : bool
-  ; (* Supported features *)
-    deprecated : bool
   ; (* Warnings *)
     warn_unused_rec : bool
   ; (* Frontend *)
@@ -38,9 +36,6 @@ module Default_options = struct
   let show_warnings = true
   let warning_as_error = false
   let no_colour = false
-
-  (* Supported features *)
-  let deprecated = false
 
   (* Warnings *)
   let warn_unused_rec = false
@@ -81,7 +76,6 @@ end
 let make
     ?(warning_as_error = Default_options.warning_as_error)
     ?(no_colour = Default_options.no_colour)
-    ?(deprecated = Default_options.deprecated)
     ?(warn_unused_rec = Default_options.warn_unused_rec)
     ?(syntax = Default_options.syntax)
     ?(entry_point = Default_options.entry_point)
@@ -109,8 +103,6 @@ let make
   { (* Formatter *)
     warning_as_error
   ; no_colour
-  ; (* Supported features *)
-    deprecated
   ; (* Warnings *)
     warn_unused_rec
   ; (* Frontend *)
