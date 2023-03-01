@@ -8,6 +8,7 @@
   simple-utils
   cmdliner
   ligo
+  ligo_init
   ligo_compile
   build
   repl
@@ -111,10 +112,42 @@
  (public_name ligo)
  (instrumentation
   (backend bisect_ppx))
- (libraries simple-utils cmdliner ligo cli)
+ (libraries
+  ligo_lsp
+  simple-utils
+  cmdliner
+  ligo
+  ligo.main_interpreter.unix
+  ligo.api.unix
+  cli)
  (flags
   -open
   Core
   (:include win32-flags.sexp))
  (modules runligo)
  (package ligo))
+
+(executable
+ (name js_main)
+ (ocamlc_flags -g)
+ (js_of_ocaml
+  (link_flags "--source-map-root=%{project_root}")
+  (javascript_files
+   threads.js
+   others.js
+   bls12-polynomial.js
+   stdint.js
+   digestif.js))
+ (libraries
+  core
+  zarith_stubs_js
+  integers_stubs_js
+  ctypes_stubs_js
+  ligo_api
+  ligo_api_js
+  ligo.main_interpreter.js
+  js_of_ocaml)
+ (modes js)
+ (preprocess
+  (pps js_of_ocaml-ppx))
+ (modules js_main))

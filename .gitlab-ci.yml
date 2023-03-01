@@ -28,6 +28,8 @@ include:
   - '/.ci/.gitlab-ci-lsp.yml'
   - '/.ci/.gitlab-ci-debugger.yml'
   - '/.ci/.gitlab-ci-webide-new.yml'
+  # CI manage notification
+  - '/.ci/.gitlab-ci-notify.yml'
 .submodule-clone:
   before_script:
     - git submodule sync --recursive
@@ -87,12 +89,24 @@ docker_build:
     - job: changelog
       artifacts: true
   script:
+    # Because JSOO artifacts are only present in ligo-builder stage.
+    # ligo-builder stage is discarded during the creation of ligo image for consumers
+    # so that we can offer them a leaner image with just necessary ligo tools
+    - DOCKER_BUILDKIT=1 docker build .
+      --build-arg=ci_commit_tag=$CI_COMMIT_TAG
+      --build-arg=ci_commit_sha=$CI_COMMIT_SHA
+      --build-arg=ci_commit_timestamp=$CI_COMMIT_TIMESTAMP
+      --build-arg=changelog_path=changelog.txt
+      --target ligo-builder
+      -t ${LIGO_IMAGE_TAG}-builder
     - DOCKER_BUILDKIT=1 docker build .
       --build-arg=ci_commit_tag=$CI_COMMIT_TAG
       --build-arg=ci_commit_sha=$CI_COMMIT_SHA
       --build-arg=ci_commit_timestamp=$CI_COMMIT_TIMESTAMP
       --build-arg=changelog_path=changelog.txt
       -t ${LIGO_IMAGE_TAG}
+    # Copy JSOO PoC IDE
+    - docker cp $(docker create ${LIGO_IMAGE_TAG}-builder):/ligo/jsoo/dist ./ligo-demo-ide
     - docker save -o ligo.tar.gz ${LIGO_IMAGE_TAG}
   after_script:
     - docker image rm "${LIGO_IMAGE_TAG}" >/dev/null 2>&1 || true
@@ -100,7 +114,6 @@ docker_build:
     expose_as: "Ligo docker image - light -"
     paths:
       - ligo.tar.gz
-
 docker_extract:
   stage: docker-extract
   rules:
@@ -136,6 +149,7 @@ docker_extract:
       - ligo.deb
       - doc
       - highlighting
+      - ligo-demo-ide
 
 check-generated-highlighting:
   stage: tooling
@@ -146,7 +160,7 @@ check-generated-highlighting:
     - scripts/diff_dir.sh highlighting/vim/ftdetect tools/vim/ligo/start/ligo/ftdetect
     - scripts/diff_dir.sh highlighting/vim/plugin tools/vim/ligo/start/ligo/plugin
     - scripts/diff_dir.sh highlighting/vim/syntax tools/vim/ligo/start/ligo/syntax
-    - scripts/diff_dir.sh highlighting/vscode tools/lsp/vscode-plugin/syntaxes
+    - scripts/diff_dir.sh highlighting/vscode tools/vscode/syntaxes
     - scripts/diff_dir.sh highlighting/textmate tools/ligo-syntax-highlighting/textmate
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'

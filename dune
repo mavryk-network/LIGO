@@ -7,4 +7,4 @@
 
 (vendored_dirs vendored-dune vendors)
 
-(dirs :standard / jsoo)
+(dirs :standard \ jsoo)

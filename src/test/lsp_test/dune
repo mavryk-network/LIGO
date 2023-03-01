@@ -4,6 +4,7 @@
  (libraries
   lsp
   linol
+  ligo_lsp
   ligo_api
   ligo_interface
   utils

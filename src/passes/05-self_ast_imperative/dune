@@ -7,7 +7,6 @@
   simple-utils
   ast_imperative
   tezos-crypto
-  tezos-base
   main_warnings
   syntax_types
   predefined)
