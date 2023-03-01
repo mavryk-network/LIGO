@@ -6,5 +6,3 @@
  (public_name ligo.unix))
 
 (vendored_dirs vendored-dune vendors)
-
-(dirs :standard \ jsoo)

@@ -3,6 +3,7 @@
   (public_name tezos-utils)
   (libraries
     tezos-error-monad
+    tezos-stdlib-unix
     tezos-micheline
     tezos-base
     data-encoding

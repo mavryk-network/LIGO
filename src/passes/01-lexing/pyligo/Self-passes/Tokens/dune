@@ -23,14 +23,8 @@
  (deps
   (:ParToken ../../../../02-parsing/pyligo/ParToken.mly))
  (action
-  (run
-   menhir
-   %{ParToken}
-   --only-tokens
-   --inspection
-   --table
-   --base
-   MenhirToken)))
+  (run menhir %{ParToken} --only-tokens --inspection --table --base
+    MenhirToken)))
 
 (library
  (name menhir_pyligo_tokens)

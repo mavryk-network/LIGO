@@ -39,6 +39,7 @@ end
 
 module Make (Ligo_api : LIGO_API) = struct
   open Lsp.Types
+  open BuildSystem.Source_input
 
   type nonrec get_scope_info = get_scope_info
 

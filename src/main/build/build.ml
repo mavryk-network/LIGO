@@ -227,21 +227,17 @@ let unqualified_typed ~raise
 
 
 let qualified_core ~raise
-    : options:Compiler_options.t -> Source_input.code_input -> Ast_core.program
+    : options:Compiler_options.t -> Source_input.file_name -> Ast_core.program
   =
- fun ~options source ->
+ fun ~options filename ->
   let open Build_core (struct
     let raise = raise
     let options = options
     let std_lib = Stdlib.get ~options
-
-    let top_level_syntax =
-      match source with
-      | Raw_input_lsp _ -> Syntax_types.CameLIGO
-      | From_file filename -> get_top_level_syntax ~options ~filename ()
-      | Raw _ -> Syntax_types.CameLIGO
+    let top_level_syntax = get_top_level_syntax ~options ~filename ()
   end) in
-  trace ~raise build_error_tracer @@ from_result (compile_qualified source)
+  trace ~raise build_error_tracer
+  @@ from_result (compile_qualified (Source_input.From_file filename))
 
 
 let qualified_core_from_string ~raise
@@ -275,10 +271,10 @@ let qualified_core_from_raw_input ~raise
 
 
 let qualified_typed ~raise
-    :  options:Compiler_options.t -> Ligo_compile.Of_core.form -> Source_input.code_input
+    :  options:Compiler_options.t -> Ligo_compile.Of_core.form -> Source_input.file_name
     -> Ast_typed.program
   =
- fun ~options form source ->
+ fun ~options form filename ->
   (* let std_lib = Stdlib.get ~options in
     let open Build_typed(struct
       let raise = raise
@@ -287,7 +283,7 @@ let qualified_typed ~raise
       let top_level_syntax = get_top_level_syntax ~options ~filename ()
     end) in
     let prg = trace ~raise build_error_tracer @@ from_result (compile_qualified (Source_input.From_file filename)) in *)
-  let prg = qualified_core ~raise ~options source in
+  let prg = qualified_core ~raise ~options filename in
   Ligo_compile.Of_core.typecheck ~raise ~options form prg
 
 
@@ -319,7 +315,7 @@ let build_expression ~raise
  fun ~options syntax expression file_name_opt ->
   let init_prg =
     let f : Source_input.file_name -> Ast_typed.program =
-     fun filename -> qualified_typed ~raise ~options Env (Source_input.From_file filename)
+     fun filename -> qualified_typed ~raise ~options Env filename
     in
     let default = Stdlib.select_lib_typed syntax (Stdlib.get ~options) in
     Option.value_map file_name_opt ~f ~default
@@ -340,11 +336,11 @@ let build_expression ~raise
 
 
 let rec build_contract_aggregated ~raise
-    : options:Compiler_options.t -> string -> string list -> Source_input.code_input -> _
+    : options:Compiler_options.t -> string -> string list -> Source_input.file_name -> _
   =
- fun ~options entry_point cli_views source ->
+ fun ~options entry_point cli_views file_name ->
   let entry_point = Value_var.of_input_var ~loc entry_point in
-  let typed_prg = qualified_typed ~raise ~options Ligo_compile.Of_core.Env source in
+  let typed_prg = qualified_typed ~raise ~options Ligo_compile.Of_core.Env file_name in
   let typed_contract =
     trace ~raise self_ast_typed_tracer
     @@ Ligo_compile.Of_core.specific_passes
@@ -388,13 +384,13 @@ let rec build_contract_aggregated ~raise
 
 
 and build_contract_stacking ~raise
-    :  options:Compiler_options.t -> string -> string list -> Source_input.code_input
+    :  options:Compiler_options.t -> string -> string list -> Source_input.file_name
     -> (Stacking.compiled_expression * _)
        * ((Value_var.t * Stacking.compiled_expression) list * _)
   =
- fun ~options entry_point cli_views source ->
+ fun ~options entry_point cli_views file_name ->
   let _, aggregated, agg_views =
-    build_contract_aggregated ~raise ~options entry_point cli_views source
+    build_contract_aggregated ~raise ~options entry_point cli_views file_name
   in
   let expanded = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
   let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
@@ -404,9 +400,9 @@ and build_contract_stacking ~raise
 
 
 (* building a contract in michelson *)
-and build_contract ~raise ~options entry_point views source =
+and build_contract ~raise ~options entry_point views file_name =
   let (contract, _), (views, _) =
-    build_contract_stacking ~raise ~options entry_point views source
+    build_contract_stacking ~raise ~options entry_point views file_name
   in
   contract, views
 
@@ -414,12 +410,7 @@ and build_contract ~raise ~options entry_point views source =
 (* Meta ligo needs contract and views as aggregated programs *)
 and build_contract_meta_ligo ~raise ~options entry_point views file_name =
   let (_, contract), (_, views) =
-    build_contract_stacking
-      ~raise
-      ~options
-      entry_point
-      views
-      (Source_input.From_file file_name)
+    build_contract_stacking ~raise ~options entry_point views file_name
   in
   contract, views
 

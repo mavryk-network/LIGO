@@ -1,6 +1,6 @@
 open Lsp_test_requests
 
-let _main =
+let main =
   Printexc.record_backtrace true;
   Alcotest.run
     "lsp server tests"

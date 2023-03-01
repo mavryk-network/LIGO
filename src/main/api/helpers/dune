@@ -1,3 +1,0 @@
-(library
- (name api_helpers)
- (libraries simple-utils main_errors main_warnings))
