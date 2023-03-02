@@ -44,6 +44,12 @@
  (js_of_ocaml
   (flags "--pretty" "--debug-info")
   ; (flags "--opt=3")
+  (javascript_files
+   threads.js
+   others.js
+   bls12-polynomial.js
+   stdint.js
+   digestif.js)
   (link_flags "--source-map-root=%{project_root}"))
  (modes js)
  (libraries
