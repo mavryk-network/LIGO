@@ -1,7 +1,6 @@
 (* A library for writing UTF8-aware lexers *)
-
 {
-(* START HEADER *)
+(* START CORE HEADER *)
 
 (* Vendor dependencies *)
 
@@ -23,45 +22,10 @@ let (let*) : ('a, 'e) result -> ('a -> ('b, 'e) result) -> ('b, 'e) result =
       Ok x         -> f x
     | Error _ as e -> e
 
-(* The functor return signature *)
-
-module type S =
-  sig
-    (* Lexical units *)
-
-    type lex_unit
-
-    (* Utility types *)
-
-    type file_path = string
-    type message   = string Region.reg
-
-    type units = lex_unit list
-
-    (* LEXER INSTANCE (see README.md) *)
-
-    (* Errors *)
-
-    type error = {
-      used_units : units;
-      message    : message
-    }
-
-    (* Instances *)
-
-    type instance = {
-      input      : Lexbuf.input;
-      read_units : Lexing.lexbuf -> (units, error) result;
-      lexbuf     : Lexing.lexbuf;
-      close      : Lexbuf.close
-    }
-
-    val open_stream : Lexbuf.input -> (instance, message) result
-  end
 
 (* THE FUNCTOR *)
 
-module Make (Config : Config.S) (Client : Client.S) =
+module MakeCore (Config : Config.S) (Client : Client.S) =
   struct
     type lex_unit = Client.token Unit.t
 
@@ -270,7 +234,7 @@ module Make (Config : Config.S) (Client : Client.S) =
     let open_block thread state =
       Stdlib.Error (thread, state, Error.Unterminated_comment)
 
-(* END HEADER *)
+(* END CORE HEADER *)
 }
 
 (* START LEXER DEFINITION *)
@@ -557,7 +521,7 @@ and init state = parse
 (* END LEXER DEFINITION *)
 
 {
-(* START TRAILER *)
+(* START CORE TRAILER *)
 
     let open_stream : Lexbuf.input -> (instance, message) result =
       let first_call = ref true in
@@ -567,5 +531,51 @@ and init state = parse
       in open_stream scan
 
   end (* of functor [Make] *)
-(* END TRAILER *)
+(* END CORE TRAILER *)
+
+(* START LowAPI as Trailer *)
+
+(* THE FUNCTOR *)
+
+module Make (Config : Config.S) (Client : Client.S) =
+  struct
+    module Core = MakeCore (Config) (Client)
+
+    type lex_unit = Core.lex_unit
+
+    type units = Core.units
+
+    type error = Core.error = {
+      used_units : units;
+      message    : string Region.reg
+    }
+
+    type 'src lexer = 'src -> (units, error) result
+
+    (* Lexing the input given a lexer instance *)
+
+    let scan_all_units = function
+      Stdlib.Error message ->
+        flush_all (); Error {used_units=[]; message}
+    | Ok Core.{read_units; lexbuf; close; _} ->
+        let result = read_units lexbuf
+        in (flush_all (); close (); result)
+
+    (* Lexing all lexical units from various sources *)
+
+    let from_lexbuf ?(file="") lexbuf =
+      Core.(open_stream (Lexbuf (file, lexbuf))) |> scan_all_units
+
+    let from_channel ?(file="") channel =
+      Core.(open_stream (Channel (file, channel))) |> scan_all_units
+
+    let from_string ?(file="") string =
+      Core.(open_stream (String (file, string))) |> scan_all_units
+
+    let from_buffer ?(file="") buffer =
+      Core.(open_stream (Buffer (file, buffer))) |> scan_all_units
+
+    let from_file file = Core.(open_stream (File file)) |> scan_all_units
+  end
 }
+(* END LowAPI as trailer *)
