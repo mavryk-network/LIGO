@@ -1,17 +1,15 @@
 ;; A UTF8-aware lexer library
 
-(ocamllex LowAPI)
-
 (library
   (name LexerLib)
   (public_name LexerLib)
   (modules
-     Client Status Options CLI LowAPI Unit Error
+     Client Status Options CLI Unit Error
      Thread State Markup Version)
   (modules_without_implementation
      Status Client)
   (private_modules
-     Core Error Version)
+     Version)
   (libraries
     ;; Vendor
     simple-utils

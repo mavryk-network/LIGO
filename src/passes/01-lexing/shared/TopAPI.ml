@@ -171,7 +171,7 @@ module Make
     (* Instantiating the library lexer with the client lexer,
        resulting in the final, bespoke lexer *)
 
-    module Scan = LexerLib.LowAPI.Make (Parameters.Config) (Client)
+    module Scan = LowAPI.Make (Parameters.Config) (Client)
 
     (* LEXING ERRORS *)
 

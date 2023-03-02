@@ -25,9 +25,9 @@ let (let*) : ('a, 'e) result -> ('a -> ('b, 'e) result) -> ('b, 'e) result =
 
 (* THE FUNCTOR *)
 
-module MakeCore (Config : Config.S) (Client : Client.S) =
+module MakeCore (Config : Config.S) (Client : LexerLib.Client.S) =
   struct
-    type lex_unit = Client.token Unit.t
+    type lex_unit = Client.token LexerLib.Unit.t
 
     type units = lex_unit list
 
@@ -43,7 +43,7 @@ module MakeCore (Config : Config.S) (Client : Client.S) =
     (* Failure *)
 
     let fail state region error =
-      let value      = Error.to_string error in
+      let value      = LexerLib.Error.to_string error in
       let message    = Region.{value; region} in
       let used_units = List.rev state#lexical_units
       in Stdlib.Error {used_units; message}
@@ -56,12 +56,12 @@ module MakeCore (Config : Config.S) (Client : Client.S) =
     | `EOF (state', region) ->
          (state#push_token (Client.mk_eof region))#set_pos state'#pos
 
-    let scan_dir ~callback scan (state: Client.token State.t) lexbuf =
+    let scan_dir ~callback scan (state: Client.token LexerLib.State.t) lexbuf =
       let state, Region.{region; _} = state#sync lexbuf in
       let state' = new Preprocessor.State.t state#pos in
       match scan region#start state' lexbuf with
         Stdlib.Error (region, err) ->
-          fail state region (Error.Invalid_directive err)
+          fail state region (LexerLib.Error.Invalid_directive err)
       | Ok (state', _, dir, ending) ->
           let state = state#set_pos state'#pos in
           let state = state#push_directive dir in
@@ -108,9 +108,9 @@ module MakeCore (Config : Config.S) (Client : Client.S) =
               hash_state#pos linenum preproc_state lexbuf
       with
         Stdlib.Error (region, error) ->
-          fail hash_state region (Error.Invalid_directive error)
+          fail hash_state region (LexerLib.Error.Invalid_directive error)
 
-      | Ok (preproc_state, args, directive, ending) ->
+      | Ok (preproc_state, args, directive, _ending) ->
           (* We use the current position (after reading the linemarker)
              of the preprocessing state [preproc_state] to reset the
              position of saved lexing state [hash_state]. (Remember that
@@ -209,7 +209,7 @@ module MakeCore (Config : Config.S) (Client : Client.S) =
     let open_stream scan input : (instance, message) result =
       let file = Lexbuf.file_from_input input in
       let read_units lexbuf =
-        let state  = State.empty ~file in
+        let state  = LexerLib.State.empty ~file in
         let* state = scan state lexbuf in
         Ok (List.rev state#lexical_units) in
       let* lexbuf, close = Lexbuf.from_input input
@@ -232,7 +232,7 @@ module MakeCore (Config : Config.S) (Client : Client.S) =
           in fail state region error
 
     let open_block thread state =
-      Stdlib.Error (thread, state, Error.Unterminated_comment)
+      Stdlib.Error (thread, state, LexerLib.Error.Unterminated_comment)
 
 (* END CORE HEADER *)
 }
@@ -325,7 +325,7 @@ rule scan state = parse
     match Config.string with
       Some delimiter when String.(delimiter = lexeme) ->
         let state, Region.{region; _} = state#sync lexbuf in
-        let thread = Thread.make ~opening:region in
+        let thread = LexerLib.Thread.make ~opening:region in
         let* thread, state = in_string thread state lexbuf in
         let token = Client.mk_string thread
         in scan (state#push_token token) lexbuf
@@ -338,7 +338,7 @@ rule scan state = parse
     match Config.block with
       Some block when String.(block#opening = lexeme) ->
         let state, Region.{region; _} = state#sync lexbuf in
-        let thread = Thread.make ~opening:region in
+        let thread = LexerLib.Thread.make ~opening:region in
         let thread = thread#push_string lexeme in
         let* thread, state = in_block block thread state lexbuf
         in scan (state#push_block thread) lexbuf
@@ -349,7 +349,7 @@ rule scan state = parse
     match Config.line with
       Some opening when String.(opening = lexeme) ->
         let state, Region.{region; _} = state#sync lexbuf in
-        let thread = Thread.make ~opening:region in
+        let thread = LexerLib.Thread.make ~opening:region in
         let thread = thread#push_string lexeme in
         let* state = in_line thread state lexbuf
         in scan state lexbuf
@@ -435,7 +435,7 @@ and in_block block thread state = parse
     and state  = state#newline lexbuf
     in in_block block thread state lexbuf }
 
-| eof { fail state thread#opening Error.Unterminated_comment }
+| eof { fail state thread#opening LexerLib.Error.Unterminated_comment }
 
 | _ { scan_utf8_wrap (scan_utf8 open_block)
                      (in_block block)
@@ -444,7 +444,7 @@ and in_block block thread state = parse
 (* Line comments *)
 
 and in_line thread state = parse
-  nl as nl { let state = state#push_line thread in
+  nl as _nl { let state = state#push_line thread in
              Ok (state#push_newline None lexbuf) }
 | eof      { Ok (state#push_line thread) }
 | _        { let scan_utf8 =
@@ -462,7 +462,7 @@ and scan_utf8 if_eof thread state = parse
           `Uchar _     -> Ok (thread, state)
         | `Malformed _
         | `End         -> Error (thread, state,
-                                 Error.Invalid_utf8_sequence)
+                                 LexerLib.Error.Invalid_utf8_sequence)
         | `Await       -> scan_utf8 if_eof thread state lexbuf }
 
 (* Scanning strings *)
@@ -480,12 +480,12 @@ and in_string thread state = parse
              in in_string thread state lexbuf }
 | '\\' { let state, Region.{region; _} = state#sync lexbuf
          in unescape region thread state lexbuf }
-| nl   { fail state thread#opening Error.Newline_in_string }
-| eof  { fail state thread#opening Error.Unterminated_string }
+| nl   { fail state thread#opening LexerLib.Error.Newline_in_string }
+| eof  { fail state thread#opening LexerLib.Error.Unterminated_string }
 | ['\000' - '\031'] | ['\128' - '\255'] as c
            (* Control characters and 8-bit ASCII *)
        { let _, Region.{region; _} = state#sync lexbuf in
-         fail state region (Error.Invalid_character_in_string c) }
+         fail state region (LexerLib.Error.Invalid_character_in_string c) }
 | _    { let state, Region.{value; _} = state#sync lexbuf in
          in_string (thread#push_string value) state lexbuf }
 
@@ -537,7 +537,7 @@ and init state = parse
 
 (* THE FUNCTOR *)
 
-module Make (Config : Config.S) (Client : Client.S) =
+module Make (Config : Config.S) (Client : LexerLib.Client.S) =
   struct
     module Core = MakeCore (Config) (Client)
 
@@ -556,10 +556,10 @@ module Make (Config : Config.S) (Client : Client.S) =
 
     let scan_all_units = function
       Stdlib.Error message ->
-        flush_all (); Error {used_units=[]; message}
+        Caml.flush_all (); Error {used_units=[]; message}
     | Ok Core.{read_units; lexbuf; close; _} ->
         let result = read_units lexbuf
-        in (flush_all (); close (); result)
+        in (Caml.flush_all (); close (); result)
 
     (* Lexing all lexical units from various sources *)
 

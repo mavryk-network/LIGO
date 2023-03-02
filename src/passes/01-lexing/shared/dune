@@ -1,6 +1,6 @@
 ;; Build of the lexer by ocamllex
 
-(ocamllex Lexer)
+(ocamllex Lexer LowAPI)
 
 ;; Build of the common lexer facilities as a library
 
@@ -16,6 +16,7 @@
   Attr
   Wrap
   Style
+  LowAPI
   Lexer
   Pipeline
   TopAPI)

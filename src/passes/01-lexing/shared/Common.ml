@@ -65,7 +65,7 @@ module Make (Config : Config.S) (Token : Token.S) =
     (* Partially instantiating the final lexer *)
 
     module Scan (Options : Options.S) =
-      LexerLib.LowAPI.Make (Config) (Lexer.Make (Options) (Token))
+      LowAPI.Make (Config) (Lexer.Make (Options) (Token))
 
     (* Filtering out the markup *)
 
