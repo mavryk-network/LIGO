@@ -351,7 +351,8 @@ let parse_module_path ~loc s =
 
 
 let rec build_contract_aggregated ~raise
-    : options:Compiler_options.t -> string -> string -> string list -> Source_input.code_input -> _
+    :  options:Compiler_options.t -> string -> string -> string list
+    -> Source_input.code_input -> _
   =
  fun ~options entry_point module_ cli_views source ->
   let entry_point = Value_var.of_input_var ~loc entry_point in
@@ -360,7 +361,7 @@ let rec build_contract_aggregated ~raise
   let typed_contract =
     trace ~raise self_ast_typed_tracer
     @@ Ligo_compile.Of_core.specific_passes
-         (Ligo_compile.Of_core.Contract { entrypoint = entry_point ; module_path })
+         (Ligo_compile.Of_core.Contract { entrypoint = entry_point; module_path })
          typed_prg
   in
   let typed_views =
@@ -406,7 +407,8 @@ let rec build_contract_aggregated ~raise
 
 
 and build_contract_stacking ~raise
-    :  options:Compiler_options.t -> string -> string -> string list -> Source_input.code_input
+    :  options:Compiler_options.t -> string -> string -> string list
+    -> Source_input.code_input
     -> (Stacking.compiled_expression * _)
        * ((Value_var.t * Stacking.compiled_expression) list * _)
   =

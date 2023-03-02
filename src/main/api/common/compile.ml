@@ -94,7 +94,9 @@ let contract
       BuildSystem.Source_input.(
         Raw { id = "source_of_text" ^ Syntax.to_ext syntax; code = source_code })
   in
-  let code, views = Build.build_contract ~raise ~options entry_point module_ views source in
+  let code, views =
+    Build.build_contract ~raise ~options entry_point module_ views source
+  in
   let file_constants = read_file_constants ~raise file_constants in
   let constants = constants @ file_constants in
   Ligo_compile.Of_michelson.build_contract
@@ -260,10 +262,7 @@ let parameter
   let app_typed_prg =
     Build.qualified_typed ~raise ~options Env (Build.Source_input.From_file source_file)
   in
-  let app_typed_prg
-      , entry_point
-      , contract_type
-    =
+  let app_typed_prg, entry_point, contract_type =
     Trace.trace ~raise Main_errors.self_ast_typed_tracer
     @@ Self_ast_typed.Helpers.fetch_contract_type entry_point module_path app_typed_prg
   in
