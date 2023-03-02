@@ -314,7 +314,7 @@ let symbol =
    recursive calls. We start with the special cases so if they fail in
    their semantic actions, the normal cases can be tried next. *)
 
-rule scan state = parse
+rule dialect_scan state = parse
   "`" | "{|" as lexeme {
     let verb_open, verb_close = Token.verbatim_delimiters in
     if String.(lexeme = verb_open) then
@@ -437,7 +437,7 @@ and scan_verbatim verb_close thread state = parse
       try Stdlib.Ok (scan state lexbuf) with
         Error msg -> Stdlib.Error msg
 
-    let callback state = handle scan state
+    let callback state = handle dialect_scan state
 
     let mk_eof = Token.mk_eof (* For EOFs from the preprocessor *)
 
