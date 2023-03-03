@@ -68,6 +68,13 @@ let (let*) : ('a, 'e) result -> ('a -> ('b, 'e) result) -> ('b, 'e) result =
 
 (* THE FUNCTOR *)
 
+(*****************************************************************************************)
+(* We don't have Core.Make, LowAPI.Make and Lexer.Make separately anymore. To merge      *)
+(* Lexer.mll and Core.mll, these functors had to be merged into one - Lexer.Make.        *)
+(* In the process, of course, the functor param Client disappears as it gets amalgamated *)
+(* into the new monolithic Lexer.Make                                                    *)
+(*****************************************************************************************)
+                                                                   
 module Make (Config : PreprocessorConfig.S) (Options : Options.S) (Token : Token.S) =
   struct
     type lex_unit = Token.t LexerLib.Unit.t
