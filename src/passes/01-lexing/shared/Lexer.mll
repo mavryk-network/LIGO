@@ -216,7 +216,7 @@ module Make (Config : PreprocessorConfig.S) (Options : Options.S) (Token : Token
         Stdlib.Error (region, error) ->
           fail hash_state region (LexerLib.Error.Invalid_directive error)
 
-      | Ok (preproc_state, args, directive, ending) ->
+      | Ok (preproc_state, args, directive, _ending) ->
           (* We use the current position (after reading the linemarker)
              of the preprocessing state [preproc_state] to reset the
              position of saved lexing state [hash_state]. (Remember that
