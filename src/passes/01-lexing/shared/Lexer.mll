@@ -74,7 +74,7 @@ let (let*) : ('a, 'e) result -> ('a -> ('b, 'e) result) -> ('b, 'e) result =
 (* In the process, of course, the functor param Client disappears as it gets amalgamated *)
 (* into the new monolithic Lexer.Make                                                    *)
 (*****************************************************************************************)
-                                                                   
+
 module Make (Config : PreprocessorConfig.S) (Options : Options.S) (Token : Token.S) =
   struct
     type lex_unit = Token.t LexerLib.Unit.t
@@ -492,24 +492,36 @@ module Make (Config : PreprocessorConfig.S) (Options : Options.S) (Token : Token
       let token = Token.mk_eof region
       in token, state
 
-    let handle scan state lexbuf =
-      try Stdlib.Ok (scan state lexbuf) with
-        Error msg -> Stdlib.Error msg
+(***********************************************************************************)
+(* callback_with_cont has been inlined                                             *)
+(*                                                                                 *)
+(* Note: this will duplicate some logic to fix too many stackframes                *)
+(*                                                                                 *)
+(* Reason being:                                                                   *)
+(* From Js_of_ocaml docs,                                                          *)
+(*                                                                                 *)
+(* https://ocsigen.org/js_of_ocaml/latest/manual/tailcall                          *)
+(*                                                                                 *)
+(* Examples of pattern not optimized                                               *)
+(* Recursive function where the tail call is made inside an intermediate function. *)
+(*                                                                                 *)
+(* let rec f x =                                                                   *)
+(*   let g delta = f (x - delta) in                                                *)
+(*   if x < 0 then 0                                                               *)
+(*   else if x mod 2 = 0                                                           *)
+(*   then g 2                                                                      *)
+(*   else g 1;;                                                                    *)
+(* Tail call of a function given as argument                                       *)
+(*                                                                                 *)
+(* let bind x f =                                                                  *)
+(*   match x with                                                                  *)
+(*   | None -> None                                                                *)
+(*   | Some x -> f x                                                               *)
+(* Note that in the future, more tail call optimizations could be perform          *)
+(* with function specialization and better inlining.                               *)
+(***********************************************************************************)
 
-    let callback dialect_scan state lexbuf =
-      match handle dialect_scan state lexbuf with
-        Ok (token, state) ->
-         Ok (state#push_token token)
-      | Error message ->
-         let used_units = List.rev state#lexical_units
-         in Error {used_units; message}
 
-    (* Client callback with local continuation [scan] *)
-
-    let callback_with_cont dialect_scan scan state lexbuf =
-      let ()     = Lexbuf.rollback lexbuf in
-      let* state = callback dialect_scan state lexbuf
-      in scan state lexbuf
 
 (* END DIALECT-SPECIFIC HEADER *)
 }
@@ -660,7 +672,21 @@ rule scan state = parse
         let* thread, state = in_string thread state lexbuf in
         let token = mk_string thread
         in scan (state#push_token token) lexbuf
-    | Some _ | None -> callback_with_cont dialect_scan scan state lexbuf }
+    | Some _ | None ->
+
+      let () = Lexbuf.rollback lexbuf in
+      let* state = 
+        match
+          try Stdlib.Ok (dialect_scan state lexbuf) with
+            Error msg -> Stdlib.Error msg
+        with
+          Ok (token, state) ->
+           Ok (state#push_token token)
+        | Error message ->
+           let used_units = List.rev state#lexical_units
+           in Error {used_units; message}
+      in
+      scan state lexbuf }
 
   (* Comments *)
 
@@ -673,7 +699,20 @@ rule scan state = parse
         let thread = thread#push_string lexeme in
         let* thread, state = in_block block thread state lexbuf
         in scan (state#push_block thread) lexbuf
-    | Some _ | None -> callback_with_cont dialect_scan scan state lexbuf }
+    | Some _ | None ->
+      let () = Lexbuf.rollback lexbuf in
+      let* state = 
+        match
+          try Stdlib.Ok (dialect_scan state lexbuf) with
+            Error msg -> Stdlib.Error msg
+        with
+          Ok (token, state) ->
+           Ok (state#push_token token)
+        | Error message ->
+           let used_units = List.rev state#lexical_units
+           in Error {used_units; message}
+      in
+      scan state lexbuf }
 
 | line_comment_opening {
     let lexeme = Lexing.lexeme lexbuf in
@@ -684,8 +723,23 @@ rule scan state = parse
         let thread = thread#push_string lexeme in
         let* state = in_line thread state lexbuf
         in scan state lexbuf
-    | Some _ | None -> callback_with_cont dialect_scan scan state lexbuf }
+    | Some _ | None ->
 
+      let () = Lexbuf.rollback lexbuf in
+      let* state = 
+        match
+          try Stdlib.Ok (dialect_scan state lexbuf) with
+            Error msg -> Stdlib.Error msg
+        with
+          Ok (token, state) ->
+           Ok (state#push_token token)
+        | Error message ->
+           let used_units = List.rev state#lexical_units
+           in Error {used_units; message}
+      in
+      scan state lexbuf
+    }
+       
 | '#' blank* (directive as id) {
     match id with
       "include" ->
@@ -707,7 +761,21 @@ rule scan state = parse
     | "error" ->
         scan_dir   ~callback:scan Directive.scan_error   state lexbuf
     | _ ->
-        callback_with_cont dialect_scan scan state lexbuf }
+
+      let () = Lexbuf.rollback lexbuf in
+      let* state = 
+        match
+          try Stdlib.Ok (dialect_scan state lexbuf) with
+            Error msg -> Stdlib.Error msg
+        with
+          Ok (token, state) ->
+           Ok (state#push_token token)
+        | Error message ->
+           let used_units = List.rev state#lexical_units
+           in Error {used_units; message}
+      in
+      scan state lexbuf
+}
 
   (* Linemarkers preprocessing directives (from #include) *)
 
@@ -716,11 +784,36 @@ rule scan state = parse
 
   (* End-of-File: we return the final state *)
 
-| eof { callback dialect_scan state lexbuf }
+| eof {
+  match
+    try Stdlib.Ok (dialect_scan state lexbuf) with
+      Error msg -> Stdlib.Error msg
+  with
+    Ok (token, state) ->
+     Ok (state#push_token token)
+  | Error message ->
+     let used_units = List.rev state#lexical_units
+     in Error {used_units; message}
+}
 
   (* Other tokens *)
 
-| _ { callback_with_cont dialect_scan scan state lexbuf }
+| _ {
+
+      let () = Lexbuf.rollback lexbuf in
+      let* state = 
+        match
+          try Stdlib.Ok (dialect_scan state lexbuf) with
+            Error msg -> Stdlib.Error msg
+        with
+          Ok (token, state) ->
+           Ok (state#push_token token)
+        | Error message ->
+           let used_units = List.rev state#lexical_units
+           in Error {used_units; message}
+      in
+      scan state lexbuf
+}
 
 (* Block comments *)
 
@@ -846,7 +939,17 @@ and unescape backslash thread state = parse
 
 and init state = parse
   utf8_bom { scan (state#push_bom lexbuf) lexbuf       }
-| eof      { callback dialect_scan state lexbuf              }
+| eof {
+  match
+    try Stdlib.Ok (dialect_scan state lexbuf) with
+      Error msg -> Stdlib.Error msg
+  with
+    Ok (token, state) ->
+     Ok (state#push_token token)
+  | Error message ->
+     let used_units = List.rev state#lexical_units
+     in Error {used_units; message}
+}
 | _        { Lexbuf.rollback lexbuf; scan state lexbuf }
 
 (* END LEXERLIB DEFINITION *)
@@ -991,10 +1094,15 @@ and scan_verbatim verb_close thread state = parse
     type 'src lexer = 'src -> (units, error) result
 
     let line_comment_attr acc lexbuf =
-      handle (line_comment_attr acc) (mk_state lexbuf) lexbuf
+      let state = mk_state lexbuf in
+      try Stdlib.Ok (line_comment_attr acc state lexbuf) with
+        Error msg -> Stdlib.Error msg
+
 
     let block_comment_attr acc lexbuf =
-      handle (block_comment_attr acc) (mk_state lexbuf) lexbuf
+      let state = mk_state lexbuf in
+      try Stdlib.Ok (block_comment_attr acc state lexbuf) with
+        Error msg -> Stdlib.Error msg
 
     (* Lexing the input given a lexer instance *)
 
