@@ -162,16 +162,10 @@ module Make
         Some last when last <= num_of_passes -> last
       | _ -> num_of_passes
 
-    (* INSTANTIATING THE LIBRARY LEXER (LexerLib) *)
-
-    (* Instantiating the client lexer *)
-
-    module Client = Lexer.Make (Options) (Token)
-
     (* Instantiating the library lexer with the client lexer,
        resulting in the final, bespoke lexer *)
 
-    module Scan = LowAPI.Make (Parameters.Config) (Client)
+    module Scan = Lexer.Make (Parameters.Config) (Options) (Token)
 
     (* LEXING ERRORS *)
 

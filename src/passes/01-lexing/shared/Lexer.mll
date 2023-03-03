@@ -68,9 +68,9 @@ let (let*) : ('a, 'e) result -> ('a -> ('b, 'e) result) -> ('b, 'e) result =
 
 (* THE FUNCTOR *)
 
-module MakeCore (Config : PreprocessorConfig.S) (Client : LexerLib.Client.S) (Options : Options.S) (Token : Token.S) =
+module Make (Config : PreprocessorConfig.S) (Options : Options.S) (Token : Token.S) =
   struct
-    type lex_unit = Client.token LexerLib.Unit.t
+    type lex_unit = Token.t LexerLib.Unit.t
 
     type units = lex_unit list
 
@@ -139,15 +139,22 @@ module MakeCore (Config : PreprocessorConfig.S) (Client : LexerLib.Client.S) (Op
       let used_units = List.rev state#lexical_units
       in Stdlib.Error {used_units; message}
 
+    let mk_eof = Token.mk_eof (* For EOFs from the preprocessor *)
+    let mk_string thread =
+      let start  = thread#opening#start in
+      let stop   = thread#closing#stop in
+      let region = Region.make ~start ~stop in
+      Token.mk_string (thread#to_string) region
+
     (* Auxiliary functions for preprocessing directives *)
 
     let handle_ending state lexbuf = function
       `EOL (state', ending) ->
          (state#push_newline (Some ending) lexbuf)#set_pos state'#pos
     | `EOF (state', region) ->
-         (state#push_token (Client.mk_eof region))#set_pos state'#pos
+         (state#push_token (mk_eof region))#set_pos state'#pos
 
-    let scan_dir ~callback scan (state: Client.token LexerLib.State.t) lexbuf =
+    let scan_dir ~callback scan (state: Token.t LexerLib.State.t) lexbuf =
       let state, Region.{region; _} = state#sync lexbuf in
       let state' = new Preprocessor.State.t state#pos in
       match scan region#start state' lexbuf with
@@ -261,29 +268,6 @@ module MakeCore (Config : PreprocessorConfig.S) (Client : LexerLib.Client.S) (Op
 
             callback (state#set_pos hash_state#pos) lexbuf
 
-    (* Internal client *)
-
-    module Client =
-      struct
-        let mk_string = Client.mk_string
-        let mk_eof    = Client.mk_eof
-
-        let callback state lexbuf =
-          match Client.callback state lexbuf with
-            Ok (token, state) ->
-              Ok (state#push_token token)
-          | Error message ->
-              let used_units = List.rev state#lexical_units
-              in Error {used_units; message}
-      end
-
-    (* Client callback with local continuation [scan] *)
-
-    let callback_with_cont scan state lexbuf =
-      let ()     = Lexbuf.rollback lexbuf in
-      let* state = Client.callback state lexbuf
-      in scan state lexbuf
-
     (* The lexer instance: the main exported data type *)
 
     type file_path = string
@@ -341,12 +325,6 @@ module MakeCore (Config : PreprocessorConfig.S) (Client : LexerLib.Client.S) (Op
     (* TOKENS *)
 
     (* Strings *)
-
-    let mk_string thread =
-      let start  = thread#opening#start in
-      let stop   = thread#closing#stop in
-      let region = Region.make ~start ~stop in
-      Token.mk_string (thread#to_string) region
 
     (* Verbatim strings *)
 
@@ -507,6 +485,25 @@ module MakeCore (Config : PreprocessorConfig.S) (Client : LexerLib.Client.S) (Op
       let token = Token.mk_eof region
       in token, state
 
+    let handle scan state lexbuf =
+      try Stdlib.Ok (scan state lexbuf) with
+        Error msg -> Stdlib.Error msg
+
+    let callback dialect_scan state lexbuf =
+      match handle dialect_scan state lexbuf with
+        Ok (token, state) ->
+         Ok (state#push_token token)
+      | Error message ->
+         let used_units = List.rev state#lexical_units
+         in Error {used_units; message}
+
+    (* Client callback with local continuation [scan] *)
+
+    let callback_with_cont dialect_scan scan state lexbuf =
+      let ()     = Lexbuf.rollback lexbuf in
+      let* state = callback dialect_scan state lexbuf
+      in scan state lexbuf
+
 (* END DIALECT-SPECIFIC HEADER *)
 }
 
@@ -654,9 +651,9 @@ rule scan state = parse
         let state, Region.{region; _} = state#sync lexbuf in
         let thread = LexerLib.Thread.make ~opening:region in
         let* thread, state = in_string thread state lexbuf in
-        let token = Client.mk_string thread
+        let token = mk_string thread
         in scan (state#push_token token) lexbuf
-    | Some _ | None -> callback_with_cont scan state lexbuf }
+    | Some _ | None -> callback_with_cont dialect_scan scan state lexbuf }
 
   (* Comments *)
 
@@ -669,7 +666,7 @@ rule scan state = parse
         let thread = thread#push_string lexeme in
         let* thread, state = in_block block thread state lexbuf
         in scan (state#push_block thread) lexbuf
-    | Some _ | None -> callback_with_cont scan state lexbuf }
+    | Some _ | None -> callback_with_cont dialect_scan scan state lexbuf }
 
 | line_comment_opening {
     let lexeme = Lexing.lexeme lexbuf in
@@ -680,7 +677,7 @@ rule scan state = parse
         let thread = thread#push_string lexeme in
         let* state = in_line thread state lexbuf
         in scan state lexbuf
-    | Some _ | None -> callback_with_cont scan state lexbuf }
+    | Some _ | None -> callback_with_cont dialect_scan scan state lexbuf }
 
 | '#' blank* (directive as id) {
     match id with
@@ -703,7 +700,7 @@ rule scan state = parse
     | "error" ->
         scan_dir   ~callback:scan Directive.scan_error   state lexbuf
     | _ ->
-        callback_with_cont scan state lexbuf }
+        callback_with_cont dialect_scan scan state lexbuf }
 
   (* Linemarkers preprocessing directives (from #include) *)
 
@@ -712,11 +709,11 @@ rule scan state = parse
 
   (* End-of-File: we return the final state *)
 
-| eof { Client.callback state lexbuf }
+| eof { callback dialect_scan state lexbuf }
 
   (* Other tokens *)
 
-| _ { callback_with_cont scan state lexbuf }
+| _ { callback_with_cont dialect_scan scan state lexbuf }
 
 (* Block comments *)
 
@@ -842,7 +839,7 @@ and unescape backslash thread state = parse
 
 and init state = parse
   utf8_bom { scan (state#push_bom lexbuf) lexbuf       }
-| eof      { Client.callback state lexbuf              }
+| eof      { callback dialect_scan state lexbuf              }
 | _        { Lexbuf.rollback lexbuf; scan state lexbuf }
 
 (* END LEXERLIB DEFINITION *)
@@ -977,19 +974,6 @@ and scan_verbatim verb_close thread state = parse
 
 (* START DIALECT TRAILER *)
 
-    type lexer =
-      token State.t ->
-      Lexing.lexbuf ->
-      (token * token State.t, message) Stdlib.result
-
-    let handle scan state lexbuf =
-      try Stdlib.Ok (scan state lexbuf) with
-        Error msg -> Stdlib.Error msg
-
-    let callback state = handle dialect_scan state
-
-    let mk_eof = Token.mk_eof (* For EOFs from the preprocessor *)
-
     let mk_state lexbuf =
       let file  = Lexbuf.current_filename lexbuf
       and line  = Lexbuf.current_linenum lexbuf in
@@ -997,56 +981,38 @@ and scan_verbatim verb_close thread state = parse
       let pos   = state#pos#set_line line
       in state#set_pos pos
 
+    type 'src lexer = 'src -> (units, error) result
+
     let line_comment_attr acc lexbuf =
       handle (line_comment_attr acc) (mk_state lexbuf) lexbuf
 
     let block_comment_attr acc lexbuf =
       handle (block_comment_attr acc) (mk_state lexbuf) lexbuf
 
-  end (* of functor Lexer's [Make] in HEADER *)
-(* END CORE TRAILER *)
-
-(* START LowAPI *)
-
-module Make (Config : PreprocessorConfig.S) (Client : LexerLib.Client.S) (Options : Options.S) (Token : Token.S) =
-  struct
-    module Core = MakeCore (Config) (Client) (Options) (Token)
-
-    type lex_unit = Core.lex_unit
-
-    type units = Core.units
-
-    type error = Core.error = {
-      used_units : units;
-      message    : string Region.reg
-    }
-
-    type 'src lexer = 'src -> (units, error) result
-
     (* Lexing the input given a lexer instance *)
 
-    let scan_all_units = function
+    let scan_all_units: (instance, message) result -> (units, error) result  = function
       Stdlib.Error message ->
         Caml.flush_all (); Error {used_units=[]; message}
-    | Ok Core.{read_units; lexbuf; close; _} ->
+    | Ok {read_units; lexbuf; close; _} ->
         let result = read_units lexbuf
         in (Caml.flush_all (); close (); result)
 
     (* Lexing all lexical units from various sources *)
 
     let from_lexbuf ?(file="") lexbuf =
-      Core.(open_stream (Lexbuf (file, lexbuf))) |> scan_all_units
+      (open_stream (Lexbuf (file, lexbuf))) |> scan_all_units
 
     let from_channel ?(file="") channel =
-      Core.(open_stream (Channel (file, channel))) |> scan_all_units
+      (open_stream (Channel (file, channel))) |> scan_all_units
 
     let from_string ?(file="") string =
-      Core.(open_stream (String (file, string))) |> scan_all_units
+      (open_stream (String (file, string))) |> scan_all_units
 
     let from_buffer ?(file="") buffer =
-      Core.(open_stream (Buffer (file, buffer))) |> scan_all_units
+      (open_stream (Buffer (file, buffer))) |> scan_all_units
 
-    let from_file file = Core.(open_stream (File file)) |> scan_all_units
+    let from_file file = (open_stream (File file)) |> scan_all_units
   end
 (* END LowAPI *)
 

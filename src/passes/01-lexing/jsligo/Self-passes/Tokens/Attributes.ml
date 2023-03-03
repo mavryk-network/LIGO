@@ -9,7 +9,7 @@ module Config        = Preprocessing_jsligo.Config
 module PreprocParams = Preprocessor.CLI.Make (Config)
 module Parameters    = LexerLib.CLI.Make (PreprocParams)
 module Options       = Parameters.Options
-module Lexer         = Lexing_shared.Lexer.Make (Options) (Token)
+module Lexer         = Lexing_shared.Lexer.Make (Parameters.Config) (Options) (Token)
 
 let scan_comment scan comment =
   let lexbuf = Lexing.from_string comment#payload in
