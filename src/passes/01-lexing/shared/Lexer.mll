@@ -164,7 +164,7 @@ module Make (Config : PreprocessorConfig.S) (Options : Options.S) (Token : Token
     | `EOF (state', region) ->
          (state#push_token (mk_eof region))#set_pos state'#pos
 
-    let scan_dir ~callback scan (state: Token.t LexerLib.State.t) lexbuf =
+    let scan_dir scan (state: Token.t LexerLib.State.t) lexbuf =
       let state, Region.{region; _} = state#sync lexbuf in
       let state' = new Preprocessor.State.t state#pos in
       match scan region#start state' lexbuf with
@@ -173,23 +173,23 @@ module Make (Config : PreprocessorConfig.S) (Options : Options.S) (Token : Token
       | Ok (state', _, dir, ending) ->
           let state = state#set_pos state'#pos in
           let state = state#push_directive dir in
-          let state = handle_ending state lexbuf ending
-          in callback state lexbuf
+          let state = handle_ending state lexbuf ending in
+          Ok state
 
     let scan_if   = scan_dir
     let scan_elif = scan_dir
 
-    let scan_else ~callback scan state lexbuf =
+    let scan_else scan state lexbuf =
       let state, Region.{region; _} = state#sync lexbuf in
       let state' = new Preprocessor.State.t state#pos in
       let _, dir, ending = scan region#start state' lexbuf in
       let state = state#push_directive dir in
-      let state = handle_ending state lexbuf ending
-      in callback state lexbuf
+      let state = handle_ending state lexbuf ending in
+      Ok state
 
     let scan_endif = scan_else
 
-    let scan_linemarker ~callback linenum state lexbuf =
+    let scan_linemarker linenum state lexbuf =
       (* We save the state and position before the lexing buffer was
          matched. *)
 
@@ -205,8 +205,6 @@ module Make (Config : PreprocessorConfig.S) (Options : Options.S) (Token : Token
       let start    = region#stop#shift_bytes (-length) in
       let line_reg = Region.make ~start ~stop:region#stop in
       let linenum  = Region.{region=line_reg; value=linenum} in
-
-
       (* We make a preprocessing state and scan the expected
          linemarker. *)
 
@@ -218,7 +216,7 @@ module Make (Config : PreprocessorConfig.S) (Options : Options.S) (Token : Token
         Stdlib.Error (region, error) ->
           fail hash_state region (LexerLib.Error.Invalid_directive error)
 
-      | Ok (preproc_state, args, directive, _ending) ->
+      | Ok (preproc_state, args, directive, ending) ->
           (* We use the current position (after reading the linemarker)
              of the preprocessing state [preproc_state] to reset the
              position of saved lexing state [hash_state]. (Remember that
@@ -730,23 +728,32 @@ rule scan state = parse
 | '#' blank* (directive as id) {
     match id with
       "include" ->
-        scan_dir   ~callback:scan Directive.scan_include state lexbuf
+        let* state = scan_dir Directive.scan_include state lexbuf
+        in scan state lexbuf
     | "import" ->
-        scan_dir   ~callback:scan Directive.scan_import  state lexbuf
+        let* state = scan_dir Directive.scan_import  state lexbuf
+        in scan state lexbuf
     | "if" ->
-        scan_if    ~callback:scan Directive.scan_if      state lexbuf
+        let* state = scan_if Directive.scan_if      state lexbuf
+        in scan state lexbuf
     | "elif" ->
-        scan_elif  ~callback:scan Directive.scan_elif    state lexbuf
+        let* state = scan_elif Directive.scan_elif    state lexbuf
+        in scan state lexbuf
     | "else" ->
-        scan_else  ~callback:scan Directive.scan_else    state lexbuf
+        let* state = scan_else Directive.scan_else    state lexbuf
+        in scan state lexbuf
     | "endif" ->
-        scan_endif ~callback:scan Directive.scan_endif   state lexbuf
+        let* state = scan_endif Directive.scan_endif   state lexbuf
+        in scan state lexbuf
     | "define" ->
-        scan_dir   ~callback:scan Directive.scan_define  state lexbuf
+        let* state = scan_dir Directive.scan_define  state lexbuf
+        in scan state lexbuf
     | "undef" ->
-        scan_dir   ~callback:scan Directive.scan_undef   state lexbuf
+        let* state = scan_dir Directive.scan_undef   state lexbuf
+        in scan state lexbuf
     | "error" ->
-        scan_dir   ~callback:scan Directive.scan_error   state lexbuf
+        let* state = scan_dir Directive.scan_error   state lexbuf
+        in scan state lexbuf
     | _ ->
 
       let () = Lexbuf.rollback lexbuf in
