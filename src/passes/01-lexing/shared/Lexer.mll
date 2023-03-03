@@ -658,20 +658,17 @@ rule scan state = parse
         let token = mk_string thread
         in scan (state#push_token token) lexbuf
     | Some _ | None ->
+       let () = Lexbuf.rollback lexbuf in
+       try
+         let (token, state) = dialect_scan state lexbuf in
+         let state = state#push_token token in
+         scan state lexbuf
+       with
+         Error message ->
+          let used_units = List.rev state#lexical_units
+          in Error {used_units; message}
+    }
 
-      let () = Lexbuf.rollback lexbuf in
-      let* state = 
-        match
-          try Stdlib.Ok (dialect_scan state lexbuf) with
-            Error msg -> Stdlib.Error msg
-        with
-          Ok (token, state) ->
-           Ok (state#push_token token)
-        | Error message ->
-           let used_units = List.rev state#lexical_units
-           in Error {used_units; message}
-      in
-      scan state lexbuf }
 
   (* Comments *)
 
@@ -685,19 +682,19 @@ rule scan state = parse
         let* thread, state = in_block block thread state lexbuf
         in scan (state#push_block thread) lexbuf
     | Some _ | None ->
-      let () = Lexbuf.rollback lexbuf in
-      let* state = 
-        match
-          try Stdlib.Ok (dialect_scan state lexbuf) with
-            Error msg -> Stdlib.Error msg
-        with
-          Ok (token, state) ->
-           Ok (state#push_token token)
-        | Error message ->
-           let used_units = List.rev state#lexical_units
-           in Error {used_units; message}
-      in
-      scan state lexbuf }
+
+
+       let () = Lexbuf.rollback lexbuf in
+       try
+         let (token, state) = dialect_scan state lexbuf in
+         let state = state#push_token token in
+         scan state lexbuf
+       with
+         Error message ->
+          let used_units = List.rev state#lexical_units
+          in Error {used_units; message}
+
+      }
 
 | line_comment_opening {
     let lexeme = Lexing.lexeme lexbuf in
@@ -710,19 +707,19 @@ rule scan state = parse
         in scan state lexbuf
     | Some _ | None ->
 
-      let () = Lexbuf.rollback lexbuf in
-      let* state = 
-        match
-          try Stdlib.Ok (dialect_scan state lexbuf) with
-            Error msg -> Stdlib.Error msg
-        with
-          Ok (token, state) ->
-           Ok (state#push_token token)
-        | Error message ->
-           let used_units = List.rev state#lexical_units
-           in Error {used_units; message}
-      in
-      scan state lexbuf
+
+
+       let () = Lexbuf.rollback lexbuf in
+       try
+         let (token, state) = dialect_scan state lexbuf in
+         let state = state#push_token token in
+         scan state lexbuf
+       with
+         Error message ->
+          let used_units = List.rev state#lexical_units
+          in Error {used_units; message}
+
+
     }
        
 | '#' blank* (directive as id) {
@@ -756,20 +753,22 @@ rule scan state = parse
         in scan state lexbuf
     | _ ->
 
-      let () = Lexbuf.rollback lexbuf in
-      let* state = 
-        match
-          try Stdlib.Ok (dialect_scan state lexbuf) with
-            Error msg -> Stdlib.Error msg
-        with
-          Ok (token, state) ->
-           Ok (state#push_token token)
-        | Error message ->
-           let used_units = List.rev state#lexical_units
-           in Error {used_units; message}
-      in
-      scan state lexbuf
-}
+
+
+       let () = Lexbuf.rollback lexbuf in
+       try
+         let (token, state) = dialect_scan state lexbuf in
+         let state = state#push_token token in
+         scan state lexbuf
+       with
+         Error message ->
+          let used_units = List.rev state#lexical_units
+          in Error {used_units; message}
+
+
+
+
+               }
 
   (* Linemarkers preprocessing directives (from #include) *)
 
@@ -804,35 +803,45 @@ rule scan state = parse
   (* End-of-File: we return the final state *)
 
 | eof {
-  match
-    try Stdlib.Ok (dialect_scan state lexbuf) with
-      Error msg -> Stdlib.Error msg
-  with
-    Ok (token, state) ->
-     Ok (state#push_token token)
-  | Error message ->
-     let used_units = List.rev state#lexical_units
-     in Error {used_units; message}
-}
+
+
+
+       try
+         let (token, state) = dialect_scan state lexbuf in
+         let state = state#push_token token in
+         scan state lexbuf
+       with
+         Error message ->
+          let used_units = List.rev state#lexical_units
+          in Error {used_units; message}
+
+
+    }
 
   (* Other tokens *)
 
 | _ {
 
-      let () = Lexbuf.rollback lexbuf in
-      let* state = 
-        match
-          try Stdlib.Ok (dialect_scan state lexbuf) with
-            Error msg -> Stdlib.Error msg
-        with
-          Ok (token, state) ->
-           Ok (state#push_token token)
-        | Error message ->
-           let used_units = List.rev state#lexical_units
-           in Error {used_units; message}
-      in
-      scan state lexbuf
-}
+
+
+
+
+       let () = Lexbuf.rollback lexbuf in
+       try
+         let (token, state) = dialect_scan state lexbuf in
+         let state = state#push_token token in
+         scan state lexbuf
+       with
+         Error message ->
+          let used_units = List.rev state#lexical_units
+          in Error {used_units; message}
+
+
+
+
+
+
+    }
 
 (* Block comments *)
 
@@ -959,15 +968,19 @@ and unescape backslash thread state = parse
 and init state = parse
   utf8_bom { scan (state#push_bom lexbuf) lexbuf       }
 | eof {
-  match
-    try Stdlib.Ok (dialect_scan state lexbuf) with
-      Error msg -> Stdlib.Error msg
-  with
-    Ok (token, state) ->
-     Ok (state#push_token token)
-  | Error message ->
-     let used_units = List.rev state#lexical_units
-     in Error {used_units; message}
+
+
+
+       try
+         let (token, state) = dialect_scan state lexbuf in
+         let state = state#push_token token in
+         scan state lexbuf
+       with
+         Error message ->
+          let used_units = List.rev state#lexical_units
+          in Error {used_units; message}
+
+
 }
 | _        { Lexbuf.rollback lexbuf; scan state lexbuf }
 
