@@ -779,7 +779,7 @@ rule scan state = parse
 | eof {
        let (token, state) = dialect_scan state lexbuf in
        let state = state#push_token token in
-       scan state lexbuf
+       Ok state
     }
 
   (* Other tokens *)
@@ -919,7 +919,7 @@ and init state = parse
 | eof {
   let (token, state) = dialect_scan state lexbuf in
   let state = state#push_token token in
-  scan state lexbuf
+  Ok state
 }
 | _        { Lexbuf.rollback lexbuf; scan state lexbuf }
 
