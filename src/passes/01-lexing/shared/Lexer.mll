@@ -266,21 +266,15 @@ module Make (Config : PreprocessorConfig.S) (Options : Options.S) (Token : Token
 
     type instance = {
       input      : Lexbuf.input;
-      read_units : Lexing.lexbuf -> (units, error) result;
       lexbuf     : Lexing.lexbuf;
       close      : Lexbuf.close
     }
 
     (* The main function *)
 
-    let open_stream scan input : (instance, message) result =
-      let file = Lexbuf.file_from_input input in
-      let read_units lexbuf =
-        let state  = LexerLib.State.empty ~file in
-        let* state = scan state lexbuf in
-        Ok (List.rev state#lexical_units) in
+    let open_stream input : (instance, message) result =
       let* lexbuf, close = Lexbuf.from_input input
-      in Ok {read_units; input; lexbuf; close}
+      in Ok {input; lexbuf; close}
 
     (* Reading UTF-8 encoded characters *)
 
@@ -1107,13 +1101,6 @@ and scan_verbatim verb_close thread state = parse
 {
 (* START CORE TRAILER *)
 
-    let open_stream : Lexbuf.input -> (instance, message) result =
-      let first_call = ref true in
-      let scan state =
-        (if !first_call then (first_call := false; init) else scan)
-        state
-      in open_stream scan
-
 (* START DIALECT TRAILER *)
 
     let mk_state lexbuf =
@@ -1138,28 +1125,38 @@ and scan_verbatim verb_close thread state = parse
 
     (* Lexing the input given a lexer instance *)
 
-    let scan_all_units: (instance, message) result -> (units, error) result  = function
+    let first_call = ref true
+    let scan state =
+        (if !first_call then (first_call := false; init) else scan)
+        state
+
+    let read_units ~file lexbuf =
+      let state  = LexerLib.State.empty ~file in
+      let* state = scan state lexbuf in
+      Ok (List.rev state#lexical_units)
+
+    let scan_all_units: file:string -> (instance, message) result -> (units, error) result  = fun ~file res -> match res with
       Stdlib.Error message ->
         Caml.flush_all (); Error {used_units=[]; message}
-    | Ok {read_units; lexbuf; close; _} ->
-        let result = read_units lexbuf
+    | Ok {lexbuf; close; _} ->
+        let result = read_units ~file lexbuf
         in (Caml.flush_all (); close (); result)
 
     (* Lexing all lexical units from various sources *)
 
     let from_lexbuf ?(file="") lexbuf =
-      (open_stream (Lexbuf (file, lexbuf))) |> scan_all_units
+      (open_stream (Lexbuf (file, lexbuf))) |> scan_all_units ~file
 
     let from_channel ?(file="") channel =
-      (open_stream (Channel (file, channel))) |> scan_all_units
+      (open_stream (Channel (file, channel))) |> scan_all_units ~file
 
     let from_string ?(file="") string =
-      (open_stream (String (file, string))) |> scan_all_units
+      (open_stream (String (file, string))) |> scan_all_units ~file
 
     let from_buffer ?(file="") buffer =
-      (open_stream (Buffer (file, buffer))) |> scan_all_units
+      (open_stream (Buffer (file, buffer))) |> scan_all_units ~file
 
-    let from_file file = (open_stream (File file)) |> scan_all_units
+    let from_file file = (open_stream (File file)) |> scan_all_units ~file
   end
 (* END LowAPI *)
 
