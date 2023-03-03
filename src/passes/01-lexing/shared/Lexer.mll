@@ -653,14 +653,9 @@ rule scan state = parse
         in scan (state#push_token token) lexbuf
     | Some _ | None ->
        let () = Lexbuf.rollback lexbuf in
-       try
-         let (token, state) = dialect_scan state lexbuf in
-         let state = state#push_token token in
-         scan state lexbuf
-       with
-         Error message ->
-          let used_units = List.rev state#lexical_units
-          in Error {used_units; message}
+       let (token, state) = dialect_scan state lexbuf in
+       let state = state#push_token token in
+       scan state lexbuf
     }
 
 
@@ -679,14 +674,9 @@ rule scan state = parse
 
 
        let () = Lexbuf.rollback lexbuf in
-       try
-         let (token, state) = dialect_scan state lexbuf in
-         let state = state#push_token token in
-         scan state lexbuf
-       with
-         Error message ->
-          let used_units = List.rev state#lexical_units
-          in Error {used_units; message}
+       let (token, state) = dialect_scan state lexbuf in
+       let state = state#push_token token in
+       scan state lexbuf
 
       }
 
@@ -704,14 +694,9 @@ rule scan state = parse
 
 
        let () = Lexbuf.rollback lexbuf in
-       try
-         let (token, state) = dialect_scan state lexbuf in
-         let state = state#push_token token in
-         scan state lexbuf
-       with
-         Error message ->
-          let used_units = List.rev state#lexical_units
-          in Error {used_units; message}
+       let (token, state) = dialect_scan state lexbuf in
+       let state = state#push_token token in
+       scan state lexbuf
 
 
     }
@@ -750,14 +735,9 @@ rule scan state = parse
 
 
        let () = Lexbuf.rollback lexbuf in
-       try
-         let (token, state) = dialect_scan state lexbuf in
-         let state = state#push_token token in
-         scan state lexbuf
-       with
-         Error message ->
-          let used_units = List.rev state#lexical_units
-          in Error {used_units; message}
+       let (token, state) = dialect_scan state lexbuf in
+       let state = state#push_token token in
+       scan state lexbuf
 
 
 
@@ -797,44 +777,19 @@ rule scan state = parse
   (* End-of-File: we return the final state *)
 
 | eof {
-
-
-
-       try
-         let (token, state) = dialect_scan state lexbuf in
-         let state = state#push_token token in
-         scan state lexbuf
-       with
-         Error message ->
-          let used_units = List.rev state#lexical_units
-          in Error {used_units; message}
-
-
+       let (token, state) = dialect_scan state lexbuf in
+       let state = state#push_token token in
+       scan state lexbuf
     }
 
   (* Other tokens *)
 
 | _ {
 
-
-
-
-
        let () = Lexbuf.rollback lexbuf in
-       try
-         let (token, state) = dialect_scan state lexbuf in
-         let state = state#push_token token in
-         scan state lexbuf
-       with
-         Error message ->
-          let used_units = List.rev state#lexical_units
-          in Error {used_units; message}
-
-
-
-
-
-
+       let (token, state) = dialect_scan state lexbuf in
+       let state = state#push_token token in
+       scan state lexbuf
     }
 
 (* Block comments *)
@@ -962,19 +917,9 @@ and unescape backslash thread state = parse
 and init state = parse
   utf8_bom { scan (state#push_bom lexbuf) lexbuf       }
 | eof {
-
-
-
-       try
-         let (token, state) = dialect_scan state lexbuf in
-         let state = state#push_token token in
-         scan state lexbuf
-       with
-         Error message ->
-          let used_units = List.rev state#lexical_units
-          in Error {used_units; message}
-
-
+  let (token, state) = dialect_scan state lexbuf in
+  let state = state#push_token token in
+  scan state lexbuf
 }
 | _        { Lexbuf.rollback lexbuf; scan state lexbuf }
 
