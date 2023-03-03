@@ -77,6 +77,9 @@ let (let*) : ('a, 'e) result -> ('a -> ('b, 'e) result) -> ('b, 'e) result =
 
 module Make (Config : PreprocessorConfig.S) (Options : Options.S) (Token : Token.S) =
   struct
+    exception DontScan of Token.t State.t
+    exception ScanOneMoreTime of Token.t State.t * Token.t State.t
+
     type lex_unit = Token.t LexerLib.Unit.t
 
     type units = lex_unit list
@@ -245,35 +248,19 @@ module Make (Config : PreprocessorConfig.S) (Options : Options.S) (Token : Token
                  may fail. More precisely, we assume that each [Push]
                  (below) is associate to one [Pop] (this case). *)
               Lexbuf.reset_file arg_file lexbuf;
-              Ok state
+             raise @@ DontScan state
 
           | None ->
               (* The linemarker is the one generated at the start of
                  the file or one written by the user. *)
-              callback (push state) lexbuf
+             let state = push state in
+             Ok state
 
           | Some Region.{value=Directive.Push; _} ->
-              (* The linemarker has been produced by the start of the
-                 preprocessing of an #include directive. See case above
-                 ([Pop]).
+             let state = push state in
+             raise @@ ScanOneMoreTime (state, hash_state)
 
-                   We call recursively [callback] to scan until a
-                 linemarker with a flag "2" is found, that is, the case
-                 [Pop] above. Between a [Push] linemarker and a [Pop],
-                 we assume that we scan the contents of the included
-                 file. *)
-              let* state = callback (push state) lexbuf in
 
-              (* The contents of the included file was scanned
-                 successfully, that is, the case [Pop] above was
-                 hit. We restore the position saved at the start of
-                 this semantic action, that is, just before the "#" of
-                 the [Push] linemarker. With that position committed
-                 to the state, we call recursively [callback] to
-                 resume scanning the rest of the file corresponding to
-                 what was just after the original #include. *)
-
-            callback (state#set_pos hash_state#pos) lexbuf
 
     (* The lexer instance: the main exported data type *)
 
@@ -780,7 +767,32 @@ rule scan state = parse
   (* Linemarkers preprocessing directives (from #include) *)
 
 | '#' blank* (natural as linenum) {
-    scan_linemarker ~callback:scan linenum state lexbuf }
+                 try let* state = scan_linemarker linenum state lexbuf in scan state lexbuf with
+                 | DontScan state -> Ok state
+                 | ScanOneMoreTime (state, hash_state) ->
+              (* The linemarker has been produced by the start of the
+                 preprocessing of an #include directive. See case above
+                 ([Pop]).
+
+                   We call recursively [callback] to scan until a
+                 linemarker with a flag "2" is found, that is, the case
+                 [Pop] above. Between a [Push] linemarker and a [Pop],
+                 we assume that we scan the contents of the included
+                 file. *)
+                    let* state = scan state lexbuf in
+              (* The contents of the included file was scanned
+                 successfully, that is, the case [Pop] above was
+                 hit. We restore the position saved at the start of
+                 this semantic action, that is, just before the "#" of
+                 the [Push] linemarker. With that position committed
+                 to the state, we call recursively [callback] to
+                 resume scanning the rest of the file corresponding to
+                 what was just after the original #include. *)
+                    scan (state#set_pos hash_state#pos) lexbuf
+
+
+               }
+
 
   (* End-of-File: we return the final state *)
 
