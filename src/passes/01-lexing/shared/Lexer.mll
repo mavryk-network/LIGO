@@ -292,8 +292,6 @@ module Make (Config : PreprocessorConfig.S) (Options : Options.S) (Token : Token
           let region = Region.make ~start:state#pos ~stop
           in fail state region error
 
-    let open_block thread state =
-      Stdlib.Error (thread, state, LexerLib.Error.Unterminated_comment)
 
 (* END CORE HEADER *)
 
@@ -808,7 +806,7 @@ and in_block block thread state = parse
         let thread = thread#set_opening opening
         in in_block block thread state lexbuf
     | Some _ | None ->
-        scan_utf8_wrap (scan_utf8 open_block) (in_block block)
+        scan_utf8_wrap (scan_utf8 (Stdlib.Error (thread, state, LexerLib.Error.Unterminated_comment))) (in_block block)
                        thread state lexbuf }
 
 | block_comment_opening {
@@ -821,14 +819,14 @@ and in_block block thread state = parse
          let* thread, state = in_block block thread state lexbuf in
          let thread = thread#set_opening opening
          in in_block block thread state lexbuf
-    else scan_utf8_wrap (scan_utf8 open_block) (in_block block)
+    else scan_utf8_wrap (scan_utf8 (Stdlib.Error (thread, state, LexerLib.Error.Unterminated_comment))) (in_block block)
                         thread state lexbuf }
 
 | block_comment_closing {
     let state, Region.{value=lexeme; _} = state#sync lexbuf in
     if   String.(block#closing = lexeme)
     then Ok (thread#push_string lexeme, state)
-    else scan_utf8_wrap (scan_utf8 open_block)
+    else scan_utf8_wrap (scan_utf8 (Stdlib.Error (thread, state, LexerLib.Error.Unterminated_comment)))
                         (in_block block)
                         thread state lexbuf }
 | nl as nl {
@@ -838,7 +836,7 @@ and in_block block thread state = parse
 
 | eof { fail state thread#opening LexerLib.Error.Unterminated_comment }
 
-| _ { scan_utf8_wrap (scan_utf8 open_block)
+| _ { scan_utf8_wrap (scan_utf8 (Stdlib.Error (thread, state, LexerLib.Error.Unterminated_comment)))
                      (in_block block)
                      thread state lexbuf }
 
@@ -848,14 +846,13 @@ and in_line thread state = parse
   nl as _nl { let state = state#push_line thread in
              Ok (state#push_newline None lexbuf) }
 | eof      { Ok (state#push_line thread) }
-| _        { let scan_utf8 =
-               scan_utf8 (fun thread state -> Ok (thread, state))
+| _        { let scan_utf8 = scan_utf8 (Ok (thread, state))
              in scan_utf8_wrap scan_utf8 in_line thread state lexbuf }
 
 (* Scanning UTF-8 encoded characters *)
 
-and scan_utf8 if_eof thread state = parse
-  eof { if_eof thread state }
+and scan_utf8 eof_state thread state = parse
+  eof { eof_state }
 | _   { let lexeme = Lexing.lexeme lexbuf in
         let thread = thread#push_string lexeme in
         let     () = state#supply (Bytes.of_string lexeme) 0 1 in
@@ -864,7 +861,7 @@ and scan_utf8 if_eof thread state = parse
         | `Malformed _
         | `End         -> Error (thread, state,
                                  LexerLib.Error.Invalid_utf8_sequence)
-        | `Await       -> scan_utf8 if_eof thread state lexbuf }
+        | `Await       -> scan_utf8 eof_state thread state lexbuf }
 
 (* Scanning strings *)
 
