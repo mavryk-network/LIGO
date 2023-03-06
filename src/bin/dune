@@ -131,7 +131,7 @@
  (name js_main)
  (ocamlc_flags -g)
  (js_of_ocaml
-  (flags "--pretty" "--debug-info" "--opt=3" "--set=tc_depth=1")
+  (flags "--pretty" "--debug-info" "--set=tc_depth=1")
   (link_flags "--source-map-root=%{project_root}")
   (javascript_files
    threads.js
