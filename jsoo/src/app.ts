@@ -38,7 +38,9 @@ async function main() {
   await initialize();
   let app = "js_main";
   let path = "";
-  await loadJSBundle(`${path}/${app}.bc.runtime.js`);
+  if (process.env.DUNE_PROFILE !== "release") {
+    await loadJSBundle(`${path}/${app}.bc.runtime.js`);
+  }
   await loadJSBundle(`${path}/${app}.bc.js`);
   console.log("All WASM dependencies loaded");
   document.getElementById("compile")?.addEventListener("click", function () {
