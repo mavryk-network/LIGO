@@ -13,12 +13,6 @@ module Make (Ligo_api : Ligo_interface.LIGO_API) = struct
   open Lsp
   module Requests = Requests.Make (Ligo_api)
   open Requests.Handler
-  (* This file is free software, part of linol. See file "LICENSE" for more information *)
-
-  (* one env per document *)
-  let get_scope_buffers : (DocumentUri.t, Ligo_interface.file_data) Hashtbl.t =
-    Hashtbl.create 32
-
 
   (* Lsp server class
 
@@ -30,14 +24,17 @@ module Make (Ligo_api : Ligo_interface.LIGO_API) = struct
    changes, etc.. By default, the method predefined does nothing (or errors out ?),
    so that users only need to override methods that they want the server to
    actually meaningfully interpret and respond to.
-*)
+  *)
 
   class lsp_server =
     object (self)
       inherit server as super
 
       (* FIXME we should read this from VSCode config *)
-      val debug_handlers = false
+      val debug_handlers = true
+
+      (* one env per document *)
+      val get_scope_buffers : (DocumentUri.t, document_info) Hashtbl.t = Hashtbl.create 32
 
       (* We now override the [on_notify_doc_did_open] method that will be called
        by the server each time a new document is opened. *)

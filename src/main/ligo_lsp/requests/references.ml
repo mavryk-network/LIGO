@@ -24,22 +24,26 @@ let get_references : DocumentUri.t -> Loc.t -> Scopes.def list -> Range.t list =
 
 
 let get_all_references
-    : Loc.t -> (DocumentUri.t, file_data) Hashtbl.t -> (DocumentUri.t * Range.t list) list
+    :  Loc.t -> (DocumentUri.t, document_info) Hashtbl.t
+    -> (DocumentUri.t * Range.t list) list Handler.t
   =
  fun location get_scope_buffers ->
-  let go (file, { get_scope_info; _ }) =
-    let defs = get_scope_info.definitions in
-    match get_references file location defs with
-    | [] -> None
-    | l -> Some (file, l)
+  let go (file, document_info) =
+    Lwt_mvar.using document_info.file_data
+    @@ fun file_data ->
+    let defs = file_data.get_scope_info.definitions in
+    Lwt.return
+    @@ ( file_data
+       , match get_references file location defs with
+         | [] -> None
+         | l -> Some (file, l) )
   in
-  let filter_map res value =
-    let value = go value in
-    match value with
-    | None -> res
-    | Some ref -> ref :: res
-  in
-  get_scope_buffers |> Hashtbl.to_seq |> List.of_seq |> List.fold_left filter_map []
+  get_scope_buffers
+  |> Hashtbl.to_seq
+  |> Lwt_seq.of_seq
+  |> Lwt_seq.filter_map_s go
+  |> Lwt_seq.to_list
+  |> lift_IO
 
 
 let on_req_references : Position.t -> DocumentUri.t -> Location.t list option Handler.t =
@@ -49,7 +53,7 @@ let on_req_references : Position.t -> DocumentUri.t -> Location.t list option Ha
   @@ fun { get_scope_info; _ } ->
   when_some (Definition.get_definition pos uri get_scope_info.definitions)
   @@ fun definition ->
-  let references = get_all_references (get_location definition) get_scope_buffers in
+  let@ references = get_all_references (get_location definition) get_scope_buffers in
   let@ () = send_debug_msg @@ "On references request on " ^ DocumentUri.to_path uri in
   let show_reference (uri, ranges) =
     DocumentUri.to_path uri

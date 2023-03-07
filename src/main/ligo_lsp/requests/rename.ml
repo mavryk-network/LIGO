@@ -14,7 +14,7 @@ let on_req_rename : string -> Position.t -> DocumentUri.t -> WorkspaceEdit.t Han
   let@ value =
     when_some' (Definition.get_definition pos uri get_scope_info.definitions)
     @@ fun definition ->
-    let references =
+    let@ references =
       References.get_all_references (get_location definition) get_scope_buffers
     in
     let changes =

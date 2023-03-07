@@ -5,24 +5,36 @@ type notify_back_mockable =
   | Normal of Linol_lwt.Jsonrpc2.notify_back
   | Mock of Linol_lwt.Diagnostic.t list ref
 
+type thread_info =
+  | No_thread
+  | One_thread of Caml_threads.Thread.t
+  | Two_threads of
+      { running : Caml_threads.Thread.t
+      ; on_hold : Caml_threads.Thread.t
+      }
+
+and document_info =
+  { thread_info : thread_info Lwt_mvar.t
+  ; file_data : Ligo_interface.file_data Lwt_mvar.t
+  }
+
 (** Enviroment availiable in Handler monad *)
-type handler_env =
+and handler_env =
   { notify_back : notify_back_mockable
   ; debug : bool
-  ; docs_cache : (Linol_lwt.DocumentUri.t, Ligo_interface.file_data) Hashtbl.t
+  ; docs_cache : (Linol_lwt.DocumentUri.t, document_info) Hashtbl.t
   }
 
 (** Handler monad : allows sending messages to user and reading docs cache *)
-type 'a handler = Handler of (handler_env -> 'a Lwt.t)
+and 'a handler = Handler of (handler_env -> 'a Lwt.t)
 
 module Handler : sig
   type 'a t = 'a handler
 end
 
-val return : 'a -> 'a Handler.t
-
 type 'a t = 'a handler
 
+val return : 'a -> 'a Handler.t
 val un_handler : 'a Handler.t -> handler_env -> 'a Lwt.t
 val run_handler : handler_env -> 'a Handler.t -> 'a Lwt.t
 val bind : 'a Handler.t -> ('a -> 'b Handler.t) -> 'b Handler.t
@@ -37,14 +49,16 @@ val fmap_to : 'a Handler.t -> ('a -> 'b) -> 'b Handler.t
 (** We can run things from Linol_lwt.IO monad here *)
 val lift_IO : 'a Lwt.t -> 'a Handler.t
 
+type unlift_IO = { unlift_IO : 'a. 'a Handler.t -> 'a Lwt.t }
+
+val with_run_in_IO : (unlift_IO -> 'b Lwt.t) -> 'b Handler.t
+
 (** Get env inside monad computation *)
 val ask : handler_env Handler.t
 
 val ask_notify_back : notify_back_mockable Handler.t
 val ask_debug : bool Handler.t
-
-val ask_docs_cache
-  : (Linol_lwt.DocumentUri.t, Ligo_interface.file_data) Hashtbl.t Handler.t
+val ask_docs_cache : (Linol_lwt.DocumentUri.t, document_info) Hashtbl.t Handler.t
 
 (** Conditional computations *)
 val when_ : bool -> unit Handler.t -> unit Handler.t

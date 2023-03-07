@@ -7,22 +7,34 @@ type notify_back_mockable =
   | Normal of notify_back
   | Mock of Jsonrpc2.Diagnostic.t list ref
 
-type handler_env =
-  { notify_back : notify_back_mockable
-  ; debug : bool
-  ; docs_cache : (DocumentUri.t, Ligo_interface.file_data) Hashtbl.t
+type thread_info =
+  | No_thread
+  | One_thread of Caml_threads.Thread.t
+  | Two_threads of
+      { running : Caml_threads.Thread.t
+      ; on_hold : Caml_threads.Thread.t
+      }
+
+and document_info =
+  { thread_info : thread_info Lwt_mvar.t
+  ; file_data : Ligo_interface.file_data Lwt_mvar.t
   }
 
-type 'a handler = Handler of (handler_env -> 'a IO.t)
+and handler_env =
+  { notify_back : notify_back_mockable
+  ; debug : bool
+  ; docs_cache : (Linol_lwt.DocumentUri.t, document_info) Hashtbl.t
+  }
+
+and 'a handler = Handler of (handler_env -> 'a IO.t)
 
 module Handler = struct
   type 'a t = 'a handler
 end
 
-let return (a : 'a) : 'a Handler.t = Handler (fun _ -> IO.return a)
-
 type 'a t = 'a Handler.t
 
+let return (a : 'a) : 'a Handler.t = Handler (fun _ -> IO.return a)
 let un_handler (Handler a : 'a Handler.t) : handler_env -> 'a IO.t = a
 let run_handler (env : handler_env) (r : 'a Handler.t) : 'a IO.t = un_handler r env
 
@@ -36,17 +48,23 @@ let bind (Handler d : 'a Handler.t) (f : 'a -> 'b Handler.t) : 'b Handler.t =
 let ( let@ ) = bind
 
 let fmap (f : 'a -> 'b) (x : 'a Handler.t) : 'b Handler.t =
-  let@ x' = x in
-  return @@ f x'
+  Handler (Lwt.map f @. un_handler x)
 
 
 let fmap_to (x : 'a Handler.t) (f : 'a -> 'b) : 'b Handler.t = fmap f x
 let lift_IO (m : 'a IO.t) : 'a Handler.t = Handler (fun _ -> m)
+
+type unlift_IO = { unlift_IO : 'a. 'a Handler.t -> 'a Lwt.t }
+
+let with_run_in_IO : (unlift_IO -> 'b Lwt.t) -> 'b Handler.t =
+ fun inner -> Handler (fun env -> inner { unlift_IO = (fun x -> run_handler env x) })
+
+
 let ask : handler_env Handler.t = Handler IO.return
 let ask_notify_back : notify_back_mockable Handler.t = fmap (fun x -> x.notify_back) ask
 let ask_debug : bool Handler.t = fmap (fun x -> x.debug) ask
 
-let ask_docs_cache : (DocumentUri.t, Ligo_interface.file_data) Hashtbl.t Handler.t =
+let ask_docs_cache : (DocumentUri.t, document_info) Hashtbl.t Handler.t =
   fmap (fun x -> x.docs_cache) ask
 
 
@@ -114,10 +132,14 @@ let with_cached_doc
   =
   let@ docs = ask_docs_cache in
   match Hashtbl.find_opt docs uri with
-  | Some file_data ->
+  | Some document_info ->
+    with_run_in_IO
+    @@ fun { unlift_IO } ->
+    Utils.Lwt_mvar.reading document_info.file_data
+    @@ fun file_data ->
     if (not return_default_if_no_info) || file_data.get_scope_info.has_info
-    then f file_data
-    else return default
+    then unlift_IO @@ f file_data
+    else Lwt.return default
   | None -> return default
 
 

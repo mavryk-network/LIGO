@@ -310,3 +310,45 @@ let get_cst (syntax : Syntax_types.t) (code : string) : (dialect_cst, string) re
       Ok (PascaLIGO_cst (Parsing.Pascaligo.parse_string ~preprocess:false ~raise buffer))
   with
   | Fatal_cst_error err -> Error err
+
+
+module Lwt_mvar = struct
+  include Lwt_mvar
+
+  (** Takes a value from the [Lwt_mvar.t] and performs an action on it, filling
+   it again with the result of this action. This function restores the contents
+   of the mvar with its initial value if the promise was rejected. Blocks if the
+   mvar is empty. *)
+  let using (m : 'a Lwt_mvar.t) (f : 'a -> ('a * 'b) Lwt.t) : 'b Lwt.t =
+    let open Linol_lwt in
+    let* v = Lwt_mvar.take m in
+    let* v', result = f v in
+    let* () = Lwt_mvar.put m v' in
+    Lwt.return result
+    (* Lwt.catch
+      (fun () ->
+        let* v', result = f v in
+        let* () = Lwt_mvar.put m v' in
+        Lwt.return result)
+      (fun exn ->
+        let* () = Lwt_mvar.put m v in
+        raise exn) *)
+
+
+  (** Like [using], but discards the result of the action. *)
+  let using_ (m : 'a Lwt_mvar.t) (f : 'a -> 'a Lwt.t) : unit Lwt.t =
+    using m @@ Lwt.map (fun x -> x, ()) @. f
+
+
+  let reading (m : 'a Lwt_mvar.t) (f : 'a -> 'b Lwt.t) : 'b Lwt.t =
+    let open Linol_lwt in
+    let* v = Lwt_mvar.take m in
+    Lwt.catch
+      (fun () ->
+        let* result = f v in
+        let* () = Lwt_mvar.put m v in
+        Lwt.return result)
+      (fun exn ->
+        let* () = Lwt_mvar.put m v in
+        raise exn)
+end
