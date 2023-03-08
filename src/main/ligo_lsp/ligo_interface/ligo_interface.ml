@@ -24,8 +24,9 @@ type get_scope_info =
 (** To support dirty files, we store some data about files in memory *)
 type file_data =
   { syntax : Syntax_types.t
-  ; code : string
+  ; mutable code : string
   ; get_scope_info : get_scope_info
+  ; mutable outdated : bool
   }
 
 module type LIGO_API = sig

@@ -47,6 +47,13 @@ let fmap (f : 'a -> 'b) (x : 'a Handler.t) : 'b Handler.t =
 
 let fmap_to (x : 'a Handler.t) (f : 'a -> 'b) : 'b Handler.t = fmap f x
 let lift_IO (m : 'a IO.t) : 'a Handler.t = Handler (fun _ -> m)
+
+type unlift_IO = { unlift_IO : 'a. 'a Handler.t -> 'a Lwt.t }
+
+let with_run_in_IO : (unlift_IO -> 'b Lwt.t) -> 'b Handler.t =
+ fun inner -> Handler (fun env -> inner { unlift_IO = (fun x -> run_handler env x) })
+
+
 let ask : handler_env Handler.t = Handler IO.return
 let ask_notify_back : notify_back_mockable Handler.t = fmap (fun x -> x.notify_back) ask
 let ask_config : config Handler.t = fmap (fun x -> x.config) ask
@@ -119,7 +126,7 @@ let send_message ?(type_ : MessageType.t = Info) (message : string) : unit Handl
       (nb#send_notification @@ ShowMessage (ShowMessageParams.create ~message ~type_))
   | Mock _ -> return ()
 
-    
+
 let with_cached_doc
     ?(return_default_if_no_info = true)
     (uri : DocumentUri.t)

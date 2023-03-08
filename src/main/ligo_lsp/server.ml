@@ -173,7 +173,9 @@ module Make (Ligo_api : Ligo_interface.LIGO_API) = struct
             run ~uri @@ Requests.on_req_type_definition position uri
           | Client_request.TextDocumentLink { textDocument; _ } ->
             let uri = textDocument.uri in
-            run ~uri @@ Requests.on_req_document_link uri
+            run ~uri
+            @@ let@ () = Requests.process_outdated_documents in
+               Requests.on_req_document_link uri (* XXX wrong notify back *)
           | Client_request.TextDocumentFoldingRange { textDocument; _ } ->
             let uri = textDocument.uri in
             run ~uri @@ Requests.on_req_folding_range uri

@@ -45,6 +45,10 @@ val fmap_to : 'a Handler.t -> ('a -> 'b) -> 'b Handler.t
 (** We can run things from Linol_lwt.IO monad here *)
 val lift_IO : 'a Lwt.t -> 'a Handler.t
 
+type unlift_IO = { unlift_IO : 'a. 'a Handler.t -> 'a Lwt.t }
+
+val with_run_in_IO : (unlift_IO -> 'b Lwt.t) -> 'b Handler.t
+
 (** Get env inside monad computation *)
 val ask : handler_env Handler.t
 
