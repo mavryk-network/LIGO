@@ -1591,4 +1591,5 @@ test_Contracts_are_sensible = reinsuring $ testCase "Contracts are sensible" do
       , "module_contracts" </> "imported2.jsligo" -- this file doesn't have any entrypoint
       , "malformed.mligo" -- incorrect contract
       , "dupped-ticket.mligo" -- illegal intentionally
+      , "iterate-big-map.mligo" -- bug in ligo 0.61.0
       ]
