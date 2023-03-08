@@ -49,6 +49,8 @@ import Data.Data
 import Data.Foldable qualified (toList)
 import Data.HashMap.Strict qualified as HM
 import Data.List qualified as List
+import Data.Scientific qualified as Sci
+import Data.Vector qualified as V
 import Debug qualified (show)
 import GHC.Generics (Rep)
 import GHC.TypeLits (Nat)
@@ -283,7 +285,7 @@ data LigoTypeContent
   deriving anyclass (NFData)
 
 data LigoTypeApp = LigoTypeApp
-  { _ltaTypeOperator :: LigoTypeVariable
+  { _ltaTypeOperator :: LigoTypeModuleAccessor
   , _ltaArguments    :: [LigoTypeExpression]
   }
   deriving stock (Generic, Show, Eq, Data)
@@ -302,12 +304,11 @@ type LigoTypeSum = LigoTypeTable
 type LigoTypeRecord = LigoTypeTable
 
 data LigoTypeTable = LigoTypeTable
-  { _lttFields :: HM.HashMap Text LigoTableField
+  { _lttFields  :: HM.HashMap Text LigoTypeExpression
   , _lttLayout  :: Value -- TODO not used
   }
   deriving stock (Generic, Show, Eq, Data)
   deriving anyclass (NFData)
-  deriving (FromJSON) via LigoJSON 3 LigoTypeTable
 
 data LigoTypeConstant = LigoTypeConstant
   { _ltcParameters :: [LigoTypeExpression]
@@ -414,6 +415,37 @@ data LigoByte = LigoByte
 ----------------------------------------------------------------------------
 -- Instances
 ----------------------------------------------------------------------------
+
+instance FromJSON LigoTypeTable where
+  parseJSON = withObject "LigoTypeTable" \o -> do
+    Array fields <- o .: "fields"
+    parsedFields <- mapM parseLigoField fields
+
+    let _lttFields = HM.fromList . V.toList $ parsedFields
+    _lttLayout <- o .: "layout"
+
+    pure LigoTypeTable{..}
+    where
+      parseLigoField :: Value -> Parser (Text, LigoTypeExpression)
+      parseLigoField = withArray "field" \arr -> do
+        Just (Array labelAndName) <- pure $ arr V.!? 0
+        Just nameValue <- pure $ labelAndName V.!? 1
+        name <-
+          -- For some reason aeson treats numbers
+          -- in quotes as numbers (not as strings).
+          case nameValue of
+            String txt -> pure txt
+            Number num -> do
+              unless (Sci.isInteger num) $
+                fail "Expected an integer number"
+              let i :: Integer = round num
+              pure $ show i
+            other -> unexpected other
+
+        Just typeExpressionValue <- pure $ arr V.!? 1
+        typeExpression <- parseJSON typeExpressionValue
+
+        pure (name, typeExpression)
 
 -- We need this instance to derive @Data@ for types
 -- that contain this @UInt@.
@@ -575,19 +607,23 @@ fromLigoType st = \case
     let tyVar = fromLigoTypeExpression _ltfaType_ in
     make' (st, TVariable tyVar)
 
-  LTCModuleAccessor LigoTypeModuleAccessor{..} ->
-    let path = map (fromLigoPrimitive NameModule . _lvName) _ltmaModulePath in
-    let element = fromLigoVariable _ltmaElement in
-    make' (st, ModuleAccess path element)
+  LTCModuleAccessor ligoTypeModuleAccessor ->
+    fromLigoTypeModuleAccessor ligoTypeModuleAccessor
 
   LTCApp LigoTypeApp{..} ->
-    let n = fromLigoVariable _ltaTypeOperator in
+    let n = fromLigoTypeModuleAccessor _ltaTypeOperator in
     let p = fromLigoTypeExpression <$> _ltaArguments in
     make' (st, TApply n p)
 
   LTCArrow LigoTypeArrow {..} ->
     make' (st, TArrow (fromLigoTypeExpression _ltaType1) (fromLigoTypeExpression _ltaType2))
   where
+    fromLigoTypeModuleAccessor :: LigoTypeModuleAccessor -> LIGO Info
+    fromLigoTypeModuleAccessor LigoTypeModuleAccessor{..} =
+      let path = map (fromLigoPrimitive NameModule . _lvName) _ltmaModulePath in
+      let element = fromLigoVariable _ltmaElement in
+      make' (st, ModuleAccess path element)
+
     fromLigoVariable :: LigoVariable -> LIGO Info
     fromLigoVariable = fromLigoPrimitive NameType . _lvName
 
@@ -610,12 +646,12 @@ fromLigoType st = \case
     fromLigoTableField
       :: FieldKind
       -> Text
-      -> LigoTableField
+      -> LigoTypeExpression
       -> LIGO Info
-    fromLigoTableField fieldKind name LigoTableField {..} =
+    fromLigoTableField fieldKind name ligoTypeExpression =
       let n = fromLigoPrimitive (NameField fieldKind) name in
       -- FIXME: Type annotation is optional.
-      let type' = Just $ fromLigoTypeExpression _ltfAssociatedType in
+      let type' = Just $ fromLigoTypeExpression ligoTypeExpression in
       case fieldKind of
         FieldSum     -> make' (st, Variant n type')
         FieldProduct -> make' (st, TField  n type')

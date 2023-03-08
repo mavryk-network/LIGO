@@ -96,6 +96,7 @@ library:
     - process
     - process-extras
     - regex-tdfa
+    - scientific
     - template-haskell
     - temporary
     - text
@@ -107,6 +108,7 @@ library:
     - unliftio-core
     - unliftio-pool
     - unordered-containers
+    - vector
     - witherable
 
 executables:

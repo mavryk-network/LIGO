@@ -148,7 +148,12 @@ test_SourceMapper = testGroup "Reading source mapper"
 
         , LigoMereLocInfo
             (LigoRange file (LigoPosition 4 3) (LigoPosition 4 28))
-            ?- SomeInstr T.PAIR
+            ?- SomeInstr
+                (    T.Nested
+                $    dummyInstr
+                T.:# T.Nested (T.NIL @'T.TOperation)
+                T.:# T.PAIR
+                )
 
         , LigoMereEnvInfo
             [ LigoStackEntryVar "main" mainType

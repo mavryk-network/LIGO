@@ -7,7 +7,7 @@ InterpretSnapshot:
       sfStack:
         [StackItem:
           siLigoDesc: elem foo of { 1: int; 0: int; } -> int
-          siValue: { {  }; { {  }; {  }; { {  }; UNPAIR; {  }; { {  }; { SWAP; {  }; { {  }; { SWAP }; ADD } } } } } }
+          siValue: { {  }; { {  }; {  }; { {  }; UNPAIR; {  }; { {  }; {  }; { { SWAP }; {  }; { {  }; { SWAP }; ADD } } } } } }
         , StackItem:
           siLigoDesc: elem s of int
           siValue: 0
@@ -23,7 +23,7 @@ InterpretSnapshot:
       sfStack:
         [StackItem:
           siLigoDesc: elem foo of { 1: int; 0: int; } -> int
-          siValue: { {  }; { {  }; {  }; { {  }; UNPAIR; {  }; { {  }; { SWAP; {  }; { {  }; { SWAP }; ADD } } } } } }
+          siValue: { {  }; { {  }; {  }; { {  }; UNPAIR; {  }; { {  }; {  }; { { SWAP }; {  }; { {  }; { SWAP }; ADD } } } } } }
         , StackItem:
           siLigoDesc: elem s of int
           siValue: 0
@@ -50,7 +50,7 @@ InterpretSnapshot:
       sfStack:
         [StackItem:
           siLigoDesc: elem foo of { 1: int; 0: int; } -> int
-          siValue: { {  }; { {  }; {  }; { {  }; UNPAIR; {  }; { {  }; { SWAP; {  }; { {  }; { SWAP }; ADD } } } } } }
+          siValue: { {  }; { {  }; {  }; { {  }; UNPAIR; {  }; { {  }; {  }; { { SWAP }; {  }; { {  }; { SWAP }; ADD } } } } } }
         , StackItem:
           siLigoDesc: elem s of int
           siValue: 0
@@ -77,7 +77,7 @@ InterpretSnapshot:
       sfStack:
         [StackItem:
           siLigoDesc: elem foo of { 1: int; 0: int; } -> int
-          siValue: { {  }; { {  }; {  }; { {  }; UNPAIR; {  }; { {  }; { SWAP; {  }; { {  }; { SWAP }; ADD } } } } } }
+          siValue: { {  }; { {  }; {  }; { {  }; UNPAIR; {  }; { {  }; {  }; { { SWAP }; {  }; { {  }; { SWAP }; ADD } } } } } }
         , StackItem:
           siLigoDesc: elem s of int
           siValue: 0
@@ -196,7 +196,7 @@ InterpretSnapshot:
       sfStack:
         [StackItem:
           siLigoDesc: elem baz of int -> { 1: int; 0: int; } -> int
-          siValue: { {  }; UNPAIR; {  }; {  }; SWAP; {  }; { {  }; {  }; { {  }; UNPAIR; {  }; { {  }; { SWAP; {  }; { { {  }; { SWAP }; MUL }; { SWAP }; ADD } } } } } }
+          siValue: { {  }; UNPAIR; {  }; {  }; SWAP; {  }; { {  }; {  }; { {  }; UNPAIR; {  }; { {  }; {  }; { { SWAP }; {  }; { { {  }; { SWAP }; MUL }; { SWAP }; ADD } } } } } }
         , StackItem:
           siLigoDesc: elem s2 of int
           siValue: 2
@@ -218,7 +218,7 @@ InterpretSnapshot:
       sfStack:
         [StackItem:
           siLigoDesc: elem baz of int -> { 1: int; 0: int; } -> int
-          siValue: { {  }; UNPAIR; {  }; {  }; SWAP; {  }; { {  }; {  }; { {  }; UNPAIR; {  }; { {  }; { SWAP; {  }; { { {  }; { SWAP }; MUL }; { SWAP }; ADD } } } } } }
+          siValue: { {  }; UNPAIR; {  }; {  }; SWAP; {  }; { {  }; {  }; { {  }; UNPAIR; {  }; { {  }; {  }; { { SWAP }; {  }; { { {  }; { SWAP }; MUL }; { SWAP }; ADD } } } } } }
         , StackItem:
           siLigoDesc: elem s2 of int
           siValue: 2
@@ -254,7 +254,7 @@ InterpretSnapshot:
       sfStack:
         [StackItem:
           siLigoDesc: elem baz of int -> { 1: int; 0: int; } -> int
-          siValue: { {  }; UNPAIR; {  }; {  }; SWAP; {  }; { {  }; {  }; { {  }; UNPAIR; {  }; { {  }; { SWAP; {  }; { { {  }; { SWAP }; MUL }; { SWAP }; ADD } } } } } }
+          siValue: { {  }; UNPAIR; {  }; {  }; SWAP; {  }; { {  }; {  }; { {  }; UNPAIR; {  }; { {  }; {  }; { { SWAP }; {  }; { { {  }; { SWAP }; MUL }; { SWAP }; ADD } } } } } }
         , StackItem:
           siLigoDesc: elem s2 of int
           siValue: 2

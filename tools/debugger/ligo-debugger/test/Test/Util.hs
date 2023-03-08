@@ -96,7 +96,7 @@ import Morley.Util.Typeable
 
 import AST.Skeleton qualified as LSP
 import Cli.Json
-  (LigoRange (LRVirtual), LigoTableField (..), LigoTypeArrow (..), LigoTypeConstant (..),
+  (LigoRange (LRVirtual), LigoTypeArrow (..), LigoTypeConstant (..),
   LigoTypeContent (LTCArrow, LTCConstant, LTCRecord, LTCSum), LigoTypeExpression (..),
   LigoTypeTable (LigoTypeTable), _ltcInjection, _ltcParameters)
 
@@ -430,16 +430,9 @@ mkArrowType domain codomain = mkTypeExpression $ LTCArrow $
 infixr 2 ~>
 
 mkTypeTable :: [(Text, LigoTypeExpression)] -> LigoTypeTable
-mkTypeTable keyValues = map (second mkTableField) keyValues
+mkTypeTable keyValues = keyValues
   & HM.fromList
   & flip LigoTypeTable Null
-  where
-    mkTableField :: LigoTypeExpression -> LigoTableField
-    mkTableField expr = LigoTableField
-      { _ltfDeclPos = 0
-      , _lrfMichelsonAnnotation = Null
-      , _ltfAssociatedType = expr
-      }
 
 mkRecordType :: [(Text, LigoTypeExpression)] -> LigoTypeExpression
 mkRecordType keyValues = mkTypeTable keyValues

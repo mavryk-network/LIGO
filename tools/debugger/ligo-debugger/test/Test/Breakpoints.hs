@@ -244,6 +244,16 @@ test_test = minor <$>
               (SrcLoc 9 81)
             )
 
+        liftIO $ step "Stop at tuple arguments"
+        goToNextBreakpoint
+        N.frozen do
+          N.getExecutedPosition @@?= Just
+            (N.SourceLocation
+              (MSFile file)
+              (SrcLoc 9 3)
+              (SrcLoc 9 80)
+            )
+
         liftIO $ step "Stop at \"what\" call"
         goToNextBreakpoint
         N.frozen do
@@ -261,6 +271,15 @@ test_test = minor <$>
             (N.SourceLocation
               (MSFile file)
               (SrcLoc 9 74)
+              (SrcLoc 9 79)
+            )
+
+        goToNextBreakpoint
+        N.frozen do
+          N.getExecutedPosition @@?= Just
+            (N.SourceLocation
+              (MSFile file)
+              (SrcLoc 9 64)
               (SrcLoc 9 79)
             )
 

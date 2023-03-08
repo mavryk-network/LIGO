@@ -21,8 +21,7 @@ import Morley.Michelson.Untyped.Entrypoints (isDefEpName)
 
 import AST (Lang)
 import Cli.Json
-  (LigoTypeApp (..), LigoTypeContent (..), LigoTypeExpression (..), LigoTypeTable (..),
-  _ltfAssociatedType)
+  (LigoTypeApp (..), LigoTypeContent (..), LigoTypeExpression (..), LigoTypeTable (..))
 
 import Language.LIGO.Debugger.CLI.Types
 import Language.LIGO.Debugger.Snapshots (StackItem (StackItem))
@@ -107,7 +106,7 @@ getInnerTypeFromRecord name = \case
             { _lttFields = hm
             }
         )
-    } -> LigoType $ _ltfAssociatedType <$> (hm HM.!? name)
+    } -> LigoType $ hm HM.!? name
   _ -> LigoType Nothing
 
 getEpAddressChildren :: Lang -> EpAddress -> [Variable]

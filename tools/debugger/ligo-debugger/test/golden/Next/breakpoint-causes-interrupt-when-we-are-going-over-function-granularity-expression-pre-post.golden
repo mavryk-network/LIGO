@@ -396,6 +396,19 @@ InterpretSnapshot:
   isStackFrames:
     [StackFrame:
       sfName: main
+      sfLoc: test/contracts/functions-visiting.mligo:13:3-13:28
+      sfStack:
+        [StackItem:
+          siLigoDesc: elem s3 of int
+          siValue: 221
+        ]
+    ]
+
+InterpretSnapshot:
+  isStatus: running / upon expression
+  isStackFrames:
+    [StackFrame:
+      sfName: main
       sfLoc: test/contracts/functions-visiting.mligo:13:3-13:24
       sfStack:
         [StackItem:
@@ -410,19 +423,6 @@ InterpretSnapshot:
     [StackFrame:
       sfName: main
       sfLoc: test/contracts/functions-visiting.mligo:13:3-13:24
-      sfStack:
-        [StackItem:
-          siLigoDesc: elem s3 of int
-          siValue: 221
-        ]
-    ]
-
-InterpretSnapshot:
-  isStatus: running / upon expression
-  isStackFrames:
-    [StackFrame:
-      sfName: main
-      sfLoc: test/contracts/functions-visiting.mligo:13:3-13:28
       sfStack:
         [StackItem:
           siLigoDesc: elem s3 of int
