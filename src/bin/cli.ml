@@ -1085,7 +1085,7 @@ let test =
         ()
     in
     return_result ~return ~show_warnings
-    @@ Api.Run.test raw_options source_file display_format no_colour
+    @@ Api.Run.test raw_options (Build.Source_input.From_file source_file) display_format no_colour
   in
   let summary = "test a contract with the LIGO test framework." in
   let readme () =
