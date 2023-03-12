@@ -32,6 +32,10 @@ const main = (action: parameter, store: storage) : [ list<operation> , storage ]
     Reset:     ()  => 0}))
   ]
 };
+
+const test_1 = (() => {
+  assert(1 == 1);
+})();
 `,
     }),
     parent: document.getElementById("ligo"),
