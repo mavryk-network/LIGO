@@ -172,6 +172,7 @@ and value =
   | V_Location of location [@name "location"]
   | V_Typed_address of Contract.t
       (* This is a copy of C_address in constant *) [@name "typed_address"]
+  | V_Views of (string * func_val) list
 [@@deriving yojson]
 
 type bigmap_state = (value * value) list
@@ -184,3 +185,4 @@ type bigmap_data =
 
 type bigmap = int * bigmap_data
 type bigmaps = bigmap list
+type toplevel_env = (string * value) list [@@deriving yojson]

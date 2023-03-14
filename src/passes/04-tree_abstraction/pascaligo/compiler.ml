@@ -183,7 +183,7 @@ let rec compile_type_expression
       let operator = compile_type_var type_var in
       let lst = npseq_to_list args.value.inside in
       let lst = List.map ~f:self lst in
-      t_app ~loc operator lst
+      t_app ~loc (Module_access.make_el operator) lst
     | T_ModPath x ->
       raise.error
         (expected_variable (Location.lift @@ CST.type_expr_to_region x.value.field))
@@ -237,15 +237,15 @@ let rec compile_expression
  fun ?(attr = []) e ->
   let self = compile_expression ~raise in
   let compile_arguments
-      : (CST.expr, CST.comma) Utils.sepseq CST.par Region.reg -> AST.expression
+      :  (CST.expr, CST.comma) Utils.sepseq CST.par Region.reg
+      -> AST.expression list * Location.t
     =
    fun args ->
     let par, loc = r_split args in
     let lst = List.map ~f:self (Utils.sepseq_to_list par.inside) in
     match lst with
-    | [] -> e_unit ~loc ()
-    | [ expr ] -> expr
-    | args -> e_tuple ~loc args
+    | [] -> [ e_unit ~loc () ], loc
+    | _ -> lst, loc
   in
   let compile_tuple_expression : CST.expr CST.tuple -> AST.expression =
    fun tuple_expr ->
@@ -319,13 +319,13 @@ let rec compile_expression
     let loc = Location.lift region in
     let var, loc_var = w_split var in
     let func = e_variable_ez ~loc:loc_var var in
-    let args = compile_arguments args in
-    e_application ~loc func args
+    let args, _loc = compile_arguments args in
+    List.fold_left ~f:(fun e arg -> e_application ~loc e arg) ~init:func args
   | E_Call call ->
     let (func, args), loc = r_split call in
     let func = self func in
-    let args = compile_arguments args in
-    e_application ~loc func args
+    let args, _loc = compile_arguments args in
+    List.fold_left ~f:(fun e arg -> e_application ~loc e arg) ~init:func args
   | E_Tuple lst -> compile_tuple_expression lst
   | E_Record record ->
     let record, loc = r_split record in
@@ -449,61 +449,28 @@ let rec compile_expression
     | x -> raise.error (wrong_functional_updator @@ CST.expr_to_region x))
   | E_Fun { value = { parameters; ret_type; return; _ }; region } ->
     check_no_attributes ~raise (Location.lift region) attr;
-    let compile_param : CST.param_decl CST.reg -> _ Param.t =
-     fun { value = { param_kind; pattern; param_type }; region = _ } ->
-      let var =
-        match pattern with
-        | P_Var x -> compile_variable x
-        | x -> raise.error (unsuported_pattern_in_function @@ CST.pattern_to_region x)
-      in
-      let ascr = Option.map ~f:(compile_type_expression ~raise <@ snd) param_type in
-      let mut_flag : Param.mutable_flag =
-        match param_kind with
-        | `Const _kwd -> Immutable
-        | `Var _kwd -> Mutable
-      in
-      Param.make ~mut_flag var ascr
-    in
     let loc = Location.lift region in
     let lambda, fun_type =
-      let params, loc_par = r_split parameters in
-      let params = Utils.sepseq_map compile_param params.inside in
-      let body = self return in
-      let ret_ty = Option.map ~f:(compile_type_expression ~raise <@ snd) ret_type in
-      let params = Utils.sepseq_to_list params in
-      match params with
-      | [] ->
-        let ty_opt =
-          Option.map ~f:(fun (a, b) -> t_arrow ~loc a b) (Option.bind_pair (None, ret_ty))
+      let params, k = compile_parameters ~raise parameters in
+      let result = k (self return) in
+      let ret_type = Option.map ~f:(compile_type_expression ~raise <@ snd) ret_type in
+      match List.rev params with
+      | [] -> raise.error @@ unsuported_pattern_in_function parameters.region
+      | binder :: lst ->
+        let init =
+          ( Lambda.{ binder; output_type = ret_type; result }
+          , Option.map ~f:(fun (a, b) -> t_arrow ~loc a b)
+            @@ Option.bind_pair (Param.get_ascr binder, ret_type) )
         in
-        e_unit ~loc (), ty_opt
-      | [ param ] ->
-        let expr = e_lambda ~loc param ret_ty body in
-        let ty_opt =
-          Option.map
-            ~f:(fun (a, b) -> t_arrow ~loc a b)
-            (Option.bind_pair (Param.get_ascr param, ret_ty))
+        let f (l, output_type) binder =
+          ( Lambda.{ binder; output_type; result = make_e ~loc @@ E_lambda l }
+          , Option.map ~f:(fun (a, b) -> t_arrow ~loc a b)
+            @@ Option.bind_pair (Param.get_ascr binder, output_type) )
         in
-        expr, ty_opt
-      | params ->
-        let input_tuple_ty =
-          (* TODOpoly: polymorphism should give some leeway (using Option.all feels wrong) *)
-          let in_tys_opt = Option.all @@ List.map ~f:Param.get_ascr params in
-          Option.map ~f:(t_tuple ~loc) in_tys_opt
+        let Lambda.{ binder; output_type; result }, ret_type =
+          List.fold_left ~f ~init lst
         in
-        let binder = Value_var.fresh ~loc ~name:"parameter" () in
-        let expr =
-          let body =
-            e_param_matching_tuple ~loc:loc_par (e_variable ~loc binder) params body
-          in
-          e_lambda_ez ~loc binder ?ascr:input_tuple_ty ret_ty body
-        in
-        let ty_opt =
-          Option.map
-            ~f:(fun (a, b) -> t_arrow ~loc a b)
-            (Option.bind_pair (input_tuple_ty, ret_ty))
-        in
-        expr, ty_opt
+        e_lambda ~loc binder output_type result, ret_type
     in
     Option.value_map ~default:lambda ~f:(e_annotation ~loc lambda) fun_type
   | E_Ctor constr ->
@@ -739,27 +706,99 @@ and compile_matching_expr
   List.map ~f:aux cases
 
 
-and compile_parameters ~raise : CST.parameters -> AST.type_expression option Param.t list =
- fun params ->
-  let aux : CST.param_decl CST.reg -> AST.type_expression option Param.t =
-   fun param ->
-    let param, _loc = r_split param in
-    let var =
-      match param.pattern with
-      | P_Var param -> compile_variable param
-      | x -> raise.error (unsuported_pattern_in_function @@ CST.pattern_to_region x)
+and compile_parameter ~raise ?(mut_flag = Param.Mutable)
+    : CST.pattern -> _ Param.t * (_ -> _)
+  =
+ fun pattern ->
+  let return ?ascr ?mut_flag fun_ var =
+    let param = Param.make ?mut_flag var ascr in
+    param, fun_
+  in
+  let return_1 ?ascr ?mut_flag var = return ?ascr ?mut_flag (fun e -> e) var in
+  match pattern with
+  | P_Var pvar -> return_1 ~mut_flag @@ compile_variable pvar
+  | P_Tuple tuple ->
+    let tuple, loc = r_split tuple in
+    let var = Value_var.fresh ~loc () in
+    let aux pattern (binder_lst, fun_) =
+      let binder, fun_' = compile_parameter ~raise ~mut_flag pattern in
+      binder :: binder_lst, fun_' <@ fun_
     in
-    match param.param_kind with
-    | `Var _ ->
-      Param.make ~mut_flag:Mutable var
-      @@ Option.map ~f:(compile_type_expression ~raise <@ snd) param.param_type
-    | `Const _ ->
-      Param.make ~mut_flag:Immutable var
-      @@ Option.map ~f:(compile_type_expression ~raise <@ snd) param.param_type
+    let param_lst, fun_ =
+      List.fold_right ~f:aux ~init:([], fun e -> e) @@ npseq_to_list tuple.inside
+    in
+    let binder_lst = List.map ~f:Param.to_binder param_lst in
+    let expr expr = e_matching_tuple ~loc (e_variable ~loc var) binder_lst @@ fun_ expr in
+    let ascr = Option.all @@ List.map ~f:(fun binder -> binder.ascr) binder_lst in
+    let ascr = Option.map ~f:(t_tuple ~loc) ascr in
+    return ?ascr ~mut_flag expr var
+  | P_Par par ->
+    let par, _loc = r_split par in
+    let param, expr = compile_parameter ~raise par.inside in
+    let var = Param.get_var param in
+    let ascr = Param.get_ascr param in
+    let mut_flag = Param.get_mut_flag param in
+    return ?ascr ~mut_flag expr var
+  | P_Record record ->
+    let record, loc = r_split record in
+    let var = Value_var.fresh ~loc () in
+    let aux ({ value; _ } : CST.field_pattern CST.reg) (binder_lst, fun_') =
+      let field_name, pattern =
+        match value with
+        | Complete { field_lhs = P_Var v; field_rhs; _ } -> v, field_rhs
+        | _ -> raise.error @@ unsupported_pattern_type pattern
+      in
+      let field_name, _loc = w_split field_name in
+      let binder, fun_ = compile_parameter ~raise pattern in
+      (field_name, binder) :: binder_lst, fun_ <@ fun_'
+    in
+    let param_lst, fun_ =
+      List.fold_right ~f:aux ~init:([], fun e -> e)
+      @@ Utils.sepseq_to_list record.elements
+    in
+    let binder_lst = List.map ~f:(fun (a, b) -> a, Param.to_binder b) param_lst in
+    let expr expr =
+      e_matching_record ~loc (e_variable ~loc var) binder_lst @@ fun_ expr
+    in
+    let ascr = Option.all @@ List.map ~f:(fun (_, binder) -> binder.ascr) binder_lst in
+    let ascr = Option.map ~f:(t_tuple ~loc) ascr in
+    return ?ascr expr var
+  | P_Typed tp ->
+    let tp, _loc = r_split tp in
+    let ({ pattern; type_annot = _, type_expr } : CST.typed_pattern) = tp in
+    let ascr = compile_type_expression ~raise type_expr in
+    let param, exprs = compile_parameter ~raise pattern in
+    let var = Param.get_var param in
+    let mut_flag = Param.get_mut_flag param in
+    return ~ascr ~mut_flag exprs var
+  | _ -> raise.error @@ unsupported_pattern_type pattern
+
+
+and compile_parameters ~raise
+    :  CST.parameters
+    -> AST.type_expression option Param.t list * (expression -> expression)
+  =
+ fun params ->
+  let aux
+      :  CST.param_decl CST.reg -> _ * (expression -> expression)
+      -> AST.type_expression option Param.t list * (expression -> expression)
+    =
+   fun param (params, fun_) ->
+    let param, _loc = r_split param in
+    let mut_flag =
+      match param.param_kind with
+      | `Var _ -> Param.Mutable
+      | `Const _ -> Param.Immutable
+    in
+    let ascr = Option.map ~f:snd param.param_type in
+    let ascr = Option.map ~f:(compile_type_expression ~raise) ascr in
+    let param, fun_' = compile_parameter ~raise ~mut_flag param.pattern in
+    let param = Param.set_ascr param ascr in
+    param :: params, fun_' <@ fun_
   in
   let params, _loc = r_split params in
-  let params = pseq_to_list params.inside in
-  List.map ~f:aux params
+  let params = Utils.sepseq_to_list params.inside in
+  List.fold_right ~f:aux ~init:([], fun e -> e) params
 
 
 and compile_path : (CST.selection, CST.dot) Utils.nsepseq -> AST.expression Access_path.t =
@@ -1109,29 +1148,23 @@ and compile_fun_decl loc ~raise
        CST.fun_decl) ->
   let fun_binder = compile_variable fun_name in
   let ret_type = Option.map ~f:(compile_type_expression ~raise <@ snd) ret_type in
-  let param = compile_parameters ~raise parameters in
-  let result = compile_expression ~raise r in
+  let params, k = compile_parameters ~raise parameters in
+  let result = k @@ compile_expression ~raise r in
   let lambda, fun_type =
-    match param with
-    | [ binder ] ->
-      let lambda : (_, _ option) Lambda.t = { binder; output_type = ret_type; result } in
-      ( lambda
-      , Option.map ~f:(fun (a, b) -> t_arrow ~loc a b)
-        @@ Option.bind_pair (Param.get_ascr binder, ret_type) )
-    | lst ->
-      let lst = Option.all @@ List.map ~f:Param.get_ascr lst in
-      let input_type = Option.map ~f:(t_tuple ~loc) lst in
-      let var = Value_var.fresh ~loc ~name:"parameters" () in
-      let binder = Param.make var input_type in
-      let result =
-        e_param_matching_tuple ~loc:result.location (e_variable ~loc var) param result
+    match List.rev params with
+    | [] -> raise.error @@ unsuported_pattern_in_function parameters.region
+    | binder :: lst ->
+      let init =
+        ( Lambda.{ binder; output_type = ret_type; result }
+        , Option.map ~f:(fun (a, b) -> t_arrow ~loc a b)
+          @@ Option.bind_pair (Param.get_ascr binder, ret_type) )
       in
-      let lambda : _ Lambda.t = { binder; output_type = ret_type; result } in
-      ( lambda
-      , Option.map ~f:(fun ((a, b) : AST.type_expression * AST.type_expression) ->
-            let loc = Location.cover a.location b.location in
-            t_arrow ~loc a b)
-        @@ Option.bind_pair (input_type, ret_type) )
+      let f (l, output_type) binder =
+        ( Lambda.{ binder; output_type; result = make_e ~loc @@ E_lambda l }
+        , Option.map ~f:(fun (a, b) -> t_arrow ~loc a b)
+          @@ Option.bind_pair (Param.get_ascr binder, output_type) )
+      in
+      List.fold_left ~f ~init lst
   in
   (* This handle polymorphic annotation *)
   let fun_type =
@@ -1236,9 +1269,9 @@ and compile_declarations ~raise : CST.declaration Utils.nseq -> AST.module_ =
  fun decl -> List.filter_map ~f:(compile_declaration ~raise) @@ nseq_to_list decl
 
 
-let compile_program ~raise : CST.declaration Utils.nseq -> AST.program =
+and compile_program ~raise : CST.ast -> AST.program =
  fun t ->
-  nseq_to_list t
+  nseq_to_list t.decl
   |> List.map ~f:(fun a ~raise -> compile_declaration ~raise a)
   |> Simple_utils.Trace.collect ~raise
   |> List.filter_opt

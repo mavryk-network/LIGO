@@ -90,8 +90,7 @@ let rec error_ppformat
     | `Main_invalid_syntax_name syntax ->
       Format.fprintf
         f
-        "@[<hv>Invalid syntax option: '%s'. @.Use 'pascaligo', 'cameligo', or 'jsligo'. \
-         @]"
+        "@[<hv>Invalid syntax option: '%s'. @.Use 'cameligo', or 'jsligo'. @]"
         syntax
     | `Main_invalid_dialect_name syntax ->
       Format.fprintf
@@ -108,9 +107,20 @@ let rec error_ppformat
     | `Main_invalid_extension extension ->
       Format.fprintf
         f
-        "@[<hv>Invalid file extension '%s'. @.Use '.ligo' for PascaLIGO, '.mligo' for \
-         CameLIGO, '.jsligo' for JsLIGO, or the --syntax option.@]"
+        "@[<hv>Invalid file extension '%s'. @.Use '.mligo' for CameLIGO, '.jsligo' for \
+         JsLIGO, or the --syntax option.@]"
         extension
+    | `Main_deprecated_pascaligo_filename filename ->
+      Format.fprintf
+        f
+        "@[<hv>Invalid file extension for '%s'.@.PascaLIGO is deprecated.@.Hint: You can \
+         enable its support using the --deprecated flag.@]"
+        filename
+    | `Main_deprecated_pascaligo_syntax () ->
+      Format.fprintf
+        f
+        "@[<hv>Invalid syntax.@.PascaLIGO is deprecated.@.Hint: You can enable its \
+         support using the --deprecated flag.@]"
     | `Main_unparse_tracer errs ->
       let errs =
         List.map
@@ -334,10 +344,6 @@ let rec error_ppformat
       Preprocessing.Errors.error_ppformat ~display_format ~no_colour f e
     | `Parser_tracer e -> Parsing.Errors.error_ppformat ~no_colour ~display_format f e
     | `Pretty_tracer _e -> () (*no error in this pass*)
-    | `Cit_pascaligo_tracer e ->
-      List.iter
-        ~f:(Tree_abstraction.Pascaligo.Errors.error_ppformat ~display_format ~no_colour f)
-        e
     | `Cit_cameligo_tracer e ->
       List.iter
         ~f:(Tree_abstraction.Cameligo.Errors.error_ppformat ~display_format ~no_colour f)
@@ -345,6 +351,10 @@ let rec error_ppformat
     | `Cit_jsligo_tracer e ->
       List.iter
         ~f:(Tree_abstraction.Jsligo.Errors.error_ppformat ~display_format ~no_colour f)
+        e
+    | `Cit_pascaligo_tracer e ->
+      List.iter
+        ~f:(Tree_abstraction.Pascaligo.Errors.error_ppformat ~display_format ~no_colour f)
         e
     | `Self_ast_imperative_tracer e ->
       Self_ast_imperative.Errors.error_ppformat ~display_format ~no_colour f e
@@ -576,6 +586,9 @@ let rec error_json : Types.all -> Simple_utils.Error.t list =
     [ make ~stage:"" ~content ]
   (* Top-level errors *)
   | `Build_error_tracer e -> [ BuildSystem.Errors.error_json e ]
+  | `Main_deprecated_pascaligo_filename _ | `Main_deprecated_pascaligo_syntax _ ->
+    let content = make_content ~message:"PascaLIGO is deprecated" () in
+    [ make ~stage:"command line interpreter" ~content ]
   | `Main_invalid_generator_name _ ->
     let content = make_content ~message:"bad generator name" () in
     [ make ~stage:"command line interpreter" ~content ]
@@ -680,9 +693,9 @@ let rec error_json : Types.all -> Simple_utils.Error.t list =
   | `Pretty_tracer _ ->
     let content = make_content ~message:"Pretty printing tracer" () in
     [ make ~stage:"pretty" ~content ]
-  | `Cit_pascaligo_tracer e -> List.map ~f:Tree_abstraction.Pascaligo.Errors.error_json e
   | `Cit_cameligo_tracer e -> List.map ~f:Tree_abstraction.Cameligo.Errors.error_json e
   | `Cit_jsligo_tracer e -> List.map ~f:Tree_abstraction.Jsligo.Errors.error_json e
+  | `Cit_pascaligo_tracer e -> List.map ~f:Tree_abstraction.Pascaligo.Errors.error_json e
   | `Self_ast_imperative_tracer e -> [ Self_ast_imperative.Errors.error_json e ]
   | `Desugaring_tracer e -> [ Desugaring.Errors.error_json e ]
   | `Checking_tracer e -> [ Checking.Errors.error_json e ]

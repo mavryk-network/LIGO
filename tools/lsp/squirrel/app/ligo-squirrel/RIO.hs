@@ -11,9 +11,11 @@ module RIO
 
 import Algebra.Graph.Class qualified as G (empty)
 import Data.Aeson (Result (Error, Success), Value, fromJSON)
+import Debug.TimeStats qualified as TimeStats
 import Language.LSP.Server qualified as S
 import Language.LSP.Types qualified as J
 import StmContainers.Map (newIO)
+import Util (timestatsEnvFlag)
 
 import AST (Fallback, FromCompiler, ScopingSystem (..), Standard)
 import ASTMap qualified
@@ -28,14 +30,13 @@ import RIO.Types (OpenDocument (..), RIO (..), RioEnv (..))
 
 newRioEnv :: IO RioEnv
 newRioEnv = do
-  reCache <- ASTMap.empty $ \doc -> do
+  reCache <- ASTMap.empty $ \doc loadEffort -> do
     scopes <- _cScopingSystem <$> S.getConfig
     case scopes of
-      FallbackScopes -> RIO.Document.load @Fallback doc
-      StandardScopes -> RIO.Document.load @Standard doc
-      CompilerScopes -> RIO.Document.load @FromCompiler doc
+      FallbackScopes -> RIO.Document.load @Fallback doc loadEffort
+      StandardScopes -> RIO.Document.load @Standard doc loadEffort
+      CompilerScopes -> RIO.Document.load @FromCompiler doc loadEffort
   reOpenDocs <- newIO
-  reIncludes <- newTVarIO G.empty
   reTempFiles <- newIO
   reIndexOpts <- newTVarIO IndexOptionsNotSetYet
   reBuildGraph <- newTVarIO G.empty
@@ -56,7 +57,9 @@ shutdownRio :: RIO ()
 shutdownRio = do
   $Log.info "Shutting down"
   Cli.cleanupLigoDaemon
-
+  liftIO $ do
+    when timestatsEnvFlag $
+      withFile "./ligo-squirrel-timestats" WriteMode TimeStats.hPrintTimeStats
   -- A note on configuration initialization: If the client decides to send the
   -- configuration on initialization, then the lsp library will call
   -- onChangeConfiguration to set the config on the server side. However, the

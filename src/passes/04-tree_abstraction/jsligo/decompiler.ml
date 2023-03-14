@@ -5,6 +5,7 @@
 module AST = Ast_imperative
 module CST = Cst.Jsligo
 module Predefined = Predefined.Tree_abstraction
+module Shared_helpers = Tree_abstraction_shared.Helpers
 module Region = Simple_utils.Region
 module Location = Simple_utils.Location
 module List = Simple_utils.List
@@ -17,9 +18,7 @@ open Ligo_prim
 (* Utils *)
 
 let decompile_attributes : string list -> CST.attribute list =
- fun kvl ->
-  let f : string -> CST.attribute = fun str -> Region.wrap_ghost str in
-  List.map ~f kvl
+  Shared_helpers.decompile_attributes
 
 
 let list_to_sepseq ~sep lst =
@@ -66,7 +65,7 @@ let braced d =
 
 
 let filter_private (attributes : CST.attributes) =
-  List.filter ~f:(fun v -> not (String.equal v.value "private")) attributes
+  List.filter ~f:(fun v -> not (String.equal (fst v.value) "private")) attributes
 
 
 (* Decompiler *)
@@ -114,7 +113,7 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr =
   let return te = te in
   match te.type_content with
   | T_sum { attributes; fields } ->
-    let aux (Label.Label c, Rows.{ associated_type; attributes = row_attr; _ }) =
+    let aux (Label.Label c, AST.{ associated_type; row_elem_attributes = row_attr; _ }) =
       let constr = Region.wrap_ghost c in
       let arg = decompile_type_expr associated_type in
       let arg =
@@ -144,7 +143,7 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr =
     in
     return @@ CST.TSum (Region.wrap_ghost sum)
   | T_record { fields; attributes } ->
-    let aux (Label.Label c, Rows.{ associated_type; attributes; _ }) =
+    let aux (Label.Label c, AST.{ associated_type; row_elem_attributes; _ }) =
       let field_name = Region.wrap_ghost c in
       let colon = Token.ghost_colon in
       let field_type : CST.type_expr = decompile_type_expr associated_type in
@@ -154,7 +153,7 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr =
     in
     let record = List.map ~f:aux fields in
     let record = list_to_nsepseq ~sep:Token.ghost_semi record in
-    let attributes = List.map ~f:(fun el -> Region.wrap_ghost el) attributes in
+    let attributes = decompile_attributes attributes in
     return @@ CST.TObject (Region.wrap_ghost @@ ne_inject braces record ~attr:attributes)
   | T_tuple tuple ->
     let tuple = List.map ~f:decompile_type_expr tuple in
@@ -173,11 +172,27 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr =
     let var = decompile_type_var variable in
     return @@ CST.TVar var
   | T_app { type_operator; arguments } ->
-    let type_operator = decompile_type_var type_operator in
-    let lst = List.map ~f:decompile_type_expr arguments in
-    let lst = list_to_nsepseq ~sep:Token.ghost_comma lst in
-    let lst = Region.wrap_ghost @@ chevrons lst in
-    return @@ CST.TApp (Region.wrap_ghost (type_operator, lst))
+    let module_path = Module_access.get_path type_operator in
+    let element = Module_access.get_el type_operator in
+    let rec aux : Module_var.t list -> (CST.type_expr -> CST.type_expr) -> CST.type_expr =
+     fun lst f_acc ->
+      match lst with
+      | module_name :: tl ->
+        let module_name = decompile_mod_var module_name in
+        let f field =
+          f_acc
+            (CST.TModA
+               (Region.wrap_ghost CST.{ module_name; selector = Token.ghost_dot; field }))
+        in
+        aux tl f
+      | [] ->
+        let type_operator = decompile_type_var element in
+        let lst = List.map ~f:decompile_type_expr arguments in
+        let lst = list_to_nsepseq ~sep:Token.ghost_comma lst in
+        let lst = Region.wrap_ghost @@ chevrons lst in
+        f_acc @@ CST.TApp (Region.wrap_ghost (type_operator, lst))
+    in
+    return @@ aux module_path (fun x -> x)
   | T_annoted _annot -> failwith "let's work on it later"
   | T_module_accessor { module_path; element } ->
     let rec aux : Module_var.t list -> (CST.type_expr -> CST.type_expr) -> CST.type_expr =
@@ -407,10 +422,34 @@ let rec decompile_expression_in : AST.expression -> statement_or_expr list =
     let ne_args = list_to_nsepseq ~sep:Token.ghost_comma args in
     let arguments = CST.Multiple (Region.wrap_ghost (par ne_args)) in
     return_expr @@ [ Expr (CST.ECall (Region.wrap_ghost (lamb, arguments))) ]
+  | E_type_abstraction { type_binder; result } ->
+    let tvs, expr = AST.Combinators.destruct_e_type_abstrctions result in
+    let tvs = List.map ~f:decompile_type_var (type_binder :: tvs) in
+    let type_params =
+      Option.return
+      @@ Region.wrap_ghost
+      @@ chevrons (list_to_nsepseq ~sep:Token.ghost_comma tvs)
+    in
+    (match expr.expression_content with
+    | E_lambda lambda ->
+      let parameters, lhs_type, body = decompile_lambda lambda in
+      let fun_expr : CST.fun_expr =
+        { parameters; lhs_type; arrow = Token.ghost_arrow; body; type_params }
+      in
+      return_expr @@ [ Expr (CST.EFun (Region.wrap_ghost @@ fun_expr)) ]
+    | E_recursive { lambda; _ } ->
+      let parameters, lhs_type, body =
+        decompile_lambda @@ Lambda.map Fun.id Option.return lambda
+      in
+      let fun_expr : CST.fun_expr =
+        { parameters; lhs_type; arrow = Token.ghost_arrow; body; type_params }
+      in
+      return_expr @@ [ Expr (CST.EFun (Region.wrap_ghost @@ fun_expr)) ]
+    | _ -> failwith "type_abstraction not supported yet")
   | E_lambda lambda ->
     let parameters, lhs_type, body = decompile_lambda lambda in
     let fun_expr : CST.fun_expr =
-      { parameters; lhs_type; arrow = Token.ghost_arrow; body }
+      { parameters; lhs_type; arrow = Token.ghost_arrow; body; type_params = None }
     in
     return_expr @@ [ Expr (CST.EFun (Region.wrap_ghost @@ fun_expr)) ]
   | E_recursive { lambda; _ } ->
@@ -418,7 +457,7 @@ let rec decompile_expression_in : AST.expression -> statement_or_expr list =
       decompile_lambda @@ Lambda.map Fun.id Option.return lambda
     in
     let fun_expr : CST.fun_expr =
-      { parameters; lhs_type; arrow = Token.ghost_arrow; body }
+      { parameters; lhs_type; arrow = Token.ghost_arrow; body; type_params = None }
     in
     return_expr @@ [ Expr (CST.EFun (Region.wrap_ghost @@ fun_expr)) ]
   | E_let_in { let_binder; rhs; let_result; attributes } ->
@@ -446,7 +485,6 @@ let rec decompile_expression_in : AST.expression -> statement_or_expr list =
     in
     let body = decompile_expression_in let_result in
     return_expr @@ (Statement const :: body)
-  | E_type_abstraction _ -> failwith "type_abstraction not supported yet"
   | E_type_in { type_binder; rhs; let_result } ->
     let name = decompile_type_var type_binder in
     let type_expr = decompile_type_expr rhs in
@@ -1028,7 +1066,7 @@ and decompile_pattern p =
         ~f:(fun (Label x) ->
           CST.PVar
             (Region.wrap_ghost { CST.variable = Region.wrap_ghost x; attributes = [] }))
-        (Record.LMap.keys lps)
+        (Record.labels lps)
     in
     let inj = list_to_nsepseq ~sep:Token.ghost_comma fields_name in
     let inj = Region.wrap_ghost @@ braced inj in

@@ -5,8 +5,18 @@
   inputs = {
     nix-npm-buildpackage.url = "github:serokell/nix-npm-buildpackage";
     tezos-packaging.url = "github:serokell/tezos-packaging";
+    haskell-nix = {
+      inputs.hackage.follows = "hackage";
+      inputs.stackage.follows = "stackage";
+    };
+    hackage = {
+      flake = false;
+    };
+    stackage = {
+      flake = false;
+    };
   };
-  outputs = { self, haskell-nix, nix-npm-buildpackage, nixpkgs, flake-utils, tezos-packaging, deploy-rs }@inputs:
+  outputs = { self, haskell-nix, nix-npm-buildpackage, nixpkgs, flake-utils, tezos-packaging, deploy-rs, ... }@inputs:
   {
     nixosModules.default = { config, pkgs, lib, ... }:
       let system = pkgs.system; in
@@ -66,7 +76,6 @@
                   --octez-client-path ${webide-cfg.tezos-client-package}/bin/octez-client \
                   --gist-token "$(cat ${webide-cfg.gist-token})"
               '';
-
           };
 
           services.nginx = {
@@ -116,18 +125,19 @@
     };
   } // (flake-utils.lib.eachSystem [ "x86_64-linux" ] (system :
     let
+      haskellPkgs = haskell-nix.legacyPackages."${system}";
       pkgs = import nixpkgs {
         overlays = [ nix-npm-buildpackage.overlays.default haskell-nix.overlay ];
         localSystem = system;
       };
       ligo-binary = {
-        # ligo 0.56.0
-        "x86_64-linux" = { url = "https://gitlab.com/ligolang/ligo/-/jobs/3370208693/artifacts/raw/ligo"; hash = "sha256-SAW2Vq1yJnMPnpcySgc9b+unmF675tR5JbTY7Z2jiVw="; };
+        # ligo 0.61.0
+        "x86_64-linux" = { url = "https://gitlab.com/ligolang/ligo/-/jobs/3857618664/artifacts/raw/ligo"; hash = "sha256-0dI7a94Q5L+5w+ry7va39uWrODrWuAXw6yZpB8l5WnE="; };
       };
-      ligo-syntaxes = pkgs.callPackage ../lsp/vscode-plugin/syntaxes {};
+      ligo-syntaxes = pkgs.callPackage ../vscode/syntaxes {};
       tezos-client = inputs.tezos-packaging.packages.${system}.tezos-client;
       frontend = (pkgs.callPackage ./ligo-webide-frontend/ligo-ide { inherit ligo-syntaxes; }) { git-proxy = "https://ligo-webide-cors-proxy.serokell.team"; };
-      backend = pkgs.callPackage ./ligo-webide-backend { };
+      backend = haskellPkgs.callPackage ./ligo-webide-backend { };
       swagger-file = backend.swagger-file // {
         meta.artifacts = [ "/swagger.json" ];
       };

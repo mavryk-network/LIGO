@@ -52,7 +52,7 @@ const ExpressionManagerModal = ({
       const decls = await WebIdeApi.listDeclarations({
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
         project: { sourceFiles: contractFiles, main: projectManager.mainFilePath },
-        onlyEndpoint: false,
+        onlyEndpoint: managerType === "dryRun",
       });
       setDeclarations(
         decls.data.map((d) => {
@@ -113,7 +113,7 @@ const ExpressionManagerModal = ({
       ref={modalRef}
       title={managerType === "dryRun" ? "Dry Run" : "Compile Expression"}
       textConfirm={managerType === "dryRun" ? "Run" : "Compile"}
-      pending={loading && (managerType === "dryRun" ? "Runing" : "Compiling")}
+      pending={loading && (managerType === "dryRun" ? "Running" : "Compiling")}
       confirmDisabled={
         name === "" || (managerType === "dryRun" ? storage === "" || params === "" : false)
       }
@@ -145,14 +145,14 @@ const ExpressionManagerModal = ({
       {managerType === "dryRun" && (
         <>
           <DebouncedFormGroup
-            label={<div>Input parameters</div>}
+            label={<div>Input parameters (ligo expression)</div>}
             value={params}
             onChange={(n: string) => setParams(n)}
             placeholder="Parameters"
             type="textarea"
           />
           <DebouncedFormGroup
-            label={<div>Storage</div>}
+            label={<div>Storage (ligo expression)</div>}
             value={storage}
             onChange={(st: string) => setStorage(st)}
             placeholder="Storage"

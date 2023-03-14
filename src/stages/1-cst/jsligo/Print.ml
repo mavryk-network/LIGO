@@ -36,6 +36,28 @@ let sprintf  = Printf.sprintf
 let compact state (region: Region.t) =
   region#compact ~offsets:state#offsets state#mode
 
+let print_attribute state (node : Attr.t reg) =
+  let key, val_opt = node.value in
+  match val_opt with
+    None ->
+      Tree.print_unary state "<attribute>" Tree.print_node key
+  | Some (String value | Ident value) ->
+      let children = [
+        Tree.mk_child Tree.print_node key;
+        Tree.mk_child Tree.print_node value]
+      in Tree.print state "<attributes>" children
+
+type label = Tree.label
+
+let print_list :
+  state -> ?region:Region.t -> label -> 'a Tree.printer -> 'a list -> unit =
+  fun state ?region label print list ->
+    let children = List.map ~f:(Tree.mk_child print) list
+    in Tree.print ?region state label children
+
+let print_attributes state (node : Attr.attribute reg list) =
+  print_list state "<attributes>" print_attribute node
+
 (** {1 Pretty-printing the AST} *)
 
 let print_ident state {value=name; region} =
@@ -359,6 +381,12 @@ and print_expr state = function
 | ETernary {value; region} ->
     print_loc_node state "ETernary" region;
     print_ternary state value
+| EContract {value; region} ->
+    print_loc_node state "EContract" region;
+    let binders        = Utils.nsepseq_to_list value in
+    let len            = List.length binders in
+    let apply len rank = print_ident (state#pad len rank) in
+    List.iteri ~f:(apply len) binders
 
 and print_constr_expr state (node: (constr * expr option) reg) =
   let constr, expr_opt = node.value in
@@ -390,8 +418,14 @@ and print_property state = function
     print_expr state expr
 
 and print_fun_expr state node =
-  let {parameters; lhs_type; body; _} = node in
+  let {parameters; lhs_type; body; type_params; arrow=_} = node in
   let fields = if Option.is_none lhs_type then 2 else 3 in
+  let () =
+    Option.iter ~f:(fun type_params ->
+    let state = state#pad fields 0 in
+    print_node state "<type_params>";
+    print_type_generics (state#pad 1 0) type_params) 
+    type_params in
   let () =
     let state = state#pad fields 0 in
     print_node state "<parameters>";
@@ -591,6 +625,11 @@ and print_type_expr state = function
       print_ne_injection print_field_decl (state#pad len rank) v.value    in
     List.iteri ~f:(List.length objects |> apply) objects
 
+and print_type_generics state (tgenerics : CST.type_generics) =
+  let inside = tgenerics.value.inside in
+  let type_params = Utils.nsepseq_to_list inside in
+  List.iter ~f:(print_ident state) type_params
+
 and print_module_access : type a. (state -> a -> unit ) -> state -> a module_access -> unit
 = fun f state ma ->
   print_ident (state#pad 2 0) ma.module_name;
@@ -645,13 +684,7 @@ and print_type_tuple state {value; _} =
   let components     = Utils.nsepseq_to_list value.inside in
   let apply len rank = print_type_expr (state#pad len rank)
   in List.iteri ~f:(List.length components |> apply) components
-
-and print_attributes state attributes =
-  print_node state "<attributes>";
-  let length         = List.length attributes in
-  let apply len rank = print_ident (state#pad len rank)
-  in List.iteri ~f:(apply length) attributes
-
+  
 and print_field_decl state {value; _} =
   let arity = if List.is_empty value.attributes then 1 else 2 in
   print_ident      state value.field_name;

@@ -30,7 +30,8 @@ import Extension (UnsupportedExtension (..), getExt)
 
 import Morley.Debugger.Core
   (DebugSource (..), DebuggerState (..), NavigableSnapshot (getLastExecutedPosition),
-  SourceLocation, curSnapshot, frozen, groupSourceLocations, playInterpretHistory, slEnd)
+  SnapshotEdgeStatus (SnapshotAtEnd), SourceLocation, SrcLoc (..), curSnapshot, frozen,
+  groupSourceLocations, pickSnapshotEdgeStatus, playInterpretHistory, slEnd)
 import Morley.Debugger.DAP.LanguageServer (JsonFromBuildable (..))
 import Morley.Debugger.DAP.RIO (logMessage, openLogHandle)
 import Morley.Debugger.DAP.Types
@@ -40,8 +41,10 @@ import Morley.Debugger.DAP.Types
   StoppedReason (..), dsDebuggerState, dsVariables, pushMessage)
 import Morley.Debugger.Protocol.DAP (ScopesRequestArguments (frameIdScopesRequestArguments))
 import Morley.Debugger.Protocol.DAP qualified as DAP
-import Morley.Michelson.ErrorPos (Pos (Pos), SrcPos (SrcPos))
-import Morley.Michelson.Interpret (ceContracts)
+import Morley.Michelson.ErrorPos (ErrorSrcPos (ErrorSrcPos), Pos (Pos), SrcPos (SrcPos))
+import Morley.Michelson.Interpret
+  (MichelsonFailed (MichelsonFailedWith), MichelsonFailureWithStack (mfwsErrorSrcPos), ceContracts,
+  mfwsFailed)
 import Morley.Michelson.Parser.Types (MichelsonSource)
 import Morley.Michelson.Printer.Util (RenderDoc (renderDoc), doesntNeedParens, printDocB)
 import Morley.Michelson.Runtime (ContractState (..))
@@ -89,10 +92,21 @@ instance HasSpecificMessages LIGO where
   type StepGranularityExt LIGO = LigoStepGranularity
 
   reportErrorAndStoppedEvent = \case
-    ExceptionMet exception -> writeException exception
+    ExceptionMet exception -> writeException True exception
     Paused reason -> writeStoppedEvent reason
-    Terminated -> writeTerminatedEvent
-    ReachedStart -> writeStoppedEvent "Reached start"
+    TerminatedOkMet -> writeTerminatedEvent
+    PastFinish -> do
+      snap <- zoom dsDebuggerState $ frozen curSnapshot
+      case pickSnapshotEdgeStatus snap of
+        SnapshotAtEnd outcome -> case outcome of
+          Left exception -> writeException False exception
+          Right () ->
+            -- At the moment we never expect this, as in case of ok termination
+            -- we should have already existed when stepping on last snapshot;
+            -- but let's handle this condition gracefully anyway.
+            writeTerminatedEvent
+        _ -> error "Unexpected status"
+    ReachedStart -> writeStoppedEvent "entry"
     where
       writeTerminatedEvent = do
         InterpretSnapshot{..} <- zoom dsDebuggerState $ frozen curSnapshot
@@ -154,9 +168,18 @@ instance HasSpecificMessages LIGO where
             }
           }
 
-      writeException exception = do
+      writeException writeLog exception = do
         st <- get
-        let msg = pretty exception
+        let msg = case mfwsFailed exception of
+              -- [LIGO-862] display this value as LIGO one
+              MichelsonFailedWith val ->
+                let
+                  ErrorSrcPos (SrcPos (Pos l) (Pos c)) = mfwsErrorSrcPos exception
+                in
+                  [int||Contract failed with value: #{val}
+                  On line #{l + 1} char #{c + 1}|]
+              _ -> pretty exception
+
         mSrcLoc <- view slEnd <<$>> uses dsDebuggerState getLastExecutedPosition
         pushMessage $ DAPEvent $ StoppedEvent $ DAP.defaultStoppedEvent
           { DAP.bodyStoppedEvent = DAP.defaultStoppedEventBody
@@ -167,12 +190,13 @@ instance HasSpecificMessages LIGO where
             , DAP.textStoppedEventBody = msg
             }
           }
-        pushMessage $ DAPEvent $ OutputEvent $ DAP.defaultOutputEvent
-          { DAP.bodyOutputEvent = withSrc st $ withSrcPos mSrcLoc DAP.defaultOutputEventBody
-            { DAP.categoryOutputEventBody = "stderr"
-            , DAP.outputOutputEventBody = msg <> "\n"
+        when writeLog do
+          pushMessage $ DAPEvent $ OutputEvent $ DAP.defaultOutputEvent
+            { DAP.bodyOutputEvent = withSrc st $ withSrcPos mSrcLoc DAP.defaultOutputEventBody
+              { DAP.categoryOutputEventBody = "stderr"
+              , DAP.outputOutputEventBody = msg <> "\n"
+              }
             }
-          }
         where
           withSrc st event = event { DAP.sourceOutputEventBody = mkSource st }
 
@@ -183,7 +207,7 @@ instance HasSpecificMessages LIGO where
 
           withSrcPos mSrcPos event = case mSrcPos of
             Nothing -> event
-            Just (SrcPos (Pos row) (Pos col)) -> event
+            Just (SrcLoc row col) -> event
               { DAP.lineOutputEventBody   = Unsafe.fromIntegral $ row + 1
               , DAP.columnOutputEventBody = Unsafe.fromIntegral $ col + 1
               }
@@ -334,7 +358,8 @@ instance HasSpecificMessages LIGO where
       let
         shortDesc = case event of
           EventFacedStatement -> Just $ StopEventDesc "at statement"
-          EventExpressionPreview -> Just $ StopEventDesc "upon exp"
+          EventExpressionPreview GeneralExpression -> Just $ StopEventDesc "upon exp"
+          EventExpressionPreview FunctionCall -> Just $ StopEventDesc "upon func call"
           EventExpressionEvaluated{} -> Just $ StopEventDesc "computed exp"
       in (shortDesc, Just event)
     _ -> (Nothing, Nothing)
@@ -398,6 +423,7 @@ handleSetLigoBinaryPath LigoSetLigoBinaryPathRequest {..} = do
     , lsAllLocs = Nothing
     , lsBinaryPath = binaryPathMb
     , lsParsedContracts = Nothing
+    , lsLambdaLocs = Nothing
     }
   logMessage [int||Set LIGO binary path: #{binaryPath}|]
 
@@ -483,7 +509,7 @@ handleGetContractMetadata LigoGetContractMetadataRequest{..} = do
     Right ligoDebugInfo -> do
       logMessage $ "Successfully read the LIGO debug output for " <> pretty program
 
-      (exprLocs, someContract, allFiles) <-
+      (exprLocs, someContract, allFiles, lambdaLocs) <-
         readLigoMapper ligoDebugInfo typesReplaceRules instrReplaceRules
         & either (throwIO . MichelsonDecodeException) pure
 
@@ -494,7 +520,7 @@ handleGetContractMetadata LigoGetContractMetadataRequest{..} = do
         parsedContracts <- parseContracts allFiles
 
         let statementLocs = getStatementLocs (getAllSourceLocations exprLocs) parsedContracts
-        let allLocs = getInterestingSourceLocations exprLocs <> statementLocs
+        let allLocs = getInterestingSourceLocations parsedContracts exprLocs <> statementLocs
 
         let
           paramNotes = cParamNotes contract
@@ -505,6 +531,7 @@ handleGetContractMetadata LigoGetContractMetadataRequest{..} = do
           { lsCollectedRunInfo = Just $ onlyContractRunInfo contract
           , lsAllLocs = Just allLocs
           , lsParsedContracts = Just parsedContracts
+          , lsLambdaLocs = Just lambdaLocs
           }
 
         lServerState <- getServerState
@@ -636,6 +663,8 @@ initDebuggerSession LigoLaunchRequestArguments {..} = do
   param <- "Parameter is not initialized" `expectInitialized` pure paramMb
   stor <- "Storage is not initialized" `expectInitialized` pure storMb
 
+  lambdaLocs <- getLambdaLocs
+
   let contractState = ContractState
         { csBalance = [tz|0u|]
         , csContract = contract
@@ -663,6 +692,7 @@ initDebuggerSession LigoLaunchRequestArguments {..} = do
         dummyContractEnv { ceContracts = M.fromList [(dummySelf, contractState)] }
         parsedContracts
         (unlifter . logMessage)
+        lambdaLocs
 
   let ds = initDebuggerState his allLocs
 

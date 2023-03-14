@@ -2,8 +2,8 @@ module Location = Simple_utils.Location
 module List = Simple_utils.List
 module Ligo_string = Simple_utils.Ligo_string
 open Simple_utils
-open Types
 open Ligo_prim
+open Types
 
 (* TODO: does that need to be cleaned-up ? *)
 module Free_variables = struct
@@ -28,7 +28,7 @@ module Free_variables = struct
       | false -> singleton name)
     | E_application { lamb; args } -> unions @@ List.map ~f:self [ lamb; args ]
     | E_constructor { element; _ } -> self element
-    | E_record m -> unions @@ List.map ~f:self @@ Record.LMap.to_list m
+    | E_record m -> unions @@ List.map ~f:self @@ Record.values m
     | E_accessor { struct_; _ } -> self struct_
     | E_update { struct_; update; _ } -> union (self struct_) @@ self update
     | E_matching { matchee; cases; _ } ->
@@ -139,50 +139,15 @@ let rec assert_type_expression_eq ((a, b) : type_expression * type_expression)
         (List.zip_exn lsta lstb)
     else None
   | T_constant _, _ -> None
-  | T_sum sa, T_sum sb ->
-    let sa' = Record.LMap.to_kv_list_rev sa.fields in
-    let sb' = Record.LMap.to_kv_list_rev sb.fields in
-    let aux
-        ( (ka, ({ associated_type = va; _ } : row_element))
-        , (kb, ({ associated_type = vb; _ } : row_element)) )
-      =
-      let* _ = assert_eq ka kb in
-      assert_type_expression_eq (va, vb)
-    in
-    let* _ = assert_same_size sa' sb' in
-    let* _ = assert_eq sa.layout sb.layout in
-    List.fold_left
-      ~f:(fun acc p ->
-        match acc with
-        | None -> None
-        | Some () -> aux p)
-      ~init:(Some ())
-      (List.zip_exn sa' sb')
-  | T_sum _, _ -> None
-  | T_record ra, T_record rb
-    when Bool.( <> ) (Record.is_tuple ra.fields) (Record.is_tuple rb.fields) -> None
-  | T_record ra, T_record rb ->
-    let sort_lmap r' = List.sort ~compare:(fun (a, _) (b, _) -> Label.compare a b) r' in
-    let ra' = sort_lmap @@ Record.LMap.to_kv_list_rev ra.fields in
-    let rb' = sort_lmap @@ Record.LMap.to_kv_list_rev rb.fields in
-    let aux
-        ( (ka, ({ associated_type = va; _ } : row_element))
-        , (kb, ({ associated_type = vb; _ } : row_element)) )
-      =
-      let* _ = assert_eq ka kb in
-      assert_type_expression_eq (va, vb)
-    in
-    let* _ = assert_eq ra.layout rb.layout in
-    let* _ = assert_same_size ra' rb' in
-    let* _ = assert_eq ra.layout rb.layout in
-    List.fold_left
-      ~f:(fun acc p ->
-        match acc with
-        | None -> None
-        | Some () -> aux p)
-      ~init:(Some ())
-      (List.zip_exn ra' rb')
+  | T_sum row1, T_sum row2 | T_record row1, T_record row2 ->
+    Option.some_if
+      (Row.equal
+         (fun t1 t2 -> Option.is_some @@ assert_type_expression_eq (t1, t2))
+         row1
+         row2)
+      ()
   | T_record _, _ -> None
+  | T_sum _, _ -> None
   | T_arrow { type1; type2 }, T_arrow { type1 = type1'; type2 = type2' } ->
     let* _ = assert_type_expression_eq (type1, type1') in
     assert_type_expression_eq (type2, type2')
@@ -268,7 +233,14 @@ let get_entry (lst : program) (name : Value_var.t) : expression option =
         { binder
         ; expr
         ; attr =
-            { inline = _; no_mutation = _; view = _; public = _; hidden = _; thunk = _ }
+            { inline = _
+            ; no_mutation = _
+            ; view = _
+            ; public = _
+            ; hidden = _
+            ; thunk = _
+            ; entry = _
+            }
         } -> if Binder.apply (Value_var.equal name) binder then Some expr else None
     | D_irrefutable_match _ | D_type _ | D_module _ -> None
   in
@@ -290,3 +262,81 @@ let get_type_of_contract ty =
       return (parameter, storage)
     | _ -> None)
   | _ -> None
+
+
+let build_entry_type p_ty s_ty =
+  let open Combinators in
+  let loc = Location.generated in
+  t_arrow
+    ~loc
+    (t_pair ~loc p_ty s_ty)
+    (t_pair ~loc (t_list ~loc (t_operation ~loc ())) s_ty)
+    ()
+
+
+let should_uncurry_entry entry_ty =
+  let is_t_list_operation listop =
+    Option.is_some @@ Combinators.assert_t_list_operation listop
+  in
+  match Combinators.get_t_arrow entry_ty with
+  | Some { type1 = tin; type2 = return } ->
+    (match Combinators.get_t_tuple tin, Combinators.get_t_tuple return with
+    | Some [ parameter; storage ], Some [ listop; storage' ] ->
+      if is_t_list_operation listop && type_expression_eq (storage, storage')
+      then `No (parameter, storage)
+      else `Bad
+    | _ ->
+      let parameter = tin in
+      (match Combinators.get_t_arrow return with
+      | Some { type1 = storage; type2 = return } ->
+        (match Combinators.get_t_pair return with
+        | Some (listop, storage') ->
+          if is_t_list_operation listop && type_expression_eq (storage, storage')
+          then `Yes (parameter, storage)
+          else `Bad
+        | _ -> `Bad)
+      | None -> `Bad))
+  | None -> `Bad
+
+
+let parameter_from_entrypoints
+    :  (Value_var.t * type_expression) List.Ne.t
+    -> ( type_expression * type_expression
+       , [> `Not_entry_point_form of Types.type_expression
+         | `Storage_does_not_match of
+           Value_var.t * Types.type_expression * Value_var.t * Types.type_expression
+         ] )
+       result
+  =
+ fun ((entrypoint, entrypoint_type), rest) ->
+  let open Result in
+  let* parameter, storage =
+    match should_uncurry_entry entrypoint_type with
+    | `Yes (parameter, storage) | `No (parameter, storage) ->
+      Result.Ok (parameter, storage)
+    | `Bad -> Result.Error (`Not_entry_point_form entrypoint_type)
+  in
+  let* parameter_list =
+    List.fold_result
+      ~init:[ String.capitalize (Value_var.to_name_exn entrypoint), parameter ]
+      ~f:(fun parameters (ep, ep_type) ->
+        let* parameter_, storage_ =
+          match should_uncurry_entry ep_type with
+          | `Yes (parameter, storage) | `No (parameter, storage) ->
+            Result.Ok (parameter, storage)
+          | `Bad -> Result.Error (`Not_entry_point_form entrypoint_type)
+        in
+        let* () =
+          Result.of_option
+            ~error:(`Storage_does_not_match (entrypoint, storage, ep, storage_))
+          @@ assert_type_expression_eq (storage_, storage)
+        in
+        return ((String.capitalize (Value_var.to_name_exn ep), parameter_) :: parameters))
+      rest
+  in
+  return
+    ( Combinators.t_sum_ez
+        ~loc:Location.generated
+        ~layout:Combinators.default_layout
+        parameter_list
+    , storage )

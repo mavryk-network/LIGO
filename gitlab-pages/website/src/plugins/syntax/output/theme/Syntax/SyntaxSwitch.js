@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { useLocation } from 'react-router-dom';
 import styles from "./styles.module.css";
 function SyntaxSwitch(props) {
   const [_, setState] = useState(0);
+  const [isNext, setIsNext] = useState(false);
+  const location = useLocation();
 
   // All this thing is a trick to force rerender
   // because it looks like there's a bug with static generation
@@ -9,6 +12,10 @@ function SyntaxSwitch(props) {
   useEffect(() => {
     setState(1);
   }, []);
+  useEffect(() => {
+    let hidePascaligo = !!location.pathname?.startsWith("/docs/next");
+    setIsNext(hidePascaligo);
+  }, [location]);
   return /*#__PURE__*/React.createElement("select", {
     className: styles.syntaxSwitch,
     value: props.syntax,
@@ -21,11 +28,11 @@ function SyntaxSwitch(props) {
       props.onSyntaxChange(e.target.value);
     }
   }, /*#__PURE__*/React.createElement("option", {
-    value: "pascaligo"
-  }, "PascaLIGO"), /*#__PURE__*/React.createElement("option", {
     value: "cameligo"
   }, "CameLIGO"), /*#__PURE__*/React.createElement("option", {
     value: "jsligo"
-  }, "JsLIGO"));
+  }, "JsLIGO"), !isNext && /*#__PURE__*/React.createElement("option", {
+    value: "pascaligo"
+  }, "PascaLIGO"));
 }
 export default SyntaxSwitch;

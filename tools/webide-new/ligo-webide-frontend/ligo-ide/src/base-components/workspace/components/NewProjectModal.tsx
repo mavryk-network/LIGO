@@ -7,6 +7,7 @@ import notification from "~/base-components/notification";
 import { ProjectManager } from "../ProjectManager";
 import actions from "../actions";
 import { WebIdeApi } from "~/components/api/api";
+import { validName } from "~/components/validators";
 
 type Template = {
   id: string;
@@ -15,7 +16,7 @@ type Template = {
   existingSyntaxes: string[];
 };
 
-const synIds = ["mligo", "ligo", "jsligo", "religo"];
+const synIds = ["mligo", "ligo", "jsligo"];
 const hardcodedTemplates = [
   { id: "empty", gitLink: undefined, display: "Empty Project", existingSyntaxes: synIds },
   { id: "increment", gitLink: undefined, display: "Increment", existingSyntaxes: synIds },
@@ -23,10 +24,9 @@ const hardcodedTemplates = [
   { id: "hashlock", gitLink: undefined, display: "Hashlock Contract", existingSyntaxes: synIds },
 ];
 const pSyntaxes = [
-  { id: "mligo", display: "Camel Ligo" },
-  { id: "ligo", display: "Pascal Ligo" },
-  { id: "jsligo", display: "JS Ligo" },
-  { id: "religo", display: "Reason Ligo" },
+  { id: "mligo", display: "CameLIGO" },
+  { id: "ligo", display: "PascaLIGO" },
+  { id: "jsligo", display: "JsLIGO" },
 ];
 
 const mapSyntaxes = (s: string) => {
@@ -36,9 +36,6 @@ const mapSyntaxes = (s: string) => {
   if (s === "jsligo") {
     return "jsligo";
   }
-  if (s === "reasonligo") {
-    return "religo";
-  }
   if (s === "pascaligo") {
     return "ligo";
   }
@@ -46,7 +43,7 @@ const mapSyntaxes = (s: string) => {
 };
 
 const convertLigoTemplates = (templates: string[]) => {
-  const syntaxPrefixes = ["cameligo", "jsligo", "reasonligo", "pascaligo"];
+  const syntaxPrefixes = ["cameligo", "jsligo", "pascaligo"];
   const splittedTemplates = templates.map((t) => t.split("-"));
 
   const s = new Set();
@@ -82,7 +79,7 @@ const NewProjectModal = forwardRef((_, ref) => {
   const [template, setTemplate] = useState("empty");
   const [templates, setTemplates] = useState<Template[]>(hardcodedTemplates);
   const [creating, setCreating] = useState(false);
-  const [syntax, setSyntax] = useState("ligo");
+  const [syntax, setSyntax] = useState("mligo");
   const [syntaxes, setSyntaxes] = useState(pSyntaxes);
 
   actions.newProjectModal = ref;
@@ -105,7 +102,7 @@ const NewProjectModal = forwardRef((_, ref) => {
       setName("");
       setTemplate("empty");
       setCreating(false);
-      setSyntax("ligo");
+      setSyntax("mligo");
       setSyntaxes(pSyntaxes);
       await modalRef.current?.openModal();
       return new Promise((resolve) => {
@@ -129,7 +126,7 @@ const NewProjectModal = forwardRef((_, ref) => {
         resolverRef.current(created);
         setName("");
         setTemplate("empty");
-        setSyntax("ligo");
+        setSyntax("mligo");
         setSyntaxes(pSyntaxes);
         setCreating(false);
         setTemplates(hardcodedTemplates);
@@ -178,7 +175,7 @@ const NewProjectModal = forwardRef((_, ref) => {
               templateInfo.existingSyntaxes.includes(s.id)
             );
             if (newSyntaxes.length === 0) {
-              newSyntaxes.push({ id: "ligo", display: "Pascal Ligo" });
+              newSyntaxes.push({ id: "mligo", display: "CameLIGO" });
             }
             setTemplate(tmp);
             setSyntaxes(newSyntaxes);
@@ -197,9 +194,14 @@ const NewProjectModal = forwardRef((_, ref) => {
       textConfirm="Create Project"
       onConfirm={onCreateProject}
       pending={creating && "Creating..."}
-      confirmDisabled={!name}
+      confirmDisabled={!name || !!validName(name)}
     >
-      <DebouncedFormGroup label="Project name" value={name} onChange={(n: string) => setName(n)} />
+      <DebouncedFormGroup
+        label="Project name"
+        value={name}
+        onChange={(n: string) => setName(n)}
+        validator={validName}
+      />
       {renderTemplate()}
       <DropdownInput
         label="Syntax"

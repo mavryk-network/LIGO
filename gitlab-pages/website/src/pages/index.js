@@ -11,6 +11,7 @@ const { Prism } = require("prism-react-renderer");
 
 Prism.languages = {
   ...Prism.languages,
+  // pascaligo should be remove after 0.60.0 is removed
   pascaligo: {
     comment: [
       /\(\*[\s\S]+?\*\)/,
@@ -92,14 +93,6 @@ export default function Home() {
               <ul>
                 <li className="primary">
                   <a href="https://ide.ligolang.org">Try Online</a>
-                </li>
-                <li className="primary">
-                  <a
-                    href="https://ide-v2-beta.ligolang.org/"
-                    target="_blank"
-                  >
-                    WebIde V2 beta
-                  </a>
                 </li>
                 <li className="primary">
                   <a

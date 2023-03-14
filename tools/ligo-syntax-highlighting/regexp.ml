@@ -25,7 +25,7 @@ let let_binding_match1_ligo: Core.regexp = {
 }
 
 let let_binding_match2_ligo: Core.regexp = {
-  emacs    = "\\\\b\\\\([a-zA-Z$_][a-zA-Z0-9$_]*\\\\)"; 
+  emacs    = "\\\\b\\\\([a-zA-Z$_][a-zA-Z0-9$_]*\\\\)";
   textmate = "\\b([a-zA-Z$_][a-zA-Z0-9$_]*)";
   vim      = "\\<[a-zA-Z$_][a-zA-Z0-9$_]*\\>";
 }
@@ -43,7 +43,7 @@ let lambda_end: Core.regexp = {
 }
 
 let of_keyword_match: Core.regexp = {
-  emacs    = "\\\\b\\\\(of)\\\\b";
+  emacs    = "\\\\b\\\\(of\\\\)\\\\b";
   textmate = "\\b(of)\\b";
   vim      = "\\<\\(of\\)\\>";
 }

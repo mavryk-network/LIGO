@@ -16,8 +16,8 @@
       z
 *)
 
+module PP_helpers = Simple_utils.PP_helpers
 open Ligo_prim
-open Simple_utils
 
 module Defs = struct
   type left = Type.t
@@ -30,10 +30,7 @@ end
 module Define = Diffing.Define (Defs)
 
 let field_types_of_row (row : Type.row) : Type.t list =
-  row.fields
-  |> Record.to_list
-  |> List.map ~f:snd
-  |> List.map ~f:(fun (row_elem : Type.row_element) -> row_elem.associated_type)
+  row.fields |> Map.to_alist |> List.map ~f:snd
 
 
 let field_types_array_of_row row = Array.of_list @@ List.rev @@ field_types_of_row row

@@ -2,6 +2,32 @@ module Location = Simple_utils.Location
 module PP = Simple_utils.PP_helpers
 open Ligo_prim
 
+module Layout = struct
+  type t =
+    | L_concrete of Layout.t
+    | L_exists of Layout_var.t
+  [@@deriving yojson, equal, sexp, compare, hash]
+
+  type field = Layout.field =
+    { name : Label.t
+    ; annot : string option
+    }
+
+  let fields = function
+    | L_concrete layout -> Some (Layout.fields layout)
+    | L_exists _lvar -> None
+
+
+  let default fields = L_concrete (Layout.default fields)
+
+  let pp ppf t =
+    match t with
+    | L_concrete layout -> Layout.pp ppf layout
+    | L_exists lvar -> Format.fprintf ppf "^%a" Layout_var.pp lvar
+end
+
+module Row = Row.Make (Layout)
+
 type meta = Ast_core.type_expression option [@@deriving yojson]
 
 type t =
@@ -36,23 +62,14 @@ and content =
       ; default_get = `Option
       }]
 
-and row =
-  { fields : row_element Record.t
-  ; layout : layout
-  }
-
-and row_element = t Rows.row_element_mini_c
+and row = t Row.t
+and layout = Layout.t
 
 and construct =
   { language : string
   ; constructor : Literal_types.t
   ; parameters : t list
   }
-
-and layout =
-  | L_comb
-  | L_tree
-  | L_exists of Layout_var.t
 [@@deriving yojson, equal, sexp, compare, hash]
 
 type constr = loc:Location.t -> ?meta:Ast_core.type_expression -> unit -> t
@@ -70,12 +87,9 @@ let rec free_vars t =
   | T_singleton _ -> Set.empty
 
 
-and free_vars_row { fields; _ } =
-  Record.fold fields ~init:Type_var.Set.empty ~f:(fun fvs row_elem ->
-      Set.union (free_vars_row_elem row_elem) fvs)
+and free_vars_row row =
+  Row.fold (fun fvs row_elem -> Set.union (free_vars row_elem) fvs) Type_var.Set.empty row
 
-
-and free_vars_row_elem row_elem = free_vars row_elem.associated_type
 
 let rec orig_vars t =
   let module Set = Type_var.Set in
@@ -90,12 +104,9 @@ let rec orig_vars t =
     abs |> Abstraction.map orig_vars |> Abstraction.fold Set.union Set.empty
 
 
-and orig_vars_row { fields; _ } =
-  Record.fold fields ~init:Type_var.Set.empty ~f:(fun ovs row_elem ->
-      Set.union (orig_vars_row_elem row_elem) ovs)
+and orig_vars_row row =
+  Row.fold (fun ovs row_elem -> Set.union (orig_vars row_elem) ovs) Type_var.Set.empty row
 
-
-and orig_vars_row_elem row_elem = orig_vars row_elem.associated_type
 
 let rec subst ?(free_vars = Type_var.Set.empty) t ~tvar ~type_ =
   let subst t = subst t ~free_vars ~tvar ~type_ in
@@ -153,12 +164,8 @@ and subst_abstraction
   else { ty_binder; kind; type_ = subst type_ }
 
 
-and subst_row ?(free_vars = Type_var.Set.empty) { fields; layout } ~tvar ~type_ =
-  { fields = Record.map fields ~f:(subst_row_elem ~free_vars ~tvar ~type_); layout }
-
-
-and subst_row_elem ?(free_vars = Type_var.Set.empty) row_elem ~tvar ~type_ =
-  Rows.map_row_element_mini_c (subst ~free_vars ~tvar ~type_) row_elem
+and subst_row ?(free_vars = Type_var.Set.empty) row ~tvar ~type_ =
+  Row.map (subst ~free_vars ~tvar ~type_) row
 
 
 let subst t ~tvar ~type_ =
@@ -179,15 +186,7 @@ let rec fold : type a. t -> init:a -> f:(a -> t -> a) -> a =
 
 
 and fold_row : type a. row -> init:a -> f:(a -> t -> a) -> a =
- fun { fields; _ } ~init ~f ->
-  Record.LMap.fold
-    (fun _label row_elem init -> fold_row_elem row_elem ~init ~f)
-    fields
-    init
-
-
-and fold_row_elem : type a. row_element -> init:a -> f:(a -> t -> a) -> a =
- fun row_elem ~init ~f -> f init row_elem.associated_type
+ fun row ~init ~f -> Row.fold f init row
 
 
 let destruct_type_abstraction t =
@@ -206,7 +205,16 @@ let texists_vars t =
       | _ -> texists_vars)
 
 
-let default_layout = L_tree
+let default_layout = Layout.default
+
+let default_layout_from_field_set fields =
+  default_layout
+    (fields |> Set.to_list |> List.map ~f:(fun name -> { Layout.name; annot = None }))
+
+
+let fields_with_no_annot fields =
+  List.map ~f:(fun (name, _) -> Layout.{ name; annot = None }) fields
+
 
 let t_construct constructor parameters ~loc ?meta () : t =
   make_t
@@ -252,7 +260,14 @@ let t_michelson_code = t_michelson_program
 let t__type_ t ~loc ?meta () : t = t_construct ~loc ?meta Literal_types._type_ [ t ] ()
   [@@map
     _type_
-    , ("list", "set", "contract", "ticket", "sapling_state", "sapling_transaction", "gen")]
+    , ( "list"
+      , "set"
+      , "contract"
+      , "ticket"
+      , "sapling_state"
+      , "sapling_transaction"
+      , "gen"
+      , "views" )]
 
 
 let t__type_ t t' ~loc ?meta () : t =
@@ -261,15 +276,9 @@ let t__type_ t t' ~loc ?meta () : t =
 
 
 let row_ez fields ?(layout = default_layout) () =
-  let fields =
-    fields
-    |> List.mapi ~f:(fun i (x, y) ->
-           ( Label.of_string x
-           , ({ associated_type = y; michelson_annotation = None; decl_pos = i }
-               : row_element) ))
-    |> Record.of_list
-  in
-  { fields; layout }
+  let fields = List.map fields ~f:(fun (name, type_) -> Label.of_string name, type_) in
+  let layout = layout @@ fields_with_no_annot fields in
+  Row.of_alist_exn ~layout fields
 
 
 let t_record_ez fields ~loc ?meta ?layout () =
@@ -290,6 +299,10 @@ let t_bool ~loc ?meta () =
 
 let t_option t ~loc ?meta () =
   t_sum_ez ~loc ?meta [ "Some", t; "None", t_unit ~loc () ] ()
+
+
+let t_arrow param result ~loc ?meta () : t =
+  t_arrow ~loc ?meta { type1 = param; type2 = result } ()
 
 
 let t_mutez = t_tez
@@ -364,18 +377,30 @@ let get_t_bool t : unit option =
   Option.some_if (equal_content t.content t_bool.content) ()
 
 
-let get_t_option t =
-  let l_none = Label.of_string "None" in
-  let l_some = Label.of_string "Some" in
+let get_t_tuple (t : t) : t list option =
+  let tuple_of_record row = Row.to_tuple row in
+  match t.content with
+  | T_record row -> Some (tuple_of_record row)
+  | _ -> None
+
+
+let get_t_option (t : t) : t option =
+  let some = Label.of_string "Some" in
+  let none = Label.of_string "None" in
   match t.content with
   | T_sum { fields; _ } ->
-    let keys = Record.LMap.keys fields in
-    (match keys with
-    | [ a; b ]
-      when (Label.equal a l_none && Label.equal b l_some)
-           || (Label.equal a l_some && Label.equal b l_none) ->
-      let some = Record.LMap.find l_some fields in
-      Some some.Rows.associated_type
+    let keys = Map.key_set fields in
+    if Set.length keys = 2 && Set.mem keys some && Set.mem keys none
+    then Map.find fields some
+    else None
+  | _ -> None
+
+
+let get_t_pair (t : t) : (t * t) option =
+  match t.content with
+  | T_record m ->
+    (match Row.to_tuple m with
+    | [ t1; t2 ] -> Some (t1, t2)
     | _ -> None)
   | _ -> None
 
@@ -482,42 +507,7 @@ end = struct
   end
 end
 
-let pp_layout ppf layout =
-  match layout with
-  | L_comb -> Format.fprintf ppf "comb"
-  | L_tree -> Format.fprintf ppf "tree"
-  | L_exists lvar -> Format.fprintf ppf "^%a" Layout_var.pp lvar
-
-
-let pp_lmap_sep value sep ppf lmap =
-  let lst = List.sort ~compare:(fun (a, _) (b, _) -> Label.compare a b) lmap in
-  let new_pp ppf (k, v) = Format.fprintf ppf "@[<h>%a -> %a@]" Label.pp k value v in
-  Format.fprintf ppf "%a" (PP.list_sep new_pp sep) lst
-
-
-let pp_lmap_sep_d x = pp_lmap_sep x (PP.tag " ,@ ")
-
-let pp_record_sep value sep ppf (m : 'a Record.t) =
-  let lst = Record.LMap.to_kv_list m in
-  Format.fprintf ppf "%a" (pp_lmap_sep value sep) lst
-
-
-let pp_tuple_sep value sep ppf m =
-  assert (Record.is_tuple m);
-  let lst = Record.tuple_of_record m in
-  let new_pp ppf (_, v) = Format.fprintf ppf "%a" value v in
-  Format.fprintf ppf "%a" (PP.list_sep new_pp sep) lst
-
-
-let pp_tuple_or_record_sep_t value format_record sep_record format_tuple sep_tuple ppf m =
-  if Record.is_tuple m
-  then Format.fprintf ppf format_tuple (pp_tuple_sep value (PP.tag sep_tuple)) m
-  else Format.fprintf ppf format_record (pp_record_sep value (PP.tag sep_record)) m
-
-
-let pp_tuple_or_record_sep_type value =
-  pp_tuple_or_record_sep_t value "@[<h>record[%a]@]" " ,@ " "@[<h>( %a )@]" " *@ "
-
+let pp_layout = Layout.pp
 
 let rec pp ~name_of_tvar ~name_of_exists ppf t =
   let pp = pp ~name_of_tvar ~name_of_exists in
@@ -534,18 +524,8 @@ let rec pp ~name_of_tvar ~name_of_exists ppf t =
     | T_singleton lit -> Literal_value.pp ppf lit
     | T_abstraction abs -> pp_type_abs ~name_of_tvar ~name_of_exists ppf abs
     | T_for_all for_all -> pp_forall ~name_of_tvar ~name_of_exists ppf for_all
-    | T_sum row ->
-      Format.fprintf
-        ppf
-        "@[<h>sum[%a]@]"
-        (pp_lmap_sep_d (pp_row_elem ~name_of_tvar ~name_of_exists))
-        (Record.LMap.to_kv_list_rev row.fields)
-    | T_record row ->
-      Format.fprintf
-        ppf
-        "%a"
-        (pp_tuple_or_record_sep_type (pp_row_elem ~name_of_tvar ~name_of_exists))
-        row.fields)
+    | T_sum row -> Row.PP.sum_type pp (fun _ _ -> ()) ppf row
+    | T_record row -> Row.PP.record_type pp (fun _ _ -> ()) ppf row)
 
 
 and pp_construct ~name_of_tvar ~name_of_exists ppf { constructor; parameters; _ } =
@@ -555,10 +535,6 @@ and pp_construct ~name_of_tvar ~name_of_exists ppf { constructor; parameters; _ 
     (Literal_types.to_string constructor)
     (PP.list_sep_d_par (pp ~name_of_tvar ~name_of_exists))
     parameters
-
-
-and pp_row_elem ~name_of_tvar ~name_of_exists ppf (row_elem : row_element) =
-  pp ~name_of_tvar ~name_of_exists ppf row_elem.associated_type
 
 
 and pp_forall
@@ -615,3 +591,109 @@ let pp_with_name_tbl ~tbl ppf t =
 let pp =
   let name_of tvar = Format.asprintf "%a" Type_var.pp tvar in
   pp ~name_of_tvar:name_of ~name_of_exists:name_of
+
+
+(* Helpers for generators *)
+
+let get_entry_form ty =
+  let equal_t = equal in
+  let open Simple_utils.Option in
+  let* { type1; type2 } = get_t_arrow ty in
+  let* parameter, storage = get_t_pair type1 in
+  let* op_list, storage' = get_t_pair type2 in
+  let* op = get_t_list op_list in
+  let* () =
+    if equal_t (t_operation ~loc:Location.generated ()) op then return () else None
+  in
+  let* () = if equal_t storage storage' then return () else None in
+  return (parameter, storage)
+
+
+let build_entry_type p_ty s_ty =
+  let loc = Location.generated in
+  t_arrow
+    ~loc
+    (t_pair ~loc p_ty s_ty ())
+    (t_pair ~loc (t_list ~loc (t_operation ~loc ()) ()) s_ty ())
+    ()
+
+
+let get_t_inj (t : t) (v : Literal_types.t) : t list option =
+  match t.content with
+  | T_construct { language = _; constructor; parameters }
+    when Literal_types.equal constructor v -> Some parameters
+  | _ -> None
+
+
+let get_t_base_inj (t : t) (v : Literal_types.t) : unit option =
+  match get_t_inj t v with
+  | Some [] -> Some ()
+  | _ -> None
+
+
+let assert_t_list_operation (t : t) : unit option =
+  match get_t_list t with
+  | Some t' -> get_t_base_inj t' Literal_types.Operation
+  | None -> None
+
+
+let should_uncurry_entry entry_ty =
+  let is_t_list_operation listop = Option.is_some @@ assert_t_list_operation listop in
+  match get_t_arrow entry_ty with
+  | Some { type1 = tin; type2 = return } ->
+    (match get_t_tuple tin, get_t_tuple return with
+    | Some [ parameter; storage ], Some [ listop; storage' ] ->
+      if is_t_list_operation listop && equal storage storage'
+      then `No (parameter, storage)
+      else `Bad
+    | _ ->
+      let parameter = tin in
+      (match get_t_arrow return with
+      | Some { type1 = storage; type2 = return } ->
+        (match get_t_pair return with
+        | Some (listop, storage') ->
+          if is_t_list_operation listop && equal storage storage'
+          then `Yes (parameter, storage)
+          else `Bad
+        | _ -> `Bad)
+      | None -> `Bad))
+  | None -> `Bad
+
+
+let parameter_from_entrypoints
+    :  (Value_var.t * t) Simple_utils.List.Ne.t
+    -> ( t * t
+       , [> `Not_entry_point_form of t
+         | `Storage_does_not_match of Value_var.t * t * Value_var.t * t
+         ] )
+       result
+  =
+ fun ((entrypoint, entrypoint_type), rest) ->
+  let equal_t = equal in
+  let open Result.Let_syntax in
+  let%bind parameter, storage =
+    match should_uncurry_entry entrypoint_type with
+    | `Yes (parameter, storage) | `No (parameter, storage) ->
+      Result.Ok (parameter, storage)
+    | `Bad -> Result.Error (`Not_entry_point_form entrypoint_type)
+  in
+  let%bind parameter_list =
+    List.fold_result
+      ~init:[ String.capitalize (Value_var.to_name_exn entrypoint), parameter ]
+      ~f:(fun parameters (ep, ep_type) ->
+        let%bind parameter_, storage_ =
+          match should_uncurry_entry ep_type with
+          | `Yes (parameter, storage) | `No (parameter, storage) ->
+            Result.Ok (parameter, storage)
+          | `Bad -> Result.Error (`Not_entry_point_form entrypoint_type)
+        in
+        let%bind () =
+          Result.of_option
+            ~error:(`Storage_does_not_match (entrypoint, storage, ep, storage_))
+          @@ if equal_t storage_ storage then Some () else None
+        in
+        return ((String.capitalize (Value_var.to_name_exn ep), parameter_) :: parameters))
+      rest
+  in
+  return
+    (t_sum_ez ~loc:Location.generated ~layout:default_layout parameter_list (), storage)

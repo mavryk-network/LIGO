@@ -31,7 +31,7 @@ let list_of_option = function
 | Some list -> list
 
 let private_attribute = {
-  value="private";
+  value=("private", None);
   region=Region.ghost
 }
 
@@ -220,9 +220,7 @@ stmt_or_namespace:
 
 %inline attributes:
   ioption(nseq("[@attr]") { Utils.nseq_to_list $1 }) {
-    let l = list_of_option $1 in
-    let filter (attr: Attr.t reg) = {attr with value = fst attr.value}
-    in List.map filter l }
+    list_of_option $1 }
 
 (* Namespace Statement *)
 
@@ -405,7 +403,13 @@ call_expr_level:
 (* Function calls *)
 
 call_expr:
-  lambda par(ioption(nsepseq(fun_arg,","))) {
+  "contract_of" "(" nsepseq(module_name,".") ")" {
+    let kwd_contract = $1 in
+    let _stop = nsepseq_to_region (fun x -> x.region) $3 in
+    let region = cover kwd_contract#region $4#region in
+    let value  = $3 in
+    EContract {region; value } }
+| lambda par(ioption(nsepseq(fun_arg,","))) {
     let par    = $2.value in
     let start  = expr_to_region $1
     and stop   = $2.region in
@@ -687,14 +691,17 @@ var_pattern:
 object_pattern:
   braces(property_patterns) { PObject $1 }
 
+object_sep:
+  ";" | "," { $1 }
+
 property_patterns:
   property_pattern {
     $1, []
   }
-| property_patterns "," property_pattern {
+| property_patterns object_sep property_pattern {
     Utils.(nsepseq_rev $1 |> nsepseq_cons $3 ($2) |> nsepseq_rev)
   }
-| property_patterns "," object_rest_pattern {
+| property_patterns object_sep object_rest_pattern {
     Utils.(nsepseq_rev $1 |> nsepseq_cons $3 ($2) |> nsepseq_rev) }
 
 property_pattern:
@@ -797,14 +804,18 @@ core_type:
 | "_"                   { TVar    {value="_"; region=$1#region} }
 | type_name             { TVar    $1 }
 | module_access_t       { TModA   $1 }
-| nsepseq(object_type, "|") {
-    match $1 with
-      (obj, []) -> TObject obj
-    | _ as u    -> TDisc u
-  }
+| union_type            {         $1 }
 | type_ctor_app         { TApp    $1 }
 | attributes type_tuple { TProd   {inside=$2; attributes=$1} }
 | par(type_expr)        { TPar    $1 }
+
+(* Union type (see sum type) *)
+
+union_type:
+  ioption("|" { $1 }) nsepseq(object_type, "|") {
+    match $2 with
+      obj, [] -> TObject obj
+    | _       -> TDisc $2 }
 
 (* Tuples of types *)
 
@@ -850,7 +861,7 @@ module_var_t:
 (* Record types (a.k.a. "object types" in JS) *)
 
 object_type:
-  attributes "{" sep_or_term_list(field_decl,",") "}" {
+  attributes "{" sep_or_term_list(field_decl,object_sep) "}" {
     let lbrace = $2 in
     let rbrace = $4 in
     let fields, terminator = $3 in
@@ -935,27 +946,34 @@ statements:
 (* Expressions *)
 
 fun_expr:
-  ES6FUN par(parameters) ioption(type_annotation) "=>" body {
-    let region = cover $2.region (body_to_region $5) in
-    let value  = {parameters = EPar $2; lhs_type=$3; arrow=$4; body=$5}
+  ioption(type_generics) ES6FUN par(parameters)
+  ioption(type_annotation) "=>" body {
+    let region = cover $3.region (body_to_region $6) in
+    let value  = {
+      parameters=EPar $3;
+      lhs_type=$4;
+      arrow=$5;
+      body=$6;
+      type_params=$1;
+    }
     in {region; value}
   }
-| ES6FUN "(" ")" ioption(type_annotation) "=>" body {
-    let lpar = $2 in
-    let rpar = $3 in
-    let arrow = $5 in
+| ioption(type_generics) ES6FUN "(" ")" ioption(type_annotation) "=>" body {
+    let lpar  = $3 in
+    let rpar  = $4 in
+    let arrow = $6 in
     let region     = cover lpar#region rpar#region in
     let parameters = EUnit {region; value = (lpar,rpar)} in
-    let region     = cover lpar#region (body_to_region $6) in
-    let value      = {parameters; lhs_type=$4; arrow; body=$6}
+    let region     = cover lpar#region (body_to_region $7) in
+    let value      = {parameters; lhs_type=$5; arrow; body=$7; type_params=$1}
     in {region; value}
-  }
+ }
 | ES6FUN "<ident>" "=>" body
 | ES6FUN "_" "=>" body {
     let params = unwrap $2 in
     let region     = cover params.region (body_to_region $4)
     and parameters = EVar params in
-    let value = {parameters; lhs_type=None; arrow=$3; body=$4}
+    let value = {parameters; lhs_type=None; arrow=$3; body=$4; type_params=None}
     in {region; value} }
 
 parameters:
@@ -999,7 +1017,7 @@ array_literal:
 (* Records (a.k.a. "objects" in JS) *)
 
 object_literal: (* TODO: keep the terminator *)
-  braces(sep_or_term_list(property,",") { fst $1 }) { EObject $1 }
+  braces(sep_or_term_list(property,object_sep) { fst $1 }) { EObject $1 }
 
 property:
   field_name {

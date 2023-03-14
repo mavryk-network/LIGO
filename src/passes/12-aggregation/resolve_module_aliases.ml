@@ -51,6 +51,7 @@ module Aliases = struct
     List.rev @@ aux path module_path
 end
 
+(* this is doing nothing ? *)
 let rec type_expression : Aliases.t -> AST.type_expression -> AST.type_expression =
  fun aliases te ->
   let self ?(aliases = aliases) = type_expression aliases in
@@ -58,10 +59,10 @@ let rec type_expression : Aliases.t -> AST.type_expression -> AST.type_expressio
   match te.type_content with
   | T_variable type_variable -> return @@ T_variable type_variable
   | T_sum { fields; layout } ->
-    let fields = Record.map ~f:(Rows.map_row_element_mini_c self) fields in
+    let fields = Record.map ~f:self fields in
     return @@ T_sum { fields; layout }
   | T_record { fields; layout } ->
-    let fields = Record.map ~f:(Rows.map_row_element_mini_c self) fields in
+    let fields = Record.map ~f:self fields in
     return @@ T_record { fields; layout }
   | T_arrow { type1; type2 } ->
     let type1 = self type1 in
@@ -230,10 +231,10 @@ and compile_module_expr mvar path
     -> Aliases.t * Module_var.t list * AST.module_expr option
   =
  fun aliases mexpr ->
-  match mexpr.wrap_content with
+  match mexpr.module_content with
   | M_struct prg ->
     let aliases, prg = compile_module (mvar :: path) aliases prg in
-    aliases, mvar :: path, Some { mexpr with wrap_content = M_struct prg }
+    aliases, mvar :: path, Some { mexpr with module_content = M_struct prg }
   | M_variable v ->
     let aliases, path' = Aliases.get aliases v in
     aliases, path', None

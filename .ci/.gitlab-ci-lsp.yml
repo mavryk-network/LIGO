@@ -1,0 +1,70 @@
+## LSP/Squirrel
+
+include:
+  - '/.ci/.gitlab-ci-tools-common.yml'
+
+vscode-extension-docker-test:
+  stage: tools-check
+  rules: &vscode_extension_mr_dev
+    - !reference [.vscode_extension_mr_changes]
+    - !reference [.dev]
+  needs: [docker_extract]
+  script:
+    - git add ./ligo # Ligo binary is needed for these tests
+    - nix build $FLAKE_FLAGS ./tools/vscode#tests.x86_64-linux.vscode-extenstion-test-docker-image
+    - docker load -i result
+    - docker run --rm vscode-extension-test
+  # Nuke imported image to save some space
+  after_script:
+    - docker image rm vscode-extension-test
+
+vscode-extension-publish-check:
+  stage: tools-check
+  rules: *vscode_extension_mr_dev
+  needs: []
+  script:
+    - nix flake $FLAKE_FLAGS check ./tools/vsce
+
+emacs-lsp-client-test:
+  stage: tools-check
+  tags:
+    - docker
+  image: silex/emacs:27.2-ci-cask
+  variables:
+    EMACS: "emacs-27.2"
+  rules:
+    - !reference [.dev]
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+      - tools/emacs/**/*
+  needs: [docker_extract]
+  script:
+    # Add ligo to path
+    - export PATH=$PWD:$PATH
+    - cd tools/emacs
+    - cask install
+    - cask emacs --batch -L . -l tests/configuration-test.el -f ert-run-tests-batch
+
+vscode-lsp-extension:
+  stage: tooling
+  rules:
+    - !reference [.vscode_extension_mr_changes]
+    - !reference [.dev]
+    - !reference [.vscode_production]
+  needs: []
+  script:
+    - nix build $FLAKE_FLAGS ./tools/vscode#vscode-extension
+    - cp -Lr --no-preserve=mode,ownership,timestamps result/*.vsix ligo-extension.vsix
+  artifacts:
+    paths:
+      - ligo-extension.vsix
+
+vscode-lsp-extension-publish:
+  stage: push
+  rules:
+    - !reference [.vscode_production]
+  needs: [vscode-lsp-extension]
+  when: manual
+  script:
+    - nix develop ./tools/vsce --command vsce publish --packagePath *.vsix # Uses VSCE_PAT env variable as personal access token
+    - nix develop ./tools/vsce --command ovsx publish *.vsix # Uses OVSX_PAT env variable as personal access token

@@ -117,6 +117,21 @@ let get_def_type = function
   | Module m -> m.def_type
 
 
+let add_references_to_def : def -> LSet.t -> def =
+ fun def references ->
+  match def with
+  | Variable vdef ->
+    Variable { vdef with references = LSet.union vdef.references references }
+  | Type tdef -> Type { tdef with references = LSet.union tdef.references references }
+  | Module mdef -> Module { mdef with references = LSet.union mdef.references references }
+
+
+let get_references = function
+  | Type t -> t.references
+  | Variable v -> v.references
+  | Module m -> m.references
+
+
 let make_v_def : string -> type_case -> def_type -> Location.t -> Location.t -> def =
  fun name t def_type range body_range ->
   let uid = make_def_id name in
@@ -162,6 +177,18 @@ let filter_local_defs : def list -> [ `Global of def list ] * [ `Local of def li
     List.partition_tf ~f:(fun def -> Caml.(get_def_type def = Global)) defs
   in
   `Global gdefs, `Local ldefs
+
+
+let rec ignore_local_defs : def list -> def list =
+ fun defs ->
+  match defs with
+  | [] -> []
+  | Variable def :: defs when Caml.(def.def_type = Local) -> ignore_local_defs defs
+  | Type def :: defs when Caml.(def.def_type = Local) -> ignore_local_defs defs
+  | Module def :: defs when Caml.(def.def_type = Local) -> ignore_local_defs defs
+  | Module ({ mod_case = Def def; _ } as mdef) :: defs ->
+    Module { mdef with mod_case = Def (ignore_local_defs def) } :: ignore_local_defs defs
+  | def :: defs -> def :: ignore_local_defs defs
 
 
 type scope = Location.t * def list

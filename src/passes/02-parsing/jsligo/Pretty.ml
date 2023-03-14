@@ -100,7 +100,7 @@ and pp_namespace ?top {value = (_, name, statements, attributes); _} =
     Some true -> true
   | _ -> false
   in
-  let is_private = List.exists ~f:(fun a -> String.equal a.value "private") attributes in
+  let is_private = List.exists ~f:(fun a -> String.equal (fst a.value) "private") attributes in
   let attributes  = filter_private attributes in
   let pp_statements = pp_nsepseq ";" pp_statement in
   (if List.is_empty attributes then empty else pp_attributes attributes) ^^
@@ -122,7 +122,7 @@ and pp_return {value = {expr; _}; _} =
   | None -> string "return"
 
 and filter_private (attributes: CST.attributes) : CST.attributes =
-  List.filter ~f:(fun (v: CST.attribute) -> not (String.equal v.value "private")) attributes
+  List.filter ~f:(fun (v: CST.attribute) -> not (String.equal (fst v.value) "private")) attributes
 
 and pp_let ?top (node : let_decl reg) =
   let {attributes; bindings; _} : let_decl = node.value in
@@ -130,7 +130,7 @@ and pp_let ?top (node : let_decl reg) =
     Some true -> true
   | _ -> false
   in
-  let is_private = List.exists ~f:(fun a -> String.equal a.value "private") attributes in
+  let is_private = List.exists ~f:(fun a -> String.equal (fst a.value) "private") attributes in
   let attributes  = filter_private attributes in
   (if List.is_empty attributes then empty else pp_attributes attributes)
      ^^ (if ((top && is_private) || not top) then string "" else string "export ")
@@ -219,6 +219,7 @@ and pp_expr = function
 | EUnit    _ -> string "unit"
 | ECodeInj _ -> failwith "TODO: ECodeInj"
 | ETernary e -> pp_ternary e
+| EContract e -> pp_contract e
 
 and pp_array (node: (array_item, comma) Utils.sepseq brackets reg) =
   match node.value.inside with
@@ -436,12 +437,19 @@ and pp_variant_comp (node: variant_comp) =
      else let sep = string "," ^/^ break 0
           in group (constr ^^ sep ^^ separate_map sep pp_type_expr params)
 
+and pp_attribute (node : Attr.t reg) =
+  let key, val_opt = node.value in
+  let thread = string "/* @" ^^ string key in
+  let thread = match val_opt with
+                 Some (String value | Ident value) ->
+                   group (thread ^/^ nest 2 (string value))
+               | None -> thread in
+  let thread = thread ^^ string " */"
+  in thread
 and pp_attributes = function
   [] -> empty
-| attr ->
-  let make s = string "@" ^^ string s.Region.value ^^ string " "
-  in
-  string "/* " ^^ concat_map make attr ^^ string "*/ "
+| attrs ->
+  separate_map (break 0) pp_attribute attrs
 
 and pp_object_type fields = group (pp_ne_injection pp_field_decl fields)
 
@@ -533,6 +541,11 @@ and pp_assign_pattern {value = {property; value; _}; _} =
 
 and pp_destruct {value = {property; target; _}; _} =
   pp_ident property ^^ string ":" ^^ pp_val_binding target
+
+and pp_contract {value; _} =
+  string "(contract_of "
+  ^^ group (nest 0 (break 1 ^^ pp_nsepseq "." pp_ident value))
+  ^^ string ")"
 
 let print_type_expr = pp_type_expr
 let print_pattern   = pp_pattern

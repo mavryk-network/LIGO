@@ -1,10 +1,18 @@
 open Cli_expect
 
 let gs s = "../../test/contracts/get_scope_tests/" ^ s
+let () = Ligo_unix.putenv ~key:"LIGO_GET_SCOPE_USE_NEW_IMP" ~data:"true"
 
 let%expect_test _ =
   run_ligo_good
-    [ "info"; "get-scope"; gs "lambda_letin.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "lambda_letin.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -69,7 +77,14 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good
-    [ "info"; "get-scope"; gs "letin.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "letin.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -129,7 +144,14 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good
-    [ "info"; "get-scope"; gs "lambda.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "lambda.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -171,7 +193,14 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good
-    [ "info"; "get-scope"; gs "match.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "match.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -267,10 +296,90 @@ let%expect_test _ =
     Body Range: File "../../test/contracts/get_scope_tests/match.mligo", line 1, characters 14-40
     Content: : |sum[Bar -> string , Foo -> int]|
     references: []
-    Module definitions: |}]
+    Module definitions:
+    Warnings:
+    File "../../test/contracts/get_scope_tests/match.mligo", line 8, characters 8-9:
+      7 |   | Foo x -> x + a
+      8 |   | Bar y -> 1 + a
+      9 |
+    :
+    Warning: unused variable "y".
+    Hint: replace it by "_y" to prevent this warning.
+
+    File "../../test/contracts/get_scope_tests/match.mligo", line 8, characters 8-9:
+      7 |   | Foo x -> x + a
+      8 |   | Bar y -> 1 + a
+      9 |
+    :
+    Warning: unused variable "y".
+    Hint: replace it by "_y" to prevent this warning.
+
+    File "../../test/contracts/get_scope_tests/match.mligo", line 15, characters 8-10:
+     14 |     a
+     15 |   | hd::tl -> 2
+     16 |
+    :
+    Warning: unused variable "tl".
+    Hint: replace it by "_tl" to prevent this warning.
+
+    File "../../test/contracts/get_scope_tests/match.mligo", line 15, characters 4-6:
+     14 |     a
+     15 |   | hd::tl -> 2
+     16 |
+    :
+    Warning: unused variable "hd".
+    Hint: replace it by "_hd" to prevent this warning.
+
+    File "../../test/contracts/get_scope_tests/match.mligo", line 13, characters 8-9:
+     12 |   | [] ->
+     13 |     let c = 2 in
+     14 |     a
+    :
+    Warning: unused variable "c".
+    Hint: replace it by "_c" to prevent this warning.
+
+    File "../../test/contracts/get_scope_tests/match.mligo", line 8, characters 8-9:
+      7 |   | Foo x -> x + a
+      8 |   | Bar y -> 1 + a
+      9 |
+    :
+    Warning: unused variable "y".
+    Hint: replace it by "_y" to prevent this warning.
+
+    File "../../test/contracts/get_scope_tests/match.mligo", line 15, characters 8-10:
+     14 |     a
+     15 |   | hd::tl -> 2
+     16 |
+    :
+    Warning: unused variable "tl".
+    Hint: replace it by "_tl" to prevent this warning.
+
+    File "../../test/contracts/get_scope_tests/match.mligo", line 15, characters 4-6:
+     14 |     a
+     15 |   | hd::tl -> 2
+     16 |
+    :
+    Warning: unused variable "hd".
+    Hint: replace it by "_hd" to prevent this warning.
+
+    File "../../test/contracts/get_scope_tests/match.mligo", line 13, characters 8-9:
+     12 |   | [] ->
+     13 |     let c = 2 in
+     14 |     a
+    :
+    Warning: unused variable "c".
+    Hint: replace it by "_c" to prevent this warning. |}]
 
 let%expect_test _ =
-  run_ligo_good [ "info"; "get-scope"; gs "rec.mligo"; "--format"; "dev"; "--with-types" ];
+  run_ligo_good
+    [ "info"
+    ; "get-scope"
+    ; gs "rec.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -280,7 +389,7 @@ let%expect_test _ =
     [ k#4 j#3 i#2 c#1 a#0  ] File "../../test/contracts/get_scope_tests/rec.mligo", line 6, characters 4-10
     [ m#7 n#6 z#5 c#1 a#0  ] File "../../test/contracts/get_scope_tests/rec.mligo", line 9, characters 7-36
     [ z#5 c#1 a#0  ] File "../../test/contracts/get_scope_tests/rec.mligo", line 11, characters 10-18
-    [ v#8 z#5 c#1 a#0  ] File "../../test/contracts/get_scope_tests/rec.mligo", line 12, characters 10-11
+    [ v#8 z#5 c#1 a#0  ] File "../../test/contracts/get_scope_tests/rec.mligo", line 12, characters 10-15
     [ b#9 v#8 z#5 c#1 a#0  ] File "../../test/contracts/get_scope_tests/rec.mligo", line 13, characters 2-9
     [ y#12 x#11 b#10 a#0  ] File "../../test/contracts/get_scope_tests/rec.mligo", line 16, character 5 to line 17, character 15
 
@@ -299,7 +408,7 @@ let%expect_test _ =
     references: []
     (b#9 -> b)
     Range: File "../../test/contracts/get_scope_tests/rec.mligo", line 12, characters 6-7
-    Body Range: File "../../test/contracts/get_scope_tests/rec.mligo", line 12, characters 10-11
+    Body Range: File "../../test/contracts/get_scope_tests/rec.mligo", line 12, characters 10-15
     Content: |resolved: int|
     references:
       File "../../test/contracts/get_scope_tests/rec.mligo", line 13, characters 8-9
@@ -346,7 +455,8 @@ let%expect_test _ =
     Range: File "../../test/contracts/get_scope_tests/rec.mligo", line 11, characters 6-7
     Body Range: File "../../test/contracts/get_scope_tests/rec.mligo", line 11, characters 10-18
     Content: |resolved: int|
-    references: []
+    references:
+      File "../../test/contracts/get_scope_tests/rec.mligo", line 12, characters 14-15
     (x#11 -> x)
     Range: File "../../test/contracts/get_scope_tests/rec.mligo", line 15, characters 8-9
     Body Range: File "../../test/contracts/get_scope_tests/rec.mligo", line 16, character 2 to line 17, character 16
@@ -373,7 +483,14 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good
-    [ "info"; "get-scope"; gs "shadowing.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "shadowing.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -432,7 +549,14 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good
-    [ "info"; "get-scope"; gs "records.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "records.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -492,7 +616,14 @@ let%expect_test _ =
     references: []
     Module definitions: |}];
   run_ligo_good
-    [ "info"; "get-scope"; gs "constant.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "constant.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -540,7 +671,14 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good
-    [ "info"; "get-scope"; gs "application.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "application.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -586,11 +724,25 @@ let%expect_test _ =
       File "../../test/contracts/get_scope_tests/application.mligo", line 2, characters 58-59
     Type definitions:
     Module definitions:
+    Warnings:
+    File "../../test/contracts/get_scope_tests/application.mligo", line 3, characters 7-8:
+      2 |   let f : (int-> int -> int) = fun (i : int) (j : int) -> j + i in
+      3 |   (let b = 1 in f 1) (let c = 2 in c)
+    :
+    Warning: unused variable "b".
+    Hint: replace it by "_b" to prevent this warning.
  |}]
 
 let%expect_test _ =
   run_ligo_good
-    [ "info"; "get-scope"; gs "include.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "include.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -665,60 +817,12 @@ let%expect_test _ =
   run_ligo_good
     [ "info"
     ; "get-scope"
-    ; gs "bad_field_record.mligo"
+    ; gs "nominal_types.mligo"
     ; "--format"
     ; "dev"
     ; "--with-types"
+    ; "--no-stdlib"
     ];
-  [%expect
-    {|
-    Scopes:
-    [ foo_record#0  ] File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 4, characters 8-9
-    [ foo_record#0  ] File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 5, characters 8-9
-    [ c#1 foo_record#0  ] File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 9, characters 10-11
-    [ i#2 c#1 foo_record#0  ] File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 10, characters 2-3
-    [ a#3 c#1 foo_record#0  ] File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 13, characters 10-11
-    [ j#4 a#3 c#1 foo_record#0  ] File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 14, characters 2-3
-
-    Variable definitions:
-    (a#3 -> a)
-    Range: File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 8, characters 4-5
-    Body Range: File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 9, character 2 to line 10, character 3
-    Content: |resolved: int|
-    references: []
-    (b#5 -> b)
-    Range: File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 12, characters 4-5
-    Body Range: File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 13, character 2 to line 14, character 3
-    Content: |unresolved|
-    references: []
-    (c#1 -> c)
-    Range: File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 3, characters 4-5
-    Body Range: File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 3, character 8 to line 6, character 1
-    Content: |resolved: foo_record|
-    references:
-      File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 9, characters 10-11 ,
-      File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 13, characters 10-11
-    (i#2 -> i)
-    Range: File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 9, characters 6-7
-    Body Range: File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 9, characters 10-15
-    Content: |resolved: int|
-    references:
-      File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 10, characters 2-3
-    (j#4 -> j)
-    Range: File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 13, characters 6-7
-    Body Range: File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 13, characters 10-15
-    Content: |unresolved|
-    references:
-      File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 14, characters 2-3
-    Type definitions:
-    (foo_record#0 -> foo_record)
-    Range: File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 1, characters 5-15
-    Body Range: File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 1, characters 18-43
-    Content: : |record[bar -> int , foo -> int]|
-    references: []
-    Module definitions: |}];
-  run_ligo_good
-    [ "info"; "get-scope"; gs "nominal_types.mligo"; "--format"; "dev"; "--with-types" ];
   [%expect
     {|
     Scopes:
@@ -776,7 +880,14 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good
-    [ "info"; "get-scope"; gs "module.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "module.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -852,7 +963,14 @@ let%expect_test _ =
     references:
       File "../../test/contracts/get_scope_tests/module.mligo", line 16, characters 4-5 |}];
   run_ligo_good
-    [ "info"; "get-scope"; gs "module2.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "module2.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -961,7 +1079,14 @@ let%expect_test _ =
     references:
       File "../../test/contracts/get_scope_tests/module2.mligo", line 19, characters 9-10 |}];
   run_ligo_good
-    [ "info"; "get-scope"; gs "module3.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "module3.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -984,77 +1109,90 @@ let%expect_test _ =
     [ c5#20 c4#19 c3#18 c2#17 c1#16 b5#15 b4#14 b3#13 b2#12 b1#11 E#10 D#9 B#8 C#7 a3#6 a2#5 a1#4 z#3 y#2 A#1 x#0  ] File "../../test/contracts/get_scope_tests/module3.mligo", line 31, characters 13-17
     [ e1#21 c5#20 c4#19 c3#18 c2#17 c1#16 b5#15 b4#14 b3#13 b2#12 b1#11 E#10 D#9 B#8 C#7 a3#6 a2#5 a1#4 z#3 y#2 A#1 x#0  ] File "../../test/contracts/get_scope_tests/module3.mligo", line 32, characters 13-17
     [ e2#22 e1#21 c5#20 c4#19 c3#18 c2#17 c1#16 b5#15 b4#14 b3#13 b2#12 b1#11 E#10 D#9 B#8 C#7 a3#6 a2#5 a1#4 z#3 y#2 A#1 x#0  ] File "../../test/contracts/get_scope_tests/module3.mligo", line 33, characters 13-17
-    [ e3#23 e2#22 e1#21 c5#20 c4#19 c3#18 c2#17 c1#16 b5#15 b4#14 b3#13 b2#12 b1#11 E#10 D#9 B#8 C#7 a3#6 a2#5 a1#4 z#3 y#2 A#1 x#0  ] File "../../test/contracts/get_scope_tests/module3.mligo", line 35, characters 4-6
+    [ e3#23 e2#22 e1#21 c5#20 c4#19 c3#18 c2#17 c1#16 b5#15 b4#14 b3#13 b2#12 b1#11 E#10 D#9 B#8 C#7 a3#6 a2#5 a1#4 z#3 y#2 A#1 x#0  ] File "../../test/contracts/get_scope_tests/module3.mligo", line 35, character 4 to line 38, character 16
 
     Variable definitions:
     (b1#11 -> b1)
     Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 19, characters 8-10
     Body Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 19, characters 13-16
     Content: |resolved: int|
-    references: []
+    references:
+      File "../../test/contracts/get_scope_tests/module3.mligo", line 36, characters 4-6
     (b2#12 -> b2)
     Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 20, characters 8-10
     Body Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 20, characters 13-16
     Content: |resolved: int|
-    references: []
+    references:
+      File "../../test/contracts/get_scope_tests/module3.mligo", line 36, characters 9-11
     (b3#13 -> b3)
     Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 21, characters 8-10
     Body Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 21, characters 13-19
     Content: |resolved: int|
-    references: []
+    references:
+      File "../../test/contracts/get_scope_tests/module3.mligo", line 36, characters 14-16
     (b4#14 -> b4)
     Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 22, characters 8-10
     Body Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 22, characters 13-19
     Content: |resolved: int|
-    references: []
+    references:
+      File "../../test/contracts/get_scope_tests/module3.mligo", line 36, characters 19-21
     (b5#15 -> b5)
     Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 23, characters 8-10
     Body Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 23, characters 13-19
     Content: |resolved: int|
-    references: []
+    references:
+      File "../../test/contracts/get_scope_tests/module3.mligo", line 36, characters 24-26
     (c1#16 -> c1)
     Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 25, characters 8-10
     Body Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 25, characters 13-16
     Content: |resolved: int|
-    references: []
+    references:
+      File "../../test/contracts/get_scope_tests/module3.mligo", line 37, characters 4-6
     (c2#17 -> c2)
     Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 26, characters 8-10
     Body Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 26, characters 13-16
     Content: |resolved: int|
-    references: []
+    references:
+      File "../../test/contracts/get_scope_tests/module3.mligo", line 37, characters 9-11
     (c3#18 -> c3)
     Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 27, characters 8-10
     Body Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 27, characters 13-19
     Content: |resolved: int|
-    references: []
+    references:
+      File "../../test/contracts/get_scope_tests/module3.mligo", line 37, characters 14-16
     (c4#19 -> c4)
     Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 28, characters 8-10
     Body Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 28, characters 13-19
     Content: |resolved: int|
-    references: []
+    references:
+      File "../../test/contracts/get_scope_tests/module3.mligo", line 37, characters 19-21
     (c5#20 -> c5)
     Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 29, characters 8-10
     Body Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 29, characters 13-19
     Content: |resolved: int|
-    references: []
+    references:
+      File "../../test/contracts/get_scope_tests/module3.mligo", line 37, characters 24-26
     (e1#21 -> e1)
     Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 31, characters 8-10
     Body Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 31, characters 13-17
     Content: |resolved: int|
-    references: []
+    references:
+      File "../../test/contracts/get_scope_tests/module3.mligo", line 38, characters 4-6
     (e2#22 -> e2)
     Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 32, characters 8-10
     Body Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 32, characters 13-17
     Content: |resolved: int|
-    references: []
+    references:
+      File "../../test/contracts/get_scope_tests/module3.mligo", line 38, characters 9-11
     (e3#23 -> e3)
     Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 33, characters 8-10
     Body Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 33, characters 13-17
     Content: |resolved: int|
-    references: []
+    references:
+      File "../../test/contracts/get_scope_tests/module3.mligo", line 38, characters 14-16
     (x#24 -> x)
     Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 5, characters 4-5
-    Body Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 6, character 4 to line 35, character 6
+    Body Range: File "../../test/contracts/get_scope_tests/module3.mligo", line 6, character 4 to line 38, character 16
     Content: |resolved: int|
     references: []
     Type definitions:
@@ -1167,7 +1305,14 @@ let%expect_test _ =
       File "../../test/contracts/get_scope_tests/module3.mligo", line 32, characters 13-14 ,
       File "../../test/contracts/get_scope_tests/module3.mligo", line 33, characters 13-14 |}];
   run_ligo_good
-    [ "info"; "get-scope"; gs "module4.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "module4.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -1205,7 +1350,14 @@ let%expect_test _ =
     references:
       File "../../test/contracts/get_scope_tests/module4.mligo", line 6, characters 4-5 |}];
   run_ligo_good
-    [ "info"; "get-scope"; gs "module5.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "module5.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
@@ -1362,6 +1514,7 @@ let%expect_test _ =
     ; "--format"
     ; "dev"
     ; "--with-types"
+    ; "--no-stdlib"
     ];
   [%expect
     {|
@@ -1431,7 +1584,14 @@ let%expect_test _ =
       Content: Alias: A#1
       references: [] |}];
   run_ligo_good
-    [ "info"; "get-scope"; gs "types.mligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "types.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
       Scopes:
@@ -1480,7 +1640,7 @@ let%expect_test _ =
       (exp2#25 -> exp2)
       Range: File "../../test/contracts/get_scope_tests/types.mligo", line 40, characters 4-8
       Body Range: File "../../test/contracts/get_scope_tests/types.mligo", line 41, character 4 to line 47, character 6
-      Content: |unresolved|
+      Content: |resolved: unit|
       references: []
       (f#20 -> f)
       Range: File "../../test/contracts/get_scope_tests/types.mligo", line 38, characters 4-5
@@ -1490,7 +1650,7 @@ let%expect_test _ =
       (fn#27 -> fn)
       Range: File "../../test/contracts/get_scope_tests/types.mligo", line 49, characters 4-6
       Body Range: File "../../test/contracts/get_scope_tests/types.mligo", line 49, characters 9-35
-      Content: |unresolved|
+      Content: |resolved: int -> nat|
       references: []
       (i#22 -> i)
       Range: File "../../test/contracts/get_scope_tests/types.mligo", line 43, characters 8-9
@@ -1511,8 +1671,8 @@ let%expect_test _ =
       Type definitions:
       (boo#23 -> boo)
       Range: File "../../test/contracts/get_scope_tests/types.mligo", line 44, characters 12-15
-      Body Range: File "../../test/contracts/get_scope_tests/types.mligo", line 44, characters 18-27
-      Content: : |option ('a)|
+      Body Range: File "../../test/contracts/get_scope_tests/types.mligo", line 44, characters 9-11
+      Content: : |funtype 'a : * . option ('a)|
       references:
         File "../../test/contracts/get_scope_tests/types.mligo", line 46, characters 12-19
       (hmm#12 -> hmm)
@@ -1564,7 +1724,7 @@ let%expect_test _ =
                         (exp1#8 -> exp1)
                         Range: File "../../test/contracts/get_scope_tests/types.mligo", line 8, characters 8-12
                         Body Range: File "../../test/contracts/get_scope_tests/types.mligo", line 9, character 8 to line 15, character 10
-                        Content: |unresolved|
+                        Content: |resolved: unit|
                         references: []
                         (g#6 -> g)
                         Range: File "../../test/contracts/get_scope_tests/types.mligo", line 12, characters 12-13
@@ -1579,8 +1739,8 @@ let%expect_test _ =
                         Type definitions:
                         (bar#5 -> bar)
                         Range: File "../../test/contracts/get_scope_tests/types.mligo", line 10, characters 16-19
-                        Body Range: File "../../test/contracts/get_scope_tests/types.mligo", line 10, characters 22-34
-                        Content: : |record[bar -> 'a]|
+                        Body Range: File "../../test/contracts/get_scope_tests/types.mligo", line 10, characters 13-15
+                        Content: : |funtype 'a : * . record[bar -> 'a]|
                         references:
                           File "../../test/contracts/get_scope_tests/types.mligo", line 14, characters 16-26
                         (foo#4 -> foo)
@@ -1620,55 +1780,414 @@ let%expect_test _ =
       Content: Alias: A#9
       references:
         File "../../test/contracts/get_scope_tests/types.mligo", line 21, characters 8-9 ,
-        File "../../test/contracts/get_scope_tests/types.mligo", line 23, characters 11-12 |}];
+        File "../../test/contracts/get_scope_tests/types.mligo", line 23, characters 11-12
+
+      Warnings:
+      File "../../test/contracts/get_scope_tests/types.mligo", line 14, characters 12-13:
+       13 |         // Module parametric type in
+       14 |         let h : string bar = { bar = "World" } in
+       15 |         ()
+      :
+      Warning: unused variable "h".
+      Hint: replace it by "_h" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 12, characters 12-13:
+       11 |         // Module type in
+       12 |         let g : foo = "Hello" in
+       13 |         // Module parametric type in
+      :
+      Warning: unused variable "g".
+      Hint: replace it by "_g" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 14, characters 12-13:
+       13 |         // Module parametric type in
+       14 |         let h : string bar = { bar = "World" } in
+       15 |         ()
+      :
+      Warning: unused variable "h".
+      Hint: replace it by "_h" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 12, characters 12-13:
+       11 |         // Module type in
+       12 |         let g : foo = "Hello" in
+       13 |         // Module parametric type in
+      :
+      Warning: unused variable "g".
+      Hint: replace it by "_g" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 14, characters 12-13:
+       13 |         // Module parametric type in
+       14 |         let h : string bar = { bar = "World" } in
+       15 |         ()
+      :
+      Warning: unused variable "h".
+      Hint: replace it by "_h" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 12, characters 12-13:
+       11 |         // Module type in
+       12 |         let g : foo = "Hello" in
+       13 |         // Module parametric type in
+      :
+      Warning: unused variable "g".
+      Hint: replace it by "_g" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 14, characters 12-13:
+       13 |         // Module parametric type in
+       14 |         let h : string bar = { bar = "World" } in
+       15 |         ()
+      :
+      Warning: unused variable "h".
+      Hint: replace it by "_h" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 12, characters 12-13:
+       11 |         // Module type in
+       12 |         let g : foo = "Hello" in
+       13 |         // Module parametric type in
+      :
+      Warning: unused variable "g".
+      Hint: replace it by "_g" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 14, characters 12-13:
+       13 |         // Module parametric type in
+       14 |         let h : string bar = { bar = "World" } in
+       15 |         ()
+      :
+      Warning: unused variable "h".
+      Hint: replace it by "_h" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 12, characters 12-13:
+       11 |         // Module type in
+       12 |         let g : foo = "Hello" in
+       13 |         // Module parametric type in
+      :
+      Warning: unused variable "g".
+      Hint: replace it by "_g" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 14, characters 12-13:
+       13 |         // Module parametric type in
+       14 |         let h : string bar = { bar = "World" } in
+       15 |         ()
+      :
+      Warning: unused variable "h".
+      Hint: replace it by "_h" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 12, characters 12-13:
+       11 |         // Module type in
+       12 |         let g : foo = "Hello" in
+       13 |         // Module parametric type in
+      :
+      Warning: unused variable "g".
+      Hint: replace it by "_g" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 14, characters 12-13:
+       13 |         // Module parametric type in
+       14 |         let h : string bar = { bar = "World" } in
+       15 |         ()
+      :
+      Warning: unused variable "h".
+      Hint: replace it by "_h" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 12, characters 12-13:
+       11 |         // Module type in
+       12 |         let g : foo = "Hello" in
+       13 |         // Module parametric type in
+      :
+      Warning: unused variable "g".
+      Hint: replace it by "_g" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 14, characters 12-13:
+       13 |         // Module parametric type in
+       14 |         let h : string bar = { bar = "World" } in
+       15 |         ()
+      :
+      Warning: unused variable "h".
+      Hint: replace it by "_h" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 12, characters 12-13:
+       11 |         // Module type in
+       12 |         let g : foo = "Hello" in
+       13 |         // Module parametric type in
+      :
+      Warning: unused variable "g".
+      Hint: replace it by "_g" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 14, characters 12-13:
+       13 |         // Module parametric type in
+       14 |         let h : string bar = { bar = "World" } in
+       15 |         ()
+      :
+      Warning: unused variable "h".
+      Hint: replace it by "_h" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 12, characters 12-13:
+       11 |         // Module type in
+       12 |         let g : foo = "Hello" in
+       13 |         // Module parametric type in
+      :
+      Warning: unused variable "g".
+      Hint: replace it by "_g" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 14, characters 12-13:
+       13 |         // Module parametric type in
+       14 |         let h : string bar = { bar = "World" } in
+       15 |         ()
+      :
+      Warning: unused variable "h".
+      Hint: replace it by "_h" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 12, characters 12-13:
+       11 |         // Module type in
+       12 |         let g : foo = "Hello" in
+       13 |         // Module parametric type in
+      :
+      Warning: unused variable "g".
+      Hint: replace it by "_g" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 14, characters 12-13:
+       13 |         // Module parametric type in
+       14 |         let h : string bar = { bar = "World" } in
+       15 |         ()
+      :
+      Warning: unused variable "h".
+      Hint: replace it by "_h" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 12, characters 12-13:
+       11 |         // Module type in
+       12 |         let g : foo = "Hello" in
+       13 |         // Module parametric type in
+      :
+      Warning: unused variable "g".
+      Hint: replace it by "_g" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 14, characters 12-13:
+       13 |         // Module parametric type in
+       14 |         let h : string bar = { bar = "World" } in
+       15 |         ()
+      :
+      Warning: unused variable "h".
+      Hint: replace it by "_h" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 12, characters 12-13:
+       11 |         // Module type in
+       12 |         let g : foo = "Hello" in
+       13 |         // Module parametric type in
+      :
+      Warning: unused variable "g".
+      Hint: replace it by "_g" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 14, characters 12-13:
+       13 |         // Module parametric type in
+       14 |         let h : string bar = { bar = "World" } in
+       15 |         ()
+      :
+      Warning: unused variable "h".
+      Hint: replace it by "_h" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 12, characters 12-13:
+       11 |         // Module type in
+       12 |         let g : foo = "Hello" in
+       13 |         // Module parametric type in
+      :
+      Warning: unused variable "g".
+      Hint: replace it by "_g" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 46, characters 8-9:
+       45 |     // paramertic type in
+       46 |     let j : nat boo = Some 1n in
+       47 |     ()
+      :
+      Warning: unused variable "j".
+      Hint: replace it by "_j" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 43, characters 8-9:
+       42 |     // type in
+       43 |     let i : qux = false in
+       44 |     type 'a boo = 'a option in
+      :
+      Warning: unused variable "i".
+      Hint: replace it by "_i" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 14, characters 12-13:
+       13 |         // Module parametric type in
+       14 |         let h : string bar = { bar = "World" } in
+       15 |         ()
+      :
+      Warning: unused variable "h".
+      Hint: replace it by "_h" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 12, characters 12-13:
+       11 |         // Module type in
+       12 |         let g : foo = "Hello" in
+       13 |         // Module parametric type in
+      :
+      Warning: unused variable "g".
+      Hint: replace it by "_g" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 46, characters 8-9:
+       45 |     // paramertic type in
+       46 |     let j : nat boo = Some 1n in
+       47 |     ()
+      :
+      Warning: unused variable "j".
+      Hint: replace it by "_j" to prevent this warning.
+
+      File "../../test/contracts/get_scope_tests/types.mligo", line 43, characters 8-9:
+       42 |     // type in
+       43 |     let i : qux = false in
+       44 |     type 'a boo = 'a option in
+      :
+      Warning: unused variable "i".
+      Hint: replace it by "_i" to prevent this warning. |}];
   run_ligo_good
-    [ "info"; "get-scope"; gs "local_type.ligo"; "--format"; "dev"; "--with-types" ];
+    [ "info"
+    ; "get-scope"
+    ; gs "import_x.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
   [%expect
     {|
     Scopes:
-    [ u#0  ] File "../../test/contracts/get_scope_tests/local_type.ligo", line 2, characters 12-14
-    [ b#4 toto#2 y#1 u#0  ] File "../../test/contracts/get_scope_tests/local_type.ligo", line 4, characters 42-43
-    [ foo#3 toto#2 y#1 u#0  ] File "../../test/contracts/get_scope_tests/local_type.ligo", line 5, characters 7-11
-    [ local_type#5  ] File "../../test/contracts/get_scope_tests/local_type.ligo", line 7, characters 10-12
+    [ X#4 Mangled_module_____________________test__contracts__get_scope_tests__x____mligo#3 x#2 y#1 x#0  ] File "../../test/contracts/get_scope_tests/import_x.mligo", line 3, characters 8-13
+    [ x#0  ] File "../../test/contracts/get_scope_tests/x.mligo", line 3, characters 8-9
+    [ y#1 x#0  ] File "../../test/contracts/get_scope_tests/x.mligo", line 4, characters 14-15
+    [ y#1 x#0  ] File "../../test/contracts/get_scope_tests/x.mligo", line 4, characters 22-24
 
     Variable definitions:
-    (b#4 -> b)
-    Range: File "../../test/contracts/get_scope_tests/local_type.ligo", line 4, characters 22-23
-    Body Range: File "../../test/contracts/get_scope_tests/local_type.ligo", line 4, characters 42-43
-    Content: |core: toto|
-    references:
-      File "../../test/contracts/get_scope_tests/local_type.ligo", line 4, characters 42-43
-    (foo#3 -> foo)
-    Range: File "../../test/contracts/get_scope_tests/local_type.ligo", line 4, characters 11-14
-    Body Range: File "../../test/contracts/get_scope_tests/local_type.ligo", line 4, characters 2-43
-    Content: |core: toto -> toto|
-    references: []
-    (local_type#5 -> local_type)
-    Range: File "../../test/contracts/get_scope_tests/local_type.ligo", line 1, characters 9-19
-    Body Range: File "../../test/contracts/get_scope_tests/local_type.ligo", line 1, character 0 to line 5, character 11
-    Content: |core: unit -> int|
-    references: []
-    (u#0 -> u)
-    Range: File "../../test/contracts/get_scope_tests/local_type.ligo", line 1, characters 25-26
-    Body Range: File "../../test/contracts/get_scope_tests/local_type.ligo", line 1, character 44 to line 5, character 11
-    Content: |core: unit|
-    references: []
-    (x#6 -> x)
-    Range: File "../../test/contracts/get_scope_tests/local_type.ligo", line 7, characters 6-7
-    Body Range: File "../../test/contracts/get_scope_tests/local_type.ligo", line 7, characters 10-12
+    (z#5 -> z)
+    Range: File "../../test/contracts/get_scope_tests/import_x.mligo", line 3, characters 4-5
+    Body Range: File "../../test/contracts/get_scope_tests/import_x.mligo", line 3, characters 8-13
     Content: |resolved: int|
     references: []
-    (y#1 -> y)
-    Range: File "../../test/contracts/get_scope_tests/local_type.ligo", line 2, characters 8-9
-    Body Range: File "../../test/contracts/get_scope_tests/local_type.ligo", line 2, characters 12-14
-    Content: |unresolved|
+    Type definitions:
+    Module definitions:
+    (Mangled_module_____________________test__contracts__get_scope_tests__x____mligo#3 -> Mangled_module_____________________test__contracts__get_scope_tests__x____mligo)
+    Range:
+    Body Range:
+    Content: Members: Variable definitions:
+                      (x#2 -> x)
+                      Range: File "../../test/contracts/get_scope_tests/x.mligo", line 4, characters 4-5
+                      Body Range: File "../../test/contracts/get_scope_tests/x.mligo", line 4, characters 8-25
+                      Content: |resolved: x|
+                      references:
+                        File "../../test/contracts/get_scope_tests/import_x.mligo", line 3, characters 8-13
+                      (y#1 -> y)
+                      Range: File "../../test/contracts/get_scope_tests/x.mligo", line 3, characters 4-5
+                      Body Range: File "../../test/contracts/get_scope_tests/x.mligo", line 3, characters 8-9
+                      Content: |resolved: int|
+                      references:
+                        File "../../test/contracts/get_scope_tests/x.mligo", line 4, characters 14-15
+                      Type definitions:
+                      (x#0 -> x)
+                      Range: File "../../test/contracts/get_scope_tests/x.mligo", line 1, characters 5-6
+                      Body Range: File "../../test/contracts/get_scope_tests/x.mligo", line 1, characters 9-33
+                      Content: : |record[a -> int , b -> string]|
+                      references: []
+                      Module definitions:
+
+    references:
+      File "../../test/contracts/get_scope_tests/import_x.mligo", line 1, characters 11-90
+
+    (X#4 -> X)
+    Range: File "../../test/contracts/get_scope_tests/import_x.mligo", line 1, characters 7-8
+    Body Range: File "../../test/contracts/get_scope_tests/import_x.mligo", line 1, characters 11-90
+    Content: Alias: Mangled_module_____________________test__contracts__get_scope_tests__x____mligo#3
+    references:
+      File "../../test/contracts/get_scope_tests/import_x.mligo", line 3, characters 8-9 |}];
+  run_ligo_good
+    [ "info"
+    ; "get-scope"
+    ; gs "local_module_using_local_binding.mligo"
+    ; "--format"
+    ; "dev"
+    ; "--with-types"
+    ; "--no-stdlib"
+    ];
+  [%expect
+    {|
+    Scopes:
+    [  ] File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 1, characters 8-9
+    [ a#0  ] File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 4, characters 12-13
+    [ a#1  ] File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 6, characters 16-17
+    [ A#3 x#2 a#1  ] File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 8, characters 4-7
+    [ b#4 a#0  ] File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 10, characters 8-9
+    [ c#5 b#4 a#0  ] File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 13, characters 12-13
+    [ c#6 b#4 a#0  ] File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 15, characters 16-17
+    [ c#7 b#4 a#0  ] File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 16, characters 16-17
+    [ C#9 x#8 c#7 c#6 b#4 a#0  ] File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 18, characters 4-7
+
+    Variable definitions:
+    (a#0 -> a)
+    Range: File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 1, characters 4-5
+    Body Range: File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 1, characters 8-9
+    Content: |resolved: int|
+    references: []
+    (a#1 -> a)
+    Range: File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 4, characters 8-9
+    Body Range: File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 4, characters 12-13
+    Content: |resolved: int|
+    references:
+      File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 6, characters 16-17
+    (b#4 -> b)
+    Range: File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 3, characters 4-5
+    Body Range: File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 4, character 4 to line 8, character 7
+    Content: |resolved: int|
+    references: []
+    (c#5 -> c)
+    Range: File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 10, characters 4-5
+    Body Range: File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 10, characters 8-9
+    Content: |resolved: int|
+    references: []
+    (c#6 -> c)
+    Range: File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 13, characters 8-9
+    Body Range: File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 13, characters 12-13
+    Content: |resolved: int|
+    references: []
+    (d#10 -> d)
+    Range: File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 12, characters 4-5
+    Body Range: File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 13, character 4 to line 18, character 7
+    Content: |resolved: int|
     references: []
     Type definitions:
-    (toto#2 -> toto)
-    Range: File "../../test/contracts/get_scope_tests/local_type.ligo", line 3, characters 7-11
-    Body Range: File "../../test/contracts/get_scope_tests/local_type.ligo", line 3, characters 15-18
-    Content: : |int|
+    Module definitions:
+    (A#3 -> A)
+    Range: File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 5, characters 11-12
+    Body Range: File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 5, character 4 to line 7, character 7
+    Content: Members: Variable definitions:
+                      (x#2 -> x)
+                      Range: File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 6, characters 12-13
+                      Body Range: File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 6, characters 16-17
+                      Content: |resolved: int|
+                      references:
+                        File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 8, characters 6-7
+                      Type definitions:
+                      Module definitions:
+
     references:
-      File "../../test/contracts/get_scope_tests/local_type.ligo", line 4, characters 26-30 ,
-      File "../../test/contracts/get_scope_tests/local_type.ligo", line 4, characters 34-38
-    Module definitions: |}]
+      File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 8, characters 4-5
+
+    (C#9 -> C)
+    Range: File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 14, characters 11-12
+    Body Range: File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 14, character 4 to line 17, character 7
+    Content: Members: Variable definitions:
+                      (c#7 -> c)
+                      Range: File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 15, characters 12-13
+                      Body Range: File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 15, characters 16-17
+                      Content: |resolved: int|
+                      references:
+                        File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 16, characters 16-17
+                      (x#8 -> x)
+                      Range: File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 16, characters 12-13
+                      Body Range: File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 16, characters 16-17
+                      Content: |resolved: int|
+                      references:
+                        File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 18, characters 6-7
+                      Type definitions:
+                      Module definitions:
+
+    references:
+      File "../../test/contracts/get_scope_tests/local_module_using_local_binding.mligo", line 18, characters 4-5 |}]
+
+let () = Ligo_unix.putenv ~key:"LIGO_GET_SCOPE_USE_NEW_IMP" ~data:""

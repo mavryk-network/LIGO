@@ -121,7 +121,7 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr =
     let attributes = Shared_helpers.decompile_attributes attributes in
     let aux
         ( Label.Label c
-        , ({ associated_type; attributes = row_attr; _ } : _ Rows.row_element) )
+        , ({ associated_type; row_elem_attributes = row_attr; _ } : _ AST.row_element) )
       =
       let ctor = Wrap.ghost c in
       let arg = decompile_type_expr associated_type in
@@ -140,7 +140,8 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr =
   | T_record { fields; attributes } ->
     let aux
         ( Label.Label c
-        , ({ associated_type; attributes = field_attr; _ } : _ Rows.row_element) )
+        , ({ associated_type; row_elem_attributes = field_attr; _ } : _ AST.row_element)
+        )
       =
       let field_name = Wrap.ghost c in
       let field_type = decompile_type_expr associated_type in
@@ -177,7 +178,7 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr =
     let v = decompile_type_var variable in
     return @@ CST.T_Var v
   | T_app { type_operator; arguments } ->
-    let v = CST.T_Var (decompile_type_var type_operator) in
+    let v = CST.T_Var (decompile_type_var (Module_access.get_el @@ type_operator)) in
     let lst = List.map ~f:decompile_type_expr arguments in
     let lst = list_to_nsepseq ~sep:Token.ghost_comma lst in
     let lst : _ CST.par = { lpar = Wrap.ghost ""; inside = lst; rpar = Wrap.ghost "" } in
@@ -1099,7 +1100,7 @@ and decompile_module_expression : AST.module_expr -> CST.module_expr =
   | M_variable v -> CST.M_Var (Wrap.ghost (Module_var.to_name_exn v))
 
 
-and decompile_declarations : AST.program -> CST.declaration Utils.nseq =
+and decompile_program : AST.program -> CST.ast =
  fun prg ->
-  let decl = List.map ~f:decompile_declaration prg in
-  List.Ne.of_list decl
+  let decl = List.Ne.of_list @@ List.map ~f:decompile_declaration prg in
+  { decl; eof = Token.ghost_eof }

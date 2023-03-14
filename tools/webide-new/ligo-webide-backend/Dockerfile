@@ -1,8 +1,8 @@
 FROM tezos/tezos:latest as octez-client
-FROM ligolang/ligo:0.52.0 as ligo-compiler
+FROM ligolang/ligo:0.61.0 as ligo-compiler
 FROM ubuntu:20.04 as web-ide-builder
 
-LABEL maintainer="laurent@marigold.dev"
+LABEL maintainer="infra@marigold.dev"
 LABEL stage=webide-new-builder
 ARG GHC_VERSION=9.0.2
 ARG LTS_SLUG=lts-19.0

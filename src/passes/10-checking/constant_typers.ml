@@ -102,10 +102,9 @@ module Comparable = struct
       in
       let%bind _ =
         List.map2_exn
-          (Record.LMap.to_list row1.fields)
-          (Record.LMap.to_list row2.fields)
-          ~f:(fun (row_elem1 : Type.row_element) (row_elem2 : Type.row_element) ->
-            comparator row_elem1.associated_type row_elem2.associated_type)
+          (Map.data row1.fields)
+          (Map.data row2.fields)
+          ~f:(fun row_elem1 row_elem2 -> comparator row_elem1 row_elem2)
         |> all
       in
       create_type @@ Type.t_bool
@@ -124,10 +123,9 @@ module Comparable = struct
       in
       let%bind _ =
         List.map2_exn
-          (Record.LMap.to_list row1.fields)
-          (Record.LMap.to_list row2.fields)
-          ~f:(fun (row_elem1 : Type.row_element) (row_elem2 : Type.row_element) ->
-            comparator row_elem1.associated_type row_elem2.associated_type)
+          (Map.data row1.fields)
+          (Map.data row2.fields)
+          ~f:(fun row_elem1 row_elem2 -> comparator row_elem1 row_elem2)
         |> all
       in
       create_type @@ Type.t_bool
@@ -254,7 +252,7 @@ module Annot = struct
     let return ret_type = { for_alls = []; arg_types = []; ret_type }
     let ( ^~> ) arg_type ret_type = { for_alls = []; arg_types = [ arg_type ]; ret_type }
     let ( ^-> ) arg_type type_ = { type_ with arg_types = arg_type :: type_.arg_types }
-    let ( @-> ) t1 t2 = Type.t_arrow ~loc { type1 = t1; type2 = t2 } ()
+    let ( @-> ) t1 t2 = Type.t_arrow ~loc t1 t2 ()
   end
 end
 
@@ -1040,10 +1038,11 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
           for_all "b"
           @@ fun b ->
           create
-            ~mode_annot:[ Inferred ]
+            ~mode_annot:[ Inferred; Checked ]
             ~types:
               [ (t_pair a b ~loc ()
                 @-> t_pair (t_list (t_operation ~loc ()) ~loc ()) b ~loc ())
+                ^-> t_views ~loc b ()
                 ^~> t_ast_contract ~loc ()
               ]) )
     ; ( C_TEST_COMPILE_AST_CONTRACT
@@ -1420,6 +1419,28 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
           create
             ~mode_annot:[ Checked ]
             ~types:[ t_contract a ~loc () ^~> t_option (t_string ~loc ()) ~loc () ]) )
+    ; ( C_TEST_NIL_VIEWS
+      , of_type
+          (for_all "a"
+          @@ fun a ->
+          create ~mode_annot:[ Checked ] ~types:[ t_unit ~loc () ^~> t_views a ~loc () ])
+      )
+    ; ( C_TEST_CONS_VIEWS
+      , of_type
+          (for_all "a"
+          @@ fun a ->
+          for_all "b"
+          @@ fun b ->
+          for_all "c"
+          @@ fun c ->
+          create
+            ~mode_annot:[ Inferred; Inferred; Checked ]
+            ~types:
+              [ a
+                ^-> (t_pair ~loc b a () @-> c)
+                ^-> t_views a ~loc ()
+                ^~> t_views a ~loc ()
+              ]) )
     ; C_EQ, of_comparator Comparable.comparator
     ; C_NEQ, of_comparator Comparable.comparator
     ; C_LT, of_comparator Comparable.comparator

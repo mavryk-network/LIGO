@@ -16,9 +16,10 @@ val compile_expression
     AST used by the compiler. *)
 val compile_program
   :  raise:(Errors.abs_error list, Main_warnings.all) Simple_utils.Trace.raise
-  -> CST.declarations
+  -> CST.t
   -> AST.program
 
 val decompile_expression : AST.expr -> CST.expr
-val decompile_declarations : AST.program -> CST.declarations
+val decompile_program : AST.program -> CST.ast
 val decompile_pattern_to_string : AST.type_expression option AST.Pattern.t -> string
+val decompile_type_expression_to_string : AST.type_expression -> string

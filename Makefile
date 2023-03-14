@@ -49,3 +49,25 @@ coverage:
 
 install:
 	cp _build/install/default/bin/ligo /usr/local/bin/ligo
+
+install-vscode:
+	cd tools/vscode/ && \
+	yarn install && \
+	rm -f ./*.vsix && \
+	yarn package && \
+	code --install-extension *.vsix --force
+
+run-vscode: install-vscode
+	code
+
+_build/default/src/bin/js_main.bc.js: ./src/bin/js_main.ml ./src/bin/dune
+	opam exec -- dune build $(<:.ml=.bc.js)
+
+
+.PHONY: build-demo-webide demo-webide-start
+build-demo-webide:
+	cd jsoo && npm i && npm run build
+
+demo-webide-start:
+	make build-demo-webide
+	python -m http.server -d $(WEB_STAGING_AREA)

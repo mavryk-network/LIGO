@@ -1,6 +1,7 @@
 import React, { PureComponent } from "react";
 
 import { Modal, DebouncedFormGroup } from "~/base-components/ui-components";
+import { validName } from "~/components/validators";
 
 import actions from "../actions";
 
@@ -26,7 +27,7 @@ export default class RenameProjectModal extends PureComponent {
       name: project.name,
       newName: project.name,
     });
-    this.forceUpdate();
+    // this.forceUpdate();
     this.modal.current.openModal();
     return new Promise((resolve) => {
       this.onConfirm = resolve;
@@ -54,11 +55,11 @@ export default class RenameProjectModal extends PureComponent {
     return (
       <Modal
         ref={this.modal}
-        title="Rename project"
+        title="Rename Project"
         textConfirm="Rename"
         onConfirm={this.onRenameProject}
         pending={creating && "Renaming..."}
-        confirmDisabled={!newName}
+        confirmDisabled={!newName || !!validName(newName)}
       >
         <DebouncedFormGroup
           label={
@@ -66,8 +67,9 @@ export default class RenameProjectModal extends PureComponent {
               New name for <kbd>{this.state.name}</kbd>
             </div>
           }
-          value={name}
+          value={newName}
           onChange={(newName) => this.setState({ newName })}
+          validator={validName}
         />
       </Modal>
     );

@@ -174,7 +174,7 @@ let rec compile_type_expression ~raise : CST.type_expr -> AST.type_expression =
     | _ ->
       let operator = Type_var.of_input_var ~loc operator.value in
       let lst = List.map ~f:self args in
-      return @@ t_app ~loc operator lst)
+      return @@ t_app ~loc (Module_access.make_el @@ operator) lst)
   | TFun func ->
     let (input_type, _, output_type), loc = r_split func in
     let input_type = self input_type in
@@ -416,14 +416,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
   | EFun func ->
     (* todo : make it in common with let function *)
     let func, loc = r_split func in
-    let ({ binders
-         ; rhs_type
-         ; body
-         ; kwd_fun = _
-         ; type_params = _
-         ; arrow = _
-         ; attributes = _
-         }
+    let ({ binders; rhs_type; body; kwd_fun = _; type_params; arrow = _; attributes = _ }
           : CST.fun_expr)
       =
       func
@@ -442,8 +435,18 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
           @@ Option.bind_pair (Param.get_ascr binder, rhs_type) )
     in
     let expr, rhs_type = aux lst in
-    let expr = fun_ expr in
-    return @@ e_lambda ~loc binder rhs_type expr
+    let expr = e_lambda ~loc binder rhs_type (fun_ expr) in
+    let expr =
+      Option.value_map
+        ~default:expr
+        ~f:(fun tp ->
+          let tp, loc = r_split tp in
+          let tp : CST.type_params = tp.inside in
+          let type_vars = List.Ne.map compile_type_var tp.type_vars in
+          List.Ne.fold_right ~f:(fun t e -> e_type_abs ~loc t e) ~init:expr type_vars)
+        type_params
+    in
+    return @@ expr
   | EConstr constr ->
     let (constr, args_o), loc = r_split constr in
     let args_o =
@@ -487,36 +490,6 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
       let lst = Option.value ~default:[] @@ Option.map ~f:npseq_to_list lc.elements in
       let lst = List.map ~f:self lst in
       return @@ e_list ~loc lst)
-  | ELetMutIn lmi ->
-    let lmi, loc = r_split lmi in
-    let ({ kwd_let = _; kwd_mut = _; binding; kwd_in = _; body; attributes }
-          : CST.let_mut_in)
-      =
-      lmi
-    in
-    let let_attr = compile_attributes attributes in
-    let body = self body in
-    let pattern, rhs_type, let_rhs =
-      match binding with
-      | { binders = pattern, []; type_params = None; rhs_type; eq = _; let_rhs } ->
-        pattern, rhs_type, let_rhs
-      | _ ->
-        (* Failed invariant due to parser *)
-        assert false
-    in
-    let let_rhs = compile_expression ~raise let_rhs in
-    let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) rhs_type in
-    let pattern = compile_pattern ~raise pattern in
-    let pattern =
-      Location.map
-        (function
-          | Pattern.P_var binder ->
-            let binder = Binder.set_ascr binder rhs_type in
-            AST.Pattern.P_var binder
-          | x -> x)
-        pattern
-    in
-    e_let_mut_in ~loc pattern let_attr let_rhs body
   | ELetIn li ->
     let li, loc = r_split li in
     let ({ kwd_let = _; kwd_rec; binding; kwd_in = _; body; attributes } : CST.let_in) =
@@ -606,6 +579,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
           in
           e_recursive
             ~loc:(Location.lift reg#region)
+            ~force_lambdarec:(List.mem ~equal:String.equal let_attr "lambdarec")
             (Binder.get_var let_binder)
             fun_type
             lambda
@@ -628,9 +602,24 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
       return @@ e_let_in ~loc pattern let_attr let_rhs @@ fun_ body)
   | ETypeIn ti ->
     let ti, loc = r_split ti in
-    let ({ type_decl = { name; type_expr; _ }; kwd_in = _; body } : CST.type_in) = ti in
+    let ({ type_decl = { name; type_expr; params; _ }; kwd_in = _; body } : CST.type_in) =
+      ti
+    in
+    let rhs =
+      let rhs = compile_type_expression ~raise type_expr in
+      match params with
+      | None -> rhs
+      | Some x ->
+        let lst = type_vars_to_list x in
+        let aux : CST.type_var Region.reg -> AST.type_expression -> AST.type_expression =
+         fun param type_ ->
+          let param, ploc = r_split param in
+          let ty_binder = Type_var.of_input_var ~loc:ploc (quote_var param.name.value) in
+          t_abstraction ~loc:ploc ty_binder Type type_
+        in
+        List.fold_right ~f:aux ~init:rhs lst
+    in
     let type_binder = compile_type_var name in
-    let rhs = compile_type_expression ~raise type_expr in
     let body = self body in
     return @@ e_type_in ~loc type_binder rhs body
   | EModIn mi ->
@@ -676,74 +665,11 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
         | hd :: tl -> (return <@ e_sequence ~loc prev) @@ aux hd tl
       in
       aux hd @@ tl)
-  | EAssign assn ->
-    let assn, loc = r_split assn in
-    let ({ binder; ass = _; expr } : CST.assign) = assn in
-    let binder = Binder.make (compile_variable binder) None in
-    let expr = self expr in
-    return @@ e_assign ~loc binder expr
-  | EFor for_loop ->
-    let for_loop, loc = r_split for_loop in
-    let CST.{ index; bound1; direction; bound2; body; _ } = for_loop in
-    let _, index = compile_var_pattern index in
-    let bound1 = compile_expression ~raise bound1 in
-    let bound2 = compile_expression ~raise bound2 in
-    let increment =
-      e_int ~loc
-      @@
-      match direction with
-      | To _ -> 1
-      | Downto kwd ->
-        (* TODO: Support downto loops. We require a more expressive for construct in ASTs for this. *)
-        raise.error (downto_for_loop_is_unsupported kwd#region)
-    in
-    let body = compile_loop_body ~raise body in
-    return @@ e_for ~loc (Binder.get_var index) bound1 bound2 increment body
-  | EForIn for_in_loop ->
-    let for_in_loop, loc = r_split for_in_loop in
-    let CST.{ pattern = raw_pattern; collection; body; _ } = for_in_loop in
-    let pattern = compile_pattern ~raise raw_pattern in
-    let binders =
-      (* TODO: Replace [For_each_loop.fe_binders] with pattern *)
-      match Location.unwrap pattern with
-      | P_var binder -> Binder.get_var binder, None
-      | P_tuple
-          [ { wrap_content = P_var binder1; _ }; { wrap_content = P_var binder2; _ } ] ->
-        Binder.get_var binder1, Some (Binder.get_var binder2)
-      | _ -> raise.error (unsupported_pattern_type [ raw_pattern ])
-    in
-    let collection = compile_expression ~raise collection in
-    let body = compile_loop_body ~raise body in
-    return @@ e_for_each ~loc binders collection Any body
-  | EWhile while_loop ->
-    let while_loop, loc = r_split while_loop in
-    let CST.{ cond; body; _ } = while_loop in
-    let cond = compile_expression ~raise cond in
-    let body = compile_loop_body ~raise body in
-    return @@ e_while ~loc cond body
-
-
-and compile_loop_body ~raise CST.{ kwd_do; seq_expr; kwd_done } =
-  let exprs = seq_expr |> pseq_to_list |> List.map ~f:(compile_expression ~raise) in
-  let body =
-    match exprs with
-    | [] ->
-      let loc = Location.lift @@ Region.cover kwd_do#region kwd_done#region in
-      e_unit ~loc ()
-    | expr :: exprs ->
-      List.fold_left exprs ~init:expr ~f:(fun expr1 expr2 ->
-          let loc = Location.cover expr1.location expr2.location in
-          e_sequence ~loc expr1 expr2)
-  in
-  body
-
-
-and compile_var_pattern var_pattern : Location.t * _ Binder.t =
-  let var_pattern, loc = r_split var_pattern in
-  (* TODO: Attributes (copied from [compile_pattern]) *)
-  let CST.{ variable; attributes = _ } = var_pattern in
-  let variable = compile_variable variable in
-  loc, Binder.make variable None
+  | EContract { value; region } ->
+    let loc = Location.lift region in
+    let module_ = List.Ne.map compile_mod_var @@ npseq_to_ne_list value in
+    let module_ = List.Ne.to_list module_ in
+    e_module_accessor ~loc module_ (Value_var.of_input_var ~loc "$contract")
 
 
 and compile_pattern ~raise : CST.pattern -> AST.ty_expr option Pattern.t =
@@ -757,9 +683,12 @@ and compile_pattern ~raise : CST.pattern -> AST.ty_expr option Pattern.t =
     in
     let loc = Location.lift region in
     Location.wrap ~loc @@ P_var b
-  | CST.PVar var_pattern ->
-    let loc, binder = compile_var_pattern var_pattern in
-    Location.wrap ~loc @@ P_var binder
+  | CST.PVar { region = _; value = { variable; attributes = _todo } } ->
+    let b =
+      let var = compile_variable variable in
+      Binder.make var None
+    in
+    Location.wrap ~loc:(Binder.get_loc b) @@ P_var b
   | CST.PTuple tuple ->
     let tuple, loc = r_split tuple in
     let lst = npseq_to_ne_list tuple in
@@ -1049,10 +978,7 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration option =
     let type_params =
       match type_params with
       | Some _ -> type_params
-      | None ->
-        (match let_rhs with
-        | EFun { value = { type_params; _ }; _ } -> type_params
-        | _ -> None)
+      | None -> None
     in
     let pattern, args = binders in
     let let_rhs = compile_expression ~raise let_rhs in
@@ -1147,6 +1073,7 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration option =
           in
           e_recursive
             ~loc:(Location.lift reg#region)
+            ~force_lambdarec:(List.mem ~equal:String.equal attr "lambdarec")
             (Binder.get_var binder)
             fun_type
             lambda

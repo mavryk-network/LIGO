@@ -1,6 +1,6 @@
 type t = { x : int ; y : (unit, unit) typed_address }
 
-let main ((_, _) : unit * unit) : operation list * unit = [], ()
+let main (_ : unit) (_ : unit) : operation list * unit = [], ()
 
 let ta, _, _ =
   Test.originate main () 0tez

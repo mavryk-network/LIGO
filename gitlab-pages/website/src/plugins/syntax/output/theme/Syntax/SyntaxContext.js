@@ -11,7 +11,7 @@ const ctx = {
     if (valid.includes(lang)) return lang;
     return syntax ?? "jsligo";
   })(),
-  setSyntax: () => { }
+  setSyntax: () => {}
 };
 const SyntaxContext = /*#__PURE__*/React.createContext(ctx);
 export default SyntaxContext;

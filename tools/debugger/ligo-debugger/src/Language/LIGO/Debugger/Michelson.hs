@@ -9,14 +9,14 @@ module Language.LIGO.Debugger.Michelson
   , readLigoMapper
   ) where
 
-import Control.Lens (at, backwards, devoid, forOf, traverseOf, unsafePartsOf)
+import Control.Lens (at, devoid, forOf, unsafePartsOf)
 import Control.Lens.Extras (template)
 import Control.Lens.Prism (_Just)
 import Control.Monad.Except (Except, liftEither, runExcept, throwError)
 import Data.DList qualified as DL
 import Data.Data (Data)
 import Data.Default (Default, def)
-import Data.HashSet qualified as HS
+import Data.HashSet qualified as HashSet
 import Data.Set qualified as Set
 import Fmt (Buildable (..), Builder, indentF, pretty, unlinesF, (+|), (|+))
 import Generics.SYB (everywhere, mkM, mkT)
@@ -40,7 +40,7 @@ import Morley.Michelson.TypeCheck.Instr qualified as Tc
 import Morley.Michelson.Typed
   (BadTypeForScope (BtHasTicket), Contract' (..), ContractCode' (unContractCode), DfsSettings (..),
   HandleImplicitDefaultEp (WithImplicitDefaultEp), Instr (..), SomeContract (..), dfsFoldInstr,
-  pattern ConcreteMeta)
+  pattern (:#), pattern ConcreteMeta)
 import Morley.Michelson.Typed qualified as T
 import Morley.Michelson.Untyped qualified as U
 import Morley.Tezos.Address (mformatAddress)
@@ -81,14 +81,18 @@ instance (meta ~ meta') => FromExp (WithMeta meta) (OpWithMeta meta') where
 
 typeCheckOpWithMeta
   :: (Show meta, NFData meta, Data meta)
-  => Tc.TcInstrBase (OpWithMeta meta)
-typeCheckOpWithMeta instr hst = case instr of
+  => (meta -> Bool) -> Tc.TcInstrBase (OpWithMeta meta)
+typeCheckOpWithMeta isRedundantMeta instr hst = case instr of
   MMetaEx m i ->
-    typeCheckOpWithMeta i hst <&> Tc.mapSeq (Tc.mapSomeInstr $ T.Meta (T.SomeMeta m))
+    typeCheckOpWithMeta isRedundantMeta i hst
+      <&> Tc.mapSeq
+            if isRedundantMeta m
+            then id
+            else Tc.mapSomeInstr $ T.Meta (T.SomeMeta m)
   MPrimEx i ->
-    Tc.typeCheckInstr typeCheckOpWithMeta i hst
+    Tc.typeCheckInstr (typeCheckOpWithMeta isRedundantMeta) i hst
   MSeqEx is ->
-    Tc.typeCheckImpl typeCheckOpWithMeta is hst <&> Tc.mapSeq (Tc.mapSomeInstr T.Nested)
+    Tc.typeCheckImpl (typeCheckOpWithMeta isRedundantMeta) is hst <&> Tc.mapSeq (Tc.mapSomeInstr T.Nested)
 
 instance Data meta => Tc.IsInstrOp (OpWithMeta meta) where
   liftInstr = MPrimEx
@@ -207,12 +211,15 @@ wrapTypeCheckFailed = \case
 fromUntypedToTyped
   :: (Default meta, Data meta, Show meta, NFData meta)
   => ContractWithMeta meta
+  -> (meta -> Bool)
   -> (U.T -> U.T)
   -> (InstrWithMeta meta -> PreprocessMonad meta (OpWithMeta meta))
   -> Either (DecodeError meta) SomeContract
-fromUntypedToTyped uContract typeRules instrRules = do
+fromUntypedToTyped uContract isRedundantMeta typeRules instrRules = do
   processedUContract <- first PreprocessError $ preprocessContract uContract typeRules instrRules
-  first wrapTypeCheckFailed $ typeCheckingWith debuggerTcOptions $ Tc.typeCheckContract' typeCheckOpWithMeta processedUContract
+  first wrapTypeCheckFailed
+    $ typeCheckingWith debuggerTcOptions
+    $ Tc.typeCheckContract' (typeCheckOpWithMeta isRedundantMeta) processedUContract
 
 data PreprocessError
   = EntrypointTypeNotFound U.EpName
@@ -326,65 +333,45 @@ preprocessContract con@U.Contract{..} typesRules instrRules =
 -- 2. A contract with inserted @Meta (SomeMeta (info :: 'EmbeddedLigoMeta'))@
 --    wrappers that carry the debug info.
 -- 3. All contract filepaths that would be used in debugging session.
+-- 4. All locations that are related to lambdas.
 readLigoMapper
   :: LigoMapper 'Unique
   -> (U.T -> U.T)
   -> (forall meta. (Default meta) => InstrWithMeta meta -> PreprocessMonad meta (OpWithMeta meta))
-  -> Either (DecodeError EmbeddedLigoMeta) (Set ExpressionSourceLocation, SomeContract, [FilePath])
+  -> Either (DecodeError EmbeddedLigoMeta) (Set ExpressionSourceLocation, SomeContract, [FilePath], HashSet LigoRange)
 readLigoMapper ligoMapper typeRules instrRules = do
   extendedExpression <- first MetaEmbeddingError $
     embedMetas (lmLocations ligoMapper) (lmMichelsonCode ligoMapper)
 
   uContract <-
     expressionToUntypedContract extendedExpression
-      <&> stripDuplicateLocations
 
   extendedContract@(SomeContract extContract) <-
-    fromUntypedToTyped uContract typeRules instrRules
+    fromUntypedToTyped uContract isRedundantIndexedInfo typeRules instrRules
 
   let allFiles = uContract ^.. template @_ @EmbeddedLigoMeta . liiLocationL . _Just . lrFileL
         -- We want to remove duplicates
         & unstableNub
         & filter (not . isLigoStdLib)
 
-  let exprLocs =
+  let (exprLocs, lambdaLocs) =
         -- We expect a lot of duplicates, stripping them via putting to Set
-        Set.fromList $
-        foldMap mentionedSourceLocs $ getSourceLocations (unContractCode $ cCode extContract)
+        bimap Set.fromList HashSet.fromList $
+        getSourceLocations (unContractCode $ cCode extContract)
 
   -- The LIGO's debug info may be really large, so we better force
   -- the evaluation for all the info that will be stored for the entire
   -- debug session, and let GC wipe out everything intermediate.
-  return $! force (exprLocs, extendedContract, allFiles)
+  return $! force (exprLocs, extendedContract, allFiles, lambdaLocs)
 
   where
-    mentionedSourceLocs :: (EmbeddedLigoMeta, Bool) -> [ExpressionSourceLocation]
-    mentionedSourceLocs (LigoIndexedInfo{..}, shouldKeep) = (shouldKeep, liiLocation)
-      & second (fmap ligoRangeToSourceLocation)
-      & sequenceA
-      <&> uncurry ExpressionSourceLocation . swap
-      & maybeToList
-
-    getSourceLocations :: Instr i o -> [(EmbeddedLigoMeta, Bool)]
-    getSourceLocations = DL.toList . dfsFoldInstr def { dsGoToValues = True } \case
-      ConcreteMeta (meta :: EmbeddedLigoMeta) instr
-        -> DL.singleton (meta, not $ shouldIgnoreMeta instr)
+    getSourceLocations :: Instr i o -> ([ExpressionSourceLocation], [LigoRange])
+    getSourceLocations = bimap DL.toList DL.toList . dfsFoldInstr def { dsGoToValues = True } \case
+      ConcreteMeta (liiLocation @'Unique -> Just loc) instr
+        -> let lambdaRange =
+                case instr of
+                  Nested LAMBDA{} -> DL.singleton loc
+                  Nested (LAMBDA{} :# _) -> DL.singleton loc
+                  _ -> mempty
+           in (DL.singleton (ExpressionSourceLocation loc $ not . shouldIgnoreMeta loc instr), lambdaRange)
       _ -> mempty
-
-    -- Strip duplicate locations.
-    --
-    -- In practice it happens that LIGO produces snapshots for intermediate
-    -- computations. For instance, @a > 10@ will translate to @COMPARE; GT@,
-    -- both having the same @location@ meta; we don't want the user to
-    -- see that.
-    stripDuplicateLocations :: ContractWithMeta EmbeddedLigoMeta -> ContractWithMeta EmbeddedLigoMeta
-    stripDuplicateLocations = evaluatingState HS.empty . traverseOf (backwards template) \(el :: EmbeddedLigoMeta) -> do
-      case liiLocation el of
-        Just loc -> do
-          ifM (HS.member loc <$> get)
-            do
-              pure (el & liiLocationL .~ Nothing)
-            do
-              modify $ HS.insert loc
-              pure el
-        Nothing -> pure el

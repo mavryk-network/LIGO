@@ -5,7 +5,7 @@ open Simple_utils.Trace
 let self_in_lambdas ~raise : expression -> expression =
   fun e ->
     match e.content with
-    | E_closure {binder=_ ; body} ->
+    | E_closure {binder=_ ; body } | E_rec { func = { binder = _ ; body } ; rec_binder = _ } ->
       let rec f = fun ~raise e -> match e.content with
         | E_raw_michelson (code, _, args) ->
           let _ = Option.map ~f:(List.map ~f:(f ~raise)) args in

@@ -31,6 +31,7 @@ let%expect_test _ =
                                    registry
       login                      . [BETA] login to the LIGO package registry
       daemon                     . launch a long running LIGO process
+      lsp                        . [BETA] launch a LIGO lsp server
       version                    . print version information
       help                       . explain a given subcommand (perhaps recursively)
 
@@ -51,6 +52,7 @@ This sub-command compiles a contract to Michelson code. It expects a source file
   [--constants CONSTANTS], -c
                              . A list of global constants that will be assumed
                                in the context, separated by ','
+  [--deprecated]             . enable deprecated language PascaLIGO
   [--disable-michelson-typechecking]
                              . Disable Michelson typecking, this might produce
                                ill-typed Michelson code.
@@ -92,10 +94,9 @@ This sub-command compiles a contract to Michelson code. It expects a source file
                                file instead of stdout
   [--project-root PATH]      . The path to root of the project.
   [--syntax SYNTAX], -s      . the syntax that will be used. Currently supported
-                               syntaxes are "pascaligo", "cameligo" and
-                               "jsligo". By default, the syntax is guessed from
-                               the extension (.ligo, .mligo, and .jsligo
-                               respectively).
+                               syntaxes are "cameligo" and "jsligo". By default,
+                               the syntax is guessed from the extension (.mligo
+                               and .jsligo respectively).
   [--views VIEWS], -v        . A list of declaration name that will be compiled
                                as on-chain views, separated by ','
   [--warn-unused-rec]        . warn about unused recursion in a recursive
@@ -103,6 +104,8 @@ This sub-command compiles a contract to Michelson code. It expects a source file
   [--werror]                 . treat warnings as errors
   [-e ENTRY-POINT], --entry-point
                              . the entry-point that will be compiled.
+  [-m MODULE], --module      . the entry-point will be compiled from that
+                               module.
   [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
                                the LIGO environment (kathmandu ,
                                lima). By default, the current protocol (lima)
@@ -130,6 +133,7 @@ let%expect_test _ =
       [--constants CONSTANTS], -c
                                  . A list of global constants that will be assumed
                                    in the context, separated by ','
+      [--deprecated]             . enable deprecated language PascaLIGO
       [--display-format FORMAT], --format
                                  . the format that will be used by the CLI.
                                    Available formats are 'dev', 'json', and
@@ -158,15 +162,16 @@ let%expect_test _ =
       [--source ADDRESS]         . the source the Michelson interpreter transaction
                                    will use.
       [--syntax SYNTAX], -s      . the syntax that will be used. Currently supported
-                                   syntaxes are "pascaligo", "cameligo" and
-                                   "jsligo". By default, the syntax is guessed from
-                                   the extension (.ligo, .mligo, and .jsligo
-                                   respectively).
+                                   syntaxes are "cameligo" and "jsligo". By default,
+                                   the syntax is guessed from the extension (.mligo
+                                   and .jsligo respectively).
       [--warn-unused-rec]        . warn about unused recursion in a recursive
                                    function
       [--werror]                 . treat warnings as errors
       [-e ENTRY-POINT], --entry-point
                                  . the entry-point that will be compiled.
+      [-m MODULE], --module      . the entry-point will be compiled from that
+                                   module.
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
                                    the LIGO environment (kathmandu ,
                                    lima). By default, the current protocol (lima)
@@ -194,6 +199,7 @@ let%expect_test _ =
       [--constants CONSTANTS], -c
                                  . A list of global constants that will be assumed
                                    in the context, separated by ','
+      [--deprecated]             . enable deprecated language PascaLIGO
       [--display-format FORMAT], --format
                                  . the format that will be used by the CLI.
                                    Available formats are 'dev', 'json', and
@@ -222,15 +228,16 @@ let%expect_test _ =
       [--source ADDRESS]         . the source the Michelson interpreter transaction
                                    will use.
       [--syntax SYNTAX], -s      . the syntax that will be used. Currently supported
-                                   syntaxes are "pascaligo", "cameligo" and
-                                   "jsligo". By default, the syntax is guessed from
-                                   the extension (.ligo, .mligo, and .jsligo
-                                   respectively).
+                                   syntaxes are "cameligo" and "jsligo". By default,
+                                   the syntax is guessed from the extension (.mligo
+                                   and .jsligo respectively).
       [--warn-unused-rec]        . warn about unused recursion in a recursive
                                    function
       [--werror]                 . treat warnings as errors
       [-e ENTRY-POINT], --entry-point
                                  . the entry-point that will be compiled.
+      [-m MODULE], --module      . the entry-point will be compiled from that
+                                   module.
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
                                    the LIGO environment (kathmandu ,
                                    lima). By default, the current protocol (lima)
@@ -251,6 +258,7 @@ let%expect_test _ =
 
     === flags ===
 
+      [--deprecated]             . enable deprecated language PascaLIGO
       [--display-format FORMAT], --format
                                  . the format that will be used by the CLI.
                                    Available formats are 'dev', 'json', and
@@ -291,6 +299,7 @@ let%expect_test _ =
                                    use for the transaction.
       [--balance INT]            . the balance the Michelson interpreter will use
                                    for the contract balance.
+      [--deprecated]             . enable deprecated language PascaLIGO
       [--display-format FORMAT], --format
                                  . the format that will be used by the CLI.
                                    Available formats are 'dev', 'json', and
@@ -308,15 +317,16 @@ let%expect_test _ =
       [--source ADDRESS]         . the source the Michelson interpreter transaction
                                    will use.
       [--syntax SYNTAX], -s      . the syntax that will be used. Currently supported
-                                   syntaxes are "pascaligo", "cameligo" and
-                                   "jsligo". By default, the syntax is guessed from
-                                   the extension (.ligo, .mligo, and .jsligo
-                                   respectively).
+                                   syntaxes are "cameligo" and "jsligo". By default,
+                                   the syntax is guessed from the extension (.mligo
+                                   and .jsligo respectively).
       [--warn-unused-rec]        . warn about unused recursion in a recursive
                                    function
       [--werror]                 . treat warnings as errors
       [-e ENTRY-POINT], --entry-point
                                  . the entry-point that will be compiled.
+      [-m MODULE], --module      . the entry-point will be compiled from that
+                                   module.
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
                                    the LIGO environment (kathmandu ,
                                    lima). By default, the current protocol (lima)
@@ -331,7 +341,7 @@ let%expect_test _ =
     {|
     run a function with the given parameter.
 
-      ligo run evaluate-call SOURCE_FILE PARAMETER_EXPRESSION
+      ligo run evaluate-call SOURCE_FILE FUNCTION PARAMETER_EXPRESSION
 
     This sub-command runs a LIGO function on a given argument. The context is initialized from a source file where the function is implemented. The interpretation is done using Michelson's interpreter.
 
@@ -341,6 +351,7 @@ let%expect_test _ =
                                    use for the transaction.
       [--balance INT]            . the balance the Michelson interpreter will use
                                    for the contract balance.
+      [--deprecated]             . enable deprecated language PascaLIGO
       [--display-format FORMAT], --format
                                  . the format that will be used by the CLI.
                                    Available formats are 'dev', 'json', and
@@ -358,15 +369,12 @@ let%expect_test _ =
       [--source ADDRESS]         . the source the Michelson interpreter transaction
                                    will use.
       [--syntax SYNTAX], -s      . the syntax that will be used. Currently supported
-                                   syntaxes are "pascaligo", "cameligo" and
-                                   "jsligo". By default, the syntax is guessed from
-                                   the extension (.ligo, .mligo, and .jsligo
-                                   respectively).
+                                   syntaxes are "cameligo" and "jsligo". By default,
+                                   the syntax is guessed from the extension (.mligo
+                                   and .jsligo respectively).
       [--warn-unused-rec]        . warn about unused recursion in a recursive
                                    function
       [--werror]                 . treat warnings as errors
-      [-e ENTRY-POINT], --entry-point
-                                 . the entry-point that will be compiled.
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
                                    the LIGO environment (kathmandu ,
                                    lima). By default, the current protocol (lima)
@@ -391,6 +399,7 @@ let%expect_test _ =
                                    use for the transaction.
       [--balance INT]            . the balance the Michelson interpreter will use
                                    for the contract balance.
+      [--deprecated]             . enable deprecated language PascaLIGO
       [--display-format FORMAT], --format
                                  . the format that will be used by the CLI.
                                    Available formats are 'dev', 'json', and
@@ -408,10 +417,9 @@ let%expect_test _ =
       [--source ADDRESS]         . the source the Michelson interpreter transaction
                                    will use.
       [--syntax SYNTAX], -s      . the syntax that will be used. Currently supported
-                                   syntaxes are "pascaligo", "cameligo" and
-                                   "jsligo". By default, the syntax is guessed from
-                                   the extension (.ligo, .mligo, and .jsligo
-                                   respectively).
+                                   syntaxes are "cameligo" and "jsligo". By default,
+                                   the syntax is guessed from the extension (.mligo
+                                   and .jsligo respectively).
       [--warn-unused-rec]        . warn about unused recursion in a recursive
                                    function
       [--werror]                 . treat warnings as errors
@@ -440,6 +448,7 @@ let%expect_test _ =
       [--constants CONSTANTS], -c
                                  . A list of global constants that will be assumed
                                    in the context, separated by ','
+      [--deprecated]             . enable deprecated language PascaLIGO
       [--display-format FORMAT], --format
                                  . the format that will be used by the CLI.
                                    Available formats are 'dev', 'json', and
@@ -485,6 +494,7 @@ let%expect_test _ =
 
     === flags ===
 
+      [--deprecated]             . enable deprecated language PascaLIGO
       [--display-format FORMAT], --format
                                  . the format that will be used by the CLI.
                                    Available formats are 'dev', 'json', and
@@ -497,10 +507,9 @@ let%expect_test _ =
                                    an entrypoint
       [--project-root PATH]      . The path to root of the project.
       [--syntax SYNTAX], -s      . the syntax that will be used. Currently supported
-                                   syntaxes are "pascaligo", "cameligo" and
-                                   "jsligo". By default, the syntax is guessed from
-                                   the extension (.ligo, .mligo, and .jsligo
-                                   respectively).
+                                   syntaxes are "cameligo" and "jsligo". By default,
+                                   the syntax is guessed from the extension (.mligo
+                                   and .jsligo respectively).
       [-help], -?                . print this help text and exit
 
     (core/src/command.ml.Exit_called (status 0)) |}]

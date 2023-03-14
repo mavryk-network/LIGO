@@ -102,6 +102,7 @@ function enableTS() {
 const overrides = [
   addWebpackAlias({
     "~": path.resolve(__dirname, "src/"),
+    'vscode/services': require.resolve('vscode/services')
   }),
   overrideProcessEnv({
     CDN: JSON.stringify(!!process.env.CDN),
@@ -138,6 +139,8 @@ const overrides = [
     BUILD_TIME: JSON.stringify(process.env.BUILD_TIME),
     MEASUREMENT_ID: JSON.stringify(process.env.MEASUREMENT_ID),
     GIT_PROXY: JSON.stringify(process.env.GIT_PROXY),
+    HTTP_PROTOCOL: JSON.stringify(process.env.HTTP_PROTOCOL),
+    BACKEND_URL: JSON.stringify(process.env.BACKEND_URL),
   }),
   addExternalBabelPlugins("@babel/plugin-proposal-class-properties", "@babel/plugin-proposal-optional-chaining", "@babel/plugin-proposal-nullish-coalescing-operator"),
   // addBabelPreset("@babel/preset-env"),
@@ -175,6 +178,9 @@ if (process.env.CDN) {
       new BundleStatsWebpackPlugin()
     )
   );
+  overrides.push(addWebpackExternals({
+    'Config': JSON.stringify(require('./config.json')),
+  }))
 }
 module.exports = {
   webpack: override(...overrides),

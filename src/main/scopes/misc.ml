@@ -55,7 +55,7 @@ let rec extract_variable_types
       in
       let in_t = in_t exp.type_expression in
       return [ Param.get_var binder, in_t ]
-    | E_recursive { fun_name; fun_type; lambda = { binder; _ } } ->
+    | E_recursive { fun_name; fun_type; lambda = { binder; _ }; force_lambdarec = _ } ->
       let in_t =
         match fun_type.type_content with
         | T_arrow { type1; _ } -> type1
@@ -106,7 +106,7 @@ let rec extract_variable_types
     Self_ast_typed.Helpers.fold_expression aux prev expr
   | D_type _ -> prev
   | D_module { module_; _ } ->
-    (match module_.wrap_content with
+    (match module_.module_content with
     | M_variable _ -> prev
     | M_module_path _ -> prev
     | M_struct ds ->
@@ -127,12 +127,21 @@ let resolve_if : with_types:bool -> bindings_map -> Value_var.t -> type_case =
 
 let make_v_def
     :  with_types:bool -> ?core_type:Ast_core.type_expression -> bindings_map -> def_type
-    -> Value_var.t -> Location.t -> Location.t -> def
+    -> Value_var.t -> Location.t -> Location.t -> def option
   =
  fun ~with_types ?core_type bindings def_type var range body_range ->
-  let type_case =
-    match core_type with
-    | Some t -> Core t
-    | None -> resolve_if ~with_types bindings var
-  in
-  make_v_def (get_binder_name var) type_case def_type range body_range
+  if Value_var.is_generated var
+  then None
+  else (
+    let type_case =
+      match core_type with
+      | Some t -> Core t
+      | None -> resolve_if ~with_types bindings var
+    in
+    Some (make_v_def (get_binder_name var) type_case def_type range body_range))
+
+
+let get_location_of_module_path : Module_var.t list -> Location.t =
+ fun mvs ->
+  List.fold mvs ~init:Location.dummy ~f:(fun loc m ->
+      Location.cover loc (Module_var.get_location m))

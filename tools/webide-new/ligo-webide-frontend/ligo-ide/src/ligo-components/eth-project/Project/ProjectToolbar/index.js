@@ -45,16 +45,28 @@ export default class ProjectToolbar extends PureComponent {
     const deployPath = this.context.projectSettings?.get("deploy") || "";
     if (!(await fileOps.exists(this.context.projectManager.pathForProjectFile(deployPath)))) {
       this.setState({ isPreDeploy: true });
-      this.compileModalOpen();
+      this.compileModalOpen(true);
     } else {
       this.deployModalRef.current.openModal();
     }
   };
 
-  compileModalOpen = () => {
+  compileModalOpen = (isDeploy) => {
+    if (!isDeploy && this.context.projectSettings?.get("doNotShowCompilationMessage")) {
+      this.compileContract(this.context.projectManager);
+      return;
+    }
     const tzFilePath = this.context.projectSettings?.get("main") || "";
     this.setState({ tzFilePath });
     this.compileModalRef.current.openModal();
+  };
+
+  compileContract = async (projectManager, doNotShow) => {
+    if (!this.state.isPreDeploy && doNotShow) {
+      await projectManager.projectSettings?.set("doNotShowCompilationMessage", true);
+    }
+    projectManager.compile(null, this.props.finalCall);
+    this.setState({ isPreDeploy: false });
   };
 
   expressionExecutionModal = (type) => {
@@ -66,7 +78,7 @@ export default class ProjectToolbar extends PureComponent {
   };
 
   render() {
-    const { signer, noBuild, noDeploy, ExtraButtons = () => null } = this.props;
+    const { signer, noBuild, noDeploy, ExtraButtons = () => null, isExpanded } = this.props;
     const { projectSettings, projectManager } = this.context;
     const compilers = projectSettings?.get("compilers") || {};
     const readOnly = !projectManager.userOwnProject && projectManager.remote;
@@ -78,7 +90,8 @@ export default class ProjectToolbar extends PureComponent {
           icon="fas fa-play"
           tooltip="Compile"
           readOnly={readOnly}
-          onClick={() => this.compileModalOpen()}
+          onClick={() => this.compileModalOpen(false)}
+          isExpanded={isExpanded}
         />
         <ToolbarButton
           id="deploy"
@@ -86,6 +99,7 @@ export default class ProjectToolbar extends PureComponent {
           tooltip="Deploy"
           readOnly={readOnly}
           onClick={() => this.deployModal()}
+          isExpanded={isExpanded}
         />
         <ToolbarButton
           id="deploy-script"
@@ -93,6 +107,7 @@ export default class ProjectToolbar extends PureComponent {
           tooltip="Deploy Script"
           readOnly={readOnly}
           onClick={() => this.deployScriptModal()}
+          isExpanded={isExpanded}
         />
         <ToolbarButton
           id="dry-run"
@@ -100,6 +115,7 @@ export default class ProjectToolbar extends PureComponent {
           tooltip="Dry Run"
           readOnly={readOnly}
           onClick={() => this.expressionExecutionModal("dryRun")}
+          isExpanded={isExpanded}
         />
         <ToolbarButton
           id="compile-expr"
@@ -107,6 +123,7 @@ export default class ProjectToolbar extends PureComponent {
           tooltip="Compile Expression"
           readOnly={readOnly}
           onClick={() => this.expressionExecutionModal("compile")}
+          isExpanded={isExpanded}
         />
         <ExtraButtons projectManager={projectManager} signer={signer} />
         <div className="flex-1" />
@@ -115,15 +132,13 @@ export default class ProjectToolbar extends PureComponent {
           icon="fas fa-cog"
           tooltip="Project Settings"
           onClick={() => projectManager.openProjectSettings()}
+          isExpanded={isExpanded}
         />
         <SignRequestModal ref={keypairManager.signReqModal} />
         <CompileModal
           modalRef={this.compileModalRef}
           tzFilePath={this.state.tzFilePath}
-          onCompile={() => {
-            projectManager.compile(null, this.props.finalCall);
-            this.setState({ isPreDeploy: false });
-          }}
+          onCompile={(doNotShow) => this.compileContract(projectManager, doNotShow)}
           isPreDeploy={this.state.isPreDeploy}
         />
         <DeployScriptModal

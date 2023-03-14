@@ -3,6 +3,7 @@ module Language.LIGO.Debugger.Snapshots
   ( StackItem (..)
   , StackFrame (..)
   , InterpretStatus (..)
+  , EventExpressionReason (..)
   , InterpretEvent (..)
   , statusExpressionEvaluatedP
   , InterpretSnapshot (..)
@@ -39,11 +40,9 @@ module Language.LIGO.Debugger.Snapshots
   , _EventExpressionEvaluated
   ) where
 
-
-import AST (Binding, Expr, LIGO)
-import AST qualified
 import Control.Lens
-  (At (at), Each (each), Ixed (ix), Zoom (zoom), lens, makeLensesWith, makePrisms, (%=), (.=), (?=))
+  (At (at), Each (each), Ixed (ix), Zoom (zoom), lens, makeLensesWith, makePrisms, (%=), (.=),
+  (<<.=), (?=))
 import Control.Lens.Prism (Prism', _Just)
 import Control.Monad.Except (throwError)
 import Control.Monad.RWS.Strict (RWST (..))
@@ -51,26 +50,32 @@ import Data.Conduit (ConduitT)
 import Data.Conduit qualified as C
 import Data.Conduit.Lazy (MonadActive, lazyConsume)
 import Data.Conduit.Lift qualified as CL
+import Data.Default (def)
 import Data.HashSet qualified as HS
 import Data.List.NonEmpty (cons)
 import Data.Vinyl (Rec (..))
-import Duplo (layer)
 import Fmt (Buildable (..), genericF, pretty)
-import Parser (Info)
-import Range (HasRange (getRange), Range (..))
 import Text.Interpolation.Nyan
 import UnliftIO (MonadUnliftIO, throwIO)
 
+import AST (LIGO)
+import Duplo (leq)
+import Parser (ParsedInfo)
+import Range (HasRange (getRange), Range (..))
+
+import Morley.Debugger.Core.Common (fromCanonicalLoc)
 import Morley.Debugger.Core.Navigate
-  (Direction (Backward), MovementResult (ReachedBoundary), NavigableSnapshot (..),
+  (Direction (Backward), MovementResult (HitBoundary), NavigableSnapshot (..),
   NavigableSnapshotWithMethods (..), SnapshotEdgeStatus (..), curSnapshot, frozen, moveRaw,
   unfreezeLocally)
 import Morley.Debugger.Core.Snapshots (DebuggerFailure, InterpretHistory (..))
+import Morley.Michelson.ErrorPos (ErrorSrcPos (ErrorSrcPos))
 import Morley.Michelson.Interpret
   (ContractEnv, InstrRunner, InterpreterState, InterpreterStateMonad (..),
-  MichelsonFailed (MichelsonFailedWith), MichelsonFailureWithStack (mfwsFailed), MorleyLogsBuilder,
-  StkEl (StkEl), initInterpreterState, mkInitStack, runInstrImpl)
+  MichelsonFailed (MichelsonFailedWith), MichelsonFailureWithStack (mfwsErrorSrcPos, mfwsFailed),
+  MorleyLogsBuilder, StkEl (StkEl), initInterpreterState, mkInitStack, runInstrImpl)
 import Morley.Michelson.Runtime.Dummy (dummyBigMapCounter, dummyGlobalCounter)
+import Morley.Michelson.TypeCheck.Helpers (handleError)
 import Morley.Michelson.Typed as T
 import Morley.Util.Lens (postfixLFields)
 
@@ -133,6 +138,16 @@ instance Buildable InterpretStatus where
     InterpretTerminatedOk -> "terminated ok"
     InterpretFailed err -> "failed with " <> build err
 
+-- | Type of the expression that we met.
+data EventExpressionReason
+  -- | Just a regular expression. We'll stop at it
+  -- only with at least @GExp@ granularity
+  = GeneralExpression
+  -- | Function call. We stop at it always while
+  -- using @StepIn@ action.
+  | FunctionCall
+  deriving stock (Show, Eq)
+
 -- | An interesting event in interpreter that is worth a snapshot.
 data InterpretEvent
     -- | Start of the new statement.
@@ -145,7 +160,7 @@ data InterpretEvent
     -- 2. There are failing expressions.
     --
     -- If stopping at such events is undesired, they can be easily skipped later.
-  | EventExpressionPreview
+  | EventExpressionPreview EventExpressionReason
 
     -- | We have evaluated expression, with the given result.
     --
@@ -162,8 +177,10 @@ instance Buildable InterpretEvent where
   build = \case
     EventFacedStatement ->
       "faced statement"
-    EventExpressionPreview ->
+    EventExpressionPreview GeneralExpression ->
       "upon expression"
+    EventExpressionPreview FunctionCall ->
+      "upon function call"
     EventExpressionEvaluated mval ->
       "expression evaluated (" <> maybe "-" build mval <> ")"
 
@@ -187,7 +204,7 @@ instance NavigableSnapshot (InterpretSnapshot u) where
     return . Just $ ligoRangeToSourceLocation locRange
   getLastExecutedPosition = unfreezeLocally do
     moveRaw Backward >>= \case
-      ReachedBoundary -> return Nothing
+      HitBoundary -> return Nothing
       _ -> frozen getExecutedPosition
 
   pickSnapshotEdgeStatus is = case isStatus is of
@@ -197,16 +214,6 @@ instance NavigableSnapshot (InterpretSnapshot u) where
 
 instance NavigableSnapshotWithMethods (InterpretSnapshot u) where
   getCurMethodBlockLevel = length . isStackFrames <$> curSnapshot
-
--- | An entry for each recursive function or cycle.
--- It is needed because we want to track which statement snapshots
--- were already recorded in the current iteration.
-data RecursiveOrCycleEntry = RecursiveOrCycleEntry
-  { roceStart :: LigoRange
-    -- ^ First snapshot in cycle or recursive function
-  , roceRecordedStatements :: HashSet LigoRange
-    -- ^ All statements that were recorded in one iteration
-  }
 
 -- | State at some point of execution, used by Morley interpreter and by
 -- our snapshots collector.
@@ -218,24 +225,35 @@ data CollectorState m = CollectorState
   , csLastRecordedSnapshot :: Maybe (InterpretSnapshot 'Unique)
     -- ^ Last recorded snapshot.
     -- We can pick @[operation] * storage@ value from it.
-  , csParsedFiles :: HashMap FilePath (LIGO Info)
+  , csParsedFiles :: HashMap FilePath (LIGO ParsedInfo)
     -- ^ Parsed contracts.
-  , csRecordedRanges :: HashSet LigoRange
+  , csRecordedStatementRanges :: HashSet LigoRange
     -- ^ Ranges of recorded statement snapshots.
-  , csRecursiveOrCycleEntries :: HashMap LigoRange RecursiveOrCycleEntry
-    -- ^ @RecursiveOrCycleEntry@ for each cycle or
-    -- recursive function expression.
+  , csRecordedExpressionRanges :: HashSet LigoRange
+    -- ^ Ranges of recorded expression snapshots.
+    -- Note that these ranges refer only to snapshots, that
+    -- have @EventExpressionPreview@ event.
+  , csRecordedExpressionEvaluatedRanges :: HashSet LigoRange
+    -- ^ Ranges of recorded expression snapshots that have
+    -- @EventExpressionEvaluated@ event.
   , csLoggingFunction :: String -> m ()
     -- ^ Function for logging some useful debugging info.
   , csMainFunctionName :: Name 'Unique
     -- ^ Name of main entrypoint.
     -- We need to store it in order not to create an extra stack frame.
+  , csLastRangeMb :: Maybe LigoRange
+    -- ^ Last range. We can use it to get
+    -- the latest position where some
+    -- failure occurred.
+  , csLambdaLocs :: HashSet LigoRange
+    -- ^ Locations for lambdas. We need them to ignore statements recording
+    -- in cases when some location is present in this set and it is not
+    -- associated with @LAMBDA@ instruction.
   }
 
 makeLensesWith postfixLFields ''StackItem
 makeLensesWith postfixLFields ''StackFrame
 makeLensesWith postfixLFields ''InterpretSnapshot
-makeLensesWith postfixLFields ''RecursiveOrCycleEntry
 makeLensesWith postfixLFields ''CollectorState
 
 stripSuffixHashFromSnapshots :: InterpretSnapshot 'Unique -> InterpretSnapshot 'Concise
@@ -283,99 +301,144 @@ logMessage str = do
 
 -- | Executes the code and collects snapshots of execution.
 runInstrCollect :: forall m. (Monad m) => InstrRunner (CollectingEvalOp m)
-runInstrCollect = \case
-  instr@(T.ConcreteMeta (embeddedMeta :: EmbeddedLigoMeta) inner) -> \oldStack -> do
+runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
+  let (embeddedMetaMb, inner) = getMetaMbAndUnwrap instr
+
+  whenJust embeddedMetaMb \embeddedMeta -> do
     logMessage
       [int||
         Got meta: #{embeddedMeta}
         for instruction: #{instr}
       |]
 
-    let stack = maybe oldStack (embedFunctionNames oldStack) (liiEnvironment embeddedMeta)
+    whenJust (liiLocation embeddedMeta) \loc -> do
+      contracts <- use csParsedFilesL
 
-    preExecutedStage embeddedMeta inner stack
-    newStack <- surroundExecutionInner embeddedMeta (runInstrImpl runInstrCollect) inner stack
-    postExecutedStage embeddedMeta inner stack newStack
-  other -> runInstrImpl runInstrCollect other
+      logMessage
+        [int||
+          Would be ignored: #{shouldIgnoreMeta loc inner contracts}
+        |]
+
+  let stack = maybe oldStack (embedFunctionNames oldStack) (liiEnvironment =<< embeddedMetaMb)
+
+  preExecutedStage embeddedMetaMb inner stack
+  newStack <- surroundExecutionInner embeddedMetaMb (runInstrImpl runInstrCollect) inner stack
+  postExecutedStage embeddedMetaMb inner newStack
   where
+    michFailureHandler :: MichelsonFailureWithStack DebuggerFailure -> CollectingEvalOp m a
+    michFailureHandler err = use csLastRangeMbL >>= \case
+      Nothing -> throwError err
+      Just (ligoPositionToSrcLoc . lrStart -> lastSrcLoc)
+        -> throwError err { mfwsErrorSrcPos = ErrorSrcPos $ fromCanonicalLoc lastSrcLoc }
+
     -- What is done upon executing instruction.
     preExecutedStage
-      :: EmbeddedLigoMeta
+      :: Maybe EmbeddedLigoMeta
       -> Instr i o
       -> Rec StkEl i
       -> CollectingEvalOp m ()
-    preExecutedStage LigoIndexedInfo{..} instr stack = do
-      whenJust liiLocation \loc -> do
-        statements <- getStatements loc
+    preExecutedStage embeddedMetaMb instr stack = case embeddedMetaMb of
+      Just LigoIndexedInfo{..} -> do
+        whenJust liiLocation \loc -> do
+          statements <- getStatements instr loc
 
-        forM_ statements \statement -> do
-          recordSnapshot statement EventFacedStatement
-          csRecordedRangesL %= HS.insert statement
+          forM_ statements \statement -> do
+            unlessM (HS.member statement <$> use csRecordedStatementRangesL) do
+              recordSnapshot statement EventFacedStatement
+              csRecordedStatementRangesL %= HS.insert statement
 
-        unless (shouldIgnoreMeta instr) do
-          recordSnapshot loc EventExpressionPreview
+          contracts <- use csParsedFilesL
+          lastLoc <- use csLastRangeMbL
 
-      whenJust liiEnvironment \env -> do
-        -- Here stripping occurs, as the second list keeps the entire stack,
-        -- while the first list (@env@) - only stack related to the current
-        -- stack frame. And this is good.
-        let stackHere = zipWith StackItem env (refineStack stack)
-        logMessage
-          [int||
-            Stack at preExecutedStage: #{stackHere}
-          |]
+          unlessM (HS.member loc <$> use csRecordedExpressionRangesL) do
+            -- There is no reason to record a snapshot with @EventExpressionPreview@
+            -- event if we already recorded a @statement@ snapshot with the same location.
+            unless (shouldIgnoreMeta loc instr contracts || lastLoc == Just loc) do
+              let eventExpressionReason =
+                    if isLocationForFunctionCall loc contracts
+                    then FunctionCall
+                    else GeneralExpression
 
-        csActiveStackFrameL . sfStackL .= stackHere
+              csRecordedExpressionRangesL %= HS.insert loc
+
+              recordSnapshot loc (EventExpressionPreview eventExpressionReason)
+
+        whenJust liiEnvironment \env -> do
+          -- Here stripping occurs, as the second list keeps the entire stack,
+          -- while the first list (@env@) - only stack related to the current
+          -- stack frame. And this is good.
+          let stackHere = zipWith StackItem env (refineStack stack)
+          logMessage
+            [int||
+              Stack at preExecutedStage: #{stackHere}
+            |]
+
+          csActiveStackFrameL . sfStackL .= stackHere
+      Nothing -> pass
 
     -- What is done right after the instruction is executed.
     postExecutedStage
-      :: EmbeddedLigoMeta
+      :: Maybe EmbeddedLigoMeta
       -> Instr i o
-      -> Rec StkEl i
       -> Rec StkEl o
       -> CollectingEvalOp m (Rec StkEl o)
-    postExecutedStage LigoIndexedInfo{..} instr oldStack newStack = do
-      returnStack <-
-        case (instr, oldStack, newStack) of
-          (EXEC{}, _ :& StkEl oldLam :& _, StkEl lam@VLam{} :& stkEls) -> do
-            -- There might be a case when after executing function
-            -- we'll get another function. In order not to lose stack frames
-            -- we need to embed all future stack frame names into resulting
-            -- function.
-            let embeddedLam = lam & lambdaMetaL .~ view lambdaMetaL oldLam
-            logMessage [int|n|
-              Embedding old meta
-              #{view lambdaMetaL oldLam}
-              into lambda #{embeddedLam}
-              |]
+    postExecutedStage embeddedMetaMb instr newStack = case embeddedMetaMb of
+      Just LigoIndexedInfo{..} -> do
+        whenJust liiLocation \loc -> do
+          -- `location` point to instructions that end expression evaluation,
+          -- we can record the computed value
+          let evaluatedVal = safeHead (refineStack newStack)
 
-            pure $ StkEl embeddedLam :& stkEls
-          _ -> pure newStack
+          logMessage
+            [int||
+              Just evaluated: #{evaluatedVal}
+            |]
 
-      whenJust liiLocation \loc -> do
-        -- `location` point to instructions that end expression evaluation,
-        -- we can record the computed value
-        let evaluatedVal = safeHead (refineStack newStack)
+          contracts <- use csParsedFilesL
 
-        logMessage
-          [int||
-            Just evaluated: #{evaluatedVal}
-          |]
+          unlessM (HS.member loc <$> use csRecordedExpressionEvaluatedRangesL) do
+            unless (shouldIgnoreMeta loc instr contracts) do
+              csRecordedExpressionEvaluatedRangesL %= HS.insert loc
+              recordSnapshot loc (EventExpressionEvaluated evaluatedVal)
 
-        unless (shouldIgnoreMeta instr) do
-          recordSnapshot loc (EventExpressionEvaluated evaluatedVal)
+        pure newStack
+      Nothing -> pure newStack
 
-      pure returnStack
+    -- When we want to go inside a function call or loop-like thing (e,g, @for-of@ or @while@)
+    -- we need to clean up remembered locations and after interpreting restore them.
+    wrapExecOrLoops :: Instr i o -> CollectingEvalOp m (Rec StkEl o) -> CollectingEvalOp m (Rec StkEl o)
+    wrapExecOrLoops instr act
+      | isExecOrLoopLike instr = do
+          -- <<.= sets a variable and returns its previous value (yeah, it's a bit confusing)
+          oldExprRanges <- csRecordedExpressionRangesL <<.= HS.empty
+          oldExprEvaluatedRanges <- csRecordedExpressionEvaluatedRangesL <<.= HS.empty
+          oldStatementRanges <- csRecordedStatementRangesL <<.= HS.empty
+
+          stack <- act
+
+          csRecordedExpressionRangesL .= oldExprRanges
+          csRecordedExpressionEvaluatedRangesL .= oldExprEvaluatedRanges
+          csRecordedStatementRangesL .= oldStatementRanges
+
+          pure stack
+      | otherwise = act
+      where
+        isExecOrLoopLike = \case
+          EXEC{} -> True
+          LOOP{} -> True
+          LOOP_LEFT{} -> True
+          ITER{} -> True
+          _ -> False
 
     -- What is done both before and after the instruction is executed.
     -- This function is executed after 'preExecutedStage' and before 'postExecutedStage'.
     surroundExecutionInner
-      :: LigoIndexedInfo 'Unique
+      :: Maybe EmbeddedLigoMeta
       -> (Instr i o -> Rec StkEl i -> CollectingEvalOp m (Rec StkEl o))
       -> Instr i o
       -> Rec StkEl i
       -> CollectingEvalOp m (Rec StkEl o)
-    surroundExecutionInner LigoIndexedInfo{} runInstr instr stack =
+    surroundExecutionInner _embeddedMetaMb runInstr instr stack = wrapExecOrLoops instr $
       case (instr, stack) of
 
         -- We're on a way to execute a function.
@@ -422,7 +485,21 @@ runInstrCollect = \case
             Restored stack frames, new active frame: #{sfName <$> use csActiveStackFrameL}
             |]
 
-          return newStack
+          case newStack of
+            StkEl newLam@VLam{} :& stkEls -> do
+              -- There might be a case when after executing function
+              -- we'll get another function. In order not to lose stack frames
+              -- we need to embed all future stack frame names into resulting
+              -- function.
+              let embeddedLam = newLam & lambdaMetaL .~ view lambdaMetaL lam
+              logMessage [int|n|
+                Embedding old meta
+                #{view lambdaMetaL lam}
+                into lambda #{embeddedLam}
+                |]
+
+              return $ StkEl embeddedLam :& stkEls
+            _ -> return newStack
 
         _ -> runInstr instr stack
 
@@ -435,7 +512,7 @@ runInstrCollect = \case
       :: LigoRange
       -> InterpretEvent
       -> CollectingEvalOp m ()
-    recordSnapshot loc event = unless (isLigoStdLib $ lrFile loc) do
+    recordSnapshot loc event = do
       logMessage
         [int||
           Recording location #{loc}
@@ -457,110 +534,88 @@ runInstrCollect = \case
         |]
 
       csLastRecordedSnapshotL ?= newSnap
+      csLastRangeMbL ?= loc
       lift $ C.yield newSnap
 
-    getStatements :: LigoRange -> CollectingEvalOp m [LigoRange]
-    getStatements ligoRange
-      | isLigoStdLib $ lrFile ligoRange = pure []
-      | otherwise = do
-          let range@Range{..} = ligoRangeToRange ligoRange
+    getStatements :: Instr i o -> LigoRange -> CollectingEvalOp m [LigoRange]
+    getStatements instr ligoRange = do
+      {-
+        Here we need to clarify some implementation moments.
 
-          parsedLigo <-
-            fromMaybe
-              (error [int||File #{_rFile} is not parsed for some reason|])
-              <$> use (csParsedFilesL . at _rFile)
+        For each @ligoRange@ we're trying to find the nearest scope
+        (like function call or loop). With loops everything seems straightforward
+        but for functions we're doing one trick.
 
-          statements <- filterAndReverseStatements $ spineAtPoint range parsedLigo
-          pure $ rangeToLigoRange . getRange <$> statements
+        In LIGO we can define functions in 2 ways:
+        1. Binding definition (like @let foo (a, b : int * int) = a + b@)
+        2. Lambda definition (like @let foo = fun (a, b : int * int) -> a + b@)
+
+        Both definitions compile to @LAMBDA@ instr with some source location, but
+        for (1) we'll have location for function arguments and for (2) location for the whole
+        @fun .. -> ..@ body.
+
+        In (1) case we wan't to record a statement location for not top-level function assignment and
+        at this moment we can do this only with these arguments locations, so, we can't just ignore them.
+        Moreover, these argument locations appear in the @LAMBDA@s body.
+
+        This is handled by matching on the current instruction. If it's a @LAMBDA@ then we'll record statements.
+        If it's not a @LAMBDA@, but range is associated with some @LAMBDA@ instr then we'll just return empty
+        statements list.
+      -}
+
+      let isLambda =
+            case instr of
+              Nested LAMBDA{} -> True
+              Nested (LAMBDA{} :# _) -> True
+              _ -> False
+
+      let range@Range{..} = ligoRangeToRange ligoRange
+
+      parsedLigo <-
+        fromMaybe
+          (error [int||File #{_rFile} is not parsed for some reason|])
+          <$> use (csParsedFilesL . at _rFile)
+
+      isLambdaLoc <- HS.member ligoRange <$> use csLambdaLocsL
+
+      if isLambdaLoc && not isLambda
+      then pure []
+      else do
+        let statements = filterAndReverseStatements isLambdaLoc (getRange parsedLigo) $ spineAtPoint range parsedLigo
+
+        pure $ rangeToLigoRange . getRange <$> statements
       where
-        filterAndReverseStatements :: [LIGO Info] -> CollectingEvalOp m [LIGO Info]
-        filterAndReverseStatements = go []
+        -- Here we're looking for statements and the nearest scope locations.
+        -- These statements are filtered by strict inclusivity of their ranges to this scope.
+        filterAndReverseStatements :: Bool -> Range -> [LIGO ParsedInfo] -> [LIGO ParsedInfo]
+        filterAndReverseStatements = \isLambdaLoc startRange nodes ->
+          let (statements, scopeRange) = usingState startRange $ go [] nodes isLambdaLoc False
+          in filter (\(getRange -> stmtRange) -> stmtRange `leq` scopeRange && stmtRange /= scopeRange) statements
           where
-            go :: [LIGO Info] -> [LIGO Info] -> CollectingEvalOp m [LIGO Info]
-            go acc [] = pure acc
-            go acc (x@(layer -> Just AST.Assign{}) : xs) = decide x acc xs
-            go acc (x@(layer -> Just AST.BConst{}) : xs) = decide x acc xs
-            go acc (x@(layer -> Just AST.BVar{}) : xs) = decide x acc xs
-            go acc (x@(layer -> Just AST.Apply{}) : xs@((layer @Expr -> Just ctor) : _)) =
-              case ctor of
-                AST.Let{} -> decide x acc xs
-                AST.Seq{} -> decide x acc xs
-                _ -> go acc xs
-            go acc (_ : xs) = go acc xs
-
-            decide :: LIGO Info -> [LIGO Info] -> [LIGO Info] -> CollectingEvalOp m [LIGO Info]
-            decide x acc xs = do
-              let accept = go (x : acc) xs
-              let deny = go acc xs
-
-              let cycleNode = xs
-                    & find \el ->
-                      case layer @Expr el of
-                        Just AST.ForLoop{} -> containsNode el x
-                        Just AST.WhileLoop{} -> containsNode el x
-                        Just AST.ForOfLoop{} -> containsNode el x
-                        Just AST.ForBox{} -> containsNode el x
-                        _ -> False
-
-              let recNode = xs
-                    & find \el ->
-                      case layer @Binding el of
-                        Just (AST.BFunction isRec _ _ _ _ _) -> isRec && containsNode el x
-                        _ -> False
-
-              ranges <- use csRecordedRangesL
-              let range = rangeToLigoRange $ getRange x
-
-              -- Here we want to check should we record this statement or not.
-              case cycleNode <|> recNode of
-                -- In this case our statement is present in some recursive function or loop.
-                -- Further we'll call @recursive function or loop@ as @repetitive action@.
-                Just (rangeToLigoRange . getRange -> nodeRange) -> do
-                  recOrCycleEntry <- use $ csRecursiveOrCycleEntriesL . at nodeRange
-                  -- Let's check if we created an entry
-                  -- for repetitive action or not.
-                  case recOrCycleEntry of
-                    -- In this case an entry for repetitive action is present.
-                    -- So, we need to perform some checks and decide
-                    -- should we record this statement or not.
-                    Just entry -> do
-                      if | entry ^. roceStartL == ligoRange -> do
-                            -- Here we are sure that we went on the first expression
-                            -- in repetitive action. It means that we should
-                            -- forget about all recorded statements in this action.
-                            csRecursiveOrCycleEntriesL . at nodeRange . _Just . roceRecordedStatementsL .= HS.singleton range
-                            accept
-
-                         -- Otherwise, we're in a process of repetitive action.
-                         -- Let's check if we recorded this statement or not.
-                         | range `HS.member` (entry ^. roceRecordedStatementsL) -> deny
-                         | otherwise -> do
-                            csRecursiveOrCycleEntriesL . at nodeRange . _Just . roceRecordedStatementsL %= HS.insert range
-                            accept
-
-                    -- In this case we stepped in repetitive action for the first time.
-                    -- It means that we should create an entry for it.
-                    Nothing -> do
-                      let newEntry = RecursiveOrCycleEntry
-                            { roceStart = ligoRange
-                            , roceRecordedStatements = HS.singleton range
-                            }
-                      csRecursiveOrCycleEntriesL . at nodeRange ?= newEntry
-                      accept
-
-                -- In this case our statement is not in repetitive action.
-                -- So, we just need to check that it is not recorded.
-                Nothing ->
-                  if not $ range `HS.member` ranges
-                  then accept
-                  else deny
+            go :: [LIGO ParsedInfo] -> [LIGO ParsedInfo] -> Bool -> Bool -> State Range [LIGO ParsedInfo]
+            go acc nodes isLambdaLoc ignore =
+              tryToProcessLigoStatement
+                onSuccess
+                onFail
+                (pure acc)
+                nodes
               where
-                -- Comparing by ranges because @Eq@ instance behaves
-                -- weird with @LIGO Info@.
-                containsNode :: LIGO Info -> LIGO Info -> Bool
-                containsNode tree node = getRange node `elem` nodes
-                  where
-                    nodes = getRange <$> spineAtPoint (getRange node) tree
+                -- Note, that @BFunction@ binding not always is a scope. Sometimes we want
+                -- to treat it as a statement. From observations we'll see that it's a statement
+                -- if and only if it's discovered as a first statement that cover the given range.
+
+                onSuccess x xs = decide True x (go (x : acc) xs)
+                onFail x xs = decide False x (go acc xs)
+
+                decide :: Bool -> LIGO ParsedInfo -> (Bool -> Bool -> State Range [LIGO ParsedInfo]) -> State Range [LIGO ParsedInfo]
+                decide isOnSuccess x cont
+                  | ignore = cont isLambdaLoc ignore
+                  | getRange x /= ligoRangeToRange ligoRange && isScopeForStatements isLambdaLoc x
+                      = put (getRange x) >> cont isLambdaLoc True
+                  | otherwise =
+                      let
+                        isFunctionAssignment = isScopeForStatements (not isLambdaLoc) x && isOnSuccess
+                      in cont (isLambdaLoc && not isFunctionAssignment) ignore
 
 runCollectInterpretSnapshots
   :: (MonadUnliftIO m, MonadActive m)
@@ -582,9 +637,13 @@ runCollectInterpretSnapshots act env initSt initStorage =
               throwIO exc
           _ -> pass
 
+        let stackFrames = case csLastRangeMb endState of
+              Nothing -> csStackFrames endState
+              Just range -> csStackFrames endState & ix 0 . sfLocL .~ range
+
         C.yield InterpretSnapshot
           { isStatus = InterpretFailed stack
-          , isStackFrames = csStackFrames endState
+          , isStackFrames = stackFrames
           }
 
       Right _ -> do
@@ -631,12 +690,13 @@ collectInterpretSnapshots
   -> Value arg
   -> Value st
   -> ContractEnv
-  -> HashMap FilePath (LIGO Info)
+  -> HashMap FilePath (LIGO ParsedInfo)
   -> (String -> m ())
+  -> HashSet LigoRange
   -> m (InterpretHistory (InterpretSnapshot 'Unique))
-collectInterpretSnapshots mainFile entrypoint Contract{..} epc param initStore env parsedContracts logger =
+collectInterpretSnapshots mainFile entrypoint Contract{..} epc param initStore env parsedContracts logger lambdaLocs =
   runCollectInterpretSnapshots
-    (runInstrCollect (unContractCode cCode) initStack)
+    (runInstrCollect (stripDuplicates $ unContractCode cCode) initStack)
     env
     collSt
     initStore
@@ -656,8 +716,40 @@ collectInterpretSnapshots mainFile entrypoint Contract{..} epc param initStore e
           }
       , csLastRecordedSnapshot = Nothing
       , csParsedFiles = parsedContracts
-      , csRecordedRanges = HS.empty
-      , csRecursiveOrCycleEntries = mempty
+      , csRecordedStatementRanges = HS.empty
+      , csRecordedExpressionRanges = HS.empty
+      , csRecordedExpressionEvaluatedRanges = HS.empty
       , csLoggingFunction = logger
       , csMainFunctionName = Name entrypoint
+      , csLastRangeMb = Nothing
+      , csLambdaLocs = lambdaLocs
       }
+
+    -- Strip duplicate locations.
+    --
+    -- In practice it happens that LIGO produces snapshots for intermediate
+    -- computations. For instance, @a > 10@ will translate to @COMPARE; GT@,
+    -- both having the same @location@ meta; we don't want the user to
+    -- see that.
+    stripDuplicates :: forall i o. Instr i o -> Instr i o
+    stripDuplicates = evaluatingState Nothing . dfsTraverseInstr def{ dsGoToValues = True, dsCtorEffectsApp = recursionImpl }
+      where
+        -- Note that this dfs is implemented in such a way that
+        -- it applies actions in bottom-up manner.
+        recursionImpl :: CtorEffectsApp $ State (Maybe LigoRange)
+        recursionImpl = CtorEffectsApp "Strip duplicates" $ flip \mkNewInstr -> \case
+          ConcreteMeta (embeddedMeta :: EmbeddedLigoMeta) _ -> case liiLocation embeddedMeta of
+            Just loc ->
+              ifM ((== Just loc) <$> get)
+                do
+                  -- @mkNewInstr@ will return meta-wrapped instruction after traversal.
+                  -- We in this branch we should replace location meta with @Nothing@.
+                  mkNewInstr >>= \case
+                    ConcreteMeta (_ :: EmbeddedLigoMeta) inner'
+                      -> pure $ Meta (SomeMeta $ embeddedMeta & liiLocationL .~ Nothing) inner'
+                    other -> pure other
+                do
+                  put (Just loc)
+                  mkNewInstr
+            _ -> mkNewInstr
+          _ -> mkNewInstr

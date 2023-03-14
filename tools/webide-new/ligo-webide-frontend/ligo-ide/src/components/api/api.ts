@@ -61,7 +61,7 @@ export const mkAxios = (): AxiosInstance => {
   return instance;
 };
 
-const baseUrl = "/api";
+const baseUrl = `${process.env.HTTP_PROTOCOL!}://${process.env.BACKEND_URL!}`;
 
 const addProtocol = <T extends { protocol?: string }>(args: T) => {
   const argsWithProtocol = args;
@@ -84,4 +84,5 @@ export const WebIdeApi = {
   listDeclarations: DefaultApiFactory(undefined, baseUrl, mkAxios()).listDeclarationsPost,
   createUpdateGist: DefaultApiFactory(undefined, baseUrl, mkAxios()).createUpdateGistPost,
   listTemplates: DefaultApiFactory(undefined, baseUrl, mkAxios()).listTemplatesPost,
+  ligoVersion: DefaultApiFactory(undefined, baseUrl, mkAxios()).ligoVersionPost,
 };

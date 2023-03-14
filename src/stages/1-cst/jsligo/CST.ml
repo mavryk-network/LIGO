@@ -46,6 +46,9 @@ type kwd_from      = lexeme wrap
 type kwd_for       = lexeme wrap
 type kwd_of        = lexeme wrap
 
+(* Keywords of contracts *)
+type kwd_contract  = lexeme wrap
+
 (* Symbols *)
 
 type arrow    = lexeme wrap  (* "=>"  *)
@@ -112,7 +115,7 @@ type type_name    = string reg
 type type_var     = string reg
 type type_constr  = string reg
 type constr       = string reg
-type attribute    = string reg
+type attribute    = Attr.attribute reg
 type field_name   = string reg
 type module_name  = string reg
 
@@ -358,6 +361,7 @@ and expr =
 | EUnit    of the_unit reg
 | ECodeInj of code_inj reg
 | ETernary of ternary reg
+| EContract of (module_name, dot) nsepseq reg
 
 and ternary = {
   condition : expr;
@@ -538,6 +542,7 @@ and body =
 | ExpressionBody of expr
 
 and fun_expr = {
+  type_params : type_generics option;
   parameters : expr;
   lhs_type   : (colon * type_expr) option;
   arrow      : arrow;
@@ -624,7 +629,8 @@ let rec expr_to_region = function
 | ECall {region;_}   | EVar {region; _}    | EProj {region; _}
 | EUnit {region;_}   | EPar {region;_}     | EBytes {region; _}
 | ESeq {region; _}   | EObject {region; _} | EArray { region; _}
-| ECodeInj {region; _} | EModA { region; _} | ETernary {region; _} -> region
+| ECodeInj {region; _} | EModA { region; _} | ETernary {region; _}
+| EContract {region; _} -> region
 
 let statement_to_region = function
   SBreak b -> b#region

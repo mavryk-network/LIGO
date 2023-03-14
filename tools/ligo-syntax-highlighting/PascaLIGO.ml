@@ -28,7 +28,7 @@ module Name = struct
   let type_int               = "typeint"
 end
 
-let syntax_highlighting = 
+let syntax_highlighting =
   let open Core in
   let type_core_patterns = [
     Name.uppercase_identifier;
@@ -222,7 +222,7 @@ let syntax_highlighting =
       };
       {
         name = Name.const_or_var;
-        kind = Match { 
+        kind = Match {
           match_name = None;
           match_     = [(Regexp.const_or_var, Some Keyword)]
         }
@@ -323,4 +323,4 @@ let syntax_highlighting =
         }
       };
     ]
-  } 
+  }

@@ -24,10 +24,10 @@ Alternatively, you can decide to use our [webide](https://ide.ligolang.org/). Th
 
 The `ligo` executable is statically linked. It should run on most modern Linux distributions.
 
-You can get the rolling release [here](https://gitlab.com/ligolang/ligo/-/jobs/3553205311/artifacts/raw/ligo), make it executable, and you are done!
+You can get the rolling release [here](https://gitlab.com/ligolang/ligo/-/jobs/3857618664/artifacts/raw/ligo), make it executable, and you are done!
 
 ```zsh
-wget https://gitlab.com/ligolang/ligo/-/jobs/3553205311/artifacts/raw/ligo
+wget https://gitlab.com/ligolang/ligo/-/jobs/3857618664/artifacts/raw/ligo
 chmod +x ./ligo
 ```
 
@@ -50,7 +50,7 @@ brew install ligolang/ligo/ligo
 ### Debian Linux package installation
 
 A `.deb` package containing the static `ligo` executable is also available.
-First, download [the package](https://gitlab.com/ligolang/ligo/-/jobs/3553205311/artifacts/raw/ligo.deb), and then install using:
+First, download [the package](https://gitlab.com/ligolang/ligo/-/jobs/3857618664/artifacts/raw/ligo.deb), and then install using:
 
 ```zsh
 sudo apt install ./ligo.deb
@@ -58,18 +58,18 @@ sudo apt install ./ligo.deb
 
 ### Dockerised installation
 
-If you've [installed 🐳 Docker](https://docs.docker.com/install/), you can run the latest [LIGO release 0.59.0](https://ligolang.org/docs/next/intro/changelog):
+If you've [installed 🐳 Docker](https://docs.docker.com/install/), you can run the latest [LIGO release 0.61.0](https://ligolang.org/docs/next/intro/changelog):
 
 Linux or OSX:
 
 > ```sh
-> docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.59.0
+> docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.61.0
 > ```
 >
 > For convenience you can alias the above command
 >
 > ```sh
-> alias ligo="docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.59.0"
+> alias ligo="docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.61.0"
 > ```
 >
 > To make this `alias` persistent across terminal sessions you need to configure your shell.  
@@ -78,13 +78,13 @@ Linux or OSX:
 Windows:
 
 > ```dos
-> docker run --rm -v "%CD%":/cd -w /cd ligolang/ligo:0.59.0`
+> docker run --rm -v "%CD%":/cd -w /cd ligolang/ligo:0.61.0`
 > ```
 >
 > For convenience you can alias the above command
 >
 > ```dos
-> doskey ligo=docker run --rm -v "%CD%":/cd -w /cd ligolang/ligo:0.59.0 $*
+> doskey ligo=docker run --rm -v "%CD%":/cd -w /cd ligolang/ligo:0.61.0 $*
 > ```
 >
 > To make the alias persistent across terminal sessions you need to add the `doskey` to the Windows Registry.  
@@ -120,7 +120,7 @@ To deploy your smart-contract on the network and to test it, you will need to us
 
 ### From a template
 
-Rather you're curious to see how to make NFT or randomness in LIGO, or you want to have an example for a more complex architecture, you can have a look in [this collection of templates](https://packages.ligolang.org/templates) made by the LIGO team.
+Rather you're curious to see how to make NFT or randomness in LIGO, or you want to have an example for a more complex architecture, you can have a look in [this collection of templates](https://packages.ligolang.org/contracts) made by the LIGO team.
 
 ### From scratch
 
@@ -522,13 +522,13 @@ Once you are sure that the contract work correctly for all the use cases, you ca
 
 For deploying the contract on Tezos, we will use the `tezos-client` interface like we did on the previous section.
 
-First, you will need an account address. You can get one for testing at the [faucet](https://teztnets.xyz/ghostnet-faucet).
+First, you will need an account address. You can get one for testing at the [faucet](https://faucet.marigold.dev/).
 Download the json file and place it in the `ligo_tutorial` folder. $!$ The account that you get from the faucet are only temporary
 
 Then we are going to point the client on a Tezos node
 
 ```zsh
-tezos-client --endpoint https://rpc.ghostnet.teztnets.xyz config update
+tezos-client --endpoint https://ghostnet.tezos.marigold.dev/ config update
 ```
 
 This is the testnet, which is a separate network from Tezos, use for testing.

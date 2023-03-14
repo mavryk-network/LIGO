@@ -1,7 +1,6 @@
 module Var = Simple_utils.Var
 open Test_helpers
 
-let file = "./contracts/multisig.ligo"
 let mfile = "./contracts/multisig.mligo"
 let compile_main ~raise f () = Test_helpers.compile_main ~raise f ()
 
@@ -89,11 +88,12 @@ let not_enough_1_of_2 ~raise f () =
   let keys = gen_keys () in
   let test_params = params ~raise 0 empty_message [ keys ] [ true ] f in
   let () =
-    expect_string_failwith
+    expect_string_failwith_twice
       ~raise
       program
       "main"
-      (e_pair ~loc test_params (init_storage 2 0 [ keys; gen_keys () ]))
+      test_params
+      (init_storage 2 0 [ keys; gen_keys () ])
       exp_failwith
   in
   ()
@@ -105,11 +105,12 @@ let unmatching_counter ~raise f () =
   let keys = gen_keys () in
   let test_params = params ~raise 1 empty_message [ keys ] [ true ] f in
   let () =
-    expect_string_failwith
+    expect_string_failwith_twice
       ~raise
       program
       "main"
-      (e_pair ~loc test_params (init_storage 1 0 [ keys ]))
+      test_params
+      (init_storage 1 0 [ keys ])
       exp_failwith
   in
   ()
@@ -123,11 +124,12 @@ let invalid_1_of_1 ~raise f () =
   let keys = [ gen_keys () ] in
   let test_params = params ~raise 0 empty_message keys [ false ] f in
   let () =
-    expect_string_failwith
+    expect_string_failwith_twice
       ~raise
       program
       "main"
-      (e_pair ~loc test_params (init_storage 1 0 keys))
+      test_params
+      (init_storage 1 0 keys)
       exp_failwith
   in
   ()
@@ -138,14 +140,14 @@ let valid_1_of_1 ~raise f () =
   let program = get_program ~raise f () in
   let keys = gen_keys () in
   let () =
-    expect_eq_n_trace_aux
+    expect_eq_n_trace_aux_twice
       ~raise
       [ 0; 1; 2 ]
       program
       "main"
       (fun n ->
         let params = params ~raise n empty_message [ keys ] [ true ] f in
-        e_pair ~loc params (init_storage 1 n [ keys ]))
+        params, init_storage 1 n [ keys ])
       (fun n -> e_pair ~loc empty_op_list (init_storage 1 (n + 1) [ keys ]))
   in
   ()
@@ -157,14 +159,14 @@ let valid_2_of_3 ~raise f () =
   let param_keys = [ gen_keys (); gen_keys () ] in
   let st_keys = param_keys @ [ gen_keys () ] in
   let () =
-    expect_eq_n_trace_aux
+    expect_eq_n_trace_aux_twice
       ~raise
       [ 0; 1; 2 ]
       program
       "main"
       (fun n ->
         let params = params ~raise n empty_message param_keys [ true; true ] f in
-        e_pair ~loc params (init_storage 2 n st_keys))
+        params, init_storage 2 n st_keys)
       (fun n -> e_pair ~loc empty_op_list (init_storage 2 (n + 1) st_keys))
   in
   ()
@@ -180,11 +182,12 @@ let invalid_3_of_3 ~raise f () =
   let test_params = params ~raise 0 empty_message param_keys [ false; true; true ] f in
   let exp_failwith = "Invalid signature" in
   let () =
-    expect_string_failwith
+    expect_string_failwith_twice
       ~raise
       program
       "main"
-      (e_pair ~loc test_params (init_storage 2 0 st_keys))
+      test_params
+      (init_storage 2 0 st_keys)
       exp_failwith
   in
   ()
@@ -198,11 +201,12 @@ let not_enough_2_of_3 ~raise f () =
   let test_params = params ~raise 0 empty_message valid_keys [ true; true ] f in
   let exp_failwith = "Not enough signatures passed the check" in
   let () =
-    expect_string_failwith
+    expect_string_failwith_twice
       ~raise
       program
       "main"
-      (e_pair ~loc test_params (init_storage 3 0 st_keys))
+      test_params
+      (init_storage 3 0 st_keys)
       exp_failwith
   in
   ()
@@ -211,15 +215,7 @@ let not_enough_2_of_3 ~raise f () =
 let main =
   test_suite
     "Multisig"
-    [ test_w "compile" (compile_main file)
-    ; test_w "unmatching_counter" (unmatching_counter file)
-    ; test_w "valid_1_of_1" (valid_1_of_1 file)
-    ; test_w "invalid_1_of_1" (invalid_1_of_1 file)
-    ; test_w "not_enough_signature" (not_enough_1_of_2 file)
-    ; test_w "valid_2_of_3" (valid_2_of_3 file)
-    ; test_w "invalid_3_of_3" (invalid_3_of_3 file)
-    ; test_w "not_enough_2_of_3" (not_enough_2_of_3 file)
-    ; test_w "compile (mligo)" (compile_main mfile)
+    [ test_w "compile (mligo)" (compile_main mfile)
     ; test_w "unmatching_counter (mligo)" (unmatching_counter mfile)
     ; test_w "valid_1_of_1 (mligo)" (valid_1_of_1 mfile)
     ; test_w "invalid_1_of_1 (mligo)" (invalid_1_of_1 mfile)

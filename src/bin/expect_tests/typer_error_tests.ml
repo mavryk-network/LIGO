@@ -5,20 +5,6 @@ let%expect_test _ =
     [ "compile"
     ; "contract"
     ; "--no-color"
-    ; "../../test/contracts/negative/let_mut.mligo"
-    ];
-  [%expect
-    {|
-    File "../../test/contracts/negative/let_mut.mligo", line 4, characters 13-14:
-      3 |   let f = fun _ ->
-      4 |     let () = i := i + 1 in
-      5 |     i
-
-    Invalid capture of mutable variable "i" |}];
-  run_ligo_bad
-    [ "compile"
-    ; "contract"
-    ; "--no-color"
     ; "../../test/contracts/negative/error_function_annotation_1.mligo"
     ];
   [%expect
@@ -61,59 +47,7 @@ let%expect_test _ =
 
     Invalid type(s)
     Cannot unify "op" with "( list (operation) * op )". |}];
-  run_ligo_bad
-    [ "compile"
-    ; "contract"
-    ; "--no-color"
-    ; "../../test/contracts/negative/error_no_tail_recursive_function.mligo"
-    ; "--entry-point"
-    ; "unvalid"
-    ];
-  [%expect
-    {|
-    File "../../test/contracts/negative/error_no_tail_recursive_function.mligo", line 2, characters 14-21:
-      1 | let rec unvalid (n:int):int =
-      2 |     let res = unvalid (n) in
-      3 |     res + 1
-
-    Recursive call not in tail position.
-    The value of a recursive call must be immediately returned by the defined function. |}];
-  run_ligo_bad
-    [ "compile"
-    ; "contract"
-    ; "--no-color"
-    ; "../../test/contracts/negative/error_no_tail_recursive_function.jsligo"
-    ; "--entry-point"
-    ; "unvalid"
-    ];
-  [%expect
-    {|
-    File "../../test/contracts/negative/error_no_tail_recursive_function.jsligo", line 5, character 2 to line 7, character 3:
-      4 |   let total = 0;
-      5 |   for (const i of l) {
-      6 |     total = total + wrong(i)
-      7 |   }
-      8 |   return total;
-
-    Recursive call not in tail position.
-    The value of a recursive call must be immediately returned by the defined function. |}];
-  run_ligo_bad
-    [ "compile"
-    ; "contract"
-    ; "--no-color"
-    ; "../../test/contracts/negative/error_no_tail_recursive_function2.mligo"
-    ; "--entry-point"
-    ; "unvalid"
-    ];
-  [%expect
-    {|
-    File "../../test/contracts/negative/error_no_tail_recursive_function2.mligo", line 3, characters 10-13:
-      2 |   let rec loop (xs : int list) : int =
-      3 |     loop (foo xs :: xs)
-      4 |   in
-
-    Recursive call not in tail position.
-    The value of a recursive call must be immediately returned by the defined function. |}];
+  (*
   run_ligo_bad
     [ "compile"
     ; "contract"
@@ -128,6 +62,7 @@ let%expect_test _ =
 
     Invalid type(s)
     Cannot unify "int" with "string". |}];
+*)
   run_ligo_bad
     [ "compile"
     ; "contract"
@@ -269,7 +204,7 @@ let%expect_test _ =
     {|
     File "../../test/contracts/negative/error_typer_1.jsligo", line 9, character 0 to line 12, character 1:
       8 |
-      9 | let main = ([param, oldStorage] : [action, storage]) : [list<operation>, storage] => {
+      9 | let main = (param : action, oldStorage : storage) : [list<operation>, storage] => {
      10 |     let newStorage : storage = addone (oldStorage, 1 as nat);
      11 |     return [list([]) as list<operation>, newStorage];
      12 | }
@@ -285,13 +220,13 @@ let%expect_test _ =
 
     Toplevel let declaration are silently change to const declaration.
 
-    File "../../test/contracts/negative/error_typer_1.jsligo", line 10, characters 38-60:
-      9 | let main = ([param, oldStorage] : [action, storage]) : [list<operation>, storage] => {
+    File "../../test/contracts/negative/error_typer_1.jsligo", line 10, characters 31-60:
+      9 | let main = (param : action, oldStorage : storage) : [list<operation>, storage] => {
      10 |     let newStorage : storage = addone (oldStorage, 1 as nat);
      11 |     return [list([]) as list<operation>, newStorage];
 
-    Invalid type(s)
-    Cannot unify "( nat * nat )" with "nat". |}];
+    Invalid type.
+    Expected a function type, but got "nat". |}];
   run_ligo_bad
     [ "compile"; "contract"; "--no-color"; "../../test/contracts/negative/id.mligo" ];
   [%expect
@@ -346,13 +281,11 @@ let%expect_test _ =
     ];
   [%expect
     {|
-    File "../../test/contracts/negative/override_option.mligo", line 3, characters 53-57:
+    File "../../test/contracts/negative/override_option.mligo", line 3, characters 57-61:
       2 |
-      3 | let main (x,y:bool * bool) = ([] : operation list), (None : option)
+      3 | let main (x : bool) (y : bool) = ([] : operation list), (None : option)
 
-    Invalid type(s)
-    Cannot unify "option (^a)" with "int".
-    Hint: "^a" represent placeholder type(s). |}]
+    Constructor "None" not found. |}]
 
 let%expect_test _ =
   run_ligo_bad
@@ -371,6 +304,7 @@ let%expect_test _ =
     Invalid type
     Ill formed type "contract".Hint: you might be missing some type arguments. |}]
 
+(*
 let%expect_test _ =
   run_ligo_bad
     [ "compile"; "contract"; "../../test/contracts/negative/double_for_each.ligo" ];
@@ -382,7 +316,8 @@ let%expect_test _ =
      20 |     };
 
     Variable "param" not found. |}]
-
+*)
+(*
 let%expect_test _ =
   run_ligo_bad
     [ "compile"; "contract"; "../../test/contracts/negative/wrong_return1.ligo" ];
@@ -396,7 +331,8 @@ let%expect_test _ =
 
     Invalid type(s)
     Cannot unify "int" with "return". |}]
-
+*)
+(*
 let%expect_test _ =
   run_ligo_bad
     [ "compile"; "contract"; "../../test/contracts/negative/wrong_return2.ligo" ];
@@ -408,6 +344,7 @@ let%expect_test _ =
 
     Invalid type(s)
     Cannot unify "int" with "return". |}]
+*)
 
 (* Compiles due to inference ;) *)
 (* let%expect_test _ =
@@ -417,7 +354,7 @@ let%expect_test _ =
         7 |     Some contract -> contract
         8 |   | None -> (failwith "The entrypoint does not exist" : int contract)
         9 |
-  
+
       Invalid type(s).
       Expected: "contract ('a)", but got: "contract (int)". |}] *)
 
@@ -486,7 +423,7 @@ let%expect_test _ =
     - string
   i.e., consecutive changes
     CHANGE A1 TO B1; CHANGE A2 TO B2
-  shouldn't appear as 
+  shouldn't appear as
     DELETE A1; INSERT B1; DELETE A2; INSERT B2
   but instead :
     DELETE A1; DELETE A2; INSERT B1; INSERT B2
@@ -558,7 +495,11 @@ let%expect_test _ =
       5 |   //       ^^^^^^         ^^^         ^^^            ^^^
 
     Invalid type(s)
-    Cannot unify "( string * int * nat * tez * string * int )" with "( tez * int * tez * nat * string )".
+    Cannot unify "( string * int * nat * tez * string * int )" with "( tez *
+                                                                       int *
+                                                                       tez *
+                                                                       nat *
+                                                                       string )".
     Difference between the types:
     - string
     + tez
@@ -585,7 +526,15 @@ let%expect_test _ =
       5 | //               ^^^   ^^^^^^               ^^^^^^^         ^^^
 
     Invalid type(s)
-    Cannot unify "( int * nat * int * nat * int * nat )" with "( int * tez * string * nat * int * address * int * tez * nat )".
+    Cannot unify "( int * nat * int * nat * int * nat )" with "( int *
+                                                                 tez *
+                                                                 string *
+                                                                 nat *
+                                                                 int *
+                                                                 address *
+                                                                 int *
+                                                                 tez *
+                                                                 nat )".
     Difference between the types:
       int
     + tez
@@ -601,7 +550,7 @@ let%expect_test _ =
 (*
   Here we have a tuple nested inside another
   The diff should suggest a [REPLACE subtuple_a BY subtuple_b]
-  
+
   For example :
     int * string * (nat * tez * nat) *          tez
   vs.
@@ -618,7 +567,7 @@ let%expect_test _ =
     CHANGE (nat * tez * nat) TO string
     keep   tez
     ADD    address
-  
+
   But weights are computed accordingly to the size of the types involved,
   so the first diff should be chosen over the second.
   In the first diff,
@@ -649,7 +598,13 @@ let%expect_test _ =
       5 |   //             ^^^^^^                ^^^    ^^^^^^         ^^^^^^^
 
     Invalid type(s)
-    Cannot unify "( int * string * ( nat * tez * nat ) * tez )" with "( int * ( nat * tez * int ) * string * tez * address )".
+    Cannot unify "( int * string * ( nat * tez * nat ) * tez )" with "( int *
+                                                                        ( nat *
+                                                                        tez *
+                                                                        int ) *
+                                                                        string *
+                                                                        tez *
+                                                                        address )".
     Difference between the types:
       int
     - string
@@ -720,7 +675,11 @@ let%expect_test _ =
       5 |   //       ^^^^^^         ^^^         ^^^            ^^^
 
     Invalid type(s)
-    Cannot unify "( string * int * nat * int * string * int )" with "( tez * int * tez * nat * string )".
+    Cannot unify "( string * int * nat * int * string * int )" with "( tez *
+                                                                       int *
+                                                                       tez *
+                                                                       nat *
+                                                                       string )".
     Difference between the types:
     - string
     + tez
@@ -781,8 +740,10 @@ let%expect_test _ =
       5 |   //                                ^^^^^^    ^^^^^^^^^^^^^^^^^
 
     Invalid type(s)
-    Cannot unify "record[bar -> ( nat * string ) , foo -> int , third_field -> tez]" with "
-    record[bar -> ( nat * nat ) , foo -> int]". |}]
+    Cannot unify "record[bar -> ( nat * string ) ,
+                         foo -> int ,
+                         third_field -> tez]" with "record[bar -> ( nat * nat ) ,
+                                                           foo -> int]". |}]
 
 (*
   In this case, the typer will stop at the first mismatch
