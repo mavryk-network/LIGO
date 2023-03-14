@@ -384,12 +384,7 @@ let%expect_test _ =
     { parameter bool ;
       storage (lambda unit mutez) ;
       code { CAR ;
-             IF { AMOUNT ;
-                  LAMBDA (pair mutez unit) mutez { CAR } ;
-                  DUP 2 ;
-                  APPLY ;
-                  SWAP ;
-                  DROP }
+             IF { LAMBDA unit mutez { DROP ; AMOUNT } }
                 { LAMBDA unit mutez { DROP ; AMOUNT } } ;
              NIL operation ;
              PAIR } } |}]
