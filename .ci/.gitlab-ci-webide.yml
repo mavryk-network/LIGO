@@ -8,11 +8,11 @@ webide-define-image-tag:
   rules:
     - if: '$CI_COMMIT_BRANCH == "webide-release/frontend"'
       when: always
-    - if: '$CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_COMMIT_BRANCH == "pgujjula/#1714-uri-normalization"'
       changes:
         - tools/webide-new/ligo-webide-frontend/**/*
       when: always
-    - if: '$CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_COMMIT_BRANCH == "pgujjula/#1714-uri-normalization"'
       changes:
         - tools/webide-new/ligo-webide-backend/**/*
       when: always
@@ -70,7 +70,7 @@ webide-new-backend-build-and-push-backend:
     - job: webide-define-image-tag
       artifacts: true 
   rules:
-    - if: '$CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_COMMIT_BRANCH == "pgujjula/#1714-uri-normalization"'
       changes:
         - tools/webide-new/ligo-webide-backend/**/*
       when: always
@@ -88,7 +88,7 @@ webide-new-frontend-build-and-push:
     - job: webide-define-image-tag
       artifacts: true
   rules:
-    - if: '$CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_COMMIT_BRANCH == "pgujjula/#1714-uri-normalization"'
       changes:
         - tools/webide-new/ligo-webide-frontend/**/*
       when: always
