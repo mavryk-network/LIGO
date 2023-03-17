@@ -54,7 +54,8 @@ module Tezos = struct
     [%michelson ({| { OPEN_CHEST ; IF_LEFT { RIGHT (or unit unit) } { IF { PUSH unit Unit ; LEFT unit ; LEFT bytes } { PUSH unit Unit ; RIGHT unit ; LEFT bytes } } } |} ck c n : chest_opening_result)]
 #endif
   [@inline] [@thunk] let call_view (type a b) (s : string) (x : a) (a : address)  : b option =
-    [%Michelson (({| { UNPAIR ; VIEW (litstr $0) (type $1) } |} : a * address -> b option), (s : string), (() : b))] (x, a)
+    let rec phantom () : b = phantom () in
+    [%michelson ({| { VIEW (litstr $0) (type $1) } |} (s : string) (phantom ()) x a : b option)]
   let split_ticket (type a) (t : a ticket) (p : nat * nat) : (a ticket * a ticket) option =
     [%michelson ({| { SPLIT_TICKET } |} t p : (a ticket * a ticket) option)]
   [@inline] [@thunk] let create_contract (type p s) (f : p -> s -> operation list * s) (kh : key_hash option) (t : tez) (s : s) : (operation * address) =

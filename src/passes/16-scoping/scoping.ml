@@ -271,6 +271,13 @@ let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.enviro
     let code = List.map ~f:(wipe_locations nil) code in
     let used = ref [] in
     let replace m = let open Tezos_micheline.Micheline in match m with
+     | Prim (_, s, [], [id]) when String.equal "typeopt" s && String.is_prefix ~prefix:"$" id ->
+       let id = String.chop_prefix_exn ~prefix:"$" id in
+       let id = Int.of_string id in
+       used := id :: ! used;
+       (match List.nth args id with
+        | Some (_, (Prim (_, "option", [t], _))) -> t
+        | _ -> internal_error __LOC__ (Format.sprintf "could not resolve (typeopt %d)" id))
      | Prim (_, s, [], [id]) when String.equal "type" s && String.is_prefix ~prefix:"$" id ->
        let id = String.chop_prefix_exn ~prefix:"$" id in
        let id = Int.of_string id in

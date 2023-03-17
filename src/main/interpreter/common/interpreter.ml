@@ -1791,6 +1791,17 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
         let open Tezos_micheline.Micheline in
         match m with
         | Prim (_, s, [], [ id ])
+          when String.equal "typeopt" s && String.is_prefix ~prefix:"$" id ->
+          let id = String.chop_prefix_exn ~prefix:"$" id in
+          let id = Int.of_string id in
+          (match List.nth args id with
+           | Some (_, (Prim (_, "option", [t], _))) -> Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun s -> s) t
+           | _ -> 
+            raise.error
+              (Errors.generic_error
+                 term.location
+                 (Format.sprintf "could not resolve (typeopt %d)" id)))
+        | Prim (_, s, [], [ id ])
           when String.equal "type" s && String.is_prefix ~prefix:"$" id ->
           let id = String.chop_prefix_exn ~prefix:"$" id in
           let id = Int.of_string id in
