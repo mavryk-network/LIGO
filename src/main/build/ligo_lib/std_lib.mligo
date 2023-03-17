@@ -171,8 +171,8 @@ end
 
 module Bytes = struct
   let concats (bs : bytes list) : bytes = [%external ("CONCATS", bs)]
-  let pack (type a) (v : a) : bytes = [%Michelson ({| { PACK } |} : a -> bytes)] v
-  let unpack (type a) (b : bytes) : a option = [%Michelson (({| { UNPACK (type $0) } |} : bytes -> a option), (() : a))] b
+  let pack (type a) (v : a) : bytes = [%michelson ({| { PACK } |} v : bytes)]
+  let unpack (type a) (b : bytes) : a option = [%michelson ({| { UNPACK (typeopt $0) } |} (None : a option) b : a option)]
   let length (b : bytes) : nat = [%external ("SIZE", b)]
 
   let concat (b1 : bytes) (b2 : bytes) : bytes = [%external ("CONCAT", b1, b2)]
