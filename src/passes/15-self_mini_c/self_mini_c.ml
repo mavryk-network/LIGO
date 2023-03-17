@@ -38,7 +38,6 @@ let rec is_pure : expression -> bool = fun e ->
   | E_closure _
   | E_rec _
   | E_variable _
-  | E_raw_michelson _
     -> true
 
   | E_if_bool (cond, bt, bf)
@@ -65,8 +64,9 @@ let rec is_pure : expression -> bool = fun e ->
   | E_global_constant (_hash, _args) ->
     (* hashed code can be impure :( *)
     false
-  | E_create_contract _ ->
+  | E_create_contract _
     (* very not pure *)
+  | E_raw_michelson _ ->
     false
 
  (* TODO E_let_mut_in is pure when the rhs is pure and the body's
