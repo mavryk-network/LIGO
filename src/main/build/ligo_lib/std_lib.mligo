@@ -62,13 +62,13 @@ module Tezos = struct
       [%external ("CREATE_CONTRACT", f, kh, t, s)]
   [@inline] [@thunk] let get_entrypoint_opt (type p) (e : string) (a : address) : p contract option =
     let _ : unit = [%external ("CHECK_ENTRYPOINT", e)] in
-    [%Michelson (({| { CONTRACT (annot $0) (type $1) } |} : address -> (p contract) option), (e : string), (() : p))] a
+    [%michelson ({| { CONTRACT (annot $0) (typeopt $1) } |} (e : string) (None : p option) a : (p contract) option)]
   [@inline] [@thunk] let get_entrypoint (type p) (e : string) (a : address) : p contract =
     let v = get_entrypoint_opt e a in
     match v with | None -> failwith "bad address for get_entrypoint" | Some c -> c
   [@inline] [@thunk] let emit (type a) (s : string) (v : a) : operation =
     let _ : unit = [%external ("CHECK_EMIT_EVENT", s, v)] in
-    [%Michelson (({| { EMIT (annot $0) (type $1) } |} : a -> operation), (s : string), (() : a))] v
+    [%michelson ({| { EMIT (annot $0) (typeopt $1) } |} (s : string) (None : a option) v : operation)]
   [@inline] [@thunk] let sapling_verify_update (type sap_a) (t : sap_a sapling_transaction) (s : sap_a sapling_state) : (bytes * (int * sap_a sapling_state)) option = [%michelson ({| { SAPLING_VERIFY_UPDATE } |} t s : (bytes * (int * sap_a sapling_state)) option)]
 
 end
