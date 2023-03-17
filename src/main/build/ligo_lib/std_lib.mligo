@@ -114,9 +114,9 @@ module Map = struct
 end
 
 module Transpiled = struct
-  let map_find_opt (type k b) (k : k) (m : b) : (k, b) external_map_find_opt = [%Michelson ({| { UNPAIR ; GET } |} : k * b -> (k, b) external_map_find_opt)] (k, m)
-  let map_add (type k v b) (k : k) (v : v) (m : b) : (k, v, b) external_map_add = [%Michelson ({| { UNPAIR ; UNPAIR ; DIP { SOME } ; UPDATE } |} : k * v * b -> (k, v, b) external_map_add)] (k, v, m)
-  let map_remove (type k b) (k : k) (m : b) : (k, b) external_map_remove = [%Michelson (({| { UNPAIR ; DIP { NONE (type $0) } ; UPDATE } |} : k * b -> (k, b) external_map_remove), (() : (k, b) external_map_remove_value))] (k, m)
+  let map_find_opt (type k b) (k : k) (m : b) : (k, b) external_map_find_opt = [%michelson ({| { GET } |} k m : (k, b) external_map_find_opt)]
+  let map_add (type k v b) (k : k) (v : v) (m : b) : (k, v, b) external_map_add = [%michelson ({| { DIP { SOME } ; UPDATE } |} k v m : (k, v, b) external_map_add)]
+  let map_remove (type k b) (k : k) (m : b) : (k, b) external_map_remove = [%michelson ({| { DIP { NONE (typeopt $0) } ; UPDATE } |} (None : ((k, b) external_map_remove_value) option) k m : (k, b) external_map_remove)]
 end
 
 module Set = struct
