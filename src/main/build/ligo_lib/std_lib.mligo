@@ -18,11 +18,11 @@ module Tezos = struct
   let voting_power (kh : key_hash) : nat = [%michelson ({| { VOTING_POWER } |} kh : nat)]
   let address (type a) (c : a contract) : address = [%michelson ({| { ADDRESS } |} c : address)]
   let implicit_account (kh : key_hash) : unit contract = [%michelson ({| { IMPLICIT_ACCOUNT } |} kh : unit contract)]
-  let join_tickets (type a) (t : a ticket * a ticket) : (a ticket) option = [%Michelson ({| { JOIN_TICKETS } |} : a ticket * a ticket -> a ticket option)] t
+  let join_tickets (type a) (t : a ticket * a ticket) : (a ticket) option = [%michelson ({| { JOIN_TICKETS } |} t : a ticket option)]
   let read_ticket (type a) (t : a ticket) : (address * (a * nat)) * a ticket =
-    [%Michelson ({| { READ_TICKET ; PAIR } |} : a ticket -> (address * (a * nat)) * a ticket)] t
+    [%michelson ({| { READ_TICKET ; PAIR } |} t : (address * (a * nat)) * a ticket)]
   let never (type a) (n : never) : a = [%michelson ({| { NEVER } |} n : a)]
-  let pairing_check (l : (bls12_381_g1 * bls12_381_g2) list) : bool = [%Michelson ({| { PAIRING_CHECK } |} : (bls12_381_g1 * bls12_381_g2) list -> bool)] l
+  let pairing_check (l : (bls12_381_g1 * bls12_381_g2) list) : bool = [%michelson ({| { PAIRING_CHECK } |} l : bool)]
   let set_delegate (o : key_hash option) : operation = [%michelson ({| { SET_DELEGATE } |} o : operation)]
   [@inline] [@thunk] let self (type a) (s : string) : a contract =
     let _ : a option = [%external ("CHECK_SELF", s)] in
