@@ -29,11 +29,9 @@ module Tezos = struct
     [%michelson ({| { SELF (annot $0) } |} (s : string) : a contract)]
   [@inline] [@thunk] let constant (type a) (s : string) : a = [%external ("GLOBAL_CONSTANT", s)]
   [@inline] [@thunk] let sapling_empty_state (type sap_a) : sap_a sapling_state =
-    let rec phantom () : sap_a = phantom () in
-    [%michelson ({| { SAPLING_EMPTY_STATE (type $0) } |} (phantom () : sap_a) : sap_a sapling_state)]
+    [%michelson ({| { SAPLING_EMPTY_STATE (typeopt $0) } |} (None : sap_a option) : sap_a sapling_state)]
   [@inline] [@thunk] let get_contract_opt (type p) (a : address) : (p contract) option =
-    let rec phantom () : p = phantom () in
-    [%michelson ({| { CONTRACT (type $0) } |} (phantom ()) a : (p contract) option)]
+    [%michelson ({| { CONTRACT (typeopt $0) } |} (None : p option) a : (p contract) option)]
   [@inline] [@thunk] let get_contract (type a) (a : address) : (a contract) =
     let v = get_contract_opt a in
     match v with | None -> failwith "bad address for get_contract" | Some c -> c
@@ -54,8 +52,7 @@ module Tezos = struct
     [%michelson ({| { OPEN_CHEST ; IF_LEFT { RIGHT (or unit unit) } { IF { PUSH unit Unit ; LEFT unit ; LEFT bytes } { PUSH unit Unit ; RIGHT unit ; LEFT bytes } } } |} ck c n : chest_opening_result)]
 #endif
   [@inline] [@thunk] let call_view (type a b) (s : string) (x : a) (a : address)  : b option =
-    let rec phantom () : b = phantom () in
-    [%michelson ({| { VIEW (litstr $0) (type $1) } |} (s : string) (phantom ()) x a : b option)]
+    [%michelson ({| { VIEW (litstr $0) (typeopt $1) } |} (s : string) (None : b option) x a : b option)]
   let split_ticket (type a) (t : a ticket) (p : nat * nat) : (a ticket * a ticket) option =
     [%michelson ({| { SPLIT_TICKET } |} t p : (a ticket * a ticket) option)]
   [@inline] [@thunk] let create_contract (type p s) (f : p -> s -> operation list * s) (kh : key_hash option) (t : tez) (s : s) : (operation * address) =

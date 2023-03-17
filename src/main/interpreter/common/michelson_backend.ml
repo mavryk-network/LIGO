@@ -1461,6 +1461,17 @@ let rec compile_value ~raise ~options ~loc
             ty)
 
 
+let compile_type_to_mcode ~raise
+    :  Ast_aggregated.type_expression
+    -> Ligo_interpreter.Types.mcode
+  =
+ fun ty ->
+  let expr_ty = Ligo_compile.Of_expanded.compile_type ~raise ty in
+  let expr_ty = Ligo_compile.Of_mini_c.compile_type expr_ty in
+  let expr_ty = clean_location_with () expr_ty in
+  expr_ty
+
+
 let compile_value ~raise ~options ~loc
     :  Ligo_interpreter.Types.value -> Ast_aggregated.type_expression
     -> Ligo_interpreter.Types.typed_michelson_code
