@@ -24,6 +24,7 @@ let pseq_to_list = function
 
 let r_split = Location.r_split
 let quote_var var = "'" ^ var
+let w_split (x : 'a CST.Wrap.t) : 'a * Location.t = x#payload, Location.lift x#region
 
 let compile_variable var =
   let var, loc = r_split var in
@@ -40,13 +41,13 @@ let compile_mod_var var =
   Module_var.of_input_var ~loc var
 
 
-let compile_attributes : CST.attributes -> string list =
+let compile_attributes : CST.attribute list -> AST.attributes =
  fun attr ->
-  let f : CST.attribute Region.reg -> string =
+  let f : CST.attribute -> string =
    fun x ->
-    let (k, v_opt), _loc = r_split x in
+    let (k, v_opt), _loc = w_split x in
     match v_opt with
-    | Some (String v | Ident v) -> String.concat ~sep:":" [ k; v ]
+    | Some (Ident v | String v) -> String.concat ~sep:":" [ k; v ]
     | None -> k
   in
   List.map ~f attr
@@ -650,10 +651,10 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
     return @@ e_mod_in ~loc alias rhs body
   | ECodeInj ci ->
     let ci, loc = r_split ci in
-    let language, _ = r_split ci.language in
+    let language, _ = w_split ci.language in
     let language, _ = r_split language in
     let code = self ci.code in
-    return @@ e_raw_code ~loc language code
+    e_raw_code ~loc language code
   | ESeq seq ->
     let seq, loc = r_split seq in
     let seq = List.map ~f:self @@ pseq_to_list seq.elements in

@@ -126,6 +126,6 @@ pin-depends: [
   [ "tezos-version.dev" "./vendors/tezos-ligo/opam" ]
   [ "tezos-workers.dev" "./vendors/tezos-ligo/opam" ]
   [ "ocaml-recovery-parser.0.2.4" "git+https://github.com/serokell/ocaml-recovery-parser.git#0.2.4" ]
-  [ "linol.0.5" "git+https://github.com/c-cube/linol.git" ]
-  [ "linol-lwt.0.5" "git+https://github.com/c-cube/linol.git" ]
+  [ "linol.0.5" "git+https://github.com/c-cube/linol.git#5a29a9e1456a431122c51f44bc10c51f46f8d592" ]
+  [ "linol-lwt.0.5" "git+https://github.com/c-cube/linol.git#5a29a9e1456a431122c51f44bc10c51f46f8d592" ]
 ]
