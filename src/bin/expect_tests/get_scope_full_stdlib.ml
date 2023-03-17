@@ -217,6 +217,7 @@ let%expect_test _ =
       File "", line 108, characters 45-53 ,
       File "", line 108, characters 74-82 ,
       File "", line 110, characters 53-61 ,
+      File "", line 120, characters 141-182 ,
       File "", line 141, characters 40-48 ,
       File "", line 142, characters 40-55 ,
       File "", line 150, characters 56-64 ,
