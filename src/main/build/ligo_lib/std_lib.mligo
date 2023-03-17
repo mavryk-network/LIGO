@@ -32,7 +32,8 @@ module Tezos = struct
     let rec phantom () : sap_a = phantom () in
     [%michelson ({| { SAPLING_EMPTY_STATE (type $0) } |} (phantom () : sap_a) : sap_a sapling_state)]
   [@inline] [@thunk] let get_contract_opt (type p) (a : address) : (p contract) option =
-    [%Michelson (({| { CONTRACT (type $0) } |} : address -> (p contract) option), (() : p))] a
+    let rec phantom () : p = phantom () in
+    [%michelson ({| { CONTRACT (type $0) } |} (phantom ()) a : (p contract) option)]
   [@inline] [@thunk] let get_contract (type a) (a : address) : (a contract) =
     let v = get_contract_opt a in
     match v with | None -> failwith "bad address for get_contract" | Some c -> c
