@@ -83,15 +83,17 @@ let%expect_test _ =
              PAIR ;
              PAIR ;
              PAIR }
-           { IF_LEFT
+           { SENDER ;
+             SWAP ;
+             IF_LEFT
                { DROP ;
-                 DUP ;
                  DUP 2 ;
+                 DUP 3 ;
                  CAR ;
                  DUP ;
                  CAR ;
                  PUSH nat 1 ;
-                 DIG 4 ;
+                 DIG 5 ;
                  CAR ;
                  CAR ;
                  CDR ;
@@ -100,11 +102,11 @@ let%expect_test _ =
                  UPDATE 1 ;
                  UPDATE 1 }
                { DROP ;
-                 DUP ;
                  DUP 2 ;
+                 DUP 3 ;
                  CDR ;
                  PUSH nat 1 ;
-                 DIG 3 ;
+                 DIG 4 ;
                  CDR ;
                  CDR ;
                  ADD ;
@@ -116,8 +118,9 @@ let%expect_test _ =
              DIG 2 ;
              CDR ;
              CAR ;
+             DIG 3 ;
              PUSH bool True ;
-             SENDER ;
+             SWAP ;
              UPDATE ;
              UPDATE 1 ;
              UPDATE 2 } ;
@@ -197,14 +200,16 @@ let%expect_test _ =
                      GET 4 ;
                      GET_AND_UPDATE ;
                      DROP ;
-                     DIG 3 ;
-                     PAIR ;
-                     NIL operation ;
-                     DIG 3 ;
+                     DIG 2 ;
                      CAR ;
                      PUSH mutez 0 ;
-                     DIG 4 ;
+                     DIG 3 ;
                      TRANSFER_TOKENS ;
+                     SWAP ;
+                     DIG 2 ;
+                     PAIR ;
+                     NIL operation ;
+                     DIG 2 ;
                      CONS ;
                      PAIR } } } } } |}]
 
@@ -252,13 +257,14 @@ Hint: replace it by "_ticket" to prevent this warning.
              UNIT ;
              TICKET ;
              IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
-             DIG 2 ;
-             NIL operation ;
-             DIG 3 ;
+             SWAP ;
              CAR ;
              PUSH mutez 0 ;
-             DIG 4 ;
+             DIG 2 ;
              TRANSFER_TOKENS ;
+             SWAP ;
+             NIL operation ;
+             DIG 2 ;
              CONS } ;
          PAIR } } |}]
 
@@ -384,7 +390,12 @@ let%expect_test _ =
     { parameter bool ;
       storage (lambda unit mutez) ;
       code { CAR ;
-             IF { LAMBDA unit mutez { DROP ; AMOUNT } }
+             IF { AMOUNT ;
+                  LAMBDA (pair mutez unit) mutez { CAR } ;
+                  DUP 2 ;
+                  APPLY ;
+                  SWAP ;
+                  DROP }
                 { LAMBDA unit mutez { DROP ; AMOUNT } } ;
              NIL operation ;
              PAIR } } |}]
@@ -906,12 +917,13 @@ let%expect_test _ =
     { parameter (or (unit %foo) (unit %b)) ;
       storage unit ;
       code { DROP ;
-             UNIT ;
-             NIL operation ;
              SELF %foo ;
              PUSH mutez 0 ;
              UNIT ;
              TRANSFER_TOKENS ;
+             UNIT ;
+             NIL operation ;
+             DIG 2 ;
              CONS ;
              PAIR } } |}]
 
@@ -1204,14 +1216,16 @@ let%expect_test _ =
                          GET 4 ;
                          GET_AND_UPDATE ;
                          DROP ;
-                         DIG 3 ;
-                         PAIR ;
-                         NIL operation ;
-                         DIG 3 ;
+                         DIG 2 ;
                          CAR ;
                          PUSH mutez 0 ;
-                         DIG 4 ;
+                         DIG 3 ;
                          TRANSFER_TOKENS ;
+                         SWAP ;
+                         DIG 2 ;
+                         PAIR ;
+                         NIL operation ;
+                         DIG 2 ;
                          CONS ;
                          PAIR } } } } } |}]
 
@@ -2840,12 +2854,12 @@ let%expect_test _ =
              CONTRACT %Upper unit ;
              IF_NONE
                { PUSH string "lol" ; FAILWITH }
-               { UNIT ;
-                 NIL operation ;
-                 DIG 2 ;
-                 PUSH mutez 0 ;
+               { PUSH mutez 0 ;
                  UNIT ;
                  TRANSFER_TOKENS ;
+                 UNIT ;
+                 NIL operation ;
+                 DIG 2 ;
                  CONS ;
                  PAIR } } } |}]
 
@@ -3032,9 +3046,9 @@ let%expect_test _ =
   storage (pair nat nat) ;
   code { CAR ;
          HASH_KEY ;
+         VOTING_POWER ;
          TOTAL_VOTING_POWER ;
          SWAP ;
-         VOTING_POWER ;
          PAIR ;
          NIL operation ;
          PAIR } } |}]
@@ -3761,8 +3775,10 @@ let%expect_test _ =
                          SELF_ADDRESS ;
                          PUSH string "" ;
                          PAIR ;
-                         SOME ;
                          SOURCE ;
+                         SWAP ;
+                         SOME ;
+                         SWAP ;
                          UPDATE ;
                          DIG 2 ;
                          PAIR ;
@@ -3794,8 +3810,10 @@ let%expect_test _ =
                          DIG 3 ;
                          DUP 4 ;
                          PAIR ;
-                         SOME ;
                          SOURCE ;
+                         SWAP ;
+                         SOME ;
+                         SWAP ;
                          UPDATE ;
                          DIG 2 ;
                          PAIR ;

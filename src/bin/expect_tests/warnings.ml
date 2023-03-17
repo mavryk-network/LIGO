@@ -113,11 +113,17 @@ let%expect_test _ =
     12:            { PUSH string "option is None" /* [ string ] */ ; FAILWITH /* [] */ }
     13:            { /* [ ticket nat ] */ } ;
     14:          DUP ;
-    15:          PAIR ;
-    16:          JOIN_TICKETS ;
-    17:          IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
-    18:          NIL operation ;
-    19:          PAIR } }
+    15:          DUP 2 ;
+    16:          DROP ;
+    17:          DUP 2 ;
+    18:          DIG 2 ;
+    19:          SWAP ;
+    20:          DROP ;
+    21:          PAIR ;
+    22:          JOIN_TICKETS ;
+    23:          IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
+    24:          NIL operation ;
+    25:          PAIR } }
   At line 14 characters 9 to 12,
   type ticket nat cannot be used here because it is not duplicable. Only duplicable types can be used with the DUP instruction and as view inputs and outputs.
   At line 14 characters 9 to 12,
