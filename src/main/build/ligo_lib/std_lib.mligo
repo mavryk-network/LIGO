@@ -180,12 +180,12 @@ module Bytes = struct
 end
 
 module Crypto = struct
-  let blake2b (b : bytes) : bytes = [%Michelson ({| { BLAKE2B } |} : bytes -> bytes)] b
-  let sha256 (b : bytes) : bytes = [%Michelson ({| { SHA256 } |} : bytes -> bytes)] b
-  let sha512 (b : bytes) : bytes = [%Michelson ({| { SHA512 } |} : bytes -> bytes)] b
-  let sha3 (b : bytes) : bytes = [%Michelson ({| { SHA3 } |} : bytes -> bytes)] b
-  let keccak (b : bytes) : bytes = [%Michelson ({| { KECCAK } |} : bytes -> bytes)] b
-  let hash_key (k : key) : key_hash = [%Michelson ({| { HASH_KEY } |} : key -> key_hash)] k
+  let blake2b (b : bytes) : bytes = [%michelson ({| { BLAKE2B } |} b : bytes)]
+  let sha256 (b : bytes) : bytes = [%michelson ({| { SHA256 } |} b : bytes)]
+  let sha512 (b : bytes) : bytes = [%michelson ({| { SHA512 } |} b : bytes)]
+  let sha3 (b : bytes) : bytes = [%michelson ({| { SHA3 } |} b : bytes)]
+  let keccak (b : bytes) : bytes = [%michelson ({| { KECCAK } |} b : bytes)]
+  let hash_key (k : key) : key_hash = [%michelson ({| { HASH_KEY } |} k : key_hash)]
   let check (k : key) (s : signature) (b : bytes) : bool = [%michelson ({| { CHECK_SIGNATURE } |} k s b : bool)]
 end
 
