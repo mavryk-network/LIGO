@@ -1,4 +1,4 @@
-let failwith (type a b) = [%Michelson ({|{ FAILWITH }|} : a -> b)]
+let failwith (type a b) (x : a) = [%michelson ({| { FAILWITH } |} x : b)]
 
 type bool = True | False
 type 'a option = Some of 'a | None
