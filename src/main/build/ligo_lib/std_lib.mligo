@@ -29,7 +29,8 @@ module Tezos = struct
     [%michelson ({| { SELF (annot $0) } |} (s : string) : a contract)]
   [@inline] [@thunk] let constant (type a) (s : string) : a = [%external ("GLOBAL_CONSTANT", s)]
   [@inline] [@thunk] let sapling_empty_state (type sap_a) : sap_a sapling_state =
-    [%Michelson (({| { DROP ; SAPLING_EMPTY_STATE (type $0) } |} : unit -> sap_a sapling_state), (() : sap_a))] ()
+    let rec phantom () : sap_a = phantom () in
+    [%michelson ({| { SAPLING_EMPTY_STATE (type $0) } |} (phantom () : sap_a) : sap_a sapling_state)]
   [@inline] [@thunk] let get_contract_opt (type p) (a : address) : (p contract) option =
     [%Michelson (({| { CONTRACT (type $0) } |} : address -> (p contract) option), (() : p))] a
   [@inline] [@thunk] let get_contract (type a) (a : address) : (a contract) =
