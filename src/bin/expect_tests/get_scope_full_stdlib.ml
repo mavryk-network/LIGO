@@ -1302,9 +1302,7 @@ let%expect_test _ =
                                         Range: File "", line 303, characters 8-11
                                         Body Range: File "", line 303, characters 12-20
                                         Content: |core: ∀ a : * . pbt_gen (a)|
-                                        references:
-                                          File "", line 306, characters 23-27 ,
-                                          File "", line 307, characters 23-27
+                                        references: []
                                         (gen_small#467 -> gen_small)
                                         Range: File "", line 304, characters 8-17
                                         Body Range: File "", line 304, characters 18-26
