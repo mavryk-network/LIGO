@@ -488,42 +488,6 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
         let code = O.e_a_applications ~loc code args in
         return @@ O.E_raw_code { language = "michelson"; code })
       result_type
-  | E_raw_code { language; code = { expression_content; _ } }
-    when Option.is_some (I.get_e_tuple expression_content) ->
-    let%bind loc = loc () in
-    let exprs = Option.value_exn ~here:[%here] @@ I.get_e_tuple expression_content in
-    let%bind code, args =
-      match exprs with
-      | [] -> raise (corner_case "expected non-empty tuple in %Michelson")
-      | code :: args -> return (code, args)
-    in
-    let%bind code, code_type =
-      raise_opt ~error:not_annotated @@ I.get_e_ascription code.expression_content
-    in
-    let%bind code_type = evaluate_type_with_default_layout code_type in
-    (* TODO: Shouldn't [code] have the type of [string]? *)
-    let%bind _, code = infer code in
-    let%bind args =
-      args
-      |> List.map ~f:(fun arg ->
-             let%bind arg, arg_type =
-               raise_opt ~error:not_annotated
-               @@ I.get_e_ascription arg.I.expression_content
-             in
-             let%bind _, arg = infer arg in
-             let%bind arg_type = evaluate_type_with_default_layout arg_type in
-             lift arg arg_type)
-      |> all
-    in
-    const
-      E.(
-        let%bind code = code in
-        let%bind args = all args in
-        let%bind code_type = decode code_type in
-        let tuple = O.e_a_record ~loc @@ Record.record_of_tuple (code :: args) in
-        return
-        @@ O.E_raw_code { language; code = { tuple with type_expression = code_type } })
-      code_type
   | E_raw_code { language; code } ->
     let%bind code, code_type =
       raise_opt ~error:not_annotated @@ I.get_e_ascription code.expression_content
