@@ -1462,8 +1462,7 @@ let rec compile_value ~raise ~options ~loc
 
 
 let compile_type_to_mcode ~raise
-    :  Ast_aggregated.type_expression
-    -> Ligo_interpreter.Types.mcode
+    : Ast_aggregated.type_expression -> Ligo_interpreter.Types.mcode
   =
  fun ty ->
   let expr_ty = Ligo_compile.Of_expanded.compile_type ~raise ty in

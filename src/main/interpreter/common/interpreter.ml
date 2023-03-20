@@ -1795,8 +1795,9 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
           let id = String.chop_prefix_exn ~prefix:"$" id in
           let id = Int.of_string id in
           (match List.nth args id with
-           | Some (_, (Prim (_, "option", [t], _))) -> Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun s -> s) t
-           | _ ->
+          | Some (_, Prim (_, "option", [ t ], _)) ->
+            Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun s -> s) t
+          | _ ->
             raise.error
               (Errors.generic_error
                  term.location
@@ -1878,77 +1879,81 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
     let ast_ty = term.type_expression in
     let code, _code_ty = Michelson_backend.parse_raw_michelson_code ~raise code ast_ty in
     let used = ref [] in
-      let replace m =
+    let replace m =
+      let open Tezos_micheline.Micheline in
+      match m with
+      | Prim (_, s, [], [ id ])
+        when String.equal "typeopt" s && String.is_prefix ~prefix:"$" id ->
+        let id = String.chop_prefix_exn ~prefix:"$" id in
+        let id = Int.of_string id in
+        used := id :: !used;
+        (match List.nth args id with
+        | Some (_, t) when Option.is_some (get_t_option t) ->
+          let t = Option.value_exn (get_t_option t) in
+          let t = Michelson_backend.compile_type_to_mcode ~raise t in
+          Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun s -> s) t
+        | _ ->
+          raise.error
+            (Errors.generic_error
+               term.location
+               (Format.sprintf "could not resolve (typeopt %d)" id)))
+      | Prim (_, s, [], [ id ])
+        when String.equal "type" s && String.is_prefix ~prefix:"$" id ->
+        let id = String.chop_prefix_exn ~prefix:"$" id in
+        let id = Int.of_string id in
+        used := id :: !used;
+        (match List.nth args id with
+        | None ->
+          raise.error
+            (Errors.generic_error
+               term.location
+               (Format.sprintf "could not resolve (type %d)" id))
+        | Some (_, t) ->
+          let t = Michelson_backend.compile_type_to_mcode ~raise t in
+          Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun s -> s) t)
+      | Prim (_, s, [], [ id ])
+        when String.equal "litstr" s && String.is_prefix ~prefix:"$" id ->
+        let id = String.chop_prefix_exn ~prefix:"$" id in
+        let id = Int.of_string id in
+        used := id :: !used;
+        (match List.nth args id with
+        | Some (V_Ct (C_string s), _) -> Tezos_micheline.Micheline.String ((), s)
+        | _ ->
+          raise.error
+            (Errors.generic_error
+               term.location
+               (Format.sprintf "could not resolve (litstr %d)" id)))
+      | Prim (a, b, c, d) ->
         let open Tezos_micheline.Micheline in
-        match m with
-        | Prim (_, s, [], [ id ])
-          when String.equal "typeopt" s && String.is_prefix ~prefix:"$" id ->
-          let id = String.chop_prefix_exn ~prefix:"$" id in
-          let id = Int.of_string id in
-          used := id :: ! used;
-          (match List.nth args id with
-           | Some (_, t) when Option.is_some (get_t_option t) ->
-             let t = Option.value_exn (get_t_option t) in
-             let t = Michelson_backend.compile_type_to_mcode ~raise t in
-             Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun s -> s) t
-           | _ ->
-            raise.error
-              (Errors.generic_error
-                 term.location
-                 (Format.sprintf "could not resolve (typeopt %d)" id)))
-        | Prim (_, s, [], [ id ])
-          when String.equal "type" s && String.is_prefix ~prefix:"$" id ->
-          let id = String.chop_prefix_exn ~prefix:"$" id in
-          let id = Int.of_string id in
-          used := id :: ! used;
-          (match List.nth args id with
-          | None ->
-            raise.error
-              (Errors.generic_error
-                 term.location
-                 (Format.sprintf "could not resolve (type %d)" id))
-          | Some (_, t) ->
-             let t = Michelson_backend.compile_type_to_mcode ~raise t in
-             Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun s -> s) t)
-        | Prim (_, s, [], [ id ])
-          when String.equal "litstr" s && String.is_prefix ~prefix:"$" id ->
-          let id = String.chop_prefix_exn ~prefix:"$" id in
-          let id = Int.of_string id in
-          used := id :: ! used;
-          (match List.nth args id with
-          | Some (V_Ct (C_string s), _) -> Tezos_micheline.Micheline.String ((), s)
-          | _ ->
-            raise.error
-              (Errors.generic_error
-                 term.location
-                 (Format.sprintf "could not resolve (litstr %d)" id)))
-        | Prim (a, b, c, d) ->
-          let open Tezos_micheline.Micheline in
-          let f arg (c, d) =
-            match arg with
-            | Prim (_, s, [], [ id ])
-              when String.equal "annot" s && String.is_prefix ~prefix:"$" id ->
-              let id = String.chop_prefix_exn ~prefix:"$" id in
-              let id = Int.of_string id in
-              used := id :: ! used;
-              let annot =
-                match List.nth args id with
-                | Some (V_Ct (C_string s), _) -> s
-                | _ ->
-                  raise.error
-                    (Errors.generic_error
-                       term.location
-                       (Format.sprintf "could not resolve (annot %d)" id))
-              in
-              c, annot :: d
-            | m -> m :: c, d
-          in
-          let c, d = List.fold_right ~f ~init:([], d) c in
-          Prim (a, b, c, d)
-        | m -> m
-      in
-      let code = Tezos_utils.Michelson.map replace code in
-      let args = List.filter_mapi ~f:(fun i v -> if not (List.mem (! used) i ~equal:Caml.(=)) then Some v else None) args in
+        let f arg (c, d) =
+          match arg with
+          | Prim (_, s, [], [ id ])
+            when String.equal "annot" s && String.is_prefix ~prefix:"$" id ->
+            let id = String.chop_prefix_exn ~prefix:"$" id in
+            let id = Int.of_string id in
+            used := id :: !used;
+            let annot =
+              match List.nth args id with
+              | Some (V_Ct (C_string s), _) -> s
+              | _ ->
+                raise.error
+                  (Errors.generic_error
+                     term.location
+                     (Format.sprintf "could not resolve (annot %d)" id))
+            in
+            c, annot :: d
+          | m -> m :: c, d
+        in
+        let c, d = List.fold_right ~f ~init:([], d) c in
+        Prim (a, b, c, d)
+      | m -> m
+    in
+    let code = Tezos_utils.Michelson.map replace code in
+    let args =
+      List.filter_mapi
+        ~f:(fun i v -> if not (List.mem !used i ~equal:Caml.( = )) then Some v else None)
+        args
+    in
     let>> v =
       Run_Michelson (term.location, calltrace, code, term.type_expression, args)
     in

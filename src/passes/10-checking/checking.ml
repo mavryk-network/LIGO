@@ -475,8 +475,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
     let rec build_func_type args =
       match args with
       | [] -> result_type
-      | (arg_type, _) :: args ->
-        Type.t_arrow ~loc arg_type (build_func_type args) ()
+      | (arg_type, _) :: args -> Type.t_arrow ~loc arg_type (build_func_type args) ()
     in
     let func_type = build_func_type args in
     const
