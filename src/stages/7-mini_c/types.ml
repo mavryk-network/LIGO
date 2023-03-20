@@ -110,9 +110,10 @@ and expression_content =
   (* E_update (record, index, update, field_count): field_count as for E_proj *)
   | E_update of expression * int * expression * int
   | E_raw_michelson of
+      ((Location.t, string) Tezos_micheline.Micheline.node list)
+  | E_inline_michelson of
       ((Location.t, string) Tezos_micheline.Micheline.node list
-      * expression list
-      * expression list option)
+      * expression list)
   (* E_global_constant (hash, args) *)
   | E_global_constant of string * expression list
   | E_create_contract of

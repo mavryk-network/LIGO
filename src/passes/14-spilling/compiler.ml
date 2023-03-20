@@ -509,7 +509,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
         let code = Micheline.inject_locations (fun _ -> Location.generated) code in
         match code with
         | Seq (_, code) ->
-          return ~tv:type_anno' @@ E_raw_michelson (code, [], Some args)
+          return ~tv:type_anno' @@ E_inline_michelson (code, args)
         | _ ->
           raise.error (raw_michelson_must_be_seq ae.location code)
     )
@@ -538,7 +538,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
          let code = Micheline.inject_locations (fun _ -> Location.generated) code in
          match code with
          | Seq (_, code) ->
-           return ~tv:type_anno' @@ E_raw_michelson (code, [], None)
+           return ~tv:type_anno' @@ E_raw_michelson code
          | _ ->
            raise.error (raw_michelson_must_be_seq ae.location code)
     )
