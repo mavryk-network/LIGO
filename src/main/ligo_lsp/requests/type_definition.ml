@@ -1,11 +1,24 @@
 open Lsp_helpers
 open Handler
-module Loc = Simple_utils.Location
 
-let get_type (vdef : Scopes.Types.vdef) : Ast_core.type_expression option =
+type type_info =
+  { var_name : Ast_core.type_expression option
+  ; contents : Ast_core.type_expression
+  }
+
+let get_type (vdef : Scopes.Types.vdef) : type_info option =
   match vdef.t with
-  | Core ty -> Some ty
-  | Resolved ty -> Option.some @@ Checking.untype_type_expression ty
+  | Core ty -> Some { var_name = None; contents = ty }
+  | Resolved ({ location; _ } as ty) ->
+    let orig_var =
+      Option.map
+        ~f:(fun x -> Ast_core.{ type_content = T_variable x; location })
+        ty.orig_var (* This is non-empty in case there is a name for our type *)
+    in
+    Some
+      { var_name = orig_var
+      ; contents = Checking.untype_type_expression ~use_orig_var:true ty
+      }
   | Unresolved -> None
 
 
@@ -28,7 +41,7 @@ let on_req_type_definition : Position.t -> Path.t -> Locations.t option Handler.
        let open Option.Monad_infix in
        get_type vdef
        >>= fun type_expression ->
-       let location = Def.Def_location.of_loc type_expression.location in
+       let location = Def.Def_location.of_loc type_expression.contents.location in
        (match location with
        | StdLib _ | Virtual _ ->
          None (* We can't return any position to user: type of this vdef is inferred *)

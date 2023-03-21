@@ -11,6 +11,14 @@ let show_with_yojson (f : 'a -> Yojson.Safe.t) (x : 'a) : string =
   Yojson.Safe.to_string @@ f x
 
 
+let doc_to_string ~(width : int) (doc : PPrint.document) : string =
+  let buffer = Buffer.create 131 in
+  PPrint.ToBuffer.pretty 1.0 width buffer doc;
+  Buffer.contents buffer
+
+let default_line_width_for_formatted_file = 80
+let default_line_width_for_hovers = 60
+
 let get_comment syntax =
   let block =
     match syntax with
@@ -66,49 +74,6 @@ let pascaligo_module =
   }
 
 
-let pp_type_expression
-    :  syntax:Syntax_types.t
-    -> [ `Core of Ast_core.type_expression | `Typed of Ast_typed.type_expression ]
-    -> ( PPrint.document
-       , [ `Exn of exn | `PassesError of Passes.Errors.t ] * string )
-       Result.t
-  =
- fun ~syntax te ->
-  let ast =
-    match te with
-    | `Core ast -> ast
-    | `Typed tast -> Checking.untype_type_expression tast
-  in
-  let cst =
-    try
-      match
-        Simple_utils.Trace.to_stdlib_result @@ Nanopasses.decompile_ty_expr ~syntax ast
-      with
-      | Error (err, _warnings) -> `PassesError err
-      | Ok (s, _warnings) ->
-        (match syntax with
-        | JsLIGO -> `JsLIGO_te (Unification_jsligo.Decompile.decompile_type_expression s)
-        | CameLIGO ->
-          `CameLIGO_te (Unification_cameligo.Decompile.decompile_type_expression s)
-        | PascaLIGO ->
-          `PascaLIGO_te (Unification_pascaligo.Decompile.decompile_type_expression s))
-    with
-    | exn -> `Exn exn
-  in
-  match cst with
-  | `CameLIGO_te cst ->
-    Ok Parsing.Cameligo.Pretty.(print_type_expr default_environment cst)
-  | `JsLIGO_te cst -> Ok Parsing.Jsligo.Pretty.(print_type_expr default_environment cst)
-  | `PascaLIGO_te cst ->
-    Ok Parsing.Pascaligo.Pretty.(print_type_expr default_environment cst)
-  | (`PassesError _ | `Exn _) as err ->
-    Error
-      ( err
-      , match te with
-        | `Core cte -> Format.asprintf "%a" Ast_core.PP.type_expression cte
-        | `Typed tte -> Format.asprintf "%a" Ast_typed.PP.type_expression tte )
-
-
 let print_module_with_description
     : module_pp_mode -> string * string -> Scopes.Types.mdef -> string
   =
@@ -156,5 +121,17 @@ let checking_error_to_string (error : Checking.Errors.typer_error) : string =
     (Checking.Errors.error_ppformat ~display_format ~no_colour:false)
     error
 
-    let default_line_width_for_formatted_file = 80
-    let default_line_width_for_hovers = 60
+
+let parsing_error_to_string (err : Parsing.Errors.t) : string =
+  let ({ content = { message; _ }; _ } : Simple_utils.Error.t) =
+    Parsing.Errors.error_json err
+  in
+  message
+
+
+let passes_error_to_string (error : Passes.Errors.t) : string =
+  let display_format = Simple_utils.Display.Human_readable in
+  Format.asprintf
+    "%a"
+    (Passes.Errors.error_ppformat ~display_format ~no_colour:false)
+    error
