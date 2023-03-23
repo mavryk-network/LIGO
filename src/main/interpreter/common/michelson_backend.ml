@@ -360,7 +360,7 @@ let compile_contract_ast ~raise ~options ~tezos_context main views =
       ~raise
       ~has_env_comments:false
       ~protocol_version:options.middle_end.protocol_version
-      ~disable_typecheck:false
+      ~disable_typecheck:true (* TODO disable only for JSOO *)
       ~tezos_context
       main_michelson
       views
