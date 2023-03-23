@@ -190,10 +190,8 @@ let make_options ~raise ?param ctxt =
     let source = ctxt.internals.source in
     let tezos_context = Tezos_state.get_alpha_context ~raise ctxt in
     let tezos_context =
-      Memory_proto_alpha.Protocol.Alpha_context.Gas.set_limit
+      Memory_proto_alpha.Protocol.Alpha_context.Gas.set_unlimited
         tezos_context
-        (Memory_proto_alpha.Protocol.Alpha_context.Gas.Arith.integral_exn
-           (Z.of_int 800000))
     in
     let timestamp =
       Memory_proto_alpha.Protocol.Script_timestamp.of_zint
