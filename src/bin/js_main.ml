@@ -55,8 +55,6 @@ let main source syntax =
     "<failed>"
 
 let test code syntax =
-  let entry_point = [ "main" ] in
-  let views = Default_options.views in
   let syntax_v =
     match
       Syntax.of_ext_opt ~support_pascaligo:Default_options.deprecated (Some syntax)
@@ -64,26 +62,18 @@ let test code syntax =
     | Some v -> v
     | None -> failwith ("Invalid syntax " ^ syntax)
   in
-  let protocol_version = "lima" in
   let display_format = Simple_utils.Display.human_readable in
-  let raw_options =
-    Raw_options.make
-      ~entry_point
-      ~syntax
-      ~views
-      ~protocol_version
-      ~disable_michelson_typechecking:true
-      ~experimental_disable_optimizations_for_debugging:false
-      ~enable_typed_opt:false
-      ~no_stdlib:false
-      ~warning_as_error:false
-      ~no_colour:true
-      ~constants:Default_options.constants
-      ~file_constants:None
-      ~project_root:None
-      ~warn_unused_rec:true
-      ()
-  in
+    let raw_options =
+      Raw_options.make
+        ~syntax
+        ~steps:1000000
+        ~disable_michelson_typechecking:true 
+        ~deprecated:false
+        ~warn_unused_rec:true
+        ~cli_expr_inj:None
+        ~test:true
+        ()
+    in
   match
     Api.Run.test raw_options (Build.Source_input.Raw { id = "source_of_text" ^ (Syntax.to_ext syntax_v) ; code }) display_format true ()
   with
