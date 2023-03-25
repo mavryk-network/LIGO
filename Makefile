@@ -61,11 +61,13 @@ run-vscode: install-vscode
 	code
 
 _build/default/src/bin/js_main.bc.js: ./src/bin/js_main.ml ./src/bin/dune
+	cd vendors/tezos-ligo && git checkout prometheansacrifice/jsoo-gas-free
 	opam exec -- dune build $(<:.ml=.bc.js)
+	git submodule update --recursive
 
 
 .PHONY: build-demo-webide demo-webide-start
-build-demo-webide:
+build-demo-webide: _build/default/src/bin/js_main.bc.js
 	cd jsoo && npm i && npm run build
 
 demo-webide-start:
