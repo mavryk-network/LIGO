@@ -145,7 +145,7 @@
   ctypes_stubs_js
   ligo_api
   ligo_api_js
-  ligo.main_interpreter.js
+  ligo.main_interpreter.unix_and_js
   js_of_ocaml)
  (modes js)
  (preprocess

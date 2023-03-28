@@ -1,8 +1,9 @@
 (library
- (name interpreter_js)
- (public_name ligo.main_interpreter.js)
+ (name interpreter_unix_and_js)
+ (public_name ligo.main_interpreter.unix_and_js)
  (instrumentation
   (backend bisect_ppx))
  (preprocess
   (pps ppx_here))
- (implements interpreter))
+ (implements interpreter)
+ (libraries fuzz))
