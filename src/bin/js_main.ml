@@ -54,11 +54,49 @@ let main source syntax =
     print_endline b;
     "<failed>"
 
+let test code syntax =
+  let syntax_v =
+    match
+      Syntax.of_ext_opt ~support_pascaligo:Default_options.deprecated (Some syntax)
+    with
+    | Some v -> v
+    | None -> failwith ("Invalid syntax " ^ syntax)
+  in
+  let display_format = Simple_utils.Display.human_readable in
+    let raw_options =
+      Raw_options.make
+        ~syntax
+        ~steps:1000000
+        ~disable_michelson_typechecking:true 
+        ~deprecated:false
+        ~warn_unused_rec:true
+        ~cli_expr_inj:None
+        ~test:true
+        ()
+    in
+  match
+    Api.Run.test raw_options (Build.Source_input.Raw { id = "source_of_text" ^ (Syntax.to_ext syntax_v) ; code }) display_format true ()
+  with
+  | Ok (a, b) ->
+    print_endline a;
+    print_endline b;
+    a
+  | Error (a, b) ->
+    print_endline "error";
+    print_endline a;
+    print_endline b;
+    "<failed>"
+
 
 let _ =
   Js.export
     "ligo"
     (object%js
+       method test code syntax =
+         let code = Js.to_string code in
+         let syntax = Js.to_string syntax in
+         let michelson = test code syntax in
+         Js.string michelson
        method compile code syntax =
          let code = Js.to_string code in
          let syntax = Js.to_string syntax in

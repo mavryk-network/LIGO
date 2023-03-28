@@ -38,6 +38,10 @@ async function main() {
   await initialize();
   let app = "js_main";
   let path = "";
+  document
+    .getElementsByTagName("h1")[0]
+    // @ts-ignore
+    .appendChild(document.createTextNode(" Build ID: " + __COMMIT_HASH__));
   // No runtime file needed since we just enable effects,
   // and it can only be enabled in whole program compilation
   // mode with Dune
@@ -47,6 +51,21 @@ async function main() {
   document.getElementById("compile")?.addEventListener("click", function () {
     // @ts-ignore
     let michelson = window.ligo.compile(
+      ligoEditor.state.doc.toJSON().join("\n"),
+      // @ts-ignore
+      document.getElementById("syntax")?.value
+    );
+    console.log(michelson);
+    michelsonEditor.setState(
+      EditorState.create({
+        extensions: [basicSetup],
+        doc: michelson,
+      })
+    );
+  });
+  document.getElementById("test")?.addEventListener("click", function () {
+    // @ts-ignore
+    let michelson = window.ligo.test(
       ligoEditor.state.doc.toJSON().join("\n"),
       // @ts-ignore
       document.getElementById("syntax")?.value

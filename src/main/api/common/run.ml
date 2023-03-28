@@ -5,7 +5,7 @@ module Helpers = Ligo_compile.Helpers
 module Run = Ligo_run.Of_michelson
 module Raw_options = Compiler_options.Raw_options
 
-let test (raw_options : Raw_options.t) source_file display_format no_colour () =
+let test (raw_options : Raw_options.t) code_input display_format no_colour () =
   format_result ~display_format ~no_colour Ligo_interpreter.Formatter.tests_format
   @@ fun ~raise ->
   let raw_options =
@@ -21,12 +21,12 @@ let test (raw_options : Raw_options.t) source_file display_format no_colour () =
       ~raise
       ~support_pascaligo:raw_options.deprecated
       (Syntax_name raw_options.syntax)
-      (Some source_file)
+      None (* TODO(prometheansacrifice) pass the file *)
   in
   let options = Compiler_options.make ~protocol_version ~syntax ~raw_options () in
   let Compiler_options.{ steps; _ } = options.test_framework in
   let typed =
-    Build.qualified_typed ~raise ~options (Build.Source_input.From_file source_file)
+    Build.qualified_typed ~raise ~options code_input
   in
   Interpreter.eval_test ~raise ~steps ~options typed
 
