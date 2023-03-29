@@ -201,6 +201,7 @@ esy-macos-m1:
     - npm i -g esy@beta --force
     - git submodule foreach --recursive git reset --hard; git submodule update --init --recursive # ensure previously applied patch is removed
     - bash -c "patch -p1 --force < 0001-Removes-problematic-sh-script-on-macos.patch"
+    - umask a+w # Because ligo_api.o is readyonly for some reason
     - esy i
     - esy release
     - mv _release platform-darwin-arm64
@@ -232,6 +233,7 @@ esy-test-macos-m1:
     - mkdir -p ~/.npm
     - npm config set prefix '~/.npm'
     - export PATH=~/.npm/bin:$PATH
+    - chmod 777 ./platform-darwin-arm64/3_________/i/ligo-36560cc1/lib/ligo/api/ligo_api.o
     - npm i --force -g ./platform-darwin-arm64
     - sh scripts/esy-multiplat-e2e-ci.sh
 
