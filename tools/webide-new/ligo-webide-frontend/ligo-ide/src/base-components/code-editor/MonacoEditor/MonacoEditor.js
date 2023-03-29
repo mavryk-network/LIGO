@@ -153,8 +153,12 @@ export default class MonacoEditor extends Component {
     codeEditorService.openCodeEditor = async (input, source) => {
       const result = await openEditorBase(input, source);
       if (result === null) {
-        const filePath = input.resource.path;
-        actions.workspace.openFile({ path: filePath }, true);
+        actions.workspace.openFile({
+          path: input.resource.path.substring(1),
+          remote: true,
+          pathInProject: modelSessionManager.projectManager.pathInProject(input.resource.path),
+          isLeaf: true,
+        });
       }
       return result; // always return the base result
     };
