@@ -16,7 +16,14 @@ let get_location_of_module_path : Module_var.t list -> Location.t =
       Location.cover loc (Module_var.get_location m))
 
 
-let defs_of_vvar ~(body : AST.expression) : VVar.t -> t -> t =
+(**
+    Add a variable definition to the provided list of definitions `t`,
+    using the information provided in the given `vvar`.
+
+    @param body The expression bound to the given variable.
+    @return The provided list of definitions augmented with the given variable.
+    *)
+let add_vvar ~(body : AST.expression) : VVar.t -> t -> t =
  fun vvar acc ->
   if VVar.is_generated vvar
   then acc
@@ -43,11 +50,27 @@ let defs_of_vvar ~(body : AST.expression) : VVar.t -> t -> t =
     Variable vdef :: acc
 
 
-let defs_of_binder ~(body : AST.expression) : _ Binder.t -> t -> t =
- fun binder acc -> defs_of_vvar ~body (Binder.get_var binder) acc
+(**
+    Add a variable definition to the provided list of definitions `t`,
+    using the information provided in the given `binder`.
+
+    It's a wrapper over {!add_vvar}, calling it with the binder's extracted vvar.
+
+    @param body The expression bound to the given variable.
+    @return The provided list of definitions augmented with the given binder.
+    *)
+let add_binder ~(body : AST.expression) : _ Binder.t -> t -> t =
+ fun binder acc -> add_vvar ~body (Binder.get_var binder) acc
 
 
-let defs_of_tvar ~(bindee : Ast_core.type_expression) : TVar.t -> t -> t =
+(**
+    Add a type variable definition to the provided list of definitions `t`,
+    using the information provided in the given `tvar`.
+
+    @param bindee The type expression bound to the given type variable.
+    @return The provided list of definitions augmented with the given type variable.
+    *)
+let add_tvar ~(bindee : Ast_core.type_expression) : TVar.t -> t -> t =
  fun tvar acc ->
   if TVar.is_generated tvar
   then acc
@@ -67,7 +90,14 @@ let defs_of_tvar ~(bindee : Ast_core.type_expression) : TVar.t -> t -> t =
     Type tdef :: acc
 
 
-let defs_of_mvar ~(bindee : Ast_core.module_expr) ~(mod_case : Types.mod_case)
+(**
+    Add a module variable definition to the provided list of definitions `t`,
+    using the information provided in the given `mvar`.
+
+    @param bindee The module expression bound to the given module variable.
+    @return The provided list of definitions augmented with the given module variable.
+    *)
+let add_mvar ~(bindee : Ast_core.module_expr) ~(mod_case : Types.mod_case)
     : MVar.t -> t -> t
   =
  fun mvar acc ->
@@ -100,7 +130,7 @@ let rec defs_of_pattern ~(body : AST.expression)
  fun ptrn acc ->
   let self ~body p = defs_of_pattern ~body p in
   let ptrn_binders = AST.Pattern.binders ptrn in
-  let f defs binder = defs_of_binder ~body binder defs in
+  let f defs binder = add_binder ~body binder defs in
   let defs = List.fold ~init:acc ~f ptrn_binders in
   defs
 
@@ -111,7 +141,7 @@ let rec defs_of_expr : AST.expression -> t -> t =
   let defs_of_lambda : _ Lambda.t -> t -> t =
    fun { binder; output_type; result } acc ->
     let vvar = Param.get_var binder in
-    self result @@ defs_of_vvar ~body:result vvar @@ acc
+    self result @@ add_vvar ~body:result vvar @@ acc
   in
   match e.expression_content with
   (* Base *)
@@ -128,10 +158,10 @@ let rec defs_of_expr : AST.expression -> t -> t =
   | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
     defs_of_pattern ~body:rhs let_binder @@ self rhs @@ self let_result @@ acc
   | E_type_in { type_binder; rhs; let_result } ->
-    defs_of_tvar ~bindee:rhs type_binder @@ self let_result @@ acc
+    add_tvar ~bindee:rhs type_binder @@ self let_result @@ acc
   | E_mod_in { module_binder; rhs; let_result } ->
     let mod_case = mod_case_of_mod_expr ~defs_of_decls rhs in
-    defs_of_mvar ~mod_case ~bindee:rhs module_binder @@ self let_result @@ acc
+    add_mvar ~mod_case ~bindee:rhs module_binder @@ self let_result @@ acc
   | E_raw_code { language; code } -> []
   (* Variant *)
   | E_constructor { constructor; element } -> self element acc
@@ -156,7 +186,7 @@ let rec defs_of_expr : AST.expression -> t -> t =
     (* binder := new_value, the binder is already declared so we don't add it to the dec list *)
     self expression acc
   | E_for { binder; start; final; incr; f_body } ->
-    defs_of_vvar ~body:f_body binder
+    add_vvar ~body:f_body binder
     @@ self start
     @@ self final
     @@ self incr
@@ -167,10 +197,10 @@ let rec defs_of_expr : AST.expression -> t -> t =
     let body = fe_body in
     let acc =
       match vvar2_opt with
-      | Some vvar -> defs_of_vvar ~body vvar acc
+      | Some vvar -> add_vvar ~body vvar acc
       | None -> acc
     in
-    self fe_body @@ self collection @@ defs_of_vvar ~body vvar1 @@ acc
+    self fe_body @@ self collection @@ add_vvar ~body vvar1 @@ acc
   | E_while { cond; body } -> self cond @@ self body @@ acc
 
 
@@ -193,16 +223,16 @@ and defs_of_decl : AST.declaration -> t -> t =
  fun decl acc ->
   match Location.unwrap decl with
   | D_value { binder; expr; attr } ->
-    defs_of_binder ~body:expr binder @@ defs_of_expr expr @@ acc
+    add_binder ~body:expr binder @@ defs_of_expr expr @@ acc
   | D_irrefutable_match { pattern; expr; attr } ->
     defs_of_pattern ~body:expr pattern @@ defs_of_expr expr @@ acc
   | D_type { type_binder; type_expr; type_attr } ->
-    defs_of_tvar ~bindee:type_expr type_binder acc
+    add_tvar ~bindee:type_expr type_binder acc
   | D_module { module_binder; module_; module_attr } ->
     (* Here, the module body's defs are within the lhs_def,
          mod_case_of_mod_expr recursively calls defs_of_decl *)
     let mod_case : Types.mod_case = mod_case_of_mod_expr ~defs_of_decls module_ in
-    defs_of_mvar ~mod_case ~bindee:module_ module_binder @@ acc
+    add_mvar ~mod_case ~bindee:module_ module_binder @@ acc
 
 
 and defs_of_decls : AST.declaration list -> t -> t =
@@ -215,16 +245,16 @@ module Of_Stdlib = struct
   let rec defs_of_decl : AST.declaration -> t -> t =
    fun decl acc ->
     match Location.unwrap decl with
-    | D_value { binder; expr; attr } -> defs_of_binder ~body:expr binder acc
+    | D_value { binder; expr; attr } -> add_binder ~body:expr binder acc
     | D_irrefutable_match { pattern; expr; attr } ->
       defs_of_pattern ~body:expr pattern acc
     | D_type { type_binder; type_expr; type_attr } ->
-      defs_of_tvar ~bindee:type_expr type_binder acc
+      add_tvar ~bindee:type_expr type_binder acc
     | D_module { module_binder; module_; module_attr } ->
       (* Here, the module body's defs are within the lhs_def,
          mod_case_of_mod_expr recursively calls defs_of_decl *)
       let mod_case : Types.mod_case = mod_case_of_mod_expr module_ ~defs_of_decls in
-      defs_of_mvar ~mod_case ~bindee:module_ module_binder acc
+      add_mvar ~mod_case ~bindee:module_ module_binder acc
 
 
   and defs_of_decls : AST.declaration list -> t -> t =
