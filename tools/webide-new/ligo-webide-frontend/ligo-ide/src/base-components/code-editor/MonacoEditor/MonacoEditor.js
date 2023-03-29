@@ -153,6 +153,7 @@ export default class MonacoEditor extends Component {
     codeEditorService.openCodeEditor = async (input, source) => {
       const result = await openEditorBase(input, source);
       if (result === null) {
+        modelSessionManager.nextEditorCursorUpdate = input.options.selection;
         actions.workspace.openFile({
           path: input.resource.path.substring(1),
           remote: true,
@@ -169,7 +170,21 @@ export default class MonacoEditor extends Component {
       if (this.props.modelSession.model) {
         this.props.modelSession.viewState = this.monacoEditor.saveViewState();
       }
-      props.modelSession.recoverInEditor(this.monacoEditor);
+      props.modelSession.recoverInEditor(this.monacoEditor).then(() => {
+        if (modelSessionManager.nextEditorCursorUpdate !== null) {
+          modelSessionManager.editor.revealRangeInCenterIfOutsideViewport({
+            startLineNumber: modelSessionManager.nextEditorCursorUpdate.startLineNumber,
+            endLineNumber: modelSessionManager.nextEditorCursorUpdate.endLineNumber,
+            startColumn: modelSessionManager.nextEditorCursorUpdate.startColumn,
+            endColumn: modelSessionManager.nextEditorCursorUpdate.endColumn,
+          });
+          modelSessionManager.editor.setPosition({
+            lineNumber: modelSessionManager.nextEditorCursorUpdate.startLineNumber,
+            column: modelSessionManager.nextEditorCursorUpdate.startColumn,
+          });
+          modelSessionManager.nextEditorCursorUpdate = null;
+        }
+      });
 
       this.throttledLayoutEditor();
     }
