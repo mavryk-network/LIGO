@@ -1,17 +1,14 @@
 [@@@warning "-26-27-32"]
 
 open Ligo_prim
-open Types
+open Simple_utils
 module AST = Ast_core
 module VVar = Value_var
 module TVar = Type_var
 module MVar = Module_var
-module Formatter = Formatter
-module Api_helper = Api_helper
 module LSet = Types.LSet
-module Location = Simple_utils.Location
-module Trace = Simple_utils.Trace
-module Types = Types
+
+type t = Types.def list
 
 let get_location_of_module_path : Module_var.t list -> Location.t =
  fun mvs ->
@@ -19,11 +16,12 @@ let get_location_of_module_path : Module_var.t list -> Location.t =
       Location.cover loc (Module_var.get_location m))
 
 
-let defs_of_vvar ~(body : AST.expression) : VVar.t -> def list -> def list =
+let defs_of_vvar ~(body : AST.expression) : VVar.t -> t -> t =
  fun vvar acc ->
   if VVar.is_generated vvar
   then acc
-  else (
+  else
+    let open Types in
     let name = get_binder_name vvar in
     let vdef : vdef =
       let name : string = name in
@@ -42,18 +40,19 @@ let defs_of_vvar ~(body : AST.expression) : VVar.t -> def list -> def list =
       let def_type : def_type = Local in
       { name; uid; range; body_range; t; references; def_type }
     in
-    Variable vdef :: acc)
+    Variable vdef :: acc
 
 
-let defs_of_binder ~(body : AST.expression) : _ Binder.t -> def list -> def list =
+let defs_of_binder ~(body : AST.expression) : _ Binder.t -> t -> t =
  fun binder acc -> defs_of_vvar ~body (Binder.get_var binder) acc
 
 
-let defs_of_tvar ~(bindee : Ast_core.type_expression) : TVar.t -> def list -> def list =
+let defs_of_tvar ~(bindee : Ast_core.type_expression) : TVar.t -> t -> t =
  fun tvar acc ->
   if TVar.is_generated tvar
   then acc
-  else (
+  else
+    let open Types in
     let name = get_type_binder_name tvar in
     let tdef : tdef =
       let name : string = name in
@@ -65,16 +64,17 @@ let defs_of_tvar ~(bindee : Ast_core.type_expression) : TVar.t -> def list -> de
       let references : LSet.t = LSet.empty (* Filled in a later pass *) in
       { name; uid; range; body_range; content; def_type; references }
     in
-    Type tdef :: acc)
+    Type tdef :: acc
 
 
-let defs_of_mvar ~(bindee : Ast_core.module_expr) ~(mod_case : mod_case)
-    : MVar.t -> def list -> def list
+let defs_of_mvar ~(bindee : Ast_core.module_expr) ~(mod_case : Types.mod_case)
+    : MVar.t -> t -> t
   =
  fun mvar acc ->
   if MVar.is_generated mvar
   then acc
-  else (
+  else
+    let open Types in
     let name = get_mod_binder_name mvar in
     let mdef : mdef =
       let name : string = name in
@@ -91,11 +91,11 @@ let defs_of_mvar ~(bindee : Ast_core.module_expr) ~(mod_case : mod_case)
       let def_type : def_type = Local in
       { name; uid; range; body_range; references; mod_case; def_type }
     in
-    Module mdef :: acc)
+    Module mdef :: acc
 
 
 let rec defs_of_pattern ~(body : AST.expression)
-    : AST.type_expression option Linear_pattern.t -> def list -> def list
+    : AST.type_expression option Linear_pattern.t -> t -> t
   =
  fun ptrn acc ->
   let self ~body p = defs_of_pattern ~body p in
@@ -105,10 +105,10 @@ let rec defs_of_pattern ~(body : AST.expression)
   defs
 
 
-let rec defs_of_expr : AST.expression -> def list -> def list =
+let rec defs_of_expr : AST.expression -> t -> t =
  fun e acc ->
   let self = defs_of_expr in
-  let defs_of_lambda : _ Lambda.t -> def list -> def list =
+  let defs_of_lambda : _ Lambda.t -> t -> t =
    fun { binder; output_type; result } acc ->
     let vvar = Param.get_var binder in
     self result @@ defs_of_vvar ~body:result vvar @@ acc
@@ -175,14 +175,13 @@ let rec defs_of_expr : AST.expression -> def list -> def list =
 
 
 and mod_case_of_mod_expr
-    :  defs_of_decls:(AST.declaration list -> def list -> def list) -> AST.module_expr
-    -> mod_case
+    : defs_of_decls:(AST.declaration list -> t -> t) -> AST.module_expr -> Types.mod_case
   =
  fun ~defs_of_decls mod_expr ->
-  let alias_of_mvars : Module_var.t list -> mod_case =
+  let alias_of_mvars : Module_var.t list -> Types.mod_case =
    fun mvars ->
     let path = List.map ~f:(fun mvar -> Format.asprintf "%a" MVar.pp mvar) mvars in
-    Alias path
+    Types.Alias path
   in
   match Location.unwrap mod_expr with
   | M_struct decls -> Def (defs_of_decls decls [])
@@ -190,7 +189,7 @@ and mod_case_of_mod_expr
   | M_module_path mod_path -> alias_of_mvars @@ List.Ne.to_list mod_path
 
 
-and defs_of_decl : AST.declaration -> def list -> def list =
+and defs_of_decl : AST.declaration -> t -> t =
  fun decl acc ->
   match Location.unwrap decl with
   | D_value { binder; expr; attr } ->
@@ -202,20 +201,18 @@ and defs_of_decl : AST.declaration -> def list -> def list =
   | D_module { module_binder; module_; module_attr } ->
     (* Here, the module body's defs are within the lhs_def,
          mod_case_of_mod_expr recursively calls defs_of_decl *)
-    let mod_case : mod_case = mod_case_of_mod_expr ~defs_of_decls module_ in
+    let mod_case : Types.mod_case = mod_case_of_mod_expr ~defs_of_decls module_ in
     defs_of_mvar ~mod_case ~bindee:module_ module_binder @@ acc
 
 
-and defs_of_decls : AST.declaration list -> def list -> def list =
+and defs_of_decls : AST.declaration list -> t -> t =
  fun decls acc -> List.fold ~init:acc ~f:(fun accu decl -> defs_of_decl decl accu) decls
 
 
-let definitions : AST.program -> def list -> def list =
- fun prg acc -> defs_of_decls prg acc
-
+let definitions : AST.program -> t -> t = fun prg acc -> defs_of_decls prg acc
 
 module Of_Stdlib = struct
-  let rec defs_of_decl : AST.declaration -> def list -> def list =
+  let rec defs_of_decl : AST.declaration -> t -> t =
    fun decl acc ->
     match Location.unwrap decl with
     | D_value { binder; expr; attr } -> defs_of_binder ~body:expr binder acc
@@ -226,13 +223,13 @@ module Of_Stdlib = struct
     | D_module { module_binder; module_; module_attr } ->
       (* Here, the module body's defs are within the lhs_def,
          mod_case_of_mod_expr recursively calls defs_of_decl *)
-      let mod_case : mod_case = mod_case_of_mod_expr module_ ~defs_of_decls in
+      let mod_case : Types.mod_case = mod_case_of_mod_expr module_ ~defs_of_decls in
       defs_of_mvar ~mod_case ~bindee:module_ module_binder acc
 
 
-  and defs_of_decls : AST.declaration list -> def list -> def list =
+  and defs_of_decls : AST.declaration list -> t -> t =
    fun decls acc -> List.fold ~init:acc ~f:(fun accu decl -> defs_of_decl decl accu) decls
 
 
-  let definitions : AST.program -> def list = fun prg -> defs_of_decls prg []
+  let definitions : AST.program -> t = fun prg -> defs_of_decls prg []
 end
