@@ -35,7 +35,7 @@ let scopes
     then [], []
     else
       ( (let stdlib_core_types = Types_pass.(Of_Ast_core.declarations empty stdlib_core) in
-         Definitions.Of_Stdlib.definitions stdlib_core
+         Definitions.Of_Stdlib_Ast.program stdlib_core
          |> Types_pass.patch stdlib_core_types)
       , stdlib_core )
   in
@@ -47,7 +47,7 @@ let scopes
     in
     let module_aliases = Module_aliases_pass.declarations prg in
     let refs = References.declarations (stdlib_core @ prg) in
-    Definitions.definitions prg stdlib_defs
+    Definitions.Of_Ast.program prg stdlib_defs
     |> (if with_types then Types_pass.patch types else Fn.id)
     |> References.patch refs
     |> Module_aliases_pass.patch module_aliases

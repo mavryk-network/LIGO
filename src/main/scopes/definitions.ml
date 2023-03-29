@@ -124,87 +124,7 @@ let add_mvar ~(bindee : Ast_core.module_expr) ~(mod_case : Types.mod_case)
     Module mdef :: acc
 
 
-let rec defs_of_pattern ~(body : AST.expression)
-    : AST.type_expression option Linear_pattern.t -> t -> t
-  =
- fun ptrn acc ->
-  let self ~body p = defs_of_pattern ~body p in
-  let ptrn_binders = AST.Pattern.binders ptrn in
-  let f defs binder = add_binder ~body binder defs in
-  let defs = List.fold ~init:acc ~f ptrn_binders in
-  defs
-
-
-let rec defs_of_expr : AST.expression -> t -> t =
- fun e acc ->
-  let self = defs_of_expr in
-  let defs_of_lambda : _ Lambda.t -> t -> t =
-   fun { binder; output_type; result } acc ->
-    let vvar = Param.get_var binder in
-    self result @@ add_vvar ~body:result vvar @@ acc
-  in
-  match e.expression_content with
-  (* Base *)
-  | E_variable v -> acc
-  | E_literal l -> acc
-  | E_constant c -> acc
-  | E_application { lamb; args } -> self lamb @@ self args @@ acc
-  | E_lambda lambda -> defs_of_lambda lambda acc
-  | E_recursive { fun_name; fun_type; lambda; force_lambdarec } ->
-    (* fun_name is already added by the parent E_let_in so don't need to add it here *)
-    defs_of_lambda lambda acc
-  | E_type_abstraction { type_binder; result } -> self result acc
-  | E_let_in { let_binder; rhs; let_result; attributes }
-  | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
-    defs_of_pattern ~body:rhs let_binder @@ self rhs @@ self let_result @@ acc
-  | E_type_in { type_binder; rhs; let_result } ->
-    add_tvar ~bindee:rhs type_binder @@ self let_result @@ acc
-  | E_mod_in { module_binder; rhs; let_result } ->
-    let mod_case = mod_case_of_mod_expr ~defs_of_decls rhs in
-    add_mvar ~mod_case ~bindee:rhs module_binder @@ self let_result @@ acc
-  | E_raw_code { language; code } -> []
-  (* Variant *)
-  | E_constructor { constructor; element } -> self element acc
-  | E_matching { matchee; cases } ->
-    let defs_of_match_cases cases acc =
-      let defs_of_match_case acc ({ pattern; body } : _ AST.Match_expr.match_case) =
-        defs_of_pattern ~body pattern @@ defs_of_expr body @@ acc
-      in
-      List.fold ~init:acc ~f:defs_of_match_case cases
-    in
-    defs_of_match_cases cases @@ self matchee @@ acc
-  (* Record *)
-  | E_record r -> Record.fold ~init:acc ~f:(fun acc entry -> self entry acc) r
-  | E_accessor { struct_; path } ->
-    self struct_ acc (* Is it possible to have decl in there ? *)
-  | E_update { struct_; path; update } -> self struct_ @@ self update @@ acc
-  (* Advanced *)
-  | E_ascription { anno_expr; type_annotation } -> self anno_expr acc
-  | E_module_accessor macc -> acc
-  (* Imperative *)
-  | E_assign { binder; expression } ->
-    (* binder := new_value, the binder is already declared so we don't add it to the dec list *)
-    self expression acc
-  | E_for { binder; start; final; incr; f_body } ->
-    add_vvar ~body:f_body binder
-    @@ self start
-    @@ self final
-    @@ self incr
-    @@ self f_body
-    @@ acc
-  | E_for_each { fe_binder = vvar1, vvar2_opt; collection; collection_type = _; fe_body }
-    ->
-    let body = fe_body in
-    let acc =
-      match vvar2_opt with
-      | Some vvar -> add_vvar ~body vvar acc
-      | None -> acc
-    in
-    self fe_body @@ self collection @@ add_vvar ~body vvar1 @@ acc
-  | E_while { cond; body } -> self cond @@ self body @@ acc
-
-
-and mod_case_of_mod_expr
+let mod_case_of_mod_expr
     : defs_of_decls:(AST.declaration list -> t -> t) -> AST.module_expr -> Types.mod_case
   =
  fun ~defs_of_decls mod_expr ->
@@ -219,47 +139,153 @@ and mod_case_of_mod_expr
   | M_module_path mod_path -> alias_of_mvars @@ List.Ne.to_list mod_path
 
 
-and defs_of_decl : AST.declaration -> t -> t =
- fun decl acc ->
-  match Location.unwrap decl with
-  | D_value { binder; expr; attr } ->
-    add_binder ~body:expr binder @@ defs_of_expr expr @@ acc
-  | D_irrefutable_match { pattern; expr; attr } ->
-    defs_of_pattern ~body:expr pattern @@ defs_of_expr expr @@ acc
-  | D_type { type_binder; type_expr; type_attr } ->
-    add_tvar ~bindee:type_expr type_binder acc
-  | D_module { module_binder; module_; module_attr } ->
-    (* Here, the module body's defs are within the lhs_def,
-         mod_case_of_mod_expr recursively calls defs_of_decl *)
-    let mod_case : Types.mod_case = mod_case_of_mod_expr ~defs_of_decls module_ in
-    add_mvar ~mod_case ~bindee:module_ module_binder @@ acc
+(**
+    This module contains the functions traversing the {!Ast_core}
+    to fetch its definitions.
+
+    During the traversal, some fields will be
+    left blank or filled with a dummy value,
+    they are meant to be filled in later passes.
+
+*)
+module Of_Ast = struct
+  let rec linear_pattern ~(body : AST.expression)
+      : AST.type_expression option Linear_pattern.t -> t -> t
+    =
+   fun ptrn acc ->
+    let self ~body p = linear_pattern ~body p in
+    let ptrn_binders = AST.Pattern.binders ptrn in
+    let f defs binder = add_binder ~body binder defs in
+    let defs = List.fold ~init:acc ~f ptrn_binders in
+    defs
 
 
-and defs_of_decls : AST.declaration list -> t -> t =
- fun decls acc -> List.fold ~init:acc ~f:(fun accu decl -> defs_of_decl decl accu) decls
+  let rec expression : AST.expression -> t -> t =
+   fun e acc ->
+    let self = expression in
+    let defs_of_lambda : _ Lambda.t -> t -> t =
+     fun { binder; output_type; result } acc ->
+      let vvar = Param.get_var binder in
+      self result @@ add_vvar ~body:result vvar @@ acc
+    in
+    match e.expression_content with
+    (* Base *)
+    | E_variable v -> acc
+    | E_literal l -> acc
+    | E_constant c -> acc
+    | E_application { lamb; args } -> self lamb @@ self args @@ acc
+    | E_lambda lambda -> defs_of_lambda lambda acc
+    | E_recursive { fun_name; fun_type; lambda; force_lambdarec } ->
+      (* fun_name is already added by the parent E_let_in so don't need to add it here *)
+      defs_of_lambda lambda acc
+    | E_type_abstraction { type_binder; result } -> self result acc
+    | E_let_in { let_binder; rhs; let_result; attributes }
+    | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
+      linear_pattern ~body:rhs let_binder @@ self rhs @@ self let_result @@ acc
+    | E_type_in { type_binder; rhs; let_result } ->
+      add_tvar ~bindee:rhs type_binder @@ self let_result @@ acc
+    | E_mod_in { module_binder; rhs; let_result } ->
+      let mod_case = mod_case_of_mod_expr ~defs_of_decls:declarations rhs in
+      add_mvar ~mod_case ~bindee:rhs module_binder @@ self let_result @@ acc
+    | E_raw_code { language; code } -> []
+    (* Variant *)
+    | E_constructor { constructor; element } -> self element acc
+    | E_matching { matchee; cases } ->
+      let defs_of_match_cases cases acc =
+        let defs_of_match_case acc ({ pattern; body } : _ AST.Match_expr.match_case) =
+          linear_pattern ~body pattern @@ expression body @@ acc
+        in
+        List.fold ~init:acc ~f:defs_of_match_case cases
+      in
+      defs_of_match_cases cases @@ self matchee @@ acc
+    (* Record *)
+    | E_record r -> Record.fold ~init:acc ~f:(fun acc entry -> self entry acc) r
+    | E_accessor { struct_; path } ->
+      self struct_ acc (* Is it possible to have decl in there ? *)
+    | E_update { struct_; path; update } -> self struct_ @@ self update @@ acc
+    (* Advanced *)
+    | E_ascription { anno_expr; type_annotation } -> self anno_expr acc
+    | E_module_accessor macc -> acc
+    (* Imperative *)
+    | E_assign { binder; expression } ->
+      (* binder := new_value, the binder is already declared so we don't add it to the dec list *)
+      self expression acc
+    | E_for { binder; start; final; incr; f_body } ->
+      add_vvar ~body:f_body binder
+      @@ self start
+      @@ self final
+      @@ self incr
+      @@ self f_body
+      @@ acc
+    | E_for_each
+        { fe_binder = vvar1, vvar2_opt; collection; collection_type = _; fe_body } ->
+      let body = fe_body in
+      let acc =
+        match vvar2_opt with
+        | Some vvar -> add_vvar ~body vvar acc
+        | None -> acc
+      in
+      self fe_body @@ self collection @@ add_vvar ~body vvar1 @@ acc
+    | E_while { cond; body } -> self cond @@ self body @@ acc
 
 
-let definitions : AST.program -> t -> t = fun prg acc -> defs_of_decls prg acc
-
-module Of_Stdlib = struct
-  let rec defs_of_decl : AST.declaration -> t -> t =
+  and declaration : AST.declaration -> t -> t =
    fun decl acc ->
     match Location.unwrap decl with
-    | D_value { binder; expr; attr } -> add_binder ~body:expr binder acc
+    | D_value { binder; expr; attr } ->
+      add_binder ~body:expr binder @@ expression expr @@ acc
     | D_irrefutable_match { pattern; expr; attr } ->
-      defs_of_pattern ~body:expr pattern acc
+      linear_pattern ~body:expr pattern @@ expression expr @@ acc
     | D_type { type_binder; type_expr; type_attr } ->
       add_tvar ~bindee:type_expr type_binder acc
     | D_module { module_binder; module_; module_attr } ->
       (* Here, the module body's defs are within the lhs_def,
-         mod_case_of_mod_expr recursively calls defs_of_decl *)
-      let mod_case : Types.mod_case = mod_case_of_mod_expr module_ ~defs_of_decls in
+         mod_case_of_mod_expr recursively calls declaration *)
+      let mod_case : Types.mod_case =
+        mod_case_of_mod_expr ~defs_of_decls:declarations module_
+      in
+      add_mvar ~mod_case ~bindee:module_ module_binder @@ acc
+
+
+  and declarations : AST.declaration list -> t -> t =
+   fun decls acc -> List.fold ~init:acc ~f:(fun accu decl -> declaration decl accu) decls
+
+
+  let program : AST.program -> t -> t = fun prg acc -> declarations prg acc
+end
+
+(**
+  This module traverses the {!AST_Core} of the stdlib and fetches its definitions.
+
+  If performs the same work as the {!Of_Ast} module, but not quite.
+
+  For example, the [declaration] traversal function doesn't traverse the [expr] of a [D_Value],
+  unlike its counterpart {!Of_Ast.declaration} which does.
+
+  Because of those differences, the {!Of_Stdlib} module is distict from {!Of_Ast}.
+
+  *)
+module Of_Stdlib_Ast = struct
+  let rec declaration : AST.declaration -> t -> t =
+   fun decl acc ->
+    match Location.unwrap decl with
+    | D_value { binder; expr; attr } -> add_binder ~body:expr binder acc
+    | D_irrefutable_match { pattern; expr; attr } ->
+      Of_Ast.linear_pattern ~body:expr pattern acc
+    | D_type { type_binder; type_expr; type_attr } ->
+      add_tvar ~bindee:type_expr type_binder acc
+    | D_module { module_binder; module_; module_attr } ->
+      (* Here, the module body's defs are within the lhs_def,
+         mod_case_of_mod_expr recursively calls declaration *)
+      let mod_case : Types.mod_case =
+        mod_case_of_mod_expr module_ ~defs_of_decls:declarations
+      in
       add_mvar ~mod_case ~bindee:module_ module_binder acc
 
 
-  and defs_of_decls : AST.declaration list -> t -> t =
-   fun decls acc -> List.fold ~init:acc ~f:(fun accu decl -> defs_of_decl decl accu) decls
+  and declarations : AST.declaration list -> t -> t =
+   fun decls acc -> List.fold ~init:acc ~f:(fun accu decl -> declaration decl accu) decls
 
 
-  let definitions : AST.program -> t = fun prg -> defs_of_decls prg []
+  let program : AST.program -> t = fun prg -> declarations prg []
 end
