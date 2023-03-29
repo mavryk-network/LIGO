@@ -153,10 +153,8 @@ export default class MonacoEditor extends Component {
     codeEditorService.openCodeEditor = async (input, source) => {
       const result = await openEditorBase(input, source);
       if (result === null) {
-        console.log("Open definition for:", input);
-        console.log("Corresponding model:", this.monacoEditor.getModel(input.resource));
-        // Code here to open new tab to given URI
-        // this.monacoEditor.setModel(this.monacoEditor.getModel(input.resource));
+        const filePath = input.resource.path;
+        actions.workspace.openFile({ path: filePath }, true);
       }
       return result; // always return the base result
     };
