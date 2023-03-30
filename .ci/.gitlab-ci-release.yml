@@ -134,7 +134,12 @@ release:
   script:
     - |
       if [[ $DRY_RUN_RELEASE == "" ]]; then
-        release-cli create --name "Release $CI_COMMIT_TAG" --description "$(cat release-notes.md)" --assets-links-name "Static Linux binary" --assets-links-url "$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/raw/ligo" --assets-links-name "deb package" --assets-links-url "$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/raw/ligo.deb" --assets-links-name "Ligo Windows installer" --assets-links-url "$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/raw/ligo_installer.exe"
+        release-cli create \
+          --name "Release $CI_COMMIT_TAG" \
+          --description "$(cat release-notes.md)" \
+          --assets-link '{"name": "Static Linux binary", "url": "'"$CI_PROJECT_URL"'/-/jobs/'"$CI_JOB_ID"'/artifacts/raw/ligo"}' \
+          --assets-link '{"name": "deb package", "url": "'"$CI_PROJECT_URL"'/-/jobs/'"$CI_JOB_ID"'/artifacts/raw/ligo.deb"}' \
+          --assets-link '{"name": "Ligo Windows installer", "url": "'"$CI_PROJECT_URL"'/-/jobs/'"$CI_JOB_ID"'/artifacts/raw/ligo_installer.exe"}'
       fi
     - echo "RELEASE_CI_JOB_ID=${CI_JOB_ID}" >> releaseCiJobId.env
 
@@ -408,7 +413,6 @@ update-repository-status:
   needs:
     - job: update_esy_version
       artifacts: true
-    - job: docker_extract
     - job: initialize-ssh
     - job: initialize-git
     - job: update-bottle-reference
@@ -456,7 +460,7 @@ publish-AUR-package:
 publish-nixpkg:
   stage: push
   script:
-    - git clone "https://github.com/laucans/nixpkgs.git"
+    - git clone "https://github.com/NixOS/nixpkgs.git"
     - PRECEDENT_LIGO_VERSION_NIX=$(.ci/scripts/nix/retrieve_version.sh nixpkgs/pkgs/development/compilers/ligo/default.nix)
     - .ci/scripts/nix/update_ligo_default_nix_file.sh nixpkgs/pkgs/development/compilers/ligo/default.nix $RELEASE_VERSION
     - cd nixpkgs

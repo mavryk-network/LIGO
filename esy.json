@@ -1,6 +1,6 @@
 {
   "name": "ligolang",
-  "version": "0.62.0-dev",
+  "version": "0.63.1-dev",
   "repository": {
     "type": "git",
     "url": "https://gitlab.com/ligolang/ligo.git"
