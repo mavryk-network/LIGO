@@ -413,6 +413,7 @@ update-repository-status:
   needs:
     - job: update_esy_version
       artifacts: true
+    - job: docker_extract
     - job: initialize-ssh
     - job: initialize-git
     - job: update-bottle-reference
