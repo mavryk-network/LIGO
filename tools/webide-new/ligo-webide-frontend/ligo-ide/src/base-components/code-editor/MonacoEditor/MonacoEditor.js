@@ -18,7 +18,7 @@ import { actions } from "~/base-components/workspace";
 import fileOps from "~/base-components/file-ops";
 
 function createWebSocket() {
-  const url = `ws://${process.env.BACKEND_URL}`;
+  const url = `wss://${process.env.BACKEND_URL}`;
   const webSocket = new WebSocket(url);
   webSocket.onopen = () => {
     const socket = toSocket(webSocket);
