@@ -147,6 +147,43 @@ let mod_case_of_mod_expr
 
 *)
 module Of_Ast = struct
+  (**
+    Options specifying which parts of the AST should not be traversed.
+
+    By default, the whole AST should be traversed.
+
+    The user, however, can provide a custom value with some fields set to [true]
+    in order to perform a custom AST-traversal without traversing certain specific nodes.
+    *)
+  module Waivers = struct
+    type t =
+      { (* Useful for Stdlib AST traversal, when declaration rhs are unwanted *)
+        d_value_expr : bool
+      ; d_type_expr : bool
+      ; d_irrefutable_match_expr : bool
+      }
+
+    let default : t =
+      { d_value_expr = false; d_type_expr = false; d_irrefutable_match_expr = false }
+
+
+    let of_opt : t option -> t = function
+      | Some t -> t
+      | None -> default
+
+
+    (** Takes a function [f] and returns a wrapper function which :
+        - Takes an optional [unless] boolean argument
+          (defaults to [false])
+        - Returns [f] if [unless] is [false]
+        - Returns the identity function if [unless] is [true]
+
+        It is meant for wrapping AST-traversal functions without re-implementing the [unless] logic each time.
+        *)
+    let wrap_with_unless (type x acc) (f : x -> acc -> acc) =
+      fun ?(unless = false) -> if unless then fun _ acc -> acc else f
+  end
+
   let linear_pattern ~(body : AST.expression)
       : AST.type_expression option Linear_pattern.t -> t -> t
     =
@@ -157,9 +194,10 @@ module Of_Ast = struct
     defs
 
 
-  let rec expression : AST.expression -> t -> t =
+  let rec expression ~(waivers : Waivers.t) : AST.expression -> t -> t =
    fun e acc ->
-    let self = expression in
+    let self = Waivers.wrap_with_unless @@ expression ~waivers in
+    let declarations = Waivers.wrap_with_unless @@ declarations ~waivers in
     let defs_of_lambda : _ Lambda.t -> t -> t =
      fun { binder; output_type = _; result } acc ->
       let vvar = Param.get_var binder in
@@ -190,7 +228,7 @@ module Of_Ast = struct
     | E_matching { matchee; cases } ->
       let defs_of_match_cases cases acc =
         let defs_of_match_case acc ({ pattern; body } : _ AST.Match_expr.match_case) =
-          linear_pattern ~body pattern @@ expression body @@ acc
+          linear_pattern ~body pattern @@ self body @@ acc
         in
         List.fold ~init:acc ~f:defs_of_match_case cases
       in
@@ -226,13 +264,17 @@ module Of_Ast = struct
     | E_while { cond; body } -> self cond @@ self body @@ acc
 
 
-  and declaration : AST.declaration -> t -> t =
+  and declaration ~(waivers : Waivers.t) : AST.declaration -> t -> t =
    fun decl acc ->
+    let expression = Waivers.wrap_with_unless @@ expression ~waivers in
+    let declarations = Waivers.wrap_with_unless @@ declarations ~waivers in
     match Location.unwrap decl with
     | D_value { binder; expr; attr = _ } ->
-      add_binder ~body:expr binder @@ expression expr @@ acc
+      add_binder ~body:expr binder @@ expression ~unless:waivers.d_value_expr expr @@ acc
     | D_irrefutable_match { pattern; expr; attr = _ } ->
-      linear_pattern ~body:expr pattern @@ expression expr @@ acc
+      linear_pattern ~body:expr pattern
+      @@ expression ~unless:waivers.d_irrefutable_match_expr expr
+      @@ acc
     | D_type { type_binder; type_expr; type_attr = _ } ->
       add_tvar ~bindee:type_expr type_binder acc
     | D_module { module_binder; module_; module_attr = _ } ->
@@ -244,45 +286,20 @@ module Of_Ast = struct
       add_mvar ~mod_case ~bindee:module_ module_binder @@ acc
 
 
-  and declarations : AST.declaration list -> t -> t =
-   fun decls acc -> List.fold ~init:acc ~f:(fun accu decl -> declaration decl accu) decls
+  and declarations ~(waivers : Waivers.t) : AST.declaration list -> t -> t =
+   fun decls acc ->
+    List.fold ~init:acc ~f:(fun accu decl -> declaration ~waivers decl accu) decls
 
 
-  let program : AST.program -> t -> t = fun prg acc -> declarations prg acc
+  let program ?(waivers = Waivers.default) : AST.program -> t -> t =
+   fun prg acc -> declarations prg acc ~waivers
 end
 
-(**
-  This module traverses the {!AST_Core} of the stdlib and fetches its definitions.
-
-  If performs the same work as the {!Of_Ast} module, but not quite.
-
-  For example, the [declaration] traversal function doesn't traverse the [expr] of a [D_Value],
-  unlike its counterpart {!Of_Ast.declaration} which does.
-
-  Because of those differences, the {!Of_Stdlib} module is distict from {!Of_Ast}.
-
-  *)
 module Of_Stdlib_Ast = struct
-  let rec declaration : AST.declaration -> t -> t =
-   fun decl acc ->
-    match Location.unwrap decl with
-    | D_value { binder; expr; attr = _ } -> add_binder ~body:expr binder acc
-    | D_irrefutable_match { pattern; expr; attr = _ } ->
-      Of_Ast.linear_pattern ~body:expr pattern acc
-    | D_type { type_binder; type_expr; type_attr = _ } ->
-      add_tvar ~bindee:type_expr type_binder acc
-    | D_module { module_binder; module_; module_attr = _ } ->
-      (* Here, the module body's defs are within the lhs_def,
-         mod_case_of_mod_expr recursively calls declaration *)
-      let mod_case : Types.mod_case =
-        mod_case_of_mod_expr module_ ~defs_of_decls:declarations
-      in
-      add_mvar ~mod_case ~bindee:module_ module_binder acc
-
-
-  and declarations : AST.declaration list -> t -> t =
-   fun decls acc -> List.fold ~init:acc ~f:(fun accu decl -> declaration decl accu) decls
-
-
-  let program : AST.program -> t = fun prg -> declarations prg []
+  let program : AST.program -> t =
+   fun prg ->
+    let waivers =
+      { Of_Ast.Waivers.default with d_value_expr = true; d_irrefutable_match_expr = true }
+    in
+    Of_Ast.program ~waivers prg []
 end
