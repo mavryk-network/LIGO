@@ -1,5 +1,3 @@
-[@@@warning "-26-27-32"]
-
 open Ligo_prim
 open Simple_utils
 module AST = Ast_core
@@ -149,11 +147,10 @@ let mod_case_of_mod_expr
 
 *)
 module Of_Ast = struct
-  let rec linear_pattern ~(body : AST.expression)
+  let linear_pattern ~(body : AST.expression)
       : AST.type_expression option Linear_pattern.t -> t -> t
     =
    fun ptrn acc ->
-    let self ~body p = linear_pattern ~body p in
     let ptrn_binders = AST.Pattern.binders ptrn in
     let f defs binder = add_binder ~body binder defs in
     let defs = List.fold ~init:acc ~f ptrn_binders in
@@ -164,32 +161,32 @@ module Of_Ast = struct
    fun e acc ->
     let self = expression in
     let defs_of_lambda : _ Lambda.t -> t -> t =
-     fun { binder; output_type; result } acc ->
+     fun { binder; output_type = _; result } acc ->
       let vvar = Param.get_var binder in
       self result @@ add_vvar ~body:result vvar @@ acc
     in
     match e.expression_content with
     (* Base *)
-    | E_variable v -> acc
-    | E_literal l -> acc
-    | E_constant c -> acc
+    | E_variable _ -> acc
+    | E_literal _ -> acc
+    | E_constant _ -> acc
     | E_application { lamb; args } -> self lamb @@ self args @@ acc
     | E_lambda lambda -> defs_of_lambda lambda acc
-    | E_recursive { fun_name; fun_type; lambda; force_lambdarec } ->
+    | E_recursive { fun_name = _; fun_type = _; lambda; force_lambdarec = _ } ->
       (* fun_name is already added by the parent E_let_in so don't need to add it here *)
       defs_of_lambda lambda acc
-    | E_type_abstraction { type_binder; result } -> self result acc
-    | E_let_in { let_binder; rhs; let_result; attributes }
-    | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
+    | E_type_abstraction { type_binder = _; result } -> self result acc
+    | E_let_in { let_binder; rhs; let_result; attributes = _ }
+    | E_let_mut_in { let_binder; rhs; let_result; attributes = _ } ->
       linear_pattern ~body:rhs let_binder @@ self rhs @@ self let_result @@ acc
     | E_type_in { type_binder; rhs; let_result } ->
       add_tvar ~bindee:rhs type_binder @@ self let_result @@ acc
     | E_mod_in { module_binder; rhs; let_result } ->
       let mod_case = mod_case_of_mod_expr ~defs_of_decls:declarations rhs in
       add_mvar ~mod_case ~bindee:rhs module_binder @@ self let_result @@ acc
-    | E_raw_code { language; code } -> []
+    | E_raw_code _ -> []
     (* Variant *)
-    | E_constructor { constructor; element } -> self element acc
+    | E_constructor { constructor = _; element } -> self element acc
     | E_matching { matchee; cases } ->
       let defs_of_match_cases cases acc =
         let defs_of_match_case acc ({ pattern; body } : _ AST.Match_expr.match_case) =
@@ -200,14 +197,14 @@ module Of_Ast = struct
       defs_of_match_cases cases @@ self matchee @@ acc
     (* Record *)
     | E_record r -> Record.fold ~init:acc ~f:(fun acc entry -> self entry acc) r
-    | E_accessor { struct_; path } ->
+    | E_accessor { struct_; path = _ } ->
       self struct_ acc (* Is it possible to have decl in there ? *)
-    | E_update { struct_; path; update } -> self struct_ @@ self update @@ acc
+    | E_update { struct_; path = _; update } -> self struct_ @@ self update @@ acc
     (* Advanced *)
-    | E_ascription { anno_expr; type_annotation } -> self anno_expr acc
-    | E_module_accessor macc -> acc
+    | E_ascription { anno_expr; type_annotation = _ } -> self anno_expr acc
+    | E_module_accessor _ -> acc
     (* Imperative *)
-    | E_assign { binder; expression } ->
+    | E_assign { binder = _; expression } ->
       (* binder := new_value, the binder is already declared so we don't add it to the dec list *)
       self expression acc
     | E_for { binder; start; final; incr; f_body } ->
@@ -232,13 +229,13 @@ module Of_Ast = struct
   and declaration : AST.declaration -> t -> t =
    fun decl acc ->
     match Location.unwrap decl with
-    | D_value { binder; expr; attr } ->
+    | D_value { binder; expr; attr = _ } ->
       add_binder ~body:expr binder @@ expression expr @@ acc
-    | D_irrefutable_match { pattern; expr; attr } ->
+    | D_irrefutable_match { pattern; expr; attr = _ } ->
       linear_pattern ~body:expr pattern @@ expression expr @@ acc
-    | D_type { type_binder; type_expr; type_attr } ->
+    | D_type { type_binder; type_expr; type_attr = _ } ->
       add_tvar ~bindee:type_expr type_binder acc
-    | D_module { module_binder; module_; module_attr } ->
+    | D_module { module_binder; module_; module_attr = _ } ->
       (* Here, the module body's defs are within the lhs_def,
          mod_case_of_mod_expr recursively calls declaration *)
       let mod_case : Types.mod_case =
@@ -269,12 +266,12 @@ module Of_Stdlib_Ast = struct
   let rec declaration : AST.declaration -> t -> t =
    fun decl acc ->
     match Location.unwrap decl with
-    | D_value { binder; expr; attr } -> add_binder ~body:expr binder acc
-    | D_irrefutable_match { pattern; expr; attr } ->
+    | D_value { binder; expr; attr = _ } -> add_binder ~body:expr binder acc
+    | D_irrefutable_match { pattern; expr; attr = _ } ->
       Of_Ast.linear_pattern ~body:expr pattern acc
-    | D_type { type_binder; type_expr; type_attr } ->
+    | D_type { type_binder; type_expr; type_attr = _ } ->
       add_tvar ~bindee:type_expr type_binder acc
-    | D_module { module_binder; module_; module_attr } ->
+    | D_module { module_binder; module_; module_attr = _ } ->
       (* Here, the module body's defs are within the lhs_def,
          mod_case_of_mod_expr recursively calls declaration *)
       let mod_case : Types.mod_case =
