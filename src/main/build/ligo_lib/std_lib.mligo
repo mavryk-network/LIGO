@@ -113,6 +113,12 @@ module Map = struct
 
 end
 
+module Transpiled = struct
+  let map_find_opt (type k b) (k : k) (m : b) : (k, b) external_map_find_opt = [%Michelson ({| { UNPAIR ; GET } |} : k * b -> (k, b) external_map_find_opt)] (k, m)
+  let map_add (type k v b) (k : k) (v : v) (m : b) : (k, v, b) external_map_add = [%Michelson ({| { UNPAIR ; UNPAIR ; DIP { SOME } ; UPDATE } |} : k * v * b -> (k, v, b) external_map_add)] (k, v, m)
+  let map_remove (type k b) (k : k) (m : b) : (k, b) external_map_remove = [%Michelson (({| { UNPAIR ; DIP { NONE (type $0) } ; UPDATE } |} : k * b -> (k, b) external_map_remove), (() : (k, b) external_map_remove_value))] (k, m)
+end
+
 module Set = struct
   let empty (type a) : a set = [%external ("SET_EMPTY")]
   let size (type a) (s : a set) : nat = [%external ("SET_SIZE", s)]
@@ -126,6 +132,8 @@ module Set = struct
   let iter (type a) (f : a -> unit) (s : a set) : unit = [%external ("SET_ITER", f, s)]
   let fold (type a b) (f : b * a -> b) (s : a set) (i : b) : b = [%external ("SET_FOLD", f, s, i)]
   let fold_desc (type a b) (f : a * b -> b) (s : a set) (i : b) : b = [%external ("SET_FOLD_DESC", f, s, i)]
+  let filter_map (type a b) (f : a -> b option) (xs : a set) : b set =
+    fold_desc (fun (a : a * b set) -> match f a.0 with | None -> a.1 | Some b -> add b a.1) xs (empty : b set)
 end
 
 module List = struct
@@ -142,6 +150,12 @@ module List = struct
   let cons (type a) (x : a) (xs : a list) : a list = [%external ("CONS", x, xs)]
   let find_opt (type a) (f : a -> bool) (xs : a list) : a option = 
     fold_right (fun (a : a * a option) -> if f a.0 then Some a.0 else a.1) xs None
+  let filter_map (type a b) (f : a -> b option) (xs : a list) : b list =
+    fold_right (fun (a : a * b list) -> match f a.0 with | None -> a.1 | Some b -> (b :: a.1)) xs []
+  let update (type a) (f : a -> a option) (xs : a list) : a list =
+    map (fun a -> match f a with | None -> a | Some a -> a) xs
+  let update_with (type a) (f : a -> bool) (v : a) (xs : a list) : a list =
+    map (fun (a : a) -> if f a then v else a) xs
 end
 
 module String = struct
@@ -282,7 +296,8 @@ module Test = struct
   let set_baker (a : address) : unit = set_baker_policy (By_account a)
   let size (c : michelson_contract) : int = [%external ("TEST_SIZE", c)]
   let compile_contract (type p s) (f : p * s -> operation list * s) : michelson_contract =
-    let ast_c : ast_contract = [%external ("TEST_COMPILE_CONTRACT", f)] in
+    let no_vs : s views = [%external ("TEST_NIL_VIEWS", ())] in
+    let ast_c : ast_contract = [%external ("TEST_COMPILE_CONTRACT", f, no_vs)] in
     [%external ("TEST_COMPILE_AST_CONTRACT", ast_c)]
   let read_contract_from_file (fn : string) : michelson_contract = [%external ("TEST_READ_CONTRACT_FROM_FILE", fn)]
   let chr (n : nat) : string option =
@@ -372,8 +387,18 @@ module Test = struct
     let c = size f in
     let a : (p, s) typed_address = cast_address a in
     (a, f, c)
+    let compile_contract_with_views (type p s) (f : p * s -> operation list * s) (vs : s views) : michelson_contract =
+      let ast_c : ast_contract = [%external ("TEST_COMPILE_CONTRACT", f, vs)] in
+      [%external ("TEST_COMPILE_AST_CONTRACT", ast_c)]
   let originate_uncurried (type p s) (f : p * s -> operation list * s) (s : s) (t : tez) : ((p, s) typed_address * michelson_contract * int) =
     let f = compile_contract f in
+    let s = eval s in
+    let a = originate_contract f s t in
+    let c = size f in
+    let a : (p, s) typed_address = cast_address a in
+    (a, f, c)
+  let originate_module (type p s) ((f, vs) : (p * s -> operation list * s) * s views) (s : s) (t : tez) : ((p, s) typed_address * michelson_contract * int) =
+    let f = compile_contract_with_views f vs in
     let s = eval s in
     let a = originate_contract f s t in
     let c = size f in

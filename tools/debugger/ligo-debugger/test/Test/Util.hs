@@ -50,6 +50,7 @@ module Test.Util
   , mkSnapshotsForImpl
   , dummyLoggingFunction
   -- * LIGO types construct helpers
+  , mkTypeExpression
   , mkConstantType
   , mkArrowType
   , (~>)
@@ -268,7 +269,7 @@ mkSnapshotsForImpl
 mkSnapshotsForImpl logger (ContractRunData file mEntrypoint (param :: param) (st :: st)) = do
   let entrypoint = mEntrypoint ?: "main"
   ligoMapper <- compileLigoContractDebug entrypoint file
-  (exprLocs, T.SomeContract (contract@T.Contract{} :: T.Contract cp' st'), allFiles) <-
+  (exprLocs, T.SomeContract (contract@T.Contract{} :: T.Contract cp' st'), allFiles, lambdaLocs) <-
     case readLigoMapper ligoMapper typesReplaceRules instrReplaceRules of
       Right v -> pure v
       Left err -> HUnit.assertFailure $ pretty err
@@ -309,6 +310,7 @@ mkSnapshotsForImpl logger (ContractRunData file mEntrypoint (param :: param) (st
       dummyContractEnv
       parsedContracts
       logger
+      lambdaLocs
 
   return (allLocs, his)
 

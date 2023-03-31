@@ -217,8 +217,14 @@ let import_file ~raise ~raw_options state file_name module_name =
   in
   let options = Compiler_options.set_init_env options state.env in
   let module_ =
-    let prg = Build.qualified_typed ~raise ~options Env file_name in
-    Location.wrap ~loc (Module_expr.M_struct prg)
+    let prg, signature =
+      Build.qualified_typed_with_signature
+        ~raise
+        ~options
+        (Build.Source_input.From_file file_name)
+    in
+    Ast_typed.
+      { module_content = Module_expr.M_struct prg; module_location = loc; signature }
   in
   let module_ =
     Ast_typed.
@@ -251,7 +257,9 @@ let use_file ~raise ~raw_options state file_name =
   in
   let options = Compiler_options.set_init_env options state.env in
   (* Missing typer environment? *)
-  let module' = Build.qualified_typed ~raise ~options Env file_name in
+  let module' =
+    Build.qualified_typed ~raise ~options (Build.Source_input.From_file file_name)
+  in
   let env = Environment.append state.env module' in
   let state =
     { state with
@@ -417,7 +425,12 @@ let main
   let protocol =
     Environment.Protocols.protocols_to_variant raw_options.protocol_version
   in
-  let syntax = Syntax.of_string_opt (Syntax_name raw_options.syntax) None in
+  let syntax =
+    Syntax.of_string_opt
+      ~support_pascaligo:raw_options.deprecated
+      (Syntax_name raw_options.syntax)
+      None
+  in
   let dry_run_opts =
     Ligo_run.Of_michelson.make_dry_run_options
       { now; amount; balance; sender; source; parameter_ty = None }

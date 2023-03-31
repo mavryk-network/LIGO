@@ -60,7 +60,7 @@ let rec signature_of_module_expr
     : ctx:Context.t -> Ast_typed.module_expr -> Context.Signature.t
   =
  fun ~ctx mod_expr ->
-  match mod_expr.wrap_content with
+  match mod_expr.module_content with
   | M_struct decls -> signature_of_module ~ctx decls
   | M_variable mvar ->
     (match Context.get_module ctx mvar with
@@ -93,17 +93,19 @@ and signature_item_of_decl : ctx:Context.t -> Ast_typed.decl -> bool * Context.S
   =
  fun ~ctx decl ->
   match Location.unwrap decl with
-  | D_value { binder; expr; attr = { public; _ } } ->
-    public, [ S_value (Binder.get_var binder, encode expr.type_expression) ]
+  | D_value { binder; expr; attr = { public; entry; view; _ } } ->
+    ( public
+    , [ S_value (Binder.get_var binder, encode expr.type_expression, { entry; view }) ] )
   | D_type { type_binder = tvar; type_expr = type_; type_attr = { public; _ } } ->
     public, [ S_type (tvar, encode type_) ]
   | D_module { module_binder = mvar; module_; module_attr = { public; _ } } ->
     let sig_' = signature_of_module_expr ~ctx module_ in
     public, [ S_module (mvar, sig_') ]
-  | D_irrefutable_match { pattern; expr = _; attr = { public; _ } } ->
+  | D_irrefutable_match { pattern; expr = _; attr = { public; entry; view; _ } } ->
     let sigs =
       List.map (Ast_typed.Pattern.binders pattern) ~f:(fun b ->
-          Context.Signature.S_value (Binder.get_var b, encode @@ Binder.get_ascr b))
+          Context.Signature.S_value
+            (Binder.get_var b, encode @@ Binder.get_ascr b, { entry; view }))
     in
     public, sigs
 
@@ -257,6 +259,7 @@ type 'a exit =
 module Context_ = Context
 
 module Context = struct
+  module Attr = Context.Attr
   module Signature = Context.Signature
 
   let lift_var ~get_vars ~add_var ~add_eq ~at ~fresh ~var' t =
@@ -366,7 +369,7 @@ module Context = struct
   let get_imm var : _ t = lift_ctx (fun ctx -> Context.get_imm ctx var)
   let get_imm_exn var ~error : _ t = get_imm var >>= raise_opt ~error
   let get_mut var : _ t = lift_ctx (fun ctx -> Context.get_mut ctx var)
-  let get_mut_exn var ~error : _ t = get_mut var >>= raise_result ~error
+  let get_mut_exn var ~error : _ t = get_mut var >>= raise_opt ~error
   let get_type_var tvar : _ t = lift_ctx (fun ctx -> Context.get_type_var ctx tvar)
   let get_type_var_exn tvar ~error = get_type_var tvar >>= raise_opt ~error
   let get_type tvar : _ t = lift_ctx (fun ctx -> Context.get_type ctx tvar)
@@ -740,8 +743,8 @@ let lexists fields =
 
 let def bindings ~on_exit ~in_ =
   Context.add
-    (List.map bindings ~f:(fun (var, mut_flag, type_) ->
-         Context_.C_value (var, mut_flag, type_)))
+    (List.map bindings ~f:(fun (var, mut_flag, type_, attr) ->
+         Context_.C_value (var, mut_flag, type_, attr)))
     ~in_
     ~on_exit
 

@@ -28,6 +28,18 @@ let rec there_is_a_decl_next tokens =
   | Type _ :: _-> true
   | _ -> false
 
+let rec there_is_else_case_default tokens =
+  let open! Token in
+  match tokens with
+  | [] -> false
+  | LineCom _  :: tokens
+  | BlockCom _ :: tokens ->
+    there_is_else_case_default tokens
+  | Else _    :: _
+  | Case _    :: _
+  | Default _ :: _ -> true
+  | _ -> false
+
 let semicolon_insertion tokens =
   let open! Token in
   let rec inner result = function
@@ -37,9 +49,15 @@ let semicolon_insertion tokens =
     inner (t :: result) rest
   | (BlockCom _ as t) :: rest ->
     inner (t :: result) rest
-  | (RBRACE _ as rbrace) :: (LineCom _ as t) :: rest ->
-    let (s, _) = Token.proj_token rbrace in
-    inner (t:: mk_semi s :: rbrace :: result) rest
+  | (Export _ as export) :: rest ->
+    inner (export :: result) rest
+  | (RBRACE _ as rbrace) :: (LineCom _ as t)  :: rest
+  | (RBRACE _ as rbrace) :: (BlockCom _ as t) :: rest ->
+    if there_is_else_case_default rest then
+      inner (t :: rbrace :: result) rest
+    else
+      let (s, _) = Token.proj_token rbrace in
+      inner (t:: mk_semi s :: rbrace :: result) rest
   | (SEMI _ as semi) :: (LineCom _ as t) :: rest
   | (SEMI _ as semi) :: (BlockCom _ as t) :: rest
   | (SEMI _ as semi) :: (Directive _ as t)  :: rest
@@ -88,6 +106,9 @@ let semicolon_insertion tokens =
   | (RBRACE _ as rbrace) :: (Type _ as r)  :: rest ->
     let (s, _) = Token.proj_token rbrace in
     inner (r :: mk_semi s :: rbrace :: result ) rest
+  | (RPAR _ as hd) :: tl
+  | (Else _ as hd) :: tl when not (there_is_a_decl_next tl) -> 
+    inner (hd :: result) tl
   | token :: (Directive _ as t) :: rest
   | token :: (Namespace _ as t) :: rest
   | token :: (Export _ as t) :: rest

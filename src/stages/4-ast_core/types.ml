@@ -2,7 +2,6 @@ open Ligo_prim
 module Location = Simple_utils.Location
 module List = Simple_utils.List
 module Ligo_string = Simple_utils.Ligo_string
-
 module Row = Row.With_optional_layout
 
 type sugar_type_expression_option = Ast_imperative.type_expression option
@@ -43,6 +42,7 @@ module ValueAttr = struct
       TODO: we should change the type of such constants to be `unit -> 'a` instead of just 'a
     *)
       view : bool
+    ; entry : bool
     ; public : bool
     ; (* Controls whether a declaration must be printed or not when using LIGO print commands (print ast-typed , ast-aggregated .. etc ..)
       set to true for standard libraries
@@ -57,16 +57,18 @@ module ValueAttr = struct
 
   let pp_if_set str ppf attr = if attr then fprintf ppf "[@@%s]" str else fprintf ppf ""
 
-  let pp ppf { inline; no_mutation; view; public; hidden; thunk } =
+  let pp ppf { inline; no_mutation; view; entry; public; hidden; thunk } =
     fprintf
       ppf
-      "%a%a%a%a%a%a"
+      "%a%a%a%a%a%a%a"
       (pp_if_set "inline")
       inline
       (pp_if_set "no_mutation")
       no_mutation
       (pp_if_set "view")
       view
+      (pp_if_set "entry")
+      entry
       (pp_if_set "private")
       (not public)
       (pp_if_set "hidden")
@@ -79,6 +81,7 @@ module ValueAttr = struct
     { inline = false
     ; no_mutation = false
     ; view = false
+    ; entry = false
     ; public = true
     ; hidden = false
     ; thunk = false
@@ -126,7 +129,6 @@ module Pattern = Linear_pattern
 module Match_expr = Match_expr.Make (Pattern)
 module Pattern_decl = Pattern_decl (Pattern) (ValueAttr)
 module Let_in = Let_in.Make (Pattern) (ValueAttr)
-module Contract_decl = Contract_decl (TypeOrModuleAttr)
 
 type expression_content =
   (* Base *)
@@ -158,9 +160,6 @@ type expression_content =
   | E_for of expr For_loop.t
   | E_for_each of expr For_each_loop.t
   | E_while of expr While_loop.t
-  (* Contracts *)
-  | E_originate of expr Originate.t
-  | E_contract_call of expr Contract_call.t
 
 and expression =
   { expression_content : expression_content
@@ -175,26 +174,11 @@ and declaration_content =
   | D_irrefutable_match of (expr, ty_expr option) Pattern_decl.t
   | D_type of ty_expr Type_decl.t
   | D_module of module_expr Module_decl.t
-  | D_contract of contract_expr Contract_decl.t
-
-and contract_declaration_content =
-  | C_value of (expr, ty_expr option) Value_decl.t
-  | C_irrefutable_match of (expr, ty_expr option) Pattern_decl.t
-  | C_type of ty_expr Type_decl.t
-  | C_module of module_expr Module_decl.t
-  (* Contract specific declarations *)
-  | C_contract of contract_expr Contract_decl.t
-  | C_entry of (expr, ty_expr option) Value_decl.t
-  | C_view of (expr, ty_expr option) Value_decl.t
 
 and declaration = declaration_content Location.wrap
 and decl = declaration [@@deriving eq, compare, yojson, hash]
 and module_expr_content = decl Module_expr.t
 and module_expr = module_expr_content Location.wrap [@@deriving eq, compare, yojson, hash]
-and contract_declaration = contract_declaration_content Location.wrap
-and contract_expr_content = contract_declaration Contract_expr.t
-and contract_expr = contract_expr_content Location.wrap
 
 type module_ = decl list [@@deriving eq, compare, yojson, hash]
-type contract = contract_declaration list [@@deriving equal, compare, yojson, hash]
 type program = declaration list [@@deriving eq, compare, yojson, hash]

@@ -192,13 +192,13 @@ let tuple_of_record row = Row.to_tuple row
 
 let get_t_tuple (t : type_expression) : type_expression list option =
   match t.type_content with
-  | T_record row -> Some (tuple_of_record row)
+  | T_record row when Row.is_tuple row -> Some (tuple_of_record row)
   | _ -> None
 
 
 let get_t_pair (t : type_expression) : (type_expression * type_expression) option =
   match t.type_content with
-  | T_record m ->
+  | T_record m when Row.is_tuple m ->
     (match tuple_of_record m with
     | [ t1; t2 ] -> Some (t1, t2)
     | _ -> None)
@@ -271,8 +271,8 @@ let e_type_abs ~loc ?sugar type_binder result =
   e_type_abstraction ~loc ?sugar { type_binder; result } ()
 
 
-let e_recursive ~loc ?sugar fun_name fun_type lambda =
-  e_recursive ~loc ?sugar { fun_name; fun_type; lambda } ()
+let e_recursive ~loc ?sugar ?(force_lambdarec = false) fun_name fun_type lambda =
+  e_recursive ~loc ?sugar { fun_name; fun_type; lambda; force_lambdarec } ()
 
 
 let e_let_in ~loc ?sugar let_binder rhs let_result attributes =

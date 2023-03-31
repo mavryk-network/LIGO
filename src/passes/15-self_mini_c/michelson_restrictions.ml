@@ -5,7 +5,7 @@ open Simple_utils.Trace
 let self_in_lambdas ~raise : expression -> expression =
   fun e ->
     match e.content with
-    | E_closure {binder=_ ; body} ->
+    | E_closure {binder=_ ; body } | E_rec { func = { binder = _ ; body } ; rec_binder = _ } ->
       let f = fun ~raise e -> match e.content with
         | E_raw_michelson (code, _) ->
           let code = Tezos_utils.Michelson.lseq Location.generated code in
@@ -44,11 +44,11 @@ let rec check_comparable ~raise (error : type_expression -> _) : type_expression
 let not_comparable ~raise : expression -> expression =
   fun e ->
   let f t = match t.type_content with
-    | T_set t ->
-      let () = check_comparable ~raise (not_comparable "set") t in
+    | T_set u ->
+      let () = check_comparable ~raise (not_comparable "set" t) u in
       t
-    | T_ticket t ->
-      let () = check_comparable ~raise (not_comparable "ticket") t in
+    | T_ticket u ->
+      let () = check_comparable ~raise (not_comparable "ticket" t) u in
       t
     | _ -> t in
   let _ = Helpers.map_type_expression f e.type_expression in

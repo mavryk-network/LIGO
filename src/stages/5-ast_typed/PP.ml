@@ -10,8 +10,6 @@ open Format
 open Types
 open Simple_utils.PP_helpers
 
-
-
 let rec type_content : formatter -> type_content -> unit =
  fun ppf tc ->
   match tc with
@@ -29,7 +27,6 @@ let rec type_content : formatter -> type_content -> unit =
  fun ppf t ->
   fprintf ppf "%a" type_expression t *)
 
-
 and type_injection ppf { language; injection; parameters } =
   (* fprintf ppf "[%s {| %s %a |}]" language (Ligo_string.extract injection) (list_sep_d_par type_expression) parameters *)
   ignore language;
@@ -42,7 +39,6 @@ and type_injection ppf { language; injection; parameters } =
 
 
 and bool ppf : unit = fprintf ppf "bool"
-
 and layout = Layout.pp
 
 and option ppf (te : type_expression) : unit =
@@ -130,6 +126,7 @@ and expression_content ppf (ec : expression_content) =
           ; no_mutation = _
           ; public = __LOC__
           ; view = _
+          ; entry = _
           ; hidden = true
           ; thunk = _
           }
@@ -186,7 +183,27 @@ and declaration ?(use_hidden = true) ppf (d : declaration) =
 and decl ppf d = declaration ppf d
 
 and module_expr ppf (me : module_expr) : unit =
-  Location.pp_wrap (Module_expr.pp decl) ppf me
+  Format.fprintf
+    ppf
+    "@[%a : %a@]"
+    (Module_expr.pp decl)
+    me.module_content
+    signature
+    me.signature
+
+
+and sig_item ppf (d : sig_item) =
+  match d with
+  | S_value (var, type_, _) ->
+    Format.fprintf ppf "@[<2>val %a :@ %a@]" Value_var.pp var type_expression type_
+  | S_type (var, type_) ->
+    Format.fprintf ppf "@[<2>type %a =@ %a@]" Type_var.pp var type_expression type_
+  | S_module (var, sig_) ->
+    Format.fprintf ppf "@[<2>module %a =@ %a@]" Module_var.pp var signature sig_
+
+
+and signature ppf (sig_ : signature) : unit =
+  Format.fprintf ppf "@[<v>sig@[<v1>@,%a@]@,end@]" (list_sep sig_item (tag "@,")) sig_
 
 
 let module_ ppf (m : module_) = list_sep decl (tag "@,") ppf m

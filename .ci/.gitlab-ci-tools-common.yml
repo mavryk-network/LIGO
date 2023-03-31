@@ -9,10 +9,10 @@ variables:
 .vscode_production:
   if: $CI_COMMIT_BRANCH == "vscode-production"
 
-.lsp_mr_changes:
+.vscode_extension_mr_changes:
   if: $CI_PIPELINE_SOURCE == "merge_request_event"
   changes:
-    - tools/lsp/**/*
+    - tools/vscode/**/*
 
 .debugger_mr_changes:
   if: $CI_PIPELINE_SOURCE == "merge_request_event"

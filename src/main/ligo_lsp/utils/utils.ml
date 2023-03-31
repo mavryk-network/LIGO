@@ -7,6 +7,7 @@ module LSet = Caml.Set.Make (Loc)
 module Hashtbl = Caml.Hashtbl
 
 let ( @. ) f g x = f (g x)
+let bind_option x f = Option.bind x ~f
 let file_start_position = Position.create ~character:0 ~line:0
 let file_end_position = Position.create ~character:0 (* FIXME *) ~line:1000000000
 let whole_file_range = Range.create ~end_:file_end_position ~start:file_start_position
@@ -129,7 +130,7 @@ let defintion_to_string (def : Scopes.def) =
 
 let location_to_string (location : Loc.t) = Format.asprintf "%a" Loc.pp location
 
-let error_to_string (error : Checking.Errors.typer_error) =
+let checking_error_to_string (error : Checking.Errors.typer_error) : string =
   let display_format = Simple_utils.Display.Human_readable in
   Format.asprintf
     "%a"
@@ -159,13 +160,14 @@ let uri_extension : DocumentUri.t -> string option =
   snd @. Filename.split_extension @. DocumentUri.to_path
 
 
-let get_syntax = Syntax.of_ext_opt @. uri_extension
+let get_syntax = Syntax.of_ext_opt ~support_pascaligo:true @. uri_extension
 
 let get_comment syntax =
   let block =
     match syntax with
     | Syntax_types.CameLIGO -> Preprocessing_cameligo.Config.block
     | Syntax_types.JsLIGO -> Preprocessing_jsligo.Config.block
+    | Syntax_types.PascaLIGO -> Preprocessing_pascaligo.Config.block
   in
   match block with
   | Some x -> x#opening, x#closing
@@ -175,8 +177,8 @@ let get_comment syntax =
 type module_pp_mode =
   { module_keyword : string
   ; import_keyword : string
-  ; equal_sign_on_definition : bool
-  ; equal_sign_on_import : bool
+  ; sign_on_definition : string option
+  ; sign_on_import : string option
   ; open_ : string
   ; close : string
   ; semicolon_at_the_end : bool
@@ -185,8 +187,8 @@ type module_pp_mode =
 let cameligo_module =
   { module_keyword = "module"
   ; import_keyword = "module"
-  ; equal_sign_on_definition = true
-  ; equal_sign_on_import = true
+  ; sign_on_definition = Some "="
+  ; sign_on_import = Some "="
   ; open_ = "struct"
   ; close = "end"
   ; semicolon_at_the_end = false
@@ -196,11 +198,22 @@ let cameligo_module =
 let jsligo_module =
   { module_keyword = "namespace"
   ; import_keyword = "import"
-  ; equal_sign_on_definition = false
-  ; equal_sign_on_import = true
+  ; sign_on_definition = None
+  ; sign_on_import = Some "="
   ; open_ = "{"
   ; close = "}"
   ; semicolon_at_the_end = true
+  }
+
+
+let pascaligo_module =
+  { module_keyword = "module"
+  ; import_keyword = "module"
+  ; sign_on_definition = Some "is"
+  ; sign_on_import = Some "is"
+  ; open_ = "{"
+  ; close = "}"
+  ; semicolon_at_the_end = false
   }
 
 
@@ -213,7 +226,8 @@ let print_module_with_description
     description.module_keyword
     ^ " "
     ^ mdef.name
-    ^ (if description.equal_sign_on_definition then " = " else " ")
+    ^ (Option.value ~default:" "
+      @@ Option.map ~f:(fun s -> " " ^ s ^ " ") description.sign_on_definition)
     ^ description.open_
     ^ " "
     ^ opening_comment
@@ -225,7 +239,8 @@ let print_module_with_description
     description.import_keyword
     ^ " "
     ^ mdef.name
-    ^ (if description.equal_sign_on_import then " = " else " ")
+    ^ (Option.value ~default:" "
+      @@ Option.map ~f:(fun s -> " " ^ s ^ " ") description.sign_on_import)
     ^ (module_path_list
       |> List.map ~f:(String.split ~on:'#')
       |> List.map ~f:(Fun.flip List.nth_exn 0)
@@ -235,3 +250,79 @@ let print_module_with_description
 let print_module : Syntax_types.t -> Scopes.Types.mdef -> string = function
   | CameLIGO -> print_module_with_description cameligo_module (get_comment CameLIGO)
   | JsLIGO -> print_module_with_description jsligo_module (get_comment JsLIGO)
+  | PascaLIGO -> print_module_with_description pascaligo_module (get_comment PascaLIGO)
+
+
+let range
+    ((line_start, character_start) : int * int)
+    ((line_end, character_end) : int * int)
+    : Range.t
+  =
+  Range.create
+    ~start:(Position.create ~line:line_start ~character:character_start)
+    ~end_:(Position.create ~line:line_end ~character:character_end)
+
+
+let interval (line : int) (character_start : int) (character_end : int) : Range.t =
+  Range.create
+    ~start:(Position.create ~line ~character:character_start)
+    ~end_:(Position.create ~line ~character:character_end)
+
+
+let point (line : int) (character : int) : Range.t =
+  let position = Position.create ~line ~character in
+  Range.create ~start:position ~end_:position
+
+
+let parsing_error_to_string (err : Parsing.Errors.t) : string =
+  let ({ content = { message; _ }; _ } : Simple_utils.Error.t) =
+    Parsing.Errors.error_json err
+  in
+  message
+
+
+type dialect_cst =
+  | CameLIGO_cst of Parsing.Cameligo.CST.t
+  | JsLIGO_cst of Parsing.Jsligo.CST.t
+  | PascaLIGO_cst of Parsing.Pascaligo.CST.t
+
+type parsing_raise = (Parsing.Errors.t, Main_warnings.all) Simple_utils.Trace.raise
+
+exception Fatal_cst_error of string
+
+let get_cst ~(strict : bool) (syntax : Syntax_types.t) (code : string)
+    : (dialect_cst, string) result
+  =
+  let buffer = Caml.Buffer.of_seq (Caml.String.to_seq code) in
+  (* Warnings and errors will be reported to the user via diagnostics, so we
+     ignore them here unless the strict mode is enabled. *)
+  let raise : parsing_raise =
+    { error = (fun err -> raise @@ Fatal_cst_error (parsing_error_to_string err))
+    ; warning = (fun _ -> ())
+    ; log_error =
+        (fun err -> if strict then raise @@ Fatal_cst_error (parsing_error_to_string err))
+    ; fast_fail = false
+    }
+  in
+  try
+    match syntax with
+    | CameLIGO ->
+      Ok (CameLIGO_cst (Parsing.Cameligo.parse_string ~preprocess:false ~raise buffer))
+    | JsLIGO ->
+      Ok (JsLIGO_cst (Parsing.Jsligo.parse_string ~preprocess:false ~raise buffer))
+    | PascaLIGO ->
+      Ok (PascaLIGO_cst (Parsing.Pascaligo.parse_string ~preprocess:false ~raise buffer))
+  with
+  | Fatal_cst_error err -> Error err
+
+
+let rec take (n : int) (xs : 'a list) : 'a list =
+  if n <= 0
+  then []
+  else (
+    match xs with
+    | [] -> []
+    | x :: xs -> x :: take (n - 1) xs)
+
+
+let value_map ~f ~default value = Option.value (Option.map ~f value) ~default

@@ -295,10 +295,10 @@ let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; bad_contract "capture_big_map.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative/capture_big_map.mligo", line 16, characters 10-16:
-     15 |   let ledger_module (data: l) : l interface = {
-     16 |     data; supply
-     17 |   }
+    File "../../test/contracts/negative/capture_big_map.mligo", line 12, characters 25-26:
+     11 |
+     12 |   let supply (ledger:l) (_:nat) =
+     13 |     ledger.supply
 
     Invalid capturing, term captures the type big_map (address ,
     nat).
@@ -390,7 +390,12 @@ let%expect_test _ =
     { parameter bool ;
       storage (lambda unit mutez) ;
       code { CAR ;
-             IF { LAMBDA unit mutez { DROP ; AMOUNT } }
+             IF { AMOUNT ;
+                  LAMBDA (pair mutez unit) mutez { CAR } ;
+                  DUP 2 ;
+                  APPLY ;
+                  SWAP ;
+                  DROP }
                 { LAMBDA unit mutez { DROP ; AMOUNT } } ;
              NIL operation ;
              PAIR } } |}]
@@ -433,10 +438,20 @@ let%expect_test _ =
     {| "Tezos.self" must be used directly and cannot be used via another function. |}]
 
 let%expect_test _ =
+  run_ligo_bad [ "compile"; "contract"; bad_contract "self_in_lambdarec.mligo" ];
+  [%expect
+    {| "Tezos.self" must be used directly and cannot be used via another function. |}]
+
+let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; bad_contract "not_comparable.mligo" ];
   [%expect
     {|
     File "../../test/contracts/negative/not_comparable.mligo", line 1, characters 16-23:
+      1 | let main (_u : (int set) set) (s : unit) : operation list * unit = ([] : operation list), s
+      2 |
+
+    This type is used inside:
+    File "../../test/contracts/negative/not_comparable.mligo", line 1, characters 15-28:
       1 | let main (_u : (int set) set) (s : unit) : operation list * unit = ([] : operation list), s
       2 |
 
@@ -448,6 +463,11 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts/negative/not_comparable.mligo", line 3, characters 17-24:
+      2 |
+      3 | let main2 (_u : (int set) ticket) (s : unit) : operation list * unit = ([] : operation list), s
+
+    This type is used inside:
+    File "../../test/contracts/negative/not_comparable.mligo", line 3, characters 16-32:
       2 |
       3 | let main2 (_u : (int set) ticket) (s : unit) : operation list * unit = ([] : operation list), s
 
@@ -494,7 +514,7 @@ File "../../test/contracts/negative/create_contract_toplevel.mligo", line 4, cha
   8 |     "un"
   9 |   in
 
-Not all free variables could be inlined in Tezos.create_contract usage: gen#182. |}];
+Not all free variables could be inlined in Tezos.create_contract usage: gen#32. |}];
   run_ligo_good [ "compile"; "contract"; contract "create_contract_var.mligo" ];
   [%expect
     {|
@@ -575,7 +595,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#182.
      11 |     "un"
      12 |   in
 
-    Not all free variables could be inlined in Tezos.create_contract usage: gen#183. |}];
+    Not all free variables could be inlined in Tezos.create_contract usage: gen#33. |}];
   run_ligo_bad [ "compile"; "contract"; bad_contract "create_contract_no_inline.mligo" ];
   [%expect
     {|
@@ -624,7 +644,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#182.
       9 |   let (op, addr) = Tezos.create_contract dummy_contract ((None: key_hash option)) 300tz 1 in
      10 |   let toto : operation list = [ op ] in
 
-    Not all free variables could be inlined in Tezos.create_contract usage: foo#200. |}];
+    Not all free variables could be inlined in Tezos.create_contract usage: foo#44. |}];
   run_ligo_good [ "compile"; "contract"; contract "create_contract.mligo" ];
   [%expect
     {|
@@ -1065,7 +1085,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good
-    [ "run"; "evaluate-call"; contract "assert.mligo"; "(false, ())"; "-e"; "with_error" ];
+    [ "run"; "evaluate-call"; contract "assert.mligo"; "with_error"; "(false, ())" ];
   [%expect {| failed with: "my custom error" |}]
 
 let%expect_test _ =
@@ -1073,9 +1093,8 @@ let%expect_test _ =
     [ "run"
     ; "evaluate-call"
     ; contract "assert.mligo"
-    ; "(None: unit option)"
-    ; "-e"
     ; "some_with_error"
+    ; "(None: unit option)"
     ];
   [%expect {| failed with: "my custom error" |}]
 
@@ -1084,9 +1103,8 @@ let%expect_test _ =
     [ "run"
     ; "evaluate-call"
     ; contract "assert.mligo"
-    ; "(Some (): unit option)"
-    ; "-e"
     ; "none_with_error"
+    ; "(Some (): unit option)"
     ];
   [%expect {| failed with: "my custom error" |}]
 
@@ -1244,30 +1262,30 @@ let%expect_test _ =
                  LAMBDA
                    unit
                    unit
-                   { { /* x#149 */ } ;
+                   { { /* x#10 */ } ;
                      { /* File "../../test/contracts/noop.mligo", line 2, characters 9-10 */ } } } ;
-               { /* f#148, _ */ } ;
+               { /* f#9, _ */ } ;
                { /* File "../../test/contracts/noop.mligo", line 3, character 2 to line 6, character 28 */
                  { /* File "../../test/contracts/noop.mligo", line 3, characters 18-21 */
                    SWAP ;
                    { /* File "../../test/contracts/noop.mligo", line 3, characters 18-19 */ DUP 2 } ;
                    SWAP ;
                    EXEC } ;
-                 { /* s2#150, f#148 */ } ;
+                 { /* s2#11, f#9 */ } ;
                  { /* File "../../test/contracts/noop.mligo", line 4, character 2 to line 6, character 28 */
                    { /* File "../../test/contracts/noop.mligo", line 4, characters 18-22 */
                      { /* File "../../test/contracts/noop.mligo", line 4, characters 20-22 */ } ;
                      { /* File "../../test/contracts/noop.mligo", line 4, characters 18-19 */ DUP 2 } ;
                      SWAP ;
                      EXEC } ;
-                   { /* s3#151, f#148 */ } ;
+                   { /* s3#12, f#9 */ } ;
                    { /* File "../../test/contracts/noop.mligo", line 5, character 2 to line 6, character 28 */
                      { /* File "../../test/contracts/noop.mligo", line 5, characters 10-14 */
                        { /* File "../../test/contracts/noop.mligo", line 5, characters 12-14 */ } ;
                        { /* File "../../test/contracts/noop.mligo", line 5, characters 10-11 */ SWAP } ;
                        SWAP ;
                        EXEC } ;
-                     { /* s#152 */ } ;
+                     { /* s#13 */ } ;
                      { /* File "../../test/contracts/noop.mligo", line 6, characters 3-27 */
                        { /* File "../../test/contracts/noop.mligo", line 6, characters 26-27 */ } ;
                        { /* File "../../test/contracts/noop.mligo", line 6, characters 3-24 */
@@ -1308,70 +1326,6 @@ let%expect_test _ =
                         { "pos_fname": "../../test/contracts/noop.mligo",
                           "pos_lnum": "1", "pos_bol": "1", "pos_cnum": "30" },
                       "point_num": "106", "point_bol": "76" } } ] },
-          { "type_content":
-              [ "T_constant",
-                { "language": "Michelson", "injection": [ "Unit" ],
-                  "parameters": [] } ], "type_meta": null, "orig_var": null,
-            "location":
-              [ "File",
-                { "start":
-                    { "byte":
-                        { "pos_fname": "../../test/contracts/noop.mligo",
-                          "pos_lnum": "2", "pos_bol": "1", "pos_cnum": "13" },
-                      "point_num": "147", "point_bol": "134" },
-                  "stop":
-                    { "byte":
-                        { "pos_fname": "../../test/contracts/noop.mligo",
-                          "pos_lnum": "2", "pos_bol": "1", "pos_cnum": "17" },
-                      "point_num": "151", "point_bol": "134" } } ] },
-          { "type_content":
-              [ "T_constant",
-                { "language": "Michelson", "injection": [ "Unit" ],
-                  "parameters": [] } ], "type_meta": null, "orig_var": null,
-            "location":
-              [ "File",
-                { "start":
-                    { "byte":
-                        { "pos_fname": "../../test/contracts/noop.mligo",
-                          "pos_lnum": "2", "pos_bol": "1", "pos_cnum": "21" },
-                      "point_num": "155", "point_bol": "134" },
-                  "stop":
-                    { "byte":
-                        { "pos_fname": "../../test/contracts/noop.mligo",
-                          "pos_lnum": "2", "pos_bol": "1", "pos_cnum": "25" },
-                      "point_num": "159", "point_bol": "134" } } ] },
-          { "type_content":
-              [ "T_constant",
-                { "language": "Michelson", "injection": [ "Unit" ],
-                  "parameters": [] } ], "type_meta": null, "orig_var": null,
-            "location":
-              [ "File",
-                { "start":
-                    { "byte":
-                        { "pos_fname": "../../test/contracts/noop.mligo",
-                          "pos_lnum": "3", "pos_bol": "1", "pos_cnum": "11" },
-                      "point_num": "178", "point_bol": "167" },
-                  "stop":
-                    { "byte":
-                        { "pos_fname": "../../test/contracts/noop.mligo",
-                          "pos_lnum": "3", "pos_bol": "1", "pos_cnum": "15" },
-                      "point_num": "182", "point_bol": "167" } } ] },
-          { "type_content":
-              [ "T_constant",
-                { "language": "Michelson", "injection": [ "Unit" ],
-                  "parameters": [] } ], "type_meta": null, "orig_var": null,
-            "location":
-              [ "File",
-                { "start":
-                    { "byte":
-                        { "pos_fname": "../../test/contracts/noop.mligo",
-                          "pos_lnum": "4", "pos_bol": "1", "pos_cnum": "11" },
-                      "point_num": "203", "point_bol": "192" },
-                  "stop":
-                    { "byte":
-                        { "pos_fname": "../../test/contracts/noop.mligo",
-                          "pos_lnum": "4", "pos_bol": "1", "pos_cnum": "15" },
-                      "point_num": "207", "point_bol": "192" } } ] },
           { "type_content":
               [ "T_constant",
                 { "language": "Michelson", "injection": [ "List" ],
@@ -2409,326 +2363,6 @@ let%expect_test _ =
                           "pos_lnum": "1", "pos_bol": "1", "pos_cnum": "55" },
                       "point_num": "131", "point_bol": "76" } } ] },
           { "type_content":
-              [ "T_record",
-                { "fields":
-                    [ [ [ "Label", "0" ],
-                        { "type_content":
-                            [ "T_constant",
-                              { "language": "Michelson", "injection": [ "List" ],
-                                "parameters":
-                                  [ { "type_content":
-                                        [ "T_constant",
-                                          { "language": "Michelson",
-                                            "injection": [ "Operation" ],
-                                            "parameters": [] } ],
-                                      "type_meta": null, "orig_var": null,
-                                      "location":
-                                        [ "File",
-                                          { "start":
-                                              { "byte":
-                                                  { "pos_fname":
-                                                      "../../test/contracts/noop.mligo",
-                                                    "pos_lnum": "6",
-                                                    "pos_bol": "1",
-                                                    "pos_cnum": "9" },
-                                                "point_num": "245",
-                                                "point_bol": "236" },
-                                            "stop":
-                                              { "byte":
-                                                  { "pos_fname":
-                                                      "../../test/contracts/noop.mligo",
-                                                    "pos_lnum": "6",
-                                                    "pos_bol": "1",
-                                                    "pos_cnum": "18" },
-                                                "point_num": "254",
-                                                "point_bol": "236" } } ] } ] } ],
-                          "type_meta":
-                            { "type_content":
-                                [ "T_app",
-                                  { "type_operator":
-                                      { "module_path": [],
-                                        "element":
-                                          { "name": "list", "counter": "0",
-                                            "generated": false,
-                                            "location":
-                                              [ "File",
-                                                { "start":
-                                                    { "byte":
-                                                        { "pos_fname":
-                                                            "../../test/contracts/noop.mligo",
-                                                          "pos_lnum": "6",
-                                                          "pos_bol": "1",
-                                                          "pos_cnum": "9" },
-                                                      "point_num": "245",
-                                                      "point_bol": "236" },
-                                                  "stop":
-                                                    { "byte":
-                                                        { "pos_fname":
-                                                            "../../test/contracts/noop.mligo",
-                                                          "pos_lnum": "6",
-                                                          "pos_bol": "1",
-                                                          "pos_cnum": "23" },
-                                                      "point_num": "259",
-                                                      "point_bol": "236" } } ] } },
-                                    "arguments":
-                                      [ { "type_content":
-                                            [ "T_variable",
-                                              { "name": "operation",
-                                                "counter": "0",
-                                                "generated": false,
-                                                "location":
-                                                  [ "File",
-                                                    { "start":
-                                                        { "byte":
-                                                            { "pos_fname":
-                                                                "../../test/contracts/noop.mligo",
-                                                              "pos_lnum": "6",
-                                                              "pos_bol": "1",
-                                                              "pos_cnum": "9" },
-                                                          "point_num": "245",
-                                                          "point_bol": "236" },
-                                                      "stop":
-                                                        { "byte":
-                                                            { "pos_fname":
-                                                                "../../test/contracts/noop.mligo",
-                                                              "pos_lnum": "6",
-                                                              "pos_bol": "1",
-                                                              "pos_cnum": "18" },
-                                                          "point_num": "254",
-                                                          "point_bol": "236" } } ] } ],
-                                          "sugar":
-                                            { "type_content":
-                                                [ "T_variable",
-                                                  { "name": "operation",
-                                                    "counter": "0",
-                                                    "generated": false,
-                                                    "location":
-                                                      [ "File",
-                                                        { "start":
-                                                            { "byte":
-                                                                { "pos_fname":
-                                                                    "../../test/contracts/noop.mligo",
-                                                                  "pos_lnum": "6",
-                                                                  "pos_bol": "1",
-                                                                  "pos_cnum": "9" },
-                                                              "point_num": "245",
-                                                              "point_bol": "236" },
-                                                          "stop":
-                                                            { "byte":
-                                                                { "pos_fname":
-                                                                    "../../test/contracts/noop.mligo",
-                                                                  "pos_lnum": "6",
-                                                                  "pos_bol": "1",
-                                                                  "pos_cnum":
-                                                                    "18" },
-                                                              "point_num": "254",
-                                                              "point_bol": "236" } } ] } ],
-                                              "location":
-                                                [ "File",
-                                                  { "start":
-                                                      { "byte":
-                                                          { "pos_fname":
-                                                              "../../test/contracts/noop.mligo",
-                                                            "pos_lnum": "6",
-                                                            "pos_bol": "1",
-                                                            "pos_cnum": "9" },
-                                                        "point_num": "245",
-                                                        "point_bol": "236" },
-                                                    "stop":
-                                                      { "byte":
-                                                          { "pos_fname":
-                                                              "../../test/contracts/noop.mligo",
-                                                            "pos_lnum": "6",
-                                                            "pos_bol": "1",
-                                                            "pos_cnum": "18" },
-                                                        "point_num": "254",
-                                                        "point_bol": "236" } } ] },
-                                          "location":
-                                            [ "File",
-                                              { "start":
-                                                  { "byte":
-                                                      { "pos_fname":
-                                                          "../../test/contracts/noop.mligo",
-                                                        "pos_lnum": "6",
-                                                        "pos_bol": "1",
-                                                        "pos_cnum": "9" },
-                                                    "point_num": "245",
-                                                    "point_bol": "236" },
-                                                "stop":
-                                                  { "byte":
-                                                      { "pos_fname":
-                                                          "../../test/contracts/noop.mligo",
-                                                        "pos_lnum": "6",
-                                                        "pos_bol": "1",
-                                                        "pos_cnum": "18" },
-                                                    "point_num": "254",
-                                                    "point_bol": "236" } } ] } ] } ],
-                              "sugar":
-                                { "type_content":
-                                    [ "T_app",
-                                      { "type_operator":
-                                          { "module_path": [],
-                                            "element":
-                                              { "name": "list", "counter": "0",
-                                                "generated": false,
-                                                "location":
-                                                  [ "File",
-                                                    { "start":
-                                                        { "byte":
-                                                            { "pos_fname":
-                                                                "../../test/contracts/noop.mligo",
-                                                              "pos_lnum": "6",
-                                                              "pos_bol": "1",
-                                                              "pos_cnum": "9" },
-                                                          "point_num": "245",
-                                                          "point_bol": "236" },
-                                                      "stop":
-                                                        { "byte":
-                                                            { "pos_fname":
-                                                                "../../test/contracts/noop.mligo",
-                                                              "pos_lnum": "6",
-                                                              "pos_bol": "1",
-                                                              "pos_cnum": "23" },
-                                                          "point_num": "259",
-                                                          "point_bol": "236" } } ] } },
-                                        "arguments":
-                                          [ { "type_content":
-                                                [ "T_variable",
-                                                  { "name": "operation",
-                                                    "counter": "0",
-                                                    "generated": false,
-                                                    "location":
-                                                      [ "File",
-                                                        { "start":
-                                                            { "byte":
-                                                                { "pos_fname":
-                                                                    "../../test/contracts/noop.mligo",
-                                                                  "pos_lnum": "6",
-                                                                  "pos_bol": "1",
-                                                                  "pos_cnum": "9" },
-                                                              "point_num": "245",
-                                                              "point_bol": "236" },
-                                                          "stop":
-                                                            { "byte":
-                                                                { "pos_fname":
-                                                                    "../../test/contracts/noop.mligo",
-                                                                  "pos_lnum": "6",
-                                                                  "pos_bol": "1",
-                                                                  "pos_cnum":
-                                                                    "18" },
-                                                              "point_num": "254",
-                                                              "point_bol": "236" } } ] } ],
-                                              "location":
-                                                [ "File",
-                                                  { "start":
-                                                      { "byte":
-                                                          { "pos_fname":
-                                                              "../../test/contracts/noop.mligo",
-                                                            "pos_lnum": "6",
-                                                            "pos_bol": "1",
-                                                            "pos_cnum": "9" },
-                                                        "point_num": "245",
-                                                        "point_bol": "236" },
-                                                    "stop":
-                                                      { "byte":
-                                                          { "pos_fname":
-                                                              "../../test/contracts/noop.mligo",
-                                                            "pos_lnum": "6",
-                                                            "pos_bol": "1",
-                                                            "pos_cnum": "18" },
-                                                        "point_num": "254",
-                                                        "point_bol": "236" } } ] } ] } ],
-                                  "location":
-                                    [ "File",
-                                      { "start":
-                                          { "byte":
-                                              { "pos_fname":
-                                                  "../../test/contracts/noop.mligo",
-                                                "pos_lnum": "6", "pos_bol": "1",
-                                                "pos_cnum": "9" },
-                                            "point_num": "245",
-                                            "point_bol": "236" },
-                                        "stop":
-                                          { "byte":
-                                              { "pos_fname":
-                                                  "../../test/contracts/noop.mligo",
-                                                "pos_lnum": "6", "pos_bol": "1",
-                                                "pos_cnum": "23" },
-                                            "point_num": "259",
-                                            "point_bol": "236" } } ] },
-                              "location":
-                                [ "File",
-                                  { "start":
-                                      { "byte":
-                                          { "pos_fname":
-                                              "../../test/contracts/noop.mligo",
-                                            "pos_lnum": "6", "pos_bol": "1",
-                                            "pos_cnum": "9" },
-                                        "point_num": "245", "point_bol": "236" },
-                                    "stop":
-                                      { "byte":
-                                          { "pos_fname":
-                                              "../../test/contracts/noop.mligo",
-                                            "pos_lnum": "6", "pos_bol": "1",
-                                            "pos_cnum": "23" },
-                                        "point_num": "259", "point_bol": "236" } } ] },
-                          "orig_var": null,
-                          "location":
-                            [ "File",
-                              { "start":
-                                  { "byte":
-                                      { "pos_fname":
-                                          "../../test/contracts/noop.mligo",
-                                        "pos_lnum": "6", "pos_bol": "1",
-                                        "pos_cnum": "9" }, "point_num": "245",
-                                    "point_bol": "236" },
-                                "stop":
-                                  { "byte":
-                                      { "pos_fname":
-                                          "../../test/contracts/noop.mligo",
-                                        "pos_lnum": "6", "pos_bol": "1",
-                                        "pos_cnum": "23" }, "point_num": "259",
-                                    "point_bol": "236" } } ] } ],
-                      [ [ "Label", "1" ],
-                        { "type_content":
-                            [ "T_constant",
-                              { "language": "Michelson", "injection": [ "Unit" ],
-                                "parameters": [] } ], "type_meta": null,
-                          "orig_var": null,
-                          "location":
-                            [ "File",
-                              { "start":
-                                  { "byte":
-                                      { "pos_fname":
-                                          "../../test/contracts/noop.mligo",
-                                        "pos_lnum": "2", "pos_bol": "1",
-                                        "pos_cnum": "21" }, "point_num": "155",
-                                    "point_bol": "134" },
-                                "stop":
-                                  { "byte":
-                                      { "pos_fname":
-                                          "../../test/contracts/noop.mligo",
-                                        "pos_lnum": "2", "pos_bol": "1",
-                                        "pos_cnum": "25" }, "point_num": "159",
-                                    "point_bol": "134" } } ] } ] ],
-                  "layout":
-                    [ "Inner",
-                      [ [ "Field", { "name": [ "Label", "0" ], "annot": null } ],
-                        [ "Field", { "name": [ "Label", "1" ], "annot": null } ] ] ] } ],
-            "type_meta": null, "orig_var": null,
-            "location":
-              [ "File",
-                { "start":
-                    { "byte":
-                        { "pos_fname": "../../test/contracts/noop.mligo",
-                          "pos_lnum": "6", "pos_bol": "1", "pos_cnum": "3" },
-                      "point_num": "239", "point_bol": "236" },
-                  "stop":
-                    { "byte":
-                        { "pos_fname": "../../test/contracts/noop.mligo",
-                          "pos_lnum": "6", "pos_bol": "1", "pos_cnum": "27" },
-                      "point_num": "263", "point_bol": "236" } } ] },
-          { "type_content":
               [ "T_arrow",
                 { "type1":
                     { "type_content":
@@ -2819,24 +2453,24 @@ let%expect_test _ =
                         "col": "22" },
                     "stop":
                       { "file": "../../test/contracts/noop.mligo", "line": "1",
-                        "col": "23" } }, "source_type": "6" },
+                        "col": "23" } }, "source_type": "2" },
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "2",
                         "col": "9" },
                     "stop":
                       { "file": "../../test/contracts/noop.mligo", "line": "2",
-                        "col": "10" } }, "source_type": "8" }, {}, {}, {}, {},
-              { "environment": [ { "name": "x#149", "source_type": "1" } ] },
+                        "col": "10" } }, "source_type": "3" }, {}, {}, {}, {},
+              { "environment": [ { "name": "x#10", "source_type": "0" } ] },
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "2",
                         "col": "9" },
                     "stop":
                       { "file": "../../test/contracts/noop.mligo", "line": "2",
-                        "col": "10" } }, "source_type": "2" },
+                        "col": "10" } }, "source_type": "0" },
               { "environment":
-                  [ { "name": "f#148", "source_type": "8" },
+                  [ { "name": "f#9", "source_type": "3" },
                     { "source_type": "0" } ] },
               { "location":
                   { "start":
@@ -2844,84 +2478,84 @@ let%expect_test _ =
                         "col": "2" },
                     "stop":
                       { "file": "../../test/contracts/noop.mligo", "line": "6",
-                        "col": "28" } }, "source_type": "7" },
+                        "col": "28" } }, "source_type": "2" },
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "3",
                         "col": "18" },
                     "stop":
                       { "file": "../../test/contracts/noop.mligo", "line": "3",
-                        "col": "21" } }, "source_type": "3" }, {},
+                        "col": "21" } }, "source_type": "0" }, {},
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "3",
                         "col": "18" },
                     "stop":
                       { "file": "../../test/contracts/noop.mligo", "line": "3",
-                        "col": "19" } }, "source_type": "8" }, {}, {}, {}, {},
+                        "col": "19" } }, "source_type": "3" }, {}, {}, {}, {},
               { "environment":
-                  [ { "name": "s2#150", "source_type": "3" },
-                    { "name": "f#148", "source_type": "8" } ] },
+                  [ { "name": "s2#11", "source_type": "0" },
+                    { "name": "f#9", "source_type": "3" } ] },
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "4",
                         "col": "2" },
                     "stop":
                       { "file": "../../test/contracts/noop.mligo", "line": "6",
-                        "col": "28" } }, "source_type": "7" },
+                        "col": "28" } }, "source_type": "2" },
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "4",
                         "col": "18" },
                     "stop":
                       { "file": "../../test/contracts/noop.mligo", "line": "4",
-                        "col": "22" } }, "source_type": "4" },
+                        "col": "22" } }, "source_type": "0" },
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "4",
                         "col": "20" },
                     "stop":
                       { "file": "../../test/contracts/noop.mligo", "line": "4",
-                        "col": "22" } }, "source_type": "3" },
+                        "col": "22" } }, "source_type": "0" },
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "4",
                         "col": "18" },
                     "stop":
                       { "file": "../../test/contracts/noop.mligo", "line": "4",
-                        "col": "19" } }, "source_type": "8" }, {}, {}, {}, {},
+                        "col": "19" } }, "source_type": "3" }, {}, {}, {}, {},
               { "environment":
-                  [ { "name": "s3#151", "source_type": "4" },
-                    { "name": "f#148", "source_type": "8" } ] },
+                  [ { "name": "s3#12", "source_type": "0" },
+                    { "name": "f#9", "source_type": "3" } ] },
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "5",
                         "col": "2" },
                     "stop":
                       { "file": "../../test/contracts/noop.mligo", "line": "6",
-                        "col": "28" } }, "source_type": "7" },
+                        "col": "28" } }, "source_type": "2" },
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "5",
                         "col": "10" },
                     "stop":
                       { "file": "../../test/contracts/noop.mligo", "line": "5",
-                        "col": "14" } }, "source_type": "2" },
+                        "col": "14" } }, "source_type": "0" },
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "5",
                         "col": "12" },
                     "stop":
                       { "file": "../../test/contracts/noop.mligo", "line": "5",
-                        "col": "14" } }, "source_type": "4" },
+                        "col": "14" } }, "source_type": "0" },
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "5",
                         "col": "10" },
                     "stop":
                       { "file": "../../test/contracts/noop.mligo", "line": "5",
-                        "col": "11" } }, "source_type": "8" }, {}, {}, {},
-              { "environment": [ { "name": "s#152", "source_type": "2" } ] },
+                        "col": "11" } }, "source_type": "3" }, {}, {}, {},
+              { "environment": [ { "name": "s#13", "source_type": "0" } ] },
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "6",
@@ -2935,28 +2569,28 @@ let%expect_test _ =
                         "col": "26" },
                     "stop":
                       { "file": "../../test/contracts/noop.mligo", "line": "6",
-                        "col": "27" } }, "source_type": "2" },
+                        "col": "27" } }, "source_type": "0" },
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "6",
                         "col": "3" },
                     "stop":
                       { "file": "../../test/contracts/noop.mligo", "line": "6",
-                        "col": "24" } }, "source_type": "5" },
+                        "col": "24" } }, "source_type": "1" },
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "6",
                         "col": "3" },
                     "stop":
                       { "file": "../../test/contracts/noop.mligo", "line": "6",
-                        "col": "24" } }, "source_type": "5" },
+                        "col": "24" } }, "source_type": "1" },
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "6",
                         "col": "3" },
                     "stop":
                       { "file": "../../test/contracts/noop.mligo", "line": "6",
-                        "col": "24" } }, "source_type": "5" }, {} ] } } |}]
+                        "col": "24" } }, "source_type": "1" }, {} ] } } |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "storage"; contract "module_contract_simple.mligo"; "999" ];
@@ -3185,6 +2819,39 @@ let%expect_test _ =
              NIL operation ;
              PAIR } } |}]
 
+(* Example contract from getting-started in PascaLIGO using --deprecated *)
+let%expect_test _ =
+  run_ligo_good [ "compile"; "contract"; contract "increment.ligo"; "--deprecated" ];
+  [%expect
+    {|
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+      storage int ;
+      code { UNPAIR ;
+             IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int 0 } ;
+             NIL operation ;
+             PAIR } } |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "compile"; "contract"; contract "increment.ligo" ];
+  [%expect
+    {|
+    Invalid file extension for '../../test/contracts/increment.ligo'.
+    PascaLIGO is deprecated.
+    Hint: You can enable its support using the --deprecated flag. |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "compile"; "expression"; "pascaligo"; "1 + 1" ];
+  [%expect
+    {|
+    Invalid syntax.
+    PascaLIGO is deprecated.
+    Hint: You can enable its support using the --deprecated flag. |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile"; "expression"; "pascaligo"; "1 + 1"; "--deprecated" ];
+  [%expect {|
+    2 |}]
+
 (* Test compiling a contract with a get_entrypoint_opt to a capitalized entrypoint *)
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "get_capitalized_entrypoint.mligo" ];
@@ -3254,6 +2921,131 @@ let%expect_test _ =
                       LEFT string } } ;
              NIL operation ;
              PAIR } } |}]
+
+(* Compiling contract with non-tail recursion *)
+let%expect_test _ =
+  run_ligo_good [ "compile"; "contract"; contract "lambdarec.mligo" ];
+  [%expect
+    {|
+    { parameter (list int) ;
+      storage (list int) ;
+      code { LAMBDA_REC
+               (pair (list int) (list int))
+               (list int)
+               { UNPAIR ;
+                 IF_CONS
+                   { DUG 2 ; PAIR ; DIG 2 ; SWAP ; EXEC ; SWAP ; CONS }
+                   { SWAP ; DROP } } ;
+             SWAP ;
+             EXEC ;
+             NIL operation ;
+             PAIR } } |}]
+
+(* Compiling CameLIGO expression with non-tail recursion *)
+let%expect_test _ =
+  run_ligo_good
+    [ "compile"
+    ; "expression"
+    ; "cameligo"
+    ; "cat [fib 1; fib 2; fib 3] [fib 4; fib 5; fib 6;  fib 7]"
+    ; "--init-file"
+    ; contract "lambdarec.mligo"
+    ];
+  [%expect {|
+    { 1 ; 2 ; 3 ; 5 ; 8 ; 13 ; 21 } |}]
+
+(* Compiling CameLIGO expression with non-tail recursion *)
+let%expect_test _ =
+  run_ligo_good
+    [ "compile"
+    ; "expression"
+    ; "cameligo"
+    ; "foo"
+    ; "--init-file"
+    ; contract "lambdarec2.mligo"
+    ];
+  [%expect
+    {|
+    (Lambda_rec
+       { LEFT int ;
+         LOOP_LEFT { DUP ; DUP 3 ; SWAP ; EXEC ; CONS ; LEFT int } ;
+         SWAP ;
+         DROP }) |}]
+
+(* Compiling CameLIGO Ackermann expression with non-tail recursion *)
+let%expect_test _ =
+  run_ligo_good
+    [ "compile"
+    ; "expression"
+    ; "cameligo"
+    ; "ackermann (3n, 2n)"
+    ; "--init-file"
+    ; contract "lambdarec.mligo"
+    ];
+  [%expect {|
+    29 |}]
+
+(* Compiling JsLIGO expression with non-tail recursion using env. *)
+let%expect_test _ =
+  run_ligo_good
+    [ "compile"
+    ; "expression"
+    ; "jsligo"
+    ; "fib2()(5)"
+    ; "--init-file"
+    ; contract "lambdarec.jsligo"
+    ];
+  [%expect {|
+    8 |}]
+
+(* Compiling JsLIGO expression with non-tail recursion *)
+let%expect_test _ =
+  run_ligo_good
+    [ "compile"
+    ; "expression"
+    ; "jsligo"
+    ; "cat(list([1,2,3]), list([4,fib(5)]))"
+    ; "--init-file"
+    ; contract "lambdarec.jsligo"
+    ];
+  [%expect {|
+    { 1 ; 2 ; 3 ; 4 ; 8 } |}]
+
+(* Compiling JsLIGO expression with non-tail recursion *)
+let%expect_test _ =
+  run_ligo_good
+    [ "compile"
+    ; "expression"
+    ; "jsligo"
+    ; "wrong"
+    ; "--init-file"
+    ; contract "lambdarec2.jsligo"
+    ];
+  [%expect
+    {|
+    (Lambda_rec
+       { PUSH int 0 ;
+         NIL int ;
+         DUP 3 ;
+         CONS ;
+         DIG 2 ;
+         CONS ;
+         ITER { DUP 3 ; SWAP ; EXEC ; ADD } ;
+         SWAP ;
+         DROP }) |}]
+
+(* Compiling expression with non-tail recursion for rose tree map *)
+let%expect_test _ =
+  run_ligo_good
+    [ "compile"
+    ; "expression"
+    ; "cameligo"
+    ; "sum t"
+    ; "--init-file"
+    ; contract "rose_tree.mligo"
+    ];
+  [%expect {|
+    53 |}]
 
 (* voting power *)
 let%expect_test _ =
@@ -3638,3 +3430,439 @@ let%expect_test _ =
     { parameter unit ;
       storage int ;
       code { DROP ; PUSH int 1 ; NIL operation ; PAIR } } |}]
+
+let%expect_test _ =
+  run_ligo_good
+    [ "compile"; "contract"; contract "entrypoint_in_module.mligo"; "-m"; "C" ];
+  [%expect
+    {|
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+      storage int ;
+      code { UNPAIR ;
+             IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int 0 } ;
+             NIL operation ;
+             PAIR } ;
+      view "foo" int int { UNPAIR ; ADD } } |}]
+
+let%expect_test _ =
+  run_ligo_good
+    [ "compile"
+    ; "contract"
+    ; contract "entrypoint_in_module.mligo"
+    ; "-m"
+    ; "C"
+    ; "-v"
+    ; "bar"
+    ];
+  [%expect
+    {|
+    File "../../test/contracts/entrypoint_in_module.mligo", line 20, characters 14-17:
+     19 |    | Reset         -> 0)
+     20 |   [@view] let foo (i : int) (store : storage) : int = i + store
+     21 |   let bar (i : int) (store : storage) : int = 1 + i + store
+
+    Warning: This view will be ignored, command line option override [
+    view] annotation
+
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+      storage int ;
+      code { UNPAIR ;
+             IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int 0 } ;
+             NIL operation ;
+             PAIR } ;
+      view "bar" int int { UNPAIR ; PUSH int 1 ; ADD ; ADD } } |}]
+
+let%expect_test _ =
+  run_ligo_bad
+    [ "compile"; "contract"; contract "entrypoint_in_module.mligo"; "-m"; "Bar" ];
+  [%expect {|
+    Internal error: Entrypoint main does not exist |}]
+
+let%expect_test _ =
+  run_ligo_bad
+    [ "compile"; "contract"; contract "entrypoint_in_module.mligo"; "-m"; "Barrau" ];
+  [%expect
+    {|
+    An internal error ocurred. Please, contact the developers.
+    Module Barrau not found with last Barrau. |}]
+
+let%expect_test _ =
+  run_ligo_good
+    [ "compile"
+    ; "parameter"
+    ; contract "entrypoint_in_module.mligo"
+    ; "Increment 32"
+    ; "-m"
+    ; "C"
+    ];
+  [%expect {|
+    (Left (Right 32)) |}]
+
+let%expect_test _ =
+  run_ligo_good
+    [ "compile"; "storage"; contract "entrypoint_in_module.mligo"; "5"; "-m"; "C" ];
+  [%expect {|
+    5 |}]
+
+let%expect_test _ =
+  run_ligo_good
+    [ "run"
+    ; "dry-run"
+    ; contract "entrypoint_in_module.mligo"
+    ; "Increment 5"
+    ; "37"
+    ; "-m"
+    ; "C"
+    ];
+  [%expect {|
+    ( LIST_EMPTY() , 42 ) |}]
+
+let%expect_test _ =
+  run_ligo_good
+    [ "compile"; "contract"; contract "entrypoint_in_module.jsligo"; "-m"; "M.C" ];
+  [%expect
+    {|
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+      storage int ;
+      code { UNPAIR ;
+             IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int 0 } ;
+             NIL operation ;
+             PAIR } ;
+      view "foo" int int { UNPAIR ; ADD } } |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "compile"; "contract"; bad_contract "entrypoint_no_type.jsligo" ];
+  [%expect
+    {|
+    File "../../test/contracts/negative/entrypoint_no_type.jsligo", line 8, characters 6-12:
+      7 | // @entry
+      8 | const unique = (_ : organization, _ : storage) => {
+      9 |     return failwith("You need to be part of Tezos organization to activate an organization");
+
+    Invalid type for entrypoint "unique".
+    An entrypoint must of type "parameter * storage -> operation list * storage". |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile"; "contract"; contract "increment_module.jsligo"; "-m"; "C" ];
+  [%expect
+    {|
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+      storage int ;
+      code { UNPAIR ;
+             IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int 0 } ;
+             NIL operation ;
+             PAIR } } |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile"; "contract"; contract "FA1.2.entries.mligo" ];
+  [%expect
+    {|
+    { parameter
+        (or (or (or (pair %approve (address %spender) (nat %value))
+                    (pair %getAllowance
+                       (pair %request (address %owner) (address %spender))
+                       (contract %callback nat)))
+                (or (pair %getBalance (address %owner) (contract %callback nat))
+                    (pair %getTotalSupply (unit %request) (contract %callback nat))))
+            (pair %transfer (address %from) (address %to) (nat %value))) ;
+      storage
+        (pair (pair (big_map %allowances (pair (address %owner) (address %spender)) nat)
+                    (big_map %tokens address nat))
+              (nat %total_supply)) ;
+      code { UNPAIR ;
+             IF_LEFT
+               { IF_LEFT
+                   { IF_LEFT
+                       { DUP 2 ;
+                         CAR ;
+                         CAR ;
+                         DUP 2 ;
+                         CAR ;
+                         SENDER ;
+                         PAIR ;
+                         PUSH nat 0 ;
+                         DUP 4 ;
+                         CDR ;
+                         COMPARE ;
+                         GT ;
+                         PUSH nat 0 ;
+                         DUP 4 ;
+                         DUP 4 ;
+                         GET ;
+                         IF_NONE { PUSH nat 0 } {} ;
+                         COMPARE ;
+                         GT ;
+                         AND ;
+                         IF { PUSH string "UnsafeAllowanceChange" ; FAILWITH } {} ;
+                         DUP 4 ;
+                         DIG 4 ;
+                         CAR ;
+                         DIG 4 ;
+                         CDR ;
+                         DIG 4 ;
+                         PUSH nat 0 ;
+                         DUP 3 ;
+                         COMPARE ;
+                         EQ ;
+                         IF { SWAP ; DROP ; NONE nat } { SWAP ; SOME } ;
+                         DIG 4 ;
+                         UPDATE ;
+                         UPDATE 1 ;
+                         UPDATE 1 ;
+                         NIL operation }
+                       { DUP 2 ;
+                         NIL operation ;
+                         DUP 3 ;
+                         CDR ;
+                         PUSH mutez 0 ;
+                         DIG 5 ;
+                         CAR ;
+                         CAR ;
+                         DIG 5 ;
+                         CAR ;
+                         GET ;
+                         IF_NONE { PUSH nat 0 } {} ;
+                         TRANSFER_TOKENS ;
+                         CONS } }
+                   { IF_LEFT
+                       { DUP 2 ;
+                         NIL operation ;
+                         DUP 3 ;
+                         CDR ;
+                         PUSH mutez 0 ;
+                         DIG 5 ;
+                         CAR ;
+                         CDR ;
+                         DIG 5 ;
+                         CAR ;
+                         GET ;
+                         IF_NONE { PUSH nat 0 } {} ;
+                         TRANSFER_TOKENS }
+                       { DUP 2 ;
+                         NIL operation ;
+                         DIG 2 ;
+                         CDR ;
+                         PUSH mutez 0 ;
+                         DIG 4 ;
+                         CDR ;
+                         TRANSFER_TOKENS } ;
+                     CONS } }
+               { DUP 2 ;
+                 CAR ;
+                 CAR ;
+                 DUP 3 ;
+                 CAR ;
+                 CDR ;
+                 DUP 3 ;
+                 CAR ;
+                 SENDER ;
+                 COMPARE ;
+                 EQ ;
+                 IF { SWAP }
+                    { SENDER ;
+                      DUP 4 ;
+                      CAR ;
+                      PAIR ;
+                      DUP 4 ;
+                      GET 4 ;
+                      DUP 4 ;
+                      DUP 3 ;
+                      GET ;
+                      IF_NONE { PUSH nat 0 } {} ;
+                      SUB ;
+                      ISNAT ;
+                      IF_NONE { PUSH string "NotEnoughAllowance" ; FAILWITH } {} ;
+                      DIG 3 ;
+                      PUSH nat 0 ;
+                      DUP 3 ;
+                      COMPARE ;
+                      EQ ;
+                      IF { SWAP ; DROP ; NONE nat } { SWAP ; SOME } ;
+                      DIG 2 ;
+                      UPDATE } ;
+                 DUP 3 ;
+                 GET 4 ;
+                 DUP 3 ;
+                 DUP 5 ;
+                 CAR ;
+                 GET ;
+                 IF_NONE { PUSH nat 0 } {} ;
+                 SUB ;
+                 ISNAT ;
+                 IF_NONE { PUSH string "NotEnoughBalance" ; FAILWITH } {} ;
+                 DIG 2 ;
+                 PUSH nat 0 ;
+                 DUP 3 ;
+                 COMPARE ;
+                 EQ ;
+                 IF { SWAP ; DROP ; NONE nat } { SWAP ; SOME } ;
+                 DUP 4 ;
+                 CAR ;
+                 UPDATE ;
+                 DUP 3 ;
+                 GET 4 ;
+                 DUP 2 ;
+                 DUP 5 ;
+                 GET 3 ;
+                 GET ;
+                 IF_NONE { PUSH nat 0 } {} ;
+                 ADD ;
+                 DUP 5 ;
+                 DIG 5 ;
+                 CAR ;
+                 DIG 3 ;
+                 PUSH nat 0 ;
+                 DUP 5 ;
+                 COMPARE ;
+                 EQ ;
+                 IF { DIG 3 ; DROP ; NONE nat } { DIG 3 ; SOME } ;
+                 DIG 5 ;
+                 GET 3 ;
+                 UPDATE ;
+                 UPDATE 2 ;
+                 UPDATE 1 ;
+                 DUP ;
+                 CAR ;
+                 DIG 2 ;
+                 UPDATE 1 ;
+                 UPDATE 1 ;
+                 NIL operation } ;
+             PAIR } } |}]
+
+let%expect_test _ =
+  run_ligo_good
+    [ "compile"
+    ; "parameter"
+    ; contract "FA1.2.entries.mligo"
+    ; "Approve { spender = (\"tz1fakefakefakefakefakefakefakcphLA5\" : address) ; value \
+       = 3n }"
+    ];
+  [%expect {|
+    (Left (Left (Left (Pair "tz1fakefakefakefakefakefakefakcphLA5" 3)))) |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile"; "contract"; contract "pokeGame.jsligo" ];
+  [%expect
+    {|
+    { parameter
+        (or (or (pair %init address nat) (unit %poke)) (address %pokeAndGetFeedback)) ;
+      storage
+        (pair (pair (string %feedback)
+                    (map %pokeTraces address (pair (string %feedback) (address %receiver))))
+              (map %ticketOwnership address (ticket string))) ;
+      code { UNPAIR ;
+             IF_LEFT
+               { IF_LEFT
+                   { SWAP ;
+                     UNPAIR ;
+                     UNPAIR ;
+                     PUSH nat 0 ;
+                     DUP 5 ;
+                     CDR ;
+                     COMPARE ;
+                     EQ ;
+                     IF { DIG 3 ; DROP ; DIG 2 }
+                        { DUP 4 ;
+                          CDR ;
+                          PUSH string "can_poke" ;
+                          TICKET ;
+                          IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
+                          DIG 3 ;
+                          SWAP ;
+                          DIG 4 ;
+                          CAR ;
+                          SWAP ;
+                          SOME ;
+                          SWAP ;
+                          UPDATE } ;
+                     DUG 2 ;
+                     PAIR ;
+                     PAIR ;
+                     NIL operation ;
+                     PAIR }
+                   { DROP ;
+                     UNPAIR ;
+                     UNPAIR ;
+                     DIG 2 ;
+                     NONE (ticket string) ;
+                     SOURCE ;
+                     GET_AND_UPDATE ;
+                     IF_NONE
+                       { DROP 3 ;
+                         PUSH string "User does not have tickets => not allowed" ;
+                         FAILWITH }
+                       { DROP ;
+                         DIG 2 ;
+                         SELF_ADDRESS ;
+                         PUSH string "" ;
+                         PAIR ;
+                         SOURCE ;
+                         SWAP ;
+                         SOME ;
+                         SWAP ;
+                         UPDATE ;
+                         DIG 2 ;
+                         PAIR ;
+                         PAIR ;
+                         NIL operation ;
+                         PAIR } } }
+               { SWAP ;
+                 UNPAIR ;
+                 CDR ;
+                 SWAP ;
+                 NONE (ticket string) ;
+                 SOURCE ;
+                 GET_AND_UPDATE ;
+                 DUP 4 ;
+                 UNIT ;
+                 VIEW "feedback" string ;
+                 SWAP ;
+                 IF_NONE
+                   { DROP 4 ;
+                     PUSH string "User does not have tickets => not allowed" ;
+                     FAILWITH }
+                   { DROP ;
+                     IF_NONE
+                       { DROP 3 ;
+                         PUSH string "Cannot find view feedback on given oracle address" ;
+                         FAILWITH }
+                       { SWAP ;
+                         DIG 2 ;
+                         DIG 3 ;
+                         DUP 4 ;
+                         PAIR ;
+                         SOURCE ;
+                         SWAP ;
+                         SOME ;
+                         SWAP ;
+                         UPDATE ;
+                         DIG 2 ;
+                         PAIR ;
+                         PAIR ;
+                         NIL operation ;
+                         PAIR } } } } ;
+      view "feedback" unit string { CDR ; CAR ; CAR } } |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile"; "parameter"; contract "pokeGame.jsligo"; "Poke()" ];
+  [%expect {|
+    (Left (Right Unit)) |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile"; "contract"; contract "contract_of.jsligo" ];
+  [%expect
+    {|
+    { parameter int ;
+      storage int ;
+      code { UNPAIR ; ADD ; NIL operation ; PAIR } } |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile"; "contract"; contract "entries_in_module.mligo"; "-m"; "C" ];
+  [%expect
+    {|
+    { parameter (or (or (int %add) (unit %reset)) (int %sub)) ;
+      storage int ;
+      code { UNPAIR ;
+             IF_LEFT { IF_LEFT { ADD } { DROP 2 ; PUSH int 0 } } { SWAP ; SUB } ;
+             NIL operation ;
+             PAIR } } |}]

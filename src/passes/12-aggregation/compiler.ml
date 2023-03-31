@@ -279,8 +279,9 @@ let push_pattern_in_scope scope pattern attributes path =
 
 
 let compile_value_attr : I.ValueAttr.t -> O.ValueAttr.t =
- fun { inline; no_mutation; view; public; hidden; thunk } ->
-  { inline; no_mutation; view; public; hidden; thunk }
+ fun { inline; no_mutation; view; public; hidden; thunk; entry } ->
+  { inline; no_mutation; view; public; hidden; thunk; entry }
+
 
 (* this is doing nothing *)
 let rec compile_type_expression ~raise path scope (type_expression : I.type_expression)
@@ -354,14 +355,17 @@ let rec compile_expression ~raise path scope (expr : I.expression) =
     let scope = Scope.push_local_type scope type_binder in
     let result = self ~scope result in
     return @@ E_type_abstraction { type_binder; result }
-  | E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } } ->
+  | E_recursive
+      { fun_name; fun_type; lambda = { binder; output_type; result }; force_lambdarec } ->
     let fun_type = self_type fun_type in
     let binder = Param.map self_type binder in
     let scope = Scope.push_func_or_case_binder scope @@ Param.get_var binder in
     let scope = Scope.push_func_or_case_binder scope fun_name in
     let output_type = self_type output_type in
     let result = self ~scope result in
-    return @@ E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } }
+    return
+    @@ E_recursive
+         { fun_name; fun_type; lambda = { binder; output_type; result }; force_lambdarec }
   | E_let_in { let_binder; rhs; let_result; attributes } ->
     let let_binder = I.Pattern.map self_type let_binder in
     let rhs = self rhs in
@@ -552,7 +556,7 @@ and compile_module_expr ~raise ?(module_attr = { public = true; hidden = false }
     : Path.t -> Scope.t -> I.module_expr -> Scope.t * O.context
   =
  fun path scope mexpr ->
-  let loc = mexpr.location in
+  let loc = mexpr.module_location in
   let rec get_declarations_from_scope scope new_path old_path =
     let dcls = Scope.get_declarations scope in
     let module_ =
@@ -582,7 +586,7 @@ and compile_module_expr ~raise ?(module_attr = { public = true; hidden = false }
   let super_attr : O.ModuleAttr.t =
     { public = module_attr.public; hidden = module_attr.hidden }
   in
-  match mexpr.wrap_content with
+  match mexpr.module_content with
   | M_struct m ->
     (* Keep the scope of identifiers be start with an empty list of declaration (corresponding to this module) *)
     let scope = Scope.clean_declarations scope in

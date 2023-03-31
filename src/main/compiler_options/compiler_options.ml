@@ -8,10 +8,12 @@ module Raw_options = Raw_options
 type frontend =
   { syntax : Syntax_types.t option
   ; (* dialect : string ; [@dead "frontend.dialect"]  *)
-    entry_point : string
+    entry_point : string list
+  ; module_ : string
   ; libraries : string list
   ; project_root : string option
   ; no_colour : bool
+  ; transpiled : bool
   }
 
 type tools =
@@ -34,6 +36,7 @@ type middle_end =
   ; no_stdlib : bool
   ; syntax_for_errors : Syntax_types.t option
   ; no_colour : bool
+  ; transpiled : bool
   }
 
 type backend =
@@ -52,18 +55,21 @@ type backend =
   ; no_colour : bool
   }
 
+type common = { deprecated : bool }
+
 type t =
   { frontend : frontend
   ; tools : tools
   ; test_framework : test_framework
   ; middle_end : middle_end
   ; backend : backend
+  ; common : common
   }
 
 let warn_unused_rec ~syntax should_warn =
   match syntax with
   | Some Syntax_types.JsLIGO -> false
-  | Some CameLIGO | None -> should_warn
+  | Some CameLIGO | Some PascaLIGO | None -> should_warn
 
 
 let make
@@ -79,8 +85,10 @@ let make
     { syntax
     ; libraries = raw_options.libraries
     ; entry_point = raw_options.entry_point
+    ; module_ = raw_options.module_
     ; project_root = raw_options.project_root
     ; no_colour = raw_options.no_colour
+    ; transpiled = raw_options.transpiled
     }
   in
   let tools =
@@ -103,6 +111,7 @@ let make
     ; no_stdlib = raw_options.no_stdlib
     ; syntax_for_errors = syntax
     ; no_colour = raw_options.no_colour
+    ; transpiled = raw_options.transpiled
     }
   in
   let backend =
@@ -119,7 +128,8 @@ let make
     ; no_colour = raw_options.no_colour
     }
   in
-  { frontend; tools; test_framework; middle_end; backend }
+  let common = { deprecated = raw_options.deprecated } in
+  { frontend; tools; test_framework; middle_end; backend; common }
 
 
 let set_init_env opts init_env =

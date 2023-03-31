@@ -11,6 +11,7 @@ stages:
   - tools-build                     # build projects from 'tools'
   - tools-check                     # run tests for projects from 'tools'
   - tooling                         # build miscellaneous tooling-related things (website, changelog..)
+  - test                            # e2e tests
   - push                            # deploy docker images, pages, releases (tag)
   - deploy                          # deploy web IDE, website preview
   - release                         # Manage branch matching ^release/*
@@ -28,6 +29,8 @@ include:
   - '/.ci/.gitlab-ci-lsp.yml'
   - '/.ci/.gitlab-ci-debugger.yml'
   - '/.ci/.gitlab-ci-webide-new.yml'
+  # CI manage notification
+  - '/.ci/.gitlab-ci-notify.yml'
 .submodule-clone:
   before_script:
     - git submodule sync --recursive
@@ -44,7 +47,7 @@ changelog:
   script:
     - ./scripts/changelog-generation.sh
   rules:
-    - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "ligolang/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
       when: always
     - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
       when: always
@@ -75,7 +78,7 @@ docker_build:
   extends: .submodule-clone
   stage: build
   rules:
-    - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "ligolang/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
       when: always
     - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
       when: always
@@ -87,24 +90,38 @@ docker_build:
     - job: changelog
       artifacts: true
   script:
+    # Because JSOO artifacts are only present in ligo-builder stage.
+    # ligo-builder stage is discarded during the creation of ligo image for consumers
+    # so that we can offer them a leaner image with just necessary ligo tools
+    - DOCKER_BUILDKIT=1 docker build .
+      --build-arg=ci_commit_tag=$CI_COMMIT_TAG
+      --build-arg=ci_commit_sha=$CI_COMMIT_SHA
+      --build-arg=ci_commit_timestamp=$CI_COMMIT_TIMESTAMP
+      --build-arg=changelog_path=changelog.txt
+      --target ligo-builder
+      -t ${LIGO_IMAGE_TAG}-builder
     - DOCKER_BUILDKIT=1 docker build .
       --build-arg=ci_commit_tag=$CI_COMMIT_TAG
       --build-arg=ci_commit_sha=$CI_COMMIT_SHA
       --build-arg=ci_commit_timestamp=$CI_COMMIT_TIMESTAMP
       --build-arg=changelog_path=changelog.txt
       -t ${LIGO_IMAGE_TAG}
+    # Copy JSOO PoC IDE
+    - docker cp $(docker create ${LIGO_IMAGE_TAG}-builder):/ligo/npm ./ligo-npm
+    - docker cp $(docker create ${LIGO_IMAGE_TAG}-builder):/ligo/jsoo/dist ./ligo-demo-ide
     - docker save -o ligo.tar.gz ${LIGO_IMAGE_TAG}
   after_script:
     - docker image rm "${LIGO_IMAGE_TAG}" >/dev/null 2>&1 || true
   artifacts:
     expose_as: "Ligo docker image - light -"
     paths:
+      - ligo-npm
+      - ligo-demo-ide
       - ligo.tar.gz
-
 docker_extract:
   stage: docker-extract
   rules:
-    - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "ligolang/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
       when: always
     - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
       when: always
@@ -146,7 +163,7 @@ check-generated-highlighting:
     - scripts/diff_dir.sh highlighting/vim/ftdetect tools/vim/ligo/start/ligo/ftdetect
     - scripts/diff_dir.sh highlighting/vim/plugin tools/vim/ligo/start/ligo/plugin
     - scripts/diff_dir.sh highlighting/vim/syntax tools/vim/ligo/start/ligo/syntax
-    - scripts/diff_dir.sh highlighting/vscode tools/lsp/vscode-plugin/syntaxes
+    - scripts/diff_dir.sh highlighting/vscode tools/vscode/syntaxes
     - scripts/diff_dir.sh highlighting/textmate tools/ligo-syntax-highlighting/textmate
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -260,7 +277,7 @@ algolia-crawl:
   script:
     # We want to trigger the job after page:deploy to reindex the website but job can't depends on page:deploy. So we put a artificial sleep of 10 seconds before triggering algolia crawler to be sure that it'll works
     - |
-      sleep 10
+      sleep 20
       curl -X post  -H "Content-Type: application/json" --user ${ALGOLIA_CRAWLER_ID}:${ALGOLIA_CRAWLER_TOKEN} https://crawler.algolia.com/api/1/crawlers/bb0597ba-5abc-45ba-bdf9-99f8152e87b0/reindex
   rules:
     - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'

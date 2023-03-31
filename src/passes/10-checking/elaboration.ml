@@ -79,7 +79,9 @@ and decode_layout
     | None ->
       let default_layout_from_field_set fields =
         O.default_layout
-          (fields |> Set.to_list |> List.map ~f:(fun name -> { Layout.name; annot = None }))
+          (fields
+          |> Set.to_list
+          |> List.map ~f:(fun name -> { Layout.name; annot = None }))
       in
       default_layout_from_field_set (Map.key_set fields))
 
@@ -101,6 +103,21 @@ let decode type_ ~raise subst =
            (if (* pick the best location! *) Location.is_dummy_or_generated loc
            then type_.location
            else loc)))
+
+
+let decode_attribute (attr : Context.Attr.t) : O.sig_item_attribute =
+  { entry = attr.entry; view = attr.view }
+
+
+let rec decode_signature (sig_ : Context.Signature.t) ~raise subst : O.signature =
+  let decode_item (item : Context.Signature.item) : O.sig_item =
+    match item with
+    | S_value (var, type_, attr) ->
+      S_value (var, decode ~raise type_ subst, decode_attribute attr)
+    | S_type (var, type_) -> S_type (var, decode ~raise type_ subst)
+    | S_module (var, sig_) -> S_module (var, decode_signature ~raise sig_ subst)
+  in
+  List.map ~f:decode_item sig_
 
 
 let check_anomalies ~syntax ~loc eqs matchee_type ~raise _subst =

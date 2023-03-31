@@ -105,6 +105,7 @@ module Fold_helpers (M : Monad) = struct
       in
       let* t = bind_map_npseq obj t in
       return @@ TDisc t
+    | TParameter { value; region } -> return @@ TParameter { value; region }
     | (TVar _ | TModA _ | TInt _ | TString _) as e -> ok e
 
 
@@ -161,7 +162,14 @@ module Fold_helpers (M : Monad) = struct
       in
       let* lhs_type = bind_map_option map_lhs_type value.lhs_type in
       let* body = map_fun_expr_body value.body in
-      let value = { parameters; lhs_type; arrow = value.arrow; body } in
+      let value =
+        { parameters
+        ; lhs_type
+        ; arrow = value.arrow
+        ; body
+        ; type_params = value.type_params
+        }
+      in
       return @@ EFun { value; region }
     | EPar { value; region } ->
       let* inside = self value.inside in
@@ -305,6 +313,7 @@ module Fold_helpers (M : Monad) = struct
       let* truthy = self value.truthy in
       let* falsy = self value.falsy in
       return @@ ETernary { value = { value with condition; truthy; falsy }; region }
+    | EContract { value; region } -> return @@ EContract { value; region }
 
 
   and map_statement : mapper -> statement -> statement monad =
@@ -317,11 +326,11 @@ module Fold_helpers (M : Monad) = struct
     | SBlock { value; region } ->
       let* inside = bind_map_npseq self value.inside in
       return @@ SBlock { value = { value with inside }; region }
-    | SExpr e ->
+    | SExpr (attributes, e) ->
       let* e = self_expr e in
-      return @@ SExpr e
+      return @@ SExpr (attributes, e)
     | SCond { value; region } ->
-      let { kwd_if; test = { inside; lpar; rpar }; ifso; ifnot } = value in
+      let { attributes; kwd_if; test = { inside; lpar; rpar }; ifso; ifnot } = value in
       let* inside = self_expr inside in
       let* ifso = self ifso in
       let map_ifnot (else_, statement) =
@@ -329,7 +338,7 @@ module Fold_helpers (M : Monad) = struct
         ok (else_, statement)
       in
       let* ifnot = bind_map_option map_ifnot ifnot in
-      let value = { kwd_if; test = { inside; lpar; rpar }; ifso; ifnot } in
+      let value = { attributes; kwd_if; test = { inside; lpar; rpar }; ifso; ifnot } in
       return @@ SCond { value; region }
     | SReturn { value = { kwd_return; expr }; region } ->
       let* expr = bind_map_option self_expr expr in

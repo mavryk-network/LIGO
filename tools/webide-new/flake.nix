@@ -76,7 +76,6 @@
                   --octez-client-path ${webide-cfg.tezos-client-package}/bin/octez-client \
                   --gist-token "$(cat ${webide-cfg.gist-token})"
               '';
-
           };
 
           services.nginx = {
@@ -132,10 +131,10 @@
         localSystem = system;
       };
       ligo-binary = {
-        # ligo 0.60.0
-        "x86_64-linux" = { url = "https://gitlab.com/ligolang/ligo/-/jobs/3625997367/artifacts/raw/ligo"; hash = "sha256-VqSUW3kELXiGId+YpygeU0HRCn6pCh8uJa9pYmjN4lc="; };
+        # ligo 0.62.0
+        "x86_64-linux" = { url = "https://gitlab.com/ligolang/ligo/-/jobs/3942174485/artifacts/raw/ligo"; hash = "sha256-sBNzotk6RNyoOEQDSr1BpVG3XIFL16u9M6GL6NEtACw="; };
       };
-      ligo-syntaxes = pkgs.callPackage ../lsp/vscode-plugin/syntaxes {};
+      ligo-syntaxes = pkgs.callPackage ../vscode/syntaxes {};
       tezos-client = inputs.tezos-packaging.packages.${system}.tezos-client;
       frontend = (pkgs.callPackage ./ligo-webide-frontend/ligo-ide { inherit ligo-syntaxes; }) { git-proxy = "https://ligo-webide-cors-proxy.serokell.team"; };
       backend = haskellPkgs.callPackage ./ligo-webide-backend { };

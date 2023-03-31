@@ -1,6 +1,6 @@
 {
   "name": "ligolang",
-  "version": "0.60.0-dev",
+  "version": "0.64.0-dev",
   "repository": {
     "type": "git",
     "url": "https://gitlab.com/ligolang/ligo.git"
@@ -25,10 +25,11 @@
   "source": "./ligo.opam",
   "override": {
     "build": [
-      "dune build -p ligo"
+      "dune build -p ligo",
+      "chmod -R a+w #{self.target_dir}"
     ],
     "buildEnv": {
-      "LIGO_VERSION": "0.60.0",
+      "LIGO_VERSION": "0.64.1",
       "OPAM_SWITCH_PREFIX": "#{ @opam/tezos-rust-libs.install }"
     },
     "exportedEnv": {
@@ -48,7 +49,7 @@
     "license": "MIT",
     "dependencies": {
       "@opam/hacl-star-raw": "*",
-      "@opam/tezos-rust-libs": "*",
+      "@opam/tezos-rust-libs": "1.1",
       "esy-libev": "*",
       "@opam/tezos-base": "*",
       "@opam/tezos-micheline": "*",
@@ -406,7 +407,14 @@
       "@opam/linol": "c-cube/linol:linol.opam#5a29a9e1456a431122c51f44bc10c51f46f8d592",
       "@opam/linol-lwt": "c-cube/linol:linol-lwt.opam#5a29a9e1456a431122c51f44bc10c51f46f8d592",
       "@opam/ordering": "opam:3.5.0",
-      "@opam/dyn": "opam:3.5.0"
+      "@opam/dyn": "opam:3.5.0",
+      "@opam/js_of_ocaml": "opam:5.0.1",
+      "@opam/js_of_ocaml-compiler": "opam:5.0.1",
+      "@opam/js_of_ocaml-ppx": "opam:5.0.1",
+      "@opam/js_of_ocaml-lwt": "opam:5.0.1",
+      "@opam/menhir": "opam:20220210",
+      "@opam/menhirLib": "opam:20220210",
+      "@opam/menhirSdk": "opam:20220210"
     }
   }
 }

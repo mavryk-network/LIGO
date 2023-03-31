@@ -27,6 +27,8 @@ export function changeLastContractPath(newPath: string) {
 
 function extToDialect(ext: string) {
   switch (ext) {
+    case '.pligo':
+    case '.ligo': return 'pascaligo'
     case '.mligo': return 'cameligo'
     case '.jsligo': return 'jsligo'
     default:
@@ -124,8 +126,13 @@ export async function executeCommand(
       throw new ex.UserInterruptionException()
     }
 
+    // FIXME (#1657): Use the code below when we support getting the index
+    // directory and use the propery `indexDirectory` for the `cwd`.
+    /*
     const requestType = new RequestType<null, string | null, void>('indexDirectory')
     const indexDirectory: string | null = await client.sendRequest(requestType, null)
+    */
+    const indexDirectory: string | null = null
     const result = execFileSync(ligoPath, finalCommand, { cwd: indexDirectory }).toString()
 
     if (showOutput) {

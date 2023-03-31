@@ -53,8 +53,8 @@ and pp_let_decl {value; _} =
                 else pp_attributes attr ^/^ let_str
   in let_str ^^ pp_let_binding binding
 
-and pp_attribute (node : Attr.t reg) =
-  let key, val_opt = node.value in
+and pp_attribute (node : Attr.t wrap) =
+  let key, val_opt = node#payload in
   let thread = string "[@" ^^ string key in
   let thread = match val_opt with
                  Some (String value | Ident value) ->
@@ -187,10 +187,6 @@ and pp_module_alias decl =
   string "module " ^^ pp_ident alias ^^ string " ="
   ^^ group (nest 0 (break 1 ^^ pp_nsepseq "." pp_ident binders))
 
-and pp_assign assign = 
-  let {binder; ass = _; expr} = assign.value in
-  prefix 2 1 (pp_ident binder ^^ string " :=") (pp_expr expr) 
-
 and pp_expr = function
   ECase       e -> pp_case_expr e
 | ECond       e -> group (pp_cond_expr e)
@@ -211,7 +207,6 @@ and pp_expr = function
 | ETuple      e -> pp_tuple_expr e
 | EPar        e -> pp_par_expr e
 | ELetIn      e -> pp_let_in e
-| ELetMutIn   e -> pp_let_mut_in e
 | ETypeIn     e -> pp_type_in e
 | EModIn      e -> pp_mod_in e
 | EModAlias   e -> pp_mod_alias e
@@ -219,57 +214,12 @@ and pp_expr = function
 | ESeq        e -> pp_seq e
 | ECodeInj    e -> pp_code_inj e
 | ERevApp     e -> pp_rev_app e
-| EAssign     e -> pp_assign e
-| EFor        e -> pp_for_loop e
-| EForIn      e -> pp_for_in_loop e
-| EWhile      e -> pp_while_loop e
+| EContract   e -> pp_contract e
 
-and pp_direction = function
-  | To _ -> string "to"
-  | Downto _ -> string "downto"
-
-and pp_index index = pp_pvar index
-
-and pp_loop_body { kwd_do = _; seq_expr; kwd_done = _ } =
-  let seq_expr =
-    match seq_expr with
-    | Some exprs ->
-        separate_map
-          (string ";" ^^ hardline)
-          pp_expr
-          (Utils.nsepseq_to_list exprs)
-    | None -> empty
-  in
-  string "do" 
-  ^^ nest 2 (hardline ^^ seq_expr) ^^ hardline 
-  ^^ string "done"
-
-
-and pp_for_loop {value; _} =
-  string "for " 
-  ^^ pp_index value.index
-  ^^ string " = "
-  ^^ pp_expr value.bound1
-  ^^ space
-  ^^ pp_direction value.direction
-  ^^ space
-  ^^ pp_expr value.bound2
-  ^^ space
-  ^^ pp_loop_body value.body
-
-and pp_for_in_loop {value; _} = 
-  string "for "
-  ^^ pp_pattern value.pattern
-  ^^ string " in "
-  ^^ pp_expr value.collection
-  ^^ space
-  ^^ pp_loop_body value.body
-
-and pp_while_loop {value; _} = 
-  string "while " 
-  ^^ pp_expr value.cond
-  ^^ space
-  ^^ pp_loop_body value.body
+and pp_contract {value; _} =
+  string "(contract_of "
+  ^^ group (nest 0 (break 1 ^^ pp_nsepseq "." pp_ident value))
+  ^^ string ")"
 
 and pp_rev_app e = pp_bin_op "|>" e
 
@@ -442,7 +392,7 @@ and pp_update {value; _} =
 
 and pp_code_inj {value; _} =
   let {language; code; _} = value in
-  let language = string language.value.value
+  let language = string language#payload.value
   and code     = pp_expr code in
   string "[%" ^^ language ^/^ code ^^ string "]"
 
@@ -486,19 +436,6 @@ and pp_let_in {value; _} =
                 else pp_attributes attr ^/^ let_str
   in let_str ^^ pp_let_binding binding
      ^^ string " in" ^^ hardline ^^ group (pp_expr body)
-
-and pp_let_mut_in {value; _} =
-  let {binding; body; attributes=attr; kwd_mut = _; _} = value in
-  let let_str = string "let mut " in
-  let let_str = 
-    if List.is_empty attr then let_str 
-    else pp_attributes attr ^/^ let_str
-  in
-  let_str 
-  ^^ pp_let_binding binding 
-  ^^ string " in" 
-  ^^ hardline 
-  ^^ group (pp_expr body)
 
 and pp_type_in {value; _} =
   let {type_decl; body; _} = value in
@@ -550,6 +487,11 @@ and pp_seq {value; _} =
      ^^ nest 2 (hardline ^^ elements) ^^ hardline
      ^^ string closing
 
+and pp_parameter {value; _} =
+  string "(parameter_of "
+  ^^ group (nest 0 (break 1 ^^ pp_nsepseq "." pp_ident value))
+  ^^ string ")"
+
 and pp_type_expr = function
   TProd t    -> pp_cartesian t
 | TSum t     -> pp_sum_type t
@@ -562,6 +504,7 @@ and pp_type_expr = function
 | TInt i     -> pp_int i
 | TModA t    -> pp_module_access pp_type_expr t
 | TArg t     -> pp_quoted_param t
+| TParameter t -> pp_parameter t
 
 and pp_quoted_param param =
   let quoted = {param with value = "'" ^ param.value.name.value}

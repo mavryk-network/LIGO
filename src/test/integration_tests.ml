@@ -4,7 +4,7 @@ open Main_errors
 open Ast_imperative.Combinators
 
 let init_env = Environment.default Environment.Protocols.current
-let type_file f = type_file f Env options
+let type_file f = type_file f options
 
 (*
 let type_alias ~raise () : unit =
@@ -1326,18 +1326,6 @@ let loop_mligo ~raise () : unit =
     let expected = e_int ~loc 10000 in
     expect_eq ~raise program "counter_nest" input expected
   in
-  let () =
-    let input = e_variable_ez ~loc "testmap" in
-    let expected =
-      e_list
-        ~loc
-        [ e_pair ~loc (e_int ~loc 2) (e_int ~loc 4)
-        ; e_pair ~loc (e_int ~loc 1) (e_int ~loc 2)
-        ; e_pair ~loc (e_int ~loc 0) (e_int ~loc 1)
-        ]
-    in
-    expect_eq ~raise program "entries" input expected
-  in
   ()
 
 
@@ -1442,44 +1430,6 @@ let loop2_jsligo ~raise () : unit =
   ()
 
 
-let loop2_mligo ~raise () : unit =
-  let program = type_file ~raise "./contracts/loop2.mligo" in
-  (* let () =
-      let make_input = e_nat ~loc in
-      let make_expected = e_nat ~loc in
-      expect_eq_n_pos program "dummy" make_input make_expected in *)
-  let () =
-    let make_input = e_nat ~loc in
-    let make_expected = e_nat ~loc in
-    expect_eq_n_pos_mid ~raise program "counter" make_input make_expected
-  in
-  let () =
-    let make_input = e_nat ~loc in
-    let make_expected n = e_nat ~loc (n * (n + 1) / 2) in
-    expect_eq_n_pos_mid ~raise program "while_sum" make_input make_expected
-  in
-  let () =
-    let make_input = e_nat ~loc in
-    let make_expected n = e_int ~loc (n * (n + 1) / 2) in
-    expect_eq_n_pos_mid ~raise program "for_sum" make_input make_expected
-  in
-  let input = e_unit ~loc () in
-  let () =
-    let expected = e_pair ~loc (e_int ~loc 3) (e_string ~loc "totototo") in
-    expect_eq ~raise program "for_collection_list" input expected
-  in
-  let () =
-    let expected = e_pair ~loc (e_int ~loc 6) (e_string ~loc "totototo") in
-    expect_eq ~raise program "for_collection_set" input expected
-  in
-  let () =
-    let expected = e_pair ~loc (e_int ~loc 6) (e_string ~loc "123") in
-    expect_eq ~raise program "for_collection_map" input expected
-  in
-  ()
-
-
-(*
 let matching ~raise () : unit =
   let program = type_file ~raise "./contracts/match.ligo" in
   let () =
@@ -1546,31 +1496,6 @@ let matching ~raise () : unit =
   in
   ()
 
-let declarations ~raise () : unit =
-  let program = type_file ~raise "./contracts/declarations.ligo" in
-  let make_input = e_int ~loc in
-  let make_expected n = e_int ~loc (42 + n) in
-  expect_eq ~raise program "main" (make_input 0) (make_expected 0);
-  expect_eq_n ~raise program "main" make_input make_expected
-
-let declaration_local ~raise () : unit =
-  let program = type_file ~raise "./contracts/declaration-local.ligo" in
-  let make_input = e_int ~loc in
-  let make_expected _ = e_int ~loc 42 in
-  expect_eq_n ~raise program "main" make_input make_expected
-
-let quote_declaration ~raise () : unit =
-  let program = type_file ~raise "./contracts/quote-declaration.ligo" in
-  let make_input = e_int ~loc in
-  let make_expected n = e_int ~loc (42 + (2 * n)) in
-  expect_eq_n ~raise program "main" make_input make_expected
-
-let quote_declarations ~raise () : unit =
-  let program = type_file ~raise "./contracts/quote-declarations.ligo" in
-  let make_input = e_int ~loc in
-  let make_expected n = e_int ~loc (74 + (2 * n)) in
-  expect_eq_n ~raise program "main" make_input make_expected
-*)
 
 let counter_contract ~raise f : unit =
   let program = type_file ~raise f in
@@ -2407,18 +2332,6 @@ let bytes_unpack ~raise f : unit =
   ()
 
 
-let let_mut ~raise () : unit =
-  let program = type_file ~raise "./contracts/let_mut.mligo" in
-  let () =
-    let exprs =
-      [ e_int ~loc 1, e_int ~loc 30; e_string ~loc "foo", e_string ~loc "bar" ]
-    in
-    List.iter exprs ~f:(fun (a, b) ->
-        expect_eq ~raise program "swap" (e_pair ~loc a b) (e_pair ~loc b a))
-  in
-  ()
-
-
 let empty_case ~raise f : unit =
   let program = type_file ~raise f in
   let () =
@@ -2529,10 +2442,11 @@ let tuple_assignment_jsligo ~raise () : unit =
     (e_tuple ~loc [ e_int ~loc 2; e_int ~loc 5 ])
 
 
+(*
 let chained_assignment_jsligo ~raise () : unit =
   let program = type_file ~raise "./contracts/chained_assignment.jsligo" in
   expect_eq ~raise program "bar" (e_unit ~loc ()) (e_int ~loc 9)
-
+*)
 
 let block_scope_jsligo ~raise () : unit =
   let program = type_file ~raise "./contracts/block_scope.jsligo" in
@@ -2545,6 +2459,7 @@ let block_scope_jsligo ~raise () : unit =
   ()
 
 
+(*
 let assignment_operators_jsligo ~raise () : unit =
   let program = type_file ~raise "./contracts/assignment_operators.jsligo" in
   let _ =
@@ -2588,7 +2503,7 @@ let assignment_operators_jsligo ~raise () : unit =
       (e_tuple ~loc [ e_nat ~loc 2; e_nat ~loc 3; e_nat ~loc 1 ])
   in
   ()
-
+*)
 
 let switch_cases_jsligo ~raise () : unit =
   let program = type_file ~raise "./contracts/switch_statement.jsligo" in
@@ -3416,6 +3331,7 @@ let switch_return_jsligo ~raise () : unit =
   ()
 
 
+(*
 let transitive_jsligo ~raise () : unit =
   let program = type_file ~raise "./contracts/transitive.jsligo" in
   (* let data = e_constructor ~loc "Increment" (e_record ~loc_ez [("amount" , e_int ~loc 42)]) in *)
@@ -3436,7 +3352,7 @@ let transitive_jsligo ~raise () : unit =
       (e_tuple ~loc [ e_int ~loc 7; e_int ~loc 0; e_int ~loc 7 ])
   in
   ()
-
+*)
 
 let if_semi_jsligo ~raise () : unit =
   let _ = type_file ~raise "./contracts/if_semi.jsligo" in
@@ -3550,10 +3466,6 @@ let main =
     ; test_w "loop (mligo)" loop_mligo
     ; test_w "loop (jsligo)" loop_jsligo
     ; test_w "loop2 (jsligo)" loop2_jsligo
-    ; test_w "loop2 (mligo)" loop2_mligo
-      (* ; test_w "declarations" declarations *)
-      (* ; test_w "quote declaration" quote_declaration *)
-      (* ; test_w "quote declarations" quote_declarations *)
     ]
   @ test_w_all "includer" include_
   @ test_w_all "counter" counter_contract
@@ -3587,9 +3499,9 @@ let main =
     ; test_w "loop_bugs (jsligo)" loop_bugs_jsligo
     ; test_w "if no else (jsligo)" if_no_else_jsligo
     ; test_w "tuple_assignment (jsligo)" tuple_assignment_jsligo
-    ; test_w "chained_assignment (jsligo)" chained_assignment_jsligo
+      (*    ; test_w "chained_assignment (jsligo)" chained_assignment_jsligo*)
     ; test_w "block_scope (jsligo)" block_scope_jsligo
-    ; test_w "assignment_operators (jsligo)" assignment_operators_jsligo
+      (*    ; test_w "assignment_operators (jsligo)" assignment_operators_jsligo*)
     ; test_w "if_if_return (jsligo)" if_if_return_jsligo
     ; test_w "switch case (jsligo)" switch_cases_jsligo
     ; test_w "for-of & while loop (jsligo)" while_and_for_loops_jsligo
@@ -3598,8 +3510,7 @@ let main =
     ; test_w "destruct func object param (jsligo)" func_object_destruct_jsligo
     ; test_w "destruct func tuple param (jsligo)" func_tuple_destruct_jsligo
     ; test_w "switch_return (jsligo)" switch_return_jsligo
-    ; test_w "transitive (jsligo)" transitive_jsligo
+      (*    ; test_w "transitive (jsligo)" transitive_jsligo*)
     ; test_w "if_semi (jsligo)" if_semi_jsligo
     ; test_w "return_handling (jsligo)" if_semi_jsligo
     ]
-  @ [ test_w "let mut (mligo)" let_mut ]

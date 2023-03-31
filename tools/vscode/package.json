@@ -3,7 +3,7 @@
     "description": "LIGO VSCode extension includes syntax highlighting, and a language server for LIGO.",
     "author": "Serokell",
     "license": "MIT",
-    "version": "0.4.30",
+    "version": "0.5.0",
     "repository": {
         "type": "git",
         "url": "https://gitlab.com/ligolang/ligo"
@@ -17,6 +17,7 @@
         "vscode": "^1.57.0"
     },
     "activationEvents": [
+        "onLanguage:ligo",
         "onLanguage:mligo",
         "onLanguage:jsligo"
     ],
@@ -24,6 +25,21 @@
     "main": "./client/out/extension",
     "contributes": {
         "languages": [
+            {
+                "id": "ligo",
+                "aliases": [
+                    "PascaLIGO"
+                ],
+                "extensions": [
+                    ".ligo",
+                    ".pligo"
+                ],
+                "icon": {
+                    "light": "logo.png",
+                    "dark": "logo.png"
+                },
+                "configuration": "./syntaxes/ligo.configuration.json"
+            },
             {
                 "id": "mligo",
                 "aliases": [
@@ -55,6 +71,11 @@
         ],
         "grammars": [
             {
+                "language": "ligo",
+                "scopeName": "source.ligo",
+                "path": "./syntaxes/ligo.tmLanguage.json"
+            },
+            {
                 "language": "mligo",
                 "scopeName": "source.mligo",
                 "path": "./syntaxes/mligo.tmLanguage.json"
@@ -73,17 +94,7 @@
                     "scope": "resource",
                     "type": "number",
                     "default": 100,
-                    "description": "Controls the maximum number of problems produced by the server."
-                },
-                "ligoLanguageServer.scopingSystem": {
-                    "scope": "resource",
-                    "type": "string",
-                    "enum": [
-                        "Fallback",
-                        "Standard"
-                    ],
-                    "default": "Fallback",
-                    "markdownDescription": "Scoping system. `Standard` means scopes from ligo compiler are used."
+                    "description": "Controls the maximum number of diagnostics produced by the server per file."
                 },
                 "ligoLanguageServer.ligoBinaryPath": {
                     "scope": "resource",
@@ -91,17 +102,29 @@
                     "default": "ligo",
                     "description": "Path to the ligo binary, default one is extracted from $PATH variable."
                 },
-                "ligoLanguageServer.disabledFeatures": {
-                    "scope": "resource",
-                    "type": "array",
-                    "default": [],
-                    "markdownDescription": "Disable specific LIGO LSP features. For a list of features, see [the README.md](https://gitlab.com/serokell/ligo/ligo/-/blob/tooling/tools/lsp/vscode-plugin/README.md)."
-                },
                 "ligoLanguageServer.tezos_source_account": {
                     "scope": "resource",
                     "type": "string",
                     "default": "baker",
                     "description": "Account for originating contracts from. It should contain enough money for origination"
+                },
+                "ligoLanguageServer.deprecated": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable support for compiling and deploying contracts written in the deprecated PascaLIGO syntax."
+                },
+                "ligoLanguageServer.loggingVerbosity": {
+                    "scope": "resource",
+                    "type": "string",
+                    "enum": [
+                        "error",
+                        "warning",
+                        "info",
+                        "log"
+                    ],
+                    "default": "info",
+                    "description": "The verbosity of logging. Error will show only errors, warning will show errors and warnings, and so on."
                 }
             }
         },

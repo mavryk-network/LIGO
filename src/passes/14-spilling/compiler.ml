@@ -91,6 +91,16 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
       let t' = compile_type t in
       return (T_set t')
     (* External types are allowed (since they're fully resolved) *)
+    | (External "map_find_opt", [ _ ; param2 ]) ->
+      (match (compile_type param2).type_content with
+      | T_big_map (_, v) | T_map (_, v) -> return (T_option v)
+      | _ -> raise.error (corner_case ~loc:__LOC__ "invalid external_map_find_opt application"))
+    | (External "map_add", [ _ ; _; param3 ]) -> return (compile_type param3).type_content
+    | (External "map_remove", [ _ ; param2 ]) -> return (compile_type param2).type_content
+    | (External "map_remove_value", [ _ ; param2 ]) ->
+      (match (compile_type param2).type_content with
+      | T_big_map (_, v) | T_map (_, v) -> return v.type_content
+      | _ -> raise.error (corner_case ~loc:__LOC__ "invalid external_map_remove application"))
     | (External "int", [ param ]) ->
       (match (compile_type param).type_content with
       | T_base TB_bls12_381_fr | T_base TB_nat -> return (T_base TB_int)
@@ -115,7 +125,7 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
         Ticket          | Int64    | Sapling_state        | Michelson_contract  |
         Contract        | Map      | Big_map              | Typed_address       |
         Michelson_pair  | Set      | Mutation             | Ast_contract        |
-        List            | External _ | Gen), [])
+        List            | Gen      | External _           | Views), [])
         -> raise.error @@ corner_case ~loc:__LOC__ "wrong constant"
     | ((Int64      | Unit      | Baker_operation      |
       Nat          | Timestamp | Michelson_or         |
@@ -130,7 +140,8 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
       Set          | Tez       | Michelson_pair       |
       Never        | Chest_key | Ast_contract         |
       Bytes        | Mutation  | Typed_address        |
-      List         | External _ | Tx_rollup_l2_address ), _::_) -> raise.error @@ corner_case ~loc:__LOC__ (Format.asprintf "wrong constant\n%a\n" Ast_aggregated.PP.type_expression t)
+      External _   | List      | Tx_rollup_l2_address |
+      Views        ), _::_) -> raise.error @@ corner_case ~loc:__LOC__ (Format.asprintf "wrong constant\n%a\n" Ast_aggregated.PP.type_expression t)
   )
   | T_sum _ when Option.is_some (AST.get_t_bool t) ->
     return (T_base TB_bool)
@@ -200,7 +211,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
   | E_type_abstraction _
   | E_type_inst _ ->
     raise.error @@ corner_case ~loc:__LOC__ (Format.asprintf "Type instance: This program should be monomorphised")
-  | E_let_in {let_binder; rhs; let_result; attributes = { inline; no_mutation=_; view=_; public=_ ; hidden = _ ; thunk = _ } } ->
+  | E_let_in {let_binder; rhs; let_result; attributes = { inline; no_mutation=_; view=_; public=_ ; hidden = _ ; thunk = _; entry = _ } } ->
     let rhs' = self rhs in
     let result' = self let_result in
     return (E_let_in (rhs', inline, ((Binder.get_var let_binder, rhs'.type_expression), result')))
@@ -253,11 +264,10 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
         List.fold_left
           path
           ~f:(fun expr (i, n, ty, _) ->
-              E_proj ({ content = expr;
-                        type_expression = ty;
-                        location = Location.generated}, i, n))
-          ~init:struct_'.content in
-      return content
+              let expr = { content = E_proj (expr, i, n) ; type_expression = ty ; location = Location.generated } in
+              expr)
+          ~init:struct_' in
+      return content.content
     )
   | E_update {struct_; path; update} -> (
       (* Compile record update to simple constructors &
@@ -380,8 +390,10 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
     )
   | E_lambda l ->
     return @@ compile_lambda ~raise l
-  | E_recursive r ->
+  | E_recursive ({ fun_name ; fun_type = _ ; lambda; force_lambdarec } as r) when not force_lambdarec && Recursion.is_tail_recursive fun_name lambda ->
     return @@ compile_recursive ~raise r
+  | E_recursive { fun_name ; fun_type ; lambda; force_lambdarec = _ } ->
+    return @@ compile_rec_lambda ~raise lambda fun_name fun_type
   | E_matching {matchee=expr; cases=m} -> (
       let expr' = self expr in
       match m with
@@ -608,6 +620,14 @@ and compile_lambda ~raise l =
   let (binder, body) = make_lambda ~loc:result.location param result' output_type in
   E_closure { binder; body }
 
+and compile_rec_lambda ~raise l fun_name _fun_type =
+  let { binder ; output_type ; result } : _ Lambda.t = l in
+  let result' = compile_expression ~raise result in
+  let param = Param.map (compile_type ~raise) binder in
+  let output_type = compile_type ~raise output_type in
+  let (binder, body) = make_lambda ~loc:result.location param result' output_type in
+  E_rec { func = { binder; body } ; rec_binder = fun_name }
+
 and compile_binder ~raise binder = 
   let ascr = compile_type ~raise (Binder.get_ascr binder) in
   (Binder.get_var binder, ascr)
@@ -627,7 +647,7 @@ and make_lambda ~loc param body body_type =
     else body in
   (Param.get_var param, body)
 
-and compile_recursive ~raise {fun_name; fun_type; lambda} =
+and compile_recursive ~raise Recursive.{fun_name; fun_type; lambda; force_lambdarec = _} =
   let rec map_lambda : Value_var.t -> type_expression -> AST.expression -> expression = fun fun_name loop_type e ->
     match e.expression_content with
       E_lambda {binder;output_type;result} ->
@@ -636,7 +656,7 @@ and compile_recursive ~raise {fun_name; fun_type; lambda} =
       let body_type = compile_type ~raise output_type in
       let param = Param.map (compile_type ~raise) param in
       let (binder, body) = make_lambda ~loc:e.location param body body_type in
-      Expression.make ~loc:e.location (E_closure {binder;body}) loop_type
+      Expression.make ~loc:e.location (E_closure {binder;body }) loop_type
     | _  ->
       let res = replace_callback ~raise fun_name loop_type false e in
       res

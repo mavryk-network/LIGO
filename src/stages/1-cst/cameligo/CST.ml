@@ -55,18 +55,11 @@ type kwd_type      = lexeme wrap
 type kwd_with      = lexeme wrap
 type kwd_module    = lexeme wrap
 type kwd_struct    = lexeme wrap
-type kwd_mut       = lexeme wrap
-type kwd_for       = lexeme wrap
-type kwd_while     = lexeme wrap
-type kwd_to        = lexeme wrap
-type kwd_downto    = lexeme wrap
-type kwd_do        = lexeme wrap
-type kwd_done      = lexeme wrap
+type kwd_contract  = lexeme wrap
 
 (* Symbols *)
 
 type arrow    = lexeme wrap  (* "->" *)
-type ass      = lexeme wrap  (* ":=" *)
 type cons     = lexeme wrap  (* "::" *)
 type cat      = lexeme wrap  (* "^"  *)
 type append   = lexeme wrap  (* "@"  *)
@@ -74,10 +67,10 @@ type dot      = lexeme wrap  (* "."  *)
 
 (* Arithmetic operators *)
 
-type minus    = lexeme wrap  (* "-" *)
-type plus     = lexeme wrap  (* "+" *)
-type slash    = lexeme wrap  (* "/" *)
-type times    = lexeme wrap  (* "*" *)
+type minus = lexeme wrap  (* "-" *)
+type plus  = lexeme wrap  (* "+" *)
+type slash = lexeme wrap  (* "/" *)
+type times = lexeme wrap  (* "*" *)
 
 (* Boolean operators *)
 
@@ -134,8 +127,8 @@ type type_constr = string reg
 type constr      = string reg
 type type_param  = string reg
 
-type attribute   = Attr.t
-type attributes  = Attr.attribute reg list
+type attribute   = Attr.t wrap
+type language    = lexeme Region.reg wrap
 
 (* Parentheses *)
 
@@ -166,7 +159,7 @@ and declaration =
 (* Non-recursive values *)
 
 and let_decl =
-  (kwd_let * kwd_rec option * let_binding * attributes)
+  (kwd_let * kwd_rec option * let_binding * attribute list)
 
 and let_binding = {
   type_params : type_params par reg option;
@@ -228,6 +221,7 @@ and type_expr =
 | TInt    of (lexeme * Z.t) reg
 | TModA   of type_expr module_access reg
 | TArg    of type_var reg
+| TParameter of (module_name, dot) nsepseq reg
 
 and type_constr_arg =
   CArg      of type_expr
@@ -238,20 +232,20 @@ and cartesian = (type_expr, times) nsepseq reg
 and sum_type = {
   lead_vbar  : vbar option;
   variants   : (variant reg, vbar) nsepseq;
-  attributes : attributes
+  attributes : attribute list
 }
 
 and variant = {
   constr     : constr;
   arg        : (kwd_of * type_expr) option;
-  attributes : attributes
+  attributes : attribute list
 }
 
 and field_decl = {
   field_name : field_name;
   colon      : colon;
   field_type : type_expr;
-  attributes : attributes
+  attributes : attribute list
 }
 
 and pattern =
@@ -271,7 +265,7 @@ and pattern =
 
 and var_pattern = {
   variable   : variable;
-  attributes : attributes
+  attributes : attribute list
 }
 
 and list_pattern =
@@ -288,12 +282,6 @@ and field_pattern = {
   field_name : field_name;
   eq         : equal;
   pattern    : pattern
-}
-
-and assign = {
-  binder : variable;
-  ass : ass;
-  expr : expr
 }
 
 and expr =
@@ -316,8 +304,6 @@ and expr =
 | ETuple    of (expr, comma) nsepseq reg
 | EPar      of expr par reg
 | ELetIn    of let_in reg
-| ELetMutIn of let_mut_in reg
-| EAssign   of assign reg
 | ETypeIn   of type_in reg
 | EModIn    of mod_in reg
 | EModAlias of mod_alias reg
@@ -325,9 +311,7 @@ and expr =
 | ESeq      of expr injection reg
 | ECodeInj  of code_inj reg
 | ERevApp   of rev_app bin_op reg
-| EWhile    of while_loop reg
-| EFor      of for_loop reg
-| EForIn    of for_in_loop reg
+| EContract of ((module_name, dot) nsepseq) reg
 
 and annot_expr = expr * colon * type_expr
 
@@ -341,7 +325,7 @@ and 'a ne_injection = {
   compound    : compound option;
   ne_elements : ('a, semi) nsepseq;
   terminator  : semi option;
-  attributes  : attributes
+  attributes  : attribute list
 }
 
 and compound =
@@ -421,8 +405,8 @@ and selection =
   FieldName of variable
 | Component of (string * Z.t) reg
 
-and field_assign = 
-  Property of field_assign_property 
+and field_assign =
+  Property of field_assign_property
 | Punned_property of field_name
 
 and field_assign_property = {
@@ -439,7 +423,7 @@ and update = {
   rbrace   : rbrace
 }
 
-and field_path_assignment = 
+and field_path_assignment =
   Path_property of field_path_assignment_property
 | Path_punned_property of field_name
 
@@ -473,16 +457,7 @@ and let_in = {
   binding    : let_binding;
   kwd_in     : kwd_in;
   body       : expr;
-  attributes : attributes
-}
-
-and let_mut_in = {
-  kwd_let    : kwd_let;
-  kwd_mut    : kwd_mut;
-  binding    : let_binding;
-  kwd_in     : kwd_in;
-  body       : expr;
-  attributes : attributes
+  attributes : attribute list
 }
 
 and type_in = {
@@ -510,7 +485,7 @@ and fun_expr = {
   rhs_type    : (colon * type_expr) option;
   arrow       : arrow;
   body        : expr;
-  attributes  : attributes
+  attributes  : attribute list
 }
 
 and cond_expr = {
@@ -521,46 +496,12 @@ and cond_expr = {
   ifnot    : (kwd_else * expr) option;
 }
 
-and for_loop = {
-  kwd_for   : kwd_for;
-  index     : var_pattern reg;
-  equal     : equal;
-  bound1    : expr;
-  direction : direction;
-  bound2    : expr;
-  body      : loop_body
-}
-
-and while_loop = {
-  kwd_while : kwd_while;
-  cond      : expr;
-  body      : loop_body
-}
-
-and for_in_loop = {
-  kwd_for     : kwd_for;
-  pattern     : pattern;
-  kwd_in      : kwd_in;
-  collection  : expr;
-  body        : loop_body
-}
-
-and direction = 
-  | To of kwd_to
-  | Downto of kwd_downto
-
-and loop_body = {
-  kwd_do    : kwd_do;
-  seq_expr  : (expr, semi) nsepseq option;
-  kwd_done  : kwd_done
-}
-
 (* Code injection.  Note how the field [language] wraps a region in
    another: the outermost region covers the header "[%<language>" and
    the innermost covers the <language>. *)
 
 and code_inj = {
-  language : string reg reg;
+  language : language;
   code     : expr;
   rbracket : rbracket;
 }
@@ -588,6 +529,7 @@ let type_expr_to_region = function
 | TVar    {region; _}
 | TModA   {region; _}
 | TArg    {region; _}
+| TParameter {region; _}
  -> region
 
 let list_pattern_to_region = function
@@ -642,9 +584,9 @@ let expr_to_region = function
 | ECall {region;_}   | EVar {region; _}    | EProj {region; _}
 | EUnit {region;_}   | EPar {region;_}     | EBytes {region; _}
 | ESeq {region; _}   | ERecord {region; _} | EUpdate {region; _}
-| EModA {region; _} | ECodeInj {region; _} | ELetMutIn {region; _}
-| ERevApp {region; _} | EAssign {region; _} | EFor {region; _}
-| EWhile {region; _} | EForIn {region; _} -> region
+| EModA {region; _} | ECodeInj {region; _}
+| ERevApp {region; _} -> region
+| EContract {region; _} -> region
 
 let selection_to_region = function
   FieldName f -> f.region

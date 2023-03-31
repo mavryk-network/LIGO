@@ -53,7 +53,7 @@ module T =
     | Ident    of lexeme Wrap.t
     | UIdent   of lexeme Wrap.t
  (* | Lang     of lexeme Region.reg *)
-    | Attr     of Attr.t Region.reg
+    | Attr     of Attr.t Wrap.t
 
     (* Symbols *)
 
@@ -132,6 +132,11 @@ module T =
     | Namespace   of lexeme Wrap.t  (* namespace *)
     | Type        of lexeme Wrap.t  (* type      *)
 
+    (* Contract keywords *)
+
+    | Contract  of lexeme Wrap.t  (* contract_of *)
+    | Parameter of lexeme Wrap.t  (* parameter_of *)
+
     (* Virtual tokens *)
 
     | ZWSP   of lexeme Wrap.t  (* Zero-Width SPace *)
@@ -144,6 +149,10 @@ module T =
 
     type token = t
 
+
+    (* NOT USED FOR JSLIGO: STUB *)
+
+    let add_directive (_ : Directive.t) (token : t) = token
 
     (* FROM TOKENS TO LEXEMES *)
 
@@ -165,7 +174,7 @@ module T =
     | Int t      -> fst t#payload
     | Ident t
     | UIdent t   -> t#payload
-    | Attr t     -> Attr.to_lexeme t.Region.value
+    | Attr t     -> Attr.to_lexeme t#payload
  (* | Lang lang  -> "[%" ^ Region.(lang.value.value) *)
 
     (* Symbols *)
@@ -245,6 +254,11 @@ module T =
     | Namespace t
     | Type      t -> t#payload
 
+    (* Contract keywords *)
+
+    | Contract t  -> t#payload
+    | Parameter t -> t#payload
+
     (* Virtual tokens *)
 
     | ZWSP _
@@ -310,6 +324,14 @@ module T =
      let mk_Namespace region = Namespace (wrap_namespace region)
      let mk_Type      region = Type      (wrap_type      region)
 
+     let wrap_contract = wrap "contract_of"
+
+     let mk_Contract region = Contract (wrap_contract region)
+
+     let wrap_parameter = wrap "parameter_of"
+
+     let mk_Parameter region = Parameter (wrap_parameter region)
+
     (* All keyword smart constructors *)
 
      let keywords = [
@@ -334,7 +356,9 @@ module T =
   (*   mk_With;   *)
        mk_As;
        mk_Namespace;
-       mk_Type
+       mk_Type;
+       mk_Contract;
+       mk_Parameter
      ]
 
     (* All keywords *)
@@ -675,8 +699,7 @@ module T =
     let wrap_ident    i = Wrap.wrap i
     let wrap_uident   c = Wrap.wrap c
 
-    let wrap_attr key value region =
-      Region.{value = (key, value); region}
+    let wrap_attr key value region = wrap (key, value) region
 
 (*  let wrap_lang lang region =
       let start = region#start#shift_bytes (String.length "[%") in
@@ -854,9 +877,9 @@ module T =
       (* Comments *)
 
     | LineCom t ->
-        t#region, sprintf "Line comment %S" t#payload
+        t#region, sprintf "LineCom %S" t#payload
     | BlockCom t ->
-        t#region, sprintf "Block comment %S" t#payload
+        t#region, sprintf "BlockCom %S" t#payload
 
       (* Literals *)
 
@@ -881,8 +904,8 @@ module T =
         t#region, sprintf "Ident %S" t#payload
     | UIdent t ->
         t#region, sprintf "UIdent %S" t#payload
-    | Attr {region; value} ->
-        region, sprintf "Attr %s" (Attr.to_string value)
+    | Attr t ->
+        t#region, sprintf "Attr %s" (Attr.to_string t#payload)
  (* | Lang {value = {value = payload; _}; region; _} ->
         region, sprintf "Lang %S" payload *)
 
@@ -963,6 +986,11 @@ module T =
     | As          t -> t#region, "As"
     | Namespace   t -> t#region, "Namespace"
     | Type        t -> t#region, "Type"
+
+    (* Contract keywords *)
+
+    | Contract t  -> t#region, "Contract"
+    | Parameter t -> t#region, "Parameter"
 
     (* Virtual tokens *)
 
@@ -1055,7 +1083,7 @@ module T =
 
     (* Attributes *)
 
-    let mk_attr ~key ?value region = Attr {region; value = key, value}
+    let mk_attr ~key ?value region = Attr (wrap (key, value) region)
 
     (* Code injection *)
 

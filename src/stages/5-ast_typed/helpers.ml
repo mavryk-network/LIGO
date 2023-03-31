@@ -72,7 +72,7 @@ let destruct_arrows (t : type_expression) =
 
 let destruct_tuple (t : type_expression) =
   match t.type_content with
-  | T_record row -> Row.to_tuple row
+  | T_record row when Row.is_tuple row -> Row.to_tuple row
   | _ -> [ t ]
 
 
@@ -342,8 +342,8 @@ and fold_map_expression_in_module_expr
     : 'a fold_mapper -> 'a -> module_expr -> 'a * module_expr
   =
  fun fold_mapper acc x ->
-  let return r wrap_content = r, { x with wrap_content } in
-  match x.wrap_content with
+  let return r module_content = r, { x with module_content } in
+  match x.module_content with
   | M_struct decls ->
     let res, decls = fold_map_module fold_mapper acc decls in
     return res (Module_expr.M_struct decls)
@@ -614,7 +614,7 @@ let uncurry_wrap ~loc ~type_ var =
   some @@ expr
 
 
-let should_curry_view view_ty =
+let should_uncurry_view view_ty =
   match Combinators.get_t_arrow view_ty with
   | Some { type1 = tin; type2 = return } ->
     (match Combinators.get_t_tuple tin with
@@ -636,7 +636,7 @@ let fetch_views_in_program
     match Location.unwrap declt with
     | D_value ({ binder; expr; attr } as dvalue) when attr.view ->
       let var = Binder.get_var binder in
-      (match should_curry_view expr.type_expression with
+      (match should_uncurry_view expr.type_expression with
       | `Yes _ ->
         let expr =
           Option.value_exn @@ uncurry_wrap ~loc ~type_:expr.type_expression var
@@ -658,7 +658,7 @@ let fetch_views_in_program
         dirref)
       when attr.view ->
       let var = Binder.get_var binder in
-      (match should_curry_view expr.type_expression with
+      (match should_uncurry_view expr.type_expression with
       | `Yes _ ->
         let expr =
           Option.value_exn @@ uncurry_wrap ~loc ~type_:expr.type_expression var

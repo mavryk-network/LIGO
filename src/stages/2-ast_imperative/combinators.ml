@@ -251,8 +251,8 @@ let e_lambda_ez ~loc var ?ascr ?mut_flag output_type result : expression =
   e_lambda ~loc (Ligo_prim.Param.make ?mut_flag var ascr) output_type result
 
 
-let e_recursive ~loc fun_name fun_type lambda =
-  make_e ~loc @@ E_recursive { fun_name; fun_type; lambda }
+let e_recursive ~loc ?(force_lambdarec = false) fun_name fun_type lambda =
+  make_e ~loc @@ E_recursive { fun_name; fun_type; lambda; force_lambdarec }
 
 
 let e_let_in ~loc let_binder attributes rhs let_result =
@@ -547,3 +547,14 @@ let destruct_for_alls (t : type_expression) =
     | _ -> type_vars, t
   in
   destruct_for_alls [] t
+
+
+(* /\ a -> /\ b -> /\ c -> e => [a ; b ; c], e*)
+let destruct_e_type_abstrctions (e : expression) : Type_var.t list * expression =
+  let rec destruct_e_type_abstrctions type_vars (e : expression) =
+    match e.expression_content with
+    | E_type_abstraction { type_binder; result } ->
+      destruct_e_type_abstrctions (type_vars @ [ type_binder ]) result
+    | _ -> type_vars, e
+  in
+  destruct_e_type_abstrctions [] e

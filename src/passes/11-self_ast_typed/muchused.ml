@@ -56,6 +56,7 @@ let rec is_dup (t : type_expression) =
           | Michelson_program
           | Gen
           | Int64
+          | Views
           (* Externals are dup *)
           | External _ )
       ; _
@@ -132,7 +133,7 @@ let rec muchuse_of_expr expr : muchuse =
           muchuse_of_binder (Binder.get_var b) (Binder.get_ascr b) m)
     in
     muchuse_union (muchuse_of_expr rhs) muchuse_let_binder
-  | E_recursive { fun_name; lambda; fun_type } ->
+  | E_recursive { fun_name; lambda; fun_type; force_lambdarec = _ } ->
     muchuse_of_binder fun_name fun_type (muchuse_of_lambda fun_type lambda)
   | E_matching { matchee; cases } ->
     muchuse_union (muchuse_of_expr matchee) (muchuse_of_cases cases)
@@ -244,7 +245,7 @@ and get_all_declarations (module_name : Module_var.t)
         [ name, expr.type_expression ]
       | D_module
           { module_binder
-          ; module_ = { wrap_content = M_struct module_; _ }
+          ; module_ = { module_content = M_struct module_; _ }
           ; module_attr = _
           } ->
         let recs = get_all_declarations module_binder module_ in
@@ -279,7 +280,7 @@ and muchuse_module_expr
     (module_binder : Module_var.t)
     (module_ : module_expr)
   =
-  match Location.unwrap module_ with
+  match module_.module_content with
   | M_struct module_ ->
     let decls = get_all_declarations module_binder module_ in
     List.fold_right

@@ -1,5 +1,6 @@
 module AST = Ast_imperative
 module CST = Cst.Cameligo
+module Wrap = Lexing_shared.Wrap
 module Token = Lexing_cameligo.Token
 module Predefined = Predefined.Tree_abstraction
 module Shared_helpers = Tree_abstraction_shared.Helpers
@@ -421,7 +422,7 @@ let rec decompile_expression : AST.expression -> CST.expr =
       let mod_alias : CST.mod_alias = { mod_alias; kwd_in = Token.ghost_in; body } in
       return_expr @@ CST.EModAlias (wrap mod_alias))
   | E_raw_code { language; code } ->
-    let language = wrap @@ wrap @@ language in
+    let language : CST.language = Wrap.ghost @@ Region.wrap_ghost @@ language in
     let code = decompile_expression code in
     let ci : CST.code_inj = { language; code; rbracket = Token.ghost_rbracket } in
     return_expr @@ CST.ECodeInj (wrap ci)
@@ -735,9 +736,6 @@ let rec decompile_expression : AST.expression -> CST.expr =
          "Decompiling a imperative construct to CameLIGO %a"
          AST.PP.expression
          expr
-  | E_originate _ | E_contract_call _ ->
-    (* TODO: Contracts *)
-    assert false
 
 
 and decompile_to_path : Value_var.t -> _ Access_path.t -> CST.path =
@@ -797,7 +795,7 @@ and decompile_declaration : AST.declaration -> CST.declaration =
       (wrap
          CST.{ kwd_type = Token.ghost_type; params; name; eq = Token.ghost_eq; type_expr })
   | D_value { binder; attr; expr } ->
-    let attributes : CST.attributes = Shared_helpers.decompile_attributes attr in
+    let attributes : CST.attribute list = Shared_helpers.decompile_attributes attr in
     let var_attributes = [] in
     let var =
       CST.PVar
@@ -839,7 +837,7 @@ and decompile_declaration : AST.declaration -> CST.declaration =
       let let_decl : CST.let_decl = Token.ghost_let, None, let_binding, attributes in
       CST.Let (wrap @@ let_decl))
   | D_irrefutable_match { pattern; attr; expr } ->
-    let attributes : CST.attributes = Shared_helpers.decompile_attributes attr in
+    let attributes : CST.attribute list = Shared_helpers.decompile_attributes attr in
     let binders = decompile_pattern pattern, [] in
     let type_params, rhs_type = None, None in
     let let_rhs = decompile_expression expr in
@@ -880,9 +878,6 @@ and decompile_declaration : AST.declaration -> CST.declaration =
         { kwd_module = Token.ghost_module; alias; eq = Token.ghost_eq; binders }
       in
       CST.ModuleAlias (wrap mod_alias))
-  | D_contract _ ->
-    (* TODO: Contracts *)
-    assert false
 
 
 and decompile_pattern : AST.type_expression option AST.Pattern.t -> CST.pattern =

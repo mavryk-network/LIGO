@@ -329,7 +329,8 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_no_mutation.mligo" ];
-  [%expect{|
+  [%expect
+    {|
     Everything at the top-level was executed.
     - test exited with value ().
     - test_mutation exited with value ().
@@ -679,36 +680,39 @@ let%expect_test _ =
   [%expect
     {|
     Everything at the top-level was executed.
-    - test_x exited with value (KT1WxkuJtr9rxYaziDJY7gHA83H3BUbEn1G1 , { parameter unit ;
+    - test_x exited with value (KT1X92QM6i2RhjuTMgHvYJA6nDu7udpmNU39 , { parameter unit ;
       storage
         (pair (pair (big_map %metadata string bytes) (set %participants address))
               (map %secrets address bool)) ;
-      code { CDR ;
-             PUSH bool True ;
+      code { PUSH bool True ;
              PUSH bool False ;
+             DIG 2 ;
+             CDR ;
+             DUP 3 ;
              DUP 2 ;
-             DUP 4 ;
              CAR ;
              CDR ;
              ITER { SWAP ;
-                    DUP 5 ;
+                    DUP 3 ;
                     CDR ;
                     DIG 2 ;
                     GET ;
-                    IF_NONE { DUP 2 ; AND } { DROP ; DUP 3 ; AND } } ;
+                    IF_NONE { DUP 3 ; AND } { DROP ; DUP 4 ; AND } } ;
              DROP ;
+             DUP 3 ;
              DUP 2 ;
-             DUP 4 ;
              CAR ;
              CDR ;
              ITER { SWAP ;
                     EMPTY_MAP address bool ;
                     DIG 2 ;
                     GET ;
-                    IF_NONE { DUP 2 ; AND } { DROP ; DUP 3 ; AND } } ;
+                    IF_NONE { DUP 3 ; AND } { DROP ; DUP 4 ; AND } } ;
+             DIG 2 ;
+             DIG 3 ;
              DROP 3 ;
              NIL operation ;
-             PAIR } } , 224). |}]
+             PAIR } } , 236). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_read_contract.mligo" ];
@@ -918,7 +922,32 @@ let%expect_test _ =
       - test_nested_record_assign_var_level2_module_member exited with value ().
       - test_nested_record_assign_var_level2_module_record_member exited with value ().
       - test_nested_record_assign_var_level2_lambda exited with value ().
-      - test_nested_record_assign_var_level2_lambda_app exited with value (). |}]
+      - test_nested_record_assign_var_level2_lambda_app exited with value ().
+      - test_simple_tuple_field_assign exited with value ().
+      - test_simple_record_field_with_array_notation_assign exited with value ().
+      - test_nested_record_assign_array_notation_level1 exited with value ().
+      - test_nested_record_assign_array_notation_level2 exited with value ().
+      - test_nested_record_assign_tuple_assign_array_notation_level2 exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test"; test "test_originate_module.mligo" ];
+  [%expect
+    {test|
+    Deployed the contract:
+    { parameter (or (int %add) (int %sub)) ;
+      storage int ;
+      code { UNPAIR ; IF_LEFT { ADD } { SWAP ; SUB } ; NIL operation ; PAIR } ;
+      view "get" unit int { CDR } ;
+      view "get_diff" int int { UNPAIR ; SWAP ; SUB } }
+    With storage: 0
+    Storage after call: 42 |test}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test"; test "test_originate_module.jsligo" ];
+  [%expect
+    {test|
+    Everything at the top-level was executed.
+    - test_increment exited with value (). |test}]
 
 (* do not remove that :) *)
 let () = Caml.Sys.chdir pwd
@@ -1072,7 +1101,6 @@ let%expect_test _ =
     File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 5, characters 4-13 ,
     File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 5, characters 4-13 ,
     File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 9, characters 14-49 ,
-    File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 9, characters 14-49 ,
     File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 9, characters 14-49 |}]
 
 let%expect_test _ =
@@ -1215,28 +1243,6 @@ let%expect_test _ =
   Cannot decompile value KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj of type typed_address (unit ,
   unit) |}]
 
-let%expect_test _ =
-  run_ligo_bad [ "run"; "test"; "bad_record_field_assign1.jsligo" ];
-  [%expect
-    {|
-    File "bad_record_field_assign1.jsligo", line 9, characters 2-12:
-      8 |   let p = { x : [1, 2, 3, 4] };
-      9 |   p.x[3] = 5;
-     10 |   assert(p.x[3] == 5)
-
-    Not supported assignment. |}]
-
-let%expect_test _ =
-  run_ligo_bad [ "run"; "test"; "bad_record_field_assign2.jsligo" ];
-  [%expect
-    {|
-    File "bad_record_field_assign2.jsligo", line 9, characters 2-15:
-      8 |   let p = { x : { z : 1 } };
-      9 |   p.x["z"] = 10;
-     10 |   assert(p.x["z"] == 10);
-
-    Not supported assignment. |}]
-
 let () = Caml.Sys.chdir pwd
 
 let%expect_test _ =
@@ -1270,5 +1276,4 @@ let%expect_test _ =
     An uncaught error occured:
     Failwith: "foo"
     Trace:
-    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66 ,
     File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66 |}]

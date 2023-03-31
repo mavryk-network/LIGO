@@ -28,16 +28,15 @@ and type_injection =
   }
 
 and row = ty_expr Row.t
-
 and te_list = type_expression list
 and annot_option = string option
 and row_element = ty_expr Row.t
 
 and type_expression =
   { type_content : type_content
-  ; type_meta : type_meta [@eq.ignore] [@hash.ignore]
-  ; orig_var : Type_var.t option [@eq.ignore] [@hash.ignore]
-  ; location : Location.t [@eq.ignore] [@hash.ignore]
+  ; type_meta : type_meta [@eq.ignore] [@hash.ignore] [@compare.ignore]
+  ; orig_var : Type_var.t option [@eq.ignore] [@hash.ignore] [@compare.ignore]
+  ; location : Location.t [@eq.ignore] [@hash.ignore] [@compare.ignore]
   }
 
 and ty_expr = type_expression [@@deriving eq, compare, yojson, hash]
@@ -106,7 +105,26 @@ and declaration_content =
 
 and declaration = declaration_content Location.wrap
 and decl = declaration [@@deriving eq, compare, yojson, hash]
-and module_expr = decl Module_expr.t Location.wrap [@@deriving eq, compare, yojson, hash]
+and module_content = decl Module_expr.t [@@deriving eq, compare, yojson, hash]
+
+and module_expr =
+  { module_content : module_content
+  ; module_location : Location.t [@eq.ignore] [@hash.ignore]
+  ; signature : signature
+  }
+[@@deriving eq, compare, yojson, hash]
+
+and sig_item =
+  | S_value of Value_var.t * ty_expr * sig_item_attribute
+  | S_type of Type_var.t * ty_expr
+  | S_module of Module_var.t * signature
+
+and sig_item_attribute =
+  { entry : bool
+  ; view : bool
+  }
+
+and signature = sig_item list
 
 type module_ = decl list [@@deriving eq, compare, yojson, hash]
 type program = declaration list [@@deriving eq, compare, yojson, hash]
