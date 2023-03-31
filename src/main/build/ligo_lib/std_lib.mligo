@@ -198,6 +198,27 @@ module Crypto = struct
   let check (k : key) (s : signature) (b : bytes) : bool = [%Michelson ({| { UNPAIR ; UNPAIR ; CHECK_SIGNATURE } |} : key * signature * bytes -> bool)] (k, s, b)
 end
 
+module Time = struct
+  [@inline] let _SECONDS_PER_DAY = 86_400
+  [@inline] let _SECONDS_PER_HOUR = 3_600
+  [@inline] let _SECONDS_PER_MINUTE = 60
+  [@inline] let _OFFSET19700101 = 2_440_588
+
+  [@inline] let _DOW_MON = 1
+  [@inline] let _DOW_TUE = 2
+  [@inline] let _DOW_WED = 3
+  [@inline] let _DOW_THU = 4
+  [@inline] let _DOW_FRI = 5
+  [@inline] let _DOW_SAT = 6
+  [@inline] let _DOW_SUN = 7
+
+  let minutes (n : int) : int = n * _SECONDS_PER_MINUTE
+  let hours (n : int) : int = n * _SECONDS_PER_HOUR
+  let days (n : int) : int = n * _SECONDS_PER_DAY
+  let weeks (n : int) : int = n * 604_800
+
+end
+
 let assert (b : bool) : unit = if b then () else failwith "failed assertion"
 let assert_some (type a) (v : a option) : unit = match v with | None -> failwith "failed assert some" | Some _ -> ()
 let assert_none (type a) (v : a option) : unit = match v with | None -> () | Some _ -> failwith "failed assert none"
