@@ -198,27 +198,6 @@ module Crypto = struct
   let check (k : key) (s : signature) (b : bytes) : bool = [%Michelson ({| { UNPAIR ; UNPAIR ; CHECK_SIGNATURE } |} : key * signature * bytes -> bool)] (k, s, b)
 end
 
-module Time = struct
-  [@inline] let _SECONDS_PER_DAY = 86_400
-  [@inline] let _SECONDS_PER_HOUR = 3_600
-  [@inline] let _SECONDS_PER_MINUTE = 60
-  [@inline] let _OFFSET19700101 = 2_440_588
-
-  [@inline] let _DOW_MON = 1
-  [@inline] let _DOW_TUE = 2
-  [@inline] let _DOW_WED = 3
-  [@inline] let _DOW_THU = 4
-  [@inline] let _DOW_FRI = 5
-  [@inline] let _DOW_SAT = 6
-  [@inline] let _DOW_SUN = 7
-
-  let minutes (n : int) : int = n * _SECONDS_PER_MINUTE
-  let hours (n : int) : int = n * _SECONDS_PER_HOUR
-  let days (n : int) : int = n * _SECONDS_PER_DAY
-  let weeks (n : int) : int = n * 604_800
-
-end
-
 let assert (b : bool) : unit = if b then () else failwith "failed assertion"
 let assert_some (type a) (v : a option) : unit = match v with | None -> failwith "failed assert some" | Some _ -> ()
 let assert_none (type a) (v : a option) : unit = match v with | None -> () | Some _ -> failwith "failed assert none"
@@ -237,6 +216,76 @@ let assert_some_with_error (type a) (v : a option) (s : string) : unit = match v
 let assert_none_with_error (type a) (v : a option) (s : string) : unit = match v with | None -> () | Some _ -> failwith s
 let ediv (type a b) (l : a) (r : b) : (a, b) external_ediv = [%Michelson ({| { UNPAIR ; EDIV } |} : a * b -> (a, b) external_ediv)] (l, r)
 
+
+module Time = struct
+  [@inline] let div x y = if x >= 0 then x / y else - (abs x / y)
+
+  [@inline] let _SECONDS_PER_DAY = 86_400
+  [@inline] let _SECONDS_PER_HOUR = 3_600
+  [@inline] let _SECONDS_PER_MINUTE = 60
+  [@inline] let _OFFSET19700101 = 2_440_588
+
+  module Days = struct
+    [@inline] let monday = 1
+    [@inline] let tuesday = 2
+    [@inline] let wednesday = 3
+    [@inline] let thursday = 4
+    [@inline] let friday = 5
+    [@inline] let saturday = 6
+    [@inline] let sunday = 7
+  end
+
+  let minutes (n : int) : int = n * _SECONDS_PER_MINUTE
+  let hours (n : int) : int = n * _SECONDS_PER_HOUR
+  let days (n : int) : int = n * _SECONDS_PER_DAY
+  let weeks (n : int) : int = n * 604_800
+
+  let days_of_date (year : nat) (month : nat) (day : nat) : nat =
+    let days = day - 32075 + div (1461 * (year + 4800 + div (month - 14) 12)) 4
+      + div (367 * (month - 2 - ((div (month - 14) 12) * 12))) 12
+      - div (3 * (div (year + 4900 + div (month - 14) 12) 100)) 4
+      - _OFFSET19700101 in
+    abs days
+
+  let days_to_date (days : nat) : nat * nat * nat =
+    let _L = days + 68569 + _OFFSET19700101 in
+    let _N = 4 * _L / 146097 in
+    let _L = _L - (146097 * _N + 3) / 4 in
+    let _year = 4000 * (_L + 1) / 1461001 in
+    let _L = _L - 1461 * _year / 4 + 31 in
+    let _month = 80 * _L / 2447 in
+    let _day = _L - 2447 * _month / 80 in
+    let _L = _month / 11 in
+    let _month = _month + 2 - 12 * _L in
+    let _year = 100 * (_N - 49) + _year + _L in
+    (abs _year, abs _month, abs _day)
+
+  let _is_leap_year (year : nat) : bool =
+    ((year mod 4 = 0n) && (year mod 100 <> 0n)) || (year mod 400 = 0n)
+  let is_leap_year (t : timestamp) : bool =
+    let year, _month, _day = days_to_date (abs (t - (0 : timestamp))) in
+    _is_leap_year year
+
+  let get_day_of_week(t : timestamp) : int =
+    let _days = (abs (t - (0 : timestamp))) / _SECONDS_PER_DAY in
+    (_days + 3) mod 7 + 1
+
+  let timestamp_of_date (year : nat) (month : nat) (day : nat) : timestamp =
+    (0 : timestamp) + _SECONDS_PER_DAY * days_of_date year month day
+  let date_of_timestamp (t : timestamp) : nat * nat * nat =
+    let t = t - (0 : timestamp) in
+    days_to_date (abs (t / _SECONDS_PER_DAY))
+
+  let get_days_of_month (year : nat) (month : nat) : nat =
+    if (month = 1n || month = 3n || month = 5n || month = 7n || month = 8n || month = 10n || month = 12n) then
+      31n
+    else if (month <> 2n) then
+      30n
+    else if _is_leap_year year then
+      29n
+    else
+      28n
+end
 
 type test_exec_error_balance_too_low =
   { contract_too_low : address ; contract_balance : tez ; spend_request : tez }
