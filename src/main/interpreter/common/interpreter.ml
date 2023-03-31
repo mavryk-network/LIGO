@@ -464,7 +464,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       return a
   in
   let return_unit_exec = function
-    | `Ok v -> return  (LC.v_ctor "Ok" v)
+    | `Ok v -> return (LC.v_ctor "Ok" v)
     | `NOk v -> return (LC.v_ctor "Failed" v)
   in
   let source_file = get_file_from_location loc in

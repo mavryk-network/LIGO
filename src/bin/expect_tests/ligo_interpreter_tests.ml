@@ -264,7 +264,8 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_run_unit.mligo" ];
-  [%expect {|
+  [%expect
+    {|
     Everything at the top-level was executed.
     - test_my exited with value (). |}]
 

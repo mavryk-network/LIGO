@@ -128,8 +128,7 @@ module Command = struct
         -> LT.value tezos_command
     | Run :
         Location.t * LT.func_val * LT.value
-        -> [ `Ok of LT.value| `NOk of LT.value ]
-           tezos_command
+        -> [ `Ok of LT.value | `NOk of LT.value ] tezos_command
     | Eval :
         Location.t * LT.value * Ast_aggregated.type_expression
         -> LT.value tezos_command
@@ -493,7 +492,8 @@ module Command = struct
           func_code.expr_ty
           arg_code
       in
-      let res = match runres with
+      let res =
+        match runres with
         | Success (expr_ty, expr) ->
           let expr, expr_ty = clean_locations expr, clean_locations expr_ty in
           let ret =
@@ -506,13 +506,10 @@ module Command = struct
           `Ok ret
         | Fail v ->
           let v = clean_locations v in
-          let ret =
-            LT.V_Michelson
-              (Untyped_code v)
-          in
+          let ret = LT.V_Michelson (Untyped_code v) in
           `NOk ret
       in
-      (res , ctxt )
+      res, ctxt
     | Eval (loc, v, expr_ty) ->
       let value = Michelson_backend.compile_value ~raise ~options ~loc v expr_ty in
       LT.V_Michelson (Ty_code value), ctxt
