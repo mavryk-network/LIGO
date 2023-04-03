@@ -16,7 +16,7 @@ let external_contract =
   let open Proto_alpha_utils.Memory_proto_alpha in
   let id = List.nth_exn (test_environment ()).identities 4 in
   let kh = id.public_key_hash in
-  Tezos_utils.Signature.Public_key_hash.to_string kh
+  Tezos_utils.Signature.V0.Public_key_hash.to_string kh
 
 
 let from_ = e_address ~loc @@ addr 5

@@ -37,7 +37,7 @@ let op_list ~raise =
   in
   let destination =
     Trace.trace_tzresult ~raise (fun _ -> Main_errors.test_internal __LOC__)
-    @@ Signature.Public_key_hash.of_b58check "tz1PpDGHRXFQq3sYDuH8EpLWzPm5PFpe1sLE"
+    @@ Signature.V0.Public_key_hash.of_b58check "tz1PpDGHRXFQq3sYDuH8EpLWzPm5PFpe1sLE"
   in
   let operation
       : _ Memory_proto_alpha.Protocol.Script_typed_ir.internal_operation_contents
@@ -68,7 +68,7 @@ let empty_payload = Ast_imperative.e_unit ~loc ()
 let chain_id_zero =
   Ast_imperative.e_bytes_raw
     ~loc
-    (Tezos_crypto.Chain_id.to_bytes Tezos_base__TzPervasives.Chain_id.zero)
+    (Tezos_crypto.Hashed.Chain_id.to_bytes Tezos_base__TzPervasives.Chain_id.zero)
 
 
 (* sign the message 'msg' with 'keys', if 'is_valid'=false the providid signature will be incorrect *)

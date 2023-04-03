@@ -289,10 +289,11 @@ module Command = struct
       in
       (), ctxt
     | Reset_state (loc, initial_timestamp, calltrace, n, amts) ->
-      let initial_timestamp =
+      (* let initial_timestamp =
         Option.map initial_timestamp ~f:(fun x ->
             Proto_alpha_utils.Time.Protocol.of_seconds (Z.to_int64 x))
-      in
+      in *)
+      ignore initial_timestamp;
       let amts = trace_option ~raise (corner_case ()) @@ LC.get_list amts in
       let amts =
         List.map
@@ -311,7 +312,7 @@ module Command = struct
           ~calltrace
           ~initial_balances:amts
           ~n:(Z.to_int n)
-          ?initial_timestamp
+          (* ?initial_timestamp *)
           ctxt.internals.protocol_version
           bootstrap_contracts
           ~baker_accounts

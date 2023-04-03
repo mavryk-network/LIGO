@@ -32,12 +32,12 @@ let v_bls12_381_g2 : Bls12_381.G2.t -> value = fun v -> V_Ct (C_bls12_381_g2 v)
 let v_bls12_381_fr : Bls12_381.Fr.t -> value = fun v -> V_Ct (C_bls12_381_fr v)
 let v_chain_id : Chain_id.t -> value = fun c -> V_Ct (C_chain_id c)
 
-let v_key_hash : Tezos_crypto.Signature.public_key_hash -> value =
+let v_key_hash : Tezos_crypto.Signature.V0.public_key_hash -> value =
  fun v -> V_Ct (C_key_hash v)
 
 
-let v_key : Tezos_crypto.Signature.public_key -> value = fun v -> V_Ct (C_key v)
-let v_signature : Tezos_crypto.Signature.t -> value = fun v -> V_Ct (C_signature v)
+let v_key : Tezos_crypto.Signature.V0.public_key -> value = fun v -> V_Ct (C_key v)
+let v_signature : Tezos_crypto.Signature.V0.t -> value = fun v -> V_Ct (C_signature v)
 let v_none : unit -> value = fun () -> V_Construct ("None", v_unit ())
 let v_ctor : string -> value -> value = fun ctor value -> V_Construct (ctor, value)
 
@@ -299,9 +299,9 @@ let compare_constant_val (c : constant_val) (c' : constant_val) : int =
     (match Tezos_protocol.Protocol.Alpha_context.Contract.compare a a' with
     | 0 -> Option.compare String.compare e e'
     | c -> c)
-  | C_key_hash kh, C_key_hash kh' -> Tezos_crypto.Signature.Public_key_hash.compare kh kh'
-  | C_key k, C_key k' -> Tezos_crypto.Signature.Public_key.compare k k'
-  | C_signature s, C_signature s' -> Tezos_crypto.Signature.compare s s'
+  | C_key_hash kh, C_key_hash kh' -> Tezos_crypto.Signature.V0.Public_key_hash.compare kh kh'
+  | C_key k, C_key k' -> Tezos_crypto.Signature.V0.Public_key.compare k k'
+  | C_signature s, C_signature s' -> Tezos_crypto.Signature.V0.compare s s'
   | C_bls12_381_g1 b, C_bls12_381_g1 b' ->
     Bytes.compare (Bls12_381.G1.to_bytes b) (Bls12_381.G1.to_bytes b')
   | C_bls12_381_g2 b, C_bls12_381_g2 b' ->

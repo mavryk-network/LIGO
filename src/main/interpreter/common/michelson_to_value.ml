@@ -21,38 +21,38 @@ let contract_of_bytes ~raise b =
 let key_hash_of_string ~raise s =
   Proto_alpha_utils.Trace.trace_tzresult ~raise (fun _ ->
       Errors.generic_error Location.generated "Cannot parse key_hash")
-  @@ Tezos_crypto.Signature.Public_key_hash.of_b58check s
+  @@ Signature.Public_key_hash.of_b58check s
 
 
 let key_hash_of_bytes ~raise s =
   Proto_alpha_utils.Trace.trace_tzresult ~raise (fun _ ->
       Errors.generic_error Location.generated "Cannot parse key_hash")
-  @@ Tezos_crypto.Signature.Public_key_hash.of_bytes s
+  @@ Signature.Public_key_hash.of_bytes s
 
 
 let key_of_string ~raise s =
   Proto_alpha_utils.Trace.trace_tzresult ~raise (fun _ ->
       Errors.generic_error Location.generated "Cannot parse key")
-  @@ Tezos_crypto.Signature.Public_key.of_b58check s
+  @@ Signature.Public_key.of_b58check s
 
 
 let key_of_bytes ~raise s =
   Proto_alpha_utils.Trace.trace_option
     ~raise
     (Errors.generic_error Location.generated "Cannot parse key")
-  @@ Tezos_crypto.Signature.Public_key.of_bytes_without_validation s
+  @@ Signature.Public_key.of_bytes_without_validation s
 
 
 let signature_of_string ~raise s =
   Proto_alpha_utils.Trace.trace_tzresult ~raise (fun _ ->
       Errors.generic_error Location.generated "Cannot parse signature")
-  @@ Tezos_crypto.Signature.of_b58check s
+  @@ Signature.of_b58check s
 
 
 let chain_id_of_string ~raise s =
   Proto_alpha_utils.Trace.trace_tzresult ~raise (fun _ ->
       Errors.generic_error Location.generated "Cannot parse chain_id")
-  @@ Tezos_crypto.Chain_id.of_b58check s
+  @@ Tezos_crypto.Hashed.Chain_id.of_b58check s
 
 
 let wrong_mini_c_value _t _v =

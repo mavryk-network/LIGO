@@ -30,9 +30,9 @@ let pp_ct : Format.formatter -> constant_val -> unit =
       (PP_helpers.option PP_helpers.string)
       c.entrypoint
   | C_mutez n -> Format.fprintf ppf "%smutez" (Z.to_string n)
-  | C_key_hash c -> Format.fprintf ppf "%a" Tezos_crypto.Signature.Public_key_hash.pp c
-  | C_key c -> Format.fprintf ppf "%a" Tezos_crypto.Signature.Public_key.pp c
-  | C_signature s -> Format.fprintf ppf "%a" Tezos_crypto.Signature.pp s
+  | C_key_hash c -> Format.fprintf ppf "%a" Tezos_crypto.Signature.V0.Public_key_hash.pp c
+  | C_key c -> Format.fprintf ppf "%a" Tezos_crypto.Signature.V0.Public_key.pp c
+  | C_signature s -> Format.fprintf ppf "%a" Tezos_crypto.Signature.V0.pp s
   | C_bls12_381_g1 b ->
     Format.fprintf ppf "%s" (Bytes.to_string (Bls12_381.G1.to_bytes b))
   | C_bls12_381_g2 b ->

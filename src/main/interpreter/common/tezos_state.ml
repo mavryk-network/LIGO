@@ -19,7 +19,7 @@ type bootstrap_contract =
   * Ast_aggregated.type_expression
   * Ast_aggregated.type_expression
 
-type baker_account = string * Signature.Public_key.t * int64 option
+type baker_account = string * Tezos_crypto.Signature.V0.Public_key.t * int64 option
 type block = Tezos_alpha_test_helpers.Block.t
 
 type last_originations =
@@ -300,7 +300,7 @@ let get_alpha_context ~raise ctxt =
 
 let unwrap_baker ~raise ~loc ~calltrace
     :  Memory_proto_alpha.Protocol.Alpha_context.Contract.t
-    -> Tezos_crypto.Signature.Public_key_hash.t
+    -> _
   =
  fun x -> implicit_account ~raise ~loc ~calltrace "The baker is not an implicit account" x
 
@@ -770,39 +770,39 @@ let add_account ~raise ~loc ~calltrace sk pk pkh : unit =
   let sk =
     Trace.trace_tzresult ~raise (fun _ ->
         Errors.generic_error ~calltrace loc "Cannot parse secret key")
-    @@ Tezos_crypto.Signature.Secret_key.of_b58check sk
+    @@ Tezos_crypto.Signature.V0.Secret_key.of_b58check sk
   in
   let account = Account.{ sk; pk; pkh } in
   Account.add_account account
 
 
-let get_account ~raise ~loc ~calltrace mc : string * Signature.public_key =
+let get_account ~raise ~loc ~calltrace mc : string * Tezos_crypto.Signature.V0.public_key =
   let open Tezos_alpha_test_helpers in
   let account =
     Trace.trace_tzresult_lwt ~raise (fun _ ->
         Errors.generic_error ~calltrace loc "Cannot find account")
     @@ Account.find mc
   in
-  let sk = Signature.Secret_key.to_b58check account.sk in
+  let sk = Tezos_crypto.Signature.V0.Secret_key.to_b58check account.sk in
   let pk = account.pk in
   sk, pk
 
 
-let new_account : unit -> string * Signature.public_key =
+let new_account : unit -> string * Tezos_crypto.Signature.V0.public_key =
  fun () ->
   let open Tezos_alpha_test_helpers.Account in
   let account = new_account () in
-  let sk = Signature.Secret_key.to_b58check account.sk in
+  let sk = Tezos_crypto.Signature.V0.Secret_key.to_b58check account.sk in
   sk, account.pk
 
 
-let sign_message ~raise ~loc ~calltrace (packed_payload : bytes) sk : Signature.t =
+let sign_message ~raise ~loc ~calltrace (packed_payload : bytes) sk : Tezos_crypto.Signature.V0.t =
   let open Tezos_crypto in
   let sk =
     Trace.trace_tzresult ~raise (throw_obj_exc loc calltrace)
-    @@ Signature.Secret_key.of_b58check sk
+    @@ Signature.V0.Secret_key.of_b58check sk
   in
-  let signed_data = Signature.sign sk packed_payload in
+  let signed_data = Signature.V0.sign sk packed_payload in
   signed_data
 
 
@@ -885,7 +885,7 @@ let get_bootstrapped_contract ~raise (n : int) =
     let open Memory_proto_alpha.Protocol.Origination_nonce in
     let initial =
       initial
-        (Tezos_crypto.Operation_hash.hash_bytes
+        (Tezos_crypto.Hashed.Operation_hash.hash_bytes
            [ Bytes.of_string "Un festival de GADT." ])
     in
     foldnat incr initial n
@@ -913,7 +913,6 @@ let init
     ?baking_reward_fixed_portion
     ?origination_size
     ?blocks_per_cycle
-    ?initial_timestamp
     n
   =
   let open Tezos_alpha_test_helpers in
@@ -926,7 +925,7 @@ let init
   in
   let baker_accounts =
     List.map baker_accounts ~f:(fun (sk, pk, amt) ->
-        let pkh = Signature.Public_key.hash pk in
+        let pkh = Tezos_crypto.Signature.V0.Public_key.hash pk in
         let amt =
           match amt with
           | None -> Tez.of_mutez_exn 4_000_000_000_000L
@@ -950,7 +949,6 @@ let init
       ?baking_reward_fixed_portion
       ?origination_size
       ?blocks_per_cycle
-      ?initial_timestamp
       accounts
   in
   raw, contracts
@@ -961,7 +959,6 @@ let init_ctxt
     ?(loc = Location.generated)
     ?(calltrace = [])
     ?(initial_balances = [])
-    ?initial_timestamp
     ?(baker_accounts = [])
     ?(n = 2)
     protocol_version
@@ -1001,7 +998,7 @@ let init_ctxt
         let sk =
           Trace.trace_tzresult ~raise (fun _ ->
               Errors.generic_error ~calltrace loc "Cannot parse secret key")
-          @@ Tezos_crypto.Signature.Secret_key.of_b58check sk
+          @@ Tezos_crypto.Signature.V0.Secret_key.of_b58check sk
         in
         sk, pk, amt)
       baker_accounts
@@ -1012,7 +1009,6 @@ let init_ctxt
       ~level:(Int32.of_int_exn 0)
       ~initial_balances
       ~baker_accounts
-      ?initial_timestamp
       n
   in
   let init_raw_ctxt =

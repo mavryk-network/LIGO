@@ -217,7 +217,7 @@ let compare_constants ~no_colour ~raise o1 o2 loc calltrace =
   | V_Ct (C_bool a), V_Ct (C_bool b) -> Bool.compare a b
   | V_Ct (C_address a), V_Ct (C_address b) -> Tezos_state.compare_account a b
   | V_Ct (C_key_hash a), V_Ct (C_key_hash b) ->
-    Tezos_crypto.Signature.Public_key_hash.compare a b
+    Tezos_crypto.Signature.V0.Public_key_hash.compare a b
   | V_Ct C_unit, V_Ct C_unit -> 0
   | V_Ct (C_string a'), V_Ct (C_string b') -> String.compare a' b'
   | V_Ct (C_bytes a'), V_Ct (C_bytes b') -> Bytes.compare a' b'
@@ -1525,15 +1525,15 @@ and eval_literal : Ligo_prim.Literal_value.t -> value Monad.t = function
   | Literal_bytes s -> Monad.return @@ v_bytes s
   | Literal_mutez s -> Monad.return @@ v_mutez s
   | Literal_key_hash s ->
-    (match Tezos_crypto.Signature.Public_key_hash.of_b58check s with
+    (match Tezos_crypto.Signature.V0.Public_key_hash.of_b58check s with
     | Ok kh -> Monad.return @@ v_key_hash kh
     | Error _ -> Monad.fail @@ Errors.literal Location.generated (Literal_key_hash s))
   | Literal_key s ->
-    (match Tezos_crypto.Signature.Public_key.of_b58check s with
+    (match Tezos_crypto.Signature.V0.Public_key.of_b58check s with
     | Ok k -> Monad.return @@ v_key k
     | Error _ -> Monad.fail @@ Errors.literal Location.generated (Literal_key s))
   | Literal_signature s ->
-    (match Tezos_crypto.Signature.of_b58check s with
+    (match Tezos_crypto.Signature.V0.of_b58check s with
     | Ok s -> Monad.return @@ v_signature s
     | Error _ -> Monad.fail @@ Errors.literal Location.generated (Literal_signature s))
   | Literal_address s ->
@@ -1553,7 +1553,7 @@ and eval_literal : Ligo_prim.Literal_value.t -> value Monad.t = function
     | Some t -> Monad.return @@ v_bls12_381_fr t
     | None -> Monad.fail @@ Errors.literal Location.generated (Literal_bls12_381_fr b))
   | Literal_chain_id c ->
-    (match Tezos_crypto.Chain_id.of_b58check_opt c with
+    (match Tezos_crypto.Hashed.Chain_id.of_b58check_opt c with
     | Some t -> Monad.return @@ v_chain_id t
     | None -> Monad.fail @@ Errors.literal Location.generated (Literal_chain_id c))
   | l -> Monad.fail @@ Errors.literal Location.generated l
