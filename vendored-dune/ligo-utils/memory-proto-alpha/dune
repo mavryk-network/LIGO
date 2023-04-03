@@ -5,5 +5,6 @@
     tezos-protocol-environment
     tezos-protocol-015-PtLimaPt
     tezos-protocol-015-PtLimaPt.parameters
+    tezos-protocol-015-PtLimaPt.environment
     tezos-client-015-PtLimaPt
-    tz015-test-helpers))
+    tezos-015-PtLimaPt-test-helpers))
