@@ -1,9 +1,9 @@
 # NOTE: dependencies added here are ignored in the LIGO build. Add
 # dependencies in /ligo.opam and run [opam lock].
 opam-version: "2.0"
-name: "proto-alpha-utils"
+name: "proto-pre-alpha-utils"
 version: "dev"
-synopsis: "LIGO Proto Alpha-specific Utilities, to be used by other libraries"
+synopsis: "LIGO Proto Pre-Alpha-specific Utilities, to be used by other libraries"
 maintainer: "Galfour <contact@ligolang.org>"
 authors: "Galfour <contact@ligolang.org>"
 license: "MIT"
