@@ -4,7 +4,7 @@ module Signature = Tezos_base.TzPervasives.Signature
 module Data_encoding = Alpha_environment.Data_encoding
 module MBytes = Bytes
 module Error_monad = X_error_monad
-module Proto_env = Tezos_protocol_environment_015_PtLimaPt
+module Proto_env = Tezos_protocol_environment_016_PtMumbai
 open Error_monad
 open Protocol
 

@@ -1,6 +1,6 @@
 open X_error_monad
 open Tezos_micheline.Micheline
-open Memory_proto_alpha.Protocol
+open Memory_proto_pre_alpha.Protocol
 
 let measure = fun michelson ->
   let open Lwt_result_syntax in

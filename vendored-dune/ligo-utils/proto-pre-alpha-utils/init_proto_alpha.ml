@@ -1,4 +1,4 @@
-open! Memory_proto_alpha
+open! Memory_proto_pre_alpha
 module List = Core.List
 module Signature = Tezos_base.TzPervasives.Signature
 module Data_encoding = Alpha_environment.Data_encoding
@@ -215,7 +215,7 @@ let init_environment ?(n = 2) () =
   let open Lwt_result_syntax in
   let* (tezos_context, accounts, contracts) = Context_init.main n in
   let accounts = List.map ~f:fst accounts in
-  let x = Memory_proto_alpha.Protocol.Alpha_context.Gas.Arith.(integral_of_int_exn 800000) in
+  let x = Memory_proto_pre_alpha.Protocol.Alpha_context.Gas.Arith.(integral_of_int_exn 800000) in
   let tezos_context = Alpha_context.Gas.set_limit tezos_context x in
   let identities =
     List.map ~f:(fun ((a:Context_init.account), c) -> {

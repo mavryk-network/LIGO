@@ -5,7 +5,7 @@
     tezos-error-monad
     tezos-protocol-015-PtLimaPt
     tezos-client-015-PtLimaPt
-    tezos-memory-proto-alpha
+    tezos-memory-proto-pre-alpha
     data-encoding
     simple-utils
     tezos-utils
