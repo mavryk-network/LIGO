@@ -1,4 +1,5 @@
-module Proto = Tezos_protocol_environment_016_PtMumbai
+(* module Name = struct let name = "alpha" end *)
+module Proto = Tezos_protocol_016_PtMumbai
 module Alpha_environment = Tezos_protocol_environment_016_PtMumbai
 module Raw_protocol = Tezos_raw_protocol_016_PtMumbai
 module Parameters = Tezos_protocol_016_PtMumbai_parameters

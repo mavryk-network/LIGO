@@ -12,15 +12,15 @@ open Protocol
 module Context_init = struct
 
   type account = {
-      pkh : Signature.V0.public_key_hash ;
-      pk :  Signature.V0.public_key ;
-      sk :  Signature.V0.secret_key ;
+      pkh : Signature.public_key_hash ;
+      pk :  Signature.public_key ;
+      sk :  Signature.secret_key ;
     }
 
   let generate_accounts n : (account * Alpha_context.Tez.t) list =
     let amount = Alpha_context.Tez.of_mutez_exn 4_000_000_000_000L in
     List.map ~f:(fun _ ->
-        let (pkh, pk, sk) = Tezos_crypto__Signature_v0.generate_key () in
+        let (pkh, pk, sk) = Signature.generate_key () in
         let account = { pkh ; pk ; sk } in
         account, amount)
       (List.range 0 n)
@@ -154,13 +154,13 @@ module Context_init = struct
     return (ctxt, accounts, contracts)
 
   let contents
-        ~predecessor
+        ~predecessor_hash
         ?(proof_of_work_nonce = default_proof_of_work_nonce)
-        ?(round = Alpha_context.Round.zero) ?seed_nonce_hash ?(liquidity_baking_toggle_vote = Liquidity_baking_repr.LB_off) () =
-    let payload_hash = Alpha_context.Block_payload.hash ~predecessor round Alpha_environment.Operation_list_hash.zero in
+        ?(payload_round = Alpha_context.Round.zero) ?seed_nonce_hash ?(liquidity_baking_toggle_vote = Liquidity_baking_repr.LB_off) () =
+    let payload_hash = Alpha_context.Block_payload.hash ~predecessor_hash ~payload_round [] in (* TODO: check if this is correct *)
     Alpha_context.Block_header.({
         payload_hash ;
-        payload_round = round ;
+        payload_round ;
         proof_of_work_nonce ;
         seed_nonce_hash ;
         liquidity_baking_toggle_vote ;
@@ -179,11 +179,11 @@ module Context_init = struct
   let begin_construction ?(round=Alpha_context.Round.zero) ~timestamp ~(header:Alpha_context.Block_header.shell_header) ~hash ctxt =
     let (>>=) = Lwt_syntax.( let* ) in
     let (>>=?) = Lwt_result_syntax.( let* ) in
-    let contents = contents ~round ~predecessor:hash () in
+    let contents = contents ~payload_round:round ~predecessor_hash:hash () in
     let protocol_data =
       let open! Alpha_context.Block_header in {
         contents ;
-        signature = Signature.V0.zero ;
+        signature = Signature.zero ;
       } in
     begin_validation_and_application ctxt Alpha_environment.Chain_id.zero
       (Construction { predecessor_hash = hash ; timestamp ; block_header_data = protocol_data }) ~predecessor:header
@@ -200,9 +200,9 @@ module Context_init = struct
 end
 
 type identity = {
-    public_key_hash : Signature.V0.public_key_hash;
-    public_key : Signature.V0.public_key;
-    secret_key : Signature.V0.secret_key;
+    public_key_hash : Signature.public_key_hash;
+    public_key : Signature.public_key;
+    secret_key : Signature.secret_key;
     implicit_contract : Alpha_context.Contract.t;
   }
 
