@@ -36,11 +36,11 @@ let string_of_contract t =
 
 
 let string_of_key_hash t =
-  Format.asprintf "%a" Tezos_crypto.Signature.V0.Public_key_hash.pp t
+  Format.asprintf "%a" Tezos_crypto.Signature.Public_key_hash.pp t
 
 
-let string_of_key t = Format.asprintf "%a" Tezos_crypto.Signature.V0.Public_key.pp t
-let string_of_signature t = Format.asprintf "%a" Tezos_crypto.Signature.V0.pp t
+let string_of_key t = Format.asprintf "%a" Tezos_crypto.Signature.Public_key.pp t
+let string_of_signature t = Format.asprintf "%a" Tezos_crypto.Signature.pp t
 let bytes_of_bls12_381_g1 t = Bls12_381.G1.to_bytes t
 let bytes_of_bls12_381_g2 t = Bls12_381.G2.to_bytes t
 let bytes_of_bls12_381_fr t = Bls12_381.Fr.to_bytes t

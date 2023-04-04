@@ -14,21 +14,21 @@ module Contract = struct
 end
 
 module Public_key_hash = struct
-  include Tezos_crypto.Signature.V0.Public_key_hash
+  include Tezos_crypto.Signature.Public_key_hash
 
   let to_yojson (pkh : t) = [%to_yojson: string] (to_b58check pkh)
   let of_yojson _ = failwith "public_key_hash_of_yojson: not implemented"
 end
 
 module Public_key = struct
-  include Tezos_crypto.Signature.V0.Public_key
+  include Tezos_crypto.Signature.Public_key
 
   let to_yojson (pk : t) = [%to_yojson: string] (to_b58check pk)
   let of_yojson _ = failwith "public_key_of_yojson: not implemented"
 end
 
 module Signature = struct
-  include Tezos_crypto.Signature.V0
+  include Tezos_crypto.Signature
 
   let to_yojson (s : t) = [%to_yojson: string] (to_b58check s)
   let of_yojson _ = failwith "signature_of_yojson: not implemented"
