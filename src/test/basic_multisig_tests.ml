@@ -32,12 +32,13 @@ let op_list ~raise =
   let open Memory_proto_alpha.Protocol.Alpha_context in
   let open Proto_alpha_utils in
   let source =
-    Trace.trace_alpha_tzresult ~raise (fun _ -> Main_errors.test_internal __LOC__)
-    @@ Contract.of_b58check "KT1DUMMYDUMMYDUMMYDUMMYDUMMYDUMu2oHG"
+    Destination.Contract
+      (Trace.trace_alpha_tzresult ~raise (fun _ -> Main_errors.test_internal __LOC__)
+      @@ Contract.of_b58check "KT1DUMMYDUMMYDUMMYDUMMYDUMMYDUMu2oHG")
   in
   let destination =
     Trace.trace_tzresult ~raise (fun _ -> Main_errors.test_internal __LOC__)
-    @@ Signature.V0.Public_key_hash.of_b58check "tz1PpDGHRXFQq3sYDuH8EpLWzPm5PFpe1sLE"
+    @@ Signature.Public_key_hash.of_b58check "tz1PpDGHRXFQq3sYDuH8EpLWzPm5PFpe1sLE"
   in
   let operation
       : _ Memory_proto_alpha.Protocol.Script_typed_ir.internal_operation_contents

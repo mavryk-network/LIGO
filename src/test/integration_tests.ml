@@ -2051,7 +2051,7 @@ let addr_test ~raise program =
   in
   let open Tezos_crypto in
   let key_hash =
-    Signature.V0.Public_key_hash.to_b58check
+    Signature.Public_key_hash.to_b58check
     @@ (List.nth_exn (test_environment ()).identities 0).public_key_hash
   in
   expect_eq ~raise program "main" (e_key_hash ~loc key_hash) (e_address ~loc addr)

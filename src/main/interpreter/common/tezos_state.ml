@@ -920,6 +920,7 @@ let init
     ?blocks_per_cycle
     n
   =
+  ignore initial_balances;
   let open Tezos_alpha_test_helpers in
   let accounts =
     Trace.trace_tzresult ~raise (fun _ ->
