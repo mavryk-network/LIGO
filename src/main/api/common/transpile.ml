@@ -15,13 +15,14 @@ let contract source_file to_syntax from_syntax display_format no_colour output_f
   in
   let to_syntax =
     match to_syntax, output_file with
-    | "auto", None -> raise.error @@ Main_errors.main_transpilation_unspecified_dest_syntax
+    | "auto", None ->
+      raise.error @@ Main_errors.main_transpilation_unspecified_dest_syntax
     | _ ->
-    Syntax.of_string_opt
-      ~raise
-      ~support_pascaligo:true
-      (Syntax_name to_syntax)
-      output_file
+      Syntax.of_string_opt
+        ~raise
+        ~support_pascaligo:true
+        (Syntax_name to_syntax)
+        output_file
   in
   let options =
     Compiler_options.make ~raw_options:(Raw_options.make ()) ~syntax:from_syntax ()
