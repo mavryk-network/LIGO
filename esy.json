@@ -45,7 +45,7 @@
     "dependencies": {
       "@opam/hacl-star-raw": "*",
       "esy-libev": "*",
-      "esy-gmp": "6.2.1000",
+      "esy-gmp": "*",
       "esy-libffi": "*"
     },
     "resolutions": {
