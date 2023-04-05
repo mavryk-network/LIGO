@@ -1,0 +1,35 @@
+
+* ringo-lwt
+
+#+begin_quote
+
+Conflicting constraints:
+  ligo-heitor-lsp-copy -> @opam/ringo-lwt -> @opam/ringo@=opam:0.4
+  ligo-heitor-lsp-copy -> @opam/tezos-crypto -> @opam/aches -> @opam/ringo@=opam:1.0.0
+
+Conflicting constraints:
+  ligo-heitor-lsp-copy -> @opam/ringo-lwt -> @opam/ringo@=opam:0.5
+  ligo-heitor-lsp-copy -> @opam/tezos-crypto -> @opam/aches -> @opam/ringo@=opam:1.0.0
+
+Conflicting constraints:
+  ligo-heitor-lsp-copy -> @opam/ringo-lwt -> @opam/ringo@=opam:0.6
+  ligo-heitor-lsp-copy -> @opam/tezos-crypto -> @opam/aches -> @opam/ringo@=opam:1.0.0
+
+Conflicting constraints:
+  ligo-heitor-lsp-copy -> @opam/ringo-lwt -> @opam/ringo@=opam:0.7
+  ligo-heitor-lsp-copy -> @opam/tezos-crypto -> @opam/aches -> @opam/ringo@=opam:1.0.0
+
+Conflicting constraints:
+  ligo-heitor-lsp-copy -> @opam/ringo-lwt -> @opam/ringo@=opam:0.8
+  ligo-heitor-lsp-copy -> @opam/tezos-crypto -> @opam/aches -> @opam/ringo@=opam:1.0.0
+
+Conflicting constraints:
+  ligo-heitor-lsp-copy -> @opam/ringo-lwt -> @opam/ringo@=opam:0.9
+  ligo-heitor-lsp-copy -> @opam/tezos-crypto -> @opam/aches -> @opam/ringo@=opam:1.0.0
+
+  
+
+#+end_quote
+
+ringo-lwt 1.0.0 hasn't been published
+[2023-04-05 Wed] Actually, ringo-lwt isn't needed anywhere in the codebase

@@ -6,21 +6,18 @@ bug-reports: "https://gitlab.com/nomadic-labs/ringo/issues"
 dev-repo: "git+https://gitlab.com/nomadic-labs/ringo.git"
 license: "MIT"
 depends: [
-  "ocaml" { >= "4.05" }
+  "ocaml" { >= "4.08" }
   "dune" { >= "1.7" }
-  "ringo" {= version }
-  "lwt"
-  "base-unix" { with-test }
 ]
 build: [
   ["dune" "build" "-p" name "-j" jobs]
 ]
-synopsis: "Lwt-wrappers for Ringo caches"
+synopsis: "Bounded-length collections"
 url {
   src:
-    "https://gitlab.com/nomadic-labs/ringo/-/archive/v0.9/ringo-v0.9.tar.gz"
+    "https://gitlab.com/nomadic-labs/ringo/-/archive/v1.0.0/ringo-v1.0.0.tar.gz"
   checksum: [
-    "md5=e3bc59c3738c2d8cd4ef4bcc2ef1a97c"
-    "sha512=f34d8bfdf80bca4251dda98706f266e015674f0e5822128b89b6d26c3928e02c37071625f292b5dfa8484cb15a7e530bc33965f6489aa85bd15c2d4d2fd71a54"
+    "md5=c4bfe8506ee67b82bf5a4f5a989711d3"
+    "sha512=4c06df137173a605f14d1bf06193e591b02bd61518669f2d77513e7cd9ad7b660d5ea913cbb079eef8ac17246a71422827594dfe5ffaec032284e0de7e660305"
   ]
 }
