@@ -64,7 +64,6 @@ depends: [
   "alcotest-lwt"
   "qcheck-alcotest"
   "irmin-pack"
-  "ringo-lwt"
   "pure-splitmix"
   "resto-cohttp-self-serving-client"
   "tezos-rust-libs"
