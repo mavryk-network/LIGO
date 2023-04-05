@@ -18,7 +18,7 @@ import { actions } from "~/base-components/workspace";
 import fileOps from "~/base-components/file-ops";
 
 function createWebSocket() {
-  const url = `wss://${process.env.BACKEND_URL}`;
+  const url = `ws://${process.env.BACKEND_URL}`;
   const webSocket = new WebSocket(url);
   webSocket.onopen = () => {
     const socket = toSocket(webSocket);
@@ -34,12 +34,14 @@ function createWebSocket() {
           const paths = Array.from(filePromiseMap.keys());
           socket.send(paths.length);
           for (let i = 0; i < paths.length; i++) {
+            console.log(paths[i]);
             socket.send(paths[i]);
             const pageSize = 100;
             let rest = contents[i];
             do {
               const contentJSON = new Map();
               const content = rest.substring(0, pageSize);
+              console.log(content);
               rest = rest.substring(pageSize);
               let done = "";
               if (rest === "") {
