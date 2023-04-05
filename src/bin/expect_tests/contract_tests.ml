@@ -182,12 +182,12 @@ let%expect_test _ =
                  CDR ;
                  DUP 4 ;
                  GET 3 ;
-                 DUP ;
-                 DIG 2 ;
+                 SWAP ;
                  SUB ;
                  ISNAT ;
                  IF_NONE { PUSH string "not enough tickets" ; FAILWITH } {} ;
-                 SWAP ;
+                 DUP 4 ;
+                 GET 3 ;
                  PAIR ;
                  SWAP ;
                  SPLIT_TICKET ;
@@ -840,11 +840,7 @@ let%expect_test _ =
       code { CAR ; UNPAIR 4 ; ADD ; ADD ; ADD ; NIL operation ; PAIR } } |}]
 
 let%expect_test _ =
-  run_ligo_good
-    [ "compile"
-    ; "contract"
-    ; contract "warning_duplicate3.mligo"
-    ];
+  run_ligo_good [ "compile"; "contract"; contract "warning_duplicate3.mligo" ];
   [%expect
     {|
     { parameter (pair (nat %c) (nat %ck)) ;
@@ -1206,12 +1202,12 @@ let%expect_test _ =
                      CDR ;
                      DUP 4 ;
                      GET 3 ;
-                     DUP ;
-                     DIG 2 ;
+                     SWAP ;
                      SUB ;
                      ISNAT ;
                      IF_NONE { PUSH string "not enough tickets" ; FAILWITH } {} ;
-                     SWAP ;
+                     DUP 4 ;
+                     GET 3 ;
                      PAIR ;
                      SWAP ;
                      SPLIT_TICKET ;
@@ -3628,11 +3624,12 @@ let%expect_test _ =
                          DUP 3 ;
                          CDR ;
                          PUSH mutez 0 ;
+                         DIG 4 ;
+                         CAR ;
                          DIG 5 ;
                          CAR ;
                          CDR ;
-                         DIG 5 ;
-                         CAR ;
+                         SWAP ;
                          GET ;
                          IF_NONE { PUSH nat 0 } {} ;
                          TRANSFER_TOKENS }
