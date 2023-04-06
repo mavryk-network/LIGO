@@ -34,23 +34,10 @@ function createWebSocket() {
           const paths = Array.from(filePromiseMap.keys());
           socket.send(paths.length);
           for (let i = 0; i < paths.length; i++) {
-            socket.send(paths[i]);
-            const pageSize = 100;
-            let rest = contents[i];
-            do {
-              const contentJSON = new Map();
-              const content = rest.substring(0, pageSize);
-              rest = rest.substring(pageSize);
-              let done = "";
-              if (rest === "") {
-                done = "true";
-              } else {
-                done = "false";
-              }
-              contentJSON.set("content", content);
-              contentJSON.set("done", done);
-              socket.send(JSON.stringify(Object.fromEntries(contentJSON)));
-            } while (rest !== "");
+            const fileJSON = new Map();
+            fileJSON.set("path", paths[i]);
+            fileJSON.set("content", contents[i]);
+            socket.send(JSON.stringify(Object.fromEntries(fileJSON)));
           }
 
           const languageClient = createLanguageClient({
