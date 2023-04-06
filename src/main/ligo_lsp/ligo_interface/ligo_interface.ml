@@ -5,15 +5,6 @@ open Linol_lwt
 
 type nonrec get_scope_info = get_scope_info
 
-module CameLIGO_pretty =
-  Parsing_shared.Common.MakePretty (Cst_cameligo.CST) (Parsing_cameligo.Pretty)
-
-module JsLIGO_pretty =
-  Parsing_shared.Common.MakePretty (Cst_jsligo.CST) (Parsing_jsligo.Pretty)
-
-module PascaLIGO_pretty =
-  Parsing_shared.Common.MakePretty (Cst_pascaligo.CST) (Parsing_pascaligo.Pretty)
-
 (** To support dirty files, we store some data about files in memory *)
 type file_data =
   { syntax : Syntax_types.t
@@ -21,8 +12,8 @@ type file_data =
   ; get_scope_info : get_scope_info
   }
 
-let get_scope : DocumentUri.t -> string -> get_scope_info =
- fun uri source ->
+let get_scope : deprecated:bool -> DocumentUri.t -> string -> get_scope_info =
+ fun ~deprecated uri source ->
   (* packages - project_root [later] *)
   let file = DocumentUri.to_path uri in
   (* #include - Pass lib or dirs *)
@@ -31,7 +22,7 @@ let get_scope : DocumentUri.t -> string -> get_scope_info =
     Compiler_options.Raw_options.make
       ~with_types:true
       ~libraries:[ dir_name ]
-      ~deprecated:true
+      ~deprecated
       ()
   in
   unfold_get_scope
