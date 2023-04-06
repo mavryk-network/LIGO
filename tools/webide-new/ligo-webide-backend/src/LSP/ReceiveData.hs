@@ -53,7 +53,6 @@ receiveFileTree prefix conn =
                   MaybeT (Aeson.decodeStrict <$> liftIO (WS.receiveData conn))
                 content <- hoistMaybe (Map.lookup "content" msg)
                 done <- hoistMaybe (Map.lookup "done" msg)
-                logFM DebugS ("content: " <> show (Text.take 20 content) <> "...")
                 appendFile (Text.unpack $ prefix <> path) content
                 unless (done == "true") receiveFile
           receiveFile
