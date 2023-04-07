@@ -511,7 +511,7 @@ module Apply = struct
       | C_mut_lock _ -> true
       | _ -> false
     in
-    if List.length ctx < 100 && List.for_all ~f:no_texists_var ctx
+    if List.for_all ~f:no_texists_var ctx
     then sig_
     else List.map sig_ ~f:(sig_item ctx)
 end
