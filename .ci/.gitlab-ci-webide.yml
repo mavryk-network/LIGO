@@ -5,10 +5,10 @@
 webide-define-image-tag:
   extends: .docker-image
   stage: pretooling
-  needs:
-    - job: changelog
-      artifacts: false
+  needs: []
   rules:
+    - if: $TRIGGER_DOCKER_BASE_STACK_BUILDER != null
+      when: always
     - if: ($CI_MERGE_REQUEST_EVENT_TYPE == "merge_train")
       when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TITLE =~ /^[w;W]eb[I;i]de-/'
@@ -24,7 +24,7 @@ webide-define-image-tag:
       when: always
   script:
     - FORMATED_CI_JOB_STARTED_AT="${CI_JOB_STARTED_AT//:/-}"
-    - NPR_ENVIRONMENT="$(echo ${CI_MERGE_REQUEST_TITLE} | grep -io 'webide-[ab]' | head -1 | sed 's/^[wW][eE][bB][Ii][dD][eE]//')" || true
+    - NPR_ENVIRONMENT="-a"
     - WEBIDE_NEW_IMAGE_TAG="registry.gitlab.com/${CI_PROJECT_PATH}/ligo_webide_new:${FORMATED_CI_JOB_STARTED_AT}-${CI_COMMIT_SHORT_SHA}${NPR_ENVIRONMENT}"
     - WEBIDE_FRONTEND_NEW_IMAGE_TAG="registry.gitlab.com/${CI_PROJECT_PATH}/ligo_webide_frontend_new:${FORMATED_CI_JOB_STARTED_AT}-${CI_COMMIT_SHORT_SHA}${NPR_ENVIRONMENT}"
     - echo "WEBIDE_NEW_IMAGE_TAG=${WEBIDE_NEW_IMAGE_TAG}" >> webide-img-tag.env
@@ -38,8 +38,6 @@ webide-new-backend-build:
   stage: build
   needs: []
   rules:
-    - if: $TRIGGER_DOCKER_BASE_STACK_BUILDER != null
-      when: always
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TITLE =~ /^[w;W]eb[I;i]de-/'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -47,7 +45,6 @@ webide-new-backend-build:
         - tools/webide-new/ligo-webide-backend/**/*
       when: always
   script:
-    - echo "${CI_BUILD_TOKEN}" | docker login -u gitlab-ci-token --password-stdin registry.gitlab.com
     - docker build tools/webide-new/ligo-webide-backend
   after_script:
     - docker image rm "${WEBIDE_NEW_IMAGE_TAG}" >/dev/null 2>&1 || true
@@ -55,9 +52,7 @@ webide-new-backend-build:
 webide-new-frontend-build:
   extends: .docker-image
   stage: build
-  needs:
-    - job: changelog
-      artifacts: false
+  needs: []
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TITLE =~ /^[w;W]eb[I;i]de-/'      
       when: never
@@ -82,6 +77,8 @@ webide-new-backend-build-and-push-backend:
     - job: webide-define-image-tag
       artifacts: true 
   rules:
+    - if: $TRIGGER_DOCKER_BASE_STACK_BUILDER != null
+      when: always
     - if: ($CI_MERGE_REQUEST_EVENT_TYPE == "merge_train")
       when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TITLE =~ /^[w;W]eb[I;i]de-/'      
