@@ -90,7 +90,7 @@ module Make (Config : Config.S) (Options : Options.S) =
                      | false -> None
       in
       match path with
-      | None -> None 
+      | None -> None
       | Some p -> Some (Fpath.v p |> Fpath.normalize |> Fpath.to_string)
 
     (* STRING PROCESSING *)
