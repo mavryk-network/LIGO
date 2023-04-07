@@ -50,7 +50,7 @@ let compile ~raise =
             (Signature.Public_key.of_b58check_opt s)
         in
         e_key ~loc s
-      | E_literal (Literal_string lit) when is_ty_var ty (to_string Timestamp) ->
+      | E_literal (Literal_string lit) when is_ty_var ty (to_string Timestamp) && Caml.(Ligo_string.get_type lit = `Standard) ->
         let open Tezos_base.TzPervasives.Time.Protocol in
         let str = Ligo_string.extract lit in
         let time = trace_option ~raise (bad_timestamp str ae) @@ of_notation str in
