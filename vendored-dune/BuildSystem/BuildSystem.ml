@@ -123,7 +123,6 @@ module Make (M : M) =
     in
     (* Add all dependency at the beginning of the file *)
     let add_modules (file_name,(mangled_name,_,_, _deps_lst)) =
-      print_endline (Format.asprintf "Adding: %s" mangled_name);
       let module_binder = mangled_name in
       (* Get the ast_type of the module *)
       let ast_typed =
