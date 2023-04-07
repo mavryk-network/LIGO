@@ -1,0 +1,18 @@
+# Create base image which gonna be used by other docker images like webide
+docker-base-stack-builder:
+  extends: .docker-image
+  stage: push
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      changes: 
+        - tools/docker-base-img/stack-haskell/**
+    # - if: $TRIGGER_DOCKER_BASE_STACK_BUILDER != null
+    #   when: always
+  script:
+    - docker build -f tools/docker-base-img/stack-haskell/Dockerfile
+       tools/docker-base-img/stack-haskell
+      -t registry.gitlab.com/${CI_PROJECT_PATH}/stack-haskell:latest
+    - echo "${CI_BUILD_TOKEN}" | docker login -u gitlab-ci-token --password-stdin registry.gitlab.com
+    - docker push registry.gitlab.com/${CI_PROJECT_PATH}/stack-haskell:latest
+  after_script:
+    - docker image rm "registry.gitlab.com/${CI_PROJECT_PATH}/stack-haskell:latest" >/dev/null 2>&1 || true

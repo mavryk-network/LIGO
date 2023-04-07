@@ -30,6 +30,7 @@ include:
   - '/.ci/.gitlab-ci-lsp.yml'
   - '/.ci/.gitlab-ci-debugger.yml'
   - '/.ci/.gitlab-ci-webide-new.yml'
+  - '/.ci/.gitlab-ci-docker-base.yml'
   # CI manage notification
   - '/.ci/.gitlab-ci-notify.yml'
 .submodule-clone:

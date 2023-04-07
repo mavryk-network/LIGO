@@ -36,10 +36,10 @@ webide-define-image-tag:
 webide-new-backend-build:
   extends: .docker-image
   stage: build
-  needs:
-    - job: changelog
-      artifacts: false
+  needs: []
   rules:
+    - if: $TRIGGER_DOCKER_BASE_STACK_BUILDER != null
+      when: always
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TITLE =~ /^[w;W]eb[I;i]de-/'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -47,6 +47,7 @@ webide-new-backend-build:
         - tools/webide-new/ligo-webide-backend/**/*
       when: always
   script:
+    - echo "${CI_BUILD_TOKEN}" | docker login -u gitlab-ci-token --password-stdin registry.gitlab.com
     - docker build tools/webide-new/ligo-webide-backend
   after_script:
     - docker image rm "${WEBIDE_NEW_IMAGE_TAG}" >/dev/null 2>&1 || true
