@@ -100,10 +100,10 @@ and expression_content ppf (ec : expression_content) =
   | E_record m -> Record.pp expression ppf m
   | E_accessor a -> Types.Accessor.pp expression ppf a
   | E_update u -> Types.Update.pp expression ppf u
-  | E_lambda l -> Lambda.pp expression type_expression ppf l
+  | E_lambda l -> Lambda.pp expression type_expression_annot ppf l
   | E_type_abstraction e -> Type_abs.pp expression ppf e
   | E_matching m -> Types.Match_expr.pp expression type_expression_annot ppf m
-  | E_recursive r -> Recursive.pp expression type_expression ppf r
+  | E_recursive r -> Recursive.pp expression type_expression_annot ppf r
   | E_let_in { let_binder; rhs; let_result; attributes = { hidden = false; _ } as attr }
     ->
     fprintf

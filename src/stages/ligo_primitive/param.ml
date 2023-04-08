@@ -34,7 +34,7 @@ let make ?(mut_flag = Immutable) ?(forced_flag = Regular) var ascr =
 let pp g ppf { binder; mut_flag; forced_flag } =
   Format.fprintf
     ppf
-    "%a%a@;%a"
+    (match mut_flag, forced_flag with Immutable, Regular -> "%a%a%a" | _ -> "%a%a@;%a")
     pp_mutable_flag
     mut_flag
     pp_forced_flag
