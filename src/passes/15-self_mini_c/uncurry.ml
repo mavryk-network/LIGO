@@ -112,8 +112,8 @@ let rec usage_in_expr (f : Value_var.t) (expr : expression) : usage =
     usages [self expr; self update]
   | E_raw_michelson _ ->
     Unused
-  | E_inline_michelson _ ->
-    Unused
+  | E_inline_michelson (_, arguments) ->
+    usages (List.map ~f:self arguments)
   | E_global_constant (_hash, args) ->
     usages (List.map ~f:self args)
   | E_create_contract (_p, _s, _code, args) ->
