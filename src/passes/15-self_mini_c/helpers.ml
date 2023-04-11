@@ -54,8 +54,12 @@ let rec map_expression : mapper -> expression -> expression = fun f e ->
   let e' = f e in
   let return content = { e' with content } in
   match e'.content with
-  | E_variable _ | E_literal _ | E_raw_michelson _ | E_inline_michelson _
+  | E_variable _ | E_literal _ | E_raw_michelson _
     as em -> return em
+  | E_inline_michelson (code, arguments) -> (
+      let arguments = List.map ~f:self arguments in
+      return @@ E_inline_michelson (code, arguments)
+  )
   | E_constant (c) -> (
       let lst = List.map ~f:self c.arguments in
       return @@ E_constant {cons_name = c.cons_name; arguments = lst}
