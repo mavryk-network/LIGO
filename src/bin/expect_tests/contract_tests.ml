@@ -182,12 +182,12 @@ let%expect_test _ =
                  CDR ;
                  DUP 4 ;
                  GET 3 ;
-                 SWAP ;
+                 DUP ;
+                 DIG 2 ;
                  SUB ;
                  ISNAT ;
                  IF_NONE { PUSH string "not enough tickets" ; FAILWITH } {} ;
-                 DUP 4 ;
-                 GET 3 ;
+                 SWAP ;
                  PAIR ;
                  SWAP ;
                  SPLIT_TICKET ;
@@ -1168,12 +1168,12 @@ let%expect_test _ =
                      CDR ;
                      DUP 4 ;
                      GET 3 ;
-                     SWAP ;
+                     DUP ;
+                     DIG 2 ;
                      SUB ;
                      ISNAT ;
                      IF_NONE { PUSH string "not enough tickets" ; FAILWITH } {} ;
-                     DUP 4 ;
-                     GET 3 ;
+                     SWAP ;
                      PAIR ;
                      SWAP ;
                      SPLIT_TICKET ;
@@ -3025,12 +3025,11 @@ let%expect_test _ =
                          DUP 3 ;
                          CDR ;
                          PUSH mutez 0 ;
-                         DIG 4 ;
-                         CAR ;
                          DIG 5 ;
                          CAR ;
                          CDR ;
-                         SWAP ;
+                         DIG 5 ;
+                         CAR ;
                          GET ;
                          IF_NONE { PUSH nat 0 } {} ;
                          TRANSFER_TOKENS }
