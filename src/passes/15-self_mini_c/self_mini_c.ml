@@ -66,10 +66,10 @@ let rec is_pure : expression -> bool = fun e ->
     false
   | E_create_contract _
     (* very not pure *)
-  | E_raw_michelson _ ->
-    false
   | E_inline_michelson _ ->
     false
+  | E_raw_michelson _ ->
+    true
 
  (* TODO E_let_mut_in is pure when the rhs is pure and the body's
      only impurity is assign/deref of the bound mutable variable *)
