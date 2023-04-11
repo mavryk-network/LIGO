@@ -13,7 +13,7 @@ module PreprocParams = Preprocessor.CLI.Make (Config)
 module Parameters    = LexerLib.CLI.Make (PreprocParams)
 module Options       = Parameters.Options
 
-(* Definition of a self-pass (a.k.a. filter) *)
+(* Definition of self-passes (a.k.a. filters) *)
 
 type item = Token.t
 
@@ -29,8 +29,7 @@ type filter =
 
 type t = filter list
 
-(* Listing all self-passes on lexical units (resulting in
-   [filters]) *)
+(* Listing all self-passes on tokens (resulting in [filters]) *)
 
 let jsligo =
   match Options.jsligo with
@@ -41,7 +40,7 @@ let jsligo =
 let filters = [
   Caml.(if Options.jsligo <> None then Some Comments.filter else None);
   Caml.(if Options.jsligo <> None then Some Directives.filter else None)
-  (* Add more in this list. *)
+  (* Add more to this list. *)
 ]
 
 let filters : t =

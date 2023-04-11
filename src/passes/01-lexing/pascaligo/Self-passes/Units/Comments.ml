@@ -11,28 +11,25 @@ module Markup = LexerLib.Markup
 
 module Token = Lx_psc_self_tokens.Token
 
-(* Utilities *)
-
-type units = Token.t Unit.t list
-
 (* Filter *)
 
-let filter (units: units) =
-  let open! Token
-  in
+let filter (units : Token.t Unit.t list) : Token.t Unit.t list =
+  let open! Token in
   let rec aux acc = function
-    `Markup Markup.BlockCom {region; value} :: units ->
-       let token = `Token (mk_BlockCom value region)
-       in aux (token :: acc) units
-  | `Markup Markup.LineCom {region; value} :: units ->
-       let token = `Token (mk_LineCom value region)
-       in aux (token :: acc) units
-  | unit :: units ->
-      aux (unit :: acc) units
-
+    `Markup Markup.BlockCom {value; region} :: remaining ->
+      aux (`Token (mk_BlockCom value region) :: acc) remaining
+  | `Markup Markup.LineCom {value; region} :: remaining ->
+      aux (`Token (mk_LineCom value region) :: acc) remaining
+  | other :: remaining ->
+      aux (other :: acc) remaining
   | [] -> List.rev acc
-  in
-  aux [] units
+  in aux [] units
+
+(* Exported *)
+
+type item = Token.t Unit.t
+
+type units = item list
 
 type message = string Region.reg
 

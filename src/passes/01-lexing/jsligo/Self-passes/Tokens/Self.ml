@@ -6,7 +6,7 @@ module Region = Simple_utils.Region
 module Std    = Simple_utils.Std
 module Unit   = LexerLib.Unit
 
-(* Definition of a self-pass (a.k.a. filter) *)
+(* Definition of self-passes (a.k.a. filters) *)
 
 type item = Token.t
 
@@ -22,8 +22,7 @@ type filter =
 
 type t = filter list
 
-(* Listing all self-passes on lexical units (resulting in
-   [filters]) *)
+(* Listing all self-passes on tokens (resulting in [filters]) *)
 
 let filters : t = [
   ES6FUN.filter;
@@ -32,5 +31,7 @@ let filters : t = [
   VBAR_hook.filter;
   SEMI.filter;
   SEMI_hook.filter;
+  Comments.filter;
   Attributes.filter
+  (* Add more to this list. *)
 ]

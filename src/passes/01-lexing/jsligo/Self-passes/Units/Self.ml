@@ -1,4 +1,4 @@
-(* Self-passes on the lexical units for CameLIGO *)
+(* Self-passes on the lexical units for JsLIGO *)
 
 (* Vendor dependencies *)
 
