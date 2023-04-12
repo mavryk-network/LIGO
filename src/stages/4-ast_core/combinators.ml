@@ -209,6 +209,7 @@ let rec get_e_applications t =
     | apps -> apps @ [ args ])
   | None -> []
 
+
 let get_e_ascription a =
   match a with
   | E_ascription { anno_expr; type_annotation } -> Some (anno_expr, type_annotation)

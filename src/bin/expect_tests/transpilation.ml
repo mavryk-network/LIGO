@@ -33,7 +33,6 @@ let%expect_test _ =
         )
       ]; |}]
 
-
 (* ---------- Tests for CLI options for syntax ------------------------------ *)
 
 (* Should fail since neither [--to-syntax] nor output file is provided *)

@@ -444,7 +444,6 @@ let e_a_application_exn ~loc lamb args =
 
 let e_a_lambda ~loc l in_ty out_ty = e_lambda ~loc l (t_arrow ~loc in_ty out_ty ())
 
-
 let rec e_a_applications ~loc lamb args : expression =
   match args with
   | [] -> lamb
@@ -456,7 +455,6 @@ let e_a_applications ~loc lamb args : expression =
 
 
 let e_a_matching ~loc matchee cases t = e_matching ~loc { matchee; cases } t
-
 
 let e_a_test_nil_views ~loc s =
   make_e ~loc (e_test_nil_views (e_a_unit ~loc ())) (t_views ~loc s)
