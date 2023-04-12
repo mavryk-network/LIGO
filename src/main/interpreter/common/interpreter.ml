@@ -1866,7 +1866,7 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
     let code = List.hd_exn vals in
     let code =
       trace_option ~raise (Errors.generic_error term.location "could not get a string")
-      @@ get_a_string code
+      @@ get_e_string code.expression_content
     in
     let args = List.tl_exn vals in
     let* args =

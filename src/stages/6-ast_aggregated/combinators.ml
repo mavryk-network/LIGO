@@ -552,3 +552,8 @@ let get_e_tuple t =
   match t with
   | E_record r -> Some (List.map ~f:snd @@ Record.tuple_of_record r)
   | _ -> None
+
+let get_e_string t =
+  match t with
+  | E_literal (Literal_string s) -> Some Ligo_string.(extract s)
+  | _ -> None
