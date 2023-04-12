@@ -14,6 +14,8 @@ let w_split (x : 'a Lexing_shared.Wrap.t) : 'a * Location.t =
 let w_fst x = fst (w_split x)
 let w_snd x = snd (w_split x)
 
+
+(* Define equivalences between CST type and Ast_unified 'sub-languages' *)
 module type EQUIVALENCES = sig
   type expr
   type ty_expr
@@ -27,6 +29,7 @@ module type EQUIVALENCES = sig
   type program
 end
 
+(* Define the type of Ast_unified nodes while being built *)
 module Folding (X : EQUIVALENCES) = struct
   type ty_expr = X.ty_expr Ast_unified.ty_expr_
   type pattern = (X.pattern, X.ty_expr) Ast_unified.pattern_
@@ -48,7 +51,7 @@ module Folding (X : EQUIVALENCES) = struct
 
   type program = (X.program, X.program_entry) Ast_unified.program_
 end
-
+(* define types of unification function (for each sub-lang) *)
 module type UNIF = sig
   module Eq : EQUIVALENCES
   open Folding(Eq)
@@ -65,6 +68,7 @@ module type UNIF = sig
   val program : Eq.program -> program
 end
 
+(* apply anamorphism on expression/pattern (can easily be extended) *)
 module Make_unification (C : UNIF) = struct
   open C
 
