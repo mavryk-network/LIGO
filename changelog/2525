@@ -1,0 +1,7 @@
+
+author: lesenechal.remi
+description: "\\n\\nfix a bug where matching on unit pattern would trigger a typing error\\n\\n"
+merge_request: '2525'
+title: "tiny bug in checker"
+type: fixed
+            
