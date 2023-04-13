@@ -99,15 +99,9 @@ module Eq = struct
   type ty_expr = I.type_expr
 
   (*
-    The most troubling thing with jsligo: functions parameters is a single expression
+    The most troubling thing with jsligo: functions parameters are expressions
     `<parameters:expr> : <lhs_type:type> => ..` (see EFun node bellow)
      I believe they should really be parsed as a pattern list
-
-    note:
-      as of today, this is a value expression `([x ,...[y, ...z]]) => x`
-      while this is not a valid declaration `const [x ,...[y, ...z]] = toto`.
-      in the first case, it's an "expression as a pattern". In the second case, it's a
-      pattern
   *)
   type pattern =
     [ `Pattern of I.pattern
