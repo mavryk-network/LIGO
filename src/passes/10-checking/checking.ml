@@ -1058,13 +1058,11 @@ and check_pattern ~mut (pat : I.type_expression option I.Pattern.t) (type_ : Typ
         return @@ (Location.wrap ~loc content : O.type_expression O.Pattern.t))
   in
   let err = pattern_do_not_conform_type pat type_ in
-  let fail () = raise err in
   set_loc pat.location
   @@
   match pat.wrap_content, type_.content with
   | P_unit, T_construct { constructor = Literal_types.Unit; _ } ->
     const E.(return P.P_unit)
-  | P_unit, _ -> fail ()
   | P_var binder, _ ->
     let%bind () =
       match Binder.get_ascr binder with
