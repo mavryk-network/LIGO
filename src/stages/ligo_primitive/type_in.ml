@@ -3,7 +3,7 @@ type ('e, 't) t =
   ; rhs : 't
   ; let_result : 'e
   }
-[@@deriving eq, compare, yojson, hash, fold, map]
+[@@deriving eq, compare, yojson, hash, fold, iter, map]
 
 let pp f g ppf { type_binder; rhs; let_result } =
   Format.fprintf
@@ -15,13 +15,3 @@ let pp f g ppf { type_binder; rhs; let_result } =
     rhs
     f
     let_result
-
-
-let fold_map
-    :  ('acc -> 'a -> 'acc * 'b) -> ('acc -> 'c -> 'acc * 'd) -> 'acc -> ('a, 'c) t
-    -> 'acc * ('b, 'd) t
-  =
- fun f g acc { type_binder; rhs; let_result } ->
-  let acc, rhs = g acc rhs in
-  let acc, let_result = f acc let_result in
-  acc, { type_binder; rhs; let_result }

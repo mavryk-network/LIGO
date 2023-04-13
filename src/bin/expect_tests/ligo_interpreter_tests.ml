@@ -354,7 +354,7 @@ let%expect_test _ =
     - test exited with value [(() , Mutation at: File "adder.mligo", line 1, characters 58-63:
       1 | let main (p : int) (k : int) : operation list * int = [], p + k
 
-    Replacing by: (p - k).
+    Replacing by: p - k.
     )]. |}]
 
 let%expect_test _ =
@@ -681,15 +681,12 @@ let%expect_test _ =
   [%expect
     {|
     Everything at the top-level was executed.
-    - test_x exited with value (KT1X92QM6i2RhjuTMgHvYJA6nDu7udpmNU39 , { parameter unit ;
+    - test_x exited with value (KT19hFZZxPTue1oBw7cc46L1p6pJ3xTo3vRF , { parameter unit ;
       storage
         (pair (pair (big_map %metadata string bytes) (set %participants address))
               (map %secrets address bool)) ;
-      code { PUSH bool True ;
-             PUSH bool False ;
-             DIG 2 ;
-             CDR ;
-             DUP 3 ;
+      code { CDR ;
+             PUSH bool True ;
              DUP 2 ;
              CAR ;
              CDR ;
@@ -698,9 +695,9 @@ let%expect_test _ =
                     CDR ;
                     DIG 2 ;
                     GET ;
-                    IF_NONE { DUP 3 ; AND } { DROP ; DUP 4 ; AND } } ;
+                    IF_NONE { PUSH bool False ; AND } { DROP ; PUSH bool True ; AND } } ;
              DROP ;
-             DUP 3 ;
+             PUSH bool True ;
              DUP 2 ;
              CAR ;
              CDR ;
@@ -708,12 +705,10 @@ let%expect_test _ =
                     EMPTY_MAP address bool ;
                     DIG 2 ;
                     GET ;
-                    IF_NONE { DUP 3 ; AND } { DROP ; DUP 4 ; AND } } ;
-             DIG 2 ;
-             DIG 3 ;
-             DROP 3 ;
+                    IF_NONE { PUSH bool False ; AND } { DROP ; PUSH bool True ; AND } } ;
+             DROP ;
              NIL operation ;
-             PAIR } } , 236). |}]
+             PAIR } } , 222). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_read_contract.mligo" ];
@@ -804,6 +799,15 @@ let%expect_test _ =
     {|
     Everything at the top-level was executed.
     - test exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test"; test "test_untranspile_bls.mligo" ];
+  [%expect
+    {|
+    Everything at the top-level was executed.
+    - test_fr exited with value ().
+    - test_g1 exited with value ().
+    - test_g2 exited with value (). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "get_contract.mligo" ];
@@ -949,6 +953,11 @@ let%expect_test _ =
     {test|
     Everything at the top-level was executed.
     - test_increment exited with value (). |test}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test"; test "test_originate_single_view.mligo" ];
+  [%expect
+    {test| |test}]
 
 (* do not remove that :) *)
 let () = Caml.Sys.chdir pwd

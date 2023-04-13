@@ -1,5 +1,6 @@
 open Linol_lwt
 open Handlers
+open Common
 module Requests = Ligo_lsp.Server.Requests
 open Requests.Handler
 
@@ -30,11 +31,8 @@ let get_folding_range_test ({ file_path; folding_ranges } : folding_range_test)
   in
   match folds_opt with
   | Some actual_folds ->
-    Common.should_match_list
-      testable_folding_range
-      ~actual:actual_folds
-      ~expected:folding_ranges
-  | None -> Alcotest.fail "Expected some list of folding ranges, got None"
+    should_match_list testable_folding_range ~actual:actual_folds ~expected:folding_ranges
+  | None -> fail "Expected some list of folding ranges, got None"
 
 
 let mk_folding_range kind (startLine, startCharacter) (endLine, endCharacter) =
@@ -91,4 +89,4 @@ let test_cases =
   ]
 
 
-let tests = "folding range", List.map ~f:get_folding_range_test test_cases
+let tests = "folding_range", List.map ~f:get_folding_range_test test_cases
