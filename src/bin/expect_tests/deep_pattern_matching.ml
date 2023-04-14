@@ -239,13 +239,16 @@ let%expect_test _ =
   run_ligo_bad [ "print"; "ast-typed"; bad_test "pm_fail13.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative//deep_pattern_matching/pm_fail13.mligo", line 7, characters 5-14:
+    File "../../test/contracts/negative//deep_pattern_matching/pm_fail13.mligo", line 5, character 3 to line 7, character 22:
+      4 |  let stor =
+      5 |    match p with
       6 |    | Increment n -> s +1
       7 |    | Decrement -> s -1
                ^^^^^^^^^
       8 |  in ([] : operation list), stor
 
-    Pattern not of the expected type "nat". |}]
+    Invalid type(s)
+    Cannot unify "unit" with "nat". |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print"; "ast-typed"; bad_test "pm_fail4.mligo" ];

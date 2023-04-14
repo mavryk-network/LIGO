@@ -33,13 +33,17 @@ let%expect_test _ =
   run_ligo_bad [ "print"; "ast-typed"; bad_test "pattern_match2.jsligo"; "--test" ];
   [%expect
     {|
-    File "../../test/contracts/negative/pattern_match2.jsligo", line 3, characters 13-15:
+    File "../../test/contracts/negative/pattern_match2.jsligo", line 2, character 2 to line 5, character 4:
+      1 | let test_foo = (x : test_exec_result) : string => {
       2 |   match(x, {
       3 |     Success: () => "",
                        ^^
       4 |     Fail: (_ : test_exec_error) => ""
+      5 |   });
+      6 | }
 
-    Pattern not of the expected type "nat". |}]
+    Invalid type(s)
+    Cannot unify "unit" with "nat". |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print"; "ast-typed"; bad_test "pattern_match5.jsligo"; "--test" ];
