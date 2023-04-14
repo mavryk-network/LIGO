@@ -52,6 +52,7 @@ module Tezos = struct
     [%michelson ({| { OPEN_CHEST ; IF_LEFT { RIGHT (or unit unit) } { IF { PUSH unit Unit ; LEFT unit ; LEFT bytes } { PUSH unit Unit ; RIGHT unit ; LEFT bytes } } } |} ck c n : chest_opening_result)]
 #endif
   [@inline] [@thunk] let call_view (type a b) (s : string) (x : a) (a : address)  : b option =
+    let _ : unit = [%external ("CHECK_CALL_VIEW_LITSTR", s)] in
     [%michelson ({| { VIEW (litstr $0) (typeopt $1) } |} (s : string) (None : b option) x a : b option)]
   let split_ticket (type a) (t : a ticket) (p : nat * nat) : (a ticket * a ticket) option =
     [%michelson ({| { SPLIT_TICKET } |} t p : (a ticket * a ticket) option)]
@@ -200,12 +201,28 @@ end
 let assert (b : bool) : unit = if b then () else failwith "failed assertion"
 let assert_some (type a) (v : a option) : unit = match v with | None -> failwith "failed assert some" | Some _ -> ()
 let assert_none (type a) (v : a option) : unit = match v with | None -> () | Some _ -> failwith "failed assert none"
+<<<<<<< HEAD
 let abs (i : int) : nat = [%michelson ({| { ABS } |} i : nat)]
 let is_nat (i : int) : nat option = [%michelson ({| { ISNAT } |} i : nat option)]
 let true : bool = True
 let false : bool = False
 let unit : unit = [%external ("UNIT")]
 let int (type a) (v : a) : a external_int = [%michelson ({| { INT } |} v : a external_int)]
+||||||| e0a30924c
+let abs (i : int) : nat = [%Michelson ({| { ABS } |} : int -> nat)] i
+let is_nat (i : int) : nat option = [%Michelson ({| { ISNAT } |} : int -> nat option)] i
+let true : bool = True
+let false : bool = False
+let unit : unit = [%external ("UNIT")]
+let int (type a) (v : a) : a external_int = [%Michelson ({| { INT } |} : a -> a external_int)] v
+=======
+let abs (i : int) : nat = [%Michelson ({| { ABS } |} : int -> nat)] i
+let is_nat (i : int) : nat option = [%Michelson ({| { ISNAT } |} : int -> nat option)] i
+[@inline] let true : bool = True
+[@inline] let false : bool = False
+[@inline] let unit : unit = [%external ("UNIT")]
+let int (type a) (v : a) : a external_int = [%Michelson ({| { INT } |} : a -> a external_int)] v
+>>>>>>> dev
 let ignore (type a) (_ : a) : unit = ()
 let curry (type a b c) (f : a * b -> c) (x : a) (y : b) : c = f (x, y)
 let uncurry (type a b c) (f : a -> b -> c) (xy : a * b) : c = f xy.0 xy.1
