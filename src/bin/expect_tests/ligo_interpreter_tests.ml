@@ -346,14 +346,6 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_mutate_module.mligo" ];
   [%expect
     {|
-    File "./test_mutate_module.mligo", line 10, characters 11-42:
-      9 |   let _ = Test.transfer_to_contract_exn c (Add 1) 0tez in
-     10 |   let () = assert (Test.get_storage a = 1) in
-     11 |   ()
-
-    You are using Michelson failwith primitive (loaded from standard library).
-    Consider using `Test.failwith` for throwing a testing framework failure.
-
     Everything at the top-level was executed.
     - test exited with value [(() , Mutation at: File "contract_under_test/module_adder.mligo", line 1, characters 66-71:
       1 | [@entry] let add (p : int) (k : int) : operation list * int = [], p + k
