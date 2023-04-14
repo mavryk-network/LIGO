@@ -201,28 +201,12 @@ end
 let assert (b : bool) : unit = if b then () else failwith "failed assertion"
 let assert_some (type a) (v : a option) : unit = match v with | None -> failwith "failed assert some" | Some _ -> ()
 let assert_none (type a) (v : a option) : unit = match v with | None -> () | Some _ -> failwith "failed assert none"
-<<<<<<< HEAD
 let abs (i : int) : nat = [%michelson ({| { ABS } |} i : nat)]
 let is_nat (i : int) : nat option = [%michelson ({| { ISNAT } |} i : nat option)]
-let true : bool = True
-let false : bool = False
-let unit : unit = [%external ("UNIT")]
-let int (type a) (v : a) : a external_int = [%michelson ({| { INT } |} v : a external_int)]
-||||||| e0a30924c
-let abs (i : int) : nat = [%Michelson ({| { ABS } |} : int -> nat)] i
-let is_nat (i : int) : nat option = [%Michelson ({| { ISNAT } |} : int -> nat option)] i
-let true : bool = True
-let false : bool = False
-let unit : unit = [%external ("UNIT")]
-let int (type a) (v : a) : a external_int = [%Michelson ({| { INT } |} : a -> a external_int)] v
-=======
-let abs (i : int) : nat = [%Michelson ({| { ABS } |} : int -> nat)] i
-let is_nat (i : int) : nat option = [%Michelson ({| { ISNAT } |} : int -> nat option)] i
 [@inline] let true : bool = True
 [@inline] let false : bool = False
 [@inline] let unit : unit = [%external ("UNIT")]
-let int (type a) (v : a) : a external_int = [%Michelson ({| { INT } |} : a -> a external_int)] v
->>>>>>> dev
+let int (type a) (v : a) : a external_int = [%michelson ({| { INT } |} v : a external_int)]
 let ignore (type a) (_ : a) : unit = ()
 let curry (type a b c) (f : a * b -> c) (x : a) (y : b) : c = f (x, y)
 let uncurry (type a b c) (f : a -> b -> c) (xy : a * b) : c = f xy.0 xy.1
