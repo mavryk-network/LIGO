@@ -63,6 +63,16 @@ val nseq_to_list    :        'a nseq -> 'a list
 val nsepseq_to_list : ('a,'b) nsepseq -> 'a list
 val sepseq_to_list  : ('a,'b)  sepseq -> 'a list
 
+(* Conversions to non-empty lists *)
+
+val nsepseq_to_nseq : ('a,'b) nsepseq -> 'a nseq
+val nsepseq_of_nseq : sep:'b -> 'a nseq -> ('a,'b) nsepseq
+
+(* Convertions of lists *)
+
+val list_to_nsepseq_opt : 'a list -> 's -> ('a, 's) nsepseq option
+val list_to_sepseq : 'a list -> 's -> ('a, 's) sepseq
+
 (* Effectful symbol generator *)
 
 val gen_sym : unit -> string

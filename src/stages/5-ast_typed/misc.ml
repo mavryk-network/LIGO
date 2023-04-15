@@ -5,108 +5,7 @@ open Simple_utils
 open Ligo_prim
 open Types
 
-(* TODO: does that need to be cleaned-up ? *)
-module Free_variables = struct
-  type bindings = Value_var.t list
-
-  let mem : bindings -> Value_var.t -> bool = List.mem ~equal:Value_var.equal
-  let singleton : Value_var.t -> bindings = fun s -> [ s ]
-  let union : bindings -> bindings -> bindings = ( @ )
-  let unions : bindings list -> bindings = List.concat
-  let empty : bindings = []
-
-  let rec expression_content : bindings -> expression_content -> bindings =
-   fun b ec ->
-    let self = expression b in
-    match ec with
-    | E_lambda l -> lambda b l
-    | E_literal _ -> empty
-    | E_constant { arguments; _ } -> unions @@ List.map ~f:self arguments
-    | E_variable name ->
-      (match mem b name with
-      | true -> empty
-      | false -> singleton name)
-    | E_application { lamb; args } -> unions @@ List.map ~f:self [ lamb; args ]
-    | E_constructor { element; _ } -> self element
-    | E_record m -> unions @@ List.map ~f:self @@ Record.values m
-    | E_accessor { struct_; _ } -> self struct_
-    | E_update { struct_; update; _ } -> union (self struct_) @@ self update
-    | E_matching { matchee; cases; _ } ->
-      union (self matchee) (matching_expression b cases)
-    | E_let_in { let_binder; rhs; let_result; _ } ->
-      let b' =
-        List.fold
-          (Types.Pattern.binders let_binder)
-          ~f:(fun b pb -> union (Binder.apply singleton pb) b)
-          ~init:b
-      in
-      union (expression b' let_result) (self rhs)
-    | E_type_abstraction { type_binder = _; result } -> self result
-    | E_mod_in { module_binder = _; rhs = _; let_result } -> self let_result
-    | E_raw_code _ -> empty
-    | E_type_inst { type_ = _; forall } -> self forall
-    | E_recursive { fun_name; lambda; _ } ->
-      let b' = union (singleton fun_name) b in
-      expression_content b' @@ E_lambda lambda
-    | E_module_accessor _ -> empty
-    | E_let_mut_in { rhs; let_result; _ } -> union (self let_result) (self rhs)
-    | E_assign { expression = e; _ } -> expression b e
-    | E_deref _ -> empty
-    | E_for { binder; start; final; incr; f_body } ->
-      let b' = union (singleton binder) b in
-      unions [ self start; self final; expression b' incr; expression b' f_body ]
-    | E_for_each { fe_binder = binder, None; collection; fe_body; collection_type = _ } ->
-      unions [ self collection; expression (union (singleton binder) b) fe_body ]
-    | E_for_each { fe_binder = binder, Some binder'; collection; fe_body; _ } ->
-      let b' = union [ binder; binder' ] b in
-      unions [ self collection; expression b' fe_body ]
-    | E_while { cond; body } -> union (self cond) (self body)
-
-
-  and lambda : bindings -> (expr, ty_expr) Lambda.t -> bindings =
-   fun b l ->
-    let b' = union (singleton (Param.get_var l.binder)) b in
-    expression b' l.result
-
-
-  and expression : bindings -> expression -> bindings =
-   fun b e -> expression_content b e.expression_content
-
-
-  and matching_case
-      :  (bindings -> expression -> bindings) -> bindings -> _ Types.Match_expr.match_case
-      -> bindings
-    =
-   fun f b m ->
-    let b' = Types.Pattern.binders m.pattern |> List.map ~f:Binder.get_var in
-    let bs = union b b' in
-    f bs m.body
-
-
-  and matching
-      :  (bindings -> expression -> bindings) -> bindings
-      -> _ Types.Match_expr.match_case list -> bindings
-    =
-   fun f b ms -> List.fold_left ms ~init:b ~f:(matching_case f)
-
-
-  and matching_expression x = matching expression x
-end
-
-let assert_eq a b = if Caml.( = ) a b then Some () else None
 let assert_same_size a b = if List.length a = List.length b then Some () else None
-
-let rec assert_list_eq f a b =
-  match a, b with
-  | [], [] -> Some ()
-  | [], _ -> None
-  | _, [] -> None
-  | hda :: tla, hdb :: tlb ->
-    Option.(
-      let* () = f hda hdb in
-      assert_list_eq f tla tlb)
-
-
 let constant_compare ia ib = Literal_types.compare ia ib
 
 let assert_no_type_vars (t : type_expression) : unit option =
@@ -299,6 +198,24 @@ let should_uncurry_entry entry_ty =
   | None -> `Bad
 
 
+(* We cannot really tell the difference, this is just an heuristic when we try with curried first *)
+let should_uncurry_view ~storage_ty view_ty =
+  match Combinators.get_t_arrow view_ty with
+  | Some { type1 = tin; type2 = return } ->
+    (match Combinators.get_t_arrow return with
+    | Some { type1 = storage; type2 = return }
+      when Option.is_some (assert_type_expression_eq (storage_ty, storage)) ->
+      `Yes (tin, storage, return)
+    | _ ->
+      (match Combinators.get_t_tuple tin with
+      | Some [ arg; storage ]
+        when Option.is_some (assert_type_expression_eq (storage_ty, storage)) ->
+        `No (arg, storage, return)
+      | Some [ _; storage ] -> `Bad_storage storage
+      | _ -> `Bad))
+  | None -> `Bad_not_function
+
+
 let parameter_from_entrypoints
     :  (Value_var.t * type_expression) List.Ne.t
     -> ( type_expression * type_expression
@@ -340,3 +257,116 @@ let parameter_from_entrypoints
         ~layout:Combinators.default_layout
         parameter_list
     , storage )
+
+
+(* Wrap a variable `f` of type `parameter -> storage -> return`
+   to an expression `fun (p, s) -> f p s : parameter * storage -> return` *)
+let uncurry_wrap ~loc ~type_ var =
+  let open Combinators in
+  let open Simple_utils.Option in
+  let* { type1 = input_ty; type2 = output_ty } = get_t_arrow type_ in
+  let* { type1 = storage; type2 = output_ty } = get_t_arrow output_ty in
+  (* We create a wrapper to uncurry it: *)
+  let parameter = input_ty in
+  let p_var = Value_var.fresh ~loc ~name:"parameter" () in
+  let s_var = Value_var.fresh ~loc ~name:"storage" () in
+  let ps_var = Value_var.fresh ~loc ~name:"input" () in
+  let p_binder = Binder.make p_var parameter in
+  let s_binder = Binder.make s_var storage in
+  let ps_param = Param.make ps_var (t_pair ~loc parameter storage) in
+  let p_expr = e_a_variable ~loc p_var parameter in
+  let s_expr = e_a_variable ~loc s_var storage in
+  let ps_expr = e_a_variable ~loc ps_var (t_pair ~loc parameter storage) in
+  (* main(p) *)
+  let expr =
+    e_a_application
+      ~loc
+      (e_a_variable ~loc var type_)
+      p_expr
+      (t_arrow ~loc storage output_ty ())
+  in
+  (* main(p)(s) *)
+  let expr = e_a_application ~loc expr s_expr output_ty in
+  (* match ps with (p, s) -> main(p)(s) *)
+  let expr =
+    e_a_matching
+      ~loc:Location.generated
+      ps_expr
+      [ { pattern =
+            Location.wrap
+              ~loc:Location.generated
+              Pattern.(
+                P_tuple
+                  [ Location.wrap ~loc:Location.generated @@ P_var p_binder
+                  ; Location.wrap ~loc:Location.generated @@ P_var s_binder
+                  ])
+        ; body = expr
+        }
+      ]
+      output_ty
+  in
+  (* fun ps -> match ps with (p, s) -> main(p)(s) *)
+  let expr =
+    e_a_lambda
+      ~loc
+      { binder = ps_param; output_type = output_ty; result = expr }
+      (t_pair ~loc parameter storage)
+      output_ty
+  in
+  some @@ expr
+
+
+let fetch_views_in_program ~storage_ty
+    : program -> program * (type_expression * type_expression Binder.t) list
+  =
+ fun prog ->
+  let aux declt ((prog, views) : program * _) =
+    let return () = declt :: prog, views in
+    let loc = Location.get_location declt in
+    match Location.unwrap declt with
+    | D_value ({ binder; expr; attr } as dvalue) when attr.view ->
+      let var = Binder.get_var binder in
+      (match should_uncurry_view ~storage_ty expr.type_expression with
+      | `Yes _ ->
+        let expr =
+          Option.value_exn @@ uncurry_wrap ~loc ~type_:expr.type_expression var
+        in
+        let binder = Binder.set_var binder (Value_var.fresh_like var) in
+        let binder = Binder.set_ascr binder expr.type_expression in
+        (* Add both `main` and the new `main#FRESH` version that calls `main` but it's curried *)
+        ( (Location.wrap ~loc:declt.location @@ D_value dvalue)
+          :: (Location.wrap ~loc:declt.location @@ D_value { dvalue with binder; expr })
+          :: prog
+        , (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
+          :: views )
+      | `No _ | `Bad | `Bad_not_function | `Bad_storage _ ->
+        ( (Location.wrap ~loc:declt.location @@ D_value dvalue) :: prog
+        , (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
+          :: views ))
+    | D_irrefutable_match
+        ({ pattern = { wrap_content = P_var binder; _ } as pattern; expr; attr } as
+        dirref)
+      when attr.view ->
+      let var = Binder.get_var binder in
+      (match should_uncurry_view ~storage_ty expr.type_expression with
+      | `Yes _ ->
+        let expr =
+          Option.value_exn @@ uncurry_wrap ~loc ~type_:expr.type_expression var
+        in
+        let binder = Binder.set_var binder (Value_var.fresh_like var) in
+        let binder = Binder.set_ascr binder expr.type_expression in
+        let pattern = Pattern.{ pattern with wrap_content = P_var binder } in
+        (* Add both `main` and the new `main#FRESH` version that calls `main` but it's curried *)
+        ( (Location.wrap ~loc:declt.location @@ D_irrefutable_match dirref)
+          :: (Location.wrap ~loc:declt.location
+             @@ D_irrefutable_match { dirref with expr; pattern })
+          :: prog
+        , (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
+          :: views )
+      | `No _ | `Bad | `Bad_not_function | `Bad_storage _ ->
+        ( (Location.wrap ~loc:declt.location @@ D_irrefutable_match dirref) :: prog
+        , (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
+          :: views ))
+    | D_irrefutable_match _ | D_type _ | D_module _ | D_value _ -> return ()
+  in
+  List.fold_right ~f:aux ~init:([], []) prog

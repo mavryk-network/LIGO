@@ -7,7 +7,6 @@ type t =
   }
 
 let empty = { content_typed = []; content_core = [] }
-let loc = Location.env
 
 module Cache = struct
   (* LanguageMap are used to cache compilation of standard libs across :
@@ -71,7 +70,6 @@ let get : options:Compiler_options.t -> unit -> t =
     let def str = "#define " ^ str ^ "\n" in
     match options.middle_end.protocol_version with
     | Environment.Protocols.Lima -> def "LIMA"
-    | Environment.Protocols.Kathmandu -> def "KATHMANDU"
   in
   let lib = Ligo_lib.get () in
   let curry_content_core = compile ~options (std ^ lib) in

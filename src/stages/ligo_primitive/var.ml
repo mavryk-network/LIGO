@@ -32,10 +32,18 @@ module Internal () = struct
       { name : string
       ; counter : int
       ; generated : bool
-      ; location :
-          (Location.t[@equal.ignore] [@compare.ignore] [@hash.ignore] [@sexp.opaque])
+      ; location : Location.t [@equal.ignore] [@compare.ignore] [@hash.ignore]
       }
-    [@@deriving equal, compare, yojson, hash, sexp]
+    [@@deriving equal, compare, yojson, hash]
+
+    let sexp_of_t ({ name; counter = _; generated = _; location = _ } : t) : Sexp.t =
+      Sexp.Atom name
+
+
+    let t_of_sexp : Sexp.t -> t = function
+      | Atom name ->
+        { name; generated = false; counter = 0; location = Location.generated }
+      | List _ as x -> Sexplib.Conv_error.ptag_no_args "can't be a list" x
   end
 
   include T
@@ -90,7 +98,6 @@ module Internal () = struct
     else Format.fprintf ppf "%s" v.name
 
 
-  let _pp ppf v = Format.fprintf ppf "%s#%d" v.name v.counter
   let wildcard ~loc = { name = "_"; counter = 0; location = loc; generated = false }
 
   include Comparable.Make (T)

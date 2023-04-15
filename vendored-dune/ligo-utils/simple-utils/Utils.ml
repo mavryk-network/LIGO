@@ -96,9 +96,29 @@ let nseq_to_list (x,y) = x::y
 
 let nsepseq_to_list (x,y) = x :: List.map ~f:snd y
 
+let nsepseq_of_nseq ~sep (hd,tl) =
+  (hd, List.map ~f:(fun x -> (sep,x)) tl)
+
 let sepseq_to_list = function
     None -> []
 | Some s -> nsepseq_to_list s
+
+(* Conversions to non-empty lists *)
+
+let nsepseq_to_nseq (hd, tl) = hd, (List.map ~f:snd tl)
+
+(* Convertions of lists *)
+
+let list_to_nsepseq_opt (lst : 'a list) (sep : 's) : ('a, 's) nsepseq option =
+  match lst with
+  | [] -> None
+  | hd :: tl -> Some (hd, List.map ~f:(fun e -> sep, e) tl)
+
+
+let list_to_sepseq (lst : 'a list) (sep : 's) : ('a, 's) sepseq =
+  match lst with
+  | [] -> None
+  | _ -> list_to_nsepseq_opt lst sep
 
 (* Optional values *)
 
