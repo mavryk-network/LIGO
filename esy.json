@@ -49,6 +49,40 @@
       "esy-libffi": "*"
     },
     "resolutions": {
+      "@opam/ocaml-lsp-server": {
+        "source": "no-source:",
+        "override": {
+          "build": ["true"]
+        }
+      },
+      "@opam/dune": "opam:3.7.1",
+      "@opam/stdune": "opam:3.7.1",
+      "@opam/tezos-rust-libs": "opam:1.1",
+      "@opam/hacl-star": "opam:0.4.1",
+      "@opam/hacl-star-raw": "opam:0.4.1",
+      "@opam/conf-cmake": {
+        "source": "no-source:",
+        "override": {
+          "build": "true"
+        }
+      },
+      "@opam/semver": "callistonianembrace/ocaml-semver:semver.opam#bf23370adb1cdf8efa60c19fe6e1ff195ee1f2ae",
+      "@opam/conf-gmp-powm-sec": {
+        "source": "no-source:",
+        "override": {
+          "build": "true"
+        }
+      },
+      "@opam/cohttp": "opam:5.0.0",
+      "@opam/cohttp-lwt": "opam:5.0.0",
+      "@opam/cohttp-lwt-unix": "opam:5.0.0",
+      "@opam/mtime": {
+        "version": "opam:1.3.0",
+        "override": {
+          "install": "esy-installer ./mtime.install"
+        }
+      },
+      "yarn-pkg-config": "esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79",
       "@opam/linol": "c-cube/linol:linol.opam#5a29a9e1456a431122c51f44bc10c51f46f8d592",
       "@opam/linol-lwt": "c-cube/linol:linol-lwt.opam#5a29a9e1456a431122c51f44bc10c51f46f8d592",
       "esy-openssl": "ManasJayanth/esy-openssl#05feaf76bbd56cde53c30a1dfe3c6353f8ab895b",
