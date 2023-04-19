@@ -105,7 +105,6 @@ let output: string -> string -> string -> string -> _ Term.ret = fun vscode_dire
     let syntaxes_without_jsligo = [
       ("ligo", PascaLIGO.syntax_highlighting);
       ("mligo", CameLIGO.syntax_highlighting);
-      ("religo", ReasonLIGO.syntax_highlighting);
     ] in
     let syntaxes = ("jsligo", JsLIGO.syntax_highlighting) :: syntaxes_without_jsligo in
 

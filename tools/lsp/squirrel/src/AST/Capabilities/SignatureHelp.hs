@@ -138,12 +138,8 @@ findSignature tree position = do
 
 -- | Make a function signature label by a dialect, a function name and its parameters.
 makeSignatureLabel :: Lang -> Text -> [Text] -> Text
-makeSignatureLabel Pascal name params
-  = "function " <> name <> " (" <> Text.intercalate "; " params <> ")"
 makeSignatureLabel Caml name params
   = "let " <> name <> " " <> unwords params
-makeSignatureLabel Reason name params
-  = "let " <> name <> " = (" <> Text.intercalate ", " params <> ")"
 makeSignatureLabel Js name params
   = "let " <> name <> " = (" <> Text.intercalate ", " params <> ")"
 

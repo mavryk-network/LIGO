@@ -1,13 +1,11 @@
 module Var = Simple_utils.Var
 open Test_helpers
 
-let file = "./contracts/multisig.ligo"
 let mfile = "./contracts/multisig.mligo"
-let refile = "./contracts/multisig.religo"
 let compile_main ~raise f () = Test_helpers.compile_main ~raise f ()
 
 open Ligo_prim
-open Ast_imperative
+open Ast_unified
 
 let init_storage threshold counter pkeys =
   let keys =
@@ -22,23 +20,18 @@ let init_storage threshold counter pkeys =
     [ "id", e_string ~loc "MULTISIG"
     ; "counter", e_nat ~loc counter
     ; "threshold", e_nat ~loc threshold
-    ; "auth", e_typed_list ~loc keys (t_key ~loc ())
+    ; "auth", e_list ~loc keys
     ]
 
 
-let empty_op_list = e_typed_list ~loc [] (t_operation ~loc ())
+let empty_op_list = e_list ~loc []
 
-(* let empty_message = e_lambda ~loc  (Location.wrap @@ Var.of_input_var "arguments",t_unit ())
-  @@ e_annotation ~loc  empty_op_list (t_list ~loc  (t_operation ~loc  ()))
-
-let chain_id_zero =
-  e_bytes_raw ~loc  (Tezos_crypto.Chain_id.to_bytes Tezos_base__TzPervasives.Chain_id.zero) *)
 let empty_message =
   e_lambda_ez
     ~loc
     (Value_var.of_input_var ~loc "arguments")
-    ~ascr:(t_unit ~loc ())
-    (Some (t_list ~loc (t_operation ~loc ())))
+    ~ascr:(tv_unit ~loc ())
+    (Some (t_list ~loc (tv_operation ~loc ())))
     empty_op_list
 
 
@@ -58,11 +51,12 @@ let params ~raise counter msg keys is_validl f =
     let payload =
       e_tuple
         ~loc
-        [ msg
-        ; e_nat ~loc counter
-        ; e_string ~loc (if is_valid then "MULTISIG" else "XX")
-        ; chain_id_zero
-        ]
+        (List.Ne.of_list
+           [ msg
+           ; e_nat ~loc counter
+           ; e_string ~loc (if is_valid then "MULTISIG" else "XX")
+           ; chain_id_zero
+           ])
     in
     let signature = sign_message ~raise program payload sk in
     e_pair ~loc (e_key_hash ~loc pkh) (e_signature ~loc signature) :: acc
@@ -70,17 +64,15 @@ let params ~raise counter msg keys is_validl f =
   let signed_msgs = List.fold ~f:aux ~init:[] (List.rev @@ List.zip_exn keys is_validl) in
   e_constructor
     ~loc
-    "CheckMessage"
-    (e_record_ez
-       ~loc
-       [ "counter", e_nat ~loc counter
-       ; "message", msg
-       ; ( "signatures"
-         , e_typed_list
-             ~loc
-             signed_msgs
-             (t_pair ~loc (t_key_hash ~loc (), t_signature ~loc ())) )
-       ])
+    { constructor = Label.of_string "CheckMessage"
+    ; element =
+        e_record_ez
+          ~loc
+          [ "counter", e_nat ~loc counter
+          ; "message", msg
+          ; "signatures", e_list ~loc signed_msgs
+          ]
+    }
 
 
 (* Provide one valid signature when the threshold is two of two keys *)
@@ -90,11 +82,12 @@ let not_enough_1_of_2 ~raise f () =
   let keys = gen_keys () in
   let test_params = params ~raise 0 empty_message [ keys ] [ true ] f in
   let () =
-    expect_string_failwith
+    expect_string_failwith_twice
       ~raise
       program
       "main"
-      (e_pair ~loc test_params (init_storage 2 0 [ keys; gen_keys () ]))
+      test_params
+      (init_storage 2 0 [ keys; gen_keys () ])
       exp_failwith
   in
   ()
@@ -106,11 +99,12 @@ let unmatching_counter ~raise f () =
   let keys = gen_keys () in
   let test_params = params ~raise 1 empty_message [ keys ] [ true ] f in
   let () =
-    expect_string_failwith
+    expect_string_failwith_twice
       ~raise
       program
       "main"
-      (e_pair ~loc test_params (init_storage 1 0 [ keys ]))
+      test_params
+      (init_storage 1 0 [ keys ])
       exp_failwith
   in
   ()
@@ -124,11 +118,12 @@ let invalid_1_of_1 ~raise f () =
   let keys = [ gen_keys () ] in
   let test_params = params ~raise 0 empty_message keys [ false ] f in
   let () =
-    expect_string_failwith
+    expect_string_failwith_twice
       ~raise
       program
       "main"
-      (e_pair ~loc test_params (init_storage 1 0 keys))
+      test_params
+      (init_storage 1 0 keys)
       exp_failwith
   in
   ()
@@ -139,14 +134,14 @@ let valid_1_of_1 ~raise f () =
   let program = get_program ~raise f () in
   let keys = gen_keys () in
   let () =
-    expect_eq_n_trace_aux
+    expect_eq_n_trace_aux_twice
       ~raise
       [ 0; 1; 2 ]
       program
       "main"
       (fun n ->
         let params = params ~raise n empty_message [ keys ] [ true ] f in
-        e_pair ~loc params (init_storage 1 n [ keys ]))
+        params, init_storage 1 n [ keys ])
       (fun n -> e_pair ~loc empty_op_list (init_storage 1 (n + 1) [ keys ]))
   in
   ()
@@ -158,14 +153,14 @@ let valid_2_of_3 ~raise f () =
   let param_keys = [ gen_keys (); gen_keys () ] in
   let st_keys = param_keys @ [ gen_keys () ] in
   let () =
-    expect_eq_n_trace_aux
+    expect_eq_n_trace_aux_twice
       ~raise
       [ 0; 1; 2 ]
       program
       "main"
       (fun n ->
         let params = params ~raise n empty_message param_keys [ true; true ] f in
-        e_pair ~loc params (init_storage 2 n st_keys))
+        params, init_storage 2 n st_keys)
       (fun n -> e_pair ~loc empty_op_list (init_storage 2 (n + 1) st_keys))
   in
   ()
@@ -181,11 +176,12 @@ let invalid_3_of_3 ~raise f () =
   let test_params = params ~raise 0 empty_message param_keys [ false; true; true ] f in
   let exp_failwith = "Invalid signature" in
   let () =
-    expect_string_failwith
+    expect_string_failwith_twice
       ~raise
       program
       "main"
-      (e_pair ~loc test_params (init_storage 2 0 st_keys))
+      test_params
+      (init_storage 2 0 st_keys)
       exp_failwith
   in
   ()
@@ -199,11 +195,12 @@ let not_enough_2_of_3 ~raise f () =
   let test_params = params ~raise 0 empty_message valid_keys [ true; true ] f in
   let exp_failwith = "Not enough signatures passed the check" in
   let () =
-    expect_string_failwith
+    expect_string_failwith_twice
       ~raise
       program
       "main"
-      (e_pair ~loc test_params (init_storage 3 0 st_keys))
+      test_params
+      (init_storage 3 0 st_keys)
       exp_failwith
   in
   ()
@@ -212,15 +209,7 @@ let not_enough_2_of_3 ~raise f () =
 let main =
   test_suite
     "Multisig"
-    [ test_w "compile" (compile_main file)
-    ; test_w "unmatching_counter" (unmatching_counter file)
-    ; test_w "valid_1_of_1" (valid_1_of_1 file)
-    ; test_w "invalid_1_of_1" (invalid_1_of_1 file)
-    ; test_w "not_enough_signature" (not_enough_1_of_2 file)
-    ; test_w "valid_2_of_3" (valid_2_of_3 file)
-    ; test_w "invalid_3_of_3" (invalid_3_of_3 file)
-    ; test_w "not_enough_2_of_3" (not_enough_2_of_3 file)
-    ; test_w "compile (mligo)" (compile_main mfile)
+    [ test_w "compile (mligo)" (compile_main mfile)
     ; test_w "unmatching_counter (mligo)" (unmatching_counter mfile)
     ; test_w "valid_1_of_1 (mligo)" (valid_1_of_1 mfile)
     ; test_w "invalid_1_of_1 (mligo)" (invalid_1_of_1 mfile)
@@ -228,12 +217,4 @@ let main =
     ; test_w "valid_2_of_3 (mligo)" (valid_2_of_3 mfile)
     ; test_w "invalid_3_of_3 (mligo)" (invalid_3_of_3 mfile)
     ; test_w "not_enough_2_of_3 (mligo)" (not_enough_2_of_3 mfile)
-    ; test_w "compile (religo)" (compile_main refile)
-    ; test_w "unmatching_counter (religo)" (unmatching_counter refile)
-    ; test_w "valid_1_of_1 (religo)" (valid_1_of_1 refile)
-    ; test_w "invalid_1_of_1 (religo)" (invalid_1_of_1 refile)
-    ; test_w "not_enough_signature (religo)" (not_enough_1_of_2 refile)
-    ; test_w "valid_2_of_3 (religo)" (valid_2_of_3 refile)
-    ; test_w "invalid_3_of_3 (religo)" (invalid_3_of_3 refile)
-    ; test_w "not_enough_2_of_3 (religo)" (not_enough_2_of_3 refile)
     ]

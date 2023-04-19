@@ -15,7 +15,7 @@ let%expect_test _ =
   [%expect
     {|
     Everything at the top-level was executed.
-    - test exited with value KT1QVWJTnMi6XJFPpnASjbfi53qokforNwdP(None). |}]
+    - test exited with value KT1QkWPtJibiG3npjQ1xUJRnsVn2YBp2DzAR(None). |}]
 
 let%expect_test _ =
   run_ligo_good
@@ -465,7 +465,7 @@ let%expect_test _ =
     ==> Reading manifest... Done
     ==> Validating manifest file...
     Error: Invalid LIGO file specifed in main field of package.json
-    Valid extension for LIGO files are (.ligo, .mligo, .religo, .jsligo) |}]
+    Valid extension for LIGO files are (.ligo, .mligo, .jsligo) |}]
 
 let () = Caml.Sys.chdir pwd
 let () = Caml.Sys.chdir "publish_invalid_storage"
@@ -577,6 +577,28 @@ let%expect_test _ =
         total files:   3 |}]
 
 let () = Caml.Sys.chdir pwd
+let () = Caml.Sys.chdir "publish_contract_slash_in_pkg_name"
+
+let%expect_test _ =
+  run_ligo_good [ "publish"; "--dry-run"; "--ligo-bin-path"; ligo_bin_path ];
+  let dry_run_log = remove_dynamic_info_from_log [%expect.output] in
+  print_endline dry_run_log;
+  [%expect
+    {|
+    ==> Reading manifest... Done
+    ==> Validating manifest file... Done
+    ==> Finding project root... Done
+    ==> Packing tarball... Done
+        publishing: @ligo/slash@0.0.1
+        === Tarball Details ===
+        name:          @ligo/slash
+        version:       0.0.1
+        filename:      @ligo/slash-0.0.1.tgz
+        package size:  *** B
+        unpacked size: *** B
+        total files:   3 |}]
+
+let () = Caml.Sys.chdir pwd
 let () = Caml.Sys.chdir "test_ligoignore"
 
 let%expect_test _ =
@@ -597,5 +619,27 @@ let%expect_test _ =
         package size:  *** B
         unpacked size: *** B
         total files:   1 |}]
+
+let () = Caml.Sys.chdir pwd
+let () = Caml.Sys.chdir "test_ligoignore_with_empty_lines"
+
+let%expect_test _ =
+  run_ligo_good [ "publish"; "--dry-run"; "--ligo-bin-path"; ligo_bin_path ];
+  let dry_run_log = remove_dynamic_info_from_log [%expect.output] in
+  print_endline dry_run_log;
+  [%expect
+    {|
+    ==> Reading manifest... Done
+    ==> Validating manifest file... Done
+    ==> Finding project root... Done
+    ==> Packing tarball... Done
+        publishing: testing_.ligoignore2@0.0.1
+        === Tarball Details ===
+        name:          testing_.ligoignore2
+        version:       0.0.1
+        filename:      testing_.ligoignore2-0.0.1.tgz
+        package size:  *** B
+        unpacked size: *** B
+        total files:   2 |}]
 
 let () = Caml.Sys.chdir pwd

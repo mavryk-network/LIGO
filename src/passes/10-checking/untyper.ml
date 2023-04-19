@@ -5,8 +5,8 @@ module O = Ast_typed
 open Ligo_prim
 
 let untype_value_attr : O.ValueAttr.t -> I.ValueAttr.t =
- fun { inline; no_mutation; view; public; hidden; thunk } ->
-  { inline; no_mutation; view; public; hidden; thunk }
+ fun { inline; no_mutation; view; public; hidden; thunk; entry } ->
+  { inline; no_mutation; view; public; hidden; thunk; entry }
 
 
 let rec untype_type_expression (t : O.type_expression) : I.type_expression =
@@ -15,21 +15,11 @@ let rec untype_type_expression (t : O.type_expression) : I.type_expression =
   let return t = I.make_t ~loc t in
   match t.type_content with
   | O.T_sum { fields; layout } ->
-    let aux ({ associated_type; michelson_annotation; decl_pos } : O.row_element) =
-      let associated_type = self associated_type in
-      let v' = ({ associated_type; michelson_annotation; decl_pos } : I.row_element) in
-      v'
-    in
-    let x' = Record.map ~f:aux fields in
-    return @@ I.T_sum { fields = x'; layout = Some layout }
+    let fields = Map.map fields ~f:self in
+    return @@ I.T_sum { fields; layout = Some layout }
   | O.T_record { fields; layout } ->
-    let aux ({ associated_type; michelson_annotation; decl_pos } : O.row_element) =
-      let associated_type = self associated_type in
-      let v' = ({ associated_type; michelson_annotation; decl_pos } : I.row_element) in
-      v'
-    in
-    let x' = Record.map ~f:aux fields in
-    return @@ I.T_record { fields = x'; layout = Some layout }
+    let fields = Map.map fields ~f:self in
+    return @@ I.T_record { fields; layout = Some layout }
   | O.T_variable name -> return @@ I.T_variable name
   | O.T_arrow arr ->
     let arr = Arrow.map self arr in
@@ -37,7 +27,8 @@ let rec untype_type_expression (t : O.type_expression) : I.type_expression =
   | O.T_constant { language = _; injection; parameters } ->
     let arguments = List.map ~f:self parameters in
     let type_operator = Type_var.of_input_var ~loc (Literal_types.to_string injection) in
-    return @@ I.T_app { type_operator; arguments }
+    return
+    @@ I.T_app { type_operator = Module_access.make_el @@ type_operator; arguments }
   | O.T_singleton l -> return @@ I.T_singleton l
   | O.T_abstraction x ->
     let x = Abstraction.map self x in
@@ -107,10 +98,10 @@ and untype_expression_content ~loc (ec : O.expression_content) : I.expression =
   | E_raw_code { language; code } ->
     let code = self code in
     return (e_raw_code ~loc language code)
-  | E_recursive { fun_name; fun_type; lambda } ->
+  | E_recursive { fun_name; fun_type; lambda; force_lambdarec } ->
     let fun_type = self_type fun_type in
     let lambda = Lambda.map self self_type lambda in
-    return @@ e_recursive ~loc fun_name fun_type lambda
+    return @@ e_recursive ~loc ~force_lambdarec fun_name fun_type lambda
   | E_module_accessor ma -> return @@ I.make_e ~loc @@ E_module_accessor ma
   | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
     let rhs = self rhs in
@@ -187,8 +178,9 @@ and untype_pattern : _ O.Pattern.t -> _ I.Pattern.t =
 
 and untype_module_expr : O.module_expr -> I.module_expr =
  fun module_expr ->
-  let return wrap_content : I.module_expr = { module_expr with wrap_content } in
-  match module_expr.wrap_content with
+  let loc = module_expr.module_location in
+  let return wrap_content : I.module_expr = Location.wrap ~loc wrap_content in
+  match module_expr.module_content with
   | M_struct prg ->
     let prg = untype_module prg in
     return (M_struct prg)
@@ -254,6 +246,3 @@ and untype_declaration =
 
 and untype_decl : O.decl -> I.decl = fun d -> Location.map untype_declaration d
 and untype_module : O.module_ -> I.module_ = fun p -> List.map ~f:untype_decl p
-
-and untype_program : O.program -> I.program =
- fun p -> List.map ~f:(Location.map untype_declaration) p

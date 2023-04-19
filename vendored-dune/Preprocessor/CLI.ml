@@ -45,14 +45,15 @@ module Make (Config : Config.S) : PARAMETERS =
                  and each <option> (if any) is one of the following:\n"
                 file
       and options = [
-        "  -I <paths>         Inclusion paths (colon-separated)";
-        "  -D <symbols>       Predefined symbols (colon-separated)";
-        "  -h, --help         This help";
-        "  -v, --version      Commit hash on stdout";
-        "      --cli          Print given options (debug)";
-        "      --columns      Columns for source locations";
-        "      --show-pp      Print result of preprocessing";
-        "      --project-root Path to the root of the project"
+        "  -I <paths>           Inclusion paths (colon-separated)";
+        "  -D <symbols>         Predefined symbols (colon-separated)";
+        "  -h, --help           This help";
+        "  -v, --version        Commit hash on stdout";
+        "      --cli            Print given options (debug)";
+        "      --columns        Columns for source locations";
+        "      --show-pp        Print result of preprocessing";
+        "      --no-colour      Disable coloured printing on stdout";
+        "      --project-root=<path>\n                       Path to the root of the project"
       ] in
       begin
         Buffer.add_string buffer header;
@@ -70,6 +71,7 @@ module Make (Config : Config.S) : PARAMETERS =
     and project_root = ref None
     and columns      = ref false
     and show_pp      = ref false
+    and no_colour    = ref false
 
     and help         = ref false
     and version      = ref false
@@ -86,6 +88,7 @@ module Make (Config : Config.S) : PARAMETERS =
         'D',     nolong,         None,             Some (add_def define);
         noshort, "columns",      set columns true, None;
         noshort, "show-pp",      set show_pp true, None;
+        noshort, "no-colour",    set no_colour true, None;
 
         noshort, "cli",          set cli true,     None;
         'h',     "help",         set help true,    None;
@@ -132,6 +135,7 @@ module Make (Config : Config.S) : PARAMETERS =
       let open Argv.SSet in
       empty
       |> add "--show-pp"
+      |> add "--no-colour"
       |> add "--columns"
 
       (* The following options are present in all CLI *)
@@ -178,6 +182,7 @@ module Make (Config : Config.S) : PARAMETERS =
     and project_root = !project_root
     and offsets      = not !columns
     and show_pp      = !show_pp
+    and no_colour    = !no_colour
     and help         = !help
     and version      = !version
 
@@ -208,6 +213,7 @@ module Make (Config : Config.S) : PARAMETERS =
         sprintf "dirs         = %s" string_of_dirs;
         sprintf "define       = %s" string_of_define;
         sprintf "show-pp      = %b" show_pp;
+        sprintf "no-colour    = %b" no_colour;
         sprintf "columns      = %b" (not offsets);
         sprintf "project-root = %s" string_of_project_root
       ] in
@@ -254,6 +260,7 @@ module Make (Config : Config.S) : PARAMETERS =
         and define       = define
         and project_root = project_root
         and show_pp      = show_pp
+        and no_colour    = no_colour
         and offsets      = offsets
       end
 

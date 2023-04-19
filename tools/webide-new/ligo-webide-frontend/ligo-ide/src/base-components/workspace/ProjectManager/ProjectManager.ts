@@ -23,6 +23,36 @@ import { RefreshData } from "~/base-components/filetree/types";
 import { GistContent } from "~/base-components/file-ops/GistFs";
 import MonacoEditor from "~/base-components/code-editor/MonacoEditor/MonacoEditor";
 
+export type RawGistProjectType = {
+  type: "rawgist";
+  obj: GistContent;
+  gistId: string;
+  name?: string;
+};
+
+export type ProcessGistProject = {
+  type: "gist";
+  name: string;
+  obj: GistContent;
+};
+
+export type ProcessGitProject = {
+  type: "git";
+  name: string;
+  gitLink: string;
+  branch?: string;
+  token?: string;
+};
+
+export type ProcessTemplateProject = {
+  type: "template";
+  name: string;
+  template: string;
+  syntax: string;
+};
+
+export type ProcessProjectType = ProcessGistProject | ProcessGitProject | ProcessTemplateProject;
+
 export default class ProjectManager {
   static ProjectSettings = ProjectSettings;
 
@@ -67,20 +97,31 @@ export default class ProjectManager {
     };
   }
 
-  static async createProject(name: string, template: string) {
-    return this.processProject(name, undefined, template);
+  static async createProject(name: string, template: string, syntax: string, gitLink?: string) {
+    if (gitLink) {
+      return this.processProject({
+        type: "git",
+        name,
+        gitLink: `https://github.com/ligolang/${gitLink}`,
+      });
+    }
+    return this.processProject({ type: "template", name, template, syntax });
   }
 
-  static async openProject(obj: GistContent, gistId: string, name?: string) {
-    const projectData = obj;
+  static async openProject(projectInfo: RawGistProjectType | ProcessGitProject) {
+    if (projectInfo.type === "git") {
+      return this.processProject(projectInfo);
+    }
+
+    const projectData = projectInfo.obj;
 
     const projectsNames = await fileOps.getProjectNames();
 
     /* eslint-disable */
     const config = JSON.parse(projectData["/config.json"].content || "{}");
-    config.gistId = gistId;
+    config.gistId = projectInfo.gistId;
 
-    const projectNameFromParams = name || (config.projectName ? config.projectName : gistId);
+    const projectNameFromParams = projectInfo.name || (config.projectName ? config.projectName : projectInfo.gistId);
     let projectName: string = projectNameFromParams;
 
     if (!projectsNames.includes(projectNameFromParams)) {
@@ -106,14 +147,12 @@ export default class ProjectManager {
     projectData["/config.json"].content = JSON.stringify(config);
     /* eslint-enable */
 
-    return this.processProject(projectName, projectData, undefined);
+    return this.processProject({ type: "gist", name: projectName, obj: projectData });
   }
 
-  static async processProject(
-    name: string,
-    obj: GistContent | undefined,
-    template: string | undefined
-  ) {
+  static async processProject(projectData: ProcessProjectType) {
+    const { name } = projectData;
+
     const data = {
       id: name,
       author: "local",
@@ -127,20 +166,34 @@ export default class ProjectManager {
       await fileOps.writeDirectory(data.path);
     }
 
-    if (obj) {
-      for (const key of Object.keys(obj)) {
+    if (projectData.type === "gist") {
+      for (const key of Object.keys(projectData.obj)) {
         try {
-          await fileOps.writeFile(`${data.path}/${key}`, obj[key].content);
+          await fileOps.writeFile(`${data.path}/${key}`, projectData.obj[key].content);
         } catch (error) {
           console.error(error);
         }
       }
-    } else if (template) {
-      const examples = getExamples(data.name, template, data.name);
+    }
+
+    if (projectData.type === "git") {
+      await fileOps.cloneGitRepo(
+        data.name,
+        projectData.gitLink,
+        projectData.branch,
+        projectData.token
+      );
+    }
+
+    if (projectData.type === "template") {
+      const examples = getExamples(data.name, projectData.template, data.name, projectData.syntax);
 
       for (const file of Object.keys(examples)) {
+        const fileObject = examples[file];
         try {
-          await fileOps.writeFile(examples[file].name, examples[file].content);
+          if (fileObject) {
+            await fileOps.writeFile(fileObject.name, fileObject.content);
+          }
         } catch (error) {
           console.error(error);
         }
@@ -244,6 +297,40 @@ export default class ProjectManager {
       pathInProject: this.pathInProject(item.path),
     }));
     return sortFile(rawData);
+  }
+
+  static getFilesFromContent = (c: (FolderInfo | FileInfo)[]) => {
+    const filePaths: string[] = [];
+    c.forEach((v) => {
+      if (v.type === "file") {
+        filePaths.push(v.path);
+      } else {
+        filePaths.push(...this.getFilesFromContent(v.children));
+      }
+    });
+    return filePaths;
+  };
+
+  static async loadDirectoryFilePathsRecursively(path: string) {
+    const children = await this.loadDirectoryFilePaths(path);
+
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      if (child.type === "folder") {
+        child.children = await this.loadDirectoryFilePathsRecursively(child.path);
+      }
+    }
+
+    return children;
+  }
+
+  static async loadDirectoryFilePaths(path: string) {
+    const result = await fileOps.readDirectory(path);
+    const rawData = result.map((item) => ({
+      ...item,
+      pathInProject: "",
+    }));
+    return rawData;
   }
 
   async readProjectSettings() {
@@ -367,6 +454,19 @@ export default class ProjectManager {
     return filePath;
   }
 
+  static async writeFileWithEditorUpdate(filePath: string, content: string) {
+    if (!(await fileOps.exists(filePath))) {
+      throw new Error(`File <b>${filePath}</b> is not exists exists.`);
+    }
+
+    try {
+      await fileOps.writeFile(filePath, content);
+      modelSessionManager.updateEditorAfterMovedFile(filePath, { path: filePath, content });
+    } catch (e) {
+      throw new Error(`Fail to write to the file: <b>${JSON.stringify(e)}</b>.`);
+    }
+  }
+
   static async renameProject(name: string, newName: string) {
     try {
       const config = await fileOps.readFile(`.workspaces/${name}/config.json`);
@@ -412,6 +512,7 @@ export default class ProjectManager {
     try {
       if (type === "file") {
         await fileOps.copyMoveFile(from, to, "move");
+        modelSessionManager.updateEditorAfterMovedFile(from, to);
       }
 
       if (type === "folder") {
@@ -439,7 +540,16 @@ export default class ProjectManager {
       }
 
       if (type === "folder") {
+        const dirContent = await this.loadDirectoryFilePathsRecursively(from);
+        const dirFiles = this.getFilesFromContent(dirContent);
+
         await fileOps.copyMoveFolder(from, to, "copy");
+        for (let i = 0; i < dirFiles.length; i++) {
+          modelSessionManager.updateEditorAfterMovedFile(
+            dirFiles[i],
+            dirFiles[i].replace(from, to)
+          );
+        }
       }
     } catch (e: any) {
       if (e instanceof Error) {
@@ -463,13 +573,26 @@ export default class ProjectManager {
     const isFile = await fileOps.isFile(oldPath);
 
     try {
-      await fileOps.rename(oldPath, newPath);
+      if (isFile) {
+        await fileOps.rename(oldPath, newPath);
+        modelSessionManager.updateEditorAfterMovedFile(oldPath, newPath);
+      } else {
+        const dirContent = await this.loadDirectoryFilePathsRecursively(oldPath);
+        const dirFiles = this.getFilesFromContent(dirContent);
+
+        await fileOps.rename(oldPath, newPath);
+        for (let i = 0; i < dirFiles.length; i++) {
+          modelSessionManager.updateEditorAfterMovedFile(
+            dirFiles[i],
+            dirFiles[i].replace(oldPath, newPath)
+          );
+        }
+      }
     } catch (e) {
       console.log(e);
       throw new Error(`Fail to rename <b>${oldPath}</b>.`);
     }
 
-    modelSessionManager.updateEditorAfterMovedFile(oldPath, newPath);
     ProjectManager.refreshDirectory({
       type: isFile ? "renameFile" : "renameDirectory",
       oldPath,
@@ -484,9 +607,16 @@ export default class ProjectManager {
     });
     if (response === 0) {
       if (node.type === "folder" && node.children) {
+        const dirContent = await this.loadDirectoryFilePathsRecursively(node.path);
+        const dirFiles = this.getFilesFromContent(dirContent);
+
         await fileOps.deleteDirectory(node.path);
+        for (let i = 0; i < dirFiles.length; i++) {
+          modelSessionManager.updateEditorAfterMovedFile(dirFiles[i], undefined);
+        }
       } else {
         await fileOps.deleteFile(node.path);
+        modelSessionManager.updateEditorAfterMovedFile(node.path, undefined);
       }
       ProjectManager.refreshDirectory({
         type: node.type === "folder" ? "deleteDirectory" : "deleteFile",

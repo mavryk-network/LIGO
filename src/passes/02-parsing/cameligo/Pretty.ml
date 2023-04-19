@@ -10,12 +10,16 @@ open! PPrint
 module Option = Simple_utils.Option
 module Token  = Lexing_cameligo.Token
 
+type environment = unit
+
+let default_environment : environment = ()
+
 let pp_par printer {value; _} =
   string "(" ^^ nest 1 (printer value.inside ^^ string ")")
 
 (* The CST *)
 
-let rec print cst =
+let rec print _state cst =
     Utils.nseq_to_list cst.decl
   |> List.map ~f:pp_declaration
   |> separate_map hardline group
@@ -53,11 +57,11 @@ and pp_let_decl {value; _} =
                 else pp_attributes attr ^/^ let_str
   in let_str ^^ pp_let_binding binding
 
-and pp_attribute (node : Attr.t reg) =
-  let key, val_opt = node.value in
+and pp_attribute (node : Attr.t wrap) =
+  let key, val_opt = node#payload in
   let thread = string "[@" ^^ string key in
   let thread = match val_opt with
-                 Some String value ->
+                 Some (String value | Ident value) ->
                    group (thread ^/^ nest 2 (string value))
                | None -> thread in
   let thread = thread ^^ string "]"
@@ -179,7 +183,7 @@ and pp_type_var (node : type_var reg) =
 and pp_module_decl decl =
   let {name; module_; _} = decl.value in
   string "module " ^^ pp_ident name ^^ string " =" ^^ string " struct"
-  ^^ group (nest 0 (break 1 ^^ print module_))
+  ^^ group (nest 0 (break 1 ^^ print () module_))
   ^^ string " end"
 
 and pp_module_alias decl =
@@ -214,6 +218,12 @@ and pp_expr = function
 | ESeq        e -> pp_seq e
 | ECodeInj    e -> pp_code_inj e
 | ERevApp     e -> pp_rev_app e
+| EContract   e -> pp_contract e
+
+and pp_contract {value; _} =
+  string "(contract_of "
+  ^^ group (nest 0 (break 1 ^^ pp_nsepseq "." pp_ident value))
+  ^^ string ")"
 
 and pp_rev_app e = pp_bin_op "|>" e
 
@@ -330,8 +340,8 @@ and pp_constr_expr {value; _} =
 and pp_record_expr ne_inj = group (pp_ne_injection pp_field_assign ne_inj)
 
 and pp_field_assign {value; _} =
-  match value with 
-    Property {field_name; field_expr; _} -> 
+  match value with
+    Property {field_name; field_expr; _} ->
       prefix 2 1 (pp_ident field_name ^^ string " =") (pp_expr field_expr)
   | Punned_property field_name ->
     pp_ident field_name
@@ -386,14 +396,14 @@ and pp_update {value; _} =
 
 and pp_code_inj {value; _} =
   let {language; code; _} = value in
-  let language = string language.value.value
+  let language = string language#payload.value
   and code     = pp_expr code in
   string "[%" ^^ language ^/^ code ^^ string "]"
 
 and pp_field_path_assign {value; _} =
-  match value with 
+  match value with
     Path_property {field_path; field_expr; _} ->
-      let path = pp_path field_path in 
+      let path = pp_path field_path in
       prefix 2 1 (path ^^ string " =") (pp_expr field_expr)
   | Path_punned_property field_name ->
     pp_ident field_name
@@ -444,7 +454,7 @@ and pp_mod_in {value; _} =
   let {name; module_; _} = mod_decl
   in string "module"
      ^^ prefix 2 1 (pp_ident name ^^ string " = struct")
-                   (print module_)
+                   (print () module_)
      ^^ string " end"
      ^^ string " in" ^^ hardline ^^ group (pp_expr body)
 
@@ -481,6 +491,11 @@ and pp_seq {value; _} =
      ^^ nest 2 (hardline ^^ elements) ^^ hardline
      ^^ string closing
 
+and pp_parameter {value; _} =
+  string "(parameter_of "
+  ^^ group (nest 0 (break 1 ^^ pp_nsepseq "." pp_ident value))
+  ^^ string ")"
+
 and pp_type_expr = function
   TProd t    -> pp_cartesian t
 | TSum t     -> pp_sum_type t
@@ -493,6 +508,7 @@ and pp_type_expr = function
 | TInt i     -> pp_int i
 | TModA t    -> pp_module_access pp_type_expr t
 | TArg t     -> pp_quoted_param t
+| TParameter t -> pp_parameter t
 
 and pp_quoted_param param =
   let quoted = {param with value = "'" ^ param.value.name.value}
@@ -575,11 +591,14 @@ and pp_fun_type {value; _} =
 
 and pp_type_par t = pp_par pp_type_expr t
 
-let print_type_expr = pp_type_expr
-let print_pattern   = pp_pattern
-let print_expr      = pp_expr
+let print_type_expr   _state = pp_type_expr
+let print_pattern     _state = pp_pattern
+let print_expr        _state = pp_expr
+let print_declaration _state = pp_declaration
 
-type cst        = CST.t
-type expr       = CST.expr
-type type_expr  = CST.type_expr
-type pattern    = CST.pattern
+
+type cst         = CST.t
+type expr        = CST.expr
+type type_expr   = CST.type_expr
+type pattern     = CST.pattern
+type declaration = CST.declaration

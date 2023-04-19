@@ -1,8 +1,6 @@
 open Cli_expect
 
 let contract = test
-let contract_resource name = test ("res/" ^ name)
-let bad_contract = bad_test
 
 (* warning unused variables example *)
 let%expect_test _ =
@@ -31,10 +29,7 @@ let%expect_test _ =
              CAR ;
              MUL ;
              ADD ;
-             SWAP ;
-             CDR ;
-             SWAP ;
-             PAIR ;
+             UPDATE 1 ;
              NIL operation ;
              PAIR } } |}]
 
@@ -82,14 +77,58 @@ let%expect_test _ =
   At (unshown) location 8, type option (ticket nat) cannot be used here because it is not duplicable. Only duplicable types can be used with the DUP instruction and as view inputs and outputs.
   At (unshown) location 8, Ticket in unauthorized position (type error). |}]
 
+let%expect_test _ =
+  run_ligo_bad [ "compile"; "contract"; contract "duplicate_ticket_local_module.mligo" ];
+  [%expect
+    {|
+  File "../../test/contracts/duplicate_ticket_local_module.mligo", line 8, characters 4-26:
+    7 |     let ticket = Option.unopt (Tezos.create_ticket 10n 10n)
+    8 |     let y = ticket, ticket
+    9 |   end in
+  :
+  Warning: variable "B.y" cannot be used more than once.
+
+  File "../../test/contracts/duplicate_ticket_local_module.mligo", line 7, characters 8-14:
+    6 |   module B = struct
+    7 |     let ticket = Option.unopt (Tezos.create_ticket 10n 10n)
+    8 |     let y = ticket, ticket
+  :
+  Warning: variable "ticket" cannot be used more than once.
+
+  Error(s) occurred while type checking the contract:
+  Ill typed contract:
+    01: { parameter unit ;
+    02:   storage (ticket nat) ;
+    03:   code { DROP
+    04:          /* [] */ ;
+    05:          PUSH nat 10
+    06:          /* [ nat ] */ ;
+    07:          PUSH nat 10
+    08:          /* [ nat : nat ] */ ;
+    09:          TICKET
+    10:          /* [ option (ticket nat) ] */ ;
+    11:          IF_NONE
+    12:            { PUSH string "option is None" /* [ string ] */ ; FAILWITH /* [] */ }
+    13:            { /* [ ticket nat ] */ } ;
+    14:          DUP ;
+    15:          PAIR ;
+    16:          JOIN_TICKETS ;
+    17:          IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
+    18:          NIL operation ;
+    19:          PAIR } }
+  At line 14 characters 9 to 12,
+  type ticket nat cannot be used here because it is not duplicable. Only duplicable types can be used with the DUP instruction and as view inputs and outputs.
+  At line 14 characters 9 to 12,
+  Ticket in unauthorized position (type error). |}]
+
 (* some check about the warnings of the E_constructor cases *)
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "warning_ambiguous_ctor.mligo" ];
   [%expect
     {|
-  File "../../test/contracts/warning_ambiguous_ctor.mligo", line 9, characters 61-64:
+  File "../../test/contracts/warning_ambiguous_ctor.mligo", line 9, characters 66-69:
     8 | (* here we expect a warning because both A constructor have the same parameter type *)
-    9 | let main = fun (() , (_: union_b)) -> ([]: operation list) , A 1
+    9 | let main = fun (() : unit) (_: union_b) -> ([]: operation list) , A 1
 
   Warning: The type of "A(1)" is ambiguous: Inferred type is "union_b" but could be of type "union_a".
   Hint: You might want to add a type annotation.

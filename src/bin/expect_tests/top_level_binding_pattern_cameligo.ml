@@ -125,6 +125,30 @@ let%expect_test _ =
 let contract file = test ("top_level_patterns/negative/" ^ file)
 
 let%expect_test _ =
+  run_ligo_bad [ "print"; "ast-core"; contract "cameligo/inside_module.mligo" ];
+  [%expect
+    {|
+    File "../../test/contracts/top_level_patterns/negative/cameligo/inside_module.mligo", line 2, characters 7-11:
+      1 | module A = struct
+      2 |   let (x, x) = (1, "string")
+      3 | end
+
+    Repeated variable in pattern.
+    Hint: Change the name. |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "print"; "ast-core"; contract "cameligo/inside_mod_in.mligo" ];
+  [%expect
+    {|
+    File "../../test/contracts/top_level_patterns/negative/cameligo/inside_mod_in.mligo", line 3, characters 9-13:
+      2 |   module A = struct
+      3 |     let (x, x) = (1, "1")
+      4 |   end in
+
+    Repeated variable in pattern.
+    Hint: Change the name. |}]
+
+let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; contract "cameligo/nested_record.mligo" ];
   [%expect
     {|
@@ -293,7 +317,7 @@ let%expect_test _ =
 
     Error : this pattern-matching is not exhaustive.
     Here are examples of cases that are not matched:
-    - {c = _; b = Bar; a = _} |}]
+    - {a = _; b = Bar; c = _} |}]
 
 let%expect_test _ =
   run_ligo_bad

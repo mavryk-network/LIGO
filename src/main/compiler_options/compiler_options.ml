@@ -2,22 +2,28 @@ open Environment
 module Default_options = Raw_options.Default_options
 module Raw_options = Raw_options
 
+(* TODO : Add a [common] section for options used in many stages,
+   like the [no_colour] or the [syntax] options for example *)
+
 type frontend =
   { syntax : Syntax_types.t option
-  ; (* dialect : string ; [@dead "frontend.dialect"]  *)
-    entry_point : string
+  ; entry_point : string list
+  ; module_ : string
   ; libraries : string list
   ; project_root : string option
+  ; transpiled : bool
   }
 
 type tools =
   { with_types : bool
   ; self_pass : bool
+  ; no_colour : bool
   }
 
 type test_framework =
   { steps : int
   ; cli_expr_inj : string option
+  ; no_colour : bool
   }
 
 type middle_end =
@@ -43,7 +49,10 @@ type backend =
         (* true if --michelson-comments env. if
                                true, empty seqs {} with comments will
                                not be erased during optimisation *)
+  ; no_colour : bool
   }
+
+type common = { deprecated : bool }
 
 type t =
   { frontend : frontend
@@ -51,12 +60,13 @@ type t =
   ; test_framework : test_framework
   ; middle_end : middle_end
   ; backend : backend
+  ; common : common
   }
 
 let warn_unused_rec ~syntax should_warn =
   match syntax with
   | Some Syntax_types.JsLIGO -> false
-  | Some CameLIGO | Some ReasonLIGO | Some PascaLIGO | None -> should_warn
+  | Some CameLIGO | Some PascaLIGO | None -> should_warn
 
 
 let make
@@ -72,14 +82,22 @@ let make
     { syntax
     ; libraries = raw_options.libraries
     ; entry_point = raw_options.entry_point
+    ; module_ = raw_options.module_
     ; project_root = raw_options.project_root
+    ; transpiled = raw_options.transpiled
     }
   in
   let tools =
-    { with_types = raw_options.with_types; self_pass = raw_options.self_pass }
+    { with_types = raw_options.with_types
+    ; self_pass = raw_options.self_pass
+    ; no_colour = raw_options.no_colour
+    }
   in
   let test_framework =
-    { steps = raw_options.steps; cli_expr_inj = raw_options.cli_expr_inj }
+    { steps = raw_options.steps
+    ; cli_expr_inj = raw_options.cli_expr_inj
+    ; no_colour = raw_options.no_colour
+    }
   in
   let middle_end =
     { test = raw_options.test
@@ -102,9 +120,11 @@ let make
     ; constants = raw_options.constants
     ; file_constants = raw_options.file_constants
     ; has_env_comments
+    ; no_colour = raw_options.no_colour
     }
   in
-  { frontend; tools; test_framework; middle_end; backend }
+  let common = { deprecated = raw_options.deprecated } in
+  { frontend; tools; test_framework; middle_end; backend; common }
 
 
 let set_init_env opts init_env =
@@ -119,3 +139,6 @@ let set_entry_point opts entry_point =
 
 let set_syntax opts syntax = { opts with frontend = { opts.frontend with syntax } }
 let set_views opts views = { opts with backend = { opts.backend with views } }
+
+let set_no_stdlib opts no_stdlib =
+  { opts with middle_end = { opts.middle_end with no_stdlib } }

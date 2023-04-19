@@ -1,5 +1,5 @@
 import React from "react";
-const valid = ["jsligo", "cameligo", "reasonligo", "pascaligo"];
+const valid = ["jsligo", "cameligo", "pascaligo"];
 const ctx = {
   syntax: (() => {
     if (typeof window === "undefined") return "jsligo";

@@ -2,19 +2,8 @@ open Ligo_prim
 module Errors = Errors
 module Helpers = Helpers
 
+let map_expression = Ast_aggregated.Helpers.map_expression
 let expression_obj ~raise e = Obj_ligo.check_obj_ligo ~raise e
-
-let eta_reduce : Ast_aggregated.expression -> Ast_aggregated.expression option =
- fun e ->
-  match e.expression_content with
-  | E_lambda { binder; result = { expression_content = E_application { lamb; args }; _ } }
-    ->
-    (match Ast_aggregated.get_e_variable args with
-    | Some y when Param.is_imm binder && Value_var.equal (Param.get_var binder) y ->
-      Some lamb
-    | _ -> None)
-  | _ -> None
-
 
 let make_forced : Ast_aggregated.expression -> Ast_aggregated.expression =
   let f e =
@@ -25,17 +14,17 @@ let make_forced : Ast_aggregated.expression -> Ast_aggregated.expression =
       { e with expression_content = E_lambda { binder; result; output_type } }
     | _ -> e
   in
-  Helpers.map_expression f
+  map_expression f
 
 
 let accessor_reduce : Ast_aggregated.expression -> Ast_aggregated.expression =
   let f (e : Ast_aggregated.expression) =
     match e.expression_content with
     | E_accessor { struct_ = { expression_content = E_record m; _ }; path } ->
-      Record.LMap.find path m
+      Record.find m path
     | _ -> e
   in
-  Helpers.map_expression f
+  map_expression f
 
 
 let replace_location
@@ -43,7 +32,7 @@ let replace_location
   =
  fun location ->
   let f (e : Ast_aggregated.expression) = { e with location } in
-  Helpers.map_expression f
+  map_expression f
 
 
 let inline_thunk : bool ref -> Ast_aggregated.expression -> Ast_aggregated.expression =
@@ -78,7 +67,7 @@ let inline_thunk : bool ref -> Ast_aggregated.expression -> Ast_aggregated.expre
 
 
 let inline_thunks : bool ref -> Ast_aggregated.expression -> Ast_aggregated.expression =
- fun changed -> Helpers.map_expression (inline_thunk changed)
+ fun changed -> map_expression (inline_thunk changed)
 
 
 let rec thunk e =
@@ -96,22 +85,23 @@ let remove_check_self : Ast_aggregated.expression -> Ast_aggregated.expression =
       Ast_aggregated.e_a_none ~loc t
     | _ -> e
   in
-  Helpers.map_expression f
+  map_expression f
 
 
 let all_aggregated_expression ~raise e =
   let e = Monomorphisation.mono_polymorphic_expr ~raise e in
   let e = Uncurry.uncurry_expression e in
   let e = thunk e in
-  let e = Helpers.map_expression (Literal_replace.expression ~raise) e in
-  let e = Helpers.map_expression (Contract_passes.entrypoint_typing ~raise) e in
-  let e = Helpers.map_expression (Contract_passes.emit_event_typing ~raise) e in
-  let e = Helpers.map_expression (Contract_passes.self_literal_typing ~raise) e in
+  let e = map_expression (Literal_replace.expression ~raise) e in
+  let e = map_expression (Contract_passes.entrypoint_typing ~raise) e in
+  let e = map_expression (Contract_passes.emit_event_typing ~raise) e in
+  let e = map_expression (Contract_passes.self_literal_typing ~raise) e in
+  let e = map_expression (Contract_passes.litstr_check ~raise) e in
   e
 
 
 let all_expression ~raise ~(options : Compiler_options.middle_end) e =
-  let e = Helpers.map_expression Polymorphic_replace.expression e in
+  let e = map_expression Polymorphic_replace.expression e in
   let e =
     if not options.test
     then (
@@ -128,7 +118,7 @@ let all_program
     ~(options : Compiler_options.middle_end)
     (prg : Ast_aggregated.program)
   =
-  let prg = Helpers.map_program Polymorphic_replace.expression prg in
+  let prg = Ast_aggregated.Helpers.map_program Polymorphic_replace.expression prg in
   let prg =
     if not options.test
     then (
@@ -156,7 +146,7 @@ let all_contract ~raise parameter storage prg =
   in
   let prg = List.fold ~f:(fun x f -> snd @@ f x) all_p ~init:prg in
   let all_p =
-    List.map ~f:(fun pass -> Helpers.map_expression pass) @@ contract_passes_map ~raise
+    List.map ~f:(fun pass -> map_expression pass) @@ contract_passes_map ~raise
   in
   let prg = List.fold ~f:(fun x f -> f x) all_p ~init:prg in
   prg

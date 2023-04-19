@@ -8,10 +8,15 @@ module List = Simple_utils.List
 module Source_input = struct
   type file_name = string
   type raw_input = { id : file_name ; code : string }
-  type code_input = From_file of file_name | Raw of raw_input
+  type raw_input_lsp = { file : file_name ; code : string }
+  type code_input = 
+    From_file of file_name 
+  | Raw of raw_input 
+  | Raw_input_lsp of raw_input_lsp
   let id_of_code_input : code_input -> file_name = function
-  | From_file file_name -> file_name
+    From_file file_name -> file_name
   | Raw { id ; code = _  } -> id
+  | Raw_input_lsp { file ; code = _ } -> file
 end
 
 module type M =
@@ -117,7 +122,7 @@ module Make (M : M) =
       | None -> failwith "failed to find module"
     in
     (* Add all dependency at the beginning of the file *)
-    let add_modules dep_types (file_name,(mangled_name,_,_, _deps_lst)) =
+    let add_modules (file_name,(mangled_name,_,_, _deps_lst)) =
       let module_binder = mangled_name in
       (* Get the ast_type of the module *)
       let ast_typed =
@@ -125,9 +130,9 @@ module Make (M : M) =
           Some ast -> ast
         | None -> failwith "failed to find module"
       in
-      (dep_types,(M.AST.make_module_declaration module_binder ast_typed))
+      M.AST.make_module_declaration module_binder ast_typed
     in
-    let _,header_list = List.fold_map_right ~f:add_modules ~init:(SMap.empty) @@ order_deps in
+    let header_list = List.map ~f:add_modules @@ order_deps in
     let aggregated = List.fold_left ~f:(fun c a ->  a::c) ~init:contract header_list in
     aggregated
 
@@ -178,4 +183,3 @@ module Make (M : M) =
         Ok contract
       | Error e -> Error e
   end
-

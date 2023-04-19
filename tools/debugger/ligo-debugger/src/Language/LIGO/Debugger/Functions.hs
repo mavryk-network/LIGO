@@ -57,7 +57,7 @@ newtype LambdaMeta = LambdaMeta
     -- The order of these names is reversed (e.g. if it is @["addImpl", "add"]@
     -- the next stack frames would be created: @["add", "addImpl"]@).
     --
-    -- Sometimes the name remains unknown, this is represented by @Nothing@.
+    -- Sometimes the name remains unknown, this is represented by @LNameUnknown@.
   } deriving stock (Show, Generic)
     deriving anyclass (NFData)
 
@@ -74,7 +74,7 @@ instance Default LambdaMeta where
 
 instance AsEmpty LambdaMeta where
   _Empty = prism
-    (def)
+    def
     \case{ LambdaMeta (LNameUnknown :| []) -> Right (); other -> Left other }
 
 -- | A lens for accessing the meta of a lambda.
@@ -82,15 +82,25 @@ instance AsEmpty LambdaMeta where
 -- Returns @Nothing@ when the lambda is unwrapped.
 lambdaMetaL :: Lens' (T.Value ('T.TLambda i o)) (Maybe LambdaMeta)
 lambdaMetaL = lens
-  do \(T.VLam lam) -> case T.rfAnyInstr lam of
-       T.ConcreteMeta meta _ -> Just meta
-       _ -> Nothing
+  -- TODO [LIGO-986]: check LambdaCodeRec is handled properly
+  do let extractMeta = \case
+           T.ConcreteMeta meta _ -> Just meta
+           _ -> Nothing
+     \case
+       (T.VLam (T.LambdaCode lam)) -> extractMeta $ T.rfAnyInstr lam
+       (T.VLam (T.LambdaCodeRec lam)) -> extractMeta $ T.rfAnyInstr lam
+
   do let replaceMeta mMeta instr =
           let pureInstr = case instr of
                 T.ConcreteMeta (_ :: LambdaMeta) i -> i
                 i -> i
           in maybe id (T.Meta . T.SomeMeta) mMeta pureInstr
-     \(T.VLam lam) mMeta -> T.VLam $ T.rfMapAnyInstr (replaceMeta mMeta) lam
+
+     \(T.VLam lamVal) mMeta -> T.VLam $ case lamVal of
+       T.LambdaCode lam ->
+         T.LambdaCode $ T.rfMapAnyInstr (replaceMeta mMeta) lam
+       T.LambdaCodeRec lam ->
+         T.LambdaCodeRec $ T.rfMapAnyInstr (replaceMeta mMeta) lam
 
 -- | Variation of 'lambdaMetaL' that can look into arbitrary value,
 -- doing nothing if it is not a lambda.

@@ -5,8 +5,8 @@
 module Config         = Preprocessing_pyligo.Config
 module PreprocParams  = Preprocessor.CLI.Make (Config)
 module Token          = Lexing_pyligo.Token
-module UnitPasses     = Lexing_pyligo_self_units.Self
-module TokenPasses    = Lexing_pyligo_self_tokens.Self
+module UnitPasses     = Lx_py_self_units.Self
+module TokenPasses    = Lx_py_self_tokens.Self
 
 (* Vendors dependencies *)
 
@@ -27,10 +27,18 @@ module API =
 
 let () =
   let open! API in
+  let no_colour = Parameters.Options.no_colour in
   match check_cli () with
     Ok ->
-      let file = Option.value Parameters.Options.input ~default:"" in
-      let std, _tokens = scan_all_tokens (Lexbuf.File file) in
+      let std =
+        match Parameters.Options.string with
+          Some s ->
+            let input = Lexbuf.String ("", s) in
+            fst (scan_all_tokens ~no_colour input)
+        | None ->
+            let file = Option.value Parameters.Options.input ~default:"" in
+            fst (scan_all_tokens ~no_colour (Lexbuf.File file))
+      in
       let () = Std.(add_nl std.out) in
       let () = Std.(add_nl std.err) in
       Printf.printf  "%s%!" (Std.string_of std.out);

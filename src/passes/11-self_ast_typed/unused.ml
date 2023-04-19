@@ -16,16 +16,6 @@ module M = Simple_utils.Map.Make (V)
 (* A map recording if a variable is being used * a list of unused variables. *)
 type defuse = bool M.t * V.t list
 
-(* This function also returns the original key, as it contains the original location. *)
-let find_opt target m =
-  let aux k v x =
-    match x with
-    | None -> if V.compare target k = 0 then Some (k, v) else None
-    | Some _ -> x
-  in
-  M.fold aux m None
-
-
 let defuse_union (x, a) (y, b) = M.union (fun _ x y -> Some (x || y)) x y, a @ b
 let defuse_neutral = M.empty, []
 let defuse_unions defuse = List.fold_left ~f:defuse_union ~init:(defuse, [])
@@ -49,12 +39,6 @@ let remove_defined_var_after defuse binder f expr =
   let defuse, unused = f (M.add binder false defuse) expr in
   let unused = add_if_not_generated binder unused (M.find binder defuse) in
   replace_opt binder old_binder defuse, unused
-
-
-let add_if_unused unused binder defuse =
-  match find_opt binder defuse with
-  | None -> unused
-  | Some (_, b) -> add_if_not_generated binder unused b
 
 
 (* Return a def-use graph + a list of unused variables *)
@@ -86,7 +70,8 @@ let rec defuse_of_expr defuse expr : defuse =
   | E_accessor { struct_; _ } -> defuse_of_expr defuse struct_
   | E_update { struct_; update; _ } ->
     defuse_union (defuse_of_expr defuse struct_) (defuse_of_expr defuse update)
-  | E_mod_in { let_result; _ } -> defuse_of_expr defuse let_result
+  | E_mod_in { let_result; rhs; _ } ->
+    defuse_union (defuse_of_module_expr defuse rhs) (defuse_of_expr defuse let_result)
   | E_module_accessor _ -> defuse, []
   | E_type_inst { forall; _ } -> defuse_of_expr defuse forall
   | E_assign { binder; expression } ->
@@ -159,43 +144,36 @@ and defuse_of_cases defuse cases =
       defuse, unused_ @ unused)
 
 
-let defuse_of_expr defuse expr =
-  let _, unused = defuse_of_expr defuse expr in
+and defuse_of_module_expr defuse (module_expr : module_expr) : defuse =
+  match module_expr.module_content with
+  | M_struct decls ->
+    List.fold_left decls ~init:(defuse, []) ~f:(fun (defuse, unused_) decl ->
+        let defuse, unused = defuse_of_declaration defuse decl in
+        defuse, unused_ @ unused)
+  | M_variable _ | M_module_path _ -> defuse, []
+
+
+and defuse_of_declaration defuse (decl : declaration) : defuse =
+  match Location.unwrap decl with
+  | D_irrefutable_match { expr; _ } | D_value { expr; _ } -> defuse_of_expr defuse expr
+  | D_type _ -> defuse, []
+  | D_module { module_; module_binder = _; module_attr = _ } ->
+    defuse_of_module_expr defuse module_
+
+
+let defuse_of_declaration defuse decl =
+  let _, unused = defuse_of_declaration defuse decl in
   List.rev unused
 
 
-let rec unused_map_module ~raise : module_ -> module_ = function
-  | m ->
-    let () = List.iter ~f:(unused_decl ~raise) m in
-    m
-
-
-and unused_declaration ~raise (x : declaration) =
+let unused_declaration ~raise (decl : declaration) =
   let update_annotations annots = List.iter ~f:raise.Simple_utils.Trace.warning annots in
-  match Location.unwrap x with
-  | D_irrefutable_match { expr; _ } | D_value { expr; _ } ->
-    let defuse, _ = defuse_neutral in
-    let unused = defuse_of_expr defuse expr in
-    let warn_var v =
-      `Self_ast_typed_warning_unused (V.get_location v, Format.asprintf "%a" V.pp v)
-    in
-    let () = update_annotations @@ List.map ~f:warn_var unused in
-    ()
-  | D_type _ -> ()
-  | D_module { module_; module_binder = _; module_attr = _ } ->
-    let _ = unused_map_module_expr ~raise module_ in
-    ()
-
-
-and unused_decl ~raise x = unused_declaration ~raise x
-
-and unused_map_module_expr ~raise : module_expr -> module_expr = function
-  | m ->
-    let return wrap_content : module_expr = { m with wrap_content } in
-    (match Location.unwrap m with
-    | M_struct x -> return @@ M_struct (unused_map_module ~raise x)
-    | M_variable _ -> m
-    | M_module_path _ -> m)
+  let defuse, _ = defuse_neutral in
+  let unused = defuse_of_declaration defuse decl in
+  let warn_var v =
+    `Self_ast_typed_warning_unused (V.get_location v, Format.asprintf "%a" V.pp v)
+  in
+  update_annotations @@ List.map ~f:warn_var unused
 
 
 let unused_map_program ~raise : program -> program = function

@@ -7,7 +7,7 @@ Goes with ticket_wallet.mligo.
 *)
 
 type mint_parameter =
-  [@layout:comb]
+  [@layout comb]
   {destination : unit ticket contract;
    amount : nat}
 
@@ -16,13 +16,12 @@ type parameter =
   | Mint of mint_parameter
 
 type storage =
-  [@layout:comb]
+  [@layout comb]
   {admin : address}
 
-let main (arg : parameter * storage) : operation list * storage =
+let main (p : parameter) (s : storage) : operation list * storage =
   begin
     assert (Tezos.get_amount () = 0mutez);
-    let (p,s) = arg in
     match p with
     | Burn ticket ->
       begin

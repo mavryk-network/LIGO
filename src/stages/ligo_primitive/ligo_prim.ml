@@ -12,11 +12,12 @@ module Layout_var = Var.Layout_var
 module Type_var = Var.Type_var
 module Literal_types = Literal_types
 module Kind = Kind
-module Rows = Rows
+module Row = Row
 module Arrow = Arrow
 module Abstraction = Abstraction
 module Type_app = Type_app
 module Type_abs = Type_abs
+module Tuple = Tuple
 
 (* Value level constructs *)
 module Value_var = Var.Value_var
@@ -38,18 +39,12 @@ module Update (Path : Access_path.S) = Update.Make (Path)
 (* Sugar *)
 module Conditional = Conditional
 module Sequence = Sequence
-module Skip = Skip
 
 (* Imperative loops *)
 module For_loop = For_loop
 module For_each_loop = For_each_loop
 module While_loop = While_loop
 module Assign = Assign
-
-(* Containers *)
-module Map_expr = Map_expr
-module Set_expr = Set_expr
-module List_expr = List_expr
 
 (* Module language *)
 module Module_var = Var.Module_var

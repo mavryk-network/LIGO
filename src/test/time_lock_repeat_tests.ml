@@ -2,7 +2,7 @@ module Var = Simple_utils.Var
 open Simple_utils.Trace
 open Test_helpers
 open Ligo_prim
-open Ast_imperative
+open Ast_unified
 open Main_errors
 module Alpha_context = Memory_proto_alpha.Protocol.Alpha_context
 
@@ -12,18 +12,16 @@ let compile_main ~raise () =
   Test_helpers.compile_main ~raise "./contracts/timelock_repeat.mligo" ()
 
 
-let empty_op_list = e_typed_list ~loc [] (t_operation ~loc ())
+let empty_op_list = e_list ~loc []
 
 let empty_message =
   e_lambda_ez
     ~loc
     (Value_var.of_input_var ~loc "arguments")
-    ~ascr:(t_unit ~loc ())
-    (Some (t_list ~loc (t_operation ~loc ())))
+    ~ascr:(tv_unit ~loc ())
+    (Some (t_list ~loc (tv_operation ~loc ())))
     empty_op_list
 
-
-let call msg = e_constructor ~loc "Call" msg
 
 let mk_time ~raise st =
   match Memory_proto_alpha.Protocol.Script_timestamp.of_string st with
@@ -51,12 +49,13 @@ let early_call ~raise () =
     Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~now ())
   in
   let exp_failwith = "You have to wait before you can execute this contract again." in
-  expect_string_failwith
+  expect_string_failwith_twice
     ~raise
     ~options
     program
     "main"
-    (e_pair ~loc (e_unit ~loc ()) init_storage)
+    (e_unit ~loc)
+    init_storage
     exp_failwith
 
 
@@ -81,12 +80,13 @@ let interval_advance ~raise () =
       Script_timestamp.add_delta now (Script_int.of_int 86_400))
   in
   let new_storage_fake = storage new_timestamp 86400 fake_decompiled_empty_message in
-  expect_eq
+  expect_eq_twice
     ~raise
     ~options
     program
     "main"
-    (e_pair ~loc (e_unit ~loc ()) init_storage)
+    (e_unit ~loc)
+    init_storage
     (e_pair ~loc empty_op_list new_storage_fake)
 
 

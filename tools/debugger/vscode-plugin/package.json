@@ -4,7 +4,7 @@
     "description": "VSCode debugger extension for LIGO.",
     "author": "Serokell",
     "license": "MIT",
-    "version": "0.0.5",
+    "version": "0.0.9",
     "repository": {
         "type": "git",
         "url": "https://gitlab.com/ligolang/ligo"
@@ -22,10 +22,10 @@
     },
     "activationEvents": [
         "onDebugResolve:ligo",
-        "onDebugResolve:mligo",
-        "onDebugResolve:religo",
-        "onDebugResolve:jsligo"
+        "onCommand:extension.ligo-debugger.switchSteppingGranularity",
+        "onCommand:extension.ligo-debugger.useLastSteppingGranularity"
     ],
+
     "icon": "logo.png",
     "main": "./out/extension",
     "contributes": {
@@ -43,13 +43,7 @@
         },
         "breakpoints": [
             {
-                "language": "ligo"
-            },
-            {
                 "language": "mligo"
-            },
-            {
-                "language": "religo"
             },
             {
                 "language": "jsligo"
@@ -57,31 +51,12 @@
         ],
         "languages": [
             {
-                "id": "ligo",
-                "aliases": [
-                    "PascaLIGO"
-                ],
-                "extensions": [
-                    ".ligo",
-                    ".pligo"
-                ]
-            },
-            {
                 "id": "mligo",
                 "aliases": [
                     "CameLIGO"
                 ],
                 "extensions": [
                     ".mligo"
-                ]
-            },
-            {
-                "id": "religo",
-                "aliases": [
-                    "ReasonLIGO"
-                ],
-                "extensions": [
-                    ".religo"
                 ]
             },
             {
@@ -99,9 +74,7 @@
                 "type": "ligo",
                 "label": "LIGO Debugger",
                 "languages": [
-                    "ligo",
                     "mligo",
-                    "religo",
                     "jsligo"
                 ],
                 "configurationAttributes": {
@@ -269,6 +242,25 @@
                         }
                     }
                 ]
+            }
+        ],
+        "commands": [
+            {
+                "command": "extension.ligo-debugger.switchSteppingGranularity",
+                "title": "Debug: Switch stepping granularity",
+                "description": "Changes granularity used by StepIn and other buttons"
+            },
+            {
+                "command": "extension.ligo-debugger.useLastSteppingGranularity",
+                "title": "Debug: Switch to last stepping granularity",
+                "description": "Changes stepping granularity to the previously selected one"
+            }
+        ],
+        "keybindings": [
+            {
+                "command": "extension.ligo-debugger.useLastSteppingGranularity",
+                "key": "ctrl+f10",
+                "mac": "cmd+f10"
             }
         ]
     },

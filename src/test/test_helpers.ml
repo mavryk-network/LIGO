@@ -23,34 +23,37 @@ let loc = Location.test
 let test_format : 'a Simple_utils.Display.format =
   { (* do not display anything if test succeed *)
     pp =
-      (fun ~display_format _ _ ->
+      (fun ~display_format ~no_colour _ _ ->
         ignore display_format;
+        ignore no_colour;
         ())
   ; to_json = (fun _ : Display.json -> `Null)
   }
 
 
-let wrap_test_w name f =
+let wrap_test_w ~no_colour name f =
   try_with
     (fun ~raise ~catch ->
       let () = f ~raise () in
       List.iter ~f:(fun w ->
-          Format.printf "%a\n" (Main_warnings.pp ~display_format:Dev) w)
+          Format.printf "%a\n" (Main_warnings.pp ~display_format:Dev ~no_colour) w)
       @@ catch.warnings ())
     (fun ~catch error ->
       let value = Error (test_err_tracer name error) in
       let format = Display.bind_format test_format Formatter.error_format in
       let disp = Simple_utils.Display.Displayable { value; format } in
-      let s = Simple_utils.Display.convert ~display_format:Dev disp in
+      let s = Simple_utils.Display.convert ~display_format:Dev ~no_colour disp in
       List.iter ~f:(fun w ->
-          Format.printf "%a\n" (Main_warnings.pp ~display_format:Dev) w)
+          Format.printf "%a\n" (Main_warnings.pp ~display_format:Dev ~no_colour) w)
       @@ catch.warnings ();
       Format.printf "%s\n" s;
       Stdlib.raise Alcotest.Test_error)
 
 
 let test_w name test =
-  Test (Alcotest.test_case name `Quick @@ fun () -> wrap_test_w name test)
+  Test
+    (Alcotest.test_case name `Quick
+    @@ fun () -> wrap_test_w ~no_colour:options.tools.no_colour name test)
 
 
 let test_w_all name test =
@@ -60,22 +63,27 @@ let test_w_all name test =
       let name = Format.asprintf "%s (%s)" name s in
       let f ~raise () = test ~raise file in
       test_w name f)
-    [ "ligo"; "mligo"; "religo"; "jsligo" ]
+    [ "mligo"; "jsligo" ]
 
 
-let wrap_test name f =
+let wrap_test ~no_colour name f =
   try_with
     (fun ~raise ~catch:_ -> f ~raise ())
     (fun ~catch:_ error ->
       let value = Error (test_err_tracer name error) in
       let format = Display.bind_format test_format Formatter.error_format in
       let disp = Simple_utils.Display.Displayable { value; format } in
-      let s = Simple_utils.Display.convert ~display_format:Dev disp in
+      let s = Simple_utils.Display.convert ~display_format:Dev ~no_colour disp in
       Format.printf "%s\n" s;
       raise Alcotest.Test_error)
 
 
-let test name f = Test (Alcotest.test_case name `Quick @@ fun () -> wrap_test name f)
+let test name f =
+  Test
+    (Alcotest.test_case name `Quick
+    @@ fun () -> wrap_test ~no_colour:options.tools.no_colour name f)
+
+
 let test_suite name lst = Test_suite (name, lst)
 
 let rec test_height : test -> int =
@@ -129,37 +137,43 @@ let wrap_ref file f =
 
 (* Common functions used in tests *)
 
-let type_file ~raise ?(st = "auto") f entry options =
+let type_file ~raise ?(st = "auto") ?cform f options =
   ignore st;
-  Build.qualified_typed ~raise ~options entry f
+  Build.qualified_typed ~raise ~options ?cform (Build.Source_input.From_file f)
 
 
-let core_file ~raise f options = Build.qualified_core ~raise ~options f
+let core_file ~raise f options =
+  Build.qualified_core ~raise ~options (Build.Source_input.From_file f)
 
-let get_program ~raise ?(st = "auto") f entry =
+
+let core_file_unqualified ~raise f options = Build.unqualified_core ~raise ~options f
+
+let get_program ~raise ?(st = "auto") f ?cform =
   wrap_ref f (fun s ->
-      let program = type_file ~raise ~st f entry options in
+      let program = type_file ~raise ~st ?cform f options in
       s := Some (program, f);
       program)
 
 
 let get_program f ?st =
-  get_program ?st f (Contract (Ligo_prim.Value_var.of_input_var ~loc "main"))
+  get_program ?st ~cform:(Contract { entrypoints = [ "main" ]; module_path = [] }) f
 
 
 let expression_to_core ~raise expression =
-  let core = Ligo_compile.Of_imperative.compile_expression ~raise expression in
+  let core =
+    Ligo_compile.Of_unified.compile_expression
+      ~raise
+      ~options
+      ~disable_initial_check:true
+      expression
+  in
   core
 
 
-let pack_payload
-    ~raise
-    (program : Ast_typed.program)
-    (payload : Ast_imperative.expression)
-    : bytes
+let pack_payload ~raise (program : Ast_typed.program) (payload : Ast_unified.expr) : bytes
   =
   let code =
-    let core = Ligo_compile.Of_imperative.compile_expression ~raise payload in
+    let core = expression_to_core ~raise payload in
     let typed =
       Ligo_compile.Of_core.compile_expression ~raise ~options ~init_prog:program core
     in
@@ -177,11 +191,7 @@ let pack_payload
   Ligo_run.Of_michelson.pack_payload ~raise payload payload_ty
 
 
-let sign_message
-    ~raise
-    (program : Ast_typed.program)
-    (payload : Ast_imperative.expression)
-    sk
+let sign_message ~raise (program : Ast_typed.program) (payload : Ast_unified.expr) sk
     : string
   =
   let open Tezos_crypto in
@@ -216,35 +226,48 @@ let str_keys (raw_pkh, raw_pk, raw_sk) =
   pkh_str, pk_str, sk_str
 
 
-let sha_256_hash pl =
-  let open Proto_alpha_utils.Memory_proto_alpha.Alpha_environment in
-  Raw_hashes.sha256 pl
-
-
-let typed_program_to_michelson ~raise (program, env) =
-  ignore env;
-  let aggregated =
-    Ligo_compile.Of_typed.compile_expression ~raise ~options:options.middle_end program
-  in
-  let expanded = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
-  let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
-  let michelson = Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c in
-  let michelson =
-    Ligo_compile.Of_michelson.build_contract ~disable_typecheck:false michelson
-  in
-  michelson
-
-
 let typed_program_with_imperative_input_to_michelson
     ~raise
     (program : Ast_typed.program)
     (entry_point : string)
-    (input : Ast_imperative.expression)
+    (input : Ast_unified.expr)
     : Stacking.compiled_expression * Ast_aggregated.type_expression
   =
   Printexc.record_backtrace true;
-  let core = Ligo_compile.Of_imperative.compile_expression ~raise input in
+  let core = expression_to_core ~raise input in
+  let entry_point =
+    Ligo_prim.Value_var.of_input_var ~loc:Location.generated entry_point
+  in
   let app = Ligo_compile.Of_core.apply entry_point core in
+  let typed_app =
+    Ligo_compile.Of_core.compile_expression ~raise ~options ~init_prog:program app
+  in
+  (* let compiled_applied = Ligo_compile.Of_typed.compile_expression ~raise typed_app in *)
+  let aggregated =
+    Ligo_compile.Of_typed.compile_expression_in_context
+      ~raise
+      ~options:options.middle_end
+      program
+      typed_app
+  in
+  let expanded = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+  let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
+  ( Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c
+  , aggregated.type_expression )
+
+
+let typed_program_with_imperative_input_to_michelson_twice
+    ~raise
+    (program : Ast_typed.program)
+    (entry_point : string)
+    (input1 : Ast_unified.expr)
+    (input2 : Ast_unified.expr)
+    : Stacking.compiled_expression * Ast_aggregated.type_expression
+  =
+  Printexc.record_backtrace true;
+  let core1 = expression_to_core ~raise input1 in
+  let core2 = expression_to_core ~raise input2 in
+  let app = Ligo_compile.Of_core.apply_twice entry_point core1 core2 in
   let typed_app =
     Ligo_compile.Of_core.compile_expression ~raise ~options ~init_prog:program app
   in
@@ -267,11 +290,46 @@ let run_typed_program_with_imperative_input
     ?options
     (program : Ast_typed.program)
     (entry_point : string)
-    (input : Ast_imperative.expression)
+    (input : Ast_unified.expr)
     : Ast_core.expression
   =
   let michelson_program, ty =
     typed_program_with_imperative_input_to_michelson ~raise program entry_point input
+  in
+  let michelson_output =
+    Ligo_run.Of_michelson.run_no_failwith
+      ~raise
+      ?options
+      michelson_program.expr
+      michelson_program.expr_ty
+  in
+  let res =
+    Decompile.Of_michelson.decompile_expression
+      ~raise
+      ty
+      (Runned_result.Success michelson_output)
+  in
+  match res with
+  | Runned_result.Success exp -> exp
+  | Runned_result.Fail _ -> raise.error test_not_expected_to_fail
+
+
+let run_typed_program_with_imperative_input_twice
+    ~raise
+    ?options
+    (program : Ast_typed.program)
+    (entry_point : string)
+    (input1 : Ast_unified.expr)
+    (input2 : Ast_unified.expr)
+    : Ast_core.expression
+  =
+  let michelson_program, ty =
+    typed_program_with_imperative_input_to_michelson_twice
+      ~raise
+      program
+      entry_point
+      input1
+      input2
   in
   let michelson_output =
     Ligo_run.Of_michelson.run_no_failwith
@@ -299,6 +357,19 @@ let expect ~raise ?options program entry_point input expecter =
   expecter result
 
 
+let expect_twice ~raise ?options program entry_point input1 input2 expecter =
+  let result =
+    trace ~raise (test_run_tracer entry_point)
+    @@ run_typed_program_with_imperative_input_twice
+         ?options
+         program
+         entry_point
+         input1
+         input2
+  in
+  expecter result
+
+
 let expect_fail ~raise ?options program entry_point input =
   trace ~raise (test_run_tracer entry_point)
   @@ fun ~raise ->
@@ -306,9 +377,50 @@ let expect_fail ~raise ?options program entry_point input =
   @@ run_typed_program_with_imperative_input ?options program entry_point input
 
 
+let expect_fail_twice ~raise ?options program entry_point input1 input2 =
+  trace ~raise (test_run_tracer entry_point)
+  @@ fun ~raise ->
+  Assert.assert_fail ~raise test_expected_to_fail
+  @@ run_typed_program_with_imperative_input_twice
+       ?options
+       program
+       entry_point
+       input1
+       input2
+
+
 let expect_string_failwith ~raise ?options program entry_point input expected_failwith =
   let michelson_program, _ =
     typed_program_with_imperative_input_to_michelson ~raise program entry_point input
+  in
+  let err =
+    Ligo_run.Of_michelson.run_failwith
+      ~raise
+      ?options
+      michelson_program.expr
+      michelson_program.expr_ty
+  in
+  match err with
+  | String (_, str) when String.equal str expected_failwith -> ()
+  | _ -> raise.error test_expected_to_fail
+
+
+let expect_string_failwith_twice
+    ~raise
+    ?options
+    program
+    entry_point
+    input1
+    input2
+    expected_failwith
+  =
+  let michelson_program, _ =
+    typed_program_with_imperative_input_to_michelson_twice
+      ~raise
+      program
+      entry_point
+      input1
+      input2
   in
   let err =
     Ligo_run.Of_michelson.run_failwith
@@ -329,6 +441,15 @@ let expect_eq ~raise ?options program entry_point input expected =
     @@ Ast_core.Misc.assert_value_eq (expected, result)
   in
   expect ~raise ?options program entry_point input expecter
+
+
+let expect_eq_twice ~raise ?options program entry_point input1 input2 expected =
+  let expected = expression_to_core ~raise expected in
+  let expecter result =
+    trace_option ~raise (test_expect_tracer expected result)
+    @@ Ast_core.Misc.assert_value_eq (expected, result)
+  in
+  expect_twice ~raise ?options program entry_point input1 input2 expecter
 
 
 let expect_eq_core ~raise ?options program entry_point input expected =
@@ -383,66 +504,22 @@ let expect_eq_evaluate ~raise (program : Ast_typed.program) entry_point expected
   expect_evaluate ~raise program entry_point expecter
 
 
-let expect_n_aux ~raise ?options lst program entry_point make_input make_expecter =
-  let aux n =
-    let input = make_input n in
-    let expecter = make_expecter n in
-    trace ~raise (test_expect_n_tracer n)
-    @@
-    let result = expect ?options program entry_point input expecter in
-    result
-  in
-  let _ = List.map ~f:aux lst in
-  ()
-
-
-let expect_eq_n_trace_aux ~raise ?options lst program entry_point make_input make_expected
-  =
-  let aux n =
-    let input = make_input n in
-    let expected = make_expected n in
-    trace ~raise (test_expect_n_tracer n)
-    @@ expect_eq ?options program entry_point input expected
-  in
-  let _ = List.map ~f:aux lst in
-  ()
-
-
-let expect_eq_exp_trace_aux
+let expect_eq_n_trace_aux_twice
     ~raise
     ?options
-    explst
+    lst
     program
     entry_point
     make_input
     make_expected
   =
-  let aux exp =
-    let input = make_input exp in
-    let expected = make_expected exp in
-    trace ~raise (test_expect_exp_tracer exp)
-    @@ expect_eq ?options program entry_point input expected
+  let aux n =
+    let input1, input2 = make_input n in
+    let expected = make_expected n in
+    trace ~raise (test_expect_n_tracer n)
+    @@ expect_eq_twice ?options program entry_point input1 input2 expected
   in
-  let _ = List.map ~f:aux explst in
-  ()
-
-
-let expect_failwith_exp_trace_aux
-    ~raise
-    ?options
-    explst
-    program
-    entry_point
-    make_input
-    make_expected_failwith
-  =
-  let aux exp =
-    let input = make_input exp in
-    let expected = make_expected_failwith exp in
-    trace ~raise (test_expect_exp_tracer exp)
-    @@ expect_string_failwith ?options program entry_point input expected
-  in
-  let _ = List.map ~f:aux explst in
+  let _ = List.map ~f:aux lst in
   ()
 
 
@@ -457,17 +534,27 @@ let expect_eq_n_aux ~raise ?options lst program entry_point make_input make_expe
   ()
 
 
+let expect_eq_n_aux_twice ~raise ?options lst program entry_point make_input make_expected
+  =
+  let aux n =
+    let input1, input2 = make_input n in
+    let expected = make_expected n in
+    trace ~raise (test_expect_eq_n_tracer n)
+    @@ expect_eq_twice ?options program entry_point input1 input2 expected
+  in
+  let () = List.iter ~f:aux lst in
+  ()
+
+
 let expect_eq_n ?options = expect_eq_n_aux ?options [ 0; 1; 2; 42; 163; -1 ]
+let expect_eq_n_twice ?options = expect_eq_n_aux_twice ?options [ 0; 1; 2; 42; 163; -1 ]
 let expect_eq_n_pos ?options = expect_eq_n_aux ?options [ 0; 1; 2; 42; 163 ]
-let expect_eq_n_strict_pos ?options = expect_eq_n_aux ?options [ 2; 42; 163 ]
 let expect_eq_n_pos_small ?options = expect_eq_n_aux ?options [ 0; 1; 2; 10 ]
 let expect_eq_n_strict_pos_small ?options = expect_eq_n_aux ?options [ 1; 2; 10 ]
 let expect_eq_n_pos_mid = expect_eq_n_aux [ 0; 1; 2; 10; 33 ]
-let expect_n_pos_small ?options = expect_n_aux ?options [ 0; 2; 10 ]
-let expect_n_strict_pos_small ?options = expect_n_aux ?options [ 2; 10 ]
 
 let expect_eq_b ~raise program entry_point make_expected =
-  let open Ast_imperative in
+  let open Ast_unified in
   let aux b =
     let input = e_bool ~loc b in
     let expected = make_expected b in
@@ -478,12 +565,12 @@ let expect_eq_b ~raise program entry_point make_expected =
 
 
 let expect_eq_n_int a b c =
-  let open Ast_imperative in
+  let open Ast_unified in
   expect_eq_n a b (e_int ~loc) (fun n -> e_int ~loc (c n))
 
 
 let expect_eq_b_bool a b c =
-  let open Ast_imperative in
+  let open Ast_unified in
   expect_eq_b a b (fun bool -> e_bool ~loc (c bool))
 
 
@@ -493,7 +580,8 @@ let compile_main ~raise f () =
       ~raise
       ~options:options.middle_end
       (get_program ~raise f ())
-    @@ Ligo_prim.Value_var.of_input_var ~loc "main"
+      (Ligo_prim.Value_var.of_input_var ~loc "main")
+      []
   in
   let expanded = Ligo_compile.Of_aggregated.compile_expression ~raise agg in
   let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in

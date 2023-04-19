@@ -10,11 +10,9 @@ module Scope : sig
   val empty : t
   val new_value_var : t -> Value_var.t -> t * Value_var.t
   val get_value_var : t -> Value_var.t -> Value_var.t
-  val new_type_var : t -> Type_var.t -> t * Type_var.t
   val get_type_var : t -> Type_var.t -> Type_var.t
   val new_mut_var : t -> Value_var.t -> t * Value_var.t
   val get_mut_var : t -> Value_var.t -> Value_var.t
-  val diff : t -> t -> t
 
   type swapper =
     { value : Value_var.t -> Value_var.t
@@ -51,27 +49,10 @@ end = struct
     |> Value_var.set_location @@ Value_var.get_location var
 
 
-  let new_type_var (map : t) var =
-    let var' =
-      match TMap.find_opt var map.type_ with
-      | Some v -> Type_var.fresh_like ~loc:(Type_var.get_location var) v
-      | None -> Type_var.fresh_like var
-    in
-    let type_ = TMap.add var var' map.type_ in
-    { map with type_ }, var'
-
-
   let get_type_var (map : t) var =
     (* The default value is for variable coming from other files *)
     Option.value ~default:var @@ TMap.find_opt var map.type_
     |> Type_var.set_location @@ Type_var.get_location var
-
-
-  let diff (a : t) (b : t) =
-    { value = VMap.diff Value_var.equal a.value b.value
-    ; type_ = TMap.diff Type_var.equal a.type_ b.type_
-    ; mut = VMap.diff Value_var.equal a.mut b.mut
-    }
 
 
   type swapper =
@@ -114,28 +95,12 @@ let rec swap_type_expression : Scope.swapper -> type_expression -> type_expressi
   | T_variable ty_var ->
     let ty_var = swaper.type_ ty_var in
     return @@ T_variable ty_var
-  | T_sum { fields; layout } ->
-    let fields =
-      Record.map
-        ~f:
-          (fun ({ associated_type; michelson_annotation; decl_pos } : row_element)
-               : row_element ->
-          let associated_type = self associated_type in
-          { associated_type; michelson_annotation; decl_pos })
-        fields
-    in
-    return @@ T_sum { fields; layout }
-  | T_record { fields; layout } ->
-    let fields =
-      Record.map
-        ~f:
-          (fun ({ associated_type; michelson_annotation; decl_pos } : row_element)
-               : row_element ->
-          let associated_type = self associated_type in
-          { associated_type; michelson_annotation; decl_pos })
-        fields
-    in
-    return @@ T_record { fields; layout }
+  | T_sum row ->
+    let row = Row.map self row in
+    return @@ T_sum row
+  | T_record row ->
+    let row = Row.map self row in
+    return @@ T_record row
   | T_arrow { type1; type2 } ->
     let type1 = self type1 in
     let type2 = self type2 in
@@ -227,13 +192,16 @@ let rec swap_expression : Scope.swapper -> expression -> expression =
     let type_binder = swaper.type_ type_binder in
     let result = self result in
     return @@ E_type_abstraction { type_binder; result }
-  | E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } } ->
+  | E_recursive
+      { fun_name; fun_type; lambda = { binder; output_type; result }; force_lambdarec } ->
     let fun_name = swaper.value fun_name in
     let fun_type = self_type fun_type in
     let binder = swap_param swaper binder in
     let output_type = self_type output_type in
     let result = self result in
-    return @@ E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } }
+    return
+    @@ E_recursive
+         { fun_name; fun_type; lambda = { binder; output_type; result }; force_lambdarec }
   | E_let_in { let_binder; rhs; let_result; attributes } ->
     let let_binder = swap_pattern swaper let_binder in
     let rhs = self rhs in
@@ -301,20 +269,6 @@ and matching_cases
       ({ pattern; body } : _ Match_expr.match_case))
 
 
-let swap_declaration : Scope.swapper -> declaration -> declaration =
- fun swaper decl ->
-  match Location.unwrap decl with
-  | D_value { binder; expr; attr } ->
-    let binder = swap_binder swaper binder in
-    let expr = swap_expression swaper expr in
-    Location.wrap ~loc:(Location.get_location decl) @@ D_value { binder; expr; attr }
-  | D_irrefutable_match { pattern; expr; attr } ->
-    let pattern = swap_pattern swaper pattern in
-    let expr = swap_expression swaper expr in
-    Location.wrap ~loc:(Location.get_location decl)
-    @@ D_irrefutable_match { pattern; expr; attr }
-
-
 let rec type_expression : Scope.t -> type_expression -> type_expression =
  fun scope te ->
   let self ?(scope = scope) = type_expression scope in
@@ -323,28 +277,12 @@ let rec type_expression : Scope.t -> type_expression -> type_expression =
   | T_variable ty_var ->
     let ty_var = Scope.get_type_var scope ty_var in
     return @@ T_variable ty_var
-  | T_sum { fields; layout } ->
-    let fields =
-      Record.map
-        ~f:
-          (fun ({ associated_type; michelson_annotation; decl_pos } : row_element)
-               : row_element ->
-          let associated_type = self associated_type in
-          { associated_type; michelson_annotation; decl_pos })
-        fields
-    in
-    return @@ T_sum { fields; layout }
-  | T_record { fields; layout } ->
-    let fields =
-      Record.map
-        ~f:
-          (fun ({ associated_type; michelson_annotation; decl_pos } : row_element)
-               : row_element ->
-          let associated_type = self associated_type in
-          { associated_type; michelson_annotation; decl_pos })
-        fields
-    in
-    return @@ T_record { fields; layout }
+  | T_sum row ->
+    let row = Row.map self row in
+    return @@ T_sum row
+  | T_record row ->
+    let row = Row.map self row in
+    return @@ T_record row
   | T_arrow { type1; type2 } ->
     let type1 = self type1 in
     let type2 = self type2 in
@@ -418,14 +356,6 @@ let param_new : Scope.t -> _ Param.t -> Scope.t * _ Param.t =
   scope, param
 
 
-let binder_get : Scope.t -> _ Binder.t -> _ Binder.t =
- fun scope binder ->
-  let self_type ?(scope = scope) = type_expression scope in
-  let var = Binder.apply (Scope.get_value_var scope) binder in
-  let binder = Binder.map self_type binder in
-  Binder.set_var binder var
-
-
 let mut_binder_get : Scope.t -> _ Binder.t -> _ Binder.t =
  fun scope binder ->
   let self_type ?(scope = scope) = type_expression scope in
@@ -461,13 +391,16 @@ let rec expression : Scope.t -> expression -> Scope.t * expression =
     (* let scope,type_binder = Scope.new_type_var scope type_binder in *)
     let _, result = self ~scope result in
     return @@ E_type_abstraction { type_binder; result }
-  | E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } } ->
+  | E_recursive
+      { fun_name; fun_type; lambda = { binder; output_type; result }; force_lambdarec } ->
     let fun_name = Scope.get_value_var scope fun_name in
     let fun_type = self_type fun_type in
     let scope, binder = param_new scope binder in
     let output_type = self_type output_type in
     let _, result = self ~scope result in
-    return @@ E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } }
+    return
+    @@ E_recursive
+         { fun_name; fun_type; lambda = { binder; output_type; result }; force_lambdarec }
   | E_let_in
       { let_binder
       ; rhs = { expression_content = E_recursive _ } as rhs
@@ -498,7 +431,7 @@ let rec expression : Scope.t -> expression -> Scope.t * expression =
     let cases = matching_cases scope cases in
     return @@ E_matching { matchee; cases }
   | E_record record ->
-    let _, record = Record.LMap.unzip @@ Record.LMap.map self record in
+    let record = Record.map ~f:(fun elem -> snd @@ self elem) record in
     return @@ E_record record
   | E_accessor { struct_; path } ->
     let _, struct_ = self struct_ in
@@ -553,40 +486,4 @@ let program : expression -> expression =
   let scope = Scope.empty in
   let scope, e = expression scope e in
   let swapper = Scope.make_swapper scope in
-  let e = swap_expression swapper e in
-  e
-
-
-let declaration : Scope.t -> declaration -> Scope.t * declaration =
- fun scope decl ->
-  match Location.unwrap decl with
-  | D_value { binder; expr; attr } ->
-    let scope, binder = binder_new scope binder in
-    let _, expr = expression scope expr in
-    ( scope
-    , Location.wrap ~loc:(Location.get_location decl) @@ D_value { binder; expr; attr } )
-  | D_irrefutable_match { pattern; expr; attr } ->
-    let scope, pattern = pattern_new scope pattern in
-    let _, expr = expression scope expr in
-    ( scope
-    , Location.wrap ~loc:(Location.get_location decl)
-      @@ D_irrefutable_match { pattern; expr; attr } )
-
-
-let program_ : program -> program =
- fun (ctxt, prg) ->
-  let scope = Scope.empty in
-  let scope, prg = expression scope prg in
-  let f decl (scope, ctxt) =
-    let scope, decl = declaration scope decl in
-    scope, decl :: ctxt
-  in
-  let scope, ctxt = List.fold_right ctxt ~init:(scope, []) ~f in
-  let swapper = Scope.make_swapper scope in
-  let prg = swap_expression swapper prg in
-  let f decl ctxt =
-    let decl = swap_declaration swapper decl in
-    decl :: ctxt
-  in
-  let ctxt = List.fold_right ctxt ~init:[] ~f in
-  ctxt, prg
+  swap_expression swapper e

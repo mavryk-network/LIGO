@@ -3,7 +3,7 @@
     "description": "LIGO VSCode extension includes syntax highlighting, and a language server for LIGO.",
     "author": "Serokell",
     "license": "MIT",
-    "version": "0.4.25",
+    "version": "0.4.30",
     "repository": {
         "type": "git",
         "url": "https://gitlab.com/ligolang/ligo"
@@ -17,30 +17,13 @@
         "vscode": "^1.57.0"
     },
     "activationEvents": [
-        "onLanguage:ligo",
         "onLanguage:mligo",
-        "onLanguage:religo",
         "onLanguage:jsligo"
     ],
     "icon": "logo.png",
     "main": "./client/out/extension",
     "contributes": {
         "languages": [
-            {
-                "id": "ligo",
-                "aliases": [
-                    "PascaLIGO"
-                ],
-                "extensions": [
-                    ".ligo",
-                    ".pligo"
-                ],
-                "icon": {
-                    "light": "logo.png",
-                    "dark": "logo.png"
-                },
-                "configuration": "./syntaxes/ligo.configuration.json"
-            },
             {
                 "id": "mligo",
                 "aliases": [
@@ -54,20 +37,6 @@
                     "dark": "logo.png"
                 },
                 "configuration": "./syntaxes/mligo.configuration.json"
-            },
-            {
-                "id": "religo",
-                "aliases": [
-                    "ReasonLIGO"
-                ],
-                "extensions": [
-                    ".religo"
-                ],
-                "icon": {
-                    "light": "logo.png",
-                    "dark": "logo.png"
-                },
-                "configuration": "./syntaxes/religo.configuration.json"
             },
             {
                 "id": "jsligo",
@@ -86,19 +55,9 @@
         ],
         "grammars": [
             {
-                "language": "ligo",
-                "scopeName": "source.ligo",
-                "path": "./syntaxes/ligo.tmLanguage.json"
-            },
-            {
                 "language": "mligo",
                 "scopeName": "source.mligo",
                 "path": "./syntaxes/mligo.tmLanguage.json"
-            },
-            {
-                "language": "religo",
-                "scopeName": "source.religo",
-                "path": "./syntaxes/religo.tmLanguage.json"
             },
             {
                 "language": "jsligo",
@@ -116,6 +75,16 @@
                     "default": 100,
                     "description": "Controls the maximum number of problems produced by the server."
                 },
+                "ligoLanguageServer.scopingSystem": {
+                    "scope": "resource",
+                    "type": "string",
+                    "enum": [
+                        "Fallback",
+                        "Standard"
+                    ],
+                    "default": "Fallback",
+                    "markdownDescription": "Scoping system. `Standard` means scopes from ligo compiler are used."
+                },
                 "ligoLanguageServer.ligoBinaryPath": {
                     "scope": "resource",
                     "type": "string",
@@ -126,7 +95,7 @@
                     "scope": "resource",
                     "type": "array",
                     "default": [],
-                    "description": "Disable specific LIGO LSP features. For a list of features, see [the README.md](https://gitlab.com/serokell/ligo/ligo/-/blob/tooling/tools/lsp/vscode-plugin/README.md)."
+                    "markdownDescription": "Disable specific LIGO LSP features. For a list of features, see [the README.md](https://gitlab.com/serokell/ligo/ligo/-/blob/tooling/tools/lsp/vscode-plugin/README.md)."
                 },
                 "ligoLanguageServer.tezos_source_account": {
                     "scope": "resource",
@@ -214,6 +183,7 @@
         "@taquito/signer": "^12.0.3",
         "@taquito/taquito": "^12.0.3",
         "axios": "^0.21.1",
+        "fs-extra": "^11.1.0",
         "node-fetch": "^3.2.3",
         "semver": "^7.3.5",
         "vscode-languageclient": "^7.0.0"

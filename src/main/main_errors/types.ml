@@ -10,6 +10,11 @@ type all =
   | `Main_invalid_dialect_name of string
   | `Main_invalid_extension of string
   | `Main_invalid_protocol_version of string list * string
+  | `Main_deprecated_pascaligo_filename of string
+  | `Main_deprecated_pascaligo_syntax of unit
+  | `Main_transpilation_unsupported_syntaxes of string * string
+  | `Main_transpilation_unspecified_dest_syntax
+  | `Main_transpilation_same_source_and_dest_syntax of string
   | `Main_unparse_tracer of tezos_alpha_error list
   | `Main_typecheck_contract_tracer of
     Environment.Protocols.t * int Tezos_utils.Michelson.michelson * tezos_alpha_error list
@@ -27,13 +32,8 @@ type all =
   | `Error_of_execution_tracer of tezos_alpha_error list
   | `Preproc_tracer of Preprocessing.Errors.t
   | `Parser_tracer of Parsing.Errors.t
+  | `Nanopasses_tracer of Nanopasses.Errors.t
   | `Pretty_tracer of Parsing.Errors.t
-  | `Cit_pascaligo_tracer of Tree_abstraction.Pascaligo.Errors.abs_error list
-  | `Cit_cameligo_tracer of Tree_abstraction.Cameligo.Errors.abs_error list
-  | `Cit_reasonligo_tracer of Tree_abstraction.Reasonligo.Errors.abs_error list
-  | `Cit_jsligo_tracer of Tree_abstraction.Jsligo.Errors.abs_error list
-  | `Self_ast_imperative_tracer of Self_ast_imperative.Errors.self_ast_imperative_error
-  | `Desugaring_tracer of Desugaring.Errors.desugaring_error
   | `Checking_tracer of Checking.Errors.typer_error
   | `Self_ast_typed_tracer of Self_ast_typed.Errors.self_ast_typed_error
   | `Aggregation_tracer of Aggregation.Errors.aggregation_error
@@ -43,6 +43,8 @@ type all =
   | `Scoping_tracer of Scoping.Errors.scoping_error
   | `Stacking_tracer of Stacking.Errors.stacking_error
   | `Ligo_init_unrecognized_template of string list
+  | `Ligo_init_registry_template_error of string
+  | `Ligo_init_git_template_error of string
   | (* | `Main_interpreter of Interpreter.interpreter_error *)
     `Main_interpret_test_entry_not_found of
     string

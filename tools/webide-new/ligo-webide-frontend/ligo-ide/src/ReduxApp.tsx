@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable new-cap */
 import { lazy, useEffect, useRef, useState } from "react";
+import { GlobalHotKeys } from "react-hotkeys";
 import { GlobalModals, autoUpdater } from "~/base-components/global";
 import { config, updateStore } from "~/lib/redux";
 import redux, { Provider } from "~/base-components/redux";
@@ -12,7 +13,8 @@ import { NotificationSystem } from "~/base-components/notification";
 import Routes from "./components/Routes";
 import fileOps, { indexedDBFileSystem, fileSystems, fileSystem } from "~/base-components/file-ops";
 import icon from "./components/icon.png";
-import { ProjectManager } from "~/base-components/workspace";
+import { ProjectManager, actions } from "~/base-components/workspace";
+import LigoHeader from "~/components/LigoHeader";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -32,7 +34,7 @@ const ReduxApp = (props: { history: any }) => {
       ligoIdeFileSystems.current.setFileSystem([indexedDB.current]);
       if (!(await fileOps.exists(".workspaces/default-project"))) {
         const Manager = ProjectManager;
-        const defaultProject = await Manager.createProject("default-project", "increment");
+        const defaultProject = await Manager.createProject("default-project", "increment", "ligo");
         redux.dispatch("ADD_PROJECT", {
           type: "local",
           project: defaultProject,
@@ -54,10 +56,21 @@ const ReduxApp = (props: { history: any }) => {
 
   return (
     <Provider store={redux.store}>
-      <div className="body" style={{ paddingTop: "49px" }}>
+      <div className="body">
+        <LigoHeader />
         <Header history={props.history} />
         <NotificationSystem />
         <GlobalModals icon={icon} />
+        <GlobalHotKeys
+          keyMap={{ CtrlCmdB: ["command+b", "control+b"] }}
+          handlers={{
+            CtrlCmdB: () => {
+              if (actions.projectManager !== null) {
+                actions.projectManager.compile(null, undefined);
+              }
+            },
+          }}
+        />
         <Routes />
         <BottomBar ref={bottomBarRef} />
       </div>

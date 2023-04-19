@@ -261,11 +261,22 @@ core_type:
 | "<int>"          {    TInt (unwrap $1) }
 | "_"              { TVar {value="_"; region=$1#region} }
 | type_name        {    TVar $1 }
+| parameter_of_type{         $1 }
 | module_access_t  {   TModA $1 }
 | type_ctor_app    {    TApp $1 }
 | record_type      { TRecord $1 }
 | type_var         {    TArg $1 }
 | par(type_expr)   {    TPar $1 }
+
+(* Parameter of contract *)
+
+parameter_of_type:
+  nsepseq(module_name,".") "parameter_of" {
+    let kwd_parameter = $2 in
+    let start = nsepseq_to_region (fun x -> x.region) $1 in
+    let region = cover start kwd_parameter#region in
+    let value  = $1 in
+    TParameter {region; value } }
 
 type_ctor_app:
   type_ctor_arg type_name {
@@ -824,6 +835,12 @@ call_expr:
                  | _,  l -> last expr_to_region l in
     let region = cover start stop in
     ECall {region; value=$1,$2} }
+| "contract_of" nsepseq(module_name,".") {
+    let kwd_contract = $1 in
+    let stop = nsepseq_to_region (fun x -> x.region) $2 in
+    let region = cover kwd_contract#region stop in
+    let value  = $2 in
+    EContract {region; value } }
 
 core_expr:
   "<int>"                             {               EArith (Int (unwrap $1)) }
@@ -846,7 +863,7 @@ core_expr:
 
 code_inj:
   "[%lang" expr "]" {
-    let region = cover $1.region $3#region
+    let region = cover $1#region $3#region
     and value  = {language=$1; code=$2; rbracket=$3}
     in {region; value} }
 

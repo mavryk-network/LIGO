@@ -4,10 +4,54 @@ import PropTypes from "prop-types";
 
 import * as monaco from "monaco-editor";
 import throttle from "lodash/throttle";
+import {
+  MonacoLanguageClient,
+  CloseAction,
+  ErrorAction,
+  MonacoServices,
+} from "monaco-languageclient";
+import { toSocket, WebSocketMessageReader, WebSocketMessageWriter } from "vscode-ws-jsonrpc";
 
 import modelSessionManager from "./modelSessionManager";
 import { theme } from "./theme";
 import { actions } from "~/base-components/workspace";
+
+function createWebSocket() {
+  const url = `ws://${process.env.BACKEND_URL}`;
+  const webSocket = new WebSocket(url);
+  webSocket.onopen = () => {
+    const socket = toSocket(webSocket);
+    const reader = new WebSocketMessageReader(socket);
+    const writer = new WebSocketMessageWriter(socket);
+    const languageClient = createLanguageClient({
+      reader,
+      writer,
+    });
+    languageClient.start();
+    reader.onClose(() => languageClient.stop());
+  };
+}
+
+function createLanguageClient(transports) {
+  return new MonacoLanguageClient({
+    name: "Sample Language Client",
+    clientOptions: {
+      // use a language id as a document selector
+      documentSelector: ["cameligoext", "jsligoext", "pascaligoext"],
+      // disable the default error handler
+      errorHandler: {
+        error: () => ({ action: ErrorAction.Continue }),
+        closed: () => ({ action: CloseAction.DoNotRestart }),
+      },
+    },
+    // create a language client connection from the JSON RPC connection on demand
+    connectionProvider: {
+      get: () => {
+        return Promise.resolve(transports);
+      },
+    },
+  });
+}
 
 export default class MonacoEditor extends Component {
   static propTypes = {
@@ -81,12 +125,24 @@ export default class MonacoEditor extends Component {
       glyphMargin: true,
       readOnly,
       domReadOnly: readOnly,
+      minimap: {
+        enabled: true,
+        autohide: true,
+        showSlider: "mouseover",
+      },
+      mouseWheelZoom: true,
     });
+    // install Monaco language client services
+    // MonacoServices.install();
+
+    // createWebSocket();
+
     modelSessionManager.editor = monacoEditor;
     monacoEditor.onDidChangeModelContent(() => {
-      this.props.onChange();
+      // this.props.onChange();
       this.props.modelSession.saved = false;
-      modelSessionManager.projectManager.onFileChanged();
+      // modelSessionManager.projectManager.onFileChanged();
+      modelSessionManager.saveCurrentFile();
     });
     monacoEditor.onDidChangeCursorPosition(({ position }) => {
       actions.updatePosition([position.lineNumber, position.column]);
@@ -120,6 +176,9 @@ export default class MonacoEditor extends Component {
 
     monacoEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, () =>
       this.props.onCommand("save")
+    );
+    monacoEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyB, () =>
+      this.props.onCommand("compile")
     );
     monacoEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_W, () =>
       this.props.onCommand("close-current-tab")

@@ -25,7 +25,7 @@ let let_binding_match1_ligo: Core.regexp = {
 }
 
 let let_binding_match2_ligo: Core.regexp = {
-  emacs    = "\\\\b\\\\([a-zA-Z$_][a-zA-Z0-9$_]*\\\\)"; 
+  emacs    = "\\\\b\\\\([a-zA-Z$_][a-zA-Z0-9$_]*\\\\)";
   textmate = "\\b([a-zA-Z$_][a-zA-Z0-9$_]*)";
   vim      = "\\<[a-zA-Z$_][a-zA-Z0-9$_]*\\>";
 }
@@ -43,7 +43,7 @@ let lambda_end: Core.regexp = {
 }
 
 let of_keyword_match: Core.regexp = {
-  emacs    = "\\\\b\\\\(of)\\\\b";
+  emacs    = "\\\\b\\\\(of\\\\)\\\\b";
   textmate = "\\b(of)\\b";
   vim      = "\\<\\(of\\)\\>";
 }
@@ -66,12 +66,6 @@ let control_keywords_match: Core.regexp = {
   vim      = "\\<\\(match\\|with\\|if\\|then\\|else\\|assert\\|failwith\\|begin\\)\\>"
 }
 
-let control_keywords_match_reasonligo: Core.regexp = {
-  emacs    = "\\\\b\\\\(switch\\\\|if\\\\|else\\\\|assert\\\\|failwith\\\\)\\\\b";
-  textmate = "\\b(switch|if|else|assert|failwith)\\b";
-  vim      = "\\<\\(switch\\|if\\|else\\|assert\\|failwith\\)\\>"
-}
-
 let structure_keywords_match: Core.regexp = {
   emacs    = "\\\\b\\\\(struct\\\\|end\\\\|in\\\\)\\\\b";
   textmate = "\\b(struct|end|in)\\b";
@@ -90,11 +84,6 @@ let operators_match: Core.regexp = {
   vim      = "::\\|-\\|+\\|/\\|\\<\\(mod\\|land\\|lor\\|lxor\\|lsl\\|lsr\\)\\>\\|&&\\|||\\|<\\|>\\|<>\\|<=\\|>="
 }
 
-let operators_match_reasonligo: Core.regexp = {
-  emacs    = "\\\\b\\\\(-\\\\|+\\\\|/\\\\|mod\\\\|land\\\\|lor\\\\|lxor\\\\|lsl\\\\|lsr\\\\|&&\\\\|||\\\\|<\\\\|>\\\\|!=\\\\|<=\\\\|>=\\\\)\\\\b";
-  textmate = "\\b(\\-|\\+|mod|land|lor|lxor|lsl|lsr|&&|\\|\\||>|!=|<=|=>|<|>)\\b";
-  vim      = "\\<\\(-\\|+\\|/\\|mod\\|land\\|lor\\|lxor\\|lsl\\|lsr\\|&&\\|||\\|<\\|>\\|!=\\|<=\\|>=\\)\\>"
-}
 
 let operators_match_ligo: Core.regexp = {
   emacs    = "\\\\b\\\\(-\\\\|+\\\\|/\\\\|mod\\\\|land\\\\|lor\\\\|lxor\\\\|lsl\\\\|lsr\\\\|&&\\\\|||\\\\|<\\\\|>\\\\|=/=\\\\|<=\\\\|>=\\\\)\\\\b";
@@ -289,16 +278,6 @@ let property_expr_end_jsligo: Core.regexp = {
   emacs    = ",\\\\|}";
   textmate = "(?=,|})";
   vim      = "\\(,\\|})\\@=";
-}
-
-(* follow(field_assignment) = RBRACE COMMA *)
-let field_expr_begin_reasonligo: Core.regexp = colon_match
-
-let field_expr_end_reasonligo: Core.regexp = {
-  (* FIXME: Emacs doesn't support positive look-ahead *)
-  emacs    = ",\\\\|}";
-  textmate = "(?=,|})";
-  vim      = "\\(,\\|}\\)\\@=";
 }
 
 let int_literal_match: Core.regexp = {
@@ -502,33 +481,4 @@ let type_annotation_field_end_ligo: Core.regexp = {
   emacs    = ";\\\\|\\\\]";
   textmate = "(?=;|\\])";
   vim      = "\\(;\\|\\]\\)\\@=";
-}
-
-(* follow(type_annotation) = RPAR RBRACE EQ COMMA ARROW *)
-let type_annotation_begin_reasonligo: Core.regexp = type_annotation_begin
-
-let type_annotation_end_reasonligo: Core.regexp = {
-  (* FIXME: Emacs doesn't support positive look-ahead *)
-  emacs    = ")\\\\|}\\\\|=\\\\|,\\\\|=>";
-  textmate = "(?=\\)|}|=|,|=>)";
-  vim      = "\\()\\|}\\|=\\|,\\|=>\\)\\@=";
-}
-
-(*
-  follow(type_decl) = Type SEMI RBRACE Module Let EOF Directive Attr
-  Heads-up for extra tokens: RPAR and COMMA. This is for parametric types.
-*)
-let type_definition_begin_reasonligo: Core.regexp = type_definition_begin
-
-let type_definition_end_reasonligo: Core.regexp = {
-  (* FIXME: Emacs doesn't support positive look-ahead *)
-  emacs    = "\\\\b\\\\(type\\\\|module\\\\|let\\\\)\\\\b\\\\|;\\\\|}\\\\|,\\\\|)\\\\|^#\\\\|\\\\[@";
-  textmate = "(?=\\b(type|module|let)\\b|;|}|,|\\)|^#|\\[@)";
-  vim      = "\\(\\<\\(type\\|module\\|let\\)\\>\\|;\\|}\\|,\\|)\\|^#\\|\\[@\\)\\@=";
-}
-
-let type_operator_match_reasonligo: Core.regexp = {
-  emacs    = "\\\\(=>\\\\|\\\\.\\\\||\\\\)";
-  textmate = "(=>|\\.|\\|)";
-  vim      = "\\(=>\\|\\.\\||\\)";
 }

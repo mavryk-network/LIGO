@@ -4,23 +4,73 @@ open Ligo_prim
 module Location = Simple_utils.Location
 
 type form =
-  | Contract of Value_var.t
-  | View of
-      { command_line_views : string list option
-            (* views declared as command line arguments if any *)
-      ; contract_entry : Value_var.t (* contract main function name                     *)
+  | Contract of
+      { entrypoints : string list
+      ; module_path : Module_var.t list
       }
-  | Env
+  | View of
+      { (* views declared as command line arguments if any *)
+        command_line_views : string list option
+      ; (* contract main function name *)
+        contract_entry : Value_var.t
+      ; contract_type : Self_ast_typed.Helpers.contract_type
+      ; module_path : Module_var.t list
+      }
 
-let specific_passes ~raise cform prg =
+let specific_passes ~raise ?(remove = true) cform prg =
   match cform with
-  | Contract entrypoint -> Self_ast_typed.all_contract ~raise entrypoint prg
-  | View { command_line_views; contract_entry } ->
-    Self_ast_typed.all_view ~raise command_line_views contract_entry prg
-  | Env -> prg
+  | Contract { entrypoints; module_path } ->
+    Self_ast_typed.all_contract ~raise ~remove entrypoints module_path prg
+  | View { command_line_views; contract_entry; module_path; contract_type } ->
+    let prg =
+      Self_ast_typed.all_view
+        ~raise
+        command_line_views
+        contract_entry
+        module_path
+        contract_type
+        prg
+    in
+    (contract_entry, contract_type), prg
 
 
-let typecheck ~raise ~(options : Compiler_options.t) (cform : form) (p : Ast_core.program)
+let typecheck_with_signature
+    ~raise
+    ~(options : Compiler_options.t)
+    ?(cform : form option)
+    (p : Ast_core.program)
+    : Ast_typed.program * Ast_typed.signature
+  =
+  let typed, signature =
+    trace ~raise checking_tracer
+    @@ Checking.type_program_with_signature
+         ~options:options.middle_end
+         ~env:options.middle_end.init_env
+         p
+  in
+  let typed =
+    trace ~raise self_ast_typed_tracer
+    @@ fun ~raise ->
+    Self_ast_typed.all_program
+      ~raise
+      ~warn_unused_rec:options.middle_end.warn_unused_rec
+      typed
+  in
+  let applied =
+    match cform with
+    | None -> typed
+    | Some cform ->
+      trace ~raise self_ast_typed_tracer
+      @@ fun ~raise -> snd @@ specific_passes ~raise cform typed
+  in
+  applied, signature
+
+
+let typecheck
+    ~raise
+    ~(options : Compiler_options.t)
+    ?(cform : form option)
+    (p : Ast_core.program)
     : Ast_typed.program
   =
   let typed =
@@ -30,16 +80,20 @@ let typecheck ~raise ~(options : Compiler_options.t) (cform : form) (p : Ast_cor
          ~env:options.middle_end.init_env
          p
   in
-  let applied =
+  let typed =
     trace ~raise self_ast_typed_tracer
     @@ fun ~raise ->
-    let selfed =
-      Self_ast_typed.all_program
-        ~raise
-        ~warn_unused_rec:options.middle_end.warn_unused_rec
-        typed
-    in
-    specific_passes ~raise cform selfed
+    Self_ast_typed.all_program
+      ~raise
+      ~warn_unused_rec:options.middle_end.warn_unused_rec
+      typed
+  in
+  let applied =
+    match cform with
+    | None -> typed
+    | Some cform ->
+      trace ~raise self_ast_typed_tracer
+      @@ fun ~raise -> snd @@ specific_passes ~raise cform typed
   in
   applied
 
@@ -66,26 +120,28 @@ let compile_expression
   applied
 
 
-let compile_program ~raise ~(options : Compiler_options.t) (prg : Ast_core.program)
-    : Ast_typed.program
-  =
-  let Compiler_options.{ init_env; _ } = options.middle_end in
-  let typed =
-    trace ~raise checking_tracer
-    @@ Checking.type_program ~options:options.middle_end ~env:init_env prg
+let apply (entry_point : Value_var.t) (param : Ast_core.expression) : Ast_core.expression =
+  let entry_point_var : Ast_core.expression =
+    { expression_content = Ast_core.E_variable entry_point
+    ; sugar = None
+    ; location = Virtual "generated entry-point variable"
+    }
   in
-  let applied =
-    trace
-      ~raise
-      self_ast_typed_tracer
-      (Self_ast_typed.all_program
-         ~warn_unused_rec:options.middle_end.warn_unused_rec
-         typed)
+  let applied : Ast_core.expression =
+    { expression_content = Ast_core.E_application { lamb = entry_point_var; args = param }
+    ; sugar = None
+    ; location = Virtual "generated application"
+    }
   in
   applied
 
 
-let apply (entry_point : string) (param : Ast_core.expression) : Ast_core.expression =
+let apply_twice
+    (entry_point : string)
+    (param1 : Ast_core.expression)
+    (param2 : Ast_core.expression)
+    : Ast_core.expression
+  =
   let name = Value_var.of_input_var ~loc:Location.dummy entry_point in
   let entry_point_var : Ast_core.expression =
     { expression_content = Ast_core.E_variable name
@@ -94,7 +150,14 @@ let apply (entry_point : string) (param : Ast_core.expression) : Ast_core.expres
     }
   in
   let applied : Ast_core.expression =
-    { expression_content = Ast_core.E_application { lamb = entry_point_var; args = param }
+    { expression_content =
+        Ast_core.E_application { lamb = entry_point_var; args = param1 }
+    ; sugar = None
+    ; location = Virtual "generated application"
+    }
+  in
+  let applied : Ast_core.expression =
+    { expression_content = Ast_core.E_application { lamb = applied; args = param2 }
     ; sugar = None
     ; location = Virtual "generated application"
     }

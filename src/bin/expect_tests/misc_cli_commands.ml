@@ -1,6 +1,8 @@
+(*
 open Cli_expect
 
 (* evaluate-expr *)
+
 let%expect_test _ =
   run_ligo_good
     [ "run"
@@ -20,8 +22,9 @@ let%expect_test _ =
     ];
   [%expect {|
     2 |}]
-
+*)
 (* list-declarations *)
+(*
 let%expect_test _ =
   run_ligo_good [ "info"; "list-declarations"; "../../test/contracts/loop.ligo" ];
   [%expect
@@ -63,15 +66,11 @@ let%expect_test _ =
     counter
     counter_simple
     aux_simple |}];
-  run_ligo_good [ "info"; "list-declarations"; "../../test/contracts/loop.religo" ];
-  [%expect
-    {|
-    ../../test/contracts/loop.religo declarations:
-    counter_nest
-    aux_nest
-    counter
-    counter_simple
-    aux_simple |}];
+  run_ligo_good
+    [ "info"; "list-declarations"; "../../test/contracts/list_declaration.jsligo" ];
+  [%expect {|
+    ../../test/contracts/list_declaration.jsligo declarations:
+    main |}];
   run_ligo_bad
     [ "run"; "interpret"; "1"; "--syntax"; "cameligo"; "--protocol"; "do_not_exist" ];
   [%expect
@@ -82,3 +81,4 @@ let%expect_test _ =
   [%expect {| Please check protocol name. |}];
   run_ligo_bad [ "repl"; "cameligo"; "--sender"; "foo" ];
   [%expect {| Please check run options. |}]
+*)

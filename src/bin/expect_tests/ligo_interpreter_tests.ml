@@ -4,6 +4,20 @@ let test basename = "./" ^ basename
 let pwd = Caml.Sys.getcwd ()
 let () = Caml.Sys.chdir "../../test/contracts/interpreter_tests/"
 
+(* tests replacing Hashlock tests *)
+let%expect_test _ =
+  run_ligo_good [ "run"; "test"; test "test_hashlock.mligo" ];
+  [%expect
+    {|
+    Everything at the top-level was executed.
+    - test_commit exited with value ().
+    - test_reveal_no_commit exited with value ().
+    - test_reveal_young_commit exited with value ().
+    - test_reveal_breaks_commit exited with value ().
+    - test_reveal_wrong_commit exited with value ().
+    - test_reveal_no_reuse exited with value ().
+    - test_reveal exited with value (). |}]
+
 (* test comparison on sum/record types *)
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_compare.mligo" ];
@@ -109,7 +123,8 @@ let%expect_test _ =
     - test_check exited with value ().
     - test_int_bls exited with value ().
     - test_not exited with value ().
-    - test_chain_id exited with value (). |}]
+    - test_chain_id exited with value ().
+    - test_concats exited with value (). |}]
 
 let%expect_test _ =
   (* This tests a possible regression on the way modules are evaluated. It is possible that the number of element in the environment explodes. *)
@@ -209,14 +224,6 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "nesting_modules.mligo" ];
   [%expect
     {|
-    File "./nesting_modules.mligo", line 15, characters 6-7:
-     14 | let foo () =
-     15 |   let x = 1 in
-     16 |   module Foo = struct
-    :
-    Warning: unused variable "x".
-    Hint: replace it by "_x" to prevent this warning.
-
     111
     Everything at the top-level was executed.
     - test exited with value (). |}]
@@ -337,10 +344,10 @@ let%expect_test _ =
 
     Everything at the top-level was executed.
     - tester exited with value <fun>.
-    - test exited with value [(() , Mutation at: File "adder.mligo", line 1, characters 59-64:
-      1 | let main ((p, k) : int * int) : operation list * int = [], p + k
+    - test exited with value [(() , Mutation at: File "adder.mligo", line 1, characters 58-63:
+      1 | let main (p : int) (k : int) : operation list * int = [], p + k
 
-    Replacing by: (p - k).
+    Replacing by: p - k.
     )]. |}]
 
 let%expect_test _ =
@@ -403,6 +410,37 @@ let%expect_test _ =
     - test_contract exited with value <fun>.
     - test_mutate_contract exited with value ().
     - test_eh exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test"; test "test_mutate_module.mligo" ];
+  [%expect
+    {|
+    File "./test_mutate_module.mligo", line 10, characters 11-42:
+      9 |   let _ = Test.transfer_to_contract_exn c (Add 1) 0tez in
+     10 |   let () = assert (Test.get_storage a = 1) in
+     11 |   ()
+
+    You are using Michelson failwith primitive (loaded from standard library).
+    Consider using `Test.failwith` for throwing a testing framework failure.
+
+    Everything at the top-level was executed.
+    - test exited with value [(() , Mutation at: File "contract_under_test/module_adder.mligo", line 1, characters 66-71:
+      1 | [@entry] let add (p : int) (k : int) : operation list * int = [], p + k
+
+    Replacing by: p - k.
+    )]. |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test"; test "test_mutate_module.jsligo" ];
+  [%expect
+    {|
+    [(() , Mutation at: File "contract_under_test/module_adder.mligo", line 1, characters 66-71:
+      1 | [@entry] let add (p : int) (k : int) : operation list * int = [], p + k
+
+    Replacing by: p - k.
+    )]
+    Everything at the top-level was executed.
+    - test exited with value (). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "iteration.jsligo" ];
@@ -814,12 +852,14 @@ let%expect_test _ =
     Everything at the top-level was executed.
     - test exited with value (). |}]
 
+(*
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_transfer_entrypoint.ligo" ];
   [%expect
     {|
     Everything at the top-level was executed.
     - test exited with value (). |}]
+*)
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_print.mligo" ];
@@ -844,6 +884,15 @@ let%expect_test _ =
     {|
     Everything at the top-level was executed.
     - test exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test"; test "test_untranspile_bls.mligo" ];
+  [%expect
+    {|
+    Everything at the top-level was executed.
+    - test_fr exited with value ().
+    - test_g1 exited with value ().
+    - test_g2 exited with value (). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "get_contract.mligo" ];
@@ -884,34 +933,36 @@ let%expect_test _ =
   [%expect
     {|
     ["typed_address","KT1Eip4VjDintiWphUf9fAM7cCikw3NajBAG"]
-    ["record",{"foo":["constant",["int","42"]],"bar":["list",[["constant",["string","hello"]],["constant",["string","world"]]]]}] |}]
+    ["record",[[["Label","bar"],["list",[["constant",["string","hello"]],["constant",["string","world"]]]]],[["Label","foo"],["constant",["int","42"]]]]] |}]
 
+(*
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_imm.ligo" ];
   [%expect
-    {xxx|
+    {test|
     Everything at the top-level was executed.
-    - test_orig exited with value (). |xxx}]
+    - test_orig exited with value (). |test}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_record.ligo" ];
   [%expect
-    {xxx|
+    {test|
     0
     Everything at the top-level was executed.
-    - test_reproducing exited with value "OK". |xxx}]
+    - test_reproducing exited with value "OK". |test}]
+*)
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "tuple_long.mligo" ];
   [%expect
-    {xxx|
+    {test|
     Everything at the top-level was executed.
-    - test exited with value (). |xxx}]
+    - test exited with value (). |test}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_compare_setmap.mligo" ];
   [%expect
-    {xxx|
+    {test|
     Everything at the top-level was executed.
     - test_address_set exited with value { "tz1KeYsjjSCLEELMuiq1oXzVZmuJrZ15W4mv" ;
       "tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ" }.
@@ -919,7 +970,7 @@ let%expect_test _ =
     - test_map exited with value { Elt "tz1KeYsjjSCLEELMuiq1oXzVZmuJrZ15W4mv" 900 ;
       Elt "KT1WoTZUkky48v3QqZWzkeJCYfhWhNaVFYuC" 100 }.
     - test_big_map exited with value { Elt "tz1KeYsjjSCLEELMuiq1oXzVZmuJrZ15W4mv" 900 ;
-      Elt "KT1WoTZUkky48v3QqZWzkeJCYfhWhNaVFYuC" 100 }. |xxx}]
+      Elt "KT1WoTZUkky48v3QqZWzkeJCYfhWhNaVFYuC" 100 }. |test}]
 
 let%expect_test _ =
   run_ligo_good
@@ -931,9 +982,66 @@ let%expect_test _ =
        (nat, t) big_map))"
     ];
   [%expect
-    {xxx|
+    {test|
     Everything at the top-level was executed.
-    - eval exited with value [1n -> {num = 1 ; num_nat = 1n ; str = "q"}]. |xxx}]
+    - eval exited with value [1n -> {num = 1 ; num_nat = 1n ; str = "q"}]. |test}]
+
+let%expect_test _ =
+  run_ligo_good
+    [ "run"; "test"; test "display_format_json.mligo"; "--display-format"; "json" ];
+  [%expect
+    {xxx|
+    [
+      [ "test_x", [ "constant", [ "int", "65" ] ] ],
+      [ "test_y", [ "constant", [ "string", "hello" ] ] ]
+    ] |xxx}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test"; test "record_field_assign.jsligo" ];
+  [%expect
+    {|
+      Everything at the top-level was executed.
+      - test_simple_record_assign exited with value ().
+      - test_nested_record_assign_level1 exited with value ().
+      - test_nested_record_assign_level2 exited with value ().
+      - test_record_assign_var exited with value ().
+      - test_nested_record_assign_var_level1 exited with value ().
+      - test_nested_record_assign_var_level2 exited with value ().
+      - test_nested_record_assign_var_level2_expr exited with value ().
+      - test_nested_record_assign_var_level2_record_access exited with value ().
+      - test_nested_record_assign_var_level2_module_member exited with value ().
+      - test_nested_record_assign_var_level2_module_record_member exited with value ().
+      - test_nested_record_assign_var_level2_lambda exited with value ().
+      - test_nested_record_assign_var_level2_lambda_app exited with value ().
+      - test_simple_tuple_field_assign exited with value ().
+      - test_simple_record_field_with_array_notation_assign exited with value ().
+      - test_nested_record_assign_array_notation_level1 exited with value ().
+      - test_nested_record_assign_array_notation_level2 exited with value ().
+      - test_nested_record_assign_tuple_assign_array_notation_level2 exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test"; test "test_originate_module.mligo" ];
+  [%expect
+    {test|
+    Deployed the contract:
+    { parameter (or (int %add) (int %sub)) ;
+      storage int ;
+      code { UNPAIR ; IF_LEFT { ADD } { SWAP ; SUB } ; NIL operation ; PAIR } ;
+      view "get" unit int { CDR } ;
+      view "get_diff" int int { UNPAIR ; SWAP ; SUB } }
+    With storage: 0
+    Storage after call: 42 |test}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test"; test "test_originate_module.jsligo" ];
+  [%expect
+    {test|
+    Everything at the top-level was executed.
+    - test_increment exited with value (). |test}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test"; test "test_originate_single_view.mligo" ];
+  [%expect {test| |test}]
 
 (* do not remove that :) *)
 let () = Caml.Sys.chdir pwd
@@ -979,6 +1087,18 @@ let%expect_test _ =
 
 let () = Caml.Sys.chdir pwd
 let bad_test n = bad_test ("/interpreter_tests/" ^ n)
+
+let%expect_test _ =
+  run_ligo_bad [ "run"; "test"; bad_test "test_capture_meta_type.mligo" ];
+  [%expect
+    {|
+    File "../../test/contracts/negative//interpreter_tests/test_capture_meta_type.mligo", line 12, characters 26-27:
+     11 |
+     12 | let f = fun (_ : unit) -> v.x
+     13 |
+
+    Invalid usage of a Test type: typed_address (unit ,
+    unit) in record[x -> int , y -> typed_address (unit , unit)] cannot be translated to Michelson. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_random.mligo" ];
@@ -1043,7 +1163,7 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts/negative//interpreter_tests/test_failure3.mligo", line 3, characters 17-18:
-      2 |   let f = (fun (_ : (unit * unit)) -> ()) in
+      2 |   let f = (fun (_ : unit) (_ : unit) -> ()) in
       3 |   Test.originate f () 0tez
 
     Invalid type(s)
@@ -1074,7 +1194,6 @@ let%expect_test _ =
     File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 5, characters 4-13 ,
     File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 5, characters 4-13 ,
     File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 5, characters 4-13 ,
-    File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 9, characters 14-49 ,
     File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 9, characters 14-49 ,
     File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 9, characters 14-49 |}]
 
@@ -1150,8 +1269,7 @@ let%expect_test _ =
       2 | const bar = Test.run(foo, {property: "toto"});
       3 |
 
-    Invalid type(s)
-    Cannot unify "record[property -> string]" with "record[field -> int]". |}]
+    Mismatching record labels. Expected record of type "record[field -> int]". |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_run_types2.jsligo" ];
@@ -1224,13 +1342,13 @@ let () = Caml.Sys.chdir pwd
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_michelson_non_func.mligo" ];
   [%expect
-    {xxx|
+    {test|
     File "../../test/contracts/negative//interpreter_tests/test_michelson_non_func.mligo", line 2, characters 16-55:
       1 | let test =
       2 |   let x : int = [%Michelson ({|{ PUSH int 1 }|} : int)] in
       3 |   begin
 
-    Embedded raw code can only have a functional type |xxx}]
+    Embedded raw code can only have a functional type |test}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "get_contract.mligo" ];
@@ -1252,5 +1370,4 @@ let%expect_test _ =
     An uncaught error occured:
     Failwith: "foo"
     Trace:
-    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66 ,
     File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66 |}]

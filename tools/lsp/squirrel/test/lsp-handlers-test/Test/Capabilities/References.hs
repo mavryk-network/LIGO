@@ -1,6 +1,5 @@
 module Test.Capabilities.References
-  ( unit_references
-  , unit_close_open_docs
+  ( unit_close_open_docs
   , unit_fileChanges
   , unit_changingUnsavedBufferAffectsBaseFile
   , unit_changingUnsavedBufferAffectsIncludedFile
@@ -22,28 +21,11 @@ import Test.Common.LSP (openLigoDoc, runHandlersTest)
 contractsDir :: FilePath
 contractsDir = Common.contractsDir </> "find"
 
-unit_references :: Assertion
-unit_references = do
-  let filename = "heap.ligo"
-
-  List refs <- runHandlersTest contractsDir do
-    doc <- openLigoDoc filename
-    getReferences doc (Position 7 9) True
-
-  filepath <- makeAbsolute (contractsDir </> filename)
-  let uri = filePathToUri filepath
-  refs `shouldMatchList` fmap (Location uri)
-    [ Range (Position 7 9) (Position 7 16)
-    , Range (Position 10 29) (Position 10 36)
-    , Range (Position 22 30) (Position 22 37)
-    , Range (Position 64 30) (Position 64 37)
-    ]
-
 unit_close_open_docs :: Assertion
 unit_close_open_docs = do
-  let b1fp = "includes" </> "B1.ligo"
-  let b2fp = "includes" </> "B2" </> "B2.ligo"
-  let b3fp = "includes" </> "B3.ligo"
+  let b1fp = "includes" </> "B1.jsligo"
+  let b2fp = "includes" </> "B2" </> "B2.jsligo"
+  let b3fp = "includes" </> "B3.jsligo"
 
   (refs1, refs2, refs3) <- runHandlersTest contractsDir do
     doc1 <- openLigoDoc b2fp
@@ -130,7 +112,7 @@ unit_fileChanges = do
 -- 1. Check that changing an included file doesn't stop the base references from appearing.
 unit_changingUnsavedBufferAffectsBaseFile :: Assertion
 unit_changingUnsavedBufferAffectsBaseFile = runHandlersTest contractsDir do
-  let c2 = "includes" </> "C2.religo"
+  let c2 = "includes" </> "C2.mligo"
   doc <- openLigoDoc c2
 
   List oldRefs <- getReferences doc (Position 0 4) True
@@ -164,13 +146,13 @@ unit_changingUnsavedBufferAffectsIncludedFile = runHandlersTest contractsDir do
   List newRefs <- getReferences doc (Position 3 14) True
 
   liftIO do
-    contents `shouldBe` "#include \"C2.religo\"\n#include \"C3.mligo\"\n\nlet c1 = c3 - c2 * 2\n"
+    contents `shouldBe` "#include \"C2.mligo\"\n#include \"C3.mligo\"\n\nlet c1 = c3 - c2 * 2\n"
     newRefs `shouldMatchList` oldRefs
 
 -- 3. Check that we lose references if we rename a global identifier.
 unit_changingUnsavedBufferMakesGlobalLoseReference :: Assertion
 unit_changingUnsavedBufferMakesGlobalLoseReference = runHandlersTest contractsDir do
-  let c2 = "includes" </> "C2.religo"
+  let c2 = "includes" </> "C2.mligo"
   doc <- openLigoDoc c2
 
   let changeRange = Range (Position 0 5) (Position 0 6)

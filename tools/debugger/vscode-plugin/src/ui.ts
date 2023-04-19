@@ -11,8 +11,174 @@
 
 import * as vscode from 'vscode';
 import { QuickPickItem } from 'vscode';
-import { Maybe, Ref, isDefined, InputBoxType, InputValueLang, InputValidationResult, ContractMetadata } from './base'
+import { Maybe, Ref, isDefined, InputBoxType, InputValueLang, InputValidationResult, ContractMetadata, impossible } from './base'
 import { LigoDebugContext, ValueAccess } from './LigoDebugContext'
+
+export type SteppingGranularity
+	= 'statement'
+	| 'expression'
+	| 'expressionSurrounded'
+
+/**
+ * Keeps information about stepping granularity status.
+ *
+ * In UI this creates a button & command for changing the used granularity,
+ * plus it can also be manually changed via the `status` setter.
+ *
+ * It is then possible to read the status from the same 'status' field,
+ * or subscribe on changes in the constructor.
+ */
+export class DebugSteppingGranularityStatus implements vscode.Disposable {
+	private bar: vscode.StatusBarItem;
+	private _status: SteppingGranularity;
+	private lastStatus: Maybe<SteppingGranularity>
+	private readonly statusChangeEvent = new vscode.EventEmitter<SteppingGranularity>();
+	private disposables: vscode.Disposable[] = new Array();
+
+	constructor
+		( onStatusChanged?: (newGranularity: SteppingGranularity) => Promise<void>
+		) {
+		// We will create a `StatusBarItem` and change stepping granularity
+		// through it.
+
+		const switchCommand = 'extension.ligo-debugger.switchSteppingGranularity';
+		const useLastCommand = 'extension.ligo-debugger.useLastSteppingGranularity';
+
+		// Note: VSCode has built-in status bar that is added on debug session start,
+		// At the moment of writing it has id='status.debug' and priority=30, and
+		// our status bar we want to put alongside.
+		this.bar = vscode.window.createStatusBarItem
+			( 'status.debug.ligo.stepping'
+			, vscode.StatusBarAlignment.Left
+			, 28
+			);
+		this.bar.name = 'Debug Stepping Granularity Status';
+		this.bar.tooltip = 'Select debug step granularity';
+		this.bar.command = switchCommand;
+
+		this.status = 'statement';
+
+		if (onStatusChanged){
+			this.disposables.push(
+				this.statusChangeEvent.event(onStatusChanged)
+			);
+		}
+
+		this.disposables.push(
+			vscode.commands.registerCommand(switchCommand, async () => {
+				const newGranularity = await this.createStatusChoosingQuickPick();
+				if (newGranularity){
+					this.status = newGranularity;
+				}
+			}),
+			vscode.commands.registerCommand(useLastCommand, () =>
+				this.toLastStatus()
+			)
+		);
+
+	}
+
+	/**
+	 * Smart field that keeps the current 'SteppingGranularity', automatically
+	 * updating the UI if assigned a new value.
+	 */
+	get status(): SteppingGranularity {
+		return this._status;
+	}
+	set status(newStatus: SteppingGranularity) {
+		if (this._status != newStatus) {
+			// We update the last used status - but only if an actual status change
+			// is performed, the other UX is annoying.
+			this.lastStatus = this._status;
+		}
+
+		this._status = newStatus;
+		this.bar.text =
+			`$(debug-step-over) ${DebugSteppingGranularityStatus.granularityToUIString(newStatus)}`;
+
+		this.statusChangeEvent.fire(newStatus);
+		// Note ↑↑: there are chances that, assuming we send a request in
+		// the callback, the backend won't receive the messages in FIFO order.
+		// If this is ever found to be the case, one option is to simply
+		// attach a counter to each status update and let backend accept only
+		// the latest message.
+	}
+
+	/**
+	 * Switch to the previously selected status.
+	 *
+	 * Does nothing and does not trigger any events if the status was never
+	 * changed.
+	 */
+	public toLastStatus() {
+		if (this.lastStatus) {
+			this.status = this.lastStatus
+      // this.lastStatus is updated in the smart setter
+		}
+	}
+
+	/**
+	 * Display the button in UI.
+	 */
+	public show() { this.bar.show(); }
+
+	/**
+	 * Hide the button in UI.
+	 */
+	public hide() { this.bar.hide(); }
+
+	public dispose() {
+		this.bar.dispose();
+		this.disposables.forEach(d => d.dispose());
+	}
+
+	// Creates a quick pick for stepping granularity selection and returns
+	// the selected option.
+	private async createStatusChoosingQuickPick(): Promise<Maybe<SteppingGranularity>>{
+		const allOptions: SteppingGranularity[] = ["statement", "expression", "expressionSurrounded"]
+		const counter = { value: 0 };
+		const pickOptions = allOptions.map(granularity => {
+			counter.value++;
+			var res: QuickPickItem & { type: SteppingGranularity } = {
+				type: granularity,
+				// We add a counter to the name to make it easy to select the necessary option
+				// by typing N and hitting Enter
+				label: `${counter.value}. ${DebugSteppingGranularityStatus.granularityToUIString(granularity)}`,
+			}
+			switch(granularity){
+				case "statement":
+					res.description = 'Stop only at statements'
+					break;
+				case "expression":
+					res.description = 'Stop at statements + after each evaluated expression'
+					break;
+				case "expressionSurrounded":
+					res.description = 'Stop at statements + before/after each expression evaluation'
+					break;
+				// If you need to add a case here, probably you also want to update
+				// `allOptions` variable above.
+				default:
+					impossible(granularity);
+				}
+			return res;
+		});
+		var chosen = await vscode.window.showQuickPick(pickOptions, {
+			placeHolder: "Select granularity for debug stepping",
+		});
+		return chosen?.type;
+	}
+
+	static granularityToUIString(granularity: SteppingGranularity): string {
+		switch(granularity) {
+			case 'statement':
+				return "Statement";
+			case 'expression':
+				return "Expression";
+			case 'expressionSurrounded':
+				return "Expression (pre + post)";
+		}
+	}
+}
 
 const suggestTypeValue = (mitype: string): { value: string, selection?: [number, number] } => {
 	const startsWith = (prefix: string, str: string): boolean =>
@@ -111,7 +277,14 @@ export async function getEntrypoint (
 
 			if (entrypoints.length <= 1) {
 				if (entrypoints.length === 0) {
-					throw new Error("Given contract doesn't have any entrypoints");
+					var msg = "Given contract doesn't have any entrypoints."
+
+					const file = vscode.window.activeTextEditor?.document.uri.fsPath
+					if (isDefined(file) && file.endsWith(".jsligo")) {
+						msg += "\n\nMake sure your main function is declared with `const`, not `let`, and has a type appropriate for an entrypoint."
+					}
+
+					throw new Error(msg);
 				}
 				state.ref.pickedEntrypoint = entrypoints[0].label;
 				return;
@@ -439,14 +612,15 @@ class MultiStepInput<S> {
 					validate = validate
 
 					isObviouslyInvalid(text: string): boolean {
-						return text.trim() === '';
+						return text === '';
 					}
 
 					onValidationResult(validationMessage: InputValidationResult): void {
 						input.validationMessage = validationMessage;
 					}
 				}
-				validationTrigger.fire(value);
+				const submitForValidation =
+					(value: string) => validationTrigger.fire(value.trim());
 
 				disposables.push(
 					input.onDidTriggerButton(item => {
@@ -457,7 +631,7 @@ class MultiStepInput<S> {
 						}
 					}),
 					input.onDidAccept(async () => {
-						validationTrigger.fire(input.value);
+						submitForValidation(input.value);
 
 						// Note: turns out, "enabled" flag does not really work
 						// and so the user's input is not blocked, see
@@ -479,7 +653,7 @@ class MultiStepInput<S> {
 						input.enabled = true;
 						input.busy = false;
 					}),
-					input.onDidChangeValue(value => validationTrigger.fire(value)),
+					input.onDidChangeValue(submitForValidation),
 					input.onDidHide(() => {
 						(async () => {
 							reject(InputFlowAction.cancel);
@@ -492,7 +666,7 @@ class MultiStepInput<S> {
 					this.current.dispose();
 				}
 				this.current = input;
-				validationTrigger.fire(value);
+				submitForValidation(value);
 				this.current.show();
 			});
 		} finally {
@@ -549,6 +723,9 @@ abstract class ValidationTrigger<V> implements vscode.Disposable {
 	//
 	// This will be run in the same order in which values were passed for
 	// validation.
+	//
+	// This will be run as many times as values were submitted for valitation via
+	// 'fire' method, however subsequent submission of the same value will be ignored.
 	protected abstract onValidationResult(validationResult: InputValidationResult): void
 
 	// Safely run validation for a new value.
@@ -571,6 +748,8 @@ abstract class ValidationTrigger<V> implements vscode.Disposable {
 				// error disappear
 				this.onValidationResult(undefined);
 				this.status = { type: "validated", value: value, successfull: false };
+			} else if (this.status.type == 'validated' && this.status.value === value) {
+				// Repeated call, do nothing
 			} else {
 				const oldStatus = this.status;
 				this.status = { type: "busy" };

@@ -121,12 +121,24 @@ export class CompilerManager {
         );
 
         if (CompilerManager.terminal) {
-          CompilerManager.terminal.writeToTerminal(`\nwrote output to ${amendedBuildPath}\n\r\n\r`);
+          if (amendedBuildPath.type === "success") {
+            CompilerManager.terminal.writeToTerminal(
+              `\nwrote output to ${amendedBuildPath.message}\n\r\n\r`
+            );
+          }
+          if (amendedBuildPath.type === "error") {
+            CompilerManager.terminal.writeToTerminal(
+              `\n${amendedBuildPath.message}\n\r\n\r`,
+              "red"
+            );
+          }
         }
       })
       .catch((e) => {
-        if (e instanceof Error) {
-          notification.error("Compilation error", e.message);
+        if (e instanceof Error && CompilerManager.terminal) {
+          const reg = /(\r\n?|\n|\t)/g;
+          const ntext = e.message.replace(reg, "\r\n");
+          CompilerManager.terminal.writeToTerminal(`\n${ntext}\n\r\n\r`);
         } else {
           console.error(JSON.stringify(e));
         }
@@ -153,8 +165,13 @@ export class CompilerManager {
     for (let i = 0; i < buildRelatedFolders.length; i++) {
       if (!(await fileOps.exists(`${curFolder}/${buildRelatedFolders[i]}`))) {
         await ProjectManager.writeDirectory(curFolder, buildRelatedFolders[i]);
-        curFolder = `${curFolder}/${buildRelatedFolders[i]}`;
+      } else if (await fileOps.isFile(`${curFolder}/${buildRelatedFolders[i]}`)) {
+        return {
+          type: "error",
+          message: `Error during contract saving: on path ${buildFolder}/${buildRelatedPath}, path ${curFolder}/${buildRelatedFolders[i]} is already existing file`,
+        };
       }
+      curFolder = `${curFolder}/${buildRelatedFolders[i]}`;
     }
 
     const buildPath = `${projectManager.projectRoot}/build${projectManager.mainFilePath.replace(
@@ -170,12 +187,12 @@ export class CompilerManager {
 
     if (!(await fileOps.exists(amendedBuildPath))) {
       await ProjectManager.createNewFile(fileFolder, fileName);
-      await fileOps.writeFile(amendedBuildPath, data);
+      await ProjectManager.writeFileWithEditorUpdate(amendedBuildPath, data);
     } else {
-      await fileOps.writeFile(amendedBuildPath, data);
+      await ProjectManager.writeFileWithEditorUpdate(amendedBuildPath, data);
     }
 
-    return amendedBuildPath;
+    return { type: "success", message: amendedBuildPath };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

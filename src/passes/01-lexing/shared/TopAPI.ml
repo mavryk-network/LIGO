@@ -62,7 +62,7 @@ module type S =
 
     type token = Token.t
 
-    val scan_token : Lexing.lexbuf -> (token, token error) result
+    val scan_token : no_colour:bool -> Lexing.lexbuf -> (token, token error) result
 
     val used_tokens : unit -> token list
 
@@ -82,7 +82,7 @@ module type S =
        preprocessor may be run before, and/or the pipeline of
        self-passes [UnitPasses] after. *)
 
-    val scan_all_units : token Unit.t lexer
+    val scan_all_units : no_colour:bool -> token Unit.t lexer
 
     (* Scanning all tokens. *)
 
@@ -93,7 +93,7 @@ module type S =
        type [Std.t] produced by [scan_all_units] and [scan_all_tokens]
        has been used by the self-passes to accumulate their I/O. *)
 
-    val scan_all_tokens : token lexer
+    val scan_all_tokens : no_colour:bool -> token lexer
   end
 
 (* The functor *)
@@ -183,7 +183,7 @@ module Make
       message      : message
     }
 
-    let format_error file msg : string =
+    let format_error no_colour file msg : string =
       let Region.{value; region} = msg in
       if String.(file = "") then
         let header =
@@ -194,7 +194,7 @@ module Make
         in sprintf "%s:\n%s" header value
       else
          sprintf "%s%s"
-           (Format.asprintf "%a" Snippet.pp_lift region)
+           (Format.asprintf "%a" (Snippet.pp_lift ~no_colour) region)
            (Std.redden value)
 
     (* PRINTING *)
@@ -246,7 +246,7 @@ module Make
 
     (* Scanning all lexical units in the input given by the CLI. *)
 
-    let scan_all_units (input : Lexbuf.input) =
+    let scan_all_units ~no_colour (input : Lexbuf.input) =
       let file = Lexbuf.file_from_input input in
       let std, preprocessed, result =
         if Options.preprocess then
@@ -265,16 +265,20 @@ module Make
         else
           (* Running only the lexer *)
           let result =
-            if String.(file = "") then
-              Scan.from_channel In_channel.stdin
-            else Scan.from_file file in
+            match input with
+              File    file               -> Scan.from_file file
+            | Buffer  (file, buf)        -> Scan.from_buffer  ~file buf
+            | String  (file, string)     -> Scan.from_string  ~file string
+            | Channel (file, in_channel) -> Scan.from_channel ~file in_channel
+            | Lexbuf  (file, lexbuf)     -> Scan.from_lexbuf  ~file lexbuf
+          in
           Std.empty, None, result
       in
       match result with
         Stdlib.Error {used_units; message} ->
           let used_items = used_units in
           commit_units used_units std; (* If "--units" *)
-          Std.(add_line std.err @@ format_error file message);
+          Std.(add_line std.err @@ format_error no_colour file message);
           Std.(add_nl std.err);
           std, Stdlib.Error {preprocessed; used_items; message}
 
@@ -290,7 +294,7 @@ module Make
               commit_units units std; (std, ok)
           | Error {used_items; message} ->
               commit_units used_items std;
-              Std.(add_line std.err @@ format_error file message);
+              Std.(add_line std.err @@ format_error no_colour file message);
               Std.(add_nl std.err);
               std, Error {preprocessed; used_items; message}
 
@@ -332,9 +336,10 @@ module Make
 
     (* Scanning all tokens in the input given by the CLI. *)
 
-    let scan_all_tokens : token lexer =
+    let scan_all_tokens : no_colour:bool -> token lexer =
+      fun ~no_colour ->
       fun (input : Lexbuf.input) ->
-        match scan_all_units input with
+        match scan_all_units ~no_colour input with
           std, Error {preprocessed; used_items; message} ->
             let used_items = filter_tokens used_items in
             std, Error {preprocessed; used_items; message}
@@ -357,7 +362,7 @@ module Make
               with
                 Error {used_items; message} ->
                   let file = Lexbuf.file_from_input input in
-                  Std.(add_line std.err (format_error file message));
+                  Std.(add_line std.err (format_error no_colour file message));
                   Std.(add_nl std.err);
                   std, Error {preprocessed=None; used_items; message}
               | Ok tokens as ok ->
@@ -380,9 +385,9 @@ module Make
 
     let clear () = (used_tokens := []; called := false)
 
-    let rec scan_token : Lexing.lexbuf -> (token, token error) result =
+    let rec scan_token : no_colour:bool -> Lexing.lexbuf -> (token, token error) result =
       let store = ref ([] : token list) in
-      fun lexbuf ->
+      fun ~no_colour lexbuf ->
         if !called then
           let token =
             match !store with
@@ -405,14 +410,14 @@ module Make
           (* Dropping standard output/error *)
           let file  = Lexbuf.current_filename lexbuf in
           let input = Lexbuf.Lexbuf (file, lexbuf) in
-          let _std, result = scan_all_tokens input in  (* TODO *)
+          let _std, result = scan_all_tokens ~no_colour input in  (* TODO *)
           match result with
             Stdlib.Error {used_items; _} as err ->
               used_tokens := used_items; err
           | Ok tokens ->
               store  := tokens;
               called := true;
-              scan_token lexbuf
+              scan_token ~no_colour lexbuf
 
     (* Getting the used tokens *)
 

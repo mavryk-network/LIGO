@@ -10,7 +10,7 @@ RUN apk update && apk upgrade && apk --no-cache add \
   build-base snappy-dev alpine-sdk \
   bash ncurses-dev xz m4 git pkgconfig findutils rsync \
   gmp-dev libev-dev libressl-dev linux-headers pcre-dev perl zlib-dev hidapi-dev \
-  libffi-dev \
+  libffi-dev nodejs npm \
   cargo py3-pip \
   && pip3 install jsonschema \
   # install opam:
@@ -42,6 +42,13 @@ COPY src /ligo/src
 COPY scripts/version.sh /ligo/scripts/version.sh
 
 COPY tools/ligo-syntax-highlighting ligo-syntax-highlighting
+
+# JSOO
+COPY jsoo /ligo/jsoo
+COPY Makefile /ligo
+COPY npm /ligo/npm
+COPY examples /ligo/examples
+
 # Run tests
 RUN opam exec -- dune build @check \
   && opam exec -- dune runtest --profile static --no-buffer \
@@ -67,11 +74,18 @@ RUN LIGO_VERSION=$(/ligo/scripts/version.sh) opam exec -- dune build -p ligo --p
   && cp /ligo/_build/install/default/bin/ligo /tmp/ligo \
   # Run doc
   && opam exec -- dune build @doc
+RUN npm i -g webpack-cli
+RUN cd /ligo && opam exec -- make build-demo-webide
+RUN cd /ligo/npm && rm /ligo/npm/ligolang-*.tgz ; npm i && npm run build && npm pack
+RUN cd /ligo/examples/ligojs && npm i && npm run build:webpack
 
 FROM esydev/esy:nightly-alpine as esy
 
 # TODO see also ligo-docker-large in nix build
-FROM alpine:3.12
+FROM alpine:3.12 as ligo
+# This variable is used for analytics to determine if th execution of the compiler is inside docker or not
+ENV DOCKER_EXECUTION=true
+
 COPY --from=esy . .
 WORKDIR /root/
 RUN chmod 755 /root # so non-root users inside container can see and execute /root/ligo
@@ -79,3 +93,7 @@ COPY --from=0 /tmp/ligo /root/ligo
 COPY --from=0 /ligo/_build/default/_doc/_html /root/doc
 COPY --from=0 /ligo/highlighting /root/highlighting
 ENTRYPOINT ["/root/ligo"]
+
+FROM ligo as ligo-ci
+# This variable is used for analytics to determine if th execution of the compiler is inside docker or not
+ENV LIGO_SKIP_ANALYTICS=true

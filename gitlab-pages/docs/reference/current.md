@@ -14,9 +14,7 @@ val get_balance : unit -> tez
 <SyntaxTitle syntax="cameligo">
 val get_balance : unit -> tez
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let get_balance: unit => tez
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let get_balance: (_u: unit) => tez
 </SyntaxTitle>
@@ -38,14 +36,7 @@ let main (p,s : unit * tez) = [], Tezos.get_balance()
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```reasonligo
-let main = ((p,s) : (unit, tez)) =>
-  ([], Tezos.get_balance());
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo
@@ -62,9 +53,7 @@ val get_now : unit -> timestamp
 <SyntaxTitle syntax="cameligo">
 val get_now : unit -> timestamp
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let get_now: unit => timestamp
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let get_now: (_u : unit) => timestamp
 </SyntaxTitle>
@@ -101,17 +90,7 @@ let one_day_later = some_date + one_day
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```reasonligo group=b
-let today         = Tezos.get_now();
-let one_day       = 86_400;
-let in_24_hrs     = today + one_day;
-let some_date     = ("2000-01-01t10:10:10Z" : timestamp);
-let one_day_later = some_date + one_day;
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=b
@@ -146,15 +125,7 @@ let in_24_hrs = today - one_day
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```reasonligo group=c
-let today     = Tezos.get_now();
-let one_day   = 86_400;
-let in_24_hrs = today - one_day;
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=c
@@ -186,13 +157,7 @@ let not_tomorrow = (Tezos.get_now () = in_24_hrs)
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```reasonligo group=c
-let not_tomorrow = (Tezos.get_now() == in_24_hrs);
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=c
@@ -201,24 +166,19 @@ let not_tomorrow = (Tezos.get_now() == in_24_hrs);
 
 </Syntax>
 
-
 <SyntaxTitle syntax="pascaligo">
 val get_amount : unit -> tez
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val get_amount : unit -> tez
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let get_amount: unit => tez
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let get_amount: (_u : unit) => tez
 </SyntaxTitle>
 
 Get the amount of tez provided by the sender to complete this
 transaction.
-
-
 
 <Syntax syntax="pascaligo">
 
@@ -235,14 +195,7 @@ let threshold (p : unit) = if Tezos.get_amount () = 100tz then 42 else 0
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```reasonligo
-let threshold = (p : unit) =>
-  if (Tezos.get_amount() == 100tz) { 42; } else { 0; };
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo
@@ -259,15 +212,12 @@ val get_sender : unit -> address
 <SyntaxTitle syntax="cameligo">
 val get_sender : unit -> address
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let get_sender: unit => address
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let get_sender: (_u : unit) => address
 </SyntaxTitle>
 
 Get the address that initiated the current transaction.
-
 
 
 <Syntax syntax="pascaligo">
@@ -284,13 +234,7 @@ let main (p : unit) = Tezos.get_sender ()
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```reasonligo
-let main = (p : unit) => Tezos.get_sender ();
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=e
@@ -305,9 +249,7 @@ val address&lt;a&gt; : contract (a) -> address
 <SyntaxTitle syntax="cameligo">
 val address : 'a contract -> address
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let address: contract('a) => address
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let address: (contract: contract&lt;&apos;a&gt;) => address
 </SyntaxTitle>
@@ -334,16 +276,7 @@ let main (p : key_hash) =
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```reasonligo
-let main = (p : key_hash) => {
-  let c = Tezos.implicit_account (p);
-  Tezos.address (c);
-};
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=f
@@ -362,16 +295,12 @@ val get_self_address : unit -> address
 <SyntaxTitle syntax="cameligo">
 val get_self_address : unit -> address
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let get_self_address: unit => address
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let get_self_address: (_u : unit) => address
 </SyntaxTitle>
 
 Get the address of the currently running contract.
-
-
 
 <Syntax syntax="pascaligo">
 
@@ -387,13 +316,7 @@ let main (p : unit) = Tezos.get_self_address ()
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```reasonligo
-let main = (p : unit) => Tezos.get_self_address ();
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=g
@@ -401,22 +324,21 @@ let main = (p : unit) => Tezos.get_self_address();
 ```
 
 </Syntax>
+
 <SyntaxTitle syntax="pascaligo">
 val self&lt;a&gt; : string -> contract (a)
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val self : string -> 'a contract
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let self: string => contract('a)
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let self: (entrypoint: string) => contract&lt;&apos;a&gt;
 </SyntaxTitle>
 
 Typecast the currently running contract with an entrypoint annotation.
-If your are using entrypoints: use "%bar" for constructor Bar
-If you are not using entrypoints: use "%default"
+If you are using entrypoints, use "%bar" for a constructor "Bar". If
+you are not using entrypoints: use "%default"
 
 <Syntax syntax="pascaligo">
 
@@ -434,13 +356,7 @@ let main (p : unit) = Tezos.self("%default")
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```reasonligo
-let main = (p: unit) => Tezos.self("%default");
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=h
@@ -454,12 +370,6 @@ val implicit_account&lt;a&gt; : key_hash -> contract (a)
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val implicit_account : key_hash -> 'a contract
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let implicit_account: key_hash => contract('a)
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let implicit_account: (hash: key_hash) => contract&lt;'a&gt;
 </SyntaxTitle>
 
 Get the default contract associated with an on-chain key-pair. This
@@ -483,13 +393,7 @@ let main (kh : key_hash) = Tezos.implicit_account kh
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```reasonligo
-let main = (kh : key_hash) => Tezos.implicit_account (kh);
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=i
@@ -498,16 +402,13 @@ let main = (kh: key_hash) => Tezos.implicit_account(kh);
 
 </Syntax>
 
-
 <SyntaxTitle syntax="pascaligo">
 val get_source : unit -> address
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val get_source : unit -> address
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let get_source: unit => address
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let get_source: (_u : unit) => address
 </SyntaxTitle>
@@ -552,13 +453,7 @@ let main (p : unit) = Tezos.get_source ()
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```reasonligo
-let main = (p : unit) => Tezos.get_source ();
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=j
@@ -567,22 +462,18 @@ let main = (p : unit) => Tezos.get_source();
 
 </Syntax>
 
-
 <SyntaxTitle syntax="pascaligo">
 val failwith&lt;a&gt; : a -> unit
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val failwith : 'a -> unit
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let failwith: 'a -> unit
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let failwith: (message: &apos;a) => unit
 </SyntaxTitle>
 
 [See `failwith`](toplevel.md#failwith)
-
 
 <SyntaxTitle syntax="pascaligo">
 val get_chain_id : unit chain_id
@@ -590,9 +481,7 @@ val get_chain_id : unit chain_id
 <SyntaxTitle syntax="cameligo">
 val get_chain_id : unit -> chain_id
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let get_chain_id: unit => chain_id
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let get_chain_id: (_u : unit) => chain_id
 </SyntaxTitle>
@@ -628,22 +517,7 @@ let main ((ignore, storage): (unit * storage)) =
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```reasonligo
-type storage = bytes;
-
-let main = ((ignore, storage): (unit, storage)) => {
-  let packed = Bytes.pack(Tezos.get_chain_id());
-  if (storage != packed) {
-    (failwith("wrong chain"): (list(operation), storage));
-  } else {
-    ([], packed);
-  }
-};
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=k
@@ -667,9 +541,7 @@ val transaction&lt;param&gt; : param -> mutez -> contract (param) -> operation
 <SyntaxTitle syntax="cameligo">
 val transaction : 'param -> mutez -> 'param contract -> operation
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let transaction: ('param, mutez , contract('param)) => operation
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let transaction: (action: &apos;param, amount: mutez, contract: contract&lt;&apos;param&gt;) => operation
 </SyntaxTitle>
@@ -682,11 +554,9 @@ To indicate an account, use `unit` as `param`.
 val create_contract &lt;param, storage&gt; : (param * storage -> list (operation) * storage) -> key_hash option -> tez -> storage -> (operation * address)
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-val create_contract : ('param * 'storage -> operation list * 'storage) -> key_hash option -> tez -> 'storage -> (operation * address)
+val create_contract : ('param -> 'storage -> operation list * 'storage) -> key_hash option -> tez -> 'storage -> (operation * address)
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let create_contract : (('param, 'storage) -> (list(operation), 'storage)) => option(key_hash) => tez => 'storage => (operation, address)
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let create_contract = (contract: ('param, 'storage) => (list &lt;operation&gt;, &apos;storage), delegate: option&lt;key_hash&gt;, balance: tez, init: 'storage) => [operation, address]
 </SyntaxTitle>
@@ -694,15 +564,25 @@ let create_contract = (contract: ('param, 'storage) => (list &lt;operation&gt;, 
 Construct an operation that originates a contract from a function. The
 optional argument of type `key_hash` represents a delegate.
 
+<SyntaxTitle syntax="cameligo">
+val create_contract : ('param * 'storage -> operation list * 'storage) -> key_hash option -> tez -> 'storage -> (operation * address)
+</SyntaxTitle>
+
+<SyntaxTitle syntax="jsligo">
+let create_contract = (contract: ['param, 'storage] => (list &lt;operation&gt;, &apos;storage), delegate: option&lt;key_hash&gt;, balance: tez, init: 'storage) => [operation, address]
+</SyntaxTitle>
+
+Construct an operation that originates a contract from an uncurried function. The
+optional argument of type `key_hash` represents a delegate.
+
 <SyntaxTitle syntax="pascaligo">
 val set_delegate : option (key_hash) -> operation
 </SyntaxTitle>
+
 <SyntaxTitle syntax="cameligo">
 val set_delegate : key_hash option -> operation
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let set_delegate: option(key_hash) => operation
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let set_delegate: (delegate: option&lt;key_hash&gt;) => operation
 </SyntaxTitle>
@@ -723,9 +603,7 @@ val get_contract_opt&lt;param&gt; : address -> option (contract (param))
 <SyntaxTitle syntax="cameligo">
 val get_contract_opt : address -> 'param contract option
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let get_contract_opt : address => option(contract('param))
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let get_contract_opt : (a: address) => option&lt;contract&lt;&apos;param&gt;&gt;
 </SyntaxTitle>
@@ -741,9 +619,7 @@ val get_contract_with_error&lt;param&gt; : address -> string -> contract (param)
 <SyntaxTitle syntax="cameligo">
 val get_contract_with_error : address -> string -> 'param contract
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let get_contract_with_error : address => string => contract('param)
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let get_contract_with_error : (a: address,s: string) => contract&lt;&apos;param&gt;&gt;
 </SyntaxTitle>
@@ -758,9 +634,7 @@ val get_entrypoint_opt&lt;param&gt; : string -> address -> option (contract (par
 <SyntaxTitle syntax="cameligo">
 val get_entrypoint_opt : string -> address -> 'param contract option
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let get_entrypoint_opt: (string, address) => option(contract('param))
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let get_entrypoint_opt: (entrypoint: string, a: address) => option&lt;contract&lt;&apos;param&gt;&gt;
 </SyntaxTitle>
@@ -778,9 +652,7 @@ val get_level : unit -> nat
 <SyntaxTitle syntax="cameligo">
 val get_level : unit -> nat
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let get_level : unit => nat
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let get_level : (_u : unit) => nat
 </SyntaxTitle>
@@ -793,9 +665,7 @@ val min_block_time : unit -> nat
 <SyntaxTitle syntax="cameligo">
 val min_block_time : unit -> nat
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let min_block_time: unit => nat
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let min_block_time: unit => nat;
 </SyntaxTitle>
@@ -808,9 +678,7 @@ val pairing_check : list (bls12_381_g1 * bls12_381_g2) -> bool
 <SyntaxTitle syntax="cameligo">
 val pairing_check : (bls12_381_g1 * bls12_381_g2) list -> bool
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let pairing_check: list(bls12_381_g1 , bls12_381_g2) => bool
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let pairing_check: list&lt;[bls12_381_g1, bls12_381_g2]&gt;) => bool
 </SyntaxTitle>
@@ -825,9 +693,7 @@ val never&lt;a&gt; : never -> a
 <SyntaxTitle syntax="cameligo">
 val never : never -> 'a
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let never: never => 'a
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let never: (never: never) => &apos;a
 </SyntaxTitle>
@@ -841,15 +707,12 @@ function get_total_voting_power : unit -> nat
 <SyntaxTitle syntax="cameligo">
 val get_total_voting_power : unit -> nat
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let get_total_voting_power: unit => nat
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let get_total_voting_power: (_u : unit) => nat
 </SyntaxTitle>
 
 Return the total voting power of all contracts. The total voting power coincides with the sum of the rolls count of every contract in the voting listings. The voting listings is calculated at the beginning of every voting period.
-
 
 <SyntaxTitle syntax="pascaligo">
 function voting_power : key_hash -> nat
@@ -857,14 +720,12 @@ function voting_power : key_hash -> nat
 <SyntaxTitle syntax="cameligo">
 val voting_power : key_hash -> nat
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let voting_power: key_hash =>nat
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let voting_power: (key_hash:key_hash) => nat
 </SyntaxTitle>
 
-Return the voting power of a given contract. The voting power value is the full staking power of the delegate, currently expressed in mutez. Though, developers should not rely on `Tezos.voting_power` to query the staking power of a contract in mutez: the value returned by `Tezos.voting_power` is still of type` nat and it should only be considered relative to `Tezos.total_voting_power`.  
+Return the voting power of a given contract. The voting power value is the full staking power of the delegate, currently expressed in mutez. Though, developers should not rely on `Tezos.voting_power` to query the staking power of a contract in mutez: the value returned by `Tezos.voting_power` is still of type` nat and it should only be considered relative to `Tezos.total_voting_power`.
 
 ## Sapling
 
@@ -886,14 +747,7 @@ type tr = 8 sapling_transaction
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```reasonligo group=sap_t
-type st = sapling_state(8);
-type tr = sapling_transaction(8);
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=sap_t
@@ -909,9 +763,7 @@ val sapling_empty_state&lt;n&gt; : sapling_state (n)
 <SyntaxTitle syntax="cameligo">
 val sapling_empty_state : 'n sapling_state
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let sapling_empty_state: sapling_state('a)
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let sapling_empty_state: sapling_state&lt;n&gt;
 </SyntaxTitle>
@@ -930,13 +782,7 @@ let x = Tezos.sapling_empty_state
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```reasonligo group=sap_t
-let x = Tezos.sapling_empty_state ;
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=sap_t
@@ -953,9 +799,7 @@ val sapling_verify_update&lt;a&gt; : sapling_transaction (a) -> sapling_state (a
 <SyntaxTitle syntax="cameligo">
 val sapling_verify_update : 'a sapling_transaction -> 'a sapling_state -> (bytes * (int * 'a sapling_state)) option
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let sapling_verify_update: sapling_transaction('a) => sapling_state('a) => option(bytes, (int, sapling_state('a)))
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let sapling_verify_update: sapling_transaction&lt;'a&gt; => sapling_state&lt;'a&gt; => option&lt;[bytes, [int, sapling_state&lt;'a&gt;]]&gt;
 </SyntaxTitle>
@@ -984,17 +828,7 @@ let f (tr : tr) =
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```reasonligo group=sap_t
-let f = (tr : tr) =>
-  switch (Tezos.sapling_verify_update (tr, x)) {
-    | Some (_, x) => x
-    | None => failwith ("failed")
-  }
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=sap_t
@@ -1015,9 +849,7 @@ val create_ticket&lt;value&gt; : value -> nat -> option (ticket (value))
 <SyntaxTitle syntax="cameligo">
 val create_ticket : 'value -> nat -> ('value ticket) option
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let create_ticket : 'value => nat => option(ticket('value))
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let create_ticket: 'value => nat => option&lt;ticket&lt;'value&gt;&gt;
 </SyntaxTitle>
@@ -1035,7 +867,6 @@ const my_ticket2 = Option.unopt (Tezos.create_ticket ("one", 10n))
 ```
 
 </Syntax>
-
 <Syntax syntax="cameligo">
 
 ```cameligo group=manip_ticket
@@ -1045,14 +876,6 @@ let my_ticket2 = Option.unopt (Tezos.create_ticket "one" 10n)
 
 </Syntax>
 
-<Syntax syntax="reasonligo">
-
-```reasonligo group=manip_ticket
-let my_ticket1 = Option.unopt(Tezos.create_ticket(1, 10n));
-let my_ticket2 = Option.unopt(Tezos.create_ticket("one", 10n));
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=manip_ticket
@@ -1062,16 +885,13 @@ let my_ticket2 = Option.unopt(Tezos.create_ticket("one", 10 as nat));
 
 </Syntax>
 
-
 <SyntaxTitle syntax="pascaligo">
 val read_ticket&lt;value&gt; : ticket (value) -> (address * (value * nat)) * ticket (value)
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val read_ticket : 'value ticket -> (address * ('value * nat)) * 'value ticket
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let read_ticket : ticket('value) => ((address, ('value , nat)) , ticket('value))
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let read_ticket: ticket&lt;'value&gt; => &lt;&lt;address, &lt;'value , nat&gt;&gt; , ticket&lt;'value&gt;&gt;
 </SyntaxTitle>
@@ -1105,17 +925,7 @@ let v =
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-To read the content of a ticket, you need to use tuple destructuring:
-
-```reasonligo group=manip_ticket
-let v2 =
-  let ((_addr, (v, _amt)), _ticket) = Tezos.read_ticket (my_ticket2);
-  v;
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 To read the content of a ticket, you need to use tuple destructuring:
@@ -1137,9 +947,7 @@ val split_ticket&lt;value&gt; : ticket (value) -> nat * nat -> option (ticket (v
 val split_ticket : 'value ticket -> nat * nat -> ('value ticket * 'value ticket) option
 </SyntaxTitle>
 
-<SyntaxTitle syntax="reasonligo">
-let split_ticket : ticket('value) => (nat , nat) => option ((ticket('value), ticket('value)))
-</SyntaxTitle>
+
 
 <SyntaxTitle syntax="jsligo">
 let split_ticket: ticket&lt;'value&gt; => &lt;nat , nat&gt; => option &lt;&lt;ticket&lt;'value&gt;, ticket&lt;'value&gt;&gt;&gt;
@@ -1171,17 +979,7 @@ let ta, tb =
 
 </Syntax>
 
-<Syntax syntax="reasonligo">
 
-```reasonligo group=manip_ticket
-let (ta,tb) =
-  switch (Tezos.split_ticket(my_ticket1, (6n, 4n))) {
-  | None => failwith("amt_a + amt_v != amt")
-  | Some split_tickets => split_tickets
-  } ;
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=manip_ticket
@@ -1199,10 +997,6 @@ val join_tickets&lt;value&gt; : ticket (value) * ticket (value) -> option (ticke
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val join_tickets : 'value ticket * 'value ticket -> ('value ticket) option
-</SyntaxTitle>
-
-<SyntaxTitle syntax="reasonligo">
-let join_tickets : (ticket('value), ticket('value)) => option (ticket('value))
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
@@ -1236,16 +1030,6 @@ let tc : int ticket option =
 
 </Syntax>
 
-<Syntax syntax="reasonligo">
-
-```reasonligo group=manip_ticket
-let tc =
-  let ta = Option.unopt(Tezos.create_ticket(1, 10n));
-  let tb = Option.unopt(Tezos.create_ticket(1, 5n));
-  Tezos.join_tickets((ta, tb));
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=manip_ticket2
@@ -1293,24 +1077,7 @@ let main (x : parameter * storage) : return =
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```reasonligo group=contract_ticket
-type storage = big_map (string, ticket(int)) ;
-
-type parameter = int ;
-
-type return = (list (operation), storage);
-
-let main = (x : (parameter , storage)) : return => {
-  let (i,store) = x ;
-  let my_ticket1 = Option.unopt (Tezos.create_ticket (i, 10n)) ;
-  let (_,x) = Big_map.get_and_update ("hello", Some(my_ticket1), store) ;
-  ([], x)
-};
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=contract_ticket
@@ -1323,8 +1090,8 @@ type return_ = [list<operation>, storage];
 let main = (x: [parameter, storage]): return_ => {
   let [i, store] = x ;
   let my_ticket1 = Option.unopt (Tezos.create_ticket (i, 10 as nat));
-  let [_, x] = Big_map.get_and_update ("hello", Some(my_ticket1), store);
-  return [list([]), x]
+  let [_, ret] = Big_map.get_and_update ("hello", Some(my_ticket1), store);
+  return [list([]), ret]
 };
 ```
 
@@ -1339,9 +1106,7 @@ val call_view&lt;arg,reg&gt; : string -> arg -> address -> option (ret)
 <SyntaxTitle syntax="cameligo">
 val call_view : string -> 'arg -> address -> 'ret option
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let call_view : string => 'arg => address => option ('ret)
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let call_view : string => 'arg => address => option &lt;&apos;ret&gt;
 </SyntaxTitle>
@@ -1357,9 +1122,7 @@ function constant: string -> 'a
 <SyntaxTitle syntax="cameligo">
 val constant : string -> 'a
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let constant : string => 'a
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let constant : string => 'a
 </SyntaxTitle>
@@ -1375,9 +1138,7 @@ val emit&lt;a&gt; :  string -> a -> operation
 <SyntaxTitle syntax="cameligo">
 val emit : string -> 'a -> operation
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let emit: string => 'a => operation
-</SyntaxTitle>
+
 <SyntaxTitle syntax="jsligo">
 let emit: string => &apos;a => operation
 </SyntaxTitle>

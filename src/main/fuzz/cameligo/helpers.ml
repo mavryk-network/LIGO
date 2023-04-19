@@ -88,6 +88,7 @@ module Fold_helpers (M : Monad) = struct
       let* field = self value.field in
       let value = { value with field } in
       return @@ TModA { value; region }
+    | TParameter { value; region } -> return @@ TParameter { value; region }
     | TVar _ | TArg _ | TInt _ | TString _ -> ok @@ t
 
 
@@ -333,6 +334,7 @@ module Fold_helpers (M : Monad) = struct
       let* code = self value.code in
       let value = { value with code } in
       return @@ ECodeInj { value; region }
+    | EContract { value; region } -> return @@ EContract { value; region }
 
 
   and matching_cases self (cases : _ Utils.nsepseq reg) =

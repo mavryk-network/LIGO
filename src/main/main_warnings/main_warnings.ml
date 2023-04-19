@@ -13,15 +13,11 @@ type all =
     * Type_var.t
     * Type_var.t
     * Location.t
-  | `Self_ast_imperative_warning_layout of Location.t * Label.t
+  | `Nanopasses_attribute_ignored of Location.t
   | `Self_ast_imperative_warning_deprecated_polymorphic_variable of
     Location.t * Type_var.t
-  | `Self_ast_imperative_warning_deprecated_constant of
-    Location.t
-    * Ast_imperative.expression
-    * Ast_imperative.expression
-    * Ast_imperative.type_expression
   | `Main_view_ignored of Location.t
+  | `Main_entry_ignored of Location.t
   | `Michelson_typecheck_failed_with_different_protocol of
     Environment.Protocols.t * Tezos_error_monad.Error_monad.error list
   | `Jsligo_deprecated_failwith_no_return of Location.t
@@ -30,14 +26,16 @@ type all =
   | `Use_meta_ligo of Location.t
   | `Self_ast_aggregated_warning_bad_self_type of
     Ast_aggregated.type_expression * Ast_aggregated.type_expression * Location.t
-  | `Deprecated_reasonligo
   ]
 
-let warn_layout loc lab = `Self_ast_imperative_warning_layout (loc, lab)
 let warn_bad_self_type t1 t2 loc = `Self_ast_aggregated_warning_bad_self_type (t1, t2, loc)
 
-let pp : display_format:string display_format -> Format.formatter -> all -> unit =
- fun ~display_format f a ->
+let pp
+    :  display_format:string display_format -> no_colour:bool -> Format.formatter -> all
+    -> unit
+  =
+ fun ~display_format ~no_colour f a ->
+  let snippet_pp = Snippet.pp ~no_colour in
   match display_format with
   | Human_readable | Dev ->
     (match a with
@@ -47,7 +45,7 @@ let pp : display_format:string display_format -> Format.formatter -> all -> unit
         "@[<hv>%a@ You are using Michelson failwith primitive (loaded from standard \
          library).@.Consider using `Test.failwith` for throwing a testing framework \
          failure.@.@]"
-        Snippet.pp
+        snippet_pp
         loc
     | `Michelson_typecheck_failed_with_different_protocol (user_proto, errs) ->
       let open Environment.Protocols in
@@ -71,7 +69,7 @@ let pp : display_format:string display_format -> Format.formatter -> all -> unit
         f
         "@[<hv>%a@ Warning: The type of \"%a\" is ambiguous: Inferred type is \"%a\" but \
          could be of type \"%a\".@ Hint: You might want to add a type annotation. @.@]"
-        Snippet.pp
+        snippet_pp
         loc
         Ast_core.PP.expression
         expr
@@ -85,7 +83,7 @@ let pp : display_format:string display_format -> Format.formatter -> all -> unit
         "@[<hv>%a@ Warning: The type the pattern of \"%a\" is ambiguous: Inferred type \
          is \"%a\" but could be of type \"%a\".@ Hint: You might want to add a type \
          annotation. @.@]"
-        Snippet.pp
+        snippet_pp
         loc
         Ast_core.(Pattern.pp PP.type_expression_option)
         pat
@@ -98,7 +96,14 @@ let pp : display_format:string display_format -> Format.formatter -> all -> unit
         f
         "@[<hv>%a@ Warning: This view will be ignored, command line option override [@ \
          view] annotation@.@]"
-        Snippet.pp
+        snippet_pp
+        loc
+    | `Main_entry_ignored loc ->
+      Format.fprintf
+        f
+        "@[<hv>%a@ Warning: This entry will be ignored, command line option override [@ \
+         entry] annotation@.@]"
+        snippet_pp
         loc
     | `Self_ast_typed_warning_unused (loc, s) ->
       Format.fprintf
@@ -106,7 +111,7 @@ let pp : display_format:string display_format -> Format.formatter -> all -> unit
         "@[<hv>%a:@.Warning: unused variable \"%s\".@.Hint: replace it by \"_%s\" to \
          prevent this warning.\n\
          @]"
-        Snippet.pp
+        snippet_pp
         loc
         s
         s
@@ -114,7 +119,7 @@ let pp : display_format:string display_format -> Format.formatter -> all -> unit
       Format.fprintf
         f
         "@[<hv>%a:@.Warning: variable \"%s\" cannot be used more than once.\n@]"
-        Snippet.pp
+        snippet_pp
         loc
         s
     | `Self_ast_typed_warning_unused_rec (loc, s) ->
@@ -123,39 +128,25 @@ let pp : display_format:string display_format -> Format.formatter -> all -> unit
         "@[<hv>%a:@.Warning: unused recursion .@.Hint: remove recursion from the \
          function \"%s\" to prevent this warning.\n\
          @]"
-        Snippet.pp
+        snippet_pp
         loc
         s
-    | `Self_ast_imperative_warning_layout (loc, Label s) ->
+    | `Nanopasses_attribute_ignored loc ->
       Format.fprintf
         f
-        "@[<hv>%a@ Warning: layout attribute only applying to %s, probably ignored.@.@]"
-        Snippet.pp
+        "@[<hv>%a@ Warning: unsupported attribute, ignored.@.@]"
+        snippet_pp
         loc
-        s
     | `Self_ast_imperative_warning_deprecated_polymorphic_variable (loc, name) ->
       Format.fprintf
         f
         "@[<hv>%a@ Warning: %a is not recognize as a polymorphic variable anymore. If \
          you want to make a polymorphic function, please consult the online \
          documentation @.@]"
-        Snippet.pp
+        snippet_pp
         loc
         Type_var.pp
         name
-    | `Self_ast_imperative_warning_deprecated_constant (l, curr, alt, ty) ->
-      Format.fprintf
-        f
-        "@[<hv>%a@ Warning: the constant %a is soon to be deprecated. Use instead %a : \
-         %a. @]"
-        Snippet.pp
-        l
-        Ast_imperative.PP.expression
-        curr
-        Ast_imperative.PP.expression
-        alt
-        Ast_imperative.PP.type_expression
-        ty
     | `Jsligo_deprecated_failwith_no_return loc ->
       Format.fprintf
         f
@@ -163,16 +154,16 @@ let pp : display_format:string display_format -> Format.formatter -> all -> unit
          function.@.Please add an explicit `return` before `failwith` if you meant the \
          built-in `failwith`.@.For now, compilation proceeds adding such `return` \
          automatically.@.@]"
-        Snippet.pp
+        snippet_pp
         loc
     | `Jsligo_deprecated_toplevel_let loc ->
       Format.fprintf
         f
         "@[<hv>%a@.Toplevel let declaration are silently change to const declaration.@.@]"
-        Snippet.pp
+        snippet_pp
         loc
     | `Jsligo_unreachable_code loc ->
-      Format.fprintf f "@[<hv>%a@ Warning: Unreachable code. @]" Snippet.pp loc
+      Format.fprintf f "@[<hv>%a@ Warning: Unreachable code. @]" snippet_pp loc
     | `Self_ast_aggregated_warning_bad_self_type (got, expected, loc) ->
       Format.fprintf
         f
@@ -180,16 +171,12 @@ let pp : display_format:string display_format -> Format.formatter -> all -> unit
          but contract being compiled would expect \"%a\".@.Note that \"Tezos.self\" \
          refers to the current contract, so the parameters should be generally the same. \
          @]"
-        Snippet.pp
+        snippet_pp
         loc
         Ast_aggregated.PP.type_expression
         got
         Ast_aggregated.PP.type_expression
-        expected
-    | `Deprecated_reasonligo ->
-      Format.fprintf
-        f
-        "@[Reasonligo is depreacted, support will be dropped in a few versions.@.@]")
+        expected)
 
 
 let to_warning : all -> Simple_utils.Warning.t =
@@ -262,6 +249,14 @@ let to_warning : all -> Simple_utils.Warning.t =
     in
     let content = make_content ~message ~location () in
     make ~stage:"view compilation" ~content
+  | `Main_entry_ignored location ->
+    let message =
+      Format.sprintf
+        "Warning: This entry will be ignored, command line option override [@ entry] \
+         annotation@."
+    in
+    let content = make_content ~message ~location () in
+    make ~stage:"view compilation" ~content
   | `Self_ast_typed_warning_unused (location, variable) ->
     let message =
       Format.sprintf
@@ -287,13 +282,9 @@ let to_warning : all -> Simple_utils.Warning.t =
     in
     let content = make_content ~message ~location () in
     make ~stage:"parsing command line parameters" ~content
-  | `Self_ast_imperative_warning_layout (location, Label s) ->
-    let message =
-      Format.sprintf
-        "Warning: layout attribute only applying to %s, probably ignored.@."
-        s
-    in
-    let content = make_content ~message ~location () in
+  | `Nanopasses_attribute_ignored loc ->
+    let message = "Warning: ignored attributes" in
+    let content = make_content ~message ~location:loc () in
     make ~stage:"typer" ~content
   | `Self_ast_imperative_warning_deprecated_polymorphic_variable (location, variable) ->
     let variable = Format.asprintf "%a" Type_var.pp variable in
@@ -304,19 +295,6 @@ let to_warning : all -> Simple_utils.Warning.t =
         variable
     in
     let content = make_content ~message ~location ~variable () in
-    make ~stage:"abstractor" ~content
-  | `Self_ast_imperative_warning_deprecated_constant (location, curr, alt, ty) ->
-    let message =
-      Format.asprintf
-        "Warning: the constant %a is soon to be deprecated. Use instead %a : %a."
-        Ast_imperative.PP.expression
-        curr
-        Ast_imperative.PP.expression
-        alt
-        Ast_imperative.PP.type_expression
-        ty
-    in
-    let content = make_content ~message ~location () in
     make ~stage:"abstractor" ~content
   | `Jsligo_deprecated_failwith_no_return location ->
     let message =
@@ -350,14 +328,6 @@ let to_warning : all -> Simple_utils.Warning.t =
     in
     let content = make_content ~message ~location () in
     make ~stage:"aggregation" ~content
-  | `Deprecated_reasonligo ->
-    let message =
-      Format.sprintf
-        "Reasonligo is depreacted, support will be dropped in a few versions.@"
-    in
-    let location = Location.dummy in
-    let content = make_content ~message ~location () in
-    make ~stage:"cli parsing" ~content
 
 
 let to_json : all -> Yojson.Safe.t =

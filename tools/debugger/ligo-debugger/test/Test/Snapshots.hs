@@ -8,9 +8,13 @@ module Test.Snapshots
 import Unsafe qualified
 
 import AST (scanContracts)
-import Control.Lens (has, ix, makeLensesWith, (?~), (^?!))
+import Cli.Json (LigoTypeContent (LTCSingleton), LigoTypeLiteralValue (LTLVInt))
+import Control.Category ((>>>))
+import Control.Lens (Each (each), has, ix, makeLensesWith, toListOf, (?~), (^?!))
 import Control.Monad.Writer (listen)
+import Data.Coerce (coerce)
 import Data.Default (Default (def))
+import Data.List.NonEmpty qualified as NE
 import Data.Map qualified as M
 import Fmt (pretty)
 import System.FilePath (combine, dropExtension, makeRelative)
@@ -24,20 +28,22 @@ import UnliftIO (forConcurrently_)
 
 import Morley.Debugger.Core
   (DebuggerState (..), Direction (..), FrozenPredicate (FrozenPredicate), HistoryReplayM,
-  MovementResult (..), NavigableSnapshot (getExecutedPosition), SourceLocation (SourceLocation),
-  SourceType (..), curSnapshot, frozen, matchesSrcType, move, moveTill, tsAfterInstrs, tsAllVisited)
+  MovementResult (..), NavigableSnapshot (getExecutedPosition), SourceLocation' (SourceLocation),
+  SrcLoc (..), curSnapshot, frozen, matchesSrcType, move, moveTill, tsAfterInstrs, tsAllVisited)
 import Morley.Debugger.Core.Breakpoint qualified as N
-import Morley.Debugger.Core.Snapshots qualified as N
 import Morley.Debugger.DAP.Types.Morley ()
-import Morley.Michelson.ErrorPos (Pos (Pos), SrcPos (SrcPos))
+import Morley.Michelson.Parser.Types (MichelsonSource (MSFile))
 import Morley.Michelson.Typed (SomeValue)
 import Morley.Michelson.Typed qualified as T
 import Morley.Util.Lens (postfixLFields)
 
+import Lorentz (MText)
 import Lorentz qualified as L
+import Lorentz.Value (mt)
 
 import Language.LIGO.Debugger.CLI.Call
 import Language.LIGO.Debugger.CLI.Types
+import Language.LIGO.Debugger.Common
 import Language.LIGO.Debugger.Michelson
 import Language.LIGO.Debugger.Navigate
 import Language.LIGO.Debugger.Snapshots
@@ -124,7 +130,21 @@ test_Snapshots = testGroup "Snapshots collection"
               )
             )
 
-          , ( InterpretRunning EventExpressionPreview
+          , ( InterpretRunning EventFacedStatement
+            , one
+              ( LigoRange file (LigoPosition 3 2) (LigoPosition 3 29)
+              , stackWithS2
+              )
+            )
+
+          , ( InterpretRunning (EventExpressionPreview GeneralExpression)
+            , one
+              ( LigoRange file (LigoPosition 3 3) (LigoPosition 3 28)
+              , stackWithS2
+              )
+            )
+
+          , ( InterpretRunning (EventExpressionPreview GeneralExpression)
             , one
               ( LigoRange file (LigoPosition 3 3) (LigoPosition 3 24)
               , stackWithS2
@@ -135,13 +155,6 @@ test_Snapshots = testGroup "Snapshots collection"
                 SomeLorentzValue ([] :: [T.Operation])
             , one
               ( LigoRange file (LigoPosition 3 3) (LigoPosition 3 24)
-              , stackWithS2
-              )
-            )
-
-          , ( InterpretRunning EventExpressionPreview
-            , one
-              ( LigoRange file (LigoPosition 3 3) (LigoPosition 3 28)
               , stackWithS2
               )
             )
@@ -229,7 +242,7 @@ test_Snapshots = testGroup "Snapshots collection"
           sp -> unexpectedSnapshot sp
 
   , testCaseSteps "check shadowing" \step -> do
-      let file = contractsDir </> "shadowing.religo"
+      let file = contractsDir </> "shadowing.mligo"
       let runData = ContractRunData
             { crdProgram = file
             , crdEntrypoint = Nothing
@@ -250,7 +263,7 @@ test_Snapshots = testGroup "Snapshots collection"
 
         liftIO $ step [int||Go to second "s1"|]
         moveTill Forward $
-          goesAfter (SrcPos (Pos 12) (Pos 0))
+          goesAfter (SrcLoc 14 0)
         checkSnapshot \snap -> do
           let stackItems = snap ^?! isStackFramesL . ix 0 . sfStackL
 
@@ -260,7 +273,7 @@ test_Snapshots = testGroup "Snapshots collection"
 
         liftIO $ step [int||Go to first "s2"|]
         moveTill Forward $
-          goesAfter (SrcPos (Pos 13) (Pos 0))
+          goesAfter (SrcLoc 15 0)
         checkSnapshot \snap -> do
           let stackItems = snap ^?! isStackFramesL . ix 0 . sfStackL
 
@@ -284,10 +297,9 @@ test_Snapshots = testGroup "Snapshots collection"
 
         liftIO $ step [int||Check shadowing in switch|]
         moveTill Forward $
-          goesAfter (SrcPos (Pos 18) (Pos 0))
+          goesAfter (SrcLoc 19 0)
         -- TODO [LIGO-552] We somehow appear at weird place
         -- Breakpoint was pointing to body of `switch`, but we stopped at the switch itself
-        _ <- move Forward
         _ <- move Forward
         checkSnapshot \snap -> do
           let stackItems = snap ^?! isStackFramesL . ix 0 . sfStackL
@@ -300,7 +312,7 @@ test_Snapshots = testGroup "Snapshots collection"
       let modulePath = contractsDir </> "module_contracts"
       let file = modulePath </> "importer.mligo"
       let nestedFile = modulePath </> "imported.mligo"
-      let nestedFile2 = modulePath </> "imported2.ligo"
+      let nestedFile2 = modulePath </> "imported2.jsligo"
       let runData = ContractRunData
             { crdProgram = file
             , crdEntrypoint = Nothing
@@ -326,8 +338,8 @@ test_Snapshots = testGroup "Snapshots collection"
         checkSnapshot \case
           InterpretSnapshot
             { isStackFrames = StackFrame
-                { sfLoc = LigoRange file' (LigoPosition 7 0) (LigoPosition 7 17)
-                } :| []
+                { sfLoc = LigoRange file' (LigoPosition 15 5) (LigoPosition 15 10)
+                } :| _
             } | file' == nestedFile -> pass
           sp -> unexpectedSnapshot sp
 
@@ -336,7 +348,7 @@ test_Snapshots = testGroup "Snapshots collection"
         checkSnapshot \case
           InterpretSnapshot
             { isStackFrames = StackFrame
-                { sfLoc = LigoRange file' (LigoPosition 6 2) (LigoPosition 6 26)
+                { sfLoc = LigoRange file' (LigoPosition 6 13) (LigoPosition 6 26)
                 } :| []
             } | file' == file -> pass
           sp -> unexpectedSnapshot sp
@@ -346,7 +358,7 @@ test_Snapshots = testGroup "Snapshots collection"
         checkSnapshot \case
           InterpretSnapshot
             { isStackFrames = StackFrame
-                { sfLoc = LigoRange file' (LigoPosition 5 4) (LigoPosition 5 18)
+                { sfLoc = LigoRange file' (LigoPosition 2 2) (LigoPosition 2 19)
                 } :| _
             } | file' == nestedFile2 -> pass
           sp -> unexpectedSnapshot sp
@@ -356,7 +368,7 @@ test_Snapshots = testGroup "Snapshots collection"
         checkSnapshot \case
           InterpretSnapshot
             { isStackFrames = StackFrame
-                { sfLoc = LigoRange file' (LigoPosition 19 57) (LigoPosition 19 64)
+                { sfLoc = LigoRange file' (LigoPosition 19 68) (LigoPosition 19 88)
                 } :| _
             } | file' == nestedFile -> pass
           sp -> unexpectedSnapshot sp
@@ -366,12 +378,32 @@ test_Snapshots = testGroup "Snapshots collection"
         checkSnapshot \case
           InterpretSnapshot
             { isStackFrames = StackFrame
-                { sfLoc = LigoRange file' (LigoPosition 10 26) (LigoPosition 10 39)
+                { sfLoc = LigoRange file' (LigoPosition 10 55) (LigoPosition 10 80)
                 } :| []
             } | file' == file -> pass
           sp -> unexpectedSnapshot sp
 
-    -- [LIGO-658]: write a test that checks that we have 'pair1' and 'pair2' in 'not-inlined-fst.mligo' contract.
+  , testCaseSteps "Pair values are present in variables pane" \step -> do
+      let file = contractsDir </> "not-inlined-fst.mligo"
+      let runData = ContractRunData
+            { crdProgram = file
+            , crdEntrypoint = Nothing
+            , crdParam = ()
+            , crdStorage = 0 :: Integer
+            }
+
+      testWithSnapshots runData do
+        void $ moveTill Forward $
+          goesBetween (SrcLoc 5 0) (SrcLoc 6 0)
+
+        liftIO $ step [int||Check that snapshot contains "pair1" and "pair2" variables|]
+        checkSnapshot \snap -> do
+          let vars = snap
+                & isStackFrames
+                & head
+                & getVariableNamesFromStackFrame
+
+          vars @~=? ["fst", "s", "pair1", "pair2"]
 
   , minor $ testCaseSteps "functions and variables are not inlined" \step -> do
       let file = contractsDir </> "funcs-and-vars-no-inline.mligo"
@@ -383,11 +415,11 @@ test_Snapshots = testGroup "Snapshots collection"
             }
 
       testWithSnapshots runData do
-        N.switchBreakpoint (N.SourcePath file) (SrcPos (Pos 8) (Pos 0))
+        N.switchBreakpoint (MSFile file) (SrcLoc 8 0)
 
         let checkLinePosition pos = do
               frozen getExecutedPosition >>= \case
-                Just (SourceLocation _ (SrcPos (Pos actualPos) _) _)
+                Just (SourceLocation _ (SrcLoc actualPos _) _)
                   | actualPos == pos -> pass
                 loc -> liftIO $ assertFailure [int||Expected stopping at line #{pos + 1}, got #{loc}|]
 
@@ -409,6 +441,7 @@ test_Snapshots = testGroup "Snapshots collection"
         liftIO $ step "check stepping inside \"func\""
         goAndCheckLinePosition 1
         goAndCheckLinePosition 2
+        goAndCheckLinePosition 3
 
         liftIO $ step "check stopping at constant assignment"
         goAndCheckLinePosition 7
@@ -440,7 +473,7 @@ test_Snapshots = testGroup "Snapshots collection"
             }
 
       testWithSnapshots runData do
-        N.switchBreakpoint (N.SourcePath file) (SrcPos (Pos 4) (Pos 0))
+        N.switchBreakpoint (MSFile file) (SrcLoc 4 0)
 
         liftIO $ step "Check that \"fold\" build-in works correctly"
         moveTill Forward isAtBreakpoint
@@ -465,6 +498,8 @@ test_Snapshots = testGroup "Snapshots collection"
                 |]
             _ -> pass
 
+    -- TODO: enable this test when type unification works properly in @ligo@
+    -- (this problem appeared in 0.58.0)
   , minor $ testCaseSteps "monomorphed functions shows pretty" \step -> do
       let file = contractsDir </> "poly.mligo"
       let runData = ContractRunData
@@ -475,7 +510,7 @@ test_Snapshots = testGroup "Snapshots collection"
             }
 
       testWithSnapshots runData do
-        N.switchBreakpoint (N.SourcePath file) (SrcPos (Pos 11) (Pos 0))
+        N.switchBreakpoint (MSFile file) (SrcLoc 11 0)
 
         N.continueUntilBreakpoint N.NextBreak
         liftIO $ step "Check function namings"
@@ -491,11 +526,12 @@ test_Snapshots = testGroup "Snapshots collection"
           unless
             ( and
               $ flip elem variables
-              <$> [ "foo$1"
-                  , "foo$4"
-                  , "id$2"
-                  , "fold_left$3"
+              <$> [ "foo"
+                  , "foo"
+                  , "id"
+                  , "fold_left"
                   , "poly_troll42_"
+                  , "s"
                   ]
             ) do
             assertFailure [int||This snapshot doesn't contain pretty monomorphed variables: #{snap}|]
@@ -513,7 +549,7 @@ test_Snapshots = testGroup "Snapshots collection"
         checkSnapshot \case
           InterpretSnapshot
             { isStackFrames = StackFrame
-                { sfLoc = LigoRange file' (LigoPosition 7 2) (LigoPosition 7 25)
+                { sfLoc = LigoRange file' (LigoPosition 6 2) (LigoPosition 6 44)
                 } :| []
             } | file' == file -> pass
           snap -> unexpectedSnapshot snap
@@ -545,11 +581,15 @@ test_Snapshots = testGroup "Snapshots collection"
         runData
         [ LigoRange file (LigoPosition 9 2) (LigoPosition 9 15)
         , LigoRange file (LigoPosition 10 2) (LigoPosition 10 19)
+        , LigoRange file (LigoPosition 4 5) (LigoPosition 4 15)
+        , LigoRange file (LigoPosition 6 7) (LigoPosition 6 9)
         , LigoRange file (LigoPosition 11 2) (LigoPosition 11 23)
+        , LigoRange file (LigoPosition 1 35) (LigoPosition 1 40)
         , LigoRange file (LigoPosition 11 27) (LigoPosition 11 43)
+        , LigoRange file (LigoPosition 12 2) (LigoPosition 12 36)
         ]
 
-      let file2 = contractsDir </> "statement-visiting.ligo"
+      let file2 = contractsDir </> "statement-visiting.jsligo"
       let runData2 = ContractRunData
             { crdProgram = file2
             , crdEntrypoint = Nothing
@@ -560,12 +600,19 @@ test_Snapshots = testGroup "Snapshots collection"
       step [int||Checking locations for #{file2}|]
       checkLocations
         runData2 $
+          [ LigoRange file2 (LigoPosition 2 2) (LigoPosition 2 19)
+          , LigoRange file2 (LigoPosition 4 2) (LigoPosition 4 17)
+          ] ++
           concat
-            ( replicate 3
-              [ LigoRange file2 (LigoPosition 4 4) (LigoPosition 4 28)
-              , LigoRange file2 (LigoPosition 5 4) (LigoPosition 5 22)
+            ( replicate 4
+              [ LigoRange file2 (LigoPosition 6 4) (LigoPosition 6 27)
+              -- TODO: these 2 next statements have the wrong order.
+              -- Wait for #1685 and check it again
+              , LigoRange file2 (LigoPosition 8 4) (LigoPosition 8 13)
+              , LigoRange file2 (LigoPosition 7 4) (LigoPosition 7 21)
               ]
             )
+          ++ [LigoRange file2 (LigoPosition 11 2) (LigoPosition 11 45)]
 
   , testCaseSteps "Execution history is lazy" \step -> do
       let file = contractsDir </> "infinite_contract.mligo"
@@ -674,8 +721,14 @@ test_Snapshots = testGroup "Snapshots collection"
               }
 
         testWithSnapshots runData do
+          liftIO $ step "Skip tuple statement"
+          _ <- move Forward
+
           liftIO $ step "Skipping push"
-          _ <- moveTill Forward $ goesAfter (SrcPos (Pos 1) (Pos 0))
+          _ <- moveTill Forward $ goesAfter (SrcLoc 1 0)
+
+          liftIO $ step "Skipping \"ExpressionPreviewEvent\""
+          _ <- moveTill Forward $ goesAfter (SrcLoc 1 0)
 
           liftIO $ step "Checking comparison result"
           do
@@ -728,7 +781,10 @@ test_Snapshots = testGroup "Snapshots collection"
 
       testWithSnapshots runData do
         void $ moveTill Forward $
-          goesAfter (SrcPos (Pos 4) (Pos 0))
+          goesAfter (SrcLoc 4 0)
+
+        -- Skip statement
+        void $ move Forward
 
         liftIO $ step [int||Extract variables|]
         checkSnapshot \snap -> do
@@ -749,12 +805,11 @@ test_Snapshots = testGroup "Snapshots collection"
             }
 
       testWithSnapshots runData do
-        moveTill Forward $
-          goesBetween (SrcPos (Pos 1) (Pos 0)) (SrcPos (Pos 2) (Pos 0))
+        moveTill Forward $ isAtLine 1
         liftIO $ step [int||Check stack frame names on entering "recursive"|]
         checkSnapshot ((@=?) ["recursive", "main"] . getStackFrameNames)
 
-        moveTill Forward $ goesAfter (SrcPos (Pos 4) (Pos 0))
+        moveTill Forward $ goesAfter (SrcLoc 4 0)
         liftIO $ step [int||Check that we have only "main" stack frame after leaving function|]
         checkSnapshot ((@=?) ["main"] . getStackFrameNames)
 
@@ -773,8 +828,7 @@ test_Snapshots = testGroup "Snapshots collection"
         liftIO $ step [int||Check that we have only one "main" stack frame|]
         checkSnapshot ((@=?) ["main"] . getStackFrameNames)
 
-        moveTill Forward $
-          goesBetween (SrcPos (Pos 1) (Pos 0)) (SrcPos (Pos 2) (Pos 0))
+        moveTill Forward $ isAtLine 2
         liftIO $ step [int||Check that we have "f" stack frame on entering local function|]
         checkSnapshot ((@=?) ["f", "main"] . getStackFrameNames)
 
@@ -788,13 +842,11 @@ test_Snapshots = testGroup "Snapshots collection"
             }
 
       testWithSnapshots runData do
-        moveTill Forward $
-          goesBetween (SrcPos (Pos 2) (Pos 0)) (SrcPos (Pos 3) (Pos 0))
+        moveTill Forward $ isAtLine 2
         liftIO $ step [int||Calling top level function "complex"|]
         checkSnapshot ((@=?) ["complex", "main"] . getStackFrameNames)
 
-        moveTill Forward $
-          goesBetween (SrcPos (Pos 0) (Pos 0)) (SrcPos (Pos 1) (Pos 0))
+        moveTill Forward $ isAtLine 0
         liftIO $ step [int||Calling function "add" from "complex"|]
         checkSnapshot ((@=?) ["add", "complex", "main"] . getStackFrameNames)
 
@@ -804,14 +856,16 @@ test_Snapshots = testGroup "Snapshots collection"
       let runData = ContractRunData
             { crdProgram = file
             , crdEntrypoint = Nothing
-            , crdParam = L.unpair @_ @_ @'[] L.# L.add @Integer @Integer
+            , crdParam = L.mkLambda $ L.unpair @_ @_ @'[] L.# L.add @Integer @Integer
             , crdStorage = 0 :: Integer
             }
 
       let runDataFailing = ContractRunData
             { crdProgram = file
             , crdEntrypoint = Nothing
-            , crdParam = L.drop L.# L.push [L.mt|Stick bugged lol|] L.# L.failWith :: '[(Integer, Integer)] L.:-> '[Integer]
+            , crdParam = L.mkLambda $
+                L.drop L.# L.push [L.mt|Stick bugged lol|] L.# L.failWith
+                  :: L.Lambda (Integer, Integer) Integer
             , crdStorage = 0 :: Integer
             }
 
@@ -839,7 +893,7 @@ test_Snapshots = testGroup "Snapshots collection"
       let dir = contractsDir </> "module_contracts"
       let file = dir </> "importer.mligo"
       let nestedFile = dir </> "imported.mligo"
-      let nestedFile2 = dir </> "imported2.ligo"
+      let nestedFile2 = dir </> "imported2.jsligo"
 
       let runData = ContractRunData
             { crdProgram = file
@@ -850,8 +904,13 @@ test_Snapshots = testGroup "Snapshots collection"
 
       testWithSnapshots runData do
         moveTill Forward $
-          goesBetween (SrcPos (Pos 8) (Pos 0)) (SrcPos (Pos 12) (Pos 0))
-          && matchesSrcType (N.SourcePath nestedFile)
+          goesBetween (SrcLoc 8 0) (SrcLoc 12 0)
+          && matchesSrcType (MSFile nestedFile)
+
+        -- Skip "lst" and "sum(...)"" statements
+        replicateM_ 2 do
+          void $ move Forward
+
         liftIO $ step [int||Check variables for "sum" snapshot|]
         checkSnapshot \case
           InterpretSnapshot
@@ -863,7 +922,7 @@ test_Snapshots = testGroup "Snapshots collection"
           snap -> unexpectedSnapshot snap
 
         moveTill Forward $
-          goesAfter (SrcPos (Pos 4) (Pos 0)) && matchesSrcType (N.SourcePath nestedFile2)
+          goesAfter (SrcLoc 5 0) && matchesSrcType (MSFile nestedFile2)
         liftIO $ step [int||Check variables for "strange" snapshot|]
         checkSnapshot \case
           InterpretSnapshot
@@ -872,7 +931,7 @@ test_Snapshots = testGroup "Snapshots collection"
                 , sfLoc = LigoRange file' _ _
                 } :| _
             } | file' == nestedFile2 ->
-                  getVariableNamesFromStackFrame stackFrame @~=? ["acc", "c", "b", "a"]
+                  getVariableNamesFromStackFrame stackFrame @~=? ["acc", "c", "b", "a", "i"]
           snap -> unexpectedSnapshot snap
 
   , testCaseSteps "Two \"main\" stack frames" \step -> do
@@ -886,7 +945,7 @@ test_Snapshots = testGroup "Snapshots collection"
 
       testWithSnapshots runData do
         moveTill Forward $
-          goesBetween (SrcPos (Pos 3) (Pos 0)) (SrcPos (Pos 5) (Pos 0))
+          goesBetween (SrcLoc 3 0) (SrcLoc 5 0)
         liftIO $ step [int||Check that we have two stack frames with "main" name|]
         checkSnapshot \case
           InterpretSnapshot
@@ -913,17 +972,16 @@ test_Snapshots = testGroup "Snapshots collection"
             }
 
       testWithSnapshots runData do
-        moveTill Forward $
-          goesBetween (SrcPos (Pos 0) (Pos 0)) (SrcPos (Pos 1) (Pos 0))
+        moveTill Forward $ isAtLine 0
 
         liftIO $ step [int||Check stack frames after entering "add5"|]
         checkSnapshot ((@=?) ["add", "add5", "main"] . getStackFrameNames)
 
-        moveTill Forward $ goesAfter (SrcPos (Pos 7) (Pos 0))
+        moveTill Forward $ goesAfter (SrcLoc 7 0)
         liftIO $ step [int||Check stack frames after leaving "add5"|]
         checkSnapshot ((@=?) ["main"] . getStackFrameNames)
 
-  , testCaseSteps "Paritally applied function inside top level function" \step -> do
+  , testCaseSteps "Partially applied function inside top level function" \step -> do
       let file = contractsDir </> "complex-apply.mligo"
       let runData = ContractRunData
             { crdProgram = file
@@ -933,13 +991,14 @@ test_Snapshots = testGroup "Snapshots collection"
             }
 
       testWithSnapshots runData do
-        moveTill Forward $
-          goesBetween (SrcPos (Pos 1) (Pos 0)) (SrcPos (Pos 2) (Pos 0))
+        -- Go to function call first.
+        moveTill Forward $ isAtLine 3
+        moveTill Forward $ isAtLine 1
 
         liftIO $ step [int||Go into "add5"|]
         checkSnapshot ((@=?) ["add", "add5", "myFunc", "main"] . getStackFrameNames)
 
-        moveTill Forward $ goesAfter (SrcPos (Pos 6) (Pos 0))
+        moveTill Forward $ goesAfter (SrcLoc 6 0)
 
         liftIO $ step [int||Leave "myFunc"|]
         checkSnapshot ((@=?) ["main"] . getStackFrameNames)
@@ -954,20 +1013,18 @@ test_Snapshots = testGroup "Snapshots collection"
             }
 
       testWithSnapshots runData do
-        moveTill Forward $
-          goesBetween (SrcPos (Pos 7) (Pos 0)) (SrcPos (Pos 8) (Pos 0))
+        moveTill Forward $ isAtLine 7
 
         liftIO $ step [int||Check stack frames for inner "sub"|]
         checkSnapshot ((@=?) ["sub", "f", "partApplied", "applyOp", "main"] . getStackFrameNames)
 
-        moveTill Forward $
-          goesBetween (SrcPos (Pos 5) (Pos 0)) (SrcPos (Pos 6) (Pos 0))
+        moveTill Forward $ isAtLine 5
 
         liftIO $ step [int||Check stack frames for inner "add"|]
         checkSnapshot ((@=?) ["add", "f", "partApplied", "applyOp", "main"] . getStackFrameNames)
 
         moveTill Forward $
-          goesAfter (SrcPos (Pos 12) (Pos 0))
+          goesAfter (SrcLoc 12 0)
 
         liftIO $ step [int||Leave "applyOp" functions|]
         checkSnapshot ((@=?) ["main"] . getStackFrameNames)
@@ -982,8 +1039,9 @@ test_Snapshots = testGroup "Snapshots collection"
             }
 
       testWithSnapshots runData do
-        moveTill Forward $
-          goesBetween (SrcPos (Pos 5) (Pos 0)) (SrcPos (Pos 6) (Pos 0))
+        -- Go to function call first.
+        moveTill Forward $ isAtLine 6
+        moveTill Forward $ isAtLine 5
 
         liftIO $ step [int||Check "sub" stack frames inside "lambdaFun"|]
 
@@ -991,8 +1049,7 @@ test_Snapshots = testGroup "Snapshots collection"
         -- but LIGO source mapper treats these "f"s from this contract as different.
         checkSnapshot ((@=?) ["sub", "f", "f", "apply", "lambdaFun", "main"] . getStackFrameNames)
 
-        moveTill Forward $
-          goesBetween (SrcPos (Pos 4) (Pos 0)) (SrcPos (Pos 5) (Pos 0))
+        moveTill Forward $ isAtLine 4
 
         liftIO $ step [int||Check "add" stack frames inside "lambdaFun"|]
 
@@ -1000,7 +1057,7 @@ test_Snapshots = testGroup "Snapshots collection"
         checkSnapshot ((@=?) ["add", "f", "f", "apply", "lambdaFun", "main"] . getStackFrameNames)
 
         moveTill Forward $
-          goesAfter (SrcPos (Pos 7) (Pos 0))
+          goesAfter (SrcLoc 7 0)
 
         liftIO $ step [int||Leave "lambdaFun"|]
         checkSnapshot ((@=?) ["main"] . getStackFrameNames)
@@ -1015,8 +1072,7 @@ test_Snapshots = testGroup "Snapshots collection"
             }
 
       testWithSnapshots runData do
-        moveTill Forward $
-          goesBetween (SrcPos (Pos 7) (Pos 0)) (SrcPos (Pos 8) (Pos 0))
+        moveTill Forward $ isAtLine 7
 
         liftIO $ step [int||Check stack frames in inner "act"|]
 
@@ -1024,7 +1080,7 @@ test_Snapshots = testGroup "Snapshots collection"
         checkSnapshot ((@=?) ["act", "f", "f", "applyOnce", "applyTwice", "applyThrice", "apply", "main"] . getStackFrameNames)
 
         moveTill Forward $
-          goesAfter (SrcPos (Pos 10) (Pos 0))
+          goesAfter (SrcLoc 10 0)
 
         liftIO $ step [int||Check stack frames after leaving "act"|]
         checkSnapshot ((@=?) ["main"] . getStackFrameNames)
@@ -1073,19 +1129,7 @@ test_Snapshots = testGroup "Snapshots collection"
       testWithSnapshots runData do
         -- Go to list
         void $ moveTill Forward $
-          goesAfter (SrcPos (Pos 5) (Pos 0))
-
-        move Forward
-
-        liftIO $ step [int||Check that we skipped constant evaluations|]
-        checkSnapshot \case
-          InterpretSnapshot
-            { isStackFrames = StackFrame
-                { sfLoc = LigoRange _ (LigoPosition 6 56) (LigoPosition 6 58)
-                } :| []
-            , isStatus = InterpretRunning EventExpressionPreview
-            } -> pass
-          snap -> unexpectedSnapshot snap
+          goesAfter (SrcLoc 5 0)
 
         moveTill Forward $ FrozenPredicate $ pure False
 
@@ -1093,14 +1137,729 @@ test_Snapshots = testGroup "Snapshots collection"
         checkSnapshot \case
           InterpretSnapshot
             { isStackFrames = StackFrame
-                { sfLoc = LigoRange _ (LigoPosition 6 56) (LigoPosition 6 58)
-                , sfName = "failwith$1"
+                { sfLoc = LigoRange _ (LigoPosition 1 37) (LigoPosition 1 52)
+                , sfName = "failwith"
                 } :|
+                  StackFrame
+                    { sfName = "failwith"
+                    }
+                  :
                   StackFrame
                     { sfName = "unsafeCompute"
                     }
                   : _
             , isStatus = InterpretFailed _
+            } -> pass
+          snap -> unexpectedSnapshot snap
+
+  , testGroup "Complex variable types"
+    [ testCaseSteps "Record type" \step -> do
+        let file = contractsDir </> "complex-storage.mligo"
+        let runData = ContractRunData
+              { crdProgram = file
+              , crdEntrypoint = Nothing
+              , crdParam = ()
+              , crdStorage = ((0, 0), [mt|""|]) :: ((Integer, Natural), MText)
+              }
+
+        testWithSnapshots runData do
+          -- Skip arguments
+          void $ move Forward
+
+          let expectedType = LigoTypeResolved $ mkRecordType
+                [ ("a", intType')
+                , ("b", mkSimpleConstantType "nat")
+                , ("c", mkSimpleConstantType "string")
+                ]
+
+          liftIO $ step "Check record type"
+          checkSnapshot \case
+            InterpretSnapshot
+              { isStackFrames = StackFrame
+                  { sfStack =
+                      [ StackItem
+                          { siLigoDesc = LigoStackEntry LigoExposedStackEntry
+                              { leseType = typ
+                              }
+                          }
+                      ]
+                  } :| _
+              } | typ == expectedType -> pass
+            snap -> unexpectedSnapshot snap
+
+    , testCaseSteps "Sum type" \step -> do
+        let file = contractsDir </> "sum-type.mligo"
+        let runData = ContractRunData
+              { crdProgram = file
+              , crdEntrypoint = Nothing
+              , crdParam = Left 42 :: Either Integer ()
+              , crdStorage = 0 :: Integer
+              }
+
+        testWithSnapshots runData do
+          let expectedType = LigoTypeResolved $ mkSumType
+                [ ("Variant1", intType')
+                , ("Variant2", unitType')
+                ]
+
+          liftIO $ step "Check sum type"
+          checkSnapshot \case
+            InterpretSnapshot
+              { isStackFrames = StackFrame
+                  { sfStack = _ :
+                      StackItem
+                        { siLigoDesc = LigoStackEntry LigoExposedStackEntry
+                            { leseType = typ
+                            }
+                        } : _
+                  } :| _
+              } | typ == expectedType -> pass
+            snap -> unexpectedSnapshot snap
+
+    , testCaseSteps "Function type" \step -> do
+        let file = contractsDir </> "complex-function-type.mligo"
+        let runData = ContractRunData
+              { crdProgram = file
+              , crdEntrypoint = Nothing
+              , crdParam = ()
+              , crdStorage = 0 :: Integer
+              }
+
+        testWithSnapshots runData do
+          let expectedType = LigoTypeResolved
+                $  intType'
+                ~> mkOptionType (mkSimpleConstantType "nat")
+                ~> mkPairType intType' (mkSimpleConstantType "string")
+                ~> intType'
+
+          liftIO $ step "Check function type"
+          checkSnapshot \case
+            InterpretSnapshot
+              { isStackFrames = StackFrame
+                  { sfStack = _ :
+                      StackItem
+                        { siLigoDesc = LigoStackEntry LigoExposedStackEntry
+                            { leseType = typ
+                            }
+                        } : _
+                  } :| _
+              } | typ == expectedType -> pass
+            snap -> unexpectedSnapshot snap
+
+    , testCaseSteps "Polymorphic functions have types" \step -> do
+        let file = contractsDir </> "polymorphic-function.mligo"
+        let runData = ContractRunData
+              { crdProgram = file
+              , crdEntrypoint = Nothing
+              , crdParam = ()
+              , crdStorage = 0 :: Integer
+              }
+
+        testWithSnapshots runData do
+          let expectedIntType = LigoTypeResolved (intType' ~> intType')
+
+          let operationList = mkConstantType "List" [mkSimpleConstantType "Operation"]
+          let expectedOperationListType = LigoTypeResolved (operationList ~> operationList)
+
+          liftIO $ step "Check types for monomorphed functions"
+          checkSnapshot \case
+            InterpretSnapshot
+              { isStackFrames = StackFrame
+                  { sfStack = _ :
+                      StackItem
+                        { siLigoDesc = LigoStackEntry LigoExposedStackEntry
+                            { leseType = typ1
+                            }
+                        } :
+                      StackItem
+                        { siLigoDesc = LigoStackEntry LigoExposedStackEntry
+                            { leseType = typ2
+                            }
+                        }
+                      : _
+                  } :| _
+              } | typ1 == expectedOperationListType && typ2 == expectedIntType -> pass
+            snap -> unexpectedSnapshot snap
+
+    , testCaseSteps "Nested structures have types" \step -> do
+        let file = contractsDir </> "nested-structure-type.mligo"
+        let runData = ContractRunData
+              { crdProgram = file
+              , crdEntrypoint = Nothing
+              , crdParam = ()
+              , crdStorage = 0 :: Integer
+              }
+
+        testWithSnapshots runData do
+          moveTill Forward $
+            isAtLine 15
+
+          let expectedComplexType = LigoTypeResolved
+                $ mkRecordType
+                    [ ("simple_field", mkSimpleConstantType "String")
+                    , ("complex_field"
+                      , mkRecordType
+                          [ ("inner_field1", intType')
+                          , ("inner_field2", intType')
+                          ]
+                      )
+                    ]
+
+          liftIO $ step "Check type for nested structure"
+          checkSnapshot \case
+            InterpretSnapshot
+              { isStackFrames = StackFrame
+                  { sfStack = _ :
+                      StackItem
+                        { siLigoDesc = LigoStackEntry LigoExposedStackEntry
+                            { leseType = typ
+                            }
+                        } : _
+                  } :| _
+              } | typ == expectedComplexType -> pass
+            snap -> unexpectedSnapshot snap
+
+    , testCaseSteps "Sum with nested record type" \step -> do
+        let file = contractsDir </> "sum-with-record-type.mligo"
+        let runData = ContractRunData
+              { crdProgram = file
+              , crdEntrypoint = Nothing
+              , crdParam = ()
+              , crdStorage = 0 :: Integer
+              }
+
+        testWithSnapshots runData do
+          let expectedType = LigoTypeResolved
+                $ mkSumType
+                    [ ( "A"
+                      , mkRecordType
+                          [ ("a1", intType')
+                          , ("a2", mkSimpleConstantType "String")
+                          ]
+                      )
+                    , ( "B"
+                      , mkRecordType
+                          [ ("b1", mkSimpleConstantType "String")
+                          , ("b2", intType')
+                          ]
+                      )
+                    ]
+
+          void $ moveTill Forward $
+            goesAfter (SrcLoc 7 0)
+
+          liftIO $ step "Check type for sum type with inner record"
+          checkSnapshot \case
+            InterpretSnapshot
+              { isStackFrames = StackFrame
+                  { sfStack = _ :
+                      StackItem
+                        { siLigoDesc = LigoStackEntry LigoExposedStackEntry
+                            { leseType = typ
+                            }
+                        } : _
+                  } :| _
+              } | typ == expectedType -> pass
+            snap -> unexpectedSnapshot snap
+
+    , testCaseSteps "Never type" \step -> do
+        let file = contractsDir </> "never-type.mligo"
+        let runData = ContractRunData
+              { crdProgram = file
+              , crdEntrypoint = Nothing
+              , crdParam = ()
+              , crdStorage = 0 :: Integer
+              }
+
+        testWithSnapshots runData do
+          let expectedType = LigoTypeResolved (unitType' ~> mkSimpleConstantType "Never")
+
+          liftIO $ step "Check \"never\" function type"
+          checkSnapshot \case
+            InterpretSnapshot
+              { isStackFrames = StackFrame
+                  { sfStack = _ :
+                      StackItem
+                        { siLigoDesc = LigoStackEntry LigoExposedStackEntry
+                            { leseType = typ
+                            }
+                        } : _
+                  } :| _
+              } | typ == expectedType -> pass
+            snap -> unexpectedSnapshot snap
+
+    , testCaseSteps "Some types from stdlib" \step -> do
+        let file = contractsDir </> "types-from-stdlib.mligo"
+        let runData = ContractRunData
+              { crdProgram = file
+              , crdEntrypoint = Nothing
+              , crdParam = ()
+              , crdStorage = 0 :: Integer
+              }
+
+        testWithSnapshots runData do
+          let bytesType = LigoTypeResolved (mkSimpleConstantType "Bytes")
+
+          let setType = LigoTypeResolved
+                $ mkConstantType "Set" [intType']
+
+          let mapType = LigoTypeResolved
+                $ mkConstantType "Map"
+                    [ intType'
+                    , mkSimpleConstantType "String"
+                    ]
+
+          void $ moveTill Forward
+            $ isAtLine 7
+
+          liftIO $ step "Check some types from stdlib"
+          checkSnapshot \case
+            InterpretSnapshot
+              { isStackFrames = StackFrame
+                  { sfStack = _ :
+                      StackItem
+                        { siLigoDesc = LigoStackEntry LigoExposedStackEntry
+                            { leseType = typ1
+                            }
+                        } :
+                      StackItem
+                        { siLigoDesc = LigoStackEntry LigoExposedStackEntry
+                            { leseType = typ2
+                            }
+                        } :
+                      StackItem
+                        { siLigoDesc = LigoStackEntry LigoExposedStackEntry
+                            { leseType = typ3
+                            }
+                        } : _
+                  } :| _
+              } | typ1 == mapType
+                , typ2 == setType
+                , typ3 == bytesType -> pass
+            snap -> unexpectedSnapshot snap
+
+    , testCaseSteps "Polymorphic values have types" \step -> do
+        let file = contractsDir </> "polymorphic-types.mligo"
+        let runData = ContractRunData
+              { crdProgram = file
+              , crdEntrypoint = Nothing
+              , crdParam = ()
+              , crdStorage = 0 :: Integer
+              }
+
+        testWithSnapshots runData do
+          let intOptionType = LigoTypeResolved (mkOptionType intType')
+          let stringOptionType = LigoTypeResolved (mkOptionType $ mkSimpleConstantType "String")
+
+          void $ moveTill Forward
+            $ goesAfter (SrcLoc 4 0)
+
+          liftIO $ step "Check monomorphed \"option\" type"
+          checkSnapshot \case
+            InterpretSnapshot
+              { isStackFrames = StackFrame
+                  { sfStack =
+                      StackItem
+                        { siLigoDesc = LigoStackEntry LigoExposedStackEntry
+                            { leseType = typ1
+                            }
+                        } :
+                      StackItem
+                        { siLigoDesc = LigoStackEntry LigoExposedStackEntry
+                            { leseType = typ2
+                            }
+                        } : _
+                  } :| _
+              } | typ1 == stringOptionType
+                , typ2 == intOptionType -> pass
+            snap -> unexpectedSnapshot snap
+
+    , testCaseSteps "Shadowed types" \step -> do
+        let file = contractsDir </> "shadowed-types.mligo"
+        let runData = ContractRunData
+              { crdProgram = file
+              , crdEntrypoint = Nothing
+              , crdParam = ()
+              , crdStorage = 0 :: Integer
+              }
+
+        testWithSnapshots runData do
+          void $ move Forward
+
+          -- Note that at this moment we're showing raw types.
+          -- It means that "type string = int" will have
+          -- "int" raw type.
+          liftIO $ step "Check shadowed type"
+          checkSnapshot \case
+            InterpretSnapshot
+              { isStackFrames = StackFrame
+                  { sfStack =
+                      StackItem
+                        { siLigoDesc = LigoStackEntry LigoExposedStackEntry
+                            { leseType = typ
+                            }
+                        } : _
+                  } :| _
+              } | typ == intType -> pass
+            snap -> unexpectedSnapshot snap
+
+    , testCaseSteps "Types from Tezos" \step -> do
+        let file = contractsDir </> "tezos-types.mligo"
+        let runData = ContractRunData
+              { crdProgram = file
+              , crdEntrypoint = Nothing
+              , crdParam = ()
+              , crdStorage = 0 :: Integer
+              }
+
+        testWithSnapshots runData do
+          let tezType = LigoTypeResolved (mkSimpleConstantType "Tez")
+          let timestampType = LigoTypeResolved (mkSimpleConstantType "Timestamp")
+          let addressType = LigoTypeResolved (mkSimpleConstantType "Address")
+          let saplingFooType = LigoTypeResolved
+                $  unitType'
+                ~> mkConstantType "Sapling_state"
+                    [ mkTypeExpression $ LTCSingleton (LTLVInt 42)
+                    ]
+
+          void $ moveTill Forward
+            $ isAtLine 7
+
+          liftIO $ step "Check types from Tezos module"
+          checkSnapshot \case
+            InterpretSnapshot
+              { isStackFrames = StackFrame
+                  { sfStack =
+                      StackItem
+                        { siLigoDesc = LigoStackEntry LigoExposedStackEntry
+                            { leseType = typ1
+                            }
+                        } :
+                      StackItem
+                        { siLigoDesc = LigoStackEntry LigoExposedStackEntry
+                            { leseType = typ2
+                            }
+                        } :
+                      StackItem
+                        { siLigoDesc = LigoStackEntry LigoExposedStackEntry
+                            { leseType = typ3
+                            }
+                        } :
+                      StackItem
+                        { siLigoDesc = LigoStackEntry LigoExposedStackEntry
+                            { leseType = typ4
+                            }
+                        } : _
+                  } :| _
+              } | typ1 == saplingFooType
+                , typ2 == addressType
+                , typ3 == timestampType
+                , typ4 == tezType -> pass
+            snap -> unexpectedSnapshot snap
+
+    , testCaseSteps "Layout comb types" \step -> do
+        let file = contractsDir </> "layout-comb-types.mligo"
+        let runData = ContractRunData
+              { crdProgram = file
+              , crdEntrypoint = Nothing
+              , crdParam = ()
+              , crdStorage = 0 :: Integer
+              }
+
+        testWithSnapshots runData do
+          let combedType = LigoTypeResolved
+                $ mkRecordType
+                    [ ("a", intType')
+                    , ("b", mkSimpleConstantType "Nat")
+                    , ("c", mkSimpleConstantType "String")
+                    ]
+
+          void $ moveTill Forward
+            $ isAtLine 9
+
+          liftIO $ step "Check combed type"
+          checkSnapshot \case
+            InterpretSnapshot
+              { isStackFrames = StackFrame
+                  { sfStack = _ :
+                      StackItem
+                        { siLigoDesc = LigoStackEntry LigoExposedStackEntry
+                            { leseType = typ
+                            }
+                        } : _
+                  } :| _
+              } | typ == combedType -> pass
+            snap -> unexpectedSnapshot snap
+    ]
+
+  , testCaseSteps "Builtin functions have locations" \step -> do
+      let file = contractsDir </> "builtins-locations.mligo"
+      let runData = ContractRunData
+            { crdProgram = file
+            , crdEntrypoint = Nothing
+            , crdParam = ()
+            , crdStorage = 10 :: Integer
+            }
+
+      testWithSnapshots runData do
+        -- Skip first statement
+        void $ move Forward
+
+        liftIO $ step "Check location for \"is_nat\""
+        checkSnapshot \case
+          InterpretSnapshot
+              { isStatus = InterpretRunning EventExpressionPreview{}
+              , isStackFrames = StackFrame
+                  { sfLoc = LigoRange _ (LigoPosition 2 12) (LigoPosition 2 20)
+                  } :| _
+              } -> pass
+          snap -> unexpectedSnapshot snap
+
+        moveTill Forward $
+          goesAfter (SrcLoc 2 0)
+
+        -- Skip statement
+        void $ move Forward
+
+        liftIO $ step "Check location for \"assert\""
+        checkSnapshot \case
+          InterpretSnapshot
+              { isStatus = InterpretRunning EventExpressionPreview{}
+              , isStackFrames = StackFrame
+                  { sfLoc = LigoRange _ (LigoPosition 3 11) (LigoPosition 3 22)
+                  } :| _
+              } -> pass
+          snap -> unexpectedSnapshot snap
+
+        moveTill Forward $
+          goesAfter (SrcLoc 8 0)
+
+        -- Skip statement
+        void $ move Forward
+
+        liftIO $ step "Check location for \"List.fold\""
+        checkSnapshot \case
+          InterpretSnapshot
+              { isStatus = InterpretRunning EventExpressionPreview{}
+              , isStackFrames = StackFrame
+                  { sfLoc = LigoRange _ (LigoPosition 9 12) (LigoPosition 9 63)
+                  } :| _
+              } -> pass
+          snap -> unexpectedSnapshot snap
+
+        -- Skip list
+        replicateM_ 3 do
+          move Forward
+
+        liftIO $ step "Check location for lambda inside \"List.fold\""
+        checkSnapshot \case
+          InterpretSnapshot
+              { isStatus = InterpretRunning EventExpressionPreview{}
+              , isStackFrames = StackFrame
+                  { sfLoc = LigoRange _ (LigoPosition 9 23) (LigoPosition 9 50)
+                  } :| _
+              } -> pass
+          snap -> unexpectedSnapshot snap
+
+        void $ move Forward
+        void $ move Forward
+
+        replicateM_ 3 do
+          let loc = LigoRange file (LigoPosition 9 41) (LigoPosition 9 50)
+
+          liftIO $ step "Aux function body in \"fold\" is statement"
+          checkSnapshot \case
+            InterpretSnapshot
+              { isStatus = InterpretRunning EventFacedStatement
+              , isStackFrames = StackFrame
+                  { sfLoc = loc'
+                  } :| _
+              } | loc == loc' -> pass
+            snap -> unexpectedSnapshot snap
+
+          void $ move Forward
+
+          checkSnapshot \case
+            InterpretSnapshot
+              { isStatus = InterpretRunning EventExpressionEvaluated{}
+              , isStackFrames = StackFrame
+                  { sfLoc = loc'
+                  } :| _
+              } | loc' == loc -> pass
+            snap -> unexpectedSnapshot snap
+
+          void $ move Forward
+
+  , testCaseSteps "Unit value is skipped" \step -> do
+      let file = contractsDir </> "contract-with-unit.mligo"
+      let runData = ContractRunData
+            { crdProgram = file
+            , crdEntrypoint = Nothing
+            , crdParam = ()
+            , crdStorage = 0 :: Integer
+            }
+
+      testWithSnapshots runData do
+        liftIO $ step [int||Check that we have a statement with unit value|]
+        checkSnapshot \case
+          InterpretSnapshot
+            { isStatus = InterpretRunning EventFacedStatement
+            , isStackFrames = StackFrame
+                { sfLoc = LigoRange file' (LigoPosition 2 2) (LigoPosition 2 17)
+                } :| _
+            } | file' == file -> pass
+          snap -> unexpectedSnapshot snap
+
+        void $ move Forward
+
+        liftIO $ step [int||Check that we skipped unit evaluation|]
+        checkSnapshot \case
+          InterpretSnapshot
+            { isStatus = InterpretRunning EventExpressionPreview{}
+            , isStackFrames = StackFrame
+                { sfLoc = LigoRange file' (LigoPosition 2 15) (LigoPosition 2 17)
+                } :| _
+            } | file' == file -> assertFailure "Unit is evaluated"
+          _ -> pass
+
+  , testGroup "Statement locations"
+    let
+      getStatementLocations :: ContractRunData -> IO [LigoRange]
+      getStatementLocations runData = do
+        let getLocations :: NonEmpty (InterpretSnapshot u) -> [LigoRange]
+            getLocations =
+                  NE.filter
+                    do \InterpretSnapshot{..} -> isStatus == InterpretRunning EventFacedStatement
+              >>> toListOf (each . isStackFramesL . ix 0 . sfLocL)
+
+        (_, getLocations . coerce -> locs) <- mkSnapshotsFor runData
+        pure locs
+    in
+    [ testCase "Last statement in function" do
+        let file = contractsDir </> "last-statement-in-function.mligo"
+        let runData = ContractRunData
+              { crdProgram = file
+              , crdEntrypoint = Nothing
+              , crdParam = ()
+              , crdStorage = 0 :: Integer
+              }
+
+        (getStatementLocations runData) @@?
+          (  elem (LigoRange file (LigoPosition 2 2) (LigoPosition 2 28))
+          )
+
+    , testCase "Last statement in let-in" do
+        let file = contractsDir </> "last-statement-in-let-in.mligo"
+        let runData = ContractRunData
+              { crdProgram = file
+              , crdEntrypoint = Nothing
+              , crdParam = ()
+              , crdStorage = 0 :: Integer
+              }
+
+        (getStatementLocations runData) @@?
+          (  elem (LigoRange file (LigoPosition 4 2) (LigoPosition 4 32))
+          && (not ... elem) (LigoRange file (LigoPosition 3 2) (LigoPosition 4 32))
+          )
+
+    , testCase "Statement in match branch" do
+        let file = contractsDir </> "statement-in-match-branch.mligo"
+        let runData = ContractRunData
+              { crdProgram = file
+              , crdEntrypoint = Nothing
+              , crdParam = ()
+              , crdStorage = 0 :: Integer
+              }
+
+        (getStatementLocations runData) @@?
+          (  elem (LigoRange file (LigoPosition 5 16) (LigoPosition 5 21))
+          )
+
+    , testCase "Statements in if" do
+        let file = contractsDir </> "statements-in-if.mligo"
+        let runData1 = ContractRunData
+              { crdProgram = file
+              , crdEntrypoint = Nothing
+              , crdParam = ()
+              , crdStorage = 0 :: Integer
+              }
+
+        (getStatementLocations runData1) @@?
+          (  elem (LigoRange file (LigoPosition 2 13) (LigoPosition 2 19))
+          && elem (LigoRange file (LigoPosition 2 37) (LigoPosition 2 43))
+          )
+
+        let runData2 = ContractRunData
+              { crdProgram = file
+              , crdEntrypoint = Nothing
+              , crdParam = ()
+              , crdStorage = 15 :: Integer
+              }
+
+        (getStatementLocations runData2) @@?
+          (  elem (LigoRange file (LigoPosition 2 13) (LigoPosition 2 19))
+          && elem (LigoRange file (LigoPosition 2 25) (LigoPosition 2 31))
+          )
+
+    , testCase "Statements in case branch" do
+        let file = contractsDir </> "statements-in-case-branch.jsligo"
+        let runData1 = ContractRunData
+              { crdProgram = file
+              , crdEntrypoint = Nothing
+              , crdParam = [L.mt|Variant1|]
+              , crdStorage = 0 :: Integer
+              }
+
+        (getStatementLocations runData1) @@?
+          (  elem (LigoRange file (LigoPosition 5 6) (LigoPosition 5 17))
+          )
+
+        let runData2 = ContractRunData
+              { crdProgram = file
+              , crdEntrypoint = Nothing
+              , crdParam = [L.mt|Variant2|]
+              , crdStorage = 0 :: Integer
+              }
+
+        (getStatementLocations runData2) @@?
+          (  elem (LigoRange file (LigoPosition 8 6) (LigoPosition 8 17))
+          )
+    ]
+
+  , testCaseSteps "EventExpressionPreview is skipped after EventFacedStatement" \step -> do
+      let runData = ContractRunData
+            { crdProgram = contractsDir </> "evaluated-event-after-statement.mligo"
+            , crdEntrypoint = Nothing
+            , crdParam = ()
+            , crdStorage = 0 :: Integer
+            }
+
+      testWithSnapshots runData do
+        void $ moveTill Forward (isAtLine 3)
+        void $ moveTill Forward (isAtLine 0)
+
+        liftIO $ step "Check \"EventFacedStatement\" event"
+        checkSnapshot \case
+          InterpretSnapshot
+            { isStatus = InterpretRunning EventFacedStatement
+            , isStackFrames = StackFrame
+                { sfLoc = LigoRange _ (LigoPosition 1 35) (LigoPosition 1 40)
+                } :| _
+            } -> pass
+          snap -> unexpectedSnapshot snap
+
+        void $ move Forward
+
+        liftIO $ step
+          [int||Check that EventExpressionPreview is skipped and \
+          we go to EventExpressionEvaluated immediately|]
+
+        checkSnapshot \case
+          InterpretSnapshot
+            { isStatus = InterpretRunning EventExpressionEvaluated{}
+            , isStackFrames = StackFrame
+                { sfLoc = LigoRange _ (LigoPosition 1 35) (LigoPosition 1 40)
+                } :| _
             } -> pass
           snap -> unexpectedSnapshot snap
   ]
@@ -1135,7 +1894,7 @@ test_Contracts_are_sensible = reinsuring $ testCase "Contracts are sensible" do
 
       ligoMapper <- compileLigoContractDebug (fromMaybe "main" coEntrypoint) (contractsDir </> contractName)
 
-      (locations, _, _) <-
+      (locations, _, _, _) <-
         case readLigoMapper ligoMapper typesReplaceRules instrReplaceRules of
           Right v -> pure v
           Left err -> assertFailure $ pretty err
@@ -1143,13 +1902,13 @@ test_Contracts_are_sensible = reinsuring $ testCase "Contracts are sensible" do
       when coCheckSourceLocations do
         forM_ (getAllSourceLocations locations) \srcLoc@(SourceLocation loc _ _) -> do
           case loc of
-            SourcePath path ->
+            MSFile path ->
               -- Some paths can be empty in @SourceLocation@ because of some ligo issues.
               -- So, we want to check them for sensibility.
               when (path == "") do
                 assertFailure [int||Expected non-empty file name in loc #{srcLoc} in contract #{contractName}|]
-            LorentzContract ->
-              assertFailure [int||Unexpected "Lorentz contract" in loc #{srcLoc} in contract #{contractName}|]
+            _ ->
+              assertFailure [int||Unexpected source location in loc field of #{srcLoc} in contract #{contractName}|]
 
       when coCheckEntrypointsList do
         try @_ @SomeException (getAvailableEntrypoints (contractsDir </> contractName)) >>= \case
@@ -1168,7 +1927,13 @@ test_Contracts_are_sensible = reinsuring $ testCase "Contracts are sensible" do
       , ("poly", def & coCheckSourceLocationsL .~ False)
       , ("self", def & coCheckSourceLocationsL .~ False)
       , ("iterate-big-map", def & coCheckSourceLocationsL .~ False)
+      , ("big-map-storage", def & coCheckSourceLocationsL .~ False)
       , ("two-entrypoints", def & coEntrypointL ?~ "main1")
+      , ("if-no-else", def & coCheckSourceLocationsL .~ False) -- no filename at some locations
+      , ("statement-visiting", def & coCheckSourceLocationsL .~ False) -- no filename at some locations
+      , ("computations-in-list", def & coCheckSourceLocationsL .~ False) -- no filename at some locations
+      , ("complex-function-type", def & coCheckSourceLocationsL .~ False) -- no filename at some locations
+      , ("builtins-locations", def & coCheckSourceLocationsL .~ False) -- no filename at some locations
       ]
 
     -- Valid contracts that can't be used in debugger for some reason.
@@ -1176,7 +1941,7 @@ test_Contracts_are_sensible = reinsuring $ testCase "Contracts are sensible" do
     badContracts = combine contractsDir <$>
       [ "no-entrypoint.mligo" -- this file doesn't have any entrypoint
       , "module_contracts" </> "imported.mligo" -- this file doesn't have any entrypoint
-      , "module_contracts" </> "imported2.ligo" -- this file doesn't have any entrypoint
+      , "module_contracts" </> "imported2.jsligo" -- this file doesn't have any entrypoint
       , "malformed.mligo" -- incorrect contract
       , "dupped-ticket.mligo" -- illegal intentionally
       ]

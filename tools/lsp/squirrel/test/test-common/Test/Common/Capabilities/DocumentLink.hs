@@ -36,20 +36,20 @@ simplifyDocumentLink (DocumentLink _range _uri _ _) =
 simplifiedBLinks :: IO [SimpleDocumentLink]
 simplifiedBLinks = do
   contractsDir <- getContractsDir
-  pure [ ((0, 0), (1, 0), Just (contractsDir </> "B2/B2.ligo"))
+  pure [ ((0, 0), (1, 0), Just (contractsDir </> "B2/B2.jsligo"))
        ]
 
 simplifiedCLinks :: IO [SimpleDocumentLink]
 simplifiedCLinks = do
   contractsDir <- getContractsDir
-  pure [ ((0, 0), (1, 0), Just (contractsDir </> "C2.religo"))
+  pure [ ((0, 0), (1, 0), Just (contractsDir </> "C2.mligo"))
        , ((1, 0), (2, 0), Just (contractsDir </> "C3.mligo"))
        ]
 
 documentLinkBDriver :: forall impl. ScopeTester impl => Assertion
 documentLinkBDriver = do
   contractsDir <- getContractsDir
-  let inputFile = contractsDir </> "B1.ligo"
+  let inputFile = contractsDir </> "B1.jsligo"
   tree <- readContractWithScopes @impl inputFile
   symbols <- getDocumentLinks inputFile (getLIGO tree)
   target <- simplifiedBLinks

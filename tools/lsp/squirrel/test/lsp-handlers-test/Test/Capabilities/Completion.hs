@@ -1,15 +1,22 @@
 module Test.Capabilities.Completion
-  ( unit_completion
-  --, unit_completion_jsligo
+  ( test_completions
   ) where
 
+import Data.Default (def)
 import Language.LSP.Test
 import Language.LSP.Types (Position (..))
 import Language.LSP.Types.Lens (label)
 import System.FilePath ((</>))
 
-import Test.HUnit (Assertion)
+import AST (completionName, getNameCompletion)
+import AST.Scope
+import Config (_cScopingSystem)
 
+import Test.Tasty (TestTree, testGroup)
+import Test.Tasty.HUnit (testCase)
+
+import Test.Common.Capabilities.Completion (caseInfos)
+import Test.Common.Capabilities.Completion qualified as Common
 import Test.Common.Capabilities.Util qualified as Common (contractsDir)
 import Test.Common.FixedExpectations (shouldMatchList)
 import Test.Common.LSP (openLigoDoc, runHandlersTest)
@@ -17,27 +24,22 @@ import Test.Common.LSP (openLigoDoc, runHandlersTest)
 contractsDir :: FilePath
 contractsDir = Common.contractsDir </> "completion"
 
-unit_completion :: Assertion
-unit_completion = do
-  let filename = "type-attribute.ligo"
+mkTest :: Common.TestInfo -> TestTree
+mkTest Common.TestInfo{..} = testCase tiContract do
 
   completions <- runHandlersTest contractsDir $ do
-    doc <- openLigoDoc filename
-    getCompletions doc (Position 14 34)
+    doc <- openLigoDoc tiContract
+    getCompletions doc $ toPosition tiPosition
 
-  sort (fmap (^. label) completions) `shouldMatchList`
-    [ "id", "is_admin"
-    , "begin", "big_map", "contains", "function", "if", "in", "is", "list", "nil", "recursive", "skip", "while"
-    ]
+  fmap (^. label) completions `shouldMatchList`
+    map (getNameCompletion . completionName) tiExpected
 
--- FIXME: LIGO-797 (https://gitlab.com/ligolang/ligo/-/issues/1514)
---unit_completion_jsligo :: Assertion
---unit_completion_jsligo = do
---  let filename = "type-attribute.jsligo"
---
---  completions <- runHandlersTest contractsDir $ do
---    doc <- openLigoDoc filename
---    getCompletions doc (Position 12 32)
---
---  sort (fmap (^. label) completions) `shouldMatchList`
---    ["id", "if", "import", "is_admin", "switch", "while"]
+  where
+    toPosition (ln, col) = Position (ln - 1) (col - 1)
+
+test_completions :: TestTree
+test_completions = testGroup "Completion" $ map mkTest
+  case _cScopingSystem def of -- `runHandlersTest` use default config
+    FallbackScopes -> caseInfos @Fallback
+    CompilerScopes -> caseInfos @FromCompiler
+    StandardScopes -> caseInfos @Standard

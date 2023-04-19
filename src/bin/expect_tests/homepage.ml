@@ -21,29 +21,7 @@ let%expect_test _ =
     - test_increment exited with value (). |}]
 
 let%expect_test _ =
-  run_ligo_good [ "run"; "test"; base "pascaligo.ligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test_initial_storage exited with value ().
-    - test_increment exited with value (). |}]
-
-let%expect_test _ =
-  run_ligo_good [ "run"; "test"; base "reasonligo.religo" ];
-  [%expect
-    {|
-    Reasonligo is depreacted, support will be dropped in a few versions.
-
-    Reasonligo is depreacted, support will be dropped in a few versions.
-
-    Reasonligo is depreacted, support will be dropped in a few versions.
-
-    Everything at the top-level was executed.
-    - test_initial_storage exited with value ().
-    - test_increment exited with value (). |}]
-
-let%expect_test _ =
-  run_ligo_good [ "compile"; "contract"; base "cameligo.mligo" ];
+  run_ligo_good [ "compile"; "contract"; base "cameligo.mligo"; "-m"; "IncDec" ];
   [%expect
     {|
     { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
@@ -54,37 +32,9 @@ let%expect_test _ =
              PAIR } } |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile"; "contract"; base "jsligo.jsligo" ];
+  run_ligo_good [ "compile"; "contract"; base "jsligo.jsligo"; "-m"; "IncDec" ];
   [%expect
     {|
-    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
-      storage int ;
-      code { UNPAIR ;
-             IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int 0 } ;
-             NIL operation ;
-             PAIR } } |}]
-
-let%expect_test _ =
-  run_ligo_good [ "compile"; "contract"; base "pascaligo.ligo" ];
-  [%expect
-    {|
-    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
-      storage int ;
-      code { UNPAIR ;
-             IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int 0 } ;
-             NIL operation ;
-             PAIR } } |}]
-
-let%expect_test _ =
-  run_ligo_good [ "compile"; "contract"; base "reasonligo.religo" ];
-  [%expect
-    {|
-    Reasonligo is depreacted, support will be dropped in a few versions.
-
-    Reasonligo is depreacted, support will be dropped in a few versions.
-
-    Reasonligo is depreacted, support will be dropped in a few versions.
-
     { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
       storage int ;
       code { UNPAIR ;

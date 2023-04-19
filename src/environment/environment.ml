@@ -6,61 +6,17 @@ module Protocols = Protocols
 (* This is an env use by repl and build *)
 (* Environment records declarations already seen in reverse orders. Use for different kind of processes *)
 type t = program
+type signature = Ast_typed.signature
 
-let pp ppf m = PP.module_ ppf @@ m
 let loc = Location.env
-
-let add_module
-    :  ?public:unit -> ?hidden:unit -> Ligo_prim.Module_var.t -> Ast_typed.module_ -> t
-    -> t
-  =
- fun ?public ?hidden module_binder module_ env ->
-  let module_ = Location.wrap ~loc @@ Module_expr.M_struct module_ in
-  let new_d =
-    Location.wrap ~loc
-    @@ D_module
-         { module_binder
-         ; module_
-         ; module_attr =
-             { public = Option.is_some public; hidden = Option.is_some hidden }
-         }
-  in
-  new_d :: env
-
-
 let add_declaration decl env = decl :: env
 let append env (program : program) : t = List.rev_append program env
 let fold ~f ~init (env : t) = List.fold ~f ~init (List.rev env)
-let foldi ~f ~init (env : t) = List.foldi ~f ~init (List.rev env)
 
 (* Artefact for build system *)
 type core = Ast_core.module_
 
-let add_core_module ?public ?hidden : Module_var.t -> Ast_core.module_ -> core -> core =
- fun module_binder module_ env ->
-  let module_ = Location.wrap ~loc @@ Module_expr.M_struct module_ in
-  let new_d =
-    Location.wrap ~loc
-    @@ Ast_core.D_module
-         { module_binder
-         ; module_
-         ; module_attr =
-             { public = Option.is_some public; hidden = Option.is_some hidden }
-         }
-  in
-  new_d :: env
-
-
-let to_module (env : t) : module_ = List.rev env
 let to_program (env : t) : program = List.rev env
-
-let append_core (env : core) (program : Ast_core.program) : core =
-  List.rev_append program env
-
-
-let init_core program = List.rev program
-let to_core_module env = List.rev env
-let to_core_program (env : core) : S.program = List.rev env
 
 (* This is an stdlib *)
 let star = Kind.Type
@@ -69,13 +25,11 @@ let star = Kind.Type
   Make sure all the type value laoded in the environment have a `Ast_core` value attached to them (`type_meta` field of `type_expression`)
 *)
 let basic_types : (Type_var.t * type_expression) list =
-  [ v_bool ~loc, t_bool ~loc ()
-  ; v_string ~loc, t_string ~loc ()
+  [ v_string ~loc, t_string ~loc ()
   ; v_bytes ~loc, t_bytes ~loc ()
   ; v_int ~loc, t_int ~loc ()
   ; v_nat ~loc, t_nat ~loc ()
   ; v_unit ~loc, t_unit ~loc ()
-  ; v_option ~loc, t_option_abst ~loc ()
   ]
 
 
@@ -113,12 +67,16 @@ let michelson_base : (Type_var.t * type_expression) list =
   ; v_external_u_ediv ~loc, t_abstraction2 ~loc (External "u_ediv") star star
   ; v_external_and ~loc, t_abstraction2 ~loc (External "and") star star
   ; v_external_u_and ~loc, t_abstraction2 ~loc (External "u_and") star star
+  ; v_external_map_find_opt ~loc, t_abstraction2 ~loc (External "map_find_opt") star star
+  ; v_external_map_add ~loc, t_abstraction3 ~loc (External "map_add") star star star
+  ; v_external_map_remove ~loc, t_abstraction2 ~loc (External "map_remove") star star
+  ; ( v_external_map_remove_value ~loc
+    , t_abstraction2 ~loc (External "map_remove_value") star star )
   ; v_tx_rollup_l2_address ~loc, t_tx_rollup_l2_address ~loc ()
   ]
 
 
 let base = basic_types @ michelson_base
-let kathmandu_types = base
 let lima_types = base
 
 let meta_ligo_types
@@ -133,6 +91,7 @@ let meta_ligo_types
     ; v_ast_contract ~loc, t_constant ~loc Ast_contract []
     ; v_gen ~loc, t_abstraction1 ~loc Gen star
     ; v_int64 ~loc, t_constant ~loc Int64 []
+    ; v_views ~loc, t_abstraction1 ~loc Views star
     ]
 
 
@@ -144,4 +103,3 @@ let of_list_type : (Type_var.t * type_expression) list -> t =
 
 let default : Protocols.t -> t = function
   | Protocols.Lima -> of_list_type (meta_ligo_types lima_types)
-  | Protocols.Kathmandu -> of_list_type (meta_ligo_types kathmandu_types)

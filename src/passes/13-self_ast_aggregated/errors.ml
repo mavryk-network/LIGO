@@ -5,6 +5,8 @@ let stage = "self_ast_aggregated"
 
 type self_ast_aggregated_error =
   [ `Self_ast_aggregated_expected_obj_ligo of Location.t
+  | `Self_ast_aggregated_expected_obj_ligo_type of
+    Location.t * Ast_aggregated.type_expression * Ast_aggregated.type_expression
   | `Self_ast_aggregated_polymorphism_unresolved of Location.t
   | `Self_ast_aggregated_monomorphisation_non_var of Ast_aggregated.expression
   | `Self_ast_aggregated_monomorphisation_non_for_all of Ast_aggregated.expression
@@ -17,6 +19,7 @@ type self_ast_aggregated_error =
   | `Self_ast_aggregated_bad_format_entrypoint_ann of string * Location.t
   | `Self_ast_aggregated_entrypoint_ann_not_literal of Location.t
   | `Self_ast_aggregated_emit_tag_not_literal of Location.t
+  | `Self_ast_aggregated_call_view_not_litstr of Location.t
   | `Self_ast_aggregated_unmatched_entrypoint of Location.t
   | `Self_ast_aggregated_corner_case of string
   | `Self_ast_aggregated_bad_single_arity of
@@ -29,26 +32,39 @@ type self_ast_aggregated_error =
 [@@deriving poly_constructor { prefix = "self_ast_aggregated_" }]
 
 let error_ppformat
-    :  display_format:string display_format -> Format.formatter
+    :  display_format:string display_format -> no_colour:bool -> Format.formatter
     -> self_ast_aggregated_error -> unit
   =
- fun ~display_format f a ->
+ fun ~display_format ~no_colour f a ->
   let name_tbl = Ast_aggregated.PP.With_name_tbl.Type_var_name_tbl.create () in
   let pp_type = Ast_aggregated.PP.With_name_tbl.pp_with_name_tbl ~tbl:name_tbl in
+  let snippet_pp = Snippet.pp ~no_colour in
   match display_format with
   | Human_readable | Dev ->
     (match a with
     | `Self_ast_aggregated_expected_obj_ligo loc ->
       Format.fprintf
         f
-        "@[<hv>%a@.Invalid usage of a Test primitive or type in object ligo.@]"
-        Snippet.pp
+        "@[<hv>%a@.Invalid usage of a Test primitive: cannot be translated to \
+         Michelson.@]"
+        snippet_pp
         loc
+    | `Self_ast_aggregated_expected_obj_ligo_type (loc, local, global) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Invalid usage of a Test type: %a in %a cannot be translated to \
+         Michelson.@]"
+        snippet_pp
+        loc
+        Ast_aggregated.PP.type_expression
+        local
+        Ast_aggregated.PP.type_expression
+        global
     | `Self_ast_aggregated_polymorphism_unresolved loc ->
       Format.fprintf
         f
         "@[<hv>%a@.Can't infer the type of this value, please add a type annotation.@]"
-        Snippet.pp
+        snippet_pp
         loc
     | `Self_ast_aggregated_monomorphisation_non_var expr
     | `Self_ast_aggregated_monomorphisation_non_for_all expr ->
@@ -63,7 +79,7 @@ let error_ppformat
         Format.fprintf
           f
           "@[<hv>%a@.Cannot monomorphise the expression.@]"
-          Snippet.pp
+          snippet_pp
           expr.location
     | `Self_ast_aggregated_monomorphisation_unexpected_type_abs (ty, expr) ->
       if Location.is_dummy_or_generated expr.location
@@ -81,7 +97,7 @@ let error_ppformat
           f
           "@[<hv>%a@.Cannot monomorphise the expression.@.The inferred type was \
            \"%a\".@.Hint: Try adding additional annotations.@]"
-          Snippet.pp
+          snippet_pp
           expr.location
           pp_type
           ty
@@ -90,16 +106,16 @@ let error_ppformat
         f
         "@[<hv>%a@.Free variable usage is not allowed in call to \
          Tezos.create_contract:@.%a@]"
-        Snippet.pp
+        snippet_pp
         e.location
-        Snippet.pp
+        snippet_pp
         (Value_var.get_location v)
     | `Self_ast_aggregated_create_contract_lambda (_cst, e) ->
       Format.fprintf
         f
         "@[<hv>%a@.Invalid usage of Tezos.create_contract.@.The first argument must be \
          an inline function. @]"
-        Snippet.pp
+        snippet_pp
         e.location
     | `Self_ast_aggregated_bad_format_entrypoint_ann (ep, loc) ->
       Format.fprintf
@@ -108,7 +124,7 @@ let error_ppformat
          expected:@.* \"%%bar\" is expected for entrypoint \"Bar\"@.* \"%%default\" when \
          no entrypoint is used.@.Valid characters in annotation: ('a' .. 'z' | 'A' .. \
          'Z' | '_' | '.' | '%%' | '@' | '0' .. '9')."
-        Snippet.pp
+        snippet_pp
         loc
         ep
     | `Self_ast_aggregated_entrypoint_ann_not_literal loc ->
@@ -116,20 +132,26 @@ let error_ppformat
         f
         "@[<hv>%a@.Invalid entrypoint value.@.The entrypoint value must be a string \
          literal. @]"
-        Snippet.pp
+        snippet_pp
+        loc
+    | `Self_ast_aggregated_call_view_not_litstr loc ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Invalid argument.@.View name must be a string literal. @]"
+        snippet_pp
         loc
     | `Self_ast_aggregated_emit_tag_not_literal loc ->
       Format.fprintf
         f
         "@[<hv>%a@.Invalid event tag.@.The tag must be a string literal. @]"
-        Snippet.pp
+        snippet_pp
         loc
     | `Self_ast_aggregated_unmatched_entrypoint loc ->
       Format.fprintf
         f
         "@[<hv>%a@.Invalid entrypoint value.@.The entrypoint value does not match a \
          constructor of the contract parameter. @]"
-        Snippet.pp
+        snippet_pp
         loc
     | `Self_ast_aggregated_corner_case desc ->
       Format.fprintf f "@[<hv>Internal error: %s @]" desc
@@ -137,7 +159,7 @@ let error_ppformat
       Format.fprintf
         f
         "@[<hv>%a@ Ill-formed \"%a\" expression@.One function argument is expected. @]"
-        Snippet.pp
+        snippet_pp
         e.location
         Constant.pp_constant'
         c
@@ -146,7 +168,7 @@ let error_ppformat
         f
         "@[<hv>%a@ Ill-formed \"%a\" expression.@.A list of pair parameters is \
          expected.@]"
-        Snippet.pp
+        snippet_pp
         e.location
         Constant.pp_constant'
         c
@@ -155,7 +177,7 @@ let error_ppformat
         f
         "@[<hv>%a@ Ill-formed \"%a\" expression.@.A list of pair parameters is \
          expected.@]"
-        Snippet.pp
+        snippet_pp
         e.location
         Constant.pp_constant'
         c)
@@ -166,7 +188,18 @@ let error_json : self_ast_aggregated_error -> Simple_utils.Error.t =
   let open Simple_utils.Error in
   match e with
   | `Self_ast_aggregated_expected_obj_ligo location ->
-    let message = "Invalid usage of a Test primitive or type in object ligo." in
+    let message = "Invalid usage of a Test primitive." in
+    let content = make_content ~message ~location () in
+    make ~stage ~content
+  | `Self_ast_aggregated_expected_obj_ligo_type (location, local, global) ->
+    let message =
+      Format.asprintf
+        "Invalid usage of a Test type: %a in %a cannot be translated to Michelson."
+        Ast_aggregated.PP.type_expression
+        local
+        Ast_aggregated.PP.type_expression
+        global
+    in
     let content = make_content ~message ~location () in
     make ~stage ~content
   | `Self_ast_aggregated_polymorphism_unresolved location ->
@@ -209,6 +242,12 @@ let error_json : self_ast_aggregated_error -> Simple_utils.Error.t =
     let message =
       Format.sprintf
         "Invalid entrypoint value.@.The entrypoint value must be a string literal."
+    in
+    let content = make_content ~message ~location () in
+    make ~stage ~content
+  | `Self_ast_aggregated_call_view_not_litstr location ->
+    let message =
+      Format.sprintf "Invalid argument.@.View name must be a string literal."
     in
     let content = make_content ~message ~location () in
     make ~stage ~content

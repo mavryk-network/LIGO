@@ -3,8 +3,12 @@
 module Test.Util
   ( -- * Shared helpers
     (</>)
+  , (<.>)
   , contractsDir
   , hasLigoExtension
+  , LSP.Lang (..)
+  , LSP.allLangs
+  , LSP.langExtension
   , pattern SomeLorentzValue
 
     -- * Test utilities
@@ -23,12 +27,15 @@ module Test.Util
   , HUnit.assertBool
   , getStackFrameNames
   , getVariableNamesFromStackFrame
+    -- * Generators
+  , genStepGranularity
     -- * Helpers for breakpoints
   , goToNextBreakpoint
   , goToPreviousBreakpoint
   , goesAfter
   , goesBefore
   , goesBetween
+  , isAtLine
     -- * Snapshot unilities
   , ContractRunData (..)
   , mkSnapshotsFor
@@ -43,12 +50,16 @@ module Test.Util
   , mkSnapshotsForImpl
   , dummyLoggingFunction
   -- * LIGO types construct helpers
+  , mkTypeExpression
   , mkConstantType
   , mkArrowType
+  , (~>)
   , mkRecordType
+  , mkSumType
     -- * Common snippets
   , mkSimpleConstantType
   , mkPairType
+  , mkOptionType
   , intType'
   , unitType'
   , intType
@@ -62,8 +73,11 @@ import Data.List.NonEmpty (singleton)
 import Data.Singletons (demote)
 import Data.Singletons.Decide (decideEquality)
 import Fmt (Buildable (..), blockListF', pretty)
-import System.FilePath (takeExtension, (</>))
+import Hedgehog (Gen)
+import Hedgehog.Gen qualified as Gen
+import System.FilePath (takeExtension, (<.>), (</>))
 import Test.HUnit (Assertion)
+import Test.HUnit.Lang qualified as HUnit
 import Test.Tasty.HUnit qualified as HUnit
 import Text.Interpolation.Nyan
 import Text.Interpolation.Nyan.Core (RMode (..))
@@ -71,19 +85,20 @@ import Text.Show qualified
 
 import Morley.Debugger.Core.Breakpoint
   (BreakpointSelector (NextBreak), continueUntilBreakpoint, reverseContinue)
+import Morley.Debugger.Core.Common (SrcLoc (..))
 import Morley.Debugger.Core.Navigate
   (DebuggerState (..), Direction (Backward, Forward), FrozenPredicate (FrozenPredicate),
-  HistoryReplay, HistoryReplayM, NavigableSnapshot (getExecutedPosition),
-  SourceLocation (SourceLocation), curSnapshot, evalWriterT, frozen, moveTill)
-import Morley.Michelson.ErrorPos (SrcPos)
+  HistoryReplay, HistoryReplayM, NavigableSnapshot (getExecutedPosition), SourceLocation,
+  SourceLocation' (SourceLocation), curSnapshot, evalWriterT, frozen, moveTill)
 import Morley.Michelson.Runtime.Dummy (dummyContractEnv)
 import Morley.Michelson.Typed (SingI (sing))
 import Morley.Michelson.Typed qualified as T
 import Morley.Util.Typeable
 
+import AST.Skeleton qualified as LSP
 import Cli.Json
   (LigoRange (LRVirtual), LigoTableField (..), LigoTypeArrow (..), LigoTypeConstant (..),
-  LigoTypeContent (LTCArrow, LTCConstant, LTCRecord), LigoTypeExpression (..),
+  LigoTypeContent (LTCArrow, LTCConstant, LTCRecord, LTCSum), LigoTypeExpression (..),
   LigoTypeTable (LigoTypeTable), _ltcInjection, _ltcParameters)
 
 import Language.LIGO.Debugger.CLI.Call
@@ -101,10 +116,7 @@ contractsDir = "test" </> "contracts"
 hasLigoExtension :: FilePath -> Bool
 hasLigoExtension file =
   takeExtension file `elem`
-    [ ".ligo"
-    , ".pligo"
-    , ".mligo"
-    , ".religo"
+    [ ".mligo"
     , ".jsligo"
     ]
 
@@ -190,11 +202,6 @@ infixl 0 @?==
     [int||Expected #tb{xs} to be a permutation of #tb{ys}|]
     (xs `isPermutationOf` ys)
 
-goesBetween
-  :: (MonadState (DebuggerState is) m, NavigableSnapshot is)
-  => SrcPos -> SrcPos -> FrozenPredicate (DebuggerState is) m
-goesBetween left right = goesAfter left && goesBefore right
-
 compareWithCurLocation
   :: (MonadState (DebuggerState (InterpretSnapshot u)) m)
   => SourceLocation -> FrozenPredicate (DebuggerState (InterpretSnapshot u)) m
@@ -203,15 +210,28 @@ compareWithCurLocation oldSrcLoc = FrozenPredicate $
 
 goesAfter
   :: (MonadState (DebuggerState is) m, NavigableSnapshot is)
-  => SrcPos -> FrozenPredicate (DebuggerState is) m
+  => SrcLoc -> FrozenPredicate (DebuggerState is) m
 goesAfter loc = FrozenPredicate $ fromMaybe False <$>
   ((\(SourceLocation _ startPos _) -> startPos >= loc) <<$>> getExecutedPosition)
 
 goesBefore
   :: (MonadState (DebuggerState is) m, NavigableSnapshot is)
-  => SrcPos -> FrozenPredicate (DebuggerState is) m
+  => SrcLoc -> FrozenPredicate (DebuggerState is) m
 goesBefore loc = FrozenPredicate $ fromMaybe False <$>
   ((\(SourceLocation _ _ endPos) -> endPos <= loc) <<$>> getExecutedPosition)
+
+goesBetween
+  :: (MonadState (DebuggerState is) m, NavigableSnapshot is)
+  => SrcLoc -> SrcLoc -> FrozenPredicate (DebuggerState is) m
+goesBetween left right = goesAfter left && goesBefore right
+
+isAtLine
+  :: (MonadState (DebuggerState is) m, NavigableSnapshot is)
+  => Word -> FrozenPredicate (DebuggerState is) m
+isAtLine line =
+  goesBetween
+    (SrcLoc line 0)
+    (SrcLoc (line + 1) 0)
 
 goToNextBreakpoint :: (HistoryReplay (InterpretSnapshot u) m) => m ()
 goToNextBreakpoint = do
@@ -231,7 +251,6 @@ data ContractRunData =
   forall param st.
   ( T.IsoValue param, T.IsoValue st
   , SingI (T.ToT param), SingI (T.ToT st)
-  , T.ForbidOr (T.ToT param)
   )
   => ContractRunData
   { crdProgram :: FilePath
@@ -250,7 +269,7 @@ mkSnapshotsForImpl
 mkSnapshotsForImpl logger (ContractRunData file mEntrypoint (param :: param) (st :: st)) = do
   let entrypoint = mEntrypoint ?: "main"
   ligoMapper <- compileLigoContractDebug entrypoint file
-  (exprLocs, T.SomeContract (contract@T.Contract{} :: T.Contract cp' st'), allFiles) <-
+  (exprLocs, T.SomeContract (contract@T.Contract{} :: T.Contract cp' st'), allFiles, lambdaLocs) <-
     case readLigoMapper ligoMapper typesReplaceRules instrReplaceRules of
       Right v -> pure v
       Left err -> HUnit.assertFailure $ pretty err
@@ -278,19 +297,20 @@ mkSnapshotsForImpl logger (ContractRunData file mEntrypoint (param :: param) (st
   parsedContracts <- parseContracts allFiles
 
   let statementLocs = getStatementLocs (getAllSourceLocations exprLocs) parsedContracts
-  let allLocs = getInterestingSourceLocations exprLocs <> statementLocs
+  let allLocs = getInterestingSourceLocations parsedContracts exprLocs <> statementLocs
 
   his <-
     collectInterpretSnapshots
       file
       (fromString entrypoint)
       contract
-      T.epcPrimitive
+      T.unsafeEpcCallRoot
       (T.toVal param)
       (T.toVal st)
       dummyContractEnv
       parsedContracts
       logger
+      lambdaLocs
 
   return (allLocs, his)
 
@@ -373,6 +393,15 @@ getVariableNamesFromStackFrame stackFrame = maybe unknownVariable pretty <$> var
   where
     variablesMb = stackFrame ^.. sfStackL . each . siLigoDescL . _LigoStackEntry . leseDeclarationL
 
+genStepGranularity :: Gen LigoStepGranularity
+genStepGranularity = Gen.frequency do
+  gran <- allLigoStepGranularities
+  weight <- pure case gran of
+    GExpExt -> 5
+    GExp -> 2
+    GStmt -> 3
+  return (weight, pure gran)
+
 mkTypeExpression :: LigoTypeContent -> LigoTypeExpression
 mkTypeExpression content = LigoTypeExpression
   { _lteTypeContent = content
@@ -397,12 +426,15 @@ mkArrowType domain codomain = mkTypeExpression $ LTCArrow $
     , _ltaType1 = domain
     }
 
-mkRecordType :: [(Text, LigoTypeExpression)] -> LigoTypeExpression
-mkRecordType record = map (second mkTableField) record
+(~>) :: LigoTypeExpression -> LigoTypeExpression -> LigoTypeExpression
+(~>) = mkArrowType
+
+infixr 2 ~>
+
+mkTypeTable :: [(Text, LigoTypeExpression)] -> LigoTypeTable
+mkTypeTable keyValues = map (second mkTableField) keyValues
   & HM.fromList
   & flip LigoTypeTable Null
-  & LTCRecord
-  & mkTypeExpression
   where
     mkTableField :: LigoTypeExpression -> LigoTableField
     mkTableField expr = LigoTableField
@@ -411,6 +443,16 @@ mkRecordType record = map (second mkTableField) record
       , _ltfAssociatedType = expr
       }
 
+mkRecordType :: [(Text, LigoTypeExpression)] -> LigoTypeExpression
+mkRecordType keyValues = mkTypeTable keyValues
+  & LTCRecord
+  & mkTypeExpression
+
+mkSumType :: [(Text, LigoTypeExpression)] -> LigoTypeExpression
+mkSumType keyValues = mkTypeTable keyValues
+  & LTCSum
+  & mkTypeExpression
+
 mkSimpleConstantType :: Text -> LigoTypeExpression
 mkSimpleConstantType typ = mkConstantType typ []
 
@@ -418,6 +460,12 @@ mkPairType :: LigoTypeExpression -> LigoTypeExpression -> LigoTypeExpression
 mkPairType fstElem sndElem = mkRecordType
   [ ("0", fstElem)
   , ("1", sndElem)
+  ]
+
+mkOptionType :: LigoTypeExpression -> LigoTypeExpression
+mkOptionType typ = mkSumType
+  [ ("Some", typ)
+  , ("None", unitType')
   ]
 
 intType' :: LigoTypeExpression

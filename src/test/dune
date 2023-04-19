@@ -1,9 +1,35 @@
 (ocamllex md)
 
 (executables
- (names test doc_test repl_test vendors_test contract_test get_scope_tests)
- (libraries simple-utils tezos-memory-proto-alpha ligo ligo.unix bos repl
-   interpreter alcotest tezos-utils tezos-crypto ligo_api))
+ (names
+  test
+  doc_test
+  repl_test
+  vendors_test
+  contract_test
+  get_scope_tests
+  pretty_printer_tests
+  lsp_test)
+ (libraries
+  simple-utils
+  tezos-memory-proto-alpha
+  ligo.main_interpreter.unix
+  ligo.api.unix
+  ligo_init
+  ligo
+  ligo.unix
+  bos
+  repl
+  interpreter
+  alcotest
+  tezos-utils
+  tezos-crypto
+  ligo_api
+  cli
+  prometheus
+  prometheus_format
+  prometheus_push
+  lsp_test_requests))
 
 (rule
  (alias doc-test)
@@ -32,6 +58,11 @@
  (action
   (run ./test.exe))
  (deps
+  (glob_files contracts/*)
+  (glob_files contracts/deep_pattern_matching/*)
+  (glob_files contracts/vars_consts/*)
+  (glob_files contracts/positive/*)
+  (glob_files contracts/negative/*)
   (glob_files preprocessor/*)))
 
 (rule
@@ -65,10 +96,6 @@
   (glob_files error-recovery/simple/cameligo/original/*.mligo)
   (glob_files error-recovery/simple/jsligo/*.jsligo)
   (glob_files error-recovery/simple/jsligo/original/*.jsligo)
-  (glob_files error-recovery/simple/pascaligo/*.ligo)
-  (glob_files error-recovery/simple/pascaligo/original/*.ligo)
-  (glob_files error-recovery/simple/reasonligo/*.religo)
-  (glob_files error-recovery/simple/reasonligo/original/*.religo)
   (glob_files error-recovery/multiple_errors/*))
  (action
   (run ./get_scope_tests.exe -q -c)))
@@ -83,10 +110,6 @@
   (glob_files error-recovery/simple/cameligo/original/*.mligo)
   (glob_files error-recovery/simple/jsligo/*.jsligo)
   (glob_files error-recovery/simple/jsligo/original/*.jsligo)
-  (glob_files error-recovery/simple/pascaligo/*.ligo)
-  (glob_files error-recovery/simple/pascaligo/original/*.ligo)
-  (glob_files error-recovery/simple/reasonligo/*.religo)
-  (glob_files error-recovery/simple/reasonligo/original/*.religo)
   (glob_files error-recovery/multiple_errors/*))
  (action
   (run ./get_scope_tests.exe -c)))
@@ -101,7 +124,9 @@
   (alias repl-test)
   (alias contract_test)
   (alias error-recovery/recovery-test)
-  (alias get_scope_tests)))
+  (alias get_scope_tests)
+  (alias pretty-printer-tests)
+  (alias lsp-test)))
 
 (rule
  (alias manual-test)
@@ -109,3 +134,17 @@
   (run ./manual_test.exe))
  (deps
   (glob_files contracts/*)))
+
+(rule
+ (alias pretty-printer-tests)
+ (action
+  (run ./pretty_printer_tests.exe))
+ (deps
+  (source_tree contracts)))
+
+(rule
+ (alias lsp-test)
+ (action
+  (run ./lsp_test.exe))
+ (deps
+  (source_tree contracts)))

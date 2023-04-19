@@ -6,7 +6,7 @@ let rec decompile : I.expression -> O.expression =
  fun exp ->
   let decompile_value_attr : I.ValueAttr.t -> O.ValueAttr.t =
    fun { inline; no_mutation; view; public; hidden; thunk } ->
-    { inline; no_mutation; view; public; hidden; thunk }
+    { inline; no_mutation; view; public; hidden; thunk; entry = false }
   in
   let return expression_content : O.expression =
     { expression_content
@@ -32,13 +32,15 @@ let rec decompile : I.expression -> O.expression =
   | E_type_abstraction { type_binder; result } ->
     let result = decompile result in
     return (O.E_type_abstraction { type_binder; result })
-  | E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } } ->
+  | E_recursive
+      { fun_name; fun_type; lambda = { binder; output_type; result }; force_lambdarec } ->
     let fun_type = decompile_type fun_type in
     let result = decompile result in
     let output_type = decompile_type output_type in
     let binder = Param.map decompile_type binder in
     return
-      (O.E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } })
+      (O.E_recursive
+         { fun_name; fun_type; lambda = { binder; output_type; result }; force_lambdarec })
   | E_let_in { let_binder; rhs; let_result; attributes } ->
     let rhs = decompile rhs in
     let let_result = decompile let_result in
@@ -104,22 +106,10 @@ and decompile_type : I.type_expression -> O.type_expression =
     let parameters = List.map ~f:decompile_type parameters in
     return (O.T_constant { language; injection; parameters })
   | T_sum { fields; layout } ->
-    let f ({ associated_type; michelson_annotation; decl_pos } : I.row_element)
-        : O.row_element
-      =
-      let associated_type = decompile_type associated_type in
-      { associated_type; michelson_annotation; decl_pos }
-    in
-    let fields = Record.map ~f fields in
+    let fields = Record.map ~f:decompile_type fields in
     return (O.T_sum { fields; layout })
   | T_record { fields; layout } ->
-    let f ({ associated_type; michelson_annotation; decl_pos } : I.row_element)
-        : O.row_element
-      =
-      let associated_type = decompile_type associated_type in
-      { associated_type; michelson_annotation; decl_pos }
-    in
-    let fields = Record.map ~f fields in
+    let fields = Record.map ~f:decompile_type fields in
     return (O.T_record { fields; layout })
   | T_arrow { type1; type2 } ->
     let type1 = decompile_type type1 in

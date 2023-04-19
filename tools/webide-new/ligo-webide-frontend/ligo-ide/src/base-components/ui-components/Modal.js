@@ -64,8 +64,12 @@ export default class BaseModal extends PureComponent {
     } else {
       e.keyCode === 27;
     }
+    const isEnter = e.keyCode ? e.keyCode === 13 : false;
     if (isEsc) {
       this.closeModal();
+    }
+    if (isEnter && !this.props.confirmDisabled) {
+      this.props.onConfirm();
     }
   };
 
@@ -205,7 +209,7 @@ export default class BaseModal extends PureComponent {
           </div>
           <div>
             {onAdditionAction && textAddition && (
-              <Button color={colorAddition} onClick={onAdditionAction}>
+              <Button color={colorAddition} onClick={onAdditionAction} className="mr-2">
                 {textAddition}
               </Button>
             )}

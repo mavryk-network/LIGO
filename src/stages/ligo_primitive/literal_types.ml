@@ -32,19 +32,20 @@ type t =
   | Bls12_381_fr
   | Never
   | Ticket
-  | Michelson_program
-  | Michelson_contract
-  | Ast_contract
-  | Typed_address
-  | Mutation
+  | Michelson_program [@only_interpreter]
+  | Michelson_contract [@only_interpreter]
+  | Ast_contract [@only_interpreter]
+  | Typed_address [@only_interpreter]
+  | Mutation [@only_interpreter]
   | Chest
   | Chest_key
   | Chest_opening_result
   | Tx_rollup_l2_address
   | External of string
-  | Gen
-  | Int64
-[@@deriving ord, eq, yojson, hash, sexp]
+  | Gen [@only_interpreter]
+  | Int64 [@only_interpreter]
+  | Views [@only_interpreter]
+[@@deriving ord, eq, yojson, hash, sexp, is { tags = [ "only_interpreter" ] }]
 
 let to_string = function
   | String -> "string"
@@ -89,59 +90,9 @@ let to_string = function
   | External s -> "external_" ^ s
   | Gen -> "pbt_gen"
   | Int64 -> "int64"
+  | Views -> "views"
 
 
-let of_string = function
-  | "string" -> String
-  | "bytes" -> Bytes
-  | "int" -> Int
-  | "operation" -> Operation
-  | "nat" -> Nat
-  | "tez" -> Tez
-  | "unit" -> Unit
-  | "address" -> Address
-  | "signature" -> Signature
-  | "key" -> Key
-  | "key_hash" -> Key_hash
-  | "timestamp" -> Timestamp
-  | "chain_id" -> Chain_id
-  | "list" -> List
-  | "map" -> Map
-  | "big_map" -> Big_map
-  | "set" -> Set
-  | "contract" -> Contract
-  | "michelson_or" -> Michelson_or
-  | "michelson_pair" -> Michelson_pair
-  | "baker_hash" -> Baker_hash
-  | "pvss_key" -> Pvss_key
-  | "sapling_transaction" -> Sapling_transaction
-  | "sapling_state" -> Sapling_state
-  | "baker_operation" -> Baker_operation
-  | "bls12_381_g1" -> Bls12_381_g1
-  | "bls12_381_g2" -> Bls12_381_g2
-  | "bls12_381_fr" -> Bls12_381_fr
-  | "never" -> Never
-  | "ticket" -> Ticket
-  | "michelson_program" -> Michelson_program
-  | "michelson_contract" -> Michelson_contract
-  | "ast_contract" -> Ast_contract
-  | "typed_address" -> Typed_address
-  | "mutation" -> Mutation
-  | "chest" -> Chest
-  | "chest_key" -> Chest_key
-  | "chest_opening_result" -> Chest_opening_result
-  | "tx_rollup_l2_address" -> Tx_rollup_l2_address
-  | "external_int" -> External "int"
-  | "external_ediv" -> External "ediv"
-  | "external_u_ediv" -> External "u_ediv"
-  | "pbt_gen" -> Gen
-  | "int64" -> Int64
-  | "external_and" -> External "and"
-  | "external_u_and" -> External "u_and"
-  | _ -> failwith "Forgot to add constant name in constant.ml?"
-
-
-let pp ppf l = Format.fprintf ppf "%s" (to_string l)
 let string = String
 let bytes = Bytes
 let int = Int
@@ -187,6 +138,7 @@ let external_ediv = External "ediv"
 let external_u_ediv = External "u_ediv"
 let gen = Gen
 let int64 = Int64
+let views = Views
 let v_bool = Type_var.of_input_var "bool"
 let v_string = Type_var.of_input_var (to_string String)
 let v_bytes = Type_var.of_input_var (to_string Bytes)
@@ -233,5 +185,14 @@ let v_external_ediv = Type_var.of_input_var (to_string @@ External "ediv")
 let v_external_u_ediv = Type_var.of_input_var (to_string @@ External "u_ediv")
 let v_external_and = Type_var.of_input_var (to_string @@ External "and")
 let v_external_u_and = Type_var.of_input_var (to_string @@ External "u_and")
+let v_external_map_find_opt = Type_var.of_input_var (to_string @@ External "map_find_opt")
+let v_external_map_add = Type_var.of_input_var (to_string @@ External "map_add")
+let v_external_map_remove = Type_var.of_input_var (to_string @@ External "map_remove")
+
+let v_external_map_remove_value =
+  Type_var.of_input_var (to_string @@ External "map_remove_value")
+
+
 let v_gen = Type_var.of_input_var (to_string @@ Gen)
 let v_int64 = Type_var.of_input_var (to_string @@ Int64)
+let v_views = Type_var.of_input_var (to_string @@ Views)

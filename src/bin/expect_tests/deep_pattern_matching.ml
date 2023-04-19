@@ -31,7 +31,7 @@ let%expect_test _ =
 
 (* wrong type on constructor argument pattern *)
 let%expect_test _ =
-  run_ligo_bad [ "print"; "ast-typed"; bad_test "pm_fail15.mligo"; "--no-colour" ];
+  run_ligo_bad [ "print"; "ast-typed"; bad_test "pm_fail15.mligo"; "--no-color" ];
   [%expect
     {|
     File "../../test/contracts/negative//deep_pattern_matching/pm_fail15.mligo", line 7, character 2 to line 9, character 25:
@@ -56,7 +56,7 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts/negative//deep_pattern_matching/pm_fail14.mligo", line 2, characters 11-14:
-      1 | let main (_ : unit * unit) : operation list * unit =
+      1 | let main (_ : unit) (_ : unit) : operation list * unit =
       2 |   let () = 42n in
       3 |   (([] : operation list), ())
 
@@ -73,8 +73,14 @@ let%expect_test _ =
       5 |   | One 1 -> 2
       6 |   | Two -> 1
 
-    Invalid pattern.
-    Can't match on values. |}]
+    Invalid pattern matching.
+      If this is pattern matching over Booleans, then "true" or "false" is expected.
+      If this is pattern matching on a list, then one of the following is expected:
+        * an empty list pattern "[]";
+        * a cons list pattern "[head, ...tail]".
+      If this is pattern matching over variants, then a constructor of a variant is expected.
+
+      Other forms of pattern matching are not (yet) supported. |}]
 
 (* unbound variable *)
 
@@ -196,7 +202,7 @@ let%expect_test _ =
 
     Error : this pattern-matching is not exhaustive.
     Here are examples of cases that are not matched:
-    - {b = _; a = None} |}]
+    - {a = None; b = _} |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print"; "ast-typed"; bad_test "pm_fail13.mligo" ];
@@ -537,7 +543,7 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts//deep_pattern_matching/edge_case_V.mligo", line 6, character 7 to line 10, character 20:
-      5 | let main (p, _ : p * int) : operation list * int =
+      5 | let main (p : p) (_ : int) : operation list * int =
       6 |   [], (match p with
       7 |     A,A,A,_,_,_ -> 1
       8 |   | B,_,_,A,A,_ -> 2
@@ -553,7 +559,7 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts//deep_pattern_matching/edge_case_S.mligo", line 6, character 7 to line 11, character 31:
-      5 | let main (p, _ : p * int) : operation list * int =
+      5 | let main (p : p) (_ : int) : operation list * int =
       6 |   [], (match p with
       7 |     A, A, _, _, _, _, _, _ -> 1
       8 |   | _, _, A, A, _, _, _, _ -> 2
@@ -591,9 +597,9 @@ let%expect_test _ =
     Warning: unused variable "myt".
     Hint: replace it by "_myt" to prevent this warning.
 
-    File "../../test/contracts//deep_pattern_matching/pm_ticket.mligo", line 5, characters 18-19:
+    File "../../test/contracts//deep_pattern_matching/pm_ticket.mligo", line 5, characters 32-33:
       4 |
-      5 | let main = fun (p,s: parameter * storage) ->
+      5 | let main = fun (p : parameter) (s: storage) ->
       6 |   match p with
     :
     Warning: unused variable "s".

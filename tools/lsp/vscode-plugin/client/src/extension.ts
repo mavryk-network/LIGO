@@ -97,9 +97,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const clientOptions: LanguageClientOptions = {
     // Register the server for plain text documents
     documentSelector: [
-      { scheme: 'file', language: 'ligo' },
       { scheme: 'file', language: 'mligo' },
-      { scheme: 'file', language: 'religo' },
       { scheme: 'file', language: 'jsligo' },
     ],
     synchronize: {

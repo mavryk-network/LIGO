@@ -6,9 +6,7 @@ import { useColorMode } from "@docusaurus/theme-common";
 import defaultTheme from "prism-react-renderer/themes/palenight";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 
-import PASCALIGO_EXAMPLE from '!!raw-loader!./pascaligo.ligo';
 import CAMELIGO_EXAMPLE from '!!raw-loader!./cameligo.mligo';
-import REASONLIGO_EXAMPLE from '!!raw-loader!./reasonligo.religo';
 import JSLIGO_EXAMPLE from '!!raw-loader!./jsligo.jsligo';
 
 function CodeExamples(props) {
@@ -27,9 +25,7 @@ function CodeExamples(props) {
       defaultValue="jsligo"
       values={[
         { label: "JsLIGO", value: "jsligo" },
-        { label: "CameLIGO", value: "cameligo" },
-        { label: "PascaLIGO", value: "pascaligo" },
-        { label: "ReasonLIGO", value: "reasonligo" },
+        { label: "CameLIGO", value: "cameligo" }
       ]}
     >
       <TabItem value="jsligo">
@@ -74,48 +70,7 @@ function CodeExamples(props) {
         </Highlight>
       </TabItem>
 
-      <TabItem value="pascaligo">
-        <Highlight
-          {...defaultProps}
-          language="pascaligo"
-          code={PASCALIGO_EXAMPLE}
-          theme={prismTheme}
-        >
-          {({ className, style, tokens, getLineProps, getTokenProps }) => (
-            <pre className={className} style={style}>
-              {tokens.map((line, i) => (
-                <div {...getLineProps({ line, key: i })}>
-                  {line.map((token, key) => (
-                    <span {...getTokenProps({ token, key })} />
-                  ))}
-                </div>
-              ))}
-            </pre>
-          )}
-        </Highlight>
-      </TabItem>
-
-      <TabItem value="reasonligo">
-        <Highlight
-          {...defaultProps}
-          language="reasonligo"
-          code={REASONLIGO_EXAMPLE}
-          theme={prismTheme}
-        >
-          {({ className, style, tokens, getLineProps, getTokenProps }) => (
-            <pre className={className} style={style}>
-              {tokens.map((line, i) => (
-                <div {...getLineProps({ line, key: i })}>
-                  {line.map((token, key) => (
-                    <span {...getTokenProps({ token, key })} />
-                  ))}
-                </div>
-              ))}
-            </pre>
-          )}
-        </Highlight>
-      </TabItem>
-    </Tabs>
+    </Tabs >
   );
 }
 

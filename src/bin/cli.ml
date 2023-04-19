@@ -34,25 +34,38 @@ let entry_point =
   let open Command.Param in
   let name = "e" in
   let doc = "ENTRY-POINT the entry-point that will be compiled." in
-  let spec = optional_with_default Default_options.entry_point string in
+  let spec =
+    optional_with_default Default_options.entry_point
+    @@ Command.Arg_type.comma_separated ~strip_whitespace:true ~unique_values:true string
+  in
   flag ~doc ~aliases:[ "--entry-point" ] name spec
+
+
+let function_name =
+  let name = "FUNCTION" in
+  Command.Param.(anon (name %: create_arg_type Fn.id))
+
+
+let module_ =
+  let open Command.Param in
+  let name = "m" in
+  let doc = "MODULE the entry-point will be compiled from that module." in
+  let spec = optional_with_default Default_options.module_ string in
+  flag ~doc ~aliases:[ "--module" ] name spec
 
 
 let source_file =
   let name = "SOURCE_FILE" in
-  let _doc = "the path to the smart contract file." in
   Command.Param.(anon (name %: create_arg_type Fn.id))
 
 
 let package_name =
   let name = "PACKAGE_NAME" in
-  let _doc = "package to install." in
   Command.Param.(anon (maybe (name %: string)))
 
 
 let expression purpose =
   let name = purpose ^ "_EXPRESSION" in
-  let _desc = "the expression that will be compiled." in
   Command.Param.(anon (name %: string))
 
 
@@ -80,6 +93,15 @@ let template =
   flag ~doc ~aliases:[ "t" ] "--template" spec
 
 
+let skip_analytics =
+  let open Command.Param in
+  let doc =
+    "Avoid ligo analytics publication. Configurable with environment variable \
+     LIGO_SKIP_ANALYTICS too"
+  in
+  flag ~doc "--skip-analytics" no_arg
+
+
 let template_list =
   let open Command.Param in
   let name = "--template-list" in
@@ -98,12 +120,36 @@ let project_name =
 let syntax =
   let open Command.Param in
   let doc =
-    "SYNTAX the syntax that will be used. Currently supported syntaxes are \
-     \"pascaligo\", \"cameligo\", \"reasonligo\" and \"jsligo\". By default, the syntax \
-     is guessed from the extension (.ligo, .mligo, .religo, and .jsligo respectively)."
+    "SYNTAX the syntax that will be used. Currently supported syntaxes are \"cameligo\" \
+     and \"jsligo\". By default, the syntax is guessed from the extension (.mligo and \
+     .jsligo respectively)."
   in
   let spec = optional_with_default Default_options.syntax string in
   flag ~doc ~aliases:[ "s" ] "--syntax" spec
+
+
+let from_syntax =
+  let open Command.Param in
+  let doc = "SYNTAX the syntax to the transpilation input." in
+  let spec = optional_with_default Default_options.syntax string in
+  flag ~doc "--from-syntax" spec
+
+
+let to_syntax =
+  let open Command.Param in
+  let doc = "SYNTAX the syntax to the transpilation output." in
+  let spec = optional_with_default Default_options.syntax string in
+  flag ~doc "--to-syntax" spec
+
+
+let nanopass =
+  let open Command.Param in
+  let doc =
+    "NANOPASS the nanopass name before/after which we stop executing the nanopasses. Use \
+     NAME+ for after and NAME for before, case do not matter (only for debug prints)"
+  in
+  let spec = optional string in
+  flag ~doc ~aliases:[ "nano" ] "--nanopass" spec
 
 
 let on_chain_views : _ Command.Param.t =
@@ -172,7 +218,7 @@ let protocol_version =
 let cli_expr_inj =
   let open Command.Param in
   let doc =
-    "EXPRESSION a expression passed to LIGO interpreter, accessible through variable \
+    "EXPRESSION an expression passed to LIGO interpreter, accessible through variable \
      'cli_arg'"
   in
   let spec = optional string in
@@ -182,11 +228,6 @@ let cli_expr_inj =
 let req_syntax =
   let open Command.Param in
   let name = "SYNTAX" in
-  let _desc =
-    "the syntax that will be used. Currently supported syntaxes are \"pascaligo\", \
-     \"cameligo\" and \"reasonligo\". By default, the syntax is guessed from the \
-     extension (.ligo, .mligo, .religo, .jsligo respectively)."
-  in
   anon (name %: string)
 
 
@@ -301,8 +342,16 @@ let now =
 
 let no_colour =
   let open Command.Param in
-  let name = "--no-colour" in
+  (* Using the american standard for the CLI *)
+  let name = "--no-color" in
   let doc = "disable coloring in CLI output" in
+  flag ~doc name no_arg
+
+
+let deprecated =
+  let open Command.Param in
+  let name = "--deprecated" in
+  let doc = "enable deprecated language PascaLIGO" in
   flag ~doc name no_arg
 
 
@@ -445,6 +494,13 @@ let project_root =
   flag ~doc name spec
 
 
+let transpiled =
+  let open Command.Param in
+  let name = "--transpiled" in
+  let doc = "Disable checks that are unapplicable to transpiled contracts." in
+  flag ~doc name no_arg
+
+
 let cache_path =
   let open Command.Param in
   let name = "--cache-path" in
@@ -465,7 +521,7 @@ let ligorc_path =
   let open Command.Param in
   let name = "--ligorc-path" in
   let doc = "PATH path to .ligorc file." in
-  let spec = optional_with_default Constants.ligo_rc_path string in
+  let spec = optional_with_default (Constants.ligo_rc_path ()) string in
   flag ~doc name spec
 
 
@@ -491,6 +547,7 @@ let compile_file =
   let f
       source_file
       entry_point
+      module_
       views
       syntax
       protocol_version
@@ -504,16 +561,20 @@ let compile_file =
       show_warnings
       warning_as_error
       no_colour
+      deprecated
+      skip_analytics
       michelson_comments
       constants
       file_constants
       project_root
+      transpiled
       warn_unused_rec
       ()
     =
     let raw_options =
       Raw_options.make
         ~entry_point
+        ~module_
         ~syntax
         ~views
         ~protocol_version
@@ -523,17 +584,33 @@ let compile_file =
         ~no_stdlib
         ~warning_as_error
         ~no_colour
+        ~deprecated
         ~constants
         ~file_constants
         ~project_root
+        ~transpiled
         ~warn_unused_rec
         ()
     in
-    return_result ~return ~show_warnings ?output_file
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"compile_contract"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~show_warnings
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+      ?output_file
     @@ Api.Compile.contract
          raw_options
-         source_file
-         display_format
+         (Api.Compile.File source_file)
          michelson_format
          michelson_comments
   in
@@ -549,6 +626,7 @@ let compile_file =
     (f
     <$> source_file
     <*> entry_point
+    <*> module_
     <*> on_chain_views
     <*> syntax
     <*> protocol_version
@@ -562,10 +640,13 @@ let compile_file =
     <*> warn
     <*> werror
     <*> no_colour
+    <*> deprecated
+    <*> skip_analytics
     <*> michelson_comments
     <*> constants
     <*> file_constants
     <*> project_root
+    <*> transpiled
     <*> warn_unused_rec)
 
 
@@ -573,6 +654,7 @@ let compile_parameter =
   let f
       source_file
       entry_point
+      module_
       expression
       syntax
       protocol_version
@@ -582,6 +664,9 @@ let compile_parameter =
       source
       now
       display_format
+      no_colour
+      deprecated
+      skip_analytics
       michelson_format
       output_file
       show_warnings
@@ -596,15 +681,32 @@ let compile_parameter =
       Raw_options.make
         ~syntax
         ~entry_point
+        ~module_
         ~protocol_version
         ~warning_as_error
         ~constants
         ~file_constants
         ~project_root
+        ~deprecated
         ~warn_unused_rec
         ()
     in
-    return_result ~return ~show_warnings ?output_file
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"compile_parameter"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~show_warnings
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+      ?output_file
     @@ Api.Compile.parameter
          raw_options
          source_file
@@ -614,7 +716,6 @@ let compile_parameter =
          sender
          source
          now
-         display_format
          michelson_format
   in
   let summary = "compile parameters to a Michelson expression." in
@@ -629,6 +730,7 @@ let compile_parameter =
     (f
     <$> source_file
     <*> entry_point
+    <*> module_
     <*> expression "parameter"
     <*> syntax
     <*> protocol_version
@@ -638,6 +740,9 @@ let compile_parameter =
     <*> source
     <*> now
     <*> display_format
+    <*> no_colour
+    <*> deprecated
+    <*> skip_analytics
     <*> michelson_code_format
     <*> output_file
     <*> warn
@@ -655,6 +760,9 @@ let compile_expression =
       protocol_version
       init_file
       display_format
+      no_colour
+      deprecated
+      skip_analytics
       without_run
       no_stdlib
       michelson_format
@@ -676,16 +784,25 @@ let compile_expression =
         ~constants
         ~file_constants
         ~project_root
+        ~deprecated
         ~warn_unused_rec
         ()
     in
-    return_result ~return ~show_warnings
-    @@ Api.Compile.expression
-         raw_options
-         expression
-         init_file
-         display_format
-         michelson_format
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"compile_expression"
+        ~raw_options
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~show_warnings
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+    @@ Api.Compile.expression raw_options expression init_file michelson_format
   in
   let summary = "compile to a Michelson value." in
   let readme () =
@@ -702,6 +819,9 @@ let compile_expression =
     <*> protocol_version
     <*> init_file
     <*> display_format
+    <*> no_colour
+    <*> deprecated
+    <*> skip_analytics
     <*> without_run
     <*> no_stdlib
     <*> michelson_code_format
@@ -718,6 +838,7 @@ let compile_storage =
       source_file
       expression
       entry_point
+      module_
       syntax
       protocol_version
       amount
@@ -726,6 +847,9 @@ let compile_storage =
       source
       now
       display_format
+      no_colour
+      deprecated
+      skip_analytics
       michelson_format
       output_file
       show_warnings
@@ -739,16 +863,33 @@ let compile_storage =
     let raw_options =
       Raw_options.make
         ~entry_point
+        ~module_
         ~syntax
         ~protocol_version
         ~warning_as_error
         ~constants
         ~file_constants
         ~project_root
+        ~deprecated
         ~warn_unused_rec
         ()
     in
-    return_result ~return ~show_warnings ?output_file
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"compile_storage"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~show_warnings
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+      ?output_file
     @@ Api.Compile.storage
          raw_options
          source_file
@@ -758,7 +899,6 @@ let compile_storage =
          sender
          source
          now
-         display_format
          michelson_format
   in
   let summary = "compile an initial storage in LIGO syntax to a Michelson expression." in
@@ -774,6 +914,7 @@ let compile_storage =
     <$> source_file
     <*> expression "STORAGE"
     <*> entry_point
+    <*> module_
     <*> syntax
     <*> protocol_version
     <*> amount
@@ -782,6 +923,9 @@ let compile_storage =
     <*> source
     <*> now
     <*> display_format
+    <*> no_colour
+    <*> deprecated
+    <*> skip_analytics
     <*> michelson_code_format
     <*> output_file
     <*> warn
@@ -799,6 +943,9 @@ let compile_constant =
       protocol_version
       init_file
       display_format
+      no_colour
+      deprecated
+      skip_analytics
       without_run
       show_warnings
       warning_as_error
@@ -813,11 +960,25 @@ let compile_constant =
         ~without_run
         ~warning_as_error
         ~project_root
+        ~deprecated
         ~warn_unused_rec
         ()
     in
-    return_result ~return ~show_warnings
-    @@ Api.Compile.constant raw_options expression init_file display_format
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"compile_constant"
+        ~raw_options
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~show_warnings
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+    @@ Api.Compile.constant raw_options expression init_file
   in
   let summary = "compile constant to a Michelson value and its hash." in
   let readme () =
@@ -834,6 +995,9 @@ let compile_constant =
     <*> protocol_version
     <*> init_file
     <*> display_format
+    <*> no_colour
+    <*> deprecated
+    <*> skip_analytics
     <*> without_run
     <*> warn
     <*> werror
@@ -853,11 +1017,102 @@ let compile_group =
 
 (** Transpile commands *)
 let transpile_contract =
-  let f source_file new_syntax syntax display_format output_file () =
-    return_result ~return ?output_file
-    @@ Api.Transpile.contract source_file new_syntax syntax display_format
+  let f
+      source_file
+      to_syntax
+      from_syntax
+      display_format
+      no_colour
+      skip_analytics
+      output_file
+      ()
+    =
+    let cli_analytic = Analytics.generate_cli_metric ~command:"transpile_contract" in
+    let transpile_analytic =
+      Analytics.
+        { group =
+            Counter_cli_transpile
+              { command = "transpile_contract"
+              ; old_syntax = Analytics.determine_syntax_label from_syntax source_file
+              ; new_syntax = to_syntax
+              }
+        ; metric_value = 1.0
+        }
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics:[ cli_analytic; transpile_analytic ]
+      ~return
+      ?output_file
+      ~display_format
+      ~no_colour
+      ~warning_as_error:false
+    @@ Api.Transpile.contract source_file to_syntax from_syntax output_file
   in
-  let summary = "[BETA] transpile a contract to another syntax." in
+  let summary = "Transpile a contract to another syntax." in
+  let readme () =
+    "This sub-command transpiles a source file to another syntax.It parses the source \
+     file and performs the transpiling at the syntactic level.It can be used for \
+     transpiling PascaLIGO contracts to JsLIGO."
+  in
+  Command.basic
+    ~summary
+    ~readme
+    (f
+    <$> source_file
+    <*> to_syntax
+    <*> from_syntax
+    <*> display_format
+    <*> no_colour
+    <*> skip_analytics
+    <*> output_file)
+
+
+let transpile_group =
+  Command.group ~summary:"Transpile ligo code from a syntax to another"
+  @@ [ "contract", transpile_contract ]
+
+
+(** Transpile with AST commands *)
+let transpile_with_ast_contract =
+  let f
+      source_file
+      new_syntax
+      syntax
+      display_format
+      skip_analytics
+      no_colour
+      output_file
+      ()
+    =
+    let cli_analytic =
+      Analytics.generate_cli_metric ~command:"transpile_with_ast_contract"
+    in
+    let transpile_analytic =
+      Analytics.
+        { group =
+            Counter_cli_transpile
+              { command = "transpile_with_ast_contract"
+              ; old_syntax = Analytics.determine_syntax_label syntax source_file
+              ; new_syntax
+              }
+        ; metric_value = 1.0
+        }
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics:[ cli_analytic; transpile_analytic ]
+      ~return
+      ?output_file
+      ~display_format
+      ~no_colour
+      ~warning_as_error:false
+    @@ Api.Transpile_with_ast.contract source_file new_syntax syntax
+  in
+  let summary =
+    "[BETA] transpile a contract to another syntax, compiling down to the AST and then \
+     decompiling."
+  in
   let readme () =
     "[BETA] This sub-command transpiles a source file to another syntax. It does not use \
      the build system, but the source file is preprocessed. Comments are currently not \
@@ -866,13 +1121,40 @@ let transpile_contract =
   Command.basic
     ~summary
     ~readme
-    (f <$> source_file <*> req_syntax <*> syntax <*> display_format <*> output_file)
+    (f
+    <$> source_file
+    <*> req_syntax
+    <*> syntax
+    <*> display_format
+    <*> no_colour
+    <*> skip_analytics
+    <*> output_file)
 
 
-let transpile_expression =
-  let f syntax expression new_syntax display_format () =
-    return_result ~return
-    @@ Api.Transpile.expression expression new_syntax syntax display_format
+let transpile_with_ast_expression =
+  let f syntax expression new_syntax display_format no_colour skip_analytics () =
+    let cli_analytic =
+      Analytics.generate_cli_metric ~command:"transpile_with_ast_expression"
+    in
+    let transpile_analytic =
+      Analytics.
+        { group =
+            Counter_cli_transpile
+              { command = "transpile_with_ast_expression"
+              ; old_syntax = syntax
+              ; new_syntax
+              }
+        ; metric_value = 1.0
+        }
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics:[ cli_analytic; transpile_analytic ]
+      ~return
+      ~display_format
+      ~no_colour
+      ~warning_as_error:false
+    @@ Api.Transpile_with_ast.expression expression new_syntax syntax
   in
   let summary = "[BETA] transpile an expression to another syntax." in
   let readme () =
@@ -882,12 +1164,20 @@ let transpile_expression =
   Command.basic
     ~summary
     ~readme
-    (f <$> req_syntax <*> expression "" <*> req_syntax <*> display_format)
+    (f
+    <$> req_syntax
+    <*> expression ""
+    <*> req_syntax
+    <*> display_format
+    <*> no_colour
+    <*> skip_analytics)
 
 
-let transpile_group =
+let transpile_with_ast_group =
   Command.group ~summary:"[BETA] transpile ligo code from a syntax to another"
-  @@ [ "contract", transpile_contract; "expression", transpile_expression ]
+  @@ [ "contract", transpile_with_ast_contract
+     ; "expression", transpile_with_ast_expression
+     ]
 
 
 (** Mutate commands *)
@@ -898,16 +1188,39 @@ let mutate_cst =
       protocol_version
       libraries
       display_format
+      no_colour
+      deprecated
+      skip_analytics
       seed
       generator
       project_root
       ()
     =
     let raw_options =
-      Raw_options.make ~syntax ~protocol_version ~libraries ~generator ~project_root ()
+      Raw_options.make
+        ~syntax
+        ~protocol_version
+        ~libraries
+        ~generator
+        ~project_root
+        ~deprecated
+        ()
     in
-    return_result ~return
-    @@ Api.Mutate.mutate_cst raw_options source_file display_format seed
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"mutate_cst"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+    @@ Api.Mutate.mutate_cst raw_options source_file seed
   in
   let summary = "return a mutated version for a given file." in
   let readme () =
@@ -923,43 +1236,9 @@ let mutate_cst =
     <*> protocol_version
     <*> libraries
     <*> display_format
-    <*> seed
-    <*> generator
-    <*> project_root)
-
-
-let mutate_ast =
-  let f
-      source_file
-      syntax
-      protocol_version
-      libraries
-      display_format
-      seed
-      generator
-      project_root
-      ()
-    =
-    let raw_options =
-      Raw_options.make ~syntax ~protocol_version ~libraries ~generator ~project_root ()
-    in
-    return_result ~return
-    @@ Api.Mutate.mutate_ast raw_options source_file display_format seed
-  in
-  let summary = "return a mutated version for a given file." in
-  let readme () =
-    "This sub-command returns a mutated version for a given file. It does not use the \
-     build system."
-  in
-  Command.basic
-    ~summary
-    ~readme
-    (f
-    <$> source_file
-    <*> syntax
-    <*> protocol_version
-    <*> libraries
-    <*> display_format
+    <*> no_colour
+    <*> deprecated
+    <*> skip_analytics
     <*> seed
     <*> generator
     <*> project_root)
@@ -967,7 +1246,7 @@ let mutate_ast =
 
 let mutate_group =
   let summary = "create mutants of a ligo file" in
-  Command.group ~summary @@ [ "cst", mutate_cst; "ast", mutate_ast ]
+  Command.group ~summary @@ [ "cst", mutate_cst ]
 
 
 (** Run commands *)
@@ -978,6 +1257,9 @@ let test =
       steps
       cli_expr_inj
       display_format
+      no_colour
+      deprecated
+      skip_analytics
       show_warnings
       project_root
       warn_unused_rec
@@ -988,13 +1270,28 @@ let test =
         ~syntax
         ~steps
         ~project_root
+        ~deprecated
         ~warn_unused_rec
         ~cli_expr_inj
         ~test:true
         ()
     in
-    return_result ~return ~show_warnings
-    @@ Api.Run.test raw_options source_file display_format
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"run_test"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~show_warnings
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+    @@ Api.Run.test raw_options source_file
   in
   let summary = "test a contract with the LIGO test framework." in
   let readme () =
@@ -1011,6 +1308,9 @@ let test =
     <*> steps
     <*> cli_expr_inj
     <*> display_format
+    <*> no_colour
+    <*> deprecated
+    <*> skip_analytics
     <*> warn
     <*> project_root
     <*> warn_unused_rec)
@@ -1024,6 +1324,9 @@ let test_expr =
       steps
       cli_expr_inj
       display_format
+      no_colour
+      deprecated
+      skip_analytics
       show_warnings
       project_root
       warn_unused_rec
@@ -1034,13 +1337,27 @@ let test_expr =
         ~syntax
         ~steps
         ~project_root
+        ~deprecated
         ~warn_unused_rec
         ~cli_expr_inj
         ~test:true
         ()
     in
-    return_result ~return ~show_warnings
-    @@ Api.Run.test_expression raw_options expr source_file display_format
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"run_test-expr"
+        ~raw_options
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~show_warnings
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+    @@ Api.Run.test_expression raw_options expr source_file
   in
   let summary = "test a expression with the LIGO test framework." in
   let readme () =
@@ -1058,6 +1375,9 @@ let test_expr =
     <*> steps
     <*> cli_expr_inj
     <*> display_format
+    <*> no_colour
+    <*> deprecated
+    <*> skip_analytics
     <*> warn
     <*> project_root
     <*> warn_unused_rec)
@@ -1069,6 +1389,7 @@ let dry_run =
       parameter
       storage
       entry_point
+      module_
       amount
       balance
       sender
@@ -1077,6 +1398,9 @@ let dry_run =
       syntax
       protocol_version
       display_format
+      no_colour
+      deprecated
+      skip_analytics
       show_warnings
       warning_as_error
       project_root
@@ -1086,14 +1410,30 @@ let dry_run =
     let raw_options =
       Raw_options.make
         ~entry_point
+        ~module_
         ~syntax
         ~protocol_version
         ~warning_as_error
         ~project_root
+        ~deprecated
         ~warn_unused_rec
         ()
     in
-    return_result ~return ~show_warnings
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"run_dry-run"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~show_warnings
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
     @@ Api.Run.dry_run
          raw_options
          source_file
@@ -1104,7 +1444,6 @@ let dry_run =
          sender
          source
          now
-         display_format
   in
   let summary = "run a smart-contract with the given storage and input." in
   let readme () =
@@ -1120,6 +1459,7 @@ let dry_run =
     <*> expression "PARAMETER"
     <*> expression "STORAGE"
     <*> entry_point
+    <*> module_
     <*> amount
     <*> balance
     <*> sender
@@ -1128,6 +1468,9 @@ let dry_run =
     <*> syntax
     <*> protocol_version
     <*> display_format
+    <*> no_colour
+    <*> deprecated
+    <*> skip_analytics
     <*> warn
     <*> werror
     <*> project_root
@@ -1137,8 +1480,8 @@ let dry_run =
 let evaluate_call =
   let f
       source_file
+      function_name
       parameter
-      entry_point
       amount
       balance
       sender
@@ -1147,6 +1490,9 @@ let evaluate_call =
       syntax
       protocol_version
       display_format
+      no_colour
+      deprecated
+      skip_analytics
       show_warnings
       warning_as_error
       project_root
@@ -1155,25 +1501,39 @@ let evaluate_call =
     =
     let raw_options =
       Raw_options.make
-        ~entry_point
         ~syntax
         ~protocol_version
         ~warning_as_error
         ~project_root
+        ~deprecated
         ~warn_unused_rec
         ()
     in
-    return_result ~return ~show_warnings
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"run_evaluate-call"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~show_warnings
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
     @@ Api.Run.evaluate_call
          raw_options
          source_file
+         function_name
          parameter
          amount
          balance
          sender
          source
          now
-         display_format
   in
   let summary = "run a function with the given parameter." in
   let readme () =
@@ -1186,8 +1546,8 @@ let evaluate_call =
     ~readme
     (f
     <$> source_file
+    <*> function_name
     <*> expression "PARAMETER"
-    <*> entry_point
     <*> amount
     <*> balance
     <*> sender
@@ -1196,6 +1556,9 @@ let evaluate_call =
     <*> syntax
     <*> protocol_version
     <*> display_format
+    <*> no_colour
+    <*> deprecated
+    <*> skip_analytics
     <*> warn
     <*> werror
     <*> project_root
@@ -1214,6 +1577,9 @@ let evaluate_expr =
       syntax
       protocol_version
       display_format
+      no_colour
+      deprecated
+      skip_analytics
       show_warnings
       warning_as_error
       project_root
@@ -1227,19 +1593,26 @@ let evaluate_expr =
         ~protocol_version
         ~warning_as_error
         ~project_root
+        ~deprecated
         ~warn_unused_rec
         ()
     in
-    return_result ~return ~show_warnings
-    @@ Api.Run.evaluate_expr
-         raw_options
-         source_file
-         amount
-         balance
-         sender
-         source
-         now
-         display_format
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"run_evaluate-expr"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~show_warnings
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+    @@ Api.Run.evaluate_expr raw_options source_file amount balance sender source now
   in
   let summary = "evaluate a given definition." in
   let readme () =
@@ -1261,6 +1634,9 @@ let evaluate_expr =
     <*> syntax
     <*> protocol_version
     <*> display_format
+    <*> no_colour
+    <*> deprecated
+    <*> skip_analytics
     <*> warn
     <*> werror
     <*> project_root
@@ -1279,24 +1655,44 @@ let interpret =
       source
       now
       display_format
+      no_colour
+      deprecated
+      skip_analytics
       project_root
       warn_unused_rec
       ()
     =
     let raw_options =
-      Raw_options.make ~syntax ~protocol_version ~project_root ~warn_unused_rec ()
+      Raw_options.make
+        ~syntax
+        ~protocol_version
+        ~project_root
+        ~deprecated
+        ~warn_unused_rec
+        ()
     in
-    return_result ~return
-    @@ Api.Run.interpret
-         raw_options
-         expression
-         init_file
-         amount
-         balance
-         sender
-         source
-         now
-         display_format
+    let cli_analytics =
+      match init_file with
+      | Some file ->
+        Analytics.generate_cli_metrics_with_syntax_and_protocol
+          ~command:"run_interpret"
+          ~raw_options
+          ~source_file:file
+          ()
+      | None ->
+        Analytics.generate_cli_metrics_with_syntax_and_protocol
+          ~command:"run_interpret"
+          ~raw_options
+          ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+    @@ Api.Run.interpret raw_options expression init_file amount balance sender source now
   in
   let summary =
     "interpret the expression in the context initialized by the provided source file."
@@ -1319,6 +1715,9 @@ let interpret =
     <*> source
     <*> now
     <*> display_format
+    <*> no_colour
+    <*> deprecated
+    <*> skip_analytics
     <*> project_root
     <*> warn_unused_rec)
 
@@ -1337,10 +1736,33 @@ let run_group =
 
 (** Info commands *)
 let list_declarations =
-  let f source_file only_ep syntax display_format project_root () =
-    let raw_options = Raw_options.make ~only_ep ~syntax ~project_root () in
-    return_result ~return
-    @@ Api.Info.list_declarations raw_options source_file display_format
+  let f
+      source_file
+      only_ep
+      syntax
+      display_format
+      no_colour
+      deprecated
+      skip_analytics
+      project_root
+      ()
+    =
+    let raw_options = Raw_options.make ~only_ep ~syntax ~project_root ~deprecated () in
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"info_list-declarations"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+    @@ Api.Info.list_declarations raw_options source_file
   in
   let summary = "list all the top-level declarations." in
   let readme () =
@@ -1350,7 +1772,15 @@ let list_declarations =
   Command.basic
     ~summary
     ~readme
-    (f <$> source_file <*> only_ep <*> syntax <*> display_format <*> project_root)
+    (f
+    <$> source_file
+    <*> only_ep
+    <*> syntax
+    <*> display_format
+    <*> no_colour
+    <*> deprecated
+    <*> skip_analytics
+    <*> project_root)
 
 
 let measure_contract =
@@ -1361,6 +1791,9 @@ let measure_contract =
       syntax
       protocol_version
       display_format
+      no_colour
+      deprecated
+      skip_analytics
       enable_typed_opt
       show_warnings
       warning_as_error
@@ -1376,12 +1809,27 @@ let measure_contract =
         ~views
         ~warning_as_error
         ~project_root
+        ~deprecated
         ~warn_unused_rec
         ~enable_typed_opt
         ()
     in
-    return_result ~return ~show_warnings
-    @@ Api.Info.measure_contract raw_options source_file display_format
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"info_measure-contract"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~show_warnings
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+    @@ Api.Info.measure_contract raw_options source_file
   in
   let summary = "measure a contract's compiled size in bytes." in
   let readme () =
@@ -1398,6 +1846,9 @@ let measure_contract =
     <*> syntax
     <*> protocol_version
     <*> display_format
+    <*> no_colour
+    <*> deprecated
+    <*> skip_analytics
     <*> enable_michelson_typed_opt
     <*> warn
     <*> werror
@@ -1406,11 +1857,41 @@ let measure_contract =
 
 
 let get_scope =
-  let f source_file protocol_version libraries display_format with_types project_root () =
+  let f
+      source_file
+      protocol_version
+      libraries
+      display_format
+      no_colour
+      deprecated
+      with_types
+      project_root
+      no_stdlib
+      ()
+    =
     let raw_options =
-      Raw_options.make ~protocol_version ~libraries ~with_types ~project_root ()
+      Raw_options.make
+        ~protocol_version
+        ~libraries
+        ~with_types
+        ~project_root
+        ~deprecated
+        ~no_stdlib
+        ()
     in
-    return_result ~return @@ Api.Info.get_scope raw_options source_file display_format
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"info_get-scope"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_with_custom_formatter ~skip_analytics:false ~cli_analytics ~return
+    @@ Ligo_interface.Get_scope.get_scope_cli_result
+         raw_options
+         source_file
+         display_format
+         no_colour
   in
   let summary = "return the JSON encoded environment for a given file." in
   let readme () =
@@ -1425,8 +1906,11 @@ let get_scope =
     <*> protocol_version
     <*> libraries
     <*> display_format
+    <*> no_colour
+    <*> deprecated
     <*> with_types
-    <*> project_root)
+    <*> project_root
+    <*> no_stdlib)
 
 
 let info_group =
@@ -1441,9 +1925,35 @@ let info_group =
 
 (** Print commands *)
 let preprocessed =
-  let f source_file syntax libraries display_format project_root no_colour () =
-    let raw_options = Raw_options.make ~syntax ~libraries ~project_root ~no_colour () in
-    return_result ~return @@ Api.Print.preprocess raw_options source_file display_format
+  let f
+      source_file
+      syntax
+      libraries
+      display_format
+      project_root
+      no_colour
+      deprecated
+      skip_analytics
+      ()
+    =
+    let raw_options =
+      Raw_options.make ~syntax ~libraries ~project_root ~no_colour ~deprecated ()
+    in
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"print_preprocessed"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+    @@ Api.Print.preprocess raw_options source_file
   in
   let summary =
     "preprocess the source file.\n\
@@ -1463,15 +1973,41 @@ let preprocessed =
      <*> libraries
      <*> display_format
      <*> project_root
-     <*> no_colour)
+     <*> no_colour
+     <*> deprecated
+     <*> skip_analytics)
 
 
 let pretty_print =
-  let f source_file syntax display_format warning_as_error no_colour project_root () =
+  let f
+      source_file
+      syntax
+      display_format
+      warning_as_error
+      no_colour
+      deprecated
+      skip_analytics
+      project_root
+      ()
+    =
     let raw_options =
-      Raw_options.make ~syntax ~warning_as_error ~no_colour ~project_root ()
+      Raw_options.make ~syntax ~warning_as_error ~no_colour ~project_root ~deprecated ()
     in
-    return_result ~return @@ Api.Print.pretty_print raw_options source_file display_format
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"print_pretty"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+    @@ Api.Print.pretty_print raw_options source_file
   in
   let summary = "pretty-print the source file." in
   let readme () =
@@ -1486,14 +2022,38 @@ let pretty_print =
      <*> display_format
      <*> werror
      <*> no_colour
+     <*> deprecated
+     <*> skip_analytics
      <*> project_root)
 
 
 let print_graph =
-  let f source_file syntax display_format project_root no_colour () =
-    let raw_options = Raw_options.make ~syntax ~project_root ~no_colour () in
-    return_result ~return
-    @@ Api.Print.dependency_graph raw_options source_file display_format
+  let f
+      source_file
+      syntax
+      display_format
+      project_root
+      no_colour
+      deprecated
+      skip_analytics
+      ()
+    =
+    let raw_options = Raw_options.make ~syntax ~project_root ~no_colour ~deprecated () in
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"print_dependency-graph"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+    @@ Api.Print.dependency_graph raw_options source_file
   in
   let summary =
     "print the dependency graph.\n\
@@ -1504,13 +2064,43 @@ let print_graph =
      explores all imported source files (recursively) following a DFS strategy."
   in
   Command.basic ~summary ~readme
-  @@ (f <$> source_file <*> syntax <*> display_format <*> project_root <*> no_colour)
+  @@ (f
+     <$> source_file
+     <*> syntax
+     <*> display_format
+     <*> project_root
+     <*> no_colour
+     <*> deprecated
+     <*> skip_analytics)
 
 
 let print_cst =
-  let f source_file syntax display_format no_colour project_root () =
-    let raw_options = Raw_options.make ~syntax ~no_colour ~project_root () in
-    return_result ~return @@ Api.Print.cst raw_options source_file display_format
+  let f
+      source_file
+      syntax
+      display_format
+      no_colour
+      deprecated
+      skip_analytics
+      project_root
+      ()
+    =
+    let raw_options = Raw_options.make ~syntax ~no_colour ~project_root ~deprecated () in
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"print_cst"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+    @@ Api.Print.cst raw_options source_file
   in
   let summary =
     "print the CST.\nWarning: Intended for development of LIGO and can break at any time."
@@ -1520,30 +2110,94 @@ let print_cst =
      preprocessing and parsing."
   in
   Command.basic ~summary ~readme
-  @@ (f <$> source_file <*> syntax <*> display_format <*> no_colour <*> project_root)
+  @@ (f
+     <$> source_file
+     <*> syntax
+     <*> display_format
+     <*> no_colour
+     <*> deprecated
+     <*> skip_analytics
+     <*> project_root)
 
 
-let print_ast =
-  let f source_file syntax display_format no_colour project_root () =
-    let raw_options = Raw_options.make ~syntax ~no_colour ~project_root () in
-    return_result ~return @@ Api.Print.ast raw_options source_file display_format
+let print_ast_unified =
+  let f
+      source_file
+      syntax
+      nanopass
+      display_format
+      no_colour
+      deprecated
+      skip_analytics
+      project_root
+      ()
+    =
+    let raw_options = Raw_options.make ~syntax ~no_colour ~project_root ~deprecated () in
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"print_ast-imperative"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+    @@ Api.Print.ast_unified raw_options nanopass source_file
   in
   let summary =
-    "print the AST with imperative construct.\n\
+    "print the unified ligo AST. Execute nanopasses if option used\n\
     \ Warning: Intended for development of LIGO and can break at any time."
   in
   let readme () =
-    "This sub-command prints the source file in the AST imperative stage, before \
-     desugaring step is applied."
+    "This sub-command prints the source file in the AST unified stage (with nanopasses)."
   in
   Command.basic ~summary ~readme
-  @@ (f <$> source_file <*> syntax <*> display_format <*> no_colour <*> project_root)
+  @@ (f
+     <$> source_file
+     <*> syntax
+     <*> nanopass
+     <*> display_format
+     <*> no_colour
+     <*> deprecated
+     <*> skip_analytics
+     <*> project_root)
 
 
 let print_ast_core =
-  let f source_file syntax display_format self_pass project_root no_colour () =
-    let raw_options = Raw_options.make ~syntax ~self_pass ~project_root ~no_colour () in
-    return_result ~return @@ Api.Print.ast_core raw_options source_file display_format
+  let f
+      source_file
+      syntax
+      display_format
+      self_pass
+      project_root
+      no_colour
+      deprecated
+      skip_analytics
+      ()
+    =
+    let raw_options =
+      Raw_options.make ~syntax ~self_pass ~project_root ~no_colour ~deprecated ()
+    in
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"print_ast-core"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+    @@ Api.Print.ast_core raw_options source_file
   in
   let summary =
     "print the core ligo AST.\n\
@@ -1557,7 +2211,9 @@ let print_ast_core =
      <*> display_format
      <*> self_pass
      <*> project_root
-     <*> no_colour)
+     <*> no_colour
+     <*> deprecated
+     <*> skip_analytics)
 
 
 let print_ast_typed =
@@ -1571,6 +2227,8 @@ let print_ast_typed =
       warn_unused_rec
       test
       no_colour
+      deprecated
+      skip_analytics
       ()
     =
     let raw_options =
@@ -1582,9 +2240,24 @@ let print_ast_typed =
         ~warn_unused_rec
         ~test
         ~no_colour
+        ~deprecated
         ()
     in
-    return_result ~return @@ Api.Print.ast_typed raw_options source_file display_format
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"print_ast-typed"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+    @@ Api.Print.ast_typed raw_options source_file
   in
   let summary =
     "print the typed AST.\n\
@@ -1605,7 +2278,9 @@ let print_ast_typed =
      <*> project_root
      <*> warn_unused_rec
      <*> test_mode
-     <*> no_colour)
+     <*> no_colour
+     <*> deprecated
+     <*> skip_analytics)
 
 
 let print_ast_aggregated =
@@ -1619,6 +2294,8 @@ let print_ast_aggregated =
       warn_unused_rec
       test
       no_colour
+      deprecated
+      skip_analytics
       ()
     =
     let raw_options =
@@ -1630,10 +2307,24 @@ let print_ast_aggregated =
         ~warn_unused_rec
         ~test
         ~no_colour
+        ~deprecated
         ()
     in
-    return_result ~return
-    @@ Api.Print.ast_aggregated raw_options source_file display_format
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"print_ast-options"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+    @@ Api.Print.ast_aggregated raw_options source_file
   in
   let summary =
     "print the contract after aggregation.\n\
@@ -1654,7 +2345,9 @@ let print_ast_aggregated =
     <*> project_root
     <*> warn_unused_rec
     <*> test_mode
-    <*> no_colour)
+    <*> no_colour
+    <*> deprecated
+    <*> skip_analytics)
 
 
 let print_ast_expanded =
@@ -1663,6 +2356,9 @@ let print_ast_expanded =
       syntax
       protocol_version
       display_format
+      no_colour
+      deprecated
+      skip_analytics
       self_pass
       project_root
       warn_unused_rec
@@ -1675,11 +2371,26 @@ let print_ast_expanded =
         ~protocol_version
         ~self_pass
         ~project_root
+        ~deprecated
         ~warn_unused_rec
         ~test
         ()
     in
-    return_result ~return @@ Api.Print.ast_expanded raw_options source_file display_format
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"print_ast-expanded"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+    @@ Api.Print.ast_expanded raw_options source_file
   in
   let summary =
     "print the contract after aggregation.\n\
@@ -1696,6 +2407,9 @@ let print_ast_expanded =
     <*> syntax
     <*> protocol_version
     <*> display_format
+    <*> no_colour
+    <*> deprecated
+    <*> skip_analytics
     <*> self_pass
     <*> project_root
     <*> warn_unused_rec
@@ -1712,6 +2426,8 @@ let print_mini_c =
       project_root
       warn_unused_rec
       no_colour
+      deprecated
+      skip_analytics
       ()
     =
     let raw_options =
@@ -1721,10 +2437,24 @@ let print_mini_c =
         ~project_root
         ~warn_unused_rec
         ~no_colour
+        ~deprecated
         ()
     in
-    return_result ~return
-    @@ Api.Print.mini_c raw_options source_file display_format optimize
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"print_mini-c"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+    @@ Api.Print.mini_c raw_options source_file optimize
   in
   let summary =
     "print Mini-C. Warning: Intended for development of LIGO and can break at any time."
@@ -1745,7 +2475,9 @@ let print_mini_c =
     <*> optimize
     <*> project_root
     <*> warn_unused_rec
-    <*> no_colour)
+    <*> no_colour
+    <*> deprecated
+    <*> skip_analytics)
 
 
 let print_group =
@@ -1758,8 +2490,8 @@ let print_group =
      ; "pretty", pretty_print
      ; "dependency-graph", print_graph
      ; "cst", print_cst
-     ; "ast-imperative", print_ast
      ; "ast-core", print_ast_core
+     ; "ast-unified", print_ast_unified
      ; "ast-typed", print_ast_typed
      ; "ast-aggregated", print_ast_aggregated
      ; "ast-expanded", print_ast_expanded
@@ -1769,17 +2501,43 @@ let print_group =
 
 (** init *)
 let init_library =
-  let f project_name template (template_list : bool) display_format () =
+  let f
+      project_name
+      template
+      (template_list : bool)
+      display_format
+      no_colour
+      skip_analytics
+      registry
+      ()
+    =
+    let cli_analytic = Analytics.generate_cli_metric ~command:"init_library" in
+    let init_analytic =
+      Analytics.
+        { group = Counter_cli_init { command = "init_library"; template }
+        ; metric_value = 1.0
+        }
+    in
     if template_list
-    then return_result ~return @@ Ligo_api.Ligo_init.list ~kind:`LIBRARY ~display_format
+    then
+      return_with_custom_formatter
+        ~skip_analytics:true
+        ~cli_analytics:[ cli_analytic ]
+        ~return
+      @@ Ligo_init.list ~kind:`LIBRARY ~display_format ~no_colour
     else
-      return_result ~return
-      @@ Ligo_api.Ligo_init.new_project
+      return_with_custom_formatter
+        ~skip_analytics
+        ~cli_analytics:[ cli_analytic; init_analytic ]
+        ~return
+      @@ Ligo_init.new_project
            ~version:Version.version
            ~kind:`LIBRARY
            ~project_name_opt:project_name
            ~template
            ~display_format
+           ~no_colour
+           ~registry
   in
   let summary = "Generate new folder which contains wished library template" in
   let readme () =
@@ -1788,21 +2546,54 @@ let init_library =
   Command.basic
     ~summary
     ~readme
-    (f <$> project_name <*> template <*> template_list <*> display_format)
+    (f
+    <$> project_name
+    <*> template
+    <*> template_list
+    <*> display_format
+    <*> no_colour
+    <*> skip_analytics
+    <*> ligo_registry)
 
 
 let init_contract =
-  let f project_name template (template_list : bool) display_format () =
+  let f
+      project_name
+      template
+      (template_list : bool)
+      display_format
+      no_colour
+      skip_analytics
+      registry
+      ()
+    =
+    let cli_analytic = Analytics.generate_cli_metric ~command:"init_contract" in
+    let init_analytic =
+      Analytics.
+        { group = Counter_cli_init { command = "init_contract"; template }
+        ; metric_value = 1.0
+        }
+    in
     if template_list
-    then return_result ~return @@ Ligo_api.Ligo_init.list ~kind:`CONTRACT ~display_format
+    then
+      return_with_custom_formatter
+        ~skip_analytics:false
+        ~cli_analytics:[ cli_analytic ]
+        ~return
+      @@ Ligo_init.list ~kind:`CONTRACT ~display_format ~no_colour
     else
-      return_result ~return
-      @@ Ligo_api.Ligo_init.new_project
+      return_with_custom_formatter
+        ~skip_analytics
+        ~cli_analytics:[ cli_analytic; init_analytic ]
+        ~return
+      @@ Ligo_init.new_project
            ~version:Version.version
            ~kind:`CONTRACT
            ~project_name_opt:project_name
            ~template
            ~display_format
+           ~no_colour
+           ~registry
   in
   let summary = "Generate new folder which contains wished contract template" in
   let readme () =
@@ -1811,7 +2602,14 @@ let init_contract =
   Command.basic
     ~summary
     ~readme
-    (f <$> project_name <*> template <*> template_list <*> display_format)
+    (f
+    <$> project_name
+    <*> template
+    <*> template_list
+    <*> display_format
+    <*> no_colour
+    <*> skip_analytics
+    <*> ligo_registry)
 
 
 let init_group =
@@ -1822,10 +2620,20 @@ let init_group =
 
 (** other *)
 let changelog =
-  let f display_format () = return_result ~return @@ Api.dump_changelog display_format in
+  let cli_analytic = Analytics.generate_cli_metric ~command:"changelog" in
+  let f display_format no_colour skip_analytics () =
+    return_result
+      ~skip_analytics
+      ~cli_analytics:[ cli_analytic ]
+      ~return
+      ~display_format
+      ~no_colour
+      ~warning_as_error:false
+    @@ Api.dump_changelog ()
+  in
   let summary = "print the ligo changelog" in
   let readme () = "Dump the LIGO changelog to stdout." in
-  Command.basic ~summary ~readme (f <$> display_format)
+  Command.basic ~summary ~readme (f <$> display_format <*> no_colour <*> skip_analytics)
 
 
 let repl =
@@ -1838,13 +2646,33 @@ let repl =
       source
       now
       display_format
+      no_colour
+      deprecated
+      skip_analytics
       init_file
       project_root
       ()
     =
-    let raw_options = Raw_options.make ~syntax ~protocol_version ~project_root () in
-    return_result ~return
-    @@ Repl.main raw_options display_format now amount balance sender source init_file
+    let raw_options =
+      Raw_options.make ~syntax ~protocol_version ~project_root ~deprecated ()
+    in
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"repl"
+        ~raw_options
+        ()
+    in
+    return_with_custom_formatter ~skip_analytics ~cli_analytics ~return
+    @@ Repl.main
+         raw_options
+         display_format
+         no_colour
+         now
+         amount
+         balance
+         sender
+         source
+         init_file
   in
   let summary = "interactive ligo interpreter" in
   let readme () = "REPL (Read-Eval-Print-Loop) for LIGO" in
@@ -1860,6 +2688,9 @@ let repl =
     <*> source
     <*> now
     <*> display_format
+    <*> no_colour
+    <*> deprecated
+    <*> skip_analytics
     <*> init_file
     <*> project_root)
 
@@ -1870,11 +2701,15 @@ let install =
     "This command invokes the package manager to install the external packages declared \
      in package.json"
   in
-  let f package_name cache_path ligo_registry () =
-    return_result ~return
+  let cli_analytic = Analytics.generate_cli_metric ~command:"install" in
+  let f package_name cache_path ligo_registry skip_analytics () =
+    return_with_custom_formatter ~skip_analytics ~cli_analytics:[ cli_analytic ] ~return
     @@ fun () -> Install.install ~package_name ~cache_path ~ligo_registry
   in
-  Command.basic ~summary ~readme (f <$> package_name <*> cache_path <*> ligo_registry)
+  Command.basic
+    ~summary
+    ~readme
+    (f <$> package_name <*> cache_path <*> ligo_registry <*> skip_analytics)
 
 
 let publish =
@@ -1883,8 +2718,9 @@ let publish =
     "[BETA] Packs the pacakage directory contents into a tarball and uploads it to the \
      registry server"
   in
-  let f ligo_registry ligorc_path project_root dry_run ligo_bin_path () =
-    return_result ~return
+  let cli_analytic = Analytics.generate_cli_metric ~command:"publish" in
+  let f ligo_registry ligorc_path project_root dry_run ligo_bin_path skip_analytics () =
+    return_with_custom_formatter ~skip_analytics ~cli_analytics:[ cli_analytic ] ~return
     @@ fun () ->
     Publish.publish ~ligo_registry ~ligorc_path ~project_root ~dry_run ~ligo_bin_path
   in
@@ -1896,7 +2732,8 @@ let publish =
     <*> ligorc_path
     <*> project_root
     <*> dry_run_flag
-    <*> ligo_bin_path)
+    <*> ligo_bin_path
+    <*> skip_analytics)
 
 
 let add_user =
@@ -1904,10 +2741,12 @@ let add_user =
   let readme () =
     "[BETA] Prompt the user for details to create a new user on registry server"
   in
-  let f ligo_registry ligorc_path () =
-    return_result ~return @@ fun () -> User.create_or_login ~ligo_registry ~ligorc_path
+  let cli_analytic = Analytics.generate_cli_metric ~command:"add-user" in
+  let f ligo_registry ligorc_path skip_analytics () =
+    return_with_custom_formatter ~skip_analytics ~cli_analytics:[ cli_analytic ] ~return
+    @@ fun () -> User.create_or_login ~ligo_registry ~ligorc_path
   in
-  Command.basic ~summary ~readme (f <$> ligo_registry <*> ligorc_path)
+  Command.basic ~summary ~readme (f <$> ligo_registry <*> ligorc_path <*> skip_analytics)
 
 
 let login =
@@ -1916,25 +2755,85 @@ let login =
     "[BETA] Prompt the user for credentials to creates a login session with the registry \
      server"
   in
-  let f ligo_registry ligorc_path () =
-    return_result ~return @@ fun () -> User.create_or_login ~ligo_registry ~ligorc_path
+  let cli_analytic = Analytics.generate_cli_metric ~command:"login" in
+  let f ligo_registry ligorc_path skip_analytics () =
+    return_with_custom_formatter ~skip_analytics ~cli_analytics:[ cli_analytic ] ~return
+    @@ fun () -> User.create_or_login ~ligo_registry ~ligorc_path
   in
-  Command.basic ~summary ~readme (f <$> ligo_registry <*> ligorc_path)
+  Command.basic ~summary ~readme (f <$> ligo_registry <*> ligorc_path <*> skip_analytics)
 
 
 let daemon =
   let summary = "launch a long running LIGO process" in
   let readme () = "Run LIGO subcommands without exiting the process" in
-  let f ligo_bin_path () =
-    return_result ~return @@ fun () -> Daemon.main ~ligo_bin_path ()
+  let cli_analytic = Analytics.generate_cli_metric ~command:"daemon" in
+  let f ligo_bin_path skip_analytics () =
+    return_with_custom_formatter ~skip_analytics ~cli_analytics:[ cli_analytic ] ~return
+    @@ fun () -> Daemon.main ~ligo_bin_path ()
   in
-  Command.basic ~summary ~readme (f <$> ligo_bin_path)
+  Command.basic ~summary ~readme (f <$> ligo_bin_path <*> skip_analytics)
+
+
+module Lsp_server = struct
+  (* Main code
+  This is the code that creates an instance of the lsp server class
+  and runs it as a task. *)
+
+  module Requests = Ligo_lsp.Server.Requests
+  module Server = Ligo_lsp.Server
+
+  let run () =
+    let s = new Server.lsp_server in
+    let server = Linol_lwt.Jsonrpc2.create_stdio (s :> Linol_lwt.Jsonrpc2.server) in
+    let task = Linol_lwt.Jsonrpc2.run server in
+    match Linol_lwt.run task with
+    | () -> Ok ("", "")
+    | exception e ->
+      let e = Caml.Printexc.to_string e in
+      Error ("", e)
+end
+
+let lsp =
+  let summary = "[BETA] launch a LIGO lsp server" in
+  let readme () = "[BETA] Run the lsp server which is used by editor extensions" in
+  let f () =
+    return_with_custom_formatter ~skip_analytics:true ~cli_analytics:[] ~return
+    @@ fun () -> Lsp_server.run ()
+  in
+  Command.basic ~summary ~readme (Command.Param.return f)
+
+
+let analytics_accept =
+  let summary = "Accept analytics term" in
+  let readme () = "Accept analytics term and store result in term_acceptance file" in
+  let f () =
+    return_with_custom_formatter ~skip_analytics:true ~cli_analytics:[] ~return
+    @@ fun () -> Analytics.update_term_acceptance "accepted"
+  in
+  Command.basic ~summary ~readme (Command.Param.return f)
+
+
+let analytics_deny =
+  let summary = "Refuse analytics term" in
+  let readme () = "Refuse analytics term and store result in term_acceptance file" in
+  let f () =
+    return_with_custom_formatter ~skip_analytics:true ~cli_analytics:[] ~return
+    @@ fun () -> Analytics.update_term_acceptance "denied"
+  in
+  Command.basic ~summary ~readme (Command.Param.return f)
+
+
+let analytics =
+  Command.group
+    ~summary:"Manage analytics"
+    [ "accept", analytics_accept; "deny", analytics_deny ]
 
 
 let main =
   Command.group ~preserve_subcommand_order:() ~summary:"The LigoLANG compiler"
   @@ [ "compile", compile_group
      ; "transpile", transpile_group
+     ; "transpile-with-ast", transpile_with_ast_group
      ; "run", run_group
      ; "info", info_group
      ; "mutate", mutate_group
@@ -1947,6 +2846,8 @@ let main =
      ; "add-user", add_user
      ; "login", login
      ; "daemon", daemon
+     ; "lsp", lsp
+     ; "analytics", analytics
      ]
 
 

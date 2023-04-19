@@ -1,6 +1,6 @@
-module Free_variables = Helpers.Free_variables
 open Ligo_prim
 open Ast_aggregated
+module Free_variables = Helpers.Free_variables
 
 (* Reference implementation:
    https://www.cs.cornell.edu/courses/cs3110/2019sp/textbook/interp/lambda-subst/main.ml
@@ -36,13 +36,16 @@ let rec replace : expression -> Value_var.t -> Value_var.t -> expression =
       if Param.is_imm binder && Param.get_var binder = x then result else replace result
     in
     return @@ E_lambda { binder; output_type; result }
-  | E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } } ->
+  | E_recursive
+      { fun_name; fun_type; lambda = { binder; output_type; result }; force_lambdarec } ->
     let result =
       if (Param.is_imm binder && Param.get_var binder = x) || fun_name = x
       then result
       else replace result
     in
-    return @@ E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } }
+    return
+    @@ E_recursive
+         { fun_name; fun_type; lambda = { binder; output_type; result }; force_lambdarec }
   | E_let_in { let_binder; rhs; let_result; attributes } ->
     let rhs = replace rhs in
     let let_result =
@@ -158,36 +161,6 @@ let subst_binder
     fresh, subst ~body ~x ~expr)
 
 
-(* Given an implementation of substitution on an arbitary type of
-   body, implements substitution on a binder (pair of bound variable
-   and body) *)
-let subst_binders
-    : type body.
-      (body:body -> x:Value_var.t -> expr:expression -> body)
-      -> (body -> Value_var.t -> Value_var.t -> body)
-      -> body:Value_var.t list * body
-      -> x:Value_var.t
-      -> expr:expression
-      -> Value_var.t list * body
-  =
- fun subst replace ~body:(ys, body) ~x ~expr ->
-  (* if x is shadowed, binder doesn't change *)
-  if List.mem ~equal:Value_var.equal ys x
-  then ys, body (* else, if no capture, subst in binder *)
-  else (
-    let fvs = Free_variables.expression expr in
-    let f (fs, body) y =
-      if not (List.mem ~equal:Value_var.equal fvs y)
-      then y :: fs, body (* else, avoid capture and subst in binder *)
-      else (
-        let fresh = Value_var.fresh_like y in
-        let body = replace body y fresh in
-        fresh :: fs, body)
-    in
-    let ys, body = List.fold ~f ~init:([], body) ys in
-    List.rev ys, subst ~body ~x ~expr)
-
-
 (**
    Computes `body[x := expr]`.
 **)
@@ -247,11 +220,11 @@ let rec subst_expression
   | E_lambda lambda ->
     let lambda = subst_lambda ~x ~expr ~body:lambda in
     return @@ E_lambda lambda
-  | E_recursive { fun_name; fun_type; lambda } ->
+  | E_recursive { fun_name; fun_type; lambda; force_lambdarec } ->
     let fun_name, lambda =
       subst_binder subst_lambda replace_lambda ~body:(fun_name, lambda) ~x ~expr
     in
-    return @@ E_recursive { fun_name; fun_type; lambda }
+    return @@ E_recursive { fun_name; fun_type; lambda; force_lambdarec }
   | E_let_in { let_binder; rhs; let_result; attributes } ->
     let rhs = self rhs in
     let let_binder, let_result = subst_pattern (let_binder, let_result) ~x ~expr in

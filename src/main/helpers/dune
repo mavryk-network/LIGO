@@ -19,11 +19,26 @@
 (library
  (name cli_helpers)
  (public_name ligo.cli_helpers)
- (modules cli_helpers repository_url ligo_rc ligo_manifest ligo_ignore
-   constants)
+ (modules
+  cli_helpers
+  repository_url
+  ligo_rc
+  ligo_manifest
+  ligo_ignore
+  constants)
  (instrumentation
   (backend bisect_ppx))
- (libraries simple-utils syntax lwt lwt.unix semver uri ligo.unix re)
- (inline_tests)
+ (libraries
+  simple-utils
+  syntax
+  lwt
+  semver
+  uri
+  ligo.unix
+  ligo.analytics
+  ligo.api
+  re)
+ (inline_tests
+  (libraries ligo.api.unix))
  (preprocess
   (pps ppx_deriving_yojson ppx_inline_test)))

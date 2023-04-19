@@ -164,7 +164,11 @@ and value =
   | V_Michelson_contract of mcode [@name "contract_code"]
   | V_Ast_contract of
       { main : Ast_aggregated.expression
-      ; views : (Value_var.t list * Ast_aggregated.expression) option
+      ; views :
+          [ `None
+          | `Single of Value_var.t list * Ast_aggregated.expression
+          | `Multi of (Value_var.t * Ast_aggregated.expression) list
+          ]
       } [@name "ast_contract"]
   | V_Mutation of mutation [@name "mutation"]
   | V_Func_val of func_val [@name "function"]
@@ -172,6 +176,7 @@ and value =
   | V_Location of location [@name "location"]
   | V_Typed_address of Contract.t
       (* This is a copy of C_address in constant *) [@name "typed_address"]
+  | V_Views of (string * func_val) list
 [@@deriving yojson]
 
 type bigmap_state = (value * value) list
@@ -184,3 +189,4 @@ type bigmap_data =
 
 type bigmap = int * bigmap_data
 type bigmaps = bigmap list
+type toplevel_env = (string * value) list [@@deriving yojson]

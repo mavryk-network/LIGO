@@ -19,16 +19,15 @@ module Test.Common.Util
 import Data.List (isSuffixOf)
 import Duplo.Pretty (Doc, Style (..), renderStyle, style)
 import Language.Haskell.TH.Syntax (liftString)
-import System.Directory (listDirectory)
+import System.Directory (canonicalizePath, listDirectory)
 import System.Environment (getEnv)
 import System.FilePath (splitDirectories, takeDirectory, (</>))
 import System.IO.Error (isDoesNotExistError)
 import UnliftIO.Exception as UnliftIO (catch, throwIO)
 
-import AST.Includes (Includes (..), includesGraph, insertPreprocessorRanges)
+import AST.Includes (includesGraph, insertPreprocessorRanges)
 import AST.Parser (parseContracts, parsePreprocessed, parseWithScopes)
 import AST.Scope
-  (ContractInfo, ContractInfo', HasScopeForest, Info', ParsedContractInfo, addScopes, contractTree)
 import AST.Skeleton (SomeLIGO)
 import Cli.Types (TempDir (..), TempSettings (..))
 import Extension (supportedExtensions)
@@ -36,14 +35,15 @@ import Log (NoLoggingT (..))
 import Parser (ParsedInfo)
 import ParseTree (pathToSrc)
 import Progress (noProgress)
+import System.IO.Unsafe (unsafePerformIO)
 
-type ScopeTester impl = (HasCallStack, HasScopeForest impl (NoLoggingT IO))
+type ScopeTester impl = (HasCallStack, HasScopeForest impl (NoLoggingT IO), KnownScopingSystem impl)
 
 tempTemplate :: String
 tempTemplate = ".ligo-test"
 
 testDir, contractsDir :: FilePath
-testDir =
+testDir = unsafePerformIO $ canonicalizePath
   $(
     let
       getDir :: IO FilePath
@@ -54,6 +54,8 @@ testDir =
     in liftIO getDir >>= liftString
   )
 contractsDir = testDir </> "contracts"
+{-# NOINLINE testDir #-}
+{-# NOINLINE contractsDir #-}
 
 getContractsWithExtension :: String -> [FilePath] -> FilePath -> IO [FilePath]
 getContractsWithExtension ext ignore dir = listDirectory dir

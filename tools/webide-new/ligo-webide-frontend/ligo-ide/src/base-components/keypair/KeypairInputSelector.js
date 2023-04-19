@@ -42,6 +42,13 @@ export default class KeypairInputSelector extends PureComponent {
       if (keypairs.length && !AllAddress.includes(this.props.value)) {
         this.props.onChange(keypairs[0].address);
       }
+      if (
+        extraOptions?.length &&
+        extraOptions[0].children?.length &&
+        !AllAddress.includes(extraOptions[0].children[0].id)
+      ) {
+        extraOptions[0].children[0].onClick();
+      }
     }
     this.setState({
       extraOptions,
@@ -122,6 +129,7 @@ export default class KeypairInputSelector extends PureComponent {
       extra = [],
       abbreviationOption = false,
       invalid,
+      style,
     } = this.props;
 
     const { options, extraOptions } = this.state;
@@ -129,7 +137,7 @@ export default class KeypairInputSelector extends PureComponent {
     const onClick = () => {
       if (!editable && !options.length && !extraOptions.length) {
         notification.error(
-          "No Available Keypiar",
+          "No Available Keypair",
           "Please create or import a keypair in the keypair manager first."
         );
       }
@@ -155,6 +163,7 @@ export default class KeypairInputSelector extends PureComponent {
         onChange={onChange}
         invalid={invalid}
         onClick={onClick}
+        style={style}
       />
     );
   }

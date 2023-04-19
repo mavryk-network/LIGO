@@ -1,11 +1,11 @@
 import React, { PureComponent } from "react";
 
 import { NavLink } from "react-router-dom";
-import { Navbar, Nav } from "~/base-components/ui-components";
+import { Navbar, Nav, UncontrolledTooltip } from "~/base-components/ui-components";
+import { KeypairButton } from "~/base-components/keypair";
 
 import NavLinkLeft from "./NavLinkLeft";
 import NavLinkRight from "./NavLinkRight";
-import User from "./User";
 import "./styles.scss";
 
 export default class Header extends PureComponent {
@@ -66,7 +66,15 @@ export default class Header extends PureComponent {
   };
 
   render() {
-    const { profile, navbarLeft, navbarRight, extraLoggedInOptions, children } = this.props;
+    const {
+      profile,
+      navbarLeft,
+      navbarRight,
+      extraLoggedInOptions,
+      children,
+      onCancelKp,
+      isOpenKeypair,
+    } = this.props;
     const username = "local";
 
     return (
@@ -77,14 +85,14 @@ export default class Header extends PureComponent {
         {children}
         <Nav navbar className="ml-auto navbar-nav-scroll navbar-right">
           {this.renderRightNavbar(navbarRight)}
-          <NavLink
-            to={`/${username}`}
-            exact
-            className="nav-link d-flex p-0"
-            activeClassName="active"
-          >
-            <User profile={profile} extraLoggedInOptions={extraLoggedInOptions} />
-          </NavLink>
+          <KeypairButton isOpenKeypair={isOpenKeypair} onCancel={onCancelKp}>
+            <div className="btn btn-primary btn-flat px-3 py-75" id="keypair-manager">
+              <i className="fas fa-key" />
+            </div>
+            <UncontrolledTooltip placement="bottom" target="keypair-manager">
+              Keypair Manager
+            </UncontrolledTooltip>
+          </KeypairButton>
         </Nav>
       </Navbar>
     );

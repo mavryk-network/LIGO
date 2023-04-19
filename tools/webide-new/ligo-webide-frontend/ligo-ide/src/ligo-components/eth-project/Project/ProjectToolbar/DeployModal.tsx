@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import { Modal } from "~/base-components/ui-components";
+import { Button, Modal } from "~/base-components/ui-components";
 import { KeypairInputSelector } from "~/base-components/keypair";
 import { networkManager } from "~/ligo-components/eth-network";
 import fileOps from "~/base-components/file-ops";
 import notification from "~/base-components/notification";
 import { WebIdeApi } from "~/components/api/api";
 import { ActionParamFormGroup } from "~/ligo-components/eth-contract";
+import { actions } from "~/base-components/workspace";
+import { validAddress, validInt } from "~/components/validators";
 
 interface DeployModalProps {
   modalRef: React.RefObject<Modal>;
@@ -151,7 +153,7 @@ const DeployModal: React.FC<DeployModalProps> = ({
     if (needEstimate) {
       const estimated: boolean = await estimate().catch((e: any) => {
         if (e instanceof Error) {
-          notification.error("Estimation error", e.message);
+          notification.error("Estimation error (Most likely your balance is zero)", e.message);
         } else {
           console.error(e);
         }
@@ -180,26 +182,33 @@ const DeployModal: React.FC<DeployModalProps> = ({
       title="Deploy contract"
       textConfirm={needEstimate ? "Estimate" : "Deploy"}
       pending={loading && (needEstimate ? "Estimating" : "Deploying")}
-      confirmDisabled={storage === "" || selectedSigner === ""}
+      confirmDisabled={
+        storage === "" ||
+        selectedSigner === "" ||
+        !!(delegateAddress !== "" && validAddress(delegateAddress)) ||
+        !!(balance !== "" && validInt(balance))
+      }
       onConfirm={confirmDeployment}
       onCancel={() => {
-        setLoading(false);
-        setStorage("");
-        setResult("");
-        setIsWallet(false);
-        setSelectedSigner("");
-        setDelegateAddress("");
-        setTxOptions(
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-          networkManager.sdk?.utils.txOptions?.list.reduce(
-            (a: { [name: string]: string }, opt: { name: string }) => ({ ...a, [opt.name]: "" }),
-            {}
-          )
-        );
-        setNeedEstimate(true);
-        setBalance("");
-        setLoadedCompiledStorage("");
-        setCompiledContract("");
+        if (result !== "") {
+          setLoading(false);
+          setStorage("");
+          setResult("");
+          setIsWallet(false);
+          setSelectedSigner("");
+          setDelegateAddress("");
+          setTxOptions(
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+            networkManager.sdk?.utils.txOptions?.list.reduce(
+              (a: { [name: string]: string }, opt: { name: string }) => ({ ...a, [opt.name]: "" }),
+              {}
+            )
+          );
+          setNeedEstimate(true);
+          setBalance("");
+          setLoadedCompiledStorage("");
+          setCompiledContract("");
+        }
         return true;
       }}
       onOpened={refreshStorage}
@@ -214,40 +223,53 @@ const DeployModal: React.FC<DeployModalProps> = ({
       <ActionParamFormGroup
         key="deploy-param-storage"
         className="mb-2"
-        label={<div>Init storage</div>}
+        label={<div>Init storage (ligo expression)</div>}
         value={storage}
         onChange={(st: string) => setStorage(st)}
         placeholder="Storage"
         size=""
         type="string"
       />
-      <KeypairInputSelector
-        label="Signer"
-        extra={
-          networkManager.isWallet &&
-          signer && [
-            {
-              group: networkManager.browserExtension.name.toLowerCase(),
-              badge: networkManager.browserExtension.name,
-              children: [
-                {
-                  address: signer,
-                  name: networkManager.browserExtension.name,
-                  onClick: () => {
-                    setIsWallet(true);
-                    setSelectedSigner(signer);
+      {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+      {/* @ts-ignore */}
+      <div style={{ display: "flex", "align-items": "flex-end" }}>
+        <KeypairInputSelector
+          label="Signer"
+          extra={
+            networkManager.isWallet &&
+            signer && [
+              {
+                group: networkManager.browserExtension.name.toLowerCase(),
+                badge: networkManager.browserExtension.name,
+                children: [
+                  {
+                    address: signer,
+                    name: networkManager.browserExtension.name,
+                    onClick: () => {
+                      setIsWallet(true);
+                      setSelectedSigner(signer);
+                    },
                   },
-                },
-              ],
-            },
-          ]
-        }
-        value={selectedSigner}
-        onChange={(newSigner: string) => {
-          setIsWallet(false);
-          setSelectedSigner(newSigner);
-        }}
-      />
+                ],
+              },
+            ]
+          }
+          value={selectedSigner}
+          onChange={(newSigner: string) => {
+            setIsWallet(false);
+            setSelectedSigner(newSigner);
+          }}
+          style={{ flex: "auto" }}
+        />
+        <Button
+          color="warning"
+          className="ml-2 mb-3"
+          style={{ height: "fit-content" }}
+          onClick={() => actions.openKeypair()}
+        >
+          Edit
+        </Button>
+      </div>
       <ActionParamFormGroup
         key="deploy-param-balance"
         className="mb-2"
@@ -268,6 +290,8 @@ const DeployModal: React.FC<DeployModalProps> = ({
         icon="fas fa-map-marker-alt"
         size=""
         type=""
+        feedback={delegateAddress !== "" && validAddress(delegateAddress)}
+        invalid={delegateAddress !== "" && !!validAddress(delegateAddress)}
       />
       <div className="row">
         {/* eslint-disable */}
@@ -282,6 +306,8 @@ const DeployModal: React.FC<DeployModalProps> = ({
             placeholder={option.placeholder}
             size=""
             type=""
+            feedback={(txOptions && txOptions[option.name]) && validInt(txOptions[option.name]) && "Invalid integer"}
+            invalid={(txOptions && txOptions[option.name]) && !!validInt(txOptions[option.name])}
           />
         ))}
         {/* eslint-enable */}

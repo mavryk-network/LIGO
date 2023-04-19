@@ -1,5 +1,7 @@
+(*
 module Var = Simple_utils.Var
 open Test_helpers
+
 
 let get_program = get_program "./contracts/replaceable_id.ligo"
 
@@ -8,26 +10,32 @@ let compile_main ~raise () =
 
 
 open Ligo_prim
-open Ast_imperative
+open Ast_unified
 
-let empty_op_list = e_typed_list ~loc [] (t_operation ~loc ())
+let empty_op_list = e_list ~loc []
 
 let empty_message =
   e_lambda_ez
     ~loc
     (Value_var.of_input_var ~loc "arguments")
-    ~ascr:(t_unit ~loc ())
-    (Some (t_list ~loc (t_operation ~loc ())))
+    ~ascr:(tv_unit ~loc ())
+    (Some (t_list ~loc (tv_operation ~loc ())))
     empty_op_list
 
 
-let storage id = e_address ~loc @@ addr id
+let storage id = e_address ~loc (addr id)
 
 let entry_change_addr id =
-  e_constructor ~loc "Change_address" @@ e_address ~loc @@ addr @@ id
+  e_constructor
+    ~loc
+    { constructor = Label.of_string "Change_address"; element = storage id }
 
 
-let entry_pass_message = e_constructor ~loc "Pass_message" @@ empty_message
+let entry_pass_message =
+  e_constructor
+    ~loc
+    { constructor = Label.of_string "Pass_message"; element = empty_message }
+
 
 let change_addr_success ~raise () =
   let program = get_program ~raise () in
@@ -112,3 +120,4 @@ let main =
     ; test_w "pass_message_success" pass_message_success
     ; test_w "pass_message_fail" pass_message_fail
     ]
+*)

@@ -24,15 +24,15 @@ packages:
     commit: 540990acfd2d4aaffa17a8337cbfa9a38cb3f2aa
 - completed:
     name: morley-debugger
-    version: 0.2.1
+    version: 0.3.0
     git: https://gitlab.com/morley-framework/morley-debugger.git
     pantry-tree:
-      size: 10584
-      sha256: 39d658d33e5b5ac44527c11f190096d91721dfe17ca55f1ff50c79ab1426cb9f
-    commit: 8853266cea86e90b3b6d2c355f03473bc448cafc
+      size: 10613
+      sha256: 2421cfcdc9dd979eafbe4b540ef6bbe1fdde3cdc7ae9cff2b21cd9cccaeecbc4
+    commit: dfc4208dedfca16584d92b4248873903b4e58112
   original:
     git: https://gitlab.com/morley-framework/morley-debugger.git
-    commit: 8853266cea86e90b3b6d2c355f03473bc448cafc
+    commit: dfc4208dedfca16584d92b4248873903b4e58112
 - completed:
     hackage: base58-bytestring-0.1.0@sha256:a1da72ee89d5450bac1c792d9fcbe95ed7154ab7246f2172b57bd4fd9b5eab79,1913
     pantry-tree:
@@ -94,26 +94,33 @@ packages:
   original:
     hackage: morley-prelude-0.5.1
 - completed:
-    hackage: morley-1.17.0@sha256:6a04825e2ddc3db9227ef3e1836b077ad35ee78758b14c52380d733120f65533,10075
+    hackage: morley-1.19.0@sha256:42e84f6950c03943f0d7664e9b0bcb5ac9c176cf3316a4efa77a0e24b2a08bc9,10973
     pantry-tree:
-      size: 10629
-      sha256: 2efdf39d6ebc22341ca56840eb35138a4904b3c9d5008ebc852d04ee442f12bb
+      size: 12075
+      sha256: 403a33d053cf0e3f6c3aca93ee1c4942c935da4d86ab9a969c3144fffd602e00
   original:
-    hackage: morley-1.17.0
+    hackage: morley-1.19.0
 - completed:
-    hackage: lorentz-0.14.0@sha256:12d0fe7e28e3ef1d762a1f212e4be1d0ae415f57ece360dce2e0b12acf658bc9,4506
+    hackage: lorentz-0.15.0@sha256:5b2b52a8b7a6de7bf4bbf8dca4f9cd2ff2f138ce852099e7a4446a809e29463d,4571
     pantry-tree:
-      size: 3991
-      sha256: 17de7123fcae4ca2c263034a93b3b8b7edf6b1b0d26c3e46937890fe89ff9e14
+      size: 4123
+      sha256: a93642b46d22739245ae46807ff03b87e9c261f79abf1a41d230e2edc5918027
   original:
-    hackage: lorentz-0.14.0
+    hackage: lorentz-0.15.0
 - completed:
-    hackage: morley-client-0.2.0@sha256:404da084a84cb97f18e797aff473909ad131bc6cef746289c2fd51d180dddb53,8468
+    hackage: morley-client-0.3.0@sha256:cca46092e141216cad1fdbdc3dee5766c7aa4a4071927e1c4836559d2d7df37c,8503
     pantry-tree:
-      size: 3585
-      sha256: 629ebe1dbf41e0ae1e0900843863972362cdb9c56101f4f5470a8a81a5346bb0
+      size: 3796
+      sha256: 68052cc9d2d27029cbd3199d82a09fbbb757aa6a2d858bd22675abc1a64d6aad
   original:
-    hackage: morley-client-0.2.0
+    hackage: morley-client-0.3.0
+- completed:
+    hackage: cleveland-0.3.0@sha256:a7e4191daf15ecd59ce7e4a5351744ecc6b031c9c88bd376c7bb3ee63a0d284d,9866
+    pantry-tree:
+      size: 9605
+      sha256: ec18f2d5fd58037e70abb70decb1c86604b2f37d432c745514308201f7d5506f
+  original:
+    hackage: cleveland-0.3.0
 - completed:
     name: caps
     version: '0'
@@ -254,44 +261,33 @@ packages:
     git: https://github.com/serokell/duplo.git
     commit: f65dc29eef93a7260cfbb7db812f0bd265db16fd
 - completed:
-    subdir: lsp-types
-    name: lsp-types
-    version: 1.5.0.0
-    git: https://github.com/haskell/lsp.git
+    hackage: timestats-0.1.0@sha256:86677d16269df53fb44d1aa8e90bfd6503461d637ff3d914f30b1d4ce98da5d2,1284
     pantry-tree:
-      size: 4160
-      sha256: 8700dc38e8aeac889d0ba7ce2a7dd2b8579e26608f64b220f5e790f0633dce24
-    commit: daafba0dfcba565595f0b7c3c7e17bfc21b3e76e
+      size: 277
+      sha256: ae05a6e3b2fdb99eaae6b465c00a5bfbb525d6b7cb5839e685eb38c4c0ed1394
   original:
-    subdir: lsp-types
-    git: https://github.com/haskell/lsp.git
-    commit: daafba0dfcba565595f0b7c3c7e17bfc21b3e76e
+    hackage: timestats-0.1.0
 - completed:
-    subdir: lsp
-    name: lsp
-    version: 1.5.0.0
-    git: https://github.com/haskell/lsp.git
+    hackage: lsp-types-1.6.0.0@sha256:06be28f931eff0b58bc7210f0567ae07713f98735b5a8fb8a6b7adde43d7c782,5690
     pantry-tree:
-      size: 1551
-      sha256: 8d13180ceb84b5b0f24ba4df81109dd7300adc5e471579b933a86f5941bbe5c0
-    commit: daafba0dfcba565595f0b7c3c7e17bfc21b3e76e
+      size: 4909
+      sha256: 0b790822bcac982b9bf3b4e249c1395d5f76a4c0cb1287eee5a5613f74a8eafd
   original:
-    subdir: lsp
-    git: https://github.com/haskell/lsp.git
-    commit: daafba0dfcba565595f0b7c3c7e17bfc21b3e76e
+    hackage: lsp-types-1.6.0.0
 - completed:
-    subdir: lsp-test
-    name: lsp-test
-    version: 0.14.0.3
-    git: https://github.com/haskell/lsp.git
+    hackage: lsp-1.6.0.0@sha256:2b95e406cc85ffa95406ae8ad7d16b82283a6ca2fcb7ea5308a4ef3e6d6e68e6,4397
     pantry-tree:
-      size: 2061
-      sha256: 415236a1e28d1c93b0f87f0422c86e7becf7be8fc23f557abab628298b0a7b3c
-    commit: daafba0dfcba565595f0b7c3c7e17bfc21b3e76e
+      size: 1044
+      sha256: 43a82c501ec3074d888f2bf4960e4b447028c1537abbca4cf65e74944604bf62
   original:
-    subdir: lsp-test
-    git: https://github.com/haskell/lsp.git
-    commit: daafba0dfcba565595f0b7c3c7e17bfc21b3e76e
+    hackage: lsp-1.6.0.0
+- completed:
+    hackage: lsp-test-0.14.1.0@sha256:a535014ed008a6584cd3c59d31435d046aa3d346ce9a36a4f6e006586e29b4a4,4852
+    pantry-tree:
+      size: 1559
+      sha256: a720cfe18e3575e8d32f7937912340601c2f7e8b2aa9b8cc91346ed531983793
+  original:
+    hackage: lsp-test-0.14.1.0
 - completed:
     name: text-rope
     version: '0.2'

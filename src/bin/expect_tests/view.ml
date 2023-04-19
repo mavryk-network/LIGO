@@ -29,8 +29,8 @@ let%expect_test _ =
     {|
     File "../../test/contracts/view.mligo", line 3, characters 12-14:
       2 |
-      3 | [@view] let v1 (n,s: int * int) : int = s + n + 1
-      4 | let v2 (_,s: int * int) : int = s + 2
+      3 | [@view] let v1 (n : int) (s: int) : int = s + n + 1
+      4 | let v2 (_ : int) (s: int) : int = s + 2
 
     Warning: This view will be ignored, command line option override [
     view] annotation
@@ -46,12 +46,12 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts/view.mligo", line 5, characters 4-12:
-      4 | let v2 (_,s: int * int) : int = s + 2
-      5 | let bad_view (_,_: int * nat ) : nat = 1n
+      4 | let v2 (_ : int) (s: int) : int = s + 2
+      5 | let bad_view (_ : int) (_: nat) : nat = 1n
       6 |
 
-    Invalid view argument.
-    View 'bad_view' has storage type 'nat' and contract 'main' has storage type 'int'. |}]
+    Invalid type for view "main#11".
+    Cannot find "int" as storage. |}]
 
 (* view + #import : no view expected *)
 let%expect_test _ =
@@ -86,7 +86,7 @@ let%expect_test _ =
   [%expect
     {| 
     File "../../test/contracts/view_restrictions.mligo", line 7, characters 10-70:
-      6 | let bad_view1 (n,s: int * int) : int =
+      6 | let bad_view1 (n : int) (s : int) : int =
       7 |   let _ = Tezos.create_contract main (None : key_hash option) 0mutez 2 in
       8 |   s + n + 1
 
@@ -113,7 +113,7 @@ let%expect_test _ =
       code { CDR ; NIL operation ; PAIR } ;
       view "ok_view"
            unit
-           bytes
+           (lambda int (pair operation address))
            { DROP ;
              LAMBDA
                int
@@ -122,8 +122,7 @@ let%expect_test _ =
                  NONE key_hash ;
                  CREATE_CONTRACT
                    { parameter unit ; storage int ; code { CDR ; NIL operation ; PAIR } } ;
-                 PAIR } ;
-             PACK } } |}]
+                 PAIR } } } |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "view_tuple_storage.mligo" ];
@@ -149,8 +148,8 @@ let%expect_test _ =
     {|
     File "../../test/contracts/negative/views_shadow.mligo", line 3, characters 12-14:
       2 |
-      3 | [@view] let v1 (n,s: int * int) : int = s + n + 1
-      4 | let v1 (n,s: int * int) : int = s + n + 111111
+      3 | [@view] let v1 (n : int) (s: int) : int = s + n + 1
+      4 | let v1 (n : int) (s: int) : int = s + n + 111111
 
     This declaration holds an annotation and is later shadowed. |}]
 
@@ -160,8 +159,8 @@ let%expect_test _ =
     {|
     File "../../test/contracts/negative/views_shadow_top_pat.mligo", line 3, characters 12-14:
       2 |
-      3 | [@view] let v1 = fun (n,s: int * int) : int -> s + n + 1
-      4 | let v1 = fun (n,s: int * int) : int -> s + n + 111111
+      3 | [@view] let v1 = fun (n : int) (s : int) : int -> s + n + 1
+      4 | let v1 = fun (n : int) (s: int) : int -> s + n + 111111
 
     This declaration holds an annotation and is later shadowed. |}]
 

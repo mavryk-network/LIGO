@@ -16,10 +16,8 @@ import System.FilePath
 import AST.Skeleton (Lang (..))
 
 data ElimExt a = ElimExt
-  { eePascal :: a
-  , eeCaml   :: a
-  , eeReason :: a
-  , eeJs     :: a
+  { eeCaml :: a
+  , eeJs   :: a
   }
 
 newtype UnsupportedExtension = UnsupportedExtension String
@@ -38,9 +36,6 @@ extGlobs = toText . (("**" </>) . ("*" <>)) <$> supportedExtensions
 getExt :: MonadError UnsupportedExtension m => FilePath -> m Lang
 getExt path =
   case takeExtension path of
-    ".religo" -> return Reason
-    ".ligo"   -> return Pascal
-    ".pligo"  -> return Pascal
     ".mligo"  -> return Caml
     ".jsligo" -> return Js
     ext       -> throwError $ UnsupportedExtension ext
@@ -51,10 +46,8 @@ isLigoFile = isRight . getExt
 onExt :: MonadError UnsupportedExtension m => ElimExt a -> FilePath -> m a
 onExt ee path =
   getExt path <&> \case
-    Pascal -> eePascal ee
-    Caml   -> eeCaml   ee
-    Reason -> eeReason ee
-    Js     -> eeJs     ee
+    Caml -> eeCaml   ee
+    Js   -> eeJs     ee
 
 supportedExtensions :: [FilePath]
-supportedExtensions = [".ligo", ".pligo", ".mligo", ".religo", ".jsligo"]
+supportedExtensions = [".mligo", ".jsligo"]

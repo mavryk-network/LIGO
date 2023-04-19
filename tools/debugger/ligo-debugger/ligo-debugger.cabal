@@ -1,6 +1,6 @@
 cabal-version: 2.0
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.35.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -92,6 +92,7 @@ library
     , filepath
     , fmt
     , hashable
+    , hedgehog
     , lens
     , lens-aeson
     , ligo-squirrel
@@ -190,8 +191,11 @@ test-suite ligo-debugger-test
       Test.Navigation
       Test.Snapshots
       Test.Util
+      Test.Util.Golden
       Test.Util.Options
       Test.Variables
+      Paths_ligo_debugger
+  autogen-modules:
       Paths_ligo_debugger
   hs-source-dirs:
       test
@@ -242,7 +246,8 @@ test-suite ligo-debugger-test
   build-tool-depends:
       tasty-discover:tasty-discover
   build-depends:
-      HUnit
+      Diff
+    , HUnit
     , aeson
     , base-noprelude
     , containers
@@ -264,6 +269,7 @@ test-suite ligo-debugger-test
     , nyan-interpolation-core
     , singletons
     , tasty
+    , tasty-golden
     , tasty-hedgehog
     , tasty-hunit-compat
     , text

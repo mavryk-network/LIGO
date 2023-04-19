@@ -28,7 +28,7 @@ module T =
        redefine manually here (by type [t]) but the second one we need
        to satisfy Menhir's Inspection API.  *)
 
-    include Menhir_pyligo_tokens.MenhirToken
+    include Mh_py_tokens.MenhirToken
 
     (* TOKENS *)
 
@@ -152,6 +152,11 @@ module T =
     | EOF of lexeme Wrap.t
 
     type token = t
+
+
+    (* NOT USED FOR JSLIGO: STUB *)
+
+    let add_directive (_ : Directive.t) (token : t) = token
 
 
     (* FROM TOKENS TO LEXEMES *)

@@ -7,7 +7,6 @@ module Region          = Simple_utils.Region
 module Utils           = Simple_utils.Utils
 module Std             = Simple_utils.Std
 module Lexbuf          = Simple_utils.Lexbuf
-module Snippet         = Simple_utils.Snippet
 module Unit            = LexerLib.Unit
 module type LEXER      = ParserLib.LowAPI.LEXER
 module type PARSER     = ParserLib.LowAPI.PARSER
@@ -41,8 +40,11 @@ module type PRINTER =
 
 module type PRETTY =
   sig
+    type environment
+    val default_environment : environment
+
     type tree
-    val print : tree -> PPrint.document
+    val print : environment -> tree -> PPrint.document
   end
 
 module type WARNING =
@@ -100,8 +102,8 @@ module Make
       struct
         include Lexer
 
-        let scan_token lexbuf =
-          match scan_token lexbuf with
+        let scan_token ~no_colour lexbuf =
+          match scan_token ~no_colour lexbuf with
             Ok _ as ok -> ok
           | Error {message; _} -> Error message
       end
@@ -144,7 +146,7 @@ module Make
     let finalise tree (std : Std.t) : unit =
       if Options.pretty then
         (* Printing the syntax tree to source code *)
-        let doc = Pretty.print tree in
+        let doc = Pretty.(print default_environment) tree in
         let width =
           match Terminal_size.get_columns () with
             None -> 60
@@ -166,9 +168,9 @@ module Make
 
     (* Formatting multiple errors *)
 
-    let format_errors std errors : unit =
+    let format_errors ~no_colour std errors : unit =
       let print Region.{value; region} =
-        let contents = MainParser.format_error ~file:true value region
+        let contents = MainParser.format_error ~no_colour ~file:true value region
         in Std.(add_line std.err contents.Region.value)
       in List.iter ~f:print @@ List.rev errors
     (* Converting results from ParserLib and handling CLI options *)
@@ -193,7 +195,7 @@ module Make
       | Ok tree -> (* No syntax error *)
           finalise tree std; Ok (tree, [])
 
-    let mk_multiple (std : Std.t)
+    let mk_multiple ~no_colour (std : Std.t)
         : (Parser.tree * message list, message Utils.nseq) result ->
           (Parser.tree * message list, error) result =
       function
@@ -202,11 +204,11 @@ module Make
       | Ok (tree, (first_msg::others as msg)) ->
           (* Syntax errors. We drop the repaired syntax tree [_]. *)
           finalise tree std;
-          format_errors std msg;
+          format_errors ~no_colour std msg;
           Error (Multiple (first_msg, others))
 
       | Error (first_msg, others as msg) -> (* Non-syntactical errors *)
-          format_errors std (first_msg::others);
+          format_errors ~no_colour std (first_msg::others);
           Error (Multiple msg)
 
     (* The type of the parser (which scans its tokens into a tree of
@@ -217,20 +219,21 @@ module Make
 
     (* Putting preprocessor, lexer and parser together *)
 
-    let parse : parser =
+    let parse : no_colour:bool -> parser =
+      fun ~no_colour ->
       fun (input : Lexbuf.input) ->
           let from_stdin () =
             let std   = Std.empty
             and stdin = In_channel.stdin in
             let result =
               if Options.mono then
-                MainParser.mono_from_channel stdin |> mk_single std
+                MainParser.mono_from_channel ~no_colour stdin |> mk_single std
               else
                 if Options.recovery then
-                  MainParser.recov_from_channel (module ParErr) stdin
-                  |> mk_multiple std
+                  MainParser.recov_from_channel ~no_colour (module ParErr) stdin
+                  |> mk_multiple ~no_colour std
                 else
-                  MainParser.incr_from_channel (module ParErr) stdin
+                  MainParser.incr_from_channel ~no_colour (module ParErr) stdin
                   |> mk_single std
             in std, result in
 
@@ -238,13 +241,13 @@ module Make
             let std = Std.empty in
             let result =
               if Options.mono then
-                MainParser.mono_from_file file |> mk_single std
+                MainParser.mono_from_file ~no_colour file |> mk_single std
               else
                 if Options.recovery then
-                  MainParser.recov_from_file (module ParErr) file
-                  |> mk_multiple std
+                  MainParser.recov_from_file ~no_colour (module ParErr) file
+                  |> mk_multiple ~no_colour std
                 else
-                  MainParser.incr_from_file (module ParErr) file
+                  MainParser.incr_from_file ~no_colour (module ParErr) file
                   |> mk_single std
             in std, result in
 

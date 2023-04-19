@@ -1,11 +1,11 @@
-type storage = [@layout:comb] {
+type storage = [@layout comb] {
   tata : int;
   toto : int;
   titi : int;
   tutu : int;
 }
 
-type storage1 = [@layout:tree] {
+type storage1 = [@layout tree] {
   tata : int;
   toto : int;
   titi : int;
@@ -13,7 +13,7 @@ type storage1 = [@layout:tree] {
 }
 type return = operation list * storage
 
-let main ((p,s) : unit * storage) : return =
+let main (p : unit) (s : storage) : return =
   let s : storage1 = {
     tata = 0;
     toto = 1;
@@ -21,3 +21,4 @@ let main ((p,s) : unit * storage) : return =
     tutu = 3;
   } in
   [],s
+

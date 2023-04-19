@@ -1,7 +1,7 @@
 module Z = Simple_utils.Z
 
 module type S = sig
-  type 'a t [@@deriving eq, compare, yojson, hash, fold, map]
+  type 'a t [@@deriving eq, compare, yojson, hash, fold, iter, map, sexp]
 
   val pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit
   val fold_map : ('acc -> 'a -> 'acc * 'b) -> 'acc -> 'a t -> 'acc * 'b t
@@ -24,16 +24,3 @@ let pp_access f ppf a =
 
 let pp f ppf a =
   Format.fprintf ppf "%a" Simple_utils.PP_helpers.(list_sep (pp_access f) (const ".")) a
-
-
-let fold_map : ('acc -> 'a -> 'acc * 'b) -> 'acc -> 'a t -> 'acc * 'b t =
- fun f acc path ->
-  let aux acc a =
-    match a with
-    | Access_record s -> acc, Access_record s
-    | Access_tuple i -> acc, Access_tuple i
-    | Access_map e ->
-      let acc, e = f acc e in
-      acc, Access_map e
-  in
-  List.fold_map ~f:aux ~init:acc path

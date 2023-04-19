@@ -35,11 +35,12 @@ module type S =
   sig
     (* Preprocessing from various sources *)
 
-    val from_lexbuf  : Lexing.lexbuf preprocessor
-    val from_channel : in_channel    preprocessor
-    val from_string  : string        preprocessor
-    val from_file    : file_path     preprocessor
-    val from_buffer  : Buffer.t      preprocessor
+    val from_lexbuf    :        Lexing.lexbuf preprocessor
+    val from_channel   :        in_channel    preprocessor
+    val from_string    :        string        preprocessor
+    val from_raw_input : (file_path * string) preprocessor
+    val from_file      :        file_path     preprocessor
+    val from_buffer    :        Buffer.t      preprocessor
   end
 
 module Make (Config : Config.S) (Options : Options.S) =
@@ -73,7 +74,7 @@ module Make (Config : Config.S) (Options : Options.S) =
       let path =
         if String.(dir = "." || dir = "") then file
         else dir ^ "/" ^ file in
-      match Caml.Sys.file_exists path with
+      let path = match Caml.Sys.file_exists path with
       | true -> Some path
       | false ->
           match find_in_cli_paths file Options.dirs with
@@ -87,6 +88,10 @@ module Make (Config : Config.S) (Options : Options.S) =
                      match Caml.Sys.file_exists file with
                      | true -> file_opt
                      | false -> None
+      in
+      match path with
+      | None -> None
+      | Some p -> Some (Fpath.v p |> Fpath.normalize |> Fpath.to_string)
 
     (* STRING PROCESSING *)
 
@@ -504,10 +509,6 @@ let cameligo_block_comment_opening   = "(*"
 let cameligo_block_comment_closing   = "*)"
 let cameligo_line_comment_opening    = "//"
 
-let reasonligo_block_comment_opening = "/*"
-let reasonligo_block_comment_closing = "*/"
-let reasonligo_line_comment_opening  = "//"
-
 let jsligo_block_comment_opening     = "/*"
 let jsligo_block_comment_closing     = "*/"
 let jsligo_line_comment_opening      = "//"
@@ -515,32 +516,27 @@ let jsligo_line_comment_opening      = "//"
 let block_comment_opening =
    pascaligo_block_comment_opening
 |   cameligo_block_comment_opening
-| reasonligo_block_comment_opening
 |     jsligo_block_comment_opening
 
 let block_comment_closing =
    pascaligo_block_comment_closing
 |   cameligo_block_comment_closing
-| reasonligo_block_comment_closing
 |     jsligo_block_comment_closing
 
 let line_comment_opening =
    pascaligo_line_comment_opening
 |   cameligo_line_comment_opening
-| reasonligo_line_comment_opening
 |     jsligo_line_comment_opening
 
 (* String delimiters *)
 
 let  pascaligo_string_delimiter = "\""
 let   cameligo_string_delimiter = "\""
-let reasonligo_string_delimiter = "\""
 let     jsligo_string_delimiter = "\""
 
 let string_delimiter =
    pascaligo_string_delimiter
 |   cameligo_string_delimiter
-| reasonligo_string_delimiter
 |     jsligo_string_delimiter
 
 (* RULES *)
@@ -769,6 +765,16 @@ and linemarker state = parse
     let from_channel = from_lexbuf <@ Lexing.from_channel
 
     let from_string = from_lexbuf <@ Lexing.from_string
+
+    let from_raw_input =
+      fun (file, input) ->
+        try
+          (from_lexbuf <@ Lexing.from_string) input
+        with Sys_error msg ->
+          let error  = Error.Failed_opening (file, msg) in
+          let msg    = Error.to_string error in
+          let region = Region.min ~file in
+          Error (None, Region.{value=msg; region})
 
     let from_buffer = from_string <@ Buffer.contents
 

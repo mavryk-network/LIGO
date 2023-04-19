@@ -78,7 +78,7 @@ type repl_result =
 
 open Simple_utils.Display
 
-let repl_result_ppformat ~display_format f = function
+let repl_result_ppformat ~display_format ~no_colour:_ f = function
   | Expression_value expr ->
     (match display_format with
     | Human_readable | Dev -> Ast_core.PP.expression f expr)
@@ -198,11 +198,8 @@ let try_declaration ~raise ~raw_options state s =
         state, Defined_values_core core_prg)
       (fun ~catch:_ -> function
         | (`Parser_tracer _ : Main_errors.all)
-        | (`Cit_jsligo_tracer _ : Main_errors.all)
-        | (`Cit_pascaligo_tracer _ : Main_errors.all)
-        | (`Cit_cameligo_tracer _ : Main_errors.all)
-        | (`Cit_reasonligo_tracer _ : Main_errors.all) ->
-          try_eval ~raise ~raw_options state s
+        | (`Nanopasses_tracer (`Small_passes_unsupported_top_level_statement _) :
+            Main_errors.all) -> try_eval ~raise ~raw_options state s
         | e -> raise.error e)
   with
   | Failure _ -> raise.error `Repl_unexpected
@@ -219,8 +216,14 @@ let import_file ~raise ~raw_options state file_name module_name =
   in
   let options = Compiler_options.set_init_env options state.env in
   let module_ =
-    let prg = Build.qualified_typed ~raise ~options Env file_name in
-    Location.wrap ~loc (Module_expr.M_struct prg)
+    let prg, signature =
+      Build.qualified_typed_with_signature
+        ~raise
+        ~options
+        (Build.Source_input.From_file file_name)
+    in
+    Ast_typed.
+      { module_content = Module_expr.M_struct prg; module_location = loc; signature }
   in
   let module_ =
     Ast_typed.
@@ -253,7 +256,9 @@ let use_file ~raise ~raw_options state file_name =
   in
   let options = Compiler_options.set_init_env options state.env in
   (* Missing typer environment? *)
-  let module' = Build.qualified_typed ~raise ~options Env file_name in
+  let module' =
+    Build.qualified_typed ~raise ~options (Build.Source_input.From_file file_name)
+  in
   let env = Environment.append state.env module' in
   let state =
     { state with
@@ -302,25 +307,25 @@ let parse s =
 
 (* REPL main and loop *)
 
-let eval display_format state c =
+let eval display_format no_colour state c =
   let (Ex_display_format t) = display_format in
   match to_stdlib_result c with
   | Ok ((state, out), _w) ->
     let disp = Displayable { value = out; format = repl_result_format } in
     let out : string =
       match t with
-      | Human_readable -> convert ~display_format:t disp
-      | Dev -> convert ~display_format:t disp
-      | Json -> Yojson.Safe.pretty_to_string @@ convert ~display_format:t disp
+      | Human_readable -> convert ~display_format:t ~no_colour disp
+      | Dev -> convert ~display_format:t ~no_colour disp
+      | Json -> Yojson.Safe.pretty_to_string @@ convert ~display_format:t ~no_colour disp
     in
     1, state, out
   | Error (e, _w) ->
     let disp = Displayable { value = e; format = Main_errors.Formatter.error_format } in
     let out : string =
       match t with
-      | Human_readable -> convert ~display_format:t disp
-      | Dev -> convert ~display_format:t disp
-      | Json -> Yojson.Safe.pretty_to_string @@ convert ~display_format:t disp
+      | Human_readable -> convert ~display_format:t ~no_colour disp
+      | Dev -> convert ~display_format:t ~no_colour disp
+      | Json -> Yojson.Safe.pretty_to_string @@ convert ~display_format:t ~no_colour disp
     in
     0, state, out
 
@@ -332,7 +337,8 @@ let parse_and_eval ~raw_options display_format state s =
     | Import (fn, mn) -> import_file state ~raw_options fn mn
     | Expr s -> try_declaration ~raw_options state s
   in
-  eval display_format state c
+  let no_colour = raw_options.no_colour in
+  eval display_format no_colour state c
 
 
 let welcome_msg =
@@ -406,6 +412,7 @@ let rec loop ~raw_options syntax display_format term history state n =
 let main
     (raw_options : Raw_options.t)
     display_format
+    no_colour
     now
     amount
     balance
@@ -417,7 +424,12 @@ let main
   let protocol =
     Environment.Protocols.protocols_to_variant raw_options.protocol_version
   in
-  let syntax = Syntax.of_string_opt (Syntax_name raw_options.syntax) None in
+  let syntax =
+    Syntax.of_string_opt
+      ~support_pascaligo:raw_options.deprecated
+      (Syntax_name raw_options.syntax)
+      None
+  in
   let dry_run_opts =
     Ligo_run.Of_michelson.make_dry_run_options
       { now; amount; balance; sender; source; parameter_ty = None }
@@ -443,7 +455,7 @@ let main
       | None -> state
       | Some file_name ->
         let c = use_file state ~raw_options file_name in
-        let _, state, _ = eval (Ex_display_format Dev) state c in
+        let _, state, _ = eval (Ex_display_format Dev) no_colour state c in
         state
     in
     Lwt_main.run (LTerm.fprintls term (LTerm_text.eval [ S welcome_msg ]));

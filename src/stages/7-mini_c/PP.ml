@@ -31,14 +31,6 @@ and annotated ppf : type_expression annotated -> _ = function
   | None, a -> type_variable ppf a
 
 
-and environment_element ppf ((n, tv) : environment_element) =
-  Format.fprintf ppf "%a : %a" Value_var.pp n type_variable tv
-
-
-and environment ppf (x : environment) =
-  fprintf ppf "Env[%a]" (list_sep_d environment_element) x
-
-
 and type_constant ppf (tb : type_base) : unit =
   let s =
     match tb with
@@ -130,6 +122,7 @@ and binder ppf (b : binder) = Value_var.pp ppf (fst b)
 and expression_content ppf (e : expression_content) =
   match e with
   | E_closure x -> function_ ppf x
+  | E_rec x -> rec_function ppf x
   | E_variable v -> fprintf ppf "%a" Value_var.pp v
   | E_application (a, b) -> fprintf ppf "@[(%a)@(%a)@]" expression a expression b
   | E_constant c ->
@@ -325,13 +318,12 @@ and expression_content ppf (e : expression_content) =
     fprintf ppf "@[while %a do@ %a@ done@]" expression cond expression body
 
 
-and expression_with_type : _ -> expression -> _ =
- fun ppf e ->
-  fprintf ppf "%a : %a" expression_content e.content type_variable e.type_expression
-
-
 and function_ ppf ({ binder; body } : anon_function) =
   fprintf ppf "@[fun %a ->@ (%a)@]" Value_var.pp binder expression body
+
+
+and rec_function ppf ({ func; rec_binder } : rec_function) =
+  fprintf ppf "@[rec %a . %a@]" Value_var.pp rec_binder function_ func
 
 
 and option_inline ppf inline = if inline then fprintf ppf "[@@inline]" else fprintf ppf ""

@@ -115,35 +115,7 @@ let main (action, store : parameter * storage) : return =
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```reasonligo test-ligo group=frontpage
-// This is testme.religo
-type storage = int;
-
-type parameter =
-  Increment (int)
-| Decrement (int)
-| Reset;
-
-type return = (list (operation), storage);
-
-// Two entrypoints
-let add = ((store, delta) : (storage, int)) : storage => store + delta;
-let sub = ((store, delta) : (storage, int)) : storage => store - delta;
-
-/* Main access point that dispatches to the entrypoints according to
-   the smart contract parameter. */
-let main = ((action, store) : (parameter, storage)) : return => {
- (([] : list (operation)),    // No operations
- (switch (action) {
-  | Increment (n) => add ((store, n))
-  | Decrement (n) => sub ((store, n))
-  | Reset         => 0}))
-};
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo test-ligo group=frontpage
@@ -200,23 +172,12 @@ const test = {
 
 let test =
   let initial_storage = 42 in
-  let taddr, _, _ = Test.originate main initial_storage 0tez in
+  let taddr, _, _ = Test.originate_uncurried main initial_storage 0tez in
   assert (Test.get_storage taddr = initial_storage)
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```reasonligo test-ligo group=frontpage
-// This continues testnew.religo
-
-let test =
-  let initial_storage = 42;
-  let (taddr, _, _) = Test.originate(main, initial_storage, 0tez);
-  assert (Test.get_storage(taddr) == initial_storage)
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo test-ligo group=frontpage
@@ -259,16 +220,7 @@ ligo run test gitlab-pages/docs/advanced/src/testnew.mligo
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```shell
-ligo run test gitlab-pages/docs/advanced/src/testnew.religo
-// Outputs:
-// Everything at the top-level was executed.
-// - test exited with value true.
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```shell
@@ -287,7 +239,7 @@ performs the transaction, and returns a `test_exec_result` which
 can be matched on to know whether the transaction was successful or not.
 In case of success you will get access to the gas consumed by the execution
 of the contract and in case of failure you will get access to a `test_exec_error`
-describing the error.  
+describing the error.
 There is an alternative version, called `Test.transfer_to_contract_exn`
 which performs the transaction and will only return the gas consumption,
 failing in case that there was an error.
@@ -318,7 +270,7 @@ const test2 =
 
 let test2 =
   let initial_storage = 42 in
-  let taddr, _, _ = Test.originate main initial_storage 0tez in
+  let taddr, _, _ = Test.originate_uncurried main initial_storage 0tez in
   let contr = Test.to_contract taddr in
   let gas_cons = Test.transfer_to_contract_exn contr (Increment (1)) 1mutez in
   let () = Test.log ("gas consumption",gas_cons) in
@@ -326,21 +278,7 @@ let test2 =
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```reasonligo test-ligo group=frontpage
-// This continues testnew.religo
-
-let test2 =
-  let initial_storage = 42;
-  let (taddr, _, _) = Test.originate(main, initial_storage, 0tez);
-  let contr = Test.to_contract(taddr);
-  let gas_cons = Test.transfer_to_contract_exn(contr, (Increment (1)), 1mutez);
-  let _unit = Test.log(("gas consumption",gas_cons));
-  assert (Test.get_storage(taddr) == initial_storage + 1)
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo test-ligo group=frontpage
@@ -370,11 +308,11 @@ and then show you how to handle it.
 
 #### The problem with tickets
 
-There is two kind of operations in the protocol : external and internal.  
+There is two kind of operations in the protocol : external and internal.
 `internal operations` are those created by smart contracts and `external operations` are those created from outside the chain
 (e.g. using `Test.originate` or `tezos-client` for instance) [more information here](https://tezos.gitlab.io/active/michelson.html#semantics-of-smart-contracts-and-transactions)
 
-In the protocol, both external and internal `transfer`/`origination` operations contains a piece of michelson code representing the `parameter`/`initial storage`.  
+In the protocol, both external and internal `transfer`/`origination` operations contains a piece of michelson code representing the `parameter`/`initial storage`.
 Now imagine you have a value of type `parameter_ty`/`storage_ty` containing a ticket, that you want to transfer or originate,
 in the operation data, tickets will be represented in Michelson as pairs:
 
@@ -385,10 +323,10 @@ in the operation data, tickets will be represented in Michelson as pairs:
 
 > ticketer address , ticket value , ticket amount
 
-If we try to apply such an operation, the type wouldn't match: ticket of bytes VS some pair.  
+If we try to apply such an operation, the type wouldn't match: ticket of bytes VS some pair.
 The protocol would not let you do that since you could be creating a ticket out of nowhere unless the operation happens to be forged from within a contract (i.e. "internally")!
 
-In the testing framework - for now - it means using "proxy-contracts" forging the operations using provided a ticket value and a ticket amount.  
+In the testing framework - for now - it means using "proxy-contracts" forging the operations using provided a ticket value and a ticket amount.
 
 #### Proxy ticket contracts
 
@@ -417,7 +355,7 @@ Here is the proposed interface for creating proxy-contracts:
   let (v,amt) = p in
   let ticket = Option.unopt (Tezos.create_ticket v amt) in
   let init_storage : whole_s = mk_storage ticket in
-  let op,addr = Tezos.create_contract main (None: key_hash option) 0mutez init_storage in
+  let op,addr = Tezos.create_contract_uncurried main (None: key_hash option) 0mutez init_storage in
   [op], Some addr
 
 
@@ -428,12 +366,12 @@ let init_transfer (type vt whole_p) (mk_param: vt ticket -> whole_p) : vt proxy_
   let proxy_transfer : ((vt * nat) * address) * unit -> operation list * unit =
     proxy_transfer_contract mk_param
   in
-  let (taddr_proxy, _, _) = Test.originate proxy_transfer () 1tez in
+  let (taddr_proxy, _, _) = Test.originate_uncurried proxy_transfer () 1tez in
   taddr_proxy
 
 let transfer (type vt)
     (taddr_proxy : vt proxy_address)
-    (info        : (vt * nat) * address) : test_exec_result = 
+    (info        : (vt * nat) * address) : test_exec_result =
   let ticket_info, dst_addr = info in
   Test.transfer_to_contract (Test.to_contract taddr_proxy) (ticket_info , dst_addr) 1mutez
 
@@ -444,7 +382,7 @@ let originate (type vt whole_s vp)
   let proxy_origination : (vt * nat) * address option -> operation list * address option =
     proxy_originate_contract mk_storage contract
   in
-  let (taddr_proxy, _, _) = Test.originate proxy_origination (None : address option) 1tez in
+  let (taddr_proxy, _, _) = Test.originate_uncurried proxy_origination (None : address option) 1tez in
   let _ = Test.transfer_to_contract_exn (Test.to_contract taddr_proxy) ticket_info 0tez in
   match Test.get_storage taddr_proxy with
   | Some addr ->
@@ -461,12 +399,9 @@ let originate (type vt whole_s vp)
 /* proxy_ticket.jsligo */
 
 /* @private */
-const proxy_transfer_contract :
-  <vt , whole_p>
-    (x : (ticket:ticket<vt>) => whole_p) => ((x : [[[vt , nat] , address] , unit] ) => [list<operation> , unit]) =
-  ( mk_param :  ((ticket:ticket<vt>) => whole_p)) => {
-    (p : [[[vt , nat] , address] , unit] ) => {
-    const [p,_] = p ;
+const proxy_transfer_contract =
+  <vt , whole_p>(mk_param :  ((ticket:ticket<vt>) => whole_p)) => {
+    return (p : [[vt , nat] , address]) => (s : unit) => {
     const [[v,amt],dst_addr] = p ;
     const ticket = Option.unopt (Tezos.create_ticket (v, amt)) ;
     const tx_param = mk_param (ticket) ;
@@ -478,20 +413,11 @@ const proxy_transfer_contract :
 };
 
 /* @private */
-const proxy_originate_contract :
-  <vt, whole_s, vp>
-    ( x : [
-            ((ticket:ticket<vt>) => whole_s),
-            ((x : [ vp , whole_s]) => [list<operation> , whole_s])
-          ]
-    ) => ( (ps:[[vt , nat] , option<address>]) => [list<operation>, option<address>]) =
-  ([mk_storage , main] : [
-            ((ticket:ticket<vt>) => whole_s),
-            ((x : [ vp , whole_s]) => [list<operation> , whole_s])
-          ]) => {
-      (p : [[vt , nat] , option<address>]) => {
-        const [p,_] = p;
-        const [v,amt] = p ;
+const proxy_originate_contract =
+  <vt, whole_s, vp>(mk_storage: (ticket:ticket<vt>) => whole_s) =>
+  (main: ((p : vp) => (s : whole_s) => [list<operation> , whole_s])) => {
+      return (p : [[vt , nat] , option<address>]) => {
+        const [v,amt] = p[0] ;
         const ticket = Option.unopt (Tezos.create_ticket (v, amt)) ;
         const init_storage : whole_s = mk_storage (ticket) ;
         const [op,addr] = Tezos.create_contract(main, (None () as option<key_hash>), (0 as mutez), init_storage) ;
@@ -501,10 +427,9 @@ const proxy_originate_contract :
 
 type proxy_address<v> =  typed_address<[[v,nat] , address] , unit> ;
 
-const init_transfer :
-  <vt, whole_p> ( mk_param : ((t:ticket<vt>) => whole_p)) => proxy_address<vt> =
-  ( mk_param :  ((t:ticket<vt>) => whole_p)) => {
-    const proxy_transfer : ((x : ([[[vt , nat] , address] , unit])) => [list<operation> , unit]) =
+const init_transfer =
+  <vt, whole_p>(mk_param :  (t:ticket<vt>) => whole_p) => {
+    const proxy_transfer : (p : [[vt , nat] , address]) => (s : unit) => [list<operation> , unit] =
       proxy_transfer_contract (mk_param)
     ;
     const [taddr_proxy, _, _] = Test.originate (proxy_transfer, unit, 1 as tez) ;
@@ -513,21 +438,20 @@ const init_transfer :
 
 const transfer :
   <vt>( x : [proxy_address<vt> , [[vt , nat] , address]]) => test_exec_result =
-  ( [taddr_proxy, info] : [proxy_address<vt> , [[vt , nat] , address]]) => {
+  <vt>([taddr_proxy, info] : [proxy_address<vt> , [[vt , nat] , address]]) => {
     const [ticket_info, dst_addr] = info ;
     return (
       Test.transfer_to_contract(Test.to_contract (taddr_proxy), [ticket_info , dst_addr], 1 as mutez)
     )
   };
 
-const originate : <vt, whole_s, vp>
-    (x : [ [vt , nat] , (t:ticket<vt>) => whole_s, (ps:[vp , whole_s]) => [list<operation> , whole_s] ]) => address =
-  ([ ticket_info , mk_storage , contract] : [ [vt , nat] , (t:ticket<vt>) => whole_s, (ps:[vp , whole_s]) => [list<operation> , whole_s] ] ) => {
-      const proxy_origination : (x : ([[vt , nat] , option<address>])) => [list<operation> , option<address>] =
-        proxy_originate_contract (mk_storage, contract) ;
+const originate =
+  <vt, whole_s, vp>([ ticket_info , mk_storage , contract] : [ [vt , nat] , (t:ticket<vt>) => whole_s, (p: vp) => (s: whole_s) => [list<operation> , whole_s] ]) => {
+      const proxy_origination : (_p : [vt , nat]) => (_s : option<address>) => [list<operation> , option<address>] =
+        curry(proxy_originate_contract (mk_storage, contract)) ;
       const [taddr_proxy, _, _] = Test.originate (proxy_origination, (None () as option<address> ),1 as tez) ;
       const _ = Test.transfer_to_contract_exn (Test.to_contract (taddr_proxy), ticket_info, 0 as tez) ;
-      match (Test.get_storage (taddr_proxy), {
+      return match (Test.get_storage (taddr_proxy), {
         Some: (addr:address) => {
         const _taddr = (Test.cast_address(addr) as typed_address<vp,whole_s> ) ;
         return addr
@@ -596,9 +520,9 @@ let main ( (p,_) : param * (string * address)) : operation list * (string * addr
   [] , (v, Tezos.get_sender ())
 
 let test_transfer_to_contract =
-  let (main_taddr, _ , _) = Test.originate main ("bye",Test.nth_bootstrap_account 1) 1mutez in
+  let (main_taddr, _ , _) = Test.originate_uncurried main ("bye",Test.nth_bootstrap_account 1) 1mutez in
   let main_addr = Tezos.address (Test.to_contract main_taddr) in
-  
+
   (* Use this address everytime you want to send tickets from the same proxy-contract *)
   let proxy_taddr =
     (* mk_param is executed __by the proxy contract__ *)
@@ -653,11 +577,11 @@ const test_transfer_to_contract_ = () : unit => {
   /* ticket_info lets you control the amount and the value of the tickets you send */
   let ticket_info1 = ["hello",10 as nat] ;
   /* we send ticket to main through the proxy-contract */
-  let _ = Proxy_ticket.transfer (proxy_taddr, [ticket_info1,main_addr]) ;
+  let _ = Proxy_ticket.transfer ([proxy_taddr, [ticket_info1,main_addr]]) ;
   let _ = Test.log (Test.get_storage (main_taddr)) ;
-  
+
   let ticket_info2 = ["world",5 as nat] ;
-  let _ = Proxy_ticket.transfer (proxy_taddr, [ticket_info2,main_addr]) ;
+  let _ = Proxy_ticket.transfer ([proxy_taddr, [ticket_info2,main_addr]]) ;
   Test.log (Test.get_storage (main_taddr));
 };
 
@@ -669,7 +593,7 @@ const test_transfer_to_contract = test_transfer_to_contract_ ();
 result:
 
 ```bash
-> ligo run test transfer_ticket.mligo 
+> ligo run test transfer_ticket.mligo
 ("poxy addr:" , KT1QGANLjYsyJmw1QNww9Jkgb4ccQr6W2gsC)
 ("hello" , KT1QGANLjYsyJmw1QNww9Jkgb4ccQr6W2gsC)
 ("world" , KT1QGANLjYsyJmw1QNww9Jkgb4ccQr6W2gsC)
@@ -747,9 +671,9 @@ const main = (_: unit, s: storage) : [ list<operation> , storage] => {
     match (s, {
       Some: (ticket: ticket<bytes>) => {
         let [_ , t] = Tezos.read_ticket (ticket) ;
-        Some (t)
+        return Some (t)
       },
-      None: () => { None () }
+      None: () => { return None () }
     });
   return [list ([]), x]
 };
@@ -757,7 +681,7 @@ const main = (_: unit, s: storage) : [ list<operation> , storage] => {
 const test_originate_contract_ = () : unit => {
   const mk_storage = (t:ticket<bytes>) : storage => { return (Some (t)) } ;
   let ticket_info = [0x0202, 15 as nat] ;
-  let addr = Proxy_ticket.originate (ticket_info, mk_storage, main) ;
+  let addr = Proxy_ticket.originate ([ticket_info, mk_storage, main]) ;
   let storage : michelson_program = Test.get_storage_of_address (addr) ;
   let unforged_storage = (Test.decompile (storage) as unforged_storage) ;
 
@@ -765,11 +689,11 @@ const test_originate_contract_ = () : unit => {
 
   match (unforged_storage, {
   Some: (x: unforged_ticket<bytes>) => {
-    let _ = Test.log ("unforged_ticket", x) ;
+    let _ = Test.log (["unforged_ticket", x]) ;
     let { ticketer , value , amount } = x ;
     let _ = assert (value == ticket_info[0]) ;
     let _ = assert (amount == ticket_info[1]) ;
-    unit
+    return unit
   },
   None: () => failwith ("impossible")
   }
@@ -826,21 +750,6 @@ function balances_under (const b : balances ; const threshold : tez) is {
 ```
 
 </Syntax>
-
-<Syntax syntax="reasonligo">
-
-```reasonligo group=rmv_bal
-// This is remove-balance.religo
-
-type balances = map(address, tez);
-
-let balances_under = ( (b, threshold) : (balances, tez) ) : balances =>
-  let f = ( (acc,(k,v)) : (balances, (address, tez)) ) =>  if (v < threshold) { Map.remove (k,acc) } else {acc} ;
-  Map.fold (f,b,b)
-```
-
-</Syntax>
-
 <Syntax syntax="jsligo">
 
 ```jsligo group=rmv_bal
@@ -849,7 +758,7 @@ let balances_under = ( (b, threshold) : (balances, tez) ) : balances =>
 type balances = map <address, tez>
 
 const balances_under = (b : balances, threshold:tez) : balances => {
-  let f = (acc : balances, kv :[address , tez] ) : balances => {
+  let f = ([acc, kv] : [balances, [address , tez]] ) : balances => {
     let [k,v] = kv ;
     if (v < threshold) { return Map.remove (k,acc) } else {return acc}
   };
@@ -881,14 +790,7 @@ const _u = Test.reset_state (5n, (list [] : list (tez)))
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```reasonligo test-ligo group=rmv_bal_test
-#include "./gitlab-pages/docs/advanced/src/remove-balance.religo"
-let _u = Test.reset_state (5n, ([] : list(tez)));
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo test-ligo group=rmv_bal_test
@@ -920,15 +822,7 @@ const balances : balances = {
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```reasonligo test-ligo group=rmv_bal_test
-let balances : balances =
-  let (a1, a2, a3) = (Test.nth_bootstrap_account(1), Test.nth_bootstrap_account(2), Test.nth_bootstrap_account(3));
-  Map.literal([ (a1, 10tz), (a2, 100tz), (a3, 1000tz)]);
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo test-ligo group=rmv_bal_test
@@ -991,22 +885,7 @@ const test =
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```reasonligo test-ligo group=rmv_bal_test
-let test =
-  List.iter (
-    (((threshold , expected_size) : (tez, nat)) =>
-      let tester = ((balances, threshold) : (balances, tez)) => Map.size (balances_under (balances, threshold));
-      let size = Test.run(tester, (balances, threshold));
-      let expected_size = Test.eval(expected_size) ;
-      let _u = Test.log (("expected", expected_size)) ;
-      let _u = Test.log (("actual", size)) ;
-      assert ( Test.michelson_equal (size, expected_size) )),
-    [ (15tez, 2n), (130tez, 1n), (1200tez, 0n)] );
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo test-ligo group=rmv_bal_test
@@ -1060,24 +939,6 @@ You can now execute the test:
 ```
 
 </Syntax>
-
-<Syntax syntax="reasonligo">
-
-```shell
-> ligo run test gitlab-pages/docs/advanced/src/unit-remove-balance-mixed.religo
-// Outputs:
-// ("expected" , 2)
-// ("actual" , 2)
-// ("expected" , 1)
-// ("actual" , 1)
-// ("expected" , 0)
-// ("actual" , 0)
-// Everything at the top-level was executed.
-// - test exited with value ().
-```
-
-</Syntax>
-
 <Syntax syntax="jsligo">
 
 ```shell
@@ -1170,37 +1031,7 @@ let main (action, store : parameter * storage) : return =
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```reasonligo
-// This is testme.religo
-
-type storage = int;
-
-type parameter =
-  Increment (int)
-| Decrement (int)
-| Reset;
-
-type return = (list (operation), storage);
-
-// Two entrypoints
-let add = ((store, delta) : (storage, int)) : storage => store + delta;
-let sub = ((store, delta) : (storage, int)) : storage => store - delta;
-
-/* Main access point that dispatches to the entrypoints according to
-   the smart contract parameter. */
-
-let main = ((action, store) : (parameter, storage)) : return => {
- (([] : list (operation)),    // No operations
- (switch (action) {
-  | Increment (n) => add ((store, n))
-  | Decrement (n) => sub ((store, n))
-  | Reset         => 0}))
-};
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo
@@ -1263,15 +1094,7 @@ ligo run interpret "main (Increment (32), 10)" --init-file testme.mligo
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
 
-```shell
-ligo run interpret "main (Increment (32), 10)" --init-file testme.religo
-// Outputs:
-// ( LIST_EMPTY() , 42 )
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```shell
@@ -1334,7 +1157,7 @@ let main (p,_ : (int*int) * unit ) =
   [Tezos.emit "%foo" p ; Tezos.emit "%foo" p.0],()
 
 let test_foo =
-  let (ta, _, _) = Test.originate main () 0tez in
+  let (ta, _, _) = Test.originate_uncurried main () 0tez in
   let _ = Test.transfer_to_contract_exn (Test.to_contract ta) (1,2) 0tez in
   (Test.get_last_events_from ta "foo" : (int*int) list),(Test.get_last_events_from ta "foo" : int list)
 ```
@@ -1343,7 +1166,7 @@ let test_foo =
 <Syntax syntax="jsligo">
 
 ```jsligo test-ligo group=test_ex
-let main = ([p, _] : [[int, int], unit]) => {
+let main = (p: [int, int], _: unit) => {
   let op1 = Tezos.emit("%foo", p);
   let op2 = Tezos.emit("%foo", p[0]);
   return [list([op1, op2]), unit];

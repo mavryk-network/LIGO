@@ -39,7 +39,7 @@
   let mk_uident   = Token.wrap_uident   "Ghost_uident"
   let mk_attr     = Token.wrap_attr     "ghost_attr" None
 
-  let mk_block_com = Token.wrap_block_com "(* comment *)"
+  let mk_block_com = Token.wrap_block_com "/* comment */"
   let mk_line_com  = Token.wrap_line_com  "// comment"
 
 ]
@@ -64,11 +64,11 @@
 %token        <(string * Z.t) Wrap.t> Int       "<int>"       [@recover.expr mk_int        $loc]
 %token                <string Wrap.t> Ident     "<ident>"     [@recover.expr mk_ident      $loc] [@recover.cost 900]
 %token                <string Wrap.t> UIdent    "<uident>"    [@recover.expr mk_uident     $loc]
-%token            <Attr.t Region.reg> Attr      "[@attr]"     [@recover.expr mk_attr       $loc]
+%token                <Attr.t Wrap.t> Attr      "[@attr]"     [@recover.expr mk_attr      $loc]
 (*
 %token        <(string * Z.t) Wrap.t> Nat       "<nat>"       [@recover.expr mk_nat        $loc]
 %token    <(string * Int64.t) Wrap.t> Mutez     "<mutez>"     [@recover.expr mk_mutez      $loc]
-%token <string Region.reg Region.reg> Lang      "[%lang"      [@recover.expr mk_lang       $loc]
+%token     <string Region.reg Wrap.t> Lang      "[%lang"      [@recover.expr mk_lang       $loc]
 *)
 
 (* Symbols *)
@@ -149,6 +149,10 @@
 %token <string Wrap.t> As        "as"        [@recover.expr Token.wrap_as        $loc]
 %token <string Wrap.t> Namespace "namespace" [@recover.expr Token.wrap_namespace $loc]
 %token <string Wrap.t> Type      "type"      [@recover.expr Token.wrap_type      $loc]
+
+(* Contract keywords *)
+%token <string Wrap.t> Contract  "contract_of"  [@recover.expr Token.wrap_contract $loc]
+%token <string Wrap.t> Parameter "parameter_of" [@recover.expr Token.wrap_parameter $loc]
 
 (* Virtual tokens *)
 

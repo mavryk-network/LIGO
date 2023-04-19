@@ -13,34 +13,11 @@ import Unsafe qualified
 
 import Cli (HasLigoClient (getLigoClientEnv), LigoClientEnv (..))
 import Control.Lens (Each (each), ix, uses, zoom, (.=), (^?!))
+import Data.Char (toLower)
+import Data.Default (def)
 import Data.Map qualified as M
 import Data.Singletons (demote)
 import Fmt (Builder, blockListF, pretty)
-import Morley.Debugger.Core
-  (DebugSource (..), DebuggerState (..), NavigableSnapshot (getLastExecutedPosition),
-  SourceLocation, SourceType, curSnapshot, frozen, groupSourceLocations, playInterpretHistory,
-  slEnd)
-import Morley.Debugger.DAP.LanguageServer (JsonFromBuildable (..))
-import Morley.Debugger.DAP.RIO (logMessage, openLogHandle)
-import Morley.Debugger.DAP.Types
-  (DAPOutputMessage (..), DAPSessionState (..),
-  DAPSpecificEvent (OutputEvent, StoppedEvent, TerminatedEvent), DAPSpecificResponse (..),
-  HasSpecificMessages (..), RIO, RequestBase (..), RioContext (..), StopEventDesc (..),
-  StoppedReason (..), dsDebuggerState, dsVariables, pushMessage)
-import Morley.Debugger.Protocol.DAP (ScopesRequestArguments (frameIdScopesRequestArguments))
-import Morley.Debugger.Protocol.DAP qualified as DAP
-import Morley.Michelson.ErrorPos (Pos (Pos), SrcPos (SrcPos))
-import Morley.Michelson.Interpret (ContractEnv (ceSelf), ceContracts)
-import Morley.Michelson.Printer.Util (RenderDoc (renderDoc), doesntNeedParens, printDocB)
-import Morley.Michelson.Runtime (AddressState (ASContract), ContractState (..))
-import Morley.Michelson.Runtime.Dummy (dummyContractEnv)
-import Morley.Michelson.Typed
-  (Contract, Contract' (..), ContractCode' (unContractCode), SomeConstrainedValue (SomeValue),
-  SomeContract (..))
-import Morley.Michelson.Typed qualified as T
-import Morley.Michelson.Untyped qualified as U
-import Morley.Tezos.Address (ta)
-import Morley.Tezos.Core (tz)
 import System.FilePath (takeFileName, (<.>), (</>))
 import Text.Interpolation.Nyan
 import UnliftIO (withRunInIO)
@@ -51,11 +28,38 @@ import UnliftIO.STM (modifyTVar)
 import Cli qualified as LSP.Cli
 import Extension (UnsupportedExtension (..), getExt)
 
-import Language.LIGO.DAP.Variables
+import Morley.Debugger.Core
+  (DebugSource (..), DebuggerState (..), NavigableSnapshot (getLastExecutedPosition),
+  SnapshotEdgeStatus (SnapshotAtEnd), SourceLocation, SrcLoc (..), curSnapshot, frozen,
+  groupSourceLocations, pickSnapshotEdgeStatus, playInterpretHistory, slEnd)
+import Morley.Debugger.DAP.LanguageServer (JsonFromBuildable (..))
+import Morley.Debugger.DAP.RIO (logMessage, openLogHandle)
+import Morley.Debugger.DAP.Types
+  (DAPOutputMessage (..), DAPSessionState (..),
+  DAPSpecificEvent (OutputEvent, StoppedEvent, TerminatedEvent), DAPSpecificResponse (..),
+  HasSpecificMessages (..), RIO, RequestBase (..), RioContext (..), StopEventDesc (..),
+  StoppedReason (..), dsDebuggerState, dsVariables, pushMessage)
+import Morley.Debugger.Protocol.DAP (ScopesRequestArguments (frameIdScopesRequestArguments))
+import Morley.Debugger.Protocol.DAP qualified as DAP
+import Morley.Michelson.ErrorPos (ErrorSrcPos (ErrorSrcPos), Pos (Pos), SrcPos (SrcPos))
+import Morley.Michelson.Interpret
+  (MichelsonFailed (MichelsonFailedWith), MichelsonFailureWithStack (mfwsErrorSrcPos), ceContracts,
+  mfwsFailed)
+import Morley.Michelson.Parser.Types (MichelsonSource)
+import Morley.Michelson.Printer.Util (RenderDoc (renderDoc), doesntNeedParens, printDocB)
+import Morley.Michelson.Runtime (ContractState (..))
+import Morley.Michelson.Runtime.Dummy (dummyContractEnv, dummySelf)
+import Morley.Michelson.Typed
+  (Constrained (SomeValue), Contract, Contract' (..), ContractCode' (unContractCode),
+  SomeContract (..))
+import Morley.Michelson.Typed qualified as T
+import Morley.Michelson.Untyped qualified as U
+import Morley.Tezos.Core (tz)
 
+import Language.LIGO.DAP.Variables
 import Language.LIGO.Debugger.CLI.Call
 import Language.LIGO.Debugger.CLI.Types
-import Language.LIGO.Debugger.Common (getStatementLocs)
+import Language.LIGO.Debugger.Common
 import Language.LIGO.Debugger.Error
 import Language.LIGO.Debugger.Handlers.Helpers
 import Language.LIGO.Debugger.Handlers.Types
@@ -88,10 +92,21 @@ instance HasSpecificMessages LIGO where
   type StepGranularityExt LIGO = LigoStepGranularity
 
   reportErrorAndStoppedEvent = \case
-    ExceptionMet exception -> writeException exception
+    ExceptionMet exception -> writeException True exception
     Paused reason -> writeStoppedEvent reason
-    Terminated -> writeTerminatedEvent
-    ReachedStart -> writeStoppedEvent "Reached start"
+    TerminatedOkMet -> writeTerminatedEvent
+    PastFinish -> do
+      snap <- zoom dsDebuggerState $ frozen curSnapshot
+      case pickSnapshotEdgeStatus snap of
+        SnapshotAtEnd outcome -> case outcome of
+          Left exception -> writeException False exception
+          Right () ->
+            -- At the moment we never expect this, as in case of ok termination
+            -- we should have already existed when stepping on last snapshot;
+            -- but let's handle this condition gracefully anyway.
+            writeTerminatedEvent
+        _ -> error "Unexpected status"
+    ReachedStart -> writeStoppedEvent "entry"
     where
       writeTerminatedEvent = do
         InterpretSnapshot{..} <- zoom dsDebuggerState $ frozen curSnapshot
@@ -153,9 +168,18 @@ instance HasSpecificMessages LIGO where
             }
           }
 
-      writeException exception = do
+      writeException writeLog exception = do
         st <- get
-        let msg = pretty exception
+        let msg = case mfwsFailed exception of
+              -- [LIGO-862] display this value as LIGO one
+              MichelsonFailedWith val ->
+                let
+                  ErrorSrcPos (SrcPos (Pos l) (Pos c)) = mfwsErrorSrcPos exception
+                in
+                  [int||Contract failed with value: #{val}
+                  On line #{l + 1} char #{c + 1}|]
+              _ -> pretty exception
+
         mSrcLoc <- view slEnd <<$>> uses dsDebuggerState getLastExecutedPosition
         pushMessage $ DAPEvent $ StoppedEvent $ DAP.defaultStoppedEvent
           { DAP.bodyStoppedEvent = DAP.defaultStoppedEventBody
@@ -166,12 +190,13 @@ instance HasSpecificMessages LIGO where
             , DAP.textStoppedEventBody = msg
             }
           }
-        pushMessage $ DAPEvent $ OutputEvent $ DAP.defaultOutputEvent
-          { DAP.bodyOutputEvent = withSrc st $ withSrcPos mSrcLoc DAP.defaultOutputEventBody
-            { DAP.categoryOutputEventBody = "stderr"
-            , DAP.outputOutputEventBody = msg <> "\n"
+        when writeLog do
+          pushMessage $ DAPEvent $ OutputEvent $ DAP.defaultOutputEvent
+            { DAP.bodyOutputEvent = withSrc st $ withSrcPos mSrcLoc DAP.defaultOutputEventBody
+              { DAP.categoryOutputEventBody = "stderr"
+              , DAP.outputOutputEventBody = msg <> "\n"
+              }
             }
-          }
         where
           withSrc st event = event { DAP.sourceOutputEventBody = mkSource st }
 
@@ -182,7 +207,7 @@ instance HasSpecificMessages LIGO where
 
           withSrcPos mSrcPos event = case mSrcPos of
             Nothing -> event
-            Just (SrcPos (Pos row) (Pos col)) -> event
+            Just (SrcLoc row col) -> event
               { DAP.lineOutputEventBody   = Unsafe.fromIntegral $ row + 1
               , DAP.columnOutputEventBody = Unsafe.fromIntegral $ col + 1
               }
@@ -295,6 +320,7 @@ instance HasSpecificMessages LIGO where
           , DAP.variablesMessage = Just $ mconcat
               [ one ("origin", pretty (debuggerExceptionType err))
               , maybe mempty (one . ("versionIssues", ) . toString) versionIssuesDetails
+              , one ("shouldInterruptDebuggingSession", map toLower $ pretty $ shouldInterruptDebuggingSession @excType)
               , debuggerExceptionData err
               ]
           }
@@ -332,7 +358,8 @@ instance HasSpecificMessages LIGO where
       let
         shortDesc = case event of
           EventFacedStatement -> Just $ StopEventDesc "at statement"
-          EventExpressionPreview -> Just $ StopEventDesc "upon exp"
+          EventExpressionPreview GeneralExpression -> Just $ StopEventDesc "upon exp"
+          EventExpressionPreview FunctionCall -> Just $ StopEventDesc "upon func call"
           EventExpressionEvaluated{} -> Just $ StopEventDesc "computed exp"
       in (shortDesc, Just event)
     _ -> (Nothing, Nothing)
@@ -349,6 +376,14 @@ instance HasSpecificMessages LIGO where
           , DAP.request_seqVariablesResponse = seqVariablesRequest
           , DAP.bodyVariablesResponse = DAP.VariablesResponseBody vs
           }
+
+  parseStepGranularity = \case
+    Nothing -> pure def
+    Just t -> case t of
+      "statement" -> pure GStmt
+      "expression" -> pure GExp
+      "expressionSurrounded" -> pure GExpExt
+      other -> Left [int||Unknown granularity `#{other}`|]
 
   processStep = processLigoStep
 
@@ -388,6 +423,7 @@ handleSetLigoBinaryPath LigoSetLigoBinaryPathRequest {..} = do
     , lsAllLocs = Nothing
     , lsBinaryPath = binaryPathMb
     , lsParsedContracts = Nothing
+    , lsLambdaLocs = Nothing
     }
   logMessage [int||Set LIGO binary path: #{binaryPath}|]
 
@@ -473,7 +509,7 @@ handleGetContractMetadata LigoGetContractMetadataRequest{..} = do
     Right ligoDebugInfo -> do
       logMessage $ "Successfully read the LIGO debug output for " <> pretty program
 
-      (exprLocs, someContract, allFiles) <-
+      (exprLocs, someContract, allFiles, lambdaLocs) <-
         readLigoMapper ligoDebugInfo typesReplaceRules instrReplaceRules
         & either (throwIO . MichelsonDecodeException) pure
 
@@ -484,18 +520,18 @@ handleGetContractMetadata LigoGetContractMetadataRequest{..} = do
         parsedContracts <- parseContracts allFiles
 
         let statementLocs = getStatementLocs (getAllSourceLocations exprLocs) parsedContracts
-        let allLocs = getInterestingSourceLocations exprLocs <> statementLocs
+        let allLocs = getInterestingSourceLocations parsedContracts exprLocs <> statementLocs
 
         let
           paramNotes = cParamNotes contract
           michelsonEntrypoints =
-            T.flattenEntrypoints paramNotes
-            <> one (U.DefEpName, T.mkUType $ T.pnNotes paramNotes)
+            T.flattenEntrypoints U.WithImplicitDefaultEp paramNotes
 
         atomically $ modifyTVar lServVar $ fmap \lServ -> lServ
           { lsCollectedRunInfo = Just $ onlyContractRunInfo contract
           , lsAllLocs = Just allLocs
           , lsParsedContracts = Just parsedContracts
+          , lsLambdaLocs = Just lambdaLocs
           }
 
         lServerState <- getServerState
@@ -627,6 +663,8 @@ initDebuggerSession LigoLaunchRequestArguments {..} = do
   param <- "Parameter is not initialized" `expectInitialized` pure paramMb
   stor <- "Storage is not initialized" `expectInitialized` pure storMb
 
+  lambdaLocs <- getLambdaLocs
+
   let contractState = ContractState
         { csBalance = [tz|0u|]
         , csContract = contract
@@ -637,10 +675,6 @@ initDebuggerSession LigoLaunchRequestArguments {..} = do
   allLocs <- getAllLocs
   parsedContracts <- getParsedContracts
 
-  -- TODO: remove it when we migrate to morley-1.18.0
-  let self = [ta|KT1AEseqMV6fk2vtvQCVyA7ZCaxv7cpxtXdB|]
-
-  logMessage [int||Self address: #{self}|]
   logMessage [int||Contract state: #{contractState}|]
 
   his <-
@@ -655,9 +689,10 @@ initDebuggerSession LigoLaunchRequestArguments {..} = do
         -- We're adding our own contract in order to use
         -- @{ SELF_ADDRESS; CONTRACT }@ replacement
         -- (we need to have this contract state to use @CONTRACT@ instruction).
-        dummyContractEnv { ceContracts = M.fromList [(self, ASContract contractState)], ceSelf = self }
+        dummyContractEnv { ceContracts = M.fromList [(dummySelf, contractState)] }
         parsedContracts
         (unlifter . logMessage)
+        lambdaLocs
 
   let ds = initDebuggerState his allLocs
 
@@ -667,7 +702,7 @@ initDebuggerState :: InterpretHistory is -> Set SourceLocation -> DebuggerState 
 initDebuggerState his allLocs = DebuggerState
   { _dsSnapshots = playInterpretHistory his
   , _dsSources =
-      fmap @(Map SourceType)
+      fmap @(Map MichelsonSource)
         (DebugSource mempty . fromList . map fst . toList @(Set _))
         (groupSourceLocations $ toList allLocs)
   }
