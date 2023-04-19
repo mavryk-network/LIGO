@@ -116,9 +116,11 @@ let decompile_pattern ~raise ~syntax : O.type_expression option O.Pattern.t -> I
   decompile_with_passes (List.map ~f:Selector.pattern passes) <@ Trivial.From_core.pattern
 
 
-let decompile_ty_expr ~raise ~syntax _ =
-  ignore (raise, syntax);
-  assert false
+let decompile_ty_expr ~raise ~syntax =
+  let passes =
+    get_passes ~raise ~syntax ~disable_initial_check:false ~duplicate_identifier:true
+  in
+  decompile_with_passes (List.map ~f:Selector.ty_expr passes) <@ Trivial.From_core.type_expression
 
 
 let compile_program ~raise ~(options : Compiler_options.t) ?stop_before

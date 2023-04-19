@@ -9,7 +9,7 @@ module Selector = Passes.Pass_type.Selector
 val execute_nanopasses
   :  raise:(Passes.Errors.t, Main_warnings.all) Simple_utils.Trace.raise
   -> options:Compiler_options.t
-  -> sort:(Passes.Pass_type.pass -> 'a Passes.Pass_type.sub_pass)
+  -> sort:('a Selector.t)
   -> ?stop_before:string
   -> ?disable_initial_check:bool
   -> 'a

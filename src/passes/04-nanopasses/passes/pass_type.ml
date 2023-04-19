@@ -20,12 +20,16 @@ type pass =
   ; expression : expr sub_pass
   ; program : program sub_pass
   ; pattern : pattern sub_pass
+  ; ty_expr : ty_expr sub_pass
   }
 
 module Selector = struct
+  type 'a t = pass -> 'a sub_pass
+
   let expr x = x.expression
   let program x = x.program
   let pattern x = x.pattern
+  let ty_expr x = x.ty_expr
 end
 
 let rec select_passes included name passes =
@@ -82,32 +86,7 @@ let nanopasses_until
   compile_with_passes (List.map ~f:sort passes) prg
 
 
-type cata_pass =
-  ( expr
-  , ty_expr
-  , pattern
-  , statement
-  , block
-  , mod_expr
-  , instruction
-  , declaration
-  , program_entry
-  , program )
-  Ast_unified.Catamorphism.fold
-
-let idle_cata_pass : cata_pass =
-  { expr = (fun x -> { fp = x })
-  ; ty_expr = (fun x -> { fp = x })
-  ; pattern = (fun x -> { fp = x })
-  ; statement = (fun x -> { fp = x })
-  ; block = (fun x -> { fp = x })
-  ; mod_expr = (fun x -> { fp = x })
-  ; instruction = (fun x -> { fp = x })
-  ; declaration = (fun x -> { fp = x })
-  ; program_entry = (fun x -> { fp = x })
-  ; program = (fun x -> { fp = x })
-  }
-
+let idle_cata_pass = Catamorphism.idle
 
 type 'a pass_unfold =
   ( expr * 'a
@@ -183,7 +162,7 @@ let default_fold plus init : 'a pass_fold =
 
 
 type 'a pass_kind =
-  [ `Cata of cata_pass
+  [ `Cata of Catamorphism.idle_fold
   | `Hylo of 'a pass_fold * 'a pass_unfold
   | `Check of Iter.iter
   | `None
@@ -207,7 +186,7 @@ let morph
   in
   let mk_sub_pass
       : type v.
-        (f:cata_pass -> v -> v)
+        (f:Catamorphism.idle_fold -> v -> v)
         * ((f:'a pass_fold -> v -> v * 'a) * (f:'a pass_unfold -> v * 'a -> v))
         * (f:Iter.iter -> v -> unit)
         -> v sub_pass
@@ -236,9 +215,15 @@ let morph
       , (Catamorphism.cata_pattern, Anamorphism.ana_pattern)
       , Iter.iter_pattern )
   in
+  let ty_expr =
+    mk_sub_pass
+      ( Catamorphism.cata_ty_expr
+      , (Catamorphism.cata_ty_expr, Anamorphism.ana_ty_expr)
+      , Iter.iter_ty_expr )
+  in
   let process_name =
     (* we use __MODULE__ .. can be a bit incovenient as a name to use with CLI so we process it a bit *)
     let open Simple_utils.Function in
     String.lowercase <@ String.substr_replace_all ~pattern:"Passes__" ~with_:""
   in
-  { name = process_name name; expression; program; pattern }
+  { name = process_name name; expression; program; pattern; ty_expr }
