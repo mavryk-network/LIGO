@@ -28,137 +28,132 @@ module Catamorphism = struct
     ; program : ('program, 'program_entry) program_ -> 'program
     }
 
-  (* TODO: cleanup, write separated cata.;*)
-  let rec cata_ty_expr : type t. f:(t ty_expr_ -> t) -> ty_expr -> t =
-   fun ~f x -> map_ty_expr_ (cata_ty_expr ~f) x.fp |> f
+  type idle_fold =
+    ( expr
+    , ty_expr
+    , pattern
+    , statement
+    , block
+    , mod_expr
+    , instruction
+    , declaration
+    , program_entry
+    , program )
+    fold
+
+  let idle : idle_fold =
+    { expr = (fun x -> { fp = x })
+    ; ty_expr = (fun x -> { fp = x })
+    ; pattern = (fun x -> { fp = x })
+    ; statement = (fun x -> { fp = x })
+    ; block = (fun x -> { fp = x })
+    ; mod_expr = (fun x -> { fp = x })
+    ; instruction = (fun x -> { fp = x })
+    ; declaration = (fun x -> { fp = x })
+    ; program_entry = (fun x -> { fp = x })
+    ; program = (fun x -> { fp = x })
+    }
 
 
-  (* we could factorize cata_expr and cata_program ; but I feel like those function are exactly those
-    we would like to generate from algebras someday, so I keep them as such *)
   let rec cata_expr
       : type e t p s b m i d pe prg. f:(e, t, p, s, b, m, i, d, pe, prg) fold -> expr -> e
     =
    fun ~f x ->
-    let self = cata_expr ~f in
-    let rec cata_ty_expr (x : ty_expr) : t = map_ty_expr_ cata_ty_expr x.fp |> f.ty_expr
-    and cata_pattern (x : pattern) : p =
-      map_pattern_ cata_pattern cata_ty_expr x.fp |> f.pattern
-    and cata_instruction (x : instruction) : i =
-      map_instruction_ cata_instruction self cata_pattern cata_statement cata_block x.fp
-      |> f.instruction
-    and cata_statement (x : statement) : s =
-      map_statement_ cata_statement cata_instruction cata_declaration x.fp |> f.statement
-    and cata_block (x : block) : b = map_block_ cata_block cata_statement x.fp |> f.block
-    and cata_declaration (x : declaration) : d =
-      map_declaration_ cata_declaration self cata_ty_expr cata_pattern cata_mod_expr x.fp
-      |> f.declaration
-    and cata_mod_expr (x : mod_expr) : m =
-      map_mod_expr_ cata_mod_expr cata_program x.fp |> f.mod_expr
-    and cata_program_entry (x : program_entry) : pe =
-      map_program_entry_ cata_program_entry cata_declaration cata_instruction x.fp
-      |> f.program_entry
-    and cata_program (x : program) : prg =
-      map_program_ cata_program cata_program_entry x.fp |> f.program
-    in
-    map_expr_ self cata_ty_expr cata_pattern cata_block cata_mod_expr x.fp |> f.expr
+    map_expr_
+      (cata_expr ~f)
+      (cata_ty_expr ~f)
+      (cata_pattern ~f)
+      (cata_block ~f)
+      (cata_mod_expr ~f)
+      x.fp
+    |> f.expr
 
 
-  let rec cata_program
+  and cata_ty_expr
       : type e t p s b m i d pe prg.
-        f:(e, t, p, s, b, m, i, d, pe, prg) fold -> program -> prg
+        f:(e, t, p, s, b, m, i, d, pe, prg) fold -> ty_expr -> t
     =
-   fun ~f x ->
-    let self = cata_program ~f in
-    let rec cata_ty_expr (x : ty_expr) : t = map_ty_expr_ cata_ty_expr x.fp |> f.ty_expr
-    and cata_expr (x : expr) : e =
-      map_expr_ cata_expr cata_ty_expr cata_pattern cata_block cata_mod_expr x.fp
-      |> f.expr
-    and cata_pattern (x : pattern) : p =
-      map_pattern_ cata_pattern cata_ty_expr x.fp |> f.pattern
-    and cata_instruction (x : instruction) : i =
-      map_instruction_
-        cata_instruction
-        cata_expr
-        cata_pattern
-        cata_statement
-        cata_block
-        x.fp
-      |> f.instruction
-    and cata_statement (x : statement) : s =
-      map_statement_ cata_statement cata_instruction cata_declaration x.fp |> f.statement
-    and cata_block (x : block) : b = map_block_ cata_block cata_statement x.fp |> f.block
-    and cata_declaration (x : declaration) : d =
-      map_declaration_
-        cata_declaration
-        cata_expr
-        cata_ty_expr
-        cata_pattern
-        cata_mod_expr
-        x.fp
-      |> f.declaration
-    and cata_mod_expr (x : mod_expr) : m =
-      map_mod_expr_ cata_mod_expr self x.fp |> f.mod_expr
-    and cata_program_entry (x : program_entry) : pe =
-      map_program_entry_ cata_program_entry cata_declaration cata_instruction x.fp
-      |> f.program_entry
-    in
-    map_program_ self cata_program_entry x.fp |> f.program
+   fun ~f x -> map_ty_expr_ (cata_ty_expr ~f) x.fp |> f.ty_expr
 
 
-  let rec cata_pattern
+  and cata_pattern
       : type e t p s b m i d pe prg.
         f:(e, t, p, s, b, m, i, d, pe, prg) fold -> pattern -> p
     =
+   fun ~f x -> map_pattern_ (cata_pattern ~f) (cata_ty_expr ~f) x.fp |> f.pattern
+
+
+  and cata_statement
+      : type e t p s b m i d pe prg.
+        f:(e, t, p, s, b, m, i, d, pe, prg) fold -> statement -> s
+    =
    fun ~f x ->
-    let self = cata_pattern ~f in
-    let rec cata_ty_expr (x : ty_expr) : t =
-      map_ty_expr_ cata_ty_expr x.fp |> f.ty_expr
-    in
-    map_pattern_ self cata_ty_expr x.fp |> f.pattern
+    map_statement_ (cata_statement ~f) (cata_instruction ~f) (cata_declaration ~f) x.fp
+    |> f.statement
 
 
-  let rec cata_block
+  and cata_block
       : type e t p s b m i d pe prg.
         f:(e, t, p, s, b, m, i, d, pe, prg) fold -> block -> b
     =
+   fun ~f x -> map_block_ (cata_block ~f) (cata_statement ~f) x.fp |> f.block
+
+
+  and cata_mod_expr
+      : type e t p s b m i d pe prg.
+        f:(e, t, p, s, b, m, i, d, pe, prg) fold -> mod_expr -> m
+    =
+   fun ~f x -> map_mod_expr_ (cata_mod_expr ~f) (cata_program ~f) x.fp |> f.mod_expr
+
+
+  and cata_instruction
+      : type e t p s b m i d pe prg.
+        f:(e, t, p, s, b, m, i, d, pe, prg) fold -> instruction -> i
+    =
    fun ~f x ->
-    let self = cata_block ~f in
-    let rec cata_ty_expr (x : ty_expr) : t = map_ty_expr_ cata_ty_expr x.fp |> f.ty_expr
-    and cata_expr (x : expr) : e =
-      map_expr_ cata_expr cata_ty_expr cata_pattern cata_block cata_mod_expr x.fp
-      |> f.expr
-    and cata_pattern (x : pattern) : p =
-      map_pattern_ cata_pattern cata_ty_expr x.fp |> f.pattern
-    and cata_block (x : block) : b = map_block_ cata_block cata_statement x.fp |> f.block
-    and cata_mod_expr (x : mod_expr) : m =
-      map_mod_expr_ cata_mod_expr cata_program x.fp |> f.mod_expr
-    and cata_program_entry (x : program_entry) : pe =
-      map_program_entry_ cata_program_entry cata_declaration cata_instruction x.fp
-      |> f.program_entry
-    and cata_program (x : program) : prg =
-      map_program_ cata_program cata_program_entry x.fp |> f.program
-    and cata_statement (x : statement) : s =
-      map_statement_ cata_statement cata_instruction cata_declaration x.fp |> f.statement
-    and cata_declaration (x : declaration) : d =
-      map_declaration_
-        cata_declaration
-        cata_expr
-        cata_ty_expr
-        cata_pattern
-        cata_mod_expr
-        x.fp
-      |> f.declaration
-    and cata_instruction (x : instruction) : i =
-      map_instruction_
-        cata_instruction
-        cata_expr
-        cata_pattern
-        cata_statement
-        cata_block
-        x.fp
-      |> f.instruction
-    in
-    map_block_ self cata_statement x.fp |> f.block
+    map_instruction_
+      (cata_instruction ~f)
+      (cata_expr ~f)
+      (cata_pattern ~f)
+      (cata_statement ~f)
+      (cata_block ~f)
+      x.fp
+    |> f.instruction
+
+
+  and cata_declaration
+      : type e t p s b m i d pe prg.
+        f:(e, t, p, s, b, m, i, d, pe, prg) fold -> declaration -> d
+    =
+   fun ~f x ->
+    map_declaration_
+      (cata_declaration ~f)
+      (cata_expr ~f)
+      (cata_ty_expr ~f)
+      (cata_pattern ~f)
+      (cata_mod_expr ~f)
+      x.fp
+    |> f.declaration
+
+
+  and cata_program_entry
+      : type e t p s b m i d pe prg.
+        f:(e, t, p, s, b, m, i, d, pe, prg) fold -> program_entry -> pe
+    =
+   fun ~f x ->
+    map_program_entry_
+      (cata_program_entry ~f)
+      (cata_declaration ~f)
+      (cata_instruction ~f)
+      x.fp
+    |> f.program_entry
+
+
+  and cata_program
+      : type e t p s b m i d pe prg.
+        f:(e, t, p, s, b, m, i, d, pe, prg) fold -> program -> prg
+    =
+   fun ~f x -> map_program_ (cata_program ~f) (cata_program_entry ~f) x.fp |> f.program
 end
 
 module Anamorphism = struct
@@ -189,8 +184,11 @@ module Anamorphism = struct
     ; program : 'program -> ('program, 'program_entry) program_
     }
 
-  let rec ana_ty_expr : type t. f:(t -> t ty_expr_) -> t -> ty_expr =
-   fun ~f x -> { fp = f x |> map_ty_expr_ (ana_ty_expr ~f) }
+  let rec ana_ty_expr
+      : type e t p s b m i d pe prg.
+        f:(e, t, p, s, b, m, i, d, pe, prg) unfold -> t -> ty_expr
+    =
+   fun ~f x -> { fp = f.ty_expr x |> map_ty_expr_ (ana_ty_expr ~f) }
 
 
   let rec ana_expr
@@ -199,9 +197,8 @@ module Anamorphism = struct
     =
    fun ~f x ->
     let self = ana_expr ~f in
-    let rec ana_ty_expr (x : t) : ty_expr =
-      { fp = f.ty_expr x |> map_ty_expr_ ana_ty_expr }
-    and ana_pattern (x : p) : pattern =
+    let ana_ty_expr = ana_ty_expr ~f in
+    let rec ana_pattern (x : p) : pattern =
       { fp = f.pattern x |> map_pattern_ ana_pattern ana_ty_expr }
     and ana_instruction (x : i) : instruction =
       { fp =
@@ -362,10 +359,12 @@ module Iter = struct
     List.fold ~init:defaults ~f:aux iters
 
 
+  let iter_ty_expr ~(f : iter) (x : ty_expr) : unit = f.ty_expr x.fp
+
   let rec iter_expr ~(f : iter) (x : expr) : unit =
     let self = iter_expr ~f in
-    let rec iter_ty_expr (x : ty_expr) : unit = f.ty_expr x.fp
-    and iter_pattern (x : pattern) : unit =
+    let iter_ty_expr = iter_ty_expr ~f in
+    let rec iter_pattern (x : pattern) : unit =
       f.pattern x.fp;
       iter_pattern_ iter_pattern iter_ty_expr x.fp
     and iter_instruction (x : instruction) : unit =
@@ -397,12 +396,10 @@ module Iter = struct
 
 
   let rec iter_program ~(f : iter) (x : program) : unit =
+    let iter_ty_expr = iter_ty_expr ~f in
     let rec iter_expr (x : expr) : unit =
       f.expr x.fp;
       iter_expr_ iter_expr iter_ty_expr iter_pattern iter_block iter_mod_expr x.fp
-    and iter_ty_expr (x : ty_expr) : unit =
-      f.ty_expr x.fp;
-      iter_ty_expr_ iter_ty_expr x.fp
     and iter_pattern (x : pattern) : unit =
       f.pattern x.fp;
       iter_pattern_ iter_pattern iter_ty_expr x.fp
