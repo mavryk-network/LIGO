@@ -22,9 +22,11 @@ type pass =
   ; pattern : pattern sub_pass
   }
 
-let expr_selector x = x.expression
-let program_selector x = x.program
-let pattern_selector x = x.pattern
+module Selector = struct
+  let expr x = x.expression
+  let program x = x.program
+  let pattern x = x.pattern
+end
 
 let rec select_passes included name passes =
   match passes with
@@ -62,9 +64,9 @@ let decompile_with_passes : type a. a sub_pass list -> a -> a =
 
 
 let nanopasses_until
-    : type a. pass list -> ?stop_before:_ -> selector:(pass -> a sub_pass) -> a -> a
+    : type a. pass list -> ?stop_before:_ -> sort:(pass -> a sub_pass) -> a -> a
   =
- fun passes ?stop_before ~selector prg ->
+ fun passes ?stop_before ~sort prg ->
   let passes =
     Option.value_map stop_before ~default:passes ~f:(fun n ->
         let included, n =
@@ -77,7 +79,7 @@ let nanopasses_until
         then failwith "No pass with the specified name";
         select_passes included n passes)
   in
-  compile_with_passes (List.map ~f:selector passes) prg
+  compile_with_passes (List.map ~f:sort passes) prg
 
 
 type cata_pass =

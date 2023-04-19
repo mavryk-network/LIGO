@@ -2,6 +2,7 @@ module I = Ast_unified
 module O = Ast_core
 open Passes.Pass_type
 module Errors = Passes.Errors
+module Selector = Passes.Pass_type.Selector
 open Simple_utils.Function
 
 (* Note:
@@ -80,12 +81,19 @@ let get_passes ~raise ~syntax ~disable_initial_check =
   passes ~raise ~syntax ~disable_initial_check
 
 
-let nanopasses_program_until ~raise ~options ?stop_before prg =
+let execute_nanopasses
+    ~raise
+    ~options
+    ~sort
+    ?stop_before
+    ?(disable_initial_check = false)
+    prg
+  =
   let passes =
     let syntax, duplicate_identifier = extract_options options in
-    get_passes ~raise ~syntax ~duplicate_identifier ~disable_initial_check:false
+    get_passes ~raise ~syntax ~duplicate_identifier ~disable_initial_check
   in
-  nanopasses_until passes ?stop_before ~selector:program_selector prg
+  nanopasses_until passes ?stop_before ~sort prg
 
 
 let decompile_program ~raise ~syntax : O.program -> I.program =
@@ -98,14 +106,14 @@ let decompile_expression ~raise ~syntax : O.expression -> I.expr =
   let passes =
     get_passes ~raise ~syntax ~disable_initial_check:false ~duplicate_identifier:true
   in
-  decompile_with_passes (List.map ~f:expr_selector passes) <@ Trivial.From_core.expression
+  decompile_with_passes (List.map ~f:Selector.expr passes) <@ Trivial.From_core.expression
 
 
 let decompile_pattern ~raise ~syntax : O.type_expression option O.Pattern.t -> I.pattern =
   let passes =
     get_passes ~raise ~syntax ~disable_initial_check:false ~duplicate_identifier:true
   in
-  decompile_with_passes (List.map ~f:pattern_selector passes) <@ Trivial.From_core.pattern
+  decompile_with_passes (List.map ~f:Selector.pattern passes) <@ Trivial.From_core.pattern
 
 
 let decompile_ty_expr ~raise ~syntax _ =
@@ -113,8 +121,11 @@ let decompile_ty_expr ~raise ~syntax _ =
   assert false
 
 
-let compile_program ~raise ~(options : Compiler_options.t) : I.program -> O.program =
- fun prg -> Trivial.To_core.program ~raise (nanopasses_program_until ~raise ~options prg)
+let compile_program ~raise ~(options : Compiler_options.t) ?stop_before
+    : I.program -> O.program
+  =
+  Trivial.To_core.program ~raise
+  <@ execute_nanopasses ~raise ~options ~sort:Selector.program ?stop_before
 
 
 let compile_expression
@@ -123,7 +134,5 @@ let compile_expression
     ?(disable_initial_check = false)
     : I.expr -> O.expression
   =
-  let syntax, duplicate_identifier = extract_options options in
-  let passes = get_passes ~raise ~syntax ~disable_initial_check ~duplicate_identifier in
   Trivial.To_core.expression ~raise
-  <@ compile_with_passes (List.map ~f:expr_selector passes)
+  <@ execute_nanopasses ~raise ~options ~sort:Selector.expr ~disable_initial_check
