@@ -426,7 +426,7 @@ module Command = struct
         | None -> `None
         | Some views -> `Single views
       in
-      LC.v_ast_contract { main; views }, ctxt
+      LC.v_ast_contract main views, ctxt
     | Read_contract_from_file (loc, calltrace, source_file) ->
       (try
          let s = In_channel.(with_file source_file ~f:input_all) in
@@ -567,7 +567,7 @@ module Command = struct
         | _ ->
           raise.error @@ Errors.generic_error loc "Views doe not reduce to a view value?"
       in
-      LC.v_ast_contract { main; views }, ctxt
+      LC.v_ast_contract main views, ctxt
     | Compile_ast_contract (loc, v) ->
       let contract =
         match v with

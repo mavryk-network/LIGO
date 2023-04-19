@@ -41,7 +41,7 @@ let v_michelson_untyped : mcode -> value = fun c -> V_Michelson (Untyped_code c)
 let v_michelson_contract : mcode -> value = fun c -> V_Michelson_contract c
 
 let v_ast_contract
-    : Ast_aggregated.expression -> (Value_var.t list * expression) option -> value
+    : Ast_aggregated.expression -> _ -> value
   =
  fun main views -> V_Ast_contract { main; views }
 
