@@ -184,103 +184,113 @@ module Anamorphism = struct
     ; program : 'program -> ('program, 'program_entry) program_
     }
 
-  let rec ana_ty_expr
+  let rec ana_expr
+      : type e t p s b m i d pe prg.
+        f:(e, t, p, s, b, m, i, d, pe, prg) unfold -> e -> expr
+    =
+   fun ~f x ->
+    { fp =
+        f.expr x
+        |> map_expr_
+             (ana_expr ~f)
+             (ana_ty_expr ~f)
+             (ana_pattern ~f)
+             (ana_block ~f)
+             (ana_mod_expr ~f)
+    }
+
+
+  and ana_ty_expr
       : type e t p s b m i d pe prg.
         f:(e, t, p, s, b, m, i, d, pe, prg) unfold -> t -> ty_expr
     =
    fun ~f x -> { fp = f.ty_expr x |> map_ty_expr_ (ana_ty_expr ~f) }
 
 
-  let rec ana_expr
+  and ana_pattern
       : type e t p s b m i d pe prg.
-        f:(e, t, p, s, b, m, i, d, pe, prg) unfold -> e -> expr
+        f:(e, t, p, s, b, m, i, d, pe, prg) unfold -> p -> pattern
+    =
+   fun ~f x -> { fp = f.pattern x |> map_pattern_ (ana_pattern ~f) (ana_ty_expr ~f) }
+
+
+  and ana_instruction
+      : type e t p s b m i d pe prg.
+        f:(e, t, p, s, b, m, i, d, pe, prg) unfold -> i -> instruction
     =
    fun ~f x ->
-    let self = ana_expr ~f in
-    let ana_ty_expr = ana_ty_expr ~f in
-    let rec ana_pattern (x : p) : pattern =
-      { fp = f.pattern x |> map_pattern_ ana_pattern ana_ty_expr }
-    and ana_instruction (x : i) : instruction =
-      { fp =
-          f.instruction x
-          |> map_instruction_ ana_instruction self ana_pattern ana_statement ana_block
-      }
-    and ana_statement (x : s) : statement =
-      { fp = f.statement x |> map_statement_ ana_statement ana_instruction ana_declaration
-      }
-    and ana_block (x : b) : block =
-      { fp = f.block x |> map_block_ ana_block ana_statement }
-    and ana_declaration (x : d) : declaration =
-      { fp =
-          f.declaration x
-          |> map_declaration_ ana_declaration self ana_ty_expr ana_pattern ana_mod_expr
-      }
-    and ana_mod_expr (x : m) =
-      { fp = f.mod_expr x |> map_mod_expr_ ana_mod_expr ana_program }
-    and ana_program_entry (x : pe) : program_entry =
-      { fp =
-          f.program_entry x
-          |> map_program_entry_ ana_program_entry ana_declaration ana_instruction
-      }
-    and ana_program (x : prg) =
-      { fp = f.program x |> map_program_ ana_program ana_program_entry }
-    in
-    { fp = f.expr x |> map_expr_ self ana_ty_expr ana_pattern ana_block ana_mod_expr }
+    { fp =
+        f.instruction x
+        |> map_instruction_
+             (ana_instruction ~f)
+             (ana_expr ~f)
+             (ana_pattern ~f)
+             (ana_statement ~f)
+             (ana_block ~f)
+    }
 
 
-  let rec ana_program
+  and ana_statement
+      : type e t p s b m i d pe prg.
+        f:(e, t, p, s, b, m, i, d, pe, prg) unfold -> s -> statement
+    =
+   fun ~f x ->
+    { fp =
+        f.statement x
+        |> map_statement_ (ana_statement ~f) (ana_instruction ~f) (ana_declaration ~f)
+    }
+
+
+  and ana_block
+      : type e t p s b m i d pe prg.
+        f:(e, t, p, s, b, m, i, d, pe, prg) unfold -> b -> block
+    =
+   fun ~f x -> { fp = f.block x |> map_block_ (ana_block ~f) (ana_statement ~f) }
+
+
+  and ana_declaration
+      : type e t p s b m i d pe prg.
+        f:(e, t, p, s, b, m, i, d, pe, prg) unfold -> d -> declaration
+    =
+   fun ~f x ->
+    { fp =
+        f.declaration x
+        |> map_declaration_
+             (ana_declaration ~f)
+             (ana_expr ~f)
+             (ana_ty_expr ~f)
+             (ana_pattern ~f)
+             (ana_mod_expr ~f)
+    }
+
+
+  and ana_mod_expr
+      : type e t p s b m i d pe prg.
+        f:(e, t, p, s, b, m, i, d, pe, prg) unfold -> m -> mod_expr
+    =
+   fun ~f x -> { fp = f.mod_expr x |> map_mod_expr_ (ana_mod_expr ~f) (ana_program ~f) }
+
+
+  and ana_program_entry
+      : type e t p s b m i d pe prg.
+        f:(e, t, p, s, b, m, i, d, pe, prg) unfold -> pe -> program_entry
+    =
+   fun ~f x ->
+    { fp =
+        f.program_entry x
+        |> map_program_entry_
+             (ana_program_entry ~f)
+             (ana_declaration ~f)
+             (ana_instruction ~f)
+    }
+
+
+  and ana_program
       : type e t p s b m i d pe prg.
         f:(e, t, p, s, b, m, i, d, pe, prg) unfold -> prg -> program
     =
    fun ~f x ->
-    let self = ana_program ~f in
-    let rec ana_ty_expr (x : t) : ty_expr =
-      { fp = f.ty_expr x |> map_ty_expr_ ana_ty_expr }
-    and ana_expr (x : e) : expr =
-      { fp = f.expr x |> map_expr_ ana_expr ana_ty_expr ana_pattern ana_block ana_mod_expr
-      }
-    and ana_pattern (x : p) : pattern =
-      { fp = f.pattern x |> map_pattern_ ana_pattern ana_ty_expr }
-    and ana_instruction (x : i) : instruction =
-      { fp =
-          f.instruction x
-          |> map_instruction_ ana_instruction ana_expr ana_pattern ana_statement ana_block
-      }
-    and ana_statement (x : s) : statement =
-      { fp = f.statement x |> map_statement_ ana_statement ana_instruction ana_declaration
-      }
-    and ana_block (x : b) : block =
-      { fp = f.block x |> map_block_ ana_block ana_statement }
-    and ana_declaration (x : d) : declaration =
-      { fp =
-          f.declaration x
-          |> map_declaration_
-               ana_declaration
-               ana_expr
-               ana_ty_expr
-               ana_pattern
-               ana_mod_expr
-      }
-    and ana_mod_expr (x : m) = { fp = f.mod_expr x |> map_mod_expr_ ana_mod_expr self }
-    and ana_program_entry (x : pe) : program_entry =
-      { fp =
-          f.program_entry x
-          |> map_program_entry_ ana_program_entry ana_declaration ana_instruction
-      }
-    in
-    { fp = f.program x |> map_program_ self ana_program_entry }
-
-
-  let rec ana_pattern
-      : type e t p s b m i d pe prg.
-        f:(e, t, p, s, b, m, i, d, pe, prg) unfold -> p -> pattern
-    =
-   fun ~f x ->
-    let self = ana_pattern ~f in
-    let rec ana_ty_expr (x : t) : ty_expr =
-      { fp = f.ty_expr x |> map_ty_expr_ ana_ty_expr }
-    in
-    { fp = f.pattern x |> map_pattern_ self ana_ty_expr }
+    { fp = f.program x |> map_program_ (ana_program ~f) (ana_program_entry ~f) }
 end
 
 module Iter = struct
@@ -359,90 +369,74 @@ module Iter = struct
     List.fold ~init:defaults ~f:aux iters
 
 
-  let iter_ty_expr ~(f : iter) (x : ty_expr) : unit = f.ty_expr x.fp
-
   let rec iter_expr ~(f : iter) (x : expr) : unit =
-    let self = iter_expr ~f in
-    let iter_ty_expr = iter_ty_expr ~f in
-    let rec iter_pattern (x : pattern) : unit =
-      f.pattern x.fp;
-      iter_pattern_ iter_pattern iter_ty_expr x.fp
-    and iter_instruction (x : instruction) : unit =
-      f.instruction x.fp;
-      iter_instruction_ iter_instruction self iter_pattern iter_statement iter_block x.fp
-    and iter_statement (x : statement) : unit =
-      f.statement x.fp;
-      iter_statement_ iter_statement iter_instruction iter_declaration x.fp
-    and iter_block (x : block) : unit =
-      f.block x.fp;
-      iter_block_ iter_block iter_statement x.fp
-    and iter_declaration (x : declaration) : unit =
-      f.declaration x.fp;
-      iter_declaration_ iter_declaration self iter_ty_expr iter_pattern iter_mod_expr x.fp
-    and iter_mod_expr (x : mod_expr) : unit =
-      f.mod_expr x.fp;
-      iter_mod_expr_ iter_mod_expr iter_program x.fp
-    and iter_program_entry (x : program_entry) : unit =
-      f.program_entry x.fp;
-      iter_program_entry_ iter_program_entry iter_declaration iter_instruction x.fp;
-      iter_program_entry_ iter_program_entry iter_declaration iter_instruction x.fp
-    and iter_program (x : program) : unit =
-      f.program x.fp;
-      iter_program_ iter_program iter_program_entry x.fp;
-      iter_program_ iter_program iter_program_entry x.fp
-    in
     f.expr x.fp;
-    iter_expr_ self iter_ty_expr iter_pattern iter_block iter_mod_expr x.fp
+    iter_expr_
+      (iter_expr ~f)
+      (iter_ty_expr ~f)
+      (iter_pattern ~f)
+      (iter_block ~f)
+      (iter_mod_expr ~f)
+      x.fp
 
 
-  let rec iter_program ~(f : iter) (x : program) : unit =
-    let iter_ty_expr = iter_ty_expr ~f in
-    let rec iter_expr (x : expr) : unit =
-      f.expr x.fp;
-      iter_expr_ iter_expr iter_ty_expr iter_pattern iter_block iter_mod_expr x.fp
-    and iter_pattern (x : pattern) : unit =
-      f.pattern x.fp;
-      iter_pattern_ iter_pattern iter_ty_expr x.fp
-    and iter_instruction (x : instruction) : unit =
-      f.instruction x.fp;
-      iter_instruction_
-        iter_instruction
-        iter_expr
-        iter_pattern
-        iter_statement
-        iter_block
-        x.fp
-    and iter_statement (x : statement) : unit =
-      f.statement x.fp;
-      iter_statement_ iter_statement iter_instruction iter_declaration x.fp
-    and iter_block (x : block) : unit =
-      f.block x.fp;
-      iter_block_ iter_block iter_statement x.fp
-    and iter_declaration (x : declaration) : unit =
-      f.declaration x.fp;
-      iter_declaration_
-        iter_declaration
-        iter_expr
-        iter_ty_expr
-        iter_pattern
-        iter_mod_expr
-        x.fp
-    and iter_mod_expr (x : mod_expr) : unit =
-      f.mod_expr x.fp;
-      iter_mod_expr_ iter_mod_expr (iter_program ~f) x.fp
-    and iter_program_entry (x : program_entry) : unit =
-      f.program_entry x.fp;
-      iter_program_entry_ iter_program_entry iter_declaration iter_instruction x.fp
-    in
-    f.program x.fp;
-    iter_program_ (iter_program ~f) iter_program_entry x.fp
+  and iter_ty_expr ~(f : iter) (x : ty_expr) : unit =
+    f.ty_expr x.fp;
+    iter_ty_expr_ (iter_ty_expr ~f) x.fp
 
 
-  let rec iter_pattern ~(f : iter) (x : pattern) : unit =
-    let rec iter_ty_expr (x : ty_expr) : unit =
-      f.ty_expr x.fp;
-      iter_ty_expr_ iter_ty_expr x.fp
-    in
+  and iter_pattern ~(f : iter) (x : pattern) : unit =
     f.pattern x.fp;
-    iter_pattern_ (iter_pattern ~f) iter_ty_expr x.fp
+    iter_pattern_ (iter_pattern ~f) (iter_ty_expr ~f) x.fp
+
+
+  and iter_instruction ~(f : iter) (x : instruction) : unit =
+    f.instruction x.fp;
+    iter_instruction_
+      (iter_instruction ~f)
+      (iter_expr ~f)
+      (iter_pattern ~f)
+      (iter_statement ~f)
+      (iter_block ~f)
+      x.fp
+
+
+  and iter_statement ~(f : iter) (x : statement) : unit =
+    f.statement x.fp;
+    iter_statement_ (iter_statement ~f) (iter_instruction ~f) (iter_declaration ~f) x.fp
+
+
+  and iter_block ~(f : iter) (x : block) : unit =
+    f.block x.fp;
+    iter_block_ (iter_block ~f) (iter_statement ~f) x.fp
+
+
+  and iter_declaration ~(f : iter) (x : declaration) : unit =
+    f.declaration x.fp;
+    iter_declaration_
+      (iter_declaration ~f)
+      (iter_expr ~f)
+      (iter_ty_expr ~f)
+      (iter_pattern ~f)
+      (iter_mod_expr ~f)
+      x.fp
+
+
+  and iter_mod_expr ~(f : iter) (x : mod_expr) : unit =
+    f.mod_expr x.fp;
+    iter_mod_expr_ (iter_mod_expr ~f) (iter_program ~f) x.fp
+
+
+  and iter_program_entry ~(f : iter) (x : program_entry) : unit =
+    f.program_entry x.fp;
+    iter_program_entry_
+      (iter_program_entry ~f)
+      (iter_declaration ~f)
+      (iter_instruction ~f)
+      x.fp
+
+
+  and iter_program ~(f : iter) (x : program) : unit =
+    f.program x.fp;
+    iter_program_ (iter_program ~f) (iter_program_entry ~f) x.fp
 end
