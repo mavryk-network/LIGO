@@ -522,3 +522,28 @@ module Test = struct
   let assert_none_with_error (type a) (v : a option) (s : string) : unit = match v with | None -> () | Some _ -> failwith s
 
 end
+
+module Test =
+  module Legacy = Test
+
+  module Michelson = struct
+    let run (type a b) (f : a -> b) (v : a) : michelson_program = [%external ("TEST_RUN", f, v)]
+    let eval (type a) (x : a) : michelson_program = run (fun (x : a) -> x) x
+    let compile_value (type a) (x : a) : michelson_program = eval x
+    let decompile (type a) (m : michelson_program) : a = [%external ("TEST_DECOMPILE", m)]
+    let constant_to_michelson_program (s : string) : michelson_program = [%external ("TEST_CONSTANT_TO_MICHELSON", s)]
+    let parse_michelson (s : string) : michelson_program = [%external ("TEST_CONSTANT_TO_MICHELSON", s)]
+  end
+
+  module Failure = struct
+    let failwith (type a b) (v : a) : b = [%external ("TEST_FAILWITH", v)]
+    let assert (b : bool) : unit = if b then () else failwith "failed assertion"
+    let assert_some (type a) (v : a option) : unit = match v with | None -> failwith "failed assert some" | Some _ -> ()
+    let assert_none (type a) (v : a option) : unit = match v with | None -> () | Some _ -> failwith "failed assert none"
+    let assert_with_error (b : bool) (s : string) = if b then () else failwith s
+    let assert_some_with_error (type a) (v : a option) (s : string) : unit = match v with | None -> failwith s | Some _ -> ()
+    let assert_none_with_error (type a) (v : a option) (s : string) : unit = match v with | None -> () | Some _ -> failwith s
+  end
+end
+
+module Test = Test.Legacy
