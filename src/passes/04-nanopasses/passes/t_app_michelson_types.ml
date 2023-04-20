@@ -96,7 +96,7 @@ let pass ~raise ~syntax =
     ~reduction_check:(reduction ~raise)
 
 
-open Unit_test_helpers
+open Unit_test_helpers.Program
 
 let%expect_test "compile_michelson_pair" =
   {|

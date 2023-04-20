@@ -84,7 +84,7 @@ let pass ~raise ~syntax =
     ~reduction_check:(reduction ~raise ~syntax)
 
 
-open Unit_test_helpers
+open Unit_test_helpers.Program
 
 let%expect_test "compile_cons" =
   {|

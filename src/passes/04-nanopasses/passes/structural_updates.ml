@@ -278,7 +278,7 @@ let pass ~raise =
     ~reduction_check:(reduction ~raise)
 
 
-open Unit_test_helpers
+open Unit_test_helpers.Program
 
 let%expect_test "compile" =
   {|

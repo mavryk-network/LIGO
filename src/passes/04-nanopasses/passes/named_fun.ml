@@ -32,7 +32,7 @@ let pass ~raise =
   morph ~name:__MODULE__ ~compile ~decompile:`None ~reduction_check:(reduction ~raise)
 
 
-open Unit_test_helpers
+open Unit_test_helpers.Program
 
 let%expect_test "compile" =
   {|

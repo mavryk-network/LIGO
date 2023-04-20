@@ -17,7 +17,7 @@ let reduction_check = Iter.defaults
 let decompile = `None
 let pass = morph ~name:__MODULE__ ~compile ~decompile ~reduction_check
 
-open Unit_test_helpers
+open Unit_test_helpers.Program
 
 let%expect_test "addition" =
   {|
