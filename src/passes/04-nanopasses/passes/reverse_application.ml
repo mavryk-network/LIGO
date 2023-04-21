@@ -5,27 +5,25 @@ open Errors
 module Location = Simple_utils.Location
 open Unit_test_helpers
 
-module rec Doc : sig end = struct
+module rec _ : DOC = struct
   (* 
     The reverse application operator '|>' is syntactic sugar for function application.
     This pass unsugars the E_rev_app operator into normal function application E_application
   *)
 
-  open Passs
+  open Pass
 
   let%expect_test _ =
     Expr.(
       {|
         (E_rev_app ((x <EXPR1>) (f <EXPR2>)))
-      |} |-> pass ~raise;
+      |} |-> Pass.pass ~raise;
       [%expect {|
         (E_call <EXPR2> (<EXPR1>))
       |}])
 end
 
-and Passs : sig
-  val pass : raise:([> `Small_passes_wrong_reduction of string ], 'a) raise -> pass
-end = struct
+and Pass : MORPH = struct
   let compile =
     let pass_expr : _ expr_ -> expr =
      fun e ->
@@ -52,4 +50,4 @@ end = struct
     morph ~name:__MODULE__ ~compile ~decompile:`None ~reduction_check:(reduction ~raise)
 end
 
-let pass = Passs.pass
+let pass = Pass.pass

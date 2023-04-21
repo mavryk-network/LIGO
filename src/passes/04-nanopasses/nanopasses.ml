@@ -32,7 +32,7 @@ let passes
   ; Type_abstraction_declaration.pass ~raise
   ; Constructor_application.pass ~raise ~syntax
   ; Named_fun.pass ~raise
-  ; E_rev_app.pass ~raise
+  ; Reverse_application.pass ~raise
   ; Freeze_operators.pass ~raise ~syntax
   ; Literalize_annotated.pass ~raise
   ; List_as_function.pass ~raise ~syntax
@@ -64,6 +64,15 @@ let passes
   ; Compute_layout.pass1
   ; Compute_layout.pass2 ~raise
   ]
+
+
+  let passes_
+  ~(raise : (Passes.Errors.t, _) Simple_utils.Trace.raise)
+  ~(syntax : Syntax_types.t)
+  ~disable_initial_check
+  ~duplicate_identifier
+= let open Passes in
+[ (module Reverse_application : T) ]
 
 
 let extract_options : Compiler_options.t -> Syntax_types.t * bool =

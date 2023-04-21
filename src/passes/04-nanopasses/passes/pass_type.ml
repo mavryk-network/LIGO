@@ -1,4 +1,5 @@
 open Ast_unified
+open Simple_utils.Trace
 
 (* it's preferable to use the defined recursion schemes for code transformations
    but  *)
@@ -22,6 +23,16 @@ type pass =
   ; pattern : pattern sub_pass
   ; ty_expr : ty_expr sub_pass
   }
+
+module type DOC = sig end
+
+module type MORPH = sig
+  val pass : raise:(Errors.t, 'warning) raise -> pass
+end
+
+module type T = sig
+  module Pass : MORPH
+end
 
 module Selector = struct
   type 'a t = pass -> 'a sub_pass

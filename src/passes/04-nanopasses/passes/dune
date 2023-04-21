@@ -20,7 +20,7 @@
   match_as_function
   hack_literalize_jsligo
   t_app_michelson_types
-  e_rev_app
+  reverse_application
   reduce_switch
   structural_updates
   returns
@@ -54,7 +54,7 @@
   restrict_projections
   unpuning
   disc_union_types)
- (libraries ast_unified syntax_types tezos-crypto tezos-base)
+ (libraries ast_unified syntax_types tezos-crypto tezos-base compiler_options)
  (inline_tests
   (flags (-stop-on-error)))
  (preprocess
