@@ -4,9 +4,12 @@ open Simple_utils.Trace
 open Errors
 module Location = Simple_utils.Location
 
+module rec _ : DOC = struct
 (* by default, JsLigo declaration all have attribute @private.
    Upon keyword 'export', attribute private must be removed
 *)
+
+end and Pass : PASS = struct
 
 let compile =
   let declaration : _ declaration_ -> declaration =
@@ -29,9 +32,10 @@ let reduction ~raise =
   }
 
 
-let pass ~raise =
+let pass ~raise ~syntax:_ =
   morph
     ~name:__MODULE__
     ~compile
     ~decompile:`None (* for now ? *)
     ~reduction_check:(reduction ~raise)
+end

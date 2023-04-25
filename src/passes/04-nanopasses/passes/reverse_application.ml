@@ -11,8 +11,6 @@ module rec _ : DOC = struct
     This pass unsugars the E_rev_app operator into normal function application E_application
   *)
 
-  open Pass
-
   let%expect_test _ =
     Expr.(
       {|
@@ -23,7 +21,7 @@ module rec _ : DOC = struct
       |}])
 end
 
-and Pass : MORPH = struct
+and Pass : PASS = struct
   let compile =
     let pass_expr : _ expr_ -> expr =
      fun e ->
@@ -46,8 +44,6 @@ and Pass : MORPH = struct
     { Iter.defaults with expr }
 
 
-  let pass ~raise =
+  let pass ~raise ~syntax:_ =
     morph ~name:__MODULE__ ~compile ~decompile:`None ~reduction_check:(reduction ~raise)
 end
-
-let pass = Pass.pass

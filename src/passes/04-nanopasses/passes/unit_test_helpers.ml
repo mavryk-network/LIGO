@@ -100,16 +100,17 @@ module type S = sig
 end
 
 module Make (X : S) = struct
-  let raise : (Errors.t, unit) raise = raise_failwith "test"
-  let expected_failure_fwd i pass = expected_failure_fwd_ X.selector (X.of_str i) pass
-  let expected_failure_bwd i pass = expected_failure_bwd_ X.selector (X.of_str i) pass
+  let raise : (Errors.t, Main_warnings.all) raise = raise_failwith "test"
+  let dft_pass pass = (fun ~raise -> pass ~raise ~syntax:Syntax_types.CameLIGO)
+  let expected_failure_fwd i pass = expected_failure_fwd_ X.selector (X.of_str i) (dft_pass pass)
+  let expected_failure_bwd i pass = expected_failure_bwd_ X.selector (X.of_str i) (dft_pass pass)
 
   let expected_sucess_fwd i pass =
-    expected_sucess_fwd_ X.selector (X.of_str i) pass X.to_str
+    expected_sucess_fwd_ X.selector (X.of_str i) (pass ~syntax:Syntax_types.CameLIGO) X.to_str
 
 
   let expected_sucess_bwd i pass =
-    expected_sucess_bwd_ X.selector (X.of_str i) pass X.to_str
+    expected_sucess_bwd_ X.selector (X.of_str i) (pass ~syntax:Syntax_types.CameLIGO) X.to_str
 
 
   let ( |-> ) = expected_sucess_fwd
