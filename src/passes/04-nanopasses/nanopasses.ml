@@ -20,12 +20,7 @@ type flags =
   ; detect_recursion : bool
   }
 
-let passes
-    ~(raise : (Passes.Errors.t, _) Simple_utils.Trace.raise)
-    ~(flags : flags)
-    ~(syntax : Syntax_types.t)
-    : Passes.Pass_type.pass list
-  =
+let passes ~(flags : flags) : ((module T) * bool) list =
   let open Passes in
   let { initial_node_check
       ; duplicate_identifier
@@ -41,62 +36,56 @@ let passes
     flags
   in
   let always_enabled = true in
-  let gp ((module P : T), (enable : bool)) =
-    if enable then Some (P.pass ~raise ~syntax) else None
-  in
-  (* TODO: if one flag isn't used.. no warning :-( *)
-  List.filter_map
-    ~f:gp
-    [ (module Initial_node_check : T), initial_node_check
-    ; (module Duplicate_identifier : T), duplicate_identifier
-    ; (module Restrict_projections : T), restrict_projection
-    ; (module Single_switch_block : T), always_enabled
-    ; (module Export_declaration : T), always_enabled
-    ; (module Top_level_restriction : T), always_enabled
-    ; (module Contract_hack : T), always_enabled
-    ; (module Pattern_restriction : T), always_enabled
-    ; (module Unpuning : T), always_enabled
-    ; (module Module_open_restriction : T), always_enabled
-    ; (module Import_restriction : T), always_enabled
-    ; (module External_hack), always_enabled
-    ; (module Linearity : T), always_enabled
-    ; (module T_arg : T), always_enabled
-    ; (module Constructor_application : T), always_enabled
-    ; (module Special_unit_constructor : T), special_unit_constructor
-    ; (module Type_abstraction_declaration : T), always_enabled
-    ; (module Named_fun : T), always_enabled
-    ; (module Reverse_application : T), always_enabled
-    ; (module Freeze_operators : T), always_enabled
-    ; (module Literalize_annotated : T), always_enabled
-    ; (module List_as_function : T), list_as_function
-    ; (module Array_to_tuple : T), array_to_tuple
-    ; (module Match_as_function : T), match_as_function
-    ; (module Object_to_record : T), object_to_record
-    ; (module Hack_literalize_jsligo : T), always_enabled
-    ; (module Restrict_t_app : T), always_enabled
-    ; (module T_app_michelson_types : T), always_enabled
-    ; (module Multi_bindings : T), always_enabled
-    ; (module Loop_variable : T), always_enabled
-    ; (module Disc_union_types : T), always_enabled
-    ; (module Returns : T), always_enabled
-    ; (module Reduce_switch : T), always_enabled
-    ; (module Structural_updates : T), always_enabled
-    ; (module Map_lookup : T), always_enabled
-    ; (module Freeze_containers : T), always_enabled
-    ; (module Unstate : T), always_enabled
-    ; (module Projections : T), always_enabled
-    ; (module Assign_transitivity : T), always_enabled
-    ; (module Reduce_sequence : T), always_enabled
-    ; (module Let_syntax : T), always_enabled
-    ; (module Generalize_functions : T), always_enabled
-    ; (module Detect_recursive : T), detect_recursion
-    ; (module Curry : T), always_enabled
-    ; (module Tuple_as_record : T), always_enabled
-    ; (module If_as_pattern_match : T), always_enabled
-    ; (module Restrict_typed_pattern : T), always_enabled
-    ; (module Compute_layout.Normalize_layout : T), always_enabled
-    ; (module Compute_layout.Normalize_no_layout : T), always_enabled
-    ]
+  [ (module Initial_node_check), initial_node_check
+  ; (module Duplicate_identifier), duplicate_identifier
+  ; (module Restrict_projections), restrict_projection
+  ; (module Single_switch_block), always_enabled
+  ; (module Export_declaration), always_enabled
+  ; (module Top_level_restriction), always_enabled
+  ; (module Contract_hack), always_enabled
+  ; (module Pattern_restriction), always_enabled
+  ; (module Unpuning), always_enabled
+  ; (module Module_open_restriction), always_enabled
+  ; (module Import_restriction), always_enabled
+  ; (module External_hack), always_enabled
+  ; (module Linearity), always_enabled
+  ; (module T_arg), always_enabled
+  ; (module Constructor_application), always_enabled
+  ; (module Special_unit_constructor), special_unit_constructor
+  ; (module Type_abstraction_declaration), always_enabled
+  ; (module Named_fun), always_enabled
+  ; (module Reverse_application), always_enabled
+  ; (module Freeze_operators), always_enabled
+  ; (module Literalize_annotated), always_enabled
+  ; (module List_as_function), list_as_function
+  ; (module Array_to_tuple), array_to_tuple
+  ; (module Match_as_function), match_as_function
+  ; (module Object_to_record), object_to_record
+  ; (module Hack_literalize_jsligo), always_enabled
+  ; (module Restrict_t_app), always_enabled
+  ; (module T_app_michelson_types), always_enabled
+  ; (module Multi_bindings), always_enabled
+  ; (module Loop_variable), always_enabled
+  ; (module Disc_union_types), always_enabled
+  ; (module Returns), always_enabled
+  ; (module Reduce_switch), always_enabled
+  ; (module Structural_updates), always_enabled
+  ; (module Map_lookup), always_enabled
+  ; (module Freeze_containers), always_enabled
+  ; (module Unstate), always_enabled
+  ; (module Projections), always_enabled
+  ; (module Assign_transitivity), always_enabled
+  ; (module Reduce_sequence), always_enabled
+  ; (module Let_syntax), always_enabled
+  ; (module Generalize_functions), always_enabled
+  ; (module Detect_recursive), detect_recursion
+  ; (module Curry), always_enabled
+  ; (module Tuple_as_record), always_enabled
+  ; (module If_as_pattern_match), always_enabled
+  ; (module Restrict_typed_pattern), always_enabled
+  ; (module Compute_layout.Normalize_layout), always_enabled
+  ; (module Compute_layout.Normalize_no_layout), always_enabled
+  ]
 
 
 let extract_options
@@ -124,19 +113,19 @@ let extract_options
   flags, syntax
 
 
-let get_passes ~raise ~options ~disable_initial_check =
+let get_passes ~options ~disable_initial_check =
   let flags, syntax = extract_options ~disable_initial_check options in
-  passes ~raise ~syntax ~flags
+  passes ~flags, syntax
 
 
-let get_passes_no_options ~raise ~syntax =
+let get_passes_no_options ~syntax =
   (* TODO: decompile_thing should accept options *)
-  let flags, _ =
+  let flags,_ =
     extract_options
       ~disable_initial_check:false
       Compiler_options.(make ~syntax ~raw_options:(Raw_options.make ()) ())
   in
-  passes ~raise ~syntax ~flags
+  passes ~flags
 
 
 let execute_nanopasses
@@ -147,8 +136,8 @@ let execute_nanopasses
     ?(disable_initial_check = false)
     prg
   =
-  let passes = get_passes ~raise ~options ~disable_initial_check in
-  nanopasses_until passes ?stop_before ~sort prg
+  let passes, syntax = get_passes ~options ~disable_initial_check in
+  nanopasses_until ~raise ~syntax passes ?stop_before ~sort prg
 
 
 let decompile_program ~raise ~syntax : O.program -> I.program =
@@ -158,18 +147,20 @@ let decompile_program ~raise ~syntax : O.program -> I.program =
 
 
 let decompile_expression ~raise ~syntax : O.expression -> I.expr =
-  let passes = get_passes_no_options ~raise ~syntax in
-  decompile_with_passes (List.map ~f:Selector.expr passes) <@ Trivial.From_core.expression
+  let passes = get_passes_no_options ~syntax in
+  decompile_with_passes ~raise ~syntax ~sort:Selector.expr passes
+  <@ Trivial.From_core.expression
 
 
 let decompile_pattern ~raise ~syntax : O.type_expression option O.Pattern.t -> I.pattern =
-  let passes = get_passes_no_options ~raise ~syntax in
-  decompile_with_passes (List.map ~f:Selector.pattern passes) <@ Trivial.From_core.pattern
+  let passes = get_passes_no_options ~syntax in
+  decompile_with_passes ~raise ~syntax ~sort:Selector.pattern passes
+  <@ Trivial.From_core.pattern
 
 
 let decompile_ty_expr ~raise ~syntax =
-  let passes = get_passes_no_options ~raise ~syntax in
-  decompile_with_passes (List.map ~f:Selector.ty_expr passes)
+  let passes = get_passes_no_options ~syntax in
+  decompile_with_passes ~raise ~syntax ~sort:Selector.ty_expr passes
   <@ Trivial.From_core.type_expression
 
 

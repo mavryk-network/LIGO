@@ -24,27 +24,44 @@ type pass =
   ; ty_expr : ty_expr sub_pass
   }
 
+type raise_t = (Errors.t, Main_warnings.all) raise
+type syntax_t = Syntax_types.t
 
 module type T = sig
   val pass : raise:(Errors.t, Main_warnings.all) raise -> syntax:Syntax_types.t -> pass
 end
 
-module Selector = struct
+module Selector : sig
+  (* select a specific sort transformation from a pass *)
+  type 'a t
+
+  val select : 'a t -> pass -> 'a sub_pass
+  val expr : expr t
+  val program : program t
+  val pattern : pattern t
+  val ty_expr : ty_expr t
+end = struct
   type 'a t = pass -> 'a sub_pass
 
+  let select (selector : 'a t) (p : pass) = selector p
   let expr x = x.expression
   let program x = x.program
   let pattern x = x.pattern
   let ty_expr x = x.ty_expr
 end
 
+let pass_of_module : raise:raise_t -> syntax:syntax_t -> (module T) -> pass =
+ fun ~raise ~syntax (module P) -> P.pass ~raise ~syntax
+
+
 let rec select_passes included name passes =
   match passes with
   | [] -> []
-  | hd :: tl ->
-    if String.equal name hd.name
-    then if included then [ hd ] else []
-    else hd :: select_passes included name tl
+  | (pass, true) :: tl ->
+    if String.equal name pass.name
+    then if included then [ pass ] else []
+    else pass :: select_passes included name tl
+  | _ :: tl -> select_passes included name tl
 
 
 let compile_with_passes : type a. a sub_pass list -> a -> a =
@@ -69,27 +86,58 @@ let compile_with_passes : type a. a sub_pass list -> a -> a =
   prg
 
 
-let decompile_with_passes : type a. a sub_pass list -> a -> a =
- fun passes prg -> List.fold passes ~init:prg ~f:(fun prg pass -> pass.backward prg)
+let decompile_with_passes
+    : type a.
+      raise:raise_t
+      -> syntax:syntax_t
+      -> sort:a Selector.t
+      -> ((module T) * bool) list
+      -> a
+      -> a
+  =
+ fun ~raise ~syntax ~sort passes prg ->
+  let passes =
+    passes
+    |> List.filter_map ~f:(fun (p, enabled) -> if enabled then Some p else None)
+    |> List.map ~f:(pass_of_module ~raise ~syntax)
+    |> List.map ~f:(Selector.select sort)
+  in
+  List.fold passes ~init:prg ~f:(fun prg pass -> pass.backward prg)
 
 
 let nanopasses_until
-    : type a. pass list -> ?stop_before:_ -> sort:(pass -> a sub_pass) -> a -> a
+    : type a.
+      raise:raise_t
+      -> syntax:syntax_t
+      -> ((module T) * bool) list
+      -> ?stop_before:_
+      -> sort:a Selector.t
+      -> a
+      -> a
   =
- fun passes ?stop_before ~sort prg ->
+ fun ~raise ~syntax passes ?stop_before ~sort prg ->
   let passes =
-    Option.value_map stop_before ~default:passes ~f:(fun n ->
-        let included, n =
-          match String.lsplit2 n ~on:'+' with
-          | Some (name, "") -> true, name
-          | _ -> false, n
-        in
-        let n = String.lowercase n in
-        if not (List.exists passes ~f:(fun p -> String.equal n p.name))
-        then failwith "No pass with the specified name";
-        select_passes included n passes)
+    List.map ~f:(Simple_utils.Pair.map_fst ~f:(pass_of_module ~raise ~syntax)) passes
   in
-  compile_with_passes (List.map ~f:sort passes) prg
+  let passes =
+    let default =
+      List.filter_map ~f:(fun (p, enabled) -> if enabled then Some p else None) passes
+    in
+    Option.value_map stop_before ~default ~f:(fun stop ->
+        let included, stop =
+          match String.lsplit2 stop ~on:'+' with
+          | Some (name, "") -> true, name
+          | _ -> false, stop
+        in
+        let stop = String.lowercase stop in
+        if not (List.exists passes ~f:(fun (p, _) -> String.equal stop p.name))
+        then failwith "No pass with the specified name";
+        if List.exists passes ~f:(fun (p, enabled) ->
+               String.equal stop p.name && not enabled)
+        then failwith "A pass exist with the specified name but isn't enabled";
+        select_passes included stop passes)
+  in
+  compile_with_passes (List.map ~f:(Selector.select sort) passes) prg
 
 
 let idle_cata_pass = Catamorphism.idle

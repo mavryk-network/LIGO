@@ -1,6 +1,7 @@
 open Simple_utils.Trace
 open Simple_utils.Function
 open Ast_unified
+open Pass_type
 
 let try_with f in_ =
   try_with
@@ -46,39 +47,39 @@ module Dummies = struct
 end
 
 let expected_failure_fwd_
-    (selector : 'a Pass_type.Selector.t)
+    (selector : 'a Selector.t)
     (input : 'a)
     (pass : raise:_ -> Pass_type.pass)
     : unit
   =
   let f ~raise =
     let pass = pass ~raise in
-    (selector pass).forward
+    (Selector.select selector pass).forward
   in
   try_with f input
 
 
 let expected_failure_bwd_
-    (selector : 'a Pass_type.Selector.t)
+    (selector : 'a Selector.t)
     (input : 'a)
     (pass : raise:_ -> Pass_type.pass)
     : unit
   =
   let f ~raise =
     let pass = pass ~raise in
-    (selector pass).backward
+    (Selector.select selector pass).backward
   in
   try_with f input
 
 
 let expected_sucess_fwd_
-    (selector : 'a Pass_type.Selector.t)
+    (selector : 'a Selector.t)
     (input : 'a)
     (pass : Pass_type.pass)
     (to_str : 'a -> string)
     : unit
   =
-  Format.printf "%s" (to_str @@ (selector pass).forward input)
+  Format.printf "%s" (to_str @@ (Selector.select selector pass).forward input)
 
 
 let expected_sucess_bwd_
@@ -88,7 +89,7 @@ let expected_sucess_bwd_
     (to_str : 'a -> string)
     : unit
   =
-  Format.printf "%s" (to_str @@ (selector pass).backward input)
+  Format.printf "%s" (to_str @@ (Selector.select selector pass).backward input)
 
 
 module type S = sig
@@ -101,16 +102,30 @@ end
 
 module Make (X : S) = struct
   let raise : (Errors.t, Main_warnings.all) raise = raise_failwith "test"
-  let dft_pass pass = (fun ~raise -> pass ~raise ~syntax:Syntax_types.CameLIGO)
-  let expected_failure_fwd i pass = expected_failure_fwd_ X.selector (X.of_str i) (dft_pass pass)
-  let expected_failure_bwd i pass = expected_failure_bwd_ X.selector (X.of_str i) (dft_pass pass)
+  let dft_pass pass ~raise = pass ~raise ~syntax:Syntax_types.CameLIGO
+
+  let expected_failure_fwd i pass =
+    expected_failure_fwd_ X.selector (X.of_str i) (dft_pass pass)
+
+
+  let expected_failure_bwd i pass =
+    expected_failure_bwd_ X.selector (X.of_str i) (dft_pass pass)
+
 
   let expected_sucess_fwd i pass =
-    expected_sucess_fwd_ X.selector (X.of_str i) (pass ~syntax:Syntax_types.CameLIGO) X.to_str
+    expected_sucess_fwd_
+      X.selector
+      (X.of_str i)
+      (pass ~syntax:Syntax_types.CameLIGO)
+      X.to_str
 
 
   let expected_sucess_bwd i pass =
-    expected_sucess_bwd_ X.selector (X.of_str i) (pass ~syntax:Syntax_types.CameLIGO) X.to_str
+    expected_sucess_bwd_
+      X.selector
+      (X.of_str i)
+      (pass ~syntax:Syntax_types.CameLIGO)
+      X.to_str
 
 
   let ( |-> ) = expected_sucess_fwd
