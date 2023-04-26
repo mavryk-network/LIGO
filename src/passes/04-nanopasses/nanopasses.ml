@@ -42,7 +42,7 @@ let passes
   in
   let always_enabled = true in
   let gp ((module P : T), (enable : bool)) =
-    if enable then Some (P.Pass.pass ~raise ~syntax) else None
+    if enable then Some (P.pass ~raise ~syntax) else None
   in
   (* TODO: if one flag isn't used.. no warning :-( *)
   List.filter_map

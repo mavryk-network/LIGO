@@ -4,9 +4,9 @@ open Simple_utils.Trace
 open Errors
 module Location = Simple_utils.Location
 
-module rec _ : DOC = struct end
 
-and Pass : PASS = struct
+
+
   let label_of_var x =
     let loc = Variable.get_location x in
     Location.wrap ~loc @@ Label.of_string (Variable.to_name_exn x)
@@ -80,4 +80,3 @@ and Pass : PASS = struct
       ~compile:(compile ~raise)
       ~decompile:`None (* TODO*)
       ~reduction_check:(reduction ~raise)
-end

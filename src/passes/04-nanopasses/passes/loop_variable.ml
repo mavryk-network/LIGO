@@ -5,9 +5,9 @@ open Simple_utils
 open Errors
 module Location = Simple_utils.Location
 
-module rec _ : DOC = struct end
 
-and Pass : PASS = struct
+
+
   let compile =
     let instruction : _ instruction_ -> instruction =
      fun i ->
@@ -56,4 +56,3 @@ and Pass : PASS = struct
       ~compile
       ~decompile:`None (* for now ? *)
       ~reduction_check:(reduction ~raise)
-end

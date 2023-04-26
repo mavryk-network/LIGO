@@ -4,9 +4,6 @@ open Simple_utils.Trace
 open Errors
 module Location = Simple_utils.Location
 
-module rec _ : DOC = struct
-end
-and Pass: PASS = struct
   
 let compile ~syntax =
   let expr : (expr, ty_expr, pattern, _, _) expr_ -> expr =
@@ -50,4 +47,3 @@ let pass ~raise ~syntax =
     ~decompile:`None (* for now ? *)
     ~reduction_check:(reduction ~raise)
 
-end

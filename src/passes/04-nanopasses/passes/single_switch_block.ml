@@ -3,11 +3,10 @@ open Pass_type
 open Simple_utils
 module Location = Simple_utils.Location
 
-module rec _ : DOC = struct
-  (* split default case from other cases in case of a single switch in a block *)
-end
 
-and Pass : PASS = struct
+  (* split default case from other cases in case of a single switch in a block *)
+
+
   let last_is_return (b : block option) =
     Option.value_map b ~default:false ~f:(fun b ->
         let stmt = get_b b in
@@ -63,4 +62,3 @@ and Pass : PASS = struct
 
   let pass ~raise:_ ~syntax:_ =
     morph ~name:__MODULE__ ~compile ~decompile:`None ~reduction_check:Iter.defaults
-end

@@ -7,9 +7,9 @@ module Location = Simple_utils.Location
 module Binder = Ligo_prim.Binder
 module Param = Ligo_prim.Param
 
-module rec _ : DOC = struct end
 
-and Pass : PASS = struct
+
+
   let mut_flag = function
     | `Var -> Param.Mutable
     | `Const -> Param.Immutable
@@ -197,4 +197,3 @@ and Pass : PASS = struct
       ~compile:(compile ~raise)
       ~decompile:`None (* for now ? *)
       ~reduction_check:(reduction ~raise)
-end

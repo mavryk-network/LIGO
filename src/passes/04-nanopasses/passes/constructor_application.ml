@@ -5,9 +5,9 @@ open Simple_utils
 open Errors
 module Location = Simple_utils.Location
 
-module rec _ : DOC = struct end
 
-and Pass : PASS = struct
+
+
   let compile ~syntax =
     let expr : (expr, ty_expr, pattern, _, _) expr_ -> expr =
      fun e ->
@@ -70,4 +70,3 @@ and Pass : PASS = struct
       ~compile:(compile ~syntax)
       ~decompile
       ~reduction_check:(reduction ~raise)
-end

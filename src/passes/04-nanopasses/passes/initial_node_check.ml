@@ -2,13 +2,9 @@ open Ast_unified
 open Pass_type
 module Location = Simple_utils.Location
 
-module rec _ : DOC = struct
   (* This is a temporary dynamic check that the unification pass do not emit
 node that are reserved for the nano passes *)
 
-end
-
-and Pass : PASS = struct
   let compile ~raise ~disable_initial_check =
     ignore raise;
     let check f x =
@@ -48,4 +44,3 @@ and Pass : PASS = struct
       ~compile:(compile ~raise ~disable_initial_check:false)
       ~decompile:`None
       ~reduction_check:Iter.defaults
-end

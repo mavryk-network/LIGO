@@ -4,9 +4,9 @@ open Simple_utils.Trace
 open Errors
 module Location = Simple_utils.Location
 
-module rec _ : DOC = struct end
 
-and Pass : PASS = struct
+
+
   let compile ~raise =
     let declaration : _ declaration_ -> declaration =
      fun d ->
@@ -48,4 +48,3 @@ and Pass : PASS = struct
       ~compile:(compile ~raise)
       ~decompile:`None
       ~reduction_check:(reduction ~raise)
-end

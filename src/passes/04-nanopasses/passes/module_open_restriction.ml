@@ -4,11 +4,11 @@ open Simple_utils.Trace
 open Errors
 module Location = Simple_utils.Location
 
-module rec _ : DOC = struct end
+
 
 (* Pascaligo allows for more powerful contstructs like A.B.( <expr> ) where other syntax would not
    This pass is here to restrict the former *)
-and Pass : PASS = struct
+
   let rec dig_proj_until_var ~raise ~f proj =
     match get_e_proj proj with
     | Some { struct_; path } ->
@@ -110,4 +110,3 @@ and Pass : PASS = struct
       ~compile:(compile ~raise)
       ~decompile:`None
       ~reduction_check:(reduction ~raise)
-end

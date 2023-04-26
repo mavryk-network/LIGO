@@ -4,9 +4,9 @@ open Simple_utils.Trace
 open Errors
 module Location = Simple_utils.Location
 
-module rec _ : DOC = struct end
 
-and Pass : PASS = struct
+
+
   let computation ~loc v r op =
     let open Assign_chainable in
     let assign r =
@@ -61,4 +61,3 @@ and Pass : PASS = struct
       ~compile
       ~decompile:`None (* for now ? *)
       ~reduction_check:(reduction ~raise)
-end

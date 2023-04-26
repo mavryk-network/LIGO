@@ -4,9 +4,9 @@ open Simple_utils
 open Ligo_prim.Constant
 module Location = Simple_utils.Location
 
-module rec _ : DOC = struct end
 
-and Pass : PASS = struct
+
+
   let destruct_args ((str, args) : expr List.Ne.t) : (string * expr list) option =
     match get_e_literal str with
     | Some (Literal_string str) -> Some (Ligo_string.extract str, args)
@@ -44,4 +44,3 @@ and Pass : PASS = struct
       ~compile
       ~decompile:`None (* for now ? *)
       ~reduction_check:Iter.defaults
-end

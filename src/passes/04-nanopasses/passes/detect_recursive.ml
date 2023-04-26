@@ -6,9 +6,9 @@ module Location = Simple_utils.Location
 module List = Simple_utils.List
 module VarSet = Caml.Set.Make (Variable)
 
-module rec _ : DOC = struct end
 
-and Pass : PASS = struct
+
+
   let rec dig ~f e =
     match get_e_type_abstraction e with
     | Some { type_binder; result } ->
@@ -115,4 +115,3 @@ and Pass : PASS = struct
       ~compile:(compile ~raise)
       ~decompile:`None (* for now .. *)
       ~reduction_check:reduction
-end

@@ -4,15 +4,12 @@ open Simple_utils.Trace
 open Errors
 module Location = Simple_utils.Location
 
-module rec _ : DOC = struct
+
   (* note: As we do not support typed pattern in the checker yet.
   this pass aims to only restrict them to typed variable pattern
   The type is ignored when non-propagatable
   *)
 
-end
-
-and Pass : PASS = struct
   let annot_if_pvar : ty_expr -> pattern -> pattern =
    fun ty p ->
     match get_p_var p with
@@ -96,4 +93,3 @@ and Pass : PASS = struct
 
   let pass ~raise ~syntax:_ =
     morph ~name:__MODULE__ ~compile ~decompile ~reduction_check:(reduction ~raise)
-end

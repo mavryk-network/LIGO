@@ -4,9 +4,6 @@ open Simple_utils.Trace
 open Errors
 module Location = Simple_utils.Location
 
-module rec _ : DOC = struct
-end
-and Pass : PASS = struct 
 
 let check_for_duplicated ~raise b =
   List.iter b ~f:(fun bound ->
@@ -34,4 +31,3 @@ let pass ~raise ~syntax:_ =
     ~compile:(compile ~raise)
     ~decompile:`None
     ~reduction_check:Iter.defaults
-end

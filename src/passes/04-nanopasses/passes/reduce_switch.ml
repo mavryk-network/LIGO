@@ -6,9 +6,9 @@ open Simple_utils
 open Errors
 module Location = Simple_utils.Location
 
-module rec _ : DOC = struct end
 
-and Pass : PASS = struct
+
+
   type group =
     { case_values : expr list
     ; body : statement list
@@ -278,4 +278,3 @@ and Pass : PASS = struct
 
   let pass ~raise ~syntax:_ =
     morph ~name:__MODULE__ ~compile ~decompile:`None ~reduction_check:(reduction ~raise)
-end

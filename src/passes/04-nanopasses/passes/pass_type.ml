@@ -24,14 +24,9 @@ type pass =
   ; ty_expr : ty_expr sub_pass
   }
 
-module type DOC = sig end
-
-module type PASS = sig
-  val pass : raise:(Errors.t, Main_warnings.all) raise -> syntax:Syntax_types.t -> pass
-end
 
 module type T = sig
-  module Pass : PASS
+  val pass : raise:(Errors.t, Main_warnings.all) raise -> syntax:Syntax_types.t -> pass
 end
 
 module Selector = struct

@@ -4,12 +4,10 @@ open Simple_utils.Trace
 open Errors
 module Location = Simple_utils.Location
 
-module rec _ : DOC = struct
   (* REMITODO : create E_fun and e_poly_recursive which do not hold type_params ? *)
   (* REMITODO : t_forall on ret_type if any *)
-end
 
-and Pass : PASS = struct
+
   let fun_type_from_parameters ~raise parameters ret_type body =
     let param_types_opt =
       List.map parameters ~f:(fun Param.{ pattern; _ } ->
@@ -102,4 +100,3 @@ and Pass : PASS = struct
       ~compile:(compile ~raise)
       ~decompile:`None (* for now ? *)
       ~reduction_check:(reduction ~raise)
-end

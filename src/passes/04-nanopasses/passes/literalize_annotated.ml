@@ -7,12 +7,10 @@ open Ligo_prim.Literal_types
 module Ligo_string = Simple_utils.Ligo_string
 open Tezos_crypto
 
-module rec _ : DOC = struct
   (* TODO: for decompilation, might be good to build a map Timestamp <-> (fun _ -> e_timestamp _) *)
 
-end
 
-and Pass : PASS = struct
+
   let is_ty_var ty str =
     match get_t_var ty with
     | None -> false
@@ -115,4 +113,3 @@ and Pass : PASS = struct
       ~compile:(compile ~raise)
       ~decompile:`None
       ~reduction_check:Iter.defaults
-end

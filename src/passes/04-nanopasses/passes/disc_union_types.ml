@@ -3,9 +3,9 @@ open Ast_unified
 open Pass_type
 open Simple_utils.Trace
 
-module rec _ : DOC = struct end
 
-and Pass : PASS = struct
+
+
   module StrSet = Caml.Set.Make (String)
   module LSet = Caml.Set.Make (Label)
 
@@ -154,4 +154,3 @@ and Pass : PASS = struct
       ~compile:(compile ~raise)
       ~decompile:`None
       ~reduction_check:(reduction ~raise)
-end

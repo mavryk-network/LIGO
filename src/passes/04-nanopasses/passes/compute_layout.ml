@@ -62,58 +62,54 @@ let compile_row ~loc layout_attr_opt (lst : ty_expr option Non_linear_rows.t) =
 
 
 module Normalize_layout = struct
-  module Pass : PASS = struct
-    let compile =
-      let ty_expr : _ ty_expr_ -> ty_expr =
-       fun t ->
-        let loc = Location.get_location t in
-        match Location.unwrap t with
-        | T_attr _ as t ->
-          map_ty_on_attr
-            (make_t ~loc t)
-            ~on_attr:(function
-              | { key = "layout"; _ } -> true
-              | _ -> false)
-            ~f:(fun layout_attr_opt ty ->
-              match get_t ty with
-              | T_sum_raw row -> t_sum ~loc (compile_row ~loc layout_attr_opt row)
-              | T_record_raw row -> t_record ~loc (compile_row ~loc layout_attr_opt row)
-              | _ -> ty)
-        | t -> make_t ~loc t
-      in
-      `Cata { idle_cata_pass with ty_expr }
+  let compile =
+    let ty_expr : _ ty_expr_ -> ty_expr =
+     fun t ->
+      let loc = Location.get_location t in
+      match Location.unwrap t with
+      | T_attr _ as t ->
+        map_ty_on_attr
+          (make_t ~loc t)
+          ~on_attr:(function
+            | { key = "layout"; _ } -> true
+            | _ -> false)
+          ~f:(fun layout_attr_opt ty ->
+            match get_t ty with
+            | T_sum_raw row -> t_sum ~loc (compile_row ~loc layout_attr_opt row)
+            | T_record_raw row -> t_record ~loc (compile_row ~loc layout_attr_opt row)
+            | _ -> ty)
+      | t -> make_t ~loc t
+    in
+    `Cata { idle_cata_pass with ty_expr }
 
 
-    let pass ~raise:_ ~syntax:_ =
-      morph ~name:__MODULE__ ~compile ~decompile:`None ~reduction_check:Iter.defaults
-  end
+  let pass ~raise:_ ~syntax:_ =
+    morph ~name:__MODULE__ ~compile ~decompile:`None ~reduction_check:Iter.defaults
 end
 
 module Normalize_no_layout = struct
-  module Pass : PASS = struct
-    let compile =
-      let ty_expr : _ ty_expr_ -> ty_expr =
-       fun t ->
-        let loc = Location.get_location t in
-        match Location.unwrap t with
-        | T_sum_raw row -> t_sum ~loc (compile_row ~loc None row)
-        | T_record_raw row -> t_record ~loc (compile_row ~loc None row)
-        | t -> make_t ~loc t
-      in
-      `Cata { idle_cata_pass with ty_expr }
+  let compile =
+    let ty_expr : _ ty_expr_ -> ty_expr =
+     fun t ->
+      let loc = Location.get_location t in
+      match Location.unwrap t with
+      | T_sum_raw row -> t_sum ~loc (compile_row ~loc None row)
+      | T_record_raw row -> t_record ~loc (compile_row ~loc None row)
+      | t -> make_t ~loc t
+    in
+    `Cata { idle_cata_pass with ty_expr }
 
 
-    let reduction ~raise =
-      { Iter.defaults with
-        ty_expr =
-          (function
-          | { wrap_content = T_sum_raw _ | T_record_raw _; _ } ->
-            raise.error (wrong_reduction __MODULE__)
-          | _ -> ())
-      }
+  let reduction ~raise =
+    { Iter.defaults with
+      ty_expr =
+        (function
+        | { wrap_content = T_sum_raw _ | T_record_raw _; _ } ->
+          raise.error (wrong_reduction __MODULE__)
+        | _ -> ())
+    }
 
 
-    let pass ~raise ~syntax:_ =
-      morph ~name:__MODULE__ ~compile ~decompile:`None ~reduction_check:(reduction ~raise)
-  end
+  let pass ~raise ~syntax:_ =
+    morph ~name:__MODULE__ ~compile ~decompile:`None ~reduction_check:(reduction ~raise)
 end

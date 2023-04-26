@@ -5,10 +5,10 @@ open Errors
 module Location = Simple_utils.Location
 open Simple_utils.Ligo_string
 
-module rec _ : DOC = struct end
+
 (* projection in Jsligo have different behaviors: x["a"] is a record access , and no map access is supported *)
 
-and Pass : PASS = struct
+
   let compile ~raise =
     let pass_expr : _ expr_ -> expr =
      fun e ->
@@ -44,4 +44,3 @@ and Pass : PASS = struct
       ~compile:(compile ~raise)
       ~decompile:`None
       ~reduction_check:(reduction ~raise)
-end

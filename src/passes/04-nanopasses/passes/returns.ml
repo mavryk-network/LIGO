@@ -6,12 +6,10 @@ open Simple_utils
 open Errors
 module Location = Simple_utils.Location
 
-module rec _ : DOC = struct
+
   (* warns about unreachable code and restrict returns in unsupported instructions (loops) *)
 
-end
 
-and Pass : PASS = struct
   let is_s_return_or_break : statement -> bool =
    fun s ->
     match get_s_instr s with
@@ -84,4 +82,3 @@ and Pass : PASS = struct
       ~compile:(compile ~raise)
       ~decompile:`None
       ~reduction_check:Iter.defaults
-end

@@ -4,20 +4,16 @@ open Simple_utils.Trace
 open Errors
 module Location = Simple_utils.Location
 
-module rec _ : DOC = struct
 (* by default, JsLigo declaration all have attribute @private.
    Upon keyword 'export', attribute private must be removed
 *)
-
-end and Pass : PASS = struct
 
 let compile =
   let declaration : _ declaration_ -> declaration =
    fun e ->
     let loc = Location.get_location e in
     match Location.unwrap e with
-    | D_export exp ->
-      d_attr ~loc (Attribute.{ key = "public"; value = None }, exp)
+    | D_export exp -> d_attr ~loc (Attribute.{ key = "public"; value = None }, exp)
     | d -> make_d ~loc d
   in
   `Cata { idle_cata_pass with declaration }
@@ -38,4 +34,3 @@ let pass ~raise ~syntax:_ =
     ~compile
     ~decompile:`None (* for now ? *)
     ~reduction_check:(reduction ~raise)
-end
