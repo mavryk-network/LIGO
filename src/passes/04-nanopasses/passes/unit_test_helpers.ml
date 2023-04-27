@@ -21,18 +21,62 @@ module Dummies = struct
 
   let lst : t list =
     let loc = Location.generated in
-    [ ( "<TY_EXPR>"
-      , Format.asprintf "%a" PP.ty_expr (t_var ~loc (Ty_variable.of_input_var ~loc "x")) )
-    ; ( "<EXPR>"
-      , Format.asprintf "%a" PP.expr (e_variable ~loc (Variable.of_input_var ~loc "#")) )
-    ; ( "<EXPR1>"
-      , Format.asprintf "%a" PP.expr (e_variable ~loc (Variable.of_input_var ~loc "#1")) )
-    ; ( "<EXPR2>"
-      , Format.asprintf "%a" PP.expr (e_variable ~loc (Variable.of_input_var ~loc "#2")) )
-    ]
+    let dummy name f =
+      let dummy str = "<" ^ name ^ str ^ ">", f (name ^ str) in
+      dummy "" :: List.map ~f:dummy (List.map ~f:string_of_int (List.range 0 5))
+    in
+    let dummy_ty_expr =
+      let f str =
+        S_exp.sexp_of_ty_expr @@ t_var ~loc (Ty_variable.of_input_var ~loc ("#" ^ str))
+      in
+      dummy "TY_EXPR" f
+    in
+    let dummy_expr =
+      let f str =
+        S_exp.sexp_of_expr @@ e_variable ~loc (Variable.of_input_var ~loc ("#" ^ str))
+      in
+      dummy "EXPR" f
+    in
+    let dummy_block =
+      let f str =
+        S_exp.sexp_of_block
+        @@ block_of_statements
+             (List.Ne.singleton
+             @@ s_decl ~loc
+             @@ d_var
+                  ~loc
+                  { type_params = None
+                  ; pattern = p_unit ~loc
+                  ; rhs_type = None
+                  ; let_rhs = e_variable ~loc (Variable.of_input_var ~loc ("#" ^ str))
+                  })
+      in
+      dummy "BLOCK" f
+    in
+    let dummy_statement =
+      let f str =
+        S_exp.sexp_of_statement
+          (s_decl ~loc
+          @@ d_var
+               ~loc
+               { type_params = None
+               ; pattern = p_unit ~loc
+               ; rhs_type = None
+               ; let_rhs = e_variable ~loc (Variable.of_input_var ~loc ("#" ^ str))
+               })
+      in
+      dummy "STATEMENT" f
+    in
+    List.map
+      ~f:(Simple_utils.Pair.map_snd ~f:Sexp.to_string)
+      (dummy_ty_expr @ dummy_expr @ dummy_statement @ dummy_block)
 
 
-  let in_output ((dummy, sexp) : t) = dummy, sexp
+  let in_output ((dummy, sexp) : t) =
+    (* this extra space is important *)
+    " " ^ dummy, sexp
+
+
   let in_input ((dummy, sexp) : t) = sexp, dummy
 
   let replace : (t -> t) -> string -> string =
@@ -96,36 +140,47 @@ module type S = sig
   type a
 
   val selector : a Pass_type.Selector.t
-  val of_str : string -> a
-  val to_str : a -> string
+  val t_of_sexp : Sexp.t -> a
+  val sexp_of_t : a -> Sexp.t
 end
 
 module Make (X : S) = struct
   let raise : (Errors.t, Main_warnings.all) raise = raise_failwith "test"
   let dft_pass pass ~raise = pass ~raise ~syntax:Syntax_types.CameLIGO
 
+  let replace_dummies_in =
+    (* we go back and forth to string representation to avoid the problem of dummies splitted on multiple line :( *)
+    Sexp.to_string_hum ~indent:1
+    <@ Sexp.of_string
+    <@ Dummies.replace_in_output
+    <@ Sexp.to_string
+    <@ X.sexp_of_t
+
+
+  let replace_dummies_out = X.t_of_sexp <@ Sexp.of_string <@ Dummies.replace_in_input
+
   let expected_failure_fwd i pass =
-    expected_failure_fwd_ X.selector (X.of_str i) (dft_pass pass)
+    expected_failure_fwd_ X.selector (replace_dummies_out i) (dft_pass pass)
 
 
   let expected_failure_bwd i pass =
-    expected_failure_bwd_ X.selector (X.of_str i) (dft_pass pass)
+    expected_failure_bwd_ X.selector (replace_dummies_out i) (dft_pass pass)
 
 
   let expected_sucess_fwd i pass =
     expected_sucess_fwd_
       X.selector
-      (X.of_str i)
+      (replace_dummies_out i)
       (pass ~syntax:Syntax_types.CameLIGO)
-      X.to_str
+      replace_dummies_in
 
 
   let expected_sucess_bwd i pass =
     expected_sucess_bwd_
       X.selector
-      (X.of_str i)
+      (replace_dummies_out i)
       (pass ~syntax:Syntax_types.CameLIGO)
-      X.to_str
+      replace_dummies_in
 
 
   let ( |-> ) = expected_sucess_fwd
@@ -138,30 +193,30 @@ module Expr = Make (struct
   type a = expr
 
   let selector = Pass_type.Selector.expr
-  let of_str = S_exp.expr_of_sexp <@ Sexp.of_string <@ Dummies.replace_in_input
-  let to_str x = Dummies.replace_in_output @@ Format.asprintf "%a" PP.expr x
+  let t_of_sexp = S_exp.expr_of_sexp
+  let sexp_of_t = S_exp.sexp_of_expr
 end)
 
 module Ty_expr = Make (struct
   type a = ty_expr
 
   let selector = Pass_type.Selector.ty_expr
-  let of_str = S_exp.ty_expr_of_sexp <@ Sexp.of_string <@ Dummies.replace_in_input
-  let to_str x = Dummies.replace_in_output @@ Format.asprintf "%a" PP.ty_expr x
+  let t_of_sexp = S_exp.ty_expr_of_sexp
+  let sexp_of_t = S_exp.sexp_of_ty_expr
 end)
 
 module Program = Make (struct
   type a = program
 
   let selector = Pass_type.Selector.program
-  let of_str = S_exp.program_of_sexp <@ Sexp.of_string <@ Dummies.replace_in_input
-  let to_str x = Dummies.replace_in_output @@ Format.asprintf "%a" PP.program x
+  let t_of_sexp = S_exp.program_of_sexp
+  let sexp_of_t = S_exp.sexp_of_program
 end)
 
 module Pattern = Make (struct
   type a = pattern
 
   let selector = Pass_type.Selector.pattern
-  let of_str = S_exp.pattern_of_sexp <@ Sexp.of_string <@ Dummies.replace_in_input
-  let to_str x = Dummies.replace_in_output @@ Format.asprintf "%a" PP.pattern x
+  let t_of_sexp = S_exp.pattern_of_sexp
+  let sexp_of_t = S_exp.sexp_of_pattern
 end)

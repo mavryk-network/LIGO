@@ -172,11 +172,11 @@ let%expect_test "compile" =
   [%expect
     {|
         ((PE_declaration
-           (D_const
-             ((pattern (P_var x))
-               (let_rhs
-                 (E_constant
-                   ((cons_name C_DIV) (arguments ((E_variable x) (E_variable y))))))))))
+          (D_const
+           ((pattern (P_var x))
+            (let_rhs
+             (E_constant
+              ((cons_name C_DIV) (arguments ((E_variable x) (E_variable y))))))))))
         |}]
 
 let%expect_test "decompile" =
@@ -192,9 +192,9 @@ let%expect_test "decompile" =
   [%expect
     {|
         ((PE_declaration
-           (D_const
-             ((pattern (P_var x))
-               (let_rhs
-                 (E_binary_op
-                   ((operator SLASH) (left (E_variable x)) (right (E_variable y)))))))))
+          (D_const
+           ((pattern (P_var x))
+            (let_rhs
+             (E_binary_op
+              ((operator SLASH) (left (E_variable x)) (right (E_variable y)))))))))
         |}]

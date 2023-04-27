@@ -129,12 +129,12 @@ let%expect_test "multi declaration in program" =
   [%expect
     {|
         ((PE_attr ((key inline) (value ()))
-           (PE_declaration (D_var ((pattern (P_var x)) (let_rhs (E_variable foo))))))
-          (PE_attr ((key inline) (value ()))
-            (PE_declaration (D_var ((pattern (P_var y)) (let_rhs (E_variable bar))))))
-          (PE_attr ((key inline) (value ()))
-            (PE_declaration (D_var ((pattern (P_var z)) (let_rhs (E_variable baz))))))
-          (PE_declaration
-            (D_var ((pattern (P_var last)) (let_rhs (E_variable last))))))
+          (PE_declaration (D_var ((pattern (P_var x)) (let_rhs (E_variable foo))))))
+         (PE_attr ((key inline) (value ()))
+          (PE_declaration (D_var ((pattern (P_var y)) (let_rhs (E_variable bar))))))
+         (PE_attr ((key inline) (value ()))
+          (PE_declaration (D_var ((pattern (P_var z)) (let_rhs (E_variable baz))))))
+         (PE_declaration
+          (D_var ((pattern (P_var last)) (let_rhs (E_variable last))))))
 
           |}]
