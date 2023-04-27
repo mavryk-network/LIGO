@@ -4,7 +4,9 @@ open Simple_utils
 open Unit_test_helpers
 module Location = Simple_utils.Location
 
-(* split default case from other cases in case of a single switch in a block *)
+(* In case of a single switch in a block, remove the default case from the switch if it holds a return
+   statement. This simplifies further reduction of switches
+*)
 
 let last_is_return (b : block option) =
   Option.value_map b ~default:false ~f:(fun b ->
