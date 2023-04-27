@@ -104,16 +104,16 @@ let%expect_test "compile_michelson_pair" =
   [%expect
     {|
         ((PE_declaration
-          (D_type
-           ((name t_string)
-            (type_expr
-             (T_record_raw
-              (((Label 0)
-                ((associated_type ((T_var int)))
-                 (attributes (((key annot) (value (w))))) (decl_pos 0)))
-               ((Label 1)
-                ((associated_type ((T_var nat)))
-                 (attributes (((key annot) (value (v))))) (decl_pos 1)))))))))) |}]
+           (D_type
+             ((name t_string)
+               (type_expr
+                 (T_record_raw
+                   (((Label 0)
+                      ((associated_type ((T_var int)))
+                        (attributes (((key annot) (value (w))))) (decl_pos 0)))
+                     ((Label 1)
+                       ((associated_type ((T_var nat)))
+                         (attributes (((key annot) (value (v))))) (decl_pos 1)))))))))) |}]
 
 let%expect_test "compile_michelson_or" =
   ({|
@@ -130,16 +130,16 @@ let%expect_test "compile_michelson_or" =
   [%expect
     {|
         ((PE_declaration
-          (D_type
-           ((name t_string)
-            (type_expr
-             (T_sum_raw
-              (((Label M_left)
-                ((associated_type ((T_var int)))
-                 (attributes (((key annot) (value (w))))) (decl_pos 0)))
-               ((Label M_right)
-                ((associated_type ((T_var nat)))
-                 (attributes (((key annot) (value (v))))) (decl_pos 1)))))))))) |}]
+           (D_type
+             ((name t_string)
+               (type_expr
+                 (T_sum_raw
+                   (((Label M_left)
+                      ((associated_type ((T_var int)))
+                        (attributes (((key annot) (value (w))))) (decl_pos 0)))
+                     ((Label M_right)
+                       ((associated_type ((T_var nat)))
+                         (attributes (((key annot) (value (v))))) (decl_pos 1)))))))))) |}]
 
 let%expect_test "compile_michelson_or_wrong_arity" =
   {|

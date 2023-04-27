@@ -4,6 +4,8 @@ open Simple_utils.Trace
 open Errors
 module Location = Simple_utils.Location
 
+(* This pass prevent shadowing in scopes (i.e. two bindings to the same variable in the same scope) *)
+
 
 let check_for_duplicated ~raise b =
   List.iter b ~f:(fun bound ->

@@ -22,6 +22,7 @@ type pass =
   ; program : program sub_pass
   ; pattern : pattern sub_pass
   ; ty_expr : ty_expr sub_pass
+  (* TODO: include all sorts here ? shoudln't be that costly *)
   }
 
 type raise_t = (Errors.t, Main_warnings.all) raise

@@ -306,32 +306,36 @@ let%expect_test "compile" =
   [%expect
     {|
     ((PE_declaration
-      (D_const
-       ((pattern (P_var x))
-        (let_rhs
-         (E_block_with
-          ((block
-            ((S_instr
-              (I_assign m
-               (E_match
-                ((expr
-                  (E_constant
-                   ((cons_name C_MAP_FIND_OPT)
-                    (arguments
-                     ((E_literal (Literal_string (Standard foo))) (E_variable m))))))
-                 (cases
-                  (((pattern (P_variant (Label Some) ((P_var gen))))
-                    (rhs
-                     (E_constant
-                      ((cons_name C_MAP_ADD)
-                       (arguments
-                        ((E_literal (Literal_string (Standard foo)))
-                         (E_record_update
-                          ((struct_ (E_variable gen)) (label (Label bar))
-                           (update (E_variable baz))))
-                         (E_variable m)))))))
-                   ((pattern (P_variant (Label None) ())) (rhs (E_variable m)))))))))))
-           (expr (E_variable m)))))))))
+       (D_const
+         ((pattern (P_var x))
+           (let_rhs
+             (E_block_with
+               ((block
+                  ((S_instr
+                     (I_assign m
+                       (E_match
+                         ((expr
+                            (E_constant
+                              ((cons_name C_MAP_FIND_OPT)
+                                (arguments
+                                  ((E_literal (Literal_string (Standard foo)))
+                                    (E_variable m))))))
+                           (cases
+                             (((pattern (P_variant (Label Some) ((P_var gen))))
+                                (rhs
+                                  (E_constant
+                                    ((cons_name C_MAP_ADD)
+                                      (arguments
+                                        ((E_literal
+                                           (Literal_string (Standard foo)))
+                                          (E_record_update
+                                            ((struct_ (E_variable gen))
+                                              (label (Label bar))
+                                              (update (E_variable baz))))
+                                          (E_variable m)))))))
+                               ((pattern (P_variant (Label None) ()))
+                                 (rhs (E_variable m)))))))))))
+                 (expr (E_variable m)))))))))
 |}]
 
 let%expect_test "compile_wrong_lvalue" =
