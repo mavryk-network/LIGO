@@ -22,7 +22,7 @@ module Dummies = struct
   let lst : t list =
     let loc = Location.generated in
     let dummy name f =
-      let dummy str = "<" ^ name ^ str ^ ">", f (name ^ str) in
+      let dummy str = "(" ^ name ^ str ^ ")", f (name ^ str) in
       dummy "" :: List.map ~f:dummy (List.map ~f:string_of_int (List.range 0 5))
     in
     let dummy_ty_expr =
@@ -74,7 +74,7 @@ module Dummies = struct
 
   let in_output ((dummy, sexp) : t) =
     (* this extra space is important *)
-    " " ^ dummy, sexp
+    dummy, sexp
 
 
   let in_input ((dummy, sexp) : t) = sexp, dummy
@@ -88,6 +88,7 @@ module Dummies = struct
 
   let replace_in_input = replace in_input
   let replace_in_output = replace in_output
+  let post_proc_re_indent = replace 
 end
 
 let expected_failure_fwd_
@@ -219,4 +220,12 @@ module Pattern = Make (struct
   let selector = Pass_type.Selector.pattern
   let t_of_sexp = S_exp.pattern_of_sexp
   let sexp_of_t = S_exp.sexp_of_pattern
+end)
+
+module Block = Make (struct
+  type a = block
+
+  let selector = Pass_type.Selector.block
+  let t_of_sexp = S_exp.block_of_sexp
+  let sexp_of_t = S_exp.sexp_of_block
 end)

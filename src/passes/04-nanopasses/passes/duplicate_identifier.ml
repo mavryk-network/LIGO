@@ -3,9 +3,9 @@ open Pass_type
 open Simple_utils.Trace
 open Errors
 module Location = Simple_utils.Location
+open Unit_test_helpers
 
 (* This pass prevent shadowing in scopes (i.e. two bindings to the same variable in the same scope) *)
-
 
 let check_for_duplicated ~raise b =
   List.iter b ~f:(fun bound ->
@@ -26,10 +26,28 @@ let compile ~raise =
    fun b -> check_for_duplicated ~raise @@ Bound_vars.bound_block { fp = b }
   in
   `Check { Iter.defaults with program; expr; block }
-    
+
+
 let pass ~raise ~syntax:_ =
   morph
     ~name:__MODULE__
     ~compile:(compile ~raise)
     ~decompile:`None
     ~reduction_check:Iter.defaults
+
+
+let%expect_test _ =
+  Block.(
+    {|
+    ((S_decl
+      (D_var ((pattern (P_var x)) (let_rhs (EXPR1)))))
+     (S_decl
+      (D_var ((pattern (P_var y)) (let_rhs (EXPR2)))))
+     (S_decl
+      (D_var ((pattern (P_var x)) (let_rhs (EXPR3)))))
+     (S_instr (I_return ((EXPR4)))))
+    |}
+    |->! pass;
+    [%expect {|
+    Err : (Small_passes_duplicate_identifier x)
+    |}])

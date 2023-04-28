@@ -22,6 +22,7 @@ type pass =
   ; program : program sub_pass
   ; pattern : pattern sub_pass
   ; ty_expr : ty_expr sub_pass
+  ; block : block sub_pass
   (* TODO: include all sorts here ? shoudln't be that costly *)
   }
 
@@ -39,12 +40,14 @@ module Selector : sig
   val select : 'a t -> pass -> 'a sub_pass
   val expr : expr t
   val program : program t
+  val block : block t
   val pattern : pattern t
   val ty_expr : ty_expr t
 end = struct
   type 'a t = pass -> 'a sub_pass
 
   let select (selector : 'a t) (p : pass) = selector p
+  let block x = x.block
   let expr x = x.expression
   let program x = x.program
   let pattern x = x.pattern
@@ -276,9 +279,15 @@ let morph
       , (Catamorphism.cata_ty_expr, Anamorphism.ana_ty_expr)
       , Iter.iter_ty_expr )
   in
+  let block =
+    mk_sub_pass
+      ( Catamorphism.cata_block
+      , (Catamorphism.cata_block, Anamorphism.ana_block)
+      , Iter.iter_block )
+  in
   let process_name =
     (* we use __MODULE__ .. can be a bit incovenient as a name to use with CLI so we process it a bit *)
     let open Simple_utils.Function in
     String.lowercase <@ String.substr_replace_all ~pattern:"Passes__" ~with_:""
   in
-  { name = process_name name; expression; program; pattern; ty_expr }
+  { name = process_name name; expression; program; pattern; ty_expr ; block}

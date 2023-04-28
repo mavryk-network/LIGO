@@ -39,8 +39,8 @@ let pass ~raise ~syntax:_ =
 let%expect_test _ =
   Expr.(
     {|
-      (E_rev_app ((x <EXPR1>) (f <EXPR2>)))
+      (E_rev_app ((x (EXPR1)) (f (EXPR2))))
     |} |-> pass ~raise;
     [%expect {|
-      (E_call <EXPR2> (<EXPR1>))
+      (E_call (EXPR2) ((EXPR1)))
     |}])

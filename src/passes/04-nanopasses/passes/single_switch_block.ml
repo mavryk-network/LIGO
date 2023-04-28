@@ -24,36 +24,38 @@ let compile =
    fun b ->
     let loc = Location.get_location b in
     match Location.unwrap b with
-    | ( { fp =
-            { wrap_content =
-                S_instr
-                  { fp =
-                      { wrap_content = I_switch { cases; switchee }; location = loc_sw }
-                  }
-            ; _
-            }
-        }
-      , [] ) ->
-      let cases = List.Ne.to_list cases in
-      let default_opt =
-        List.find_map cases ~f:(function
-            | Switch_default_case x when last_is_return x -> Some x
-            | _ -> None)
+    | one, [] ->
+      let single_switch_opt =
+        let open Option in
+        let* instr = get_s_instr one in
+        get_i_switch instr
       in
-      (match default_opt with
-      | None | Some None -> make_b ~loc b.wrap_content
-      | Some (Some default_block) ->
-        let default_block = get_b default_block in
-        let cases_no_default =
-          List.filter cases ~f:(function
-              | Switch_case _ -> true
-              | Switch_default_case _ -> false)
+      (match single_switch_opt with
+      | Some Switch.{ cases; switchee } ->
+        let loc_sw = get_s_loc one in
+        let cases = List.Ne.to_list cases in
+        let default_opt =
+          List.find_map cases ~f:(function
+              | Switch_default_case x when last_is_return x -> x
+              | _ -> None)
         in
-        (match List.Ne.of_list_opt cases_no_default with
-        | None -> block_of_statements default_block
-        | Some cases ->
-          let switch = s_instr ~loc:loc_sw @@ i_switch ~loc:loc_sw { cases; switchee } in
-          block_of_statements (List.Ne.cons switch default_block)))
+        (match default_opt with
+        | Some default_block ->
+          let default_block = get_b default_block in
+          let cases_no_default =
+            List.filter cases ~f:(function
+                | Switch_case _ -> true
+                | Switch_default_case _ -> false)
+          in
+          (match List.Ne.of_list_opt cases_no_default with
+          | None -> block_of_statements default_block
+          | Some cases ->
+            let switch =
+              s_instr ~loc:loc_sw @@ i_switch ~loc:loc_sw { cases; switchee }
+            in
+            block_of_statements (List.Ne.cons switch default_block))
+        | None -> make_b ~loc b.wrap_content)
+      | None -> make_b ~loc b.wrap_content)
     | _ -> make_b ~loc b.wrap_content
   in
   `Cata { idle_cata_pass with block }
@@ -64,26 +66,20 @@ let pass ~raise:_ ~syntax:_ =
 
 
 let%expect_test _ =
-  Expr.(
+  Block.(
     {|
-      (E_block_with
-        ((block
-          ((S_instr
-          (I_switch
-          ((switchee (E_variable n))
-            (cases
-            ((Switch_case <EXPR> (<BLOCK1>))
-              (Switch_default_case ((<STATEMENT1> (S_instr (I_return ()))))))))))))
-        (expr <EXPR1>)))
+      ((S_instr
+        (I_switch
+        ((switchee (E_variable n))
+          (cases
+          ((Switch_case (EXPR) ((BLOCK1)))
+            (Switch_default_case (((STATEMENT1) (S_instr (I_return ())))))))))))
     |}
     |-> pass ~raise;
     [%expect
       {|
-      (E_block_with
-       ((block
-         ((S_instr
-           (I_switch
-            ((switchee (E_variable n)) (cases ((Switch_case <EXPR> (<BLOCK1>)))))))
-          <STATEMENT1> (S_instr (I_return ()))))
-        (expr <EXPR1>)))
+        ((S_instr
+          (I_switch
+           ((switchee (E_variable n)) (cases ((Switch_case (EXPR) ((BLOCK1))))))))
+         (STATEMENT1) (S_instr (I_return ())))
       |}])
