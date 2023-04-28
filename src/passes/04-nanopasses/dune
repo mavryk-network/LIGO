@@ -7,4 +7,9 @@
  (inline_tests
   (flags (-stop-on-error)))
  (preprocess
-  (pps ppx_deriving.map ppx_woo ppx_sexp_conv ppx_expect ppx_poly_constructor)))
+  (pps
+   ppx_deriving.map
+   ppx_woo
+   ppx_sexp_conv
+   ppx_expect
+   ppx_poly_constructor)))

@@ -55,7 +55,13 @@
   special_unit_constructor
   unpuning
   disc_union_types)
- (libraries ast_unified syntax_types tezos-crypto tezos-base compiler_options main_warnings)
+ (libraries
+  ast_unified
+  syntax_types
+  tezos-crypto
+  tezos-base
+  compiler_options
+  main_warnings)
  (inline_tests
   (flags (-stop-on-error)))
  (preprocess

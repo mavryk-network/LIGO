@@ -10,10 +10,16 @@ let array_to_list ~raise ~loc (arguments : expr Array_repr.t) =
     e_constant ~loc { cons_name = C_CONS; arguments = [ hd; tl ] }
   | [ Rest_entry ls; Rest_entry rs ] ->
     let p = Variable.fresh ~loc () in
-    let l = e_record_access ~loc { struct_ = e_variable p ~loc ; label = Label.of_int 0 } in
-    let r = e_record_access ~loc { struct_ = e_variable p ~loc ; label = Label.of_int 1 } in
-    let result = e_constant ~loc { cons_name = C_CONS; arguments = [ l ; r ] } in
-    let lambda = Lambda.{ binder = Ligo_prim.Param.make p None ; output_type = None ; result } in
+    let l =
+      e_record_access ~loc { struct_ = e_variable p ~loc; label = Label.of_int 0 }
+    in
+    let r =
+      e_record_access ~loc { struct_ = e_variable p ~loc; label = Label.of_int 1 }
+    in
+    let result = e_constant ~loc { cons_name = C_CONS; arguments = [ l; r ] } in
+    let lambda =
+      Lambda.{ binder = Ligo_prim.Param.make p None; output_type = None; result }
+    in
     let f = e_lambda ~loc lambda in
     e_constant ~loc { cons_name = C_LIST_FOLD_RIGHT; arguments = [ f; ls; rs ] }
   | _ ->

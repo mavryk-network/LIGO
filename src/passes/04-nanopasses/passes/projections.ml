@@ -4,7 +4,6 @@ open Simple_utils.Trace
 open Errors
 module Location = Simple_utils.Location
 
-  
 let compile ~syntax =
   let expr : (expr, ty_expr, pattern, _, _) expr_ -> expr =
    fun e ->
@@ -46,4 +45,3 @@ let pass ~raise ~syntax =
     ~compile:(compile ~syntax)
     ~decompile:`None (* for now ? *)
     ~reduction_check:(reduction ~raise)
-
