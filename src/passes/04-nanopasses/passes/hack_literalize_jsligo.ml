@@ -73,101 +73,35 @@ let pass ~raise ~syntax =
     ~reduction_check:(reduction ~raise)
 
 
-open Unit_test_helpers.Program
+open Unit_test_helpers.Expr
 
 let p_test ~raise ~syntax:_ = pass ~raise ~syntax:JsLIGO
 
 let%expect_test "number_42_as_nat" =
-  {|
-      ((PE_declaration
-        (D_var (
-          (pattern (P_var y))
-          (let_rhs (
-            E_annot (
-              (E_literal (Literal_int 42))
-              (T_var nat)
-            )
-          ))
-        ))
-      ))
-      |}
-  |-> p_test ~raise;
-  [%expect
-    {|
-        ((PE_declaration
-          (D_var ((pattern (P_var y)) (let_rhs (E_literal (Literal_nat 42))))))) |}]
+  {| (E_annot ((E_literal (Literal_int 42)) (T_var nat))) |} |-> p_test ~raise;
+  [%expect {| (E_literal (Literal_nat 42)) |}]
 
 let%expect_test "number_42_as_mutez" =
-  {|
-      ((PE_declaration
-        (D_var (
-          (pattern (P_var y))
-          (let_rhs (
-            E_annot (
-              (E_literal (Literal_int 42))
-              (T_var mutez)
-            )
-          ))
-        ))
-      ))
-      |}
-  |-> p_test ~raise;
-  [%expect
-    {|
-        ((PE_declaration
-          (D_var ((pattern (P_var y)) (let_rhs (E_literal (Literal_mutez 42))))))) |}]
+  {| (E_annot ((E_literal (Literal_int 42)) (T_var mutez))) |} |-> p_test ~raise;
+  [%expect {| (E_literal (Literal_mutez 42))  |}]
 
 let%expect_test "number_42_as_tez" =
-  {|
-      ((PE_declaration
-        (D_var (
-          (pattern (P_var y))
-          (let_rhs (
-            E_annot (
-              (E_literal (Literal_int 42))
-              (T_var tez)
-            )
-          ))
-        ))
-      ))
-      |}
-  |-> p_test ~raise;
-  [%expect
-    {|
-        ((PE_declaration
-          (D_var
-           ((pattern (P_var y)) (let_rhs (E_literal (Literal_mutez 42000000))))))) |}]
+  {| ( E_annot ((E_literal (Literal_int 42)) (T_var tez))) |} |-> p_test ~raise;
+  [%expect {|(E_literal (Literal_mutez 42000000)) |}]
 
 let%expect_test "code_inj" =
   {|
-      ((PE_declaration
-        (D_var (
-          (pattern (P_var y))
-          (let_rhs
-            (E_annot (
-              (E_raw_code (
-                (language Michelson)
-                (code (E_literal (Literal_string (Verbatim "{ UNPAIR ; ADD }") )))
-              ))
-              (T_fun (
-                (T_prod ((T_var nat) (T_var nat)))
-                (T_var nat)
-              ))
-            ))
-          )
-        ))
-      ))
+    (E_annot
+      ((E_raw_code ((language Michelson)
+        (code (E_literal (Literal_string (Verbatim "{ UNPAIR ; ADD }") )))))
+        (TY_EXPR)))
       |}
   |-> p_test ~raise;
   [%expect
     {|
-        ((PE_declaration
-          (D_var
-           ((pattern (P_var y))
-            (let_rhs
-             (E_raw_code
-              ((language Michelson)
-               (code
-                (E_annot
-                 ((E_literal (Literal_string (Verbatim "{ UNPAIR ; ADD }")))
-                  (T_fun ((T_prod ((T_var nat) (T_var nat))) (T_var nat))))))))))))) |}]
+      (E_raw_code
+       ((language Michelson)
+        (code
+         (E_annot
+          ((E_literal (Literal_string (Verbatim "{ UNPAIR ; ADD }"))) (TY_EXPR))))))
+    |}]
