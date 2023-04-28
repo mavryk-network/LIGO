@@ -4,6 +4,8 @@ open Simple_utils.Trace
 open Errors
 module Location = Simple_utils.Location
 
+(* Throw errors on currently unsupported patterns (literals, rests) *)
+
 let compile ~raise =
   let pattern : _ pattern_ -> pattern = function
     | { wrap_content = P_unit; location = loc } ->

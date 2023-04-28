@@ -23,7 +23,8 @@ type pass =
   ; pattern : pattern sub_pass
   ; ty_expr : ty_expr sub_pass
   ; block : block sub_pass
-  (* TODO: include all sorts here ? shoudln't be that costly *)
+  ; declaration : declaration sub_pass
+        (* TODO: include all sorts here ? shoudln't be that costly *)
   }
 
 type raise_t = (Errors.t, Main_warnings.all) raise
@@ -43,6 +44,7 @@ module Selector : sig
   val block : block t
   val pattern : pattern t
   val ty_expr : ty_expr t
+  val declaration : declaration t
 end = struct
   type 'a t = pass -> 'a sub_pass
 
@@ -52,6 +54,7 @@ end = struct
   let program x = x.program
   let pattern x = x.pattern
   let ty_expr x = x.ty_expr
+  let declaration x = x.declaration
 end
 
 let pass_of_module : raise:raise_t -> syntax:syntax_t -> (module T) -> pass =
@@ -285,9 +288,15 @@ let morph
       , (Catamorphism.cata_block, Anamorphism.ana_block)
       , Iter.iter_block )
   in
+  let declaration =
+    mk_sub_pass
+      ( Catamorphism.cata_declaration
+      , (Catamorphism.cata_declaration, Anamorphism.ana_declaration)
+      , Iter.iter_declaration )
+  in
   let process_name =
     (* we use __MODULE__ .. can be a bit incovenient as a name to use with CLI so we process it a bit *)
     let open Simple_utils.Function in
     String.lowercase <@ String.substr_replace_all ~pattern:"Passes__" ~with_:""
   in
-  { name = process_name name; expression; program; pattern; ty_expr ; block}
+  { name = process_name name; expression; program; pattern; ty_expr; block; declaration }

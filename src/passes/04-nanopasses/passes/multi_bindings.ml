@@ -117,7 +117,7 @@ open Unit_test_helpers.Program
 
 let%expect_test "multi declaration in program" =
   {|
-        ((PE_attr ((key inline) (value ())) (PE_declaration
+        ((PE_attr ((key inline)) (PE_declaration
           (D_multi_var (
             ((pattern (P_var x)) (let_rhs (E_variable foo)))
             ((pattern (P_var y)) (let_rhs (E_variable bar)))
@@ -128,11 +128,11 @@ let%expect_test "multi declaration in program" =
   |-> pass ~raise;
   [%expect
     {|
-        ((PE_attr ((key inline) (value ()))
+        ((PE_attr ((key inline))
           (PE_declaration (D_var ((pattern (P_var x)) (let_rhs (E_variable foo))))))
-         (PE_attr ((key inline) (value ()))
+         (PE_attr ((key inline))
           (PE_declaration (D_var ((pattern (P_var y)) (let_rhs (E_variable bar))))))
-         (PE_attr ((key inline) (value ()))
+         (PE_attr ((key inline))
           (PE_declaration (D_var ((pattern (P_var z)) (let_rhs (E_variable baz))))))
          (PE_declaration
           (D_var ((pattern (P_var last)) (let_rhs (E_variable last))))))

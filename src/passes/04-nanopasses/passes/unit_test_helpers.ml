@@ -17,6 +17,9 @@ let try_with f in_ =
 
 
 module Dummies = struct
+  (* rewrite dummy S-exp atom to neutral sorts (expr,ty_expr,...),
+     better use 'change' @ https://github.com/janestreet/sexp ?
+  *)
   type t = string * string
 
   let lst : t list =
@@ -36,6 +39,19 @@ module Dummies = struct
         S_exp.sexp_of_expr @@ e_variable ~loc (Variable.of_input_var ~loc ("#" ^ str))
       in
       dummy "EXPR" f
+    in
+    let dummy_declaration =
+      let f str =
+        S_exp.sexp_of_declaration
+        @@ d_var
+             ~loc
+             { type_params = None
+             ; pattern = p_unit ~loc
+             ; rhs_type = None
+             ; let_rhs = e_variable ~loc (Variable.of_input_var ~loc ("#" ^ str))
+             }
+      in
+      dummy "DECLARATION" f
     in
     let dummy_block =
       let f str =
@@ -69,7 +85,7 @@ module Dummies = struct
     in
     List.map
       ~f:(Simple_utils.Pair.map_snd ~f:Sexp.to_string)
-      (dummy_ty_expr @ dummy_expr @ dummy_statement @ dummy_block)
+      (dummy_ty_expr @ dummy_expr @ dummy_statement @ dummy_block @ dummy_declaration)
 
 
   let in_output ((dummy, sexp) : t) =
@@ -88,7 +104,7 @@ module Dummies = struct
 
   let replace_in_input = replace in_input
   let replace_in_output = replace in_output
-  let post_proc_re_indent = replace 
+  let post_proc_re_indent = replace
 end
 
 let expected_failure_fwd_
@@ -228,4 +244,12 @@ module Block = Make (struct
   let selector = Pass_type.Selector.block
   let t_of_sexp = S_exp.block_of_sexp
   let sexp_of_t = S_exp.sexp_of_block
+end)
+
+module Declaration = Make (struct
+  type a = declaration
+
+  let selector = Pass_type.Selector.declaration
+  let t_of_sexp = S_exp.declaration_of_sexp
+  let sexp_of_t = S_exp.sexp_of_declaration
 end)

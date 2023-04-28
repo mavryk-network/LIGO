@@ -12,6 +12,7 @@ type flags =
   { initial_node_check : bool
   ; duplicate_identifier : bool
   ; restrict_projection : bool
+  ; export_declaration : bool
   ; special_unit_constructor : bool
   ; list_as_function : bool
   ; array_to_tuple : bool
@@ -25,6 +26,7 @@ let passes ~(flags : flags) : ((module T) * bool) list =
   let { initial_node_check
       ; duplicate_identifier
       ; restrict_projection
+      ; export_declaration
       ; special_unit_constructor
       ; list_as_function
       ; array_to_tuple
@@ -40,7 +42,7 @@ let passes ~(flags : flags) : ((module T) * bool) list =
   ; (module Duplicate_identifier), duplicate_identifier
   ; (module Restrict_projections), restrict_projection
   ; (module Single_switch_block), always_enabled
-  ; (module Export_declaration), always_enabled
+  ; (module Export_declaration), export_declaration
   ; (module Top_level_restriction), always_enabled
   ; (module Contract_hack), always_enabled
   ; (module Pattern_restriction), always_enabled
@@ -102,6 +104,7 @@ let extract_options
     { initial_node_check = not disable_initial_check
     ; duplicate_identifier
     ; restrict_projection = is_jsligo
+    ; export_declaration = is_jsligo
     ; special_unit_constructor = is_pascaligo
     ; list_as_function = is_jsligo
     ; array_to_tuple = is_jsligo
@@ -120,7 +123,7 @@ let get_passes ~options ~disable_initial_check =
 
 let get_passes_no_options ~syntax =
   (* TODO: decompile_thing should accept options *)
-  let flags,_ =
+  let flags, _ =
     extract_options
       ~disable_initial_check:false
       Compiler_options.(make ~syntax ~raw_options:(Raw_options.make ()) ())

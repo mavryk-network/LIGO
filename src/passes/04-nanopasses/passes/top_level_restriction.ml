@@ -5,6 +5,10 @@ open Simple_utils.Function
 open Errors
 module Location = Simple_utils.Location
 
+(* Restrictions at top-level :
+   - variable declaration (warning)
+   - statement (error) *)
+
 let rec silent_let_to_const ~raise d =
   let loc = get_d_loc d in
   match get_d d with
