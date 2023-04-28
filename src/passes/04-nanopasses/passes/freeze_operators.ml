@@ -3,6 +3,9 @@ open Ast_unified
 open Pass_type
 open Errors
 
+(* morph binary and unary operators/keywords to ligo internal constants 
+  each syntax has its own set of keywords *)
+
 let todo_error operator =
   failwith
     (Format.asprintf
@@ -156,45 +159,14 @@ let pass ~raise ~syntax =
     ~reduction_check:(reduction ~raise)
 
 
-open Unit_test_helpers.Program
+open Unit_test_helpers.Expr
 
 let p_test ~raise ~syntax:_ = pass ~raise ~syntax:PascaLIGO
 
 let%expect_test "compile" =
-  {|
-      ((PE_declaration
-        (D_const (
-          (pattern (P_var x))
-          (let_rhs
-            (E_binary_op ((operator SLASH) (left (E_variable x)) (right (E_variable y)))))))))
-      |}
-  |-> p_test ~raise;
-  [%expect
-    {|
-        ((PE_declaration
-          (D_const
-           ((pattern (P_var x))
-            (let_rhs
-             (E_constant
-              ((cons_name C_DIV) (arguments ((E_variable x) (E_variable y))))))))))
-        |}]
+  {| (E_binary_op ((operator SLASH) (left (EXPR1)) (right (EXPR2)))) |} |-> p_test ~raise;
+  [%expect {| (E_constant ((cons_name C_DIV) (arguments ((EXPR1) (EXPR2))))) |}]
 
 let%expect_test "decompile" =
-  {|
-      ((PE_declaration
-      (D_const
-        ((pattern (P_var x))
-          (let_rhs
-            (E_constant
-              ((cons_name C_DIV) (arguments ((E_variable x) (E_variable y)))))))))) 
-      |}
-  <-| p_test ~raise;
-  [%expect
-    {|
-        ((PE_declaration
-          (D_const
-           ((pattern (P_var x))
-            (let_rhs
-             (E_binary_op
-              ((operator SLASH) (left (E_variable x)) (right (E_variable y)))))))))
-        |}]
+  {| (E_constant ((cons_name C_DIV) (arguments ((EXPR1) (EXPR2))))) |} <-| p_test ~raise;
+  [%expect {| (E_binary_op ((operator SLASH) (left (EXPR1)) (right (EXPR2)))) |}]
