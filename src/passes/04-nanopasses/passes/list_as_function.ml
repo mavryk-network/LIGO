@@ -4,6 +4,8 @@ open Simple_utils.Trace
 open Errors
 module Location = Simple_utils.Location
 
+(* handle TS pattern to build lists from a function (cons, and literals) *)
+
 let array_to_list ~raise ~loc (arguments : expr Array_repr.t) =
   match arguments with
   | [ Expr_entry hd; Rest_entry tl ] ->
@@ -91,104 +93,54 @@ let pass ~raise ~syntax:_ =
     ~reduction_check:(reduction ~raise)
 
 
-open Unit_test_helpers.Program
-
 let p_test ~raise ~syntax:_ = pass ~raise ~syntax:Syntax_types.JsLIGO
+
+open Unit_test_helpers.Expr
 
 let%expect_test "compile_cons" =
   {|
-      ((PE_declaration
-         (D_const
-           ((pattern (P_var x))
-             (let_rhs
-               (E_call (E_variable list)
-                 ((E_array
-                    ((Expr_entry (E_variable hd)) (Rest_entry (E_variable tl)))))))))))
-      |}
+    (E_call
+      (E_variable list)
+      ((E_array ((Expr_entry (EXPR1)) (Rest_entry (EXPR2))))))
+  |}
   |-> p_test ~raise;
   [%expect
     {|
-        ((PE_declaration
-          (D_const
-           ((pattern (P_var x))
-            (let_rhs
-             (E_constant
-              ((cons_name C_CONS) (arguments ((E_variable hd) (E_variable tl))))))))))
-        |}]
+      (E_constant ((cons_name C_CONS) (arguments ((EXPR1) (EXPR2)))))
+    |}]
 
 let%expect_test "compile_list" =
   {|
-      ((PE_declaration
-         (D_const
-           ((pattern (P_var x))
-             (let_rhs
-               (E_call (E_variable list)
-                 ((E_array
-                    ((Expr_entry (E_variable a)) (Expr_entry (E_variable b)) (Expr_entry (E_variable c)))))))))))
-      |}
+    (E_call (E_variable list)
+      ((E_array
+        ((Expr_entry (EXPR1)) (Expr_entry (EXPR2)) (Expr_entry (EXPR3))))))
+  |}
   |-> p_test ~raise;
-  [%expect
-    {|
-      ((PE_declaration
-        (D_const
-         ((pattern (P_var x))
-          (let_rhs (E_list ((E_variable a) (E_variable b) (E_variable c))))))))
-      |}]
+  [%expect {| (E_list ((EXPR1) (EXPR2) (EXPR3))) |}]
 
 let%expect_test "compile_fail" =
   {|
-      ((PE_declaration
-         (D_const
-           ((pattern (P_var x))
-             (let_rhs
-               (E_call (E_variable list)
-                 ((E_array
-                    ((Expr_entry (E_variable hd)) (Rest_entry (E_variable tl1)) (Rest_entry (E_variable tl2)))))))))))
-      |}
+    (E_call (E_variable list)
+      ((E_array
+        ((Expr_entry (EXPR1)) (Rest_entry (EXPR2)) (Rest_entry (EXPR3))))))
+  |}
   |->! pass;
   [%expect
-    {|
-      Err : (Small_passes_array_rest_not_supported (E_variable tl1))
-      |}]
+    {| Err : (Small_passes_array_rest_not_supported (E_variable #EXPR2)) |}]
 
 let%expect_test "decompile_cons" =
-  {|
-      ((PE_declaration
-        (D_const
-          ((pattern (P_var x))
-            (let_rhs
-              (E_constant
-                ((cons_name C_CONS) (arguments ((E_variable hd) (E_variable tl))))))))))
-      |}
+  {| (E_constant ((cons_name C_CONS) (arguments ((EXPR1) (EXPR2))))) |}
   <-| p_test ~raise;
   [%expect
     {|
-          ((PE_declaration
-            (D_const
-             ((pattern (P_var x))
-              (let_rhs
-               (E_call (E_variable list)
-                ((E_array ((Expr_entry (E_variable hd)) (Rest_entry (E_variable tl)))))))))))
-    
-        |}]
+      (E_call (E_variable list)
+       ((E_array ((Expr_entry (EXPR1)) (Rest_entry (EXPR2)))))) |}]
 
 let%expect_test "decompile_list" =
-  {|
-      ((PE_declaration
-         (D_const
-           ((pattern (P_var x))
-             (let_rhs (E_list ((E_variable a) (E_variable b) (E_variable c))))))))
-      |}
+  {| (E_list ((EXPR1) (EXPR2) (EXPR3))) |}
   <-| p_test ~raise;
   [%expect
     {|
-          ((PE_declaration
-            (D_const
-             ((pattern (P_var x))
-              (let_rhs
-               (E_call (E_variable list)
-                ((E_array
-                  ((Expr_entry (E_variable a)) (Expr_entry (E_variable b))
-                   (Expr_entry (E_variable c)))))))))))
-    
-      |}]
+      (E_call (E_variable list)
+       ((E_array ((Expr_entry (EXPR1)) (Expr_entry (EXPR2)) (Expr_entry (EXPR3))))))
+    |}]
