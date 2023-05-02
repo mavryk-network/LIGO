@@ -69,25 +69,44 @@ let pascaligo_module =
 let pp_type_expression
     :  syntax:Syntax_types.t
     -> [ `Core of Ast_core.type_expression | `Typed of Ast_typed.type_expression ]
-    -> string
+    -> ( PPrint.document
+       , [ `Exn of exn | `PassesError of Passes.Errors.t ] * string )
+       Result.t
   =
  fun ~syntax te ->
-  let cte =
+  let ast =
     match te with
-    | `Core cte -> cte
-    | `Typed tte -> Checking.untype_type_expression tte
+    | `Core ast -> ast
+    | `Typed tast -> Checking.untype_type_expression tast
   in
-  let ty_expr_to_string =
-    let raise = Simple_utils.Trace.raise_failwith "LSP" in
-    Buffer.contents
-    <@ Decompile.Helpers.specialise_and_print_ty syntax
-    <@ Decompile.Of_core.decompile_ty_expr ~raise ~syntax
+  let cst =
+    try
+      match
+        Simple_utils.Trace.to_stdlib_result @@ Nanopasses.decompile_ty_expr ~syntax ast
+      with
+      | Error (err, _warnings) -> `PassesError err
+      | Ok (s, _warnings) ->
+        (match syntax with
+        | JsLIGO -> `JsLIGO_te (Unification_jsligo.Decompile.decompile_type_expression s)
+        | CameLIGO ->
+          `CameLIGO_te (Unification_cameligo.Decompile.decompile_type_expression s)
+        | PascaLIGO ->
+          `PascaLIGO_te (Unification_pascaligo.Decompile.decompile_type_expression s))
+    with
+    | exn -> `Exn exn
   in
-  try ty_expr_to_string cte with
-  | _ ->
-    (match te with
-    | `Core cte -> Format.asprintf "%a" Ast_core.PP.type_expression cte
-    | `Typed tte -> Format.asprintf "%a" Ast_typed.PP.type_expression tte)
+  match cst with
+  | `CameLIGO_te cst ->
+    Ok Parsing.Cameligo.Pretty.(print_type_expr default_environment cst)
+  | `JsLIGO_te cst -> Ok Parsing.Jsligo.Pretty.(print_type_expr default_environment cst)
+  | `PascaLIGO_te cst ->
+    Ok Parsing.Pascaligo.Pretty.(print_type_expr default_environment cst)
+  | (`PassesError _ | `Exn _) as err ->
+    Error
+      ( err
+      , match te with
+        | `Core cte -> Format.asprintf "%a" Ast_core.PP.type_expression cte
+        | `Typed tte -> Format.asprintf "%a" Ast_typed.PP.type_expression tte )
 
 
 let print_module_with_description
