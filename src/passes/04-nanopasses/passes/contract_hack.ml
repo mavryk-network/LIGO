@@ -53,7 +53,7 @@ let pass ~raise ~syntax:_ =
 
 let%expect_test _ =
   Expr.(
-    {| (E_contract (A B)) |} |-> pass ~raise;
+    {| (E_contract (A B)) |} |-> pass;
     [%expect
       {|
       (E_module_access

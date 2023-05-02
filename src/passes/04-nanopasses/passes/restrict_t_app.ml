@@ -55,7 +55,7 @@ let%expect_test "compile_t_app_t_var" =
       ((constr (T_var my_var))
         (type_args ((T_var arg1) (T_var arg2)))))
   |}
-  |-> pass ~raise;
+  |-> pass;
   [%expect
     {| (T_app ((constr (T_var my_var)) (type_args ((T_var arg1) (T_var arg2))))) |}]
 

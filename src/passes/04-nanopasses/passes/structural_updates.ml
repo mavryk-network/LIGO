@@ -289,7 +289,7 @@ let%expect_test "compile" =
            (path (FieldName (Label bar))))))
        (rhs_expr (EXPR2))))
   |}
-  |-> pass ~raise;
+  |-> pass;
   [%expect
     {|
     (I_assign m

@@ -48,7 +48,7 @@ let%expect_test _ =
     {|
       (P_pun_record
         ((Punned (Label a)) (Punned (Label b)))) |}
-    |-> pass ~raise;
+    |-> pass ;
     [%expect
       {|
       (P_pun_record

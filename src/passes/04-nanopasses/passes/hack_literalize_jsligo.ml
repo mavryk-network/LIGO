@@ -78,15 +78,15 @@ open Unit_test_helpers.Expr
 let p_test ~raise ~syntax:_ = pass ~raise ~syntax:JsLIGO
 
 let%expect_test "number_42_as_nat" =
-  {| (E_annot ((E_literal (Literal_int 42)) (T_var nat))) |} |-> p_test ~raise;
+  {| (E_annot ((E_literal (Literal_int 42)) (T_var nat))) |} |-> p_test;
   [%expect {| (E_literal (Literal_nat 42)) |}]
 
 let%expect_test "number_42_as_mutez" =
-  {| (E_annot ((E_literal (Literal_int 42)) (T_var mutez))) |} |-> p_test ~raise;
+  {| (E_annot ((E_literal (Literal_int 42)) (T_var mutez))) |} |-> p_test;
   [%expect {| (E_literal (Literal_mutez 42))  |}]
 
 let%expect_test "number_42_as_tez" =
-  {| ( E_annot ((E_literal (Literal_int 42)) (T_var tez))) |} |-> p_test ~raise;
+  {| ( E_annot ((E_literal (Literal_int 42)) (T_var tez))) |} |-> p_test;
   [%expect {|(E_literal (Literal_mutez 42000000)) |}]
 
 let%expect_test "code_inj" =
@@ -96,7 +96,7 @@ let%expect_test "code_inj" =
         (code (E_literal (Literal_string (Verbatim "{ UNPAIR ; ADD }") )))))
         (TY_EXPR)))
       |}
-  |-> p_test ~raise;
+  |-> p_test;
   [%expect
     {|
       (E_raw_code

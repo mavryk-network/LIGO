@@ -125,7 +125,7 @@ let%expect_test "multi declaration in program" =
       (PE_declaration
         (D_var ((pattern (P_var last)) (let_rhs (EXPR4))))))
   |}
-  |-> pass ~raise;
+  |-> pass;
   [%expect
     {|
         ((PE_attr ((key inline))

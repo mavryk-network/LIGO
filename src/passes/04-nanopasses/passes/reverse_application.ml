@@ -40,7 +40,7 @@ let%expect_test _ =
   Expr.(
     {|
       (E_rev_app ((x (EXPR1)) (f (EXPR2))))
-    |} |-> pass ~raise;
+    |} |-> pass;
     [%expect {|
       (E_call (EXPR2) ((EXPR1)))
     |}])

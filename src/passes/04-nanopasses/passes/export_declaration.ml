@@ -44,15 +44,9 @@ let pass ~raise ~syntax:_ =
 
 let%expect_test _ =
   Declaration.(
-    {|
-      (D_export (DECLARATION1))
-    |} |-> pass ~raise;
-    [%expect {|
-      (D_attr (((key public)) (DECLARATION1)))
-    |}];
-    {|
-      (D_attr (((key public)) (DECLARATION1)))
-    |} <-| pass ~raise;
+    {| (D_export (DECLARATION1)) |} |-> pass;
+    [%expect {| (D_attr (((key public)) (DECLARATION1))) |}];
+    {| (D_attr (((key public)) (DECLARATION1))) |} <-| pass;
     [%expect {|
       (D_export (DECLARATION1))
     |}])

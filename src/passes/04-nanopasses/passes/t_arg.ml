@@ -20,4 +20,4 @@ let pass ~raise:_ ~syntax:_ = morph ~name:__MODULE__ ~compile ~decompile ~reduct
 open Unit_test_helpers.Ty_expr
 
 let%expect_test _ =
-  {| (T_arg x) |} |-> pass ~raise; [%expect {| (T_var 'x) |}]
+  {| (T_arg x) |} |-> pass; [%expect {| (T_var 'x) |}]

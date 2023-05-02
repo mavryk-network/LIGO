@@ -89,7 +89,7 @@ let pass ~raise ~syntax =
 
 open Unit_test_helpers.Ty_expr
 
-let tpass ~syntax:_ = pass ~raise ~syntax:Syntax_types.CameLIGO
+let tpass ~raise ~syntax:_ = pass ~raise ~syntax:Syntax_types.CameLIGO
 
 let%expect_test "compile_michelson_pair" =
   {|

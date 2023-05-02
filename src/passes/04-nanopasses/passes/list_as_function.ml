@@ -103,7 +103,7 @@ let%expect_test "compile_cons" =
       (E_variable list)
       ((E_array ((Expr_entry (EXPR1)) (Rest_entry (EXPR2))))))
   |}
-  |-> p_test ~raise;
+  |-> p_test;
   [%expect
     {|
       (E_constant ((cons_name C_CONS) (arguments ((EXPR1) (EXPR2)))))
@@ -115,7 +115,7 @@ let%expect_test "compile_list" =
       ((E_array
         ((Expr_entry (EXPR1)) (Expr_entry (EXPR2)) (Expr_entry (EXPR3))))))
   |}
-  |-> p_test ~raise;
+  |-> p_test;
   [%expect {| (E_list ((EXPR1) (EXPR2) (EXPR3))) |}]
 
 let%expect_test "compile_fail" =
@@ -130,7 +130,7 @@ let%expect_test "compile_fail" =
 
 let%expect_test "decompile_cons" =
   {| (E_constant ((cons_name C_CONS) (arguments ((EXPR1) (EXPR2))))) |}
-  <-| p_test ~raise;
+  <-| p_test;
   [%expect
     {|
       (E_call (E_variable list)
@@ -138,7 +138,7 @@ let%expect_test "decompile_cons" =
 
 let%expect_test "decompile_list" =
   {| (E_list ((EXPR1) (EXPR2) (EXPR3))) |}
-  <-| p_test ~raise;
+  <-| p_test;
   [%expect
     {|
       (E_call (E_variable list)

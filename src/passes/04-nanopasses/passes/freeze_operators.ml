@@ -164,9 +164,9 @@ open Unit_test_helpers.Expr
 let p_test ~raise ~syntax:_ = pass ~raise ~syntax:PascaLIGO
 
 let%expect_test "compile" =
-  {| (E_binary_op ((operator SLASH) (left (EXPR1)) (right (EXPR2)))) |} |-> p_test ~raise;
+  {| (E_binary_op ((operator SLASH) (left (EXPR1)) (right (EXPR2)))) |} |-> p_test;
   [%expect {| (E_constant ((cons_name C_DIV) (arguments ((EXPR1) (EXPR2))))) |}]
 
 let%expect_test "decompile" =
-  {| (E_constant ((cons_name C_DIV) (arguments ((EXPR1) (EXPR2))))) |} <-| p_test ~raise;
+  {| (E_constant ((cons_name C_DIV) (arguments ((EXPR1) (EXPR2))))) |} <-| p_test;
   [%expect {| (E_binary_op ((operator SLASH) (left (EXPR1)) (right (EXPR2)))) |}]

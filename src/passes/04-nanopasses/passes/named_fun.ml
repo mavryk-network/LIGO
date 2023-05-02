@@ -39,5 +39,5 @@ let%expect_test "compile" =
   {| (T_named_fun
         ((((name (foo)) (type_expr (TY_EXPR1))) ((name (bar)) (type_expr (TY_EXPR2))))
          (TY_EXPR3))) |}
-  |-> pass ~raise;
+  |-> pass;
   [%expect {| (T_fun ((TY_EXPR1) (T_fun ((TY_EXPR2) (TY_EXPR3))))) |}]

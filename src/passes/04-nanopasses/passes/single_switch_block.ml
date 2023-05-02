@@ -75,7 +75,7 @@ let%expect_test _ =
           ((Switch_case (EXPR) ((BLOCK1)))
             (Switch_default_case (((STATEMENT1) (S_instr (I_return ())))))))))))
     |}
-    |-> pass ~raise;
+    |-> pass;
     [%expect
       {|
         ((S_instr

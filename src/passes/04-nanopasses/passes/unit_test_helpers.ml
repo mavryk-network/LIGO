@@ -184,7 +184,7 @@ module Make (X : S) = struct
     expected_sucess_fwd_
       X.selector
       (replace_dummies_out i)
-      (pass ~syntax:Syntax_types.CameLIGO)
+      (pass ~raise ~syntax:Syntax_types.CameLIGO)
       replace_dummies_in
 
 
@@ -192,7 +192,7 @@ module Make (X : S) = struct
     expected_sucess_bwd_
       X.selector
       (replace_dummies_out i)
-      (pass ~syntax:Syntax_types.CameLIGO)
+      (pass ~raise ~syntax:Syntax_types.CameLIGO)
       replace_dummies_in
 
 

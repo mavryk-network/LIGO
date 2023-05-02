@@ -90,7 +90,7 @@ let%expect_test "compile" =
   {|
     (D_type_abstraction ((name my_t) (params ((a b))) (type_expr (TY_EXPR))))
   |}
-  |-> pass ~raise;
+  |-> pass;
   [%expect
     {|
     (D_type
@@ -114,6 +114,6 @@ let%expect_test "decompile" =
                (kind Type)
                (type_ (TY_EXPR))))))))))
   |}
-  <-| pass ~raise;
+  <-| pass;
   [%expect
     {| (D_type_abstraction ((name my_t) (params ((a b))) (type_expr (TY_EXPR)))) |}]
