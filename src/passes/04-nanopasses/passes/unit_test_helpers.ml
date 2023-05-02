@@ -88,11 +88,7 @@ module Dummies = struct
       (dummy_ty_expr @ dummy_expr @ dummy_statement @ dummy_block @ dummy_declaration)
 
 
-  let in_output ((dummy, sexp) : t) =
-    (* this extra space is important *)
-    dummy, sexp
-
-
+  let in_output ((dummy, sexp) : t) = dummy, sexp
   let in_input ((dummy, sexp) : t) = sexp, dummy
 
   let replace : (t -> t) -> string -> string =
@@ -252,4 +248,12 @@ module Declaration = Make (struct
   let selector = Pass_type.Selector.declaration
   let t_of_sexp = S_exp.declaration_of_sexp
   let sexp_of_t = S_exp.sexp_of_declaration
+end)
+
+module Instruction = Make (struct
+  type a = instruction
+
+  let selector = Pass_type.Selector.instruction
+  let t_of_sexp = S_exp.instruction_of_sexp
+  let sexp_of_t = S_exp.sexp_of_instruction
 end)

@@ -47,44 +47,24 @@ let pass ~raise ~syntax:_ =
     ~reduction_check:(reduction ~raise)
 
 
-open Unit_test_helpers.Program
+open Unit_test_helpers.Ty_expr
 
 let%expect_test "compile_t_app_t_var" =
   {|
-      ((
-        PE_declaration (D_type ((name t) (type_expr (
-          T_app (
-            (constr (T_var my_var))
-            (type_args (
-              (T_var arg1)
-              (T_var arg2)
-            ))
-          )
-        ))))
-      ))
-      |}
+    (T_app
+      ((constr (T_var my_var))
+        (type_args ((T_var arg1) (T_var arg2)))))
+  |}
   |-> pass ~raise;
   [%expect
-    {|
-        ((PE_declaration
-          (D_type
-           ((name t)
-            (type_expr
-             (T_app
-              ((constr (T_var my_var)) (type_args ((T_var arg1) (T_var arg2)))))))))) |}]
+    {| (T_app ((constr (T_var my_var)) (type_args ((T_var arg1) (T_var arg2))))) |}]
 
 let%expect_test "compile_t_app_wrong" =
-  {|((
-          PE_declaration (D_type ((name t) (type_expr (
-            T_app (
-              (constr (T_arg should_be_a_t_var))
-              (type_args (
-                (T_var arg1)
-                (T_var arg2)
-              ))
-            )
-          ))))
-      ))|}
+  {|
+    (T_app
+      ((constr (T_arg should_be_a_t_var))
+       (type_args ((T_var arg1) (T_var arg2)))))
+  |}
   |->! pass;
   [%expect
     {|

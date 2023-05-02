@@ -87,71 +87,52 @@ let pass ~raise ~syntax =
     ~reduction_check:(reduction ~raise)
 
 
-open Unit_test_helpers.Program
+open Unit_test_helpers.Ty_expr
+
+let tpass ~syntax:_ = pass ~raise ~syntax:Syntax_types.CameLIGO
 
 let%expect_test "compile_michelson_pair" =
-  ({|
-      ((PE_declaration
-        (D_type
-          ((name t_string)
-            (type_expr
-              (T_app
-                ((constr (T_var michelson_pair))
-                  (type_args
-                    ((T_var int) (T_string w) (T_var nat) (T_string v))))))))))
-      |}
-  |-> fun ~syntax:_ -> pass ~raise ~syntax:Syntax_types.CameLIGO);
+  {|
+      (T_app
+        ((constr (T_var michelson_pair))
+         (type_args
+           ((TY_EXPR1) (T_string w) (TY_EXPR2) (T_string v)))))
+  |}
+  |-> tpass;
   [%expect
     {|
-        ((PE_declaration
-          (D_type
-           ((name t_string)
-            (type_expr
-             (T_record_raw
-              (((Label 0)
-                ((associated_type ((T_var int)))
-                 (attributes (((key annot) (value w)))) (decl_pos 0)))
-               ((Label 1)
-                ((associated_type ((T_var nat)))
-                 (attributes (((key annot) (value v)))) (decl_pos 1)))))))))) |}]
+        (T_record_raw
+         (((Label 0)
+           ((associated_type ((TY_EXPR1))) (attributes (((key annot) (value w))))
+            (decl_pos 0)))
+          ((Label 1)
+           ((associated_type ((TY_EXPR2))) (attributes (((key annot) (value v))))
+            (decl_pos 1))))) |}]
 
 let%expect_test "compile_michelson_or" =
-  ({|
-      ((PE_declaration
-         (D_type
-           ((name t_string)
-             (type_expr
-               (T_app
-                 ((constr (T_var michelson_or))
-                   (type_args
-                     ((T_var int) (T_string w) (T_var nat) (T_string v))))))))))
-      |}
-  |-> fun ~syntax:_ -> pass ~raise ~syntax:Syntax_types.CameLIGO);
+  {|
+      (T_app
+        ((constr (T_var michelson_or))
+         (type_args
+           ((TY_EXPR1) (T_string w) (TY_EXPR2) (T_string v)))))
+  |}
+  |-> tpass;
   [%expect
     {|
-        ((PE_declaration
-          (D_type
-           ((name t_string)
-            (type_expr
-             (T_sum_raw
-              (((Label M_left)
-                ((associated_type ((T_var int)))
-                 (attributes (((key annot) (value w)))) (decl_pos 0)))
-               ((Label M_right)
-                ((associated_type ((T_var nat)))
-                 (attributes (((key annot) (value v)))) (decl_pos 1)))))))))) |}]
+        (T_sum_raw
+         (((Label M_left)
+           ((associated_type ((TY_EXPR1))) (attributes (((key annot) (value w))))
+            (decl_pos 0)))
+          ((Label M_right)
+           ((associated_type ((TY_EXPR2))) (attributes (((key annot) (value v))))
+            (decl_pos 1))))) |}]
 
 let%expect_test "compile_michelson_or_wrong_arity" =
   {|
-      ((PE_declaration
-         (D_type
-           ((name t_string)
-             (type_expr
-               (T_app
-                 ((constr (T_var michelson_or))
-                   (type_args
-                     ((T_string w) (T_var nat) (T_string v))))))))))
-      |}
+    (T_app
+      ((constr (T_var michelson_or))
+       (type_args ((T_string w) (TY_EXPR) (T_string v)))))
+  |}
   |->! pass;
   [%expect
     {|
@@ -160,15 +141,10 @@ let%expect_test "compile_michelson_or_wrong_arity" =
 
 let%expect_test "compile_michelson_or_type_wrong" =
   {|
-      ((PE_declaration
-         (D_type
-           ((name t_string)
-             (type_expr
-               (T_app
-                 ((constr (T_var michelson_or))
-                   (type_args
-                     ((T_var int) (T_var tez) (T_var nat) (T_string v))))))))))
-      |}
+    (T_app
+      ((constr (T_var michelson_or))
+       (type_args ((T_var int) (TY_EXPR1) (TY_EXPR2) (T_string v)))))
+  |}
   |->! pass;
   [%expect
     {| Err : (Small_passes_michelson_type_wrong (michelson_or (T_var michelson_or))) |}]

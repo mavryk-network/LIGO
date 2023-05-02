@@ -17,16 +17,7 @@ let reduction_check = Iter.defaults
 let decompile = `None
 let pass ~raise:_ ~syntax:_ = morph ~name:__MODULE__ ~compile ~decompile ~reduction_check
 
-open Unit_test_helpers.Program
+open Unit_test_helpers.Ty_expr
 
 let%expect_test "addition" =
-  {|
-      ((PE_declaration
-        (D_type_abstraction ((name t) (params (x))
-          (type_expr (T_arg x))))))
-    |}
-  |-> pass ~raise;
-  [%expect
-    {|
-      ((PE_declaration
-        (D_type_abstraction ((name t) (params ((x))) (type_expr (T_var 'x)))))) |}]
+  {| (T_arg x) |} |-> pass ~raise; [%expect {| (T_var 'x) |}]

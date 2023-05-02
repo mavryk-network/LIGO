@@ -33,22 +33,11 @@ let pass ~raise ~syntax:_ =
   morph ~name:__MODULE__ ~compile ~decompile:`None ~reduction_check:(reduction ~raise)
 
 
-open Unit_test_helpers.Program
+open Unit_test_helpers.Ty_expr
 
 let%expect_test "compile" =
-  {|
-      ((PE_declaration
-        (D_type
-          ( (name t)
-            (type_expr
-              (T_named_fun
-                ((((name (foo)) (type_expr (T_var int))) ((name (bar)) (type_expr (T_var string))))
-                  (T_var nat))))))))
-    |}
+  {| (T_named_fun
+        ((((name (foo)) (type_expr (TY_EXPR1))) ((name (bar)) (type_expr (TY_EXPR2))))
+         (TY_EXPR3))) |}
   |-> pass ~raise;
-  [%expect
-    {|
-      ((PE_declaration
-        (D_type
-         ((name t)
-          (type_expr (T_fun ((T_var int) (T_fun ((T_var string) (T_var nat)))))))))) |}]
+  [%expect {| (T_fun ((TY_EXPR1) (T_fun ((TY_EXPR2) (TY_EXPR3))))) |}]

@@ -278,77 +278,45 @@ let pass ~raise ~syntax:_ =
     ~reduction_check:(reduction ~raise)
 
 
-open Unit_test_helpers.Program
+open Unit_test_helpers.Instruction
 
 let%expect_test "compile" =
   {|
-  ((PE_declaration
-    (D_const
-      ((pattern (P_var x))
-        (let_rhs
-          (E_block_with
-            ((block
-                ((S_instr
-                  (I_struct_assign
-                    ((lhs_expr
-                        (E_proj
-                          ((struct_
-                            (E_map_lookup
-                              ((map (E_variable m))
-                                (keys
-                                  ((E_literal
-                                      (Literal_string (Standard foo))))))))
-                            (path (FieldName (Label bar))))))
-                      (rhs_expr (E_variable baz)))))))
-              (expr (E_variable m)))))))))
+    (I_struct_assign
+      ((lhs_expr
+        (E_proj
+          ((struct_ (E_map_lookup ((map (E_variable m)) (keys ((EXPR1))))))
+           (path (FieldName (Label bar))))))
+       (rhs_expr (EXPR2))))
   |}
   |-> pass ~raise;
   [%expect
     {|
-    ((PE_declaration
-      (D_const
-       ((pattern (P_var x))
-        (let_rhs
-         (E_block_with
-          ((block
-            ((S_instr
-              (I_assign m
-               (E_match
-                ((expr
-                  (E_constant
-                   ((cons_name C_MAP_FIND_OPT)
-                    (arguments
-                     ((E_literal (Literal_string (Standard foo))) (E_variable m))))))
-                 (cases
-                  (((pattern (P_variant (Label Some) ((P_var gen))))
-                    (rhs
-                     (E_constant
-                      ((cons_name C_MAP_ADD)
-                       (arguments
-                        ((E_literal (Literal_string (Standard foo)))
-                         (E_record_update
-                          ((struct_ (E_variable gen)) (label (Label bar))
-                           (update (E_variable baz))))
-                         (E_variable m)))))))
-                   ((pattern (P_variant (Label None) ())) (rhs (E_variable m)))))))))))
-           (expr (E_variable m)))))))))
+    (I_assign m
+     (E_match
+      ((expr
+        (E_constant
+         ((cons_name C_MAP_FIND_OPT) (arguments ((EXPR1) (E_variable m))))))
+       (cases
+        (((pattern (P_variant (Label Some) ((P_var gen))))
+          (rhs
+           (E_constant
+            ((cons_name C_MAP_ADD)
+             (arguments
+              ((EXPR1)
+               (E_record_update
+                ((struct_ (E_variable gen)) (label (Label bar)) (update (EXPR2))))
+               (E_variable m)))))))
+         ((pattern (P_variant (Label None) ())) (rhs (E_variable m))))))))
 |}]
 
 let%expect_test "compile_wrong_lvalue" =
   {|
-  ((PE_declaration
-    (D_const
-      ((pattern (P_var x))
-        (let_rhs
-          (E_block_with
-            ((block
-                ((S_instr
-                  (I_struct_assign
-                    ((lhs_expr (E_tuple ((E_variable wrong))))
-                     (rhs_expr (E_variable baz)))))))
-              (expr (E_variable m)))))))))
+    (I_struct_assign
+      ((lhs_expr (E_tuple ((EXPR))))
+       (rhs_expr (EXPR))))
   |}
   |->! pass;
   [%expect {|
-    Err : (Small_passes_wrong_lvalue (E_tuple ((E_variable wrong))))
+    Err : (Small_passes_wrong_lvalue (E_tuple ((E_variable #EXPR))))
     |}]
