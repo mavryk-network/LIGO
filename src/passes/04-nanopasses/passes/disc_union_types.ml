@@ -25,9 +25,7 @@ let morph_t_disc ~raise ~err ~loc (rows : ty_expr Non_linear_disc_rows.t) : reg 
         let ty_string_rows =
           List.filter_map rows ~f:(fun (label, row) ->
               let Non_linear_rows.{ associated_type = ty; _ } = row in
-              Option.map
-                (Option.value_map ~default:None ty ~f:get_t_string)
-                ~f:(fun str -> label, str))
+              Option.map (get_t_string ty) ~f:(fun str -> label, str))
         in
         match ty_string_rows with
         | [ (label, id) ] ->

@@ -30,7 +30,10 @@ let compile ~raise =
     | T_named_fun (args, _) ->
       if unlinear_type Ty_variable.compare (List.filter_map args ~f:(fun x -> x.name))
       then raise.error (non_linear_type (`Ty ty))
-    | T_record_raw rows | T_sum_raw rows ->
+    | T_sum_raw rows ->
+      if unlinear_type Label.compare (List.map rows ~f:fst)
+        then raise.error (non_linear_type (`Ty ty))
+    | T_record_raw rows ->
       if unlinear_type Label.compare (List.map rows ~f:fst)
       then raise.error (non_linear_type (`Ty ty))
     | _ -> ()

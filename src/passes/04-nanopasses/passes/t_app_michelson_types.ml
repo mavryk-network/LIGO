@@ -26,7 +26,7 @@ let t_michelson_or ~loc (l : ty_expr) l_ann (r : ty_expr) r_ann =
 let t_michelson_pair ~loc l l_ann r r_ann =
   t_record_raw
     ~loc
-    (Non_linear_rows.make [ Label "0", Some l, [ l_ann ]; Label "1", Some r, [ r_ann ] ])
+    (Non_linear_rows.make [ Label "0", l, [ l_ann ]; Label "1", r, [ r_ann ] ])
 
 
 let compile ~raise ~syntax =

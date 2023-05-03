@@ -82,7 +82,7 @@ let ez_t_sum ~loc ?sugar ?layout lst =
   make_t ~loc ?sugar @@ T_sum row
 
 
-let t_sum_ez ~loc ?sugar ?layout (lst : (string * type_expression) list) : type_expression
+let t_sum_ez ~loc ?sugar ?layout (lst : (string * type_expression option) list) : type_expression
   =
   (* this should be [make_t_ez_sum] if we want to be consistent *)
   let lst = List.map ~f:(fun (x, y) -> Label.of_string x, y) lst in
@@ -90,7 +90,7 @@ let t_sum_ez ~loc ?sugar ?layout (lst : (string * type_expression) list) : type_
 
 
 let t_bool ~loc ?sugar () : type_expression =
-  t_sum_ez ~loc ?sugar [ "True", t_unit ~loc (); "False", t_unit ~loc () ]
+  t_sum_ez ~loc ?sugar [ "True", None; "False", None ]
 
 
 let get_t_bool (t : type_expression) : unit option =
@@ -100,7 +100,7 @@ let get_t_bool (t : type_expression) : unit option =
   Option.some_if (Types.equal_type_content t.type_content t_bool.type_content) ()
 
 
-let get_t_option (t : type_expression) : type_expression option =
+let get_t_option (t : type_expression) : type_expression option option =
   match t.type_content with
   | T_sum { fields; _ } ->
     let keys = Map.key_set fields in

@@ -96,7 +96,7 @@ and 'self type_expression_content_ =
   | T_module_open_in of (Mod_variable.t, 'self) Mod_access.t
   | T_arg of string
   | T_sum_raw of 'self option Non_linear_rows.t
-  | T_record_raw of 'self option Non_linear_rows.t
+  | T_record_raw of 'self Non_linear_rows.t
   | T_disc_union of 'self Non_linear_disc_rows.t
   | T_abstraction of 'self Abstraction.t
   | T_module_access of (Mod_variable.t Simple_utils.List.Ne.t, Ty_variable.t) Mod_access.t
@@ -104,7 +104,7 @@ and 'self type_expression_content_ =
       ( (Mod_variable.t Simple_utils.List.Ne.t, Ty_variable.t) Mod_access.t
       , 'self )
       Type_app.t [@not_initial]
-  | T_sum of 'self Row.t [@not_initial]
+  | T_sum of 'self option Row.t [@not_initial]
   | T_record of 'self Row.t [@not_initial]
   | T_for_all of 'self Abstraction.t [@not_initial]
 [@@deriving

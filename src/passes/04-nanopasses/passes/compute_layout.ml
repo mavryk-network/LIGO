@@ -12,10 +12,7 @@ let compile_row ~loc layout_attr_opt (lst : ty_expr option Non_linear_rows.t) =
            let open Non_linear_rows in
            Int.compare ra.decl_pos rb.decl_pos)
     |> List.map ~f:(fun (label, Non_linear_rows.{ associated_type; attributes; _ }) ->
-           let ty =
-             Option.value_or_thunk associated_type ~default:(fun () -> tv_unit ~loc ())
-           in
-           label, ty, attributes)
+           label, associated_type, attributes)
   in
   let layout =
     let labels = List.map ~f:(fun (l, _, a) -> l, a) lst in

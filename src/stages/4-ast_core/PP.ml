@@ -23,7 +23,8 @@ and layout = Simple_utils.PP_helpers.if_present Layout.pp
 and option ppf (te : type_expression) =
   let t = Combinators.get_t_option te in
   match t with
-  | Some t -> fprintf ppf "option (%a)" type_expression t
+  | Some Some t -> fprintf ppf "option (%a)" type_expression t
+  | Some None -> fprintf ppf "option ()"
   | None -> fprintf ppf "option ('a)"
 
 
@@ -31,7 +32,7 @@ and type_content : formatter -> type_content -> unit =
  fun ppf te ->
   match te with
   | T_variable tv -> Type_var.pp ppf tv
-  | T_sum row -> Row.PP.sum_type type_expression layout ppf row
+  | T_sum row -> Row.PP.sum_type (Simple_utils.PP_helpers.option type_expression) layout ppf row
   | T_record row -> Row.PP.record_type type_expression layout ppf row
   | T_arrow a -> Arrow.pp type_expression ppf a
   | T_app app -> Type_app.pp (Module_access.pp Type_var.pp) type_expression ppf app

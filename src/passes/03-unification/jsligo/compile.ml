@@ -340,7 +340,7 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
     let fields =
       let destruct I.{ field_name; field_type; attributes; _ } =
         ( TODO_do_in_parsing.labelize (r_fst field_name)
-        , Some field_type
+        , field_type
         , TODO_do_in_parsing.conv_attrs attributes )
       in
       let lst = List.map ~f:(destruct <@ r_fst) @@ nsepseq_to_list ne_elements in
@@ -388,16 +388,9 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
         let I.{ attributes; ne_elements; _ } = x.value in
         let obj =
           Region.wrap_ghost
-            I.
-              { compound = None (* (I.field_decl Region.reg, I.semi) nsepseq *)
-              ; ne_elements
-              ; terminator = None
-              ; attributes = []
-              }
+            I.{ compound = None; ne_elements; terminator = None; attributes = [] }
         in
-        ( () (* , t_record_raw ~loc (Non_linear_rows.make lst) *)
-        , I.TObject obj
-        , TODO_do_in_parsing.conv_attrs attributes )
+        (), I.TObject obj, TODO_do_in_parsing.conv_attrs attributes
       in
       let lst = List.map ~f:destruct_obj (nsepseq_to_list t) in
       O.Non_linear_disc_rows.make lst

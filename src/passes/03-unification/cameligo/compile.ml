@@ -134,8 +134,7 @@ module TODO_do_in_parsing = struct
   (* constructor application as in jsligo *)
   let fake_constructor_app el_opt ctor =
     match el_opt with
-    | Some element ->
-      O.(E_constructor { constructor = ctor; element })
+    | Some element -> O.(E_constructor { constructor = ctor; element })
     | None ->
       let element =
         let open Lexing_cameligo.Token in
@@ -384,15 +383,13 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
     let fields =
       let field_decls = nseq_map r_fst @@ nsepseq_to_nseq ne_elements in
       (* let open Ligo_prim in *)
-      let compile_field_decl
-          : int -> I.field_decl -> I.type_expr option O.Non_linear_rows.row
-        =
+      let compile_field_decl : int -> I.field_decl -> I.type_expr O.Non_linear_rows.row =
        fun i { field_name; field_type; attributes; _ } ->
         let l = TODO_do_in_parsing.labelize field_name in
         let rows =
           O.Non_linear_rows.
             { decl_pos = i
-            ; associated_type = Some field_type
+            ; associated_type = field_type
             ; attributes = List.map (TODO_do_in_parsing.conv_attrs attributes) ~f:fst
             }
         in

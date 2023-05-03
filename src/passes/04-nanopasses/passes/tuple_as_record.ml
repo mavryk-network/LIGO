@@ -27,7 +27,7 @@ let compile =
         List.mapi
           ~f:(fun i ty ->
             ( Label.of_int i
-            , Non_linear_rows.{ associated_type = Some ty; attributes = []; decl_pos = i }
+            , Non_linear_rows.{ associated_type = ty; attributes = []; decl_pos = i }
             ))
           (List.Ne.to_list prod)
       in

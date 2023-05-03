@@ -14,16 +14,14 @@ type string_option = string option
 
 type type_content =
   | T_variable of Type_var.t
-  | T_sum of row
-  | T_record of row
+  | T_sum of type_expression option Row.t
+  | T_record of type_expression Row.t
   | T_arrow of ty_expr Arrow.t
   | T_app of (Type_var.t Module_access.t, ty_expr) Type_app.t
   | T_module_accessor of Type_var.t Module_access.t
   | T_singleton of Literal_value.t
   | T_abstraction of ty_expr Abstraction.t
   | T_for_all of ty_expr Abstraction.t
-
-and row = type_expression Row.t
 
 and type_expression =
   { type_content : type_content

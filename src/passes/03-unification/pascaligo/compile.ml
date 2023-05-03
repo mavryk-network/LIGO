@@ -297,7 +297,7 @@ let rec compile_type_expression : CST.type_expr -> AST.ty_expr =
     let fields =
       let destruct CST.{ field_type; field_name; attributes } =
         ( Label.of_string (w_fst field_name)
-        , Option.map ~f:(self <@ snd) field_type
+        , (self <@ snd) (Option.value_exn field_type)
         , List.map attributes ~f:(translate_attr_pascaligo <@ w_fst) )
       in
       let lst = List.map ~f:(destruct <@ r_fst) @@ sepseq_to_list t.elements in
