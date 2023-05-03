@@ -471,7 +471,7 @@ and pp_bin_op state {value; _} =
 
 and pp_un_op state {value; _} =
   let {arg; op} = value in
-  token op ^^ pp_expr state value.arg
+  token op ^^ pp_expr state arg
 
 and pp_comp_expr state = function
   Lt    e -> pp_bin_op state e
