@@ -73,9 +73,7 @@ let t__type_ ~loc ?sugar () : type_expression = t_constant ~loc ?sugar _type_ []
       , "never"
       , "mutation"
       , "pvss_key"
-      , "baker_hash"
-      , "chest_key"
-      , "chest" )]
+      , "baker_hash" )]
 
 
 let ez_t_sum ~loc ?sugar ?layout lst =
@@ -193,6 +191,21 @@ let get_e_tuple t =
   match t with
   | E_record r -> Some (List.map ~f:snd @@ Record.tuple_of_record r)
   | _ -> None
+
+
+let get_e_application t =
+  match t with
+  | E_application { lamb; args } -> Some (lamb, args)
+  | _ -> None
+
+
+let rec get_e_applications t =
+  match get_e_application t with
+  | Some (lamb, args) ->
+    (match get_e_applications lamb.expression_content with
+    | [] -> [ lamb; args ]
+    | apps -> apps @ [ args ])
+  | None -> []
 
 
 let get_e_ascription a =

@@ -71,8 +71,6 @@ let t__type_ ~loc ?core () : type_expression = t_constant ~loc ?core _type_ []
       , "mutation"
       , "pvss_key"
       , "baker_hash"
-      , "chest_key"
-      , "chest"
       , "tx_rollup_l2_address"
       , "michelson_contract"
       , "ast_contract"
@@ -207,16 +205,6 @@ let t_arrow param result ~loc ?s () : type_expression =
   t_arrow ~loc ?type_meta:s { type1 = param; type2 = result } ()
 
 
-let t_chest_opening_result ~loc ?core () : type_expression =
-  t_sum_ez
-    ~loc
-    ?core
-    [ "Ok_opening", t_bytes ~loc ()
-    ; "Fail_decrypt", t_unit ~loc ()
-    ; "Fail_timelock", t_unit ~loc ()
-    ]
-
-
 let get_lambda_with_type e =
   match e.expression_content, e.type_expression.type_content with
   | E_lambda l, T_arrow { type1; type2 } -> Some (l, (type1, type2))
@@ -273,8 +261,6 @@ let get_t__type_ (t : type_expression) : unit option = get_t_base_inj t _type_
       , "key"
       , "signature"
       , "key_hash"
-      , "chest"
-      , "chest_key"
       , "michelson_program"
       , "bls12_381_g1"
       , "bls12_381_g2"
@@ -436,7 +422,24 @@ let ez_e_a_record ~loc ?layout r =
 
 let e_a_variable ~loc v ty = e_variable ~loc v ty
 let e_a_application ~loc lamb args t = e_application ~loc { lamb; args } t
+
+let e_a_application_exn ~loc lamb args =
+  let Arrow.{ type1 = _; type2 } = get_t_arrow_exn lamb.type_expression in
+  e_application ~loc { lamb; args } type2
+
+
 let e_a_lambda ~loc l in_ty out_ty = e_lambda ~loc l (t_arrow ~loc in_ty out_ty ())
+
+let rec e_a_applications ~loc lamb args : expression =
+  match args with
+  | [] -> lamb
+  | args :: argss -> e_a_application_exn ~loc (e_a_applications ~loc lamb argss) args
+
+
+let e_a_applications ~loc lamb args : expression =
+  e_a_applications ~loc lamb (List.rev args)
+
+
 let e_a_matching ~loc matchee cases t = e_matching ~loc { matchee; cases } t
 
 let e_a_test_nil_views ~loc s =

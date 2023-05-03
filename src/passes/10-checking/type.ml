@@ -229,8 +229,6 @@ let t__type_ ~loc ?meta () : t = t_construct Literal_types._type_ [] ~loc ?meta 
       , "mutation"
       , "pvss_key"
       , "baker_hash"
-      , "chest_key"
-      , "chest"
       , "tx_rollup_l2_address"
       , "michelson_contract"
       , "ast_contract"
@@ -386,6 +384,12 @@ let get_t_pair (t : t) : (t * t) option =
     | [ t1; t2 ] -> Some (t1, t2)
     | _ -> None)
   | _ -> None
+
+
+let rec get_arrows_result t =
+  match t.content with
+  | T_arrow { type1 = _; type2 } -> get_arrows_result type2
+  | _ -> t
 
 
 module Type_var_name_tbl : sig

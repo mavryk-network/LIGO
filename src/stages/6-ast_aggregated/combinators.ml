@@ -67,9 +67,7 @@ let t__type_ ~loc () : type_expression = t_constant ~loc _type_ []
       , "never"
       , "mutation"
       , "pvss_key"
-      , "baker_hash"
-      , "chest_key"
-      , "chest" )]
+      , "baker_hash" )]
 
 
 let t__type_ ~loc t : type_expression = t_constant ~loc _type_ [ t ]
@@ -190,8 +188,6 @@ let get_t__type_ (t : type_expression) : unit option = get_t_base_inj t _type_
       , "key"
       , "signature"
       , "key_hash"
-      , "chest"
-      , "chest_key"
       , "michelson_program"
       , "bls12_381_g1"
       , "bls12_381_g2"
@@ -323,9 +319,7 @@ let e__type_ p : expression_content = E_literal (Literal__type_ p)
       , "operation"
       , "bls12_381_g1"
       , "bls12_381_g2"
-      , "bls12_381_fr"
-      , "chest"
-      , "chest_key" )]
+      , "bls12_381_fr" )]
 
 
 let e_unit () : expression_content = E_literal Literal_unit
@@ -357,8 +351,6 @@ let e_a__type_ ~loc p = make_e ~loc (e__type_ p) (t__type_ ~loc ())
       , "bls12_381_g1"
       , "bls12_381_g2"
       , "bls12_381_fr"
-      , "chest"
-      , "chest_key"
       , "chain_id" )]
 
 
@@ -461,6 +453,15 @@ let get_type_abstractions (e : expression) =
   aux [] e
 
 
+let rec get_e_applications t =
+  match get_e_application t with
+  | Some { lamb; args } ->
+    (match get_e_applications lamb with
+    | [] -> [ lamb; args ]
+    | apps -> apps @ [ args ])
+  | None -> []
+
+
 (* This function re-builds a term prefixed with E_type_abstraction:
    given an expression e and a list of type variables [t1; ...; tn],
    it constructs an expression /\ t1 . ... . /\ tn . e *)
@@ -542,4 +543,10 @@ let context_apply (p : context) (e : expression) : expression =
 let get_e_tuple t =
   match t with
   | E_record r -> Some (List.map ~f:snd @@ Record.tuple_of_record r)
+  | _ -> None
+
+
+let get_e_string t =
+  match t with
+  | E_literal (Literal_string s) -> Some Ligo_string.(extract s)
   | _ -> None
