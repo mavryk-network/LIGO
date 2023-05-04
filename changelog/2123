@@ -1,5 +1,5 @@
 author: er433
-description: \nThe comparison functions (`<`, `<=`, etc.) now can work with variant
+description: \nThe comparison functions ("<", "<=", etc.) now can work with variant
   types.\n\n#### Example\n\nGiven the file `test_compare.mligo`:\n\n```\ntype
   c = [@layout:comb] | B of int | A of string\ntype cl = c list\n\nlet test_cmp_list
   = Test.assert ([A \"hello\" ; A \"bye\"] > [A \"hello\" ; B 42])\n\n```\n\n\n##### Before

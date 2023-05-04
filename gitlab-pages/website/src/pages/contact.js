@@ -11,13 +11,6 @@ const TEAM = [
     pinned: true
   },
   {
-    firstName: 'Eowyn',
-    lastName: 'Dean',
-    image: 'img/team/eowyn.jpg',
-    link: 'https://gitlab.com/dernhelm7',
-    pinned: true
-  },
-  {
     firstName: 'Gabriel',
     lastName: 'Alfour',
     image: 'img/team/gabriel.jpeg',
