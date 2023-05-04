@@ -38,7 +38,6 @@ let rec is_pure : expression -> bool = fun e ->
   | E_closure _
   | E_rec _
   | E_variable _
-  | E_raw_michelson _
     -> true
 
   | E_if_bool (cond, bt, bf)
@@ -65,9 +64,12 @@ let rec is_pure : expression -> bool = fun e ->
   | E_global_constant (_hash, _args) ->
     (* hashed code can be impure :( *)
     false
-  | E_create_contract _ ->
+  | E_create_contract _
     (* very not pure *)
+  | E_inline_michelson _ ->
     false
+  | E_raw_michelson _ ->
+    true
 
  (* TODO E_let_mut_in is pure when the rhs is pure and the body's
      only impurity is assign/deref of the bound mutable variable *)
@@ -338,5 +340,7 @@ let all_expression ~raise options e =
   let e = Uncurry.uncurry_expression e in
   let e = all_expression ~raise options e in
   let e = create_contract ~raise e in
-  let e = Check_apply.capture_expression ~raise e in
+  let e = if options.backend.disable_michelson_typechecking
+          then e
+          else Check_apply.capture_expression ~raise e in
   e

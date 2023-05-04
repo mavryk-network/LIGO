@@ -7,7 +7,7 @@ module I = Cst.Jsligo
 
 let ghost : string I.wrap = I.Wrap.ghost ""
 
-module TODO_unify_in_cst = struct
+module TODO_do_in_parsing = struct
   let conv_attr attr_reg =
     let (key, value), _loc = w_split attr_reg in
     let f = function
@@ -24,9 +24,7 @@ module TODO_unify_in_cst = struct
 
 
   let weird_attr _ = ()
-end
 
-module TODO_do_in_parsing = struct
   let labelize_pattern p =
     match p with
     (* would be better to emit a label/string directly ? *)
@@ -71,7 +69,7 @@ module TODO_do_in_parsing = struct
     (path, field), is_open
 
 
-  let clause_block compile_statement (x : I.statement) =
+  let control_flow_clause compile_statement (x : I.statement) =
     (* if the statement is a block containing a single instruction,
        we do not want to emit a ClauseBlock, but a ClauseInstr *)
     let single_stmt_block (x : I.statement) =
@@ -84,7 +82,7 @@ module TODO_do_in_parsing = struct
         (match Location.unwrap @@ compile_statement one with
         | S_instr i -> O.Test_clause.ClauseInstr i
         | _ -> O.Test_clause.ClauseBlock (single_stmt_block x))
-      | _ -> O.Test_clause.ClauseBlock (single_stmt_block x))
+      | _ -> O.Test_clause.ClauseBlock inside)
     | S_instr i -> O.Test_clause.ClauseInstr i
     | _ -> O.Test_clause.ClauseBlock (single_stmt_block x)
 
@@ -94,7 +92,10 @@ module TODO_do_in_parsing = struct
   let tvar x = Ligo_prim.Type_var.of_input_var ~loc:(r_snd x) (r_fst x)
 end
 
-module Js_patterns = struct
+module Eq = struct
+  type expr = I.expr
+  type ty_expr = I.type_expr
+
   (*
     The most troubling thing with jsligo: functions parameters is a single expression
     `<parameters:expr> : <lhs_type:type> => ..` (see EFun node bellow)
@@ -106,40 +107,26 @@ module Js_patterns = struct
       in the first case, it's an "expression as a pattern". In the second case, it's a
       pattern
   *)
-  type t =
+  type pattern =
     [ `Pattern of I.pattern
     | `Expr of I.expr
     ]
 
-  let pattern_of_expr e = `Expr e
-  let pattern_of_pattern e = `Pattern e
+  type statement = I.statement
+  type block = I.statements
+  type mod_expr = I.statements
+  type instruction = I.statement
+  type declaration = I.statement
+  type program_entry = I.toplevel_statement
+  type program = I.t
 end
 
-let rec compile_expression e = Ast_unified.Anamorphism.ana_expr ~f:unfolder e
+let pattern_of_expr x = `Expr x
+let pattern_of_pattern x = `Pattern x
 
-and compile_program prg =
-  Ast_unified.Anamorphism.ana_program ~f:unfolder I.(prg.statements)
+module Folding = Folding (Eq)
 
-
-and unfolder =
-  Ast_unified.Anamorphism.
-    { expr
-    ; ty_expr
-    ; pattern
-    ; statement
-    ; block
-    ; mod_expr
-    ; instruction
-    ; declaration
-    ; program_entry
-    ; program
-    }
-
-
-and expr
-    :  I.expr
-    -> (I.expr, I.type_expr, Js_patterns.t, I.statements, I.statements) O.expression_
-  =
+let rec expr : Eq.expr -> Folding.expr =
  fun e ->
   let loc = Location.lift (I.expr_to_region e) in
   let return = Location.wrap ~loc in
@@ -205,7 +192,7 @@ and expr
     in
     return @@ E_call (expr, args)
   | EConstr { value = ctor, arg_opt; _ } ->
-    let element = TODO_unify_in_cst.constructor_element arg_opt in
+    let element = TODO_do_in_parsing.constructor_element arg_opt in
     return @@ E_constructor { constructor = O.Label.of_string ctor.value; element }
   | EArray { value = items; _ } ->
     let items =
@@ -251,7 +238,6 @@ and expr
           List.Ne.map TODO_do_in_parsing.tvar (nsepseq_to_nseq (r_fst tp).inside))
     in
     let parameters =
-      let open Js_patterns in
       match parameters with
       | EPar { value = { inside = ESeq x; _ }; _ } ->
         List.map
@@ -301,7 +287,7 @@ and expr
     return @@ E_contract lst
 
 
-and ty_expr : I.type_expr -> I.type_expr O.ty_expr_ =
+let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
  fun t ->
   let loc = Location.lift (I.type_expr_to_region t) in
   let return = Location.wrap ~loc in
@@ -309,7 +295,7 @@ and ty_expr : I.type_expr -> I.type_expr O.ty_expr_ =
     match attributes with
     | [] -> return @@ no_attr
     | hd :: tl ->
-      let hd = TODO_unify_in_cst.conv_attr hd in
+      let hd = TODO_do_in_parsing.conv_attr hd in
       return @@ O.T_attr (hd, attr tl)
   in
   match t with
@@ -337,7 +323,7 @@ and ty_expr : I.type_expr -> I.type_expr O.ty_expr_ =
       in
       ( TODO_do_in_parsing.labelize (r_fst constr)
       , ty
-      , TODO_unify_in_cst.conv_attrs attributes )
+      , TODO_do_in_parsing.conv_attrs attributes )
     in
     return_attr
       attributes
@@ -355,7 +341,7 @@ and ty_expr : I.type_expr -> I.type_expr O.ty_expr_ =
       let destruct I.{ field_name; field_type; attributes; _ } =
         ( TODO_do_in_parsing.labelize (r_fst field_name)
         , Some field_type
-        , TODO_unify_in_cst.conv_attrs attributes )
+        , TODO_do_in_parsing.conv_attrs attributes )
       in
       let lst = List.map ~f:(destruct <@ r_fst) @@ nsepseq_to_list ne_elements in
       O.Non_linear_rows.make lst
@@ -411,7 +397,7 @@ and ty_expr : I.type_expr -> I.type_expr O.ty_expr_ =
         in
         ( () (* , t_record_raw ~loc (Non_linear_rows.make lst) *)
         , I.TObject obj
-        , TODO_unify_in_cst.conv_attrs attributes )
+        , TODO_do_in_parsing.conv_attrs attributes )
       in
       let lst = List.map ~f:destruct_obj (nsepseq_to_list t) in
       O.Non_linear_disc_rows.make lst
@@ -421,9 +407,8 @@ and ty_expr : I.type_expr -> I.type_expr O.ty_expr_ =
     Location.wrap ~loc @@ O.T_disc_union fields
 
 
-and pattern : Js_patterns.t -> (Js_patterns.t, I.type_expr) O.pattern_ =
+let rec pattern : Eq.pattern -> Folding.pattern =
  fun p ->
-  let open Js_patterns in
   match p with
   | `Pattern p ->
     let loc = Location.lift (I.pattern_to_region p) in
@@ -438,9 +423,9 @@ and pattern : Js_patterns.t -> (Js_patterns.t, I.type_expr) O.pattern_ =
       (match attributes with
       | [] -> return @@ P_var (TODO_do_in_parsing.var variable)
       | hd :: tl ->
-        let attr = TODO_unify_in_cst.conv_attr hd in
+        let attr = TODO_do_in_parsing.conv_attr hd in
         let p = { p with value = { p.value with attributes = tl } } in
-        return @@ P_attr (attr, Js_patterns.pattern_of_pattern @@ I.PVar p))
+        return @@ P_attr (attr, pattern_of_pattern @@ I.PVar p))
     | PObject o ->
       let lps =
         List.map
@@ -490,18 +475,8 @@ and pattern : Js_patterns.t -> (Js_patterns.t, I.type_expr) O.pattern_ =
 
 
 (* in JSLIGO, instruction ; statements and declaration are all statement *)
-and statement : I.statement -> (I.statement, I.statement, I.statement) O.statement_ =
- fun s ->
-  let loc = Location.lift (I.statement_to_region s) in
-  let return = Location.wrap ~loc in
-  match s with
-  | SNamespace _ | SImport _ | SExport _ | SLet _ | SConst _ | SType _ ->
-    return @@ O.S_decl s
-  | SBlock _ | SExpr _ | SCond _ | SReturn _ | SSwitch _ | SBreak _ | SWhile _ | SForOf _
-    -> return @@ S_instr s
 
-
-and block : I.statements -> (I.statements, I.statement) O.block_ =
+let block : Eq.block -> Folding.block =
  fun stmts ->
   let loc =
     nsepseq_foldl
@@ -512,7 +487,7 @@ and block : I.statements -> (I.statements, I.statement) O.block_ =
   Location.wrap ~loc (nsepseq_to_nseq stmts)
 
 
-and mod_expr : I.statements -> (I.statements, I.toplevel_statements) O.mod_expr_ =
+let mod_expr : Eq.mod_expr -> Folding.mod_expr =
  fun stmts ->
   let loc =
     Location.(
@@ -521,13 +496,21 @@ and mod_expr : I.statements -> (I.statements, I.toplevel_statements) O.mod_expr_
       |> nsepseq_foldl cover generated)
   in
   let stmts = stmts |> nsepseq_to_nseq |> nseq_map (fun x -> I.TopLevel (x, None)) in
-  Location.wrap ~loc (O.M_body stmts)
+  Location.wrap ~loc (O.M_body I.{ statements = stmts; eof = ghost })
 
 
-and instruction
-    :  I.statement
-    -> (I.statement, I.expr, Js_patterns.t, I.statement, I.statements) O.instruction_
-  =
+let rec statement : Eq.statement -> Folding.statement =
+ fun s ->
+  let loc = Location.lift (I.statement_to_region s) in
+  let return = Location.wrap ~loc in
+  match s with
+  | SNamespace _ | SImport _ | SExport _ | SLet _ | SConst _ | SType _ ->
+    return @@ O.S_decl s
+  | SBlock _ | SExpr _ | SCond _ | SReturn _ | SSwitch _ | SBreak _ | SWhile _ | SForOf _
+    -> return @@ S_instr s
+
+
+and instruction : Eq.instruction -> Folding.instruction =
  fun i ->
   let loc = Location.lift (I.statement_to_region i) in
   let return = Location.wrap ~loc in
@@ -537,13 +520,15 @@ and instruction
   match i with
   | SBlock s -> return @@ O.I_block s.value.inside
   | SExpr (attr, expr) ->
-    TODO_unify_in_cst.weird_attr attr;
+    TODO_do_in_parsing.weird_attr attr;
     return @@ I_expr expr
   | SCond c ->
     let c = c.value in
     let I.{ ifso; ifnot; test; _ } = c in
-    let ifso = TODO_do_in_parsing.clause_block statement ifso in
-    let ifnot = Option.map ifnot ~f:(TODO_do_in_parsing.clause_block statement <@ snd) in
+    let ifso = TODO_do_in_parsing.control_flow_clause statement ifso in
+    let ifnot =
+      Option.map ifnot ~f:(TODO_do_in_parsing.control_flow_clause statement <@ snd)
+    in
     return @@ I_cond { test = test.inside; ifso; ifnot }
   | SReturn s -> return @@ I_return s.value.expr
   | SSwitch s ->
@@ -575,15 +560,12 @@ and instruction
   | _ -> assert false
 
 
-and declaration
-    :  I.statement
-    -> (I.statement, I.expr, I.type_expr, Js_patterns.t, I.statements) O.declaration_
-  =
+and declaration : Eq.declaration -> Folding.declaration =
  fun d ->
   let loc = Location.lift (I.statement_to_region d) in
   let return = Location.wrap ~loc in
   let compile_val_binding
-      : I.val_binding -> (Js_patterns.t, I.expr, I.type_expr) O.Simple_decl.t
+      : I.val_binding -> (Eq.pattern, I.expr, I.type_expr) O.Simple_decl.t
     =
    fun { binders; type_params; lhs_type; eq = _; expr } ->
     let pattern = `Pattern binders in
@@ -598,7 +580,7 @@ and declaration
     match attributes with
     | [] -> return @@ no_attr
     | hd :: tl ->
-      let hd = TODO_unify_in_cst.conv_attr hd in
+      let hd = TODO_do_in_parsing.conv_attr hd in
       return @@ O.D_attr (hd, attr tl)
   in
   match d with
@@ -668,10 +650,7 @@ and declaration
   | _ -> assert false
 
 
-and program_entry
-    :  I.toplevel_statement
-    -> (I.toplevel_statement, I.statement, I.statement) O.program_entry_
-  = function
+and program_entry : Eq.program_entry -> Folding.program_entry = function
   | I.TopLevel (s, _) ->
     (match Location.unwrap @@ statement s with
     | O.S_decl _ -> PE_declaration s
@@ -680,7 +659,4 @@ and program_entry
   | I.Directive _ -> PE_preproc_directive ()
 
 
-and program
-    : I.toplevel_statements -> (I.toplevel_statements, I.toplevel_statement) O.program_
-  =
-  List.Ne.to_list
+and program : Eq.program -> Folding.program = fun x -> List.Ne.to_list x.statements
