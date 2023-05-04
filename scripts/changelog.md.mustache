@@ -1,6 +1,6 @@
 # LIGO Changelog
 
-**Release 0.63.0 and 0.63.1 don't exist. Use 0.63.2 directly**
+**Release 0.64.0 and 0.64.1 don't exist. Use 0.64.2 directly**
 
 {{#changelog}}
 {{#is_next}}
@@ -16,6 +16,17 @@
 ### Breaking :
 {{#breaking}}
 * {{{title}}} ([!{{merge_request}} by {{{author}}}](https://gitlab.com/ligolang/ligo/-/merge_requests/{{merge_request}}))
+
+<details>
+<summary> <ins>Details</ins> : </summary>
+{{#description}}
+{{{description}}}
+{{/description}}
+
+{{^description}}
+No details provided for this change. Please visit the [MR to learn more](https://gitlab.com/ligolang/ligo/-/merge_requests/{{merge_request}})
+{{/description}}
+<details>
 {{/breaking}}
 {{/breaking_ind}}
 
@@ -88,121 +99,3 @@
 _No changes for this version_
 {{/changes}}
 
-<details>
-{{#changes}}
-<summary> <ins>Details</ins> : </summary>
-
-{{#breaking}}
-### [{{{type}}}] {{{title}}}
-{{#description}}
-{{{description}}}
-{{/description}}
-
-{{^description}}
-No details provided for this change. Please visit the [MR to learn more](https://gitlab.com/ligolang/ligo/-/merge_requests/{{merge_request}})
-{{/description}}
-{{/breaking}}
-
-{{#added}}
-### [{{{type}}}] {{{title}}}
-{{#description}}
-{{{description}}}
-{{/description}}
-
-{{^description}}
-No details provided for this change. Please visit the [MR to learn more](https://gitlab.com/ligolang/ligo/-/merge_requests/{{merge_request}})
-{{/description}}
-{{/added}}
-
-{{#fixed}}
-### [{{{type}}}] {{{title}}}
-{{#description}}
-{{{description}}}
-{{/description}}
-
-{{^description}}
-No details provided for this change. Please visit the [MR to learn more](https://gitlab.com/ligolang/ligo/-/merge_requests/{{merge_request}})
-{{/description}}
-{{/fixed}}
-
-{{#changed}}
-### [{{{type}}}] {{{title}}}
-{{#description}}
-{{{description}}}
-{{/description}}
-
-{{^description}}
-No details provided for this change. Please visit the [MR to learn more](https://gitlab.com/ligolang/ligo/-/merge_requests/{{merge_request}})
-{{/description}}
-{{/changed}}
-
-{{#deprecated}}
-### [{{{type}}}] {{{title}}}
-{{#description}}
-{{{description}}}
-{{/description}}
-
-{{^description}}
-No details provided for this change. Please visit the [MR to learn more](https://gitlab.com/ligolang/ligo/-/merge_requests/{{merge_request}})
-{{/description}}
-{{/deprecated}}
-
-{{#removed}}
-### [{{{type}}}] {{{title}}}
-{{#description}}
-{{{description}}}
-{{/description}}
-
-{{^description}}
-No details provided for this change. Please visit the [MR to learn more](https://gitlab.com/ligolang/ligo/-/merge_requests/{{merge_request}})
-{{/description}}
-{{/removed}}
-
-{{#performance}}
-### [{{{type}}}] {{{title}}}
-{{#description}}
-{{{description}}}
-{{/description}}
-
-{{^description}}
-No details provided for this change. Please visit the [MR to learn more](https://gitlab.com/ligolang/ligo/-/merge_requests/{{merge_request}})
-{{/description}}
-{{/performance}}
-
-{{#internal}}
-### [{{{type}}}] {{{title}}}
-{{#description}}
-{{{description}}}
-{{/description}}
-
-{{^description}}
-No details provided for this change. Please visit the [MR to learn more](https://gitlab.com/ligolang/ligo/-/merge_requests/{{merge_request}})
-{{/description}}
-{{/internal}}
-
-{{#other}}
-### [{{{type}}}] {{{title}}}
-{{#description}}
-{{{description}}}
-{{/description}}
-
-{{^description}}
-No details provided for this change. Please visit the [MR to learn more](https://gitlab.com/ligolang/ligo/-/merge_requests/{{merge_request}})
-{{/description}}
-{{/other}}
-
-{{#null}}
-### [{{{type}}}] {{{title}}}
-{{#description}}
-{{{description}}}
-{{/description}}
-
-{{^description}}
-No details provided for this change. Please visit the [MR to learn more](https://gitlab.com/ligolang/ligo/-/merge_requests/{{merge_request}})
-{{/description}}
-{{/null}}
-{{/changes}}
-</details>
-
----
-{{/changelog}}
