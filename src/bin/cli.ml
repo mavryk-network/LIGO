@@ -569,6 +569,7 @@ let compile_file =
       project_root
       transpiled
       warn_unused_rec
+      libraries
       ()
     =
     let raw_options =
@@ -590,6 +591,7 @@ let compile_file =
         ~project_root
         ~transpiled
         ~warn_unused_rec
+        ~libraries
         ()
     in
     let cli_analytics =
@@ -647,7 +649,8 @@ let compile_file =
     <*> file_constants
     <*> project_root
     <*> transpiled
-    <*> warn_unused_rec)
+    <*> warn_unused_rec
+    <*> libraries)
 
 
 let compile_parameter =
