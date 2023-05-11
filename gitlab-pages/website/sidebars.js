@@ -13,41 +13,35 @@
 
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const sidebars = {
-  docs: {
-    Intro: ["intro/introduction", "intro/installation", "intro/editor-support"],
-    "Language Basics": [
-      "language-basics/types",
-      "language-basics/constants-and-variables",
-      "language-basics/math-numbers-tez",
-      "language-basics/strings-bytes",
-      "language-basics/functions",
-      "language-basics/boolean-if-else",
-      "language-basics/loops",
-      "language-basics/unit-option-pattern-matching",
-      "language-basics/maps-records",
-      "language-basics/sets-lists-tuples",
-      "language-basics/exceptions",
-      "language-basics/modules",
-      "language-basics/tezos-specific",
+  "docs": {
+    "Getting started": [
+      "intro/introduction",
+      "tutorials/getting-started/getting-started",
+      "intro/installation",
     ],
-    Advanced: [
-      "advanced/timestamps-addresses",
-      "advanced/entrypoints-contracts",
-      "advanced/include",
-      "advanced/first-contract",
-      "advanced/michelson-and-ligo",
-      "advanced/polymorphism",
+    "Basics": [
+      "language-basics/types"
+    ],
+    "Writing a Contract": [
+      "advanced/entrypoints-contracts"
+    ],
+    "Testing and Debugging": [
       "advanced/testing",
       "advanced/mutation-testing",
       "advanced/michelson_testing",
-      "advanced/inline",
-      "advanced/interop",
-      "advanced/embedded-michelson",
-      "advanced/package-management",
-      "advanced/global-constants",
     ],
-    Reference: ["api/cli-commands", "api/cheat-sheet"],
-    "Sub-Commands": [
+    "Combining Code": [
+      "language-basics/modules",
+      "advanced/global-constants",
+      "advanced/package-management"
+    ],
+    "Advanced Topics": [
+      "advanced/polymorphism",
+      "advanced/inline",
+    ]
+  },
+  "API": {
+    "CLI": [
       "manpages/changelog",
       "manpages/add-user",
       "manpages/analytics accept",
@@ -88,7 +82,7 @@ const sidebars = {
       "manpages/transpile-with-ast contract",
       "manpages/transpile-with-ast expression",
     ],
-    API: [
+    "API": [
       "reference/toplevel",
       "reference/big-map-reference",
       "reference/bitwise-reference",
@@ -103,87 +97,18 @@ const sidebars = {
       "reference/test",
       "reference/proxy-ticket-reference",
     ],
-    "Protocol Upgrades": [
+    "Changelog":[
+      "intro/changelog",
       "protocol/hangzhou",
       "protocol/ithaca",
       "protocol/jakarta",
       "protocol/kathmandu",
       "protocol/lima",
-      "protocol/mumbai",
-    ],
+      "protocol/mumbai"
+    ]
   },
-  "contributors-docs": {
-    Introduction: [
-      "contributors/origin",
-      "contributors/philosophy",
-      "contributors/getting-started",
-      "contributors/documentation-and-releases",
-    ],
-    "Big Picture": [
-      "contributors/big-picture/overview",
-      "contributors/big-picture/front-end",
-      "contributors/big-picture/middle-end",
-      "contributors/big-picture/back-end",
-      "contributors/big-picture/vendors",
-    ],
-    "Road Map": [
-      "contributors/road-map/short-term",
-      "contributors/road-map/long-term",
-    ],
-  },
-  tutorials: [
-    {
-      label: "Getting started",
-      type: "doc",
-      id: "tutorials/getting-started/getting-started",
-    },
-    {
-      type: "category",
-      label: "First contract",
-      collapsible: true,
-      collapsed: true,
-      items: [
-        "tutorials/taco-shop/tezos-taco-shop-smart-contract",
-        "tutorials/taco-shop/tezos-taco-shop-payout",
-      ],
-    },
-    {
-      type: "category",
-      label: "LIGO Registry",
-      collapsible: true,
-      collapsed: true,
-      items: [
-        "tutorials/registry/what-is-the-registry",
-        "tutorials/registry/how-to-make-an-audit",
-      ],
-    },
-    {
-      type: "doc",
-      id: "tutorials/start-a-project-from-a-template",
-    },
-    {
-      type: "doc",
-      label: "Migrating from Ethereum",
-      id: "tutorials/tz-vs-eth/tz-vs-eth",
-    },
-    {
-      type: "doc",
-      label: "Inter-contract invocations",
-      id: "tutorials/inter-contract-calls/inter-contract-calls",
-    },
-    {
-      type: "doc",
-      label: "Smart contract security",
-      id: "tutorials/security/security",
-    },
-    {
-      label: "Optimisation",
-      type: "doc",
-      id: "tutorials/optimisation/optimisation",
-    },
-  ],
-  faq: {
-    FAQ: [
+  "faq": {
+    "FAQ": [
       "faq/intro",
       "faq/convert-address-to-contract",
       "faq/polymorphic-comparison",
