@@ -4,15 +4,15 @@ class Ligo < Formula
   license "MIT"
 
   # We clone repo explicitely to preserve the information about git submodules
-  url "https://gitlab.com/ligolang/ligo.git", tag: "0.64.2", revision: "435a5f7e167c871916bb13b961dc97e3d2a9aec8"
-  version "0.64.2"
+  url "https://gitlab.com/ligolang/ligo.git", tag: "0.65.0", revision: "6a123b0238925d6839f3d97197c8c0b3d9dc3362"
+  version "0.65.0"
   head "https://gitlab.com/ligolang/ligo.git", branch: "dev"
 
 
   bottle do
     root_url "https://gitlab.com/api/v4/projects/12294987/packages/generic/ligo_bottle/current"
-    sha256 cellar: :any, arm64_ventura: "32ddc08549e82926e02e3419bf4d2f5573fcf628406d3dec18c16079c8b11658"
-    sha256 cellar: :any, ventura: "e9266330b7910ed8ce29808d2ab97c3ad5f833c2a899b23d855b747849bf98de"
+    sha256 cellar: :any, arm64_ventura: "90e376a52159cc11269108fd2b4d23900beb979330e0d0969ba0a8aac1a84897"
+    sha256 cellar: :any, ventura: "d14b2251942531b15ba3d69e9941fc612a15913c15fa4783e1692755aa75a045"
   end
 
   build_dependencies = %w[opam rust hidapi pkg-config gnu-sed cmake gcc]
