@@ -5,21 +5,16 @@ module Test.Util
     (</>)
   , (<.>)
   , contractsDir
-  , hasLigoExtension
   , AST.Lang (..)
   , AST.allLangs
   , AST.langExtension
   , pattern SomeLorentzValue
 
     -- * Test utilities
-  , ShowThroughBuild (..)
-  , TestBuildable (..)
-  , rmode'tb
   , (@?=)
   , (@@?=)
   , (@?)
   , (@@?)
-  , (@?==)
   , (@~=?)
   , HUnit.testCase
   , HUnit.testCaseSteps
@@ -34,19 +29,17 @@ module Test.Util
   , goToNextBreakpoint
   , goToPreviousBreakpoint
   , goesAfter
-  , goesBefore
   , goesBetween
   , isAtLine
     -- * Snapshot unilities
   , ContractRunData (..)
   , mkSnapshotsFor
-  , mkSnapshotsForLogging
   , withSnapshots
   , testWithSnapshotsImpl
   , testWithSnapshots
-  , testWithSnapshotsLogging
   , checkSnapshot
   , unexpectedSnapshot
+  , extractConvertInfos
     -- * Lower-lever interface
   , mkSnapshotsForImpl
   , dummyLoggingFunction
@@ -64,7 +57,6 @@ module Test.Util
   , intType'
   , unitType'
   , intType
-  , unitType
   ) where
 
 import Control.Lens (each)
@@ -73,7 +65,7 @@ import Data.Singletons.Decide (decideEquality)
 import Fmt (Buildable (..), blockListF', pretty)
 import Hedgehog (Gen)
 import Hedgehog.Gen qualified as Gen
-import System.FilePath (takeExtension, (<.>), (</>))
+import System.FilePath ((<.>), (</>))
 import Test.HUnit (Assertion)
 import Test.HUnit.Lang qualified as HUnit
 import Test.Tasty.HUnit qualified as HUnit
@@ -88,7 +80,8 @@ import Morley.Debugger.Core.Navigate
   (DebuggerState (..), Direction (Backward, Forward), FrozenPredicate (FrozenPredicate),
   HistoryReplay, HistoryReplayM, NavigableSnapshot (getExecutedPosition), SourceLocation,
   SourceLocation' (SourceLocation), curSnapshot, evalWriterT, frozen, moveTill)
-import Morley.Michelson.Runtime.Dummy (dummyContractEnv)
+import Morley.Michelson.Interpret (ContractEnv (ceMaxSteps), RemainingSteps)
+import Morley.Michelson.Runtime.Dummy (dummyContractEnv, dummyMaxSteps)
 import Morley.Michelson.Typed (SingI (sing))
 import Morley.Michelson.Typed qualified as T
 import Morley.Util.Typeable
@@ -106,13 +99,6 @@ import Language.LIGO.Debugger.Snapshots
 
 contractsDir :: FilePath
 contractsDir = "test" </> "contracts"
-
-hasLigoExtension :: FilePath -> Bool
-hasLigoExtension file =
-  takeExtension file `elem`
-    [ ".mligo"
-    , ".jsligo"
-    ]
 
 renderNoLineLengthLimit :: Doc -> Text
 renderNoLineLengthLimit = toText . renderStyle style{lineLength = maxBound}
@@ -184,14 +170,6 @@ infix 1 @?
   => m a -> (a -> Bool) -> m ()
 (@@?) am p = am >>= \a -> a @? p
 infix 1 @@?
-
-(@?==)
-  :: (MonadIO m, MonadReader r m, Eq a, Buildable (TestBuildable a), HasCallStack)
-  => Lens' r a -> a -> m ()
-len @?== expected = do
-  actual <- view len
-  actual @?= expected
-infixl 0 @?==
 
 -- | Check that the first list is permutation of the second one.
 (@~=?)
@@ -268,11 +246,14 @@ dummyLoggingFunction = const $ pure ()
 
 mkSnapshotsForImpl
   :: HasCallStack
-  => (String -> IO ()) -> ContractRunData -> IO (Set SourceLocation, InterpretHistory (InterpretSnapshot 'Unique))
-mkSnapshotsForImpl logger (ContractRunData file mEntrypoint (param :: param) (st :: st)) = do
+  => (String -> IO ())
+  -> Maybe RemainingSteps
+  -> ContractRunData
+  -> IO (Set SourceLocation, InterpretHistory (InterpretSnapshot 'Unique))
+mkSnapshotsForImpl logger maxStepsMb (ContractRunData file mEntrypoint (param :: param) (st :: st)) = do
   let entrypoint = mEntrypoint ?: "main"
   ligoMapper <- compileLigoContractDebug entrypoint file
-  (exprLocs, T.SomeContract (contract@T.Contract{} :: T.Contract cp' st'), allFiles, lambdaLocs) <-
+  (exprLocs, T.SomeContract (contract@T.Contract{} :: T.Contract cp' st'), allFiles, lambdaLocs, entrypointType) <-
     case readLigoMapper ligoMapper typesReplaceRules instrReplaceRules of
       Right v -> pure v
       Left err -> HUnit.assertFailure $ pretty err
@@ -310,10 +291,12 @@ mkSnapshotsForImpl logger (ContractRunData file mEntrypoint (param :: param) (st
       T.unsafeEpcCallRoot
       (T.toVal param)
       (T.toVal st)
-      dummyContractEnv
+      dummyContractEnv { ceMaxSteps = fromMaybe dummyMaxSteps maxStepsMb }
       parsedContracts
       logger
       lambdaLocs
+      (isJust maxStepsMb)
+      entrypointType
 
   return (allLocs, his)
 
@@ -321,15 +304,15 @@ mkSnapshotsForImpl logger (ContractRunData file mEntrypoint (param :: param) (st
 mkSnapshotsFor
   :: HasCallStack
   => ContractRunData -> IO (Set SourceLocation, InterpretHistory (InterpretSnapshot 'Unique))
-mkSnapshotsFor = mkSnapshotsForImpl dummyLoggingFunction
+mkSnapshotsFor = mkSnapshotsForImpl dummyLoggingFunction Nothing
 
 -- | Same as @mkSnapshotsFor@ but prints
 -- snapshots collection logs into the console.
-{-# WARNING mkSnapshotsForLogging "'mkSnapshotsForLogging' remains in code" #-}
-mkSnapshotsForLogging
+{-# WARNING _mkSnapshotsForLogging "'mkSnapshotsForLogging' remains in code" #-}
+_mkSnapshotsForLogging
   :: HasCallStack
   => ContractRunData -> IO (Set SourceLocation, InterpretHistory (InterpretSnapshot 'Unique))
-mkSnapshotsForLogging = mkSnapshotsForImpl putStrLn
+_mkSnapshotsForLogging = mkSnapshotsForImpl putStrLn Nothing
 
 withSnapshots
   :: (Monad m)
@@ -341,25 +324,26 @@ withSnapshots (allLocs, his) action =
 
 testWithSnapshotsImpl
   :: (String -> IO ())
+  -> Maybe RemainingSteps
   -> ContractRunData
   -> HistoryReplayM (InterpretSnapshot 'Unique) IO ()
   -> Assertion
-testWithSnapshotsImpl logger runData action = do
-  locsAndHis <- mkSnapshotsForImpl logger runData
+testWithSnapshotsImpl logger maxStepsMb runData action = do
+  locsAndHis <- mkSnapshotsForImpl logger maxStepsMb runData
   withSnapshots locsAndHis action
 
 testWithSnapshots
   :: ContractRunData
   -> HistoryReplayM (InterpretSnapshot 'Unique) IO ()
   -> Assertion
-testWithSnapshots = testWithSnapshotsImpl dummyLoggingFunction
+testWithSnapshots = testWithSnapshotsImpl dummyLoggingFunction Nothing
 
-{-# WARNING testWithSnapshotsLogging "'testWithSnapshotsLogging' remains in code" #-}
-testWithSnapshotsLogging
+{-# WARNING _testWithSnapshotsLogging "'testWithSnapshotsLogging' remains in code" #-}
+_testWithSnapshotsLogging
   :: ContractRunData
   -> HistoryReplayM (InterpretSnapshot 'Unique) IO ()
   -> Assertion
-testWithSnapshotsLogging = testWithSnapshotsImpl putStrLn
+_testWithSnapshotsLogging = testWithSnapshotsImpl putStrLn Nothing
 
 checkSnapshot
   :: (MonadState (DebuggerState (InterpretSnapshot 'Unique)) m, MonadIO m)
@@ -420,5 +404,10 @@ unitType' = mkSimpleConstantType "Unit"
 intType :: LigoType
 intType = LigoTypeResolved intType'
 
-unitType :: LigoType
-unitType = LigoTypeResolved unitType'
+extractConvertInfos :: InterpretSnapshot u -> [PreLigoConvertInfo]
+extractConvertInfos snap =
+  let stackItems = sfStack $ head $ isStackFrames snap in
+  catMaybes $ flip map stackItems \stackItem -> do
+    StackItem desc michVal <- pure stackItem
+    LigoStackEntry (LigoExposedStackEntry _ typ) <- pure desc
+    pure $ PreLigoConvertInfo michVal typ

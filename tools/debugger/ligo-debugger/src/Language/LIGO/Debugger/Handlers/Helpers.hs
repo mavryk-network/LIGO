@@ -23,6 +23,7 @@ import Morley.Debugger.DAP.LanguageServer qualified as MD
 import Morley.Debugger.DAP.Types
   (DAPOutputMessage (..), DAPSpecificResponse (..), HandlerEnv (..),
   HasSpecificMessages (LanguageServerStateExt), RIO, RioContext (..))
+import Morley.Michelson.Interpret (RemainingSteps)
 import Morley.Michelson.Parser qualified as P
 import Morley.Michelson.TypeCheck (typeVerifyTopLevelType)
 import Morley.Michelson.Typed (Contract' (..))
@@ -40,6 +41,7 @@ import Language.LIGO.Debugger.CLI
 import Language.LIGO.Debugger.Common
 import Language.LIGO.Debugger.Error
 import Language.LIGO.Debugger.Michelson
+import Language.LIGO.Extension
 import Language.LIGO.ParseTree (pathToSrc)
 import Language.LIGO.Parser (ParsedInfo)
 import Language.LIGO.Range
@@ -105,6 +107,11 @@ data LigoLanguageServerState = LigoLanguageServerState
   , lsMoveId :: Word
     -- ^ The identifier of position, assigned a unique id after each step
     -- (visiting the same snapshot twice will also result in different ids).
+  , lsMaxSteps :: Maybe RemainingSteps
+    -- ^ Max amount of steps that the debugger will do.
+    -- If it is @Nothing@ then max steps is infinite.
+  , lsEntrypointType :: Maybe LigoType
+    -- ^ the type of the @main@ method.
   }
 
 instance Buildable LigoLanguageServerState where
@@ -235,6 +242,16 @@ getLambdaLocs
   => RIO ext (HashSet Range)
 getLambdaLocs = "Lambda locs are not initialized" `expectInitialized` (lsLambdaLocs <$> getServerState)
 
+getMaxStepsMb
+  :: (LanguageServerStateExt ext ~ LigoLanguageServerState)
+  => RIO ext (Maybe RemainingSteps)
+getMaxStepsMb = lsMaxSteps <$> getServerState
+
+getEntrypointType
+  :: (LanguageServerStateExt ext ~ LigoLanguageServerState)
+  => RIO ext LigoType
+getEntrypointType = "Entrypoint type is not initialized" `expectInitialized` (lsEntrypointType <$> getServerState)
+
 parseContracts :: (HasLigoClient m) => [FilePath] -> m (HashMap FilePath (LIGO ParsedInfo))
 parseContracts allFiles = do
   parsedInfos <- do
@@ -263,6 +280,7 @@ instance Exception SomeDebuggerException where
       , SomeDebuggerException <$> fromException @MichelsonDecodeException e
       , SomeDebuggerException <$> fromException @ConfigurationException e
       , SomeDebuggerException <$> fromException @UnsupportedLigoVersionException e
+      , SomeDebuggerException <$> fromException @UnsupportedExtension e
       , SomeDebuggerException <$> fromException @ReplacementException e
       , SomeDebuggerException <$> fromException @PluginCommunicationException e
       , SomeDebuggerException <$> fromException @ImpossibleHappened e
