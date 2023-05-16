@@ -556,6 +556,8 @@ let rec unify (type1 : Type.t) (type2 : Type.t) =
     raise (cannot_unify no_color type1 type2)
   in
   match type1.content, type2.content with
+  | _, T_variable tv when Type_var.is_name tv "^hole" -> return ()
+  | T_variable tv, _ when Type_var.is_name tv "^hole" -> return ()
   | T_singleton lit1, T_singleton lit2 when Literal_value.equal lit1 lit2 -> return ()
   | T_variable tvar1, T_variable tvar2 when Type_var.equal tvar1 tvar2 -> return ()
   | T_exists tvar1, T_exists tvar2 when Type_var.equal tvar1 tvar2 -> return ()

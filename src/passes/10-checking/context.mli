@@ -17,8 +17,8 @@ module Signature : sig
   type t = item list
 
   and item =
-    | S_value of Value_var.t * Type.t * Attr.t
-    | S_type of Type_var.t * Type.t
+    | S_value of Value_var.t * Type.t option * Attr.t
+    | S_type of Type_var.t * Type.t option
     | S_module of Module_var.t * t
     | S_module_type of Module_var.t * Module_type.t
 
@@ -38,8 +38,8 @@ and mutable_flag = Param.mutable_flag =
   | Immutable
 
 and item =
-  | C_value of Value_var.t * mutable_flag * Type.t * Attr.t
-  | C_type of Type_var.t * Type.t
+  | C_value of Value_var.t * mutable_flag * Type.t option * Attr.t
+  | C_type of Type_var.t * Type.t option
   | C_type_var of Type_var.t * Kind.t
   | C_module of Module_var.t * Signature.t
   | C_module_type of Module_var.t * Module_type.t

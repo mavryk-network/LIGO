@@ -40,6 +40,7 @@ and type_content : formatter -> type_content -> unit =
   | T_singleton x -> Literal_value.pp ppf x
   | T_abstraction x -> Abstraction.pp_type_abs type_expression ppf x
   | T_for_all x -> Abstraction.pp_forall type_expression ppf x
+  | T_wildcard -> string ppf "_"
 
 
 let type_expression_option ppf (te : type_expression option) : unit =

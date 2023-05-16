@@ -16,6 +16,7 @@ type type_content =
   | T_singleton of Literal_value.t
   | T_abstraction of ty_expr Abstraction.t
   | T_for_all of ty_expr Abstraction.t
+  | T_wildcard
 
 and row = type_expression Row.t
 

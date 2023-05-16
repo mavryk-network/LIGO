@@ -86,6 +86,8 @@ let rec evaluate_type ~default_layout (type_ : I.type_expression)
   | T_record row ->
     let%bind row = evaluate_row ~default_layout row in
     const @@ T_record row
+  | T_variable tvar when Type_var.is_name tvar "^hole" ->
+    const @@ T_exists (Type_var.fresh ~name:"_" ~loc:Location.generated ())
   | T_variable tvar ->
     (* Get the closest type or type variable with type var [tvar] *)
     (match%bind
@@ -187,6 +189,7 @@ let rec evaluate_type ~default_layout (type_ : I.type_expression)
         ~in_:(evaluate_type ~default_layout type_ >>| fun type_ -> type_, ())
     in
     const @@ T_for_all { ty_binder; kind; type_ }
+  | T_wildcard -> const @@ T_exists (Type_var.fresh ~name:"_" ~loc:Location.generated ())
 
 
 and evaluate_row ~default_layout ({ fields; layout } : I.row) : (Type.row, 'err, 'wrn) C.t

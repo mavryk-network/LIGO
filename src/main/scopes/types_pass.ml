@@ -288,6 +288,58 @@ module Typing_env = struct
     raise.log_error (tracer e)
 
 
+  let rec sig_of_alias
+      : Module_var.t List.Ne.t -> Ast_typed.signature -> Ast_typed.signature
+    =
+   fun mvs sig_ ->
+    let mv, mvs = mvs in
+    let resolve mv sig_ =
+      match
+        List.find_exn sig_ ~f:(function
+            | Ast_typed.S_module (mb, _) -> Module_var.equal mb mv
+            | _ -> false)
+      with
+      | Ast_typed.S_module (_, sig_) -> sig_
+      | _ -> failwith "not a module"
+    in
+    match mvs with
+    | [] -> resolve mv sig_
+    | mvs ->
+      let sig_ = resolve mv sig_ in
+      sig_of_alias (List.Ne.of_list mvs) sig_
+
+
+  let rec sig_of_module
+      : original:Ast_typed.signature -> Ast_core.module_expr -> Ast_typed.signature
+    =
+   fun ~original me ->
+    let dummy_sig_attr = Ast_typed.{ entry = false; view = false } in
+    let rhs_type () =
+      Ast_typed.
+        { type_content =
+            (let tv = Type_var.fresh ~name:"^hole" ~loc:Location.dummy () in
+             T_variable tv)
+        ; type_meta = None
+        ; orig_var = None
+        ; location = Location.dummy
+        }
+    in
+    let mk_value b = Ast_typed.S_value (Binder.get_var b, rhs_type (), dummy_sig_attr) in
+    match Location.unwrap me with
+    | M_struct decls ->
+      List.concat_map decls ~f:(fun decl ->
+          match Location.unwrap decl with
+          | D_value { binder; _ } -> [ mk_value binder ]
+          | D_irrefutable_match { pattern; _ } ->
+            let binder = Pattern.binders pattern in
+            List.map binder ~f:mk_value
+          | D_type { type_binder; _ } -> [ Ast_typed.S_type (type_binder, rhs_type ()) ]
+          | D_module { module_binder; module_; _ } ->
+            [ Ast_typed.S_module (module_binder, sig_of_module ~original module_) ])
+    | M_variable mv -> sig_of_alias (mv, []) original
+    | M_module_path mvs -> sig_of_alias mvs original
+
+
   let update_typing_env
       ~(raise : (Main_errors.all, Main_warnings.all) Trace.raise)
       ~options
@@ -312,7 +364,15 @@ module Typing_env = struct
         { type_env; bindings; decls }
       | Error (e, ws) ->
         collect_warns_and_errs ~raise Main_errors.checking_tracer (e, ws);
-        tenv)
+        (match Location.unwrap decl with
+        | D_module { module_; module_binder; _ } ->
+          { tenv with
+            type_env =
+              (let sig_ = sig_of_module module_ ~original:tenv.type_env in
+               Ast_typed.S_module (module_binder, sig_))
+              :: tenv.type_env
+          }
+        | _ -> tenv))
 
 
   let self_ast_typed_pass

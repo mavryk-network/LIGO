@@ -110,8 +110,8 @@ and module_expr =
 [@@deriving eq, compare, yojson, hash]
 
 and sig_item =
-  | S_value of Value_var.t * ty_expr * sig_item_attribute
-  | S_type of Type_var.t * ty_expr
+  | S_value of Value_var.t * ty_expr option * sig_item_attribute
+  | S_type of Type_var.t * ty_expr option
   | S_module of Module_var.t * signature
 
 and sig_item_attribute =
