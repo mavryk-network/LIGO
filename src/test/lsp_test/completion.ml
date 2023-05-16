@@ -243,13 +243,13 @@ let test_cases_cameligo =
         [ CompletionItem.create
             ~label:"outer"
             ~kind:CompletionItemKind.Variable
-            ~detail:"(* Unresolved *)"
+            ~detail:"string"
             ~sortText:"\x08"
             ()
         ; CompletionItem.create
             ~label:"inner"
             ~kind:CompletionItemKind.Variable
-            ~detail:"(* Unresolved *)"
+            ~detail:"int"
             ~sortText:"\x08"
             ()
         ]
@@ -262,7 +262,7 @@ let test_cases_cameligo =
         [ CompletionItem.create
             ~label:"outer"
             ~kind:CompletionItemKind.Variable
-            ~detail:"(* Unresolved *)"
+            ~detail:"string"
             ~sortText:"\x08"
             ()
         ; CompletionItem.create
@@ -567,13 +567,13 @@ let test_cases_jsligo =
         [ CompletionItem.create
             ~label:"outer"
             ~kind:CompletionItemKind.Variable
-            ~detail:"/* Unresolved */"
+            ~detail:"string"
             ~sortText:"\x08"
             ()
         ; CompletionItem.create
             ~label:"inner"
             ~kind:CompletionItemKind.Variable
-            ~detail:"/* Unresolved */"
+            ~detail:"int"
             ~sortText:"\x08"
             ()
         ]
@@ -586,7 +586,7 @@ let test_cases_jsligo =
         [ CompletionItem.create
             ~label:"outer"
             ~kind:CompletionItemKind.Variable
-            ~detail:"/* Unresolved */"
+            ~detail:"string"
             ~sortText:"\x08"
             ()
         ; CompletionItem.create
@@ -879,13 +879,13 @@ let test_cases_pascaligo =
         [ CompletionItem.create
             ~label:"outer"
             ~kind:CompletionItemKind.Variable
-            ~detail:"(* Unresolved *)"
+            ~detail:"string"
             ~sortText:"\x08"
             ()
         ; CompletionItem.create
             ~label:"inner"
             ~kind:CompletionItemKind.Variable
-            ~detail:"(* Unresolved *)"
+            ~detail:"int"
             ~sortText:"\x08"
             ()
         ]
@@ -898,7 +898,7 @@ let test_cases_pascaligo =
         [ CompletionItem.create
             ~label:"outer"
             ~kind:CompletionItemKind.Variable
-            ~detail:"(* Unresolved *)"
+            ~detail:"string"
             ~sortText:"\x08"
             ()
         ; CompletionItem.create

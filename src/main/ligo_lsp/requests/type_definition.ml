@@ -1,5 +1,7 @@
 open Lsp_helpers
 open Handler
+module Trace = Simple_utils.Trace
+module Loc = Simple_utils.Location
 
 (* E.g. when [type t = A | B], the type info for A would have
    var_name [Some <tvar for t>]
@@ -30,7 +32,12 @@ let get_type (vdef : Scopes.Types.vdef) : type_info option =
             set [use_orig_var = True] so this expression will be pretty,
             and we also set [orig_var = None] before untyping so we're getting
             full expression and not just `T_variable` *)
-          Checking.untype_type_expression ~use_orig_var:true { ty with orig_var = None }
+          Trace.try_with
+            (fun ~raise ~catch:_ ->
+              Checking.untype_type_expression ~raise
+                ~use_orig_var:true
+                { ty with orig_var = None })
+            (fun ~catch:_ _ -> failwith "Untyper failed AAA")
       }
   | Unresolved -> None
 

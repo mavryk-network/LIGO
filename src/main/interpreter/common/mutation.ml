@@ -33,7 +33,10 @@ let mutate_some_contract
   let module Fuzzer = Fuzz.Ast_aggregated.Mutator in
   let f (e, (l, m)) =
     let syntax = get_syntax ~raise ~support_pascaligo:true syntax l in
-    let s = Fuzz.Ast_aggregated.expression_to_string ~syntax m in
+    let s =
+      trace ~raise Main_errors.checking_tracer
+      @@ fun ~raise -> Fuzz.Ast_aggregated.expression_to_string ~raise ~syntax m
+    in
     e, (l, m, s)
   in
   Option.map ~f @@ Fuzzer.some_mutate_expression ~n main
@@ -49,7 +52,10 @@ let mutate_some_value
   let module Fuzzer = Fuzz.Ast_aggregated.Mutator in
   let f (e, (loc, m)) =
     let syntax = get_syntax ~raise ~support_pascaligo:true syntax loc in
-    let s = Fuzz.Ast_aggregated.expression_to_string ~syntax m in
+    let s =
+      trace ~raise Main_errors.checking_tracer
+      @@ fun ~raise -> Fuzz.Ast_aggregated.expression_to_string ~raise ~syntax m
+    in
     e, (loc, m, s)
   in
   Option.map ~f @@ Fuzzer.some_mutate_expression ~n expr

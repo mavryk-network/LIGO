@@ -137,7 +137,7 @@ let rec fold_map_expression : 'a fold_mapper -> 'a -> expression -> 'a * express
     | E_while w ->
       let res, w = While_loop.fold_map self init w in
       res, return @@ E_while w
-    | (E_deref _ | E_literal _ | E_variable _ | E_module_accessor _) as e' ->
+    | (E_deref _ | E_literal _ | E_variable _ | E_module_accessor _ | E_error _) as e' ->
       init, return e')
 
 
@@ -212,7 +212,7 @@ let rec fold_type_expression
   let self te = fold_type_expression te ~f in
   let init = f init te in
   match te.type_content with
-  | T_variable _ -> init
+  | T_variable _ | T_exists _ -> init
   | T_constant { parameters; _ } -> List.fold parameters ~init ~f
   | T_sum row | T_record row -> Row.fold f init row
   | T_arrow { type1; type2 } -> self type2 ~init:(self type1 ~init)

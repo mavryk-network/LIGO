@@ -9,16 +9,23 @@ type t = type_case LMap.t
 let empty = LMap.empty
 
 module Of_Ast_typed = struct
-  let add_binding : t -> Ast_typed.expression_variable * Ast_typed.type_expression -> t =
+  let add_binding
+      : t -> Ast_typed.expression_variable * Ast_typed.type_expression option -> t
+    =
    fun env binding ->
     let v, t = binding in
-    let t =
-      match t.orig_var with
-      | Some t' -> { t with type_content = T_variable t' }
-      | None -> t
-    in
     let loc = Value_var.get_location v in
-    let type_case = Resolved t in
+    let type_case =
+      match t with
+      | None -> Unresolved
+      | Some t ->
+        let t =
+          match t.orig_var with
+          | Some t' -> { t with type_content = T_variable t' }
+          | None -> t
+        in
+        Resolved t
+    in
     LMap.add loc type_case env
 
 
@@ -27,7 +34,7 @@ module Of_Ast_typed = struct
   let rec extract_binding_types_from_signature : t -> Ast_typed.signature -> t =
    fun bindings sig_ ->
     List.fold sig_ ~init:bindings ~f:(fun bindings -> function
-      | S_value (v, t, _) -> add_bindings bindings [ v, t ]
+      | S_value (v, t, _) -> add_bindings bindings [ v, Some t ]
       | S_type _ -> bindings
       | S_module (_, sig_) -> extract_binding_types_from_signature bindings sig_)
 
@@ -39,6 +46,10 @@ module Of_Ast_typed = struct
       let return = add_bindings env in
       let loc = exp.location in
       match exp.expression_content with
+      (* FIXME: @Melywn
+         What should be the expected behaviour here for erroneous
+         expressions? *)
+      | E_error _
       | E_literal _
       | E_application _
       | E_raw_code _
@@ -53,38 +64,40 @@ module Of_Ast_typed = struct
       | E_constant _ -> return []
       | E_type_inst _ -> return []
       | E_coerce _ -> return []
-      | E_variable v -> return [ v, exp.type_expression ]
-      | E_lambda { binder; _ } -> return [ Param.get_var binder, Param.get_ascr binder ]
+      | E_variable v -> return [ v, Some exp.type_expression ]
+      | E_lambda { binder; _ } ->
+        return [ Param.get_var binder, Some (Param.get_ascr binder) ]
       | E_recursive { fun_name; fun_type; lambda = { binder; _ }; force_lambdarec = _ } ->
-        return [ fun_name, fun_type; Param.get_var binder, Param.get_ascr binder ]
+        return
+          [ fun_name, Some fun_type; Param.get_var binder, Some (Param.get_ascr binder) ]
       | E_let_mut_in { let_binder; rhs = _; _ } | E_let_in { let_binder; rhs = _; _ } ->
         return
         @@ List.map
-             ~f:(fun binder -> Binder.get_var binder, Binder.get_ascr binder)
+             ~f:(fun binder -> Binder.get_var binder, Some (Binder.get_ascr binder))
              (Pattern.binders let_binder)
       | E_matching { matchee = _; cases } ->
         let bindings =
           List.concat
           @@ List.map cases ~f:(fun { pattern; _ } ->
                  let binders = Pattern.binders pattern in
-                 List.map binders ~f:(fun b -> Binder.get_var b, Binder.get_ascr b))
+                 List.map binders ~f:(fun b -> Binder.get_var b, Some (Binder.get_ascr b)))
         in
         return bindings
-      | E_module_accessor { element = e; _ } -> return [ e, exp.type_expression ]
-      | E_for { binder; start; _ } -> return [ binder, start.type_expression ]
+      | E_module_accessor { element = e; _ } -> return [ e, Some exp.type_expression ]
+      | E_for { binder; start; _ } -> return [ binder, Some start.type_expression ]
       | E_for_each { fe_binder = binder1, Some binder2; collection; _ } ->
         let key_type, val_type = Ast_typed.get_t_map_exn collection.type_expression in
-        return [ binder1, key_type; binder2, val_type ]
+        return [ binder1, Some key_type; binder2, Some val_type ]
       | E_for_each { fe_binder = binder, None; collection; _ } ->
         let type_ = collection.type_expression in
         if Ast_typed.is_t_set type_
-        then return [ binder, Ast_typed.get_t_set_exn type_ ]
+        then return [ binder, Some (Ast_typed.get_t_set_exn type_) ]
         else if Ast_typed.is_t_list type_
-        then return [ binder, Ast_typed.get_t_list_exn type_ ]
+        then return [ binder, Some (Ast_typed.get_t_list_exn type_) ]
         else if Ast_typed.is_t_map type_
         then (
           let k, v = Ast_typed.get_t_map_exn type_ in
-          return [ binder, Ast_typed.t_pair ~loc k v ])
+          return [ binder, Some (Ast_typed.t_pair ~loc k v) ])
         else return []
       | E_mod_in { rhs = { signature; _ }; _ } ->
         extract_binding_types_from_signature env signature
@@ -93,12 +106,12 @@ module Of_Ast_typed = struct
     | D_value { attr = { hidden = true; _ }; _ } -> prev
     | D_irrefutable_match { attr = { hidden = true; _ }; _ } -> prev
     | D_value { binder; expr; _ } ->
-      let prev = add_bindings prev [ Binder.get_var binder, expr.type_expression ] in
+      let prev = add_bindings prev [ Binder.get_var binder, Some expr.type_expression ] in
       Self_ast_typed.Helpers.fold_expression aux prev expr
     | D_irrefutable_match { pattern; expr; _ } ->
       let prev =
         let f acc binder =
-          add_bindings acc [ Binder.get_var binder, expr.type_expression ]
+          add_bindings acc [ Binder.get_var binder, Some expr.type_expression ]
         in
         List.fold (Pattern.binders pattern) ~f ~init:prev
       in
@@ -154,18 +167,18 @@ module Of_Ast_core = struct
     | Some t -> add_vvar_type env (Param.get_var param, t)
 
 
-  (** [set_core_type_if_possible] detects patterns like 
-      
+  (** [set_core_type_if_possible] detects patterns like
+
       {[
         let x : int = 1
       ]}
 
       The abstraction pass will create AST like
-      [D_irrefutable_match 
+      [D_irrefutable_match
         (E_ascription ({ expr = E_literal 1; type_annotation = int }), _)]
 
       So here we want the x to have [Core int]
-  
+
       Hence we extract the type annotation from the rhs and we set it back to
       the binder.
   *)
@@ -268,76 +281,82 @@ module Of_Ast_core = struct
 end
 
 module Typing_env = struct
-  type nonrec t =
-    { (* type_env is the global typing signature required by the typer *)
-      type_env : Ast_typed.signature
-    ; (* bindings is Map from [Location.t] -> [Types.type_case] *)
-      bindings : t
-    ; (* Top-level declaration tree used for ast-typed-self-passes *)
-      decls : Ast_typed.declaration list
-    }
 
   (** The typer normall call {!Trace.error} which internally always calls {!Stdlib.raise}
-      which stops the program, But here we want to recover from the error. That is the reason 
+      which stops the program, But here we want to recover from the error. That is the reason
       we use {!collect_warns_and_errs} *)
   let collect_warns_and_errs
       ~(raise : (Main_errors.all, Main_warnings.all) Trace.raise)
       tracer
-      (e, ws)
+      (es, ws)
     =
-    let () = List.iter ws ~f:raise.warning in
-    raise.log_error (tracer e)
+    List.iter ws ~f:raise.warning;
+    List.iter es ~f:(fun e -> raise.log_error (tracer e))
 
 
-  let update_typing_env
+  let collect_recovered_errors_from_module prg =
+    Self_ast_typed.Helpers.fold_expression_in_module
+      (fun errs (expr : Ast_typed.expression) ->
+        match expr.expression_content with
+        | E_error { error; _ } -> error :: errs
+        | _ -> errs)
+      []
+      prg
+
+
+  let resolve
       ~(raise : (Main_errors.all, Main_warnings.all) Trace.raise)
       ~options
-      tenv
-      decl
+      ~stdlib_env
+      decls
     =
     let typed_prg =
       Simple_utils.Trace.to_stdlib_result
-      @@ Checking.type_declaration ~options ~env:tenv.type_env decl
+      @@ Checking.type_program ~options ~env:stdlib_env decls
     in
     Result.(
       match typed_prg with
-      | Ok (decl, ws) ->
-        let decl = List.nth_exn decl 0 in
-        let module AST = Ast_typed in
+      | Ok (prg, ws) ->
         let bindings =
-          Of_Ast_typed.extract_binding_types tenv.bindings decl.wrap_content
+          List.fold_left prg ~init:empty ~f:(fun bindings decl ->
+              Of_Ast_typed.extract_binding_types bindings decl.wrap_content)
         in
-        let type_env = tenv.type_env @ Ast_typed.Misc.to_signature [ decl ] in
-        let decls = tenv.decls @ [ decl ] in
         let () = List.iter ws ~f:raise.warning in
-        { type_env; bindings; decls }
+        let es = collect_recovered_errors_from_module prg in
+        collect_warns_and_errs ~raise Main_errors.scopes_recovered_error (es, ws);
+        prg, bindings
       | Error (e, ws) ->
-        collect_warns_and_errs ~raise Main_errors.checking_tracer (e, ws);
-        tenv)
+        collect_warns_and_errs ~raise Main_errors.checking_tracer ([ e ], ws);
+        (* For now, assume errors are recorded in the AST *)
+        [], empty)
 
+
+  (* (match Location.unwrap decl with
+        | D_module { module_; module_binder; _ } ->
+          { tenv with
+            type_env =
+              (tenv.type_env
+              @
+              let sig_ = sig_of_module module_ ~original:tenv.type_env in
+              [ Ast_typed.S_module (module_binder, sig_) ])
+          }
+        | _ -> tenv)) *)
 
   let self_ast_typed_pass
       ~(raise : (Main_errors.all, Main_warnings.all) Trace.raise)
       ~(options : Compiler_options.middle_end)
-      tenv
+      decls
     =
     ignore options;
-    match
-      Simple_utils.Trace.to_stdlib_result @@ Self_ast_typed.all_program tenv.decls
-    with
+    match Simple_utils.Trace.to_stdlib_result @@ Self_ast_typed.all_program decls with
     | Ok (_, ws) -> List.iter ws ~f:raise.warning
     | Error (e, ws) ->
-      collect_warns_and_errs ~raise Main_errors.self_ast_typed_tracer (e, ws)
-
-
-  let init stdlib_decls =
-    let type_env = Ast_typed.Misc.to_signature stdlib_decls in
-    { type_env; bindings = LMap.empty; decls = stdlib_decls }
+      collect_warns_and_errs ~raise Main_errors.self_ast_typed_tracer ([ e ], ws)
 end
 
 (** [resolve] takes your [Ast_core.program] and gives you the typing information
     in the form of [t]
-   
+
     Here we run the typer related thing first because in the following example
     {[
       let x : int = 1
@@ -351,8 +370,8 @@ end
     pass1 (just typer) -> [ x -> resolved (int) ; t -> unresolved ; y -> unresolved ]
 
     After running the typer we traverse the [Ast_core.program] to fill in the [t]
-    with type annotations available in the program 
-    
+    with type annotations available in the program
+
     pass2 -> [ x -> resolved (int) ; t -> core (int) ; y -> unresolved ]
 
     {i Note:} If we do pass2 before pass1 we will end up with
@@ -365,10 +384,9 @@ let resolve
     -> Ast_core.program -> t
   =
  fun ~raise ~options ~stdlib_decls prg ->
-  let tenv = Typing_env.init stdlib_decls in
-  let tenv = List.fold prg ~init:tenv ~f:(Typing_env.update_typing_env ~raise ~options) in
-  let () = Typing_env.self_ast_typed_pass ~raise ~options tenv in
-  let bindings = tenv.bindings in
+  let stdlib_env = Ast_typed.to_signature stdlib_decls in
+  let tprg, bindings = Typing_env.resolve ~raise ~options ~stdlib_env prg in
+  let () = Typing_env.self_ast_typed_pass ~raise ~options tprg in
   Of_Ast_core.declarations bindings prg
 
 

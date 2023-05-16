@@ -17,12 +17,14 @@ type ('a, 'err, 'wrn) t =
   -> State.t
   -> State.t * 'a
 
-let rec encode (type_ : Ast_typed.type_expression) : Type.t =
+let rec encode ~raise (type_ : Ast_typed.type_expression) : Type.t =
+  let encode = encode ~raise in
   let return content : Type.t =
     { content; orig_var = type_.orig_var; location = type_.location }
   in
   match type_.type_content with
   | T_variable tvar -> return @@ T_variable tvar
+  | T_exists _ -> raise.error @@ cannot_encode_texists type_ type_.location
   | T_arrow arr ->
     let arr = Arrow.map encode arr in
     return @@ T_arrow arr
@@ -37,32 +39,32 @@ let rec encode (type_ : Ast_typed.type_expression) : Type.t =
     let parameters = List.map parameters ~f:encode in
     return @@ T_construct { language; constructor = injection; parameters }
   | T_sum row ->
-    let row = encode_row row in
+    let row = encode_row ~raise row in
     return @@ T_sum row
   | T_record row ->
-    let row = encode_row row in
+    let row = encode_row ~raise row in
     return @@ T_record row
 
 
-and encode_row ({ fields; layout } : Ast_typed.row) : Type.row =
-  let fields = Map.map ~f:encode fields in
+and encode_row ~raise ({ fields; layout } : Ast_typed.row) : Type.row =
+  let fields = Map.map ~f:(encode ~raise) fields in
   let layout = encode_layout layout in
   Row.{ fields; layout }
 
 
 and encode_layout (layout : Layout.t) : Type.layout = L_concrete layout
 
-and encode_sig_item (item : Ast_typed.sig_item) : Context.Signature.item =
+and encode_sig_item ~raise (item : Ast_typed.sig_item) : Context.Signature.item =
   match item with
   | Ast_typed.S_value (v, ty, attr) ->
-    Context.Signature.S_value (v, encode ty, encode_sig_item_attribute attr)
-  | S_type (v, ty) -> Context.Signature.S_type (v, encode ty, Context.Attrs.Type.default)
+    Context.Signature.S_value (v, encode ~raise ty, encode_sig_item_attribute attr)
+  | S_type (v, ty) -> Context.Signature.S_type (v, encode ~raise ty, Context.Attrs.Type.default)
   | S_module (v, sig_) ->
-    Context.Signature.S_module (v, encode_signature sig_, Context.Attrs.Module.default)
+    Context.Signature.S_module (v, encode_signature ~raise sig_, Context.Attrs.Module.default)
 
 
-and encode_signature (sig_ : Ast_typed.signature) : Context.Signature.t =
-  List.map ~f:encode_sig_item sig_
+and encode_signature ~raise (sig_ : Ast_typed.signature) : Context.Signature.t =
+  List.map ~f:(encode_sig_item ~raise) sig_
 
 
 and encode_sig_item_attribute (attr : Ast_typed.sig_item_attribute)
@@ -72,21 +74,21 @@ and encode_sig_item_attribute (attr : Ast_typed.sig_item_attribute)
 
 
 (* Load context from the outside declarations *)
-let ctx_init_of_sig ?env () =
+let ctx_init_of_sig ~raise ?env () =
   match env with
   | None -> Context.empty
   | Some (env : Ast_typed.signature) ->
     let f ctx decl =
       match decl with
-      | Ast_typed.S_value (v, ty, _attr) -> Context.add_imm ctx v (encode ty)
-      | S_type (v, ty) -> Context.add_type ctx v (encode ty)
-      | S_module (v, sig_) -> Context.add_module ctx v (encode_signature sig_)
+      | Ast_typed.S_value (v, ty, _attr) -> Context.add_imm ctx v (encode ~raise ty)
+      | S_type (v, ty) -> Context.add_type ctx v (encode ~raise ty)
+      | S_module (v, sig_) -> Context.add_module ctx v (encode_signature ~raise sig_)
     in
     List.fold env ~init:Context.empty ~f
 
 
 let run_elab t ~raise ~options ~loc ?env () =
-  let ctx = ctx_init_of_sig ?env () in
+  let ctx = ctx_init_of_sig ~raise ?env () in
   (* Format.printf "@[Context:@.%a@]" Context.pp ctx; *)
   let ctx, pos = Context.mark ctx in
   let (ctx, subst), elab = t ~raise ~options ~loc (ctx, Substitution.empty) in
@@ -791,9 +793,13 @@ let try_ (body : ('a, 'err, 'wrn) t) ~(with_ : 'err -> ('a, 'err, 'wrn) t)
     : ('a, 'err, 'wrn) t
   =
  fun ~raise ~options ~loc state ->
-  Trace.try_with
-    (fun ~raise ~catch:_ -> body ~raise ~options ~loc state)
-    (fun ~catch:_ err -> with_ err ~raise ~options ~loc state)
+  match Trace.to_stdlib_result (body ~options ~loc state) with
+  | Ok (v, ws) ->
+    List.iter ws ~f:raise.warning;
+    v
+  | Error (err, ws) ->
+    List.iter ws ~f:raise.warning;
+    with_ err ~raise ~options ~loc state
 
 
 let try_all (ts : ('a, 'err, 'wrn) t list) : ('a, 'err, 'wrn) t =

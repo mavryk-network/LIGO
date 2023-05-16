@@ -419,9 +419,9 @@ end
 
 (** This section defines functions related to running computations. *)
 
-(** [encode type_] encodes an [Ast_typed.type_expression] representation of a type into the typer's 
+(** [encode ~raise type_] encodes an [Ast_typed.type_expression] representation of a type into the typer's 
     internal representation [Type.t]. *)
-val encode : Ast_typed.type_expression -> Type.t
+val encode : raise:(Errors.typer_error, Main_warnings.all) raise -> Ast_typed.type_expression -> Type.t
 
 (** [run_elab comp ~raise ~options ~loc ~env] runs and elaborates the computation [comp] with the handler 
     provided by [~raise], compiler options [~options] and initial environment [~env]. *)

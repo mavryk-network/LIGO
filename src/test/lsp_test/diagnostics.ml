@@ -58,9 +58,9 @@ let test_cases =
               }
           }
         ; { severity = DiagnosticSeverity.Error
-          ; message = "Variable \"foo\" not found. "
+          ; message = "Invalid type(s)\nCannot unify \"int\" with \"string\"."
           ; location =
-              { range = interval 5 31 34
+              { range = interval 5 27 34
               ; path = Path.from_relative "contracts/negative/error_typer_1.mligo"
               }
           }
@@ -186,6 +186,65 @@ let test_cases =
           ; location =
               { range = interval 0 7 17
               ; path = Path.from_relative "contracts/lsp/warnings.jsligo"
+              }
+          }
+        ]
+    ; max_number_of_problems = None
+    }
+  ; { test_name = "Shows diagnostics from another file with a type error."
+    ; file_path = "contracts/lsp/importer_failure.mligo"
+    ; diagnostics =
+        [ { severity = DiagnosticSeverity.Error
+          ; message = "Invalid type(s)\nCannot unify \"string\" with \"int\"."
+          ; location =
+              { range = interval 3 2 21
+              ; path = Path.from_relative "contracts/lsp/importer_failure.mligo"
+              }
+          }
+        ; { severity = DiagnosticSeverity.Error
+          ; message = "Invalid type(s).\nExpected \"string\", but got: \"int\"."
+          ; location =
+              { range = interval 2 23 24
+              ; path = Path.from_relative "contracts/lsp/imported_failure.mligo"
+              }
+          }
+        ]
+    ; max_number_of_problems = None
+    }
+  ; { test_name = "Shows diagnostics for a file with recoverable type error."
+    ; file_path = "contracts/lsp/recover_type_error1.mligo"
+    ; diagnostics =
+        [ { severity = DiagnosticSeverity.Error
+          ; message = "Invalid type(s)\nCannot unify \"int\" with \"string\"."
+          ; location =
+              { range = interval 0 8 15
+              ; path = Path.from_relative "contracts/lsp/recover_type_error1.mligo"
+              }
+          }
+        ]
+    ; max_number_of_problems = None
+    }
+  ; { test_name = "Shows diagnostics for a file with recoverable type error."
+    ; file_path = "contracts/lsp/recover_type_error2.mligo"
+    ; diagnostics =
+        [ { severity = DiagnosticSeverity.Error
+          ; message = "Variable \"f\" not found. "
+          ; location =
+              { range = interval 0 10 11
+              ; path = Path.from_relative "contracts/lsp/recover_type_error2.mligo"
+              }
+          }
+        ]
+    ; max_number_of_problems = None
+    }
+  ; { test_name = "Shows diagnostics for a file with recoverable type error."
+    ; file_path = "contracts/lsp/recover_type_error3.mligo"
+    ; diagnostics =
+        [ { severity = DiagnosticSeverity.Error
+          ; message = "Variable \"g\" not found. "
+          ; location =
+              { range = interval 0 14 15
+              ; path = Path.from_relative "contracts/lsp/recover_type_error3.mligo"
               }
           }
         ]

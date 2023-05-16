@@ -46,7 +46,7 @@ module Diagnostic = struct
   let remove_underscore_numeration s =
     { s with
       message =
-        "(* This is a testable_pp. The actual result might be slightly different. *) "
+        "(* This is a testable_pp. The actual result might be slightly different. *)\n"
         ^ Str.global_replace (Str.regexp {|_#[0-9][0-9]*|}) "_#N" s.message
     }
 

@@ -381,7 +381,11 @@ let complete_fields
       in
       (match t with
       | Core t -> mk_completions t
-      | Resolved t -> mk_completions (Checking.untype_type_expression t)
+      | Resolved t ->
+        Trace.try_with
+          (fun ~raise ~catch:_ ->
+            Checking.untype_type_expression ~raise t |> mk_completions)
+          (fun ~catch:_ _ -> None)
       | Unresolved -> None)
     | None | Some (Type _ | Module _) -> None
   in

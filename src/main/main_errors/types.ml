@@ -87,5 +87,6 @@ type all =
   | `Test_not_expected_to_fail
   | `Test_repl of string list * string list
   | `Repl_unexpected
+  | `Scopes_recovered_error of Simple_utils.Error.t
   ]
 [@@deriving poly_constructor]

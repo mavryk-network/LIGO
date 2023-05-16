@@ -2,6 +2,7 @@ open Main_errors
 open Simple_utils.Trace
 open Ligo_prim
 module Location = Simple_utils.Location
+module Checking = Checking
 
 type form =
   | Contract of
