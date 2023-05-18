@@ -47,6 +47,20 @@ async function copyUntilHasOutput(workbench: tester.Workbench): Promise<string> 
   }
 }
 
+// See https://github.com/redhat-developer/vscode-extension-tester/issues/506#issuecomment-1271156702
+// This workaround is needed because openResource doesn't work inside docker container
+// which is used to run tests in CI
+async function openEditor(file: string) {
+  const titleBar = new tester.TitleBar();
+  const item = await titleBar.getItem('File');
+  const fileMenu = await item!.select();
+  const openItem = await fileMenu.getItem("Open File...");
+  await openItem!.select();
+  const input = await tester.InputBox.create();
+  await input.setText(file);
+  await input.confirm();
+}
+
 function testDriver(
   file: string,
   buttonName: string,
@@ -56,7 +70,7 @@ function testDriver(
   ...sequence: (string | undefined)[]
 ) {
   test(message, async () => {
-    await tester.VSBrowser.instance.openResources(file)
+    await openEditor(file)
 
     const statusBar = new tester.StatusBar()
     await statusBar.wait()
