@@ -57,6 +57,7 @@ module Value_decl (Attr : Declaration.Attr) = Declaration.Value_decl (Attr)
 module Type_decl (Attr : Declaration.Attr) = Declaration.Type_decl (Attr)
 module Module_decl (Attr : Declaration.Attr) = Declaration.Module_decl (Attr)
 
+module Value_attr = Value_attr
 module Pattern_decl (Pattern : Pattern.S) (Attr : Declaration.Attr) =
   Declaration.Pattern_decl (Pattern) (Attr)
 
