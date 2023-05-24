@@ -50,7 +50,7 @@ module Of_Ast = struct
     let add_current_expr scopes =
       if env_changed then add scopes e.location (env.avail_defs @ env.parent) else scopes
     in
-    match e.expression_content with
+    match Location.unwrap e with
     | E_variable _ -> add_current_expr scopes
     | E_module_accessor _ -> add_current_expr scopes
     (* TODO : Should we recursively call on the maccess.element ? *)

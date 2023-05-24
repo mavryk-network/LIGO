@@ -75,7 +75,7 @@ let rec evaluate_type ~default_layout (type_ : I.type_expression)
     let%bind loc = loc () in
     return @@ Type.{ type_ with location = loc }
   in
-  match type_.type_content with
+  match Location.unwrap type_ with
   | T_arrow { type1; type2 } ->
     let%bind type1 = evaluate_type ~default_layout type1 in
     let%bind type2 = evaluate_type ~default_layout type2 in
@@ -279,7 +279,7 @@ let rec check_expression (expr : I.expression) (type_ : Type.t)
         let%bind type_ = decode type_ in
         return @@ O.make_e ~loc content type_)
   in
-  match expr.expression_content, type_.content with
+  match Location.unwrap expr, type_.content with
   | E_literal lit, T_construct _ ->
     let%bind lit_type, expr = infer_literal lit in
     let%bind () =
@@ -399,7 +399,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
           return @@ O.make_e ~loc content type_) )
   in
   let%bind syntax = Options.syntax () in
-  match expr.expression_content with
+  match Location.unwrap expr with
   | E_literal lit -> infer_literal lit
   | E_constant { cons_name = const; arguments = args } -> infer_constant const args
   | E_variable var ->
@@ -468,9 +468,9 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
     return (res_type, let_result)
   | E_raw_code { language = "michelson"; code } ->
     let%bind code, result_type =
-      raise_opt ~error:not_annotated @@ I.get_e_ascription code.expression_content
+      raise_opt ~error:not_annotated @@ I.get_e_ascription code.wrap_content
     in
-    let vals = I.get_e_applications code.expression_content in
+    let vals = I.get_e_applications code.wrap_content in
     let vals =
       match vals with
       | [] -> [ code ]
@@ -508,7 +508,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
       result_type
   | E_raw_code { language; code } ->
     let%bind code, code_type =
-      raise_opt ~error:not_annotated @@ I.get_e_ascription code.expression_content
+      raise_opt ~error:not_annotated @@ I.get_e_ascription code.wrap_content
     in
     let%bind code_type = evaluate_type_with_default_layout code_type in
     let%bind _, code = infer code in

@@ -190,14 +190,12 @@ end = struct
     =
    fun e ->
     let location = Location.get_location e in
-    let ret ?(location = location) expression_content : O.expression =
-      O.{ expression_content; sugar = None; location }
-    in
+    let ret ?(location = location) e : O.expression = Location.wrap ~loc:location e in
     match Location.unwrap e with
-    | E_attr (attr, { expression_content = E_let_in x; location; _ }) ->
+    | E_attr (attr, { wrap_content = E_let_in x; location; _ }) ->
       ret ~location
       @@ E_let_in { x with attributes = conv_exp_attr ~raise location x.attributes attr }
-    | E_attr (attr, { expression_content = E_let_mut_in x; location; _ }) ->
+    | E_attr (attr, { wrap_content = E_let_mut_in x; location; _ }) ->
       ret ~location
       @@ E_let_mut_in
            { x with attributes = conv_exp_attr ~raise location x.attributes attr }
@@ -307,9 +305,7 @@ end = struct
   and ty_expr : O.type_expression I.ty_expr_ -> O.type_expression =
    fun t ->
     let location = Location.get_location t in
-    let ret type_content : O.type_expression =
-      O.{ type_content; sugar = None; location }
-    in
+    let ret x : O.type_expression = Location.wrap ~loc:location x in
     match Location.unwrap t with
     | T_attr (_, ty) -> ty
     | T_var v -> ret @@ T_variable v
@@ -326,7 +322,7 @@ end = struct
            }
     | T_app { constr; type_args } ->
       (match constr with
-      | { type_content = T_variable type_operator; _ } ->
+      | { wrap_content = T_variable type_operator; _ } ->
         ret
         @@ T_app
              { type_operator = { module_path = []; element = type_operator }
@@ -475,7 +471,7 @@ end = struct
       let loc = e.location in
       Location.wrap ~loc content
     in
-    match e.expression_content with
+    match e.wrap_content with
     | E_literal x -> ret @@ E_literal x
     | E_variable x -> ret @@ E_variable x
     | E_record fields ->
@@ -550,7 +546,7 @@ end = struct
           , O.Non_linear_rows.
               { associated_type = Some associated_type; attributes = []; decl_pos } ))
     in
-    match ty.type_content with
+    match ty.wrap_content with
     | T_variable v -> ret @@ T_var v
     | T_constant (t, _) -> ret @@ T_constant (Ligo_prim.Literal_types.to_string t)
     | T_app { type_operator; arguments } ->

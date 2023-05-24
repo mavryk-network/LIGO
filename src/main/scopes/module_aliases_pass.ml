@@ -75,7 +75,7 @@ let resolve_module_alias
     module [E_mod_in] calls [module_expression] to resolve that module.  *)
 let rec expression : AST.expression -> t -> env -> t =
  fun e m_alias env ->
-  match e.expression_content with
+  match Location.unwrap e with
   | E_variable _ -> m_alias
   | E_module_accessor _ -> m_alias
   | E_literal _ -> m_alias

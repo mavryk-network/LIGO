@@ -30,7 +30,7 @@ let defs_of_vvar ~(body : AST.expression) : VVar.t -> def list -> def list =
       let uid : string = Types.make_def_id name (VVar.get_location vvar) in
       let range : Location.t = VVar.get_location vvar in
       let body_range : Location.t =
-        match body.expression_content with
+        match Location.unwrap body with
         (* For [E_recursive], we have to dig into [r.lambda.result] to get the real body range
              because otehrwise [body.location] will just return the "rec" keyword's range,
              for some reason *)
@@ -113,7 +113,7 @@ let rec defs_of_expr : AST.expression -> def list -> def list =
     let vvar = Param.get_var binder in
     self result @@ defs_of_vvar ~body:result vvar @@ acc
   in
-  match e.expression_content with
+  match Location.unwrap e with
   (* Base *)
   | E_variable v -> acc
   | E_literal l -> acc

@@ -4,12 +4,6 @@ module List = Simple_utils.List
 module Ligo_string = Simple_utils.Ligo_string
 module Row = Row.With_optional_layout
 
-type sugar_type_expression_option = Ast_unified.ty_expr option
-[@@deriving eq, compare, yojson, hash]
-
-type sugar_expression_option = Ast_unified.expr option
-[@@deriving eq, compare, yojson, hash]
-
 type string_option = string option
 
 type type_content =
@@ -26,11 +20,7 @@ type type_content =
 
 and row = type_expression Row.t
 
-and type_expression =
-  { type_content : type_content
-  ; sugar : sugar_type_expression_option [@deriving.ignore]
-  ; location : Location.t [@deriving.ignore] [@hash.ignore]
-  }
+and type_expression = type_content Location.wrap
 
 and ty_expr = type_expression [@@deriving eq, compare, yojson, hash]
 and type_expression_option = type_expression option [@@deriving eq, compare, yojson, hash]
@@ -165,11 +155,7 @@ type expression_content =
   | E_for_each of expr For_each_loop.t
   | E_while of expr While_loop.t
 
-and expression =
-  { expression_content : expression_content
-  ; sugar : sugar_expression_option
-  ; location : Location.t [@hash.ignore]
-  }
+and expression = expression_content Location.wrap
 
 and expr = expression [@@deriving eq, compare, yojson, hash]
 

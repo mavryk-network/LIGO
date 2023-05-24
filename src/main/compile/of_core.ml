@@ -115,19 +115,11 @@ let compile_expression
 
 
 let apply (entry_point : Value_var.t) (param : Ast_core.expression) : Ast_core.expression =
-  let entry_point_var : Ast_core.expression =
-    { expression_content = Ast_core.E_variable entry_point
-    ; sugar = None
-    ; location = Virtual "generated entry-point variable"
-    }
+  let open Ast_core in
+  let entry_point_var =
+    e_variable ~loc:(Virtual "generated entry-point variable") entry_point
   in
-  let applied : Ast_core.expression =
-    { expression_content = Ast_core.E_application { lamb = entry_point_var; args = param }
-    ; sugar = None
-    ; location = Virtual "generated application"
-    }
-  in
-  applied
+  e_application ~loc:(Virtual "generated application") entry_point_var param
 
 
 let apply_twice
@@ -136,27 +128,13 @@ let apply_twice
     (param2 : Ast_core.expression)
     : Ast_core.expression
   =
+  let open Ast_core in
   let name = Value_var.of_input_var ~loc:Location.dummy entry_point in
-  let entry_point_var : Ast_core.expression =
-    { expression_content = Ast_core.E_variable name
-    ; sugar = None
-    ; location = Virtual "generated entry-point variable"
-    }
-  in
+  let entry_point_var = e_variable ~loc:(Virtual "generated entry-point variable") name in
   let applied : Ast_core.expression =
-    { expression_content =
-        Ast_core.E_application { lamb = entry_point_var; args = param1 }
-    ; sugar = None
-    ; location = Virtual "generated application"
-    }
+    e_application ~loc:(Virtual "generated application") entry_point_var param1
   in
-  let applied : Ast_core.expression =
-    { expression_content = Ast_core.E_application { lamb = applied; args = param2 }
-    ; sugar = None
-    ; location = Virtual "generated application"
-    }
-  in
-  applied
+  e_application ~loc:(Virtual "generated application") applied param2
 
 
 let list_declarations (m : Ast_core.program) : Value_var.t list =

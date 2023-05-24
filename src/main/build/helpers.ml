@@ -7,14 +7,12 @@ let loc = Location.env
 let sap_for_all (b : Ast_core.type_expression option Binder.t) =
   let open Ast_core in
   let f t =
-    match t.type_content with
+    match Location.unwrap t with
     | T_for_all { ty_binder; type_; kind = _ } when not (Type_var.is_generated ty_binder)
       ->
       let name = Type_var.to_name_exn ty_binder in
       if String.is_prefix name ~prefix:"sap_"
-      then (
-        let type_content = T_for_all { ty_binder; type_; kind = Kind.Singleton } in
-        { t with type_content })
+      then (t_for_all ~loc:t.location { ty_binder; type_; kind = Kind.Singleton }) ()
       else t
     | _ -> t
   in

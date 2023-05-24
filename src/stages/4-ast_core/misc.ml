@@ -15,7 +15,7 @@ let rec assert_list_eq f a b =
 (* TODO this was supposed to mean equality of _values_; if
    assert_value_eq (a, b) = Some (), then a and b should be values *)
 let rec assert_value_eq ((a, b) : expression * expression) : unit option =
-  match a.expression_content, b.expression_content with
+  match a.wrap_content, b.wrap_content with
   | E_literal a, E_literal b -> Literal_value.assert_eq (a, b)
   | E_constant ca, E_constant cb when Caml.( = ) ca.cons_name cb.cons_name ->
     let lst = List.zip_exn ca.arguments cb.arguments in

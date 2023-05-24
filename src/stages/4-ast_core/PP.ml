@@ -14,7 +14,7 @@ let rec type_expression ppf (te : type_expression) : unit =
   then bool ppf
   else if Option.is_some (Combinators.get_t_option te)
   then option ppf te
-  else fprintf ppf "%a" type_content te.type_content
+  else fprintf ppf "%a" type_content (Combinators.get_t te)
 
 
 and bool ppf = fprintf ppf "bool"
@@ -49,7 +49,7 @@ let type_expression_option ppf (te : type_expression option) : unit =
 
 
 let rec expression ppf (e : expression) =
-  fprintf ppf "@[%a@]" expression_content e.expression_content
+  fprintf ppf "@[%a@]" expression_content (Combinators.get_e e)
 
 
 and expression_content ppf (ec : expression_content) =

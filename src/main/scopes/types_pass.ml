@@ -172,7 +172,7 @@ module Of_Ast_core = struct
       -> Ast_core.type_expression option Binder.t list * Ast_core.expression
     =
    fun binders expr ->
-    match binders, expr.expression_content with
+    match binders, Location.unwrap expr with
     | [ binder ], Ast_core.E_ascription { anno_expr; type_annotation } ->
       let binder = Binder.set_ascr binder (Some type_annotation) in
       [ binder ], anno_expr
@@ -181,7 +181,7 @@ module Of_Ast_core = struct
 
   let rec expression : t -> Ast_core.expression -> t =
    fun bindings expr ->
-    match expr.expression_content with
+    match Location.unwrap expr with
     | E_literal _ | E_variable _ | E_module_accessor _ -> bindings
     | E_raw_code { code; _ } -> expression bindings code
     | E_constant { arguments; _ } -> List.fold arguments ~init:bindings ~f:expression

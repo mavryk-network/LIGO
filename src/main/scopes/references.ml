@@ -225,7 +225,7 @@ let resolve_module_alias_and_update_mvar_references
     upates the [references] & [env] *)
 let rec expression : AST.expression -> references -> env -> references =
  fun e refs env ->
-  match e.expression_content with
+  match Location.unwrap e with
   | E_variable v -> References.add_vvar v env refs
   | E_module_accessor { module_path; element } ->
     let refs, _, _ =
@@ -323,7 +323,7 @@ let rec expression : AST.expression -> references -> env -> references =
     update the [references]  *)
 and type_expression : AST.type_expression -> references -> env -> references =
  fun te refs env ->
-  match te.type_content with
+  match Location.unwrap te with
   | T_variable tv -> References.add_tvar tv env refs
   | T_constant _ -> refs (* FIXME *)
   | T_module_accessor { module_path; element } ->
