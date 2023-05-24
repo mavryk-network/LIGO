@@ -25,23 +25,7 @@ and type_expression = type_content Location.wrap
 and ty_expr = type_expression [@@deriving eq, compare, yojson, hash]
 and type_expression_option = type_expression option [@@deriving eq, compare, yojson, hash]
 
-module TypeOrModuleAttr = struct
-  type t =
-    { public : bool
-    ; hidden : bool
-    }
-  [@@deriving eq, compare, yojson, hash]
 
-  open Format
-
-  let pp_if_set str ppf attr = if attr then fprintf ppf "[@@%s]" str else fprintf ppf ""
-
-  let pp ppf { public; hidden } =
-    fprintf ppf "%a%a" (pp_if_set "private") (not public) (pp_if_set "hidden") hidden
-
-
-  let default_attributes = { public = true; hidden = false }
-end
 
 module Access_label = struct
   type 'a t = Label.t
@@ -63,8 +47,8 @@ end
 module Accessor = Accessor (Access_label)
 module Update = Update (Access_label)
 module Value_decl = Value_decl (Value_attr)
-module Type_decl = Type_decl (TypeOrModuleAttr)
-module Module_decl = Module_decl (TypeOrModuleAttr)
+module Type_decl = Type_decl (Type_or_module_attr)
+module Module_decl = Module_decl (Type_or_module_attr)
 module Pattern = Linear_pattern
 module Match_expr = Match_expr.Make (Pattern)
 module Pattern_decl = Pattern_decl (Pattern) (Value_attr)
