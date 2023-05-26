@@ -110,7 +110,7 @@ then
 	    LIGO_FILES=$(find $DUNE_WORKSPACE_ROOT/src/test/error-recovery/$TEST_TYPE/$DIALECT -name "*.$LIGO_FILE_EXT" -type f -exec basename {} + | sort | uniq)
 	    ;;
 	*)
-	    LIGO_FILES=$(find $DUNE_WORKSPACE_ROOT/src/test/error-recovery/$TEST_TYPE/$DIALECT -name "*.$LIGO_FILE_EXT" -type f -printf "%f\n" | sort | uniq)
+	    LIGO_FILES=$(LANG=C.UTF-8 find $DUNE_WORKSPACE_ROOT/src/test/error-recovery/$TEST_TYPE/$DIALECT -name "*.$LIGO_FILE_EXT" -type f -printf "%f\n" | sort | uniq)
 	    ;;
     esac
 fi
