@@ -207,7 +207,9 @@ and print_nat (node : (lexeme * Z.t) wrap) =
 
 (* PRINTING THE CST *)
 
-let rec print state cst = print_declarations state cst.decl
+let rec print state (cst: CST.t) =
+  let {decl; eof} = cst in
+  print_declarations state decl ^/^ print_comments eof#comments
 
 (* DECLARATIONS (top-level) *)
 
