@@ -30,11 +30,7 @@ include Let_syntax
 
 let rec decode (type_ : Type.t) ~raise subst =
   let return type_content : O.type_expression =
-    { type_content
-    ; type_meta = type_.meta
-    ; orig_var = type_.orig_var
-    ; location = type_.location
-    }
+    O.make_t ~loc:type_.location ~orig_var:type_.orig_var type_content
   in
   let decode type_ = decode type_ ~raise subst in
   let decode_row row = decode_row row ~raise subst in

@@ -2,14 +2,10 @@ open Ligo_prim
 module Location = Simple_utils.Location
 module Row = Row.With_layout
 
-type type_variable = Type_var.t [@@deriving compare, hash]
-type expression_variable = Value_var.t [@@deriving compare, hash]
-type module_variable = Module_var.t [@@deriving compare, hash]
+type type_variable = Type_var.t
+type expression_variable = Value_var.t
 
-type ast_core_type_expression = Ast_core.type_expression
-[@@deriving eq, compare, yojson, hash]
-
-type type_meta = ast_core_type_expression option [@@deriving eq, compare, yojson, hash]
+type module_variable = Module_var.t
 
 and type_content =
   | T_variable of Type_var.t
@@ -32,27 +28,25 @@ and te_list = type_expression list
 and annot_option = string option
 and row_element = ty_expr Row.t
 
-and type_expression =
+and type_expression_data =
   { type_content : type_content
-  ; type_meta : type_meta [@eq.ignore] [@hash.ignore] [@compare.ignore]
-  ; orig_var : Type_var.t option [@eq.ignore] [@hash.ignore] [@compare.ignore]
-  ; location : Location.t [@eq.ignore] [@hash.ignore] [@compare.ignore]
+  ; orig_var : Type_var.t option [@ignore]
   }
 
-and ty_expr = type_expression [@@deriving eq, compare, yojson, hash]
+and type_expression = type_expression_data Location.wrap
+and ty_expr = type_expression [@@deriving equal, compare, yojson, hash]
 
-module ValueAttr = Ast_core.ValueAttr
-module TypeOrModuleAttr = Ast_core.TypeOrModuleAttr
-module Access_label = Ast_core.Access_label
+module Value_attr = Value_attr
+module Access_label = Access_label
 module Accessor = Accessor (Access_label)
 module Update = Update (Access_label)
-module Value_decl = Value_decl (ValueAttr)
-module Type_decl = Type_decl (TypeOrModuleAttr)
-module Module_decl = Module_decl (TypeOrModuleAttr)
+module Value_decl = Value_decl (Value_attr)
+module Type_decl = Type_decl (Type_or_module_attr)
+module Module_decl = Module_decl (Type_or_module_attr)
 module Pattern = Linear_pattern
 module Match_expr = Match_expr.Make (Pattern)
-module Let_in = Let_in.Make (Pattern) (ValueAttr)
-module Pattern_decl = Pattern_decl (Pattern) (ValueAttr)
+module Let_in = Let_in.Make (Pattern) (Value_attr)
+module Pattern_decl = Pattern_decl (Pattern) (Value_attr)
 
 type expression_content =
   (* Base *)
@@ -89,11 +83,12 @@ and type_inst =
   ; type_ : type_expression
   }
 
-and expression =
-  { expression_content : expression_content
-  ; location : Location.t [@hash.ignore]
+and expression_data =
+  { expression : expression_content
   ; type_expression : type_expression
   }
+
+and expression = expression_data Location.wrap
 
 and expr = expression [@@deriving eq, compare, yojson, hash]
 

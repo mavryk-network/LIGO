@@ -13,9 +13,12 @@ module Of_Ast_typed = struct
    fun env binding ->
     let v, t = binding in
     let t =
-      match t.orig_var with
-      | Some t' -> { t with type_content = T_variable t' }
-      | None -> t
+      Location.map
+        (fun data ->
+          match data.Ast_typed.orig_var with
+          | Some t' -> { data with type_content = T_variable t' }
+          | None -> Location.unwrap t)
+        t
     in
     let loc = Value_var.get_location v in
     let type_case = Resolved t in
@@ -38,7 +41,7 @@ module Of_Ast_typed = struct
      fun env exp ->
       let return = add_bindings env in
       let loc = exp.location in
-      match exp.expression_content with
+      match Ast_typed.get_e exp with
       | E_literal _
       | E_application _
       | E_raw_code _
@@ -52,7 +55,7 @@ module Of_Ast_typed = struct
       | E_update _
       | E_constant _ -> return []
       | E_type_inst _ -> return []
-      | E_variable v -> return [ v, exp.type_expression ]
+      | E_variable v -> return [ v, Ast_typed.get_e_type exp ]
       | E_lambda { binder; _ } -> return [ Param.get_var binder, Param.get_ascr binder ]
       | E_recursive { fun_name; fun_type; lambda = { binder; _ }; force_lambdarec = _ } ->
         return [ fun_name, fun_type; Param.get_var binder, Param.get_ascr binder ]
@@ -69,13 +72,15 @@ module Of_Ast_typed = struct
                  List.map binders ~f:(fun b -> Binder.get_var b, Binder.get_ascr b))
         in
         return bindings
-      | E_module_accessor { element = e; _ } -> return [ e, exp.type_expression ]
-      | E_for { binder; start; _ } -> return [ binder, start.type_expression ]
+      | E_module_accessor { element = e; _ } -> return [ e, Ast_typed.get_e_type exp ]
+      | E_for { binder; start; _ } -> return [ binder, Ast_typed.get_e_type start ]
       | E_for_each { fe_binder = binder1, Some binder2; collection; _ } ->
-        let key_type, val_type = Ast_typed.get_t_map_exn collection.type_expression in
+        let key_type, val_type =
+          Ast_typed.get_t_map_exn (Ast_typed.get_e_type collection)
+        in
         return [ binder1, key_type; binder2, val_type ]
       | E_for_each { fe_binder = binder, None; collection; _ } ->
-        let type_ = collection.type_expression in
+        let type_ = Ast_typed.get_e_type collection in
         if Ast_typed.is_t_set type_
         then return [ binder, Ast_typed.get_t_set_exn type_ ]
         else if Ast_typed.is_t_list type_
@@ -92,12 +97,12 @@ module Of_Ast_typed = struct
     | D_value { attr = { hidden = true; _ }; _ } -> prev
     | D_irrefutable_match { attr = { hidden = true; _ }; _ } -> prev
     | D_value { binder; expr; _ } ->
-      let prev = add_bindings prev [ Binder.get_var binder, expr.type_expression ] in
+      let prev = add_bindings prev [ Binder.get_var binder, Ast_typed.get_e_type expr ] in
       Self_ast_typed.Helpers.fold_expression aux prev expr
     | D_irrefutable_match { pattern; expr; _ } ->
       let prev =
         let f acc binder =
-          add_bindings acc [ Binder.get_var binder, expr.type_expression ]
+          add_bindings acc [ Binder.get_var binder, Ast_typed.get_e_type expr ]
         in
         List.fold (Pattern.binders pattern) ~f ~init:prev
       in

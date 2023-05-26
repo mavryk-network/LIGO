@@ -104,7 +104,7 @@ let rec compile_expression : I.expression -> O.expression =
 
 
 and compile_matching
-    :  loc:Location.t -> ?attributes:O.ValueAttr.t -> mut:bool -> O.expression
+    :  loc:Location.t -> ?attributes:O.Value_attr.t -> mut:bool -> O.expression
     -> (I.expression, I.type_expression) I.Match_expr.match_case list -> O.expression
   =
  fun ~loc ?attributes ~mut matchee cases ->
@@ -122,7 +122,7 @@ and compile_matching
     { let_binder = Binder.make var matchee_type
     ; rhs = matchee
     ; let_result = { match_expr with location = loc }
-    ; attributes = Option.value attributes ~default:O.ValueAttr.default_attributes
+    ; attributes = Option.value attributes ~default:O.Value_attr.default_attributes
     }
 
 
@@ -171,7 +171,7 @@ and destruct_mut_let_in : O.expression -> O.expression =
             { let_binder = b
             ; rhs = O.e_variable ~loc (Binder.get_var b) (Binder.get_ascr b)
             ; let_result = acc
-            ; attributes = O.ValueAttr.default_attributes
+            ; attributes = O.Value_attr.default_attributes
             })
         ~init:case.body
     in
@@ -188,7 +188,7 @@ and destruct_mut_let_in : O.expression -> O.expression =
               { let_binder = b
               ; rhs = O.e_variable ~loc pattern ty
               ; let_result = body
-              ; attributes = O.ValueAttr.default_attributes
+              ; attributes = O.Value_attr.default_attributes
               }
           in
           { x with body })

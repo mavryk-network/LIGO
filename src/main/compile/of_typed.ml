@@ -131,9 +131,9 @@ let assert_equal_contract_type ~raise
     trace_option ~raise main_entrypoint_not_found (Ast_typed.get_entry contract entry)
   in
   trace ~raise (check_typed_arguments_tracer c) (fun ~raise ->
-      match entry_point.type_expression.type_content with
+      match get_t (get_e_type entry_point) with
       | T_arrow { type1 = args; type2 = _ } ->
-        (match args.type_content with
+        (match get_t args with
         | T_record m when Record.cardinal m.fields = 2 ->
           let param_exp = Record.find m.fields (Label "0") in
           let storage_exp = Record.find m.fields (Label "1") in
@@ -142,12 +142,12 @@ let assert_equal_contract_type ~raise
             trace ~raise checking_tracer
             @@ Checking.assert_type_expression_eq
                  entry_point.location
-                 (param_exp, param.type_expression)
+                 (param_exp, get_e_type param)
           | Check_storage ->
             trace ~raise checking_tracer
             @@ Checking.assert_type_expression_eq
                  entry_point.location
-                 (storage_exp, param.type_expression))
+                 (storage_exp, get_e_type param))
         | _ -> raise.error @@ main_entrypoint_not_a_function)
       | _ -> raise.error @@ main_entrypoint_not_a_function)
 
@@ -196,7 +196,7 @@ let list_declarations (only_ep : bool) (m : Ast_typed.program) : Value_var.t lis
         if only_ep
         then
           if is_some
-               (Ast_typed.Misc.get_type_of_contract expr.type_expression.type_content)
+               (Ast_typed.Misc.get_type_of_contract (get_t (get_e_type expr)))
           then Binder.get_var binder :: prev
           else prev
         else Binder.get_var binder :: prev

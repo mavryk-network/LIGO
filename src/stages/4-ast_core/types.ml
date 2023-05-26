@@ -44,6 +44,8 @@ module Access_label = struct
   let fold_map _ a b = a, b
 end
 
+module Value_attr = Value_attr
+module Type_or_module_attr = Type_or_module_attr
 module Accessor = Accessor (Access_label)
 module Update = Update (Access_label)
 module Value_decl = Value_decl (Value_attr)

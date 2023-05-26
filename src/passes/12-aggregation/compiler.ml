@@ -138,7 +138,7 @@ module Scope : sig
   type t
 
   type decl =
-    | Value of O.type_expression Binder.t * O.type_expression * O.ValueAttr.t
+    | Value of O.type_expression Binder.t * O.type_expression * O.Value_attr.t
     | Module of Module_var.t
 
   val empty : t
@@ -149,7 +149,7 @@ module Scope : sig
     :  t
     -> O.type_expression Binder.t
     -> O.type_expression
-    -> O.ValueAttr.t
+    -> O.Value_attr.t
     -> Path.t
     -> t
 
@@ -173,7 +173,7 @@ end = struct
     }
 
   and decl =
-    | Value of O.type_expression Binder.t * O.type_expression * O.ValueAttr.t
+    | Value of O.type_expression Binder.t * O.type_expression * O.Value_attr.t
     | Module of Module_var.t
 
   let empty =
@@ -242,7 +242,7 @@ let push_pattern_in_scope scope pattern attributes path =
     ~init:scope
 
 
-let compile_value_attr : I.ValueAttr.t -> O.ValueAttr.t =
+let compile_value_attr : I.Value_attr.t -> O.Value_attr.t =
  fun { inline; no_mutation; view; public; hidden; thunk; entry } ->
   { inline; no_mutation; view; public; hidden; thunk; entry }
 
@@ -256,11 +256,11 @@ let rec compile_type_expression ~raise path scope (type_expression : I.type_expr
     O.
       { type_content
       ; location = type_expression.location
-      ; orig_var = type_expression.orig_var
+      ; orig_var = type_expression.wrap_content.orig_var
       ; source_type = Some type_expression
       }
   in
-  match type_expression.type_content with
+  match I.get_t type_expression with
   | T_variable type_variable ->
     (* Look up the path in the scope *)
     return @@ T_variable type_variable
@@ -292,10 +292,10 @@ let rec compile_expression ~raise path scope (expr : I.expression) =
     compile_type_expression ~raise path scope
   in
   let return expression_content =
-    let type_expression = self_type expr.type_expression in
+    let type_expression = self_type (I.get_e_type expr) in
     O.{ expression_content; location = expr.location; type_expression }
   in
-  match expr.expression_content with
+  match I.get_e expr with
   | E_literal literal -> return @@ E_literal literal
   | E_constant { cons_name; arguments } ->
     let arguments = List.map ~f:self arguments in
@@ -349,7 +349,7 @@ let rec compile_expression ~raise path scope (expr : I.expression) =
     let element = self element in
     return @@ E_constructor { constructor; element }
   | E_matching { matchee; cases } ->
-    let attributes = O.ValueAttr.default_attributes in
+    let attributes = O.Value_attr.default_attributes in
     let matchee = self matchee in
     let cases : _ O.Match_expr.match_case list =
       List.map cases ~f:(fun { pattern; body } ->

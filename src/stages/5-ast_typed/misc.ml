@@ -4,6 +4,7 @@ module Ligo_string = Simple_utils.Ligo_string
 open Simple_utils
 open Ligo_prim
 open Types
+open Combinators
 
 let assert_same_size a b = if List.length a = List.length b then Some () else None
 let constant_compare ia ib = Literal_types.compare ia ib
@@ -12,7 +13,7 @@ let assert_no_type_vars (t : type_expression) : unit option =
   let f r te =
     let open Option in
     let* () = r in
-    match te.type_content with
+    match get_t te with
     | T_variable _ | T_for_all _ -> None
     | _ -> return ()
   in
@@ -23,7 +24,7 @@ let rec assert_type_expression_eq ((a, b) : type_expression * type_expression)
     : unit option
   =
   let open Option in
-  match a.type_content, b.type_content with
+  match get_t a, get_t b with
   | ( T_constant { language = la; injection = ia; parameters = lsta }
     , T_constant { language = lb; injection = ib; parameters = lstb } ) ->
     if String.equal la lb && constant_compare ia ib = 0
@@ -143,7 +144,7 @@ let get_entry (lst : program) (name : Value_var.t) : expression option =
 let get_type_of_contract ty =
   match ty with
   | T_arrow { type1; type2 } ->
-    (match type1.type_content, type2.type_content with
+    (match get_t type1, get_t type2 with
     | T_record tin, T_record tout
       when Record.is_tuple tin.fields && Record.is_tuple tout.fields ->
       let open Simple_utils.Option in
@@ -320,47 +321,39 @@ let fetch_views_in_program ~storage_ty
     match Location.unwrap declt with
     | D_value ({ binder; expr; attr } as dvalue) when attr.view ->
       let var = Binder.get_var binder in
-      (match should_uncurry_view ~storage_ty expr.type_expression with
+      (match should_uncurry_view ~storage_ty (get_e_type expr) with
       | `Yes _ ->
-        let expr =
-          Option.value_exn @@ uncurry_wrap ~loc ~type_:expr.type_expression var
-        in
+        let expr = Option.value_exn @@ uncurry_wrap ~loc ~type_:(get_e_type expr) var in
         let binder = Binder.set_var binder (Value_var.fresh_like var) in
-        let binder = Binder.set_ascr binder expr.type_expression in
+        let binder = Binder.set_ascr binder (get_e_type expr) in
         (* Add both `main` and the new `main#FRESH` version that calls `main` but it's curried *)
         ( (Location.wrap ~loc:declt.location @@ D_value dvalue)
           :: (Location.wrap ~loc:declt.location @@ D_value { dvalue with binder; expr })
           :: prog
-        , (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
-          :: views )
+        , (get_e_type expr, Binder.map (fun _ -> get_e_type expr) binder) :: views )
       | `No _ | `Bad | `Bad_not_function | `Bad_storage _ ->
         ( (Location.wrap ~loc:declt.location @@ D_value dvalue) :: prog
-        , (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
-          :: views ))
+        , (get_e_type expr, Binder.map (fun _ -> get_e_type expr) binder) :: views ))
     | D_irrefutable_match
         ({ pattern = { wrap_content = P_var binder; _ } as pattern; expr; attr } as
         dirref)
       when attr.view ->
       let var = Binder.get_var binder in
-      (match should_uncurry_view ~storage_ty expr.type_expression with
+      (match should_uncurry_view ~storage_ty (get_e_type expr) with
       | `Yes _ ->
-        let expr =
-          Option.value_exn @@ uncurry_wrap ~loc ~type_:expr.type_expression var
-        in
+        let expr = Option.value_exn @@ uncurry_wrap ~loc ~type_:(get_e_type expr) var in
         let binder = Binder.set_var binder (Value_var.fresh_like var) in
-        let binder = Binder.set_ascr binder expr.type_expression in
+        let binder = Binder.set_ascr binder (get_e_type expr) in
         let pattern = Pattern.{ pattern with wrap_content = P_var binder } in
         (* Add both `main` and the new `main#FRESH` version that calls `main` but it's curried *)
         ( (Location.wrap ~loc:declt.location @@ D_irrefutable_match dirref)
           :: (Location.wrap ~loc:declt.location
              @@ D_irrefutable_match { dirref with expr; pattern })
           :: prog
-        , (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
-          :: views )
+        , (get_e_type expr, Binder.map (fun _ -> get_e_type expr) binder) :: views )
       | `No _ | `Bad | `Bad_not_function | `Bad_storage _ ->
         ( (Location.wrap ~loc:declt.location @@ D_irrefutable_match dirref) :: prog
-        , (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
-          :: views ))
+        , (get_e_type expr, Binder.map (fun _ -> get_e_type expr) binder) :: views ))
     | D_irrefutable_match _ | D_type _ | D_module _ | D_value _ -> return ()
   in
   List.fold_right ~f:aux ~init:([], []) prog
@@ -373,7 +366,7 @@ let to_signature (program : program) : signature =
         List.fold (Pattern.binders pattern) ~init:ctx ~f:(fun ctx x ->
             ctx @ [ S_value (Binder.get_var x, Binder.get_ascr x, { view; entry }) ])
       | D_value { binder; expr; attr = { view; entry; _ } } ->
-        ctx @ [ S_value (Binder.get_var binder, expr.type_expression, { view; entry }) ]
+        ctx @ [ S_value (Binder.get_var binder, get_e_type expr, { view; entry }) ]
       | D_type { type_binder; type_expr; type_attr = _ } ->
         ctx @ [ S_type (type_binder, type_expr) ]
       | D_module { module_binder; module_; module_attr = _ } ->

@@ -69,7 +69,7 @@ let rec evaluate_type ~default_layout (type_ : I.type_expression)
   @@
   let const content =
     let%bind loc = loc () in
-    return @@ Type.make_t ~loc content (Some type_)
+    return @@ Type.make_t ~loc content
   in
   let lift type_ =
     let%bind loc = loc () in
@@ -105,7 +105,7 @@ let rec evaluate_type ~default_layout (type_ : I.type_expression)
     let%bind ty_binders = ty_binders arity in
     let%bind loc = loc () in
     let parameters =
-      List.map ~f:(fun t -> Type.make_t ~loc (T_variable t) None) ty_binders
+      List.map ~f:(fun t -> Type.make_t ~loc (T_variable t)) ty_binders
     in
     let kind = Kind.Type in
     let%bind app =
@@ -217,7 +217,7 @@ let evaluate_type_with_default_layout type_ =
     type_
 
 
-let infer_value_attr : I.ValueAttr.t -> O.ValueAttr.t =
+let infer_value_attr : I.Value_attr.t -> O.Value_attr.t =
  fun { inline; no_mutation; view; public; hidden; thunk; entry } ->
   { inline; no_mutation; view; public; hidden; thunk; entry }
 
@@ -387,7 +387,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
     E.(
       let%map expr = expr
       and type_ = decode type_ in
-      O.make_e ~loc expr.O.expression_content type_)
+      O.make_e ~loc (O.get_e expr) type_)
   in
   let const content type_ =
     let%bind loc = loc () in
@@ -502,7 +502,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
         let%bind code = code
         and code_type = decode func_type
         and args = all @@ List.map ~f:snd args in
-        let code = { code with type_expression = code_type } in
+        let code = O.change_expr_type code code_type in
         let code = O.e_a_applications ~loc code args in
         return @@ O.E_raw_code { language = "michelson"; code })
       result_type
@@ -516,8 +516,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
       E.(
         let%bind code = code
         and code_type = decode code_type in
-        return
-        @@ O.E_raw_code { language; code = { code with type_expression = code_type } })
+        return @@ O.E_raw_code { language; code = O.change_expr_type code code_type })
       code_type
   | E_ascription { anno_expr; type_annotation } ->
     let%bind ascr = evaluate_type_with_default_layout type_annotation in
@@ -900,7 +899,7 @@ and generalize_expr (in_ : (Type.t * O.expression E.t, 'err, 'wrn) C.t)
           O.e_type_abstraction
             ~loc
             { type_binder = tvar; result = expr }
-            (O.t_for_all ~loc tvar kind expr.type_expression)))
+            (O.t_for_all ~loc tvar kind (O.get_e_type expr))))
   in
   return (type_, expr)
 
@@ -924,7 +923,7 @@ and infer_application (lamb_type : Type.t) (args : I.expression)
             let%bind lamb_type = decode lamb_type in
             f
               (O.make_e
-                 ~loc:hole.O.location
+                 ~loc:hole.Location.location
                  (E_type_inst { forall = hole; type_ = texists })
                  lamb_type))
       , args )
@@ -1364,7 +1363,7 @@ and infer_declaration (decl : I.declaration)
       E.(
         let%bind expr = expr
         and pattern = pattern in
-        let%bind () = check_let_annomalies ~syntax pattern expr.type_expression in
+        let%bind () = check_let_annomalies ~syntax pattern (O.get_e_type expr) in
         return @@ O.D_irrefutable_match { pattern; expr; attr })
       (List.map
          ~f:(fun (v, _, ty) ->

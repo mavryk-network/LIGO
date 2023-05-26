@@ -41,7 +41,7 @@ let check_view_type ~raise
   in
   let rec type_check err (t : Ast_typed.type_expression) : unit =
     let self = type_check err in
-    match t.type_content with
+    match Ast_typed.get_t t with
     | T_variable _ -> ()
     | T_constant { injection = Big_map; _ }
     | T_constant { injection = Sapling_state; _ }

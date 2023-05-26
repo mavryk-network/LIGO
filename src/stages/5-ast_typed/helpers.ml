@@ -4,6 +4,7 @@ module Ligo_string = Simple_utils.Ligo_string
 module Pair = Simple_utils.Pair
 open Ligo_prim
 open Types
+open Combinators
 
 let remove_empty_annotation (ann : string option) : string option =
   match ann with
@@ -25,38 +26,41 @@ module VarSet = Caml.Set.Make (Type_var)
 let rec subst_type ?(fv = VarSet.empty) v t (u : type_expression) =
   let self = subst_type ~fv in
   let loc = u.location in
-  match u.type_content with
-  | T_variable v' when Type_var.equal v v' -> t
-  | T_arrow { type1; type2 } ->
-    let type1 = self v t type1 in
-    let type2 = self v t type2 in
-    { u with type_content = T_arrow { type1; type2 } }
-  | T_abstraction { ty_binder; kind; type_ } when VarSet.mem ty_binder fv ->
-    let ty_binder' = Type_var.fresh ~loc () in
-    let type_ = self ty_binder (Combinators.t_variable ~loc ty_binder' ()) type_ in
-    let ty_binder = ty_binder' in
-    self v t { u with type_content = T_abstraction { ty_binder; kind; type_ } }
-  | T_abstraction { ty_binder; kind; type_ } when not (Type_var.equal ty_binder v) ->
-    let type_ = self v t type_ in
-    { u with type_content = T_abstraction { ty_binder; kind; type_ } }
-  | T_for_all { ty_binder; kind; type_ } when VarSet.mem ty_binder fv ->
-    let ty_binder' = Type_var.fresh ~loc () in
-    let type_ = self ty_binder (Combinators.t_variable ~loc ty_binder' ()) type_ in
-    let ty_binder = ty_binder' in
-    self v t { u with type_content = T_for_all { ty_binder; kind; type_ } }
-  | T_for_all { ty_binder; kind; type_ } when not (Type_var.equal ty_binder v) ->
-    let type_ = self v t type_ in
-    { u with type_content = T_for_all { ty_binder; kind; type_ } }
-  | T_constant { language; injection; parameters } ->
-    let parameters = List.map ~f:(self v t) parameters in
-    { u with type_content = T_constant { language; injection; parameters } }
-  | T_sum row ->
-    let row = Row.map (self v t) row in
-    { u with type_content = T_sum row }
-  | T_record row ->
-    let row = Row.map (self v t) row in
-    { u with type_content = T_record row }
-  | _ -> u
+  Location.map
+    (fun (data : type_expression_data) : type_expression_data ->
+      match data.type_content with
+      | T_variable v' when Type_var.equal v v' -> Location.unwrap t
+      | T_arrow { type1; type2 } ->
+        let type1 = self v t type1 in
+        let type2 = self v t type2 in
+        { data with type_content = T_arrow { type1; type2 } }
+      | T_abstraction { ty_binder; kind; type_ } when VarSet.mem ty_binder fv ->
+        let ty_binder' = Type_var.fresh ~loc () in
+        let type_ = self ty_binder (Combinators.t_variable ~loc ty_binder' ()) type_ in
+        let ty_binder = ty_binder' in
+        Location.unwrap @@ self v t (t_abstraction ~loc { ty_binder; kind; type_ } ())
+      | T_abstraction { ty_binder; kind; type_ } when not (Type_var.equal ty_binder v) ->
+        let type_ = self v t type_ in
+        { data with type_content = T_abstraction { ty_binder; kind; type_ } }
+      | T_for_all { ty_binder; kind; type_ } when VarSet.mem ty_binder fv ->
+        let ty_binder' = Type_var.fresh ~loc () in
+        let type_ = self ty_binder (Combinators.t_variable ~loc ty_binder' ()) type_ in
+        let ty_binder = ty_binder' in
+        Location.unwrap @@ self v t (t_for_all ~loc ty_binder kind type_)
+      | T_for_all { ty_binder; kind; type_ } when not (Type_var.equal ty_binder v) ->
+        let type_ = self v t type_ in
+        { data with type_content = T_for_all { ty_binder; kind; type_ } }
+      | T_constant { language; injection; parameters } ->
+        let parameters = List.map ~f:(self v t) parameters in
+        { data with type_content = T_constant { language; injection; parameters } }
+      | T_sum row ->
+        let row = Row.map (self v t) row in
+        { data with type_content = T_sum row }
+      | T_record row ->
+        let row = Row.map (self v t) row in
+        { data with type_content = T_record row }
+      | _ -> data)
+    u
 
 
 type 'a fold_mapper = 'a -> expression -> bool * 'a * expression
@@ -69,8 +73,10 @@ let rec fold_map_expression : 'a fold_mapper -> 'a -> expression -> 'a * express
   if not continue
   then init, e'
   else (
-    let return expression_content = { e' with expression_content } in
-    match e'.expression_content with
+    let return expression =
+      { e' with wrap_content = { e'.wrap_content with expression } }
+    in
+    match e'.wrap_content.expression with
     | E_matching { matchee = e; cases } ->
       let res, e' = self init e in
       let res, cases' = fold_map_cases f res cases in
@@ -203,7 +209,7 @@ let rec fold_type_expression
  fun te ~init ~f ->
   let self te = fold_type_expression te ~f in
   let init = f init te in
-  match te.type_content with
+  match get_t te with
   | T_variable _ -> init
   | T_constant { parameters; _ } -> List.fold parameters ~init ~f
   | T_sum row | T_record row -> Row.fold f init row
@@ -284,5 +290,6 @@ let fetch_view_type : declaration -> (type_expression * type_expression Binder.t
   | D_value { binder; expr; attr }
   | D_irrefutable_match { pattern = { wrap_content = P_var binder; _ }; expr; attr }
     when attr.view ->
-    Some (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
+    let ty = get_e_type expr in
+    Some (ty, Binder.map (fun _ -> ty) binder)
   | D_value _ | D_irrefutable_match _ | D_type _ | D_module _ -> None

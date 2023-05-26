@@ -31,9 +31,8 @@ and type_expression =
 
 and ty_expr = type_expression [@@deriving equal, compare, yojson, hash]
 
-module ValueAttr = Ast_typed.ValueAttr
-module ModuleAttr = Ast_typed.TypeOrModuleAttr
-module Value_decl = Value_decl (ValueAttr)
+module ModuleAttr = Type_or_module_attr
+module Value_decl = Value_decl (Value_attr)
 
 module Access_label = struct
   type 'a t = Label.t
@@ -52,12 +51,13 @@ module Access_label = struct
   let iter _ = Label.iter
 end
 
+module Value_attr = Value_attr
 module Pattern = Linear_pattern
 module Accessor = Accessor (Access_label)
 module Update = Update (Access_label)
-module Let_in = Let_in.Make (Pattern) (ValueAttr)
+module Let_in = Let_in.Make (Pattern) (Value_attr)
 module Match_expr = Match_expr.Make (Pattern)
-module Pattern_decl = Pattern_decl (Pattern) (ValueAttr)
+module Pattern_decl = Pattern_decl (Pattern) (Value_attr)
 
 type expression_content =
   (* Base *)

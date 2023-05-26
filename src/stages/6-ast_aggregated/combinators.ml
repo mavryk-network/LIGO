@@ -515,7 +515,7 @@ let context_decl
     ~loc
     (binder : type_expression Binder.t)
     (expr : expression)
-    (attr : ValueAttr.t)
+    (attr : Value_attr.t)
     : context
   =
   [ Location.wrap ~loc @@ D_value { binder; expr; attr } ]
@@ -525,7 +525,7 @@ let context_decl_pattern
     ~loc
     (pattern : type_expression Pattern.t)
     (expr : expression)
-    (attr : ValueAttr.t)
+    (attr : Value_attr.t)
     : context
   =
   [ Location.wrap ~loc @@ D_irrefutable_match { pattern; expr; attr } ]

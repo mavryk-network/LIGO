@@ -50,15 +50,15 @@ let internalize_core (ds : Ast_core.program) : Ast_core.program =
   and value_decl (value_decl : _ Value_decl.t) =
     let binder = sap_for_all value_decl.binder in
     let binder = at_prefix binder in
-    let attr : ValueAttr.t =
+    let attr : Value_attr.t =
       { value_decl.attr with inline = true; hidden = true; no_mutation = true }
     in
     Value_decl.{ value_decl with binder; attr }
   and type_decl (type_decl : _ Type_decl.t) =
-    let type_attr : TypeOrModuleAttr.t = { type_decl.type_attr with hidden = true } in
+    let type_attr : Type_or_module_attr.t = { type_decl.type_attr with hidden = true } in
     Type_decl.{ type_decl with type_attr }
   and pattern_decl (pattern_decl : _ Pattern_decl.t) =
-    let attr : ValueAttr.t = { pattern_decl.attr with hidden = true } in
+    let attr : Value_attr.t = { pattern_decl.attr with hidden = true } in
     Pattern_decl.{ pattern_decl with attr }
   and declaration : declaration -> declaration =
    fun decl ->
@@ -92,7 +92,7 @@ let inject_declaration ~options ~raise
     let open Ast_core in
     let expr = Ligo_compile.Utils.core_expression_string ~raise ~options syntax arg in
     let attr =
-      ValueAttr.
+      Value_attr.
         { inline = false
         ; no_mutation = true
         ; view = false

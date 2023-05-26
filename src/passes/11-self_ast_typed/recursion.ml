@@ -22,13 +22,16 @@ let show_unused_rec_warning ~raise ~warn_unused_rec fun_name =
 
 let remove_rec_expression ~raise ~warn_unused_rec : expression -> expression =
  fun e ->
-  let return expression_content = { e with expression_content } in
-  match e.expression_content with
-  | E_recursive { fun_name; fun_type = _; lambda; force_lambdarec = _ } as e ->
-    let is_shadowed = check_rec_binder_shadowed ~fun_name ~lambda in
-    if is_shadowed
-    then (
-      let () = show_unused_rec_warning ~raise ~warn_unused_rec fun_name in
-      return (E_lambda lambda))
-    else return e
-  | e -> return e
+  Location.map
+    (fun data ->
+      let return expression = { data with expression } in
+      match data.expression with
+      | E_recursive { fun_name; fun_type = _; lambda; force_lambdarec = _ } as e ->
+        let is_shadowed = check_rec_binder_shadowed ~fun_name ~lambda in
+        if is_shadowed
+        then (
+          let () = show_unused_rec_warning ~raise ~warn_unused_rec fun_name in
+          return (E_lambda lambda))
+        else return e
+      | e -> return e)
+    e

@@ -4,15 +4,12 @@ module O = Ast_typed
 
 let rec decompile : I.expression -> O.expression =
  fun exp ->
-  let decompile_value_attr : I.ValueAttr.t -> O.ValueAttr.t =
+  let decompile_value_attr : I.Value_attr.t -> O.Value_attr.t =
    fun { inline; no_mutation; view; public; hidden; thunk } ->
     { inline; no_mutation; view; public; hidden; thunk; entry = false }
   in
-  let return expression_content : O.expression =
-    { expression_content
-    ; location = exp.location
-    ; type_expression = decompile_type exp.type_expression
-    }
+  let return expression_content =
+    O.make_e ~loc:exp.location expression_content (decompile_type exp.I.type_expression)
   in
   match exp.expression_content with
   | E_literal l -> return (O.E_literal l)
@@ -98,7 +95,7 @@ let rec decompile : I.expression -> O.expression =
 and decompile_type : I.type_expression -> O.type_expression =
  fun ty ->
   let return type_content : O.type_expression =
-    { type_content; location = ty.location; orig_var = ty.orig_var; type_meta = None }
+    O.make_t ~loc:ty.location ~orig_var:ty.orig_var type_content
   in
   match ty.type_content with
   | T_variable v -> return (O.T_variable v)

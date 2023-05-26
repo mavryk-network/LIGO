@@ -6,6 +6,7 @@ module List = Simple_utils.List
 module Ligo_string = Simple_utils.Ligo_string
 module Int64 = Caml.Int64
 open Ligo_prim
+open Combinators
 open Format
 open Types
 open Simple_utils.PP_helpers
@@ -54,7 +55,7 @@ and type_expression ppf (te : type_expression) : unit =
   then bool ppf
   else if Option.is_some (Combinators.get_t_option te)
   then option ppf te
-  else fprintf ppf "%a" type_content te.type_content
+  else fprintf ppf "%a" type_content (get_t te)
 
 
 let type_expression_annot ppf (te : type_expression) : unit =
@@ -76,19 +77,17 @@ let rec type_content_orig : formatter -> type_content -> unit =
 
 and type_expression_orig ppf (te : type_expression) : unit =
   (* TODO: we should have a way to hook custom pretty-printers for some types and/or track the "origin" of types as they flow through the constraint solver. This is a temporary quick fix *)
-  match te.orig_var with
+  match (Location.unwrap te).orig_var with
   | None ->
     if Option.is_some (Combinators.get_t_bool te)
     then bool ppf
     else if Option.is_some (Combinators.get_t_option te)
     then option ppf te
-    else fprintf ppf "%a" type_content_orig te.type_content
-  | Some v -> Ast_core.(PP.type_expression ppf (t_variable ~loc:te.location v ()))
+    else fprintf ppf "%a" type_content_orig (get_t te)
+  | Some v -> type_expression ppf (t_variable ~loc:te.location v ())
 
 
-let rec expression ppf (e : expression) =
-  fprintf ppf "%a" expression_content e.expression_content
-
+let rec expression ppf (e : expression) = fprintf ppf "%a" expression_content (get_e e)
 
 and expression_content ppf (ec : expression_content) =
   match ec with
@@ -113,7 +112,7 @@ and expression_content ppf (ec : expression_content) =
       let_binder
       expression
       rhs
-      Types.ValueAttr.pp
+      Value_attr.pp
       attr
       expression
       let_result
@@ -143,7 +142,7 @@ and expression_content ppf (ec : expression_content) =
       let_binder
       expression
       rhs
-      Types.ValueAttr.pp
+      Value_attr.pp
       attributes
       expression
       let_result

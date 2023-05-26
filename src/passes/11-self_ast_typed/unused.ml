@@ -43,7 +43,7 @@ let remove_defined_var_after defuse binder f expr =
 
 (* Return a def-use graph + a list of unused variables *)
 let rec defuse_of_expr defuse expr : defuse =
-  match expr.expression_content with
+  match get_e expr with
   | E_literal _ -> defuse, []
   | E_constructor { element; _ } -> defuse_of_expr defuse element
   | E_constant { arguments; _ } ->

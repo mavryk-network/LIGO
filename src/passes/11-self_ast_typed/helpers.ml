@@ -13,7 +13,7 @@ let rec fold_expression : 'a folder -> 'a -> expression -> 'a =
   let self = fold_expression f in
   let self_type = Fun.const in
   let init = f init e in
-  match e.expression_content with
+  match get_e e with
   | E_literal _ | E_variable _ | E_raw_code _ | E_module_accessor _ -> init
   | E_constant { arguments = lst; cons_name = _ } ->
     let res = List.fold ~f:self ~init lst in
@@ -96,8 +96,9 @@ let rec map_expression : 'err mapper -> expression -> expression =
  fun f e ->
   let self = map_expression f in
   let e' = f e in
-  let return expression_content = { e' with expression_content } in
-  match e'.expression_content with
+  Location.map (fun data ->
+  let return expression = { data with expression } in
+  match get_e e' with
   | E_matching { matchee = e; cases } ->
     let e' = self e in
     let cases' = map_cases f cases in
@@ -162,7 +163,7 @@ let rec map_expression : 'err mapper -> expression -> expression =
     let rhs = self rhs in
     let let_result = self let_result in
     return @@ E_let_mut_in { let_binder; rhs; let_result; attributes }
-  | (E_deref _ | E_literal _ | E_variable _ | E_raw_code _) as e' -> return e'
+  | (E_deref _ | E_literal _ | E_variable _ | E_raw_code _) as e' -> return e') e'
 
 
 and map_expression_in_module_expr
@@ -220,7 +221,7 @@ let fetch_entry_type ~raise : string -> program -> type_expression * Location.t 
     trace_option ~raise (corner_case ("Entrypoint '" ^ main_fname ^ "' does not exist"))
     @@ main_decl_opt
   in
-  expr.type_expression, expr.location
+  (get_e_type expr), expr.location
 
 
 type contract_type =
@@ -410,10 +411,10 @@ let fetch_contract_type ~raise
       let var = Binder.get_var binder in
       if Value_var.equal var main_fname
       then (
-        match Ast_typed.uncurry_wrap ~loc ~type_:expr.type_expression var with
+        match Ast_typed.uncurry_wrap ~loc ~type_:(get_e_type expr)var with
         | Some expr ->
           let binder = Binder.set_var binder (Value_var.fresh_like var) in
-          let binder = Binder.set_ascr binder expr.type_expression in
+          let binder = Binder.set_ascr binder (get_e_type expr) in
           (* Add both `main` and the new `main#FRESH` version that calls `main` but it's curried *)
           ( (Location.wrap ~loc:declt.location @@ D_value dvalue)
             :: (Location.wrap ~loc:declt.location @@ D_value { dvalue with binder; expr })
@@ -430,10 +431,10 @@ let fetch_contract_type ~raise
       let var = Binder.get_var binder in
       if Value_var.equal var main_fname
       then (
-        match Ast_typed.uncurry_wrap ~loc ~type_:expr.type_expression var with
+        match Ast_typed.uncurry_wrap ~loc ~type_:(get_e_type expr) var with
         | Some expr ->
           let binder = Binder.set_var binder (Value_var.fresh_like var) in
-          let binder = Binder.set_ascr binder expr.type_expression in
+          let binder = Binder.set_ascr binder (get_e_type expr) in
           let pattern = Pattern.{ pattern with wrap_content = P_var binder } in
           (* Add both `main` and the new `main#FRESH` version that calls `main` but it's curried *)
           ( (Location.wrap ~loc:declt.location @@ D_irrefutable_match dirref)
@@ -457,7 +458,7 @@ let fetch_contract_type ~raise
     @@ main_decl_opt
   in
   let var, expr = main_decl in
-  match expr.type_expression.type_content with
+  match get_t (get_e_type expr) with
   | T_arrow { type1; type2 } ->
     (match Ast_typed.Combinators.(get_t_pair type1, get_t_pair type2) with
     | Some (parameter, storage), Some (listop, storage') ->
@@ -481,16 +482,16 @@ let fetch_contract_type ~raise
       m, var, { parameter; storage }
     | _ ->
       raise.error
-      @@ bad_contract_io main_fname expr.type_expression (Value_var.get_location var))
+      @@ bad_contract_io main_fname (get_e_type expr) (Value_var.get_location var))
   | _ ->
     raise.error
-    @@ bad_contract_io main_fname expr.type_expression (Value_var.get_location var)
+    @@ bad_contract_io main_fname (get_e_type expr) (Value_var.get_location var)
 
 
 (* get_shadowed_decl [prg] [predicate] returns the location of the last shadowed annotated top-level declaration of program [prg] if any
    [predicate] defines the annotation (or set of annotation) you want to match on
 *)
-let get_shadowed_decl : program -> (ValueAttr.t -> bool) -> Location.t option =
+let get_shadowed_decl : program -> (Value_attr.t -> bool) -> Location.t option =
  fun prg predicate ->
   let aux ((seen, shadows) : Value_var.t list * Location.t list) (x : declaration) =
     match Location.unwrap x with
@@ -513,7 +514,7 @@ let get_shadowed_decl : program -> (ValueAttr.t -> bool) -> Location.t option =
 
 
 let update_attribute_annotations
-    : (ValueAttr.t -> ValueAttr.t option) -> program -> program
+    : (Value_attr.t -> Value_attr.t option) -> program -> program
   =
  fun pred m ->
   let aux (x : declaration) =
@@ -530,7 +531,7 @@ let update_attribute_annotations
 
 
 let annotate_with_attribute ~raise
-    :  (ValueAttr.t -> ValueAttr.t) -> string list -> Ast_typed.program
+    :  (Value_attr.t -> Value_attr.t) -> string list -> Ast_typed.program
     -> Ast_typed.program
   =
  fun upd names prg ->
@@ -574,7 +575,7 @@ let annotate_with_attribute ~raise
 
 (* strip_view_annotations [p] remove all the [@view] annotation in top-level declarations of program [p] *)
 let strip_view_annotations p =
-  let f (attr : ValueAttr.t) =
+  let f (attr : Value_attr.t) =
     if attr.view then Some { attr with view = false } else None
   in
   update_attribute_annotations f p
@@ -598,13 +599,13 @@ let strip_view_annotations p =
 *)
 let annotate_with_view ~raise : string list -> Ast_typed.program -> Ast_typed.program =
  fun names prg ->
-  let f (attr : ValueAttr.t) = { attr with view = true } in
+  let f (attr : Value_attr.t) = { attr with view = true } in
   annotate_with_attribute ~raise f names prg
 
 
 (* strip_entry_annotations [p] remove all the [@entry] annotation in top-level declarations of program [p] *)
 let strip_entry_annotations p =
-  let f (attr : ValueAttr.t) =
+  let f (attr : Value_attr.t) =
     if attr.entry then Some { attr with entry = false } else None
   in
   update_attribute_annotations f p
@@ -628,7 +629,7 @@ let strip_entry_annotations p =
 *)
 let annotate_with_entry ~raise : string list -> Ast_typed.program -> Ast_typed.program =
  fun names prg ->
-  let f (attr : ValueAttr.t) = { attr with entry = true } in
+  let f (attr : Value_attr.t) = { attr with entry = true } in
   annotate_with_attribute ~raise f names prg
 
 
@@ -687,7 +688,7 @@ end = struct
   let rec get_fv_expr : expression -> moduleEnv' =
    fun e ->
     let self = get_fv_expr in
-    match e.expression_content with
+    match get_e e with
     | E_variable v ->
       { modVarSet = ModVarSet.empty
       ; moduleEnv = VarMap.empty
@@ -834,8 +835,9 @@ module Declaration_mapper = struct
   let rec map_expression : 'err mapper -> expression -> expression =
    fun f e ->
     let self = map_expression f in
-    let return expression_content = { e with expression_content } in
-    match e.expression_content with
+    Location.map (fun data ->
+    let return expression = { data with expression } in
+    match get_e e with
     | E_matching { matchee = e; cases } ->
       let e' = self e in
       let cases' = map_cases f cases in
@@ -905,7 +907,7 @@ module Declaration_mapper = struct
       let rhs = self rhs in
       let let_result = self let_result in
       return @@ E_let_mut_in { let_binder; rhs; let_result; attributes }
-    | (E_deref _ | E_literal _ | E_variable _ | E_raw_code _) as e' -> return e'
+    | (E_deref _ | E_literal _ | E_variable _ | E_raw_code _) as e' -> return e') e
 
 
   and map_expression_in_module_expr

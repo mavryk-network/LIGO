@@ -12,7 +12,7 @@ type virtual_location = string
 type t =
   | File of (Region.t) (* file_location *)
   | Virtual of virtual_location
-  [@@deriving sexp]
+  [@@deriving sexp] [@@hash.ignore] [@@compare.ignore]
 let to_yojson = function
   | File reg  -> `List [`String "File"; Region.to_yojson reg]
   | Virtual v -> `List [`String "Virtual"; `String v]
@@ -69,7 +69,7 @@ let is_virtual = function
 
 type 'a wrap = {
   wrap_content : 'a ;
-  location : t [@hash.ignore]  ;
+  location : t [@hash.ignore] [@eq.ignore] ;
 } [@@deriving eq,compare,yojson,hash,iter,map,fold,sexp]
 
 

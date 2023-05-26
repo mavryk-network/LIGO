@@ -416,7 +416,7 @@ let uncurry_expression (expr : expression) : expression =
               e_a_application ~loc (e_a_variable ~loc fun_name fun_type) args ret_type
             in
             let attr =
-              ValueAttr.
+              Value_attr.
                 { inline = true
                 ; no_mutation = false
                 ; view = false

@@ -8,7 +8,7 @@ very naive decompilation
 
 *)
 
-let default_attr : I.ValueAttr.t =
+let default_attr : I.Value_attr.t =
   { inline = false
   ; no_mutation = false
   ; public = true

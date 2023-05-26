@@ -10,7 +10,7 @@ module Attr : sig
   [@@deriving compare, hash, equal]
 
   val default : t
-  val of_core_attr : Ast_core.ValueAttr.t -> t
+  val of_core_attr : Ast_core.Value_attr.t -> t
 end
 
 module Signature : sig

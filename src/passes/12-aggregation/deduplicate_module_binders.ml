@@ -38,113 +38,121 @@ end
 let rec type_expression : Scope.t -> AST.type_expression -> AST.type_expression =
  fun scope te ->
   let self ?(scope = scope) = type_expression scope in
-  let return type_content = { te with type_content } in
-  match te.type_content with
-  | T_variable type_variable -> return @@ T_variable type_variable
-  | T_sum { fields; layout } ->
-    let fields = Record.map ~f:self fields in
-    return @@ T_sum { fields; layout }
-  | T_record { fields; layout } ->
-    let fields = Record.map ~f:self fields in
-    return @@ T_record { fields; layout }
-  | T_arrow { type1; type2 } ->
-    let type1 = self type1 in
-    let type2 = self type2 in
-    return @@ T_arrow { type1; type2 }
-  | T_constant { language; injection; parameters } ->
-    let parameters = List.map ~f:self parameters in
-    return @@ T_constant { language; injection; parameters }
-  | T_singleton literal -> return @@ T_singleton literal
-  | T_abstraction { ty_binder; kind; type_ } ->
-    let type_ = self type_ in
-    return @@ T_abstraction { ty_binder; kind; type_ }
-  | T_for_all { ty_binder; kind; type_ } ->
-    let type_ = self type_ in
-    return @@ T_for_all { ty_binder; kind; type_ }
+  Location.map
+    (fun data ->
+      let return type_content = AST.{ data with type_content } in
+      match data.type_content with
+      | T_variable type_variable -> return @@ T_variable type_variable
+      | T_sum { fields; layout } ->
+        let fields = Record.map ~f:self fields in
+        return @@ T_sum { fields; layout }
+      | T_record { fields; layout } ->
+        let fields = Record.map ~f:self fields in
+        return @@ T_record { fields; layout }
+      | T_arrow { type1; type2 } ->
+        let type1 = self type1 in
+        let type2 = self type2 in
+        return @@ T_arrow { type1; type2 }
+      | T_constant { language; injection; parameters } ->
+        let parameters = List.map ~f:self parameters in
+        return @@ T_constant { language; injection; parameters }
+      | T_singleton literal -> return @@ T_singleton literal
+      | T_abstraction { ty_binder; kind; type_ } ->
+        let type_ = self type_ in
+        return @@ T_abstraction { ty_binder; kind; type_ }
+      | T_for_all { ty_binder; kind; type_ } ->
+        let type_ = self type_ in
+        return @@ T_for_all { ty_binder; kind; type_ })
+    te
 
 
 let rec expression : Scope.t -> AST.expression -> AST.expression =
  fun scope e ->
   let self ?(scope = scope) = expression scope in
   let self_type ?(scope = scope) = type_expression scope in
-  let return expression_content = { e with expression_content } in
-  match e.expression_content with
-  | E_literal literal -> return @@ E_literal literal
-  | E_constant { cons_name; arguments } ->
-    let arguments = List.map ~f:self arguments in
-    return @@ E_constant { cons_name; arguments }
-  | E_variable variable -> return @@ E_variable variable
-  | E_application { lamb; args } ->
-    let lamb = self lamb in
-    let args = self args in
-    return @@ E_application { lamb; args }
-  | E_lambda l ->
-    let l = Lambda.map self self_type l in
-    return @@ E_lambda l
-  | E_type_abstraction { type_binder; result } ->
-    (* With current implementation of polymorphism, deshadowing type var breaks stuff *)
-    (* let scope,type_binder = Scope.new_type_var scope type_binder in *)
-    let result = self ~scope result in
-    return @@ E_type_abstraction { type_binder; result }
-  | E_recursive r ->
-    let r = Recursive.map self self_type r in
-    return @@ E_recursive r
-  | E_let_in { let_binder; rhs; let_result; attributes } ->
-    let let_binder = AST.Pattern.map self_type let_binder in
-    let rhs = self rhs in
-    let let_result = self let_result in
-    return @@ E_let_in { let_binder; rhs; let_result; attributes }
-  | E_type_inst { forall; type_ } ->
-    let forall = self forall in
-    let type_ = self_type type_ in
-    return @@ E_type_inst { forall; type_ }
-  | E_raw_code { language; code } ->
-    let code = self code in
-    return @@ E_raw_code { language; code }
-  | E_constructor { constructor; element } ->
-    let element = self element in
-    return @@ E_constructor { constructor; element }
-  | E_matching { matchee; cases } ->
-    let matchee = self matchee in
-    let cases = matching_cases scope cases in
-    return @@ E_matching { matchee; cases }
-  | E_record record ->
-    let record = Record.map ~f:self record in
-    return @@ E_record record
-  | E_accessor { struct_; path } ->
-    let struct_ = self struct_ in
-    return @@ E_accessor { struct_; path }
-  | E_update { struct_; path; update } ->
-    let struct_ = self struct_ in
-    let update = self update in
-    return @@ E_update { struct_; path; update }
-  | E_mod_in { module_binder; rhs; let_result } ->
-    let mod_scope, rhs = compile_module_expr scope rhs in
-    let scope, module_binder = Scope.new_module_var scope module_binder mod_scope in
-    let let_result = self ~scope let_result in
-    return @@ E_mod_in { module_binder; rhs; let_result }
-  | E_module_accessor { module_path; element } ->
-    let _, module_path = List.fold_map ~init:scope module_path ~f:Scope.get_module_var in
-    return @@ E_module_accessor { module_path; element }
-  | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
-    let rhs = self rhs in
-    let let_result = self let_result in
-    let let_binder = AST.Pattern.map self_type let_binder in
-    return (E_let_mut_in { let_binder; rhs; let_result; attributes })
-  | E_deref var -> return (E_deref var)
-  | E_assign { binder; expression } ->
-    let binder = Binder.map self_type binder in
-    let expression = self expression in
-    return @@ E_assign { binder; expression }
-  | E_for for_loop ->
-    let for_loop = For_loop.map self for_loop in
-    return @@ E_for for_loop
-  | E_for_each for_each_loop ->
-    let for_each_loop = For_each_loop.map self for_each_loop in
-    return @@ E_for_each for_each_loop
-  | E_while while_loop ->
-    let while_loop = While_loop.map self while_loop in
-    return @@ E_while while_loop
+  Location.map
+    (fun data ->
+      let return expression = AST.{ data with expression } in
+      match data.expression with
+      | E_literal literal -> return @@ E_literal literal
+      | E_constant { cons_name; arguments } ->
+        let arguments = List.map ~f:self arguments in
+        return @@ E_constant { cons_name; arguments }
+      | E_variable variable -> return @@ E_variable variable
+      | E_application { lamb; args } ->
+        let lamb = self lamb in
+        let args = self args in
+        return @@ E_application { lamb; args }
+      | E_lambda l ->
+        let l = Lambda.map self self_type l in
+        return @@ E_lambda l
+      | E_type_abstraction { type_binder; result } ->
+        (* With current implementation of polymorphism, deshadowing type var breaks stuff *)
+        (* let scope,type_binder = Scope.new_type_var scope type_binder in *)
+        let result = self ~scope result in
+        return @@ E_type_abstraction { type_binder; result }
+      | E_recursive r ->
+        let r = Recursive.map self self_type r in
+        return @@ E_recursive r
+      | E_let_in { let_binder; rhs; let_result; attributes } ->
+        let let_binder = AST.Pattern.map self_type let_binder in
+        let rhs = self rhs in
+        let let_result = self let_result in
+        return @@ E_let_in { let_binder; rhs; let_result; attributes }
+      | E_type_inst { forall; type_ } ->
+        let forall = self forall in
+        let type_ = self_type type_ in
+        return @@ E_type_inst { forall; type_ }
+      | E_raw_code { language; code } ->
+        let code = self code in
+        return @@ E_raw_code { language; code }
+      | E_constructor { constructor; element } ->
+        let element = self element in
+        return @@ E_constructor { constructor; element }
+      | E_matching { matchee; cases } ->
+        let matchee = self matchee in
+        let cases = matching_cases scope cases in
+        return @@ E_matching { matchee; cases }
+      | E_record record ->
+        let record = Record.map ~f:self record in
+        return @@ E_record record
+      | E_accessor { struct_; path } ->
+        let struct_ = self struct_ in
+        return @@ E_accessor { struct_; path }
+      | E_update { struct_; path; update } ->
+        let struct_ = self struct_ in
+        let update = self update in
+        return @@ E_update { struct_; path; update }
+      | E_mod_in { module_binder; rhs; let_result } ->
+        let mod_scope, rhs = compile_module_expr scope rhs in
+        let scope, module_binder = Scope.new_module_var scope module_binder mod_scope in
+        let let_result = self ~scope let_result in
+        return @@ E_mod_in { module_binder; rhs; let_result }
+      | E_module_accessor { module_path; element } ->
+        let _, module_path =
+          List.fold_map ~init:scope module_path ~f:Scope.get_module_var
+        in
+        return @@ E_module_accessor { module_path; element }
+      | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
+        let rhs = self rhs in
+        let let_result = self let_result in
+        let let_binder = AST.Pattern.map self_type let_binder in
+        return (E_let_mut_in { let_binder; rhs; let_result; attributes })
+      | E_deref var -> return (E_deref var)
+      | E_assign { binder; expression } ->
+        let binder = Binder.map self_type binder in
+        let expression = self expression in
+        return @@ E_assign { binder; expression }
+      | E_for for_loop ->
+        let for_loop = For_loop.map self for_loop in
+        return @@ E_for for_loop
+      | E_for_each for_each_loop ->
+        let for_each_loop = For_each_loop.map self for_each_loop in
+        return @@ E_for_each for_each_loop
+      | E_while while_loop ->
+        let while_loop = While_loop.map self while_loop in
+        return @@ E_while while_loop)
+    e
 
 
 and matching_cases

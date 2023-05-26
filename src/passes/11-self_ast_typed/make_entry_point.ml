@@ -1,6 +1,7 @@
 open Simple_utils.Trace
 open Errors
 open Ligo_prim
+open Ast_typed.Combinators
 
 let default_entrypoint = "main"
 
@@ -101,7 +102,7 @@ let create_entrypoint_function_expr entrypoints parameter_type storage_type =
                P_variant
                  ( constructor
                  , Location.wrap ~loc
-                   @@ P_var (Binder.make pattern param_storage.type_expression) ))
+                   @@ P_var (Binder.make pattern (get_e_type param_storage)) ))
         in
         ({ pattern; body } : _ Match_expr.match_case))
   in
@@ -110,12 +111,12 @@ let create_entrypoint_function_expr entrypoints parameter_type storage_type =
   let result =
     e_a_matching
       ~loc
-      (e_a_variable ~loc params param_storage.type_expression)
+      (e_a_variable ~loc params (get_e_type param_storage))
       [ { pattern; body } ]
       oplst_storage
   in
   e_lambda
-    { binder = Param.(make params param_storage.type_expression)
+    { binder = Param.(make params (get_e_type param_storage))
     ; result
     ; output_type = oplst_storage
     }
@@ -185,7 +186,7 @@ let program ~raise : Ast_typed.module_ -> Ast_typed.declaration list =
           parameter_type
           storage_type
       in
-      let binder = Binder.make default_built_entrypoint_var expr.type_expression in
+      let binder = Binder.make default_built_entrypoint_var (get_e_type expr) in
       ( Location.wrap ~loc
         @@ Ast_typed.D_value
              { binder
@@ -200,12 +201,12 @@ let program ~raise : Ast_typed.module_ -> Ast_typed.declaration list =
                  ; hidden = false
                  }
              }
-      , Ast_typed.e_a_variable ~loc (Binder.get_var binder) expr.type_expression )
+      , Ast_typed.e_a_variable ~loc (Binder.get_var binder) (get_e_type expr) )
     in
     let views = get_views_of_module module_ in
     let views_decl, views_var =
       let expr = create_views_function_expr ~loc views storage_type in
-      let binder = Binder.make default_views_var expr.type_expression in
+      let binder = Binder.make default_views_var (get_e_type expr) in
       ( Location.wrap ~loc
         @@ Ast_typed.D_value
              { binder
@@ -220,11 +221,11 @@ let program ~raise : Ast_typed.module_ -> Ast_typed.declaration list =
                  ; hidden = false
                  }
              }
-      , Ast_typed.e_a_variable ~loc (Binder.get_var binder) expr.type_expression )
+      , Ast_typed.e_a_variable ~loc (Binder.get_var binder) (get_e_type expr) )
     in
     let contract_decl =
       let expr = Ast_typed.e_a_pair ~loc entrypoint_var views_var in
-      let binder = Binder.make default_contract_var expr.type_expression in
+      let binder = Binder.make default_contract_var (get_e_type expr) in
       Location.wrap ~loc
       @@ Ast_typed.D_value
            { binder
@@ -325,7 +326,7 @@ let make_main_entrypoint ~raise
           parameter_type
           storage_type
       in
-      let binder = Binder.make default_built_entrypoint_var expr.type_expression in
+      let binder = Binder.make default_built_entrypoint_var (get_e_type expr) in
       Location.wrap ~loc
       @@ Ast_typed.D_value
            { binder

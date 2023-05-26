@@ -19,13 +19,9 @@ type ('a, 'err, 'wrn) t =
 
 let rec encode (type_ : Ast_typed.type_expression) : Type.t =
   let return content : Type.t =
-    { content
-    ; meta = type_.type_meta
-    ; orig_var = type_.orig_var
-    ; location = type_.location
-    }
+    { content; orig_var = type_.wrap_content.orig_var; location = type_.location }
   in
-  match type_.type_content with
+  match Ast_typed.get_t type_ with
   | T_variable tvar -> return @@ T_variable tvar
   | T_arrow arr ->
     let arr = Arrow.map encode arr in
@@ -753,10 +749,10 @@ let generalize (t : (Type.t * 'a, _, _) t)
   (ctx, Substitution.merge subst subst'), (type_, tvars, result)
 
 
-let create_type ?meta (constr : Type.constr) =
+let create_type (constr : Type.constr) =
   let open Let_syntax in
   let%bind loc = loc () in
-  return (constr ?meta ~loc ())
+  return (constr ~loc ())
 
 
 let try_ (body : ('a, 'err, 'wrn) t) ~(with_ : 'err -> ('a, 'err, 'wrn) t)
@@ -840,7 +836,7 @@ module With_frag = struct
   let raise error = lift (raise error)
   let warn warning = lift (warn warning)
   let assert_ cond ~error = lift (assert_ ~error cond)
-  let create_type ?meta type_ = lift (create_type ?meta type_)
+  let create_type type_ = lift (create_type type_)
 
   module Context = struct
     let get_sum label = lift (Context.get_sum label)

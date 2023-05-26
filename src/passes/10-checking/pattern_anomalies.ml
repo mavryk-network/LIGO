@@ -51,7 +51,7 @@ let get_variant_nested_type label (tsum : AST.row) =
 
 
 let rec destructure_type (t : AST.type_expression) =
-  match t.type_content with
+  match AST.get_t t with
   | AST.T_record { fields; _ } ->
     LMap.fold
       ~f:(fun ~key:_ ~data:elt_typ ts -> ts @ destructure_type elt_typ)
@@ -149,7 +149,7 @@ and to_original_pattern ~raise ~loc simple_patterns (ty : AST.type_expression) =
     let ps = to_original_pattern ~raise ~loc sps t in
     Location.wrap ~loc @@ P_variant (c, ps)
   | _ ->
-    (match ty.type_content with
+    (match AST.get_t ty with
     | AST.T_record { fields; _ } ->
       let kvs = LMap.to_alist fields in
       let labels, tys = List.unzip kvs in

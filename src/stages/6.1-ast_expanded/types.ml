@@ -13,15 +13,15 @@ and ty_expr = type_expression
 
 type row = [%import: Ast_aggregated.row]
 
-module ValueAttr = struct
-  include Ast_aggregated.ValueAttr
+module Value_attr = struct
+  include Ast_aggregated.Value_attr
 end
 
 module ModuleAttr = struct
   include Ast_aggregated.ModuleAttr
 end
 
-module Value_decl = Value_decl (ValueAttr)
+module Value_decl = Value_decl (Value_attr)
 
 module Access_label = struct
   include Ast_aggregated.Access_label
@@ -29,7 +29,7 @@ end
 
 module Accessor = Ast_aggregated.Accessor
 module Update = Ast_aggregated.Update
-module Let_in = Let_in.Make (Binder) (ValueAttr)
+module Let_in = Let_in.Make (Binder) (Value_attr)
 
 type expression_content =
   (* Base *)

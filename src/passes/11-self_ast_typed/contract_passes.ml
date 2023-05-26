@@ -38,7 +38,9 @@ and unions l = List.fold l ~init:empty_env ~f:merge_env
 
 and get_fv expr =
   let self = get_fv in
-  let return env expression_content = env, { expr with expression_content } in
+  let return env expression =
+    env, Location.map (fun data -> { data with expression }) expr
+  in
   let get_fv_lambda Lambda.{ binder; output_type; result } =
     let env, result = self result in
     ( (match Param.get_mut_flag binder with
@@ -50,7 +52,7 @@ and get_fv expr =
         })
     , Lambda.{ binder; output_type; result } )
   in
-  match expr.expression_content with
+  match Ast_typed.get_e expr with
   | E_variable v ->
     return { empty_env with used_var = VVarSet.singleton v } @@ E_variable v
   | (E_literal _ | E_raw_code _) as ec ->

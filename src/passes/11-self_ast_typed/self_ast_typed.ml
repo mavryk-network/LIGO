@@ -71,7 +71,7 @@ let all_view ~raise command_line_views main_name module_path contract_type prg =
   in
   let () =
     match
-      Helpers.get_shadowed_decl module_ (fun ({ view; _ } : Ast_typed.ValueAttr.t) ->
+      Helpers.get_shadowed_decl module_ (fun ({ view; _ } : Ast_typed.Value_attr.t) ->
           view)
     with
     | Some loc -> raise.error (Errors.annotated_declaration_shadowed loc)

@@ -23,7 +23,7 @@ let muchuse_neutral : muchuse = M.empty, []
 
 let rec is_dup (t : type_expression) =
   let open Literal_types in
-  match t.type_content with
+  match get_t t with
   | T_constant
       { injection =
           ( Never
@@ -110,7 +110,7 @@ let muchuse_of_binder v t (countuse, muchused) =
 
 
 let rec muchuse_of_expr expr : muchuse =
-  match expr.expression_content with
+  match get_e expr with
   | E_literal _ -> muchuse_neutral
   | E_constructor { element; _ } -> muchuse_of_expr element
   | E_constant { arguments; _ } -> muchuse_unions (List.map ~f:muchuse_of_expr arguments)
@@ -179,12 +179,12 @@ let rec muchuse_of_expr expr : muchuse =
       [ muchuse_of_expr start
       ; muchuse_of_expr final
       ; muchuse_of_expr incr
-      ; muchuse_of_binder binder start.type_expression (muchuse_of_expr f_body)
+      ; muchuse_of_binder binder (get_e_type start) (muchuse_of_expr f_body)
       ]
   | E_for_each { fe_binder = binder1, binder2; collection; fe_body; _ } ->
     (* Recover type of binders *)
     let binders =
-      let type_ = collection.type_expression in
+      let type_ = get_e_type collection in
       if is_t_map type_
       then (
         let loc = type_.location in
@@ -239,7 +239,7 @@ and get_all_declarations (module_name : Module_var.t)
           ^ Format.asprintf "%a" Value_var.pp
           @@ Binder.get_var binder
         in
-        [ name, expr.type_expression ]
+        [ name, get_e_type expr ]
       | D_module
           { module_binder
           ; module_ = { module_content = M_struct module_; _ }
@@ -292,13 +292,13 @@ and muchuse_declaration (x : declaration) s =
   | D_value { expr; binder; _ } ->
     muchuse_union
       (muchuse_of_expr expr)
-      (muchuse_of_binder (Binder.get_var binder) expr.type_expression s)
+      (muchuse_of_binder (Binder.get_var binder) (get_e_type expr) s)
   | D_irrefutable_match { expr; pattern; _ } ->
     let binders = Pattern.binders pattern in
     let muchuse_expr = muchuse_of_expr expr in
     let muchuse_pattern =
       List.map binders ~f:(fun b ->
-          muchuse_of_binder (Binder.get_var b) expr.type_expression s)
+          muchuse_of_binder (Binder.get_var b) (get_e_type expr) s)
     in
     muchuse_union muchuse_expr (muchuse_maxs muchuse_pattern)
   | D_module { module_; module_binder; module_attr = _ } ->

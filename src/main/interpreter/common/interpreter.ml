@@ -38,7 +38,7 @@ pattern_env_extend_ [locs,env] [pattern] [ty] [value]
   Bounded variable in [pattern] can also be mutable -- in which case locations are push through
   the execution monad
 *)
-let rec pattern_env_extend_ ~(no_colour : bool) ~(attributes : ValueAttr.t) ~(mut : bool)
+let rec pattern_env_extend_ ~(no_colour : bool) ~(attributes : Value_attr.t) ~(mut : bool)
     :  location list * env -> _ AST.Pattern.t -> AST.type_expression -> value
     -> (location list * env) Monad.t
   =
@@ -1729,7 +1729,7 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
             (let* env =
                pattern_env_extend
                  ~no_colour
-                 ~attributes:ValueAttr.default_attributes
+                 ~attributes:Value_attr.default_attributes
                  env
                  pattern
                  matchee.type_expression
@@ -2144,9 +2144,9 @@ let eval_test ~raise ~steps ~options : Ast_typed.program -> bool * toplevel_env 
       if (not (Value_var.is_generated var))
          && Base.String.is_prefix (Value_var.to_name_exn var) ~prefix:"test"
       then (
-        let expr = Ast_typed.(e_a_variable ~loc var expr.type_expression) in
+        let expr = Ast_typed.(e_a_variable ~loc var (get_e_type expr)) in
         (* TODO: check that variables are unique, as they are ignored *)
-        decl :: ds, (binder, expr.type_expression) :: defs)
+        decl :: ds, (binder, (Ast_typed.get_e_type expr)) :: defs)
       else decl :: ds, defs
     | _ -> decl :: ds, defs
   in

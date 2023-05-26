@@ -1,7 +1,6 @@
 module Location = Simple_utils.Location
 module List = Simple_utils.List
 module Ligo_string = Simple_utils.Ligo_string
-module S = Ast_core
 open Ligo_prim
 open Literal_types
 open Types
@@ -14,14 +13,14 @@ type expression_content = [%import: Types.expression_content]
   ez
     { prefixes =
         [ ( "make_e"
-          , fun ~loc expression_content type_expression : expression ->
-              { expression_content; location = loc; type_expression } )
-        ; ("get", fun x -> x.expression_content)
-        ; ("get_type", fun x -> x.type_expression)
+          , fun ~loc expression type_expression : expression ->
+              Location.wrap ~loc { expression; type_expression } )
+        ; ("get_e", fun x -> (Location.unwrap x).expression)
+        ; ("get_e_type", fun (x : expression) -> (Location.unwrap x).type_expression)
         ]
     ; wrap_constructor =
         ("expression_content", fun content type_ ~loc -> make_e ~loc content type_)
-    ; wrap_get = "expression_content", get
+    ; wrap_get = "expression_content", get_e
     }]
 
 type type_content = [%import: Types.type_content]
@@ -29,26 +28,22 @@ type type_content = [%import: Types.type_content]
   ez
     { prefixes =
         [ ( "make_t"
-          , fun ~loc type_content type_meta : type_expression ->
-              { type_content; location = loc; orig_var = None; type_meta } )
-        ; ("get", fun x -> x.type_content)
+          , fun ~loc ?(orig_var = None) type_content : type_expression ->
+              Location.wrap ~loc { type_content; orig_var } )
+        ; ("get_t", fun x -> (Location.unwrap x).type_content)
         ]
     ; wrap_constructor =
-        ( "type_content"
-        , fun type_content ~loc ?type_meta () -> make_t ~loc type_content type_meta )
-    ; wrap_get = "type_content", get
+        ("type_content", fun type_content ~loc () -> make_t ~loc type_content)
+    ; wrap_get = "type_content", get_t
     ; default_get = `Option
     }]
 
-let t_constant ~loc ?core injection parameters : type_expression =
-  make_t
-    ~loc
-    (T_constant { language = Backend.Michelson.name; injection; parameters })
-    core
+let t_constant ~loc injection parameters : type_expression =
+  make_t ~loc (T_constant { language = Backend.Michelson.name; injection; parameters })
 
 
 (* TODO?: X_name here should be replaced by X_injection *)
-let t__type_ ~loc ?core () : type_expression = t_constant ~loc ?core _type_ []
+let t__type_ ~loc () : type_expression = t_constant ~loc _type_ []
   [@@map
     _type_
     , ( "signature"
@@ -76,8 +71,10 @@ let t__type_ ~loc ?core () : type_expression = t_constant ~loc ?core _type_ []
       , "ast_contract"
       , "int64" )]
 
+let change_expr_type e type_expression =
+  Location.map (fun data -> {data with type_expression}) e
 
-let t__type_ ~loc ?core t : type_expression = t_constant ~loc ?core _type_ [ t ]
+let t__type_ ~loc t : type_expression = t_constant ~loc _type_ [ t ]
   [@@map
     _type_
     , ( "list"
@@ -94,12 +91,7 @@ let t_mutez = t_tez
 
 let t_abstraction1 ~loc name kind : type_expression =
   let ty_binder = Type_var.fresh ~loc ~name:"_a" () in
-  let type_ =
-    t_constant
-      ~loc
-      name
-      [ t_variable ~loc ~type_meta:(Ast_core.t_variable ~loc ty_binder ()) ty_binder () ]
-  in
+  let type_ = t_constant ~loc name [ t_variable ~loc ty_binder () ] in
   t_abstraction { ty_binder; kind; type_ } ~loc ()
 
 
@@ -153,8 +145,8 @@ let t_abstraction3 ~loc name kind_l kind_m kind_r : type_expression =
 
 let t_for_all ty_binder kind type_ = t_for_all { ty_binder; kind; type_ } ()
 
-let t_record ~loc ?core ~layout fields : type_expression =
-  t_record ~loc ?type_meta:core (Row.create ~layout fields) ()
+let t_record ~loc ~layout fields : type_expression =
+  t_record ~loc (Row.create ~layout fields) ()
 
 
 let default_layout = Layout.default
@@ -172,47 +164,43 @@ let fields_with_no_annot fields =
    Currently the typer doesn't insert any annotations. Lets keep that for now and raise an issue later 
 hopefully test won't pass but I am uncertain :D *)
 
-let ez_t_record
-    ~loc
-    ?core
-    ?(layout = default_layout)
-    (lst : (Label.t * type_expression) list)
+let ez_t_record ~loc ?(layout = default_layout) (lst : (Label.t * type_expression) list)
     : type_expression
   =
   let layout = layout @@ fields_with_no_annot lst in
   let row = Row.of_alist_exn ~layout lst in
-  make_t ~loc (T_record row) core
+  make_t ~loc (T_record row)
 
 
-let t_pair ~loc ?core a b : type_expression =
-  ez_t_record ~loc ?core [ Label.of_int 0, a; Label.of_int 1, b ]
+let t_pair ~loc a b : type_expression =
+  ez_t_record ~loc [ Label.of_int 0, a; Label.of_int 1, b ]
 
 
-let t_sum_ez ~loc ?core ?(layout = default_layout) (lst : (string * type_expression) list)
+let t_sum_ez ~loc ?(layout = default_layout) (lst : (string * type_expression) list)
     : type_expression
   =
   let fields = List.map ~f:(fun (x, y) -> Label.of_string x, y) lst in
   let layout = layout @@ fields_with_no_annot fields in
   let row = Row.of_alist_exn ~layout fields in
-  make_t ~loc (T_sum row) core
+  make_t ~loc (T_sum row)
 
 
-let t_bool ~loc ?core () : type_expression =
-  t_sum_ez ~loc ?core [ "True", t_unit ~loc (); "False", t_unit ~loc () ]
+let t_bool ~loc () : type_expression =
+  t_sum_ez ~loc [ "True", t_unit ~loc (); "False", t_unit ~loc () ]
 
 
-let t_arrow param result ~loc ?s () : type_expression =
-  t_arrow ~loc ?type_meta:s { type1 = param; type2 = result } ()
+let t_arrow param result ~loc () : type_expression =
+  t_arrow ~loc { type1 = param; type2 = result } ()
 
 
 let get_lambda_with_type e =
-  match e.expression_content, e.type_expression.type_content with
+  match get_e e, get_t (get_e_type e) with
   | E_lambda l, T_arrow { type1; type2 } -> Some (l, (type1, type2))
   | _ -> None
 
 
 let get_t_bool (t : type_expression) : unit option =
-  match t.type_content with
+  match get_t t with
   | T_sum { fields; _ } ->
     let keys = Map.key_set fields in
     if Set.length keys = 2 && Set.mem keys (Label "True") && Set.mem keys (Label "False")
@@ -222,7 +210,7 @@ let get_t_bool (t : type_expression) : unit option =
 
 
 let get_t_option (t : type_expression) : type_expression option =
-  match t.type_content with
+  match get_t t with
   | T_sum { fields; _ } ->
     let keys = Map.key_set fields in
     if Set.length keys = 2 && Set.mem keys (Label "Some") && Set.mem keys (Label "None")
@@ -232,7 +220,7 @@ let get_t_option (t : type_expression) : type_expression option =
 
 
 let get_t_inj (t : type_expression) (v : Literal_types.t) : type_expression list option =
-  match t.type_content with
+  match get_t t with
   | T_constant { language = _; injection; parameters }
     when Literal_types.equal injection v -> Some parameters
   | _ -> None
@@ -278,13 +266,13 @@ let get_t__type_ (t : type_expression) : type_expression option = get_t_unary_in
 let tuple_of_record row = Row.to_tuple row
 
 let get_t_tuple (t : type_expression) : type_expression list option =
-  match t.type_content with
+  match get_t t with
   | T_record row when Row.is_tuple row -> Some (tuple_of_record row)
   | _ -> None
 
 
 let get_t_pair (t : type_expression) : (type_expression * type_expression) option =
-  match t.type_content with
+  match get_t t with
   | T_record m when Row.is_tuple m ->
     (match tuple_of_record m with
     | [ t1; t2 ] -> Some (t1, t2)
@@ -293,7 +281,7 @@ let get_t_pair (t : type_expression) : (type_expression * type_expression) optio
 
 
 let get_t_map (t : type_expression) : (type_expression * type_expression) option =
-  match t.type_content with
+  match get_t t with
   | T_constant { language = _; injection; parameters = [ k; v ] }
     when Literal_types.equal injection Literal_types.Map -> Some (k, v)
   | _ -> None
@@ -301,14 +289,14 @@ let get_t_map (t : type_expression) : (type_expression * type_expression) option
 
 let get_t_typed_address (t : type_expression) : (type_expression * type_expression) option
   =
-  match t.type_content with
+  match get_t t with
   | T_constant { language = _; injection; parameters = [ k; v ] }
     when Literal_types.equal injection Literal_types.Typed_address -> Some (k, v)
   | _ -> None
 
 
 let get_t_big_map (t : type_expression) : (type_expression * type_expression) option =
-  match t.type_content with
+  match get_t t with
   | T_constant { language = _; injection; parameters = [ k; v ] }
     when Literal_types.equal injection Literal_types.Big_map -> Some (k, v)
   | _ -> None
@@ -400,7 +388,7 @@ let e_a__type_ ~loc p = make_e ~loc (e__type_ p) (t__type_ ~loc ())
 
 
 let e_a_pair ~loc a b =
-  make_e ~loc (e_pair a b) (t_pair ~loc a.type_expression b.type_expression)
+  make_e ~loc (e_pair a b) (t_pair ~loc (get_e_type a) (get_e_type b))
 
 
 let e_a_record ~loc ?(layout = default_layout) r =
@@ -410,24 +398,21 @@ let e_a_record ~loc ?(layout = default_layout) r =
     (t_record
        ~loc
        ~layout:(layout @@ fields_with_no_annot (Map.to_alist r))
-       (Map.map r ~f:(fun expr -> expr.type_expression)))
+       (Map.map r ~f:(fun expr -> get_e_type expr)))
 
 
 let ez_e_a_record ~loc ?layout r =
   make_e
     ~loc
     (ez_e_record r)
-    (ez_t_record
-       ~loc
-       ?layout
-       (List.map r ~f:(fun (name, expr) -> name, expr.type_expression)))
+    (ez_t_record ~loc ?layout (List.map r ~f:(fun (name, expr) -> name, get_e_type expr)))
 
 
 let e_a_variable ~loc v ty = e_variable ~loc v ty
 let e_a_application ~loc lamb args t = e_application ~loc { lamb; args } t
 
 let e_a_application_exn ~loc lamb args =
-  let Arrow.{ type1 = _; type2 } = get_t_arrow_exn lamb.type_expression in
+  let Arrow.{ type1 = _; type2 } = get_t_arrow_exn (get_e_type lamb) in
   e_application ~loc { lamb; args } type2
 
 

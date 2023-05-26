@@ -4,7 +4,7 @@ module I = Ast_core
 module O = Ast_typed
 open Ligo_prim
 
-let untype_value_attr : O.ValueAttr.t -> I.ValueAttr.t =
+let untype_value_attr : O.Value_attr.t -> I.Value_attr.t =
  fun { inline; no_mutation; view; public; hidden; thunk; entry } ->
   { inline; no_mutation; view; public; hidden; thunk; entry }
 
@@ -13,7 +13,7 @@ let rec untype_type_expression (t : O.type_expression) : I.type_expression =
   let loc = t.location in
   let self = untype_type_expression in
   let return t = I.make_t ~loc t in
-  match t.type_content with
+  match O.get_t t with
   | O.T_sum { fields; layout } ->
     let fields = Map.map fields ~f:self in
     return @@ I.T_sum { fields; layout = Some layout }
@@ -44,7 +44,8 @@ let rec untype_type_expression (t : O.type_expression) : I.type_expression =
 let untype_type_expression_option x = Option.return @@ untype_type_expression x
 
 let rec untype_expression (e : O.expression) : I.expression =
-  untype_expression_content ~loc:e.location e.expression_content
+  let O.{ expression; type_expression = _ } = Location.unwrap e in
+  untype_expression_content ~loc:e.location expression
 
 
 and untype_expression_content ~loc (ec : O.expression_content) : I.expression =
@@ -91,7 +92,7 @@ and untype_expression_content ~loc (ec : O.expression_content) : I.expression =
   | E_let_in { let_binder; rhs; let_result; attributes } ->
     let rhs = self rhs in
     let result = self let_result in
-    let attr : ValueAttr.t = untype_value_attr attributes in
+    let attr : Value_attr.t = untype_value_attr attributes in
     let let_binder = O.Pattern.map (Fn.const None) let_binder in
     return (e_let_mut_in ~loc let_binder rhs result attr)
   | E_mod_in { module_binder; rhs; let_result } ->
@@ -109,7 +110,7 @@ and untype_expression_content ~loc (ec : O.expression_content) : I.expression =
   | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
     let rhs = self rhs in
     let result = self let_result in
-    let attr : ValueAttr.t = untype_value_attr attributes in
+    let attr : Value_attr.t = untype_value_attr attributes in
     let let_binder = O.Pattern.map (Fn.const None) let_binder in
     return (e_let_in ~loc let_binder rhs result attr)
   | E_assign a ->
@@ -126,10 +127,10 @@ and untype_expression_content ~loc (ec : O.expression_content) : I.expression =
     return @@ I.make_e ~loc @@ E_while while_loop
   | E_deref var -> return @@ I.make_e ~loc @@ E_variable var
   | E_type_inst { forall; type_ = type_inst } ->
-    (match forall.type_expression.type_content with
+    (match O.(get_t (get_e_type forall)) with
     | T_for_all { ty_binder; type_; kind = _ } ->
       let type_ = Ast_typed.Helpers.subst_type ty_binder type_inst type_ in
-      let forall = { forall with type_expression = type_ } in
+      let forall = Location.map (fun data -> O.{ data with type_expression = type_ }) forall in
       self forall
     | T_arrow _ ->
       (* This case is used for external typers *)
@@ -195,7 +196,7 @@ and untype_declaration_constant
     : (O.expression -> I.expression) -> _ O.Value_decl.t -> _ I.Value_decl.t
   =
  fun untype_expression { binder; expr; attr } ->
-  let ty = untype_type_expression expr.O.type_expression in
+  let ty = untype_type_expression (O.get_e_type expr) in
   let binder = Binder.map (Fn.const @@ Some ty) binder in
   let expr = untype_expression expr in
   let expr = I.e_ascription ~loc:expr.location expr ty in
@@ -207,7 +208,7 @@ and untype_declaration_pattern
     : (O.expression -> I.expression) -> _ O.Pattern_decl.t -> _ I.Pattern_decl.t
   =
  fun untype_expression { pattern; expr; attr } ->
-  let ty = untype_type_expression expr.O.type_expression in
+  let ty = untype_type_expression (O.get_e_type expr) in
   let pattern = O.Pattern.map (Fn.const None) pattern in
   let expr = untype_expression expr in
   let expr = I.e_ascription ~loc:expr.location expr ty in
@@ -218,14 +219,14 @@ and untype_declaration_pattern
 and untype_declaration_type : _ O.Type_decl.t -> _ I.Type_decl.t =
  fun { type_binder; type_expr; type_attr = { public; hidden } } ->
   let type_expr = untype_type_expression type_expr in
-  let type_attr = ({ public; hidden } : I.TypeOrModuleAttr.t) in
+  let type_attr = ({ public; hidden } : I.Type_or_module_attr.t) in
   { type_binder; type_expr; type_attr }
 
 
 and untype_declaration_module : _ O.Module_decl.t -> _ I.Module_decl.t =
  fun { module_binder; module_; module_attr = { public; hidden } } ->
   let module_ = untype_module_expr module_ in
-  let module_attr = ({ public; hidden } : I.TypeOrModuleAttr.t) in
+  let module_attr = ({ public; hidden } : I.Type_or_module_attr.t) in
   { module_binder; module_; module_attr }
 
 
