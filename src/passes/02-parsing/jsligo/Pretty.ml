@@ -150,7 +150,9 @@ let rec print state (node : CST.t) =
   let prog = Utils.nseq_to_list statements
              |> List.map ~f:(pp_toplevel_statement state)
              |> separate_map hardline group
-  in prog ^/^ pp_comments eof#comments
+  in match eof#comments with
+       [] -> prog
+     | comments -> prog ^/^ pp_comments comments
 
 and pp_toplevel_statement state = function
   TopLevel (stmt, _) ->
