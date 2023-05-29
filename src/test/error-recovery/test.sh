@@ -127,6 +127,8 @@ mkdir -p original_generated
 
 echo "STATUS,FILE,LOC,CST,SYMBOLS,TOKENS,ERRORS" > $RESULTS
 
+echo $LIGO_FILES > $RESULTS
+
 for f in $LIGO_FILES; do
     CURRENT_FILE_ERROR=0
     # enable trap to catch all nonzero exit code
