@@ -531,8 +531,9 @@ let declaration : Eq.declaration -> Folding.declaration =
   | D_Module { value = { name; module_expr; _ }; _ } ->
     let name = TODO_do_in_parsing.mvar name in
     ret @@ D_module { name; mod_expr = module_expr }
-  | D_Module_include { value = { kwd_include ; module_expr ; _ }} ->
+  | D_Module_include { value = { kwd_include ; module_expr } ; _ } ->
     (* TODO *)
+    ignore (kwd_include,module_expr) ;
     assert false
 
 
