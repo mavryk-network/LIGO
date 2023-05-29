@@ -106,11 +106,11 @@ if [ -z "$LIGO_FILES" ]
 then
 
     case "$(uname -s)" in
-	Darwin)
+	Darwin*)
 	    LIGO_FILES=$(LC_COLLATE=C.UTF-8 find $DUNE_WORKSPACE_ROOT/src/test/error-recovery/$TEST_TYPE/$DIALECT -name "*.$LIGO_FILE_EXT" -type f -exec basename {} + | sort | uniq)
 	    ;;
 	*)
-	    LIGO_FILES=$(LC_COLLATE=C.UTF-8 find $DUNE_WORKSPACE_ROOT/src/test/error-recovery/$TEST_TYPE/$DIALECT -name "*.$LIGO_FILE_EXT" -type f -printf "%f\n" | LC_ALL=C sort -fus)
+	    LIGO_FILES=$(LC_COLLATE=C.UTF-8 find $DUNE_WORKSPACE_ROOT/src/test/error-recovery/$TEST_TYPE/$DIALECT -name "*.$LIGO_FILE_EXT" -type f -printf "%f\n" | LC_ALL=C sort -fus | uniq)
 	    ;;
     esac
 fi
