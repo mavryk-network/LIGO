@@ -113,6 +113,7 @@ module T =
     | Match     of lexeme Wrap.t  (* match  *)
     | Mod       of lexeme Wrap.t  (* mod    *)
     | Module    of lexeme Wrap.t  (* module *)
+    | Include   of lexeme Wrap.t  (* include*)
     | Mut       of lexeme Wrap.t  (* mut    *)
     | Not       of lexeme Wrap.t  (* not    *)
     | Of        of lexeme Wrap.t  (* of     *)
@@ -224,6 +225,7 @@ module T =
     | Lxor   t
     | Match  t
     | Mod    t
+    | Include t
     | Module t
     | Mut    t
     | Not    t
@@ -282,6 +284,7 @@ module T =
     let wrap_with   = wrap "with"
     let wrap_contract   = wrap "contract_of"
     let wrap_parameter  = wrap "parameter_of"
+    let wrap_include = wrap "include"
 
     (* Smart constructors *)
 
@@ -871,6 +874,7 @@ module T =
     | Match  t -> t#region, "Match"
     | Mod    t -> t#region, "Mod"
     | Module t -> t#region, "Module"
+    | Include t -> t#region, "Include"
     | Mut    t -> t#region, "Mut"
     | Not    t -> t#region, "Not"
     | Of     t -> t#region, "Of"

@@ -63,6 +63,7 @@ type kwd_type   = lexeme wrap
 type kwd_upto   = lexeme wrap
 type kwd_while  = lexeme wrap
 type kwd_with   = lexeme wrap
+type kwd_include = lexeme wrap
 
 (* Symbols *)
 
@@ -146,6 +147,7 @@ and declaration =
 | D_Directive of Directive.t
 | D_Let       of let_decl reg
 | D_Module    of module_decl reg
+| D_Module_include of module_include reg
 | D_Type      of type_decl reg
 
 (* Non-recursive, top-level values *)
@@ -182,6 +184,11 @@ and module_body = {
   kwd_struct   : kwd_struct;
   declarations : declaration list;
   kwd_end      : kwd_end
+}
+
+and module_include = {
+  kwd_include : kwd_include ;
+  module_expr : module_expr
 }
 
 (* Module paths *)
@@ -698,4 +705,6 @@ let declaration_to_region = function
 | D_Directive dir         -> Directive.to_region dir
 | D_Let       {region; _}
 | D_Module    {region; _}
+| D_Module_include {region; _}
 | D_Type      {region; _} -> region
+

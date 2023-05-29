@@ -64,6 +64,7 @@ and print_declaration state = function
 | D_Let       d -> print_D_Let       state d
 | D_Module    d -> print_D_Module    state d
 | D_Type      d -> print_D_Type      state d
+| D_Module_include _ -> assert false
 
 (* Attributed declaration *)
 
@@ -106,6 +107,13 @@ and print_type_params state (node : type_params par) =
 and print_type_annotation state (_, type_expr) =
   Tree.make_unary state "<type>" print_type_expr type_expr
 
+and print_D_Module_include state node =
+  let Region.{value; region} = node in
+  let children = mk_children_module_include value
+  in Tree.make state ~region "D_Module_include" children
+
+and mk_children_module_include (node : module_decl) =
+  Tree.[ mk_child print_module_expr node.module_expr]
 (* Type declaration *)
 
 and print_D_Type state (node : type_decl reg) =
