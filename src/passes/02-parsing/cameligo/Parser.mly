@@ -240,10 +240,10 @@ top_declaration:
 | "<directive>" { D_Directive $1 } (* Only at top-level *)
 
 declaration:
-  type_decl   { D_Type   $1 }
-| let_decl    { D_Let    $1 }
-| module_decl { D_Module $1 }
-| attr_decl   { D_Attr   $1 }
+  type_decl      { D_Type   $1 }
+| let_decl       { D_Let    $1 }
+| module_decl    { D_Module $1 }
+| attr_decl      { D_Attr   $1 }
 | module_include { D_Module_include $1 }
 
 (* Attributed declarations *)
