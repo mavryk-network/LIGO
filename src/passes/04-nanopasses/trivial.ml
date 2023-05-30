@@ -663,8 +663,6 @@ end = struct
       ret @@ T_record_raw (conv_fields fields)
     | T_abstraction x -> ret @@ T_abstraction x
     | T_for_all x -> ret @@ T_for_all x
-    | T_wildcard ->
-      ret @@ T_var (Ligo_prim.Type_var.fresh ~name:"_" ~loc:Location.generated ())
 
 
   and pattern_

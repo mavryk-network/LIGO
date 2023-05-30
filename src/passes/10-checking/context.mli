@@ -64,7 +64,7 @@ val of_list : item list -> t
 val ( |:: ) : t -> item -> t
 val join : t -> t -> t
 val ( |@ ) : t -> t -> t
-val item_of_signature_item : Signature.item -> item
+val item_of_signature_item : Signature.item -> item list
 val pp : Format.formatter -> t -> unit
 val add_value : t -> Value_var.t -> mutable_flag -> Type.t option -> Attr.t -> t
 val add_mut : t -> Value_var.t -> Type.t option -> t

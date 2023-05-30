@@ -360,7 +360,6 @@ and type_expression : AST.type_expression -> references -> env -> references =
     type_expression type2 refs env
   | T_for_all { ty_binder = _; kind = _; type_ }
   | T_abstraction { ty_binder = _; kind = _; type_ } -> type_expression type_ refs env
-  | T_wildcard -> refs
 
 
 (** [module_expression] takes a [AST.module_expr] and depending on the type of 

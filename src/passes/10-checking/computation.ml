@@ -744,7 +744,7 @@ let def_type_var bindings ~on_exit ~in_ =
 
 
 let def_sig_item sig_items ~on_exit ~in_ =
-  Context.add (List.map sig_items ~f:Context_.item_of_signature_item) ~in_ ~on_exit
+  Context.add (List.concat_map sig_items ~f:Context_.item_of_signature_item) ~in_ ~on_exit
 
 
 let assert_ cond ~error =

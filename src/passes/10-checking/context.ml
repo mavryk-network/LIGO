@@ -315,16 +315,29 @@ let add_texists_var t tvar kind = t |:: C_texists_var (tvar, kind)
 let add_module t mvar mctx = t |:: C_module (mvar, mctx)
 let add_lexists_var t lvar fields = t |:: C_lexists_var (lvar, fields)
 
-let item_of_signature_item (sig_item : Signature.item) : item =
+let item_of_signature_item (sig_item : Signature.item) : item list =
   match sig_item with
-  | S_value (var, type_, attr) -> C_value (var, Immutable, type_, attr)
-  | S_type (tvar, type_) -> C_type (tvar, type_)
-  | S_module (mvar, sig_) -> C_module (mvar, sig_)
-  | S_module_type (mvar, sig_) -> C_module_type (mvar, sig_)
+  | S_value (var, type_, attr) ->
+    (* let loc = Location.generated in
+        let tvar = Type_var.fresh ~loc () in
+        Type.t_exists ~loc tvar () *)
+
+    (* let type_ = 
+    
+add_texists_var
+      
+    in *)
+    let loc = Location.generated in
+    let kind = Ligo_prim.Kind.Type in
+    let tvar = Type_var.fresh ~loc () in
+    C_texists_var (tvar, kind) :: [ C_value (var, Immutable, type_, attr) ]
+  | S_type (tvar, type_) -> [ C_type (tvar, type_) ]
+  | S_module (mvar, sig_) -> [ C_module (mvar, sig_) ]
+  | S_module_type (mvar, sig_) -> [ C_module_type (mvar, sig_) ]
 
 
 let add_signature_item t (sig_item : Signature.item) =
-  add t (item_of_signature_item sig_item)
+  t |@ item_of_signature_item sig_item
 
 
 let add_signature_items t (sig_items : Signature.item list) =
@@ -758,21 +771,23 @@ let get_module_of_path t ((local_module, path) : Module_var.t List.Ne.t) =
       let%bind sig_ = sig_ in
       Signature.get_module sig_ mvar)
 
+
 let get_module_type_of_path t module_path =
   let module_path = List.Ne.rev module_path in
   let (local_signature, path) : Module_var.t List.Ne.t = module_path in
   let path = List.rev path in
   match path with
-  | [] ->
-    get_module_type t local_signature
+  | [] -> get_module_type t local_signature
   | local_module :: path ->
     let open Option.Let_syntax in
     let%bind t = get_module t local_module in
-    let rec aux = fun module_path (t : Signature.t) -> match module_path with
-        [] -> Some t
+    let rec aux module_path (t : Signature.t) =
+      match module_path with
+      | [] -> Some t
       | mvar :: module_path ->
         let%bind t = Signature.get_module t mvar in
-        aux module_path t in
+        aux module_path t
+    in
     let%bind t = aux path t in
     Signature.get_module_type t local_signature
 
@@ -1062,8 +1077,7 @@ end = struct
         | C_module (_mvar, sig_) ->
           (* Shadowing permitted *)
           signature ~ctx sig_
-        | C_module_type _ ->
-          true (* TODO *))
+        | C_module_type _ -> true (* TODO *))
     in
     loop ctx
 
