@@ -241,6 +241,7 @@ and ('self, 'expr, 'ty_expr, 'pattern, 'mod_expr) declaration_content_ =
   | D_fun of ('ty_expr, 'expr, 'pattern Param.t) Fun_decl.t
   | D_type_abstraction of 'ty_expr Type_abstraction_decl.t
   | D_module of 'mod_expr Mod_decl.t
+  | D_module_include of 'mod_expr
   | D_type of 'ty_expr Type_decl.t [@not_initial]
   | D_irrefutable_match of ('expr, 'pattern) Pattern_decl.t [@not_initial]
 [@@deriving

@@ -379,7 +379,7 @@ let remove_unused_for_views : Module_var.t list -> program -> program =
                  (Pattern.binders dc.pattern))
           in
           Some (lhs_env, rhs_env)
-        | D_value _ | D_irrefutable_match _ | D_type _ | D_module _ -> None)
+        | D_value _ | D_irrefutable_match _ | D_type _ | D_module _ | D_module_include _ -> None)
   in
   (* lhs_envs = variables bound by declaration ; rhs_envs = free variables in declaration rhs *)
   let lhs_envs, rhs_envs = List.unzip envs in

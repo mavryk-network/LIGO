@@ -242,6 +242,9 @@ and untype_declaration =
     | D_type dt ->
       let dt = untype_declaration_type dt in
       return @@ D_type dt
+    | D_module_include module_ ->
+      let module_ = untype_module_expr module_ in
+      return @@ D_module_include module_
     | D_module dm ->
       let dm = untype_declaration_module dm in
       return @@ D_module dm

@@ -77,6 +77,7 @@ and fold_expression_in_module_expr : ('a -> expression -> 'a) -> 'a -> module_ex
         | D_value x -> self acc x.expr
         | D_irrefutable_match x -> self acc x.expr
         | D_module x -> fold_expression_in_module_expr self acc x.module_
+        | D_module_include x -> fold_expression_in_module_expr self acc x
         | D_type _ -> acc)
       ~init:acc
       decls
@@ -197,6 +198,8 @@ and map_declaration m (x : declaration) =
   | D_module { module_binder; module_; module_attr } ->
     let module_ = map_expression_in_module_expr m module_ in
     return @@ D_module { module_binder; module_; module_attr }
+  | D_module_include module_ ->
+    return @@ D_module_include (map_expression_in_module_expr m module_)
 
 
 and map_decl m d = map_declaration m d
@@ -213,6 +216,10 @@ let fetch_entry_type ~raise : string -> program -> type_expression * Location.t 
     | D_value { binder; expr; attr = _ }
     | D_irrefutable_match { pattern = { wrap_content = P_var binder; _ }; expr; attr = _ }
       -> if Value_var.is_name (Binder.get_var binder) main_fname then Some expr else None
+    | D_module_include module_ ->
+      (match module_.module_content with
+      | M_struct _ -> assert false
+      | _ -> None)
     | D_irrefutable_match _ | D_type _ | D_module _ -> None
   in
   let main_decl_opt = List.find_map ~f:aux @@ List.rev m in
@@ -445,7 +452,8 @@ let fetch_contract_type ~raise
           ( (Location.wrap ~loc:declt.location @@ D_irrefutable_match dirref) :: prog
           , Some (Binder.get_var binder, expr) ))
       else return ()
-    | D_irrefutable_match _ | D_type _ | D_module _ | D_value _ -> return ()
+    | D_irrefutable_match _ | D_type _ | D_module _ | D_value _ | D_module_include _ ->
+      return ()
   in
   let run m = List.fold_right ~f:aux ~init:([], None) m in
   let m, main_decl_opt = update_module module_path run m in
@@ -504,6 +512,7 @@ let get_shadowed_decl : program -> (ValueAttr.t -> bool) -> Location.t option =
       | Some x -> seen, Value_var.get_location x :: shadows
       | None ->
         if predicate attr then Binder.get_var binder :: seen, shadows else seen, shadows)
+    | D_module_include _ -> seen, shadows (* TODO : what should we do here ? *)
     | D_irrefutable_match _ | D_type _ | D_module _ -> seen, shadows
   in
   let _, shadows = List.fold ~f:aux ~init:([], []) prg in
@@ -524,6 +533,7 @@ let update_attribute_annotations
     | D_irrefutable_match ({ attr; _ } as decl) when Option.is_some (pred attr) ->
       let attr = Option.value_exn @@ pred attr in
       { x with wrap_content = D_irrefutable_match { decl with attr } }
+    | D_module_include _ -> x (* TODO : what should we do here ? *)
     | D_module _ | D_type _ | D_value _ | D_irrefutable_match _ -> x
   in
   List.map ~f:aux m
@@ -560,6 +570,7 @@ let annotate_with_attribute ~raise
             in
             decorated :: prg, List.remove_element ~compare:String.compare found names
           | None -> continue)
+        | D_module_include _ -> continue (* TODO : what should we do here ? *)
         | D_irrefutable_match _ | D_type _ | D_module _ -> continue)
   in
   let () =
@@ -813,6 +824,7 @@ end = struct
       match Location.unwrap x with
       | D_value { binder = _; expr; attr = _ } -> get_fv_expr expr
       | D_irrefutable_match { pattern = _; expr; attr = _ } -> get_fv_expr expr
+      | D_module_include module_
       | D_module { module_binder = _; module_; module_attr = _ } ->
         get_fv_module_expr module_
       | D_type _t -> empty
@@ -941,6 +953,9 @@ module Declaration_mapper = struct
     | D_irrefutable_match { pattern; expr; attr } ->
       let expr = map_expression f expr in
       return @@ D_irrefutable_match { pattern; expr; attr }
+    | D_module_include module_ ->
+      let module_ = map_expression_in_module_expr f module_ in
+      return @@ D_module_include module_
 
 
   and map_decl m d = map_declaration m d

@@ -11,6 +11,7 @@ module Scope : sig
   val empty : t
   val new_module_var : t -> Module_var.t -> t -> t * Module_var.t
   val get_module_var : t -> Module_var.t -> t * Module_var.t
+  val merge_scopes : t -> t -> t
 end = struct
   module MMap = Simple_utils.Map.Make (Module_var)
 
@@ -26,7 +27,9 @@ end = struct
     in
     let module_ = MMap.add var (var', mod_scope) map.module_ in
     { module_ }, var'
-
+  
+  let merge_scopes scope mod_scope =
+    { module_ = MMap.union (fun _ v1 _ -> Some v1) scope.module_ mod_scope.module_ }
 
   let get_module_var map var =
     (* The default value is for variable coming from other files *)
@@ -170,6 +173,9 @@ and compile_declaration scope (d : AST.declaration) : Scope.t * AST.declaration 
   | D_type { type_binder; type_expr; type_attr } ->
     let type_expr = type_expression scope type_expr in
     return scope @@ AST.D_type { type_binder; type_expr; type_attr }
+  | D_module_include module_ ->
+    let scope', module_ = compile_module_expr scope module_ in
+    return (Scope.merge_scopes scope scope') @@ AST.D_module_include module_
   | D_module { module_binder; module_; module_attr } ->
     let mod_scope, module_ = compile_module_expr scope module_ in
     let scope, module_binder = Scope.new_module_var scope module_binder mod_scope in

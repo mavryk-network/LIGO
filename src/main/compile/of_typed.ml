@@ -200,6 +200,8 @@ let list_declarations (only_ep : bool) (m : Ast_typed.program) : Value_var.t lis
           then Binder.get_var binder :: prev
           else prev
         else Binder.get_var binder :: prev
+      | D_module_include _ ->
+        assert false (* What TODO here ? *)
       | D_value _ | D_irrefutable_match _ | D_type _ | D_module _ -> prev)
     ~init:[]
     m

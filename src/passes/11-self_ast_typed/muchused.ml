@@ -256,6 +256,18 @@ and get_all_declarations (module_name : Module_var.t)
           name, t
         in
         recs |> List.map ~f:add_module_name
+      | D_module_include { module_content = M_struct module_ ; _ } ->
+        let recs = get_all_declarations (Module_var.of_input_var ~loc:location "") module_ in
+        let add_module_name (v, t) =
+          let name =
+            V.of_input_var ~loc:location
+            @@ Format.asprintf "%a" Module_var.pp module_name
+            ^ "."
+            ^ Format.asprintf "%a" Value_var.pp v
+          in
+          name, t
+        in
+        recs |> List.map ~f:add_module_name
       | D_irrefutable_match { pattern; _ } ->
         let binders = Pattern.binders pattern in
         List.map binders ~f:(fun binder ->
@@ -267,7 +279,7 @@ and get_all_declarations (module_name : Module_var.t)
               @@ Binder.get_var binder
             in
             name, Binder.get_ascr binder)
-      | D_type _ | D_module _ -> []
+      | D_module_include _ |  D_type _ | D_module _ -> []
     in
     m |> List.map ~f:aux |> List.concat
 
@@ -303,6 +315,8 @@ and muchuse_declaration (x : declaration) s =
     muchuse_union muchuse_expr (muchuse_maxs muchuse_pattern)
   | D_module { module_; module_binder; module_attr = _ } ->
     muchuse_module_expr s module_binder module_
+  | D_module_include module_ ->
+    muchuse_module_expr s (Module_var.of_input_var ~loc:Location.dummy "") module_
   | D_type _ -> s
 
 

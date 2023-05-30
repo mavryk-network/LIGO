@@ -111,6 +111,7 @@ and declaration ppf (d : declaration) =
     then Types.Pattern_decl.pp expression type_expression_option ppf pd
   | D_type td -> Types.Type_decl.pp type_expression ppf td
   | D_module md -> Types.Module_decl.pp module_expr ppf md
+  | D_module_include me -> fprintf ppf "include (%a)" module_expr me 
 
 
 and decl ppf d = declaration ppf d

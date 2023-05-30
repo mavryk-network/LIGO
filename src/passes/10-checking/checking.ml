@@ -1401,6 +1401,13 @@ and infer_declaration (decl : I.declaration)
         let%bind module_ = module_ in
         return @@ O.D_module { module_binder; module_; module_attr = { public; hidden } })
       [ S_module (module_binder, sig_) ]
+  | D_module_include module_ ->
+    let%bind sig_, module_ = infer_module_expr module_ in
+    const
+      E.(
+        let%bind module_ = module_ in
+        return @@ O.D_module_include module_)
+      sig_
 
 
 and infer_module (module_ : I.module_) : (Signature.t * O.module_ E.t, _, _) C.t =

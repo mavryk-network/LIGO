@@ -171,7 +171,9 @@ and declaration : AST.declaration -> t -> env -> t * env =
     in
     let env = Env.add_mvar module_binder defs_or_alias_opt module_map env in
     m_alias, env
-
+  | D_module_include module_ ->
+    ignore module_ ; (* TODO *)
+    m_alias ,env
 
 (** [declarations] builds the [env] and tries to resolves module aliases *)
 and declarations : AST.declaration list -> t -> env -> t * env =

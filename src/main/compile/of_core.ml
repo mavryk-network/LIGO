@@ -165,7 +165,7 @@ let list_declarations (m : Ast_core.program) : Value_var.t list =
       let open Location in
       match (el.wrap_content : Ast_core.declaration_content) with
       | D_value { binder; _ } -> Binder.get_var binder :: prev
-      | D_irrefutable_match _ | D_type _ | D_module _ -> prev)
+      | D_irrefutable_match _ | D_type _ | D_module _ | D_module_include _ -> prev)
     ~init:[]
     m
 
@@ -178,7 +178,7 @@ let list_lhs_pattern_declarations (m : Ast_core.program) : Value_var.t list =
         let binders = Ast_core.Pattern.binders pattern in
         let vars = List.map binders ~f:Binder.get_var in
         vars @ prev
-      | D_value _ | D_type _ | D_module _ -> prev)
+      | D_value _ | D_type _ | D_module _ | D_module_include _ -> prev)
     ~init:[]
     m
 
@@ -189,7 +189,8 @@ let list_type_declarations (m : Ast_core.program) : Type_var.t list =
       let open Location in
       match (el.wrap_content : Ast_core.declaration_content) with
       | D_type { type_binder; type_attr; _ } when type_attr.public -> type_binder :: prev
-      | D_value _ | D_irrefutable_match _ | D_module _ | D_type _ -> prev)
+      | D_value _ | D_irrefutable_match _ | D_module _ | D_type _ | D_module_include _ ->
+        prev)
     ~init:[]
     m
 
@@ -200,6 +201,6 @@ let list_mod_declarations (m : Ast_core.program) : Module_var.t list =
       let open Location in
       match (el.wrap_content : Ast_core.declaration_content) with
       | D_module { module_binder; _ } -> module_binder :: prev
-      | D_value _ | D_irrefutable_match _ | D_type _ -> prev)
+      | D_value _ | D_irrefutable_match _ | D_type _ | D_module_include _ -> prev)
     ~init:[]
     m

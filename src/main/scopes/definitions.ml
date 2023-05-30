@@ -204,6 +204,10 @@ and defs_of_decl : AST.declaration -> def list -> def list =
          mod_case_of_mod_expr recursively calls defs_of_decl *)
     let mod_case : mod_case = mod_case_of_mod_expr ~defs_of_decls module_ in
     defs_of_mvar ~mod_case ~bindee:module_ module_binder @@ acc
+  | D_module_include module_ ->
+    (match mod_case_of_mod_expr ~defs_of_decls module_ with
+    | Alias _ -> acc
+    | Def x -> x)
 
 
 and defs_of_decls : AST.declaration list -> def list -> def list =
@@ -228,6 +232,10 @@ module Of_Stdlib = struct
          mod_case_of_mod_expr recursively calls defs_of_decl *)
       let mod_case : mod_case = mod_case_of_mod_expr module_ ~defs_of_decls in
       defs_of_mvar ~mod_case ~bindee:module_ module_binder acc
+    | D_module_include module_ ->
+      (match mod_case_of_mod_expr ~defs_of_decls module_ with
+      | Alias _ -> acc
+      | Def x -> x)
 
 
   and defs_of_decls : AST.declaration list -> def list -> def list =

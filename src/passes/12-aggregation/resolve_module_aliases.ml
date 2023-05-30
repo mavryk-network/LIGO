@@ -23,6 +23,11 @@ module Aliases = struct
 
   let get aliases mvar = MMap.find mvar aliases.inside
 
+  let add aliases mod_aliase =
+    let inside = MMap.union (fun _ _ b -> Some b) aliases.inside mod_aliase.inside in
+    { inside }
+
+
   let diff_path path module_path =
     let path = List.rev path in
     let module_path = List.rev module_path in
@@ -117,7 +122,7 @@ let rec expression path : Aliases.t -> AST.expression -> AST.expression =
     let update = self update in
     return @@ E_update { struct_; path; update }
   | E_mod_in { module_binder; rhs; let_result } ->
-    let mod_aliases, path, rhs = compile_module_expr module_binder [] aliases rhs in
+    let mod_aliases, path, rhs = compile_module_expr ~module_binder [] aliases rhs in
     let aliases = Aliases.push aliases module_binder mod_aliases path in
     let let_result = self ~aliases let_result in
     (match rhs with
@@ -180,9 +185,15 @@ and compile_declaration path aliases (d : AST.declaration)
   | D_type { type_binder; type_expr; type_attr } ->
     let type_expr = type_expression aliases type_expr in
     return_s aliases @@ AST.D_type { type_binder; type_expr; type_attr }
+  | D_module_include module_ ->
+    let mod_aliases, _, module_opt = compile_module_expr path aliases module_ in
+    let aliases = Aliases.add mod_aliases aliases in
+    (match module_opt with
+    | Some module_ -> return_s aliases @@ AST.D_module_include module_
+    | None -> return_n aliases)
   | D_module { module_binder; module_; module_attr } ->
     let mod_aliases, path, module_ =
-      compile_module_expr module_binder path aliases module_
+      compile_module_expr ~module_binder path aliases module_
     in
     let aliases = Aliases.push aliases module_binder mod_aliases path in
     (match module_ with
@@ -209,15 +220,16 @@ and compile_module path aliases (m : AST.module_) : Aliases.t * AST.module_ =
   aliases, dcl
 
 
-and compile_module_expr mvar path
+and compile_module_expr ?module_binder path
     :  Aliases.t -> AST.module_expr
     -> Aliases.t * Module_var.t list * AST.module_expr option
   =
  fun aliases mexpr ->
   match mexpr.module_content with
   | M_struct prg ->
-    let aliases, prg = compile_module (mvar :: path) aliases prg in
-    aliases, mvar :: path, Some { mexpr with module_content = M_struct prg }
+    let path = Option.value_map ~default:path ~f:(fun a -> a :: path) module_binder in
+    let aliases, prg = compile_module path aliases prg in
+    aliases, path, Some { mexpr with module_content = M_struct prg }
   | M_variable v ->
     let aliases, path' = Aliases.get aliases v in
     aliases, path', None
