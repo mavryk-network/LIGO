@@ -189,17 +189,32 @@ and module_expr ppf (me : module_expr) : unit =
     signature
     me.signature
 
+
 and sig_item ppf (d : sig_item) =
   match d with
   | S_value (var, type_, _) ->
-    Format.fprintf ppf "@[<2>val %a :@ %a@]" Value_var.pp var type_expression type_
+    Format.fprintf
+      ppf
+      "@[<2>val %a :@ %a@]"
+      Value_var.pp
+      var
+      (Simple_utils.PP_helpers.option type_expression)
+      type_
   | S_type (var, type_) ->
-    Format.fprintf ppf "@[<2>type %a =@ %a@]" Type_var.pp var type_expression type_
+    Format.fprintf
+      ppf
+      "@[<2>type %a =@ %a@]"
+      Type_var.pp
+      var
+      (Simple_utils.PP_helpers.option type_expression)
+      type_
   | S_module (var, sig_) ->
     Format.fprintf ppf "@[<2>module %a =@ %a@]" Module_var.pp var signature sig_
 
+
 and signature ppf (sig_ : signature) : unit =
   Format.fprintf ppf "@[<v>sig@[<v1>@,%a@]@,end@]" (list_sep sig_item (tag "@,")) sig_
+
 
 let program ?(use_hidden = false) ppf (p : program) =
   list_sep (declaration ~use_hidden) (tag "@,") ppf p

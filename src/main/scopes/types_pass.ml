@@ -9,16 +9,23 @@ type t = type_case LMap.t
 let empty = LMap.empty
 
 module Of_Ast_typed = struct
-  let add_binding : t -> Ast_typed.expression_variable * Ast_typed.type_expression -> t =
+  let add_binding
+      : t -> Ast_typed.expression_variable * Ast_typed.type_expression option -> t
+    =
    fun env binding ->
     let v, t = binding in
-    let t =
-      match t.orig_var with
-      | Some t' -> { t with type_content = T_variable t' }
-      | None -> t
-    in
     let loc = Value_var.get_location v in
-    let type_case = Resolved t in
+    let type_case =
+      match t with
+      | None -> Unresolved
+      | Some t ->
+        let t =
+          match t.orig_var with
+          | Some t' -> { t with type_content = T_variable t' }
+          | None -> t
+        in
+        Resolved t
+    in
     LMap.add loc type_case env
 
 
@@ -52,38 +59,40 @@ module Of_Ast_typed = struct
       | E_update _
       | E_constant _ -> return []
       | E_type_inst _ -> return []
-      | E_variable v -> return [ v, exp.type_expression ]
-      | E_lambda { binder; _ } -> return [ Param.get_var binder, Param.get_ascr binder ]
+      | E_variable v -> return [ v, Some exp.type_expression ]
+      | E_lambda { binder; _ } ->
+        return [ Param.get_var binder, Some (Param.get_ascr binder) ]
       | E_recursive { fun_name; fun_type; lambda = { binder; _ }; force_lambdarec = _ } ->
-        return [ fun_name, fun_type; Param.get_var binder, Param.get_ascr binder ]
+        return
+          [ fun_name, Some fun_type; Param.get_var binder, Some (Param.get_ascr binder) ]
       | E_let_mut_in { let_binder; rhs = _; _ } | E_let_in { let_binder; rhs = _; _ } ->
         return
         @@ List.map
-             ~f:(fun binder -> Binder.get_var binder, Binder.get_ascr binder)
+             ~f:(fun binder -> Binder.get_var binder, Some (Binder.get_ascr binder))
              (Pattern.binders let_binder)
       | E_matching { matchee = _; cases } ->
         let bindings =
           List.concat
           @@ List.map cases ~f:(fun { pattern; _ } ->
                  let binders = Pattern.binders pattern in
-                 List.map binders ~f:(fun b -> Binder.get_var b, Binder.get_ascr b))
+                 List.map binders ~f:(fun b -> Binder.get_var b, Some (Binder.get_ascr b)))
         in
         return bindings
-      | E_module_accessor { element = e; _ } -> return [ e, exp.type_expression ]
-      | E_for { binder; start; _ } -> return [ binder, start.type_expression ]
+      | E_module_accessor { element = e; _ } -> return [ e, Some exp.type_expression ]
+      | E_for { binder; start; _ } -> return [ binder, Some start.type_expression ]
       | E_for_each { fe_binder = binder1, Some binder2; collection; _ } ->
         let key_type, val_type = Ast_typed.get_t_map_exn collection.type_expression in
-        return [ binder1, key_type; binder2, val_type ]
+        return [ binder1, Some key_type; binder2, Some val_type ]
       | E_for_each { fe_binder = binder, None; collection; _ } ->
         let type_ = collection.type_expression in
         if Ast_typed.is_t_set type_
-        then return [ binder, Ast_typed.get_t_set_exn type_ ]
+        then return [ binder, Some (Ast_typed.get_t_set_exn type_) ]
         else if Ast_typed.is_t_list type_
-        then return [ binder, Ast_typed.get_t_list_exn type_ ]
+        then return [ binder, Some (Ast_typed.get_t_list_exn type_) ]
         else if Ast_typed.is_t_map type_
         then (
           let k, v = Ast_typed.get_t_map_exn type_ in
-          return [ binder, Ast_typed.t_pair ~loc k v ])
+          return [ binder, Some (Ast_typed.t_pair ~loc k v) ])
         else return []
       | E_mod_in { rhs = { signature; _ }; _ } ->
         extract_binding_types_from_signature env signature
@@ -92,12 +101,12 @@ module Of_Ast_typed = struct
     | D_value { attr = { hidden = true; _ }; _ } -> prev
     | D_irrefutable_match { attr = { hidden = true; _ }; _ } -> prev
     | D_value { binder; expr; _ } ->
-      let prev = add_bindings prev [ Binder.get_var binder, expr.type_expression ] in
+      let prev = add_bindings prev [ Binder.get_var binder, Some expr.type_expression ] in
       Self_ast_typed.Helpers.fold_expression aux prev expr
     | D_irrefutable_match { pattern; expr; _ } ->
       let prev =
         let f acc binder =
-          add_bindings acc [ Binder.get_var binder, expr.type_expression ]
+          add_bindings acc [ Binder.get_var binder, Some expr.type_expression ]
         in
         List.fold (Pattern.binders pattern) ~f ~init:prev
       in
@@ -109,8 +118,7 @@ module Of_Ast_typed = struct
       | M_module_path _ -> prev
       | M_struct ds ->
         List.fold_left ds ~init:prev ~f:(fun prev d ->
-            extract_binding_types prev d.wrap_content)
-      )
+            extract_binding_types prev d.wrap_content))
 end
 
 module Of_Ast_core = struct
@@ -258,8 +266,7 @@ module Of_Ast_core = struct
       declarations bindings decls
     | D_module { module_ = { wrap_content = M_variable _; _ }; _ }
     | D_module { module_ = { wrap_content = M_module_path _; _ }; _ } -> bindings
-    | D_signature _ ->
-      bindings
+    | D_signature _ -> bindings
 
 
   and declarations : t -> Ast_core.declaration list -> t =
@@ -319,12 +326,13 @@ module Typing_env = struct
         { type_content =
             (let tv = Type_var.fresh ~name:"^hole" ~loc:Location.dummy () in
              T_variable tv)
-        ; type_meta = None
         ; orig_var = None
         ; location = Location.dummy
         }
     in
-    let mk_value b = Ast_typed.S_value (Binder.get_var b, rhs_type (), dummy_sig_attr) in
+    let mk_value b =
+      Ast_typed.S_value (Binder.get_var b, Some (rhs_type ()), dummy_sig_attr)
+    in
     match Location.unwrap me with
     | M_struct decls ->
       List.concat_map decls ~f:(fun decl ->
@@ -333,9 +341,11 @@ module Typing_env = struct
           | D_irrefutable_match { pattern; _ } ->
             let binder = Pattern.binders pattern in
             List.map binder ~f:mk_value
-          | D_type { type_binder; _ } -> [ Ast_typed.S_type (type_binder, rhs_type ()) ]
+          | D_type { type_binder; _ } ->
+            [ Ast_typed.S_type (type_binder, Some (rhs_type ())) ]
           | D_module { module_binder; module_; _ } ->
-            [ Ast_typed.S_module (module_binder, sig_of_module ~original module_) ])
+            [ Ast_typed.S_module (module_binder, sig_of_module ~original module_) ]
+          | D_signature { signature_binder = _; signature = _ } -> failwith "FIXME")
     | M_variable mv -> sig_of_alias (mv, []) original
     | M_module_path mvs -> sig_of_alias mvs original
 

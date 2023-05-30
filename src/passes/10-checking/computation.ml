@@ -19,10 +19,7 @@ type ('a, 'err, 'wrn) t =
 
 let rec encode (type_ : Ast_typed.type_expression) : Type.t =
   let return content : Type.t =
-    { content
-    ; orig_var = type_.orig_var
-    ; location = type_.location
-    }
+    { content; orig_var = type_.orig_var; location = type_.location }
   in
   match type_.type_content with
   | T_variable tvar -> return @@ T_variable tvar
@@ -58,8 +55,8 @@ and encode_layout (layout : Layout.t) : Type.layout = L_concrete layout
 and encode_sig_item (item : Ast_typed.sig_item) : Context.Signature.item =
   match item with
   | Ast_typed.S_value (v, ty, attr) ->
-    Context.Signature.S_value (v, encode ty, encode_sig_item_attribute attr)
-  | S_type (v, ty) -> Context.Signature.S_type (v, encode ty)
+    Context.Signature.S_value (v, Option.map ~f:encode ty, encode_sig_item_attribute attr)
+  | S_type (v, ty) -> Context.Signature.S_type (v, Option.map ~f:encode ty)
   | S_module (v, sig_) -> Context.Signature.S_module (v, encode_signature sig_)
 
 
@@ -78,8 +75,12 @@ let ctx_init_of_sig ?env () =
   | Some (env : Ast_typed.signature) ->
     let f ctx decl =
       match decl with
-      | Ast_typed.S_value (v, ty, _attr) -> Context.add_imm ctx v (encode ty)
-      | S_type (v, ty) -> Context.add_type ctx v (encode ty)
+      | Ast_typed.S_value (v, ty, _attr) ->
+        let ty = Option.map ~f:encode ty in
+        Context.add_imm ctx v ty
+      | S_type (v, ty) ->
+        let ty = Option.map ~f:encode ty in
+        Context.add_type ctx v ty
       | S_module (v, sig_) -> Context.add_module ctx v (encode_signature sig_)
     in
     List.fold env ~init:Context.empty ~f
@@ -343,10 +344,22 @@ module Context = struct
     lift_ctx (fun ctx -> Context.get_texists_var ctx tvar) >>= raise_opt ~error
 
 
-  let get_module_of_path path : _ t = lift_ctx (fun ctx -> Context.get_module_of_path ctx path)
-  let get_module_of_path_exn path ~error : _ t = get_module_of_path path >>= raise_opt ~error
-  let get_module_type_of_path path : _ t = lift_ctx (fun ctx -> Context.get_module_type_of_path ctx path)
-  let get_module_type_of_path_exn path ~error : _ t = get_module_type_of_path path >>= raise_opt ~error
+  let get_module_of_path path : _ t =
+    lift_ctx (fun ctx -> Context.get_module_of_path ctx path)
+
+
+  let get_module_of_path_exn path ~error : _ t =
+    get_module_of_path path >>= raise_opt ~error
+
+
+  let get_module_type_of_path path : _ t =
+    lift_ctx (fun ctx -> Context.get_module_type_of_path ctx path)
+
+
+  let get_module_type_of_path_exn path ~error : _ t =
+    get_module_type_of_path path >>= raise_opt ~error
+
+
   let get_module mvar : _ t = lift_ctx (fun ctx -> Context.get_module ctx mvar)
   let get_module_exn mvar ~error : _ t = get_module mvar >>= raise_opt ~error
   let get_sum constr : _ t = lift_ctx (fun ctx -> Context.get_sum ctx constr)
@@ -514,11 +527,11 @@ let unify_texists tvar type_ =
   let%bind kind = Context.get_texists_var tvar ~error:(unbound_texists_var tvar) in
   let%bind type_ = lift ~mode:Invariant ~tvar ~kind type_ in
   if%bind
-    match%map Context.Well_formed.type_ type_ with
+    match%map Context.Well_formed.type_ (Some type_) with
     | Some kind' -> Kind.equal kind kind'
     | _ -> false
   then Context.add_texists_eq tvar kind type_
-  else raise_l ~loc:type_.location (ill_formed_type type_)
+  else raise_l ~loc:type_.location (ill_formed_type (Some type_))
 
 
 let unify_layout type1 type2 ~fields (layout1 : Type.layout) (layout2 : Type.layout) =
@@ -539,7 +552,7 @@ type unify_error =
   [ `Typer_cannot_unify of bool * Type.t * Type.t * Location.t
   | `Typer_cannot_unify_diff_layout of
     Type.t * Type.t * Type.layout * Type.layout * Location.t
-  | `Typer_ill_formed_type of Type.t * Location.t
+  | `Typer_ill_formed_type of Type.t option * Location.t
   | `Typer_occurs_check_failed of Type_var.t * Type.t * Location.t
   | `Typer_unbound_texists_var of Type_var.t * Location.t
   ]

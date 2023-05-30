@@ -28,7 +28,6 @@ end
 
 module Row = Row.Make (Layout)
 
-
 type t =
   { content : content
   ; orig_var : (Type_var.t option[@equal.ignore] [@compare.ignore] [@hash.ignore])
@@ -50,8 +49,7 @@ and content =
   , ez
       { prefixes =
           [ ( "make_t"
-            , fun ~loc content : t ->
-                { content; location = loc; orig_var = None } )
+            , fun ~loc content : t -> { content; location = loc; orig_var = None } )
           ; ("get", fun x -> x.content)
           ]
       ; wrap_constructor =
@@ -148,14 +146,19 @@ and subst_abstraction
 and subst_row ?(free_vars = Type_var.Set.empty) row ~tvar ~type_ =
   Row.map (subst ~free_vars ~tvar ~type_) row
 
+
 let subst =
   let free_vars_type = free_vars in
   let subst ?free_vars t ~tvar ~type_ =
-    let free_vars = match free_vars with
+    let free_vars =
+      match free_vars with
       | None -> free_vars_type t
       | Some free_vars -> free_vars
-    in subst ~free_vars t ~tvar ~type_ in
+    in
+    subst ~free_vars t ~tvar ~type_
+  in
   subst
+
 
 let rec fold : type a. t -> init:a -> f:(a -> t -> a) -> a =
  fun t ~init ~f ->
@@ -200,13 +203,11 @@ let fields_with_no_annot fields =
   List.map ~f:(fun (name, _) -> Layout.{ name; annot = None }) fields
 
 
-let t_construct constructor parameters ~loc  () : t =
-  make_t
-    ~loc
-    (T_construct { language = Backend.Michelson.name; constructor; parameters })
+let t_construct constructor parameters ~loc () : t =
+  make_t ~loc (T_construct { language = Backend.Michelson.name; constructor; parameters })
 
 
-let t__type_ ~loc  () : t = t_construct Literal_types._type_ [] ~loc  ()
+let t__type_ ~loc () : t = t_construct Literal_types._type_ [] ~loc ()
   [@@map
     _type_
     , ( "signature"
@@ -238,7 +239,7 @@ let t__type_ ~loc  () : t = t_construct Literal_types._type_ [] ~loc  ()
 
 let t_michelson_code = t_michelson_program
 
-let t__type_ t ~loc  () : t = t_construct ~loc  Literal_types._type_ [ t ] ()
+let t__type_ t ~loc () : t = t_construct ~loc Literal_types._type_ [ t ] ()
   [@@map
     _type_
     , ( "list"
@@ -251,8 +252,7 @@ let t__type_ t ~loc  () : t = t_construct ~loc  Literal_types._type_ [ t ] ()
       , "views" )]
 
 
-let t__type_ t t' ~loc  () : t =
-  t_construct ~loc  Literal_types._type_ [ t; t' ] ()
+let t__type_ t t' ~loc () : t = t_construct ~loc Literal_types._type_ [ t; t' ] ()
   [@@map _type_, ("map", "big_map", "typed_address")]
 
 
@@ -262,40 +262,27 @@ let row_ez fields ?(layout = default_layout) () =
   Row.of_alist_exn ~layout fields
 
 
-let t_record_ez fields ~loc  ?layout () =
-  t_record ~loc  (row_ez fields ?layout ()) ()
+let t_record_ez fields ~loc ?layout () = t_record ~loc (row_ez fields ?layout ()) ()
+
+let t_tuple ts ~loc () =
+  t_record_ez (List.mapi ts ~f:(fun i t -> Int.to_string i, t)) ~loc ()
 
 
-let t_tuple ts ~loc  () =
-  t_record_ez (List.mapi ts ~f:(fun i t -> Int.to_string i, t)) ~loc  ()
-
-
-let t_pair t1 t2 ~loc  () = t_tuple [ t1; t2 ] ~loc  ()
-let t_triplet t1 t2 t3 ~loc  () = t_tuple [ t1; t2; t3 ] ~loc  ()
-let t_sum_ez fields ~loc  ?layout () = t_sum ~loc  (row_ez fields ?layout ()) ()
-
-let t_bool ~loc  () =
-  t_sum_ez ~loc  [ "True", t_unit ~loc (); "False", t_unit ~loc () ] ()
-
-
-let t_option t ~loc  () =
-  t_sum_ez ~loc  [ "Some", t; "None", t_unit ~loc () ] ()
-
-
-let t_arrow param result ~loc  () : t =
-  t_arrow ~loc  { type1 = param; type2 = result } ()
-
-
+let t_pair t1 t2 ~loc () = t_tuple [ t1; t2 ] ~loc ()
+let t_triplet t1 t2 t3 ~loc () = t_tuple [ t1; t2; t3 ] ~loc ()
+let t_sum_ez fields ~loc ?layout () = t_sum ~loc (row_ez fields ?layout ()) ()
+let t_bool ~loc () = t_sum_ez ~loc [ "True", t_unit ~loc (); "False", t_unit ~loc () ] ()
+let t_option t ~loc () = t_sum_ez ~loc [ "Some", t; "None", t_unit ~loc () ] ()
+let t_arrow param result ~loc () : t = t_arrow ~loc { type1 = param; type2 = result } ()
 let t_mutez = t_tez
 
-let t_record_with_orig_var row ~orig_var ~loc  () =
-  { (t_record row ~loc  ()) with orig_var }
+let t_record_with_orig_var row ~orig_var ~loc () =
+  { (t_record row ~loc ()) with orig_var }
 
 
-let t_test_baker_policy ~loc  () =
+let t_test_baker_policy ~loc () =
   t_sum_ez
     ~loc
-    
     [ "By_round", t_int ~loc ()
     ; "By_account", t_address ~loc ()
     ; "Excluding", t_list ~loc (t_address ~loc ()) ()
@@ -303,10 +290,9 @@ let t_test_baker_policy ~loc  () =
     ()
 
 
-let t_test_exec_error ~loc  () =
+let t_test_exec_error ~loc () =
   t_sum_ez
     ~loc
-    
     [ "Rejected", t_pair ~loc (t_michelson_code ~loc ()) (t_address ~loc ()) ()
     ; ( "Balance_too_low"
       , t_record_ez
@@ -321,8 +307,8 @@ let t_test_exec_error ~loc  () =
     ()
 
 
-let t_test_exec_result ~loc  () =
-  t_sum_ez ~loc  [ "Success", t_nat ~loc (); "Fail", t_test_exec_error ~loc () ] ()
+let t_test_exec_result ~loc () =
+  t_sum_ez ~loc [ "Success", t_nat ~loc (); "Fail", t_test_exec_error ~loc () ] ()
 
 
 let get_t_construct t constr =
@@ -632,16 +618,21 @@ let should_uncurry_entry entry_ty =
 
 
 let parameter_from_entrypoints
-    :  (Value_var.t * t) Simple_utils.List.Ne.t
+    :  (Value_var.t * t option) Simple_utils.List.Ne.t
     -> ( t * t
        , [> `Not_entry_point_form of t
          | `Storage_does_not_match of Value_var.t * t * Value_var.t * t
+         | `Optional_type_entrypoint
          ] )
        result
   =
  fun ((entrypoint, entrypoint_type), rest) ->
+  (* FIXME: take care of `Optional_type_entrypoint *)
   let equal_t = equal in
   let open Result.Let_syntax in
+  let%bind entrypoint_type =
+    Result.of_option ~error:`Optional_type_entrypoint entrypoint_type
+  in
   let%bind parameter, storage =
     match should_uncurry_entry entrypoint_type with
     | `Yes (parameter, storage) | `No (parameter, storage) ->
@@ -652,6 +643,7 @@ let parameter_from_entrypoints
     List.fold_result
       ~init:[ String.capitalize (Value_var.to_name_exn entrypoint), parameter ]
       ~f:(fun parameters (ep, ep_type) ->
+        let%bind ep_type = Result.of_option ~error:`Optional_type_entrypoint ep_type in
         let%bind parameter_, storage_ =
           match should_uncurry_entry ep_type with
           | `Yes (parameter, storage) | `No (parameter, storage) ->

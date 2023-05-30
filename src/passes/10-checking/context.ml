@@ -88,7 +88,7 @@ module Signature = struct
       (module Type_var)
       (fun t tvar ->
         (find_map t ~f:(function
-            | S_type (tvar', type_) when Type_var.equal tvar tvar' -> Some type_
+            | S_type (tvar', type_) when Type_var.equal tvar tvar' -> type_
             | _ -> None) [@landmark "get_type"]))
 
 
@@ -381,7 +381,7 @@ let get_type =
     (module Type_var)
     (fun t tvar ->
       (List.find_map t ~f:(function
-          | C_type (tvar', type_) when Type_var.equal tvar tvar' -> Some type_
+          | C_type (tvar', type_) when Type_var.equal tvar tvar' -> type_
           | _ -> None) [@landmark "get_type"]))
 
 

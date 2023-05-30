@@ -110,7 +110,7 @@ module Context : sig
       captured by a closure), then we return [Error]. *)
   val get_value
     :  Value_var.t
-    -> ( ( Context.mutable_flag * Type.t * Context.Attr.t
+    -> ( ( Context.mutable_flag * Type.t option * Context.Attr.t
          , [ `Mut_var_captured | `Not_found ] )
          result
        , 'err
@@ -120,27 +120,27 @@ module Context : sig
   val get_value_exn
     :  Value_var.t
     -> error:([ `Mut_var_captured | `Not_found ] -> 'err Errors.with_loc)
-    -> (Context.mutable_flag * Type.t * Context.Attr.t, 'err, 'wrn) t
+    -> (Context.mutable_flag * Type.t option * Context.Attr.t, 'err, 'wrn) t
 
   (** [get_imm var] returns the type of the immutable variable [var].
       Returning [None] if not found in the current context. *)
-  val get_imm : Value_var.t -> ((Type.t * Context.Attr.t) option, 'err, 'wrn) t
+  val get_imm : Value_var.t -> ((Type.t option * Context.Attr.t) option, 'err, 'wrn) t
 
   val get_imm_exn
     :  Value_var.t
     -> error:'err Errors.with_loc
-    -> (Type.t * Context.Attr.t, 'err, 'wrn) t
+    -> (Type.t option * Context.Attr.t, 'err, 'wrn) t
 
   (** [get_mut var] returns the type of the mutable variable [var].
       Returning [None] if not found in the current context. *)
   val get_mut
     :  Value_var.t
-    -> ((Type.t, [ `Mut_var_captured | `Not_found ]) result, 'err, 'wrn) t
+    -> ((Type.t option, [ `Mut_var_captured | `Not_found ]) result, 'err, 'wrn) t
 
   val get_mut_exn
     :  Value_var.t
     -> error:([ `Mut_var_captured | `Not_found ] -> 'err Errors.with_loc)
-    -> (Type.t, 'err, 'wrn) t
+    -> (Type.t option, 'err, 'wrn) t
 
   (** [get_type_var tvar] returns the kind of the type variable [tvar].
       Returning [None] if not found in the current context.
@@ -168,12 +168,12 @@ module Context : sig
       Returning [None] if not found in the current context. *)
   val get_type_or_type_var
     :  Type_var.t
-    -> ([ `Type of Type.t | `Type_var of Kind.t ] option, 'err, 'wrn) t
+    -> ([ `Type of Type.t option | `Type_var of Kind.t ] option, 'err, 'wrn) t
 
   val get_type_or_type_var_exn
     :  Type_var.t
     -> error:'err Errors.with_loc
-    -> ([ `Type of Type.t | `Type_var of Kind.t ], 'err, 'wrn) t
+    -> ([ `Type of Type.t option | `Type_var of Kind.t ], 'err, 'wrn) t
 
   (** [get_module mvar] returns signature of the module [mvar].
       Returning [None] if not found in the current context. *)
@@ -198,7 +198,9 @@ module Context : sig
   (** [get_module_type_of_path path] returns the signature of the module path [path].
       Returning [None] if not found in the current context. *)
 
-  val get_module_type_of_path : Module_var.t List.Ne.t -> (Module_type.t option, 'err, 'wrn) t
+  val get_module_type_of_path
+    :  Module_var.t List.Ne.t
+    -> (Module_type.t option, 'err, 'wrn) t
 
   val get_module_type_of_path_exn
     :  Module_var.t List.Ne.t
@@ -246,7 +248,7 @@ module Context : sig
 
   module Well_formed : sig
     val context : unit -> (bool, 'err, 'wrn) t
-    val type_ : Type.t -> (Kind.t option, 'err, 'wrn) t
+    val type_ : Type.t option -> (Kind.t option, 'err, 'wrn) t
   end
 end
 
@@ -269,7 +271,7 @@ val create_type : Type.constr -> (Type.t, 'err, 'wrn) t
     computation [in_] *)
 
 val def
-  :  (Value_var.t * Param.mutable_flag * Type.t * Context.Attr.t) list
+  :  (Value_var.t * Param.mutable_flag * Type.t option * Context.Attr.t) list
   -> on_exit:'a exit
   -> in_:('a, 'err, 'wrn) t
   -> ('a, 'err, 'wrn) t
@@ -277,7 +279,7 @@ val def
 (** [def_type types ~on_exit ~in_] binds the type definitions [types] in 
     computation [in_] *)
 val def_type
-  :  (Type_var.t * Type.t) list
+  :  (Type_var.t * Type.t option) list
   -> on_exit:'a exit
   -> in_:('a, 'err, 'wrn) t
   -> ('a, 'err, 'wrn) t
@@ -317,7 +319,7 @@ type unify_error =
   [ `Typer_cannot_unify of bool * Type.t * Type.t * Location.t
   | `Typer_cannot_unify_diff_layout of
     Type.t * Type.t * Type.layout * Type.layout * Location.t
-  | `Typer_ill_formed_type of Type.t * Location.t
+  | `Typer_ill_formed_type of Type.t option * Location.t
   | `Typer_occurs_check_failed of Type_var.t * Type.t * Location.t
   | `Typer_unbound_texists_var of Type_var.t * Location.t
   ]
