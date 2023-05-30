@@ -381,5 +381,5 @@ let to_signature (program : program) : signature =
       | D_type { type_binder; type_expr; type_attr = _ } ->
         ctx @ [ S_type (type_binder, type_expr) ]
       | D_module_include x -> x.signature
-      | D_module { module_binder; module_; module_attr = _ } ->
+      | D_module { module_binder; module_; module_attr = _; annotation = ()  } ->
         ctx @ [ S_module (module_binder, module_.signature) ])

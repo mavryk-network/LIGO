@@ -119,10 +119,12 @@ module T =
     | Of        of lexeme Wrap.t  (* of     *)
     | Or        of lexeme Wrap.t  (* or     *)
     | Rec       of lexeme Wrap.t  (* rec    *)
+    | Sig       of lexeme Wrap.t  (* sig    *)
     | Struct    of lexeme Wrap.t  (* struct *)
     | Then      of lexeme Wrap.t  (* then   *)
     | Type      of lexeme Wrap.t  (* type   *)
     | Upto      of lexeme Wrap.t  (* upto   *)
+    | Val       of lexeme Wrap.t  (* val    *)
     | While     of lexeme Wrap.t  (* while  *)
     | With      of lexeme Wrap.t  (* with   *)
     | Contract  of lexeme Wrap.t  (* contract_of *)
@@ -228,6 +230,8 @@ module T =
     | Mod       t
     | Include   t
     | Module    t
+    | Sig       t
+    | Val       t
     | Mut       t
     | Not       t
     | Of        t
@@ -270,6 +274,9 @@ module T =
     let wrap_mut       = wrap "mut"
     let wrap_land      = wrap "land"
     let wrap_lor       = wrap "lor"
+    let wrap_sig    = wrap "sig"
+    let wrap_val    = wrap "val"
+
     let wrap_lxor      = wrap "lxor"
     let wrap_lsl       = wrap "lsl"
     let wrap_lsr       = wrap "lsr"
@@ -313,6 +320,9 @@ module T =
     let mk_Not       region = Not       (wrap_not       region)
     let mk_Of        region = Of        (wrap_of        region)
     let mk_Or        region = Or        (wrap_or        region)
+    let mk_Sig       region = Sig       (wrap_sig       region)
+    let mk_Val       region = Val       (wrap_val       region)
+
     let mk_Parameter region = Parameter (wrap_parameter region)
     let mk_Rec       region = Rec       (wrap_rec       region)
     let mk_Struct    region = Struct    (wrap_struct    region)
@@ -352,10 +362,12 @@ module T =
       mk_Or;
       mk_Parameter;
       mk_Rec;
+      mk_Sig;
       mk_Struct;
       mk_Then;
       mk_Type;
       mk_Upto;
+      mk_Val;
       mk_While;
       mk_With
     ]
@@ -406,6 +418,8 @@ module T =
     let ghost_upto      = wrap_upto      Region.ghost
     let ghost_while     = wrap_while     Region.ghost
     let ghost_with      = wrap_with      Region.ghost
+    let ghost_val       = wrap_with      Region.ghost
+    let ghost_sig       = wrap_with      Region.ghost
 
     let ghost_Begin     = Begin     ghost_begin
     let ghost_Contract  = Contract  ghost_contract
@@ -440,6 +454,9 @@ module T =
     let ghost_Upto      = Upto      ghost_upto
     let ghost_While     = While     ghost_while
     let ghost_With      = With      ghost_with
+    let ghost_Val       = Val       ghost_val
+    let ghost_Sig       = Sig       ghost_sig
+
 
 
     (* SYMBOLS *)
@@ -771,6 +788,8 @@ module T =
     | "Upto"      -> ghost_upto#payload
     | "While"     -> ghost_while#payload
     | "With"      -> ghost_with#payload
+    | "Val"       -> ghost_val#payload
+    | "Sig"       -> ghost_sig#payload
 
     (* Virtual tokens *)
 
@@ -891,6 +910,8 @@ module T =
     | Not       t -> t#region, "Not"
     | Of        t -> t#region, "Of"
     | Or        t -> t#region, "Or"
+    | Val       t -> t#region, "Val"
+    | Sig       t -> t#region, "Sig"
     | Parameter t -> t#region, "Parameter"
     | Rec       t -> t#region, "Rec"
     | Struct    t -> t#region, "Struct"

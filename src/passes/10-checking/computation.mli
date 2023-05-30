@@ -185,15 +185,25 @@ module Context : sig
     -> error:'err Errors.with_loc
     -> (Signature.t, 'err, 'wrn) t
 
-  (** [get_signature path] returns the signature of the module path [path].
+  (** [get_module_of_path path] returns the signature of the module path [path].
       Returning [None] if not found in the current context. *)
 
-  val get_signature : Module_var.t List.Ne.t -> (Signature.t option, 'err, 'wrn) t
+  val get_module_of_path : Module_var.t List.Ne.t -> (Signature.t option, 'err, 'wrn) t
 
-  val get_signature_exn
+  val get_module_of_path_exn
     :  Module_var.t List.Ne.t
     -> error:'err Errors.with_loc
     -> (Signature.t, 'err, 'wrn) t
+
+  (** [get_module_type_of_path path] returns the signature of the module path [path].
+      Returning [None] if not found in the current context. *)
+
+  val get_module_type_of_path : Module_var.t List.Ne.t -> (Module_type.t option, 'err, 'wrn) t
+
+  val get_module_type_of_path_exn
+    :  Module_var.t List.Ne.t
+    -> error:'err Errors.with_loc
+    -> (Module_type.t, 'err, 'wrn) t
 
   (** [get_sum constr] returns a list of [(type_name, type_params, constr_type, sum_type)] for any sum type in the context
       containing [constr].
@@ -253,7 +263,7 @@ val lexists : Label.Set.t -> (Type.layout, 'err, 'wrn) t
 
 (** [create_type constr] returns a created type using the [constr] function
     with the location automatically provided *)
-val create_type : ?meta:Ast_core.type_expression -> Type.constr -> (Type.t, 'err, 'wrn) t
+val create_type : Type.constr -> (Type.t, 'err, 'wrn) t
 
 (** [def bindings ~on_exit ~in_] binds the context bindings [bindings] in 
     computation [in_] *)
@@ -358,12 +368,7 @@ module With_frag : sig
   include Monad.S3 with type ('a, 'err, 'wrn) t := ('a, 'err, 'wrn) t
 
   val lift : ('a, 'err, 'wrn) e -> ('a, 'err, 'wrn) t
-
-  val create_type
-    :  ?meta:Ast_core.type_expression
-    -> Type.constr
-    -> (Type.t, 'err, 'wrn) t
-
+  val create_type : Type.constr -> (Type.t, 'err, 'wrn) t
   val all_lmap : ('a, 'err, 'wrn) t Label.Map.t -> ('a Label.Map.t, 'err, 'wrn) t
   val all_lmap_unit : (unit, 'err, 'wrn) t Label.Map.t -> (unit, 'err, 'wrn) t
   val loc : unit -> (Location.t, 'err, 'wrn) t

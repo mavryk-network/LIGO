@@ -260,6 +260,8 @@ module Of_Ast_core = struct
     | D_module { module_ = { wrap_content = M_variable _; _ }; _ }
     | D_module { module_ = { wrap_content = M_module_path _; _ }; _ } -> bindings
     | D_module_include _ -> bindings (* TODO *) 
+    | D_signature _ ->
+      bindings
 
 
   and declarations : t -> Ast_core.declaration list -> t =
@@ -301,6 +303,7 @@ module Typing_env = struct
     Result.(
       match typed_prg with
       | Ok (decl, ws) ->
+        let decl = List.nth_exn decl 0 in
         let module AST = Ast_typed in
         let bindings =
           Of_Ast_typed.extract_binding_types tenv.bindings decl.wrap_content

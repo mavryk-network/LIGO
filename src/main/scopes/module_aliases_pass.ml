@@ -165,15 +165,16 @@ and declaration : AST.declaration -> t -> env -> t * env =
     let m_alias = expression expr m_alias env in
     m_alias, env
   | D_type { type_binder = _; type_expr = _; type_attr = _ } -> m_alias, env
-  | D_module { module_binder; module_; module_attr = _ } ->
+  | D_module { module_binder; module_; module_attr = _; annotation = _ } ->
     let m_alias, defs_or_alias_opt, module_map =
       module_expression module_binder module_ m_alias env
     in
     let env = Env.add_mvar module_binder defs_or_alias_opt module_map env in
     m_alias, env
-  | D_module_include module_ ->
-    ignore module_ ; (* TODO *)
-    m_alias ,env
+  | D_signature _ ->
+    m_alias, env
+  | D_module_include _ -> m_alias, env (* TODO *)
+
 
 (** [declarations] builds the [env] and tries to resolves module aliases *)
 and declarations : AST.declaration list -> t -> env -> t * env =

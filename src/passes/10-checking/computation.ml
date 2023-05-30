@@ -20,7 +20,6 @@ type ('a, 'err, 'wrn) t =
 let rec encode (type_ : Ast_typed.type_expression) : Type.t =
   let return content : Type.t =
     { content
-    ; meta = type_.type_meta
     ; orig_var = type_.orig_var
     ; location = type_.location
     }
@@ -344,8 +343,10 @@ module Context = struct
     lift_ctx (fun ctx -> Context.get_texists_var ctx tvar) >>= raise_opt ~error
 
 
-  let get_signature path : _ t = lift_ctx (fun ctx -> Context.get_signature ctx path)
-  let get_signature_exn path ~error : _ t = get_signature path >>= raise_opt ~error
+  let get_module_of_path path : _ t = lift_ctx (fun ctx -> Context.get_module_of_path ctx path)
+  let get_module_of_path_exn path ~error : _ t = get_module_of_path path >>= raise_opt ~error
+  let get_module_type_of_path path : _ t = lift_ctx (fun ctx -> Context.get_module_type_of_path ctx path)
+  let get_module_type_of_path_exn path ~error : _ t = get_module_type_of_path path >>= raise_opt ~error
   let get_module mvar : _ t = lift_ctx (fun ctx -> Context.get_module ctx mvar)
   let get_module_exn mvar ~error : _ t = get_module mvar >>= raise_opt ~error
   let get_sum constr : _ t = lift_ctx (fun ctx -> Context.get_sum ctx constr)
@@ -753,10 +754,10 @@ let generalize (t : (Type.t * 'a, _, _) t)
   (ctx, Substitution.merge subst subst'), (type_, tvars, result)
 
 
-let create_type ?meta (constr : Type.constr) =
+let create_type (constr : Type.constr) =
   let open Let_syntax in
   let%bind loc = loc () in
-  return (constr ?meta ~loc ())
+  return (constr ~loc ())
 
 
 let try_ (body : ('a, 'err, 'wrn) t) ~(with_ : 'err -> ('a, 'err, 'wrn) t)
@@ -840,7 +841,7 @@ module With_frag = struct
   let raise error = lift (raise error)
   let warn warning = lift (warn warning)
   let assert_ cond ~error = lift (assert_ ~error cond)
-  let create_type ?meta type_ = lift (create_type ?meta type_)
+  let create_type type_ = lift (create_type type_)
 
   module Context = struct
     let get_sum label = lift (Context.get_sum label)

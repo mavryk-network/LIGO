@@ -176,10 +176,10 @@ and compile_declaration scope (d : AST.declaration) : Scope.t * AST.declaration 
   | D_module_include module_ ->
     let scope', module_ = compile_module_expr scope module_ in
     return (Scope.merge_scopes scope scope') @@ AST.D_module_include module_
-  | D_module { module_binder; module_; module_attr } ->
+  | D_module { module_binder; module_; module_attr; annotation = ()  } ->
     let mod_scope, module_ = compile_module_expr scope module_ in
     let scope, module_binder = Scope.new_module_var scope module_binder mod_scope in
-    return scope @@ AST.D_module { module_binder; module_; module_attr }
+    return scope @@ AST.D_module { module_binder; module_; module_attr; annotation = () }
 
 
 and compile_program scope (program : AST.program) : Scope.t * AST.program =

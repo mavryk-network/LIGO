@@ -83,7 +83,7 @@ and type_expression_orig ppf (te : type_expression) : unit =
     else if Option.is_some (Combinators.get_t_option te)
     then option ppf te
     else fprintf ppf "%a" type_content_orig te.type_content
-  | Some v -> Ast_core.(PP.type_expression ppf (t_variable ~loc:te.location v ()))
+  | Some v -> type_expression ppf (Combinators.t_variable ~loc:te.location v ())
 
 
 let rec expression ppf (e : expression) =
@@ -175,7 +175,7 @@ and declaration ?(use_hidden = true) ppf (d : declaration) =
   | D_module md ->
     if md.module_attr.hidden && use_hidden
     then ()
-    else Types.Module_decl.pp module_expr ppf md
+    else Types.Module_decl.pp module_expr (fun _ () -> ()) ppf md
   | D_module_include x -> fprintf ppf "include %a" module_expr x
 
 
@@ -190,7 +190,6 @@ and module_expr ppf (me : module_expr) : unit =
     signature
     me.signature
 
-
 and sig_item ppf (d : sig_item) =
   match d with
   | S_value (var, type_, _) ->
@@ -200,10 +199,8 @@ and sig_item ppf (d : sig_item) =
   | S_module (var, sig_) ->
     Format.fprintf ppf "@[<2>module %a =@ %a@]" Module_var.pp var signature sig_
 
-
 and signature ppf (sig_ : signature) : unit =
   Format.fprintf ppf "@[<v>sig@[<v1>@,%a@]@,end@]" (list_sep sig_item (tag "@,")) sig_
-
 
 let program ?(use_hidden = false) ppf (p : program) =
   list_sep (declaration ~use_hidden) (tag "@,") ppf p
