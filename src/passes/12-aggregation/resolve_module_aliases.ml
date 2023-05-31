@@ -190,7 +190,7 @@ and compile_declaration path aliases (d : AST.declaration)
     let aliases = Aliases.add mod_aliases aliases in
     (match module_opt with
     | Some module_ -> return_s aliases @@ AST.D_module_include module_
-    | None -> return_n aliases)
+    | None -> return_s aliases @@ AST.D_module_include module_)
   | D_module { module_binder; module_; module_attr ; annotation = () } ->
     let mod_aliases, path, module_ =
       compile_module_expr ~module_binder path aliases module_
