@@ -888,7 +888,7 @@ At this point, an expression is expected.
 
 interactive_expr: With
 ##
-## Ends in an error in state: 1114.
+## Ends in an error in state: 1143.
 ##
 ## interactive_expr' -> . interactive_expr [ # ]
 ##
@@ -2904,10 +2904,10 @@ contract: Type Ident EQ UIdent DOT With
 ##
 ## Ends in an error in state: 69.
 ##
-## module_path(__anonymous_5) -> module_name DOT . module_path(__anonymous_5) [ VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
-## module_path(__anonymous_5) -> module_name DOT . type_name [ VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
-## module_path(__anonymous_6) -> module_name DOT . module_path(__anonymous_6) [ VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
-## module_path(__anonymous_6) -> module_name DOT . par(type_expr) [ VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
+## module_path(__anonymous_5) -> module_name DOT . module_path(__anonymous_5) [ Val VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
+## module_path(__anonymous_5) -> module_name DOT . type_name [ Val VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
+## module_path(__anonymous_6) -> module_name DOT . module_path(__anonymous_6) [ Val VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
+## module_path(__anonymous_6) -> module_name DOT . par(type_expr) [ Val VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
 ## nsepseq(module_name,DOT) -> module_name DOT . nsepseq(module_name,DOT) [ Parameter ]
 ##
 ## The known suffix of the stack is as follows:
@@ -3729,7 +3729,7 @@ contract: Type Ident EQ LBRACE With
 ##
 ## Ends in an error in state: 30.
 ##
-## braces(option(__anonymous_2(field_decl))) -> LBRACE . option(__anonymous_2(field_decl)) RBRACE [ VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
+## braces(option(__anonymous_2(field_decl))) -> LBRACE . option(__anonymous_2(field_decl)) RBRACE [ Val VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
 ##
 ## The known suffix of the stack is as follows:
 ## LBRACE
@@ -3770,7 +3770,7 @@ contract: Type Ident EQ LPAR String VBAR
 ##
 ## Ends in an error in state: 109.
 ##
-## par(type_expr) -> LPAR type_expr . RPAR [ VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
+## par(type_expr) -> LPAR type_expr . RPAR [ Val VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
 ## tuple(type_expr) -> type_expr . COMMA nsepseq(type_expr,COMMA) [ RPAR ]
 ##
 ## The known suffix of the stack is as follows:
@@ -3796,7 +3796,7 @@ contract: Type Ident EQ String ARROW With
 ##
 ## Ends in an error in state: 93.
 ##
-## fun_type_level -> cartesian_level ARROW . fun_type_level [ VBAR Type SEMI RPAR RBRACE Module Let Include In End EQ EOF Directive COMMA Attr ]
+## fun_type_level -> cartesian_level ARROW . fun_type_level [ Val VBAR Type SEMI RPAR RBRACE Module Let Include In End EQ EOF Directive COMMA Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## cartesian_level ARROW
@@ -3819,7 +3819,7 @@ contract: Let Ident COLON UIdent Of With
 ##
 ## Ends in an error in state: 25.
 ##
-## of_type(fun_type_level) -> Of . fun_type_level [ VBAR Type SEMI RPAR RBRACE Module Let Include In End EQ EOF Directive COMMA Attr ]
+## of_type(fun_type_level) -> Of . fun_type_level [ Val VBAR Type SEMI RPAR RBRACE Module Let Include In End EQ EOF Directive COMMA Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## Of
@@ -3834,7 +3834,7 @@ contract: Type Ident EQ String TIMES UIdent With
 ##
 ## Ends in an error in state: 63.
 ##
-## parameter_of_type -> nsepseq(module_name,DOT) . Parameter [ VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
+## parameter_of_type -> nsepseq(module_name,DOT) . Parameter [ Val VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
 ##
 ## The known suffix of the stack is as follows:
 ## nsepseq(module_name,DOT)
@@ -3854,7 +3854,7 @@ contract: Type Ident EQ String TIMES String TIMES With
 ##
 ## Ends in an error in state: 90.
 ##
-## nsepseq(core_type,TIMES) -> core_type TIMES . nsepseq(core_type,TIMES) [ VBAR Type SEMI RPAR RBRACE Module Let Include In End EQ EOF Directive COMMA Attr ARROW ]
+## nsepseq(core_type,TIMES) -> core_type TIMES . nsepseq(core_type,TIMES) [ Val VBAR Type SEMI RPAR RBRACE Module Let Include In End EQ EOF Directive COMMA Attr ARROW ]
 ##
 ## The known suffix of the stack is as follows:
 ## core_type TIMES
@@ -3863,7 +3863,7 @@ contract: Type Ident EQ String TIMES With
 ##
 ## Ends in an error in state: 84.
 ##
-## cartesian_level -> core_type TIMES . nsepseq(core_type,TIMES) [ VBAR Type SEMI RPAR RBRACE Module Let Include In End EQ EOF Directive COMMA Attr ARROW ]
+## cartesian_level -> core_type TIMES . nsepseq(core_type,TIMES) [ Val VBAR Type SEMI RPAR RBRACE Module Let Include In End EQ EOF Directive COMMA Attr ARROW ]
 ##
 ## The known suffix of the stack is as follows:
 ## core_type TIMES
@@ -3877,7 +3877,7 @@ contract: Type Ident EQ VBAR With
 ##
 ## Ends in an error in state: 20.
 ##
-## long_variant(fun_type_level) -> VBAR . short_variant(fun_type_level) [ VBAR Type SEMI RPAR RBRACE Module Let Include In End EQ EOF Directive COMMA Attr ]
+## long_variant(fun_type_level) -> VBAR . short_variant(fun_type_level) [ Val VBAR Type SEMI RPAR RBRACE Module Let Include In End EQ EOF Directive COMMA Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## VBAR
@@ -3914,7 +3914,7 @@ At this point, one of the following is expected:
 
 contract: Directive With
 ##
-## Ends in an error in state: 1108.
+## Ends in an error in state: 1137.
 ##
 ## nseq(top_declaration) -> top_declaration . [ EOF ]
 ## nseq(top_declaration) -> top_declaration . nseq(top_declaration) [ EOF ]
@@ -3931,7 +3931,7 @@ following is expected:
 
 contract: Module UIdent EQ Struct Type Ident EQ UIdent EOF
 ##
-## Ends in an error in state: 1104.
+## Ends in an error in state: 1128.
 ##
 ## nseq(declaration) -> declaration . [ End ]
 ## nseq(declaration) -> declaration . nseq(declaration) [ End ]
@@ -3948,7 +3948,7 @@ contract: Module UIdent EQ Struct Type Ident EQ UIdent EOF
 ## In state 74, spurious reduction of production variant_type(fun_type_level) -> short_variant(fun_type_level)
 ## In state 71, spurious reduction of production type_expr -> variant_type(fun_type_level)
 ## In state 124, spurious reduction of production type_decl -> Type type_name EQ type_expr
-## In state 1096, spurious reduction of production declaration -> type_decl
+## In state 1119, spurious reduction of production declaration -> type_decl
 ##
 
 Ill-formed module declaration.
@@ -3979,6 +3979,7 @@ contract: Module UIdent With
 ## Ends in an error in state: 152.
 ##
 ## module_decl -> Module module_name . EQ module_expr [ Type Module Let Include In End EOF Directive Attr ]
+## module_decl -> Module module_name . module_constraint EQ module_expr [ Type Module Let Include In End EOF Directive Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## Module module_name
@@ -3991,7 +3992,9 @@ contract: Module With
 ##
 ## Ends in an error in state: 126.
 ##
-## module_decl -> Module . module_name EQ module_expr [ Type Module Let Include In End EOF Directive Attr ]
+## module_decl -> Module . module_name EQ module_expr [ Type Module Let Include End EOF Directive Attr ]
+## module_decl -> Module . module_name module_constraint EQ module_expr [ Type Module Let Include End EOF Directive Attr ]
+## signature_decl -> Module . Type module_name EQ signature_expr [ Type Module Let Include End EOF Directive Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## Module
@@ -4022,8 +4025,8 @@ interactive_expr: Module UIdent EQ UIdent Type
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 1089, spurious reduction of production module_expr -> module_name
-## In state 1106, spurious reduction of production module_decl -> Module module_name EQ module_expr
+## In state 1115, spurious reduction of production module_expr -> module_name
+## In state 1130, spurious reduction of production module_decl -> Module module_name EQ module_expr
 ##
 interactive_expr: Match Verbatim With WILD ARROW If Verbatim Then Module UIdent EQ UIdent Type
 ##
@@ -4039,8 +4042,8 @@ interactive_expr: Match Verbatim With WILD ARROW If Verbatim Then Module UIdent 
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 1089, spurious reduction of production module_expr -> module_name
-## In state 1106, spurious reduction of production module_decl -> Module module_name EQ module_expr
+## In state 1115, spurious reduction of production module_expr -> module_name
+## In state 1130, spurious reduction of production module_decl -> Module module_name EQ module_expr
 ##
 interactive_expr: If Verbatim Then Match Verbatim With WILD ARROW Module UIdent EQ UIdent Type
 ##
@@ -4056,8 +4059,8 @@ interactive_expr: If Verbatim Then Match Verbatim With WILD ARROW Module UIdent 
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 1089, spurious reduction of production module_expr -> module_name
-## In state 1106, spurious reduction of production module_decl -> Module module_name EQ module_expr
+## In state 1115, spurious reduction of production module_expr -> module_name
+## In state 1130, spurious reduction of production module_decl -> Module module_name EQ module_expr
 ##
 interactive_expr: Match Verbatim With WILD ARROW Module UIdent EQ UIdent Type
 ##
@@ -4072,8 +4075,8 @@ interactive_expr: Match Verbatim With WILD ARROW Module UIdent EQ UIdent Type
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 1089, spurious reduction of production module_expr -> module_name
-## In state 1106, spurious reduction of production module_decl -> Module module_name EQ module_expr
+## In state 1115, spurious reduction of production module_expr -> module_name
+## In state 1130, spurious reduction of production module_decl -> Module module_name EQ module_expr
 ##
 interactive_expr: If Verbatim Then Module UIdent EQ UIdent Type
 ##
@@ -4089,8 +4092,8 @@ interactive_expr: If Verbatim Then Module UIdent EQ UIdent Type
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 1089, spurious reduction of production module_expr -> module_name
-## In state 1106, spurious reduction of production module_decl -> Module module_name EQ module_expr
+## In state 1115, spurious reduction of production module_expr -> module_name
+## In state 1130, spurious reduction of production module_decl -> Module module_name EQ module_expr
 ##
 
 Ill-formed local module declaration.
@@ -4099,10 +4102,10 @@ is expected, followed by an expression.
 
 contract: Module UIdent EQ UIdent DOT With
 ##
-## Ends in an error in state: 1090.
+## Ends in an error in state: 149.
 ##
-## module_path(module_name) -> module_name DOT . module_path(module_name) [ Type Module Let Include In End EOF Directive Attr ]
-## module_path(module_name) -> module_name DOT . module_name [ Type Module Let Include In End EOF Directive Attr ]
+## module_path(module_name) -> module_name DOT . module_path(module_name) [ Type Module Let Include In End EQ EOF Directive Attr ]
+## module_path(module_name) -> module_name DOT . module_name [ Type Module Let Include In End EQ EOF Directive Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## module_name DOT
@@ -4115,7 +4118,7 @@ contract: Type QUOTE With
 ##
 ## Ends in an error in state: 3.
 ##
-## quoted_type_var -> QUOTE . variable [ VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
+## quoted_type_var -> QUOTE . variable [ Val VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
 ##
 ## The known suffix of the stack is as follows:
 ## QUOTE
@@ -4323,8 +4326,8 @@ interactive_expr: LPAR UIdent COLON LPAR Ident COMMA Ident RPAR With
 ##
 ## Ends in an error in state: 46.
 ##
-## qualified_type -> type_ctor_arg . type_in_module(__anonymous_4) [ VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
-## type_ctor_app -> type_ctor_arg . type_ctor [ VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
+## qualified_type -> type_ctor_arg . type_in_module(__anonymous_4) [ Val VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
+## type_ctor_app -> type_ctor_arg . type_ctor [ Val VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
 ##
 ## The known suffix of the stack is as follows:
 ## type_ctor_arg
@@ -5352,7 +5355,7 @@ contract: Let Ident COLON LPAR With
 ## Ends in an error in state: 28.
 ##
 ## par(tuple(type_expr)) -> LPAR . tuple(type_expr) RPAR [ UIdent Ident ]
-## par(type_expr) -> LPAR . type_expr RPAR [ VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
+## par(type_expr) -> LPAR . type_expr RPAR [ Val VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
 ##
 ## The known suffix of the stack is as follows:
 ## LPAR
@@ -5534,7 +5537,7 @@ At this point, one of the following is expected:
 
 contract: Attr With
 ##
-## Ends in an error in state: 1095.
+## Ends in an error in state: 1118.
 ##
 ## attr_decl -> Attr . declaration [ Type Module Let Include End EOF Directive Attr ]
 ##
@@ -5681,7 +5684,7 @@ contract: Let Ident COLON UIdent Of Attr With
 ##
 ## Ends in an error in state: 85.
 ##
-## core_type -> Attr . core_type [ VBAR Type TIMES SEMI RPAR RBRACE Module Let Include In End EQ EOF Directive COMMA Attr ARROW ]
+## core_type -> Attr . core_type [ Val VBAR Type TIMES SEMI RPAR RBRACE Module Let Include In End EQ EOF Directive COMMA Attr ARROW ]
 ##
 ## The known suffix of the stack is as follows:
 ## Attr
@@ -5749,7 +5752,7 @@ contract: Let UIdent COLON VBAR Attr ZWSP
 ##
 ## Ends in an error in state: 22.
 ##
-## short_variant(fun_type_level) -> Attr . short_variant(fun_type_level) [ VBAR Type SEMI RPAR RBRACE Module Let Include In End EQ EOF Directive COMMA Attr ]
+## short_variant(fun_type_level) -> Attr . short_variant(fun_type_level) [ Val VBAR Type SEMI RPAR RBRACE Module Let Include In End EQ EOF Directive COMMA Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## Attr
@@ -5763,10 +5766,10 @@ contract: Let Ident COLON Attr With
 ##
 ## Ends in an error in state: 42.
 ##
-## core_type -> Attr . core_type [ Type TIMES SEMI RPAR RBRACE Module Let Include In End EQ EOF Directive COMMA Attr ARROW ]
+## core_type -> Attr . core_type [ Val Type TIMES SEMI RPAR RBRACE Module Let Include In End EQ EOF Directive COMMA Attr ARROW ]
 ## nseq(Attr) -> Attr . [ VBAR ]
 ## nseq(Attr) -> Attr . nseq(Attr) [ VBAR ]
-## short_variant(fun_type_level) -> Attr . short_variant(fun_type_level) [ VBAR Type SEMI RPAR RBRACE Module Let Include In End EQ EOF Directive COMMA Attr ]
+## short_variant(fun_type_level) -> Attr . short_variant(fun_type_level) [ Val VBAR Type SEMI RPAR RBRACE Module Let Include In End EQ EOF Directive COMMA Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## Attr
@@ -6412,7 +6415,7 @@ contract: Let UIdent COLON UIdent DOT LPAR ZWSP
 ##
 ## Ends in an error in state: 70.
 ##
-## par(type_expr) -> LPAR . type_expr RPAR [ VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
+## par(type_expr) -> LPAR . type_expr RPAR [ Val VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
 ##
 ## The known suffix of the stack is as follows:
 ## LPAR
@@ -6425,8 +6428,8 @@ contract: Let UIdent COLON Ident UIdent ZWSP
 ##
 ## Ends in an error in state: 51.
 ##
-## module_path(__anonymous_4) -> module_name . DOT module_path(__anonymous_4) [ VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
-## module_path(__anonymous_4) -> module_name . DOT type_ctor [ VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
+## module_path(__anonymous_4) -> module_name . DOT module_path(__anonymous_4) [ Val VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
+## module_path(__anonymous_4) -> module_name . DOT type_ctor [ Val VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
 ##
 ## The known suffix of the stack is as follows:
 ## module_name
@@ -6439,8 +6442,8 @@ contract: Let UIdent COLON Ident UIdent DOT ZWSP
 ##
 ## Ends in an error in state: 52.
 ##
-## module_path(__anonymous_4) -> module_name DOT . module_path(__anonymous_4) [ VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
-## module_path(__anonymous_4) -> module_name DOT . type_ctor [ VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
+## module_path(__anonymous_4) -> module_name DOT . module_path(__anonymous_4) [ Val VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
+## module_path(__anonymous_4) -> module_name DOT . type_ctor [ Val VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
 ##
 ## The known suffix of the stack is as follows:
 ## module_name DOT
@@ -6455,7 +6458,7 @@ contract: Let UIdent COLON UIdent DOT LPAR Ident VBAR
 ##
 ## Ends in an error in state: 72.
 ##
-## par(type_expr) -> LPAR type_expr . RPAR [ VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
+## par(type_expr) -> LPAR type_expr . RPAR [ Val VBAR UIdent Type TIMES SEMI RPAR RBRACE Module Let Include In Ident End EQ EOF Directive COMMA Attr ARROW ]
 ##
 ## The known suffix of the stack is as follows:
 ## LPAR type_expr
@@ -6710,7 +6713,7 @@ At this point, an expression is expected.
 
 interactive_expr: Ident Bytes ZWSP
 ##
-## Ends in an error in state: 1116.
+## Ends in an error in state: 1145.
 ##
 ## interactive_expr -> expr . EOF [ # ]
 ##
@@ -8238,9 +8241,257 @@ Ill-formed while-loop.
 At this point, if the condition is complete, then the keyword 'do' is
 expected, followed by the loop body.
 
+contract: Module Type ZWSP
+##
+## Ends in an error in state: 127.
+##
+## signature_decl -> Module Type . module_name EQ signature_expr [ Type Module Let Include End EOF Directive Attr ]
+##
+## The known suffix of the stack is as follows:
+## Module Type
+##
+
+Ill-formed module type declaration.
+At this point, the name of the module type being declared is expected.
+
+contract: Module Type UIdent ZWSP
+##
+## Ends in an error in state: 128.
+##
+## signature_decl -> Module Type module_name . EQ signature_expr [ Type Module Let Include End EOF Directive Attr ]
+##
+## The known suffix of the stack is as follows:
+## Module Type module_name
+##
+
+Ill-formed module type declaration.
+At this point, the assignment symbol '='.
+
+contract: Module Type UIdent EQ ZWSP
+##
+## Ends in an error in state: 129.
+##
+## signature_decl -> Module Type module_name EQ . signature_expr [ Type Module Let Include End EOF Directive Attr ]
+##
+## The known suffix of the stack is as follows:
+## Module Type module_name EQ
+##
+
+Ill-formed module type declaration declaration.
+At this point, one of the following is expected:
+  * the name of the module type being aliases;
+  * the qualified name of the module being aliased, e.g. 'M.N';
+  * the keyword 'sig' followed by declarations, if
+    defining a new module type.
+
+contract: Module UIdent COLON Sig ZWSP
+##
+## Ends in an error in state: 130.
+##
+## signature_sig -> Sig . End [ Type Module Let Include End EQ EOF Directive Attr ]
+## signature_sig -> Sig . nseq(sig_item) End [ Type Module Let Include End EQ EOF Directive Attr ]
+##
+## The known suffix of the stack is as follows:
+## Sig
+##
+
+Ill-formed module type declaration.
+At this point, one of the following is expected:
+  * a declaration;
+  * the keyword 'end' if the module is empty.
+
+contract: Module UIdent COLON Sig Val ZWSP
+##
+## Ends in an error in state: 131.
+##
+## sig_item -> Val . variable type_annotation(type_expr) [ Val Type End Attr ]
+##
+## The known suffix of the stack is as follows:
+## Val
+##
+
+Ill-formed module type declaration.
+At this point, the name of the value being declared is expected.
+
+contract: Module UIdent COLON Sig Val Ident ZWSP
+##
+## Ends in an error in state: 132.
+##
+## sig_item -> Val variable . type_annotation(type_expr) [ Val Type End Attr ]
+##
+## The known suffix of the stack is as follows:
+## Val variable
+##
+
+Ill-formed module type declaration.
+At this point, the type of the value being declared is expected.
+
+contract: Module UIdent COLON Sig Val Ident COLON UIdent ARROW
+##
+## Ends in an error in state: 141.
+##
+## nseq(sig_item) -> sig_item . [ End ]
+## nseq(sig_item) -> sig_item . nseq(sig_item) [ End ]
+##
+## The known suffix of the stack is as follows:
+## sig_item
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 29, spurious reduction of production ctor -> UIdent
+## In state 24, spurious reduction of production short_variant(fun_type_level) -> ctor
+## In state 74, spurious reduction of production variant_type(fun_type_level) -> short_variant(fun_type_level)
+## In state 71, spurious reduction of production type_expr -> variant_type(fun_type_level)
+## In state 100, spurious reduction of production type_annotation(type_expr) -> COLON type_expr
+## In state 133, spurious reduction of production sig_item -> Val variable type_annotation(type_expr)
+##
+
+Ill-formed module type declaration.
+At this point, if the current declaration is complete, one of the
+following is expected:
+  * another declaration;
+  * the end of the module type.
+
+contract: Module UIdent COLON UIdent ZWSP
+##
+## Ends in an error in state: 148.
+##
+## module_path(module_name) -> module_name . DOT module_path(module_name) [ Type Module Let Include End EQ EOF Directive Attr ]
+## module_path(module_name) -> module_name . DOT module_name [ Type Module Let Include End EQ EOF Directive Attr ]
+## signature_expr -> module_name . [ Type Module Let Include End EQ EOF Directive Attr ]
+##
+## The known suffix of the stack is as follows:
+## module_name
+##
+
+Ill-formed module declaration.
+At this point, the assignment symbol '='.
+
+interactive_expr: Module ZWSP
+##
+## Ends in an error in state: 259.
+##
+## module_decl -> Module . module_name EQ module_expr [ In ]
+## module_decl -> Module . module_name module_constraint EQ module_expr [ In ]
+##
+## The known suffix of the stack is as follows:
+## Module
+##
+
+Ill-formed module declaration.
+At this point, the name of the module being declared is expected.
+
+contract: Module UIdent COLON ZWSP
+##
+## Ends in an error in state: 1131.
+##
+## module_constraint -> COLON . signature_expr [ EQ ]
+##
+## The known suffix of the stack is as follows:
+## COLON
+##
+
+Ill-formed module declaration.
+At this point, the module type of the module being declared is expected.
+
+contract: Module UIdent COLON UIdent Type
+##
+## Ends in an error in state: 1133.
+##
+## module_decl -> Module module_name module_constraint . EQ module_expr [ Type Module Let Include In End EOF Directive Attr ]
+##
+## The known suffix of the stack is as follows:
+## Module module_name module_constraint
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 148, spurious reduction of production signature_expr -> module_name
+## In state 1132, spurious reduction of production module_constraint -> COLON signature_expr
+##
+
+Ill-formed module declaration.
+At this point, the assignment symbol '='.
+
+contract: Module UIdent COLON UIdent EQ ZWSP
+##
+## Ends in an error in state: 1134.
+##
+## module_decl -> Module module_name module_constraint EQ . module_expr [ Type Module Let Include In End EOF Directive Attr ]
+##
+## The known suffix of the stack is as follows:
+## Module module_name module_constraint EQ
+##
+
+Ill-formed module declaration declaration.
+At this point, one of the following is expected:
+  * the name of the module being aliases;
+  * the qualified name of the module being aliased, e.g. 'M.N';
+  * the keyword 'struct' followed by declarations, if
+    defining a new module.
+
+contract: Module UIdent COLON Sig Type ZWSP
+##
+## Ends in an error in state: 134.
+##
+## sig_item -> Type . type_name EQ type_expr [ Val Type End Attr ]
+## sig_item -> Type . type_name [ Val Type End Attr ]
+##
+## The known suffix of the stack is as follows:
+## Type
+##
+
+Ill-formed module type declaration.
+At this point, the name of the type being declared is expected.
+
+contract: Module UIdent COLON Sig Type Ident ZWSP
+##
+## Ends in an error in state: 135.
+##
+## sig_item -> Type type_name . EQ type_expr [ Val Type End Attr ]
+## sig_item -> Type type_name . [ Val Type End Attr ]
+##
+## The known suffix of the stack is as follows:
+## Type type_name
+##
+
+Ill-formed module type declaration.
+At this point, the type name being declared is expected.
+
+contract: Module UIdent COLON Sig Type Ident EQ ZWSP
+##
+## Ends in an error in state: 136.
+##
+## sig_item -> Type type_name EQ . type_expr [ Val Type End Attr ]
+##
+## The known suffix of the stack is as follows:
+## Type type_name EQ
+##
+
+Ill-formed module type declaration.
+At this point, the type being declared is expected.
+
+contract: Module UIdent COLON Sig Attr ZWSP
+##
+## Ends in an error in state: 139.
+##
+## sig_item -> Attr . sig_item [ Val Type End Attr ]
+##
+## The known suffix of the stack is as follows:
+## Attr
+##
+
+Ill-formed module type declaration.
+At this point, one of the following is expected:
+  * a declaration;
+  * the keyword 'end' if the module is empty.
+
 contract: Include ZWSP
 ##
-## Ends in an error in state: 1086.
+## Ends in an error in state: 1112.
 ##
 ## module_include -> Include . module_expr [ Type Module Let Include End EOF Directive Attr ]
 ##
@@ -8248,9 +8499,5 @@ contract: Include ZWSP
 ## Include
 ##
 
-Ill-formed include directive.
-At this point, one of the following is expected:
-  * the name of the module being aliases;
-  * the qualified name of the module being aliased, e.g. 'M.N';
-  * the keyword 'struct' followed by declarations, if
-    defining a new module.
+Ill-formed module inclusion.
+At this point, the module to be included is expected as an expression.
