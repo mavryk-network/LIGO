@@ -8,6 +8,7 @@ module AST = Ast_typed
 module Scope : sig
   type t
 
+  val pp : t -> unit
   val empty : t
   val new_module_var : t -> Module_var.t -> t -> t * Module_var.t
   val get_module_var : t -> Module_var.t -> t * Module_var.t
@@ -17,6 +18,25 @@ end = struct
 
   type t = { module_ : (Module_var.t * t) MMap.t }
 
+  let rec pp ppf (x : t) =
+    let lst = MMap.to_kv_list x.module_ in
+    Format.fprintf
+      ppf
+      "%a"
+      (PP_helpers.list (fun ppf (mvar, (mvar2, x')) ->
+           Format.fprintf
+             ppf
+             "{ %a -> (%a , [%a]) }"
+             Module_var.pp
+             mvar
+             Module_var.pp
+             mvar2
+             pp
+             x'))
+      lst
+
+
+  let pp x = print_endline @@ Format.asprintf "%a" pp x
   let empty = { module_ = MMap.empty }
 
   let new_module_var map var mod_scope =
@@ -27,9 +47,11 @@ end = struct
     in
     let module_ = MMap.add var (var', mod_scope) map.module_ in
     { module_ }, var'
-  
+
+
   let merge_scopes scope mod_scope =
     { module_ = MMap.union (fun _ v1 _ -> Some v1) scope.module_ mod_scope.module_ }
+
 
   let get_module_var map var =
     (* The default value is for variable coming from other files *)
@@ -176,7 +198,7 @@ and compile_declaration scope (d : AST.declaration) : Scope.t * AST.declaration 
   | D_module_include module_ ->
     let scope', module_ = compile_module_expr scope module_ in
     return (Scope.merge_scopes scope scope') @@ AST.D_module_include module_
-  | D_module { module_binder; module_; module_attr; annotation = ()  } ->
+  | D_module { module_binder; module_; module_attr; annotation = () } ->
     let mod_scope, module_ = compile_module_expr scope module_ in
     let scope, module_binder = Scope.new_module_var scope module_binder mod_scope in
     return scope @@ AST.D_module { module_binder; module_; module_attr; annotation = () }
