@@ -26,7 +26,7 @@ following:
 Here is a full example:
 
 ```shell
-ligo run dry-run src/basic.mligo Unit Unit --entry-point main
+ligo run dry-run src/basic.mligo 'unit' 'unit' --entry-point main
 // Outputs:
 // tuple[   list[]
 //          Unit
