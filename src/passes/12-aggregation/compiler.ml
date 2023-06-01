@@ -123,8 +123,13 @@ module Path : sig
   val add_to_path : t -> Module_var.t -> t
   val get_from_module_path : Module_var.t List.t -> t
   val append : t -> t -> t
+  val pp : Format.formatter -> t -> unit
 end = struct
   type t = Module_var.t list
+
+  let pp ppf (x : t) =
+    Format.fprintf ppf "[%a]" (PP_helpers.list_sep_d_par Module_var.pp) x
+
 
   let empty = []
   let add_to_path (p : t) s = s :: p
@@ -160,6 +165,7 @@ module Scope : sig
   val add_path_to_var : t -> Path.t -> Value_var.t -> t * Value_var.t
   val get_declarations : t -> decl list
   val clean_declarations : t -> t
+  val pp_name_map : t -> unit
 end = struct
   module ValueVMap = Map.Make (Value_var)
   module TypeVMap = Map.Make (Type_var)
@@ -176,6 +182,25 @@ end = struct
   and decl =
     | Value of O.type_expression Binder.t * O.type_expression * O.ValueAttr.t
     | Module of Module_var.t
+
+  let pp_name_map (x : t) =
+    print_endline
+    @@ Format.asprintf
+         "%a"
+         (PP_helpers.list_sep
+            (fun ppf ((mvar_lst, s), var) ->
+              Format.fprintf
+                ppf
+                "{ path:(%a) valvar:(%a) -> %a }"
+                Path.pp
+                mvar_lst
+                Value_var.pp
+                s
+                Value_var.pp
+                var)
+            (PP_helpers.tag ","))
+         (PathVarMap.to_kv_list x.name_map)
+
 
   let empty =
     { value = ValueVMap.empty
