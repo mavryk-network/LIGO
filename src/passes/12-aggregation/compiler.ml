@@ -183,7 +183,7 @@ let build_context : Data.scope -> O.context =
     | Exp { binding = { name = _; fresh_name }; item; attr } ->
       let binder = Binder.make fresh_name item.type_expression in
       [ Location.wrap ~loc:item.location (O.D_value { binder; expr = item; attr }) ]
-    | Mod { in_scope = { decls; _ }; _ } -> List.join (List.map decls ~f)
+    | Mod { in_scope = { decls; _ }; _ } -> List.join (List.map (List.rev decls) ~f)
   in
   List.join (List.map ~f (List.rev scope.decls))
 
