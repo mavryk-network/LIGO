@@ -12,7 +12,7 @@ open Ligo_prim
 
 module Data = struct
   type scope =
-    { exp : exp_ list
+    { exp : var_binding list
     ; mod_ : mod_ list
     ; decls : decl list
     }
@@ -20,28 +20,41 @@ module Data = struct
   and decl =
     | Mod of mod_
     | Exp of exp_
+    | Pat of pat_
+
+  and ('a, 'b) binding_ =
+    { name : 'a
+    ; fresh_name : 'b
+    }
+
+  and var_binding = (Value_var.t, Value_var.t) binding_
+  and pat_binding = (I.ty_expr I.Pattern.t, O.ty_expr O.Pattern.t) binding_
 
   and mod_ =
     { name : Module_var.t
     ; in_scope : scope
     }
 
-  and exp_ =
-    { name : Value_var.t
-    ; fresh_name : Value_var.t
+  and pat_ =
+    { binding : pat_binding
     ; item : O.expression
     ; attr : O.ValueAttr.t
-    ; attributes : unit
+    }
+
+  and exp_ =
+    { binding : var_binding
+    ; item : O.expression
+    ; attr : O.ValueAttr.t
     }
 
   (* Important note: path is _only_ used for naming of fresh variables, so that debuging a printed AST is easier *)
   and path = Module_var.t list
 
   module PP_DEBUG = struct
-    open Format
+    (* open Format *)
     (* open Simple_utils.PP_helpers *)
 
-    let rec pp ppf { exp; mod_ } =
+    (* let rec pp ppf { exp; mod_ } =
       let pp_mod_ ppf { name; in_scope } =
         fprintf ppf "{ name = %a ; items = @[<v 2>@.%a@] }" Module_var.pp name pp in_scope
       in
@@ -60,7 +73,8 @@ module Data = struct
         Simple_utils.PP_helpers.(list_sep pp_exp_ (tag "@."))
         exp
         Simple_utils.PP_helpers.(list_sep pp_mod_ (tag "@."))
-        mod_
+        mod_ *)
+  
   end
 
   let empty = { exp = []; mod_ = []; decls = [] }
@@ -71,14 +85,13 @@ module Data = struct
      fun acc module_variable ->
       match List.find acc.mod_ ~f:(fun x -> Module_var.equal x.name module_variable) with
       | Some x -> x.in_scope
-      | _ ->
-        failwith
-          (Format.asprintf
+      | _ -> failwith "xx"
+     (* (Format.asprintf
              "couldnt find %a in: \n %a "
              Module_var.pp
              module_variable
              PP_DEBUG.pp
-             scope)
+             scope) *)
     in
     List.fold requested_path ~init:scope ~f
 
@@ -92,9 +105,28 @@ module Data = struct
   let add_exp : scope -> exp_ -> scope =
    fun scope new_exp ->
     let exp =
-      List.filter scope.exp ~f:(fun x -> not (Value_var.equal x.name new_exp.name))
+      List.filter scope.exp ~f:(fun x ->
+          not (Value_var.equal x.name new_exp.binding.name))
     in
-    { scope with exp = new_exp :: exp; decls = Exp new_exp :: scope.decls }
+    { scope with exp = new_exp.binding :: exp; decls = Exp new_exp :: scope.decls }
+
+
+  let add_exp_pat : scope -> pat_ -> scope =
+   fun scope new_pat ->
+    let new_bound : var_binding list =
+      let names = List.map ~f:Binder.get_var @@ I.Pattern.binders new_pat.binding.name in
+      let fresh_names =
+        List.map ~f:Binder.get_var @@ I.Pattern.binders new_pat.binding.fresh_name
+      in
+      List.map
+        ~f:(fun (name, fresh_name) -> { name; fresh_name })
+        (List.zip_exn names fresh_names)
+    in
+    let exp =
+      List.filter scope.exp ~f:(fun x ->
+          not @@ List.exists new_bound ~f:(fun new_ -> Value_var.equal x.name new_.name))
+    in
+    { scope with exp = new_bound @ exp; decls = Pat new_pat :: scope.decls }
 
 
   let add_module : scope -> Module_var.t -> scope -> scope =
@@ -125,12 +157,9 @@ let aggregate_scope : Data.scope -> leaf:O.expression -> O.expression =
   let rec f : O.expression -> Data.decl -> O.expression =
    fun acc_exp d ->
     match d with
-    | Exp { name = _; fresh_name; item; attr; attributes } ->
-      (* O.e_a_let_in
-        { var = fresh_name; ascr = Some item.type_expression; attributes }
-        item
-        acc_exp
-        attr *)
+    | Pat { binding = { name = _; fresh_name }; item; attr } ->
+      O.e_a_let_in ~loc:item.location fresh_name item acc_exp attr
+    | Exp { binding = { name = _; fresh_name }; item; attr } ->
       let binder =
         O.Pattern.var ~loc:(Value_var.get_location fresh_name)
         @@ Binder.make fresh_name item.type_expression
@@ -146,7 +175,12 @@ let build_context : Data.scope -> O.context =
   let rec f : Data.decl -> O.declaration list =
    fun d ->
     match d with
-    | Exp { name = _; fresh_name; item; attr; attributes = () } ->
+    | Pat { binding = { name = _; fresh_name }; item; attr } ->
+      [ Location.wrap
+          ~loc:item.location
+          (O.D_irrefutable_match { pattern = fresh_name; expr = item; attr })
+      ]
+    | Exp { binding = { name = _; fresh_name }; item; attr } ->
       let binder = Binder.make fresh_name item.type_expression in
       [ Location.wrap ~loc:item.location (O.D_value { binder; expr = item; attr }) ]
     | Mod { in_scope = { decls; _ }; _ } -> List.join (List.map decls ~f)
@@ -168,12 +202,20 @@ and compile_declarations ~raise : Data.scope -> Data.path -> I.module_ -> Data.s
    fun acc_scope decl ->
     match decl.wrap_content with
     | I.D_type _ -> acc_scope
+    | I.D_irrefutable_match { pattern; expr; attr } ->
+      let pat =
+        let item = compile_expression ~raise acc_scope [] expr in
+        let fresh_name = fresh_pattern ~raise pattern path in
+        (* Data.{ name = binder.var; fresh_name; item; attr; attributes = binder.attributes } *)
+        (Data.{ binding = { name = pattern; fresh_name }; item; attr } : Data.pat_)
+      in
+      Data.add_exp_pat acc_scope pat
     | I.D_value { binder; expr; attr } ->
       let exp =
         let item = compile_expression ~raise acc_scope [] expr in
         let fresh_name = fresh_name binder.var path in
         (* Data.{ name = binder.var; fresh_name; item; attr; attributes = binder.attributes } *)
-        Data.{ name = binder.var; fresh_name; item; attr; attributes = () }
+        (Data.{ binding = { name = binder.var; fresh_name }; item; attr } : Data.exp_)
       in
       Data.add_exp acc_scope exp
     | I.D_module { module_binder; module_; module_attr = _ } ->
@@ -181,7 +223,6 @@ and compile_declarations ~raise : Data.scope -> Data.path -> I.module_ -> Data.s
         compile_module_expr ~raise acc_scope (path @ [ module_binder ]) module_
       in
       Data.add_module acc_scope module_binder rhs_glob
-    | D_irrefutable_match _ -> assert false
   in
   List.fold lst ~init:init_scope ~f
 
@@ -346,7 +387,7 @@ and compile_expression ~raise : Data.scope -> Data.path -> I.expression -> O.exp
   | I.E_while x -> return (O.E_while (While_loop.map self x))
 
 
-and fresh_name : I.expression_variable -> Data.path -> Value_var.t =
+and fresh_name : Value_var.t -> Data.path -> Value_var.t =
  fun v path ->
   match path with
   | [] -> v
@@ -357,3 +398,14 @@ and fresh_name : I.expression_variable -> Data.path -> Value_var.t =
     in
     let name = "#" ^ name in
     Value_var.fresh ~loc:(Value_var.get_location v) ~name ()
+
+
+and fresh_pattern ~raise : I.ty_expr I.Pattern.t -> Data.path -> O.ty_expr O.Pattern.t =
+ fun pattern path ->
+  let pattern = I.Pattern.map (compile_type ~raise) pattern in
+  O.Pattern.map_pattern
+    (Location.map (function
+        | Linear_pattern.P_var x ->
+          O.Pattern.P_var (Binder.set_var x (fresh_name (Binder.get_var x) path))
+        | x -> x))
+    pattern
