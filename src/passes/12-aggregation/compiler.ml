@@ -193,7 +193,7 @@ let rec compile ~raise : Data.scope -> Data.path -> I.expression -> I.program ->
  fun scope path hole module_ ->
   let scope = compile_declarations ~raise scope path module_ in
   let hole = compile_expression ~raise scope [] hole in
-  build_context scope, aggregate_scope scope ~leaf:hole
+  build_context scope, hole
 
 
 and compile_declarations ~raise : Data.scope -> Data.path -> I.module_ -> Data.scope =
