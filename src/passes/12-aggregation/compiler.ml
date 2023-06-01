@@ -185,7 +185,7 @@ let build_context : Data.scope -> O.context =
       [ Location.wrap ~loc:item.location (O.D_value { binder; expr = item; attr }) ]
     | Mod { in_scope = { decls; _ }; _ } -> List.join (List.map decls ~f)
   in
-  List.join (List.map ~f scope.decls)
+  List.join (List.map ~f (List.rev scope.decls))
 
 
 let rec compile ~raise : Data.scope -> Data.path -> I.expression -> I.program -> O.program
@@ -206,7 +206,6 @@ and compile_declarations ~raise : Data.scope -> Data.path -> I.module_ -> Data.s
       let pat =
         let item = compile_expression ~raise acc_scope [] expr in
         let fresh_name = fresh_pattern ~raise pattern path in
-        (* Data.{ name = binder.var; fresh_name; item; attr; attributes = binder.attributes } *)
         (Data.{ binding = { name = pattern; fresh_name }; item; attr } : Data.pat_)
       in
       Data.add_exp_pat acc_scope pat
@@ -214,7 +213,6 @@ and compile_declarations ~raise : Data.scope -> Data.path -> I.module_ -> Data.s
       let exp =
         let item = compile_expression ~raise acc_scope [] expr in
         let fresh_name = fresh_name binder.var path in
-        (* Data.{ name = binder.var; fresh_name; item; attr; attributes = binder.attributes } *)
         (Data.{ binding = { name = binder.var; fresh_name }; item; attr } : Data.exp_)
       in
       Data.add_exp acc_scope exp
@@ -254,21 +252,12 @@ and compile_type ~raise : I.type_expression -> O.type_expression =
   | T_constant { language; injection; parameters } ->
     let parameters = List.map parameters ~f:self in
     return (T_constant { language; injection; parameters })
-  | T_sum r ->
-    let r = I.Row.map self r in
-    return (T_sum r)
-  | T_record r ->
-    let r = I.Row.map self r in
-    return (T_record r)
-  | T_arrow { type1; type2 } ->
-    let type1 = self type1 in
-    let type2 = self type2 in
-    return (T_arrow { type1; type2 })
+  | T_sum r -> return (T_sum (I.Row.map self r))
+  | T_record r -> return (T_record (I.Row.map self r))
+  | T_arrow x -> return (T_arrow (Arrow.map self x))
   | T_singleton x -> return (T_singleton x)
-  | T_abstraction _ -> assert false
-  | T_for_all { ty_binder; kind; type_ } ->
-    let type_ = self type_ in
-    return (T_for_all { ty_binder; kind; type_ })
+  | T_abstraction x -> return (T_for_all (Abstraction.map self x))
+  | T_for_all x -> return (T_for_all (Abstraction.map self x))
 
 
 and compile_expression ~raise : Data.scope -> Data.path -> I.expression -> O.expression =
@@ -333,7 +322,7 @@ and compile_expression ~raise : Data.scope -> Data.path -> I.expression -> O.exp
     let rhs = self rhs in
     let let_result = self ~data let_result in
     let let_binder = I.Pattern.map self_ty let_binder in
-    return @@ O.E_let_in { let_binder; rhs; let_result; attributes }
+    return @@ O.E_let_mut_in { let_binder; rhs; let_result; attributes }
   | I.E_let_in { let_binder; rhs; let_result; attributes } ->
     let data =
       List.fold
@@ -341,10 +330,9 @@ and compile_expression ~raise : Data.scope -> Data.path -> I.expression -> O.exp
         ~f:(fun scope binder -> Data.rm_exp scope (Binder.get_var binder))
         (I.Pattern.binders let_binder)
     in
-    let rhs = self rhs in
     let let_result = self ~data let_result in
     let let_binder = I.Pattern.map self_ty let_binder in
-    return @@ O.E_let_in { let_binder; rhs; let_result; attributes }
+    return @@ O.E_let_in { let_binder; rhs = self rhs ; let_result; attributes }
   | I.E_for_each { fe_binder = b, b_opt; collection; collection_type; fe_body } ->
     let data = Data.rm_exp scope b in
     let data = Option.value_map b_opt ~default:data ~f:(fun b -> Data.rm_exp data b) in
