@@ -52,16 +52,45 @@ and encode_row ({ fields; layout } : Ast_typed.row) : Type.row =
 
 and encode_layout (layout : Layout.t) : Type.layout = L_concrete layout
 
-and encode_sig_item (item : Ast_typed.sig_item) : Context.Signature.item =
+and encode_sig_item (ctx : Context.t) (item : Ast_typed.sig_item)
+    : Context.Signature.item * Context.t
+  =
   match item with
   | Ast_typed.S_value (v, ty, attr) ->
-    Context.Signature.S_value (v, Option.map ~f:encode ty, encode_sig_item_attribute attr)
-  | S_type (v, ty) -> Context.Signature.S_type (v, Option.map ~f:encode ty)
-  | S_module (v, sig_) -> Context.Signature.S_module (v, encode_signature sig_)
+    let ty, ctx =
+      match ty with
+      | None ->
+        let loc = Location.generated in
+        let tvar = Type_var.fresh ~loc () in
+        let ctx = Context.add_texists_var ctx tvar Ligo_prim.Kind.Type in
+        Type.t_exists ~loc tvar (), ctx
+      | Some ty -> encode ty, ctx
+    in
+    Context.Signature.S_value (v, ty, encode_sig_item_attribute attr), ctx
+  | S_type (v, ty) ->
+    let ty, ctx =
+      match ty with
+      | None ->
+        let loc = Location.generated in
+        let tvar = Type_var.fresh ~loc () in
+        let ctx = Context.add_texists_var ctx tvar Ligo_prim.Kind.Type in
+        Type.t_exists ~loc tvar (), ctx
+      | Some ty -> encode ty, ctx
+    in
+    Context.Signature.S_type (v, ty), ctx
+  | S_module (v, sig_) ->
+    let item, ctx = encode_signature ctx sig_ in
+    Context.Signature.S_module (v, item), ctx
 
 
-and encode_signature (sig_ : Ast_typed.signature) : Context.Signature.t =
-  List.map ~f:encode_sig_item sig_
+and encode_signature (ctx : Context.t) (sig_ : Ast_typed.signature)
+    : Context.Signature.t * Context.t
+  =
+  match sig_ with
+  | [] -> [], ctx
+  | item :: items ->
+    let item, ctx = encode_sig_item ctx item in
+    encode_signature ctx items
 
 
 and encode_sig_item_attribute (attr : Ast_typed.sig_item_attribute) : Context.Attr.t =
@@ -76,12 +105,30 @@ let ctx_init_of_sig ?env () =
     let f ctx decl =
       match decl with
       | Ast_typed.S_value (v, ty, _attr) ->
-        let ty = Option.map ~f:encode ty in
+        let ty, ctx =
+          match ty with
+          | None ->
+            let loc = Location.generated in
+            let tvar = Type_var.fresh ~loc () in
+            let ctx = Context.add_texists_var ctx tvar Ligo_prim.Kind.Type in
+            Type.t_exists ~loc tvar (), ctx
+          | Some ty -> encode ty, ctx
+        in
         Context.add_imm ctx v ty
       | S_type (v, ty) ->
-        let ty = Option.map ~f:encode ty in
+        let ty, ctx =
+          match ty with
+          | None ->
+            let loc = Location.generated in
+            let tvar = Type_var.fresh ~loc () in
+            let ctx = Context.add_texists_var ctx tvar Ligo_prim.Kind.Type in
+            Type.t_exists ~loc tvar (), ctx
+          | Some ty -> encode ty, ctx
+        in
         Context.add_type ctx v ty
-      | S_module (v, sig_) -> Context.add_module ctx v (encode_signature sig_)
+      | S_module (v, sig_) ->
+        let sigs, ctx = encode_signature ctx sig_ in
+        Context.add_module ctx v sigs
     in
     List.fold env ~init:Context.empty ~f
 
@@ -527,11 +574,11 @@ let unify_texists tvar type_ =
   let%bind kind = Context.get_texists_var tvar ~error:(unbound_texists_var tvar) in
   let%bind type_ = lift ~mode:Invariant ~tvar ~kind type_ in
   if%bind
-    match%map Context.Well_formed.type_ (Some type_) with
+    match%map Context.Well_formed.type_ type_ with
     | Some kind' -> Kind.equal kind kind'
     | _ -> false
   then Context.add_texists_eq tvar kind type_
-  else raise_l ~loc:type_.location (ill_formed_type (Some type_))
+  else raise_l ~loc:type_.location (ill_formed_type type_)
 
 
 let unify_layout type1 type2 ~fields (layout1 : Type.layout) (layout2 : Type.layout) =
@@ -552,7 +599,7 @@ type unify_error =
   [ `Typer_cannot_unify of bool * Type.t * Type.t * Location.t
   | `Typer_cannot_unify_diff_layout of
     Type.t * Type.t * Type.layout * Type.layout * Location.t
-  | `Typer_ill_formed_type of Type.t option * Location.t
+  | `Typer_ill_formed_type of Type.t * Location.t
   | `Typer_occurs_check_failed of Type_var.t * Type.t * Location.t
   | `Typer_unbound_texists_var of Type_var.t * Location.t
   ]
@@ -744,7 +791,7 @@ let def_type_var bindings ~on_exit ~in_ =
 
 
 let def_sig_item sig_items ~on_exit ~in_ =
-  Context.add (List.concat_map sig_items ~f:Context_.item_of_signature_item) ~in_ ~on_exit
+  Context.add (List.map sig_items ~f:Context_.item_of_signature_item) ~in_ ~on_exit
 
 
 let assert_ cond ~error =

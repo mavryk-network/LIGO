@@ -108,7 +108,7 @@ let type_improve t =
 
 type typer_error =
   [ `Typer_mut_var_captured of Value_var.t * Location.t
-  | `Typer_ill_formed_type of Type.t option * Location.t
+  | `Typer_ill_formed_type of Type.t * Location.t
   | `Typer_record_mismatch of Ast_core.expression * Type.t * Location.t
   | `Typer_cannot_subtype of Type.t * Type.t * Location.t
   | `Typer_corner_case of string * Location.t
@@ -152,7 +152,7 @@ type typer_error =
   | `Typer_signature_not_found_value of Value_var.t * Location.t
   | `Typer_signature_not_found_type of Type_var.t * Location.t
   | `Typer_signature_not_found_entry of Value_var.t * Location.t
-  | `Typer_signature_not_match_value of Value_var.t * Type.t * Type.t option * Location.t
+  | `Typer_signature_not_match_value of Value_var.t * Type.t * Type.t * Location.t
   | `Typer_signature_not_match_type of Type_var.t * Type.t * Type.t * Location.t
   ]
 [@@deriving poly_constructor { prefix = "typer_" }]
@@ -171,15 +171,15 @@ let extract_loc_and_message : typer_error -> Location.t * string =
         Value_var.pp
         var )
   | `Typer_ill_formed_type (type_, loc) ->
-    let type_ = Option.map ~f:type_improve type_ in
+    let type_ = type_improve type_ in
     ( loc
     , Format.asprintf
         "@[<hv>Invalid type@.Ill formed type \"%a\".Hint: you might be missing some type \
          arguments.%a@]"
-        (Simple_utils.PP_helpers.option pp_type)
+        pp_type
         type_
         (pp_texists_hint ())
-        (Option.to_list type_) )
+        [ type_ ] )
   | `Typer_record_mismatch (_record, type_, loc) ->
     let type_ = type_improve type_ in
     ( loc
@@ -467,13 +467,13 @@ let extract_loc_and_message : typer_error -> Location.t * string =
         var )
   | `Typer_signature_not_match_value (var, found_type, expected_type, loc) ->
     let found_type = type_improve found_type in
-    let expected_type = Option.map ~f:type_improve expected_type in
+    let expected_type = type_improve expected_type in
     ( loc
     , Format.asprintf
         "@[<hv>Value \"%a\" does not match.@.Expected \"%a\", but got: \"%a\".@]"
         Value_var.pp
         var
-        (Simple_utils.PP_helpers.option pp_type)
+        pp_type
         expected_type
         pp_type
         found_type )

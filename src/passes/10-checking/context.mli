@@ -17,12 +17,12 @@ module Signature : sig
   type t = item list
 
   and item =
-    | S_value of Value_var.t * Type.t option * Attr.t
-    | S_type of Type_var.t * Type.t option
+    | S_value of Value_var.t * Type.t * Attr.t
+    | S_type of Type_var.t * Type.t
     | S_module of Module_var.t * t
     | S_module_type of Module_var.t * Module_type.t
 
-  val get_value : t -> Value_var.t -> (Type.t option * Attr.t) option
+  val get_value : t -> Value_var.t -> (Type.t * Attr.t) option
   val get_type : t -> Type_var.t -> Type.t option
   val get_module : t -> Module_var.t -> t option
   val pp : Format.formatter -> t -> unit
@@ -38,8 +38,8 @@ and mutable_flag = Param.mutable_flag =
   | Immutable
 
 and item =
-  | C_value of Value_var.t * mutable_flag * Type.t option * Attr.t
-  | C_type of Type_var.t * Type.t option
+  | C_value of Value_var.t * mutable_flag * Type.t * Attr.t
+  | C_type of Type_var.t * Type.t
   | C_type_var of Type_var.t * Kind.t
   | C_module of Module_var.t * Signature.t
   | C_module_type of Module_var.t * Module_type.t
@@ -64,12 +64,12 @@ val of_list : item list -> t
 val ( |:: ) : t -> item -> t
 val join : t -> t -> t
 val ( |@ ) : t -> t -> t
-val item_of_signature_item : Signature.item -> item list
+val item_of_signature_item : Signature.item -> item
 val pp : Format.formatter -> t -> unit
-val add_value : t -> Value_var.t -> mutable_flag -> Type.t option -> Attr.t -> t
-val add_mut : t -> Value_var.t -> Type.t option -> t
-val add_imm : t -> Value_var.t -> ?attr:Attr.t -> Type.t option -> t
-val add_type : t -> Type_var.t -> Type.t option -> t
+val add_value : t -> Value_var.t -> mutable_flag -> Type.t -> Attr.t -> t
+val add_mut : t -> Value_var.t -> Type.t -> t
+val add_imm : t -> Value_var.t -> ?attr:Attr.t -> Type.t -> t
+val add_type : t -> Type_var.t -> Type.t -> t
 val add_type_var : t -> Type_var.t -> Kind.t -> t
 val add_texists_var : t -> Type_var.t -> Kind.t -> t
 val add_texists_eq : t -> Type_var.t -> Kind.t -> Type.t -> t
@@ -80,10 +80,10 @@ val add_module : t -> Module_var.t -> Signature.t -> t
 val get_value
   :  t
   -> Value_var.t
-  -> (mutable_flag * Type.t option * Attr.t, [> `Mut_var_captured | `Not_found ]) result
+  -> (mutable_flag * Type.t * Attr.t, [> `Mut_var_captured | `Not_found ]) result
 
-val get_imm : t -> Value_var.t -> (Type.t option * Attr.t) option
-val get_mut : t -> Value_var.t -> (Type.t option, [> `Mut_var_captured | `Not_found ]) result
+val get_imm : t -> Value_var.t -> (Type.t * Attr.t) option
+val get_mut : t -> Value_var.t -> (Type.t, [> `Mut_var_captured | `Not_found ]) result
 val get_type : t -> Type_var.t -> Type.t option
 val get_module : t -> Module_var.t -> Signature.t option
 val get_type_vars : t -> Type_var.Set.t
@@ -100,7 +100,7 @@ val get_module_type_of_path : t -> Module_var.t List.Ne.t -> Module_type.t optio
 val get_type_or_type_var
   :  t
   -> Type_var.t
-  -> [ `Type of Type.t option | `Type_var of Kind.t ] option
+  -> [ `Type of Type.t | `Type_var of Kind.t ] option
 
 val add_signature_item : t -> Signature.item -> t
 val add_signature_items : t -> Signature.item list -> t
@@ -129,7 +129,7 @@ val get_sum : t -> Label.t -> (Type_var.t * Type_var.t list * Type.t * Type.t) l
 
 module Well_formed : sig
   val context : t -> bool
-  val type_ : ctx:t -> Type.t option -> Kind.t option
+  val type_ : ctx:t -> Type.t -> Kind.t option
   val layout : ctx:t -> Type.layout -> bool
 end
 

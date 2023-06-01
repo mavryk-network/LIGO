@@ -59,8 +59,8 @@ module Signature = struct
     type t = item list
 
     and item =
-      | S_value of Value_var.t * Type.t option * Attr.t
-      | S_type of Type_var.t * Type.t option
+      | S_value of Value_var.t * Type.t * Attr.t
+      | S_type of Type_var.t * Type.t
       | S_module of Module_var.t * t
       | S_module_type of Module_var.t * Module_type.t
     [@@deriving compare, hash]
@@ -88,7 +88,7 @@ module Signature = struct
       (module Type_var)
       (fun t tvar ->
         (find_map t ~f:(function
-            | S_type (tvar', type_) when Type_var.equal tvar tvar' -> type_
+            | S_type (tvar', type_) when Type_var.equal tvar tvar' -> Some type_
             | _ -> None) [@landmark "get_type"]))
 
 
@@ -116,11 +116,9 @@ module Signature = struct
    fun item1 item2 ->
     match item1, item2 with
     | S_value (var1, type1, attr1), S_value (var2, type2, attr2) ->
-      Value_var.equal var1 var2
-      && Option.equal Type.equal type1 type2
-      && Attr.equal attr1 attr2
+      Value_var.equal var1 var2 && Type.equal type1 type2 && Attr.equal attr1 attr2
     | S_type (tvar1, type1), S_type (tvar2, type2) ->
-      Type_var.equal tvar1 tvar2 && Option.equal Type.equal type1 type2
+      Type_var.equal tvar1 tvar2 && Type.equal type1 type2
     | S_module (mvar1, sig1), S_module (mvar2, sig2) ->
       Module_var.equal mvar1 mvar2 && equal sig1 sig2
     | _, _ -> false
@@ -176,22 +174,9 @@ module Signature = struct
     let rec pp_item ppf item =
       match item with
       | S_value (var, type_, _attr) ->
-        (* FIXME: Try not to use Simple_utils.PP_helpers.option *)
-        Format.fprintf
-          ppf
-          "%a : %a"
-          Value_var.pp
-          var
-          (Simple_utils.PP_helpers.option Type.pp)
-          type_
+        Format.fprintf ppf "%a : %a" Value_var.pp var Type.pp type_
       | S_type (tvar, type_) ->
-        Format.fprintf
-          ppf
-          "type %a = %a"
-          Type_var.pp
-          tvar
-          (Simple_utils.PP_helpers.option Type.pp)
-          type_
+        Format.fprintf ppf "type %a = %a" Type_var.pp tvar Type.pp type_
       | S_module (mvar, sig_) ->
         Format.fprintf ppf "module %a = %a" Module_var.pp mvar pp sig_
       | S_module_type (mvar, sig_) ->
@@ -214,8 +199,8 @@ module T = struct
   type t = item list
 
   and item =
-    | C_value of Value_var.t * mutable_flag * Type.t option * Attr.t
-    | C_type of Type_var.t * Type.t option
+    | C_value of Value_var.t * mutable_flag * Type.t * Attr.t
+    | C_type of Type_var.t * Type.t
     | C_type_var of Type_var.t * Kind.t
     | C_module of Module_var.t * Signature.t
     | C_module_type of Module_var.t * Module_type.t
@@ -255,16 +240,10 @@ module PP = struct
         mut_flag
         Value_var.pp
         evar
-        (Simple_utils.PP_helpers.option Type.pp)
+        Type.pp
         type_
     | C_type (tvar, type_) ->
-      Format.fprintf
-        ppf
-        "type %a = %a"
-        Type_var.pp
-        tvar
-        (Simple_utils.PP_helpers.option Type.pp)
-        type_
+      Format.fprintf ppf "type %a = %a" Type_var.pp tvar Type.pp type_
     | C_type_var (tvar, kind) ->
       Format.fprintf ppf "%a :: %a" Type_var.pp tvar Kind.pp kind
     | C_texists_var (evar, kind) ->
@@ -315,29 +294,16 @@ let add_texists_var t tvar kind = t |:: C_texists_var (tvar, kind)
 let add_module t mvar mctx = t |:: C_module (mvar, mctx)
 let add_lexists_var t lvar fields = t |:: C_lexists_var (lvar, fields)
 
-let item_of_signature_item (sig_item : Signature.item) : item list =
+let item_of_signature_item (sig_item : Signature.item) : item =
   match sig_item with
-  | S_value (var, type_, attr) ->
-    (* let loc = Location.generated in
-        let tvar = Type_var.fresh ~loc () in
-        Type.t_exists ~loc tvar () *)
-
-    (* let type_ = 
-    
-add_texists_var
-      
-    in *)
-    let loc = Location.generated in
-    let kind = Ligo_prim.Kind.Type in
-    let tvar = Type_var.fresh ~loc () in
-    C_texists_var (tvar, kind) :: [ C_value (var, Immutable, type_, attr) ]
-  | S_type (tvar, type_) -> [ C_type (tvar, type_) ]
-  | S_module (mvar, sig_) -> [ C_module (mvar, sig_) ]
-  | S_module_type (mvar, sig_) -> [ C_module_type (mvar, sig_) ]
+  | S_value (var, type_, attr) -> C_value (var, Immutable, type_, attr)
+  | S_type (tvar, type_) -> C_type (tvar, type_)
+  | S_module (mvar, sig_) -> C_module (mvar, sig_)
+  | S_module_type (mvar, sig_) -> C_module_type (mvar, sig_)
 
 
 let add_signature_item t (sig_item : Signature.item) =
-  t |@ item_of_signature_item sig_item
+  add t (item_of_signature_item sig_item)
 
 
 let add_signature_items t (sig_items : Signature.item list) =
@@ -394,7 +360,7 @@ let get_type =
     (module Type_var)
     (fun t tvar ->
       (List.find_map t ~f:(function
-          | C_type (tvar', type_) when Type_var.equal tvar tvar' -> type_
+          | C_type (tvar', type_) when Type_var.equal tvar tvar' -> Some type_
           | _ -> None) [@landmark "get_type"]))
 
 
@@ -554,8 +520,8 @@ module Apply = struct
 
   let rec sig_item ctx (sig_item : Signature.item) : Signature.item =
     match sig_item with
-    | S_type (tvar, type') -> S_type (tvar, Option.map ~f:(type_ ctx) type')
-    | S_value (var, type', attr) -> S_value (var, Option.map ~f:(type_ ctx) type', attr)
+    | S_type (tvar, type') -> S_type (tvar, type_ ctx type')
+    | S_value (var, type', attr) -> S_value (var, type_ ctx type', attr)
     | S_module (mvar, sig') -> S_module (mvar, sig_ ctx sig')
     | S_module_type (mvar, sig') -> S_module_type (mvar, sig')
 
@@ -582,10 +548,10 @@ let equal_item : item -> item -> bool =
   | C_value (var1, mut_flag1, type1, attr1), C_value (var2, mut_flag2, type2, attr2) ->
     Value_var.equal var1 var2
     && Param.equal_mutable_flag mut_flag1 mut_flag2
-    && Option.equal Type.equal type1 type2
+    && Type.equal type1 type2
     && Attr.equal attr1 attr2
   | C_type (tvar1, type1), C_type (tvar2, type2) ->
-    Type_var.equal tvar1 tvar2 && Option.equal Type.equal type1 type2
+    Type_var.equal tvar1 tvar2 && Type.equal type1 type2
   | C_type_var (tvar1, kind1), C_type_var (tvar2, kind2) ->
     Type_var.equal tvar1 tvar2 && Kind.equal kind1 kind2
   | C_texists_var (tvar1, kind1), C_texists_var (tvar2, kind2) ->
@@ -794,7 +760,7 @@ let get_module_type_of_path t module_path =
 
 type ('a, 'ret) contextual =
   'a
-  -> to_type_map:('a -> Type.t option Type_var.Map.t)
+  -> to_type_map:('a -> Type.t Type_var.Map.t)
   -> to_module_map:('a -> Signature.t Module_var.Map.t)
   -> 'ret
 
@@ -812,10 +778,9 @@ let sig_contextual f sig_ =
     1. Use [merge], and convert the merged map into a (sorted) kv_list. This will remove duplicate eponym types
     2. Use [to_kvi_list], append all the kvi_lists, and sort the resulting kvi_list by id, into a kv_list, this keeps duplicates
 *)
-let get_module_types : t -> (Type_var.t * Type.t option) list =
+let get_module_types : t -> (Type_var.t * Type.t) list =
   let sort_to_alist
-      :  (Type_var.t, int * Type.t option) List.Assoc.t
-      -> (Type_var.t, Type.t option) List.Assoc.t
+      : (Type_var.t, int * Type.t) List.Assoc.t -> (Type_var.t, Type.t) List.Assoc.t
     =
    fun list ->
     let sorted_list =
@@ -824,7 +789,7 @@ let get_module_types : t -> (Type_var.t * Type.t option) list =
     List.map ~f:(fun (tvar, (_, type_)) -> tvar, type_) sorted_list
   in
   memoize hashable (fun ctx ->
-      let rec signature : Signature.t -> (Type_var.t, int * Type.t option) List.Assoc.t =
+      let rec signature : Signature.t -> (Type_var.t, int * Type.t) List.Assoc.t =
        fun sig_ ->
         (* Types in the current signature *)
         let local_types = Map.to_alist @@ Signature.to_type_mapi sig_ in
@@ -875,31 +840,26 @@ let get_module_types : t -> (Type_var.t * Type.t option) list =
     we then add [t1] manually to the list.
 *)
 let add_shadowed_nested_t_sum
-    :  (Type_var.t * Type.t option) list -> Type_var.t * Type.t option
-    -> (Type_var.t * Type.t option) list
+    : (Type_var.t * Type.t) list -> Type_var.t * Type.t -> (Type_var.t * Type.t) list
   =
  fun tsum_list (tvar, type_) ->
   let add_if_shadowed_t_sum
-      :  Type_var.t -> (Type_var.t * Type.t option) list * bool -> Type.t
-      -> (Type_var.t * Type.t option) list * bool
+      :  Type_var.t -> (Type_var.t * Type.t) list * bool -> Type.t
+      -> (Type_var.t * Type.t) list * bool
     =
    fun shadower_tvar (acc, is_top_level) type_ ->
     let return x = x, false in
     match type_.content, type_.orig_var with
     | T_sum _, Some tvar ->
       if Type_var.equal tvar shadower_tvar && not is_top_level
-      then return ((tvar, Some type_) :: acc)
+      then return ((tvar, type_) :: acc)
       else return acc
     | T_sum _, None ->
       return acc (* TODO : What should we do with those sum types with no binder ? *)
     | _ -> return acc
   in
-  let (nested_t_sums, _) : (Type_var.t * Type.t option) list * bool =
-    Option.fold
-      ~f:(fun _ type_ ->
-        Type.fold type_ ~init:(tsum_list, true) ~f:(add_if_shadowed_t_sum tvar))
-      ~init:(tsum_list, false)
-      type_
+  let (nested_t_sums, _) : (Type_var.t * Type.t) list * bool =
+    Type.fold type_ ~init:(tsum_list, true) ~f:(add_if_shadowed_t_sum tvar)
   in
   (* FIXME: dunno what should be ~init *)
   (tvar, type_) :: nested_t_sums
@@ -933,8 +893,6 @@ let get_sum : t -> Label.t -> (Type_var.t * Type_var.t list * Type.t * Type.t) l
     (module Label)
     (fun ctx constr ->
       (let filter_tsum (var, type_) =
-         let open Option.Let_syntax in
-         let%bind type_ = type_ in
          let t_params, type_ = Type.destruct_type_abstraction type_ in
          match type_.content with
          | T_sum m ->
@@ -952,7 +910,7 @@ let get_sum : t -> Label.t -> (Type_var.t * Type_var.t list * Type.t * Type.t) l
          List.fold (List.rev module_types) ~init:[] ~f:add_shadowed_nested_t_sum
        in
        (* For all types found, pick only the T_sum, and make 4-uple out of them  *)
-       let matching_t_sum = List.filter_map ~f:filter_tsum @@ module_types in
+       let matching_t_sum = List.filter_map ~f:filter_tsum module_types in
        let matching_t_sum = dedup matching_t_sum in
        let general_type_opt =
          List.find ~f:(fun (_, tvs, _, _) -> not @@ List.is_empty tvs) matching_t_sum
@@ -997,9 +955,9 @@ let get_record : t -> Type.t Label.Map.t -> (Type_var.t option * Type.row) optio
          match
            to_type_map t
            |> Map.to_alist
-           |> List.find_map ~f:(fun (_, type_) -> Option.map ~f:is_record_type type_)
+           |> List.find_map ~f:(fun (_, type_) -> is_record_type type_)
          with
-         | Some _ as result -> Option.join result
+         | Some _ as result -> result
          | None ->
            let modules = to_module_map t in
            List.fold_left
@@ -1015,7 +973,7 @@ let get_record : t -> Type.t Label.Map.t -> (Type_var.t option * Type.row) optio
 
 module Well_formed : sig
   val context : t -> bool
-  val type_ : ctx:t -> Type.t option -> Kind.t option
+  val type_ : ctx:t -> Type.t -> Kind.t option
   val layout : ctx:t -> Type.layout -> bool
 end = struct
   let rec context ctx =
@@ -1030,12 +988,7 @@ end = struct
           (match type_ type' ~ctx with
           | Some Type -> true
           | _ ->
-            Format.printf
-              "Value %a has non-type type %a"
-              Value_var.pp
-              var
-              (Simple_utils.PP_helpers.option Type.pp)
-              type';
+            Format.printf "Value %a has non-type type %a" Value_var.pp var Type.pp type';
             false)
         | C_type (_tvar, type') ->
           (match type_ type' ~ctx with
@@ -1055,7 +1008,7 @@ end = struct
         | C_texists_eq (evar, kind, type') ->
           (not (Set.mem (get_texists_vars t) evar))
           &&
-          (match type_ (Some type') ~ctx with
+          (match type_ type' ~ctx with
           | Some kind' -> Kind.compare kind kind' = 0
           | _ ->
             (* Format.printf
@@ -1091,9 +1044,8 @@ end = struct
   and type_ ~ctx t : Kind.t option =
     let open Option.Let_syntax in
     let open Kind in
-    let rec loop (t : Type.t option) ~ctx =
+    let rec loop (t : Type.t) ~ctx =
       let loop ?(ctx = ctx) t = loop t ~ctx in
-      let%bind t = t in
       match t.content with
       | T_variable tvar -> get_type_var ctx tvar
       | T_exists tvar -> get_texists_var ctx tvar
@@ -1101,7 +1053,7 @@ end = struct
         (* Hack. No HKT parameters, so simply check if all params are
                  of kind: *. *)
         if List.for_all parameters ~f:(fun param ->
-               match loop (Some param) with
+               match loop param with
                | Some (Type | Singleton) -> true
                | _ ->
                  Format.printf "Ill-kinded parameter: %a\n" Type.pp param;
@@ -1110,22 +1062,22 @@ end = struct
         else None
       | T_singleton _ -> return Singleton
       | T_arrow { type1 = arg_type; type2 = ret_type } ->
-        let%bind arg_kind = loop (Some arg_type) in
-        let%bind ret_kind = loop (Some ret_type) in
+        let%bind arg_kind = loop arg_type in
+        let%bind ret_kind = loop ret_type in
         (match arg_kind, ret_kind with
         | Type, Type -> Some Type
         | _ -> None)
       | T_abstraction { ty_binder = tvar; kind; type_ } ->
-        let%bind kind' = loop ~ctx:(ctx |:: C_type_var (tvar, kind)) @@ Some type_ in
+        let%bind kind' = loop ~ctx:(ctx |:: C_type_var (tvar, kind)) type_ in
         return @@ Arrow (kind, kind')
       | T_for_all { ty_binder = tvar; kind; type_ } ->
-        (match%bind loop ~ctx:(ctx |:: C_type_var (tvar, kind)) @@ Some type_ with
+        (match%bind loop ~ctx:(ctx |:: C_type_var (tvar, kind)) type_ with
         | Type -> return Type
         | _ -> None)
       | T_sum rows | T_record rows ->
         if Map.for_all
              ~f:(fun associated_type ->
-               match loop (Some associated_type) with
+               match loop associated_type with
                | Some Type -> true
                | _ -> false)
              rows.fields
@@ -1183,7 +1135,7 @@ module Hashes = struct
         let types = Map.to_alist @@ to_type_map t in
         let modules = Map.to_alist @@ to_module_map t in
         List.iter (List.rev types) ~f:(fun (v, t) ->
-            Option.iter t ~f:(fun t -> Hashtbl.set table ~key:t ~data:(path, v)));
+            Hashtbl.set table ~key:t ~data:(path, v));
         List.iter (List.rev modules) ~f:(fun (v, t) ->
             sig_contextual hash_types t ~path:(path @ [ v ]))
       in

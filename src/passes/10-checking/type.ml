@@ -618,7 +618,7 @@ let should_uncurry_entry entry_ty =
 
 
 let parameter_from_entrypoints
-    :  (Value_var.t * t option) Simple_utils.List.Ne.t
+    :  (Value_var.t * t) Simple_utils.List.Ne.t
     -> ( t * t
        , [> `Not_entry_point_form of t
          | `Storage_does_not_match of Value_var.t * t * Value_var.t * t
@@ -627,12 +627,8 @@ let parameter_from_entrypoints
        result
   =
  fun ((entrypoint, entrypoint_type), rest) ->
-  (* FIXME: take care of `Optional_type_entrypoint *)
   let equal_t = equal in
   let open Result.Let_syntax in
-  let%bind entrypoint_type =
-    Result.of_option ~error:`Optional_type_entrypoint entrypoint_type
-  in
   let%bind parameter, storage =
     match should_uncurry_entry entrypoint_type with
     | `Yes (parameter, storage) | `No (parameter, storage) ->
@@ -643,7 +639,6 @@ let parameter_from_entrypoints
     List.fold_result
       ~init:[ String.capitalize (Value_var.to_name_exn entrypoint), parameter ]
       ~f:(fun parameters (ep, ep_type) ->
-        let%bind ep_type = Result.of_option ~error:`Optional_type_entrypoint ep_type in
         let%bind parameter_, storage_ =
           match should_uncurry_entry ep_type with
           | `Yes (parameter, storage) | `No (parameter, storage) ->

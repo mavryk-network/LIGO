@@ -109,11 +109,8 @@ let rec decode_signature (sig_ : Context.Signature.t) ~raise subst : O.signature
   let decode_item (item : Context.Signature.item) : O.sig_item list =
     match item with
     | S_value (var, type_, attr) ->
-      [ S_value
-          (var, Option.map ~f:(Fn.flip (decode ~raise) subst) type_, decode_attribute attr)
-      ]
-    | S_type (var, type_) ->
-      [ S_type (var, Option.map ~f:(Fn.flip (decode ~raise) subst) type_) ]
+      [ S_value (var, Some (decode ~raise type_ subst), decode_attribute attr) ]
+    | S_type (var, type_) -> [ S_type (var, Some (decode ~raise type_ subst)) ]
     | S_module (var, sig_) -> [ S_module (var, decode_signature ~raise sig_ subst) ]
     | S_module_type _ -> []
   in
