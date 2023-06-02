@@ -51,30 +51,23 @@ module Data = struct
   and path = Module_var.t list
 
   module PP_DEBUG = struct
-    (* open Format *)
-    (* open Simple_utils.PP_helpers *)
+    open Format
+    open Simple_utils.PP_helpers
 
-    (* let rec pp ppf { exp; mod_ } =
+    let rec pp ppf { exp; mod_ } =
       let pp_mod_ ppf { name; in_scope } =
         fprintf ppf "{ name = %a ; items = @[<v 2>@.%a@] }" Module_var.pp name pp in_scope
       in
-      let pp_exp_ ppf { name; fresh_name; item = _ } =
-        fprintf
-          ppf
-          "{ name = %a ; fresh_name = %a ; items = XX }"
-          Value_var.pp
-          name
-          Value_var.pp
-          fresh_name (*Ast_aggregated.PP.expression item*)
+      let pp_exp_ fa fb ppf ({ name; fresh_name } : ('a, 'b) binding_) =
+        fprintf ppf "{ name = %a ; fresh_name = %a ; items = XX }" fa name fb fresh_name
       in
       fprintf
         ppf
         "{ exp = @[<v>%a@] ; mod_ = @[<v 2>@.%a@] }"
-        Simple_utils.PP_helpers.(list_sep pp_exp_ (tag "@."))
+        (list_sep (pp_exp_ Value_var.pp Value_var.pp) (tag "@."))
         exp
-        Simple_utils.PP_helpers.(list_sep pp_mod_ (tag "@."))
-        mod_ *)
-  
+        (list_sep pp_mod_ (tag "@."))
+        mod_
   end
 
   let empty = { exp = []; mod_ = []; decls = [] }
@@ -85,13 +78,14 @@ module Data = struct
      fun acc module_variable ->
       match List.find acc.mod_ ~f:(fun x -> Module_var.equal x.name module_variable) with
       | Some x -> x.in_scope
-      | _ -> failwith "xx"
-     (* (Format.asprintf
+      | _ ->
+        failwith
+          (Format.asprintf
              "couldnt find %a in: \n %a "
              Module_var.pp
              module_variable
              PP_DEBUG.pp
-             scope) *)
+             scope)
     in
     List.fold requested_path ~init:scope ~f
 
@@ -332,7 +326,7 @@ and compile_expression ~raise : Data.scope -> Data.path -> I.expression -> O.exp
     in
     let let_result = self ~data let_result in
     let let_binder = I.Pattern.map self_ty let_binder in
-    return @@ O.E_let_in { let_binder; rhs = self rhs ; let_result; attributes }
+    return @@ O.E_let_in { let_binder; rhs = self rhs; let_result; attributes }
   | I.E_for_each { fe_binder = b, b_opt; collection; collection_type; fe_body } ->
     let data = Data.rm_exp scope b in
     let data = Option.value_map b_opt ~default:data ~f:(fun b -> Data.rm_exp data b) in
