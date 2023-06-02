@@ -131,7 +131,10 @@ let all_program
   prg
 
 
-let contract_passes ~raise = [ Contract_passes.self_typing ~raise ]
+let contract_passes ~raise =
+  [ Contract_passes.self_typing ~raise
+  ; No_nested_big_map.self_typing ~raise
+  ]
 
 let contract_passes_map ~raise =
   [ Contract_passes.entrypoint_typing ~raise; Contract_passes.emit_event_typing ~raise ]
