@@ -3,17 +3,40 @@ module O = Ast_aggregated
 open Ligo_prim
 
 (*
-  This pass does the following:
-  - aggregates declarations into a chain of let-ins
-  - flatten modules into let-ins
+  This pass flattens programs with module declarations into a list of simple top-level declarations.
+  Later, this list is morphed into a single expression of chained let-ins.
+  
+  It works as follow:
+  - morph input program I into the Data IR (see doc bellow)
+  - morph the IR into a list of top-level declaration
 *)
 
 module Data = struct
-  (* when data is added into exp or mod_, it is also added to decls *)
-  type scope =
-    { exp : var_binding list (* env for expressions *)
-    ; mod_ : mod_ list (* env for modules *)
-    ; decls : decl list (* actual content *)
+  (*
+    IR of a module (i.e. a program)
+    [env]
+      Bindings accessible *from* a given module. It is used to resolve variables and module access.
+      It includes bindings that are declared within the module itself:
+      e.g. in the following, module `A` env contains both binding for `y` and `x`
+      ```
+      let x = ..
+      module A = struct
+        let y = ..
+      end
+      ```
+    [decls]
+      Actual module content. It is used to build the final result of this pass (the list of top-level declarations) and 
+      also to build expression when encountering the `E_mod_in` node.
+      For each declaration it holds the binding and the payload (expression or another module).
+  *)
+  type t =
+    { env : env
+    ; decls : decl list
+    }
+
+  and env =
+    { exp : var_binding list
+    ; mod_ : mod_ list
     }
 
   and decl =
@@ -21,17 +44,9 @@ module Data = struct
     | Exp of exp_
     | Pat of pat_
 
-  and 'a binding_ =
-    { old : 'a (* old binding *)
-    ; fresh : 'a (* new binding (with fresh variables) *)
-    }
-
-  and var_binding = Value_var.t binding_
-  and pat_binding = (O.ty_expr[@sexp.opaque]) O.Pattern.t binding_
-
   and mod_ =
     { name : Module_var.t
-    ; in_scope : scope
+    ; in_scope : t
     }
 
   and pat_ =
@@ -45,10 +60,18 @@ module Data = struct
     ; item : (O.expression[@sexp.opaque])
     ; attr : (O.ValueAttr.t[@sexp.opaque])
     }
-  [@@deriving sexp_of]
 
-  let pp ppf scope = Format.fprintf ppf "%a" Sexp.pp_hum (sexp_of_scope scope)
-  let empty = { exp = []; mod_ = []; decls = [] }
+  (* [binding_] link [old] identifiers to freshly generated ones [fresh] *)
+  and 'a binding_ =
+    { old : 'a
+    ; fresh : 'a
+    }
+
+  and var_binding = Value_var.t binding_
+  and pat_binding = (O.ty_expr[@sexp.opaque]) O.Pattern.t binding_ [@@deriving sexp_of]
+
+  let pp ppf scope = Format.fprintf ppf "%a" Sexp.pp_hum (sexp_of_t scope)
+  let empty = { env = { exp = []; mod_ = [] }; decls = [] }
 
   (* Important note: path is _ONLY_ used for naming of fresh variables, so that debuging a printed AST is easier *)
   type path = Module_var.t list
@@ -76,11 +99,13 @@ module Data = struct
       pattern
 
 
-  let resolve_path : scope -> path -> scope =
+  let resolve_path : t -> path -> t =
    fun scope requested_path ->
-    let f : scope -> Module_var.t -> scope =
+    let f : t -> Module_var.t -> t =
      fun acc module_variable ->
-      match List.find acc.mod_ ~f:(fun x -> Module_var.equal x.name module_variable) with
+      match
+        List.find acc.env.mod_ ~f:(fun x -> Module_var.equal x.name module_variable)
+      with
       | Some x -> x.in_scope
       | _ ->
         failwith
@@ -94,18 +119,20 @@ module Data = struct
     List.fold requested_path ~init:scope ~f
 
 
-  let rm_exp : scope -> I.expression_variable -> scope =
-   fun items to_rm ->
-    let exp = List.filter items.exp ~f:(fun x -> not @@ Value_var.equal x.old to_rm) in
-    { items with exp }
+  let rm_exp : t -> I.expression_variable -> t =
+   fun { env = { exp; mod_ }; decls } to_rm ->
+    { env =
+        { exp = List.filter exp ~f:(fun x -> not @@ Value_var.equal x.old to_rm); mod_ }
+    ; decls
+    }
 
 
-  let add_exp : scope -> exp_ -> scope =
-   fun scope new_exp ->
+  let add_exp : t -> exp_ -> t =
+   fun { env = { exp; mod_ }; decls } new_exp ->
     let exp =
-      List.filter scope.exp ~f:(fun x -> not (Value_var.equal x.old new_exp.binding.old))
+      List.filter exp ~f:(fun x -> not (Value_var.equal x.old new_exp.binding.old))
     in
-    { scope with exp = new_exp.binding :: exp; decls = scope.decls @ [ Exp new_exp ] }
+    { env = { exp = new_exp.binding :: exp; mod_ }; decls = decls @ [ Exp new_exp ] }
 
 
   let pat_to_var_bindings : pat_binding -> var_binding list =
@@ -115,40 +142,40 @@ module Data = struct
     List.map ~f:(fun (old, fresh) -> { old; fresh }) (List.zip_exn names freshs)
 
 
-  let add_exp_pat : scope -> pat_ -> scope =
-   fun scope new_pat ->
+  let add_exp_pat : t -> pat_ -> t =
+   fun { env = { exp; mod_ }; decls } new_pat ->
     let new_bound = pat_to_var_bindings new_pat.binding in
     let exp =
-      List.filter scope.exp ~f:(fun x ->
+      List.filter exp ~f:(fun x ->
           not @@ List.exists new_bound ~f:(fun new_ -> Value_var.equal x.old new_.old))
     in
-    { scope with exp = new_bound @ exp; decls = scope.decls @ [ Pat new_pat ] }
+    { env = { exp = new_bound @ exp; mod_ }; decls = decls @ [ Pat new_pat ] }
 
 
-  let add_module : scope -> Module_var.t -> scope -> scope =
-   fun scope mod_var new_scope ->
+  let add_module : t -> Module_var.t -> t -> t =
+   fun { env = { exp; mod_ }; decls } mod_var new_scope ->
     let mod_ =
-      List.filter scope.mod_ ~f:(fun x -> not (Module_var.equal x.name mod_var))
+      { name = mod_var; in_scope = new_scope }
+      :: List.filter mod_ ~f:(fun x -> not (Module_var.equal x.name mod_var))
     in
-    let mod_ = { name = mod_var; in_scope = new_scope } :: mod_ in
-    let decls = scope.decls @ [ Mod { name = mod_var; in_scope = new_scope } ] in
-    { scope with mod_; decls }
+    let decls = decls @ [ Mod { name = mod_var; in_scope = new_scope } ] in
+    { env = { exp; mod_ }; decls }
 
 
-  let resolve_variable : scope -> Value_var.t -> Value_var.t =
+  let resolve_variable : t -> Value_var.t -> Value_var.t =
    fun scope v ->
-    match List.find scope.exp ~f:(fun x -> Value_var.equal v x.old) with
+    match List.find scope.env.exp ~f:(fun x -> Value_var.equal v x.old) with
     | Some x -> x.fresh
     | None -> v
 
 
-  let resolve_variable_in_path : scope -> path -> Value_var.t -> Value_var.t =
+  let resolve_variable_in_path : t -> path -> Value_var.t -> Value_var.t =
    fun scope path v ->
     let x = resolve_path scope path in
     resolve_variable x v
 
 
-  let rec refresh : scope -> path -> scope =
+  let rec refresh : t -> path -> t =
    fun scope path ->
     (* for all declaration in data, assign a new fresh binding and update the environements *)
     let refreshed_decls =
@@ -174,14 +201,14 @@ module Data = struct
                List.map
                  ~f:(fun ({ old = old'; fresh = _ } as x) ->
                    if Value_var.equal old old' then { x with fresh } else x)
-                 scope.exp
+                 scope.env.exp
              in
-             { scope with exp })
+             { scope with env = { scope.env with exp } })
     in
     { updated_scope with decls = refreshed_decls }
 end
 
-let aggregate_scope : Data.scope -> leaf:O.expression -> O.expression =
+let aggregate_scope : Data.t -> leaf:O.expression -> O.expression =
  fun scope ~leaf ->
   let rec f : Data.decl -> O.expression -> O.expression =
    fun d acc_exp ->
@@ -199,7 +226,7 @@ let aggregate_scope : Data.scope -> leaf:O.expression -> O.expression =
   List.fold_right scope.decls ~f ~init:leaf
 
 
-let build_context : Data.scope -> O.context =
+let build_context : Data.t -> O.context =
  fun scope ->
   let rec f : Data.decl -> O.declaration list =
    fun d ->
@@ -217,17 +244,16 @@ let build_context : Data.scope -> O.context =
   List.join (List.map ~f scope.decls)
 
 
-let rec compile ~raise : Data.scope -> Data.path -> I.expression -> I.program -> O.program
-  =
+let rec compile ~raise : Data.t -> Data.path -> I.expression -> I.program -> O.program =
  fun scope path hole module_ ->
   let scope = compile_declarations ~raise scope path module_ in
   let hole = compile_expression ~raise scope [] hole in
   build_context scope, hole
 
 
-and compile_declarations ~raise : Data.scope -> Data.path -> I.module_ -> Data.scope =
+and compile_declarations ~raise : Data.t -> Data.path -> I.module_ -> Data.t =
  fun init_scope path lst ->
-  let f : Data.scope -> I.declaration -> Data.scope =
+  let f : Data.t -> I.declaration -> Data.t =
    fun acc_scope decl ->
     match decl.wrap_content with
     | I.D_type _ -> acc_scope
@@ -256,7 +282,7 @@ and compile_declarations ~raise : Data.scope -> Data.path -> I.module_ -> Data.s
 
 
 and compile_module_expr ~raise ?(copy_content = false)
-    : Data.scope -> Data.path -> I.module_expr -> Data.scope
+    : Data.t -> Data.path -> I.module_expr -> Data.t
   =
  fun scope path mexpr ->
   match mexpr.module_content with
@@ -292,7 +318,7 @@ and compile_type ~raise : I.type_expression -> O.type_expression =
   | T_for_all x -> return (T_for_all (Abstraction.map self x))
 
 
-and compile_expression ~raise : Data.scope -> Data.path -> I.expression -> O.expression =
+and compile_expression ~raise : Data.t -> Data.path -> I.expression -> O.expression =
  fun scope path expr ->
   let self ?(data = scope) = compile_expression ~raise data path in
   let self_ty = compile_type ~raise in
