@@ -15,7 +15,7 @@ module Data = struct
   (*
     IR of a module (i.e. a program)
     [env]
-      Bindings accessible *from* a given module. It is used to resolve variables and module access.
+      Bindings accessible *from* a given module. It is used to resolve variables and module accesses.
       It includes bindings that are declared within the module itself:
       e.g. in the following, module `A` env contains both binding for `y` and `x`
       ```
@@ -24,14 +24,14 @@ module Data = struct
         let y = ..
       end
       ```
-    [decls]
+    [content]
       Actual module content. It is used to build the final result of this pass (the list of top-level declarations) and 
       also to build expression when encountering the `E_mod_in` node.
       For each declaration it holds the binding and the payload (expression or another module).
   *)
   type t =
     { env : env
-    ; decls : decl list
+    ; content : decl list
     }
 
   and env =
@@ -70,10 +70,14 @@ module Data = struct
   and var_binding = Value_var.t binding_
   and pat_binding = (O.ty_expr[@sexp.opaque]) O.Pattern.t binding_ [@@deriving sexp_of]
 
-  let pp ppf scope = Format.fprintf ppf "%a" Sexp.pp_hum (sexp_of_t scope)
-  let empty = { env = { exp = []; mod_ = [] }; decls = [] }
+  let pp ppf data = Format.fprintf ppf "%a" Sexp.pp_hum (sexp_of_t data)
+  let empty = { env = { exp = []; mod_ = [] }; content = [] }
 
-  (* Important note: path is _ONLY_ used for naming of fresh variables, so that debuging a printed AST is easier *)
+  (*
+    Important note: path is _ONLY_ used for naming of fresh variables, so that debuging a printed AST is easier.  
+    e.g. module access `A.B.x` will become variable `#A#B#x`
+    IT SHOULD NEVER BE USED FOR INTERNAL COMPUTATION OR RESOLVING
+  *)
   type path = Module_var.t list
 
   let fresh_var : Value_var.t -> path -> Value_var.t =
@@ -100,7 +104,7 @@ module Data = struct
 
 
   let resolve_path : t -> path -> t =
-   fun scope requested_path ->
+   fun data requested_path ->
     let f : t -> Module_var.t -> t =
      fun acc module_variable ->
       match
@@ -114,25 +118,25 @@ module Data = struct
              Module_var.pp
              module_variable
              pp
-             scope)
+             data)
     in
-    List.fold requested_path ~init:scope ~f
+    List.fold requested_path ~init:data ~f
 
 
   let rm_exp : t -> I.expression_variable -> t =
-   fun { env = { exp; mod_ }; decls } to_rm ->
+   fun { env = { exp; mod_ }; content } to_rm ->
     { env =
         { exp = List.filter exp ~f:(fun x -> not @@ Value_var.equal x.old to_rm); mod_ }
-    ; decls
+    ; content
     }
 
 
   let add_exp : t -> exp_ -> t =
-   fun { env = { exp; mod_ }; decls } new_exp ->
+   fun { env = { exp; mod_ }; content } new_exp ->
     let exp =
       List.filter exp ~f:(fun x -> not (Value_var.equal x.old new_exp.binding.old))
     in
-    { env = { exp = new_exp.binding :: exp; mod_ }; decls = decls @ [ Exp new_exp ] }
+    { env = { exp = new_exp.binding :: exp; mod_ }; content = content @ [ Exp new_exp ] }
 
 
   let pat_to_var_bindings : pat_binding -> var_binding list =
@@ -143,42 +147,42 @@ module Data = struct
 
 
   let add_exp_pat : t -> pat_ -> t =
-   fun { env = { exp; mod_ }; decls } new_pat ->
+   fun { env = { exp; mod_ }; content } new_pat ->
     let new_bound = pat_to_var_bindings new_pat.binding in
     let exp =
       List.filter exp ~f:(fun x ->
           not @@ List.exists new_bound ~f:(fun new_ -> Value_var.equal x.old new_.old))
     in
-    { env = { exp = new_bound @ exp; mod_ }; decls = decls @ [ Pat new_pat ] }
+    { env = { exp = new_bound @ exp; mod_ }; content = content @ [ Pat new_pat ] }
 
 
   let add_module : t -> Module_var.t -> t -> t =
-   fun { env = { exp; mod_ }; decls } mod_var new_scope ->
+   fun { env = { exp; mod_ }; content } mod_var new_scope ->
     let mod_ =
       { name = mod_var; in_scope = new_scope }
       :: List.filter mod_ ~f:(fun x -> not (Module_var.equal x.name mod_var))
     in
-    let decls = decls @ [ Mod { name = mod_var; in_scope = new_scope } ] in
-    { env = { exp; mod_ }; decls }
+    let content = content @ [ Mod { name = mod_var; in_scope = new_scope } ] in
+    { env = { exp; mod_ }; content }
 
 
   let resolve_variable : t -> Value_var.t -> Value_var.t =
-   fun scope v ->
-    match List.find scope.env.exp ~f:(fun x -> Value_var.equal v x.old) with
+   fun data v ->
+    match List.find data.env.exp ~f:(fun x -> Value_var.equal v x.old) with
     | Some x -> x.fresh
     | None -> v
 
 
   let resolve_variable_in_path : t -> path -> Value_var.t -> Value_var.t =
-   fun scope path v ->
-    let x = resolve_path scope path in
+   fun data path v ->
+    let x = resolve_path data path in
     resolve_variable x v
 
 
   let rec refresh : t -> path -> t =
-   fun scope path ->
+   fun data path ->
     (* for all declaration in data, assign a new fresh binding and update the environements *)
-    let refreshed_decls =
+    let refreshed_content =
       List.map
         ~f:(function
           | Mod { name; in_scope } ->
@@ -187,29 +191,29 @@ module Data = struct
             Exp { x with binding = { old; fresh = fresh_var old path } }
           | Pat ({ binding = { old; fresh = _ }; _ } as x) ->
             Pat { x with binding = { old; fresh = fresh_pattern old path } })
-        scope.decls
+        data.content
     in
     let updated_scope =
-      refreshed_decls
+      refreshed_content
       |> List.map ~f:(function
              | Mod _ -> []
              | Exp x -> [ x.binding ]
              | Pat x -> pat_to_var_bindings x.binding)
       |> List.join
-      |> List.fold ~init:scope ~f:(fun scope { old; fresh } ->
+      |> List.fold ~init:data ~f:(fun data { old; fresh } ->
              let exp =
                List.map
                  ~f:(fun ({ old = old'; fresh = _ } as x) ->
                    if Value_var.equal old old' then { x with fresh } else x)
-                 scope.env.exp
+                 data.env.exp
              in
-             { scope with env = { scope.env with exp } })
+             { data with env = { data.env with exp } })
     in
-    { updated_scope with decls = refreshed_decls }
+    { updated_scope with content = refreshed_content }
 end
 
 let aggregate_scope : Data.t -> leaf:O.expression -> O.expression =
- fun scope ~leaf ->
+ fun data ~leaf ->
   let rec f : Data.decl -> O.expression -> O.expression =
    fun d acc_exp ->
     match d with
@@ -221,13 +225,13 @@ let aggregate_scope : Data.t -> leaf:O.expression -> O.expression =
         @@ Binder.make fresh item.type_expression
       in
       O.e_a_let_in ~loc:item.location binder item acc_exp attr
-    | Mod { in_scope = { decls; _ }; _ } -> List.fold_right decls ~f ~init:acc_exp
+    | Mod { in_scope = { content; _ }; _ } -> List.fold_right content ~f ~init:acc_exp
   in
-  List.fold_right scope.decls ~f ~init:leaf
+  List.fold_right data.content ~f ~init:leaf
 
 
 let build_context : Data.t -> O.context =
- fun scope ->
+ fun data ->
   let rec f : Data.decl -> O.declaration list =
    fun d ->
     match d with
@@ -239,19 +243,19 @@ let build_context : Data.t -> O.context =
     | Exp { binding = { old = _; fresh }; item; attr } ->
       let binder = Binder.make fresh item.type_expression in
       [ Location.wrap ~loc:item.location (O.D_value { binder; expr = item; attr }) ]
-    | Mod { in_scope = { decls; _ }; _ } -> List.join (List.map decls ~f)
+    | Mod { in_scope = { content; _ }; _ } -> List.join (List.map content ~f)
   in
-  List.join (List.map ~f scope.decls)
+  List.join (List.map ~f data.content)
 
 
-let rec compile ~raise : Data.t -> Data.path -> I.expression -> I.program -> O.program =
- fun scope path hole module_ ->
-  let scope = compile_declarations ~raise scope path module_ in
-  let hole = compile_expression ~raise scope [] hole in
-  build_context scope, hole
+let rec compile : Data.t -> Data.path -> I.expression -> I.program -> O.program =
+ fun data path hole module_ ->
+  let data = compile_declarations data path module_ in
+  let hole = compile_expression data [] hole in
+  build_context data, hole
 
 
-and compile_declarations ~raise : Data.t -> Data.path -> I.module_ -> Data.t =
+and compile_declarations : Data.t -> Data.path -> I.module_ -> Data.t =
  fun init_scope path lst ->
   let f : Data.t -> I.declaration -> Data.t =
    fun acc_scope decl ->
@@ -259,45 +263,46 @@ and compile_declarations ~raise : Data.t -> Data.path -> I.module_ -> Data.t =
     | I.D_type _ -> acc_scope
     | I.D_irrefutable_match { pattern; expr; attr } ->
       let pat =
-        let item = compile_expression ~raise acc_scope [] expr in
-        let pattern = I.Pattern.map (compile_type ~raise) pattern in
+        let item = compile_expression acc_scope [] expr in
+        let pattern = I.Pattern.map compile_type pattern in
         let fresh = Data.fresh_pattern pattern path in
         (Data.{ binding = { old = pattern; fresh }; item; attr } : Data.pat_)
       in
       Data.add_exp_pat acc_scope pat
     | I.D_value { binder; expr; attr } ->
       let exp =
-        let item = compile_expression ~raise acc_scope [] expr in
+        let item = compile_expression acc_scope [] expr in
         let fresh = Data.fresh_var binder.var path in
         (Data.{ binding = { old = binder.var; fresh }; item; attr } : Data.exp_)
       in
       Data.add_exp acc_scope exp
     | I.D_module { module_binder; module_; module_attr = _ } ->
-      let rhs_glob =
-        compile_module_expr ~raise acc_scope (path @ [ module_binder ]) module_
-      in
+      let rhs_glob = compile_module_expr acc_scope (path @ [ module_binder ]) module_ in
       Data.add_module acc_scope module_binder rhs_glob
   in
   List.fold lst ~init:init_scope ~f
 
-
-and compile_module_expr ~raise ?(copy_content = false)
+(*
+  [copy_content] let you control if the module content should be entirely copied 
+  as a new set of bindings, or if we should just make reference to it
+*)
+and compile_module_expr ?(copy_content = false)
     : Data.t -> Data.path -> I.module_expr -> Data.t
   =
- fun scope path mexpr ->
+ fun data path mexpr ->
   match mexpr.module_content with
-  | M_struct prg -> compile_declarations ~raise { scope with decls = [] } path prg
+  | M_struct prg -> compile_declarations { data with content = [] } path prg
   | M_variable v ->
-    let res = Data.resolve_path scope [ v ] in
-    if copy_content then Data.refresh res path else { res with decls = [] }
+    let res = Data.resolve_path data [ v ] in
+    if copy_content then Data.refresh res path else { res with content = [] }
   | M_module_path m_path ->
-    let res = Data.resolve_path scope (List.Ne.to_list m_path) in
-    if copy_content then Data.refresh res path else { res with decls = [] }
+    let res = Data.resolve_path data (List.Ne.to_list m_path) in
+    if copy_content then Data.refresh res path else { res with content = [] }
 
 
-and compile_type ~raise : I.type_expression -> O.type_expression =
+and compile_type : I.type_expression -> O.type_expression =
  fun ty ->
-  let self = compile_type ~raise in
+  let self = compile_type in
   let return type_content : O.type_expression =
     { type_content
     ; orig_var = ty.orig_var
@@ -308,8 +313,7 @@ and compile_type ~raise : I.type_expression -> O.type_expression =
   match ty.type_content with
   | T_variable x -> return (T_variable x)
   | T_constant { language; injection; parameters } ->
-    let parameters = List.map parameters ~f:self in
-    return (T_constant { language; injection; parameters })
+    return (T_constant { language; injection; parameters = List.map parameters ~f:self })
   | T_sum r -> return (T_sum (I.Row.map self r))
   | T_record r -> return (T_record (I.Row.map self r))
   | T_arrow x -> return (T_arrow (Arrow.map self x))
@@ -318,21 +322,21 @@ and compile_type ~raise : I.type_expression -> O.type_expression =
   | T_for_all x -> return (T_for_all (Abstraction.map self x))
 
 
-and compile_expression ~raise : Data.t -> Data.path -> I.expression -> O.expression =
- fun scope path expr ->
-  let self ?(data = scope) = compile_expression ~raise data path in
-  let self_ty = compile_type ~raise in
+and compile_expression : Data.t -> Data.path -> I.expression -> O.expression =
+ fun data path expr ->
+  let self ?(data = data) = compile_expression data path in
+  let self_ty = compile_type in
   let return expression_content : O.expression =
-    let type_expression = compile_type ~raise expr.type_expression in
+    let type_expression = compile_type expr.type_expression in
     { expression_content; type_expression; location = expr.location }
   in
   match expr.expression_content with
   (* resolving variable names *)
   | I.E_variable v ->
-    let v = Data.resolve_variable scope v in
+    let v = Data.resolve_variable data v in
     return (O.E_variable v)
   | I.E_module_accessor { module_path; element } ->
-    let v = Data.resolve_variable_in_path scope module_path element in
+    let v = Data.resolve_variable_in_path data module_path element in
     return (O.E_variable v)
   (* bounding expressions *)
   | I.E_matching { matchee; cases } ->
@@ -341,8 +345,8 @@ and compile_expression ~raise : Data.t -> Data.path -> I.expression -> O.express
         ~f:(fun { pattern; body } ->
           let data =
             List.fold
-              ~init:scope
-              ~f:(fun scope binder -> Data.rm_exp scope (Binder.get_var binder))
+              ~init:data
+              ~f:(fun data binder -> Data.rm_exp data (Binder.get_var binder))
               (I.Pattern.binders pattern)
           in
           O.Match_expr.{ pattern = I.Pattern.map self_ty pattern; body = self ~data body })
@@ -350,7 +354,7 @@ and compile_expression ~raise : Data.t -> Data.path -> I.expression -> O.express
     in
     return (O.E_matching { matchee = self matchee; cases })
   | I.E_for { binder; start; final; incr; f_body } ->
-    let data = Data.rm_exp scope binder in
+    let data = Data.rm_exp data binder in
     return
       (O.E_for
          { binder
@@ -361,7 +365,7 @@ and compile_expression ~raise : Data.t -> Data.path -> I.expression -> O.express
          })
   | I.E_recursive
       { fun_name; fun_type; lambda = { binder; result; output_type }; force_lambdarec } ->
-    let data = Data.rm_exp scope (Param.get_var binder) in
+    let data = Data.rm_exp data (Param.get_var binder) in
     let data = Data.rm_exp data fun_name in
     let result = self ~data result in
     let fun_type = self_ty fun_type in
@@ -373,8 +377,8 @@ and compile_expression ~raise : Data.t -> Data.path -> I.expression -> O.express
   | I.E_let_mut_in { let_binder; rhs; let_result; attributes } ->
     let data =
       List.fold
-        ~init:scope
-        ~f:(fun scope binder -> Data.rm_exp scope (Binder.get_var binder))
+        ~init:data
+        ~f:(fun data binder -> Data.rm_exp data (Binder.get_var binder))
         (I.Pattern.binders let_binder)
     in
     let rhs = self rhs in
@@ -384,15 +388,15 @@ and compile_expression ~raise : Data.t -> Data.path -> I.expression -> O.express
   | I.E_let_in { let_binder; rhs; let_result; attributes } ->
     let data =
       List.fold
-        ~init:scope
-        ~f:(fun scope binder -> Data.rm_exp scope (Binder.get_var binder))
+        ~init:data
+        ~f:(fun data binder -> Data.rm_exp data (Binder.get_var binder))
         (I.Pattern.binders let_binder)
     in
     let let_result = self ~data let_result in
     let let_binder = I.Pattern.map self_ty let_binder in
     return @@ O.E_let_in { let_binder; rhs = self rhs; let_result; attributes }
   | I.E_for_each { fe_binder = b, b_opt; collection; collection_type; fe_body } ->
-    let data = Data.rm_exp scope b in
+    let data = Data.rm_exp data b in
     let data = Option.value_map b_opt ~default:data ~f:(fun b -> Data.rm_exp data b) in
     return
       (O.E_for_each
@@ -406,12 +410,11 @@ and compile_expression ~raise : Data.t -> Data.path -> I.expression -> O.express
     let data =
       let rhs_scope =
         compile_module_expr
-          ~raise
-          scope
+          data
           (Module_var.add_prefix "LOCAL#in" module_binder :: path)
           rhs
       in
-      Data.add_module scope module_binder rhs_scope
+      Data.add_module data module_binder rhs_scope
     in
     let x = Data.resolve_path data [ module_binder ] in
     aggregate_scope x ~leaf:(self ~data let_result)
