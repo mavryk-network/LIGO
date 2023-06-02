@@ -23,8 +23,8 @@ module Data = struct
     | Pat of pat_
 
   and ('a, 'b) binding_ =
-    { name : 'a
-    ; fresh_name : 'b
+    { old : 'a (* old binding *)
+    ; fresh : 'b (* new binding (with fresh variables) *)
     }
 
   and var_binding = (Value_var.t, Value_var.t) binding_
@@ -58,8 +58,8 @@ module Data = struct
       let pp_mod_ ppf { name; in_scope } =
         fprintf ppf "{ name = %a ; items = @[<v 2>@.%a@] }" Module_var.pp name pp in_scope
       in
-      let pp_exp_ fa fb ppf ({ name; fresh_name } : ('a, 'b) binding_) =
-        fprintf ppf "{ name = %a ; fresh_name = %a ; items = XX }" fa name fb fresh_name
+      let pp_exp_ fa fb ppf ({ old; fresh } : ('a, 'b) binding_) =
+        fprintf ppf "{ name = %a ; fresh = %a ; items = XX }" fa old fb fresh
       in
       fprintf
         ppf
@@ -92,15 +92,14 @@ module Data = struct
 
   let rm_exp : scope -> I.expression_variable -> scope =
    fun items to_rm ->
-    let exp = List.filter items.exp ~f:(fun x -> not @@ Value_var.equal x.name to_rm) in
+    let exp = List.filter items.exp ~f:(fun x -> not @@ Value_var.equal x.old to_rm) in
     { items with exp }
 
 
   let add_exp : scope -> exp_ -> scope =
    fun scope new_exp ->
     let exp =
-      List.filter scope.exp ~f:(fun x ->
-          not (Value_var.equal x.name new_exp.binding.name))
+      List.filter scope.exp ~f:(fun x -> not (Value_var.equal x.old new_exp.binding.old))
     in
     { scope with exp = new_exp.binding :: exp; decls = scope.decls @ [ Exp new_exp ] }
 
@@ -108,17 +107,15 @@ module Data = struct
   let add_exp_pat : scope -> pat_ -> scope =
    fun scope new_pat ->
     let new_bound : var_binding list =
-      let names = List.map ~f:Binder.get_var @@ I.Pattern.binders new_pat.binding.name in
-      let fresh_names =
-        List.map ~f:Binder.get_var @@ I.Pattern.binders new_pat.binding.fresh_name
+      let names = List.map ~f:Binder.get_var @@ I.Pattern.binders new_pat.binding.old in
+      let freshs =
+        List.map ~f:Binder.get_var @@ I.Pattern.binders new_pat.binding.fresh
       in
-      List.map
-        ~f:(fun (name, fresh_name) -> { name; fresh_name })
-        (List.zip_exn names fresh_names)
+      List.map ~f:(fun (old, fresh) -> { old; fresh }) (List.zip_exn names freshs)
     in
     let exp =
       List.filter scope.exp ~f:(fun x ->
-          not @@ List.exists new_bound ~f:(fun new_ -> Value_var.equal x.name new_.name))
+          not @@ List.exists new_bound ~f:(fun new_ -> Value_var.equal x.old new_.old))
     in
     { scope with exp = new_bound @ exp; decls = scope.decls @ [ Pat new_pat ] }
 
@@ -135,8 +132,8 @@ module Data = struct
 
   let resolve_variable : scope -> Value_var.t -> Value_var.t =
    fun scope v ->
-    match List.find scope.exp ~f:(fun x -> Value_var.equal v x.name) with
-    | Some x -> x.fresh_name
+    match List.find scope.exp ~f:(fun x -> Value_var.equal v x.old) with
+    | Some x -> x.fresh
     | None -> v
 
 
@@ -151,12 +148,12 @@ let aggregate_scope : Data.scope -> leaf:O.expression -> O.expression =
   let rec f : Data.decl -> O.expression -> O.expression =
    fun d acc_exp ->
     match d with
-    | Pat { binding = { name = _; fresh_name }; item; attr } ->
-      O.e_a_let_in ~loc:item.location fresh_name item acc_exp attr
-    | Exp { binding = { name = _; fresh_name }; item; attr } ->
+    | Pat { binding = { old = _; fresh }; item; attr } ->
+      O.e_a_let_in ~loc:item.location fresh item acc_exp attr
+    | Exp { binding = { old = _; fresh }; item; attr } ->
       let binder =
-        O.Pattern.var ~loc:(Value_var.get_location fresh_name)
-        @@ Binder.make fresh_name item.type_expression
+        O.Pattern.var ~loc:(Value_var.get_location fresh)
+        @@ Binder.make fresh item.type_expression
       in
       O.e_a_let_in ~loc:item.location binder item acc_exp attr
     | Mod { in_scope = { decls; _ }; _ } -> List.fold_right decls ~f ~init:acc_exp
@@ -169,13 +166,13 @@ let build_context : Data.scope -> O.context =
   let rec f : Data.decl -> O.declaration list =
    fun d ->
     match d with
-    | Pat { binding = { name = _; fresh_name }; item; attr } ->
+    | Pat { binding = { old = _; fresh }; item; attr } ->
       [ Location.wrap
           ~loc:item.location
-          (O.D_irrefutable_match { pattern = fresh_name; expr = item; attr })
+          (O.D_irrefutable_match { pattern = fresh; expr = item; attr })
       ]
-    | Exp { binding = { name = _; fresh_name }; item; attr } ->
-      let binder = Binder.make fresh_name item.type_expression in
+    | Exp { binding = { old = _; fresh }; item; attr } ->
+      let binder = Binder.make fresh item.type_expression in
       [ Location.wrap ~loc:item.location (O.D_value { binder; expr = item; attr }) ]
     | Mod { in_scope = { decls; _ }; _ } -> List.join (List.map decls ~f)
   in
@@ -199,15 +196,15 @@ and compile_declarations ~raise : Data.scope -> Data.path -> I.module_ -> Data.s
     | I.D_irrefutable_match { pattern; expr; attr } ->
       let pat =
         let item = compile_expression ~raise acc_scope [] expr in
-        let fresh_name = fresh_pattern ~raise pattern path in
-        (Data.{ binding = { name = pattern; fresh_name }; item; attr } : Data.pat_)
+        let fresh = fresh_pattern ~raise pattern path in
+        (Data.{ binding = { old = pattern; fresh }; item; attr } : Data.pat_)
       in
       Data.add_exp_pat acc_scope pat
     | I.D_value { binder; expr; attr } ->
       let exp =
         let item = compile_expression ~raise acc_scope [] expr in
-        let fresh_name = fresh_name binder.var path in
-        (Data.{ binding = { name = binder.var; fresh_name }; item; attr } : Data.exp_)
+        let fresh = fresh binder.var path in
+        (Data.{ binding = { old = binder.var; fresh }; item; attr } : Data.exp_)
       in
       Data.add_exp acc_scope exp
     | I.D_module { module_binder; module_; module_attr = _ } ->
@@ -369,7 +366,7 @@ and compile_expression ~raise : Data.scope -> Data.path -> I.expression -> O.exp
   | I.E_while x -> return (O.E_while (While_loop.map self x))
 
 
-and fresh_name : Value_var.t -> Data.path -> Value_var.t =
+and fresh : Value_var.t -> Data.path -> Value_var.t =
  fun v path ->
   match path with
   | [] -> v
@@ -388,6 +385,6 @@ and fresh_pattern ~raise : I.ty_expr I.Pattern.t -> Data.path -> O.ty_expr O.Pat
   O.Pattern.map_pattern
     (Location.map (function
         | Linear_pattern.P_var x ->
-          O.Pattern.P_var (Binder.set_var x (fresh_name (Binder.get_var x) path))
+          O.Pattern.P_var (Binder.set_var x (fresh (Binder.get_var x) path))
         | x -> x))
     pattern
