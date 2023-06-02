@@ -29,7 +29,7 @@ module Data = struct
     }
 
   and var_binding = (Value_var.t, Value_var.t) binding_
-  and pat_binding = (I.ty_expr I.Pattern.t, O.ty_expr O.Pattern.t) binding_
+  and pat_binding = ((I.ty_expr [@sexp.opaque]) I.Pattern.t, (O.ty_expr [@sexp.opaque]) O.Pattern.t) binding_
 
   and mod_ =
     { name : Module_var.t
@@ -38,37 +38,23 @@ module Data = struct
 
   and pat_ =
     { binding : pat_binding
-    ; item : O.expression
-    ; attr : O.ValueAttr.t
+    ; item : (O.expression [@sexp.opaque])
+    ; attr : (O.ValueAttr.t [@sexp.opaque])
     }
 
   and exp_ =
     { binding : var_binding
-    ; item : O.expression
-    ; attr : O.ValueAttr.t
-    }
+    ; item : (O.expression [@sexp.opaque])
+    ; attr : (O.ValueAttr.t [@sexp.opaque])
+    } [@@deriving sexp_of]
 
   (* Important note: path is _only_ used for naming of fresh variables, so that debuging a printed AST is easier *)
   and path = Module_var.t list
 
   module PP_DEBUG = struct
     open Format
-    open Simple_utils.PP_helpers
 
-    let rec pp ppf { exp; mod_ } =
-      let pp_mod_ ppf { name; in_scope } =
-        fprintf ppf "{ name = %a ; items = @[<v 2>@.%a@] }" Module_var.pp name pp in_scope
-      in
-      let pp_exp_ fa fb ppf ({ old; fresh } : ('a, 'b) binding_) =
-        fprintf ppf "{ name = %a ; fresh = %a ; items = XX }" fa old fb fresh
-      in
-      fprintf
-        ppf
-        "{ exp = @[<v>%a@] ; mod_ = @[<v 2>@.%a@] }"
-        (list_sep (pp_exp_ Value_var.pp Value_var.pp) (tag "@."))
-        exp
-        (list_sep pp_mod_ (tag "@."))
-        mod_
+    let pp ppf scope = fprintf ppf "%a" Sexp.pp_hum (sexp_of_scope scope)
   end
 
   let empty = { exp = []; mod_ = []; decls = [] }
