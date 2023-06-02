@@ -102,7 +102,7 @@ module Data = struct
       List.filter scope.exp ~f:(fun x ->
           not (Value_var.equal x.name new_exp.binding.name))
     in
-    { scope with exp = new_exp.binding :: exp; decls = Exp new_exp :: scope.decls }
+    { scope with exp = new_exp.binding :: exp; decls = scope.decls @ [ Exp new_exp ] }
 
 
   let add_exp_pat : scope -> pat_ -> scope =
@@ -120,7 +120,7 @@ module Data = struct
       List.filter scope.exp ~f:(fun x ->
           not @@ List.exists new_bound ~f:(fun new_ -> Value_var.equal x.name new_.name))
     in
-    { scope with exp = new_bound @ exp; decls = Pat new_pat :: scope.decls }
+    { scope with exp = new_bound @ exp; decls = scope.decls @ [ Pat new_pat ] }
 
 
   let add_module : scope -> Module_var.t -> scope -> scope =
@@ -129,7 +129,7 @@ module Data = struct
       List.filter scope.mod_ ~f:(fun x -> not (Module_var.equal x.name mod_var))
     in
     let mod_ = { name = mod_var; in_scope = new_scope } :: mod_ in
-    let decls = Mod { name = mod_var; in_scope = new_scope } :: scope.decls in
+    let decls = scope.decls @ [ Mod { name = mod_var; in_scope = new_scope } ] in
     { scope with mod_; decls }
 
 
@@ -148,8 +148,8 @@ end
 
 let aggregate_scope : Data.scope -> leaf:O.expression -> O.expression =
  fun scope ~leaf ->
-  let rec f : O.expression -> Data.decl -> O.expression =
-   fun acc_exp d ->
+  let rec f : Data.decl -> O.expression -> O.expression =
+   fun d acc_exp ->
     match d with
     | Pat { binding = { name = _; fresh_name }; item; attr } ->
       O.e_a_let_in ~loc:item.location fresh_name item acc_exp attr
@@ -159,9 +159,9 @@ let aggregate_scope : Data.scope -> leaf:O.expression -> O.expression =
         @@ Binder.make fresh_name item.type_expression
       in
       O.e_a_let_in ~loc:item.location binder item acc_exp attr
-    | Mod { in_scope = { decls; _ }; _ } -> List.fold_left decls ~f ~init:acc_exp
+    | Mod { in_scope = { decls; _ }; _ } -> List.fold_right decls ~f ~init:acc_exp
   in
-  List.fold_left scope.decls ~f ~init:leaf
+  List.fold_right scope.decls ~f ~init:leaf
 
 
 let build_context : Data.scope -> O.context =
@@ -177,9 +177,9 @@ let build_context : Data.scope -> O.context =
     | Exp { binding = { name = _; fresh_name }; item; attr } ->
       let binder = Binder.make fresh_name item.type_expression in
       [ Location.wrap ~loc:item.location (O.D_value { binder; expr = item; attr }) ]
-    | Mod { in_scope = { decls; _ }; _ } -> List.join (List.map (List.rev decls) ~f)
+    | Mod { in_scope = { decls; _ }; _ } -> List.join (List.map decls ~f)
   in
-  List.join (List.map ~f (List.rev scope.decls))
+  List.join (List.map ~f scope.decls)
 
 
 let rec compile ~raise : Data.scope -> Data.path -> I.expression -> I.program -> O.program
