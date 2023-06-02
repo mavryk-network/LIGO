@@ -11,10 +11,11 @@ open Ligo_prim
 *)
 
 module Data = struct
+  (* when data is added into exp or mod_, it is also added to decls *)
   type scope =
-    { exp : var_binding list
-    ; mod_ : mod_ list
-    ; decls : decl list
+    { exp : var_binding list (* env for expressions *)
+    ; mod_ : mod_ list (* env for modules *)
+    ; decls : decl list (* actual content *)
     }
 
   and decl =
