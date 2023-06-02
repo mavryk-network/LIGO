@@ -35,26 +35,9 @@ module ValueAttr = Ast_typed.ValueAttr
 module ModuleAttr = Ast_typed.TypeOrModuleAttr
 module Value_decl = Value_decl (ValueAttr)
 
-module Access_label = struct
-  type 'a t = Label.t
-
-  let equal _ = Label.equal
-  let compare _ = Label.compare
-  let to_yojson _ = Label.to_yojson
-  let of_yojson _ = Label.of_yojson
-  let hash_fold_t _ = Label.hash_fold_t
-  let pp _ = Label.pp
-  let fold _ = Fun.const
-  let map _ = Fun.id
-  let fold_map _ a b = a, b
-  let t_of_sexp _ = Label.t_of_sexp
-  let sexp_of_t _ = Label.sexp_of_t
-  let iter _ = Label.iter
-end
-
 module Pattern = Linear_pattern
-module Accessor = Ast_typed.Accessor
-module Update = Ast_typed.Update
+module Accessor = Accessor (Access_label)
+module Update = Update (Access_label)
 module Let_in = Let_in.Make (Pattern) (ValueAttr)
 module Match_expr = Match_expr.Make (Pattern)
 module Pattern_decl = Pattern_decl (Pattern) (ValueAttr)
