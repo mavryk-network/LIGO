@@ -181,7 +181,7 @@ module Data = struct
 
   let rec refresh : t -> path -> t =
    fun data path ->
-    (* for all declaration in data, assign a new fresh binding and update the environements *)
+    (* for all declaration in content data, assign a new fresh binding and update the environements *)
     let refreshed_content =
       List.map
         ~f:(function
@@ -193,23 +193,30 @@ module Data = struct
             Pat { x with binding = { old; fresh = fresh_pattern old path } })
         data.content
     in
-    let updated_scope =
+    let refreshed_mod_ =
+      List.map data.env.mod_ ~f:(function { name; in_scope } ->
+          let in_scope_opt =
+            (* refresh has been recursively applied when refreshing the content, just copy the result here *)
+            List.find_map refreshed_content ~f:(function
+                | Mod x -> if Module_var.equal x.name name then Some x.in_scope else None
+                | _ -> None)
+          in
+          { name; in_scope = Option.value ~default:in_scope in_scope_opt })
+    in
+    let refreshed_exp =
       refreshed_content
       |> List.map ~f:(function
              | Mod _ -> []
              | Exp x -> [ x.binding ]
              | Pat x -> pat_to_var_bindings x.binding)
       |> List.join
-      |> List.fold ~init:data ~f:(fun data { old; fresh } ->
-             let exp =
-               List.map
-                 ~f:(fun ({ old = old'; fresh = _ } as x) ->
-                   if Value_var.equal old old' then { x with fresh } else x)
-                 data.env.exp
-             in
-             { data with env = { data.env with exp } })
+      |> List.fold ~init:data.env.exp ~f:(fun exp_env { old; fresh } ->
+             List.map
+               ~f:(fun ({ old = old'; fresh = _ } as x) ->
+                 if Value_var.equal old old' then { x with fresh } else x)
+               exp_env)
     in
-    { updated_scope with content = refreshed_content }
+    { env = { exp = refreshed_exp; mod_ = refreshed_mod_ }; content = refreshed_content }
 end
 
 let aggregate_scope : Data.t -> leaf:O.expression -> O.expression =
@@ -281,6 +288,7 @@ and compile_declarations : Data.t -> Data.path -> I.module_ -> Data.t =
       Data.add_module acc_scope module_binder rhs_glob
   in
   List.fold lst ~init:init_scope ~f
+
 
 (*
   [copy_content] let you control if the module content should be entirely copied 
