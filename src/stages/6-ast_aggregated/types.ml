@@ -53,8 +53,8 @@ module Access_label = struct
 end
 
 module Pattern = Linear_pattern
-module Accessor = Accessor (Access_label)
-module Update = Update (Access_label)
+module Accessor = Ast_typed.Accessor
+module Update = Ast_typed.Update
 module Let_in = Let_in.Make (Pattern) (ValueAttr)
 module Match_expr = Match_expr.Make (Pattern)
 module Pattern_decl = Pattern_decl (Pattern) (ValueAttr)
