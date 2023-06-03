@@ -41,7 +41,7 @@
         "@opam/conf-libev",
         "esy-gmp"
       ],
-      "rewritePrefix": true
+      "rewritePrefix": false
     }
   },
   "dependencies": {
