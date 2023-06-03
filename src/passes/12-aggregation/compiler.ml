@@ -52,7 +52,7 @@ module Data = struct
   and pat_ =
     { binding : pat_binding
     ; debug_path : path
-    ; data : t
+    ; data : env
     ; item : (I.expression[@sexp.opaque])
     ; attr : (O.ValueAttr.t[@sexp.opaque])
     }
@@ -60,7 +60,7 @@ module Data = struct
   and exp_ =
     { binding : var_binding
     ; debug_path : path
-    ; data : t
+    ; data : env
     ; item : (I.expression[@sexp.opaque])
     ; attr : (O.ValueAttr.t[@sexp.opaque])
     }
@@ -82,7 +82,9 @@ module Data = struct
   and path = Module_var.t list
 
   let pp ppf data = Format.fprintf ppf "%a" Sexp.pp_hum (sexp_of_t data)
-  let empty = { env = { exp = []; mod_ = [] }; content = [] }
+  let pp_env ppf data = Format.fprintf ppf "%a" Sexp.pp_hum (sexp_of_env data)
+  let empty_env = { exp = []; mod_ = [] }
+  let empty = { env = empty_env; content = [] }
 
   let fresh_var : Value_var.t -> path -> Value_var.t =
    fun v path ->
@@ -107,8 +109,8 @@ module Data = struct
       pattern
 
 
-  let resolve_path : t -> path -> t =
-   fun data requested_path ->
+  let resolve_path : env -> path -> t =
+   fun env requested_path ->
     let f : t -> Module_var.t -> t =
      fun acc module_variable ->
       match
@@ -121,17 +123,16 @@ module Data = struct
              "couldnt find %a in: \n %a "
              Module_var.pp
              module_variable
-             pp
-             data)
+             pp_env
+             env)
     in
-    List.fold requested_path ~init:data ~f
+    List.fold requested_path ~init:{ content = []; env } ~f
 
 
-  let rm_exp : t -> I.expression_variable -> t =
-   fun { env = { exp; mod_ }; content } to_rm ->
-    { env =
-        { exp = List.filter exp ~f:(fun x -> not @@ Value_var.equal x.old to_rm); mod_ }
-    ; content
+  let rm_exp : env -> I.expression_variable -> env =
+   fun env to_rm ->
+    { env with
+      exp = List.filter env.exp ~f:(fun x -> not @@ Value_var.equal x.old to_rm)
     }
 
 
@@ -170,17 +171,17 @@ module Data = struct
     { env = { exp; mod_ }; content }
 
 
-  let resolve_variable : t -> Value_var.t -> Value_var.t =
-   fun data v ->
-    match List.find data.env.exp ~f:(fun x -> Value_var.equal v x.old) with
+  let resolve_variable : env -> Value_var.t -> Value_var.t =
+   fun env v ->
+    match List.find env.exp ~f:(fun x -> Value_var.equal v x.old) with
     | Some x -> x.fresh
     | None -> v
 
 
-  let resolve_variable_in_path : t -> path -> Value_var.t -> Value_var.t =
-   fun data path v ->
-    let x = resolve_path data path in
-    resolve_variable x v
+  let resolve_variable_in_path : env -> path -> Value_var.t -> Value_var.t =
+   fun env path v ->
+    let x = resolve_path env path in
+    resolve_variable x.env v
 
 
   let rec refresh : t -> path -> t =
@@ -224,11 +225,11 @@ module Data = struct
 end
 
 let rec aggregate_scope : Data.t -> leaf:O.expression -> O.expression =
- fun {content  ; _ } ~leaf ->
+ fun { content; _ } ~leaf ->
   let f : Data.decl -> O.expression -> O.expression =
    fun d acc_exp ->
     match d with
-    | Pat { binding = { old = _; fresh }; item; debug_path; data ; attr } ->
+    | Pat { binding = { old = _; fresh }; item; debug_path; data; attr } ->
       let item = compile_expression data debug_path item in
       O.e_a_let_in ~loc:item.location fresh item acc_exp attr
     | Exp { binding = { old = _; fresh }; item; debug_path; data; attr } ->
@@ -244,7 +245,7 @@ let rec aggregate_scope : Data.t -> leaf:O.expression -> O.expression =
 
 
 and build_context : Data.t -> O.context =
- fun {content  ; _ } ->
+ fun { content; _ } ->
   let f : Data.decl -> O.declaration list =
    fun d ->
     match d with
@@ -266,7 +267,7 @@ and build_context : Data.t -> O.context =
 and compile : Data.t -> Data.path -> I.expression -> I.program -> O.program =
  fun data path hole module_ ->
   let data = compile_declarations data path module_ in
-  let hole = compile_expression data [] hole in
+  let hole = compile_expression data.env [] hole in
   build_context data, hole
 
 
@@ -280,7 +281,13 @@ and compile_declarations : Data.t -> Data.path -> I.module_ -> Data.t =
       let pat =
         let pattern = I.Pattern.map compile_type pattern in
         let fresh = Data.fresh_pattern pattern path in
-        (Data.{ binding = { old = pattern; fresh }; item = expr; debug_path = []; data = acc_scope ; attr }
+        (Data.
+           { binding = { old = pattern; fresh }
+           ; item = expr
+           ; debug_path = []
+           ; data = acc_scope.env
+           ; attr
+           }
           : Data.pat_)
       in
       Data.add_exp_pat acc_scope pat
@@ -288,14 +295,21 @@ and compile_declarations : Data.t -> Data.path -> I.module_ -> Data.t =
       let exp =
         let fresh = Data.fresh_var binder.var path in
         (Data.
-           { binding = { old = binder.var; fresh }; item = expr; debug_path = []; data = acc_scope ; attr }
+           { binding = { old = binder.var; fresh }
+           ; item = expr
+           ; debug_path = []
+           ; data = acc_scope.env
+           ; attr
+           }
           : Data.exp_)
       in
       Data.add_exp acc_scope exp
     | I.D_module { module_binder; module_; module_attr = _ } ->
-      let rhs_glob = compile_module_expr acc_scope (path @ [ module_binder ]) module_ in
+      let rhs_glob =
+        compile_module_expr acc_scope.env (path @ [ module_binder ]) module_
+      in
       Data.add_module acc_scope module_binder rhs_glob
-    (* | I.D_module_include _ -> assert false *)
+    | I.D_module_include _ -> assert false
   in
   List.fold lst ~init:init_scope ~f
 
@@ -305,16 +319,16 @@ and compile_declarations : Data.t -> Data.path -> I.module_ -> Data.t =
   as a new set of bindings, or if we should just make reference to it
 *)
 and compile_module_expr ?(copy_content = false)
-    : Data.t -> Data.path -> I.module_expr -> Data.t
+    : Data.env -> Data.path -> I.module_expr -> Data.t
   =
- fun data path mexpr ->
+ fun env path mexpr ->
   match mexpr.module_content with
-  | M_struct prg -> compile_declarations { data with content = [] } path prg
+  | M_struct prg -> compile_declarations { env; content = [] } path prg
   | M_variable v ->
-    let res = Data.resolve_path data [ v ] in
+    let res = Data.resolve_path env [ v ] in
     if copy_content then Data.refresh res path else { res with content = [] }
   | M_module_path m_path ->
-    let res = Data.resolve_path data (List.Ne.to_list m_path) in
+    let res = Data.resolve_path env (List.Ne.to_list m_path) in
     if copy_content then Data.refresh res path else { res with content = [] }
 
 
@@ -340,7 +354,7 @@ and compile_type : I.type_expression -> O.type_expression =
   | T_for_all x -> return (T_for_all (Abstraction.map self x))
 
 
-and compile_expression : Data.t -> Data.path -> I.expression -> O.expression =
+and compile_expression : Data.env -> Data.path -> I.expression -> O.expression =
  fun data path expr ->
   let self ?(data = data) = compile_expression data path in
   let self_ty = compile_type in
@@ -432,10 +446,10 @@ and compile_expression : Data.t -> Data.path -> I.expression -> O.expression =
           (Module_var.add_prefix "LOCAL#in" module_binder :: path)
           rhs
       in
-      Data.add_module data module_binder rhs_scope
+      Data.add_module { env = data; content = [] } module_binder rhs_scope
     in
-    let x = Data.resolve_path data [ module_binder ] in
-    aggregate_scope x ~leaf:(self ~data let_result)
+    let x = Data.resolve_path data.env [ module_binder ] in
+    aggregate_scope x ~leaf:(self ~data:data.env let_result)
   (* trivials *)
   | I.E_literal l -> return (O.E_literal l)
   | I.E_raw_code x -> return (O.E_raw_code (Raw_code.map self x))

@@ -3,7 +3,7 @@ module Errors = Errors
 let compile_expression ~raise : Ast_typed.expression -> Ast_aggregated.expression =
  fun x ->
   ignore raise;
-  Compiler.compile_expression Compiler.Data.empty [] x
+  Compiler.compile_expression Compiler.Data.empty_env [] x
 
 
 let compile_program ~raise
