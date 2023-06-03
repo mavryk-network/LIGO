@@ -86,10 +86,17 @@ publish_npm_windows_x86:
       fi
     - cd platform-windows-x64
     - chmod 664 package.json
-    - node ../.ci/scripts/npm_update_os_arch.js package.json) > package.json
+    - node ../.ci/scripts/npm_update_os_arch.js package.json) > package.json.tmp && mv package.json.tmp package.json
     - VERSION=$(../.ci/scripts/versioning/determine_esy_version.sh package.json windows)
     - status=0 ; ../.ci/scripts/versioning/update_esy_version.sh package.json $VERSION ; npm publish --access public --tag windows$SUFFIX || status=1
+    - npm pack
+    - node ../.ci/scripts/npm_update_name.js package.json) > package.json.tmp && mv package.json.tmp package.json
+    - npm pack
+    - mkdir -p ../tarballs; mv *.tgz ../tarballs
     - echo "ligo_npm_build_status $status" | curl --data-binary @- -u '$PROM_PUSH_AUTH' https://pushgateway.prometheus.gcp.marigold.dev/metrics/job/ligo-build-short/branch/$CI_COMMIT_TAG/arch/windows-x86
+  artifacts:
+    paths:
+      - tarballs
 
 esy-macos-intel:
   extends: .submodule-clone
@@ -176,7 +183,14 @@ publish_npm_darwin_x86_64:
     - node ../.ci/scripts/npm_update_os_arch.js package.json) > package.json
     - VERSION=$(../.ci/scripts/versioning/determine_esy_version.sh package.json macos-intel)
     - status=0 ; ../.ci/scripts/versioning/update_esy_version.sh package.json $VERSION ; npm publish --access public --tag macos-intel$SUFFIX || status=1
+    - npm pack
+    - node ../.ci/scripts/npm_update_name.js package.json) > package.json.tmp && mv package.json.tmp package.json
+    - npm pack
+    - mkdir -p ../tarballs; mv *.tgz ../tarballs
     - echo "ligo_npm_build_status $status" | curl --data-binary @- -u '$PROM_PUSH_AUTH' https://pushgateway.prometheus.gcp.marigold.dev/metrics/job/ligo-build-short/branch/$CI_COMMIT_TAG/arch/darwin
+  artifacts:
+    paths:
+      - tarballs
 
 esy-macos-m1:
   extends: .submodule-clone
@@ -264,7 +278,14 @@ publish_npm_darwin_arm64:
     - node ../.ci/scripts/npm_update_os_arch.js package.json) > package.json
     - VERSION=$(../.ci/scripts/versioning/determine_esy_version.sh package.json macos-m1)
     - status=0  ; ../.ci/scripts/versioning/update_esy_version.sh package.json $VERSION ; npm publish --access public --tag macos-m1$SUFFIX || status=1
+    - npm pack
+    - node ../.ci/scripts/npm_update_name.js package.json) > package.json.tmp && mv package.json.tmp package.json
+    - npm pack
+    - mkdir -p ../tarballs; mv *.tgz ../tarballs
     - echo "ligo_npm_build_status $status" | curl --data-binary @- -u '$PROM_PUSH_AUTH' https://pushgateway.prometheus.gcp.marigold.dev/metrics/job/ligo-build-short/branch/$CI_COMMIT_TAG/arch/darwin-arm64
+  artifacts:
+    paths:
+      - tarballs
 
 publish_ligojs:
   stage: push
