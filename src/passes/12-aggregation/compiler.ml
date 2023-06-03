@@ -51,13 +51,17 @@ module Data = struct
 
   and pat_ =
     { binding : pat_binding
-    ; item : (O.expression[@sexp.opaque])
+    ; debug_path : path
+    ; data : t
+    ; item : (I.expression[@sexp.opaque])
     ; attr : (O.ValueAttr.t[@sexp.opaque])
     }
 
   and exp_ =
     { binding : var_binding
-    ; item : (O.expression[@sexp.opaque])
+    ; debug_path : path
+    ; data : t
+    ; item : (I.expression[@sexp.opaque])
     ; attr : (O.ValueAttr.t[@sexp.opaque])
     }
 
@@ -70,15 +74,15 @@ module Data = struct
   and var_binding = Value_var.t binding_
   and pat_binding = (O.ty_expr[@sexp.opaque]) O.Pattern.t binding_ [@@deriving sexp_of]
 
-  let pp ppf data = Format.fprintf ppf "%a" Sexp.pp_hum (sexp_of_t data)
-  let empty = { env = { exp = []; mod_ = [] }; content = [] }
-
   (*
     Important note: path is _ONLY_ used for naming of fresh variables, so that debuging a printed AST is easier.  
     e.g. module access `A.B.x` will become variable `#A#B#x`
     IT SHOULD NEVER BE USED FOR INTERNAL COMPUTATION OR RESOLVING
   *)
-  type path = Module_var.t list
+  and path = Module_var.t list
+
+  let pp ppf data = Format.fprintf ppf "%a" Sexp.pp_hum (sexp_of_t data)
+  let empty = { env = { exp = []; mod_ = [] }; content = [] }
 
   let fresh_var : Value_var.t -> path -> Value_var.t =
    fun v path ->
@@ -219,43 +223,47 @@ module Data = struct
     { env = { exp = refreshed_exp; mod_ = refreshed_mod_ }; content = refreshed_content }
 end
 
-let aggregate_scope : Data.t -> leaf:O.expression -> O.expression =
- fun data ~leaf ->
-  let rec f : Data.decl -> O.expression -> O.expression =
+let rec aggregate_scope : Data.t -> leaf:O.expression -> O.expression =
+ fun {content  ; _ } ~leaf ->
+  let f : Data.decl -> O.expression -> O.expression =
    fun d acc_exp ->
     match d with
-    | Pat { binding = { old = _; fresh }; item; attr } ->
+    | Pat { binding = { old = _; fresh }; item; debug_path; data ; attr } ->
+      let item = compile_expression data debug_path item in
       O.e_a_let_in ~loc:item.location fresh item acc_exp attr
-    | Exp { binding = { old = _; fresh }; item; attr } ->
+    | Exp { binding = { old = _; fresh }; item; debug_path; data; attr } ->
+      let item = compile_expression data debug_path item in
       let binder =
         O.Pattern.var ~loc:(Value_var.get_location fresh)
         @@ Binder.make fresh item.type_expression
       in
       O.e_a_let_in ~loc:item.location binder item acc_exp attr
-    | Mod { in_scope = { content; _ }; _ } -> List.fold_right content ~f ~init:acc_exp
+    | Mod { in_scope; _ } -> aggregate_scope in_scope ~leaf:acc_exp
   in
-  List.fold_right data.content ~f ~init:leaf
+  List.fold_right content ~f ~init:leaf
 
 
-let build_context : Data.t -> O.context =
- fun data ->
-  let rec f : Data.decl -> O.declaration list =
+and build_context : Data.t -> O.context =
+ fun {content  ; _ } ->
+  let f : Data.decl -> O.declaration list =
    fun d ->
     match d with
-    | Pat { binding = { old = _; fresh }; item; attr } ->
+    | Pat { binding = { old = _; fresh }; item; debug_path; data; attr } ->
+      let item = compile_expression data debug_path item in
       [ Location.wrap
           ~loc:item.location
           (O.D_irrefutable_match { pattern = fresh; expr = item; attr })
       ]
-    | Exp { binding = { old = _; fresh }; item; attr } ->
+    | Exp { binding = { old = _; fresh }; item; debug_path; data; attr } ->
+      let item = compile_expression data debug_path item in
       let binder = Binder.make fresh item.type_expression in
       [ Location.wrap ~loc:item.location (O.D_value { binder; expr = item; attr }) ]
-    | Mod { in_scope = { content; _ }; _ } -> List.join (List.map content ~f)
+    | Mod { in_scope; _ } -> build_context in_scope
   in
-  List.join (List.map ~f data.content)
+  List.join (List.map ~f content)
 
 
-let rec compile : Data.t -> Data.path -> I.expression -> I.program -> O.program =
+and compile : Data.t -> Data.path -> I.expression -> I.program -> O.program =
  fun data path hole module_ ->
   let data = compile_declarations data path module_ in
   let hole = compile_expression data [] hole in
@@ -270,22 +278,24 @@ and compile_declarations : Data.t -> Data.path -> I.module_ -> Data.t =
     | I.D_type _ -> acc_scope
     | I.D_irrefutable_match { pattern; expr; attr } ->
       let pat =
-        let item = compile_expression acc_scope [] expr in
         let pattern = I.Pattern.map compile_type pattern in
         let fresh = Data.fresh_pattern pattern path in
-        (Data.{ binding = { old = pattern; fresh }; item; attr } : Data.pat_)
+        (Data.{ binding = { old = pattern; fresh }; item = expr; debug_path = []; data = acc_scope ; attr }
+          : Data.pat_)
       in
       Data.add_exp_pat acc_scope pat
     | I.D_value { binder; expr; attr } ->
       let exp =
-        let item = compile_expression acc_scope [] expr in
         let fresh = Data.fresh_var binder.var path in
-        (Data.{ binding = { old = binder.var; fresh }; item; attr } : Data.exp_)
+        (Data.
+           { binding = { old = binder.var; fresh }; item = expr; debug_path = []; data = acc_scope ; attr }
+          : Data.exp_)
       in
       Data.add_exp acc_scope exp
     | I.D_module { module_binder; module_; module_attr = _ } ->
       let rhs_glob = compile_module_expr acc_scope (path @ [ module_binder ]) module_ in
       Data.add_module acc_scope module_binder rhs_glob
+    (* | I.D_module_include _ -> assert false *)
   in
   List.fold lst ~init:init_scope ~f
 
