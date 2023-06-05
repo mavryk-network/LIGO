@@ -53,7 +53,6 @@ module Data = struct
 
   and pat_ =
     { binding : pat_binding
-    ; debug_path : (path[@sexp.opaque])
     ; env : env
     ; item : (I.expression[@sexp.opaque])
     ; attr : (O.ValueAttr.t[@sexp.opaque])
@@ -61,7 +60,6 @@ module Data = struct
 
   and exp_ =
     { binding : var_binding
-    ; debug_path : (path[@sexp.opaque])
     ; env : (env[@sexp.opaque])
     ; item : (I.expression[@sexp.opaque])
     ; attr : (O.ValueAttr.t[@sexp.opaque])
@@ -279,11 +277,11 @@ let rec aggregate_scope : Data.t -> leaf:O.expression -> O.expression =
   let rec f : Data.decl -> O.expression -> O.expression =
    fun d acc_exp ->
     match d with
-    | Pat { binding = { old = _; fresh }; item; debug_path; env; attr } ->
-      let item = compile_expression env debug_path item in
+    | Pat { binding = { old = _; fresh }; item; env; attr } ->
+      let item = compile_expression env item in
       O.e_a_let_in ~loc:item.location fresh item acc_exp attr
-    | Exp { binding = { old = _; fresh }; item; debug_path; env; attr } ->
-      let item = compile_expression env debug_path item in
+    | Exp { binding = { old = _; fresh }; item; env; attr } ->
+      let item = compile_expression env item in
       let binder =
         O.Pattern.var ~loc:(Value_var.get_location fresh)
         @@ Binder.make fresh item.type_expression
@@ -300,14 +298,14 @@ and build_context : Data.t -> O.context =
   let rec f : Data.decl -> O.declaration list =
    fun d ->
     match d with
-    | Pat { binding = { old = _; fresh }; item; debug_path; env; attr } ->
-      let item = compile_expression env debug_path item in
+    | Pat { binding = { old = _; fresh }; item; env; attr } ->
+      let item = compile_expression env item in
       [ Location.wrap
           ~loc:item.location
           (O.D_irrefutable_match { pattern = fresh; expr = item; attr })
       ]
-    | Exp { binding = { old = _; fresh }; item; debug_path; env; attr } ->
-      let item = compile_expression env debug_path item in
+    | Exp { binding = { old = _; fresh }; item; env; attr } ->
+      let item = compile_expression env item in
       let binder = Binder.make fresh item.type_expression in
       [ Location.wrap ~loc:item.location (O.D_value { binder; expr = item; attr }) ]
     | Mod { in_; _ } -> build_context in_
@@ -316,10 +314,10 @@ and build_context : Data.t -> O.context =
   List.join (List.map ~f content)
 
 
-and compile : Data.t -> Data.path -> I.expression -> I.program -> O.program =
- fun data path hole module_ ->
-  let data = compile_declarations data path module_ in
-  let hole = compile_expression data.env [] hole in
+and compile : Data.t -> I.expression -> I.program -> O.program =
+ fun data hole module_ ->
+  let data = compile_declarations data [] module_ in
+  let hole = compile_expression data.env hole in
   build_context data, hole
 
 
@@ -334,12 +332,7 @@ and compile_declarations : Data.t -> Data.path -> I.module_ -> Data.t =
         let pattern = I.Pattern.map compile_type pattern in
         let fresh = Data.fresh_pattern pattern path in
         (Data.
-           { binding = { old = pattern; fresh }
-           ; item = expr
-           ; debug_path = []
-           ; env = acc_scope.env
-           ; attr
-           }
+           { binding = { old = pattern; fresh }; item = expr; env = acc_scope.env; attr }
           : Data.pat_)
       in
       Data.add_exp_pat acc_scope pat
@@ -349,7 +342,6 @@ and compile_declarations : Data.t -> Data.path -> I.module_ -> Data.t =
         (Data.
            { binding = { old = binder.var; fresh }
            ; item = expr
-           ; debug_path = []
            ; env = acc_scope.env
            ; attr
            }
@@ -413,9 +405,10 @@ and compile_type : I.type_expression -> O.type_expression =
   | T_for_all x -> return (T_for_all (Abstraction.map self x))
 
 
-and compile_expression : Data.env -> Data.path -> I.expression -> O.expression =
- fun env path expr ->
-  let self ?(env = env) = compile_expression env path in
+and compile_expression : Data.env -> ?debug_path:Data.path -> I.expression -> O.expression
+  =
+ fun env ?(debug_path = []) expr ->
+  let self ?(env = env) ?(debug_path = debug_path) = compile_expression env ~debug_path in
   let self_ty = compile_type in
   let return expression_content : O.expression =
     let type_expression = compile_type expr.type_expression in
@@ -502,7 +495,7 @@ and compile_expression : Data.env -> Data.path -> I.expression -> O.expression =
       let rhs_scope =
         compile_module_expr
           env
-          ("LOCAL#in" :: Data.extend_debug_path path module_binder)
+          ("LOCAL#in" :: Data.extend_debug_path debug_path module_binder)
           rhs
       in
       Data.add_module { env; content = [] } module_binder rhs_scope
