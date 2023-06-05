@@ -92,6 +92,11 @@ module Data = struct
     path @ [ name ]
 
 
+  let extend_debug_paths : path -> Module_var.t list -> path =
+   fun path modvars ->
+    List.fold_right modvars ~init:path ~f:(fun el acc -> extend_debug_path acc el)
+
+
   let fresh_var : Value_var.t -> path -> Value_var.t =
    fun v path ->
     match path with
@@ -377,10 +382,15 @@ and compile_module_expr ?(copy_content = false)
   | M_struct prg -> compile_declarations { env; content = [] } path prg
   | M_variable v ->
     let res = Data.resolve_path env [ v ] in
-    if copy_content then Data.refresh res path else { res with content = [] }
+    if copy_content
+    then Data.refresh res (Data.extend_debug_path path v)
+    else { res with content = [] }
   | M_module_path m_path ->
-    let res = Data.resolve_path env (List.Ne.to_list m_path) in
-    if copy_content then Data.refresh res path else { res with content = [] }
+    let m_path = List.Ne.to_list m_path in
+    let res = Data.resolve_path env m_path in
+    if copy_content
+    then Data.refresh res (Data.extend_debug_paths path m_path)
+    else { res with content = [] }
 
 
 and compile_type : I.type_expression -> O.type_expression =
