@@ -41,6 +41,7 @@ module Data = struct
 
   and decl =
     | Mod of mod_
+    | Incl of decl list
     | Exp of exp_
     | Pat of pat_
 
@@ -51,7 +52,7 @@ module Data = struct
 
   and pat_ =
     { binding : pat_binding
-    ; debug_path : path
+    ; debug_path : (path[@sexp.opaque])
     ; data : env
     ; item : (I.expression[@sexp.opaque])
     ; attr : (O.ValueAttr.t[@sexp.opaque])
@@ -59,8 +60,8 @@ module Data = struct
 
   and exp_ =
     { binding : var_binding
-    ; debug_path : path
-    ; data : env
+    ; debug_path : (path[@sexp.opaque])
+    ; data : (env[@sexp.opaque])
     ; item : (I.expression[@sexp.opaque])
     ; attr : (O.ValueAttr.t[@sexp.opaque])
     }
@@ -98,7 +99,6 @@ module Data = struct
       let name = "#" ^ name in
       Value_var.fresh ~loc:(Value_var.get_location v) ~name ()
 
-
   let fresh_pattern : O.ty_expr O.Pattern.t -> path -> O.ty_expr O.Pattern.t =
    fun pattern path ->
     O.Pattern.map_pattern
@@ -109,7 +109,7 @@ module Data = struct
       pattern
 
 
-  let resolve_path : env -> path -> t =
+  let resolve_path : env -> Module_var.t list -> t =
    fun env requested_path ->
     let f : t -> Module_var.t -> t =
      fun acc module_variable ->
@@ -178,55 +178,99 @@ module Data = struct
     | None -> v
 
 
-  let resolve_variable_in_path : env -> path -> Value_var.t -> Value_var.t =
+  let resolve_variable_in_path : env -> Module_var.t list -> Value_var.t -> Value_var.t =
    fun env path v ->
     let x = resolve_path env path in
     resolve_variable x.env v
 
 
-  let rec refresh : t -> path -> t =
-   fun data path ->
-    (* for all declaration in content data, assign a new fresh binding and update the environements *)
-    let refreshed_content =
-      List.map
-        ~f:(function
-          | Mod { name; in_scope } ->
-            Mod { name; in_scope = refresh in_scope (path @ [ name ]) }
-          | Exp ({ binding = { old; fresh = _ }; _ } as x) ->
-            Exp { x with binding = { old; fresh = fresh_var old path } }
-          | Pat ({ binding = { old; fresh = _ }; _ } as x) ->
-            Pat { x with binding = { old; fresh = fresh_pattern old path } })
-        data.content
+  let rec refresh
+      :  new_bindings:(Module_var.t list * var_binding) list -> t -> path
+      -> (Module_var.t list * var_binding) list * t
+    =
+   fun ~new_bindings data path ->
+    let rec refresh_env : (Module_var.t list * var_binding) list -> env -> env =
+     fun new_bindings { exp; mod_ } ->
+      let exp =
+        (* select new bindings at top-level only *)
+        let news =
+          List.filter_map
+            ~f:(function
+              | [], x -> Some x
+              | _ -> None)
+            new_bindings
+        in
+        List.map exp ~f:(fun { old; fresh } ->
+            match List.find ~f:(fun x -> Value_var.equal x.old old) news with
+            | Some x -> x
+            | None -> { old; fresh })
+      in
+      let mod_ =
+        List.map mod_ ~f:(fun { name; in_scope } ->
+            let news =
+              List.filter_map
+                ~f:(function
+                  | b ->
+                    (match b with
+                    | [], _ -> Some b
+                    | hd :: tl, x when Module_var.equal hd name -> Some (tl, x)
+                    | _ -> None))
+                new_bindings
+            in
+            { name; in_scope = { in_scope with env = refresh_env news in_scope.env } })
+      in
+      { exp; mod_ }
     in
-    let refreshed_mod_ =
-      List.map data.env.mod_ ~f:(function { name; in_scope } ->
-          let in_scope_opt =
-            (* refresh has been recursively applied when refreshing the content, just copy the result here *)
-            List.find_map refreshed_content ~f:(function
-                | Mod x -> if Module_var.equal x.name name then Some x.in_scope else None
-                | _ -> None)
+    let new_bindings, content =
+      List.fold_map data.content ~init:new_bindings ~f:(fun new_bindings -> function
+        | Pat ({ binding = { old; fresh = _ }; data; _ } as x) ->
+          let data = refresh_env new_bindings data in
+          let new_binding = { old; fresh = fresh_pattern old path } in
+          let nb_pat = List.map ~f:(fun x -> [], x) @@ pat_to_var_bindings new_binding in
+          nb_pat @ new_bindings, Pat { x with binding = new_binding; data }
+        | Exp ({ binding = { old; fresh = _ }; data; _ } as x) ->
+          let data = refresh_env new_bindings data in
+          let new_binding = { old; fresh = fresh_var old path } in
+          ([], new_binding) :: new_bindings, Exp { x with binding = new_binding; data }
+        | Mod { name; in_scope } ->
+          let inner_bindings, in_scope =
+            refresh ~new_bindings in_scope (path @ [ name ])
           in
-          { name; in_scope = Option.value ~default:in_scope in_scope_opt })
+          let mod_bindings =
+            List.map ~f:(fun (mod_path, b) -> name :: mod_path, b) inner_bindings
+          in
+          mod_bindings @ new_bindings, Mod { name; in_scope }
+        | Incl x -> new_bindings, Incl x)
     in
-    let refreshed_exp =
-      refreshed_content
-      |> List.map ~f:(function
-             | Mod _ -> []
-             | Exp x -> [ x.binding ]
-             | Pat x -> pat_to_var_bindings x.binding)
-      |> List.join
-      |> List.fold ~init:data.env.exp ~f:(fun exp_env { old; fresh } ->
-             List.map
-               ~f:(fun ({ old = old'; fresh = _ } as x) ->
-                 if Value_var.equal old old' then { x with fresh } else x)
-               exp_env)
+    let env = refresh_env new_bindings data.env in
+    new_bindings, { content; env }
+
+
+  let refresh data path = snd @@ refresh ~new_bindings:[] data path
+
+  let include_ : t -> t -> t =
+   fun data to_include ->
+    let exp =
+      List.filter data.env.exp ~f:(fun x ->
+          not
+          @@ List.exists to_include.env.exp ~f:(fun new_ ->
+                 Value_var.equal x.old new_.old))
     in
-    { env = { exp = refreshed_exp; mod_ = refreshed_mod_ }; content = refreshed_content }
+    let mod_ =
+      List.filter data.env.mod_ ~f:(fun x ->
+          not
+          @@ List.exists to_include.env.mod_ ~f:(fun new_ ->
+                 Module_var.equal x.name new_.name))
+    in
+    (* TODO mod_ .. *)
+    { env = { exp = exp @ to_include.env.exp; mod_ = mod_ @ to_include.env.mod_ }
+    ; content = data.content @ [ Incl to_include.content ]
+    }
 end
 
 let rec aggregate_scope : Data.t -> leaf:O.expression -> O.expression =
  fun { content; _ } ~leaf ->
-  let f : Data.decl -> O.expression -> O.expression =
+  let rec f : Data.decl -> O.expression -> O.expression =
    fun d acc_exp ->
     match d with
     | Pat { binding = { old = _; fresh }; item; debug_path; data; attr } ->
@@ -240,13 +284,14 @@ let rec aggregate_scope : Data.t -> leaf:O.expression -> O.expression =
       in
       O.e_a_let_in ~loc:item.location binder item acc_exp attr
     | Mod { in_scope; _ } -> aggregate_scope in_scope ~leaf:acc_exp
+    | Incl content -> List.fold_right content ~f ~init:acc_exp
   in
   List.fold_right content ~f ~init:leaf
 
 
 and build_context : Data.t -> O.context =
  fun { content; _ } ->
-  let f : Data.decl -> O.declaration list =
+  let rec f : Data.decl -> O.declaration list =
    fun d ->
     match d with
     | Pat { binding = { old = _; fresh }; item; debug_path; data; attr } ->
@@ -260,6 +305,7 @@ and build_context : Data.t -> O.context =
       let binder = Binder.make fresh item.type_expression in
       [ Location.wrap ~loc:item.location (O.D_value { binder; expr = item; attr }) ]
     | Mod { in_scope; _ } -> build_context in_scope
+    | Incl content -> List.join (List.map ~f content)
   in
   List.join (List.map ~f content)
 
@@ -309,7 +355,15 @@ and compile_declarations : Data.t -> Data.path -> I.module_ -> Data.t =
         compile_module_expr acc_scope.env (path @ [ module_binder ]) module_
       in
       Data.add_module acc_scope module_binder rhs_glob
-    | I.D_module_include _ -> assert false
+    | I.D_module_include module_ ->
+      let data =
+        compile_module_expr
+          ~copy_content:true
+          acc_scope.env
+          (Module_var.of_input_var ~loc:decl.location "INCL" :: path)
+          module_
+      in
+      Data.include_ acc_scope data
   in
   List.fold lst ~init:init_scope ~f
 
