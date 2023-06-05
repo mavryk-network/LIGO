@@ -22,7 +22,6 @@ module type VAR = sig
   val is_ignored : t -> bool
   val add_prefix : string -> t -> t
 
-
   (* Prints vars as %s or %s#%d *)
   val pp : Format.formatter -> t -> unit
 
@@ -48,6 +47,7 @@ end
 module Module_var : sig
   include VAR
 
+  val internal_get_name_and_counter : t -> string * int
   val is_name : t -> string -> bool
 end
 

@@ -81,12 +81,18 @@ module Data = struct
     e.g. module access `A.B.x` will become variable `#A#B#x`
     IT SHOULD NEVER BE USED FOR INTERNAL COMPUTATION OR RESOLVING
   *)
-  and path = Module_var.t list
+  and path = string list
 
   let pp ppf data = Format.fprintf ppf "%a" Sexp.pp_hum (sexp_of_t data)
   let pp_env ppf data = Format.fprintf ppf "%a" Sexp.pp_hum (sexp_of_env data)
   let empty_env = { exp = []; mod_ = [] }
   let empty = { env = empty_env; content = [] }
+
+  let extend_debug_path : path -> Module_var.t -> path =
+   fun path modvar ->
+    let name, _ = Module_var.internal_get_name_and_counter modvar in
+    path @ [ name ]
+
 
   let fresh_var : Value_var.t -> path -> Value_var.t =
    fun v path ->
@@ -94,11 +100,10 @@ module Data = struct
     | [] -> v
     | _ ->
       let name, _ = Value_var.internal_get_name_and_counter v in
-      let name =
-        List.fold_right ~f:(fun s r -> Module_var.to_name_exn s ^ "#" ^ r) ~init:name path
-      in
+      let name = List.fold_right ~f:(fun s r -> s ^ "#" ^ r) ~init:name path in
       let name = "#" ^ name in
       Value_var.fresh ~loc:(Value_var.get_location v) ~name ()
+
 
   let fresh_pattern : O.ty_expr O.Pattern.t -> path -> O.ty_expr O.Pattern.t =
    fun pattern path ->
@@ -235,7 +240,7 @@ module Data = struct
           ([], new_binding) :: new_bindings, Exp { x with binding = new_binding; env }
         | Mod { name; in_ } ->
           let inner_bindings, in_ =
-            refresh ~new_bindings in_ (path @ [ name ])
+            refresh ~new_bindings in_ (extend_debug_path path name)
           in
           let mod_bindings =
             List.map ~f:(fun (mod_path, b) -> name :: mod_path, b) inner_bindings
@@ -353,16 +358,15 @@ and compile_declarations : Data.t -> Data.path -> I.module_ -> Data.t =
       Data.add_exp acc_scope exp
     | I.D_module { module_binder; module_; module_attr = _ } ->
       let rhs_glob =
-        compile_module_expr acc_scope.env (path @ [ module_binder ]) module_
+        compile_module_expr
+          acc_scope.env
+          (Data.extend_debug_path path module_binder)
+          module_
       in
       Data.add_module acc_scope module_binder rhs_glob
     | I.D_module_include module_ ->
       let data =
-        compile_module_expr
-          ~copy_content:true
-          acc_scope.env
-          (Module_var.of_input_var ~loc:decl.location "INCL" :: path)
-          module_
+        compile_module_expr ~copy_content:true acc_scope.env ("INCL" :: path) module_
       in
       Data.include_ acc_scope data
   in
@@ -498,10 +502,10 @@ and compile_expression : Data.env -> Data.path -> I.expression -> O.expression =
       let rhs_scope =
         compile_module_expr
           env
-          (Module_var.add_prefix "LOCAL#in" module_binder :: path)
+          ("LOCAL#in" :: Data.extend_debug_path path module_binder)
           rhs
       in
-      Data.add_module { env ; content = [] } module_binder rhs_scope
+      Data.add_module { env; content = [] } module_binder rhs_scope
     in
     let x = Data.resolve_path data.env [ module_binder ] in
     aggregate_scope x ~leaf:(self ~env:data.env let_result)
