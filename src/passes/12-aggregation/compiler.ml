@@ -249,7 +249,11 @@ module Data = struct
             List.map ~f:(fun (mod_path, b) -> name :: mod_path, b) inner_bindings
           in
           mod_bindings @ new_bindings, Mod { name; in_ }
-        | Incl x -> new_bindings, Incl x)
+        | Incl x ->
+          let incl_bindings, x =
+            refresh ~new_bindings { content = x; env = empty_env } path
+          in
+          incl_bindings @ new_bindings, Incl x.content)
     in
     let env = refresh_env new_bindings data.env in
     new_bindings, { content; env }
@@ -259,6 +263,7 @@ module Data = struct
 
   let include_ : t -> t -> t =
    fun data to_include ->
+    (* TODO: would be smart to use map .. ughh .. *)
     let exp =
       List.filter data.env.exp ~f:(fun x ->
           not
@@ -271,7 +276,6 @@ module Data = struct
           @@ List.exists to_include.env.mod_ ~f:(fun new_ ->
                  Module_var.equal x.name new_.name))
     in
-    (* TODO mod_ .. *)
     { env = { exp = exp @ to_include.env.exp; mod_ = mod_ @ to_include.env.mod_ }
     ; content = data.content @ [ Incl to_include.content ]
     }
@@ -383,13 +387,12 @@ and compile_module_expr ?(copy_content = false)
   | M_variable v ->
     let res = Data.resolve_path env [ v ] in
     if copy_content
-    then Data.refresh res (Data.extend_debug_path path v)
+    then Data.refresh res path
     else { res with content = [] }
   | M_module_path m_path ->
-    let m_path = List.Ne.to_list m_path in
-    let res = Data.resolve_path env m_path in
+    let res = Data.resolve_path env (List.Ne.to_list m_path) in
     if copy_content
-    then Data.refresh res (Data.extend_debug_paths path m_path)
+    then Data.refresh res path
     else { res with content = [] }
 
 
