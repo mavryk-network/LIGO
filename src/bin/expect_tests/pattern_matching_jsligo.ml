@@ -36,10 +36,13 @@ let%expect_test _ =
     File "../../test/contracts/negative/pattern_match2.jsligo", line 2, character 2 to line 5, character 4:
       1 | let test_foo = (x : test_exec_result) : string => {
       2 |   match(x, {
+            ^^^^^^^^^^
       3 |     Success: () => "",
-                       ^^
+          ^^^^^^^^^^^^^^^^^^^^^^
       4 |     Fail: (_ : test_exec_error) => ""
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       5 |   });
+          ^^^^
       6 | }
 
     Invalid type(s)
