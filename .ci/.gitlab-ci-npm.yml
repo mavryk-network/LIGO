@@ -29,6 +29,7 @@ esy-windows:
     - cp ./LICENSE.md ./windows-installer
     - cp ./tools/webide-new/ligo-webide-frontend/ligo-ide/public/favicon.ico ./windows-installer
     - cd windows-installer; makensis .\WindowsInstaller.nsi; mv ligo_installer.exe ../ligo_installer.exe ; cd ..
+    - ./scripts/signInstallerWithTestCertificates.ps1
     - bash -c "esy release || esy release || esy release"
     - git submodule foreach --recursive git reset --hard; git submodule update --init --recursive # ensure previously applied patch is removed
     - mv _release platform-windows-x64
