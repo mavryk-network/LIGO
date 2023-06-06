@@ -242,9 +242,11 @@ let%expect_test _ =
     File "../../test/contracts/negative//deep_pattern_matching/pm_fail13.mligo", line 5, character 3 to line 7, character 22:
       4 |  let stor =
       5 |    match p with
+             ^^^^^^^^^^^^^
       6 |    | Increment n -> s +1
+          ^^^^^^^^^^^^^^^^^^^^^^^^
       7 |    | Decrement -> s -1
-               ^^^^^^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^
       8 |  in ([] : operation list), stor
 
     Invalid type(s)
