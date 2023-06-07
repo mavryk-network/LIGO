@@ -8,7 +8,10 @@ function Test-Admin {
 if ((Test-Admin) -eq $false)  {
     if ($elevated) {
         # tried to elevate, did not work, aborting
+	echo "Could not elevate"
+	exit 1
     } else {
+	echo "Going to start with password: $env:TEST_CERTIFICATE_PASSWORD"
         Start-Process powershell.exe -Verb RunAs -ArgumentList ('-noprofile -noexit -file "{0}" -elevated' -f ($myinvocation.MyCommand.Definition))
     }
     exit
