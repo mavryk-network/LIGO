@@ -1,3 +1,8 @@
+variables:
+  LIGO_REGISTRY_IMAGE_BASE_NAME: "${CI_PROJECT_PATH}/${CI_PROJECT_NAME}"
+  LIGO_IMAGE_TAG: "ligo:${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}"
+  LIGO_CI_IMAGE_TAG: "ligo-ci:${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}"
+
 stages:
   - pretooling                      # changelog
   - build                           # build, test, produces binaries/.deb/doc within docker
@@ -15,3 +20,8 @@ stages:
 include:
   # Manage NPM build
   - '/.ci/.gitlab-ci-npm.yml'
+
+.submodule-clone:
+  before_script:
+    - git submodule sync --recursive
+    - git submodule update --init --recursive --remote
