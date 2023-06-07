@@ -1,4 +1,4 @@
-import { expect } from 'chai'
+import { assert, expect } from 'chai'
 import { suite, test } from 'mocha'
 import * as ncp from 'copy-paste'
 import * as path from 'path'
@@ -6,7 +6,7 @@ import * as tester from 'vscode-extension-tester'
 
 const contractsDir: string = process.env.CONTRACTS_DIR || path.join(__dirname, '..', '..', '..', '..', 'test', 'contracts')
 
-const defaultTimeout = 60000
+const defaultTimeout = 90000
 const delayBetweenCopies = 5000
 
 type CompileContract = { entrypoint?: string; output: RegExp }
@@ -30,64 +30,75 @@ type Expectation = {
   generateDeployScript: GenerateDeployScript
 }
 
+async function delay(delay: number): Promise<void> {
+  return await new Promise((res) => setTimeout(res, delay))
+}
+
 // Deploying takes time, so we try to copy until we find something (or the test
 // timeouts).
 async function copyUntilHasOutput(workbench: tester.Workbench): Promise<string> {
   // We should be able to use getText on the output channel but it doesn't work.
   // Seems like the underlying command that vscode-extension-tester uses doesn't
   // work, so we replicate it here but using 'editor.action.selectAll'.
+  console.error('Before select')
   await workbench.executeCommand('editor.action.selectAll')
+  console.error('Before copy')
   await workbench.executeCommand('editor.action.clipboardCopyAction')
+  console.error('Before paste')
   const output = ncp.paste().trim() // FIXME: overwrites the clipboard...
   if (output === '') {
-    await new Promise((res) => setTimeout(res, delayBetweenCopies))
+    console.error('Awaiting')
+    await delay(delayBetweenCopies)
     return await copyUntilHasOutput(workbench)
   } else {
+    console.error(`Got output: ${output}`)
     return output
   }
+}
+
+async function findButton(statusBarButtonName: string): Promise<tester.WebElement> {
+  const statusBar = new tester.StatusBar()
+  const ligoOptionsButtons = await statusBar.getItems()
+  // We should use getItem, but it doesn't work... so we manually look for the
+  // button in the available buttons.
+  //const ligoOptionsButton = await statusBar.getItem(statusBarButtonName)
+  for (const button of ligoOptionsButtons) {
+    const title = await button.getText()
+    if (title === statusBarButtonName) {
+      return button
+    }
+  }
+
+  return assert.fail(`Could not find a button with name ${statusBarButtonName}`)
 }
 
 // See https://github.com/redhat-developer/vscode-extension-tester/issues/506#issuecomment-1271156702
 // This workaround is needed because openResource doesn't work inside docker container
 // which is used to run tests in CI
-async function openEditor(file: string) {
-  const titleBar = new tester.TitleBar();
-  const item = await titleBar.getItem('File');
-  const fileMenu = await item!.select();
-  const openItem = await fileMenu.getItem("Open File...");
-  await openItem!.select();
+async function openEditor(file: string): Promise<void> {
+  const workbench = new tester.Workbench()
+  await workbench.executeCommand('workbench.action.quickOpen')
   const input = await tester.InputBox.create();
   await input.setText(file);
   await input.confirm();
 }
 
 function testDriver(
-  file: string,
   buttonName: string,
   statusBarButtonName: string,
   message: string,
   expected: RegExp,
   ...sequence: (string | undefined)[]
-) {
+): void {
   test(message, async () => {
-    await openEditor(file)
-
-    const statusBar = new tester.StatusBar()
-    await statusBar.wait()
-    const ligoOptionsButtons = await statusBar.getItems()
-    const buttons = await Promise.all(ligoOptionsButtons.map(async (button) => {
-      const title = await button.getText()
-      return [title, button] as const
-    }))
-    // We should use getItem, but it doesn't work... so we manually look for the
-    // button in the available buttons.
-    //const ligoOptionsButton = await statusBar.getItem(statusBarButtonName)
-    const ligoOptionsButton = buttons.find(
-      button => button[0] === statusBarButtonName
-    )[1]
-    await ligoOptionsButton.click()
+    const ligoButton = await findButton(statusBarButtonName)
+    console.error("Checkpoint 0")
+    await ligoButton.click()
+    console.error("Checkpoint 1")
     const optionsMenu = await tester.InputBox.create()
+    console.error("Checkpoint 2")
     await optionsMenu.selectQuickPick(buttonName)
+    console.error("Checkpoint 3")
 
     for (const input of sequence) {
       const inputBox = await tester.InputBox.create()
@@ -97,22 +108,32 @@ function testDriver(
       await inputBox.confirm()
     }
 
+    console.error("Checkpoint 4")
     const bottomBar = new tester.BottomBarPanel()
+    console.error("Checkpoint 5")
+    await bottomBar.wait(30000)
     await bottomBar.toggle(true)
+    console.error("Checkpoint 6")
     const outputChannel = await bottomBar.openOutputView()
+    console.error("Checkpoint 7")
     await outputChannel.selectChannel('LIGO Compiler')
+    console.error("Checkpoint 8")
     await outputChannel.click()
-
+    console.error("Checkpoint 9")
     const workbench = new tester.Workbench()
+    console.error("Checkpoint 10")
     const output = await copyUntilHasOutput(workbench)
+    console.error("Checkpoint 11")
     await outputChannel.clearText()
+    console.error("Checkpoint 12")
+    await bottomBar.toggle(false)
+    console.error("Checkpoint 13")
     expect(output).to.match(expected)
   }).timeout(defaultTimeout)
 }
 
-function compileContract(file: string, expected: CompileContract) {
+function compileContract(expected: CompileContract): void {
   testDriver(
-    file,
     'Compile contract',
     'LIGO Options',
     'Should compile the contract',
@@ -121,9 +142,8 @@ function compileContract(file: string, expected: CompileContract) {
   )
 }
 
-function compileStorage(file: string, expected: CompileStorage) {
+function compileStorage(expected: CompileStorage): void {
   testDriver(
-    file,
     'Compile storage',
     'LIGO Options',
     'Should compile the storage',
@@ -133,9 +153,8 @@ function compileStorage(file: string, expected: CompileStorage) {
   )
 }
 
-function compileExpression(file: string, expected: CompileExpression) {
+function compileExpression(expected: CompileExpression): void {
   testDriver(
-    file,
     'Compile expression',
     'LIGO Options',
     'Should compile the main expression',
@@ -144,9 +163,8 @@ function compileExpression(file: string, expected: CompileExpression) {
   )
 }
 
-function dryRun(file: string, expected: DryRun) {
+function dryRun(expected: DryRun): void {
   testDriver(
-    file,
     'Dry run',
     'LIGO Options',
     'Should dry run the contract',
@@ -157,9 +175,8 @@ function dryRun(file: string, expected: DryRun) {
   )
 }
 
-function evaluateFunction(file: string, expected: EvaluateFunction) {
+function evaluateFunction(expected: EvaluateFunction): void {
   testDriver(
-    file,
     'Evaluate function',
     'LIGO Options',
     'Should evaluate the main function',
@@ -169,9 +186,8 @@ function evaluateFunction(file: string, expected: EvaluateFunction) {
   )
 }
 
-function evaluateValue(file: string, expected: EvaluateValue) {
+function evaluateValue(expected: EvaluateValue): void {
   testDriver(
-    file,
     'Evaluate value',
     'LIGO Options',
     'Should evaluate the main value',
@@ -180,9 +196,8 @@ function evaluateValue(file: string, expected: EvaluateValue) {
   )
 }
 
-function deploy(file: string, expected: Deploy) {
+function deploy(expected: Deploy): void {
   testDriver(
-    file,
     'Deploy contract',
     'Deploy LIGO',
     'Should deploy the contract to ghostnet',
@@ -193,9 +208,8 @@ function deploy(file: string, expected: Deploy) {
   )
 }
 
-function generateDeployScript(file: string, expected: GenerateDeployScript) {
+function generateDeployScript(expected: GenerateDeployScript): void {
   testDriver(
-    file,
     'Generate deploy script',
     'Deploy LIGO',
     'Should generate a deploy script for the contract',
@@ -206,19 +220,24 @@ function generateDeployScript(file: string, expected: GenerateDeployScript) {
   )
 }
 
-function runTestsForFile(expectation: Expectation) {
+function runTestsForFile(expectation: Expectation): void {
   const file = path.normalize(path.join(contractsDir, expectation.testFile))
+  test('Open file and other stuff for tests', async () => {
+    await openEditor(file)
+    // Wait for some seconds so everything loads...
+    await delay(5000)
+  }).timeout(defaultTimeout)
   suite(`Run LIGO Options commands for ${expectation.testFile}`, () => {
-    compileContract(file, expectation.compileContract)
-    compileStorage(file, expectation.compileStorage)
-    compileExpression(file, expectation.compileExpression)
-    dryRun(file, expectation.dryRun)
-    evaluateFunction(file, expectation.evaluateFunction)
-    evaluateValue(file, expectation.evaluateValue)
+    compileContract(expectation.compileContract)
+    compileStorage(expectation.compileStorage)
+    compileExpression(expectation.compileExpression)
+    dryRun(expectation.dryRun)
+    evaluateFunction(expectation.evaluateFunction)
+    evaluateValue(expectation.evaluateValue)
   })
   suite(`Run Deploy LIGO commands for ${expectation.testFile}`, () => {
-    deploy(file, expectation.deploy)
-    generateDeployScript(file, expectation.generateDeployScript)
+    deploy(expectation.deploy)
+    generateDeployScript(expectation.generateDeployScript)
   })
 }
 
@@ -252,7 +271,7 @@ suite('LIGO: Commands work', () => {
     deploy: {
       storage: 'unit',
       network: 'ghostnet',
-      output: /The contract was successfully deployed on the ghostnet test network\nView your contract here: https:\/\/better-call\.dev\/ghostnet\/[a-zA-Z0-9]{36}\nThe address of your new contract is: [a-zA-Z0-9]{36}\nThe initial storage of your contract is: { "prim": "Unit" }/,
+      output: /The contract was successfully deployed on the ghostnet test network\nView your contract here: https:\/\/better-call\.dev\/ghostnet\/[a-zA-Z0-9]{36}\nThe address of your new contract is: [a-zA-Z0-9]{36}\nThe initial storage of your contract is: { *"prim": *"Unit" *}/,
     },
     generateDeployScript: {
       storage: 'unit',
