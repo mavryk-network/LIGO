@@ -74,256 +74,256 @@ to_dos:
     paths:
       - to-dos.html
 
-# TODO: https://docs.gitlab.com/ee/ci/yaml/#onlychangesexceptchanges ?
-docker_build:
-  stage: build
-  rules:
-    - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "ligolang/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
-      when: always
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-  needs:
-    - job: changelog
-      artifacts: true
-  script:
-    - git submodule update --init --recursive # because of a gitlab caching issue
-    # Because JSOO artifacts are only present in ligo-builder stage.
-    # ligo-builder stage is discarded during the creation of ligo image for consumers
-    # so that we can offer them a leaner image with just necessary ligo tools
-    - DOCKER_BUILDKIT=1 docker build .
-      --build-arg=ci_commit_tag=$CI_COMMIT_TAG
-      --build-arg=ci_commit_sha=$CI_COMMIT_SHA
-      --build-arg=ci_commit_timestamp=$CI_COMMIT_TIMESTAMP
-      --build-arg=changelog_path=changelog.txt
-      --target ligo-builder
-      -t ${LIGO_IMAGE_TAG}-builder
-    - DOCKER_BUILDKIT=1 docker build .
-      --build-arg=ci_commit_tag=$CI_COMMIT_TAG
-      --build-arg=ci_commit_sha=$CI_COMMIT_SHA
-      --build-arg=ci_commit_timestamp=$CI_COMMIT_TIMESTAMP
-      --build-arg=changelog_path=changelog.txt
-      -t ${LIGO_IMAGE_TAG} --target ligo
-    # Copy JSOO PoC IDE
-    - docker cp $(docker create ${LIGO_IMAGE_TAG}-builder):/ligo/npm ./ligo-npm
-    - docker cp $(docker create ${LIGO_IMAGE_TAG}-builder):/ligo/jsoo/dist ./ligo-demo-ide
-    - DOCKER_BUILDKIT=1 docker build .
-      --build-arg=ci_commit_tag=$CI_COMMIT_TAG
-      --build-arg=ci_commit_sha=$CI_COMMIT_SHA
-      --build-arg=ci_commit_timestamp=$CI_COMMIT_TIMESTAMP
-      --build-arg=changelog_path=changelog.txt
-      -t ${LIGO_CI_IMAGE_TAG} --target ligo-ci
-    - docker save -o ligo.tar.gz ${LIGO_IMAGE_TAG}
-    - docker save -o ligo_ci.tar.gz ${LIGO_CI_IMAGE_TAG}
-  after_script:
-    - docker image rm "${LIGO_IMAGE_TAG}" >/dev/null 2>&1 || true
-  artifacts:
-    expose_as: "Ligo docker image - light -"
-    paths:
-      - ligo-npm
-      - ligo-demo-ide
-      - ligo.tar.gz
-      - ligo_ci.tar.gz
+# # TODO: https://docs.gitlab.com/ee/ci/yaml/#onlychangesexceptchanges ?
+# docker_build:
+#   stage: build
+#   rules:
+#     - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "ligolang/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
+#       when: always
+#     - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       when: always
+#     - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       when: always
+#     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       when: always
+#   needs:
+#     - job: changelog
+#       artifacts: true
+#   script:
+#     - git submodule update --init --recursive # because of a gitlab caching issue
+#     # Because JSOO artifacts are only present in ligo-builder stage.
+#     # ligo-builder stage is discarded during the creation of ligo image for consumers
+#     # so that we can offer them a leaner image with just necessary ligo tools
+#     - DOCKER_BUILDKIT=1 docker build .
+#       --build-arg=ci_commit_tag=$CI_COMMIT_TAG
+#       --build-arg=ci_commit_sha=$CI_COMMIT_SHA
+#       --build-arg=ci_commit_timestamp=$CI_COMMIT_TIMESTAMP
+#       --build-arg=changelog_path=changelog.txt
+#       --target ligo-builder
+#       -t ${LIGO_IMAGE_TAG}-builder
+#     - DOCKER_BUILDKIT=1 docker build .
+#       --build-arg=ci_commit_tag=$CI_COMMIT_TAG
+#       --build-arg=ci_commit_sha=$CI_COMMIT_SHA
+#       --build-arg=ci_commit_timestamp=$CI_COMMIT_TIMESTAMP
+#       --build-arg=changelog_path=changelog.txt
+#       -t ${LIGO_IMAGE_TAG} --target ligo
+#     # Copy JSOO PoC IDE
+#     - docker cp $(docker create ${LIGO_IMAGE_TAG}-builder):/ligo/npm ./ligo-npm
+#     - docker cp $(docker create ${LIGO_IMAGE_TAG}-builder):/ligo/jsoo/dist ./ligo-demo-ide
+#     - DOCKER_BUILDKIT=1 docker build .
+#       --build-arg=ci_commit_tag=$CI_COMMIT_TAG
+#       --build-arg=ci_commit_sha=$CI_COMMIT_SHA
+#       --build-arg=ci_commit_timestamp=$CI_COMMIT_TIMESTAMP
+#       --build-arg=changelog_path=changelog.txt
+#       -t ${LIGO_CI_IMAGE_TAG} --target ligo-ci
+#     - docker save -o ligo.tar.gz ${LIGO_IMAGE_TAG}
+#     - docker save -o ligo_ci.tar.gz ${LIGO_CI_IMAGE_TAG}
+#   after_script:
+#     - docker image rm "${LIGO_IMAGE_TAG}" >/dev/null 2>&1 || true
+#   artifacts:
+#     expose_as: "Ligo docker image - light -"
+#     paths:
+#       - ligo-npm
+#       - ligo-demo-ide
+#       - ligo.tar.gz
+#       - ligo_ci.tar.gz
 
-docker_extract:
-  stage: docker-extract
-  rules:
-    - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "ligolang/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
-      when: always
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-  needs:
-    - job: docker_build
-      artifacts: true
-  script:
-    - docker load -i ligo.tar.gz
-    - docker cp $(docker create ${LIGO_IMAGE_TAG}):/root/ligo .
-    - chmod +rwx ligo
-    # Check that the binary is truly static and has 0 dependencies
-    # previous command, but it seems statically meant something a bit different.
-    # - ldd ligo | grep 'statically' # TODO: there is maybe a better way to do that ?
-    # the string depends on ldd...
-    - if ! ldd ligo; then echo "ldd failed, i.e. expecting that it is statically linked."; else echo "Expected ldd ligo to fail (not a dynamic executable)."; fi
-    - docker cp -La $(docker create ${LIGO_IMAGE_TAG}):/root/doc .
-    - docker cp $(docker create ${LIGO_IMAGE_TAG}):/root/highlighting ./highlighting
-    # Generate ligo.deb
-    - ./scripts/create-package-deb-file.sh
-  after_script:
-    - docker image rm -f "${LIGO_IMAGE_TAG}" >/dev/null 2>&1 || true
-  artifacts:
-    paths:
-      - ligo
-      - ligo.deb
-      - doc
-      - highlighting
+# docker_extract:
+#   stage: docker-extract
+#   rules:
+#     - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "ligolang/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
+#       when: always
+#     - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       when: always
+#     - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       when: always
+#     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       when: always
+#   needs:
+#     - job: docker_build
+#       artifacts: true
+#   script:
+#     - docker load -i ligo.tar.gz
+#     - docker cp $(docker create ${LIGO_IMAGE_TAG}):/root/ligo .
+#     - chmod +rwx ligo
+#     # Check that the binary is truly static and has 0 dependencies
+#     # previous command, but it seems statically meant something a bit different.
+#     # - ldd ligo | grep 'statically' # TODO: there is maybe a better way to do that ?
+#     # the string depends on ldd...
+#     - if ! ldd ligo; then echo "ldd failed, i.e. expecting that it is statically linked."; else echo "Expected ldd ligo to fail (not a dynamic executable)."; fi
+#     - docker cp -La $(docker create ${LIGO_IMAGE_TAG}):/root/doc .
+#     - docker cp $(docker create ${LIGO_IMAGE_TAG}):/root/highlighting ./highlighting
+#     # Generate ligo.deb
+#     - ./scripts/create-package-deb-file.sh
+#   after_script:
+#     - docker image rm -f "${LIGO_IMAGE_TAG}" >/dev/null 2>&1 || true
+#   artifacts:
+#     paths:
+#       - ligo
+#       - ligo.deb
+#       - doc
+#       - highlighting
 
-check-generated-highlighting:
-  stage: tooling
-  dependencies:
-    - docker_extract
-  script:
-    - scripts/diff_dir.sh highlighting/emacs tools/emacs
-    - scripts/diff_dir.sh highlighting/vim/ftdetect tools/vim/ligo/start/ligo/ftdetect
-    - scripts/diff_dir.sh highlighting/vim/plugin tools/vim/ligo/start/ligo/plugin
-    - scripts/diff_dir.sh highlighting/vim/syntax tools/vim/ligo/start/ligo/syntax
-    - scripts/diff_dir.sh highlighting/vscode tools/vscode/syntaxes
-    - scripts/diff_dir.sh highlighting/textmate tools/ligo-syntax-highlighting/textmate
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes:
-        - tools/ligo-syntax-highlighting/**/*
-      when: always
+# check-generated-highlighting:
+#   stage: tooling
+#   dependencies:
+#     - docker_extract
+#   script:
+#     - scripts/diff_dir.sh highlighting/emacs tools/emacs
+#     - scripts/diff_dir.sh highlighting/vim/ftdetect tools/vim/ligo/start/ligo/ftdetect
+#     - scripts/diff_dir.sh highlighting/vim/plugin tools/vim/ligo/start/ligo/plugin
+#     - scripts/diff_dir.sh highlighting/vim/syntax tools/vim/ligo/start/ligo/syntax
+#     - scripts/diff_dir.sh highlighting/vscode tools/vscode/syntaxes
+#     - scripts/diff_dir.sh highlighting/textmate tools/ligo-syntax-highlighting/textmate
+#   rules:
+#     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+#       changes:
+#         - tools/ligo-syntax-highlighting/**/*
+#       when: always
 
-.docker-image:
-  stage: push
-  image: docker:19.03.5
-  services:
-    - docker:19.03.5-dind
+# .docker-image:
+#   stage: push
+#   image: docker:19.03.5
+#   services:
+#     - docker:19.03.5-dind
 
-docker_push_ligo:
-  stage: push
-  extends: .docker-image
-  dependencies:
-    - docker_build
-  needs:
-    - docker_build
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-  script:
-    - echo ${LIGO_REGISTRY_PASSWORD} | docker login -u ${LIGO_REGISTRY_USER} --password-stdin
-    - docker load -i=./ligo.tar.gz
-    - if test "$CI_COMMIT_REF_NAME" = "dev"; then export LIGO_TAG=next; else if echo "$CI_COMMIT_TAG" | grep -E "[0-9]+\.[0-9]+\.[0-9]+"; then export LIGO_TAG="$CI_COMMIT_TAG"; else export LIGO_TAG=next-attempt; fi; fi
-    - export LIGO_REGISTRY_FULL_NAME="ligolang/ligo:$LIGO_TAG"
-    - docker tag "${LIGO_IMAGE_TAG}" "${LIGO_REGISTRY_FULL_NAME}"
-    - docker push "${LIGO_REGISTRY_FULL_NAME}"
-  after_script:
-    - docker image rm "${LIGO_IMAGE_TAG}" >/dev/null 2>&1 || true
+# docker_push_ligo:
+#   stage: push
+#   extends: .docker-image
+#   dependencies:
+#     - docker_build
+#   needs:
+#     - docker_build
+#   rules:
+#     - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       when: always
+#     - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       when: always
+#   script:
+#     - echo ${LIGO_REGISTRY_PASSWORD} | docker login -u ${LIGO_REGISTRY_USER} --password-stdin
+#     - docker load -i=./ligo.tar.gz
+#     - if test "$CI_COMMIT_REF_NAME" = "dev"; then export LIGO_TAG=next; else if echo "$CI_COMMIT_TAG" | grep -E "[0-9]+\.[0-9]+\.[0-9]+"; then export LIGO_TAG="$CI_COMMIT_TAG"; else export LIGO_TAG=next-attempt; fi; fi
+#     - export LIGO_REGISTRY_FULL_NAME="ligolang/ligo:$LIGO_TAG"
+#     - docker tag "${LIGO_IMAGE_TAG}" "${LIGO_REGISTRY_FULL_NAME}"
+#     - docker push "${LIGO_REGISTRY_FULL_NAME}"
+#   after_script:
+#     - docker image rm "${LIGO_IMAGE_TAG}" >/dev/null 2>&1 || true
 
-docker_push_ligo_ci:
-  stage: push
-  extends: .docker-image
-  dependencies:
-    - docker_build
-  needs:
-    - docker_build
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-  script:
-    - echo ${LIGO_REGISTRY_PASSWORD} | docker login -u ${LIGO_REGISTRY_USER} --password-stdin
-    - docker load -i=./ligo_ci.tar.gz
-    - if test "$CI_COMMIT_REF_NAME" = "dev"; then export LIGO_TAG=next; else if echo "$CI_COMMIT_TAG" | grep -E "[0-9]+\.[0-9]+\.[0-9]+"; then export LIGO_TAG="$CI_COMMIT_TAG"; else export LIGO_TAG=next-attempt; fi; fi
-    - export LIGO_REGISTRY_FULL_NAME="ligolang/ligo_ci:$LIGO_TAG"
-    - docker tag "${LIGO_CI_IMAGE_TAG}" "${LIGO_REGISTRY_FULL_NAME}"
-    - docker push "${LIGO_REGISTRY_FULL_NAME}"
-  after_script:
-    - docker image rm "${LIGO_CI_IMAGE_TAG}" >/dev/null 2>&1 || true
+# docker_push_ligo_ci:
+#   stage: push
+#   extends: .docker-image
+#   dependencies:
+#     - docker_build
+#   needs:
+#     - docker_build
+#   rules:
+#     - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       when: always
+#     - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       when: always
+#   script:
+#     - echo ${LIGO_REGISTRY_PASSWORD} | docker login -u ${LIGO_REGISTRY_USER} --password-stdin
+#     - docker load -i=./ligo_ci.tar.gz
+#     - if test "$CI_COMMIT_REF_NAME" = "dev"; then export LIGO_TAG=next; else if echo "$CI_COMMIT_TAG" | grep -E "[0-9]+\.[0-9]+\.[0-9]+"; then export LIGO_TAG="$CI_COMMIT_TAG"; else export LIGO_TAG=next-attempt; fi; fi
+#     - export LIGO_REGISTRY_FULL_NAME="ligolang/ligo_ci:$LIGO_TAG"
+#     - docker tag "${LIGO_CI_IMAGE_TAG}" "${LIGO_REGISTRY_FULL_NAME}"
+#     - docker push "${LIGO_REGISTRY_FULL_NAME}"
+#   after_script:
+#     - docker image rm "${LIGO_CI_IMAGE_TAG}" >/dev/null 2>&1 || true
 
-xrefcheck:
-  stage: tooling
-  needs:
-    - job: changelog
-      artifacts: true
-  script:
-    - wget https://github.com/serokell/xrefcheck/releases/download/v0.2.2/xrefcheck-x86_64-linux --no-verbose -O xrefcheck
-    - chmod 777 ./xrefcheck
-    - ./xrefcheck
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-  allow_failure: true
+# xrefcheck:
+#   stage: tooling
+#   needs:
+#     - job: changelog
+#       artifacts: true
+#   script:
+#     - wget https://github.com/serokell/xrefcheck/releases/download/v0.2.2/xrefcheck-x86_64-linux --no-verbose -O xrefcheck
+#     - chmod 777 ./xrefcheck
+#     - ./xrefcheck
+#   rules:
+#     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       when: always
+#   allow_failure: true
 
-.website:
-  stage: push
-  tags:
-    - docker
-  image: node:16.17.0-buster
-  needs:
-    - job: changelog
-      artifacts: true
-  script:
-    - export DOC_PATH=./gitlab-pages/docs
-    - export WEBSITE_PATH=./gitlab-pages/website
-    - cp -f ./changelog.md $DOC_PATH/intro/changelog.md
-    - export LATEST_VERSION=$(ls -1r $WEBSITE_PATH/versioned_docs | sed -n '1p')
-    - echo $LATEST_VERSION
-    - cp -f ./changelog.md $WEBSITE_PATH/versioned_docs/$LATEST_VERSION/intro/changelog.md
-    - npm --prefix $WEBSITE_PATH ci
-    - npm --prefix $WEBSITE_PATH run build
-    - cp -Lr --no-preserve=mode,ownership,timestamps $WEBSITE_PATH/build public
-    - touch to-dos.html; cp to-dos.html public/to-dos.html
-  artifacts:
-    paths:
-      - public
+# .website:
+#   stage: push
+#   tags:
+#     - docker
+#   image: node:16.17.0-buster
+#   needs:
+#     - job: changelog
+#       artifacts: true
+#   script:
+#     - export DOC_PATH=./gitlab-pages/docs
+#     - export WEBSITE_PATH=./gitlab-pages/website
+#     - cp -f ./changelog.md $DOC_PATH/intro/changelog.md
+#     - export LATEST_VERSION=$(ls -1r $WEBSITE_PATH/versioned_docs | sed -n '1p')
+#     - echo $LATEST_VERSION
+#     - cp -f ./changelog.md $WEBSITE_PATH/versioned_docs/$LATEST_VERSION/intro/changelog.md
+#     - npm --prefix $WEBSITE_PATH ci
+#     - npm --prefix $WEBSITE_PATH run build
+#     - cp -Lr --no-preserve=mode,ownership,timestamps $WEBSITE_PATH/build public
+#     - touch to-dos.html; cp to-dos.html public/to-dos.html
+#   artifacts:
+#     paths:
+#       - public
 
-pages:
-  extends: .website
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      changes:
-        - gitlab-pages/**/*
-        - changelog/*
+# pages:
+#   extends: .website
+#   rules:
+#     - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       changes:
+#         - gitlab-pages/**/*
+#         - changelog/*
 
-pages-attempt:
-  extends: .website
-  needs:
-    - job: changelog
-      artifacts: true
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes:
-        - gitlab-pages/**/*
-        - changelog/*
-      when: on_success
+# pages-attempt:
+#   extends: .website
+#   needs:
+#     - job: changelog
+#       artifacts: true
+#   rules:
+#     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+#       changes:
+#         - gitlab-pages/**/*
+#         - changelog/*
+#       when: on_success
 
-algolia-crawl:
-  stage: push
-  needs:
-    - job: pages
-  script:
-    # We want to trigger the job after page:deploy to reindex the website but job can't depends on page:deploy. So we put a artificial sleep of 10 seconds before triggering algolia crawler to be sure that it'll works
-    - |
-      sleep 20
-      curl -X post  -H "Content-Type: application/json" --user ${ALGOLIA_CRAWLER_ID}:${ALGOLIA_CRAWLER_TOKEN} https://crawler.algolia.com/api/1/crawlers/bb0597ba-5abc-45ba-bdf9-99f8152e87b0/reindex
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      changes:
-        - gitlab-pages/**/*
-      when: on_success
+# algolia-crawl:
+#   stage: push
+#   needs:
+#     - job: pages
+#   script:
+#     # We want to trigger the job after page:deploy to reindex the website but job can't depends on page:deploy. So we put a artificial sleep of 10 seconds before triggering algolia crawler to be sure that it'll works
+#     - |
+#       sleep 20
+#       curl -X post  -H "Content-Type: application/json" --user ${ALGOLIA_CRAWLER_ID}:${ALGOLIA_CRAWLER_TOKEN} https://crawler.algolia.com/api/1/crawlers/bb0597ba-5abc-45ba-bdf9-99f8152e87b0/reindex
+#   rules:
+#     - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       changes:
+#         - gitlab-pages/**/*
+#       when: on_success
 
-deploy_website_preview:
-  stage: deploy
-  image: node:16.17.0-buster
-  tags:
-    - docker
-  needs:
-    - job: pages-attempt
-      artifacts: true
-  script:
-    - apt-get update
-    - apt-get install -y --no-install-recommends jq
-    - npm install netlify-cli
-    - npx netlify deploy --site $NETLIFY_SITE_ID_LIGOLANG --dir=./public --auth $NETLIFY_AUTH_TOKEN --json --alias="$CI_MERGE_REQUEST_IID-$CI_COMMIT_SHORT_SHA" > netlify.json
-    - export NETLIFY_DEPLOY_URL=$(jq -r .deploy_url netlify.json)
-    - export NETLIFY_DEPLOY_LOGS=$(jq -r .logs netlify.json)
-    - echo "The URL for this deployment is $NETLIFY_DEPLOY_URL"
-    - echo "Logs for this deployment can be found at $NETLIFY_DEPLOY_LOGS"
-    - ./.ci/scripts/publish_preview_as_MR_comment.sh $CI_PROJECT_ID $CI_MERGE_REQUEST_IID $GITLAB_PERSONAL_API_PRIVATE_TOKEN "A new deploy preview is available on Netlify at $NETLIFY_DEPLOY_URL, you can view the logs at $NETLIFY_DEPLOY_LOGS" "ligolang-bot" "ligolang.netlify"
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes:
-        - gitlab-pages/**/*
-        - changelog/*
-      when: on_success
+# deploy_website_preview:
+#   stage: deploy
+#   image: node:16.17.0-buster
+#   tags:
+#     - docker
+#   needs:
+#     - job: pages-attempt
+#       artifacts: true
+#   script:
+#     - apt-get update
+#     - apt-get install -y --no-install-recommends jq
+#     - npm install netlify-cli
+#     - npx netlify deploy --site $NETLIFY_SITE_ID_LIGOLANG --dir=./public --auth $NETLIFY_AUTH_TOKEN --json --alias="$CI_MERGE_REQUEST_IID-$CI_COMMIT_SHORT_SHA" > netlify.json
+#     - export NETLIFY_DEPLOY_URL=$(jq -r .deploy_url netlify.json)
+#     - export NETLIFY_DEPLOY_LOGS=$(jq -r .logs netlify.json)
+#     - echo "The URL for this deployment is $NETLIFY_DEPLOY_URL"
+#     - echo "Logs for this deployment can be found at $NETLIFY_DEPLOY_LOGS"
+#     - ./.ci/scripts/publish_preview_as_MR_comment.sh $CI_PROJECT_ID $CI_MERGE_REQUEST_IID $GITLAB_PERSONAL_API_PRIVATE_TOKEN "A new deploy preview is available on Netlify at $NETLIFY_DEPLOY_URL, you can view the logs at $NETLIFY_DEPLOY_LOGS" "ligolang-bot" "ligolang.netlify"
+#   rules:
+#     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+#       changes:
+#         - gitlab-pages/**/*
+#         - changelog/*
+#       when: on_success
