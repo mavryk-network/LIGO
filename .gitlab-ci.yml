@@ -43,36 +43,36 @@ include:
     - find "$CI_PROJECT_DIR" -path "$CI_PROJECT_DIR/.git" -prune -o "(" -type d -a -not -perm -u=w ")" -exec chmod --verbose u+w {} ";"
     - export COMMIT_DATE="$(git show --no-patch --format=%ci)"
 
-changelog:
-  stage: pretooling
-  script:
-    - ./scripts/changelog-generation.sh
-  rules:
-    - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "ligolang/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
-      when: always
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-  artifacts:
-    paths:
-      - changelog.md
-      - changelog.txt
-      - release-notes.md
-      - release-notes.txt
+# changelog:
+#   stage: pretooling
+#   script:
+#     - ./scripts/changelog-generation.sh
+#   rules:
+#     - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "ligolang/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
+#       when: always
+#     - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       when: always
+#     - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       when: always
+#     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       when: always
+#   artifacts:
+#     paths:
+#       - changelog.md
+#       - changelog.txt
+#       - release-notes.md
+#       - release-notes.txt
 
-to_dos:
-  stage: pretooling
-  only:
-    - merge_requests
-    - /^.*-run-dev$/
-  script:
-    - ./scripts/list-to-dos.sh > to-dos.html
-  artifacts:
-    paths:
-      - to-dos.html
+# to_dos:
+#   stage: pretooling
+#   only:
+#     - merge_requests
+#     - /^.*-run-dev$/
+#   script:
+#     - ./scripts/list-to-dos.sh > to-dos.html
+#   artifacts:
+#     paths:
+#       - to-dos.html
 
 # TODO: https://docs.gitlab.com/ee/ci/yaml/#onlychangesexceptchanges ?
 docker_build:
