@@ -281,16 +281,7 @@ let%expect_test _ =
     Content: : |record[x -> int , y -> int]|
     references:
       File "../../test/contracts/warning_unused.mligo", line 9, characters 22-29
-    Module definitions:
-    Warnings:
-    File "../../test/contracts/warning_unused.mligo", line 11, characters 6-7:
-     10 |   let x = s.x + 3 in
-     11 |   let x = foo x in
-                ^
-     12 |   let x = bar s.x in
-    :
-    Warning: unused variable "x".
-    Hint: replace it by "_x" to prevent this warning. |}];
+    Module definitions: |}];
   run_ligo_good
     [ "info"
     ; "get-scope"

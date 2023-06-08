@@ -68,13 +68,6 @@ let test_cases =
           ; message = "Toplevel let declaration is silently changed to const declaration."
           ; range = Some (interval 0 0 10)
           }
-        ; { severity = DiagnosticSeverity.Warning
-          ; message =
-              "\n\
-               Warning: unused variable \"x\".\n\
-               Hint: replace it by \"_x\" to prevent this warning.\n"
-          ; range = Some (interval 2 10 11)
-          }
         ]
     ; max_number_of_problems = None
     }
