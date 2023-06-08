@@ -5,12 +5,10 @@ open Ligo_prim
 let make_entry_point_program = Make_entry_point.program
 
 let all_program_passes ~raise ~warn_unused_rec =
-  [ Helpers.map_program @@ Recursion.remove_rec_expression ~raise ~warn_unused_rec ]
-
+  ignore raise; ignore warn_unused_rec; [ ]
 
 let all_expression_passes ~raise ~warn_unused_rec =
-  [ Helpers.map_expression @@ Recursion.remove_rec_expression ~raise ~warn_unused_rec ]
-
+  ignore raise; ignore warn_unused_rec; [ ]
 
 let contract_passes ~raise =
   ignore raise; []

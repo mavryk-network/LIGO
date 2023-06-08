@@ -120,6 +120,8 @@ let all_program
   =
   let prg = Unused.unused_map_program ~raise prg in
   let prg = Muchused.muchused_map_program ~raise prg in
+  let warn_unused_rec = options.warn_unused_rec in
+  let prg = Ast_aggregated.Helpers.map_program (Recursion.remove_rec_expression ~raise ~warn_unused_rec) prg in
   let prg = if not options.test then Remove_unused.remove_unused prg else prg in
   let prg = Ast_aggregated.Helpers.map_program Polymorphic_replace.expression prg in
   let prg =
