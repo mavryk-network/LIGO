@@ -116,13 +116,12 @@ let pp
         loc
         s
         s
-    | `Self_ast_aggregated_warning_muchused (loc, s) ->
+    | `Self_ast_aggregated_warning_muchused (loc, _s) ->
       Format.fprintf
         f
-        "@[<hv>%a:@.Warning: variable \"%s\" cannot be used more than once.\n@]"
+        "@[<hv>%a:@.Warning: variable cannot be used more than once.\n@]"
         snippet_pp
         loc
-        s
     | `Self_ast_aggregated_warning_unused_rec (loc, s) ->
       Format.fprintf
         f
@@ -275,9 +274,9 @@ let to_warning : all -> Simple_utils.Warning.t =
     in
     let content = make_content ~message ~location ~variable () in
     make ~stage:"parsing command line parameters" ~content
-  | `Self_ast_aggregated_warning_muchused (location, s) ->
+  | `Self_ast_aggregated_warning_muchused (location, _s) ->
     let message =
-      Format.sprintf "@.Warning: variable \"%s\" cannot be used more than once.\n@]" s
+      Format.sprintf "@.Warning: variable cannot be used more than once.\n@]"
     in
     let content = make_content ~message ~location () in
     make ~stage:"typer" ~content

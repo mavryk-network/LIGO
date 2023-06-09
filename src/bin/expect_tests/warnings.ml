@@ -52,7 +52,7 @@ let%expect_test _ =
               ^
     3 | end
   :
-  Warning: variable "#Foo#x#208" cannot be used more than once.
+  Warning: variable cannot be used more than once.
 
   Error(s) occurred while checking the contract:
   At (unshown) location 15, type ticket nat cannot be used here because it is not duplicable. Only duplicable types can be used with the DUP instruction and as view inputs and outputs.
@@ -74,7 +74,7 @@ let%expect_test _ =
             ^
     2 | let x = (x, x)
   :
-  Warning: variable "x" cannot be used more than once.
+  Warning: variable cannot be used more than once.
 
   Error(s) occurred while checking the contract:
   At (unshown) location 8, type option (ticket nat) cannot be used here because it is not duplicable. Only duplicable types can be used with the DUP instruction and as view inputs and outputs.
@@ -90,7 +90,7 @@ let%expect_test _ =
                 ^
     9 |   end in
   :
-  Warning: variable "#LOCAL#inB#y#214" cannot be used more than once.
+  Warning: variable cannot be used more than once.
 
   File "../../test/contracts/duplicate_ticket_local_module.mligo", line 7, characters 8-14:
     6 |   module B = struct
@@ -98,7 +98,7 @@ let%expect_test _ =
                 ^^^^^^
     8 |     let y = ticket, ticket
   :
-  Warning: variable "#LOCAL#inB#ticket#213" cannot be used more than once.
+  Warning: variable cannot be used more than once.
 
   Error(s) occurred while type checking the contract:
   Ill typed contract:
