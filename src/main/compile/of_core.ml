@@ -51,7 +51,6 @@ let typecheck_with_signature
     @@ fun ~raise ->
     Self_ast_typed.all_program
       ~raise
-      ~warn_unused_rec:options.middle_end.warn_unused_rec
       typed
   in
   let applied =
@@ -81,7 +80,6 @@ let typecheck
     @@ fun ~raise ->
     Self_ast_typed.all_program
       ~raise
-      ~warn_unused_rec:options.middle_end.warn_unused_rec
       typed
   in
   let applied =
@@ -105,13 +103,7 @@ let compile_expression
     trace ~raise checking_tracer
     @@ Checking.type_expression ~options:options.middle_end ~env:context expr
   in
-  let applied =
-    trace ~raise self_ast_typed_tracer
-    @@ Self_ast_typed.all_expression
-         ~warn_unused_rec:options.middle_end.warn_unused_rec
-         typed
-  in
-  applied
+  typed
 
 
 let apply (entry_point : Value_var.t) (param : Ast_core.expression) : Ast_core.expression =
