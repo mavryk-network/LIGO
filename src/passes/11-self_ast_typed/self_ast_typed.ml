@@ -2,8 +2,6 @@ module Errors = Errors
 module Helpers = Helpers
 open Ligo_prim
 
-let make_entry_point_program = Make_entry_point.program
-
 let all_program ~raise init =
   Make_entry_point.make_main_module ~raise init
 
