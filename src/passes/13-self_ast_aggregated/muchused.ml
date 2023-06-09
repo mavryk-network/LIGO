@@ -235,7 +235,7 @@ let muchused_map_program ~raise : program -> program = function
     in
     let _, muchused = muchused_declarations muchuse_neutral p in
     let warn_var v =
-      `Self_ast_typed_warning_muchused (V.get_location v, Format.asprintf "%a" V.pp v)
+      `Self_ast_aggregated_warning_muchused (V.get_location v, Format.asprintf "%a" V.pp v)
     in
     let () = update_annotations @@ List.map ~f:warn_var muchused in
     (p, e)

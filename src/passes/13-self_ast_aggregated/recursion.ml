@@ -14,7 +14,7 @@ let show_unused_rec_warning ~raise ~warn_unused_rec fun_name =
   if warn_unused_rec
   then
     raise.warning
-      (`Self_ast_typed_warning_unused_rec
+      (`Self_ast_aggregated_warning_unused_rec
         (Value_var.get_location fun_name, Format.asprintf "%a" Value_var.pp fun_name))
   else ()
 

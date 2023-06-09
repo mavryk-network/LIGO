@@ -154,7 +154,7 @@ let unused_declaration ~raise (decl : declaration) =
   let defuse, _ = defuse_neutral in
   let unused = defuse_of_declaration defuse decl in
   let warn_var v =
-    `Self_ast_typed_warning_unused (V.get_location v, Format.asprintf "%a" V.pp v)
+    `Self_ast_aggregated_warning_unused (V.get_location v, Format.asprintf "%a" V.pp v)
   in
   update_annotations @@ List.map ~f:warn_var unused
 
