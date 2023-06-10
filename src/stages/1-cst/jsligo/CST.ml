@@ -1,8 +1,9 @@
 (* Concrete Syntax Tree (CST) for JsLIGO *)
 
-(* To disable warning about multiply-defined record labels. *)
+(* Disabling warnings *)
 
-[@@@warning "-30-40-42"]
+[@@@warning "-30"] (* multiply-defined record labels *)
+(* [@@@warning "-30-40-42"] *)
 
 (* Vendor dependencies *)
 
@@ -27,85 +28,71 @@ type lexeme = string
 
 (* Keywords of JsLIGO *)
 
-type kwd_else       = lexeme wrap
-type kwd_if         = lexeme wrap
-type kwd_let        = lexeme wrap
-type kwd_const      = lexeme wrap
-type kwd_type       = lexeme wrap
-type kwd_return     = lexeme wrap
-type kwd_switch     = lexeme wrap
-type kwd_case       = lexeme wrap
-type kwd_default    = lexeme wrap
+(* IMPORTANT: The keywords are sorted alphabetically. If you
+   add or modify some, please make sure they remain in order. *)
+
 type kwd_as         = lexeme wrap
 type kwd_break      = lexeme wrap
-type kwd_namespace  = lexeme wrap
+type kwd_case       = lexeme wrap
+type kwd_const      = lexeme wrap
+type kwd_default    = lexeme wrap
+type kwd_else       = lexeme wrap
 type kwd_export     = lexeme wrap
-type kwd_import     = lexeme wrap
-type kwd_implements = lexeme wrap
-type kwd_interface  = lexeme wrap
-type kwd_while      = lexeme wrap
-type kwd_from       = lexeme wrap
 type kwd_for        = lexeme wrap
+type kwd_from       = lexeme wrap
+type kwd_if         = lexeme wrap
+type kwd_implements = lexeme wrap
+type kwd_import     = lexeme wrap
+type kwd_interface  = lexeme wrap
+type kwd_let        = lexeme wrap
+type kwd_namespace  = lexeme wrap
 type kwd_of         = lexeme wrap
+type kwd_return     = lexeme wrap
+type kwd_switch     = lexeme wrap
+type kwd_type       = lexeme wrap
+type kwd_while      = lexeme wrap
 
 (* Symbols *)
 
-type arrow    = lexeme wrap  (* "=>"  *)
-type dot      = lexeme wrap  (* "."   *)
-type ellipsis = lexeme wrap  (* "..." *)
-type equal    = lexeme wrap  (* "="   *)
+type arrow     = lexeme wrap  (* =>  *)
+type dot       = lexeme wrap  (* .   *)
+type ellipsis  = lexeme wrap  (* ... *)
+type equal     = lexeme wrap  (* =   *)
+type minus     = lexeme wrap  (* -   *)
+type plus      = lexeme wrap  (* +   *)
+type slash     = lexeme wrap  (* /   *)
+type modulo    = lexeme wrap  (* %   *)
+type times     = lexeme wrap  (* *   *)
+type increment = lexeme wrap  (* ++  *)
+type decrement = lexeme wrap  (* --  *)
+type qmark     = lexeme wrap  (* ?   *)
+type bool_or   = lexeme wrap  (* ||  *)
+type bool_and  = lexeme wrap  (* &&  *)
+type negation  = lexeme wrap  (* !   *)
+type equal_cmp = lexeme wrap  (* ==  *)
+type neq       = lexeme wrap  (* !=  *)
+type lt        = lexeme wrap  (* <   *)
+type gt        = lexeme wrap  (* >   *)
+type leq       = lexeme wrap  (* <=  *)
+type geq       = lexeme wrap  (* >=  *)
+type lpar      = lexeme wrap  (* (   *)
+type rpar      = lexeme wrap  (* )   *)
+type lbracket  = lexeme wrap  (* [   *)
+type rbracket  = lexeme wrap  (* ]   *)
+type lbrace    = lexeme wrap  (* {   *)
+type rbrace    = lexeme wrap  (* }   *)
+type comma     = lexeme wrap  (* ,   *)
+type semi      = lexeme wrap  (* ;   *)
+type vbar      = lexeme wrap  (* |   *)
+type colon     = lexeme wrap  (* :   *)
+type wild      = lexeme wrap  (* _   *)
+type times_eq  = lexeme wrap  (* *=  *)
+type div_eq    = lexeme wrap  (* /=  *)
+type minus_eq  = lexeme wrap  (* -=  *)
+type plus_eq   = lexeme wrap  (* +=  *)
+type mod_eq    = lexeme wrap  (* %=  *)
 
-(* Arithmetic operators *)
-
-type minus      = lexeme wrap  (* "-" *)
-type plus       = lexeme wrap  (* "+" *)
-type slash      = lexeme wrap  (* "/" *)
-type modulo     = lexeme wrap  (* "%" *)
-type times      = lexeme wrap  (* "*" *)
-
-(* Increment & Decrement operators *)
-
-type increment = lexeme wrap (* "++" *)
-type decrement = lexeme wrap (* "--" *)
-
-(* Ternary operator *)
-
-type qmark = lexeme wrap  (* ? *)
-
-(* Boolean operators *)
-
-type bool_or  = lexeme wrap  (* "||" *)
-type bool_and = lexeme wrap  (* "&&" *)
-
-(* Comparisons *)
-
-type negate    = lexeme wrap  (* "!"  *)
-type equal_cmp = lexeme wrap  (* "==" *)
-type neq       = lexeme wrap  (* "!=" *)
-type lt        = lexeme wrap  (* "<"  *)
-type gt        = lexeme wrap  (* ">"  *)
-type leq       = lexeme wrap  (* "<=" *)
-type geq       = lexeme wrap  (* ">=" *)
-
-(* Compounds *)
-
-type lpar     = lexeme wrap  (* "(" *)
-type rpar     = lexeme wrap  (* ")" *)
-type lbracket = lexeme wrap  (* "[" *)
-type rbracket = lexeme wrap  (* "]" *)
-type lbrace   = lexeme wrap  (* "{" *)
-type rbrace   = lexeme wrap  (* "}" *)
-
-(* Separators *)
-
-type comma = lexeme wrap  (* "," *)
-type semi  = lexeme wrap  (* ";" *)
-type vbar  = lexeme wrap  (* "|" *)
-type colon = lexeme wrap  (* ":" *)
-
-(* Wildcard *)
-
-type wild = lexeme wrap  (* "_" *)
+type field_sep = lexeme wrap  (* , ; *)
 
 (* End-Of-File *)
 
@@ -114,192 +101,447 @@ type eof = lexeme wrap
 (* Literals *)
 
 type variable    = lexeme wrap
-type fun_name    = lexeme wrap
-type fun_arg_name    = lexeme wrap
 type type_name   = lexeme wrap
 type type_var    = lexeme wrap
-type type_constr = lexeme wrap
-type constr      = lexeme wrap
+type ctor        = lexeme wrap
 type field_name  = lexeme wrap
 type module_name = lexeme wrap
+type intf_name   = lexeme wrap
 
-type attribute   = Attr.t wrap
-type language    = lexeme wrap
+type attribute    = Attr.t wrap
+type language     = lexeme wrap
 
-(* Parentheses *)
+(* Parentheses, braces, brackets *)
 
-type 'a braces = {
-  lbrace : lbrace;
-  inside : 'a;
-  rbrace : rbrace
-}
+type 'a par'      = {lpar: lpar; inside: 'a; rpar: rpar}
+type 'a par       = 'a par' reg
+type 'a braces'   = {lbrace: lbrace; inside: 'a; rbrace: rbrace}
+type 'a braces    = 'a braces' reg
+type 'a brackets' = {lbracket: lbracket; inside: 'a; rbracket: rbracket}
+type 'a brackets  = 'a brackets' reg
+type 'a chevrons' = {lchevron: lt; inside: 'a; rchevron: gt}
+type 'a chevrons  = 'a chevrons' reg
 
-type 'a brackets = {
-  lbracket : lbracket;
-  inside   : 'a;
-  rbracket : rbracket
-}
+(* Lists *)
 
-type 'a chevrons = {
-  lchevron   : lt;
-  inside     : 'a;
-  rchevron   : gt
-}
+type ('a, 'sep) sep_or_term =
+  Sep  of ('a, 'sep) sepseq
+| Term of ('a * 'sep) seq
 
-type 'a par = {
-  lpar   : lpar;
-  inside : 'a;
-  rpar   : rpar
-}
+type ('a, 'sep) nsep_or_term =
+  NSep  of ('a, 'sep) nsepseq
+| NTerm of ('a * 'sep) nseq
 
-type the_unit = lpar * rpar
+type ('a, 'sep) nsep_or_pref =
+  NSep of ('a, 'sep) nsepseq
+| Pref of ('sep * 'a) nseq
 
 (* The Abstract Syntax Tree *)
 
 type t = {
-  statements : toplevel_statements;
-  eof        : eof
+  decl : top_decl nseq;
+  eof  : eof
 }
 
 and cst = t
 
-and toplevel_statements = toplevel_statement nseq
+(* TOP-LEVEL DECLARATIONS *)
 
-and toplevel_statement =
-  TopLevel  of (statement * semi option)
-| Directive of Directive.t
+and top_decl =
+  TL_Decl      of declaration * semi option
+| TL_Attr      of (attribute * top_decl)
+| TL_Export    of kwd_export * top_decl
+| TL_Directive of Directive.t
 
-and ast = t
+(* INNER DECLARATIONS (AS STATEMENTS) *)
 
-and attributes = attribute list
+(* IMPORTANT: The data constructors are sorted alphabetically. If you
+   add or modify some, please make sure they remain in order. *)
 
-(* Non-recursive values *)
+and declaration =
+  D_Value     of value_decl reg
+| D_Import    of import_decl reg
+| D_Interface of interface_decl reg
+| D_Module    of module_decl reg
+| D_Type      of type_decl reg
+
+(* Value declaration *)
+
+and value_decl = {
+  kind     : val_kind;
+  bindings : (val_binding reg, comma) nsepseq
+}
+
+and val_kind = [
+  `Let   of kwd_let
+| `Const of kwd_const
+]
 
 and val_binding = {
   binders     : pattern;
-  type_params : type_generics option;
-  lhs_type    : (colon * type_expr) option;
+  type_params : type_params option;
+  rhs_type    : type_annotation option;
   eq          : equal;
-  expr        : expr
+  rhs_expr    : expr
 }
 
-and type_generics = (variable, comma) nsepseq chevrons reg
+and type_params = (variable, comma) sep_or_term chevrons
+
+and type_annotation = colon * type_expr
+
+(* Import declaration *)
+
+and import_decl =
+  Alias of import_alias
+| All   of import_all_as
+| From  of import_from
+
+and import_alias = {
+  kwd_import  : kwd_import;
+  alias       : module_name;
+  equal       : equal;
+  module_path : module_name module_path reg
+}
+
+and import_all_as = {
+  kwd_import : kwd_import;
+  times      : times;
+  kwd_as     : kwd_as;
+  alias      : module_name;
+  kwd_from   : kwd_from;
+  file_path  : file_path
+}
+
+and import_from = {
+  kwd_import : kwd_import;
+  imported   : (field_name, comma) sep_or_term braces;
+  kwd_from   : kwd_from;
+  file_path  : file_path
+}
+
+(* Module paths *)
+
+and 'a module_path = {
+  module_path : (module_name, dot) nsepseq;
+  selector    : dot;
+  field       : 'a
+}
+
+(* Interfaces *)
+
+and interface_decl = {
+  kwd_interface : kwd_interface;
+  intf_name     : intf_name;
+  intf_body     : intf_body
+}
+
+and intf_body = intf_entries braces
+
+and intf_entries = (intf_entry, semi) nsep_or_term
+
+and intf_entry =
+  I_Attr    of (attribute * intf_entry)
+| I_Type    of intf_type reg
+| I_Const   of intf_const reg
+
+and intf_type = {
+  kwd_type : kwd_type;
+  name     : type_name;
+  type_rhs : (equal * type_expr) option
+}
+
+and intf_const = {
+  kwd_const  : kwd_const;
+  name       : variable;
+  const_type : type_annotation
+}
+
+(* Module declaration *)
+
+and module_decl = {
+  kwd_namespace : kwd_namespace;
+  module_name   : module_name;
+  module_body   : statements braces
+}
 
 (* Type declarations *)
 
 and type_decl = {
-  attributes : attributes;
-  kwd_type   : kwd_type;
-  name       : type_name;
-  params     : type_vars option;
-  eq         : equal;
-  type_expr  : type_expr
-}
-
-and type_vars = (type_var, comma) nsepseq chevrons reg
-
-and fun_type_args = (fun_type_arg, comma) nsepseq par
-
-and fun_type_arg = {
-  name      : fun_arg_name;
-  colon     : colon;
+  kwd_type  : kwd_type;
+  params    : type_vars option;
+  name      : type_name;
+  eq        : equal;
   type_expr : type_expr
 }
 
-and obj_type = field_decl reg ne_injection reg
+and type_vars = (type_var, comma) sep_or_term chevrons
+
+(* TYPE EXPRESSIONS *)
+
+(* IMPORTANT: The data constructors are sorted alphabetically. If you
+   add or modify some, please make sure they remain in order. *)
 
 and type_expr =
-  TProd      of cartesian
-| TSum       of sum_type reg
-| TObject    of obj_type
-| TApp       of (type_constr * type_params) reg
-| TFun       of (fun_type_args * arrow * type_expr) reg
-| TPar       of type_expr par reg
-| TVar       of variable
-| TString    of lexeme wrap
-| TInt       of (lexeme * Z.t) wrap
-| TModA      of type_expr module_access reg
-| TDisc      of (obj_type, vbar) nsepseq
-| TParameter of (module_name, dot) nsepseq reg
+  T_App       of (type_expr * type_ctor_args) reg  (* <u,v> M.t         *)
+| T_Attr      of (attribute * type_expr)           (* @a e              *)
+| T_Cart      of cartesian                         (* [t, [u, v]]       *)
+| T_Fun       of fun_type                          (* (a : t) => u      *)
+| T_Int       of (lexeme * Z.t) wrap               (* 42                *)
+| T_ModPath   of type_expr module_path reg         (* A.B.(t * u)       *)
+| T_Par       of type_expr par                     (* (t)               *)
+| T_Parameter of (module_name, dot) nsepseq reg    (* parameter_of m    *)
+| T_Record    of type_expr record                  (* {x; @a y : t}     *)
+| T_String    of lexeme wrap                       (* "x"               *)
+| T_Union     of union_type                        (* {kind: "C", x: t} *)
+| T_Var       of variable                          (* t                 *)
+| T_Variant   of variant_type reg                  (* ["A"] | ["B", t]  *)
 
-and type_params = (type_expr, comma) nsepseq chevrons reg
+(*  Type application *)
 
-and cartesian = {
-  inside     : (type_expr, comma) nsepseq brackets reg;
-  attributes : attributes
+and type_ctor_args = (type_expr, comma) nsep_or_term chevrons
+
+(* Cartesian type *)
+
+and cartesian = (type_expr, comma) nsep_or_term brackets
+
+(* Functional type *)
+
+and fun_type = (fun_type_params * arrow * type_expr) reg
+
+and fun_type_params = (fun_type_param, comma) nsepseq par
+
+and fun_type_param = variable * type_annotation option
+
+(* Record type *)
+
+and 'a record = ('a field reg, field_sep) sep_or_term braces
+
+and 'rhs field =
+  Full of 'rhs full_field
+| Incl of ellipsis * variable (* Type or value depending on the context *)
+
+and 'rhs full_field = {
+  attributes : attribute list;
+  field_name : field_name;
+  field_rhs  : (colon * 'rhs) option
 }
 
-and 'a module_access = {
-  module_name : module_name;
-  selector    : dot;
-  field       : 'a;
-}
+(* Variant type *)
 
-and sum_type = {
-  leading_vbar : vbar option;
-  variants     : (variant reg, vbar) nsepseq reg;
-  attributes   : attributes
-}
+and variant_type = (variant reg, vbar) nsep_or_pref
 
 and variant = {
-  tuple      : variant_comp brackets reg;
-  attributes : attributes
+  attributes : attribute list;
+  tuple      : variant_comp brackets
 }
 
 and variant_comp = {
-  constr : constr;
-  params : (comma * (type_expr, comma) nsepseq) option
+  ctor        : ctor;
+  ctor_params : (comma * (type_expr, comma) nsep_or_term) option
 }
 
-and field_decl = {
-  field_name : field_name;
-  colon      : colon;
-  field_type : type_expr;
-  attributes : attributes
-}
+(* Discriminated unions *)
 
-and rest_pattern = {
-  ellipsis : ellipsis;
-  rest     : variable
-}
+and union_type = (type_expr record, vbar) nsep_or_pref
 
-and assign_pattern = {
-  property : variable;
-  eq       : equal;
-  value    : expr
-}
+(* PATTERNS *)
 
-and destruct = {
-  property  : variable;
-  colon     : colon;
-  target    : val_binding reg;
-}
+(* IMPORTANT: The data constructors are sorted alphabetically. If you
+   add or modify some, please make sure they remain in order. *)
 
 and pattern =
-  PRest     of rest_pattern reg
-| PAssign   of assign_pattern reg
-| PVar      of var_pattern reg
-| PConstr   of variable         (* Not used in the Parser! *)
-| PDestruct of destruct reg
-| PObject   of object_pattern
-| PArray    of array_pattern
+  P_Attr   of (attribute * pattern)  (* @a [x, _]      *)
+| P_Record of pattern record         (* {x, y : 0}     *)
+| P_Tuple  of pattern tuple          (* [x, ...y, z]   *)
+| P_Typed  of typed_pattern          (* [] : list<int> *)
+| P_Var    of variable               (* x              *)
 
-and array_pattern = (pattern, comma) nsepseq brackets reg
+(* Tuple *)
 
-and object_pattern = (pattern, comma) nsepseq braces reg
+and 'a tuple = ('a component, comma) sep_or_term brackets
 
-and var_pattern = {
-  variable   : variable;
-  attributes : attribute list
+and 'a component = ellipsis option * 'a
+
+(* Typed pattern *)
+
+and typed_pattern = pattern * type_annotation
+
+(* STATEMENTS *)
+
+(* IMPORTANT: The data constructors are sorted alphabetically. If you
+   add or modify some, please make sure they remain in order. *)
+
+and statement =
+  S_Attr   of (attribute * statement)
+| S_Block  of statements braces
+| S_Break  of kwd_break
+| S_Cond   of cond_stmt reg
+| S_Decl   of declaration
+| S_Expr   of expr
+| S_For    of for_stmt reg
+| S_ForOf  of for_of_stmt reg
+| S_Return of return_stmt reg
+| S_Switch of switch_stmt reg
+| S_While  of while_stmt reg
+
+and statements = (statement, semi) nsep_or_term
+
+(* Conditional statement *)
+
+and cond_stmt = {
+  kwd_if : kwd_if;
+  test   : expr par;
+  if_so  : statement;
+  if_not : (kwd_else * statement) option
 }
 
-and string_expr =
-  String   of lexeme wrap
-| Verbatim of lexeme wrap
+(* For-loops *)
 
-and return = {
-  kwd_return: kwd_return;
-  expr: expr option;
+and for_stmt = {
+  kwd_for   : kwd_for;
+  range     : range_for par;
+  statement : statement option
+}
+
+and range_for = {
+  initialiser  : statement option;
+  semi1        : semi;
+  condition    : expr option;
+  semi2        : semi;
+  afterthought : (expr, comma) nsepseq option
+}
+
+(* For-of loops *)
+
+and for_of_stmt = {
+  kwd_for   : kwd_for;
+  range     : range_of par;
+  statement : statement
+}
+
+and range_of = {
+  index_kind : val_kind;
+  index      : variable;
+  kwd_of     : kwd_of;
+  expr       : expr
+}
+
+(* Return statement *)
+
+and return_stmt = kwd_return * expr option
+
+(* Switch statement *)
+
+and switch_stmt = {
+  kwd_switch  : kwd_switch;
+  test        : expr par;
+  switch_body : case nseq braces
+}
+
+and case =
+  Case    of switch_case
+| Default of switch_default (* Unicity not checked *)
+
+and switch_case = {
+  kwd_case   : kwd_case;
+  expr       : expr;
+  colon      : colon;
+  statements : statements option
+}
+
+and switch_default = {
+  kwd_default : kwd_default;
+  colon       : colon;
+  statements  : statements option
+}
+
+(* While-loop *)
+
+and while_stmt = {
+  kwd_while : kwd_while;
+  cond      : expr par;
+  statement : statement
+}
+
+(* EXPRESSIONS *)
+
+(* IMPORTANT: The data constructors are sorted alphabetically. If you
+   add or modify some, please make sure they remain in order. *)
+
+and expr =
+  E_Add      of plus bin_op reg                (* x + y          *)
+| E_AddEq    of plus_eq bin_op reg             (* x += y         *)
+| E_And      of bool_and bin_op reg            (* x && y         *)
+| E_App      of (expr * arguments) reg         (* f(x)   Foo()   *)
+| E_Attr     of (attribute * expr)             (* @a [x, y]      *)
+| E_Bytes    of (lexeme * Hex.t) wrap          (* 0xFFFA         *)
+| E_CodeInj  of code_inj reg
+| E_Contract of (module_name, dot) nsepseq reg (* contract_of M  *)
+| E_Ctor     of ctor                           (* C              *)
+| E_Div      of slash bin_op reg               (* x / y          *)
+| E_DivEq    of div_eq bin_op reg              (* x /= y         *)
+| E_Equal    of equal_cmp bin_op reg           (* x == y         *)
+| E_Fun      of fun_expr reg                   (* (x: int) => x  *)
+| E_Geq      of geq bin_op reg                 (* x >= y         *)
+| E_Gt       of gt bin_op reg                  (* x > y          *)
+| E_Int      of (lexeme * Z.t) wrap            (* 42             *)
+| E_Leq      of leq bin_op reg                 (* x <= y         *)
+| E_Lt       of lt bin_op reg                  (* x < y          *)
+| E_MinusEq  of minus_eq bin_op reg            (* x -= y         *)
+| E_Mod      of modulo bin_op reg              (* x % n          *)
+| E_ModEq    of mod_eq bin_op reg              (* x %= y         *)
+| E_ModPath  of expr module_path reg           (* M.N.x          *)
+| E_Mult     of times bin_op reg               (* x * y          *)
+| E_Neg      of minus un_op reg                (* -x             *)
+| E_Neq      of neq bin_op reg                 (* x != y         *)
+| E_Not      of negation un_2op reg            (* !x             *)
+| E_Or       of bool_or bin_op reg             (* x || y         *)
+| E_Record   of record_expr                    (* {x : e, y}     *)
+| E_Par      of expr par                       (* (x + y)        *)
+| E_PostDecr of decrement_expr reg             (* x--            *)
+| E_PostIncr of increment_expr reg             (* x++            *)
+| E_PreDecr  of decrement_expr reg             (* --x            *)
+| E_PreIncr  of increment_expr reg             (* ++x            *)
+| E_Proj     of projection reg                 (* e.x.1          *)
+| E_String   of lexeme wrap                    (* "abcdef"       *)
+| E_Sub      of minus bin_op reg               (* x - y          *)
+| E_Ternary  of ternary reg                    (* x ? y : z      *)
+| E_TimesEq  of times_eq bin_op reg            (* x *= y         *)
+| E_Tuple    of expr tuple                     (* [x, ...y, z]   *)
+| E_Typed    of annot_expr reg                 (* (e as t)       *)
+| E_Unit     of the_unit reg                   (* ()             *)
+| E_Update   of update_expr braces             (* {...x, y : z}  *)
+| E_Var      of variable                       (* x              *)
+| E_Verbatim of lexeme wrap                    (* {|foo|}        *)
+
+(*| E_Seq      of (expr, comma) nsepseq reg (* TODO: ??? *) *)
+
+(* Applications *)
+
+and arguments = (expr, comma) sepseq par
+
+(* Functional expressions *)
+
+and fun_expr = {
+  type_params : type_params option;
+  parameters  : parameters;
+  rhs_type    : type_annotation option;
+  arrow       : arrow;
+  body        : body;
+}
+
+and parameters = (pattern, comma) sep_of_term par
+
+
+
+
+(* XXX *)
+
+and update_expr = {
+  ellipsis : ellipsis;
+  record   : expr;
+  comma    : comma;
+  updates  : nsepseq
 }
 
 and switch = {
@@ -313,8 +555,8 @@ and switch = {
 }
 
 and case =
-  Switch_case         of switch_case
-| Switch_default_case of switch_default_case
+  Case        of switch_case
+| CaseDefault of switch_default_case
 
 and switch_case = {
   kwd_case   : kwd_case;
@@ -329,14 +571,14 @@ and switch_default_case = {
   statements  : statements option
 }
 
-and array_item_rest = {
+and tuple_item_rest = {
   ellipsis : ellipsis;
   expr     : expr
 }
 
-and array_item =
+and tuple_item =
   Expr_entry of expr
-| Rest_entry of array_item_rest reg
+| Rest_entry of tuple_item_rest reg
 
 and property2 = {
   name       : expr;
@@ -355,29 +597,8 @@ and property =
 | Property        of property2 reg
 | Property_rest   of property_rest reg
 
-and expr =
-  EAnnot    of annot_expr reg
-| EArith    of arith_expr
-| EArray    of (array_item, comma) sepseq brackets reg
-| EAssign   of (expr * operator reg * expr)
-| EBytes    of (lexeme * Hex.t) wrap
-| ECall     of (expr * arguments) reg
-| ECodeInj  of code_inj reg
-| EConstr   of (constr * expr option) reg
-| EContract of (module_name, dot) nsepseq reg
-| EFun      of fun_expr reg
-| ELogic    of logic_expr
-| EModA     of expr module_access reg
-| EObject   of object_expr
-| EPar      of expr par reg
-| EPrefix   of prefix_postfix_op reg
-| EPostfix  of prefix_postfix_op reg
-| EProj     of projection reg
-| ESeq      of (expr, comma) nsepseq reg
-| EString   of string_expr
-| ETernary  of ternary reg
-| EUnit     of the_unit reg
-| EVar      of variable
+
+type the_unit = lpar * rpar
 
 and ternary = {
   condition : expr;
@@ -388,7 +609,7 @@ and ternary = {
 }
 
 and assignment_operator =
-  Times_eq
+  Times_eq (* *= *)
 | Div_eq
 | Min_eq
 | Plus_eq
@@ -398,31 +619,14 @@ and operator =
   Eq
 | Assignment_operator of assignment_operator
 
-and object_expr = (property, comma) nsepseq braces reg
+and record_expr = (property, comma) nsepseq braces
 
-and statement =
-  SBlock     of statements braces reg
-| SExpr      of (attributes * expr)
-| SCond      of cond_statement reg
-| SReturn    of return reg
-| SLet       of let_decl reg
-| SConst     of const_decl reg
-| SType      of type_decl reg
-| SSwitch    of switch reg
-| SBreak     of kwd_break
-| SInterface of interface_statement reg
-| SNamespace of namespace_statement reg
-| SExport    of (kwd_export * statement) reg
-| SImport    of import reg
-| SWhile     of while_stmt reg
-| SForOf     of for_of reg
-| SFor       of for_stmt reg
 
 and namespace_statement =
-  kwd_namespace * module_name * interface_annotation option * statements braces reg * attributes
+  kwd_namespace * module_name * intf_annotation option * statements braces reg * attributes
 
-and interface_expr =
-  IInterface of interface_body
+and intf_expr =
+  IInterface of intf_body
 | IPath      of (module_name, dot) nsepseq reg
 
 and interface_entry =
@@ -451,18 +655,13 @@ and for_of = {
   attributes : attributes;
   kwd_for    : kwd_for;
   lpar       : lpar;
-  index_kind : index_kind;
+  index_kind : val_kind;
   index      : variable;
   kwd_of     : kwd_of;
   expr       : expr;
   rpar       : rpar;
   statement  : statement
 }
-
-and index_kind = [
-  `Let   of kwd_let
-| `Const of kwd_const
-]
 
 and for_stmt = {
   attributes   : attributes;
@@ -507,9 +706,6 @@ and import_selected = {
 
 and statements = (statement, semi) nsepseq
 
-and arguments =
-  Multiple of (expr, comma) nsepseq par reg
-| Unit     of the_unit reg
 
 (* TODO: Used with colon too in Parser *)
 and annot_expr = expr * kwd_as * type_expr
@@ -525,51 +721,10 @@ and compound =
   Braces   of lbrace * rbrace
 | Brackets of lbracket * rbracket
 
-and arith_expr =
-  Add   of plus bin_op reg
-| Sub   of minus bin_op reg
-| Mult  of times bin_op reg
-| Div   of slash bin_op reg
-| Mod   of modulo bin_op reg
-| Neg   of minus un_op reg
-| Int   of (lexeme * Z.t) wrap
+(* Binary and unary arithmetic operators *)
 
-and logic_expr =
-  BoolExpr of bool_expr
-| CompExpr of comp_expr
-
-and bool_expr =
-  Or   of bool_or bin_op reg
-| And  of bool_and bin_op reg
-| Not  of negate un_op reg
-
-and 'a bin_op = {
-  op   : 'a;
-  arg1 : expr;
-  arg2 : expr
-}
-
-and 'a un_op = {
-  op  : 'a;
-  arg : expr
-}
-
-and prefix_postfix_op = {
-  update_type : update_type;
-  variable    : variable
-}
-
-and update_type =
-  Increment of increment
-| Decrement of decrement
-
-and comp_expr =
-  Lt    of lt        bin_op reg
-| Leq   of leq       bin_op reg
-| Gt    of gt        bin_op reg
-| Geq   of geq       bin_op reg
-| Equal of equal_cmp bin_op reg
-| Neq   of neq       bin_op reg
+and 'a bin_op = {arg1: expr; op: 'a; arg2: expr}
+and 'a  un_op = {op: 'a; arg: expr}
 
 and projection = {
   expr      : expr;
@@ -585,29 +740,9 @@ and selection_field_name = {
   value : variable
 }
 
-and let_decl = {
-  attributes : attributes;
-  kwd_let    : kwd_let;
-  bindings   : (val_binding reg, comma) nsepseq
-}
-
-and const_decl = {
-  attributes : attributes;
-  kwd_const  : kwd_const;
-  bindings   : (val_binding reg, comma) nsepseq;
-}
-
 and body =
   FunctionBody   of statements braces reg
 | ExpressionBody of expr
-
-and fun_expr = {
-  type_params : type_generics option;
-  parameters  : expr;
-  lhs_type    : (colon * type_expr) option;
-  arrow       : arrow;
-  body        : body;
-}
 
 and cond_statement = {
   attributes : attributes;
@@ -730,11 +865,11 @@ let property_to_region = function
 | Property {region; _}
 | Property_rest {region; _} -> region
 
-let array_item_to_region = function
+let tuple_item_to_region = function
   Expr_entry e -> expr_to_region e
 | Rest_entry {region; _} -> region
 
-let toplevel_statement_to_region = function
+let top_statement_to_region = function
   TopLevel (statement, None) -> statement_to_region statement
 | TopLevel (statement, Some semi) ->
     Region.cover (statement_to_region statement) semi#region

@@ -80,7 +80,7 @@ interactive_expr: LBRACE ZWSP
 ##
 ## Ends in an error in state: 23.
 ##
-## braces(__anonymous_3) -> LBRACE . sep_or_term_list(property,object_sep) RBRACE [ TIMES SLASH SEMI RPAR REM RBRACKET RBRACE QMARK PLUS NE MINUS LT LPAR LE LBRACKET GT Else EQ2 EOF Default DOT Case COMMA COLON BOOL_OR BOOL_AND As ]
+## braces(__anonymous_3) -> LBRACE . sep_or_term(property,object_sep) RBRACE [ TIMES SLASH SEMI RPAR REM RBRACKET RBRACE QMARK PLUS NE MINUS LT LPAR LE LBRACKET GT Else EQ2 EOF Default DOT Case COMMA COLON BOOL_OR BOOL_AND As ]
 ##
 ## The known suffix of the stack is as follows:
 ## LBRACE
@@ -1440,7 +1440,7 @@ contract: LBRACE ZWSP
 ##
 ## Ends in an error in state: 39.
 ##
-## braces(__anonymous_3) -> LBRACE . sep_or_term_list(property,object_sep) RBRACE [ TIMES SLASH SEMI RPAR REM RBRACKET RBRACE QMARK PLUS NE MINUS LT LPAR LE LBRACKET GT Else EQ2 EOF Default DOT Case COMMA COLON BOOL_OR BOOL_AND As ]
+## braces(__anonymous_3) -> LBRACE . sep_or_term(property,object_sep) RBRACE [ TIMES SLASH SEMI RPAR REM RBRACKET RBRACE QMARK PLUS NE MINUS LT LPAR LE LBRACKET GT Else EQ2 EOF Default DOT Case COMMA COLON BOOL_OR BOOL_AND As ]
 ## braces(statements) -> LBRACE . statements RBRACE [ SEMI RPAR RBRACKET RBRACE Else EOF Default Case COMMA COLON ]
 ##
 ## The known suffix of the stack is as follows:
@@ -3034,7 +3034,7 @@ interactive_expr: Bytes As LBRACE ZWSP
 ##
 ## Ends in an error in state: 75.
 ##
-## object_type -> LBRACE . sep_or_term_list(field_decl,object_sep) RBRACE [ VBAR SEMI RPAR RBRACKET RBRACE GT Else EQ EOF Default Case COMMA COLON ARROW ]
+## object_type -> LBRACE . sep_or_term(field_decl,object_sep) RBRACE [ VBAR SEMI RPAR RBRACKET RBRACE GT Else EQ EOF Default Case COMMA COLON ARROW ]
 ##
 ## The known suffix of the stack is as follows:
 ## LBRACE
@@ -3043,7 +3043,7 @@ interactive_expr: Bytes As Attr LBRACE ZWSP
 ##
 ## Ends in an error in state: 109.
 ##
-## object_type -> nseq(Attr) LBRACE . sep_or_term_list(field_decl,object_sep) RBRACE [ VBAR SEMI RPAR RBRACKET RBRACE GT Else EQ EOF Default Case COMMA COLON ARROW ]
+## object_type -> nseq(Attr) LBRACE . sep_or_term(field_decl,object_sep) RBRACE [ VBAR SEMI RPAR RBRACKET RBRACE GT Else EQ EOF Default Case COMMA COLON ARROW ]
 ##
 ## The known suffix of the stack is as follows:
 ## nseq(Attr) LBRACE
@@ -3221,7 +3221,7 @@ interactive_expr: Bytes As LBRACE Ident RBRACE VBAR Attr ZWSP
 ##
 ## Ends in an error in state: 108.
 ##
-## object_type -> nseq(Attr) . LBRACE sep_or_term_list(field_decl,object_sep) RBRACE [ VBAR SEMI RPAR RBRACKET RBRACE GT Else EQ EOF Default Case COMMA COLON ARROW ]
+## object_type -> nseq(Attr) . LBRACE sep_or_term(field_decl,object_sep) RBRACE [ VBAR SEMI RPAR RBRACKET RBRACE GT Else EQ EOF Default Case COMMA COLON ARROW ]
 ##
 ## The known suffix of the stack is as follows:
 ## nseq(Attr)
@@ -3286,7 +3286,7 @@ interactive_expr: Bytes As Attr ZWSP
 ## Ends in an error in state: 124.
 ##
 ## core_type -> nseq(Attr) . type_tuple [ SEMI RPAR RBRACKET RBRACE GT Else EQ EOF Default Case COMMA COLON ARROW ]
-## object_type -> nseq(Attr) . LBRACE sep_or_term_list(field_decl,object_sep) RBRACE [ VBAR SEMI RPAR RBRACKET RBRACE GT Else EQ EOF Default Case COMMA COLON ARROW ]
+## object_type -> nseq(Attr) . LBRACE sep_or_term(field_decl,object_sep) RBRACE [ VBAR SEMI RPAR RBRACKET RBRACE GT Else EQ EOF Default Case COMMA COLON ARROW ]
 ## sum_type -> nseq(Attr) . VBAR nsepseq(variant,VBAR) [ SEMI RPAR RBRACKET RBRACE GT Else EQ EOF Default Case COMMA COLON ARROW ]
 ## variant -> nseq(Attr) . brackets(variant_comp) [ VBAR SEMI RPAR RBRACKET RBRACE GT Else EQ EOF Default Case COMMA COLON ARROW ]
 ##
@@ -3303,7 +3303,7 @@ contract: Ident As LBRACKET Attr ZWSP
 ##
 ## Ends in an error in state: 155.
 ##
-## object_type -> nseq(Attr) . LBRACE sep_or_term_list(field_decl,object_sep) RBRACE [ VBAR RBRACKET COMMA ]
+## object_type -> nseq(Attr) . LBRACE sep_or_term(field_decl,object_sep) RBRACE [ VBAR RBRACKET COMMA ]
 ## sum_type -> nseq(Attr) . VBAR nsepseq(variant,VBAR) [ RBRACKET COMMA ]
 ## type_component_no_string -> nseq(Attr) . type_tuple [ RBRACKET COMMA ]
 ## variant -> nseq(Attr) . brackets(variant_comp) [ VBAR RBRACKET COMMA ]
@@ -3517,7 +3517,7 @@ interactive_expr: Bytes As VBAR Attr ZWSP
 ##
 ## Ends in an error in state: 176.
 ##
-## object_type -> nseq(Attr) . LBRACE sep_or_term_list(field_decl,object_sep) RBRACE [ VBAR SEMI RPAR RBRACKET RBRACE GT Else EQ EOF Default Case COMMA COLON ARROW ]
+## object_type -> nseq(Attr) . LBRACE sep_or_term(field_decl,object_sep) RBRACE [ VBAR SEMI RPAR RBRACKET RBRACE GT Else EQ EOF Default Case COMMA COLON ARROW ]
 ## variant -> nseq(Attr) . brackets(variant_comp) [ VBAR SEMI RPAR RBRACKET RBRACE GT Else EQ EOF Default Case COMMA COLON ARROW ]
 ##
 ## The known suffix of the stack is as follows:
@@ -4084,8 +4084,8 @@ contract: Switch LPAR Bytes RPAR LBRACE Default COLON Return Default
 ## In state 476, spurious reduction of production statement -> base_stmt(statement)
 ## In state 672, spurious reduction of production case_statement -> statement
 ## In state 677, spurious reduction of production nsepseq(case_statement,SEMI) -> case_statement
-## In state 675, spurious reduction of production sep_or_term_list(case_statement,SEMI) -> nsepseq(case_statement,SEMI)
-## In state 673, spurious reduction of production case_statements -> sep_or_term_list(case_statement,SEMI)
+## In state 675, spurious reduction of production sep_or_term(case_statement,SEMI) -> nsepseq(case_statement,SEMI)
+## In state 673, spurious reduction of production case_statements -> sep_or_term(case_statement,SEMI)
 ## In state 676, spurious reduction of production default_case -> Default COLON case_statements
 ## In state 687, spurious reduction of production cases -> default_case
 ##
@@ -4112,8 +4112,8 @@ contract: LBRACE Return While
 ## In state 435, spurious reduction of production base_stmt(statement) -> return_stmt
 ## In state 476, spurious reduction of production statement -> base_stmt(statement)
 ## In state 698, spurious reduction of production nsepseq(statement,SEMI) -> statement
-## In state 721, spurious reduction of production sep_or_term_list(statement,SEMI) -> nsepseq(statement,SEMI)
-## In state 702, spurious reduction of production statements -> sep_or_term_list(statement,SEMI)
+## In state 721, spurious reduction of production sep_or_term(statement,SEMI) -> nsepseq(statement,SEMI)
+## In state 702, spurious reduction of production statements -> sep_or_term(statement,SEMI)
 ##
 
 Ill-formed block of statements.

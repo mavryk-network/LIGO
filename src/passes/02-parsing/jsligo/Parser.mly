@@ -143,7 +143,7 @@ nsepseq(item,sep):
    parses a non-empty list of items separated by [sep], and optionally
    terminated by [sep]. *)
 
-sep_or_term_list(item,sep):
+sep_or_term(item,sep):
   nsepseq(item,sep) {
     $1, None
   }
@@ -245,7 +245,7 @@ interface:
   }
 
 interface_entries:
-  sep_or_term_list(interface_entry,";") { fst $1 }
+  sep_or_term(interface_entry,";") { fst $1 }
 
 interface_entry:
   attributes "type" type_name "=" type_expr {
@@ -283,7 +283,7 @@ interface_annotation:
   }
 
 stmts_or_namespace_or_interface: (* TODO: Keep terminator *)
-  sep_or_term_list(stmt_or_namespace_or_interface,";") { fst $1 }
+  sep_or_term(stmt_or_namespace_or_interface,";") { fst $1 }
 
 (* STATEMENTS *)
 
@@ -388,7 +388,7 @@ assign_lhs:
 
 assign_stmt:
   assign_lhs "="  expr {
-    $1, {value = Eq; region = $2#region}, $3 }
+    $1, {value = Eq; region = $2#region}, $3 } (* TODO Wrong regions! *)
 | assign_lhs "*=" expr {
     $1, {value = Assignment_operator Times_eq; region=$2#region}, $3 }
 | assign_lhs "/=" expr {
@@ -645,7 +645,7 @@ default_case:
     Switch_default_case {kwd_default=$1; colon=$2; statements=$3} }
 
 case_statements:
-  sep_or_term_list(case_statement,";") {
+  sep_or_term(case_statement,";") {
     fst $1 : (statement, semi) Utils.nsepseq }
 
 case_statement:
@@ -952,7 +952,7 @@ module_var_t:
 (* Record types (a.k.a. "object types" in JS) *)
 
 object_type:
-  attributes "{" sep_or_term_list(field_decl,object_sep) "}" {
+  attributes "{" sep_or_term(field_decl,object_sep) "}" {
     let lbrace = $2 in
     let rbrace = $4 in
     let fields, terminator = $3 in
@@ -1009,7 +1009,7 @@ import_stmt:
 
 (* TODO: Keep terminator *)
 statements:
-  sep_or_term_list(statement,";") {
+  sep_or_term(statement,";") {
     fst $1 : (statement, semi) Utils.nsepseq }
 
 (* Expressions *)
@@ -1076,7 +1076,7 @@ array_literal:
 (* Records (a.k.a. "objects" in JS) *)
 
 object_literal: (* TODO: keep the terminator *)
-  braces(sep_or_term_list(property,object_sep) { fst $1 }) { $1 }
+  braces(sep_or_term(property,object_sep) { fst $1 }) { $1 }
 
 property:
   field_name {

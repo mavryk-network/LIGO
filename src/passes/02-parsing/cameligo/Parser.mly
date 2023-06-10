@@ -158,10 +158,10 @@ nsepseq(X,Sep):
   X                    {                 $1,        [] }
 | X Sep nsepseq(X,Sep) { let h,t = $3 in $1, ($2,h)::t }
 
-(* The rule [sep_or_term(item,sep)] ("separated or terminated list")
-   parses a non-empty list of items separated by [sep], and optionally
-   terminated by [sep]. The following rules were inspired by the
-   following blog post by Pottier:
+(* The rule [sep_or_term_list(item,sep)] ("separated or terminated
+   list") parses a non-empty list of items separated by [sep], and
+   optionally terminated by [sep]. The following rules were inspired
+   by the following blog post by Pottier:
 
    http://gallium.inria.fr/blog/lr-lists/
 *)
