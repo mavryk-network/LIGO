@@ -16,7 +16,7 @@ depends: [
   "alcotest" {with-test & >= "1.4.0"}
   "fmt" {with-test}
   "astring" {with-test}
-  "mtime" {with-test & >= "1.1.0"}
+  "mtime" {with-test & >= "2.0.0"}
   "odoc" {with-doc}
 ]
 build: [
@@ -36,10 +36,10 @@ build: [
 dev-repo: "git+https://github.com/CraigFe/progress.git"
 url {
   src:
-    "https://github.com/CraigFe/progress/releases/download/0.2.1/terminal-0.2.1.tbz"
+    "https://github.com/craigfe/progress/releases/download/0.2.2/progress-0.2.2.tbz"
   checksum: [
-    "sha256=7ae7f5c5a2db88107d0b3fd37d5344f066921270a3e74d56dd13457feb9e586e"
-    "sha512=3828ac568e447e5f1e59450ee48491c256d8bc77abe234190e14e2db5be7b81f379837083f0eb28ea9572fce2781fd0addd7adc1701947c0b2de9d8319ace042"
+    "sha256=3341c21923a21cd6b5b5cfa9ec3981f59572c367940fe5e02450533dfb4110b5"
+    "sha512=3edbe5ca6ea0bbc678b7dc4abe38bb4c3c4832de0144cc6e0791678712931fbaf2f7141196fca3fdc13a20777851cadcd165bf30c11d92193eecbd8f2d9dbf15"
   ]
 }
-x-commit-hash: "04ad0ff1dcfdbd46133b640a4481924a56724640"
+x-commit-hash: "541f13436bcb2e07c9512c196fda4c2161e12813"

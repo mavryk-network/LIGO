@@ -10,10 +10,7 @@
   "esy": {
     "buildsInSource": "_build",
     "opamOverrideRemote": "https://github.com/ligolang/esy-opam-override",
-    "build": [
-      "dune build -p ligo",
-      "chmod -R a+w #{self.target_dir}"
-    ],
+    "build": ["dune build -p ligo", "chmod -R a+w #{self.target_dir}"],
     "buildEnv": {
       "OCAMLRUNPARAM": "b",
       "PATH": "#{@opam/hacl-star-raw.lib / 'hacl-star-raw' : esy-libffi.lib : esy-libev.lib : $PATH}",
@@ -35,9 +32,7 @@
       }
     },
     "release": {
-      "bin": [
-        "ligo"
-      ],
+      "bin": ["ligo"],
       "includePackages": [
         "root",
         "esy-libev",
@@ -110,6 +105,7 @@
     "esy-libffi": "*"
   },
   "resolutions": {
+    "@opam/lwt": "github:ocsigen/lwt:lwt.opam#9943ba77a5508feaea5e1fb60b011db4179f9c61",
     "@opam/bls12-381": "opam:6.1.0",
     "@opam/rresult": "opam:0.6.0",
     "@opam/bos": "esy-ocaml/bos#9c7956dda6c0d82afcd599c26f8f7efcc373b70e",
