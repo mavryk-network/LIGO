@@ -308,9 +308,11 @@ and cartesian = (type_expr, comma) nsep_or_term brackets
 
 (* Functional type *)
 
-and fun_type = (parameters * arrow * type_expr) reg
+and fun_type = (fun_params * arrow * type_expr) reg
 
-and parameters = (pattern, comma) sep_or_term par
+and fun_params = (fun_param, comma) sep_or_term par
+
+and fun_param = variable * type_annotation option
 
 (* Parameter of type *)
 
@@ -532,6 +534,8 @@ and fun_expr = {
   arrow       : arrow;
   body        : body;
 }
+
+and parameters = (pattern, comma) sep_or_term par
 
 and body =
   FunBody  of statements braces
