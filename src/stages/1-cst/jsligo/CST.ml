@@ -263,8 +263,15 @@ and intf_const = {
 and module_decl = {
   kwd_namespace : kwd_namespace;
   module_name   : module_name;
+  interface     : interface option;
   module_body   : statements braces
 }
+
+and interface = (kwd_implements * intf_expr) reg
+
+and intf_expr =
+  I_Body of intf_body
+| I_Path of module_name module_path reg
 
 (* Type declarations *)
 
@@ -308,11 +315,9 @@ and cartesian = (type_expr, comma) nsep_or_term brackets
 
 (* Functional type *)
 
-and fun_type = (fun_params * arrow * type_expr) reg
+and fun_type = (parameters * arrow * type_expr) reg
 
-and fun_params = (fun_param, comma) sep_or_term par
-
-and fun_param = variable * type_annotation option
+and parameters = (pattern, comma) sep_or_term par
 
 (* Parameter of type *)
 
@@ -534,8 +539,6 @@ and fun_expr = {
   arrow       : arrow;
   body        : body;
 }
-
-and parameters = (pattern, comma) sep_or_term par
 
 and body =
   FunBody  of statements braces
