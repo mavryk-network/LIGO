@@ -41,22 +41,223 @@ let mk_children_attr (node : Attr.t wrap list) =
 
 (* Preprocessing directives *)
 
-let print_Directive state (node : Directive.t) =
+let print_TL_Directive state (node : Directive.t) =
   let region, string = Directive.project node in
   Tree.make_unary state "Directive" Tree.make_node ~region string
 
 (* PRINTING THE CST *)
 
 let rec print_cst state (node : cst) =
-  Tree.of_nseq state "<cst>" print_toplevel_statement node.statements
+  Tree.of_nseq state "<cst>" print_top_decl node.decl
 
 (* TOP-LEVEL *)
 
-and print_toplevel_statement state = function
-  TopLevel  s -> print_TopLevel  state s
-| Directive s -> print_Directive state s
+and print_top_decl state = function
+  TL_Decl      d -> print_TL_Decl      state d
+| TL_Attr      d -> print_TL_Attr      state d
+| TL_Export    d -> print_TL_Export    state d
+| TL_Directive d -> print_TL_Directive state d
 
-and print_TopLevel state (stmt, _) = print_statement state stmt
+(* Normal declaration *)
+
+and print_TL_Decl state (d, _) = print_declaration state d
+
+(* Attributed declaration *)
+
+and print_TL_Attr state (node: (attribute * top_decl) reg) =
+  let Region.{region; value} = node in
+  let attribute, top_decl = value in
+  let children = Tree.[
+    mk_child print_attribute attribute;
+    mk_child print_top_decl  top_decl]
+  in Tree.make ~region state "TL_Attr" children
+
+(* Export declaration *)
+
+and print_TL_Export state (node : (kwd_export * top_decl) reg) =
+  let Region.{region; value} = node in
+  Tree.make_unary ~region state "TL_Export" print_top_decl (snd value)
+
+(* INNER DECLARATIONS (AS STATEMENTS) *)
+
+and print_declaration state = function
+  D_Value     d -> print_D_Value     state d
+| D_Import    d -> print_D_Import    state d
+| D_Interface d -> print_D_Interface state d
+| D_Module    d -> print_D_Module    state d
+| D_Type      d -> print_D_Type      state d
+
+(* Value declaration *)
+
+and print_D_Value state (node: value_decl reg) =
+  let Region.{region; value} = node in
+  let {kind; bindings} = value in
+  let children = mk_child print_var_kind kind
+                 :: mk_children_bindings bindings
+  in Tree.make state ~region "D_Value" children
+
+and print_var_kind state = function
+  `Let   kwd_let   -> Tree.make_literal state kwd_let
+| `Const kwd_const -> Tree.make_literal state kwd_const
+
+and mk_children_bindings (node: (val_binding reg, comma) nsepseq) =
+  Tree.mk_children_nsepseq print_val_binding node
+
+and print_val_binding state (node: val_binding reg) =
+  let Region.{region; value} = node in
+  let {binders; type_params; rhs_type; eq; rhs_expr} = value in
+
+  let print_binders state (node: pattern) =
+    Tree.make_unary state "<binders>" print_pattern node
+
+  and print_type_params state (node: type_params) =
+    let Region.{region; value} = node in
+    let seq = value.inside in
+    Tree.(of_sep_or_term state ~region "<parameters>" make_literal seq)
+
+  and print_rhs state (node: expr) =
+    Tree.make_unary state "<rhs>" print_expr node in
+
+  let children = Tree.[
+    mk_child     print_binders         binders;
+    mk_child_opt print_type_params     type_params;
+    mk_child_opt print_type_annotation rhs_type;
+    mk_child     print_rhs             rhs_expr]
+  in Tree.make state ~region "<binding>" children
+
+and print_type_annotation state (node : type_annotation) =
+  Tree.make_unary state "<type>" print_type_expr (snd node)
+
+(* Import declaration *)
+
+and print_D_Import state (node: import_decl) =
+  Tree.make_unary state "D_Import" print_import_decl node
+
+and print_import_decl state = function
+  AliasModule d -> print_AliasModule state d
+| ImportAll   d -> print_ImportAll   state d
+| ImportSome  d -> print_ImportSome  state d
+
+and print_AliasModule state (node: import_alias reg) =
+  let Region.{value; region} = node in
+  let {kwd_import=_; alias; equal=_; module_path} = value in
+  let print_module_path =
+    print_module_path Tree.make_literal "<module_path>" in
+  let children = Tree.[
+    mk_child print_alias       alias;
+    mk_child print_module_path module_path]
+  in Tree.make ~region state "AliasModule" children
+
+and print_alias state (node: module_name) =
+  Tree.(make_unary state "<alias>" make_literal node)
+
+and print_module_path :
+  'a.'a Tree.printer -> Tree.root -> Tree.state -> 'a module_path reg -> unit =
+  fun print root state {value; region} ->
+  let children = Tree.(
+    mk_children_nsepseq make_literal value.module_path
+    @ [Tree.mk_child print value.field])
+  in Tree.make state root ~region children
+
+and print_ImportAll state (node: import_all_as reg) =
+  let Region.{value; region} = node in
+  let {kwd_import; times=_; kwd_as=_; alias; kwd_from=_; file_path} = value in
+  let children = Tree.[
+    mk_child print_alias     alias;
+    mk_child print_file_path file_path]
+  in Tree.make ~region state "ImportAll" children
+
+and print_file_path state (node: string wrap) =
+  Tree.(make_unary state "<file path>" make_literal node)
+
+and print_ImportSome state (node: import_from reg) =
+  let Region.{value; region} = node in
+  let {kwd_import=_; imported; kwd_from=_; file_path} = value in
+  let children = Tree.[
+    mk_child print_imported  imported;
+    mk_child print_file_path file_path]
+  in Tree.make ~region state "ImportSome" children
+
+and print_imported state (node: (field_name, comma) sep_or_term braces reg) =
+  let Region.{region; value} = node in
+  Tree.(of_sep_or_term state ~region "<module path>"
+                       make_literal value.inside)
+
+(* Interface declaration *)
+
+and print_D_Interface state (node : interface_decl reg) =
+  let Region.{region; value} = node in
+  let {kwd_interface=_; intf_name; intf_body} = value in
+  let children = mk_child make_literal intf_name
+                 :: mk_children_intf_body intf_body
+  in Tree.make ~region state "D_Interface" children
+
+and mk_children_intf_body (node: intf_body) =
+  Tree.mk_children_nsep_or_term print_intf_entry node.inside
+
+and print_intf_entry state = function
+  I_Attr  e -> print_I_Attr  state e
+| I_Type  e -> print_I_Type  state e
+| I_Const e -> print_I_Const state e
+
+and print_I_Attr state (node : (attribute * intf_entry) reg) =
+  let Region.{region; value} = node in
+  let attribute, entry = value in
+  let children = Tree.[
+    mk_child print_attribute  attribute;
+    mk_child print_intf_entry entry]
+  in Tree.make ~region state "I_Attr" children
+
+and print_I_Type state (node : intf_type reg) =
+  let Region.{region; value} = node in
+  let {kwd_type=_; type_name; type_rhs} = value in
+  let children = Tree.[
+    mk_child     make_literal   type_name;
+    mk_child_opt print_type_rhs type_rhs]
+  in Tree.make ~region state "I_Type" children
+
+and print_type_rhs state (node : equal * type_expr) =
+  print_type_expr (snd node)
+
+and print_I_Const state (node : intf_const reg) =
+  let Region.{value; region} = node in
+  let {kwd_const=_; const_name; const_type} = value in
+  let children = Tree.[
+    mk_child make_literal          const_name;
+    mk_child print_type_annotation const_type]
+  in Tree.make ~region state "I_Const" children
+
+(* Modules *)
+
+and print_D_Module state (node: module_decl reg) =
+  let Region.{value; region} = node in
+  let {kwd_namespace=_; module_name; module_type; module_body} = value in
+  let children = Tree.[
+    mk_child     print_module_name module_name;
+    mk_child_opt print_interface   module_type;
+    mk_child     print_statements  module_body.value.inside]
+  in Tree.make ~region state "D_Module" children
+
+and print_module_name state (node: module_name) =
+  Tree.(make_unary state "<module>" make_literal node)
+
+and print_interface state (node: interface) =
+  let Region.{value; region} = node in
+  let {kwd_implements=_; intf_expr} = value in
+  Tree.make_unary ~region state "<interface>" print_intf_expr intf_expr
+
+and print_interface state (node: module_name) =
+  Tree.(make_unary state "<interface>" make_literal node)
+
+and print_intf_expr state = function
+  I_Body i -> print_I_Body state i
+| I_Path i -> print_I_Path state i
+
+and print_I_Body state = Tree.make state "I_Body" @@ mk_children_intf_body
+and print_I_Path state (node: module_name module_path reg) =
+  print_module_path Tree.make_literal "I_Path" state node
+
+(* XXX *)
 
 (* STATEMENTS *)
 
@@ -77,13 +278,6 @@ and print_statement state = function
 | SForOf     s -> print_SForOf     state s
 | SWhile     s -> print_SWhile     state s
 | SFor       s -> print_SFor       state s
-
-(* Interface entry *)
-
-and print_interface_entry state = function
-  IType      s -> print_IType      state s
-| IType_var  s -> print_IType_var  state s
-| IConst     s -> print_IConst     state s
 
 (* Blocks *)
 
@@ -131,41 +325,6 @@ and print_SLet state (node: let_decl reg) =
                @ mk_children_attr     value.attributes
   in Tree.make state ~region "SLet" children
 
-and mk_children_bindings (node: (val_binding reg, comma) nsepseq) =
-  Tree.mk_children_nsepseq print_val_binding node
-
-and print_val_binding state (node: val_binding reg) =
-  let Region.{region; value} = node in
-
-  let print_binders state (node: pattern) =
-    Tree.make_unary state "<binders>" print_pattern node
-
-  and print_type_params state (node: type_generics) =
-    let Region.{region; value} = node in
-    let seq = value.inside in
-    Tree.(of_nsepseq state ~region "<parameters>" make_literal seq)
-
-  and print_rhs state (node: expr) =
-    Tree.make_unary state "<rhs>" print_expr node in
-
-  let children = Tree.[
-    mk_child     print_binders         value.binders;
-    mk_child_opt print_type_params     value.type_params;
-    mk_child_opt print_type_annotation value.lhs_type;
-    mk_child     print_rhs             value.expr]
-  in Tree.make state ~region "<binding>" children
-
-and print_type_annotation state (_, type_expr) =
-  Tree.make_unary state "<type>" print_type_expr type_expr
-
-(* Constant declaration *)
-
-and print_SConst state (node: const_decl reg) =
-  let Region.{region; value} = node in
-  let children = mk_children_bindings value.bindings
-               @ mk_children_attr     value.attributes
-  in Tree.make state ~region "SConst" children
-
 (* Type declaration *)
 
 and print_SType state (node: type_decl reg) =
@@ -182,35 +341,6 @@ and print_SType state (node: type_decl reg) =
     mk_child     print_type_expr value.type_expr]
   @ mk_children_attr value.attributes
   in Tree.make state ~region "SType" children
-
-(* Value declarations (signature) *)
-
-and print_IConst state (node : (attributes * kwd_const * variable * colon * type_expr) reg) =
-  let Region.{value; region} = node in
-  let attributes, _kwd_val, var, _colon, type_expr = value in
-  let children = Tree.[mk_child make_literal var;
-                       mk_child print_type_expr type_expr] @
-                 mk_children_attr attributes
-  in Tree.make ~region state "IConst" children
-
-(* Type declarations (signature) *)
-
-and print_IType state (node : (attributes * kwd_type * variable * equal * type_expr) reg) =
-  let Region.{value; region} = node in
-  let attributes, _kwd_type, var, _eq, type_expr = value in
-  let children = Tree.[mk_child make_literal var;
-                       mk_child print_type_expr type_expr] @
-                 mk_children_attr attributes
-  in Tree.make ~region state "IType" children
-
-(* Type declarations (signature) *)
-
-and print_IType_var state (node : (attributes * kwd_type * variable) reg) =
-  let Region.{value; region} = node in
-  let attributes, _kwd_type, var = value in
-  let children = Tree.[mk_child make_literal var] @
-                 mk_children_attr attributes
-  in Tree.make ~region state "IType_var" children
 
 (* Switch statement *)
 
@@ -243,107 +373,11 @@ and print_Switch_default_case state (node: switch_default_case) =
 and print_SBreak state (node: kwd_break) =
   Tree.make_node ~region:node#region state "SBreak"
 
-(* Namespaces *)
-
-and print_SNamespace state (node: namespace_statement reg) =
-  let Region.{value; region} = node in
-  let _, module_name, annotation_opt, statements, attributes = value in
-  let statements = statements.value.inside in
-  let children = Tree.[
-    mk_child print_namespace  module_name;
-    mk_child_opt print_interface_annotation annotation_opt;
-    mk_child print_statements statements]
-  @ mk_children_attr attributes
-  in Tree.make ~region state "SNamespace" children
-
-and print_interface_annotation state (node: interface_annotation) =
-  let Region.{value; region} = node in
-  let _, interface_expr = value in
-  let children = Tree.[mk_child print_interface_expr interface_expr]
-  in Tree.make ~region state "<interface_annotation>" children
-
-and print_namespace state (node: module_name) =
-  Tree.(make_unary state "<namespace>" make_literal node)
-
-(* Interfaces *)
-
-and print_SInterface state (node: interface_statement reg) =
-  let Region.{value; region} = node in
-  let _, module_name, interface_entries, attributes = value in
-  let interface_entries = interface_entries.value.inside in
-  let children = Tree.[
-    mk_child print_interface  module_name;
-    mk_child print_interface_entries interface_entries]
-  @ mk_children_attr attributes
-  in Tree.make ~region state "SInterface" children
-
-and print_interface state (node: module_name) =
-  Tree.(make_unary state "<interface>" make_literal node)
-
-and print_interface_expr state = function
-  IInterface b -> print_interface_body state b
-| IPath p      -> print_interface_path state p
-
-and print_interface_entries state (node: interface_entries) =
-  Tree.of_nsepseq state "<interface_entries>" print_interface_entry node
-
-and print_interface_body state (node: interface_body) =
-  let Region.{value; region} = node in
-  Tree.make_unary state ~region "<interface_body>" print_interface_entries value.inside
-
-and print_interface_path state (node: (module_name, dot) nsepseq reg) =
-  let Region.{value; region} = node in
-  Tree.make_unary state ~region "<interface_path>" print_module_path value
-
 (* Export statements *)
 
 and print_SExport state (node: (kwd_export * statement) reg) =
   let Region.{value; region} = node in
   Tree.make_unary ~region state "SExport" print_statement (snd value)
-
-(* Import statements *)
-
-and print_SImport state (node: import reg) =
-  let Region.{value; region} = node in
-  Tree.make_unary ~region state "SImport" print_import value
-
-and print_import state = function
-  Import_rename   i -> print_Import_rename   state i
-| Import_all_as   i -> print_Import_all_as   state i
-| Import_selected i -> print_Import_selected state i
-
-and print_Import_rename state (node: import_rename) =
-  let children = Tree.[
-    mk_child make_literal      node.kwd_import;
-    mk_child print_alias       node.alias;
-    mk_child print_module_path node.module_path]
-  in Tree.make state "Import_rename" children
-
-and print_alias state (node: module_name) =
-  Tree.(make_unary state "<alias>" make_literal node)
-
-and print_module_path state (node: (module_name, dot) nsepseq) =
-  Tree.(of_nsepseq state "<module path>" make_literal node)
-
-and print_Import_all_as state (node: import_all_as) =
-  let children = Tree.[
-    mk_child print_alias    node.alias;
-    mk_child print_dir_path node.module_path]
-  in Tree.make state "Import_all_as" children
-
-and print_dir_path state (node: string wrap) =
-  Tree.(make_unary state "<module path>" make_literal node)
-
-and print_Import_selected state (node: import_selected) =
-  let children = Tree.[
-    mk_child print_imported node.imported;
-    mk_child print_dir_path node.module_path]
-  in Tree.make state "Import_selected" children
-
-and print_imported state (node: (field_name, comma) nsepseq braces reg) =
-  let Region.{region; value} = node in
-  Tree.(of_nsepseq state ~region "<module path>"
-          make_literal value.inside)
 
 (* For-loops *)
 
@@ -364,8 +398,8 @@ and print_SForOf state (node: for_of reg) =
 
 and print_SFor state (node: for_stmt reg) =
   let Region.{value; region} = node in
-  
-  let children = 
+
+  let children =
     mk_children_attr value.attributes @
     Tree.[
       mk_child_opt print_statement  value.initialiser;

@@ -69,10 +69,10 @@ and print_declaration state = function
 (* SIGNATURE DECLARATIONS *)
 
 and print_sig_item state = function
-  S_Attr     d -> print_S_Attr       state d
-| S_Value    d -> print_S_Value      state d
-| S_Type     d -> print_S_Type       state d
-| S_Type_var d -> print_S_Type_var state d
+  S_Attr    d -> print_S_Attr    state d
+| S_Value   d -> print_S_Value   state d
+| S_Type    d -> print_S_Type    state d
+| S_TypeVar d -> print_S_TypeVar state d
 
 (* Attributed declaration *)
 
@@ -184,11 +184,10 @@ and print_M_Var state (node : module_name) =
 and print_module_path :
   'a.'a Tree.printer -> Tree.root -> Tree.state -> 'a module_path reg -> unit =
   fun print root state {value; region} ->
-    let children =
-      (List.map ~f:Tree.(mk_child make_literal)
-       @@ Utils.nsepseq_to_list value.module_path)
-      @ [Tree.mk_child print value.field]
-    in Tree.make state root ~region children
+  let children = Tree.(
+    mk_children_nsepseq make_literal value.module_path
+    @ [Tree.mk_child print value.field])
+  in Tree.make state root ~region children
 
 (* Signature declaration *)
 
@@ -238,11 +237,11 @@ and print_S_Type state (node : (kwd_type * variable * equal * type_expr) reg) =
 
 (* Type declarations (signature) *)
 
-and print_S_Type_var state (node : (kwd_type * variable) reg) =
+and print_S_TypeVar state (node : (kwd_type * variable) reg) =
   let Region.{value; region} = node in
   let _kwd_type, var = value in
   let children = Tree.[mk_child make_literal var]
-  in Tree.make ~region state "S_Type_var" children
+  in Tree.make ~region state "S_TypeVar" children
 
 (* TYPE EXPRESSIONS *)
 

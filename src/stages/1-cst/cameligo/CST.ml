@@ -211,10 +211,10 @@ and signature_expr =
 | S_Var  of module_name
 
 and sig_item =
-  S_Value    of (kwd_val * variable * colon * type_expr) reg
-| S_Type     of (kwd_type * variable * equal * type_expr) reg
-| S_Type_var of (kwd_type * variable) reg
-| S_Attr     of (attribute * sig_item) reg
+  S_Value   of (kwd_val * variable * colon * type_expr) reg
+| S_Type    of (kwd_type * variable * equal * type_expr) reg
+| S_TypeVar of (kwd_type * variable) reg
+| S_Attr    of (attribute * sig_item) reg
 
 (* Module paths *)
 
@@ -734,7 +734,7 @@ let declaration_to_region = function
 | D_Type      {region; _} -> region
 
 let sig_item_to_region = function
-  S_Attr     {region; _}
-| S_Value    {region; _}
-| S_Type     {region; _}
-| S_Type_var {region; _} -> region
+  S_Attr    {region; _}
+| S_Value   {region; _}
+| S_Type    {region; _}
+| S_TypeVar {region; _} -> region

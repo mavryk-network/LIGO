@@ -557,7 +557,7 @@ sig_item:
   }
 | "type" type_name {
     let region = cover $1#region $2#region
-    in S_Type_var {region; value=$1,$2}
+    in S_TypeVar {region; value=$1,$2}
   }
 | "[@attr]" sig_item {
     let region = cover $1#region (sig_item_to_region $2)

@@ -245,10 +245,10 @@ and print_sig_item_list state (node : sig_item list) =
   |> separate_map hardline group
 
 and print_sig_item state = function
-  S_Attr       d -> print_S_Attr     state d
-| S_Value      d -> print_S_Value    state d ^^ hardline
-| S_Type       d -> print_S_Type     state d ^^ hardline
-| S_Type_var   d -> print_S_Type_var       d ^^ hardline
+  S_Attr      d -> print_S_Attr    state d
+| S_Value     d -> print_S_Value   state d ^^ hardline
+| S_Type      d -> print_S_Type    state d ^^ hardline
+| S_TypeVar   d -> print_S_TypeVar       d ^^ hardline
 
 (* Attributed declaration *)
 
@@ -421,7 +421,7 @@ and print_S_Type state (node : (kwd_type * variable * equal * type_expr) reg) =
   ^^ group (nest padding (break 1 ^^ t_expr))
 
 
-and print_S_Type_var (node : (kwd_type * variable) reg) =
+and print_S_TypeVar (node : (kwd_type * variable) reg) =
   let kwd_type, name = node.value in
   let name    = print_ident name in
   token kwd_type ^^ space ^^ name

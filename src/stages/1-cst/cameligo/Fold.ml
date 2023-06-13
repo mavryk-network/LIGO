@@ -610,7 +610,7 @@ let fold
       S_Attr node -> node -| S_reg (S_tuple_2 (S_attribute, S_sig_item))
     | S_Value node -> node -| S_reg (S_tuple_4 (S_kwd_let, S_variable, S_colon, S_type_expr))
     | S_Type node -> node -| S_reg (S_tuple_4 (S_kwd_type, S_variable, S_equal, S_type_expr))
-    | S_Type_var node -> node -| S_reg (S_tuple_2 (S_kwd_type, S_variable)))
+    | S_TypeVar node -> node -| S_reg (S_tuple_2 (S_kwd_type, S_variable)))
   | S_slash -> process @@ node -| S_wrap S_lexeme
   | S_slash_eq -> process @@ node -| S_wrap S_lexeme
   | S_the_unit -> process @@ node -| S_tuple_2 (S_lpar, S_rpar)

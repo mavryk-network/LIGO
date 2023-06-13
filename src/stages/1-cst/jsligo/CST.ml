@@ -16,11 +16,16 @@ module Token     = Lexing_jsligo.Token
 
 module Wrap = Lexing_shared.Wrap
 module Attr = Lexing_shared.Attr
+module CommonNodes = Cst_shared.CommonNodes
 
 (* Utilities *)
 
 type 'a reg = 'a Region.reg
 type 'payload wrap = 'payload Wrap.t
+
+type ('a, 'sep) sep_or_term  = ('a, 'sep) CommonNodes.sep_or_term
+type ('a, 'sep) nsep_or_term = ('a, 'sep) CommonNodes.nsep_or_term
+type ('a, 'sep) nsep_or_pref = ('a, 'sep) CommonNodes.nsep_or_pref
 
 open Utils
 
@@ -124,20 +129,6 @@ type 'a brackets  = 'a brackets' reg
 type 'a chevrons' = {lchevron: lt; inside: 'a; rchevron: gt}
 type 'a chevrons  = 'a chevrons' reg
 
-(* Lists *)
-
-type ('a, 'sep) sep_or_term =
-  Sep  of ('a, 'sep) sepseq
-| Term of ('a * 'sep) list
-
-type ('a, 'sep) nsep_or_term =
-  NSep  of ('a, 'sep) nsepseq
-| NTerm of ('a * 'sep) nseq
-
-type ('a, 'sep) nsep_or_pref =
-  NSep of ('a, 'sep) nsepseq
-| Pref of ('sep * 'a) nseq
-
 (* The Abstract Syntax Tree *)
 
 type t = {
@@ -151,8 +142,8 @@ and cst = t
 
 and top_decl =
   TL_Decl      of declaration * semi option
-| TL_Attr      of (attribute * top_decl)
-| TL_Export    of kwd_export * top_decl
+| TL_Attr      of (attribute * top_decl) reg
+| TL_Export    of (kwd_export * top_decl) reg
 | TL_Directive of Directive.t
 
 (* INNER DECLARATIONS (AS STATEMENTS) *)
@@ -162,7 +153,7 @@ and top_decl =
 
 and declaration =
   D_Value     of value_decl reg
-| D_Import    of import_decl reg
+| D_Import    of import_decl
 | D_Interface of interface_decl reg
 | D_Module    of module_decl reg
 | D_Type      of type_decl reg
@@ -194,9 +185,9 @@ and type_annotation = colon * type_expr
 (* Import declaration *)
 
 and import_decl =
-  Alias of import_alias
-| All   of import_all_as
-| From  of import_from
+  AliasModule of import_alias reg
+| ImportAll   of import_all_as reg
+| ImportSome  of import_from reg
 
 and import_alias = {
   kwd_import  : kwd_import;
@@ -242,19 +233,19 @@ and intf_body = intf_entries braces
 and intf_entries = (intf_entry, semi) nsep_or_term
 
 and intf_entry =
-  I_Attr    of (attribute * intf_entry)
+  I_Attr    of (attribute * intf_entry) reg
 | I_Type    of intf_type reg
 | I_Const   of intf_const reg
 
 and intf_type = {
-  kwd_type : kwd_type;
-  name     : type_name;
-  type_rhs : (equal * type_expr) option
+  kwd_type  : kwd_type;
+  type_name : type_name;
+  type_rhs  : (equal * type_expr) option
 }
 
 and intf_const = {
   kwd_const  : kwd_const;
-  name       : variable;
+  const_name : variable;
   const_type : type_annotation
 }
 
@@ -263,7 +254,7 @@ and intf_const = {
 and module_decl = {
   kwd_namespace : kwd_namespace;
   module_name   : module_name;
-  interface     : interface option;
+  module_type   : interface option;
   module_body   : statements braces
 }
 
@@ -292,7 +283,7 @@ and type_vars = (type_var, comma) sep_or_term chevrons
 
 and type_expr =
   T_App       of (type_expr * type_ctor_args) reg  (* <u,v> M.t         *)
-| T_Attr      of (attribute * type_expr)           (* @a e              *)
+| T_Attr      of (attribute * type_expr) reg       (* @a e              *)
 | T_Cart      of cartesian                         (* [t, [u, v]]       *)
 | T_Fun       of fun_type                          (* (a : t) => u      *)
 | T_Int       of (lexeme * Z.t) wrap               (* 42                *)
@@ -360,11 +351,11 @@ and union_type = (type_expr field record, vbar) nsep_or_pref reg
    add or modify some, please make sure they remain in order. *)
 
 and pattern =
-  P_Attr   of (attribute * pattern)  (* @a [x, _]      *)
-| P_Record of pattern field record   (* {x, y : 0}     *)
-| P_Tuple  of pattern tuple          (* [x, ...y, z]   *)
-| P_Typed  of typed_pattern          (* [] : list<int> *)
-| P_Var    of variable               (* x              *)
+  P_Attr   of (attribute * pattern) reg (* @a [x, _]      *)
+| P_Record of pattern field record      (* {x, y : 0}     *)
+| P_Tuple  of pattern tuple             (* [x, ...y, z]   *)
+| P_Typed  of typed_pattern             (* [] : list<int> *)
+| P_Var    of variable                  (* x              *)
 
 (* Tuple *)
 
@@ -382,7 +373,7 @@ and typed_pattern = pattern * type_annotation
    add or modify some, please make sure they remain in order. *)
 
 and statement =
-  S_Attr   of (attribute * statement)
+  S_Attr   of (attribute * statement) reg
 | S_Block  of statements braces
 | S_Break  of kwd_break
 | S_Cond   of cond_stmt reg
@@ -483,7 +474,7 @@ and expr =
 | E_AddEq    of plus_eq bin_op reg      (* x += y            *)
 | E_And      of bool_and bin_op reg     (* x && y            *)
 | E_App      of (expr * arguments) reg  (* f(x)   Foo()      *)
-| E_Attr     of (attribute * expr)      (* @a [x, y]         *)
+| E_Attr     of (attribute * expr) reg  (* @a [x, y]         *)
 | E_Bytes    of (lexeme * Hex.t) wrap   (* 0xFFFA            *)
 | E_CodeInj  of code_inj reg
 | E_Contract of contract_of_expr reg    (* contract_of (M.N) *)
@@ -576,7 +567,7 @@ and ternary = {
 
 (* Typed expression *)
 
-and typed_expr = expr * kwd_as * type_expr (* TODO: Used with colon too in Parser *)
+and typed_expr = expr * kwd_as * type_expr
 
 (* Binary and unary arithmetic operators *)
 
@@ -603,11 +594,6 @@ and code_inj = {
   code     : expr;
 }
 
-(*
-and 'rhs field =
-  Full of 'rhs full_field
-| Incl of ellipsis * variable *)
-
 (* PROJECTIONS *)
 
 (* Projecting regions from some nodes of the AST *)
@@ -633,13 +619,13 @@ let declaration_to_region = function
 
 let rec top_decl_to_region = function
   TL_Decl      (d, _) -> declaration_to_region d
-| TL_Attr      (_, d)
-| TL_Export    (_, d) -> top_decl_to_region d
+| TL_Attr      {region; _}
+| TL_Export    {region; _} -> region
 | TL_Directive d -> Directive.to_region d
 
 let rec type_expr_to_region = function
-  T_App       {region; _} -> region
-| T_Attr      (_, e) -> type_expr_to_region e
+  T_App       {region; _}
+| T_Attr      {region; _}
 | T_Cart      {region; _}
 | T_Fun       {region; _} -> region
 | T_Int       w -> w#region
@@ -653,7 +639,7 @@ let rec type_expr_to_region = function
 | T_Variant   {region; _} -> region
 
 let rec pattern_to_region = function
-  P_Attr   (_,p) -> pattern_to_region p
+  P_Attr   {region; _}
 | P_Record {region; _}
 | P_Tuple  {region; _} -> region
 | P_Typed  (p, (_, e)) ->
@@ -707,7 +693,7 @@ let rec expr_to_region = function
 | E_Verbatim w -> w#region
 
 let rec statement_to_region = function
-  S_Attr   (_, s) -> statement_to_region s
+  S_Attr   {region; _}
 | S_Block  {region; _} -> region
 | S_Break  w -> w#region
 | S_Cond   {region; _} -> region

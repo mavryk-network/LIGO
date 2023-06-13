@@ -582,7 +582,7 @@ let sig_entry : Eq.sig_entry -> Folding.sig_entry = function
   | S_Type {region; value = (_, v, _, ty)} ->
     let loc = Location.lift region in
     Location.wrap ~loc (O.S_type (TODO_do_in_parsing.tvar v, ty))
-  | S_Type_var {region; value = (_, v)} ->
+  | S_TypeVar {region; value = (_, v)} ->
     let loc = Location.lift region in
     Location.wrap ~loc (O.S_type_var (TODO_do_in_parsing.tvar v))
   | S_Attr {region; value = attr, si} ->

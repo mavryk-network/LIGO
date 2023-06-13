@@ -123,6 +123,16 @@ val mk_children_sepseq :
 val mk_children_nseq :
   'a printer -> ?root:root -> 'a Utils.nseq -> child list
 
+val mk_children_sep_or_term :
+  'a printer -> ?root:root -> ('a,_) CommonNodes.sep_or_term -> child list
+
+val mk_children_nsep_or_term :
+  'a printer -> ?root:root -> ('a,_) CommonNodes.nsep_or_term -> child list
+
+val mk_children_nsep_or_pref :
+  'a printer -> ?root:root -> ('a,_) CommonNodes.nsep_or_pref -> child list
+
+
 (* PRINTING LISTS AND SEQUENCES *)
 
 (* The call [of_list ?region state ?root print list] prints a tree of
@@ -161,6 +171,31 @@ val of_nseq :
   -> 'a printer
   -> 'a Utils.nseq
   -> unit
+
+val of_sep_or_term :
+  ?region:Region.t
+  -> state
+  -> root
+  -> 'a printer
+  -> ('a,_) CommonNodes.sep_or_term
+  -> unit
+
+val of_nsep_or_term :
+  ?region:Region.t
+  -> state
+  -> root
+  -> 'a printer
+  -> ('a,_) CommonNodes.nsep_or_term
+  -> unit
+
+val of_nsep_or_pref :
+  ?region:Region.t
+  -> state
+  -> root
+  -> 'a printer
+  -> ('a,_) CommonNodes.nsep_or_pref
+  -> unit
+
 
 (* PRINTING TOKENS (NODES) *)
 

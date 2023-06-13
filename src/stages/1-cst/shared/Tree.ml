@@ -126,6 +126,15 @@ let mk_children_sepseq print ?root =
 let mk_children_nseq print ?root =
   mk_children_list print ?root <@ Utils.nseq_to_list
 
+let mk_children_sep_or_term print ?root =
+  mk_children_list print ?root <@ CommonNodes.sep_or_term_to_list
+
+let mk_children_nsep_or_term print ?root =
+  mk_children_list print ?root <@ CommonNodes.nsep_or_term_to_list
+
+let mk_children_nsep_or_pref print ?root =
+  mk_children_list print ?root <@ CommonNodes.nsep_or_pref_to_list
+
 (* PRINTING UNARY TREES *)
 
 let make_unary ?region state root print node =
@@ -145,6 +154,20 @@ let of_sepseq ?region state root print =
 
 let of_nseq ?region state root print =
   of_list ?region state root print <@ Utils.nseq_to_list
+
+let of_sep_or_term ?region state root print = function
+  `Sep s -> of_sepseq ?region state root print s
+| `Term l -> of_list ?region state root print @@ List.map ~f:fst l
+
+let of_nsep_or_term ?region state root print = function
+  `NSep s -> of_nsepseq ?region state root print s
+| `NTerm (hd, tl) ->
+     of_list ?region state root print @@ List.map ~f:fst (hd::tl)
+
+let of_nsep_or_pref ?region state root print = function
+  `NSep s -> of_nsepseq ?region state root print s
+| `Pref (hd, tl) ->
+     of_list ?region state root print @@ List.map ~f:snd (hd::tl)
 
 (* PRINTING LEAVES *)
 
