@@ -6,7 +6,7 @@ type all =
   [ `Self_ast_aggregated_warning_unused of Location.t * string
   | `Self_ast_aggregated_warning_muchused of Location.t * string
   | `Self_ast_aggregated_warning_unused_rec of Location.t * string
-  | `Self_ast_typed_metadata_invalid_type of Location.t * string
+  | `Self_ast_aggregated_metadata_invalid_type of Location.t * string
   | `Checking_ambiguous_constructor_expr of
     Ast_core.expression * Type_var.t * Type_var.t * Location.t
   | `Checking_ambiguous_constructor_pat of
@@ -132,7 +132,7 @@ let pp
         snippet_pp
         loc
         s
-    | `Self_ast_typed_metadata_invalid_type (loc, s) ->
+    | `Self_ast_aggregated_metadata_invalid_type (loc, s) ->
       Format.fprintf
         f
         "@[<hv>%a:@.Warning: If the following metadata is meant to be TZIP-16 \
@@ -302,7 +302,7 @@ let to_warning : all -> Simple_utils.Warning.t =
     in
     let content = make_content ~message ~location () in
     make ~stage:"parsing command line parameters" ~content
-  | `Self_ast_typed_metadata_invalid_type (loc, s) ->
+  | `Self_ast_aggregated_metadata_invalid_type (loc, s) ->
     let message =
       Format.sprintf
         "Warning: If the following metadata is meant to be TZIP-16 compliant,@.\

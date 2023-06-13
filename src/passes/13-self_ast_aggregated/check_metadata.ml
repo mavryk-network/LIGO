@@ -44,5 +44,5 @@ let check_metadata_tzip16_type_compliance ~raise ?syntax (storage_metadata : typ
     | Some Syntax_types.JsLIGO -> "big_map<string, bytes>"
     | Some CameLIGO -> "(string, bytes) big_map"
     | _ -> "big_map string bytes" in
-  let warning = `Self_ast_typed_metadata_invalid_type (storage_metadata.location, suggested_type) in
+  let warning = `Self_ast_aggregated_metadata_invalid_type (storage_metadata.location, suggested_type) in
   if not pass then raise.warning @@ warning
