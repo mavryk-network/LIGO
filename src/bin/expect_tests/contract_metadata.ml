@@ -48,18 +48,6 @@ let%expect_test _ =
     [ "compile"; "storage"; test "metadata_tzip16.mligo"; "-e"; entrypoint; storage ];
   [%expect
     {|
-    File "../../test/contracts/contract_metadata/metadata_tzip16.mligo", line 16, characters 15-18:
-     15 |   { data     : int
-     16 |   ; metadata : nat
-                         ^^^
-     17 |   }
-    :
-    Warning: If the following metadata is meant to be TZIP-16 compliant,
-    then it should be a 'big_map' from 'string' to 'bytes'.
-    Hint: The corresponding type should be :
-      (string, bytes) big_map
-    You can disable this warning with the '--no-metadata-check' flag.
-
     (Pair 42 33) |}]
 
 let%expect_test _ =
@@ -87,18 +75,6 @@ let%expect_test _ =
     [ "compile"; "storage"; test "metadata_tzip16.jsligo"; "-e"; entrypoint; storage ];
   [%expect
     {|
-    File "../../test/contracts/contract_metadata/metadata_tzip16.jsligo", line 17, characters 12-15:
-     16 |   data: int,
-     17 |   metadata: nat,
-                      ^^^
-     18 | };
-    :
-    Warning: If the following metadata is meant to be TZIP-16 compliant,
-    then it should be a 'big_map' from 'string' to 'bytes'.
-    Hint: The corresponding type should be :
-      big_map<string, bytes>
-    You can disable this warning with the '--no-metadata-check' flag.
-
     (Pair 42 33) |}]
 
 (* -------------------------------------------------------------------------- *)
@@ -130,18 +106,6 @@ let%expect_test _ =
     [ "compile"; "storage"; test "metadata_tzip16.mligo"; "-e"; entrypoint; storage ];
   [%expect
     {|
-    File "../../test/contracts/contract_metadata/metadata_tzip16.mligo", line 25, characters 15-30:
-     24 |   { data     : int
-     25 |   ; metadata : (bytes, string) big_map
-                         ^^^^^^^^^^^^^^^
-     26 |   }
-    :
-    Warning: If the following metadata is meant to be TZIP-16 compliant,
-    then it should be a 'big_map' from 'string' to 'bytes'.
-    Hint: The corresponding type should be :
-      (string, bytes) big_map
-    You can disable this warning with the '--no-metadata-check' flag.
-
     (Pair 42 { Elt 0x24 "titi" ; Elt 0x42 "toto" }) |}]
 
 let%expect_test _ =
@@ -171,18 +135,6 @@ let%expect_test _ =
     [ "compile"; "storage"; test "metadata_tzip16.jsligo"; "-e"; entrypoint; storage ];
   [%expect
     {|
-    File "../../test/contracts/contract_metadata/metadata_tzip16.jsligo", line 29, characters 12-34:
-     28 |   data: int,
-     29 |   metadata: big_map<bytes, string>;
-                      ^^^^^^^^^^^^^^^^^^^^^^
-     30 | };
-    :
-    Warning: If the following metadata is meant to be TZIP-16 compliant,
-    then it should be a 'big_map' from 'string' to 'bytes'.
-    Hint: The corresponding type should be :
-      big_map<string, bytes>
-    You can disable this warning with the '--no-metadata-check' flag.
-
     (Pair 42 { Elt 0x24 "titi" ; Elt 0x42 "toto" }) |}]
 
 (* -------------------------------------------------------------------------- *)
@@ -214,18 +166,6 @@ let%expect_test _ =
     [ "compile"; "storage"; test "metadata_tzip16.mligo"; "-e"; entrypoint; storage ];
   [%expect
     {|
-    File "../../test/contracts/contract_metadata/metadata_tzip16.mligo", line 34, characters 32-47:
-     33 |   { data     : int
-     34 |   ; [@annot metadata] notdata : (bytes, string) big_map
-                                          ^^^^^^^^^^^^^^^
-     35 |   }
-    :
-    Warning: If the following metadata is meant to be TZIP-16 compliant,
-    then it should be a 'big_map' from 'string' to 'bytes'.
-    Hint: The corresponding type should be :
-      (string, bytes) big_map
-    You can disable this warning with the '--no-metadata-check' flag.
-
     (Pair 42 { Elt 0x24 "titi" ; Elt 0x42 "toto" }) |}]
 
 (* -------------------------------------------------------------------------- *)

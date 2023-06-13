@@ -20,7 +20,8 @@ type form =
 let specific_passes ~raise ~options cform prg =
   match cform with
   | Contract { entrypoints; module_path } ->
-    Self_ast_typed.all_contract ~raise ~options entrypoints module_path prg
+    ignore options;
+    Self_ast_typed.all_contract ~raise entrypoints module_path prg
   | View { command_line_views; contract_entry; module_path; contract_type } ->
     let prg =
       Self_ast_typed.all_view

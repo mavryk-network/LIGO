@@ -5,7 +5,7 @@ open Ligo_prim
 let all_program ~raise init =
   Make_entry_point.make_main_module ~raise init
 
-let all_contract ~raise ~(options : Compiler_options.t) entrypoints module_path (prg : Ast_typed.program) =
+let all_contract ~raise entrypoints module_path (prg : Ast_typed.program) =
   let module_ = Helpers.get_module module_path prg in
   let module_ =
     match entrypoints with
@@ -19,17 +19,6 @@ let all_contract ~raise ~(options : Compiler_options.t) entrypoints module_path 
   let prg, main_name, contract_type =
     Helpers.fetch_contract_type ~raise main_name module_path prg
   in
-  (* let () = *)
-  (*   if not options.middle_end.no_metadata_check *)
-  (*   then ( *)
-  (*     (\* Check storage type TZIP-16 compliance *\) *)
-  (*     let open Check_metadata in *)
-  (*     match find_storage_metadata_opt contract_type.storage with *)
-  (*     | Some metadata -> *)
-  (*       check_metadata_tzip16_type_compliance ~raise ?syntax:options.middle_end.syntax_for_errors metadata *)
-  (*     | None -> ()) *)
-  (* in *)
-  ignore options;
   (main_name, contract_type), prg
 
 
@@ -74,6 +63,3 @@ let all_view ~raise command_line_views main_name module_path contract_type prg =
   let () = List.iter ~f module_ in
   let prg, () = Helpers.update_module module_path (fun _ -> module_, ()) prg in
   prg
-
-
-module Check_metadata = Check_metadata
