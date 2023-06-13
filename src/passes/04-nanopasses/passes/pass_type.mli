@@ -71,6 +71,7 @@ module Selector : sig
 
   val expr : Ast_unified.expr t
   val program : Ast_unified.program t
+  val top_level : Ast_unified.top_level t
   val block : Ast_unified.block t
   val pattern : Ast_unified.pattern t
   val ty_expr : Ast_unified.ty_expr t

@@ -55,6 +55,7 @@ end = struct
       ; declaration = declaration ~raise
       ; program_entry = program_entry ~raise
       ; program = Fun.id
+      ; top_level = top_level
       ; sig_expr = sig_expr
       ; sig_entry = sig_entry ~raise
       }
@@ -479,7 +480,8 @@ end = struct
       | _ ->
         invariant
         @@ Format.asprintf "%a" Sexp.pp_hum (I.sexp_of_sig_entry_ ig ig ig item)
-  
+
+  and top_level : _ I.Types.top_level_ -> O.program = function Top_level l -> l
 end
 
 module From_core : sig
@@ -507,6 +509,7 @@ end = struct
       ; declaration = (fun _ -> assert false)
       ; program_entry = (fun _ -> assert false)
       ; program = Fun.id
+      ; top_level = (fun t -> Top_level t)
       ; sig_expr = (fun _ -> assert false)
       ; sig_entry = (fun _ -> assert false)
       }

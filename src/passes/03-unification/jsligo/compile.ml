@@ -119,6 +119,7 @@ module Eq = struct
   type declaration = I.statement
   type program_entry = I.toplevel_statement
   type program = I.t
+  type top_level = I.t
   type sig_expr = I.interface_expr
   type sig_entry = I.interface_entry
 end
@@ -705,6 +706,9 @@ and program_entry : Eq.program_entry -> Folding.program_entry = function
 
 
 and program : Eq.program -> Folding.program = fun x -> List.Ne.to_list x.statements
+
+
+and top_level : Eq.top_level -> Folding.top_level = fun x -> Top_level x
 
 
 and sig_expr : Eq.sig_expr -> Folding.sig_expr = function

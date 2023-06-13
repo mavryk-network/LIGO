@@ -12,6 +12,7 @@ module Catamorphism = struct
        , 'declaration
        , 'program_entry
        , 'program
+       , 'top_level
        , 'sig_expr
        , 'sig_entry)
        fold =
@@ -28,6 +29,7 @@ module Catamorphism = struct
     ; program_entry :
         ('program_entry, 'declaration, 'instruction) program_entry_ -> 'program_entry
     ; program : ('program, 'program_entry) program_ -> 'program
+    ; top_level : ('top_level, 'program) top_level_ -> 'top_level
     ; sig_expr : ('sig_expr, 'sig_entry, 'ty_expr) sig_expr_ -> 'sig_expr
     ; sig_entry : ('sig_expr, 'sig_entry, 'ty_expr) sig_entry_ -> 'sig_entry
     }
@@ -43,6 +45,7 @@ module Catamorphism = struct
     , declaration
     , program_entry
     , program
+    , top_level
     , sig_expr
     , sig_entry)
     fold
@@ -58,13 +61,14 @@ module Catamorphism = struct
     ; declaration = (fun x -> { fp = x })
     ; program_entry = (fun x -> { fp = x })
     ; program = (fun x -> { fp = x })
+    ; top_level = (fun x -> { fp = x })
     ; sig_expr = (fun x -> { fp = x })
     ; sig_entry = (fun x -> { fp = x })
     }
 
 
   let rec cata_expr
-      : type e t p s b m i d pe prg sgt si. f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) fold -> expr -> e
+      : type e t p s b m i d pe prg tl sgt si. f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) fold -> expr -> e
     =
    fun ~f x ->
     map_expr_
@@ -78,22 +82,22 @@ module Catamorphism = struct
 
 
   and cata_ty_expr
-      : type e t p s b m i d pe prg sgt si.
-        f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) fold -> ty_expr -> t
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) fold -> ty_expr -> t
     =
    fun ~f x -> map_ty_expr_ (cata_ty_expr ~f) x.fp |> f.ty_expr
 
 
   and cata_pattern
-      : type e t p s b m i d pe prg sgt si.
-        f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) fold -> pattern -> p
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) fold -> pattern -> p
     =
    fun ~f x -> map_pattern_ (cata_pattern ~f) (cata_ty_expr ~f) x.fp |> f.pattern
 
 
   and cata_statement
-      : type e t p s b m i d pe prg sgt si.
-        f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) fold -> statement -> s
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) fold -> statement -> s
     =
    fun ~f x ->
     map_statement_ (cata_statement ~f) (cata_instruction ~f) (cata_declaration ~f) x.fp
@@ -101,22 +105,22 @@ module Catamorphism = struct
 
 
   and cata_block
-      : type e t p s b m i d pe prg sgt si.
-        f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) fold -> block -> b
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) fold -> block -> b
     =
    fun ~f x -> map_block_ (cata_block ~f) (cata_statement ~f) x.fp |> f.block
 
 
   and cata_mod_expr
-      : type e t p s b m i d pe prg sgt si.
-        f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) fold -> mod_expr -> m
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) fold -> mod_expr -> m
     =
    fun ~f x -> map_mod_expr_ (cata_mod_expr ~f) (cata_program ~f) x.fp |> f.mod_expr
 
 
   and cata_instruction
-      : type e t p s b m i d pe prg sgt si.
-        f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) fold -> instruction -> i
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) fold -> instruction -> i
     =
    fun ~f x ->
     map_instruction_
@@ -130,8 +134,8 @@ module Catamorphism = struct
 
 
   and cata_declaration
-      : type e t p s b m i d pe prg sgt si.
-        f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) fold -> declaration -> d
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) fold -> declaration -> d
     =
    fun ~f x ->
     map_declaration_
@@ -146,8 +150,8 @@ module Catamorphism = struct
 
 
   and cata_program_entry
-      : type e t p s b m i d pe prg sgt si.
-        f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) fold -> program_entry -> pe
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) fold -> program_entry -> pe
     =
    fun ~f x ->
     map_program_entry_
@@ -159,21 +163,28 @@ module Catamorphism = struct
 
 
   and cata_program
-      : type e t p s b m i d pe prg sgt si.
-        f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) fold -> program -> prg
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) fold -> program -> prg
     =
    fun ~f x -> map_program_ (cata_program ~f) (cata_program_entry ~f) x.fp |> f.program
 
 
+  and cata_top_level
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) fold -> top_level -> tl
+    =
+   fun ~f x -> map_top_level_ (cata_top_level ~f) (cata_program ~f) x.fp |> f.top_level
+
+
   and cata_sig_expr
-      : type e t p s b m i d pe prg sgt si.
-        f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) fold -> sig_expr -> sgt
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) fold -> sig_expr -> sgt
     =
    fun ~f x -> map_sig_expr_ (cata_sig_expr ~f) (cata_sig_entry ~f) (cata_ty_expr ~f) x.fp |> f.sig_expr
 
   and cata_sig_entry
-      : type e t p s b m i d pe prg sgt si.
-        f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) fold -> sig_entry -> si
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) fold -> sig_entry -> si
     =
    fun ~f x -> map_sig_entry_ (cata_sig_expr ~f) (cata_sig_entry ~f) (cata_ty_expr ~f) x.fp |> f.sig_entry
 end
@@ -190,6 +201,7 @@ module Anamorphism = struct
        , 'declaration
        , 'program_entry
        , 'program
+       , 'top_level
        , 'sig_expr
        , 'sig_entry)
        unfold =
@@ -206,13 +218,14 @@ module Anamorphism = struct
     ; program_entry :
         'program_entry -> ('program_entry, 'declaration, 'instruction) program_entry_
     ; program : 'program -> ('program, 'program_entry) program_
+    ; top_level : 'top_level -> ('top_level, 'program) top_level_
     ; sig_expr : 'sig_expr -> ('sig_expr, 'sig_entry, 'ty_expr) sig_expr_
     ; sig_entry : 'sig_entry -> ('sig_expr, 'sig_entry, 'ty_expr) sig_entry_
     }
 
   let rec ana_expr
-      : type e t p s b m i d pe prg sgt si.
-        f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) unfold -> e -> expr
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) unfold -> e -> expr
     =
    fun ~f x ->
     { fp =
@@ -227,22 +240,22 @@ module Anamorphism = struct
 
 
   and ana_ty_expr
-      : type e t p s b m i d pe prg sgt si.
-        f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) unfold -> t -> ty_expr
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) unfold -> t -> ty_expr
     =
    fun ~f x -> { fp = f.ty_expr x |> map_ty_expr_ (ana_ty_expr ~f) }
 
 
   and ana_pattern
-      : type e t p s b m i d pe prg sgt si.
-        f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) unfold -> p -> pattern
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) unfold -> p -> pattern
     =
    fun ~f x -> { fp = f.pattern x |> map_pattern_ (ana_pattern ~f) (ana_ty_expr ~f) }
 
 
   and ana_instruction
-      : type e t p s b m i d pe prg sgt si.
-        f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) unfold -> i -> instruction
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) unfold -> i -> instruction
     =
    fun ~f x ->
     { fp =
@@ -257,8 +270,8 @@ module Anamorphism = struct
 
 
   and ana_statement
-      : type e t p s b m i d pe prg sgt si.
-        f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) unfold -> s -> statement
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) unfold -> s -> statement
     =
    fun ~f x ->
     { fp =
@@ -268,15 +281,15 @@ module Anamorphism = struct
 
 
   and ana_block
-      : type e t p s b m i d pe prg sgt si.
-        f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) unfold -> b -> block
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) unfold -> b -> block
     =
    fun ~f x -> { fp = f.block x |> map_block_ (ana_block ~f) (ana_statement ~f) }
 
 
   and ana_declaration
-      : type e t p s b m i d pe prg sgt si.
-        f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) unfold -> d -> declaration
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) unfold -> d -> declaration
     =
    fun ~f x ->
     { fp =
@@ -292,15 +305,15 @@ module Anamorphism = struct
 
 
   and ana_mod_expr
-      : type e t p s b m i d pe prg sgt si.
-        f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) unfold -> m -> mod_expr
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) unfold -> m -> mod_expr
     =
    fun ~f x -> { fp = f.mod_expr x |> map_mod_expr_ (ana_mod_expr ~f) (ana_program ~f) }
 
 
   and ana_program_entry
-      : type e t p s b m i d pe prg sgt si.
-        f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) unfold -> pe -> program_entry
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) unfold -> pe -> program_entry
     =
    fun ~f x ->
     { fp =
@@ -313,23 +326,31 @@ module Anamorphism = struct
 
 
   and ana_program
-      : type e t p s b m i d pe prg sgt si.
-        f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) unfold -> prg -> program
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) unfold -> prg -> program
     =
    fun ~f x ->
     { fp = f.program x |> map_program_ (ana_program ~f) (ana_program_entry ~f) }
 
 
+  and ana_top_level
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) unfold -> tl -> top_level
+    =
+   fun ~f x ->
+    { fp = f.top_level x |> map_top_level_ (ana_top_level ~f) (ana_program ~f) }
+
+
   and ana_sig_expr
-      : type e t p s b m i d pe prg sgt si.
-        f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) unfold -> sgt -> sig_expr
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) unfold -> sgt -> sig_expr
     =
    fun ~f x ->
     { fp = f.sig_expr x |> map_sig_expr_ (ana_sig_expr ~f) (ana_sig_entry ~f) (ana_ty_expr ~f) }
 
   and ana_sig_entry
-      : type e t p s b m i d pe prg sgt si.
-        f:(e, t, p, s, b, m, i, d, pe, prg, sgt, si) unfold -> si -> sig_entry
+      : type e t p s b m i d pe prg tl sgt si.
+        f:(e, t, p, s, b, m, i, d, pe, prg, tl, sgt, si) unfold -> si -> sig_entry
     =
    fun ~f x ->
     { fp = f.sig_entry x |> map_sig_entry_ (ana_sig_expr ~f) (ana_sig_entry ~f) (ana_ty_expr ~f) }
@@ -347,6 +368,7 @@ module Iter = struct
     ; declaration : (declaration, expr, ty_expr, pattern, mod_expr, sig_expr) declaration_ -> unit
     ; program_entry : (program_entry, declaration, instruction) program_entry_ -> unit
     ; program : (program, program_entry) program_ -> unit
+    ; top_level : (top_level, program) top_level_ -> unit
     ; sig_expr : (sig_expr, sig_entry, ty_expr) sig_expr_ -> unit
     ; sig_entry : (sig_expr, sig_entry, ty_expr) sig_entry_ -> unit
     }
@@ -362,6 +384,7 @@ module Iter = struct
     ; declaration = ignore
     ; program_entry = ignore
     ; program = ignore
+    ; top_level = ignore
     ; sig_expr = ignore
     ; sig_entry = ignore
     }
@@ -410,6 +433,10 @@ module Iter = struct
           (fun x ->
             acc.program x;
             iter.program x)
+      ; top_level =
+          (fun x ->
+            acc.top_level x;
+            iter.top_level x)
       ; sig_expr =
           (fun x ->
              acc.sig_expr x;
@@ -494,6 +521,11 @@ module Iter = struct
   and iter_program ~(f : iter) (x : program) : unit =
     f.program x.fp;
     iter_program_ (iter_program ~f) (iter_program_entry ~f) x.fp
+
+
+  and iter_top_level ~(f : iter) (x : top_level) : unit =
+    f.top_level x.fp;
+    iter_top_level_ (iter_top_level ~f) (iter_program ~f) x.fp
 
 
   and iter_sig_expr ~(f : iter) (x : sig_expr) : unit =

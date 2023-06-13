@@ -125,6 +125,15 @@ type ('a, 'b) program_ = [%import: ('a, 'b) Types.program_]
         ]
     }]
 
+type ('a, 'b) top_level_ = [%import: ('a, 'b) Types.top_level_]
+[@@deriving
+  ez
+    { prefixes =
+        [ ("make_tl", fun content : top_level -> { fp = content })
+        ; ("get_tl", fun (x : Types.top_level) -> x.fp)
+        ]
+    }]
+
 type ('a, 'b, 'c) sig_entry_ = [%import: ('a, 'b, 'c) Types.sig_entry_]
 [@@deriving
   ez
@@ -404,6 +413,7 @@ let get_pattern_binders (p : pattern) : Variable.t list =
       ; declaration = (fun _ -> ())
       ; program_entry = (fun _ -> ())
       ; program = (fun _ -> ())
+      ; top_level = (fun _ -> ())
       ; sig_expr = (fun _ -> ())
       ; sig_entry = (fun _ -> ())
       }

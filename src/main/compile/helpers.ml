@@ -108,7 +108,7 @@ let parse_and_abstract_expression_jsligo ~raise buffer =
   Unification.Jsligo.compile_expression raw
 
 
-let parse_and_abstract ~raise ~(meta : meta) buffer file_path : Ast_unified.program =
+let parse_and_abstract ~raise ~(meta : meta) buffer file_path : Ast_unified.top_level =
   let parse_and_abstract =
     match meta.syntax with
     | CameLIGO -> parse_and_abstract_cameligo

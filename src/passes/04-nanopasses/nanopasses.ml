@@ -26,6 +26,7 @@ type flags =
   ; projections : Syntax_types.t
   ; pattern_constructor_application : Syntax_types.t
   ; mod_res : ModRes.t option
+  ; entries_and_views : string list * string list
   }
 
 let passes ~(flags : flags) : (module T) list =
@@ -49,6 +50,7 @@ let passes ~(flags : flags) : (module T) list =
       ; projections
       ; pattern_constructor_application
       ; mod_res
+      ; entries_and_views
       }
     =
     flags
@@ -68,6 +70,7 @@ let passes ~(flags : flags) : (module T) list =
   ; entry (module Restrict_projections) ~flag:restrict_projection ~arg:()
   ; entry (module Single_switch_block) ~flag:always ~arg:()
   ; entry (module Export_declaration) ~flag:export_declaration ~arg:()
+  ; entry (module Entries_and_views) ~flag:always ~arg:entries_and_views
   ; entry (module Top_level_restriction) ~flag:always ~arg:()
   ; entry (module Contract_hack) ~flag:always ~arg:()
   ; entry (module Pattern_restriction) ~flag:always ~arg:()
@@ -135,6 +138,7 @@ let extract_flags_from_options : disable_initial_check:bool -> Compiler_options.
   let mod_res =
     Option.bind ~f:Preprocessor.ModRes.make options.Compiler_options.frontend.project_root
   in
+  let entries_and_views = options.frontend.entry_point, options.backend.views in
   { initial_node_check = not disable_initial_check
   ; duplicate_identifier
   ; for_to_while_loop = options.frontend.warn_infinite_loop
@@ -154,6 +158,7 @@ let extract_flags_from_options : disable_initial_check:bool -> Compiler_options.
   ; projections = syntax
   ; pattern_constructor_application = syntax
   ; mod_res = mod_res
+  ; entries_and_views = entries_and_views
   }
 
 
@@ -216,6 +221,20 @@ let compile_program ~raise ~(options : Compiler_options.t) ?stop_before
        ?stop_before
        ~sort:Selector.program
        (get_passes ~options ~disable_initial_check:false)
+
+
+let compile_top_level ~raise ~(options : Compiler_options.t) ?stop_before
+    : I.top_level -> O.program
+  =
+  fun tl ->
+  let Top_level prg = tl.fp in
+  Trivial.To_core.program ~raise
+  @@ compile_passes
+       ~raise
+       ?stop_before
+       ~sort:Selector.program
+       (get_passes ~options ~disable_initial_check:false)
+       prg
 
 
 let compile_expression

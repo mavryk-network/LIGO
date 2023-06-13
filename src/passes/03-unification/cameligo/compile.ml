@@ -16,6 +16,7 @@ module Eq = struct
   type declaration = I.declaration
   type program_entry = I.declaration
   type program = I.t
+  type top_level = I.t
   type sig_expr = I.signature_expr
   type sig_entry = I.sig_item
 
@@ -557,6 +558,7 @@ let mod_expr : Eq.mod_expr -> Folding.mod_expr =
 
 let program_entry : Eq.program_entry -> Folding.program_entry = fun x -> PE_declaration x
 let program : Eq.program -> Folding.program = fun { decl; _ } -> List.Ne.to_list decl
+let top_level : Eq.top_level -> Folding.top_level = fun l -> Top_level l
 
 
 let sig_expr : Eq.sig_expr -> Folding.sig_expr = function

@@ -104,6 +104,8 @@ let fv_folder =
   let block : _ block_ -> bound = fold_block_ union union empty in
   let mod_expr = fold_mod_expr_ union union empty in
   let program : _ program_ -> bound = fold_program_ union union empty in
+  let top_level : _ top_level_ -> bound =
+    function Top_level s -> s in
   let sig_expr : _ sig_expr_ -> bound = fold_sig_expr_ union union union empty in
   let sig_entry : _ sig_entry_ -> bound = fun si ->
     match Location.unwrap si with
@@ -128,6 +130,7 @@ let fv_folder =
   ; declaration
   ; program_entry
   ; program
+  ; top_level
   ; sig_expr
   ; sig_entry
   }

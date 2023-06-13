@@ -49,6 +49,7 @@
   of_file
   export_declaration
   import_restriction
+  entries_and_views
   projections
   tuple_as_record
   pattern_restriction

@@ -28,6 +28,7 @@ module Selector : sig
   val select : 'a t -> morphing -> 'a sub_pass
   val expr : expr t
   val program : program t
+  val top_level : top_level t
   val block : block t
   val pattern : pattern t
   val ty_expr : ty_expr t
@@ -40,6 +41,7 @@ end = struct
   let block x = x.block
   let expr x = x.expression
   let program x = x.program
+  let top_level x = x.top_level
   let pattern x = x.pattern
   let ty_expr x = x.ty_expr
   let declaration x = x.declaration

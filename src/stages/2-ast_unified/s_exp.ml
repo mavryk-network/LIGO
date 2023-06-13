@@ -10,6 +10,7 @@ module type OBSCURER = sig
   val mod_expr : bool
   val expr : bool
   val program : bool
+  val top_level : bool
   val program_entry : bool
   val sig_expr : bool
   val sig_entry : bool
@@ -109,6 +110,13 @@ module M (H : OBSCURER) = struct
     else Types.sexp_of_program_ sexp_of_program sexp_of_program_entry e.fp
 
 
+  and sexp_of_top_level : top_level -> Sexp.t =
+   fun e ->
+    if H.top_level
+    then Sexp.Atom "TOP_LEVEL"
+    else Types.sexp_of_top_level_ sexp_of_top_level sexp_of_program e.fp
+
+
   and sexp_of_sig_expr : sig_expr -> Sexp.t =
    fun e ->
     if H.sig_expr
@@ -134,6 +142,7 @@ include M (struct
   let mod_expr = false
   let expr = false
   let program = false
+  let top_level = false
   let program_entry = false
   let sig_expr = false
   let sig_entry = false
@@ -215,6 +224,12 @@ and program_entry_of_sexp : Sexp.t -> program_entry =
 and program_of_sexp : Sexp.t -> program =
  fun s ->
   let fp = Types.program__of_sexp program_of_sexp program_entry_of_sexp s in
+  { fp }
+
+
+and top_level_of_sexp : Sexp.t -> top_level =
+ fun s ->
+  let fp = Types.top_level__of_sexp top_level_of_sexp program_of_sexp s in
   { fp }
 
 

@@ -53,6 +53,7 @@ let split_break stmts : statement list * bool =
         ; declaration = (fun _ -> ())
         ; program_entry = (fun _ -> ())
         ; program = (fun _ -> ())
+        ; top_level = (fun _ -> ())
         ; sig_expr = (fun _ -> ())
         ; sig_entry = (fun _ -> ())
         }

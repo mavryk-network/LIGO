@@ -26,6 +26,7 @@ module type EQUIVALENCES = sig
   type declaration
   type program_entry
   type program
+  type top_level
   type sig_expr
   type sig_entry
 end
@@ -52,6 +53,8 @@ module Folding (X : EQUIVALENCES) = struct
 
   type program = (X.program, X.program_entry) Ast_unified.program_
 
+  type top_level = (X.top_level, X.program) Ast_unified.top_level_
+
   type sig_expr = (X.sig_expr, X.sig_entry, X.ty_expr) Ast_unified.sig_expr_
 
   type sig_entry = (X.sig_expr, X.sig_entry, X.ty_expr) Ast_unified.sig_entry_
@@ -72,6 +75,7 @@ module type UNIF = sig
   val expr : Eq.expr -> expr
   val program_entry : Eq.program_entry -> program_entry
   val program : Eq.program -> program
+  val top_level : Eq.top_level -> top_level
   val sig_expr : Eq.sig_expr -> sig_expr
   val sig_entry : Eq.sig_entry -> sig_entry
 end
@@ -92,6 +96,7 @@ module Make_unification (C : UNIF) = struct
       ; declaration
       ; program_entry
       ; program
+      ; top_level
       ; sig_expr
       ; sig_entry
       }
@@ -99,6 +104,7 @@ module Make_unification (C : UNIF) = struct
 
   let compile_expression e = Ast_unified.Anamorphism.ana_expr ~f:unfolder e
   let compile_program prg = Ast_unified.Anamorphism.ana_program ~f:unfolder prg
+  let compile_top_level prg = Ast_unified.Anamorphism.ana_top_level ~f:unfolder prg
 end
 
 let failwith_not_initial_node_decompiler node =

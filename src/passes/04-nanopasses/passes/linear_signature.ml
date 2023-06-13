@@ -36,7 +36,7 @@ module Type_vars = struct
     | Types.List.Or_unequal_lengths.Ok x -> x
     | Types.List.Or_unequal_lengths.Unequal_lengths -> assert false
 
-  let ftv_folder : (bound, ty_expr, pattern, bound, bound, bound, bound, bound, bound, bound, bound, bound) fold =
+  let ftv_folder : (bound, ty_expr, pattern, bound, bound, bound, bound, bound, bound, bound, bound, bound, bound) fold =
     let sig_expr : _ sig_expr_ -> bound = fold_sig_expr_ union union union empty in
     let sig_entry : _ sig_entry_ -> bound = fun si ->
       match Location.unwrap si with
@@ -55,6 +55,7 @@ module Type_vars = struct
     ; declaration = (fun _ -> empty)
     ; program_entry = (fun _ -> empty)
     ; program = (fun _ -> empty)
+    ; top_level = (fun _ -> empty)
     ; sig_expr
     ; sig_entry
     }

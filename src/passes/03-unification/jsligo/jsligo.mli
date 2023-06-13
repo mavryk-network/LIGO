@@ -2,7 +2,7 @@ module CST = Cst.Jsligo
 module AST = Ast_unified
 
 val compile_expression : CST.expr -> AST.expr
-val compile_program : CST.t -> AST.program
+val compile_program : CST.t -> AST.top_level
 val decompile_expression : AST.expr -> CST.expr
 val decompile_program : AST.program -> CST.t
 val decompile_pattern : AST.pattern -> CST.pattern

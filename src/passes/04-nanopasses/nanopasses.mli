@@ -22,6 +22,13 @@ val compile_program
   -> Ast_unified.program
   -> Ast_core.program
 
+val compile_top_level
+  :  raise:(Passes.Errors.t, Main_warnings.all) Simple_utils.Trace.raise
+  -> options:Compiler_options.t
+  -> ?stop_before:string
+  -> Ast_unified.top_level
+  -> Ast_core.program
+
 (* disable_initial_check is used in test, where we emit final node right away *)
 val compile_expression
   :  raise:(Passes.Errors.t, Main_warnings.all) Simple_utils.Trace.raise

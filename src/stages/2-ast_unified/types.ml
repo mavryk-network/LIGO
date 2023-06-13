@@ -426,6 +426,13 @@ include struct
   [@@deriving map, fold, yojson, iter, sexp, eq, compare, hash]
 end
 
+include struct
+  [@@@warning "-27"]
+
+  type ('self, 'program) top_level_ = Top_level of 'program
+  [@@deriving map, fold, yojson, iter, sexp, eq, compare, hash]
+end
+
 type ty_expr = { fp : ty_expr ty_expr_ }
 and pattern = { fp : (pattern, ty_expr) pattern_ }
 and instruction = { fp : (instruction, expr, pattern, statement, block) instruction_ }
@@ -436,5 +443,6 @@ and mod_expr = { fp : (mod_expr, program) mod_expr_ }
 and expr = { fp : (expr, ty_expr, pattern, block, mod_expr) expr_ }
 and program_entry = { fp : (program_entry, declaration, instruction) program_entry_ }
 and program = { fp : (program, program_entry) program_ }
+and top_level = { fp : (top_level, program) top_level_ }
 and sig_expr = { fp : (sig_expr, sig_entry, ty_expr) sig_expr_ }
 and sig_entry = { fp : (sig_expr, sig_entry, ty_expr) sig_entry_ } [@@deriving eq, compare, hash]

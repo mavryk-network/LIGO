@@ -128,6 +128,8 @@ let fv_folder =
   let program_entry : _ program_entry_ -> sequence =
     fold_program_entry_ propagate_bound propagate_bound merge_bound (empty, empty)
   in
+  let top_level : _ top_level_ -> fv = function
+      Top_level l -> l in
   let statement : _ statement_ -> sequence =
     fold_statement_ propagate_bound merge_bound propagate_bound (empty, empty)
   in
@@ -141,6 +143,7 @@ let fv_folder =
   ; declaration
   ; program_entry
   ; program
+  ; top_level
   ; sig_expr
   ; sig_entry
   }

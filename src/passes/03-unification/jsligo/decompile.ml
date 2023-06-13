@@ -17,6 +17,7 @@ let rec folder =
     ; declaration = todo
     ; program_entry = todo
     ; program = todo
+    ; top_level = todo
     ; sig_expr = todo
     ; sig_entry = todo
     }
