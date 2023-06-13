@@ -47,7 +47,7 @@ let compile_expression_in_context
           Ast_aggregated.get_t_pair input_ty)
       in
       trace ~raise self_ast_aggregated_tracer
-      @@ Self_ast_aggregated.all_contract parameter_ty storage_ty exp)
+      @@ Self_ast_aggregated.all_contract ~options parameter_ty storage_ty exp)
     else exp
   in
   if self_pass then Self_ast_aggregated.remove_check_self exp else exp

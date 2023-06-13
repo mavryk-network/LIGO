@@ -19,16 +19,17 @@ let all_contract ~raise ~(options : Compiler_options.t) entrypoints module_path 
   let prg, main_name, contract_type =
     Helpers.fetch_contract_type ~raise main_name module_path prg
   in
-  let () =
-    if not options.middle_end.no_metadata_check
-    then (
-      (* Check storage type TZIP-16 compliance *)
-      let open Check_metadata in
-      match find_storage_metadata_opt contract_type.storage with
-      | Some metadata ->
-        check_metadata_tzip16_type_compliance ~raise ?syntax:options.middle_end.syntax_for_errors metadata
-      | None -> ())
-  in
+  (* let () = *)
+  (*   if not options.middle_end.no_metadata_check *)
+  (*   then ( *)
+  (*     (\* Check storage type TZIP-16 compliance *\) *)
+  (*     let open Check_metadata in *)
+  (*     match find_storage_metadata_opt contract_type.storage with *)
+  (*     | Some metadata -> *)
+  (*       check_metadata_tzip16_type_compliance ~raise ?syntax:options.middle_end.syntax_for_errors metadata *)
+  (*     | None -> ()) *)
+  (* in *)
+  ignore options;
   (main_name, contract_type), prg
 
 
