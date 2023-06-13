@@ -229,6 +229,89 @@ module Bytes = struct
   let sub (s : nat) (l : nat) (b : bytes) : bytes = [%external ("SLICE", s, l, b)]
 end
 
+module Dynamic_entrypoints_helpers = struct
+  (* This is used by LIGO to morph contract into contract with dynamic entrypoints *)
+  type ('p,'s) ps_f = 'p -> 's -> operation list * 's
+
+
+  type ('s, 'dyn_main) dyn_storage = {
+    storage : 's
+  ; dynamic_entries : (nat, 'dyn_main) big_map
+  }
+
+  (* partially apply on the first 2 arguments to get an entry lifted as a main function *)
+  let dyn_entry_to_main
+    (type storage dyn_main_param dyn_ep_param) =
+      type entry_dyn = (dyn_ep_param, storage) ps_f in
+      fun
+        (getter : dyn_main_param -> dyn_ep_param option)
+        (dyn_main : entry_dyn)
+        p s : operation list * storage ->
+          let p = Option.value_exn (-2) (getter p) in  
+          dyn_main p s
+
+  (* partially apply on the first 3 arguments to get a valid entry to set/update dynamic entries *)
+  let setter
+    (type storage dyn_ep_param dyn_main_param) =
+      type entry_dyn = (dyn_ep_param, storage) ps_f in
+      type main_dyn = (dyn_main_param ,storage) ps_f in
+      type lazified_storage = (storage, main_dyn) dyn_storage in
+      fun
+        (condition_on_set : storage -> bool)
+        (selector : nat)
+        (getter : dyn_main_param -> dyn_ep_param option)
+        (dyn_main : entry_dyn)
+        (store : lazified_storage)
+        : operation list * lazified_storage ->
+          let f = dyn_entry_to_main getter dyn_main in
+          if condition_on_set store.storage then (
+            let dynamic_entries = Big_map.update selector (Some f) store.dynamic_entries in
+            [], { store with dynamic_entries })
+          else 
+            failwith (-3)
+
+  (* partially apply on the first 2 arguments to get a valid entry to a call a dynamic entries *)
+  let caller
+    (type storage dyn_ep_param dyn_main_param) =
+      type main_dyn = (dyn_main_param, storage) ps_f in
+      type lazified_storage = (storage, main_dyn) dyn_storage in 
+      fun
+        (selector : nat)
+        (mk_param : dyn_ep_param -> dyn_main_param)
+        (param : dyn_ep_param)
+        (store : lazified_storage)
+        : operation list * lazified_storage ->
+          let f = match Big_map.find_opt selector store.dynamic_entries with Some x -> x | None -> failwith (-3) in
+          let ops, storage = f (mk_param param) store.storage in
+          ops, { store with storage }
+
+  (* to be partially applied on the first argument to get a valid entry *)
+  let forward_entry
+    (type storage dyn_ep_param dyn_main_param) =
+      type main_dyn = (dyn_main_param, storage) ps_f in
+      type entry_dyn = dyn_ep_param -> storage -> operation list * storage in
+      type lazified_storage = (storage, main_dyn) dyn_storage in 
+      fun
+        (client_entry: entry_dyn)
+        (param : dyn_ep_param)
+        (store: lazified_storage)
+        : operation list * lazified_storage ->
+          let ops, storage = client_entry param store.storage  in
+          ops, { store with storage }
+
+  let forward_view
+    (type storage view_param view_return dyn_main_param) =
+      type main_dyn = (dyn_main_param, storage) ps_f in
+      type view_f = view_param -> storage -> view_return in
+      type lazified_storage = (storage, main_dyn) dyn_storage in 
+      fun
+        (client_view: view_f)
+        (view_param : view_param)
+        (store: lazified_storage)
+        : view_return ->
+          client_view view_param store.storage
+end
+
 module Crypto = struct
   let blake2b (b : bytes) : bytes = [%michelson ({| { BLAKE2B } |} b : bytes)]
   let sha256 (b : bytes) : bytes = [%michelson ({| { SHA256 } |} b : bytes)]
