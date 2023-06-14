@@ -10,7 +10,7 @@ type t =
   ; warn_infinite_loop : bool
   ; (* Frontend *)
     syntax : string
-  ; entry_point : string list
+  ; entry_point : string list option
   ; module_ : string
   ; libraries : string list
   ; project_root : string option
@@ -52,7 +52,7 @@ module Default_options = struct
 
   (* Frontend *)
   let syntax = "auto"
-  let entry_point = []
+  let entry_point = None
   let module_ = ""
   let libraries = []
   let project_root = None

@@ -7,7 +7,7 @@ module Raw_options = Raw_options
 
 type frontend =
   { syntax : Syntax_types.t option
-  ; entry_point : string list
+  ; entry_point : string list option
   ; module_ : string
   ; libraries : string list
   ; project_root : string option

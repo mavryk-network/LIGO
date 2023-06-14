@@ -77,7 +77,7 @@ val qualified_typed_with_signature
 val build_contract_meta_ligo
   :  raise:(Main_errors.all, Main_warnings.all) Simple_utils.Trace.raise
   -> options:Compiler_options.t
-  -> string list
+  -> string list option
   -> string list option
   -> string
   -> Ligo_prim__Var.Value_var.t
@@ -109,7 +109,7 @@ val dependency_graph
 val build_contract
   :  raise:(Main_errors.all, Main_warnings.all) Simple_utils.Trace.raise
   -> options:Compiler_options.t
-  -> string list
+  -> string list option
   -> string
   -> string list option
   -> Source_input.code_input

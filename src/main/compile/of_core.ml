@@ -5,7 +5,7 @@ module Location = Simple_utils.Location
 
 type form =
   | Contract of
-      { entrypoints : string list
+      { entrypoints : string list option
       ; module_path : Module_var.t list
       }
   | View of

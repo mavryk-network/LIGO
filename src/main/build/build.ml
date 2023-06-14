@@ -428,7 +428,7 @@ type contract_michelson =
   }
 
 let rec build_contract_aggregated ~raise
-    :  options:Compiler_options.t -> string list -> string -> string list option
+    :  options:Compiler_options.t -> string list option -> string -> string list option
     -> Source_input.code_input -> _
   =
  fun ~options entry_points module_ cli_views source ->
@@ -480,7 +480,7 @@ let rec build_contract_aggregated ~raise
 
 
 and build_contract_stacking ~raise
-    :  options:Compiler_options.t -> string list -> string -> string list option
+    :  options:Compiler_options.t -> string list option -> string -> string list option
     -> Source_input.code_input
     -> _
        * (Stacking.compiled_expression * _)

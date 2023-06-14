@@ -305,7 +305,10 @@ let evaluate_expr
         Compiler_options.make ~protocol_version ~raw_options ~syntax ()
       in
       let Compiler_options.{ entry_point; _ } = options.frontend in
-      let entry_point = List.hd_exn entry_point in
+      let entry_point = match entry_point with
+        | Some (entry_point :: _) -> entry_point
+        | _ -> failwith "Entrypoint not set"
+      in
       let Build.{ expression; ast_type } =
         Build.build_expression ~raise ~options syntax entry_point (Some source_file)
       in

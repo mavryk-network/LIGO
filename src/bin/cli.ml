@@ -35,7 +35,7 @@ let entry_point =
   let name = "e" in
   let doc = "ENTRY-POINT the entry-point that will be compiled." in
   let spec =
-    optional_with_default Default_options.entry_point
+    optional
     @@ Command.Arg_type.comma_separated ~strip_whitespace:true ~unique_values:true string
   in
   flag ~doc ~aliases:[ "--entry-point" ] name spec

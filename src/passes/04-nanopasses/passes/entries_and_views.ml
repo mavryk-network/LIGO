@@ -11,11 +11,12 @@ module Location = Simple_utils.Location
 let name = __MODULE__
 
 include Flag.With_arg (struct
-  type flag = string list * string list option
+  type flag = string list option * string list option
 end)
 
 let get_entries ()  =
   let entries, _ = get_flag () in
+  let entries = Option.value ~default:[] entries in
   let entries = List.map ~f:(Ligo_prim.Value_var.of_input_var ~loc:Location.generated) entries in
   entries
 
