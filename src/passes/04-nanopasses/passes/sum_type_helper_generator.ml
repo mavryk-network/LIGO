@@ -13,6 +13,12 @@ include Flag.No_arg ()
 
 let name = __MODULE__
 
+let ok_attr = function
+  | Attribute.{ key; value = None }
+    when String.equal key "ppx_helpers" || String.equal key "dyn_entry" -> true
+  | _ -> false
+
+
 let prefix_let_lhs ~loc prefix str =
   p_var ~loc (Variable.of_input_var ~loc (prefix ^ "_" ^ String.uncapitalize str))
 
@@ -86,21 +92,18 @@ let compile ~raise:_ =
   let program : _ program_ -> program =
    fun p ->
     let extended =
-      List.fold p ~init:[] ~f:(fun acc pe : program_entry list ->
-          let default = acc @ [ pe ] in
+      List.map p ~f:(fun pe : program_entry list ->
           let type_sum_decl_opt =
             let open Simple_utils.Option in
             let* d = get_pe_declaration pe in
-            let* { key; value }, decl = get_d_attr d in
+            let* attr, decl = get_d_attr d in
             let* { name; type_expr } = get_d_type decl in
             let* sum = get_t_sum_raw type_expr in
-            if String.equal key "ppx_helpers" && Option.is_none value
-            then Some (decl, name, sum, get_t_loc type_expr)
-            else None
+            if ok_attr attr then Some (decl, name, sum, get_t_loc type_expr) else None
           in
-          Option.value_map type_sum_decl_opt ~default ~f:gen_helpers)
+          Option.value_map type_sum_decl_opt ~default:[pe] ~f:gen_helpers)
     in
-    make_prg extended
+    make_prg (List.join extended)
   in
   Fold { idle_fold with program }
 
@@ -109,14 +112,13 @@ let reduction ~raise =
   { Iter.defaults with
     declaration =
       (function
-      | { wrap_content = D_attr ({ key = "ppx_helpers"; value = None }, _); _ } ->
+      | { wrap_content = D_attr (attr, _); _ } when ok_attr attr ->
         raise.error (wrong_reduction __MODULE__)
       | _ -> ())
   }
 
 
 let decompile ~raise:_ = Nothing
-
 
 open Unit_test_helpers.Program
 
@@ -131,8 +133,10 @@ let%expect_test "compile" =
         (T_sum_raw
          (((Label Foo) ((associated_type ((TY_EXPR1))) (decl_pos 0)))
           ((Label Bar) ((associated_type ()) (decl_pos 1))))))))))))
-  |} |-> compile;
-  [%expect {|
+  |}
+  |-> compile;
+  [%expect
+    {|
     ((PE_declaration
       (D_type
        ((name dyn_param)
