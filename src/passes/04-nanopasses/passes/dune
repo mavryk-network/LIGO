@@ -46,6 +46,7 @@
   generalize_functions
   curry
   linearity
+  dynamic_entries
   external_hack
   of_file
   export_declaration

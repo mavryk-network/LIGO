@@ -35,6 +35,8 @@ type t =
   | `Small_passes_bad_format_literal of expr * string
   | `Small_passes_duplicate_identifier of Variable.t
   | `Small_passes_duplicate_ty_identifier of Ty_variable.t
+  | `Small_passes_no_dynamic_entry of program_entry list
+  | `Small_passes_dynamic_entry_not_a_sum_type of ty_expr
   ]
 [@@deriving poly_constructor { prefix = "small_passes_" }, sexp]
 
@@ -50,6 +52,28 @@ let error_ppformat
   | Dev -> Format.fprintf f "%a" (Sexp.pp_hum_indent 4) (sexp_of_t a)
   | Human_readable ->
     (match a with
+    | `Small_passes_dynamic_entry_not_a_sum_type ty ->
+      Format.fprintf
+        f
+        "@[<hv>%aDynamic entries type must be a sum-type.@]"
+        snippet_pp
+        (get_t_loc ty)
+    | `Small_passes_no_dynamic_entry lst ->
+      let loc =
+        let rec aux x =
+          match get_pe x with
+          | PE_declaration x -> get_d_loc x
+          | PE_attr (_, x) -> aux x
+          | PE_top_level_instruction x -> get_i_loc x
+          | PE_preproc_directive _ -> Location.generated
+        in
+        lst |> List.map ~f:aux |> List.fold ~init:Location.generated ~f:Location.cover
+      in
+      Format.fprintf
+        f
+        "@[<hv>%aA contract with dynamic entries should always define a storage type.@]"
+        snippet_pp
+        loc
     | `Small_passes_unsupported_disc_union_type ty ->
       Format.fprintf
         f
@@ -214,6 +238,14 @@ let error_json : t -> Simple_utils.Error.t =
  fun e ->
   let open Simple_utils.Error in
   match e with
+  | `Small_passes_dynamic_entry_not_a_sum_type ty ->
+    let message = "Dynamic entries type must be a sum-type" in
+    let content = make_content ~message () in
+    make ~stage ~content
+  | `Small_passes_no_dynamic_entry lst ->
+    let message = "A contract with dynamic entries should always define a storage type" in
+    let content = make_content ~message () in
+    make ~stage ~content
   | `Small_passes_wrong_reduction pass ->
     let message = Format.asprintf "@[<hv>Pass %s did not reduce.@]" pass in
     let content = make_content ~message () in

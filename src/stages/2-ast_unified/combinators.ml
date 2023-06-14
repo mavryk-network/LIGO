@@ -287,6 +287,11 @@ let e_record_ez ~loc (lst : (string * expr) list) =
   @@ List.map lst ~f:(fun (l, e) -> Field.Complete (Label.of_string l, e))
 
 
+let t_pair_raw ~loc (lst : ty_expr list) =
+  let lst = List.mapi lst ~f:(fun i ty -> Label.Label (string_of_int i), Some ty, []) in
+  t_record_raw ~loc (Non_linear_rows.make lst)
+
+
 let e_lambda_ez ~loc var ?ascr ?mut_flag output_type result : expr =
   e_lambda ~loc { binder = Ligo_prim.Param.make ?mut_flag var ascr; output_type; result }
 
@@ -363,6 +368,19 @@ let t_fun_of_list ~loc (lst : ty_expr list) =
   match List.rev lst with
   | [] -> assert false
   | hd :: tl -> List.fold tl ~init:hd ~f:(fun acc t -> t_fun ~loc (t, acc))
+
+
+let get_t_fun_lst (ty : ty_expr) =
+  let rec aux acc ty =
+    match get_t_fun ty with
+    | Some (l, r) -> aux (l :: acc) r
+    | None -> acc
+  in
+  List.rev @@ aux [] ty
+
+
+let e_application_lst ~loc (lamb:expr) (args : expr list) =
+  List.fold_right args ~init:lamb ~f:(fun args lamb -> e_application ~loc {lamb ; args})
 
 
 let e_type_abstract_ez ty_params init =
