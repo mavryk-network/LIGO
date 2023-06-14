@@ -96,12 +96,18 @@ let compile ~raise:_ =
           let type_sum_decl_opt =
             let open Simple_utils.Option in
             let* d = get_pe_declaration pe in
-            let* attr, decl = get_d_attr d in
-            let* { name; type_expr } = get_d_type decl in
+            let* attr, d' = get_d_attr d in
+            let* { name; type_expr } = get_d_type d' in
             let* sum = get_t_sum_raw type_expr in
-            if ok_attr attr then Some (decl, name, sum, get_t_loc type_expr) else None
+            let stripped_decl =
+              (* strip only if ppx_helpers *)
+              if String.equal attr.key "ppx_helpers" then d' else d
+            in
+            if ok_attr attr
+            then Some (stripped_decl, name, sum, get_t_loc type_expr)
+            else None
           in
-          Option.value_map type_sum_decl_opt ~default:[pe] ~f:gen_helpers)
+          Option.value_map type_sum_decl_opt ~default:[ pe ] ~f:gen_helpers)
     in
     make_prg (List.join extended)
   in
@@ -112,7 +118,7 @@ let reduction ~raise =
   { Iter.defaults with
     declaration =
       (function
-      | { wrap_content = D_attr (attr, _); _ } when ok_attr attr ->
+      | { wrap_content = D_attr (attr, _); _ } when String.equal attr.key "ppx_helpers" ->
         raise.error (wrong_reduction __MODULE__)
       | _ -> ())
   }
