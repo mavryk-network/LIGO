@@ -227,15 +227,15 @@ let compile_top_level ~raise ~(options : Compiler_options.t) ?stop_before
     : I.top_level -> O.program
   =
   fun tl ->
-  let Top_level prg = tl.fp in
-  Trivial.To_core.program ~raise
-  @@ compile_passes
+  let tl = compile_passes
        ~raise
        ?stop_before
-       ~sort:Selector.program
+       ~sort:Selector.top_level
        (get_passes ~options ~disable_initial_check:false)
-       prg
-
+       tl in
+  let Top_level prg = tl.fp in
+  Trivial.To_core.program ~raise
+  @@ prg
 
 let compile_expression
     ~raise
