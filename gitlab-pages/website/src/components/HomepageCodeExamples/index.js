@@ -8,7 +8,8 @@ import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 
 import CAMELIGO_EXAMPLE from '!!raw-loader!./cameligo.mligo';
 import JSLIGO_EXAMPLE from '!!raw-loader!./jsligo.jsligo';
-
+import CAMELIGO_FULL_EXAMPLE from '!!raw-loader!./cameligo-full.mligo';
+import JSLIGO_FULL_EXAMPLE from '!!raw-loader!./jsligo-full.jsligo';
 function CodeExamples(props) {
   const {
     siteConfig: {
@@ -25,7 +26,9 @@ function CodeExamples(props) {
       defaultValue="jsligo"
       values={[
         { label: "JsLIGO", value: "jsligo" },
-        { label: "CameLIGO", value: "cameligo" }
+        { label: "CameLIGO", value: "cameligo" },
+        { label: "JsLIGO full", value: "jsligo-full" },
+        { label: "CameLIGO full", value: "cameligo-full" }
       ]}
     >
       <TabItem value="jsligo">
@@ -70,7 +73,49 @@ function CodeExamples(props) {
         </Highlight>
       </TabItem>
 
+      <TabItem value="cameligo-full">
+        <Highlight
+          {...defaultProps}
+          language="cameligo"
+          code={CAMELIGO_FULL_EXAMPLE}
+          theme={prismTheme}
+        >
+          {({ className, style, tokens, getLineProps, getTokenProps }) => (
+            <pre className={className} style={style}>
+              {tokens.map((line, i) => (
+                <div {...getLineProps({ line, key: i })}>
+                  {line.map((token, key) => (
+                    <span {...getTokenProps({ token, key })} />
+                  ))}
+                </div>
+              ))}
+            </pre>
+          )}
+        </Highlight>
+      </TabItem>
+
+      <TabItem value="jsligo-full">
+        <Highlight
+          {...defaultProps}
+          language="jsligo"
+          code={JSLIGO_FULL_EXAMPLE}
+          theme={prismTheme}
+        >
+          {({ className, style, tokens, getLineProps, getTokenProps }) => (
+            <pre className={className} style={style}>
+              {tokens.map((line, i) => (
+                <div {...getLineProps({ line, key: i })}>
+                  {line.map((token, key) => (
+                    <span {...getTokenProps({ token, key })} />
+                  ))}
+                </div>
+              ))}
+            </pre>
+          )}
+        </Highlight>
+      </TabItem>
     </Tabs >
+
   );
 }
 

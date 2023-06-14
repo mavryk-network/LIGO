@@ -5,6 +5,45 @@ let base path =
 
 
 let%expect_test _ =
+  run_ligo_good [ "run"; "test"; base "cameligo-bp.mligo" ];
+  [%expect
+    {|
+    Everything at the top-level was executed.
+    - test_initial_storage exited with value ().
+    - test_increment exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test"; base "jsligo-bp.jsligo" ];
+  [%expect
+    {|
+    Everything at the top-level was executed.
+    - test_initial_storage exited with value ().
+    - test_increment exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile"; "contract"; base "cameligo-bp.mligo"; "-m"; "IncDec" ];
+  [%expect
+    {|
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+      storage int ;
+      code { UNPAIR ;
+             IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int 0 } ;
+             NIL operation ;
+             PAIR } } |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile"; "contract"; base "jsligo-bp.jsligo"; "-m"; "IncDec" ];
+  [%expect
+    {|
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+      storage int ;
+      code { UNPAIR ;
+             IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int 0 } ;
+             NIL operation ;
+             PAIR } } |}]
+
+
+let%expect_test _ =
   run_ligo_good [ "run"; "test"; base "cameligo.mligo" ];
   [%expect
     {|
@@ -17,7 +56,7 @@ let%expect_test _ =
     Everything at the top-level was executed. |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile"; "contract"; base "cameligo.mligo"; "-m"; "IncDec" ];
+  run_ligo_good [ "compile"; "contract"; base "cameligo.mligo" ];
   [%expect
     {|
     { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
@@ -28,7 +67,7 @@ let%expect_test _ =
              PAIR } } |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile"; "contract"; base "jsligo.jsligo"; "-m"; "IncDec" ];
+  run_ligo_good [ "compile"; "contract"; base "jsligo.jsligo" ];
   [%expect
     {|
     { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;

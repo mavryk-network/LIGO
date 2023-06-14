@@ -1,13 +1,13 @@
-module IncDec = struct
-  type storage = int
-  type return = operation list * storage
+type storage = int
 
-  (* Three entrypoints *)
-  [@entry] let increment (delta : int) (store : storage) : return =
-    [], store + delta
-  [@entry] let decrement (delta : int) (store : storage) : return =
-    [], store - delta
-  [@entry] let reset (() : unit) (_ : storage) : return =
-    [], 0
-end
+type ret = operation list * storage
 
+
+[@entry] let increment (delta : int) (store : storage) : ret =
+  [], store + delta
+
+[@entry] let decrement (delta : int) (store : storage) : ret =
+  [], store - delta
+
+[@entry] let reset (() : unit) (_ : storage) : ret =
+  [], 0

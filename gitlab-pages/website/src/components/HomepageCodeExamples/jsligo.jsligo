@@ -1,18 +1,14 @@
-namespace IncDec {
-  type storage = int;
-  type ret = [list<operation>, storage];
+type storage = int;
+type ret = [list<operation>, storage];
+@entry
+const increment = (delta : int, store : storage) : ret =>
+  [list([]), store + delta];
 
-  // Three entrypoints
+@entry
+const decrement = (delta : int, store : storage) : ret =>
+  [list([]), store - delta];
 
-  @entry
-  const increment = (delta : int, store : storage) : ret =>
-    [list([]), store + delta];
+@entry
+const reset = (_ : unit, _ : storage) : ret =>
+  [list([]), 0];
 
-  @entry
-  const decrement = (delta : int, store : storage) : ret =>
-    [list([]), store - delta];
-
-  @entry
-  const reset = (_ : unit, _ : storage) : ret =>
-    [list([]), 0];
-};
