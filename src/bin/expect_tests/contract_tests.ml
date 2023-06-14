@@ -2502,7 +2502,7 @@ let%expect_test _ =
              IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int 0 } ;
              NIL operation ;
              PAIR } ;
-      view "bar" int int { UNPAIR ; PUSH int 1 ; ADD ; ADD } } |}]
+      view "foo" int int { UNPAIR ; ADD } } |}]
 
 let%expect_test _ =
   run_ligo_bad

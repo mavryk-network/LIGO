@@ -43,14 +43,14 @@ let all_view ~raise command_line_views main_name module_path contract_type prg =
     | Some loc -> raise.error (Errors.annotated_declaration_shadowed loc)
     | None -> ()
   in
-  let module_ =
-    (* in case of command_line views, strip the existing user views and decorate the AST *)
-    match command_line_views with
-    | None -> module_
-    | Some command_line_views ->
-      Helpers.strip_view_annotations module_
-      |> Helpers.annotate_with_view ~raise command_line_views
-  in
+  (* let module_ = *)
+  (*   (\* in case of command_line views, strip the existing user views and decorate the AST *\) *)
+  (*   match command_line_views with *)
+  (*   | None -> module_ *)
+  (*   | Some command_line_views -> *)
+  (*     Helpers.strip_view_annotations module_ *)
+  (*     |> Helpers.annotate_with_view ~raise command_line_views *)
+  (* in *)
   let f decl =
     match Ast_typed.Helpers.fetch_view_type decl with
     | None -> ()

@@ -27,15 +27,6 @@ let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "view.mligo"; "--views"; "v2" ];
   [%expect
     {|
-    File "../../test/contracts/view.mligo", line 3, characters 12-14:
-      2 |
-      3 | [@view] let v1 (n : int) (s: int) : int = s + n + 1
-                      ^^
-      4 | let v2 (_ : int) (s: int) : int = s + 2
-
-    Warning: This view will be ignored, command line option override [
-    view] annotation
-
     { parameter unit ;
       storage int ;
       code { CDR ; NIL operation ; PAIR } ;

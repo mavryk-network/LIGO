@@ -85,6 +85,26 @@ let compile ~raise =
         let pass = toplevel_wrap ~raise ~when_ ~wrap in
         apply_pass ~pass prg
       in
+      let prg =
+        let pass =
+          let pred ({ key ; _ } : Attribute.t) =
+            not (List.is_empty (get_views ())) &&
+            String.equal key "view"
+          in
+          strip_attribute ~raise ~pred in
+        apply_pass ~pass prg
+      in
+      let prg =
+        let wrap ~loc d = d_attr ~loc ({ key = "view"; value = None }, d) in
+        let when_ binders =
+          not (List.is_empty (get_views ())) &&
+          List.exists
+            binders
+            ~f:(fun v -> List.mem ~equal:Ligo_prim.Value_var.equal (get_views ()) v)
+        in
+        let pass = toplevel_wrap ~raise ~when_ ~wrap in
+        apply_pass ~pass prg
+      in
       make_tl (Top_level prg)
   in
   Fold { idle_fold with top_level }
