@@ -78,7 +78,7 @@ val build_contract_meta_ligo
   :  raise:(Main_errors.all, Main_warnings.all) Simple_utils.Trace.raise
   -> options:Compiler_options.t
   -> string list
-  -> string list
+  -> string list option
   -> string
   -> Ligo_prim__Var.Value_var.t
      * Ast_aggregated.Types.expression
@@ -111,7 +111,7 @@ val build_contract
   -> options:Compiler_options.t
   -> string list
   -> string
-  -> string list
+  -> string list option
   -> Source_input.code_input
   -> contract_michelson
 

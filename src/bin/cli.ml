@@ -159,7 +159,7 @@ let on_chain_views : _ Command.Param.t =
      by ','"
   in
   let spec =
-    optional_with_default Default_options.views
+    optional
     @@ Command.Arg_type.comma_separated ~strip_whitespace:true ~unique_values:true string
   in
   flag ~doc ~aliases:[ "v" ] "--views" spec

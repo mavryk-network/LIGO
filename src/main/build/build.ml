@@ -428,7 +428,7 @@ type contract_michelson =
   }
 
 let rec build_contract_aggregated ~raise
-    :  options:Compiler_options.t -> string list -> string -> string list
+    :  options:Compiler_options.t -> string list -> string -> string list option
     -> Source_input.code_input -> _
   =
  fun ~options entry_points module_ cli_views source ->
@@ -443,11 +443,7 @@ let rec build_contract_aggregated ~raise
   let entry_point, contract_type = contract_info in
   let _, typed_views =
     let form =
-      let command_line_views =
-        match cli_views with
-        | [] -> None
-        | x -> Some x
-      in
+      let command_line_views = cli_views in
       Ligo_compile.Of_core.View
         { command_line_views; contract_entry = entry_point; module_path; contract_type }
     in
@@ -484,7 +480,7 @@ let rec build_contract_aggregated ~raise
 
 
 and build_contract_stacking ~raise
-    :  options:Compiler_options.t -> string list -> string -> string list
+    :  options:Compiler_options.t -> string list -> string -> string list option
     -> Source_input.code_input
     -> _
        * (Stacking.compiled_expression * _)

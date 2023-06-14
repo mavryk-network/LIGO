@@ -26,7 +26,7 @@ type flags =
   ; projections : Syntax_types.t
   ; pattern_constructor_application : Syntax_types.t
   ; mod_res : ModRes.t option
-  ; entries_and_views : string list * string list
+  ; entries_and_views : string list * string list option
   }
 
 let passes ~(flags : flags) : (module T) list =

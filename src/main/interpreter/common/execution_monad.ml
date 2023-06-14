@@ -405,7 +405,7 @@ module Command = struct
         @@ Errors.generic_error Location.generated "Trying to measure a non-contract")
     | Compile_contract_from_file (source_file, entry_point, views, _mutation) ->
       let options = Compiler_options.set_entry_point options [ entry_point ] in
-      let options = Compiler_options.set_views options views in
+      let options = Compiler_options.set_views options (Some views) in
       let options = Compiler_options.set_test_flag options false in
       let main, views =
         Michelson_backend.compile_contract_file
@@ -413,7 +413,7 @@ module Command = struct
           ~options
           source_file
           [ entry_point ]
-          views
+          (Some views)
       in
       let views =
         match views with

@@ -32,7 +32,7 @@ type t =
   ; experimental_disable_optimizations_for_debugging : bool
   ; enable_typed_opt : bool
   ; without_run : bool
-  ; views : string list
+  ; views : (string list) option
   ; constants : string list
   ; file_constants : string option
   }
@@ -78,7 +78,7 @@ module Default_options = struct
   let experimental_disable_optimizations_for_debugging = false
   let enable_typed_opt = false
   let without_run = false
-  let views = []
+  let views = None
   let constants = []
   let file_constants = None
 end
