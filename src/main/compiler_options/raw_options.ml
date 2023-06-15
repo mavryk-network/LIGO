@@ -26,6 +26,7 @@ type t =
   ; cli_expr_inj : string option
   ; (* Middle-end *)
     no_stdlib : bool
+  ; use_orig_var : bool
   ; (* Backend *)
     protocol_version : string
   ; disable_michelson_typechecking : bool
@@ -71,6 +72,7 @@ module Default_options = struct
 
   (* Middle-end *)
   let no_stdlib = false
+  let use_orig_var = false
 
   (* Backend *)
   let protocol_version = "current"
@@ -105,6 +107,7 @@ let make
     ?(cli_expr_inj = Default_options.cli_expr_inj)
     ?(protocol_version = Default_options.protocol_version)
     ?(no_stdlib = Default_options.no_stdlib)
+    ?(use_orig_var = Default_options.use_orig_var)
     ?(disable_michelson_typechecking = Default_options.disable_michelson_typechecking)
     ?(experimental_disable_optimizations_for_debugging =
       Default_options.experimental_disable_optimizations_for_debugging)
@@ -142,6 +145,7 @@ let make
   ; cli_expr_inj
   ; (* Middle-end *)
     no_stdlib
+  ; use_orig_var
   ; (* Backend *)
     protocol_version
   ; disable_michelson_typechecking

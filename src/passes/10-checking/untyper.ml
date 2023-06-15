@@ -8,18 +8,21 @@ let untype_value_attr : O.ValueAttr.t -> I.ValueAttr.t =
  fun { inline; no_mutation; view; public; hidden; thunk; entry } ->
   { inline; no_mutation; view; public; hidden; thunk; entry }
 
+
 (* use_orig_var param allows us to preserve the orininal type variables names, e.g. if
    we have [type t = A | B] then type of [Some A] will be transformed to [t option]
   instead of default [(A | B) option]. 
   It needs to be done during untyping, since O.type_expression can have orig_var 
   and I.type_expression can't *)
-let rec untype_type_expression ?(use_orig_var = false) (t : O.type_expression)
+let rec untype_type_expression
+    ~(options : Compiler_options.middle_end)
+    (t : O.type_expression)
     : I.type_expression
   =
   let loc = t.location in
-  let self = untype_type_expression ~use_orig_var in
+  let self = untype_type_expression ~options in
   let return t = I.make_t ~loc t in
-  if Option.is_some t.orig_var && use_orig_var
+  if Option.is_some t.orig_var && options.use_orig_var
   then return @@ I.T_variable (Option.value_exn t.orig_var)
   else (
     match t.type_content with
@@ -52,17 +55,20 @@ let rec untype_type_expression ?(use_orig_var = false) (t : O.type_expression)
       return @@ T_for_all x)
 
 
-let untype_type_expression_option x = Option.return @@ untype_type_expression x
-
-let rec untype_expression (e : O.expression) : I.expression =
-  untype_expression_content ~loc:e.location e.expression_content
+let untype_type_expression_option ~options x =
+  Option.return @@ untype_type_expression ~options x
 
 
-and untype_expression_content ~loc (ec : O.expression_content) : I.expression =
+let rec untype_expression ~options (e : O.expression) : I.expression =
+  untype_expression_content ~options ~loc:e.location e.expression_content
+
+
+and untype_expression_content ~loc ~options (ec : O.expression_content) : I.expression =
   let open I in
-  let self = untype_expression in
-  let self_type = untype_type_expression in
-  let self_type_opt = untype_type_expression_option in
+  let self = untype_expression ~options in
+  let self_type = untype_type_expression ~options in
+  let self_type_opt = untype_type_expression_option ~options in
+  let self_module = untype_module_expr ~options in
   let return e = e in
   match ec with
   | E_literal l -> return (e_literal ~loc l)
@@ -97,7 +103,7 @@ and untype_expression_content ~loc (ec : O.expression_content) : I.expression =
     let e = self e in
     return (e_record_update ~loc r' (Label l) e)
   | E_matching m ->
-    let I.Match_expr.{ matchee; cases } = untype_match_expr m in
+    let I.Match_expr.{ matchee; cases } = untype_match_expr ~options m in
     return (e_matching ~loc matchee cases)
   | E_let_in { let_binder; rhs; let_result; attributes } ->
     let rhs = self rhs in
@@ -106,7 +112,7 @@ and untype_expression_content ~loc (ec : O.expression_content) : I.expression =
     let let_binder = O.Pattern.map (Fn.const None) let_binder in
     return (e_let_mut_in ~loc let_binder rhs result attr)
   | E_mod_in { module_binder; rhs; let_result } ->
-    let rhs = untype_module_expr rhs in
+    let rhs = self_module rhs in
     let result = self let_result in
     return @@ e_mod_in ~loc module_binder rhs result
   | E_raw_code { language; code } ->
@@ -150,15 +156,17 @@ and untype_expression_content ~loc (ec : O.expression_content) : I.expression =
 
 
 and untype_match_expr
-    :  (O.expression, O.type_expression) O.Match_expr.t
+    :  options:Compiler_options.middle_end
+    -> (O.expression, O.type_expression) O.Match_expr.t
     -> (I.expression, I.type_expression option) I.Match_expr.t
   =
- fun { matchee; cases } ->
-  let matchee = untype_expression matchee in
+ fun ~options { matchee; cases } ->
+  let self_type = untype_type_expression_option ~options in
+  let matchee = untype_expression matchee ~options in
   let cases =
     List.map cases ~f:(fun { pattern; body } ->
-        let pattern = O.Pattern.map untype_type_expression_option pattern in
-        let body = untype_expression body in
+        let pattern = O.Pattern.map self_type pattern in
+        let body = untype_expression ~options body in
         I.Match_expr.{ pattern; body })
   in
   I.Match_expr.{ matchee; cases }
@@ -190,23 +198,26 @@ and untype_pattern : _ O.Pattern.t -> _ I.Pattern.t =
     Location.wrap ~loc (I.Pattern.P_record lps)
 
 
-and untype_module_expr : O.module_expr -> I.module_expr =
- fun module_expr ->
+and untype_module_expr
+    : options:Compiler_options.middle_end -> O.module_expr -> I.module_expr
+  =
+ fun ~options module_expr ->
   let loc = module_expr.module_location in
   let return wrap_content : I.module_expr = Location.wrap ~loc wrap_content in
   match module_expr.module_content with
   | M_struct prg ->
-    let prg = untype_module prg in
+    let prg = untype_module ~options prg in
     return (M_struct prg)
   | M_module_path path -> return (M_module_path path)
   | M_variable v -> return (M_variable v)
 
 
 and untype_declaration_constant
-    : (O.expression -> I.expression) -> _ O.Value_decl.t -> _ I.Value_decl.t
+    :  options:Compiler_options.middle_end -> (O.expression -> I.expression)
+    -> _ O.Value_decl.t -> _ I.Value_decl.t
   =
- fun untype_expression { binder; expr; attr } ->
-  let ty = untype_type_expression expr.O.type_expression in
+ fun ~options untype_expression { binder; expr; attr } ->
+  let ty = untype_type_expression ~options expr.O.type_expression in
   let binder = Binder.map (Fn.const @@ Some ty) binder in
   let expr = untype_expression expr in
   let expr = I.e_ascription ~loc:expr.location expr ty in
@@ -215,10 +226,11 @@ and untype_declaration_constant
 
 
 and untype_declaration_pattern
-    : (O.expression -> I.expression) -> _ O.Pattern_decl.t -> _ I.Pattern_decl.t
+    :  options:Compiler_options.middle_end -> (O.expression -> I.expression)
+    -> _ O.Pattern_decl.t -> _ I.Pattern_decl.t
   =
- fun untype_expression { pattern; expr; attr } ->
-  let ty = untype_type_expression expr.O.type_expression in
+ fun ~options untype_expression { pattern; expr; attr } ->
+  let ty = untype_type_expression ~options expr.O.type_expression in
   let pattern = O.Pattern.map (Fn.const None) pattern in
   let expr = untype_expression expr in
   let expr = I.e_ascription ~loc:expr.location expr ty in
@@ -226,38 +238,47 @@ and untype_declaration_pattern
   { pattern; attr; expr }
 
 
-and untype_declaration_type : _ O.Type_decl.t -> _ I.Type_decl.t =
- fun { type_binder; type_expr; type_attr = { public; hidden } } ->
-  let type_expr = untype_type_expression type_expr in
+and untype_declaration_type
+    : options:Compiler_options.middle_end -> _ O.Type_decl.t -> _ I.Type_decl.t
+  =
+ fun ~options { type_binder; type_expr; type_attr = { public; hidden } } ->
+  let type_expr = untype_type_expression ~options type_expr in
   let type_attr = ({ public; hidden } : I.TypeOrModuleAttr.t) in
   { type_binder; type_expr; type_attr }
 
 
-and untype_declaration_module : _ O.Module_decl.t -> _ I.Module_decl.t =
- fun { module_binder; module_; module_attr = { public; hidden }; annotation } ->
-  let module_ = untype_module_expr module_ in
+and untype_declaration_module
+    : options:Compiler_options.middle_end -> _ O.Module_decl.t -> _ I.Module_decl.t
+  =
+ fun ~options { module_binder; module_; module_attr = { public; hidden }; annotation } ->
+  let module_ = untype_module_expr ~options module_ in
   let module_attr = ({ public; hidden } : I.TypeOrModuleAttr.t) in
   { module_binder; module_; module_attr; annotation }
 
 
 and untype_declaration =
   let return (d : I.declaration_content) = d in
-  fun (d : O.declaration_content) ->
+  fun ~options (d : O.declaration_content) ->
+    let self_expr = untype_expression ~options in
     match d with
     | D_value dc ->
-      let dc = untype_declaration_constant untype_expression dc in
+      let dc = untype_declaration_constant ~options self_expr dc in
       return @@ D_value dc
     | D_irrefutable_match x ->
-      let x = untype_declaration_pattern untype_expression x in
+      let x = untype_declaration_pattern ~options self_expr x in
       return @@ D_irrefutable_match x
     | D_type dt ->
-      let dt = untype_declaration_type dt in
+      let dt = untype_declaration_type ~options dt in
       return @@ D_type dt
     | D_module dm ->
-      let dm = untype_declaration_module dm in
+      let dm = untype_declaration_module ~options dm in
       let dm = { dm with annotation = None } in
       return @@ D_module dm
 
 
-and untype_decl : O.decl -> I.decl = fun d -> Location.map untype_declaration d
-and untype_module : O.module_ -> I.module_ = fun p -> List.map ~f:untype_decl p
+and untype_decl : options:Compiler_options.middle_end -> O.decl -> I.decl =
+ fun ~options d -> Location.map (untype_declaration ~options) d
+
+
+and untype_module : options:Compiler_options.middle_end -> O.module_ -> I.module_ =
+ fun ~options p -> List.map ~f:(untype_decl ~options) p

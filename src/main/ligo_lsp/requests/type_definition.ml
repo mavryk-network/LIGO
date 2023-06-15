@@ -15,10 +15,9 @@ let get_type (vdef : Scopes.Types.vdef) : type_info option =
         ~f:(fun x -> Ast_core.{ type_content = T_variable x; location })
         ty.orig_var (* This is non-empty in case there is a name for our type *)
     in
-    Some
-      { var_name = orig_var
-      ; contents = Checking.untype_type_expression ~use_orig_var:true ty
-      }
+    let raw_options = Compiler_options.Raw_options.make ~use_orig_var:true () in
+    let options = (Compiler_options.make ~raw_options ()).middle_end in
+    Some { var_name = orig_var; contents = Checking.untype_type_expression ~options ty }
   | Unresolved -> None
 
 
