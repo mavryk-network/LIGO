@@ -400,6 +400,9 @@ let%expect_test _ =
     ];
   [%expect {|
     include_include/main.mligo declarations:
+    $contract
+    $views
+    $main
     main
     hello |}]
 

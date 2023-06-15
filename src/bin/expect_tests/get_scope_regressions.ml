@@ -87,7 +87,15 @@ let%expect_test _ =
     references:
       File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 3, characters 16-17
     Type definitions:
-    Module definitions: |}]
+    Module definitions:
+    Errors:
+    File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 1, characters 26-33:
+      1 | let main (p : key_hash) : address =
+                                    ^^^^^^^
+      2 |   let c : unit contract = Tezos.implicit_account (p) in
+
+    Invalid type for entrypoint "main".
+    An entrypoint must of type "parameter * storage -> operation list * storage". |}]
 
 let%expect_test _ =
   run_ligo_good

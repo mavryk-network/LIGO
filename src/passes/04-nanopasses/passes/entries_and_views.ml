@@ -14,9 +14,13 @@ include Flag.With_arg (struct
   type flag = string list option * string list option
 end)
 
+module EntriesSet = Set.Make(struct type t = Ligo_prim.Value_var.t [@@deriving ord, sexp] end)
+
+let _entries = ref EntriesSet.empty
+
 let get_entries ()  =
   let entries, _ = get_flag () in
-  let entries = Option.value ~default:[] entries in
+  let entries = Option.value ~default:["main"] entries in
   let entries = List.map ~f:(Ligo_prim.Value_var.of_input_var ~loc:Location.generated) entries in
   entries
 
@@ -49,14 +53,16 @@ let rec toplevel_wrap ~raise ~when_ ~wrap d =
   | D_export d ->
     make_d ~loc (D_export (self d))
   | D_const { pattern; _ } | D_let { pattern = (pattern, _); _ } | D_multi_const ({ pattern ; _ }, _) ->
-    if when_ (get_pattern_binders pattern) then
-      wrap ~loc d
+    let entries = get_pattern_binders pattern in
+    if when_ entries then
+      wrap ~loc entries d
     else
       d
   | d -> make_d ~loc d
 
 
 let compile ~raise =
+  _entries := EntriesSet.of_list (get_entries ());
   let program_entry ~pass : (program_entry, declaration, instruction) program_entry_ -> program_entry = function
     | PE_top_level_instruction i -> raise.error (unsupported_top_level_statement i)
     | PE_declaration d -> pe_declaration (pass d)
@@ -65,7 +71,7 @@ let compile ~raise =
   let top_level : (top_level, program) top_level_ -> top_level = function
     | Top_level (prg : program) ->
       let apply_pass ~pass prg =
-        make_prg @@ List.map ~f:(program_entry ~pass) @@ List.map ~f:get_pe @@ get_prg prg
+        make_prg @@ List.rev @@ List.map ~f:(program_entry ~pass) @@ List.map ~f:get_pe @@ List.rev @@ get_prg prg
       in
       let prg =
         let pass =
@@ -77,12 +83,14 @@ let compile ~raise =
         apply_pass ~pass prg
       in
       let prg =
-        let wrap ~loc d = d_attr ~loc ({ key = "entry"; value = None }, d) in
+        let wrap ~loc entries d =
+          List.iter ~f:(fun entry -> _entries := EntriesSet.remove (! _entries) entry) entries;
+          d_attr ~loc ({ key = "entry"; value = None }, d) in
         let when_ binders =
           not (List.is_empty (get_entries ())) &&
           List.exists
             binders
-            ~f:(fun v -> List.mem ~equal:Ligo_prim.Value_var.equal (get_entries ()) v)
+            ~f:(fun v -> EntriesSet.mem (! _entries) v && List.mem ~equal:Ligo_prim.Value_var.equal (get_entries ()) v)
         in
         let pass = toplevel_wrap ~raise ~when_ ~wrap in
         apply_pass ~pass prg
@@ -97,7 +105,7 @@ let compile ~raise =
         apply_pass ~pass prg
       in
       let prg =
-        let wrap ~loc d = d_attr ~loc ({ key = "view"; value = None }, d) in
+        let wrap ~loc _ d = d_attr ~loc ({ key = "view"; value = None }, d) in
         let when_ binders =
           not (List.is_empty (get_views ())) &&
           List.exists

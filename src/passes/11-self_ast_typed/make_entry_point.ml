@@ -147,6 +147,93 @@ let program ~raise : Ast_typed.module_ -> Ast_typed.declaration list =
   let loc = Location.generated in
   match Simple_utils.List.Ne.of_list_opt @@ get_entries_of_module module_ with
   | None -> []
+  | Some ((ep, ep_type), []) ->
+    let parameter_type, storage_type =
+      match Ast_typed.Misc.parameter_from_entrypoint (ep, ep_type) with
+      | Error (`Not_entry_point_form (ep, ep_type)) ->
+        raise.error (bad_contract_io ep ep_type ep_type.location)
+      | Error (`Storage_does_not_match (ep_1, storage_1, ep_2, storage_2)) ->
+        raise.error
+          (corner_case
+          @@ Format.asprintf
+               "@[<hv>Storage types do not match for different entrypoints:@.%a : %a@.%a \
+                : %a@]"
+               Value_var.pp
+               ep_1
+               Ast_typed.PP.type_expression
+               storage_1
+               Value_var.pp
+               ep_2
+               Ast_typed.PP.type_expression
+               storage_2)
+      | Ok (p, s) -> p, s
+    in
+    let type_binder = default_parameter_var in
+    let entrypoint_type_decl =
+      Location.wrap ~loc
+      @@ Ast_typed.D_type
+           { type_binder
+           ; type_expr = parameter_type
+           ; type_attr = { public = true; hidden = false }
+           }
+    in
+    let entrypoint_function_decl, entrypoint_var =
+      let expr = Ast_typed.e_variable ~loc ep ep_type in
+      let binder = Binder.make default_built_entrypoint_var expr.type_expression in
+      Location.wrap ~loc
+      @@ Ast_typed.D_value
+           { binder
+           ; expr
+           ; attr =
+               { inline = false
+               ; no_mutation = false
+               ; entry = false
+               ; view = false
+               ; public = true
+               ; thunk = false
+               ; hidden = false
+               }
+           },
+      Ast_typed.e_a_variable ~loc (Binder.get_var binder) expr.type_expression in
+    let views = get_views_of_module module_ in
+    let views_decl, views_var =
+      let expr = create_views_function_expr ~loc views storage_type in
+      let binder = Binder.make default_views_var expr.type_expression in
+      ( Location.wrap ~loc
+        @@ Ast_typed.D_value
+             { binder
+             ; expr
+             ; attr =
+                 { inline = false
+                 ; no_mutation = false
+                 ; entry = false
+                 ; view = false
+                 ; public = true
+                 ; thunk = false
+                 ; hidden = false
+                 }
+             }
+      , Ast_typed.e_a_variable ~loc (Binder.get_var binder) expr.type_expression )
+    in
+    let contract_decl =
+      let expr = Ast_typed.e_a_pair ~loc entrypoint_var views_var in
+      let binder = Binder.make default_contract_var expr.type_expression in
+      Location.wrap ~loc
+      @@ Ast_typed.D_value
+           { binder
+           ; expr
+           ; attr =
+               { inline = false
+               ; no_mutation = false
+               ; entry = false
+               ; view = false
+               ; public = true
+               ; thunk = false
+               ; hidden = false
+               }
+           }
+    in
+    [ entrypoint_type_decl; entrypoint_function_decl; views_decl; contract_decl ]
   | Some entries ->
     let parameter_type, storage_type =
       match Ast_typed.Misc.parameter_from_entrypoints entries with
@@ -282,7 +369,58 @@ let make_main_entrypoint ~raise
   let loc = Location.generated in
   let prg = make_main_module ~raise prg in
   match entrypoints with
-  | entrypoint, [] -> entrypoint, prg
+  | entrypoint, [] ->
+    let ep = entrypoint in
+    let ep, ep_type = ep, fst @@ Helpers.fetch_entry_type ~raise (Value_var.to_name_exn ep) prg in
+    let parameter_type, _ =
+      match Ast_typed.Misc.parameter_from_entrypoint (ep, ep_type) with
+      | Error (`Not_entry_point_form (ep, ep_type)) ->
+        raise.error (bad_contract_io ep ep_type ep_type.location)
+      | Error (`Storage_does_not_match (ep_1, storage_1, ep_2, storage_2)) ->
+        raise.error
+          (corner_case
+          @@ Format.asprintf
+               "@[<hv>Storage types do not match for different entrypoints:@.%a : %a@.%a \
+                : %a@]"
+               Value_var.pp
+               ep_1
+               Ast_typed.PP.type_expression
+               storage_1
+               Value_var.pp
+               ep_2
+               Ast_typed.PP.type_expression
+               storage_2)
+      | Ok (p, s) -> p, s
+    in
+    let type_binder = default_parameter_var in
+    let entrypoint_type_decl =
+      Location.wrap ~loc
+      @@ Ast_typed.D_type
+           { type_binder
+           ; type_expr = parameter_type
+           ; type_attr = { public = true; hidden = false }
+           }
+    in
+    let entrypoint_function_decl =
+      let expr = Ast_typed.e_variable ~loc ep ep_type in
+      let binder = Binder.make default_built_entrypoint_var expr.type_expression in
+      Location.wrap ~loc
+      @@ Ast_typed.D_value
+           { binder
+           ; expr
+           ; attr =
+               { inline = false
+               ; no_mutation = false
+               ; entry = false
+               ; view = false
+               ; public = true
+               ; thunk = false
+               ; hidden = false
+               }
+           }
+    in
+    let prg = prg @ [ entrypoint_type_decl; entrypoint_function_decl ] in
+    default_built_entrypoint_var, prg
   | entrypoint, rest ->
     let entries =
       let f ep =

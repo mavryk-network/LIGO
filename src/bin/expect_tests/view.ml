@@ -37,14 +37,8 @@ let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; contract "view.mligo"; "--views"; "v1,bad_view" ];
   [%expect
     {|
-    File "../../test/contracts/view.mligo", line 5, characters 4-12:
-      4 | let v2 (_ : int) (s: int) : int = s + 2
-      5 | let bad_view (_ : int) (_: nat) : nat = 1n
-              ^^^^^^^^
-      6 |
-
-    Invalid type for view "main#11".
-    Cannot find "int" as storage. |}]
+    An internal error ocurred. Please, contact the developers.
+    wrong view. |}]
 
 (* view + #import : no view expected *)
 let%expect_test _ =

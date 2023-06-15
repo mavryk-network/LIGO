@@ -253,6 +253,28 @@ let parameter_from_entrypoints
     , storage )
 
 
+let parameter_from_entrypoint
+    :  (Value_var.t * type_expression)
+    -> ( type_expression * type_expression
+       , [> `Not_entry_point_form of Types.expression_variable * Types.type_expression
+         | `Storage_does_not_match of
+           Value_var.t * Types.type_expression * Value_var.t * Types.type_expression
+         ] )
+       result
+  =
+ fun (entrypoint, entrypoint_type) ->
+  let open Result in
+  let* parameter, storage =
+    match should_uncurry_entry entrypoint_type with
+    | `Yes (parameter, storage) | `No (parameter, storage) ->
+      Result.Ok (parameter, storage)
+    | `Bad -> Result.Error (`Not_entry_point_form (entrypoint, entrypoint_type))
+  in
+  return
+    ( parameter
+    , storage )
+
+
 (* Wrap a variable `f` of type `parameter -> storage -> return`
    to an expression `fun (p, s) -> f p s : parameter * storage -> return` *)
 let uncurry_wrap ~loc ~type_ var =

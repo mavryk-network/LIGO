@@ -18,6 +18,18 @@ val parameter_from_entrypoints
        ] )
      result
 
+val parameter_from_entrypoint
+  :  (Ligo_prim.Value_var.t * type_expression)
+  -> ( type_expression * type_expression
+     , [> `Not_entry_point_form of Types.expression_variable * Types.type_expression
+       | `Storage_does_not_match of
+         Ligo_prim.Value_var.t
+         * Types.type_expression
+         * Ligo_prim.Value_var.t
+         * Types.type_expression
+       ] )
+     result
+
 val should_uncurry_entry
   :  Types.type_expression
   -> [> `Bad

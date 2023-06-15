@@ -810,7 +810,16 @@ let%expect_test _ =
     Content: : |record[bar -> foo_variant , foo -> foo_variant]|
     references:
       File "../../test/contracts/get_scope_tests/nominal_types.mligo", line 13, characters 14-24
-    Module definitions: |}]
+    Module definitions:
+    Errors:
+    File "../../test/contracts/get_scope_tests/nominal_types.mligo", line 13, characters 28-39:
+     12 |
+     13 | let main (p : foo_record) : foo_variant = p.foo
+                                      ^^^^^^^^^^^
+     14 |
+
+    Invalid type for entrypoint "main".
+    An entrypoint must of type "parameter * storage -> operation list * storage". |}]
 
 let%expect_test _ =
   run_ligo_good

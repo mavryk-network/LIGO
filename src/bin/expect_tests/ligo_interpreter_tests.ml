@@ -348,28 +348,49 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_mutate_module.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test exited with value [(() , Mutation at: File "contract_under_test/module_adder.mligo", line 1, characters 66-71:
-      1 | [@entry] let add (p : int) (k : int) : operation list * int = [], p + k
-                                                                            ^^^^^
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
 
-    Replacing by: p ^ k.
-    )]. |}]
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 350, characters 2-66
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_mutate_module.mligo", line 3, characters 18-36:
+    2 |
+    3 | let _tester (a : (Adder parameter_of, int) typed_address) (_ : michelson_contract) (_ : int) : unit =
+                          ^^^^^^^^^^^^^^^^^^
+    4 |   let c : (Adder parameter_of) contract = Test.to_contract a in
+
+  Type "$parameter" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_mutate_module.jsligo" ];
-  [%expect
-    {|
-    [(() , Mutation at: File "contract_under_test/module_adder.mligo", line 1, characters 66-71:
-      1 | [@entry] let add (p : int) (k : int) : operation list * int = [], p + k
-                                                                            ^^^^^
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
 
-    Replacing by: p ^ k.
-    )]
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 373, characters 2-67
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  File "./test_mutate_module.jsligo", line 3, characters 35-53:
+    2 |
+    3 | const _tester = (a : typed_address<parameter_of Adder, int>, _ : michelson_contract, _ : int) : unit => {
+                                           ^^^^^^^^^^^^^^^^^^
+    4 |   let c : contract<parameter_of Adder> = Test.to_contract(a);
+
+  Type "$parameter" not found. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "iteration.jsligo" ];
