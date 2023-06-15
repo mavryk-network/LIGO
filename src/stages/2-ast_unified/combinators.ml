@@ -305,6 +305,7 @@ let tv__type_ ~loc () : ty_expr =
     _type_
     , ( "string"
       , "bytes"
+      , "bool"
       , "int"
       , "operation"
       , "nat"

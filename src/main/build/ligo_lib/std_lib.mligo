@@ -240,13 +240,15 @@ module Dynamic_entrypoints_helpers = struct
   }
 
   (* partially apply on the first 2 arguments to get an entry lifted as a main function *)
-  let dyn_entry_to_main
+  let wrap_dynamic_entry
     (type storage dyn_main_param dyn_ep_param) =
       type entry_dyn = (dyn_ep_param, storage) ps_f in
       fun
         (getter : dyn_main_param -> dyn_ep_param option)
         (dyn_main : entry_dyn)
-        p s : operation list * storage ->
+        (p : dyn_main_param)
+        (s : storage)
+        : operation list * storage ->
           let p = Option.value_exn (-2) (getter p) in  
           dyn_main p s
 
@@ -263,7 +265,7 @@ module Dynamic_entrypoints_helpers = struct
         (dyn_main : entry_dyn)
         (store : lazified_storage)
         : operation list * lazified_storage ->
-          let f = dyn_entry_to_main getter dyn_main in
+          let f = wrap_dynamic_entry getter dyn_main in
           if condition_on_set store.storage then (
             let dynamic_entries = Big_map.update selector (Some f) store.dynamic_entries in
             [], { store with dynamic_entries })
