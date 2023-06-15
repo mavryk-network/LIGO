@@ -32,6 +32,8 @@ for each [@view] declarations:
 include Flag.No_arg ()
 
 let tv_storage ~loc = t_var ~loc @@ Ty_variable.of_input_var ~loc "storage"
+let v_dyn_storage ~loc = Ty_variable.of_input_var ~loc "dyn_storage"
+let tv_dyn_storage ~loc = t_var ~loc (v_dyn_storage ~loc)
 let name = __MODULE__
 
 type ez_row = (Label.t * ty_expr) list
@@ -53,6 +55,7 @@ let rec compile ~raise =
    fun p ->
     match fetch_dyn_entry_type p with
     | Some dyn_entry_t ->
+      let loc = Location.generated in
       let storage_t = fetch_static_storage_type ~raise p in
       let entry_ts = fetch_static_entry_parameter_types p in
       let view_ts = fetch_view_types p in
@@ -71,6 +74,11 @@ let rec compile ~raise =
           }
       in
       let dyn_entry_rows = get_ez_row ~raise dyn_entry_t in
+      let dyn_storage_type_decl =
+        top_level_decl
+          ~loc
+          (d_type ~loc { name = v_dyn_storage ~loc; type_expr = dynamic_storage_type })
+      in
       let condition_decls = on_set_conditions p dyn_entry_rows in
       let setter_decls = dyn_setters dynamic_storage_type dyn_entry_rows in
       let dyn_caller_decls = dyn_caller dynamic_storage_type dyn_entry_rows in
@@ -78,6 +86,7 @@ let rec compile ~raise =
       let view_fwd_decls = view_forwarders dynamic_storage_type view_ts in
       make_prg
         (strip_views_and_entry_attributes p
+        @ [ dyn_storage_type_decl ]
         @ List.join
             [ condition_decls
             ; setter_decls
@@ -179,7 +188,7 @@ and fetch_static_entry_parameter_types : program_entry list -> (Variable.t * ty_
          let* { key; value }, d = get_d_attr d in
          if String.equal key "entry" && Option.is_none value
          then
-           let* { pattern; rhs_type; _ } = get_d_const d in
+           let* pattern, rhs_type = get_decl_and_ty d in
            let* name = List.to_singleton (get_pattern_binders pattern) in
            let* entry_param_ty = get_first_param_t rhs_type pattern in
            Some (name, entry_param_ty)
@@ -194,7 +203,7 @@ and fetch_view_types : program_entry list -> (Variable.t * ty_expr * ty_expr) li
          let* { key; value }, d = get_d_attr d in
          if String.equal key "view" && Option.is_none value
          then
-           let* { pattern; rhs_type; _ } = get_d_const d in
+           let* pattern, rhs_type = get_decl_and_ty d in
            let* name = List.to_singleton (get_pattern_binders pattern) in
            let* view_param_ty = get_first_param_t rhs_type pattern in
            let* view_result_ty = get_third_param_t rhs_type pattern in
@@ -215,7 +224,7 @@ and on_set_conditions : program_entry list -> ez_row -> program_entry list =
     (* compute condition_on_set_ bindings that are present *)
     filter_decl p ~f:(fun d ->
         let open Simple_utils.Option in
-        let* { pattern; _ } = get_d_const d in
+        let* pattern, _ = get_decl_and_ty d in
         let* name = List.to_singleton (get_pattern_binders pattern) in
         List.find labels_str ~f:(fun label ->
             Variable.is_name name ("condition_on_set_" ^ String.uncapitalize label)))
@@ -247,7 +256,7 @@ and on_set_conditions : program_entry list -> ez_row -> program_entry list =
                          ~loc
                          ("condition_on_set_" ^ String.uncapitalize str))
                 ; type_params = None
-                ; rhs_type = None
+                ; rhs_type = Some (t_fun ~loc (tv_storage ~loc, tv_bool ~loc ()))
                 ; let_rhs = fun_const_true ~loc
                 })))
 
@@ -304,9 +313,9 @@ and entry_forwarders : ty_expr -> (Variable.t * ty_expr) list -> program_entry l
           ; args = e_variable ~loc entry_name
           }
       in
-      make_top_level_declaration_with_attribute
+      top_level_decl
         ~loc
-        "entry"
+        ~attr:"entry"
         (d_const
            ~loc
            { pattern = p_var ~loc entry_name; type_params = None; rhs_type; let_rhs }))
@@ -328,9 +337,9 @@ and view_forwarders
           ; args = e_variable ~loc view_name
           }
       in
-      make_top_level_declaration_with_attribute
+      top_level_decl
         ~loc
-        "view"
+        ~attr:"view"
         (d_const
            ~loc
            { pattern = p_var ~loc view_name; type_params = None; rhs_type; let_rhs }))
@@ -365,9 +374,9 @@ and make_decl_of_call_to_std_lib ~loc ~suffix ~std_lib_fun ~args_prefixes patter
     in
     e_application_lst ~loc lamb args
   in
-  make_top_level_declaration_with_attribute
+  top_level_decl
     ~loc
-    "entry"
+    ~attr:"entry"
     (d_const ~loc { pattern; type_params = None; rhs_type; let_rhs })
 
 
@@ -382,5 +391,18 @@ and mod_access_to_stdlib ~loc fun_ =
       }
 
 
-and make_top_level_declaration_with_attribute ~loc attr d =
-  make_pe (PE_declaration (d_attr ~loc ({ key = attr; value = None }, d)))
+and top_level_decl ~loc ?attr d =
+  let d =
+    Option.value_map attr ~default:d ~f:(fun attr ->
+        d_attr ~loc ({ key = attr; value = None }, d))
+  in
+  make_pe (PE_declaration d)
+
+
+and get_decl_and_ty d =
+  let open Simple_utils.Option in
+  bind_eager_or
+    (let* { pattern; rhs_type; _ } = get_d_const d in
+     return (pattern, rhs_type))
+    (let* { pattern; _ } = get_d_irrefutable_match d in
+     return (pattern, None))
