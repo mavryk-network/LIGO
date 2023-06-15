@@ -4,15 +4,17 @@ type t = Scopes.def
 
 (* TODO use this in Scopes instead of `Loc` and `LSet` *)
 
-module Def_location = struct
-  type loc_in_file =
+module Loc_in_file = struct
+  type t =
     { path : Path.t
     ; range : Range.t
     }
   [@@deriving eq, ord, sexp]
+end
 
+module Def_location = struct
   type t =
-    | File of loc_in_file
+    | File of Loc_in_file.t
     | StdLib of { range : Range.t }
     | Virtual of string
   [@@deriving eq, ord, sexp]
@@ -37,6 +39,32 @@ let get_location : Scopes.def -> Def_location.t =
   | Variable vdef -> vdef.range
   | Type tdef -> tdef.range
   | Module mdef -> mdef.range
+
+
+let get_name : Scopes.def -> string = function
+  | Variable vdef -> vdef.name
+  | Type tdef -> tdef.name
+  | Module mdef -> mdef.name
+
+
+let get_def_type : Scopes.def -> Scopes.Types.def_type = function
+  | Variable vdef -> vdef.def_type
+  | Type tdef -> tdef.def_type
+  | Module mdef -> mdef.def_type
+
+
+let get_mod_path : Scopes.def -> string list = function
+  | Variable vdef -> vdef.mod_path
+  | Type tdef -> tdef.mod_path
+  | Module mdef -> mdef.mod_path
+
+
+let get_path : Scopes.def -> Path.t option =
+  Def_location.(
+    function
+    | File { path; _ } -> Some path
+    | StdLib _ | Virtual _ -> None)
+  <@ get_location
 
 
 let references_getter : Scopes.def -> Def_locations.t =
