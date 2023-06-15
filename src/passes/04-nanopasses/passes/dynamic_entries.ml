@@ -36,7 +36,16 @@ let name = __MODULE__
 
 type ez_row = (Label.t * ty_expr) list
 
-let reduction ~raise = Iter.defaults
+let reduction ~raise =
+  { Iter.defaults with
+    declaration =
+      (function
+      | { wrap_content = D_attr (attr, _); _ } when String.equal attr.key "dyn_storage" ->
+        raise.error (wrong_reduction __MODULE__)
+      | _ -> ())
+  }
+
+
 let decompile ~raise:_ = Nothing
 
 let rec compile ~raise =
@@ -134,7 +143,7 @@ and fetch_dyn_entry_type : program_entry list -> ty_expr option =
       else None)
 
 
-and get_first_param_t rhs_type let_rhs =
+and get_first_param_t rhs_type pattern =
   let open Simple_utils.Option in
   let from_annot =
     let* rhs_type in
@@ -143,11 +152,11 @@ and get_first_param_t rhs_type let_rhs =
   match from_annot with
   | Some (first :: _) -> Some first
   | _ ->
-    let* lamb = get_e_lambda let_rhs in
-    Ligo_prim.Param.get_ascr lamb.binder
+    let* ty, _ = get_p_var_typed pattern in
+    List.hd (get_t_fun_lst ty)
 
 
-and get_third_param_t rhs_type let_rhs =
+and get_third_param_t rhs_type pattern =
   let open Simple_utils.Option in
   let from_annot =
     let* rhs_type in
@@ -156,10 +165,9 @@ and get_third_param_t rhs_type let_rhs =
   match from_annot with
   | Some (_ :: _ :: third :: _) -> Some third
   | _ ->
-    let* lamb = get_e_lambda let_rhs in
-    let* lamb = get_e_lambda lamb.result in
-    let* lamb = get_e_lambda lamb.result in
-    Ligo_prim.Param.get_ascr lamb.binder
+    let* ty, _ = get_p_var_typed pattern in
+    let* _, _, three = List.to_triple (get_t_fun_lst ty) in
+    Some three
 
 
 and fetch_static_entry_parameter_types : program_entry list -> (Variable.t * ty_expr) list
@@ -171,9 +179,9 @@ and fetch_static_entry_parameter_types : program_entry list -> (Variable.t * ty_
          let* { key; value }, d = get_d_attr d in
          if String.equal key "entry" && Option.is_none value
          then
-           let* { pattern; rhs_type; let_rhs } = get_d_const d in
+           let* { pattern; rhs_type; _ } = get_d_const d in
            let* name = List.to_singleton (get_pattern_binders pattern) in
-           let* entry_param_ty = get_first_param_t rhs_type let_rhs in
+           let* entry_param_ty = get_first_param_t rhs_type pattern in
            Some (name, entry_param_ty)
          else None)
 
@@ -186,10 +194,10 @@ and fetch_view_types : program_entry list -> (Variable.t * ty_expr * ty_expr) li
          let* { key; value }, d = get_d_attr d in
          if String.equal key "view" && Option.is_none value
          then
-           let* { pattern; rhs_type; let_rhs } = get_d_const d in
+           let* { pattern; rhs_type; _ } = get_d_const d in
            let* name = List.to_singleton (get_pattern_binders pattern) in
-           let* view_param_ty = get_first_param_t rhs_type let_rhs in
-           let* view_result_ty = get_third_param_t rhs_type let_rhs in
+           let* view_param_ty = get_first_param_t rhs_type pattern in
+           let* view_result_ty = get_third_param_t rhs_type pattern in
            Some (name, view_param_ty, view_result_ty)
          else None)
 
@@ -207,14 +215,14 @@ and on_set_conditions : program_entry list -> ez_row -> program_entry list =
     (* compute condition_on_set_ bindings that are present *)
     filter_decl p ~f:(fun d ->
         let open Simple_utils.Option in
-        let* { pattern; rhs_type; let_rhs } = get_d_const d in
+        let* { pattern; _ } = get_d_const d in
         let* name = List.to_singleton (get_pattern_binders pattern) in
         List.find labels_str ~f:(fun label ->
             Variable.is_name name ("condition_on_set_" ^ String.uncapitalize label)))
   in
   let missing_conditions =
     List.filter
-      ~f:(fun l -> List.exists ~f:(String.equal l) present_conditions)
+      ~f:(fun l -> not @@ List.exists ~f:(String.equal l) present_conditions)
       labels_str
   in
   let fun_const_true ~loc =
@@ -273,13 +281,7 @@ and dyn_caller : ty_expr -> ez_row -> program_entry list =
   List.map dyn_param_rows ~f:(fun (label, dyn_param_ty) ->
       let label = String.uncapitalize (Label.to_string label) in
       let pattern = p_var ~loc (Variable.of_input_var ~loc label) in
-      let rhs_type =
-        Some
-          (make_ps_func
-             ~loc
-             (make_ps_func ~loc dyn_param_ty (tv_storage ~loc))
-             dyn_storage_t)
-      in
+      let rhs_type = Some (make_ps_func ~loc dyn_param_ty dyn_storage_t) in
       let args_prefixes = [ "enum_"; "make_" ] in
       make_decl_of_call_to_std_lib
         ~loc
@@ -302,11 +304,12 @@ and entry_forwarders : ty_expr -> (Variable.t * ty_expr) list -> program_entry l
           ; args = e_variable ~loc entry_name
           }
       in
-      make_pe
-        (PE_declaration
-           (d_const
-              ~loc
-              { pattern = p_var ~loc entry_name; type_params = None; rhs_type; let_rhs })))
+      make_top_level_declaration_with_attribute
+        ~loc
+        "entry"
+        (d_const
+           ~loc
+           { pattern = p_var ~loc entry_name; type_params = None; rhs_type; let_rhs }))
 
 
 and view_forwarders
@@ -325,11 +328,12 @@ and view_forwarders
           ; args = e_variable ~loc view_name
           }
       in
-      make_pe
-        (PE_declaration
-           (d_const
-              ~loc
-              { pattern = p_var ~loc view_name; type_params = None; rhs_type; let_rhs })))
+      make_top_level_declaration_with_attribute
+        ~loc
+        "view"
+        (d_const
+           ~loc
+           { pattern = p_var ~loc view_name; type_params = None; rhs_type; let_rhs }))
 
 
 and strip_views_and_entry_attributes : program_entry list -> program_entry list =
@@ -338,7 +342,8 @@ and strip_views_and_entry_attributes : program_entry list -> program_entry list 
         let open Simple_utils.Option in
         let* d = get_pe_declaration p in
         let* { key; value }, d' = get_d_attr d in
-        if (String.equal key "entry" || String.equal key "view") && Option.is_none value
+        let k_eq = String.equal key in
+        if (k_eq "entry" || k_eq "view" || k_eq "dyn_entry") && Option.is_none value
         then Some (make_pe (PE_declaration d'))
         else None
       in
@@ -348,7 +353,7 @@ and strip_views_and_entry_attributes : program_entry list -> program_entry list 
 and make_decl_of_call_to_std_lib ~loc ~suffix ~std_lib_fun ~args_prefixes pattern rhs_type
   =
   (* generate the following top-level declaration
-    `let <pattern> : <rhs_type> = Dynamic_entrypoints_helpers.<std_lib_fun> <suffix>_<args_prefixes>[0] .. <suffix>_<args_prefixes>[N]`
+    `[@entry] let <pattern> : <rhs_type> = Dynamic_entrypoints_helpers.<std_lib_fun> <suffix>_<args_prefixes>[0] .. <suffix>_<args_prefixes>[N]`
   *)
   let let_rhs =
     let lamb = mod_access_to_stdlib ~loc std_lib_fun in
@@ -360,8 +365,10 @@ and make_decl_of_call_to_std_lib ~loc ~suffix ~std_lib_fun ~args_prefixes patter
     in
     e_application_lst ~loc lamb args
   in
-  make_pe
-    (PE_declaration (d_const ~loc { pattern; type_params = None; rhs_type; let_rhs }))
+  make_top_level_declaration_with_attribute
+    ~loc
+    "entry"
+    (d_const ~loc { pattern; type_params = None; rhs_type; let_rhs })
 
 
 and mod_access_to_stdlib ~loc fun_ =
@@ -373,3 +380,7 @@ and mod_access_to_stdlib ~loc fun_ =
       ; field = Variable.of_input_var ~loc fun_
       ; field_as_open = false
       }
+
+
+and make_top_level_declaration_with_attribute ~loc attr d =
+  make_pe (PE_declaration (d_attr ~loc ({ key = attr; value = None }, d)))

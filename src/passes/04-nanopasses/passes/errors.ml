@@ -238,11 +238,11 @@ let error_json : t -> Simple_utils.Error.t =
  fun e ->
   let open Simple_utils.Error in
   match e with
-  | `Small_passes_dynamic_entry_not_a_sum_type ty ->
+  | `Small_passes_dynamic_entry_not_a_sum_type _ ->
     let message = "Dynamic entries type must be a sum-type" in
     let content = make_content ~message () in
     make ~stage ~content
-  | `Small_passes_no_dynamic_entry lst ->
+  | `Small_passes_no_dynamic_entry _ ->
     let message = "A contract with dynamic entries should always define a storage type" in
     let content = make_content ~message () in
     make ~stage ~content

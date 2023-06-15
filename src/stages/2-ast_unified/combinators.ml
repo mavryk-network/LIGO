@@ -374,13 +374,13 @@ let get_t_fun_lst (ty : ty_expr) =
   let rec aux acc ty =
     match get_t_fun ty with
     | Some (l, r) -> aux (l :: acc) r
-    | None -> acc
+    | None -> ty::acc
   in
   List.rev @@ aux [] ty
 
 
-let e_application_lst ~loc (lamb:expr) (args : expr list) =
-  List.fold_right args ~init:lamb ~f:(fun args lamb -> e_application ~loc {lamb ; args})
+let e_application_lst ~loc (lamb : expr) (args : expr list) =
+  List.fold args ~init:lamb ~f:(fun lamb args -> e_application ~loc { lamb; args })
 
 
 let e_type_abstract_ez ty_params init =

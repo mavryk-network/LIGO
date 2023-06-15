@@ -17,6 +17,9 @@ let rec remove_element ?compare:cmp x lst =
 
 let repeat n x = init ~f:(fun _ -> x) n
 
+let to_triple = function
+| [a ; b ; c] -> Some (a, b, c)
+  | _ -> None
 let to_pair = function
   | [a ; b] -> Some (a, b)
   | _ -> None
