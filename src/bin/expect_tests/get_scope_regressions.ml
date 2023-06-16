@@ -429,7 +429,7 @@ let%expect_test _ =
     [ s_x#2:9-12  ] File "../../test/contracts/get_scope_tests/regressions/duplicate_unused_warnings.mligo", line 2, characters 16-17
     [  ] File "../../test/contracts/get_scope_tests/regressions/duplicate_unused_warnings.mligo", line 3, characters 12-13
     [ m#1:4-5  ] File "../../test/contracts/get_scope_tests/regressions/duplicate_unused_warnings.mligo", line 6, characters 21-22
-    [ m#1:4-5  ] File "../../test/contracts/get_scope_tests/regressions/duplicate_unused_warnings.mligo", line 7, characters 14-15
+    [ m#1:4-5 _#7:9-10  ] File "../../test/contracts/get_scope_tests/regressions/duplicate_unused_warnings.mligo", line 7, characters 14-15
     [ m#1:4-5  ] File "../../test/contracts/get_scope_tests/regressions/duplicate_unused_warnings.mligo", line 8, characters 12-13
 
     Variable definitions:
@@ -446,6 +446,11 @@ let%expect_test _ =
     (m2#6:4-6 -> m2)
     Range: File "../../test/contracts/get_scope_tests/regressions/duplicate_unused_warnings.mligo", line 6, characters 4-6
     Body Range: File "../../test/contracts/get_scope_tests/regressions/duplicate_unused_warnings.mligo", line 6, character 9 to line 8, character 13
+    Content: |resolved: int|
+    references: []
+    (_#7:9-10 -> _)
+    Range: File "../../test/contracts/get_scope_tests/regressions/duplicate_unused_warnings.mligo", line 7, characters 9-10
+    Body Range: File "../../test/contracts/get_scope_tests/regressions/duplicate_unused_warnings.mligo", line 7, characters 14-15
     Content: |resolved: int|
     references: []
     Type definitions:
