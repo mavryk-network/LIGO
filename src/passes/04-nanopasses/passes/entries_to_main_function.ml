@@ -68,11 +68,14 @@ and fetch_static_entry_parameter_types : program_entry list -> (Variable.t * ty_
          let open Simple_utils.Option in
          let* { key; value }, d = get_d_attr d in
          if String.equal key "entry" && Option.is_none value
-         then
+         then (
            let* pattern, rhs_type = get_decl_and_ty d in
            let* name = List.to_singleton (get_pattern_binders pattern) in
-           let* entry_param_ty = get_first_param_t rhs_type pattern in
-           Some (name, entry_param_ty)
+           let entry_param_ty = get_first_param_t rhs_type pattern in
+           if Option.is_none entry_param_ty
+           then failwith @@ Format.asprintf "TODO: Could not extract %a parameter type.." Variable.pp name;
+           let* entry_param_ty in
+           Some (name, entry_param_ty))
          else None)
 
 
