@@ -161,6 +161,7 @@ let typed_prod =
     ; type_file "type_vars_let_fun.mligo"
     ; type_file "export_newline.jsligo"
     ; type_file "ppx_helpers.mligo"
+    ; type_file "wildcards.jsligo"
     ]
 
 
