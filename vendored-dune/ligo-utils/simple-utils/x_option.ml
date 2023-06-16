@@ -10,6 +10,9 @@ let bind_eager_or = fun a b -> match (a , b) with
   | _, Some b -> Some b
   | _ -> None
 
+let bind_eager_list lst =
+  value ~default:None @@ List.find lst ~f:(Option.is_some)
+
 let map_pair_or = fun (fa, fb) p ->
   bind_eager_or (fa p) (fb p)
 

@@ -47,17 +47,16 @@ and filter_decl : type b. program_entry list -> f:(declaration -> b option) -> b
          | _ -> None)
 
 
-and get_first_param_t rhs_type pattern =
+and get_first_param_t rhs_type pattern expr =
   let open Simple_utils.Option in
-  let from_annot =
-    let* rhs_type in
-    Some (get_t_fun_lst rhs_type)
-  in
-  match from_annot with
-  | Some (first :: _) -> Some first
-  | _ ->
-    let* ty, _ = get_p_var_typed pattern in
-    List.hd (get_t_fun_lst ty)
+  bind_eager_list
+    [ (let* rhs_type in
+       List.hd (get_t_fun_lst rhs_type))
+    ; (let* ty, _ = get_p_var_typed pattern in
+       List.hd (get_t_fun_lst ty))
+    ; (let* { binder; _ } = get_e_lambda expr in
+       Ligo_prim.Param.get_ascr binder)
+    ]
 
 
 and fetch_static_entry_parameter_types : program_entry list -> (Variable.t * ty_expr) list
@@ -69,11 +68,16 @@ and fetch_static_entry_parameter_types : program_entry list -> (Variable.t * ty_
          let* { key; value }, d = get_d_attr d in
          if String.equal key "entry" && Option.is_none value
          then (
-           let* pattern, rhs_type = get_decl_and_ty d in
+           let* pattern, rhs_type, expr = get_decl_and_ty d in
            let* name = List.to_singleton (get_pattern_binders pattern) in
-           let entry_param_ty = get_first_param_t rhs_type pattern in
+           let entry_param_ty = get_first_param_t rhs_type pattern expr in
            if Option.is_none entry_param_ty
-           then failwith @@ Format.asprintf "TODO: Could not extract %a parameter type.." Variable.pp name;
+           then
+             failwith
+             @@ Format.asprintf
+                  "TODO: Could not extract %a parameter type.."
+                  Variable.pp
+                  name;
            let* entry_param_ty in
            Some (name, entry_param_ty))
          else None)
@@ -144,7 +148,7 @@ and top_level_decl ~loc d = make_pe (PE_declaration d)
 and get_decl_and_ty d =
   let open Simple_utils.Option in
   bind_eager_or
-    (let* { pattern; rhs_type; _ } = get_d_const d in
-     return (pattern, rhs_type))
+    (let* { pattern; rhs_type; let_rhs } = get_d_const d in
+     return (pattern, rhs_type, let_rhs))
     (let* { pattern; expr; _ } = get_d_irrefutable_match d in
-     return (pattern, None))
+     return (pattern, None, expr))
