@@ -48,8 +48,8 @@ module T =
     | Verbatim of lexeme Wrap.t
     | Bytes    of (lexeme * Hex.t) Wrap.t
     | Int      of (lexeme * Z.t) Wrap.t
- (* | Nat      of (lexeme * Z.t) Wrap.t
-    | Mutez    of (lexeme * Int64.t) Wrap.t *)
+    | Nat      of (lexeme * Z.t) Wrap.t
+    | Mutez    of (lexeme * Int64.t) Wrap.t
     | Ident    of lexeme Wrap.t
     | UIdent   of lexeme Wrap.t
  (* | Lang     of lexeme Region.reg *)
@@ -63,8 +63,8 @@ module T =
     | TIMES    of lexeme Wrap.t  (* *    *)
     | REM      of lexeme Wrap.t  (* %    *)
     | QMARK    of lexeme Wrap.t  (* ?    *)
- (* | PLUS2    of lexeme Wrap.t  (* ++   *)
-    | MINUS2   of lexeme Wrap.t  (* --   *) *)
+    | PLUS2    of lexeme Wrap.t  (* ++   *)
+    | MINUS2   of lexeme Wrap.t  (* --   *)
     | LPAR     of lexeme Wrap.t  (* (    *)
     | RPAR     of lexeme Wrap.t  (* )    *)
     | LBRACKET of lexeme Wrap.t  (* [    *)
@@ -103,8 +103,6 @@ module T =
     | VBAR     of lexeme Wrap.t  (* |    *)
     | ARROW    of lexeme Wrap.t  (* =>   *)
     | WILD     of lexeme Wrap.t  (* _    *)
-    | INCR     of lexeme Wrap.t  (* ++   *)
-    | DECR     of lexeme Wrap.t  (* --   *)
 
     (* JavaScript Keywords *)
 
@@ -175,6 +173,8 @@ module T =
     | Verbatim t -> String.escaped t#payload
     | Bytes t    -> fst t#payload
     | Int t      -> fst t#payload
+    | Nat t      -> fst t#payload
+    | Mutez t    -> fst t#payload
     | Ident t
     | UIdent t   -> t#payload
     | Attr t     -> Attr.to_lexeme t#payload
@@ -188,8 +188,8 @@ module T =
     | TIMES    t
     | REM      t
     | QMARK    t
- (* | PLUS2    t
-    | MINUS2   t *)
+    | PLUS2    t
+    | MINUS2   t
     | LPAR     t
     | RPAR     t
     | LBRACE   t
@@ -228,8 +228,6 @@ module T =
     | VBAR     t
     | ARROW    t
     | WILD     t
-    | INCR     t
-    | DECR     t
 
     (* JavaScript Keywords *)
 
@@ -452,8 +450,8 @@ module T =
     let wrap_times    = wrap "*"
     let wrap_rem      = wrap "%"
     let wrap_qmark    = wrap "?"
- (* let wrap_plus2    = wrap "++"
-    let wrap_minus2   = wrap "--" *)
+    let wrap_plus2    = wrap "++"
+    let wrap_minus2   = wrap "--"
     let wrap_lpar     = wrap "("
     let wrap_rpar     = wrap ")"
     let wrap_lbracket = wrap "["
@@ -504,8 +502,8 @@ module T =
     let mk_TIMES    region = TIMES    (wrap_times    region)
     let mk_REM      region = REM      (wrap_rem      region)
     let mk_QMARK    region = QMARK    (wrap_qmark    region)
- (* let mk_PLUS2    region = PLUS2    (wrap_plus2    region)
-    let mk_MINUS2   region = MINUS2   (wrap_minus2   region) *)
+    let mk_PLUS2    region = PLUS2    (wrap_plus2    region)
+    let mk_MINUS2   region = MINUS2   (wrap_minus2   region)
     let mk_LPAR     region = LPAR     (wrap_lpar     region)
     let mk_RPAR     region = RPAR     (wrap_rpar     region)
     let mk_LBRACKET region = LBRACKET (wrap_lbracket region)
@@ -544,8 +542,6 @@ module T =
     let mk_VBAR     region = VBAR     (wrap_vbar     region)
     let mk_ARROW    region = ARROW    (wrap_arrow    region)
     let mk_WILD     region = WILD     (wrap_wild     region)
-    let mk_INCR     region = INCR     (wrap_incr     region)
-    let mk_DECR     region = DECR     (wrap_decr     region)
 
     (* All symbol smart constructors *)
 
@@ -556,8 +552,8 @@ module T =
       mk_TIMES;
       mk_REM;
       mk_QMARK;
- (*   mk_PLUS2;
-      mk_MINUS2; *)
+      mk_PLUS2;
+      mk_MINUS2;
       mk_LPAR;
       mk_RPAR;
       mk_LBRACKET;
@@ -595,9 +591,7 @@ module T =
       mk_XOR_EQ;  *)
       mk_VBAR;
       mk_ARROW;
-      mk_WILD;
-      mk_INCR;
-      mk_DECR;
+      mk_WILD
     ]
 
     (* All symbols *)
@@ -619,8 +613,8 @@ module T =
     let ghost_times    = wrap_times    Region.ghost
     let ghost_rem      = wrap_rem      Region.ghost
     let ghost_qmark    = wrap_qmark    Region.ghost
- (* let ghost_plus2    = wrap_plus2    Region.ghost
-    let ghost_minus2   = wrap_minus2   Region.ghost *)
+    let ghost_plus2    = wrap_plus2    Region.ghost
+    let ghost_minus2   = wrap_minus2   Region.ghost
     let ghost_lpar     = wrap_lpar     Region.ghost
     let ghost_rpar     = wrap_rpar     Region.ghost
     let ghost_lbracket = wrap_lbracket Region.ghost
@@ -669,8 +663,8 @@ module T =
     let ghost_TIMES    = TIMES    ghost_times
     let ghost_REM      = REM      ghost_rem
     let ghost_QMARK    = QMARK    ghost_qmark
- (* let ghost_PLUS2    = PLUS2    ghost_plus2
-    let ghost_MINUS2   = MINUS2   ghost_minus *)
+    let ghost_PLUS2    = PLUS2    ghost_plus2
+    let ghost_MINUS2   = MINUS2   ghost_minus2
     let ghost_LPAR     = LPAR     ghost_lpar
     let ghost_RPAR     = RPAR     ghost_rpar
     let ghost_LBRACKET = LBRACKET ghost_lbracket
@@ -719,8 +713,8 @@ module T =
     let wrap_verbatim s = Wrap.wrap s
     let wrap_bytes    b = Wrap.wrap ("0x" ^ Hex.show b, b)
     let wrap_int      z = Wrap.wrap (Z.to_string z, z)
-(*  let wrap_nat      z = Wrap.wrap (Z.to_string z ^ "n", z)
-    let wrap_mutez    i = Wrap.wrap (Int64.to_string i ^ "mutez", i) *)
+    let wrap_nat      z = Wrap.wrap (Z.to_string z ^ "n", z)
+    let wrap_mutez    i = Wrap.wrap (Int64.to_string i ^ "mutez", i)
     let wrap_ident    i = Wrap.wrap i
     let wrap_uident   c = Wrap.wrap c
 
@@ -735,8 +729,8 @@ module T =
     let ghost_verbatim s = wrap_verbatim s   Region.ghost
     let ghost_bytes    b = wrap_bytes    b   Region.ghost
     let ghost_int      z = wrap_int      z   Region.ghost
-(*  let ghost_nat      z = wrap_nat      z   Region.ghost
-    let ghost_mutez    i = wrap_mutez    i   Region.ghost *)
+    let ghost_nat      z = wrap_nat      z   Region.ghost
+    let ghost_mutez    i = wrap_mutez    i   Region.ghost
     let ghost_ident    i = wrap_ident    i   Region.ghost
     let ghost_uident   c = wrap_uident   c   Region.ghost
     let ghost_attr   k v = wrap_attr     k v Region.ghost
@@ -746,8 +740,8 @@ module T =
     let ghost_Verbatim s = Verbatim (ghost_verbatim s)
     let ghost_Bytes    b = Bytes    (ghost_bytes b)
     let ghost_Int      z = Int      (ghost_int z)
-(*  let ghost_Nat      z = Nat      (ghost_nat z)
-    let ghost_Mutez    i = Mutez    (ghost_mutez i) *)
+    let ghost_Nat      z = Nat      (ghost_nat z)
+    let ghost_Mutez    i = Mutez    (ghost_mutez i)
     let ghost_Ident    i = Ident    (ghost_ident i)
     let ghost_UIdent   c = UIdent   (ghost_uident c)
     let ghost_Attr   k v = Attr     (ghost_attr k v)
@@ -792,8 +786,8 @@ module T =
       "Ident"    -> "x"
     | "UIdent"   -> "C"
     | "Int"      -> "1"
- (* | "Nat"      -> "1n"
-    | "Mutez"    -> "1mutez" *)
+    | "Nat"      -> "1n"
+    | "Mutez"    -> "1mutez"
     | "String"   -> "\"a string\""
     | "Verbatim" -> "{|verbatim|}"
     | "Bytes"    -> "0xAA"
@@ -808,8 +802,8 @@ module T =
     | "TIMES"    -> ghost_times#payload
     | "REM"      -> ghost_rem#payload
     | "QMARK"    -> ghost_qmark#payload
- (* | "PLUS2"    -> ghost_plus2#payload
-    | "MINUS2"   -> ghost_minus2#payload *)
+    | "PLUS2"    -> ghost_plus2#payload
+    | "MINUS2"   -> ghost_minus2#payload
     | "LPAR"     -> ghost_lpar#payload
     | "RPAR"     -> ghost_rpar#payload
     | "LBRACE"   -> ghost_lbrace#payload
@@ -848,8 +842,6 @@ module T =
     | "VBAR"     -> ghost_vbar#payload
     | "ARROW"    -> ghost_arrow#payload
     | "WILD"     -> ghost_wild#payload
-    | "INCR"     -> ghost_incr#payload
-    | "DECR"     -> ghost_decr#payload
 
     (* JavaScript Keywords *)
 
@@ -926,12 +918,12 @@ module T =
     | Int t ->
         let s, n = t#payload in
         t#region, sprintf "Int (%S, %s)%s" s (Z.to_string n) (comments t)
- (* | Nat t ->
+    | Nat t ->
         let s, n = t#payload in
         t#region, sprintf "Nat (%S, %s)" s (Z.to_string n)
     | Mutez t ->
         let s, n = t#payload in
-        t#region, sprintf "Mutez (%S, %s)" s (Int64.to_string n) *)
+        t#region, sprintf "Mutez (%S, %s)" s (Int64.to_string n)
     | Ident t ->
         t#region, sprintf "Ident %S%s" t#payload (comments t)
     | UIdent t ->
@@ -949,8 +941,8 @@ module T =
     | TIMES    t -> t#region, sprintf "TIMES%s" (comments t)
     | REM      t -> t#region, sprintf "REM%s" (comments t)
     | QMARK    t -> t#region, sprintf "QMARK%s" (comments t)
- (* | PLUS2    t -> t#region, sprintf "PLUS2%s" (comments t)
-    | MINUS2   t -> t#region, sprintf "MINUS2%s" (comments t) *)
+    | PLUS2    t -> t#region, sprintf "PLUS2%s" (comments t)
+    | MINUS2   t -> t#region, sprintf "MINUS2%s" (comments t)
     | LPAR     t -> t#region, sprintf "LPAR%s" (comments t)
     | RPAR     t -> t#region, sprintf "RPAR%s" (comments t)
     | LBRACE   t -> t#region, sprintf "LBRACE%s" (comments t)
@@ -989,8 +981,6 @@ module T =
     | VBAR     t -> t#region, sprintf "VBAR%s" (comments t)
     | ARROW    t -> t#region, sprintf "ARROW%s" (comments t)
     | WILD     t -> t#region, sprintf "WILD%s" (comments t)
-    | INCR     t -> t#region, sprintf "INCR%s" (comments t)
-    | DECR     t -> t#region, sprintf "DECR%s" (comments t)
 
     (* JavaScript Keywords *)
 
@@ -1081,17 +1071,22 @@ module T =
 
     (* Natural numbers *)
 
-    type nat_err = Wrong_nat_syntax of string
+    type nat_err = Wrong_nat_syntax of string (* Not CameLIGO *)
 
-    let mk_nat _nat _z _region =
-      Error (Wrong_nat_syntax "Example: \"12334 as nat\".")
+    let mk_nat nat z region = Ok (Nat (wrap (nat ^ "n", z) region))
+
+(*  let mk_nat _nat _z _region =
+      Error (Wrong_nat_syntax "Example: \"12334 as nat\".") *)
 
     (* Mutez *)
 
     type mutez_err = Wrong_mutez_syntax of string
 
-    let mk_mutez _nat ~suffix:_ _int64 _region =
-      Error (Wrong_mutez_syntax "Example: \"1234 as mutez\".")
+    let mk_mutez nat ~suffix int64 region =
+      Ok (Mutez (wrap (nat ^ suffix, int64) region))
+
+(*  let mk_mutez _nat ~suffix:_ _int64 _region =
+      Error (Wrong_mutez_syntax "Example: \"1234 as mutez\".") *)
 
     (* End-Of-File *)
 
@@ -1152,8 +1147,8 @@ module T =
     | TIMES _
     | REM _
     | QMARK _
- (* | PLUS2 _
-    | MINUS2 _ *)
+    | PLUS2 _
+    | MINUS2 _
     | LPAR _
     | RPAR _
     | LBRACKET _
@@ -1191,9 +1186,7 @@ module T =
     | XOR_EQ _ *)
     | VBAR _
     | ARROW _
-    | WILD _
-    | INCR _
-    | DECR _ -> true
+    | WILD _ -> true
     | _ -> false
 
     (* Verbatim strings *)

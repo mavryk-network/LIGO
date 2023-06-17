@@ -16,16 +16,16 @@ module Token     = Lexing_jsligo.Token
 
 module Wrap = Lexing_shared.Wrap
 module Attr = Lexing_shared.Attr
-module CommonNodes = Cst_shared.CommonNodes
+module Nodes = Cst_shared.Nodes
 
 (* Utilities *)
 
 type 'a reg = 'a Region.reg
 type 'payload wrap = 'payload Wrap.t
 
-type ('a, 'sep) sep_or_term  = ('a, 'sep) CommonNodes.sep_or_term
-type ('a, 'sep) nsep_or_term = ('a, 'sep) CommonNodes.nsep_or_term
-type ('a, 'sep) nsep_or_pref = ('a, 'sep) CommonNodes.nsep_or_pref
+type ('a, 'sep) sep_or_term  = ('a, 'sep) Nodes.sep_or_term
+type ('a, 'sep) nsep_or_term = ('a, 'sep) Nodes.nsep_or_term
+type ('a, 'sep) nsep_or_pref = ('a, 'sep) Nodes.nsep_or_pref
 
 open Utils
 
@@ -141,8 +141,8 @@ and cst = t
 (* TOP-LEVEL DECLARATIONS *)
 
 and top_decl =
-  TL_Decl      of declaration * semi option
-| TL_Attr      of (attribute * top_decl) reg
+  TL_Decl      of (declaration * semi option)
+| TL_Attr      of (attribute * top_decl)
 | TL_Export    of (kwd_export * top_decl) reg
 | TL_Directive of Directive.t
 
@@ -233,7 +233,7 @@ and intf_body = intf_entries braces
 and intf_entries = (intf_entry, semi) nsep_or_term
 
 and intf_entry =
-  I_Attr    of (attribute * intf_entry) reg
+  I_Attr    of (attribute * intf_entry)
 | I_Type    of intf_type reg
 | I_Const   of intf_const reg
 
@@ -283,7 +283,7 @@ and type_vars = (type_var, comma) sep_or_term chevrons
 
 and type_expr =
   T_App       of (type_expr * type_ctor_args) reg  (* <u,v> M.t         *)
-| T_Attr      of (attribute * type_expr) reg       (* @a e              *)
+| T_Attr      of (attribute * type_expr)           (* @a e              *)
 | T_Cart      of cartesian                         (* [t, [u, v]]       *)
 | T_Fun       of fun_type                          (* (a : t) => u      *)
 | T_Int       of (lexeme * Z.t) wrap               (* 42                *)
@@ -319,13 +319,17 @@ and parameter_of_type = {
 
 (* Record type *)
 
-and 'a record = ('a reg, field_sep) sep_or_term braces
+and 'a record = ('a field reg, field_sep) sep_or_term braces
 
-and 'rhs field = {
+and 'a field = {
   attributes : attribute list;
   field_name : field_name;
-  field_rhs  : (colon * 'rhs) option
+  field_rhs  : (colon * 'a) option
 }
+
+(* Discriminated unions *)
+
+and union_type = (type_expr field record, vbar) nsep_or_pref reg
 
 (* Variant type *)
 
@@ -341,21 +345,21 @@ and variant_comp = {
   ctor_params : (comma * (type_expr, comma) nsep_or_term) option
 }
 
-(* Discriminated unions *)
-
-and union_type = (type_expr field record, vbar) nsep_or_pref reg
-
 (* PATTERNS *)
 
 (* IMPORTANT: The data constructors are sorted alphabetically. If you
    add or modify some, please make sure they remain in order. *)
 
 and pattern =
-  P_Attr   of (attribute * pattern) reg (* @a [x, _]      *)
-| P_Record of pattern field record      (* {x, y : 0}     *)
-| P_Tuple  of pattern tuple             (* [x, ...y, z]   *)
-| P_Typed  of typed_pattern             (* [] : list<int> *)
-| P_Var    of variable                  (* x              *)
+  P_Attr     of attribute * pattern      (* @a [x, _]      *)
+| P_Bytes    of (lexeme * Hex.t) wrap    (* 0xFFFA         *)
+| P_Mutez    of (lexeme * Int64.t) wrap  (* 5mutez         *)
+| P_Nat      of (lexeme * Z.t) wrap      (* 4n             *)
+| P_Record   of pattern field record     (* {x, y : 0}     *)
+| P_Tuple    of pattern tuple            (* [x, ...y, z]   *)
+| P_Typed    of typed_pattern reg        (* [] : list<int> *)
+| P_Var      of variable                 (* x              *)
+| P_Verbatim of lexeme wrap              (* {|foo|}        *)
 
 (* Tuple *)
 
@@ -373,7 +377,7 @@ and typed_pattern = pattern * type_annotation
    add or modify some, please make sure they remain in order. *)
 
 and statement =
-  S_Attr   of (attribute * statement) reg
+  S_Attr   of attribute * statement
 | S_Block  of statements braces
 | S_Break  of kwd_break
 | S_Cond   of cond_stmt reg
@@ -474,7 +478,7 @@ and expr =
 | E_AddEq    of plus_eq bin_op reg      (* x += y            *)
 | E_And      of bool_and bin_op reg     (* x && y            *)
 | E_App      of (expr * arguments) reg  (* f(x)   Foo()      *)
-| E_Attr     of (attribute * expr) reg  (* @a [x, y]         *)
+| E_Attr     of attribute * expr        (* @a [x, y]         *)
 | E_Bytes    of (lexeme * Hex.t) wrap   (* 0xFFFA            *)
 | E_CodeInj  of code_inj reg
 | E_Contract of contract_of_expr reg    (* contract_of (M.N) *)
@@ -497,13 +501,13 @@ and expr =
 | E_Neq      of neq bin_op reg          (* x != y            *)
 | E_Not      of negation un_op reg      (* !x                *)
 | E_Or       of bool_or bin_op reg      (* x || y            *)
-| E_Record   of expr field record       (* {x : e, y}        *)
 | E_Par      of expr par                (* (x + y)           *)
 | E_PostDecr of decrement un_op reg     (* x--               *)
 | E_PostIncr of increment un_op reg     (* x++               *)
 | E_PreDecr  of decrement un_op reg     (* --x               *)
 | E_PreIncr  of increment un_op reg     (* ++x               *)
 | E_Proj     of projection reg          (* e.x.1             *)
+| E_Record   of expr field record       (* {x : e, y}        *)
 | E_String   of lexeme wrap             (* "abcdef"          *)
 | E_Sub      of minus bin_op reg        (* x - y             *)
 | E_Ternary  of ternary reg             (* x ? y : z         *)
@@ -514,8 +518,6 @@ and expr =
 | E_Update   of update_expr braces      (* {...x, y : z}     *)
 | E_Var      of variable                (* x                 *)
 | E_Verbatim of lexeme wrap             (* {|foo|}           *)
-
-(*| E_Seq      of (expr, comma) nsepseq reg (* TODO: ??? *) *)
 
 (* Applications *)
 
@@ -539,7 +541,7 @@ and body =
 
 and contract_of_expr = {
   kwd_contract_of : kwd_contract_of;
-  module_path     : module_name module_path par
+  module_path     : module_name module_path reg par
 }
 
 (* Functional update of record expressions *)
@@ -610,22 +612,27 @@ let nsepseq_to_region to_region (hd,tl) =
   let reg (_, item) = to_region item in
   Region.cover (to_region hd) (last reg tl)
 
+let import_decl_to_region = function
+  AliasModule {region; _}
+| ImportAll   {region; _}
+| ImportSome  {region; _} -> region
+
 let declaration_to_region = function
-  D_Value     {region; _}
-| D_Import    {region; _}
+  D_Value     {region; _} -> region
+| D_Import    d -> import_decl_to_region d
 | D_Interface {region; _}
 | D_Module    {region; _}
 | D_Type      {region; _} -> region
 
 let rec top_decl_to_region = function
   TL_Decl      (d, _) -> declaration_to_region d
-| TL_Attr      {region; _}
+| TL_Attr      (_, d) -> top_decl_to_region d
 | TL_Export    {region; _} -> region
 | TL_Directive d -> Directive.to_region d
 
 let rec type_expr_to_region = function
-  T_App       {region; _}
-| T_Attr      {region; _}
+  T_App       {region; _} -> region
+| T_Attr      (_, t) -> type_expr_to_region t
 | T_Cart      {region; _}
 | T_Fun       {region; _} -> region
 | T_Int       w -> w#region
@@ -639,12 +646,15 @@ let rec type_expr_to_region = function
 | T_Variant   {region; _} -> region
 
 let rec pattern_to_region = function
-  P_Attr   {region; _}
+  P_Attr   (_, p) -> pattern_to_region p
+| P_Bytes  w -> w#region
+| P_Mutez  w -> w#region
+| P_Nat    w -> w#region
 | P_Record {region; _}
-| P_Tuple  {region; _} -> region
-| P_Typed  (p, (_, e)) ->
-    Region.cover (pattern_to_region p) (type_expr_to_region e)
+| P_Tuple  {region; _}
+| P_Typed  {region; _} -> region
 | P_Var w -> w#region
+| P_Verbatim w -> w#region
 
 let rec expr_to_region = function
   E_Add      {region; _}
@@ -693,7 +703,7 @@ let rec expr_to_region = function
 | E_Verbatim w -> w#region
 
 let rec statement_to_region = function
-  S_Attr   {region; _}
+  S_Attr   (_, s) -> statement_to_region s
 | S_Block  {region; _} -> region
 | S_Break  w -> w#region
 | S_Cond   {region; _} -> region

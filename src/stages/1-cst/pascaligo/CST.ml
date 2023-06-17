@@ -111,6 +111,9 @@ type eof = lexeme wrap
 (* Literals *)
 
 type variable    = lexeme wrap
+type type_param  = lexeme wrap
+type type_name   = lexeme wrap
+type type_var    = lexeme wrap
 type module_name = lexeme wrap
 type field_name  = lexeme wrap
 type ctor        = lexeme wrap
@@ -178,7 +181,7 @@ and const_decl = {
   terminator  : semi option
 }
 
-and type_params = (variable, comma) nsepseq
+and type_params = (type_param, comma) nsepseq
 
 and parameters = (param_decl reg, comma) sepseq par reg
 
@@ -228,8 +231,8 @@ and module_body = {
 
 and type_decl = {
   kwd_type   : kwd_type;
-  name       : variable;
-  params     : variable tuple option;
+  name       : type_name;
+  params     : type_param tuple option;
   kwd_is     : kwd_is;
   type_expr  : type_expr;
   terminator : semi option
@@ -253,7 +256,7 @@ and type_expr =
 | T_Record  of field_decl reg compound reg (* record [a; [@a1] b : t] *)
 | T_String  of lexeme wrap                         (*           "foo" *)
 | T_Sum     of sum_type reg                        (* [@a] A | B of t *)
-| T_Var     of variable                            (*               t *)
+| T_Var     of type_var                            (*               t *)
 
 (* Application of type constructors *)
 

@@ -33,8 +33,8 @@
   let mk_verbatim  = Token.wrap_verbatim  "ghost verbatim"
   let mk_bytes     = Token.wrap_bytes    (Hex.of_string "Ghost bytes")
   let mk_int       = Token.wrap_int       Z.zero
-(*let mk_nat       = Token.wrap_nat       Z.zero
-  let mk_mutez     = Token.wrap_mutez     Int64.zero *)
+  let mk_nat       = Token.wrap_nat       Z.zero
+  let mk_mutez     = Token.wrap_mutez     Int64.zero
   let mk_ident     = Token.wrap_ident     "ghost_ident"
   let mk_uident    = Token.wrap_uident    "Ghost_uident"
   let mk_attr      = Token.wrap_attr      "ghost_attr" None
@@ -58,31 +58,28 @@
 
 %token     <Preprocessor.Directive.t> Directive "<directive>" [@recover.expr mk_Directive  $loc]
 %token                <string Wrap.t> String    "<string>"    [@recover.expr mk_string     $loc]
-(* TODO: recovery annotation is turned off because it isn't supported in the pretty printer (see Pretty.pp_expr) *)
-%token                <string Wrap.t> Verbatim  "<verbatim>"  (* [@recover.expr mk_verbatim   $loc] *)
+%token                <string Wrap.t> Verbatim  "<verbatim>"  [@recover.expr mk_verbatim   $loc]
 %token      <(string * Hex.t) Wrap.t> Bytes     "<bytes>"     [@recover.expr mk_bytes      $loc]
 %token        <(string * Z.t) Wrap.t> Int       "<int>"       [@recover.expr mk_int        $loc]
 %token                <string Wrap.t> Ident     "<ident>"     [@recover.expr mk_ident      $loc] [@recover.cost 900]
 %token                <string Wrap.t> UIdent    "<uident>"    [@recover.expr mk_uident     $loc]
-%token                <Attr.t Wrap.t> Attr      "[@attr]"     [@recover.expr mk_attr      $loc]
-(*
+%token                <Attr.t Wrap.t> Attr      "[@attr]"     [@recover.expr mk_attr       $loc]
 %token        <(string * Z.t) Wrap.t> Nat       "<nat>"       [@recover.expr mk_nat        $loc]
 %token    <(string * Int64.t) Wrap.t> Mutez     "<mutez>"     [@recover.expr mk_mutez      $loc]
+(*
 %token     <string Region.reg Wrap.t> Lang      "[%lang"      [@recover.expr mk_lang       $loc]
 *)
 
 (* Symbols *)
 
-%token <string Wrap.t> MINUS   "-"    [@recover.expr Token.wrap_minus   $loc]
-%token <string Wrap.t> PLUS    "+"    [@recover.expr Token.wrap_plus    $loc]
-%token <string Wrap.t> SLASH   "/"    [@recover.expr Token.wrap_slash   $loc]
-%token <string Wrap.t> TIMES   "*"    [@recover.expr Token.wrap_times   $loc]
-%token <string Wrap.t> REM     "%"    [@recover.expr Token.wrap_rem     $loc]
-%token <string Wrap.t> QMARK   "?"    [@recover.expr Token.wrap_qmark   $loc]
-(*
-%token <string Wrap.t> PLUS2   "++"   [@recover.expr Token.wrap_plus2   $loc]
-%token <string Wrap.t> MINUS2  "--"   [@recover.expr Token.wrap_minus2  $loc]
-*)
+%token <string Wrap.t> MINUS   "-"    [@recover.expr Token.wrap_minus    $loc]
+%token <string Wrap.t> PLUS    "+"    [@recover.expr Token.wrap_plus     $loc]
+%token <string Wrap.t> SLASH   "/"    [@recover.expr Token.wrap_slash    $loc]
+%token <string Wrap.t> TIMES   "*"    [@recover.expr Token.wrap_times    $loc]
+%token <string Wrap.t> REM     "%"    [@recover.expr Token.wrap_rem      $loc]
+%token <string Wrap.t> QMARK   "?"    [@recover.expr Token.wrap_qmark    $loc]
+%token <string Wrap.t> PLUS2   "++"   [@recover.expr Token.wrap_plus2    $loc]
+%token <string Wrap.t> MINUS2  "--"   [@recover.expr Token.wrap_minus2   $loc]
 %token <string Wrap.t> LPAR     "("   [@recover.expr Token.wrap_lpar     $loc]
 %token <string Wrap.t> RPAR     ")"   [@recover.expr Token.wrap_rpar     $loc]
 %token <string Wrap.t> LBRACKET "["   [@recover.expr Token.wrap_lbracket $loc]
@@ -116,17 +113,15 @@
 %token <string Wrap.t> REM_EQ   "%="  [@recover.expr Token.wrap_rem_eq   $loc]
 %token <string Wrap.t> DIV_EQ   "/="  [@recover.expr Token.wrap_div_eq   $loc]
 (*
-%token <string Wrap.t> SL_EQ    "<<<=" [@recover.expr Token.wrap_sl_eq    $loc]
-%token <string Wrap.t> SR_EQ    ">>>=" [@recover.expr Token.wrap_sr_eq    $loc]
-%token <string Wrap.t> AND_EQ   "&="   [@recover.expr Token.wrap_and_eq   $loc]
-%token <string Wrap.t> OR_EQ    "|="   [@recover.expr Token.wrap_or_eq    $loc]
-%token <string Wrap.t> XOR_EQ   "^="   [@recover.expr Token.wrap_xor_eq   $loc]
+%token <string Wrap.t> SL_EQ    "<<<=" [@recover.expr Token.wrap_sl_eq   $loc]
+%token <string Wrap.t> SR_EQ    ">>>=" [@recover.expr Token.wrap_sr_eq   $loc]
+%token <string Wrap.t> AND_EQ   "&="   [@recover.expr Token.wrap_and_eq  $loc]
+%token <string Wrap.t> OR_EQ    "|="   [@recover.expr Token.wrap_or_eq   $loc]
+%token <string Wrap.t> XOR_EQ   "^="   [@recover.expr Token.wrap_xor_eq  $loc]
 *)
 %token <string Wrap.t> VBAR     "|"   [@recover.expr Token.wrap_vbar     $loc]
 %token <string Wrap.t> ARROW    "=>"  [@recover.expr Token.wrap_arrow    $loc]
 %token <string Wrap.t> WILD     "_"   [@recover.expr Token.wrap_wild     $loc] [@recover.cost 700]
-%token <string Wrap.t> INCR     "++"  [@recover.expr Token.wrap_wild     $loc]
-%token <string Wrap.t> DECR     "--"  [@recover.expr Token.wrap_wild     $loc]
 
 (* JavaScript Keywords *)
 
@@ -155,6 +150,7 @@
 %token <string Wrap.t> Type       "type"       [@recover.expr Token.wrap_type       $loc]
 
 (* Contract keywords *)
+
 %token <string Wrap.t> Contract  "contract_of"  [@recover.expr Token.wrap_contract $loc]
 %token <string Wrap.t> Parameter "parameter_of" [@recover.expr Token.wrap_parameter $loc]
 

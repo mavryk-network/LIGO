@@ -40,6 +40,8 @@ let add_comment (comment : Wrap.comment) : Token.t -> Token.t = function
 | Verbatim w -> Verbatim (w#add_comment comment)
 | Bytes    w -> Bytes (w#add_comment comment)
 | Int      w -> Int (w#add_comment comment)
+| Nat      w -> Nat (w#add_comment comment)
+| Mutez    w -> Mutez (w#add_comment comment)
 | Ident    w -> Ident (w#add_comment comment)
 | UIdent   w -> UIdent (w#add_comment comment)
 | Attr     w -> Attr (w#add_comment comment)
@@ -52,6 +54,8 @@ let add_comment (comment : Wrap.comment) : Token.t -> Token.t = function
 | TIMES    w -> TIMES (w#add_comment comment)
 | REM      w -> REM (w#add_comment comment)
 | QMARK    w -> QMARK (w#add_comment comment)
+| PLUS2    w -> PLUS2 (w#add_comment comment)
+| MINUS2   w -> MINUS2 (w#add_comment comment)
 | LPAR     w -> LPAR (w#add_comment comment)
 | RPAR     w -> RPAR (w#add_comment comment)
 | LBRACKET w -> LBRACKET (w#add_comment comment)
@@ -80,8 +84,6 @@ let add_comment (comment : Wrap.comment) : Token.t -> Token.t = function
 | VBAR     w -> VBAR (w#add_comment comment)
 | ARROW    w -> ARROW (w#add_comment comment)
 | WILD     w -> WILD (w#add_comment comment)
-| INCR     w -> INCR (w#add_comment comment)
-| DECR     w -> DECR (w#add_comment comment)
 
 (* JavaScript Keywords *)
 

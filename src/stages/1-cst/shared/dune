@@ -13,4 +13,4 @@
   zarith
   hex)
  (modules
-   Tree Fold CommonNodes))
+   Tree Fold Nodes))

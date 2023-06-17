@@ -153,6 +153,8 @@ everything_else:
 | "<verbatim>"      { Verbatim $1  }
 | "<bytes>"         { Bytes $1     }
 | "<int>"           { Int $1       }
+| "<nat>"           { Nat $1       }
+| "<mutez>"         { Mutez $1     }
 | "<ident>"         { Ident $1     }
 | "<uident>"        { UIdent $1    }
 | "[@attr]"         { Attr $1      }
@@ -183,8 +185,8 @@ everything_else:
 | "/="              { DIV_EQ $1    }
 | "|"               { VBAR $1      }
 | "_"               { WILD $1      }
-| "++"              { INCR $1      }
-| "--"              { DECR $1      }
+| "++"              { PLUS2 $1     }
+| "--"              { MINUS2 $1    }
 | "?"               { QMARK $1     }
 | "break"           { Break $1     }
 | "case"            { Case $1      }

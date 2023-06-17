@@ -31,6 +31,8 @@ let add_comment (comment : string Region.reg) : Token.t -> Token.t = function
 | Verbatim w -> Verbatim (w#add_line_comment comment)
 | Bytes    w -> Bytes (w#add_line_comment comment)
 | Int      w -> Int (w#add_line_comment comment)
+| Nat      w -> Nat (w#add_line_comment comment)
+| Mutez    w -> Mutez (w#add_line_comment comment)
 | Ident    w -> Ident (w#add_line_comment comment)
 | UIdent   w -> UIdent (w#add_line_comment comment)
 | Attr     w -> Attr (w#add_line_comment comment)
@@ -43,6 +45,8 @@ let add_comment (comment : string Region.reg) : Token.t -> Token.t = function
 | TIMES    w -> TIMES (w#add_line_comment comment)
 | REM      w -> REM (w#add_line_comment comment)
 | QMARK    w -> QMARK (w#add_line_comment comment)
+| PLUS2    w -> PLUS2 (w#add_line_comment comment)
+| MINUS2   w -> MINUS2 (w#add_line_comment comment)
 | LPAR     w -> LPAR (w#add_line_comment comment)
 | RPAR     w -> RPAR (w#add_line_comment comment)
 | LBRACKET w -> LBRACKET (w#add_line_comment comment)
@@ -71,8 +75,6 @@ let add_comment (comment : string Region.reg) : Token.t -> Token.t = function
 | VBAR     w -> VBAR (w#add_line_comment comment)
 | ARROW    w -> ARROW (w#add_line_comment comment)
 | WILD     w -> WILD (w#add_line_comment comment)
-| INCR     w -> INCR (w#add_line_comment comment)
-| DECR     w -> DECR (w#add_line_comment comment)
 
 (* JavaScript Keywords *)
 

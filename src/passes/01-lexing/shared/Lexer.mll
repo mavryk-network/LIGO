@@ -193,9 +193,8 @@ module Make (Options : Options.S) (Token : Token.S) =
     (* Identifiers *)
 
     let mk_ident state buffer =
-      let state, Region.{region; value} = state#sync buffer in
-      let token = Token.mk_ident value region
-      in token, state
+      let state, Region.{region; value} = state#sync buffer
+      in Token.mk_ident value region, state
 
     (* Attributes *)
 
@@ -204,25 +203,22 @@ module Make (Options : Options.S) (Token : Token.S) =
       and value =
         match value with
           None        -> None
-        | Some string -> Some (Attr.String string) in
-      let token = Token.mk_attr ~key ?value region
-      in token, state
+        | Some string -> Some (Attr.String string)
+      in Token.mk_attr ~key ?value region, state
 
     let mk_id_attr key ?value state buffer =
       let state, Region.{region; _} = state#sync buffer
       and value =
         match value with
           None      -> None
-        | Some name -> Some (Attr.Ident name) in
-      let token = Token.mk_attr ~key ?value region
-      in token, state
+        | Some name -> Some (Attr.Ident name)
+      in Token.mk_attr ~key ?value region, state
 
     (* Data constructors and module names *)
 
     let mk_uident state buffer =
-      let state, Region.{region; value} = state#sync buffer in
-      let token = Token.mk_uident value region
-      in token, state
+      let state, Region.{region; value} = state#sync buffer
+      in Token.mk_uident value region, state
 
     (* Code injection *)
 
@@ -249,9 +245,9 @@ module Make (Options : Options.S) (Token : Token.S) =
     (* End-of-File *)
 
     let mk_eof state buffer =
-      let state, Region.{region; _} = state#sync buffer in
-      let token = Token.mk_eof region
-      in token, state
+      let state, Region.{region; _} = state#sync buffer
+      in Token.mk_eof region, state
+
 
 (* END HEADER *)
 }

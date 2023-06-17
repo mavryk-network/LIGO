@@ -254,13 +254,13 @@ and print_type_expr state = function
 | T_Int       t -> print_T_Int       state t
 | T_ModPath   t -> print_T_ModPath   state t
 | T_Par       t -> print_T_Par       state t
+| T_Parameter t -> print_T_Parameter state t
 | T_Record    t -> print_T_Record    state t
 | T_String    t -> print_T_String    state t
-| T_Variant   t -> print_T_Variant   state t
 | T_Var       t -> print_T_Var       state t
-| T_Parameter t -> print_T_Parameter state t
+| T_Variant   t -> print_T_Variant   state t
 
-(* Constructor application *)
+(* Application of type constructors *)
 
 and print_T_App state (node : (type_expr * type_ctor_arg) reg) =
   let Region.{value; region} = node in
@@ -325,6 +325,12 @@ and print_T_ModPath state (node : type_expr module_path reg) =
 and print_T_Par state (node : type_expr par) =
   Tree.make_unary state "T_Par" print_type_expr node.value.inside
 
+(* Type parameter *)
+
+and print_T_Parameter state (node : (module_name, dot) nsepseq reg) =
+  let Region.{value; region} = node in
+  Tree.(of_nsepseq state ~region "T_Parameter" make_literal value)
+
 (* Record types *)
 
 and print_T_Record state (node : field_decl reg record) =
@@ -343,7 +349,7 @@ and print_field_decl state (node : field_decl reg) =
 (* Type string *)
 
 and print_T_String state (node : lexeme wrap) =
-  Tree.(make_unary state "T_String" make_verbatim node)
+  Tree.(make_unary state "T_String" make_string node)
 
 (* Variant types *)
 
@@ -356,8 +362,7 @@ and print_variant state (node : variant reg) =
   let {attributes; ctor; ctor_args} = value in
   let children = Tree.mk_child_opt print_of_type_expr ctor_args
                  :: mk_children_attr attributes in
-  let root = ctor#payload in
-  Tree.make ~region state root children
+  Tree.make ~region state ctor#payload children
 
 and print_of_type_expr state (_, type_expr) =
   print_type_expr state type_expr
@@ -366,12 +371,6 @@ and print_of_type_expr state (_, type_expr) =
 
 and print_T_Var state (node : variable) =
   Tree.(make_unary state "T_Var" make_literal node)
-
-(* Type parameter *)
-
-and print_T_Parameter state (node : (module_name, dot) nsepseq reg) =
-  let Region.{value; region} = node in
-  Tree.(of_nsepseq state ~region "T_Parameter" make_literal value)
 
 (* PATTERNS *)
 
@@ -552,7 +551,7 @@ and print_P_Var state (node : variable) =
 (* A verbatim string *)
 
 and print_P_Verbatim state (node : lexeme wrap) =
-  Tree.(make_unary state "P_Verbatim" make_string node)
+  Tree.(make_unary state "P_Verbatim" make_verbatim node)
 
 (* Unit pattern *)
 
@@ -641,7 +640,7 @@ and print_bin_op state root (node : 'op bin_op reg) =
 and print_E_And state (node : bool_and bin_op reg) =
   print_bin_op state "E_And" node
 
-(* Constructor application (or constant constructor) as expressions *)
+(* Data constructor application or function call *)
 
 and print_E_App state (node : (expr * expr nseq) reg) =
   let Region.{value; region} = node in
@@ -949,7 +948,11 @@ and print_E_Par state (node : expr par) =
 
 and print_E_Proj state (node : projection reg) =
   let Region.{value; region} = node in
-  Tree.of_nsepseq state ~region "E_Proj" print_selection value.field_path
+  let {record_or_tuple; selector=_; field_path} = value in
+  let children = Tree.(
+      mk_child print_expr record_or_tuple
+      :: mk_children_nsepseq print_selection field_path)
+  in Tree.make state ~region "E_Proj" children
 
 and print_selection state = function
   FieldName name -> print_FieldName state name

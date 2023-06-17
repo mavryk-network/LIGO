@@ -256,11 +256,11 @@ and type_expr =
 | T_Int       of (lexeme * Z.t) wrap                 (* 42              *)
 | T_ModPath   of type_expr module_path reg           (* A.B.(x * y)     *)
 | T_Par       of type_expr par                       (* (t)             *)
+| T_Parameter of (module_name, dot) nsepseq reg      (* parameter_of m  *)
 | T_Record    of field_decl reg record               (* {a; [@x] b: t}  *)
 | T_String    of lexeme wrap                         (* "x"             *)
-| T_Variant   of variant_type reg                    (* [@a] A | B of t *)
 | T_Var       of variable                            (* x               *)
-| T_Parameter of (module_name, dot) nsepseq reg      (* parameter_of m  *)
+| T_Variant   of variant_type reg                    (* [@a] A | B of t *)
 
 (* Type application *)
 
