@@ -3,7 +3,7 @@ esy-windows:
   tags:
     - windows
   script:
-    - ./scripts/bundle-esy.ps1 ./windows-installer
+    - ./scripts/bundle-esy.ps1 ./windows-installer/tools
   artifacts:
     paths:
       - ./windows-installer

@@ -150,7 +150,7 @@ let does_command_exist (cmd : string) =
   | _ -> Error "unknown error"
 
 
-let makeCommand cmd =
+let makeCommand ?ligo_installation_dir cmd =
   let open Caml in
   (* Looks up $env:PATH for the command *)
   let resolve_npm_command cmd =
@@ -180,13 +180,20 @@ let makeCommand cmd =
         ""
     in
     let paths = Str.split path_sep_regexp v in
+    let paths = match ligo_installation_dir with
+      | Some path -> (Filename.concat path "tools") :: paths
+      | None -> paths
+    in
     let npmPaths =
       List.filter_map
         (fun path ->
           let cmd_p = Filename.concat path (sprintf "%s.cmd" cmd) in
+          let ps1_p = Filename.concat path (sprintf "%s.ps1" cmd) in
           let exe_p = Filename.concat path (sprintf "%s.exe" cmd) in
           if Sys.file_exists cmd_p
           then Some cmd_p
+          else if Sys.file_exists ps1_p
+          then Some ps1_p
           else if Sys.file_exists exe_p
           then Some exe_p
           else None)
@@ -252,7 +259,9 @@ let run_command (cmd : command) =
   else (
     let _empty_string, args = cmd in
     let bin = args.(0) in
-    let bin_full_path = makeCommand bin in
+    let ligo_full_path = makeCommand "ligo" in
+    let ligo_installation_dir = Filename.dirname ligo_full_path in
+    let bin_full_path = makeCommand ~ligo_installation_dir bin in
     let env =
       Ligo_unix.environment ()
       |> Array.filter ~f:(fun kv -> not (Str.string_match (Str.regexp "_=") kv 0))
