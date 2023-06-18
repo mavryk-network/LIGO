@@ -1058,7 +1058,7 @@ contract: If LPAR Bytes SEMI
 ##
 ## Ends in an error in state: 396.
 ##
-## par(if_cond) -> LPAR if_cond . RPAR [ While WILD Verbatim UIdent Type Switch String Return MINUS Let LPAR LBRACKET LBRACE Int Import If Ident INCR For Export DECR Contract Const Bytes BOOL_NOT Attr ]
+## par(if_cond) -> LPAR if_cond . RPAR [ While WILD Verbatim UIdent Type Switch String Return MINUS Let LPAR LBRACKET LBRACE Int Import If Ident PLUS2 For Export MINUS2 Contract Const Bytes BOOL_NOT Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## LPAR if_cond
@@ -1156,7 +1156,7 @@ contract: If LPAR ZWSP
 ##
 ## Ends in an error in state: 395.
 ##
-## par(if_cond) -> LPAR . if_cond RPAR [ While WILD Verbatim UIdent Type Switch String Return MINUS Let LPAR LBRACKET LBRACE Int Import If Ident INCR For Export DECR Contract Const Bytes BOOL_NOT Attr ]
+## par(if_cond) -> LPAR . if_cond RPAR [ While WILD Verbatim UIdent Type Switch String Return MINUS Let LPAR LBRACKET LBRACE Int Import If Ident PLUS2 For Export MINUS2 Contract Const Bytes BOOL_NOT Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## LPAR
@@ -2312,7 +2312,7 @@ contract: While LPAR Bytes SEMI
 ##
 ## Ends in an error in state: 760.
 ##
-## par(while_cond) -> LPAR while_cond . RPAR [ While WILD Verbatim UIdent Type Switch String Return MINUS Let LPAR LBRACKET LBRACE Int Import If Ident INCR For Export DECR Contract Const Bytes BOOL_NOT Attr ]
+## par(while_cond) -> LPAR while_cond . RPAR [ While WILD Verbatim UIdent Type Switch String Return MINUS Let LPAR LBRACKET LBRACE Int Import If Ident PLUS2 For Export MINUS2 Contract Const Bytes BOOL_NOT Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## LPAR while_cond
@@ -2340,7 +2340,7 @@ contract: While LPAR ZWSP
 ##
 ## Ends in an error in state: 2.
 ##
-## par(while_cond) -> LPAR . while_cond RPAR [ While WILD Verbatim UIdent Type Switch String Return MINUS Let LPAR LBRACKET LBRACE Int Import If Ident INCR For Export DECR Contract Const Bytes BOOL_NOT Attr ]
+## par(while_cond) -> LPAR . while_cond RPAR [ While WILD Verbatim UIdent Type Switch String Return MINUS Let LPAR LBRACKET LBRACE Int Import If Ident PLUS2 For Export MINUS2 Contract Const Bytes BOOL_NOT Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## LPAR
@@ -3673,7 +3673,7 @@ interactive_expr: Bytes QMARK Bytes SEMI
 ## In state 234, spurious reduction of production disj_expr_level -> conj_expr_level
 ## In state 228, spurious reduction of production expr -> disj_expr_level
 ##
-contract: For LPAR SEMI SEMI Ident QMARK DECR Ident COMMA
+contract: For LPAR SEMI SEMI Ident QMARK MINUS2 Ident COMMA
 ##
 ## Ends in an error in state: 485.
 ##
@@ -3688,7 +3688,7 @@ contract: For LPAR SEMI SEMI Ident QMARK DECR Ident COMMA
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 482, spurious reduction of production non_decl_expr_stmt(closed_non_decl_expr_stmt) -> increment_decrement_operators
 ##
-contract: Ident QMARK DECR Ident Else
+contract: Ident QMARK MINUS2 Ident Else
 ##
 ## Ends in an error in state: 454.
 ##
@@ -3716,7 +3716,7 @@ interactive_expr: Bytes QMARK Bytes COLON ZWSP
 ## The known suffix of the stack is as follows:
 ## disj_expr_level QMARK expr COLON
 ##
-contract: For LPAR SEMI SEMI Ident QMARK DECR Ident COLON ZWSP
+contract: For LPAR SEMI SEMI Ident QMARK MINUS2 Ident COLON ZWSP
 ##
 ## Ends in an error in state: 486.
 ##
@@ -4452,27 +4452,27 @@ contract: Ident As Parameter ZWSP
 Ill-formed parameter of a contract.
 At this point, a module path is expected.
 
-contract: INCR ZWSP
+contract: PLUS2 ZWSP
 ##
 ## Ends in an error in state: 34.
 ##
-## increment_decrement_operators -> INCR . Ident [ TIMES SLASH SEMI RPAR REM RBRACKET RBRACE QMARK PLUS NE MINUS LT LE GT Else EQ2 EOF Default Case COMMA COLON BOOL_OR BOOL_AND ]
+## increment_decrement_operators -> PLUS2 . Ident [ TIMES SLASH SEMI RPAR REM RBRACKET RBRACE QMARK PLUS NE MINUS LT LE GT Else EQ2 EOF Default Case COMMA COLON BOOL_OR BOOL_AND ]
 ##
 ## The known suffix of the stack is as follows:
-## INCR
+## PLUS2
 ##
 
 Ill-formed arithmetic expression.
 At this point, the incremented variable is expected.
 
-contract: DECR ZWSP
+contract: MINUS2 ZWSP
 ##
 ## Ends in an error in state: 192.
 ##
-## increment_decrement_operators -> DECR . Ident [ TIMES SLASH SEMI RPAR REM RBRACKET RBRACE QMARK PLUS NE MINUS LT LE GT Else EQ2 EOF Default Case COMMA COLON BOOL_OR BOOL_AND ]
+## increment_decrement_operators -> MINUS2 . Ident [ TIMES SLASH SEMI RPAR REM RBRACKET RBRACE QMARK PLUS NE MINUS LT LE GT Else EQ2 EOF Default Case COMMA COLON BOOL_OR BOOL_AND ]
 ##
 ## The known suffix of the stack is as follows:
-## DECR
+## MINUS2
 ##
 
 Ill-formed arithmetic expression.
@@ -4558,7 +4558,7 @@ contract: Attr For LPAR SEMI ZWSP
 ## The known suffix of the stack is as follows:
 ## nseq(Attr) For LPAR SEMI
 ##
-contract: Attr For LPAR DECR Ident SEMI ZWSP
+contract: Attr For LPAR MINUS2 Ident SEMI ZWSP
 ##
 ## Ends in an error in state: 514.
 ##
@@ -4574,7 +4574,7 @@ contract: Attr For LPAR DECR Ident SEMI ZWSP
 ## The known suffix of the stack is as follows:
 ## nseq(Attr) For LPAR for_initialiser SEMI
 ##
-contract: If LPAR Bytes RPAR For LPAR DECR Ident SEMI ZWSP
+contract: If LPAR Bytes RPAR For LPAR MINUS2 Ident SEMI ZWSP
 ##
 ## Ends in an error in state: 648.
 ##
@@ -4598,7 +4598,7 @@ contract: If LPAR Bytes RPAR For LPAR DECR Ident SEMI ZWSP
 ## The known suffix of the stack is as follows:
 ## For LPAR for_initialiser SEMI
 ##
-contract: For LPAR DECR Ident SEMI ZWSP
+contract: For LPAR MINUS2 Ident SEMI ZWSP
 ##
 ## Ends in an error in state: 557.
 ##
@@ -4614,7 +4614,7 @@ contract: For LPAR DECR Ident SEMI ZWSP
 ## The known suffix of the stack is as follows:
 ## For LPAR for_initialiser SEMI
 ##
-contract: If LPAR Bytes RPAR Attr For LPAR DECR Ident SEMI ZWSP
+contract: If LPAR Bytes RPAR Attr For LPAR MINUS2 Ident SEMI ZWSP
 ##
 ## Ends in an error in state: 609.
 ##
@@ -4644,7 +4644,7 @@ At this point, one of the following is expected:
   * the condition as a boolean expression;
   * a semicolon ';' if no condition.
 
-contract: For LPAR SEMI SEMI DECR Ident COLON
+contract: For LPAR SEMI SEMI MINUS2 Ident COLON
 ##
 ## Ends in an error in state: 491.
 ##
@@ -4667,7 +4667,7 @@ At this point, if the statement is complete, one of the following is expected:
   * a comma ',' followed by another increment or decrement statement;
   * a closing parenthesis ')' if no more increment nor decrement.
 
-contract: For LPAR SEMI SEMI DECR Ident COMMA ZWSP
+contract: For LPAR SEMI SEMI MINUS2 Ident COMMA ZWSP
 ##
 ## Ends in an error in state: 492.
 ##
@@ -4788,7 +4788,7 @@ contract: If LPAR Bytes RPAR Attr For LPAR SEMI Bytes While
 ## In state 234, spurious reduction of production disj_expr_level -> conj_expr_level
 ## In state 228, spurious reduction of production expr -> disj_expr_level
 ##
-contract: Attr For LPAR DECR Ident SEMI Bytes While
+contract: Attr For LPAR MINUS2 Ident SEMI Bytes While
 ##
 ## Ends in an error in state: 521.
 ##
@@ -4813,7 +4813,7 @@ contract: Attr For LPAR DECR Ident SEMI Bytes While
 ## In state 234, spurious reduction of production disj_expr_level -> conj_expr_level
 ## In state 228, spurious reduction of production expr -> disj_expr_level
 ##
-contract: If LPAR Bytes RPAR For LPAR DECR Ident SEMI Bytes While
+contract: If LPAR Bytes RPAR For LPAR MINUS2 Ident SEMI Bytes While
 ##
 ## Ends in an error in state: 655.
 ##
@@ -4842,7 +4842,7 @@ contract: If LPAR Bytes RPAR For LPAR DECR Ident SEMI Bytes While
 ## In state 234, spurious reduction of production disj_expr_level -> conj_expr_level
 ## In state 228, spurious reduction of production expr -> disj_expr_level
 ##
-contract: For LPAR DECR Ident SEMI Bytes While
+contract: For LPAR MINUS2 Ident SEMI Bytes While
 ##
 ## Ends in an error in state: 564.
 ##
@@ -4867,7 +4867,7 @@ contract: For LPAR DECR Ident SEMI Bytes While
 ## In state 234, spurious reduction of production disj_expr_level -> conj_expr_level
 ## In state 228, spurious reduction of production expr -> disj_expr_level
 ##
-contract: If LPAR Bytes RPAR Attr For LPAR DECR Ident SEMI Bytes While
+contract: If LPAR Bytes RPAR Attr For LPAR MINUS2 Ident SEMI Bytes While
 ##
 ## Ends in an error in state: 616.
 ##
@@ -4956,7 +4956,7 @@ contract: If LPAR Bytes RPAR Attr For LPAR SEMI Bytes SEMI ZWSP
 ## The known suffix of the stack is as follows:
 ## nseq(Attr) For LPAR SEMI expr SEMI
 ##
-contract: Attr For LPAR DECR Ident SEMI SEMI ZWSP
+contract: Attr For LPAR MINUS2 Ident SEMI SEMI ZWSP
 ##
 ## Ends in an error in state: 515.
 ##
@@ -4968,7 +4968,7 @@ contract: Attr For LPAR DECR Ident SEMI SEMI ZWSP
 ## The known suffix of the stack is as follows:
 ## nseq(Attr) For LPAR for_initialiser SEMI SEMI
 ##
-contract: If LPAR Bytes RPAR For LPAR DECR Ident SEMI SEMI ZWSP
+contract: If LPAR Bytes RPAR For LPAR MINUS2 Ident SEMI SEMI ZWSP
 ##
 ## Ends in an error in state: 649.
 ##
@@ -4984,7 +4984,7 @@ contract: If LPAR Bytes RPAR For LPAR DECR Ident SEMI SEMI ZWSP
 ## The known suffix of the stack is as follows:
 ## For LPAR for_initialiser SEMI SEMI
 ##
-contract: For LPAR DECR Ident SEMI SEMI ZWSP
+contract: For LPAR MINUS2 Ident SEMI SEMI ZWSP
 ##
 ## Ends in an error in state: 558.
 ##
@@ -4996,7 +4996,7 @@ contract: For LPAR DECR Ident SEMI SEMI ZWSP
 ## The known suffix of the stack is as follows:
 ## For LPAR for_initialiser SEMI SEMI
 ##
-contract: If LPAR Bytes RPAR Attr For LPAR DECR Ident SEMI SEMI ZWSP
+contract: If LPAR Bytes RPAR Attr For LPAR MINUS2 Ident SEMI SEMI ZWSP
 ##
 ## Ends in an error in state: 610.
 ##
@@ -5012,7 +5012,7 @@ contract: If LPAR Bytes RPAR Attr For LPAR DECR Ident SEMI SEMI ZWSP
 ## The known suffix of the stack is as follows:
 ## nseq(Attr) For LPAR for_initialiser SEMI SEMI
 ##
-contract: Attr For LPAR DECR Ident SEMI Bytes SEMI ZWSP
+contract: Attr For LPAR MINUS2 Ident SEMI Bytes SEMI ZWSP
 ##
 ## Ends in an error in state: 522.
 ##
@@ -5024,7 +5024,7 @@ contract: Attr For LPAR DECR Ident SEMI Bytes SEMI ZWSP
 ## The known suffix of the stack is as follows:
 ## nseq(Attr) For LPAR for_initialiser SEMI expr SEMI
 ##
-contract: If LPAR Bytes RPAR For LPAR DECR Ident SEMI Bytes SEMI ZWSP
+contract: If LPAR Bytes RPAR For LPAR MINUS2 Ident SEMI Bytes SEMI ZWSP
 ##
 ## Ends in an error in state: 656.
 ##
@@ -5040,7 +5040,7 @@ contract: If LPAR Bytes RPAR For LPAR DECR Ident SEMI Bytes SEMI ZWSP
 ## The known suffix of the stack is as follows:
 ## For LPAR for_initialiser SEMI expr SEMI
 ##
-contract: For LPAR DECR Ident SEMI Bytes SEMI ZWSP
+contract: For LPAR MINUS2 Ident SEMI Bytes SEMI ZWSP
 ##
 ## Ends in an error in state: 565.
 ##
@@ -5052,7 +5052,7 @@ contract: For LPAR DECR Ident SEMI Bytes SEMI ZWSP
 ## The known suffix of the stack is as follows:
 ## For LPAR for_initialiser SEMI expr SEMI
 ##
-contract: If LPAR Bytes RPAR Attr For LPAR DECR Ident SEMI Bytes SEMI ZWSP
+contract: If LPAR Bytes RPAR Attr For LPAR MINUS2 Ident SEMI Bytes SEMI ZWSP
 ##
 ## Ends in an error in state: 617.
 ##
@@ -5130,7 +5130,7 @@ At this point, one of the following is expected:
   * at least one increment or decrement statement, e.g. 'i++';
   * a closing parenthesis ')' if no increment nor decrement.
 
-contract: Attr For LPAR DECR Ident COLON
+contract: Attr For LPAR MINUS2 Ident COLON
 ##
 ## Ends in an error in state: 513.
 ##
@@ -5154,7 +5154,7 @@ contract: Attr For LPAR DECR Ident COLON
 ## In state 443, spurious reduction of production expr_stmt -> non_decl_expr_stmt(expr_stmt)
 ## In state 528, spurious reduction of production for_initialiser -> expr_stmt
 ##
-contract: If LPAR Bytes RPAR For LPAR DECR Ident COLON
+contract: If LPAR Bytes RPAR For LPAR MINUS2 Ident COLON
 ##
 ## Ends in an error in state: 647.
 ##
@@ -5186,7 +5186,7 @@ contract: If LPAR Bytes RPAR For LPAR DECR Ident COLON
 ## In state 443, spurious reduction of production expr_stmt -> non_decl_expr_stmt(expr_stmt)
 ## In state 528, spurious reduction of production for_initialiser -> expr_stmt
 ##
-contract: For LPAR DECR Ident COLON
+contract: For LPAR MINUS2 Ident COLON
 ##
 ## Ends in an error in state: 556.
 ##
@@ -5210,7 +5210,7 @@ contract: For LPAR DECR Ident COLON
 ## In state 443, spurious reduction of production expr_stmt -> non_decl_expr_stmt(expr_stmt)
 ## In state 528, spurious reduction of production for_initialiser -> expr_stmt
 ##
-contract: If LPAR Bytes RPAR Attr For LPAR DECR Ident COLON
+contract: If LPAR Bytes RPAR Attr For LPAR MINUS2 Ident COLON
 ##
 ## Ends in an error in state: 608.
 ##
