@@ -4,3 +4,6 @@ esy-windows:
     - windows
   script:
     - ./scripts/bundle-esy.ps1 ./windows-installer
+  artifacts:
+    paths:
+      - ./windows-installer
