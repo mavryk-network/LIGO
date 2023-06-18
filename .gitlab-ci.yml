@@ -3,5 +3,4 @@ esy-windows:
   tags:
     - windows
   script:
-    - mkdir windows-installer
     - ./scripts/bundle-esy.ps1 ./windows-installer
