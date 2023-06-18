@@ -1,4 +1,4 @@
-param([switch]$Elevated, $Path)
+param([switch]$Elevated, $Path, $Password)
 
 function Test-Admin {
     $currentUser = New-Object Security.Principal.WindowsPrincipal $([Security.Principal.WindowsIdentity]::GetCurrent())
@@ -11,15 +11,22 @@ if ((Test-Admin) -eq $false)  {
 	echo "Could not elevate"
 	exit 1
     } else {
-	echo "Going to start with password: $env:TEST_CERTIFICATE_PASSWORD"
-        Start-Process powershell.exe -Verb RunAs -ArgumentList ('-noprofile -noexit -file "{0}" -elevated' -f ($myinvocation.MyCommand.Definition) -Path $Path)
+        Start-Process powershell.exe -Verb RunAs -ArgumentList ("-noprofile -noexit -file {0} -Password ${env:TEST_CERTIFICATE_PASSWORD} -Path $(Resolve-Path $Path) -elevated" -f ($myinvocation.MyCommand.Definition))
     }
     exit
 }
 
 
+$TestCertificatePassword = "default"
+if ($env:TEST_CERTIFICATE_PASSWORD) {
+    $TestCertificatePassword = $env:TEST_CERTIFICATE_PASSWORD
+}
+if ($Password) {
+    $TestCertificatePassword = $Password
+}
+
 $cert = New-SelfSignedCertificate -DnsName ligolang -CertStoreLocation cert:\LocalMachine\My -type CodeSigning
-$pwd = ConvertTo-SecureString -String $env:TEST_CERTIFICATE_PASSWORD -Force -AsPlainText
+$pwd = ConvertTo-SecureString -String $TestCertificatePassword -Force -AsPlainText
 Export-PfxCertificate -cert $cert -FilePath ligolang-certs.pfx -Password $pwd
 $env:PATH = $env:PATH + ';C:\Program Files (x86)\Windows Kits\10\App Certification Kit\'
-signtool.exe sign /a /f ligolang-certs.pfx /p $env:TEST_CERTIFICATE_PASSWORD /fd SHA256 $Path
+signtool.exe sign /a /f ligolang-certs.pfx /p $TestCertificatePassword /fd SHA256 $Path
