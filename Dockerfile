@@ -1,4 +1,4 @@
-FROM alpine:3.16 as ligo-builder
+FROM alpine:3.18 as ligo-builder
 
 WORKDIR /ligo
 
@@ -49,6 +49,9 @@ COPY jsoo /ligo/jsoo
 COPY Makefile /ligo
 COPY npm /ligo/npm
 COPY examples /ligo/examples
+COPY 0001-Nairobi-JSOO-Gas-free.patch /ligo
+COPY 0002-JSOO-Use-lib_hacl-compatible-with-hacl-star-0.4.1.patch /ligo
+
 
 # Run tests
 RUN opam exec -- dune runtest --profile static --no-buffer \
@@ -82,7 +85,7 @@ RUN cd /ligo/examples/ligojs && npm i && npm run build:webpack
 FROM esydev/esy:nightly-alpine as esy
 
 # TODO see also ligo-docker-large in nix build
-FROM alpine:3.12 as ligo
+FROM alpine:3.18 as ligo
 # This variable is used for analytics to determine if th execution of the compiler is inside docker or not
 ENV DOCKER_EXECUTION=true
 

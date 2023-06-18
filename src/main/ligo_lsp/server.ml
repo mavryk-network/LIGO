@@ -4,7 +4,7 @@ open Lsp_helpers
 open Requests.Handler
 
 (* one env per document *)
-let get_scope_buffers : DocsCache.t = DocsCache.create ()
+let get_scope_buffers : Docs_cache.t = Docs_cache.create ()
 
 let default_config : config =
   { max_number_of_problems = 100
@@ -38,7 +38,10 @@ class lsp_server =
     method on_notif_doc_did_open ~notify_back document ~content : unit IO.t =
       let file = DocumentUri.to_path document.uri in
       run_handler
-        { notify_back = Normal notify_back; config; docs_cache = get_scope_buffers }
+        { notify_back = Normal (document.uri, notify_back)
+        ; config
+        ; docs_cache = get_scope_buffers
+        }
       @@ let@ { deprecated; _ } = ask_config in
          let@ () =
            if not deprecated
@@ -67,7 +70,10 @@ class lsp_server =
         : unit IO.t =
       let file = DocumentUri.to_path document.uri in
       run_handler
-        { notify_back = Normal notify_back; config; docs_cache = get_scope_buffers }
+        { notify_back = Normal (document.uri, notify_back)
+        ; config
+        ; docs_cache = get_scope_buffers
+        }
       @@ Requests.on_doc file new_content
 
     method decode_apply_settings (settings : Yojson.Safe.t) : unit =
@@ -176,6 +182,15 @@ class lsp_server =
     method config_folding_range =
       Some (`Bool (self#is_request_enabled "textDocument/foldingRange"))
 
+    method! config_completion =
+      let completionItem =
+        CompletionOptions.create_completionItem ~labelDetailsSupport:true ()
+      in
+      let completion_options =
+        CompletionOptions.create ~completionItem ~triggerCharacters:[ "."; "@" ] ()
+      in
+      Some completion_options
+
     method! config_modify_capabilities (c : ServerCapabilities.t) : ServerCapabilities.t =
       { c with
         hoverProvider = self#config_hover
@@ -187,6 +202,7 @@ class lsp_server =
       ; documentLinkProvider = self#config_document_link_provider
       ; foldingRangeProvider = self#config_folding_range
       ; documentRangeFormattingProvider = self#config_range_formatting
+      ; completionProvider = self#config_completion
       }
 
     method! on_notification_unhandled
@@ -273,13 +289,14 @@ class lsp_server =
             run_handler
               { notify_back =
                   Normal
-                    (new Linol_lwt.Jsonrpc2.notify_back
-                       ~uri
-                       ~notify_back
-                       ~server_request
-                       ~workDoneToken:None
-                       ~partialResultToken:None
-                       ())
+                    ( uri
+                    , new Linol_lwt.Jsonrpc2.notify_back
+                        ~uri
+                        ~notify_back
+                        ~server_request
+                        ~workDoneToken:None
+                        ~partialResultToken:None
+                        () )
               ; config
               ; docs_cache = get_scope_buffers
               }
@@ -328,5 +345,9 @@ class lsp_server =
           let uri = textDocument.uri in
           run ~uri ~default:None
           @@ Requests.on_req_range_formatting (DocumentUri.to_path uri) range options
+        | Client_request.TextDocumentCompletion { textDocument; position; _ } ->
+          let uri = textDocument.uri in
+          run ~uri ~default:None
+          @@ Requests.on_req_completion position (DocumentUri.to_path uri)
         | _ -> super#on_request ~notify_back ~server_request ~id r
   end

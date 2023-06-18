@@ -348,6 +348,13 @@ let no_colour =
   flag ~doc name no_arg
 
 
+let no_metadata_check =
+  let open Command.Param in
+  let name = "--no-metadata-check" in
+  let doc = "disable TZIP-16 metadata compliance check" in
+  flag ~doc name no_arg
+
+
 let show_loc =
   let open Command.Param in
   (* Using the american standard for the CLI *)
@@ -589,6 +596,7 @@ let compile_file =
       show_warnings
       warning_as_error
       no_colour
+      no_metadata_check
       deprecated
       skip_analytics
       michelson_comments
@@ -614,6 +622,7 @@ let compile_file =
         ~no_stdlib
         ~warning_as_error
         ~no_colour
+        ~no_metadata_check
         ~deprecated
         ~constants
         ~file_constants
@@ -672,6 +681,7 @@ let compile_file =
     <*> warn
     <*> werror
     <*> no_colour
+    <*> no_metadata_check
     <*> deprecated
     <*> skip_analytics
     <*> michelson_comments
@@ -894,6 +904,7 @@ let compile_storage =
       now
       display_format
       no_colour
+      no_metadata_check
       deprecated
       skip_analytics
       michelson_format
@@ -922,6 +933,7 @@ let compile_storage =
         ~warn_unused_rec
         ~warn_infinite_loop
         ~libraries
+        ~no_metadata_check
         ()
     in
     let cli_analytics =
@@ -974,6 +986,7 @@ let compile_storage =
     <*> now
     <*> display_format
     <*> no_colour
+    <*> no_metadata_check
     <*> deprecated
     <*> skip_analytics
     <*> michelson_code_format
@@ -1287,7 +1300,7 @@ let test =
       ~display_format
       ~no_colour
       ~warning_as_error:raw_options.warning_as_error
-    @@ Api.Run.test raw_options source_file
+    @@ Api.Run.test raw_options (Build.Source_input.From_file source_file)
   in
   let summary = "test a contract with the LIGO test framework." in
   let readme () =
@@ -2881,14 +2894,39 @@ module Lsp_server = struct
   module Server = Ligo_lsp.Server
 
   let run () =
-    let s = new Server.lsp_server in
-    let server = Linol_lwt.Jsonrpc2.create_stdio (s :> Linol_lwt.Jsonrpc2.server) in
-    let task = Linol_lwt.Jsonrpc2.run server in
-    match Linol_lwt.run task with
-    | () -> Ok ("", "")
-    | exception e ->
-      let e = Caml.Printexc.to_string e in
-      Error ("", e)
+    let reporter ppf =
+      let report _src level ~over k msgf =
+        let k _ =
+          over ();
+          k ()
+        in
+        let with_stamp header _tags k ppf fmt =
+          let time = Time_ns.(to_string_utc @@ now ()) in
+          Format.kfprintf
+            k
+            ppf
+            ("%s %a @[" ^^ fmt ^^ "@]@.")
+            time
+            Logs.pp_header
+            (level, header)
+        in
+        msgf @@ fun ?header ?tags fmt -> with_stamp header tags k ppf fmt
+      in
+      { Logs.report }
+    in
+    let log_file = Filename.(temp_dir_name ^/ "ligo_language_server.log") in
+    Out_channel.with_file ~append:true log_file ~f:(fun outc ->
+        Logs.set_reporter (reporter @@ Format.formatter_of_out_channel outc);
+        Logs.set_level (Some Logs.Debug);
+        let s = new Server.lsp_server in
+        let server = Linol_lwt.Jsonrpc2.create_stdio (s :> Linol_lwt.Jsonrpc2.server) in
+        let task = Linol_lwt.Jsonrpc2.run server in
+        Format.eprintf "For LIGO language server logs, see %s\n%!" log_file;
+        match Linol_lwt.run task with
+        | () -> Ok ("", "")
+        | exception e ->
+          let e = Caml.Printexc.to_string e in
+          Error ("", e))
 end
 
 let lsp =
