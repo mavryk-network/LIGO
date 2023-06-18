@@ -290,11 +290,11 @@ and type_expr =
 | T_ModPath   of type_expr module_path reg         (* A.B.[u, v]        *)
 | T_Par       of type_expr par                     (* (t)               *)
 | T_Parameter of parameter_of_type reg             (* parameter_of m    *)
-| T_Record    of type_expr field record            (* {x; @a y : t}     *)
+| T_Record    of type_expr record                  (* {x; @a y : t}     *)
 | T_String    of lexeme wrap                       (* "x"               *)
 | T_Union     of union_type                        (* {kind: "C", x: t} *)
 | T_Var       of variable                          (* t                 *)
-| T_Variant   of variant_type reg                  (* ["A"] | ["B", t]  *)
+| T_Variant   of variant_type                      (* ["A"] | ["B", t]  *)
 
 (*  Type application *)
 
@@ -329,7 +329,7 @@ and 'a field = {
 
 (* Discriminated unions *)
 
-and union_type = (type_expr field record, vbar) nsep_or_pref reg
+and union_type = (type_expr record, vbar) nsep_or_pref reg
 
 (* Variant type *)
 
@@ -351,11 +351,11 @@ and variant_comp = {
    add or modify some, please make sure they remain in order. *)
 
 and pattern =
-  P_Attr     of attribute * pattern      (* @a [x, _]      *)
+  P_Attr     of (attribute * pattern)    (* @a [x, _]      *)
 | P_Bytes    of (lexeme * Hex.t) wrap    (* 0xFFFA         *)
 | P_Mutez    of (lexeme * Int64.t) wrap  (* 5mutez         *)
 | P_Nat      of (lexeme * Z.t) wrap      (* 4n             *)
-| P_Record   of pattern field record     (* {x, y : 0}     *)
+| P_Record   of pattern record           (* {x, y : 0}     *)
 | P_Tuple    of pattern tuple            (* [x, ...y, z]   *)
 | P_Typed    of typed_pattern reg        (* [] : list<int> *)
 | P_Var      of variable                 (* x              *)
@@ -377,7 +377,7 @@ and typed_pattern = pattern * type_annotation
    add or modify some, please make sure they remain in order. *)
 
 and statement =
-  S_Attr   of attribute * statement
+  S_Attr   of (attribute * statement)
 | S_Block  of statements braces
 | S_Break  of kwd_break
 | S_Cond   of cond_stmt reg
@@ -478,7 +478,7 @@ and expr =
 | E_AddEq    of plus_eq bin_op reg      (* x += y            *)
 | E_And      of bool_and bin_op reg     (* x && y            *)
 | E_App      of (expr * arguments) reg  (* f(x)   Foo()      *)
-| E_Attr     of attribute * expr        (* @a [x, y]         *)
+| E_Attr     of (attribute * expr)      (* @a [x, y]         *)
 | E_Bytes    of (lexeme * Hex.t) wrap   (* 0xFFFA            *)
 | E_CodeInj  of code_inj reg
 | E_Contract of contract_of_expr reg    (* contract_of (M.N) *)
@@ -507,7 +507,7 @@ and expr =
 | E_PreDecr  of decrement un_op reg     (* --x               *)
 | E_PreIncr  of increment un_op reg     (* ++x               *)
 | E_Proj     of projection reg          (* e.x.1             *)
-| E_Record   of expr field record       (* {x : e, y}        *)
+| E_Record   of expr record             (* {x : e, y}        *)
 | E_String   of lexeme wrap             (* "abcdef"          *)
 | E_Sub      of minus bin_op reg        (* x - y             *)
 | E_Ternary  of ternary reg             (* x ? y : z         *)
@@ -550,7 +550,7 @@ and update_expr = {
   ellipsis : ellipsis;
   record   : expr;
   comma    : comma;
-  updates  : (expr field, semi) nsepseq
+  updates  : (expr field reg, semi) nsep_or_term
 }
 
 (* Unit value *)
@@ -584,7 +584,7 @@ and projection = {
 }
 
 and selection =
-  FieldName of dot * field_name
+  FieldName of (dot * field_name)
 | Component of expr brackets
 
 (* Code injection.  Note how the field [language] wraps a region in
