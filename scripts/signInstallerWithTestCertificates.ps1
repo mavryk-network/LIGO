@@ -30,3 +30,7 @@ $pwd = ConvertTo-SecureString -String $TestCertificatePassword -Force -AsPlainTe
 Export-PfxCertificate -cert $cert -FilePath ligolang-certs.pfx -Password $pwd
 $env:PATH = $env:PATH + ';C:\Program Files (x86)\Windows Kits\10\App Certification Kit;C:\Program Files (x86)\Windows Kits\10\bin\x64'
 signtool.exe sign /a /f ligolang-certs.pfx /p $TestCertificatePassword /fd SHA256 $Path
+
+if (!$?) {
+    echo "Could not sign ${Path}"
+}
