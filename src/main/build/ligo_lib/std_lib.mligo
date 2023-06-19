@@ -289,13 +289,13 @@ module Dynamic_entrypoints_helpers = struct
 
   (* to be partially applied on the first argument to get a valid entry *)
   let forward_entry
-    (type storage dyn_ep_param dyn_main_param) =
+    (type storage static_ep_param dyn_main_param) =
+      type entry_dyn = static_ep_param -> storage -> operation list * storage in
       type main_dyn = (dyn_main_param, storage) ps_f in
-      type entry_dyn = dyn_ep_param -> storage -> operation list * storage in
       type lazified_storage = (storage, main_dyn) dyn_storage in 
       fun
         (client_entry: entry_dyn)
-        (param : dyn_ep_param)
+        (param : static_ep_param)
         (store: lazified_storage)
         : operation list * lazified_storage ->
           let ops, storage = client_entry param store.storage  in

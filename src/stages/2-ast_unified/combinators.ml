@@ -295,6 +295,11 @@ let t_pair_raw ~loc (lst : ty_expr list) =
 let e_lambda_ez ~loc var ?ascr ?mut_flag output_type result : expr =
   e_lambda ~loc { binder = Ligo_prim.Param.make ?mut_flag var ascr; output_type; result }
 
+let e_lambda_ez_lst ~loc (var_lst : (Variable.t * ty_expr option) list) result : expr =
+  List.fold_right var_lst ~init:result ~f:(fun (v,ty_opt) result ->
+    let binder = Ligo_prim.Param.make v ty_opt in
+    e_lambda ~loc {binder ; output_type = None; result} )
+
 
 let e_variable_ez ~loc str = e_variable ~loc (Variable.of_input_var ~loc str)
 
