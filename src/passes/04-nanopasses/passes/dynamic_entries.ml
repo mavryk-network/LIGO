@@ -57,8 +57,8 @@ let rec compile ~raise =
       let storage_t = fetch_static_storage_type ~raise p in
       let entry_ts = fetch_static_entry_names p in
       let view_ts = fetch_view_names p in
+      let loc = get_t_loc storage_t in
       let dynamic_storage_type =
-        let loc = get_t_loc storage_t in
         t_module_app
           ~loc
           { constr =
@@ -71,6 +71,11 @@ let rec compile ~raise =
           ; type_args = storage_t, [ make_ps_func ~loc dyn_entry_t storage_t ]
           }
       in
+      let dyn_storage_type_decl =
+        top_level_decl
+          ~loc
+          (d_type ~loc { name = v_dyn_storage ~loc; type_expr = dynamic_storage_type })
+      in
       let dyn_entry_rows = get_ez_row ~raise dyn_entry_t in
       let condition_decls = on_set_conditions p dyn_entry_rows in
       let setter_decls = dyn_setters dynamic_storage_type dyn_entry_rows in
@@ -79,6 +84,7 @@ let rec compile ~raise =
       let view_fwd_decls = view_forwarders dynamic_storage_type view_ts in
       make_prg
         (strip_views_and_entry_attributes p
+        @ [ dyn_storage_type_decl ]
         @ List.join
             [ condition_decls
             ; setter_decls
