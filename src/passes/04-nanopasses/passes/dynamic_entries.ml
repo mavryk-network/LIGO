@@ -33,6 +33,7 @@ include Flag.No_arg ()
 
 let tv_storage ~loc = t_var ~loc @@ Ty_variable.of_input_var ~loc "storage"
 let v_dyn_storage ~loc = Ty_variable.of_input_var ~loc "dyn_storage"
+let tv_dyn_storage ~loc = t_var ~loc (v_dyn_storage ~loc)
 let name = __MODULE__
 
 type ez_row = (Label.t * ty_expr) list
@@ -78,10 +79,10 @@ let rec compile ~raise =
       in
       let dyn_entry_rows = get_ez_row ~raise dyn_entry_t in
       let condition_decls = on_set_conditions p dyn_entry_rows in
-      let setter_decls = dyn_setters dynamic_storage_type dyn_entry_rows in
-      let dyn_caller_decls = dyn_caller dynamic_storage_type dyn_entry_rows in
-      let entry_fwd_decls = entry_forwarders dynamic_storage_type entry_ts in
-      let view_fwd_decls = view_forwarders dynamic_storage_type view_ts in
+      let setter_decls = dyn_setters  dyn_entry_rows in
+      let dyn_caller_decls = dyn_caller  dyn_entry_rows in
+      let entry_fwd_decls = entry_forwarders  entry_ts in
+      let view_fwd_decls = view_forwarders  view_ts in
       make_prg
         (strip_views_and_entry_attributes p
         @ [ dyn_storage_type_decl ]
@@ -227,48 +228,38 @@ and on_set_conditions : program_entry list -> ez_row -> program_entry list =
                 })))
 
 
-and dyn_setters : ty_expr -> ez_row -> program_entry list =
- fun dyn_storage_t dyn_param_rows ->
+and dyn_setters : ez_row -> program_entry list =
+ fun dyn_param_rows ->
   let loc = Location.generated in
   List.map dyn_param_rows ~f:(fun (label, dyn_param_ty) ->
       let label = String.uncapitalize (Label.to_string label) in
       let pattern = p_var ~loc (Variable.of_input_var ~loc ("set_" ^ label)) in
-      let rhs_type =
-        Some
-          (make_ps_func
-             ~loc
-             (make_ps_func ~loc dyn_param_ty (tv_storage ~loc))
-             dyn_storage_t)
-      in
       let args_prefixes = [ "condition_on_set_"; "enum_"; "get_" ] in
       make_decl_of_call_to_std_lib
         ~loc
         ~suffix:label
         ~std_lib_fun:"setter"
         ~args_prefixes
-        pattern
-        rhs_type)
+        pattern)
 
 
-and dyn_caller : ty_expr -> ez_row -> program_entry list =
- fun dyn_storage_t dyn_param_rows ->
+and dyn_caller : ez_row -> program_entry list =
+ fun dyn_param_rows ->
   let loc = Location.generated in
   List.map dyn_param_rows ~f:(fun (label, dyn_param_ty) ->
       let label = String.uncapitalize (Label.to_string label) in
       let pattern = p_var ~loc (Variable.of_input_var ~loc label) in
-      let rhs_type = Some (make_ps_func ~loc dyn_param_ty dyn_storage_t) in
       let args_prefixes = [ "enum_"; "make_" ] in
       make_decl_of_call_to_std_lib
         ~loc
         ~suffix:label
         ~std_lib_fun:"caller"
         ~args_prefixes
-        pattern
-        rhs_type)
+        pattern)
 
 
-and entry_forwarders : ty_expr -> Variable.t list -> program_entry list =
- fun dyn_storage_t entry_params ->
+and entry_forwarders : Variable.t list -> program_entry list =
+ fun entry_params ->
   let loc = Location.generated in
   let v_x = Variable.of_input_var ~loc "x" in
   let v_y = Variable.of_input_var ~loc "y" in
@@ -279,7 +270,7 @@ and entry_forwarders : ty_expr -> Variable.t list -> program_entry list =
           (mod_access_to_stdlib ~loc "forward_entry")
           [ e_variable ~loc entry_name; e_variable ~loc v_x; e_variable ~loc v_y ]
       in
-      let let_rhs = e_lambda_ez_lst ~loc [ v_x, None; v_y, Some dyn_storage_t ] app in
+      let let_rhs = e_lambda_ez_lst ~loc [ v_x, None; v_y, Some (tv_dyn_storage ~loc) ] app in
       top_level_decl
         ~loc
         ~attr:"entry"
@@ -292,8 +283,8 @@ and entry_forwarders : ty_expr -> Variable.t list -> program_entry list =
            }))
 
 
-and view_forwarders : ty_expr -> Variable.t list -> program_entry list =
- fun dyn_storage_t view_params ->
+and view_forwarders : Variable.t list -> program_entry list =
+ fun view_params ->
   let loc = Location.generated in
   let v_x = Variable.of_input_var ~loc "x" in
   let v_y = Variable.of_input_var ~loc "y" in
@@ -304,7 +295,7 @@ and view_forwarders : ty_expr -> Variable.t list -> program_entry list =
           (mod_access_to_stdlib ~loc "forward_view")
           [ e_variable ~loc view_name; e_variable ~loc v_x; e_variable ~loc v_y ]
       in
-      let let_rhs = e_lambda_ez_lst ~loc [ v_x, None; v_y, Some dyn_storage_t ] app in
+      let let_rhs = e_lambda_ez_lst ~loc [ v_x, None; v_y, Some (tv_dyn_storage ~loc) ] app in
       top_level_decl
         ~loc
         ~attr:"view"
@@ -331,12 +322,13 @@ and strip_views_and_entry_attributes : program_entry list -> program_entry list 
       Option.value ~default:p opt)
 
 
-and make_decl_of_call_to_std_lib ~loc ~suffix ~std_lib_fun ~args_prefixes pattern rhs_type
-  =
+and make_decl_of_call_to_std_lib ~loc ~suffix ~std_lib_fun ~args_prefixes pattern =
   (* generate the following top-level declaration
     `[@entry] let <pattern> : <rhs_type> = Dynamic_entrypoints_helpers.<std_lib_fun> <suffix>_<args_prefixes>[0] .. <suffix>_<args_prefixes>[N]`
   *)
-  let let_rhs =
+  let v_x = Variable.of_input_var ~loc "x" in
+  let v_y = Variable.of_input_var ~loc "y" in
+  let app =
     let lamb = mod_access_to_stdlib ~loc std_lib_fun in
     let args =
       args_prefixes
@@ -344,12 +336,15 @@ and make_decl_of_call_to_std_lib ~loc ~suffix ~std_lib_fun ~args_prefixes patter
       |> List.map ~f:(Variable.of_input_var ~loc)
       |> List.map ~f:(e_variable ~loc)
     in
-    e_application_lst ~loc lamb args
+    e_application_lst ~loc lamb (args @ [ e_variable ~loc v_x; e_variable ~loc v_y ])
+  in
+  let let_rhs =
+    e_lambda_ez_lst ~loc [ v_x, None; v_y, Some (t_var ~loc @@ v_dyn_storage ~loc) ] app
   in
   top_level_decl
     ~loc
     ~attr:"entry"
-    (d_const ~loc { pattern; type_params = None; rhs_type; let_rhs })
+    (d_const ~loc { pattern; type_params = None; rhs_type = None; let_rhs })
 
 
 and mod_access_to_stdlib ~loc fun_ =
