@@ -8,6 +8,7 @@
   flag
   morphing
   ; nanopasses:
+  storage_in_contract
   map_lookup
   errors
   unit_test_helpers

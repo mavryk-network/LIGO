@@ -116,6 +116,14 @@ type ('a, 'b, 'c) program_entry_ = [%import: ('a, 'b, 'c) Types.program_entry_]
     ; wrap_get = "program_entry_", get_pe
     }]
 
+let rec get_pe_loc (x : program_entry) =
+  match get_pe x with
+  | PE_declaration d -> get_d_loc d
+  | PE_attr (_, d) -> get_pe_loc d
+  | PE_top_level_instruction i -> get_i_loc i
+  | PE_preproc_directive _ -> Location.generated
+
+
 type ('a, 'b) program_ = [%import: ('a, 'b) Types.program_]
 [@@deriving
   ez

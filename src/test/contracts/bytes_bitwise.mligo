@@ -1,4 +1,5 @@
-[@entry] let main (_ : unit) (_ : unit) : operation list * unit  =
+type storage = unit
+[@entry] let main (_ : unit) (_ : storage) : operation list * storage =
   let b_and         = 0x0005 land 0x0106 in
   let b_or          = 0x0005 lor  0x0106 in
   let b_xor         = 0x0005 lxor 0x0106 in

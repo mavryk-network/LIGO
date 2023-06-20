@@ -1,4 +1,5 @@
-[@entry] let main (_ : unit) (_ : unit) : operation list * unit =
+type storage = unit
+[@entry] let main (_ : unit) (_ : storage) : operation list * storage =
   let b = 0x123456 in 
   (* bytes => nat => bytes *)
   let () = assert (b = bytes(nat(b))) in

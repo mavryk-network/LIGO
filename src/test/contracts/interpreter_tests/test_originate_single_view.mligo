@@ -2,8 +2,9 @@ let () = Test.unset_print_values ()
 
 module Bar = struct
   module Foo = struct
-    [@entry] let add n s : operation list * int = [], s + n
-    [@entry] let sub n s : operation list * int = [], s - n
+    type storage = int
+    [@entry] let add n s : operation list * storage = [], s + n
+    [@entry] let sub n s : operation list * storage = [], s - n
     [@view] let get () s : int = s
   end
 end

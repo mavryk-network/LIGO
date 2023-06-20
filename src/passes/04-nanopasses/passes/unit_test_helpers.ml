@@ -28,6 +28,12 @@ module Dummies = struct
       let dummy str = "(" ^ name ^ str ^ ")", f (name ^ str) in
       dummy "" :: List.map ~f:dummy (List.map ~f:string_of_int (List.range 0 5))
     in
+    let dummy_pattern =
+      let f str =
+        S_exp.sexp_of_pattern @@ p_var ~loc (Variable.of_input_var ~loc ("#" ^ str))
+      in
+      dummy "PATTERN" f
+    in
     let dummy_ty_expr =
       let f str =
         S_exp.sexp_of_ty_expr @@ t_var ~loc (Ty_variable.of_input_var ~loc ("#" ^ str))
@@ -85,7 +91,12 @@ module Dummies = struct
     in
     List.map
       ~f:(Simple_utils.Pair.map_snd ~f:Sexp.to_string)
-      (dummy_ty_expr @ dummy_expr @ dummy_statement @ dummy_block @ dummy_declaration)
+      (dummy_ty_expr
+      @ dummy_expr
+      @ dummy_statement
+      @ dummy_block
+      @ dummy_declaration
+      @ dummy_pattern)
 
 
   let in_output ((dummy, sexp) : t) = dummy, sexp

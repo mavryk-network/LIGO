@@ -35,6 +35,7 @@ type t =
   | `Small_passes_bad_format_literal of expr * string
   | `Small_passes_duplicate_identifier of Variable.t
   | `Small_passes_duplicate_ty_identifier of Ty_variable.t
+  | `Small_passes_no_storage_in_contract of program
   ]
 [@@deriving poly_constructor { prefix = "small_passes_" }, sexp]
 
@@ -50,6 +51,18 @@ let error_ppformat
   | Dev -> Format.fprintf f "%a" (Sexp.pp_hum_indent 4) (sexp_of_t a)
   | Human_readable ->
     (match a with
+    | `Small_passes_no_storage_in_contract prg ->
+      let loc =
+        List.fold
+          ~init:Location.generated
+          ~f:Location.cover
+          (List.map ~f:get_pe_loc (get_prg prg))
+      in
+      Format.fprintf
+        f
+        "@[<hv>%aMissing storage type declaration in contract.@]"
+        snippet_pp
+        loc
     | `Small_passes_unsupported_disc_union_type ty ->
       Format.fprintf
         f
@@ -214,6 +227,10 @@ let error_json : t -> Simple_utils.Error.t =
  fun e ->
   let open Simple_utils.Error in
   match e with
+  | `Small_passes_no_storage_in_contract _ ->
+    make
+      ~stage
+      ~content:(make_content ~message:"Missing storage type declaration in contract" ())
   | `Small_passes_wrong_reduction pass ->
     let message = Format.asprintf "@[<hv>Pass %s did not reduce.@]" pass in
     let content = make_content ~message () in

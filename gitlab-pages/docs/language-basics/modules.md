@@ -442,14 +442,18 @@ import US_DOLLAR = EURO;
 When a module contains declarations that are tagged with the attribute
 `@entry`, then a contract can be obtained from such module. All
 declarations in the module tagged as `@entry` are grouped, and a
-dispatcher contract is generated.
+dispatcher contract is generated.  
+
+Note that a contract must have a `storage` type definition and the second
+parameter of each entries must match this type.
 
 <Syntax syntax="cameligo">
 
 ```cameligo group=contract
 module C = struct
-  [@entry] let increment (p : int) (s : int) : operation list * int = [], s + p
-  [@entry] let decrement (p : int) (s : int) : operation list * int = [], s - p
+  type storage = int
+  [@entry] let increment (p : int) (s : storage) : operation list * storage = [], s + p
+  [@entry] let decrement (p : int) (s : storage) : operation list * storage = [], s - p
 end
 ```
 
@@ -459,10 +463,11 @@ end
 
 ```jsligo group=contract
 namespace C {
+  type storage = int;
   @entry
-  const increment = (p : int, s : int) : [list<operation>, int] => [list([]), s + p];
+  const increment = (p : int, s : storage) : [list<operation>, storage] => [list([]), s + p];
   @entry
-  const decrement = (p : int, s : int) : [list<operation>, int] => [list([]), s - p];
+  const decrement = (p : int, s : storage) : [list<operation>, storage] => [list([]), s - p];
 };
 ```
 
