@@ -109,8 +109,7 @@ module Of_Ast_typed = struct
       | M_module_path _ -> prev
       | M_struct ds ->
         List.fold_left ds ~init:prev ~f:(fun prev d ->
-            extract_binding_types prev d.wrap_content)
-      )
+            extract_binding_types prev d.wrap_content))
 end
 
 module Of_Ast_core = struct
@@ -258,8 +257,7 @@ module Of_Ast_core = struct
       declarations bindings decls
     | D_module { module_ = { wrap_content = M_variable _; _ }; _ }
     | D_module { module_ = { wrap_content = M_module_path _; _ }; _ } -> bindings
-    | D_signature _ ->
-      bindings
+    | D_signature _ -> bindings
 
 
   and declarations : t -> Ast_core.declaration list -> t =
@@ -380,6 +378,7 @@ let rec patch : t -> Types.def list -> Types.def list =
         (match v.t, LMap.find_opt v.range bindings with
         | Unresolved, Some t -> Types.Variable { v with t }
         | _ -> Variable v)
+      | Constructor c -> Constructor c
       | Type t -> Type t
       | Module m ->
         let mod_case =

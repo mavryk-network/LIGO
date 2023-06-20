@@ -24,11 +24,14 @@ build-deps:
 #	Install OCaml build dependencies for Ligo
 	scripts/install_vendors_deps.sh
 
+build-local:
+	scripts/build_ligo_local.sh
+
 build: build-deps
 	export PATH="/usr/local/bin$${PATH:+:}$${PATH:-}"
 	eval $$(opam config env)
 #	Build Ligo for local dev use
-	scripts/build_ligo_local.sh
+	build-local
 
 test: build
 	scripts/check_duplicate_filenames.sh || exit

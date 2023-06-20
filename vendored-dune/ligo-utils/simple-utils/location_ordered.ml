@@ -1,4 +1,4 @@
-type t = Location.t
+include Location
 
 let compare a b =
   let open Location in

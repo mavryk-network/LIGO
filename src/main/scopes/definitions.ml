@@ -53,6 +53,40 @@ let defs_of_binder ~(body : AST.expression)
   defs_of_vvar ~body (Binder.get_var binder) def_type mod_path acc
 
 
+let rec get_constructors : AST.type_expression -> def list =
+ fun parent_type ->
+  let current =
+    match AST.Combinators.get_t_sum_opt parent_type with
+    | None -> []
+    | Some row ->
+      let fields = Record.to_list row.fields in
+      List.map fields ~f:(fun (Label name, te) ->
+          Constructor
+            { name
+            ; uid =
+                make_def_id
+                  name
+                  parent_type.location (* Chage uid later if it causes problems *)
+            ; range = te.location (* THIS is wrong, we need field level location *)
+            ; body_range = te.location
+            ; t = te
+            ; parent_type
+            ; references = LSet.empty
+            ; def_type = Global
+            ; mod_path = [] (* If something breaks check this *)
+            })
+  and children =
+    match parent_type.type_content with
+    | T_variable _ | T_constant _ | T_singleton _ | T_module_accessor _ -> []
+    | T_sum { fields; _ } | T_record { fields; _ } ->
+      Record.fold fields ~init:[] ~f:(fun acc t -> acc @ get_constructors t)
+    | T_arrow { type1; type2 } -> get_constructors type1 @ get_constructors type2
+    | T_app { arguments; _ } -> List.concat_map arguments ~f:get_constructors
+    | T_abstraction { type_; _ } | T_for_all { type_; _ } -> get_constructors type_
+  in
+  children @ current
+
+
 let defs_of_tvar ~(bindee : Ast_core.type_expression)
     : TVar.t -> def_type -> string list -> def list -> def list
   =
@@ -70,7 +104,8 @@ let defs_of_tvar ~(bindee : Ast_core.type_expression)
       let references : LSet.t = LSet.empty (* Filled in a later pass *) in
       { name; uid; range; body_range; content; def_type; references; mod_path }
     in
-    Type tdef :: acc)
+    let constructors = get_constructors bindee in
+    (Type tdef :: constructors) @ acc)
 
 
 let defs_of_mvar ~(bindee : Ast_core.module_expr) ~(mod_case : mod_case)
@@ -145,7 +180,7 @@ let rec defs_of_expr : AST.expression -> string list -> def list -> def list =
     let mod_case = mod_case_of_mod_expr ~defs_of_decls rhs inner_mod_path in
     defs_of_mvar ~mod_case ~bindee:rhs module_binder Local inner_mod_path
     @@ self let_result mod_path acc
-  | E_raw_code { language = _; code = _ } -> acc
+  | E_raw_code { language; code } -> []
   (* Variant *)
   | E_constructor { constructor; element } -> self element mod_path acc
   | E_matching { matchee; cases } ->

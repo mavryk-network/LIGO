@@ -89,7 +89,7 @@ module Def = struct
    fun new_def ->
     let find_def_opt (def : def) (old_defs : Types.def list) : Types.def option =
       let f (types_def : Types.def) : bool =
-        Location.equal (Types.get_range types_def) (get_location def)
+        Location.equal (Types.get_def_range types_def) (get_location def)
       in
       List.find ~f old_defs
     in

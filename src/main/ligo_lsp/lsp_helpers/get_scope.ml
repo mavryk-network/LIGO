@@ -108,7 +108,7 @@ let unfold_get_scope ((errors, warnings, plain_data_opt) : get_scope_api_result)
         List.filter_map
           ~f:(function
             | Module m -> Some m
-            | Variable _ | Type _ -> None)
+            | Variable _ | Type _ | Constructor _ -> None)
           defs
       in
       defs @ List.concat_map ~f:from_module current_module_defs

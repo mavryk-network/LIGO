@@ -14,22 +14,24 @@ let get_mod_binder_name : Module_var.t -> string =
  fun v -> if Module_var.is_generated v then generated_flag else Module_var.to_name_exn v
 
 
-module Location = Simple_utils.Location
+module Location = Simple_utils.Location_ordered
 module List = Simple_utils.List
-module LSet = Caml.Set.Make (Simple_utils.Location_ordered)
+module LSet = Caml.Set.Make (Location)
 
-type uid = string
+type uid = string [@@deriving ord, eq]
 
 type type_case =
   | Core of Ast_core.type_expression
   | Resolved of Ast_typed.type_expression
   | Unresolved
+[@@deriving ord, eq]
 
 type def_type =
   | Local
   | Parameter
   | Module_field
   | Global
+[@@deriving ord, eq]
 
 type vdef =
   { name : string
@@ -41,6 +43,21 @@ type vdef =
   ; def_type : def_type
   ; mod_path : string list
   }
+[@@deriving ord, eq]
+
+type cdef =
+  { name : string
+  ; uid : string
+  ; range : Location.t
+  ; body_range : Location.t
+  ; t : Ast_core.type_expression
+  (* TODO: make this parent_type_tsum *)
+  ; parent_type : Ast_core.type_expression
+  ; references : LSet.t
+  ; def_type : def_type
+  ; mod_path : string list
+  }
+[@@deriving ord, eq]
 
 type tdef =
   { name : string
@@ -52,6 +69,7 @@ type tdef =
   ; references : LSet.t
   ; mod_path : string list
   }
+[@@deriving ord, eq]
 
 type mod_case =
   | Def of def list
@@ -70,42 +88,49 @@ and mdef =
 
 and def =
   | Variable of vdef
+  | Constructor of cdef
   | Type of tdef
   | Module of mdef
+[@@deriving ord, eq]
 
-let def_compare a b =
-  match a, b with
-  | Variable x, Variable y -> String.compare x.name y.name
-  | Type x, Type y -> String.compare x.name y.name
-  | Module x, Module y -> String.compare x.name y.name
-  | Variable _, (Type _ | Module _) -> -1
-  | (Type _ | Module _), Variable _ -> 1
-  | Type _, Module _ -> 1
-  | Module _, Type _ -> -1
+let get_def_type : def -> def_type = function
+  | Variable vdef -> vdef.def_type
+  | Type tdef -> tdef.def_type
+  | Module mdef -> mdef.def_type
+  | Constructor cdef -> cdef.def_type
 
 
-let def_equal a b = 0 = def_compare a b
+let get_def_mod_path : def -> string list = function
+  | Variable vdef -> vdef.mod_path
+  | Type tdef -> tdef.mod_path
+  | Module mdef -> mdef.mod_path
+  | Constructor cdef -> cdef.mod_path
+
 
 let get_def_name = function
   | Variable d -> d.name
+  | Constructor c -> c.name
   | Type d -> d.name
   | Module d -> d.name
 
 
 let get_def_uid = function
   | Variable d -> d.uid
+  | Constructor c -> c.uid
   | Type d -> d.uid
   | Module d -> d.uid
 
 
-let get_range = function
+let get_def_range = function
   | Type t -> t.range
+  | Constructor c -> c.range
   | Variable v -> v.range
   | Module m -> m.range
 
 
-let get_body_range = function
+let get_def_body_range = function
   | Type t -> t.body_range
+  | Constructor c -> c.body_range
   | Variable v -> v.body_range
   | Module m -> m.body_range
 
@@ -132,7 +157,7 @@ and shadow_defs : def list -> def list =
   match defs with
   | [] -> []
   | def :: defs ->
-    let shadow_def def' = not @@ def_equal def def' in
+    let shadow_def def' = not @@ equal_def def def' in
     def :: shadow_defs (List.filter defs ~f:shadow_def)
 
 

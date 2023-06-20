@@ -32,32 +32,12 @@ module Def_locations = Set.Make (Def_location)
 let to_string (def : t) = Format.asprintf "%a" Scopes.PP.definitions [ def ]
 
 let get_location : Scopes.def -> Def_location.t =
- fun def ->
-  Def_location.of_loc
-  @@
-  match def with
-  | Variable vdef -> vdef.range
-  | Type tdef -> tdef.range
-  | Module mdef -> mdef.range
+ fun def -> Def_location.of_loc @@ Scopes.Types.get_def_range def
 
 
-let get_name : Scopes.def -> string = function
-  | Variable vdef -> vdef.name
-  | Type tdef -> tdef.name
-  | Module mdef -> mdef.name
-
-
-let get_def_type : Scopes.def -> Scopes.Types.def_type = function
-  | Variable vdef -> vdef.def_type
-  | Type tdef -> tdef.def_type
-  | Module mdef -> mdef.def_type
-
-
-let get_mod_path : Scopes.def -> string list = function
-  | Variable vdef -> vdef.mod_path
-  | Type tdef -> tdef.mod_path
-  | Module mdef -> mdef.mod_path
-
+let get_name : Scopes.def -> string = Scopes.Types.get_def_name
+let get_def_type : Scopes.def -> Scopes.Types.def_type = Scopes.Types.get_def_type
+let get_mod_path : Scopes.def -> string list = Scopes.Types.get_def_mod_path
 
 let get_path : Scopes.def -> Path.t option =
   Def_location.(
@@ -75,6 +55,7 @@ let references_getter : Scopes.def -> Def_locations.t =
     | Variable vdef -> LSet.add vdef.range vdef.references
     | Type tdef -> LSet.add tdef.range tdef.references
     | Module mdef -> LSet.add mdef.range mdef.references
+    | Constructor cdef -> LSet.add cdef.range cdef.references
   in
   Def_locations.of_sequence
   @@ Sequence.map ~f:Def_location.of_loc
