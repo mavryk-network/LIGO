@@ -10,8 +10,8 @@ type _ sing =
   | S_arrow : arrow sing
   | S_ass : ass sing
   | S_assign : assign sing
-  | S_attribute : attribute sing
   | S_attr : Attr.t sing
+  | S_attribute : attribute sing
   | S_bin_op : 'a sing -> 'a bin_op sing
   | S_bool_and : bool_and sing
   | S_bool_or : bool_or sing
@@ -38,11 +38,11 @@ type _ sing =
   | S_expr : expr sing
   | S_false : false_const sing
   | S_field : 'a sing * 'b sing * 'c sing -> ('a, 'b, 'c) field sing
-  | S_full_field : 'a sing * 'b sing * 'c sing -> ('a, 'b, 'c) full_field sing
   | S_field_decl : field_decl sing
   | S_field_name : field_name sing
   | S_for_in_loop : for_in_loop sing
   | S_for_loop : for_loop sing
+  | S_full_field : 'a sing * 'b sing * 'c sing -> ('a, 'b, 'c) full_field sing
   | S_fun_expr : fun_expr sing
   | S_geq : geq sing
   | S_gt : gt sing
@@ -131,14 +131,15 @@ type _ sing =
   | S_rpar : rpar sing
   | S_selection : selection sing
   | S_semi : semi sing
+  | S_sepseq : 'a sing * 'b sing -> ('a, 'b) Utils.sepseq sing
   | S_sequence_expr : sequence_expr sing
+  | S_sig_item : sig_item sing
   | S_signature_body : signature_body sing
   | S_signature_decl : signature_decl sing
   | S_signature_expr : signature_expr sing
-  | S_sig_item : sig_item sing
   | S_slash : slash sing
   | S_slash_eq : slash_eq sing
-  | S_sepseq : 'a sing * 'b sing -> ('a, 'b) Utils.sepseq sing
+  | S_string : string_ sing
   | S_the_unit : the_unit sing
   | S_times : times sing
   | S_times_eq : times_eq sing
@@ -152,6 +153,7 @@ type _ sing =
   | S_type_decl : type_decl sing
   | S_type_expr : type_expr sing
   | S_type_in : type_in sing
+  | S_type_name : type_name sing
   | S_type_params : type_params sing
   | S_type_var : type_var sing
   | S_type_vars : type_vars sing
@@ -164,6 +166,7 @@ type _ sing =
   | S_variant_type : variant_type sing
   | S_vbar : vbar sing
   | S_vbar_eq : vbar_eq sing
+  | S_verbatim : verbatim sing
   | S_while_loop : while_loop sing
   | S_wrap : 'a sing -> 'a wrap sing
   | S_z : Z.t sing
@@ -321,7 +324,7 @@ let fold'
     | E_Par node -> node -| S_par S_expr
     | E_Proj node -> node -| S_reg S_projection
     | E_Record node -> node -| S_record_expr
-    | E_String node -> node -| S_wrap S_lexeme
+    | E_String node -> node -| S_string
     | E_Sub node -> node -| S_reg (S_bin_op S_minus)
     | E_True node -> node -| S_true
     | E_Tuple node -> node -| S_reg (S_tuple S_expr)
@@ -330,7 +333,7 @@ let fold'
     | E_Unit node -> node -| S_reg S_the_unit
     | E_Update node -> node -| S_braces S_update_expr
     | E_Var node -> node -| S_variable
-    | E_Verbatim node -> node -| S_wrap S_lexeme
+    | E_Verbatim node -> node -| S_verbatim
     | E_Seq node -> node -| S_reg S_sequence_expr
     | E_RevApp node -> node -| S_reg (S_bin_op S_rev_app)
     | E_While node -> node -| S_reg S_while_loop)
@@ -554,12 +557,12 @@ let fold'
     | P_Nat node -> node -| S_wrap (S_tuple_2 (S_lexeme, S_z))
     | P_Par node -> node -| S_par S_pattern
     | P_Record node -> node -| S_record_pattern
-    | P_String node -> node -| S_wrap S_lexeme
+    | P_String node -> node -| S_string
     | P_True node -> node -| S_true
     | P_Tuple node -> node -| S_reg (S_tuple S_pattern)
     | P_Typed node -> node -| S_reg S_typed_pattern
     | P_Var node -> node -| S_variable
-    | P_Verbatim node -> node -| S_wrap S_lexeme
+    | P_Verbatim node -> node -| S_verbatim
     | P_Unit node -> node -| S_reg S_the_unit)
   | S_plus -> process @@ node -| S_wrap S_lexeme
   | S_plus_eq -> process @@ node -| S_wrap S_lexeme
@@ -629,6 +632,7 @@ let fold'
     | S_TypeVar node -> node -| S_reg (S_tuple_2 (S_kwd_type, S_variable)))
   | S_slash -> process @@ node -| S_wrap S_lexeme
   | S_slash_eq -> process @@ node -| S_wrap S_lexeme
+  | S_string -> process @@ node -| S_wrap S_lexeme
   | S_the_unit -> process @@ node -| S_tuple_2 (S_lpar, S_rpar)
   | S_times -> process @@ node -| S_wrap S_lexeme
   | S_times_eq -> process @@ node -| S_wrap S_lexeme
@@ -661,7 +665,7 @@ let fold'
     let { kwd_type; name; params; eq; type_expr } = node in
     process_list
     [ kwd_type -| S_kwd_type
-    ; name -| S_variable
+    ; name -| S_type_name
     ; params -| S_option S_type_vars
     ; eq -| S_equal
     ; type_expr -| S_type_expr ]
@@ -676,7 +680,7 @@ let fold'
     | T_ModPath node -> node -| S_reg (S_module_path S_type_expr)
     | T_Par node -> node -| S_par S_type_expr
     | T_Record node -> node -| S_record (S_reg S_field_decl)
-    | T_String node -> node -| S_wrap S_lexeme
+    | T_String node -> node -| S_string
     | T_Variant node -> node -| S_reg S_variant_type
     | T_Var node -> node -| S_variable
     | T_ParameterOf node -> node -| S_reg (S_nsepseq (S_module_name, S_dot)))
@@ -686,10 +690,11 @@ let fold'
     [ type_decl -| S_type_decl
     ; kwd_in -| S_kwd_in
     ; body -| S_expr ]
+  | S_type_name -> process @@ node -| S_wrap S_lexeme
   | S_type_params ->
-    process @@ node -| S_tuple_2 (S_kwd_type, S_nseq S_variable)
+    process @@ node -| S_tuple_2 (S_kwd_type, S_nseq S_type_name)
   | S_type_var ->
-    process @@ node -| S_reg (S_tuple_2 (S_option S_quote, S_variable))
+    process @@ node -| S_reg (S_tuple_2 (S_option S_quote, S_type_name))
   | S_type_vars -> process
     (match node with
       TV_Single node -> node -| S_type_var
@@ -722,6 +727,7 @@ let fold'
     ; variants -| S_nsepseq (S_reg S_variant, S_vbar)]
   | S_vbar -> process @@ node -| S_wrap S_lexeme
   | S_vbar_eq -> process @@ node -| S_wrap S_lexeme
+  | S_verbatim -> process @@ node -| S_wrap S_lexeme
   | S_while_loop ->
     let { kwd_while; cond; body } = node in
     process_list

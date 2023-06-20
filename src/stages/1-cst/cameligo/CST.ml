@@ -115,12 +115,15 @@ type eof = lexeme wrap
 
 (* Literals *)
 
-type variable    = lexeme wrap
-type module_name = lexeme wrap
-type field_name  = lexeme wrap
-type ctor        = lexeme wrap
-type language    = lexeme Region.reg wrap
 type attribute   = Attr.t wrap
+type ctor        = lexeme wrap
+type field_name  = lexeme wrap
+type language    = lexeme Region.reg wrap
+type module_name = lexeme wrap
+type string_     = lexeme wrap
+type type_name   = lexeme wrap
+type variable    = lexeme wrap
+type verbatim    = lexeme wrap
 
 type string_literal   = lexeme wrap
 type int_literal      = (lexeme * Z.t) wrap
@@ -177,7 +180,7 @@ and let_binding = {
 
 (* Type parameters *)
 
-and type_params = kwd_type * variable nseq
+and type_params = kwd_type * type_name nseq
 
 (* Module declaration *)
 
@@ -245,7 +248,7 @@ and 'a module_path = {
 and type_decl = {
   kwd_type  : kwd_type;
   params    : type_vars option;
-  name      : variable;
+  name      : type_name;
   eq        : equal;
   type_expr : type_expr
 }
@@ -254,7 +257,7 @@ and type_vars =
   TV_Single of type_var
 | TV_Tuple  of type_var tuple par
 
-and type_var = (quote option * variable) reg  (* 'a or ' a or _ *)
+and type_var = (quote option * type_name) reg  (* 'a or ' a or _ *)
 
 and 'a tuple = ('a, comma) nsepseq
 

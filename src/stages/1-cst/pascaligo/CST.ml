@@ -118,7 +118,10 @@ type field_name  = lexeme wrap
 type ctor        = lexeme wrap
 
 type attribute   = Attr.t wrap
+type collection  = lexeme wrap
 type language    = lexeme Region.reg wrap
+type string_     = lexeme wrap
+type verbatim    = lexeme wrap
 
 type string_literal   = lexeme wrap
 type int_literal      = (lexeme * Z.t) wrap
