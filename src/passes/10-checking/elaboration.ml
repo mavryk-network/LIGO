@@ -42,7 +42,9 @@ let rec decode (type_ : Type.t) ~raise subst =
   | I.T_exists tvar ->
     (match Substitution.find_texists_eq subst tvar with
     | Some (_, type_) -> decode type_
-    | None -> raise.error (cannot_decode_texists type_ type_.location))
+    | None ->
+      (* This is VeryBad *)
+      return @@ O.T_variable (Type_var.of_input_var ~loc:Location.generated "X"))
   | I.T_arrow arr ->
     let arr = Arrow.map decode arr in
     return @@ O.T_arrow arr

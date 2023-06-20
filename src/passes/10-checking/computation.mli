@@ -314,7 +314,7 @@ val generalize
 (** {5 Unification and Subtyping} *)
 
 type unify_error =
-  [ `Typer_cannot_unify of bool * Type.t * Type.t * Location.t
+  [ `Typer_cannot_unify of bool * Type.t * Type.t * string * string * Location.t
   | `Typer_cannot_unify_diff_layout of
     Type.t * Type.t * Type.layout * Type.layout * Location.t
   | `Typer_ill_formed_type of Type.t * Location.t

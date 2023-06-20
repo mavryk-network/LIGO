@@ -536,7 +536,7 @@ let unify_layout type1 type2 ~fields (layout1 : Type.layout) (layout2 : Type.lay
 let equal_domains lmap1 lmap2 = Set.equal (Map.key_set lmap1) (Map.key_set lmap2)
 
 type unify_error =
-  [ `Typer_cannot_unify of bool * Type.t * Type.t * Location.t
+  [ `Typer_cannot_unify of bool * Type.t * Type.t * string * string * Location.t
   | `Typer_cannot_unify_diff_layout of
     Type.t * Type.t * Type.layout * Type.layout * Location.t
   | `Typer_ill_formed_type of Type.t * Location.t
@@ -552,8 +552,21 @@ let rec unify (type1 : Type.t) (type2 : Type.t) =
     unify type1 type2
   in
   let fail () =
+    let t_to_core x =
+      (* let x: _ t = Context.tapply type1 in *)
+      let r (type a b) str : (a, b) raise = (Simple_utils.Trace.raise_failwith str) in
+      x
+      |> Errors.type_improve
+      |> Elaboration.decode
+      |> (fun x -> Elaboration.run x ~raise:(r "Elaboration.run") Substitution.empty)
+      |> Untyper.untype_type_expression
+      |> Nanopasses.decompile_ty_expr ~raise:(Simple_utils.Trace.raise_failwith "2") ~syntax:Syntax_types.CameLIGO
+      |> Unification.Cameligo.decompile_ty_expr
+      |> Parsing.Cameligo.pretty_print_type_expr Parsing.Cameligo.Pretty.default_state
+      |> Buffer.contents
+    in
     let%bind no_color = Options.no_color () in
-    raise (cannot_unify no_color type1 type2)
+    raise (cannot_unify no_color type1 type2 (t_to_core type1) (t_to_core type2))
   in
   match type1.content, type2.content with
   | T_singleton lit1, T_singleton lit2 when Literal_value.equal lit1 lit2 -> return ()

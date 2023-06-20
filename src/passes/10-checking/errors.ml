@@ -120,7 +120,7 @@ type typer_error =
   | `Typer_pattern_redundant_case of Location.t
   | `Typer_cannot_unify_diff_layout of
     Type.t * Type.t * Type.layout * Type.layout * Location.t
-  | `Typer_cannot_unify of bool * Type.t * Type.t * Location.t
+  | `Typer_cannot_unify of bool * Type.t * Type.t * string * string * Location.t
   | `Typer_assert_equal of
     Ast_typed.type_expression * Ast_typed.type_expression * Location.t
   | `Typer_unbound_module of Module_var.t list * Location.t
@@ -226,16 +226,15 @@ let extract_loc_and_message : typer_error -> Location.t * string =
         ps )
   | `Typer_pattern_redundant_case loc ->
     loc, Format.asprintf "@[<hv>Error : this match case is unused.@]"
-  | `Typer_cannot_unify (no_color, type1, type2, loc) ->
-    let type1 = type_improve type1 in
-    let type2 = type_improve type2 in
+  | `Typer_cannot_unify (no_color, type1, type2, t1', t2', loc) ->
+    (* let type1 = type_improve type1 in
+    let type2 = type_improve type2 in *)
+    ignore (type1,type2);
     ( loc
     , Format.asprintf
-        "@[<hv>Invalid type(s)@.Cannot unify \"%a\" with \"%a\".%a%a@]"
-        pp_type
-        type1
-        pp_type
-        type2
+        "@[<hv>Invalid type(s)@.Cannot unify \"%s\" with \"%s\".%a%a@]"
+        t1'
+        t2'
         (Typediff.pp ~no_color ~tbl:name_tbl)
         (Typediff.diff type1 type2)
         (pp_texists_hint ())
