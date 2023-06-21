@@ -1,0 +1,10 @@
+namespace IncDec {
+  type storage = [nat,nat];
+  @entry
+  const increment = (delta : int, store : int) : [list<operation>, int] =>
+    [list([]), store + delta];
+
+  @entry
+  const decrement = (delta : int, store : int) : [list<operation>, int] =>
+    [list([]), store - delta];
+};

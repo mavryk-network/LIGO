@@ -8,8 +8,16 @@ let bad_contract = bad_test
 let () = Ligo_unix.putenv ~key:"TERM" ~data:"dumb"
 
 let%expect_test _ =
-  run_ligo_good [ "compile"; "expression"; "jsligo"; "add2(x, x)"; "--init-file"; contract "modules.jsligo" ];
-  [%expect {|
+  run_ligo_good
+    [ "compile"
+    ; "expression"
+    ; "jsligo"
+    ; "add2(x, x)"
+    ; "--init-file"
+    ; contract "modules.jsligo"
+    ];
+  [%expect
+    {|
     File "../../test/contracts/modules.jsligo", line 2, character 0 to line 4, character 1:
       1 | // @foo
       2 | namespace B {
@@ -25,7 +33,8 @@ let%expect_test _ =
     84 |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile"; "contract"; contract "FA1.2.interface.mligo"; "-m"; "FA12_ENTRIES" ];
+  run_ligo_good
+    [ "compile"; "contract"; contract "FA1.2.interface.mligo"; "-m"; "FA12_ENTRIES" ];
   [%expect
     {|
     { parameter
@@ -201,9 +210,15 @@ let%expect_test _ =
              PAIR } } |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile"; "expression"; "jsligo"; "t"; "--init-file"; contract "jsligo_uppercase_generic.jsligo" ];
-  [%expect
-    {|
+  run_ligo_good
+    [ "compile"
+    ; "expression"
+    ; "jsligo"
+    ; "t"
+    ; "--init-file"
+    ; contract "jsligo_uppercase_generic.jsligo"
+    ];
+  [%expect {|
     { 1 ; 2 ; 3 } |}]
 
 let%expect_test _ =
@@ -250,13 +265,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good
-    [ "compile"
-    ; "expression"
-    ; "cameligo"
-    ; "s"
-    ; "--init-file"
-    ; contract "of_file.mligo"
-    ];
+    [ "compile"; "expression"; "cameligo"; "s"; "--init-file"; contract "of_file.mligo" ];
   [%expect
     {xxx|
     "let s = [%of_file \"./of_file.mligo\"]\n\nlet m () = [%michelson ({| { PUSH unit Unit ; PUSH mutez 300000000 ; NONE key_hash ; CREATE_CONTRACT (codestr $0) ; PAIR } |} [%of_file \"./interpreter_tests/contract_under_test/compiled.tz\"] : operation * address)]\n\nlet main (_ : unit) (_ : unit) : operation list * unit =\n  let op, _ = m () in\n  [op], ()\n" |xxx}]
@@ -469,8 +478,7 @@ let%expect_test _ =
                      PAIR } } } } } |}]
 
 let%expect_test _ =
-  run_ligo_good
-    [ "compile"; "contract"; contract "ticket_builder.mligo" ];
+  run_ligo_good [ "compile"; "contract"; contract "ticket_builder.mligo" ];
   [%expect
     {|
 File "../../test/contracts/ticket_builder.mligo", line 28, characters 28-34:
@@ -548,6 +556,35 @@ let%expect_test _ =
       { parameter key_hash ;
         storage unit ;
         code { DROP ; UNIT ; NIL operation ; PAIR } } |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "compile"; "contract"; bad_contract "contract_storage_do_not_match.jsligo" ];
+  [%expect
+    {|
+        File "../../test/contracts/negative/contract_storage_do_not_match.jsligo", line 1, character 0 to line 10, character 1:
+          1 | namespace IncDec {
+              ^^^^^^^^^^^^^^^^^^
+          2 |   type storage = [nat,nat];
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          3 |   @entry
+              ^^^^^^^^
+          4 |   const increment = (delta : int, store : int) : [list<operation>, int] =>
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          5 |     [list([]), store + delta];
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          6 |
+
+          7 |   @entry
+              ^^^^^^^^
+          8 |   const decrement = (delta : int, store : int) : [list<operation>, int] =>
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          9 |     [list([]), store - delta];
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         10 | };
+              ^
+
+        A type system corner case occurred:
+        Entrypoint increment does not match storage type  ( nat * nat ) |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; bad_contract "capture_big_map.mligo" ];

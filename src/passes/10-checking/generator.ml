@@ -21,21 +21,22 @@ let default_parameter = "$parameter"
 let default_parameter_var =
   Type_var.of_input_var ~loc:Location.generated default_parameter
 
+
 (* [check_entries s e] returns true if all entries from signature s are present in e *)
-let check_entries : Signature.t -> Value_var.t list -> [`All_found | `Not_found of Value_var.t] =
-  fun sig_ e ->
+let check_entries
+    : Signature.t -> Value_var.t list -> [ `All_found | `Not_found of Value_var.t ]
+  =
+ fun sig_ e ->
   let f s =
     match s with
     | Signature.S_value (var, _, attr) when attr.entry ->
-      if (List.mem ~equal:Value_var.equal e var) then
-        None
-      else
-        Some var
+      if List.mem ~equal:Value_var.equal e var then None else Some var
     | _ -> None
   in
   match List.find_map ~f sig_ with
   | None -> `All_found
   | Some e -> `Not_found e
+
 
 let program_sig_ : Signature.t -> (Signature.item list, _, _) C.t =
  fun sig_ ->
@@ -44,16 +45,25 @@ let program_sig_ : Signature.t -> (Signature.item list, _, _) C.t =
     | Signature.S_value (var, ty, attr) when attr.entry -> Some (var, ty)
     | _ -> None
   in
+  let is_storage = function
+    | Signature.S_type (var, ty) when Type_var.is_name var "storage" -> Some ty
+    | _ -> None
+  in
   let open C.Let_syntax in
   match List.Ne.of_list_opt @@ List.filter_map ~f:is_entry sig_ with
   | None -> return []
   | Some entries ->
+    let%bind storage_type =
+      C.raise_opt
+        ~error:(corner_case "Undefined storage type at top-level")
+        (List.find_map (List.rev sig_) ~f:is_storage)
+    in
     let%bind parameter_type, storage_type =
-      match Type.parameter_from_entrypoints entries with
+      match Type.parameter_from_entrypoints storage_type entries with
       | Error (`Not_entry_point_form ep_type) ->
         C.raise
           (corner_case @@ Format.asprintf "Not an entrypoint form: %a" Type.pp ep_type)
-      | Error (`Storage_does_not_match (ep_1, storage_1, ep_2, storage_2)) ->
+      | Error (`Storage_does_not_match_ep (ep_1, storage_1, ep_2, storage_2)) ->
         C.raise
           (corner_case
           @@ Format.asprintf
@@ -67,6 +77,15 @@ let program_sig_ : Signature.t -> (Signature.item list, _, _) C.t =
                ep_2
                Type.pp
                storage_2)
+      | Error (`Storage_does_not_match_top_level ep) ->
+        C.raise
+          (corner_case
+          @@ Format.asprintf
+               "@[<hv>Entrypoint %a does not match storage type  %a@]"
+               Value_var.pp
+               ep
+               Type.pp
+               storage_type)
       | Ok (p, s) -> return (p, s)
     in
     let type_binder = default_parameter_var in
