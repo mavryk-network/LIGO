@@ -543,14 +543,6 @@ let%expect_test _ =
     Warning: unused variable "ps".
     Hint: replace it by "_ps" to prevent this warning.
 
-    File "../../test/contracts/subtle_nontail_fail.mligo", line 1, characters 10-12:
-      1 | let main (ps : unit * unit) : operation list * unit =
-                    ^^
-      2 |   if true
-    :
-    Warning: unused variable "ps".
-    Hint: replace it by "_ps" to prevent this warning.
-
     failed with: "This contract always fails" |}]
 
 let%expect_test _ =
@@ -644,7 +636,7 @@ File "../../test/contracts/negative/create_contract_toplevel.mligo", line 4, cha
       ^^^^^^^^
   9 |   in
 
-Not all free variables could be inlined in Tezos.create_contract usage: gen#238. |}];
+Not all free variables could be inlined in Tezos.create_contract usage: gen#241. |}];
   run_ligo_good [ "compile"; "contract"; contract "create_contract_var.mligo" ];
   [%expect
     {|
@@ -736,7 +728,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#238.
           ^^^^^^^^
      12 |   in
 
-    Not all free variables could be inlined in Tezos.create_contract usage: gen#239. |}];
+    Not all free variables could be inlined in Tezos.create_contract usage: gen#242. |}];
   run_ligo_bad [ "compile"; "contract"; bad_contract "create_contract_no_inline.mligo" ];
   [%expect
     {|
@@ -791,7 +783,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#238.
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      10 |   let toto : operation list = [ op ] in
 
-    Not all free variables could be inlined in Tezos.create_contract usage: foo#247. |}];
+    Not all free variables could be inlined in Tezos.create_contract usage: foo#253. |}];
   run_ligo_good [ "compile"; "contract"; contract "create_contract.mligo" ];
   [%expect
     {|
@@ -2476,7 +2468,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
-  Called from Cli_expect_tests__Contract_tests.(fun) in file "src/bin/expect_tests/contract_tests.ml", line 2470, characters 2-73
+  Called from Cli_expect_tests__Contract_tests.(fun) in file "src/bin/expect_tests/contract_tests.ml", line 2462, characters 2-73
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -2499,7 +2491,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
-  Called from Cli_expect_tests__Contract_tests.(fun) in file "src/bin/expect_tests/contract_tests.ml", line 2487, characters 2-197
+  Called from Cli_expect_tests__Contract_tests.(fun) in file "src/bin/expect_tests/contract_tests.ml", line 2479, characters 2-197
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -2516,7 +2508,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
-  Called from Cli_expect_tests__Contract_tests.(fun) in file "src/bin/expect_tests/contract_tests.ml", line 2510, characters 2-69
+  Called from Cli_expect_tests__Contract_tests.(fun) in file "src/bin/expect_tests/contract_tests.ml", line 2502, characters 2-69
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -2533,7 +2525,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
-  Called from Cli_expect_tests__Contract_tests.(fun) in file "src/bin/expect_tests/contract_tests.ml", line 2527, characters 2-80
+  Called from Cli_expect_tests__Contract_tests.(fun) in file "src/bin/expect_tests/contract_tests.ml", line 2519, characters 2-80
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output
@@ -2550,7 +2542,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
-  Called from Cli_expect_tests__Contract_tests.(fun) in file "src/bin/expect_tests/contract_tests.ml", line 2544, characters 2-72
+  Called from Cli_expect_tests__Contract_tests.(fun) in file "src/bin/expect_tests/contract_tests.ml", line 2536, characters 2-72
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
 
   Trailing output

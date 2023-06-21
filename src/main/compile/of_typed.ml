@@ -10,6 +10,7 @@ let compile_expression_in_context
     ~raise
     ~options
     ?(self_pass = true)
+    ?(self_program = true)
     ?(contract_pass = false)
     : Ast_typed.program -> Ast_typed.expression -> Ast_aggregated.expression
   =
@@ -21,7 +22,7 @@ let compile_expression_in_context
     if self_pass
     then
       trace ~raise self_ast_aggregated_tracer
-      @@ Self_ast_aggregated.all_program ~options (ctxt, exp)
+      @@ Self_ast_aggregated.all_program ~options ~self_program (ctxt, exp)
     else ctxt, exp
   in
   let exp = Ast_aggregated.context_apply ctxt exp in

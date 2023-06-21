@@ -116,10 +116,12 @@ let all_expression ~raise ~(options : Compiler_options.middle_end) e =
 let all_program
     ~raise
     ~(options : Compiler_options.middle_end)
+    ?(self_program : bool = true)
     (prg : Ast_aggregated.program)
   =
-  let prg = Unused.unused_map_program ~raise prg in
-  let prg = Muchused.muchused_map_program ~raise prg in
+  let self_program ~f prg = if self_program then f prg else prg in
+  let prg = self_program ~f:(Unused.unused_map_program ~raise) prg in
+  let prg = self_program ~f:(Muchused.muchused_map_program ~raise) prg in
   let warn_unused_rec = options.warn_unused_rec in
   let prg = Ast_aggregated.Helpers.map_program (Recursion.remove_rec_expression ~raise ~warn_unused_rec) prg in
   let prg = if not options.test then Remove_unused.remove_unused prg else prg in

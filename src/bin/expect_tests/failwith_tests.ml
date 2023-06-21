@@ -14,14 +14,6 @@ let%expect_test _ =
     Warning: unused variable "ps".
     Hint: replace it by "_ps" to prevent this warning.
 
-    File "../../test/contracts/subtle_nontail_fail.mligo", line 1, characters 10-12:
-      1 | let main (ps : unit * unit) : operation list * unit =
-                    ^^
-      2 |   if true
-    :
-    Warning: unused variable "ps".
-    Hint: replace it by "_ps" to prevent this warning.
-
     failed with: "This contract always fails" |}]
 
 let%expect_test _ =

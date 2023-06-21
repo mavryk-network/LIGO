@@ -38,8 +38,8 @@ let specific_passes ~raise ~options cform prg =
 let typecheck_with_signature
     ~raise
     ~(options : Compiler_options.t)
-    ?(cform : form option)
     ?(context : Ast_typed.signature option)
+    ?(self_pass : bool = false)
     (p : Ast_core.program)
     : Ast_typed.program * Ast_typed.signature
   =
@@ -48,20 +48,16 @@ let typecheck_with_signature
     @@ Checking.type_program_with_signature ~options:options.middle_end ?env:context p
   in
   let typed =
-    trace ~raise self_ast_typed_tracer
-    @@ fun ~raise ->
-    Self_ast_typed.all_program
-      ~raise
+    if self_pass then
+      trace ~raise self_ast_typed_tracer
+      @@ fun ~raise ->
+      Self_ast_typed.all_program
+        ~raise
+        typed
+    else
       typed
   in
-  let applied =
-    match cform with
-    | None -> typed
-    | Some cform ->
-      trace ~raise self_ast_typed_tracer
-      @@ fun ~raise -> snd @@ specific_passes ~raise ~options cform typed
-  in
-  applied, signature
+  typed, signature
 
 
 let typecheck
