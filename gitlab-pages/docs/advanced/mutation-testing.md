@@ -25,15 +25,16 @@ function twice (const x : int) : int is x + x
 </Syntax>
 <Syntax syntax="cameligo">
 
-```cameligo test-ligo group=twice
+```cameligo test-ligo group=frontpage
 let twice (x : int) = x + x
 ```
+
 </Syntax>
 
 <Syntax syntax="jsligo">
 
-```jsligo test-ligo group=twice
-const twice = (x: int) => x + x;
+```jsligo test-ligo group=frontpage
+const twice = (x: int): int => x + x;
 ```
 
 </Syntax>
@@ -58,7 +59,7 @@ const test = simple_tests (twice);
 </Syntax>
 <Syntax syntax="cameligo">
 
-```cameligo test-ligo group=twice
+```cameligo test-ligo group=frontpage
 let simple_tests (f : int -> int) =
   (* Test 1 *)
   let () = assert (Test.michelson_equal (Test.run f 0) (Test.eval 0)) in
@@ -73,7 +74,7 @@ let test = simple_tests twice
 
 <Syntax syntax="jsligo">
 
-```jsligo test-ligo group=twice
+```jsligo test-ligo group=frontpage
 const simple_tests = (f : ((input: int) => int)) : unit => {
   /* Test 1 */
   assert (Test.michelson_equal(Test.run(f, 0), Test.eval(0)));
@@ -145,7 +146,7 @@ let twice (x : int) = x * x
 
 <Syntax syntax="jsligo">
 
-```jsligo test-ligo group=frontpage
+```jsligo test-ligo group=frontpage2
 const twice = (x: int): int => x * x;
 ```
 
@@ -223,25 +224,25 @@ const test_mutation =
 </Syntax>
 <Syntax syntax="cameligo">
 
-```cameligo test-ligo group=twice
+```cameligo skip
 let test_mutation =
   match Test.mutation_test twice simple_tests with
     None -> ()
   | Some (_, mutation) ->
       let () = Test.log mutation in
-      Test.println "Some mutation also passes the tests! ^^"
+      failwith "Some mutation also passes the tests! ^^"
 ```
 
 </Syntax>
 
 <Syntax syntax="jsligo">
 
-```jsligo test-ligo group=twice
+```jsligo skip
 const test_mutation =
   match(Test.mutation_test(twice, simple_tests), {
     None: () => unit,
     Some: pmutation => { Test.log(pmutation[1]);
-                         Test.println("Some mutation also passes the tests! ^^") }
+                         failwith ("Some mutation also passes the tests! ^^") }
   });
 ```
 
@@ -469,7 +470,7 @@ let main (action, store : parameter * storage) : return =
 
 <Syntax syntax="jsligo">
 
-```jsligo test-ligo group=frontpage
+```jsligo test-ligo group=frontpage3
 // This is mutation-contract.jsligo
 type storage = int;
 
@@ -530,7 +531,7 @@ const test = originate_and_test (main);
 
 let originate_and_test (mainf : parameter * storage -> return) =
   let initial_storage = 7 in
-  let (taddr, _, _) = Test.originate_uncurried mainf initial_storage 0tez in
+  let (taddr, _, _) = Test.originate mainf initial_storage 0tez in
   let contr = Test.to_contract taddr in
   let _ = Test.transfer_to_contract_exn contr (Increment 7) 1mutez in
   assert (Test.get_storage taddr = initial_storage + 7)
@@ -542,10 +543,10 @@ let test = originate_and_test main
 
 <Syntax syntax="jsligo">
 
-```jsligo test-ligo group=frontpage
+```jsligo test-ligo group=frontpage3
 // This continues mutation-contract.jsligo
 
-const originate_and_test = (mainf : (p: parameter) => (s: storage) => return_) : unit => {
+const originate_and_test = (mainf : ((p: parameter, s: storage) => return_)) : unit => {
   let initial_storage = 5 as int;
   let [taddr, _, _] = Test.originate(mainf, initial_storage, 0 as tez);
   let contr = Test.to_contract(taddr);
@@ -575,24 +576,24 @@ const test_mutation =
 </Syntax>
 <Syntax syntax="cameligo">
 
-```cameligo test-ligo group=frontpage
+```cameligo skip
 let test_mutation =
   match Test.mutation_test main originate_and_test with
     None -> ()
   | Some (_, mutation) -> let () = Test.log(mutation) in
-                          Test.println "Some mutation also passes the tests! ^^"
+                          failwith "Some mutation also passes the tests! ^^"
 ```
 
 </Syntax>
 
 <Syntax syntax="jsligo">
 
-```jsligo test-ligo group=frontpage
+```jsligo skip
 const test_mutation =
   match(Test.mutation_test(main, originate_and_test), {
     None: () => unit,
     Some: pmutation => { Test.log(pmutation[1]);
-                         Test.println("Some mutation also passes the tests! ^^") }
+                         failwith ("Some mutation also passes the tests! ^^") }
   });
 ```
 
@@ -688,10 +689,10 @@ function originate_and_test(const mainf : parameter * storage -> return) is{
 </Syntax>
 <Syntax syntax="cameligo">
 
-```cameligo test-ligo group=frontpage
-let originate_and_test_dec (mainf : parameter * storage -> return) =
+```cameligo skip
+let originate_and_test (mainf : parameter * storage -> return) =
   let initial_storage = 7 in
-  let (taddr, _, _) = Test.originate_uncurried mainf initial_storage 0tez in
+  let (taddr, _, _) = Test.originate mainf initial_storage 0tez in
   let contr = Test.to_contract taddr in
   let _ = Test.transfer_to_contract_exn contr (Increment (7)) 1mutez in
   let _ = Test.transfer_to_contract_exn contr (Decrement (3)) 1mutez in
@@ -702,8 +703,8 @@ let originate_and_test_dec (mainf : parameter * storage -> return) =
 
 <Syntax syntax="jsligo">
 
-```jsligo test-ligo group=frontpage
-const originate_and_test_dec = (mainf : ((p: parameter, s: storage) => return_)) : unit => {
+```jsligo skip
+const originate_and_test = (mainf : ((p: parameter, s: storage) => return_)) : unit => {
   let initial_storage = 5 as int;
   let [taddr, _, _] = Test.originate(mainf, initial_storage, 0 as tez);
   let contr = Test.to_contract(taddr);
@@ -754,7 +755,7 @@ then process the list:
 <Syntax syntax="pascaligo">
 
 ```pascaligo skip
-const test_mutation_all =
+const test_mutation =
   case Test.mutation_test_all (main, originate_and_test) of [
     nil -> unit
   | ms -> {
@@ -771,34 +772,34 @@ const test_mutation_all =
 </Syntax>
 <Syntax syntax="cameligo">
 
-```cameligo test-ligo group=frontpage
-let test_mutation_all =
-  match Test.mutation_test_all main originate_and_test_dec with
+```cameligo skip
+let test_mutation =
+  match Test.mutation_test_all main originate_and_test with
     [] -> ()
   | ms -> let () = List.iter (fun ((_, mutation) : unit * mutation) ->
                               let path = Test.save_mutation "." mutation in
                               let () = Test.log "saved at:" in
                               Test.log path) ms in
-          Test.println "Some mutation also passes the tests! ^^"
+          failwith "Some mutation also passes the tests! ^^"
 ```
 
 </Syntax>
 
 <Syntax syntax="jsligo">
 
-```jsligo test-ligo group=frontpage
-const test_mutation_all =
-  match(Test.mutation_test_all(main, originate_and_test_dec), list([
+```jsligo skip
+const test_mutation =
+  match(Test.mutation_test_all(main, originate_and_test), list([
     ([]: list<[unit, mutation]>) => unit,
     ([hd,...tl]: list<[unit, mutation]>) => {
-                         let ms = list([hd,...tl]);
+                         let ms = [hd,...tl];
                          for (const m of ms) {
                            let [_, mutation] = m;
                            let path = Test.save_mutation(".", mutation);
                            Test.log("saved at:");
                            Test.log(path);
                          };
-                         Test.println("Some mutation also passes the tests! ^^") }
+                         failwith ("Some mutation also passes the tests! ^^") }
   ]));
 ```
 
@@ -875,7 +876,7 @@ function main (const action : parameter; const store : storage) : return is {
 </Syntax>
 <Syntax syntax="cameligo">
 
-```cameligo test-ligo group=no_mutation
+```cameligo skip
 // This is mutation-contract.mligo
 type storage = int
 
@@ -903,8 +904,8 @@ let main (action, store : parameter * storage) : return =
 
 <Syntax syntax="jsligo">
 
-```jsligo test-ligo group=no_mutation
-// This is mutation-contract.jsligo
+```jsligo skip
+/ This is mutation-contract.jsligo
 type storage = int;
 
 type parameter =

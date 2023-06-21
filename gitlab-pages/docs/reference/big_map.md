@@ -30,7 +30,7 @@ val empty : ('key, 'value) big_map
 let empty: big_map&lt;&apos;key, &apos;value&gt;
 </SyntaxTitle>
 
-Create an empty big map.
+Create an empty big_map.
 
 <Syntax syntax="pascaligo">
 
@@ -69,6 +69,7 @@ let empty: register = Big_map.empty;
 ```
 
 </Syntax>
+
 
 <SyntaxTitle syntax="pascaligo">
 val literal&lt;key,value&gt; : list (key * value) -> big_map (key, value)
@@ -140,6 +141,7 @@ Retrieve a value from a big map with the given key.
 Because the key may be missing in the big map, the result is an
 *optional value*.
 
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=big_map
@@ -172,6 +174,7 @@ let my_balance: option <move> =
 ```
 
 </Syntax>
+
 
 <SyntaxTitle syntax="pascaligo">
 val mem&lt;key,value&gt; : key -> big_map (key, value) -> bool
@@ -285,6 +288,7 @@ val get_and_update&lt;key,value&gt; : key -> option (value) -> big_map (key, val
 val get_and_update : 'key -> 'value option -> ('key, 'value) big_map -> value option * ('key, 'value) big_map
 </SyntaxTitle>
 
+
 Similar to `update` but it also returns the value that was previously stored in the big_map
 
 <SyntaxTitle syntax="pascaligo">
@@ -304,7 +308,6 @@ const added_item : register = Big_map.add (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQw
 ```
 
 </Syntax>
-
 <Syntax syntax="cameligo">
 
 ```cameligo group=big_map
@@ -324,6 +327,7 @@ let add = (m: register): register =>
 ```
 
 </Syntax>
+
 
 <SyntaxTitle syntax="pascaligo">
 val remove&lt;key,value&gt; : key -> big_map (key, value) -> big_map (key, value)

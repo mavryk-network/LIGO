@@ -27,26 +27,24 @@ type lexeme = string
 
 (* Keywords of JsLIGO *)
 
-type kwd_else       = lexeme wrap
-type kwd_if         = lexeme wrap
-type kwd_let        = lexeme wrap
-type kwd_const      = lexeme wrap
-type kwd_type       = lexeme wrap
-type kwd_return     = lexeme wrap
-type kwd_switch     = lexeme wrap
-type kwd_case       = lexeme wrap
-type kwd_default    = lexeme wrap
-type kwd_as         = lexeme wrap
-type kwd_break      = lexeme wrap
-type kwd_namespace  = lexeme wrap
-type kwd_export     = lexeme wrap
-type kwd_import     = lexeme wrap
-type kwd_implements = lexeme wrap
-type kwd_interface  = lexeme wrap
-type kwd_while      = lexeme wrap
-type kwd_from       = lexeme wrap
-type kwd_for        = lexeme wrap
-type kwd_of         = lexeme wrap
+type kwd_else      = lexeme wrap
+type kwd_if        = lexeme wrap
+type kwd_let       = lexeme wrap
+type kwd_const     = lexeme wrap
+type kwd_type      = lexeme wrap
+type kwd_return    = lexeme wrap
+type kwd_switch    = lexeme wrap
+type kwd_case      = lexeme wrap
+type kwd_default   = lexeme wrap
+type kwd_as        = lexeme wrap
+type kwd_break     = lexeme wrap
+type kwd_namespace = lexeme wrap
+type kwd_export    = lexeme wrap
+type kwd_import    = lexeme wrap
+type kwd_while     = lexeme wrap
+type kwd_from      = lexeme wrap
+type kwd_for       = lexeme wrap
+type kwd_of        = lexeme wrap
 
 (* Symbols *)
 
@@ -63,11 +61,6 @@ type slash      = lexeme wrap  (* "/" *)
 type modulo     = lexeme wrap  (* "%" *)
 type times      = lexeme wrap  (* "*" *)
 
-(* Increment & Decrement operators *)
-
-type increment = lexeme wrap (* "++" *)
-type decrement = lexeme wrap (* "--" *)
-
 (* Ternary operator *)
 
 type qmark = lexeme wrap  (* ? *)
@@ -80,7 +73,7 @@ type bool_and = lexeme wrap  (* "&&" *)
 (* Comparisons *)
 
 type negate    = lexeme wrap  (* "!"  *)
-type equal_cmp = lexeme wrap  (* "==" *)
+type equal_cmp = lexeme wrap  (* "=="  *)
 type neq       = lexeme wrap  (* "!=" *)
 type lt        = lexeme wrap  (* "<"  *)
 type gt        = lexeme wrap  (* ">"  *)
@@ -113,18 +106,16 @@ type eof = lexeme wrap
 
 (* Literals *)
 
-type variable    = lexeme wrap
-type fun_name    = lexeme wrap
-type fun_arg_name    = lexeme wrap
-type type_name   = lexeme wrap
-type type_var    = lexeme wrap
-type type_constr = lexeme wrap
-type constr      = lexeme wrap
-type field_name  = lexeme wrap
-type module_name = lexeme wrap
+type variable     = string reg
+type fun_name     = string reg
+type type_name    = string reg
+type type_var     = string reg
+type type_constr  = string reg
+type constr       = string reg
+type attribute    = string reg
+type field_name   = string reg
+type module_name  = string reg
 
-type attribute   = Attr.t wrap
-type language    = lexeme wrap
 
 (* Parentheses *)
 
@@ -161,12 +152,10 @@ type t = {
   eof        : eof
 }
 
-and cst = t
-
 and toplevel_statements = toplevel_statement nseq
 
 and toplevel_statement =
-  TopLevel  of (statement * semi option)
+  TopLevel  of statement * semi option
 | Directive of Directive.t
 
 and ast = t
@@ -176,11 +165,11 @@ and attributes = attribute list
 (* Non-recursive values *)
 
 and val_binding = {
-  binders     : pattern;
+  binders    : pattern;
   type_params : type_generics option;
-  lhs_type    : (colon * type_expr) option;
-  eq          : equal;
-  expr        : expr
+  lhs_type   : (colon * type_expr) option;
+  eq         : equal;
+  expr       : expr
 }
 
 and type_generics = (variable, comma) nsepseq chevrons reg
@@ -201,7 +190,7 @@ and type_vars = (type_var, comma) nsepseq chevrons reg
 and fun_type_args = (fun_type_arg, comma) nsepseq par
 
 and fun_type_arg = {
-  name      : fun_arg_name;
+  name      : variable;
   colon     : colon;
   type_expr : type_expr
 }
@@ -209,18 +198,17 @@ and fun_type_arg = {
 and obj_type = field_decl reg ne_injection reg
 
 and type_expr =
-  TProd      of cartesian
-| TSum       of sum_type reg
-| TObject    of obj_type
-| TApp       of (type_constr * type_params) reg
-| TFun       of (fun_type_args * arrow * type_expr) reg
-| TPar       of type_expr par reg
-| TVar       of variable
-| TString    of lexeme wrap
-| TInt       of (lexeme * Z.t) wrap
-| TModA      of type_expr module_access reg
-| TDisc      of (obj_type, vbar) nsepseq
-| TParameter of (module_name, dot) nsepseq reg
+  TProd   of cartesian
+| TSum    of sum_type reg
+| TObject of obj_type
+| TApp    of (type_constr * type_params) reg
+| TFun    of (fun_type_args * arrow * type_expr) reg
+| TPar    of type_expr par reg
+| TVar    of variable
+| TString of lexeme reg
+| TInt    of (lexeme * Z.t) reg
+| TModA   of type_expr module_access reg
+| TDisc   of (obj_type, vbar) nsepseq
 
 and type_params = (type_expr, comma) nsepseq chevrons reg
 
@@ -242,8 +230,8 @@ and sum_type = {
 }
 
 and variant = {
-  tuple      : variant_comp brackets reg;
-  attributes : attributes
+  tuple        : variant_comp brackets reg;
+  attributes   : attributes
 }
 
 and variant_comp = {
@@ -259,14 +247,14 @@ and field_decl = {
 }
 
 and rest_pattern = {
-  ellipsis : ellipsis;
-  rest     : variable
+  ellipsis  : ellipsis;
+  rest      : variable
 }
 
 and assign_pattern = {
-  property : variable;
-  eq       : equal;
-  value    : expr
+  property  : variable;
+  eq        : equal;
+  value     : expr
 }
 
 and destruct = {
@@ -279,7 +267,7 @@ and pattern =
   PRest     of rest_pattern reg
 | PAssign   of assign_pattern reg
 | PVar      of var_pattern reg
-| PConstr   of variable         (* Not used in the Parser! *)
+| PConstr   of variable
 | PDestruct of destruct reg
 | PObject   of object_pattern
 | PArray    of array_pattern
@@ -294,8 +282,8 @@ and var_pattern = {
 }
 
 and string_expr =
-  String   of lexeme wrap
-| Verbatim of lexeme wrap
+  String   of string reg
+| Verbatim of string reg
 
 and return = {
   kwd_return: kwd_return;
@@ -303,31 +291,27 @@ and return = {
 }
 
 and switch = {
-  kwd_switch : kwd_switch;
-  lpar       : lpar;
-  expr       : expr;
-  rpar       : rpar;
-  lbrace     : lbrace;
-  cases      : case nseq;
-  rbrace     : rbrace
+  kwd_switch  : kwd_switch;
+  lpar        : lpar;
+  expr        : expr;
+  rpar        : rpar;
+  lbrace      : lbrace;
+  cases       : switch_case nseq;
+  rbrace      : rbrace;
 }
 
-and case =
-  Switch_case         of switch_case
-| Switch_default_case of switch_default_case
-
-and switch_case = {
-  kwd_case   : kwd_case;
-  expr       : expr;
-  colon      : colon;
-  statements : statements option
-}
-
-and switch_default_case = {
-  kwd_default : kwd_default;
-  colon       : colon;
-  statements  : statements option
-}
+and switch_case =
+  Switch_case of {
+    kwd_case    : kwd_case;
+    expr        : expr;
+    colon       : colon;
+    statements  : statements option;
+  }
+| Switch_default_case of {
+    kwd_default : kwd_default;
+    colon       : colon;
+    statements  : statements option;
+  }
 
 and array_item_rest = {
   ellipsis : ellipsis;
@@ -339,10 +323,9 @@ and array_item =
 | Rest_entry of array_item_rest reg
 
 and property2 = {
-  name       : expr;
-  colon      : colon;
-  value      : expr;
-  attributes : attribute list
+  name  : expr;
+  colon : colon;
+  value : expr
 }
 
 and property_rest = {
@@ -356,28 +339,25 @@ and property =
 | Property_rest   of property_rest reg
 
 and expr =
-  EAnnot    of annot_expr reg
-| EArith    of arith_expr
-| EArray    of (array_item, comma) sepseq brackets reg
-| EAssign   of (expr * operator reg * expr)
-| EBytes    of (lexeme * Hex.t) wrap
-| ECall     of (expr * arguments) reg
-| ECodeInj  of code_inj reg
-| EConstr   of (constr * expr option) reg
-| EContract of (module_name, dot) nsepseq reg
-| EFun      of fun_expr reg
-| ELogic    of logic_expr
-| EModA     of expr module_access reg
-| EObject   of object_expr
-| EPar      of expr par reg
-| EPrefix   of prefix_postfix_op reg
-| EPostfix  of prefix_postfix_op reg
-| EProj     of projection reg
-| ESeq      of (expr, comma) nsepseq reg
-| EString   of string_expr
-| ETernary  of ternary reg
-| EUnit     of the_unit reg
-| EVar      of variable
+  EFun     of fun_expr reg
+| EPar     of expr par reg
+| ESeq     of (expr, comma) nsepseq reg
+| EVar     of variable
+| EModA    of expr module_access reg
+| ELogic   of logic_expr
+| EArith   of arith_expr
+| ECall    of (expr * arguments) reg
+| EBytes   of (string * Hex.t) reg
+| EArray   of (array_item, comma) sepseq brackets reg
+| EObject  of object_expr
+| EString  of string_expr
+| EProj    of projection reg
+| EAssign  of expr * operator reg * expr
+| EConstr  of (constr * expr option) reg
+| EAnnot   of annot_expr reg
+| EUnit    of the_unit reg
+| ECodeInj of code_inj reg
+| ETernary of ternary reg
 
 and ternary = {
   condition : expr;
@@ -401,54 +381,33 @@ and operator =
 and object_expr = (property, comma) nsepseq braces reg
 
 and statement =
-  SBlock     of statements braces reg
-| SExpr      of (attributes * expr)
-| SCond      of cond_statement reg
-| SReturn    of return reg
-| SLet       of let_decl reg
-| SConst     of const_decl reg
-| SType      of type_decl reg
-| SSwitch    of switch reg
-| SBreak     of kwd_break
-| SInterface of interface_statement reg
-| SNamespace of namespace_statement reg
-| SExport    of (kwd_export * statement) reg
-| SImport    of import reg
-| SWhile     of while_stmt reg
-| SForOf     of for_of reg
-| SFor       of for_stmt reg
+  SBlock      of (statement, semi) nsepseq braces reg
+| SExpr       of expr
+| SCond       of cond_statement reg
+| SReturn     of return reg
+| SLet        of let_decl reg
+| SConst      of const_decl reg
+| SType       of type_decl reg
+| SSwitch     of switch reg
+| SBreak      of kwd_break
+| SNamespace  of namespace_statement
+| SExport     of (kwd_export * statement) reg
+| SImport     of import reg
+| SWhile      of while_stmt reg
+| SForOf      of for_of reg
 
 and namespace_statement =
-  kwd_namespace * module_name * interface_annotation option * statements braces reg * attributes
-
-and interface_expr =
-  IInterface of interface_body
-| IPath      of (module_name, dot) nsepseq reg
-
-and interface_entry =
-  IType      of (attributes * kwd_type * variable * equal * type_expr) reg
-| IType_var  of (attributes * kwd_type * variable) reg
-| IConst     of (attributes * kwd_const * variable * colon * type_expr) reg
-
-and interface_entries = (interface_entry, semi) nsepseq
-
-and interface_body = interface_entries braces reg
-
-and interface_annotation = (kwd_implements * interface_expr) reg
-
-and interface_statement =
-  kwd_interface * module_name * interface_body * attributes
+  (kwd_namespace * module_name * statements braces reg * attributes) reg
 
 and while_stmt = {
-  kwd_while : kwd_while;
-  lpar      : lpar;
-  expr      : expr;
-  rpar      : rpar;
-  statement : statement
+  kwd_while: kwd_while;
+  lpar:      lpar;
+  expr:      expr;
+  rpar:      rpar;
+  statement: statement;
 }
 
 and for_of = {
-  attributes : attributes;
   kwd_for    : kwd_for;
   lpar       : lpar;
   index_kind : index_kind;
@@ -461,49 +420,30 @@ and for_of = {
 
 and index_kind = [
   `Let   of kwd_let
-| `Const of kwd_const
-]
-
-and for_stmt = {
-  attributes   : attributes;
-  kwd_for      : kwd_for;
-  lpar         : lpar;
-  initialiser  : statement option;
-  semi1        : semi;
-  condition    : expr option;
-  semi2        : semi;
-  afterthought : (expr, comma) nsepseq option;
-  rpar         : rpar;
-  statement    : statement option
-}
+| `Const of kwd_const]
 
 and import =
-  Import_rename   of import_rename
-| Import_all_as   of import_all_as
-| Import_selected of import_selected
+  Import_rename of {
+    kwd_import   : kwd_import;
+    alias        : module_name;
+    equal        : equal;
+    module_path  : (module_name, dot) nsepseq
+  }
+| Import_all_as of {
+    kwd_import   : kwd_import;
+    times        : times;
+    kwd_as       : kwd_as;
+    alias        : module_name;
+    kwd_from     : kwd_from;
+    module_path  : string reg
+  }
+| Import_selected of {
+    kwd_import   : kwd_import;
+    imported     : (field_name, comma) nsepseq braces reg;
+    kwd_from      : kwd_from;
+    module_path  : string reg
+  }
 
-and import_rename = {
-  kwd_import  : kwd_import;
-  alias       : module_name;
-  equal       : equal;
-  module_path : (module_name, dot) nsepseq
-}
-
-and import_all_as = {
-  kwd_import  : kwd_import;
-  times       : times;
-  kwd_as      : kwd_as;
-  alias       : module_name;
-  kwd_from    : kwd_from;
-  module_path : string wrap
-}
-
-and import_selected = {
-  kwd_import  : kwd_import;
-  imported    : (field_name, comma) nsepseq braces reg;
-  kwd_from    : kwd_from;
-  module_path : string wrap
-}
 
 and statements = (statement, semi) nsepseq
 
@@ -511,8 +451,13 @@ and arguments =
   Multiple of (expr, comma) nsepseq par reg
 | Unit     of the_unit reg
 
-(* TODO: Used with colon too in Parser *)
-and annot_expr = expr * kwd_as * type_expr
+and annot_expr = expr * kwd_as * type_expr (* TODO: Used with colon too in Parser *)
+
+and 'a injection = {
+  compound   : compound option;
+  elements   : ('a, semi) sepseq;
+  terminator : semi option
+}
 
 and 'a ne_injection = {
   compound    : compound option;
@@ -532,7 +477,7 @@ and arith_expr =
 | Div   of slash bin_op reg
 | Mod   of modulo bin_op reg
 | Neg   of minus un_op reg
-| Int   of (lexeme * Z.t) wrap
+| Int   of (string * Z.t) reg
 
 and logic_expr =
   BoolExpr of bool_expr
@@ -554,15 +499,6 @@ and 'a un_op = {
   arg : expr
 }
 
-and prefix_postfix_op = {
-  update_type : update_type;
-  variable    : variable
-}
-
-and update_type =
-  Increment of increment
-| Decrement of decrement
-
 and comp_expr =
   Lt    of lt        bin_op reg
 | Leq   of leq       bin_op reg
@@ -576,14 +512,14 @@ and projection = {
   selection : selection;
 }
 
-and selection =
-  FieldName of selection_field_name reg
-| Component of expr brackets reg
-
 and selection_field_name = {
   dot   : dot;
   value : variable
 }
+
+and selection =
+  FieldName of selection_field_name reg
+| Component of expr brackets reg
 
 and let_decl = {
   attributes : attributes;
@@ -602,19 +538,17 @@ and body =
 | ExpressionBody of expr
 
 and fun_expr = {
-  type_params : type_generics option;
-  parameters  : expr;
-  lhs_type    : (colon * type_expr) option;
-  arrow       : arrow;
-  body        : body;
+  parameters : expr;
+  lhs_type   : (colon * type_expr) option;
+  arrow      : arrow;
+  body       : body;
 }
 
 and cond_statement = {
-  attributes : attributes;
-  kwd_if     : kwd_if;
-  test       : expr par;
-  ifso       : statement;
-  ifnot      : (kwd_else * statement) option;
+  kwd_if : kwd_if;
+  test   : expr par;
+  ifso   : statement;
+  ifnot  : (kwd_else * statement) option;
 }
 
 (* Code injection.  Note how the field [language] wraps a region in
@@ -622,7 +556,7 @@ and cond_statement = {
    the innermost covers the <language>. *)
 
 and code_inj = {
-  language : language;
+  language : string reg;
   code     : expr;
 }
 
@@ -646,19 +580,17 @@ let type_expr_to_region = function
 | TObject {region; _}
 | TApp    {region; _}
 | TFun    {region; _}
-| TPar    {region; _} -> region
-| TString t
-| TVar    t -> t#region
-| TModA   {region; _} -> region
-| TInt    t -> t#region
+| TPar    {region; _}
+| TString {region; _}
+| TVar    {region; _}
+| TModA   {region; _}
+| TInt    {region; _} -> region
 | TDisc   reg -> nsepseq_to_region (fun a -> a.Region.region) reg
-| TParameter {region; _} -> region
 
 let pattern_to_region = function
-  PRest {region;_ }    | PAssign {region ;_ }
-| PVar {region ;_ }    | PDestruct {region ;_ }
+  PRest {region;_ }   | PAssign {region ;_ }
+| PVar {region ;_ }    | PConstr {region; _ } | PDestruct {region ;_ }
 | PObject {region ;_ } | PArray {region; _} -> region
-| PConstr p -> p#region
 
 let bool_expr_to_region = function
   Or {region;_} | And {region;_}
@@ -675,11 +607,11 @@ let logic_expr_to_region = function
 
 let arith_expr_to_region = function
   Add {region;_} | Sub {region;_} | Mult {region;_}
-| Div {region;_} | Mod {region;_} | Neg {region;_} -> region
-| Int e -> e#region
+| Div {region;_} | Mod {region;_} | Neg {region;_}
+| Int {region;_} -> region
 
 let string_expr_to_region = function
-  Verbatim w | String w -> w#region
+  Verbatim {region;_} | String {region;_} -> region
 
 let rec expr_to_region = function
   ELogic e -> logic_expr_to_region e
@@ -689,19 +621,14 @@ let rec expr_to_region = function
     Region.cover (expr_to_region f) (expr_to_region e)
 | EConstr {region; _}
 | EAnnot {region;_ } | EFun {region;_}
-| ECall {region;_}   | EProj {region; _}
-| EUnit {region;_}   | EPar {region;_}
+| ECall {region;_}   | EVar {region; _}    | EProj {region; _}
+| EUnit {region;_}   | EPar {region;_}     | EBytes {region; _}
 | ESeq {region; _}   | EObject {region; _} | EArray { region; _}
 | ECodeInj {region; _} | EModA { region; _} | ETernary {region; _} -> region
-| EBytes v -> v#region
-| EVar v -> v#region
-| EContract {region; _}
-| EPrefix {region;_}
-| EPostfix {region;_} -> region
 
 let statement_to_region = function
   SBreak b -> b#region
-| SExpr (_,e) -> expr_to_region e
+| SExpr e -> expr_to_region e
 | SBlock {region; _ }
 | SCond {region; _}
 | SReturn {region; _}
@@ -713,9 +640,7 @@ let statement_to_region = function
 | SExport {region; _}
 | SForOf {region; _}
 | SWhile {region; _}
-| SInterface {region; _}
-| SNamespace {region; _}
-| SFor {region;_} -> region
+| SNamespace {region; _} -> region
 
 let selection_to_region = function
   FieldName f -> f.region
@@ -733,9 +658,3 @@ let property_to_region = function
 let array_item_to_region = function
   Expr_entry e -> expr_to_region e
 | Rest_entry {region; _} -> region
-
-let toplevel_statement_to_region = function
-  TopLevel (statement, None) -> statement_to_region statement
-| TopLevel (statement, Some semi) ->
-    Region.cover (statement_to_region statement) semi#region
-| Directive d -> Directive.to_region d

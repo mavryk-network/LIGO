@@ -23,18 +23,15 @@ module Pipeline = Lexing_shared.Pipeline
 
 module type PRETTY =
   sig
-    type state
-    val default_state : state
-
     type cst
     type expr
     type type_expr
     type pattern
 
-    val print           : state -> cst       -> PPrint.document
-    val print_expr      : state -> expr      -> PPrint.document
-    val print_type_expr : state -> type_expr -> PPrint.document
-    val print_pattern   : state -> pattern   -> PPrint.document
+    val print           : cst       -> PPrint.document
+    val print_expr      : expr      -> PPrint.document
+    val print_type_expr : type_expr -> PPrint.document
+    val print_pattern   : pattern   -> PPrint.document
   end
 
 (* PARSING *)
@@ -66,7 +63,7 @@ module MakeParser
 
     type raise = (Errors.t, Main_warnings.all) Trace.raise
 
-    type 'a parser = ?preprocess:bool -> ?project_root:file_path -> raise:raise -> Buffer.t -> 'a
+    type 'a parser = ?preprocess:bool -> raise:raise -> Buffer.t -> 'a
 
     val parse_file   : (file_path -> CST.tree) parser
     val parse_string : CST.tree parser
@@ -145,7 +142,7 @@ module MakeTwoParsers
 
     type raise = (Errors.t, Main_warnings.all) Trace.raise
 
-    type 'a parser = ?preprocess:bool -> ?project_root:file_path -> raise:raise -> Buffer.t -> 'a
+    type 'a parser = ?preprocess:bool -> raise:raise -> Buffer.t -> 'a
 
     val parse_file   : (file_path -> CST.t) parser
     val parse_string : CST.t parser
@@ -172,20 +169,20 @@ module MakePretty (CST    : CST)
   sig
     (* Pretty-print a contract from its CST *)
 
-    val pretty_print : Pretty.state -> CST.t -> Buffer.t
+    val pretty_print : CST.t -> Buffer.t
 
     (* Pretty-print an expression from its CST *)
 
-    val pretty_print_expression : Pretty.state -> CST.expr -> Buffer.t
+    val pretty_print_expression : CST.expr -> Buffer.t
 
     (* Pretty-print a pattern from its CST. The [cols] parameters is
        the witdh measured in columns. If none, the width of the
        terminal is selected. If none, it is set to 60-character
        wide. *)
 
-    val pretty_print_pattern : ?cols:int -> Pretty.state -> CST.pattern -> Buffer.t
+    val pretty_print_pattern : ?cols:int -> CST.pattern -> Buffer.t
 
     (* Pretty-print a type expression from its CST *)
 
-    val pretty_print_type_expr : Pretty.state -> CST.type_expr -> Buffer.t
+    val pretty_print_type_expr : CST.type_expr -> Buffer.t
   end

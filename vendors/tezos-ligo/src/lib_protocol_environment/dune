@@ -1,0 +1,28 @@
+; This file was automatically generated, do not edit.
+; Edit file manifest/main.ml instead.
+
+(library
+ (name tp_environment)
+ (public_name tezos-protocol-environment)
+ (instrumentation (backend bisect_ppx))
+ (libraries
+  zarith
+  zarith_stubs_js
+  bls12-381
+  tezos-plonk
+  tezos-crypto-dal
+  class_group_vdf
+  ringo
+  ringo-lwt
+  tezos-base
+  tezos-sapling
+  tezos-protocol-environment.sigs
+  tezos-protocol-environment.structs
+  tezos-micheline
+  tezos-context.memory
+  tezos-scoru-wasm
+  tezos-event-logging)
+ (flags
+  (:standard)
+  -open Tezos_base.TzPervasives
+  -open Tezos_micheline))

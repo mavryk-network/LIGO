@@ -1,7 +1,0 @@
-
-author: tomjack
-description: "\\n\\n"
-merge_request: '2509'
-title: "Fix debugger environment edge case"
-type: fixed
-            

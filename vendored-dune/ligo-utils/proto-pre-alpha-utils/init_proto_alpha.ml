@@ -1,10 +1,10 @@
-open! Memory_proto_pre_alpha
+open! Memory_proto_alpha
 module List = Core.List
 module Signature = Tezos_base.TzPervasives.Signature
 module Data_encoding = Alpha_environment.Data_encoding
 module MBytes = Bytes
 module Error_monad = X_error_monad
-module Proto_env = Tpe_016
+module Proto_env = Tp_environment_014_PtKathma
 open Error_monad
 open Protocol
 
@@ -12,9 +12,9 @@ open Protocol
 module Context_init = struct
 
   type account = {
-      pkh : Signature.public_key_hash ;
-      pk :  Signature.public_key ;
-      sk :  Signature.secret_key ;
+      pkh : Signature.Public_key_hash.t ;
+      pk :  Signature.Public_key.t ;
+      sk :  Signature.Secret_key.t ;
     }
 
   let generate_accounts n : (account * Alpha_context.Tez.t) list =
@@ -73,7 +73,7 @@ module Context_init = struct
     let open Lwt in
     let bootstrap_accounts =
       List.mapi ~f:(fun i ({ pk ; pkh ; _ }, amount) ->
-          Alpha_context.Parameters.{ public_key_hash = pkh ; public_key = if i > 0 then None else Some pk ; amount ; delegate_to = None ; consensus_key = None }
+          Alpha_context.Parameters.{ public_key_hash = pkh ; public_key = if i > 0 then None else Some pk ; amount ; delegate_to = None }
         ) initial_accounts
     in
     let json =
@@ -91,11 +91,11 @@ module Context_init = struct
     let proto_params =
       Data_encoding.Binary.to_bytes_exn Data_encoding.json json
     in
-    let* ctxt = Tpenv.(
+    let* ctxt = Tp_environment.(
       Context.add Memory_context.empty ["version"] (MBytes.of_string "genesis")
       )
     in
-    let* ctxt = Tpenv.Context.(
+    let* ctxt = Tp_environment.Context.(
       add ctxt protocol_param_key proto_params
       )
     in
@@ -116,7 +116,7 @@ module Context_init = struct
       Stdlib.failwith "Must have one account with a roll to bake";
 
     (* Check there is at least one roll *)
-    let constants : Alpha_context.Constants.Parametric.t = Tp_016_params.Default_parameters.constants_test in
+    let constants : Alpha_context.Constants.Parametric.t = Tp014_parameters.Default_parameters.constants_test in
     let* () = check_constants_consistency constants in
     let hash =
       Alpha_environment.Block_hash.of_b58check_exn "BLockGenesisGenesisGenesisGenesisGenesisCCCCCeZiLHU"
@@ -157,7 +157,7 @@ module Context_init = struct
         ~predecessor
         ?(proof_of_work_nonce = default_proof_of_work_nonce)
         ?(round = Alpha_context.Round.zero) ?seed_nonce_hash ?(liquidity_baking_toggle_vote = Liquidity_baking_repr.LB_off) () =
-    let payload_hash = Alpha_context.Block_payload.hash ~predecessor_hash:predecessor ~payload_round:round [] in (* TODO: check if this is correct *)
+    let payload_hash = Alpha_context.Block_payload.hash ~predecessor round Alpha_environment.Operation_list_hash.zero in
     Alpha_context.Block_header.({
         payload_hash ;
         payload_round = round ;
@@ -166,15 +166,6 @@ module Context_init = struct
         liquidity_baking_toggle_vote ;
       })
 
-  let begin_validation_and_application ctxt chain_id mode ~predecessor =
-    let open Lwt_result_syntax in
-    let* validation_state =
-      Main.begin_validation ctxt chain_id mode ~predecessor
-    in
-    let* application_state =
-      Main.begin_application ctxt chain_id mode ~predecessor
-    in
-    return (validation_state, application_state)
 
   let begin_construction ?(round=Alpha_context.Round.zero) ~timestamp ~(header:Alpha_context.Block_header.shell_header) ~hash ctxt =
     let (>>=) = Lwt_syntax.( let* ) in
@@ -185,9 +176,16 @@ module Context_init = struct
         contents ;
         signature = Signature.zero ;
       } in
-    begin_validation_and_application ctxt Alpha_environment.Chain_id.zero
-      (Construction { predecessor_hash = hash ; timestamp ; block_header_data = protocol_data }) ~predecessor:header
-      >>= fun x -> Lwt.return @@ Alpha_environment.wrap_tzresult x >>=? fun (_, state) ->
+    Main.begin_construction
+      ~chain_id: Alpha_environment.Chain_id.zero
+      ~predecessor_context: ctxt
+      ~predecessor_timestamp: header.timestamp
+      ~predecessor_fitness: header.fitness
+      ~predecessor_level: header.level
+      ~predecessor:hash
+      ~timestamp
+      ~protocol_data
+      () >>= fun x -> Lwt.return @@ Alpha_environment.wrap_tzresult x >>=? fun state ->
         Lwt_result_syntax.return state.ctxt
 
   let main n =
@@ -206,7 +204,6 @@ type identity = {
     implicit_contract : Alpha_context.Contract.t;
   }
 
-
 type environment = {
     tezos_context : Alpha_context.t ;
     identities : identity list ;
@@ -216,7 +213,7 @@ let init_environment ?(n = 2) () =
   let open Lwt_result_syntax in
   let* (tezos_context, accounts, contracts) = Context_init.main n in
   let accounts = List.map ~f:fst accounts in
-  let x = Memory_proto_pre_alpha.Protocol.Alpha_context.Gas.Arith.(integral_of_int_exn 800000) in
+  let x = Memory_proto_alpha.Protocol.Alpha_context.Gas.Arith.(integral_of_int_exn 800000) in
   let tezos_context = Alpha_context.Gas.set_limit tezos_context x in
   let identities =
     List.map ~f:(fun ((a:Context_init.account), c) -> {

@@ -463,6 +463,10 @@ val ediv : nat -> nat -> (nat * nat) option
 </SyntaxTitle>
 
 
+
+
+
+
 <SyntaxTitle syntax="jsligo">
 let ediv: (value: int, divided_by: int) => option&lt;[int, nat]&gt;
 </SyntaxTitle>
@@ -498,6 +502,7 @@ type sapling_state (n)
 type 'n sapling_state
 </SyntaxTitle>
 
+
 <SyntaxTitle syntax="pascaligo">
 type sapling_transaction (n)
 </SyntaxTitle>
@@ -505,12 +510,15 @@ type sapling_transaction (n)
 type 'n sapling_transaction
 </SyntaxTitle>
 
+
+
 <SyntaxTitle syntax="pascaligo">
 type ticket (v)
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 type 'v ticket
 </SyntaxTitle>
+
 
 Edo protocol introduced the following ticket type.
 Follow this [wallet example](https://gitlab.com/ligolang/ligo/-/blob/dev/src/test/contracts/ticket_wallet.mligo) for an example of
@@ -530,6 +538,7 @@ type my_ticket is ticket (va)
 ```
 
 </Syntax>
+
 <Syntax syntax="cameligo">
 
 ```cameligo group=ticket_t
@@ -538,3 +547,18 @@ type my_ticket = va ticket
 ```
 
 </Syntax>
+
+
+
+<SyntaxTitle syntax="pascaligo">
+type tx_rollup_l2_address
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+type tx_rollup_l2_address
+</SyntaxTitle>
+
+<SyntaxTitle syntax="jsligo">
+type tx_rollup_l2_address
+</SyntaxTitle>
+
+A type used to identify accounts on transaction rollups’ legders. Values of type tx_rollup_l2_address are 20-byte hashes of a BLS public keys (with a string notation based of a base58 encoding, prefixed with tz4).

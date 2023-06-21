@@ -26,16 +26,14 @@ module Make (PreprocParams: Preprocessor.CLI.PARAMETERS) : PARAMETERS =
 
     let make_help buffer : Buffer.t =
       let options = [
-        "  -t, --tokens         Print tokens";
-        "  -u, --units          Print lexical units";
-        "  -c, --copy           Print lexemes and markup";
-        "      --bytes          Bytes for source locations";
-        "      --preprocess     Run the preprocessor";
-        "      --post=<pass>    Run postprocessing up to pass <pass> \n\
-        \                       (0/1/2/etc.). None: 0. Default: all";
-        "      --print-passes   Print the self-passes's names when applied";
-        "      --string=<str>   Use a string as input. Discard any other input.";
-        "      --jsligo[=<dst>] Transpile to JsLIGO. Default: stdout."
+        "  -t, --tokens       Print tokens";
+        "  -u, --units        Print lexical units";
+        "  -c, --copy         Print lexemes and markup";
+        "      --bytes        Bytes for source locations";
+        "      --preprocess   Run the preprocessor";
+        "      --post=<pass>  Run postprocessing up to pass <pass> \n\
+        \                     (0/1/2/etc.). None: 0. Default: all.";
+        "      --print-passes Print the self-passes's names when applied."
       ] in
       begin
         Buffer.add_string buffer (Base.String.concat ~sep:"\n" options);
@@ -50,34 +48,20 @@ module Make (PreprocParams: Preprocessor.CLI.PARAMETERS) : PARAMETERS =
     and units        = ref false
     and bytes        = ref false
     and preprocess   = ref false
-    and string       = ref (None : string option)
     and post         = ref (None : int option)
     and print_passes = ref false
-    and jsligo       = ref (None : string option option)
 
     and help    = ref false
     and version = ref false
     and cli     = ref false
 
-    (* --jsligo *)
-
-    let print_jsligo = function
-      None -> "None"
-    | Some None -> "Some None"
-    | Some Some file -> "Some (Some " ^ file ^ ")"
-
-    let set_jsligo file =
-      if Caml.(!jsligo = None)
-      then jsligo := Some (Some file)
-      else raise (Getopt.Error "Only one --jsligo option allowed.")
-
     (* --post *)
 
     let print_post = function
-      None   -> "None (all passes)"
+      None   -> "None (i.e. all passes)"
     | Some n -> string_of_int n
 
-    let set_post arg =
+    let post_arg arg =
       match !post with
         Some _ -> raise (Getopt.Error "Only one --post option allowed.")
       | None ->
@@ -87,17 +71,6 @@ module Make (PreprocParams: Preprocessor.CLI.PARAMETERS) : PARAMETERS =
               raise (Getopt.Error "Invalid pass number.")
           | passes -> post := passes
 
-    (* --string *)
-
-    let print_string = function
-      None -> "None"
-    | Some s -> Printf.sprintf "Some %S" s
-
-    let set_string str =
-      if Caml.(!string = None)
-      then string := Some str
-      else raise (Getopt.Error "Only one --string option allowed.")
-
     (* Specifying the command-line options a la GNU
 
        See [GetoptLib.Getopt] for the layout of the command line and
@@ -105,16 +78,13 @@ module Make (PreprocParams: Preprocessor.CLI.PARAMETERS) : PARAMETERS =
 
     let specs =
       Getopt.[
-        'c',     "copy",         set copy true, None;
-        't',     "tokens",       set tokens true, None;
-        'u',     "units",        set units true, None;
+        noshort, "copy",         set copy true, None;
+        noshort, "tokens",       set tokens true, None;
+        noshort, "units",        set units true, None;
         noshort, "bytes",        set bytes true, None;
         noshort, "preprocess",   set preprocess true, None;
-        noshort, "string",       None, Some set_string;
-        noshort, "post",         None, Some set_post;
+        noshort, "post",         None, Some post_arg;
         noshort, "print-passes", set print_passes true, None;
-        noshort, "jsligo",       set jsligo (Some None),
-                                 Some set_jsligo;
         noshort, "cli",          set cli true, None;
         'h',     "help",         set help true, None;
         'v',     "version",      set version true, None
@@ -148,13 +118,12 @@ module Make (PreprocParams: Preprocessor.CLI.PARAMETERS) : PARAMETERS =
     let opt_wo_arg =
       let open SSet in
       empty
-      |> add "--copy"   |> add "-c"
-      |> add "--tokens" |> add "-t"
-      |> add "--units"  |> add "-u"
+      |> add "--copy"
+      |> add "--tokens"
+      |> add "--units"
       |> add "--bytes"
       |> add "--preprocess"
       |> add "--print-passes"
-      |> add "--jsligo"
 
       (* The following options are present in all CLIs *)
       |> add "--cli"
@@ -165,8 +134,6 @@ module Make (PreprocParams: Preprocessor.CLI.PARAMETERS) : PARAMETERS =
       let open SSet in
       empty
       |> add "--post"
-      |> add "--jsligo"
-      |> add "--string"
 
     let argv_copy = Array.copy Sys.argv
 
@@ -198,8 +165,6 @@ module Make (PreprocParams: Preprocessor.CLI.PARAMETERS) : PARAMETERS =
     and preprocess   = !preprocess
     and postprocess  = !post
     and print_passes = !print_passes
-    and jsligo       = !jsligo
-    and string       = !string
 
     (* Re-exporting and printing on stdout the CLI options *)
 
@@ -212,9 +177,7 @@ module Make (PreprocParams: Preprocessor.CLI.PARAMETERS) : PARAMETERS =
         sprintf "bytes        = %b" !bytes;
         sprintf "preprocess   = %b" preprocess;
         sprintf "post         = %s" (print_post postprocess);
-        sprintf "print_passes = %b" print_passes;
-        sprintf "jsligo       = %s" (print_jsligo jsligo);
-        sprintf "string       = %S" (print_string string)] in
+        sprintf "print_passes = %b" print_passes] in
     begin
       Buffer.add_string buffer (Base.String.concat ~sep:"\n" options);
       Buffer.add_char buffer '\n';
@@ -254,9 +217,7 @@ module Make (PreprocParams: Preprocessor.CLI.PARAMETERS) : PARAMETERS =
         let preprocess   = preprocess
         let mode         = mode
         let command      = command
-        let string       = string
         let print_passes = print_passes
-        let jsligo       = jsligo
       end
 
     module Status =

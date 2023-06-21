@@ -125,8 +125,8 @@ val find_opt : 'key -> ('key, 'value) map -> 'value option
 let find_opt : (key: 'key, map: map &lt;'key, 'value&gt;) => option &lt;'value&gt;
 </SyntaxTitle>
 
-Retrieve a (option) value from a map with the given key. Returns
-`None` if the key is missing and the value otherwise.
+Retrieve a (option) value from a map with the given key. Returns `None` if the
+key is missing and the value otherwise.
 
 
 <Syntax syntax="pascaligo">
@@ -163,7 +163,6 @@ let my_balance: option<move> =
 </Syntax>
 
 
-
 <SyntaxTitle syntax="pascaligo">
 val update&lt;key,value&gt; : key -> option (value) -> map (key, value) -> map (key, value)
 </SyntaxTitle>
@@ -175,8 +174,8 @@ val update: 'key -> 'value option -> ('key, 'value) map -> ('key, 'value) map
 let update: (key: 'key, new_value: option&lt;'value&gt;, map: map&lt;'key, 'value&gt;) => map &lt;'key, 'value&gt;
 </SyntaxTitle>
 
-Note: When `None` is used as a value, the key and associated value is
-removed from the map.
+Note: when `None` is used as a value, the key and associated value is removed
+from the map.
 
 <Syntax syntax="pascaligo">
 
@@ -238,8 +237,7 @@ val get_and_update : 'key -> 'value option -> ('key, 'value) map -> 'value optio
 let get_and_update : (key : 'key, value : option&lt;'value&gt;, map : map&lt;'key, 'value&gt;) => [option&lt;'value&gt;, map&lt;'key, 'value&gt;]
 </SyntaxTitle>
 
-Similar to `update` but it also returns the value that was previously
-stored in the map.
+Similar to `update` but it also returns the value that was previously stored in the map
 
 <Syntax syntax="pascaligo">
 
@@ -252,7 +250,7 @@ const updated : option (move) * register =
 <Syntax syntax="cameligo">
 
 ```cameligo group=maps
-let (old_move_opt, updated_map) : move option * register =
+let (old_move_opt, updated_map) : (move option * register) =
   Map.get_and_update ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) (Some (4, 9)) moves
 ```
 
@@ -278,7 +276,7 @@ val add : 'key -> 'value -> ('key, 'value) map  -> ('key, 'value) map
 let add: (key: 'key, value: 'value, map: map&lt;'key, 'value&gt;) => map&lt;'key, 'value&gt;
 </SyntaxTitle>
 
-Returns a new map with key-value pair added to the input map.
+Returns a new map with key-value pair added to the input map
 
 <Syntax syntax="pascaligo">
 
@@ -308,6 +306,7 @@ let add = (m: register): register =>
 
 </Syntax>
 
+
 <SyntaxTitle syntax="pascaligo">
 val remove&lt;key,value&gt; : key -> map (key, value) -> map (key, value)
 </SyntaxTitle>
@@ -319,7 +318,7 @@ val remove : 'key -> ('key, 'value) map -> ('key, 'value) map
 let remove: ('key: key, map: map&lt;'key, 'value&gt;) => map&lt;'key, 'value&gt;
 </SyntaxTitle>
 
-Returns a new map with key-value pair removed from the input map.
+Returns a new map with key-value pair removed from the input map
 
 <Syntax syntax="pascaligo">
 
@@ -358,6 +357,7 @@ let updated_map3 : register =
 
 </Syntax>
 
+
 <SyntaxTitle syntax="pascaligo">
 val iter&lt;key,value&gt; : (key * value -> unit) -> map (key, value) -> unit
 </SyntaxTitle>
@@ -369,7 +369,7 @@ val iter : ('key * 'value -> unit) -> ('key, 'value) map -> unit
 let iter: (iter: (['key, 'value]) => unit, map: map&lt;'key, 'value&gt;) => unit
 </SyntaxTitle>
 
-Iterate over key-value pairs in a map.
+Iterate over key-value pairs in a map
 
 <Syntax syntax="pascaligo">
 
@@ -395,7 +395,7 @@ let iter_op (m : register) : unit =
 
 ```jsligo group=maps
 let iter_op = (m : register) : unit => {
-  let predicate = ([i, j]: [address, move]): unit => assert (j[0] > 3);
+  let predicate = (i: address, j: move): unit => assert (j[0] > 3);
   Map.iter (predicate, m);
 };
 ```
@@ -439,12 +439,13 @@ let map_op (m : register) : register =
 
 ```jsligo group=maps
 let map_op = (m : register) : register => {
-  let increment = ([_i, j]: [address, move]) : move => [j[0], j[1] + 1];
+  let increment = (_i: address, j: move) : move => [j[0], j[1] + 1];
   return Map.map (increment, m);
 };
 ```
 
 </Syntax>
+
 
 <SyntaxTitle syntax="pascaligo">
 val fold&lt;acc,key,value&gt; : (acc * (key * value) -> acc) * map (key, value) * acc -> acc
@@ -457,7 +458,7 @@ val fold : ('acc * ('key * 'value) -> 'acc) -> ('key, 'value) map -> 'acc -> 'ac
 let fold: (iter: ((acc: 'acc, item: ['key, 'value]) => 'acc), map: map&lt;'key, 'value&gt;, acc: 'acc) => 'acc
 </SyntaxTitle>
 
-Fold over key-value pairs in a map:
+Fold over key-value pairs of a map
 
 <Syntax syntax="pascaligo">
 
@@ -483,7 +484,7 @@ let fold_op (m : register) : int =
 
 ```jsligo group=maps
 let fold_op = (m : register): int => {
-  let folded = ([i, j]: [int, [address, move]]):int => i + j[1][1];
+  let folded = (i: int, j: [address, move]):int => i + j[1][1];
   return Map.fold (folded, m, 5);
 };
 ```
@@ -501,7 +502,7 @@ val size : ('key, 'value) map -> nat
 let size: (map: map&lt;'key, 'value&gt;) => nat
 </SyntaxTitle>
 
-Return the number of items in the map:
+Returns the number of items in the map.
 
 <Syntax syntax="pascaligo">
 
@@ -510,7 +511,6 @@ const _ : nat = Map.size (moves)
 ```
 
 </Syntax>
-
 
 <Syntax syntax="cameligo">
 
@@ -539,7 +539,7 @@ val mem : 'key -> ('key, 'value) map -> bool
 let mem : (key: 'key, map: map&lt;'key, 'value&gt;) => bool
 </SyntaxTitle>
 
-Checks if a key exists in the map:
+Checks if a key exists in the map.
 
 <Syntax syntax="pascaligo">
 

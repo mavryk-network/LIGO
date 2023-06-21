@@ -63,22 +63,6 @@ val nseq_to_list    :        'a nseq -> 'a list
 val nsepseq_to_list : ('a,'b) nsepseq -> 'a list
 val sepseq_to_list  : ('a,'b)  sepseq -> 'a list
 
-(* Map and concatenate lists *)
-
-val nseq_concat_map    :  'a        nseq -> f:('a -> 'c list) -> 'c list
-val nsepseq_concat_map : ('a,'b) nsepseq -> f:('a -> 'c list) -> 'c list
-val sepseq_concat_map  : ('a,'b)  sepseq -> f:('a -> 'c list) -> 'c list
-
-(* Conversions to non-empty lists *)
-
-val nsepseq_to_nseq : ('a,'b) nsepseq -> 'a nseq
-val nsepseq_of_nseq : sep:'b -> 'a nseq -> ('a,'b) nsepseq
-
-(* Convertions of lists *)
-
-val list_to_nsepseq_opt : 'a list -> 's -> ('a, 's) nsepseq option
-val list_to_sepseq : 'a list -> 's -> ('a, 's) sepseq
-
 (* Effectful symbol generator *)
 
 val gen_sym : unit -> string
@@ -94,6 +78,15 @@ val highlight : string -> unit
 (* When failing to parse a specifed JSON format *)
 
 val error_yojson_format : string -> ('a, string) result
+
+(* Working with optional values *)
+
+module Option :
+  sig
+    val apply     : ('a -> 'b) -> 'a option -> 'b option
+    val rev_apply : ('a -> 'a) option -> 'a -> 'a
+    val to_string : string option -> string
+  end
 
 (* An extension to the standard module [String] *)
 
@@ -112,8 +105,3 @@ module Int :
     module Map : Caml.Map.S with type key = t
     module Set : Caml.Set.S with type elt = t
   end
-
-(* Optional let *)
-
-val (let*) : 'a option -> ('a -> 'b option) -> 'b option
-val return : 'a -> 'a option

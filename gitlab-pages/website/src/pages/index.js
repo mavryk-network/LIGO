@@ -11,7 +11,6 @@ const { Prism } = require("prism-react-renderer");
 
 Prism.languages = {
   ...Prism.languages,
-  // pascaligo should be remove after 0.60.0 is removed
   pascaligo: {
     comment: [
       /\(\*[\s\S]+?\*\)/,
@@ -63,6 +62,10 @@ Prism.languages = {
     ],
     punctuation: /\(\.|\.\)|[()\[\]:;,.]/,
   },
+  reasonligo: {
+    ...Prism.languages.reason,
+    comment: [/(^|[^\\])\/\*[\s\S]*?\*\//, /\(\*[\s\S]*?\*\)/, /\/\/.*/],
+  },
   cameligo: {
     ...Prism.languages.ocaml,
     comment: [/(^|[^\\])\/\*[\s\S]*?\*\//, /\(\*[\s\S]*?\*\)/, /\/\/.*/],
@@ -74,8 +77,8 @@ export default function Home() {
   const { siteConfig } = useDocusaurusContext();
   return (
     <Layout
-      title={`${siteConfig.title}`}
-      description="A friendly Smart Contract Language for Tezos"
+      title={`Hello from ${siteConfig.title}`}
+      description="Description will go into a meta tag in <head />"
     >
       <main>
         <div
@@ -88,31 +91,40 @@ export default function Home() {
             flexDirection: "column",
           }}
         >
-          <div id="title">
-            <h1>A friendly Smart Contract Language for Tezos</h1>
-            <p>Smart contracts were never so easy</p>
-          </div>
           <div id="intro" className="centered">
-            <HomepageCodeExamples />
             <div id="callToAction">
               <ul>
                 <li className="primary">
-                  <a href={useBaseUrl("docs/tutorials/getting-started")}>Get started</a>
+                  <a href="https://ide.ligolang.org">Try Online</a>
                 </li>
-                <li className="secondary">
-                  <a href={useBaseUrl("docs/reference/toplevel")}>
-                    Language references
+                <li className="primary">
+                  <a
+                    href="https://ide-v2-beta.ligolang.org/"
+                    target="_blank"
+                  >
+                    WebIde V2 beta
+                  </a>
+                </li>
+                <li className="primary">
+                  <a
+                    href="https://gitpod.io/#https://gitlab.com/ligolang/template-ligo"
+                    target="_blank"
+                  >
+                    Try on Gitpod
                   </a>
                 </li>
                 <li className="secondary">
-                  <a href={useBaseUrl("docs/next/intro/changelog")}>
-                    Changelog
+                  <a href={useBaseUrl("/docs/intro/installation")}>Install</a>
+                </li>
+                <li className="secondary">
+                  <a href={useBaseUrl("https://academy.ligolang.org/")}>
+                    Learn on Academy
                   </a>
                 </li>
               </ul>
             </div>
+            <HomepageCodeExamples />
           </div>
-
           <HomepageFeatures />
           <HomepagePartners />
         </div>

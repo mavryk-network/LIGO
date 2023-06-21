@@ -14,6 +14,7 @@ reassigned. Put in another way, they can be assigned once, at their
 declaration. When defining a constant you need to provide a `name`,
 `type` and a `value`:
 
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=a
@@ -86,6 +87,7 @@ ligo run evaluate-expr gitlab-pages/docs/language-basics/src/variables-and-const
 
 
 ## Variables
+
 
 <Syntax syntax="pascaligo">
 
@@ -174,9 +176,9 @@ ligo run evaluate-call gitlab-pages/docs/language-basics/src/variables-and-const
 ## Escaped Identifiers
 
 Both variables and constants are, at the level of the lexicon,
-_identifiers_. Each flavour of LIGO has its own set of
-keywords. Sometimes we need an identifier that is the same as a
-keyword, or, perhaps, we do not want to shadow a predefined
+_identifiers_. Each flavour of LIGO has its own set of keywords,
+PascaLIGO with the most. Sometimes we need an identifier that is the
+same as a keyword, or, perhaps, we do not want to shadow a predefined
 identifier, like `amount`. In those cases, you could suffix your
 identifier with an underscore, like `amount_`. (Beware that if you
 prefix with an underscore, like `_amount`, the compiler will not

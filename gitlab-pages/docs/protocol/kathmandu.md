@@ -7,13 +7,14 @@ description: Kathmandu changes
 import Syntax from '@theme/Syntax';
 import SyntaxTitle from '@theme/SyntaxTitle';
 
-> Note: as LIGO uses Mumbai protocol to Michelson type-check your programs, the flag `--disable-michelson-typechecking` is recommended to compile contracts to Kathmandu when using tickets / chest.
-
+> Note: as LIGO uses Lima protocol to Michelson type-check your programs, the flag `--disable-michelson-typechecking` is recommended to compile contracts to Kathmandu when using tickets / chest.
+ 
 ## API
 
 ### New primitives
 
 #### Tezos
+
 
 <SyntaxTitle syntax="pascaligo">
 val emit&lt;a&gt; :  string -> a -> operation
@@ -28,7 +29,11 @@ let emit: string => &apos;a => operation
 
 Build an event operation. To actually emit an event, this operation must be returned the same way as other operations (origination / transfer ..)
 
+
+
 #### Test
+
+
 <SyntaxTitle syntax="pascaligo">
 val get_last_events_from&lt;a,p,s&gt; : typed_address (p,s) -> string -> list (a)
 </SyntaxTitle>
@@ -70,7 +75,7 @@ let main (p,_ : (int*int) * unit ) =
   [Tezos.emit "%foo" p ; Tezos.emit "%foo" p.0],()
 
 let test_foo =
-  let (ta, _, _) = Test.originate_uncurried main () 0tez in
+  let (ta, _, _) = Test.originate main () 0tez in
   let _ = Test.transfer_to_contract_exn (Test.to_contract ta) (1,2) 0tez in
   (Test.get_last_events_from ta "foo" : (int*int) list),(Test.get_last_events_from ta "foo" : int list)
 ```
@@ -79,7 +84,7 @@ let test_foo =
 <Syntax syntax="jsligo">
 
 ```jsligo test-ligo group=test_ex
-let main = (p: [int, int], _ : unit) => {
+let main = ([p, _] : [[int, int], unit]) => {
   let op1 = Tezos.emit("%foo", p);
   let op2 = Tezos.emit("%foo", p[0]);
   return [list([op1, op2]), unit];

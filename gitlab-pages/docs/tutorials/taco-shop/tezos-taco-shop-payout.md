@@ -71,11 +71,11 @@ type taco_supply = {
     max_price     : tez
 }
 
-type taco_shop_storage = (nat, taco_supply) map
+type taco_shop_storage = (nat, taco_supply) map 
 
 type return = operation list * taco_shop_storage
 
-let buy_taco (taco_kind_index, taco_shop_storage : nat * taco_shop_storage) : return =
+let buy_taco (taco_kind_index, taco_shop_storage : nat * taco_shop_storage) : return = 
   // Retrieve the taco_kind from the contract's storage or fail
   let taco_kind : taco_supply =
     match Map.find_opt taco_kind_index taco_shop_storage with
@@ -87,8 +87,8 @@ let buy_taco (taco_kind_index, taco_shop_storage : nat * taco_shop_storage) : re
     taco_kind.max_price / taco_kind.current_stock in
 
   // We won't sell tacos if the amount is not correct
-  let () =
-    assert_with_error ((Tezos.get_amount ()) <> current_purchase_price)
+  let () = 
+    assert_with_error ((Tezos.get_amount ()) <> current_purchase_price) 
       "Sorry, the taco you are trying to purchase has a different price" in
 
   // Decrease the stock by 1n, because we have just sold one
@@ -125,7 +125,7 @@ let buy_taco = ([taco_kind_index, taco_shop_storage] : [nat, taco_shop_storage])
     taco_kind.max_price / taco_kind.current_stock;
 
   // We won't sell tacos if the amount is not correct
-  let _ =
+  let _ = 
     assert_with_error (((Tezos.get_amount ()) != current_purchase_price),
       "Sorry, the taco you are trying to purchase has a different price");
 
@@ -133,8 +133,8 @@ let buy_taco = ([taco_kind_index, taco_shop_storage] : [nat, taco_shop_storage])
   let taco_kind_ = { ...taco_kind, current_stock : (abs (taco_kind.current_stock - (1 as nat))) };
 
   // Update the storage with the refreshed taco_kind
-  let new_taco_shop_storage = Map.update (taco_kind_index, Some(taco_kind_), taco_shop_storage);
-  return [list([]), new_taco_shop_storage];
+  let taco_shop_storage = Map.update (taco_kind_index, Some(taco_kind_), taco_shop_storage);
+  return [list([]), taco_shop_storage];
 }
 ```
 
@@ -342,14 +342,14 @@ type taco_supply = {
     max_price     : tez
 }
 
-type taco_shop_storage = (nat, taco_supply) map
+type taco_shop_storage = (nat, taco_supply) map 
 
 type return = operation list * taco_shop_storage
 
 let ownerAddress : address =
   ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV" : address)
 
-let buy_taco (taco_kind_index, taco_shop_storage : nat * taco_shop_storage) : return =
+let buy_taco (taco_kind_index, taco_shop_storage : nat * taco_shop_storage) : return = 
   // Retrieve the taco_kind from the contract's storage or fail
   let taco_kind : taco_supply =
     match Map.find_opt taco_kind_index taco_shop_storage with
@@ -361,8 +361,8 @@ let buy_taco (taco_kind_index, taco_shop_storage : nat * taco_shop_storage) : re
     taco_kind.max_price / taco_kind.current_stock in
 
   // We won't sell tacos if the amount is not correct
-  let () =
-    assert_with_error ((Tezos.get_amount ()) <> current_purchase_price)
+  let () = 
+    assert_with_error ((Tezos.get_amount ()) <> current_purchase_price) 
       "Sorry, the taco you are trying to purchase has a different price" in
 
   // Decrease the stock by 1n, because we have just sold one
@@ -412,7 +412,7 @@ let buy_taco = ([taco_kind_index, taco_shop_storage] : [nat, taco_shop_storage])
     taco_kind.max_price / taco_kind.current_stock;
 
   // We won't sell tacos if the amount is not correct
-  let _ =
+  let _ = 
     assert_with_error (((Tezos.get_amount ()) != current_purchase_price),
       "Sorry, the taco you are trying to purchase has a different price");
 
@@ -420,7 +420,7 @@ let buy_taco = ([taco_kind_index, taco_shop_storage] : [nat, taco_shop_storage])
   let taco_kind_ = { ...taco_kind, current_stock : (abs (taco_kind.current_stock - (1 as nat))) };
 
   // Update the storage with the refreshed taco_kind
-  let new_taco_shop_storage = Map.update (taco_kind_index, Some(taco_kind_), taco_shop_storage);
+  let taco_shop_storage = Map.update (taco_kind_index, Some(taco_kind_), taco_shop_storage);
 
   let receiver : contract<unit> =
     match ((Tezos.get_contract_opt (ownerAddress) as option<contract<unit>>), {
@@ -431,7 +431,7 @@ let buy_taco = ([taco_kind_index, taco_shop_storage] : [nat, taco_shop_storage])
   let payoutOperation : operation = Tezos.transaction (unit, Tezos.get_amount (), receiver);
   let operations : list<operation> = list([payoutOperation]);
 
-  return [operations, new_taco_shop_storage];
+  return [operations, taco_shop_storage];
 }
 ```
 

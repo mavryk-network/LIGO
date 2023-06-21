@@ -1,4 +1,4 @@
-let main (_ : unit) (_ : unit) : operation list * unit =
+let main (_, _ : unit * unit) : operation list * unit =
   let _v = (failwith "foo" : unit) in
   ([] : operation list), ()
 

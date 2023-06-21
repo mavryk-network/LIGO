@@ -17,7 +17,7 @@ import {
 import notification from "~/base-components/notification";
 
 import keypairManager, { KeypairManager } from "./keypairManager";
-import { validName } from "~/components/validators";
+import { keypairNameValidator } from "./helper";
 
 export default class CreateKeypairModal extends PureComponent {
   constructor(props) {
@@ -150,9 +150,7 @@ export default class CreateKeypairModal extends PureComponent {
         textConfirm="Create"
         pending={this.state.pending && "Creating..."}
         onConfirm={this.onConfirm}
-        confirmDisabled={
-          !this.state.name || !address || !!(this.state.name && !!validName(this.state.name))
-        }
+        confirmDisabled={!this.state.name || !address}
         colorActions={["info"]}
         ActionBtn={this.renderRegenerateBtn()}
       >
@@ -163,7 +161,7 @@ export default class CreateKeypairModal extends PureComponent {
           placeholder="Please enter a name for the keypair"
           value={this.state.name}
           onChange={(name) => this.setState({ name })}
-          validator={validName}
+          validator={keypairNameValidator}
         />
         {this.renderChainOptions()}
         <Label>Keypair info</Label>

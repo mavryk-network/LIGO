@@ -209,7 +209,7 @@ export default class BaseModal extends PureComponent {
           </div>
           <div>
             {onAdditionAction && textAddition && (
-              <Button color={colorAddition} onClick={onAdditionAction} className="mr-2">
+              <Button color={colorAddition} onClick={onAdditionAction}>
                 {textAddition}
               </Button>
             )}

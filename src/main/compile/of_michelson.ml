@@ -75,9 +75,8 @@ let parse_constant_pre ~raise code =
           (unparsing_michelson_tracer @@ List.map ~f:(fun x -> `Tezos_alpha_error x) errs)
       | [] -> map_node (fun _ -> ()) (fun x -> x) code)
   in
-  Proto_pre_alpha_utils.(
-    Trace.trace_alpha_tzresult ~raise unparsing_michelson_tracer
-    @@ Memory_proto_alpha.node_to_canonical code)
+  Proto_pre_alpha_utils.Trace.trace_alpha_tzresult ~raise unparsing_michelson_tracer
+  @@ Proto_pre_alpha_utils.Memory_proto_alpha.node_to_canonical code
 
 
 let dummy : Stacking.meta =

@@ -6,7 +6,7 @@
 #import "list_monad.mligo" "M"
 #endif
 
-type 'a t = 'a M.monad
+type t = M.monad
 
 let interval (x : int) (y : int) =
   let rec r ((c, acc) : int * int t) : int t =

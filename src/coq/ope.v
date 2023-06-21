@@ -1,7 +1,6 @@
 From Coq Require Import List Lia.
 From Coq Require Arith.Peano_dec.
 Import ListNotations.
-Unset Lia Cache.
 
 (* Definitions and lemmas related to order-preserving embeddings
    (OPEs).

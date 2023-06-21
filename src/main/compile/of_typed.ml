@@ -10,7 +10,6 @@ let compile_expression_in_context
     ~raise
     ~options
     ?(self_pass = true)
-    ?(self_program = true)
     ?(contract_pass = false)
     : Ast_typed.program -> Ast_typed.expression -> Ast_aggregated.expression
   =
@@ -22,7 +21,7 @@ let compile_expression_in_context
     if self_pass
     then
       trace ~raise self_ast_aggregated_tracer
-      @@ Self_ast_aggregated.all_program ~options ~self_program (ctxt, exp)
+      @@ Self_ast_aggregated.all_program ~options (ctxt, exp)
     else ctxt, exp
   in
   let exp = Ast_aggregated.context_apply ctxt exp in
@@ -48,7 +47,7 @@ let compile_expression_in_context
           Ast_aggregated.get_t_pair input_ty)
       in
       trace ~raise self_ast_aggregated_tracer
-      @@ Self_ast_aggregated.all_contract ~options parameter_ty storage_ty exp)
+      @@ Self_ast_aggregated.all_contract parameter_ty storage_ty exp)
     else exp
   in
   if self_pass then Self_ast_aggregated.remove_check_self exp else exp
@@ -61,37 +60,14 @@ let compile_expression ~raise ~options : Ast_typed.expression -> Ast_aggregated.
   trace ~raise self_ast_aggregated_tracer @@ Self_ast_aggregated.all_expression ~options x
 
 
-let apply_to_entrypoint_with_contract_type ~raise ~options ?(contract_pass = false)
-    :  Ast_typed.program -> Value_var.t -> Module_var.t list -> _
-    -> Ast_aggregated.expression
-  =
- fun prg entrypoint module_path contract_type ->
-  let loc = Location.dummy in
-  let Self_ast_typed.Helpers.{ parameter = p_ty; storage = s_ty } = contract_type in
-  let ty =
-    t_arrow
-      ~loc
-      (t_pair ~loc p_ty s_ty)
-      (t_pair ~loc (t_list ~loc (t_operation ~loc ())) s_ty)
-      ()
-  in
-  let ep_expr =
-    let open Ast_typed in
-    match module_path with
-    | [] -> e_a_variable ~loc entrypoint ty
-    | _ -> e_module_accessor ~loc { module_path; element = entrypoint } ty
-  in
-  compile_expression_in_context ~raise ~options ~contract_pass prg ep_expr
-
-
 let apply_to_entrypoint_contract ~raise ~options ?(contract_pass = false)
-    : Ast_typed.program -> Value_var.t -> Module_var.t list -> Ast_aggregated.expression
+    : Ast_typed.program -> Value_var.t -> Ast_aggregated.expression
   =
- fun prg entrypoint module_path ->
+ fun prg entrypoint ->
   let loc = Location.dummy in
-  let prg, entrypoint, Self_ast_typed.Helpers.{ parameter = p_ty; storage = s_ty } =
+  let Self_ast_typed.Helpers.{ parameter = p_ty; storage = s_ty } =
     trace ~raise self_ast_typed_tracer
-    @@ Self_ast_typed.Helpers.fetch_contract_type entrypoint module_path prg
+    @@ Self_ast_typed.Helpers.fetch_contract_type entrypoint prg
   in
   let ty =
     t_arrow
@@ -100,13 +76,8 @@ let apply_to_entrypoint_contract ~raise ~options ?(contract_pass = false)
       (t_pair ~loc (t_list ~loc (t_operation ~loc ())) s_ty)
       ()
   in
-  let ep_expr =
-    let open Ast_typed in
-    match module_path with
-    | [] -> e_a_variable ~loc entrypoint ty
-    | _ -> e_module_accessor ~loc { module_path; element = entrypoint } ty
-  in
-  compile_expression_in_context ~raise ~options ~contract_pass prg ep_expr
+  let var_ep = Ast_typed.(e_a_variable ~loc entrypoint ty) in
+  compile_expression_in_context ~raise ~options ~contract_pass prg var_ep
 
 
 let apply_to_entrypoint ~raise ~options
@@ -135,9 +106,13 @@ let assert_equal_contract_type ~raise
       match entry_point.type_expression.type_content with
       | T_arrow { type1 = args; type2 = _ } ->
         (match args.type_content with
-        | T_record m when Record.cardinal m.fields = 2 ->
-          let param_exp = Record.find m.fields (Label "0") in
-          let storage_exp = Record.find m.fields (Label "1") in
+        | T_record m when Record.LMap.cardinal m.fields = 2 ->
+          let ({ associated_type = param_exp; _ } : row_element) =
+            Record.LMap.find (Label "0") m.fields
+          in
+          let ({ associated_type = storage_exp; _ } : row_element) =
+            Record.LMap.find (Label "1") m.fields
+          in
           (match c with
           | Check_parameter ->
             trace ~raise checking_tracer
@@ -154,11 +129,11 @@ let assert_equal_contract_type ~raise
 
 
 let apply_to_entrypoint_view ~raise ~options
-    :  Module_var.t list -> Ast_typed.program
-    -> (Ast_typed.type_expression * _ Binder.t) list -> Ast_aggregated.expression
+    : Ast_typed.program -> Ast_aggregated.expression
   =
- fun module_path prg views_info ->
+ fun prg ->
   let loc = Location.dummy in
+  let views_info = Ast_typed.Helpers.fetch_views_in_program prg in
   let aux : int -> _ -> Label.t * expression =
    fun i (view_ty, view_binder) ->
     let a_ty, s_ty, r_ty =
@@ -166,17 +141,10 @@ let apply_to_entrypoint_view ~raise ~options
       trace_option ~raise main_unknown @@ Ast_typed.get_view_form view_ty
     in
     let ty = t_arrow ~loc (t_pair ~loc a_ty s_ty) r_ty () in
-    let ep_expr =
-      let open Ast_typed in
-      match module_path with
-      | [] -> e_a_variable ~loc (Binder.get_var view_binder) ty
-      | _ ->
-        e_module_accessor ~loc { module_path; element = Binder.get_var view_binder } ty
-    in
-    Label.of_int i, ep_expr
+    Label.of_int i, Ast_typed.(e_a_variable ~loc (Binder.get_var view_binder) ty)
   in
   let tuple_view =
-    Ast_typed.ez_e_a_record ~loc ~layout:Layout.comb (List.mapi ~f:aux views_info)
+    Ast_typed.ez_e_a_record ~loc ~layout:L_comb (List.mapi ~f:aux views_info)
   in
   let e = compile_expression_in_context ~raise ~options prg tuple_view in
   Self_ast_aggregated.remove_check_self e
@@ -193,7 +161,7 @@ let list_declarations (only_ep : bool) (m : Ast_typed.program) : Value_var.t lis
       match el.wrap_content with
       | D_irrefutable_match { pattern = { wrap_content = P_var binder; _ }; attr; expr }
       | D_value { binder; attr; expr }
-        when not attr.hidden ->
+        when attr.public && not attr.hidden ->
         if only_ep
         then
           if is_some
@@ -212,6 +180,18 @@ let list_type_declarations (m : Ast_typed.program) : Type_var.t list =
       let open Simple_utils.Location in
       match el.wrap_content with
       | D_type { type_binder; type_attr; _ } when type_attr.public -> type_binder :: prev
+      | _ -> prev)
+    ~init:[]
+    m
+
+
+let list_mod_declarations (m : Ast_typed.program) : Module_var.t list =
+  List.fold_left
+    ~f:(fun prev el ->
+      let open Simple_utils.Location in
+      match el.wrap_content with
+      | D_module { module_binder; module_attr; _ } when module_attr.public ->
+        module_binder :: prev
       | _ -> prev)
     ~init:[]
     m

@@ -1,18 +1,16 @@
 variables:
   LIGO_REGISTRY_IMAGE_BASE_NAME: "${CI_PROJECT_PATH}/${CI_PROJECT_NAME}"
+  WEBIDE_IMAGE_TAG: "registry.gitlab.com/${CI_PROJECT_PATH}/ligo_webide:${CI_COMMIT_SHORT_SHA}"
+  WEBIDE_NEW_IMAGE_TAG: "registry.gitlab.com/${CI_PROJECT_PATH}/ligo_webide_new:${CI_COMMIT_SHORT_SHA}"
+  WEBIDE_FRONTEND_NEW_IMAGE_TAG: "registry.gitlab.com/${CI_PROJECT_PATH}/ligo_webide_frontend_new:${CI_COMMIT_SHORT_SHA}"
   LIGO_IMAGE_TAG: "ligo:${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}"
-  LIGO_CI_IMAGE_TAG: "ligo-ci:${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}"
 
 stages:
   - pretooling                      # changelog
   - build                           # build, test, produces binaries/.deb/doc within docker
   - post-build-action               # Post build action
   - docker-extract                  # extract what have been built and expose them as artifact
-  - tools-precheck                  # preliminary checks done for projects from 'tools'
-  - tools-build                     # build projects from 'tools'
-  - tools-check                     # run tests for projects from 'tools'
   - tooling                         # build miscellaneous tooling-related things (website, changelog..)
-  - test                            # e2e tests
   - push                            # deploy docker images, pages, releases (tag)
   - deploy                          # deploy web IDE, website preview
   - release                         # Manage branch matching ^release/*
@@ -22,16 +20,7 @@ include:
   - '/.ci/.gitlab-ci-changelog.yml'
   # jobs for managing process around release
   - '/.ci/.gitlab-ci-release.yml'
-  # Manage NPM build
-  - '/.ci/.gitlab-ci-npm.yml'
-  # Manage pipeline related to webide
-  - '/.ci/.gitlab-ci-webide.yml'
-  # CI jobs for projects from 'tools'
-  - '/.ci/.gitlab-ci-lsp.yml'
-  - '/.ci/.gitlab-ci-debugger.yml'
-  - '/.ci/.gitlab-ci-webide-new.yml'
-  # CI manage notification
-  - '/.ci/.gitlab-ci-notify.yml'
+
 .submodule-clone:
   before_script:
     - git submodule sync --recursive
@@ -43,19 +32,125 @@ include:
     - find "$CI_PROJECT_DIR" -path "$CI_PROJECT_DIR/.git" -prune -o "(" -type d -a -not -perm -u=w ")" -exec chmod --verbose u+w {} ";"
     - export COMMIT_DATE="$(git show --no-patch --format=%ci)"
 
+esy-windows:
+  tags:
+    - windows
+  stage: build
+  only:
+  - merge_requests
+  - dev
+  - /^release/.*$/
+  script:
+    # - $env:GIT_CURL_VERBOSE = 1
+    # - $env:GIT_TRACE = 1
+    # - $env:GIT_TRACE_PACKET = 1
+    - git config http.postBuffer 1048576000
+    - npm i -g @esy-nightly/esy --force
+    - $env:PATH = 'C:\Program Files (x86)\NSIS;C:\Program Files\Git\bin;C:\Users\gitlabrunner\AppData\Roaming\npm;' + $env:PATH
+    - $env:HOME = 'C:/Users/gitlabrunner'
+    # - bash -c "patch -p1 < 001-tezos-deps-via-esy.patch"
+    - esy i
+    - bash -c "esy release || esy release || esy release"
+    - rm -Recurse -Force _esy
+    - cp ./windows-installer/*.dll _release/bin/
+    - cp ./tools/webide-new/ligo-webide-frontend/ligo-ide/public/favicon.ico ./_release
+    - cp ./windows-installer/WindowsInstaller.nsi _release
+    - cd _release; makensis .\WindowsInstaller.nsi
+    - cd .. ; mv _release platform-windows-x64
+  artifacts:
+    paths:
+      - platform-windows-x64
+
+esy-macos-intel:
+  extends: .submodule-clone
+  tags:
+    - mac
+    - i7
+  stage: build
+  only:
+  - merge_requests
+  - dev
+  - /^release/.*$/
+  script:
+    - mkdir -p ~/.npm
+    - npm config set prefix '~/.npm'
+    - export PATH=~/.npm/bin:$PATH
+    - npm i -g @esy-nightly/esy --force
+    - git submodule foreach --recursive git reset --hard; git submodule update --init --recursive # ensure previously applied patch is removed
+    - bash -c "patch -p1 --force < 0001-Removes-problematic-sh-script-on-macos.patch"
+    - esy i
+    - esy release
+    - mv _release platform-darwin
+    - git submodule foreach --recursive git reset --hard; git submodule update --init --recursive # ensure previously applied patch is removed
+  artifacts:
+    paths:
+      - platform-darwin
+
+esy-macos-m1:
+  extends: .submodule-clone
+  tags:
+    - mac
+    - m1
+  stage: build
+  only:
+  - merge_requests
+  - dev
+  - /^release/.*$/
+  script:
+    - mkdir -p ~/.npm
+    - brew install node
+    - npm config set prefix '~/.npm'
+    - export PATH=~/.npm/bin:$PATH
+    - npm i -g esy@beta --force
+    - git submodule foreach --recursive git reset --hard; git submodule update --init --recursive # ensure previously applied patch is removed
+    - bash -c "patch -p1 --force < 0001-Removes-problematic-sh-script-on-macos.patch"
+    - esy i
+    - esy release
+    - mv _release platform-darwin-arm64
+    - git submodule foreach --recursive git reset --hard; git submodule update --init --recursive # ensure previously applied patch is removed
+  artifacts:
+    paths:
+      - platform-darwin-arm64
+
+prepare_npm_tarball:
+  tags:
+  - docker
+  stage: push
+  needs:
+    - job: docker_extract
+      artifacts: true
+    - job: esy-windows
+      artifacts: true
+    - job: esy-macos-intel
+      artifacts: true
+    - job: esy-macos-m1
+      artifacts: true
+  only:
+    - merge_requests
+    - dev
+    - /^release/.*$/
+  script:
+    - mkdir -p _release/platform-linux/bin
+    - cp platform-windows-x64/esyInstallRelease.js _release
+    - mv platform-* _release/
+    - cp ./ligo _release/platform-linux/bin
+    - node scripts/pipelines-release.js
+    - cp ./scripts/release-postinstall.js _release/postinstall.js
+    - cd _release && npm pack
+  artifacts:
+    paths:
+      - _release/ligo-*.tgz
+
 changelog:
   stage: pretooling
+  only:
+    - merge_requests
+    - dev
+    - /^.*-run-dev$/
+    - /^release/.*$/
+    - /[0-9]+\.[0-9]+\.[0-9]+/
   script:
     - ./scripts/changelog-generation.sh
-  rules:
-    - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "ligolang/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
-      when: always
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
   artifacts:
     paths:
       - changelog.md
@@ -76,72 +171,41 @@ to_dos:
 
 # TODO: https://docs.gitlab.com/ee/ci/yaml/#onlychangesexceptchanges ?
 docker_build:
+  extends: .submodule-clone
   stage: build
-  rules:
-    - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "ligolang/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
-      when: always
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-  needs:
-    - job: changelog
-      artifacts: true
+  dependencies:
+    - changelog
+  only:
+    - merge_requests
+    - dev
+    - /^.*-run-dev$/
+    - /^release/.*$/
+    - /[0-9]+\.[0-9]+\.[0-9]+/
   script:
-    - git submodule update --init --recursive # because of a gitlab caching issue
-    # Because JSOO artifacts are only present in ligo-builder stage.
-    # ligo-builder stage is discarded during the creation of ligo image for consumers
-    # so that we can offer them a leaner image with just necessary ligo tools
     - DOCKER_BUILDKIT=1 docker build .
       --build-arg=ci_commit_tag=$CI_COMMIT_TAG
       --build-arg=ci_commit_sha=$CI_COMMIT_SHA
       --build-arg=ci_commit_timestamp=$CI_COMMIT_TIMESTAMP
       --build-arg=changelog_path=changelog.txt
-      --target ligo-builder
-      -t ${LIGO_IMAGE_TAG}-builder
-    - DOCKER_BUILDKIT=1 docker build .
-      --build-arg=ci_commit_tag=$CI_COMMIT_TAG
-      --build-arg=ci_commit_sha=$CI_COMMIT_SHA
-      --build-arg=ci_commit_timestamp=$CI_COMMIT_TIMESTAMP
-      --build-arg=changelog_path=changelog.txt
-      -t ${LIGO_IMAGE_TAG} --target ligo
-    # Copy JSOO PoC IDE
-    - docker cp $(docker create ${LIGO_IMAGE_TAG}-builder):/ligo/npm ./ligo-npm
-    - docker cp $(docker create ${LIGO_IMAGE_TAG}-builder):/ligo/jsoo/dist ./ligo-demo-ide
-    - DOCKER_BUILDKIT=1 docker build .
-      --build-arg=ci_commit_tag=$CI_COMMIT_TAG
-      --build-arg=ci_commit_sha=$CI_COMMIT_SHA
-      --build-arg=ci_commit_timestamp=$CI_COMMIT_TIMESTAMP
-      --build-arg=changelog_path=changelog.txt
-      -t ${LIGO_CI_IMAGE_TAG} --target ligo-ci
+      -t ${LIGO_IMAGE_TAG}
     - docker save -o ligo.tar.gz ${LIGO_IMAGE_TAG}
-    - docker save -o ligo_ci.tar.gz ${LIGO_CI_IMAGE_TAG}
   after_script:
     - docker image rm "${LIGO_IMAGE_TAG}" >/dev/null 2>&1 || true
   artifacts:
     expose_as: "Ligo docker image - light -"
     paths:
-      - ligo-npm
-      - ligo-demo-ide
       - ligo.tar.gz
-      - ligo_ci.tar.gz
 
 docker_extract:
   stage: docker-extract
-  rules:
-    - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "ligolang/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
-      when: always
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-  needs:
-    - job: docker_build
-      artifacts: true
+  only:
+    - merge_requests
+    - dev
+    - /^.*-run-dev$/
+    - /^release/.*$/
+    - /[0-9]+\.[0-9]+\.[0-9]+/
+  dependencies :
+    - docker_build
   script:
     - docker load -i ligo.tar.gz
     - docker cp $(docker create ${LIGO_IMAGE_TAG}):/root/ligo .
@@ -173,7 +237,7 @@ check-generated-highlighting:
     - scripts/diff_dir.sh highlighting/vim/ftdetect tools/vim/ligo/start/ligo/ftdetect
     - scripts/diff_dir.sh highlighting/vim/plugin tools/vim/ligo/start/ligo/plugin
     - scripts/diff_dir.sh highlighting/vim/syntax tools/vim/ligo/start/ligo/syntax
-    - scripts/diff_dir.sh highlighting/vscode tools/vscode/syntaxes
+    - scripts/diff_dir.sh highlighting/vscode tools/lsp/vscode-plugin/syntaxes
     - scripts/diff_dir.sh highlighting/textmate tools/ligo-syntax-highlighting/textmate
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -187,49 +251,40 @@ check-generated-highlighting:
   services:
     - docker:19.03.5-dind
 
-docker_push_ligo:
+docker-push:
   stage: push
   extends: .docker-image
   dependencies:
     - docker_build
   needs:
     - docker_build
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
+  only:
+    - dev
+    - /^.*-run-dev$/
+    - /[0-9]+\.[0-9]+\.[0-9]+/
   script:
     - echo ${LIGO_REGISTRY_PASSWORD} | docker login -u ${LIGO_REGISTRY_USER} --password-stdin
     - docker load -i=./ligo.tar.gz
     - if test "$CI_COMMIT_REF_NAME" = "dev"; then export LIGO_TAG=next; else if echo "$CI_COMMIT_TAG" | grep -E "[0-9]+\.[0-9]+\.[0-9]+"; then export LIGO_TAG="$CI_COMMIT_TAG"; else export LIGO_TAG=next-attempt; fi; fi
-    - export LIGO_REGISTRY_FULL_NAME="ligolang/ligo:$LIGO_TAG"
+    - export LIGO_REGISTRY_FULL_NAME="${LIGO_REGISTRY_IMAGE_BUILD:-ligolang/ligo}:$LIGO_TAG"
     - docker tag "${LIGO_IMAGE_TAG}" "${LIGO_REGISTRY_FULL_NAME}"
     - docker push "${LIGO_REGISTRY_FULL_NAME}"
   after_script:
     - docker image rm "${LIGO_IMAGE_TAG}" >/dev/null 2>&1 || true
 
-docker_push_ligo_ci:
-  stage: push
-  extends: .docker-image
-  dependencies:
-    - docker_build
-  needs:
-    - docker_build
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-  script:
-    - echo ${LIGO_REGISTRY_PASSWORD} | docker login -u ${LIGO_REGISTRY_USER} --password-stdin
-    - docker load -i=./ligo_ci.tar.gz
-    - if test "$CI_COMMIT_REF_NAME" = "dev"; then export LIGO_TAG=next; else if echo "$CI_COMMIT_TAG" | grep -E "[0-9]+\.[0-9]+\.[0-9]+"; then export LIGO_TAG="$CI_COMMIT_TAG"; else export LIGO_TAG=next-attempt; fi; fi
-    - export LIGO_REGISTRY_FULL_NAME="ligolang/ligo_ci:$LIGO_TAG"
-    - docker tag "${LIGO_CI_IMAGE_TAG}" "${LIGO_REGISTRY_FULL_NAME}"
-    - docker push "${LIGO_REGISTRY_FULL_NAME}"
-  after_script:
-    - docker image rm "${LIGO_CI_IMAGE_TAG}" >/dev/null 2>&1 || true
+# docker-large-push: ?
+#   extends: docker-push
+#   dependencies:
+#     - docker-large
+#   needs:
+#     - docker-large
+#   script:
+#     - echo "${LIGO_REGISTRY_PASSWORD}" | docker login -u "${LIGO_REGISTRY_USER}" --password-stdin
+#     - docker load -i=./ligo.tar.gz
+#     - if test "$CI_COMMIT_REF_NAME" = "dev"; then export LIGO_TAG=next-large; else if echo "$CI_COMMIT_TAG" | grep -E "[0-9]+\.[0-9]+\.[0-9]+"; then export LIGO_TAG="$CI_COMMIT_TAG-large"; else export LIGO_TAG=next-attempt-large; fi; fi
+#     - export LIGO_REGISTRY_FULL_NAME="${LIGO_REGISTRY_IMAGE_BUILD:-ligolang/ligo}:$LIGO_TAG"
+#     - docker tag ligo "${LIGO_REGISTRY_FULL_NAME}"
+#     - docker push "${LIGO_REGISTRY_FULL_NAME}"
 
 xrefcheck:
   stage: tooling
@@ -245,11 +300,67 @@ xrefcheck:
       when: always
   allow_failure: true
 
+webide-backend-build-and-push-backend:
+  extends: .docker-image
+  stage: deploy
+  rules:
+    # Only deploy docker when from the dev branch or a merge request AND on the canonical ligolang/ligo repository
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
+      changes:
+        - tools/webide/**/*
+        - src/test/examples/**/*
+      when: always
+    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+      when: always
+  script:
+    - echo "${CI_BUILD_TOKEN}" | docker login -u gitlab-ci-token --password-stdin registry.gitlab.com
+    - cp -r src/test/examples tools/webide/packages/client/examples
+    - docker build tools/webide --build-arg EXAMPLES_DIR_SRC=packages/client/examples -t ${WEBIDE_IMAGE_TAG}
+    - docker push "${WEBIDE_IMAGE_TAG}"
+  after_script:
+    - docker image rm "${WEBIDE_IMAGE_TAG}" >/dev/null 2>&1 || true
+
+webide-new-backend-build-and-push-backend:
+  extends: .docker-image
+  stage: deploy
+  needs:
+    - job: changelog
+      artifacts: false
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+      changes:
+        - tools/webide-new/ligo-webide-backend/**/*
+      when: always
+  script:
+    - echo "${CI_BUILD_TOKEN}" | docker login -u gitlab-ci-token --password-stdin registry.gitlab.com
+    - docker build tools/webide-new/ligo-webide-backend -t ${WEBIDE_NEW_IMAGE_TAG}
+    - docker push "${WEBIDE_NEW_IMAGE_TAG}"
+  after_script:
+    - docker image rm "${WEBIDE_NEW_IMAGE_TAG}" >/dev/null 2>&1 || true
+
+webide-new-frontend-build-and-push:
+  extends: .docker-image
+  stage: deploy
+  needs:
+    - job: changelog
+      artifacts: false
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+      changes:
+        - tools/webide-new/ligo-webide-frontend/ligo-ide/**/*
+      when: always
+  script:
+    - echo "${CI_BUILD_TOKEN}" | docker login -u gitlab-ci-token --password-stdin registry.gitlab.com
+    - docker build tools/webide-new/ligo-webide-frontend/ligo-ide -t ${WEBIDE_FRONTEND_NEW_IMAGE_TAG}
+    - docker push "${WEBIDE_FRONTEND_NEW_IMAGE_TAG}"
+  after_script:
+    - docker image rm "${WEBIDE_FRONTEND_NEW_IMAGE_TAG}" >/dev/null 2>&1 || true
+
 .website:
   stage: push
   tags:
     - docker
-  image: node:20.2.0-buster
+  image: node:16.17.0-buster
   needs:
     - job: changelog
       artifacts: true
@@ -295,7 +406,7 @@ algolia-crawl:
   script:
     # We want to trigger the job after page:deploy to reindex the website but job can't depends on page:deploy. So we put a artificial sleep of 10 seconds before triggering algolia crawler to be sure that it'll works
     - |
-      sleep 20
+      sleep 10
       curl -X post  -H "Content-Type: application/json" --user ${ALGOLIA_CRAWLER_ID}:${ALGOLIA_CRAWLER_TOKEN} https://crawler.algolia.com/api/1/crawlers/bb0597ba-5abc-45ba-bdf9-99f8152e87b0/reindex
   rules:
     - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
@@ -305,7 +416,7 @@ algolia-crawl:
 
 deploy_website_preview:
   stage: deploy
-  image: node:20.2.0-buster
+  image: node:16.17.0-buster
   tags:
     - docker
   needs:
@@ -320,10 +431,99 @@ deploy_website_preview:
     - export NETLIFY_DEPLOY_LOGS=$(jq -r .logs netlify.json)
     - echo "The URL for this deployment is $NETLIFY_DEPLOY_URL"
     - echo "Logs for this deployment can be found at $NETLIFY_DEPLOY_LOGS"
-    - ./.ci/scripts/publish_preview_as_MR_comment.sh $CI_PROJECT_ID $CI_MERGE_REQUEST_IID $GITLAB_PERSONAL_API_PRIVATE_TOKEN "A new deploy preview is available on Netlify at $NETLIFY_DEPLOY_URL, you can view the logs at $NETLIFY_DEPLOY_LOGS" "ligolang-bot" "ligolang.netlify"
+    - '[ ! -z "$CI_MERGE_REQUEST_IID" ] && curl POST https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/notes -d "{\"body\": \"A new deploy preview is available on Netlify at $NETLIFY_DEPLOY_URL, you can view the logs at $NETLIFY_DEPLOY_LOGS\"}" --header "Content-Type: application/json" --header "Private-Token: $GITLAB_PERSONAL_API_PRIVATE_TOKEN"'
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes:
         - gitlab-pages/**/*
         - changelog/*
       when: on_success
+
+# This job will deploy the web-ide docker container to the test server.
+deploy-handoff-feature:
+  # Handoff deployment duties to private repo.
+  stage: deploy
+  variables:
+    APP_NAME: "web-ide-backend"
+    NEW_VERSION: "${CI_COMMIT_SHORT_SHA}"
+    ENV: "non-prod"
+  trigger:
+    project: ligolang/kubernetes-infrastructure
+  rules:
+    # Only deploy handoff when from an MR AND on the canonical ligolang/ligo repository.
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
+      changes:
+        - tools/webide/**/*
+        - src/test/examples/**/*
+      when: always
+
+deploy-handoff:
+  # Handoff deployment duties to private repo
+  stage: deploy
+  variables:
+    APP_NAME: "web-ide-backend"
+    NEW_VERSION: "${CI_COMMIT_SHORT_SHA}"
+    ENV: "prod"
+  trigger:
+    project: ligolang/kubernetes-infrastructure
+  rules:
+    # Only deploy handoff when from the dev branch AND on the canonical ligolang/ligo repository
+    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+      changes:
+        - tools/webide/**/*
+        - src/test/examples/**/*
+      when: always
+
+# This job builds the ligo-webide front-end from the tools/webide/ directory and deploys it as a Branch Deploy to Netlify using the netlify-cli tool.
+# After the deployment is done a comment is posted to the MR with the draft site URL as well as the Netlify logs
+build-preview-ligo-webide-front-end:
+  stage: deploy
+  image: node:12.20.0-buster
+  tags:
+    - docker
+  script:
+    - apt-get update
+    - apt-get install -y --no-install-recommends jq
+    - cd ./tools/webide/
+    - sed -i "s/temphost/$CI_MERGE_REQUEST_IID-$CI_COMMIT_SHORT_SHA/g" ./packages/client/feature-netlify.toml
+    - cat ./packages/client/feature-netlify.toml
+    - mv ./packages/client/feature-netlify.toml ./packages/client/netlify.toml
+    - yarn install
+    - CI= yarn workspaces run build
+    - cd ./packages/client
+    - npm install netlify-cli@11.1.0-rc.2
+    - npx netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_AUTH_TOKEN --json --alias="$CI_MERGE_REQUEST_IID-$CI_COMMIT_SHORT_SHA" > netlify.json
+    - export NETLIFY_DEPLOY_URL=$(jq -r .deploy_url netlify.json)
+    - export NETLIFY_DEPLOY_LOGS=$(jq -r .logs netlify.json)
+    - echo "The URL for this deployment is $NETLIFY_DEPLOY_URL"
+    - echo "Logs for this deployment can be found at $NETLIFY_DEPLOY_LOGS"
+    - '[ ! -z "$CI_MERGE_REQUEST_IID" ] && curl POST https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/notes -d "{\"body\": \"A new deploy preview is available on Netlify at $NETLIFY_DEPLOY_URL, you can view the logs at $NETLIFY_DEPLOY_LOGS\"}" --header "Content-Type: application/json" --header "Private-Token: $GITLAB_PERSONAL_API_PRIVATE_TOKEN"'
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - tools/webide/**/*
+        - src/test/examples/**/*
+      when: always
+
+# This job builds the ligo-webide front-end from the tools/webide/ directory and does a production deployment to Netlify and publishes the site using the netlify-cli tool.
+build-ligo-webide-front-end:
+  stage: deploy
+  image: node:12.20.0-buster
+  tags:
+    - docker
+  script:
+    - apt-get update
+    - cd ./tools/webide/
+    - mv ./packages/client/prod-netlify.toml ./packages/client/netlify.toml
+    - yarn install
+    - CI= yarn workspaces run build
+    - cd ./packages/client
+    # new version of CLI is incompatible with node:12:20.
+    - npm install netlify-cli@11.1.0-rc.2
+    - npx netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_AUTH_TOKEN --json --prod > netlify.json
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      changes:
+        - tools/webide/**/*
+        - src/test/examples/**/*
+      when: always

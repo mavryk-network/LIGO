@@ -13,9 +13,9 @@ import Servant.Client (BaseUrl(..), Scheme(Https))
 import Text.Megaparsec (errorBundlePretty)
 
 import Morley.Client
-  (AliasBehavior(..), MorleyClientConfig(..), MorleyClientEnv, MorleyClientM,
-  OperationInfo(OpOriginate), OriginationData(..), dryRunOperationsNonEmpty, getProtocolParameters,
-  mkMorleyClientEnv, revealKeyUnlessRevealed, runMorleyClientM)
+  (MorleyClientConfig(..), MorleyClientEnv, MorleyClientM, OperationInfo(OpOriginate),
+  OriginationData(..), dryRunOperationsNonEmpty, getProtocolParameters, mkMorleyClientEnv,
+  revealKeyUnlessRevealed, runMorleyClientM)
 import Morley.Client.Action.Common (computeStorageLimit)
 import Morley.Client.RPC (AppliedResult, ProtocolParameters(ppCostPerByte))
 import Morley.Client.TezosClient.Impl as TezosClient (importKey)
@@ -35,7 +35,7 @@ import Morley.Tezos.Core (Mutez(UnsafeMutez, unMutez))
 import Morley.Tezos.Crypto (KeyHash, PublicKey, SecretKey, detSecretKey, hashKey, toPublic)
 
 import Common (WebIDEM)
-import Config (ServerConfig(..))
+import Config (Config(..))
 import Error (LigoCompilerError(..), MorleyError(..))
 import Method.Compile (compile)
 import Schema.CompileRequest (CompileRequest(..))
@@ -107,13 +107,13 @@ generateDeployScript request = do
   let originationData :: OriginationData
       originationData = mkOriginationData typeCheckResult
 
-  octezClientPath <- lift (asks scOctezClientPath) >>= \case
+  octezClientPath <- lift (asks cOctezClientPath) >>= \case
     Nothing -> throwM NoLigoBinary
     Just p -> pure p
 
   let morleyConfig :: MorleyClientConfig
       morleyConfig = MorleyClientConfig
-        { mccEndpointUrl = Just (BaseUrl Https "ghostnet.tezos.marigold.dev" 443 "")
+        { mccEndpointUrl = Just (BaseUrl Https "kathmandu.testnet.tezos.serokell.team" 443 "")
         , mccTezosClientPath = octezClientPath
         , mccMbTezosClientDataDir = Nothing
         , mccVerbosity = 0
@@ -158,12 +158,11 @@ decodeTextCode text =
 mkOriginationData :: SomeContractAndStorage -> OriginationData
 mkOriginationData (SomeContractAndStorage con val) =
   OriginationData
-    { odAliasBehavior = DontSaveAlias
+    { odReplaceExisting = True
     , odName = ContractAlias "contract"
     , odBalance = UnsafeMutez 0
     , odContract = con
     , odStorage = val
-    , odDelegate = Nothing
     , odMbFee = Nothing
     }
 

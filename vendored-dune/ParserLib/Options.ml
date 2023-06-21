@@ -4,12 +4,12 @@ module type S =
   sig
     include LexerLib.Options.S
 
-    val mono           : bool
-    val pretty         : bool
-    val cst            : bool
-    val recovery       : bool
-    val used_tokens    : bool
-    val trace_recovery : string option option
+    val mono                  : bool  (* --mono *)
+    val pretty                : bool  (* --pretty *)
+    val cst                   : bool  (* --cst *)
+    val recovery              : bool  (* --recovery *)
+    val used_tokens           : bool  (* --used-tokens *)
+    val trace_recovery        : string option option (* --trace-recovery [path] *)
   end
 
 (* Default values for plugging the parser into the compiler *)

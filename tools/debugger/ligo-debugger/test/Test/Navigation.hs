@@ -3,19 +3,7 @@
 -- | Tests on navigation through the snapshots and
 -- responding to stepping commands.
 module Test.Navigation
-  ( test_StepIn_golden
-  , test_Seq_node_doesn't_have_location
-  , test_constant_as_statement
-  , test_top_level_function_with_preprocessor_don't_have_locations
-  , test_big_tuples_have_correct_evaluated_value
-  , test_values_inside_switch_and_match_with_are_statements
-  , test_local_function_assignments_are_statements
-  , test_record_update_is_statement
-  , test_Next_golden
-  , test_StepOut_golden
-  , test_Continue_golden
-  , test_StepBackReversed
-  , test_ContinueReversed
+  ( module Test.Navigation
   ) where
 
 import Fmt (pretty)
@@ -27,15 +15,14 @@ import Test.Tasty.Hedgehog (testProperty)
 import Text.Interpolation.Nyan
 
 import Morley.Debugger.Core
-  (Direction (..), MovementResult (..), NavigableSnapshot (getExecutedPosition), PausedReason (..),
-  SourceLocation' (..), SrcLoc (..), curSnapshot, frozen, getCurMethodBlockLevel,
-  getFutureSnapshotsNum, moveTill, switchBreakpoint)
+  (Direction (..), MovementResult (..), NavigableSnapshot (getExecutedPosition),
+  SourceLocation (..), frozen, getCurMethodBlockLevel, getFutureSnapshotsNum, moveTill,
+  switchBreakpoint)
 import Morley.Debugger.DAP.Types (StepCommand' (..))
+import Morley.Michelson.ErrorPos (Pos (..), SrcPos (..))
 import Morley.Michelson.Parser.Types (MichelsonSource (..))
-import Morley.Michelson.Text (mt)
 
 import Language.LIGO.Debugger.Navigate
-import Language.LIGO.Debugger.Snapshots
 
 import Test.Util
 import Test.Util.Golden
@@ -63,7 +50,10 @@ basicCaseRun dialect = ContractRunData
   , crdStorage = 0 :: Integer
   }
 
-{-
+{- TODO: This test is yet broken due to:
+
+* Functions calls having no locations
+* [LIGO-950]: some statements snapshots are not there
 
 [LIGO-951]: finalize the tests.
 
@@ -85,132 +75,6 @@ test_StepIn_golden = testGroup "StepIn" do
 
       ]
 
-test_Seq_node_doesn't_have_location :: TestTree
-test_Seq_node_doesn't_have_location =
-  let
-    runData = ContractRunData
-      { crdProgram = contractsDir </> "seq-nodes-without-locations.mligo"
-      , crdEntrypoint = Nothing
-      , crdParam = ()
-      , crdStorage = 0 :: Integer
-      }
-
-    doStep = processLigoStep (CStepIn GExpExt)
-  in goldenTestWithSnapshots
-      "seq nodes dont have expression locations in snapshots"
-      "StepIn"
-      runData
-      (dumpAllSnapshotsWithStep doStep)
-
-test_constant_as_statement :: TestTree
-test_constant_as_statement =
-  let
-    runData = ContractRunData
-      { crdProgram = contractsDir </> "constant_as_statement.mligo"
-      , crdEntrypoint = Nothing
-      , crdParam = ()
-      , crdStorage = 0 :: Integer
-      }
-
-    doStep = processLigoStep (CStepIn GStmt)
-  in goldenTestWithSnapshots
-      "Constant recognized as statement"
-      "StepIn"
-      runData
-      (dumpAllSnapshotsWithStep doStep)
-
-test_top_level_function_with_preprocessor_don't_have_locations :: TestTree
-test_top_level_function_with_preprocessor_don't_have_locations =
-  let
-    runData = ContractRunData
-      { crdProgram = contractsDir </> "contract-with-preprocessor.mligo"
-      , crdEntrypoint = Nothing
-      , crdParam = ()
-      , crdStorage = 0 :: Integer
-      }
-
-    doStep = processLigoStep (CStepIn GExpExt)
-  in goldenTestWithSnapshots
-      "top-level functions with preprocessor don't have expression locations in snapshots"
-      "StepIn"
-      runData
-      (dumpAllSnapshotsWithStep doStep)
-
-test_big_tuples_have_correct_evaluated_value :: TestTree
-test_big_tuples_have_correct_evaluated_value =
-  let
-    runData = ContractRunData
-      { crdProgram = contractsDir </> "tuple-with-size-five.mligo"
-      , crdEntrypoint = Nothing
-      , crdParam = ()
-      , crdStorage = 0 :: Integer
-      }
-
-    doStep = processLigoStep (CStepIn GExpExt)
-  in goldenTestWithSnapshots
-      "big tuples have correct evaluated value"
-      "StepIn"
-      runData
-      (dumpAllSnapshotsWithStep doStep)
-
-test_values_inside_switch_and_match_with_are_statements :: TestTree
-test_values_inside_switch_and_match_with_are_statements =
-  testGroup "Values inside \"switch\" and \"match ... with\" are statements" $
-    [ ContractRunData
-      { crdProgram = contractsDir </> "statement-in-match-branch.mligo"
-      , crdEntrypoint = Nothing
-      , crdParam = ()
-      , crdStorage = 0 :: Integer
-      }
-
-    , ContractRunData
-      { crdProgram = contractsDir </> "statements-in-case-branch.jsligo"
-      , crdEntrypoint = Nothing
-      , crdParam = [mt|Variant1|]
-      , crdStorage = 0 :: Integer
-      }
-    ] <&> \runData -> do
-      let doStep = processLigoStep (CStepIn GStmt)
-      goldenTestWithSnapshots
-        [int||checking for #{crdProgram runData} contract|]
-        "StepIn"
-        runData
-        (dumpAllSnapshotsWithStep doStep)
-
-test_local_function_assignments_are_statements :: TestTree
-test_local_function_assignments_are_statements =
-  let
-    runData = ContractRunData
-      { crdProgram = contractsDir </> "local-function-assignments.mligo"
-      , crdEntrypoint = Nothing
-      , crdParam = ()
-      , crdStorage = 0 :: Integer
-      }
-
-    doStep = processLigoStep (CStepIn GStmt)
-  in goldenTestWithSnapshots
-      "local function assignments are statements"
-      "StepIn"
-      runData
-      (dumpAllSnapshotsWithStep doStep)
-
-test_record_update_is_statement :: TestTree
-test_record_update_is_statement =
-  let
-    runData = ContractRunData
-      { crdProgram = contractsDir </> "record-update-is-statement.mligo"
-      , crdEntrypoint = Nothing
-      , crdParam = ()
-      , crdStorage = ((0 :: Integer, [mt|"str"|]), False)
-      }
-
-    doStep = processLigoStep (CStepIn GStmt)
-  in goldenTestWithSnapshots
-      "record update is statement"
-      "StepIn"
-      runData
-      (dumpAllSnapshotsWithStep doStep)
-
 test_Next_golden :: TestTree
 test_Next_golden = testGroup "Next" do
   gran <- allLigoStepGranularities
@@ -222,7 +86,7 @@ test_Next_golden = testGroup "Next" do
         do
           dumpAllSnapshotsWithStep $
             doStep <* do
-              Just (SourceLocation _ (SrcLoc line _) _) <-
+              Just (SourceLocation _ (SrcPos (Pos line) _) _) <-
                 lift $ frozen getExecutedPosition
               when (gran == GStmt && line < 10) do
                 liftIO $ assertFailure [int||
@@ -250,7 +114,7 @@ test_Next_golden = testGroup "Next" do
           do
             switchBreakpoint
               (MSFile $ crdProgram $ basicCaseRun Caml)
-              (SrcLoc 1 0)
+              (SrcPos (Pos 1) (Pos 0))
             [int||Enabled breakpoint within `f`, but not within `g`|]
             dumpAllSnapshotsWithStep doStep
 
@@ -293,10 +157,10 @@ test_StepOut_golden = testGroup "StepOut" do
         do
           switchBreakpoint
             (MSFile $ crdProgram $ basicCaseRun Caml)
-            (SrcLoc 1 0)
+            (SrcPos (Pos 1) (Pos 0))
           switchBreakpoint
             (MSFile $ crdProgram $ basicCaseRun Caml)
-            (SrcLoc 2 0)
+            (SrcPos (Pos 2) (Pos 0))
           processLigoStep (CContinue Forward)
           [int||Should be within `f` now:|]
           dumpCurSnapshot
@@ -319,12 +183,10 @@ test_Continue_golden = testGroup "Continue"
       do
         switchBreakpoint
           (MSFile $ crdProgram $ basicCaseRun Caml)
-          (SrcLoc 11 0)
+          (SrcPos (Pos 11) (Pos 0))
         [int||Breakpoint is set at `f` & `g` call|]
         dumpAllSnapshotsWithStep doStep
   ]
-
-{-# ANN test_StepBackReversed ("HLint: ignore Redundant <$>" :: Text) #-}
 
 test_StepBackReversed :: IO TestTree
 test_StepBackReversed = fmap (testGroup "Step back is the opposite to Next") $
@@ -348,7 +210,7 @@ test_StepBackReversed = fmap (testGroup "Step back is the opposite to Next") $
     }
 
   ] `forM` \runData -> do
-    locsAndHis <- liftIO $ mkSnapshotsForImpl dummyLoggingFunction Nothing runData
+    locsAndHis <- liftIO $ mkSnapshotsForImpl dummyLoggingFunction runData
     return $ testProperty [int||On example of "#{crdProgram runData}"|] $
       property $ withSnapshots locsAndHis do
         let liftProp = lift . lift
@@ -363,13 +225,6 @@ test_StepBackReversed = fmap (testGroup "Step back is the opposite to Next") $
             Gen.integral (Range.constant 0 futureSnapshotsNum)
           replicateM_ stepsNum $ processLigoStep (CStepIn granularity)
 
-        isStatus <$> frozen curSnapshot >>= \case
-          -- This property doesn't hold for @GStmt@ granularity
-          -- in case of stopping at function call.
-          InterpretRunning (EventExpressionPreview FunctionCall)
-            | granularity == GStmt -> liftProp discard
-          _ -> pass
-
         startPos <- frozen getExecutedPosition
         annotateShow startPos
         startMethodLevel <- frozen getCurMethodBlockLevel
@@ -379,7 +234,7 @@ test_StepBackReversed = fmap (testGroup "Step back is the opposite to Next") $
         -- Do a step over...
         do
           moveRes <- processLigoStep (CNext dir granularity)
-          unless (moveRes == MovedSuccessfully PlainPaused) $
+          unless (moveRes == MovedSuccessfully) $
             -- We started at the end of the tape, this case is not interesting
             liftProp discard
 

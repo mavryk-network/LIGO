@@ -192,9 +192,9 @@ let rec decompile ~raise (v : value) (t : AST.type_expression) : AST.expression 
         Bls12_381_fr    | Address              | Key             | Chain_id | Signature         | Ast_contract       |
         Map             | Big_map              | Set             | Int64    | Baker_hash        | Pvss_key           |
         Sapling_state   | Sapling_transaction  | Baker_operation | Never    | Michelson_program | Michelson_contract |
-        Gen             | String               | Typed_address   | Mutation | List              | 
-                                                 Int             | Key_hash | Ticket            | Timestamp          |
-        Operation       | Tx_rollup_l2_address | External _      | Views), _) ->
+        Gen             | String               | Typed_address   | Mutation | List              | Chest              |
+        Chest_key       | Chest_opening_result | Int             | Key_hash | Ticket            | Timestamp          |
+        Operation       | External _ | Tx_rollup_l2_address), _) ->
       let () = Format.printf "%a" AST.PP.type_content t.type_content in
       raise.error @@ corner_case ~loc:"unspiller" "Wrong number of args or wrong kinds for the type constant"
   )
@@ -208,13 +208,14 @@ let rec decompile ~raise (v : value) (t : AST.type_expression) : AST.expression 
       return (E_constructor {constructor=Label "None";element=make_e ~loc (e_unit ()) (t_unit ~loc ())})
     | _ -> raise.error @@ corner_case ~loc:"unspiller" "impossible"
     )
-  | T_sum sum ->
-      let (constructor, v, tv) = Row.extract_constructor sum v get_left get_right in
+  | T_sum {layout ; fields} ->
+      let lst = List.map ~f:(fun (k,({associated_type;_} : row_element)) -> (k,associated_type)) @@ AST.Combinators.kv_list_of_t_sum ~layout fields in
+      let (constructor, v, tv) = Layout.extract_constructor ~raise ~layout v lst get_left get_right in
       let sub = self v tv in
       return (E_constructor {constructor;element=sub})
-  | T_record reco ->
-      let lst = Row.extract_record reco v get_pair in
-      let lst = List.map ~f:(fun (l,v,ty) -> (l,(v,ty))) lst in
+  | T_record {layout ; fields } ->
+      let lst = List.map ~f:(fun (k,({associated_type;_} : row_element)) -> (k,associated_type)) @@ AST.Combinators.kv_list_of_t_record_or_tuple ~layout fields in
+      let lst = Layout.extract_record ~raise ~layout v lst get_pair in
       let lst = List.Assoc.map ~f:(fun (y, z) -> self y z) lst in
       let m' = Ligo_prim.Record.of_list lst in
       return (E_record m')

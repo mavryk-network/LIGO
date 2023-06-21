@@ -1,1 +1,0 @@
-let error = "SOME ERROR"

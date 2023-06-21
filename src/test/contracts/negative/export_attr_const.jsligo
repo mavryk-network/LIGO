@@ -1,2 +1,0 @@
-export @no_mutation
-const toto: D.titi = E.toto;

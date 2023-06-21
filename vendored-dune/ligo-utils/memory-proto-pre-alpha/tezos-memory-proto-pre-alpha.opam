@@ -12,8 +12,8 @@ bug-reports: "https://gitlab.com/ligolang/tezos/issues"
 # If you change the dependencies, run `opam lock` in the root
 depends: [
   "dune"
-  "tpe"
-  "tp-016"
+  "tezos-protocol-environment"
+  "tezos-protocol-014-PtKathma"
 ]
 build: [
   ["dune" "build" "-p" name]

@@ -54,7 +54,7 @@ const main = (p: [nat, nat], s: [nat, nat]) : [list<operation>, [nat, nat]] =>
 </Syntax>
 
 Now if we measure the difference between inlining and without inlining, using
-`ligo info measure-contract name_of_contract.mligo --entry-point <entrypoint>`, we see the
+`ligo info measure-contract name_of_contract.ligo --entry-point <entrypoint>`, we see the
 following results:
 
 <table>

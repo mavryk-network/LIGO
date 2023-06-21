@@ -8,6 +8,36 @@ open Simple_utils.PP_helpers
 
 type 'a pretty_printer = Format.formatter -> 'a -> unit
 
+let lmap_sep value sep ppf m =
+  let lst = List.sort ~compare:(fun (a, _) (b, _) -> Label.compare a b) m in
+  let new_pp ppf (k, v) = fprintf ppf "@[<h>%a -> %a@]" Label.pp k value v in
+  fprintf ppf "%a" (list_sep new_pp sep) lst
+
+
+let record_sep value sep ppf (m : 'a Record.t) =
+  let lst = Record.LMap.to_kv_list m in
+  fprintf ppf "%a" (lmap_sep value sep) lst
+
+
+let tuple_sep value sep ppf m =
+  assert (Record.is_tuple m);
+  let lst = Record.tuple_of_record m in
+  let new_pp ppf (_, v) = fprintf ppf "%a" value v in
+  fprintf ppf "%a" (list_sep new_pp sep) lst
+
+
+let tuple_or_record_sep_t value format_record sep_record format_tuple sep_tuple ppf m =
+  if Record.is_tuple m
+  then fprintf ppf format_tuple (tuple_sep value (tag sep_tuple)) m
+  else fprintf ppf format_record (record_sep value (tag sep_record)) m
+
+
+let tuple_or_record_sep_type value =
+  tuple_or_record_sep_t value "@[<h>record[%a]@]" " ,@ " "@[<h>( %a )@]" " *@ "
+
+
+let lmap_sep_d x = lmap_sep x (tag " ,@ ")
+
 let rec type_expression ppf (te : type_expression) : unit =
   (* TODO: we should have a way to hook custom pretty-printers for some types and/or track the "origin" of types as they flow through the constraint solver. This is a temporary quick fix *)
   if Option.is_some (Combinators.get_t_bool te)
@@ -18,7 +48,6 @@ let rec type_expression ppf (te : type_expression) : unit =
 
 
 and bool ppf = fprintf ppf "bool"
-and layout = Simple_utils.PP_helpers.if_present Layout.pp
 
 and option ppf (te : type_expression) =
   let t = Combinators.get_t_option te in
@@ -31,15 +60,20 @@ and type_content : formatter -> type_content -> unit =
  fun ppf te ->
   match te with
   | T_variable tv -> Type_var.pp ppf tv
-  | T_constant (t, _) -> string ppf (Literal_types.to_string t)
-  | T_sum row -> Row.PP.sum_type type_expression layout ppf row
-  | T_record row -> Row.PP.record_type type_expression layout ppf row
+  | T_sum m ->
+    fprintf ppf "@[<h>sum[%a]@]" (lmap_sep_d row) (Record.LMap.to_kv_list_rev m.fields)
+  | T_record m -> fprintf ppf "%a" (tuple_or_record_sep_type row) m.fields
   | T_arrow a -> Arrow.pp type_expression ppf a
-  | T_app app -> Type_app.pp (Module_access.pp Type_var.pp) type_expression ppf app
+  | T_app app -> Type_app.pp type_expression ppf app
   | T_module_accessor ma -> Module_access.pp Type_var.pp ppf ma
   | T_singleton x -> Literal_value.pp ppf x
   | T_abstraction x -> Abstraction.pp_type_abs type_expression ppf x
   | T_for_all x -> Abstraction.pp_forall type_expression ppf x
+
+
+and row : formatter -> row_element -> unit =
+ fun ppf { associated_type; michelson_annotation = _; decl_pos = _ } ->
+  fprintf ppf "%a" type_expression associated_type
 
 
 let type_expression_option ppf (te : type_expression option) : unit =
@@ -74,7 +108,7 @@ and expression_content ppf (ec : expression_content) =
       let_binder
       expression
       rhs
-      Value_attr.pp
+      Types.ValueAttr.pp
       attributes
       expression
       let_result
@@ -91,7 +125,7 @@ and expression_content ppf (ec : expression_content) =
       let_binder
       expression
       rhs
-      Value_attr.pp
+      Types.ValueAttr.pp
       attributes
       expression
       let_result
@@ -103,15 +137,11 @@ and expression_content ppf (ec : expression_content) =
 
 and declaration ppf (d : declaration) =
   match Location.unwrap d with
-  | D_value vd ->
-    if not vd.attr.hidden
-    then Types.Value_decl.pp expression type_expression_option ppf vd
+  | D_value vd -> Types.Value_decl.pp expression type_expression_option ppf vd
   | D_irrefutable_match pd ->
-    if not pd.attr.hidden
-    then Types.Pattern_decl.pp expression type_expression_option ppf pd
+    Types.Pattern_decl.pp expression type_expression_option ppf pd
   | D_type td -> Types.Type_decl.pp type_expression ppf td
-  | D_module md -> Types.Module_decl.pp module_expr (Simple_utils.PP_helpers.option signature_expr) ppf md
-  | D_signature sd -> Types.Signature_decl.pp signature_expr ppf sd
+  | D_module md -> Types.Module_decl.pp module_expr ppf md
 
 
 and decl ppf d = declaration ppf d
@@ -119,31 +149,5 @@ and decl ppf d = declaration ppf d
 and module_expr ppf (me : module_expr) : unit =
   Location.pp_wrap (Module_expr.pp decl) ppf me
 
-and sig_item_attribute ppf { view; entry } =
-  let pp_if_set str ppf attr = if attr then fprintf ppf "[@@%s]" str else fprintf ppf "" in
-  fprintf
-    ppf
-    "%a%a"
-    (pp_if_set "view")
-    view
-    (pp_if_set "entry")
-    entry
-
-and sig_item ppf (d : sig_item) =
-  match d with
-  | S_value (var, type_, attr) ->
-    Format.fprintf ppf "@[<2>val %a :@ %a@;<1 2>%a@]" Value_var.pp var type_expression type_ sig_item_attribute attr
-  | S_type (var, type_) ->
-    Format.fprintf ppf "@[<2>type %a =@ %a@]" Type_var.pp var type_expression type_
-  | S_type_var var ->
-    Format.fprintf ppf "@[<2>type %a@]" Type_var.pp var
-
-and signature ppf (sig_ : signature) : unit =
-  Format.fprintf ppf "@[<v>sig@[<v1>@,%a@]@,end@]" (list_sep sig_item (tag "@,")) sig_
-
-and signature_expr ppf (sig_expr : signature_expr) : unit =
-  match Location.unwrap sig_expr with
-  | S_sig sig_ -> Format.fprintf ppf "%a" signature sig_
-  | S_path path -> Simple_utils.PP_helpers.(ne_list_sep Module_var.pp (tag ".")) ppf path
 
 let program ppf (p : program) = list_sep declaration (tag "@,") ppf p

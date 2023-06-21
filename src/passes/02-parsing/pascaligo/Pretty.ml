@@ -2,7 +2,7 @@
 
 module List = Core.List
 
-(* Vendored dependencies *)
+(* Vendor dependencies *)
 
 module Utils = Simple_utils.Utils
 module Region = Simple_utils.Region
@@ -19,14 +19,10 @@ open! PPrint
 
 (* UTILITIES *)
 
-type state = unit
-
-let default_state : state = ()
-
 let unroll_D_Attr (attr, decl) =
   let rec aux attrs = function
-    D_Attr {value = (attr, decl); _} -> aux (attr :: attrs) decl
-  | decl                             -> List.rev attrs, decl
+    D_Attr { value = (attr, decl); _ } -> aux (attr :: attrs) decl
+  | decl                -> List.rev attrs, decl
   in aux [attr] decl
 
 let unroll_T_Attr (attr, type_expr) =
@@ -75,6 +71,7 @@ let print_int (node : (lexeme * Z.t) wrap) =
 and print_nat (node : (lexeme * Z.t) wrap) =
   string (Z.to_string (snd node#payload) ^ "n")
 
+
 (* HIGHER-ORDER PRINTERS *)
 
 let print_par : ('a -> document) -> 'a par reg -> document =
@@ -91,35 +88,35 @@ let print_chevrons : ('a -> document) -> 'a chevrons reg -> document =
 
 (* PRINTING THE CST *)
 
-let rec print _state cst = print_declarations cst.decl
+let rec print cst = print_declarations cst.decl
 
 (* DECLARATIONS (top-level) *)
 
 and print_declarations (node : declarations) =
-  Utils.nseq_to_list node
-|> List.map ~f:print_declaration
-|> separate_map (hardline ^^ hardline) group
+    Utils.nseq_to_list node
+  |> List.map ~f:print_declaration
+  |> separate_map (hardline ^^ hardline) group
 
 (* IMPORTANT: The data constructors are sorted alphabetically. If you
    add or modify some, please make sure they remain in order. *)
 
 and print_declaration = function
-  D_Attr      d -> print_D_Attr      d
-| D_Const     d -> print_D_Const     d
-| D_Directive d -> print_D_Directive d
-| D_Fun       d -> print_D_Fun       d
-| D_Module    d -> print_D_Module    d
-| D_Type      d -> print_D_Type      d
+  D_Attr      d -> print_D_Attr d
+| D_Const     d -> print_D_Const d
+| D_Directive d -> string (Directive.to_lexeme d).Region.value
+| D_Fun       d -> print_D_Fun d
+| D_Module    d -> print_D_Module d
+| D_Type      d -> print_D_Type d
 
 (* Attributed declaration *)
 
-and print_D_Attr (node: (attribute * declaration) reg) =
+and print_D_Attr (node) =
   let attributes, declaration = unroll_D_Attr node.value in
   let thread = print_declaration declaration
   in print_attributes thread attributes
 
-and print_attribute (node : Attr.t wrap) =
-  let key, val_opt = node#payload in
+and print_attribute (node : Attr.t reg) =
+  let key, val_opt = node.value in
   let thread = string "[@" ^^ string key in
   let thread = match val_opt with
                  Some (String value | Ident value) ->
@@ -164,15 +161,6 @@ and print_opt_type thread (node : type_annotation option) =
 
 and print_type_annotation thread (_, type_expr : type_annotation) =
   group (thread ^/^ nest 2 (string ": " ^^ print_type_expr type_expr))
-
-(* Preprocessing directives *)
-
-and print_D_Directive (node: Directive.t) =
-  let comments  = Directive.get_comments node in
-  let comments  = List.map ~f:(fun x -> x.value) comments in
-  let comments  = separate_map hardline string comments in
-  let directive = string (Directive.to_lexeme node).Region.value
-  in comments ^/^ directive
 
 (* Function declaration *)
 
@@ -330,8 +318,9 @@ and print_T_Attr (node : attribute * type_expr) =
     match type_expr with
       T_Sum t ->
         print_sum_type ~attr:(not (List.is_empty attributes)) t
-    | _ -> print_type_expr type_expr
-  in print_attributes thread attributes
+    | _ -> print_type_expr type_expr in
+  let thread = print_attributes thread attributes
+  in thread
 
 (* Cartesian type *)
 
@@ -355,7 +344,7 @@ and print_T_Fun (node : (type_expr * arrow * type_expr) reg) =
 
 (* Integer type *)
 
-and print_T_Int (node : (lexeme * Z.t) wrap) = print_int node
+and print_T_Int (node :  (lexeme * Z.t) wrap) = print_int node
 
 (* Module path *)
 
@@ -364,49 +353,21 @@ and print_T_ModPath (node : type_expr module_path reg) =
 
 and print_module_path
   : type a.(a -> document) -> a module_path reg -> document =
-  fun print {value; _} ->
-    let modules = Utils.nsepseq_to_list value.module_path
-    and sep     = string "." ^^ break 0 in
-    let modules = separate_map sep print_ident modules
-    in group (modules ^^ sep ^^ print value.field)
-
-(* Parenthesised type *)
-
-and print_T_Par (node : type_expr par reg) =
-  print_par print_type_expr node
-
-(* Record type *)
-
-and print_T_Record (node : field_decl reg compound reg) =
-  group (print_compound print_field_decl node)
-
-and print_field_decl (node : field_decl reg) =
-  let node       = node.value in
-  let field_name = node.field_name
-  and field_type = node.field_type
-  and attributes = node.attributes
-  in
-  let thread     = print_ident field_name in
-  let thread     = print_attributes thread attributes in
-  match field_type with
-    None -> thread
-  | Some (_, e) -> (thread ^^ string " :") ^//^ print_type_expr e
-
-and print_compound : 'a.('a -> document) -> 'a compound reg -> document =
   fun print node ->
-    let node     = node.value in
-    let kind     = node.kind
-    and elements = node.elements
+    let node        = node.value in
+    let module_path = node.module_path
+    and field       = node.field
     in
-    let sep      = string ";" ^^ break 1 in
-    let elements = Utils.sepseq_to_list elements in
-    let elements = separate_map sep print elements in
-    let thread   = string (kind#payload ^ " [") in
-    let thread   = thread ^^ nest 2 (break 0 ^^ elements) in
-    let thread   = thread ^^ break 0 ^^ string "]"
-    in group thread
+    let modules     = Utils.nsepseq_to_list module_path
+    and sep         = string "." ^^ break 0 in
+    let modules     = separate_map sep print_ident modules in
+    group (modules ^^ sep ^^ print field)
 
-(* String type *)
+(* Type variable *)
+
+and print_T_Var (node : variable) = print_ident node
+
+(* Type string *)
 
 and print_T_String (node : lexeme wrap) = print_string node
 
@@ -444,9 +405,50 @@ and print_variant (node : variant reg) =
   | Some (_,e) -> let args = print_type_expr e
                  in prefix 4 1 (thread ^^ string " of") args
 
-(* Type variable *)
+(* Record type *)
 
-and print_T_Var (node : variable) = print_ident node
+and print_T_Record (node : field_decl reg compound reg) =
+  group (print_compound print_field_decl node)
+
+and print_field_decl (node : field_decl reg) =
+  let node       = node.value in
+  let field_name = node.field_name
+  and field_type = node.field_type
+  and attributes = node.attributes
+  in
+  let thread     = print_ident field_name in
+  let thread     = print_attributes thread attributes in
+  match field_type with
+    None -> thread
+  | Some (_, e) -> (thread ^^ string " :") ^//^ print_type_expr e
+
+and print_compound : 'a.('a -> document) -> 'a compound reg -> document =
+  fun print node ->
+    let node     = node.value in
+    let kind     = node.kind
+    and elements = node.elements
+    in
+    let sep      = string ";" ^^ break 1 in
+    let elements = Utils.sepseq_to_list elements in
+    let elements = separate_map sep print elements in
+    let thread   = string (kind#payload ^ " [") in
+    let thread   = thread ^^ nest 2 (break 0 ^^ elements) in
+    let thread   = thread ^^ break 0 ^^ string "]"
+    in group thread
+
+(* Parenthesised type *)
+
+and print_T_Par (node : type_expr par reg) =
+  print_par print_type_expr node
+
+(* Blocks *)
+
+and print_block (node : block reg) =
+  string "{" ^^ print_in_block node ^^ hardline ^^ string "}"
+
+and print_in_block (node : block reg) =
+  let statements = print_statements node.value.statements
+  in nest 2 (hardline ^^ statements)
 
 (* STATEMENTS *)
 
@@ -519,7 +521,8 @@ and print_I_Assign (node : assignment reg) =
 and print_I_Call (node : call) = print_call node
 
 and print_call (node : call) =
-  let lambda, arguments = node.value in
+  let node              = node.value in
+  let lambda, arguments = node in
   let arguments         = print_call_args arguments in
   group (print_expr lambda ^^ nest 2 (break 1 ^^ arguments))
 
@@ -598,15 +601,6 @@ and print_test_clause = function
 and print_ClauseInstr (node : instruction) = print_instruction node
 
 and print_ClauseBlock (node : block reg) = print_block node
-
-(* Blocks *)
-
-and print_block (node : block reg) =
-  string "{" ^^ print_in_block node ^^ hardline ^^ string "}"
-
-and print_in_block (node : block reg) =
-  let statements = print_statements node.value.statements
-  in nest 2 (hardline ^^ statements)
 
 (* Interation over integer intervals *)
 
@@ -703,6 +697,7 @@ and print_I_While (node : while_loop reg) =
   and block = print_block node.block
   in group ((string "while" ^//^ cond) ^^ hardline ^^ block)
 
+
 (* PATTERNS *)
 
 and print_pattern (node : pattern) =
@@ -752,8 +747,9 @@ and print_tuple : 'a.('a -> document) -> 'a tuple -> document =
 
 and print_P_Attr (node : attribute * pattern) =
   let attributes, pattern = unroll_P_Attr node in
-  let thread = print_pattern pattern
-  in print_attributes thread attributes
+  let thread = print_pattern pattern in
+  let thread = print_attributes thread attributes
+  in thread
 
 (* Pattern bytes *)
 
@@ -810,13 +806,15 @@ and print_field_pattern (node : field_pattern reg) =
   match node.value with
     Punned {pun; attributes} ->
       let thread = print_pattern pun in
-      print_attributes thread attributes
+      let thread = print_attributes thread attributes
+      in thread
   | Complete {field_lhs; field_lens; field_rhs; attributes} ->
      let thread = group ((print_pattern field_lhs
                           ^^ string " "
                           ^^ print_field_lens field_lens)
-                          ^//^ print_pattern field_rhs)
-     in print_attributes thread attributes
+                          ^//^ print_pattern field_rhs) in
+      let thread = print_attributes thread attributes
+      in thread
 
 and print_field_lens (node : field_lens) =
   match node with
@@ -863,6 +861,7 @@ and print_expr (node : expr) =
   | E_BigMap    e -> print_E_BigMap    e
   | E_Block     e -> print_E_Block     e
   | E_Bytes     e -> print_E_Bytes     e
+  | E_Call      e -> print_E_Call      e
   | E_Case      e -> print_E_Case      e
   | E_Cat       e -> print_E_Cat       e
   | E_CodeInj   e -> print_E_CodeInj   e
@@ -914,13 +913,13 @@ and print_bin_op (node : lexeme wrap bin_op reg) =
   in group (print_expr arg1 ^/^ string (op#payload ^ " ")
             ^^ nest length (print_expr arg2))
 
-(* Logical conjunction *)
-
-and print_E_And (node : kwd_and bin_op reg) = print_bin_op node
-
 (* Application to data constructors *)
 
-and print_E_App (node : call) = print_call node
+and print_E_App (node : (expr * expr tuple option) reg) =
+  match node.value with
+    ctor, None -> print_expr ctor
+  | ctor, Some tuple ->
+      group (print_expr ctor ^//^ print_tuple print_expr tuple)
 
 (* Attributes expressions *)
 
@@ -929,6 +928,10 @@ and print_E_Attr (node : attribute * expr) =
   let thread = print_expr expr in
   let thread = print_attributes thread attributes
   in thread
+
+(* Logical conjunction *)
+
+and print_E_And (node : kwd_and bin_op reg) = print_bin_op node
 
 (* Big map expression *)
 
@@ -954,6 +957,10 @@ and print_E_Block (node : block_with reg) =
 
 and print_E_Bytes (node : (lexeme * Hex.t) wrap) = print_bytes node
 
+(* Function calls *)
+
+and print_E_Call (node : call) = print_call node
+
 (* Case expressions *)
 
 and print_E_Case (node : expr case reg) =
@@ -967,9 +974,17 @@ and print_E_Cat (node : caret bin_op reg) = print_bin_op node
 
 and print_E_CodeInj (node : code_inj reg) =
   let node     = node.value in
-  let language = string node.language#payload.value
+  let language = string node.language.value.value
   and code     = print_expr node.code
   in group (string "[%" ^^ language ^/^ code ^^ string "]")
+
+(* Constructor in expressions *)
+
+and print_E_Ctor (node : ctor) = print_ident node
+
+(* Equality *)
+
+and print_E_Equal (node : equal bin_op reg) = print_bin_op node
 
 (* Conditional expression *)
 
@@ -979,7 +994,7 @@ and print_E_Cond (node : expr conditional reg) =
   and if_so  = print_expr node.if_so
   and if_not = node.if_not
   in
-  let thread = string "if " ^^ group (nest 3 test) in
+  let thread = string "if "  ^^ group (nest 3 test) in
   let thread = thread ^/^ string "then"
                ^^ group (nest 2 (break 1 ^^ if_so)) in
   let thread =
@@ -993,17 +1008,9 @@ and print_E_Cond (node : expr conditional reg) =
 
 and print_E_Cons (node : sharp bin_op reg) = print_bin_op node
 
-(* Constructor in expressions *)
-
-and print_E_Ctor (node : ctor) = print_ident node
-
 (* Arithmetic division *)
 
 and print_E_Div (node : slash bin_op reg) = print_bin_op node
-
-(* Equality *)
-
-and print_E_Equal (node : equal bin_op reg) = print_bin_op node
 
 (* Function expressions *)
 
@@ -1064,7 +1071,7 @@ and print_keys (node : expr brackets reg Utils.nseq) =
     print_brackets print_expr key ^/^ acc
   in group (List.fold_right ~f:apply ~init:empty keys)
 
-(* Arithmethic modulo *)
+(* Modulo *)
 
 and print_E_Mod (node : kwd_mod bin_op reg) = print_bin_op node
 
@@ -1113,19 +1120,6 @@ and print_E_Or (node : kwd_or bin_op reg) = print_bin_op node
 
 and print_E_Par (node : expr par reg) = print_par print_expr node
 
-(* Projection *)
-
-and print_E_Proj (node : projection reg) =
-  let node            = node.value in
-  let record_or_tuple = print_expr node.record_or_tuple
-  and field_path      = print_nsepseq print_selection node.field_path
-  in group (record_or_tuple ^^ string "." ^^ break 0 ^^ field_path)
-
-and print_selection (node : selection) =
-  match node with
-    FieldName name -> string name#payload
-  | Component cmp  -> cmp#payload |> snd |> Z.to_string |> string
-
 (* Record expression *)
 
 and print_E_Record (node : record_expr) =
@@ -1135,11 +1129,13 @@ and print_field_expr (node : (expr, expr) field reg) =
   match node.value with
     Punned {pun; attributes} ->
       let thread = print_expr pun in
-      print_attributes thread attributes
+      let thread = print_attributes thread attributes
+      in thread
   | Complete {field_lhs; field_rhs; attributes; _} ->
       let thread = group ((print_expr field_lhs ^^ string " =")
-                          ^//^ print_expr field_rhs)
-      in print_attributes thread attributes
+                          ^//^ print_expr field_rhs) in
+      let thread = print_attributes thread attributes
+      in thread
 
 (* Set expression *)
 
@@ -1183,24 +1179,34 @@ and print_E_Update (node : update reg) =
   in
   group (structure ^^ string " with" ^^ nest 2 (break 1 ^^ update))
 
-(* Expression variable *)
-
-and print_E_Var (node : variable) = print_variable node
-
 (* Verbatim string expressions *)
 
 and print_E_Verbatim (node : lexeme wrap) = print_verbatim node
 
+(* Expression variable *)
+
+and print_E_Var (node : variable) = print_variable node
+
+(* Projection *)
+
+and print_E_Proj (node : projection reg) =
+  let node            = node.value in
+  let record_or_tuple = print_expr node.record_or_tuple
+  and field_path      = print_nsepseq print_selection node.field_path
+  in group (record_or_tuple ^^ string "." ^^ break 0 ^^ field_path)
+
+and print_selection (node : selection) =
+  match node with
+    FieldName name -> string name#payload
+  | Component cmp  -> cmp#payload |> snd |> Z.to_string |> string
 
 (* EXPORTS *)
 
-let print_type_expr   _state = print_type_expr
-let print_pattern     _state = print_pattern
-let print_expr        _state = print_expr
-let print_declaration _state = print_declaration
+let print_type_expr = print_type_expr
+let print_pattern   = print_pattern
+let print_expr      = print_expr
 
-type cst         = CST.t
-type expr        = CST.expr
-type type_expr   = CST.type_expr
-type pattern     = CST.pattern
-type declaration = CST.declaration
+type cst        = CST.t
+type expr       = CST.expr
+type type_expr  = CST.type_expr
+type pattern    = CST.pattern

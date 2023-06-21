@@ -3,7 +3,7 @@ module Trace = Trace
 module Logger = Logger
 module PP_helpers = PP_helpers
 module Location = Location
-module Location_ordered = Location_ordered
+
 module List = X_list
 module Pair = X_pair
 module Triple = X_triple
@@ -22,8 +22,6 @@ module Snippet = Snippet
 
 module Error = Error
 module Warning = Warning
-module File = Simple_utils_file
-module Http_uri = Simple_utils_http_uri
 
 (* Originally by Christian Rinderknecht *)
 

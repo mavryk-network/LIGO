@@ -11,12 +11,13 @@ function that dispatches control to the entrypoints (it is not already
 the default entrypoint).
 
 The semantics of function calls in LIGO is that of a *copy of the
-arguments but also of the environment*. In the case of JsLIGO, this
+arguments but also of the environment*. In the case of PascaLIGO, this
 means that any mutation (assignment) on variables outside the scope of
 the function will be lost when the function returns, just as the
 mutations inside the functions will be.
 
 ## Declaring Functions
+
 
 <Syntax syntax="pascaligo">
 
@@ -110,7 +111,6 @@ ligo run evaluate-call gitlab-pages/docs/language-basics/src/functions/blockless
 ```
 
 </Syntax>
-
 <Syntax syntax="cameligo">
 
 Functions in CameLIGO are defined using the `let` keyword, like other
@@ -247,9 +247,13 @@ ligo run evaluate-call gitlab-pages/docs/language-basics/src/functions/blockless
 # Outputs: 3
 ```
 
-As in CameLIGO, the function body is a single expression, whose value
-is returned. If the body contains more than a single expression, you
-use block between braces:
+
+
+As in CameLIGO and with blockless functions in PascaLIGO, the function
+body is a single expression, whose value is returned.
+
+If the body contains more than a single expression, you use block
+between braces:
 
 ```jsligo group=b
 let myFun = (x: int, y: int) => {
@@ -288,6 +292,7 @@ are useful when you want to pass them as arguments, or assign them to
 a key in a record or a map.
 
 Here is how to define an anonymous function:
+
 
 <Syntax syntax="pascaligo">
 
@@ -343,6 +348,7 @@ pattern for lambdas: to be used as parameters to functions. Consider
 the use case of having a list of integers and mapping the increment
 function to all its elements.
 
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=c
@@ -397,9 +403,8 @@ gitlab-pages/docs/language-basics/src/functions/incr_map.jsligo --entry-point in
 
 
 ## Nested functions (also known as closures)
-
-It is possible to define a functions inside another function. These
-functions have access to variables in the same scope.
+It's possible to place functions inside other functions. These functions
+have access to variables in the same scope.
 
 <Syntax syntax="pascaligo">
 
@@ -432,16 +437,17 @@ let closure_example = i => {
 </Syntax>
 
 
-## Recursive functions
+## Recursive function
 
-LIGO functions are not recursive by default, the user need to specify
-that the function is recursive.
+<Syntax syntax="pascaligo">
+
+LIGO functions are not recursive by default and the user needs to
+specify that the function is recursive.
 
 At the moment, recursive function are limited to one, e.g., a tuple,
 parameter and recursion is limited to __tail recursion__, that is, the
 recursive call should be the last expression of the function.
 
-<Syntax syntax="pascaligo">
 In PascaLIGO, recursive functions are defined using the `recursive`
 keyword:
 
@@ -453,8 +459,15 @@ recursive function fibo (const n : int; const n_1 : int; const n_0 : int) : int 
   if n < 2 then n_1 else fibo (n-1, n_1 + n_0, n_1)
 ```
 </Syntax>
-
 <Syntax syntax="cameligo">
+
+LIGO functions are not recursive by default, the user need to specify
+that the function is recursive.
+
+At the moment, recursive function are limited to one, e.g., a tuple,
+parameter and recursion is limited to __tail recursion__, that is, the
+recursive call should be the last expression of the function.
+
 In CameLIGO, recursive functions are defined using the `rec` keyword
 
 ```cameligo group=d
@@ -465,8 +478,10 @@ let rec fibo (n, n_1, n_0 : int * int * int) : int =
   if n < 2 then n_1 else fibo (n-1, n_1 + n_0, n_1)
 ```
 </Syntax>
-
 <Syntax syntax="jsligo">
+
+At the moment, recursion is limited to __tail recursion__, that is, the
+recursive call should be the last expression of the function.
 
 ```jsligo group=d
 let sum = (n: int, acc: int): int => {

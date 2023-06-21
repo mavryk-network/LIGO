@@ -49,29 +49,3 @@ coverage:
 
 install:
 	cp _build/install/default/bin/ligo /usr/local/bin/ligo
-
-install-vscode:
-	cd tools/vscode/ && \
-	yarn install && \
-	rm -f ./*.vsix && \
-	yarn package && \
-	code --install-extension *.vsix --force
-
-run-vscode: install-vscode
-	code
-
-_build/default/src/bin/js_main.bc.js: ./src/bin/js_main.ml ./src/bin/dune
-	patch -d vendors/tezos-ligo -p1 < ./0001-Nairobi-JSOO-Gas-free.patch
-	patch -d vendors/tezos-ligo -p1 < ./0002-JSOO-Use-lib_hacl-compatible-with-hacl-star-0.4.1.patch
-	opam exec -- dune build $(<:.ml=.bc.js)
-	patch -d vendors/tezos-ligo -R -p1 < 0001-Nairobi-JSOO-Gas-free.patch
-	patch -d vendors/tezos-ligo -R -p1 < 0002-JSOO-Use-lib_hacl-compatible-with-hacl-star-0.4.1.patch
-
-
-.PHONY: build-demo-webide demo-webide-start
-build-demo-webide: _build/default/src/bin/js_main.bc.js
-	cd jsoo && env PUPPETEER_PRODUCT=firefox npm i && npm run build
-
-demo-webide-start:
-	make build-demo-webide
-	python -m http.server -d $(WEB_STAGING_AREA)

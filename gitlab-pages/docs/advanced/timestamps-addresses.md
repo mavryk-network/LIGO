@@ -13,8 +13,8 @@ providing the given current timestamp for the contract.
 
 ### Starting time of the current block
 
-You can obtain the starting time of the current block using the
-built-in `Tezos.get_now`. This timestamp does not change during the execution
+You can obtain the starting time of the current block using the 
+built-in `Tezos.get_now`. This timestamp does not change during the execution 
 of the contract. Please be aware that it is up to the baker to set the
 current timestamp value.
 
@@ -125,6 +125,7 @@ let in_24_hrs: timestamp = today - one_day;
 
 Timestamps can be subtracted, that means, we can use minus (`-`) between two timestamps:
 
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=g
@@ -220,7 +221,6 @@ let my_account: address =
 
 </Syntax>
 
-
 ## Signatures
 
 The `signature` type in LIGO datatype is used for Tezos signatures
@@ -268,6 +268,7 @@ failure if the key is invalid.
 
 Here is how you can define a key.
 
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=f
@@ -293,3 +294,4 @@ let my_key : key =
 ```
 
 </Syntax>
+

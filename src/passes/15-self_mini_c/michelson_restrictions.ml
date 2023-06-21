@@ -5,17 +5,9 @@ open Simple_utils.Trace
 let self_in_lambdas ~raise : expression -> expression =
   fun e ->
     match e.content with
-    | E_closure {binder=_ ; body } | E_rec { func = { binder = _ ; body } ; rec_binder = _ } ->
-      let rec f = fun ~raise e -> match e.content with
-        | E_raw_michelson (code) ->
-          let code = Tezos_utils.Michelson.lseq Location.generated code in
-          let code = Tezos_micheline.Micheline.(map_node (fun _ -> ()) (fun x -> x) code) in
-          if Tezos_utils.Michelson.has_prim "SELF" code then
-            raise.error bad_self_address
-          else
-            e
-        | E_inline_michelson (code, args) ->
-          let _ = List.map ~f:(f ~raise) args in
+    | E_closure {binder=_ ; body} ->
+      let f = fun ~raise e -> match e.content with
+        | E_raw_michelson (code, _) ->
           let code = Tezos_utils.Michelson.lseq Location.generated code in
           let code = Tezos_micheline.Micheline.(map_node (fun _ -> ()) (fun x -> x) code) in
           if Tezos_utils.Michelson.has_prim "SELF" code then
@@ -52,11 +44,11 @@ let rec check_comparable ~raise (error : type_expression -> _) : type_expression
 let not_comparable ~raise : expression -> expression =
   fun e ->
   let f t = match t.type_content with
-    | T_set u ->
-      let () = check_comparable ~raise (not_comparable "set" t) u in
+    | T_set t ->
+      let () = check_comparable ~raise (not_comparable "set") t in
       t
-    | T_ticket u ->
-      let () = check_comparable ~raise (not_comparable "ticket" t) u in
+    | T_ticket t ->
+      let () = check_comparable ~raise (not_comparable "ticket") t in
       t
     | _ -> t in
   let _ = Helpers.map_type_expression f e.type_expression in

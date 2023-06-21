@@ -9,6 +9,7 @@ import Syntax from '@theme/Syntax';
 
 Strings are defined using the built-in `string` type like this:
 
+
 <Syntax syntax="pascaligo">
 
 ```
@@ -32,7 +33,10 @@ let a = "Hello Alice";
 
 </Syntax>
 
+
+
 ### Concatenating Strings
+
 
 <Syntax syntax="pascaligo">
 
@@ -103,12 +107,14 @@ let slice = String.sub (0 as nat, 1 as nat, name);
 
 </Syntax>
 
+
 > ⚠️ Notice that the offset and length of the slice are natural
 > numbers.
 
 ### Length of Strings
 
 The length of a string can be found using a built-in function:
+
 
 <Syntax syntax="pascaligo">
 
@@ -144,6 +150,7 @@ let length = String.length(name);  // length == 5
 
 Byte literals are defined using the prefix `0x` followed by hexadecimal digits like this:
 
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo
@@ -167,7 +174,9 @@ let b = 0x7070;
 
 </Syntax>
 
+
 Moreover, a string literal can be converted to its bytes representation:
+
 
 <Syntax syntax="pascaligo">
 
@@ -226,12 +235,13 @@ let mixed = Bytes.concat(white, black); // 0xffff0000
 
 </Syntax>
 
+
+
 ### Extracting Bytes
 
-Bytes can be extracted using the predefined function `Bytes.sub`.  The
-first parameter takes the start index and the second parameter takes
-the number of bytes. Pay special attention to how `bytes` are
-indexed.
+Bytes can be extracted using the predefined function `Bytes.sub`. 
+The first parameter takes the start index and the second parameter takes the number of bytes.
+Pay special attention to how `bytes` are indexed.
 
 <Syntax syntax="pascaligo">
 
@@ -263,6 +273,7 @@ let slice = Bytes.sub (1 as nat, 2 as nat, b); // 0x3456
 
 The length of `bytes` can be found using a built-in function `Bytes.length`:
 
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=f
@@ -289,149 +300,3 @@ let length = Bytes.length(b);  // length = 3
 
 </Syntax>
 
-### Bitwise operators
-
-You can perform bitwise operation on `bytes` as follows:
-
-<Syntax syntax="pascaligo">
-
-```pascaligo group=g
-(* Bitwise and *)
-const b_and           = Bitwise.and         (0x0005, 0x0106); // 0x0004
-
-(* Bitwise or *)
-const b_or            = Bitwise.or          (0x0005, 0x0106); // 0x0107
-
-(* Bitwise xor *)
-const b_xor           = Bitwise.xor         (0x0005, 0x0106); // 0x0103
-
-(* Bitwise shift left *)
-const b_shift_left    = Bitwise.shift_left  (0x06  , 8n    ); // 0x0600
-
-(* Bitwise shift right *)
-const b_shift_right   = Bitwise.shift_right (0x0006, 1n    ); // 0x0003
-```
-
-</Syntax>
-<Syntax syntax="cameligo">
-
-```cameligo group=g
-(* Bitwise and *)
-let b_and         = 0x0005 land 0x0106 (* 0x0004 *)
-
-(* Bitwise or *)
-let b_or          = 0x0005 lor  0x0106 (* 0x0107 *)
-
-(* Bitwise xor *)
-let b_xor         = 0x0005 lxor 0x0106 (* 0x0103 *)
-
-(* Bitwise shift left *)
-let b_shift_left  = 0x06   lsl  8n     (* 0x0600 *)
-
-(* Bitwise shift right *)
-let b_shift_right = 0x0006 lsr  1n     (* 0x0003 *)
-```
-
-</Syntax>
-
-<Syntax syntax="jsligo">
-
-```jsligo group=g
-/* Bitwise and */
-const b_and           = Bitwise.and         (0x0005, 0x0106  ); // 0x0004
-
-/* Bitwise or */
-const b_or            = Bitwise.or          (0x0005, 0x0106  ); // 0x0107
-
-/* Bitwise xor */
-const b_xor           = Bitwise.xor         (0x0005, 0x0106  ); // 0x0103
-
-/* Bitwise shift left */
-const b_shift_left    = Bitwise.shift_left  (0x06  , 8 as nat); // 0x0600
-
-/* Bitwise shift right */
-const b_shift_right   = Bitwise.shift_right (0x0006, 1 as nat); // 0x0003
-```
-
-</Syntax>
-
-
-### From `bytes` to `nat` and back
-
-You can case `bytes` to `nat` using the built-in `nat` function and vice-versa 
-using using the `bytes` built-in function.
-
-<Syntax syntax="pascaligo">
-
-```pascaligo group=h
-(* bytes -> nat *)
-const test_bytes_nat = nat(0x1234) // 1234n
-
-(* nat -> bytes *)
-const test_nat_bytes = bytes(4660n) // 0x1234
-```
-
-</Syntax>
-<Syntax syntax="cameligo">
-
-```cameligo group=h
-(* bytes -> nat *)
-let test_bytes_nat = nat 0x1234 (* 1234n *)
-
-(* nat -> bytes *)
-let test_nat_bytes = bytes 4660n (* 0x1234 *)
-```
-
-</Syntax>
-
-<Syntax syntax="jsligo">
-
-```jsligo group=h
-/* bytes -> nat */
-const test_bytes_nat = nat(0x1234) // (1234 as nat)
-
-/* nat -> bytes */
-const test_nat_bytes = bytes(4660 as nat) // 0x1234
-```
-
-</Syntax>
-
-### From `bytes` to `int` and back
-
-You can cast `bytes` to `int` using the built-in `int` function and vice-versa 
-using the `bytes` built-in function.
-
-<Syntax syntax="pascaligo">
-
-```pascaligo group=h
-(* bytes -> int *)
-const test_bytes_int = int(0x1234) // 4660
-
-(* int -> bytes *)
-const test_int_bytes = bytes(4660) // 0x1234
-```
-
-</Syntax>
-<Syntax syntax="cameligo">
-
-```cameligo group=h
-(* bytes -> int *)
-let test_bytes_int = int 0x1234 (* 4660 *)
-
-(* int -> bytes *)
-let test_int_bytes = bytes 4660 (* 0x1234 *)
-```
-
-</Syntax>
-
-<Syntax syntax="jsligo">
-
-```jsligo group=h
-/* bytes -> int */
-const test_bytes_int = int(0x1234) // 4660
-
-/* int -> bytes */
-const test_int_bytes = bytes(4660) // 0x1234
-```
-
-</Syntax>

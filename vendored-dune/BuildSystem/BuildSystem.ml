@@ -8,17 +8,10 @@ module List = Simple_utils.List
 module Source_input = struct
   type file_name = string
   type raw_input = { id : file_name ; code : string }
-  type raw_input_lsp = { file : file_name ; code : string }
-  type code_input = 
-    From_file of file_name 
-  | HTTP of Uri.t
-  | Raw of raw_input 
-  | Raw_input_lsp of raw_input_lsp
+  type code_input = From_file of file_name | Raw of raw_input
   let id_of_code_input : code_input -> file_name = function
-    From_file file_name -> file_name
-  | HTTP uri -> Filename.basename @@ Uri.to_string uri
+  | From_file file_name -> file_name
   | Raw { id ; code = _  } -> id
-  | Raw_input_lsp { file ; code = _ } -> file
 end
 
 module type M =
@@ -31,26 +24,19 @@ module type M =
     type meta_data
     val preprocess : code_input -> compilation_unit * meta_data * (file_name * module_name) list
     module AST : sig
-      type t
-      val link : t -> t -> t
-
-      (* An interface describes the signature of a module *)
-      type interface
-      val link_interface : interface -> interface -> interface
-
+      type declaration
+      type t = declaration list
       (* Environment should be a local notion of the BuildSystem *)
       type environment
+      val add_module_to_env : module_name -> environment -> environment -> environment
+      val add_ast_to_env : t -> environment -> environment
       val init_env : environment
-      val add_module_to_environment : module_name -> interface -> environment -> environment
-      val add_interface_to_environment : interface -> environment -> environment
 
       (* This should probably be taken in charge be the compiler, which should be able to handle "libraries" *)
-      val make_module_in_ast : module_name -> t -> interface -> t -> t
-      val make_module_in_interface : module_name -> interface -> interface -> interface
+      val make_module_declaration : module_name -> t -> declaration
     end
-    val compile : AST.environment -> file_name -> meta_data -> compilation_unit -> AST.t * AST.interface
+    val compile : AST.environment -> file_name -> meta_data -> compilation_unit -> AST.t
     val lib_ast : unit -> AST.t
-    val lib_interface : unit -> AST.interface
   end
 
 module Make (M : M) =
@@ -63,8 +49,8 @@ module Make (M : M) =
   type error = Errors.t
   type ast = M.AST.t
   type env = M.AST.environment
-  type interface = M.AST.interface
   type 'a build_error = ('a, error) result
+
 
   let dependency_graph : code_input -> graph =
     fun code_input ->
@@ -80,15 +66,7 @@ module Make (M : M) =
           else G.add_edge dep_g acc id
         in
         let dep_g,vertices =
-          let f (x, y) =
-            let dependency_code_input =
-              match Caml.Sys.backend_type with
-              | Other "js_of_ocaml" -> Source_input.HTTP (Uri.of_string x)
-              | _ -> Source_input.From_file x
-            in
-            dependency_code_input, y
-          in
-          let deps = List.map ~f deps in
+          let deps = List.map ~f:(fun (x,y) -> Source_input.From_file x, y) deps in
           List.fold ~f:(dfs id) ~init:(dep_g,vertices) deps
         in
         (dep_g,vertices)
@@ -119,13 +97,13 @@ module Make (M : M) =
   let aggregate_dependencies_as_headers order_deps asts_typed =
     (* Add the module at the beginning of the file *)
     let aux map ((file_name),(_,_,_,deps_lst)) =
-      let (ast,intf) =
+      let (ast,_) =
         match (SMap.find_opt file_name asts_typed) with
           Some ast -> ast
         | None -> failwith "failed to find module"
       in
 
-      let map = SMap.add file_name (ast, intf) map in
+      let map = SMap.add file_name ast map in
       map
     in
     let asts_typed = List.fold ~f:aux ~init:SMap.empty order_deps in
@@ -133,55 +111,50 @@ module Make (M : M) =
     let (file_name,(_,_,_,_deps_lst)),order_deps = match List.rev order_deps with
       | [] -> failwith "compiling nothing"
       | hd::tl -> (hd,tl) in
-    let contract, contract_interface =
+    let contract =
       match (SMap.find_opt file_name asts_typed) with
         Some ast -> ast
       | None -> failwith "failed to find module"
     in
     (* Add all dependency at the beginning of the file *)
-    let add_modules (file_name,(mangled_name,_,_, _deps_lst)) =
+    let add_modules dep_types (file_name,(mangled_name,_,_, _deps_lst)) =
       let module_binder = mangled_name in
       (* Get the ast_type of the module *)
-      let ast_typed, interface =
+      let ast_typed =
         match (SMap.find_opt file_name asts_typed) with
           Some ast -> ast
         | None -> failwith "failed to find module"
       in
-      (module_binder, ast_typed, interface)
+      (dep_types,(M.AST.make_module_declaration module_binder ast_typed))
     in
-    let header_list = List.map ~f:add_modules @@ order_deps in
-    let aggregated = List.fold_left ~f:(fun (c, ci) (module_binder, ast, interface) ->  (M.AST.make_module_in_ast module_binder ast interface c, M.AST.make_module_in_interface module_binder interface ci)) ~init:(contract, contract_interface) header_list in
+    let _,header_list = List.fold_map_right ~f:add_modules ~init:(SMap.empty) @@ order_deps in
+    let aggregated = List.fold_left ~f:(fun c a ->  a::c) ~init:contract header_list in
     aggregated
 
   let add_modules_in_env (env : M.AST.environment) deps =
-    let aux env (module_name, (_,intf)) =
-      M.AST.add_module_to_environment module_name intf env
+    let aux env (module_name, (_,ast)) =
+      M.AST.add_module_to_env module_name ast env
     in
     List.fold_left ~f:aux ~init:env deps
 
-  let add_deps_to_env (asts_typed : (ast * interface) SMap.t) (_file_name, (_meta,_c_unit,deps)) =
+  let add_deps_to_env (asts_typed : (ast * env) SMap.t) (_file_name, (_meta,_c_unit,deps)) =
     let aux (file_name,module_name) =
-      let file_name =
-        match Caml.Sys.backend_type with
-        | Other "js_of_ocaml" -> Filename.basename file_name (* Because HTTP URIs could be deepers *)
-        | _ -> file_name
-      in
       let ast_typed =
         match (SMap.find_opt file_name asts_typed) with
           Some (ast) -> ast
-        | None -> failwith ("Failed for " ^ file_name ^ " File typed before dependency. The build system is broken, contact the devs")
+        | None -> failwith "File typed before dependency. The build system is broken, contact the devs"
       in
       (module_name, ast_typed)
     in
     let deps = List.map ~f:aux deps in
-    let init_env = M.AST.add_interface_to_environment (M.lib_interface ()) M.AST.init_env in
-    let env_with_deps = add_modules_in_env init_env deps in
+    let env_with_deps = add_modules_in_env M.AST.init_env deps in
     env_with_deps
 
   let compile_file_with_deps asts (file_name, (mangled_name,meta,c_unit,deps)) =
     let env_with_deps = add_deps_to_env asts (file_name, (meta,c_unit,deps)) in
-    let ast, ast_intf = M.compile env_with_deps file_name meta c_unit in
-    SMap.add file_name (ast, ast_intf) asts
+    let ast = M.compile env_with_deps file_name meta c_unit in
+    let ast_env = M.AST.add_ast_to_env (ast:ast) env_with_deps in
+    SMap.add file_name (ast,ast_env) asts
 
   let compile_unqualified : code_input -> ast build_error =
     fun main_code_input ->
@@ -193,17 +166,16 @@ module Make (M : M) =
         Ok (fst @@ SMap.find main_file_name asts_typed)
       | Error e -> Error e
 
-  let compile_qualified : code_input -> (ast * interface) build_error =
+  let compile_qualified : code_input -> ast build_error =
     fun code_input ->
       let deps = dependency_graph code_input in
       let file_name = Source_input.id_of_code_input code_input in
       match solve_graph deps file_name with
         Ok (ordered_deps) ->
         let asts_typed = List.fold ~f:(compile_file_with_deps) ~init:(SMap.empty) ordered_deps in
-        let contract, contract_interface = aggregate_dependencies_as_headers ordered_deps asts_typed in
-        let contract = M.AST.link (M.lib_ast ()) contract in
-        let contract_interface = M.AST.link_interface (M.lib_interface ()) contract_interface in
-        Ok (contract, contract_interface)
+        let contract = aggregate_dependencies_as_headers ordered_deps asts_typed in
+        let contract = M.lib_ast () @ contract in
+        Ok contract
       | Error e -> Error e
   end
 

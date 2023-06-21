@@ -48,7 +48,7 @@ let while_multi_statements_1 = (n : int) : int => {
         i += 1;
         m -= 1;
     };
-    m = i;
+    let _ = m = i;
     return sum
 }
 
@@ -62,6 +62,6 @@ let while_multi_statements_2 = (n : int) : int => {
         i += 1;
         m -= 1;
     };
-    i = m;
+    let _ = i = m;
     return sum
 };

@@ -6,49 +6,23 @@ title: Migrating from Ethereum
 import Syntax from '@theme/Syntax';
 
 
-This article is aimed at those who have some experience with
-developing smart contracts for Ethereum in Solidity. We will cover the
-key differences between Solidity and LIGO, compare the execution model
-of Ethereum and Tezos blockchains, and list the features you should be
-aware of while developing smart contracts for Tezos.
+This article is aimed at those who have some experience with developing smart contracts for Ethereum in Solidity. We will cover the key differences between Solidity and LIGO, compare the execution model of Ethereum and Tezos blockchains, and list the features you should be aware of while developing smart contracts for Tezos.
 
 ## Languages and libraries
 
-Tezos is an upgradeable blockchain that focuses on
-decentralisation. It offers a wide variety of languages, frameworks,
-and tools you can use to develop your contracts. In this article, we
-mainly focus on the LIGO language, and the provided examples use the
-Truffle framework for testing. However, many of the points here cover
-the inherent differences in the blockchain architectures, so they
-should be valid for other languages and frameworks in the Tezos
-ecosystem.
+Tezos is an upgradeable blockchain that focuses on decentralisation. It offers a wide variety of languages, frameworks, and tools you can use to develop your contracts. In this article, we mainly focus on the LIGO language, and the provided examples use the Truffle framework for testing. However, many of the points here cover the inherent differences in the blockchain architectures, so they should be valid for other languages and frameworks in the Tezos ecosystem.
 
-The current Tezos protocol uses the Michelson language under the
-hood. Michelson is much like EVM in Ethereum, inasmuch as its programs
-are low-level code executed by an embedded virtual
-machine. Nevertheless, contrary to EVM byte-code, Michelson is a
-strongly-typed stack-based language designed to be human-readable.
+The current Tezos protocol uses the Michelson language under the hood. Michelson is much like EVM in Ethereum, inasmuch as its programs are low-level code executed by an embedded virtual machine. Nevertheless, contrary to EVM byte-code, Michelson is a strongly-typed stack-based language designed to be human-readable.
 
-Having a human-readable representation of compiled contracts makes it
-harder for compiler bugs to pass unnoticed: everyone can review the
-Michelson code of the contract and even formally prove its
-correctness.
+Having a human-readable representation of compiled contracts makes it harder for compiler bugs to pass unnoticed: everyone can review the Michelson code of the contract and even formally prove its correctness.
 
-LIGO is a family of high-level languages. There are several _flavours_
-or _syntaxes_ of LIGO – CameLIGO, and JsLIGO. The developers may
-choose whatever syntax looks more familiar to them.
+LIGO is a family of high-level languages. There are several _flavours_ or _syntaxes_ of LIGO – PascaLIGO, CameLIGO, and JsLIGO. The developers may choose whatever syntax looks more familiar to them.
 
 ## Terminology
 
-For those who come from the Ethereum world, the terminology used in
-Tezos may be misleading. Tezos developers chose to _not_ reuse the
-same terms for similar concepts for a reason: a false sense of
-similarity would be a bad friend for those migrating to a different
-blockchain architecture.
+For those who come from the Ethereum world, the terminology used in Tezos may be misleading. Tezos developers chose to _not_ reuse the same terms for similar concepts for a reason: a false sense of similarity would be a bad friend for those migrating to a different blockchain architecture.
 
-We will, however, try to associate the terms known to you with the
-terms used in Tezos. Note that this is just an _association,_ and not
-the exact equivalence.
+We will, however, try to associate the terms known to you with the terms used in Tezos. Note that this is just an _association,_ and not the exact equivalence.
 
 | Ethereum term            | Tezos term           | Notes |
 |--------------------------|----------------------|-------|
@@ -80,7 +54,6 @@ type token_amount is TokenAmount of nat
 ```
 
 </Syntax>
-
 <Syntax syntax="cameligo">
 
 ```cameligo
@@ -101,6 +74,7 @@ type token_amount = | ["TokenAmount", nat];
 
 </Syntax>
 
+
 As in Solidity, there are record types:
 <Syntax syntax="pascaligo">
 
@@ -109,7 +83,6 @@ type creature is record [heads_count : nat; legs_count : nat; tails_count : nat]
 ```
 
 </Syntax>
-
 <Syntax syntax="cameligo">
 
 ```cameligo
@@ -117,6 +90,8 @@ type creature = {heads_count : nat; legs_count : nat; tails_count : nat}
 ```
 
 </Syntax>
+
+
 
 <Syntax syntax="jsligo">
 
@@ -253,6 +228,7 @@ type authority is Dictatorship of leader | Democracy of committee
 ```
 
 </Syntax>
+
 <Syntax syntax="cameligo">
 
 ```cameligo
@@ -298,7 +274,6 @@ When the contract is compiled, the Solidity compiler automatically adds dispatch
 In Tezos, a contract must define a default entrypoint that does the dispatching. It is much like a `main` function in C-like languages. It accepts a typed _parameter_ (some data that comes with a transaction) and the current value of the contract _storage_ (the internal state of the contract). The default entrypoint returns a list of internal operations and the new value of the storage.
 
 For example, we can simulate Ethereum dispatching behaviour:
-
 <Syntax syntax="pascaligo">
 
 ```pascaligo
@@ -360,7 +335,7 @@ let main (p, s : parameter * storage) =
 <Syntax syntax="jsligo">
 
 ```jsligo group=a2
-let main = (parameter: bytes, storage: int): [list<operation>, int] => {
+let main = ([parameter, storage]: [bytes, int]): [list<operation>, int] => {
   if (parameter == 0xbc1ecb8e) {
     return [list([]), storage + 1]
   } else {
@@ -380,7 +355,7 @@ type parameter = ["Increment"] | ["Decrement"];
 
 type storage = int;
 
-let main = (p: parameter, s: storage): [list<operation>, int] => {
+let main = ([p, s]: [parameter, storage]): [list<operation>, int] => {
   return match(p, {
     Increment: () => [list([]), s + 1],
     Decrement: () => [list([]), s - 1]
@@ -424,6 +399,7 @@ let main (p, s : parameter * storage) =
 ```
 
 </Syntax>
+
 
 
 <Syntax syntax="jsligo">
@@ -512,7 +488,7 @@ let multiplyBy4 = (storage: int) : int => multiplyBy2(multiplyBy2(storage));
 
 type parameter = | ["MultiplyBy4"] | ["MultiplyBy16"];
 
-let main = (param: parameter, storage: int) : [list<operation>, int] => {
+let main = (param : parameter, storage : int) => {
   const op = list ([]) ;
   return match(param, {
     MultiplyBy4: () => [op, multiplyBy4(storage)],
@@ -579,7 +555,7 @@ type parameter = | ["Compute", (c : int) => int];
 
 type storage = int;
 
-let main = (p: parameter, s: storage): [list<operation>, int] => {
+let main = ([p, s]: [parameter, storage]): [list<operation>, int] => {
   return match(p, {
     Compute: (func : (c : int) => int) => [list([]), func(s)]
   });
@@ -596,7 +572,6 @@ ligo run interpret 'main([Compute ((x : int) => x * x + 2 * x + 1), 3])' --init-
 The interpreted output is `( LIST_EMPTY() , 16 )`, which is an empty list of operations and the new storage value – the result of the computation.
 
 But this is not all lambdas are capable of. You can, for example, save them in storage:
-
 <Syntax syntax="pascaligo">
 
 ```pascaligo
@@ -653,20 +628,20 @@ type storage = { fn : option<((x : int) => int)>, value : int };
 
 type parameter = ["CallFunction"] | ["SetFunction", ((x : int) => int)];
 
-let call = (fn: option<((x : int) => int)>, value: int) : int => {
+let call = ([fn, value]: [option<((x : int) => int)>, int]) : int => {
   return match(fn, {
     Some: f => f(value),
     None: () => failwith("Lambda is not set")
   })
 };
 
-let main = (p : parameter, s: storage) : [list<operation>, storage] => {
+let main = ([p, s]: [parameter, storage]) : [list<operation>, storage] => {
   let newStorage =
     match(p, {
       SetFunction: fn => ({...s, fn: Some (fn)}),
       CallFunction: () => ({...s, value: call(s.fn, s.value)})
     });
-  return [list([]), newStorage]
+  [list([]), newStorage]
 };
 ```
 
@@ -776,7 +751,7 @@ let treasury = (p : unit, s : storage) => {
 
   // Then we prepare the internal operation we want to perform
   let operation = Tezos.transaction(unit, s.rewardsLeft, beneficiary);
-
+  
   // ...and return both the operations and the updated storage
   return [list([operation]), newStorage];
 };
@@ -855,10 +830,10 @@ In this article, we discussed some Solidity patterns and their LIGO counterparts
 
 | Solidity pattern | LIGO pattern |
 |------------------|--------------|
-| `public` field   | A field in the storage record, e.g. <Syntax syntax="cameligo">`type storage = { x : int; y : nat }`</Syntax><Syntax syntax="jsligo">`type storage = { x : int, y : nat }`</Syntax> |
+| `public` field   | A field in the storage record, e.g. <Syntax syntax="pascaligo">`type storage is record [ x : int; y : nat ]`</Syntax><Syntax syntax="cameligo">`type storage = { x : int; y : nat }`</Syntax><Syntax syntax="jsligo">`type storage = { x : int, y : nat }`</Syntax> |
 | `private` field  | N/A: all fields are public |
-| `private` method | A regular function, e.g., <Syntax syntax="cameligo">`let func (a : int) = ...`</Syntax><Syntax syntax="jsligo">`let func = (a : int) => ...`</Syntax> |
-| `public` /  `external` method  | A separate entrypoint in the parameter: <Syntax syntax="cameligo">`type parameter = F of int`</Syntax><Syntax syntax="jsligo">`type parameter = ["F", int]`</Syntax>. `main` entrypoint should dispatch and forward this call to the corresponding function using a match expression |
+| `private` method | A regular function, e.g., <Syntax syntax="pascaligo">`function func (const a : int) is ...`</Syntax><Syntax syntax="cameligo">`let func (a : int) = ...`</Syntax><Syntax syntax="jsligo">`let func = (a : int) => ...`</Syntax> |
+| `public` /  `external` method  | A separate entrypoint in the parameter: <Syntax syntax="pascaligo">`type parameter = F of int`</Syntax><Syntax syntax="cameligo">`type parameter = F of int`</Syntax><Syntax syntax="jsligo">`type parameter = ["F", int]`</Syntax>. `main` entrypoint should dispatch and forward this call to the corresponding function using a match expression |
 | `internal` method | There is no concept of inheritance in Tezos |
 | Constructor      | Set the initial storage upon origination |
 | Method that returns a value | Inspect the contract storage directly |

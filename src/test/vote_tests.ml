@@ -4,7 +4,7 @@ open Main_errors
 
 let get_program = get_program "./contracts/vote.mligo"
 
-open Ast_unified
+open Ast_imperative
 
 let init_storage name =
   e_record_ez
@@ -12,20 +12,13 @@ let init_storage name =
     [ "title", e_string ~loc name
     ; "yea", e_nat ~loc 0
     ; "nay", e_nat ~loc 0
-    ; "voters", e_set ~loc []
+    ; "voters", e_typed_set ~loc [] (t_address ~loc ())
     ; "start_time", e_timestamp ~loc 0
     ; "finish_time", e_timestamp ~loc 1000000000
     ]
 
 
-let yea =
-  let element =
-    e_applied_constructor
-      ~loc
-      { constructor = Label.of_string "Yea"; element = e_unit ~loc }
-  in
-  e_applied_constructor ~loc { constructor = Label.of_string "Vote"; element }
-
+let yea = e_constructor ~loc "Vote" (e_constructor ~loc "Yea" (e_unit ~loc ()))
 
 let init_vote ~raise () =
   let program = get_program ~raise () in

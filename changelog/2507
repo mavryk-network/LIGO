@@ -1,7 +1,0 @@
-
-author: tomjack
-description: "\\n\\n"
-merge_request: '2507'
-title: "Fix some debugger issues with source_type propagation"
-type: fixed
-            

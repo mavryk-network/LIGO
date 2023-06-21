@@ -1,9 +1,19 @@
 # Ligo Web IDE
 
-The Web IDE is available at https://ide.ligolang.org.
+## Deployment
 
-For instructions on building the frontend and backend, see the READMEs in the
-`ligo-webide-frontend` and `ligo-webide-backend` folders respectively.
+Web IDE is available at https://ligo-webide.serokell.team/.
 
-For information on the structure and functionality of the Web IDE as a whole,
-see documentation on [Notion](https://serokell.notion.site/Web-IDE-Documentation-7bf09a024d654571b548ab097f4be737).
+### Manually
+
+Prerequisites: `x86_64-linux` machine with Nix.
+
+To deploy a new version from CLI you'll need to run:
+```
+nix develop -c deploy .#webide --ssh-user <user> --skip-checks --remote-build
+```
+Note that in order to do the deployment, your user needs to have root access to the server.
+
+### From CI
+
+Web IDE deployment can be triggered from the CI manually on each commit to the `tooling` branch.

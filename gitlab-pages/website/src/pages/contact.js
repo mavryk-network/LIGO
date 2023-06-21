@@ -49,7 +49,7 @@ const TEAM = [
 
 const COMMUNICATION_CHANNELS = [
   {
-    link: 'https://discord.gg/tezos',
+    link: 'https://discord.gg/9rhYaEt',
     icon: 'img/communication_channels/discord.svg',
     description: "Join our Discord server. We're here to help."
   },

@@ -7,12 +7,12 @@
 (* } *)
 
 type virtual_location = string
-  [@@deriving hash, sexp]
+  [@@deriving hash]
 
 type t =
-  | File of (Region.t) (* file_location *)
+  | File of Region.t (* file_location *)
   | Virtual of virtual_location
-  [@@deriving sexp]
+
 let to_yojson = function
   | File reg  -> `List [`String "File"; Region.to_yojson reg]
   | Virtual v -> `List [`String "Virtual"; `String v]
@@ -69,19 +69,8 @@ let is_virtual = function
 
 type 'a wrap = {
   wrap_content : 'a ;
-  location : t [@hash.ignore]  ;
-} [@@deriving eq,compare,yojson,hash,iter,map,fold,sexp]
-
-
-let sexp_of_wrap : ('a -> Sexp.t) -> 'a wrap -> Sexp.t =
-  fun sexp_of_content ({ wrap_content ; location} as x) ->
-    match location with
-    | Virtual _ -> sexp_of_content wrap_content
-    | _ -> sexp_of_wrap sexp_of_content x
-
-let wrap_of_sexp : (Sexp.t -> 'a) -> Sexp.t -> 'a wrap = fun content_of_sexp sexp ->
-  { wrap_content = content_of_sexp sexp ; location = dummy }
-
+  location : t [@hash.ignore] ;
+} [@@deriving eq,compare,yojson,hash,iter]
 
 let wrap_to_yojson f {wrap_content;location} =
   `Assoc [("wrap_content", f wrap_content); ("location",to_yojson location)]
@@ -135,10 +124,3 @@ let cover : t -> t -> t = fun a b ->
 let get_file : t -> Region.t option = function
   | File r -> Some r
   | _ -> None
-
-let order : t -> t -> int = fun a b ->
-  match a, b with
-  | File a , File b -> if Region.lt a b then 1 else -1
-  | File a , _ -> 1
-  | _ , File b -> -1
-  | _ -> 0

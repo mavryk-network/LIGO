@@ -1,0 +1,126 @@
+; This file was automatically generated, do not edit.
+; Edit file manifest/main.ml instead.
+
+(executables
+ (names
+  test_p2p_socket
+  test_p2p_pool
+  test_p2p_io_scheduler
+  test_p2p_peerset
+  test_p2p_buffer_reader
+  test_p2p_banned_peers
+  test_p2p_node
+  test_p2p_connect_handler
+  test_p2p_maintenance)
+ (libraries
+  tezos-base
+  tezos-base.unix
+  tezos-stdlib-unix
+  tezos-stdlib
+  tezos-p2p
+  tezos-test-helpers
+  tezos-base-test-helpers
+  tezos-event-logging-test-helpers
+  tezos-p2p-services
+  alcotest-lwt
+  astring)
+ (link_flags
+  (:standard -linkall))
+ (flags
+  (:standard)
+  -open Tezos_base.TzPervasives
+  -open Tezos_stdlib_unix
+  -open Tezos_stdlib
+  -open Tezos_p2p
+  -open Tezos_base_test_helpers
+  -open Tezos_event_logging_test_helpers
+  -open Tezos_p2p_services))
+
+(rule
+ (alias runtest_p2p_socket)
+ (locks /ports/49152-65535)
+ (action (setenv BISECT_SIGTERM yes (run %{exe:test_p2p_socket.exe}))))
+
+(rule
+ (alias runtest_p2p_pool)
+ (locks /ports/49152-65535)
+ (action
+  (setenv BISECT_SIGTERM yes
+   (run %{exe:test_p2p_pool.exe} --clients 10 --repeat 5))))
+
+(rule
+ (alias runtest_p2p_io_scheduler)
+ (locks /ports/49152-65535)
+ (action
+  (setenv BISECT_SIGTERM yes
+   (run
+    %{exe:test_p2p_io_scheduler.exe}
+    --delay 5 --clients 8 --max-upload-speed 262144 --max-download-speed
+    1048576))))
+
+(rule
+ (alias runtest_p2p_socket_ipv4)
+ (locks /ports/49152-65535)
+ (action
+  (setenv BISECT_SIGTERM yes
+   (run %{exe:test_p2p_socket.exe} --addr ::ffff:127.0.0.1))))
+
+(rule
+ (alias runtest_p2p_pool_ipv4)
+ (locks /ports/49152-65535)
+ (action
+  (setenv BISECT_SIGTERM yes
+   (run
+    %{exe:test_p2p_pool.exe}
+    --clients 10 --repeat 5 --addr ::ffff:127.0.0.1))))
+
+(rule
+ (alias runtest_p2p_io_scheduler_ipv4)
+ (locks /ports/49152-65535)
+ (action
+  (setenv BISECT_SIGTERM yes
+   (run
+    %{exe:test_p2p_io_scheduler.exe}
+    --delay 5 --clients 8 --max-upload-speed 262144 --max-download-speed
+    1048576 --addr ::ffff:127.0.0.1))))
+
+(rule
+ (alias runtest_p2p_peerset)
+ (action (setenv BISECT_SIGTERM yes (run %{exe:test_p2p_peerset.exe}))))
+
+(rule
+ (alias runtest_p2p_buffer_reader)
+ (action (setenv BISECT_SIGTERM yes (run %{exe:test_p2p_buffer_reader.exe}))))
+
+(rule
+ (alias runtest_p2p_banned_peers)
+ (action (setenv BISECT_SIGTERM yes (run %{exe:test_p2p_banned_peers.exe}))))
+
+(rule
+ (alias runtest_p2p_node)
+ (locks /ports/49152-65535)
+ (action (setenv BISECT_SIGTERM yes (run %{exe:test_p2p_node.exe}))))
+
+(rule
+ (alias runtest_p2p_connect_handler)
+ (action
+  (setenv BISECT_SIGTERM yes (run %{exe:test_p2p_connect_handler.exe}))))
+
+(rule
+ (alias runtest_p2p_maintenance)
+ (action (setenv BISECT_SIGTERM yes (run %{exe:test_p2p_maintenance.exe}))))
+
+(rule
+ (alias runtest)
+ (package tezos-p2p)
+ (deps
+  (alias runtest_p2p_socket_ipv4)
+  (alias runtest_p2p_pool_ipv4)
+  (alias runtest_p2p_io_scheduler_ipv4)
+  (alias runtest_p2p_peerset)
+  (alias runtest_p2p_buffer_reader)
+  (alias runtest_p2p_banned_peers)
+  (alias runtest_p2p_node)
+  (alias runtest_p2p_connect_handler)
+  (alias runtest_p2p_maintenance))
+ (action (progn)))

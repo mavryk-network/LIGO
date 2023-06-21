@@ -1,12 +1,7 @@
 open Cli_expect
 
-let remove_last_line str =
-  String.split_lines str |> List.drop_last_exn |> String.concat ~sep:"\n"
-
-
 let%expect_test _ =
   run_ligo_good [ "-help" ];
-  print_endline @@ remove_last_line [%expect.output];
   [%expect
     {|
     The LigoLANG compiler
@@ -16,11 +11,11 @@ let%expect_test _ =
     === subcommands ===
 
       compile                    . compile a ligo program to michelson
-      transpile                  . Transpile ligo code from a syntax to another
-      transpile-with-ast         . [BETA] transpile ligo code from a syntax to
+      transpile                  . [BETA] transpile ligo code from a syntax to
                                    another
       run                        . compile and interpret ligo code
       info                       . tools to get information from contracts
+      mutate                     . create mutants of a ligo file
       repl                       . interactive ligo interpreter
       init                       . Initialize a new ligo project from template.
                                    Contract or library.
@@ -36,14 +31,13 @@ let%expect_test _ =
                                    registry
       login                      . [BETA] login to the LIGO package registry
       daemon                     . launch a long running LIGO process
-      lsp                        . [BETA] launch a LIGO lsp server
-      analytics                  . Manage analytics
       version                    . print version information
-      help                       . explain a given subcommand (perhaps recursively) |}]
+      help                       . explain a given subcommand (perhaps recursively)
+
+    (core/src/command.ml.Exit_called (status 0)) |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; "-help" ];
-  print_endline @@ remove_last_line [%expect.output];
   [%expect
     {|
 compile a contract.
@@ -57,7 +51,6 @@ This sub-command compiles a contract to Michelson code. It expects a source file
   [--constants CONSTANTS], -c
                              . A list of global constants that will be assumed
                                in the context, separated by ','
-  [--deprecated]             . enable deprecated language PascaLIGO
   [--disable-michelson-typechecking]
                              . Disable Michelson typecking, this might produce
                                ill-typed Michelson code.
@@ -80,9 +73,6 @@ This sub-command compiles a contract to Michelson code. It expects a source file
                              . A file with a JSON list of strings with Michelson
                                code. Those Michelson values will be registered
                                as global constants in the context.
-  [--library LIBS], -l       . A comma-separated list of paths to directories
-                               where to search for files to be included by the
-                               preprocessor
   [--michelson-comments COMMENT_TYPE] ...
                              . Selects kinds of comments to be added to the
                                Michelson output. Currently 'location' and 'env'
@@ -94,41 +84,35 @@ This sub-command compiles a contract to Michelson code. It expects a source file
                              . format that will be used by compile-contract for
                                the resulting Michelson. Available formats are
                                'text' (default), 'json' and 'hex'.
-  [--no-color]               . disable coloring in CLI output
-  [--no-metadata-check]      . disable TZIP-16 metadata compliance check
+  [--no-colour]              . disable coloring in CLI output
   [--no-stdlib]              . disable stdlib inclusion.
   [--no-warn]                . disable warning messages
   [--output-file FILENAME], -o
                              . if used, prints the output into the specified
                                file instead of stdout
   [--project-root PATH]      . The path to root of the project.
-  [--skip-analytics]         . Avoid ligo analytics publication. Configurable
-                               with environment variable LIGO_SKIP_ANALYTICS too
   [--syntax SYNTAX], -s      . the syntax that will be used. Currently supported
-                               syntaxes are "cameligo" and "jsligo". By default,
-                               the syntax is guessed from the extension (.mligo
-                               and .jsligo respectively).
-  [--transpiled]             . Disable checks that are unapplicable to
-                               transpiled contracts.
+                               syntaxes are "pascaligo", "cameligo" and
+                               "jsligo". By default, the syntax is guessed from
+                               the extension (.ligo, .mligo, and .jsligo
+                               respectively).
   [--views VIEWS], -v        . A list of declaration name that will be compiled
                                as on-chain views, separated by ','
-  [--warn-infinite-loop]     . warn about infinite loop
   [--warn-unused-rec]        . warn about unused recursion in a recursive
                                function
   [--werror]                 . treat warnings as errors
   [-e ENTRY-POINT], --entry-point
                              . the entry-point that will be compiled.
-  [-m MODULE], --module      . the entry-point will be compiled from that
-                               module.
   [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
-                               the LIGO environment (mumbai ,
-                               nairobi). By default, the current protocol
-                               (nairobi) will be used
-  [-help], -?                . print this help text and exit |}]
+                               the LIGO environment (kathmandu ,
+                               lima). By default, the current protocol (lima)
+                               will be used
+  [-help], -?                . print this help text and exit
+
+(core/src/command.ml.Exit_called (status 0)) |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "parameter"; "-help" ];
-  print_endline @@ remove_last_line [%expect.output];
   [%expect
     {|
     compile parameters to a Michelson expression.
@@ -146,7 +130,6 @@ let%expect_test _ =
       [--constants CONSTANTS], -c
                                  . A list of global constants that will be assumed
                                    in the context, separated by ','
-      [--deprecated]             . enable deprecated language PascaLIGO
       [--display-format FORMAT], --format
                                  . the format that will be used by the CLI.
                                    Available formats are 'dev', 'json', and
@@ -158,14 +141,10 @@ let%expect_test _ =
                                  . A file with a JSON list of strings with Michelson
                                    code. Those Michelson values will be registered
                                    as global constants in the context.
-      [--library LIBS], -l       . A comma-separated list of paths to directories
-                                   where to search for files to be included by the
-                                   preprocessor
       [--michelson-format CODE_FORMAT]
                                  . format that will be used by compile-contract for
                                    the resulting Michelson. Available formats are
                                    'text' (default), 'json' and 'hex'.
-      [--no-color]               . disable coloring in CLI output
       [--no-warn]                . disable warning messages
       [--now TIMESTAMP]          . the NOW value the Michelson interpreter will use
                                    (e.g. '2000-01-01T10:10:10Z')
@@ -175,31 +154,28 @@ let%expect_test _ =
       [--project-root PATH]      . The path to root of the project.
       [--sender ADDRESS]         . the sender the Michelson interpreter transaction
                                    will use.
-      [--skip-analytics]         . Avoid ligo analytics publication. Configurable
-                                   with environment variable LIGO_SKIP_ANALYTICS too
       [--source ADDRESS]         . the source the Michelson interpreter transaction
                                    will use.
       [--syntax SYNTAX], -s      . the syntax that will be used. Currently supported
-                                   syntaxes are "cameligo" and "jsligo". By default,
-                                   the syntax is guessed from the extension (.mligo
-                                   and .jsligo respectively).
-      [--warn-infinite-loop]     . warn about infinite loop
+                                   syntaxes are "pascaligo", "cameligo" and
+                                   "jsligo". By default, the syntax is guessed from
+                                   the extension (.ligo, .mligo, and .jsligo
+                                   respectively).
       [--warn-unused-rec]        . warn about unused recursion in a recursive
                                    function
       [--werror]                 . treat warnings as errors
       [-e ENTRY-POINT], --entry-point
                                  . the entry-point that will be compiled.
-      [-m MODULE], --module      . the entry-point will be compiled from that
-                                   module.
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
-                                   the LIGO environment (mumbai ,
-                                   nairobi). By default, the current protocol
-                                   (nairobi) will be used
-      [-help], -?                . print this help text and exit |}]
+                                   the LIGO environment (kathmandu ,
+                                   lima). By default, the current protocol (lima)
+                                   will be used
+      [-help], -?                . print this help text and exit
+
+    (core/src/command.ml.Exit_called (status 0)) |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "storage"; "-help" ];
-  print_endline @@ remove_last_line [%expect.output];
   [%expect
     {|
     compile an initial storage in LIGO syntax to a Michelson expression.
@@ -217,7 +193,6 @@ let%expect_test _ =
       [--constants CONSTANTS], -c
                                  . A list of global constants that will be assumed
                                    in the context, separated by ','
-      [--deprecated]             . enable deprecated language PascaLIGO
       [--display-format FORMAT], --format
                                  . the format that will be used by the CLI.
                                    Available formats are 'dev', 'json', and
@@ -229,15 +204,10 @@ let%expect_test _ =
                                  . A file with a JSON list of strings with Michelson
                                    code. Those Michelson values will be registered
                                    as global constants in the context.
-      [--library LIBS], -l       . A comma-separated list of paths to directories
-                                   where to search for files to be included by the
-                                   preprocessor
       [--michelson-format CODE_FORMAT]
                                  . format that will be used by compile-contract for
                                    the resulting Michelson. Available formats are
                                    'text' (default), 'json' and 'hex'.
-      [--no-color]               . disable coloring in CLI output
-      [--no-metadata-check]      . disable TZIP-16 metadata compliance check
       [--no-warn]                . disable warning messages
       [--now TIMESTAMP]          . the NOW value the Michelson interpreter will use
                                    (e.g. '2000-01-01T10:10:10Z')
@@ -247,31 +217,28 @@ let%expect_test _ =
       [--project-root PATH]      . The path to root of the project.
       [--sender ADDRESS]         . the sender the Michelson interpreter transaction
                                    will use.
-      [--skip-analytics]         . Avoid ligo analytics publication. Configurable
-                                   with environment variable LIGO_SKIP_ANALYTICS too
       [--source ADDRESS]         . the source the Michelson interpreter transaction
                                    will use.
       [--syntax SYNTAX], -s      . the syntax that will be used. Currently supported
-                                   syntaxes are "cameligo" and "jsligo". By default,
-                                   the syntax is guessed from the extension (.mligo
-                                   and .jsligo respectively).
-      [--warn-infinite-loop]     . warn about infinite loop
+                                   syntaxes are "pascaligo", "cameligo" and
+                                   "jsligo". By default, the syntax is guessed from
+                                   the extension (.ligo, .mligo, and .jsligo
+                                   respectively).
       [--warn-unused-rec]        . warn about unused recursion in a recursive
                                    function
       [--werror]                 . treat warnings as errors
       [-e ENTRY-POINT], --entry-point
                                  . the entry-point that will be compiled.
-      [-m MODULE], --module      . the entry-point will be compiled from that
-                                   module.
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
-                                   the LIGO environment (mumbai ,
-                                   nairobi). By default, the current protocol
-                                   (nairobi) will be used
-      [-help], -?                . print this help text and exit |}]
+                                   the LIGO environment (kathmandu ,
+                                   lima). By default, the current protocol (lima)
+                                   will be used
+      [-help], -?                . print this help text and exit
+
+    (core/src/command.ml.Exit_called (status 0)) |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "constant"; "-help" ];
-  print_endline @@ remove_last_line [%expect.output];
   [%expect
     {|
     compile constant to a Michelson value and its hash.
@@ -282,7 +249,6 @@ let%expect_test _ =
 
     === flags ===
 
-      [--deprecated]             . enable deprecated language PascaLIGO
       [--display-format FORMAT], --format
                                  . the format that will be used by the CLI.
                                    Available formats are 'dev', 'json', and
@@ -292,28 +258,22 @@ let%expect_test _ =
                                    meanwhile.
       [--init-file FILENAME]     . the path to the smart contract file to be used
                                    for context initialization.
-      [--library LIBS], -l       . A comma-separated list of paths to directories
-                                   where to search for files to be included by the
-                                   preprocessor
-      [--no-color]               . disable coloring in CLI output
       [--no-warn]                . disable warning messages
       [--project-root PATH]      . The path to root of the project.
-      [--skip-analytics]         . Avoid ligo analytics publication. Configurable
-                                   with environment variable LIGO_SKIP_ANALYTICS too
-      [--warn-infinite-loop]     . warn about infinite loop
       [--warn-unused-rec]        . warn about unused recursion in a recursive
                                    function
       [--werror]                 . treat warnings as errors
       [--without-run]            . disable running of compiled expression.
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
-                                   the LIGO environment (mumbai ,
-                                   nairobi). By default, the current protocol
-                                   (nairobi) will be used
-      [-help], -?                . print this help text and exit |}]
+                                   the LIGO environment (kathmandu ,
+                                   lima). By default, the current protocol (lima)
+                                   will be used
+      [-help], -?                . print this help text and exit
+
+    (core/src/command.ml.Exit_called (status 0)) |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "dry-run"; "-help" ];
-  print_endline @@ remove_last_line [%expect.output];
   [%expect
     {|
     run a smart-contract with the given storage and input.
@@ -328,7 +288,6 @@ let%expect_test _ =
                                    use for the transaction.
       [--balance INT]            . the balance the Michelson interpreter will use
                                    for the contract balance.
-      [--deprecated]             . enable deprecated language PascaLIGO
       [--display-format FORMAT], --format
                                  . the format that will be used by the CLI.
                                    Available formats are 'dev', 'json', and
@@ -336,46 +295,39 @@ let%expect_test _ =
                                    lacks details (we are still tweaking it), please
                                    contact us and use another format in the
                                    meanwhile.
-      [--library LIBS], -l       . A comma-separated list of paths to directories
-                                   where to search for files to be included by the
-                                   preprocessor
-      [--no-color]               . disable coloring in CLI output
       [--no-warn]                . disable warning messages
       [--now TIMESTAMP]          . the NOW value the Michelson interpreter will use
                                    (e.g. '2000-01-01T10:10:10Z')
       [--project-root PATH]      . The path to root of the project.
       [--sender ADDRESS]         . the sender the Michelson interpreter transaction
                                    will use.
-      [--skip-analytics]         . Avoid ligo analytics publication. Configurable
-                                   with environment variable LIGO_SKIP_ANALYTICS too
       [--source ADDRESS]         . the source the Michelson interpreter transaction
                                    will use.
       [--syntax SYNTAX], -s      . the syntax that will be used. Currently supported
-                                   syntaxes are "cameligo" and "jsligo". By default,
-                                   the syntax is guessed from the extension (.mligo
-                                   and .jsligo respectively).
-      [--warn-infinite-loop]     . warn about infinite loop
+                                   syntaxes are "pascaligo", "cameligo" and
+                                   "jsligo". By default, the syntax is guessed from
+                                   the extension (.ligo, .mligo, and .jsligo
+                                   respectively).
       [--warn-unused-rec]        . warn about unused recursion in a recursive
                                    function
       [--werror]                 . treat warnings as errors
       [-e ENTRY-POINT], --entry-point
                                  . the entry-point that will be compiled.
-      [-m MODULE], --module      . the entry-point will be compiled from that
-                                   module.
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
-                                   the LIGO environment (mumbai ,
-                                   nairobi). By default, the current protocol
-                                   (nairobi) will be used
-      [-help], -?                . print this help text and exit |}]
+                                   the LIGO environment (kathmandu ,
+                                   lima). By default, the current protocol (lima)
+                                   will be used
+      [-help], -?                . print this help text and exit
+
+    (core/src/command.ml.Exit_called (status 0)) |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "evaluate-call"; "-help" ];
-  print_endline @@ remove_last_line [%expect.output];
   [%expect
     {|
     run a function with the given parameter.
 
-      ligo run evaluate-call SOURCE_FILE FUNCTION PARAMETER_EXPRESSION
+      ligo run evaluate-call SOURCE_FILE PARAMETER_EXPRESSION
 
     This sub-command runs a LIGO function on a given argument. The context is initialized from a source file where the function is implemented. The interpretation is done using Michelson's interpreter.
 
@@ -385,7 +337,6 @@ let%expect_test _ =
                                    use for the transaction.
       [--balance INT]            . the balance the Michelson interpreter will use
                                    for the contract balance.
-      [--deprecated]             . enable deprecated language PascaLIGO
       [--display-format FORMAT], --format
                                  . the format that will be used by the CLI.
                                    Available formats are 'dev', 'json', and
@@ -393,37 +344,34 @@ let%expect_test _ =
                                    lacks details (we are still tweaking it), please
                                    contact us and use another format in the
                                    meanwhile.
-      [--library LIBS], -l       . A comma-separated list of paths to directories
-                                   where to search for files to be included by the
-                                   preprocessor
-      [--no-color]               . disable coloring in CLI output
       [--no-warn]                . disable warning messages
       [--now TIMESTAMP]          . the NOW value the Michelson interpreter will use
                                    (e.g. '2000-01-01T10:10:10Z')
       [--project-root PATH]      . The path to root of the project.
       [--sender ADDRESS]         . the sender the Michelson interpreter transaction
                                    will use.
-      [--skip-analytics]         . Avoid ligo analytics publication. Configurable
-                                   with environment variable LIGO_SKIP_ANALYTICS too
       [--source ADDRESS]         . the source the Michelson interpreter transaction
                                    will use.
       [--syntax SYNTAX], -s      . the syntax that will be used. Currently supported
-                                   syntaxes are "cameligo" and "jsligo". By default,
-                                   the syntax is guessed from the extension (.mligo
-                                   and .jsligo respectively).
-      [--warn-infinite-loop]     . warn about infinite loop
+                                   syntaxes are "pascaligo", "cameligo" and
+                                   "jsligo". By default, the syntax is guessed from
+                                   the extension (.ligo, .mligo, and .jsligo
+                                   respectively).
       [--warn-unused-rec]        . warn about unused recursion in a recursive
                                    function
       [--werror]                 . treat warnings as errors
+      [-e ENTRY-POINT], --entry-point
+                                 . the entry-point that will be compiled.
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
-                                   the LIGO environment (mumbai ,
-                                   nairobi). By default, the current protocol
-                                   (nairobi) will be used
-      [-help], -?                . print this help text and exit |}]
+                                   the LIGO environment (kathmandu ,
+                                   lima). By default, the current protocol (lima)
+                                   will be used
+      [-help], -?                . print this help text and exit
+
+    (core/src/command.ml.Exit_called (status 0)) |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "evaluate-expr"; "-help" ];
-  print_endline @@ remove_last_line [%expect.output];
   [%expect
     {|
     evaluate a given definition.
@@ -438,7 +386,6 @@ let%expect_test _ =
                                    use for the transaction.
       [--balance INT]            . the balance the Michelson interpreter will use
                                    for the contract balance.
-      [--deprecated]             . enable deprecated language PascaLIGO
       [--display-format FORMAT], --format
                                  . the format that will be used by the CLI.
                                    Available formats are 'dev', 'json', and
@@ -446,39 +393,34 @@ let%expect_test _ =
                                    lacks details (we are still tweaking it), please
                                    contact us and use another format in the
                                    meanwhile.
-      [--library LIBS], -l       . A comma-separated list of paths to directories
-                                   where to search for files to be included by the
-                                   preprocessor
-      [--no-color]               . disable coloring in CLI output
       [--no-warn]                . disable warning messages
       [--now TIMESTAMP]          . the NOW value the Michelson interpreter will use
                                    (e.g. '2000-01-01T10:10:10Z')
       [--project-root PATH]      . The path to root of the project.
       [--sender ADDRESS]         . the sender the Michelson interpreter transaction
                                    will use.
-      [--skip-analytics]         . Avoid ligo analytics publication. Configurable
-                                   with environment variable LIGO_SKIP_ANALYTICS too
       [--source ADDRESS]         . the source the Michelson interpreter transaction
                                    will use.
       [--syntax SYNTAX], -s      . the syntax that will be used. Currently supported
-                                   syntaxes are "cameligo" and "jsligo". By default,
-                                   the syntax is guessed from the extension (.mligo
-                                   and .jsligo respectively).
-      [--warn-infinite-loop]     . warn about infinite loop
+                                   syntaxes are "pascaligo", "cameligo" and
+                                   "jsligo". By default, the syntax is guessed from
+                                   the extension (.ligo, .mligo, and .jsligo
+                                   respectively).
       [--warn-unused-rec]        . warn about unused recursion in a recursive
                                    function
       [--werror]                 . treat warnings as errors
       [-e ENTRY-POINT], --entry-point
                                  . the entry-point that will be compiled.
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
-                                   the LIGO environment (mumbai ,
-                                   nairobi). By default, the current protocol
-                                   (nairobi) will be used
-      [-help], -?                . print this help text and exit |}]
+                                   the LIGO environment (kathmandu ,
+                                   lima). By default, the current protocol (lima)
+                                   will be used
+      [-help], -?                . print this help text and exit
+
+    (core/src/command.ml.Exit_called (status 0)) |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "expression"; "-help" ];
-  print_endline @@ remove_last_line [%expect.output];
   [%expect
     {|
     compile to a Michelson value.
@@ -492,7 +434,6 @@ let%expect_test _ =
       [--constants CONSTANTS], -c
                                  . A list of global constants that will be assumed
                                    in the context, separated by ','
-      [--deprecated]             . enable deprecated language PascaLIGO
       [--display-format FORMAT], --format
                                  . the format that will be used by the CLI.
                                    Available formats are 'dev', 'json', and
@@ -506,33 +447,27 @@ let%expect_test _ =
                                    as global constants in the context.
       [--init-file FILENAME]     . the path to the smart contract file to be used
                                    for context initialization.
-      [--library LIBS], -l       . A comma-separated list of paths to directories
-                                   where to search for files to be included by the
-                                   preprocessor
       [--michelson-format CODE_FORMAT]
                                  . format that will be used by compile-contract for
                                    the resulting Michelson. Available formats are
                                    'text' (default), 'json' and 'hex'.
-      [--no-color]               . disable coloring in CLI output
       [--no-stdlib]              . disable stdlib inclusion.
       [--no-warn]                . disable warning messages
       [--project-root PATH]      . The path to root of the project.
-      [--skip-analytics]         . Avoid ligo analytics publication. Configurable
-                                   with environment variable LIGO_SKIP_ANALYTICS too
-      [--warn-infinite-loop]     . warn about infinite loop
       [--warn-unused-rec]        . warn about unused recursion in a recursive
                                    function
       [--werror]                 . treat warnings as errors
       [--without-run]            . disable running of compiled expression.
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
-                                   the LIGO environment (mumbai ,
-                                   nairobi). By default, the current protocol
-                                   (nairobi) will be used
-      [-help], -?                . print this help text and exit |}]
+                                   the LIGO environment (kathmandu ,
+                                   lima). By default, the current protocol (lima)
+                                   will be used
+      [-help], -?                . print this help text and exit
+
+    (core/src/command.ml.Exit_called (status 0)) |}]
 
 let%expect_test _ =
   run_ligo_good [ "info"; "list-declarations"; "-help" ];
-  print_endline @@ remove_last_line [%expect.output];
   [%expect
     {|
     list all the top-level declarations.
@@ -543,7 +478,6 @@ let%expect_test _ =
 
     === flags ===
 
-      [--deprecated]             . enable deprecated language PascaLIGO
       [--display-format FORMAT], --format
                                  . the format that will be used by the CLI.
                                    Available formats are 'dev', 'json', and
@@ -551,17 +485,14 @@ let%expect_test _ =
                                    lacks details (we are still tweaking it), please
                                    contact us and use another format in the
                                    meanwhile.
-      [--library LIBS], -l       . A comma-separated list of paths to directories
-                                   where to search for files to be included by the
-                                   preprocessor
-      [--no-color]               . disable coloring in CLI output
       [--only-ep]                . Only display declarations that have the type of
                                    an entrypoint
       [--project-root PATH]      . The path to root of the project.
-      [--skip-analytics]         . Avoid ligo analytics publication. Configurable
-                                   with environment variable LIGO_SKIP_ANALYTICS too
       [--syntax SYNTAX], -s      . the syntax that will be used. Currently supported
-                                   syntaxes are "cameligo" and "jsligo". By default,
-                                   the syntax is guessed from the extension (.mligo
-                                   and .jsligo respectively).
-      [-help], -?                . print this help text and exit |}]
+                                   syntaxes are "pascaligo", "cameligo" and
+                                   "jsligo". By default, the syntax is guessed from
+                                   the extension (.ligo, .mligo, and .jsligo
+                                   respectively).
+      [-help], -?                . print this help text and exit
+
+    (core/src/command.ml.Exit_called (status 0)) |}]

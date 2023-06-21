@@ -24,6 +24,7 @@ return type of `Byte.unpack` is an option that needs to be annotated.
 > the corresponding LIGO functions without doing your homework first.
 
 
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=a
@@ -62,6 +63,7 @@ structures such as maps will not allow the use of the `key` type. Even
 if this were not the case, hashes are much smaller than keys, and
 storage on blockchains comes at a cost premium. You can hash keys with
 a predefined functions returning a value of type `key_hash`.
+
 
 
 <Syntax syntax="pascaligo">
@@ -109,6 +111,8 @@ asynchronously. You can do this in LIGO using the `key` and
 > because that would require storing a private key on chain, at which
 > point it is not... private anymore.
 
+
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=c
@@ -148,6 +152,8 @@ can do it with `Tezos.get_self_address`.
 > ⚠️ Due to limitations in Michelson, `Tezos.get_self_address` in a
 > contract is only allowed at the top-level. Using it in an embedded
 > function will cause an error.
+
+
 
 <Syntax syntax="pascaligo">
 
@@ -195,7 +201,7 @@ const origination : operation * address = Tezos.create_contract (
 
 ```cameligo group=e
 let origination : operation * address = Tezos.create_contract
-  (fun (p : nat) (s : string) -> ([], s))
+  (fun (p, s : nat * string) -> ([], s))
   None
   3tz
   "initial_storage"
@@ -206,7 +212,7 @@ let origination : operation * address = Tezos.create_contract
 <Syntax syntax="jsligo">
 
 ```jsligo group=e
-let origination = Tezos.create_contract ((p: nat, s: string) =>
+let origination = Tezos.create_contract ((p: nat, s: string) => 
 [list([]), s],
   None(),
   3 as tez,

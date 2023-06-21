@@ -16,7 +16,6 @@ export default function ToolbarButton({
   className = undefined,
   children = undefined,
   readOnly = undefined,
-  isExpanded = false,
 }) {
   const childrenComponent = loading ? (
     <span key="loading">
@@ -24,12 +23,9 @@ export default function ToolbarButton({
     </span>
   ) : (
     children || (
-      <>
-        <span className={isExpanded ? "ml-2 mr-2" : ""} key="icon" style={{ minWidth: "1.2rem" }}>
-          <i className={icon} />
-        </span>
-        {isExpanded ? tooltip : null}
-      </>
+      <span key="icon">
+        <i className={icon} />
+      </span>
     )
   );
   const tooltipComponent = tooltip && (
@@ -51,9 +47,7 @@ export default function ToolbarButton({
         id={`toolbar-btn-${id}`}
         key={`toolbar-btn-${id}`}
         className={classnames(
-          isExpanded
-            ? "d-flex align-items-start"
-            : "flex-none px-2 w-5 flex-column align-items-center",
+          "flex-none px-2 w-5 flex-column align-items-center",
           !rounded && "rounded-0 border-0",
           className
         )}
@@ -62,7 +56,7 @@ export default function ToolbarButton({
       >
         {childrenComponent}
       </Button>
-      {!isExpanded && tooltipComponent}
+      {tooltipComponent}
     </>
   );
 }

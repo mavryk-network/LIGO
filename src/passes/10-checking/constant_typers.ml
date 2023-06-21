@@ -102,9 +102,10 @@ module Comparable = struct
       in
       let%bind _ =
         List.map2_exn
-          (Map.data row1.fields)
-          (Map.data row2.fields)
-          ~f:(fun row_elem1 row_elem2 -> comparator row_elem1 row_elem2)
+          (Record.LMap.to_list row1.fields)
+          (Record.LMap.to_list row2.fields)
+          ~f:(fun (row_elem1 : Type.row_element) (row_elem2 : Type.row_element) ->
+            comparator row_elem1.associated_type row_elem2.associated_type)
         |> all
       in
       create_type @@ Type.t_bool
@@ -123,9 +124,10 @@ module Comparable = struct
       in
       let%bind _ =
         List.map2_exn
-          (Map.data row1.fields)
-          (Map.data row2.fields)
-          ~f:(fun row_elem1 row_elem2 -> comparator row_elem1 row_elem2)
+          (Record.LMap.to_list row1.fields)
+          (Record.LMap.to_list row2.fields)
+          ~f:(fun (row_elem1 : Type.row_element) (row_elem2 : Type.row_element) ->
+            comparator row_elem1.associated_type row_elem2.associated_type)
         |> all
       in
       create_type @@ Type.t_bool
@@ -252,7 +254,7 @@ module Annot = struct
     let return ret_type = { for_alls = []; arg_types = []; ret_type }
     let ( ^~> ) arg_type ret_type = { for_alls = []; arg_types = [ arg_type ]; ret_type }
     let ( ^-> ) arg_type type_ = { type_ with arg_types = arg_type :: type_.arg_types }
-    let ( @-> ) t1 t2 = Type.t_arrow ~loc t1 t2 ()
+    let ( @-> ) t1 t2 = Type.t_arrow ~loc { type1 = t1; type2 = t2 } ()
   end
 end
 
@@ -737,14 +739,6 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                [ t_string ~loc () ^-> t_string ~loc () ^~> t_string ~loc ()
                ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
                ]) )
-    ; ( C_CONCATS
-      , of_type
-          (create
-             ~mode_annot:[ Inferred ]
-             ~types:
-               [ t_list ~loc (t_string ~loc ()) () ^~> t_string ~loc ()
-               ; t_list ~loc (t_bytes ~loc ()) () ^~> t_bytes ~loc ()
-               ]) )
       (* Option *)
     ; ( C_NONE
       , of_type
@@ -765,10 +759,6 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
             ~mode_annot:[ Checked; Inferred ]
             ~types:[ (a @-> b) ^-> t_option a ~loc () ^~> t_option b ~loc () ]) )
     ; ( C_CHECK_ENTRYPOINT
-      , of_type
-          (create ~mode_annot:[ Checked ] ~types:[ t_string ~loc () ^~> t_unit ~loc () ])
-      )
-    ; ( C_CHECK_CALL_VIEW_LITSTR
       , of_type
           (create ~mode_annot:[ Checked ] ~types:[ t_string ~loc () ^~> t_unit ~loc () ])
       )
@@ -982,7 +972,6 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                [ t_bool ~loc () ^~> t_bool ~loc ()
                ; t_int ~loc () ^~> t_int ~loc ()
                ; t_nat ~loc () ^~> t_int ~loc ()
-               ; t_bytes ~loc () ^~> t_bytes ~loc ()
                ]) )
     ; ( C_AND
       , of_type
@@ -993,7 +982,6 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                ; t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
                ; t_int ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
                ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
-               ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
                ]) )
     ; ( C_OR
       , of_type
@@ -1003,7 +991,6 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                [ t_bool ~loc () ^-> t_bool ~loc () ^~> t_bool ~loc ()
                ; t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
                ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
-               ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
                ]) )
     ; ( C_XOR
       , of_type
@@ -1013,7 +1000,6 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                [ t_bool ~loc () ^-> t_bool ~loc () ^~> t_bool ~loc ()
                ; t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
                ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
-               ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
                ]) )
     ; ( C_LSL
       , of_type
@@ -1022,7 +1008,6 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
              ~types:
                [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
                ; t_int64 ~loc () ^-> t_nat ~loc () ^~> t_int64 ~loc ()
-               ; t_bytes ~loc () ^-> t_nat ~loc () ^~> t_bytes ~loc ()
                ]) )
     ; ( C_LSR
       , of_type
@@ -1031,7 +1016,6 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
              ~types:
                [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
                ; t_int64 ~loc () ^-> t_nat ~loc () ^~> t_int64 ~loc ()
-               ; t_bytes ~loc () ^-> t_nat ~loc () ^~> t_bytes ~loc ()
                ]) )
       (* Tests *)
     ; ( C_TEST_ADDRESS
@@ -1048,11 +1032,10 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
           for_all "b"
           @@ fun b ->
           create
-            ~mode_annot:[ Inferred; Checked ]
+            ~mode_annot:[ Inferred ]
             ~types:
               [ (t_pair a b ~loc ()
                 @-> t_pair (t_list (t_operation ~loc ()) ~loc ()) b ~loc ())
-                ^-> t_views ~loc b ()
                 ^~> t_ast_contract ~loc ()
               ]) )
     ; ( C_TEST_COMPILE_AST_CONTRACT
@@ -1338,6 +1321,20 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
           create
             ~mode_annot:[ Inferred ]
             ~types:[ t_typed_address a b ~loc () ^~> t_contract a ~loc () ]) )
+    ; ( C_TEST_CREATE_CHEST
+      , of_type
+          (create
+             ~mode_annot:[ Checked; Checked ]
+             ~types:
+               [ t_bytes ~loc ()
+                 ^-> t_nat ~loc ()
+                 ^~> t_pair (t_chest ~loc ()) (t_chest_key ~loc ()) ~loc ()
+               ]) )
+    ; ( C_TEST_CREATE_CHEST_KEY
+      , of_type
+          (create
+             ~mode_annot:[ Checked; Checked ]
+             ~types:[ t_chest ~loc () ^-> t_nat ~loc () ^~> t_chest_key ~loc () ]) )
     ; ( C_GLOBAL_CONSTANT
       , of_type
           (for_all "a"
@@ -1415,28 +1412,6 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
           create
             ~mode_annot:[ Checked ]
             ~types:[ t_contract a ~loc () ^~> t_option (t_string ~loc ()) ~loc () ]) )
-    ; ( C_TEST_NIL_VIEWS
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create ~mode_annot:[ Checked ] ~types:[ t_unit ~loc () ^~> t_views a ~loc () ])
-      )
-    ; ( C_TEST_CONS_VIEWS
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          for_all "c"
-          @@ fun c ->
-          create
-            ~mode_annot:[ Inferred; Inferred; Checked ]
-            ~types:
-              [ a
-                ^-> (t_pair ~loc b a () @-> c)
-                ^-> t_views a ~loc ()
-                ^~> t_views a ~loc ()
-              ]) )
     ; C_EQ, of_comparator Comparable.comparator
     ; C_NEQ, of_comparator Comparable.comparator
     ; C_LT, of_comparator Comparable.comparator
@@ -1580,115 +1555,12 @@ module External_types = struct
              return ret_type)
 
 
-  let map_find_opt_types : _ t =
-    let open Type in
-    let open C in
-    let open Let_syntax in
-    fun (received_arg_types : Type.t list) ->
-      if List.length received_arg_types <> 2
-      then
-        raise (corner_case "Unequal lengths between mode annotation and argument types")
-      else (
-        let k = List.nth_exn received_arg_types 0 in
-        let%bind k = Context.tapply k in
-        let m_or_bm = List.nth_exn received_arg_types 1 in
-        let%bind m_or_bm = Context.tapply m_or_bm in
-        let%bind k', v =
-          match get_t_big_map m_or_bm with
-          | Some (k', v) -> return (k', v)
-          | None ->
-            (match get_t_map m_or_bm with
-            | Some (k', v) -> return (k', v)
-            | None ->
-              raise
-                (corner_case
-                   "external_find_opt: second parameter is neither big_map nor map"))
-        in
-        let%bind k' = Context.tapply k' in
-        let%bind () = unify k k' in
-        let%bind v = Context.tapply v in
-        let%bind loc = loc () in
-        return (t_option ~loc v ()))
-
-
-  let map_add_types : _ t =
-    let open Type in
-    let open C in
-    let open Let_syntax in
-    fun (received_arg_types : Type.t list) ->
-      if List.length received_arg_types <> 3
-      then
-        raise (corner_case "Unequal lengths between mode annotation and argument types")
-      else (
-        let k = List.nth_exn received_arg_types 0 in
-        let%bind k = Context.tapply k in
-        let v = List.nth_exn received_arg_types 1 in
-        let%bind v = Context.tapply v in
-        let m_or_bm = List.nth_exn received_arg_types 2 in
-        let%bind m_or_bm = Context.tapply m_or_bm in
-        let%bind k', v' =
-          match get_t_big_map m_or_bm with
-          | Some (k', v') -> return (k', v')
-          | None ->
-            (match get_t_map m_or_bm with
-            | Some (k', v') -> return (k', v')
-            | None ->
-              raise
-                (corner_case
-                   "external_find_opt: second parameter is neither big_map nor map"))
-        in
-        let%bind k' = Context.tapply k' in
-        let%bind () = unify k k' in
-        let%bind v' = Context.tapply v' in
-        let%bind () = unify v v' in
-        return m_or_bm)
-
-
-  let map_remove_types : _ t =
-    let open Type in
-    let open C in
-    let open Let_syntax in
-    fun (received_arg_types : Type.t list) ->
-      if List.length received_arg_types <> 2
-      then
-        raise (corner_case "Unequal lengths between mode annotation and argument types")
-      else (
-        let k = List.nth_exn received_arg_types 0 in
-        let%bind k = Context.tapply k in
-        let m_or_bm = List.nth_exn received_arg_types 1 in
-        let%bind m_or_bm = Context.tapply m_or_bm in
-        let%bind k', _ =
-          match get_t_big_map m_or_bm with
-          | Some (k', v) -> return (k', v)
-          | None ->
-            (match get_t_map m_or_bm with
-            | Some (k', v) -> return (k', v)
-            | None ->
-              raise
-                (corner_case
-                   "external_find_opt: second parameter is neither big_map nor map"))
-        in
-        let%bind k' = Context.tapply k' in
-        let%bind () = unify k k' in
-        return m_or_bm)
-
-
-  let bytes_types : (Errors.typer_error, Main_warnings.all) t =
-    let open Type in
-    let open Annot.Syntax in
-    of_type
-      (create [ t_int ~loc () ^~> t_bytes ~loc (); t_nat () ~loc ^~> t_bytes ~loc () ])
-
-
   let int_types : (Errors.typer_error, Main_warnings.all) t =
     let open Type in
     let open Annot.Syntax in
     of_type
       (create
-         [ t_nat () ~loc ^~> t_int ~loc ()
-         ; t_bls12_381_fr ~loc () ^~> t_int ~loc ()
-         ; t_bytes ~loc () ^~> t_int ~loc ()
-         ])
+         [ t_nat () ~loc ^~> t_int ~loc (); t_bls12_381_fr ~loc () ^~> t_int ~loc () ])
 
 
   let ediv_types : (Errors.typer_error, Main_warnings.all) t =
@@ -1724,46 +1596,5 @@ module External_types = struct
       (create
          [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
          ; t_int ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-         ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
-         ])
-
-
-  let or_types : (Errors.typer_error, Main_warnings.all) t =
-    let open Type in
-    let open Annot.Syntax in
-    of_type
-      (create
-         [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-         ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
-         ])
-
-
-  let xor_types : (Errors.typer_error, Main_warnings.all) t =
-    let open Type in
-    let open Annot.Syntax in
-    of_type
-      (create
-         [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-         ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
-         ])
-
-
-  let lsl_types : (Errors.typer_error, Main_warnings.all) t =
-    let open Type in
-    let open Annot.Syntax in
-    of_type
-      (create
-         [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-         ; t_bytes ~loc () ^-> t_nat ~loc () ^~> t_bytes ~loc ()
-         ])
-
-
-  let lsr_types : (Errors.typer_error, Main_warnings.all) t =
-    let open Type in
-    let open Annot.Syntax in
-    of_type
-      (create
-         [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-         ; t_bytes ~loc () ^-> t_nat ~loc () ^~> t_bytes ~loc ()
          ])
 end

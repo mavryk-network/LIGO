@@ -18,12 +18,12 @@ include Monad.Make (struct
   let map = `Define_using_bind
 end)
 
-let all_lmap (lmap : 'a t Label.Map.t) : 'a Label.Map.t t =
- fun ~raise subst -> Map.map ~f:(fun t -> t ~raise subst) lmap
+let all_lmap (lmap : 'a t Record.LMap.t) : 'a Record.LMap.t t =
+ fun ~raise subst -> Record.LMap.map (fun t -> t ~raise subst) lmap
 
 
-let all_lmap_unit (lmap : unit t Label.Map.t) : unit t =
- fun ~raise subst -> Label.Map.iter ~f:(fun t -> t ~raise subst) lmap
+let all_lmap_unit (lmap : unit t Record.LMap.t) : unit t =
+ fun ~raise subst -> Record.LMap.iter (fun _label t -> t ~raise subst) lmap
 
 
 include Let_syntax
@@ -31,6 +31,7 @@ include Let_syntax
 let rec decode (type_ : Type.t) ~raise subst =
   let return type_content : O.type_expression =
     { type_content
+    ; type_meta = type_.meta
     ; orig_var = type_.orig_var
     ; location = type_.location
     }
@@ -64,31 +65,27 @@ let rec decode (type_ : Type.t) ~raise subst =
     return @@ O.T_record row
 
 
-and decode_layout
-    (fields : O.type_expression Label.Map.t)
-    (layout : Type.layout)
-    ~raise
-    subst
-  =
+and decode_layout (layout : Type.layout) ~raise subst =
+  let open Layout in
   match layout with
-  | L_concrete layout -> layout
+  | L_tree -> L_tree
+  | L_comb -> L_comb
   | L_exists lvar ->
     (match Substitution.find_lexists_eq subst lvar with
-    | Some (_, layout) -> decode_layout fields layout ~raise subst
-    | None ->
-      let default_layout_from_field_set fields =
-        O.default_layout
-          (fields
-          |> Set.to_list
-          |> List.map ~f:(fun name -> { Layout.name; annot = None }))
-      in
-      default_layout_from_field_set (Map.key_set fields))
+    | Some layout -> decode_layout layout ~raise subst
+    | None -> O.default_layout)
+
+
+and decode_row_elem (row_elem : Type.row_element) ~raise subst =
+  Rows.map_row_element_mini_c (fun type_ -> decode type_ ~raise subst) row_elem
 
 
 and decode_row ({ fields; layout } : Type.row) ~raise subst =
-  let fields = Map.map ~f:(fun row_elem -> decode row_elem ~raise subst) fields in
-  let layout = decode_layout fields layout ~raise subst in
-  { fields; layout }
+  let fields =
+    Record.map ~f:(fun row_elem -> decode_row_elem row_elem ~raise subst) fields
+  in
+  let layout = decode_layout layout ~raise subst in
+  O.{ fields; layout }
 
 
 let decode type_ ~raise subst =
@@ -102,22 +99,6 @@ let decode type_ ~raise subst =
            (if (* pick the best location! *) Location.is_dummy_or_generated loc
            then type_.location
            else loc)))
-
-
-let decode_attribute (attr : Context.Attr.t) : O.sig_item_attribute =
-  { entry = attr.entry; view = attr.view }
-
-
-let rec decode_signature (sig_ : Context.Signature.t) ~raise subst : O.signature =
-  let decode_item (item : Context.Signature.item) : O.sig_item list =
-    match item with
-    | S_value (var, type_, attr) ->
-      [ S_value (var, decode ~raise type_ subst, decode_attribute attr) ]
-    | S_type (var, type_) -> [ S_type (var, decode ~raise type_ subst) ]
-    | S_module (var, sig_) -> [ S_module (var, decode_signature ~raise sig_ subst) ]
-    | S_module_type _ -> [ ]
-  in
-  List.concat_map ~f:decode_item sig_
 
 
 let check_anomalies ~syntax ~loc eqs matchee_type ~raise _subst =

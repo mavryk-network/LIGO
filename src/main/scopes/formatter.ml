@@ -12,6 +12,9 @@ let scope_ppformat ~display_format ~no_colour f (d, s) =
   | Dev -> Format.fprintf f "@[<v>%a@ %a@]" PP.scopes s PP.definitions d
 
 
+let scope_jsonformat defscopes : json = PP.to_json defscopes
+let scope_format : 'a format = { pp = scope_ppformat; to_json = scope_jsonformat }
+
 type get_scope_output =
   { errors : Main_errors.all list
   ; warns : Main_warnings.all list
@@ -23,21 +26,15 @@ let warn_format = Main_warnings.format
 
 let pp_get_scope_output : get_scope_output pp =
  fun ~display_format ~no_colour f { errors; warns; info } ->
-  let () =
-    match info with
-    | Some info -> scope_ppformat ~display_format ~no_colour f info
-    | None -> ()
-  in
-  let () = if not @@ List.is_empty errors then Format.fprintf f "@[<v>Errors: @,@]" in
-  let () =
-    List.iter errors ~f:(fun err ->
-        error_format.pp ~display_format ~no_colour f err;
-        Format.fprintf f "@,")
-  in
-  let () = if not @@ List.is_empty warns then Format.fprintf f "@[<v>Warnings: @,@]" in
+  (match info with
+  | Some info -> scope_ppformat ~display_format ~no_colour f info
+  | None -> ());
+  List.iter errors ~f:(fun err ->
+      error_format.pp ~display_format ~no_colour f err;
+      Format.fprintf f "\n");
   List.iter warns ~f:(fun warn ->
       warn_format.pp ~display_format ~no_colour f warn;
-      Format.fprintf f "@,")
+      Format.fprintf f "\n")
 
 
 let to_errors list =
@@ -52,12 +49,12 @@ let to_warnings list =
 
 let get_scope_output_to_json : get_scope_output -> json =
  fun { errors; warns; info } ->
+  let content = [ "errors", to_errors errors; "warnings", to_warnings warns ] in
   let info_json =
     match info with
     | Some (d, s) -> [ "definitions", PP.defs_json d; "scopes", PP.scopes_json s ]
     | None -> []
   in
-  let content = [ "errors", to_errors errors; "warnings", to_warnings warns ] in
   `Assoc (content @ info_json)
 
 

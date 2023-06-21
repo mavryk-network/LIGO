@@ -1,4 +1,4 @@
-let main (p : bool) (s : unit) =
+let main (p, s : bool * unit) =
   let () : unit = assert p
   in ([] : operation list), s
 

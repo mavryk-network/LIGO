@@ -3,7 +3,6 @@ import * as monaco from "monaco-editor";
 import pathHelper from "path-browserify";
 import fileOps from "~/base-components/file-ops";
 import notification from "~/base-components/notification";
-import { findNonAsciiCharIndex } from "~/components/validators";
 
 import MonacoEditorModelSession from "./MonacoEditorModelSession";
 
@@ -42,7 +41,6 @@ class ModelSessionManager {
     this.decorationMap = {};
     this.lintMarkerMap = {};
     this.compileMarkerMap = {};
-    this.nextEditorCursorUpdate = null;
   }
 
   tabsRef = null;
@@ -51,11 +49,6 @@ class ModelSessionManager {
 
   updateEditorAfterMovedFile(oldPath, newPath) {
     if (!this.sessions[oldPath]) return;
-
-    if (oldPath === newPath.path) {
-      this.refreshFile(newPath, true);
-      return;
-    }
 
     const tabsState = this.tabsRef.current.state;
 
@@ -140,10 +133,6 @@ class ModelSessionManager {
     this._editor = editor;
   }
 
-  get editor() {
-    return this._editor;
-  }
-
   get projectManager() {
     return this._editorContainer.props.projectManager;
   }
@@ -184,7 +173,12 @@ class ModelSessionManager {
     }
     if (tab.remote) {
       const basename = pathHelper.basename(tab.path);
-      return <span key="cloud-icon">{basename}</span>;
+      return (
+        <span key="cloud-icon">
+          <i className="fas fa-cloud small text-muted mr-1" />
+          {basename}
+        </span>
+      );
     }
     return pathHelper.basename(tab.path);
   }
@@ -215,17 +209,6 @@ class ModelSessionManager {
         let content = "";
         try {
           content = await fileOps.readFile(filePath);
-          const nonAscii = findNonAsciiCharIndex(content);
-          if (nonAscii !== -1) {
-            notification.error(
-              "Non ASCII character.",
-              `On line ${nonAscii.additionColumn + 1} column ${
-                nonAscii.additionIndex + 1
-              } you are using a non ASCII character: ${
-                content[nonAscii.index]
-              }. Please make sure all the symbols correspond to ASCII chart. Otherwise you may have problems with your project.`
-            );
-          }
         } catch (e) {
           console.warn(e);
         }
@@ -276,7 +259,10 @@ class ModelSessionManager {
     if (!this.sessions[filePath]) {
       throw new Error(`File "${filePath}" is not open in the current workspace.`);
     }
+    // this._editorContainer.fileSaving(filePath)
     const content = await fileOps.readFile(filePath);
+    // this.sessions[filePath].saved = true
+    // this._editorContainer.fileSaved(filePath)
     this.sessions[filePath].refreshValue(content);
   }
 
@@ -318,12 +304,12 @@ class ModelSessionManager {
     this._editor?.setSelection(model.getFullModelRange());
   }
 
-  refreshFile(data, forceRefresh) {
+  refreshFile(data) {
     const modelSession = this.sessions[data.path];
     if (!modelSession || modelSession.saving) {
       return;
     }
-    if (!modelSession.saved || forceRefresh) {
+    if (!modelSession.saved) {
       modelSession.refreshValue(data.content);
       this._editorContainer.fileSaved(data.path);
       modelSession.saved = true;

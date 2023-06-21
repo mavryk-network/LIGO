@@ -26,7 +26,7 @@ following:
 Here is a full example:
 
 ```shell
-ligo run dry-run src/basic.mligo Unit Unit --entry-point main
+ligo run dry-run src/basic.ligo Unit Unit --entry-point main
 // Outputs:
 // tuple[   list[]
 //          Unit
@@ -76,19 +76,20 @@ type parameter =
 
 type storage = int
 
-type return = operation list * storage
+type return = (operation) list * storage
 
-let add (n : int) (store : storage) : storage = store + n
-let sub (n : int) (store : storage) : storage = store - n
+let add (n, store : int * storage) : storage = store + n
+let sub (n, store : int * storage) : storage = store - n
 
-let main (action : parameter) (store : storage) : return =
-  [],
-  (match action with
-     Increment n -> add n store
-   | Decrement n -> sub n store)
+let main (action, store : parameter * storage) : return =
+  ([],
+   (match action with
+      Increment n -> add (n, store)
+    | Decrement n -> sub (n, store)))
 ```
 
 </Syntax>
+
 
 
 <Syntax syntax="jsligo">
@@ -121,7 +122,7 @@ with a variant parameter of value `Increment (5)` and an initial
 storage value of `5`.
 
 ```shell
-ligo run dry-run src/counter.mligo "Increment(5)" 5 --entry-point main
+ligo run dry-run src/counter.ligo "Increment(5)" 5 --entry-point main
 // tuple[   list[]
 //          10
 // ]
@@ -136,7 +137,7 @@ have to compile it first, this can be done with the help of the
 `compile-contract` CLI command:
 
 ```shell
-ligo compile contract src/counter.mligo --entry-point main
+ligo compile contract src/counter.ligo --entry-point main
 ```
 
 Command above will output the following Michelson code:
@@ -177,7 +178,7 @@ need to provide the initial storage value, we can use
 Michelson.
 
 ```shell
-ligo compile storage src/counter.mligo 5 --entry-point main
+ligo compile storage src/counter.ligo 5 --entry-point main
 // Outputs: 5
 ```
 
@@ -192,7 +193,7 @@ values to Michelson. We will need to use `compile-parameter` to
 compile our `action` variant into Michelson, here's how:
 
 ```shell
-ligo compile parameter src/counter.mligo 'Increment(5)' --entry-point main
+ligo compile parameter src/counter.ligo 'Increment(5)' --entry-point main
 // Outputs: (Right 5)
 ```
 

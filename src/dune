@@ -5,54 +5,18 @@
  (public_name ligo)
  (instrumentation
   (backend bisect_ppx))
- (libraries Preprocessor simple-utils tezos-micheline ligo_main))
-
-(rule
- (targets
-  platform-specific-compiler-flags.sexp
-  platform-specific-linker-flags.sexp)
- (action
-  (run ../configurator/configurator.exe)))
+ (libraries Preprocessor simple-utils tezos-utils tezos-micheline ligo_main))
 
 (env
  (dev
-  (link_flags
-   (:include platform-specific-linker-flags.sexp))
   (flags
-   (:standard
-    -w
-    @1..3@5..28@30..39@43@46..47@49..57@61..62-40
-    -strict-sequence
-    -strict-formats
-    -short-paths
-    -keep-locs
-    -open
-    Core
-    (:include platform-specific-linker-flags.sexp)
-    (:include platform-specific-compiler-flags.sexp))))
+   (:standard -w @1..3@5..28@30..39@43@46..47@49..57@61..62-40
+     -strict-sequence -strict-formats -short-paths -keep-locs -open Core)))
  (release
-  (link_flags
-   (:include platform-specific-linker-flags.sexp))
   (flags
-   (:standard
-    -strict-sequence
-    -strict-formats
-    -short-paths
-    -keep-locs
-    -open
-    Core
-    (:include platform-specific-linker-flags.sexp)
-    (:include platform-specific-compiler-flags.sexp))))
+   (:standard -strict-sequence -strict-formats -short-paths -keep-locs -open
+     Core)))
  (static
-  (link_flags
-   (:include platform-specific-linker-flags.sexp))
   (flags
-   (:standard
-    -strict-sequence
-    -strict-formats
-    -short-paths
-    -keep-locs
-    -open
-    Core
-    (:include platform-specific-linker-flags.sexp)
-    (:include platform-specific-compiler-flags.sexp)))))
+   (:standard -strict-sequence -strict-formats -short-paths -keep-locs -open
+     Core))))

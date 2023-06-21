@@ -1,0 +1,40 @@
+; This file was automatically generated, do not edit.
+; Edit file manifest/main.ml instead.
+
+(executables
+ (names test_proxy test_fuzzing_proxy_getter test_light test_fuzzing_light)
+ (libraries
+  tezos-base
+  tezos-base.unix
+  tezos-stdlib-unix
+  tezos-proxy
+  tezos-base-test-helpers
+  tezos-test-helpers
+  tezos-shell-services-test-helpers
+  qcheck-alcotest
+  alcotest-lwt
+  uri)
+ (flags
+  (:standard)
+  -open Tezos_base.TzPervasives
+  -open Tezos_base_test_helpers))
+
+(rule
+ (alias runtest)
+ (package tezos-proxy)
+ (action (run %{dep:./test_proxy.exe})))
+
+(rule
+ (alias runtest)
+ (package tezos-proxy)
+ (action (run %{dep:./test_fuzzing_proxy_getter.exe})))
+
+(rule
+ (alias runtest)
+ (package tezos-proxy)
+ (action (run %{dep:./test_light.exe})))
+
+(rule
+ (alias runtest)
+ (package tezos-proxy)
+ (action (run %{dep:./test_fuzzing_light.exe})))

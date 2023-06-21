@@ -531,7 +531,7 @@ a:hover {
 #homePage {
   display: flex;
   flex-direction: column;
-  margin-top: 30px;
+  margin-top: 80px;
 }
 
 #homePage .tab-content {
@@ -542,7 +542,7 @@ a:hover {
   margin: 0;
 }
 
-#homePage title h1 {
+#homePage h1 {
   font-family: "Open Sans", sans-serif;
   font-weight: bold;
   font-size: 1.875em;
@@ -555,53 +555,7 @@ a:hover {
 }
 
 #callToAction {
-  margin-top: 60px;
-}
-
-#homePage #intro #webide ul {
-  cursor: pointer;
-  font-weight: normal;
-  padding: 0px;
-  display: inline-block;
-}
-
-#homePage #intro #webide ul li {
-  margin-left: 1.5em;
-  margin-right: 4.5em;
-  margin-top: 0.5em;
-  text-align: center;
-  cursor: pointer;
-  font-size: 1.4em;
-  border: 2px solid;
-  padding: 25px 50px;
-}
-
-#homePage #intro #webide ul li a {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-#homePage #intro #webide ul li.primary:hover {
-  background-color: var(--ifm-color-primary);
-  border-left: 4px solid var(--ifm-color-primary);
-}
-
-#homePage #intro #webide ul li.primary:hover a {
-  color: white;
-}
-
-#homePage #intro #webide ul li.secondary:hover {
-  background-color: var(--secondary-brand-color);
-}
-
-#homePage #intro #webide ul li.secondary:hover a {
-  color: white;
-  background-color: var(--secondary-brand-color);
-}
-
-#homePage #intro #webide ul li.secondary a {
-  color: var(--secondary-brand-color);
+  margin-top: 300px;
 }
 
 #homePage #intro #callToAction ul {
@@ -613,9 +567,9 @@ a:hover {
 #homePage #intro #callToAction ul li a {
   cursor: pointer;
   font-weight: normal;
-  font-size: 1.5em;
+  font-size: 2em;
   border-left: 4px solid;
-  padding: 25px 50px;
+  padding: 30px 50px;
 }
 
 #homePage #intro #callToAction ul li.secondary a {
@@ -644,15 +598,7 @@ a:hover {
   min-height: 450px;
   max-width: 400px;
 }
-#homePage #title {
-  align-self: center;
-  margin-bottom: 20px;
-}
 
-#homePage #title p {
-  font-style: italic;
-  font-size: 1.5em;
-}
 #homePage #intro #preview p {
   font-style: italic;
   font-size: 1.5em;

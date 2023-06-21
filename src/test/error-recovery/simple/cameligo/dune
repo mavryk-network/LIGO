@@ -4,13 +4,8 @@
   (:script ../../test.sh)
   (glob_files *.mligo)
   (glob_files original/*.mligo)
-  ../../../../passes/02-parsing/cameligo/ParserMain.exe)
+  (:parser ../../../../passes/02-parsing/cameligo/ParserMain.exe))
  (action
   (progn
-   (run
-    bash
-    %{script}
-    --dialect=cameligo
-    --test-type=simple
-    --dune-workspace=%{workspace_root})
+   (run %{script} *.mligo %{parser})
    (diff? results.csv.expected results.csv))))

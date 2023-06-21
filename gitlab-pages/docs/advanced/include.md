@@ -10,7 +10,7 @@ has a modular structure, you might find it useful to use the
 `#include` statement to split the contract up over multiple files.
 
 You take the code that you want to include and put it in a separate
-file, for example the contract names `included`:
+file, for example `included.ligo`:
 
 <Syntax syntax="pascaligo">
 
@@ -42,8 +42,7 @@ const foo = 144;
 
 </Syntax>
 
-And then you can include this code using the `#include` statement like
-so:
+And then you can include this code using the `#include` statement like so:
 
 <Syntax syntax="pascaligo">
 

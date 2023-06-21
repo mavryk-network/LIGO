@@ -53,7 +53,7 @@ module T =
     | Ident    of lexeme Wrap.t
     | UIdent   of lexeme Wrap.t
  (* | Lang     of lexeme Region.reg *)
-    | Attr     of Attr.t Wrap.t
+    | Attr     of Attr.t Region.reg
 
     (* Symbols *)
 
@@ -103,8 +103,6 @@ module T =
     | VBAR     of lexeme Wrap.t  (* |    *)
     | ARROW    of lexeme Wrap.t  (* =>   *)
     | WILD     of lexeme Wrap.t  (* _    *)
-    | INCR     of lexeme Wrap.t  (* ++   *)
-    | DECR     of lexeme Wrap.t  (* --   *)
 
     (* JavaScript Keywords *)
 
@@ -131,15 +129,8 @@ module T =
     (* TypeScript keywords *)
 
     | As          of lexeme Wrap.t  (* as        *)
-    | Implements  of lexeme Wrap.t  (* implements *)
-    | Interface   of lexeme Wrap.t  (* interface *)
     | Namespace   of lexeme Wrap.t  (* namespace *)
     | Type        of lexeme Wrap.t  (* type      *)
-
-    (* Contract keywords *)
-
-    | Contract  of lexeme Wrap.t  (* contract_of *)
-    | Parameter of lexeme Wrap.t  (* parameter_of *)
 
     (* Virtual tokens *)
 
@@ -153,9 +144,6 @@ module T =
 
     type token = t
 
-    (* NOT USED FOR JSLIGO: STUB *)
-
-    let add_directive (_ : Directive.t) (token : t) = token
 
     (* FROM TOKENS TO LEXEMES *)
 
@@ -177,7 +165,7 @@ module T =
     | Int t      -> fst t#payload
     | Ident t
     | UIdent t   -> t#payload
-    | Attr t     -> Attr.to_lexeme t#payload
+    | Attr t     -> Attr.to_lexeme t.Region.value
  (* | Lang lang  -> "[%" ^ Region.(lang.value.value) *)
 
     (* Symbols *)
@@ -228,8 +216,6 @@ module T =
     | VBAR     t
     | ARROW    t
     | WILD     t
-    | INCR     t
-    | DECR     t
 
     (* JavaScript Keywords *)
 
@@ -255,16 +241,9 @@ module T =
 
     (* TypeScript keywords *)
 
-    | As         t
-    | Implements t
-    | Interface  t
-    | Namespace  t
-    | Type       t -> t#payload
-
-    (* Contract keywords *)
-
-    | Contract t  -> t#payload
-    | Parameter t -> t#payload
+    | As        t
+    | Namespace t
+    | Type      t -> t#payload
 
     (* Virtual tokens *)
 
@@ -323,25 +302,13 @@ module T =
 
      (* TypeScript keywords *)
 
-     let wrap_as         = wrap "as"
-     let wrap_implements = wrap "implements"
-     let wrap_interface  = wrap "interface"
-     let wrap_namespace  = wrap "namespace"
-     let wrap_type       = wrap "type"
+     let wrap_as        = wrap "as"
+     let wrap_namespace = wrap "namespace"
+     let wrap_type      = wrap "type"
 
-     let mk_As         region = As         (wrap_as         region)
-     let mk_Implements region = Implements (wrap_implements region)
-     let mk_Interface  region = Interface  (wrap_interface  region)
-     let mk_Namespace  region = Namespace  (wrap_namespace  region)
-     let mk_Type       region = Type       (wrap_type       region)
-
-     let wrap_contract = wrap "contract_of"
-
-     let mk_Contract region = Contract (wrap_contract region)
-
-     let wrap_parameter = wrap "parameter_of"
-
-     let mk_Parameter region = Parameter (wrap_parameter region)
+     let mk_As        region = As        (wrap_as        region)
+     let mk_Namespace region = Namespace (wrap_namespace region)
+     let mk_Type      region = Type      (wrap_type      region)
 
     (* All keyword smart constructors *)
 
@@ -366,12 +333,8 @@ module T =
        mk_While;
   (*   mk_With;   *)
        mk_As;
-       mk_Implements;
-       mk_Interface;
        mk_Namespace;
-       mk_Type;
-       mk_Contract;
-       mk_Parameter
+       mk_Type
      ]
 
     (* All keywords *)
@@ -431,17 +394,13 @@ module T =
 
      (* TypeScript keywords *)
 
-     let ghost_as         = wrap_as         Region.ghost
-     let ghost_implements = wrap_implements Region.ghost
-     let ghost_interface  = wrap_interface  Region.ghost
-     let ghost_namespace  = wrap_namespace  Region.ghost
-     let ghost_type       = wrap_type       Region.ghost
+     let ghost_as        = wrap_as        Region.ghost
+     let ghost_namespace = wrap_namespace Region.ghost
+     let ghost_type      = wrap_type      Region.ghost
 
-     let ghost_As         = As         ghost_as
-     let ghost_Implements = Implements ghost_implements
-     let ghost_Interface  = Interface  ghost_interface
-     let ghost_Namespace  = Namespace  ghost_namespace
-     let ghost_Type       = Type       ghost_type
+     let ghost_As        = As        ghost_as
+     let ghost_Namespace = Namespace ghost_namespace
+     let ghost_Type      = Type      ghost_type
 
 
     (* SYMBOLS *)
@@ -493,8 +452,6 @@ module T =
     let wrap_vbar     = wrap "|"
     let wrap_arrow    = wrap "=>"
     let wrap_wild     = wrap "_"
-    let wrap_incr     = wrap "++"
-    let wrap_decr     = wrap "--"
 
     (* Smart constructors *)
 
@@ -544,8 +501,6 @@ module T =
     let mk_VBAR     region = VBAR     (wrap_vbar     region)
     let mk_ARROW    region = ARROW    (wrap_arrow    region)
     let mk_WILD     region = WILD     (wrap_wild     region)
-    let mk_INCR     region = INCR     (wrap_incr     region)
-    let mk_DECR     region = DECR     (wrap_decr     region)
 
     (* All symbol smart constructors *)
 
@@ -595,9 +550,7 @@ module T =
       mk_XOR_EQ;  *)
       mk_VBAR;
       mk_ARROW;
-      mk_WILD;
-      mk_INCR;
-      mk_DECR;
+      mk_WILD
     ]
 
     (* All symbols *)
@@ -660,8 +613,6 @@ module T =
     let ghost_vbar     = wrap_vbar     Region.ghost
     let ghost_arrow    = wrap_arrow    Region.ghost
     let ghost_wild     = wrap_wild     Region.ghost
-    let ghost_incr     = wrap_incr     Region.ghost
-    let ghost_decr     = wrap_decr     Region.ghost
 
     let ghost_MINUS    = MINUS    ghost_minus
     let ghost_PLUS     = PLUS     ghost_plus
@@ -724,7 +675,8 @@ module T =
     let wrap_ident    i = Wrap.wrap i
     let wrap_uident   c = Wrap.wrap c
 
-    let wrap_attr key value region = wrap (key, value) region
+    let wrap_attr key value region =
+      Region.{value = (key, value); region}
 
 (*  let wrap_lang lang region =
       let start = region#start#shift_bytes (String.length "[%") in
@@ -848,8 +800,6 @@ module T =
     | "VBAR"     -> ghost_vbar#payload
     | "ARROW"    -> ghost_arrow#payload
     | "WILD"     -> ghost_wild#payload
-    | "INCR"     -> ghost_incr#payload
-    | "DECR"     -> ghost_decr#payload
 
     (* JavaScript Keywords *)
 
@@ -876,11 +826,9 @@ module T =
 
     (* TypeScript keywords *)
 
-    | "As"         -> ghost_as#payload
-    | "Implements" -> ghost_implements#payload
-    | "Interface"  -> ghost_interface#payload
-    | "Namespace"  -> ghost_namespace#payload
-    | "Type"       -> ghost_type#payload
+    | "Type"      -> ghost_type#payload
+    | "Namespace" -> ghost_namespace#payload
+    | "As"        -> ghost_as#payload
 
     (* Virtual tokens *)
 
@@ -898,9 +846,6 @@ module T =
 
     (* FROM TOKENS TO TOKEN STRINGS AND REGIONS *)
 
-    let comments (w : _ Wrap.t) =
-      if Caml.(w#comments = []) then "" else " + comments"
-
     let proj_token = function
       (* Preprocessing directives *)
 
@@ -909,23 +854,23 @@ module T =
       (* Comments *)
 
     | LineCom t ->
-        t#region, sprintf "LineCom %S" t#payload
+        t#region, sprintf "Line comment %S" t#payload
     | BlockCom t ->
-        t#region, sprintf "BlockCom %S" t#payload
+        t#region, sprintf "Block comment %S" t#payload
 
       (* Literals *)
 
     | String t ->
-        t#region, sprintf "String %S%s" t#payload (comments t)
+        t#region, sprintf "String %S" t#payload
     | Verbatim t ->
-        t#region, sprintf "Verbatim %S%s" t#payload (comments t)
+        t#region, sprintf "Verbatim %S" t#payload
     | Bytes t ->
         let s, b = t#payload in
         t#region,
-        sprintf "Bytes (%S, \"0x%s\")%s" s (Hex.show b) (comments t)
+        sprintf "Bytes (%S, \"0x%s\")" s (Hex.show b)
     | Int t ->
         let s, n = t#payload in
-        t#region, sprintf "Int (%S, %s)%s" s (Z.to_string n) (comments t)
+        t#region, sprintf "Int (%S, %s)" s (Z.to_string n)
  (* | Nat t ->
         let s, n = t#payload in
         t#region, sprintf "Nat (%S, %s)" s (Z.to_string n)
@@ -933,109 +878,100 @@ module T =
         let s, n = t#payload in
         t#region, sprintf "Mutez (%S, %s)" s (Int64.to_string n) *)
     | Ident t ->
-        t#region, sprintf "Ident %S%s" t#payload (comments t)
+        t#region, sprintf "Ident %S" t#payload
     | UIdent t ->
-        t#region, sprintf "UIdent %S%s" t#payload (comments t)
-    | Attr t ->
-        t#region, sprintf "Attr %s%s" (Attr.to_string t#payload) (comments t)
+        t#region, sprintf "UIdent %S" t#payload
+    | Attr {region; value} ->
+        region, sprintf "Attr %s" (Attr.to_string value)
  (* | Lang {value = {value = payload; _}; region; _} ->
         region, sprintf "Lang %S" payload *)
 
     (* Symbols *)
 
-    | MINUS    t -> t#region, sprintf "MINUS%s" (comments t)
-    | PLUS     t -> t#region, sprintf "PLUS%s" (comments t)
-    | SLASH    t -> t#region, sprintf "SLASH%s" (comments t)
-    | TIMES    t -> t#region, sprintf "TIMES%s" (comments t)
-    | REM      t -> t#region, sprintf "REM%s" (comments t)
-    | QMARK    t -> t#region, sprintf "QMARK%s" (comments t)
- (* | PLUS2    t -> t#region, sprintf "PLUS2%s" (comments t)
-    | MINUS2   t -> t#region, sprintf "MINUS2%s" (comments t) *)
-    | LPAR     t -> t#region, sprintf "LPAR%s" (comments t)
-    | RPAR     t -> t#region, sprintf "RPAR%s" (comments t)
-    | LBRACE   t -> t#region, sprintf "LBRACE%s" (comments t)
-    | RBRACE   t -> t#region, sprintf "RBRACE%s" (comments t)
-    | LBRACKET t -> t#region, sprintf "LBRACKET%s" (comments t)
-    | RBRACKET t -> t#region, sprintf "RBRACKET%s" (comments t)
-    | COMMA    t -> t#region, sprintf "COMMA%s" (comments t)
-    | SEMI     t -> t#region, sprintf "SEMI%s" (comments t)
-    | COLON    t -> t#region, sprintf "COLON%s" (comments t)
-    | DOT      t -> t#region, sprintf "DOT%s" (comments t)
-    | ELLIPSIS t -> t#region, sprintf "ELLIPSIS%s" (comments t)
-    | BOOL_OR  t -> t#region, sprintf "BOOL_OR%s" (comments t)
-    | BOOL_AND t -> t#region, sprintf "BOOL_AND%s" (comments t)
-    | BOOL_NOT t -> t#region, sprintf "BOOL_NOT%s" (comments t)
- (* | BIT_AND  t -> t#region, sprintf "BIT_AND%s" (comments t)
-    | BIT_NOT  t -> t#region, sprintf "BIT_NOT%s" (comments t)
-    | BIT_XOR  t -> t#region, sprintf "BIT_XOR%s" (comments t)
-    | SHIFT_L  t -> t#region, sprintf "SHIFT_L%s" (comments t)
-    | SHIFT_R  t -> t#region, sprintf "SHIFT_R%s" (comments t) *)
-    | EQ       t -> t#region, sprintf "EQ%s" (comments t)
-    | EQ2      t -> t#region, sprintf "EQ2%s" (comments t)
-    | NE       t -> t#region, sprintf "NE%s" (comments t)
-    | LT       t -> t#region, sprintf "LT%s" (comments t)
-    | GT       t -> t#region, sprintf "GT%s" (comments t)
-    | LE       t -> t#region, sprintf "LE%s" (comments t)
-    | PLUS_EQ  t -> t#region, sprintf "PLUS_EQ%s" (comments t)
-    | MINUS_EQ t -> t#region, sprintf "MINUS_EQ%s" (comments t)
-    | MULT_EQ  t -> t#region, sprintf "MULT_EQ%s" (comments t)
-    | REM_EQ   t -> t#region, sprintf "REM_EQ%s" (comments t)
-    | DIV_EQ   t -> t#region, sprintf "DIV_EQ%s" (comments t)
- (* | SL_EQ    t -> t#region, sprintf "SL_EQ%s" (comments t)
-    | SR_EQ    t -> t#region, sprintf "SR_EQ%s" (comments t)
-    | AND_EQ   t -> t#region, sprintf "AND_EQ%s" (comments t)
-    | OR_EQ    t -> t#region, sprintf "OR_EQ%s" (comments t)
-    | XOR_EQ   t -> t#region, sprintf "XOR_EQ%s" (comments t) *)
-    | VBAR     t -> t#region, sprintf "VBAR%s" (comments t)
-    | ARROW    t -> t#region, sprintf "ARROW%s" (comments t)
-    | WILD     t -> t#region, sprintf "WILD%s" (comments t)
-    | INCR     t -> t#region, sprintf "INCR%s" (comments t)
-    | DECR     t -> t#region, sprintf "DECR%s" (comments t)
+    | MINUS    t -> t#region, "MINUS"
+    | PLUS     t -> t#region, "PLUS"
+    | SLASH    t -> t#region, "SLASH"
+    | TIMES    t -> t#region, "TIMES"
+    | REM      t -> t#region, "REM"
+    | QMARK    t -> t#region, "QMARK"
+ (* | PLUS2    t -> t#region, "PLUS2"
+    | MINUS2   t -> t#region, "MINUS2" *)
+    | LPAR     t -> t#region, "LPAR"
+    | RPAR     t -> t#region, "RPAR"
+    | LBRACE   t -> t#region, "LBRACE"
+    | RBRACE   t -> t#region, "RBRACE"
+    | LBRACKET t -> t#region, "LBRACKET"
+    | RBRACKET t -> t#region, "RBRACKET"
+    | COMMA    t -> t#region, "COMMA"
+    | SEMI     t -> t#region, "SEMI"
+    | COLON    t -> t#region, "COLON"
+    | DOT      t -> t#region, "DOT"
+    | ELLIPSIS t -> t#region, "ELLIPSIS"
+    | BOOL_OR  t -> t#region, "BOOL_OR"
+    | BOOL_AND t -> t#region, "BOOL_AND"
+    | BOOL_NOT t -> t#region, "BOOL_NOT"
+ (* | BIT_AND  t -> t#region, "BIT_AND"
+    | BIT_NOT  t -> t#region, "BIT_NOT"
+    | BIT_XOR  t -> t#region, "BIT_XOR"
+    | SHIFT_L  t -> t#region, "SHIFT_L"
+    | SHIFT_R  t -> t#region, "SHIFT_R" *)
+    | EQ       t -> t#region, "EQ"
+    | EQ2      t -> t#region, "EQ2"
+    | NE       t -> t#region, "NE"
+    | LT       t -> t#region, "LT"
+    | GT       t -> t#region, "GT"
+    | LE       t -> t#region, "LE"
+    | PLUS_EQ  t -> t#region, "PLUS_EQ"
+    | MINUS_EQ t -> t#region, "MINUS_EQ"
+    | MULT_EQ  t -> t#region, "MULT_EQ"
+    | REM_EQ   t -> t#region, "REM_EQ"
+    | DIV_EQ   t -> t#region, "DIV_EQ"
+ (* | SL_EQ    t -> t#region, "SL_EQ"
+    | SR_EQ    t -> t#region, "SR_EQ"
+    | AND_EQ   t -> t#region, "AND_EQ"
+    | OR_EQ    t -> t#region, "OR_EQ"
+    | XOR_EQ   t -> t#region, "XOR_EQ" *)
+    | VBAR     t -> t#region, "VBAR"
+    | ARROW    t -> t#region, "ARROW"
+    | WILD     t -> t#region, "WILD"
 
     (* JavaScript Keywords *)
 
- (* | Break    t -> t#region, sprintf "Break%s" (comments t) *)
-    | Case     t -> t#region, sprintf "Case%s" (comments t)
- (* | Class    t -> t#region, sprintf "Class%s (comments t)" *)
-    | Const    t -> t#region, sprintf "Const%s" (comments t)
-    | Default  t -> t#region, sprintf "Default%s" (comments t)
-    | Else     t -> t#region, sprintf "Else%s" (comments t)
-    | Export   t -> t#region, sprintf "Export%s" (comments t)
-    | For      t -> t#region, sprintf "For%s" (comments t)
-    | If       t -> t#region, sprintf "If%s" (comments t)
-    | Import   t -> t#region, sprintf "Import%s" (comments t)
-    | Let      t -> t#region, sprintf "Let%s" (comments t)
-    | Of       t -> t#region, sprintf "Of%s" (comments t)
-    | Return   t -> t#region, sprintf "Return%s" (comments t)
-    | Break    t -> t#region, sprintf "Break%s" (comments t)
-    | Switch   t -> t#region, sprintf "Switch%s" (comments t)
- (* | This     t -> t#region, sprintf "This%s" (comments t)
-    | Void     t -> t#region, sprintf "Void%s" (comments t)*)
-    | While    t -> t#region, sprintf "While%s" (comments t)
-    | From     t -> t#region, sprintf "From%s" (comments t)
- (* | With     t -> t#region, sprintf "With%s" (comments t) *)
+ (* | Break    t -> t#region, "Break" *)
+    | Case     t -> t#region, "Case"
+ (* | Class    t -> t#region, "Class" *)
+    | Const    t -> t#region, "Const"
+    | Default  t -> t#region, "Default"
+    | Else     t -> t#region, "Else"
+    | Export   t -> t#region, "Export"
+    | For      t -> t#region, "For"
+    | If       t -> t#region, "If"
+    | Import   t -> t#region, "Import"
+    | Let      t -> t#region, "Let"
+    | Of       t -> t#region, "Of"
+    | Return   t -> t#region, "Return"
+    | Break    t -> t#region, "Break"
+    | Switch   t -> t#region, "Switch"
+ (* | This     t -> t#region, "This"
+    | Void     t -> t#region, "Void" *)
+    | While    t -> t#region, "While"
+    | From     t -> t#region, "From"
+ (* | With     t -> t#region, "With" *)
 
     (* TypeScript keywords *)
 
-    | As          t -> t#region, sprintf "As%s" (comments t)
-    | Implements  t -> t#region, sprintf "Implements%s" (comments t)
-    | Interface   t -> t#region, sprintf "Interface%s" (comments t)
-    | Namespace   t -> t#region, sprintf "Namespace%s" (comments t)
-    | Type        t -> t#region, sprintf "Type%s" (comments t)
-
-    (* Contract keywords *)
-
-    | Contract  t -> t#region, sprintf "Contract%s" (comments t)
-    | Parameter t -> t#region, sprintf "Parameter%s" (comments t)
+    | As          t -> t#region, "As"
+    | Namespace   t -> t#region, "Namespace"
+    | Type        t -> t#region, "Type"
 
     (* Virtual tokens *)
 
-    | ZWSP   t -> t#region, sprintf "ZWSP%s" (comments t)
-    | ES6FUN t -> t#region, sprintf "ES6FUN%s" (comments t)
+    | ZWSP   t -> t#region, "ZWSP"
+    | ES6FUN t -> t#region, "ES6FUN"
 
     (* End-Of-File *)
 
-    | EOF t -> t#region, sprintf "EOF%s" (comments t)
+    | EOF t -> t#region, "EOF"
 
 
     (* CONVERSIONS *)
@@ -1119,7 +1055,7 @@ module T =
 
     (* Attributes *)
 
-    let mk_attr ~key ?value region = Attr (wrap (key, value) region)
+    let mk_attr ~key ?value region = Attr {region; value = key, value}
 
     (* Code injection *)
 
@@ -1191,9 +1127,7 @@ module T =
     | XOR_EQ _ *)
     | VBAR _
     | ARROW _
-    | WILD _
-    | INCR _
-    | DECR _ -> true
+    | WILD _ -> true
     | _ -> false
 
     (* Verbatim strings *)

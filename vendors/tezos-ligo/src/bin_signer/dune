@@ -1,0 +1,37 @@
+; This file was automatically generated, do not edit.
+; Edit file manifest/main.ml instead.
+
+(executable
+ (name main_signer)
+ (public_name octez-signer)
+ (package octez-signer)
+ (instrumentation (backend bisect_ppx))
+ (libraries
+  tezos-base
+  tezos-base.unix
+  tezos-clic
+  tezos-client-base
+  tezos-client-base-unix
+  tezos-client-commands
+  tezos-signer-services
+  tezos-rpc-http
+  tezos-rpc-http-server
+  tezos-rpc-http-client-unix
+  tezos-stdlib-unix
+  tezos-stdlib
+  tezos-signer-backends.unix)
+ (link_flags
+  (:standard)
+  (:include %{workspace_root}/static-link-flags.sexp))
+ (flags
+  (:standard)
+  -open Tezos_base.TzPervasives
+  -open Tezos_client_base
+  -open Tezos_client_base_unix
+  -open Tezos_client_commands
+  -open Tezos_signer_services
+  -open Tezos_rpc_http
+  -open Tezos_rpc_http_server
+  -open Tezos_rpc_http_client_unix
+  -open Tezos_stdlib_unix
+  -open Tezos_stdlib))

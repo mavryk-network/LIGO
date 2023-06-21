@@ -16,6 +16,16 @@ module Value_decl (Attr : Attr) = struct
     }
   [@@deriving eq, compare, yojson, hash, fold, map]
 
+  let fold_map
+      :  ('acc -> 'a -> 'acc * 'b) -> ('acc -> 'c -> 'acc * 'd) -> 'acc -> ('a, 'c) t
+      -> 'acc * ('b, 'd) t
+    =
+   fun f g acc { binder; attr; expr } ->
+    let acc, binder = Binder.fold_map g acc binder in
+    let acc, expr = f acc expr in
+    acc, { binder; attr; expr }
+
+
   let pp ?(print_type = true) f g ppf { binder; attr; expr } =
     let cond ppf b =
       if print_type
@@ -32,6 +42,16 @@ module Pattern_decl (Pattern : Pattern.S) (Attr : Attr) = struct
     ; attr : Attr.t
     }
   [@@deriving eq, compare, yojson, hash, fold, map]
+
+  let fold_map
+      :  ('acc -> 'a -> 'acc * 'b) -> ('acc -> 'c -> 'acc * 'd) -> 'acc -> ('a, 'c) t
+      -> 'acc * ('b, 'd) t
+    =
+   fun f g acc { pattern; attr; expr } ->
+    let acc, pattern = Pattern.fold_map g acc pattern in
+    let acc, expr = f acc expr in
+    acc, { pattern; attr; expr }
+
 
   let pp ?(print_type = true) f g ppf { pattern; attr; expr } =
     let cond ppf b =
@@ -50,6 +70,12 @@ module Type_decl (Attr : Attr) = struct
     }
   [@@deriving eq, compare, yojson, hash, fold, map]
 
+  let fold_map : ('acc -> 'a -> 'acc * 'b) -> 'acc -> 'a t -> 'acc * 'b t =
+   fun g acc { type_binder; type_expr; type_attr } ->
+    let acc, type_expr = g acc type_expr in
+    acc, { type_binder; type_expr; type_attr }
+
+
   let pp g ppf { type_binder; type_expr; type_attr } =
     Format.fprintf
       ppf
@@ -63,41 +89,27 @@ module Type_decl (Attr : Attr) = struct
 end
 
 module Module_decl (Attr : Attr) = struct
-  type ('module_expr, 'signature_expr) t =
+  type 'module_expr t =
     { module_binder : Var.Module_var.t
     ; module_ : 'module_expr
-    ; annotation : 'signature_expr
     ; module_attr : Attr.t
     }
   [@@deriving eq, compare, yojson, hash, fold, map]
 
-  let pp h a ppf { module_binder; module_; annotation; module_attr } =
+  let fold_map : ('acc -> 'a -> 'acc * 'b) -> 'acc -> 'a t -> 'acc * 'b t =
+   fun f acc { module_binder; module_; module_attr } ->
+    let acc, module_ = f acc module_ in
+    acc, { module_binder; module_; module_attr }
+
+
+  let pp h ppf { module_binder; module_; module_attr } =
     Format.fprintf
       ppf
-      "@[<2>module %a : %a =@ %a%a@]"
+      "@[<2>module %a =@ %a%a@]"
       Var.Module_var.pp
       module_binder
       h
       module_
-      a
-      annotation
       Attr.pp
       module_attr
-end
-
-module Signature_decl = struct
-  type 'signature_expr t =
-    { signature_binder : Var.Module_var.t
-    ; signature : 'signature_expr
-    }
-  [@@deriving eq, compare, yojson, hash, fold, map]
-
-  let pp h ppf { signature_binder; signature } =
-    Format.fprintf
-      ppf
-      "@[<2>module type %a =@ %a@]"
-      Var.Module_var.pp
-      signature_binder
-      h
-      signature
 end

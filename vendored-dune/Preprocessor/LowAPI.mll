@@ -35,12 +35,11 @@ module type S =
   sig
     (* Preprocessing from various sources *)
 
-    val from_lexbuf    :        Lexing.lexbuf preprocessor
-    val from_channel   :        in_channel    preprocessor
-    val from_string    :        string        preprocessor
-    val from_raw_input : (file_path * string) preprocessor
-    val from_file      :        file_path     preprocessor
-    val from_buffer    :        Buffer.t      preprocessor
+    val from_lexbuf  : Lexing.lexbuf preprocessor
+    val from_channel : in_channel    preprocessor
+    val from_string  : string        preprocessor
+    val from_file    : file_path     preprocessor
+    val from_buffer  : Buffer.t      preprocessor
   end
 
 module Make (Config : Config.S) (Options : Options.S) =
@@ -57,9 +56,12 @@ module Make (Config : Config.S) (Options : Options.S) =
     let rec find_in_cli_paths file_path = function
       [] -> None
     | dir::dirs ->
-       (match Simple_utils.File.exists ~dir file_path with
-        | Some path  -> Some path
-        | None -> find_in_cli_paths file_path dirs)
+        let path =
+          if String.(dir = "." || dir = "") then file_path
+          else dir ^ "/" ^ file_path in
+        match Caml.Sys.file_exists path with
+        | true           -> Some path
+        | false -> find_in_cli_paths file_path dirs
 
     (* The call [find dir file inclusion_paths] looks for [file] in
        [dir]. If the file is not found, it is sought in the
@@ -69,25 +71,22 @@ module Make (Config : Config.S) (Options : Options.S) =
 
     let find dir file inclusion_paths =
       let path =
-        match Simple_utils.File.exists ~dir file with
-        | Some path -> Some path
-        | None ->
-            match find_in_cli_paths file Options.dirs with
-              Some _ as some -> some
-            | None ->
-                let file_opt =
-                  ModRes.find_external_file ~file ~inclusion_paths
-                in
-                match file_opt with
-                  None -> None
-                | Some file ->
-                   match Simple_utils.File.exists file with
-                   | Some path -> file_opt
-                   | None -> None
-      in
-      match path with
-      | None -> None
-      | Some p -> Some (Fpath.v p |> Fpath.normalize |> Fpath.to_string)
+        if String.(dir = "." || dir = "") then file
+        else dir ^ "/" ^ file in
+      match Caml.Sys.file_exists path with
+      | true -> Some path
+      | false ->
+          match find_in_cli_paths file Options.dirs with
+            Some _ as some -> some
+          | None ->
+              let file_opt =
+                ModRes.find_external_file ~file ~inclusion_paths
+              in match file_opt with
+                   None -> None
+                 | Some file ->
+                     match Caml.Sys.file_exists file with
+                     | true -> file_opt
+                     | false -> None
 
     (* STRING PROCESSING *)
 
@@ -197,15 +196,18 @@ module Make (Config : Config.S) (Options : Options.S) =
                  * The third component of the triple is an updated
                    value of the [state] (see [incl_chan] above). *)
 
-            let incl_path, incl_file_str, state =
+            let incl_path, incl_chan, state =
               match find path incl_file external_dirs with
                 None ->
                   fail state incl_region (Error.File_not_found incl_file)
               | Some incl_path ->
-                 (match Simple_utils.File.read incl_path with
-                 | Some incl_file_str -> incl_path, incl_file_str, state
-                 | None -> Error.Failed_opening (incl_path, (incl_path ^ "not found")) |> fail state incl_region)
-            in
+                  try
+                    let in_chan = open_in incl_path in
+                    let state   = state#push_chan in_chan
+                    in incl_path, in_chan, state
+                  with Sys_error msg ->
+                    Error.Failed_opening (incl_path, msg)
+                    |> fail state incl_region in
             
             (* We check if the current file exists in the stack of ancestors 
                in which case we fail with the error [Error.Cyclic_inclusion]
@@ -227,7 +229,7 @@ module Make (Config : Config.S) (Options : Options.S) =
             (* We prepare a lexing buffer from the input channel bound to
                the file to include. *)
 
-            let incl_buf = Lexing.from_string incl_file_str in
+            let incl_buf = Lexing.from_channel incl_chan in
 
             (* We instruct the lexing buffer just created that the
                corresponding file name is [incl_file] (recall that
@@ -502,6 +504,10 @@ let cameligo_block_comment_opening   = "(*"
 let cameligo_block_comment_closing   = "*)"
 let cameligo_line_comment_opening    = "//"
 
+let reasonligo_block_comment_opening = "/*"
+let reasonligo_block_comment_closing = "*/"
+let reasonligo_line_comment_opening  = "//"
+
 let jsligo_block_comment_opening     = "/*"
 let jsligo_block_comment_closing     = "*/"
 let jsligo_line_comment_opening      = "//"
@@ -509,27 +515,32 @@ let jsligo_line_comment_opening      = "//"
 let block_comment_opening =
    pascaligo_block_comment_opening
 |   cameligo_block_comment_opening
+| reasonligo_block_comment_opening
 |     jsligo_block_comment_opening
 
 let block_comment_closing =
    pascaligo_block_comment_closing
 |   cameligo_block_comment_closing
+| reasonligo_block_comment_closing
 |     jsligo_block_comment_closing
 
 let line_comment_opening =
    pascaligo_line_comment_opening
 |   cameligo_line_comment_opening
+| reasonligo_line_comment_opening
 |     jsligo_line_comment_opening
 
 (* String delimiters *)
 
 let  pascaligo_string_delimiter = "\""
 let   cameligo_string_delimiter = "\""
+let reasonligo_string_delimiter = "\""
 let     jsligo_string_delimiter = "\""
 
 let string_delimiter =
    pascaligo_string_delimiter
 |   cameligo_string_delimiter
+| reasonligo_string_delimiter
 |     jsligo_string_delimiter
 
 (* RULES *)
@@ -758,18 +769,6 @@ and linemarker state = parse
     let from_channel = from_lexbuf <@ Lexing.from_channel
 
     let from_string = from_lexbuf <@ Lexing.from_string
-
-    let from_raw_input =
-      fun (file, input) ->
-        try
-          let lexbuf = Lexing.from_string input in
-          Lexbuf.reset_file file lexbuf;
-          from_lexbuf lexbuf
-        with Sys_error msg ->
-          let error  = Error.Failed_opening (file, msg) in
-          let msg    = Error.to_string error in
-          let region = Region.min ~file in
-          Error (None, Region.{value=msg; region})
 
     let from_buffer = from_string <@ Buffer.contents
 

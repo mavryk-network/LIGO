@@ -1,8 +1,3 @@
-type reference =
-  | Name_ref of string
-  | Self_ref
-  | String_ref
-
 type t = {
   syntax_name:                string;
   alt_name:                   string;
@@ -11,7 +6,7 @@ type t = {
   folding_start_marker:       string option;
   folding_stop_marker:        string option;
   language_features:          language_features;
-  syntax_patterns:            reference list;
+  syntax_patterns:            string list;
   repository:                 pattern list
 }
 
@@ -28,11 +23,11 @@ and regexp = {
 (* FIXME: doesn't support Emacs for now *)
 and extra_patterns = {
   (* Match extra things inside line comments. *)
-  in_line_comments: reference list;
+  in_line_comments: string list;
   (* Match extra things inside block comments. *)
-  in_block_comments: reference list;
+  in_block_comments: string list;
   (* Match extra things inside strings. *)
-  in_strings: reference list;
+  in_strings: string list;
 }
 
 and language_features = {
@@ -109,7 +104,7 @@ and begin_end_pattern = {
      be split. This is because of VIM. *)
   begin_:         (regexp * highlight_name option) list;
   end_:           (regexp * highlight_name option) list;
-  patterns:       reference list;
+  patterns:       string list;
 }
 
 and match_pattern = {

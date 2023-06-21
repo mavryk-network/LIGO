@@ -9,7 +9,7 @@ In this guide, we will look into contract interactions on Tezos. We will provide
 
 ## Internal operations
 
-When you make a transaction to a contract, this contract may, in turn, emit other operations. Those operations are called "internal". There are three kinds of internal operations:
+When you make a transaction to a contract, this contract may, in turn, emit other operations. These operations are called "internal". There are three kinds of internal operations:
 1. Transaction – an operation that transfers value and, if the callee is an originated contract, executes the code of the callee.
 2. Origination – creates a new smart contract.
 3. Delegation – sets a delegate for the current contract.
@@ -29,7 +29,6 @@ However, there are legit reasons for using internal operations, including the fo
 3. You implement a standard that explicitly forbids you to extend the functionality.
 
 ## Internal transactions in LIGO
-
 The simplest example of an internal transaction is sending Tez to a contract. Note that in Tezos, implicit accounts owned by people holding private keys are contracts as well. Implicit accounts have no code and accept _unit_ as the parameter. Consider the following code snippet:
 
 <Syntax syntax="pascaligo">
@@ -73,7 +72,7 @@ let main (destination_addr, _ : parameter * storage) =
 
 It accepts a destination address as the parameter. Then we need to check whether the address points to a contract that accepts a unit. We do this with `Tezos.get_contract_opt`. This function returns `Some (value)` if the contract exists and the parameter type is correct. Otherwise, it returns `None`. In case it is `None`, we fail with an error, otherwise we use `Tezos.transaction` to forge the internal transaction to the destination contract.
 
-> Note: since `Tezos.transaction` is called with unit as its first argument, LIGO infer that `destination_addr` has to point to a contract that accepts unit
+> Note: since `Tezos.transaction` is called with unit as its first argument, LIGO infer that `destination_addr` has to point to a contract that accepts unit 
 
 Let us also examine a contract that stores the address of another contract and passes an argument to it. Here is how this "proxy" can look like:
 
@@ -123,12 +122,8 @@ let main (param, callee_addr : parameter * storage) =
 
 </Syntax>
 
-To call a contract, we need to add a type annotation `: int contract
-option` for `Tezos.get_contract_opt`. LIGO knows that
-`Tezos.get_contract_opt` returns a `contract option` but at the time
-of type inference it does not know that the callee accepts an
-`int`. In this case, we expect the callee to accept an `int`. Such a
-callee can be implemented like this:
+
+To call a contract, we need to add a type annotation `: int contract option` for `Tezos.get_contract_opt`. LIGO knows that `Tezos.get_contract_opt` returns a `contract option` but at the time of type inference it does not know that the callee accepts an `int`. In this case, we expect the callee to accept an `int`. Such a callee can be implemented like this:
 
 <Syntax syntax="pascaligo">
 
@@ -149,6 +144,7 @@ let main (param, storage : int * int) = [], param + storage
 ```
 
 </Syntax>
+
 
 But what if we want to make a transaction to a contract but do not know the full type of its parameter? For example, we may know that some contract accepts `Add 5` as its parameter, but we do not know what other entrypoints are there.
 
@@ -275,7 +271,7 @@ type t is record [hello : int; l : nat; i : bytes; g : string; o : address]
 </Syntax>
 <Syntax syntax="cameligo">
 
-LIGO automatically converts a complex type `type t = Hello | L | I | G | O` into an annotated left-balanced tree with items sorted alphabetically: `(or (or (or (unit %g) (unit %hello)) (or (unit %i) (unit %l))) (unit %o))`. LIGO applies the same transformation to record types:
+LIGO automatically converts a complex type `type t = Hello | L | I | G | O` into an annotated left-balanced tree with items sorted alphabetically: `(or (or (or (unit %g) (unit %hello)) (or (unit %i) (unit %l))) (unit %o))`. LIGO applies the same transformation to record types: 
 ```cameligo
 type t = {hello : int; l : nat; i : bytes; g : string; o : address}
 ```
@@ -384,7 +380,6 @@ function main (const p : parameter; const s : storage) is {
 ```
 
 </Syntax>
-
 <Syntax syntax="cameligo">
 
 ```cameligo
@@ -509,7 +504,7 @@ const op = Tezos.create_contract(
 
 ```cameligo group=solo_create_contract
 let op = Tezos.create_contract
-  (fun (p : int) (s : int) -> [], p + s)
+  (fun (p, s : int * int) -> [], p + s)
   None
   0mutez
   1
@@ -560,7 +555,7 @@ function create_and_call (const st : list (address)) is {
 let create_and_call (storage : address list) =
   let create_op, addr =
     Tezos.create_contract
-      (fun (p : int) (s : int) -> [], p + s)
+      (fun (p, s : int * int) -> [], p + s)
       None
       0tez
       1 in

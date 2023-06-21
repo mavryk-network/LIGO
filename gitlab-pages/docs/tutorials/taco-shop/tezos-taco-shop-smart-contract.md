@@ -19,7 +19,7 @@ consumers.
 
 <br/>
 <img src="/img/tutorials/get-started/tezos-taco-shop-smart-contract/taco-stand.svg" width="50%" />
-<div style={{ opacity: 0.7, textAlign: 'center', fontSize: '10px' }}>Made by <a href="https://www.flaticon.com/authors/smashicons" title="Smashicons">Smashicons</a> from <a href="https://www.flaticon.com/"    title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
+<div style={{ opacity: 0.7, textAlign: 'center', fontSize: '10px' }}>Made by <a href="https://www.flaticon.com/authors/smashicons" title="Smashicons">Smashicons</a> from <a href="https://www.flaticon.com/" 			    title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" 			    title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
 </div>
 
 ---
@@ -46,7 +46,7 @@ finite supply for the current sales life-cycle.
 
 The current purchase price is calculated with the following formula:
 
-```cameligo skip
+```pascaligo skip
 current_purchase_price = max_price / available_stock
 ```
 
@@ -106,7 +106,6 @@ let main = ([parameter, contractStorage] : [int, int]) : [list <operation>, int]
 ```
 
 </Syntax>
-
 <Syntax syntax="cameligo">
 
 ```cameligo group=a
@@ -329,7 +328,7 @@ ligo compile expression pascaligo --init-file taco-shop.ligo init_storage
 <Syntax syntax="cameligo">
 
 ```zsh
-ligo compile expression cameligo --init-file taco-shop.mligo init_storage
+ligo compile expression pascaligo --init-file taco-shop.mligo init_storage
 # Output:
 #
 # { Elt 1 (Pair 50 50000000) ; Elt 2 (Pair 20 75000000) }
@@ -340,7 +339,7 @@ ligo compile expression cameligo --init-file taco-shop.mligo init_storage
 <Syntax syntax="jsligo">
 
 ```zsh
-ligo compile expression jsligo --init-file taco-shop.jsligo init_storage
+ligo compile expression pascaligo --init-file taco-shop.jsligo init_storage
 # Output:
 #
 # { Elt 1 (Pair 50 50000000) ; Elt 2 (Pair 20 75000000) }
@@ -367,6 +366,8 @@ have sold a taco!
 Let is start by customising our contract a bit, we will:
 
 - rename `parameter` to `taco_kind_index`
+- only in PascaLIGO syntax: change `taco_shop_storage` to a `var` instead of a `const`, because
+  we will want to modify it
 
 <Syntax syntax="pascaligo">
 
@@ -388,7 +389,7 @@ let buy_taco (taco_kind_index, taco_shop_storage : nat * taco_shop_storage) : re
 <Syntax syntax="jsligo">
 
 ```jsligo group=b
-let buy_taco = (taco_kind_index: nat, taco_shop_storage: taco_shop_storage) : return_ => {
+let buy_taco = ([taco_kind_index, taco_shop_storage] : [nat, taco_shop_storage]) : return_ => {
   return [list([]), taco_shop_storage]
 };
 ```
@@ -452,7 +453,7 @@ let buy_taco (taco_kind_index, taco_shop_storage : nat * taco_shop_storage) : re
 <Syntax syntax="jsligo">
 
 ```jsligo group=b
-let buy_taco2 = (taco_kind_index: nat, taco_shop_storage: taco_shop_storage): return_ => {
+let buy_taco2 = ([taco_kind_index, taco_shop_storage] : [nat, taco_shop_storage]) => {
   /* Retrieve the taco_kind from the contracts storage or fail */
   let taco_kind =
     match (Map.find_opt (taco_kind_index, taco_shop_storage), {
@@ -542,7 +543,7 @@ let buy_taco (taco_kind_index, taco_shop_storage : nat * taco_shop_storage) =
 <Syntax syntax="jsligo">
 
 ```jsligo group=b
-let buy_taco3 = (taco_kind_index: nat, taco_shop_storage: taco_shop_storage) : return_ => {
+let buy_taco3 = ([taco_kind_index, taco_shop_storage] : [nat, taco_shop_storage]) : return_ => {
   /* Retrieve the taco_kind from the contracts storage or fail */
   let taco_kind : taco_supply =
     match (Map.find_opt (taco_kind_index, taco_shop_storage), {
@@ -646,7 +647,7 @@ let test =
       (1n, { current_stock = 50n ; max_price = 50tez }) ;
       (2n, { current_stock = 20n ; max_price = 75tez }) ; ]
   in
-  let (pedro_taco_shop_ta, _code, _size) = Test.originate_uncurried buy_taco init_storage 0tez in
+  let (pedro_taco_shop_ta, _code, _size) = Test.originate buy_taco init_storage 0tez in
   (* Convert typed_address to contract *)
   let pedro_taco_shop_ctr = Test.to_contract pedro_taco_shop_ta in
   (* Convert contract to address *)
@@ -689,12 +690,12 @@ let test =
 ```jsligo test-ligo group=test
 #include "gitlab-pages/docs/tutorials/taco-shop/tezos-taco-shop-smart-contract.jsligo"
 
-let assert_string_failure = (res: test_exec_result, expected: string) => {
+let assert_string_failure = ([res,expected] : [test_exec_result, string]) => {
   let expected_bis = Test.eval (expected) ;
   match (res, {
     Fail: (x: test_exec_error) => (
       match (x, {
-        Rejected: (x:[michelson_program,address]) => assert (Test.michelson_equal (x[0], expected_bis)),
+        Rejected: (x:[michelson_code,address]) => assert (Test.michelson_equal (x[0], expected_bis)),
         Balance_too_low: (_: { contract_too_low : address , contract_balance : tez , spend_request : tez }) => failwith ("contract failed for an unknown reason"),
         Other: (_:string) => failwith ("contract failed for an unknown reason")
       })),
@@ -718,7 +719,7 @@ let test = ((_: unit): unit => {
   let unknown_kind = (3 as nat) ;
 
   /* Auxiliary function for testing equality in maps */
-  let eq_in_map = (r: taco_supply, m: taco_shop_storage, k: nat) =>
+  let eq_in_map = ([r, m, k] : [taco_supply, taco_shop_storage, nat]) =>
     match(Map.find_opt(k, m), {
      None: () => false,
      Some: (v : taco_supply) => v.current_stock == r.current_stock && v.max_price == r.max_price }) ;
@@ -825,6 +826,7 @@ if (Tezos.get_amount ()) <> current_purchase_price then
 ```
 
 </Syntax>
+
 <Syntax syntax="jsligo">
 
 ```jsligo skip

@@ -3,8 +3,9 @@
   (public_name proto-pre-alpha-utils)
   (libraries
     tezos-error-monad
-    tp-017
-    tp-016
+    tezos-stdlib-unix
+    tezos-protocol-014-PtKathma
+    tezos-client-014-PtKathma
     tezos-memory-proto-pre-alpha
     data-encoding
     simple-utils

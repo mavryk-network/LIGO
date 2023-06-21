@@ -1,9 +1,0 @@
-(library
- (name requests)
- (public_name ligo.ligo_lsp.requests)
- (flags
-  (:standard -w +A-4-28-40-42-44-70))
- (instrumentation
-  (backend bisect_ppx))
- (preprocess (pps ppx_let))
- (libraries lsp linol lsp_helpers compiler_options checking))

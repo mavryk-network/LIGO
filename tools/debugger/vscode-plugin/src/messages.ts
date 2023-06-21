@@ -17,19 +17,18 @@ export interface InitializeLoggerArguments {
 export interface InitializeLoggerResponse extends DebugProtocol.Response {
 }
 
-// SetLigoConfig //
+// SetLigoBinaryPath //
 
-export interface SetLigoConfigArguments {
+export interface SetLigoBinaryPathArguments {
 	binaryPath?: string
-	maxSteps?: number
 }
 
-export interface SetLigoConfigRequest extends DebugProtocol.Request {
-	command: 'setLigoConfig'
-	arguments: SetLigoConfigArguments
+export interface SetLigoBinaryPathRequest extends DebugProtocol.Request {
+	command: 'setLigoBinaryPath'
+	arguments: SetLigoBinaryPathArguments
 }
 
-export interface SetLigoConfigResponse extends DebugProtocol.Response {
+export interface SetLigoBinaryPathResponse extends DebugProtocol.Response {
 }
 
 // SetProgramPath //

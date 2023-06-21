@@ -2,8 +2,19 @@ open Ligo_prim
 module Errors = Errors
 module Helpers = Helpers
 
-let map_expression = Ast_aggregated.Helpers.map_expression
 let expression_obj ~raise e = Obj_ligo.check_obj_ligo ~raise e
+
+let eta_reduce : Ast_aggregated.expression -> Ast_aggregated.expression option =
+ fun e ->
+  match e.expression_content with
+  | E_lambda { binder; result = { expression_content = E_application { lamb; args }; _ } }
+    ->
+    (match Ast_aggregated.get_e_variable args with
+    | Some y when Param.is_imm binder && Value_var.equal (Param.get_var binder) y ->
+      Some lamb
+    | _ -> None)
+  | _ -> None
+
 
 let make_forced : Ast_aggregated.expression -> Ast_aggregated.expression =
   let f e =
@@ -14,17 +25,17 @@ let make_forced : Ast_aggregated.expression -> Ast_aggregated.expression =
       { e with expression_content = E_lambda { binder; result; output_type } }
     | _ -> e
   in
-  map_expression f
+  Helpers.map_expression f
 
 
 let accessor_reduce : Ast_aggregated.expression -> Ast_aggregated.expression =
   let f (e : Ast_aggregated.expression) =
     match e.expression_content with
     | E_accessor { struct_ = { expression_content = E_record m; _ }; path } ->
-      Record.find m path
+      Record.LMap.find path m
     | _ -> e
   in
-  map_expression f
+  Helpers.map_expression f
 
 
 let replace_location
@@ -32,7 +43,7 @@ let replace_location
   =
  fun location ->
   let f (e : Ast_aggregated.expression) = { e with location } in
-  map_expression f
+  Helpers.map_expression f
 
 
 let inline_thunk : bool ref -> Ast_aggregated.expression -> Ast_aggregated.expression =
@@ -67,7 +78,7 @@ let inline_thunk : bool ref -> Ast_aggregated.expression -> Ast_aggregated.expre
 
 
 let inline_thunks : bool ref -> Ast_aggregated.expression -> Ast_aggregated.expression =
- fun changed -> map_expression (inline_thunk changed)
+ fun changed -> Helpers.map_expression (inline_thunk changed)
 
 
 let rec thunk e =
@@ -85,23 +96,22 @@ let remove_check_self : Ast_aggregated.expression -> Ast_aggregated.expression =
       Ast_aggregated.e_a_none ~loc t
     | _ -> e
   in
-  map_expression f
+  Helpers.map_expression f
 
 
 let all_aggregated_expression ~raise e =
   let e = Monomorphisation.mono_polymorphic_expr ~raise e in
   let e = Uncurry.uncurry_expression e in
   let e = thunk e in
-  let e = map_expression (Literal_replace.expression ~raise) e in
-  let e = map_expression (Contract_passes.entrypoint_typing ~raise) e in
-  let e = map_expression (Contract_passes.emit_event_typing ~raise) e in
-  let e = map_expression (Contract_passes.self_literal_typing ~raise) e in
-  let e = map_expression (Contract_passes.litstr_check ~raise) e in
+  let e = Helpers.map_expression (Literal_replace.expression ~raise) e in
+  let e = Helpers.map_expression (Contract_passes.entrypoint_typing ~raise) e in
+  let e = Helpers.map_expression (Contract_passes.emit_event_typing ~raise) e in
+  let e = Helpers.map_expression (Contract_passes.self_literal_typing ~raise) e in
   e
 
 
 let all_expression ~raise ~(options : Compiler_options.middle_end) e =
-  let e = map_expression Polymorphic_replace.expression e in
+  let e = Helpers.map_expression Polymorphic_replace.expression e in
   let e =
     if not options.test
     then (
@@ -116,16 +126,9 @@ let all_expression ~raise ~(options : Compiler_options.middle_end) e =
 let all_program
     ~raise
     ~(options : Compiler_options.middle_end)
-    ?(self_program : bool = true)
     (prg : Ast_aggregated.program)
   =
-  let self_program ~f prg = if self_program then f prg else prg in
-  let prg = self_program ~f:(Unused.unused_map_program ~raise) prg in
-  let prg = self_program ~f:(Muchused.muchused_map_program ~raise) prg in
-  let warn_unused_rec = options.warn_unused_rec in
-  let prg = Ast_aggregated.Helpers.map_program (Recursion.remove_rec_expression ~raise ~warn_unused_rec) prg in
-  let prg = if not options.test then Remove_unused.remove_unused prg else prg in
-  let prg = Ast_aggregated.Helpers.map_program Polymorphic_replace.expression prg in
+  let prg = Helpers.map_program Polymorphic_replace.expression prg in
   let prg =
     if not options.test
     then (
@@ -138,27 +141,14 @@ let all_program
   prg
 
 
-let contract_passes ~raise =
-  [ Contract_passes.self_typing ~raise
-  ; No_nested_big_map.self_typing ~raise
-  ]
+let contract_passes ~raise = [ Contract_passes.self_typing ~raise ]
 
 let contract_passes_map ~raise =
   [ Contract_passes.entrypoint_typing ~raise; Contract_passes.emit_event_typing ~raise ]
 
 
-let all_contract ~raise ~(options : Compiler_options.middle_end) parameter storage prg =
+let all_contract ~raise parameter storage prg =
   let contract_type : Contract_passes.contract_type = { parameter; storage } in
-  let () =
-    if not options.no_metadata_check
-    then (
-      (* Check storage type TZIP-16 compliance *)
-      let open Check_metadata in
-      match find_storage_metadata_opt contract_type.storage with
-      | Some metadata ->
-        check_metadata_tzip16_type_compliance ~raise ?syntax:options.syntax_for_errors metadata
-      | None -> ())
-  in
   let all_p =
     List.map ~f:(fun pass ->
         Ast_aggregated.Helpers.fold_map_expression pass contract_type)
@@ -166,7 +156,7 @@ let all_contract ~raise ~(options : Compiler_options.middle_end) parameter stora
   in
   let prg = List.fold ~f:(fun x f -> snd @@ f x) all_p ~init:prg in
   let all_p =
-    List.map ~f:(fun pass -> map_expression pass) @@ contract_passes_map ~raise
+    List.map ~f:(fun pass -> Helpers.map_expression pass) @@ contract_passes_map ~raise
   in
   let prg = List.fold ~f:(fun x f -> f x) all_p ~init:prg in
   prg

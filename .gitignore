@@ -8,6 +8,7 @@ version.ml
 /_opam/
 /*.pp.ligo
 /*.pp.mligo
+/*.pp.religo
 **/.DS_Store
 .vscode/
 /ligo.install
@@ -18,12 +19,9 @@ version.ml
 /to-dos.html
 /*.ligo
 /*.mligo
+/*.religo
 /*.jsligo
 env/
 _esy
 node_modules
-changelog.txt
 /src/main/build/ligo_lib/loaded.ml
-
-jsoo/dist
-jsoo/lib

@@ -65,6 +65,8 @@ let rec translate_type ?var : I.type_expression -> oty =
   | I.T_base I.TB_bls12_381_g2 -> T_base (nil, Prim (nil, "bls12_381_g2", [], []))
   | I.T_base I.TB_bls12_381_fr -> T_base (nil, Prim (nil, "bls12_381_fr", [], []))
   | I.T_base I.TB_never -> T_base (nil, Prim (nil, "never", [], []))
+  | I.T_base I.TB_chest -> T_base (nil, Prim (nil, "chest", [], []))
+  | I.T_base I.TB_chest_key -> T_base (nil, Prim (nil, "chest_key", [], []))
   | I.T_base I.TB_tx_rollup_l2_address -> T_base (nil, Prim (nil, "tx_rollup_l2_address", [], []))
   | I.T_base I.TB_type_int memo_size -> T_base (nil, Int (nil, memo_size))
   | I.T_ticket x -> T_ticket (nil, translate_type x)
@@ -145,18 +147,6 @@ let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.enviro
     let binder = (binder, binder_type) in
     let binder = translate_binder (binder, body) env in
     O.E_lam (meta, binder, translate_type return_type)
-  | E_rec { rec_binder; func = { binder; body } } ->
-    let (binder_type, return_type) =
-      (* TODO move binder type to the binder, like all other binders? *)
-      (* at the moment, this is the only error here! so I am not
-         bothering with error machinery... *)
-      match Mini_c.get_t_function expr.type_expression with
-      | None -> internal_error __LOC__ "type of lambda is not a function type"
-      | Some t -> t in
-    let binder = (binder, binder_type) in
-    let rec_binder = (rec_binder, expr.type_expression) in
-    let binder = translate_binder2 ((binder, rec_binder), body) env in
-    O.E_rec (meta, binder, translate_type return_type)
   | E_constant constant ->
     let (mich, args) = translate_constant ~raise ~proto meta constant expr.type_expression env in
     O.E_inline_michelson (meta, mich, args)
@@ -222,7 +212,8 @@ let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.enviro
   | E_update (e1, i, e2, n) ->
     let args = translate_args [e2; e1] env in
     E_update (meta, args, int_to_nat i, int_to_nat n)
-  | E_raw_michelson code -> 
+  | E_raw_michelson (code, args) ->
+    let args = List.map ~f:(fun e -> (translate_expression e env, Stacking.To_micheline.translate_type (translate_type e.type_expression))) args in
     (* maybe should move type into syntax? *)
     let (a, b) = match Mini_c.get_t_function ty with
       | None -> internal_error __LOC__ (Format.asprintf "type of Michelson insertion ([%%Michelson ...]) is not a function type = %a" Mini_c.PP.type_expression ty)
@@ -230,56 +221,18 @@ let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.enviro
     let wipe_locations l e =
       Tezos_micheline.Micheline.(inject_locations (fun _ -> l) (strip_locations e)) in
     let code = List.map ~f:(wipe_locations nil) code in
-    E_raw_michelson (meta, translate_type a, translate_type b, code)
-  | E_inline_michelson (code, args') ->
-    let args = List.map ~f:(fun e -> (translate_expression e env, Stacking.To_micheline.translate_type (translate_type e.type_expression))) args' in
-    let wipe_locations l e =
-      Tezos_micheline.Micheline.(inject_locations (fun _ -> l) (strip_locations e)) in
-    let code = List.map ~f:(wipe_locations nil) code in
-    let used = ref [] in
     let replace m = let open Tezos_micheline.Micheline in match m with
-     | Prim (_, s, [], [id]) when String.equal "typeopt" s && String.is_prefix ~prefix:"$" id ->
-       let id = String.chop_prefix_exn ~prefix:"$" id in
-       let id = Int.of_string id in
-       used := id :: ! used;
-       (match List.nth args id with
-        | Some (_, (Prim (_, "option", [t], _))) -> t
-        | _ -> internal_error __LOC__ (Format.sprintf "could not resolve (typeopt %d)" id))
      | Prim (_, s, [], [id]) when String.equal "type" s && String.is_prefix ~prefix:"$" id ->
        let id = String.chop_prefix_exn ~prefix:"$" id in
        let id = Int.of_string id in
-       used := id :: ! used;
        (match List.nth args id with
         | None -> internal_error __LOC__ (Format.sprintf "could not resolve (type %d)" id)
         | Some (_, t) -> t)
      | Prim (_, s, [], [id]) when String.equal "litstr" s && String.is_prefix ~prefix:"$" id ->
        let id = String.chop_prefix_exn ~prefix:"$" id in
        let id = Int.of_string id in
-       used := id :: ! used;
        (match List.nth args id with
         | Some (E_literal (m, Literal_string s), _) -> String (m, Ligo_string.extract s)
-        | _ -> internal_error __LOC__ (Format.sprintf "could not resolve (litstr %d)" id))
-     | Prim (_, s, [], [id]) when String.equal "codestr" s && String.is_prefix ~prefix:"$" id ->
-       let id = String.chop_prefix_exn ~prefix:"$" id in
-       let id = Int.of_string id in
-       used := id :: ! used;
-       (match List.nth args id with
-        | Some (E_literal (m, Literal_string s), _) ->
-          let open Tezos_micheline in
-          let code = Ligo_string.extract s in
-          let (code, errs) = Micheline_parser.tokenize code in
-          (match errs with
-           | _ :: _ -> internal_error __LOC__ (Format.sprintf "could not parse raw michelson")
-           | [] ->
-             let (code, errs) = Micheline_parser.parse_expression ~check:false code in
-             match errs with
-             | _ :: _ ->  internal_error __LOC__ (Format.sprintf "could not parse raw michelson")
-             | [] ->
-               let code = Micheline.strip_locations code in
-               (* hmm *)
-               let code = Micheline.inject_locations (fun _ -> Location.generated) code in
-               map_node (fun _ -> m) (fun x -> x) code
-          )
         | _ -> internal_error __LOC__ (Format.sprintf "could not resolve (litstr %d)" id))
      | Prim (a, b, c, d) ->
        let open Tezos_micheline.Micheline in
@@ -288,7 +241,6 @@ let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.enviro
          | Prim (_, s, [], [id]) when String.equal "annot" s && String.is_prefix ~prefix:"$" id ->
            let id = String.chop_prefix_exn ~prefix:"$" id in
            let id = Int.of_string id in
-           used := id :: ! used;
            let annot = match List.nth args id with
              | Some (E_literal (_, Literal_string s), _) -> Ligo_string.extract s
              | _ -> internal_error __LOC__ (Format.sprintf "could not resolve (annot %d)" id) in
@@ -299,9 +251,7 @@ let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.enviro
      | m -> m
     in
     let code = List.map ~f:(Tezos_utils.Michelson.map replace) code in
-    let args' = List.filter_mapi ~f:(fun i v -> if not (List.mem (! used) i ~equal:Caml.(=)) then Some v else None) args' in
-    let args' = translate_args args' env in
-    E_inline_michelson (meta, code, args')
+    E_raw_michelson (meta, translate_type a, translate_type b, code)
   | E_global_constant (hash, args) ->
     let args = translate_args args env in
     let output_ty = translate_type ty in
@@ -420,12 +370,7 @@ and translate_constant ~raise ~proto (meta : meta) (expr : I.constant) (ty : I.t
       let* a = Mini_c.get_t_list ty in
       return (Type_args (None, [translate_type a]), expr.arguments)
     | C_LOOP_CONTINUE | C_LEFT ->
-      let b =
-        match ty.type_content with
-        | T_or (_, (_, b)) -> b
-        | _ ->
-          failwith (Format.asprintf "WRONG TYPE %a\n%!" Mini_c.PP.type_expression ty) in
-      (* let* (_, b) = Mini_c.get_t_or ty in *)
+      let* (_, b) = Mini_c.get_t_or ty in
       return (Type_args (None, [translate_type b]), expr.arguments)
     | C_LOOP_STOP | C_RIGHT ->
       let* (a, _) = Mini_c.get_t_or ty in

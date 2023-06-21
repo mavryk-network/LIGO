@@ -12,7 +12,6 @@ const {
 } = require("prism-react-renderer");
 Prism.languages = {
   ...Prism.languages,
-  // Remove pascaligo after 0.60.0 doc is deleted
   pascaligo: {
     'comment': [/\(\*[\s\S]+?\*\)/,
     // /\{[\s\S]+?\}/,

@@ -1,5 +1,5 @@
 type storage = int
 type parameter = nat
 
-let main (action : parameter) (store : storage) : storage =
+let main (action, store : parameter * storage) : storage =
   store + 1

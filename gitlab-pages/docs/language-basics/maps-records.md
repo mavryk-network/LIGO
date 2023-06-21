@@ -362,8 +362,9 @@ type account is
 </Syntax>
 <Syntax syntax="cameligo">
 
-A unique feature of LIGO is the ability to perform nested updates on
-records. For example if you have the following record structure:
+A unique feature of LIGO is the ability to perform nested updates on records.
+
+For example if you have the following record structure:
 
 ```cameligo
 type color = Blue | Green
@@ -588,6 +589,8 @@ type register = map<address, move>;
 
 Here is how to create an empty map.
 
+
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=maps
@@ -615,6 +618,7 @@ let empty: register = Map.empty;
 ### Creating a Non-empty Map
 
 And here is how to create a non-empty map value:
+
 
 <Syntax syntax="pascaligo">
 
@@ -666,6 +670,7 @@ that we type-cast a string into an address.
 
 ### Accessing Map Bindings
 
+
 <Syntax syntax="pascaligo">
 
 In PascaLIGO, we can use the postfix `[]` operator to read the `move`
@@ -700,6 +705,8 @@ let my_balance: option<move> =
 Notice how the value we read is an optional value: this is to force
 the reader to account for a missing key in the map. This requires
 *pattern matching*.
+
+
 
 <Syntax syntax="pascaligo">
 
@@ -742,6 +749,8 @@ let force_access = (key: address, moves: register) => {
 Given a map, we may want to add a new binding, remove one, or modify
 one by changing the value associated to an already existing key. All
 those operations are called *updates*.
+
+
 
 <Syntax syntax="pascaligo">
 
@@ -821,6 +830,7 @@ let add = (m: register) =>
 To remove a binding from a map, we need its key.
 
 
+
 <Syntax syntax="pascaligo">
 
 In PascaLIGO, there is a special instruction to remove a binding from
@@ -879,6 +889,8 @@ over maps is called `Map.iter`. In the following example, the register
 of moves is iterated to check that the start of each move is above
 `3`.
 
+
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=maps
@@ -903,7 +915,7 @@ let iter_op (m : register) : unit =
 
 ```jsligo group=maps
 let iter_op = (m: register) => {
-  let predicate = ([i, j]: [address, move]) => assert(j[0] > 3);
+  let predicate = (i: address, j: move) => assert(j[0] > 3);
   Map.iter(predicate, m);
 };
 ```
@@ -944,7 +956,7 @@ let map_op (m : register) : register =
 
 ```jsligo group=maps
 let map_op = (m: register) => {
-  let increment = ([_, j]: [address, move]) => [j[0], j[1] + 1];
+  let increment = (_: address, j: move) => [j[0], j[1] + 1];
   return Map.map(increment, m);
 };
 ```
@@ -962,6 +974,8 @@ traversal of the data structure is over.
 
 The predefined functional iterator implementing the folded operation
 over maps is called `Map.fold` and is used as follows.
+
+
 
 <Syntax syntax="pascaligo">
 
@@ -987,7 +1001,7 @@ let fold_op (m : register) : int =
 
 ```jsligo group=maps
 let fold_op = (m: register): int => {
-  let folded = ([i, j]: [int, [address, move]]) => i + j[1][1];
+  let folded = (i: int, j: [address, move]) => i + j[1][1];
   return Map.fold(folded, m, 5);
 };
 ```
@@ -1042,6 +1056,9 @@ type register = big_map<address, move>;
 
 Here is how to create an empty big map.
 
+
+
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=big_maps
@@ -1068,6 +1085,7 @@ let empty: register = Big_map.empty;
 ### Creating a Non-empty Map
 
 And here is how to create a non-empty map value:
+
 
 <Syntax syntax="pascaligo">
 
@@ -1123,6 +1141,8 @@ If we want to access a move from our `register` above, we can use the
 postfix `[]` operator to read the associated `move` value. However,
 the value we read is an optional value (in our case, of type `option
 (move)`), to account for a missing key. Here is an example:
+
+
 
 <Syntax syntax="pascaligo">
 

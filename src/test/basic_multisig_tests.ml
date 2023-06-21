@@ -1,10 +1,11 @@
 open Test_helpers
 
+let file = "./contracts/basic_multisig/multisig.ligo"
 let mfile = "./contracts/basic_multisig/multisig.mligo"
 let compile_main ~raise f () = Test_helpers.compile_main ~raise f ()
 
 let init_storage threshold counter pkeys =
-  let open Ast_unified in
+  let open Ast_imperative in
   let keys =
     List.map
       ~f:(fun el ->
@@ -17,7 +18,7 @@ let init_storage threshold counter pkeys =
     [ "id", e_string ~loc "MULTISIG"
     ; "counter", e_nat ~loc counter
     ; "threshold", e_nat ~loc threshold
-    ; "auth", e_list ~loc keys
+    ; "auth", e_typed_list ~loc keys (t_key ~loc ())
     ]
 
 
@@ -32,9 +33,8 @@ let op_list ~raise =
   let open Memory_proto_alpha.Protocol.Alpha_context in
   let open Proto_alpha_utils in
   let source =
-    Destination.Contract
-      (Trace.trace_alpha_tzresult ~raise (fun _ -> Main_errors.test_internal __LOC__)
-      @@ Contract.of_b58check "KT1DUMMYDUMMYDUMMYDUMMYDUMMYDUMu2oHG")
+    Trace.trace_alpha_tzresult ~raise (fun _ -> Main_errors.test_internal __LOC__)
+    @@ Contract.of_b58check "KT1DUMMYDUMMYDUMMYDUMMYDUMMYDUMu2oHG"
   in
   let destination =
     Trace.trace_tzresult ~raise (fun _ -> Main_errors.test_internal __LOC__)
@@ -60,32 +60,33 @@ let op_list ~raise =
       Memory_proto_alpha.Protocol.Apply_internal_results.internal_operation_encoding
       contents
   in
-  Ast_unified.(e_list ~loc [ e_literal ~loc (Literal_operation opbytes) ])
+  Ast_imperative.(
+    e_typed_list ~loc [ e_literal ~loc (Literal_operation opbytes) ] (t_operation ~loc ()))
 
 
-let empty_payload = Ast_unified.e_unit ~loc
+let empty_payload = Ast_imperative.e_unit ~loc ()
 
 let chain_id_zero =
-  Ast_unified.e_bytes_raw
+  Ast_imperative.e_bytes_raw
     ~loc
-    (Tezos_crypto.Hashed.Chain_id.to_bytes Tezos_base__TzPervasives.Chain_id.zero)
+    (Tezos_crypto.Chain_id.to_bytes Tezos_base__TzPervasives.Chain_id.zero)
 
 
 (* sign the message 'msg' with 'keys', if 'is_valid'=false the providid signature will be incorrect *)
 let params ~raise counter payload keys is_validl f =
-  let open Ast_unified in
+  let open Ast_imperative in
   let prog = get_program ~raise f () in
   let aux acc (key, is_valid) =
     let _, _pk, sk = key in
     let pkh, _, _ = str_keys key in
     let msg =
-      e_tuple ~loc
-      @@ List.Ne.of_list
-           [ payload
-           ; e_nat ~loc counter
-           ; e_string ~loc (if is_valid then "MULTISIG" else "XX")
-           ; chain_id_zero
-           ]
+      e_tuple
+        ~loc
+        [ payload
+        ; e_nat ~loc counter
+        ; e_string ~loc (if is_valid then "MULTISIG" else "XX")
+        ; chain_id_zero
+        ]
     in
     let signature = sign_message ~raise prog msg sk in
     e_pair ~loc (e_key_hash ~loc pkh) (e_signature ~loc signature) :: acc
@@ -95,12 +96,17 @@ let params ~raise counter payload keys is_validl f =
     ~loc
     [ "counter", e_nat ~loc counter
     ; "payload", payload
-    ; "signatures", e_list ~loc signed_msgs
+    ; ( "signatures"
+      , e_typed_list
+          ~loc
+          signed_msgs
+          (t_pair ~loc (t_key_hash ~loc (), t_signature ~loc ())) )
     ]
 
 
 (* Provide one valid signature when the threshold is two of two keys *)
 let not_enough_1_of_2 ~raise f () =
+  let open Ast_imperative in
   let program = get_program ~raise f () in
   let exp_failwith = "Not enough signatures passed the check" in
   let keys = gen_keys () in
@@ -110,30 +116,29 @@ let not_enough_1_of_2 ~raise f () =
       make_options ~env:(test_environment ()) ~sender:first_contract ())
   in
   let () =
-    expect_string_failwith_twice
+    expect_string_failwith
       ~raise
       program
       ~options
       "main"
-      test_params
-      (init_storage 2 0 [ keys; gen_keys () ])
+      (e_pair ~loc test_params (init_storage 2 0 [ keys; gen_keys () ]))
       exp_failwith
   in
   ()
 
 
 let unmatching_counter ~raise f () =
+  let open Ast_imperative in
   let program = get_program ~raise f () in
   let exp_failwith = "Counters does not match" in
   let keys = gen_keys () in
   let test_params = params ~raise 1 empty_payload [ keys ] [ true ] f in
   let () =
-    expect_string_failwith_twice
+    expect_string_failwith
       ~raise
       program
       "main"
-      test_params
-      (init_storage 1 0 [ keys ])
+      (e_pair ~loc test_params (init_storage 1 0 [ keys ]))
       exp_failwith
   in
   ()
@@ -142,17 +147,17 @@ let unmatching_counter ~raise f () =
 (* Provide one invalid signature (correct key but incorrect signature)
    when the threshold is one of one key *)
 let invalid_1_of_1 ~raise f () =
+  let open Ast_imperative in
   let program = get_program ~raise f () in
   let exp_failwith = "Invalid signature" in
   let keys = [ gen_keys () ] in
   let test_params = params ~raise 0 empty_payload keys [ false ] f in
   let () =
-    expect_string_failwith_twice
+    expect_string_failwith
       ~raise
       program
       "main"
-      test_params
-      (init_storage 1 0 keys)
+      (e_pair ~loc test_params (init_storage 1 0 keys))
       exp_failwith
   in
   ()
@@ -160,19 +165,19 @@ let invalid_1_of_1 ~raise f () =
 
 (* Provide one valid signature when the threshold is one of one key *)
 let valid_1_of_1 ~raise f () =
-  let open Ast_unified in
+  let open Ast_imperative in
   let program = get_program ~raise f () in
   let op_list = op_list ~raise in
   let keys = gen_keys () in
   let () =
-    expect_eq_n_trace_aux_twice
+    expect_eq_n_trace_aux
       ~raise
       [ 0; 1; 2 ]
       program
       "main"
       (fun n ->
         let params = params ~raise n empty_payload [ keys ] [ true ] f in
-        params, init_storage 1 n [ keys ])
+        e_pair ~loc params (init_storage 1 n [ keys ]))
       (fun n -> e_pair ~loc op_list (init_storage 1 (n + 1) [ keys ]))
   in
   ()
@@ -180,20 +185,20 @@ let valid_1_of_1 ~raise f () =
 
 (* Provive two valid signatures when the threshold is two of three keys *)
 let valid_2_of_3 ~raise f () =
-  let open Ast_unified in
+  let open Ast_imperative in
   let program = get_program ~raise f () in
   let op_list = op_list ~raise in
   let param_keys = [ gen_keys (); gen_keys () ] in
   let st_keys = param_keys @ [ gen_keys () ] in
   let () =
-    expect_eq_n_trace_aux_twice
+    expect_eq_n_trace_aux
       ~raise
       [ 0; 1; 2 ]
       program
       "main"
       (fun n ->
         let params = params ~raise n empty_payload param_keys [ true; true ] f in
-        params, init_storage 2 n st_keys)
+        e_pair ~loc params (init_storage 2 n st_keys))
       (fun n -> e_pair ~loc op_list (init_storage 2 (n + 1) st_keys))
   in
   ()
@@ -201,6 +206,7 @@ let valid_2_of_3 ~raise f () =
 
 (* Provide one invalid signature and two valid signatures when the threshold is two of three keys *)
 let invalid_3_of_3 ~raise f () =
+  let open Ast_imperative in
   let program = get_program ~raise f () in
   let valid_keys = [ gen_keys (); gen_keys () ] in
   let invalid_key = gen_keys () in
@@ -209,12 +215,11 @@ let invalid_3_of_3 ~raise f () =
   let test_params = params ~raise 0 empty_payload param_keys [ false; true; true ] f in
   let exp_failwith = "Invalid signature" in
   let () =
-    expect_string_failwith_twice
+    expect_string_failwith
       ~raise
       program
       "main"
-      test_params
-      (init_storage 2 0 st_keys)
+      (e_pair ~loc test_params (init_storage 2 0 st_keys))
       exp_failwith
   in
   ()
@@ -222,18 +227,18 @@ let invalid_3_of_3 ~raise f () =
 
 (* Provide two valid signatures when the threshold is three of three keys *)
 let not_enough_2_of_3 ~raise f () =
+  let open Ast_imperative in
   let program = get_program ~raise f () in
   let valid_keys = [ gen_keys (); gen_keys () ] in
   let st_keys = gen_keys () :: valid_keys in
   let test_params = params ~raise 0 empty_payload valid_keys [ true; true ] f in
   let exp_failwith = "Not enough signatures passed the check" in
   let () =
-    expect_string_failwith_twice
+    expect_string_failwith
       ~raise
       program
       "main"
-      test_params
-      (init_storage 3 0 st_keys)
+      (e_pair ~loc test_params (init_storage 3 0 st_keys))
       exp_failwith
   in
   ()
@@ -242,7 +247,15 @@ let not_enough_2_of_3 ~raise f () =
 let main =
   test_suite
     "Basic Multisig"
-    [ test_w "compile (mligo)" (compile_main mfile)
+    [ test_w "compile" (compile_main file)
+    ; test_w "unmatching_counter" (unmatching_counter file)
+    ; test_w "valid_1_of_1" (valid_1_of_1 file)
+    ; test_w "invalid_1_of_1" (invalid_1_of_1 file)
+    ; test_w "not_enough_signature" (not_enough_1_of_2 file)
+    ; test_w "valid_2_of_3" (valid_2_of_3 file)
+    ; test_w "invalid_3_of_3" (invalid_3_of_3 file)
+    ; test_w "not_enough_2_of_3" (not_enough_2_of_3 file)
+    ; test_w "compile (mligo)" (compile_main mfile)
     ; test_w "unmatching_counter (mligo)" (unmatching_counter mfile)
     ; test_w "valid_1_of_1 (mligo)" (valid_1_of_1 mfile)
     ; test_w "invalid_1_of_1 (mligo)" (invalid_1_of_1 mfile)

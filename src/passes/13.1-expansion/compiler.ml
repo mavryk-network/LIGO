@@ -1,4 +1,3 @@
-module Location = Simple_utils.Location
 module I = Ast_aggregated
 module O = Ast_expanded
 open Ligo_prim
@@ -109,15 +108,13 @@ and compile_matching
   =
  fun ~loc ?attributes ~mut matchee cases ->
   let matchee_type = matchee.type_expression in
-  let var = Value_var.fresh ~loc ~name:"match_" () in
-  let match_expr =
-    let cases =
-      List.map cases ~f:(fun { pattern; body } ->
-          let body = compile_expression body in
-          I.Match_expr.{ pattern; body })
-    in
-    Decision_tree.compile matchee.type_expression var cases
+  let eqs =
+    List.map cases ~f:(fun { pattern; body } ->
+        let body = compile_expression body in
+        pattern, matchee_type, body)
   in
+  let var = Value_var.fresh ~loc ~name:"match_" () in
+  let match_expr = Pattern_matching.compile_matching var eqs in
   let match_expr = if mut then destruct_mut_let_in match_expr else match_expr in
   O.e_a_let_in
     ~loc
@@ -163,7 +160,7 @@ and destruct_mut_let_in : O.expression -> O.expression =
   let loc = match_expr.location in
   match match_expr.expression_content with
   | O.E_matching ({ cases = O.Match_record case; _ } as prod_case) ->
-    let binders = List.map ~f:snd (Record.to_list case.fields) in
+    let binders = List.map ~f:snd (Record.LMap.to_kv_list case.fields) in
     let body =
       List.fold
         binders

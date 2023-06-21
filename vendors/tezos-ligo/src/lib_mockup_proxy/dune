@@ -1,0 +1,19 @@
+; This file was automatically generated, do not edit.
+; Edit file manifest/main.ml instead.
+
+(library
+ (name tezos_mockup_proxy)
+ (public_name tezos-mockup-proxy)
+ (instrumentation (backend bisect_ppx))
+ (libraries
+  tezos-base
+  tezos-client-base
+  tezos-protocol-environment
+  tezos-rpc-http
+  resto-cohttp-self-serving-client
+  tezos-rpc-http-client
+  tezos-shell-services
+  uri)
+ (flags
+  (:standard)
+  -open Tezos_base.TzPervasives))

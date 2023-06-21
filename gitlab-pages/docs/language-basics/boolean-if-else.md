@@ -10,6 +10,7 @@ import Syntax from '@theme/Syntax';
 The type of a boolean value is `bool`. Here is how to define a boolean
 value:
 
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=a
@@ -159,6 +160,7 @@ const lte : bool = 4 <= 3;
   </div>
 </div>
 </Syntax>
+
 <Syntax syntax="cameligo">
 <div className="boolean-example-table">
   <div className="operation">
@@ -423,6 +425,7 @@ function.
 
 ### Comparing Strings
 
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=b
@@ -454,6 +457,7 @@ let c = (a == b); // true
 
 
 ### Comparing numbers
+
 
 <Syntax syntax="pascaligo">
 
@@ -502,6 +506,7 @@ let h = (a != b);
 
 > 💡 Comparing `tez` values is especially useful when dealing with an
 > amount sent in a transaction.
+
 
 <Syntax syntax="pascaligo">
 
@@ -618,11 +623,11 @@ gitlab-pages/docs/language-basics/src/boolean-if-else/cond.mligo '21n' --entry-p
 type magnitude = ["Small"] | ["Large"]; // See variant types.
 
 let compare = n => {
-  if (n < (10 as nat)) {
-    return Small ();
-  }
-  else {
-    return Large ();
+  if (n < (10 as nat)) { 
+    return Small (); 
+  } 
+  else { 
+    return Large (); 
   };
 };
 ```
@@ -705,11 +710,12 @@ let ternary = a => a == 1 ? true : false
 which can also be nested:
 
 ```jsligo
-let ternary_nested = a =>
-  a == 1 ? "one"   :
-  a == 2 ? "two"   :
-  a == 3 ? "three" :
+let ternary_nested = a => 
+  a == 1 ? "one"   : 
+  a == 2 ? "two"   : 
+  a == 3 ? "three" : 
           "other"
 ```
 
 </Syntax>
+

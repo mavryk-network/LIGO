@@ -46,22 +46,6 @@ let concat_op = (s: bytes): bytes => Bytes.concat(s, 0x7070);
 </Syntax>
 
 <SyntaxTitle syntax="pascaligo">
-val concats : list (bytes) -> bytes
-</SyntaxTitle>
-<SyntaxTitle syntax="cameligo">
-val concats : bytes list -> bytes
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let concats: list(bytes) => bytes
-</SyntaxTitle>
-<SyntaxTitle syntax="jsligo">
-let concats: (bs: list&lt;bytes&gt;) => bytes
-</SyntaxTitle>
-
-
-Concatenate together a list of `bytes` and return the result.
-
-<SyntaxTitle syntax="pascaligo">
 val sub : nat -> nat -> bytes -> bytes
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
@@ -115,6 +99,8 @@ Converts Michelson data structures to a binary format for serialisation.
 
 > ⚠️ `PACK` and `UNPACK` are features of Michelson that are intended to be used by people that really know what they're doing. There are several failure cases (such as `UNPACK`ing a lambda from an untrusted source), most of which are beyond the scope of this document. Don't use these functions without doing your homework first.
 
+
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo
@@ -145,6 +131,7 @@ let id_string = (p: string) => {
 
 </Syntax>
 
+
 <SyntaxTitle syntax="pascaligo">
 val unpack&lt;a&gt; : bytes -> option (a)
 </SyntaxTitle>
@@ -161,6 +148,8 @@ Reverses the result of using `pack` on data.
 As the conversion might fail an option type is returned.
 
 > ⚠️ `PACK` and `UNPACK` are features of Michelson that are intended to be used by people that really know what they're doing. There are several failure cases (such as `UNPACK`ing a lambda from an untrusted source), most of which are beyond the scope of this document. Don't use these functions without doing your homework first.
+
+
 
 <Syntax syntax="pascaligo">
 

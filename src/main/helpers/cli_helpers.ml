@@ -4,8 +4,6 @@ module LigoIgnore = Ligo_ignore
 module RepositoryUrl = Repository_url
 module Constants = Constants
 module Semver = LigoManifest.Semver
-module Trace = Simple_utils.Trace
-module Display = Simple_utils.Display
 
 let find_project_root () =
   let pwd = Caml.Sys.getcwd in
@@ -55,82 +53,21 @@ type return =
   | Compileur_Error
   | Exception of exn
 
-let return_with_custom_formatter ~cli_analytics ~skip_analytics
+let return_result
     :  return:return ref -> ?show_warnings:bool -> ?output_file:string
     -> (unit -> ('value, _) result) -> unit
   =
  fun ~return ?(show_warnings = false) ?output_file f ->
-  Analytics.propose_term_acceptation ~skip_analytics;
-  let _ =
-    try
-      match f () with
-      | Ok (v, w) ->
-        return := Done;
-        return_with_warn ~show_warnings w (fun () -> return_good ?output_file v)
-      | Error (e, w) ->
-        return := Compileur_Error;
-        return_with_warn ~show_warnings w (fun () -> return_bad e)
-    with
-    | exn -> return := Exception exn
-  in
-  Analytics.edit_metrics_values cli_analytics;
-  match !return with
-  | Done -> Analytics.push_collected_metrics ~skip_analytics
-  | Compileur_Error -> ()
-  | Exception e ->
-    let _e = Format.asprintf "exception %a" Exn.pp e in
-    ()
-
-
-let return_result ~cli_analytics ~skip_analytics
-    :  return:return ref -> ?show_warnings:bool -> ?output_file:string -> display_format:_
-    -> no_colour:bool -> warning_as_error:bool
-    -> 'value Display.format
-       * (raise:(Main_errors.all, Main_warnings.all) Trace.raise
-          -> 'value * Analytics.analytics_inputs)
-    -> unit
-  =
- fun ~return
-     ?(show_warnings = false)
-     ?output_file
-     ~display_format
-     ~no_colour
-     ~warning_as_error
-     (value_format, f) ->
-  Analytics.propose_term_acceptation ~skip_analytics;
-  let () =
-    try
-      let result = Trace.to_stdlib_result f in
-      let value, analytics =
-        match result with
-        | Ok ((v, analytics), _w) -> Ok v, analytics
-        | Error (e, _w) -> Error e, []
-      in
-      let format = Display.bind_format value_format Main_errors.Formatter.error_format in
-      let formatted_result () =
-        Ligo_api.Api_helpers.toplevel
-          ~warning_as_error
-          ~display_format
-          ~no_colour
-          (Displayable { value; format })
-          result
-      in
-      Analytics.edit_metrics_values (List.append cli_analytics analytics);
-      match formatted_result () with
-      | Ok (v, w) ->
-        return := Done;
-        return_with_warn ~show_warnings w (fun () -> return_good ?output_file v)
-      | Error (e, w) ->
-        return := Compileur_Error;
-        return_with_warn ~show_warnings w (fun () -> return_bad e)
-    with
-    | exn -> return := Exception exn
-  in
-  (* Push analytics *)
-  match !return with
-  | Done -> Analytics.push_collected_metrics ~skip_analytics
-  | Compileur_Error -> ()
-  | Exception _ -> ()
+  try
+    match f () with
+    | Ok (v, w) ->
+      return := Done;
+      return_with_warn ~show_warnings w (fun () -> return_good ?output_file v)
+    | Error (e, w) ->
+      return := Compileur_Error;
+      return_with_warn ~show_warnings w (fun () -> return_bad e)
+  with
+  | exn -> return := Exception exn
 
 
 type command = string * string array
@@ -181,22 +118,15 @@ let makeCommand cmd =
     in
     let paths = Str.split path_sep_regexp v in
     let npmPaths =
-      List.filter_map
-        (fun path ->
-          let cmd_p = Filename.concat path (sprintf "%s.cmd" cmd) in
-          let exe_p = Filename.concat path (sprintf "%s.exe" cmd) in
-          if Sys.file_exists cmd_p
-          then Some cmd_p
-          else if Sys.file_exists exe_p
-          then Some exe_p
-          else None)
+      List.filter
+        (fun path -> Sys.file_exists (Filename.concat path (sprintf "%s.cmd" cmd)))
         paths
     in
     match npmPaths with
     | [] ->
-      fprintf stderr "No command %s found in environment" cmd;
+      fprintf stderr "No %s bin path found" cmd;
       exit (-1)
-    | h :: _ -> h
+    | h :: _ -> Filename.concat h (sprintf "%s.cmd" cmd)
   in
   match Sys.unix with
   | true -> cmd
@@ -259,5 +189,5 @@ let run_command (cmd : command) =
       |> Array.append [| "_=" |]
     in
     let args = Array.sub args ~pos:1 ~len:(Array.length args - 1) in
-    run ~env bin_full_path args;
+    run ~env "cmd.exe" (Array.append [| "/c"; bin_full_path |] args);
     Ok ())

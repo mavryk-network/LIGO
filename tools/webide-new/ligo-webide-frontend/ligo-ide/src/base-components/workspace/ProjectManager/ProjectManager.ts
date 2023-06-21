@@ -1,4 +1,5 @@
 import pathHelper from "path-browserify";
+import moment from "moment";
 import * as monaco from "monaco-editor";
 import fileOps, { FileInfo, FolderInfo } from "~/base-components/file-ops";
 import notification from "~/base-components/notification";
@@ -10,7 +11,9 @@ import { getExamples } from "./examples";
 
 import redux from "~/base-components/redux";
 
-import compilerManager from "~/ligo-components/ligo-compiler";
+import { networkManager } from "~/ligo-components/eth-network";
+import compilerManager from "~/ligo-components/eth-compiler";
+import queue from "~/ligo-components/eth-queue";
 
 import ProjectSettings from "../ProjectSettings";
 
@@ -19,37 +22,6 @@ import type TerminalButton from "../components/TerminalButton";
 import { RefreshData } from "~/base-components/filetree/types";
 import { GistContent } from "~/base-components/file-ops/GistFs";
 import MonacoEditor from "~/base-components/code-editor/MonacoEditor/MonacoEditor";
-import { findNonAsciiCharIndex } from "~/components/validators";
-
-export type RawGistProjectType = {
-  type: "rawgist";
-  obj: GistContent;
-  gistId: string;
-  name?: string;
-};
-
-export type ProcessGistProject = {
-  type: "gist";
-  name: string;
-  obj: GistContent;
-};
-
-export type ProcessGitProject = {
-  type: "git";
-  name: string;
-  gitLink: string;
-  branch?: string;
-  token?: string;
-};
-
-export type ProcessTemplateProject = {
-  type: "template";
-  name: string;
-  template: string;
-  syntax: string;
-};
-
-export type ProcessProjectType = ProcessGistProject | ProcessGitProject | ProcessTemplateProject;
 
 export default class ProjectManager {
   static ProjectSettings = ProjectSettings;
@@ -82,6 +54,10 @@ export default class ProjectManager {
     ProjectManager.channel.on("refresh-directory", callback);
   }
 
+  // TODO: using Function as a type is not a great solution.
+  // Each event has its own callback which should be possible to type.
+  // Right now it is not really understandable what events we need
+  // so in future it should be possible to type callbacks and remove eslint-disable.
   // eslint-disable-next-line @typescript-eslint/ban-types
   static effect(evt: string, callback: Function) {
     return () => {
@@ -92,30 +68,19 @@ export default class ProjectManager {
   }
 
   static async createProject(name: string, template: string, syntax: string, gitLink?: string) {
-    if (gitLink) {
-      return this.processProject({
-        type: "git",
-        name,
-        gitLink: `https://github.com/ligolang/${gitLink}`,
-      });
-    }
-    return this.processProject({ type: "template", name, template, syntax });
+    return this.processProject(name, undefined, template, syntax, gitLink);
   }
 
-  static async openProject(projectInfo: RawGistProjectType | ProcessGitProject) {
-    if (projectInfo.type === "git") {
-      return this.processProject(projectInfo);
-    }
-
-    const projectData = projectInfo.obj;
+  static async openProject(obj: GistContent, gistId: string, name?: string) {
+    const projectData = obj;
 
     const projectsNames = await fileOps.getProjectNames();
 
     /* eslint-disable */
     const config = JSON.parse(projectData["/config.json"].content || "{}");
-    config.gistId = projectInfo.gistId;
+    config.gistId = gistId;
 
-    const projectNameFromParams = projectInfo.name || (config.projectName ? config.projectName : projectInfo.gistId);
+    const projectNameFromParams = name || (config.projectName ? config.projectName : gistId);
     let projectName: string = projectNameFromParams;
 
     if (!projectsNames.includes(projectNameFromParams)) {
@@ -141,12 +106,16 @@ export default class ProjectManager {
     projectData["/config.json"].content = JSON.stringify(config);
     /* eslint-enable */
 
-    return this.processProject({ type: "gist", name: projectName, obj: projectData });
+    return this.processProject(projectName, projectData, undefined, undefined, undefined);
   }
 
-  static async processProject(projectData: ProcessProjectType) {
-    const { name } = projectData;
-
+  static async processProject(
+    name: string,
+    obj?: GistContent,
+    template?: string,
+    syntax?: string,
+    gitLink?: string
+  ) {
     const data = {
       id: name,
       author: "local",
@@ -160,47 +129,33 @@ export default class ProjectManager {
       await fileOps.writeDirectory(data.path);
     }
 
-    if (projectData.type === "gist") {
-      for (const key of Object.keys(projectData.obj)) {
+    if (obj) {
+      for (const key of Object.keys(obj)) {
         try {
-          await fileOps.writeFile(`${data.path}/${key}`, projectData.obj[key].content);
-          const nonAscii = findNonAsciiCharIndex(projectData.obj[key].content);
-          if (nonAscii !== -1) {
-            notification.error(
-              "Non ASCII character.",
-              `In file ${data.path}/${key} on line ${nonAscii.additionColumn + 1} column ${
-                nonAscii.additionIndex + 1
-              } you are using a non ASCII character: ${
-                projectData.obj[key].content[nonAscii.index]
-              }. Please make sure all the symbols correspond to ASCII chart. Otherwise you may have problems with your project.`
-            );
-          }
+          await fileOps.writeFile(`${data.path}/${key}`, obj[key].content);
         } catch (error) {
           console.error(error);
         }
       }
-    }
-
-    if (projectData.type === "git") {
-      await fileOps.cloneGitRepo(
-        data.name,
-        projectData.gitLink,
-        projectData.branch,
-        projectData.token
-      );
-    }
-
-    if (projectData.type === "template") {
-      const examples = getExamples(data.name, projectData.template, data.name, projectData.syntax);
-
-      for (const file of Object.keys(examples)) {
-        const fileObject = examples[file];
+    } else if (template && syntax) {
+      if (gitLink) {
         try {
-          if (fileObject) {
-            await fileOps.writeFile(fileObject.name, fileObject.content);
-          }
+          await fileOps.cloneGitRepo(data.name, `https://github.com/ligolang/${gitLink}`);
         } catch (error) {
           console.error(error);
+        }
+      } else {
+        const examples = getExamples(data.name, template, data.name, syntax);
+
+        for (const file of Object.keys(examples)) {
+          const fileObject = examples[file];
+          try {
+            if (fileObject) {
+              await fileOps.writeFile(fileObject.name, fileObject.content);
+            }
+          } catch (error) {
+            console.error(error);
+          }
         }
       }
     }
@@ -459,19 +414,6 @@ export default class ProjectManager {
     return filePath;
   }
 
-  static async writeFileWithEditorUpdate(filePath: string, content: string) {
-    if (!(await fileOps.exists(filePath))) {
-      throw new Error(`File <b>${filePath}</b> is not exists exists.`);
-    }
-
-    try {
-      await fileOps.writeFile(filePath, content);
-      modelSessionManager.updateEditorAfterMovedFile(filePath, { path: filePath, content });
-    } catch (e) {
-      throw new Error(`Fail to write to the file: <b>${JSON.stringify(e)}</b>.`);
-    }
-  }
-
   static async renameProject(name: string, newName: string) {
     try {
       const config = await fileOps.readFile(`.workspaces/${name}/config.json`);
@@ -664,17 +606,344 @@ export default class ProjectManager {
   lint() {}
 
   async compile(sourceFile?: string, finalCall?: () => void) {
+    const settings = await this.checkSettings();
+
     await this.project.saveAll();
     this.toggleTerminal(true);
 
     try {
-      await compilerManager.build(this);
+      await compilerManager.build(settings, this, sourceFile);
     } catch {
       if (finalCall) {
         finalCall();
       }
       return false;
     }
+    // if (result?.decorations) {
+    //   modelSessionManager.updateDecorations(result.decorations);
+    // }
+    // if (result?.errors) {
+    //   if (finalCall) {
+    //     finalCall();
+    //   }
+    //   return false;
+    // }
+
+    // if (finalCall) {
+    //   finalCall();
+    // }
     return true;
   }
+
+  // TODO: a great part of code was disabled for eslint, filled with
+  // all ts autofixes and ts-ignore flags. The problem is that we do not
+  // use this code right now and moreover if one day we will return to it
+  // it will be rewrited. So, right now there is no reason to type and
+  // pretty it.
+  /* eslint-disable */
+  async deploy(contractFileNode: { pathInProject: string; path: string }) {
+    if (!networkManager.sdk) {
+      notification.error(
+        "Cannot Deploy",
+        "No connected network. Please start a local network or switch to a remote network."
+      );
+      return;
+    }
+
+    let contracts;
+    if (contractFileNode) {
+      contractFileNode.pathInProject = this.pathInProject(contractFileNode.path);
+      contracts = [contractFileNode];
+    } else {
+      try {
+        contracts = await this.getMainContract(); // TODO this is not real getMainContract for this function as deploy is not implemented yet (old version of deploy function is used here)
+      } catch {
+        notification.error(
+          "Cannot Deploy",
+          "Cannot locate the built folder. Please make sure you have built the project successfully."
+        );
+        return;
+      }
+    }
+
+    if (!contracts.length) {
+      notification.error(
+        "Cannot Deploy",
+        "No built contracts found. Please make sure you have built the project successfully."
+      );
+      return;
+    }
+
+    this.deployButton.getDeploymentParameters(
+      {
+        contractFileNode: contractFileNode || (await this.getDefaultContractFileNode()),
+        contracts,
+      },
+      (contractObj: any, allParameters: any) => this.pushDeployment(contractObj, allParameters),
+      (contractObj: any, allParameters: any) => this.estimate(contractObj, allParameters)
+    );
+  }
+
+  async getDefaultContractFileNode() {
+    const settings = await this.checkSettings();
+    // @ts-ignore
+    if (!settings?.deploy) {
+      return;
+    }
+    // @ts-ignore
+    const filePath = this.pathForProjectFile(settings.deploy);
+    const pathInProject = this.pathInProject(filePath);
+    return { path: filePath, pathInProject };
+  }
+
+  async readProjectAbis() {
+    const contracts = await this.getMainContract(); // TODO this is not real getMainContract for this function as readProjectAbis is not implemented yet (old version of readProjectAbis function is used here)
+    const abis = await Promise.all(
+      contracts.map((contract) =>
+        fileOps
+          // @ts-ignore
+          .readFile(contract.path)
+          .then((content) => ({
+            // @ts-ignore
+            contractPath: contract.path,
+            // @ts-ignore
+            pathInProject: this.pathInProject(contract.path),
+            content: JSON.parse(content),
+          }))
+          .catch(() => null)
+      )
+    );
+    // @ts-ignore
+    return abis.filter(Boolean).map(({ contractPath, pathInProject, content }) => {
+      const name = content.contractName || pathHelper.parse(contractPath).name;
+      return {
+        contractPath,
+        pathInProject,
+        name,
+        abi: content?.abi,
+        content,
+      };
+    });
+  }
+
+  checkSdkAndSigner(allParameters: { signer: any }) {
+    if (!networkManager.sdk) {
+      notification.error(
+        "No Network",
+        "No connected network. Please start a local network or switch to a remote network."
+      );
+      return true;
+    }
+
+    if (!allParameters.signer) {
+      notification.error(
+        "Deployment Error",
+        "No signer specified. Please select one to sign the deployment transaction."
+      );
+      return true;
+    }
+
+    return false;
+  }
+
+  validateDeployment(contractObj: {
+    bytecode: any;
+    evm: { bytecode: { object: any }; deployedBytecode: { object: any } };
+    deployedBytecode: any;
+    abi: any;
+  }) {
+    let bytecode = contractObj.bytecode || contractObj.evm?.bytecode?.object;
+    let deployedBytecode =
+      contractObj.deployedBytecode || contractObj.evm?.deployedBytecode?.object;
+
+    if (!deployedBytecode) {
+      notification.error(
+        "Deployment Error",
+        "Invalid <b>deployedBytecode</b> and <b>evm.deployedBytecode.object</b> fields in the built contract JSON. Please make sure you selected a correct built contract JSON file."
+      );
+      return;
+    }
+    if (!deployedBytecode) {
+      notification.error(
+        "Deployment Error",
+        "Invalid <b>bytecode</b> and <b>evm.bytecode.object</b> fields in the built contract JSON. Please make sure you selected a correct built contract JSON file."
+      );
+      return;
+    }
+    if (!bytecode.startsWith("0x")) {
+      bytecode = `0x${bytecode}`;
+    }
+    if (!deployedBytecode.startsWith("0x")) {
+      deployedBytecode = `0x${deployedBytecode}`;
+    }
+    return {
+      abi: contractObj.abi,
+      bytecode,
+      deployedBytecode,
+    };
+  }
+
+  async estimate(
+    contractObj: {
+      bytecode: any;
+      evm: { bytecode: { object: any }; deployedBytecode: { object: any } };
+      deployedBytecode: any;
+      abi: any;
+    },
+    allParameters: { signer?: any; amount?: any; parameters?: any }
+  ) {
+    // @ts-ignore
+    if (this.checkSdkAndSigner(allParameters)) {
+      return;
+    }
+    const deploy = this.validateDeployment(contractObj);
+    if (!deploy) {
+      return;
+    }
+
+    const { amount, parameters } = allParameters;
+
+    this.deployButton.setState({ pending: "Estimating..." });
+
+    let result;
+    try {
+      const tx = await networkManager.sdk.getDeployTransaction(
+        {
+          abi: deploy.abi,
+          bytecode: deploy.bytecode,
+          // @ts-ignore
+          options: deploy.options,
+          parameters: parameters.array,
+          amount,
+        },
+        {
+          from: allParameters.signer,
+        }
+      );
+      result = await networkManager.sdk.estimate(tx);
+    } catch (e) {
+      console.warn(e);
+      // @ts-ignore
+      notification.error("Estimate Failed", e.reason || e.message);
+      this.deployButton.setState({ pending: false });
+      return;
+    }
+
+    this.deployButton.setState({ pending: false });
+
+    return result;
+  }
+
+  async pushDeployment(
+    contractObj: {
+      bytecode: any;
+      evm: { bytecode: { object: any }; deployedBytecode: { object: any } };
+      deployedBytecode: any;
+      abi: any;
+    },
+    allParameters: {
+      [x: string]: any;
+      signer?: any;
+      contractName?: any;
+      amount?: any;
+      parameters?: any;
+    }
+  ) {
+    // @ts-ignore
+    if (this.checkSdkAndSigner(allParameters)) {
+      return;
+    }
+    const deploy = this.validateDeployment(contractObj);
+    if (!deploy) {
+      return;
+    }
+
+    this.deployButton.setState({ pending: "Deploying...", result: "" });
+
+    const { networkId } = networkManager.sdk;
+    const { contractName, amount, parameters, ...override } = allParameters;
+    const codeHash = networkManager.sdk.utils.sign.sha3(deploy.deployedBytecode);
+
+    let result;
+    try {
+      const tx = await networkManager.sdk.getDeployTransaction(
+        {
+          abi: deploy.abi,
+          bytecode: deploy.bytecode,
+          // @ts-ignore
+          options: deploy.options,
+          parameters: parameters.array,
+          amount,
+        },
+        {
+          from: allParameters.signer,
+          ...override,
+        }
+      );
+
+      result = await new Promise((resolve, reject) => {
+        queue
+          .add(
+            () => networkManager.sdk.sendTransaction(tx),
+            {
+              title: "Deploy a Contract",
+              name: "Deploy",
+              contractName,
+              signer: allParameters.signer,
+              abi: deploy.abi,
+              value: networkManager.sdk.utils.unit.toValue(amount || "0"),
+              params: parameters.obj,
+              ...override,
+              modalWhenExecuted: true,
+            },
+            {
+              pushing: () => this.deployButton.closeModal(),
+              // @ts-ignore
+              executed: ({ tx, receipt, abi }) => {
+                resolve({
+                  network: networkId,
+                  codeHash,
+                  ...parameters,
+                  tx,
+                  receipt,
+                  abi,
+                });
+                return true;
+              },
+              "failed-timeout": reject,
+              failed: reject,
+            }
+          )
+          .catch(reject);
+      });
+    } catch (e) {
+      console.warn(e);
+      // @ts-ignore
+      notification.error("Deploy Failed", e.reason || e.message);
+      this.deployButton.setState({ pending: false });
+      return;
+    }
+
+    this.deployButton.setState({ pending: false });
+    notification.success("Deploy Successful");
+
+    redux.dispatch("ABI_ADD", {
+      // @ts-ignore
+      ...deploy.options,
+      name: contractName,
+      // @ts-ignore
+      codeHash: result.codeHash,
+      abi: JSON.stringify(deploy.abi),
+    });
+
+    const deployResultPath = pathHelper.join(
+      this.projectRoot,
+      "deploys",
+      // @ts-ignore
+      `${result.network}_${moment().format("YYYYMMDD_HHmmss")}.json`
+    );
+    // @ts-ignore
+    await this.writeFile(deployResultPath, JSON.stringify(result, null, 2));
+  }
+  /* eslint-enable */
 }

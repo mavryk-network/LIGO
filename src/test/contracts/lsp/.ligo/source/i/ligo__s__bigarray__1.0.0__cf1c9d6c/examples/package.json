@@ -1,8 +1,0 @@
-{
-  "scripts": {
-    "test": "ligo run test ./main.mligo"
-  },
-  "dependencies": {
-    "bigarray-cameligo": "*"
-  }
-}

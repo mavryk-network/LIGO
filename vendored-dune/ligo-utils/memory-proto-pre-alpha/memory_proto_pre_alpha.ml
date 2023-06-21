@@ -1,10 +1,10 @@
 module Name = struct let name = "alpha" end
-module Proto = Tp_016
-module Alpha_environment = Tpe_016
-module Raw_protocol = Trp_016
-module Parameters = Tp016_parameters
-module Client = Tc_016
-module Test_helpers = Tz016_test_helpers
+module Proto = Tezos_protocol_014_PtKathma
+module Alpha_environment = Tp_environment_014_PtKathma
+module Raw_protocol = Trp_014
+module Parameters = Tp014_parameters
+module Client = Tezos_client_014_PtKathma
+module Test_helpers = P014_test_helpers
 
 type alpha_error = Alpha_environment.Error_monad.error
 type 'a alpha_tzresult = 'a Alpha_environment.Error_monad.tzresult

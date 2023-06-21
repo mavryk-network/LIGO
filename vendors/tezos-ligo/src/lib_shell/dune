@@ -1,0 +1,53 @@
+; This file was automatically generated, do not edit.
+; Edit file manifest/main.ml instead.
+
+(library
+ (name tezos_shell)
+ (public_name tezos-shell)
+ (instrumentation (backend bisect_ppx))
+ (libraries
+  lwt-watcher
+  lwt-canceler
+  prometheus
+  tezos-base
+  tezos-base.unix
+  tezos-context
+  tezos-store
+  tezos-store.shared
+  tezos-protocol-environment
+  tezos-context-ops
+  tezos-shell-context
+  tezos-p2p
+  tezos-stdlib-unix
+  tezos-shell-services
+  tezos-p2p-services
+  tezos-protocol-updater
+  tezos-requester
+  tezos-workers
+  tezos-validation
+  tezos-version
+  lwt-exit)
+ (inline_tests (flags -verbose) (modes native))
+ (preprocess (pps ppx_expect))
+ (flags
+  (:standard)
+  -open Tezos_base.TzPervasives
+  -open Tezos_base
+  -open Tezos_base_unix
+  -open Tezos_context
+  -open Tezos_store
+  -open Tezos_store_shared
+  -open Tp_environment
+  -open Tezos_context_ops
+  -open Tezos_shell_context
+  -open Tezos_p2p
+  -open Tezos_stdlib_unix
+  -open Tezos_shell_services
+  -open Tezos_p2p_services
+  -open Tezos_protocol_updater
+  -open Tezos_requester
+  -open Tezos_workers
+  -open Tezos_validation
+  -open Tezos_version))
+
+(documentation (package tezos-shell))

@@ -5,8 +5,6 @@ let stage = "self_ast_aggregated"
 
 type self_ast_aggregated_error =
   [ `Self_ast_aggregated_expected_obj_ligo of Location.t
-  | `Self_ast_aggregated_expected_obj_ligo_type of
-    Location.t * Ast_aggregated.type_expression * Ast_aggregated.type_expression
   | `Self_ast_aggregated_polymorphism_unresolved of Location.t
   | `Self_ast_aggregated_monomorphisation_non_var of Ast_aggregated.expression
   | `Self_ast_aggregated_monomorphisation_non_for_all of Ast_aggregated.expression
@@ -19,7 +17,6 @@ type self_ast_aggregated_error =
   | `Self_ast_aggregated_bad_format_entrypoint_ann of string * Location.t
   | `Self_ast_aggregated_entrypoint_ann_not_literal of Location.t
   | `Self_ast_aggregated_emit_tag_not_literal of Location.t
-  | `Self_ast_aggregated_call_view_not_litstr of Location.t
   | `Self_ast_aggregated_unmatched_entrypoint of Location.t
   | `Self_ast_aggregated_corner_case of string
   | `Self_ast_aggregated_bad_single_arity of
@@ -28,7 +25,6 @@ type self_ast_aggregated_error =
     Constant.constant' * Ast_aggregated.expression
   | `Self_ast_aggregated_bad_set_param_type of
     Constant.constant' * Ast_aggregated.expression
-  | `Self_ast_aggregated_nested_bigmap of Location.t
   ]
 [@@deriving poly_constructor { prefix = "self_ast_aggregated_" }]
 
@@ -46,21 +42,9 @@ let error_ppformat
     | `Self_ast_aggregated_expected_obj_ligo loc ->
       Format.fprintf
         f
-        "@[<hv>%a@.Invalid usage of a Test primitive: cannot be translated to \
-         Michelson.@]"
+        "@[<hv>%a@.Invalid usage of a Test primitive or type in object ligo.@]"
         snippet_pp
         loc
-    | `Self_ast_aggregated_expected_obj_ligo_type (loc, local, global) ->
-      Format.fprintf
-        f
-        "@[<hv>%a@.Invalid usage of a Test type: %a in %a cannot be translated to \
-         Michelson.@]"
-        snippet_pp
-        loc
-        Ast_aggregated.PP.type_expression
-        local
-        Ast_aggregated.PP.type_expression
-        global
     | `Self_ast_aggregated_polymorphism_unresolved loc ->
       Format.fprintf
         f
@@ -135,12 +119,6 @@ let error_ppformat
          literal. @]"
         snippet_pp
         loc
-    | `Self_ast_aggregated_call_view_not_litstr loc ->
-      Format.fprintf
-        f
-        "@[<hv>%a@.Invalid argument.@.View name must be a string literal. @]"
-        snippet_pp
-        loc
     | `Self_ast_aggregated_emit_tag_not_literal loc ->
       Format.fprintf
         f
@@ -181,14 +159,7 @@ let error_ppformat
         snippet_pp
         e.location
         Constant.pp_constant'
-        c
-    | `Self_ast_aggregated_nested_bigmap loc ->
-      Format.fprintf
-        f
-        "@[<hv>%a@.Invalid big map nesting.@.A big map cannot be nested inside another \
-         big map. @]"
-        snippet_pp
-        loc)
+        c)
 
 
 let error_json : self_ast_aggregated_error -> Simple_utils.Error.t =
@@ -196,18 +167,7 @@ let error_json : self_ast_aggregated_error -> Simple_utils.Error.t =
   let open Simple_utils.Error in
   match e with
   | `Self_ast_aggregated_expected_obj_ligo location ->
-    let message = "Invalid usage of a Test primitive." in
-    let content = make_content ~message ~location () in
-    make ~stage ~content
-  | `Self_ast_aggregated_expected_obj_ligo_type (location, local, global) ->
-    let message =
-      Format.asprintf
-        "Invalid usage of a Test type: %a in %a cannot be translated to Michelson."
-        Ast_aggregated.PP.type_expression
-        local
-        Ast_aggregated.PP.type_expression
-        global
-    in
+    let message = "Invalid usage of a Test primitive or type in object ligo." in
     let content = make_content ~message ~location () in
     make ~stage ~content
   | `Self_ast_aggregated_polymorphism_unresolved location ->
@@ -250,12 +210,6 @@ let error_json : self_ast_aggregated_error -> Simple_utils.Error.t =
     let message =
       Format.sprintf
         "Invalid entrypoint value.@.The entrypoint value must be a string literal."
-    in
-    let content = make_content ~message ~location () in
-    make ~stage ~content
-  | `Self_ast_aggregated_call_view_not_litstr location ->
-    let message =
-      Format.sprintf "Invalid argument.@.View name must be a string literal."
     in
     let content = make_content ~message ~location () in
     make ~stage ~content
@@ -304,13 +258,6 @@ let error_json : self_ast_aggregated_error -> Simple_utils.Error.t =
         "Ill-formed \"%a\" expression.@.A list of pair parameters is expected."
         Constant.pp_constant'
         c
-    in
-    let content = make_content ~message ~location () in
-    make ~stage ~content
-  | `Self_ast_aggregated_nested_bigmap location ->
-    let message =
-      Format.sprintf
-        "Invalid big map nesting.@.A big map cannot be nested inside another big map."
     in
     let content = make_content ~message ~location () in
     make ~stage ~content

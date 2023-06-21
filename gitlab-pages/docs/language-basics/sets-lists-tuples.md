@@ -61,6 +61,8 @@ Unlike [a record](maps-records.md), tuple types do not
 have to be defined before they can be used. However below we will give
 them names by *type aliasing*.
 
+
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=tuple
@@ -140,14 +142,14 @@ and within a code block:
 ```jsligo group=tuple
 let destruct_tuple = (x : [ int , [int , nat] ]) : nat => {
   let [a,[b,c]] = x ;
-  return c
+  c
 };
 ```
 
 ```jsligo group=tuple
 let destruct_record = (x : { a : int , b : string }) : int => {
   let { a , b } = x ;
-  return a
+  a
 };
 ```
 
@@ -164,6 +166,8 @@ not in pattern matching. However, we can access components by their
 position in their tuple, which cannot be done in OCaml. *Tuple
 components are zero-indexed*, that is, the first component has index
 `0`.
+
+
 
 <Syntax syntax="pascaligo">
 
@@ -204,6 +208,7 @@ think of a list a *stack*, where the top is written on the left.
 
 ### Defining Lists
 
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=lists
@@ -236,6 +241,8 @@ let my_list = list([1, 2, 2]); // The head is 1
 Lists can be augmented by adding an element before the head (or, in
 terms of stack, by *pushing an element on top*). This operation is
 usually called *consing* in functional languages.
+
+
 
 <Syntax syntax="pascaligo">
 
@@ -279,6 +286,7 @@ You cannot access element directly in list but you can access the
 first element, the head or the rest of the list, the tail.  The two
 function to access those are `List.head_opt` and `List.tail_opt`
 
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=lists
@@ -312,7 +320,7 @@ matching](unit-option-pattern-matching.md#match-on-lists).
 
 A *functional iterator* is a function that traverses a data structure
 and calls in turn a given function over the elements of that structure
-to compute some value. Another approach is possible in JsLIGO:
+to compute some value. Another approach is possible in PascaLIGO:
 *loops* (see the relevant section).
 
 There are three kinds of functional iterations over LIGO lists: the
@@ -332,6 +340,8 @@ called `List.iter`.
 
 In the following example, a list is iterated to check that all its
 elements (integers) are strictly greater than `3`.
+
+
 
 <Syntax syntax="pascaligo">
 
@@ -365,6 +375,7 @@ let iter_op = (l: list<int>): unit => {
 </Syntax>
 
 
+
 #### Mapped Operation over Lists
 
 We may want to change all the elements of a given list by applying to
@@ -372,6 +383,8 @@ them a function. This is called a *map operation*, not to be confused
 with the map data structure. The predefined functional iterator
 implementing the mapped operation over lists is called `List.map` and
 is used as follows.
+
+
 
 <Syntax syntax="pascaligo">
 
@@ -447,7 +460,7 @@ let sum_of_elements : int = List.fold_left sum 0 my_list
 <Syntax syntax="jsligo">
 
 ```jsligo group=lists
-let sum = ([result, i]: [int, int]) => result + i;
+let sum = (result: int, i: int) => result + i;
 let sum_of_elements: int = List.fold (sum, my_list, 0);
 ```
 
@@ -462,6 +475,8 @@ can be empty and, if not, elements of sets in LIGO are *unique*,
 whereas they can be repeated in a *list*.
 
 ### Empty Sets
+
+
 
 <Syntax syntax="pascaligo">
 
@@ -497,6 +512,8 @@ let my_empty_set: set<int> = Set.empty;
 
 
 ### Non-empty Sets
+
+
 
 <Syntax syntax="pascaligo">
 
@@ -586,6 +603,8 @@ let add_999: set<int> = Set.add(999, my_set);
 
 ### Set Membership
 
+
+
 <Syntax syntax="pascaligo">
 
 PascaLIGO features a special keyword `contains` that operates like an
@@ -626,6 +645,7 @@ The predefined function `Set.size` returns the number of
 elements in a given set as follows.
 
 
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=sets
@@ -649,10 +669,14 @@ let cardinal: nat = Set.size(my_set);
 
 </Syntax>
 
+
+
 ### Updating Sets
 
 There are two ways to update a set, that is to add or remove from
 it.
+
+
 
 <Syntax syntax="pascaligo">
 
@@ -710,11 +734,13 @@ let smaller_set: set<int> = Set.remove(3, my_set);
 
 </Syntax>
 
+
+
 ### Functional Iteration over Sets
 
 A *functional iterator* is a function that traverses a data structure
 and calls in turn a given function over the elements of that structure
-to compute some value. Another approach is possible in JsLIGO:
+to compute some value. Another approach is possible in PascaLIGO:
 *loops* (see the relevant section).
 
 There are three kinds of functional iterations over LIGO maps: the
@@ -732,6 +758,8 @@ The predefined functional iterator implementing the iterated operation
 over sets is called `Set.iter`. In the following example, a set is
 iterated to check that all its elements (integers) are greater than
 `3`.
+
+
 
 <Syntax syntax="pascaligo">
 
@@ -765,6 +793,42 @@ let iter_op = s => {
 </Syntax>
 
 
+
+<!-- #### Mapped Operation (NOT IMPLEMENTED YET) -->
+
+<!-- We may want to change all the elements of a given set by applying to -->
+<!-- them a function. This is called a *mapped operation*, not to be -->
+<!-- confused with the map data structure. -->
+
+<!-- <\!--DOCUSAURUS_CODE_TABS-\-> -->
+
+<!-- <\!--PascaLIGO-\-> -->
+
+<!-- In PascaLIGO, the predefined functional iterator implementing the -->
+<!-- mapped operation over sets is called `Set.map` and is used as follows: -->
+
+<!-- ```pascaligo skip -->
+<!-- function increment (const i : int): int is i + 1 -->
+
+<!-- // Creates a new set with all elements incremented by 1 -->
+<!-- const plus_one : set (int) = Set.map (increment, larger_set) -->
+<!-- ``` -->
+
+<!-- <\!--CameLIGO-\-> -->
+
+<!-- In CameLIGO, the predefined functional iterator implementing the -->
+<!-- mapped operation over sets is called `Set.map` and is used as follows: -->
+
+<!-- ```cameligo skip -->
+<!-- let increment (i : int) : int = i + 1 -->
+
+<!-- // Creates a new set with all elements incremented by 1 -->
+<!-- let plus_one : int set = Set.map increment larger_set -->
+<!-- ``` -->
+
+
+<!-- <\!--END_DOCUSAURUS_CODE_TABS-\-> -->
+
 #### Folded Operation
 
 A *folded operation* is the most general of iterations. The folded
@@ -772,6 +836,7 @@ function takes two arguments: an *accumulator* and the structure
 *element* at hand, with which it then produces a new accumulator. This
 enables having a partial result that becomes complete when the
 traversal of the data structure is over.
+
 
 <Syntax syntax="pascaligo">
 
@@ -796,6 +861,7 @@ function loop (const s : set (int)) : int is {
 ```
 
 </Syntax>
+
 <Syntax syntax="cameligo">
 
 The predefined fold over sets is called `Set.fold`, however an
@@ -811,6 +877,8 @@ let sum_of_elements : int = Set.fold sum my_set 0
 
 </Syntax>
 
+
+
 <Syntax syntax="jsligo">
 
 The predefined fold over sets is called `Set.fold`, however an
@@ -819,7 +887,7 @@ signature `val fold_right : ('acc * 'elt -> 'acc) * 'elt set * 'acc ->
 'acc`.
 
 ```jsligo group=sets
-let sum = ([acc, i]: [int, int]) => acc + i;
+let sum = (acc: int, i: int) => acc + i;
 let sum_of_elements = Set.fold (sum, my_set, 0);
 ```
 

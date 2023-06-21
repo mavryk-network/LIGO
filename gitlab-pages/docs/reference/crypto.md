@@ -22,6 +22,8 @@ let blake2b: (b: bytes) => bytes
 Runs the [blake2b hash algorithm](https://en.wikipedia.org/wiki/BLAKE_(hash_function)#BLAKE2)
 over the given `bytes` data and returns a `bytes` representing the hash.
 
+
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo
@@ -58,9 +60,10 @@ val sha256 : bytes -> bytes
 let sha256: (b: bytes) => bytes
 </SyntaxTitle>
 
-Runs the [sha256 hash algorithm](https://en.wikipedia.org/wiki/SHA-2)
-over the given `bytes` data and returns a `bytes` representing the
-hash.
+Runs the [sha256 hash algorithm](https://en.wikipedia.org/wiki/SHA-2) over the given
+`bytes` data and returns a `bytes` representing the hash.
+
+
 
 <Syntax syntax="pascaligo">
 
@@ -99,6 +102,8 @@ let sha512: (b: bytes) => bytes
 Runs the [sha512 hash algorithm](https://en.wikipedia.org/wiki/SHA-2) over the given
 `bytes` data and returns a `bytes` representing the hash.
 
+
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo
@@ -136,6 +141,8 @@ let sha3: (b: bytes) => bytes
 Runs the [sha3 hash algorithm](https://en.wikipedia.org/wiki/SHA-3) over the given
 `bytes` data and returns a `bytes` representing the hash.
 
+
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo
@@ -158,7 +165,6 @@ let hasherman3 = (s: bytes): bytes => Crypto.sha3(s);
 ```
 
 </Syntax>
-
 <SyntaxTitle syntax="pascaligo">
 val keccak : bytes -> bytes
 </SyntaxTitle>
@@ -209,6 +215,8 @@ let hash_key: (k: key) => key_hash
 
 Hashes a key for easy comparison and storage.
 
+
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo
@@ -255,6 +263,8 @@ let check: (k: key, s: signature, b: bytes) => bool
 Check that a message has been signed by a particular key.
 
 > ⚠️ There is no way to *generate* a signed message in LIGO. This is because that would require storing a private key on chain, at which point it isn't very private anymore.
+
+
 
 <Syntax syntax="pascaligo">
 

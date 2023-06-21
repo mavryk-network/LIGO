@@ -4,11 +4,6 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 const PARTNERS = [
   {
-    name: 'Serokell',
-    image: 'img/partners/serokell-white-logo.svg',
-    link: 'https://serokell.io/',
-    pinned: true
-  },{
     name: 'Nomadic Labs',
     image: 'img/partners/nomadic-logo.png',
     link: 'https://www.nomadic-labs.com/',
@@ -18,6 +13,18 @@ const PARTNERS = [
     name: 'MacStadium developer logo',
     image: 'img/partners/MacStadium-developerlogo.png',
     link: 'https://www.macstadium.com/',
+    pinned: true
+  },
+  {
+    name: 'TQ Tezos',
+    image: 'img/partners/tq-logo.svg',
+    link: 'https://tqtezos.com/',
+    pinned: true
+  },
+  {
+    name: 'Stove Labs',
+    image: 'img/partners/stove-logo.png',
+    link: 'https://stove-labs.com',
     pinned: true
   }
 ];

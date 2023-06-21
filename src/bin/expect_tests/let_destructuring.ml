@@ -35,11 +35,10 @@ let%expect_test _ =
     File "../../test/contracts/negative/let_destructuring.mligo", line 4, characters 6-23:
       3 | let t1 =
       4 |   let { a = a ; f = b }  = { a = 1 ; b = 1n } in
-                ^^^^^^^^^^^^^^^^^
       5 |   (a,b)
 
-    Pattern not of the expected type "foo". |}];
-  (*
+    Pattern not of the expected type "foo". |}]
+
 let%expect_test _ =
   run_ligo_good [ "run"; "interpret"; "t1"; "--init-file"; test "let_destructuring.ligo" ];
   [%expect {| 1 |}];
@@ -69,7 +68,6 @@ let%expect_test _ =
       5 | } with (a,b)
 
     Pattern not of the expected type "foo". |}];
-*)
   run_ligo_bad
     [ "run"
     ; "interpret"

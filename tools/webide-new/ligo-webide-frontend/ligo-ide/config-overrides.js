@@ -1,3 +1,4 @@
+const os = require('os');
 const path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
 const {
@@ -101,46 +102,80 @@ function enableTS() {
 const overrides = [
   addWebpackAlias({
     "~": path.resolve(__dirname, "src/"),
-    'vscode/services': require.resolve('vscode/services')
   }),
   overrideProcessEnv({
-    PROJECT_NAME: '"LIGO IDE"',
+    CDN: JSON.stringify(!!process.env.CDN),
+    BUILD: JSON.stringify(process.env.BUILD),
+    PROJECT: JSON.stringify(process.env.PROJECT || process.env.BUILD),
+    DEPLOY: JSON.stringify(process.env.DEPLOY || ''),
+    PROJECT_NAME: JSON.stringify(process.env.PROJECT_NAME),
+    PROJECT_WEB_URL: JSON.stringify('https://eth.ide.black'),
+    PROJECT_DESKTOP_URL: JSON.stringify('https://app.obsidians.io/eth'),
+    PROJECT_GITHUB_REPO: JSON.stringify(
+      'https://github.com/ObsidianLabs/Black-IDE'
+    ),
+    OS_IS_LINUX: JSON.stringify(os.type() === 'Linux'),
+    OS_IS_WINDOWS: JSON.stringify(os.type() === 'Windows_NT'),
+    OS_IS_MAC: JSON.stringify(os.type() === 'Darwin'),
+    CHAIN_NAME: '"Ethereum"',
+    CHAIN_SHORT_NAME: '"ETH"',
+    CHAIN_EXECUTABLE_NAME: '"Geth"',
+    CHAIN_EXECUTABLE_NAME_IN_LABEL: '"Geth"',
+    COMPILER_NAME: '"Truffle"',
+    COMPILER_NAME_IN_LABEL: '"Truffle"',
+    COMPILER_EXECUTABLE_NAME: '"truffle"',
+    COMPILER_VERSION_KEY: '"truffle"',
+    DOCKER_IMAGE_NODE: '"ethereum/client-go"',
+    DOCKER_IMAGE_COMPILER: '"obsidians/truffle"',
+    INFURA_PROJECT_ID: '"cc547d769203404cb928ec965af26894"',
+    TOKENVIEW_API_TOKEN: '"EKOSwQf1EICfbxcVyNvt"',
+    BROWSER_EXTENSION_NAME: '"MetaMask"',
+    LANG: JSON.stringify(process.env.LANGUAGE || 'en'),
+    ENABLE_AUTH: true,
+    RENDER_LOGO: JSON.stringify(process.env.RENDER_LOGO || false),
+    BUILD_ID: process.env.BUILD_ID,
+    COMMIT_ID: JSON.stringify(process.env.COMMIT_ID),
+    BUILD_TIME: JSON.stringify(process.env.BUILD_TIME),
     MEASUREMENT_ID: JSON.stringify(process.env.MEASUREMENT_ID),
     GIT_PROXY: JSON.stringify(process.env.GIT_PROXY),
-    HTTP_PROTOCOL: JSON.stringify(process.env.HTTP_PROTOCOL),
-    BACKEND_URL: JSON.stringify(process.env.BACKEND_URL),
   }),
   addExternalBabelPlugins("@babel/plugin-proposal-class-properties", "@babel/plugin-proposal-optional-chaining", "@babel/plugin-proposal-nullish-coalescing-operator"),
+  // addBabelPreset("@babel/preset-env"),
   enableTS(),
   turnOffMangle(),
   addWasmLoader(),
   customSplitting(),
 ];
 
-
-overrides.push(
-  addWebpackPlugin(
-    new MonacoWebpackPlugin({
-      languages: [
-        'json',
-        'javascript',
-        'typescript',
-        'css',
-        'html',
-        'markdown',
-        'c',
-        'cpp',
-        'shell',
-      ],
-    }),
-    new BundleAnalyzerPlugin(),
-    new BundleStatsWebpackPlugin()
-  )
-);
-overrides.push(addWebpackExternals({
-  'Config': JSON.stringify(require('./config.json')),
-}))
-
+if (process.env.CDN) {
+  overrides.unshift(
+    addWebpackExternals({
+      react: 'React',
+      'react-dom': 'ReactDOM',
+      'monaco-editor': 'monaco',
+    })
+  );
+} else {
+  overrides.push(
+    addWebpackPlugin(
+      new MonacoWebpackPlugin({
+        languages: [
+          'json',
+          'javascript',
+          'typescript',
+          'css',
+          'html',
+          'markdown',
+          'c',
+          'cpp',
+          'shell',
+        ],
+      }),
+      new BundleAnalyzerPlugin(),
+      new BundleStatsWebpackPlugin()
+    )
+  );
+}
 module.exports = {
   webpack: override(...overrides),
   devServer: function (configFunction) {

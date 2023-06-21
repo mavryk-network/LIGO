@@ -88,6 +88,7 @@ ligo compile expression cameligo "[%Michelson ({| { PUSH nat 42; DROP ; PUSH nat
 
 </Syntax>
 
+
 As we can see, the embedded Michelson code was not modified. However,
 if the resulting function is applied, then the embedded Michelson code
 could be modified/optimised by the compiler. To exemplify this
@@ -155,7 +156,7 @@ type parameter =
 
 type storage = int
 
-let main (action : parameter) (store : storage) : operation list * storage =
+let main (action, store : parameter * storage) : operation list * storage =
   [],
   (match action with
      Increment n -> store + n

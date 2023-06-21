@@ -1,9 +1,11 @@
 module Var = Simple_utils.Var
 open Test_helpers
 open Ligo_prim
-open Ast_unified
+open Ast_imperative
 
+let file = "./contracts/pledge.ligo"
 let mfile = "./contracts/pledge.mligo"
+let compile_main ~raise f () = Test_helpers.compile_main ~raise f ()
 
 let oracle_addr, oracle_contract =
   let open Proto_alpha_utils.Memory_proto_alpha in
@@ -12,27 +14,28 @@ let oracle_addr, oracle_contract =
   Protocol.Alpha_context.Contract.to_b58check kt, kt
 
 
-let stranger_contract =
+let stranger_addr, stranger_contract =
   let open Proto_alpha_utils.Memory_proto_alpha in
   let id = List.nth_exn (test_environment ()).identities 1 in
-  id.implicit_contract
+  let kt = id.implicit_contract in
+  Protocol.Alpha_context.Contract.to_b58check kt, kt
 
 
-let empty_op_list = e_list ~loc []
+let empty_op_list = e_typed_list ~loc [] (t_operation ~loc ())
 
 let empty_message =
   e_lambda_ez
     ~loc
     (Value_var.of_input_var ~loc "arguments")
-    ~ascr:(tv_unit ~loc ())
-    (Some (t_list ~loc (tv_operation ~loc ())))
+    ~ascr:(t_unit ~loc ())
+    (Some (t_list ~loc (t_operation ~loc ())))
     empty_op_list
 
 
 let pledge ~raise f () =
   let program = get_program ~raise f () in
   let storage = e_address ~loc oracle_addr in
-  let parameter = e_unit ~loc in
+  let parameter = e_unit ~loc () in
   let options =
     Proto_alpha_utils.Memory_proto_alpha.(
       make_options
@@ -87,7 +90,10 @@ let distribute_unauthorized ~raise f () =
 let main =
   test_suite
     "Pledge & Distribute"
-    [ test_w "donate" (pledge mfile)
+    [ test_w "donate" (pledge file)
+    ; test_w "distribute" (distribute file)
+    ; test_w "distribute (unauthorized)" (distribute_unauthorized file)
+    ; test_w "donate" (pledge mfile)
     ; test_w "distribute" (distribute mfile)
     ; test_w "distribute (unauthorized)" (distribute_unauthorized mfile)
     ]

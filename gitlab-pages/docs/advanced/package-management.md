@@ -46,7 +46,7 @@ by simply placing a manifest file, `package.json` over there.
 
 ## LIGO registry
 
-The [LIGO registry](https://packages.ligolang.org/) is used to host LIGO packages. The LIGO registry contains the contracts/libraries along with their metadata. The packages which reside on the LIGO registry can be installed using the `ligo install` command.
+The [LIGO registry](https://packages.ligolang.org/) is used to host LIGO packages. The LIGO registry contains the contracts/libraries along with their metadata. The packages which reside on the LIGO registry can be installed using the `ligo install` command. 
 
 ## Consuming
 
@@ -54,7 +54,7 @@ To fetch (download) & maintain different versions of external libraries we need 
 LIGO libraries can be published to [LIGO's registry](https://packages.ligolang.org/) as well as [npm](https://www.npmjs.com/).
 Using `ligo install` command we can fetch these ligo libraries (It internally invokes the [esy](https://esy.sh/) package manager).
 
-Pre-requites:
+Pre-requites: 
 1. Install esy ([link](https://esy.sh/docs/en/getting-started.html))
 
 ### Workflow
@@ -75,8 +75,7 @@ $ ligo install @ligo/bigarray
 ```
 <br/>
 
-Now we will write a smart contract names `main` which will use the
-`@ligo/bigarray` library
+Now we will write a smart contract `main.mligo` which will use the `@ligo/bigarray` library
 
 <Syntax syntax="pascaligo">
 
@@ -112,7 +111,7 @@ type storage = int list
 let main (action, store : parameter * storage) : operation list * storage =
   (([]: operation list),
    (match action with
-      Concat ys -> BA.concat store ys
+      Concat ys -> BA.concat store ys 
     | Reverse   -> BA.reverse store))
 
 ```
@@ -144,13 +143,13 @@ const main = (action: parameter, store: storage): [list<operation>, storage] => 
 </Syntax>
 <br/>
 
-> Note: When using LIGO packages via `#import`/`#include`
+> Note: When using LIGO packages via `#import`/`#include` 
 >
 > If only the name of the package is provided, it will be resolved to
 > the `main` file of the package.
 >
 > If you want to import a specific file from the package, the syntax is of the form
->
+> 
 > `#import "<pkg name>/<file in package>" "Module"`
 >
 > `#include "pkg name>/<file in package>"`
@@ -185,7 +184,7 @@ let test =
     let contr : parameter contract = Test.to_contract taddr in
     let _ = Test.transfer_to_contract_exn contr Reverse 1mutez in
     assert (Test.get_storage taddr = [3; 2; 1])
-
+                                         
 ```
 
 </Syntax>
@@ -270,7 +269,7 @@ $ ligo install
 
 ### Upgrading the version of a LIGO package
 
-During the lifecycle of a project, if you wish to upgrade the version of a LIGO package,
+During the lifecycle of a project, if you wish to upgrade the version of a LIGO package, 
 Just update the package version to the desired one in the `package.json`. e.g.
 
 ```diff
@@ -297,9 +296,10 @@ This will fetch the updated version of the LIGO package, and the compiler will u
 
 ### Using a LIGO package via REPL
 
-If you wish to try out a LIGO package in the REPL environment, Install
-the LIGO package by following the steps above, and then fire up the
-LIGO REPL using the following command
+If you wish to try out a LIGO package in the REPL environment, Install the LIGO package by
+following the steps above,
+
+And then fire up the LIGO REPL using the following command
 
 <Syntax syntax="pascaligo">
 
@@ -372,7 +372,7 @@ The structure of a LIGO manifest is as follows,
 - **`version`** : Version of the package (Should be a valid [sem-ver](https://semver.org/)).
 - **`main`** : The main file of the package, Ideally this file should export all the functionality that the package provides.
 - **`author`** : Author of the package.
-- **`license`** : A valid SPDX license identifier.
+- **`license`** : A valid SPDX license identifier. 
 - **`repository`** : The place where the LIGO code is hosted (remote repository),
 The `repository` field follows a [structure same as npm](https://docs.npmjs.com/cli/v9/configuring-npm/package-json#repository).
 - **`bugs`** : The url to your project's issue tracker and/or the email address to which issues should be reported.
@@ -386,8 +386,8 @@ The `bugs` fields follows a [structure same as npm](https://docs.npmjs.com/cli/v
 
 - **`description`** : A brief description of the package.
 - **`readme`** : Some readme text, if this field is omitted the contents of README.md or README will be used in its place.
-- **`dependencies`** : A object (key-value pairs) of dependencies of the package where key is a `package_name` and the value is a `package_version`
-- **`dev_dependencies`** : A object (key-value pairs) of dev_dependencies of the package where key is a `package_name` and value is a `package_version`
+- **`dependencies`** : A object (key-value pairs) of dependencies of the package where key is a `package_name` and the value is a `package_version` 
+- **`dev_dependencies`** : A object (key-value pairs) of dev_dependencies of the package where key is a `package_name` and value is a `package_version` 
 
 
 Sample LIGO manifest (`package.json`) with some of the above information:
@@ -419,7 +419,7 @@ Sample LIGO manifest (`package.json`) with some of the above information:
 #### Ignore some files or directories while packaging using .ligoignore
 
 You can specify some files or directories which you want to keep out of the LIGO package (keys, deployment scripts, etc.) in a `.ligoignore` file.
-`.ligoignore` file is similar to a `.gitignore` file (you can specify glob patterns of files or directories you would like to ignore)
+`.ligoignore` file is similar to a `.gitignore` file (you can specify glob patterns of files or directories you would like to ignore) 
 
 ### Creating and publishing packages to the LIGO registry
 
@@ -464,13 +464,13 @@ let reverse (type a) (xs : a list) : a list =
 ```jsligo group=pkg
 /* LIGO library for working with lists */
 
-const concat = <T>(xs : list<T>, ys : list<T>) : list<T> => {
-    let f = ([x, ys] : [T, list<T>]) : list<T> => list([x, ...ys]);
+const concat : <T>(xs : list<T>, ys : list<T>) => list<T> = (xs : list<T>, ys : list<T>) : list<T> => {
+    let f = (x : T, ys : list<T>) : list<T> => list([x, ...ys]);
     return List.fold_right(f, xs, ys)
 }
 
-const reverse = <T>(xs : list<T>) : list<T> => {
-    let f = ([ys, x] : [list<T>, T]) : list<T> => list([x, ...ys]);
+const reverse : <T>(xs : list<T>) => list<T> = (xs : list<T>) : list<T> => {
+    let f = (ys : list<T>, x : T) : list<T> => list([x, ...ys]);
     return List.fold_left(f, (list([]) as list<T>), xs)
 }
 
@@ -504,13 +504,13 @@ const test_reverse = {
 ```cameligo skip
 #include "list.mligo"
 
-let test_concat =
+let test_concat = 
     let xs = [1; 2; 3] in
     let ys = [4; 5; 6] in
     let zs = concat xs ys in
     assert (zs = [1; 2; 3; 4; 5; 6])
 
-let test_reverse =
+let test_reverse = 
     let xs = [1; 2; 3] in
     assert (reverse xs = [3; 2; 1])
 
@@ -556,6 +556,7 @@ $ ligo run test list.test.mligo
 ```
 
 </Syntax>
+
 <Syntax syntax="jsligo">
 
 ```bash
@@ -589,7 +590,7 @@ This would create a `.ligorc` in the home directory.
 LIGO packages can be published to a central repository at
 [`packages.ligolang.org`](https://packages.ligolang.org/) with the `ligo publish` command.
 
-```bash
+```bash 
 $ ligo publish
 ==> Reading manifest... Done
 ==> Validating manifest file... Done
@@ -629,10 +630,8 @@ $ ligo install --cache-path PATH
 
 ### --project-root
 
-LIGO will try to infer the root directory of the project so that it
-can find the dependencies installed on your local machine, If you wish
-to specify the root directory manually you can do so using the
-`--project-root` option e.g.
+LIGO will try to infer the root directory of the project so that it can find the dependencies installed on your local machine, 
+If you wish to specify the root directory manually you can do so using the `--project-root` option e.g.
 
 <Syntax syntax="pascaligo">
 
@@ -672,7 +671,7 @@ $ ligo publish --ligorc-path ./.ligorc
 ```
 <br/>
 
-> Note: Using `ligo login` users can log into multiple registries e.g. LIGO registry, and the LIGO beta registry, A new entry will be created in the `.ligorc` for storing auth token of each registry.
+> Note: Using `ligo login` users can log into multiple registries e.g. LIGO registry, and the LIGO beta registry, A new entry will be created in the `.ligorc` for storing auth token of each registry.  
 
 ### --dry-run
 
@@ -693,7 +692,7 @@ This will only display the report on the command line what it would have done in
 Yes, any syntax can be used in packages. Furthermore, one can consume a package written in one syntax from another.
 
 ### 2. What happens if there is a main function in a LIGO package?
-
+    
 Depends on how it is called.
 
 If it is not used, it won't appear in the final Michelson - only the used parts from the library will be compiled.
@@ -715,9 +714,9 @@ In this case, only `add` function from the package will be used by the compiler.
 Also,
 
 ```cameligo skip
-#import "package_name/increment.mligo"
+#import "package_name/increment.mligo" 
 
-let test =
+let test = 
   Test.originate ... Increment.main ...
 ```
 <br/>
@@ -726,5 +725,5 @@ In this case, the main function will be used in tests.
 
 ### 3. What happens if package.json is already in use (maybe because of another tool like npm or taqueria)?
 
-In that case, you can name your LIGO manifest as `esy.json` to avoid conflicts with other tools.
+In that case, you can name your LIGO manifest as `esy.json` to avoid conflicts with other tools. 
 Also, there is a plan in the future to introduce `ligo.json` as manifest.

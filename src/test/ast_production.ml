@@ -27,17 +27,6 @@ let test_case name test =
   Test (Alcotest.test_case name `Quick @@ fun () -> wrap_test_w ~no_colour name test)
 
 
-let comp_file_assert ~raise f test syntax expected () =
-  let options =
-    let options = Test_helpers.options in
-    let options = Compiler_options.set_syntax options syntax in
-    Compiler_options.set_test_flag options test
-  in
-  let (core : Ast_core.program) = Test_helpers.core_file_unqualified ~raise f options in
-  let got = Format.asprintf "%a" Ast_core.PP.program core in
-  if not (String.equal got expected) then Stdlib.raise Alcotest.Test_error
-
-
 let comp_file_ ~raise f test syntax () =
   let options =
     let options = Test_helpers.options in
@@ -54,7 +43,7 @@ let type_file_ ~raise f test syntax () =
     let options = Compiler_options.set_syntax options syntax in
     Compiler_options.set_test_flag options test
   in
-  let (_ : Ast_typed.program) = Test_helpers.type_file ~raise f options in
+  let (_ : Ast_typed.program) = Test_helpers.type_file ~raise f Env options in
   ()
 
 
@@ -64,7 +53,7 @@ let agg_file_ ~raise f test syntax () =
     let options = Compiler_options.set_syntax options syntax in
     Compiler_options.set_test_flag options test
   in
-  let prg = Test_helpers.type_file ~raise f options in
+  let prg = Test_helpers.type_file ~raise f Env options in
   let (_ : Ast_aggregated.program) =
     trace ~raise aggregation_tracer
     @@ Aggregation.compile_program (Ast_typed.e_a_unit ~loc ()) prg
@@ -78,7 +67,7 @@ let mini_c_file_ ~raise f test syntax () =
     let options = Compiler_options.set_syntax options syntax in
     Compiler_options.set_test_flag options test
   in
-  let prg = Test_helpers.type_file ~raise f options in
+  let prg = Test_helpers.type_file ~raise f Env options in
   let ctxt, exp =
     trace ~raise aggregation_tracer
     @@ Aggregation.compile_program (Ast_typed.e_a_unit ~loc ()) prg
@@ -119,11 +108,6 @@ let comp_file f =
   test_case f (comp_file_ f false None)
 
 
-let comp_file_assert f expected =
-  let f = "./contracts/" ^ f in
-  test_case f (comp_file_assert f false None expected)
-
-
 let aggregate_file f =
   let f = "./contracts/" ^ f in
   test_case f (agg_file_ f false None)
@@ -142,7 +126,8 @@ let compile_file_ f =
 let typed_prod =
   Test_helpers.test_suite
     "Ast-typed productions"
-    [ type_file "build/D.mligo"
+    [ type_file "type-alias.ligo"
+    ; type_file "build/D.mligo"
     ; type_file "build/instance/main.mligo"
     ; type_file "infer_fun_application.mligo"
     ; type_file "protocol_dalphanet.mligo"
@@ -155,29 +140,28 @@ let typed_prod =
     ; type_file "modules_and_free_vars/nested_modules.mligo"
     ; type_file "modules_and_free_vars/module_with_free_vars.mligo"
     ; type_file "modules_and_free_vars/nested_modules_with_free_vars.mligo"
-    ; type_tfile "pattern_match4.jsligo" (*    ; type_file "layout.pligo" *)
+    ; type_tfile "pattern_match4.jsligo"
+    ; type_file "layout.pligo"
     ; lex_file "add_semi.jsligo" (* not sure about this one *)
     ; type_file "type_shadowing.mligo"
-    ; type_file "type_vars_let_fun.mligo"
-    ; type_file "export_newline.jsligo"
-    ; type_file "ppx_helpers.mligo"
     ]
 
 
 let core_prod =
   Test_helpers.test_suite
     "Ast-core productions"
-    [ comp_file "vars_consts/multiple_vars.jsligo"
+    [ comp_file "vars_consts/shadowing.ligo"
+    ; comp_file "vars_consts/func_const_var.ligo"
+    ; comp_file "vars_consts/func_same_const_var.ligo"
+    ; comp_file "vars_consts/func_var_const.ligo"
+    ; comp_file "vars_consts/var_loop.ligo"
+    ; comp_file "vars_consts/multiple_vars.ligo"
+    ; comp_file "vars_consts/multiple_vars.jsligo"
     ; comp_file "letin.mligo"
-    ; comp_file "double_ignored_variable.jsligo"
-    ; comp_file "clauseblock.jsligo"
+    ; comp_file "type_puning.ligo"
     ; comp_file "polymorphism/annotate.mligo"
+    ; comp_file "deep_pattern_matching/list_pattern.ligo"
     ; comp_file "deep_pattern_matching/list_pattern.mligo"
-    ; comp_file_assert
-        "core_abstraction/fun_type_var.mligo"
-        "\n\
-         const foo : ∀ a : * . list (a) -> list (a) =\n\
-        \  Λ a ->  Λ b ->  fun ( xs : list (b)) : list (b) -> xs"
     ]
 
 
@@ -234,4 +218,12 @@ let contract_prod =
     ; compile_file_ "top_level_patterns/contracts/jsligo/ticket_tuple.jsligo"
       (* ; compile_file_ "top_level_patterns/contracts/jsligo/tuple_record.jsligo" *)
     ; compile_file_ "top_level_patterns/contracts/jsligo/tuple.jsligo"
+    ; compile_file_ "top_level_patterns/contracts/pascaligo/nested_record.ligo"
+    ; compile_file_ "top_level_patterns/contracts/pascaligo/nested_tuple.ligo"
+    ; compile_file_ "top_level_patterns/contracts/pascaligo/record_tuple.ligo"
+    ; compile_file_ "top_level_patterns/contracts/pascaligo/record.ligo"
+    ; compile_file_ "top_level_patterns/contracts/pascaligo/ticket_record.ligo"
+    ; compile_file_ "top_level_patterns/contracts/pascaligo/ticket_tuple.ligo"
+    ; compile_file_ "top_level_patterns/contracts/pascaligo/tuple_record.ligo"
+    ; compile_file_ "top_level_patterns/contracts/pascaligo/tuple.ligo"
     ]

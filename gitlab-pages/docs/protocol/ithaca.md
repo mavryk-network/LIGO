@@ -15,8 +15,7 @@ import SyntaxTitle from '@theme/SyntaxTitle';
 
 The behaviour of the subtraction operator `-` on values of type `tez` has been changed in protocol Ithaca.
 
-Subtracting values of type `tez` yeilds on optional value. (This emits
-the `SUB_MUTEZ` Michelson instruction)
+Subtracting values of type `tez` yeilds on optional value. (This emmits the `SUB_MUTEZ` michelson instruction)
 
 <Syntax syntax="pascaligo">
 
@@ -29,11 +28,12 @@ const e : option (tez) = 1mutez - 5mutez (* None *)
 ```
 
 </Syntax>
-
 <Syntax syntax="cameligo">
 
 ```cameligo group=b
+
 let d : tez option = 5mutez - 1mutez (* Some (4mutez) *)
+
 let e : tez option = 1mutez - 5mutez (* None *)
 
 ```
@@ -43,12 +43,15 @@ let e : tez option = 1mutez - 5mutez (* None *)
 <Syntax syntax="jsligo">
 
 ```jsligo group=b
+
 let d : option<tez> = (5 as mutez) - (1 as mutez); /* Some (4mutez) */
+
 let e : option<tez> = (1 as mutez) - (5 as mutez); /* None */
 
 ```
 
 </Syntax>
+
 
 
 #### Option Module
@@ -86,5 +89,5 @@ let set_now = (now: timestamp) => unit
 </SyntaxTitle>
 
 We no longer support `Test.set_now` in LIGO `0.38.0` onwards, this is because
-the underlying functions used by the LIGO Testing framework do not support
+the underlying functions used by the LIGO Testing framework do not support 
 setting exact timestamps.

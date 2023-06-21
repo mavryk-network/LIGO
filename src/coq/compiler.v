@@ -4,7 +4,6 @@ From Coq Require Import String List Arith ZArith Program.Tactics micromega.Lia m
 From Coq Require Extraction.
 Import ListNotations.
 Open Scope string_scope.
-Unset Lia Cache.
 
 From ligo_coq Require Import ope.
 
@@ -110,7 +109,7 @@ Inductive ty : Set :=
 | T_operation : meta -> ty
 .
 
-Context {with_var_names : list bool -> list ty -> meta -> meta}.
+Context {with_var_names : list ty -> meta -> meta}.
 Context {lit micheline : Set}.
 Context {lit_code : meta -> lit -> list micheline}.
 Context {global_constant : meta -> string -> list micheline}.
@@ -141,7 +140,6 @@ Inductive expr : Set :=
 
 | E_app : meta -> args -> expr
 | E_lam : meta -> binds -> ty -> expr
-| E_rec : meta -> binds -> ty -> expr
 
 | E_literal : meta -> lit -> expr
 
@@ -438,7 +436,6 @@ Inductive instr : Set :=
 | I_IF_CONS : meta -> prog -> prog -> instr
 
 | I_FUNC : meta -> list ty -> ty -> ty -> list bool -> list bool -> prog -> instr (* VERY FICTION *)
-| I_REC_FUNC : meta -> list ty -> ty -> ty -> list bool -> list bool -> prog -> instr (* VERY FICTION *)
 | I_LAMBDA : meta -> ty -> ty -> prog -> instr
 | I_EXEC : meta -> instr (* func or lambda *)
 | I_APPLY_LAMBDA : meta -> ty -> instr (* FICTION (APPLY but with a type arg) *)
@@ -626,13 +623,6 @@ Inductive instr_typed : instr -> list ty -> list ty -> Prop :=
       ope_valid r2 (length d1) ->
       select r2 d1 = d2 ->
       instr_typed (I_FUNC l1 d1 a b r1 r2 code) s (T_func l2 a b :: s)}
-| Recfunc_typed {a b r1 r2 code s d1 d2} :
-    `{prog_typed code (a :: (T_lambda l1 a b) :: d1) (b :: d2) ->
-      ope_valid r1 (length s) ->
-      select r1 s = d1 ->
-      ope_valid r2 (length d1) ->
-      select r2 d1 = d2 ->
-      instr_typed (I_REC_FUNC l1 d1 a b r1 r2 code) s (T_func l2 a b :: s)}
 | Exec_func_typed {a b s} :
     `{instr_typed (I_EXEC l1) (a :: T_func l2 a b :: s) (b :: s)}
 
@@ -918,13 +908,6 @@ Fixpoint compile_expr (r : ope) (env : list ty) (e : expr) {struct e} : prog :=
                end in
       [I_SEQ l [I_FUNC null env a b (trim r (length env)) (repeat true (length env))
                        (compile_binds (repeat true (length env)) env e)]]
-  | E_rec l e b =>
-      let a := match e with
-               | Binds _ [a;_] _ => a
-               | _ => T_unit null
-               end in
-      [I_SEQ l [I_REC_FUNC null env a b (trim r (length env)) (repeat true (length env))
-                       (compile_binds (repeat true (length env)) env e)]]
   | E_literal l lit =>
       [I_SEQ l [I_RAW null O (lit_code null lit)]]
   | E_pair l e =>
@@ -1012,7 +995,7 @@ compile_binds
   | Binds l az e =>
       let env' := az ++ env in
       let r' := repeat true (length az) ++ r in
-      app [I_SEQ (with_var_names r' env' null) []]
+      app [I_SEQ (with_var_names env' null) []]
           (app (compile_expr r' env' e)
                [I_DIP null [I_DROP null (length az)]])
   end.
@@ -1360,19 +1343,6 @@ Fixpoint
                  (repeat false (weight (tl rb)))
                  (compile_ope [ope_hd rb] ++ body')
             :: compile_ope (true :: inj2 (comp (tl rb) r1) (tl r)))
-      else (tl r, [])
-  | I_REC_FUNC l cs a b r1 r2 body =>
-      if ope_hd r
-      then
-        let (rb, body') := strengthen_progg body (true :: repeat false (weight r2)) in
-        (union (comp (tl (tl rb)) r1) (tl r),
-          I_REC_FUNC l
-                 (select (tl (tl rb)) cs)
-                 a b
-                 (inj1 (comp (tl (tl rb)) r1) (tl r))
-                 (repeat false (weight (tl (tl rb))))
-                 (compile_ope [ope_hd rb; ope_hd (tl rb)] ++ body')
-            :: compile_ope (true :: inj2 (comp (tl (tl rb)) r1) (tl r)))
       else (tl r, [])
   | I_LAMBDA l a b body =>
       (tl r,
@@ -1762,8 +1732,6 @@ Proof with try split; try lia; eauto 15 with michelson.
       try destruct s1;
       strengthen_rewrite...
   (* I_FUNC *)
-  - admit.
-  (* I_REC_FUNC *)
   - admit.
   (* I_EXEC *)
   - destruct r;

@@ -1,0 +1,17 @@
+; This file was automatically generated, do not edit.
+; Edit file manifest/main.ml instead.
+
+(library
+ (name tezos_webassembly_interpreter)
+ (public_name tezos-webassembly-interpreter)
+ (instrumentation (backend bisect_ppx))
+ (libraries
+  tezos-lwt-result-stdlib
+  zarith
+  tezos-lazy-containers)
+ (preprocess (pps ppx_deriving.show))
+ (flags
+  (:standard)
+  -open Tezos_lazy_containers))
+
+(include_subdirs unqualified)

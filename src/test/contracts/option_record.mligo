@@ -2,7 +2,7 @@ type t = { s : int option ; n : string option } option
 
 type return = operation list * t
 
-let main (_ : unit) (_ : t) : return = 
+let main (_ : unit * t) : return = 
   ([] : operation list), Some { s = Some 1 ; n = (None : string option) }
 
 let test =

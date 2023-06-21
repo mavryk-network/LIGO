@@ -1,5 +1,0 @@
-(executable
- (name configurator)
- (modules configurator)
- (flags (:standard))
- (libraries core dune-configurator))

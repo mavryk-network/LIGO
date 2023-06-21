@@ -585,7 +585,7 @@ let make_abstract_sum = (z_or: z_or): z_to_v =>
         M_right: (x_or: x_or) => {
           return match(x_or, {
             M_left: (n: unit) => X(),
-            M_right: (w_or: w_or_v) => {
+            M_right: (w_or: w_or) => {
               return match(w_or, {
                 M_left: (n: unit) => W(),
                 M_right: (n: unit) => V()
@@ -606,6 +606,7 @@ let make_abstract_record = (z: string, y: int, x: string, w: bool, v: int) =>  (
 ## Entrypoints and annotations
 It's possible for a contract to have multiple entrypoints, which translates in
 LIGO to a `parameter` with a variant type as shown here:
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo
@@ -663,6 +664,7 @@ let main = (p: parameter, x: storage): [list<operation>, storage] =>
 </Syntax>
 
 This contract can be called by another contract, like this one:
+
 
 <Syntax syntax="pascaligo">
 

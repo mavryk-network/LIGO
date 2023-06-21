@@ -1,10 +1,2 @@
-(lang dune 3.0)
-
-(package
- (name simple-utils))
-
-(package
- (name simple-utils-unix))
-
-(package
- (name simple-utils-js))
+(lang dune 2.7)
+(name simple-utils)

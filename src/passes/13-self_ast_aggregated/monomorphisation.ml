@@ -1,7 +1,6 @@
 module PP_helpers = Simple_utils.PP_helpers
 module AST = Ast_aggregated
 open Ligo_prim
-module Row = AST.Row
 
 let fold_map_expression = AST.Helpers.fold_map_expression
 let poly_name ~loc v = Value_var.fresh_like ~loc v
@@ -50,6 +49,24 @@ module Data = struct
     Option.value ~default:[] @@ LIMap.find_opt ev data
 
 
+  let instance_lookup_opt
+      (lid : Value_var.t)
+      (type_instances' : AST.type_expression list)
+      (type_' : AST.type_expression)
+      (data : t)
+    =
+    let aux { Instance.vid; type_instances; type_ } =
+      if AST.equal_type_expression type_ type_'
+         && List.equal
+              (fun t1 t2 -> AST.equal_type_expression t1 t2)
+              type_instances
+              type_instances'
+      then Some (vid, type_instances)
+      else None
+    in
+    List.find_map ~f:aux @@ Option.value ~default:[] (LIMap.find_opt lid data)
+
+
   let instance_add (lid : Value_var.t) (instance : Instance.t) (data : t) =
     let lid_instances =
       instance :: (Option.value ~default:[] @@ LIMap.find_opt lid data)
@@ -75,10 +92,10 @@ let apply_table_expr table (expr : AST.expression) =
           let binder = Param.map apply_table_type binder in
           let output_type = apply_table_type output_type in
           return @@ E_lambda { binder; output_type; result }
-        | E_recursive { fun_name; fun_type; lambda; force_lambdarec } ->
+        | E_recursive { fun_name; fun_type; lambda } ->
           let fun_type = apply_table_type fun_type in
           let lambda = Lambda.map Fn.id apply_table_type lambda in
-          return @@ E_recursive { fun_name; fun_type; lambda; force_lambdarec }
+          return @@ E_recursive { fun_name; fun_type; lambda }
         | E_matching { matchee; cases } ->
           let f : _ AST.Match_expr.match_case -> _ AST.Match_expr.match_case =
            fun { pattern; body } ->
@@ -168,12 +185,32 @@ let rec subst_external_type et t (u : AST.type_expression) =
   | T_constant { language; injection; parameters } ->
     let parameters = List.map ~f:(self et t) parameters in
     { u with type_content = T_constant { language; injection; parameters } }
-  | T_sum row ->
-    let row = Row.map (self et t) row in
-    { u with type_content = T_sum row }
-  | T_record row ->
-    let row = Row.map (self et t) row in
-    { u with type_content = T_record row }
+  | T_sum { fields; layout } ->
+    let fields =
+      AST.(
+        Record.map
+          ~f:
+            (fun Rows.{ associated_type; michelson_annotation; decl_pos } : row_element ->
+            { associated_type = self et t associated_type
+            ; michelson_annotation
+            ; decl_pos
+            })
+          fields)
+    in
+    { u with type_content = T_sum { fields; layout } }
+  | T_record { fields; layout } ->
+    let fields =
+      AST.(
+        Record.map
+          ~f:
+            (fun Rows.{ associated_type; michelson_annotation; decl_pos } : row_element ->
+            { associated_type = self et t associated_type
+            ; michelson_annotation
+            ; decl_pos
+            })
+          fields)
+    in
+    { u with type_content = T_record { fields; layout } }
   | _ -> u
 
 
@@ -189,9 +226,9 @@ let subst_external_term et t (e : AST.expression) =
         | E_lambda { binder; output_type; result } ->
           let binder = Param.map (subst_external_type et t) binder in
           return @@ E_lambda { binder; output_type; result }
-        | E_recursive { fun_name; fun_type; lambda; force_lambdarec } ->
+        | E_recursive { fun_name; fun_type; lambda } ->
           let fun_type = subst_external_type et t fun_type in
-          return @@ E_recursive { fun_name; fun_type; lambda; force_lambdarec }
+          return @@ E_recursive { fun_name; fun_type; lambda }
         | E_matching { matchee; cases } ->
           let f : _ AST.Match_expr.match_case -> _ AST.Match_expr.match_case =
            fun { pattern; body } ->
@@ -265,17 +302,11 @@ let rec mono_polymorphic_expression ~raise
   | E_type_abstraction { type_binder = _; result } ->
     raise.Trace.error
       (Errors.monomorphisation_unexpected_type_abs expr.type_expression result)
-  | E_recursive
-      { fun_name; fun_type; lambda = { binder; output_type; result }; force_lambdarec } ->
+  | E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } } ->
     let data, result = self data result in
     ( data
     , return
-        (E_recursive
-           { fun_name
-           ; fun_type
-           ; lambda = { binder; output_type; result }
-           ; force_lambdarec
-           }) )
+        (E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } }) )
   | E_let_in { let_binder; rhs; let_result; attributes } ->
     let () =
       match AST.Combinators.get_t_arrow rhs.type_expression with
@@ -304,12 +335,8 @@ let rec mono_polymorphic_expression ~raise
       let table = List.zip_exn type_vars type_instances in
       let data, rhs =
         match rhs.expression_content with
-        | E_recursive
-            { fun_name
-            ; fun_type = _
-            ; lambda = { binder; output_type; result }
-            ; force_lambdarec
-            } ->
+        | E_recursive { fun_name; fun_type = _; lambda = { binder; output_type; result } }
+          ->
           let lambda =
             Lambda.
               { binder
@@ -321,12 +348,7 @@ let rec mono_polymorphic_expression ~raise
           ( data
           , { rhs with
               expression_content =
-                E_recursive
-                  { fun_name = vid
-                  ; fun_type = rhs.type_expression
-                  ; lambda
-                  ; force_lambdarec
-                  }
+                E_recursive { fun_name = vid; fun_type = rhs.type_expression; lambda }
             } )
         | _ -> data, rhs
       in
@@ -428,7 +450,10 @@ let check_if_polymorphism_present ~raise e =
     | T_constant { parameters; _ } ->
       List.fold_left parameters ~init:() ~f:(fun () te ->
           ignore @@ check_type_expression ~loc te)
-    | T_record row | T_sum row -> Row.iter (check_type_expression ~loc) row
+    | T_record { fields; _ } | T_sum { fields; _ } ->
+      Record.LMap.iter
+        (fun _ (re : AST.row_element) -> check_type_expression ~loc re.associated_type)
+        fields
     | T_arrow _ -> ()
     | T_singleton _ -> ()
     | T_for_all _ -> show_error loc

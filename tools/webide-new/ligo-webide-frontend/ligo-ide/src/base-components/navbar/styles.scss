@@ -1,9 +1,10 @@
 .navbar {
+  margin-top: -49px;
   height: 49px;
   top: 0;
   padding: 0;
   border-bottom: 1px solid var(--color-border);
-  z-index: 10;
+  z-index: 1000;
   flex: none;
   justify-content: stretch;
   align-items: stretch;

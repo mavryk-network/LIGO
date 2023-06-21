@@ -123,16 +123,17 @@ module Make (Config : Config.S) (Client : Client.S) =
 
       let hash_state = state in
 
-      (* We synchronise the logical state with the matched string *)
+      (* We syncronise the logical state with the matched string *)
 
       let state, Region.{region; _} = state#sync lexbuf in
 
-      (* We determine the region of the line number *)
+      (* We determine the regon of the line number *)
 
       let length   = String.length linenum in
       let start    = region#stop#shift_bytes (-length) in
       let line_reg = Region.make ~start ~stop:region#stop in
       let linenum  = Region.{region=line_reg; value=linenum} in
+
 
       (* We make a preprocessing state and scan the expected
          linemarker. *)
@@ -173,7 +174,7 @@ module Make (Config : Config.S) (Client : Client.S) =
                  preprocessing of an #include directive. We assume that
                  the user never writes one, otherwise preprocessing
                  may fail. More precisely, we assume that each [Push]
-                 (below) is associated to one [Pop] (this case). *)
+                 (below) is associate to one [Pop] (this case). *)
               Lexbuf.reset_file arg_file lexbuf;
               Ok state
 
@@ -292,6 +293,10 @@ let cameligo_block_comment_opening   = "(*"
 let cameligo_block_comment_closing   = "*)"
 let cameligo_line_comment_opening    = "//"
 
+let reasonligo_block_comment_opening = "/*"
+let reasonligo_block_comment_closing = "*/"
+let reasonligo_line_comment_opening  = "//"
+
 let jsligo_block_comment_opening     = "/*"
 let jsligo_block_comment_closing     = "*/"
 let jsligo_line_comment_opening      = "//"
@@ -303,18 +308,21 @@ let pyligo_line_comment_opening      = "##"
 let block_comment_opening =
    pascaligo_block_comment_opening
 |   cameligo_block_comment_opening
+| reasonligo_block_comment_opening
 |     jsligo_block_comment_opening
 |     pyligo_block_comment_opening
 
 let block_comment_closing =
    pascaligo_block_comment_closing
 |   cameligo_block_comment_closing
+| reasonligo_block_comment_closing
 |     jsligo_block_comment_closing
 |     pyligo_block_comment_closing
 
 let line_comment_opening =
    pascaligo_line_comment_opening
 |   cameligo_line_comment_opening
+| reasonligo_line_comment_opening
 |     jsligo_line_comment_opening
 |     pyligo_line_comment_opening
 
@@ -322,12 +330,14 @@ let line_comment_opening =
 
 let  pascaligo_string_delimiter = "\""
 let   cameligo_string_delimiter = "\""
+let reasonligo_string_delimiter = "\""
 let     jsligo_string_delimiter = "\""
 let     pyligo_string_delimiter = "\""
 
 let string_delimiter =
    pascaligo_string_delimiter
 |   cameligo_string_delimiter
+| reasonligo_string_delimiter
 |     jsligo_string_delimiter
 |     pyligo_string_delimiter
 
@@ -374,6 +384,7 @@ rule scan state = parse
       Some block when String.(block#opening = lexeme) ->
         let state, Region.{region; _} = state#sync lexbuf in
         let thread = Thread.make ~opening:region in
+        let thread = thread#push_string lexeme in
         let* thread, state = in_block block thread state lexbuf
         in scan (state#push_block thread) lexbuf
     | Some _ | None -> callback_with_cont scan state lexbuf }
@@ -384,6 +395,7 @@ rule scan state = parse
       Some opening when String.(opening = lexeme) ->
         let state, Region.{region; _} = state#sync lexbuf in
         let thread = Thread.make ~opening:region in
+        let thread = thread#push_string lexeme in
         let* state = in_line thread state lexbuf
         in scan state lexbuf
     | Some _ | None -> callback_with_cont scan state lexbuf }
@@ -459,7 +471,7 @@ and in_block block thread state = parse
 | block_comment_closing {
     let state, Region.{value=lexeme; _} = state#sync lexbuf in
     if   String.(block#closing = lexeme)
-    then Ok (thread, state)
+    then Ok (thread#push_string lexeme, state)
     else scan_utf8_wrap (scan_utf8 open_block)
                         (in_block block)
                         thread state lexbuf }

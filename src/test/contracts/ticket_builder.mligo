@@ -19,9 +19,10 @@ type storage =
   [@layout comb]
   {admin : address}
 
-let main (p : parameter) (s : storage) : operation list * storage =
+let main (arg : parameter * storage) : operation list * storage =
   begin
     assert (Tezos.get_amount () = 0mutez);
+    let (p,s) = arg in
     match p with
     | Burn ticket ->
       begin

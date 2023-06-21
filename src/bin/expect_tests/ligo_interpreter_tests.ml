@@ -4,20 +4,6 @@ let test basename = "./" ^ basename
 let pwd = Caml.Sys.getcwd ()
 let () = Caml.Sys.chdir "../../test/contracts/interpreter_tests/"
 
-(* tests replacing Hashlock tests *)
-let%expect_test _ =
-  run_ligo_good [ "run"; "test"; test "test_hashlock.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test_commit exited with value ().
-    - test_reveal_no_commit exited with value ().
-    - test_reveal_young_commit exited with value ().
-    - test_reveal_breaks_commit exited with value ().
-    - test_reveal_wrong_commit exited with value ().
-    - test_reveal_no_reuse exited with value ().
-    - test_reveal exited with value (). |}]
-
 (* test comparison on sum/record types *)
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_compare.mligo" ];
@@ -41,7 +27,7 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_timestamp_contract.mligo" ];
   [%expect
     {|
-    Success (1279n)
+    Success (2109n)
     Everything at the top-level was executed.
     - test_timestamp exited with value (). |}]
 
@@ -93,8 +79,6 @@ let%expect_test _ =
     - test_top_level_recursion exited with value ().
     - test_bitwise_ops exited with value ().
     - test_bitwise_module exited with value ().
-    - test_bytes_bitwise_ops exited with value ().
-    - test_bytes_bitwise_module exited with value ().
     - test_list_concat exited with value ().
     - test_list_head_opt exited with value ().
     - test_list_tail_opt exited with value ().
@@ -125,9 +109,7 @@ let%expect_test _ =
     - test_check exited with value ().
     - test_int_bls exited with value ().
     - test_not exited with value ().
-    - test_chain_id exited with value ().
-    - test_concats exited with value ().
-    - test_bytes_nat_int_conversion exited with value (). |}]
+    - test_chain_id exited with value (). |}]
 
 let%expect_test _ =
   (* This tests a possible regression on the way modules are evaluated. It is possible that the number of element in the environment explodes. *)
@@ -227,6 +209,14 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "nesting_modules.mligo" ];
   [%expect
     {|
+    File "./nesting_modules.mligo", line 15, characters 6-7:
+     14 | let foo () =
+     15 |   let x = 1 in
+     16 |   module Foo = struct
+    :
+    Warning: unused variable "x".
+    Hint: replace it by "_x" to prevent this warning.
+
     111
     Everything at the top-level was executed.
     - test exited with value (). |}]
@@ -337,39 +327,21 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_mutate_from_file.mligo" ];
   [%expect
     {|
+    File "./test_mutate_from_file.mligo", line 7, characters 11-65:
+      6 |   let _ = Test.transfer_exn a (Test.eval 1) 0tez in
+      7 |   let () = assert (Test.get_storage_of_address a = (Test.eval 1)) in
+      8 |   ()
+
+    You are using Michelson failwith primitive (loaded from standard library).
+    Consider using `Test.failwith` for throwing a testing framework failure.
+
     Everything at the top-level was executed.
     - tester exited with value <fun>.
-    - test exited with value [(() , Mutation at: File "adder.mligo", line 1, characters 58-63:
-      1 | let main (p : int) (k : int) : operation list * int = [], p + k
-                                                                    ^^^^^
+    - test exited with value [(() , Mutation at: File "adder.mligo", line 1, characters 59-64:
+      1 | let main ((p, k) : int * int) : operation list * int = [], p + k
 
-    Replacing by: p ^ k.
+    Replacing by: (p - k).
     )]. |}]
-
-let%expect_test _ =
-  run_ligo_good [ "run"; "test"; test "test_mutate_module.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test exited with value [(() , Mutation at: File "contract_under_test/module_adder.mligo", line 1, characters 66-71:
-      1 | [@entry] let add (p : int) (k : int) : operation list * int = [], p + k
-                                                                            ^^^^^
-
-    Replacing by: p ^ k.
-    )]. |}]
-
-let%expect_test _ =
-  run_ligo_good [ "run"; "test"; test "test_mutate_module.jsligo" ];
-  [%expect
-    {|
-    [(() , Mutation at: File "contract_under_test/module_adder.mligo", line 1, characters 66-71:
-      1 | [@entry] let add (p : int) (k : int) : operation list * int = [], p + k
-                                                                            ^^^^^
-
-    Replacing by: p ^ k.
-    )]
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "iteration.jsligo" ];
@@ -578,7 +550,7 @@ let%expect_test _ =
   [%expect
     {|
     Everything at the top-level was executed.
-    - test exited with value (1305n , 1510n , 1510n). |}]
+    - test exited with value (2136n , 2331n , 2331n). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_implicit_account.jsligo" ];
@@ -659,14 +631,6 @@ let%expect_test _ =
     - test_get_time exited with value (). |}]
 
 let%expect_test _ =
-  run_ligo_good [ "run"; "test"; test "test_decompile_failure.mligo" ];
-  [%expect
-    {|
-    (4n , ("a" , 5))
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
-
-let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_context.mligo" ];
   [%expect
     {|
@@ -696,14 +660,14 @@ let%expect_test _ =
     100000000000000mutez
     3799997904750mutez
     Everything at the top-level was executed.
-    - test exited with value {contract_balance = 3799997904750mutez ; contract_too_low = tz1hkMbkLPkvhxyqsQoBoLPqb1mruSzZx3zy ; spend_request = 100000000000000mutez}. |}]
+    - test exited with value {contract_balance = 3799997904750mutez ; contract_too_low = tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ ; spend_request = 100000000000000mutez}. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_inline.mligo" ];
   [%expect
     {|
     Everything at the top-level was executed.
-    - test_x exited with value (KT1E7ftEB5z7eL6SET1dBWbg2Tf1VXaLtHyv , { parameter unit ;
+    - test_x exited with value (KT19hFZZxPTue1oBw7cc46L1p6pJ3xTo3vRF , { parameter unit ;
       storage
         (pair (pair (big_map %metadata string bytes) (set %participants address))
               (map %secrets address bool)) ;
@@ -736,7 +700,7 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_read_contract.mligo" ];
   [%expect
     {|
-    KT1MoPRoithHNa7i6LYHqeQfZB4oyWThinnS
+    KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj
     [1 -> "hi"]
     Everything at the top-level was executed.
     - test_foo exited with value ().
@@ -789,14 +753,12 @@ let%expect_test _ =
     Everything at the top-level was executed.
     - test exited with value (). |}]
 
-(*
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_transfer_entrypoint.ligo" ];
   [%expect
     {|
     Everything at the top-level was executed.
     - test exited with value (). |}]
-*)
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_print.mligo" ];
@@ -823,15 +785,6 @@ let%expect_test _ =
     - test exited with value (). |}]
 
 let%expect_test _ =
-  run_ligo_good [ "run"; "test"; test "test_untranspile_bls.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test_fr exited with value ().
-    - test_g1 exited with value ().
-    - test_g2 exited with value (). |}]
-
-let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "get_contract.mligo" ];
   [%expect
     {|
@@ -842,15 +795,15 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_key.mligo" ];
   [%expect
     {|
-    edpktom5rsehpEY6Kp2NShwsnpaaEjWxKFMJ3Rjp99VMJuHS93wxD6
+    edpkuPiWEAMNmxsNYRNnjnHgpox275MR1svXTB9hbeshMUkTZwrB1P
     Everything at the top-level was executed.
-    - test exited with value Success (1968n). |}]
+    - test exited with value Success (2797n). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_tickets_and_bigmaps.mligo" ];
   [%expect
     {|
-    Success (2673n)
+    Success (3504n)
     Everything at the top-level was executed.
     - test_one exited with value (). |}]
 
@@ -869,37 +822,35 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_to_json.mligo" ];
   [%expect
     {|
-    ["typed_address","KT1CHLcGYthioYYsY5dETp1m7rm7FdX9HH1K"]
-    ["record",[[["Label","bar"],["list",[["constant",["string","hello"]],["constant",["string","world"]]]]],[["Label","foo"],["constant",["int","42"]]]]] |}]
+    ["typed_address","KT1Eip4VjDintiWphUf9fAM7cCikw3NajBAG"]
+    ["record",{"foo":["constant",["int","42"]],"bar":["list",[["constant",["string","hello"]],["constant",["string","world"]]]]}] |}]
 
-(*
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_imm.ligo" ];
   [%expect
-    {test|
+    {xxx|
     Everything at the top-level was executed.
-    - test_orig exited with value (). |test}]
+    - test_orig exited with value (). |xxx}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_record.ligo" ];
   [%expect
-    {test|
+    {xxx|
     0
     Everything at the top-level was executed.
-    - test_reproducing exited with value "OK". |test}]
-*)
+    - test_reproducing exited with value "OK". |xxx}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "tuple_long.mligo" ];
   [%expect
-    {test|
+    {xxx|
     Everything at the top-level was executed.
-    - test exited with value (). |test}]
+    - test exited with value (). |xxx}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_compare_setmap.mligo" ];
   [%expect
-    {test|
+    {xxx|
     Everything at the top-level was executed.
     - test_address_set exited with value { "tz1KeYsjjSCLEELMuiq1oXzVZmuJrZ15W4mv" ;
       "tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ" }.
@@ -907,7 +858,7 @@ let%expect_test _ =
     - test_map exited with value { Elt "tz1KeYsjjSCLEELMuiq1oXzVZmuJrZ15W4mv" 900 ;
       Elt "KT1WoTZUkky48v3QqZWzkeJCYfhWhNaVFYuC" 100 }.
     - test_big_map exited with value { Elt "tz1KeYsjjSCLEELMuiq1oXzVZmuJrZ15W4mv" 900 ;
-      Elt "KT1WoTZUkky48v3QqZWzkeJCYfhWhNaVFYuC" 100 }. |test}]
+      Elt "KT1WoTZUkky48v3QqZWzkeJCYfhWhNaVFYuC" 100 }. |xxx}]
 
 let%expect_test _ =
   run_ligo_good
@@ -919,170 +870,9 @@ let%expect_test _ =
        (nat, t) big_map))"
     ];
   [%expect
-    {test|
-    Everything at the top-level was executed.
-    - eval exited with value [1n -> {num = 1 ; num_nat = 1n ; str = "q"}]. |test}]
-
-let%expect_test _ =
-  run_ligo_good
-    [ "run"; "test"; test "display_format_json.mligo"; "--display-format"; "json" ];
-  [%expect
     {xxx|
-    [
-      [ "test_x", [ "constant", [ "int", "65" ] ] ],
-      [ "test_y", [ "constant", [ "string", "hello" ] ] ]
-    ] |xxx}]
-
-let%expect_test _ =
-  run_ligo_good [ "run"; "test"; test "record_field_assign.jsligo" ];
-  [%expect
-    {|
-      Everything at the top-level was executed.
-      - test_simple_record_assign exited with value ().
-      - test_nested_record_assign_level1 exited with value ().
-      - test_nested_record_assign_level2 exited with value ().
-      - test_record_assign_var exited with value ().
-      - test_nested_record_assign_var_level1 exited with value ().
-      - test_nested_record_assign_var_level2 exited with value ().
-      - test_nested_record_assign_var_level2_expr exited with value ().
-      - test_nested_record_assign_var_level2_record_access exited with value ().
-      - test_nested_record_assign_var_level2_module_member exited with value ().
-      - test_nested_record_assign_var_level2_module_record_member exited with value ().
-      - test_nested_record_assign_var_level2_lambda exited with value ().
-      - test_nested_record_assign_var_level2_lambda_app exited with value ().
-      - test_simple_tuple_field_assign exited with value ().
-      - test_simple_record_field_with_array_notation_assign exited with value ().
-      - test_nested_record_assign_array_notation_level1 exited with value ().
-      - test_nested_record_assign_array_notation_level2 exited with value ().
-      - test_nested_record_assign_tuple_assign_array_notation_level2 exited with value (). |}]
-
-let%expect_test _ =
-  run_ligo_good [ "run"; "test"; test "test_originate_module.mligo" ];
-  [%expect
-    {test|
-    Deployed the contract:
-    { parameter (or (int %add) (int %sub)) ;
-      storage int ;
-      code { UNPAIR ; IF_LEFT { ADD } { SWAP ; SUB } ; NIL operation ; PAIR } ;
-      view "get" unit int { CDR } ;
-      view "get_diff" int int { UNPAIR ; SWAP ; SUB } }
-    With storage: 0
-    Storage after call: 42 |test}]
-
-let%expect_test _ =
-  run_ligo_good [ "run"; "test"; test "test_originate_module.jsligo" ];
-  [%expect
-    {test|
     Everything at the top-level was executed.
-    - test_increment exited with value (). |test}]
-
-let%expect_test _ =
-  run_ligo_good [ "run"; "test"; test "test_originate_single_view.mligo" ];
-  [%expect {test| |test}]
-
-let%expect_test _ =
-  run_ligo_good [ "run"; "test"; test "contract_with_ticket_storage.mligo" ];
-  [%expect
-    {|
-    ("unforged_ticket" , Some ({amount = 15n ; ticketer = KT1CDHnKFHBMFtyzC92oTfi4Z5wthR4Yk3LW ; value = 0x0202}))
-    Everything at the top-level was executed.
-    - test_originate_contract exited with value (). |}];
-  run_ligo_good [ "run"; "test"; test "contract_with_ticket_param.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test_transfer_to_contract exited with value (). |}];
-  run_ligo_good [ "run"; "test"; test "uncurried_contract_with_ticket_storage.mligo" ];
-  [%expect
-    {|
-    ("unforged_ticket" , Some ({amount = 15n ; ticketer = KT1CDHnKFHBMFtyzC92oTfi4Z5wthR4Yk3LW ; value = 0x0202}))
-    Everything at the top-level was executed.
-    - test_originate_contract exited with value (). |}];
-  run_ligo_good [ "run"; "test"; test "uncurried_contract_with_ticket_param.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test_transfer_to_contract exited with value (). |}]
-
-let%expect_test _ =
-  run_ligo_good [ "run"; "test"; test "test_prefix_posfix_ops.jsligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test_prefix_ops exited with value ().
-    - test_postfix_ops exited with value ().
-    - test1 exited with value ().
-    - test2 exited with value ().
-    - test3 exited with value ().
-    - test4 exited with value ().
-    - test5 exited with value ().
-    - test6 exited with value ().
-    - test7 exited with value ().
-    - test8 exited with value ().
-    - test9 exited with value ().
-    - test10 exited with value ().
-    - test11 exited with value ().
-    - test12 exited with value ().
-    - test1_ exited with value ().
-    - test2_ exited with value ().
-    - test3_ exited with value ().
-    - test4_ exited with value ().
-    - test5_ exited with value ().
-    - test6_ exited with value ().
-    - test7_ exited with value ().
-    - test8_ exited with value ().
-    - test9_ exited with value ().
-    - test10_ exited with value ().
-    - test11_ exited with value ().
-    - test12_ exited with value (). |}]
-
-let%expect_test "for loops" =
-  run_ligo_good [ "run"; "test"; test "/for_loop/single_loop.jsligo" ];
-  [%expect
-    {|
-      Everything at the top-level was executed.
-      - testPalindrome exited with value (). |}];
-  run_ligo_good [ "run"; "test"; test "/for_loop/pascal_triangle.jsligo" ];
-  [%expect{|
-                      1
-                    1   1
-                  1   2   1
-                1   3   3   1
-              1   4   6   4   1
-            1   5  10  10   5   1
-          1   6  15  20  15   6   1
-        1   7  21  35  35  21   7   1
-
-                        1
-                      1   1
-                    1   2   1
-                  1   3   3   1
-                1   4   6   4   1
-              1   5  10  10   5   1
-            1   6  15  20  15   6   1
-          1   7  21  35  35  21   7   1
-        1   8  28  56  70  56  28   8   1
-    Everything at the top-level was executed.
-    - test8 exited with value "".
-    - testspace exited with value ().
-    - test10 exited with value "". |}];
-  run_ligo_good [ "run"; "test"; test "/for_loop/matrix_multiplication.jsligo" ];
-  [%expect{|
-    Everything at the top-level was executed.
-    - test_3x1_1x3 exited with value ().
-    - test_3x3_3x3 exited with value ().
-    - test_1x3_3x1 exited with value ().
-    - test_I3x3_3x3 exited with value (). |}];
-  run_ligo_good [ "run"; "test"; test "/for_loop/for_loops.jsligo" ];
-  [%expect{|
-    Everything at the top-level was executed.
-    - testLoop exited with value (). |}]
-
-let%expect_test "aggregation regression" =
-  run_ligo_good [ "run"; "test"; test "agg_bar.mligo" ];
-  [%expect {|
-    Running <A simple list extension>
-    Everything at the top-level was executed. |}]
+    - eval exited with value [1n -> {num = 1 ; num_nat = 1n ; str = "q"}]. |xxx}]
 
 (* do not remove that :) *)
 let () = Caml.Sys.chdir pwd
@@ -1097,13 +887,13 @@ let%expect_test _ =
   [%expect
     {|
     Everything at the top-level was executed.
-    - test_originate_from_file_relative_path exited with value KT1MoPRoithHNa7i6LYHqeQfZB4oyWThinnS.
+    - test_originate_from_file_relative_path exited with value KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj.
     - test_originate_from_file_relative_path_w_r_t_imported_file exited with value true. |}];
   run_ligo_good [ "run"; "test"; test "test.jsligo" ];
   [%expect
     {|
     Everything at the top-level was executed.
-    - test_originate_from_file_relative_path exited with value KT1MoPRoithHNa7i6LYHqeQfZB4oyWThinnS.
+    - test_originate_from_file_relative_path exited with value KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj.
     - test_originate_from_file_relative_path_w_r_t_imported_file exited with value true. |}]
 
 let () = Caml.Sys.chdir pwd
@@ -1117,39 +907,25 @@ let%expect_test _ =
   [%expect
     {|
     Everything at the top-level was executed.
-    - test_originate_from_file_relative_path exited with value KT1MoPRoithHNa7i6LYHqeQfZB4oyWThinnS.
+    - test_originate_from_file_relative_path exited with value KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj.
     - test_originate_from_file_relative_path_w_r_t_imported_file exited with value true. |}];
   run_ligo_good [ "run"; "test"; test "test/a/b/test.jsligo" ];
   [%expect
     {|
     Everything at the top-level was executed.
-    - test_originate_from_file_relative_path exited with value KT1MoPRoithHNa7i6LYHqeQfZB4oyWThinnS.
+    - test_originate_from_file_relative_path exited with value KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj.
     - test_originate_from_file_relative_path_w_r_t_imported_file exited with value true. |}]
 
 let () = Caml.Sys.chdir pwd
 let bad_test n = bad_test ("/interpreter_tests/" ^ n)
 
 let%expect_test _ =
-  run_ligo_bad [ "run"; "test"; bad_test "test_capture_meta_type.mligo" ];
-  [%expect
-    {|
-    File "../../test/contracts/negative//interpreter_tests/test_capture_meta_type.mligo", line 12, characters 26-27:
-     11 |
-     12 | let f = fun (_ : unit) -> v.x
-                                    ^
-     13 |
-
-    Invalid usage of a Test type: typed_address (unit ,
-    unit) in record[x -> int , y -> typed_address (unit , unit)] cannot be translated to Michelson. |}]
-
-let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_random.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative//interpreter_tests/test_random.mligo", line 6, characters 46-49:
+    File "../../test/contracts/negative//interpreter_tests/test_random.mligo", line 6, characters 46-58:
       5 |   (* We generate the property *)
       6 |   let test = PBT.make_test (PBT.gen_small : ((int contract) list) pbt_gen) (fun (xs : (int contract) list) -> List.length xs = 42n) in
-                                                        ^^^
       7 |   (* And run it *)
 
     Generator for type contract (int) is not implemented. For now, only unit, string, bytes, address, int, nat, tez, records, sums, lists, sets, maps and big_maps can be generated. |}]
@@ -1161,12 +937,16 @@ let%expect_test _ =
     File "../../test/contracts/negative//interpreter_tests/test_failure1.mligo", line 2, characters 2-25:
       1 | let test : unit =
       2 |   failwith "I am failing"
-            ^^^^^^^^^^^^^^^^^^^^^^^
+
+    You are using Michelson failwith primitive (loaded from standard library).
+    Consider using `Test.failwith` for throwing a testing framework failure.
+
+    File "../../test/contracts/negative//interpreter_tests/test_failure1.mligo", line 2, characters 2-25:
+      1 | let test : unit =
+      2 |   failwith "I am failing"
 
     An uncaught error occured:
-    Failwith: "I am failing"
-    Trace:
-    File "../../test/contracts/negative//interpreter_tests/test_failure1.mligo", line 2, characters 2-25 |}]
+    Failwith: "I am failing" |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_failure2.mligo" ];
@@ -1175,12 +955,17 @@ let%expect_test _ =
     File "../../test/contracts/negative//interpreter_tests/test_failure2.mligo", line 2, characters 4-16:
       1 | let test =
       2 |     assert false
-              ^^^^^^^^^^^^
+
+    You are using Michelson failwith primitive (loaded from standard library).
+    Consider using `Test.failwith` for throwing a testing framework failure.
+
+    File "../../test/contracts/negative//interpreter_tests/test_failure2.mligo", line 2, characters 4-16:
+      1 | let test =
+      2 |     assert false
 
     An uncaught error occured:
     Failwith: "failed assertion"
     Trace:
-    File "../../test/contracts/negative//interpreter_tests/test_failure2.mligo", line 2, characters 4-16 ,
     File "../../test/contracts/negative//interpreter_tests/test_failure2.mligo", line 2, characters 4-16 |}]
 
 let%expect_test _ =
@@ -1189,7 +974,6 @@ let%expect_test _ =
     {|
     File "../../test/contracts/negative//interpreter_tests/bad_balances_reset.mligo", line 1, characters 11-48:
       1 | let test = Test.reset_state 2n [4000tez;4000tez]
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
      baker account initial balance must at least reach 6000 tez |}]
 
@@ -1198,9 +982,8 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts/negative//interpreter_tests/test_failure3.mligo", line 3, characters 17-18:
-      2 |   let f = (fun (_ : unit) (_ : unit) -> ()) in
+      2 |   let f = (fun (_ : (unit * unit)) -> ()) in
       3 |   Test.originate f () 0tez
-                           ^
 
     Invalid type(s)
     Cannot unify "unit" with "( list (operation) * unit )". |}]
@@ -1212,18 +995,25 @@ let%expect_test _ =
     File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 3, characters 4-31:
       2 |   if x < 0 then
       3 |     (failwith "negative" : int)
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      4 |   else
+
+    You are using Michelson failwith primitive (loaded from standard library).
+    Consider using `Test.failwith` for throwing a testing framework failure.
+
+    File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 3, characters 4-31:
+      2 |   if x < 0 then
+      3 |     (failwith "negative" : int)
       4 |   else
 
     An uncaught error occured:
     Failwith: "negative"
     Trace:
-    File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 3, characters 4-31 ,
     File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 5, characters 4-13 ,
     File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 5, characters 4-13 ,
     File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 5, characters 4-13 ,
     File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 5, characters 4-13 ,
     File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 5, characters 4-13 ,
+    File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 9, characters 14-49 ,
     File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 9, characters 14-49 ,
     File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 9, characters 14-49 |}]
 
@@ -1234,7 +1024,6 @@ let%expect_test _ =
     File "../../test/contracts/negative//interpreter_tests/test_trace2.mligo", line 6, characters 10-88:
       5 | let make_call (contr : unit contract) =
       6 |   let _ = Test.get_storage_of_address ("KT1RYW6Zm24t3rSquhw1djfcgQeH9gBdsmiL" : address) in
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       7 |   Test.transfer_to_contract_exn contr () 10tez
 
     An uncaught error occured:
@@ -1250,16 +1039,19 @@ let%expect_test _ =
     File "../../test/contracts/negative//interpreter_tests/test_mutation_loop.mligo", line 18, characters 36-83:
      17 |     | Some (_, mutation) -> let () = Test.log(mutation) in
      18 |                                     failwith "Some mutation also passes the tests!"
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    You are using Michelson failwith primitive (loaded from standard library).
+    Consider using `Test.failwith` for throwing a testing framework failure.
+
+    File "../../test/contracts/negative//interpreter_tests/test_mutation_loop.mligo", line 18, characters 36-83:
+     17 |     | Some (_, mutation) -> let () = Test.log(mutation) in
+     18 |                                     failwith "Some mutation also passes the tests!"
 
     An uncaught error occured:
     Failwith: "Some mutation also passes the tests!"
-    Trace:
-    File "../../test/contracts/negative//interpreter_tests/test_mutation_loop.mligo", line 18, characters 36-83
     Mutation at: File "../../test/contracts/negative//interpreter_tests/test_mutation_loop.mligo", line 3, characters 29-30:
       2 |     if rounds > 0 then
       3 |         my_rec_fun (rounds - 1)
-                                       ^
       4 |     else
 
     Replacing by: 2. |}]
@@ -1271,11 +1063,10 @@ let%expect_test _ =
     File "../../test/contracts/negative//interpreter_tests/test_source1.mligo", line 10, characters 18-45:
       9 |   let () = Test.set_source addr in
      10 |   let (_, _, _) = Test.originate main () 0tez in
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
      11 |   ()
 
     The source address is not an implicit account
-    KT1MoPRoithHNa7i6LYHqeQfZB4oyWThinnS |}]
+    KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_source2.mligo" ];
@@ -1284,11 +1075,10 @@ let%expect_test _ =
     File "../../test/contracts/negative//interpreter_tests/test_source2.mligo", line 10, characters 10-52:
       9 |   let () = Test.set_source addr in
      10 |   let _ = Test.transfer_exn addr (Test.eval ()) 0tez in
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      11 |   ()
 
     The source address is not an implicit account
-    KT1MoPRoithHNa7i6LYHqeQfZB4oyWThinnS |}]
+    KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_run_types.jsligo" ];
@@ -1297,10 +1087,10 @@ let%expect_test _ =
     File "../../test/contracts/negative//interpreter_tests/test_run_types.jsligo", line 2, characters 26-44:
       1 | const foo = (x: {field: int}): {field: int} => {return x};
       2 | const bar = Test.run(foo, {property: "toto"});
-                                    ^^^^^^^^^^^^^^^^^^
       3 |
 
-    Mismatching record labels. Expected record of type "record[field -> int]". |}]
+    Invalid type(s)
+    Cannot unify "record[property -> string]" with "record[field -> int]". |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_run_types2.jsligo" ];
@@ -1309,7 +1099,6 @@ let%expect_test _ =
     File "../../test/contracts/negative//interpreter_tests/test_run_types2.jsligo", line 2, characters 26-32:
       1 | const foo = (x:  {b:int}):  {b:int} => {return x};
       2 | const bar = Test.run(foo, "toto");
-                                    ^^^^^^
 
     Invalid type(s)
     Cannot unify "string" with "record[b -> int]". |}]
@@ -1321,7 +1110,6 @@ let%expect_test _ =
     File "../../test/contracts/negative//interpreter_tests/test_run_types3.jsligo", line 2, characters 26-41:
       1 | const foo = (x: int): int => {return x};
       2 | const bar = Test.run(foo, {field: "toto"});
-                                    ^^^^^^^^^^^^^^^
 
     Invalid type(s)
     Cannot unify "record[field -> string]" with "int". |}]
@@ -1333,7 +1121,6 @@ let%expect_test _ =
     File "../../test/contracts/negative//interpreter_tests/test_decompile.mligo", line 3, characters 2-29:
       2 |   let x = Test.eval 4n in
       3 |   (Test.decompile x : string)
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     This Michelson value has assigned type 'nat', which does not coincide with expected type 'string'. |}]
 
@@ -1344,7 +1131,6 @@ let%expect_test _ =
     File "../../test/contracts/negative//interpreter_tests/test_register_delegate.mligo", line 19, characters 19-46:
      18 |   let () = Test.set_baker a in
      19 |   let (ta, _, _) = Test.originate main 41 5tez in
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
      20 |
 
     Baker cannot bake. Enough rolls? Enough cycles passed?
@@ -1363,18 +1149,13 @@ let%expect_test _ =
   File "typed_addr_in_bytes_pack.mligo", line 14, character 17 to line 18, character 5:
    13 |     let r = originate_record () in
    14 |     let packed = Bytes.pack (fun() ->
-                         ^^^^^^^^^^^^^^^^^^^^^
    15 |         match (Tezos.get_entrypoint_opt "%transfer" r.addr : unit contract option) with
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    16 |           Some(c) -> let op = Tezos.transaction () 0mutez c in [op]
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    17 |         | None ->  ([] : operation list)
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    18 |     ) in
-        ^^^^^
    19 |     let () = Test.log(packed) in
 
-  Cannot decompile value KT1MoPRoithHNa7i6LYHqeQfZB4oyWThinnS of type typed_address (unit ,
+  Cannot decompile value KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj of type typed_address (unit ,
   unit) |}]
 
 let () = Caml.Sys.chdir pwd
@@ -1382,14 +1163,13 @@ let () = Caml.Sys.chdir pwd
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_michelson_non_func.mligo" ];
   [%expect
-    {test|
+    {xxx|
     File "../../test/contracts/negative//interpreter_tests/test_michelson_non_func.mligo", line 2, characters 16-55:
       1 | let test =
       2 |   let x : int = [%Michelson ({|{ PUSH int 1 }|} : int)] in
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       3 |   begin
 
-    Embedded raw code can only have a functional type |test}]
+    Embedded raw code can only have a functional type |xxx}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "get_contract.mligo" ];
@@ -1398,7 +1178,14 @@ let%expect_test _ =
     File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66:
      14 |   let _ = (Tezos.get_contract a : (parameter contract)) in
      15 |   let _ = (Tezos.get_contract_with_error a "foo" : (int contract)) in
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     16 |   ()
+
+    You are using Michelson failwith primitive (loaded from standard library).
+    Consider using `Test.failwith` for throwing a testing framework failure.
+
+    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66:
+     14 |   let _ = (Tezos.get_contract a : (parameter contract)) in
+     15 |   let _ = (Tezos.get_contract_with_error a "foo" : (int contract)) in
      16 |   ()
 
     An uncaught error occured:

@@ -1,4 +1,4 @@
-import Network from "~/ligo-components/ligo-network";
+import Network from "~/ligo-components/eth-network";
 
 Network.defaultProps = {
   minerKey: true,

@@ -6,34 +6,17 @@
 require_relative 'helpers'
 require_relative 'trailing-whitespaces'
 
-if mr_merging_branches?
-  message(
-    "This merge request looks like plain merge of one branch into another.\n"\
-    "Checks won't be performed."
-  )
-else
-
-# TODO: uncomment this when bugs are fixed.
-# check_trailing_whitespaces()
+check_trailing_whitespaces()
 
 # Clean commits history
 if git.commits.any? { |c| c.subject =~ /^Merge branch/ }
-  # This is a warning because `add-changelog-entry` job
-  # produces merge commit.
-  warn('Please, no merge commits. Rebase for the win.')
+  fail 'Please, no merge commits. Rebase for the win.'
 end
 
 # Proper commit style
 # Note: we do not use commit_lint plugin because it triggers on fixup commits
 git.commits.each { |commit|
-  # If any of these substrings is included into commit message,
-  # we are fine with issue tag absence.
-  exclusions = [
-    # In lower-case
-    "changelog"
-  ]
-
-  if commit.fixup? || commit.wip? || exclusions.any? { |exc| commit.subject.downcase.include?(exc) }
+  if commit.fixup? || commit.wip?
     next
   end
 
@@ -42,7 +25,15 @@ git.commits.each { |commit|
   subject_ticked = commit.subject_ticked
 
   unless has_valid_issue_tags(subject)
-    warn("In #{commit.sha} message lacks issue id: #{subject_ticked}.")
+    # If any of these substrings is included into commit message,
+    # we are fine with issue tag absence.
+    exclusions = [
+      # In lower-case
+      "changelog"
+    ]
+    if exclusions.none? { |exc| subject.downcase.include?(exc) }
+      warn("In #{commit.sha} message lacks issue id: #{subject_ticked}.")
+    end
   end
 
   if subject_payload.start_with?(" ")
@@ -62,6 +53,12 @@ git.commits.each { |commit|
   end
 
   if commit.message_body.empty?
+    # If any of these substrings is included into commit message,
+    # we are fine with commit description absence.
+    exclusions = [
+      # In lower-case
+      "changelog"
+    ]
     unless commit.chore? || exclusions.any? { |exc| subject.downcase.include?(exc) }
       fail("Commit #{commit.sha} lacks description :unamused:")
     end
@@ -75,7 +72,7 @@ git.commits.each { |commit|
     if !commit.chore?
       description_patterns = [
         /^Problem:[ \n].*^Solution:[ \n]/m,
-        /^Motivation:[ \n].*/m,
+        /^Motivation: [ \n].*/,
         /And yes, I don't care about templates/
       ]
       unless description_patterns.any? { |pattern| pattern.match?(commit.description) }
@@ -108,5 +105,3 @@ end.join(', ')
 unless all_YT_tickets.empty?
   message("Mentioned YT tickets: #{all_YT_tickets}.")
 end
-
-end  # check on plain branches merge

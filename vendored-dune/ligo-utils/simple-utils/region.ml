@@ -166,12 +166,13 @@ let compare r1 r2 =
   else 1
 
 let cover r1 r2 =
-  if r1#is_ghost then r2
-  else if r2#is_ghost then r1
-  else 
-    let pos_min p1 p2 = if Pos.lt p1 p2 then p1 else p2 
-    and pos_max p1 p2 = if Pos.lt p1 p2 then p2 else p1
-    in make ~start:(pos_min r1#start r2#start) ~stop:(pos_max r1#stop r2#stop)
+  if r1#is_ghost
+  then r2
+  else if r2#is_ghost
+       then r1
+       else if   lt r1 r2
+            then make ~start:r1#start ~stop:r2#stop
+            else make ~start:r2#start ~stop:r1#stop
 
 let to_yojson f =
   `Assoc [
@@ -193,13 +194,3 @@ let of_yojson = fun t ->
        | (Error _ as e), _ | _, (Error _ as e) -> e)
   | _ ->
      Utils.error_yojson_format "{start: Pos.t, stop: Pos.t}"
-
-let extract (x : region) =
-  let start = x#start#compact `Point in
-  let end_ = x#stop#compact `Point in
-  start,end_
-
-let sexp_of_t x =
-  let start,end_ = extract x in
-  Sexp.(List [ Atom start ; Atom end_ ])
-let t_of_sexp x = assert false

@@ -1,7 +1,7 @@
 module Location = Simple_utils.Location
 
 module type Container = sig
-  type 'a t [@@deriving eq, compare, yojson, hash, sexp]
+  type 'a t [@@deriving eq, compare, yojson, hash]
 
   val iter : 'a t -> f:('a -> unit) -> unit
   val map : 'a t -> f:('a -> 'b) -> 'b t
@@ -38,7 +38,7 @@ module Make (Container : Container) = struct
     | P_tuple of 'ty_exp t list
     | P_record of 'ty_exp t Container.t
 
-  and 't t = 't pattern_repr Location.wrap [@@deriving eq, compare, yojson, hash, sexp]
+  and 't t = 't pattern_repr Location.wrap [@@deriving eq, compare, yojson, hash]
 
   let var : loc:Location.t -> 'ty Binder.t -> 'ty t =
    fun ~loc b -> Location.wrap ~loc (P_var b)
@@ -50,6 +50,14 @@ module Make (Container : Container) = struct
 
   let variant_pattern : loc:Location.t -> Label.t * 'ty_exp t -> 'ty t =
    fun ~loc (label, pat) -> Location.wrap ~loc (P_variant (label, pat))
+
+
+  (* get top level ascription if any *)
+  let get_ascr : 'ty t -> 'ty option =
+   fun x ->
+    match x.wrap_content with
+    | P_var b -> Some (Binder.get_ascr b)
+    | _ -> None
 
 
   let rec pp_list g ppf pl =

@@ -1,2 +1,0 @@
-#import "warnings.jsligo" "W"
-const x = W.y

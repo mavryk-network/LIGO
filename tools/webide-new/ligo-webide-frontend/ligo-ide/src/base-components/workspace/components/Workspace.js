@@ -49,7 +49,6 @@ export default class Workspace extends Component {
       editorConfig: {},
       showTerminal: !!props.terminal,
       terminalSize: 160,
-      expanded: true,
     };
 
     const effect = ProjectManager.effect("settings:editor", (editorConfig) => {
@@ -125,6 +124,9 @@ export default class Workspace extends Component {
       node || this.filetree.current.activeNode || this.filetree.current.rootNode[0];
     const basePath = activeNode.children ? activeNode.path : pathHelper.dirname(activeNode.path);
     const baseName = basePath;
+    // if (platform.isWeb) {
+    //   baseName = activeNode.children ? activeNode.pathInProject : pathHelper.dirname(activeNode.pathInProject)
+    // }
     this.createModal.current.openCreateFileModal({ baseName, basePath });
   };
 
@@ -140,6 +142,9 @@ export default class Workspace extends Component {
     const activeNode = node || this.filetree.current.activeNode || this.filetree.current.rootNode;
     const basePath = activeNode.children ? activeNode.path : pathHelper.dirname(activeNode.path);
     const baseName = basePath;
+    // if (platform.isWeb) {
+    //   baseName = activeNode.children ? activeNode.pathInProject : pathHelper.dirname(activeNode.pathInProject)
+    // }
     this.createModal.current.openCreateFolderModal({ baseName, basePath });
   };
 
@@ -255,7 +260,7 @@ export default class Workspace extends Component {
     return (
       <>
         <SplitPane
-          className="ligoide-workspace"
+          className="obsidians-workspace"
           defaultSize={defaultSize}
           minSize={160}
           onChange={this.throttledDispatchResizeEvent}
@@ -265,51 +270,27 @@ export default class Workspace extends Component {
             }
             return size;
           }}
-          style={{ overflow: undefined }}
         >
           <div className="d-flex flex-column align-items-stretch h-100">
-            <div className={`d-flex border-bottom-1 ${this.state.expanded ? "flex-column" : ""}`}>
-              <ToolbarButton
-                id="expand"
-                tooltip={this.state.expanded ? "Hide Actions" : "Expand Actions"}
-                readOnly={readOnly}
-                onClick={() => this.setState({ expanded: !this.state.expanded })}
-                isExpanded={this.state.expanded}
-              >
-                {this.state.expanded ? (
-                  <>
-                    <span className="mr-2" key="switch-expanded">
-                      <span className="fas fa-chevron-down fa-fw" />
-                    </span>
-                    Actions
-                  </>
-                ) : (
-                  <span key="switch-close">
-                    <span className="fas fa-chevron-right fa-fw" />
-                  </span>
-                )}
-              </ToolbarButton>
+            <div className="d-flex border-bottom-1">
               <ToolbarButton
                 id="new"
                 icon="fas fa-plus"
                 tooltip="New File"
                 readOnly={readOnly}
                 onClick={() => this.openCreateFileModal()}
-                isExpanded={this.state.expanded}
               />
               <ToolbarButton
                 id="gist"
                 icon="fab fa-github"
-                tooltip="Upload to Gist"
+                tooltip="Upload to gist"
                 readOnly={readOnly}
                 onClick={() => this.gistUploadFileModal()}
-                isExpanded={this.state.expanded}
               />
               <ProjectToolbar
                 finalCall={this.updateTree}
                 signer={signer}
                 editor={this.codeEditor}
-                isExpanded={this.state.expanded}
               />
             </div>
             <FileTree

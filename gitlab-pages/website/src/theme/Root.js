@@ -12,8 +12,7 @@ export default function Root({ children }) {
       get: (searchParams, prop) => searchParams.get(prop),
     });
 
-    // Remove "pascaligo" after 0.60.0 doc is deleted
-    const valid = ["jsligo", "cameligo", "pascaligo"];
+    const valid = ["jsligo", "cameligo", "reasonligo", "pascaligo"];
 
     const lang = (params.lang || "").toLowerCase();
 

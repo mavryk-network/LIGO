@@ -1,22 +1,11 @@
 (* A pretty printer for JsLIGO *)
 
-module CST = Cst_jsligo.CST
-module PrettyComb = Parsing_shared.PrettyComb
+type cst       = Cst_jsligo.CST.t
+type expr      = Cst_jsligo.CST.expr
+type type_expr = Cst_jsligo.CST.type_expr
+type pattern   = Cst_jsligo.CST.pattern
 
-(* Placement *)
-
-type state = PrettyComb.state
-
-val default_state : state
-
-type cst                = CST.t
-type expr               = CST.expr
-type type_expr          = CST.type_expr
-type pattern            = CST.pattern
-type toplevel_statement = CST.toplevel_statement
-
-val print                    : state -> cst -> PPrint.document
-val print_expr               : state -> expr -> PPrint.document
-val print_type_expr          : state -> type_expr -> PPrint.document
-val print_pattern            : state -> pattern -> PPrint.document
-val print_toplevel_statement : state -> toplevel_statement -> PPrint.document
+val print           : cst -> PPrint.document
+val print_expr      : expr -> PPrint.document
+val print_type_expr : type_expr -> PPrint.document
+val print_pattern   : pattern -> PPrint.document

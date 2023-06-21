@@ -392,8 +392,8 @@ For debugging.
     fprintf fmt "  :link '(url-link \"https://www.ligolang.org/\")\n";
     fprintf fmt "  :group 'languages)\n\n";
 
-    fprintf fmt "(defcustom ligo-bin \"ligo\"\n";
-    fprintf fmt "  \"Path to LIGO executable.\"\n";
+    fprintf fmt "(defcustom ligo-squirrel-bin \"ligo-squirrel\"\n";
+    fprintf fmt "  \"Path to LIGO language server executable.\"\n";
     fprintf fmt "  :type 'string\n";
     fprintf fmt "   :group 'ligo)\n"
 
@@ -406,14 +406,15 @@ For debugging.
 
     fprintf fmt ";;;###autoload\n";
     fprintf fmt "(defun ligo-setup-lsp ()\n";
-    fprintf fmt "  \"Set up an LSP backend for ligo that will use `ligo-bin'.\"\n";
+    fprintf fmt "  \"Set up an LSP backend for ligo that will use `ligo-squirrel-bin'.\"\n";
     fprintf fmt "  (interactive)\n";
     fprintf fmt "  (add-to-list 'lsp-language-id-configuration '(ligo-pascal-mode . \"ligo\"))\n";
     fprintf fmt "  (add-to-list 'lsp-language-id-configuration '(ligo-caml-mode . \"ligo\"))\n";
+    fprintf fmt "  (add-to-list 'lsp-language-id-configuration '(ligo-reason-mode . \"ligo\"))\n";
     fprintf fmt "  (lsp-register-client\n";
     fprintf fmt "   (make-lsp-client\n";
-    fprintf fmt "    :new-connection (lsp-stdio-connection `(,ligo-bin \"lsp\"))\n";
-    fprintf fmt "    :major-modes '(ligo-pascal-mode ligo-caml-mode)\n";
+    fprintf fmt "    :new-connection (lsp-stdio-connection `(,ligo-squirrel-bin))\n";
+    fprintf fmt "    :major-modes '(ligo-pascal-mode ligo-caml-mode ligo-reason-mode)\n";
     fprintf fmt "    :server-id 'ligo)))\n"
 
   let print fmt syntax alt_name (t: Core.t) =

@@ -345,14 +345,9 @@ class FileManager {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async cloneGitRepo(name: string, gitUrl: string, branch?: string, token?: string) {
+  async cloneGitRepo(name: string, gitUrl: string) {
     await this.writeDirectory(`.workspaces/${name}`);
-    try {
-      await GitFs.clone(`/.workspaces/${name}`, gitUrl, branch, token);
-    } catch (_) {
-      await this.deleteDirectory(`.workspaces/${name}`);
-      throw new Error("Looks like your project is private, please add access token");
-    }
+    await GitFs.clone(`/.workspaces/${name}`, gitUrl);
     await this.writeFile(
       `.workspaces/${name}/config.json`,
       `{
@@ -362,18 +357,6 @@ class FileManager {
     }
     `
     );
-    await this.deleteDirectory(`.workspaces/${name}/.git`);
-    if (await this.exists(`.workspaces/${name}/.gitignore`)) {
-      await this.deleteFile(`.workspaces/${name}/.gitignore`);
-    }
-  }
-
-  async loadGitBranches(url: string, token?: string) {
-    try {
-      return await GitFs.getRemoteBranches(url, token);
-    } catch (_) {
-      throw new Error("Looks like your project is private, please add access token");
-    }
   }
 
   // eslint-disable-next-line class-methods-use-this

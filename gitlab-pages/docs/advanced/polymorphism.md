@@ -97,7 +97,7 @@ Here we introduce a type variable `a` which can be generalised using
 <Syntax syntax="jsligo">
 
 ```jsligo group=poly
-const id = <T>(x : T) : T => x;
+const id : <T>((x : T) => T) = x => x;
 ```
 
 Here `T` is a type variable which can be generalised. In general,
@@ -179,8 +179,8 @@ let rev (type a) (xs : a list) : a list =
 <Syntax syntax="jsligo">
 
 ```jsligo group=poly
-const rev = <T>(xs : list<T>) : list<T> => {
-  const rev = <T>([xs, acc] : [list<T>, list<T>]) : list<T> =>
+const rev : <T>((xs : list<T>) => list<T>) = xs => {
+  const rev : ((p : [list<T>, list<T>]) => list<T>) = ([xs, acc] : [list<T>, list<T>]) : list<T> =>
     match(xs, list([
     ([] : list<T>) => acc,
     ([x,... xs] : list<T>) => rev([xs, list([x,...acc])])
@@ -193,8 +193,10 @@ const rev = <T>(xs : list<T>) : list<T> => {
 </Syntax>
 
 We use an accumulator variable `acc` to keep the elements of the list
-processed, consing each element on it. As with the identity function,
-we can then use it directly in different types:
+processed, consing each element on it.
+
+As with the identity function, we can then use it directly in
+different types:
 
 <Syntax syntax="pascaligo">
 

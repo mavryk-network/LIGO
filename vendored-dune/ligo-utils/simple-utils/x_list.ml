@@ -47,42 +47,18 @@ let repeat x n =
   in
   aux n []
 
-let zip_opt a b = match List.zip a b with | Or_unequal_lengths.Ok x -> Some x | Or_unequal_lengths.Unequal_lengths -> None
-
-let rec deoptionalize xs =
-  match xs with
-  | [] -> Some []
-  | None :: _ -> None
-  | Some x :: xs ->
-    let xs = deoptionalize xs in
-    match xs with
-    | None -> None
-    | Some xs -> Some (x :: xs)
 
 module Ne = struct
 
   type 'a t = 'a * 'a list
-    [@@deriving eq,compare,yojson,hash,sexp,fold]
-
-  let sexp_of_t (f: 'a -> Sexp.t) ((hd,tl):'a t) : Sexp.t = List.sexp_of_t f (hd::tl)
-  let t_of_sexp : type a . (Sexp.t -> a) -> Sexp.t -> a t = fun f x ->
-    match x with
-    | Atom _ -> (f x) , []
-    | List lst ->
-      let lst = List.map ~f lst in
-      List.hd_exn lst, List.tl_exn lst
+    [@@deriving eq,compare,yojson,hash]
 
   let unzip ((hd, tl): _ t) =
     let (a, b) = hd and (la, lb) = unzip tl in
     (a, la), (b, lb)
   let of_list lst = List.hd_exn lst, List.tl_exn lst (* TODO: Remove *)
-  let of_list_opt = function | [] -> None | (x :: xs) -> Some (x, xs)
   let to_list (hd, tl : _ t) = hd :: tl
   let singleton hd : 'a t = hd , []
-  let last ((hd, tl) : _ t) =
-    match tl with
-    | [] -> hd
-    | _ -> List.last_exn tl
   let hd : 'a t -> 'a = fst
   let cons : 'a -> 'a t -> 'a t = fun hd' (hd , tl) -> hd' , hd :: tl
   let iter f (hd, tl : _ t) = f hd ; List.iter ~f tl
@@ -121,14 +97,4 @@ module Ne = struct
       )
     in
     rev @@ aux (singleton lst) lst
-
-  let deoptionalize : 'a option t -> 'a t option = fun lst ->
-    let hd, tl = lst in
-    match hd with
-    | None -> None
-    | Some hd ->
-      let tl = deoptionalize tl in
-      match tl with
-      | None -> None
-      | Some tl -> Some (hd, tl)
 end

@@ -1,4 +1,4 @@
-let map_expression = Ast_aggregated.Helpers.map_expression
+let map_expression = Helpers.map_expression
 
 open Ligo_prim
 open Ast_aggregated
@@ -110,7 +110,7 @@ let rec usage_in_expr (f : Value_var.t) (expr : expression) : usage =
   | E_raw_code _ -> Unused
   | E_constructor { constructor = _; element } -> self element
   | E_matching { matchee; cases } -> usages (self matchee :: self_cases cases)
-  | E_record fields -> usages (List.map ~f:self (Record.values fields))
+  | E_record fields -> usages (List.map ~f:self (Record.LMap.to_list fields))
   | E_accessor { struct_; path = _ } -> self struct_
   | E_update { struct_; path = _; update } -> usages [ self struct_; self update ]
   | E_type_inst { forall; type_ = _ } -> self forall
@@ -130,9 +130,25 @@ let rec usage_in_expr (f : Value_var.t) (expr : expression) : usage =
 
 let uncurried_labels (depth : int) = Label.range 0 depth
 
-let uncurried_rows (depth : int) (args : type_expression list) : row =
-  assert (List.length args = depth);
-  Row.create_tuple args
+let uncurried_rows (depth : int) (args : type_expression list) : rows =
+  let labels = uncurried_labels depth in
+  let fields =
+    Record.of_list
+      (List.mapi
+         ~f:(fun i (label, ty) ->
+           ( label
+           , ({ associated_type = ty; michelson_annotation = None; decl_pos = i }
+               : row_element) ))
+         (match List.zip labels args with
+         | Ok x -> x
+         | _ ->
+           failwith
+           @@ Format.asprintf
+                "uncurried_rows: args length : %i expected %i\n%!"
+                (List.length args)
+                depth))
+  in
+  { fields; layout = L_comb }
 
 
 let uncurried_record_type ~loc depth args =
@@ -260,12 +276,9 @@ let rec uncurry_in_expression ~raise (f : Value_var.t) (depth : int) (expr : exp
   | E_type_abstraction { type_binder; result } ->
     let result = self result in
     return (E_type_abstraction { type_binder; result })
-  | E_recursive
-      { fun_name; fun_type; lambda = { binder; output_type; result }; force_lambdarec } ->
+  | E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } } ->
     let result = self_binder [ fun_name ] (self_param binder result) in
-    return
-      (E_recursive
-         { fun_name; fun_type; lambda = { binder; output_type; result }; force_lambdarec })
+    return (E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } })
   | E_let_in { let_binder; rhs; let_result; attributes } ->
     let rhs = self rhs in
     let let_result =
@@ -334,12 +347,7 @@ let uncurry_expression (expr : expression) : expression =
     (fun expr ->
       let loc = expr.location in
       match expr.expression_content with
-      | E_recursive
-          { fun_name
-          ; fun_type
-          ; lambda = { binder = _; result } as lambda
-          ; force_lambdarec
-          } ->
+      | E_recursive { fun_name; fun_type; lambda = { binder = _; result } as lambda } ->
         let inner_lambda = { expr with expression_content = E_lambda lambda } in
         (match usage_in_expr fun_name result with
         | Unused | Other -> expr
@@ -401,7 +409,6 @@ let uncurry_expression (expr : expression) : expression =
                         ; output_type = ret_type
                         ; result
                         }
-                    ; force_lambdarec
                     }
               ; type_expression =
                   { type_content = T_arrow { type1 = record_type; type2 = ret_type }
@@ -423,7 +430,6 @@ let uncurry_expression (expr : expression) : expression =
                 ; public = true
                 ; hidden = false
                 ; thunk = false
-                ; entry = false
                 }
             in
             (* Construct the let *)

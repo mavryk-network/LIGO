@@ -128,7 +128,8 @@ module Run = Ligo_run.Of_michelson
 module Raw_options = Compiler_options.Raw_options
 
 type state =
-  { syntax : Syntax_types.t
+  { env : Environment.t (* The repl should have its own notion of environment *)
+  ; syntax : Syntax_types.t
   ; protocol : Environment.Protocols.t
   ; top_level : Ast_typed.program
   ; dry_run_opts : Run.options
@@ -137,9 +138,10 @@ type state =
 
 let try_eval ~raise ~raw_options state s =
   let options = Compiler_options.make ~raw_options ~syntax:state.syntax () in
+  let options = Compiler_options.set_init_env options state.env in
   let typed_exp =
     Ligo_compile.Utils.type_expression_string ~raise ~options state.syntax s
-    @@ Ast_typed.Misc.to_signature state.top_level
+    @@ Environment.to_program state.env
   in
   let aggregated_exp =
     Ligo_compile.Of_typed.compile_expression_in_context
@@ -179,27 +181,28 @@ let concat_modules ~declaration (m1 : Ast_typed.program) (m2 : Ast_typed.program
 
 let try_declaration ~raise ~raw_options state s =
   let options = Compiler_options.make ~raw_options ~syntax:state.syntax () in
+  let options = Compiler_options.set_init_env options state.env in
   try
     try_with
       (fun ~raise ~catch:_ ->
         let typed_prg, core_prg =
-          Ligo_compile.Utils.type_program_string
-            ~raise
-            ~options
-            ~context:(Ast_typed.Misc.to_signature state.top_level)
-            state.syntax
-            s
+          Ligo_compile.Utils.type_program_string ~raise ~options state.syntax s
         in
+        let env = Environment.append state.env typed_prg in
         let state =
           { state with
-            top_level = concat_modules ~declaration:true state.top_level typed_prg
+            env
+          ; top_level = concat_modules ~declaration:true state.top_level typed_prg
           }
         in
         state, Defined_values_core core_prg)
       (fun ~catch:_ -> function
         | (`Parser_tracer _ : Main_errors.all)
-        | (`Nanopasses_tracer (`Small_passes_unsupported_top_level_statement _) :
-            Main_errors.all) -> try_eval ~raise ~raw_options state s
+        | (`Cit_jsligo_tracer _ : Main_errors.all)
+        | (`Cit_pascaligo_tracer _ : Main_errors.all)
+        | (`Cit_cameligo_tracer _ : Main_errors.all)
+        | (`Cit_reasonligo_tracer _ : Main_errors.all) ->
+          try_eval ~raise ~raw_options state s
         | e -> raise.error e)
   with
   | Failure _ -> raise.error `Repl_unexpected
@@ -214,15 +217,10 @@ let import_file ~raise ~raw_options state file_name module_name =
       ~protocol_version:state.protocol
       ()
   in
+  let options = Compiler_options.set_init_env options state.env in
   let module_ =
-    let prg, signature =
-      Build.qualified_typed_with_signature
-        ~raise
-        ~options
-        (Build.Source_input.From_file file_name)
-    in
-    Ast_typed.
-      { module_content = Module_expr.M_struct prg; module_location = loc; signature }
+    let prg = Build.qualified_typed ~raise ~options Env file_name in
+    Location.wrap ~loc (Module_expr.M_struct prg)
   in
   let module_ =
     Ast_typed.
@@ -231,12 +229,15 @@ let import_file ~raise ~raw_options state file_name module_name =
              { module_binder = Module_var.of_input_var ~loc module_name
              ; module_
              ; module_attr = { public = true; hidden = false }
-             ; annotation = ()
              }
       ]
   in
+  let env = Environment.append state.env module_ in
   let state =
-    { state with top_level = concat_modules ~declaration:true state.top_level module_ }
+    { state with
+      env
+    ; top_level = concat_modules ~declaration:true state.top_level module_
+    }
   in
   state, Just_ok
 
@@ -250,12 +251,15 @@ let use_file ~raise ~raw_options state file_name =
       ~protocol_version:state.protocol
       ()
   in
+  let options = Compiler_options.set_init_env options state.env in
   (* Missing typer environment? *)
-  let module' =
-    Build.qualified_typed ~raise ~options (Build.Source_input.From_file file_name)
-  in
+  let module' = Build.qualified_typed ~raise ~options Env file_name in
+  let env = Environment.append state.env module' in
   let state =
-    { state with top_level = concat_modules ~declaration:false state.top_level module' }
+    { state with
+      env
+    ; top_level = concat_modules ~declaration:false state.top_level module'
+    }
   in
   state, Defined_values_typed module'
 
@@ -342,7 +346,9 @@ let welcome_msg =
 let make_initial_state syntax protocol dry_run_opts project_root options =
   let lib = Build.Stdlib.get ~options in
   let top_level = Build.Stdlib.select_lib_typed syntax lib in
-  { top_level
+  let env = Environment.append (Environment.default protocol) top_level in
+  { env
+  ; top_level
   ; syntax
   ; protocol
   ; dry_run_opts
@@ -401,7 +407,6 @@ let rec loop ~raw_options syntax display_format term history state n =
 let main
     (raw_options : Raw_options.t)
     display_format
-    no_colour
     now
     amount
     balance
@@ -413,12 +418,7 @@ let main
   let protocol =
     Environment.Protocols.protocols_to_variant raw_options.protocol_version
   in
-  let syntax =
-    Syntax.of_string_opt
-      ~support_pascaligo:raw_options.deprecated
-      (Syntax_name raw_options.syntax)
-      None
-  in
+  let syntax = Syntax.of_string_opt (Syntax_name raw_options.syntax) None in
   let dry_run_opts =
     Ligo_run.Of_michelson.make_dry_run_options
       { now; amount; balance; sender; source; parameter_ty = None }
@@ -444,7 +444,7 @@ let main
       | None -> state
       | Some file_name ->
         let c = use_file state ~raw_options file_name in
-        let _, state, _ = eval (Ex_display_format Dev) no_colour state c in
+        let _, state, _ = eval (Ex_display_format Dev) raw_options.no_colour state c in
         state
     in
     Lwt_main.run (LTerm.fprintls term (LTerm_text.eval [ S welcome_msg ]));

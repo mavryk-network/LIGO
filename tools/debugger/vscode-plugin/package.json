@@ -4,7 +4,7 @@
     "description": "VSCode debugger extension for LIGO.",
     "author": "Serokell",
     "license": "MIT",
-    "version": "0.1.1",
+    "version": "0.0.7",
     "repository": {
         "type": "git",
         "url": "https://gitlab.com/ligolang/ligo"
@@ -22,8 +22,10 @@
     },
     "activationEvents": [
         "onDebugResolve:ligo",
-        "onCommand:extension.ligo-debugger.switchSteppingGranularity",
-        "onCommand:extension.ligo-debugger.useLastSteppingGranularity"
+        "onDebugResolve:mligo",
+        "onDebugResolve:religo",
+        "onDebugResolve:jsligo",
+        "onCommand:extension.ligo-debugger.switchSteppingGranularity"
     ],
 
     "icon": "logo.png",
@@ -38,20 +40,18 @@
                     "type": "string",
                     "default": "ligo",
                     "description": "Path to the ligo binary, default one is extracted from $PATH variable."
-                },
-                "ligoDebugger.maxSteps": {
-                    "scope": "resource",
-                    "type": ["integer", "null"],
-                    "default": 1000,
-                    "minimum": 1,
-                    "maximum": 18446744073709551615,
-                    "description": "Maximum number of steps in contract. Leave it blank if you want an infinite amount of steps."
                 }
             }
         },
         "breakpoints": [
             {
+                "language": "ligo"
+            },
+            {
                 "language": "mligo"
+            },
+            {
+                "language": "religo"
             },
             {
                 "language": "jsligo"
@@ -59,12 +59,31 @@
         ],
         "languages": [
             {
+                "id": "ligo",
+                "aliases": [
+                    "PascaLIGO"
+                ],
+                "extensions": [
+                    ".ligo",
+                    ".pligo"
+                ]
+            },
+            {
                 "id": "mligo",
                 "aliases": [
                     "CameLIGO"
                 ],
                 "extensions": [
                     ".mligo"
+                ]
+            },
+            {
+                "id": "religo",
+                "aliases": [
+                    "ReasonLIGO"
+                ],
+                "extensions": [
+                    ".religo"
                 ]
             },
             {
@@ -82,7 +101,9 @@
                 "type": "ligo",
                 "label": "LIGO Debugger",
                 "languages": [
+                    "ligo",
                     "mligo",
+                    "religo",
                     "jsligo"
                 ],
                 "configurationAttributes": {
@@ -105,17 +126,17 @@
                             "entrypoint": {
                                 "type": "string",
                                 "description": "Entry point of the contract (`main` method)",
-                                "default": "(*@AskOnStart@*)"
+                                "default": "{AskOnStart}"
                             },
                             "michelsonEntrypoint": {
                                 "type": "string",
                                 "description": "Michelson entrypoint to call. If specified, as parameter you should enter argument of this entrypoint.",
-                                "default": "(*@AskOnStart@*)"
+                                "default": "{AskOnStart}"
                             },
                             "parameter": {
                                 "type": "string",
                                 "description": "Parameter value.",
-                                "default": "(*@AskOnStart@*)"
+                                "default": "{AskOnStart}"
                             },
                             "parameterLang": {
                                 "type": "string",
@@ -125,7 +146,7 @@
                             "storage": {
                                 "type": "string",
                                 "description": "Initial storage value.",
-                                "default": "(*@AskOnStart@*)"
+                                "default": "{AskOnStart}"
                             },
                             "storageLang": {
                                 "type": "string",
@@ -143,43 +164,43 @@
                                 "properties": {
                                     "now": {
                                         "default": "2020-01-01T00:00:00Z",
-                                        "description": "Value returned by `Tezos.get_now()`"
+                                        "description": "Value returned by `NOW` instruction"
                                     },
                                     "level": {
                                         "default": 0,
-                                        "description": "Value returned by `Tezos.get_level()`"
+                                        "description": "Value returned by `LEVEL` instruction"
                                     },
                                     "sender": {
                                         "type": "string",
                                         "default": "tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY",
-                                        "description": "Value returned by `Tezos.get_sender()`"
+                                        "description": "Value returned by SENDER instruction"
                                     },
                                     "source": {
                                         "type": "string",
                                         "default": "tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY",
-                                        "description": "Value returned by `Tezos.get_source()`"
+                                        "description": "Value returned by SOURCE instruction"
                                     },
                                     "self": {
                                         "type": "string",
                                         "default": "KT1XQcegsEtio9oGbLUHA8SKX4iZ2rpEXY9b",
-                                        "description": "Value returned by `Tezos.get_self_address()`"
+                                        "description": "Value returned by SELF_ADDRESS instruction"
                                     },
                                     "amount": {
                                         "default": 0,
-                                        "description": "Value returned by `Tezos.get_amount()`"
+                                        "description": "Value returned by AMOUNT instruction"
                                     },
                                     "balance": {
                                         "default": 0,
-                                        "description": "Value returned by `Tezos.get_balance()`"
+                                        "description": "Value returned by BALANCE instruction"
                                     },
                                     "chainId": {
                                         "type": "string",
                                         "default": "NetXH12Aer3be93",
-                                        "description": "Value returned by `Tezos.get_chain_id()`"
+                                        "description": "Value returned by CHAIN_ID instruction"
                                     },
                                     "votingPowers": {
                                         "type": "object",
-                                        "description": "Voting power distribution, affects `Tezos.voting_power` and `Tezos.get_total_voting_power()`",
+                                        "description": "Voting power distribution, affects VOTING_POWER and TOTAL_VOTING_POWER instructions",
                                         "properties": {
                                             "kind": {
                                                 "enum": "simple"
@@ -197,9 +218,9 @@
                         "request": "launch",
                         "name": "Launch LIGO",
                         "logDir": "",
-                        "entrypoint": "(*@AskOnStart@*)",
-                        "parameter": "(*@AskOnStart@*)",
-                        "storage": "(*@AskOnStart@*)"
+                        "entrypoint": "{AskOnStart}",
+                        "parameter": "{AskOnStart}",
+                        "storage": "{AskOnStart}"
                     }
                 ],
                 "configurationSnippets": [
@@ -210,9 +231,9 @@
                             "type": "ligo",
                             "request": "launch",
                             "name": "Launch ${1:LIGO contract}",
-                            "entrypoint": "${2|(*@AskOnStart@*)|}",
-                            "parameter": "${3|(*@AskOnStart@*)|}",
-                            "storage": "${4|(*@AskOnStart@*)|}"
+                            "entrypoint": "${2|{AskOnStart}|}",
+                            "parameter": "${3|{AskOnStart}|}",
+                            "storage": "${4|{AskOnStart}|}"
                         }
                     },
                     {
@@ -225,11 +246,11 @@
                             "logDir": "",
                             "program": "^\"\\${file}\"",
                             "stopOnEntry": true,
-                            "michelsonEntrypoint": "${2|(*@AskOnStart@*),default|}",
-                            "entrypoint": "${3|(*@AskOnStart@*)|}",
-                            "parameter": "${4|(*@AskOnStart@*)|}",
+                            "michelsonEntrypoint": "${2|{AskOnStart},default|}",
+                            "entrypoint": "${3|{AskOnStart}|}",
+                            "parameter": "${4|{AskOnStart}|}",
                             "parameterLang": "LIGO",
-                            "storage": "${5|(*@AskOnStart@*)|}",
+                            "storage": "${5|{AskOnStart}|}",
                             "storageLang": "LIGO",
                             "contractEnv": {
                                 "now": "${6:${CURRENT_YEAR}-${CURRENT_MONTH}-${CURRENT_DATE}T${CURRENT_HOUR}:${CURRENT_MINUTE}:${CURRENT_SECOND}Z}",
@@ -243,7 +264,7 @@
                                 "votingPowers": {
                                     "kind": "simple",
                                     "contents": {
-                                        "tz1aZcxeRT4DDZZkYcU3vuBaaBRtnxyTmQRr": "100$0"
+                                        "tz1aZcxeRT4DDZZkYcU3vuBaaBRtnxyTmQRr": "10$0"
                                     }
                                 }
                             }
@@ -257,18 +278,6 @@
                 "command": "extension.ligo-debugger.switchSteppingGranularity",
                 "title": "Debug: Switch stepping granularity",
                 "description": "Changes granularity used by StepIn and other buttons"
-            },
-            {
-                "command": "extension.ligo-debugger.useLastSteppingGranularity",
-                "title": "Debug: Switch to last stepping granularity",
-                "description": "Changes stepping granularity to the previously selected one"
-            }
-        ],
-        "keybindings": [
-            {
-                "command": "extension.ligo-debugger.useLastSteppingGranularity",
-                "key": "ctrl+f10",
-                "mac": "cmd+f10"
             }
         ]
     },

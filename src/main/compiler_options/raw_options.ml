@@ -2,19 +2,13 @@ type t =
   { (* Formatter *)
     warning_as_error : bool
   ; no_colour : bool
-  ; no_metadata_check : bool
-  ; (* Supported features *)
-    deprecated : bool
   ; (* Warnings *)
     warn_unused_rec : bool
-  ; warn_infinite_loop : bool
   ; (* Frontend *)
     syntax : string
-  ; entry_point : string list
-  ; module_ : string
+  ; entry_point : string
   ; libraries : string list
   ; project_root : string option
-  ; transpiled : bool
   ; (* Tools *)
     with_types : bool
   ; self_pass : bool
@@ -39,27 +33,23 @@ type t =
 
 module Default_options = struct
   (* Formatter *)
+  let show_warnings = true
   let warning_as_error = false
   let no_colour = false
-  let no_metadata_check = false
-
-  (* Supported features *)
-  let deprecated = false
 
   (* Warnings *)
   let warn_unused_rec = false
-  let warn_infinite_loop = false
 
   (* Frontend *)
   let syntax = "auto"
-  let entry_point = []
-  let module_ = ""
+  let dialect = "terse"
+  let entry_point = "main"
   let libraries = []
   let project_root = None
-  let transpiled = false
 
   (* Tools *)
   let only_ep = false
+  let infer = false
   let with_types = false
   let self_pass = false
 
@@ -86,16 +76,11 @@ end
 let make
     ?(warning_as_error = Default_options.warning_as_error)
     ?(no_colour = Default_options.no_colour)
-    ?(no_metadata_check = Default_options.no_metadata_check)
-    ?(deprecated = Default_options.deprecated)
     ?(warn_unused_rec = Default_options.warn_unused_rec)
-    ?(warn_infinite_loop = Default_options.warn_infinite_loop)
     ?(syntax = Default_options.syntax)
     ?(entry_point = Default_options.entry_point)
-    ?(module_ = Default_options.module_)
     ?(libraries = Default_options.libraries)
     ?(project_root = Default_options.project_root)
-    ?(transpiled = Default_options.transpiled)
     ?(only_ep = Default_options.only_ep)
     ?(with_types = Default_options.with_types)
     ?(self_pass = Default_options.self_pass)
@@ -118,19 +103,13 @@ let make
   { (* Formatter *)
     warning_as_error
   ; no_colour
-  ; no_metadata_check
-  ; (* Supported features *)
-    deprecated
   ; (* Warnings *)
     warn_unused_rec
-  ; warn_infinite_loop
   ; (* Frontend *)
     syntax
   ; entry_point
-  ; module_
   ; libraries
   ; project_root
-  ; transpiled
   ; (* Tools *)
     only_ep
   ; with_types

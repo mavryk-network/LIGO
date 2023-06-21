@@ -3,7 +3,6 @@ module Test.Variables
   ) where
 
 import Data.Map qualified as M
-import Fmt (pretty)
 import Unsafe (fromJust)
 
 import Morley.Debugger.Protocol.DAP (Variable (..))
@@ -20,21 +19,19 @@ import Test.HUnit ((@?=))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (testCase)
 
-import Language.LIGO.AST (Lang (Caml))
+import AST (Lang (Caml))
+
 import Language.LIGO.DAP.Variables (createVariables, runBuilder)
-import Language.LIGO.Debugger.CLI
+import Language.LIGO.Debugger.CLI.Types
+  (LigoExposedStackEntry (LigoExposedStackEntry), LigoStackEntry (LigoStackEntry), LigoType (..),
+  LigoVariable (LigoVariable), Name, NameType (Concise))
+import Language.LIGO.Debugger.Snapshots (StackItem (StackItem))
 
-mkDummyValue :: LigoOrMichValue -> Maybe (Name 'Concise) -> (Text, LigoOrMichValue)
-mkDummyValue v nameMb =
-  ( maybe unknownVariable pretty nameMb
-  , v
-  )
-
-mkDummyMichValue :: (SingI t) => Value t -> Maybe (Name 'Concise) -> (Text, LigoOrMichValue)
-mkDummyMichValue v = mkDummyValue (MichValue (LigoType Nothing) $ SomeValue v)
-
-mkDummyLigoValue :: LigoValue -> Maybe (Name 'Concise) -> (Text, LigoOrMichValue)
-mkDummyLigoValue v = mkDummyValue (LigoValue (LigoType Nothing) v)
+mkStackItem :: (SingI t) => Value t -> Maybe (Name 'Concise) -> StackItem 'Concise
+mkStackItem v nameMb = StackItem desc (SomeValue v)
+  where
+    desc =
+      LigoStackEntry $ LigoExposedStackEntry (LigoVariable <$> nameMb) (LigoType Nothing)
 
 test_Variables :: TestTree
 test_Variables = testGroup "variables"
@@ -48,7 +45,7 @@ testAddresses :: TestTree
 testAddresses = testGroup "addresses"
   [ testCase "address with entrypoint \"foo\"" do
       let epAddress = EpAddress' address (UnsafeEpName "foo")
-      let addressItem = mkDummyMichValue (VAddress epAddress) (Just "addr")
+      let addressItem = mkStackItem (VAddress epAddress) (Just "addr")
       snd (runBuilder $ createVariables Caml [addressItem]) @?=
         M.fromList
           [ (1,
@@ -91,7 +88,7 @@ testAddresses = testGroup "addresses"
           ]
   , testCase "address without entrypoint" do
       let epAddress = EpAddress' address DefEpName
-      let addressItem = mkDummyMichValue (VAddress epAddress) (Just "addr")
+      let addressItem = mkStackItem (VAddress epAddress) (Just "addr")
       snd (runBuilder $ createVariables Caml [addressItem]) @?=
         M.fromList
           [ (1,
@@ -123,7 +120,7 @@ testContracts = testGroup "contracts"
             mkEntrypointCall (UnsafeEpName "foo") paramNotes
       case mkEntrypoint of
         MkEntrypointCallRes _ entrypoint -> do
-          let contractItem = mkDummyMichValue (VContract address (SomeEpc entrypoint)) (Just "contract")
+          let contractItem = mkStackItem (VContract address (SomeEpc entrypoint)) (Just "contract")
           snd (runBuilder $ createVariables Caml [contractItem]) @?=
             M.fromList
               [ (1,
@@ -165,7 +162,7 @@ testContracts = testGroup "contracts"
                   ])
               ]
   , testCase "contract without entrypoint" do
-      let contractItem = mkDummyMichValue (VContract address (sepcPrimitive @'TUnit)) (Just "contract")
+      let contractItem = mkStackItem (VContract address (sepcPrimitive @'TUnit)) (Just "contract")
       snd (runBuilder $ createVariables Caml [contractItem]) @?=
         M.fromList
           [ (1,
@@ -182,49 +179,6 @@ testContracts = testGroup "contracts"
                   }
               ])
           ]
-  , testCase "LIGO contract" do
-      let contract = LigoContract "tz1faswCTDciRzE4oJ9jn2Vm2dvjeyA9fUzU" (Just "foo")
-      let contractItem = mkDummyLigoValue (LVCt $ LCContract contract) (Just "addr")
-      snd (runBuilder $ createVariables Caml [contractItem]) @?=
-        M.fromList
-          [ (1,
-              [ Variable
-                  { nameVariable = "address"
-                  , valueVariable = "tz1faswCTDciRzE4oJ9jn2Vm2dvjeyA9fUzU"
-                  , typeVariable = ""
-                  , presentationHintVariable = Nothing
-                  , evaluateNameVariable = Nothing
-                  , variablesReferenceVariable = 0
-                  , namedVariablesVariable = Nothing
-                  , indexedVariablesVariable = Nothing
-                  , __vscodeVariableMenuContextVariable = Nothing
-                  }
-              , Variable
-                  { nameVariable = "entrypoint"
-                  , valueVariable = "foo"
-                  , typeVariable = ""
-                  , presentationHintVariable = Nothing
-                  , evaluateNameVariable = Nothing
-                  , variablesReferenceVariable = 0
-                  , namedVariablesVariable = Nothing
-                  , indexedVariablesVariable = Nothing
-                  , __vscodeVariableMenuContextVariable = Nothing
-                  }
-              ])
-          , (2,
-              [ Variable
-                  { nameVariable = "addr"
-                  , valueVariable = "tz1faswCTDciRzE4oJ9jn2Vm2dvjeyA9fUzU(foo)"
-                  , typeVariable = ""
-                  , presentationHintVariable = Nothing
-                  , evaluateNameVariable = Just "tz1faswCTDciRzE4oJ9jn2Vm2dvjeyA9fUzU(foo)"
-                  , variablesReferenceVariable = 1
-                  , namedVariablesVariable = Nothing
-                  , indexedVariablesVariable = Nothing
-                  , __vscodeVariableMenuContextVariable = Just "contract"
-                  }
-              ])
-          ]
   ]
   where
     address = fromRight (error "address parse error")
@@ -233,7 +187,7 @@ testContracts = testGroup "contracts"
 testOption :: TestTree
 testOption = testGroup "option"
   [ testCase "nothing" do
-      let vNothingItem = mkDummyMichValue (VOption @'TUnit Nothing) (Just "nothingVar")
+      let vNothingItem = mkStackItem (VOption @'TUnit Nothing) (Just "nothingVar")
       snd (runBuilder $ createVariables Caml [vNothingItem]) @?=
         M.fromList
           [ (1,
@@ -252,7 +206,7 @@ testOption = testGroup "option"
             )
           ]
   , testCase "contains unit" do
-      let vUnitItem = mkDummyMichValue (VOption $ Just VUnit) (Just "someUnit")
+      let vUnitItem = mkStackItem (VOption $ Just VUnit) (Just "someUnit")
       snd (runBuilder $ createVariables Caml [vUnitItem]) @?=
         M.fromList
           [ (1,
@@ -284,45 +238,12 @@ testOption = testGroup "option"
               ]
             )
           ]
-  , testCase "LIGO Some" do
-      let ligoSome = mkDummyLigoValue (LVConstructor ("Some", LVCt LCUnit)) (Just "someUnit")
-      snd (runBuilder $ createVariables Caml [ligoSome]) @?=
-        M.fromList
-          [ (1,
-              [ Variable
-                  { nameVariable = "Some"
-                  , valueVariable = "()"
-                  , typeVariable = ""
-                  , presentationHintVariable = Nothing
-                  , evaluateNameVariable = Just "()"
-                  , variablesReferenceVariable = 0
-                  , namedVariablesVariable = Nothing
-                  , indexedVariablesVariable = Nothing
-                  , __vscodeVariableMenuContextVariable = Nothing
-                  }
-                ]
-              )
-          , (2,
-              [ Variable
-                  { nameVariable = "someUnit"
-                  , valueVariable = "Some (())"
-                  , typeVariable = ""
-                  , presentationHintVariable = Nothing
-                  , evaluateNameVariable = Just "Some (())"
-                  , variablesReferenceVariable = 1
-                  , namedVariablesVariable = Nothing
-                  , indexedVariablesVariable = Nothing
-                  , __vscodeVariableMenuContextVariable = Nothing
-                  }
-              ]
-            )
-          ]
   ]
 
 testList :: TestTree
 testList = testGroup "list"
   [ testCase "empty list" do
-      let vList = mkDummyMichValue (VList @'TUnit []) (Just "list")
+      let vList = mkStackItem (VList @'TUnit []) (Just "list")
       snd (runBuilder $ createVariables Caml [vList]) @?=
         M.fromList
           [ (1,
@@ -341,7 +262,7 @@ testList = testGroup "list"
             )
           ]
   , testCase "list of two units" do
-      let vList = mkDummyMichValue (VList [VUnit, VUnit]) (Just "list")
+      let vList = mkStackItem (VList [VUnit, VUnit]) (Just "list")
       snd (runBuilder $ createVariables Caml [vList]) @?=
         M.fromList
           [ (1,
@@ -376,50 +297,6 @@ testList = testGroup "list"
                   , typeVariable = ""
                   , presentationHintVariable = Nothing
                   , evaluateNameVariable = Just "[(), ()]"
-                  , variablesReferenceVariable = 1
-                  , namedVariablesVariable = Nothing
-                  , indexedVariablesVariable = Nothing
-                  , __vscodeVariableMenuContextVariable = Nothing
-                  }
-              ]
-            )
-          ]
-  , testCase "LIGO list" do
-      let ligoList = mkDummyLigoValue (LVList [LVCt LCUnit, LVCt LCUnit]) (Just "list")
-      snd (runBuilder $ createVariables Caml [ligoList]) @?=
-        M.fromList
-          [ (1,
-              [ Variable
-                  { nameVariable = "1"
-                  , valueVariable = "()"
-                  , typeVariable = ""
-                  , presentationHintVariable = Nothing
-                  , evaluateNameVariable = Just "()"
-                  , variablesReferenceVariable = 0
-                  , namedVariablesVariable = Nothing
-                  , indexedVariablesVariable = Nothing
-                  , __vscodeVariableMenuContextVariable = Nothing
-                  }
-              , Variable
-                  { nameVariable = "2"
-                  , valueVariable = "()"
-                  , typeVariable = ""
-                  , presentationHintVariable = Nothing
-                  , evaluateNameVariable = Just "()"
-                  , variablesReferenceVariable = 0
-                  , namedVariablesVariable = Nothing
-                  , indexedVariablesVariable = Nothing
-                  , __vscodeVariableMenuContextVariable = Nothing
-                  }
-              ]
-            )
-          , (2,
-              [ Variable
-                  { nameVariable = "list"
-                  , valueVariable = "[(); ()]"
-                  , typeVariable = ""
-                  , presentationHintVariable = Nothing
-                  , evaluateNameVariable = Just "[(); ()]"
                   , variablesReferenceVariable = 1
                   , namedVariablesVariable = Nothing
                   , indexedVariablesVariable = Nothing

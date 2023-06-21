@@ -1,16 +1,11 @@
-{-# OPTIONS_GHC -Wno-orphans #-}
-
 -- | Types related to DAP.
 module Language.LIGO.Debugger.Handlers.Types
   ( LigoLaunchRequest (..)
   , LigoLaunchRequestArguments (..)
-  , LigoContractEnvArguments (..)
-  , LigoVotingPowers (..)
-  , SimpleVotingPowersInfo (..)
   , LigoInitializeLoggerRequest (..)
   , LigoInitializeLoggerRequestArguments (..)
-  , LigoSetLigoConfigRequest (..)
-  , LigoSetLigoConfigRequestArguments (..)
+  , LigoSetLigoBinaryPathRequest (..)
+  , LigoSetLigoBinaryPathRequestArguments (..)
   , LigoSetProgramPathRequest (..)
   , LigoSetProgramPathRequestArguments (..)
   , LigoValidateEntrypointRequest (..)
@@ -24,7 +19,7 @@ module Language.LIGO.Debugger.Handlers.Types
   , LigoSpecificRequest (..)
 
   , LigoInitializeLoggerResponse (..)
-  , LigoSetLigoConfigResponse (..)
+  , LigoSetLigoBinaryPathResponse (..)
   , LigoSetProgramPathResponse (..)
   , LigoValidateEntrypointResponse (..)
   , ContractMetadata (..)
@@ -38,12 +33,8 @@ import Fmt (Buildable (..), GenericBuildable (..))
 
 import Morley.Debugger.DAP.LanguageServer qualified as MD
 import Morley.Debugger.DAP.TH (deriveSum, jsonfyMany)
-import Morley.Debugger.DAP.Types (MichelsonJson (MichelsonJson))
+import Morley.Debugger.DAP.Types ()
 import Morley.Michelson.Untyped qualified as U
-import Morley.Tezos.Address (ContractAddress, L1Address)
-import Morley.Tezos.Core (ChainId, Mutez, Timestamp)
-import Morley.Tezos.Crypto (KeyHash)
-import Data.Default (Default (def))
 
 data LigoLaunchRequest = LigoLaunchRequest
   { seqLigoLaunchRequest :: Int
@@ -70,43 +61,8 @@ data LigoLaunchRequestArguments = LigoLaunchRequestArguments
 
     -- | Parameter value for contract.
   , parameterLigoLaunchRequestArguments :: Maybe String
-
-    -- | Custom contract environment
-  , contractEnvLigoLaunchRequestArguments :: Maybe LigoContractEnvArguments
   } deriving stock (Eq, Show, Generic)
     deriving Buildable via (GenericBuildable LigoLaunchRequestArguments)
-
-data LigoContractEnvArguments = LigoContractEnvArguments
-  { nowLigoContractEnvArguments :: Maybe $ MichelsonJson Timestamp
-  , balanceLigoContractEnvArguments :: Maybe $ MichelsonJson Mutez
-  , amountLigoContractEnvArguments :: Maybe $ MichelsonJson Mutez
-  , selfLigoContractEnvArguments :: Maybe ContractAddress
-  , sourceLigoContractEnvArguments :: Maybe L1Address
-  , senderLigoContractEnvArguments :: Maybe L1Address
-  , chainIdLigoContractEnvArguments :: Maybe $ MichelsonJson ChainId
-  , levelLigoContractEnvArguments :: Maybe $ MichelsonJson Natural
-  , votingPowersLigoContractEnvArguments :: Maybe LigoVotingPowers
-  } deriving stock (Eq, Show, Generic)
-    deriving Buildable via (GenericBuildable LigoContractEnvArguments)
-
-instance Default LigoContractEnvArguments where
-  def = LigoContractEnvArguments
-    Nothing Nothing Nothing Nothing
-    Nothing Nothing Nothing Nothing Nothing
-
-data LigoVotingPowers
-  = SimpleVotingPowers SimpleVotingPowersInfo
-  deriving stock (Eq, Show, Generic)
-  deriving Buildable via (GenericBuildable LigoVotingPowers)
-
-data SimpleVotingPowersInfo = SimpleVotingPowersInfo
-  { contentsSimpleVotingPowersInfo :: Map (MichelsonJson KeyHash) (MichelsonJson Natural)
-  } deriving stock (Eq, Show, Generic)
-    deriving Buildable via (GenericBuildable SimpleVotingPowersInfo)
-
--- TODO: move it to morley-debugger
-instance Buildable a => Buildable (MichelsonJson a) where
-  build (MichelsonJson v) = build v
 
 data LigoInitializeLoggerRequest = LigoInitializeLoggerRequest
   { seqLigoInitializeLoggerRequest :: Int
@@ -123,20 +79,19 @@ data LigoInitializeLoggerRequestArguments = LigoInitializeLoggerRequestArguments
   } deriving stock (Eq, Show, Generic)
     deriving Buildable via (GenericBuildable LigoInitializeLoggerRequestArguments)
 
-data LigoSetLigoConfigRequest = LigoSetLigoConfigRequest
-  { seqLigoSetLigoConfigRequest :: Int
-  , typeLigoSetLigoConfigRequest :: String
-  , commandLigoSetLigoConfigRequest :: String
-  , argumentsLigoSetLigoConfigRequest :: LigoSetLigoConfigRequestArguments
+data LigoSetLigoBinaryPathRequest = LigoSetLigoBinaryPathRequest
+  { seqLigoSetLigoBinaryPathRequest :: Int
+  , typeLigoSetLigoBinaryPathRequest :: String
+  , commandLigoSetLigoBinaryPathRequest :: String
+  , argumentsLigoSetLigoBinaryPathRequest :: LigoSetLigoBinaryPathRequestArguments
   } deriving stock (Eq, Show, Generic)
-    deriving Buildable via (GenericBuildable LigoSetLigoConfigRequest)
+    deriving Buildable via (GenericBuildable LigoSetLigoBinaryPathRequest)
 
--- | Fields fetched from config.
-data LigoSetLigoConfigRequestArguments = LigoSetLigoConfigRequestArguments
-  { binaryPathLigoSetLigoConfigRequestArguments :: Maybe FilePath
-  , maxStepsLigoSetLigoConfigRequestArguments :: Maybe Word64
+-- | Binary path for LIGO executable.
+data LigoSetLigoBinaryPathRequestArguments = LigoSetLigoBinaryPathRequestArguments
+  { binaryPathLigoSetLigoBinaryPathRequestArguments :: Maybe FilePath
   } deriving stock (Eq, Show, Generic)
-    deriving Buildable via (GenericBuildable LigoSetLigoConfigRequestArguments)
+    deriving Buildable via (GenericBuildable LigoSetLigoBinaryPathRequestArguments)
 
 data LigoSetProgramPathRequest = LigoSetProgramPathRequest
   { seqLigoSetProgramPathRequest :: Int
@@ -217,7 +172,7 @@ data LigoValidateConfigRequestArguments = LigoValidateConfigRequestArguments
 
 data LigoSpecificRequest
   = InitializeLoggerRequest LigoInitializeLoggerRequest
-  | SetLigoConfigRequest LigoSetLigoConfigRequest
+  | SetLigoBinaryPathRequest LigoSetLigoBinaryPathRequest
   | SetProgramPathRequest LigoSetProgramPathRequest
   | ValidateEntrypointRequest LigoValidateEntrypointRequest
   | GetContractMetadataRequest LigoGetContractMetadataRequest
@@ -233,12 +188,12 @@ data LigoInitializeLoggerResponse = LigoInitializeLoggerResponse
   } deriving stock (Show, Eq, Generic)
     deriving Buildable via (GenericBuildable LigoInitializeLoggerResponse)
 
-data LigoSetLigoConfigResponse = LigoSetLigoConfigResponse
-  { seqLigoSetLigoConfigResponse :: Int
-  , request_seqLigoSetLigoConfigResponse :: Int
-  , successLigoSetLigoConfigResponse :: Bool
+data LigoSetLigoBinaryPathResponse = LigoSetLigoBinaryPathResponse
+  { seqLigoSetLigoBinaryPathResponse :: Int
+  , request_seqLigoSetLigoBinaryPathResponse :: Int
+  , successLigoSetLigoBinaryPathResponse :: Bool
   } deriving stock (Show, Eq, Generic)
-    deriving Buildable via (GenericBuildable LigoSetLigoConfigResponse)
+    deriving Buildable via (GenericBuildable LigoSetLigoBinaryPathResponse)
 
 data LigoSetProgramPathResponse = LigoSetProgramPathResponse
   { seqLigoSetProgramPathResponse :: Int
@@ -292,7 +247,7 @@ data LigoValidateConfigResponse = LigoValidateConfigResponse
 
 data LigoSpecificResponse
   = InitializeLoggerResponse LigoInitializeLoggerResponse
-  | SetLigoConfigResponse LigoSetLigoConfigResponse
+  | SetLigoBinaryPathResponse LigoSetLigoBinaryPathResponse
   | SetProgramPathResponse LigoSetProgramPathResponse
   | ValidateEntrypointResponse LigoValidateEntrypointResponse
   | GetContractMetadataResponse LigoGetContractMetadataResponse
@@ -304,10 +259,8 @@ data LigoSpecificResponse
 deriveSum
   [ (''LigoSpecificRequest, "Request", "command", [])
   , (''LigoSpecificResponse, "Response", "command", [])
-  , (''LigoVotingPowers, "VotingPowers", "kind", [])
   ]
 jsonfyMany
   [ ''LigoLaunchRequest
   , ''LigoLaunchRequestArguments
-  , ''LigoContractEnvArguments
   ]

@@ -1,11 +1,8 @@
 open Test_helpers
-open Ast_unified
-
-let e_some element =
-  e_applied_constructor { constructor = Label.of_string "Some"; element }
-
+open Ast_imperative
 
 let get_program = get_program "./contracts/id.mligo"
+let compile_main ~raise () = Test_helpers.compile_main ~raise "./contracts/id.mligo" ()
 
 let first_owner, first_contract =
   let open Proto_alpha_utils.Memory_proto_alpha in
@@ -71,13 +68,12 @@ let buy_id ~raise () =
       ]
   in
   let () =
-    expect_eq_twice
+    expect_eq
       ~raise
       ~options
       program
       "buy"
-      param
-      storage
+      (e_pair ~loc param storage)
       (e_pair ~loc (e_list ~loc []) new_storage)
   in
   ()
@@ -123,7 +119,11 @@ let buy_id_sender_addr ~raise () =
       ]
   in
   let param =
-    e_record_ez ~loc [ "profile", owner_website; "initial_controller", e_none ~loc ]
+    e_record_ez
+      ~loc
+      [ "profile", owner_website
+      ; "initial_controller", e_typed_none ~loc (t_address ~loc ())
+      ]
   in
   let new_storage =
     e_record_ez
@@ -136,13 +136,12 @@ let buy_id_sender_addr ~raise () =
       ]
   in
   let () =
-    expect_eq_twice
+    expect_eq
       ~raise
       ~options
       program
       "buy"
-      param
-      storage
+      (e_pair ~loc param storage)
       (e_pair ~loc (e_list ~loc []) new_storage)
   in
   ()
@@ -187,13 +186,12 @@ let buy_id_wrong_amount ~raise () =
       ]
   in
   let () =
-    expect_string_failwith_twice
+    expect_string_failwith
       ~raise
       ~options
       program
       "buy"
-      param
-      storage
+      (e_pair ~loc param storage)
       "Incorrect amount paid."
   in
   ()
@@ -267,13 +265,12 @@ let update_details_owner ~raise () =
       ]
   in
   let () =
-    expect_eq_twice
+    expect_eq
       ~raise
       ~options
       program
       "update_details"
-      param
-      storage
+      (e_pair ~loc param storage)
       (e_pair ~loc (e_list ~loc []) new_storage)
   in
   ()
@@ -347,13 +344,12 @@ let update_details_controller ~raise () =
       ]
   in
   let () =
-    expect_eq_twice
+    expect_eq
       ~raise
       ~options
       program
       "update_details"
-      param
-      storage
+      (e_pair ~loc param storage)
       (e_pair ~loc (e_list ~loc []) new_storage)
   in
   ()
@@ -410,13 +406,12 @@ let update_details_nonexistent ~raise () =
       ]
   in
   let () =
-    expect_string_failwith_twice
+    expect_string_failwith
       ~raise
       ~options
       program
       "update_details"
-      param
-      storage
+      (e_pair ~loc param storage)
       "This ID does not exist."
   in
   ()
@@ -472,13 +467,12 @@ let update_details_wrong_addr ~raise () =
       ]
   in
   let () =
-    expect_string_failwith_twice
+    expect_string_failwith
       ~raise
       ~options
       program
       "update_details"
-      param
-      storage
+      (e_pair ~loc param storage)
       "You are not the owner or controller of this ID."
   in
   ()
@@ -528,16 +522,18 @@ let update_details_unchanged ~raise () =
   let param =
     e_record_ez
       ~loc
-      [ "id", e_int ~loc 1; "new_profile", e_none ~loc; "new_controller", e_none ~loc ]
+      [ "id", e_int ~loc 1
+      ; "new_profile", e_typed_none ~loc (t_bytes ~loc ())
+      ; "new_controller", e_typed_none ~loc (t_address ~loc ())
+      ]
   in
   let () =
-    expect_eq_twice
+    expect_eq
       ~raise
       ~options
       program
       "update_details"
-      param
-      storage
+      (e_pair ~loc param storage)
       (e_pair ~loc (e_list ~loc []) storage)
   in
   ()
@@ -605,13 +601,12 @@ let update_owner ~raise () =
     e_record_ez ~loc [ "id", e_int ~loc 1; "new_owner", e_address ~loc owner_addr ]
   in
   let () =
-    expect_eq_twice
+    expect_eq
       ~raise
       ~options
       program
       "update_owner"
-      param
-      storage
+      (e_pair ~loc param storage)
       (e_pair ~loc (e_list ~loc []) new_storage)
   in
   ()
@@ -662,13 +657,12 @@ let update_owner_nonexistent ~raise () =
     e_record_ez ~loc [ "id", e_int ~loc 2; "new_owner", e_address ~loc new_addr ]
   in
   let () =
-    expect_string_failwith_twice
+    expect_string_failwith
       ~raise
       ~options
       program
       "update_owner"
-      param
-      storage
+      (e_pair ~loc param storage)
       "This ID does not exist."
   in
   ()
@@ -719,13 +713,12 @@ let update_owner_wrong_addr ~raise () =
     e_record_ez ~loc [ "id", e_int ~loc 0; "new_owner", e_address ~loc new_addr ]
   in
   let () =
-    expect_string_failwith_twice
+    expect_string_failwith
       ~raise
       ~options
       program
       "update_owner"
-      param
-      storage
+      (e_pair ~loc param storage)
       "You are not the owner of this ID."
   in
   ()
@@ -782,13 +775,12 @@ let skip ~raise () =
       ]
   in
   let () =
-    expect_eq_twice
+    expect_eq
       ~raise
       ~options
       program
       "skip"
-      (e_unit ~loc)
-      storage
+      (e_pair ~loc (e_unit ~loc ()) storage)
       (e_pair ~loc (e_list ~loc []) new_storage)
   in
   ()
@@ -836,13 +828,12 @@ let skip_wrong_amount ~raise () =
       ]
   in
   let () =
-    expect_string_failwith_twice
+    expect_string_failwith
       ~raise
       ~options
       program
       "skip"
-      (e_unit ~loc)
-      storage
+      (e_pair ~loc (e_unit ~loc ()) storage)
       "Incorrect amount paid."
   in
   ()

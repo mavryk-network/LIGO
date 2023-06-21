@@ -79,6 +79,7 @@ remain in comments as they would otherwise not compile, for example,
 adding a value of type `int` to a value of type `tez` is invalid. Note
 that adding an integer to a natural number produces an integer.
 
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=a
@@ -135,7 +136,7 @@ let e : nat = 5n + 10n
 let g : int = 1_000_000
 ```
 
-> Tip: you can use underscores for readability when defining large
+> Pro tip: you can use underscores for readability when defining large
 > numbers:
 >
 >```cameligo
@@ -168,7 +169,7 @@ let e: nat = (5 as nat) + (10 as nat);
 let g = 1_000_000;
 ```
 
-> Tip: you can use underscores for readability when defining large
+> Pro tip: you can use underscores for readability when defining large
 > numbers:
 >```jsligo
 >let sum : tez = 100_000 as mutez;
@@ -180,7 +181,8 @@ let g = 1_000_000;
 
 Subtraction looks as follows.
 
-> ⚠️ Even when subtracting two `nats`, the result is an `int`.
+> ⚠️ Even when subtracting two `nats`, the result is an `int`
+
 
 <Syntax syntax="pascaligo">
 
@@ -223,9 +225,8 @@ let b: int = (5 as nat) - (2 as nat);
 
 </Syntax>
 
-From protocol *`Ithaca`* onwards subtracting values of type `tez`
-yeilds an optional value (due to the Michelson instruction
-`SUB_MUTEZ`)
+From protocol *`Ithaca`* onwards subtracting values of type `tez` yeilds on optional value (due to the michelson instruction `SUB_MUTEZ`)
+
 
 <Syntax syntax="pascaligo">
 
@@ -241,7 +242,9 @@ const e : option (tez) = 1mutez - 5mutez (* None *)
 <Syntax syntax="cameligo">
 
 ```cameligo group=b
+
 let d : tez option = 5mutez - 1mutez (* Some (4mutez) *)
+
 let e : tez option = 1mutez - 5mutez (* None *)
 
 ```
@@ -251,7 +254,9 @@ let e : tez option = 1mutez - 5mutez (* None *)
 <Syntax syntax="jsligo">
 
 ```jsligo group=b
+
 let d : option<tez> = (5 as mutez) - (1 as mutez); /* Some (4mutez) */
+
 let e : option<tez> = (1 as mutez) - (5 as mutez); /* None */
 
 ```
@@ -302,7 +307,8 @@ let c: tez = (5 as nat) * (5 as mutez);
 
 In LIGO you can divide `int`, `nat`, and `tez`. Here is how:
 
-> ⚠️ Division of two `tez` values results into a `nat`.
+> ⚠️ Division of two `tez` values results into a `nat`
+
 
 <Syntax syntax="pascaligo">
 
@@ -336,6 +342,7 @@ let c: nat = (10 as mutez) / (3 as mutez);
 
 LIGO also allows you to compute the remainder of the Euclidean
 division. In LIGO, it is a natural number.
+
 
 <Syntax syntax="pascaligo">
 
@@ -391,6 +398,7 @@ For cases when you need both the quotient and the remainder, LIGO provides the
 `ediv` operation. `ediv x y` returns `Some (quotient, remainder)`, unless `y`
 is zero, in which case it returns `None`
 
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=f
@@ -440,6 +448,7 @@ let ediv4: option<[int , nat]> = ediv(a, d);  // Some (7, 2)
 
 You can *cast* an `int` to a `nat` and vice versa. Here is how:
 
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=e
@@ -473,6 +482,7 @@ You can check if a value is a `nat` by using a predefined cast
 function which accepts an `int` and returns an optional `nat`: if the
 result is not `None`, then the provided integer was indeed a natural
 number, and not otherwise.
+
 
 <Syntax syntax="pascaligo">
 
@@ -522,57 +532,4 @@ let seven_ : nat = 14n land 1n // 7
 
 </Syntax>
 
-<Syntax syntax="jsligo">
 
-## Increment operator
-
-Increment opeator increments (adds one to) the value of the binder.
-
-In the **prefix** position (`++p`) the operator increments the value and returns 
-the latest incremented value.
-
-In the **postfix** position (`p++`) the operator increments the value but 
-returns the old value before the increment.
-
-```jsligo test-ligo group=increment_ops
-
-const testInc = (() => {
-  let inc = 0;
-  
-  // Prefix increment operator
-  assert(++inc == 1);
-
-  // Postfix increment operator
-  assert(inc++ == 1);
-  assert(inc   == 2);
-})();
-
-```
-
-
-## Decrement operator 
-
-Decrement opeator decrements (subtracts one from) the value of the binder.
-
-In the **prefix** position (`--p`) the operator decrements the value and returns 
-the latest decremented value.
-
-In the **postfix** position (`p--`) the operator decrements the value but 
-returns the old value before the decrement.
-
-```jsligo test-ligo group=decrement_ops
-
-const testDec = (() => {
-  let dec = 10;
-
-  // Prefix decrement operator
-  assert(--dec == 9);
-
-  // Postfix decrement operator
-  assert(dec-- == 9);
-  assert(dec   == 8);
-})();
-
-```
-
-</Syntax>

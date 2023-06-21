@@ -1,0 +1,30 @@
+; This file was automatically generated, do not edit.
+; Edit file manifest/main.ml instead.
+
+(library
+ (name tezos_stdlib_unix)
+ (public_name tezos-stdlib-unix)
+ (instrumentation (backend bisect_ppx))
+ (libraries
+  unix
+  tezos-error-monad
+  tezos-lwt-result-stdlib
+  tezos-event-logging
+  tezos-stdlib
+  data-encoding
+  lwt.unix
+  ipaddr.unix
+  re
+  ezjsonm
+  ptime
+  mtime
+  mtime.clock.os
+  lwt_log
+  uri)
+ (flags
+  (:standard)
+  -open Tezos_error_monad
+  -open Tezos_error_monad.TzLwtreslib
+  -open Tezos_event_logging
+  -open Tezos_stdlib
+  -open Data_encoding))

@@ -82,7 +82,7 @@ const main = ([action, store]: [parameter, storage]): return_ => {
 
 </Syntax>
 
-To obtain Michelson code from it, we run the LIGO compiler like so:
+To obtain Michelson code from it, we run the LIGO compiler:
 
 <Syntax syntax="pascaligo">
 
@@ -214,6 +214,7 @@ ligo compile parameter gitlab-pages/docs/advanced/src/testing/mockup_testme.mlig
 ```
 
 </Syntax>
+
 
 So our parameter is simply the string (notice that the constructor
 `Append` was removed). We execute a call to the contract with this

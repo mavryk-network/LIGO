@@ -1,33 +1,25 @@
 -- | Reading debug info from ligo debug output.
 module Test.DebugInfo
-  ( test_SourceMapper
-  , test_Errors
-  , test_Function_call_locations
+  ( module Test.DebugInfo
   ) where
 
 import Control.Lens (_Empty, hasn't)
 import Data.Default (def)
-import Data.Set qualified as Set
+import Data.Typeable (cast)
 import Fmt (Buildable (..), pretty)
-import Test.HUnit (Assertion)
 import Test.Tasty (TestTree, testGroup)
 import Test.Util
 import Text.Interpolation.Nyan
 
-import Morley.Debugger.Core (SourceLocation, SourceLocation' (..), SrcLoc (..))
-import Morley.Michelson.Parser.Types (MichelsonSource (MSFile))
+import Morley.Debugger.Core (SourceLocation (..))
+import Morley.Michelson.ErrorPos (Pos (..), SrcPos (..))
 import Morley.Michelson.Typed qualified as T
 import Morley.Michelson.Typed.Util (dsGoToValues)
-import Morley.Util.PeanoNatural (toPeanoNatural')
 
-import Language.LIGO.AST (LIGO)
 import Language.LIGO.Debugger.CLI.Call
 import Language.LIGO.Debugger.CLI.Types
-import Language.LIGO.Debugger.Common
-import Language.LIGO.Debugger.Handlers.Helpers
 import Language.LIGO.Debugger.Michelson
-import Language.LIGO.Parser (ParsedInfo)
-import Language.LIGO.Range
+import Language.LIGO.Debugger.Snapshots
 
 data SomeInstr = forall i o. SomeInstr (T.Instr i o)
 
@@ -39,23 +31,21 @@ instance Buildable SomeInstr where
   build (SomeInstr i) = build i
 
 -- | Get instructions with associated 'InstrNo' metas.
-collectCodeMetas :: HashMap FilePath (LIGO ParsedInfo) -> T.Instr i o -> [(EmbeddedLigoMeta, SomeInstr)]
-collectCodeMetas parsedContracts = T.dfsFoldInstr def { dsGoToValues = True } \case
-  T.ConcreteMeta meta i ->
-    case liiLocation meta of
-      Just loc
-        | shouldIgnoreMeta loc i parsedContracts -> mempty
-      _ -> one (meta, SomeInstr i)
+collectCodeMetas :: T.Instr i o -> [(EmbeddedLigoMeta, SomeInstr)]
+collectCodeMetas = T.dfsFoldInstr def { dsGoToValues = True } \case
+  T.Meta (T.SomeMeta (cast -> Just (meta :: EmbeddedLigoMeta))) i -> case i of
+    T.LAMBDA _ -> mempty
+    _ -> one (meta, SomeInstr i)
   _ -> mempty
 
-collectContractMetas :: HashMap FilePath (LIGO ParsedInfo) -> T.Contract cp st -> [(EmbeddedLigoMeta, SomeInstr)]
-collectContractMetas parsedContracts = collectCodeMetas parsedContracts . T.unContractCode . T.cCode
+collectContractMetas :: T.Contract cp st -> [(EmbeddedLigoMeta, SomeInstr)]
+collectContractMetas = collectCodeMetas . T.unContractCode . T.cCode
 
--- | Run the given contract + entrypoint, build code with embedded ligo metadata.
+-- | Run the given contract + entrypoint, build code with embedded ligo metadata,
 buildSourceMapper
   :: FilePath
   -> String
-  -> IO (Set ExpressionSourceLocation, T.SomeContract, [FilePath], HashSet Range, LigoType)
+  -> IO (Set ExpressionSourceLocation, T.SomeContract, [FilePath])
 buildSourceMapper file entrypoint = do
   ligoMapper <- compileLigoContractDebug entrypoint file
   case readLigoMapper ligoMapper typesReplaceRules instrReplaceRules of
@@ -75,28 +65,21 @@ test_SourceMapper = testGroup "Reading source mapper"
   [ testCase "simple-ops.mligo contract" do
       let file = contractsDir </> "simple-ops.mligo"
 
-      (exprLocs, T.SomeContract contract, allFiles, _, _) <- buildSourceMapper file "main"
-
-      parsedContracts <- parseContracts allFiles
-
+      (exprLocs, T.SomeContract contract, _) <- buildSourceMapper file "main"
       let nonEmptyMetasAndInstrs =
             map (first stripSuffixHashFromLigoIndexedInfo) $
             filter (hasn't (_1 . _Empty)) $
-            collectContractMetas parsedContracts contract
+            collectContractMetas contract
 
-      let unitIntTuple' = mkPairType
-            (mkSimpleConstantType "Unit")
-            (mkSimpleConstantType "Int")
-
-      let unitIntTuple = LigoTypeResolved unitIntTuple'
-
-      let operationList' = mkConstantType "List" [mkSimpleConstantType "operation"]
-      let operationList = LigoTypeResolved operationList'
-
-      let resultType' = mkPairType operationList' intType'
-      let resultType = LigoTypeResolved resultType'
-
-      let mainType = LigoTypeResolved $ unitIntTuple' ~> resultType'
+      let mainType = LigoTypeResolved
+            ( mkPairType
+                (mkSimpleConstantType "Unit")
+                (mkSimpleConstantType "Int")
+              `mkArrowType`
+              mkPairType
+                (mkConstantType "List" [mkSimpleConstantType "operation"])
+                (mkSimpleConstantType "Int")
+            )
 
       nonEmptyMetasAndInstrs
         @?=
@@ -105,11 +88,7 @@ test_SourceMapper = testGroup "Reading source mapper"
             ?- SomeInstr dummyInstr
 
         , LigoMereEnvInfo
-            [LigoStackEntryNoVar unitIntTuple]
-            ?- SomeInstr dummyInstr
-
-        , LigoMereEnvInfo
-            [LigoStackEntryNoVar unitIntTuple]
+            [LigoHiddenStackEntry]
             ?- SomeInstr dummyInstr
 
         , LigoMereEnvInfo
@@ -125,87 +104,40 @@ test_SourceMapper = testGroup "Reading source mapper"
             ?- SomeInstr dummyInstr
 
         , LigoMereLocInfo
-            (Range (LigoPosition 2 12) (LigoPosition 2 18) file)
-            intType
+            (LigoRange file (LigoPosition 2 15) (LigoPosition 2 17))
+            ?- SomeInstr (T.PUSH $ T.VInt 42)
+
+        , LigoMereLocInfo
+            (LigoRange file (LigoPosition 2 11) (LigoPosition 2 17))
             ?- SomeInstr (T.ADD @'T.TInt @'T.TInt)
 
+        , LigoMereEnvInfo
+            [LigoStackEntryVar "s2" intType]
+            ?- SomeInstr dummyInstr
+
         , LigoMereLocInfo
-            (Range (LigoPosition 2 12) (LigoPosition 2 18) file)
-            intType
-            ?- SomeInstr
-                (    T.Nested
-                $    T.Nested (T.PUSH @'T.TInt (T.VInt 42))
-                T.:# T.Nested (T.SWAP)
-                T.:# T.ADD @'T.TInt @'T.TInt
-                )
+            (LigoRange file (LigoPosition 3 21) (LigoPosition 3 22))
+            ?- SomeInstr (T.PUSH $ T.VInt 2)
+
+        , LigoMereLocInfo
+            (LigoRange file (LigoPosition 3 11) (LigoPosition 3 18))
+            ?- SomeInstr (T.MUL @'T.TInt @'T.TInt)
+
+        , LigoMereLocInfo
+            (LigoRange file (LigoPosition 3 11) (LigoPosition 3 22))
+            ?- SomeInstr (T.MUL @'T.TInt @'T.TInt)
 
         , LigoMereEnvInfo
             [LigoStackEntryVar "s2" intType]
             ?- SomeInstr dummyInstr
 
         , LigoMereLocInfo
-            (Range (LigoPosition 3 12) (LigoPosition 3 19) file)
-            intType
-            ?- SomeInstr (T.MUL @'T.TInt @'T.TInt)
-
-        , LigoMereLocInfo
-            (Range (LigoPosition 3 12) (LigoPosition 3 19) file)
-            intType
-            ?- SomeInstr
-                (    T.Nested
-                $    T.Nested (T.DUPN @_ @_ @_ @'T.TInt $ toPeanoNatural' @2)
-                T.:# T.Nested (T.DUPN @_ @_ @_ @'T.TInt $ toPeanoNatural' @3)
-                T.:# T.MUL @'T.TInt @'T.TInt
-                )
-
-        , LigoMereLocInfo
-            (Range (LigoPosition 3 12) (LigoPosition 3 23) file)
-            intType
-            ?- SomeInstr (T.MUL @'T.TInt @'T.TInt)
-
-        , LigoMereLocInfo
-            (Range (LigoPosition 3 12) (LigoPosition 3 23) file)
-            intType
-            ?- SomeInstr
-                (    T.Nested
-                $    T.Nested (T.PUSH @'T.TInt (T.VInt 2))
-                T.:# T.Nested
-                       (    T.Nested (T.DUPN @_ @_ @_ @'T.TInt $ toPeanoNatural' @2)
-                       T.:# T.Nested (T.DUPN @_ @_ @_ @'T.TInt $ toPeanoNatural' @3)
-                       T.:# T.MUL @'T.TInt @'T.TInt
-                       )
-                T.:# T.MUL
-                T.:# T.DROP
-                )
-
-        , LigoMereEnvInfo
-            [LigoStackEntryVar "s2" intType]
-            ?- SomeInstr dummyInstr
-
-        , LigoMereLocInfo
-            (Range (LigoPosition 4 4) (LigoPosition 4 25) file)
-            operationList
+            (LigoRange file (LigoPosition 4 3) (LigoPosition 4 24))
             ?- SomeInstr (T.NIL @'T.TOperation)
 
         , LigoMereLocInfo
-            (Range (LigoPosition 4 4) (LigoPosition 4 25) file)
-            operationList
-            ?- SomeInstr (T.Nested $ T.NIL @'T.TOperation)
-
-        , LigoMereLocInfo
-            (Range (LigoPosition 4 4) (LigoPosition 4 29) file)
-            resultType
+            (LigoRange file (LigoPosition 4 3) (LigoPosition 4 28))
             ?- SomeInstr T.PAIR
-
-        , LigoMereLocInfo
-            (Range (LigoPosition 4 4) (LigoPosition 4 29) file)
-            resultType
-            ?- SomeInstr
-                (    T.Nested
-                $    T.Nested T.Nop
-                T.:# T.Nested (T.NIL @'T.TOperation)
-                T.:# T.PAIR
-                )
 
         , LigoMereEnvInfo
             [ LigoStackEntryVar "main" mainType
@@ -215,39 +147,37 @@ test_SourceMapper = testGroup "Reading source mapper"
 
         ]
 
-      ((_slStart &&& _slEnd) <$> toList (getInterestingSourceLocations parsedContracts exprLocs))
+      ((_slStart &&& _slEnd) <$> toList (getInterestingSourceLocations exprLocs))
         @?=
         -- Note: the order of entries below is not the interpretation order
         -- because we extracted these pairs from Set with its lexicographical order
-        [ ( SrcLoc 1 11
-          , SrcLoc 1 17
+        [ ( SrcPos (Pos 1) (Pos 11)
+          , SrcPos (Pos 1) (Pos 17)
           )
-        , ( SrcLoc 2 11
-          , SrcLoc 2 18
+        , ( SrcPos (Pos 2) (Pos 11)
+          , SrcPos (Pos 2) (Pos 18)
           )
-        , ( SrcLoc 2 11
-          , SrcLoc 2 22
+        , ( SrcPos (Pos 2) (Pos 11)
+          , SrcPos (Pos 2) (Pos 22)
           )
-        , ( SrcLoc 3 3
-          , SrcLoc 3 24
+        , ( SrcPos (Pos 3) (Pos 3)
+          , SrcPos (Pos 3) (Pos 24)
           )
-        , ( SrcLoc 3 3
-          , SrcLoc 3 28
+        , ( SrcPos (Pos 3) (Pos 3)
+          , SrcPos (Pos 3) (Pos 28)
           )
         ]
 
   , testCase "metas are not shifted in `if` blocks" do
       let file = contractsDir </> "if.mligo"
-      (_, T.SomeContract contract, allFiles, _, _) <- buildSourceMapper file "main"
+      (_, T.SomeContract contract, _) <- buildSourceMapper file "main"
 
-      parsedContracts <- parseContracts allFiles
-
-      forM_ @_ @_ @() (collectContractMetas parsedContracts contract)
+      forM_ @_ @_ @() (collectContractMetas contract)
         \(LigoIndexedInfo{..}, SomeInstr instr) -> case instr of
           T.MUL -> liiLocation @?= Just
-            do Range (LigoPosition 2 27) (LigoPosition 2 32) file
+            do LigoRange file (LigoPosition 2 26) (LigoPosition 2 31)
           T.CAR -> liiLocation @?= Just
-            do Range (LigoPosition 2 38) (LigoPosition 2 43) file
+            do LigoRange file (LigoPosition 2 37) (LigoPosition 2 42)
           _ -> pass
 
   ]
@@ -261,42 +191,4 @@ test_Errors = testGroup "Errors"
       case readLigoMapper ligoMapper typesReplaceRules instrReplaceRules of
         Left (PreprocessError UnsupportedTicketDup) -> pass
         _ -> assertFailure [int||Expected "UnsupportedTicketDup" error.|]
-  ]
-
-test_Function_call_locations :: TestTree
-test_Function_call_locations = testGroup "Function call locations"
-  let
-    makeSourceLocation :: FilePath -> (Word, Word) -> (Word, Word) -> SourceLocation
-    makeSourceLocation filepath (startL, startCol) (endLine, endCol) =
-      SourceLocation
-        (MSFile filepath)
-        (SrcLoc (startL - 1) startCol)
-        (SrcLoc (endLine - 1) endCol)
-
-    checkLocations :: FilePath -> [((Word, Word), (Word, Word))] -> Assertion
-    checkLocations contractName expectedLocs = do
-      let file = contractsDir </> contractName
-      (Set.map (rangeToSourceLocation . eslRange) -> locs, _, _, _, _) <- buildSourceMapper file "main"
-
-      forM_ (uncurry (makeSourceLocation file) <$> expectedLocs) \loc -> do
-        if Set.member loc locs
-        then pass
-        else assertFailure [int||Expected #{loc} to be a part of #{toList locs}|]
-  in
-  [ testCase "Locations for built-ins" do
-      let expectedLocs =
-            [ ((2, 12), (2, 18)) -- "is_nat" location
-            , ((3, 11), (3, 17)) -- "assert" location
-            , ((9, 12), (9, 21)) -- "List.fold" location
-            ]
-
-      checkLocations "builtins-locations.mligo" expectedLocs
-
-  , testCase "Locations for user-defined functions" do
-      let expectedLocs =
-            [ ((3, 32), (3, 35)) -- "add" location
-            , ((7, 12), (7, 16)) -- "add5" location
-            ]
-
-      checkLocations "apply.mligo" expectedLocs
   ]

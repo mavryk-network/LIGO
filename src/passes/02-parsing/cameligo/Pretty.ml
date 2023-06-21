@@ -1,1272 +1,585 @@
-(* A pretty printer for CameLIGO *)
-
-(* Jane Street dependency *)
+[@@@warning "-42"]
 
 module List = Core.List
 
-(* Vendored dependencies *)
-
-module Utils  = Simple_utils.Utils
-module Region = Simple_utils.Region
-
-(* Local dependencies *)
-
 module CST = Cst_cameligo.CST
-module PrettyComb = Parsing_shared.PrettyComb
-
-(* Global openings *)
-
 open CST
+module Region = Simple_utils.Region
 open! Region
 open! PPrint
+module Option = Simple_utils.Option
+module Token  = Lexing_cameligo.Token
 
-(* Utilities and local shadowings *)
+let pp_par printer {value; _} =
+  string "(" ^^ nest 1 (printer value.inside ^^ string ")")
 
-let prefix = PrettyComb.prefix
-let (^/^)  = PrettyComb.(^/^)
-type state = PrettyComb.state
+(* The CST *)
 
-let (<@) = Utils.(<@)
-
-(* Placement *)
-
-let default_state : state =
-  object
-    method indent       = 2
-    method leading_vbar = PrettyComb.Only_on_new_line
-  end
-
-(* Comments *)
-
-let print_line_comment comment = string "//" ^^ string comment.value
-
-let print_block_comment comment =
-  string "(*" ^^ string comment.value ^^ string "*)"
-
-let print_line_comment_opt prefix = function
-  None -> prefix
-| Some comment -> prefix ^^ space ^^ print_line_comment comment
-
-let print_comment = function
-  Wrap.Block comment -> print_block_comment comment
-| Wrap.Line  comment -> print_line_comment  comment
-
-let print_comments = function
-  [] -> empty
-| comments -> separate_map hardline print_comment comments ^^ hardline
-
-(* Tokens *)
-
-let token (t : string Wrap.t) : document =
-  let prefix = print_comments t#comments ^/^ string t#payload
-  in print_line_comment_opt prefix t#line_comment
-
-(* Enclosed documents *)
-
-let print_enclosed_document
-    state ?(force_hardline : bool option) (thread : document)
-    break_size left right =
-  let left  = token left
-  and right = token right in
-  group (
-    match force_hardline with
-      None | Some false ->
-        nest state#indent (left ^^ break break_size ^^ thread)
-        ^^ break break_size ^^ right
-    | Some true ->
-        nest state#indent (left ^^ hardline ^^ thread)
-        ^^ hardline ^^ right)
-
-(* HIGHER-ORDER PRINTERS *)
-
-let print_braces_like_document
-  state inside ?(force_hardline : bool option) left right =
-  print_enclosed_document state ?force_hardline inside 0 left right
-
-let print_braces state print
-  ?(force_hardline : bool option) (node : 'a braces) =
-  let {lbrace; inside; rbrace} = node.value in
-  print_braces_like_document
-    state ?force_hardline (print inside) lbrace rbrace
-
-let print_brackets_like_document
-  state inside ?(force_hardline : bool option) left right =
-  print_enclosed_document state ?force_hardline inside 0 left right
-
-let print_brackets state print (node : 'a brackets) =
-  let {lbracket; inside; rbracket} = node.value in
-  print_brackets_like_document
-    state ~force_hardline:false (print inside) lbracket rbracket
-
-(*
-let print_par_like_document
-  state inside ?(force_hardline : bool option) left right =
-  print_enclosed_document state ?force_hardline inside 0 left right
-
-let print_par state print (node : 'a par) =
-  let {lpar; inside; rpar} = node.value in
-  print_par_like_document
-    state ~force_hardline:false (print inside) lpar rpar
-*)
-
-let print_par : ('a -> document) -> 'a par -> document =
-  fun print node ->
-    let {lpar; inside; rpar} = node.value in
-    token lpar ^^ nest 1 (print inside ^^ token rpar)
-
-(* The separator [sep] here represents some extra spacing (like spaces
-   or newlines) that will be printed after every separator in a
-   sequence of type [Utils.nsepseq]. *)
-
-let print_nsepseq :
-  'a.document -> ('a -> document) ->
-  ('a, lexeme Wrap.t) Utils.nsepseq -> document =
-  fun terminator print elements ->
-    let hd, tl = elements in
-    let rec separate_map = function
-      []            -> empty
-    | (sep', x)::xs -> token sep' ^^ terminator ^^ print x ^^ separate_map xs
-    in group (print hd ^^ separate_map tl)
-
-let print_sepseq :
-  'a.document -> ('a -> document) ->
-  ('a, lexeme wrap) Utils.sepseq -> document =
-  fun terminator print -> function
-    None     -> empty
-  | Some seq -> print_nsepseq terminator print seq
-
-let print_nseq : 'a.('a -> document) -> 'a Utils.nseq -> document =
-  fun print (head, tail) -> separate_map (break 1) print (head::tail)
-
-(* Enclosed structures *)
-(*
-let is_enclosed_expr = function
-  E_List _ | E_Par _ | E_Record _ | E_Update _ | E_Seq _ -> true
-| _ -> false
-
-let is_enclosed_type = function
-  T_Par _ | T_Record _ -> true
-| _ -> false
-*)
-
-(* UTILITIES *)
-
-let unroll_D_Attr (attr, decl) =
-  let rec aux attrs = function
-    D_Attr {value = (attr, decl); _ } -> aux (attr :: attrs) decl
-  | decl                              -> List.rev attrs, decl
-  in aux [attr] decl
-
-let unroll_S_attr (attr, sig_item) =
-  let rec aux attrs = function
-    S_Attr {value = (attr, sig_item); _ } -> aux (attr :: attrs) sig_item
-  | sig_item                              -> List.rev attrs, sig_item
-  in aux [attr] sig_item
-
-let unroll_T_Attr (attr, type_expr) =
-  let rec aux attrs = function
-    T_Attr (attr, type_expr) -> aux (attr :: attrs) type_expr
-  | type_expr                -> List.rev attrs, type_expr
-  in aux [attr] type_expr
-
-let unroll_P_Attr (attr, pattern) =
-  let rec aux attrs = function
-    P_Attr (attr, pattern) -> aux (attr :: attrs) pattern
-  | pattern                -> List.rev attrs, pattern
-  in aux [attr] pattern
-
-let unroll_E_Attr (attr, expr) =
-  let rec aux attrs = function
-    E_Attr (attr, expr) -> aux (attr :: attrs) expr
-  | expr                -> List.rev attrs, expr
-  in aux [attr] expr
-
-(* PRINTING LITERALS *)
-
-let print_bytes (node : (lexeme * Hex.t) wrap) =
-  let prefix = print_comments node#comments
-               ^/^ string ("0x" ^ Hex.show (snd node#payload))
-  in print_line_comment_opt prefix node#line_comment
-
-let print_mutez (node : (lexeme * Int64.t) wrap) =
-  let prefix = print_comments node#comments
-               ^/^ (Int64.to_string (snd node#payload) ^ "mutez" |> string)
-  in print_line_comment_opt prefix node#line_comment
-
-let print_ident (node : variable) = token node
-
-let print_string (node : lexeme wrap) =
-  dquotes (print_ident node)
-
-let print_verbatim (node : lexeme wrap) =
-  string "{|" ^^ print_ident node ^^ string "|}"
-
-let print_int (node : (lexeme * Z.t) wrap) =
-  let prefix = print_comments node#comments
-               ^/^ string (Z.to_string (snd node#payload))
-  in print_line_comment_opt prefix node#line_comment
-
-and print_nat (node : (lexeme * Z.t) wrap) =
-  let prefix = print_comments node#comments
-               ^/^ string (Z.to_string (snd node#payload) ^ "n")
-  in print_line_comment_opt prefix node#line_comment
-
-(* PRINTING THE CST *)
-
-let rec print state (cst: CST.t) =
-  let {decl; eof} = cst in
-  let decls = print_declarations state decl
-  in match eof#comments with
-       [] -> decls
-     | comments -> decls ^/^ print_comments comments
-
-(* DECLARATIONS (top-level) *)
-
-and print_declarations state (node : declaration Utils.nseq) =
-   print_decl_list state (Utils.nseq_to_list node)
-
-and print_decl_list state (node : declaration list) =
-  List.map ~f:(print_declaration state) node
+let rec print cst =
+    Utils.nseq_to_list cst.decl
+  |> List.map ~f:pp_declaration
   |> separate_map hardline group
 
-and print_declaration state = function
-  D_Attr      d -> print_D_Attr      state d
-| D_Directive d -> print_D_Directive state d
-| D_Let       d -> print_D_Let       state d ^^ hardline
-| D_Module    d -> print_D_Module    state d ^^ hardline
-| D_Type      d -> print_D_Type      state d ^^ hardline
-| D_Signature d -> print_D_Signature state d ^^ hardline
+(* Declarations *)
 
+and pp_declaration = function
+  Let         decl -> pp_let_decl     decl ^^ hardline
+| TypeDecl    decl -> pp_type_decl    decl ^^ hardline
+| ModuleDecl  decl -> pp_module_decl  decl ^^ hardline
+| ModuleAlias decl -> pp_module_alias decl ^^ hardline
+| Directive   dir  -> string (Directive.to_lexeme dir).Region.value
 
-(* SIGNATURE DECLARATIONS *)
+(* Variables *)
 
-and print_sig_item_list state (node : sig_item list) =
-  List.map ~f:(print_sig_item state) node
-  |> separate_map hardline group
+and pp_ident t = string t.value
 
-and print_sig_item state = function
-  S_Attr       d -> print_S_Attr     state d
-| S_Value      d -> print_S_Value    state d ^^ hardline
-| S_Type       d -> print_S_Type     state d ^^ hardline
-| S_Type_var   d -> print_S_Type_var       d ^^ hardline
+(* Strings *)
 
-(* Attributed declaration *)
+and pp_string s = string "\"" ^^ pp_ident s ^^ string "\""
 
-and print_D_Attr state (node : (attribute * declaration) reg) =
-  let attributes, declaration = unroll_D_Attr node.value in
-  let thread = print_declaration state declaration
-  in print_attributes state thread attributes
+(* Verbatim strings *)
 
-and print_attribute state (node : Attr.t wrap) =
-  let key, val_opt = node#payload in
-  let thread = string key in
-  let thread = match val_opt with
-                 Some (String value | Ident value) ->
-                   group (thread ^/^ nest state#indent (string value))
-               | None -> thread in
-  let thread = print_comments node#comments
-               ^/^ lbracket ^^ at ^^ thread ^^ rbracket
-  in print_line_comment_opt thread node#line_comment
-
-and print_attributes state thread = function
-  [] -> thread
-| a  -> group (separate_map (break 0) (print_attribute state) a ^/^ thread)
-
-(* Attributed sig. item *)
-
-and print_S_Attr state (node : (attribute * sig_item) reg) =
-  let attributes, sig_item = unroll_S_attr node.value in
-  let thread = print_sig_item state sig_item
-  in print_attributes state thread attributes
-
-(* Preprocessing directives *)
-
-and print_D_Directive _state (node : Directive.t) =
-  string (Directive.to_lexeme node).Region.value
+and pp_verbatim s = string "{|" ^^ pp_ident s ^^ string "|}"
 
 (* Value declarations *)
 
-and print_D_Let state (node : let_decl reg) =
-  let kwd_let, rec_opt, let_binding = node.value in
+and pp_let_decl {value; _} =
+  let _, rec_opt, binding, attr = value in
   let let_str =
     match rec_opt with
-      None         -> token kwd_let
-    | Some kwd_rec -> token kwd_let ^^ space ^^ token kwd_rec
-  in let_str ^^ space ^^ print_let_binding state let_binding
+        None -> string "let "
+    | Some _ -> string "let rec " in
+  let let_str = if List.is_empty attr then let_str
+                else pp_attributes attr ^/^ let_str
+  in let_str ^^ pp_let_binding binding
 
-and print_let_binding state (node : let_binding) =
-  let {binders; type_params; rhs_type; eq; let_rhs} = node in
+and pp_attribute (node : Attr.t reg) =
+  let key, val_opt = node.value in
+  let thread = string "[@" ^^ string key in
+  let thread = match val_opt with
+                 Some (String value | Ident value) ->
+                   group (thread ^/^ nest 2 (string value))
+               | None -> thread in
+  let thread = thread ^^ string "]"
+  in thread
+
+and pp_attributes = function
+     [] -> empty
+| attrs -> separate_map (break 0) pp_attribute attrs
+
+and pp_let_binding (binding : let_binding) =
+  let {type_params; binders; rhs_type; let_rhs; _} = binding in
   let head, tail = binders in
-  let thread = print_type_params (print_pattern state head) type_params in
+  let thread = pp_type_params (pp_pattern head) type_params in
   let thread =
     if List.is_empty tail then thread
     else
-      let patterns = separate_map (break 1) (print_pattern state) tail in
-      thread ^^ group (nest state#indent (break 1 ^^ patterns)) in
-  let thread = print_opt_type state thread rhs_type in
-  group (thread ^^ space ^^ token eq ^//^ print_expr state let_rhs)
-
-and print_opt_type state thread = function
-  None   -> thread
-| Some a -> print_type_annotation state thread a
-
-and print_type_annotation state thread (colon, type_expr : type_annotation) =
-  group (thread ^/^
-         nest
-           state#indent
-           (token colon ^^ space ^^ print_type_expr state type_expr))
-
-and print_type_params thread (node : type_params par option) =
-  match node with
-    None    -> thread
-  | Some {value; _ } ->
-      let {lpar; inside=(kwd_type, vars); rpar} = value in
-      let params = print_nseq print_ident vars in
-      thread ^^ token lpar ^^ token kwd_type ^^ params ^^ token rpar
-      ^^ space
-
-
-(* Value declarations (signature) *)
-
-and print_S_Value state (node : (kwd_val * variable * colon * type_expr) reg) =
-  let kwd_val, var, colon, type_expr = node.value
-  in token kwd_val ^^ space ^^ print_ident var ^^ space ^^ token colon ^^ space ^^ print_type_expr state type_expr
-
-(* Module declaration (structure) *)
-
-and print_D_Module state (node : module_decl reg) =
-  let {kwd_module; name; eq; module_expr; annotation = _} = node.value in
-  let name        = print_ident name
-  and module_expr = print_module_expr state module_expr
-  in group (token kwd_module ^^ space ^^ name ^^ space ^^ token eq
-            ^^ space ^^ module_expr)
-
-and print_module_expr state = function
-  M_Body e -> print_M_Body state e
-| M_Path e -> print_M_Path       e
-| M_Var  e -> print_M_Var        e
-
-and print_M_Body state (node : module_body reg) =
-  let {kwd_struct; declarations; kwd_end} = node.value in
-  let decls = print_decl_list state declarations in
-  let decls = nest state#indent (break 0 ^^ decls) in
-  group (token kwd_struct ^^ decls ^^ hardline ^^ token kwd_end)
-
-and print_M_Path (node : module_name module_path reg) =
-  print_module_path print_ident node
-
-and print_M_Var (node : module_name) = print_ident node
-
-
-(* Module declaration (signature) *)
-
-and print_D_Signature state (node : signature_decl reg) =
-  let {kwd_module; kwd_type; name; eq; signature_expr} = node.value in
-  let name        = print_ident name
-  and signature_expr = print_signature_expr state signature_expr
-  in group (token kwd_module ^^ space ^^ token kwd_type ^^ space ^^ name ^^ space ^^ token eq
-            ^^ space ^^ signature_expr)
-
-and print_signature_expr state = function
-  S_Sig  e -> print_S_sig  state e
-| S_Path e -> print_S_path       e
-| S_Var  e -> print_S_var        e
-
-and print_S_sig state (node : signature_body reg) =
-  let {kwd_sig; sig_items; kwd_end} = node.value in
-  let decls = print_sig_item_list state sig_items in
-  let decls = nest state#indent (break 0 ^^ decls) in
-  group (token kwd_sig ^^ decls ^^ hardline ^^ token kwd_end)
-
-and print_S_path (node : module_name module_path reg) =
-  print_module_path print_ident node
-
-and print_S_var (node : module_name) = print_ident node
-
-(* Type declaration *)
-
-and print_D_Type state (node : type_decl reg) =
-  print_type_decl state node.value
-
-and print_type_decl state (node : type_decl) =
-  let {kwd_type; params; name; eq; type_expr} = node in
-  let name    = print_ident name
-  and params  = print_type_vars params
-  and padding = match type_expr with T_Variant _ -> 0 | _ -> state#indent
-  and t_expr  = print_type_expr state type_expr in
-  token kwd_type ^^ space ^^ params ^^ name ^^ space ^^ token eq
-  ^^ group (nest padding (break 1 ^^ t_expr))
-
-and print_type_vars (node : type_vars option) =
-  match node with
-    None -> empty
-  | Some TV_Single param ->
-      print_type_var param ^^ space
-  | Some TV_Tuple tuple ->
-      print_par (print_nsepseq (break 1) print_type_var) tuple ^^ space
-
-and print_type_var (node : type_var) =
-  match node.value with
-    Some quote, var -> token quote ^^ print_ident var
-  | None, var       -> print_ident var
-
-(* Type declaration (signature) *)
-
-and print_S_Type state (node : (kwd_type * variable * equal * type_expr) reg) =
-  let kwd_type, name, eq, type_expr = node.value in
-  let name    = print_ident name
-  and padding = match type_expr with T_Variant _ -> 0 | _ -> state#indent
-  and t_expr  = print_type_expr state type_expr in
-  token kwd_type ^^ space ^^ name ^^ space ^^ token eq
-  ^^ group (nest padding (break 1 ^^ t_expr))
-
-
-and print_S_Type_var (node : (kwd_type * variable) reg) =
-  let kwd_type, name = node.value in
-  let name    = print_ident name in
-  token kwd_type ^^ space ^^ name
-
-(* TYPE EXPRESSIONS *)
-
-(* IMPORTANT: The data constructors are sorted alphabetically. If you
-   add or modify some, please make sure they remain in order. *)
-
-and print_type_expr state = function
-  T_App       t -> print_T_App       state t
-| T_Arg       t -> print_T_Arg             t
-| T_Attr      t -> print_T_Attr      state t
-| T_Cart      t -> print_T_Cart      state t
-| T_Fun       t -> print_T_Fun       state t
-| T_Int       t -> print_T_Int             t
-| T_ModPath   t -> print_T_ModPath   state t
-| T_Par       t -> print_T_Par       state t
-| T_Record    t -> print_T_Record    state t
-| T_String    t -> print_T_String          t
-| T_Variant   t -> print_T_Variant   state t
-| T_Var       t -> print_T_Var             t
-| T_Parameter t -> print_T_Parameter       t
-
-(* Type application *)
-
-and print_T_App state (node : (type_expr * type_ctor_arg) reg) =
-  let ctor, arg = node.value in
-  print_type_ctor_arg state arg ^//^ print_type_expr state ctor
-
-and print_type_ctor_arg state = function
-  TC_Single t -> print_type_expr      state t
-| TC_Tuple  t -> print_ctor_arg_tuple state t
-
-and print_ctor_arg_tuple state (node : type_expr tuple par) =
-  let {lpar; inside; rpar} = node.value in
-  let head, tail = inside in
-  let rec app = function
-    [] -> empty
-  | [(_, e)] -> group (break 1 ^^ print_type_expr state e)
-  | (sep, e) :: items ->
-      group (break 1 ^^ print_type_expr state e ^^ token sep) ^^ app items
-  in
-  match tail with
-    [] -> print_type_expr state head
-  | h :: tail ->
-      let components =
-        print_type_expr state head ^^ comma ^^ app (h :: tail)
-      in token lpar ^^ nest 1 (components ^^ token rpar)
-
-(* Type variable *)
-
-and print_T_Arg (node : type_var) =
-  let quote_opt, variable = node.value in
-  let var_doc = print_ident variable in
-  match quote_opt with
-    None   -> var_doc
-  | Some _ -> squote ^^ var_doc
-
-(* Attributed type *)
-
-and print_T_Attr state (node : attribute * type_expr) =
-  let attributes, type_expr = unroll_T_Attr node in
-  let thread =
-    match type_expr with
-      T_Variant t ->
-        print_variant_type state ~attr:(not (List.is_empty attributes)) t
-    | _ -> print_type_expr state type_expr
-  in print_attributes state thread attributes
-
-(* Cartesian type *)
-
-and print_T_Cart state (node : cartesian) =
-  let head, times, tail = node.value in
-  let head = print_type_expr state head in
-  let rec app = function
-    []       -> empty
-  | [e]      -> group (break 1 ^^ print_type_expr state e)
-  | e::items -> group (break 1 ^^ print_type_expr state e
-                       ^^ space ^^ token times)
-                ^^ app items
-  in head ^^ space ^^ token times ^^ app (Utils.nsepseq_to_list tail)
-
-(* Functional type *)
-
-and print_T_Fun state (node : (type_expr * arrow * type_expr) reg) =
-  let lhs, arrow, rhs = node.value in
-  let lhs = print_type_expr state lhs
-  and rhs = print_type_expr state rhs
-  in group (lhs ^^ space ^^ token arrow ^/^ rhs)
-
-(* Integer type *)
-
-and print_T_Int (node : (lexeme * Z.t) wrap) = print_int node
-
-(* Module path *)
-
-and print_T_ModPath state (node : type_expr module_path reg) =
-  print_module_path (print_type_expr state) node
-
-and print_module_path
-  : type a.(a -> document) -> a module_path reg -> document =
-  fun print node ->
-    let {module_path; selector; field} = node.value in
-    let modules = Utils.nsepseq_to_list module_path
-    and sep     = token selector ^^ break 0 in
-    let modules = separate_map sep print_ident modules
-    in group (modules ^^ sep ^^ print field)
-
-(* Parenthesised type expressions *)
-
-and print_T_Par state (node : type_expr par) =
-  print_par (print_type_expr state) node
-
-(* Record type *)
-
-and print_T_Record state (node : field_decl reg record) =
-  print_record (print_field_decl state) node
-
-and print_field_decl state (node : field_decl reg) =
-  let {attributes; field_name; field_type} = node.value in
-  let thread = print_ident field_name in
-  let thread = print_attributes state thread attributes
-  in group (print_opt_type state thread field_type)
-
-and print_record : 'a.('a -> document) -> 'a record -> document =
-  fun print node ->
-    let {lbrace; inside; rbrace} = node.value in
-    let fields = print_sepseq hardline print inside in
-    let fields = nest 1 (break 0 ^^ fields) in
-    group (token lbrace ^^ fields ^^ break 0 ^^ token rbrace)
-
-(* String type *)
-
-and print_T_String (node : lexeme wrap) = print_string node
-
-(* Variant types *)
-
-and print_T_Variant state (node : variant_type reg) =
-  print_variant_type state ~attr:false node
-
-and print_variant_type state ~(attr: bool) (node : variant_type reg) =
-  let head, tail =
-    Utils.nsepseq_map (nest state#indent <@ print_variant state)
-                      node.value.variants
-  and padding_flat =
-    let open PrettyComb in
-    if attr then bar ^^ space
-    else match state#leading_vbar with
-           Avoid | Only_on_new_line -> empty
-         | Always -> bar ^^ space
-  and padding_non_flat =
-    let open PrettyComb in
-    if attr then bar ^^ space
-    else match state#leading_vbar with
-           Avoid -> blank state#indent
-         | Always | Only_on_new_line -> bar ^^ space in
-
-  (* Do not append a vertical bar if we are in flat mode, unless we
-     have attributes. The reason is that those two are different:
-
-     type t = [@annot] | Ctor
-     type t = [@annot] Ctor
-  *)
-
-  let head =
-    if List.is_empty tail then head
-    else ifflat padding_flat padding_non_flat ^^ head
-
-  and app variant = group (hardline ^^ bar ^^ space ^^ variant)
-
-  in head ^^ concat_map app (List.map ~f:snd tail)
-
-and print_variant state (node : variant reg) =
-  let {attributes; ctor; ctor_args} = node.value in
-  let thread = print_ident ctor in
-  let thread = print_attributes state thread attributes in
-  match ctor_args with
-    None -> thread
-  | Some (kwd_of, e) ->
-      group (thread ^^ space
-             ^^ token kwd_of ^^ space ^^ print_type_expr state e)
-
-(* Type variables *)
-
-and print_T_Var (node : variable) = print_ident node
-
-(* Parameter of *)
-
-and print_T_Parameter (node : (module_name, dot) Utils.nsepseq reg) =
-  let path = print_nsepseq (break 0) print_ident node.value in
-  let path = group (nest 0 (break 1 ^^ path))
-  in path ^^ space ^^ string "parameter_of"
-
-(* PATTERNS *)
-
-(* IMPORTANT: The data constructors are sorted alphabetically. If you
-   add or modify some, please make sure they remain in order. *)
-
-and print_pattern state = function
-  P_App      p -> print_P_App      state p
-| P_Attr     p -> print_P_Attr     state p
-| P_Bytes    p -> print_P_Bytes          p
-| P_Cons     p -> print_P_Cons     state p
-| P_Ctor     p -> print_P_Ctor           p
-| P_Int      p -> print_P_Int            p
-| P_List     p -> print_P_List     state p
-| P_ModPath  p -> print_P_ModPath  state p
-| P_Mutez    p -> print_P_Mutez          p
-| P_Nat      p -> print_P_Nat            p
-| P_Par      p -> print_P_Par      state p
-| P_Record   p -> print_P_Record   state p
-| P_String   p -> print_P_String         p
-| P_Tuple    p -> print_P_Tuple    state p
-| P_Typed    p -> print_P_Typed    state p
-| P_Var      p -> print_P_Var            p
-| P_Verbatim p -> print_P_Verbatim       p
-| P_Unit     p -> print_P_Unit           p
-
-(* Pattern for the application of a data constructor *)
-
-and print_P_App state (node : (pattern * pattern option) reg) =
-  match node.value with
-    ctor, None   -> print_pattern state ctor
-  | ctor, Some p ->
-      let print = print_pattern state in
-      prefix (2 * state#indent) 1 (print ctor) (print p)
-
-(* Attributed pattern *)
-
-and print_P_Attr state (node : attribute * pattern) =
-  let attributes, pattern = unroll_P_Attr node in
-  print_attributes state (print_pattern state pattern) attributes
-
-(* Pattern bytes *)
-
-and print_P_Bytes (node : (lexeme * Hex.t) wrap) = print_bytes node
-
-(* Pattern for consing *)
-
-and print_P_Cons state (node : (pattern * cons * pattern) reg) =
-  let p1, cons, p2 = node.value in
-  let p1 = print_pattern state p1
-  and p2 = print_pattern state p2
-  in p1 ^^ space ^^ token cons ^//^ p2
-
-(* Constructor in a pattern *)
-
-and print_P_Ctor (node : ctor) = print_ident node
-
-(* Integer in a pattern *)
-
-and print_P_Int (node : (lexeme * Z.t) wrap) = print_int node
-
-(* Lists *)
-
-and print_P_List state (node : pattern list_) =
-  print_list state (print_pattern state) node
-
-and print_list :
-  'a.state -> ('a -> document) -> 'a list_ -> document =
-  fun state print list ->
-    print_brackets state (print_sepseq (break 1) print) list
-
-(* Module paths in patterns *)
-
-and print_P_ModPath state (node : pattern module_path reg) =
-  print_module_path (print_pattern state) node
-
-(* Mutez in patterns *)
-
-and print_P_Mutez (node : (lexeme * Int64.t) wrap) = print_mutez node
-
-(* Natural numbers in patterns *)
-
-and print_P_Nat (node : (lexeme * Z.t) wrap) = print_nat node
-
-(* Parenthesised pattern *)
-
-and print_P_Par state (node : pattern par) =
-  print_par (print_pattern state) node
-
-(* Record pattern *)
-
-and print_P_Record state (node : record_pattern) =
-  print_record (print_field_pattern state) node
-
-and print_field_pattern state (node : (field_name, equal, pattern) field) =
-  print_field
-    state
-    ~lhs:print_ident
-    ~lens:print_ident
-    ~rhs:(print_pattern state)
-    node
-
-and print_field :
-  'lhs 'op 'rhs.
-  state ->
-  lhs:('lhs -> document) ->
-  lens:('op -> document) ->
-  rhs:('rhs -> document) ->
-  ('lhs,'op,'rhs) field ->
-  document =
-  fun state ~lhs:print_lhs ~lens:print_lens ~rhs:print_rhs -> function
-    Punned node ->
-      let {pun; attributes} = node.value in
-      print_attributes state (print_lhs pun) attributes
-  | Complete node ->
-      let {field_lhs; field_lens; field_rhs; attributes} = node.value in
-      let thread = print_lhs field_lhs
-                   ^^ space ^^ print_lens field_lens
-                   ^//^ print_rhs field_rhs
-      in print_attributes state thread attributes
-
-(* String patterns *)
-
-and print_P_String (node : lexeme wrap) = print_string node
-
-(* Tuple patterns *)
-
-and print_P_Tuple state (node : pattern tuple reg) =
-  let head, tail = node.value in
+      thread ^^ (*string " " ^^*)
+      group (nest 2 (break 1 ^^ separate_map (break 1) pp_pattern tail)) in
+  let lhs =
+    thread ^^
+    match rhs_type with
+            None -> empty
+    | Some (_,e) -> group (break 1 ^^ string ": " ^^ pp_type_expr e)
+  in prefix 2 1 (lhs ^^ string " =") (pp_expr let_rhs)
+
+and pp_type_params thread = function
+  None -> thread
+| Some type_params ->
+    let params = pp_nseq pp_ident type_params.value.inside.type_vars
+    in thread ^//^ string "(type " ^^ params ^^ string ")"
+
+and pp_pattern = function
+  PConstr   p -> pp_pconstr p
+| PUnit     _ -> string "()"
+| PVar      v -> pp_pvar v
+| PInt      i -> pp_int i
+| PNat      n -> pp_nat n
+| PBytes    b -> pp_bytes b
+| PString   s -> pp_string s
+| PVerbatim s -> pp_verbatim s
+| PList     l -> pp_plist l
+| PTuple    t -> pp_ptuple t
+| PPar      p -> pp_ppar p
+| PRecord   r -> pp_precord r
+| PTyped    t -> pp_ptyped t
+
+and pp_pvar {value; _} =
+  let {variable; attributes} = value in
+  let v = pp_ident variable in
+  if List.is_empty attributes then v
+  else group (pp_attributes attributes ^/^ v)
+
+and pp_pconstr {value; _} =
+  match value with
+    constr, None -> pp_ident constr
+  | constr, Some pat ->
+      prefix 4 1 (pp_ident constr) (pp_pattern pat)
+
+and pp_int {value; _} =
+  string (Z.to_string (snd value))
+
+and pp_nat {value; _} =
+  string (Z.to_string (snd value) ^ "n")
+
+and pp_bytes {value; _} =
+  string ("0x" ^ Hex.show (snd value))
+
+and pp_ppar p = pp_par pp_pattern p
+
+and pp_plist = function
+  PListComp cmp -> pp_list_comp cmp
+| PCons cons -> pp_pcons cons
+
+and pp_list_comp e = group (pp_injection pp_pattern e)
+
+and pp_pcons {value; _} =
+  let patt1, _, patt2 = value in
+  prefix 2 1 (pp_pattern patt1 ^^ string " ::") (pp_pattern patt2)
+
+and pp_ptuple {value; _} =
+  let head, tail = value in
   let rec app = function
     []  -> empty
-  | [_, p] -> group (break 1 ^^ print_pattern state p)
-  | (comma, p)::items ->
-      group (break 1 ^^ print_pattern state p ^^ token comma)
-      ^^ app items in
-  let head = print_pattern state head in
-  if List.is_empty tail
-  then head
-  else head ^^ comma ^^ app tail
-
-(* Typed patterns *)
-
-and print_P_Typed state (node : typed_pattern reg) =
-  let pattern, type_annot = node.value in
-  print_type_annotation state (print_pattern state pattern) type_annot
-
-(* Variable pattern *)
-
-and print_P_Var (node : variable) = print_ident node
-
-(* Verbatim string patterns *)
-
-and print_P_Verbatim (node : lexeme wrap) = print_verbatim node
-
-(* Unit pattern *)
-
-and print_P_Unit (node : the_unit reg) =
-  let lpar, rpar = node.value
-  in token lpar ^^ token rpar
-
-(* EXPRESSIONS *)
-
-(* IMPORTANT: The data constructors are sorted alphabetically. If you
-   add or modify some, please make sure they remain in order. *)
-
-and print_expr state = function
-  E_Add      e -> print_E_Add      state e
-| E_And      e -> print_E_And      state e
-| E_App      e -> print_E_App      state e
-| E_Assign   e -> print_E_Assign   state e
-| E_Attr     e -> print_E_Attr     state e
-| E_Bytes    e -> print_E_Bytes          e
-| E_Cat      e -> print_E_Cat      state e
-| E_CodeInj  e -> print_E_CodeInj  state e
-| E_Cond     e -> print_E_Cond     state e
-| E_Cons     e -> print_E_Cons     state e
-| E_Contract e -> print_E_Contract       e
-| E_Ctor     e -> print_E_Ctor           e
-| E_Div      e -> print_E_Div      state e
-| E_Equal    e -> print_E_Equal    state e
-| E_For      e -> print_E_For      state e
-| E_ForIn    e -> print_E_ForIn    state e
-| E_Fun      e -> print_E_Fun      state e
-| E_Geq      e -> print_E_Geq      state e
-| E_Gt       e -> print_E_Gt       state e
-| E_Int      e -> print_E_Int            e
-| E_Land     e -> print_E_Land     state e
-| E_Leq      e -> print_E_Leq      state e
-| E_LetIn    e -> print_E_LetIn    state e
-| E_LetMutIn e -> print_E_LetMutIn state e
-| E_List     e -> print_E_List     state e
-| E_Lor      e -> print_E_Lor      state e
-| E_Lsl      e -> print_E_Lsl      state e
-| E_Lsr      e -> print_E_Lsr      state e
-| E_Lt       e -> print_E_Lt       state e
-| E_Lxor     e -> print_E_Lxor     state e
-| E_Match    e -> print_E_Match    state e
-| E_Mod      e -> print_E_Mod      state e
-| E_ModIn    e -> print_E_ModIn    state e
-| E_ModPath  e -> print_E_ModPath  state e
-| E_Mult     e -> print_E_Mult     state e
-| E_Mutez    e -> print_E_Mutez          e
-| E_Nat      e -> print_E_Nat            e
-| E_Neg      e -> print_E_Neg      state e
-| E_Neq      e -> print_E_Neq      state e
-| E_Not      e -> print_E_Not      state e
-| E_Or       e -> print_E_Or       state e
-| E_Par      e -> print_E_Par      state e
-| E_Proj     e -> print_E_Proj     state e
-| E_Record   e -> print_E_Record   state e
-| E_RevApp   e -> print_E_RevApp   state e
-| E_Seq      e -> print_E_Seq      state e
-| E_String   e -> print_E_String         e
-| E_Sub      e -> print_E_Sub      state e
-| E_Tuple    e -> print_E_Tuple    state e
-| E_Typed    e -> print_E_Typed    state e
-| E_TypeIn   e -> print_E_TypeIn   state e
-| E_Unit     e -> print_E_Unit           e
-| E_Update   e -> print_E_Update   state e
-| E_Var      e -> print_E_Var            e
-| E_Verbatim e -> print_E_Verbatim       e
-| E_While    e -> print_E_While    state e
-
-(* Addition *)
-
-and print_E_Add state (node : plus bin_op reg) = print_bin_op state node
-
-and print_bin_op state (node : lexeme wrap bin_op reg) =
-  let {op; arg1; arg2} = node.value in
-  let length = String.length op#payload + 1
-  in group (print_expr state arg1 ^/^ token op ^^ space
-            ^^ nest length (print_expr state arg2))
-
-(* Logical conjunction *)
-
-and print_E_And state (node : bool_and bin_op reg) =
-  print_bin_op state node
-
-(* Application to data constructors and functions *)
-
-and print_E_App state (node : (expr * expr Utils.nseq) reg) =
-  let fun_or_ctor, args = node.value in
-  let args = print_nseq (print_expr state) args in
-  group (print_expr state fun_or_ctor
-         ^^ nest state#indent (break 1 ^^ args))
-
-(* Mutable assignment expressions *)
-
-and print_E_Assign state (node : assign reg) =
-  let {binder; ass; expr} = node.value in
-  prefix state#indent 1
-    (print_ident binder ^^ space ^^ token ass)
-    (print_expr state expr)
-
-(* Attributes expressions *)
-
-and print_E_Attr state (node : attribute * expr) =
-  let attributes, expr = unroll_E_Attr node in
-  let thread = print_expr state expr in
-  print_attributes state thread attributes
-
-(* Bytes expressions *)
-
-and print_E_Bytes (node : (lexeme * Hex.t) wrap) =
-  print_bytes node
-
-(* String concatenation *)
-
-and print_E_Cat state (node : caret bin_op reg) =
-  print_bin_op state node
-
-(* Code injection *)
-
-and print_E_CodeInj state (node : code_inj reg) =
-  let {language; code; rbracket} = node.value in
-  let lang = string language#payload.value
-  and code = print_expr state code in
-  group (print_comments language#comments ^/^
-         lbracket ^^ percent ^^ lang ^/^ code ^^ token rbracket)
-
-(* Conditional expression *)
-
-and print_E_Cond state (node : cond_expr reg) =
-  let {kwd_if; test; kwd_then; if_so; if_not} = node.value in
-  let test  = token kwd_if ^^ space
-              ^^ group (nest (1 + state#indent) (print_expr state test))
-  and if_so = token kwd_then
-              ^^ group (nest state#indent
-                          (break 1 ^^ print_expr state if_so))
-  in match if_not with
-    Some (kwd_else, expr) ->
-      let if_not =
-        token kwd_else
-        ^^ group (nest state#indent (break 1 ^^ print_expr state expr))
-      in test ^/^ if_so ^/^ if_not
-  | None -> test ^/^ if_so
-
-(* Consing expression *)
-
-and print_E_Cons state (node : cons bin_op reg) = print_bin_op state node
-
-and print_E_Contract (node : (module_name, dot) Utils.nsepseq reg) =
-  let path = print_nsepseq (break 0) print_ident node.value in
-  string "contract_of" ^^ space ^^ group (nest 0 (break 1 ^^ path))
-
-(* Constructor in expressions *)
-
-and print_E_Ctor (node : ctor) = print_ident node
-
-(* Arithmetic division *)
-
-and print_E_Div state (node : slash bin_op reg) = print_bin_op state node
-
-(* Equality *)
-
-and print_E_Equal state (node : equal bin_op reg) = print_bin_op state node
-
-(* For loop *)
-
-and print_E_For state (node : for_loop reg) =
-  let {kwd_for; index; equal; bound1;
-       direction; bound2; body} = node.value in
-  token kwd_for ^^ space
-  ^^ print_ident index
-  ^^ space ^^ token equal ^^ space
-  ^^ print_expr state bound1 ^^ space
-  ^^ print_direction direction ^^ space
-  ^^ print_expr state bound2  ^^ space
-  ^^ print_loop_body state body
-
-and print_direction = function
-  Upto kwd_upto -> token kwd_upto
-| Downto kwd_downto -> token kwd_downto
-
-and print_loop_body state (node : loop_body reg) =
-  let {kwd_do; seq_expr; kwd_done} = node.value in
-  let seq_expr = print_sepseq hardline (print_expr state) seq_expr in
-  token kwd_do
-  ^^ nest state#indent (hardline ^^ seq_expr) ^^ hardline
-  ^^ token kwd_done
-
-(* ForIn loop *)
-
-and print_E_ForIn state (node : for_in_loop reg) =
-  let {kwd_for; pattern; kwd_in; collection; body} = node.value in
-  token kwd_for ^^ space
-  ^^ print_pattern state pattern
-  ^^ space ^^ token kwd_in ^^ space
-  ^^ print_expr state collection
-  ^^ space ^^ print_loop_body state body
-
-(* Function expressions *)
-
-and print_E_Fun state (node : fun_expr reg) =
-  let {kwd_fun; type_params; binders; rhs_type; arrow; body} = node.value in
-  let thread  = token kwd_fun ^^ space in
-  let thread  = print_type_params thread type_params in
-  let thread  = thread
-                ^^ nest state#indent
-                        (print_nseq (print_pattern state) binders) in
-  let thread  = print_opt_type state thread rhs_type in
-  group (thread ^^ space ^^ token arrow ^^ space
-         ^^ nest state#indent (print_expr state body))
-
-(* Greater or equal than *)
-
-and print_E_Geq state (node : geq bin_op reg) = print_bin_op state node
-
-(* Greater than *)
-
-and print_E_Gt state (node : gt bin_op reg) = print_bin_op state node
-
-(* Integers *)
-
-and print_E_Int (node : (lexeme * Z.t) wrap) = print_int node
-
-(* Bitwise conjunction *)
-
-and print_E_Land state (node : kwd_land bin_op reg) = print_bin_op state node
-
-(* Lower or equal than *)
-
-and print_E_Leq state (node : leq bin_op reg) = print_bin_op state node
-
-(* Local value definition *)
-
-and print_E_LetIn state (node : let_in reg) =
-  let {kwd_let; kwd_rec; binding; kwd_in; body} = node.value in
-  let let_str =
-    match kwd_rec with
-      None -> token kwd_let
-    | Some kwd_rec -> token kwd_let ^^ space ^^ token kwd_rec
-  in let_str ^^ space ^^ print_let_binding state binding ^^ space
-     ^^ token kwd_in ^^ hardline ^^ group (print_expr state body)
-
-(* Mutable value definition *)
-
-and print_E_LetMutIn state (node : let_mut_in reg) =
-  let {kwd_let; kwd_mut; binding; kwd_in; body} = node.value in
-  let let_str = token kwd_let ^^ space ^^ token kwd_mut ^^ space
-  in let_str ^^ print_let_binding state binding
-     ^^ space ^^ token kwd_in ^^ hardline ^^ group (print_expr state body)
-
-(* List expressions *)
-
-and print_E_List state (node : expr list_) =
-  print_list state (print_expr state) node
-
-(* Bitwise disjunction *)
-
-and print_E_Lor state (node : kwd_lor bin_op reg) = print_bin_op state node
-
-(* Bitwise left shift *)
-
-and print_E_Lsl state (node : kwd_lsl bin_op reg) = print_bin_op state node
-
-(* Bitwise right shift *)
-
-and print_E_Lsr state (node : kwd_lsr bin_op reg) = print_bin_op state node
-
-(* Lower than *)
-
-and print_E_Lt state (node : lt bin_op reg) = print_bin_op state node
-
-(* Bitwise exclusive disjunction *)
-
-and print_E_Lxor state (node : kwd_lxor bin_op reg) = print_bin_op state node
-
-(* Pattern matching *)
-
-and print_E_Match state (node : match_expr reg) =
-  let {kwd_match; subject; kwd_with; lead_vbar=_; clauses} = node.value in
-  group (token kwd_match
-         ^^ space ^^ nest state#indent (print_expr state subject)
-         ^/^ token kwd_with)
-  ^^ hardline ^^ print_clauses state clauses
-
-and print_clauses state (node : (match_clause reg, vbar) Utils.nsepseq reg) =
-  let head, tail = node.value in
-  let head       = print_clause state head in
-  let head       = if List.is_empty tail then head
-                   else blank state#indent ^^ head in
+  | [p] -> group (break 1 ^^ pp_pattern p)
+  | p::items ->
+      group (break 1 ^^ pp_pattern p ^^ string ",") ^^ app items
+  in if List.is_empty tail
+     then pp_pattern head
+     else pp_pattern head ^^ string "," ^^ app (List.map ~f:snd tail)
+
+and pp_precord fields = group (pp_ne_injection pp_field_pattern fields)
+
+and pp_field_pattern {value; _} =
+  let {field_name; pattern; _} = value in
+  prefix 2 1 (pp_ident field_name ^^ string " =") (pp_pattern pattern)
+
+and pp_ptyped {value; _} =
+  let {pattern; type_expr; _} = value in
+  group (pp_pattern pattern ^^ string " :" ^/^ pp_type_expr type_expr)
+
+and pp_type_decl decl =
+  let {name; params; type_expr; _} = decl.value in
+  let params = pp_type_vars params in
+  let padding = match type_expr with TSum _ -> 0 | _ -> 2 in
+  string "type " ^^ params ^^ pp_ident name ^^ string " ="
+  ^^ group (nest padding (break 1 ^^ pp_type_expr type_expr))
+
+and pp_type_vars (node : type_vars option) =
+  match node with
+    None -> empty
+  | Some QParam param ->
+      pp_type_var param ^^ string " "
+  | Some QParamTuple tuple ->
+      pp_par (pp_nsepseq "," pp_type_var) tuple ^^ string " "
+
+and pp_type_var (node : type_var reg) =
+  string "'" ^^ pp_ident node.value.name
+
+and pp_module_decl decl =
+  let {name; module_; _} = decl.value in
+  string "module " ^^ pp_ident name ^^ string " =" ^^ string " struct"
+  ^^ group (nest 0 (break 1 ^^ print module_))
+  ^^ string " end"
+
+and pp_module_alias decl =
+  let {alias; binders; _} = decl.value in
+  string "module " ^^ pp_ident alias ^^ string " ="
+  ^^ group (nest 0 (break 1 ^^ pp_nsepseq "." pp_ident binders))
+
+and pp_expr = function
+  ECase       e -> pp_case_expr e
+| ECond       e -> group (pp_cond_expr e)
+| EAnnot      e -> pp_annot_expr e
+| ELogic      e -> group (pp_logic_expr e)
+| EArith      e -> group (pp_arith_expr e)
+| EString     e -> pp_string_expr e
+| EList       e -> group (pp_list_expr e)
+| EConstr     e -> pp_constr_expr e
+| ERecord     e -> pp_record_expr e
+| EProj       e -> pp_projection e
+| EModA       e -> pp_module_access pp_expr e
+| EUpdate     e -> pp_update e
+| EVar        v -> pp_ident v
+| ECall       e -> pp_call_expr e
+| EBytes      e -> pp_bytes e
+| EUnit       _ -> string "()"
+| ETuple      e -> pp_tuple_expr e
+| EPar        e -> pp_par_expr e
+| ELetIn      e -> pp_let_in e
+| ETypeIn     e -> pp_type_in e
+| EModIn      e -> pp_mod_in e
+| EModAlias   e -> pp_mod_alias e
+| EFun        e -> pp_fun e
+| ESeq        e -> pp_seq e
+| ECodeInj    e -> pp_code_inj e
+| ERevApp     e -> pp_rev_app e
+
+and pp_rev_app e = pp_bin_op "|>" e
+
+and pp_case_expr {value; _} =
+  let {expr; cases; _} = value in
+  group (string "match " ^^ nest 6 (pp_expr expr) ^/^ string "with")
+  ^^ hardline ^^ pp_cases cases
+
+and pp_cases {value; _} =
+  let head, tail = value in
+  let head       = pp_clause head in
+  let head       = if List.is_empty tail then head else blank 2 ^^ head in
   let rest       = List.map ~f:snd tail in
-  let app clause = break 1 ^^ bar ^^ space ^^ print_clause state clause
+  let app clause = break 1 ^^ string "| " ^^ pp_clause clause
   in  head ^^ concat_map app rest
 
-and print_clause state (node: match_clause reg) =
-  let {pattern; arrow; rhs} = node.value in
-  let offset = state#indent * 2 in
-  print_pattern state pattern
-  ^^ prefix offset 1 (space ^^ token arrow) (print_expr state rhs)
+and pp_clause {value; _} =
+  let {pattern; rhs; _} = value in
+    pp_pattern pattern ^^ prefix 4 1 (string " ->") (pp_expr rhs)
 
-(* Arithmethic modulo *)
+and pp_cond_expr {value; _} =
+  let {test; ifso; ifnot; _} = value in
+  let test = string "if " ^^ group (nest 3 (pp_expr test))
+  and ifso = string "then" ^^ group (nest 2 (break 1 ^^ pp_expr ifso))
+  in match ifnot with
+    Some (_,ifnot) ->
+    let ifnot = string "else" ^^ group (nest 2 (break 1 ^^ pp_expr ifnot)) in
+    test ^/^ ifso ^/^ ifnot
+  | None ->
+    test ^/^ ifso
 
-and print_E_Mod state (node : kwd_mod bin_op reg) = print_bin_op state node
+and pp_annot_expr {value; _} =
+  let expr, _, type_expr = value.inside in
+    group (string "(" ^^ nest 1 (pp_expr expr ^/^ string ": "
+    ^^ pp_type_expr type_expr ^^ string ")"))
 
-(* Local module definition *)
+and pp_logic_expr = function
+  BoolExpr e -> pp_bool_expr e
+| CompExpr e -> pp_comp_expr e
 
-and print_E_ModIn state (node : module_in reg) =
-  let {mod_decl; kwd_in; body} = node.value in
-  let {kwd_module; name; eq; module_expr; annotation = _} = mod_decl
-  in group (token kwd_module
-            ^^ print_ident name ^^ space ^^ token eq ^^ space
-            ^^ print_module_expr state module_expr
-            ^^ space ^^ token kwd_in ^^ hardline ^^ print_expr state body)
+and pp_bool_expr = function
+  Or   e  -> pp_bin_op "||" e
+| And  e  -> pp_bin_op "&&" e
+| Not  e  -> pp_un_op "not" e
 
-(* Module paths *)
+and pp_bin_op op {value; _} =
+  let {arg1; arg2; _} = value
+  and length = String.length op + 1 in
+  pp_expr arg1 ^/^ string (op ^ " ") ^^ nest length (pp_expr arg2)
 
-and print_E_ModPath state (node : expr module_path reg) =
-  print_module_path (print_expr state) node
+and pp_un_op op {value; _} =
+  string (op ^ " ") ^^ pp_expr value.arg
 
-(* Multiplication *)
+and pp_comp_expr = function
+  Lt    e -> pp_bin_op "<"  e
+| Leq   e -> pp_bin_op "<=" e
+| Gt    e -> pp_bin_op ">"  e
+| Geq   e -> pp_bin_op ">=" e
+| Equal e -> pp_bin_op "="  e
+| Neq   e -> pp_bin_op "<>" e
 
-and print_E_Mult state (node : times bin_op reg) = print_bin_op state node
+and pp_arith_expr = function
+  Add   e -> pp_bin_op "+" e
+| Sub   e -> pp_bin_op "-" e
+| Mult  e -> pp_bin_op "*" e
+| Div   e -> pp_bin_op "/" e
+| Mod   e -> pp_bin_op "mod" e
+| Land  e -> pp_bin_op "land" e
+| Lor   e -> pp_bin_op "lor" e
+| Lxor  e -> pp_bin_op "lxor" e
+| Lsl   e -> pp_bin_op "lsl" e
+| Lsr   e -> pp_bin_op "lsr" e
+| Neg   e -> string "-" ^^ pp_expr e.value.arg
+| Int   e -> pp_int e
+| Nat   e -> pp_nat e
+| Mutez e -> pp_mutez e
 
-(* Mutez as an expression *)
+and pp_mutez {value; _} =
+  Int64.to_string (snd value) ^ "mutez" |> string
 
-and print_E_Mutez (node : (lexeme * Int64.t) wrap) =
-  print_mutez node
+and pp_string_expr = function
+     Cat e -> pp_bin_op "^" e
+| String e -> pp_string e
+| Verbatim e -> pp_verbatim e
 
-(* Natural numbers in expressions *)
+and pp_list_expr = function
+      ECons e -> pp_bin_op "::" e
+| EListComp e -> group (pp_injection pp_expr e)
 
-and print_E_Nat (node :  (lexeme * Z.t) wrap) = print_nat node
+and pp_injection :
+  'a.('a -> document) -> 'a injection reg -> document =
+  fun printer {value; _} ->
+    let {compound; elements; _} = value in
+    let sep = string ";" ^^ break 1 in
+    let elements = Utils.sepseq_to_list elements in
+    let elements = separate_map sep printer elements in
+    match Option.map ~f:pp_compound compound with
+      None -> elements
+    | Some ((opening, _), (closing, _)) ->
+        string opening ^^ nest 1 elements ^^ string closing
 
-(* Arithmetic negation *)
+and pp_compound = function
+  BeginEnd (a, b) -> (("begin", a), ("end", b))
+| Braces (a, b)   -> (("{", a), ("}", b))
+| Brackets (a, b) -> (("[", a), ("]",b))
 
-and print_E_Neg state (node : minus un_op reg) =
-  let {op; arg} = node.value in
-  token op ^^ print_expr state arg
+and pp_constr_expr {value; _} =
+  let constr, arg = value in
+  let constr = string constr.value in
+  match arg with
+      None -> constr
+  | Some e -> prefix 2 1 constr (pp_expr e)
 
-and print_un_op state (node : lexeme wrap un_op reg) =
-  let {op; arg} = node.value in
-  token op ^^ space ^^ print_expr state arg
+and pp_record_expr ne_inj = group (pp_ne_injection pp_field_assign ne_inj)
 
-(* Arithmetic difference *)
+and pp_field_assign {value; _} =
+  match value with
+    Property {field_name; field_expr; _} ->
+      prefix 2 1 (pp_ident field_name ^^ string " =") (pp_expr field_expr)
+  | Punned_property field_name ->
+    pp_ident field_name
 
-and print_E_Neq state (node : neq bin_op reg) = print_bin_op state node
+and pp_ne_injection :
+  'a.('a -> document) -> 'a ne_injection reg -> document =
+  fun printer {value; _} ->
+    let {compound; ne_elements; attributes; _} = value in
+    let elements = pp_nsepseq ";" printer ne_elements in
+    let inj =
+      match Option.map ~f:pp_compound compound with
+        None -> elements
+      | Some ((opening, _), (closing, _)) ->
+          string opening ^^ align elements ^^ string closing in
+    let inj = if List.is_empty attributes then inj
+              else pp_attributes attributes ^/^ inj
+    in inj
 
-(* Logical negation *)
+and pp_nsepseq :
+  'a.string -> ('a -> document) -> ('a, lexeme Wrap.t) Utils.nsepseq -> document =
+  fun sep printer elements ->
+    let elems = Utils.nsepseq_to_list elements
+    and sep   = string sep ^^ break 1
+    in separate_map sep printer elems
 
-and print_E_Not state (node : kwd_not un_op reg) = print_un_op state node
+and pp_nseq : 'a.('a -> document) -> 'a Utils.nseq -> document =
+  fun printer (head, tail) -> separate_map (break 1) printer (head::tail)
 
-(* Logical disjunction *)
+and pp_projection {value; _} =
+  let {struct_name; field_path; _} = value in
+  let fields = Utils.nsepseq_to_list field_path
+  and sep    = string "." ^^ break 0 in
+  let fields = separate_map sep pp_selection fields in
+  group (pp_ident struct_name ^^ string "." ^^ break 0 ^^ fields)
 
-and print_E_Or state (node : kwd_or bin_op reg) = print_bin_op state node
+and pp_module_access :
+  type a.(a -> document) -> a module_access reg -> document =
+  fun f {value; _} ->
+    let {module_name; field; _} = value in
+    group (pp_ident module_name ^^ string "." ^^ break 0 ^^ f field)
 
-(* Parenthesised expression *)
+and pp_selection = function
+  FieldName v   -> string v.value
+| Component cmp -> cmp.value |> snd |> Z.to_string |> string
 
-and print_E_Par state (node : expr par) =
-  print_par (print_expr state) node
+and pp_update {value; _} =
+  let {record; updates; _} = value in
+  let updates = group (pp_ne_injection pp_field_path_assign updates)
+  and record  = pp_path record in
+  string "{" ^^ record ^^ string " with"
+  ^^ nest 2 (break 1 ^^ updates ^^ string "}")
 
-(* Projection *)
+and pp_code_inj {value; _} =
+  let {language; code; _} = value in
+  let language = string language.value.value
+  and code     = pp_expr code in
+  string "[%" ^^ language ^/^ code ^^ string "]"
 
-and print_E_Proj state (node : projection reg) = print_projection state node
+and pp_field_path_assign {value; _} =
+  match value with
+    Path_property {field_path; field_expr; _} ->
+      let path = pp_path field_path in
+      prefix 2 1 (path ^^ string " =") (pp_expr field_expr)
+  | Path_punned_property field_name ->
+    pp_ident field_name
 
-and print_projection state (node : projection reg) =
-  let {record_or_tuple; selector; field_path} = node.value in
-  let record_or_tuple = print_expr state record_or_tuple
-  and field_path      = print_nsepseq (break 0) print_selection field_path
-  in group (record_or_tuple ^^ token selector ^^ break 0 ^^ field_path)
+and pp_path = function
+  Name v -> pp_ident v
+| Path p -> pp_projection p
 
-and print_selection = function
-  FieldName name -> token name
-| Component cmp  ->
-    let prefix = print_comments cmp#comments
-                 ^/^ (cmp#payload |> snd |> Z.to_string |> string)
-    in print_line_comment_opt prefix cmp#line_comment
+and pp_call_expr {value; _} =
+  let lambda, arguments = value in
+  let arguments = pp_nseq pp_expr arguments in
+  group (pp_expr lambda ^^ nest 2 (break 1 ^^ arguments))
 
-(* Record expression *)
+and pp_tuple_expr {value; _} =
+  let head, tail = value in
+  let rec app = function
+    []  -> empty
+  | [e] -> group (break 1 ^^ pp_expr e)
+  | e::items ->
+      group (break 1 ^^ pp_expr e ^^ string ",") ^^ app items
+  in if List.is_empty tail
+     then pp_expr head
+     else pp_expr head ^^ string "," ^^ app (List.map ~f:snd tail)
 
-and print_E_Record state (node : record_expr) =
-  print_record (print_field_expr state) node
+and pp_par_expr e = pp_par pp_expr e
 
-and print_field_expr state (node : (field_name, equal, expr) field) =
-  print_field
-    state
-    ~lhs:print_ident
-    ~lens:print_ident
-    ~rhs:(print_expr state)
-    node
+and pp_let_in {value; _} =
+  let {binding; kwd_rec; body; attributes=attr; _} = value in
+  let let_str =
+    match kwd_rec with
+        None -> string "let "
+    | Some _ -> string "let rec " in
+  let let_str = if List.is_empty attr then let_str
+                else pp_attributes attr ^/^ let_str
+  in let_str ^^ pp_let_binding binding
+     ^^ string " in" ^^ hardline ^^ group (pp_expr body)
 
-(* String expression *)
+and pp_type_in {value; _} =
+  let {type_decl; body; _} = value in
+  let {name; type_expr; _} = type_decl
+  in string "type "
+     ^^ prefix 2 1 (pp_ident name ^^ string " =")
+                   (pp_type_expr type_expr)
+     ^^ string " in" ^^ hardline ^^ group (pp_expr body)
 
-and print_E_String (node : lexeme wrap) = print_string node
+and pp_mod_in {value; _} =
+  let {mod_decl; body; _} = value in
+  let {name; module_; _} = mod_decl
+  in string "module"
+     ^^ prefix 2 1 (pp_ident name ^^ string " = struct")
+                   (print module_)
+     ^^ string " end"
+     ^^ string " in" ^^ hardline ^^ group (pp_expr body)
 
-(* Arithmetic subtraction *)
+and pp_mod_alias {value; _} =
+  let {mod_alias; body; _} = value in
+  let {alias; binders; _} = mod_alias
+  in string "module"
+     ^^ prefix 2 1 (pp_ident alias ^^ string " =")
+                   (pp_nsepseq "." pp_ident binders)
+     ^^ string " end"
+     ^^ string " in" ^^ hardline ^^ group (pp_expr body)
 
-and print_E_Sub state (node : minus bin_op reg) = print_bin_op state node
+and pp_fun {value; _} =
+  let {binders; rhs_type; body; _} = value in
+  let binders = pp_nseq pp_pattern binders
+  and annot   =
+    match rhs_type with
+      None -> empty
+    | Some (_,e) ->
+        group (break 1 ^^ string ":"
+               ^^ nest 2 (break 1 ^^ pp_type_expr e))
+  in group (string "fun " ^^ nest 4 binders ^^ annot
+     ^^ string " ->" ^^ nest 2 (break 1 ^^ pp_expr body))
 
-(* Tuple expression *)
-
-and print_E_Tuple state (node : expr tuple reg) =
-  print_nsepseq (break 1) (print_expr state) node.value
-
-(* Typed expression *)
-
-and print_E_Typed state (node : typed_expr par) =
-  let print (expr, type_annot) =
-    print_type_annotation state (print_expr state expr) type_annot
-  in print_par print node
-
-(* Local type definition *)
-
-and print_E_TypeIn state (node : type_in reg) =
-  let {type_decl; kwd_in; body} = node.value in
-  print_type_decl state type_decl
-  ^^ space ^^ token kwd_in ^^ hardline
-  ^^ group (print_expr state body)
-
-(* Unit expression *)
-
-and print_E_Unit (node : the_unit reg) =
-  let lpar, rpar = node.value
-  in token lpar ^^ token rpar
-
-(* Functional update of records *)
-
-and print_E_Update state (node : update_expr braces) =
-  let print (node : update_expr) =
-    let {record; kwd_with; updates} = node in
-    let print_field = print_field_path_assign state in
-    let updates     = print_nsepseq (break 1) print_field updates
-    and record      = print_expr state record
-    in record ^^ space ^^ token kwd_with
-       ^^ nest state#indent (break 1 ^^ updates)
-  in group (print_braces ~force_hardline:false state print node)
-
-and print_field_path_assign state (node : (path, lens, expr) field) =
-  print_field
-    state
-    ~lhs:(print_path state)
-    ~lens:print_lens
-    ~rhs:(print_expr state)
-    node
-
-and print_path state = function
-  Name p -> print_ident            p
-| Path p -> print_projection state p
-
-and print_lens = function
-  Lens_Id   l
-| Lens_Add  l
-| Lens_Sub  l
-| Lens_Mult l
-| Lens_Div  l
-| Lens_Fun  l -> token l
-
-(* Expression variable *)
-
-and print_E_Var (node : variable) = print_ident node
-
-(* Verbatim string expressions *)
-
-and print_E_Verbatim (node : lexeme wrap) = print_verbatim node
-
-(* While loop *)
-
-and print_E_While state (node : while_loop reg) =
-  let {kwd_while; cond; body} = node.value in
-  token kwd_while ^^ space ^^ print_expr state cond
-  ^^ space ^^ print_loop_body state body
-
-(* Sequence expressions *)
-
-and print_E_Seq state (node : sequence_expr reg) =
-  let {compound; elements} = node.value in
-  let elements = print_sepseq hardline (print_expr state) elements in
-  match compound with
+and pp_seq {value; _} =
+  let {compound; elements; _} = value in
+  let sep = string ";" ^^ hardline in
+  let elements = Utils.sepseq_to_list elements in
+  let elements = separate_map sep pp_expr elements in
+  match Option.map ~f:pp_compound compound with
     None -> elements
-  | Some BeginEnd (kwd_begin, kwd_end) ->
-      token kwd_begin
-      ^^ nest state#indent (hardline ^^ elements) ^^ hardline
-      ^^ token kwd_end
-  | Some Parens (lpar, rpar) ->
-      token lpar
-      ^^ nest state#indent (hardline ^^ elements) ^^ hardline
-      ^^ token rpar
+  | Some ((opening, _), (closing, _)) ->
+     string opening
+     ^^ nest 2 (hardline ^^ elements) ^^ hardline
+     ^^ string closing
 
-(* Reverse application *)
+and pp_type_expr = function
+  TProd t    -> pp_cartesian t
+| TSum t     -> pp_sum_type t
+| TRecord t  -> pp_record_type t
+| TApp t     -> pp_type_app t
+| TFun t     -> pp_fun_type t
+| TPar t     -> pp_type_par t
+| TVar t     -> pp_ident t
+| TString s  -> pp_string s
+| TInt i     -> pp_int i
+| TModA t    -> pp_module_access pp_type_expr t
+| TArg t     -> pp_quoted_param t
 
-and print_E_RevApp state (node : rev_app bin_op reg) =
-  print_bin_op state node
+and pp_quoted_param param =
+  let quoted = {param with value = "'" ^ param.value.name.value}
+  in pp_ident quoted
 
-(* EXPORTS *)
+and pp_cartesian {value; _} =
+  let head, tail = value in
+  let rec app = function
+    []  -> empty
+  | [e] -> group (break 1 ^^ pp_type_expr e)
+  | e::items ->
+      group (break 1 ^^ pp_type_expr e ^^ string " *") ^^ app items
+  in pp_type_expr head ^^ string " *" ^^ app (List.map ~f:snd tail)
 
-let print_type_expr   = print_type_expr
-let print_pattern     = print_pattern
-let print_expr        = print_expr
-let print_declaration = print_declaration
+and pp_sum_type {value; _} =
+  let {variants; attributes; _} = value in
+  let head, tail = variants in
+  let head = pp_variant head in
+  let padding_flat =
+    if List.is_empty attributes then empty else string "| " in
+  let padding_non_flat =
+    if List.is_empty attributes then blank 2 else string "| " in
+  let head =
+    if List.is_empty tail then head
+    else ifflat (padding_flat ^^ head) (padding_non_flat ^^ head) in
+  let rest = List.map ~f:snd tail in
+  let app variant =
+    group (break 1 ^^ string "| " ^^ pp_variant variant) in
+  let whole = head ^^ concat_map app rest in
+  if List.is_empty attributes then whole
+  else pp_attributes attributes ^/^ whole
 
-type cst         = CST.t
-type expr        = CST.expr
-type type_expr   = CST.type_expr
-type pattern     = CST.pattern
-type declaration = CST.declaration
+and pp_variant {value; _} =
+  let {constr; arg; attributes=attr} = value in
+  let pre = if List.is_empty attr then pp_ident constr
+            else group (pp_attributes attr ^/^ pp_ident constr) in
+  match arg with
+    None -> pre
+  | Some (_,e) -> prefix 4 1 (pre ^^ string " of") (pp_type_expr e)
+
+and pp_record_type fields = group (pp_ne_injection pp_field_decl fields)
+
+and pp_field_decl {value; _} =
+  let {field_name; field_type; attributes; _} = value in
+  let attr   = pp_attributes attributes in
+  let name   = if List.is_empty attributes then pp_ident field_name
+               else attr ^/^ pp_ident field_name in
+  let t_expr = pp_type_expr field_type
+  in prefix 2 1 (name ^^ string " :") t_expr
+
+and pp_type_app (node : (type_constr * type_constr_arg) reg) =
+  let {value; _} = node in
+  let ctor, arg = value in
+  prefix 2 1 (pp_type_constr_arg arg) (pp_type_constr ctor)
+
+and pp_type_constr_arg = function
+  CArg t -> pp_type_expr t
+| CArgTuple t -> pp_ctor_arg_tuple t
+
+and pp_ctor_arg_tuple {value; _} =
+  let head, tail = value.inside in
+  let rec app = function
+    []  -> empty
+  | [(_, e)] -> group (break 1 ^^ pp_type_expr e)
+  | (_, e)::items ->
+      group (break 1 ^^ pp_type_expr e ^^ string ",") ^^ app items
+  in
+  match tail with
+    []        -> pp_type_expr head
+  | h :: tail ->
+    let components =
+      pp_type_expr head ^^ string "," ^^ app (h :: tail)
+    in string "(" ^^ nest 1 (components ^^ string ")")
+
+and pp_type_constr constr = string constr.value
+
+and pp_fun_type {value; _} =
+  let lhs, _, rhs = value in
+  group (pp_type_expr lhs ^^ string " ->" ^/^ pp_type_expr rhs)
+
+and pp_type_par t = pp_par pp_type_expr t
+
+let print_type_expr = pp_type_expr
+let print_pattern   = pp_pattern
+let print_expr      = pp_expr
+
+type cst        = CST.t
+type expr       = CST.expr
+type type_expr  = CST.type_expr
+type pattern    = CST.pattern

@@ -38,52 +38,130 @@ let at_prefix (b : Ast_core.type_expression option Binder.t) =
 
 let internalize_core (ds : Ast_core.program) : Ast_core.program =
   let open Ast_core in
-  let rec module_decl
-      ({ module_binder; module_; module_attr; annotation } : (module_expr, _) Module_decl.t)
-    =
-    let module_ =
-      match module_ with
-      | { wrap_content = M_struct x; _ } ->
-        { module_ with wrap_content = Module_expr.M_struct (module' x) }
-      | _ -> module_
-    in
-    let module_attr = { module_attr with hidden = true } in
-    Module_decl.{ module_binder; module_; module_attr; annotation }
-  and value_decl (value_decl : _ Value_decl.t) =
-    let binder = sap_for_all value_decl.binder in
-    let binder = at_prefix binder in
-    let attr : ValueAttr.t =
-      { value_decl.attr with inline = true; hidden = true; no_mutation = true }
-    in
-    Value_decl.{ value_decl with binder; attr }
-  and type_decl (type_decl : _ Type_decl.t) =
-    let type_attr : TypeOrModuleAttr.t = { type_decl.type_attr with hidden = true } in
-    Type_decl.{ type_decl with type_attr }
-  and pattern_decl (pattern_decl : _ Pattern_decl.t) =
-    let attr : ValueAttr.t = { pattern_decl.attr with hidden = true } in
-    Pattern_decl.{ pattern_decl with attr }
-  and declaration : declaration -> declaration =
-   fun decl ->
-    Location.map
-      (function
-        | D_module module_decl' ->
-          let module_decl' = module_decl module_decl' in
-          D_module module_decl'
-        | D_value value_decl' ->
-          let value_decl' = value_decl value_decl' in
-          D_value value_decl'
-        | D_type type_decl' ->
-          let type_decl' = type_decl type_decl' in
-          D_type type_decl'
-        | D_irrefutable_match pattern_decl' ->
-          let pattern_decl' = pattern_decl pattern_decl' in
-          D_irrefutable_match pattern_decl'
-        | D_signature signature' ->
-          (* TODO *)
-          D_signature signature')
-      decl
-  and module' module_ = List.map ~f:declaration module_ in
+  let rec f (d : declaration_content) : declaration_content =
+    match d with
+    | D_module { module_binder; module_; module_attr } ->
+      let module_ =
+        match module_ with
+        | { wrap_content = M_struct x; _ } ->
+          { module_ with wrap_content = Module_expr.M_struct (module' x) }
+        | _ -> module_
+      in
+      D_module { module_binder; module_; module_attr }
+    | D_type { type_binder; type_expr; type_attr } ->
+      D_type { type_binder; type_expr; type_attr }
+    | D_irrefutable_match x -> D_irrefutable_match x
+    | D_value x ->
+      let binder = sap_for_all x.binder in
+      let binder = at_prefix binder in
+      let attr : ValueAttr.t = { x.attr with inline = true; hidden = true } in
+      D_value { x with attr; binder }
+  and declaration (d : declaration) = Simple_utils.Location.map f d
+  and decl d = declaration d
+  and module' = List.map ~f:decl in
   List.map ~f:declaration ds
+
+
+(* [get_aliases_prelude] [var] [typed_program] returns aliases for all non-private declarations (module , type and value) in [typed_program].
+   Declarations are accessed accessed through [var].
+
+  e.g. with [var] == Curry
+    ```
+    module A = <..>
+    module B = struct
+      type baz = <..>
+      module C = <..>
+    end
+    [@private] module D = <..>
+    type bar = <..>
+    let foo = <..>
+    ```
+  we return
+    ```
+    module A = Curry.A
+    module B = Curry.B
+    let foo = Curry.foo
+    type bar = <..>
+    ```
+*)
+let get_aliases_prelude
+    : Ast_typed.module_variable -> Ast_typed.program -> Ast_core.program
+  =
+ fun mod_binder prg ->
+  let get_mod_bindings acc d =
+    let open Ast_typed in
+    match Location.unwrap d with
+    | D_module { module_binder; module_attr; _ }
+      when TypeOrModuleAttr.(module_attr.public) -> module_binder :: acc
+    | D_type _ | D_module _ | D_value _ | D_irrefutable_match _ -> acc
+  in
+  let get_val_bindings acc d =
+    let open Ast_typed in
+    match Location.unwrap d with
+    | D_value { binder; attr; _ } when ValueAttr.(attr.public) -> binder :: acc
+    | D_irrefutable_match { pattern; attr; _ } when ValueAttr.(attr.public) ->
+      let binders = Pattern.binders pattern in
+      binders @ acc
+    | D_type _ | D_module _ | D_value _ | D_irrefutable_match _ -> acc
+  in
+  let get_ty_bindings acc d =
+    let open Ast_typed in
+    match Location.unwrap d with
+    | D_type { type_binder; type_attr; _ } when type_attr.public -> type_binder :: acc
+    | D_type _ | D_module _ | D_value _ | D_irrefutable_match _ -> acc
+  in
+  let module_attr = Ast_core.TypeOrModuleAttr.{ public = true; hidden = true } in
+  let attr =
+    Ast_core.ValueAttr.
+      { inline = true
+      ; no_mutation = true
+      ; view = false
+      ; public = true
+      ; hidden = true
+      ; thunk = false
+      }
+  in
+  let mod_bindings = List.(rev (fold prg ~init:[] ~f:get_mod_bindings)) in
+  let val_bindings = List.(rev (fold prg ~init:[] ~f:get_val_bindings)) in
+  let ty_bindings = List.(rev (fold prg ~init:[] ~f:get_ty_bindings)) in
+  let prelude_mod : Ast_core.program =
+    let open Ast_core in
+    let prelude =
+      List.map mod_bindings ~f:(fun module_binder ->
+          let module_ =
+            Location.wrap ~loc @@ Module_expr.M_module_path (mod_binder, [ module_binder ])
+          in
+          Location.wrap ~loc @@ D_module { module_binder; module_attr; module_ })
+    in
+    prelude
+  in
+  let prelude_val : Ast_core.program =
+    let open Ast_core in
+    let prelude =
+      List.map val_bindings ~f:(fun binder ->
+          let expr =
+            make_e ~loc
+            @@ E_module_accessor
+                 { module_path = [ mod_binder ]; element = Binder.get_var binder }
+          in
+          Location.wrap ~loc
+          @@ D_value { binder = Binder.set_ascr binder None; attr; expr })
+    in
+    prelude
+  in
+  let prelude_ty : Ast_core.program =
+    let open Ast_core in
+    let prelude =
+      List.map ty_bindings ~f:(fun type_binder ->
+          let type_expr =
+            make_t ~loc
+            @@ T_module_accessor { module_path = [ mod_binder ]; element = type_binder }
+          in
+          Location.wrap ~loc @@ D_type { type_binder; type_expr; type_attr = module_attr })
+    in
+    prelude
+  in
+  prelude_mod @ prelude_val @ prelude_ty
 
 
 (* [inject_declaration] [syntax] [module_] fetch expression argument passed through CLI options and inject a declaration `let cli_arg = [options.cli_expr_inj]`
@@ -95,7 +173,7 @@ let inject_declaration ~options ~raise
  fun syntax prg ->
   let inject_arg_declaration arg =
     let open Ast_core in
-    let expr = Ligo_compile.Utils.core_expression_string ~raise ~options syntax arg in
+    let expr = Ligo_compile.Utils.core_expression_string ~raise syntax arg in
     let attr =
       ValueAttr.
         { inline = false
@@ -104,7 +182,6 @@ let inject_declaration ~options ~raise
         ; public = false
         ; hidden = false
         ; thunk = false
-        ; entry = false
         }
     in
     let d =

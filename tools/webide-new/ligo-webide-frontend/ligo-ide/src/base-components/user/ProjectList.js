@@ -3,6 +3,7 @@ import React, { PureComponent } from "react";
 import { Link } from "react-router-dom";
 import { DeleteButton, IconButton } from "~/base-components/ui-components";
 
+import platform from "~/base-components/platform";
 import fileOps from "~/base-components/file-ops";
 import { ProjectPath, actions } from "~/base-components/workspace";
 
@@ -63,6 +64,19 @@ export default class ProjectList extends PureComponent {
             onClick={() => this.renameProject(project)}
           />
         </div>
+      );
+    }
+
+    if (platform.isDesktop) {
+      return (
+        <IconButton
+          key={`open-in-browser-${project.id}`}
+          color="transparent"
+          className="text-muted"
+          icon="fas fa-external-link-alt"
+          tooltip="Open in Browser"
+          onClick={() => fileOps.openLink(`${process.env.PROJECT_WEB_URL}/${project.path}`)}
+        />
       );
     }
 

@@ -33,7 +33,3 @@ let equal a b = match a,b with
 let extract = function
     Standard s -> s
   | Verbatim v -> v
-
-let get_type = function
-    Standard _ -> `Standard
-  | Verbatim _ -> `Verbatim

@@ -18,6 +18,7 @@ The `unit` type in Michelson or LIGO is a predefined type that
 contains only one value that carries no information. It is used when
 no relevant information is required or produced. Here is how it used.
 
+
 <Syntax syntax="pascaligo">
 
 In PascaLIGO, the unique value of the `unit` type is `Unit`.
@@ -67,24 +68,24 @@ The simplest form of pattern matching in JsLIGO is with help of a discriminated
 union type, which should be familiar for developers coming from TypeScript.
 
 ```jsligo
-type foo =
+type foo = 
   { kind: "increment", amount: int}
 | { kind: "decrement", amount: int}
 | { kind: "reset"}
 ```
 
-Here, the `kind` field is unique among the objects. If not, an error will be
-generated. Also, if multiple fields are present which can be used as unique
-field, only the first unique field will be used.
+Here, the `kind` field is unique among the objects. If not, an error will be 
+generated. Also, if multiple fields are present which can be used as unique 
+field, only the first unique field will be used. 
 
-Creating an object from a discriminated union type requires all the fields
+Creating an object from a discriminated union type requires all the fields 
 to be fully written. So for increment that would be:
 
-```jsligo
+```jsligo 
 let obj = { kind: "increment", amount: 3}
 ```
 
-or
+or 
 
 ```jsligo
 let obj2 = { kind: "reset" }
@@ -112,8 +113,8 @@ let foo = (item: foo) => {
 Note that all cases of the discriminated union must be handled, if not an error
 will be generated.
 
-The "strict" rules on discriminated union types are because there currently is
-no type system support for this.
+The "strict" rules on discriminated union types are because there currently is 
+no type system support for this. 
 
 
 </Syntax>
@@ -127,6 +128,7 @@ the enumerated types found in Java, C++, JavaScript etc.
 
 Here is how we define a coin as being either head or tail (and nothing
 else):
+
 
 <Syntax syntax="pascaligo">
 
@@ -219,6 +221,7 @@ type user =
 let u : user = Admin(1000 as nat);
 let g : user = Guest();
 ```
+
 
 In JsLIGO, a constant constructor is equivalent to the same constructor
 taking an argument of type `unit`, so, for example, `Guest ()` is the
@@ -357,6 +360,7 @@ not defined for some inputs. In that case, the value of the `option`
 type would be `None`, otherwise `Some (v)`, where `v` is some
 meaningful value *of any type*. An example in arithmetic is the
 division operation:
+
 
 <Syntax syntax="pascaligo">
 

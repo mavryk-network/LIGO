@@ -3,22 +3,15 @@ open Types
 
 let scopes : Format.formatter -> scopes -> unit =
  fun f s ->
+  let s = List.sort s ~compare:(fun (l1, _) (l2, _) -> Location.compare l1 l2) in
   let pp_scope f (scope : scope) =
     let loc, defs = scope in
-    let defs =
-      List.sort defs ~compare:(fun d1 d2 ->
-          Simple_utils.Location_ordered.compare (get_range d1) (get_range d2))
-    in
     let pp_bindings f defs =
       List.iter defs ~f:(fun def -> Format.fprintf f "%s " (get_def_uid def))
     in
     Format.fprintf f "[ %a ] %a" pp_bindings defs Location.pp loc
   in
   let pp_scopes f = List.iter ~f:(Format.fprintf f "@[<v>%a@ @]" pp_scope) in
-  let s =
-    List.sort s ~compare:(fun (l1, _) (l2, _) ->
-        Simple_utils.Location_ordered.compare l1 l2)
-  in
   Format.fprintf f "@[<v>Scopes:@ %a@]" pp_scopes s
 
 
@@ -26,7 +19,7 @@ let rec definitions : Format.formatter -> def list -> unit =
  fun f defs ->
   let defs =
     List.sort defs ~compare:(fun d1 d2 ->
-        Simple_utils.Location_ordered.compare (get_range d1) (get_range d2))
+        String.compare (get_def_uid d1) (get_def_uid d2))
   in
   let refs ppf locs =
     let locs = LSet.elements locs in
@@ -40,12 +33,6 @@ let rec definitions : Format.formatter -> def list -> unit =
         PP_helpers.(list_sep Location.pp (tag " ,@ "))
         locs
   in
-  let pp_def_type ppf = function
-    | Local -> Format.fprintf ppf "Local"
-    | Global -> Format.fprintf ppf "Global"
-    | Parameter -> Format.fprintf ppf "Parameter"
-    | Module_field -> Format.fprintf ppf "Module_field"
-  in
   let pp_content ppf = function
     | Variable v ->
       let typ ppf t =
@@ -54,17 +41,7 @@ let rec definitions : Format.formatter -> def list -> unit =
         | Resolved t -> Format.fprintf ppf "resolved: %a" Ast_typed.PP.type_expression t
         | Unresolved -> Format.fprintf ppf "unresolved"
       in
-      Format.fprintf
-        ppf
-        "|%a|@ %a @ Mod Path = %a @ Def Type = %a"
-        typ
-        v.t
-        refs
-        v.references
-        (PP_helpers.list String.pp)
-        v.mod_path
-        pp_def_type
-        v.def_type
+      Format.fprintf ppf "|%a|@ %a" typ v.t refs v.references
     | Type t ->
       Format.fprintf
         ppf
@@ -73,7 +50,7 @@ let rec definitions : Format.formatter -> def list -> unit =
         t.content
         refs
         t.references
-    | Module { mod_case = Alias (a, _resolved); references; _ } ->
+    | Module { mod_case = Alias a; references; _ } ->
       Format.fprintf ppf "Alias: %s @ %a @ " (String.concat ~sep:"." a) refs references
     | Module { mod_case = Def d; references; _ } ->
       Format.fprintf ppf "Members: %a @ %a @ " definitions d refs references
@@ -145,36 +122,19 @@ let rec def_to_yojson : def -> string * Yojson.Safe.t =
       ]
   in
   let aux = function
-    | Variable { name; range; body_range; t; references; uid; def_type = _; mod_path = _ }
-      -> uid, defintion ~name ~range ~body_range ~t ~references
-    | Type
-        { name; range; body_range; content; uid; def_type = _; references; mod_path = _ }
-      -> uid, type_definition ~name ~range ~body_range ~content ~references
-    | Module
-        { name
-        ; range
-        ; body_range
-        ; mod_case = Def d
-        ; references
-        ; uid
-        ; def_type = _
-        ; mod_path = _
-        } ->
+    | Variable { name; range; body_range; t; references; uid; def_type = _ } ->
+      uid, defintion ~name ~range ~body_range ~t ~references
+    | Type { name; range; body_range; content; uid; def_type = _; references } ->
+      uid, type_definition ~name ~range ~body_range ~content ~references
+    | Module { name; range; body_range; mod_case = Def d; references; uid; def_type = _ }
+      ->
       ( uid
       , `Assoc
           [ "definition", defintion ~name ~range ~body_range ~references ~t:Unresolved
           ; "members", defs_json d
           ] )
     | Module
-        { name
-        ; range
-        ; body_range
-        ; mod_case = Alias (a, _resolved)
-        ; references
-        ; uid
-        ; def_type = _
-        ; mod_path = _
-        } ->
+        { name; range; body_range; mod_case = Alias a; references; uid; def_type = _ } ->
       let alias = `List (List.map a ~f:(fun s -> `String s)) in
       ( uid
       , `Assoc
@@ -236,3 +196,6 @@ let scopes_json (scopes : scopes) : Yojson.Safe.t =
            ; "module_environment", `List ms
            ])
        scopes)
+
+
+let to_json (d, s) = `Assoc [ "definitions", defs_json d; "scopes", scopes_json s ]

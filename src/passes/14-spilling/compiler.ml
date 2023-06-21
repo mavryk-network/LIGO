@@ -34,7 +34,7 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
   let loc = t.location in
   match t.type_content with
   | T_variable (name) -> raise.error @@ no_type_variable @@ name
-  | _ when Option.is_some (get_t_bool t) -> return (T_base TB_bool)
+  | t when (AST.compare_type_content t (t_bool ~loc ()).type_content) = 0-> return (T_base TB_bool)
   | T_constant {language ; injection ; parameters} -> (
     let () = Assert.assert_true ~raise (corner_case ~loc:__LOC__ "unsupported language") @@ String.equal language Backend.Michelson.name in
     match injection , parameters with
@@ -55,6 +55,8 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
     | (Signature,       []) -> return (T_base TB_signature)
     | (Baker_hash,      []) -> return (T_base TB_baker_hash)
     | (Pvss_key,        []) -> return (T_base TB_pvss_key)
+    | (Chest,           []) -> return (T_base TB_chest)
+    | (Chest_key,       []) -> return (T_base TB_chest_key)
     | (Tx_rollup_l2_address, []) -> return (T_base TB_tx_rollup_l2_address)
     | (Baker_operation, []) -> return (T_base TB_baker_operation)
     | (Bls12_381_g1,    []) -> return (T_base TB_bls12_381_g1)
@@ -89,25 +91,11 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
       let t' = compile_type t in
       return (T_set t')
     (* External types are allowed (since they're fully resolved) *)
-    | (External Map_find_opt, [ _ ; param2 ]) ->
-      (match (compile_type param2).type_content with
-      | T_big_map (_, v) | T_map (_, v) -> return (T_option v)
-      | _ -> raise.error (corner_case ~loc:__LOC__ "invalid external_map_find_opt application"))
-    | (External Map_add, [ _ ; _; param3 ]) -> return (compile_type param3).type_content
-    | (External Map_remove, [ _ ; param2 ]) -> return (compile_type param2).type_content
-    | (External Map_remove_value, [ _ ; param2 ]) ->
-      (match (compile_type param2).type_content with
-      | T_big_map (_, v) | T_map (_, v) -> return v.type_content
-      | _ -> raise.error (corner_case ~loc:__LOC__ "invalid external_map_remove application"))
-    | (External Int, [ param ]) ->
+    | (External "int", [ param ]) ->
       (match (compile_type param).type_content with
-      | T_base TB_bls12_381_fr | T_base TB_nat | T_base TB_bytes -> return (T_base TB_int) 
+      | T_base TB_bls12_381_fr | T_base TB_nat -> return (T_base TB_int)
       | _ -> raise.error (corner_case ~loc:__LOC__ "invalid external_int application"))
-    | (External Bytes, [ param ]) ->
-      (match (compile_type param).type_content with
-      | T_base TB_int | T_base TB_nat -> return (T_base TB_bytes) 
-      | _ -> raise.error (corner_case ~loc:__LOC__ "invalid external_bytes application"))
-    | (External Ediv, [ param1; param2 ]) ->
+    | (External ("ediv" | "u_ediv"), [ param1; param2 ]) ->
       let open AST in
       let return t1 t2 = compile_type (t_option ~loc (t_pair ~loc t1 t2)) in
       (match (compile_type param1).type_content, (compile_type param2).type_content with
@@ -117,54 +105,32 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
       | T_base TB_int, T_base TB_nat -> return (t_int ~loc ()) (t_nat ~loc ())
       | T_base TB_mutez, T_base TB_mutez -> return (t_nat ~loc ()) (t_tez ~loc ())
       | T_base TB_mutez, T_base TB_nat -> return (t_tez ~loc ()) (t_tez ~loc ())
-      | _ -> raise.error (corner_case ~loc:__LOC__ "invalid external_ediv application"))
-    | (External And, [ param1; param2 ]) ->
+      | _ -> raise.error (corner_case ~loc:__LOC__ "invalid external_(ediv|u_ediv) application"))
+    | (External ("and" | "u_and"), [ param1; param2 ]) ->
       (match (compile_type param1).type_content, (compile_type param2).type_content with
       | T_base TB_nat, T_base TB_nat -> return (T_base TB_nat)
       | T_base TB_int, T_base TB_nat -> return (T_base TB_nat)
-      | T_base TB_bytes, T_base TB_bytes -> return (T_base TB_bytes)
-      | _ -> raise.error (corner_case ~loc:__LOC__ "invalid external_and application"))
-    | (External Or, [ param1; param2 ]) ->
-      (match (compile_type param1).type_content, (compile_type param2).type_content with
-      | T_base TB_nat, T_base TB_nat -> return (T_base TB_nat)
-      | T_base TB_bytes, T_base TB_bytes -> return (T_base TB_bytes)
-      | _ -> raise.error (corner_case ~loc:__LOC__ "invalid external_or application"))
-    | (External Xor, [ param1; param2 ]) ->
-      (match (compile_type param1).type_content, (compile_type param2).type_content with
-      | T_base TB_nat, T_base TB_nat -> return (T_base TB_nat)
-      | T_base TB_bytes, T_base TB_bytes -> return (T_base TB_bytes)
-      | _ -> raise.error (corner_case ~loc:__LOC__ "invalid external_xor application"))
-    | (External Lsl, [ param1; param2 ]) ->
-      (match (compile_type param1).type_content, (compile_type param2).type_content with
-      | T_base TB_nat, T_base TB_nat -> return (T_base TB_nat)
-      | T_base TB_bytes, T_base TB_nat -> return (T_base TB_bytes)
-      | _ -> raise.error (corner_case ~loc:__LOC__ "invalid external_lsl application"))
-    | (External Lsr, [ param1; param2 ]) ->
-      (match (compile_type param1).type_content, (compile_type param2).type_content with
-      | T_base TB_nat, T_base TB_nat -> return (T_base TB_nat)
-      | T_base TB_bytes, T_base TB_nat -> return (T_base TB_bytes)
-      | _ -> raise.error (corner_case ~loc:__LOC__ "invalid external_lsr application"))
-    | ((Michelson_or               | Sapling_transaction |
+      | _ -> raise.error (corner_case ~loc:__LOC__ "invalid external_(ediv|u_ediv) application"))
+    | ((Michelson_or               | Chest_opening_result | Sapling_transaction |
         Ticket          | Int64    | Sapling_state        | Michelson_contract  |
         Contract        | Map      | Big_map              | Typed_address       |
         Michelson_pair  | Set      | Mutation             | Ast_contract        |
-        List            | Gen      | External _           | Views), [])
+        List            | External _ | Gen), [])
         -> raise.error @@ corner_case ~loc:__LOC__ "wrong constant"
     | ((Int64      | Unit      | Baker_operation      |
       Nat          | Timestamp | Michelson_or         |
-      String       | Gen       |
+      String       | Gen       | Chest_opening_result |
       Address      | Operation | Bls12_381_fr         |
       Key_hash     | Chain_id  | Sapling_transaction  |
       Baker_hash   | Pvss_key  | Michelson_contract   |
-                     Int       | Bls12_381_g1         |
+      Chest        | Int       | Bls12_381_g1         |
       Bls12_381_g2 | Key       | Michelson_program    |
       Ticket       | Signature | Sapling_state        |
       Contract     | Map       | Big_map              |
       Set          | Tez       | Michelson_pair       |
-      Never                    | Ast_contract         |
+      Never        | Chest_key | Ast_contract         |
       Bytes        | Mutation  | Typed_address        |
-      External _   | List      | Tx_rollup_l2_address |
-      Views        ), _::_) -> raise.error @@ corner_case ~loc:__LOC__ (Format.asprintf "wrong constant\n%a\n" Ast_aggregated.PP.type_expression t)
+      List         | External _ | Tx_rollup_l2_address ), _::_) -> raise.error @@ corner_case ~loc:__LOC__ (Format.asprintf "wrong constant\n%a\n" Ast_aggregated.PP.type_expression t)
   )
   | T_sum _ when Option.is_some (AST.get_t_bool t) ->
     return (T_base TB_bool)
@@ -172,37 +138,34 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
     let o = trace_option ~raise (corner_case ~loc:__LOC__ ("impossible")) @@ AST.get_t_option t in
     let o' = compile_type o in
     return (T_option o')
-  | T_sum { fields ; layout } -> (
-      match is_michelson_or fields layout with
-      | Some (a, b) -> (
-          let aux ( (t,ann): AST.type_expression * string option) =
-            let t = compile_type t in
-            let annot = remove_empty_annotation ann in
+  | T_sum { fields = m ; layout } -> (
+      match is_michelson_or m with
+      | Some (a , b) -> (
+          let aux (x : AST.row_element) =
+            let t = compile_type x.associated_type in
+            let annot = remove_empty_annotation x.michelson_annotation in
             (annot , t)
           in
           let a' = aux a in
           let b' = aux b in
           return @@ T_or (a' , b')
         )
-      | None ->
-        let fields = Label.Map.map fields ~f:(compile_type) in
-        Layout.t_sum ~raise ?source_type:t.source_type fields layout
+      | None -> Layout.t_sum ~raise ~layout return compile_type m
     )
-  | T_record { fields ; layout } -> (
-      match is_michelson_pair fields layout with
-      | Some (a, b) -> (
-        let aux ( (t,ann): AST.type_expression * string option) =
-          let t = compile_type t in
-          let annot = remove_empty_annotation ann in
-          (annot , t)
-        in
-        let a' = aux a in
-        let b' = aux b in
-        return @@ T_tuple [a' ; b']
-      )
-      | None ->
-        let fields = Label.Map.map fields ~f:(compile_type) in
-        Layout.t_record ~raise ?source_type:t.source_type fields layout
+  | T_record { fields = m ; layout } -> (
+      match is_michelson_pair m with
+      | Some (a , b) -> (
+          let aux (x : AST.row_element) =
+            let t = compile_type x.associated_type in
+            let annot = remove_empty_annotation x.michelson_annotation in
+            (annot , t)
+          in
+          let a' = aux a in
+          let b' = aux b in
+          let t = T_tuple [a'; b'] in
+          return t
+        )
+      | None -> Layout.t_record_to_pairs ~layout return compile_type m
     )
   | T_arrow {type1;type2} -> (
       let param' = compile_type type1 in
@@ -216,6 +179,62 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
   | T_for_all _ ->
     raise.error @@ corner_case ~loc:__LOC__ "For all type uncaught"
 
+(* probably should use result monad for conformity? but these errors
+   are supposed to be impossible *)
+let internal_error loc msg =
+  failwith
+    (Format.asprintf
+       "@[<v>Internal error, please report this as a bug@ %s@ %s@ @]"
+       loc msg)
+
+(* todo: refactor handling of recursive functions *)
+let compile_record_matching ~raise (expr' : expression) return k ({ fields; body; tv } : _ AST.matching_content_record) =
+  let record =
+    trace_option ~raise (corner_case ~loc:__LOC__ "compile_record_matching: getting lr tree") @@
+    get_t_record_opt tv in
+  let loc = expr'.location in
+  match record.layout with
+  (* TODO unify with or simplify other case below? *)
+  | L_comb ->
+    let record_fields = kv_list_of_t_record_or_tuple ~layout:L_comb record.fields in
+    let fields =
+      List.map
+        ~f:(fun (l, (row_element : AST.row_element)) ->
+          let t = compile_type ~raise row_element.associated_type in
+          let x = trace_option ~raise
+            (corner_case ~loc:__LOC__ ("missing label in record"))
+            Record.(LMap.find_opt l fields)
+          in
+          (Binder.get_var x, t)
+        )
+        record_fields
+    in
+    let body = k body in
+    return (E_let_tuple (expr', (fields, body)))
+  | _ ->
+    let tree = Layout.record_tree ~layout:record.layout ?source_type:tv.source_type (compile_type ~raise) record.fields in
+    let body = k body in
+    let rec aux expr (tree : Layout.record_tree) body =
+      match tree.content with
+      | Field l ->
+        let x = trace_option ~raise
+          (corner_case ~loc:__LOC__ ("missing label in record"))
+          (Record.LMap.find_opt l fields)
+        in
+        let var = Binder.get_var x in
+        return @@ E_let_in (expr, false, ((var, tree.type_), body))
+      | Pair (x, y) ->
+        let x_var = Value_var.fresh ~loc () in
+        let y_var = Value_var.fresh ~loc () in
+        let x_ty = x.type_ in
+        let y_ty = y.type_ in
+        let x_var_expr = Combinators.Expression.make_tpl (E_variable x_var, x_ty) in
+        let y_var_expr = Combinators.Expression.make_tpl (E_variable y_var, y_ty) in
+        let yrec = aux y_var_expr y body in
+        let xrec = aux x_var_expr x yrec in
+        return @@ E_let_tuple (expr, ([(x_var, x_ty); (y_var, y_ty)], xrec))
+    in
+    aux expr' tree body
 
 let rec compile_expression ~raise (ae:AST.expression) : expression =
   let tv = compile_type ~raise ae.type_expression in
@@ -227,16 +246,16 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
   | E_type_abstraction _
   | E_type_inst _ ->
     raise.error @@ corner_case ~loc:__LOC__ (Format.asprintf "Type instance: This program should be monomorphised")
-  | E_let_in {let_binder; rhs; let_result; attributes = { inline; no_mutation=_; view=_; public=_ ; hidden = _ ; thunk = _; entry = _ } } ->
+  | E_let_in {let_binder; rhs; let_result; attributes = { inline; no_mutation=_; view=_; public=_ ; hidden = _ ; thunk = _ } } ->
     let rhs' = self rhs in
     let result' = self let_result in
     return (E_let_in (rhs', inline, ((Binder.get_var let_binder, rhs'.type_expression), result')))
   | E_literal l -> return @@ E_literal l
   | E_variable name -> return @@ E_variable name
   | E_application {lamb; args} ->
-    let a = self lamb in
-    let b = self args in
-    return @@ E_application (a, b)
+      let a = self lamb in
+      let b = self args in
+      return @@ E_application (a, b)
   | E_constructor {constructor=Label "True";element} when AST.compare_expression_content element.expression_content (AST.e_unit ()) = 0 ->
     return @@ E_constant { cons_name = C_TRUE ; arguments = [] }
   | E_constructor {constructor=Label "False";element} when AST.compare_expression_content element.expression_content (AST.e_unit ()) = 0 ->
@@ -247,77 +266,109 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
     let e = compile_expression ~raise element in
     return @@ E_constant { cons_name = C_SOME ; arguments = [e] }
   | E_constructor {constructor;element} -> (
-      let ty' = compile_type ~raise ae.type_expression in
-      let ty_variant =
-        trace_option ~raise (corner_case ~loc:__LOC__ "not a record") @@
-        get_t_sum_opt (get_type ae) in
-      let path = Layout.constructor_to_lr ~layout:ty_variant.layout ty' constructor in
-      let aux = fun pred (ty, lr) ->
-        let c : Constant.constant' = match lr with
-          | `Left  -> C_LEFT
-          | `Right -> C_RIGHT
-        in
-        return ~tv:ty @@ E_constant {cons_name=c;arguments=[pred]}
+    let ty' = compile_type ~raise ae.type_expression in
+    let ty_variant =
+      trace_option ~raise (corner_case ~loc:__LOC__ "not a record") @@
+      get_t_sum_opt (get_type ae) in
+    let path = Layout.constructor_to_lr ~raise ~layout:ty_variant.layout ty' ty_variant.fields constructor in
+    let aux = fun pred (ty, lr) ->
+      let c : Constant.constant' = match lr with
+        | `Left  -> C_LEFT
+        | `Right -> C_RIGHT
       in
-      let element' = self element in
-      let expr = List.fold ~f:aux ~init:element' path in
-      expr
-    )
+      return ~tv:ty @@ E_constant {cons_name=c;arguments=[pred]}
+    in
+    let element' = self element in
+    let expr = List.fold ~f:aux ~init:element' path in
+    expr
+  )
   | E_record m -> (
-      let (record_t : Ast_aggregated.Types.row) = trace_option ~raise (corner_case ~loc:__LOC__ "record expected") (AST.get_t_record_opt ae.type_expression) in
-      let m = Record.map ~f:self m in
-      Layout.record_to_pairs
-        ~raise ~source_type:tv.source_type
-        (fun ~tv x -> return ~tv x) m record_t.layout
+      let record_t = trace_option ~raise (corner_case ~loc:__LOC__ "record expected") (AST.get_t_record_opt ae.type_expression) in
+      (* Note: now returns E_tuple, not pairs, for combs *)
+      Layout.record_to_pairs ~raise self (fun e1 e2 -> return @@ ec_pair e1 e2) (fun es -> return @@ E_tuple es) record_t m
     )
   | E_accessor {struct_; path} -> (
-      let ty' = compile_type ~raise (get_type struct_) in
-      let record_ty = trace_option ~raise (corner_case ~loc:__LOC__ "not a record") @@
-        get_t_record_opt (get_type struct_) in
-      let path = Layout.path_to_field record_ty.layout path ty' in
-      let struct_' = compile_expression ~raise struct_ in
-      let content =
-        List.fold_left
-          path
-          ~f:(fun expr (i, n, ty, _) ->
-              let expr = { content = E_proj (expr, i, n) ; type_expression = ty ; location = Location.generated } in
-              expr)
-          ~init:struct_' in
-      return content.content
-    )
+    let ty' = compile_type ~raise (get_type struct_) in
+    let record_ty = trace_option ~raise (corner_case ~loc:__LOC__ "not a record") @@
+      get_t_record_opt (get_type struct_) in
+    match record_ty.layout with
+    | L_comb ->
+      let record_fields = kv_list_of_t_record_or_tuple ~layout:record_ty.layout record_ty.fields in
+      let i = fst @@ Option.value_exn  (List.findi ~f:(fun _ (label, _) -> 0 = Label.compare path label) record_fields) in
+      let n = List.length record_fields in
+      let struct_ = compile_expression ~raise struct_ in
+      return (E_proj (struct_, i, n))
+    | _ ->
+    let path = Layout.record_access_to_lr ~raise ~layout:record_ty.layout ty' record_ty.fields path in
+    let aux = fun pred (ty, lr) ->
+      let c : Constant.constant' = match lr with
+        | `Left  -> C_CAR
+        | `Right -> C_CDR
+      in
+      return ~tv:ty @@ E_constant {cons_name=c;arguments=[pred]}
+    in
+    let struct_' = compile_expression ~raise struct_ in
+    let expr = List.fold ~f:aux ~init:struct_' path in
+    expr
+  )
   | E_update {struct_; path; update} -> (
-      (* Compile record update to simple constructors &
-         projections. This will be optimized to some degree by eta
-         contraction in a later pass. *)
+    (* Compile record update to simple constructors &
+       projections. This will be optimized to some degree by eta
+       contraction in a later pass. *)
       let ty = get_type struct_ in
       let record_ty =
         trace_option ~raise (corner_case ~loc:__LOC__ "not a record") @@
         get_t_record_opt (ty) in
       let ty' = compile_type ~raise (ty) in
-      let path = Layout.path_to_field record_ty.layout path ty' in
+      match record_ty.layout with
+      | L_comb ->
+        let record_fields = kv_list_of_t_record_or_tuple ~layout:record_ty.layout record_ty.fields in
+        let struct_ = self struct_ in
+        let update = self update in
+        let i = fst @@ Option.value_exn  (List.findi ~f:(fun _ (label, _) -> 0 = Label.compare path label) record_fields) in
+        let n = List.length record_fields in
+        return (E_update (struct_, i, update, n))
+      | _ ->
+      let path =
+        trace_strong ~raise (corner_case ~loc:__LOC__ "record access") @@
+        (fun ~raise:_ -> Layout.record_access_to_lr ~raise ~layout:record_ty.layout ty' record_ty.fields path) in
+      let path = List.map ~f:snd path in
+      let update = self update in
+      let struct_ = self struct_ in
       let record_var = Value_var.fresh ~loc () in
-      let with_ty content ty =
-        { content = content;
-          type_expression = ty;
-          location = Location.generated} in
-      let update_' = self update in
-      let struct_' = self struct_ in
-      let content =
-        List.fold_right
-          path
-          ~f:(fun (i, n, field_ty, parent_ty) update ->
-              E_update (with_ty (E_variable record_var) parent_ty,
-                        i,
-                        with_ty (E_let_in (with_ty
-                                             (E_proj (with_ty (E_variable record_var) parent_ty, i, n))
-                                             field_ty,
-                                           false,
-                                           ((record_var, parent_ty), with_ty update field_ty)))
-                          field_ty,
-                        n))
-          ~init:update_'.content in
-      return @@ E_let_in (struct_', false, ((record_var, ty'), with_ty content ty'))
-    )
+      let car (e : expression) : expression =
+        match e.type_expression.type_content with
+        | T_tuple [(_, a); _] ->
+          { e with
+            content = E_constant { cons_name = C_CAR ; arguments = [e] } ;
+            type_expression = a }
+        | _ -> internal_error __LOC__ "record did not have pair type" in
+      let cdr (e : expression) : expression =
+        match e.type_expression.type_content with
+        | T_tuple [_; (_, b)] ->
+          { e with
+            content = E_constant { cons_name = C_CDR ; arguments = [e] } ;
+            type_expression = b }
+        | _ -> internal_error __LOC__ "record did not have pair type" in
+      let rec build_record_update record path =
+        match path with
+        | [] -> update
+        | `Left :: path ->
+          { record with
+            content = E_constant { cons_name = C_PAIR ;
+                                   arguments = [ build_record_update (car record) path;
+                                                 cdr record ] } }
+        | `Right :: path ->
+          { record with
+            content = E_constant { cons_name = C_PAIR ;
+                                   arguments = [ car record;
+                                                 build_record_update (cdr record) path ] } } in
+      return
+        (E_let_in (struct_, false, ((record_var, struct_.type_expression),
+                   build_record_update
+                     (e_var record_var struct_.type_expression)
+                     path)))
+  )
   | E_constant {cons_name=name; arguments=lst} -> (
       let iterator_generator (iterator_name : Constant.constant') =
         let expression_to_iterator_body (f : AST.expression) =
@@ -360,7 +411,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
               let f' = expression_to_iterator_body f in
               let i' = self i in
               return @@ E_iterator (iterator_name , f' , i')
-            )
+          )
           | (code :: args), C_CREATE_CONTRACT -> (
               let code' = expression_to_iterator_body code in
               let args' = List.map ~f:self args in
@@ -406,10 +457,8 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
     )
   | E_lambda l ->
     return @@ compile_lambda ~raise l
-  | E_recursive ({ fun_name ; fun_type = _ ; lambda; force_lambdarec } as r) when not force_lambdarec && Recursion.is_tail_recursive fun_name lambda ->
+  | E_recursive r ->
     return @@ compile_recursive ~raise r
-  | E_recursive { fun_name ; fun_type ; lambda; force_lambdarec = _ } ->
-    return @@ compile_rec_lambda ~raise lambda fun_name fun_type
   | E_matching {matchee=expr; cases=m} -> (
       let expr' = self expr in
       match m with
@@ -422,7 +471,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
             let get_case c =
               trace_option ~raise
                 (corner_case ~loc:__LOC__ ("missing " ^ c ^ " case in match"))
-                (Record.find_opt c_body_lst (Label.of_string c)) in
+                (Record.LMap.find_opt (Label c) c_body_lst) in
             let match_nil = get_case "Nil" in
             let match_cons = get_case "Cons" in
             let nil = self (fst match_nil) in
@@ -430,7 +479,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
               let hd = Value_var.fresh ~loc () in
               let tl = Value_var.fresh ~loc () in
               let proj_t = t_pair (None,list_ty) (None,expr'.type_expression) in
-              let proj = Expression.make (ec_pair (e_var  hd list_ty) (e_var tl expr'.type_expression)) proj_t in
+              let proj = Expression.make (ec_pair (e_var hd list_ty) (e_var tl expr'.type_expression)) proj_t in
               let cons_body = self (fst match_cons) in
               let cons_body' = e_let_in (snd match_cons) proj_t false proj cons_body in
               (((hd,list_ty), (tl,expr'.type_expression)), cons_body')
@@ -443,7 +492,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
             let get_case c =
               trace_option ~raise
                 (corner_case ~loc:__LOC__ ("missing " ^ c ^ " case in match"))
-                (Record.find_opt c_body_lst (Label.of_string c)) in
+                (Record.LMap.find_opt (Label c) c_body_lst) in
             let match_none = get_case "None" in
             let match_some = get_case "Some" in
             let n = self (fst match_none) in
@@ -459,25 +508,25 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
             let get_case c =
               trace_option ~raise
                 (corner_case ~loc:__LOC__ ("missing " ^ c ^ " case in match"))
-                (Record.find_opt cases (Label c)) in
+                (Record.LMap.find_opt (Label c) cases) in
             let match_true  = get_case "True" in
             let match_false = get_case "False" in
             let (t , f) = Pair.map ~f:self (match_true, match_false) in
             return @@ E_if_bool (expr', t, f)
           | _ -> (
-              let record_ty = trace_option ~raise (corner_case ~loc:__LOC__ "compile_recursive: getting lr tree") @@
+              let record_ty = trace_option ~raise (corner_case ~loc:__LOC__ "compile_expression: getting lr tree") @@
                 get_t_sum_opt tv in
-              let tree = Layout.match_variant_to_tree ~raise ~layout:record_ty.layout (compile_type ~raise tv) in
+              let tree = Layout.match_variant_to_tree ~raise ~layout:record_ty.layout ~compile_type:(compile_type ~raise) record_ty.fields in
               let rec aux top t =
                 match t with
                 | ((`Leaf (Label.Label constructor_name)) , tv) -> (
-                    let ({constructor=_ ; pattern ; body} : _ AST.matching_content_case)=
+                    let ({constructor=_ ; pattern ; body} : _ AST.matching_content_case ) =
                       trace_option ~raise (corner_case ~loc:__LOC__ "missing match clause") @@
                       let aux ({constructor = Label c ; pattern=_ ; body=_} : _ AST.matching_content_case) =
                         (String.equal c constructor_name) in
                       List.find ~f:aux cases in
                     let body' = self body in
-                    return @@ E_let_in (top, false, ((pattern, tv) , body'))
+                    return @@ E_let_in (top, false, ((pattern , tv) , body'))
                   )
                 | ((`Node (a , b)) , tv) ->
                   let a' =
@@ -497,19 +546,25 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
               trace_strong ~raise (corner_case ~loc:__LOC__ "building constructor") @@
               (fun ~raise:_ -> aux expr' tree)
             )
-        )
+      )
       | Match_record record ->
-        compile_record_matching ~raise ~loc (fun content -> return content) self expr' record  
-    )
-  | E_raw_code { language = "michelson"; code} ->
-    let type_anno  = get_type code in
+        compile_record_matching ~raise expr' return self record
+  )
+  | E_raw_code { language; code = { expression_content = m ; _ } } when Option.is_some (get_e_tuple m) ->
+    let backend = Backend.Michelson.name in
+    let () =
+      Assert.assert_true ~raise
+        (corner_case ~loc:__LOC__ "Language insert - backend mismatch only provide code insertion in the language you are compiling to")
+        (String.equal language backend)
+    in
+    let tuple = Option.value ~default:[] (AST.get_e_tuple m) in
+    let code, args = match tuple with
+      | [] -> raise.error (corner_case ~loc:__LOC__ "expected non-empty tuple in %Michelson")
+      | hd :: tl -> hd, tl in
+    let args = List.map ~f:(fun t -> self t) args in
+    let type_anno  = get_type ae in
     let type_anno' = compile_type ~raise type_anno in
-    let vals = get_e_applications code in
-    let vals = match vals with [] -> [code] | vals -> vals in
-    let code = List.hd_exn vals in
     let code = trace_option ~raise (corner_case ~loc:__LOC__ "could not get a string") @@ get_a_string code in
-    let args = List.tl_exn vals in
-    let args = List.map ~f:(self) args in
     let open Tezos_micheline in
     let orig_code = code in
     let (code, errs) = Micheline_parser.tokenize code in
@@ -525,7 +580,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
         let code = Micheline.inject_locations (fun _ -> Location.generated) code in
         match code with
         | Seq (_, code) ->
-          return ~tv:type_anno' @@ E_inline_michelson (code, args)
+          return ~tv:type_anno' @@ E_raw_michelson (code, args)
         | _ ->
           raise.error (raw_michelson_must_be_seq ae.location code)
     )
@@ -543,20 +598,20 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
     let orig_code = code in
     let (code, errs) = Micheline_parser.tokenize code in
     (match errs with
-     | _ :: _ -> raise.error (could_not_parse_raw_michelson ae.location orig_code)
-     | [] ->
-       let (code, errs) = Micheline_parser.parse_expression ~check:false code in
-       match errs with
-       | _ :: _ -> raise.error (could_not_parse_raw_michelson ae.location orig_code)
-       | [] ->
-         let code = Micheline.strip_locations code in
-         (* hmm *)
-         let code = Micheline.inject_locations (fun _ -> Location.generated) code in
-         match code with
-         | Seq (_, code) ->
-           return ~tv:type_anno' @@ E_raw_michelson code
-         | _ ->
-           raise.error (raw_michelson_must_be_seq ae.location code)
+    | _ :: _ -> raise.error (could_not_parse_raw_michelson ae.location orig_code)
+    | [] ->
+      let (code, errs) = Micheline_parser.parse_expression ~check:false code in
+      match errs with
+      | _ :: _ -> raise.error (could_not_parse_raw_michelson ae.location orig_code)
+      | [] ->
+        let code = Micheline.strip_locations code in
+        (* hmm *)
+        let code = Micheline.inject_locations (fun _ -> Location.generated) code in
+        match code with
+        | Seq (_, code) ->
+          return ~tv:type_anno' @@ E_raw_michelson (code, [])
+        | _ ->
+          raise.error (raw_michelson_must_be_seq ae.location code)
     )
   | E_let_mut_in { let_binder; rhs; let_result; attributes = _ } ->
     let binder = compile_binder ~raise let_binder in
@@ -604,24 +659,6 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
     let body = self body in
     return @@ E_while (cond, body)
 
-and compile_record_matching ~raise ~loc return k (matchee : expression)
-    ({ fields; body; tv } : _ AST.matching_content_record) =
-  let row =
-    trace_option ~raise
-      (corner_case ~loc:__LOC__ "Invariant broken. `tv` isn't a record type")
-    @@ get_t_record_opt tv
-  in
-  let body = k body in
-  let row = AST.Row.map (compile_type ~raise) row in
-  let ty' = compile_type ~raise tv in
-  let bindings = Layout.explode_row ~loc row ty' fields matchee in
-  List.fold_right bindings ~init:body ~f:(fun (binding, matchee) body ->
-      return  @@ 
-      match binding with
-      | `Let binding -> E_let_in (matchee, false, (binding, body))
-      | `Let_tuple bindings -> E_let_tuple (matchee, (bindings, body)))
-
-
 and compile_lambda ~raise l =
   let { binder ; output_type ; result } : _ Lambda.t = l in
   let result' = compile_expression ~raise result in
@@ -629,14 +666,6 @@ and compile_lambda ~raise l =
   let output_type = compile_type ~raise output_type in
   let (binder, body) = make_lambda ~loc:result.location param result' output_type in
   E_closure { binder; body }
-
-and compile_rec_lambda ~raise l fun_name _fun_type =
-  let { binder ; output_type ; result } : _ Lambda.t = l in
-  let result' = compile_expression ~raise result in
-  let param = Param.map (compile_type ~raise) binder in
-  let output_type = compile_type ~raise output_type in
-  let (binder, body) = make_lambda ~loc:result.location param result' output_type in
-  E_rec { func = { binder; body } ; rec_binder = fun_name }
 
 and compile_binder ~raise binder = 
   let ascr = compile_type ~raise (Binder.get_ascr binder) in
@@ -657,7 +686,7 @@ and make_lambda ~loc param body body_type =
     else body in
   (Param.get_var param, body)
 
-and compile_recursive ~raise Recursive.{fun_name; fun_type; lambda; force_lambdarec = _} =
+and compile_recursive ~raise {fun_name; fun_type; lambda} =
   let rec map_lambda : Value_var.t -> type_expression -> AST.expression -> expression = fun fun_name loop_type e ->
     match e.expression_content with
       E_lambda {binder;output_type;result} ->
@@ -666,31 +695,31 @@ and compile_recursive ~raise Recursive.{fun_name; fun_type; lambda; force_lambda
       let body_type = compile_type ~raise output_type in
       let param = Param.map (compile_type ~raise) param in
       let (binder, body) = make_lambda ~loc:e.location param body body_type in
-      Expression.make ~loc:e.location (E_closure {binder;body }) loop_type
+      Expression.make ~loc:e.location (E_closure {binder;body}) loop_type
     | _  ->
       let res = replace_callback ~raise fun_name loop_type false e in
       res
 
   and replace_callback ~raise : Value_var.t -> type_expression -> bool -> AST.expression -> expression = fun fun_name loop_type shadowed e ->
     match e.expression_content with
-    | E_let_in li ->
-      let shadowed = shadowed || Binder.apply (Value_var.equal fun_name) li.let_binder in
-      let let_result = replace_callback ~raise fun_name loop_type shadowed li.let_result in
-      let rhs = compile_expression ~raise li.rhs in
-      let ty  = compile_type ~raise li.rhs.type_expression in
-      let let_binder = Binder.get_var li.let_binder in
-      e_let_in let_binder ty li.attributes.inline rhs let_result
-    | E_let_mut_in li ->
-      (* Not possible for mut to shadow fun_name *)
-      let let_result = replace_callback ~raise fun_name loop_type shadowed li.let_result in
-      let rhs = compile_expression ~raise li.rhs in
-      let ty  = compile_type ~raise li.rhs.type_expression in
-      let let_binder = Binder.get_var li.let_binder in
-      e_let_mut_in let_binder ty rhs let_result
-    | E_matching m ->
-      let ty = compile_type ~raise e.type_expression in
-      matching ~raise fun_name loop_type shadowed m ty
-    | E_application {lamb;args} -> (
+      | E_let_in li ->
+        let shadowed = shadowed || Binder.apply (Value_var.equal fun_name) li.let_binder in
+        let let_result = replace_callback ~raise fun_name loop_type shadowed li.let_result in
+        let rhs = compile_expression ~raise li.rhs in
+        let ty  = compile_type ~raise li.rhs.type_expression in
+        let let_binder = Binder.get_var li.let_binder in
+        e_let_in let_binder ty li.attributes.inline rhs let_result
+      | E_let_mut_in li ->
+        (* Not possible for mut to shadow fun_name *)
+        let let_result = replace_callback ~raise fun_name loop_type shadowed li.let_result in
+        let rhs = compile_expression ~raise li.rhs in
+        let ty  = compile_type ~raise li.rhs.type_expression in
+        let let_binder = Binder.get_var li.let_binder in
+        e_let_mut_in let_binder ty rhs let_result
+      | E_matching m ->
+        let ty = compile_type ~raise e.type_expression in
+        matching ~raise fun_name loop_type shadowed m ty
+      | E_application {lamb;args} -> (
         match lamb.expression_content,shadowed with
         | E_variable name, false when Value_var.equal fun_name name ->
           let expr = compile_expression ~raise args in
@@ -699,9 +728,9 @@ and compile_recursive ~raise Recursive.{fun_name; fun_type; lambda; force_lambda
           let expr = compile_expression ~raise e in
           Expression.make (E_constant {cons_name=C_LOOP_STOP;arguments=[expr]}) loop_type
       )
-    | _ ->
-      let expr = compile_expression ~raise e in
-      Expression.make (E_constant {cons_name=C_LOOP_STOP;arguments=[expr]}) loop_type
+      | _ ->
+        let expr = compile_expression ~raise e in
+        Expression.make (E_constant {cons_name=C_LOOP_STOP;arguments=[expr]}) loop_type
 
   and matching ~raise : Value_var.t -> type_expression -> bool -> AST.matching -> type_expression -> expression = fun fun_name loop_type shadowed m ty ->
     let return ret = Expression.make ret @@ ty in
@@ -718,7 +747,7 @@ and compile_recursive ~raise Recursive.{fun_name; fun_type; lambda; force_lambda
           let get_case c =
             trace_option ~raise
               (corner_case ~loc:__LOC__ ("missing " ^ c ^ " case in match"))
-              (Record.find_opt c_body_lst (Label.of_string c)) in
+              (Record.LMap.find_opt (Label.of_string c) c_body_lst) in
           let match_nil = get_case "Nil" in
           let match_cons = get_case "Cons" in
           let nil = self (fst match_nil) in
@@ -739,7 +768,7 @@ and compile_recursive ~raise Recursive.{fun_name; fun_type; lambda; force_lambda
           let get_case c =
             trace_option ~raise
               (corner_case ~loc:__LOC__ ("missing " ^ c ^ " case in match"))
-              (Record.find_opt c_body_lst (Label.of_string c)) in
+              (Record.LMap.find_opt (Label.of_string c) c_body_lst) in
           let match_none = get_case "None" in
           let match_some = get_case "Some" in
           let n = self (fst match_none) in
@@ -755,7 +784,7 @@ and compile_recursive ~raise Recursive.{fun_name; fun_type; lambda; force_lambda
           let get_case c =
             trace_option ~raise
               (corner_case ~loc:__LOC__ ("missing " ^ c ^ " case in match"))
-              (Record.find_opt cases (Label c)) in
+              (Record.LMap.find_opt (Label c) cases) in
           let match_true  = get_case "True" in
           let match_false = get_case "False" in
           let (t , f) = Pair.map ~f:self (match_true, match_false) in
@@ -763,7 +792,7 @@ and compile_recursive ~raise Recursive.{fun_name; fun_type; lambda; force_lambda
         | _ -> (
             let record_ty = trace_option ~raise (corner_case ~loc:__LOC__ "compile_recursive: getting lr tree") @@
               get_t_sum_opt tv in
-            let tree = Layout.match_variant_to_tree ~raise ~layout:record_ty.layout (compile_type ~raise tv) in
+            let tree = Layout.match_variant_to_tree ~raise ~layout:record_ty.layout ~compile_type:(compile_type ~raise) record_ty.fields in
             let rec aux top t =
               match t with
               | ((`Leaf (Label.Label constructor_name)) , tv) -> (
@@ -789,17 +818,17 @@ and compile_recursive ~raise Recursive.{fun_name; fun_type; lambda; force_lambda
                   ((right_var , b_ty) , e)
                 in
                 return @@ E_if_left (top , a' , b')
-            in
-            trace_strong ~raise (corner_case ~loc:__LOC__ "building constructor") @@
-            (fun ~raise:_ -> aux expr' tree)
-          )
+          in
+          trace_strong ~raise (corner_case ~loc:__LOC__ "building constructor") @@
+          (fun ~raise:_ -> aux expr' tree)
+       )
       )
-    | Match_record record ->
-      compile_record_matching ~raise ~loc return (replace_callback ~raise fun_name loop_type shadowed) expr' record
+      | Match_record record ->
+        compile_record_matching ~raise expr' return (replace_callback ~raise fun_name loop_type shadowed) record
   in
   let fun_type = compile_type ~raise fun_type in
   let (input_type,output_type) = trace_option ~raise (corner_case ~loc:__LOC__ "wrongtype") @@ get_t_function fun_type in
-  let loop_type = t_union ~source_type:None (None, input_type) (None, output_type) in
+  let loop_type = t_union (None, input_type) (None, output_type) in
   let body = map_lambda fun_name loop_type lambda.result in
   let param = Param.map (compile_type ~raise) lambda.binder in
   let (binder, body) = make_lambda ~loc:body.location param body loop_type in

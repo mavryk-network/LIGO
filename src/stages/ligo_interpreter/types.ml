@@ -56,7 +56,7 @@ module Bls12_381_Fr = struct
 end
 
 module Chain_id = struct
-  include Tezos_crypto.Hashed.Chain_id
+  include Tezos_crypto.Chain_id
 
   let to_yojson (c : t) = [%to_yojson: bytes] (to_bytes c)
   let of_yojson _ = failwith "chain_id_of_yojson: not implemented"
@@ -164,11 +164,7 @@ and value =
   | V_Michelson_contract of mcode [@name "contract_code"]
   | V_Ast_contract of
       { main : Ast_aggregated.expression
-      ; views :
-          [ `None
-          | `Single of Value_var.t list * Ast_aggregated.expression
-          | `Multi of (Value_var.t * Ast_aggregated.expression) list
-          ]
+      ; views : (Value_var.t list * Ast_aggregated.expression) option
       } [@name "ast_contract"]
   | V_Mutation of mutation [@name "mutation"]
   | V_Func_val of func_val [@name "function"]
@@ -176,7 +172,6 @@ and value =
   | V_Location of location [@name "location"]
   | V_Typed_address of Contract.t
       (* This is a copy of C_address in constant *) [@name "typed_address"]
-  | V_Views of (string * func_val) list
 [@@deriving yojson]
 
 type bigmap_state = (value * value) list
@@ -189,4 +184,3 @@ type bigmap_data =
 
 type bigmap = int * bigmap_data
 type bigmaps = bigmap list
-type toplevel_env = (string * value) list [@@deriving yojson]

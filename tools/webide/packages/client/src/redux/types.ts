@@ -1,6 +1,7 @@
 export enum Language {
   PascaLigo = 'pascaligo',
   CameLigo = 'cameligo',
+  ReasonLigo = 'reasonligo',
   JsLigo = 'jsligo',
 }
 

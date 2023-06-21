@@ -96,37 +96,28 @@ let nseq_to_list (x,y) = x::y
 
 let nsepseq_to_list (x,y) = x :: List.map ~f:snd y
 
-let nsepseq_of_nseq ~sep (hd,tl) =
-  (hd, List.map ~f:(fun x -> (sep,x)) tl)
-
 let sepseq_to_list = function
     None -> []
 | Some s -> nsepseq_to_list s
 
-(* Conversions to non-empty lists *)
+(* Optional values *)
 
-let nsepseq_to_nseq (hd, tl) = hd, (List.map ~f:snd tl)
+module Option =
+  struct
+    let apply f x =
+      match x with
+        Some y -> Some (f y)
+      |   None -> None
 
-(* Convertions of lists *)
+    let rev_apply x y =
+      match x with
+        Some f -> f y
+      |   None -> y
 
-let list_to_nsepseq_opt (lst : 'a list) (sep : 's) : ('a, 's) nsepseq option =
-  match lst with
-  | [] -> None
-  | hd :: tl -> Some (hd, List.map ~f:(fun e -> sep, e) tl)
-
-
-let list_to_sepseq (lst : 'a list) (sep : 's) : ('a, 's) sepseq =
-  match lst with
-  | [] -> None
-  | _ -> list_to_nsepseq_opt lst sep
-
-(* Map and concatenate lists *)
-
-let nseq_concat_map nseq ~f = List.concat_map (nseq_to_list nseq) ~f
-
-let sepseq_concat_map sepseq ~f = List.concat_map (sepseq_to_list sepseq) ~f
-
-let nsepseq_concat_map nsepseq ~f = List.concat_map (nsepseq_to_list nsepseq) ~f
+    let to_string = function
+      Some x -> x
+    |   None -> ""
+  end
 
 (* Modules based on [String], like sets and maps. *)
 
@@ -181,12 +172,3 @@ let error_yojson_format format =
   Error ("Invalid JSON value.
           An object with the following specification is expected:"
          ^ format)
-
-(* Optional let *)
-
-let (let*) o f =
-  match o with
-    None -> None
-  | Some x -> f x
-
-let return x = Some x

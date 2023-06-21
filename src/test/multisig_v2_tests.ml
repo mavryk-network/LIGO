@@ -1,4 +1,3 @@
-(*
 module Var = Simple_utils.Var
 open Test_helpers
 
@@ -9,16 +8,16 @@ let compile_main ~raise () =
 
 
 open Ligo_prim
-open Ast_unified
+open Ast_imperative
 
-let empty_op_list = e_list ~loc []
+let empty_op_list = e_typed_list ~loc [] (t_operation ~loc ())
 
 let empty_message =
   e_lambda_ez
     ~loc
     (Value_var.of_input_var ~loc "arguments")
-    ~ascr:(tv_bytes ~loc ())
-    (Some (t_list ~loc (tv_operation ~loc ())))
+    ~ascr:(t_bytes ~loc ())
+    (Some (t_list ~loc (t_operation ~loc ())))
     empty_op_list
 
 
@@ -26,18 +25,19 @@ let empty_message2 =
   e_lambda_ez
     ~loc
     (Value_var.of_input_var ~loc "arguments")
-    ~ascr:(tv_bytes ~loc ())
-    (Some (t_list ~loc (tv_operation ~loc ())))
-    (let_unit_in (e_unit ~loc) empty_op_list)
+    ~ascr:(t_bytes ~loc ())
+    (Some (t_list ~loc (t_operation ~loc ())))
+    (e_let_in_ez
+       ~loc
+       (Value_var.of_input_var ~loc "foo")
+       ~ascr:(t_unit ~loc ())
+       []
+       (e_unit ~loc ())
+       empty_op_list)
 
 
-let send_param element =
-  e_constructor ~loc { constructor = Label.of_string "Send"; element }
-
-
-let withdraw_param =
-  e_constructor ~loc { constructor = Label.of_string "Withdraw"; element = empty_message }
-
+let send_param msg = e_constructor ~loc "Send" msg
+let withdraw_param = e_constructor ~loc "Withdraw" empty_message
 
 type st_type =
   { state_hash : bytes
@@ -45,7 +45,7 @@ type st_type =
   ; max_proposal : int
   ; max_msg_size : int
   ; id_counter_list : (int * int) list
-  ; msg_store_list : (expr * expr) list
+  ; msg_store_list : (expression * expression) list
   }
 
 let storage
@@ -65,9 +65,12 @@ let storage
     ; "threshold", e_nat ~loc threshold
     ; "max_proposal", e_nat ~loc max_proposal
     ; "max_message_size", e_nat ~loc max_msg_size
-    ; "authorized_addresses", e_set ~loc auth_set
-    ; "message_store", e_map ~loc msg_store_list
-    ; "proposal_counters", e_map ~loc counter_store
+    ; "authorized_addresses", e_typed_set ~loc auth_set (t_address ~loc ())
+    ; ( "message_store"
+      , e_typed_map ~loc msg_store_list (t_bytes ~loc ()) (t_set ~loc (t_address ~loc ()))
+      )
+    ; ( "proposal_counters"
+      , e_typed_map ~loc counter_store (t_address ~loc ()) (t_nat ~loc ()) )
     ]
 
 
@@ -381,7 +384,7 @@ let succeeded_storing ~raise () =
     ; max_msg_size = 15
     ; state_hash = Bytes.create 0
     ; id_counter_list = [ 1, 0; 2, 0; 3, 0 ]
-    ; msg_store_list = [ bytes, e_set ~loc [] ]
+    ; msg_store_list = [ bytes, e_typed_set ~loc [] (t_address ~loc ()) ]
     }
   in
   let options =
@@ -438,4 +441,3 @@ let main =
     ; test_w "withdraw_already_accounted_two" withdraw_already_accounted_two
     ; test_w "counters_reset" counters_reset
     ]
-*)

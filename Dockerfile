@@ -1,4 +1,4 @@
-FROM alpine:3.18 as ligo-builder
+FROM alpine:3.16 as ligo-builder
 
 WORKDIR /ligo
 
@@ -10,8 +10,8 @@ RUN apk update && apk upgrade && apk --no-cache add \
   build-base snappy-dev alpine-sdk \
   bash ncurses-dev xz m4 git pkgconfig findutils rsync \
   gmp-dev libev-dev libressl-dev linux-headers pcre-dev perl zlib-dev hidapi-dev \
-  libffi-dev nodejs npm \
-  cargo py3-pip cmake  \
+  libffi-dev \
+  cargo py3-pip \
   && pip3 install jsonschema \
   # install opam:
   # not using install_opam.sh because it does `opam init` with `-a` and not `--disable-sandboxing`
@@ -27,10 +27,10 @@ COPY scripts/setup_switch.sh /ligo/scripts/setup_switch.sh
 RUN opam update \
   && sh scripts/setup_switch.sh
 COPY scripts/install_opam_deps.sh /ligo/scripts/install_opam_deps.sh
-COPY vendors /ligo/vendors
-COPY vendored-dune /ligo/vendored-dune
 COPY ligo.opam /ligo
 COPY ligo.opam.locked /ligo
+COPY vendors /ligo/vendors
+COPY vendored-dune /ligo/vendored-dune
 
 # install all transitive deps
 RUN opam update && sh scripts/install_opam_deps.sh
@@ -38,23 +38,13 @@ RUN opam update && sh scripts/install_opam_deps.sh
 COPY gitlab-pages /ligo/gitlab-pages
 # Install LIGO
 COPY dune dune-project ligo_unix.ml /ligo/
-COPY configurator /ligo/configurator
 COPY src /ligo/src
 COPY scripts/version.sh /ligo/scripts/version.sh
 
 COPY tools/ligo-syntax-highlighting ligo-syntax-highlighting
-
-# JSOO
-COPY jsoo /ligo/jsoo
-COPY Makefile /ligo
-COPY npm /ligo/npm
-COPY examples /ligo/examples
-COPY 0001-Nairobi-JSOO-Gas-free.patch /ligo
-COPY 0002-JSOO-Use-lib_hacl-compatible-with-hacl-star-0.4.1.patch /ligo
-
-
 # Run tests
-RUN opam exec -- dune runtest --profile static --no-buffer \
+RUN opam exec -- dune build @check \
+  && opam exec -- dune runtest --profile static --no-buffer \
 # Coverage (only the overall)
   && find . -name '*.coverage' | xargs rm -f \
   && opam exec -- dune clean \
@@ -77,18 +67,11 @@ RUN LIGO_VERSION=$(/ligo/scripts/version.sh) opam exec -- dune build -p ligo --p
   && cp /ligo/_build/install/default/bin/ligo /tmp/ligo \
   # Run doc
   && opam exec -- dune build @doc
-RUN npm i -g webpack-cli
-RUN cd /ligo && opam exec -- make build-demo-webide
-RUN cd /ligo/npm && rm /ligo/npm/ligolang-*.tgz ; npm i && npm run build && npm pack
-RUN cd /ligo/examples/ligojs && npm i && npm run build:webpack
 
 FROM esydev/esy:nightly-alpine as esy
 
 # TODO see also ligo-docker-large in nix build
-FROM alpine:3.18 as ligo
-# This variable is used for analytics to determine if th execution of the compiler is inside docker or not
-ENV DOCKER_EXECUTION=true
-
+FROM alpine:3.12
 COPY --from=esy . .
 WORKDIR /root/
 RUN chmod 755 /root # so non-root users inside container can see and execute /root/ligo
@@ -96,7 +79,3 @@ COPY --from=0 /tmp/ligo /root/ligo
 COPY --from=0 /ligo/_build/default/_doc/_html /root/doc
 COPY --from=0 /ligo/highlighting /root/highlighting
 ENTRYPOINT ["/root/ligo"]
-
-FROM ligo as ligo-ci
-# This variable is used for analytics to determine if th execution of the compiler is inside docker or not
-ENV LIGO_SKIP_ANALYTICS=true

@@ -7,12 +7,11 @@ module Raw_options = Raw_options
 
 type frontend =
   { syntax : Syntax_types.t option
-  ; entry_point : string list
-  ; module_ : string
+  ; (* dialect : string ; [@dead "frontend.dialect"]  *)
+    entry_point : string
   ; libraries : string list
   ; project_root : string option
-  ; transpiled : bool
-  ; warn_infinite_loop : bool
+  ; no_colour : bool
   }
 
 type tools =
@@ -29,12 +28,12 @@ type test_framework =
 
 type middle_end =
   { test : bool
+  ; init_env : Environment.t
   ; protocol_version : Protocols.t
   ; warn_unused_rec : bool
   ; no_stdlib : bool
   ; syntax_for_errors : Syntax_types.t option
   ; no_colour : bool
-  ; no_metadata_check : bool
   }
 
 type backend =
@@ -53,15 +52,12 @@ type backend =
   ; no_colour : bool
   }
 
-type common = { deprecated : bool }
-
 type t =
   { frontend : frontend
   ; tools : tools
   ; test_framework : test_framework
   ; middle_end : middle_end
   ; backend : backend
-  ; common : common
   }
 
 let warn_unused_rec ~syntax should_warn =
@@ -83,10 +79,8 @@ let make
     { syntax
     ; libraries = raw_options.libraries
     ; entry_point = raw_options.entry_point
-    ; module_ = raw_options.module_
     ; project_root = raw_options.project_root
-    ; transpiled = raw_options.transpiled
-    ; warn_infinite_loop = raw_options.warn_infinite_loop
+    ; no_colour = raw_options.no_colour
     }
   in
   let tools =
@@ -103,12 +97,12 @@ let make
   in
   let middle_end =
     { test = raw_options.test
+    ; init_env = default protocol_version
     ; protocol_version
     ; warn_unused_rec = warn_unused_rec ~syntax raw_options.warn_unused_rec
     ; no_stdlib = raw_options.no_stdlib
     ; syntax_for_errors = syntax
     ; no_colour = raw_options.no_colour
-    ; no_metadata_check = raw_options.no_metadata_check
     }
   in
   let backend =
@@ -125,8 +119,11 @@ let make
     ; no_colour = raw_options.no_colour
     }
   in
-  let common = { deprecated = raw_options.deprecated } in
-  { frontend; tools; test_framework; middle_end; backend; common }
+  { frontend; tools; test_framework; middle_end; backend }
+
+
+let set_init_env opts init_env =
+  { opts with middle_end = { opts.middle_end with init_env } }
 
 
 let set_test_flag opts test = { opts with middle_end = { opts.middle_end with test } }
@@ -137,6 +134,3 @@ let set_entry_point opts entry_point =
 
 let set_syntax opts syntax = { opts with frontend = { opts.frontend with syntax } }
 let set_views opts views = { opts with backend = { opts.backend with views } }
-
-let set_no_stdlib opts no_stdlib =
-  { opts with middle_end = { opts.middle_end with no_stdlib } }

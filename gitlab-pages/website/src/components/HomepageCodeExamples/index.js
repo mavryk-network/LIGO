@@ -5,8 +5,8 @@ import TabItem from "@theme/TabItem";
 import { useColorMode } from "@docusaurus/theme-common";
 import defaultTheme from "prism-react-renderer/themes/palenight";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
-import styles from './styles.module.css';
 
+import PASCALIGO_EXAMPLE from '!!raw-loader!./pascaligo.ligo';
 import CAMELIGO_EXAMPLE from '!!raw-loader!./cameligo.mligo';
 import JSLIGO_EXAMPLE from '!!raw-loader!./jsligo.jsligo';
 
@@ -24,11 +24,10 @@ function CodeExamples(props) {
   return (
     <Tabs
       defaultValue="jsligo"
-      attributes={{className: styles.tabPannel}}
       values={[
         { label: "JsLIGO", value: "jsligo" },
         { label: "CameLIGO", value: "cameligo" },
-        { label: "Try it", value: "try" }
+        { label: "PascaLIGO", value: "pascaligo" },
       ]}
     >
       <TabItem value="jsligo">
@@ -72,18 +71,28 @@ function CodeExamples(props) {
           )}
         </Highlight>
       </TabItem>
-      <TabItem value="try">
-        <div id="webide">
-          <ul>
-            <li className="primary">
-              <a href="https://ligo-webide-v2.gcp.marigold.dev/share/168a39632c555e70098ac6236c7a20a8">JsLIGO on Web IDE</a>
-            </li>
-            <li className="secondary">
-              <a href="https://ligo-webide-v2.gcp.marigold.dev/share/fd1ed87670420bfaa6438b2078f8de6c">CameLIGO on Web IDE</a>
-            </li>
-          </ul>
-        </div>
+
+      <TabItem value="pascaligo">
+        <Highlight
+          {...defaultProps}
+          language="pascaligo"
+          code={PASCALIGO_EXAMPLE}
+          theme={prismTheme}
+        >
+          {({ className, style, tokens, getLineProps, getTokenProps }) => (
+            <pre className={className} style={style}>
+              {tokens.map((line, i) => (
+                <div {...getLineProps({ line, key: i })}>
+                  {line.map((token, key) => (
+                    <span {...getTokenProps({ token, key })} />
+                  ))}
+                </div>
+              ))}
+            </pre>
+          )}
+        </Highlight>
       </TabItem>
+
     </Tabs >
   );
 }
@@ -91,6 +100,8 @@ function CodeExamples(props) {
 export default function HomepageCodeExamples() {
   return (
     <div id="preview">
+      <h1>A friendly Smart Contract Language for Tezos</h1>
+      <p>Smart contracts were never so easy</p>
       <CodeExamples />
     </div>
   );

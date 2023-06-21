@@ -19,8 +19,6 @@ module type VAR = sig
   val get_location : t -> Location.t
   val set_location : Location.t -> t -> t
   val is_generated : t -> bool
-  val is_ignored : t -> bool
-  val add_prefix : string -> t -> t
 
   (* Prints vars as %s or %s#%d *)
   val pp : Format.formatter -> t -> unit
@@ -34,25 +32,17 @@ module Internal () = struct
       { name : string
       ; counter : int
       ; generated : bool
-      ; location : Location.t [@equal.ignore] [@compare.ignore] [@hash.ignore]
+      ; location :
+          (Location.t[@equal.ignore] [@compare.ignore] [@hash.ignore] [@sexp.opaque])
       }
-    [@@deriving equal, compare, yojson, hash]
-
-    let sexp_of_t ({ name; counter = _; generated = _; location = _ } : t) : Sexp.t =
-      Sexp.Atom name
-
-
-    let t_of_sexp : Sexp.t -> t = function
-      | Atom name ->
-        { name; generated = false; counter = 0; location = Location.generated }
-      | List _ as x -> Sexplib.Conv_error.ptag_no_args "can't be a list" x
+    [@@deriving equal, compare, yojson, hash, sexp]
   end
 
   include T
 
   let global_counter = ref 1
   let reset_counter () = global_counter := 1
-  let add_prefix str var = {var with name=str^var.name}
+
   let fresh ~loc ?(name = "gen") () =
     let counter =
       incr global_counter;
@@ -100,8 +90,8 @@ module Internal () = struct
     else Format.fprintf ppf "%s" v.name
 
 
+  let _pp ppf v = Format.fprintf ppf "%s#%d" v.name v.counter
   let wildcard ~loc = { name = "_"; counter = 0; location = loc; generated = false }
-  let is_ignored { name; _ } = String.is_prefix ~prefix:"_" name
 
   include Comparable.Make (T)
 end

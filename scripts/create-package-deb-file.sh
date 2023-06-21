@@ -1,3 +1,8 @@
+#!/usr/bin/env nix-shell
+#!nix-shell -p git dpkg -i bash
+
+# shellcheck shell=bash
+
 #!/bin/bash
 cd "$( dirname "${BASH_SOURCE[0]}" )"/..
 
@@ -41,5 +46,5 @@ cp $LIGO_BINARY_PATH $pkgName/usr/local/bin/ligo
 mv ./control $pkgName/DEBIAN/control
 
 # Generate .deb
-dpkg-deb -Zxz --build $pkgName
+dpkg-deb --build $pkgName
 ln $pkgName.deb ligo.deb

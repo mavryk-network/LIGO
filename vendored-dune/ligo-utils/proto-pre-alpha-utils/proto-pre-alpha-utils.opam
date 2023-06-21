@@ -42,7 +42,7 @@ depends: [
   "tezos-crypto"
   "tezos-error-monad"
   "tezos-stdlib-unix"
-  "tpe"
+  "tezos-protocol-environment"
   "tezos-protocol-011-PtHangzH"
   "tezos-client-011-PtHangzH"
   "tezos-memory-proto-alpha"

@@ -6,6 +6,7 @@ import { DragSource, DropTarget, DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { Menu, Item, useContextMenu, Separator } from "react-contexify";
 import throttle from "lodash/throttle";
+import platform from "~/base-components/platform";
 
 const Types = {
   TAB: "tab",
@@ -51,6 +52,7 @@ const cardTarget = {
   },
   drop(props, monitor) {
     if (monitor.canDrop()) {
+      props.onSelectTab(props.tab);
     }
   },
 };
@@ -108,7 +110,7 @@ class TabHeaderItem extends PureComponent {
           onCloseTab(tab);
         }}
       >
-        {/* <span
+        <span
           key="nav-item-dot"
           className={classnames("nav-item-close-dot", {
             active: unsaved && !saving,
@@ -126,14 +128,6 @@ class TabHeaderItem extends PureComponent {
           key="nav-item-close"
           className={classnames("nav-item-close-times", {
             active: !unsaved && !saving,
-          })}
-        >
-          <i className="fas fa-times" />
-        </span> */}
-        <span
-          key="nav-item-close"
-          className={classnames("nav-item-close-times", {
-            active: true,
           })}
         >
           <i className="fas fa-times" />
@@ -352,7 +346,7 @@ export default class TabHeader extends Component {
             <div
               onDoubleClick={onNewTab}
               className={classnames("flex-grow-1", {
-                "border-bottom-tab": tabs.length !== 0,
+                "border-bottom-tab": tabs.length !== 0 || platform.isDesktop,
               })}
             />
             {ToolButtons.map((btn, index) => {

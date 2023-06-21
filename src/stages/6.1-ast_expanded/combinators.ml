@@ -1,7 +1,7 @@
-module Ligo_string = Simple_utils.Ligo_string
 open Ligo_prim
 open Literal_types
 open Types
+open Simple_utils
 
 [@@@warning "-32"]
 
@@ -89,7 +89,9 @@ let t__type_ ~loc () : type_expression = t_constant ~loc _type_ []
       , "never"
       , "mutation"
       , "pvss_key"
-      , "baker_hash" )]
+      , "baker_hash"
+      , "chest_key"
+      , "chest" )]
 
 
 let t__type_ ~loc t t' : type_expression = t_constant ~loc _type_ [ t; t' ]
@@ -120,7 +122,9 @@ let get_t__type_ (t : type_expression) : type_expression option = get_t_unary_in
       , "never"
       , "mutation"
       , "pvss_key"
-      , "baker_hash" )]
+      , "baker_hash"
+      , "chest_key"
+      , "chest" )]
 
 
 let is_t__type_ t = Option.is_some (get_t__type_ t)
@@ -148,7 +152,9 @@ let is_t__type_ t = Option.is_some (get_t__type_ t)
       , "never"
       , "mutation"
       , "pvss_key"
-      , "baker_hash" )]
+      , "baker_hash"
+      , "chest_key"
+      , "chest" )]
 
 
 let get_t__type__exn t =
@@ -179,57 +185,41 @@ let get_t__type__exn t =
       , "never"
       , "mutation"
       , "pvss_key"
-      , "baker_hash" )]
+      , "baker_hash"
+      , "chest_key"
+      , "chest" )]
 
 
 let t_arrow param result ~loc ?source_type () : type_expression =
   t_arrow ~loc ?source_type { type1 = param; type2 = result } ()
 
 
-let default_layout = Layout.default
-
-let fields_with_no_annot fields =
-  List.map ~f:(fun (name, _) -> Layout.{ name; annot = None }) fields
-
-
 let t_record ~loc ~layout fields : type_expression =
   make_t ~loc (T_record { fields; layout })
 
 
-let ez_t_record ~loc ?(layout = default_layout) lst : type_expression =
-  let layout = layout @@ fields_with_no_annot lst in
-  let row = Row.of_alist_exn ~layout lst in
-  make_t ~loc (T_record row)
-
-
 let make_t_ez_record
     ~loc
-    ?(layout = default_layout)
+    ?(layout = Layout.default_layout)
     (lst : (string * type_expression) list)
     : type_expression
   =
-  let lst = List.map ~f:(fun (name, t) -> Label.of_string name, t) lst in
-  ez_t_record ~loc ~layout lst
+  let lst =
+    List.mapi
+      ~f:(fun i (x, y) ->
+        ( Label.of_string x
+        , ({ associated_type = y; michelson_annotation = None; decl_pos = i }
+            : row_element) ))
+      lst
+  in
+  let map = Record.of_list lst in
+  t_record ~loc ~layout map
 
 
 let get_a_string (t : expression) =
   match t.expression_content with
   | E_literal (Literal_string s) -> Some (Ligo_string.extract s)
   | _ -> None
-
-
-let e_literal__type_ ~loc x t : expression = make_e ~loc (E_literal (Literal__type_ x)) t
-  [@@map _type_, ("string", "int")]
-
-let e_literal_unit ~loc = make_e ~loc (E_literal Literal_unit) (t_unit ~loc ())
-
-let rec get_e_applications t =
-  match get_e_application t with
-  | Some { lamb; args } ->
-    (match get_e_applications lamb with
-    | [] -> [ lamb; args ]
-    | apps -> apps @ [ args ])
-  | None -> []
 
 
 let e_a_variable v ty = e_variable v ty
@@ -239,12 +229,13 @@ let get_t_option (t : type_expression) : type_expression option =
   let l_some = Label.of_string "Some" in
   match t.type_content with
   | T_sum { fields; _ } ->
-    let keys = Record.labels fields in
+    let keys = Record.LMap.keys fields in
     (match keys with
     | [ a; b ]
       when (Label.equal a l_none && Label.equal b l_some)
            || (Label.equal a l_some && Label.equal b l_none) ->
-      Record.find_opt fields l_some
+      let some = Record.LMap.find l_some fields in
+      Some some.Rows.associated_type
     | _ -> None)
   | _ -> None
 
@@ -255,21 +246,30 @@ let e_a_let_in ~loc x = e_let_in ~loc x (get_type x.let_result)
 let get_sum_type (t : type_expression) (label : Label.t) : type_expression =
   match get_t_sum t with
   | None -> failwith "pattern expanded: could not get sum type"
-  | Some row ->
-    (match Map.find row.fields label with
+  | Some struct_ ->
+    (match Record.LMap.find_opt label struct_.fields with
     | None -> failwith "pattern expanded: could not get row from its label"
-    | Some elem_type -> elem_type)
+    | Some row_element -> row_element.associated_type)
 
 
 let t_sum ~loc ~layout fields : type_expression = make_t ~loc (T_sum { fields; layout })
 
-let t_sum_ez ~loc ?(layout = default_layout) (lst : (string * type_expression) list)
+let t_sum_ez
+    ~loc
+    ?(layout = Layout.default_layout)
+    (lst : (string * type_expression) list)
     : type_expression
   =
-  let lst = List.map ~f:(fun (name, t) -> Label.of_string name, t) lst in
-  let layout = layout @@ fields_with_no_annot lst in
-  let map = Row.of_alist_exn ~layout lst in
-  make_t ~loc (T_sum map)
+  let lst =
+    List.mapi
+      ~f:(fun i (x, y) ->
+        ( Label.of_string x
+        , ({ associated_type = y; michelson_annotation = None; decl_pos = i }
+            : row_element) ))
+      lst
+  in
+  let map = Record.of_list lst in
+  t_sum ~loc ~layout map
 
 
 let t_bool ~loc () : type_expression =
@@ -277,13 +277,8 @@ let t_bool ~loc () : type_expression =
 
 
 let get_t_bool (t : type_expression) : unit option =
-  match t.type_content with
-  | T_sum { fields; _ } ->
-    let keys = Map.key_set fields in
-    if Set.length keys = 2 && Set.mem keys (Label "True") && Set.mem keys (Label "False")
-    then Some ()
-    else None
-  | _ -> None
+  let t_bool = t_bool ~loc:t.location () in
+  Option.some_if (equal_type_content t.type_content t_bool.type_content) ()
 
 
 let t_option ~loc typ : type_expression =
@@ -294,37 +289,105 @@ let t_record ~loc ~layout fields : type_expression =
   make_t ~loc (T_record { fields; layout })
 
 
-let ez_t_record ~loc ?(layout = default_layout) lst : type_expression =
-  let layout = layout @@ fields_with_no_annot lst in
-  let row = Row.of_alist_exn ~layout lst in
-  make_t ~loc (T_record row)
+let ez_t_record ~loc ?(layout = Layout.default_layout) lst : type_expression =
+  let m = Record.of_list lst in
+  t_record ~loc ~layout m
 
 
 let t_pair ~loc a b : type_expression =
-  ez_t_record ~loc [ Label.of_int 0, a; Label.of_int 1, b ]
+  ez_t_record
+    ~loc
+    [ Label.of_int 0, { associated_type = a; michelson_annotation = None; decl_pos = 0 }
+    ; Label.of_int 1, { associated_type = b; michelson_annotation = None; decl_pos = 1 }
+    ]
 
 
-let is_michelson_or (fields : _ Record.t) (layout : Ligo_prim.Layout.t) =
-  match layout with
-  | Inner [ Field { name = _; annot = ann_a }; Field { name = _; annot = ann_b } ] ->
-    (match
-       Record.find_opt fields (Label "M_left"), Record.find_opt fields (Label "M_right")
-     with
-    | Some l, Some r -> Some ((l, ann_a), (r, ann_b))
-    | _ -> None)
+let is_michelson_or (t : _ Record.t) =
+  let s =
+    List.sort ~compare:(fun (k1, _) (k2, _) -> Label.compare k1 k2)
+    @@ Record.LMap.to_kv_list t
+  in
+  match s with
+  | [ (Label "M_left", ta); (Label "M_right", tb) ] -> Some (ta, tb)
   | _ -> None
 
 
-let is_michelson_pair (fields : _ Record.t) (layout : Ligo_prim.Layout.t) =
-  match layout with
-  | Inner [ Field { name = _; annot = ann_a }; Field { name = _; annot = ann_b } ] ->
-    (match Record.find_opt fields (Label "0"), Record.find_opt fields (Label "1") with
-    | Some l, Some r -> Some ((l, ann_a), (r, ann_b))
-    | _ -> None)
+let is_michelson_pair (t : row_element Record.t) : (row_element * row_element) option =
+  match Record.LMap.to_list t with
+  | [ a; b ] ->
+    if (List.for_all ~f:(fun i -> Record.LMap.mem i t) @@ Label.range 0 2)
+       && Option.(is_some a.michelson_annotation || is_some b.michelson_annotation)
+    then Some (a, b)
+    else None
   | _ -> None
 
 
-let e_unit () : expression_content = E_literal (Literal_unit)
+let kv_list_of_t_sum ?(layout = Layout.default_layout) (m : row_element Record.t) =
+  let lst = Record.LMap.to_kv_list m in
+  match layout with
+  | L_tree -> lst
+  | L_comb ->
+    let aux
+        (_, ({ associated_type = _; decl_pos = a; _ } : row_element))
+        (_, ({ associated_type = _; decl_pos = b; _ } : row_element))
+      =
+      Int.compare a b
+    in
+    List.sort ~compare:aux lst
+
+
+let kv_list_of_t_record_or_tuple
+    ?(layout = Layout.default_layout)
+    (m : row_element Record.t)
+  =
+  let lst =
+    if Record.is_tuple m then Record.tuple_of_record m else Record.LMap.to_kv_list m
+  in
+  match layout with
+  | L_tree -> lst
+  | L_comb ->
+    let aux
+        (_, ({ associated_type = _; decl_pos = a; _ } : row_element))
+        (_, ({ associated_type = _; decl_pos = b; _ } : row_element))
+      =
+      Int.compare a b
+    in
+    List.sort ~compare:aux lst
+
+
+let kv_list_of_record_or_tuple ~layout record_t_content record =
+  let exps =
+    if Record.is_tuple record
+    then Record.tuple_of_record record
+    else Record.LMap.to_kv_list record
+  in
+  match (layout : Layout.t) with
+  | L_tree -> List.map ~f:snd exps
+  | L_comb ->
+    let types =
+      if Record.is_tuple record
+      then Record.tuple_of_record record_t_content
+      else Record.LMap.to_kv_list record_t_content
+    in
+    let te =
+      List.map
+        ~f:(fun ((label_t, t), (label_e, e)) ->
+          assert (Label.equal label_t label_e);
+          (*TODO TEST*)
+          t, e)
+        (List.zip_exn types exps)
+    in
+    let s =
+      List.sort
+        ~compare:
+          (fun (({ associated_type = _; decl_pos = a; _ } : row_element), _)
+               ({ associated_type = _; decl_pos = b; _ }, _) -> Int.compare a b)
+        te
+    in
+    List.map ~f:snd s
+
+
+let e_unit () : expression_content = E_literal Literal_unit
 
 let get_e_tuple t =
   match t with

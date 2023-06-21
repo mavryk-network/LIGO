@@ -63,6 +63,8 @@ export default class CodeEditorCollection extends PureComponent {
     this.tabs.current.updateTab({ unsaved });
   };
 
+  // NOTE: there is no pathInProject props return in the local project, while will return it in remote project
+  // see: packages/workspace/src/ProjectManager/ProjectManager.ts
   copyPath = ({ pathInProject, path }) => {
     const filePath = pathInProject || path;
     const clipboard = new ClipBoardService();
@@ -89,6 +91,7 @@ export default class CodeEditorCollection extends PureComponent {
     onCloseTab(this.tabs.current);
   };
 
+  // MARK: may can define a batch delete in the Tabs component
   closeOtherFiles = (currentTab) => {
     const { onCloseTab, allTabs } = this.tabs.current;
     const shouldCloseTabs = allTabs.filter((tab) => tab.key !== currentTab.key);
@@ -111,8 +114,30 @@ export default class CodeEditorCollection extends PureComponent {
 
   promptSave = async (filePath) => {
     let clicked = false;
+    // if (_.platform.isWeb) {
+    //   const filename = windowPath.parse(path).base
+    //   clicked = await $.modals.open('confirmUnsave', {
+    //     title: `Do you want to save the changes in ${filename}?`,
+    //     text: `Your changes will be lost if you don't save them.`
+    //   })
+    //   if (clicked === 'DUN_SAVE') {
+    //     return true
+    //   } else if (clicked) {
+    //     await $.project.save(path)
+    //     return true
+    //   }
+    //   return false
+    // } else {
+    //   const { response } = await remote.dialog.showMessageBox({
+    //     // title: `Do you want to save the changes you made for ${path}?`,
+    //     message: 'Your changes will be lost if you close this item without saving.',
+    //     buttons: ['Save', 'Cancel', `Don't Save`]
+    //   })
+    //   clicked = response
+    // }
 
     const { response } = await fileOps.showMessageBox({
+      // title: `Do you want to save the changes you made for ${path}?`,
       message: "Your changes will be lost if you close this item without saving.",
       buttons: ["Save", "Cancel", "Don't Save"],
     });
@@ -174,8 +199,6 @@ export default class CodeEditorCollection extends PureComponent {
         return;
       case "prev-tab":
         this.tabs.current.prevTab();
-      case "compile":
-        this.props.projectManager.compile(null, undefined);
     }
   };
 
@@ -191,7 +214,7 @@ export default class CodeEditorCollection extends PureComponent {
 
     return (
       <div
-        className={classnames("d-flex w-100 h-100", {
+        className={classnames("d-flex w-100 h-100 overflow-hidden", {
           bg2: this.tabs.current && this.tabs.current.state.tabs.length !== 1,
         })}
       >

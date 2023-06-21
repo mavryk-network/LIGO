@@ -11,6 +11,7 @@ import SyntaxTitle from '@theme/SyntaxTitle';
 ## API
 
 ### New types
+
 <SyntaxTitle syntax="pascaligo">
 type chest
 </SyntaxTitle>
@@ -22,6 +23,7 @@ type chest
 type chest
 </SyntaxTitle>
 A type for chests
+
 <SyntaxTitle syntax="pascaligo">
 type chest_key
 </SyntaxTitle>
@@ -82,6 +84,7 @@ val call_view : string -> 'arg -> address -> 'ret option
 let call_view : string => 'arg => address => option &lt;&apos;ret&gt;
 </SyntaxTitle>
 
+
 <SyntaxTitle syntax="pascaligo">
 function constant: string -> 'a
 </SyntaxTitle>
@@ -95,7 +98,7 @@ let constant : string => 'a
 
 #### Test
 
-New signature for originate_from_file:
+new signature for originate_from_file:
 
 <SyntaxTitle syntax="pascaligo">
 val originate_from_file : string -> string -> list (string) -> michelson_program -> tez -> (address * michelson_program * int)
@@ -109,6 +112,7 @@ let originate_from_file = (filepath: string, entrypoint: string , views : list &
 </SyntaxTitle>
 
 Originate a contract with a path to the contract file, an entrypoint, a list of views, an initial storage and an initial balance.
+
 <SyntaxTitle syntax="pascaligo">
 val create_chest : bytes -> nat -> chest * chest_key
 </SyntaxTitle>
@@ -219,6 +223,7 @@ function open_or_fail (const ck : chest_key; const c : chest; const @time : nat)
 
 </Syntax>
 
+
 ### On-chain views
 
 > Tezos documentation on views can be found [here](https://tezos.gitlab.io/011/michelson.html#operations-on-views)
@@ -328,6 +333,7 @@ let view_call = ([name,parameter,addr]: [string , int , address]) : option<int> 
 ```
 
 </Syntax>
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=views
@@ -338,6 +344,5 @@ function view_call (const name : string; const parameter : int; const addr: addr
 
 ### Global constant
 
-The new primitive `Tezos.constant` allows you to use a predefined
-constant already registered on chain.  It accepts a hash in the form
-of a string and will require a type annotation.
+The new primitive `Tezos.constant` allows you to use a predefined constant already registered on chain.
+It accepts a hash in the form of a string and will require a type annotation.

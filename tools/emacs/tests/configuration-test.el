@@ -1,6 +1,6 @@
 (require 'ert)
 (require 'lsp-mode)
-(require 'mligo-mode "ligo-mode.el")
+(require 'ligo-mode)
 
 (ligo-setup-lsp)
 
@@ -28,16 +28,19 @@
 (ert-deftest ligo-auto-mode-alist-test ()
   "Check that file extensions are properly binded to according mode"
   (should (member '("\\.mligo\\'" . ligo-caml-mode) auto-mode-alist))
+  (should (member '("\\.religo\\'" . ligo-reason-mode) auto-mode-alist))
   (should (member '("\\.ligo\\'" . ligo-pascal-mode) auto-mode-alist))
   )
 
-(ert-deftest ligo-bin-test ()
+(ert-deftest ligo-squirrel-bin-test ()
   "Check that LSP server is set"
-  (should (file-executable-p (executable-find ligo-bin)))
+  (should (file-executable-p (executable-find ligo-squirrel-bin)))
   )
 
 (ert-deftest ligo-setup-lsp-test ()
   "Check that `setup-lsp-test' works properly"
+  (should (member '(ligo-pascal-mode . "ligo") lsp-language-id-configuration))
   (should (member '(ligo-caml-mode . "ligo") lsp-language-id-configuration))
+  (should (member '(ligo-reason-mode . "ligo") lsp-language-id-configuration))
   (should (gethash 'ligo lsp-clients))
   )

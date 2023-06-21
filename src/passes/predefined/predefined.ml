@@ -41,6 +41,10 @@ module Tree_abstraction = struct
     | _ as c ->
       failwith
       @@ Format.asprintf "Constant not handled : %a" Ligo_prim.Constant.pp_constant' c
+
+
+  let constant_to_string = function
+    | Ligo_prim.Constant.Const x -> pseudo_module_to_string x
 end
 
 module Michelson = struct
@@ -116,7 +120,6 @@ module Michelson = struct
         (simple_binary @@ seq [ dip (i_push (prim "bool") (prim "False")); prim "UPDATE" ])
     | C_SET_UPDATE, _ -> Some (simple_ternary @@ prim "UPDATE")
     | C_CONCAT, _ -> Some (simple_binary @@ prim "CONCAT")
-    | C_CONCATS, _ -> Some (simple_unary @@ prim "CONCAT")
     | C_SLICE, _ ->
       Some
         (simple_ternary @@ seq [ prim "SLICE"; i_assert_some_msg (i_push_string "SLICE") ])

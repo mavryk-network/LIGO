@@ -1,0 +1,18 @@
+; This file was automatically generated, do not edit.
+; Edit file manifest/main.ml instead.
+
+(executable
+ (name main)
+ (libraries
+  tezos-webassembly-interpreter
+  alcotest)
+ (flags
+  (:standard)
+  -open Tezos_webassembly_interpreter))
+
+(rule
+ (alias runtest)
+ (package tezos-webassembly-interpreter)
+ (action (run %{dep:./main.exe})))
+
+(include_subdirs no)

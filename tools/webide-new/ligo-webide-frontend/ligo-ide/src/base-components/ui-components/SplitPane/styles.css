@@ -3,11 +3,6 @@
   background-color: #eff5ff;
 }
 
-.obsidians-workspace .Pane {
-  overflow: visible !important;
-  background-color: #eff5ff;
-}
-
 .Resizer {
   background: var(--color-border);
   z-index: 1;

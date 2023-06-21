@@ -75,7 +75,7 @@ end
 affected_files = git.added_files + git.modified_files
 
 # limit files to .hs files
-haskell_files = affected_files.select { |file| file.end_with?('.hs') && File.exist?(file) }
+haskell_files = affected_files.select { |file| file.end_with?('.hs') }
 
 # avoid overwriting and keep the values of duplicate 'hint' keys separate
 hlint_options =

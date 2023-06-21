@@ -9,8 +9,9 @@ In the context of testing framework,
 if you want to convert an address to a contract,
 you need to convert `address` to `typed_address` using `Test.cast_address`.
 
-Then convert `typed_address` to `contract` using
-`Test.to_contract`. For example:
+Then convert `typed_address` to `contract` using `Test.to_contract`
+
+example:
 
 <Syntax syntax="pascaligo">
 
@@ -23,7 +24,6 @@ const test = {
 ```
 
 </Syntax>
-
 <Syntax syntax="cameligo">
 
 ```cameligo test-ligo group=addr2contract

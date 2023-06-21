@@ -9,8 +9,8 @@ type ('a, 'err, 'wrn) t
 
 include Monad.S3 with type ('a, 'err, 'wrn) t := ('a, 'err, 'wrn) t
 
-val all_lmap : ('a, 'err, 'wrn) t Label.Map.t -> ('a Label.Map.t, 'err, 'wrn) t
-val all_lmap_unit : (unit, 'err, 'wrn) t Label.Map.t -> (unit, 'err, 'wrn) t
+val all_lmap : ('a, 'err, 'wrn) t Record.LMap.t -> ('a Record.LMap.t, 'err, 'wrn) t
+val all_lmap_unit : (unit, 'err, 'wrn) t Record.LMap.t -> (unit, 'err, 'wrn) t
 
 (** {1 Location Handling} *)
 
@@ -71,7 +71,7 @@ module Options : sig
       This is equivalent to [options () >>| fun opt -> opt.syntax] *)
   val syntax : unit -> (Syntax_types.t option, 'err, 'wrn) t
 
-  (** [no_color ()] returns whether the [--no-color] flag was passed via compiler options.
+  (** [no_color ()] returns whether the [--no-colour] flag was passed via compiler options.
       This is equivalent to [options () >>| fun opt -> opt.no_colour] *)
   val no_color : unit -> (bool, 'err, 'wrn) t
 end
@@ -98,7 +98,6 @@ type 'a exit =
       (** Similar to [Lift_type] but for signatures. *)
 
 module Context : sig
-  module Attr = Context.Attr
   module Signature = Context.Signature
 
   (** {1 Context lookup functions} *)
@@ -110,9 +109,7 @@ module Context : sig
       captured by a closure), then we return [Error]. *)
   val get_value
     :  Value_var.t
-    -> ( ( Context.mutable_flag * Type.t * Context.Attr.t
-         , [ `Mut_var_captured | `Not_found ] )
-         result
+    -> ( (Context.mutable_flag * Type.t, [ `Mut_var_captured | `Not_found ]) result
        , 'err
        , 'wrn )
        t
@@ -120,27 +117,19 @@ module Context : sig
   val get_value_exn
     :  Value_var.t
     -> error:([ `Mut_var_captured | `Not_found ] -> 'err Errors.with_loc)
-    -> (Context.mutable_flag * Type.t * Context.Attr.t, 'err, 'wrn) t
+    -> (Context.mutable_flag * Type.t, 'err, 'wrn) t
 
   (** [get_imm var] returns the type of the immutable variable [var].
       Returning [None] if not found in the current context. *)
-  val get_imm : Value_var.t -> ((Type.t * Context.Attr.t) option, 'err, 'wrn) t
+  val get_imm : Value_var.t -> (Type.t option, 'err, 'wrn) t
 
-  val get_imm_exn
-    :  Value_var.t
-    -> error:'err Errors.with_loc
-    -> (Type.t * Context.Attr.t, 'err, 'wrn) t
+  val get_imm_exn : Value_var.t -> error:'err Errors.with_loc -> (Type.t, 'err, 'wrn) t
 
   (** [get_mut var] returns the type of the mutable variable [var].
       Returning [None] if not found in the current context. *)
-  val get_mut
-    :  Value_var.t
-    -> ((Type.t, [ `Mut_var_captured | `Not_found ]) result, 'err, 'wrn) t
+  val get_mut : Value_var.t -> (Type.t option, 'err, 'wrn) t
 
-  val get_mut_exn
-    :  Value_var.t
-    -> error:([ `Mut_var_captured | `Not_found ] -> 'err Errors.with_loc)
-    -> (Type.t, 'err, 'wrn) t
+  val get_mut_exn : Value_var.t -> error:'err Errors.with_loc -> (Type.t, 'err, 'wrn) t
 
   (** [get_type_var tvar] returns the kind of the type variable [tvar].
       Returning [None] if not found in the current context.
@@ -185,25 +174,15 @@ module Context : sig
     -> error:'err Errors.with_loc
     -> (Signature.t, 'err, 'wrn) t
 
-  (** [get_module_of_path path] returns the signature of the module path [path].
+  (** [get_signature path] returns the signature of the module path [path].
       Returning [None] if not found in the current context. *)
 
-  val get_module_of_path : Module_var.t List.Ne.t -> (Signature.t option, 'err, 'wrn) t
+  val get_signature : Module_var.t List.Ne.t -> (Signature.t option, 'err, 'wrn) t
 
-  val get_module_of_path_exn
+  val get_signature_exn
     :  Module_var.t List.Ne.t
     -> error:'err Errors.with_loc
     -> (Signature.t, 'err, 'wrn) t
-
-  (** [get_module_type_of_path path] returns the signature of the module path [path].
-      Returning [None] if not found in the current context. *)
-
-  val get_module_type_of_path : Module_var.t List.Ne.t -> (Module_type.t option, 'err, 'wrn) t
-
-  val get_module_type_of_path_exn
-    :  Module_var.t List.Ne.t
-    -> error:'err Errors.with_loc
-    -> (Module_type.t, 'err, 'wrn) t
 
   (** [get_sum constr] returns a list of [(type_name, type_params, constr_type, sum_type)] for any sum type in the context
       containing [constr].
@@ -229,7 +208,7 @@ module Context : sig
   (** [get_record record_type] returns the record type defined in the context that instantiates
       to [record_type].  *)
   val get_record
-    :  Type.t Label.Map.t
+    :  Type.row_element Record.t
     -> ((Type_var.t option * Type.row) option, 'err, 'wrn) t
 
   (** [lock ~on_exit ~in_] adds a local fitch-style lock for mutable variables to 
@@ -259,17 +238,17 @@ val exists : Kind.t -> (Type.t, 'err, 'wrn) t
 val for_all : Kind.t -> (Type.t, 'err, 'wrn) t
 
 (** [lexists ()] create a new existential layout variable *)
-val lexists : Label.Set.t -> (Type.layout, 'err, 'wrn) t
+val lexists : unit -> (Type.layout, 'err, 'wrn) t
 
 (** [create_type constr] returns a created type using the [constr] function
     with the location automatically provided *)
-val create_type : Type.constr -> (Type.t, 'err, 'wrn) t
+val create_type : ?meta:Ast_core.type_expression -> Type.constr -> (Type.t, 'err, 'wrn) t
 
 (** [def bindings ~on_exit ~in_] binds the context bindings [bindings] in 
     computation [in_] *)
 
 val def
-  :  (Value_var.t * Param.mutable_flag * Type.t * Context.Attr.t) list
+  :  (Value_var.t * Param.mutable_flag * Type.t) list
   -> on_exit:'a exit
   -> in_:('a, 'err, 'wrn) t
   -> ('a, 'err, 'wrn) t
@@ -368,9 +347,14 @@ module With_frag : sig
   include Monad.S3 with type ('a, 'err, 'wrn) t := ('a, 'err, 'wrn) t
 
   val lift : ('a, 'err, 'wrn) e -> ('a, 'err, 'wrn) t
-  val create_type : Type.constr -> (Type.t, 'err, 'wrn) t
-  val all_lmap : ('a, 'err, 'wrn) t Label.Map.t -> ('a Label.Map.t, 'err, 'wrn) t
-  val all_lmap_unit : (unit, 'err, 'wrn) t Label.Map.t -> (unit, 'err, 'wrn) t
+
+  val create_type
+    :  ?meta:Ast_core.type_expression
+    -> Type.constr
+    -> (Type.t, 'err, 'wrn) t
+
+  val all_lmap : ('a, 'err, 'wrn) t Record.LMap.t -> ('a Record.LMap.t, 'err, 'wrn) t
+  val all_lmap_unit : (unit, 'err, 'wrn) t Record.LMap.t -> (unit, 'err, 'wrn) t
   val loc : unit -> (Location.t, 'err, 'wrn) t
   val set_loc : Location.t -> ('a, 'err, 'wrn) t -> ('a, 'err, 'wrn) t
 
@@ -391,14 +375,14 @@ module With_frag : sig
       -> ((Type_var.t * Type_var.t list * Type.t * Type.t) list, 'err, 'wrn) t
 
     val get_record
-      :  Type.t Label.Map.t
+      :  Type.row_element Record.t
       -> ((Type_var.t option * Type.row) option, 'err, 'wrn) t
 
     val tapply : Type.t -> (Type.t, 'err, 'wrn) t
   end
 
   val exists : Kind.t -> (Type.t, 'err, 'wrn) t
-  val lexists : Label.Set.t -> (Type.layout, 'err, 'wrn) t
+  val lexists : unit -> (Type.layout, 'err, 'wrn) t
   val unify : Type.t -> Type.t -> (unit, [> unify_error ], 'wrn) t
 
   val subtype
@@ -428,6 +412,6 @@ val run_elab
   -> raise:(Errors.typer_error, Main_warnings.all) raise
   -> options:Compiler_options.middle_end
   -> loc:Location.t
-  -> ?env:Ast_typed.signature
+  -> ?env:Environment.t
   -> unit
   -> 'a

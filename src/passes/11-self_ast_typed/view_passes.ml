@@ -1,5 +1,4 @@
 open Ligo_prim
-module Row = Ast_typed.Row
 open Simple_utils
 open Trace
 open Helpers
@@ -15,18 +14,12 @@ let check_view_type ~raise
  fun ~err_data:(main_name, view_binder) { storage = c_storage; _ } view_ty ->
   let view_loc = Value_var.get_location @@ Binder.get_var view_binder in
   let arg, v_storage, return =
-    match Ast_typed.should_uncurry_view ~storage_ty:c_storage view_ty with
-    | `Yes v | `No v -> v
-    | `Bad_storage v_storage ->
-      raise.error
-      @@ storage_view_contract
-           view_loc
-           main_name
-           (Binder.get_var view_binder)
-           c_storage
-           v_storage
-    | `Bad_not_function -> raise.error @@ bad_view_io main_name view_loc
-    | `Bad -> raise.error @@ bad_view_storage main_name c_storage view_loc
+    match Ast_typed.get_t_arrow view_ty with
+    | Some { type1 = tin; type2 = return } ->
+      (match Ast_typed.get_t_tuple tin with
+      | Some [ arg; storage ] -> arg, storage, return
+      | _ -> raise.error (expected_pair_in_view view_loc))
+    | None -> raise.error @@ bad_view_io main_name view_loc
   in
   let () =
     trace_option
@@ -39,22 +32,16 @@ let check_view_type ~raise
          v_storage)
     @@ Ast_typed.assert_type_expression_eq (c_storage, v_storage)
   in
-  let rec type_check err (t : Ast_typed.type_expression) : unit =
-    let self = type_check err in
-    match t.type_content with
-    | T_variable _ -> ()
-    | T_constant { injection = Big_map; _ }
-    | T_constant { injection = Sapling_state; _ }
-    | T_constant { injection = Operation; _ }
-    | T_constant { injection = Ticket; _ } -> raise.error err
-    | T_constant x -> List.iter ~f:self x.parameters
-    | T_sum row | T_record row -> Row.iter self row
-    | T_arrow _ ->
-      (* lambdas are always OK *)
-      ()
-    | T_singleton _ -> ()
-    | T_abstraction x -> self x.type_
-    | T_for_all x -> self x.type_
+  let type_check err (t : Ast_typed.type_expression) : unit =
+    let aux (t : Ast_typed.type_expression) =
+      match t.type_content with
+      | T_constant { injection = Big_map; _ }
+      | T_constant { injection = Sapling_state; _ }
+      | T_constant { injection = Operation; _ }
+      | T_constant { injection = Ticket; _ } -> raise.error err
+      | _ -> ()
+    in
+    Helpers.iter_type_expression aux t
   in
   let () = type_check (type_view_io_out view_loc return) return in
   let () = type_check (type_view_io_in view_loc arg) arg in

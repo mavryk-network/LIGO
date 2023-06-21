@@ -26,18 +26,15 @@ module LexerAPI = Lexing_shared.TopAPI
 
 module type PRETTY =
   sig
-    type state
-    val default_state : state
-
     type cst
     type expr
     type type_expr
     type pattern
 
-    val print           : state -> cst       -> PPrint.document
-    val print_expr      : state -> expr      -> PPrint.document
-    val print_type_expr : state -> type_expr -> PPrint.document
-    val print_pattern   : state -> pattern   -> PPrint.document
+    val print           : cst       -> PPrint.document
+    val print_expr      : expr      -> PPrint.document
+    val print_type_expr : type_expr -> PPrint.document
+    val print_pattern   : pattern   -> PPrint.document
   end
 
 (* PARSING *)
@@ -71,7 +68,7 @@ module MakeParser
 
     type raise = (Errors.t, Main_warnings.all) Trace.raise
 
-    type 'a parser = ?preprocess:bool -> ?project_root:file_path -> raise:raise -> Buffer.t -> 'a
+    type 'a parser = ?preprocess:bool -> raise:raise -> Buffer.t -> 'a
 
     (* Lifting [Stdlib.result] to [Trace.raise] and logging errors. *)
 
@@ -95,10 +92,9 @@ module MakeParser
 
     (* Generic parser *)
 
-    let gen_parser ?(preprocess = true) ?project_root ~raise ?file_path buffer : CST.tree =
+    let gen_parser ?(preprocess = true) ~raise ?file_path buffer : CST.tree =
       (* Instantiating the general lexer of LexerLib *)
       let preprocess_ = preprocess in
-      let project_root_ = project_root in
       let module Warning =
         struct
           let add = raise.Trace.warning
@@ -114,9 +110,7 @@ module MakeParser
           module Options: Preprocessor.Options.S =
             struct
               include DefaultPreprocParams.Options
-
               let input = file_path
-              let project_root = project_root_
             end
         end in
 
@@ -124,17 +118,17 @@ module MakeParser
 
       let module LexerParams =
         LexerLib.CLI.MakeDefault (PreprocParams) in
-
-      let module LexerParams = struct
+      
+      let module LexerParams = struct 
         include LexerParams
 
-        module Options = struct
+        module Options = struct 
           include LexerParams.Options
-
+ 
           let preprocess = preprocess_
-        end
+        end 
 
-      end
+      end 
       in
 
       let module MainLexer =
@@ -180,15 +174,15 @@ module MakeParser
 
     (* Parsing a file *)
 
-    let from_file ?preprocess ?project_root ~raise buffer file_path : CST.tree =
-      gen_parser ?preprocess ?project_root ~raise ~file_path buffer
+    let from_file ?preprocess ~raise buffer file_path : CST.tree =
+      gen_parser ?preprocess ~raise ~file_path buffer
 
     let parse_file = from_file
 
     (* Parsing a string *)
 
-    let from_string ?preprocess ?project_root ~raise buffer : CST.tree =
-      gen_parser ?preprocess ?project_root ~raise buffer
+    let from_string ?preprocess ~raise buffer : CST.tree =
+      gen_parser ?preprocess ~raise buffer
 
     let parse_string = from_string
   end
@@ -262,7 +256,7 @@ module MakeTwoParsers
 
     type raise = (Errors.t, Main_warnings.all) Trace.raise
 
-    type 'a parser = ?preprocess:bool -> ?project_root:file_path -> raise:raise -> Buffer.t -> 'a
+    type 'a parser = ?preprocess:bool -> raise:raise -> Buffer.t -> 'a
 
     module Errors = Errors
 
@@ -344,17 +338,17 @@ module MakePretty (CST    : CST)
         | Some c -> c
       in width, buffer
 
-    let pretty_print env cst =
+    let pretty_print cst =
       let width, buffer = set () in
-      let doc = Pretty.print env cst in
+      let doc = Pretty.print cst in
       let () = PPrint.ToBuffer.pretty 1.0 width buffer doc
       in buffer
 
     (* Pretty-print an expression from its CST *)
 
-    let print_expr env expr =
+    let print_expr expr =
       let width, buffer = set () in
-      let doc = Pretty.print_expr env expr in
+      let doc = Pretty.print_expr expr in
       let () = PPrint.ToBuffer.pretty 1.0 width buffer doc
       in buffer
 
@@ -362,9 +356,9 @@ module MakePretty (CST    : CST)
 
     (* Pretty-print a pattern from its CST *)
 
-    let print_pattern ?cols env pattern =
+    let print_pattern ?cols pattern =
       let width, buffer = set () in
-      let doc = Pretty.print_pattern env pattern in
+      let doc = Pretty.print_pattern pattern in
       let width = match cols with Some cols -> cols | None -> width in
       let () = PPrint.ToBuffer.pretty 1.0 width buffer doc
       in buffer
@@ -373,9 +367,9 @@ module MakePretty (CST    : CST)
 
     (* Pretty-print a type expression from its CST *)
 
-    let print_type_expr env type_expr =
+    let print_type_expr type_expr =
       let width, buffer = set () in
-      let doc = Pretty.print_type_expr env type_expr in
+      let doc = Pretty.print_type_expr type_expr in
       let () = PPrint.ToBuffer.pretty 1.0 width buffer doc
       in buffer
 

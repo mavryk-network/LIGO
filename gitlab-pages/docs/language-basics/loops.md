@@ -79,32 +79,16 @@ gitlab-pages/docs/language-basics/src/loops/gcd.mligo '(2n*2n*3n*11n, 2n*2n*2n*3
 
 <Syntax syntax="jsligo">
 
-JsLIGO currently supports iteration through while while loops, for loops and
+JsLIGO currently supports iteration through while while loops and
 through the use of tail recursive functions.
-
-Here is how to check if a string is a palindrome or not using a `for` loop:
-
-```jsligo group=a
-const getChar = (s: string, idx: nat): string => String.sub(idx, 1 as nat, s)
-
-const isPalindrome = (s: string): bool => {
-  let p = "";
-  let length = String.length(s);
-  for (let i = length - 1 ; i >= 0 ; i--) {
-    p += getChar(s, abs(i));
-  }
-  return p == s;
-}
-```
-
 
 Here is how to compute the greatest common divisors of two natural
 numbers by means of Euclid's algorithm with using a while loop:
 
 
 ```jsligo group=a
-let gcd = (a: nat, b: nat) => {
-  let [x,y] = [a,b]; // we will modify x and y
+let gcd = (x: nat, y: nat) => {
+  let [x,y] = [x,y]; // we will modify x and y
   if (x < y) {
     const z = x;
     x = y; y = z;
@@ -155,9 +139,6 @@ ligo run evaluate-call
 gitlab-pages/docs/language-basics/src/loops/gcd.jsligo '(2n*2n*3n*11n, 2n*2n*2n*3n*3n*5n*7n)' --entry-point gcd2
 # Outputs: +12
 ```
-
-> Note: Currently JsLIGO does not support the key words `break` & `continue` in the context
-> of loops.
 
 </Syntax>
 

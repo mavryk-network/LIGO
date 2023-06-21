@@ -31,7 +31,6 @@ export type SteppingGranularity
 export class DebugSteppingGranularityStatus implements vscode.Disposable {
 	private bar: vscode.StatusBarItem;
 	private _status: SteppingGranularity;
-	private lastStatus: Maybe<SteppingGranularity>
 	private readonly statusChangeEvent = new vscode.EventEmitter<SteppingGranularity>();
 	private disposables: vscode.Disposable[] = new Array();
 
@@ -41,8 +40,7 @@ export class DebugSteppingGranularityStatus implements vscode.Disposable {
 		// We will create a `StatusBarItem` and change stepping granularity
 		// through it.
 
-		const switchCommand = 'extension.ligo-debugger.switchSteppingGranularity';
-		const useLastCommand = 'extension.ligo-debugger.useLastSteppingGranularity';
+		const usedCommand = 'extension.ligo-debugger.switchSteppingGranularity';
 
 		// Note: VSCode has built-in status bar that is added on debug session start,
 		// At the moment of writing it has id='status.debug' and priority=30, and
@@ -54,7 +52,7 @@ export class DebugSteppingGranularityStatus implements vscode.Disposable {
 			);
 		this.bar.name = 'Debug Stepping Granularity Status';
 		this.bar.tooltip = 'Select debug step granularity';
-		this.bar.command = switchCommand;
+		this.bar.command = usedCommand;
 
 		this.status = 'statement';
 
@@ -65,15 +63,12 @@ export class DebugSteppingGranularityStatus implements vscode.Disposable {
 		}
 
 		this.disposables.push(
-			vscode.commands.registerCommand(switchCommand, async () => {
+			vscode.commands.registerCommand(usedCommand, async () => {
 				const newGranularity = await this.createStatusChoosingQuickPick();
 				if (newGranularity){
 					this.status = newGranularity;
 				}
-			}),
-			vscode.commands.registerCommand(useLastCommand, () =>
-				this.toLastStatus()
-			)
+			})
 		);
 
 	}
@@ -86,12 +81,6 @@ export class DebugSteppingGranularityStatus implements vscode.Disposable {
 		return this._status;
 	}
 	set status(newStatus: SteppingGranularity) {
-		if (this._status != newStatus) {
-			// We update the last used status - but only if an actual status change
-			// is performed, the other UX is annoying.
-			this.lastStatus = this._status;
-		}
-
 		this._status = newStatus;
 		this.bar.text =
 			`$(debug-step-over) ${DebugSteppingGranularityStatus.granularityToUIString(newStatus)}`;
@@ -102,19 +91,6 @@ export class DebugSteppingGranularityStatus implements vscode.Disposable {
 		// If this is ever found to be the case, one option is to simply
 		// attach a counter to each status update and let backend accept only
 		// the latest message.
-	}
-
-	/**
-	 * Switch to the previously selected status.
-	 *
-	 * Does nothing and does not trigger any events if the status was never
-	 * changed.
-	 */
-	public toLastStatus() {
-		if (this.lastStatus) {
-			this.status = this.lastStatus
-      // this.lastStatus is updated in the smart setter
-		}
 	}
 
 	/**
@@ -277,14 +253,7 @@ export async function getEntrypoint (
 
 			if (entrypoints.length <= 1) {
 				if (entrypoints.length === 0) {
-					var msg = "Given contract doesn't have any entrypoints."
-
-					const file = vscode.window.activeTextEditor?.document.uri.fsPath
-					if (isDefined(file) && file.endsWith(".jsligo")) {
-						msg += "\n\nMake sure your main function is declared with `const`, not `let`, and has a type appropriate for an entrypoint."
-					}
-
-					throw new Error(msg);
+					throw new Error("Given contract doesn't have any entrypoints");
 				}
 				state.ref.pickedEntrypoint = entrypoints[0].label;
 				return;
@@ -452,7 +421,7 @@ export async function getParameterOrStorage(
 		);
 
 	if (isDefined(result.value) && isDefined(result.currentSwitch.lang)) {
-		rememberedVal.value = [result.value, result.currentSwitch.lang];
+		rememberedVal.value[1] = result.currentSwitch.lang;
 		return [result.value, result.currentSwitch.lang];
 	}
 }

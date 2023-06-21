@@ -5,7 +5,7 @@ import { Modal, DebouncedFormGroup, ButtonOptions, Label } from "~/base-componen
 import notification from "~/base-components/notification";
 
 import keypairManager from "./keypairManager";
-import { validName } from "~/components/validators";
+import { keypairNameValidator } from "./helper";
 
 export default class ImportKeypairModal extends PureComponent {
   constructor(props) {
@@ -137,7 +137,7 @@ export default class ImportKeypairModal extends PureComponent {
         textConfirm="Import"
         pending={this.state.pending && "Importing..."}
         onConfirm={this.onConfirm}
-        confirmDisabled={!name || !valid || !!(name && !!validName(name))}
+        confirmDisabled={!name || !valid}
       >
         <DebouncedFormGroup
           ref={this.input}
@@ -146,7 +146,7 @@ export default class ImportKeypairModal extends PureComponent {
           placeholder="Please enter a name for the keypair"
           value={this.state.name}
           onChange={(name) => this.setState({ name })}
-          validator={validName}
+          validator={keypairNameValidator}
         />
         {this.renderChainOptions()}
         <DebouncedFormGroup

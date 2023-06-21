@@ -1,0 +1,74 @@
+; This file was automatically generated, do not edit.
+; Edit file manifest/main.ml instead.
+
+(library
+ (name octez_protocol_compiler)
+ (public_name octez-protocol-compiler)
+ (instrumentation (backend bisect_ppx))
+ (libraries
+  tezos-base
+  tezos-base.unix
+  tezos-version
+  tezos-protocol-environment.sigs
+  tezos-stdlib-unix
+  compiler-libs.common
+  lwt.unix
+  ocplib-ocamlres
+  unix)
+ (flags
+  (:standard)
+  -open Tezos_base.TzPervasives
+  -open Tezos_base_unix
+  -open Tezos_stdlib_unix)
+ (modules Embedded_cmis_env Embedded_cmis_register Packer Compiler Defaults))
+
+(rule
+ (targets embedded-interfaces-env)
+ (deps (package tezos-protocol-environment))
+ (action
+  (with-stdout-to
+   %{targets}
+   (run
+    bin/cmis_of_cma.exe
+    %{lib:tezos-protocol-environment.sigs:tp_environment_sigs.cmxa}))))
+
+(rule
+ (targets embedded_cmis_env.ml)
+ (deps (package tezos-protocol-environment))
+ (action
+  (run
+   %{bin:ocp-ocamlres} -format variants -o %{targets}
+   %{read-strings:embedded-interfaces-env})))
+
+(rule
+ (targets embedded_cmis_register.ml)
+ (action
+  (run
+   %{bin:ocp-ocamlres} -format variants -o %{targets}
+   %{cmi:registerer/tezos_protocol_registerer})))
+
+(rule
+ (targets defaults.ml)
+ (action
+  (write-file
+   %{targets}
+   "let warnings = \"+a-4-40..42-44-45-48-60-67-69-70\"")))
+
+(library
+ (name octez_protocol_compiler_native)
+ (public_name octez-protocol-compiler.native)
+ (instrumentation (backend bisect_ppx))
+ (libraries
+  tezos-base
+  octez-protocol-compiler
+  compiler-libs.optcomp)
+ (flags
+  (:standard)
+  -open Tezos_base.TzPervasives
+  -open Octez_protocol_compiler)
+ (modules Native))
+
+(install
+ (package octez-protocol-compiler)
+ (section libexec)
+ (files final_protocol_versions))

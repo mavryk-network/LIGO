@@ -7,9 +7,9 @@
  (libraries
   ;; LIGO
   lexing_shared
-  mh_py_tokens
-  Lx_py_self_units
-  lx_py_self_tokens
+  menhir_pyligo_tokens
+  lexing_pyligo_self_units
+  lexing_pyligo_self_tokens
   ;; Third party
   str
   hex))
@@ -19,8 +19,6 @@
 (executable
  (name LexerMain)
  (libraries
-  simple-utils-unix
-  simple-utils-unix.http_uri
   ;; LIGO
   preprocessing_pyligo
   lexing_shared

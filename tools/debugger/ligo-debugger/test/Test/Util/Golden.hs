@@ -1,6 +1,9 @@
 -- | Golden tests functionality.
 module Test.Util.Golden
-  ( goldenTestWithSnapshots
+  ( goldenTestWithSnapshotsImpl
+  , goldenTestWithSnapshots
+  , goldenTestWithSnapshotsLogging
+  , dumpComment
   , dumpCurSnapshot
   , dumpAllSnapshotsWithStep
   ) where
@@ -28,7 +31,7 @@ import UnliftIO.Exception (handle, throwIO)
 import Morley.Debugger.Core.Navigate
   (HistoryReplay, HistoryReplayM, MovementResult (..), curSnapshot, frozen)
 
-import Language.LIGO.Debugger.CLI
+import Language.LIGO.Debugger.CLI.Types
 import Language.LIGO.Debugger.Snapshots
 
 import Test.Util
@@ -113,7 +116,7 @@ goldenTestWithSnapshotsImpl logger testName goldenFolder runData logicFunc = do
     action = handle (throwIO . UnhandledHUnitException) do
       outputVar <- newIORef mempty
       let write = liftIO . modifyIORef outputVar . (:)
-      testWithSnapshotsImpl logger Nothing runData $
+      testWithSnapshotsImpl logger runData $
         usingReaderT (GoldenActionContext write) logicFunc
       recordedOutput <- readIORef outputVar
       return $
@@ -163,15 +166,15 @@ gonnaWriteGoldenFile file = do
   atomicModifyIORef writtenGoldenFiles \files ->
     (Set.insert file files, Set.member file files)
 
-goldenTestWithSnapshots, _goldenTestWithSnapshotsLogging
+goldenTestWithSnapshots, goldenTestWithSnapshotsLogging
   :: TestName
   -> FilePath
   -> ContractRunData
   -> ReaderT GoldenActionContext (HistoryReplayM (InterpretSnapshot 'Unique) IO) ()
   -> TestTree
 goldenTestWithSnapshots = goldenTestWithSnapshotsImpl dummyLoggingFunction
-_goldenTestWithSnapshotsLogging = goldenTestWithSnapshotsImpl putStrLn
-{-# WARNING _goldenTestWithSnapshotsLogging "'goldenTestWithSnapshotsLogging' remains in code" #-}
+goldenTestWithSnapshotsLogging = goldenTestWithSnapshotsImpl putStrLn
+{-# WARNING goldenTestWithSnapshotsLogging "'goldenTestWithSnapshotsLogging' remains in code" #-}
 
 -- | A little fun, here it seems justified.
 instance (a ~ (), MonadIO m) => FromBuilder (ReaderT GoldenActionContext m a) where
@@ -199,11 +202,11 @@ dumpAllSnapshotsWithStep
      , MonadReader GoldenActionContext m, MonadIO m
      , HasCallStack
      )
-  => m (MovementResult a)
+  => m MovementResult
   -> m ()
 dumpAllSnapshotsWithStep step = go (1000 :: Int)
   where
   go 0 = error "Looks like stepping fell into infinite loop"
   go n = do
     dumpCurSnapshot
-    step >>= \case{ HitBoundary -> pass; _ -> go (n - 1) }
+    step >>= \case{ ReachedBoundary -> pass; _ -> go (n - 1) }

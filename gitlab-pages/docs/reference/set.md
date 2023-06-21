@@ -149,7 +149,7 @@ let cardinal: (set: set&lt;&apos;elt&gt;) => nat
 
 Number of elements in a set.
 
-Notice: Previously, `Set.size` was used for the number of elements in
+Notice: previously, `Set.size` was used for the number of elements in
 a set. `Set.size` is now marked for deprecation, and `Set.cardinal`
 should be used instead.
 
@@ -259,7 +259,8 @@ val update : 'elt -> bool -> 'elt set -> 'elt set
 let update: (elt : 'elt, flag : bool, set : set&lt;'elt&gt;) => set&lt;'elt&gt;
 </SyntaxTitle>
 
-Add or remove an element in a set based on the boolean value being passed.
+
+add or remove an element in a set based on the boolean value being passed.
 
 <Syntax syntax="pascaligo">
 
@@ -381,7 +382,7 @@ let sum_of_elements : int = Set.fold sum my_set 0
 <Syntax syntax="jsligo">
 
 ```jsligo group=sets
-let sum = ([acc, i]: [int, int]): int => acc + i;
+let sum = (acc: int, i: int): int => acc + i;
 let sum_of_elements: int = Set.fold(sum, my_set, 0);
 ```
 
@@ -420,21 +421,8 @@ let sum_of_elements : int = Set.fold_desc sum_right my_set 0
 <Syntax syntax="jsligo">
 
 ```jsligo group=sets
-let sum_right = ([i, acc]: [int, int]) : int => acc + i;
+let sum_right = (i: int, acc: int) : int => acc + i;
 let sum_of_elements_desc : int = Set.fold_desc (sum_right, my_set, 0);
 ```
 
 </Syntax>
-
-
-<SyntaxTitle syntax="cameligo">
-val filter_map : ('a -> 'b option) -> 'a set -> 'b set
-</SyntaxTitle>
-
-<SyntaxTitle syntax="jsligo">
-let filter_map: (mapper: ((item: 'a) => option&lt;'b&gt;), set: set&lt;'a&gt;) => set&lt;'b&gt;
-</SyntaxTitle>
-
-Apply a function to items of a set to create a new set, but the function can omit certain elements by returning `None`.
-
-Notice: built in terms of `fold_desc`.

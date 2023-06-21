@@ -9,11 +9,10 @@
   ;; Vendors
   simple-utils
   LexerLib
-  preprocessing_pascaligo
   ;; LIGO
   lexing_shared
   mh_psc_tokens)
- (modules Token Self Comments Directives))
+ (modules Token Self))
 
 ;; --------------------------------------------------------------------
 ;; Build the type ['a terminal] to complete the inspection API of
@@ -24,14 +23,8 @@
  (deps
   (:ParToken ../../../../02-parsing/pascaligo/ParToken.mly))
  (action
-  (run
-   menhir
-   %{ParToken}
-   --only-tokens
-   --inspection
-   --table
-   --base
-   MenhirToken)))
+  (run menhir %{ParToken} --only-tokens --inspection --table --base
+    MenhirToken)))
 
 (library
  (name mh_psc_tokens)

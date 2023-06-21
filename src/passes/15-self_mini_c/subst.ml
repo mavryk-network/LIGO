@@ -33,11 +33,6 @@ let rec replace : expression -> var_name -> var_name -> expression =
     let body = replace body in
     let binder = replace_var binder in
     return @@ E_closure { binder ; body }
-  | E_rec { func = { binder ; body } ; rec_binder } ->
-    let body = replace body in
-    let binder = replace_var binder in
-    let rec_binder = replace_var rec_binder in
-    return @@ E_rec { func = { binder ; body } ; rec_binder }
   | E_constant (c) ->
     let args = List.map ~f:replace c.arguments in
     return @@ E_constant {cons_name = c.cons_name; arguments = args}
@@ -109,11 +104,9 @@ let rec replace : expression -> var_name -> var_name -> expression =
     let expr = replace expr in
     let update = replace update in
     return @@ E_update (expr, i, update, n)
-  | E_raw_michelson (code) ->
-    return @@ E_raw_michelson (code)
-  | E_inline_michelson (code, args') ->
-    let args' = List.map ~f:replace args' in
-    return @@ E_inline_michelson (code, args')
+  | E_raw_michelson (code, args) ->
+    let args = List.map ~f:replace args in
+    return @@ E_raw_michelson (code, args)
   | E_global_constant (hash, args) ->
     let args = List.map ~f:replace args in
     return @@ E_global_constant (hash, args)
@@ -228,10 +221,6 @@ let rec subst_expression : body:expression -> x:var_name -> expr:expression -> e
     let (binder, body) = self_binder1 ~body:(binder, body) in
     return @@ E_closure { binder ; body }
   )
-  | E_rec { func = { binder ; body } ; rec_binder } -> (
-    let (binder, (rec_binder, body)) = self_binder2 ~body:(binder, (rec_binder, body)) in
-    return @@ E_rec { func = { binder ; body } ; rec_binder }
-  )
   | E_let_in (expr, inline, ((v , tv), body)) -> (
     let expr = self expr in
     let (v, body) = self_binder1 ~body:(v, body) in
@@ -289,11 +278,9 @@ let rec subst_expression : body:expression -> x:var_name -> expr:expression -> e
     let (name_r, r) = self_binder1 ~body:(name_r, r) in
     return @@ E_if_left (c, ((name_l, tvl) , l), ((name_r, tvr) , r))
   )
-  | E_raw_michelson (code) ->
-    return @@ E_raw_michelson (code)
-  | E_inline_michelson (code, args') ->
-    let args' = List.map ~f:self args' in
-    return @@ E_inline_michelson (code, args')
+  | E_raw_michelson (code, args) ->
+    let args = List.map ~f:self args in
+    return @@ E_raw_michelson (code, args)
   | E_literal _ ->
     return_id
   | E_constant {cons_name; arguments} -> (

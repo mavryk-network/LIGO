@@ -21,7 +21,6 @@ type API =
   :<|> "list-declarations" :> ReqBody '[JSON] ListDeclarationsRequest :> Post '[JSON] ListDeclarationsResponse
   :<|> "create-update-gist" :> ReqBody '[JSON] GistCreateUpdateRequest :> Post '[JSON] Text
   :<|> "list-templates" :> Post '[JSON] [Text]
-  :<|> "ligo-version" :> Post '[JSON] Text
 
 type SwaggeredAPI =
   SwaggerSchemaUI "swagger-ui" "openapi.json"

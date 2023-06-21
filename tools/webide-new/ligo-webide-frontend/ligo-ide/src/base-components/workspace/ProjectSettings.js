@@ -80,6 +80,10 @@ export default class ProjectSettings {
       this.channel.trigger(`settings:${key}`, value);
       await this.writeSettings(settings);
     }
+
+    if (key === "compilers.solc") {
+      this.projectManager.lint();
+    }
   }
 
   trimSettings = (rawSettings = {}) => {
@@ -88,7 +92,6 @@ export default class ProjectSettings {
       main: rawSettings.main,
       deploy: rawSettings.deploy,
       storage: rawSettings.storage,
-      doNotShowCompilationMessage: rawSettings.doNotShowCompilationMessage || false,
     };
     if (rawSettings.gistId) {
       settings.gistId = rawSettings.gistId;

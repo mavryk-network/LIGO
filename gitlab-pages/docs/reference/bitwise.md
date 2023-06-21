@@ -16,7 +16,7 @@ val and : 'a -> nat -> nat
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let and : (a: &apos;a, b: nat) => nat
+let and: (a: &apos;a, b: nat) => nat
 </SyntaxTitle>
 
 `'a` can either be an `int` or `nat`.
@@ -175,7 +175,6 @@ const one : nat = Bitwise.shift_right (2n, 1n)
 ```
 
 </Syntax>
-
 <Syntax syntax="cameligo">
 
 ```cameligo

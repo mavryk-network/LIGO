@@ -6,26 +6,17 @@ title: Optimisation guide
 import Syntax from '@theme/Syntax';
 
 
-Imagine you develop a contract and try to adhere to all the business
-requirements while doing it in a secure fashion. If you do not
-optimise your contract, chances are, it will either fail to fit into
-the hard limits or be too expensive to execute.
+Imagine you develop a contract and try to adhere to all the business requirements while doing it in a secure fashion. If you do not optimise your contract, chances are, it will either fail to fit into the hard limits or be too expensive to execute.
 
-It would be hard to add ad-hoc optimisations after the contract is
-ready. To avoid such situations, you need to understand what the
-limits are, how gas is consumed, and how storage and execution fees
-are computed.
+It would be hard to add ad-hoc optimisations after the contract is ready. To avoid such situations, you need to understand what the limits are, how gas is consumed, and how storage and execution fees are computed.
 
-In this article, we will cover Tezos limits, fee model, and the basics
-of measuring and optimising your contracts.
+In this article, we will cover Tezos limits, fee model, and the basics of measuring and optimising your contracts.
 
 ## Tezos gas model
 
 ### What limits and fees are there?
 
-Bounding the contracts' complexity is crucial for public blockchains
-like Tezos. These bounds ensure liveness – the chain's ability to
-progress and produce new blocks in a reasonable time.
+Bounding the contracts' complexity is crucial for public blockchains like Tezos. These bounds ensure liveness – the chain's ability to progress and produce new blocks in a reasonable time.
 
 Limits:
 * A limit on the **operation size** is imposed because the nodes transfer operations across the network. If an operation is too large, nodes may fail to broadcast it in time.
@@ -320,9 +311,7 @@ let main (parameter, storage : parameter * storage) : operation list * storage =
 
 </Syntax>
 
-We can now put the code of this large entrypoint to storage upon the
-contract origination. If we do not provide any means to change the
-stored lambda, the immutability of the contract will not be affected.
+We can now put the code of this large entrypoint to storage upon the contract origination. If we do not provide any means to change the stored lambda, the immutability of the contract will not be affected.
 
 <Syntax syntax="pascaligo">
 
@@ -331,27 +320,13 @@ This pattern is also useful if you have long code blocks that repeat across some
 </Syntax>
 <Syntax syntax="cameligo">
 
-This pattern is also useful if you have long code blocks that repeat
-across some subset of entrypoints. For example, if you develop a
-custom token, you may need different flavors of transfers with a
-common pre-transfer check. In this case, you can add a lambda
-`preTransferCheck : (transfer_params -> bool)` to the storage and call
-it upon transfer.
+This pattern is also useful if you have long code blocks that repeat across some subset of entrypoints. For example, if you develop a custom token, you may need different flavors of transfers with a common pre-transfer check. In this case, you can add a lambda `preTransferCheck : (transfer_params -> bool)` to the storage and call it upon transfer.
 
 </Syntax>
 
 
-However, you always need to measure the gas consumption and the
-occupied storage. It may be the case that the wrapper code that
-extracts the lambda from storage and calls it is costlier than the
-piece of code you are trying to optimise.
+However, you always need to measure the gas consumption and the occupied storage. It may be the case that the wrapper code that extracts the lambda from storage and calls it is costlier than the piece of code you are trying to optimise.
 
 ## Conclusion
 
-We have discussed the Tezos fee and gas model and identified the
-following optimisation targets: contract and storage size, gas
-consumption, and excess bytes written to storage. We also discussed
-inlining, constants optimisation, lazy storage, and lazy entrypoint
-loading. We hope these techniques can help you develop contracts that
-require fewer resources to execute. And, we cannot stress this enough:
-**always measure your contracts.**
+We have discussed the Tezos fee and gas model and identified the following optimisation targets: contract and storage size, gas consumption, and excess bytes written to storage. We also discussed inlining, constants optimisation, lazy storage, and lazy entrypoint loading. We hope these techniques can help you develop contracts that require fewer resources to execute. And, we cannot stress this enough: **always measure your contracts.**

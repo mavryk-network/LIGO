@@ -66,7 +66,7 @@ let solve = function
 let cons a b =
   let s = match a, b with
     (* let foo = a:int => a *)
-  | ((EQ _ | GT _) as s), Suggestion f  -> Solved (s :: es6fun_token :: (f None))
+  | (EQ _ as s), Suggestion f  -> Solved (s :: es6fun_token :: (f None))
   | (COLON _  as s), Suggestion f  ->
     Suggestion (fun c ->
       match c with
@@ -78,7 +78,7 @@ let cons a b =
     (* | Foo, y =>  *)
   | (VBAR _ as v),          Suggestion f  -> Solved (v :: (f None))
     (* let foo = () => 2 *)
-  | ((EQ _ | GT _) as s),            Inject tokens -> Solved (s :: es6fun_token :: tokens)
+  | (EQ _ as s),            Inject tokens -> Solved (s :: es6fun_token :: tokens)
     (* Bar => *)
 
     (* let x = (x: int, b: int => int) => b(x) *)
@@ -136,7 +136,7 @@ let concat a b =
   handle_state s
 %}
 
-(* See [../../02-parsing/jsligo/ParToken.mly] for the definition of tokens. *)
+(* See [../../02-parsing/reasonligo/ParToken.mly] for the definition of tokens. *)
 
 (* Entry points *)
 
@@ -183,8 +183,6 @@ everything_else:
 | "/="              { DIV_EQ $1    }
 | "|"               { VBAR $1      }
 | "_"               { WILD $1      }
-| "++"              { INCR $1      }
-| "--"              { DECR $1      }
 | "?"               { QMARK $1     }
 | "break"           { Break $1     }
 | "case"            { Case $1      }
@@ -202,12 +200,8 @@ everything_else:
 | "while"           { While $1     }
 | "from"            { From $1      }
 | "as"              { As $1        }
-| "implements"      { Implements $1 }
-| "interface"       { Interface $1 }
 | "namespace"       { Namespace $1 }
 | "type"            { Type $1      }
-| "contract_of"     { Contract $1  }
-| "parameter_of"    { Parameter $1 }
 | ZWSP              { ZWSP $1      }
 
 inner:

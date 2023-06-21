@@ -7,34 +7,28 @@ open Simple_utils.Trace
 val type_program
   :  raise:(typer_error, Main_warnings.all) raise
   -> options:Compiler_options.middle_end
-  -> ?env:O.signature
+  -> ?env:Environment.t
   -> I.program
   -> O.program
-
-val type_program_with_signature
-  :  raise:(typer_error, Main_warnings.all) raise
-  -> options:Compiler_options.middle_end
-  -> ?env:O.signature
-  -> I.program
-  -> O.program * O.signature
 
 val type_declaration
   :  raise:(typer_error, Main_warnings.all) raise
   -> options:Compiler_options.middle_end
-  -> ?env:O.signature
+  -> ?env:Environment.t
   -> I.declaration
-  -> O.declaration list
+  -> O.declaration
 
 val type_expression
   :  raise:(typer_error, Main_warnings.all) raise
   -> options:Compiler_options.middle_end
-  -> ?env:O.signature
+  -> ?env:Environment.t
   -> ?tv_opt:O.type_expression
   -> I.expression
   -> O.expression
 
 val untype_expression : O.expression -> I.expression
 val untype_type_expression : O.type_expression -> I.type_expression
+val untype_program : O.program -> I.program
 
 val assert_type_expression_eq
   :  raise:(typer_error, Main_warnings.all) raise

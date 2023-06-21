@@ -7,6 +7,7 @@ module Region          = Simple_utils.Region
 module Utils           = Simple_utils.Utils
 module Std             = Simple_utils.Std
 module Lexbuf          = Simple_utils.Lexbuf
+module Snippet         = Simple_utils.Snippet
 module Unit            = LexerLib.Unit
 module type LEXER      = ParserLib.LowAPI.LEXER
 module type PARSER     = ParserLib.LowAPI.PARSER
@@ -40,11 +41,8 @@ module type PRINTER =
 
 module type PRETTY =
   sig
-    type state
-    val default_state : state
-
     type tree
-    val print : state -> tree -> PPrint.document
+    val print : tree -> PPrint.document
   end
 
 module type WARNING =
@@ -146,7 +144,7 @@ module Make
     let finalise tree (std : Std.t) : unit =
       if Options.pretty then
         (* Printing the syntax tree to source code *)
-        let doc = Pretty.(print default_state) tree in
+        let doc = Pretty.print tree in
         let width =
           match Terminal_size.get_columns () with
             None -> 60

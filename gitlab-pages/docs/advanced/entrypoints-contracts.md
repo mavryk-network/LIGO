@@ -77,7 +77,7 @@ type parameter = nat
 type storage = nat
 type return = operation list * storage
 
-let main (action : parameter) (store : storage) : return =
+let save (action, store: parameter * storage) : return =
   ([], store)
 ```
 
@@ -160,16 +160,16 @@ type storage = {
 
 type return = operation list * storage
 
-let entry_A (n : nat) (store : storage) : return =
+let entry_A (n, store : nat * storage) : return =
   [], {store with counter = n}
 
-let entry_B (s : string) (store : storage) : return =
+let entry_B (s, store : string * storage) : return =
   [], {store with name = s}
 
-let main (action : parameter) (store: storage) : return =
+let main (action, store: parameter * storage) : return =
   match action with
-    Action_A n -> entry_A n store
-  | Action_B s -> entry_B s store
+    Action_A n -> entry_A (n, store)
+  | Action_B s -> entry_B (s, store)
 ```
 
 </Syntax>
@@ -237,7 +237,7 @@ type parameter = unit
 type storage = unit
 type return = operation list * storage
 
-let deny (action : parameter) (store : storage) : return =
+let deny (action, store : parameter * storage) : return =
   if Tezos.get_amount () > 0tez then
     failwith "This contract does not accept tokens."
   else ([], store)
@@ -284,7 +284,7 @@ function main (const action : parameter; const store : storage) : return is
 ```cameligo group=c
 let owner = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx": address)
 
-let main (action : parameter) (store: storage) : return =
+let main (action, store: parameter * storage) : return =
   if Tezos.get_sender () <> owner then failwith "Access denied."
   else ([], store)
 ```
@@ -328,9 +328,9 @@ emitting a transaction operation at the end of an entrypoint.
 > account (tz1, ...): all you have to do is use a unit value as the
 > parameter of the smart contract.
 
-In our case, we have a `counter` contract that accepts an action of
-type `parameter`, and we have a `proxy` contract that accepts the same
-parameter type, and forwards the call to the deployed counter
+In our case, we have a `counter.ligo` contract that accepts an action
+of type `parameter`, and we have a `proxy.ligo` contract that accepts
+the same parameter type, and forwards the call to the deployed counter
 contract.
 
 <Syntax syntax="pascaligo">

@@ -12,22 +12,6 @@ stored on chain, and they can be referred to from a contract we are
 deploying. Using global constants, we will be able to originate
 contracts that (after expansion) surpass size limit for contracts.
 
-## API primer
-
-<SyntaxTitle syntax="pascaligo">
-function constant: string -> 'a
-</SyntaxTitle>
-<SyntaxTitle syntax="cameligo">
-val constant : string -> 'a
-</SyntaxTitle>
-
-<SyntaxTitle syntax="jsligo">
-let constant : string => 'a
-</SyntaxTitle>
-
-The primitive `Tezos.constant` allows you to use a predefined constant already registered on chain.
-It accepts a hash in the form of a string and will require a type annotation.
-
 ## Using global constants
 
 Global constants are introduced using `Tezos.constant`. This function
@@ -154,7 +138,7 @@ function main(const p : string; const s : int) : list(operation) * int is
 let helper ((s, x) : string * int) =
   String.length s + x * 3 + 2
 
-let main (p : string) (s : int) : operation list * int =
+let main ((p, s) : string * int) : operation list * int =
   ([], helper (p, s))
 ```
 
@@ -163,11 +147,11 @@ let main (p : string) (s : int) : operation list * int =
 <Syntax syntax="jsligo">
 
 ```jsligo group=pre_global
-const helper = ([s, x]: [string, int]) =>
+const helper = (s: string, x: int) =>
   String.length(s) + x * 3 + 2;
 
 const main = (p: string, s: int) : [list<operation>, int] =>
-  [list([]), helper ([p, s])];
+  [list([]), helper (p, s)];
 ```
 
 </Syntax>
@@ -317,7 +301,7 @@ function main(const p : string; const s : int) : list(operation) * int is
 <Syntax syntax="cameligo">
 
 ```cameligo skip
-let main (p : string) (s : int) : operation list * int =
+let main ((p, s) : string * int) : operation list * int =
   ([], (Tezos.constant "exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf")(p, s))
 ```
 
@@ -454,7 +438,7 @@ let f (x : int) = x * 3 + 2
 
 let ct = Test.register_constant (Test.eval f)
 
-let main (() : parameter) (store : storage) : return =
+let main ((), store : parameter * storage) : return =
  [], (Tezos.constant ct store)
 
 let test =

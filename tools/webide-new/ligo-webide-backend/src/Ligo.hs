@@ -4,11 +4,12 @@ import System.Exit (ExitCode)
 import System.Process (proc, readCreateProcessWithExitCode)
 
 import Common (WebIDEM)
-import Config (scDockerizedLigoVersion, scLigoPath)
+import Config (cDockerizedLigoVersion, cLigoPath)
+import Error (LigoCompilerError(..))
 
 runLigo :: FilePath -> [String] -> WebIDEM (ExitCode, String, String)
 runLigo dirPath commands = do
-  dockerizedLigo <- lift (asks scDockerizedLigoVersion)
+  dockerizedLigo <- lift (asks cDockerizedLigoVersion)
   case dockerizedLigo of
     Just version ->
       liftIO
@@ -20,9 +21,12 @@ runLigo dirPath commands = do
         , dirPath ++ ":" ++ dirPath
         , "-w"
         , dirPath
-        , "ligolang/ligo_ci:" ++ version
+        , "ligolang/ligo:" ++ version
         ]
         ++ commands
     Nothing -> do
-      ligoPath <- lift (asks scLigoPath)
-      liftIO $ readCreateProcessWithExitCode (proc ligoPath commands) ""
+      mLigoPath <- lift (asks cLigoPath)
+      case mLigoPath of
+        Nothing -> throwM NoLigoBinary
+        Just ligoPath ->
+          liftIO $ readCreateProcessWithExitCode (proc ligoPath commands) ""

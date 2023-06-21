@@ -1,13 +1,7 @@
 open Ast_core
-open Nanopasses
+open Desugaring
 
-let decompile ~raise ~syntax (m : program) : Ast_unified.program =
-  decompile_program ~raise ~syntax m
+let decompile (m : program) : Ast_imperative.program = decompile_program m
 
-
-let decompile_expression ~raise ~syntax (e : expression) : Ast_unified.expr =
-  decompile_expression ~raise ~syntax e
-
-
-let decompile_ty_expr ~raise ~syntax (t : type_expression) : Ast_unified.ty_expr =
-  decompile_ty_expr ~raise ~syntax t
+let decompile_expression (e : expression) : Ast_imperative.expression =
+  decompile_expression e

@@ -149,17 +149,8 @@ module Print = struct
 end
 
 module Convert = struct 
-  let make_references (t : Core.t) =
-    List.concat_map
-      (function
-        | Core.Self_ref -> [ "@top" ]
-        | Core.Name_ref p -> [ p ]
-        | Core.String_ref -> List.mapi (fun i _ -> "string" ^ string_of_int i) t.language_features.string_delimiters)
-
-  let pattern_to_vim: Core.t -> Core.pattern -> item list = fun t ->
-    let toplevel = t.syntax_patterns in
-    function
-    | {name; kind = Begin_end {meta_name=highlight; begin_; end_; patterns}} ->
+  let pattern_to_vim: string list -> Core.pattern -> item list = fun toplevel -> function
+    {name; kind = Begin_end {meta_name=highlight; begin_; end_; patterns}} ->
     let rec aux name result (begin_: (Core.regexp * Core.highlight_name option) list) end_ = (
       match begin_, end_ with 
         (start, highlight_start) :: [], (end_, highlight_end) :: rest ->
@@ -198,9 +189,9 @@ module Convert = struct
                   | None -> [])
               }: region_inside);
               next_groups = (match rest with [] -> [] | _ -> [name ^ "___"]);
-              contained = not (List.mem (Core.Name_ref name) toplevel);
+              contained = not (List.mem name toplevel);
               contained_in = [];
-              contains = make_references t patterns;
+              contains = List.map (fun p -> if p = "$self" then "@top" else p) patterns;
             }) :: 
           result) [] rest
       | (match_, highlight) :: rest, end_ -> 
@@ -213,7 +204,7 @@ module Convert = struct
                 group_name = name;
                 value = match_.Core.vim;
                 next_groups = [name ^ "___"];
-                contained = not (List.mem (Core.Name_ref name) toplevel);
+                contained = not (List.mem name toplevel);
                 contained_in = []; 
                 contains = [];
               })
@@ -230,7 +221,7 @@ module Convert = struct
             group_name = name;
             value = match_.Core.vim;
             next_groups = (match rest_e with [] -> [] | _ -> [name ^ "___"]);
-            contained = not (List.mem (Core.Name_ref name) toplevel);
+            contained = not (List.mem name toplevel);
             contained_in = []; 
             contains = [];
           })
@@ -256,7 +247,7 @@ module Convert = struct
         [Syntax (Match {
           group_name = name;
           value = regexp.Core.vim;
-          contained = not (List.mem (Core.Name_ref name) toplevel);
+          contained = not (List.mem name toplevel);
           contained_in = [];
           contains = [];
           next_groups = (match rest with _ :: _ -> [name ^ "_"] | _ -> [])
@@ -282,31 +273,30 @@ module Convert = struct
     | None -> [])
 
   let to_vim: Core.t -> t = fun t ->
+    let toplevel = t.syntax_patterns in
     let language_features = t.Core.language_features in
     let comments = language_features.comments in
     let extra_patterns = language_features.extra_patterns in
-    let strings = List.mapi (fun i d ->
-      {
-        group_name = "string" ^ string_of_int i;
-        value = {
-          start        = Some d.Core.vim;
-          end_         = Some d.Core.vim;
-          match_groups = []
-        };
-        contained = false;
-        contained_in = [];
-        contains = "@Spell" :: make_references t extra_patterns.in_strings;
-        next_groups = []
-      }
-    ) language_features.string_delimiters in
-    (List.fold_left (fun a c -> (pattern_to_vim t c) @ a ) [] t.repository)
+    (List.fold_left (fun a c -> (pattern_to_vim toplevel c) @ a ) [] t.repository)
     @
     [VIMComment "string"]
     @
-    List.concat_map (fun s ->
-      [ Syntax (Region s)
-      ; Highlight (Link {group_name = s.group_name; highlight = Core.String})
-      ]) strings
+    (List.map (fun d ->
+        Syntax (Region {
+          group_name = "string";
+          value = {
+            start        = Some d.Core.vim;
+            end_         = Some d.Core.vim;
+            match_groups = []
+          };
+          contained = false;
+          contained_in = [];
+          contains = "@Spell" :: extra_patterns.in_strings;
+          next_groups = []
+        })
+    ) language_features.string_delimiters)
+    @
+    [Highlight (Link {group_name = "string"; highlight = Core.String})]
     @
     [VIMComment "linecomment"]
     @
@@ -318,8 +308,8 @@ module Convert = struct
         match_groups = [];
       };
       contained    = false;
-      contained_in = "ALLBUT" :: "blockcomment" :: make_references t [String_ref];
-      contains     = "@Spell" :: make_references t extra_patterns.in_line_comments;
+      contained_in = ["ALLBUT"; "string"; "blockcomment"];
+      contains     = "@Spell" :: extra_patterns.in_line_comments;
       next_groups  = []
     })]
     @
@@ -335,8 +325,8 @@ module Convert = struct
         match_groups = []
       };
       contained    = false;
-      contained_in = "ALLBUT" :: "blockcomment" :: make_references t [String_ref];
-      contains     = "@Spell" :: make_references t extra_patterns.in_block_comments;
+      contained_in = ["ALLBUT"; "string"; "linecomment"];
+      contains     = "@Spell" :: extra_patterns.in_block_comments;
       next_groups  = []
     })]
     @
@@ -359,14 +349,14 @@ let vim_plugin (syntaxes: (string * Core.t) list): string =
   let fmt = formatter_of_buffer buffer in
   let allow_list = String.concat ", " (List.map (fun (name, _) -> "'" ^ name ^ "'") syntaxes) in
   fprintf fmt "\" THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY MANUALLY OR YOUR CHANGES WILL BE LOST.\n";
-  fprintf fmt "if executable('ligo')\n";
+  fprintf fmt "if executable('ligo-squirrel')\n";
   fprintf fmt "  if !exists(\"autocommands_loaded\")\n";
   fprintf fmt "    let autocommands_loaded=1\n";
   fprintf fmt "    augroup ligoRegisterLanguageServer\n";
   fprintf fmt "      autocmd User lsp_setup\n";
   fprintf fmt "          \\ call lsp#register_server({\n";
   fprintf fmt "          \\   'name': 'ligo_lsp',\n";
-  fprintf fmt "          \\   'cmd': {server_info->['ligo', 'lsp']},\n";
+  fprintf fmt "          \\   'cmd': {server_info->['ligo-squirrel']},\n";
   fprintf fmt "          \\   'allowlist': [%s],\n" allow_list;
   fprintf fmt "          \\ })\n";
   fprintf fmt "    augroup END\n";

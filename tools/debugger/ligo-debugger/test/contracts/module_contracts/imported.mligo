@@ -1,4 +1,4 @@
-#import "imported2.jsligo" "IMP"
+#import "imported2.ligo" "IMP"
 
 let add (a, b : int * int) : int = a + b
 

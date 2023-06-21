@@ -3,10 +3,9 @@ open Ligo_prim
 open Display
 
 type all =
-  [ `Self_ast_aggregated_warning_unused of Location.t * string
-  | `Self_ast_aggregated_warning_muchused of Location.t * string
-  | `Self_ast_aggregated_warning_unused_rec of Location.t * string
-  | `Self_ast_aggregated_metadata_invalid_type of Location.t * string
+  [ `Self_ast_typed_warning_unused of Location.t * string
+  | `Self_ast_typed_warning_muchused of Location.t * string
+  | `Self_ast_typed_warning_unused_rec of Location.t * string
   | `Checking_ambiguous_constructor_expr of
     Ast_core.expression * Type_var.t * Type_var.t * Location.t
   | `Checking_ambiguous_constructor_pat of
@@ -14,12 +13,15 @@ type all =
     * Type_var.t
     * Type_var.t
     * Location.t
-  | `Nanopasses_attribute_ignored of Location.t
-  | `Nanopasses_infinite_for_loop of Location.t
+  | `Self_ast_imperative_warning_layout of Location.t * Label.t
   | `Self_ast_imperative_warning_deprecated_polymorphic_variable of
     Location.t * Type_var.t
+  | `Self_ast_imperative_warning_deprecated_constant of
+    Location.t
+    * Ast_imperative.expression
+    * Ast_imperative.expression
+    * Ast_imperative.type_expression
   | `Main_view_ignored of Location.t
-  | `Main_entry_ignored of Location.t
   | `Michelson_typecheck_failed_with_different_protocol of
     Environment.Protocols.t * Tezos_error_monad.Error_monad.error list
   | `Jsligo_deprecated_failwith_no_return of Location.t
@@ -28,8 +30,10 @@ type all =
   | `Use_meta_ligo of Location.t
   | `Self_ast_aggregated_warning_bad_self_type of
     Ast_aggregated.type_expression * Ast_aggregated.type_expression * Location.t
+  | `Deprecated_reasonligo
   ]
 
+let warn_layout loc lab = `Self_ast_imperative_warning_layout (loc, lab)
 let warn_bad_self_type t1 t2 loc = `Self_ast_aggregated_warning_bad_self_type (t1, t2, loc)
 
 let pp
@@ -100,14 +104,7 @@ let pp
          view] annotation@.@]"
         snippet_pp
         loc
-    | `Main_entry_ignored loc ->
-      Format.fprintf
-        f
-        "@[<hv>%a@ Warning: This entry will be ignored, command line option override [@ \
-         entry] annotation@.@]"
-        snippet_pp
-        loc
-    | `Self_ast_aggregated_warning_unused (loc, s) ->
+    | `Self_ast_typed_warning_unused (loc, s) ->
       Format.fprintf
         f
         "@[<hv>%a:@.Warning: unused variable \"%s\".@.Hint: replace it by \"_%s\" to \
@@ -117,13 +114,14 @@ let pp
         loc
         s
         s
-    | `Self_ast_aggregated_warning_muchused (loc, _s) ->
+    | `Self_ast_typed_warning_muchused (loc, s) ->
       Format.fprintf
         f
-        "@[<hv>%a:@.Warning: variable cannot be used more than once.\n@]"
+        "@[<hv>%a:@.Warning: variable \"%s\" cannot be used more than once.\n@]"
         snippet_pp
         loc
-    | `Self_ast_aggregated_warning_unused_rec (loc, s) ->
+        s
+    | `Self_ast_typed_warning_unused_rec (loc, s) ->
       Format.fprintf
         f
         "@[<hv>%a:@.Warning: unused recursion .@.Hint: remove recursion from the \
@@ -132,31 +130,13 @@ let pp
         snippet_pp
         loc
         s
-    | `Self_ast_aggregated_metadata_invalid_type (loc, s) ->
+    | `Self_ast_imperative_warning_layout (loc, Label s) ->
       Format.fprintf
         f
-        "@[<hv>%a:@.Warning: If the following metadata is meant to be TZIP-16 \
-         compliant,@.then it should be a 'big_map' from 'string' to 'bytes'.@.Hint: The \
-         corresponding type should be :@.\
-         @[  %s@]@.\
-         You can disable this warning with the '--no-metadata-check' flag.@.\
-         @]"
+        "@[<hv>%a@ Warning: layout attribute only applying to %s, probably ignored.@.@]"
         snippet_pp
         loc
         s
-    | `Nanopasses_attribute_ignored loc ->
-      Format.fprintf
-        f
-        "@[<hv>%a@ Warning: unsupported attribute, ignored.@.@]"
-        snippet_pp
-        loc
-    | `Nanopasses_infinite_for_loop loc ->
-      Format.fprintf
-        f
-        "@[<hv>%a@.Warning: A boolean conditional expression is expected.@.Otherwise \
-         this leads to an infinte loop.@.@]"
-        snippet_pp
-        loc
     | `Self_ast_imperative_warning_deprecated_polymorphic_variable (loc, name) ->
       Format.fprintf
         f
@@ -167,6 +147,19 @@ let pp
         loc
         Type_var.pp
         name
+    | `Self_ast_imperative_warning_deprecated_constant (l, curr, alt, ty) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@ Warning: the constant %a is soon to be deprecated. Use instead %a : \
+         %a. @]"
+        snippet_pp
+        l
+        Ast_imperative.PP.expression
+        curr
+        Ast_imperative.PP.expression
+        alt
+        Ast_imperative.PP.type_expression
+        ty
     | `Jsligo_deprecated_failwith_no_return loc ->
       Format.fprintf
         f
@@ -179,7 +172,7 @@ let pp
     | `Jsligo_deprecated_toplevel_let loc ->
       Format.fprintf
         f
-        "@[<hv>%a@.Toplevel let declaration is silently changed to const declaration.@.@]"
+        "@[<hv>%a@.Toplevel let declaration are silently change to const declaration.@.@]"
         snippet_pp
         loc
     | `Jsligo_unreachable_code loc ->
@@ -196,7 +189,11 @@ let pp
         Ast_aggregated.PP.type_expression
         got
         Ast_aggregated.PP.type_expression
-        expected)
+        expected
+    | `Deprecated_reasonligo ->
+      Format.fprintf
+        f
+        "@[Reasonligo is depreacted, support will be dropped in a few versions.@.@]")
 
 
 let to_warning : all -> Simple_utils.Warning.t =
@@ -269,15 +266,7 @@ let to_warning : all -> Simple_utils.Warning.t =
     in
     let content = make_content ~message ~location () in
     make ~stage:"view compilation" ~content
-  | `Main_entry_ignored location ->
-    let message =
-      Format.sprintf
-        "Warning: This entry will be ignored, command line option override [@ entry] \
-         annotation@."
-    in
-    let content = make_content ~message ~location () in
-    make ~stage:"view compilation" ~content
-  | `Self_ast_aggregated_warning_unused (location, variable) ->
+  | `Self_ast_typed_warning_unused (location, variable) ->
     let message =
       Format.sprintf
         "@.Warning: unused variable \"%s\".@.Hint: replace it by \"_%s\" to prevent this \
@@ -287,13 +276,13 @@ let to_warning : all -> Simple_utils.Warning.t =
     in
     let content = make_content ~message ~location ~variable () in
     make ~stage:"parsing command line parameters" ~content
-  | `Self_ast_aggregated_warning_muchused (location, _s) ->
+  | `Self_ast_typed_warning_muchused (location, s) ->
     let message =
-      Format.sprintf "@.Warning: variable cannot be used more than once.\n@]"
+      Format.sprintf "@.Warning: variable \"%s\" cannot be used more than once.\n@]" s
     in
     let content = make_content ~message ~location () in
     make ~stage:"typer" ~content
-  | `Self_ast_aggregated_warning_unused_rec (location, s) ->
+  | `Self_ast_typed_warning_unused_rec (location, s) ->
     let message =
       Format.sprintf
         "Warning: unused recursion .@.Hint: remove recursion from the function \"%s\" to \
@@ -302,28 +291,13 @@ let to_warning : all -> Simple_utils.Warning.t =
     in
     let content = make_content ~message ~location () in
     make ~stage:"parsing command line parameters" ~content
-  | `Self_ast_aggregated_metadata_invalid_type (loc, s) ->
+  | `Self_ast_imperative_warning_layout (location, Label s) ->
     let message =
       Format.sprintf
-        "Warning: If the following metadata is meant to be TZIP-16 compliant,@.\
-         then it should be a 'big_map' from 'string' to 'bytes'.@.\
-         Hint: The corresponding type should be :@.\
-         @[  %s@]@.\
-         You can disable this warning with the '--no-metadata-check' flag.\n"
+        "Warning: layout attribute only applying to %s, probably ignored.@."
         s
     in
-    let content = make_content ~message ~location:loc () in
-    make ~stage:"parsing command line parameters" ~content
-  | `Nanopasses_attribute_ignored loc ->
-    let message = "Warning: ignored attributes" in
-    let content = make_content ~message ~location:loc () in
-    make ~stage:"typer" ~content
-  | `Nanopasses_infinite_for_loop loc ->
-    let message =
-      "Warning: A boolean conditional expression is expected.\n\
-       Otherwise this leads to an infinte loop."
-    in
-    let content = make_content ~message ~location:loc () in
+    let content = make_content ~message ~location () in
     make ~stage:"typer" ~content
   | `Self_ast_imperative_warning_deprecated_polymorphic_variable (location, variable) ->
     let variable = Format.asprintf "%a" Type_var.pp variable in
@@ -334,6 +308,19 @@ let to_warning : all -> Simple_utils.Warning.t =
         variable
     in
     let content = make_content ~message ~location ~variable () in
+    make ~stage:"abstractor" ~content
+  | `Self_ast_imperative_warning_deprecated_constant (location, curr, alt, ty) ->
+    let message =
+      Format.asprintf
+        "Warning: the constant %a is soon to be deprecated. Use instead %a : %a."
+        Ast_imperative.PP.expression
+        curr
+        Ast_imperative.PP.expression
+        alt
+        Ast_imperative.PP.type_expression
+        ty
+    in
+    let content = make_content ~message ~location () in
     make ~stage:"abstractor" ~content
   | `Jsligo_deprecated_failwith_no_return location ->
     let message =
@@ -346,7 +333,7 @@ let to_warning : all -> Simple_utils.Warning.t =
     make ~stage:"abstractor" ~content
   | `Jsligo_deprecated_toplevel_let location ->
     let message =
-      Format.sprintf "Toplevel let declaration is silently changed to const declaration."
+      Format.sprintf "Toplevel let declaration are silently change to const declaration.@"
     in
     let content = make_content ~message ~location () in
     make ~stage:"abstractor" ~content
@@ -367,6 +354,14 @@ let to_warning : all -> Simple_utils.Warning.t =
     in
     let content = make_content ~message ~location () in
     make ~stage:"aggregation" ~content
+  | `Deprecated_reasonligo ->
+    let message =
+      Format.sprintf
+        "Reasonligo is depreacted, support will be dropped in a few versions.@"
+    in
+    let location = Location.dummy in
+    let content = make_content ~message ~location () in
+    make ~stage:"cli parsing" ~content
 
 
 let to_json : all -> Yojson.Safe.t =

@@ -1,4 +1,4 @@
-(* Transforming comments into tokens so that a self-pass on them can
+(* Transformiing comments into tokens so that a self-pass on them can
    try to extract attributes *)
 
 (* Vendor dependencies *)

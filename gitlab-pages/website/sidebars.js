@@ -14,209 +14,81 @@
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const sidebars = {
   "docs": {
-    "Getting started": [
-      "tutorials/getting-started/getting-started",
-      "intro/installation"
-    ],
-    "Learn": [
-      {
-      "type": "link",
-      "label": "Learn with Academy",
-      "href": "https://academy.ligolang.org/",
-      },
-      {
-        "type": "link",
-        "label": "Learn with Marigold",
-        "href": "https://www.marigold.dev/learn",
-      },
-    ],
-    "Basics": [
+    "Intro": ["intro/introduction", "intro/installation", "intro/editor-support"],
+    "Language Basics": [
       "language-basics/types",
-      "language-basics/composite-types",
-      "language-basics/type-annotations",
+      "language-basics/constants-and-variables",
+      "language-basics/math-numbers-tez",
+      "language-basics/strings-bytes",
       "language-basics/functions",
       "language-basics/boolean-if-else",
-      "language-basics/constants-and-variables",
-      "language-basics/maps-records",
-      "language-basics/sets-lists-tuples",
-      /* TODO: + mutation */
-      "language-basics/exceptions",
-      "language-basics/math-numbers-tez",
       "language-basics/loops",
       "language-basics/unit-option-pattern-matching",
+      "language-basics/maps-records",
+      "language-basics/sets-lists-tuples",
+      "language-basics/exceptions",
+      "language-basics/modules",
       "language-basics/tezos-specific"
     ],
-    "Writing a Contract": [
-      "intro/introduction",
-      {
-        "type": "category",
-        "label": "First contract",
-        "items": [
-          "tutorials/taco-shop/tezos-taco-shop-smart-contract",
-          "tutorials/taco-shop/tezos-taco-shop-payout"
-        ],
-      },
-      "advanced/entrypoints-contracts",
-      //TODO "contract/views",
-      // "contract/events",
-      "tutorials/start-a-project-from-a-template",
-    ],
-    "Testing and Debugging": [
-      "advanced/testing",
-      "advanced/mutation-testing",
-      "advanced/michelson_testing",
-      //TODO: write doc "testing/debugging"
-    ],
-    "Combining Code": [
-      "language-basics/modules",
-      "advanced/global-constants",
-      "advanced/package-management"
-    ],
-    "Advanced Topics": [
-      "advanced/polymorphism",
-      "advanced/inline",
-      "tutorials/inter-contract-calls/inter-contract-calls",
-      "tutorials/optimisation/optimisation",
-      "tutorials/security/security",
-      //TODO: write doc "advanced/best-practices",
+    "Advanced": [
       "advanced/timestamps-addresses",
+      "advanced/entrypoints-contracts",
       "advanced/include",
       "advanced/first-contract",
       "advanced/michelson-and-ligo",
+      "advanced/polymorphism",
+      "advanced/testing",
+      "advanced/mutation-testing",
+      "advanced/michelson_testing",
+      "advanced/inline",
       "advanced/interop",
-      "advanced/embedded-michelson"
+      "advanced/embedded-michelson",
+      "advanced/package-management",
+      "advanced/global-constants"
     ],
-    "Misc": [
-      "intro/editor-support",
+    "Reference": [
       "api/cli-commands",
-      "api/cheat-sheet",
-      "contributors/origin",
-      "contributors/philosophy",
-      "contributors/getting-started",
-      "contributors/documentation-and-releases",
-      "contributors/big-picture/overview",
-      "contributors/big-picture/front-end",
-      "contributors/big-picture/middle-end",
-      "contributors/big-picture/back-end",
-      "contributors/big-picture/vendors",
-      "contributors/road-map/short-term",
-      "contributors/road-map/long-term",
-      "tutorials/registry/what-is-the-registry",
-      "tutorials/registry/how-to-make-an-audit",
-      "tutorials/tz-vs-eth/tz-vs-eth",
+      "api/cheat-sheet"
     ],
-  },
-  "API": {
-    "CLI": [
-       {
-        "type": "doc",
-        "id": "manpages/ligo"
-      },
-      {
-        "type": "category",
-        "label": "ligo compile",
-        "items": [
-          "manpages/compile constant",
-          "manpages/compile contract",
-          "manpages/compile expression",
-          "manpages/compile parameter",
-          "manpages/compile storage"
-        ]
-      },
-      {
-        "type": "category",
-        "label": "ligo run",
-        "items": [
-          "manpages/run dry-run",
-          "manpages/run evaluate-call",
-          "manpages/run evaluate-expr",
-          "manpages/run interpret",
-          "manpages/run test",
-          "manpages/run test-expr"
-        ]
-      },
-      {
-        "type": "category",
-        "label": "ligo print",
-        "items": [
-          "manpages/print ast-aggregated",
-          "manpages/print ast-core",
-          "manpages/print ast-typed",
-          "manpages/print ast-expanded",
-          "manpages/print ast-unified",
-          "manpages/print cst",
-          "manpages/print dependency-graph",
-          "manpages/print mini-c",
-          "manpages/print preprocessed",
-          "manpages/print pretty"
-        ]
-      },
-      {
-        "type": "category",
-        "label": "ligo transpile",
-        "items": [
-          "manpages/transpile contract",
-          "manpages/transpile-with-ast contract",
-          "manpages/transpile-with-ast expression"
-        ]
-      },
-      {
-        "type": "category",
-        "label": "ligo info",
-        "items": [
-          "manpages/info get-scope",
-          "manpages/info list-declarations",
-          "manpages/info measure-contract"
-        ]
-      },
-      {
-        "type": "category",
-        "label": "ligo analytics",
-        "items": [
-          "manpages/analytics accept",
-          "manpages/analytics deny"
-        ]
-      },
-      {
-        "type": "category",
-        "label": "ligo init",
-        "items": [
-          "manpages/init contract",
-          "manpages/init library"
-        ]
-      },
-      {
-        "type": "doc",
-        "label": "ligo changelog",
-        "id": "manpages/changelog"
-      },
-      {
-        "type": "doc",
-        "label": "ligo add-user",
-        "id": "manpages/add-user"
-      },
-      {
-        "type": "doc",
-        "label": "ligo install",
-        "id": "manpages/install"
-      },
-      {
-        "type": "doc",
-        "label": "ligo login",
-        "id": "manpages/login"
-      },
-      {
-        "type": "doc",
-        "label": "ligo publish",
-        "id": "manpages/publish"
-      },
-      {
-        "type": "doc",
-        "label": "ligo repl",
-        "id": "manpages/repl"
-      }
+    "Sub-Commands": [
+      "manpages/changelog",
+      "manpages/add-user",
+      "manpages/compile constant",
+      "manpages/compile contract",
+      "manpages/compile expression",
+      "manpages/compile parameter",
+      "manpages/compile storage",
+      "manpages/info get-scope",
+      "manpages/info list-declarations",
+      "manpages/info measure-contract",
+      "manpages/init contract",
+      "manpages/init library",
+      "manpages/install",
+      "manpages/ligo",
+      "manpages/login",
+      "manpages/mutate ast",
+      "manpages/mutate cst",
+      "manpages/print ast-aggregated",
+      "manpages/print ast-core",
+      "manpages/print ast-imperative",
+      "manpages/print ast-typed",
+      "manpages/print cst",
+      "manpages/print dependency-graph",
+      "manpages/print mini-c",
+      "manpages/print preprocessed",
+      "manpages/print pretty",
+      "manpages/publish",
+      "manpages/repl",
+      "manpages/run dry-run",
+      "manpages/run evaluate-call",
+      "manpages/run evaluate-expr",
+      "manpages/run interpret",
+      "manpages/run test",
+      "manpages/run test-expr",
+      "manpages/transpile contract",
+      "manpages/transpile expression"
     ],
-    "Language": [
+    "API":[
       "reference/toplevel",
       "reference/big-map-reference",
       "reference/bitwise-reference",
@@ -228,20 +100,55 @@ const sidebars = {
       "reference/string-reference",
       "reference/option-reference",
       "reference/current-reference",
-      "reference/test",
-      "reference/proxy-ticket-reference",
-      "contract/tickets"
+      "reference/test"
     ],
-    "Changelog": [
-      "intro/changelog",
+    "Protocol Upgrades": [
       "protocol/hangzhou",
       "protocol/ithaca",
       "protocol/jakarta",
       "protocol/kathmandu",
-      "protocol/lima",
-      "protocol/mumbai",
-      "protocol/nairobi"
+      "protocol/lima"
+    ]
+  },
+  "contributors-docs": {
+    "Introduction": [
+      "contributors/origin",
+      "contributors/philosophy",
+      "contributors/getting-started",
+      "contributors/documentation-and-releases"
     ],
+    "Big Picture": [
+      "contributors/big-picture/overview",
+      "contributors/big-picture/front-end",
+      "contributors/big-picture/middle-end",
+      "contributors/big-picture/back-end",
+      "contributors/big-picture/vendors"
+    ],
+    "Road Map": [
+      "contributors/road-map/short-term",
+      "contributors/road-map/long-term"
+    ]
+  },
+  "tutorials": {
+    "Get-started" : [
+      "tutorials/getting-started/getting-started"
+    ],
+    "First-contract": [
+      "tutorials/taco-shop/tezos-taco-shop-smart-contract",
+      "tutorials/taco-shop/tezos-taco-shop-payout"
+    ],
+    "Migrating from Ethereum": [
+      "tutorials/tz-vs-eth/tz-vs-eth"
+    ],
+    "Inter-contract invocations": [
+      "tutorials/inter-contract-calls/inter-contract-calls"
+    ],
+    "Security": [
+      "tutorials/security/security"
+    ],
+    "Optimisation": [
+      "tutorials/optimisation/optimisation"
+    ]
   },
   "faq": {
     "FAQ": [
@@ -250,8 +157,7 @@ const sidebars = {
       "faq/polymorphic-comparison",
       "faq/catch-error-view",
       "faq/cameligo-ocaml-syntax-diff",
-      "faq/tezos-now-advance-time",
-      "faq/transpile-pascaligo-to-jsligo"
+      "faq/tezos-now-advance-time"
     ]
   }
 };

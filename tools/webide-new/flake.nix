@@ -5,18 +5,8 @@
   inputs = {
     nix-npm-buildpackage.url = "github:serokell/nix-npm-buildpackage";
     tezos-packaging.url = "github:serokell/tezos-packaging";
-    haskell-nix = {
-      inputs.hackage.follows = "hackage";
-      inputs.stackage.follows = "stackage";
-    };
-    hackage = {
-      flake = false;
-    };
-    stackage = {
-      flake = false;
-    };
   };
-  outputs = { self, haskell-nix, nix-npm-buildpackage, nixpkgs, flake-utils, tezos-packaging, deploy-rs, ... }@inputs:
+  outputs = { self, haskell-nix, nix-npm-buildpackage, nixpkgs, flake-utils, tezos-packaging, deploy-rs }@inputs:
   {
     nixosModules.default = { config, pkgs, lib, ... }:
       let system = pkgs.system; in
@@ -76,6 +66,7 @@
                   --octez-client-path ${webide-cfg.tezos-client-package}/bin/octez-client \
                   --gist-token "$(cat ${webide-cfg.gist-token})"
               '';
+
           };
 
           services.nginx = {
@@ -101,20 +92,40 @@
 
         };
       };
+    deploy = let
+      webide-profile = (import nixpkgs { localSystem = "x86_64-linux"; }).linkFarm "webide-profile" [
+        { name = "backend"; path = self.packages.x86_64-linux.backend; }
+        { name = "frontend"; path = self.packages.x86_64-linux.frontend; }
+        { name = "tezos-client"; path = self.packages.x86_64-linux.tezos-client; }
+        { name = "ligo"; path = self.packages.x86_64-linux.ligo-bin; }
+      ];
+    in {
+      sshOpts = [ "-p 17788" ];
+      nodes.webide = {
+        # TODO: perhaps it should be moved to a dedicated server
+        hostname = "tejat-prior.gemini.serokell.team";
+        user = "deploy";
+        profiles = {
+          webide.path = deploy-rs.lib.x86_64-linux.activate.custom
+            webide-profile
+            "sudo /run/current-system/sw/bin/systemctl restart container@ligo-webide-thing.service";
+        };
+      };
+    };
   } // (flake-utils.lib.eachSystem [ "x86_64-linux" ] (system :
     let
-      haskellPkgs = haskell-nix.legacyPackages."${system}";
       pkgs = import nixpkgs {
         overlays = [ nix-npm-buildpackage.overlays.default haskell-nix.overlay ];
         localSystem = system;
       };
       ligo-binary = {
-        "x86_64-linux" = { url = "https://gitlab.com/ligolang/ligo/-/jobs/4437631759/artifacts/raw/ligo"; hash = "sha256-+s+282qS8tKPLsDtH4LBnHdy/+wyo/qBIX4TZu1xAfs="; };
+        # ligo 0.56.0
+        "x86_64-linux" = { url = "https://gitlab.com/ligolang/ligo/-/jobs/3370208693/artifacts/raw/ligo"; hash = "sha256-SAW2Vq1yJnMPnpcySgc9b+unmF675tR5JbTY7Z2jiVw="; };
       };
-      ligo-syntaxes = pkgs.callPackage ../vscode/syntaxes {};
+      ligo-syntaxes = pkgs.callPackage ../lsp/vscode-plugin/syntaxes {};
       tezos-client = inputs.tezos-packaging.packages.${system}.tezos-client;
-      frontend = (pkgs.callPackage ./ligo-webide-frontend/ligo-ide { inherit ligo-syntaxes; }) { git-proxy = "https://ligo-webide-cors-proxy.serokell.team"; };
-      backend = haskellPkgs.callPackage ./ligo-webide-backend { };
+      frontend = pkgs.callPackage ./ligo-webide-frontend/ligo-ide { inherit ligo-syntaxes; };
+      backend = pkgs.callPackage ./ligo-webide-backend { };
       swagger-file = backend.swagger-file // {
         meta.artifacts = [ "/swagger.json" ];
       };
@@ -148,6 +159,11 @@
           diff -q ${backend-generated-openapi} ${frontend.src}/src/components/api/generated
           touch $out
         '';
+      } // deploy-rs.lib.${system}.deployChecks self.deploy;
+      devShell = pkgs.mkShell {
+        buildInputs = [
+          deploy-rs.defaultPackage.${system}
+        ];
       };
     }
   ));

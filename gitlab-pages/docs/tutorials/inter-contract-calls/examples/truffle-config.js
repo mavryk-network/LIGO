@@ -5,6 +5,8 @@ const secret = 'edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq'
 
 // A syntax to use:
 syntax = 'mligo' // CameLIGO
+// syntax = 'ligo'   // PascaLIGO
+
 
 module.exports = {
   // see <http://truffleframework.com/docs/advanced/configuration>

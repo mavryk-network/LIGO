@@ -4,6 +4,17 @@ let%expect_test _ =
   run_ligo_good
     [ "run"
     ; "interpret"
+    ; "change_color_preference(acc, Green)"
+    ; "--init-file"
+    ; test "record.ligo"
+    ];
+  [%expect
+    {| record[id -> 1 , preferences -> record[color -> Green(unit) , other -> 1]] |}]
+
+let%expect_test _ =
+  run_ligo_good
+    [ "run"
+    ; "interpret"
     ; "change_color_preference acc Green"
     ; "--init-file"
     ; test "record.mligo"
@@ -12,7 +23,6 @@ let%expect_test _ =
     {|
     record[id -> 1 , preferences -> record[color -> Green(unit) , other -> 1]] |}]
 
-(*
 let%expect_test _ =
   run_ligo_good
     [ "run"; "interpret"; "lhs_expr_access1"; "--init-file"; test "record.ligo" ];
@@ -30,4 +40,3 @@ let%expect_test _ =
     [ "run"; "interpret"; "lhs_expr_fupdate"; "--init-file"; test "record.ligo" ];
   [%expect {|
     record[color -> Green(unit) , other -> 2] |}]
-*)

@@ -28,19 +28,19 @@ module Name = struct
   let type_int               = "typeint"
 end
 
-let syntax_highlighting =
+let syntax_highlighting = 
   let open Core in
   let type_core_patterns = [
-    Name_ref Name.uppercase_identifier;
+    Name.uppercase_identifier;
     (* Sum type *)
-    Name_ref Name.of_keyword;
+    Name.of_keyword;
 
-    Name_ref Name.type_product;
-    Name_ref Name.type_operator;
-    Name_ref Name.type_name;
-    Name_ref Name.type_parentheses;
-    Name_ref Name.type_int;
-    String_ref;
+    Name.type_product;
+    Name.type_operator;
+    Name.type_name;
+    Name.type_parentheses;
+    Name.type_int;
+    "string";
   ] in
   {
     syntax_name          = "ligo";
@@ -137,18 +137,18 @@ let syntax_highlighting =
     };
     syntax_patterns = [
       (* TODO: Name.lowercase_identifier; *)
-      Name_ref Name.type_binder;
-      Name_ref Name.uppercase_identifier;
-      Name_ref Name.attribute;
-      Name_ref Name.macro;
-      Name_ref Name.control_keywords;
-      Name_ref Name.module_declaration;
-      Name_ref Name.function_;
-      Name_ref Name.operators;
-      Name_ref Name.type_definition;
-      Name_ref Name.const_or_var;
-      Name_ref Name.numeric_literals;
-      Name_ref Name.type_annotation;
+      Name.type_binder;
+      Name.uppercase_identifier;
+      Name.attribute;
+      Name.macro;
+      Name.control_keywords;
+      Name.module_declaration;
+      Name.function_;
+      Name.operators;
+      Name.type_definition;
+      Name.const_or_var;
+      Name.numeric_literals;
+      Name.type_annotation;
     ];
     repository = [
       Helpers.attribute;
@@ -222,7 +222,7 @@ let syntax_highlighting =
       };
       {
         name = Name.const_or_var;
-        kind = Match {
+        kind = Match { 
           match_name = None;
           match_     = [(Regexp.const_or_var, Some Keyword)]
         }
@@ -247,7 +247,7 @@ let syntax_highlighting =
             (Regexp.type_binder_positive_lookahead_ligo, None);
           ];
           end_ = [(Regexp.chevron_end, None)];
-          patterns = [Name_ref Name.type_name];
+          patterns = [Name.type_name; Name.type_name];
         };
       };
       {
@@ -256,7 +256,7 @@ let syntax_highlighting =
           meta_name = None;
           begin_ = [(Regexp.type_definition_begin_ligo, Some Keyword)];
           end_ = [(Regexp.type_definition_end_ligo, None)];
-          patterns = Name_ref Name.is_keyword :: type_core_patterns;
+          patterns = Name.is_keyword :: type_core_patterns;
         }
       };
       {
@@ -289,11 +289,7 @@ let syntax_highlighting =
             (Regexp.brackets_begin, None);
           ];
           end_ = [(Regexp.brackets_end, None)];
-          patterns = [
-            Name_ref Name.lowercase_identifier;
-            Name_ref Name.type_annotation_field;
-            Name_ref Name.semicolon;
-          ];
+          patterns = [Name.lowercase_identifier; Name.type_annotation_field; Name.semicolon];
         }
       };
       {
@@ -327,4 +323,4 @@ let syntax_highlighting =
         }
       };
     ]
-  }
+  } 
