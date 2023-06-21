@@ -67,31 +67,31 @@ esy-test-windows:
     - cd ./platform-windows-x64; npm pack; bash -c "npm i -g ./ligolang-$(jq -r .version ../esy.json).tgz --force"; cd ..
     - bash -c "sh scripts/esy-multiplat-e2e-ci.sh"
 
-publish_npm_windows_x86:
-  stage: push
-  allow_failure: true
-  needs:
-    - job: esy-windows
-      artifacts: true
-    - job: esy-test-windows
-      artifacts: false
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      changes:
-        - src/**/*
-      when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-  script:
-    - |      
-      if [[ $CI_COMMIT_REF_NAME == "dev" ]]; then
-        SUFFIX=-dev
-      fi
-    - cd platform-windows-x64
-    - chmod 664 package.json
-    - VERSION=$(../.ci/scripts/versioning/determine_esy_version.sh package.json windows)
-    - status=0 ; ../.ci/scripts/versioning/update_esy_version.sh package.json $VERSION ; npm publish --access public --tag windows$SUFFIX || status=1
-    - echo "ligo_npm_build_status $status" | curl --data-binary @- -u '$PROM_PUSH_AUTH' https://pushgateway.prometheus.gcp.marigold.dev/metrics/job/ligo-build-short/branch/$CI_COMMIT_TAG/arch/windows-x86
+# publish_npm_windows_x86:
+#   stage: push
+#   allow_failure: true
+#   needs:
+#     - job: esy-windows
+#       artifacts: true
+#     - job: esy-test-windows
+#       artifacts: false
+#   rules:
+#     - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       changes:
+#         - src/**/*
+#       when: always
+#     - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       when: always
+#   script:
+#     - |      
+#       if [[ $CI_COMMIT_REF_NAME == "dev" ]]; then
+#         SUFFIX=-dev
+#       fi
+#     - cd platform-windows-x64
+#     - chmod 664 package.json
+#     - VERSION=$(../.ci/scripts/versioning/determine_esy_version.sh package.json windows)
+#     - status=0 ; ../.ci/scripts/versioning/update_esy_version.sh package.json $VERSION ; npm publish --access public --tag windows$SUFFIX || status=1
+#     - echo "ligo_npm_build_status $status" | curl --data-binary @- -u '$PROM_PUSH_AUTH' https://pushgateway.prometheus.gcp.marigold.dev/metrics/job/ligo-build-short/branch/$CI_COMMIT_TAG/arch/windows-x86
 
 esy-macos-intel:
   extends: .submodule-clone
@@ -154,30 +154,30 @@ esy-test-macos-intel:
     - npm i --force -g ./platform-darwin
     - sh scripts/esy-multiplat-e2e-ci.sh
 
-publish_npm_darwin_x86_64:
-  stage: push
-  needs:
-    - job: esy-macos-intel
-      artifacts: true
-    - job: esy-test-macos-intel
-      artifacts: false
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      changes:
-        - src/**/*
-      when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-  script:
-    - |      
-      if [[ $CI_COMMIT_REF_NAME == "dev" ]]; then
-        SUFFIX=-dev
-      fi
-    - cd platform-darwin
-    - chmod 664 package.json
-    - VERSION=$(../.ci/scripts/versioning/determine_esy_version.sh package.json macos-intel)
-    - status=0 ; ../.ci/scripts/versioning/update_esy_version.sh package.json $VERSION ; npm publish --access public --tag macos-intel$SUFFIX || status=1
-    - echo "ligo_npm_build_status $status" | curl --data-binary @- -u '$PROM_PUSH_AUTH' https://pushgateway.prometheus.gcp.marigold.dev/metrics/job/ligo-build-short/branch/$CI_COMMIT_TAG/arch/darwin
+# publish_npm_darwin_x86_64:
+#   stage: push
+#   needs:
+#     - job: esy-macos-intel
+#       artifacts: true
+#     - job: esy-test-macos-intel
+#       artifacts: false
+#   rules:
+#     - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       changes:
+#         - src/**/*
+#       when: always
+#     - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       when: always
+#   script:
+#     - |      
+#       if [[ $CI_COMMIT_REF_NAME == "dev" ]]; then
+#         SUFFIX=-dev
+#       fi
+#     - cd platform-darwin
+#     - chmod 664 package.json
+#     - VERSION=$(../.ci/scripts/versioning/determine_esy_version.sh package.json macos-intel)
+#     - status=0 ; ../.ci/scripts/versioning/update_esy_version.sh package.json $VERSION ; npm publish --access public --tag macos-intel$SUFFIX || status=1
+#     - echo "ligo_npm_build_status $status" | curl --data-binary @- -u '$PROM_PUSH_AUTH' https://pushgateway.prometheus.gcp.marigold.dev/metrics/job/ligo-build-short/branch/$CI_COMMIT_TAG/arch/darwin
 
 esy-macos-m1:
   extends: .submodule-clone
@@ -241,30 +241,30 @@ esy-test-macos-m1:
     - npm i --force -g ./platform-darwin-arm64
     - sh scripts/esy-multiplat-e2e-ci.sh
 
-publish_npm_darwin_arm64:
-  stage: push
-  needs:
-    - job: esy-macos-m1
-      artifacts: true
-    - job: esy-test-macos-m1
-      artifacts: false
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      changes:
-        - src/**/*
-      when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-  script:
-    - |      
-      if [[ $CI_COMMIT_REF_NAME == "dev" ]]; then
-        SUFFIX=-dev
-      fi
-    - cd platform-darwin-arm64
-    - chmod 664 package.json
-    - VERSION=$(../.ci/scripts/versioning/determine_esy_version.sh package.json macos-m1)
-    - status=0  ; ../.ci/scripts/versioning/update_esy_version.sh package.json $VERSION ; npm publish --access public --tag macos-m1$SUFFIX || status=1
-    - echo "ligo_npm_build_status $status" | curl --data-binary @- -u '$PROM_PUSH_AUTH' https://pushgateway.prometheus.gcp.marigold.dev/metrics/job/ligo-build-short/branch/$CI_COMMIT_TAG/arch/darwin-arm64
+# publish_npm_darwin_arm64:
+#   stage: push
+#   needs:
+#     - job: esy-macos-m1
+#       artifacts: true
+#     - job: esy-test-macos-m1
+#       artifacts: false
+#   rules:
+#     - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       changes:
+#         - src/**/*
+#       when: always
+#     - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       when: always
+#   script:
+#     - |      
+#       if [[ $CI_COMMIT_REF_NAME == "dev" ]]; then
+#         SUFFIX=-dev
+#       fi
+#     - cd platform-darwin-arm64
+#     - chmod 664 package.json
+#     - VERSION=$(../.ci/scripts/versioning/determine_esy_version.sh package.json macos-m1)
+#     - status=0  ; ../.ci/scripts/versioning/update_esy_version.sh package.json $VERSION ; npm publish --access public --tag macos-m1$SUFFIX || status=1
+#     - echo "ligo_npm_build_status $status" | curl --data-binary @- -u '$PROM_PUSH_AUTH' https://pushgateway.prometheus.gcp.marigold.dev/metrics/job/ligo-build-short/branch/$CI_COMMIT_TAG/arch/darwin-arm64
 
 test_ligojs:
   tags:
@@ -286,26 +286,26 @@ test_ligojs:
     - apt-get install -yq gconf-service libasound2 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgcc1 libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates fonts-liberation libnss3 lsb-release xdg-utils wget nodejs
     - cd jsoo; env PUPPETEER_PRODUCT=firefox npm i; env JSOO_DIST_DIR=$PWD/ligo-demo-ide node ./test/pptr.mjs
 
-publish_ligojs:
-  stage: push
-  needs:
-    - job: docker_build
-      artifacts: true
-    - job: test_ligojs
-      artifacts: false
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      changes:
-        - src/**/*
-      when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
-      when: always
-  script:
-    - |      
-      if [[ $CI_COMMIT_REF_NAME == "dev" ]]; then
-        SUFFIX=-dev
-      fi
-    - cd ./ligo-npm
-    - chmod 664 package.json
-    - VERSION=$(../.ci/scripts/versioning/determine_esy_version.sh package.json web)
-    - status=0 ; ../.ci/scripts/versioning/update_esy_version.sh package.json $VERSION ; npm publish --access public || status=1
+# publish_ligojs:
+#   stage: push
+#   needs:
+#     - job: docker_build
+#       artifacts: true
+#     - job: test_ligojs
+#       artifacts: false
+#   rules:
+#     - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       changes:
+#         - src/**/*
+#       when: always
+#     - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+#       when: always
+#   script:
+#     - |      
+#       if [[ $CI_COMMIT_REF_NAME == "dev" ]]; then
+#         SUFFIX=-dev
+#       fi
+#     - cd ./ligo-npm
+#     - chmod 664 package.json
+#     - VERSION=$(../.ci/scripts/versioning/determine_esy_version.sh package.json web)
+#     - status=0 ; ../.ci/scripts/versioning/update_esy_version.sh package.json $VERSION ; npm publish --access public || status=1
