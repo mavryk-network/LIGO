@@ -617,45 +617,38 @@ let should_uncurry_entry entry_ty =
   | None -> `Bad
 
 
+(* parameter_from_entrypoints [storage_t] [ep_nlst] return the main parameter type (sum_type holding entries parameter)
+  iif all entries in ep_nlst have the following properties:
+   - is of the form ` 'p -> 's -> operation list * 's `
+   - 's == [storage_t]
+*)
 let parameter_from_entrypoints
     :  t -> (Value_var.t * t) Simple_utils.List.Ne.t
-    -> ( t * t
-       , [> `Not_entry_point_form of t
-         | `Storage_does_not_match_ep of Value_var.t * t * Value_var.t * t
-         | `Storage_does_not_match_top_level of Value_var.t
-         ] )
+    -> ( t
+       , [> `Not_entry_point_form of t | `Storage_does_not_match of Value_var.t ] )
        result
   =
- fun top_level_storage_t ((entrypoint, entrypoint_type), rest) ->
+ fun storage_t ep_nlst ->
   let equal_t = equal in
   let open Result.Let_syntax in
-  let%bind parameter, storage =
-    match should_uncurry_entry entrypoint_type with
-    | `Yes (parameter, storage) | `No (parameter, storage) ->
-      Result.Ok (parameter, storage)
-    | `Bad -> Result.Error (`Not_entry_point_form entrypoint_type)
-  in
-  let%bind parameter_list =
-    List.fold_result
-      ~init:[ String.capitalize (Value_var.to_name_exn entrypoint), parameter ]
-      ~f:(fun parameters (ep, ep_type) ->
+  let parameter_list =
+    List.map
+      ~f:(fun (ep, ep_type) ->
         let%bind parameter_, storage_ =
           match should_uncurry_entry ep_type with
           | `Yes (parameter, storage) | `No (parameter, storage) ->
             Result.Ok (parameter, storage)
-          | `Bad -> Result.Error (`Not_entry_point_form entrypoint_type)
+          | `Bad -> Result.Error (`Not_entry_point_form ep_type)
         in
         let%bind () =
-          Result.of_option
-            ~error:(`Storage_does_not_match_ep (entrypoint, storage, ep, storage_))
-          @@ if equal_t storage_ storage then Some () else None
+          Result.of_option ~error:(`Storage_does_not_match ep)
+          @@ if equal_t storage_ storage_t then Some () else None
         in
-        let%bind () =
-          Result.of_option ~error:(`Storage_does_not_match_top_level entrypoint)
-          @@ if equal_t storage_ top_level_storage_t then Some () else None
-        in
-        return ((String.capitalize (Value_var.to_name_exn ep), parameter_) :: parameters))
-      rest
+        return (String.capitalize (Value_var.to_name_exn ep), parameter_))
+      (Simple_utils.List.Ne.to_list ep_nlst)
   in
-  return
-    (t_sum_ez ~loc:Location.generated ~layout:default_layout parameter_list (), storage)
+  let parameter_list, errs = List.partition_result parameter_list in
+  match List.hd errs with
+  | Some err -> Result.Error err
+  | None ->
+    return (t_sum_ez ~loc:Location.generated ~layout:default_layout parameter_list ())

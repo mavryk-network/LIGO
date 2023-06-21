@@ -58,26 +58,12 @@ let program_sig_ : Signature.t -> (Signature.item list, _, _) C.t =
         ~error:(corner_case "Undefined storage type at top-level")
         (List.find_map (List.rev sig_) ~f:is_storage)
     in
-    let%bind parameter_type, storage_type =
+    let%bind parameter_type =
       match Type.parameter_from_entrypoints storage_type entries with
       | Error (`Not_entry_point_form ep_type) ->
         C.raise
           (corner_case @@ Format.asprintf "Not an entrypoint form: %a" Type.pp ep_type)
-      | Error (`Storage_does_not_match_ep (ep_1, storage_1, ep_2, storage_2)) ->
-        C.raise
-          (corner_case
-          @@ Format.asprintf
-               "@[<hv>Storage types do not match for different entrypoints:@.- %a : \
-                %a@.- %a : %a@]"
-               Value_var.pp
-               ep_1
-               Type.pp
-               storage_1
-               Value_var.pp
-               ep_2
-               Type.pp
-               storage_2)
-      | Error (`Storage_does_not_match_top_level ep) ->
+      | Error (`Storage_does_not_match ep) ->
         C.raise
           (corner_case
           @@ Format.asprintf
@@ -86,7 +72,7 @@ let program_sig_ : Signature.t -> (Signature.item list, _, _) C.t =
                ep
                Type.pp
                storage_type)
-      | Ok (p, s) -> return (p, s)
+      | Ok p -> return p
     in
     let type_binder = default_parameter_var in
     let parameter_type_decl = Signature.S_type (type_binder, parameter_type) in
