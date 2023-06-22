@@ -37,13 +37,6 @@ let rec decode (type_ : Type.t) ~raise subst =
   match type_.content with
   | I.T_variable tvar -> return @@ O.T_variable tvar
   | I.T_exists tvar ->
-    if Type_var.is_name tvar "lsp_hole"
-    then (
-      Format.eprintf "elaboration.decode %a\n" Type_var.pp tvar;
-      Format.eprintf
-        "elaboration.decode.subst %a\n"
-        Sexp.pp_hum
-        (Substitution.sexp_of_t subst));
     (match Substitution.find_texists_eq subst tvar with
     | Some (_, type_) -> decode type_
     | None -> raise.error (cannot_decode_texists type_ type_.location))
@@ -112,16 +105,37 @@ let decode_attribute (attr : Context.Attr.t) : O.sig_item_attribute =
   { entry = attr.entry; view = attr.view }
 
 
+let decode_partial partial_type ~raise subst =
+  match partial_type with
+  | Ok type_ -> Some (decode ~raise type_ subst)
+  | Error tvar ->
+    (match Substitution.find_texists_eq subst tvar with
+    | Some (_, type_) -> Some (decode ~raise type_ subst)
+    | None -> None)
+
+
 let rec decode_signature (sig_ : Context.Signature.t) ~raise subst : O.signature =
   let decode_item (item : Context.Signature.item) : O.sig_item list =
     match item with
-    | S_value (var, type_, attr) ->
-      [ S_value (var, Some (decode ~raise type_ subst), decode_attribute attr) ]
+    | S_value (var, partial_type, attr) ->
+      Format.eprintf "decode : S_value : %a - %a \n"  Value_var.pp var (Context.Partial.pp Type.pp) partial_type;
+      [ S_value (var, decode_partial ~raise partial_type subst, decode_attribute attr) ]
     | S_type (var, type_) -> [ S_type (var, Some (decode ~raise type_ subst)) ]
     | S_module (var, sig_) -> [ S_module (var, decode_signature ~raise sig_ subst) ]
     | S_module_type _ -> []
   in
   List.concat_map ~f:decode_item sig_
+
+
+(* let decode_partial partial_type ~raise subst =
+  match partial_type with
+  | Ok type_ -> decode ~raise type_ subst
+  | Error tvar ->
+    (match Substitution.find_texists_eq subst tvar with
+    | Some (_, type_) -> decode ~raise type_ subst
+    | None ->
+      let loc = Type_var.get_location tvar in
+      raise.error (cannot_decode_texists (Type.t_exists ~loc tvar ()) loc)) *)
 
 
 let check_anomalies ~syntax ~loc eqs matchee_type ~raise _subst =

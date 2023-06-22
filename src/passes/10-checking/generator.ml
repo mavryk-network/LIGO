@@ -42,7 +42,7 @@ let program_sig_ : Signature.t -> (Signature.item list, _, _) C.t =
  fun sig_ ->
   let is_entry s =
     match s with
-    | Signature.S_value (var, ty, attr) when attr.entry -> Some (var, ty)
+    | Signature.S_value (var, Ok type_, attr) when attr.entry -> Some (var, type_)
     | _ -> None
   in
   let open C.Let_syntax in
@@ -77,17 +77,17 @@ let program_sig_ : Signature.t -> (Signature.item list, _, _) C.t =
     let contract_type = Type.build_entry_type parameter_type storage_type in
     let contract_decl =
       Signature.S_value
-        (default_built_entrypoint_var, contract_type, Context.Attr.default)
+        (default_built_entrypoint_var, Ok contract_type, Context.Attr.default)
     in
     let views_type = Type.t_views ~loc:Location.generated storage_type () in
     let views_decl =
-      Signature.S_value (default_views_var, views_type, Context.Attr.default)
+      Signature.S_value (default_views_var, Ok views_type, Context.Attr.default)
     in
     let mcontract_type =
       Type.t_pair ~loc:Location.generated contract_type views_type ()
     in
     let mcontract_decl =
-      Signature.S_value (default_contract_var, mcontract_type, Context.Attr.default)
+      Signature.S_value (default_contract_var, Ok mcontract_type, Context.Attr.default)
     in
     return [ parameter_type_decl; contract_decl; views_decl; mcontract_decl ]
 

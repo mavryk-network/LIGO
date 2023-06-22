@@ -14,6 +14,7 @@ type type_content =
   | T_record of type_expression Row.t
   | T_arrow of ty_expr Arrow.t
   | T_singleton of Literal_value.t
+  
   | T_abstraction of ty_expr Abstraction.t
   | T_for_all of ty_expr Abstraction.t
 

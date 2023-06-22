@@ -98,6 +98,7 @@ type 'a exit =
       (** Similar to [Lift_type] but for signatures. *)
 
 module Context : sig
+  module Partial = Context.Partial
   module Attr = Context.Attr
   module Signature = Context.Signature
 
@@ -255,6 +256,7 @@ end
 val fresh_type_var : unit -> (Type_var.t, 'err, 'wrn) t
 
 (** [exists kind] creates a new existential variable of kind [kind] *)
+val exists_tvar : Kind.t -> (Type_var.t * Type.t, 'err, 'wrn) t
 val exists : Kind.t -> (Type.t, 'err, 'wrn) t
 
 (** [for_all kind] creates a new universal variable of kind [kind] *)

@@ -366,18 +366,19 @@ module Typing_env = struct
            even the well-typed declarations are not added to the signature/context,
            See if things can be more granular to avoid this problem. *)
         collect_warns_and_errs ~raise Main_errors.checking_tracer (e, ws);
-        (match Location.unwrap decl with
+        tenv)
+
+
+  (* (match Location.unwrap decl with
         | D_module { module_; module_binder; _ } ->
           { tenv with
             type_env =
               (tenv.type_env
               @
               let sig_ = sig_of_module module_ ~original:tenv.type_env in
-              Format.eprintf "After typing: %a\n%!" Ast_typed.PP.signature sig_;
               [ Ast_typed.S_module (module_binder, sig_) ])
           }
-        | _ -> tenv))
-
+        | _ -> tenv)) *)
 
   let self_ast_typed_pass
       ~(raise : (Main_errors.all, Main_warnings.all) Trace.raise)
@@ -386,8 +387,7 @@ module Typing_env = struct
     =
     ignore options;
     match
-      Simple_utils.Trace.to_stdlib_result
-      @@ Self_ast_typed.all_program tenv.decls
+      Simple_utils.Trace.to_stdlib_result @@ Self_ast_typed.all_program tenv.decls
     with
     | Ok (_, ws) -> List.iter ws ~f:raise.warning
     | Error (e, ws) ->

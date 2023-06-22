@@ -52,12 +52,13 @@ and encode_row ({ fields; layout } : Ast_typed.row) : Type.row =
 
 and encode_layout (layout : Layout.t) : Type.layout = L_concrete layout
 
-and get_type_placeholder : loc:Location.t -> Context.t -> Type.t * Context.t =
- fun ~loc ctx ->
-  let tvar = Type_var.fresh ~name:"lsp_hole" ~loc () in
-  (* const test : ∀ a : * . a = Λ a ->  (failwith@{string}@{a})@("aaaaa") *)
-  let ctx = Context.add_texists_var ctx tvar Ligo_prim.Kind.Type in
-  Type.t_exists ~loc tvar (), ctx
+and encode_partial_type ~loc ctx type_ =
+  match type_ with
+  | None ->
+    let tvar = Type_var.fresh ~name:"lsp_hole" ~loc () in
+    let ctx = Context.add_texists_var ctx tvar Ligo_prim.Kind.Type in
+    ctx, Error tvar
+  | Some type_ -> ctx, Ok (encode type_)
 
 
 and encode_sig_item (ctx : Context.t) (item : Ast_typed.sig_item)
@@ -65,16 +66,13 @@ and encode_sig_item (ctx : Context.t) (item : Ast_typed.sig_item)
   =
   match item with
   | Ast_typed.S_value (v, ty, attr) ->
-    let ty, ctx =
-      match ty with
-      | None -> get_type_placeholder ~loc:(Value_var.get_location v) ctx
-      | Some ty -> encode ty, ctx
-    in
-    Context.Signature.S_value (v, ty, encode_sig_item_attribute attr), ctx
+    let loc = Value_var.get_location v in
+    let ctx, type_ = encode_partial_type ~loc ctx ty in
+    Context.Signature.S_value (v, type_, encode_sig_item_attribute attr), ctx
   | S_type (v, ty) ->
     let ty, ctx =
       match ty with
-      | None -> get_type_placeholder ~loc:(Type_var.get_location v) ctx
+      | None -> assert false
       | Some ty -> encode ty, ctx
     in
     Context.Signature.S_type (v, ty), ctx
@@ -106,18 +104,15 @@ let ctx_init_of_sig ?env () =
     let f ctx decl =
       match decl with
       | Ast_typed.S_value (v, ty, _attr) ->
-        let ty, ctx =
-          match ty with
-          | None -> get_type_placeholder ~loc:(Value_var.get_location v) ctx
-          | Some ty -> encode ty, ctx
-        in
-        Context.add_imm ctx v ty
+        let ctx, type_ = encode_partial_type ~loc:(Value_var.get_location v) ctx ty in
+        Context.add_imm ctx v type_
       | S_type (v, ty) ->
         let ty, ctx =
           match ty with
-          | None -> get_type_placeholder ~loc:(Type_var.get_location v) ctx
+          | None -> assert false
           | Some ty -> encode ty, ctx
         in
+        (* let ctx, type_ = encode_partial_type ~loc ctx ty in *)
         Context.add_type ctx v ty
       | S_module (v, sig_) ->
         let sigs, ctx = encode_signature ctx sig_ in
@@ -259,6 +254,7 @@ type 'a exit =
 module Context_ = Context
 
 module Context = struct
+  module Partial = Context.Partial
   module Attr = Context.Attr
   module Signature = Context.Signature
 
@@ -364,11 +360,31 @@ module Context = struct
     f ctx
 
 
-  let get_value var : _ t = lift_ctx (fun ctx -> Context.get_value ctx var)
+  let get_value var : _ t =
+    let open Let_syntax in
+    let%map result = lift_ctx (fun ctx -> Context.get_value ctx var) in
+    let%map.Result mut_flag, partial_type, attr = result in
+    mut_flag, Context.Partial.to_type partial_type, attr
+
+
   let get_value_exn var ~error : _ t = get_value var >>= raise_result ~error
-  let get_imm var : _ t = lift_ctx (fun ctx -> Context.get_imm ctx var)
+
+  let get_imm var : _ t =
+    let open Let_syntax in
+    let%map result = lift_ctx (fun ctx -> Context.get_imm ctx var) in
+    let%map.Option partial_type, attr = result in
+    Context.Partial.to_type partial_type, attr
+
+
   let get_imm_exn var ~error : _ t = get_imm var >>= raise_opt ~error
-  let get_mut var : _ t = lift_ctx (fun ctx -> Context.get_mut ctx var)
+
+  let get_mut var : _ t =
+    let open Let_syntax in
+    let%map result = lift_ctx (fun ctx -> Context.get_mut ctx var) in
+    let%map.Result partial_type = result in
+    Context.Partial.to_type partial_type
+
+
   let get_mut_exn var ~error : _ t = get_mut var >>= raise_result ~error
   let get_type_var tvar : _ t = lift_ctx (fun ctx -> Context.get_type_var ctx tvar)
   let get_type_var_exn tvar ~error = get_type_var tvar >>= raise_opt ~error
@@ -601,7 +617,6 @@ type unify_error =
   ]
 
 let rec unify (type1 : Type.t) (type2 : Type.t) =
-  Format.eprintf "computation.unify %a %a\n" Type.pp type1 Type.pp type2;
   let open Let_syntax in
   let unify_ type1 type2 =
     let%bind type1 = Context.tapply type1 in
@@ -613,20 +628,11 @@ let rec unify (type1 : Type.t) (type2 : Type.t) =
     raise (cannot_unify no_color type1 type2)
   in
   match type1.content, type2.content with
-  (* | _, T_variable tv when Type_var.is_name tv "^hole" -> return ()
-  | T_variable tv, _ when Type_var.is_name tv "^hole" -> return () *)
   | T_singleton lit1, T_singleton lit2 when Literal_value.equal lit1 lit2 -> return ()
   | T_variable tvar1, T_variable tvar2 when Type_var.equal tvar1 tvar2 -> return ()
   | T_exists tvar1, T_exists tvar2 when Type_var.equal tvar1 tvar2 -> return ()
   | _, T_exists tvar2 -> unify_texists tvar2 type1
-  | T_exists tvar1, _ ->
-    Format.eprintf
-      "computation.unify t_exists = %a type = %a\n"
-      Type.pp
-      type1
-      Type.pp
-      type2;
-    unify_texists tvar1 type2
+  | T_exists tvar1, _ -> unify_texists tvar1 type2
   | ( T_construct { language = lang1; constructor = constr1; parameters = params1 }
     , T_construct { language = lang2; constructor = constr2; parameters = params2 } )
     when String.(lang1 = lang2) && Literal_types.equal constr1 constr2 ->
@@ -744,6 +750,13 @@ let rec subtype ~(received : Type.t) ~(expected : Type.t)
     return E.return
 
 
+let exists_tvar kind = 
+  let open Let_syntax in
+  let%bind tvar, texists = fresh_texists () in
+  let%bind () = Context.push [ C_texists_var (tvar, kind) ] in
+  return (tvar, texists)
+
+
 let exists kind =
   let open Let_syntax in
   let%bind tvar, texists = fresh_texists () in
@@ -768,7 +781,7 @@ let lexists fields =
 let def bindings ~on_exit ~in_ =
   Context.add
     (List.map bindings ~f:(fun (var, mut_flag, type_, attr) ->
-         Context_.C_value (var, mut_flag, type_, attr)))
+         Context_.C_value (var, mut_flag, Ok type_, attr)))
     ~in_
     ~on_exit
 
