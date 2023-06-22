@@ -367,8 +367,8 @@ testLambdas = testGroup "lambdas"
       }
   in
   [ testCase "complex case" do
-      let (rootVar, referredVars) = runBuilder do
-            buildLambdaInfo Caml "the var" (varTy "f") $
+      let (resVars, referredVars) = runBuilder do
+            buildLambdaInfo Caml $
               LambdaMeta
               [ lambdaNamedEvent "add11"
               , lambdaAppliedNum 5
@@ -380,23 +380,7 @@ testLambdas = testGroup "lambdas"
               , lambdaNamedEvent "add"
               ]
 
-      rootVar @?=
-        defaultVariable
-          { nameVariable = "the var"
-          , valueVariable = "<lambda>"
-          , typeVariable = "f"
-          , variablesReferenceVariable = 4
-          }
-      M.lookup 5 referredVars @?= Nothing
-      M.lookup 4 referredVars @?= Just
-        [ defaultVariable
-            { nameVariable = "<fun>"
-            , valueVariable = "add11"
-            , typeVariable = "type of add11"
-            , variablesReferenceVariable = 3
-            }
-        ]
-      M.lookup 3 referredVars @?= Just
+      resVars @?=
         [ defaultVariable
             { nameVariable = "<fun>"
             , valueVariable = "addTwo"
@@ -410,6 +394,7 @@ testLambdas = testGroup "lambdas"
             , evaluateNameVariable = Just "5"
             }
         ]
+      M.lookup 3 referredVars @?= Nothing
       M.lookup 2 referredVars @?= Just
         [ defaultVariable
             { nameVariable = "<fun>"
@@ -445,23 +430,15 @@ testLambdas = testGroup "lambdas"
         ]
 
   , testCase "applications before the first naming do not wreak havoc" do
-      let (rootVar, referredVars) = runBuilder do
-            buildLambdaInfo Caml "the var" (varTy "f") $
+      let (resVars, _) = runBuilder do
+            buildLambdaInfo Caml $
               LambdaMeta
               [ lambdaAppliedNum 1
               , lambdaNamedEvent "add"
               , lambdaAppliedNum (-1)
               ]
 
-      rootVar @?=
-        defaultVariable
-          { nameVariable = "the var"
-          , valueVariable = "<lambda>"
-          , typeVariable = "f"
-          , variablesReferenceVariable = 1
-          }
-      M.lookup 2 referredVars @?= Nothing
-      M.lookup 1 referredVars @?= Just
+      resVars @?=
         [ defaultVariable
             { nameVariable = "<fun>"
             , valueVariable = "add"
@@ -477,16 +454,8 @@ testLambdas = testGroup "lambdas"
         ]
 
   , testCase "empty meta works too" do
-      let (rootVar, referredVars) = runBuilder do
-            buildLambdaInfo Caml "the var" (varTy "f") def
-
-      rootVar @?=
-        defaultVariable
-          { nameVariable = "the var"
-          , valueVariable = "<lambda>"
-          , typeVariable = "f"
-          }
-
-      referredVars @?= mempty
+      let (resVars, _) = runBuilder do
+            buildLambdaInfo Caml def
+      resVars @?= mempty
 
   ]

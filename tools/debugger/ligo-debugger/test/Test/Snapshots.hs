@@ -2063,14 +2063,9 @@ test_Lambdas = testGroup "Lambdas meta and display as variable" $
                 (LigoTypeResolved $ intType' ~> intType' ~> intType' ~> intType' ~> intType')
             ]
 
-          let (rootVar, refVarsMap) = Vars.runBuilder $
-                Vars.buildLambdaInfo Caml "applyThrice" LigoTypeUnresolved applyThriceMeta
-          rootVar @?= DAP.defaultVariable
-            { DAP.nameVariable = "applyThrice"
-            , DAP.valueVariable = "<lambda>"
-            , DAP.variablesReferenceVariable = 6
-            }
-          M.lookup 6 refVarsMap @?= Just
+          let (resVars, refVarsMap) = Vars.runBuilder $
+                Vars.buildLambdaInfo Caml applyThriceMeta
+          resVars @?=
             [ DAP.defaultVariable
               { DAP.nameVariable = "func"
               , DAP.valueVariable = "applyTwiceDuplicated"
