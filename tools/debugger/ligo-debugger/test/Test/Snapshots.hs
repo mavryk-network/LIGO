@@ -1912,7 +1912,7 @@ test_Snapshots = testGroup "Snapshots collection"
         liftIO $ step "Decompile"
         actual <-
           liftIO (convertMichelsonValuesToLigo dummyLoggingFunction convertInfos)
-            <&> mapMaybe (\case{LigoValue _ v -> Just v ; _ -> Nothing})
+            <&> mapMaybe (\case{LigoValue _ _ v -> Just v ; _ -> Nothing})
 
         expected @?= actual
 
@@ -1966,7 +1966,7 @@ test_Snapshots = testGroup "Snapshots collection"
         liftIO $ step "Decompile"
         actual <-
           liftIO (convertMichelsonValuesToLigo dummyLoggingFunction [storageConvertInfo])
-            <&> mapMaybe (\case{LigoValue _ v -> Just v ; _ -> Nothing})
+            <&> mapMaybe (\case{LigoValue _ _ v -> Just v ; _ -> Nothing})
 
         expected @?= actual
 
@@ -2000,7 +2000,7 @@ test_Snapshots = testGroup "Snapshots collection"
               liftIO $ step "Decompile evaluated value"
               actual <-
                 liftIO (convertMichelsonValuesToLigo dummyLoggingFunction [PreLigoConvertInfo value typ])
-                  <&> mapMaybe (\case{LigoValue _ v -> Just v ; _ -> Nothing})
+                  <&> mapMaybe (\case{LigoValue _ _ v -> Just v ; _ -> Nothing})
 
               expected @?= actual
           snap -> unexpectedSnapshot snap

@@ -44,7 +44,9 @@ import Language.LIGO.Debugger.CLI.Types
 -------------
 
 data LigoOrMichValue
-  = LigoValue LigoType LigoValue
+  = LigoValue (Maybe SomeValue) LigoType LigoValue
+    -- ^ Additionally to LIGO information, we carry the original Michelson value
+    -- (before any replacements) since it can contain valuable meta-information.
   | MichValue LigoType SomeValue
   | ToBeComputed
     -- ^ Since we compute @LIGO@ values in async manner
@@ -222,7 +224,7 @@ tryDecompilePrimitive (SomeValue val) = case val of
 
 getLigoType :: LigoOrMichValue -> LigoType
 getLigoType = \case
-  LigoValue typ _ -> typ
+  LigoValue _ typ _ -> typ
   MichValue typ _ -> typ
   ToBeComputed -> LigoType Nothing
 
@@ -285,7 +287,7 @@ instance FromJSON LigoValueMichelson where
 
 instance Buildable LigoOrMichValue where
   build = \case
-    LigoValue ligoType ligoValue -> buildLigoValue ligoType ligoValue
+    LigoValue _ ligoType ligoValue -> buildLigoValue ligoType ligoValue
     MichValue _ mich -> build mich
     ToBeComputed -> "computing..."
 
@@ -293,7 +295,7 @@ instance Buildable (DebugPrint (Lang, LigoOrMichValue)) where
   build (DebugPrint mode (lang, val)) =
     case val of
       MichValue _ (SomeValue michValue) -> build (DebugPrint mode michValue)
-      LigoValue ligoType ligoValue -> buildLigoValue' lang mode ligoType ligoValue
+      LigoValue _ ligoType ligoValue -> buildLigoValue' lang mode ligoType ligoValue
       ToBeComputed -> build ToBeComputed
 
 buildLigoValue' :: Lang -> DebugPrintMode -> LigoType -> LigoValue -> Builder

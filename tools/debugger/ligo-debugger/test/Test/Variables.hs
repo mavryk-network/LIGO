@@ -36,7 +36,7 @@ mkDummyMichValue :: (SingI t) => Value t -> Maybe (Name 'Concise) -> (Text, Ligo
 mkDummyMichValue v = mkDummyValue (MichValue (LigoType Nothing) $ SomeValue v)
 
 mkDummyLigoValue :: LigoValue -> Maybe (Name 'Concise) -> (Text, LigoOrMichValue)
-mkDummyLigoValue v = mkDummyValue (LigoValue (LigoType Nothing) v)
+mkDummyLigoValue v = mkDummyValue (LigoValue Nothing (LigoType Nothing) v)
 
 -- | Create a dummy constant type.
 varTy :: Text -> LigoType

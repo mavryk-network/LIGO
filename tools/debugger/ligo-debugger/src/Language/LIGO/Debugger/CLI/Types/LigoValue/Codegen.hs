@@ -6,7 +6,7 @@ import Data.Singletons (Sing, withSingI)
 import Fmt (Builder, pretty)
 import Text.Interpolation.Nyan
 
-import Morley.Michelson.Text (mkMTextCut, mt)
+import Morley.Michelson.Text (MText, mkMTextCut, mt)
 import Morley.Michelson.Typed (SingI (sing), SingT (..))
 import Morley.Michelson.Typed qualified as T
 
@@ -139,6 +139,13 @@ replaceOps sng val = case (val, sng) of
   (T.VBls12381G2 bts, _) -> T.VBls12381G2 bts
   (T.VChest ch, _) -> T.VChest ch
   (T.VChestKey chKey, _) -> T.VChestKey chKey
+
+-- | Constant with which we replace lambdas on rendering.
+replacedFunConst :: Text
+replacedFunConstMich :: MText
+(replacedFunConst, replacedFunConstMich) =
+  let t = [mt|<fun>|]
+  in (toText t, t)
 
 -- | Replace subtypes in the @LIGO@ one.
 replaceLigoType :: LIGO Info -> LIGO Info

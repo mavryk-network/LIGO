@@ -171,7 +171,7 @@ instance HasSpecificMessages LIGO where
           where
             buildOpsAndNewStorage :: (MonadThrow m) => LigoOrMichValue -> m (Builder, Builder)
             buildOpsAndNewStorage = \case
-              LigoValue ligoType ligoValue -> case toTupleMaybe ligoValue of
+              LigoValue _ ligoType ligoValue -> case toTupleMaybe ligoValue of
                 Just [LVList ops, st] -> do
                   let (fstType, sndType) = maybe (LigoType Nothing, LigoType Nothing) (bimap LigoType LigoType) do
                         LTCRecord LigoTypeTable{..} <- _lteTypeContent <$> unLigoType ligoType
@@ -199,7 +199,7 @@ instance HasSpecificMessages LIGO where
 
             buildOldStorage :: (MonadThrow m) => LigoOrMichValue -> m Builder
             buildOldStorage = \case
-              LigoValue ligoType ligoValue -> pure $ buildLigoValue ligoType ligoValue
+              LigoValue _ ligoType ligoValue -> pure $ buildLigoValue ligoType ligoValue
               MichValue _ (SomeValue (st :: T.Value r)) ->
                 case T.valueTypeSanity st of
                   T.Dict ->
@@ -523,7 +523,7 @@ decompileValue convertInfo@(PreLigoConvertInfo val typ) manager = do
     DV.putComputed
       manager
       convertInfo
-      (LigoValue typ dec)
+      (LigoValue (Just val) typ dec)
 
   mLigoVal <- DV.computeSTM manager convertInfo
   pure $ fromMaybe ToBeComputed mLigoVal
@@ -563,7 +563,7 @@ convertMichelsonValuesToLigo logger inps = do
 
   pure $
     zipWith
-      do \(t, michValue) dec -> maybe (MichValue t michValue) (LigoValue t) dec
+      do \(t, michValue) dec -> maybe (MichValue t michValue) (LigoValue (Just michValue) t) dec
       typesAndValues
       decompiledValues
 
