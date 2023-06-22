@@ -349,11 +349,10 @@ module Typing_env = struct
       Simple_utils.Trace.to_stdlib_result
       @@ Checking.type_declaration ~options ~env:tenv.type_env decl
     in
-    (* Format.eprintf "Before typing: %a\n%!" Ast_typed.PP.signature tenv.type_env; *)
     Result.(
       match typed_prg with
       | Ok (decl, ws) ->
-        let decl = List.nth_exn decl 0 in
+        let decl = List.hd_exn decl in
         let module AST = Ast_typed in
         let bindings =
           Of_Ast_typed.extract_binding_types tenv.bindings decl.wrap_content
@@ -363,6 +362,9 @@ module Typing_env = struct
         let () = List.iter ws ~f:raise.warning in
         { type_env; bindings; decls }
       | Error (e, ws) ->
+        (* Note: If the some declaration in the module fails to type-check,
+           even the well-typed declarations are not added to the signature/context,
+           See if things can be more granular to avoid this problem. *)
         collect_warns_and_errs ~raise Main_errors.checking_tracer (e, ws);
         (match Location.unwrap decl with
         | D_module { module_; module_binder; _ } ->
@@ -371,7 +373,7 @@ module Typing_env = struct
               (tenv.type_env
               @
               let sig_ = sig_of_module module_ ~original:tenv.type_env in
-              (* Format.eprintf "After typing: %a\n%!" Ast_typed.PP.signature sig_; *)
+              Format.eprintf "After typing: %a\n%!" Ast_typed.PP.signature sig_;
               [ Ast_typed.S_module (module_binder, sig_) ])
           }
         | _ -> tenv))

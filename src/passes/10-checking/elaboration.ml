@@ -37,6 +37,13 @@ let rec decode (type_ : Type.t) ~raise subst =
   match type_.content with
   | I.T_variable tvar -> return @@ O.T_variable tvar
   | I.T_exists tvar ->
+    if Type_var.is_name tvar "lsp_hole"
+    then (
+      Format.eprintf "elaboration.decode %a\n" Type_var.pp tvar;
+      Format.eprintf
+        "elaboration.decode.subst %a\n"
+        Sexp.pp_hum
+        (Substitution.sexp_of_t subst));
     (match Substitution.find_texists_eq subst tvar with
     | Some (_, type_) -> decode type_
     | None -> raise.error (cannot_decode_texists type_ type_.location))

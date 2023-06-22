@@ -52,6 +52,14 @@ and encode_row ({ fields; layout } : Ast_typed.row) : Type.row =
 
 and encode_layout (layout : Layout.t) : Type.layout = L_concrete layout
 
+and get_type_placeholder : loc:Location.t -> Context.t -> Type.t * Context.t =
+ fun ~loc ctx ->
+  let tvar = Type_var.fresh ~name:"lsp_hole" ~loc () in
+  (* const test : ∀ a : * . a = Λ a ->  (failwith@{string}@{a})@("aaaaa") *)
+  let ctx = Context.add_texists_var ctx tvar Ligo_prim.Kind.Type in
+  Type.t_exists ~loc tvar (), ctx
+
+
 and encode_sig_item (ctx : Context.t) (item : Ast_typed.sig_item)
     : Context.Signature.item * Context.t
   =
@@ -59,22 +67,14 @@ and encode_sig_item (ctx : Context.t) (item : Ast_typed.sig_item)
   | Ast_typed.S_value (v, ty, attr) ->
     let ty, ctx =
       match ty with
-      | None ->
-        let loc = Location.generated in
-        let tvar = Type_var.fresh ~loc () in
-        let ctx = Context.add_texists_var ctx tvar Ligo_prim.Kind.Type in
-        Type.t_exists ~loc tvar (), ctx
+      | None -> get_type_placeholder ~loc:(Value_var.get_location v) ctx
       | Some ty -> encode ty, ctx
     in
     Context.Signature.S_value (v, ty, encode_sig_item_attribute attr), ctx
   | S_type (v, ty) ->
     let ty, ctx =
       match ty with
-      | None ->
-        let loc = Location.generated in
-        let tvar = Type_var.fresh ~loc () in
-        let ctx = Context.add_texists_var ctx tvar Ligo_prim.Kind.Type in
-        Type.t_exists ~loc tvar (), ctx
+      | None -> get_type_placeholder ~loc:(Type_var.get_location v) ctx
       | Some ty -> encode ty, ctx
     in
     Context.Signature.S_type (v, ty), ctx
@@ -90,7 +90,8 @@ and encode_signature (ctx : Context.t) (sig_ : Ast_typed.signature)
   | [] -> [], ctx
   | item :: items ->
     let item, ctx = encode_sig_item ctx item in
-    encode_signature ctx items
+    let items, ctx = encode_signature ctx items in
+    item :: items, ctx
 
 
 and encode_sig_item_attribute (attr : Ast_typed.sig_item_attribute) : Context.Attr.t =
@@ -107,28 +108,23 @@ let ctx_init_of_sig ?env () =
       | Ast_typed.S_value (v, ty, _attr) ->
         let ty, ctx =
           match ty with
-          | None ->
-            let loc = Location.generated in
-            let tvar = Type_var.fresh ~loc () in
-            let ctx = Context.add_texists_var ctx tvar Ligo_prim.Kind.Type in
-            Type.t_exists ~loc tvar (), ctx
+          | None -> get_type_placeholder ~loc:(Value_var.get_location v) ctx
           | Some ty -> encode ty, ctx
         in
         Context.add_imm ctx v ty
       | S_type (v, ty) ->
         let ty, ctx =
           match ty with
-          | None ->
-            let loc = Location.generated in
-            let tvar = Type_var.fresh ~loc () in
-            let ctx = Context.add_texists_var ctx tvar Ligo_prim.Kind.Type in
-            Type.t_exists ~loc tvar (), ctx
+          | None -> get_type_placeholder ~loc:(Type_var.get_location v) ctx
           | Some ty -> encode ty, ctx
         in
         Context.add_type ctx v ty
       | S_module (v, sig_) ->
         let sigs, ctx = encode_signature ctx sig_ in
-        Context.add_module ctx v sigs
+        let ctx = Context.add_module ctx v sigs in
+        if Module_var.is_name v "M"
+        then Format.eprintf "Sigs : %a\n%!" Context.Signature.pp sigs;
+        ctx
     in
     List.fold env ~init:Context.empty ~f
 
@@ -605,6 +601,7 @@ type unify_error =
   ]
 
 let rec unify (type1 : Type.t) (type2 : Type.t) =
+  Format.eprintf "computation.unify %a %a\n" Type.pp type1 Type.pp type2;
   let open Let_syntax in
   let unify_ type1 type2 =
     let%bind type1 = Context.tapply type1 in
@@ -616,13 +613,20 @@ let rec unify (type1 : Type.t) (type2 : Type.t) =
     raise (cannot_unify no_color type1 type2)
   in
   match type1.content, type2.content with
-  | _, T_variable tv when Type_var.is_name tv "^hole" -> return ()
-  | T_variable tv, _ when Type_var.is_name tv "^hole" -> return ()
+  (* | _, T_variable tv when Type_var.is_name tv "^hole" -> return ()
+  | T_variable tv, _ when Type_var.is_name tv "^hole" -> return () *)
   | T_singleton lit1, T_singleton lit2 when Literal_value.equal lit1 lit2 -> return ()
   | T_variable tvar1, T_variable tvar2 when Type_var.equal tvar1 tvar2 -> return ()
   | T_exists tvar1, T_exists tvar2 when Type_var.equal tvar1 tvar2 -> return ()
   | _, T_exists tvar2 -> unify_texists tvar2 type1
-  | T_exists tvar1, _ -> unify_texists tvar1 type2
+  | T_exists tvar1, _ ->
+    Format.eprintf
+      "computation.unify t_exists = %a type = %a\n"
+      Type.pp
+      type1
+      Type.pp
+      type2;
+    unify_texists tvar1 type2
   | ( T_construct { language = lang1; constructor = constr1; parameters = params1 }
     , T_construct { language = lang2; constructor = constr2; parameters = params2 } )
     when String.(lang1 = lang2) && Literal_types.equal constr1 constr2 ->

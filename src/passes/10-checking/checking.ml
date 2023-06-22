@@ -698,6 +698,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
     let%bind sig_ =
       Context.get_module_of_path_exn module_path' ~error:(unbound_module module_path)
     in
+    Format.eprintf "E_module_accessor: %a\n" Signature.pp sig_;
     let%bind elt_type, _ =
       raise_opt ~error:(unbound_variable element) @@ Signature.get_value sig_ element
     in

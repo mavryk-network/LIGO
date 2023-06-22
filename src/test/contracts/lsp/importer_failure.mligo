@@ -3,16 +3,21 @@
 
 // type alias = Failure.failure
 
-module M = struct 
-  let x = 1
-
+module M = struct
   // type failure = list list
-  let failure : string = 0
+  // let failure = 0 + ""
+
+  let x = 1 + "" // x : forall a . a
 end
 
-let main (_, _ : int * int) : operation list * int =
-  [], M.failure
+// let test (type a) : a = failwith "aaaaa"
 
+// let main (_, _ : int * int) : operation list * int =
+//   [], (M.failure)
+
+
+let x : string = M.x
+let y : int = M.x
 
 //let main2 (_, _ : int * int) : operation list * int =
 //  [], Failure2.failure
