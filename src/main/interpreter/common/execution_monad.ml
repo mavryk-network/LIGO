@@ -190,6 +190,9 @@ module Command = struct
     | Constant_to_Michelson :
         Location.t * Ligo_interpreter.Types.calltrace * string
         -> LT.mcode tezos_command
+    | Constant_eval :
+        Location.t * Ligo_interpreter.Types.calltrace * string * Ast_aggregated.type_expression
+        -> LT.value tezos_command
     | Register_file_constants :
         Location.t * Ligo_interpreter.Types.calltrace * string
         -> LT.value tezos_command
@@ -794,6 +797,49 @@ module Command = struct
     | Constant_to_Michelson (loc, calltrace, code) ->
       let code = Tezos_state.parse_constant ~raise ~loc ~calltrace code in
       code, ctxt
+    | Constant_eval (loc, calltrace, code, type_) ->
+      let ty : (unit, string) Scoping.Micheline.node =
+        let data_t = Michelson_backend.compile_type ~raise type_ in
+        Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun x -> x) data_t
+      in
+      let constant : (unit, string) Scoping.Micheline.node =
+        Prim ((), "constant", [String ((), code)], [])
+      in
+      let code : (unit, string) Scoping.Micheline.node =
+        Prim ((), "PUSH", [ty; constant], [])
+      in
+      let code : (unit, string) Scoping.Micheline.node =
+        Seq ((), [code])
+      in
+      (match
+         Michelson_backend.run_michelson_func_
+           ~raise
+           ~options
+           ~loc
+           ctxt
+           code
+           type_
+           []
+       with
+      | Ok v -> v, ctxt
+      | Error data ->
+        let data_t = Michelson_backend.compile_type ~raise type_ in
+        let data_opt =
+          to_option
+          @@ Michelson_to_value.decompile_to_untyped_value
+               ~bigmaps:[]
+               (clean_locations data_t)
+               (clean_locations data)
+        in
+        let data_opt =
+          match data_opt with
+          | Some data ->
+            Some (Michelson_to_value.decompile_value ~raise ~bigmaps:[] data type_)
+          | None -> None
+        in
+        (match data_opt with
+        | Some data -> raise.error @@ Errors.meta_lang_eval loc calltrace data
+        | None -> raise.error @@ Errors.target_lang_failwith loc calltrace data))
     | Register_file_constants (loc, calltrace, fn) ->
       let hashes, ctxt =
         Tezos_state.register_file_constants

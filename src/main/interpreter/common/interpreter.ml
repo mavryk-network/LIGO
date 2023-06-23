@@ -1495,6 +1495,10 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_TEST_CONS_VIEWS, [ V_Ct (C_string n); V_Func_val f; V_Views vs ] ->
     return @@ v_views @@ ((n, f) :: vs)
   | C_TEST_CONS_VIEWS, _ -> fail @@ error_type ()
+  | C_GLOBAL_CONSTANT, [ V_Ct (C_string s) ] ->
+    let>> v = Constant_eval (loc, calltrace, s, expr_ty) in
+    return @@ v
+  | C_GLOBAL_CONSTANT, _ -> fail @@ error_type ()
   | C_POLYMORPHIC_ADD, _ ->
     fail @@ Errors.generic_error loc "POLYMORPHIC_ADD is solved in checking."
   | C_POLYMORPHIC_SUB, _ ->
@@ -1516,8 +1520,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       | C_MAP_GET_FORCE
       | C_BIG_MAP
       | C_BIG_MAP_LITERAL
-      | C_CREATE_CONTRACT
-      | C_GLOBAL_CONSTANT )
+      | C_CREATE_CONTRACT )
     , _ ) -> fail @@ Errors.generic_error loc "Unbound primitive."
 
 
@@ -2161,7 +2164,24 @@ let eval_expression ~raise ~steps ~options ?(self_pass = true)
     trace ~raise Main_errors.self_ast_aggregated_tracer
     @@ Self_ast_aggregated.all_expression ~options:options.middle_end expr
   in
-  let value, st = try_eval ~raise ~steps ~options expr Env.empty_env initial_state None in
+  let loc = Location.generated in
+  let calltrace = [] in
+  let state = match options.backend.file_constants with
+    | None -> initial_state
+    | Some file_constants ->
+      snd @@ Monad.eval ~raise ~options
+      (let open Monad in
+       let>> _ = Register_file_constants (loc, calltrace, file_constants) in
+       return ()) initial_state None in
+  let add_constant s state =
+    snd @@ Monad.eval ~raise ~options
+      (let open Monad in
+       let>> p = Constant_to_Michelson (loc, calltrace, s) in
+       let>> _ = Register_constant (loc, calltrace, p) in
+       return ()) state None
+  in
+  let state = List.fold_right ~f:add_constant ~init:state options.backend.constants in
+  let value, st = try_eval ~raise ~steps ~options expr Env.empty_env state None in
   st.print_values, value
 
 
