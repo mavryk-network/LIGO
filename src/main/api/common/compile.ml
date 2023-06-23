@@ -437,22 +437,26 @@ let storage
           michelson
           []
       in
-      let aggregated_param =
-        Ligo_compile.Of_typed.compile_expression_in_context
-          ~raise
-          ~options:options.middle_end
-          app_typed_prg
-          typed_store
-      in
-      let expanded_param =
-        Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_param
-      in
-      let mini_c_param =
-        Ligo_compile.Of_expanded.compile_expression ~raise expanded_param
-      in
-      let compiled_param =
-        Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c_param
-      in
+      let _b, v = Interpreter.eval_expression ~raise ~steps:Int.max_value ~options ~self_pass:false app_typed_prg typed_store in
+      let type_ = Aggregation.compile_type typed_store.type_expression in
+      let compiled_param = Interpreter.compile_value ~raise ~options ~loc:Location.generated v type_ in
+      let compiled_param = compiled_param.micheline_repr in
+      (* let aggregated_param = *)
+      (*   Ligo_compile.Of_typed.compile_expression_in_context *)
+      (*     ~raise *)
+      (*     ~options:options.middle_end *)
+      (*     app_typed_prg *)
+      (*     typed_store *)
+      (* in *)
+      (* let expanded_param = *)
+      (*   Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_param *)
+      (* in *)
+      (* let mini_c_param = *)
+      (*   Ligo_compile.Of_expanded.compile_expression ~raise expanded_param *)
+      (* in *)
+      (* let compiled_param = *)
+      (*   Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c_param *)
+      (* in *)
       let module_ = Self_ast_typed.Helpers.get_module module_path app_typed_prg in
       let () =
         Ligo_compile.Of_typed.assert_equal_contract_type
@@ -468,10 +472,11 @@ let storage
           ~constants
           { now; amount; balance; sender; source; parameter_ty = None }
       in
-      ( no_comment
-          (Run.evaluate_expression
-             ~raise
-             ~options
-             compiled_param.expr
-             compiled_param.expr_ty)
+      ignore options;
+      ( no_comment compiled_param.code
+          (* (Run.evaluate_expression *)
+          (*    ~raise *)
+          (*    ~options *)
+          (*    compiled_param.code *)
+          (*    compiled_param.code_ty) *)
       , [] ) )

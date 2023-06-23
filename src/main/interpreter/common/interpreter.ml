@@ -1,5 +1,4 @@
 open Simple_utils.Trace
-open Simple_utils
 open Ligo_interpreter.Types
 open Ligo_interpreter.Combinators
 open Ligo_prim
@@ -159,7 +158,7 @@ and pattern_env_extend ~no_colour ~attributes env pattern ty value =
 
 
 let get_file_from_location loc =
-  let open Option in
+  let open Simple_utils.Option in
   let* reg = Location.get_file loc in
   let file = reg#file in
   if String.(file = "") then None else Some file
@@ -234,7 +233,7 @@ let compare_constants ~no_colour ~raise o1 o2 loc calltrace =
       let pp_value = Ligo_interpreter.PP.pp_value ~no_colour in
       Format.asprintf
         "Comparison not supported: %a"
-        (PP_helpers.pair pp_value pp_value)
+        (Simple_utils.PP_helpers.pair pp_value pp_value)
         (operand, operand')
     in
     raise.error @@ Errors.meta_lang_eval loc calltrace @@ v_string msg
@@ -340,7 +339,7 @@ let rec apply_comparison ~no_colour ~raise
     let msg =
       Format.asprintf
         "Comparison not supported: %a"
-        (PP_helpers.pair pp_value pp_value)
+        (Simple_utils.PP_helpers.pair pp_value pp_value)
         (operand, operand')
     in
     raise.error @@ Errors.meta_lang_eval loc calltrace @@ v_string msg
@@ -377,7 +376,7 @@ let rec apply_comparison ~no_colour ~raise
     let msg =
       Format.asprintf
         "Different value types, cannot be compared: %a"
-        (PP_helpers.pair pp_value pp_value)
+        (Simple_utils.PP_helpers.pair pp_value pp_value)
         (operand, operand')
     in
     raise.error @@ Errors.meta_lang_eval loc calltrace @@ v_string msg
@@ -446,7 +445,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
          "Type error: evaluating constant %a with types:@.%a@."
          Ligo_prim.Constant.pp_constant'
          c
-         (PP_helpers.list_sep_d AST.PP.type_expression)
+         (Simple_utils.PP_helpers.list_sep_d AST.PP.type_expression)
          types)
   in
   let div_by_zero_str = v_string "Dividing by zero" in
@@ -1240,7 +1239,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_TEST_LAST_ORIGINATIONS, _ -> fail @@ error_type ()
   | C_TEST_LAST_EVENTS, [ V_Ct (C_string tag) ] ->
     let event_payload_type_opt =
-      let open Option in
+      let open Simple_utils.Option in
       let* x = Ast_aggregated.get_t_list expr_ty in
       let* _addr, a = Ast_aggregated.get_t_pair x in
       return a
@@ -1528,7 +1527,7 @@ and eval_literal : Ligo_prim.Literal_value.t -> value Monad.t = function
   | Literal_int i -> Monad.return @@ v_int i
   | Literal_nat n -> Monad.return @@ v_nat n
   | Literal_timestamp i -> Monad.return @@ v_timestamp i
-  | Literal_string s -> Monad.return @@ v_string (Ligo_string.extract s)
+  | Literal_string s -> Monad.return @@ v_string (Simple_utils.Ligo_string.extract s)
   | Literal_bytes s -> Monad.return @@ v_bytes s
   | Literal_mutez s -> Monad.return @@ v_mutez s
   | Literal_key_hash s ->
@@ -1581,7 +1580,7 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
   in
   let loc = term.location in
   let no_colour = options.test_framework.no_colour in
-  let snippet_pp = Snippet.pp ~no_colour in
+  let snippet_pp = Simple_utils.Snippet.pp ~no_colour in
   match term.expression_content with
   | E_application { lamb = f; args } ->
     let* f' = eval_ligo f calltrace env in
@@ -2142,14 +2141,14 @@ and try_eval ~raise ~steps ~options expr env state r =
   Monad.eval ~raise ~options (eval_ligo ~raise ~steps ~options expr [] env) state r
 
 
-let eval_expression ~raise ~steps ~options
+let eval_expression ~raise ~steps ~options ?(self_pass = true)
     : Ast_typed.program -> Ast_typed.expression -> bool * value
   =
  fun prg expr ->
   (* Compile new context *)
   let initial_state = Execution_monad.make_state ~raise ~options in
-  let prg =
-    trace ~raise Main_errors.self_ast_typed_tracer @@ Self_ast_typed.all_program prg
+  let prg = if self_pass then
+    trace ~raise Main_errors.self_ast_typed_tracer @@ Self_ast_typed.all_program prg else prg
   in
   let expr =
     Ligo_compile.Of_typed.compile_expression_in_context
@@ -2209,5 +2208,10 @@ let eval_test ~raise ~steps ~options : Ast_typed.program -> bool * toplevel_env 
     b, List.fold_right ~f ~init:[] @@ lst
   | _ -> failwith "Not a tuple?"
 
+let compile_value ~raise ~options ~(loc:Simple_utils.Location.t)
+  :  Monad.LT.value
+  -> type_expression
+  -> Monad.LT.typed_michelson_code
+  = Michelson_backend.compile_value ~raise ~options ~loc
 
 let () = Printexc.record_backtrace true
