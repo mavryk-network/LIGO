@@ -39,7 +39,7 @@ module Pattern_decl = Nano_prim.Pattern_decl
 module Simple_let_in = Nano_prim.Simple_let_in
 module Recursive = Nano_prim.Recursive
 module Abstraction = Ligo_prim.Abstraction
-module Row = Ligo_prim.Row.With_optional_layout
+module Row = Ligo_prim.Row.With_layout
 
 module Empty_label = struct
   type t = unit [@@deriving eq, compare, yojson, iter, hash, sexp]

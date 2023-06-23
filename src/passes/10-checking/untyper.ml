@@ -16,10 +16,10 @@ let rec untype_type_expression (t : O.type_expression) : I.type_expression =
   match t.type_content with
   | O.T_sum { fields; layout } ->
     let fields = Map.map fields ~f:self in
-    return @@ I.T_sum { fields; layout = Some layout }
+    return @@ I.T_sum { fields; layout = layout }
   | O.T_record { fields; layout } ->
     let fields = Map.map fields ~f:self in
-    return @@ I.T_record { fields; layout = Some layout }
+    return @@ I.T_record { fields; layout = layout }
   | O.T_variable name -> return @@ I.T_variable name
   | O.T_arrow arr ->
     let arr = Arrow.map self arr in

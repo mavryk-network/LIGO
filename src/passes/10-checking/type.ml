@@ -275,11 +275,11 @@ let t_triplet t1 t2 t3 ~loc  () = t_tuple [ t1; t2; t3 ] ~loc  ()
 let t_sum_ez fields ~loc  ?layout () = t_sum ~loc  (row_ez fields ?layout ()) ()
 
 let t_bool ~loc  () =
-  t_sum_ez ~loc  [ "True", t_unit ~loc (); "False", t_unit ~loc () ] ()
+  t_sum_ez ~loc  [ "False", t_unit ~loc (); "True", t_unit ~loc () ] ()
 
 
 let t_option t ~loc  () =
-  t_sum_ez ~loc  [ "Some", t; "None", t_unit ~loc () ] ()
+  t_sum_ez ~loc  [ "None", t_unit ~loc (); "Some", t ] ()
 
 
 let t_arrow param result ~loc  () : t =
@@ -296,8 +296,8 @@ let t_test_baker_policy ~loc  () =
   t_sum_ez
     ~loc
     
-    [ "By_round", t_int ~loc ()
-    ; "By_account", t_address ~loc ()
+    [ "By_account", t_address ~loc ()
+    ; "By_round", t_int ~loc ()
     ; "Excluding", t_list ~loc (t_address ~loc ()) ()
     ]
     ()
@@ -307,22 +307,22 @@ let t_test_exec_error ~loc  () =
   t_sum_ez
     ~loc
     
-    [ "Rejected", t_pair ~loc (t_michelson_code ~loc ()) (t_address ~loc ()) ()
-    ; ( "Balance_too_low"
+    [ ( "Balance_too_low"
       , t_record_ez
           ~loc
-          [ "contract_too_low", t_address ~loc ()
-          ; "contract_balance", t_mutez ~loc ()
+          [ "contract_balance", t_mutez ~loc ()
+          ; "contract_too_low", t_address ~loc ()
           ; "spend_request", t_mutez ~loc ()
           ]
           () )
     ; "Other", t_string ~loc ()
+    ; "Rejected", t_pair ~loc (t_michelson_code ~loc ()) (t_address ~loc ()) ()
     ]
     ()
 
 
 let t_test_exec_result ~loc  () =
-  t_sum_ez ~loc  [ "Success", t_nat ~loc (); "Fail", t_test_exec_error ~loc () ] ()
+  t_sum_ez ~loc  [ "Fail", t_test_exec_error ~loc (); "Success", t_nat ~loc () ] ()
 
 
 let get_t_construct t constr =

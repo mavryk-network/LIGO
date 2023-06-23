@@ -193,11 +193,7 @@ and evaluate_row ~default_layout ({ fields; layout } : I.row) : (Type.row, 'err,
   =
   let open C in
   let open Let_syntax in
-  let%bind layout =
-    match layout with
-    | Some layout -> return @@ evaluate_layout layout
-    | None -> default_layout (Map.key_set fields)
-  in
+  let%bind layout = return @@ evaluate_layout layout in
   let%bind fields = fields |> Map.map ~f:(evaluate_type ~default_layout) |> all_lmap in
   return { Type.Row.fields; layout }
 

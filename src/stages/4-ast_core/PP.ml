@@ -18,7 +18,9 @@ let rec type_expression ppf (te : type_expression) : unit =
 
 
 and bool ppf = fprintf ppf "bool"
-and layout = Simple_utils.PP_helpers.if_present Layout.pp
+
+(* ... don't print layouts because they are ugly and usually useless *)
+and layout = fun _ _ -> ()
 
 and option ppf (te : type_expression) =
   let t = Combinators.get_t_option te in

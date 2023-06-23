@@ -276,10 +276,9 @@ let%expect_test _ =
     (main#9:4-8 -> main)
     Range: File "../../test/contracts/warning_unused.mligo", line 9, characters 4-8
     Body Range: File "../../test/contracts/warning_unused.mligo", line 10, character 2 to line 13, character 39
-    Content: |resolved: ( int *
-                          record[x -> int , y -> int({ name: x }, { name: y })] ) ->
-    ( list (operation) *
-      record[x -> int , y -> int({ name: x }, { name: y })] )|
+    Content: |resolved: ( int * record[x -> int , y -> int] ) -> ( list (operation) *
+                                                                   record[x -> int ,
+                                                                        y -> int] )|
     references: []
     Mod Path =
     Def Type = Global

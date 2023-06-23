@@ -2,7 +2,7 @@ open Ligo_prim
 module Location = Simple_utils.Location
 module List = Simple_utils.List
 module Ligo_string = Simple_utils.Ligo_string
-module Row = Row.With_optional_layout
+module Row = Row.With_layout
 
 
 type type_content =

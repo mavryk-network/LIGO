@@ -1,5 +1,5 @@
 module Location = Simple_utils.Location
-module Row = Ligo_prim.Row.With_optional_layout
+module Row = Ligo_prim.Row.With_layout
 module Value_attr = Ligo_prim.Value_attr
 module Type_or_module_attr = Ligo_prim.Type_or_module_attr
 open Simple_utils

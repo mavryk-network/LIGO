@@ -86,13 +86,6 @@ struct
   end
 end
 
-module With_optional_layout = Make (struct
-  type t = Layout.t option [@@deriving equal, compare, yojson, sexp]
-
-  let fields t = Option.map t ~f:Layout.fields
-  let default fields = Some (Layout.default fields)
-end)
-
 module With_layout = struct
   module L = struct
     include Layout
