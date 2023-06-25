@@ -412,11 +412,11 @@ top_declaration:
 | "<directive>"    { D_Directive       $1 } (* Only at top-level *)
 
 declaration:
-  type_decl    { D_Type     $1 }
-| const_decl   { D_Const    $1 }
-| fun_decl     { D_Fun      $1 }
-| module_decl  { D_Module   $1 }
-| attr_decl    { D_Attr     $1 }
+  type_decl    { D_Type   $1 }
+| const_decl   { D_Const  $1 }
+| fun_decl     { D_Fun    $1 }
+| module_decl  { D_Module $1 }
+| attr_decl    { D_Attr   $1 }
 
 (* Attributed declaration *)
 

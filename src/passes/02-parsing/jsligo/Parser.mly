@@ -23,8 +23,6 @@ let mk_wild_pattern variable =
   let value    = {variable; attributes=[]}
   in {region; value}
 
-let private_attribute = Wrap.ghost ("private", None)
-
 (* END HEADER *)
 %}
 
@@ -81,6 +79,14 @@ let private_attribute = Wrap.ghost ("private", None)
 
 (* RULES *)
 
+(* Zero-Width SPace virtual token in context *)
+
+gt:
+  ">" ioption(ZWSP) { $1 }
+
+ge:
+  ">" ZWSP "=" { Wrap.wrap ">=" (cover $1#region $3#region) }
+
 (* Compound constructs *)
 
 par(X):
@@ -95,18 +101,10 @@ chevrons(X):
     and value  = {lchevron=$1; inside=$2; rchevron=$3}
     in {region; value} }
 
-gt:
-  ">" ioption(ZWSP) { $1 }
-
-ge:
-  ">" ZWSP "=" { Wrap.wrap ">=" (cover $1#region $3#region) }
-
 brackets(X):
   "[" X "]" {
-    let lbracket = $1 in
-    let rbracket = $3 in
-    let region = cover lbracket#region rbracket#region
-    and value  = {lbracket; inside=$2; rbracket}
+    let region = cover $1#region $3#region
+    and value  = {lbracket=$1; inside=$2; rbracket=$3}
     in {region; value} }
 
 braces(X):
@@ -158,48 +156,20 @@ sep_or_term(item,sep):
 
 (* Helpers *)
 
-%inline type_param  : "<ident>" | "<uident>" { $1 }
-%inline field_name  : "<ident>"  { $1 }
-%inline module_name : "<uident>" { $1 }
-%inline ctor        : "<uident>" { $1 }
-%inline type_name   : "<ident>" | "<uident>" { $1 }
-%inline module_path : "<string>" { $1 }
+%inline
+variable    : "<ident>"  { $1 }
 
-(* NOTES *)
+type_param  : "<ident>" | "<uident>" { $1 }
+field_name  : "<ident>"  { $1 }
+module_name : "<uident>" { $1 }
+ctor        : "<uident>" { $1 }
+type_name   : "<ident>" | "<uident>" { $1 }
+module_path : "<string>" { $1 }
 
-(* The reason for rules [if_cond], [while_cond] and [switch_cond],
-   instead of the obvious [par(expr)], is meant to identify the
-   syntactic construct for error messages. The only [par(expr)] as a
-   left-hand side in an LR item corresponds to
-   [member_expr: ... | par(expr)]
-   so the context is clear: a general expression between parentheses. *)
+%inline
+lang_name   : "<ident>" | "<uident>" { $1 }
+(*parameter   : "<ident>"*)
 
-(* Entry point *)
-
-interactive_expr: expr EOF { $1 }
-
-(* Entry point *)
-
-contract:
-  toplevel_stmts EOF { {statements=$1; eof=$2} : CST.t }
-
-(* TOP-LEVEL STATEMENTS *)
-
-toplevel_stmts:
-  stmt_or_namespace_or_interface ";" toplevel_stmts {
-    Utils.nseq_cons (TopLevel ($1, Some $2)) $3
-  }
-| stmt_or_namespace_or_interface ";"? {
-    TopLevel ($1, $2), []
-  }
-| "<directive>" {
-    Directive $1, []
-  }
-| "<directive>" toplevel_stmts {
-    Utils.nseq_cons (Directive $1) $2 }
-
-stmt_or_namespace_or_interface:
-  statement | namespace_stmt | interface_stmt { $1 }
 
 (* Attributes *)
 
@@ -207,6 +177,49 @@ stmt_or_namespace_or_interface:
 attributes:
   ioption(nseq("[@attr]") { Utils.nseq_to_list $1 }) {
     Option.value ~default:[] $1 }
+
+(* ENTRY POINTS *)
+
+interactive_expr: expr EOF { $1 }
+
+contract:
+  nseq(top_decl) EOF { {decl=$1; eof=$2} }
+
+(* TOP-LEVEL DECLARATIONS *)
+
+top_decl:
+  declaration ";"?   { TL_Decl      ($1, $2) }
+| "[@attr]" top_decl { TL_Attr      ($1, $2) }
+| "export" top_decl  { TL_Export    ($1, $2) }
+| "<directive>"      { TL_Directive $1       }
+
+(* INNER DECLARATIONS (AS STATEMENTS) *)
+
+declaration:
+  value_decl     { D_Value     $1 }
+| import_decl    { D_Import    $1 }
+| interface_decl { D_Interface $1 }
+| module_decl    { D_Module    $1 }
+| type_decl      { D_Type      $1 }
+
+(* Value declaration (constant and mutable) *)
+
+ value_decl:
+   let_decl | const_decl { $1 }
+
+let_decl:
+  "let" binding_list {
+    let stop   = nsepseq_to_region (fun e -> e.region) $2 in
+    let region = cover $1#region stop
+    and value  = {kind = `Let $1; bindings=$2}
+    in {region; value} }
+
+const_decl:
+  "const" binding_list {
+    let stop   = nsepseq_to_region (fun e -> e.region) $2 in
+    let region = cover $1#region stop
+    and value  = {kind = `Const $1; bindings=$2}
+    in {region; value} }
 
 (* Namespace Statement *)
 
@@ -383,8 +396,8 @@ closed_non_decl_expr_stmt:
   non_decl_expr_stmt(closed_non_decl_expr_stmt) { $1 }
 
 assign_lhs:
-  projection  { EProj $1 }
-| "<ident>"   { EVar  $1 }
+  projection { EProj $1 }
+| variable   { EVar  $1 }
 
 assign_stmt:
   assign_lhs "="  expr {
@@ -409,25 +422,25 @@ ternary_expr(expr):
     in ETernary {value; region}}
 
 increment_decrement_operators:
-  "++" "<ident>" {
+  "++" variable {
     let region = cover $1#region $2#region
     and update_type = Increment $1 in
     let value = {update_type; variable=$2}
     in EPrefix {region; value}
   }
-| "--" "<ident>" {
+| "--" variable {
     let region = cover $1#region $2#region
     and update_type = Decrement $1 in
     let value = {update_type; variable=$2}
     in EPrefix {region; value}
   }
-| "<ident>" "++" {
+| variable "++" {
     let region = cover $1#region $2#region
     and update_type = Increment $2 in
     let value = {update_type; variable=$1}
     in EPostfix {region; value}
   }
-| "<ident>" "--" {
+| variable "--" {
     let region = cover $1#region $2#region
     and update_type = Decrement $2 in
     let value  = {update_type; variable=$1}
@@ -535,11 +548,13 @@ fun_arg:
 (* General expressions *)
 
 member_expr:
-  "_" | "<ident>" { EVar     $1            }
-| "<int>"         { EArith   (Int $1)      }
-| "<bytes>"       { EBytes   $1            }
-| "<string>"      { EString  (String $1)   }
-| "<verbatim>"    { EString  (Verbatim $1) }
+  "_" | variable  { E_Var      $1 }
+| "<int>"         { E_Int      $1 }
+| "<nat>"         { E_Nat      $1 }
+| "<bytes>"       { E_Bytes    $1 }
+| "<string>"      { E_String   $1 }
+| "<verbatim>"    { E_Verbatim $1 }
+| "<mutez>"       { E_Mutez    $1 }
 | ctor_expr       { EConstr  $1            }
 | projection      { EProj    $1            }
 | code_inj        { ECodeInj $1            }
@@ -564,8 +579,7 @@ module_var_e:
 (* Code injection *)
 
 code_inj:
-  "<ident>" "<verbatim>"
-| "<uident>" "<verbatim>" {
+  lang_name "<verbatim>" {
     let region = cover $1#region $2#region
     and value  = {language=$1; code = EString (Verbatim $2)}
     in {region; value} }
@@ -666,6 +680,13 @@ return_stmt:
 
 (* Conditional Statements *)
 
+(* The reason for rules [if_cond], [while_cond] and [switch_cond],
+   instead of the obvious [par(expr)], is meant to identify the
+   syntactic construct for error messages. The only [par(expr)] as a
+   left-hand side in an LR item corresponds to
+   [member_expr: ... | par(expr)]
+   so the context is clear: a general expression between parentheses. *)
+
 if_stmt:
   attributes "if" par(if_cond) statement {
     let region = cover $2#region (statement_to_region $4) in
@@ -717,20 +738,6 @@ type_annotation:
 declaration:
   let_decl | const_decl | type_decl { $1 }
 
-let_decl:
-  "let" binding_list {
-    let stop   = nsepseq_to_region (fun e -> e.region) $2 in
-    let region = cover $1#region stop
-    and mk_value attr =
-      {kwd_let=$1; bindings=$2; attributes=private_attribute::attr}
-    in fun attr -> SLet {region; value = mk_value attr} }
-
-const_decl:
-  "const" binding_list {
-    let stop   = nsepseq_to_region (fun e -> e.region) $2 in
-    let region = cover $1#region stop
-    and mk_value attributes = {kwd_const=$1; bindings=$2; attributes}
-    in fun attr -> SConst {region; value = mk_value attr} }
 
 (* PATTERNS *)
 
@@ -762,7 +769,7 @@ binding_pattern:
 | array_pattern  { $1 }
 
 var_pattern:
-  attributes "<ident>" {
+  attributes variable {
     let value = {variable=$2; attributes=$1}
     in {region=$2#region; value} }
 

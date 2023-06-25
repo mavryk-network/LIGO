@@ -131,10 +131,7 @@ type 'a chevrons  = 'a chevrons' reg
 
 (* The Abstract Syntax Tree *)
 
-type t = {
-  decl : top_decl nseq;
-  eof  : eof
-}
+type t = {decl : top_decl nseq; eof : eof}
 
 and cst = t
 
