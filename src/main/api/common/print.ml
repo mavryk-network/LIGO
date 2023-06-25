@@ -163,9 +163,7 @@ let ast_typed (raw_options : Raw_options.t) source_file =
       if self_pass
       then
         ( Trace.trace ~raise Main_errors.self_ast_typed_tracer
-          @@ Self_ast_typed.all_program
-               ~warn_unused_rec:options.middle_end.warn_unused_rec
-               typed
+          @@ Self_ast_typed.all_program typed
         , [] )
       else typed, [] )
 

@@ -24,10 +24,10 @@ Alternatively, you can decide to use our [webide](https://ide.ligolang.org/). Th
 
 The `ligo` executable is statically linked. It should run on most modern Linux distributions.
 
-You can get the rolling release [here](https://gitlab.com/ligolang/ligo/-/jobs/4437631759/artifacts/raw/ligo), make it executable, and you are done!
+You can get the rolling release [here](https://gitlab.com/ligolang/ligo/-/jobs/4515773937/artifacts/raw/ligo), make it executable, and you are done!
 
 ```zsh
-wget https://gitlab.com/ligolang/ligo/-/jobs/4437631759/artifacts/raw/ligo
+wget https://gitlab.com/ligolang/ligo/-/jobs/4515773937/artifacts/raw/ligo
 chmod +x ./ligo
 ```
 
@@ -50,7 +50,7 @@ brew install ligolang/ligo/ligo
 ### Debian Linux package installation
 
 A `.deb` package containing the static `ligo` executable is also available.
-First, download [the package](https://gitlab.com/ligolang/ligo/-/jobs/4437631759/artifacts/raw/ligo.deb), and then install using:
+First, download [the package](https://gitlab.com/ligolang/ligo/-/jobs/4515773937/artifacts/raw/ligo.deb), and then install using:
 
 ```zsh
 sudo apt install ./ligo.deb
@@ -58,7 +58,7 @@ sudo apt install ./ligo.deb
 
 ### Dockerised installation
 
-If you've [installed 🐳 Docker](https://docs.docker.com/install/), you can run the latest [LIGO release ](https://ligolang.org/docs/next/intro/changelog):
+If you've [installed 🐳 Docker](https://docs.docker.com/install/), you can run the latest [LIGO release](https://ligolang.org/docs/next/intro/changelog):
 
 Linux or OSX:
 

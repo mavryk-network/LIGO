@@ -38,20 +38,26 @@ module Diagnostic = struct
   include Lsp.Types.Diagnostic
 
   let pp = Helpers_pretty.pp_with_yojson yojson_of_t
+  let eq = Caml.( = )
 
-  let eq a b =
-    (* We don't want to fix the numbers of identifiers during tests, so we
-      replace things like "Variable \"_#123\" not found." 
-      to "Variable \"_#N\" not found." before comparisons *)
-    let remove_underscore_numeration s =
-      { s with
-        message = Str.global_replace (Str.regexp {|_#[0-9][0-9]*|}) "_#N" s.message
-      }
-    in
-    Caml.(remove_underscore_numeration a = remove_underscore_numeration b)
+  (* We don't want to fix the numbers of identifiers during tests, so we
+    replace things like "Variable \"_#123\" not found."
+    to "Variable \"_#N\" not found." before comparisons *)
+  let remove_underscore_numeration s =
+    { s with
+      message =
+        "(* This is a testable_pp. The actual result might be slightly different. *) "
+        ^ Str.global_replace (Str.regexp {|_#[0-9][0-9]*|}) "_#N" s.message
+    }
 
 
-  let testable = Alcotest.testable pp eq
+  let testable_pp fmt a = pp fmt (remove_underscore_numeration a)
+
+  let testable_eq a b =
+    eq (remove_underscore_numeration a) (remove_underscore_numeration b)
+
+
+  let testable = Alcotest.testable testable_pp testable_eq
 end
 
 module Locations = struct
@@ -71,9 +77,22 @@ module DocumentLink = struct
   let eq = Caml.( = )
   let testable = Alcotest.testable pp eq
 
-  let create ~(target:Path.t) =
-    Lsp.Types.DocumentLink.create
-      ~target:("file:///" ^ Path.to_string_with_canonical_drive_letter target)
+  let path_to_target path =
+    let prefix =
+      (* Target of document link should be an URI, but the lsp library wrongly uses string type here,
+     so we're creating a string starting with "file:///"*)
+      if Sys.unix
+      then
+        "file://"
+        (* after adding the prefix to abs path "/home/..." we'll get "file:///home/..." *)
+      else "file:///"
+      (* after adding the prefix to "C:/users/..." we'll get "file:///C:/users/..." *)
+    in
+    prefix ^ Path.to_string_with_canonical_drive_letter path
+
+
+  let create ~(target : Path.t) =
+    Lsp.Types.DocumentLink.create ~target:(path_to_target target)
 end
 
 module FoldingRange = struct

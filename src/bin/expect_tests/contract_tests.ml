@@ -8,8 +8,16 @@ let bad_contract = bad_test
 let () = Ligo_unix.putenv ~key:"TERM" ~data:"dumb"
 
 let%expect_test _ =
-  run_ligo_good [ "compile"; "expression"; "jsligo"; "add2(x, x)"; "--init-file"; contract "modules.jsligo" ];
-  [%expect {|
+  run_ligo_good
+    [ "compile"
+    ; "expression"
+    ; "jsligo"
+    ; "add2(x, x)"
+    ; "--init-file"
+    ; contract "modules.jsligo"
+    ];
+  [%expect
+    {|
     File "../../test/contracts/modules.jsligo", line 2, character 0 to line 4, character 1:
       1 | // @foo
       2 | namespace B {
@@ -25,7 +33,8 @@ let%expect_test _ =
     84 |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile"; "contract"; contract "FA1.2.interface.mligo"; "-m"; "FA12_ENTRIES" ];
+  run_ligo_good
+    [ "compile"; "contract"; contract "FA1.2.interface.mligo"; "-m"; "FA12_ENTRIES" ];
   [%expect
     {|
     { parameter
@@ -201,9 +210,15 @@ let%expect_test _ =
              PAIR } } |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile"; "expression"; "jsligo"; "t"; "--init-file"; contract "jsligo_uppercase_generic.jsligo" ];
-  [%expect
-    {|
+  run_ligo_good
+    [ "compile"
+    ; "expression"
+    ; "jsligo"
+    ; "t"
+    ; "--init-file"
+    ; contract "jsligo_uppercase_generic.jsligo"
+    ];
+  [%expect {|
     { 1 ; 2 ; 3 } |}]
 
 let%expect_test _ =
@@ -250,13 +265,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good
-    [ "compile"
-    ; "expression"
-    ; "cameligo"
-    ; "s"
-    ; "--init-file"
-    ; contract "of_file.mligo"
-    ];
+    [ "compile"; "expression"; "cameligo"; "s"; "--init-file"; contract "of_file.mligo" ];
   [%expect
     {xxx|
     "let s = [%of_file \"./of_file.mligo\"]\n\nlet m () = [%michelson ({| { PUSH unit Unit ; PUSH mutez 300000000 ; NONE key_hash ; CREATE_CONTRACT (codestr $0) ; PAIR } |} [%of_file \"./interpreter_tests/contract_under_test/compiled.tz\"] : operation * address)]\n\nlet main (_ : unit) (_ : unit) : operation list * unit =\n  let op, _ = m () in\n  [op], ()\n" |xxx}]
@@ -469,8 +478,7 @@ let%expect_test _ =
                      PAIR } } } } } |}]
 
 let%expect_test _ =
-  run_ligo_good
-    [ "compile"; "contract"; contract "ticket_builder.mligo" ];
+  run_ligo_good [ "compile"; "contract"; contract "ticket_builder.mligo" ];
   [%expect
     {|
 File "../../test/contracts/ticket_builder.mligo", line 28, characters 28-34:
@@ -789,7 +797,7 @@ File "../../test/contracts/negative/create_contract_toplevel.mligo", line 4, cha
       ^^^^^^^^
   9 |   in
 
-Not all free variables could be inlined in Tezos.create_contract usage: gen#237. |}];
+Not all free variables could be inlined in Tezos.create_contract usage: gen#240. |}];
   run_ligo_good [ "compile"; "contract"; contract "create_contract_var.mligo" ];
   [%expect
     {|
@@ -881,7 +889,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#237.
           ^^^^^^^^
      12 |   in
 
-    Not all free variables could be inlined in Tezos.create_contract usage: gen#238. |}];
+    Not all free variables could be inlined in Tezos.create_contract usage: gen#241. |}];
   run_ligo_bad [ "compile"; "contract"; bad_contract "create_contract_no_inline.mligo" ];
   [%expect
     {|
@@ -936,7 +944,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#237.
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      10 |   let toto : operation list = [ op ] in
 
-    Not all free variables could be inlined in Tezos.create_contract usage: foo#249. |}];
+    Not all free variables could be inlined in Tezos.create_contract usage: foo#255. |}];
   run_ligo_good [ "compile"; "contract"; contract "create_contract.mligo" ];
   [%expect
     {|
@@ -989,15 +997,6 @@ let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; bad_contract "bad_contract.mligo" ];
   [%expect
     {|
-File "../../test/contracts/negative/bad_contract.mligo", line 4, characters 10-16:
-  3 |
-  4 | let main (action : parameter) (store : storage) : storage =
-                ^^^^^^
-  5 |   store + 1
-:
-Warning: unused variable "action".
-Hint: replace it by "_action" to prevent this warning.
-
 File "../../test/contracts/negative/bad_contract.mligo", line 4, characters 4-8:
   3 |
   4 | let main (action : parameter) (store : storage) : storage =
@@ -1009,15 +1008,6 @@ An entrypoint must of type "parameter * storage -> operation list * storage". |}
   run_ligo_bad [ "compile"; "contract"; bad_contract "bad_contract2.mligo" ];
   [%expect
     {|
-File "../../test/contracts/negative/bad_contract2.mligo", line 5, characters 10-16:
-  4 |
-  5 | let main (action : parameter) (store : storage) : return =
-                ^^^^^^
-  6 |   ("bad",store + 1)
-:
-Warning: unused variable "action".
-Hint: replace it by "_action" to prevent this warning.
-
 File "../../test/contracts/negative/bad_contract2.mligo", line 5, character 0 to line 6, character 19:
   4 |
   5 | let main (action : parameter) (store : storage) : return =
@@ -1031,24 +1021,6 @@ We expected a list of operations but we got string |}];
   run_ligo_bad [ "compile"; "contract"; bad_contract "bad_contract3.mligo" ];
   [%expect
     {|
-File "../../test/contracts/negative/bad_contract3.mligo", line 5, characters 10-16:
-  4 |
-  5 | let main (action, store : parameter * storage) : return =
-                ^^^^^^
-  6 |   (([]: operation list),"bad")
-:
-Warning: unused variable "action".
-Hint: replace it by "_action" to prevent this warning.
-
-File "../../test/contracts/negative/bad_contract3.mligo", line 5, characters 18-23:
-  4 |
-  5 | let main (action, store : parameter * storage) : return =
-                        ^^^^^
-  6 |   (([]: operation list),"bad")
-:
-Warning: unused variable "store".
-Hint: replace it by "_store" to prevent this warning.
-
 File "../../test/contracts/negative/bad_contract3.mligo", line 5, character 0 to line 6, character 30:
   4 |
   5 | let main (action, store : parameter * storage) : return =

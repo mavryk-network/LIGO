@@ -33,10 +33,10 @@ If you wish to see the changelog, you can either run `ligo changelog` or go to [
 
 The `ligo` executable is statically linked. It should run on most modern Linux distributions.
 
-You can get the rolling release [here](https://gitlab.com/ligolang/ligo/-/jobs/4437631759/artifacts/raw/ligo), make it executable, and you are done!
+You can get the rolling release [here](https://gitlab.com/ligolang/ligo/-/jobs/4515773937/artifacts/raw/ligo), make it executable, and you are done!
 
 ```zsh
-wget https://gitlab.com/ligolang/ligo/-/jobs/4437631759/artifacts/raw/ligo
+wget https://gitlab.com/ligolang/ligo/-/jobs/4515773937/artifacts/raw/ligo
 chmod +x ./ligo
 ```
 
@@ -48,14 +48,16 @@ sudo cp ./ligo /usr/local/bin
 ```
 </TabItem>
 <TabItem value="macos">
-  
+
 Try our tap :
+
 ```bash
 brew tap ligolang/ligo https://gitlab.com/ligolang/ligo.git
 brew install ligolang/ligo/ligo
 ```
 
-To upgrade ligo : 
+To upgrade ligo :
+
 ```bash
 brew update
 brew upgrade ligolang/ligo/ligo
@@ -63,9 +65,9 @@ brew upgrade ligolang/ligo/ligo
 
 </TabItem>
 <TabItem value="deb">
-  
+
 A `.deb` package containing the static `ligo` executable is also available.
-First, download [the package](https://gitlab.com/ligolang/ligo/-/jobs/4437631759/artifacts/raw/ligo.deb), and then install using: 
+First, download [the package](https://gitlab.com/ligolang/ligo/-/jobs/4515773937/artifacts/raw/ligo.deb), and then install using: 
 
 ```zsh
 sudo apt install ./ligo.deb
@@ -89,27 +91,27 @@ yay -S ligo-bin
 
 </TabItem>
 <TabItem value="docker">
-  
-  If you've [installed 🐳 Docker](https://docs.docker.com/install/), you can run the latest [LIGO release ](./changelog.md):
+
+If you've [installed 🐳 Docker](https://docs.docker.com/install/), you can run the latest [LIGO release](./changelog.md):
 
 Linux or OSX:
 > ```sh
-> docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.67.1
+> docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.68.0
 > ```
 > For convenience you can alias the above command
 > ```sh
-> alias ligo='docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.67.1'
+> alias ligo='docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.68.0'
 > ```
 > To make this `alias` persistent across terminal sessions you need to configure your shell.     
 > Here is a [good link](https://www.tecmint.com/create-alias-in-linux/) with the steps on how to do that.
 
 Windows:
 > ```dos
-> docker run --rm -v "%CD%":/cd -w /cd ligolang/ligo:0.67.1`
+> docker run --rm -v "%CD%":/cd -w /cd ligolang/ligo:0.68.0`
 > ```
 > For convenience you can alias the above command
 > ```dos
-> doskey ligo=docker run --rm -v "%CD%":/cd -w /cd ligolang/ligo:0.67.1 $*
+> doskey ligo=docker run --rm -v "%CD%":/cd -w /cd ligolang/ligo:0.68.0 $*
 > ```
 > To make the alias persistent across terminal sessions you need to add the `doskey` to the Windows Registry.  
 > Follow [this stackoverflow answer](https://stackoverflow.com/a/21040825) for the steps on how to do that.
@@ -120,8 +122,6 @@ Or run one of the older versions found on [DockerHub](https://hub.docker.com/r/l
 
 </TabItem>
 <TabItem value="windows">
-
-
 
 > **Disclaimer**
 >
@@ -137,7 +137,7 @@ npm i -g ligolang@windows-beta
 
 ### via GUI installer
 
-You can download the installer from [here hosted on our Gitlab](https://gitlab.com/ligolang/ligo/-/jobs/4437631759/artifacts/raw/ligo_installer.exe?inline=false).
+You can download the installer from [here hosted on our Gitlab](https://gitlab.com/ligolang/ligo/-/jobs/4515773937/artifacts/raw/ligo_installer.exe?inline=false).
 
 #### Prerequisite
 

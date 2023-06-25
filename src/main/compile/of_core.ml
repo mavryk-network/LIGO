@@ -20,7 +20,8 @@ type form =
 let specific_passes ~raise ~options cform prg =
   match cform with
   | Contract { entrypoints; module_path } ->
-    Self_ast_typed.all_contract ~raise ~options entrypoints module_path prg
+    ignore options;
+    Self_ast_typed.all_contract ~raise entrypoints module_path prg
   | View { command_line_views; contract_entry; module_path; contract_type } ->
     let prg =
       Self_ast_typed.all_view
@@ -37,8 +38,8 @@ let specific_passes ~raise ~options cform prg =
 let typecheck_with_signature
     ~raise
     ~(options : Compiler_options.t)
-    ?(cform : form option)
     ?(context : Ast_typed.signature option)
+    ?(self_pass : bool = false)
     (p : Ast_core.program)
     : Ast_typed.program * Ast_typed.signature
   =
@@ -47,21 +48,13 @@ let typecheck_with_signature
     @@ Checking.type_program_with_signature ~options:options.middle_end ?env:context p
   in
   let typed =
-    trace ~raise self_ast_typed_tracer
-    @@ fun ~raise ->
-    Self_ast_typed.all_program
-      ~raise
-      ~warn_unused_rec:options.middle_end.warn_unused_rec
-      typed
-  in
-  let applied =
-    match cform with
-    | None -> typed
-    | Some cform ->
+    if self_pass
+    then
       trace ~raise self_ast_typed_tracer
-      @@ fun ~raise -> snd @@ specific_passes ~raise ~options cform typed
+      @@ fun ~raise -> Self_ast_typed.all_program ~raise typed
+    else typed
   in
-  applied, signature
+  typed, signature
 
 
 let typecheck
@@ -78,11 +71,7 @@ let typecheck
   in
   let typed =
     trace ~raise self_ast_typed_tracer
-    @@ fun ~raise ->
-    Self_ast_typed.all_program
-      ~raise
-      ~warn_unused_rec:options.middle_end.warn_unused_rec
-      typed
+    @@ fun ~raise -> Self_ast_typed.all_program ~raise typed
   in
   let applied =
     match cform with
@@ -105,13 +94,7 @@ let compile_expression
     trace ~raise checking_tracer
     @@ Checking.type_expression ~options:options.middle_end ~env:context expr
   in
-  let applied =
-    trace ~raise self_ast_typed_tracer
-    @@ Self_ast_typed.all_expression
-         ~warn_unused_rec:options.middle_end.warn_unused_rec
-         typed
-  in
-  applied
+  typed
 
 
 let apply (entry_point : Value_var.t) (param : Ast_core.expression) : Ast_core.expression =
