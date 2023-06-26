@@ -66,7 +66,7 @@ let pascaligo_module =
   }
 
 
-let pp_type_expression
+let pp_type_expression ~raise
     :  syntax:Syntax_types.t
     -> [ `Core of Ast_core.type_expression | `Typed of Ast_typed.type_expression ]
     -> string
@@ -75,7 +75,7 @@ let pp_type_expression
   let cte =
     match te with
     | `Core cte -> cte
-    | `Typed tte -> Checking.untype_type_expression tte
+    | `Typed tte -> Checking.untype_type_expression ~raise tte
   in
   let ty_expr_to_string =
     let raise = Simple_utils.Trace.raise_failwith "LSP" in

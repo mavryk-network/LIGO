@@ -14,6 +14,7 @@ let rec type_content : formatter -> type_content -> unit =
  fun ppf tc ->
   match tc with
   | T_variable tv -> Type_var.pp ppf tv
+  | T_exists tv -> Format.fprintf ppf "^%a" Type_var.pp tv
   | T_sum row -> Row.PP.sum_type type_expression layout ppf row
   | T_record row -> Row.PP.tuple_or_record_type type_expression layout ppf row
   | T_arrow a -> Arrow.pp type_expression ppf a
@@ -65,6 +66,7 @@ let rec type_content_orig : formatter -> type_content -> unit =
  fun ppf tc ->
   match tc with
   | T_variable tv -> Type_var.pp ppf tv
+  | T_exists tv -> Format.fprintf ppf "^%a" Type_var.pp tv
   | T_sum row -> Row.PP.sum_type type_expression layout ppf row
   | T_record row -> Row.PP.tuple_or_record_type type_expression layout ppf row
   | T_arrow a -> Arrow.pp type_expression ppf a

@@ -206,7 +206,7 @@ let rec fold_type_expression
   let self te = fold_type_expression te ~f in
   let init = f init te in
   match te.type_content with
-  | T_variable _ -> init
+  | T_variable _ | T_exists _ -> init
   | T_constant { parameters; _ } -> List.fold parameters ~init ~f
   | T_sum row | T_record row -> Row.fold f init row
   | T_arrow { type1; type2 } -> self type2 ~init:(self type1 ~init)

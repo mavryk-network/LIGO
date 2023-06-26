@@ -232,9 +232,11 @@ let typed_contract_and_expression
     contract_type
   in
   let annotation =
+    Trace.trace ~raise Main_errors.checking_tracer
+    @@ fun ~raise ->
     match check_type with
-    | Runned_result.Check_storage -> Checking.untype_type_expression storage_ty
-    | Check_parameter -> Checking.untype_type_expression parameter_ty
+    | Runned_result.Check_storage -> Checking.untype_type_expression ~raise storage_ty
+    | Check_parameter -> Checking.untype_type_expression ~raise parameter_ty
   in
   let typed_expr =
     Trace.try_with

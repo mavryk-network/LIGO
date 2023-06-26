@@ -1597,7 +1597,7 @@ let type_expression ~raise ~options ?env ?tv_opt expr =
   C.run_elab
     (match tv_opt with
     | Some type_ ->
-      let type_ = C.encode type_ in
+      let type_ = C.encode ~raise type_ in
       check_expression expr type_
     | None ->
       let%map.C _, expr = infer_expression expr in

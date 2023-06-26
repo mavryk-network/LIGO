@@ -1,11 +1,15 @@
 open Lsp_helpers
 open Handler
+module Trace = Simple_utils.Trace
 module Loc = Simple_utils.Location
 
 let get_type (vdef : Scopes.Types.vdef) : Ast_core.type_expression option =
   match vdef.t with
   | Core ty -> Some ty
-  | Resolved ty -> Option.some @@ Checking.untype_type_expression ty
+  | Resolved ty ->
+    Trace.try_with
+      (fun ~raise ~catch:_ -> Some (Checking.untype_type_expression ~raise ty))
+      (fun ~catch:_ _ -> None)
   | Unresolved -> None
 
 

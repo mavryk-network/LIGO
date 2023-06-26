@@ -4,13 +4,19 @@ open Lsp_helpers
 let hover_string : Syntax_types.t -> Scopes.def -> string =
  fun syntax ->
   let opening_comment, closing_comment = Helpers_pretty.get_comment syntax in
-  let type_to_string t = Helpers_pretty.pp_type_expression ~syntax (`Core t) in
+  let type_to_string t =
+    Trace.try_with
+      (fun ~raise ~catch:_ ->
+        Some (Helpers_pretty.pp_type_expression ~raise ~syntax (`Core t)))
+      (fun ~catch:_ _ -> None)
+  in
+  let unwrap type_ =
+    Option.value ~default:(opening_comment ^ " Unresolved " ^ closing_comment) type_
+  in
   function
   | Variable vdef ->
-    Type_definition.get_type vdef
-    |> Option.map ~f:type_to_string
-    |> Option.value ~default:(opening_comment ^ " Unresolved " ^ closing_comment)
-  | Type tdef -> type_to_string tdef.content
+    Type_definition.get_type vdef |> Option.bind ~f:type_to_string |> unwrap
+  | Type tdef -> type_to_string tdef.content |> unwrap
   | Module mdef -> Helpers_pretty.print_module syntax mdef
 
 
