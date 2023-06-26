@@ -159,7 +159,7 @@ and declaration =
 
 and value_decl = {
   kind     : var_kind;
-  bindings : (val_binding reg, comma) nsepseq
+  bindings : (val_binding reg, comma) sep_or_term
 }
 
 and var_kind = [
@@ -168,14 +168,14 @@ and var_kind = [
 ]
 
 and val_binding = {
-  binders     : pattern;
-  type_params : type_params option;
-  rhs_type    : type_annotation option;
-  eq          : equal;
-  rhs_expr    : expr
+  pattern   : pattern;
+  type_vars : type_vars option;
+  rhs_type  : type_annotation option;
+  eq        : equal;
+  rhs_expr  : expr
 }
 
-and type_params = (variable, comma) sep_or_term chevrons
+and type_vars = (type_var, comma) sep_or_term chevrons
 
 and type_annotation = colon * type_expr
 
@@ -190,8 +190,10 @@ and import_alias = {
   kwd_import  : kwd_import;
   alias       : module_name;
   equal       : equal;
-  module_path : module_name module_path reg
+  module_path : module_selection
 }
+
+and module_selection = module_name module_path reg
 
 and import_all_as = {
   kwd_import : kwd_import;
@@ -227,7 +229,7 @@ and interface_decl = {
 
 and intf_body = intf_entries braces
 
-and intf_entries = (intf_entry, semi) nsep_or_term
+and intf_entries = (intf_entry, semi) sep_or_term
 
 and intf_entry =
   I_Attr    of (attribute * intf_entry)
@@ -259,19 +261,17 @@ and interface = (kwd_implements * intf_expr) reg
 
 and intf_expr =
   I_Body of intf_body
-| I_Path of module_name module_path reg
+| I_Path of module_selection
 
 (* Type declarations *)
 
 and type_decl = {
   kwd_type  : kwd_type;
-  params    : type_vars option;
+  type_vars : type_vars option;
   name      : type_name;
   eq        : equal;
   type_expr : type_expr
 }
-
-and type_vars = (type_var, comma) sep_or_term chevrons
 
 (* TYPE EXPRESSIONS *)
 
@@ -311,7 +311,7 @@ and parameters = (pattern, comma) sep_or_term par
 
 and parameter_of_type = {
   kwd_parameter_of : kwd_parameter_of;
-  module_path      : module_name module_path reg
+  module_path      : module_selection
 }
 
 (* Record type *)
@@ -523,11 +523,11 @@ and arguments = (expr, comma) sepseq par
 (* Functional expressions *)
 
 and fun_expr = {
-  type_params : type_params option;
-  parameters  : parameters;
-  rhs_type    : type_annotation option;
-  arrow       : arrow;
-  body        : body;
+  type_vars  : type_vars option;
+  parameters : parameters;
+  rhs_type   : type_annotation option;
+  arrow      : arrow;
+  body       : body;
 }
 
 and body =
@@ -538,7 +538,7 @@ and body =
 
 and contract_of_expr = {
   kwd_contract_of : kwd_contract_of;
-  module_path     : module_name module_path reg par
+  module_path     : module_selection par
 }
 
 (* Functional update of record expressions *)

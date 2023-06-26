@@ -17,8 +17,6 @@ open CST (* THE ONLY GLOBAL OPENING *)
 
 (* UTILITIES *)
 
-type ('a, 'sep) nsepseq = ('a, 'sep) Utils.nsepseq
-
 let (<@) = Utils.(<@)
 
 let print_attribute state (node : Attr.t wrap) =
@@ -100,16 +98,16 @@ and print_var_kind state = function
   `Let   kwd_let   -> Tree.make_literal state kwd_let
 | `Const kwd_const -> Tree.make_literal state kwd_const
 
-and mk_children_bindings (node: (val_binding reg, comma) nsepseq) =
-  Tree.mk_children_nsepseq print_val_binding node
+and mk_children_bindings (node: (val_binding reg, comma) sep_or_term) =
+  Tree.mk_children_sep_or_term print_val_binding node
 
 and print_val_binding state (node: val_binding reg) =
   let Region.{region; value} = node in
-  let {binders; type_params; rhs_type; eq=_; rhs_expr} = value in
+  let {pattern; type_vars; rhs_type; eq=_; rhs_expr} = value in
 
   let children = Tree.[
-    mk_child     print_binders         binders;
-    mk_child_opt print_type_params     type_params;
+    mk_child     print_binders         pattern;
+    mk_child_opt print_type_vars       type_vars;
     mk_child_opt print_type_annotation rhs_type;
     mk_child     print_rhs             rhs_expr]
   in Tree.make state ~region "<binding>" children
@@ -120,10 +118,10 @@ and print_rhs state (node: expr) =
 and print_binders state (node: pattern) =
   Tree.make_unary state "<binders>" print_pattern node
 
-and print_type_params state (node: type_params) =
+and print_type_vars state (node: type_vars) =
   let Region.{region; value} = node in
   let seq = value.inside in
-  Tree.(of_sep_or_term state ~region "<parameters>" make_literal seq)
+  Tree.(of_sep_or_term state ~region "<type vars>" make_literal seq)
 
 and print_type_annotation state (node : type_annotation) =
   Tree.make_unary state "<type>" print_type_expr (snd node)
@@ -194,7 +192,7 @@ and print_D_Interface state (node : interface_decl reg) =
   in Tree.make ~region state "D_Interface" children
 
 and mk_children_intf_body (node: intf_body) =
-  Tree.mk_children_nsep_or_term print_intf_entry node.value.inside
+  Tree.mk_children_sep_or_term print_intf_entry node.value.inside
 
 and print_intf_entry state = function
   I_Attr  e -> print_I_Attr  state e
@@ -252,24 +250,19 @@ and print_intf_expr state = function
 
 and print_I_Body state (node: intf_body) =
   Tree.make state "I_Body" (mk_children_intf_body node)
-and print_I_Path state (node: module_name module_path reg) =
+and print_I_Path state (node: module_selection) =
   print_module_path Tree.make_literal "I_Path" state node
 
 (* Type declaration *)
 
 and print_D_Type state (node: type_decl reg) =
   let Region.{value; region} = node in
-  let {kwd_type=_; params; name; eq=_; type_expr} = value in
+  let {kwd_type=_; type_vars; name; eq=_; type_expr} = value in
   let children = Tree.[
     mk_child     make_literal    name;
-    mk_child_opt print_type_vars params;
+    mk_child_opt print_type_vars type_vars;
     mk_child     print_type_expr type_expr]
   in Tree.make state ~region "D_Type" children
-
-and print_type_vars state (node: type_vars) =
-  let Region.{region; value} = node in
-  let seq = value.inside in
-  Tree.(of_sep_or_term state ~region "<parameters>" make_literal seq)
 
 (* TYPE EXPRESSIONS *)
 
@@ -638,9 +631,9 @@ and print_E_Equal state (node : equal_cmp bin_op reg) =
 (* Functional expressions *)
 
 and print_E_Fun state (node : fun_expr reg) =
-  let {type_params; parameters; rhs_type; arrow=_; body} = node.value in
+  let {type_vars; parameters; rhs_type; arrow=_; body} = node.value in
   let children = Tree.[
-    mk_child_opt print_type_params     type_params;
+    mk_child_opt print_type_vars       type_vars;
     mk_child     print_parameters      parameters;
     mk_child_opt print_type_annotation rhs_type;
     mk_child     print_fun_body        body]
