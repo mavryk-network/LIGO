@@ -10,10 +10,8 @@
   "esy": {
     "buildsInSource": "_build",
     "opamOverrideRemote": "https://github.com/ligolang/esy-opam-override",
-    "build": [
-      "dune build -p ligo",
-      "chmod -R a+w #{self.target_dir}"
-    ],
+    "opamOverrideRemote": "https://github.com/ligolang/esy-opam-override",
+    "build": ["dune build -p ligo", "chmod -R a+w #{self.target_dir}"],
     "buildEnv": {
       "OCAMLRUNPARAM": "b",
       "PATH": "#{@opam/hacl-star-raw.lib / 'hacl-star-raw' : esy-libffi.lib : esy-libev.lib : $PATH}",
@@ -35,9 +33,7 @@
       }
     },
     "release": {
-      "bin": [
-        "ligo"
-      ],
+      "bin": ["ligo"],
       "includePackages": [
         "root",
         "esy-libev",
@@ -92,13 +88,11 @@
     "@opam/linol-lwt": "*",
     "ligo-win32-ntdll-stubs": "*",
     "@opam/tezos-rust-libs": "*",
-    "@opam/tz-016-test-helpers": "*",
-    "@opam/tz-017-test-helpers": "*",
+    "@opam/tezos-alpha-test-helpers": "*",
     "@opam/tezos-base": "*",
     "@opam/tezos-hacl": "*",
     "@opam/tezos-micheline": "*",
-    "@opam/tc-017": "*",
-    "@opam/tc-016": "*",
+    "@opam/tezos-client-alpha": "*",
     "@opam/lwt_log": "*",
     "@opam/secp256k1-internal": "*",
     "@opam/bls12-381-signature": "*",
@@ -110,10 +104,61 @@
     "esy-libffi": "*"
   },
   "resolutions": {
+    "@opam/tezos-webassembly-interpreter": "./vendors/tezos-ligo",
+    "@opam/tezos-smart-rollup-alpha": "./vendors/tezos-ligo",
+    "@opam/tezos-rpc-http-client-unix": "./vendors/tezos-ligo",
+    "@opam/tezos-mockup-registration": "./vendors/tezos-ligo",
+    "@opam/tezos-lwt-result-stdlib": "./vendors/tezos-ligo",
+    "@opam/tezos-client-base-unix": "./vendors/tezos-ligo",
+    "@opam/tezos-alpha-test-helpers": "./vendors/tezos-ligo",
+    "@opam/tezos-protocol-environment": "./vendors/tezos-ligo",
+    "@opam/tezos-protocol-plugin-alpha": "./vendors/tezos-ligo",
+    "@opam/tezos-protocol-alpha": "./vendors/tezos-ligo",
+    "@opam/tezos-version": "./vendors/tezos-ligo",
+    "@opam/tezos-tree-encoding": "./vendors/tezos-ligo",
+    "@opam/tezos-test-helpers": "./vendors/tezos-ligo",
+    "@opam/tezos-stdlib-unix": "./vendors/tezos-ligo",
+    "@opam/tezos-stdlib": "./vendors/tezos-ligo",
+    "@opam/tezos-signer-services": "./vendors/tezos-ligo",
+    "@opam/tezos-signer-backends": "./vendors/tezos-ligo",
+    "@opam/tezos-shell-services": "./vendors/tezos-ligo",
+    "@opam/tezos-scoru-wasm": "./vendors/tezos-ligo",
+    "@opam/tezos-rust-libs": "./vendors/tezos-ligo",
+    "@opam/tezos-rpc-http-client": "./vendors/tezos-ligo",
+    "@opam/tezos-rpc-http": "./vendors/tezos-ligo",
+    "@opam/tezos-rpc": "./vendors/tezos-ligo",
+    "@opam/tezos-proxy": "./vendors/tezos-ligo",
+    "@opam/tezos-p2p-services": "./vendors/tezos-ligo",
+    "@opam/tezos-p2p": "./vendors/tezos-ligo",
+    "@opam/tezos-mockup-proxy": "./vendors/tezos-ligo",
+    "@opam/tezos-mockup-commands": "./vendors/tezos-ligo",
+    "@opam/tezos-mockup": "./vendors/tezos-ligo",
+    "@opam/tezos-micheline": "./vendors/tezos-ligo",
+    "@opam/tezos-lazy-containers": "./vendors/tezos-ligo",
+    "@opam/tezos-event-logging": "./vendors/tezos-ligo",
+    "@opam/tezos-error-monad": "./vendors/tezos-ligo",
+    "@opam/tezos-crypto-dal": "./vendors/tezos-ligo",
+    "@opam/tezos-crypto": "./vendors/tezos-ligo",
+    "@opam/tezos-context": "./vendors/tezos-ligo",
+    "@opam/tezos-client-commands": "./vendors/tezos-ligo",
+    "@opam/tezos-client-base": "./vendors/tezos-ligo",
+    "@opam/tezos-clic": "./vendors/tezos-ligo",
+    "@opam/tezos-base": "./vendors/tezos-ligo",
+    "@opam/tezos-client-alpha": "./vendors/tezos-ligo",
+    "@opam/octez-polynomial": "./vendors/tezos-ligo",
+    "@opam/octez-plonk": "./vendors/tezos-ligo",
+    "@opam/octez-plompiler": "./vendors/tezos-ligo",
+    "@opam/octez-mec": "./vendors/tezos-ligo",
+    "@opam/octez-distributed-lwt-internal": "./vendors/tezos-ligo",
+    "@opam/octez-distributed-internal": "./vendors/tezos-ligo",
+    "@opam/octez-bls12-381-signature": "./vendors/tezos-ligo",
+    "@opam/octez-bls12-381-polynomial": "./vendors/tezos-ligo",
+    "@opam/octez-bls12-381-hash": "./vendors/tezos-ligo",
+
     "@opam/index": "opam:1.6.1",
     "@opam/progress": "opam:0.2.1",
     "@opam/tezos-sapling": {
-      "version": "opam:17.0",
+      "source": "./vendors/tezos-ligo",
       "override": {
         "buildEnvOverride": {
           "OPAM_SWITCH_PREFIX": "#{ @opam/tezos-rust-libs.install }"
@@ -124,7 +169,7 @@
       }
     },
     "@opam/tezos-hacl": {
-      "version": "opam:17.0",
+      "source": "./vendors/tezos-ligo",
       "override": {
         "build": [
           "rm -rf vendors",
@@ -141,28 +186,15 @@
         }
       }
     },
-    "@opam/tp-016": {
-      "version": "opam:17.0",
+    "@opam/tezos-protocol-alpha": {
+      "source": "./vendors/tezos-ligo",
       "override": {
         "build": [
           "rm -rf vendors",
-          "env LD_LIBRARY_PATH=#{@opam/hacl-star-raw.lib / 'hacl-star-raw' : $LD_LIBRARY_PATH} DYLD_LIBRARY_PATH=#{@opam/hacl-star-raw.lib / 'hacl-star-raw' : $DYLD_LIBRARY_PATH} dune build -p tp-016"
+          "env LD_LIBRARY_PATH=#{@opam/hacl-star-raw.lib / 'hacl-star-raw' : $LD_LIBRARY_PATH} DYLD_LIBRARY_PATH=#{@opam/hacl-star-raw.lib / 'hacl-star-raw' : $DYLD_LIBRARY_PATH} dune build -p tezos-protocol-alpha"
         ],
         "dependencies": {
           "@opam/hacl-star-raw": "*"
-        }
-      }
-    },
-    "@opam/tp-017": {
-      "version": "opam:17.0",
-      "override": {
-        "build": [
-          "rm -rf vendors",
-          "env LD_LIBRARY_PATH=#{@opam/hacl-star-raw.lib / 'hacl-star-raw' : $LD_LIBRARY_PATH} DYLD_LIBRARY_PATH=#{@opam/hacl-star-raw.lib / 'hacl-star-raw' : $DYLD_LIBRARY_PATH} dune build -p tp-017"
-        ],
-        "dependencies": {
-          "@opam/hacl-star-raw": "*",
-          "ligo-win32-ntdll-stubs": "*"
         }
       }
     },
@@ -193,8 +225,6 @@
     "@opam/dune": "opam:3.7.1",
     "@opam/dune-configurator": "opam:3.7.1",
     "@opam/stdune": "opam:3.7.1",
-    "@opam/hacl-star": "opam:0.4.1",
-    "@opam/hacl-star-raw": "opam:0.4.1",
     "@opam/semver": "callistonianembrace/ocaml-semver:semver.opam#bf23370adb1cdf8efa60c19fe6e1ff195ee1f2ae",
     "@opam/conf-gmp-powm-sec": {
       "source": "no-source:",
