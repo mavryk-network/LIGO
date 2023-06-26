@@ -26,46 +26,46 @@ let mk_wild_pattern variable =
 (* END HEADER *)
 %}
 
-%attribute nsepseq(case_statement,SEMI) [@recover.cost 1004]
-%attribute nsepseq(statement,SEMI)      [@recover.cost 1004]
+(* %attribute nsepseq(case_statement,SEMI) [@recover.cost 1004] *)
+(* %attribute nsepseq(statement,SEMI)      [@recover.cost 1004] *)
 
 (* Reductions on error *)
 
-%on_error_reduce gt
-%on_error_reduce nseq(Attr)
-%on_error_reduce bin_op(add_expr_level,PLUS,mult_expr_level)
-%on_error_reduce bin_op(add_expr_level,MINUS,mult_expr_level)
-%on_error_reduce call_expr_level
-%on_error_reduce bin_op(disj_expr_level,BOOL_OR,conj_expr_level)
-%on_error_reduce type_expr
-%on_error_reduce core_type
-%on_error_reduce chevrons(type_ctor_args)
-%on_error_reduce disj_expr_level
-%on_error_reduce member_expr
-%on_error_reduce add_expr_level
-%on_error_reduce nsepseq(binding_initializer,COMMA)
-%on_error_reduce nsepseq(module_name,DOT)
-%on_error_reduce base_stmt(statement)
-%on_error_reduce unary_expr_level
-%on_error_reduce bin_op(comp_expr_level,NE,add_expr_level)
-%on_error_reduce bin_op(comp_expr_level,LT,add_expr_level)
-%on_error_reduce bin_op(comp_expr_level,LE,add_expr_level)
-%on_error_reduce bin_op(comp_expr_level,gt,add_expr_level)
-%on_error_reduce bin_op(comp_expr_level,ge,add_expr_level)
-%on_error_reduce bin_op(comp_expr_level,EQ2,add_expr_level)
-%on_error_reduce expr_stmt
-%on_error_reduce expr
-%on_error_reduce comp_expr_level
-%on_error_reduce conj_expr_level
-%on_error_reduce bin_op(conj_expr_level,BOOL_AND,comp_expr_level)
-%on_error_reduce return_stmt
-%on_error_reduce nsepseq(statement,SEMI)
-%on_error_reduce nsepseq(variant,VBAR)
-%on_error_reduce nsepseq(object_type,VBAR)
-%on_error_reduce nsepseq(field_name,COMMA)
-%on_error_reduce module_var_t
-%on_error_reduce for_stmt(statement)
-%on_error_reduce chevrons(nsepseq(type_param,COMMA))
+(* %on_error_reduce gt *)
+(* %on_error_reduce nseq(Attr) *)
+(* %on_error_reduce bin_op(add_expr_level,PLUS,mult_expr_level) *)
+(* %on_error_reduce bin_op(add_expr_level,MINUS,mult_expr_level) *)
+(* %on_error_reduce call_expr_level *)
+(* %on_error_reduce bin_op(disj_expr_level,BOOL_OR,conj_expr_level) *)
+(* %on_error_reduce type_expr *)
+(* %on_error_reduce core_type *)
+(* %on_error_reduce chevrons(type_ctor_args) *)
+(* %on_error_reduce disj_expr_level *)
+(* %on_error_reduce member_expr *)
+(* %on_error_reduce add_expr_level *)
+(* %on_error_reduce nsepseq(binding_initializer,COMMA) *)
+(* %on_error_reduce nsepseq(module_name,DOT) *)
+(* %on_error_reduce base_stmt(statement) *)
+(* %on_error_reduce unary_expr_level *)
+(* %on_error_reduce bin_op(comp_expr_level,NE,add_expr_level) *)
+(* %on_error_reduce bin_op(comp_expr_level,LT,add_expr_level) *)
+(* %on_error_reduce bin_op(comp_expr_level,LE,add_expr_level) *)
+(* %on_error_reduce bin_op(comp_expr_level,gt,add_expr_level) *)
+(* %on_error_reduce bin_op(comp_expr_level,ge,add_expr_level) *)
+(* %on_error_reduce bin_op(comp_expr_level,EQ2,add_expr_level) *)
+(* %on_error_reduce expr_stmt *)
+(* %on_error_reduce expr *)
+(* %on_error_reduce comp_expr_level *)
+(* %on_error_reduce conj_expr_level *)
+(* %on_error_reduce bin_op(conj_expr_level,BOOL_AND,comp_expr_level) *)
+(* %on_error_reduce return_stmt *)
+(* %on_error_reduce nsepseq(statement,SEMI) *)
+(* %on_error_reduce nsepseq(variant,VBAR) *)
+(* %on_error_reduce nsepseq(object_type,VBAR) *)
+(* %on_error_reduce nsepseq(field_name,COMMA) *)
+(* %on_error_reduce module_var_t *)
+(* %on_error_reduce for_stmt(statement) *)
+(* %on_error_reduce chevrons(nsepseq(type_var,COMMA)) *)
 
 (* See [ParToken.mly] for the definition of tokens. *)
 
@@ -142,28 +142,20 @@ nsepseq(item,sep):
    terminated by [sep]. *)
 
 sep_or_term(item,sep):
-  nsepseq(item,sep) {
-    $1, None
-  }
-| nseq(item sep {$1,$2}) {
-    let (first,sep), tail = $1 in
-    let rec trans (seq, prev_sep as acc) = function
-      [] -> acc
-    | (item, next_sep) :: others ->
-        trans ((prev_sep,item)::seq, next_sep) others in
-    let list, term = trans ([],sep) tail
-    in (first, List.rev list), Some term }
+  nsepseq(item,sep)      { `NSep  $1 }
+| nseq(item sep {$1,$2}) { `NTerm $1 }
 
 (* Helpers *)
 
 %inline
 variable    : "<ident>"  { $1 }
 
-type_param  : "<ident>" | "<uident>" { $1 }
+type_var    : "<ident>" | "<uident>" { $1 }
+type_name   : "<ident>" | "<uident>" { $1 }
 field_name  : "<ident>"  { $1 }
 module_name : "<uident>" { $1 }
+intf_name   : "<uident>" { $1 }
 ctor        : "<uident>" { $1 }
-type_name   : "<ident>" | "<uident>" { $1 }
 module_path : "<string>" { $1 }
 
 %inline
@@ -190,8 +182,10 @@ contract:
 top_decl:
   declaration ";"?   { TL_Decl      ($1, $2) }
 | "[@attr]" top_decl { TL_Attr      ($1, $2) }
-| "export" top_decl  { TL_Export    ($1, $2) }
 | "<directive>"      { TL_Directive $1       }
+| "export" top_decl  {
+     let region = cover $1#region (top_decl_to_region $2)
+     in TL_Export {region; value=($1,$2)} }
 
 (* INNER DECLARATIONS (AS STATEMENTS) *)
 
@@ -204,99 +198,114 @@ declaration:
 
 (* Value declaration (constant and mutable) *)
 
- value_decl:
-   let_decl | const_decl { $1 }
+value_decl:
+  var_kind bindings { {kind=$1; bindings=$2} }
 
-let_decl:
-  "let" binding_list {
-    let stop   = nsepseq_to_region (fun e -> e.region) $2 in
+var_kind:
+  "let"   { `Let   $1 }
+| "const" { `Const $1 |
+
+bindings:
+  nsepseq(val_binding,",") { $1 }
+
+val_binding:
+  pattern ioption(type_vars) ioption(type_annotation) "=" expr {
+    let start  = pattern_to_region $1
+    and stop   = expr_to_region $5 in
+    let region = cover start stop
+    and value  = {pattern=$1; type_vars=$2; rhs_type=$3; eq=$4; rhs_expr=$5}
+    in {region; value}
+
+type_vars:
+  chevrons(sep_or_term(type_var,",")) { $1 }
+
+type_annotation:
+  ":" type_expr { $1, $2 }
+
+(* Import declaration *)
+
+import_decl:
+  "import" module_name "=" module_selection {
+    let stop   = nsepseq_to_region (fun a -> a#region) $4 in
     let region = cover $1#region stop
-    and value  = {kind = `Let $1; bindings=$2}
-    in {region; value} }
-
-const_decl:
-  "const" binding_list {
-    let stop   = nsepseq_to_region (fun e -> e.region) $2 in
-    let region = cover $1#region stop
-    and value  = {kind = `Const $1; bindings=$2}
-    in {region; value} }
-
-(* Namespace Statement *)
-
-namespace_stmt:
-  attributes ioption("export") namespace {
-    let namespace = $3 $1 in
-    match $2 with
-      Some kwd_export ->
-        let region = cover kwd_export#region (statement_to_region namespace)
-        in SExport {region; value = (kwd_export, namespace)}
-    | None -> namespace }
-
-namespace:
-  "namespace" module_name ioption(interface_annotation) braces(stmts_or_namespace_or_interface) {
-    let region = cover $1#region $4.region
-    in fun attrs ->
-       SNamespace {region; value=($1,$2,$3,$4,private_attribute::attrs)} }
-
-
-(* Interface Statement *)
-
-interface_stmt:
-  attributes ioption("export") interface {
-    let interface = $3 $1 in
-    match $2 with
-      Some kwd_export ->
-        let region = cover kwd_export#region (statement_to_region interface)
-        in SExport {region; value = (kwd_export, interface)}
-    | None -> interface }
-
-interface:
-  "interface" module_name braces(interface_entries) {
-    let region = cover $1#region $3.region
-    in fun attrs ->
-       SInterface {region; value=($1,$2,$3,attrs)}
-  }
-
-interface_entries:
-  sep_or_term(interface_entry,";") { fst $1 }
-
-interface_entry:
-  attributes "type" type_name "=" type_expr {
-    let value  = $1, $2, $3, $4, $5
-    and stop   = type_expr_to_region $5 in
-    let region = cover $2#region stop
-    in IType {region; value}
-  }
-| attributes "type" type_name {
-    let value = $1, $2, $3 in
-    let region = cover $2#region $3#region
-    in IType_var {region; value}
-  }
-| attributes "const" "<ident>" type_annotation {
-    let colon, t_expr = $4 in
-    let value  = $1, $2, $3, colon, t_expr
-    and stop   = type_expr_to_region t_expr in
-    let region = cover $2#region stop
-    in IConst {region; value}
-  }
-
-interface_expr:
-  nsepseq(module_name,".") {
-    let region = nsepseq_to_region (fun x -> x#region) $1 in
-    IPath { region; value = $1 }
-  }
-| braces(interface_entries) { IInterface $1 }
-
-interface_annotation:
-  "implements" interface_expr {
-    let stop = match $2 with | IInterface {region;_} | IPath {region; _} -> region in
-    let region = cover $1#region stop
-    and value = $1, $2
+    and value  = AliasModule {kwd_import=$1; alias=$2;
+                              equal=$3; module_path=$4}
     in {region; value}
   }
+| "import" "*" "as" module_name "from" module_path {
+    let region = cover $1#region $6#region in
+    let value  = ImportAll {kwd_import=$1; times=$2; kwd_as=$3; alias=$4;
+                            kwd_from=$5; module_path=$6}
+    in {region; value}
+  }
+| "import" braces(sep_or_term(field_name, ",")) "from" module_path {
+    let region = cover $1#region $4#region in
+    let value  = ImportSome {kwd_import=$1; imported=$2; kwd_from=$3;
+                             module_path=$4}
+    in {region; value} }
 
-stmts_or_namespace_or_interface: (* TODO: Keep terminator *)
-  sep_or_term(stmt_or_namespace_or_interface,";") { fst $1 }
+module_selection:
+  nsepseq(module_name,".") { $1 }
+
+(* Interfaces *)
+
+interface_decl:
+  "interface" intf_name intf_body {
+    let region = cover $1#region $3.region
+    and value  = {kwd_interface=$1; intf_name=$2; intf_body=$3}
+    in {region; value} }
+
+intf_body:
+  braces(intf_entries) { $1 }
+
+intf_entries:
+  sep_or_term(intf_entry,";") { $1 }
+
+intf_entry:
+  "[@attr]" intf_entry { I_Attr  ($1,$2) }
+| intf_type            { I_Type  $1      }
+| intf_const           { I_Const $1      }
+
+intf_type:
+  "type" type_name "=" type_expr {
+    let value  = {kwd_type=$1; type_name=$2; type_rhs = Some $3}
+    and stop   = type_expr_to_region $4 in
+    let region = cover $1#region stop
+    in {region; value}
+  }
+| "type" type_name {
+    let value  = {kwd_type=$1; type_name=$2; type_rhs=None}
+    and region = cover $1#region $2#region
+    in {region; value} }
+
+intf_const:
+  "const" variable type_annotation {
+    let _, t   = $3 in
+    let stop   = type_expr_to_region in
+    let region = cover $1#region (type_expr_to_region t)
+    and value  = {kwd_const=$1; const_name=$2; const_type=$3}
+    in {region; value} }
+
+(* Module declaration *)
+
+module_decl:
+  "namespace" module_name ioption(interface) braces(statements) {
+     let region = cover $1#region $4.region
+     and value  = {kwd_namespace=$1; module_name=$2; module_type=$3;
+                   module_body=$4}
+     in {region; value} }
+
+interface:
+  "implements" intf_expr {
+     let region = cover $1#region (intf_expr_to_region $2)
+     and value  = $1,$2
+     in {region; value} }
+
+intf_expr:
+  intf_body        { I_Body $1 }
+| module_selection { I_Path $1 }
+
+(* XXX *)
 
 (* STATEMENTS *)
 
@@ -523,7 +532,7 @@ call_expr_level:
 (* Function calls *)
 
 call_expr:
-  "contract_of" "(" nsepseq(module_name,".") ")" {
+  "contract_of" "(" module_selection ")" {
     let region = cover $1#region $4#region
     in EContract {region; value=$3 }
   }
@@ -730,9 +739,6 @@ array_rest_pattern:
     and value  = {ellipsis=$1; rest=$2}
     in PRest {region; value} }
 
-type_annotation:
-  ":" type_expr { $1, $2 }
-
 (* DECLARATIONS *)
 
 declaration:
@@ -924,7 +930,7 @@ type_component:
 (* Parameter of contract *)
 
 parameter_of_type:
-  "parameter_of" nsepseq(module_name,".") {
+  "parameter_of" module_selection {
     let stop   = nsepseq_to_region (fun x -> x#region) $2 in
     let region = cover $1#region stop
     in TParameter {region; value=$2} }
@@ -986,30 +992,6 @@ field_decl:
     let region = cover $2#region stop in
     let value : field_decl = {
       field_name=$2; colon; field_type; attributes= $1}
-    in {region; value} }
-
-(* Import statement *)
-
-import_stmt:
-  "import" module_name "=" nsepseq(module_name,".") {
-    let region =
-      cover $1#region (nsepseq_to_region (fun a -> a#region) $4)
-    and value =
-      Import_rename {kwd_import=$1; alias=$2; equal=$3; module_path=$4}
-    in {region; value}
-  }
-| "import" "*" "as" module_name "from" module_path {
-    let region = cover $1#region $6#region in
-    let value =
-      Import_all_as {kwd_import=$1; times=$2; kwd_as=$3; alias=$4;
-                     kwd_from=$5; module_path=$6}
-    in {region; value}
-  }
-| "import" braces(nsepseq(field_name, ",")) "from" module_path {
-    let region = cover $1#region $4#region in
-    let value =
-      Import_selected {kwd_import=$1; imported=$2; kwd_from=$3;
-                       module_path=$4}
     in {region; value} }
 
 (* Statements *)
