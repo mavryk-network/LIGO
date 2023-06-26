@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "esy-cmake": "*"
+    "esy-libffi": "*"
   }
 }

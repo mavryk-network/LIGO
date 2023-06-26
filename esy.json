@@ -104,6 +104,8 @@
     "esy-libffi": "*"
   },
   "resolutions": {
+    "@opam/hacl-star-raw": "opam:0.4.1",
+    "@opam/hacl-star": "opam:0.4.1",
     "@opam/tezos-webassembly-interpreter": "./vendors/tezos-ligo",
     "@opam/tezos-smart-rollup-alpha": "./vendors/tezos-ligo",
     "@opam/tezos-rpc-http-client-unix": "./vendors/tezos-ligo",
