@@ -1,6 +1,6 @@
 type content =
   { message : string
-  ; location : Location.t option
+  ; location : Location.t option [@equal.ignore] [@hash.ignore] [@compare.ignore]
   ; children : t option
   }
 
@@ -9,6 +9,7 @@ and t =
   ; stage : string
   ; content : content
   }
+[@@deriving equal, compare, hash, yojson]
 
 let make_content ~message ?location ?children () =
   { message; location; children }
@@ -16,6 +17,7 @@ let make_content ~message ?location ?children () =
 let status = "error"
 let make ~stage ~content = { status; stage; content }
 
+(* TODO: Can be replaced by derivied [to_yojson] *)
 let rec to_yojson : t -> Yojson.Safe.t 
   = fun e ->
     let open Yojson.Safe in
