@@ -236,10 +236,7 @@ let get_storage ~raise ~loc ~calltrace ctxt (m : Contract.t) =
     in
     fst
     @@ Trace.trace_alpha_tzresult_lwt ~raise (throw_obj_exc loc calltrace)
-    @@ Tezos_protocol.Protocol.Script_ir_translator.parse_toplevel
-         alpha_context
-         ~legacy:false
-         x
+    @@ Tezos_protocol.Protocol.Script_ir_translator.parse_toplevel alpha_context x
   in
   let storage_type =
     Tezos_micheline.Micheline.(
@@ -325,7 +322,7 @@ let extract_origination_from_result
     let aux (x : Apply_internal_results.packed_internal_operation_result) =
       match x with
       | Internal_operation_result
-          ({ source = Contract source; _ }, Applied (IOrigination_result x)) ->
+          ({ sender = Contract source; _ }, Applied (IOrigination_result x)) ->
         let originated_contracts =
           List.map ~f:(contract_of_hash ~raise) x.originated_contracts
         in
@@ -360,7 +357,7 @@ let extract_event_from_result
     let aux acc (x : Apply_internal_results.packed_internal_operation_result) =
       match x with
       | Internal_operation_result
-          ( { operation = Event { tag; payload; ty }; source = Contract source; _ }
+          ( { operation = Event { tag; payload; ty }; sender = Contract source; _ }
           , Applied (IEvent_result _) ) ->
         ( source
         , Entrypoint_repr.to_string tag
@@ -388,10 +385,10 @@ let extract_lazy_storage_diff_from_result
       } ->
     let aux (x : Apply_internal_results.packed_internal_operation_result) =
       match x with
-      | Internal_operation_result ({ source = _; _ }, Applied (IOrigination_result x)) ->
+      | Internal_operation_result ({ sender = _; _ }, Applied (IOrigination_result x)) ->
         [ x.lazy_storage_diff ]
       | Internal_operation_result
-          ( { source = _; _ }
+          ( { sender = _; _ }
           , Applied (ITransaction_result (Transaction_to_contract_result x)) ) ->
         [ x.lazy_storage_diff ]
       | _ -> []
@@ -573,7 +570,7 @@ let get_single_tx_result_gas
         { operation_result =
             Applied
               ( Transaction_result (Transaction_to_contract_result { consumed_gas; _ })
-              | Transaction_result (Transaction_to_tx_rollup_result { consumed_gas; _ })
+              | Transaction_result (Transaction_to_sc_rollup_result { consumed_gas; _ })
               | Origination_result { consumed_gas; _ }
               | Delegation_result { consumed_gas; _ }
               | Register_global_constant_result { consumed_gas; _ } )
@@ -933,16 +930,20 @@ let init
   let accounts = accounts @ baker_accounts in
   let raw =
     Block.genesis
+    (* ?reward_weights *)
+    (* ?cycles_per_voting_period:int32 -> *)
+    (* ?sc_rollup_enable:bool -> *)
+    (* ?sc_rollup_arith_pvm_enable:bool -> *)
+    (* ?dal_enable:bool -> *)
+    (* ?zk_rollup_enable:bool -> *)
+    (* ?hard_gas_limit_per_block:Gas.Arith.integral -> *)
+    (* ?nonce_revelation_threshold:int32 -> *)
       ?commitments
       ~consensus_threshold
       ?min_proposal_quorum
       ?bootstrap_contracts
       ?level
       ?cost_per_byte
-      ?liquidity_baking_subsidy
-      ?endorsing_reward_per_slot
-      ?baking_reward_bonus_per_slot
-      ?baking_reward_fixed_portion
       ?origination_size
       ?blocks_per_cycle
       ?initial_timestamp
