@@ -4,7 +4,7 @@ module Signature = Tezos_base.TzPervasives.Signature
 module Data_encoding = Alpha_environment.Data_encoding
 module MBytes = Bytes
 module Error_monad = X_error_monad
-module Proto_env = Tpe_017
+module Proto_env = Tezos_protocol_environment_alpha
 open Error_monad
 open Protocol
 
@@ -82,6 +82,7 @@ module Context_init = struct
         Alpha_context.Parameters.{
           bootstrap_accounts ;
           bootstrap_contracts = [] ;
+          bootstrap_smart_rollups = [] ;
           commitments ;
           constants ;
           security_deposit_ramp_up_cycles ;
@@ -91,7 +92,7 @@ module Context_init = struct
     let proto_params =
       Data_encoding.Binary.to_bytes_exn Data_encoding.json json
     in
-    let* ctxt = Tpenv.(
+    let* ctxt = Tezos_protocol_environment.(
       Context.add Memory_context.empty ["version"] (MBytes.of_string "genesis")
       )
     in
@@ -156,14 +157,18 @@ module Context_init = struct
   let contents
         ~predecessor_hash
         ?(proof_of_work_nonce = default_proof_of_work_nonce)
-        ?(payload_round = Alpha_context.Round.zero) ?seed_nonce_hash ?(liquidity_baking_toggle_vote = Liquidity_baking_repr.LB_off) () =
+        ?(payload_round = Alpha_context.Round.zero) ?seed_nonce_hash ?(liquidity_baking_toggle_vote = Alpha_context.Toggle_votes.Toggle_vote_pass) ?(adaptive_inflation_vote = Alpha_context.Toggle_votes.Toggle_vote_pass) () =
     let payload_hash = Alpha_context.Block_payload.hash ~predecessor_hash ~payload_round [] in (* TODO: check if this is correct *)
     Alpha_context.Block_header.({
         payload_hash ;
         payload_round ;
         proof_of_work_nonce ;
         seed_nonce_hash ;
-        liquidity_baking_toggle_vote ;
+        toggle_votes =
+            {
+              liquidity_baking_vote = liquidity_baking_toggle_vote;
+              adaptive_inflation_vote;
+            };
       })
 
   let begin_validation_and_application ctxt chain_id mode ~predecessor =

@@ -4,7 +4,7 @@ module Signature = Tezos_base.TzPervasives.Signature
 module Data_encoding = Alpha_environment.Data_encoding
 module MBytes = Bytes
 module Error_monad = X_error_monad
-module Proto_env = Tpe_016
+module Proto_env = Tezos_protocol_environment_alpha
 open Error_monad
 open Protocol
 
@@ -82,6 +82,7 @@ module Context_init = struct
         Alpha_context.Parameters.{
           bootstrap_accounts ;
           bootstrap_contracts = [] ;
+          bootstrap_smart_rollups = [] ;
           commitments ;
           constants ;
           security_deposit_ramp_up_cycles ;
@@ -91,11 +92,11 @@ module Context_init = struct
     let proto_params =
       Data_encoding.Binary.to_bytes_exn Data_encoding.json json
     in
-    let* ctxt = Tpenv.(
+    let* ctxt = Tezos_protocol_environment.(
       Context.add Memory_context.empty ["version"] (MBytes.of_string "genesis")
       )
     in
-    let* ctxt = Tpenv.Context.(
+    let* ctxt = Proto_env.Context.(
       add ctxt protocol_param_key proto_params
       )
     in
@@ -116,7 +117,7 @@ module Context_init = struct
       Stdlib.failwith "Must have one account with a roll to bake";
 
     (* Check there is at least one roll *)
-    let constants : Alpha_context.Constants.Parametric.t = Tp_016_params.Default_parameters.constants_test in
+    let constants = Memory_proto_pre_alpha.Parameters.Default_parameters.constants_test in
     let* () = check_constants_consistency constants in
     let hash =
       Alpha_environment.Block_hash.of_b58check_exn "BLockGenesisGenesisGenesisGenesisGenesisCCCCCeZiLHU"
@@ -154,16 +155,20 @@ module Context_init = struct
     return (ctxt, accounts, contracts)
 
   let contents
-        ~predecessor
+        ~predecessor_hash
         ?(proof_of_work_nonce = default_proof_of_work_nonce)
-        ?(round = Alpha_context.Round.zero) ?seed_nonce_hash ?(liquidity_baking_toggle_vote = Liquidity_baking_repr.LB_off) () =
-    let payload_hash = Alpha_context.Block_payload.hash ~predecessor_hash:predecessor ~payload_round:round [] in (* TODO: check if this is correct *)
+        ?(payload_round = Alpha_context.Round.zero) ?seed_nonce_hash ?(liquidity_baking_toggle_vote = Alpha_context.Toggle_votes.Toggle_vote_pass) ?(adaptive_inflation_vote = Alpha_context.Toggle_votes.Toggle_vote_pass) () =
+    let payload_hash = Alpha_context.Block_payload.hash ~predecessor_hash ~payload_round [] in (* TODO: check if this is correct *)
     Alpha_context.Block_header.({
         payload_hash ;
-        payload_round = round ;
+        payload_round ;
         proof_of_work_nonce ;
         seed_nonce_hash ;
-        liquidity_baking_toggle_vote ;
+        toggle_votes =
+            {
+              liquidity_baking_vote = liquidity_baking_toggle_vote;
+              adaptive_inflation_vote;
+            };
       })
 
   let begin_validation_and_application ctxt chain_id mode ~predecessor =
@@ -179,7 +184,7 @@ module Context_init = struct
   let begin_construction ?(round=Alpha_context.Round.zero) ~timestamp ~(header:Alpha_context.Block_header.shell_header) ~hash ctxt =
     let (>>=) = Lwt_syntax.( let* ) in
     let (>>=?) = Lwt_result_syntax.( let* ) in
-    let contents = contents ~round ~predecessor:hash () in
+    let contents = contents ~payload_round:round ~predecessor_hash:hash () in
     let protocol_data =
       let open! Alpha_context.Block_header in {
         contents ;
@@ -193,7 +198,7 @@ module Context_init = struct
   let main n =
     let (>>=?) = Lwt_result_syntax.( let* ) in
     init n >>=? fun ((ctxt, header, hash), accounts, contracts) ->
-    let timestamp = Environment.Time.of_seconds @@ 1645576185L in
+    let timestamp = Environment.Time.of_seconds @@ 1645498950L in
     begin_construction ~timestamp ~header ~hash ctxt.context >>=? fun ctxt ->
       Lwt_result_syntax.return (ctxt, accounts, contracts)
 
@@ -205,7 +210,6 @@ type identity = {
     secret_key : Signature.secret_key;
     implicit_contract : Alpha_context.Contract.t;
   }
-
 
 type environment = {
     tezos_context : Alpha_context.t ;

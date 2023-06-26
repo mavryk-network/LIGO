@@ -3,7 +3,7 @@
   (public_name proto-alpha-utils)
   (libraries
     tezos-error-monad
-    tp-017
+    tezos-protocol-alpha
     tezos-memory-proto-alpha
     data-encoding
     simple-utils

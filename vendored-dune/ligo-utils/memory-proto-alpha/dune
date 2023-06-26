@@ -2,9 +2,9 @@
   (name memory_proto_alpha)
   (public_name tezos-memory-proto-alpha)
   (libraries
-    tpe
-    tp-017
-    tc-017
-    tp-017.parameters
-    tp-017.environment
-    tz-017-test-helpers))
+    tezos-protocol-environment
+    tezos-protocol-alpha
+    tezos-client-alpha
+    tezos-protocol-alpha.parameters
+    tezos-protocol-alpha.environment
+    tezos-alpha-test-helpers))
