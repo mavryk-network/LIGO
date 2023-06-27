@@ -560,7 +560,14 @@ let rec error_ppformat
          Or check if template exists on LIGO registry.\n"
       @@ String.concat ~sep:"\n- " lststr
     | `Ligo_init_registry_template_error e -> Format.fprintf f "@[<hv>@.%s@.@]" e
-    | `Ligo_init_git_template_error e -> Format.fprintf f "@[<hv>@.%s@.@]" e)
+    | `Ligo_init_git_template_error e -> Format.fprintf f "@[<hv>@.%s@.@]" e
+    | `Scopes_recovered_error e ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.%s@]"
+        Simple_utils.(PP_helpers.option (Snippet.pp ~no_colour))
+        e.content.location
+        e.content.message)
 
 
 let rec error_json : Types.all -> Simple_utils.Error.t list =
@@ -747,6 +754,7 @@ let rec error_json : Types.all -> Simple_utils.Error.t list =
   | `Repl_unexpected ->
     let content = make_content ~message:"REPL tracer" () in
     [ make ~stage:"repl" ~content ]
+  | `Scopes_recovered_error e -> [ e ]
 
 
 let error_jsonformat : Types.all -> Yojson.Safe.t =

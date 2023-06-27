@@ -269,14 +269,6 @@ module Of_Ast_core = struct
 end
 
 module Typing_env = struct
-  type nonrec t =
-    { (* type_env is the global typing signature required by the typer *)
-      type_env : Ast_typed.signature
-    ; (* bindings is Map from [Location.t] -> [Types.type_case] *)
-      bindings : t
-    ; (* Top-level declaration tree used for ast-typed-self-passes *)
-      decls : Ast_typed.declaration list
-    }
 
   (** The typer normall call {!Trace.error} which internally always calls {!Stdlib.raise}
       which stops the program, But here we want to recover from the error. That is the reason 
@@ -284,56 +276,59 @@ module Typing_env = struct
   let collect_warns_and_errs
       ~(raise : (Main_errors.all, Main_warnings.all) Trace.raise)
       tracer
-      (e, ws)
+      (es, ws)
     =
-    let () = List.iter ws ~f:raise.warning in
-    raise.log_error (tracer e)
+    List.iter ws ~f:raise.warning;
+    List.iter es ~f:(fun e -> raise.log_error (tracer e))
 
 
-  let update_typing_env
+  let collect_recovered_errors_from_module prg =
+    Self_ast_typed.Helpers.fold_expression_in_module
+      (fun errs (expr : Ast_typed.expression) ->
+        match expr.expression_content with
+        | E_error { error; _ } -> error :: errs
+        | _ -> errs)
+      []
+      prg
+
+
+  let resolve
       ~(raise : (Main_errors.all, Main_warnings.all) Trace.raise)
       ~options
-      tenv
-      decl
+      ~stdlib_env
+      decls
     =
     let typed_prg =
       Simple_utils.Trace.to_stdlib_result
-      @@ Checking.type_declaration ~options ~env:tenv.type_env decl
+      @@ Checking.type_program ~options ~env:stdlib_env decls
     in
     Result.(
       match typed_prg with
-      | Ok (decl, ws) ->
-        let decl = List.nth_exn decl 0 in
-        let module AST = Ast_typed in
+      | Ok (prg, ws) ->
         let bindings =
-          Of_Ast_typed.extract_binding_types tenv.bindings decl.wrap_content
+          List.fold_left prg ~init:empty ~f:(fun bindings decl ->
+              Of_Ast_typed.extract_binding_types bindings decl.wrap_content)
         in
-        let type_env = tenv.type_env @ Ast_typed.Misc.to_signature [ decl ] in
-        let decls = tenv.decls @ [ decl ] in
         let () = List.iter ws ~f:raise.warning in
-        { type_env; bindings; decls }
+        let es = collect_recovered_errors_from_module prg in
+        collect_warns_and_errs ~raise Main_errors.scopes_recovered_error (es, ws);
+        prg, bindings
       | Error (e, ws) ->
-        collect_warns_and_errs ~raise Main_errors.checking_tracer (e, ws);
-        tenv)
+        collect_warns_and_errs ~raise Main_errors.checking_tracer ([ e ], ws);
+        (* For now, assume errors are recorded in the AST *)
+        [], empty)
 
 
   let self_ast_typed_pass
       ~(raise : (Main_errors.all, Main_warnings.all) Trace.raise)
       ~(options : Compiler_options.middle_end)
-      tenv
+      decls
     =
     ignore options;
-    match
-      Simple_utils.Trace.to_stdlib_result @@ Self_ast_typed.all_program tenv.decls
-    with
+    match Simple_utils.Trace.to_stdlib_result @@ Self_ast_typed.all_program decls with
     | Ok (_, ws) -> List.iter ws ~f:raise.warning
     | Error (e, ws) ->
-      collect_warns_and_errs ~raise Main_errors.self_ast_typed_tracer (e, ws)
-
-
-  let init stdlib_decls =
-    let type_env = Ast_typed.Misc.to_signature stdlib_decls in
-    { type_env; bindings = LMap.empty; decls = stdlib_decls }
+      collect_warns_and_errs ~raise Main_errors.self_ast_typed_tracer ([ e ], ws)
 end
 
 (** [resolve] takes your [Ast_core.program] and gives you the typing information
@@ -366,10 +361,9 @@ let resolve
     -> Ast_core.program -> t
   =
  fun ~raise ~options ~stdlib_decls prg ->
-  let tenv = Typing_env.init stdlib_decls in
-  let tenv = List.fold prg ~init:tenv ~f:(Typing_env.update_typing_env ~raise ~options) in
-  let () = Typing_env.self_ast_typed_pass ~raise ~options tenv in
-  let bindings = tenv.bindings in
+  let stdlib_env = Ast_typed.to_signature stdlib_decls in
+  let tprg, bindings = Typing_env.resolve ~raise ~options ~stdlib_env prg in
+  let () = Typing_env.self_ast_typed_pass ~raise ~options tprg in
   Of_Ast_core.declarations bindings prg
 
 
