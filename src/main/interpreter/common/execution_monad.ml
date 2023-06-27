@@ -191,7 +191,10 @@ module Command = struct
         Location.t * Ligo_interpreter.Types.calltrace * string
         -> LT.mcode tezos_command
     | Constant_eval :
-        Location.t * Ligo_interpreter.Types.calltrace * string * Ast_aggregated.type_expression
+        Location.t
+        * Ligo_interpreter.Types.calltrace
+        * string
+        * Ast_aggregated.type_expression
         -> LT.value tezos_command
     | Register_file_constants :
         Location.t * Ligo_interpreter.Types.calltrace * string
@@ -803,23 +806,14 @@ module Command = struct
         Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun x -> x) data_t
       in
       let constant : (unit, string) Scoping.Micheline.node =
-        Prim ((), "constant", [String ((), code)], [])
+        Prim ((), "constant", [ String ((), code) ], [])
       in
       let code : (unit, string) Scoping.Micheline.node =
-        Prim ((), "PUSH", [ty; constant], [])
+        Prim ((), "PUSH", [ ty; constant ], [])
       in
-      let code : (unit, string) Scoping.Micheline.node =
-        Seq ((), [code])
-      in
+      let code : (unit, string) Scoping.Micheline.node = Seq ((), [ code ]) in
       (match
-         Michelson_backend.run_michelson_func_
-           ~raise
-           ~options
-           ~loc
-           ctxt
-           code
-           type_
-           []
+         Michelson_backend.run_michelson_func_ ~raise ~options ~loc ctxt code type_ []
        with
       | Ok v -> v, ctxt
       | Error data ->

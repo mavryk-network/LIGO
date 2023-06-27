@@ -1651,7 +1651,7 @@ let%expect_test _ =
     ; "--constants"
     ; "{ PUSH int 2 ; PUSH int 3 ; DIG 2 ; MUL ; ADD }"
     ];
-  [%expect{| 128 |}]
+  [%expect {| 128 |}]
 
 let%expect_test _ =
   run_ligo_good
@@ -1711,7 +1711,7 @@ let%expect_test _ =
     ; "--constants"
     ; "{ PUSH int 2 ; PUSH int 3 ; DIG 2 ; MUL ; ADD }"
     ];
-  [%expect{| (Pair 1 { PUSH int 2 ; PUSH int 3 ; DIG 2 ; MUL ; ADD }) |}]
+  [%expect {| (Pair 1 { PUSH int 2 ; PUSH int 3 ; DIG 2 ; MUL ; ADD }) |}]
 
 let%expect_test _ =
   run_ligo_good
@@ -1722,7 +1722,7 @@ let%expect_test _ =
     ; "--file-constants"
     ; contract_resource "const.json"
     ];
-  [%expect{| (Pair 1 { PUSH int 2 ; PUSH int 3 ; DIG 2 ; MUL ; ADD }) |}]
+  [%expect {| (Pair 1 { PUSH int 2 ; PUSH int 3 ; DIG 2 ; MUL ; ADD }) |}]
 
 let%expect_test _ =
   run_ligo_good

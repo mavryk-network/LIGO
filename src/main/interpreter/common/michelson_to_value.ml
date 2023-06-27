@@ -285,7 +285,9 @@ let rec decompile_to_untyped_value ~raise ~bigmaps
            Tezos_protocol.Protocol.Michelson_v1_primitives.string_of_prim
            c)
     in
-    let code_block = make_e ~loc (e_string (Ligo_string.verbatim u)) (t_arrow ~loc t_input t_output ()) in
+    let code_block =
+      make_e ~loc (e_string (Ligo_string.verbatim u)) (t_arrow ~loc t_input t_output ())
+    in
     let insertion =
       e_a_raw_code
         ~loc

@@ -437,9 +437,19 @@ let storage
           michelson
           []
       in
-      let _, v = Interpreter.eval_expression ~raise ~steps:Int.max_value ~options ~self_pass:false app_typed_prg typed_store in
+      let _, v =
+        Interpreter.eval_expression
+          ~raise
+          ~steps:Int.max_value
+          ~options
+          ~self_pass:false
+          app_typed_prg
+          typed_store
+      in
       let type_ = Aggregation.compile_type typed_store.type_expression in
-      let compiled_param = Interpreter.compile_value ~raise ~options ~loc:Location.generated v type_ in
+      let compiled_param =
+        Interpreter.compile_value ~raise ~options ~loc:Location.generated v type_
+      in
       let compiled_param = compiled_param.micheline_repr in
       let module_ = Self_ast_typed.Helpers.get_module module_path app_typed_prg in
       let () =
@@ -457,5 +467,4 @@ let storage
           { now; amount; balance; sender; source; parameter_ty = None }
       in
       ignore options;
-      ( no_comment compiled_param.code
-      , [] ) )
+      no_comment compiled_param.code, [] )

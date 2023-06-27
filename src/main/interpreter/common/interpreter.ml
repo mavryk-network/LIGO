@@ -2150,8 +2150,10 @@ let eval_expression ~raise ~steps ~options ?(self_pass = true)
  fun prg expr ->
   (* Compile new context *)
   let initial_state = Execution_monad.make_state ~raise ~options in
-  let prg = if self_pass then
-    trace ~raise Main_errors.self_ast_typed_tracer @@ Self_ast_typed.all_program prg else prg
+  let prg =
+    if self_pass
+    then trace ~raise Main_errors.self_ast_typed_tracer @@ Self_ast_typed.all_program prg
+    else prg
   in
   let expr =
     Ligo_compile.Of_typed.compile_expression_in_context
@@ -2166,19 +2168,31 @@ let eval_expression ~raise ~steps ~options ?(self_pass = true)
   in
   let loc = Location.generated in
   let calltrace = [] in
-  let state = match options.backend.file_constants with
+  let state =
+    match options.backend.file_constants with
     | None -> initial_state
     | Some file_constants ->
-      snd @@ Monad.eval ~raise ~options
-      (let open Monad in
-       let>> _ = Register_file_constants (loc, calltrace, file_constants) in
-       return ()) initial_state None in
+      snd
+      @@ Monad.eval
+           ~raise
+           ~options
+           (let open Monad in
+           let>> _ = Register_file_constants (loc, calltrace, file_constants) in
+           return ())
+           initial_state
+           None
+  in
   let add_constant s state =
-    snd @@ Monad.eval ~raise ~options
-      (let open Monad in
-       let>> p = Constant_to_Michelson (loc, calltrace, s) in
-       let>> _ = Register_constant (loc, calltrace, p) in
-       return ()) state None
+    snd
+    @@ Monad.eval
+         ~raise
+         ~options
+         (let open Monad in
+         let>> p = Constant_to_Michelson (loc, calltrace, s) in
+         let>> _ = Register_constant (loc, calltrace, p) in
+         return ())
+         state
+         None
   in
   let state = List.fold_right ~f:add_constant ~init:state options.backend.constants in
   let value, st = try_eval ~raise ~steps ~options expr Env.empty_env state None in
@@ -2228,10 +2242,11 @@ let eval_test ~raise ~steps ~options : Ast_typed.program -> bool * toplevel_env 
     b, List.fold_right ~f ~init:[] @@ lst
   | _ -> failwith "Not a tuple?"
 
-let compile_value ~raise ~options ~(loc:Simple_utils.Location.t)
-  :  Monad.LT.value
-  -> type_expression
-  -> Monad.LT.typed_michelson_code
-  = Michelson_backend.compile_value ~raise ~options ~loc
+
+let compile_value ~raise ~options ~(loc : Simple_utils.Location.t)
+    : Monad.LT.value -> type_expression -> Monad.LT.typed_michelson_code
+  =
+  Michelson_backend.compile_value ~raise ~options ~loc
+
 
 let () = Printexc.record_backtrace true

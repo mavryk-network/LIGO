@@ -86,7 +86,7 @@ end = struct
     | { key = "hidden"; value = None } -> { o_attr with hidden = true }
     | { key = "thunk"; value = None } -> { o_attr with thunk = true }
     | { key = "entry"; value = None } -> { o_attr with entry = true }
-    | { key = "comment"; value = _} -> o_attr (* TODO: We might want to keep it *)
+    | { key = "comment"; value = _ } -> o_attr (* TODO: We might want to keep it *)
     | _ ->
       raise.warning (`Nanopasses_attribute_ignored loc);
       Value_attr.default_attributes
@@ -99,7 +99,7 @@ end = struct
     match i_attr with
     | { key = "view"; value = None } -> { o_attr with view = true }
     | { key = "entry"; value = None } -> { o_attr with entry = true }
-    | { key = "comment"; value = _} -> o_attr (* TODO: We might want to keep it *)
+    | { key = "comment"; value = _ } -> o_attr (* TODO: We might want to keep it *)
     | _ ->
       raise.warning (`Nanopasses_attribute_ignored loc);
       let default : O.sig_item_attribute = { entry = false; view = false } in
@@ -114,7 +114,7 @@ end = struct
     | { key = "thunk"; value = None } -> { o_attr with thunk = true }
     | { key = "private"; value = None } -> { o_attr with public = false }
     | { key = "public"; value = None } -> { o_attr with public = true }
-    | { key = "comment"; value = _} -> o_attr (* TODO: We might want to keep it *)
+    | { key = "comment"; value = _ } -> o_attr (* TODO: We might want to keep it *)
     | _ ->
       raise.warning (`Nanopasses_attribute_ignored loc);
       Value_attr.default_attributes
@@ -128,7 +128,7 @@ end = struct
     | { key = "private"; value = None } -> { o_attr with public = false }
     | { key = "public"; value = None } -> { o_attr with public = true }
     | { key = "hidden"; value = None } -> { o_attr with hidden = true }
-    | { key = "comment"; value = _} -> o_attr (* TODO: We might want to keep it *)
+    | { key = "comment"; value = _ } -> o_attr (* TODO: We might want to keep it *)
     | _ ->
       raise.warning (`Nanopasses_attribute_ignored loc);
       Type_or_module_attr.default_attributes
