@@ -35,27 +35,178 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good
     [ "compile"; "contract"; contract "FA1.2.interface.mligo"; "-m"; "FA12_ENTRIES" ];
-  [%expect.unreachable]
-  [@@expect.uncaught_exn
-    {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
-  Called from Cli_expect_tests__Contract_tests.(fun) in file "src/bin/expect_tests/contract_tests.ml", line 36, characters 2-101
-  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts/FA1.2.interface.mligo", line 52, characters 0-52:
-   51 |
-   52 | module FA12_ENTRIES : FA12_IFACE = FA12_IMPL_ENTRIES
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-  Value "transfer" does not match.
-  Expected "Mangled_module_____________________test__contracts__FA1____2____entries____mligo.transfer -> Mangled_module_____________________test__contracts__FA1____2____entries____mligo.storage -> Mangled_module_____________________test__contracts__FA1____2____entries____mligo.result", but got: "Mangled_module_____________________test__contracts__FA1____2____entries____mligo.transfer -> Mangled_module_____________________test__contracts__FA1____2____entries____mligo.storage -> Mangled_module_____________________test__contracts__FA1____2____entries____mligo.result". |}]
+  [%expect{|
+    { parameter
+        (or (or (or (pair %approve (address %spender) (nat %value))
+                    (pair %getAllowance
+                       (pair %request (address %owner) (address %spender))
+                       (contract %callback nat)))
+                (or (pair %getBalance (address %owner) (contract %callback nat))
+                    (pair %getTotalSupply (unit %request) (contract %callback nat))))
+            (pair %transfer (address %from) (address %to) (nat %value))) ;
+      storage
+        (pair (pair (big_map %allowances (pair (address %owner) (address %spender)) nat)
+                    (big_map %tokens address nat))
+              (nat %total_supply)) ;
+      code { UNPAIR ;
+             IF_LEFT
+               { IF_LEFT
+                   { IF_LEFT
+                       { DUP 2 ;
+                         CAR ;
+                         CAR ;
+                         DUP 2 ;
+                         CAR ;
+                         SENDER ;
+                         PAIR ;
+                         PUSH nat 0 ;
+                         DUP 4 ;
+                         CDR ;
+                         COMPARE ;
+                         GT ;
+                         PUSH nat 0 ;
+                         DUP 4 ;
+                         DUP 4 ;
+                         GET ;
+                         IF_NONE { PUSH nat 0 } {} ;
+                         COMPARE ;
+                         GT ;
+                         AND ;
+                         IF { PUSH string "UnsafeAllowanceChange" ; FAILWITH } {} ;
+                         DUP 4 ;
+                         DIG 4 ;
+                         CAR ;
+                         DIG 4 ;
+                         CDR ;
+                         DIG 4 ;
+                         PUSH nat 0 ;
+                         DUP 3 ;
+                         COMPARE ;
+                         EQ ;
+                         IF { SWAP ; DROP ; NONE nat } { SWAP ; SOME } ;
+                         DIG 4 ;
+                         UPDATE ;
+                         UPDATE 1 ;
+                         UPDATE 1 ;
+                         NIL operation }
+                       { DUP 2 ;
+                         NIL operation ;
+                         DUP 3 ;
+                         CDR ;
+                         PUSH mutez 0 ;
+                         DIG 5 ;
+                         CAR ;
+                         CAR ;
+                         DIG 5 ;
+                         CAR ;
+                         GET ;
+                         IF_NONE { PUSH nat 0 } {} ;
+                         TRANSFER_TOKENS ;
+                         CONS } }
+                   { IF_LEFT
+                       { DUP 2 ;
+                         NIL operation ;
+                         DUP 3 ;
+                         CDR ;
+                         PUSH mutez 0 ;
+                         DIG 5 ;
+                         CAR ;
+                         CDR ;
+                         DIG 5 ;
+                         CAR ;
+                         GET ;
+                         IF_NONE { PUSH nat 0 } {} ;
+                         TRANSFER_TOKENS }
+                       { DUP 2 ;
+                         NIL operation ;
+                         DIG 2 ;
+                         CDR ;
+                         PUSH mutez 0 ;
+                         DIG 4 ;
+                         CDR ;
+                         TRANSFER_TOKENS } ;
+                     CONS } }
+               { DUP 2 ;
+                 CAR ;
+                 CAR ;
+                 DUP 3 ;
+                 CAR ;
+                 CDR ;
+                 DUP 3 ;
+                 CAR ;
+                 SENDER ;
+                 COMPARE ;
+                 EQ ;
+                 IF { SWAP }
+                    { SENDER ;
+                      DUP 4 ;
+                      CAR ;
+                      PAIR ;
+                      DUP 4 ;
+                      GET 4 ;
+                      DUP 4 ;
+                      DUP 3 ;
+                      GET ;
+                      IF_NONE { PUSH nat 0 } {} ;
+                      SUB ;
+                      ISNAT ;
+                      IF_NONE { PUSH string "NotEnoughAllowance" ; FAILWITH } {} ;
+                      DIG 3 ;
+                      PUSH nat 0 ;
+                      DUP 3 ;
+                      COMPARE ;
+                      EQ ;
+                      IF { SWAP ; DROP ; NONE nat } { SWAP ; SOME } ;
+                      DIG 2 ;
+                      UPDATE } ;
+                 DUP 3 ;
+                 GET 4 ;
+                 DUP 3 ;
+                 DUP 5 ;
+                 CAR ;
+                 GET ;
+                 IF_NONE { PUSH nat 0 } {} ;
+                 SUB ;
+                 ISNAT ;
+                 IF_NONE { PUSH string "NotEnoughBalance" ; FAILWITH } {} ;
+                 DIG 2 ;
+                 PUSH nat 0 ;
+                 DUP 3 ;
+                 COMPARE ;
+                 EQ ;
+                 IF { SWAP ; DROP ; NONE nat } { SWAP ; SOME } ;
+                 DUP 4 ;
+                 CAR ;
+                 UPDATE ;
+                 DUP 3 ;
+                 GET 4 ;
+                 DUP 2 ;
+                 DUP 5 ;
+                 GET 3 ;
+                 GET ;
+                 IF_NONE { PUSH nat 0 } {} ;
+                 ADD ;
+                 DUP 5 ;
+                 DIG 5 ;
+                 CAR ;
+                 DIG 3 ;
+                 PUSH nat 0 ;
+                 DUP 5 ;
+                 COMPARE ;
+                 EQ ;
+                 IF { DIG 3 ; DROP ; NONE nat } { DIG 3 ; SOME } ;
+                 DIG 5 ;
+                 GET 3 ;
+                 UPDATE ;
+                 UPDATE 2 ;
+                 UPDATE 1 ;
+                 DUP ;
+                 CAR ;
+                 DIG 2 ;
+                 UPDATE 1 ;
+                 UPDATE 1 ;
+                 NIL operation } ;
+             PAIR } } |}]
 
 let%expect_test _ =
   run_ligo_good
@@ -2453,7 +2604,17 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; bad_contract "entrypoint_no_type.jsligo" ];
   [%expect {|
-    Internal error: Entrypoint main does not exist |}]
+    File "../../test/contracts/negative/entrypoint_no_type.jsligo", line 8, character 15 to line 10, character 1:
+      7 | @entry
+      8 | const unique = (_ : organization, _ : storage) => {
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      9 |     return failwith("You need to be part of Tezos organization to activate an organization");
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     10 | };
+          ^
+
+    Invalid type for entrypoint "unique".
+    An entrypoint must of type "parameter * storage -> operation list * storage". |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "increment_module.jsligo"; "-m"; "C" ];
@@ -2468,21 +2629,178 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "FA1.2.entries.mligo" ];
-  [%expect.unreachable]
-  [@@expect.uncaught_exn
-    {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
-  Called from Cli_expect_tests__Contract_tests.(fun) in file "src/bin/expect_tests/contract_tests.ml", line 2470, characters 2-73
-  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
-
-  Trailing output
-  ---------------
-  Internal error: Entrypoint main does not exist |}]
+  [%expect{|
+    { parameter
+        (or (or (or (pair %approve (address %spender) (nat %value))
+                    (pair %getAllowance
+                       (pair %request (address %owner) (address %spender))
+                       (contract %callback nat)))
+                (or (pair %getBalance (address %owner) (contract %callback nat))
+                    (pair %getTotalSupply (unit %request) (contract %callback nat))))
+            (pair %transfer (address %from) (address %to) (nat %value))) ;
+      storage
+        (pair (pair (big_map %allowances (pair (address %owner) (address %spender)) nat)
+                    (big_map %tokens address nat))
+              (nat %total_supply)) ;
+      code { UNPAIR ;
+             IF_LEFT
+               { IF_LEFT
+                   { IF_LEFT
+                       { DUP 2 ;
+                         CAR ;
+                         CAR ;
+                         DUP 2 ;
+                         CAR ;
+                         SENDER ;
+                         PAIR ;
+                         PUSH nat 0 ;
+                         DUP 4 ;
+                         CDR ;
+                         COMPARE ;
+                         GT ;
+                         PUSH nat 0 ;
+                         DUP 4 ;
+                         DUP 4 ;
+                         GET ;
+                         IF_NONE { PUSH nat 0 } {} ;
+                         COMPARE ;
+                         GT ;
+                         AND ;
+                         IF { PUSH string "UnsafeAllowanceChange" ; FAILWITH } {} ;
+                         DUP 4 ;
+                         DIG 4 ;
+                         CAR ;
+                         DIG 4 ;
+                         CDR ;
+                         DIG 4 ;
+                         PUSH nat 0 ;
+                         DUP 3 ;
+                         COMPARE ;
+                         EQ ;
+                         IF { SWAP ; DROP ; NONE nat } { SWAP ; SOME } ;
+                         DIG 4 ;
+                         UPDATE ;
+                         UPDATE 1 ;
+                         UPDATE 1 ;
+                         NIL operation }
+                       { DUP 2 ;
+                         NIL operation ;
+                         DUP 3 ;
+                         CDR ;
+                         PUSH mutez 0 ;
+                         DIG 5 ;
+                         CAR ;
+                         CAR ;
+                         DIG 5 ;
+                         CAR ;
+                         GET ;
+                         IF_NONE { PUSH nat 0 } {} ;
+                         TRANSFER_TOKENS ;
+                         CONS } }
+                   { IF_LEFT
+                       { DUP 2 ;
+                         NIL operation ;
+                         DUP 3 ;
+                         CDR ;
+                         PUSH mutez 0 ;
+                         DIG 5 ;
+                         CAR ;
+                         CDR ;
+                         DIG 5 ;
+                         CAR ;
+                         GET ;
+                         IF_NONE { PUSH nat 0 } {} ;
+                         TRANSFER_TOKENS }
+                       { DUP 2 ;
+                         NIL operation ;
+                         DIG 2 ;
+                         CDR ;
+                         PUSH mutez 0 ;
+                         DIG 4 ;
+                         CDR ;
+                         TRANSFER_TOKENS } ;
+                     CONS } }
+               { DUP 2 ;
+                 CAR ;
+                 CAR ;
+                 DUP 3 ;
+                 CAR ;
+                 CDR ;
+                 DUP 3 ;
+                 CAR ;
+                 SENDER ;
+                 COMPARE ;
+                 EQ ;
+                 IF { SWAP }
+                    { SENDER ;
+                      DUP 4 ;
+                      CAR ;
+                      PAIR ;
+                      DUP 4 ;
+                      GET 4 ;
+                      DUP 4 ;
+                      DUP 3 ;
+                      GET ;
+                      IF_NONE { PUSH nat 0 } {} ;
+                      SUB ;
+                      ISNAT ;
+                      IF_NONE { PUSH string "NotEnoughAllowance" ; FAILWITH } {} ;
+                      DIG 3 ;
+                      PUSH nat 0 ;
+                      DUP 3 ;
+                      COMPARE ;
+                      EQ ;
+                      IF { SWAP ; DROP ; NONE nat } { SWAP ; SOME } ;
+                      DIG 2 ;
+                      UPDATE } ;
+                 DUP 3 ;
+                 GET 4 ;
+                 DUP 3 ;
+                 DUP 5 ;
+                 CAR ;
+                 GET ;
+                 IF_NONE { PUSH nat 0 } {} ;
+                 SUB ;
+                 ISNAT ;
+                 IF_NONE { PUSH string "NotEnoughBalance" ; FAILWITH } {} ;
+                 DIG 2 ;
+                 PUSH nat 0 ;
+                 DUP 3 ;
+                 COMPARE ;
+                 EQ ;
+                 IF { SWAP ; DROP ; NONE nat } { SWAP ; SOME } ;
+                 DUP 4 ;
+                 CAR ;
+                 UPDATE ;
+                 DUP 3 ;
+                 GET 4 ;
+                 DUP 2 ;
+                 DUP 5 ;
+                 GET 3 ;
+                 GET ;
+                 IF_NONE { PUSH nat 0 } {} ;
+                 ADD ;
+                 DUP 5 ;
+                 DIG 5 ;
+                 CAR ;
+                 DIG 3 ;
+                 PUSH nat 0 ;
+                 DUP 5 ;
+                 COMPARE ;
+                 EQ ;
+                 IF { DIG 3 ; DROP ; NONE nat } { DIG 3 ; SOME } ;
+                 DIG 5 ;
+                 GET 3 ;
+                 UPDATE ;
+                 UPDATE 2 ;
+                 UPDATE 1 ;
+                 DUP ;
+                 CAR ;
+                 DIG 2 ;
+                 UPDATE 1 ;
+                 UPDATE 1 ;
+                 NIL operation } ;
+             PAIR } } |}]
 
 let%expect_test _ =
   run_ligo_good
@@ -2492,75 +2810,120 @@ let%expect_test _ =
     ; "Approve { spender = (\"tz1fakefakefakefakefakefakefakcphLA5\" : address) ; value \
        = 3n }"
     ];
-  [%expect.unreachable]
-  [@@expect.uncaught_exn
-    {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
-  Called from Cli_expect_tests__Contract_tests.(fun) in file "src/bin/expect_tests/contract_tests.ml", line 2488, characters 2-197
-  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
-
-  Trailing output
-  ---------------
-  Internal error: Entrypoint main does not exist |}]
+  [%expect{| (Left (Left (Left (Pair "tz1fakefakefakefakefakefakefakcphLA5" 3)))) |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "pokeGame.jsligo" ];
-  [%expect.unreachable]
-  [@@expect.uncaught_exn
-    {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
-  Called from Cli_expect_tests__Contract_tests.(fun) in file "src/bin/expect_tests/contract_tests.ml", line 2512, characters 2-69
-  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
-
-  Trailing output
-  ---------------
-  Internal error: Entrypoint main does not exist |}]
+  [%expect{|
+    { parameter
+        (or (or (pair %init address nat) (unit %poke)) (address %pokeAndGetFeedback)) ;
+      storage
+        (pair (pair (string %feedback)
+                    (map %pokeTraces address (pair (string %feedback) (address %receiver))))
+              (map %ticketOwnership address (ticket string))) ;
+      code { UNPAIR ;
+             IF_LEFT
+               { IF_LEFT
+                   { SWAP ;
+                     UNPAIR ;
+                     UNPAIR ;
+                     PUSH nat 0 ;
+                     DUP 5 ;
+                     CDR ;
+                     COMPARE ;
+                     EQ ;
+                     IF { DIG 3 ; DROP ; DIG 2 }
+                        { DUP 4 ;
+                          CDR ;
+                          PUSH string "can_poke" ;
+                          TICKET ;
+                          IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
+                          DIG 3 ;
+                          SWAP ;
+                          DIG 4 ;
+                          CAR ;
+                          SWAP ;
+                          SOME ;
+                          SWAP ;
+                          UPDATE } ;
+                     DUG 2 ;
+                     PAIR ;
+                     PAIR ;
+                     NIL operation ;
+                     PAIR }
+                   { DROP ;
+                     UNPAIR ;
+                     UNPAIR ;
+                     DIG 2 ;
+                     NONE (ticket string) ;
+                     SOURCE ;
+                     GET_AND_UPDATE ;
+                     IF_NONE
+                       { DROP 3 ;
+                         PUSH string "User does not have tickets => not allowed" ;
+                         FAILWITH }
+                       { DROP ;
+                         DIG 2 ;
+                         SELF_ADDRESS ;
+                         PUSH string "" ;
+                         PAIR ;
+                         SOURCE ;
+                         SWAP ;
+                         SOME ;
+                         SWAP ;
+                         UPDATE ;
+                         DIG 2 ;
+                         PAIR ;
+                         PAIR ;
+                         NIL operation ;
+                         PAIR } } }
+               { SWAP ;
+                 UNPAIR ;
+                 CDR ;
+                 SWAP ;
+                 NONE (ticket string) ;
+                 SOURCE ;
+                 GET_AND_UPDATE ;
+                 DUP 4 ;
+                 UNIT ;
+                 VIEW "feedback" string ;
+                 SWAP ;
+                 IF_NONE
+                   { DROP 4 ;
+                     PUSH string "User does not have tickets => not allowed" ;
+                     FAILWITH }
+                   { DROP ;
+                     IF_NONE
+                       { DROP 3 ;
+                         PUSH string "Cannot find view feedback on given oracle address" ;
+                         FAILWITH }
+                       { SWAP ;
+                         DIG 2 ;
+                         DIG 3 ;
+                         DUP 4 ;
+                         PAIR ;
+                         SOURCE ;
+                         SWAP ;
+                         SOME ;
+                         SWAP ;
+                         UPDATE ;
+                         DIG 2 ;
+                         PAIR ;
+                         PAIR ;
+                         NIL operation ;
+                         PAIR } } } } ;
+      view "feedback" unit string { CDR ; CAR ; CAR } } |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "parameter"; contract "pokeGame.jsligo"; "Poke()" ];
-  [%expect.unreachable]
-  [@@expect.uncaught_exn
-    {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
-  Called from Cli_expect_tests__Contract_tests.(fun) in file "src/bin/expect_tests/contract_tests.ml", line 2530, characters 2-80
-  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
-
-  Trailing output
-  ---------------
-  Internal error: Entrypoint main does not exist |}]
+  [%expect{| (Left (Right Unit)) |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "contract_of.jsligo" ];
-  [%expect.unreachable]
-  [@@expect.uncaught_exn
-    {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
-  Called from Cli_expect_tests__Contract_tests.(fun) in file "src/bin/expect_tests/contract_tests.ml", line 2548, characters 2-72
-  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
-
-  Trailing output
-  ---------------
-  Internal error: Entrypoint main does not exist |}]
+  [%expect{|
+    { parameter int ;
+      storage int ;
+      code { UNPAIR ; ADD ; NIL operation ; PAIR } } |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "entries_in_module.mligo"; "-m"; "C" ];

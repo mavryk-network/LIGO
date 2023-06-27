@@ -23,9 +23,8 @@ let _entries = ref EntriesSet.empty
 
 let get_entries () =
   let entries, _ = get_flag () in
-  let entries = Option.value ~default:[ "main" ] entries in
   let entries =
-    List.map ~f:(Ligo_prim.Value_var.of_input_var ~loc:Location.generated) entries
+    Option.map ~f:(List.map ~f:(Ligo_prim.Value_var.of_input_var ~loc:Location.generated)) entries
   in
   entries
 
@@ -63,7 +62,9 @@ let rec toplevel_wrap ~raise ~when_ ~wrap d =
 
 
 let compile ~raise =
-  _entries := EntriesSet.of_list (get_entries ());
+  _entries := (EntriesSet.of_list @@ match get_entries () with
+    | None -> [Ligo_prim.Value_var.of_input_var ~loc:Location.generated "main"]
+    | Some entries -> entries);
   let program_entry ~pass
       : (program_entry, declaration, instruction) program_entry_ -> program_entry
     = function
@@ -84,7 +85,7 @@ let compile ~raise =
       let prg =
         let pass =
           let pred ({ key; _ } : Attribute.t) =
-            (not (List.is_empty (get_entries ()))) && String.equal key "entry"
+            (Option.is_some (get_entries ())) && String.equal key "entry"
           in
           strip_attribute ~raise ~pred
         in
@@ -98,10 +99,10 @@ let compile ~raise =
           d_attr ~loc ({ key = "entry"; value = None }, d)
         in
         let when_ binders =
-          (not (List.is_empty (get_entries ())))
-          && List.exists binders ~f:(fun v ->
+          (* (Option.is_some (get_entries ())) *)
+          (* &&  *)List.exists binders ~f:(fun v ->
                  EntriesSet.mem !_entries v
-                 && List.mem ~equal:Ligo_prim.Value_var.equal (get_entries ()) v)
+                 (* && List.mem ~equal:Ligo_prim.Value_var.equal (get_entries ()) v *))
         in
         let pass = toplevel_wrap ~raise ~when_ ~wrap in
         apply_pass ~pass prg
