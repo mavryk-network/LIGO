@@ -38,7 +38,6 @@ module Type_vars = struct
     | Types.List.Or_unequal_lengths.Ok x -> x
     | Types.List.Or_unequal_lengths.Unequal_lengths -> assert false
 
-
   let ftv_folder
       : ( bound, ty_expr, pattern, bound, bound, bound, bound, bound, bound, bound, bound
       , bound, bound ) fold

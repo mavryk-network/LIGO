@@ -59,6 +59,7 @@ module Folding (X : EQUIVALENCES) = struct
 
   type program = (X.program, X.program_entry) Ast_unified.program_
   type top_level = (X.top_level, X.program) Ast_unified.top_level_
+
   type sig_expr = (X.sig_expr, X.sig_entry, X.ty_expr) Ast_unified.sig_expr_
   type sig_entry = (X.sig_expr, X.sig_entry, X.ty_expr) Ast_unified.sig_entry_
 end
