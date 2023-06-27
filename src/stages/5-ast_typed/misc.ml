@@ -254,7 +254,7 @@ let parameter_from_entrypoints
 
 
 let parameter_from_entrypoint
-    :  (Value_var.t * type_expression)
+    :  Value_var.t * type_expression
     -> ( type_expression * type_expression
        , [> `Not_entry_point_form of Types.expression_variable * Types.type_expression
          | `Storage_does_not_match of
@@ -270,9 +270,7 @@ let parameter_from_entrypoint
       Result.Ok (parameter, storage)
     | `Bad -> Result.Error (`Not_entry_point_form (entrypoint, entrypoint_type))
   in
-  return
-    ( parameter
-    , storage )
+  return (parameter, storage)
 
 
 (* Wrap a variable `f` of type `parameter -> storage -> return`

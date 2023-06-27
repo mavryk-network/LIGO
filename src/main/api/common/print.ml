@@ -107,11 +107,10 @@ let ast_unified (raw_options : Raw_options.t) show_loc hide_sort stop_before sou
           source_file
       in
       let unified = Compile.Utils.to_unified ~raise ~meta c_unit source_file in
-      let Top_level prg = unified.fp in
+      let (Top_level prg) = unified.fp in
       match stop_before with
       | None -> prg, []
-      | Some _ ->
-        Compile.Of_unified.compile_until ~raise ~options ?stop_before prg, [] )
+      | Some _ -> Compile.Of_unified.compile_until ~raise ~options ?stop_before prg, [] )
 
 
 let ast_core (raw_options : Raw_options.t) source_file =
@@ -164,8 +163,7 @@ let ast_typed (raw_options : Raw_options.t) source_file =
       if self_pass
       then
         ( Trace.trace ~raise Main_errors.self_ast_typed_tracer
-          @@ Self_ast_typed.all_program
-               typed
+          @@ Self_ast_typed.all_program typed
         , [] )
       else typed, [] )
 

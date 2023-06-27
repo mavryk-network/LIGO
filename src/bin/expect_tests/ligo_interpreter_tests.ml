@@ -349,7 +349,8 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_mutate_module.mligo" ];
   [%expect.unreachable]
-[@@expect.uncaught_exn {|
+  [@@expect.uncaught_exn
+    {|
   (* CR expect_test_collector: This test expectation appears to contain a backtrace.
      This is strongly discouraged as backtraces are fragile.
      Please change this test to not include a backtrace. *)
@@ -372,7 +373,8 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_mutate_module.jsligo" ];
   [%expect.unreachable]
-[@@expect.uncaught_exn {|
+  [@@expect.uncaught_exn
+    {|
   (* CR expect_test_collector: This test expectation appears to contain a backtrace.
      This is strongly discouraged as backtraces are fragile.
      Please change this test to not include a backtrace. *)
@@ -1064,7 +1066,8 @@ let%expect_test "for loops" =
       Everything at the top-level was executed.
       - testPalindrome exited with value (). |}];
   run_ligo_good [ "run"; "test"; test "/for_loop/pascal_triangle.jsligo" ];
-  [%expect{|
+  [%expect
+    {|
                       1
                     1   1
                   1   2   1
@@ -1088,20 +1091,23 @@ let%expect_test "for loops" =
     - testspace exited with value ().
     - test10 exited with value "". |}];
   run_ligo_good [ "run"; "test"; test "/for_loop/matrix_multiplication.jsligo" ];
-  [%expect{|
+  [%expect
+    {|
     Everything at the top-level was executed.
     - test_3x1_1x3 exited with value ().
     - test_3x3_3x3 exited with value ().
     - test_1x3_3x1 exited with value ().
     - test_I3x3_3x3 exited with value (). |}];
   run_ligo_good [ "run"; "test"; test "/for_loop/for_loops.jsligo" ];
-  [%expect{|
+  [%expect
+    {|
     Everything at the top-level was executed.
     - testLoop exited with value (). |}]
 
 let%expect_test "aggregation regression" =
   run_ligo_good [ "run"; "test"; test "agg_bar.mligo" ];
-  [%expect {|
+  [%expect
+    {|
     Running <A simple list extension>
     Everything at the top-level was executed. |}]
 

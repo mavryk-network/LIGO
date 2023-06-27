@@ -55,8 +55,8 @@ end = struct
       ; declaration = declaration ~raise
       ; program_entry = program_entry ~raise
       ; program = Fun.id
-      ; top_level = top_level
-      ; sig_expr = sig_expr
+      ; top_level
+      ; sig_expr
       ; sig_entry = sig_entry ~raise
       }
 
@@ -91,6 +91,7 @@ end = struct
       raise.warning (`Nanopasses_attribute_ignored loc);
       Value_attr.default_attributes
 
+
   and conv_vsigitem_attr ~raise
       : Location.t -> O.sig_item_attribute -> I.Attribute.t -> O.sig_item_attribute
     =
@@ -100,7 +101,7 @@ end = struct
     | { key = "entry"; value = None } -> { o_attr with entry = true }
     | _ ->
       raise.warning (`Nanopasses_attribute_ignored loc);
-      let default : O.sig_item_attribute = { entry = false ; view = false } in
+      let default : O.sig_item_attribute = { entry = false; view = false } in
       default
 
 
@@ -189,11 +190,7 @@ end = struct
            ; module_attr = O.TypeOrModuleAttr.default_attributes
            }
     | D_signature { name; sig_expr } ->
-      ret
-      @@ D_signature
-           { signature_binder = name
-           ; signature = sig_expr
-           }
+      ret @@ D_signature { signature_binder = name; signature = sig_expr }
     | D_type { name; type_expr } ->
       ret
       @@ D_type
@@ -438,8 +435,7 @@ end = struct
       @@ D_module
            { x with module_attr = conv_modtydecl_attr ~raise location x.module_attr attr }
     | PE_attr (_TODO, O.{ wrap_content = D_signature x; location }) ->
-      ret location
-      @@ D_signature x
+      ret location @@ D_signature x
     | PE_declaration d -> d
     | PE_preproc_directive _ -> Location.wrap ~loc:Location.generated (dummy_top_level ())
     | PE_top_level_instruction _ -> invariant "pe"
@@ -454,34 +450,42 @@ end = struct
     | I.M_path x -> ret @@ M_module_path x
     | I.M_var x -> ret @@ M_variable x
 
-  and sig_expr : (O.signature_expr, O.sig_item, O.type_expression) I.Types.sig_expr_ -> O.signature_expr =
-    fun se ->
-    let sig_expr (se : (O.signature_expr, O.sig_item, O.type_expression) I.Types.sig_expr_) =
+
+  and sig_expr
+      :  (O.signature_expr, O.sig_item, O.type_expression) I.Types.sig_expr_
+      -> O.signature_expr
+    =
+   fun se ->
+    let sig_expr
+        (se : (O.signature_expr, O.sig_item, O.type_expression) I.Types.sig_expr_)
+      =
       let loc = Location.get_location se in
       match Location.unwrap se with
-      | I.Types.S_body m -> (
-          Location.wrap ~loc @@ O.S_sig m
-        )
+      | I.Types.S_body m -> Location.wrap ~loc @@ O.S_sig m
       | S_path p -> Location.wrap ~loc @@ O.S_path p
     in
     sig_expr se
 
-  and sig_entry ~raise : (O.signature_expr, O.sig_item, O.type_expression) I.Types.sig_entry_ -> O.sig_item =
-    fun item ->
-      let attr : O.sig_item_attribute = { entry = false ; view = false } in
-      match Location.unwrap item with
-      | S_value (v, ty) -> S_value (v, ty, attr)
-      | S_type (v, ty) -> S_type (v, ty)
-      | S_type_var v -> S_type_var v
-      | S_attr (attr', S_value (v, ty, attr)) ->
-        let location = Location.get_location item in
-        let attr = conv_vsigitem_attr ~raise location attr attr' in
-        S_value (v, ty, attr)
-      | _ ->
-        invariant
-        @@ Format.asprintf "%a" Sexp.pp_hum (I.sexp_of_sig_entry_ ig ig ig item)
 
-  and top_level : _ I.Types.top_level_ -> O.program = function Top_level l -> l
+  and sig_entry ~raise
+      : (O.signature_expr, O.sig_item, O.type_expression) I.Types.sig_entry_ -> O.sig_item
+    =
+   fun item ->
+    let attr : O.sig_item_attribute = { entry = false; view = false } in
+    match Location.unwrap item with
+    | S_value (v, ty) -> S_value (v, ty, attr)
+    | S_type (v, ty) -> S_type (v, ty)
+    | S_type_var v -> S_type_var v
+    | S_attr (attr', S_value (v, ty, attr)) ->
+      let location = Location.get_location item in
+      let attr = conv_vsigitem_attr ~raise location attr attr' in
+      S_value (v, ty, attr)
+    | _ ->
+      invariant @@ Format.asprintf "%a" Sexp.pp_hum (I.sexp_of_sig_entry_ ig ig ig item)
+
+
+  and top_level : _ I.Types.top_level_ -> O.program = function
+    | Top_level l -> l
 end
 
 module From_core : sig

@@ -344,7 +344,7 @@ let test_cases_cameligo =
         ]
     ; negative_labels = []
     }
-  (* FIXME (#1689): Once error recovery is improved, we should revisit this test
+    (* FIXME (#1689): Once error recovery is improved, we should revisit this test
      based on the feedback in this thread:
      https://gitlab.com/ligolang/ligo/-/merge_requests/2527#note_1430629077
   ; { test_name = "Complete first module from written module path"

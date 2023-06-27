@@ -900,8 +900,6 @@ let compile_program : CST.t -> AST.program =
   |> List.map ~f:(fun x -> make_pe @@ PE_declaration x)
   |> make_prg
 
+
 let compile_top_level : CST.t -> AST.top_level =
- fun t ->
-  compile_program t
-  |> fun l -> Top_level l
-  |> make_tl
+ fun t -> compile_program t |> fun l -> Top_level l |> make_tl

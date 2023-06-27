@@ -32,7 +32,7 @@ type t =
   ; experimental_disable_optimizations_for_debugging : bool
   ; enable_typed_opt : bool
   ; without_run : bool
-  ; views : (string list) option
+  ; views : string list option
   ; constants : string list
   ; file_constants : string option
   }

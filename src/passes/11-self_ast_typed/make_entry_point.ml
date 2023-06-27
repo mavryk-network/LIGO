@@ -180,21 +180,22 @@ let program ~raise : Ast_typed.module_ -> Ast_typed.declaration list =
     let entrypoint_function_decl, entrypoint_var =
       let expr = Ast_typed.e_variable ~loc ep ep_type in
       let binder = Binder.make default_built_entrypoint_var expr.type_expression in
-      Location.wrap ~loc
-      @@ Ast_typed.D_value
-           { binder
-           ; expr
-           ; attr =
-               { inline = false
-               ; no_mutation = false
-               ; entry = false
-               ; view = false
-               ; public = true
-               ; thunk = false
-               ; hidden = false
-               }
-           },
-      Ast_typed.e_a_variable ~loc (Binder.get_var binder) expr.type_expression in
+      ( Location.wrap ~loc
+        @@ Ast_typed.D_value
+             { binder
+             ; expr
+             ; attr =
+                 { inline = false
+                 ; no_mutation = false
+                 ; entry = false
+                 ; view = false
+                 ; public = true
+                 ; thunk = false
+                 ; hidden = false
+                 }
+             }
+      , Ast_typed.e_a_variable ~loc (Binder.get_var binder) expr.type_expression )
+    in
     let views = get_views_of_module module_ in
     let views_decl, views_var =
       let expr = create_views_function_expr ~loc views storage_type in
@@ -371,7 +372,9 @@ let make_main_entrypoint ~raise
   match entrypoints with
   | entrypoint, [] ->
     let ep = entrypoint in
-    let ep, ep_type = ep, fst @@ Helpers.fetch_entry_type ~raise (Value_var.to_name_exn ep) prg in
+    let ep, ep_type =
+      ep, fst @@ Helpers.fetch_entry_type ~raise (Value_var.to_name_exn ep) prg
+    in
     let parameter_type, _ =
       match Ast_typed.Misc.parameter_from_entrypoint (ep, ep_type) with
       | Error (`Not_entry_point_form (ep, ep_type)) ->

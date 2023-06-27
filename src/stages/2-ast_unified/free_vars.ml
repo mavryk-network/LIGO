@@ -129,7 +129,8 @@ let fv_folder =
     fold_program_entry_ propagate_bound propagate_bound merge_bound (empty, empty)
   in
   let top_level : _ top_level_ -> fv = function
-      Top_level l -> l in
+    | Top_level l -> l
+  in
   let statement : _ statement_ -> sequence =
     fold_statement_ propagate_bound merge_bound propagate_bound (empty, empty)
   in

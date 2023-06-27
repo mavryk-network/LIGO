@@ -71,7 +71,7 @@ module DocumentLink = struct
   let eq = Caml.( = )
   let testable = Alcotest.testable pp eq
 
-  let create ~(target:Path.t) =
+  let create ~(target : Path.t) =
     Lsp.Types.DocumentLink.create
       ~target:("file:///" ^ Path.to_string_with_canonical_drive_letter target)
 end

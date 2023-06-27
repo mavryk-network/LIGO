@@ -158,8 +158,8 @@ let extract_flags_from_options : disable_initial_check:bool -> Compiler_options.
   ; t_app_michelson_types = syntax
   ; projections = syntax
   ; pattern_constructor_application = syntax
-  ; mod_res = mod_res
-  ; entries_and_views = entries_and_views
+  ; mod_res
+  ; entries_and_views
   }
 
 
@@ -227,16 +227,18 @@ let compile_program ~raise ~(options : Compiler_options.t) ?stop_before
 let compile_top_level ~raise ~(options : Compiler_options.t) ?stop_before
     : I.top_level -> O.program
   =
-  fun tl ->
-  let tl = compile_passes
-       ~raise
-       ?stop_before
-       ~sort:Selector.top_level
-       (get_passes ~options ~disable_initial_check:false)
-       tl in
-  let Top_level prg = tl.fp in
-  Trivial.To_core.program ~raise
-  @@ prg
+ fun tl ->
+  let tl =
+    compile_passes
+      ~raise
+      ?stop_before
+      ~sort:Selector.top_level
+      (get_passes ~options ~disable_initial_check:false)
+      tl
+  in
+  let (Top_level prg) = tl.fp in
+  Trivial.To_core.program ~raise @@ prg
+
 
 let compile_expression
     ~raise
