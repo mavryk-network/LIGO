@@ -86,6 +86,7 @@ end = struct
     | { key = "hidden"; value = None } -> { o_attr with hidden = true }
     | { key = "thunk"; value = None } -> { o_attr with thunk = true }
     | { key = "entry"; value = None } -> { o_attr with entry = true }
+    | { key = "dyn_entry"; value = None } -> { o_attr with dyn_entry = true }
     | { key = "comment"; value = _} -> o_attr (* TODO: We might want to keep it *)
     | _ ->
       raise.warning (`Nanopasses_attribute_ignored loc);

@@ -4,10 +4,7 @@ module I = Ast_core
 module O = Ast_typed
 open Ligo_prim
 
-let untype_value_attr : O.ValueAttr.t -> I.ValueAttr.t =
- fun { inline; no_mutation; view; public; hidden; thunk; entry } ->
-  { inline; no_mutation; view; public; hidden; thunk; entry }
-
+let untype_value_attr : O.ValueAttr.t -> I.ValueAttr.t = fun x -> x
 
 let rec untype_type_expression (t : O.type_expression) : I.type_expression =
   let loc = t.location in

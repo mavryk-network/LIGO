@@ -424,6 +424,7 @@ let uncurry_expression (expr : expression) : expression =
                 ; hidden = false
                 ; thunk = false
                 ; entry = false
+                ; dyn_entry = false
                 }
             in
             (* Construct the let *)

@@ -6,6 +6,7 @@ type t =
 *)
     view : bool
   ; entry : bool
+  ; dyn_entry : bool
   ; public : bool
   ; (* Controls whether a declaration must be printed or not when using LIGO print commands (print ast-typed , ast-aggregated .. etc ..)
   set to true for standard libraries
@@ -48,4 +49,5 @@ let default_attributes =
   ; public = true
   ; hidden = false
   ; thunk = false
+  ; dyn_entry = false
   }
