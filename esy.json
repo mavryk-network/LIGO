@@ -196,6 +196,7 @@
           "env LD_LIBRARY_PATH=#{@opam/hacl-star-raw.lib / 'hacl-star-raw' : $LD_LIBRARY_PATH} DYLD_LIBRARY_PATH=#{@opam/hacl-star-raw.lib / 'hacl-star-raw' : $DYLD_LIBRARY_PATH} dune build -p tezos-protocol-alpha"
         ],
         "dependencies": {
+          "ligo-win32-ntdll-stubs": "*",
           "@opam/hacl-star-raw": "*"
         }
       }

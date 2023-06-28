@@ -1,5 +1,5 @@
 {
-  "checksum": "3c917ba41075905737cc00687e4a22f8",
+  "checksum": "0a0be0072dcedfa3921387339a395afb",
   "root": "ligolang@link-dev:./esy.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -998,14 +998,14 @@
       "overrides": [],
       "dependencies": [
         "ocaml@4.14.1000@d41d8cd9",
-        "@opam/tezos-protocol-alpha@path:vendors/tezos-ligo@b97e5078",
+        "@opam/tezos-protocol-alpha@path:vendors/tezos-ligo@e82373d4",
         "@opam/tezos-base@path:vendors/tezos-ligo@d41d8cd9",
         "@opam/ppx_expect@opam:v0.15.0@6b1e9de8",
         "@opam/dune@opam:3.7.1@e0adc71a", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "ocaml@4.14.1000@d41d8cd9",
-        "@opam/tezos-protocol-alpha@path:vendors/tezos-ligo@b97e5078",
+        "@opam/tezos-protocol-alpha@path:vendors/tezos-ligo@e82373d4",
         "@opam/tezos-base@path:vendors/tezos-ligo@d41d8cd9",
         "@opam/ppx_expect@opam:v0.15.0@6b1e9de8",
         "@opam/dune@opam:3.7.1@e0adc71a"
@@ -1400,14 +1400,14 @@
       "dependencies": [
         "ocaml@4.14.1000@d41d8cd9",
         "@opam/tezos-smart-rollup-alpha@path:vendors/tezos-ligo@d41d8cd9",
-        "@opam/tezos-protocol-alpha@path:vendors/tezos-ligo@b97e5078",
+        "@opam/tezos-protocol-alpha@path:vendors/tezos-ligo@e82373d4",
         "@opam/tezos-base@path:vendors/tezos-ligo@d41d8cd9",
         "@opam/dune@opam:3.7.1@e0adc71a", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "ocaml@4.14.1000@d41d8cd9",
         "@opam/tezos-smart-rollup-alpha@path:vendors/tezos-ligo@d41d8cd9",
-        "@opam/tezos-protocol-alpha@path:vendors/tezos-ligo@b97e5078",
+        "@opam/tezos-protocol-alpha@path:vendors/tezos-ligo@e82373d4",
         "@opam/tezos-base@path:vendors/tezos-ligo@d41d8cd9",
         "@opam/dune@opam:3.7.1@e0adc71a"
       ]
@@ -1467,8 +1467,8 @@
         "@opam/aches@opam:1.0.0@999771de"
       ]
     },
-    "@opam/tezos-protocol-alpha@path:vendors/tezos-ligo@b97e5078": {
-      "id": "@opam/tezos-protocol-alpha@path:vendors/tezos-ligo@b97e5078",
+    "@opam/tezos-protocol-alpha@path:vendors/tezos-ligo@e82373d4": {
+      "id": "@opam/tezos-protocol-alpha@path:vendors/tezos-ligo@e82373d4",
       "name": "@opam/tezos-protocol-alpha",
       "version": "path:vendors/tezos-ligo",
       "source": {
@@ -1481,11 +1481,15 @@
             "rm -rf vendors",
             "env LD_LIBRARY_PATH=#{@opam/hacl-star-raw.lib / 'hacl-star-raw' : $LD_LIBRARY_PATH} DYLD_LIBRARY_PATH=#{@opam/hacl-star-raw.lib / 'hacl-star-raw' : $DYLD_LIBRARY_PATH} dune build -p tezos-protocol-alpha"
           ],
-          "dependencies": { "@opam/hacl-star-raw": "*" }
+          "dependencies": {
+            "ligo-win32-ntdll-stubs": "*",
+            "@opam/hacl-star-raw": "*"
+          }
         }
       ],
       "dependencies": [
         "ocaml@4.14.1000@d41d8cd9",
+        "ligo-win32-ntdll-stubs@git:https://gitlab.com/ligolang/win32-ntdll-stubs.git#d62252963c9874f2e250febd83f6243545c6942d@d41d8cd9",
         "@opam/tezos-protocol-environment@path:vendors/tezos-ligo@d41d8cd9",
         "@opam/tezos-base@path:vendors/tezos-ligo@d41d8cd9",
         "@opam/hacl-star-raw@opam:0.4.1@b3a08087",
@@ -2098,7 +2102,7 @@
         "@opam/tezos-proxy@path:vendors/tezos-ligo@d41d8cd9",
         "@opam/tezos-protocol-plugin-alpha@path:vendors/tezos-ligo@d41d8cd9",
         "@opam/tezos-protocol-environment@path:vendors/tezos-ligo@d41d8cd9",
-        "@opam/tezos-protocol-alpha@path:vendors/tezos-ligo@b97e5078",
+        "@opam/tezos-protocol-alpha@path:vendors/tezos-ligo@e82373d4",
         "@opam/tezos-mockup-registration@path:vendors/tezos-ligo@d41d8cd9",
         "@opam/tezos-mockup-commands@path:vendors/tezos-ligo@d41d8cd9",
         "@opam/tezos-mockup@path:vendors/tezos-ligo@d41d8cd9",
@@ -2121,7 +2125,7 @@
         "@opam/tezos-proxy@path:vendors/tezos-ligo@d41d8cd9",
         "@opam/tezos-protocol-plugin-alpha@path:vendors/tezos-ligo@d41d8cd9",
         "@opam/tezos-protocol-environment@path:vendors/tezos-ligo@d41d8cd9",
-        "@opam/tezos-protocol-alpha@path:vendors/tezos-ligo@b97e5078",
+        "@opam/tezos-protocol-alpha@path:vendors/tezos-ligo@e82373d4",
         "@opam/tezos-mockup-registration@path:vendors/tezos-ligo@d41d8cd9",
         "@opam/tezos-mockup-commands@path:vendors/tezos-ligo@d41d8cd9",
         "@opam/tezos-mockup@path:vendors/tezos-ligo@d41d8cd9",
@@ -2224,7 +2228,7 @@
         "@opam/tezos-shell-services@path:vendors/tezos-ligo@d41d8cd9",
         "@opam/tezos-protocol-plugin-alpha@path:vendors/tezos-ligo@d41d8cd9",
         "@opam/tezos-protocol-environment@path:vendors/tezos-ligo@d41d8cd9",
-        "@opam/tezos-protocol-alpha@path:vendors/tezos-ligo@b97e5078",
+        "@opam/tezos-protocol-alpha@path:vendors/tezos-ligo@e82373d4",
         "@opam/tezos-micheline@path:vendors/tezos-ligo@d41d8cd9",
         "@opam/tezos-crypto-dal@path:vendors/tezos-ligo@d41d8cd9",
         "@opam/tezos-client-alpha@path:vendors/tezos-ligo@d41d8cd9",
@@ -2240,7 +2244,7 @@
         "@opam/tezos-shell-services@path:vendors/tezos-ligo@d41d8cd9",
         "@opam/tezos-protocol-plugin-alpha@path:vendors/tezos-ligo@d41d8cd9",
         "@opam/tezos-protocol-environment@path:vendors/tezos-ligo@d41d8cd9",
-        "@opam/tezos-protocol-alpha@path:vendors/tezos-ligo@b97e5078",
+        "@opam/tezos-protocol-alpha@path:vendors/tezos-ligo@e82373d4",
         "@opam/tezos-micheline@path:vendors/tezos-ligo@d41d8cd9",
         "@opam/tezos-crypto-dal@path:vendors/tezos-ligo@d41d8cd9",
         "@opam/tezos-client-alpha@path:vendors/tezos-ligo@d41d8cd9",
