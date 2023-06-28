@@ -622,7 +622,6 @@ let parameter_from_entrypoints
     -> ( t * t
        , [> `Not_entry_point_form of t
          | `Storage_does_not_match of Value_var.t * t * Value_var.t * t
-         | `Optional_type_entrypoint
          ] )
        result
   =

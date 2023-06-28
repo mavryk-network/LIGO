@@ -54,27 +54,12 @@ module Attr = struct
   let of_core_attr ({ entry; view; _ } : Ast_typed.ValueAttr.t) = { entry; view }
 end
 
-module Partial = struct
-  type 'a t = ('a, Type_var.t) Result.t [@@deriving equal, compare, hash, sexp]
-
-  let pp pp ppf t =
-    match t with
-    | Ok x -> pp ppf x
-    | Error tvar -> Format.fprintf ppf "^%a" Type_var.pp tvar
-
-
-  let to_type t =
-    match t with
-    | Ok type_ -> type_
-    | Error tvar -> Type.t_exists ~loc:(Type_var.get_location tvar) tvar ()
-end
-
 module Signature = struct
   module T = struct
     type t = item list
 
     and item =
-      | S_value of Value_var.t * Type.t Partial.t * Attr.t
+      | S_value of Value_var.t * Type.t * Attr.t
       | S_type of Type_var.t * Type.t
       | S_module of Module_var.t * t
       | S_module_type of Module_var.t * Module_type.t
@@ -131,9 +116,7 @@ module Signature = struct
    fun item1 item2 ->
     match item1, item2 with
     | S_value (var1, type1, attr1), S_value (var2, type2, attr2) ->
-      Value_var.equal var1 var2
-      && Partial.equal Type.equal type1 type2
-      && Attr.equal attr1 attr2
+      Value_var.equal var1 var2 && Type.equal type1 type2 && Attr.equal attr1 attr2
     | S_type (tvar1, type1), S_type (tvar2, type2) ->
       Type_var.equal tvar1 tvar2 && Type.equal type1 type2
     | S_module (mvar1, sig1), S_module (mvar2, sig2) ->
@@ -191,7 +174,7 @@ module Signature = struct
     let rec pp_item ppf item =
       match item with
       | S_value (var, type_, _attr) ->
-        Format.fprintf ppf "%a : %a" Value_var.pp var (Partial.pp Type.pp) type_
+        Format.fprintf ppf "%a : %a" Value_var.pp var Type.pp type_
       | S_type (tvar, type_) ->
         Format.fprintf ppf "type %a = %a" Type_var.pp tvar Type.pp type_
       | S_module (mvar, sig_) ->
@@ -216,7 +199,7 @@ module T = struct
   type t = item list
 
   and item =
-    | C_value of Value_var.t * mutable_flag * Type.t Partial.t * Attr.t
+    | C_value of Value_var.t * mutable_flag * Type.t * Attr.t
     | C_type of Type_var.t * Type.t
     | C_type_var of Type_var.t * Kind.t
     | C_module of Module_var.t * Signature.t
@@ -252,12 +235,12 @@ module PP = struct
     | C_value (evar, mut_flag, type_, _attr) ->
       Format.fprintf
         ppf
-        "%a %a : %a"
+        "%a%a : %a"
         Param.pp_mutable_flag
         mut_flag
         Value_var.pp
         evar
-        (Partial.pp Type.pp)
+        Type.pp
         type_
     | C_type (tvar, type_) ->
       Format.fprintf ppf "type %a = %a" Type_var.pp tvar Type.pp type_
@@ -334,11 +317,10 @@ let get_value =
     (fun t var ->
       let[@landmark "get_value"] rec loop ?(locked = false) items =
         match items with
-        | C_value (var', mut_flag, partial_type, attr) :: _ when Value_var.equal var var'
-          ->
+        | C_value (var', mut_flag, type_, attr) :: _ when Value_var.equal var var' ->
           (match mut_flag, locked with
           | Mutable, true -> Error `Mut_var_captured
-          | _ -> Ok (mut_flag, partial_type, attr))
+          | _ -> Ok (mut_flag, type_, attr))
         | C_mut_lock _ :: items -> loop ~locked:true items
         | _ :: items -> loop ~locked items
         | [] -> Error `Not_found
@@ -491,17 +473,14 @@ let get_lexists_eq =
 
 
 module Apply = struct
-  let rec type_var ctx tvar ~default =
-    match get_texists_eq ctx tvar with
-    | Some t -> type_ ctx t
-    | None -> default
-
-
-  and type_ ctx (t : Type.t) : Type.t =
+  let rec type_ ctx (t : Type.t) : Type.t =
     let apply = type_ ctx in
     let return content = { t with content } in
     match t.content with
-    | T_exists tvar -> type_var ctx tvar ~default:t
+    | T_exists tvar ->
+      (match get_texists_eq ctx tvar with
+      | Some t -> apply t
+      | None -> t)
     | T_variable _tvar -> t
     | T_construct construct ->
       let parameters = List.map ~f:apply construct.parameters in
@@ -542,13 +521,7 @@ module Apply = struct
   let rec sig_item ctx (sig_item : Signature.item) : Signature.item =
     match sig_item with
     | S_type (tvar, type') -> S_type (tvar, type_ ctx type')
-    | S_value (var, partial_type, attr) ->
-      (match partial_type with
-      | Ok type' -> S_value (var, Ok (type_ ctx type'), attr)
-      | Error tvar ->
-        (match get_texists_eq ctx tvar with
-        | Some type' -> S_value (var, Ok (type_ ctx type'), attr)
-        | None -> S_value (var, Error tvar, attr)))
+    | S_value (var, type', attr) -> S_value (var, type_ ctx type', attr)
     | S_module (mvar, sig') -> S_module (mvar, sig_ ctx sig')
     | S_module_type (mvar, sig') -> S_module_type (mvar, sig')
 
@@ -575,7 +548,7 @@ let equal_item : item -> item -> bool =
   | C_value (var1, mut_flag1, type1, attr1), C_value (var2, mut_flag2, type2, attr2) ->
     Value_var.equal var1 var2
     && Param.equal_mutable_flag mut_flag1 mut_flag2
-    && (Partial.equal Type.equal) type1 type2
+    && Type.equal type1 type2
     && Attr.equal attr1 attr2
   | C_type (tvar1, type1), C_type (tvar2, type2) ->
     Type_var.equal tvar1 tvar2 && Type.equal type1 type2
@@ -866,10 +839,7 @@ let get_module_types : t -> (Type_var.t * Type.t) list =
     to ensure it will fold over all nested type in [t1] but not the toplevel one (i.e. [t1]),
     we then add [t1] manually to the list.
 *)
-let add_shadowed_nested_t_sum
-    : (Type_var.t * Type.t) list -> Type_var.t * Type.t -> (Type_var.t * Type.t) list
-  =
- fun tsum_list (tvar, type_) ->
+let add_shadowed_nested_t_sum tsum_list (tvar, type_) =
   let add_if_shadowed_t_sum
       :  Type_var.t -> (Type_var.t * Type.t) list * bool -> Type.t
       -> (Type_var.t * Type.t) list * bool
@@ -936,7 +906,7 @@ let get_sum : t -> Label.t -> (Type_var.t * Type_var.t list * Type.t * Type.t) l
          List.fold (List.rev module_types) ~init:[] ~f:add_shadowed_nested_t_sum
        in
        (* For all types found, pick only the T_sum, and make 4-uple out of them  *)
-       let matching_t_sum = List.filter_map ~f:filter_tsum module_types in
+       let matching_t_sum = List.filter_map ~f:filter_tsum @@ module_types in
        let matching_t_sum = dedup matching_t_sum in
        let general_type_opt =
          List.find ~f:(fun (_, tvs, _, _) -> not @@ List.is_empty tvs) matching_t_sum
@@ -1011,15 +981,10 @@ end = struct
         &&
         (match item with
         | C_value (var, _, type', _) ->
-          (match partial_type type' ~ctx with
+          (match type_ type' ~ctx with
           | Some Type -> true
           | _ ->
-            Format.printf
-              "Value %a has non-type type %a"
-              Value_var.pp
-              var
-              (Partial.pp Type.pp)
-              type';
+            Format.printf "Value %a has non-type type %a" Value_var.pp var Type.pp type';
             false)
         | C_type (_tvar, type') ->
           (match type_ type' ~ctx with
@@ -1072,7 +1037,7 @@ end = struct
     | L_exists lvar -> Set.mem (get_lexists_vars ctx) lvar
 
 
-  and type_ ~ctx (t : Type.t) : Kind.t option =
+  and type_ ~ctx t : Kind.t option =
     let open Option.Let_syntax in
     let open Kind in
     let rec loop (t : Type.t) ~ctx =
@@ -1129,7 +1094,7 @@ end = struct
   and signature_item ~ctx (sig_item : Signature.item) =
     match sig_item with
     | S_value (_var, type', _) ->
-      (match partial_type ~ctx type' with
+      (match type_ ~ctx type' with
       | Some Type -> true
       | _ -> false)
     | S_type (_tvar, type') ->
@@ -1138,12 +1103,6 @@ end = struct
       | _ -> false)
     | S_module (_mvar, sig_) -> signature ~ctx sig_
     | S_module_type (_mvar, _sig_) -> true (* TODO *)
-
-
-  and partial_type ~ctx partial_type : Kind.t option =
-    match partial_type with
-    | Ok type' -> type_ ~ctx type'
-    | Error tvar -> get_texists_var ctx tvar
 end
 
 module Hashes = struct

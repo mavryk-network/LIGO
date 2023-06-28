@@ -13,24 +13,16 @@ module Attr : sig
   val of_core_attr : Ast_typed.ValueAttr.t -> t
 end
 
-module Partial : sig
-  type 'a t = ('a, Type_var.t) Result.t
-  [@@deriving equal, compare, hash]
-
-  val pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit
-  val to_type : Type.t t -> Type.t
-end
-
 module Signature : sig
   type t = item list
 
   and item =
-    | S_value of Value_var.t * Type.t Partial.t * Attr.t
+    | S_value of Value_var.t * Type.t * Attr.t
     | S_type of Type_var.t * Type.t
     | S_module of Module_var.t * t
     | S_module_type of Module_var.t * Module_type.t
 
-  val get_value : t -> Value_var.t -> (Type.t Partial.t * Attr.t) option
+  val get_value : t -> Value_var.t -> (Type.t * Attr.t) option
   val get_type : t -> Type_var.t -> Type.t option
   val get_module : t -> Module_var.t -> t option
   val pp : Format.formatter -> t -> unit
@@ -46,7 +38,7 @@ and mutable_flag = Param.mutable_flag =
   | Immutable
 
 and item =
-  | C_value of Value_var.t * mutable_flag * Type.t Partial.t * Attr.t
+  | C_value of Value_var.t * mutable_flag * Type.t * Attr.t
   | C_type of Type_var.t * Type.t
   | C_type_var of Type_var.t * Kind.t
   | C_module of Module_var.t * Signature.t
@@ -74,9 +66,9 @@ val join : t -> t -> t
 val ( |@ ) : t -> t -> t
 val item_of_signature_item : Signature.item -> item
 val pp : Format.formatter -> t -> unit
-val add_value : t -> Value_var.t -> mutable_flag -> Type.t Partial.t -> Attr.t -> t
-val add_mut : t -> Value_var.t -> Type.t Partial.t -> t
-val add_imm : t -> Value_var.t -> ?attr:Attr.t -> Type.t Partial.t -> t
+val add_value : t -> Value_var.t -> mutable_flag -> Type.t -> Attr.t -> t
+val add_mut : t -> Value_var.t -> Type.t -> t
+val add_imm : t -> Value_var.t -> ?attr:Attr.t -> Type.t -> t
 val add_type : t -> Type_var.t -> Type.t -> t
 val add_type_var : t -> Type_var.t -> Kind.t -> t
 val add_texists_var : t -> Type_var.t -> Kind.t -> t
@@ -88,10 +80,10 @@ val add_module : t -> Module_var.t -> Signature.t -> t
 val get_value
   :  t
   -> Value_var.t
-  -> (mutable_flag * Type.t Partial.t * Attr.t, [> `Mut_var_captured | `Not_found ]) result
+  -> (mutable_flag * Type.t * Attr.t, [> `Mut_var_captured | `Not_found ]) result
 
-val get_imm : t -> Value_var.t -> (Type.t Partial.t * Attr.t) option
-val get_mut : t -> Value_var.t -> (Type.t Partial.t, [> `Mut_var_captured | `Not_found ]) result
+val get_imm : t -> Value_var.t -> (Type.t * Attr.t) option
+val get_mut : t -> Value_var.t -> (Type.t, [> `Mut_var_captured | `Not_found ]) result
 val get_type : t -> Type_var.t -> Type.t option
 val get_module : t -> Module_var.t -> Signature.t option
 val get_type_vars : t -> Type_var.Set.t

@@ -52,44 +52,16 @@ and encode_row ({ fields; layout } : Ast_typed.row) : Type.row =
 
 and encode_layout (layout : Layout.t) : Type.layout = L_concrete layout
 
-and encode_partial_type ~loc ctx type_ =
-  match type_ with
-  | None ->
-    let tvar = Type_var.fresh ~name:"lsp_hole" ~loc () in
-    let ctx = Context.add_texists_var ctx tvar Ligo_prim.Kind.Type in
-    ctx, Error tvar
-  | Some type_ -> ctx, Ok (encode type_)
-
-
-and encode_sig_item (ctx : Context.t) (item : Ast_typed.sig_item)
-    : Context.Signature.item * Context.t
-  =
+and encode_sig_item (item : Ast_typed.sig_item) : Context.Signature.item =
   match item with
   | Ast_typed.S_value (v, ty, attr) ->
-    let loc = Value_var.get_location v in
-    let ctx, type_ = encode_partial_type ~loc ctx ty in
-    Context.Signature.S_value (v, type_, encode_sig_item_attribute attr), ctx
-  | S_type (v, ty) ->
-    let ty, ctx =
-      match ty with
-      | None -> assert false
-      | Some ty -> encode ty, ctx
-    in
-    Context.Signature.S_type (v, ty), ctx
-  | S_module (v, sig_) ->
-    let item, ctx = encode_signature ctx sig_ in
-    Context.Signature.S_module (v, item), ctx
+    Context.Signature.S_value (v, encode ty, encode_sig_item_attribute attr)
+  | S_type (v, ty) -> Context.Signature.S_type (v, encode ty)
+  | S_module (v, sig_) -> Context.Signature.S_module (v, encode_signature sig_)
 
 
-and encode_signature (ctx : Context.t) (sig_ : Ast_typed.signature)
-    : Context.Signature.t * Context.t
-  =
-  match sig_ with
-  | [] -> [], ctx
-  | item :: items ->
-    let item, ctx = encode_sig_item ctx item in
-    let items, ctx = encode_signature ctx items in
-    item :: items, ctx
+and encode_signature (sig_ : Ast_typed.signature) : Context.Signature.t =
+  List.map ~f:encode_sig_item sig_
 
 
 and encode_sig_item_attribute (attr : Ast_typed.sig_item_attribute) : Context.Attr.t =
@@ -103,23 +75,9 @@ let ctx_init_of_sig ?env () =
   | Some (env : Ast_typed.signature) ->
     let f ctx decl =
       match decl with
-      | Ast_typed.S_value (v, ty, _attr) ->
-        let ctx, type_ = encode_partial_type ~loc:(Value_var.get_location v) ctx ty in
-        Context.add_imm ctx v type_
-      | S_type (v, ty) ->
-        let ty, ctx =
-          match ty with
-          | None -> assert false
-          | Some ty -> encode ty, ctx
-        in
-        (* let ctx, type_ = encode_partial_type ~loc ctx ty in *)
-        Context.add_type ctx v ty
-      | S_module (v, sig_) ->
-        let sigs, ctx = encode_signature ctx sig_ in
-        let ctx = Context.add_module ctx v sigs in
-        if Module_var.is_name v "M"
-        then Format.eprintf "Sigs : %a\n%!" Context.Signature.pp sigs;
-        ctx
+      | Ast_typed.S_value (v, ty, _attr) -> Context.add_imm ctx v (encode ty)
+      | S_type (v, ty) -> Context.add_type ctx v (encode ty)
+      | S_module (v, sig_) -> Context.add_module ctx v (encode_signature sig_)
     in
     List.fold env ~init:Context.empty ~f
 
@@ -254,7 +212,6 @@ type 'a exit =
 module Context_ = Context
 
 module Context = struct
-  module Partial = Context.Partial
   module Attr = Context.Attr
   module Signature = Context.Signature
 
@@ -360,31 +317,11 @@ module Context = struct
     f ctx
 
 
-  let get_value var : _ t =
-    let open Let_syntax in
-    let%map result = lift_ctx (fun ctx -> Context.get_value ctx var) in
-    let%map.Result mut_flag, partial_type, attr = result in
-    mut_flag, Context.Partial.to_type partial_type, attr
-
-
+  let get_value var : _ t = lift_ctx (fun ctx -> Context.get_value ctx var)
   let get_value_exn var ~error : _ t = get_value var >>= raise_result ~error
-
-  let get_imm var : _ t =
-    let open Let_syntax in
-    let%map result = lift_ctx (fun ctx -> Context.get_imm ctx var) in
-    let%map.Option partial_type, attr = result in
-    Context.Partial.to_type partial_type, attr
-
-
+  let get_imm var : _ t = lift_ctx (fun ctx -> Context.get_imm ctx var)
   let get_imm_exn var ~error : _ t = get_imm var >>= raise_opt ~error
-
-  let get_mut var : _ t =
-    let open Let_syntax in
-    let%map result = lift_ctx (fun ctx -> Context.get_mut ctx var) in
-    let%map.Result partial_type = result in
-    Context.Partial.to_type partial_type
-
-
+  let get_mut var : _ t = lift_ctx (fun ctx -> Context.get_mut ctx var)
   let get_mut_exn var ~error : _ t = get_mut var >>= raise_result ~error
   let get_type_var tvar : _ t = lift_ctx (fun ctx -> Context.get_type_var ctx tvar)
   let get_type_var_exn tvar ~error = get_type_var tvar >>= raise_opt ~error
@@ -750,13 +687,6 @@ let rec subtype ~(received : Type.t) ~(expected : Type.t)
     return E.return
 
 
-let exists_tvar kind = 
-  let open Let_syntax in
-  let%bind tvar, texists = fresh_texists () in
-  let%bind () = Context.push [ C_texists_var (tvar, kind) ] in
-  return (tvar, texists)
-
-
 let exists kind =
   let open Let_syntax in
   let%bind tvar, texists = fresh_texists () in
@@ -781,7 +711,7 @@ let lexists fields =
 let def bindings ~on_exit ~in_ =
   Context.add
     (List.map bindings ~f:(fun (var, mut_flag, type_, attr) ->
-         Context_.C_value (var, mut_flag, Ok type_, attr)))
+         Context_.C_value (var, mut_flag, type_, attr)))
     ~in_
     ~on_exit
 

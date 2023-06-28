@@ -701,9 +701,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
     let%bind elt_type, _ =
       raise_opt ~error:(unbound_variable element) @@ Signature.get_value sig_ element
     in
-    const
-      E.(return @@ O.E_module_accessor { module_path; element })
-      (Context.Partial.to_type elt_type)
+    const E.(return @@ O.E_module_accessor { module_path; element }) elt_type
   | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
     let%bind rhs_type, rhs = infer rhs in
     let%bind rhs_type = Context.tapply rhs_type in
@@ -1361,17 +1359,16 @@ and cast_items (inferred_sig : Signature.t) (items : Module_type.item list) =
       return (Signature.S_type (v, ty') :: sig_, entries))
     else raise (signature_not_match_type v ty ty')
   | Module_type.MT_value (v, ty, attr) :: sig_ ->
-    let%bind pty', attr' =
+    let%bind ty', attr' =
       raise_opt (Signature.get_value inferred_sig v) ~error:(signature_not_found_value v)
     in
-    let ty' = Context.Partial.to_type pty' in
     if Bool.equal attr.entry attr'.entry
        && Bool.equal attr.view attr'.view
        && Type.equal ty ty'
     then (
       let%bind sig_, entries = cast_items inferred_sig sig_ in
       let entries = entries @ if attr.entry then [ v ] else [] in
-      return (Signature.S_value (v, pty', attr') :: sig_, entries))
+      return (Signature.S_value (v, ty', attr') :: sig_, entries))
     else raise (signature_not_match_value v ty ty')
 
 
@@ -1437,25 +1434,6 @@ and infer_module_expr (mod_expr : I.module_expr)
     const E.(return @@ M.M_variable mvar) sig_
 
 
-and hole () : (Type_var.t * O.expression E.t, _, _) C.t =
-  let open C in
-  let open Let_syntax in
-  let%bind loc = loc () in
-  let%bind tvar, texists = exists_tvar Type in
-  return
-    ( tvar
-    , E.(
-        let%map result_type = decode texists in
-        O.e_a_application
-          ~loc
-          (O.e_a_variable
-             ~loc
-             (Value_var.of_input_var ~loc "failwith")
-             (O.t_arrow ~loc (O.t_unit ~loc ()) result_type ()))
-          (O.e_a_unit ~loc ())
-          result_type) )
-
-
 and infer_declaration (decl : I.declaration)
     : (Signature.item list * O.declaration list E.t, _, _) C.t
   =
@@ -1491,7 +1469,7 @@ and infer_declaration (decl : I.declaration)
         return @@ O.D_irrefutable_match { pattern; expr; attr })
       (List.map
          ~f:(fun (v, _, ty) ->
-           Context.Signature.S_value (v, Ok ty, Context.Attr.of_core_attr attr))
+           Context.Signature.S_value (v, ty, Context.Attr.of_core_attr attr))
          frags)
   | D_type { type_binder; type_expr; type_attr = { public; hidden } } ->
     let%bind type_expr = With_default_layout.evaluate_type type_expr in
@@ -1508,26 +1486,14 @@ and infer_declaration (decl : I.declaration)
       let%map loc = loc () in
       Option.value_map ascr ~default:expr ~f:(fun ascr -> I.e_ascription ~loc expr ascr)
     in
-    let%bind partial_expr_type, expr =
-      try_
-        (let%map type_, expr = infer_expression expr in
-         Ok type_, expr)
-        ~with_:(fun _ ->
-          let%map tvar, hole = hole () in
-          Error tvar, hole)
-    in
-    let%bind loc = loc () in
+    let%bind expr_type, expr = infer_expression expr in
     let attr = infer_value_attr attr in
     const
       E.(
-        let%bind expr_type = 
-          match%map decode_partial partial_expr_type with
-          | None -> O.t_unit ~loc () 
-          | Some type_ -> type_
-        in
-        let%bind expr = expr in
+        let%bind expr_type = decode expr_type
+        and expr = expr in
         return @@ O.D_value { binder = Binder.set_ascr binder expr_type; expr; attr })
-      [ S_value (var, partial_expr_type, Context.Attr.of_core_attr attr) ]
+      [ S_value (var, expr_type, Context.Attr.of_core_attr attr) ]
   | D_module { module_binder; module_; module_attr = { public; hidden }; annotation } ->
     let%bind inferred_sig, module_ = infer_module_expr module_ in
     let%bind annoted_sig =
