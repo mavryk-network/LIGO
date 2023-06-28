@@ -1434,6 +1434,21 @@ and infer_module_expr (mod_expr : I.module_expr)
     const E.(return @@ M.M_variable mvar) sig_
 
 
+and try_infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C.t =
+  let open C in
+  let open Let_syntax in
+  try_ (infer_expression expr) ~with_:(fun error ->
+      let%bind loc = loc () in
+      (* Use an arbitrary type for the erroneous expression *)
+      let%bind ret_type = exists Type in
+      return
+        ( ret_type
+        , E.(
+            let error = Errors.error_json error in
+            let%bind ret_type = decode ret_type in
+            return @@ O.make_e ~loc (E_error { expression = expr; error }) ret_type) ))
+
+
 and infer_declaration (decl : I.declaration)
     : (Signature.item list * O.declaration list E.t, _, _) C.t
   =
@@ -1455,7 +1470,7 @@ and infer_declaration (decl : I.declaration)
   @@
   match decl.wrap_content with
   | D_irrefutable_match { pattern; expr; attr } ->
-    let%bind matchee_type, expr = infer_expression expr in
+    let%bind matchee_type, expr = try_infer_expression expr in
     let attr = infer_value_attr attr in
     let%bind matchee_type = Context.tapply matchee_type in
     let%bind frags, pattern =
@@ -1486,7 +1501,7 @@ and infer_declaration (decl : I.declaration)
       let%map loc = loc () in
       Option.value_map ascr ~default:expr ~f:(fun ascr -> I.e_ascription ~loc expr ascr)
     in
-    let%bind expr_type, expr = infer_expression expr in
+    let%bind expr_type, expr = try_infer_expression expr in
     let attr = infer_value_attr attr in
     const
       E.(
@@ -1597,7 +1612,7 @@ let type_expression ~raise ~options ?env ?tv_opt expr =
   C.run_elab
     (match tv_opt with
     | Some type_ ->
-      let type_ = C.encode type_ in
+      let type_ = C.encode ~raise type_ in
       check_expression expr type_
     | None ->
       let%map.C _, expr = infer_expression expr in

@@ -55,6 +55,8 @@ let rec assert_type_expression_eq ((a, b) : type_expression * type_expression)
     (* TODO : we must check that the two types were bound at the same location (even if they have the same name), i.e. use something like De Bruijn indices or a propper graph encoding *)
     if Type_var.equal x y then Some () else None
   | T_variable _, _ -> None
+  | T_exists x, T_exists y -> if Type_var.equal x y then Some () else None
+  | T_exists _, _ -> None
   | T_singleton a, T_singleton b -> assert_literal_eq (a, b)
   | T_singleton _, _ -> None
   | T_abstraction a, T_abstraction b ->
@@ -371,10 +373,10 @@ let to_signature (program : program) : signature =
       match Location.unwrap decl with
       | D_irrefutable_match { pattern; expr = _; attr = { view; entry; _ } } ->
         List.fold (Pattern.binders pattern) ~init:ctx ~f:(fun ctx x ->
-            ctx @ [ S_value (Binder.get_var x, Some (Binder.get_ascr x), { view; entry }) ])
+            ctx @ [ S_value (Binder.get_var x, Binder.get_ascr x, { view; entry }) ])
       | D_value { binder; expr; attr = { view; entry; _ } } ->
-        ctx @ [ S_value (Binder.get_var binder, Some expr.type_expression, { view; entry }) ]
+        ctx @ [ S_value (Binder.get_var binder, expr.type_expression, { view; entry }) ]
       | D_type { type_binder; type_expr; type_attr = _ } ->
-        ctx @ [ S_type (type_binder, Some type_expr) ]
+        ctx @ [ S_type (type_binder, type_expr) ]
       | D_module { module_binder; module_; module_attr = _; annotation = () } ->
         ctx @ [ S_module (module_binder, module_.signature) ])

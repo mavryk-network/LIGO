@@ -66,7 +66,7 @@ let pascaligo_module =
   }
 
 
-let pp_type_expression
+let pp_type_expression ~raise
     :  syntax:Syntax_types.t
     -> [ `Core of Ast_core.type_expression | `Typed of Ast_typed.type_expression ]
     -> string
@@ -75,7 +75,7 @@ let pp_type_expression
   let cte =
     match te with
     | `Core cte -> cte
-    | `Typed tte -> Checking.untype_type_expression tte
+    | `Typed tte -> Checking.untype_type_expression ~raise tte
   in
   let ty_expr_to_string =
     let raise = Simple_utils.Trace.raise_failwith "LSP" in
@@ -115,8 +115,7 @@ let print_module_with_description
     ^ (Option.value ~default:" "
       @@ Option.map ~f:(fun s -> " " ^ s ^ " ") description.sign_on_import)
     ^ (module_path_list
-      |> List.map ~f:(String.split ~on:'#')
-      |> List.map ~f:(Fun.flip List.nth_exn 0)
+      |> List.map ~f:(List.hd_exn <@ String.split ~on:'#' <@ Scopes.Types.Uid.to_name)
       |> String.concat ~sep:".")
 
 
@@ -137,5 +136,6 @@ let checking_error_to_string (error : Checking.Errors.typer_error) : string =
     (Checking.Errors.error_ppformat ~display_format ~no_colour:false)
     error
 
-    let default_line_width_for_formatted_file = 80
-    let default_line_width_for_hovers = 60
+
+let default_line_width_for_formatted_file = 80
+let default_line_width_for_hovers = 60

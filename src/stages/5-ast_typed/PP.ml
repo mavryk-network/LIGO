@@ -14,6 +14,7 @@ let rec type_content : formatter -> type_content -> unit =
  fun ppf tc ->
   match tc with
   | T_variable tv -> Type_var.pp ppf tv
+  | T_exists tv -> Format.fprintf ppf "^%a" Type_var.pp tv
   | T_sum row -> Row.PP.sum_type type_expression layout ppf row
   | T_record row -> Row.PP.tuple_or_record_type type_expression layout ppf row
   | T_arrow a -> Arrow.pp type_expression ppf a
@@ -65,6 +66,7 @@ let rec type_content_orig : formatter -> type_content -> unit =
  fun ppf tc ->
   match tc with
   | T_variable tv -> Type_var.pp ppf tv
+  | T_exists tv -> Format.fprintf ppf "^%a" Type_var.pp tv
   | T_sum row -> Row.PP.sum_type type_expression layout ppf row
   | T_record row -> Row.PP.tuple_or_record_type type_expression layout ppf row
   | T_arrow a -> Arrow.pp type_expression ppf a
@@ -152,6 +154,14 @@ and expression_content ppf (ec : expression_content) =
   | E_for for_loop -> For_loop.pp expression ppf for_loop
   | E_for_each for_each -> For_each_loop.pp expression ppf for_each
   | E_while while_loop -> While_loop.pp expression ppf while_loop
+  | E_error { expression; error } ->
+    (* Should only be printed in debugging situations *)
+    Format.fprintf
+      ppf
+      "@[Error { expression = %a;@;<1 8>message = %s }@]"
+      Ast_core.PP.expression
+      expression
+      error.content.message
 
 
 and type_inst ppf { forall; type_ } =
@@ -193,21 +203,9 @@ and module_expr ppf (me : module_expr) : unit =
 and sig_item ppf (d : sig_item) =
   match d with
   | S_value (var, type_, _) ->
-    Format.fprintf
-      ppf
-      "@[<2>val %a :@ %a@]"
-      Value_var.pp
-      var
-      (Simple_utils.PP_helpers.option type_expression)
-      type_
+    Format.fprintf ppf "@[<2>val %a :@ %a@]" Value_var.pp var type_expression type_
   | S_type (var, type_) ->
-    Format.fprintf
-      ppf
-      "@[<2>type %a =@ %a@]"
-      Type_var.pp
-      var
-      (Simple_utils.PP_helpers.option type_expression)
-      type_
+    Format.fprintf ppf "@[<2>type %a =@ %a@]" Type_var.pp var type_expression type_
   | S_module (var, sig_) ->
     Format.fprintf ppf "@[<2>module %a =@ %a@]" Module_var.pp var signature sig_
 

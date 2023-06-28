@@ -34,7 +34,7 @@ module Of_Ast_typed = struct
   let rec extract_binding_types_from_signature : t -> Ast_typed.signature -> t =
    fun bindings sig_ ->
     List.fold sig_ ~init:bindings ~f:(fun bindings -> function
-      | S_value (v, t, _) -> add_bindings bindings [ v, t ]
+      | S_value (v, t, _) -> add_bindings bindings [ v, Some t ]
       | S_type _ -> bindings
       | S_module (_, sig_) -> extract_binding_types_from_signature bindings sig_)
 
@@ -46,6 +46,10 @@ module Of_Ast_typed = struct
       let return = add_bindings env in
       let loc = exp.location in
       match exp.expression_content with
+      (* FIXME: @Melywn
+         What should be the expected behaviour here for erroneous 
+         expressions? *)
+      | E_error _
       | E_literal _
       | E_application _
       | E_raw_code _
@@ -274,14 +278,6 @@ module Of_Ast_core = struct
 end
 
 module Typing_env = struct
-  type nonrec t =
-    { (* type_env is the global typing signature required by the typer *)
-      type_env : Ast_typed.signature
-    ; (* bindings is Map from [Location.t] -> [Types.type_case] *)
-      bindings : t
-    ; (* Top-level declaration tree used for ast-typed-self-passes *)
-      decls : Ast_typed.declaration list
-    }
 
   (** The typer normall call {!Trace.error} which internally always calls {!Stdlib.raise}
       which stops the program, But here we want to recover from the error. That is the reason 
@@ -289,84 +285,47 @@ module Typing_env = struct
   let collect_warns_and_errs
       ~(raise : (Main_errors.all, Main_warnings.all) Trace.raise)
       tracer
-      (e, ws)
+      (es, ws)
     =
-    let () = List.iter ws ~f:raise.warning in
-    raise.log_error (tracer e)
+    List.iter ws ~f:raise.warning;
+    List.iter es ~f:(fun e -> raise.log_error (tracer e))
 
 
-  let rec sig_of_alias
-      : Module_var.t List.Ne.t -> Ast_typed.signature -> Ast_typed.signature
-    =
-   fun mvs sig_ ->
-    let mv, mvs = mvs in
-    let resolve mv sig_ =
-      match
-        List.find_exn sig_ ~f:(function
-            | Ast_typed.S_module (mb, _) -> Module_var.equal mb mv
-            | _ -> false)
-      with
-      | Ast_typed.S_module (_, sig_) -> sig_
-      | _ -> failwith "not a module"
-    in
-    match mvs with
-    | [] -> resolve mv sig_
-    | mvs ->
-      let sig_ = resolve mv sig_ in
-      sig_of_alias (List.Ne.of_list mvs) sig_
+  let collect_recovered_errors_from_module prg =
+    Self_ast_typed.Helpers.fold_expression_in_module
+      (fun errs (expr : Ast_typed.expression) ->
+        match expr.expression_content with
+        | E_error { error; _ } -> error :: errs
+        | _ -> errs)
+      []
+      prg
 
 
-  let rec sig_of_module
-      : original:Ast_typed.signature -> Ast_core.module_expr -> Ast_typed.signature
-    =
-   fun ~original me ->
-    let dummy_sig_attr = Ast_typed.{ entry = false; view = false } in
-    let rhs_type () = None in
-    let mk_value b = Ast_typed.S_value (Binder.get_var b, rhs_type (), dummy_sig_attr) in
-    match Location.unwrap me with
-    | M_struct decls ->
-      List.concat_map decls ~f:(fun decl ->
-          match Location.unwrap decl with
-          | D_value { binder; _ } -> [ mk_value binder ]
-          | D_irrefutable_match { pattern; _ } ->
-            let binder = Pattern.binders pattern in
-            List.map binder ~f:mk_value
-          | D_type { type_binder; _ } -> [ Ast_typed.S_type (type_binder, rhs_type ()) ]
-          | D_module { module_binder; module_; _ } ->
-            [ Ast_typed.S_module (module_binder, sig_of_module ~original module_) ]
-          | D_signature { signature_binder = _; signature = _ } -> failwith "FIXME")
-    | M_variable mv -> sig_of_alias (mv, []) original
-    | M_module_path mvs -> sig_of_alias mvs original
-
-
-  let update_typing_env
+  let resolve
       ~(raise : (Main_errors.all, Main_warnings.all) Trace.raise)
       ~options
-      tenv
-      decl
+      ~stdlib_env
+      decls
     =
     let typed_prg =
       Simple_utils.Trace.to_stdlib_result
-      @@ Checking.type_declaration ~options ~env:tenv.type_env decl
+      @@ Checking.type_program ~options ~env:stdlib_env decls
     in
     Result.(
       match typed_prg with
-      | Ok (decl, ws) ->
-        let decl = List.hd_exn decl in
-        let module AST = Ast_typed in
+      | Ok (prg, ws) ->
         let bindings =
-          Of_Ast_typed.extract_binding_types tenv.bindings decl.wrap_content
+          List.fold_left prg ~init:empty ~f:(fun bindings decl ->
+              Of_Ast_typed.extract_binding_types bindings decl.wrap_content)
         in
-        let type_env = tenv.type_env @ Ast_typed.Misc.to_signature [ decl ] in
-        let decls = tenv.decls @ [ decl ] in
         let () = List.iter ws ~f:raise.warning in
-        { type_env; bindings; decls }
+        let es = collect_recovered_errors_from_module prg in
+        collect_warns_and_errs ~raise Main_errors.scopes_recovered_error (es, ws);
+        prg, bindings
       | Error (e, ws) ->
-        (* Note: If the some declaration in the module fails to type-check,
-           even the well-typed declarations are not added to the signature/context,
-           See if things can be more granular to avoid this problem. *)
-        collect_warns_and_errs ~raise Main_errors.checking_tracer (e, ws);
-        tenv)
+        collect_warns_and_errs ~raise Main_errors.checking_tracer ([ e ], ws);
+        (* For now, assume errors are recorded in the AST *)
+        [], empty)
 
 
   (* (match Location.unwrap decl with
@@ -383,20 +342,13 @@ module Typing_env = struct
   let self_ast_typed_pass
       ~(raise : (Main_errors.all, Main_warnings.all) Trace.raise)
       ~(options : Compiler_options.middle_end)
-      tenv
+      decls
     =
     ignore options;
-    match
-      Simple_utils.Trace.to_stdlib_result @@ Self_ast_typed.all_program tenv.decls
-    with
+    match Simple_utils.Trace.to_stdlib_result @@ Self_ast_typed.all_program decls with
     | Ok (_, ws) -> List.iter ws ~f:raise.warning
     | Error (e, ws) ->
-      collect_warns_and_errs ~raise Main_errors.self_ast_typed_tracer (e, ws)
-
-
-  let init stdlib_decls =
-    let type_env = Ast_typed.Misc.to_signature stdlib_decls in
-    { type_env; bindings = LMap.empty; decls = stdlib_decls }
+      collect_warns_and_errs ~raise Main_errors.self_ast_typed_tracer ([ e ], ws)
 end
 
 (** [resolve] takes your [Ast_core.program] and gives you the typing information
@@ -429,10 +381,9 @@ let resolve
     -> Ast_core.program -> t
   =
  fun ~raise ~options ~stdlib_decls prg ->
-  let tenv = Typing_env.init stdlib_decls in
-  let tenv = List.fold prg ~init:tenv ~f:(Typing_env.update_typing_env ~raise ~options) in
-  let () = Typing_env.self_ast_typed_pass ~raise ~options tenv in
-  let bindings = tenv.bindings in
+  let stdlib_env = Ast_typed.to_signature stdlib_decls in
+  let tprg, bindings = Typing_env.resolve ~raise ~options ~stdlib_env prg in
+  let () = Typing_env.self_ast_typed_pass ~raise ~options tprg in
   Of_Ast_core.declarations bindings prg
 
 

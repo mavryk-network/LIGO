@@ -340,7 +340,9 @@ let complete_fields
             List.find_map get_scope_info.definitions ~f:(function
                 | Variable _ | Type _ -> None
                 | Module m ->
-                  if String.(m.name = resolved) then get_module_defs m.mod_case else None))
+                  if Scopes.Types.Uid.(m.uid = resolved)
+                  then get_module_defs m.mod_case
+                  else None))
     in
     Go_to_definition.get_definition module_pos path get_scope_info.definitions
     >>= function
@@ -360,7 +362,11 @@ let complete_fields
       in
       (match t with
       | Core t -> mk_completions t
-      | Resolved t -> mk_completions (Checking.untype_type_expression t)
+      | Resolved t ->
+        Trace.try_with
+          (fun ~raise ~catch:_ ->
+            Checking.untype_type_expression ~raise t |> mk_completions)
+          (fun ~catch:_ _ -> None)
       | Unresolved -> None)
     | None | Some (Type _ | Module _) -> None
   in

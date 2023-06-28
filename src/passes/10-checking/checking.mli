@@ -33,8 +33,15 @@ val type_expression
   -> I.expression
   -> O.expression
 
-val untype_expression : O.expression -> I.expression
-val untype_type_expression : O.type_expression -> I.type_expression
+val untype_expression
+  :  raise:(typer_error, Main_warnings.all) raise
+  -> O.expression
+  -> I.expression
+
+val untype_type_expression
+  :  raise:(typer_error, Main_warnings.all) raise
+  -> O.type_expression
+  -> I.type_expression
 
 val assert_type_expression_eq
   :  raise:(typer_error, Main_warnings.all) raise

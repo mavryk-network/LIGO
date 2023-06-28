@@ -149,6 +149,8 @@ type typer_error =
   | `Typer_uncomparable_types of Type.t * Type.t * Location.t
   | `Typer_comparator_composed of Type.t * Location.t
   | `Typer_cannot_decode_texists of Type.t * Location.t
+  | `Typer_cannot_encode_texists of Ast_typed.type_expression * Location.t
+  | `Typer_cannot_decompile_texists of Ast_typed.type_expression * Location.t
   | `Typer_signature_not_found_value of Value_var.t * Location.t
   | `Typer_signature_not_found_type of Type_var.t * Location.t
   | `Typer_signature_not_found_entry of Value_var.t * Location.t
@@ -435,6 +437,18 @@ let extract_loc_and_message : typer_error -> Location.t * string =
         type_
         (pp_texists_hint ())
         [ type_ ] )
+  | `Typer_cannot_decompile_texists (type_, loc) ->
+    ( loc
+    , Format.asprintf
+        "@[<hv>Underspecified type \"%a\".@.Cannot decompile this type.@]"
+        Ast_typed.PP.type_expression
+        type_ )
+  | `Typer_cannot_encode_texists (type_, loc) ->
+    ( loc
+    , Format.asprintf
+        "@[<hv>Underspecified type \"%a\".@.Cannot encode this type.@]"
+        Ast_typed.PP.type_expression
+        type_ )
   | `Typer_literal_type_mismatch (lit_type, expected_type, loc) ->
     let lit_type = type_improve lit_type in
     let expected_type = type_improve expected_type in

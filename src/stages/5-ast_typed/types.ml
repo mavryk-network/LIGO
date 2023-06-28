@@ -6,15 +6,14 @@ type type_variable = Type_var.t [@@deriving compare, hash]
 type expression_variable = Value_var.t [@@deriving compare, hash]
 type module_variable = Module_var.t [@@deriving compare, hash]
 
-
 type type_content =
   | T_variable of Type_var.t
+  | T_exists of Type_var.t
   | T_constant of type_injection
   | T_sum of type_expression Row.t
   | T_record of type_expression Row.t
   | T_arrow of ty_expr Arrow.t
   | T_singleton of Literal_value.t
-  
   | T_abstraction of ty_expr Abstraction.t
   | T_for_all of ty_expr Abstraction.t
 
@@ -79,6 +78,13 @@ type expression_content =
   | E_for of expr For_loop.t
   | E_for_each of expr For_each_loop.t
   | E_while of expr While_loop.t
+  (* Error recovery *)
+  | E_error of error
+
+and error =
+  { expression : Ast_core.expression
+  ; error : Simple_utils.Error.t
+  }
 
 and type_inst =
   { forall : expression
@@ -111,8 +117,8 @@ and module_expr =
 [@@deriving eq, compare, yojson, hash]
 
 and sig_item =
-  | S_value of Value_var.t * ty_expr option * sig_item_attribute
-  | S_type of Type_var.t * ty_expr option
+  | S_value of Value_var.t * ty_expr * sig_item_attribute
+  | S_type of Type_var.t * ty_expr
   | S_module of Module_var.t * signature
 
 and sig_item_attribute =

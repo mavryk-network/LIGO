@@ -1,5 +1,6 @@
 module I = Ast_typed
 module O = Ast_aggregated
+open Errors
 open Ligo_prim
 
 (*
@@ -245,9 +246,7 @@ let build_context : Data.t -> O.context =
    fun d ->
     match d with
     | Pat { binding = { old = _; fresh }; item; attr; loc } ->
-      [ Location.wrap
-          ~loc
-          (O.D_irrefutable_match { pattern = fresh; expr = item; attr })
+      [ Location.wrap ~loc (O.D_irrefutable_match { pattern = fresh; expr = item; attr })
       ]
     | Exp { binding = { old = _; fresh }; item; attr; loc } ->
       let binder = Binder.make fresh item.type_expression in
@@ -257,14 +256,14 @@ let build_context : Data.t -> O.context =
   List.join (List.map ~f data.content)
 
 
-let rec compile : Data.t -> Data.path -> I.expression -> I.program -> O.program =
+let rec compile ~raise : Data.t -> Data.path -> I.expression -> I.program -> O.program =
  fun data path hole module_ ->
-  let data = compile_declarations data path module_ in
-  let hole = compile_expression data [] hole in
+  let data = compile_declarations ~raise data path module_ in
+  let hole = compile_expression ~raise data [] hole in
   build_context data, hole
 
 
-and compile_declarations : Data.t -> Data.path -> I.module_ -> Data.t =
+and compile_declarations ~raise : Data.t -> Data.path -> I.module_ -> Data.t =
  fun init_scope path lst ->
   let f : Data.t -> I.declaration -> Data.t =
    fun acc_scope decl ->
@@ -272,21 +271,25 @@ and compile_declarations : Data.t -> Data.path -> I.module_ -> Data.t =
     | I.D_type _ -> acc_scope
     | I.D_irrefutable_match { pattern; expr; attr } ->
       let pat =
-        let item = compile_expression acc_scope [] expr in
-        let pattern = I.Pattern.map compile_type pattern in
+        let item = compile_expression ~raise acc_scope [] expr in
+        let pattern = I.Pattern.map (compile_type ~raise) pattern in
         let fresh = Data.fresh_pattern pattern path in
-        (Data.{ binding = { old = pattern; fresh }; item; attr; loc = decl.location } : Data.pat_)
+        (Data.{ binding = { old = pattern; fresh }; item; attr; loc = decl.location }
+          : Data.pat_)
       in
       Data.add_exp_pat acc_scope pat
     | I.D_value { binder; expr; attr } ->
       let exp =
-        let item = compile_expression acc_scope [] expr in
+        let item = compile_expression ~raise acc_scope [] expr in
         let fresh = Data.fresh_var binder.var path in
-        (Data.{ binding = { old = binder.var; fresh }; item; attr; loc = decl.location } : Data.exp_)
+        (Data.{ binding = { old = binder.var; fresh }; item; attr; loc = decl.location }
+          : Data.exp_)
       in
       Data.add_exp acc_scope exp
     | I.D_module { module_binder; module_; module_attr = _ } ->
-      let rhs_glob = compile_module_expr acc_scope (path @ [ module_binder ]) module_ in
+      let rhs_glob =
+        compile_module_expr ~raise acc_scope (path @ [ module_binder ]) module_
+      in
       Data.add_module acc_scope module_binder rhs_glob
   in
   List.fold lst ~init:init_scope ~f
@@ -296,12 +299,12 @@ and compile_declarations : Data.t -> Data.path -> I.module_ -> Data.t =
   [copy_content] let you control if the module content should be entirely copied 
   as a new set of bindings, or if we should just make reference to it
 *)
-and compile_module_expr ?(copy_content = false)
+and compile_module_expr ~raise ?(copy_content = false)
     : Data.t -> Data.path -> I.module_expr -> Data.t
   =
  fun data path mexpr ->
   match mexpr.module_content with
-  | M_struct prg -> compile_declarations { data with content = [] } path prg
+  | M_struct prg -> compile_declarations ~raise { data with content = [] } path prg
   | M_variable v ->
     let res = Data.resolve_path data [ v ] in
     if copy_content then Data.refresh res path else { res with content = [] }
@@ -310,9 +313,9 @@ and compile_module_expr ?(copy_content = false)
     if copy_content then Data.refresh res path else { res with content = [] }
 
 
-and compile_type : I.type_expression -> O.type_expression =
+and compile_type ~(raise : _ Trace.raise) : I.type_expression -> O.type_expression =
  fun ty ->
-  let self = compile_type in
+  let self = compile_type ~raise in
   let return type_content : O.type_expression =
     { type_content
     ; orig_var = ty.orig_var
@@ -322,6 +325,7 @@ and compile_type : I.type_expression -> O.type_expression =
   in
   match ty.type_content with
   | T_variable x -> return (T_variable x)
+  | T_exists _ -> raise.error @@ cannot_compile_texists ty ty.location
   | T_constant { language; injection; parameters } ->
     return (T_constant { language; injection; parameters = List.map parameters ~f:self })
   | T_sum r -> return (T_sum (I.Row.map self r))
@@ -332,15 +336,16 @@ and compile_type : I.type_expression -> O.type_expression =
   | T_for_all x -> return (T_for_all (Abstraction.map self x))
 
 
-and compile_expression : Data.t -> Data.path -> I.expression -> O.expression =
+and compile_expression ~raise : Data.t -> Data.path -> I.expression -> O.expression =
  fun data path expr ->
-  let self ?(data = data) = compile_expression data path in
-  let self_ty = compile_type in
+  let self ?(data = data) = compile_expression ~raise data path in
+  let self_ty = compile_type ~raise in
   let return expression_content : O.expression =
-    let type_expression = compile_type expr.type_expression in
+    let type_expression = compile_type ~raise expr.type_expression in
     { expression_content; type_expression; location = expr.location }
   in
   match expr.expression_content with
+  | I.E_error _ -> raise.error @@ cannot_compile_erroneous_expression expr expr.location
   (* resolving variable names *)
   | I.E_variable v ->
     let v = Data.resolve_variable data v in
@@ -428,6 +433,7 @@ and compile_expression : Data.t -> Data.path -> I.expression -> O.expression =
     let data =
       let rhs_scope =
         compile_module_expr
+          ~raise
           data
           (Module_var.add_prefix "LOCAL#in" module_binder :: path)
           rhs
