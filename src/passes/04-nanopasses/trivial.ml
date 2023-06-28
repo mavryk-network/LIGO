@@ -161,6 +161,7 @@ end = struct
       ret
       @@ D_module
            { x with module_attr = conv_modtydecl_attr ~raise location x.module_attr attr }
+    | D_attr (_attr, O.{ wrap_content = D_signature x; _ }) -> ret @@ D_signature x
     | D_const { type_params = None; pattern; rhs_type; let_rhs }
     | D_var { type_params = None; pattern; rhs_type; let_rhs } ->
       let let_rhs =
