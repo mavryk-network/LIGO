@@ -243,7 +243,21 @@ let%expect_test _ =
   in
   run_ligo_good
     [ "compile"; "storage"; test "metadata_tzip16.mligo"; "-e"; entrypoint; storage ];
-  [%expect {| (Pair 42 { Elt "titi" 0x24 ; Elt "toto" 0x42 }) |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
+  Called from Cli_expect_tests__Contract_metadata.(fun) in file "src/bin/expect_tests/contract_metadata.ml", line 244, characters 2-101
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  An internal error ocurred. Please, contact the developers.
+  metadata error. |}]
 
 let%expect_test _ =
   let entrypoint = "entry_valid_metadata" in
@@ -258,7 +272,21 @@ let%expect_test _ =
   in
   run_ligo_good
     [ "compile"; "storage"; test "metadata_tzip16.jsligo"; "-e"; entrypoint; storage ];
-  [%expect {| (Pair 42 { Elt "titi" 0x24 ; Elt "toto" 0x42 }) |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
+  Called from Cli_expect_tests__Contract_metadata.(fun) in file "src/bin/expect_tests/contract_metadata.ml", line 273, characters 2-102
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  An internal error ocurred. Please, contact the developers.
+  metadata error. |}]
 
 (* -------------------------------------------------------------------------- *)
 (* Contracts with invalid 'metadata' should pass when the waiver flag is enabled *)

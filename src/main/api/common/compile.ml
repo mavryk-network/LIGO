@@ -446,10 +446,10 @@ let storage
           app_typed_prg
           typed_store
       in
-      let () = match Ligo_interpreter.Value_checks.tzip16_check v with
+      let type_ = Aggregation.compile_type typed_store.type_expression in
+      let () = match Ligo_interpreter.Value_checks.all_check ~options:options.middle_end ~type_ v with
         | Some () -> ()
         | None -> failwith "metadata error" in
-      let type_ = Aggregation.compile_type typed_store.type_expression in
       let compiled_param =
         Interpreter.compile_value ~raise ~options ~loc:Location.generated v type_
       in

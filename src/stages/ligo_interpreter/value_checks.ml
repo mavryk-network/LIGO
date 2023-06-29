@@ -52,3 +52,13 @@ let tzip16_check (v : value) =
   )
   | _ ->
     return ()
+
+let all_check ~(options : Compiler_options.middle_end) ~type_ (v : value) =
+  let open Simple_utils.Option in
+  if not options.no_metadata_check
+  then
+    match Self_ast_aggregated.find_storage_metadata_opt type_ with
+    | Some metadata when Self_ast_aggregated.is_metadata_tzip16_type_valid metadata ->
+      tzip16_check v
+    | _ -> return ()
+  else return ()

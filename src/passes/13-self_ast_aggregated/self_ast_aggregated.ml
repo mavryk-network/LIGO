@@ -2,6 +2,8 @@ open Ligo_prim
 module Errors = Errors
 module Helpers = Helpers
 
+let find_storage_metadata_opt = Check_metadata.find_storage_metadata_opt
+let is_metadata_tzip16_type_valid = Check_metadata.is_metadata_tzip16_type_valid
 let map_expression = Ast_aggregated.Helpers.map_expression
 let expression_obj ~raise e = Obj_ligo.check_obj_ligo ~raise e
 
