@@ -53,7 +53,8 @@ let tzip16_check (v : value) =
   | _ ->
     return ()
 
-let all_check ~(options : Compiler_options.middle_end) ~type_ (v : value) =
+let all_check ~raise ~(options : Compiler_options.middle_end) ~type_ (v : value) =
+  ignore raise;
   let open Simple_utils.Option in
   if not options.no_metadata_check
   then
