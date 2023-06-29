@@ -1,3 +1,5 @@
+module Value_checks = Value_checks
+
 type interpreter_error = Errors.interpreter_error
 
 val eval_expression

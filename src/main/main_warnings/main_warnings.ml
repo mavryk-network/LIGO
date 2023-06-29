@@ -28,6 +28,9 @@ type all =
   | `Use_meta_ligo of Location.t
   | `Self_ast_aggregated_warning_bad_self_type of
     Ast_aggregated.type_expression * Ast_aggregated.type_expression * Location.t
+  | `Metadata_no_empty_key of Location.t
+  | `Metadata_tezos_storage_not_found of Location.t * string
+  | `Metadata_not_valid_URI of Location.t * string
   ]
 
 let warn_bad_self_type t1 t2 loc = `Self_ast_aggregated_warning_bad_self_type (t1, t2, loc)
@@ -194,7 +197,13 @@ let pp
         Ast_aggregated.PP.type_expression
         got
         Ast_aggregated.PP.type_expression
-        expected)
+        expected
+    | `Metadata_no_empty_key loc ->
+      Format.fprintf f "@[<hv>%a@ Warning: Empty key in metadata big-map is mandatory. @]" snippet_pp loc
+    | `Metadata_tezos_storage_not_found (loc, key) ->
+      Format.fprintf f "@[<hv>%a@ Warning: Could not find key %s in storage's metadata. @]" snippet_pp loc key
+    | `Metadata_not_valid_URI (loc, uri) ->
+      Format.fprintf f "@[<hv>%a@ Warning: Could not find a valid URI %s in storage's metadata empty key. @]" snippet_pp loc uri)
 
 
 let to_warning : all -> Simple_utils.Warning.t =
@@ -364,6 +373,24 @@ let to_warning : all -> Simple_utils.Warning.t =
     in
     let content = make_content ~message ~location () in
     make ~stage:"aggregation" ~content
+  | `Metadata_no_empty_key location ->
+    let message =
+      Format.sprintf "Empty key in metadata big-map is mandatory."
+    in
+    let content = make_content ~message ~location () in
+    make ~stage:"value_check" ~content
+  | `Metadata_tezos_storage_not_found (location, key) ->
+    let message =
+      Format.sprintf "Could not find key %s in storage's metadata." key
+    in
+    let content = make_content ~message ~location () in
+    make ~stage:"value_check" ~content
+  | `Metadata_not_valid_URI (location, uri) ->
+    let message =
+      Format.sprintf "Could not find a valid URI %s in storage's metadata empty key." uri
+    in
+    let content = make_content ~message ~location () in
+    make ~stage:"value_check" ~content
 
 
 let to_json : all -> Yojson.Safe.t =

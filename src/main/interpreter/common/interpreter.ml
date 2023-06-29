@@ -8,6 +8,7 @@ module Env = Ligo_interpreter.Environment
 module Monad = Execution_monad
 module ModRes = Preprocessor.ModRes
 module TzBytes = Tezos_stdlib.TzBytes
+module Value_checks = Value_checks
 
 type interpreter_error = Errors.interpreter_error
 

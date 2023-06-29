@@ -447,9 +447,7 @@ let storage
           typed_store
       in
       let type_ = Aggregation.compile_type typed_store.type_expression in
-      let () = match Ligo_interpreter.Value_checks.all_check ~raise ~options:options.middle_end ~type_ v with
-        | Some () -> ()
-        | None -> failwith "metadata error" in
+      let () = Interpreter.Value_checks.all_check ~raise ~options:options.middle_end ~type_ ~loc:typed_store.location v in
       let compiled_param =
         Interpreter.compile_value ~raise ~options ~loc:Location.generated v type_
       in
