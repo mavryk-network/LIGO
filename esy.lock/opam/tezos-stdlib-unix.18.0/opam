@@ -1,0 +1,46 @@
+# This file was automatically generated, do not edit.
+# Edit file manifest/main.ml instead.
+opam-version: "2.0"
+maintainer: "contact@tezos.com"
+authors: ["Tezos devteam"]
+homepage: "https://www.tezos.com/"
+bug-reports: "https://gitlab.com/tezos/tezos/issues"
+dev-repo: "git+https://gitlab.com/tezos/tezos.git"
+license: "MIT"
+depends: [
+  "dune" { >= "3.0"}
+  "dune-configurator"
+  "ocaml" { >= "4.14" }
+  "base-unix"
+  "tezos-error-monad"
+  "tezos-lwt-result-stdlib"
+  "tezos-event-logging"
+  "tezos-stdlib"
+  "data-encoding" { >= "0.7.1" & < "1.0.0" }
+  "aches-lwt" { >= "1.0.0" }
+  "lwt" { >= "5.6.0" }
+  "ipaddr" { >= "5.0.0" & < "6.0.0" }
+  "re" { >= "1.9.0" }
+  "ezjsonm" { >= "1.1.0" }
+  "ptime" { >= "1.1.0" }
+  "mtime" { >= "1.4.0" & < "2.0.0" }
+  "conf-libev"
+  "uri" { >= "3.1.0" }
+  "tezt" { with-test & >= "3.1.1" }
+  "tezos-test-helpers" {with-test}
+  "qcheck-alcotest" { with-test & >= "0.20" }
+  "octez-alcotezt" {with-test}
+]
+build: [
+  ["rm" "-rf" "vendors" "contrib"]
+  ["dune" "build" "-p" name "-j" jobs]
+  ["dune" "runtest" "-p" name "-j" jobs] {with-test}
+]
+synopsis: "Tezos: yet-another local-extension of the OCaml standard library (unix-specific fragment)"
+url {
+  src: "https://gitlab.com/ligolang/tezos-ligo/-/archive/v18.0-alpha.3/tezos-ligo-v18.0-alpha.3.tar.gz"
+  checksum: [
+    "sha256=b2edf49db49eb4f0329bbf4e6f1006f710135824090e24bf172b4379fd332027"
+    "sha512=55c978462a7a9e9bb0d90ffdafc26413aa58835824ea3568325db9fc1e53279c04add76f1950695efdc430ad5a0fb28fd218bb2d6b8b4181ab02ff7369934afd"
+  ]
+}
