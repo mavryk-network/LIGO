@@ -191,6 +191,26 @@ let test_cases =
         ]
     ; max_number_of_problems = None
     }
+  ; { test_name = "Shows diagnostics from another file with a type error."
+    ; file_path = "contracts/lsp/importer_failure.mligo"
+    ; diagnostics = []
+    ; max_number_of_problems = None
+    }
+  ; { test_name = "Shows diagnostics for a file with recoverable type error."
+    ; file_path = "contracts/lsp/recover_type_error1.mligo"
+    ; diagnostics = []
+    ; max_number_of_problems = None
+    }
+  ; { test_name = "Shows diagnostics for a file with recoverable type error."
+    ; file_path = "contracts/lsp/recover_type_error2.mligo"
+    ; diagnostics = []
+    ; max_number_of_problems = None
+    }
+  ; { test_name = "Shows diagnostics for a file with recoverable type error."
+    ; file_path = "contracts/lsp/recover_type_error3.mligo"
+    ; diagnostics = []
+    ; max_number_of_problems = None
+    }
   ]
 
 

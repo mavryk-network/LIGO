@@ -1440,7 +1440,11 @@ and try_infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, 
   try_ (infer_expression expr) ~with_:(fun error ->
       let%bind loc = loc () in
       (* Use an arbitrary type for the erroneous expression *)
-      let%bind ret_type = exists Type in
+      let%bind ret_type =
+        match Ast_core.Combinators.get_e_ascription_opt expr with
+        | Some ascr -> With_default_layout.evaluate_type ascr.type_annotation
+        | None -> exists Type
+      in
       return
         ( ret_type
         , E.(
