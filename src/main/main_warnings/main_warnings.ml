@@ -223,7 +223,8 @@ let pp
     | `Metadata_slash_not_valid_URI (loc, uri) ->
       Format.fprintf
         f
-        "@[<hv>%a@ Warning: Slash ('/') not in a valid position in URI: %s. @]"
+        "@[<hv>%a@ Warning: Slash ('/') not in a valid position in \
+         URI: \"%s\", use instead \"%%2F\". @]"
         snippet_pp
         loc
         uri)

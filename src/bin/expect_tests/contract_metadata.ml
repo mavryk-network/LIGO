@@ -232,6 +232,36 @@ let%expect_test _ =
 (* Contracts with valid 'metadata' type should pass *)
 let%expect_test _ =
   let entrypoint = "entry_valid_metadata" in
+  run_ligo_good
+    [ "compile"; "storage"; test "metadata_tzip16.mligo"; "-e"; entrypoint; "good_storage" ];
+  [%expect
+    {|
+    (Pair 42
+          { Elt "" 0x74657a6f732d73746f726167653a68656c6c6f253246776f726c64 ;
+            Elt "hello/world" 0x4a534f4e3f }) |}];
+  run_ligo_good
+    [ "compile"; "storage"; test "metadata_tzip16.mligo"; "-e"; entrypoint; "bad_storage0" ];
+  [%expect
+    {|
+    Warning: Slash ('/') not in a valid position in URI: "hello/invalid_not_http", use instead "%2F".
+    (Pair 42
+          { Elt "" 0x74657a6f732d73746f726167653a68656c6c6f2f696e76616c69645f6e6f745f68747470 ;
+            Elt "hello/world" 0x4a534f4e3f ;
+            Elt "invalid_not_http" 0x68747470733a2f2f7777772e6578616d706c652e636f6d ;
+            Elt "invalid_trailing_slash"
+                0x697066733a2f2f516d577169337542684251354b55367352314c704c714a5472344778755066454b3755447976364763633366484c2f ;
+            Elt "invalid_wrong_hash" 0x697066733a2f2f696e76616c69642d68617368 }) |}];
+  run_ligo_good
+    [ "compile"; "storage"; test "metadata_tzip16.mligo"; "-e"; entrypoint; "bad_storage1" ];
+  [%expect
+    {|
+     Warning: Could not find a valid URI haha in storage's metadata empty key.
+    (Pair 42
+          { Elt "" 0x68616861 ;
+            Elt "hello/world" 0x687474703a2f2f7777772e6578616d706c652e636f6d }) |}]
+
+let%expect_test _ =
+  let entrypoint = "entry_valid_metadata" in
   run_ligo_good [ "compile"; "contract"; test "metadata_tzip16.mligo"; "-e"; entrypoint ];
   [%expect
     {|
