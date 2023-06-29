@@ -205,8 +205,8 @@ let fold'
   | S_bin_op sing ->
     let { op; arg1; arg2 } = node in
     process_list
-    [ op -| sing
-    ; arg1 -| S_expr
+    [ arg1 -| S_expr
+    ; op -| sing
     ; arg2 -| S_expr ]
   | S_binding ->
     let { key; arrow; value } = node in
@@ -382,11 +382,11 @@ let fold'
       Punned node -> node -| S_punned sing_1
     | Complete node -> node -| S_full_field (sing_1, sing_2))
   | S_field_decl ->
-    let { field_name; field_type; attributes } = node in
+    let { attributes; field_name; field_type } = node in
     process_list
-    [ field_name -| S_field_name
-    ; field_type -| S_option S_type_annotation
-    ; attributes -| S_list S_attribute ]
+    [ attributes -| S_list S_attribute
+    ; field_name -| S_field_name
+    ; field_type -| S_option S_type_annotation ]
   | S_field_lens -> process
     (match node with
       Lens_Id node -> node -| S_assign
@@ -433,12 +433,12 @@ let fold'
     ; collection -| S_expr
     ; block -| S_reg S_block ]
   | S_full_field (sing_1, sing_2) ->
-    let { field_lhs; field_lens; field_rhs; attributes } = node in
+    let { attributes; field_lhs; field_lens; field_rhs } = node in
     process_list
-    [ field_lhs -| sing_1
+    [ attributes -| S_list S_attribute
+    ; field_lhs -| sing_1
     ; field_lens -| S_field_lens
-    ; field_rhs -| sing_2
-    ; attributes -| S_list S_attribute ]
+    ; field_rhs -| sing_2 ]
   | S_fun_decl ->
     let { kwd_recursive
       ; kwd_function
@@ -633,10 +633,10 @@ let fold'
     ; selector -| S_dot
     ; field_path -| S_nsepseq (S_selection, S_dot) ]
   | S_punned sing ->
-    let { pun; attributes } = node in
+    let { attributes; pun } = node in
     process_list
-    [ pun -| sing
-    ; attributes -| S_list S_attribute ]
+    [ attributes -| S_list S_attribute
+    ; pun -| sing ]
   | S_rbrace -> process @@ node -| S_wrap S_lexeme
   | S_rbracket -> process @@ node -| S_wrap S_lexeme
   | S_record_expr ->
@@ -776,11 +776,11 @@ let fold'
     ; terminator -| S_option S_semi ]
   | S_variable -> process @@ node -| S_wrap S_lexeme
   | S_variant ->
-    let { ctor; ctor_args; attributes } = node in
+    let { attributes; ctor; ctor_args } = node in
     process_list
-    [ ctor -| S_ctor
-    ; ctor_args -| S_option (S_tuple_2 (S_kwd_of, S_type_expr))
-    ; attributes -| S_list S_attribute ]
+    [ attributes -| S_list S_attribute
+    ; ctor -| S_ctor
+    ; ctor_args -| S_option (S_tuple_2 (S_kwd_of, S_type_expr)) ]
   | S_vbar -> process @@ node -| S_wrap S_lexeme
   | S_vbar_eq -> process @@ node -| S_wrap S_lexeme
   | S_verbatim -> process @@ node -| S_wrap S_lexeme

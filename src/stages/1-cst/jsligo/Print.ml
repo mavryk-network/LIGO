@@ -413,27 +413,58 @@ and print_T_Var state (node : variable) =
 
 and print_T_Variant state (node : variant_type) =
   let Region.{value; region} = node in
-  Tree.of_nsep_or_pref ~region state "T_Variant" print_variant value
+  Tree.of_nsep_or_pref ~region state "T_Variant" (print_variant_kind print_type_expr) value
 
-and print_variant state (node : variant) =
-  let {attributes; tuple} = node in
-  let Region.{region; value} = tuple in
-  let _, app = value in
+and print_variant_kind : 'a. 'a Tree.printer -> 'a variant_kind Tree.printer =
+ fun printer state node ->
+  match node with
+    Variant   node -> print_variant printer state node
+  | Bracketed node -> print_bracketed_variant printer state node
+  | Legacy    node -> print_legacy_variant printer state node
+
+and print_variant : 'a. 'a Tree.printer -> 'a variant reg Tree.printer =
+ fun printer state node ->
+  let ({attributes; tuple} : 'a variant) = node.value in
+  let _, app = tuple in
   let ctor, ctor_params =
     match app with
       ZeroArg ctor -> ctor, []
-    | MultArg brackets ->
+    | MultArg (ctor, brackets) ->
         let app = brackets.value.inside in
         match app with
-         `Sep p -> p
-        | `Term ((ctor,_), ctor_params) ->
-             ctor, List.map ~f:(fun (x,y) -> (y,x)) ctor_params in
-  let print state (_, arg) = print_type_expr state arg in
+          `Sep p -> ctor, Utils.nsepseq_to_list p
+        | `Term ctor_params ->
+             ctor, List.map ~f:fst @@ Utils.nseq_to_list ctor_params
+  in
   let children =
-    Tree.(mk_child print_type_expr ctor) ::
-    Tree.mk_children_list print ~root:"<parameters>" ctor_params
+    Tree.(mk_child printer ctor) ::
+    Tree.mk_children_list printer ~root:"<parameters>" ctor_params
     @ mk_children_attr attributes
-  in Tree.make ~region state "<variant>" children
+  in Tree.make ~region:node.region state "<variant>" children
+
+and print_bracketed_variant : 'a. 'a Tree.printer -> 'a bracketed_variant reg Tree.printer =
+ fun printer state node ->
+  let {attributes; sharp = _; tuple} = node.value in
+  let {ctor; args} : 'a bracketed_variant_args = tuple.value.inside in
+  let ctor_params =
+    Option.value_map ~default:[] ~f:(Utils.sep_or_term_to_list <@ snd) args
+  in
+  let children =
+    Tree.mk_child printer ctor ::
+    Tree.mk_children_list printer ~root:"<parameters>" ctor_params
+    @ mk_children_attr attributes
+  in Tree.make ~region:node.region state "<bracketed_variant>" children
+
+and print_legacy_variant : 'a. 'a Tree.printer -> 'a legacy_variant reg Tree.printer =
+ fun printer state node ->
+  let {attributes; tuple} = node.value in
+  let {ctor; args} = tuple.value.inside in
+  let args = List.map ~f:snd args in
+  let children =
+    Tree.mk_child (Tree.make_node ~region:ctor#region) ctor#payload ::
+    Tree.mk_children_list printer ~root:"<args>" args
+    @ mk_children_attr attributes
+  in Tree.make ~region:node.region state "<legacy_variant>" children
 
 (* PATTERNS *)
 
@@ -441,6 +472,7 @@ and print_pattern state = function
   P_Attr     p -> print_P_Attr     state p
 | P_Array    p -> print_P_Array    state p
 | P_Bytes    p -> print_P_Bytes    state p
+| P_Ctor     p -> print_P_Ctor     state p
 | P_CtorApp  p -> print_P_CtorApp  state p
 | P_False    p -> print_P_False    state p
 | P_Int      p -> print_P_Int      state p
@@ -468,14 +500,19 @@ and print_P_Attr state (node : attribute * pattern) =
 and print_P_Bytes state (node: (lexeme * Hex.t) wrap) =
   Tree.make_bytes "P_Bytes" state node
 
+(* Constructor *)
+
+and print_P_Ctor state (node : ctor) =
+  Tree.(make_unary state "P_Ctor" make_literal node)
+
 (* Application of data constructors in patterns *)
 
-and print_P_CtorApp state (node: pattern ctor_app reg) =
-  print_ctor_app print_pattern "P_CtorApp" state node
+and print_P_CtorApp state (node: pattern variant_kind) =
+  print_variant_kind print_pattern state node
 
 (* "false" as a pattern *)
 
-and print_P_False state (node : false_const) =
+and print_P_False state (node : kwd_false) =
   Tree.make_node ~region:node#region state "P_False"
 
 (* Integers in patterns *)
@@ -512,7 +549,7 @@ and print_P_String state (node : lexeme wrap) =
 
 (* "true" as an expression *)
 
-and print_P_True state (node : true_const) =
+and print_P_True state (node : kwd_true) =
   Tree.make_node ~region:node#region state "P_True"
 
 (* Tuple patterns *)
@@ -578,6 +615,7 @@ and print_expr state = function
 | E_Bytes      e -> print_E_Bytes      state e
 | E_CodeInj    e -> print_E_CodeInj    state e
 | E_ContractOf e -> print_E_ContractOf state e
+| E_Ctor       e -> print_E_Ctor       state e
 | E_CtorApp    e -> print_E_CtorApp    state e
 | E_Div        e -> print_E_Div        state e
 | E_DivEq      e -> print_E_DivEq      state e
@@ -757,29 +795,15 @@ and print_E_ContractOf state (node: contract_of_expr reg) =
   let path = namespace_path.value.inside in
   Tree.make_unary state "E_ContractOf" print_namespace_selection path
 
+(* Constructor *)
+
+and print_E_Ctor state (node : ctor) =
+  Tree.(make_unary state "E_Ctor" make_literal node)
+
 (* Application of data constructor as expressions *)
 
-and print_E_CtorApp state (node : expr ctor_app reg) =
-  print_ctor_app print_expr "E_CtorApp" state node
-
-and print_ctor_app :
-  'a.'a Tree.printer -> Tree.root -> Tree.state -> 'a ctor_app reg -> unit =
-  fun print root state {region; value} ->
-  let _, app = value in
-  let ctor, ctor_params =
-    match app with
-      ZeroArg ctor -> ctor, []
-    | MultArg brackets ->
-        let app = brackets.value.inside in
-        match app with
-          `Sep p -> p
-        | `Term ((ctor,_), ctor_params) ->
-          ctor, List.map ~f:(fun (x,y) -> (y,x)) ctor_params in
-  let print' state (_, arg) = print state arg in
-  let children =
-    Tree.(mk_child print ctor) ::
-    Tree.mk_children_list print' ~root:"<parameters>" ctor_params
-  in Tree.make ~region state root children
+and print_E_CtorApp state (node : expr variant_kind) =
+  print_variant_kind print_expr state node
 
 (* The Euclidean quotient *)
 
@@ -807,7 +831,7 @@ and print_E_Equal state (node : equal_cmp bin_op reg) =
 
 (* "false" as an expression *)
 
-and print_E_False state (node : false_const) =
+and print_E_False state (node : kwd_false) =
   Tree.make_node ~region:node#region state "E_False"
 
 (* Functional expressions introduced with the keyword "function" *)
@@ -1051,7 +1075,7 @@ and print_E_MultEq state (node: times_eq bin_op reg) =
 
 (* "true" as an expression *)
 
-and print_E_True state (node : true_const) =
+and print_E_True state (node : kwd_true) =
   Tree.make_node ~region:node#region state "E_True"
 
 (* Tuple of expressions *)

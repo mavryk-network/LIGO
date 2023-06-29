@@ -7,10 +7,10 @@ module I = Cst.Jsligo
 
 let ghost : string I.wrap = I.Wrap.ghost ""
 
-let sep_or_term_to_nelist : ('a, _) Utils.sep_or_term -> 'a List.Ne.t option =
+let sep_or_term_to_nelist : ('a, 'b) Utils.sep_or_term -> 'a List.Ne.t option =
   Option.map ~f:(function
       | `Sep x -> nsepseq_to_nseq x
-      | `Term x -> nseq_map snd x)
+      | `Term x -> nseq_map fst x)
 
 
 let nsep_or_term_to_nelist : ('a, 'b) Utils.nsep_or_term -> 'a List.Ne.t = function
@@ -178,11 +178,28 @@ let rec expr : Eq.expr -> Folding.expr =
   | E_App { value = expr, args; _ } ->
     let args = sepseq_to_list args.value.inside in
     return @@ E_call (expr, Location.wrap ~loc @@ args)
-  | E_CtorApp { value = _, ZeroArg ctor; _ } -> return @@ E_ctor_app (ctor, None)
-  | E_CtorApp { value = _, MultArg app; _ } ->
-    let ctor, args = nsep_or_term_to_nelist app.value.inside in
-    let args = List.Ne.of_list_opt args in
-    return @@ E_ctor_app (ctor, args)
+  | E_Ctor value -> return @@ E_constr (TODO_do_in_parsing.labelize (w_fst value))
+  | E_CtorApp (Variant { value = { attributes = _; tuple }; region = _ }) ->
+    return
+    @@
+    (match tuple with
+    | _sharp, ZeroArg ctor -> E_ctor_app (ctor, None)
+    | _sharp, MultArg (ctor, args) ->
+      let args = nsep_or_term_to_nelist args.value.inside in
+      E_ctor_app (ctor, Some args))
+  | E_CtorApp (Bracketed { value = { attributes = _; sharp = _; tuple }; region = _ }) ->
+    let ({ ctor; args } : I.expr I.bracketed_variant_args) = tuple.value.inside in
+    return
+    @@
+    (match args with
+    | None -> E_ctor_app (ctor, None)
+    | Some (_comma, args) ->
+      let args = sep_or_term_to_nelist args in
+      E_ctor_app (ctor, args))
+  | E_CtorApp (Legacy { value = { attributes = _; tuple }; region = _ }) ->
+    let ({ ctor; args } : I.expr I.legacy_variant_args) = tuple.value.inside in
+    let args = List.Ne.of_list_opt @@ List.map ~f:snd args in
+    return @@ E_ctor_app (E_String ctor, args)
   | E_Array { value = items; _ } ->
     let items =
       let translate_array_item : I.expr I.element -> _ AST.Array_repr.item = function
@@ -398,38 +415,87 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
     return @@ T_prod t
   | T_Variant { value = variants; region } ->
     let variants = nsep_or_pref_to_list variants in
-    let destruct : I.variant -> _ =
-     fun { tuple; attributes } ->
-      let ctor, ctor_params =
-        match snd (r_fst tuple) with
-        | I.ZeroArg ctor -> ctor, None
-        | MultArg args ->
-          let ctor, args = nsep_or_term_to_nelist args.value.inside in
-          let args = List.Ne.of_list_opt args in
-          ctor, args
-      in
-      let ctor =
-        match ctor with
-        | T_String s -> s
-        | _ -> failwith "Expected string from parser."
-      in
-      let ctor_params : (I.type_expr, I.comma) nsep_or_term option =
-        Option.map ~f:(fun x -> `Sep (nsepseq_of_nseq ~sep:ghost x)) ctor_params
-      in
-      let ty =
-        match ctor_params with
-        | None -> None
-        | Some (`Sep (t, [])) | Some (`Term ((t, _), _)) -> Some t
-        | Some ctor_params ->
-          let inside : I.array_type =
-            Region.wrap_ghost
-            @@ I.{ lbracket = ghost; inside = ctor_params; rbracket = ghost }
-          in
-          Some (I.T_Array inside)
-      in
-      ( TODO_do_in_parsing.labelize ctor#payload
-      , ty
-      , TODO_do_in_parsing.conv_attrs attributes )
+    let destruct : I.type_expr I.variant_kind -> _ = function
+      | Variant { value = { tuple; attributes }; region = _ } ->
+        let ctor, ctor_params =
+          match snd tuple with
+          | I.ZeroArg ctor -> ctor, None
+          | MultArg (ctor, args) ->
+            let args = nsep_or_term_to_nelist args.value.inside in
+            ctor, Some args
+        in
+        let ctor =
+          match ctor with
+          | T_String s -> s
+          | _ -> failwith "Expected string from parser."
+        in
+        let ctor_params : (I.type_expr, I.comma) nsep_or_term option =
+          Option.map ~f:(fun x -> `Sep (nsepseq_of_nseq ~sep:ghost x)) ctor_params
+        in
+        let ty =
+          match ctor_params with
+          | None -> None
+          | Some (`Sep (t, []) | `Term ((t, _), _)) -> Some t
+          | Some ctor_params ->
+            let inside : I.array_type =
+              Region.wrap_ghost
+              @@ I.{ lbracket = ghost; inside = ctor_params; rbracket = ghost }
+            in
+            Some (I.T_Array inside)
+        in
+        ( TODO_do_in_parsing.labelize ctor#payload
+        , ty
+        , TODO_do_in_parsing.conv_attrs attributes )
+      | Bracketed { value = { tuple; sharp; attributes }; region = _ } ->
+        let ({ ctor; args } : I.type_expr I.bracketed_variant_args) =
+          tuple.value.inside
+        in
+        let ctor =
+          match ctor with
+          | T_String s -> s
+          | _ -> failwith "Expected string from parser."
+        in
+        let ctor_params =
+          Option.value_map ~default:None ~f:(sep_or_term_to_nelist <@ snd) args
+        in
+        let ctor_params : (I.type_expr, I.comma) nsep_or_term option =
+          Option.map ~f:(fun x -> `Sep (nsepseq_of_nseq ~sep:ghost x)) ctor_params
+        in
+        let ty =
+          match ctor_params with
+          | None -> None
+          | Some (`Sep (t, []) | `Term ((t, _), _)) -> Some t
+          | Some ctor_params ->
+            let inside : I.array_type =
+              Region.wrap_ghost
+              @@ I.{ lbracket = ghost; inside = ctor_params; rbracket = ghost }
+            in
+            Some (I.T_Array inside)
+        in
+        ( TODO_do_in_parsing.labelize ctor#payload
+        , ty
+        , TODO_do_in_parsing.conv_attrs attributes )
+      | Legacy { value = { attributes; tuple }; region } ->
+        let ({ ctor; args } : I.type_expr I.legacy_variant_args) = tuple.value.inside in
+        let ctor_params =
+          args |> List.map ~f:(fun (x, y) -> y, x) |> List.Ne.of_list_opt
+        in
+        let ty =
+          match ctor_params with
+          | None -> None
+          | Some ((t, _), []) -> Some t
+          | Some ctor_params ->
+            let inside : I.array_type =
+              { value =
+                  I.{ lbracket = ghost; inside = `Term ctor_params; rbracket = ghost }
+              ; region
+              }
+            in
+            Some (I.T_Array inside)
+        in
+        ( TODO_do_in_parsing.labelize ctor#payload
+        , ty
+        , TODO_do_in_parsing.conv_attrs attributes )
     in
     let variants = variants |> List.map ~f:destruct |> TODO_do_in_parsing.compile_rows in
     return @@ T_sum_raw variants
@@ -514,13 +580,23 @@ let pattern : Eq.pattern -> Folding.pattern =
   let return = Location.wrap ~loc in
   match p with
   | P_Attr (attr, p) -> return @@ O.P_attr (TODO_do_in_parsing.conv_attr attr, p)
-  | P_CtorApp { value = _, app; _ } ->
-    let ctor, args =
-      match app with
-      | ZeroArg ctor -> ctor, []
-      | MultArg all -> nsep_or_term_to_nelist all.value.inside
-    in
-    return @@ P_ctor_app (ctor, args)
+  | P_Ctor c -> return @@ P_ctor (TODO_do_in_parsing.labelize (w_fst c))
+  | P_CtorApp variant ->
+    (match variant with
+    | Variant { value = { attributes = _; tuple = _, app }; _ } ->
+      let ctor, args =
+        match app with
+        | ZeroArg ctor -> ctor, []
+        | MultArg (ctor, args) -> ctor, nsep_or_term_to_list args.value.inside
+      in
+      return @@ P_ctor_app (ctor, args)
+    | Bracketed { value = { attributes = _; sharp = _; tuple }; _ } ->
+      let ({ ctor; args } : I.pattern I.bracketed_variant_args) = tuple.value.inside in
+      let args = Option.value_map ~default:[] ~f:(sep_or_term_to_list <@ snd) args in
+      return @@ P_ctor_app (ctor, args)
+    | Legacy { value = { attributes = _; tuple }; _ } ->
+      let ({ ctor; args } : I.pattern I.legacy_variant_args) = tuple.value.inside in
+      return @@ P_ctor_app (P_String ctor, List.map ~f:snd args))
   | P_NamePath { value = { namespace_path; property; _ }; _ } ->
     let module_path = nseq_map TODO_do_in_parsing.mvar (nsepseq_to_nseq namespace_path) in
     return @@ P_mod_access { module_path; field = property; field_as_open = false }

@@ -223,6 +223,8 @@ let print_mutez (node : (lexeme * Int64.t) wrap) =
 
 let print_ident (node : variable) = token node
 
+let print_ctor (node : ctor) = token node
+
 let print_string (node : lexeme wrap) = dquotes (print_ident node)
 
 and print_verbatim (node : lexeme wrap) = bquotes (print_ident node)
@@ -671,6 +673,7 @@ and print_expr state = function
 | E_Bytes      e -> print_E_Bytes            e
 | E_CodeInj    e -> print_E_CodeInj    state e
 | E_ContractOf e -> print_E_ContractOf state e
+| E_Ctor       e -> print_E_Ctor             e
 | E_CtorApp    e -> print_E_CtorApp    state e
 | E_Div        e -> print_E_Div        state e
 | E_DivEq      e -> print_E_DivEq      state e
@@ -861,36 +864,14 @@ and print_E_ContractOf state (node : contract_of_expr reg) =
   token kwd_contract_of ^^
   print_par state (print_namespace_selection state) namespace_path
 
+(* Constructor *)
+
+and print_E_Ctor (node : ctor) = print_ctor node
+
 (* Constructor application *)
 
-and print_E_CtorApp state (node : expr ctor_app reg) =
-  print_ctor_app state print_ctor_expr print_expr node
-
-and print_ctor_app :
-  'a.state -> (state -> 'a -> document) -> (state -> 'a -> document) ->
-  'a ctor_app reg -> document =
-  fun state print_ctor print node ->
-    match snd node.value with
-      ZeroArg ctor -> print_ctor state ctor ^^ string "()"
-    | MultArg args ->
-        match args.value.inside with
-          `Sep (ctor, []) -> print_ctor state ctor
-        | `Term ((ctor,_), []) -> print_ctor state ctor
-        | `Sep (ctor, (_,arg)::args) ->
-             print_ctor state ctor
-             ^^ print_ctor_args (print state) (arg, args)
-        | `Term ((ctor,_), (arg,_)::args) ->
-            let args = List.map ~f:(fun (x,y) -> (y,x)) args in
-            print_ctor state ctor
-            ^^ print_ctor_args (print state) (arg, args)
-
-and print_ctor_expr state = function
-  E_String s -> string s#payload
-| expr -> print_expr state expr (* Should not happen *)
-
-and print_ctor_args :
-  'a.('a -> document) -> ('a,'sep) Utils.nsepseq -> document =
-  fun print seq -> string "(" ^^ print_nsepseq (break 1) print seq ^^ string ")"
+and print_E_CtorApp state (node : expr variant_kind) =
+  print_variant_kind print_expr state node
 
 (* Euclidean division *)
 
@@ -913,9 +894,9 @@ and print_E_Equal state (node : equal bin_op reg) = print_bin_op state node
 
 (* Logical falsity *)
 
-and print_false (node : false_const) = token node
+and print_false (node : kwd_false) = token node
 
-and print_E_False (node : false_const) = print_false node
+and print_E_False (node : kwd_false) = print_false node
 
 (* Function expression *)
 
@@ -1144,9 +1125,9 @@ and print_E_Ternary state (node : ternary reg) =
 
 (* Logical truth *)
 
-and print_true (node : true_const) = token node
+and print_true (node : kwd_true) = token node
 
-and print_E_True (node : true_const) = print_true node
+and print_E_True (node : kwd_true) = print_true node
 
 (* Typed expressions *)
 
@@ -1191,6 +1172,7 @@ and print_pattern state = function
   P_Array    p -> print_P_Array    state p
 | P_Attr     p -> print_P_Attr     state p
 | P_Bytes    p -> print_P_Bytes          p
+| P_Ctor     p -> print_P_Ctor           p
 | P_CtorApp  p -> print_P_CtorApp  state p
 | P_False    p -> print_P_False          p
 | P_Int      p -> print_P_Int            p
@@ -1223,18 +1205,18 @@ and print_P_Attr state (node : attribute * pattern) =
 
 and print_P_Bytes (node : (lexeme * Hex.t) wrap) = print_bytes node
 
+(* Constructor pattern *)
+
+and print_P_Ctor (node : ctor) = print_ctor node
+
 (* Pattern for constructor application *)
 
-and print_P_CtorApp state (node : pattern ctor_app reg) =
-  print_ctor_app state print_ctor_pattern print_pattern node
-
-and print_ctor_pattern state = function
-  P_String s -> string s#payload
-| pattern -> print_pattern state pattern (* Should not happen *)
+and print_P_CtorApp state (node : pattern variant_kind) =
+  print_variant_kind print_pattern state node
 
 (* Logical false pattern *)
 
-and print_P_False (node : false_const) = print_false node
+and print_P_False (node : kwd_false) = print_false node
 
 (* Integer in a pattern *)
 
@@ -1264,7 +1246,7 @@ and print_P_String (node : lexeme wrap) = print_string node
 
 (* Logical truth pattern *)
 
-and print_P_True (node : true_const) = print_true node
+and print_P_True (node : kwd_true) = print_true node
 
 (* Typed patterns *)
 
@@ -1439,22 +1421,64 @@ and print_T_Var (node : variable) = print_ident node
 
 (* Variant type *)
 
-and print_variant state (node : variant) =
-  let {tuple; attributes} = node in
-  let sharp, app = tuple.value in
+and print_variant_kind : 'a. (state -> 'a -> document) -> state -> 'a variant_kind -> document =
+ fun printer state node ->
+  match node with
+    Variant node -> print_variant printer state node
+  | Bracketed node -> print_bracketed_variant printer state node
+  | Legacy  node -> print_legacy_variant printer state node
+
+and print_variant : 'a. (state -> 'a -> document) -> state -> 'a variant reg -> document =
+ fun printer state node ->
+  let ({tuple; attributes} : 'a variant) = node.value in
+  let sharp, app = tuple in
   let tuple = Option.value_map ~default:empty ~f:token sharp
-              ^^ print_app state print_type_expr app
+              ^^ print_app state printer app
   in group (print_attributes state tuple attributes)
+
+and print_bracketed_variant : 'a. (state -> 'a -> document) -> state -> 'a bracketed_variant reg -> document =
+ fun printer state node ->
+  let {attributes; sharp; tuple} = node.value in
+  let attributes = print_attributes state empty attributes in
+  let sharp = token sharp in
+  let tuple = print_brackets state (print_bracketed_variant_args printer state) tuple
+  in group (attributes ^^ sharp ^^ tuple)
+
+and print_bracketed_variant_args : 'a. (state -> 'a -> document) -> state -> 'a bracketed_variant_args -> document =
+ fun printer state node ->
+  let {ctor; args} : 'a bracketed_variant_args = node in
+  let args =
+    match args with
+      None -> empty
+    | Some (comma, args) -> token comma ^/^ print_sep_or_term (break 1) (printer state) args
+  in printer state ctor ^^ args
+
+and print_legacy_variant : 'a. (state -> 'a -> document) -> state -> 'a legacy_variant reg -> document =
+ fun printer state node ->
+  let {attributes; tuple} = node.value in
+  let tuple = print_legacy_variant_args printer state tuple in
+  print_attributes state tuple attributes
+
+and print_legacy_variant_args : 'a. (state -> 'a -> document) -> state -> 'a legacy_variant_args brackets -> document =
+ fun printer state ->
+  print_brackets state (fun inside ->
+    let {ctor; args} = inside in
+    let ctor = print_string ctor in
+    let rec separate_map = function
+      []            -> empty
+    | (sep', x)::xs -> token ~sep:(break 1) sep' ^^ printer state x ^^ separate_map xs
+    in ctor ^^ separate_map args)
 
 and print_app :
   'a.state -> (state -> 'a -> document) -> 'a app -> document =
   fun state print -> function
-    ZeroArg ctor  -> print state ctor
-  | MultArg args -> let seq = print_nsep_or_term (break 1) (print state)
-                    in print_brackets state seq args
+    ZeroArg ctor -> print state ctor
+  | MultArg (ctor, args) ->
+      print state ctor
+      ^^ print_par state (print_nsep_or_term (break 1) (print state)) args
 
 and print_variant_type state (node : variant_type) =
-  print_variant_or_union_type state print_variant node
+  print_variant_or_union_type state (print_variant_kind print_type_expr) node
 
 and print_T_Variant state (node : variant_type) = print_variant_type state node
 

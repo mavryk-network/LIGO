@@ -193,6 +193,23 @@ class lsp_server =
       in
       Some completion_options
 
+    method config_semantic_tokens =
+      let legend =
+        SemanticTokensLegend.create
+          ~tokenModifiers:
+            (Array.to_list
+            @@ Array.map ~f:Requests.mk_modifier_legend Requests.all_modifiers)
+          ~tokenTypes:
+            (Array.to_list @@ Array.map ~f:Requests.mk_type_legend Requests.all_types)
+      in
+      Some
+        (`SemanticTokensOptions
+          (SemanticTokensOptions.create
+             ~full:(`Full { delta = Some false })
+             ~legend
+             ~range:true
+             ()))
+
     method! config_modify_capabilities (c : ServerCapabilities.t) : ServerCapabilities.t =
       { c with
         hoverProvider = self#config_hover
@@ -205,6 +222,7 @@ class lsp_server =
       ; foldingRangeProvider = self#config_folding_range
       ; documentRangeFormattingProvider = self#config_range_formatting
       ; completionProvider = self#config_completion
+      ; semanticTokensProvider = self#config_semantic_tokens
       }
 
     method! on_notification_unhandled
@@ -351,5 +369,13 @@ class lsp_server =
           let uri = textDocument.uri in
           run ~uri ~default:None
           @@ Requests.on_req_completion position (DocumentUri.to_path uri)
+        | Client_request.SemanticTokensFull { textDocument; _ } ->
+          let uri = textDocument.uri in
+          run ~uri ~default:None
+          @@ Requests.on_req_semantic_tokens_full (DocumentUri.to_path uri)
+        | Client_request.SemanticTokensRange { textDocument; range; _ } ->
+          let uri = textDocument.uri in
+          run ~uri ~default:None
+          @@ Requests.on_req_semantic_tokens_range (DocumentUri.to_path uri) range
         | _ -> super#on_request ~notify_back ~server_request ~id r
   end
