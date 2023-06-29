@@ -30,16 +30,13 @@ let find_storage_metadata_opt (storage : Ast_aggregated.type_expression)
 
 (** Verifies that the type of the [metadata] field in the storage
     is a [(string, bytes) big_map], as required by the TZIP-16 standard. *)
-let is_metadata_tzip16_type_valid
-    (storage_metadata : type_expression)
-    : bool
-  =
+let is_metadata_tzip16_type_valid (storage_metadata : type_expression) : bool =
   match Ast_aggregated.get_t_big_map storage_metadata with
   | None -> false
   | Some (p1, p2) ->
     (match Ast_aggregated.get_t_string p1, Ast_aggregated.get_t_bytes p2 with
-     | Some _, Some _ -> true
-     | _ -> false)
+    | Some _, Some _ -> true
+    | _ -> false)
 
 
 (** Verifies that the type of the [metadata] field in the storage
@@ -51,9 +48,7 @@ let check_metadata_tzip16_type_compliance
     (storage_metadata : type_expression)
     : unit
   =
-  let pass =
-    is_metadata_tzip16_type_valid storage_metadata
-  in
+  let pass = is_metadata_tzip16_type_valid storage_metadata in
   let suggested_type =
     match syntax with
     (* TODO: improve this with decompilation? *)

@@ -173,7 +173,7 @@ let get_pair : value -> (value * value) option =
   | _ -> None
 
 
-let get_record : value -> (value Record.t) option =
+let get_record : value -> value Record.t option =
  fun value ->
   match value with
   | V_Record lm -> Some lm

@@ -243,7 +243,8 @@ let%expect_test _ =
   in
   run_ligo_good
     [ "compile"; "storage"; test "metadata_tzip16.mligo"; "-e"; entrypoint; storage ];
-  [%expect{|
+  [%expect
+    {|
      Warning: Empty key in metadata big-map is mandatory.
     (Pair 42 { Elt "titi" 0x24 ; Elt "toto" 0x42 }) |}]
 
@@ -260,7 +261,8 @@ let%expect_test _ =
   in
   run_ligo_good
     [ "compile"; "storage"; test "metadata_tzip16.jsligo"; "-e"; entrypoint; storage ];
-  [%expect{|
+  [%expect
+    {|
      Warning: Empty key in metadata big-map is mandatory.
     (Pair 42 { Elt "titi" 0x24 ; Elt "toto" 0x42 }) |}]
 
