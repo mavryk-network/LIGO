@@ -112,7 +112,10 @@ let make ~(start : Pos.t) ~(stop : Pos.t) =
       method compact ?(file=true) ?(offsets=true) mode =
         if start#is_ghost || stop#is_ghost then "ghost"
         else
-          let file_opt  =
+          sprintf "Start:\n%sStop:\n%s"
+          (start#compact ~file:false ~offsets mode)
+          (stop#compact ~file:false ~offsets mode)
+          (* let file_opt  =
             if file then Filename.basename start#file ^ ":" else ""
           and start_str = start#compact ~file:false ~offsets mode
           and stop_str  = stop#compact ~file:false ~offsets mode in
@@ -123,7 +126,7 @@ let make ~(start : Pos.t) ~(stop : Pos.t) =
                       (if offsets then stop#offset mode else stop#column mode)
             else sprintf "%s%s-%s" file_opt start_str stop_str
           else sprintf "%s:%s-%s:%s"
-                       start#file start_str stop#file stop_str
+                       start#file start_str stop#file stop_str *)
     end
 
 let empty pos = make ~start:pos ~stop:pos

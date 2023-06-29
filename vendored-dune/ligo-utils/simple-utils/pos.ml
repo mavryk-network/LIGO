@@ -121,13 +121,23 @@ let make ~byte ~point_num ~point_bol : t =
     method compact ?(file=true) ?(offsets=true) mode =
       if self#is_ghost then "ghost"
       else
-        let horizontal =
+        sprintf "byte.pos_lnum = %d\n
+                 byte.pos_cnum = %d\n
+                 byte.pos_bol = %d\n
+                 point_num = %d\n
+                 point_bol = %d\n"
+          byte.pos_lnum
+          byte.pos_cnum
+          byte.pos_bol
+          point_num
+          point_bol
+        (* let horizontal =
           if offsets then self#offset mode
           else self#column mode in
         if file && String.(<>) self#file "" then
           sprintf "%s:%i:%i" self#file self#line horizontal
         else
-          sprintf "%i:%i" self#line horizontal
+          sprintf "%i:%i" self#line horizontal *)
 end
 
 
