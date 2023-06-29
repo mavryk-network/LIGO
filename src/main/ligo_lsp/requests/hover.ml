@@ -11,6 +11,7 @@ let hover_string : Syntax_types.t -> Scopes.def -> string =
     |> Option.map ~f:type_to_string
     |> Option.value ~default:(opening_comment ^ " Unresolved " ^ closing_comment)
   | Type tdef -> type_to_string tdef.content
+  | Constructor cdef -> type_to_string cdef.parent_type
   | Module mdef -> Helpers_pretty.print_module syntax mdef
 
 

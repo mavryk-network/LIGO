@@ -123,7 +123,7 @@ let rec definitions : Format.formatter -> def list -> unit =
   in
   Format.fprintf
     f
-    "@[<v>Variable definitions:@ %a @ Constructor definition: %a @ Type definitions:@ \
+    "@[<v>Variable definitions:@ %a @ Constructor definitions:@ %a @ Type definitions:@ \
      %aModule definitions:@ %a@]"
     pp_def
     variables

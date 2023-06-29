@@ -290,7 +290,7 @@ let complete_fields
         (List.find_map get_scope_info.definitions ~f:(function
             | Type tdef ->
               if Ligo_prim.Type_var.is_name var tdef.name then Some tdef else None
-            | Variable _ | Module _ -> None))
+            | Variable _ | Module _ | Constructor _ -> None))
         ~f:(fun tdef -> find_record_in_core tdef.content.type_content)
     | _ -> None
   in
@@ -340,7 +340,7 @@ let complete_fields
       | Alias (_alias, resolved) ->
         Option.bind resolved ~f:(fun resolved ->
             List.find_map get_scope_info.definitions ~f:(function
-                | Variable _ | Type _ -> None
+                | Variable _ | Type _ | Constructor _ -> None
                 | Module m ->
                   (* FIXME: potential StackOverflow *)
                   if String.(m.name = resolved) then get_module_defs m.mod_case else None))
@@ -348,7 +348,7 @@ let complete_fields
     Go_to_definition.get_definition module_pos path get_scope_info.definitions
     >>= function
     | Module { mod_case; _ } -> get_module_defs mod_case
-    | Variable _ | Type _ -> None
+    | Variable _ | Type _ | Constructor _-> None
   in
   let projection_impl
       (struct_pos : Position.t)
@@ -365,7 +365,7 @@ let complete_fields
       | Core t -> mk_completions t
       | Resolved t -> mk_completions (Checking.untype_type_expression t)
       | Unresolved -> None)
-    | None | Some (Type _ | Module _) -> None
+    | None | Some (Type _ | Module _ | Constructor _) -> None
   in
   let module_path_impl
       (module_names_before_cursor : Cst_shared.Tree.lexeme Lexing_shared.Wrap.t list)
@@ -382,7 +382,7 @@ let complete_fields
     =
     module_path_impl module_names_before_cursor (function
         | Type _ -> false
-        | Variable _ | Module _ -> true)
+        | Variable _ | Module _ | Constructor _ -> true)
   in
   let module_path_impl_type_expr
       (module_names_before_cursor : Cst_shared.Tree.lexeme Lexing_shared.Wrap.t list)
@@ -390,7 +390,7 @@ let complete_fields
     =
     module_path_impl module_names_before_cursor (function
         | Variable _ -> false
-        | Type _ | Module _ -> true)
+        | Type _ | Module _ | Constructor _ -> true)
   in
   let mk_dist region =
     let range = Range.of_region region in
