@@ -1,0 +1,6 @@
+
+author: Martoon
+description: "\\nFor partially applied functions, in trivial cases started showing how they were created in the `VARIABLES` pane.\\n\\n"
+merge_request: '2563'
+title: "Display internals of functions that are partially applied other functions"
+type: added
