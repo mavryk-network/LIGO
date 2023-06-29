@@ -116,6 +116,7 @@ and sig_item =
 and sig_item_attribute =
   { entry : bool
   ; view : bool
+  ; dyn_entry : bool
   }
 
 and signature = sig_item list

@@ -1498,7 +1498,7 @@ and infer_declaration (decl : I.declaration)
       match annotation with
       | None ->
         (* For non-annoted signatures, we use the one inferred *)
-        let%bind inferred_sig = Generator.make_main_signature inferred_sig in
+        let%bind inferred_sig = Generator.make_main_signature module_binder inferred_sig in
         return inferred_sig
       | Some signature_expr ->
         (* For annoted signtures, we evaluate the signature, cast the inferred signature to it, and check that all entries implemented where declared *)
@@ -1511,7 +1511,7 @@ and infer_declaration (decl : I.declaration)
           | `All_found -> return ()
           | `Not_found e -> raise (signature_not_found_entry e)
         in
-        let%bind annoted_sig = Generator.make_main_signature annoted_sig in
+        let%bind annoted_sig = Generator.make_main_signature module_binder annoted_sig in
         return annoted_sig
     in
     const

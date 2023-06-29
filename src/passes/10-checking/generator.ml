@@ -17,6 +17,7 @@ let default_views_var = Value_var.of_input_var ~loc:Location.generated default_v
 let default_contract = "$contract"
 let default_contract_var = Value_var.of_input_var ~loc:Location.generated default_contract
 let default_parameter = "$parameter"
+let dyn_entry_mod_var = Module_var.of_input_var ~loc:Location.generated "Dynamic_entries"
 
 let default_parameter_var =
   Type_var.of_input_var ~loc:Location.generated default_parameter
@@ -40,6 +41,7 @@ let check_entries
 
 let program_sig_ : Signature.t -> (Signature.item list, _, _) C.t =
  fun sig_ ->
+  let loc = Location.generated in
   let is_entry s =
     match s with
     | Signature.S_value (var, ty, attr) when attr.entry -> Some (var, ty)
@@ -76,20 +78,49 @@ let program_sig_ : Signature.t -> (Signature.item list, _, _) C.t =
     let contract_decl =
       Signature.S_value (default_built_entrypoint_var, contract_type, Context.Attr.default)
     in
-    let views_type = Type.t_views ~loc:Location.generated storage_type () in
+    let views_type = Type.t_views ~loc storage_type () in
     let views_decl =
       Signature.S_value (default_views_var, views_type, Context.Attr.default)
     in
-    let mcontract_type =
-      Type.t_pair ~loc:Location.generated contract_type views_type ()
-    in
+    let mcontract_type = Type.t_pair ~loc contract_type views_type () in
     let mcontract_decl =
       Signature.S_value (default_contract_var, mcontract_type, Context.Attr.default)
     in
     return [ parameter_type_decl; contract_decl; views_decl; mcontract_decl ]
 
 
-let make_main_signature (sig_ : Signature.t) =
+let dynamic_entries sig_ =
+  let loc = Location.generated in
+  let dyn_t = Type.(t_big_map ~loc (t_nat ~loc ()) (t_bytes ~loc ()) ()) in
+  let helpers =
+    List.filter_map sig_ ~f:(function
+        | Signature.S_value (var, ty, attr) when attr.dyn_entry ->
+          Some
+            [ Signature.S_value
+                ( Value_var.add_prefix "enum_" var
+                , Type.t_nat ~loc ()
+                , Context.Attr.default )
+            ; Signature.S_value
+                ( Value_var.add_prefix "set_" var
+                , Type.(t_arrow ~loc ty (t_arrow ~loc dyn_t dyn_t ()) ())
+                , Context.Attr.default )
+            ; Signature.S_value
+                ( Value_var.add_prefix "get_" var
+                , Type.(t_arrow ~loc dyn_t (t_option ~loc ty ()) ())
+                , Context.Attr.default )
+            ]
+        | _ -> None)
+  in
+  List.join helpers
+
+
+let make_main_signature (module_binder : Module_var.t) (sig_ : Signature.t) =
   let open C.Let_syntax in
-  let%bind postfix = program_sig_ sig_ in
+  let%bind postfix =
+    if Module_var.equal dyn_entry_mod_var module_binder
+    then return (dynamic_entries sig_)
+    else (
+      let%bind postfix_contracts = program_sig_ sig_ in
+      return postfix_contracts)
+  in
   return @@ sig_ @ postfix

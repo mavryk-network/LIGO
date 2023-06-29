@@ -369,11 +369,16 @@ let fetch_views_in_program ~storage_ty
 let to_signature (program : program) : signature =
   List.fold program ~init:[] ~f:(fun ctx decl ->
       match Location.unwrap decl with
-      | D_irrefutable_match { pattern; expr = _; attr = { view; entry; _ } } ->
+      | D_irrefutable_match { pattern; expr = _; attr = { view; entry; dyn_entry; _ } } ->
         List.fold (Pattern.binders pattern) ~init:ctx ~f:(fun ctx x ->
-            ctx @ [ S_value (Binder.get_var x, Binder.get_ascr x, { view; entry }) ])
-      | D_value { binder; expr; attr = { view; entry; _ } } ->
-        ctx @ [ S_value (Binder.get_var binder, expr.type_expression, { view; entry }) ]
+            ctx
+            @ [ S_value (Binder.get_var x, Binder.get_ascr x, { view; entry; dyn_entry })
+              ])
+      | D_value { binder; expr; attr = { view; entry; dyn_entry; _ } } ->
+        ctx
+        @ [ S_value
+              (Binder.get_var binder, expr.type_expression, { view; entry; dyn_entry })
+          ]
       | D_type { type_binder; type_expr; type_attr = _ } ->
         ctx @ [ S_type (type_binder, type_expr) ]
       | D_module { module_binder; module_; module_attr = _; annotation = () } ->

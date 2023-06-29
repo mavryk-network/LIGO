@@ -102,7 +102,7 @@ let decode type_ ~raise subst =
 
 
 let decode_attribute (attr : Context.Attr.t) : O.sig_item_attribute =
-  { entry = attr.entry; view = attr.view }
+  { entry = attr.entry; view = attr.view; dyn_entry = attr.dyn_entry }
 
 
 let rec decode_signature (sig_ : Context.Signature.t) ~raise subst : O.signature =

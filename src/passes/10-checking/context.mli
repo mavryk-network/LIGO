@@ -5,6 +5,7 @@ open Ligo_prim
 module Attr : sig
   type t =
     { entry : bool
+    ; dyn_entry : bool
     ; view : bool
     }
   [@@deriving compare, hash, equal]

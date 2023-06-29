@@ -46,12 +46,15 @@ end
 module Attr = struct
   type t =
     { entry : bool
+    ; dyn_entry : bool
     ; view : bool
     }
   [@@deriving compare, hash, equal]
 
-  let default = { entry = false; view = false }
-  let of_core_attr ({ entry; view; _ } : Ast_typed.ValueAttr.t) = { entry; view }
+  let default = { entry = false; dyn_entry = false; view = false }
+
+  let of_core_attr ({ entry; view; dyn_entry; _ } : Ast_typed.ValueAttr.t) =
+    { entry; view; dyn_entry }
 end
 
 module Signature = struct
