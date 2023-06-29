@@ -24,9 +24,10 @@ let uri_check (b : bytes) =
   else
     None
 
-let tzip16_check (v : value) =
+let tzip16_check ~(raise : (_, Main_warnings.all) Simple_utils.Trace.raise) (v : value) =
+  let open Simple_utils.Trace in
   let open Simple_utils.Option in
-  let* values = Combinators.get_record v in
+  let values = trace_option ~raise (failwith "oops") @@ Combinators.get_record v in
   let* metadata = Ligo_prim.(Record.find_opt values Label.(of_string "metadata")) in
   let* values = Combinators.get_map metadata in
   let* values = all @@ List.map ~f:(fun (k, v) ->
@@ -54,12 +55,11 @@ let tzip16_check (v : value) =
     return ()
 
 let all_check ~raise ~(options : Compiler_options.middle_end) ~type_ (v : value) =
-  ignore raise;
   let open Simple_utils.Option in
   if not options.no_metadata_check
   then
     match Self_ast_aggregated.find_storage_metadata_opt type_ with
     | Some metadata when Self_ast_aggregated.is_metadata_tzip16_type_valid metadata ->
-      tzip16_check v
+      tzip16_check ~raise v
     | _ -> return ()
   else return ()
