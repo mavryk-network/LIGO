@@ -71,3 +71,11 @@ let bad_storage1 : storage =
      ; ("hello/world", [%bytes "http://www.example.com"])
      ]
    }
+
+let bad_storage2 : storage =
+   { data = 42
+   ; metadata = Big_map.literal
+     [ ("", [%bytes "tezos-storage:haha"])
+     ; ("hello/world", [%bytes "http://www.example.com"])
+     ]
+   }

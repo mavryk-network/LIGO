@@ -258,6 +258,14 @@ let%expect_test _ =
      Warning: Could not find a valid URI haha in storage's metadata empty key.
     (Pair 42
           { Elt "" 0x68616861 ;
+            Elt "hello/world" 0x687474703a2f2f7777772e6578616d706c652e636f6d }) |}];
+  run_ligo_good
+    [ "compile"; "storage"; test "metadata_tzip16.mligo"; "-e"; entrypoint; "bad_storage2" ];
+  [%expect
+    {|
+     Warning: Could not find key haha in storage's metadata.
+    (Pair 42
+          { Elt "" 0x74657a6f732d73746f726167653a68616861 ;
             Elt "hello/world" 0x687474703a2f2f7777772e6578616d706c652e636f6d }) |}]
 
 let%expect_test _ =
