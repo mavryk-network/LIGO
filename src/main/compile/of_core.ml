@@ -46,7 +46,7 @@ let typecheck_with_signature
   =
   let typed, signature =
     trace ~raise checking_tracer
-    @@ Checking.type_program_with_signature ~options:options.middle_end ?env:context p
+    (Checking.type_program_with_signature ~options:options.middle_end ?env:context ~should_recover:false p)
   in
   let typed =
     if self_pass
@@ -68,7 +68,7 @@ let typecheck
   =
   let typed =
     trace ~raise checking_tracer
-    @@ Checking.type_program ~options:options.middle_end ?env:context p
+    @@ Checking.type_program ~options:options.middle_end ?env:context ~should_recover:false p
   in
   let typed =
     trace ~raise self_ast_typed_tracer
@@ -93,7 +93,7 @@ let compile_expression
   =
   let typed =
     trace ~raise checking_tracer
-    @@ Checking.type_expression ~options:options.middle_end ~env:context expr
+    @@ Checking.type_expression ~options:options.middle_end ~env:context ~should_recover:false expr
   in
   typed
 

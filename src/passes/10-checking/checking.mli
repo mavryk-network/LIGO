@@ -8,6 +8,7 @@ val type_program
   :  raise:(typer_error, Main_warnings.all) raise
   -> options:Compiler_options.middle_end
   -> ?env:O.signature
+  -> ?should_recover: bool
   -> I.program
   -> O.program
 
@@ -15,6 +16,7 @@ val type_program_with_signature
   :  raise:(typer_error, Main_warnings.all) raise
   -> options:Compiler_options.middle_end
   -> ?env:O.signature
+  -> ?should_recover : bool
   -> I.program
   -> O.program * O.signature
 
@@ -22,6 +24,7 @@ val type_declaration
   :  raise:(typer_error, Main_warnings.all) raise
   -> options:Compiler_options.middle_end
   -> ?env:O.signature
+  -> ?should_recover : bool
   -> I.declaration
   -> O.declaration list
 
@@ -30,6 +33,7 @@ val type_expression
   -> options:Compiler_options.middle_end
   -> ?env:O.signature
   -> ?tv_opt:O.type_expression
+  -> ?should_recover : bool
   -> I.expression
   -> O.expression
 

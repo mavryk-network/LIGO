@@ -303,7 +303,7 @@ let infer_literal lit : (Type.t * O.expression E.t, _, _) C.t =
 
 
 let rec check_expression (expr : I.expression) (type_ : Type.t)
-    : (O.expression E.t, _, _) C.t
+  ~(should_recover : bool) : (O.expression E.t, _, _) C.t
   =
   let open C in
   let open Let_syntax in
@@ -339,7 +339,7 @@ let rec check_expression (expr : I.expression) (type_ : Type.t)
     , T_for_all { ty_binder = tvar'; kind; type_ } ) ->
     let type_ = Type.subst_var type_ ~tvar:tvar' ~tvar':tvar in
     let%bind result =
-      def_type_var [ tvar, kind ] ~on_exit:Drop ~in_:(check result type_)
+      def_type_var [ tvar, kind ] ~on_exit:Drop ~in_:(check result type_ ~should_recover)
     in
     let%bind type_ = create_type @@ Type.t_for_all { ty_binder = tvar; kind; type_ } in
     const_with_type
@@ -353,14 +353,14 @@ let rec check_expression (expr : I.expression) (type_ : Type.t)
       def_type_var
         [ tvar', kind ]
         ~on_exit:Drop
-        ~in_:(check expr (Type.subst_var type_ ~tvar ~tvar'))
+        ~in_:(check expr (Type.subst_var type_ ~tvar ~tvar') ~should_recover)
     in
     const
       E.(
         let%bind result = result in
         return @@ O.E_type_abstraction { type_binder = tvar; result })
   | E_lambda lambda, T_arrow { type1 = arg_type; type2 = ret_type } ->
-    let%bind lambda = check_lambda lambda arg_type ret_type in
+    let%bind lambda = check_lambda lambda arg_type ret_type ~should_recover in
     const
       E.(
         let%bind lambda = lambda in
@@ -376,7 +376,7 @@ let rec check_expression (expr : I.expression) (type_ : Type.t)
       |> Map.mapi ~f:(fun ~key:label ~data:expr ->
              (* Invariant: [Map.key_set record = Map.key_set row.fields]  *)
              let type_ = Map.find_exn row.fields label in
-             check expr type_)
+             check expr type_ ~should_recover)
       |> all_lmap
     in
     const
@@ -384,11 +384,11 @@ let rec check_expression (expr : I.expression) (type_ : Type.t)
         let%bind record = all_lmap record in
         return @@ O.E_record record)
   | E_update { struct_; path; update }, T_record row ->
-    let%bind struct_ = check struct_ type_ in
+    let%bind struct_ = check struct_ type_ ~should_recover in
     let%bind field_row_elem =
       raise_opt ~error:(bad_record_access path) @@ Map.find row.fields path
     in
-    let%bind update = check update field_row_elem in
+    let%bind update = check update field_row_elem ~should_recover in
     const
       E.(
         let%bind struct_ = struct_
@@ -399,19 +399,19 @@ let rec check_expression (expr : I.expression) (type_ : Type.t)
       raise_opt ~error:(bad_constructor constructor type_)
       @@ Map.find row.fields constructor
     in
-    let%bind element = check element constr_row_elem in
+    let%bind element = check element constr_row_elem ~should_recover in
     const
       E.(
         let%bind element = element in
         return @@ O.E_constructor { constructor; element })
   | E_matching { matchee; cases }, _ ->
-    let%bind matchee_type, matchee = infer matchee in
+    let%bind matchee_type, matchee = infer matchee ~should_recover in
     let%bind matchee_type = Context.tapply matchee_type in
-    let%bind cases = check_cases cases matchee_type type_ in
+    let%bind cases = check_cases cases matchee_type type_ ~should_recover in
     let%bind match_expr = compile_match matchee cases matchee_type in
     const match_expr
   | _ ->
-    let%bind type_', expr = infer expr in
+    let%bind type_', expr = infer expr ~should_recover in
     let%bind f =
       let%bind type_' = Context.tapply type_' in
       let%bind type_ = Context.tapply type_ in
@@ -423,7 +423,7 @@ let rec check_expression (expr : I.expression) (type_ : Type.t)
         f expr)
 
 
-and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C.t =
+and infer_expression (expr : I.expression) ~(should_recover : bool) : (Type.t * O.expression E.t, _, _) C.t =
   let open C in
   let open Let_syntax in
   let check expr type_ = check_expression expr type_ in
@@ -450,7 +450,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
   let%bind syntax = Options.syntax () in
   match expr.expression_content with
   | E_literal lit -> infer_literal lit
-  | E_constant { cons_name = const; arguments = args } -> infer_constant const args
+  | E_constant { cons_name = const; arguments = args } -> infer_constant const args ~should_recover
   | E_variable var ->
     let%bind mut_flag, type_, _ =
       Context.get_value_exn var ~error:(function
@@ -463,12 +463,12 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
         | Immutable -> return (O.E_variable var)
         | Mutable -> return (O.E_deref var))
       type_
-  | E_lambda lambda -> infer_lambda lambda
+  | E_lambda lambda -> infer_lambda lambda ~should_recover
   | E_application { lamb; args } ->
-    let%bind lamb_type, lamb = infer lamb in
+    let%bind lamb_type, lamb = infer lamb ~should_recover in
     let%bind ret_type, f, args =
       let%bind lamb_type = Context.tapply lamb_type in
-      infer_application lamb_type args
+      infer_application lamb_type args ~should_recover
     in
     const
       E.(
@@ -479,7 +479,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
   | E_type_abstraction { type_binder = tvar; result } ->
     generalize_expr
     @@ let%bind ret_type, expr =
-         def_type_var [ tvar, Type ] ~on_exit:Lift_type ~in_:(infer result)
+         def_type_var [ tvar, Type ] ~on_exit:Lift_type ~in_:(infer result ~should_recover)
        in
        let%bind ret_type =
          create_type @@ Type.t_for_all { ty_binder = tvar; kind = Type; type_ = ret_type }
@@ -490,13 +490,13 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
            return (O.E_type_abstraction { type_binder = tvar; result = expr }))
          ret_type
   | E_let_in { let_binder; rhs; let_result; attributes } ->
-    let%bind rhs_type, rhs = infer rhs in
+    let%bind rhs_type, rhs = infer rhs ~should_recover in
     let%bind rhs_type = Context.tapply rhs_type in
     let%bind frags, let_binder =
       With_frag.run @@ check_pattern ~mut:false let_binder rhs_type
     in
     let%bind res_type, let_result =
-      def_frag frags ~on_exit:Lift_type ~in_:(infer let_result)
+      def_frag frags ~on_exit:Lift_type ~in_:(infer let_result ~should_recover)
     in
     let attributes = infer_value_attr attributes in
     const
@@ -511,7 +511,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
   | E_type_in { type_binder = tvar; rhs; let_result } ->
     let%bind rhs = With_default_layout.evaluate_type rhs in
     let%bind res_type, let_result =
-      def_type [ tvar, rhs ] ~on_exit:Lift_type ~in_:(infer let_result)
+      def_type [ tvar, rhs ] ~on_exit:Lift_type ~in_:(infer let_result ~should_recover)
     in
     let%bind let_result = lift let_result res_type in
     return (res_type, let_result)
@@ -531,13 +531,13 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
       List.fold_right
         ~f:(fun expr result ->
           let%bind list = result in
-          let%bind expr_type, expr = infer expr in
+          let%bind expr_type, expr = infer expr ~should_recover in
           let list = (expr_type, expr) :: list in
           return list)
         ~init:(return [])
         args
     in
-    let%bind _, code = infer code in
+    let%bind _, code = infer code ~should_recover in
     let%bind loc = loc () in
     let%bind result_type = With_default_layout.evaluate_type result_type in
     let rec build_func_type args =
@@ -560,7 +560,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
       raise_opt ~error:not_annotated @@ I.get_e_ascription code.expression_content
     in
     let%bind code_type = With_default_layout.evaluate_type code_type in
-    let%bind _, code = infer code in
+    let%bind _, code = infer code ~should_recover in
     const
       E.(
         let%bind code = code
@@ -570,7 +570,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
       code_type
   | E_ascription { anno_expr; type_annotation } ->
     let%bind ascr = With_default_layout.evaluate_type type_annotation in
-    let%bind expr = check anno_expr ascr in
+    let%bind expr = check anno_expr ascr ~should_recover in
     let%bind expr = lift expr ascr in
     return (ascr, expr)
   | E_recursive { fun_name; fun_type; lambda; force_lambdarec } ->
@@ -584,7 +584,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
       def
         [ fun_name, Immutable, fun_type, Context.Attr.default ]
         ~on_exit:Drop
-        ~in_:(check_lambda (Lambda.map Fn.id Option.some lambda) arg_type ret_type)
+        ~in_:(check_lambda (Lambda.map Fn.id Option.some lambda) arg_type ret_type ~should_recover)
     in
     const
       E.(
@@ -597,7 +597,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
       Label.Map.fold
         ~f:(fun ~key:label ~data:expr result ->
           let%bind fields, record = result in
-          let%bind expr_type, expr = infer expr in
+          let%bind expr_type, expr = infer expr ~should_recover in
           let fields = Map.set fields ~key:label ~data:expr_type in
           let record = Map.set record ~key:label ~data:expr in
           return (fields, record))
@@ -617,7 +617,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
         return @@ O.E_record record)
       record_type
   | E_accessor { struct_; path = field } ->
-    let%bind record_type, struct_ = infer struct_ in
+    let%bind record_type, struct_ = infer struct_ ~should_recover in
     let%bind row =
       let%bind record_type = Context.tapply record_type in
       raise_opt ~error:(expected_record record_type) @@ Type.get_t_record record_type
@@ -631,7 +631,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
         return @@ O.E_accessor { struct_; path = field })
       field_row_elem
   | E_update { struct_; path; update } ->
-    let%bind record_type, struct_ = infer struct_ in
+    let%bind record_type, struct_ = infer struct_ ~should_recover in
     let%bind row =
       let%bind record_type = Context.tapply record_type in
       raise_opt ~error:(expected_record record_type) @@ Type.get_t_record record_type
@@ -639,7 +639,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
     let%bind field_row_elem =
       raise_opt ~error:(bad_record_access path) @@ Map.find row.fields path
     in
-    let%bind update = check update field_row_elem in
+    let%bind update = check update field_row_elem ~should_recover in
     const
       E.(
         let%bind struct_ = struct_
@@ -670,23 +670,23 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
     in
     let arg_type = apply_subst arg_type in
     let sum_type = apply_subst sum_type in
-    let%bind arg = check arg arg_type in
+    let%bind arg = check arg arg_type ~should_recover in
     const
       E.(
         let%bind arg = arg in
         return @@ O.E_constructor { constructor; element = arg })
       sum_type
   | E_matching { matchee; cases } ->
-    let%bind matchee_type, matchee = infer matchee in
+    let%bind matchee_type, matchee = infer matchee ~should_recover in
     let%bind ret_type = exists Type in
     let%bind matchee_type = Context.tapply matchee_type in
-    let%bind cases = check_cases cases matchee_type ret_type in
+    let%bind cases = check_cases cases matchee_type ret_type ~should_recover in
     let%bind match_expr = compile_match matchee cases matchee_type in
     const match_expr ret_type
   | E_mod_in { module_binder = mvar; rhs; let_result } ->
-    let%bind sig_, rhs = infer_module_expr rhs in
+    let%bind sig_, rhs = infer_module_expr rhs ~should_recover in
     let%bind ret_type, let_result =
-      def_module [ mvar, sig_ ] ~on_exit:Lift_type ~in_:(infer let_result)
+      def_module [ mvar, sig_ ] ~on_exit:Lift_type ~in_:(infer let_result ~should_recover)
     in
     const
       E.(
@@ -704,13 +704,13 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
     in
     const E.(return @@ O.E_module_accessor { module_path; element }) elt_type
   | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
-    let%bind rhs_type, rhs = infer rhs in
+    let%bind rhs_type, rhs = infer rhs ~should_recover in
     let%bind rhs_type = Context.tapply rhs_type in
     let%bind frags, let_binder =
       With_frag.run @@ check_pattern ~mut:true let_binder rhs_type
     in
     let%bind res_type, let_result =
-      def_frag frags ~on_exit:Lift_type ~in_:(infer let_result)
+      def_frag frags ~on_exit:Lift_type ~in_:(infer let_result ~should_recover)
     in
     let attributes = infer_value_attr attributes in
     const
@@ -731,7 +731,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
              | `Mut_var_captured -> mut_var_captured var)
     in
     let%bind type_ = Context.tapply type_ in
-    let%bind expression = check expression type_ in
+    let%bind expression = check expression type_ ~should_recover in
     let%bind ret_type = create_type Type.t_unit in
     const
       E.(
@@ -742,14 +742,14 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
   | E_for { binder; start; final; incr; f_body } ->
     let%bind t_int = create_type Type.t_int in
     let%bind t_unit = create_type Type.t_unit in
-    let%bind start = check start t_int in
-    let%bind incr = check incr t_int in
-    let%bind final = check final t_int in
+    let%bind start = check start t_int ~should_recover in
+    let%bind incr = check incr t_int ~should_recover in
+    let%bind final = check final t_int ~should_recover in
     let%bind f_body =
       def
         [ binder, Immutable, t_int, Context.Attr.default ]
         ~on_exit:Drop
-        ~in_:(check f_body t_unit)
+        ~in_:(check f_body t_unit ~should_recover)
     in
     const
       E.(
@@ -766,7 +766,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
       ; fe_body
       } ->
     let%bind t_unit = create_type Type.t_unit in
-    let%bind type_, collection = infer collection in
+    let%bind type_, collection = infer collection ~should_recover in
     let%bind type_ = Context.tapply type_ in
     let%bind key_type, val_type =
       raise_opt ~error:(mismatching_for_each_collection_type collection_type type_)
@@ -778,7 +778,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
         ; val_binder, Immutable, val_type, Context.Attr.default
         ]
         ~on_exit:Drop
-        ~in_:(check fe_body t_unit)
+        ~in_:(check fe_body t_unit ~should_recover)
     in
     const
       E.(
@@ -791,7 +791,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
   | E_for_each
       { fe_binder = (binder, None) as fe_binder; collection; collection_type; fe_body } ->
     let%bind t_unit = create_type Type.t_unit in
-    let%bind type_, collection = infer collection in
+    let%bind type_, collection = infer collection ~should_recover in
     let%bind (binder_type : Type.t) =
       let opt_value_exn opt =
         raise_opt ~error:(mismatching_for_each_collection_type collection_type type_) opt
@@ -815,7 +815,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
       def
         [ binder, Immutable, binder_type, Context.Attr.default ]
         ~on_exit:Drop
-        ~in_:(check fe_body t_unit)
+        ~in_:(check fe_body t_unit ~should_recover)
     in
     const
       E.(
@@ -826,8 +826,8 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
   | E_while { cond; body } ->
     let%bind t_unit = create_type Type.t_unit in
     let%bind t_bool = create_type Type.t_bool in
-    let%bind cond = check cond t_bool in
-    let%bind body = check body t_unit in
+    let%bind cond = check cond t_bool ~should_recover in
+    let%bind body = check body t_unit ~should_recover in
     const
       E.(
         let%bind cond = cond
@@ -840,6 +840,7 @@ and check_lambda
     ({ binder; output_type = ret_ascr; result } : _ Lambda.t)
     arg_type
     ret_type
+    ~(should_recover : bool)
     : (_ Lambda.t E.t, _, _) C.t
   =
   let open C in
@@ -870,7 +871,7 @@ and check_lambda
              , Context.Attr.default )
            ]
            ~on_exit:Drop
-           ~in_:(check_expression result ret_type))
+           ~in_:(check_expression result ret_type ~should_recover))
   in
   return
   @@ E.(
@@ -882,7 +883,7 @@ and check_lambda
             { binder = Param.set_ascr binder arg_type; result; output_type = ret_type })
 
 
-and infer_lambda ({ binder; output_type = ret_ascr; result } : _ Lambda.t)
+and infer_lambda ({ binder; output_type = ret_ascr; result } : _ Lambda.t) ~(should_recover : bool)
     : (Type.t * O.expression E.t, _, _) C.t
   =
   let open C in
@@ -918,7 +919,7 @@ and infer_lambda ({ binder; output_type = ret_ascr; result } : _ Lambda.t)
                 , Context.Attr.default )
               ]
               ~on_exit:Lift_type
-              ~in_:(infer_expression result)
+              ~in_:(infer_expression result ~should_recover)
           in
           let%bind type_ = create_type @@ Type.t_arrow arg_type ret_type in
           const
@@ -954,7 +955,7 @@ and generalize_expr (in_ : (Type.t * O.expression E.t, 'err, 'wrn) C.t)
   return (type_, expr)
 
 
-and infer_application (lamb_type : Type.t) (args : I.expression)
+and infer_application (lamb_type : Type.t) (args : I.expression) ~(should_recover : bool)
     : (Type.t * (O.expression -> O.expression E.t) * O.expression E.t, _, _) C.t
   =
   let open C in
@@ -964,7 +965,7 @@ and infer_application (lamb_type : Type.t) (args : I.expression)
   | T_for_all { ty_binder = tvar; kind; type_ } ->
     let%bind texists = exists kind in
     let lamb_type = Type.subst type_ ~tvar ~type_:texists in
-    let%bind ret_type, f, args = infer_application lamb_type args in
+    let%bind ret_type, f, args = infer_application lamb_type args ~should_recover in
     return
       ( ret_type
       , E.(
@@ -978,7 +979,7 @@ and infer_application (lamb_type : Type.t) (args : I.expression)
                  lamb_type))
       , args )
   | T_arrow { type1 = arg_type; type2 = ret_type } ->
-    let%bind args = check_expression args arg_type in
+    let%bind args = check_expression args arg_type ~should_recover in
     let%bind ret_type =
       try_
         (let%bind ret_type = Context.tapply ret_type in
@@ -1014,18 +1015,18 @@ and infer_application (lamb_type : Type.t) (args : I.expression)
     let%bind tvar2 = exists Type in
     let%bind arr = create_type @@ Type.t_arrow tvar1 tvar2 in
     let%bind () = unify_texists tvar arr in
-    let%bind args = check_expression args tvar1 in
+    let%bind args = check_expression args tvar1 ~should_recover in
     return (tvar2, E.return, args)
   | _ -> fail ()
 
 
-and infer_constant const args : (Type.t * O.expression E.t, _, _) C.t =
+and infer_constant const args ~(should_recover : bool) : (Type.t * O.expression E.t, _, _) C.t =
   let open C in
   let open Let_syntax in
   let%bind ret_type, args =
     Constant_typers.infer_constant
-      ~infer:infer_expression
-      ~check:check_expression
+      ~infer:(infer_expression ~should_recover) 
+      ~check:(check_expression ~should_recover)
       const
       args
   in
@@ -1288,6 +1289,7 @@ and check_cases
     (cases : (I.expression, I.type_expression option) I.Match_expr.match_case list)
     (matchee_type : Type.t)
     (ret_type : Type.t)
+    ~(should_recover : bool)
     : ((O.type_expression O.Pattern.t * O.expression) list E.t, _, _) C.t
   =
   let open C in
@@ -1297,7 +1299,7 @@ and check_cases
     let%bind frag, pattern =
       With_frag.run @@ check_pattern ~mut:false pattern matchee_type
     in
-    let%bind body = def_frag frag ~on_exit:Drop ~in_:(check_expression body ret_type) in
+    let%bind body = def_frag frag ~on_exit:Drop ~in_:(check_expression body ret_type ~should_recover) in
     return
       E.(
         let%map pattern = pattern
@@ -1397,7 +1399,7 @@ and cast_signature (inferred_sig : Signature.t) (annoted_sig : Module_type.t)
   return (insts @ items, entries)
 
 
-and infer_module_expr (mod_expr : I.module_expr)
+and infer_module_expr (mod_expr : I.module_expr) ~(should_recover : bool)
     : (Signature.t * O.module_expr E.t, _, _) C.t
   =
   let open C in
@@ -1417,7 +1419,7 @@ and infer_module_expr (mod_expr : I.module_expr)
   @@
   match mod_expr.wrap_content with
   | M_struct decls ->
-    let%bind sig_, decls = infer_module decls in
+    let%bind sig_, decls = infer_module decls ~should_recover in
     const
       E.(
         let%bind decls = decls in
@@ -1435,26 +1437,29 @@ and infer_module_expr (mod_expr : I.module_expr)
     const E.(return @@ M.M_variable mvar) sig_
 
 
-and try_infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C.t =
+and try_infer_expression (expr : I.expression) ~(should_recover : bool) : (Type.t * O.expression E.t, _, _) C.t =
   let open C in
   let open Let_syntax in
-  try_ (infer_expression expr) ~with_:(fun error ->
-      let%bind loc = loc () in
-      (* Use an arbitrary type for the erroneous expression *)
-      let%bind ret_type =
-        match Ast_core.Combinators.get_e_ascription_opt expr with
-        | Some ascr -> With_default_layout.evaluate_type ascr.type_annotation
-        | None -> exists Type
-      in
-      return
-        ( ret_type
-        , E.(
-            let error = Errors.error_json error in
-            let%bind ret_type = decode ret_type in
-            return @@ O.make_e ~loc (E_error { expression = expr; error }) ret_type) ))
+  if not should_recover then 
+    infer_expression expr ~should_recover
+  else
+    ( try_ (infer_expression expr ~should_recover) ~with_:(fun error ->
+          let%bind loc = loc () in
+          (* Use an arbitrary type for the erroneous expression *)
+          let%bind ret_type =
+            match Ast_core.Combinators.get_e_ascription_opt expr with
+            | Some ascr -> With_default_layout.evaluate_type ascr.type_annotation
+            | None -> exists Type
+          in
+          return
+            ( ret_type
+            , E.(
+                let error = Errors.error_json error in
+                let%bind ret_type = decode ret_type in
+                return @@ O.make_e ~loc (E_error { expression = expr; error }) ret_type) )))
 
 
-and infer_declaration (decl : I.declaration)
+and infer_declaration (decl : I.declaration) ~(should_recover : bool)
     : (Signature.item list * O.declaration list E.t, _, _) C.t
   =
   let open C in
@@ -1475,7 +1480,7 @@ and infer_declaration (decl : I.declaration)
   @@
   match decl.wrap_content with
   | D_irrefutable_match { pattern; expr; attr } ->
-    let%bind matchee_type, expr = try_infer_expression expr in
+    let%bind matchee_type, expr = try_infer_expression expr ~should_recover in
     let attr = infer_value_attr attr in
     let%bind matchee_type = Context.tapply matchee_type in
     let%bind frags, pattern =
@@ -1506,7 +1511,7 @@ and infer_declaration (decl : I.declaration)
       let%map loc = loc () in
       Option.value_map ascr ~default:expr ~f:(fun ascr -> I.e_ascription ~loc expr ascr)
     in
-    let%bind expr_type, expr = try_infer_expression expr in
+    let%bind expr_type, expr = try_infer_expression expr ~should_recover in
     let attr = infer_value_attr attr in
     const
       E.(
@@ -1516,7 +1521,7 @@ and infer_declaration (decl : I.declaration)
       [ S_value (var, expr_type, Context.Attr.of_core_attr attr) ]
   | D_module
       { module_binder; module_; module_attr = { public; hidden } as attr; annotation } ->
-    let%bind inferred_sig, module_ = infer_module_expr module_ in
+    let%bind inferred_sig, module_ = infer_module_expr module_ ~should_recover in
     let rec remove_non_public inferred_sig =
       let self = remove_non_public in
       match inferred_sig with
@@ -1563,15 +1568,15 @@ and infer_declaration (decl : I.declaration)
     no_declaration [ S_module_type (signature_binder, signature_expr) ]
 
 
-and infer_module (module_ : I.module_) : (Signature.t * O.module_ E.t, _, _) C.t =
+and infer_module (module_ : I.module_) ~(should_recover : bool) : (Signature.t * O.module_ E.t, _, _) C.t =
   let open C in
   let open Let_syntax in
   match module_ with
   | [] -> return ([], E.return [])
   | decl :: module_ ->
-    let%bind sig_, decl = infer_declaration decl in
+    let%bind sig_, decl = infer_declaration decl ~should_recover in
     let%bind tl_sig_, decls =
-      def_sig_item sig_ ~on_exit:Lift_sig ~in_:(infer_module module_)
+      def_sig_item sig_ ~on_exit:Lift_sig ~in_:(infer_module module_ ~should_recover)
     in
     return
       ( sig_ @ tl_sig_
@@ -1592,10 +1597,10 @@ and infer_module (module_ : I.module_) : (Signature.t * O.module_ E.t, _, _) C.t
       ~f:(fun decl loc -> Location.cover loc decl.location)
       ~init:decl.location *)
 
-let type_program_with_signature ~raise ~options ?env program =
+let type_program_with_signature ~raise ~options ?env ?(should_recover = false) program  =
   let loc = Location.generated in
   C.run_elab
-    (let%map.C signature, program = infer_module program in
+    (let%map.C signature, program = infer_module program ~should_recover in
      E.(
        let%bind program = program in
        let%bind signature = decode_signature signature in
@@ -1607,14 +1612,14 @@ let type_program_with_signature ~raise ~options ?env program =
     ()
 
 
-let type_program ~raise ~options ?env program =
-  let program, _ = type_program_with_signature ~raise ~options ?env program in
+let type_program ~raise ~options ?env ?(should_recover = false) program  =
+  let program, _ = type_program_with_signature ~raise ~options ?env program ~should_recover in
   program
 
 
-let type_declaration ~raise ~options ?env decl =
+let type_declaration ~raise ~options ?env ?(should_recover = false) decl =
   C.run_elab
-    (let%map.C _, decl = infer_declaration decl in
+    (let%map.C _, decl = infer_declaration decl ~should_recover in
      decl)
     ~raise
     ~options
@@ -1623,14 +1628,14 @@ let type_declaration ~raise ~options ?env decl =
     ()
 
 
-let type_expression ~raise ~options ?env ?tv_opt expr =
+let type_expression ~raise ~options ?env ?tv_opt ?(should_recover = false) expr  =
   C.run_elab
     (match tv_opt with
     | Some type_ ->
       let type_ = C.encode ~raise type_ in
-      check_expression expr type_
+      check_expression expr type_ ~should_recover
     | None ->
-      let%map.C _, expr = infer_expression expr in
+      let%map.C _, expr = infer_expression expr ~should_recover in
       expr)
     ~raise
     ~options
