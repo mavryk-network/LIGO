@@ -58,16 +58,21 @@ and encode_sig_item ~raise (item : Ast_typed.sig_item) : Context.Signature.item 
   match item with
   | Ast_typed.S_value (v, ty, attr) ->
     Context.Signature.S_value (v, encode ~raise ty, encode_sig_item_attribute attr)
-  | S_type (v, ty) -> Context.Signature.S_type (v, encode ~raise ty)
-  | S_module (v, sig_) -> Context.Signature.S_module (v, encode_signature ~raise sig_)
+  | S_type (v, ty) ->
+    Context.Signature.S_type (v, encode ~raise ty, Context.Attrs.Type.default)
+  | S_module (v, sig_) ->
+    Context.Signature.S_module
+      (v, encode_signature ~raise sig_, Context.Attrs.Module.default)
 
 
 and encode_signature ~raise (sig_ : Ast_typed.signature) : Context.Signature.t =
   List.map ~f:(encode_sig_item ~raise) sig_
 
 
-and encode_sig_item_attribute (attr : Ast_typed.sig_item_attribute) : Context.Attr.t =
-  { view = attr.view; entry = attr.entry }
+and encode_sig_item_attribute (attr : Ast_typed.sig_item_attribute)
+    : Context.Attrs.Value.t
+  =
+  { view = attr.view; entry = attr.entry; public = true }
 
 
 (* Load context from the outside declarations *)
@@ -214,7 +219,7 @@ type 'a exit =
 module Context_ = Context
 
 module Context = struct
-  module Attr = Context.Attr
+  module Attr = Context.Attrs.Value
   module Signature = Context.Signature
 
   let lift_var ~get_vars ~add_var ~add_eq ~at ~fresh ~var' t =
