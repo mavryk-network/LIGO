@@ -30,9 +30,7 @@ let warn_ambiguous_constructor ~warning ~tvar:var_chosen ~arg_type ignored
     List.find ~f:(fun (_, _, arg_type', _) -> Type.equal arg_type arg_type') ignored
   in
   match ignored_match with
-  | Some (var_ignored, _, _, _) ->
-    Format.eprintf "%a | %a\n" Type_var.pp var_chosen Type_var.pp var_ignored;
-    warn (warning var_chosen var_ignored)
+  | Some (var_ignored, _, _, _) -> warn (warning var_chosen var_ignored)
   | None -> return ()
 
 
