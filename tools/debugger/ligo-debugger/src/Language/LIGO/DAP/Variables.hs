@@ -262,4 +262,4 @@ buildLambdaInfo lang = \meta ->
 
 -- | Variable value shown for functions.
 funConst :: Text
-funConst = "<fun>"
+funConst = replacedFunConst

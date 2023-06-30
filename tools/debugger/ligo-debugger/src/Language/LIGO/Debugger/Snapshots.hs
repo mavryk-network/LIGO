@@ -559,6 +559,55 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
               return $ StkEl embeddedLam :& stkEls
             _ -> return newStack
 
+
+        (APPLY{}, StkEl arg@VLam{} :& StkEl lam :& _) -> do
+          logMessage
+            [int||
+              Calling APPLY to pass a lambda as argument to another lambda
+            |]
+
+          newStack <- runInstr instr stack
+
+          newStack2 <- case checkIsCurryingLambda lam of
+            Left err -> do
+              logMessage [int||Lambda is not a currying lambda: #{err}|]
+              return newStack
+            Right appliedArgs -> do
+              -- If lambda is currying, then it serves no logic, just
+              -- changes @arg@ (which is also a lambda) to accepts its
+              -- arguments in different order / layout.
+              -- So we copy the meta from @arg@ to the resulting lambda.
+              --
+              -- TODO: at this point, we completely don't handle the fact
+              -- that arguments may be applied in a very custom order,
+              -- disregard the original order of arguments of the original function.
+              --
+              -- Show this in UI somehow?
+              -- Looks like the user would have no way to associate the list of
+              -- supplied values for arguments with the original function arguments.
+
+              let meta = getLambdaMeta arg
+              logMessage
+                [int|n|
+                  Lambda is currying lambda, copying meta of the APPLY's argument
+                  to result:
+                  #{lam ^. lambdaMetaL}
+
+                  Arguments applied by the currying lambda: #{appliedArgs}
+                |]
+
+              -- unfortunatelly, in case of currying lambda, we have no
+              -- way to get LIGO type of arguments which this lambda applies,
+              -- they are just not publically visible
+              let argTy = LigoTypeUnresolved
+              let newMeta = foldr addAppliedArg meta $
+                    (\val -> LambdaArg val argTy) <$> appliedArgs
+              let StkEl newLam :& stkEls = newStack
+              let updatedNewLam = newLam & lambdaMetaL ?~ newMeta
+              return $ StkEl updatedNewLam :& stkEls
+
+          return newStack2
+
         _ -> runInstr instr stack
 
     -- Save a snapshot.

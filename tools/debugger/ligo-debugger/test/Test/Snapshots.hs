@@ -2067,7 +2067,7 @@ test_Lambdas = testGroup "Lambdas meta and display as variable" $
                 Vars.buildLambdaInfo Caml applyThriceMeta
           resVars @?=
             [ DAP.defaultVariable
-              { DAP.nameVariable = "func"
+              { DAP.nameVariable = "<fun>"
               , DAP.valueVariable = "applyTwiceDuplicated"
               , DAP.typeVariable = "int -> int -> int"
               , DAP.variablesReferenceVariable = 5
@@ -2083,7 +2083,7 @@ test_Lambdas = testGroup "Lambdas meta and display as variable" $
             ]
           M.lookup 5 refVarsMap @?= Just
             [ DAP.defaultVariable
-              { DAP.nameVariable = "func"
+              { DAP.nameVariable = "<fun>"
               , DAP.valueVariable = "applyTwice"
               , DAP.typeVariable = "int -> int -> int"
               , DAP.variablesReferenceVariable = 4
@@ -2091,7 +2091,7 @@ test_Lambdas = testGroup "Lambdas meta and display as variable" $
             ]
           M.lookup 4 refVarsMap @?= Just
             [ DAP.defaultVariable
-              { DAP.nameVariable = "func"
+              { DAP.nameVariable = "<fun>"
               , DAP.valueVariable = "applyOnce"
               , DAP.typeVariable = "int -> int -> int -> int"
               , DAP.variablesReferenceVariable = 3
@@ -2104,7 +2104,7 @@ test_Lambdas = testGroup "Lambdas meta and display as variable" $
             ]
           M.lookup 3 refVarsMap @?= Just
             [ DAP.defaultVariable
-              { DAP.nameVariable = "func"
+              { DAP.nameVariable = "<fun>"
               , DAP.valueVariable = "f"
               , DAP.typeVariable = "int -> int -> int -> int -> int"
               , DAP.variablesReferenceVariable = 2
@@ -2118,7 +2118,7 @@ test_Lambdas = testGroup "Lambdas meta and display as variable" $
           -- TODO [LIGO-916]: a temporary sadness
           M.lookup 2 refVarsMap @?= Just
             [ DAP.defaultVariable
-              { DAP.nameVariable = "func"
+              { DAP.nameVariable = "<fun>"
               , DAP.valueVariable = "f"
               , DAP.typeVariable = "int -> int -> int -> int -> int"
               , DAP.variablesReferenceVariable = 1
@@ -2126,7 +2126,7 @@ test_Lambdas = testGroup "Lambdas meta and display as variable" $
             ]
           M.lookup 1 refVarsMap @?= Just
             [ DAP.defaultVariable
-              { DAP.nameVariable = "func"
+              { DAP.nameVariable = "<fun>"
               , DAP.valueVariable = "act"
               , DAP.typeVariable = "int -> int -> int -> int -> int"
               }

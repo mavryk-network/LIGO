@@ -23,9 +23,12 @@ module Language.LIGO.Debugger.Functions
   , embedFunctionNameIntoLambda
   , addAppliedArg
   , getLambdaMeta
+  , checkIsCurryingLambda
   ) where
 
 import Control.Lens (AsEmpty (..), lens, makeLensesWith, makePrisms, non', prism)
+import Control.Monad.Except (Except, runExcept, throwError)
+import Control.Monad.Writer (WriterT, runWriterT, tell)
 import Data.Default (Default (..))
 import Data.Singletons (SingI)
 import Data.Vinyl (Rec (RNil, (:&)))
@@ -34,6 +37,8 @@ import Text.Interpolation.Nyan
 
 import Morley.Michelson.Interpret (StkEl (StkEl))
 import Morley.Michelson.Typed qualified as T
+import Morley.Michelson.Typed.ClassifiedInstr
+  (ClassifiedInstr (..), IsMichelson (..), SingIsMichelson (SFromMichelson), withClassifiedInstr)
 import Morley.Util.Lens (postfixLFields)
 
 import Language.LIGO.Debugger.CLI
@@ -273,3 +278,65 @@ addAppliedArg arg (LambdaMeta evs) = LambdaMeta (LambdaApplied arg : evs)
 
 getLambdaMeta :: T.Value ('T.TLambda i o) -> LambdaMeta
 getLambdaMeta = fromMaybe def . view lambdaMetaL
+
+data NotCurryingLamReason
+  = forall i o. NclrBadInstr (T.Instr i o)
+
+instance Buildable NotCurryingLamReason where
+  build = \case
+    NclrBadInstr i -> [int||
+      An instruction carrying logic found: #{i}
+      ||]
+
+-- | Check if this lambda value carries no logic, rather serves to accept
+-- one lambda and return another with different layout or order of arguments.
+--
+-- LIGO may use such helper lambdas to partially apply a lambda as argument to
+-- another lambda.
+--
+-- This function returns which arguments the currying lambda applies to its
+-- argument (potentially returning a partial application of the original function).
+-- The order of values in the list is unspecified.
+checkIsCurryingLambda :: T.Value ('T.TLambda i o) -> Either NotCurryingLamReason [T.SomeValue]
+checkIsCurryingLambda =
+  let runM :: WriterT [T.SomeValue] (Except NotCurryingLamReason) a
+           -> Either NotCurryingLamReason [T.SomeValue]
+      runM = runExcept . fmap snd . runWriterT
+
+  in runM . T.dfsTraverseValue def
+    { T.dsGoToValues = True
+    , T.dsInstrStep = \i -> fmap (const i) $
+        i & withClassifiedInstr @_ @IsMichelson \case
+        SFromMichelson -> \case
+          -- we should be ok with all stack manipulating instructions
+          C_DIP{} -> pass
+          C_DIPN{} -> pass
+          C_DROP{} -> pass
+          C_DROPN{} -> pass
+          C_SWAP{} -> pass
+          C_DIG{} -> pass
+          C_DUG{} -> pass
+          C_AnnDUP{} -> pass
+          C_AnnDUPN{} -> pass
+          C_AnnCAR{} -> pass
+          C_AnnCDR{} -> pass
+          C_AnnPAIR{} -> pass
+          C_AnnPAIRN{} -> pass
+          C_AnnUNPAIR{} -> pass
+          C_UNPAIRN{} -> pass
+
+          -- lambda may contain inner helper lambdas that it will call
+          C_AnnLAMBDA{} -> pass  -- will be traversed recursively by dfs
+          C_AnnEXEC{} -> pass
+          C_AnnAPPLY{} -> pass
+
+          -- when a currying lambda applies an argument to the lambda, the
+          -- argument is PUSH'ed.
+          -- non-pushable values will be fetched from outside of the lambda
+          -- and never be created directly inside it.
+          C_AnnPUSH _ val -> tell [T.SomeValue val]
+          _ -> throwError $ NclrBadInstr i
+
+        -- our helper and structural instructions are irrelevant
+        _ -> \_ -> pass
+    }
