@@ -155,17 +155,17 @@ let of_sepseq ?region state root print =
 let of_nseq ?region state root print =
   of_list ?region state root print <@ Utils.nseq_to_list
 
-let of_sep_or_term ?region state root print = function
-  `Sep s -> of_sepseq ?region state root print s
-| `Term l -> of_list ?region state root print @@ List.map ~f:fst l
-
 let of_nsep_or_term ?region state root print = function
-  `NSep s -> of_nsepseq ?region state root print s
-| `NTerm (hd, tl) ->
+  `Sep s -> of_nsepseq ?region state root print s
+| `Term (hd, tl) ->
      of_list ?region state root print @@ List.map ~f:fst (hd::tl)
 
+let of_sep_or_term ?region state root print = function
+  None -> ()
+| Some s -> of_nsep_or_term ?region state root print s
+
 let of_nsep_or_pref ?region state root print = function
-  `NSep s -> of_nsepseq ?region state root print s
+  `Sep s -> of_nsepseq ?region state root print s
 | `Pref (hd, tl) ->
      of_list ?region state root print @@ List.map ~f:snd (hd::tl)
 
