@@ -51,7 +51,7 @@ let%expect_test _ =
     (b#12:4-5 -> b)
     Range: File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 12, characters 4-5
     Body Range: File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 13, character 2 to line 14, character 3
-    Content: |unresolved|
+    Content: |resolved: ^gen#2|
     references: []
     Mod Path =
     Def Type = Global
@@ -71,12 +71,12 @@ let%expect_test _ =
     references: []
     Module definitions:
     Errors:
-    File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 13, characters 10-15:
+    Some(File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 13, characters 10-15:
      12 | let b =
      13 |   let j = c.boo in
                     ^^^^^
      14 |   j
-
+    )
     Invalid record field "boo" in record.
 
 |}];
@@ -151,12 +151,12 @@ let%expect_test _ =
       File "../../test/contracts/get_scope_tests/local_type.mligo", line 4, characters 23-27
     Module definitions:
     Errors:
-    File "../../test/contracts/get_scope_tests/local_type.mligo", line 5, characters 2-6:
+    Some(File "../../test/contracts/get_scope_tests/local_type.mligo", line 5, characters 2-6:
       4 |   let foo (b : toto) : toto = b in
       5 |   titi
             ^^^^
       6 |
-
+    )
     Variable "titi" not found.
  |}];
   run_ligo_good
@@ -210,10 +210,10 @@ let%expect_test _ =
     Type definitions:
     Module definitions:
     Errors:
-    File "../../test/contracts/get_scope_tests/errors/type_error.mligo", line 1, characters 14-21:
+    Some(File "../../test/contracts/get_scope_tests/errors/type_error.mligo", line 1, characters 14-21:
       1 | let x : int = "Hello"
                         ^^^^^^^
-
+    )
     Invalid type(s).
     Expected "int", but got: "string". |}];
   run_ligo_good

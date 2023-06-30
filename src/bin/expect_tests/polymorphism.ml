@@ -350,40 +350,31 @@ let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; test "unresolved/contract.mligo" ];
   [%expect
     {xxx|
-    File "./unresolved/contract.mligo", line 6, characters 29-31:
+    Underspecified type "^gen#9".
+    Please add additional annotations.File "./unresolved/contract.mligo", line 6, characters 29-31:
       5 |     let b                = List.length ys in
       6 |     [], (a + b + List.length [])
-                                       ^^
-
-    Underspecified type "^a".
-    Please add additional annotations.
-    Hint: "^a" represent placeholder type(s). |xxx}]
+                                       ^^ |xxx}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; test "unresolved/contract2.mligo" ];
   [%expect
     {xxx|
-    File "./unresolved/contract2.mligo", line 4, characters 13-15:
+    Underspecified type "^gen#5".
+    Please add additional annotations.File "./unresolved/contract2.mligo", line 4, characters 13-15:
       3 | let main (_ : int list) (_ : nat) : (operation list * nat) =
       4 |     [], (one [])
-                       ^^
-
-    Underspecified type "^a".
-    Please add additional annotations.
-    Hint: "^a" represent placeholder type(s). |xxx}]
+                       ^^ |xxx}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile"; "storage"; test "unresolved/storage.mligo"; "s" ];
   [%expect
     {xxx|
-    File "./unresolved/storage.mligo", line 1, characters 20-22:
+    Underspecified type "^gen#4".
+    Please add additional annotations.File "./unresolved/storage.mligo", line 1, characters 20-22:
       1 | let s = List.length []
                               ^^
-      2 |
-
-    Underspecified type "^a".
-    Please add additional annotations.
-    Hint: "^a" represent placeholder type(s). |xxx}]
+      2 | |xxx}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile"; "parameter"; test "unresolved/parameter.mligo"; "p" ];
@@ -394,17 +385,15 @@ let%expect_test _ =
                   ^^
       2 |
 
-    Underspecified type "list (^a)".
-    Please add additional annotations.
-    Hint: "^a" represent placeholder type(s). |xxx}]
+    Underspecified type "^gen#2".
+    Cannot encode this type. |xxx}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile"; "expression"; "cameligo"; "[]" ];
   [%expect
     {|
-    Underspecified type "list (^a)".
-    Please add additional annotations.
-    Hint: "^a" represent placeholder type(s). |}]
+    Underspecified type "^gen#2".
+    Please add additional annotations. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; test "monomorphisation_fail.mligo" ];
