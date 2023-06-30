@@ -12,8 +12,34 @@ open Simple_utils.Region
 module CST = Cst_jsligo.CST
 open! CST
 module Wrap = Lexing_shared.Wrap
+module Nodes = Cst_shared.Nodes
 
-(* Utilities *)
+(* UTILITIES
+
+   The following functions help build CST nodes. When they are
+   complicated, like [mk_mod_path], it is because the grammar rule had
+   to be written in a certain way to remain LR, and that way did not
+   make it easy in the semantic action to collate the information into
+   CST nodes. *)
+
+let mk_reg region value = Region.{region; value}
+
+let mk_mod_path :
+  (module_name * dot) Utils.nseq * 'a ->
+  ('a -> Region.t) ->
+  'a CST.module_path Region.reg =
+  fun (nseq, field) to_region ->
+    let (first, sep), tail = nseq in
+    let rec trans (seq, prev_sep as acc) = function
+      [] -> acc
+    | (item, next_sep) :: others ->
+        trans ((prev_sep, item) :: seq, next_sep) others in
+    let list, last_dot = trans ([], sep) tail in
+    let module_path = first, List.rev list in
+    let region = CST.nseq_to_region (fun (x,_) -> x#region) nseq in
+    let region = Region.cover region (to_region field)
+    and value = {module_path; selector=last_dot; field}
+    in {value; region}
 
 let ghost = Wrap.ghost
 
@@ -22,6 +48,20 @@ let mk_wild_pattern variable =
   let variable = Wrap.make "_" region in
   let value    = {variable; attributes=[]}
   in {region; value}
+
+let last = Nodes.last
+let nseq_to_region = Nodes.nseq_to_region
+let nsepseq_to_region = Nodes.nsepseq_to_region
+
+(* Hooking attributes, if any *)
+
+let rec hook mk_attr attrs node =
+  match attrs with
+    []            -> node
+  | attr :: attrs -> mk_attr attr @@ hook mk_attr attrs node
+
+let hook_E_Attr = hook @@ fun a e -> E_Attr (a,e)
+let hook_T_Attr = hook @@ fun a t -> T_Attr (a,t)
 
 (* END HEADER *)
 %}
@@ -137,13 +177,28 @@ nsepseq(item,sep):
   item                       {                        $1, [] }
 | item sep nsepseq(item,sep) { let h,t = $3 in $1, ($2,h)::t }
 
+(* The rule [nsep_or_term(item,sep)] ("non-empty separated or
+   terminated list") parses a non-empty list of items separated by
+   [sep], and optionally terminated by [sep]. *)
+
+nsep_or_term(item,sep):
+  nsepseq(item,sep)      { `Sep  $1 }
+| nseq(item sep {$1,$2}) { `Term $1 }
+
 (* The rule [sep_or_term(item,sep)] ("separated or terminated list")
-   parses a non-empty list of items separated by [sep], and optionally
+   parses a list of items separated by [sep], and optionally
    terminated by [sep]. *)
 
 sep_or_term(item,sep):
-  nsepseq(item,sep)      { `NSep  $1 }
-| nseq(item sep {$1,$2}) { `NTerm $1 }
+  ioption(nsep_or_term(item,sep)) { $1 }
+
+(* The rule [nsep_or_pref(item,sep)] ("non-empty separated or prefixed
+   list") parses a non-empty list of items separated by [sep], and
+   optionally prefixed by [sep]. *)
+
+nsep_or_pref(item,sep):
+  nsepseq(item,sep)      { `Sep  $1 }
+| nseq(sep item {$1,$2}) { `Pref $1 }
 
 (* Helpers *)
 
@@ -152,16 +207,15 @@ variable    : "<ident>"  { $1 }
 
 type_var    : "<ident>" | "<uident>" { $1 }
 type_name   : "<ident>" | "<uident>" { $1 }
+type_ctor   : "<ident>" | "<uident>" { $1 }
 field_name  : "<ident>"  { $1 }
 module_name : "<uident>" { $1 }
 intf_name   : "<uident>" { $1 }
 ctor        : "<uident>" { $1 }
-module_path : "<string>" { $1 }
+file_path   : "<string>" { $1 }
 
 %inline
 lang_name   : "<ident>" | "<uident>" { $1 }
-(*parameter   : "<ident>"*)
-
 
 (* Attributes *)
 
@@ -199,7 +253,12 @@ declaration:
 (* Value declaration (constant and mutable) *)
 
 value_decl:
-  var_kind bindings { {kind=$1; bindings=$2} }
+  var_kind bindings {
+    let start  = var_kind_to_region $1
+    and stop   = nsepseq_to_region (fun x -> x.region) $2 in
+    let region = cover start stop
+    and value  = {kind=$1; bindings=$2}
+    in {region; value} }
 
 var_kind:
   "let"   { `Let   $1 }
@@ -210,9 +269,7 @@ bindings:
 
 val_binding:
   pattern ioption(type_vars) ioption(type_annotation) "=" expr {
-    let start  = pattern_to_region $1
-    and stop   = expr_to_region $5 in
-    let region = cover start stop
+    let region = cover (pattern_to_region $1) (expr_to_region $5)
     and value  = {pattern=$1; type_vars=$2; rhs_type=$3; eq=$4; rhs_expr=$5}
     in {region; value}
 
@@ -232,22 +289,29 @@ import_decl:
                               equal=$3; module_path=$4}
     in {region; value}
   }
-| "import" "*" "as" module_name "from" module_path {
+| "import" "*" "as" module_name "from" file_path {
     let region = cover $1#region $6#region in
     let value  = ImportAll {kwd_import=$1; times=$2; kwd_as=$3; alias=$4;
-                            kwd_from=$5; module_path=$6}
+                            kwd_from=$5; file_path=$6}
     in {region; value}
   }
-| "import" braces(sep_or_term(field_name, ",")) "from" module_path {
+| "import" braces(sep_or_term(field_name, ",")) "from" file_path {
     let region = cover $1#region $4#region in
     let value  = ImportSome {kwd_import=$1; imported=$2; kwd_from=$3;
-                             module_path=$4}
+                             file_path=$4}
     in {region; value} }
 
 module_selection:
-  nsepseq(module_name,".") { $1 }
+  module_path(module_name) { mk_mod_path $1 (fun w -> w#region) }
 
-(* Interfaces *)
+module_path(selected):
+  module_name "." module_path(selected) {
+    let (head, tail), selected = $3 in
+    (($1,$2), head::tail), selected
+  }
+| module_name "." selected { (($1,$2), []), $3 }
+
+(* Interface declaration *)
 
 interface_decl:
   "interface" intf_name intf_body {
@@ -288,7 +352,7 @@ intf_const:
 
 (* Module declaration *)
 
-module_decl:
+module_decl: (* TODO: Allow "_" as module_name *)
   "namespace" module_name ioption(interface) braces(statements) {
      let region = cover $1#region $4.region
      and value  = {kwd_namespace=$1; module_name=$2; module_type=$3;
@@ -298,14 +362,185 @@ module_decl:
 interface:
   "implements" intf_expr {
      let region = cover $1#region (intf_expr_to_region $2)
-     and value  = $1,$2
-     in {region; value} }
+     in {region; value=($1,$2)} }
 
 intf_expr:
   intf_body        { I_Body $1 }
 | module_selection { I_Path $1 }
 
+(* Type declaration *)
+
+type_decl:
+  "type" type_name ioption(type_vars) "=" type_expr { (* TODO: Allow "_" *)
+    let region = cover $1#region (type_expr_to_region $5)
+    and value = {kwd_type=$1; name=$2; type_vars=$3; eq=$4; type_expr=$5}
+    in {region; value}
+
+type_vars:
+  chevrons(nsepseq(type_var,",")) { $1 }
+
+(* TYPE EXPRESSIONS *)
+
+type_expr:
+  fun_type | variant_type | core_type { $1 }
+
+(* Functional types *)
+
+fun_type:
+  par(sep_or_term(fun_type_param,",")) "=>" type_expr {
+    let stop   = type_expr_to_region $3 in
+    let region = cover $1.region stop
+    in T_Fun {region; value=($1,$2,$3)} }
+
+fun_type_param:
+  "<ident>" type_annotation {
+    let region = cover $1#region (type_expr_to_region (snd $2))
+    in {region; value = ($1,$2)} }
+
+(* Variant types *)
+
+variant_type:
+  attributes nseq("|",variant) {
+   (* Attributes of the variant type *)
+    let region    = nseq_to_region (fun x -> x.region) $2 in
+    let type_expr = T_Variant {region; value = `Pref $2}
+    in hook_T_Attr $1 type_expr
+  }
+| nsepseq(variant, "|") {
+    let region = nsepseq_to_region (fun x -> x.region) $1
+    in T_Variant {region; value = `Sep $1} }
+
+variant:
+  attributes brackets(variant_comp) {
+    let value = {attributes=$1; tuple=$2}
+    in {region = $2.region; value} }
+
+%inline
+variant_comp:
+  "<string>"                 { {ctor=$1; ctor_params = None}         }
+| "<string>" "," ctor_params { {ctor=$1; ctor_params = Some ($2,$3)} }
+
+ctor_params:
+  nsep_or_term(ctor_param,",") { $1 }
+
+ctor_param:
+  type_expr { $1 }
+
+(* Core types *)
+
+(* The production [core_type_no_string] is here to avoid a conflict
+   with a variant for a constant constructor, e.g. [["C"]], which
+   could be interpreted otherwise as an type tuple (array) of the type
+   ["C"]. *)
+
+core_type:
+  "<string>"            { T_String $1 }
+| core_type_no_string   {          $1 }
+
+core_type_no_string:
+  "[@attr]" core_type_no_string { T_Attr ($1,$2) }
+| no_attr_type                  { $1             }
+
+%inline (* Was on [core_type_no_string] *)
+no_attr_type:
+  "<int>"           { T_Int    $1 }
+| type_name         { T_Var    $1 } (* "_" unsupported in type checker *)
+| type_ctor_app     { T_App    $1 }
+| type_tuple        { T_Cart   $1 }
+| record(type_expr) { T_Record $1 }
+| par(type_expr)    { T_Par    $1 }
+
+| parameter_of      { T_Parameter $1 }  (* TODO *)
+| module_access_t   { T_ModPath   $1 }
+| union_type        {             $1 }
+
+(* Application of type arguments to type constructors *)
+
+type_ctor_app:
+  type_ctor chevrons(type_ctor_args) {
+    let region = cover $1#region $2.region
+    in {region; value = ($1,$2)} }
+
+type_ctor_args:
+  nsep_or_term(type_ctor_arg,",") { $1 }
+
+type_ctor_arg:
+  type_expr { $1 }
+
+(* Tuples of types *)
+
+type_tuple:
+  brackets(type_components) { $1 }
+
+type_components:
+  type_component_no_string {
+    `Sep ($1,[])
+  }
+| type_component_no_string "," nsep_or_term(type_component,",") {
+    match $3 with
+      `Sep  seq -> `Sep (Utils.nsepseq_cons $1 $2 seq)
+    | `Term seq -> `Term (($1,$2) :: seq) }
+
+type_component_no_string:
+  fun_type | sum_type | core_type_no_string { $1 }
+
+type_component:
+  type_expr { $1 }
+
+(* Record types (a.k.a. "object types" in JS) *)
+
+record(field_kind):
+  braces(sep_of_term(field(field_kind),object_sep)) { $1 }
+
+field(field_kind):
+  attributes field_name ioption(":" field_kind { $1,$2 }) {
+    fun region_of_field_kind ->
+      let region =
+        match $3 with
+          None -> $2#region
+        | Some (_, k) -> cover $2#region (region_of_field_kind k)
+      and value = {attributes=$1; field_name=$2; field_rhs=$3}
+      in {region; value} }
+
 (* XXX *)
+
+     (*
+type_in_module(type_expr):
+  module_path(type_expr) {
+    T_ModPath (mk_mod_path $1 type_expr_to_region) }
+ *)
+
+
+
+(* Union type (see sum type) *)
+
+union_type:
+  ioption("|" { $1 }) nsepseq(object_type, "|") {
+    match $2 with
+      obj, [] -> TObject obj
+    | _       -> TDisc $2 }
+
+(* Parameter of contract *)
+
+parameter_of:
+  "parameter_of" module_selection {
+    let stop   = nsepseq_to_region (fun x -> x#region) $2 in
+    let region = cover $1#region stop
+    in {region; value=$2} }
+
+(* Selection of types in modules (a.k.a. qualified type name) *)
+
+module_access_t:
+  module_name "." module_var_t {
+    let stop   = type_expr_to_region $3 in
+    let region = cover $1#region stop
+    and value  = {module_name=$1; selector=$2; field=$3}
+    in {region; value} }
+
+module_var_t:
+  module_access_t { TModA $1 }
+| type_name       { TVar  $1 }
+| type_ctor_app   { TApp  $1 }
 
 (* STATEMENTS *)
 
@@ -815,184 +1050,6 @@ object_rest_pattern:
     let region = cover $1#region $2#region
     and value  = {ellipsis=$1; rest=$2}
     in PRest {region; value} }
-
-(* Type declarations *)
-
-type_decl:
-  "type" type_name ioption(type_params) "=" type_expr {
-    let region = cover $1#region (type_expr_to_region $5) in
-    let mk_value attr =
-      {kwd_type=$1; name=$2; params=$3; eq=$4; type_expr=$5;
-       attributes=private_attribute::attr}
-    in fun attr -> SType {region; value = mk_value attr} }
-
-type_params:
-  chevrons(nsepseq(type_param,",")) { $1 }
-
-(* TYPE EXPRESSIONS *)
-
-type_expr:
-  fun_type | sum_type | core_type { $1 }
-
-(* Functional types *)
-
-fun_type:
-  ES6FUN par(nsepseq(fun_param,",")) "=>" type_expr {
-    let stop   = type_expr_to_region $4 in
-    let region = cover $2.region stop
-    and value  = $2.value, $3, $4
-    in TFun {region; value} }
-
-fun_param:
-  "<ident>" type_annotation {
-    let colon, type_expr = $2
-    in {name=$1; colon; type_expr} }
-
-(* Sum types *)
-
-sum_type:
-  attributes "|" nsepseq(variant, "|") {
-    let stop     = nsepseq_to_region (fun x -> x.region) $3 in
-    let region   = cover $2#region stop in
-    let variants = {region; value=$3} in
-    let value    = {attributes=$1; leading_vbar = Some $2; variants}
-    in TSum {region; value}
-  }
-| nsepseq(variant, "|") {
-    let region   = nsepseq_to_region (fun x -> x.region) $1 in
-    let variants = {region; value=$1} in
-    let value    = {attributes=[]; leading_vbar=None; variants}
-    in TSum {region; value} }
-
-variant:
-  attributes brackets(variant_comp) {
-    let region = $2.region
-    and value  = {attributes=$1; tuple=$2}
-    in {region; value} }
-
-%inline
-variant_comp:
-  "<string>"                 { {constr=$1; params = None}         }
-| "<string>" "," ctor_params { {constr=$1; params = Some ($2,$3)} }
-
-ctor_params:
-  nsepseq(ctor_param,",") { $1 }
-
-ctor_param:
-  type_expr { $1 }
-
-(* Core types *)
-
-core_type:
-  "<string>"            { TString $1 }
-| core_type_no_string   { $1}
-
-%inline
-core_type_no_string:
-  "<int>"               { TInt    $1 }
-| "_" | type_name       { TVar    $1 }
-| parameter_of_type     {         $1 }
-| module_access_t       { TModA   $1 }
-| union_type            {         $1 }
-| type_ctor_app         { TApp    $1 }
-| attributes type_tuple { TProd   {inside=$2; attributes=$1} }
-| par(type_expr)        { TPar    $1 }
-
-(* Union type (see sum type) *)
-
-union_type:
-  ioption("|" { $1 }) nsepseq(object_type, "|") {
-    match $2 with
-      obj, [] -> TObject obj
-    | _       -> TDisc $2 }
-
-(* Tuples of types *)
-
-(* The production [core_type_no_string] is here to avoid a conflict
-   with a variant for a constant contructor, e.g. [["C"]], which could
-   be interpreted otherwise as an type tuple (array) of the type
-   ["C"]. *)
-
-type_tuple:
-  brackets(type_components) { $1 }
-
-type_components:
-  type_component_no_string { $1,[] }
-| type_component_no_string "," nsepseq(type_component,",") {
-    Utils.nsepseq_cons $1 $2 $3 }
-
-type_component_no_string:
-  fun_type | sum_type | core_type_no_string { $1 }
-
-type_component:
-  type_expr { $1 }
-
-(* Parameter of contract *)
-
-parameter_of_type:
-  "parameter_of" module_selection {
-    let stop   = nsepseq_to_region (fun x -> x#region) $2 in
-    let region = cover $1#region stop
-    in TParameter {region; value=$2} }
-
-(* Application of type arguments to type constructors *)
-
-type_ctor_app:
-  type_name chevrons(type_ctor_args) {
-    let region = cover $1#region $2.region
-    in {region; value = ($1,$2)} }
-
-type_ctor_args:
-  nsepseq(type_ctor_arg,",") { $1 }
-
-type_ctor_arg:
-  type_expr { $1 }
-
-(* Selection of types in modules (a.k.a. qualified type name) *)
-
-module_access_t:
-  module_name "." module_var_t {
-    let stop   = type_expr_to_region $3 in
-    let region = cover $1#region stop
-    and value  = {module_name=$1; selector=$2; field=$3}
-    in {region; value} }
-
-module_var_t:
-  module_access_t { TModA $1 }
-| type_name       { TVar  $1 }
-| type_ctor_app   { TApp  $1 }
-
-(* Record types (a.k.a. "object types" in JS) *)
-
-object_type:
-  attributes "{" sep_or_term(field_decl,object_sep) "}" {
-    let lbrace = $2 in
-    let rbrace = $4 in
-    let fields, terminator = $3 in
-    let region = cover lbrace#region rbrace#region
-    and value = {
-      compound = Some (Braces (lbrace,rbrace));
-      ne_elements = fields;
-      terminator;
-      attributes=$1}
-    in {region; value} }
-
-field_decl:
-  attributes field_name {
-    let value = {
-      field_name=$2;
-      colon = ghost ":";  (* TODO: Create a "new" CST node *)
-      field_type = TVar (ghost $2#payload); (* TODO *)
-      attributes=$1}
-    in {value; region = $2#region}
-  }
-| attributes field_name type_annotation {
-    let colon, field_type = $3 in
-    let stop   = type_expr_to_region field_type in
-    let region = cover $2#region stop in
-    let value : field_decl = {
-      field_name=$2; colon; field_type; attributes= $1}
-    in {region; value} }
 
 (* Statements *)
 
