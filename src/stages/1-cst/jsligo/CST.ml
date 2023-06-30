@@ -14,8 +14,8 @@ module Token     = Lexing_jsligo.Token
 
 (* Local dependencies *)
 
-module Wrap = Lexing_shared.Wrap
-module Attr = Lexing_shared.Attr
+module Wrap  = Lexing_shared.Wrap
+module Attr  = Lexing_shared.Attr
 module Nodes = Cst_shared.Nodes
 
 (* Utilities *)
@@ -110,6 +110,7 @@ type eof = lexeme wrap
 type variable    = lexeme wrap
 type type_name   = lexeme wrap
 type type_var    = lexeme wrap
+type type_ctor   = lexeme wrap
 type ctor        = lexeme wrap
 type field_name  = lexeme wrap
 type module_name = lexeme wrap
@@ -267,8 +268,8 @@ and intf_expr =
 
 and type_decl = {
   kwd_type  : kwd_type;
-  type_vars : type_vars option;
   name      : type_name;
+  type_vars : type_vars option;
   eq        : equal;
   type_expr : type_expr
 }
@@ -279,7 +280,7 @@ and type_decl = {
    add or modify some, please make sure they remain in order. *)
 
 and type_expr =
-  T_App       of (type_expr * type_ctor_args) reg  (* <u,v> M.t         *)
+  T_App       of (type_ctor * type_ctor_args) reg  (* <u,v> M.t         *)
 | T_Attr      of (attribute * type_expr)           (* @a e              *)
 | T_Cart      of cartesian                         (* [t, [u, v]]       *)
 | T_Fun       of fun_type                          (* (a : t) => u      *)
@@ -303,9 +304,9 @@ and cartesian = (type_expr, comma) nsep_or_term brackets
 
 (* Functional type *)
 
-and fun_type = (parameters * arrow * type_expr) reg
-
-and parameters = (pattern, comma) sep_or_term par
+and fun_type        = (fun_type_params * arrow * type_expr) reg
+and fun_type_params = (fun_type_param reg, comma) sep_or_term par
+and fun_type_param  = variable * type_annotation
 
 (* Parameter of type *)
 
@@ -530,6 +531,8 @@ and fun_expr = {
   body       : body;
 }
 
+and parameters = (pattern, comma) sep_or_term par
+
 and body =
   FunBody  of statements braces
 | ExprBody of expr
@@ -596,18 +599,6 @@ and code_inj = {
 (* PROJECTIONS *)
 
 (* Projecting regions from some nodes of the AST *)
-
-let rec last to_region = function
-    [] -> Region.ghost
-|  [x] -> to_region x
-| _::t -> last to_region t
-
-let nseq_to_region to_region (hd,tl) =
-  Region.cover (to_region hd) (last to_region tl)
-
-let nsepseq_to_region to_region (hd,tl) =
-  let reg (_, item) = to_region item in
-  Region.cover (to_region hd) (last reg tl)
 
 let import_decl_to_region = function
   AliasModule {region; _}
@@ -711,3 +702,6 @@ let rec statement_to_region = function
 | S_Return {region; _}
 | S_Switch {region; _}
 | S_While  {region; _} -> region
+
+let var_kind_to_region = function
+  `Let w | `Const w -> w#region

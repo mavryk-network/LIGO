@@ -283,12 +283,12 @@ and print_type_expr state = function
 
 (* Application of type constructors *)
 
-and print_T_App state (node: (type_expr * type_ctor_args) reg) =
+and print_T_App state (node: (type_ctor * type_ctor_args) reg) =
   let Region.{region; value} = node in
-  let ctor, args = value in
+  let type_ctor, args = value in
   let args = args.value.inside in
   let children = Tree.(
-    mk_child print_type_expr ctor
+    mk_child make_literal type_ctor
     :: mk_children_nsep_or_term ~root:"<arguments>" print_type_expr args)
   in Tree.make state ~region "T_App" children
 
@@ -311,16 +311,24 @@ and print_T_Cart state (node : cartesian) =
 
 and print_T_Fun state (node : fun_type) =
   let Region.{value; region} = node in
-  let parameters, _, codomain = value in
+  let fun_type_params, _, codomain = value in
   let children = Tree.[
-    mk_child print_parameters parameters;
-    mk_child print_codomain   codomain]
+    mk_child print_fun_type_params fun_type_params;
+    mk_child print_codomain        codomain]
   in Tree.make state "T_Fun" ~region children
 
-and print_parameters state (node: parameters) =
+and print_fun_type_params state (node: fun_type_params) =
   let Region.{value; region} = node in
-  let params = value.inside in
-  Tree.of_sep_or_term ~region state "<parameters>" print_pattern params
+  Tree.of_sep_or_term ~region state "<parameters>"
+                      print_fun_type_param value.inside
+
+and print_fun_type_param state (node: fun_type_param reg) =
+  let Region.{region; value} = node in
+  let parameter, type_annotation = value in
+  let children = Tree.[
+    mk_child make_literal          parameter;
+    mk_child print_type_annotation type_annotation]
+  in Tree.make ~region state "<parameter>" children
 
 and print_codomain state (node: type_expr) =
   Tree.make_unary state "<codomain>" print_type_expr node
@@ -638,6 +646,11 @@ and print_E_Fun state (node : fun_expr reg) =
     mk_child_opt print_type_annotation rhs_type;
     mk_child     print_fun_body        body]
   in Tree.make state "E_Fun" children
+
+and print_parameters state (node: parameters) =
+  let Region.{value; region} = node in
+  let params = value.inside in
+  Tree.of_sep_or_term ~region state "<parameters>" print_pattern params
 
 and print_fun_body state = function
   FunBody  b -> print_FunBody  state b
