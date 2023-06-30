@@ -224,8 +224,8 @@ let pp
     | `Metadata_slash_not_valid_URI (loc, uri) ->
       Format.fprintf
         f
-        "@[<hv>%a@ Warning: Slash ('/') not in a valid position in \
-         URI: \"%s\", use instead \"%%2F\". @]"
+        "@[<hv>%a@ Warning: Slash ('/') not in a valid position in URI: \"%s\", use \
+         instead \"%%2F\". @]"
         snippet_pp
         loc
         uri
@@ -427,6 +427,7 @@ let to_warning : all -> Simple_utils.Warning.t =
     let message = Format.sprintf "Could not parse JSON in storage's metadata: \"%s\"" e in
     let content = make_content ~message ~location () in
     make ~stage:"value_check" ~content
+
 
 let to_json : all -> Yojson.Safe.t =
  fun w ->

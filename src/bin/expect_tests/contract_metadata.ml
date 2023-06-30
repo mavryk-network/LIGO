@@ -233,7 +233,13 @@ let%expect_test _ =
 let%expect_test _ =
   let entrypoint = "entry_valid_metadata" in
   run_ligo_good
-    [ "compile"; "storage"; test "metadata_tzip16.mligo"; "-e"; entrypoint; "good_storage" ];
+    [ "compile"
+    ; "storage"
+    ; test "metadata_tzip16.mligo"
+    ; "-e"
+    ; entrypoint
+    ; "good_storage"
+    ];
   [%expect
     {|
     (Pair 42
@@ -241,7 +247,13 @@ let%expect_test _ =
             Elt "hello/world"
                 0x207b0a2020226e616d65223a22464132204e4654204d61726b6574706c616365222c0a2020226465736372697074696f6e223a224578616d706c65206f662046413220696d706c656d656e746174696f6e222c0a20202276657273696f6e223a22302e302e31222c0a2020226c6963656e7365223a7b226e616d65223a224d4954227d2c0a202022617574686f7273223a5b224d617269676f6c643c636f6e74616374406d617269676f6c642e6465763e225d2c0a202022686f6d6570616765223a2268747470733a2f2f6d617269676f6c642e646576222c0a202022736f75726365223a7b0a202022746f6f6c73223a5b224c69676f225d2c0a2020226c6f636174696f6e223a2268747470733a2f2f6769746875622e636f6d2f6c69676f6c616e672f636f6e74726163742d636174616c6f6775652f747265652f6d61696e2f6c69622f666132227d2c0a202022696e7465726661636573223a5b22545a49502d303132225d2c0a2020226572726f7273223a205b5d2c0a2020227669657773223a205b5d0a20207d0a2020 }) |}];
   run_ligo_good
-    [ "compile"; "storage"; test "metadata_tzip16.mligo"; "-e"; entrypoint; "bad_storage0" ];
+    [ "compile"
+    ; "storage"
+    ; test "metadata_tzip16.mligo"
+    ; "-e"
+    ; entrypoint
+    ; "bad_storage0"
+    ];
   [%expect
     {|
     Warning: Slash ('/') not in a valid position in URI: "hello/invalid_not_http", use instead "%2F".
@@ -253,7 +265,13 @@ let%expect_test _ =
                 0x697066733a2f2f516d577169337542684251354b55367352314c704c714a5472344778755066454b3755447976364763633366484c2f ;
             Elt "invalid_wrong_hash" 0x697066733a2f2f696e76616c69642d68617368 }) |}];
   run_ligo_good
-    [ "compile"; "storage"; test "metadata_tzip16.mligo"; "-e"; entrypoint; "bad_storage1" ];
+    [ "compile"
+    ; "storage"
+    ; test "metadata_tzip16.mligo"
+    ; "-e"
+    ; entrypoint
+    ; "bad_storage1"
+    ];
   [%expect
     {|
      Warning: Could not find a valid URI haha in storage's metadata empty key.
@@ -261,7 +279,13 @@ let%expect_test _ =
           { Elt "" 0x68616861 ;
             Elt "hello/world" 0x687474703a2f2f7777772e6578616d706c652e636f6d }) |}];
   run_ligo_good
-    [ "compile"; "storage"; test "metadata_tzip16.mligo"; "-e"; entrypoint; "bad_storage2" ];
+    [ "compile"
+    ; "storage"
+    ; test "metadata_tzip16.mligo"
+    ; "-e"
+    ; entrypoint
+    ; "bad_storage2"
+    ];
   [%expect
     {|
      Warning: Could not find key haha in storage's metadata.
@@ -269,7 +293,13 @@ let%expect_test _ =
           { Elt "" 0x74657a6f732d73746f726167653a68616861 ;
             Elt "hello/world" 0x687474703a2f2f7777772e6578616d706c652e636f6d }) |}];
   run_ligo_good
-    [ "compile"; "storage"; test "metadata_tzip16.mligo"; "-e"; entrypoint; "bad_storage3" ];
+    [ "compile"
+    ; "storage"
+    ; test "metadata_tzip16.mligo"
+    ; "-e"
+    ; entrypoint
+    ; "bad_storage3"
+    ];
   [%expect
     {|
     Warning: Could not parse JSON in storage's metadata: "Line 1, bytes 0-7:
