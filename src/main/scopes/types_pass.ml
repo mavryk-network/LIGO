@@ -278,7 +278,6 @@ module Of_Ast_core = struct
 end
 
 module Typing_env = struct
-
   (** The typer normall call {!Trace.error} which internally always calls {!Stdlib.raise}
       which stops the program, But here we want to recover from the error. That is the reason 
       we use {!collect_warns_and_errs} *)
@@ -309,7 +308,7 @@ module Typing_env = struct
     =
     let typed_prg =
       Simple_utils.Trace.to_stdlib_result
-      @@ Checking.type_program ~options ~env:stdlib_env decls
+      @@ Checking.type_program ~options ~env:stdlib_env ~should_recover:true decls
     in
     Result.(
       match typed_prg with
