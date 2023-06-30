@@ -24,8 +24,7 @@ let rec encode ~raise (type_ : Ast_typed.type_expression) : Type.t =
   in
   match type_.type_content with
   | T_variable tvar -> return @@ T_variable tvar
-  | T_exists _ ->
-    raise.error @@ cannot_encode_texists type_ type_.location
+  | T_exists _ -> raise.error @@ cannot_encode_texists type_ type_.location
   | T_arrow arr ->
     let arr = Arrow.map encode arr in
     return @@ T_arrow arr
@@ -776,9 +775,13 @@ let try_ (body : ('a, 'err, 'wrn) t) ~(with_ : 'err -> ('a, 'err, 'wrn) t)
     : ('a, 'err, 'wrn) t
   =
  fun ~raise ~options ~loc state ->
-  Trace.try_with
-    (fun ~raise ~catch:_ -> body ~raise ~options ~loc state)
-    (fun ~catch:_ err -> with_ err ~raise ~options ~loc state)
+  match Trace.to_stdlib_result (body ~options ~loc state) with
+  | Ok (v, ws) ->
+    List.iter ws ~f:raise.warning;
+    v
+  | Error (err, ws) ->
+    List.iter ws ~f:raise.warning;
+    with_ err ~raise ~options ~loc state
 
 
 let try_all (ts : ('a, 'err, 'wrn) t list) : ('a, 'err, 'wrn) t =
