@@ -32,6 +32,7 @@ type all =
   | `Metadata_tezos_storage_not_found of Location.t * string
   | `Metadata_not_valid_URI of Location.t * string
   | `Metadata_slash_not_valid_URI of Location.t * string
+  | `Metadata_invalid_JSON of Location.t * string
   ]
 
 let warn_bad_self_type t1 t2 loc = `Self_ast_aggregated_warning_bad_self_type (t1, t2, loc)
@@ -227,7 +228,14 @@ let pp
          URI: \"%s\", use instead \"%%2F\". @]"
         snippet_pp
         loc
-        uri)
+        uri
+    | `Metadata_invalid_JSON (loc, e) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@ Warning: Could not parse JSON in storage's metadata: \"%s\". @]"
+        snippet_pp
+        loc
+        e)
 
 
 let to_warning : all -> Simple_utils.Warning.t =
@@ -415,7 +423,10 @@ let to_warning : all -> Simple_utils.Warning.t =
     let message = Format.sprintf "Slash ('/') not in a valid position in URI: %s." uri in
     let content = make_content ~message ~location () in
     make ~stage:"value_check" ~content
-
+  | `Metadata_invalid_JSON (location, e) ->
+    let message = Format.sprintf "Could not parse JSON in storage's metadata: \"%s\"" e in
+    let content = make_content ~message ~location () in
+    make ~stage:"value_check" ~content
 
 let to_json : all -> Yojson.Safe.t =
  fun w ->

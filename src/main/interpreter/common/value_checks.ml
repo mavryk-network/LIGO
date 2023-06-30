@@ -1,14 +1,14 @@
 open Ligo_interpreter
 open Types
 
-let json_check ~raise (b : bytes) =
-  ignore raise;
+let json_check ~loc (b : bytes) =
+  let open Simple_utils.Result in
   try
     let _ = Yojson.Basic.from_string Bytes.(to_string b) in
-    ()
+    Ok ()
   with
-  | Yojson.Json_error e -> print_endline e
-  | _ -> failwith "Should not fail here"
+  | Yojson.Json_error e -> fail (`Metadata_invalid_JSON (loc, e))
+  | _ -> Ok ()
 
 
 type protocolInfo =
@@ -108,7 +108,7 @@ let tzip16_check
         of_option ~error:(`Metadata_tezos_storage_not_found (loc, location))
         @@ List.find ~f:(fun (k, _) -> String.equal k location) values
       in
-      return (json_check ~raise json)
+      json_check ~loc json
     | Some _ -> return ())
   | _ -> return ()
 

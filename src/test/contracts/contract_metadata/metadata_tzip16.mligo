@@ -45,11 +45,28 @@ type storage =
 let entry_valid_metadata (_p, s : param * storage) : operation list * storage =
   [], s
 
+let json = [%bytes
+  {| {
+  "name":"FA2 NFT Marketplace",
+  "description":"Example of FA2 implementation",
+  "version":"0.0.1",
+  "license":{"name":"MIT"},
+  "authors":["Marigold<contact@marigold.dev>"],
+  "homepage":"https://marigold.dev",
+  "source":{
+  "tools":["Ligo"],
+  "location":"https://github.com/ligolang/contract-catalogue/tree/main/lib/fa2"},
+  "interfaces":["TZIP-012"],
+  "errors": [],
+  "views": []
+  }
+  |}]
+
 let good_storage : storage =
    { data = 42
    ; metadata = Big_map.literal
      [ ("", Bytes.concat [%bytes "tezos-storage:hello%2F"] [%bytes "world"])
-     ; ("hello/world", [%bytes "JSON?"])
+     ; ("hello/world", json)
      ]
    }
 
@@ -77,5 +94,13 @@ let bad_storage2 : storage =
    ; metadata = Big_map.literal
      [ ("", [%bytes "tezos-storage:haha"])
      ; ("hello/world", [%bytes "http://www.example.com"])
+     ]
+   }
+
+let bad_storage3 : storage =
+   { data = 42
+   ; metadata = Big_map.literal
+     [ ("", [%bytes "tezos-storage:haha"])
+     ; ("haha", [%bytes "nojson!"])
      ]
    }
