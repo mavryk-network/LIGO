@@ -7,6 +7,7 @@
  (preprocess
   (pps ppx_here))
  (libraries
+  yojson
   ast_aggregated
   ligo_interpreter
   tezos-memory-proto-alpha

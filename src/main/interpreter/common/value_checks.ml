@@ -2,9 +2,13 @@ open Ligo_interpreter
 open Types
 
 let json_check ~raise (b : bytes) =
-  ignore b;
   ignore raise;
-  ()
+  try
+    let _ = Yojson.Basic.from_string Bytes.(to_string b) in
+    ()
+  with
+  | Yojson.Json_error e -> print_endline e
+  | _ -> failwith "Should not fail here"
 
 
 type protocolInfo =

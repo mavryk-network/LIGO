@@ -236,6 +236,8 @@ let%expect_test _ =
     [ "compile"; "storage"; test "metadata_tzip16.mligo"; "-e"; entrypoint; "good_storage" ];
   [%expect
     {|
+    Line 1, bytes 0-5:
+    Invalid token 'JSON?'
     (Pair 42
           { Elt "" 0x74657a6f732d73746f726167653a68656c6c6f253246776f726c64 ;
             Elt "hello/world" 0x4a534f4e3f }) |}];
