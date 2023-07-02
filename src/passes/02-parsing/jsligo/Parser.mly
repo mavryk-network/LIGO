@@ -60,8 +60,9 @@ let rec hook mk_attr attrs node =
     []            -> node
   | attr :: attrs -> mk_attr attr @@ hook mk_attr attrs node
 
-let hook_E_Attr = hook @@ fun a e -> E_Attr (a,e)
-let hook_T_Attr = hook @@ fun a t -> T_Attr (a,t)
+let hook_E_Attr = hook @@ fun a e -> E_Attr (a, e)
+let hook_T_Attr = hook @@ fun a t -> T_Attr (a, t)
+let hook_S_Attr = hook @@ fun a s -> S_Attr (a, s)
 
 (* END HEADER *)
 %}
@@ -352,12 +353,15 @@ intf_const:
 
 (* Module declaration *)
 
-module_decl: (* TODO: Allow "_" as module_name *)
-  "namespace" module_name ioption(interface) braces(statements) {
+module_decl:
+  "namespace" module_binder ioption(interface) braces(statements) {
      let region = cover $1#region $4.region
      and value  = {kwd_namespace=$1; module_name=$2; module_type=$3;
                    module_body=$4}
      in {region; value} }
+
+module_binder:
+  module_name | "_" { $1 }
 
 interface:
   "implements" intf_expr {
@@ -371,10 +375,13 @@ intf_expr:
 (* Type declaration *)
 
 type_decl:
-  "type" type_name ioption(type_vars) "=" type_expr { (* TODO: Allow "_" *)
+  "type" type_binder ioption(type_vars) "=" type_expr {
     let region = cover $1#region (type_expr_to_region $5)
-    and value = {kwd_type=$1; name=$2; type_vars=$3; eq=$4; type_expr=$5}
+    and value  = {kwd_type=$1; name=$2; type_vars=$3; eq=$4; type_expr=$5}
     in {region; value}
+
+type_binder:
+  type_name | "_" { $1 }
 
 type_vars:
   chevrons(nsepseq(type_var,",")) { $1 }
@@ -443,26 +450,24 @@ core_type_no_string:
 
 %inline (* Was on [core_type_no_string] *)
 no_attr_type:
-  "<int>"           { T_Int    $1 }
-| type_name         { T_Var    $1 } (* "_" unsupported in type checker *)
-| type_ctor_app     { T_App    $1 }
-| type_tuple        { T_Cart   $1 }
-| record(type_expr) { T_Record $1 }
-| par(type_expr)    { T_Par    $1 }
-
-| parameter_of      { T_Parameter $1 }  (* TODO *)
-| module_access_t   { T_ModPath   $1 }
-| union_type        {             $1 }
+  "<int>"           { T_Int       $1 }
+| type_name         { T_Var       $1 } (* "_" unsupported in type checker *)
+| type_ctor_app     { T_App       $1 }
+| type_tuple        { T_Cart      $1 }
+| par(type_expr)    { T_Par       $1 }
+| parameter_of_type { T_Parameter $1 }
+| qualified_type
+| union_or_record   {             $1 }
 
 (* Application of type arguments to type constructors *)
 
 type_ctor_app:
-  type_ctor chevrons(type_ctor_args) {
+  type_ctor type_ctor_args {
     let region = cover $1#region $2.region
     in {region; value = ($1,$2)} }
 
 type_ctor_args:
-  nsep_or_term(type_ctor_arg,",") { $1 }
+  chevrons(nsep_or_term(type_ctor_arg,",")) { $1 }
 
 type_ctor_arg:
   type_expr { $1 }
@@ -502,81 +507,217 @@ field(field_kind):
       and value = {attributes=$1; field_name=$2; field_rhs=$3}
       in {region; value} }
 
-(* XXX *)
-
-     (*
-type_in_module(type_expr):
-  module_path(type_expr) {
-    T_ModPath (mk_mod_path $1 type_expr_to_region) }
- *)
-
-
-
-(* Union type (see sum type) *)
-
-union_type:
-  ioption("|" { $1 }) nsepseq(object_type, "|") {
-    match $2 with
-      obj, [] -> TObject obj
-    | _       -> TDisc $2 }
-
 (* Parameter of contract *)
 
-parameter_of:
+parameter_of_type:
   "parameter_of" module_selection {
     let stop   = nsepseq_to_region (fun x -> x#region) $2 in
     let region = cover $1#region stop
     in {region; value=$2} }
 
-(* Selection of types in modules (a.k.a. qualified type name) *)
+(* Type qualifications
 
-module_access_t:
-  module_name "." module_var_t {
-    let stop   = type_expr_to_region $3 in
-    let region = cover $1#region stop
-    and value  = {module_name=$1; selector=$2; field=$3}
-    in {region; value} }
+   The rule [module_path] is parameterised by what is derived after a
+   series of selections of modules inside modules (nested modules),
+   like [A.B.C.D]. For example, here, we want to qualify ("select") a
+   type in a module, so the parameter is [type_name], because only
+   types defined at top-level are in the scope (that is, any type
+   declaration inside blocks is not). Then we can derive
+   [A.B.C.D.t]. Notice that, in the semantic action of
+   [type_in_module] we call the function [mk_mod_path] to reorganise
+   the steps of the path and thus fit our CST. That complicated step
+   is necessary because we need an LR(1) grammar. Indeed, rule
+   [module_path] is right-recursive, yielding the reverse order of
+   selection: "A.(B.(C))" instead of the expected "((A).B).C": the
+   function [mk_mod_path] the semantic action of [type_in_module]
+   reverses that path. We could have chosen to leave the associativity
+   unspecified, like so:
 
-module_var_t:
-  module_access_t { TModA $1 }
-| type_name       { TVar  $1 }
-| type_ctor_app   { TApp  $1 }
+     type_in_module(type_expr):
+       nsepseq(module_name,".") "." type_expr { ... }
+
+   Unfortunately, this creates a shift/reduce conflict (on "."),
+   whence our more involved solution. *)
+
+qualified_type:
+  type_in_module(type_ctor { T_Var $1 }) type_ctor_args {
+    let start  = type_ctor_arg_to_region $1
+    and stop   = type_expr_to_region $2 in
+    let region = cover start stop
+    in T_App {region; value=$2,$1}
+  }
+| type_in_module(type_name      { T_Var $1 })
+| type_in_module(par(type_expr) { T_Par $1 }) { $1 }
+
+type_in_module(type_expr):
+  module_path(type_expr) {
+    T_ModPath (mk_mod_path $1 type_expr_to_region) }
+
+(* Union or record type *)
+
+union_or_record:
+  nsep_or_pref(record(type_expr),"|") {
+    match $1 with
+      `Sep (record, []) -> T_Record record
+    | _ -> T_Union $1 }
 
 (* STATEMENTS *)
 
+statements:
+  nsep_or_term(statement,";") { $1 }
+
 statement:
-  base_stmt(statement) | if_stmt { $1 }
+  base_stmt(statement)  { $1                }
+| attributes if_stmt    { hook_S_Attr $1 $2 }
 
 base_stmt(right_stmt):
-  attributes expr_stmt     { $2 $1      }
-| return_stmt              { SReturn $1 }
-| block_stmt               { SBlock  $1 }
-| switch_stmt              { SSwitch $1 }
-| import_stmt              { SImport $1 }
-| export_decl              { SExport $1 }
-| if_else_stmt(right_stmt)
-| for_of_stmt(right_stmt)
-| for_stmt(right_stmt)
+  "[@attr]" base_stmt(right_stmt) { S_Attr ($1,$2) }
+| no_attr_stmt(right_stmt)        { $1             }
+
+no_attr_stmt(right_stmt):
+  block_stmt               { S_Block  $1 }
+| "break"                  { S_Break  $1 }
+| if_else_stmt(right_stmt) { S_Cond   $1 }
+| declaration              { S_Decl   $1 }
+| expr                     { S_Expr   $1 }
+| for_stmt(right_stmt)     { S_For    $1 }
+| for_of_stmt(right_stmt)  { S_ForOf  $1 }
+| return_stmt              { S_Return $1 }
+| switch_stmt              { S_Switch $1 }
+
+
 | while_stmt(right_stmt)   { $1 }
 
 closed_stmt:
   base_stmt(closed_stmt) { $1 }
 
-(* Bounded loops *)
+(* Block of statement *)
+
+block_stmt:
+  braces(statements) { $1 : statement braces }
+
+(* Conditional statement *)
+
+(* The reason for rules [if_cond], [while_cond] and [switch_cond],
+   instead of the obvious [par(expr)], is meant to identify the
+   syntactic construct for error messages. The only [par(expr)] as a
+   left-hand side in an LR item corresponds to
+   [member_expr: ... | par(expr)]
+   so the context is clear: a general expression between parentheses. *)
+
+if_stmt:
+  "if" par(if_cond) statement {
+    let region = cover $1#region (statement_to_region $3)
+    and value  = {kwd_if=$1; test=$2; if_so=$3; if_not=None}
+    in S_Cond {region; value} }
+
+if_else_stmt(right_stmt):
+  "if" par(if_cond) closed_stmt "else" right_stmt {
+    let region = cover $1#region (statement_to_region $5)
+    and value  = {kwd_if=$1; test=$2; if_so=$3; if_not = Some ($4,$5)}
+    in {region; value} }
+
+if_cond:
+  expr { $1 }
+
+(* For-loop statement *)
+
+for_stmt(right_stmt):
+  "for" par(range_for) ioption(statement) {
+    let stop = match $3 with
+                 None      -> $2.region
+               | Some stmt -> statement_to_region stmt in
+    let region = cover $1#region stop
+    and value = {kwd_for=$1; test=$2; for_body=$3}
+    in {region; value} }
+
+range_for:
+  ioption(initialiser) ";" ioption(condition) ";" ioption(afterthought) {
+    let start = match $1 with
+                  None      -> $2#region
+                | Some stmt -> statement_to_region $1
+    and stop = match $5 with
+                 None   -> $4#region
+               | Some s -> nsepseq_to_region expr_to_region s in
+    let region = cover start stop
+    and value = {initialiser=$1; semi1=$2; condition=$3; semi2=$4;
+                 afterthought=$5}
+    in {region; value} }
+
+initialiser:
+  statement { $1 }
+
+condition:
+  expr { $1 }
+
+afterthought:
+  nsepseq(expr,",") { $1 }
+
+(* For-of loop statement *)
 
 for_of_stmt(right_stmt):
-  attributes "for" "(" index_kind "<ident>" "of" expr ")" right_stmt {
-    let region = cover $2#region (statement_to_region $9)
-    and value  = {attributes=$1; kwd_for=$2; lpar=$3; index_kind=$4;
-                  index=$5; kwd_of=$6; expr=$7; rpar=$8; statement=$9}
-    in SForOf {region; value} }
+  "for" par(range_of) right_stmt {
+    let region = cover $1#region (statement_to_region $3)
+    and value  = {kwd_for=$2; range=$2; for_of_body=$3}
+    in {region; value} }
+
+range_of:
+  index_kind variable "of" expr {
+   {index_kind=$1; index=$2; kwd_of=$3; expr=$4} }
 
 %inline
 index_kind:
   "const" { `Const $1 }
 | "let"   { `Let   $1 }
 
-(* Unbounded loops *)
+(* Return statement *)
+
+return_stmt:
+  "return" expr {
+    let region = cover $1#region (expr_to_region $2)
+    in {region; value = ($1, Some $2)}
+  }
+| "return" { {region=$1#region; value = ($1, None)} }
+
+(* Switch statement *)
+
+switch_stmt:
+  "switch" par(subject) braces(cases) {
+    let region = cover $1#region $3.region
+    and value  = {kwd_switch=$1; subject=$2; cases=$3}
+    in {region; value} }
+
+subject:
+  expr { $1 }
+
+cases:
+  nseq(case) ioption(default_case) {
+    match $2 with
+      None -> $1
+    | Some default ->
+        Utils.(nseq_rev $1 |> nseq_cons default |> nseq_rev)
+  }
+| default_case { $1,[] }
+
+case:
+  "case" expr ":" ioption(case_statements) {
+    Switch_case {kwd_case=$1; expr=$2; colon=$3; statements=$4} }
+
+default_case:
+  "default" ":" ioption(case_statements) {
+    Switch_default_case {kwd_default=$1; colon=$2; statements=$3} }
+
+case_statements:
+  sep_or_term(case_statement,";") {
+    fst $1 : (statement, semi) Utils.nsepseq }
+
+case_statement:
+  statement { $1 }
+| "break"   { SBreak $1 }
+
+(* XXX *)
+
+(* While loop *)
 
 while_stmt(right_stmt):
   "while" par(while_cond) right_stmt {
@@ -857,95 +998,6 @@ ctor_args:
     in ESeq {region; value=$1} }
 
 ctor_arg:
-  expr { $1 }
-
-(* Export Declaration *)
-
-export_decl:
-  attributes "export" attributes declaration {
-    let declaration = $4 ($1 @ $3)  in
-    let region = cover $2#region (statement_to_region declaration)
-    in {region; value = ($2, declaration)} }
-
-(* Block of Statements *)
-
-block_stmt:
-  braces(statements) { $1 : (statement, semi) Utils.nsepseq braces reg}
-
-(* Switch Statement *)
-
-switch_stmt:
-  "switch" par(switch_cond) braces(cases) {
-    let {lpar; inside=expr; rpar} = ($2 : expr par reg).value
-    and {lbrace; inside=cases; rbrace} = ($3 : _ braces reg).value in
-    let region = cover $1#region $3.region
-    and value = {kwd_switch=$1; lpar; expr; rpar; lbrace; cases; rbrace}
-    in {region; value} }
-
-switch_cond:
-  expr { $1 }
-
-cases:
-  nseq(case) ioption(default_case) {
-    match $2 with
-      None -> $1
-    | Some default ->
-       Utils.(nseq_rev $1 |> nseq_cons default |> nseq_rev)
-  }
-| default_case { $1,[] }
-
-case:
-  "case" expr ":" ioption(case_statements) {
-    Switch_case {kwd_case=$1; expr=$2; colon=$3; statements=$4} }
-
-default_case:
-  "default" ":" ioption(case_statements) {
-    Switch_default_case {kwd_default=$1; colon=$2; statements=$3} }
-
-case_statements:
-  sep_or_term(case_statement,";") {
-    fst $1 : (statement, semi) Utils.nsepseq }
-
-case_statement:
-  statement { $1 }
-| "break"   { SBreak $1 }
-
-(* Return Statements *)
-
-return_stmt:
-  "return" {
-    let value = {kwd_return=$1; expr=None}
-    in {region=$1#region; value}
-  }
-| "return" expr {
-    let region = cover $1#region (expr_to_region $2)
-    and value  = {kwd_return=$1; expr = Some $2}
-    in {region; value} }
-
-(* Conditional Statements *)
-
-(* The reason for rules [if_cond], [while_cond] and [switch_cond],
-   instead of the obvious [par(expr)], is meant to identify the
-   syntactic construct for error messages. The only [par(expr)] as a
-   left-hand side in an LR item corresponds to
-   [member_expr: ... | par(expr)]
-   so the context is clear: a general expression between parentheses. *)
-
-if_stmt:
-  attributes "if" par(if_cond) statement {
-    let region = cover $2#region (statement_to_region $4) in
-    let value  = {attributes=$1; kwd_if=$2; test=$3.value;
-                  ifso=$4; ifnot=None}
-    in SCond {region; value} }
-
-if_else_stmt(right_stmt):
-  "if" par(if_cond) closed_stmt "else" right_stmt {
-    let region = cover $1#region (statement_to_region $5)
-    and value  = {attributes=[]; kwd_if=$1; test=$2.value;
-                  ifso=$3; ifnot = Some ($4,$5)}
-    in SCond {region; value} }
-
-if_cond:
   expr { $1 }
 
 (* Array Patterns *)

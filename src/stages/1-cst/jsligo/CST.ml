@@ -401,9 +401,9 @@ and cond_stmt = {
 (* For-loops *)
 
 and for_stmt = {
-  kwd_for   : kwd_for;
-  range     : range_for par;
-  statement : statement option
+  kwd_for  : kwd_for;
+  range    : range_for par;
+  for_body : statement option
 }
 
 and range_for = {
@@ -417,9 +417,9 @@ and range_for = {
 (* For-of loops *)
 
 and for_of_stmt = {
-  kwd_for   : kwd_for;
-  range     : range_of par;
-  statement : statement
+  kwd_for     : kwd_for;
+  range       : range_of par;
+  for_of_body : statement
 }
 
 and range_of = {

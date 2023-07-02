@@ -900,7 +900,7 @@ and print_S_Expr state (node: expr) =
 
 and print_S_For state (node: for_stmt reg) =
   let Region.{value; region} = node in
-  let {kwd_for=_; range; statement} : for_stmt = value in
+  let {kwd_for=_; range; for_body} : for_stmt = value in
   let range = range.value.inside in
   let {initialiser; semi1=_; condition; semi2=_; afterthought} = range in
   let print_initialiser state = Tree.make_unary state "<init>" print_statement
@@ -910,7 +910,7 @@ and print_S_For state (node: for_stmt reg) =
     mk_child_opt print_initialiser initialiser;
     mk_child_opt print_cond        condition]
   @ mk_children_nsepseq_opt ~root:"<afterthought>" print_expr afterthought
-  @ [mk_child_opt print_loop_body statement]
+  @ [mk_child_opt print_loop_body for_body]
   in make state ~region "S_For" children
 
 and print_loop_body state = Tree.make_unary state "<body>" print_statement
@@ -919,16 +919,16 @@ and print_loop_body state = Tree.make_unary state "<body>" print_statement
 
 and print_S_ForOf state (node: for_of_stmt reg) =
   let Region.{value; region} = node in
-  let {kwd_for=_; range; statement} = value in
+  let {kwd_for=_; range; for_of_body} = value in
   let range = range.value.inside in
   let {index_kind; index; kwd_of=_; expr} = range in
   let print_index state = function
-    `Let _,   var -> Tree.(make_unary state "let" make_literal var)
+    `Let _,   var -> Tree.(make_unary state "let"   make_literal var)
   | `Const _, var -> Tree.(make_unary state "const" make_literal var) in
   let children = Tree.[
     mk_child print_index     (index_kind, index);
     mk_child print_expr      expr;
-    mk_child print_loop_body statement]
+    mk_child print_loop_body for_of_body]
   in Tree.make ~region state "S_ForOf" children
 
 (* return statement *)
