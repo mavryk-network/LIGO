@@ -1,6 +1,5 @@
 author: pewulfman
-description: '<!--- Section under ## Changelog will be added to your changelog description.
-  --->\n\n'
+description: ''
 merge_request: '2129'
 title: 'Bugfix : Resolving module aliasing for nested modules'
 type: fixed
