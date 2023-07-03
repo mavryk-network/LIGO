@@ -97,7 +97,7 @@ let dynamic_entries sig_ =
         | Signature.S_value (var, ty, attr) when attr.dyn_entry ->
           Some
             [ Signature.S_value
-                ( Value_var.add_prefix "enum_" var
+                ( Value_var.add_prefix "key_" var
                 , Type.t_nat ~loc ()
                 , Context.Attr.default )
             ; Signature.S_value
