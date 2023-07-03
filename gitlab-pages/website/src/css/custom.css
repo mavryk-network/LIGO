@@ -696,7 +696,7 @@ a:hover {
 }
 
 #partners #heading {
-  word-wrap: break-word;
+  word-wrap: normal;
   width: 200px;
   line-height: 1em;
 }
