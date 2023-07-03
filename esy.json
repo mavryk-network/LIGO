@@ -165,7 +165,7 @@
       }
     },
     "@opam/coq": "opam:8.13.2",
-    "ligo-win32-ntdll-stubs": "git+https://gitlab.com/ligolang/win32-ntdll-stubs.git#d62252963c9874f2e250febd83f6243545c6942d",
+    "ligo-win32-ntdll-stubs": "git+https://gitlab.com/ligolang/win32-ntdll-stubs.git#357dfa49fa7c55e92c5a45187fa58a4b1e35e795",
     "@opam/tezos-rust-libs": {
       "version": "opam:1.5",
       "override": {
