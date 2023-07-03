@@ -438,32 +438,34 @@ and return_stmt = kwd_return * expr option
 and switch_stmt = {
   kwd_switch : kwd_switch;
   subject    : expr par;
-  cases      : case nseq braces
+  cases      : cases braces
 }
 
-and case =
-  Case    of switch_case
-| Default of switch_default (* Unicity not checked *)
+and cases =
+  AllCases of all_cases
+| Default  of switch_default reg
+
+and all_cases = switch_case reg nseq * switch_default reg option
 
 and switch_case = {
-  kwd_case   : kwd_case;
-  expr       : expr;
-  colon      : colon;
-  statements : statements option
+  kwd_case  : kwd_case;
+  expr      : expr;
+  colon     : colon;
+  case_body : statements option
 }
 
 and switch_default = {
-  kwd_default : kwd_default;
-  colon       : colon;
-  statements  : statements option
+  kwd_default  : kwd_default;
+  colon        : colon;
+  default_body : statements option
 }
 
 (* While-loop *)
 
 and while_stmt = {
-  kwd_while : kwd_while;
-  invariant : expr par;
-  statement : statement
+  kwd_while  : kwd_while;
+  invariant  : expr par;
+  while_body : statement
 }
 
 (* EXPRESSIONS *)

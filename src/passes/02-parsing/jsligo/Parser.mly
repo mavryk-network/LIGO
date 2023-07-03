@@ -576,7 +576,6 @@ base_stmt(right_stmt):
 
 no_attr_stmt(right_stmt):
   block_stmt               { S_Block  $1 }
-| "break"                  { S_Break  $1 }
 | if_else_stmt(right_stmt) { S_Cond   $1 }
 | declaration              { S_Decl   $1 }
 | expr                     { S_Expr   $1 }
@@ -584,9 +583,7 @@ no_attr_stmt(right_stmt):
 | for_of_stmt(right_stmt)  { S_ForOf  $1 }
 | return_stmt              { S_Return $1 }
 | switch_stmt              { S_Switch $1 }
-
-
-| while_stmt(right_stmt)   { $1 }
+| while_stmt(right_stmt)   { S_While  $1 }
 
 closed_stmt:
   base_stmt(closed_stmt) { $1 }
@@ -691,146 +688,50 @@ subject:
   expr { $1 }
 
 cases:
-  nseq(case) ioption(default_case) {
-    match $2 with
-      None -> $1
-    | Some default ->
-        Utils.(nseq_rev $1 |> nseq_cons default |> nseq_rev)
-  }
-| default_case { $1,[] }
+  nseq(switch_case) ioption(switch_default) { AllCases ($1,$2) }
+| switch_default                            { Default       $1 }
 
-case:
+switch_case:
   "case" expr ":" ioption(case_statements) {
-    Switch_case {kwd_case=$1; expr=$2; colon=$3; statements=$4} }
+    let stop = match $4 with
+                 None -> $3#region
+               | Some `Sep (hd,_)
+               | Some `Term ((hd,_)::_) -> statement_to_region hd in
+    let region = cover $1#region stop
+    and value  = {kwd_case=$1; expr=$2; colon=$3; case_body=$4}
+    in {region; value} }
 
-default_case:
+switch_default:
   "default" ":" ioption(case_statements) {
-    Switch_default_case {kwd_default=$1; colon=$2; statements=$3} }
+    let stop =
+      match $3 with
+        None       -> $2#region
+      | Some stmts -> nsep_to_term_to_region statement_to_region stmts
+    let region = cover $1#region stop
+    and value  = {kwd_default=$1; colon=$2; default_body=$3}
+    in {region; value} }
 
 case_statements:
-  sep_or_term(case_statement,";") {
-    fst $1 : (statement, semi) Utils.nsepseq }
+  nsep_or_term(case_statement,";") { $1 }
 
 case_statement:
-  statement { $1 }
-| "break"   { SBreak $1 }
-
-(* XXX *)
+  statement {         $1 }
+| "break"   { S_Break $1 }
 
 (* While loop *)
 
 while_stmt(right_stmt):
   "while" par(while_cond) right_stmt {
-    let cond : expr par reg = $2 in
-    let {lpar; inside=expr; rpar} : expr par = cond.value in
     let region = cover $1#region (statement_to_region $3)
-    and value = {kwd_while=$1; lpar; expr; rpar; statement=$3}
+    and value  = {kwd_while=$1; invariant=$2=$3}
     in SWhile {region; value} }
 
 while_cond:
   expr { $1 }
 
-for_initialiser:
-  expr_stmt { $1 }
+(* EXPRESSIONS *)
 
-for_stmt(right_stmt):
-  attributes "for" "("
-    ioption(for_initialiser) ";"
-    ioption(expr) ";"
-    ioption(nsepseq(closed_non_decl_expr_stmt, ","))
-  ")" ioption(right_stmt) {
-    let initialiser = Core.Option.map $4 ~f:(fun f -> f [])
-    and condition    = $6
-    and afterthought = $8
-    and statement    = $10 in
-    let region_end   =
-      match $10 with
-        Some s -> statement_to_region s
-      | None   -> $9#region
-    in
-    let region = cover $2#region region_end
-    and value = {
-      attributes=$1;
-      kwd_for=$2;
-      lpar=$3;
-      initialiser;
-      semi1=$5;
-      condition;
-      semi2=$7;
-      afterthought;
-      rpar=$9;
-      statement;
-    }
-    in SFor {region;value}
-  }
-
-(* Expressions as Statements *)
-
-expr_stmt:
-  declaration                   { $1 }
-| non_decl_expr_stmt(expr_stmt) { fun attrs -> SExpr (attrs, $1) }
-
-non_decl_expr_stmt(right_stmt):
-  assign_stmt                                  { EAssign $1 }
-| increment_decrement_operators
-| call_expr
-| as_expr
-| ternary_expr(non_decl_expr_stmt(right_stmt)) { $1 }
-
-closed_non_decl_expr_stmt:
-  non_decl_expr_stmt(closed_non_decl_expr_stmt) { $1 }
-
-assign_lhs:
-  projection { EProj $1 }
-| variable   { EVar  $1 }
-
-assign_stmt:
-  assign_lhs "="  expr {
-    $1, {value = Eq; region = $2#region}, $3 } (* TODO Wrong regions! *)
-| assign_lhs "*=" expr {
-    $1, {value = Assignment_operator Times_eq; region=$2#region}, $3 }
-| assign_lhs "/=" expr {
-    $1, {value = Assignment_operator Div_eq; region=$2#region}, $3 }
-| assign_lhs "%=" expr {
-    $1, {value = Assignment_operator Mod_eq; region=$2#region}, $3 }
-| assign_lhs "+=" expr {
-    $1, {value = Assignment_operator Plus_eq; region = $2#region}, $3 }
-| assign_lhs "-=" expr {
-    $1, {value = Assignment_operator Min_eq; region = $2#region}, $3 }
-
-ternary_expr(expr):
-  disj_expr_level "?" expr ":" expr {
-    let start  = expr_to_region $1
-    and stop   = expr_to_region $5 in
-    let region = cover start stop in
-    let value  = {condition=$1; qmark=$2; truthy=$3; colon=$4; falsy=$5}
-    in ETernary {value; region}}
-
-increment_decrement_operators:
-  "++" variable {
-    let region = cover $1#region $2#region
-    and update_type = Increment $1 in
-    let value = {update_type; variable=$2}
-    in EPrefix {region; value}
-  }
-| "--" variable {
-    let region = cover $1#region $2#region
-    and update_type = Decrement $1 in
-    let value = {update_type; variable=$2}
-    in EPrefix {region; value}
-  }
-| variable "++" {
-    let region = cover $1#region $2#region
-    and update_type = Increment $2 in
-    let value = {update_type; variable=$1}
-    in EPostfix {region; value}
-  }
-| variable "--" {
-    let region = cover $1#region $2#region
-    and update_type = Decrement $2 in
-    let value  = {update_type; variable=$1}
-    in EPostfix {region; value}
-  }
+(* XXX *)
 
 (* Expressions *)
 
@@ -1025,6 +926,74 @@ array_rest_pattern:
     let region = cover $1#region $2#region
     and value  = {ellipsis=$1; rest=$2}
     in PRest {region; value} }
+
+(* Expressions as Statements *)
+
+expr_stmt:
+  declaration                   { $1 }
+| non_decl_expr_stmt(expr_stmt) { fun attrs -> SExpr (attrs, $1) }
+
+non_decl_expr_stmt(right_stmt):
+  assign_stmt                                  { EAssign $1 }
+| increment_decrement_operators
+| call_expr
+| as_expr
+| ternary_expr(non_decl_expr_stmt(right_stmt)) { $1 }
+
+closed_non_decl_expr_stmt:
+  non_decl_expr_stmt(closed_non_decl_expr_stmt) { $1 }
+
+assign_lhs:
+  projection { EProj $1 }
+| variable   { EVar  $1 }
+
+assign_stmt:
+  assign_lhs "="  expr {
+    $1, {value = Eq; region = $2#region}, $3 } (* TODO Wrong regions! *)
+| assign_lhs "*=" expr {
+    $1, {value = Assignment_operator Times_eq; region=$2#region}, $3 }
+| assign_lhs "/=" expr {
+    $1, {value = Assignment_operator Div_eq; region=$2#region}, $3 }
+| assign_lhs "%=" expr {
+    $1, {value = Assignment_operator Mod_eq; region=$2#region}, $3 }
+| assign_lhs "+=" expr {
+    $1, {value = Assignment_operator Plus_eq; region = $2#region}, $3 }
+| assign_lhs "-=" expr {
+    $1, {value = Assignment_operator Min_eq; region = $2#region}, $3 }
+
+ternary_expr(expr):
+  disj_expr_level "?" expr ":" expr {
+    let start  = expr_to_region $1
+    and stop   = expr_to_region $5 in
+    let region = cover start stop in
+    let value  = {condition=$1; qmark=$2; truthy=$3; colon=$4; falsy=$5}
+    in ETernary {value; region}}
+
+increment_decrement_operators:
+  "++" variable {
+    let region = cover $1#region $2#region
+    and update_type = Increment $1 in
+    let value = {update_type; variable=$2}
+    in EPrefix {region; value}
+  }
+| "--" variable {
+    let region = cover $1#region $2#region
+    and update_type = Decrement $1 in
+    let value = {update_type; variable=$2}
+    in EPrefix {region; value}
+  }
+| variable "++" {
+    let region = cover $1#region $2#region
+    and update_type = Increment $2 in
+    let value = {update_type; variable=$1}
+    in EPostfix {region; value}
+  }
+| variable "--" {
+    let region = cover $1#region $2#region
+    and update_type = Decrement $2 in
+    let value  = {update_type; variable=$1}
+    in EPostfix {region; value}
+  }
 
 (* DECLARATIONS *)
 

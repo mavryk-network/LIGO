@@ -42,7 +42,7 @@ let mk_children_attr (node : Attr.t wrap list) =
 
 let print_TL_Directive state (node : Directive.t) =
   let region, string = Directive.project node in
-  Tree.make_unary state "Directive" Tree.make_node ~region string
+  Tree.(make_unary state "Directive" make_node ~region string)
 
 (* PRINTING THE CST *)
 
@@ -945,41 +945,53 @@ and print_S_Switch state (node: switch_stmt reg) =
   and cases   = cases.value.inside in
   let print_subject state (node: expr) =
     Tree.make_unary state "<subject>" print_expr node in
-  let children = Tree.(mk_child print_subject subject
-                       :: mk_children_nseq print_case cases)
+  let children = Tree.[
+    mk_child print_subject subject;
+    mk_child print_cases   cases]
   in Tree.make state ~region "S_Switch" children
 
-and print_case state = function
-  Case    c -> print_Case    state c
-| Default c -> print_Default state c
+and print_cases state = function
+  AllCases c -> print_AllCases state c
+| Default  c -> print_Default  state c
 
-and print_Case state (node: switch_case) =
-  let {kwd_case=_; expr; colon=_; statements} = node in
+and print_AllCases state (node: all_cases) =
+  let normal_cases, default_case_opt = node in
+  let children = Tree.(
+    mk_children_nseq print_case normal_cases
+    @ [mk_child_opt print_switch_default default_case_opt])
+  in Tree.make state "AllCases" children
+
+and print_case state (node: switch_case reg) =
+  let Region.{value; region} = node in
+  let {kwd_case=_; expr; colon=_; case_body} = value in
   let children = Tree.[
     mk_child     print_expr       expr;
-    mk_child_opt print_statements statements]
-  in Tree.make state "Case" children
+    mk_child_opt print_statements case_body]
+  in Tree.make ~region state "<case>" children
+
+and print_Default state (node: switch_default reg) =
+  print_switch_default state node
+
+and print_switch_default state (node: switch_default reg) =
+  let Region.{value; region} = node in
+  let {kwd_default=_; colon=_; default_body} = value in
+  match default_body with
+    None -> Tree.make_node ~region state "<empty default>"
+  | Some stmts ->
+      Tree.make_unary ~region state "Default" print_statements stmts
 
 and print_statements state (node: statements) =
   Tree.of_nsep_or_term state "<statements>" print_statement node
-
-and print_Default state (node: switch_default) =
-  let {kwd_default=_; colon=_; statements} = node in
-  match statements with
-    None -> ()
-  | Some stmts ->
-      Tree.of_nsep_or_term state "Default" print_statement stmts
 
 (* While-loop statement *)
 
 and print_S_While state (node: while_stmt reg) =
   let Region.{region; value} = node in
-  let {kwd_while=_; invariant; statement} = value in
+  let {kwd_while=_; invariant; while_body} = value in
   let children = Tree.[
     mk_child print_expr      invariant.value.inside;
-    mk_child print_statement statement]
+    mk_child print_statement while_body]
   in Tree.make state ~region "S_While" children
-
 
 (* PRINTING (client-slide) *)
 
