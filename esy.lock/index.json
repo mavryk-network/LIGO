@@ -1,5 +1,5 @@
 {
-  "checksum": "5a38bda97f041bd123c9c0fe4d5b6056",
+  "checksum": "de0d2ee8bf0bb658b43090557c35e246",
   "root": "ligolang@link-dev:./esy.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -42,7 +42,7 @@
         "ligo-win32-ntdll-stubs@git:https://gitlab.com/ligolang/win32-ntdll-stubs.git#357dfa49fa7c55e92c5a45187fa58a4b1e35e795@d41d8cd9",
         "esy-libffi@3.3.1@d41d8cd9", "esy-libev@4.33.1@d41d8cd9",
         "esy-gmp@6.2.1001@d41d8cd9", "@opam/yojson@opam:2.1.0@157478b0",
-        "@opam/tezos-rust-libs@opam:1.5@b842bf0e",
+        "@opam/tezos-rust-libs@opam:1.5@086fceda",
         "@opam/tezos-micheline@opam:18.0@841121b3",
         "@opam/tezos-hacl@opam:18.0@47f272a3",
         "@opam/tezos-crypto@opam:18.0@e89c463e",
@@ -1288,7 +1288,7 @@
       "dependencies": [
         "ocaml@4.14.1000@d41d8cd9", "@opam/tezos-stdlib@opam:18.0@ac198f3a",
         "@opam/tezos-sapling-parameters@opam:1.1.0@d91efb97",
-        "@opam/tezos-rust-libs@opam:1.5@b842bf0e",
+        "@opam/tezos-rust-libs@opam:1.5@086fceda",
         "@opam/tezos-lwt-result-stdlib@opam:18.0@ee89cf9d",
         "@opam/tezos-error-monad@opam:18.0@4302d9f7",
         "@opam/tezos-crypto@opam:18.0@e89c463e",
@@ -1305,7 +1305,7 @@
       "devDependencies": [
         "ocaml@4.14.1000@d41d8cd9", "@opam/tezos-stdlib@opam:18.0@ac198f3a",
         "@opam/tezos-sapling-parameters@opam:1.1.0@d91efb97",
-        "@opam/tezos-rust-libs@opam:1.5@b842bf0e",
+        "@opam/tezos-rust-libs@opam:1.5@086fceda",
         "@opam/tezos-lwt-result-stdlib@opam:18.0@ee89cf9d",
         "@opam/tezos-error-monad@opam:18.0@4302d9f7",
         "@opam/tezos-crypto@opam:18.0@e89c463e",
@@ -1319,8 +1319,8 @@
         "@opam/conf-rust@opam:0.1@cfc45709"
       ]
     },
-    "@opam/tezos-rust-libs@opam:1.5@b842bf0e": {
-      "id": "@opam/tezos-rust-libs@opam:1.5@b842bf0e",
+    "@opam/tezos-rust-libs@opam:1.5@086fceda": {
+      "id": "@opam/tezos-rust-libs@opam:1.5@086fceda",
       "name": "@opam/tezos-rust-libs",
       "version": "opam:1.5",
       "source": {
@@ -1336,11 +1336,6 @@
         }
       },
       "overrides": [
-        {
-          "buildEnv": {
-            "CC": "#{os == 'windows' ? 'x86_64-w64-mingw32-gcc': 'cc'}"
-          }
-        },
         {
           "opamoverride":
             "esy.lock/overrides/opam__s__tezos_rust_libs_opam__c__1.5_opam_override"
