@@ -30,6 +30,7 @@ type 'payload wrap = <
   add_attribute    : attribute         -> 'payload wrap;
   add_directive    : Directive.t       -> 'payload wrap;
   add_comment      : comment           -> 'payload wrap;
+  set_comments     : comment list      -> 'payload wrap;
   add_line_comment : string Region.reg -> 'payload wrap
 >
 

@@ -30,6 +30,7 @@ type 'payload wrap = <
   add_attribute    : attribute         -> 'payload wrap;
   add_directive    : Directive.t       -> 'payload wrap;
   add_comment      : comment           -> 'payload wrap;
+  set_comments     : comment list      -> 'payload wrap;
   add_line_comment : string Region.reg -> 'payload wrap
 >
 
@@ -64,6 +65,7 @@ let wrap ?(attributes=[]) ?directive ?comment ?line_com payload region =
     method add_attribute  attr = {< attributes = attr :: attributes >}
     method add_directive  dir  = {< directives = dir :: directives >}
     method add_comment    com  = {< comments = com :: comments >}
+    method set_comments   coms = {< comments = coms >}
     method add_line_comment c  = {< line_comment = Some c >}
   end
 

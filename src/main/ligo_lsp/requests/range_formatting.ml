@@ -15,6 +15,22 @@ type declaration =
   , Cst_pascaligo.CST.declaration )
   Dialect_cst.dialect
 
+(* AAAAAAAAAAAAAAAAAA *)
+let deattach_toplevel_comment : declaration -> declaration =
+  Dialect_cst.from_dialect
+    { cameligo =
+        ((fun x -> Dialect_cst.CameLIGO x)
+        <@ Cst_cameligo.CST.(
+             function
+             | D_Let d ->
+               let f (a, b, c) = a#set_comments [], b, c in
+               D_Let { d with value = f d.value }
+             | _ -> failwith ""))
+    ; jsligo = failwith ""
+    ; pascaligo = failwith ""
+    }
+
+
 let decl_range : declaration -> Range.t =
   Range.of_region
   <@ Dialect_cst.from_dialect
@@ -71,6 +87,7 @@ let range_formatting
     let covering_interval = Range.cover_nseq (Nseq.nseq_map decl_range (d, ds)) in
     let content =
       declarations_in_range
+      |> List.map ~f:deattach_toplevel_comment
       |> List.map ~f:(print_decl pp_mode)
       |> String.concat ~sep:"\n"
       |> strip_trailing_newline
