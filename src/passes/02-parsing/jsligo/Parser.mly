@@ -76,13 +76,13 @@ let hook_S_Attr = hook @@ fun a s -> S_Attr (a, s)
 (* %on_error_reduce nseq(Attr) *)
 (* %on_error_reduce bin_op(add_expr_level,PLUS,mult_expr_level) *)
 (* %on_error_reduce bin_op(add_expr_level,MINUS,mult_expr_level) *)
-(* %on_error_reduce call_expr_level *)
+(* %on_error_reduce app_expr_level *)
 (* %on_error_reduce bin_op(disj_expr_level,BOOL_OR,conj_expr_level) *)
 (* %on_error_reduce type_expr *)
 (* %on_error_reduce core_type *)
 (* %on_error_reduce chevrons(type_ctor_args) *)
 (* %on_error_reduce disj_expr_level *)
-(* %on_error_reduce member_expr *)
+(* %on_error_reduce core_expr *)
 (* %on_error_reduce add_expr_level *)
 (* %on_error_reduce nsepseq(binding_initializer,COMMA) *)
 (* %on_error_reduce nsepseq(module_name,DOT) *)
@@ -451,7 +451,7 @@ core_type_no_string:
 %inline (* Was on [core_type_no_string] *)
 no_attr_type:
   "<int>"           { T_Int       $1 }
-| type_name         { T_Var       $1 } (* "_" unsupported in type checker *)
+| type_name         { T_Var       $1 } (* "_" unsupported in type-checker *)
 | type_ctor_app     { T_App       $1 }
 | type_tuple        { T_Cart      $1 }
 | par(type_expr)    { T_Par       $1 }
@@ -599,7 +599,7 @@ block_stmt:
    instead of the obvious [par(expr)], is meant to identify the
    syntactic construct for error messages. The only [par(expr)] as a
    left-hand side in an LR item corresponds to
-   [member_expr: ... | par(expr)]
+   [core_expr: ... | par(expr)]
    so the context is clear: a general expression between parentheses. *)
 
 if_stmt:
@@ -731,26 +731,25 @@ while_cond:
 
 (* EXPRESSIONS *)
 
-(* XXX *)
-
-(* Expressions *)
-
 expr:
   fun_expr           { EFun $1 }
 | ternary_expr(expr)
-| as_expr
+| cast_expr
 | disj_expr_level    { $1 }
 
-as_expr:
-  call_expr_level "as" type_expr {
+(* Cast expressions *)
+
+cast_expr:
+  app_expr_level "as" type_expr {
     let stop   = type_expr_to_region $3 in
     let region = cover (expr_to_region $1) stop
-    in EAnnot {region; value = $1,$2,$3} }
+    in E_Typed {region; value=($1,$2,$3)} }
+
+(* Logical disjuction *)
 
 disj_expr_level:
-  bin_op(disj_expr_level, "||", conj_expr_level) {
-    ELogic (BoolExpr (Or $1)) }
-| conj_expr_level { $1 }
+  bin_op(disj_expr_level, "||", conj_expr_level) { E_Or $1 }
+| conj_expr_level                                {      $1 }
 
 bin_op(arg1,op,arg2):
   arg1 op arg2 {
@@ -758,96 +757,129 @@ bin_op(arg1,op,arg2):
     and value  = {arg1=$1; op=$2; arg2=$3}
     in {region; value} }
 
+(* Logical conjunction *)
+
 conj_expr_level:
-  bin_op(conj_expr_level, "&&", comp_expr_level) {
-    ELogic (BoolExpr (And $1)) }
-| comp_expr_level { $1 }
+  bin_op(conj_expr_level, "&&", comp_expr_level) { E_And $1 }
+| comp_expr_level                                {       $1 }
+
+(* Comparisons *)
 
 comp_expr_level:
-  bin_op(comp_expr_level, "<", add_expr_level)  {
-    ELogic (CompExpr (Lt $1)) }
-| bin_op(comp_expr_level, "<=", add_expr_level) {
-    ELogic (CompExpr (Leq $1)) }
-| bin_op(comp_expr_level, gt, add_expr_level)   {
-    ELogic (CompExpr (Gt $1)) }
-| bin_op(comp_expr_level, ge, add_expr_level) {
-    ELogic (CompExpr (Geq $1)) }
-| bin_op(comp_expr_level, "==", add_expr_level) {
-    ELogic (CompExpr (Equal $1)) }
-| bin_op(comp_expr_level, "!=", add_expr_level) {
-    ELogic (CompExpr (Neq $1)) }
-| add_expr_level { $1 }
+  bin_op(comp_expr_level, "<", add_expr_level)  { E_Lt    $1 }
+| bin_op(comp_expr_level, "<=", add_expr_level) { E_Leq   $1 }
+| bin_op(comp_expr_level, gt, add_expr_level)   { E_Gt    $1 }
+| bin_op(comp_expr_level, ge, add_expr_level)   { E_Geq   $1 }
+| bin_op(comp_expr_level, "==", add_expr_level) { E_Equal $1 }
+| bin_op(comp_expr_level, "!=", add_expr_level) { E_Neq   $1 }
+| add_expr_level                                {         $1 }
+
+(* Addition & subtraction *)
 
 add_expr_level:
-  bin_op(add_expr_level, "+", mult_expr_level)   {  EArith (Add $1) }
-| bin_op(add_expr_level, "-", mult_expr_level)   {  EArith (Sub $1) }
-| mult_expr_level                                {               $1 }
+  bin_op(add_expr_level, "+", mult_expr_level)   { E_Add $1 }
+| bin_op(add_expr_level, "-", mult_expr_level)   { E_Sub $1 }
+| mult_expr_level                                {       $1 }
+
+(* Multiplications & division *)
 
 mult_expr_level:
-  bin_op(mult_expr_level, "*", unary_expr_level) { EArith (Mult $1) }
-| bin_op(mult_expr_level, "/", unary_expr_level) {  EArith (Div $1) }
-| bin_op(mult_expr_level, "%", unary_expr_level) {  EArith (Mod $1) }
-| unary_expr_level                               {               $1 }
+  bin_op(mult_expr_level, "*", unary_expr_level) { E_Mult $1 }
+| bin_op(mult_expr_level, "/", unary_expr_level) { E_Div  $1 }
+| bin_op(mult_expr_level, "%", unary_expr_level) { E_Mod  $1 }
+| unary_expr_level                               {        $1 }
+
+(* Logical and arithmetic negation *)
 
 unary_expr_level:
-  "-" call_expr_level {
+  "-" app_expr_level {
     let region = cover $1#region (expr_to_region $2)
     and value  = {op=$1; arg=$2}
-    in EArith (Neg {region; value})
+    in E_Neg {region; value}
   }
-| "!" call_expr_level {
+| "!" app_expr_level {
     let region = cover $1#region (expr_to_region $2)
-    and value  = {op=$1; arg=$2} in
-    ELogic (BoolExpr (Not ({region; value})))
+    and value  = {op=$1; arg=$2}
+    in E_Not {region; value}
   }
-| increment_decrement_operators
-| call_expr_level { $1 }
+| incr_expr
+| decr_expr
+| app_expr_level { $1 }
 
-call_expr_level:
-  call_expr | member_expr { $1 }
+(* Function calls & data constructor applications *)
 
-(* Function calls *)
+app_expr_level:
+  app_expr | core_expr { $1 }
 
-call_expr:
-  "contract_of" "(" module_selection ")" {
-    let region = cover $1#region $4#region
-    in EContract {region; value=$3 }
+app_expr:
+  "contract_of" par(module_selection) {
+    let region = cover $1#region $2.region
+    and value  = {kwd_contract_of=$1; module_path=$2}
+    in E_Contract {region; value}
   }
-| lambda par(ioption(nsepseq(fun_arg,","))) {
-    let par    = $2.value in
-    let region = cover (expr_to_region $1) $2.region in
-    let args   =
-      match par.inside with
-        None ->
-          Unit {region=$2.region; value = (par.lpar, par.rpar)}
-      | Some args ->
-          Multiple {$2 with value = {par with inside=args}}
-    in ECall {region; value = ($1, args)} }
+| app_expr_level arguments {
+    let region = cover (expr_to_region $1) $2.region
+    in E_App {region; value=($1,$2)} }
 
-lambda:
-  call_expr
-| member_expr { $1 } (* TODO: specialise *)
+arguments:
+  par(ioption(nsepseq(argument,","))) { $1 }
 
-fun_arg:
+argument:
   expr { $1 }
 
-(* General expressions *)
+(* Core expressions *)
 
-member_expr:
-  "_" | variable  { E_Var      $1 }
-| "<int>"         { E_Int      $1 }
+core_expr:
+  "[@attr]" core_expr { E_Attr ($1,$2) }
+| no_attr_expr        { $1 }
+
+no_attr_expr:
+(*  "_" | variable  { E_Var      $1 } *)
+  "<int>"         { E_Int      $1 }
 | "<nat>"         { E_Nat      $1 }
-| "<bytes>"       { E_Bytes    $1 }
+| "<mutez>"       { E_Mutez    $1 }
 | "<string>"      { E_String   $1 }
 | "<verbatim>"    { E_Verbatim $1 }
-| "<mutez>"       { E_Mutez    $1 }
-| ctor_expr       { EConstr  $1            }
+| "<bytes>"       { E_Bytes    $1 }
+| unit            { E_Unit     $1 }
+
 | projection      { EProj    $1            }
 | code_inj        { ECodeInj $1            }
 | par(expr)       { EPar     $1            }
 | module_access_e { EModA    $1            }
 | array_literal   { EArray   $1            }
-| object_literal  { EObject  $1            }
+| record_expr  { EObject  $1            }
+
+(* Unit (value and pattern) *)
+
+unit:
+  "(" ")" { {region = cover $1#region $2#region; value = ($1,$2)} }
+
+(* Record expressions (a.k.a. "objects" in JS) *)
+
+record_expr: (* TODO: keep the terminator *)
+  braces(sep_or_term(property,object_sep) { fst $1 }) { $1 }
+
+property:
+  field_name {
+    let region = $1#region in
+    Punned_property {region; value = EVar $1}
+  }
+| attributes property_name ":" expr {
+    let region = cover (expr_to_region $2) (expr_to_region $4)
+    and value  = {attributes=$1; name=$2; colon=$3; value=$4}
+    in Property {region; value}
+  }
+| "..." expr {
+    let region = cover $1#region (expr_to_region $2)
+    and value : property_rest = {ellipsis=$1; expr=$2}
+    in Property_rest {region; value} }
+
+property_name:
+  "<int>"    { EArith  (Int $1)    }
+| "<string>" { EString (String $1) }
+| ctor
+| field_name { EVar $1 }
 
 (* Qualified values *)
 
@@ -873,33 +905,18 @@ code_inj:
 (* Tuple projection *)
 
 projection:
-  member_expr brackets(expr) {
+  core_expr brackets(expr) {
     let region = cover (expr_to_region $1) $2.region in
     let value  = {expr=$1; selection = Component $2 }
     in {region; value}
   }
-| member_expr "." field_name {
+| core_expr "." field_name {
     let selection =
       FieldName {region = cover $2#region $3#region;
                  value  = {dot=$2; value=$3}} in
     let region = cover (expr_to_region $1) $3#region
     and value  = {expr=$1; selection}
     in {region; value} }
-
-(* Constructor applications *)
-
-ctor_expr:
-  ctor "(" ctor_args? ")" {
-    let region = cover $1#region $4#region
-    in {region; value = ($1,$3)} }
-
-ctor_args:
-  nsepseq(ctor_arg,",") {
-    let region = nsepseq_to_region expr_to_region $1
-    in ESeq {region; value=$1} }
-
-ctor_arg:
-  expr { $1 }
 
 (* Array Patterns *)
 
@@ -935,9 +952,10 @@ expr_stmt:
 
 non_decl_expr_stmt(right_stmt):
   assign_stmt                                  { EAssign $1 }
-| increment_decrement_operators
-| call_expr
-| as_expr
+| incr_expr
+| decr_expr
+| app_expr
+| cast_expr
 | ternary_expr(non_decl_expr_stmt(right_stmt)) { $1 }
 
 closed_non_decl_expr_stmt:
@@ -969,16 +987,10 @@ ternary_expr(expr):
     let value  = {condition=$1; qmark=$2; truthy=$3; colon=$4; falsy=$5}
     in ETernary {value; region}}
 
-increment_decrement_operators:
+incr_expr:
   "++" variable {
     let region = cover $1#region $2#region
     and update_type = Increment $1 in
-    let value = {update_type; variable=$2}
-    in EPrefix {region; value}
-  }
-| "--" variable {
-    let region = cover $1#region $2#region
-    and update_type = Decrement $1 in
     let value = {update_type; variable=$2}
     in EPrefix {region; value}
   }
@@ -988,12 +1000,22 @@ increment_decrement_operators:
     let value = {update_type; variable=$1}
     in EPostfix {region; value}
   }
+
+decr_expr:
+  "--" variable {
+    let region = cover $1#region $2#region
+    and update_type = Decrement $1 in
+    let value = {update_type; variable=$2}
+    in EPrefix {region; value}
+  }
 | variable "--" {
     let region = cover $1#region $2#region
     and update_type = Decrement $2 in
     let value  = {update_type; variable=$1}
     in EPostfix {region; value}
   }
+
+(* XXX *)
 
 (* DECLARATIONS *)
 
@@ -1139,29 +1161,3 @@ array_item:
 
 array_literal:
   brackets(ioption(nsepseq(array_item,","))) { $1 }
-
-(* Records (a.k.a. "objects" in JS) *)
-
-object_literal: (* TODO: keep the terminator *)
-  braces(sep_or_term(property,object_sep) { fst $1 }) { $1 }
-
-property:
-  field_name {
-    let region = $1#region in
-    Punned_property {region; value = EVar $1}
-  }
-| attributes property_name ":" expr {
-    let region = cover (expr_to_region $2) (expr_to_region $4)
-    and value  = {attributes=$1; name=$2; colon=$3; value=$4}
-    in Property {region; value}
-  }
-| "..." expr {
-    let region = cover $1#region (expr_to_region $2)
-    and value : property_rest = {ellipsis=$1; expr=$2}
-    in Property_rest {region; value} }
-
-property_name:
-  "<int>"    { EArith  (Int $1)    }
-| "<string>" { EString (String $1) }
-| ctor
-| field_name { EVar $1 }

@@ -416,11 +416,14 @@ and print_ctor_params state = function
 and print_pattern state = function
   P_Attr     p -> print_P_Attr     state p
 | P_Bytes    p -> print_P_Bytes    state p
+| P_Int      p -> print_P_Int      state p
 | P_Mutez    p -> print_P_Mutez    state p
 | P_Nat      p -> print_P_Nat      state p
 | P_Record   p -> print_P_Record   state p
+| P_String   p -> print_P_String   state p
 | P_Tuple    p -> print_P_Tuple    state p
 | P_Typed    p -> print_P_Typed    state p
+| P_Unit     p -> print_P_Unit     state p
 | P_Var      p -> print_P_Var      state p
 | P_Verbatim p -> print_P_Verbatim state p
 
@@ -438,6 +441,11 @@ and print_P_Attr state (node : attribute * pattern) =
 and print_P_Bytes state (node: (lexeme * Hex.t) wrap) =
   Tree.make_bytes "P_Bytes" state node
 
+(* Integers in patterns *)
+
+and print_P_Int state (node : (lexeme * Z.t) wrap) =
+  Tree.make_int "P_Int" state node
+
 (* Mutez in patterns *)
 
 and print_P_Mutez state (node : (lexeme * Int64.t) wrap) =
@@ -454,6 +462,11 @@ and print_P_Record state (node: pattern record) =
   let Region.{value; region} = node in
   let print = print_field print_pattern in
   Tree.of_sep_or_term ~region state "P_Record" print value.inside
+
+(* String literals as patterns *)
+
+and print_P_String state (node : lexeme wrap) =
+  Tree.(make_unary state "P_String" make_string node)
 
 (* Tuple patterns *)
 
@@ -482,6 +495,12 @@ and print_P_Typed state (node : typed_pattern reg) =
     mk_child print_pattern         pattern;
     mk_child print_type_annotation type_annot]
   in Tree.make state "P_Typed" ~region children
+
+(* Unit pattern *)
+
+and print_P_Unit state (node : the_unit reg) =
+  let Region.{region; _} = node in
+  Tree.make_node ~region state "P_Unit"
 
 (* A pattern variable *)
 

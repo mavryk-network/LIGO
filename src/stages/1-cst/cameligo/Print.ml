@@ -393,9 +393,9 @@ and print_pattern state = function
 | P_String   p -> print_P_String   state p
 | P_Tuple    p -> print_P_Tuple    state p
 | P_Typed    p -> print_P_Typed    state p
+| P_Unit     p -> print_P_Unit     state p
 | P_Var      p -> print_P_Var      state p
 | P_Verbatim p -> print_P_Verbatim state p
-| P_Unit     p -> print_P_Unit     state p
 
 (* A constructor application (or constant constructor) in patterns *)
 
@@ -543,6 +543,12 @@ and print_P_Typed state (node : typed_pattern reg) =
     mk_child print_type_annotation type_annot]
   in Tree.make state "P_Typed" ~region children
 
+(* Unit pattern *)
+
+and print_P_Unit state (node : the_unit reg) =
+  let Region.{region; _} = node in
+  Tree.make_node ~region state "P_Unit"
+
 (* A pattern variable *)
 
 and print_P_Var state (node : variable) =
@@ -552,12 +558,6 @@ and print_P_Var state (node : variable) =
 
 and print_P_Verbatim state (node : lexeme wrap) =
   Tree.(make_unary state "P_Verbatim" make_verbatim node)
-
-(* Unit pattern *)
-
-and print_P_Unit state (node : the_unit reg) =
-  let Region.{region; _} = node in
-  Tree.make_node ~region state "P_Unit"
 
 (* EXPRESSIONS *)
 

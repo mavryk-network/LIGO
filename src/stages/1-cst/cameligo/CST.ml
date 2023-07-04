@@ -318,9 +318,9 @@ and pattern =
 | P_String   of lexeme wrap                     (* "string"  *)
 | P_Tuple    of pattern tuple reg               (* 1, x      *)
 | P_Typed    of typed_pattern reg               (* (x : int) *)
+| P_Unit     of the_unit reg                    (* ()        *)
 | P_Var      of variable                        (* x         *)
 | P_Verbatim of lexeme wrap                     (* {|foo|}   *)
-| P_Unit     of the_unit reg                    (* ()        *)
 
 (* List pattern *)
 

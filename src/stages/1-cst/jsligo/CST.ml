@@ -285,7 +285,7 @@ and type_expr =
 | T_Cart      of cartesian                         (* [t, [u, v]]       *)
 | T_Fun       of fun_type                          (* (a : t) => u      *)
 | T_Int       of (lexeme * Z.t) wrap               (* 42                *)
-| T_ModPath   of type_expr module_path reg         (* A.B.[u, v]        *)
+| T_ModPath   of type_expr module_path reg         (* A.B.list<u>       *)
 | T_Par       of type_expr par                     (* (t)               *)
 | T_Parameter of parameter_of_type reg             (* parameter_of m    *)
 | T_Record    of type_expr record                  (* {x; @a y : t}     *)
@@ -351,11 +351,14 @@ and variant_comp = {
 and pattern =
   P_Attr     of (attribute * pattern)    (* @a [x, _]      *)
 | P_Bytes    of (lexeme * Hex.t) wrap    (* 0xFFFA         *)
+| P_Int      of (lexeme * Z.t) wrap      (* 42             *)
 | P_Mutez    of (lexeme * Int64.t) wrap  (* 5mutez         *)
 | P_Nat      of (lexeme * Z.t) wrap      (* 4n             *)
 | P_Record   of pattern record           (* {x, y : 0}     *)
+| P_String   of lexeme wrap              (* "string"       *)
 | P_Tuple    of pattern tuple            (* [x, ...y, z]   *)
 | P_Typed    of typed_pattern reg        (* [] : list<int> *)
+| P_Unit     of the_unit reg             (* ()             *)
 | P_Var      of variable                 (* x              *)
 | P_Verbatim of lexeme wrap              (* {|foo|}        *)
 
@@ -638,11 +641,14 @@ let rec type_expr_to_region = function
 let rec pattern_to_region = function
   P_Attr   (_, p) -> pattern_to_region p
 | P_Bytes  w -> w#region
+| P_Int    w -> w#region
 | P_Mutez  w -> w#region
 | P_Nat    w -> w#region
-| P_Record {region; _}
+| P_Record {region; _} -> region
+| P_String w-> w#region
 | P_Tuple  {region; _}
-| P_Typed  {region; _} -> region
+| P_Typed  {region; _}
+| P_Unit   {region; _} -> region
 | P_Var w -> w#region
 | P_Verbatim w -> w#region
 
