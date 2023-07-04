@@ -94,7 +94,7 @@ let program_sig_ : Signature.t -> (Signature.item list, _, _) C.t =
 
 let dynamic_entries sig_ =
   let loc = Location.generated in
-  let dyn_t = Type.(t_big_map ~loc (t_nat ~loc ()) (t_bytes ~loc ()) ()) in
+  let nat_big_map = Type.(t_big_map ~loc (t_nat ~loc ()) (t_bytes ~loc ()) ()) in
   let helpers =
     List.filter_map sig_ ~f:(function
         | Signature.S_value (var, ty, attr) when attr.dyn_entry ->
@@ -105,11 +105,11 @@ let dynamic_entries sig_ =
                 , Context.Attrs.Value.default )
             ; Signature.S_value
                 ( Value_var.add_prefix "set_" var
-                , Type.(t_arrow ~loc ty (t_arrow ~loc dyn_t dyn_t ()) ())
+                , Type.(t_arrow ~loc (t_pair ~loc ty nat_big_map ()) nat_big_map ())
                 , Context.Attrs.Value.default )
             ; Signature.S_value
                 ( Value_var.add_prefix "get_" var
-                , Type.(t_arrow ~loc dyn_t (t_option ~loc ty ()) ())
+                , Type.(t_arrow ~loc nat_big_map (t_option ~loc ty ()) ())
                 , Context.Attrs.Value.default )
             ]
         | _ -> None)

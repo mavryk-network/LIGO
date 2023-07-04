@@ -37,6 +37,14 @@ struct
     create ~layout fields
 
 
+  let of_alist_default_layout_exn fields =
+    let layout =
+      L.default (List.map ~f:(fun (name, _x) -> Layout.{ name; annot = None }) fields)
+    in
+    let fields = Label.Map.of_alist_exn fields in
+    create ~layout fields
+
+
   let hash_fold_t f state t = Map.hash_fold_m__t (module Label) f state t.fields
   let length t = Map.length t.fields
 

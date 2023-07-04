@@ -85,6 +85,14 @@ let t__type_ ~loc t : type_expression = t_constant ~loc _type_ [ t ]
       , "views" )]
 
 
+let t__type_ ~loc t1 t2 : type_expression = t_constant ~loc _type_ [ t1; t2 ]
+  [@@map _type_, ("map", "big_map")]
+
+
+let d__type_ ~loc x : declaration = Location.wrap ~loc (D__type_ x)
+  [@@map _type_, ("value", "irrefutable_match", "type", "module")]
+
+
 let t_mutez = t_tez
 
 let t_abstraction1 ~loc name kind : type_expression =
@@ -217,6 +225,11 @@ let get_t_option (t : type_expression) : type_expression option =
   | _ -> None
 
 
+let t_option ~loc (t : type_expression) : type_expression =
+  let fields = [ Label.of_string "Some", t; Label.of_string "None", t_unit ~loc () ] in
+  make_t ~loc (T_sum (Row.of_alist_default_layout_exn fields))
+
+
 let get_t_inj (t : type_expression) (v : Literal_types.t) : type_expression list option =
   match t.type_content with
   | T_constant { language = _; injection; parameters }
@@ -340,7 +353,7 @@ let e__ct_ p : expression_content = E_constant { cons_name = C__CT_; arguments =
 
 let e__ct_ p p' p'' : expression_content =
   E_constant { cons_name = C__CT_; arguments = [ p; p'; p'' ] }
-  [@@map _ct_, ("map_add", "test_cons_views")]
+  [@@map _ct_, ("map_add", "test_cons_views", "map_update")]
 
 
 let e__type_ p : expression_content = E_literal (Literal__type_ p)

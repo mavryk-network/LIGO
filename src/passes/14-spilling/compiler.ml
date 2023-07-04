@@ -227,10 +227,10 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
   | E_type_abstraction _
   | E_type_inst _ ->
     raise.error @@ corner_case ~loc:__LOC__ (Format.asprintf "Type instance: This program should be monomorphised")
-  | E_let_in {let_binder; rhs; let_result; attributes = { inline; no_mutation=_; view=_; public=_ ; hidden = _ ; thunk = _; entry = _ } } ->
+  | E_let_in {let_binder; rhs; let_result; attributes  } ->
     let rhs' = self rhs in
     let result' = self let_result in
-    return (E_let_in (rhs', inline, ((Binder.get_var let_binder, rhs'.type_expression), result')))
+    return (E_let_in (rhs', attributes.inline, ((Binder.get_var let_binder, rhs'.type_expression), result')))
   | E_literal l -> return @@ E_literal l
   | E_variable name -> return @@ E_variable name
   | E_application {lamb; args} ->

@@ -2,7 +2,9 @@ module Errors = Errors
 module Helpers = Helpers
 open Ligo_prim
 
-let all_program ~raise init = Make_entry_point.make_main_module ~raise init
+let all_program ~raise init =
+  init |> Make_dynamic_entries.make ~raise |> Make_entry_point.make_main_module ~raise 
+
 
 let all_contract ~raise entrypoints module_path (prg : Ast_typed.program) =
   let module_ = Helpers.get_module module_path prg in
@@ -13,6 +15,7 @@ let all_contract ~raise entrypoints module_path (prg : Ast_typed.program) =
       Helpers.strip_entry_annotations module_
       |> Helpers.annotate_with_entry ~raise entrypoints
   in
+  let module_ = Make_dynamic_entries.program ~raise module_ in
   let main_name, module_ = Make_entry_point.program ~raise module_ in
   let prg, () = Helpers.update_module module_path (fun _ -> module_, ()) prg in
   let prg, main_name, contract_type =

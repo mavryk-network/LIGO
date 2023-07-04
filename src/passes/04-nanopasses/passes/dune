@@ -8,6 +8,7 @@
   flag
   morphing
   ; nanopasses:
+  dynamic_entries
   map_lookup
   errors
   unit_test_helpers

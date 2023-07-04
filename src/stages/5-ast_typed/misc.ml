@@ -133,6 +133,7 @@ let get_entry (lst : program) (name : Value_var.t) : expression option =
             ; hidden = _
             ; thunk = _
             ; entry = _
+            ; dyn_entry = _
             }
         } -> if Binder.apply (Value_var.equal name) binder then Some expr else None
     | D_irrefutable_match _ | D_type _ | D_module _ -> None

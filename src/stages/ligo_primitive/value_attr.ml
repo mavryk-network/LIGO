@@ -21,10 +21,10 @@ open Format
 
 let pp_if_set str ppf attr = if attr then fprintf ppf "[@@%s]" str else fprintf ppf ""
 
-let pp ppf { inline; no_mutation; view; entry; public; hidden; thunk } =
+let pp ppf { inline; no_mutation; view; entry; public; hidden; thunk ; dyn_entry } =
   fprintf
     ppf
-    "%a%a%a%a%a%a%a"
+    "%a%a%a%a%a%a%a%a"
     (pp_if_set "inline")
     inline
     (pp_if_set "no_mutation")
@@ -39,6 +39,8 @@ let pp ppf { inline; no_mutation; view; entry; public; hidden; thunk } =
     hidden
     (pp_if_set "thunk")
     thunk
+    (pp_if_set "dyn_entry")
+    dyn_entry
 
 
 let default_attributes =
