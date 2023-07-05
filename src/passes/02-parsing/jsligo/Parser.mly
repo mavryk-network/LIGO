@@ -492,21 +492,6 @@ type_component_no_string:
 type_component:
   type_expr { $1 }
 
-(* Record types (a.k.a. "object types" in JS) *)
-
-record(field_kind):
-  braces(sep_of_term(field(field_kind),object_sep)) { $1 }
-
-field(field_kind):
-  attributes field_name ioption(":" field_kind { $1,$2 }) {
-    fun region_of_field_kind ->
-      let region =
-        match $3 with
-          None -> $2#region
-        | Some (_, k) -> cover $2#region (region_of_field_kind k)
-      and value = {attributes=$1; field_name=$2; field_rhs=$3}
-      in {region; value} }
-
 (* Parameter of contract *)
 
 parameter_of_type:
@@ -560,6 +545,24 @@ union_or_record:
     match $1 with
       `Sep (record, []) -> T_Record record
     | _ -> T_Union $1 }
+
+(* Record types (a.k.a. "object types" in JS) *)
+
+record(field_kind):
+  braces(sep_of_term(field(field_kind),field_sep)) { $1 }
+
+field_sep:
+  ";" | "," { $1 }
+
+field(field_kind):
+  attributes field_name ioption(":" field_kind { $1,$2 }) {
+    fun region_of_field_kind ->
+      let region =
+        match $3 with
+          None -> $2#region
+        | Some (_,k) -> cover $2#region (region_of_field_kind k)
+      and value = {attributes=$1; field_name=$2; field_rhs=$3}
+      in {region; value} }
 
 (* STATEMENTS *)
 
@@ -842,13 +845,14 @@ no_attr_expr:
 | "<verbatim>"    { E_Verbatim $1 }
 | "<bytes>"       { E_Bytes    $1 }
 | unit            { E_Unit     $1 }
+| record(expr)    { E_Record   $1 }
 
-| projection      { EProj    $1            }
-| code_inj        { ECodeInj $1            }
-| par(expr)       { EPar     $1            }
-| module_access_e { EModA    $1            }
-| array_literal   { EArray   $1            }
-| record_expr  { EObject  $1            }
+| projection      { EProj      $1            }
+| code_inj        { ECodeInj   $1            }
+| par(expr)       { EPar       $1            }
+| module_access_e { EModA      $1            }
+| array_literal   { EArray     $1            }
+
 
 (* Unit (value and pattern) *)
 
@@ -857,8 +861,8 @@ unit:
 
 (* Record expressions (a.k.a. "objects" in JS) *)
 
-record_expr: (* TODO: keep the terminator *)
-  braces(sep_or_term(property,object_sep) { fst $1 }) { $1 }
+record_expr:
+  braces(sep_or_term(property,field_sep) { fst $1 }) { $1 }
 
 property:
   field_name {
@@ -1062,17 +1066,15 @@ var_pattern:
 object_pattern:
   braces(property_patterns) { PObject $1 }
 
-object_sep:
-  ";" | "," { $1 }
 
 property_patterns:
   property_pattern {
     $1, []
   }
-| property_patterns object_sep property_pattern {
+| property_patterns field_sep property_pattern {
     Utils.(nsepseq_rev $1 |> nsepseq_cons $3 ($2) |> nsepseq_rev)
   }
-| property_patterns object_sep object_rest_pattern {
+| property_patterns field_sep object_rest_pattern {
     Utils.(nsepseq_rev $1 |> nsepseq_cons $3 $2 |> nsepseq_rev) }
 
 property_pattern:
