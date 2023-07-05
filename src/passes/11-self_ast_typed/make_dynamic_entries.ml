@@ -5,78 +5,39 @@ open Ligo_prim
 let default_dynmod = "Dynamic_entries"
 let default_contract_var = Module_var.of_input_var ~loc:Location.generated default_dynmod
 
-let get_dyn_entries_decl ~raise (mod_e : Ast_typed.module_expr) =
-  match mod_e.module_content with
-  | M_struct prg ->
-    let f d =
-      match Location.unwrap d with
-      | Ast_typed.D_value { binder; attr; _ } when attr.dyn_entry ->
-        Some (Binder.get_var binder, Binder.get_ascr binder)
-      | Ast_typed.D_irrefutable_match { pattern; attr; _ } when attr.dyn_entry ->
-        (match Location.unwrap pattern with
-        | P_var binder -> Some (Binder.get_var binder, Binder.get_ascr binder)
-        | _ -> None)
-      | _ -> None
-    in
-    prg |> List.filter_map ~f
-  | _ ->
-    raise.error
-      (corner_case
-      @@ Format.asprintf
-           "@[<hv>%aDynamic_entries module must be @]"
-           (Snippet.pp ~no_colour:false)
-           mod_e.module_location)
+let e_a_pack ~loc v ty =
+  let open Ast_typed in
+  let ins = make_e ~loc (e_string @@ Ligo_string.Verbatim "{ PACK }") ty in
+  make_e
+    ~loc
+    (E_raw_code { language = "michelson"; code = e_a_applications ~loc ins [ v ] })
+    ty
 
 
-let get_dyn_entries ~raise (prg : Ast_typed.module_)
+let e_a_unpack ~loc v ty =
+  let open Ast_typed in
+  let ins = make_e ~loc (e_string @@ Ligo_string.Verbatim "{ UNPACK (typeopt $0) }") ty in
+  make_e
+    ~loc
+    (E_raw_code { language = "michelson"; code = e_a_applications ~loc ins [ v ] })
+    ty
+
+
+let e_a_map_update ~loc k vopt m ty_op =
+  let open Ast_typed in
+  make_e ~loc (e_map_update k vopt m) ty_op
+
+
+let e_a_map_find_opt ~loc k m ty_op = Ast_typed.(make_e ~loc (e_map_find_opt k m) ty_op)
+
+let get_dyn_entries (prg : Ast_typed.signature)
     : (Value_var.t * Ast_typed.Types.type_expression) list
   =
-  let f d =
-    match Location.unwrap d with
-    | Ast_typed.D_module { module_binder; module_; _ }
-      when Module_var.equal module_binder default_contract_var ->
-      Some (d.location, module_)
+  let f = function
+    | Ast_typed.S_value (v, ty, attr) when attr.dyn_entry -> Some (v, ty)
     | _ -> None
   in
-  match List.filter_map ~f prg with
-  | [ (_, one) ] -> get_dyn_entries_decl ~raise one
-  | [] -> []
-  | (loc, _) :: _ ->
-    raise.error
-      (corner_case
-      @@ Format.asprintf
-           "@[<hv>%aMultiple definition of Dynamic_entries module@]"
-           (Snippet.pp ~no_colour:false)
-           loc)
-
-
-(* let ps_func ~loc p s =
-  Ast_typed.(
-    t_arrow
-      ~loc
-      p
-      (t_arrow ~loc s (t_pair ~loc (t_list ~loc (t_operation ~loc ())) s) ())
-      ()) *)
-
-(* let big_map_update =
-  let loc = Location.generated in
-  Module_access.
-    { module_path = [ Module_var.of_input_var ~loc "Big_map" ]
-    ; element = Value_var.of_input_var ~loc "update"
-    }*)
-
-let e_pack ~loc v ty =
-  let p =
-    Ast_typed.(
-      make_e
-        ~loc
-        (E_raw_code
-           { language = "michelson"
-           ; code = e_a_string ~loc @@ Ligo_string.Standard "{ PACK }"
-           })
-        ty)
-  in
-  Ast_typed.e_a_applications ~loc p [ v ]
+  List.filter_map ~f prg
 
 
 let generated_helpers
@@ -86,15 +47,6 @@ let generated_helpers
   let open Ast_typed in
   let loc = Location.generated in
   let nat_big_map = t_big_map ~loc (t_nat ~loc ()) (t_bytes ~loc ()) in
-  let t_big_map_update =
-    let open Ast_typed in
-    let loc = Location.generated in
-    t_arrow
-      ~loc
-      (t_nat ~loc ())
-      (t_arrow ~loc (t_option ~loc (t_bytes ~loc ())) nat_big_map ())
-      ()
-  in
   let t_pack ty = t_arrow ~loc ty (t_bytes ~loc ()) () in
   List.join
   @@ List.mapi lst ~f:(fun i (v, dyn_entry_ty) ->
@@ -113,7 +65,7 @@ let generated_helpers
            let e_in_n n =
              e_accessor
                ~loc
-               Accessor.{ struct_ = e_variable ~loc v_in t_in; path = Label.of_string n }
+               Accessor.{ struct_ = e_variable ~loc v_in t_in; path = Label.of_int n }
                dyn_entry_ty
            in
            d_value
@@ -128,51 +80,67 @@ let generated_helpers
                    { binder = Param.make v_in t_in
                    ; output_type = nat_big_map
                    ; result =
-                       make_e
+                       e_a_map_update
                          ~loc
-                         (e_map_update
-                            e_key
-                            (make_e
-                               ~loc
-                               (e_some (e_pack ~loc (e_in_n "0") (t_pack dyn_entry_ty)))
-                               (t_option ~loc (t_bytes ~loc ())))
-                            (e_in_n "1"))
-                         t_big_map_update
+                         e_key
+                         (make_e
+                            ~loc
+                            (e_some (e_a_pack ~loc (e_in_n 0) (t_pack dyn_entry_ty)))
+                            (t_option ~loc (t_bytes ~loc ())))
+                         (e_in_n 1)
+                         nat_big_map
                    }
                    t_in
                    nat_big_map
              ; attr = ValueAttr.default_attributes
              }
          in
-         [ key; set ])
-
-
-let program ~raise : Ast_typed.module_ -> Ast_typed.declaration list =
- fun module_ ->
-  let extra_decls = generated_helpers (get_dyn_entries ~raise module_) in
-  List.map module_ ~f:(function
-      | Ast_typed.(
-          { wrap_content =
-              D_module
-                ({ module_binder
-                 ; module_ = { module_content = M_struct struct_; _ } as module_
-                 ; _
-                 } as mod_)
-          ; _
-          } as decl)
-        when Module_var.equal module_binder default_contract_var ->
-        let module_content = Module_expr.M_struct (struct_ @ extra_decls) in
-        { decl with
-          wrap_content =
-            Ast_typed.D_module { mod_ with module_ = { module_ with module_content } }
-        }
-      | x -> x)
-
-
-let make_dyn_module_expr ~raise (module_content : Ast_typed.module_content) =
-  match module_content with
-  | M_struct ds -> Module_expr.M_struct (program ~raise ds)
-  | _ -> module_content
+         let get =
+           let v_in = Value_var.fresh ~loc () in
+           let t_in = nat_big_map in
+           let t_out = t_option ~loc dyn_entry_ty in
+           let proj = Value_var.fresh ~loc () in
+           let t_proj = t_bytes ~loc () in
+           d_value
+             ~loc
+             { binder =
+                 Binder.make (Value_var.add_prefix "get_" v) (t_arrow ~loc t_in t_out ())
+             ; expr =
+                 e_a_lambda
+                   ~loc
+                   { binder = Param.make v_in t_in
+                   ; output_type = t_out
+                   ; result =
+                       e_a_matching
+                         ~loc
+                         (e_a_map_find_opt
+                            ~loc
+                            e_key
+                            (e_variable ~loc v_in t_in)
+                            (t_option ~loc (t_bytes ~loc ())))
+                         [ { pattern =
+                               Pattern.variant_pattern
+                                 ~loc
+                                 (Label.of_string "None", Pattern.unit ~loc)
+                           ; body = make_e ~loc (e_none ()) t_out
+                           }
+                         ; { pattern =
+                               Pattern.variant_pattern
+                                 ~loc
+                                 ( Label.of_string "Some"
+                                 , Pattern.var ~loc (Binder.make proj t_proj) )
+                           ; body =
+                               e_a_unpack ~loc (e_variable ~loc proj t_proj) dyn_entry_ty
+                           }
+                         ]
+                         t_out
+                   }
+                   t_in
+                   t_out
+             ; attr = ValueAttr.default_attributes
+             }
+         in
+         [ key; set; get ])
 
 
 let make ~raise prg =
@@ -181,10 +149,13 @@ let make ~raise prg =
     | Ast_typed.D_module
         { module_binder
         ; module_attr
-        ; module_ = { module_content; module_location; signature }
+        ; module_ = { module_content = M_struct struct_; module_location; signature }
         ; annotation
-        } ->
-      let module_content = make_dyn_module_expr ~raise module_content in
+        }
+      when Module_var.equal module_binder default_contract_var ->
+      let dyn_entries = get_dyn_entries signature in
+      let extra = generated_helpers dyn_entries in
+      let module_content = Module_expr.M_struct (struct_ @ extra) in
       Location.wrap ~loc:(Location.get_location d)
       @@ Ast_typed.D_module
            { module_binder
@@ -194,5 +165,4 @@ let make ~raise prg =
            }
     | _ -> d
   in
-  let prg = Helpers.Declaration_mapper.map_module f prg in
-  prg @ program ~raise prg
+  Helpers.Declaration_mapper.map_module f prg

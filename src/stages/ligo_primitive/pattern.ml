@@ -42,7 +42,8 @@ module Make (Container : Container) = struct
 
   let var : loc:Location.t -> 'ty Binder.t -> 'ty t =
    fun ~loc b -> Location.wrap ~loc (P_var b)
-
+  
+  let unit ~loc = Location.wrap ~loc P_unit
 
   let record_pattern : loc:Location.t -> 'ty_exp t Container.t -> 'ty t =
    fun ~loc b -> Location.wrap ~loc (P_record b)

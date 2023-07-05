@@ -182,6 +182,10 @@ let t_pair ~loc a b : type_expression =
   ez_t_record ~loc [ Label.of_int 0, a; Label.of_int 1, b ]
 
 
+let t_triple ~loc a b c : type_expression =
+  ez_t_record ~loc [ Label.of_int 0, a; Label.of_int 1, b; Label.of_int 2, c ]
+
+
 let t_sum_ez ~loc ?(layout = default_layout) (lst : (string * type_expression) list)
     : type_expression
   =
@@ -346,9 +350,16 @@ let assert_t_list_operation (t : type_expression) : unit option =
 let ez_e_record (lst : (Label.t * expression) list) : expression_content =
   E_record (Record.of_list lst)
 
+  let e__ct_ () : expression_content = E_constant { cons_name = C__CT_; arguments = [ ] }
+  [@@map _ct_, ("none")]
 
 let e__ct_ p : expression_content = E_constant { cons_name = C__CT_; arguments = [ p ] }
   [@@map _ct_, ("some", "test_nil_views")]
+
+
+let e__ct_ p p' : expression_content =
+  E_constant { cons_name = C__CT_; arguments = [ p; p' ] }
+  [@@map _ct_, "map_find_opt"]
 
 
 let e__ct_ p p' p'' : expression_content =
@@ -379,6 +390,10 @@ let e__type_ p : expression_content = E_literal (Literal__type_ p)
 let e_unit () : expression_content = E_literal Literal_unit
 let e_pair a b : expression_content = ez_e_record [ Label.of_int 0, a; Label.of_int 1, b ]
 
+let e_triple a b c : expression_content =
+  ez_e_record [ Label.of_int 0, a; Label.of_int 1, b; Label.of_int 2, c ]
+
+
 let e_a__type_ ~loc p = make_e ~loc (e__type_ p) (t__type_ ~loc ())
   [@@map
     _type_
@@ -400,6 +415,13 @@ let e_a__type_ ~loc p = make_e ~loc (e__type_ p) (t__type_ ~loc ())
 
 let e_a_pair ~loc a b =
   make_e ~loc (e_pair a b) (t_pair ~loc a.type_expression b.type_expression)
+
+
+let e_a_triple ~loc a b c =
+  make_e
+    ~loc
+    (e_triple a b c)
+    (t_triple ~loc a.type_expression b.type_expression c.type_expression)
 
 
 let e_a_record ~loc ?(layout = default_layout) r =
