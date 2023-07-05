@@ -7,7 +7,8 @@ let default_contract_var = Module_var.of_input_var ~loc:Location.generated defau
 
 let e_a_pack ~loc v ty =
   let open Ast_typed in
-  let ins = make_e ~loc (e_string @@ Ligo_string.Verbatim "{ PACK }") ty in
+  let t_pack ty = t_arrow ~loc ty (t_bytes ~loc ()) () in
+  let ins = make_e ~loc (e_string @@ Ligo_string.Verbatim "{ PACK }") (t_pack ty) in
   make_e
     ~loc
     (E_raw_code { language = "michelson"; code = e_a_applications ~loc ins [ v ] })
@@ -16,10 +17,11 @@ let e_a_pack ~loc v ty =
 
 let e_a_unpack ~loc v ty =
   let open Ast_typed in
-  let ins = make_e ~loc (e_string @@ Ligo_string.Verbatim "{ UNPACK (typeopt $0) }") ty in
+  let t_unpack = t_arrow ~loc (t_option ~loc ty) (t_arrow ~loc (t_bytes ~loc ()) (t_option ~loc ty) ()) () in
+  let ins = make_e ~loc (e_string @@ Ligo_string.Verbatim "{ UNPACK (typeopt $0) }") t_unpack in
   make_e
     ~loc
-    (E_raw_code { language = "michelson"; code = e_a_applications ~loc ins [ v ] })
+    (E_raw_code { language = "michelson"; code = e_a_applications ~loc ins [ make_e ~loc (e_none ()) (t_option ~loc ty) ; v ] })
     ty
 
 
@@ -47,7 +49,6 @@ let generated_helpers
   let open Ast_typed in
   let loc = Location.generated in
   let nat_big_map = t_big_map ~loc (t_nat ~loc ()) (t_bytes ~loc ()) in
-  let t_pack ty = t_arrow ~loc ty (t_bytes ~loc ()) () in
   List.join
   @@ List.mapi lst ~f:(fun i (v, dyn_entry_ty) ->
          let e_key = e_a_nat ~loc (Z.of_int i) in
@@ -85,7 +86,7 @@ let generated_helpers
                          e_key
                          (make_e
                             ~loc
-                            (e_some (e_a_pack ~loc (e_in_n 0) (t_pack dyn_entry_ty)))
+                            (e_some (e_a_pack ~loc (e_in_n 0) dyn_entry_ty))
                             (t_option ~loc (t_bytes ~loc ())))
                          (e_in_n 1)
                          nat_big_map
@@ -130,7 +131,10 @@ let generated_helpers
                                  ( Label.of_string "Some"
                                  , Pattern.var ~loc (Binder.make proj t_proj) )
                            ; body =
-                               e_a_unpack ~loc (e_variable ~loc proj t_proj) dyn_entry_ty
+                               e_a_unpack
+                                 ~loc
+                                 (e_variable ~loc proj t_proj)
+                                 dyn_entry_ty
                            }
                          ]
                          t_out
