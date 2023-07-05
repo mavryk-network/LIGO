@@ -1,17 +1,17 @@
 {
-  "checksum": "de0d2ee8bf0bb658b43090557c35e246",
+  "checksum": "983f2911099c52ef98353f07c4b7bb7c",
   "root": "ligolang@link-dev:./esy.json",
   "node": {
-    "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
+    "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#6dddf01eec5056c76fee2095e07757d9c53096a@d41d8cd9": {
       "id":
-        "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9",
+        "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#6dddf01eec5056c76fee2095e07757d9c53096a@d41d8cd9",
       "name": "yarn-pkg-config",
       "version":
-        "github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79",
+        "github:esy-ocaml/yarn-pkg-config#6dddf01eec5056c76fee2095e07757d9c53096a",
       "source": {
         "type": "install",
         "source": [
-          "github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79"
+          "github:esy-ocaml/yarn-pkg-config#6dddf01eec5056c76fee2095e07757d9c53096a"
         ]
       },
       "overrides": [],
@@ -7125,7 +7125,7 @@
         }
       ],
       "dependencies": [
-        "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9",
+        "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#6dddf01eec5056c76fee2095e07757d9c53096a@d41d8cd9",
         "ocaml@4.14.1000@d41d8cd9", "esy-gmp@6.2.1001@d41d8cd9",
         "@opam/zarith@opam:1.12@23811ea3",
         "@opam/hacl-star-raw@opam:0.4.1@b3a08087",
@@ -8047,7 +8047,7 @@
         }
       ],
       "dependencies": [
-        "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9",
+        "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#6dddf01eec5056c76fee2095e07757d9c53096a@d41d8cd9",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": []
@@ -8454,7 +8454,7 @@
         }
       ],
       "dependencies": [
-        "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9",
+        "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#6dddf01eec5056c76fee2095e07757d9c53096a@d41d8cd9",
         "ocaml@4.14.1000@d41d8cd9", "esy-gmp@6.2.1001@d41d8cd9",
         "@opam/zarith@opam:1.12@23811ea3",
         "@opam/integers@opam:0.7.0@a0bd70b4",

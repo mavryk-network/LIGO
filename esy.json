@@ -187,7 +187,7 @@
         "install": "esy-installer ./mtime.install"
       }
     },
-    "yarn-pkg-config": "esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79",
+    "yarn-pkg-config": "esy-ocaml/yarn-pkg-config#6dddf01eec5056c76fee2095e07757d9c53096a",
     "@opam/linol": "c-cube/linol:linol.opam#439534e0c5b7a3fbf93ba05fae7d171426153763",
     "@opam/linol-lwt": "c-cube/linol:linol-lwt.opam#439534e0c5b7a3fbf93ba05fae7d171426153763",
     "esy-openssl": "ManasJayanth/esy-openssl#05feaf76bbd56cde53c30a1dfe3c6353f8ab895b",
