@@ -1,0 +1,36 @@
+namespace My_contract {
+  namespace Dynamic_entries {
+    // @dyn_entry
+    export const one = (_: unit, _: int): [list<operation>, int] => [list([]), 1];
+    // @dyn_entry
+    export const tick = (_: ticket<int>, x: [int, int]): [list<operation>, [int, int]] =>
+      [list([]), x]
+  };
+
+  type storage = { storage: int, dynamic_entries };
+  type ret = [list<operation>, storage];
+  
+  @entry
+  const call_one = (_ : unit, s : storage) : ret => {
+    const dyn_entry_opt = Dynamic_entries.get_one(s.dynamic_entries) ;
+    const dyn_entry = Option.value_exn (-1, dyn_entry_opt) ;
+    const [op, storage] = dyn_entry(unit, s.storage) ;
+    return [op, { ...s, storage : storage }]
+  };
+
+  @entry
+  const call_tick = (p : ticket<int>, s : storage) : ret => {
+    const dyn_entry_opt = Dynamic_entries.get_tick(s.dynamic_entries) ;
+      const dyn_entry = Option.value_exn (-1, dyn_entry_opt) ;
+      const [op, [i1,i2]] = dyn_entry(p, [s.storage,0]) ;
+      return [op, { ...s, storage : i1 + i2 }]
+  };
+
+  @entry
+  const set_one = (_:unit, s : storage) : ret => {
+    const one =  (_:unit ,_:int) : [list<operation> , int] => [list([]), 11]  ;
+    const dynamic_entries = Dynamic_entries.set_one ([one, s.dynamic_entries]) ;
+    return [list([]), {...s, dynamic_entries : dynamic_entries}]
+  };
+
+};

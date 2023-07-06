@@ -46,6 +46,7 @@ type external_map_add = "%constant:external_map_add"
 type external_map_remove = "%constant:external_map_remove"
 type external_map_remove_value = "%constant:external_map_remove_value"
 
+type dynamic_entries = (nat,bytes) big_map
 (* protocol dependent types *)
 
 let failwith (type a b) (x : a) = [%michelson ({| { FAILWITH } |} x : b)]

@@ -8,8 +8,8 @@ module Location = Simple_utils.Location
 (*
    on top level type declarations:
     - upon puning on 'dynamic_entries' on storage type definition: pre-declare type 'dynamic_entries' (big_map nat to bytes)
-    - if Dynamic_entries module is defined, check that no [@entry] [@view] inside? (maybe not usefull ?) 
-    - if Dynamic_entries module is defined, check that it is define BEFORE any [@entry] (maybe not)
+    - if Dynamic_entries module is defined, check that no [@entry] [@view] inside?
+    - check that Dynamic_entries module within a module is unique
     - if Dynamic_entries module is defined, but no type storage -> warning
 *)
 
@@ -22,7 +22,7 @@ let rec get_within_attr : type a. (a -> (Attribute.t * a) option) -> a -> a =
   | None -> x
 
 
-let dynamic_entries_t =
+(* let dynamic_entries_t =
   let loc = Location.generated in
   pe_declaration
     (d_type
@@ -36,7 +36,7 @@ let dynamic_entries_t =
                  ( t_var ~loc (Ty_variable.of_input_var ~loc "nat")
                  , [ t_var ~loc (Ty_variable.of_input_var ~loc "bytes") ] )
              }
-       })
+       }) *)
 
 
 let name = __MODULE__
@@ -49,7 +49,7 @@ let rec compile ~raise:_ =
     match is_dynamic_storage p with
     | Some _rows ->
       let () = () (* check that rows has a storage type *) in
-      make_prg (dynamic_entries_t :: p)
+      make_prg p
     | None -> make_prg p
   in
   Fold { idle_fold with program }

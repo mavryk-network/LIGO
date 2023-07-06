@@ -7,15 +7,13 @@ module My_contract = struct
 
   module Dynamic_entries = struct
     [@dyn_entry]
-    let one  () (_:int) : operation list * int = [], 1
+    let one () (_ : int) : operation list * int = [], 1
 
     [@dyn_entry]
     let tick : int ticket -> (int * int) -> operation list * (int * int) =
       fun _ x -> [], x
 
   end
-
-  let is_admin (_ : address) = true
 
   [@entry]
   let call_one () (s : storage) : operation list * storage =
@@ -35,7 +33,7 @@ module My_contract = struct
 
   [@entry]
   let set_one () (s : storage) : operation list * storage =
-    let one () (_:int) : operation list * int = [], 11 in
+    let one () (_ : int) : operation list * int = [], 11 in
     let dynamic_entries = Dynamic_entries.set_one (one, s.dynamic_entries) in
     [], {s with dynamic_entries}
 

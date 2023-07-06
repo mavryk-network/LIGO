@@ -43,7 +43,7 @@ let rec there_is_else_case_default tokens =
 let attributes = [
   "@entry"; "@inline"; "@view"; "@no_mutation"; "@private";
   "@public"; "@hidden"; "@thunk";
-  "@layout"; "@annot"]
+  "@layout"; "@annot"; "@dyn_entry"]
 
 let semicolon_insertion tokens =
   let open! Token in

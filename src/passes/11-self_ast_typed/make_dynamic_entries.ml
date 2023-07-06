@@ -200,6 +200,7 @@ let make ~raise prg =
         }
       when Module_var.equal module_binder default_contract_var ->
       let dyn_entries = get_dyn_entries signature in
+      print_endline @@ Format.asprintf "HEY: %d" (List.length dyn_entries);
       let extra = generated_helpers dyn_entries in
       let module_content = Module_expr.M_struct (struct_ @ extra) in
       Location.wrap ~loc:(Location.get_location d)
