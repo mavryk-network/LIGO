@@ -100,6 +100,10 @@ let dynamic_entries sig_ =
         | Signature.S_value (var, ty, attr) when attr.dyn_entry ->
           Some
             [ Signature.S_value
+                ( Value_var.of_input_var ~loc "initial"
+                , nat_big_map
+                , Context.Attrs.Value.default )
+            ; Signature.S_value
                 ( Value_var.add_prefix "key_" var
                 , Type.t_nat ~loc ()
                 , Context.Attrs.Value.default )

@@ -354,7 +354,7 @@ let ez_e_record (lst : (Label.t * expression) list) : expression_content =
   [@@map _ct_, ("none")]
 
 let e__ct_ p : expression_content = E_constant { cons_name = C__CT_; arguments = [ p ] }
-  [@@map _ct_, ("some", "test_nil_views")]
+  [@@map _ct_, ("some", "test_nil_views", "big_map_literal")]
 
 
 let e__ct_ p p' : expression_content =

@@ -7,7 +7,7 @@ module My_contract = struct
 
   module Dynamic_entries = struct
     [@dyn_entry]
-    let one : unit -> int -> operation list * int = fun () _ -> [], 1
+    let one  () (_:int) : operation list * int = [], 1
 
     [@dyn_entry]
     let tick : int ticket -> (int * int) -> operation list * (int * int) =
