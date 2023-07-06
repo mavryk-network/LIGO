@@ -15,18 +15,67 @@ type declaration =
   , Cst_pascaligo.CST.declaration )
   Dialect_cst.dialect
 
-(* AAAAAAAAAAAAAAAAAA *)
+(* AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA *)
 let deattach_toplevel_comment : declaration -> declaration =
+  let deattach_from_directive : Preprocessor.Directive.t -> Preprocessor.Directive.t =
+    failwith "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  in
   Dialect_cst.from_dialect
     { cameligo =
         ((fun x -> Dialect_cst.CameLIGO x)
         <@ Cst_cameligo.CST.(
              function
+             | D_Attr d ->
+               let f (a, b) = a#set_comments [], b in
+               D_Attr { d with value = f d.value }
+             | D_Directive d -> D_Directive (deattach_from_directive d)
              | D_Let d ->
-               let f (a, b, c) = a#set_comments [], b, c in
+               let f : let_decl -> let_decl = fun (a, b, c) -> a#set_comments [], b, c in
                D_Let { d with value = f d.value }
-             | _ -> failwith ""))
-    ; jsligo = failwith ""
+             | D_Module d ->
+               let f : module_decl -> module_decl =
+                fun md -> { md with kwd_module = md.kwd_module#set_comments [] }
+               in
+               D_Module { d with value = f d.value }
+             | D_Module_include d ->
+               let f : module_include -> module_include =
+                fun md -> { md with kwd_include = md.kwd_include#set_comments [] }
+               in
+               D_Module_include { d with value = f d.value }
+             | D_Signature d ->
+               let f : signature_decl -> signature_decl =
+                fun md -> { md with kwd_module = md.kwd_module#set_comments [] }
+               in
+               D_Signature { d with value = f d.value }
+             | D_Type d ->
+               let f : type_decl -> type_decl =
+                fun md -> { md with kwd_type = md.kwd_type#set_comments [] }
+               in
+               D_Type { d with value = f d.value }))
+    ; jsligo =
+        ((fun x -> Dialect_cst.JsLIGO x)
+        <@ Cst_jsligo.CST.(
+             (* Since attributes come before the statements, the leading comment will link to first attribute and not to keyword *)
+             let deattach_from_attributes_if_availiable
+                 ~get_attributes
+                 ~set_attributes
+                 ~deattach_from_body
+                 x
+               =
+               match get_attributes x with
+               | [] -> deattach_from_body x
+               | attr :: rest -> set_attributes (attr :: rest) x
+             in
+             let rec deattach_from_statement = function
+               | SBlock d ->
+                 let f (x, xs) = deattach_from_statement x, xs in
+                 SBlock { d with value = { d.value with inside = f d.value.inside } }
+               | SExpr _ -> OH ITS IMPOSSIBLE
+               | x -> x (* AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA *)
+             in
+             function
+             | Directive d -> Directive (deattach_from_directive d)
+             | TopLevel (t, semi) -> TopLevel (deattach_from_statement t, semi)))
     ; pascaligo = failwith ""
     }
 

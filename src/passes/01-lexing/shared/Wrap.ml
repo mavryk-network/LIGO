@@ -43,7 +43,7 @@ type 'a ctor =
   ?line_com:string Region.reg ->
   'a -> Region.t -> 'a wrap
 
-let wrap ?(attributes=[]) ?directive ?comment ?line_com payload region =
+let wrap ?(attributes=[]) ?directive ?comment ?line_com (payload : 'a) region : 'a wrap =
   object
     method payload      = payload
 
