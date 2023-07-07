@@ -168,7 +168,6 @@
     "ligo-win32-ntdll-stubs": "git+https://gitlab.com/ligolang/win32-ntdll-stubs.git#357dfa49fa7c55e92c5a45187fa58a4b1e35e795",
     "@opam/tezos-rust-libs": "opam:1.5",
     "esy-rustup": "esy-packages/esy-rustup:esy.json#3872ef2eaefb6c2207bd7cb4386d073a27381bfe",
-    "@opam/dune": "opam:3.8.2",
     "@opam/semver": "callistonianembrace/ocaml-semver:semver.opam#bf23370adb1cdf8efa60c19fe6e1ff195ee1f2ae",
     "@opam/conf-gmp-powm-sec": {
       "source": "no-source:",
