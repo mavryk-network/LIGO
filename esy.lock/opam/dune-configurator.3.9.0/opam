@@ -40,10 +40,10 @@ build: [
   ]
 ]
 url {
-  src: "https://github.com/ocaml/dune/releases/download/3.8.2/dune-3.8.2.tbz"
+  src: "https://github.com/ocaml/dune/releases/download/3.9.0/dune-3.9.0.tbz"
   checksum: [
-    "sha256=5a6ec790128616b6b46616427fa9c8f2ba0d6ef5a405bf8fdbc6f82dc0d935fd"
-    "sha512=d0298138e46d1a3eb9b46ed369314259e1b3611f377b7562ac50353cdb9d480c2487810ade65e1f3ccc6df00bd8e43bfd3c2664d0c3c59cb13abd091be87324d"
+    "sha256=c4825a9de454aedf450c2db25ac353033e31d326a9d1b4b7a2cd7260639bd544"
+    "sha512=55d83bfee7c741cb5b74187674f9ef992ddf0b149f8d22a0a392c4c8ddf1075e9192eebd81cf36c115331cd96e10824100c6c338835d26c25e965e68ed94673d"
   ]
 }
-x-commit-hash: "e6a7ca69d3b27aa21b59887b5549daafdc931899"
+x-commit-hash: "891fa5a7d72655634378425d51a1cf703ff93336"

@@ -15,8 +15,8 @@ license: "MIT"
 homepage: "https://github.com/ocaml-community/sedlex"
 bug-reports: "https://github.com/ocaml-community/sedlex/issues"
 depends: [
-  "ocaml" {>= "4.14"}
-  "dune" {>= "2.8"}
+  "ocaml" {>= "4.08"}
+  "dune" {>= "3.0"}
   "ppxlib" {>= "0.26.0"}
   "gen"
   "ppx_expect" {with-test}
@@ -40,9 +40,9 @@ dev-repo: "git+https://github.com/ocaml-community/sedlex.git"
 doc: "https://ocaml-community.github.io/sedlex/index.html"
 url {
   src:
-    "https://github.com/ocaml-community/sedlex/archive/refs/tags/v3.1.tar.gz"
+    "https://github.com/ocaml-community/sedlex/archive/refs/tags/v3.2.tar.gz"
   checksum: [
-    "md5=e9d423a4cb194af3f39cc38eeb033eeb"
-    "sha512=27c7954c03a9d78f252167708afe7d91648ad3d3aa529e00c73da75bac49c2cf552cc9d27d29f1d9a04b1e2b47b7c6de9e9850c53124ad9f311d0a8f54bb9cae"
+    "md5=b67eec3a80a7fed8e6c91e47260b0843"
+    "sha512=00e257d1b97e99d49028d2e38b20a05c6aa151c362991c37c17522bf58c19e273b762ea39dd9783ed9ecc60d11dadeabb0487e16b4af91536e45e7e18c86cfe9"
   ]
 }
