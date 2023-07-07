@@ -26,6 +26,7 @@ If you wish to see the changelog, you can either run `ligo changelog` or go to [
     { label: 'MacOS', value: 'macos' },
     { label: 'Debian package', value: 'deb' },
     { label: 'Arch', value: 'AUR' },
+    { label: 'Npm', value: 'NPM' },
     { label: 'Dockerized', value: 'docker' },
     { label: 'Windows', value: 'windows' }
   ]}>
@@ -90,6 +91,24 @@ yay -S ligo-bin
 ```
 
 </TabItem>
+<TabItem value="NPM">
+
+It's possible to install latest release of ligo through [npm](https://www.npmjs.com/package/ligolang?activeTab=versions)
+
+Depending of you OS,arch, you can use `windows`,`macos-m1` (arm64),`macos-intel`.
+
+```zsh
+npm i -g ligolang@<windows|macos-m1|macos-intel>
+```
+
+for dev version
+```zsh
+npm i -g ligolang@<windows|macos-m1|macos-intel>-dev
+```
+
+Latest version is the latest macos-intel published version. Almost used for referencement.
+
+</TabItem>
 <TabItem value="docker">
 
 If you've [installed 🐳 Docker](https://docs.docker.com/install/), you can run the latest [LIGO release](./changelog.md):
@@ -132,7 +151,7 @@ Or run one of the older versions found on [DockerHub](https://hub.docker.com/r/l
 Windows users can install LIGO via NPM.
 
 ```sh
-npm i -g ligolang@windows-beta
+npm i -g ligolang@windows
 ```
 
 ### via GUI installer
