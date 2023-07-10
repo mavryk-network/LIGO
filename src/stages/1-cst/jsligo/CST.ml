@@ -207,7 +207,7 @@ and import_all_as = {
 
 and import_from = {
   kwd_import : kwd_import;
-  imported   : (field_name, comma) sep_or_term braces;
+  imported   : (variable, comma) sep_or_term braces;
   kwd_from   : kwd_from;
   file_path  : file_path
 }
@@ -321,9 +321,15 @@ and 'a record = ('a field reg, field_sep) sep_or_term braces
 
 and 'a field = {
   attributes : attribute list;
-  field_name : field_name;
-  field_rhs  : (colon * 'a) option
+  field_id   : field_id;
+  field_rhs  : (colon * 'a) option (* [None] means punning *)
 }
+
+and field_id =
+  F_Name of field_name
+| F_Num  of (lexeme * Z.t) wrap
+| F_Cap  of lexeme wrap
+| F_Str  of lexeme wrap
 
 (* Discriminated unions *)
 
@@ -349,18 +355,19 @@ and variant_comp = {
    add or modify some, please make sure they remain in order. *)
 
 and pattern =
-  P_Attr     of (attribute * pattern)    (* @a [x, _]      *)
-| P_Bytes    of (lexeme * Hex.t) wrap    (* 0xFFFA         *)
-| P_Int      of (lexeme * Z.t) wrap      (* 42             *)
-| P_Mutez    of (lexeme * Int64.t) wrap  (* 5mutez         *)
-| P_Nat      of (lexeme * Z.t) wrap      (* 4n             *)
-| P_Record   of pattern record           (* {x, y : 0}     *)
-| P_String   of lexeme wrap              (* "string"       *)
-| P_Tuple    of pattern tuple            (* [x, ...y, z]   *)
-| P_Typed    of typed_pattern reg        (* [] : list<int> *)
-| P_Unit     of the_unit reg             (* ()             *)
-| P_Var      of variable                 (* x              *)
-| P_Verbatim of lexeme wrap              (* {|foo|}        *)
+  P_Attr     of (attribute * pattern)    (* @a [x, _]       *)
+| P_Bytes    of (lexeme * Hex.t) wrap    (* 0xFFFA          *)
+| P_Ctor     of ctor                     (* C               *)
+| P_Int      of (lexeme * Z.t) wrap      (* 42              *)
+| P_Mutez    of (lexeme * Int64.t) wrap  (* 5mutez          *)
+| P_Nat      of (lexeme * Z.t) wrap      (* 4n              *)
+| P_Par      of pattern par              (* ({x : 0})       *)
+| P_Record   of pattern record           (* {x, y : 0}      *)
+| P_String   of lexeme wrap              (* "string"        *)
+| P_Tuple    of pattern tuple            (* [x, ...y, z] [] *)
+| P_Typed    of typed_pattern reg        (* [] : list<int>  *)
+| P_Var      of variable                 (* x               *)
+| P_Verbatim of lexeme wrap              (* {|foo|}         *)
 
 (* Tuple *)
 
@@ -481,6 +488,7 @@ and expr =
 | E_AddEq    of plus_eq bin_op reg      (* x += y            *)
 | E_And      of bool_and bin_op reg     (* x && y            *)
 | E_App      of (expr * arguments) reg  (* f(x)   Foo()      *)
+| E_Assign   of equal bin_op reg        (* x = y             *)
 | E_Attr     of (attribute * expr)      (* @a [x, y]         *)
 | E_Bytes    of (lexeme * Hex.t) wrap   (* 0xFFFA            *)
 | E_CodeInj  of code_inj reg
@@ -500,6 +508,8 @@ and expr =
 | E_ModEq    of mod_eq bin_op reg       (* x %= y            *)
 | E_ModPath  of expr module_path reg    (* M.N.x.0           *)
 | E_Mult     of times bin_op reg        (* x * y             *)
+| E_Mutez    of (lexeme * Int64.t) wrap (* 5mutez            *)
+| E_Nat      of (lexeme * Z.t) wrap     (* 42n               *)
 | E_Neg      of minus un_op reg         (* -x                *)
 | E_Neq      of neq bin_op reg          (* x != y            *)
 | E_Not      of negation un_op reg      (* !x                *)
@@ -515,9 +525,8 @@ and expr =
 | E_Sub      of minus bin_op reg        (* x - y             *)
 | E_Ternary  of ternary reg             (* x ? y : z         *)
 | E_TimesEq  of times_eq bin_op reg     (* x *= y            *)
-| E_Tuple    of expr tuple              (* [x, ...y, z]      *)
+| E_Tuple    of expr tuple              (* [x, ...y, z]  []  *)
 | E_Typed    of typed_expr reg          (* e as t            *)
-| E_Unit     of the_unit reg            (* ()                *)
 | E_Update   of update_expr braces      (* {...x, y : z}     *)
 | E_Var      of variable                (* x                 *)
 | E_Verbatim of lexeme wrap             (* {|foo|}           *)
@@ -533,12 +542,14 @@ and fun_expr = {
   parameters : parameters;
   rhs_type   : type_annotation option;
   arrow      : arrow;
-  body       : body;
+  fun_body   : fun_body
 }
 
-and parameters = (pattern, comma) sep_or_term par
+and parameters =
+  Params   of (pattern, comma) sep_or_term par
+| OneParam of variable
 
-and body =
+and fun_body =
   FunBody  of statements braces
 | ExprBody of expr
 
@@ -554,13 +565,13 @@ and contract_of_expr = {
 and update_expr = {
   ellipsis : ellipsis;
   record   : expr;
-  comma    : comma;
-  updates  : (expr field reg, semi) nsep_or_term
+  sep      : field_sep;
+  updates  : (path field reg, field_sep) nsep_or_term
 }
 
-(* Unit value *)
-
-and the_unit = lpar * rpar
+and path =
+  FieldId of field_id
+| Path    of projection reg
 
 (* Ternary conditional *)
 
@@ -589,8 +600,8 @@ and projection = {
 }
 
 and selection =
-  FieldName of (dot * field_name)
-| Component of expr brackets
+  Field     of (dot * field_id)
+| Component of lexeme wrap brackets
 
 (* Code injection.  Note how the field [language] wraps a region in
    another: the outermost region covers the header "[%<language>" and
@@ -598,7 +609,7 @@ and selection =
 
 and code_inj = {
   language : language;
-  code     : expr;
+  code     : expr
 }
 
 (* PROJECTIONS *)
@@ -641,14 +652,15 @@ let rec type_expr_to_region = function
 let rec pattern_to_region = function
   P_Attr   (_, p) -> pattern_to_region p
 | P_Bytes  w -> w#region
+| P_Ctor   w -> w#region
 | P_Int    w -> w#region
 | P_Mutez  w -> w#region
 | P_Nat    w -> w#region
+| P_Par    {region; _}
 | P_Record {region; _} -> region
 | P_String w-> w#region
 | P_Tuple  {region; _}
-| P_Typed  {region; _}
-| P_Unit   {region; _} -> region
+| P_Typed  {region; _} -> region
 | P_Var w -> w#region
 | P_Verbatim w -> w#region
 
@@ -656,7 +668,8 @@ let rec expr_to_region = function
   E_Add      {region; _}
 | E_AddEq    {region; _}
 | E_And      {region; _}
-| E_App      {region; _} -> region
+| E_App      {region; _}
+| E_Assign   {region; _} -> region
 | E_Attr     (_, e) -> expr_to_region e
 | E_Bytes    w -> w#region
 | E_CodeInj  {region; _}
@@ -675,7 +688,9 @@ let rec expr_to_region = function
 | E_Mod      {region; _}
 | E_ModEq    {region; _}
 | E_ModPath  {region; _}
-| E_Mult     {region; _}
+| E_Mult     {region; _} -> region
+| E_Mutez    w -> w#region
+| E_Nat      w -> w#region
 | E_Neg      {region; _}
 | E_Neq      {region; _}
 | E_Not      {region; _}
@@ -693,7 +708,6 @@ let rec expr_to_region = function
 | E_TimesEq  {region; _}
 | E_Tuple    {region; _}
 | E_Typed    {region; _}
-| E_Unit     {region; _}
 | E_Update   {region; _} -> region
 | E_Var      w
 | E_Verbatim w -> w#region
@@ -713,3 +727,21 @@ let rec statement_to_region = function
 
 let var_kind_to_region = function
   `Let w | `Const w -> w#region
+
+let field_id_to_region = function
+  F_Name i -> i#region
+| F_Num  i -> i#region
+| F_Cap  i -> i#region
+| F_Str  i -> i#region
+
+let path_to_region = function
+  FieldId p -> field_id_to_region p
+| Path    p -> p.region
+
+let parameters_to_region = function
+  Params {region; _} -> region
+| OneParam w -> w#region
+
+let fun_body_to_region = function
+  FunBody {region; _} -> region
+| ExprBody e -> expr_to_region e

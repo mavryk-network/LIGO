@@ -209,11 +209,12 @@ variable    : "<ident>"  { $1 }
 type_var    : "<ident>" | "<uident>" { $1 }
 type_name   : "<ident>" | "<uident>" { $1 }
 type_ctor   : "<ident>" | "<uident>" { $1 }
-field_name  : "<ident>"  { $1 }
 module_name : "<uident>" { $1 }
 intf_name   : "<uident>" { $1 }
 ctor        : "<uident>" { $1 }
 file_path   : "<string>" { $1 }
+record_name : "<ident>"  { $1 }
+field_name  : "<ident>"  { $1 }
 
 %inline
 lang_name   : "<ident>" | "<uident>" { $1 }
@@ -255,15 +256,14 @@ declaration:
 
 value_decl:
   var_kind bindings {
-    let start  = var_kind_to_region $1
-    and stop   = nsepseq_to_region (fun x -> x.region) $2 in
-    let region = cover start stop
+    let stop   = nsepseq_to_region (fun x -> x.region) $2 in
+    let region = cover (var_kind_to_region $1) stop
     and value  = {kind=$1; bindings=$2}
     in {region; value} }
 
 var_kind:
   "let"   { `Let   $1 }
-| "const" { `Const $1 |
+| "const" { `Const $1 }
 
 bindings:
   nsepseq(val_binding,",") { $1 }
@@ -272,7 +272,7 @@ val_binding:
   pattern ioption(type_vars) ioption(type_annotation) "=" expr {
     let region = cover (pattern_to_region $1) (expr_to_region $5)
     and value  = {pattern=$1; type_vars=$2; rhs_type=$3; eq=$4; rhs_expr=$5}
-    in {region; value}
+    in {region; value} }
 
 type_vars:
   chevrons(sep_or_term(type_var,",")) { $1 }
@@ -291,14 +291,14 @@ import_decl:
     in {region; value}
   }
 | "import" "*" "as" module_name "from" file_path {
-    let region = cover $1#region $6#region in
-    let value  = ImportAll {kwd_import=$1; times=$2; kwd_as=$3; alias=$4;
+    let region = cover $1#region $6#region
+    and value  = ImportAll {kwd_import=$1; times=$2; kwd_as=$3; alias=$4;
                             kwd_from=$5; file_path=$6}
     in {region; value}
   }
-| "import" braces(sep_or_term(field_name, ",")) "from" file_path {
-    let region = cover $1#region $4#region in
-    let value  = ImportSome {kwd_import=$1; imported=$2; kwd_from=$3;
+| "import" braces(sep_or_term(variable, ",")) "from" file_path {
+    let region = cover $1#region $4#region
+    and value  = ImportSome {kwd_import=$1; imported=$2; kwd_from=$3;
                              file_path=$4}
     in {region; value} }
 
@@ -378,13 +378,10 @@ type_decl:
   "type" type_binder ioption(type_vars) "=" type_expr {
     let region = cover $1#region (type_expr_to_region $5)
     and value  = {kwd_type=$1; name=$2; type_vars=$3; eq=$4; type_expr=$5}
-    in {region; value}
+    in {region; value} }
 
 type_binder:
   type_name | "_" { $1 }
-
-type_vars:
-  chevrons(nsepseq(type_var,",")) { $1 }
 
 (* TYPE EXPRESSIONS *)
 
@@ -407,13 +404,12 @@ fun_type_param:
 (* Variant types *)
 
 variant_type:
-  attributes nseq("|",variant) {
-   (* Attributes of the variant type *)
+  attributes nseq("|" variant { $1,$2} ) {
     let region    = nseq_to_region (fun x -> x.region) $2 in
     let type_expr = T_Variant {region; value = `Pref $2}
     in hook_T_Attr $1 type_expr
   }
-| nsepseq(variant, "|") {
+| nsepseq(variant,"|") {
     let region = nsepseq_to_region (fun x -> x.region) $1
     in T_Variant {region; value = `Sep $1} }
 
@@ -487,7 +483,7 @@ type_components:
     | `Term seq -> `Term (($1,$2) :: seq) }
 
 type_component_no_string:
-  fun_type | sum_type | core_type_no_string { $1 }
+  fun_type | variant_type | core_type_no_string { $1 }
 
 type_component:
   type_expr { $1 }
@@ -549,20 +545,26 @@ union_or_record:
 (* Record types (a.k.a. "object types" in JS) *)
 
 record(field_kind):
-  braces(sep_of_term(field(field_kind),field_sep)) { $1 }
+  braces(sep_or_term(field(field_kind),field_sep)) { $1 }
 
 field_sep:
   ";" | "," { $1 }
 
 field(field_kind):
-  attributes field_name ioption(":" field_kind { $1,$2 }) {
+  attributes field_id ioption(":" field_kind { $1,$2 }) {
     fun region_of_field_kind ->
       let region =
         match $3 with
           None -> $2#region
         | Some (_,k) -> cover $2#region (region_of_field_kind k)
-      and value = {attributes=$1; field_name=$2; field_rhs=$3}
+      and value = {attributes=$1; field_id=$2; field_rhs=$3}
       in {region; value} }
+
+field_id:
+  field_name { F_Name $1 }
+| "<int>"    { F_Int  $1 }
+| "<string>" { F_Str  $1 }
+| ctor       { F_Cap  $1 }
 
 (* STATEMENTS *)
 
@@ -570,8 +572,8 @@ statements:
   nsep_or_term(statement,";") { $1 }
 
 statement:
-  base_stmt(statement)  { $1                }
-| attributes if_stmt    { hook_S_Attr $1 $2 }
+  base_stmt(statement) { $1                }
+| attributes if_stmt   { hook_S_Attr $1 $2 }
 
 base_stmt(right_stmt):
   "[@attr]" base_stmt(right_stmt) { S_Attr ($1,$2) }
@@ -587,9 +589,24 @@ no_attr_stmt(right_stmt):
 | return_stmt              { S_Return $1 }
 | switch_stmt              { S_Switch $1 }
 | while_stmt(right_stmt)   { S_While  $1 }
+| assign_stmt              {          $1 }
 
 closed_stmt:
   base_stmt(closed_stmt) { $1 }
+
+(* Assignments *)
+
+assign_stmt:
+  bin_op(assign_lhs,  "=", expr) { E_Assign  $1 }
+| bin_op(assign_lhs, "*=", expr) { E_TimesEq $1 }
+| bin_op(assign_lhs, "/=", expr) { E_DivEq   $1 }
+| bin_op(assign_lhs, "%=", expr) { E_ModEq   $1 }
+| bin_op(assign_lhs, "+=", expr) { E_AddEq   $1 }
+| bin_op(assign_lhs, "-=", expr) { E_MinusEq $1 }
+
+assign_lhs:
+  projection { E_Proj $1 }
+| variable   { E_Var  $1 }
 
 (* Block of statement *)
 
@@ -726,8 +743,8 @@ case_statement:
 while_stmt(right_stmt):
   "while" par(while_cond) right_stmt {
     let region = cover $1#region (statement_to_region $3)
-    and value  = {kwd_while=$1; invariant=$2=$3}
-    in SWhile {region; value} }
+    and value  = {kwd_while=$1; invariant=$2; while_body=$3}
+    in {region; value} }
 
 while_cond:
   expr { $1 }
@@ -735,18 +752,63 @@ while_cond:
 (* EXPRESSIONS *)
 
 expr:
-  fun_expr           { EFun $1 }
+  fun_expr           { E_Fun $1 }
+| typed_expr
 | ternary_expr(expr)
-| cast_expr
 | disj_expr_level    { $1 }
 
-(* Cast expressions *)
+(* Functional expressions *)
 
-cast_expr:
+fun_expr:
+  ioption(type_vars) parameters ioption(type_annotation) "=>" fun_body {
+    let start  = match $1 with
+                   None -> parameters_to_region $2
+                 | Some {region; _} -> region in
+    let region = cover start (fun_body_to_region $5) in
+    let value  = {type_vars=$1; parameters=$2;
+                  lhs_type=$3; arrow=$4; fun_body=$5}
+    in {region; value} }
+
+parameters:
+  par(sep_or_term(pattern,",")) { Params   $1 }
+| variable | "_"                { OneParam $1 }
+
+(* Note: we use [expr] to avoid an LR conflict, and obtain instead
+   the item
+   ## par(expr) -> LPAR expr . RPAR [ ... ]
+   ## parameter -> expr . type_annotation [ RPAR COMMA ] *)
+
+(*
+parameter:
+  expr ioption(type_annotation) {
+    match $2 with
+      Some (colon, type_expr) ->
+        let start  = expr_to_region $1
+        and stop   = type_expr_to_region type_expr in
+        let region = cover start stop in
+        EAnnot { region; value = $1, colon, type_expr }
+    | None -> $1 }
+*)
+
+fun_body:
+  braces(statements) { FunBody  $1 }
+| expr               { ExprBody $1 }
+
+(* Typed expressions *)
+
+typed_expr:
   app_expr_level "as" type_expr {
     let stop   = type_expr_to_region $3 in
     let region = cover (expr_to_region $1) stop
     in E_Typed {region; value=($1,$2,$3)} }
+
+(* Ternary conditional operator *)
+
+ternary_expr(branch):
+  disj_expr_level "?" branch ":" branch {
+    let region = cover (expr_to_region $1) (expr_to_region $5)
+    and value  = {condition=$1; qmark=$2; truthy=$3; colon=$4; falsy=$5}
+    in E_Ternary {value; region} }
 
 (* Logical disjuction *)
 
@@ -809,6 +871,30 @@ unary_expr_level:
 | decr_expr
 | app_expr_level { $1 }
 
+(* Increment & decrement operators *)
+
+incr_expr:
+  "++" variable {
+    let region = cover $1#region $2#region
+    and value  = {op=$1; arg=$2}
+    in E_PreIncr {region; value}
+  }
+| variable "++" {
+    let region = cover $1#region $2#region
+    and value  = {op=$2; arg=$1}
+    in E_PostIncr {region; value} }
+
+decr_expr:
+  "--" variable {
+    let region = cover $1#region $2#region
+    and value  = {op=$1; arg=$2}
+    in E_PreDecr {region; value}
+  }
+| variable "--" {
+    let region = cover $1#region $2#region
+    and value  = {op=$2; arg=$1}
+    in E_PostDecr {region; value} }
+
 (* Function calls & data constructor applications *)
 
 app_expr_level:
@@ -834,122 +920,159 @@ argument:
 
 core_expr:
   "[@attr]" core_expr { E_Attr ($1,$2) }
-| no_attr_expr        { $1 }
+| no_attr_core_expr   { $1             }
 
-no_attr_expr:
-(*  "_" | variable  { E_Var      $1 } *)
-  "<int>"         { E_Int      $1 }
-| "<nat>"         { E_Nat      $1 }
-| "<mutez>"       { E_Mutez    $1 }
-| "<string>"      { E_String   $1 }
-| "<verbatim>"    { E_Verbatim $1 }
-| "<bytes>"       { E_Bytes    $1 }
-| unit            { E_Unit     $1 }
-| record(expr)    { E_Record   $1 }
-
-| projection      { EProj      $1            }
-| code_inj        { ECodeInj   $1            }
-| par(expr)       { EPar       $1            }
-| module_access_e { EModA      $1            }
-| array_literal   { EArray     $1            }
-
-
-(* Unit (value and pattern) *)
-
-unit:
-  "(" ")" { {region = cover $1#region $2#region; value = ($1,$2)} }
-
-(* Record expressions (a.k.a. "objects" in JS) *)
-
-record_expr:
-  braces(sep_or_term(property,field_sep) { fst $1 }) { $1 }
-
-property:
-  field_name {
-    let region = $1#region in
-    Punned_property {region; value = EVar $1}
-  }
-| attributes property_name ":" expr {
-    let region = cover (expr_to_region $2) (expr_to_region $4)
-    and value  = {attributes=$1; name=$2; colon=$3; value=$4}
-    in Property {region; value}
-  }
-| "..." expr {
-    let region = cover $1#region (expr_to_region $2)
-    and value : property_rest = {ellipsis=$1; expr=$2}
-    in Property_rest {region; value} }
-
-property_name:
-  "<int>"    { EArith  (Int $1)    }
-| "<string>" { EString (String $1) }
-| ctor
-| field_name { EVar $1 }
-
-(* Qualified values *)
-
-module_access_e:
-  module_name "." module_var_e {
-    let region = cover $1#region (expr_to_region $3)
-    and value  = {module_name=$1; selector=$2; field=$3}
-    in {region; value} }
-
-module_var_e:
-  module_access_e { EModA $1 }
-| field_name      { EVar  $1 }
-(*| projection      { EProj $1 } TODO *)
+no_attr_core_expr:
+  "<int>"       { E_Int      $1 }
+| "<nat>"       { E_Nat      $1 }
+| "<mutez>"     { E_Mutez    $1 }
+| "<string>"    { E_String   $1 }
+| "<verbatim>"  { E_Verbatim $1 }
+| "<bytes>"     { E_Bytes    $1 }
+| record(expr)  { E_Record   $1 }
+| code_inj      { E_CodeInj  $1 }
+| record_update { E_Update   $1 }
+| ctor          { E_Ctor     $1 }
+| tuple(expr)   { E_Tuple    $1 }
+| path_expr     {            $1 }
 
 (* Code injection *)
 
 code_inj:
   lang_name "<verbatim>" {
     let region = cover $1#region $2#region
-    and value  = {language=$1; code = EString (Verbatim $2)}
+    and value  = {language=$1; code = E_Verbatim $2}
     in {region; value} }
 
-(* Tuple projection *)
+(* Functional updates of records *)
+
+record_update:
+  braces(update_expr) { $1 }
+
+update_expr:
+  "..." expr field_sep updates {
+    {ellipsis=$1; record=$2; sep=$3; updates=$4} }
+
+updates:
+  nsep_or_term(field(field_path_assignment),field_sep) { $1 }
+
+field_path_assignment:
+  attributes field_id {
+    let region = field_id_to_region $2
+    and value  = {attributes=$1; field_id=$2}
+    in FieldId {region; value} }
+| attributes path ":" expr {
+    let region = cover (path_to_region $2) (expr_to_region $4)
+    and value  = {attributes=$1; field_id=$2; field_rhs = Some ($3,$4)}
+    in Path {region; value} }
+
+path:
+  record_name { FieldId (F_Name $1) }
+| projection  { Path $1 }
 
 projection:
-  core_expr brackets(expr) {
-    let region = cover (expr_to_region $1) $2.region in
-    let value  = {expr=$1; selection = Component $2 }
-    in {region; value}
-  }
-| core_expr "." field_name {
-    let selection =
-      FieldName {region = cover $2#region $3#region;
-                 value  = {dot=$2; value=$3}} in
-    let region = cover (expr_to_region $1) $3#region
-    and value  = {expr=$1; selection}
+  no_attr_core_expr nseq(selection) {
+    let stop   = nseq_to_region selection_to_region $2 in
+    let region = cover (expr_to_region $1) stop
+    and value  = {record_or_tuple=$1; field_path=$2}
     in {region; value} }
 
-(* Array Patterns *)
+selection:
+  "." field_id      { Field ($1,$2) }
+| brackets("<int>") { Component $1  }
 
-array_pattern:
-  brackets(array_item_patterns) { PArray $1 }
+(* Tuples (a.k.a "arrays" is JS) *)
 
-array_item_patterns:
-  array_item_pattern {
-    $1, []
+tuple(item):
+  brackets(sep_or_term(component(item),",")) { $1 }
+
+component(item):
+  ioption("...") item { $1,$2 }
+
+(* Path expressions
+
+   A path expression is a construct that qualifies unambiguously a
+   value or type. When maintaining this subgrammar, be wary of not
+   introducing a regression. Here are the currently possible cases:
+
+      * a single variable: "a" or "@0" or "@type" etc.
+      * a single variable in a nested module: "A.B.a"
+      * nested fields and compoments from a variable: "a[0][1]b"
+      * same within a nested module: "A.B.a[0][1].b"
+      * nested fields and components from an expression: "(e).a[0][1]b" *)
+
+path_expr:
+  module_path(selected) { E_ModPath (mk_mod_path $1 expr_to_region) }
+| local_path            { $1 }
+
+selected:
+  field_path { $1        }
+| ctor       { E_Ctor $1 }
+
+field_path:
+  variable "." nsepseq(selection,".") {
+    let stop   = nsepseq_to_region selection_to_region $3 in
+    let region = cover $1#region stop
+    and value  = {record_or_tuple=(E_Var $1); selector=$2; field_path=$3}
+    in E_Proj {region; value}
   }
-| array_item_patterns "," array_item_pattern {
-    Utils.(nsepseq_rev $1 |> nsepseq_cons $3 ($2) |> nsepseq_rev)
+| par(expr) { E_Par $1 }
+| variable  { E_Var $1 }
+
+local_path:
+  par(expr) "." nsepseq(selection,".") {
+    let stop   = nsepseq_to_region selection_to_region $3 in
+    let region = cover $1.region stop
+    and value  = {record_or_tuple=(E_Par $1); selector=$2; field_path=$3}
+    in E_Proj {region; value}
   }
-| array_item_patterns "," array_rest_pattern  {
-    Utils.(nsepseq_rev $1 |> nsepseq_cons $3 ($2) |> nsepseq_rev) }
+| field_path { $1 }
 
-array_item_pattern:
-  "_"           { PVar (mk_wild_pattern $1) }
-| var_pattern   { PVar $1 }
-| array_pattern { $1 }
+(* PATTERNS *)
 
-array_rest_pattern:
-  "..." "<ident>" {
-    let region = cover $1#region $2#region
-    and value  = {ellipsis=$1; rest=$2}
-    in PRest {region; value} }
+pattern:
+  "[@attr]" pattern { P_Attr ($1,$2) }
+| no_attr_pattern   { $1             }
+
+no_attr_pattern:
+  "<int>"                      { P_Int      $1 }
+| "<nat>"                      { P_Nat      $1 }
+| "<bytes>"                    { P_Bytes    $1 }
+| "<string>"                   { P_String   $1 }
+| "<verbatim>"                 { P_Verbatim $1 }
+| "<mutez>"                    { P_Mutez    $1 }
+| "_" | variable               { P_Var      $1 }
+| record(pattern)              { P_Record   $1 }
+| tuple(pattern)               { P_Tuple    $1 }
+| in_pattern
+| qualified_pattern            { $1            }
+
+(* Parenthesised patterns *)
+
+in_pattern:
+  par(pattern | typed_pattern { $1 }) { P_Par $1 }
+
+(* Typed patterns *)
+
+typed_pattern:
+  pattern type_annotation {
+    let stop   = type_expr_to_region (snd $2) in
+    let region = cover (pattern_to_region $1) stop
+    in P_Typed {region; value=($1,$2)} }
+
+(* Qualified patterns (patterns modulo module paths) *)
+
+qualified_pattern:
+  pattern_in_module(ctor       { P_Ctor $1 })
+| pattern_in_module(variable   { P_Var  $1 })
+| pattern_in_module(in_pattern {        $1 }) { $1 }
+
+pattern_in_module(pattern):
+  module_path(pattern) {
+    P_ModPath (mk_mod_path $1 pattern_to_region) }
 
 (* Expressions as Statements *)
-
+(*
 expr_stmt:
   declaration                   { $1 }
 | non_decl_expr_stmt(expr_stmt) { fun attrs -> SExpr (attrs, $1) }
@@ -959,207 +1082,9 @@ non_decl_expr_stmt(right_stmt):
 | incr_expr
 | decr_expr
 | app_expr
-| cast_expr
+| typed_expr
 | ternary_expr(non_decl_expr_stmt(right_stmt)) { $1 }
 
 closed_non_decl_expr_stmt:
   non_decl_expr_stmt(closed_non_decl_expr_stmt) { $1 }
-
-assign_lhs:
-  projection { EProj $1 }
-| variable   { EVar  $1 }
-
-assign_stmt:
-  assign_lhs "="  expr {
-    $1, {value = Eq; region = $2#region}, $3 } (* TODO Wrong regions! *)
-| assign_lhs "*=" expr {
-    $1, {value = Assignment_operator Times_eq; region=$2#region}, $3 }
-| assign_lhs "/=" expr {
-    $1, {value = Assignment_operator Div_eq; region=$2#region}, $3 }
-| assign_lhs "%=" expr {
-    $1, {value = Assignment_operator Mod_eq; region=$2#region}, $3 }
-| assign_lhs "+=" expr {
-    $1, {value = Assignment_operator Plus_eq; region = $2#region}, $3 }
-| assign_lhs "-=" expr {
-    $1, {value = Assignment_operator Min_eq; region = $2#region}, $3 }
-
-ternary_expr(expr):
-  disj_expr_level "?" expr ":" expr {
-    let start  = expr_to_region $1
-    and stop   = expr_to_region $5 in
-    let region = cover start stop in
-    let value  = {condition=$1; qmark=$2; truthy=$3; colon=$4; falsy=$5}
-    in ETernary {value; region}}
-
-incr_expr:
-  "++" variable {
-    let region = cover $1#region $2#region
-    and update_type = Increment $1 in
-    let value = {update_type; variable=$2}
-    in EPrefix {region; value}
-  }
-| variable "++" {
-    let region = cover $1#region $2#region
-    and update_type = Increment $2 in
-    let value = {update_type; variable=$1}
-    in EPostfix {region; value}
-  }
-
-decr_expr:
-  "--" variable {
-    let region = cover $1#region $2#region
-    and update_type = Decrement $1 in
-    let value = {update_type; variable=$2}
-    in EPrefix {region; value}
-  }
-| variable "--" {
-    let region = cover $1#region $2#region
-    and update_type = Decrement $2 in
-    let value  = {update_type; variable=$1}
-    in EPostfix {region; value}
-  }
-
-(* XXX *)
-
-(* DECLARATIONS *)
-
-declaration:
-  let_decl | const_decl | type_decl { $1 }
-
-
-(* PATTERNS *)
-
-binding_list:
-  nsepseq(binding_initializer,",") { $1 }
-
-binding_initializer:
-  binding_pattern ioption(binding_type) "=" expr {
-    let lhs_type, type_params =
-      match $2 with
-        None -> None, None
-      | Some (a,b) -> Some a, b in
-    let start  = pattern_to_region $1
-    and stop   = expr_to_region $4 in
-    let region = cover start stop
-    and value  = {binders=$1; type_params; lhs_type; eq=$3; expr=$4}
-    in {region; value} }
-
-binding_type:
-  ":" ioption(type_parameters) type_expr { ($1,$3), $2 }
-
-type_parameters:
-  chevrons(nsepseq(type_param,",")) { $1 }
-
-binding_pattern:
-  "_"            { PVar (mk_wild_pattern $1) }
-| var_pattern    { PVar $1 }
-| object_pattern
-| array_pattern  { $1 }
-
-var_pattern:
-  attributes variable {
-    let value = {variable=$2; attributes=$1}
-    in {region=$2#region; value} }
-
-(* Record patterns (a.k.a. "object patterns" in JS) *)
-
-object_pattern:
-  braces(property_patterns) { PObject $1 }
-
-
-property_patterns:
-  property_pattern {
-    $1, []
-  }
-| property_patterns field_sep property_pattern {
-    Utils.(nsepseq_rev $1 |> nsepseq_cons $3 ($2) |> nsepseq_rev)
-  }
-| property_patterns field_sep object_rest_pattern {
-    Utils.(nsepseq_rev $1 |> nsepseq_cons $3 $2 |> nsepseq_rev) }
-
-property_pattern:
-  "<ident>" "=" expr {
-    let region = cover $1#region (expr_to_region $3)
-    and value  = {property=$1; eq=$2; value=$3}
-    in PAssign {region; value}
-  }
-| "<ident>" ":" binding_initializer {
-    let region = cover $1#region $3.region
-    and value  = {property=$1; colon=$2; target=$3}
-    in PDestruct {region; value}
-  }
-| var_pattern { PVar $1 }
-
-object_rest_pattern:
-  "..." "<ident>" {
-    let region = cover $1#region $2#region
-    and value  = {ellipsis=$1; rest=$2}
-    in PRest {region; value} }
-
-(* Statements *)
-
-(* TODO: Keep terminator *)
-statements:
-  sep_or_term(statement,";") {
-    fst $1 : (statement, semi) Utils.nsepseq }
-
-(* Expressions *)
-
-fun_expr:
-  ioption(type_parameters) ES6FUN par(parameters)
-  ioption(type_annotation) "=>" body {
-    let region = cover $3.region (body_to_region $6) in
-    let value  = {type_params=$1; parameters = EPar $3;
-                  lhs_type=$4; arrow=$5; body=$6}
-    in {region; value}
-  }
-| ioption(type_parameters) ES6FUN "(" ")" ioption(type_annotation) "=>" body {
-    let region     = cover $3#region $4#region in
-    let parameters = EUnit {region; value = ($3,$4)} in
-    let region     = cover $3#region (body_to_region $7) in
-    let value      = {type_params=$1; parameters; lhs_type=$5; arrow=$6; body=$7}
-    in {region; value}
- }
-| ES6FUN "<ident>" "=>" body
-| ES6FUN "_" "=>" body {
-    let region     = cover $2#region (body_to_region $4)
-    and parameters = EVar $2 in
-    let value = {type_params=None; parameters; lhs_type=None; arrow=$3; body=$4}
-    in {region; value} }
-
-parameters:
-  nsepseq(parameter,",") {
-    let region = nsepseq_to_region expr_to_region $1
-    in ESeq {region; value=$1} }
-
-(* Note: we use [expr] to avoid an LR conflict, and obtain instead
-   the item
-   ## par(expr) -> LPAR expr . RPAR [ ... ]
-   ## parameter -> expr . type_annotation [ RPAR COMMA ]
-*)
-
-parameter:
-  expr ioption(type_annotation) {
-    match $2 with
-      Some (colon, type_expr) ->
-        let start = expr_to_region $1 in
-        let stop = type_expr_to_region type_expr in
-        let region = cover start stop in
-        EAnnot { region; value = $1, colon, type_expr }
-    | None -> $1 }
-
-body:
-  braces(statements) { FunctionBody   $1 }
-| expr               { ExpressionBody $1 }
-
-(* Tuples (a.k.a "arrays" is JS) *)
-
-array_item:
-  expr       { Expr_entry $1 }
-| "..." expr {
-    let region = cover $1#region (expr_to_region $2) in
-    let value : array_item_rest = {ellipsis=$1; expr=$2}
-    in Rest_entry {region; value} }
-
-array_literal:
-  brackets(ioption(nsepseq(array_item,","))) { $1 }
+ *)

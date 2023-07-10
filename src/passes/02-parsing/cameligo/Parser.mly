@@ -876,7 +876,6 @@ fun_expr(right_expr):
                   rhs_type=$4; arrow=$5; body=$6}
     in E_Fun {region; value} }
 
-
 (* For loops *)
 
 for_expr:
@@ -885,58 +884,34 @@ for_expr:
 
 for_int_expr:
   "for" index "=" expr direction expr block {
-    let kwd_for  = $1 in
-    let equal    = $3 in
-    let stop     = $7.region in
-    let region   = cover kwd_for#region stop in
-    let value    = {kwd_for;
-                    index     = $2;
-                    equal;
-                    bound1    = $4;
-                    direction = $5;
-                    bound2    = $6;
-                    body      = $7}
+    let region = cover $1#region $7.region in
+    let value  = {kwd_for=$1; index=$2; equal=$3; bound1=$4;
+                  direction=$5; bound2=$6; body=$7}
     in E_For {region; value} }
 
 index:
   variable { $1 }
 
 direction:
-  "upto"   { Upto $1 }
+  "upto"   { Upto   $1 }
 | "downto" { Downto $1 }
 
 block:
   "do" ioption(series) "done" {
-    let kwd_do   = $1 in
-    let kwd_done = $3 in
-    let value    = {kwd_do;
-                    seq_expr = $2;
-                    kwd_done} in
-    let region   = cover kwd_do#region
-                         kwd_done#region
+    let region = cover $1#region $3#region
+    and value  = {kwd_do=$1; seq_expr=$2; kwd_done=$3}
     in {region; value} }
 
 for_in_expr:
   "for" pattern "in" expr block {
-    let kwd_for = $1 in
-    let kwd_in  = $3 in
-    let stop    = $5.region in
-    let region  = cover kwd_for#region stop in
-    let value   = {kwd_for;
-                   pattern    = $2;
-                   kwd_in;
-                   collection = $4;
-                   body       = $5}
+    let region = cover $1#region $5.region in
+    let value  = {kwd_for=$1; pattern=$2; kwd_in=$3; collection=$4; body=$5}
     in E_ForIn {region; value} }
 
 while_expr:
   "while" expr block {
-    let kwd_while = $1 in
-    let stop      = $3.region in
-    let region    = cover kwd_while#region stop in
-    let value     = {kwd_while;
-                     cond = $2;
-                     body = $3}
+    let region = cover $1#region $3.region
+    and value  = {kwd_while=$1; cond=$2; body=$3}
     in E_While {region; value} }
 
 %inline
@@ -1070,8 +1045,7 @@ typed_expr:
       * a single variable in a nested module: "A.B.a"
       * nested fields and compoments from a variable: "a.0.1.b"
       * same within a nested module: "A.B.a.0.1.b"
-      * nested fields and components from an expression: "(e).a.0.1.b"
- *)
+      * nested fields and components from an expression: "(e).a.0.1.b" *)
 
 path_expr:
   module_path(selected) { E_ModPath (mk_mod_path $1 expr_to_region) }
