@@ -204,17 +204,20 @@ nsep_or_pref(item,sep):
 (* Helpers *)
 
 %inline
-variable    : "<ident>"  { $1 }
+ variable        : "<ident>"  { $1 }
 
-type_var    : "<ident>" | "<uident>" { $1 }
-type_name   : "<ident>" | "<uident>" { $1 }
-type_ctor   : "<ident>" | "<uident>" { $1 }
-module_name : "<uident>" { $1 }
-intf_name   : "<uident>" { $1 }
-ctor        : "<uident>" { $1 }
-file_path   : "<string>" { $1 }
-record_name : "<ident>"  { $1 }
-field_name  : "<ident>"  { $1 }
+type_var        : "<ident>" | "<uident>" { $1 }
+type_name       : "<ident>" | "<uident>" { $1 }
+type_ctor       : "<ident>" | "<uident>" { $1 }
+module_name     : "<uident>" { $1 }
+intf_name       : "<uident>" { $1 }
+ctor            : "<uident>" { $1 }
+file_path       : "<string>" { $1 }
+record_name     : "<ident>"  { $1 }
+field_name      : "<ident>"  { $1 }
+
+%inline
+record_or_tuple : "<ident>"  { $1 }
 
 %inline
 lang_name   : "<ident>" | "<uident>" { $1 }
@@ -261,6 +264,7 @@ value_decl:
     and value  = {kind=$1; bindings=$2}
     in {region; value} }
 
+%inline
 var_kind:
   "let"   { `Let   $1 }
 | "const" { `Const $1 }
@@ -386,7 +390,7 @@ type_binder:
 (* TYPE EXPRESSIONS *)
 
 type_expr:
-  fun_type | variant_type | core_type { $1 }
+  fun_type | variant_type | union_or_record | core_type { $1 }
 
 (* Functional types *)
 
@@ -452,8 +456,8 @@ no_attr_type:
 | type_tuple        { T_Cart      $1 }
 | par(type_expr)    { T_Par       $1 }
 | parameter_of_type { T_Parameter $1 }
-| qualified_type
-| union_or_record   {             $1 }
+| qualified_type    {             $1 }
+    (*| union_or_record   {             $1 }*)
 
 (* Application of type arguments to type constructors *)
 
@@ -537,9 +541,10 @@ type_in_module(type_expr):
 (* Union or record type *)
 
 union_or_record:
-  nsep_or_pref(record(type_expr),"|") {
-    match $1 with
-      `Sep (record, []) -> T_Record record
+  attributes nsep_or_pref(record(type_expr),"|") {
+    let type_expr =
+    match $2 with
+      `Sep (t, []) -> T_Record t
     | _ -> T_Union $1 }
 
 (* Record types (a.k.a. "object types" in JS) *)
@@ -572,39 +577,53 @@ statements:
   nsep_or_term(statement,";") { $1 }
 
 statement:
-  base_stmt(statement) { $1                }
-| attributes if_stmt   { hook_S_Attr $1 $2 }
+  base_stmt(statement) | if_stmt { $1 }
 
 base_stmt(right_stmt):
-  "[@attr]" base_stmt(right_stmt) { S_Attr ($1,$2) }
-| no_attr_stmt(right_stmt)        { $1             }
-
-no_attr_stmt(right_stmt):
-  block_stmt               { S_Block  $1 }
+  attributes expr_stmt(expr)     { hook_S_Attr $1 $2 }
+| block_stmt               { S_Block  $1 }
 | if_else_stmt(right_stmt) { S_Cond   $1 }
-| declaration              { S_Decl   $1 }
-| expr                     { S_Expr   $1 }
+(*| declaration              { S_Decl   $1 } *)
+(*| expr_stmt                { S_Expr   $1 } *)
 | for_stmt(right_stmt)     { S_For    $1 }
 | for_of_stmt(right_stmt)  { S_ForOf  $1 }
 | return_stmt              { S_Return $1 }
 | switch_stmt              { S_Switch $1 }
 | while_stmt(right_stmt)   { S_While  $1 }
-| assign_stmt              {          $1 }
+(*| assign_stmt              {          $1 }*)
 
 closed_stmt:
   base_stmt(closed_stmt) { $1 }
 
+(* Expressions as statements *)
+
+expr_stmt(right_expr):
+  declaration                                          { S_Decl $1 }
+| non_decl_expr_stmt(right_expr,expr_stmt(right_expr)) { S_Expr $1 }
+
+non_decl_expr_stmt(right_expr,right_stmt):
+  assign_stmt(right_expr)
+| incr_expr
+| decr_expr
+| app_expr
+| typed_expr
+| ternary_test(non_decl_expr_stmt(disj_expr_level,right_stmt)) { $1 }
+| par(expr) { E_Par $1 }
+
+closed_non_decl_expr_stmt(right_expr):
+  non_decl_expr_stmt(right_expr,closed_non_decl_expr_stmt(right_expr)) { $1 }
+
 (* Assignments *)
 
-assign_stmt:
-  bin_op(assign_lhs,  "=", expr) { E_Assign  $1 }
-| bin_op(assign_lhs, "*=", expr) { E_TimesEq $1 }
-| bin_op(assign_lhs, "/=", expr) { E_DivEq   $1 }
-| bin_op(assign_lhs, "%=", expr) { E_ModEq   $1 }
-| bin_op(assign_lhs, "+=", expr) { E_AddEq   $1 }
-| bin_op(assign_lhs, "-=", expr) { E_MinusEq $1 }
+assign_stmt(right_expr):
+  bin_op(path,  "=", right_expr) { E_Assign  $1 }
+| bin_op(path, "*=", right_expr) { E_TimesEq $1 }
+| bin_op(path, "/=", right_expr) { E_DivEq   $1 }
+| bin_op(path, "%=", right_expr) { E_ModEq   $1 }
+| bin_op(path, "+=", right_expr) { E_AddEq   $1 }
+| bin_op(path, "-=", right_expr) { E_MinusEq $1 }
 
-assign_lhs:
+path:
   projection { E_Proj $1 }
 | variable   { E_Var  $1 }
 
@@ -640,7 +659,7 @@ if_cond:
 (* For-loop statement *)
 
 for_stmt(right_stmt):
-  "for" par(range_for) ioption(statement) {
+  "for" par(range_for) ioption(right_stmt) {
     let stop = match $3 with
                  None      -> $2.region
                | Some stmt -> statement_to_region stmt in
@@ -662,7 +681,7 @@ range_for:
     in {region; value} }
 
 initialiser:
-  statement { $1 }
+  expr_stmt(expr) { $1 }
 
 condition:
   expr { $1 }
@@ -712,7 +731,7 @@ cases:
 | switch_default                            { Default       $1 }
 
 switch_case:
-  "case" expr ":" ioption(case_statements) {
+  "case" disj_expr_level ":" ioption(case_statements) {
     let stop = match $4 with
                  None -> $3#region
                | Some `Sep (hd,_)
@@ -754,8 +773,8 @@ while_cond:
 expr:
   fun_expr           { E_Fun $1 }
 | typed_expr
-| ternary_expr(expr)
-| disj_expr_level    { $1 }
+| ternary_test(disj_expr_level)
+| disj_expr_level               { $1 }
 
 (* Functional expressions *)
 
@@ -770,25 +789,22 @@ fun_expr:
     in {region; value} }
 
 parameters:
-  par(sep_or_term(pattern,",")) { Params   $1 }
-| variable | "_"                { OneParam $1 }
+  par(sep_or_term(parameter,",")) { Params   $1 }
+| variable | "_"                  { OneParam $1 }
+
+parameter:
+  pattern ioption(type_annotation) {
+    match $2 with
+      Some (_, type_expr) ->
+        let stop   = type_expr_to_region type_expr in
+        let region = cover (pattern_to_region $1) stop
+        in P_Typed {region; value = $1,$2}
+    | None -> $1 }
 
 (* Note: we use [expr] to avoid an LR conflict, and obtain instead
    the item
    ## par(expr) -> LPAR expr . RPAR [ ... ]
    ## parameter -> expr . type_annotation [ RPAR COMMA ] *)
-
-(*
-parameter:
-  expr ioption(type_annotation) {
-    match $2 with
-      Some (colon, type_expr) ->
-        let start  = expr_to_region $1
-        and stop   = type_expr_to_region type_expr in
-        let region = cover start stop in
-        EAnnot { region; value = $1, colon, type_expr }
-    | None -> $1 }
-*)
 
 fun_body:
   braces(statements) { FunBody  $1 }
@@ -804,7 +820,7 @@ typed_expr:
 
 (* Ternary conditional operator *)
 
-ternary_expr(branch):
+ternary_test(branch):
   disj_expr_level "?" branch ":" branch {
     let region = cover (expr_to_region $1) (expr_to_region $5)
     and value  = {condition=$1; qmark=$2; truthy=$3; colon=$4; falsy=$5}
@@ -898,17 +914,20 @@ decr_expr:
 (* Function calls & data constructor applications *)
 
 app_expr_level:
-  app_expr | core_expr { $1 }
-
-app_expr:
   "contract_of" par(module_selection) {
     let region = cover $1#region $2.region
     and value  = {kwd_contract_of=$1; module_path=$2}
     in E_Contract {region; value}
   }
-| app_expr_level arguments {
+| lambda { $1 }
+
+app_expr:
+  lambda arguments {
     let region = cover (expr_to_region $1) $2.region
     in E_App {region; value=($1,$2)} }
+
+lambda:
+  app_expr | no_attr_core_expr { $1 }
 
 arguments:
   par(ioption(nsepseq(argument,","))) { $1 }
@@ -966,12 +985,14 @@ field_path_assignment:
     and value  = {attributes=$1; field_id=$2; field_rhs = Some ($3,$4)}
     in Path {region; value} }
 
+(*
 path:
   record_name { FieldId (F_Name $1) }
 | projection  { Path $1 }
+ *)
 
 projection:
-  no_attr_core_expr nseq(selection) {
+  record_or_tuple nseq(selection) {
     let stop   = nseq_to_region selection_to_region $2 in
     let region = cover (expr_to_region $1) stop
     and value  = {record_or_tuple=$1; field_path=$2}
@@ -1010,20 +1031,20 @@ selected:
 | ctor       { E_Ctor $1 }
 
 field_path:
-  variable "." nsepseq(selection,".") {
-    let stop   = nsepseq_to_region selection_to_region $3 in
-    let region = cover $1#region stop
-    and value  = {record_or_tuple=(E_Var $1); selector=$2; field_path=$3}
+  variable nseq(selection) {
+    let stop   = nseq_to_region selection_to_region $2 in
+    let region = cover (expr_to_region $1) stop
+    and value  = {record_or_tuple=(E_Var $1); field_path=$2}
     in E_Proj {region; value}
   }
 | par(expr) { E_Par $1 }
 | variable  { E_Var $1 }
 
 local_path:
-  par(expr) "." nsepseq(selection,".") {
-    let stop   = nsepseq_to_region selection_to_region $3 in
-    let region = cover $1.region stop
-    and value  = {record_or_tuple=(E_Par $1); selector=$2; field_path=$3}
+  par(expr) nseq(selection) {
+    let stop   = nseq_to_region selection_to_region $2 in
+    let region = cover (expr_to_region $1) stop
+    and value  = {record_or_tuple=(E_Par $1); field_path=$2}
     in E_Proj {region; value}
   }
 | field_path { $1 }
@@ -1044,13 +1065,8 @@ no_attr_pattern:
 | "_" | variable               { P_Var      $1 }
 | record(pattern)              { P_Record   $1 }
 | tuple(pattern)               { P_Tuple    $1 }
-| in_pattern
+(*| par(typed_pattern)           { P_Par      $1 }*)
 | qualified_pattern            { $1            }
-
-(* Parenthesised patterns *)
-
-in_pattern:
-  par(pattern | typed_pattern { $1 }) { P_Par $1 }
 
 (* Typed patterns *)
 
@@ -1064,27 +1080,9 @@ typed_pattern:
 
 qualified_pattern:
   pattern_in_module(ctor       { P_Ctor $1 })
-| pattern_in_module(variable   { P_Var  $1 })
-| pattern_in_module(in_pattern {        $1 }) { $1 }
+| pattern_in_module(variable   { P_Var  $1 }) { $1 }
+(*| pattern_in_module(in_pattern {        $1 }) { $1 } *)
 
 pattern_in_module(pattern):
   module_path(pattern) {
     P_ModPath (mk_mod_path $1 pattern_to_region) }
-
-(* Expressions as Statements *)
-(*
-expr_stmt:
-  declaration                   { $1 }
-| non_decl_expr_stmt(expr_stmt) { fun attrs -> SExpr (attrs, $1) }
-
-non_decl_expr_stmt(right_stmt):
-  assign_stmt                                  { EAssign $1 }
-| incr_expr
-| decr_expr
-| app_expr
-| typed_expr
-| ternary_expr(non_decl_expr_stmt(right_stmt)) { $1 }
-
-closed_non_decl_expr_stmt:
-  non_decl_expr_stmt(closed_non_decl_expr_stmt) { $1 }
- *)
