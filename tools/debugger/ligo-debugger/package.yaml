@@ -47,6 +47,7 @@ default-extensions:
   - TypeApplications
   - TypeFamilies
   - TypeOperators
+  - UndecidableInstances
   - ViewPatterns
 
 ghc-options:
@@ -83,7 +84,6 @@ library:
     - free
     - hashable
     - lens
-    - lens-aeson
     - monad-stm
     - morley
     - morley-debugger
@@ -91,6 +91,7 @@ library:
     - nyan-interpolation
     - nyan-interpolation-core
     - process
+    - reflection
     - process-extras
     - regex-tdfa
     - scientific
@@ -162,7 +163,6 @@ tests:
       - directory
       - duplo
       - filepath
-      - fmt
       - hedgehog
       - hspec-expectations
       - lens

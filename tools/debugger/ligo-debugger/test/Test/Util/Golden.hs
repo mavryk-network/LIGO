@@ -12,8 +12,7 @@ import Data.List qualified as List
 import Data.Set qualified as Set
 import Data.Text qualified as Text
 import Data.Text.IO qualified as Text
-import Fmt (Builder, fmt, pretty)
-import Fmt.Internal.Core (FromBuilder (..))
+import Fmt (Doc, FromDoc, fmt, pretty)
 import GHC.Stack (srcLocFile, srcLocStartLine)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath (pathSeparator)
@@ -21,7 +20,7 @@ import System.IO.Unsafe (unsafePerformIO)
 import Test.HUnit.Lang qualified as HUnit
 import Test.Tasty (TestName, TestTree)
 import Test.Tasty.Golden.Advanced (goldenTest)
-import Text.Interpolation.Nyan
+import Text.Interpolation.Nyan hiding (rmode')
 import Text.Show qualified
 import UnliftIO.Exception (handle, throwIO)
 
@@ -57,8 +56,9 @@ instance Exception UnhandledHUnitException where
 
 -- | Let's dumping a piece of output, that will be then matched againt
 -- the golden file.
-newtype GoldenActionContext = GoldenActionContext
-  { gacDumpOutput :: Builder -> IO ()
+data GoldenActionContext = GoldenActionContext
+  { gacDumpOutput :: Doc -> IO ()
+  , gacLigoTypesVec :: LigoTypesVec
   }
 
 -- | This creates a golden test of the snapshots visited by the specific replay.
@@ -91,7 +91,7 @@ goldenTestWithSnapshotsImpl
      -- ^ Golden file.
   -> ContractRunData
      -- ^ Which contract to run and how.
-  -> ReaderT GoldenActionContext (HistoryReplayM (InterpretSnapshot 'Unique) IO) ()
+  -> ReaderT GoldenActionContext (ReaderT TestCtx (HistoryReplayM (InterpretSnapshot 'Unique) IO)) ()
      -- ^ The movement logic within a special monad that has 'HistoryReplay'
      -- constraint and provides a way to construct the expected output.
   -> TestTree
@@ -113,8 +113,9 @@ goldenTestWithSnapshotsImpl logger testName goldenFolder runData logicFunc = do
     action = handle (throwIO . UnhandledHUnitException) do
       outputVar <- newIORef mempty
       let write = liftIO . modifyIORef outputVar . (:)
-      testWithSnapshotsImpl logger Nothing runData $
-        usingReaderT (GoldenActionContext write) logicFunc
+      testWithSnapshotsImpl logger Nothing runData do
+        ligoTypesVec <- asks tcLigoTypesVec
+        usingReaderT (GoldenActionContext write ligoTypesVec) logicFunc
       recordedOutput <- readIORef outputVar
       return $
         fmt $ mconcat $ intersperse "\n" $
@@ -167,21 +168,21 @@ goldenTestWithSnapshots, _goldenTestWithSnapshotsLogging
   :: TestName
   -> FilePath
   -> ContractRunData
-  -> ReaderT GoldenActionContext (HistoryReplayM (InterpretSnapshot 'Unique) IO) ()
+  -> ReaderT GoldenActionContext (ReaderT TestCtx (HistoryReplayM (InterpretSnapshot 'Unique) IO)) ()
   -> TestTree
 goldenTestWithSnapshots = goldenTestWithSnapshotsImpl dummyLoggingFunction
 _goldenTestWithSnapshotsLogging = goldenTestWithSnapshotsImpl putStrLn
 {-# WARNING _goldenTestWithSnapshotsLogging "'goldenTestWithSnapshotsLogging' remains in code" #-}
 
 -- | A little fun, here it seems justified.
-instance (a ~ (), MonadIO m) => FromBuilder (ReaderT GoldenActionContext m a) where
-  fromBuilder = dumpComment
+instance (a ~ (), MonadIO m) => FromDoc (ReaderT GoldenActionContext m a) where
+  fmt = dumpComment
 
 -- | Dump some text, it will be put to the overall compared text without changes
 -- (except for some surrounding newlines).
 dumpComment
   :: (MonadReader GoldenActionContext m, MonadIO m)
-  => Builder -> m ()
+  => Doc -> m ()
 dumpComment msg = ask >>= \GoldenActionContext{..} -> liftIO $ gacDumpOutput msg
 
 -- | Dump the current snapshot to the overall compared text.
@@ -190,7 +191,8 @@ dumpCurSnapshot
      , MonadReader GoldenActionContext m, MonadIO m
      )
   => m ()
-dumpCurSnapshot = dumpComment . pretty =<< frozen curSnapshot
+dumpCurSnapshot =
+  asks gacLigoTypesVec >>= \vec -> frozen curSnapshot >>= dumpComment . pretty . makeConciseSnapshots vec
 
 -- | Perform the given step many times until the end and record the snapshots
 -- at stops.
