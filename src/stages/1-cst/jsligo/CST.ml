@@ -735,10 +735,6 @@ let field_id_to_region = function
 | F_Cap  i -> i#region
 | F_Str  i -> i#region
 
-let path_to_region = function
-  FieldId p -> field_id_to_region p
-| Path    p -> p.region
-
 let parameters_to_region = function
   Params {region; _} -> region
 | OneParam w -> w#region

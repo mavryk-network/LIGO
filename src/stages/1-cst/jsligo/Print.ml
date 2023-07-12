@@ -885,21 +885,13 @@ and print_E_Typed state (node: typed_expr reg) =
 and print_E_Update state (node: update_expr braces) =
   let Region.{region; value} = node in
   let {ellipsis=_; record; sep=_; updates} = value.inside in
-  let print_updates state (node: (path field reg, semi) nsep_or_term) =
-    let print = print_field print_path in
+  let print_updates state (node: (expr field reg, semi) nsep_or_term) =
+    let print = print_field print_expr in
     Tree.of_nsep_or_term state "<updates>" print node in
   let children = Tree.[
     mk_child print_expr    record;
     mk_child print_updates updates]
   in Tree.make state ~region "E_Update" children
-
-and print_path state = function
-  FieldId p -> Tree.(make_unary state "FieldId" print_field_id p)
-| Path    p -> print_Path state p
-
-and print_Path state (node : projection reg) =
-  let Region.{value; region} = node in
-  Tree.of_nseq state ~region "Path" print_selection value.field_path
 
 and print_E_Var state (node: variable) =
   Tree.(make_unary state "E_Var" make_literal node)
