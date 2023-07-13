@@ -534,7 +534,7 @@ core_type:
 | type_ctor_app   { T_App    $1 }
 | record_type     { T_Record $1 }
 | par(type_expr)  { T_Par    $1 }
-| qualified_type  { $1          }
+| qualified_type
 | attr_type       { $1 }
 
 (* Attributed core types *)

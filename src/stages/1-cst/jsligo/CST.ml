@@ -119,6 +119,14 @@ type file_path   = lexeme wrap
 type language    = lexeme wrap
 type attribute   = Attr.t wrap
 
+type string_literal   = lexeme wrap
+type capitalised_id   = lexeme wrap
+type int_literal      = (lexeme * Z.t) wrap
+type nat_literal      = int_literal
+type bytes_literal    = (lexeme * Hex.t) wrap
+type mutez_literal    = (lexeme * Int64.t) wrap
+type verbatim_literal = lexeme wrap
+
 (* Parentheses, braces, brackets *)
 
 type 'a par'      = {lpar: lpar; inside: 'a; rpar: rpar}
@@ -284,12 +292,12 @@ and type_expr =
 | T_Attr      of (attribute * type_expr)           (* @a e              *)
 | T_Cart      of cartesian                         (* [t, [u, v]]       *)
 | T_Fun       of fun_type                          (* (a : t) => u      *)
-| T_Int       of (lexeme * Z.t) wrap               (* 42                *)
+| T_Int       of int_literal                       (* 42                *)
 | T_ModPath   of type_expr module_path reg         (* A.B.list<u>       *)
 | T_Par       of type_expr par                     (* (t)               *)
 | T_Parameter of parameter_of_type reg             (* parameter_of m    *)
 | T_Record    of type_expr record                  (* {x; @a y : t}     *)
-| T_String    of lexeme wrap                       (* "x"               *)
+| T_String    of string_literal                    (* "x"               *)
 | T_Union     of union_type                        (* {kind: "C", x: t} *)
 | T_Var       of variable                          (* t                 *)
 | T_Variant   of variant_type                      (* ["A"] | ["B", t]  *)
@@ -327,9 +335,9 @@ and 'a field = {
 
 and field_id =
   F_Name of field_name
-| F_Num  of (lexeme * Z.t) wrap
-| F_Cap  of lexeme wrap
-| F_Str  of lexeme wrap
+| F_Num  of nat_literal
+| F_Cap  of capitalised_id
+| F_Str  of string_literal
 
 (* Discriminated unions *)
 
@@ -356,18 +364,18 @@ and variant_comp = {
 
 and pattern =
   P_Attr     of (attribute * pattern)    (* @a [x, _]       *)
-| P_Bytes    of (lexeme * Hex.t) wrap    (* 0xFFFA          *)
+| P_Bytes    of bytes_literal            (* 0xFFFA          *)
 | P_Ctor     of ctor                     (* C               *)
-| P_Int      of (lexeme * Z.t) wrap      (* 42              *)
-| P_Mutez    of (lexeme * Int64.t) wrap  (* 5mutez          *)
-| P_Nat      of (lexeme * Z.t) wrap      (* 4n              *)
+| P_Int      of int_literal              (* 42              *)
+| P_Mutez    of mutez_literal            (* 5mutez          *)
+| P_Nat      of nat_literal              (* 4n              *)
 | P_Par      of pattern par              (* ({x : 0})       *)
 | P_Record   of pattern record           (* {x, y : 0}      *)
 | P_String   of lexeme wrap              (* "string"        *)
 | P_Tuple    of pattern tuple            (* [x, ...y, z] [] *)
 | P_Typed    of typed_pattern reg        (* [] : list<int>  *)
 | P_Var      of variable                 (* x               *)
-| P_Verbatim of lexeme wrap              (* {|foo|}         *)
+| P_Verbatim of verbatim_literal         (* {|foo|}         *)
 
 (* Tuple *)
 
@@ -490,7 +498,7 @@ and expr =
 | E_App      of (expr * arguments) reg  (* f(x)   Foo()      *)
 | E_Assign   of equal bin_op reg        (* x = y             *)
 | E_Attr     of (attribute * expr)      (* @a [x, y]         *)
-| E_Bytes    of (lexeme * Hex.t) wrap   (* 0xFFFA            *)
+| E_Bytes    of bytes_literal           (* 0xFFFA            *)
 | E_CodeInj  of code_inj reg
 | E_Contract of contract_of_expr reg    (* contract_of (M.N) *)
 | E_Ctor     of ctor                    (* C                 *)
@@ -500,7 +508,7 @@ and expr =
 | E_Fun      of fun_expr reg            (* (x : int) => e    *)
 | E_Geq      of geq bin_op reg          (* x >= y            *)
 | E_Gt       of gt bin_op reg           (* x > y             *)
-| E_Int      of (lexeme * Z.t) wrap     (* 42                *)
+| E_Int      of int_literal             (* 42                *)
 | E_Leq      of leq bin_op reg          (* x <= y            *)
 | E_Lt       of lt bin_op reg           (* x < y             *)
 | E_MinusEq  of minus_eq bin_op reg     (* x -= y            *)
@@ -508,8 +516,8 @@ and expr =
 | E_ModEq    of mod_eq bin_op reg       (* x %= y            *)
 | E_ModPath  of expr module_path reg    (* M.N.x.0           *)
 | E_Mult     of times bin_op reg        (* x * y             *)
-| E_Mutez    of (lexeme * Int64.t) wrap (* 5mutez            *)
-| E_Nat      of (lexeme * Z.t) wrap     (* 42n               *)
+| E_Mutez    of mutez_literal           (* 5mutez            *)
+| E_Nat      of nat_literal             (* 42n               *)
 | E_Neg      of minus un_op reg         (* -x                *)
 | E_Neq      of neq bin_op reg          (* x != y            *)
 | E_Not      of negation un_op reg      (* !x                *)
@@ -521,7 +529,7 @@ and expr =
 | E_PreIncr  of increment un_op reg     (* ++x               *)
 | E_Proj     of projection reg          (* e.x.1             *)
 | E_Record   of expr record             (* {x : e, y}        *)
-| E_String   of lexeme wrap             (* "abcdef"          *)
+| E_String   of string_literal          (* "abcdef"          *)
 | E_Sub      of minus bin_op reg        (* x - y             *)
 | E_Ternary  of ternary reg             (* x ? y : z         *)
 | E_TimesEq  of times_eq bin_op reg     (* x *= y            *)
@@ -529,7 +537,7 @@ and expr =
 | E_Typed    of typed_expr reg          (* e as t            *)
 | E_Update   of update_expr braces      (* {...x, y : z}     *)
 | E_Var      of variable                (* x                 *)
-| E_Verbatim of lexeme wrap             (* {|foo|}           *)
+| E_Verbatim of verbatim_literal        (* {|foo|}           *)
 
 (* Applications *)
 
@@ -602,7 +610,7 @@ and projection = {
 
 and selection =
   Field     of (dot * field_id)
-| Component of lexeme wrap brackets
+| Component of int_literal brackets
 
 (* Code injection.  Note how the field [language] wraps a region in
    another: the outermost region covers the header "[%<language>" and

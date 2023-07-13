@@ -175,17 +175,23 @@ type lexeme = string
 
 (* Strings *)
 
-let make_string state (wrap : string Wrap.t) =
+let make_string state (wrap : string Wrap.t) : unit =
   let region = compact state wrap#region in
   let node   = sprintf "%s%S (%s)\n" state#pad_path wrap#payload region
   in Buffer.add_string state#buffer node
 
+let make_string root state (wrap : string Wrap.t) =
+  make_unary state root make_string wrap
+
 (* Verbatim strings *)
 
-let make_verbatim state (wrap : string Wrap.t) =
+let make_verbatim state (wrap : string Wrap.t) : unit =
   let region = compact state wrap#region in
   let node   = sprintf "%s{|%s|} (%s)\n" state#pad_path wrap#payload region
   in Buffer.add_string state#buffer node
+
+let make_verbatim root state (wrap : string Wrap.t) =
+  make_unary state root make_verbatim wrap
 
 (* Numbers *)
 

@@ -196,13 +196,12 @@ val of_nsep_or_pref :
   -> ('a,_) Nodes.nsep_or_pref
   -> unit
 
-
 (* PRINTING TOKENS (NODES) *)
 
 type lexeme = string
 
-val make_string   : string Wrap.t printer
-val make_verbatim : string Wrap.t printer
+val make_string   : root -> string Wrap.t printer
+val make_verbatim : root -> string Wrap.t printer
 val make_int      : root -> (lexeme *     Z.t) Wrap.t printer
 val make_nat      : root -> (lexeme *     Z.t) Wrap.t printer
 val make_bytes    : root -> (lexeme *   Hex.t) Wrap.t printer

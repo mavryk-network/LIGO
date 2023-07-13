@@ -169,13 +169,13 @@ braces(X):
 (* Non-empty sequence of items *)
 
 nseq(X):
-  X         { $1, [] }
+  X         { $1,[] }
 | X nseq(X) { let hd,tl = $2 in $1, hd::tl }
 
 (* Non-empty separated sequence of items *)
 
 nsepseq(item,sep):
-  item                       {                        $1, [] }
+  item                       {                         $1,[] }
 | item sep nsepseq(item,sep) { let h,t = $3 in $1, ($2,h)::t }
 
 (* The rule [nsep_or_term(item,sep)] ("non-empty separated or
@@ -239,9 +239,9 @@ contract:
 (* TOP-LEVEL DECLARATIONS *)
 
 top_decl:
-  declaration ";"?   { TL_Decl      ($1, $2) }
-| "[@attr]" top_decl { TL_Attr      ($1, $2) }
-| "<directive>"      { TL_Directive $1       }
+  declaration ";"?   { TL_Decl      ($1,$2) }
+| "[@attr]" top_decl { TL_Attr      ($1,$2) }
+| "<directive>"      { TL_Directive $1      }
 | "export" top_decl  {
      let region = cover $1#region (top_decl_to_region $2)
      in TL_Export {region; value=($1,$2)} }
@@ -282,7 +282,7 @@ type_vars:
   chevrons(sep_or_term(type_var,",")) { $1 }
 
 type_annotation:
-  ":" type_expr { $1, $2 }
+  ":" type_expr { $1,$2 }
 
 (* Import declaration *)
 
@@ -408,19 +408,22 @@ fun_type_param:
 (* Variant types *)
 
 variant_type:
-  attributes nseq("|" variant { $1,$2} ) {
-    let region    = nseq_to_region (fun x -> x.region) $2 in
-    let type_expr = T_Variant {region; value = `Pref $2}
-    in hook_T_Attr $1 type_expr
-  }
-| nsepseq(variant,"|") {
+  nsepseq(variant,"|") {
     let region = nsepseq_to_region (fun x -> x.region) $1
-    in T_Variant {region; value = `Sep $1} }
+    in T_Variant {region; value = `Sep $1}
+  }
+| attr_variant { $1 }
+
+attr_variant:
+  nseq("|" variant { $1,$2 }) {
+    let region = nseq_to_region (fun x -> x.region) $1
+    in T_Variant {region; value = `Pref $1}
+  }
+| "[@attr]" attr_variant { T_Attr ($1,$2) }
 
 variant:
-  attributes brackets(variant_comp) {
-    let value = {attributes=$1; tuple=$2}
-    in {region = $2.region; value} }
+  "[@attr]" variant      { {$2 with attributes = $1::$2.attributes} }
+| brackets(variant_comp) { {attributes=[]; tuple=$1}                }
 
 %inline
 variant_comp:
@@ -441,23 +444,23 @@ ctor_param:
    ["C"]. *)
 
 core_type:
-  "<string>"            { T_String $1 }
-| core_type_no_string   {          $1 }
+  "<string>"          { T_String $1 }
+| core_type_no_string {          $1 }
 
 core_type_no_string:
-  "[@attr]" core_type_no_string { T_Attr ($1,$2) }
-| no_attr_type                  { $1             }
-
-%inline (* Was on [core_type_no_string] *)
-no_attr_type:
-  "<int>"           { T_Int       $1 }
+ "<int>"            { T_Int       $1 }
 | type_name         { T_Var       $1 } (* "_" unsupported in type-checker *)
 | type_ctor_app     { T_App       $1 }
 | type_tuple        { T_Cart      $1 }
 | par(type_expr)    { T_Par       $1 }
 | parameter_of_type { T_Parameter $1 }
-| qualified_type    {             $1 }
-    (*| union_or_record   {             $1 }*)
+| qualified_type
+| attr_type         {             $1 }
+
+(* Attributed core type *)
+
+attr_type:
+  "[@attr]" core_type_no_string { T_Attr ($1,$2) }
 
 (* Application of type arguments to type constructors *)
 
@@ -541,11 +544,12 @@ type_in_module(type_expr):
 (* Union or record type *)
 
 union_or_record:
-  attributes nsep_or_pref(record(type_expr),"|") {
-    let type_expr =
-    match $2 with
-      `Sep (t, []) -> T_Record t
-    | _ -> T_Union $1 }
+  nsep_or_pref(record(type_expr),"|") {
+    match $1 with
+     `Sep (t,[]) -> T_Record t
+    | _ -> T_Union $1
+  }
+| "[@attr]" union_or_record { T_Attr ($1,$2) }
 
 (* Record types (a.k.a. "object types" in JS) *)
 
@@ -984,12 +988,6 @@ field_path_assignment:
     let region = cover (path_to_region $2) (expr_to_region $4)
     and value  = {attributes=$1; field_id=$2; field_rhs = Some ($3,$4)}
     in Path {region; value} }
-
-(*
-path:
-  record_name { FieldId (F_Name $1) }
-| projection  { Path $1 }
- *)
 
 projection:
   record_or_tuple nseq(selection) {

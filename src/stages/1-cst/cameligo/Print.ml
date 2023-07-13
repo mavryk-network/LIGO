@@ -348,8 +348,8 @@ and print_field_decl state (node : field_decl reg) =
 
 (* Type string *)
 
-and print_T_String state (node : lexeme wrap) =
-  Tree.(make_unary state "T_String" make_string node)
+and print_T_String state (node : string_literal) =
+  Tree.make_string "T_String" state node
 
 (* Variant types *)
 
@@ -525,7 +525,7 @@ and print_update_lens state = function
 (* String literals as patterns *)
 
 and print_P_String state (node : lexeme wrap) =
-  Tree.(make_unary state "P_String" make_string node)
+  Tree.make_string "P_String" state node
 
 (* The pattern matching a tuple *)
 
@@ -557,7 +557,7 @@ and print_P_Var state (node : variable) =
 (* A verbatim string *)
 
 and print_P_Verbatim state (node : lexeme wrap) =
-  Tree.(make_unary state "P_Verbatim" make_verbatim node)
+  Tree.make_verbatim "P_Verbatim" state node
 
 (* EXPRESSIONS *)
 
@@ -980,7 +980,7 @@ and print_field_expr state (node : (field_name, equal, expr) field) =
 (* String literals *)
 
 and print_E_String state (node : lexeme wrap) =
-  Tree.(make_unary state "E_String" make_string node)
+  Tree.make_string "E_String" state node
 
 (* Arithmetic subtraction *)
 
@@ -1049,7 +1049,7 @@ and print_E_Var state (node : variable) =
 (* Verbatim strings *)
 
 and print_E_Verbatim state (node : lexeme wrap) =
-  Tree.(make_unary state "E_Verbatim" make_verbatim node)
+  Tree.make_verbatim "E_Verbatim" state node
 
 (* Sequence *)
 

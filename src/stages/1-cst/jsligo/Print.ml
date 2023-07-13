@@ -335,7 +335,7 @@ and print_codomain state (node: type_expr) =
 
 (* The integer type *)
 
-and print_T_Int state (node : (lexeme * Z.t) wrap) =
+and print_T_Int state (node : int_literal) =
   Tree.make_int "T_Int" state node
 
 (* Module paths in type expressions *)
@@ -383,19 +383,19 @@ and print_field_id state = function
 and print_F_Name state (node: field_name) =
   Tree.(make_unary state "F_Name" make_literal node)
 
-and print_F_Num state (node: (lexeme * Z.t) wrap) =
+and print_F_Num state (node: int_literal) =
   Tree.make_int "F_Num" state node
 
-and print_F_Cap state (node: lexeme wrap) =
+and print_F_Cap state (node: capitalised_id) =
   Tree.(make_unary state "F_Cap" make_literal node)
 
-and print_F_Str state (node: lexeme wrap) =
-  Tree.(make_unary state "F_Str" make_literal node)
+and print_F_Str state (node: string_literal) =
+  Tree.make_string "F_Str" state node
 
 (* Type string *)
 
-and print_T_String state (node : lexeme wrap) =
-  Tree.(make_unary state "T_String" make_string node)
+and print_T_String state (node: string_literal) =
+  Tree.make_string "T_String" state node
 
 (* Discriminated unions *)
 
@@ -496,7 +496,7 @@ and print_P_Record state (node: pattern record) =
 (* String literals as patterns *)
 
 and print_P_String state (node : lexeme wrap) =
-  Tree.(make_unary state "P_String" make_string node)
+  Tree.make_string "P_String" state node
 
 (* Tuple patterns *)
 
@@ -534,7 +534,7 @@ and print_P_Var state (node : variable) =
 (* A verbatim string as a pattern *)
 
 and print_P_Verbatim state (node : lexeme wrap) =
-  Tree.(make_unary state "P_Verbatim" make_verbatim node)
+  Tree.make_verbatim "P_Verbatim" state node
 
 (* EXPRESSIONS *)
 
@@ -841,8 +841,8 @@ and print_selection state = function
 and print_Field state (node : dot * field_id) =
   Tree.make_unary state "Field" print_field_id (snd node)
 
-and print_Component state (node : lexeme wrap brackets) =
-  Tree.(make_unary state "Component" make_literal node.value.inside)
+and print_Component state (node : int_literal brackets) =
+  Tree.(make_int "Component" state node.value.inside)
 
 (* Record expressions *)
 
@@ -850,7 +850,7 @@ and print_E_Record state (node: expr record) =
   print_record print_expr "E_Record" state node
 
 and print_E_String state (node: lexeme wrap) =
-  Tree.(make_unary state "E_String" make_string node)
+  Tree.make_string "E_String" state node
 
 and print_E_Sub state (node: minus bin_op reg) =
   print_bin_op state "E_Sub" node
@@ -897,7 +897,7 @@ and print_E_Var state (node: variable) =
   Tree.(make_unary state "E_Var" make_literal node)
 
 and print_E_Verbatim state (node: lexeme wrap) =
-  Tree.(make_unary state "E_Verbatim" make_verbatim node)
+  Tree.make_verbatim "E_Verbatim" state node
 
 (* STATEMENTS *)
 
