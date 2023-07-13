@@ -1,5 +1,3 @@
-{-# LANGUAGE UndecidableInstances #-}
-
 module Test.Util
   ( -- * Shared helpers
     (</>)
@@ -9,6 +7,7 @@ module Test.Util
   , AST.allLangs
   , AST.langExtension
   , pattern SomeLorentzValue
+  , rmode'
 
     -- * Test utilities
   , (@?=)
@@ -71,7 +70,7 @@ import System.FilePath ((<.>), (</>))
 import Test.HUnit (Assertion)
 import Test.HUnit.Lang qualified as HUnit
 import Test.Tasty.HUnit qualified as HUnit
-import Text.Interpolation.Nyan
+import Text.Interpolation.Nyan hiding (rmode')
 import Text.Interpolation.Nyan.Core (RMode (..))
 import Text.Show qualified
 
@@ -100,6 +99,7 @@ import Language.LIGO.Debugger.Handlers.Impl
 import Language.LIGO.Debugger.Michelson
 import Language.LIGO.Debugger.Navigate
 import Language.LIGO.Debugger.Snapshots
+import "ligo-debugger" Util
 
 contractsDir :: FilePath
 contractsDir = "test" </> "contracts"
@@ -120,10 +120,10 @@ newtype TestBuildable a = TB
 
 -- | Provide @tb@ rendering mode for nyan-interpolators.
 rmode'tb :: Buildable (TestBuildable a) => RMode a
-rmode'tb = RMode (build . TB)
+rmode'tb = RMode (pretty . TB)
 
-instance {-# OVERLAPPABLE #-} Buildable a => Buildable (TestBuildable a) where
-  build = build . unTB
+instance {-# OVERLAPPABLE #-} (ForInternalUse => Buildable a) => Buildable (TestBuildable a) where
+  build = itIsForInternalUse $ build . unTB
 
 instance Buildable (TestBuildable a) => Buildable (TestBuildable [a]) where
   build (TB l) = pretty $ blockListF' "-" (build . TB) l

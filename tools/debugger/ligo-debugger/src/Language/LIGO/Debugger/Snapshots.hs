@@ -9,7 +9,8 @@ module Language.LIGO.Debugger.Snapshots
   , InterpretEvent (..)
   , statusExpressionEvaluatedP
   , InterpretSnapshot (..)
-  , LambdaMeta (..)
+  , LambdaMeta
+  , LambdaMeta' (..)
   , ContractEnv
   , CollectorState (..)
   , InterpretHistory (..)
@@ -57,9 +58,10 @@ import Data.Default (def)
 import Data.HashSet qualified as HS
 import Data.List.NonEmpty (cons)
 import Data.Vinyl (Rec (..))
-import Fmt (Buildable (..), genericF, pretty)
-import Text.Interpolation.Nyan
+import Fmt.Buildable (Buildable, build, pretty)
+import Text.Interpolation.Nyan hiding (rmode')
 import UnliftIO (MonadUnliftIO, throwIO)
+import Util
 
 import Morley.Debugger.Core.Common (fromCanonicalLoc)
 import Morley.Debugger.Core.Navigate
@@ -74,7 +76,8 @@ import Morley.Michelson.Interpret
   (ContractEnv' (ceMaxSteps), InstrRunner, InterpreterState (InterpreterState),
   InterpreterStateMonad (..), MichelsonFailed (MichelsonExt, MichelsonFailedWith),
   MichelsonFailureWithStack (MichelsonFailureWithStack, mfwsErrorSrcPos, mfwsFailed),
-  MorleyLogsBuilder, StkEl (StkEl), isRemainingSteps, mkInitStack, runInstrImpl)
+  MorleyLogsBuilder, NoStkElMeta (NoStkElMeta), StkEl (MkStkEl, StkEl), isRemainingSteps,
+  runInstrImpl)
 import Morley.Michelson.Runtime.Dummy (dummyBigMapCounter, dummyGlobalCounter)
 import Morley.Michelson.TypeCheck.Helpers (handleError)
 import Morley.Michelson.Typed as T
@@ -94,12 +97,10 @@ data StackItem u = StackItem
   { siLigoDesc :: LigoStackEntry u
   , siValue :: SomeValue
   } deriving stock (Generic)
+    deriving anyclass (Buildable)
 
 deriving stock instance (Show (LigoTypeF u)) => Show (StackItem u)
 deriving stock instance Eq (StackItem 'Concise)
-
-instance (SingI u) => Buildable (StackItem u) where
-  build = genericF
 
 -- | Stack frame provides information about execution in some scope.
 --
@@ -118,12 +119,10 @@ data StackFrame u = StackFrame
     -- ^ Ligo stack available at the current position of this stack frame.
     -- Top of the stack goes first.
   } deriving stock (Generic)
+    deriving anyclass (Buildable)
 
 deriving stock instance (Show (LigoTypeF u)) => Show (StackFrame u)
 deriving stock instance Eq (StackFrame 'Concise)
-
-instance (SingI u) => Buildable (StackFrame u) where
-  build = genericF
 
 -- | Snapshot type, depends on which event has triggered the snapshot
 -- recording.
@@ -200,12 +199,10 @@ data InterpretSnapshot u = InterpretSnapshot
   , isStackFrames :: NonEmpty (StackFrame u)
     -- ^ Stack frames, top-level frame goes last.
   } deriving stock (Generic)
+    deriving anyclass (Buildable)
 
 deriving stock instance (Show (LigoTypeF u)) => Show (InterpretSnapshot u)
 deriving stock instance Eq (InterpretSnapshot 'Concise)
-
-instance (SingI u) => Buildable (InterpretSnapshot u) where
-  build = genericF
 
 instance NavigableSnapshot (InterpretSnapshot u) where
   getExecutedPosition = do
@@ -324,13 +321,17 @@ makePrisms ''InterpretEvent
 statusExpressionEvaluatedP :: Traversal' InterpretStatus SomeValue
 statusExpressionEvaluatedP = _InterpretRunning . _EventExpressionEvaluated . _2 . _Just
 
-logMessage :: forall m. (Monad m) => String -> CollectingEvalOp m ()
-logMessage str = do
+logMessage :: (Monad m) => (ForInternalUse => String) -> CollectingEvalOp m ()
+logMessage msg = logMessageM (pure msg)
+
+logMessageM :: (Monad m) => (ForInternalUse => CollectingEvalOp m String) -> CollectingEvalOp m ()
+logMessageM mkMsg = do
   logger <- use csLoggingFunctionL
-  lift $ logger [int||[SnapshotCollecting] #{str}|]
+  msg <- itIsForInternalUse mkMsg
+  lift $ logger [int||[SnapshotCollecting] #{msg}|]
 
 -- | Executes the code and collects snapshots of execution.
-runInstrCollect :: forall m. (Monad m) => InstrRunner (CollectingEvalOp m)
+runInstrCollect :: forall m. (Monad m) => InstrRunner NoStkElMeta (CollectingEvalOp m)
 runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
   let (embeddedMetaMb, inner) = getMetaMbAndUnwrap instr
 
@@ -367,7 +368,7 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
     preExecutedStage
       :: Maybe EmbeddedLigoMeta
       -> Instr i o
-      -> Rec StkEl i
+      -> Rec (StkEl meta) i
       -> CollectingEvalOp m ()
     preExecutedStage embeddedMetaMb instr stack = case embeddedMetaMb of
       Just LigoIndexedInfo{..} -> do
@@ -416,8 +417,8 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
     postExecutedStage
       :: Maybe EmbeddedLigoMeta
       -> Instr i o
-      -> Rec StkEl o
-      -> CollectingEvalOp m (Rec StkEl o)
+      -> Rec (StkEl meta) o
+      -> CollectingEvalOp m (Rec (StkEl meta) o)
     postExecutedStage embeddedMetaMb instr newStack = case embeddedMetaMb of
       Just LigoIndexedInfo{..} -> do
         whenJust liiLocation \loc -> do
@@ -443,7 +444,7 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
 
     -- When we want to go inside a function call or loop-like thing (e,g, @for-of@ or @while@)
     -- we need to clean up remembered locations and after interpreting restore them.
-    wrapAction :: Instr i o -> CollectingEvalOp m (Rec StkEl o) -> CollectingEvalOp m (Rec StkEl o)
+    wrapAction :: Instr i o -> CollectingEvalOp m (Rec (StkEl meta) o) -> CollectingEvalOp m (Rec (StkEl meta) o)
     wrapAction instr act
       | isExecOrLoopLike instr = do
           -- <<.= sets a variable and returns its previous value (yeah, it's a bit confusing)
@@ -475,10 +476,10 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
     -- This function is executed after 'preExecutedStage' and before 'postExecutedStage'.
     surroundExecutionInner
       :: Maybe EmbeddedLigoMeta
-      -> (Instr i o -> Rec StkEl i -> CollectingEvalOp m (Rec StkEl o))
+      -> (Instr i o -> Rec (StkEl meta) i -> CollectingEvalOp m (Rec (StkEl meta) o))
       -> Instr i o
-      -> Rec StkEl i
-      -> CollectingEvalOp m (Rec StkEl o)
+      -> Rec (StkEl meta) i
+      -> CollectingEvalOp m (Rec (StkEl meta) o)
     surroundExecutionInner _embeddedMetaMb runInstr instr stack = wrapAction instr $
       case (instr, stack) of
 
@@ -492,7 +493,7 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
         -- creating a @lambda arg1 (lambda arg2 res)@ value
         -- and using @EXEC@ after it to perform application.
         (EXEC{}, _ :& StkEl lam :& _) -> do
-          let meta@LambdaMeta{..} = getLambdaMeta lam
+          let meta = getLambdaMeta lam
           logMessage
             [int||
               Meta #{meta} for lambda #{lam}
@@ -500,7 +501,7 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
 
           oldStackFrames <- use csStackFramesL
 
-          forM_ lmVariables \name -> do
+          forM_ (lmAllFuncNames meta) \name -> do
             let sfName = pretty name
             loc <- use $ csActiveStackFrameL . sfLocL
             let newStackFrame = StackFrame
@@ -511,7 +512,7 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
 
             mainFunctionName <- use csMainFunctionNameL
 
-            unless (mainFunctionName `matchesUniqueLambdaName` name) do
+            unless (name `compareUniqueNames` mainFunctionName) do
               logMessage
                 [int||
                   Created new stack frame #{newStackFrame}
@@ -522,12 +523,12 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
           newStack <- runInstr instr stack
 
           csStackFramesL .= oldStackFrames
-          logMessage =<< [int|m|
+          logMessageM [int|m|
             Restored stack frames, new active frame: #{sfName <$> use csActiveStackFrameL}
             |]
 
           case newStack of
-            StkEl newLam@VLam{} :& stkEls -> do
+            MkStkEl m newLam@VLam{} :& stkEls -> do
               -- There might be a case when after executing function
               -- we'll get another function. In order not to lose stack frames
               -- we need to embed all future stack frame names into resulting
@@ -539,7 +540,7 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
                 into lambda #{embeddedLam}
                 |]
 
-              return $ StkEl embeddedLam :& stkEls
+              return $ MkStkEl m embeddedLam :& stkEls
             _ -> return newStack
 
         _ -> runInstr instr stack
@@ -764,7 +765,7 @@ collectInterpretSnapshots
       collSt
       initStore
     where
-      initStack = mkInitStack (liftCallArg epc param) initStore
+      initStack = MkStkEl NoStkElMeta (T.VPair (liftCallArg epc param, initStore)) :& RNil
       initSt =
         InterpreterState (ceMaxSteps env)
           dummyGlobalCounter dummyBigMapCounter

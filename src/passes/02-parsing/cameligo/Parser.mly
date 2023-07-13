@@ -240,10 +240,11 @@ top_declaration:
 | "<directive>" { D_Directive $1 } (* Only at top-level *)
 
 declaration:
-  type_decl      { D_Type   $1 }
-| let_decl       { D_Let    $1 }
-| module_decl    { D_Module $1 }
-| attr_decl      { D_Attr   $1 }
+  type_decl      { D_Type      $1 }
+| let_decl       { D_Let       $1 }
+| module_decl    { D_Module    $1 }
+| attr_decl      { D_Attr      $1 }
+| module_include { D_Include   $1 }
 | signature_decl { D_Signature $1 }
 
 (* Attributed declarations *)
@@ -497,6 +498,15 @@ type_params:
 
 parameters:
   nseq(core_irrefutable) { $1 }
+
+(* Top-level directives *)
+
+module_include:
+  "include" module_expr {
+    let stop   = module_expr_to_region $2 in
+    let region = cover $1#region stop
+    and value  = {kwd_include=$1; module_expr=$2}
+    in {region; value} }
 
 (* Top-level module declaration *)
 
