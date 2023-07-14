@@ -79,6 +79,8 @@ RUN LIGO_VERSION=$(/ligo/scripts/version.sh) opam exec -- dune build -p ligo --p
   && opam exec -- dune build @doc
 RUN npm i -g webpack-cli
 RUN cd /ligo && opam exec -- make build-demo-webide
+RUN mv /ligo/_build/default/src/bin/js_main.bc.js /ligo/_build/default/src/bin/js_main.dev.bc.js
+RUN cd /ligo && opam exec -- make JSOO_DUNE_PROFILE=release build-demo-webide
 RUN cd /ligo/npm && rm /ligo/npm/ligolang-*.tgz ; npm i && npm run build && npm pack
 RUN cd /ligo/examples/ligojs && npm i && npm run build:webpack
 
