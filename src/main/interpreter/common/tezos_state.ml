@@ -882,10 +882,6 @@ let init
     ?bootstrap_contracts
     ?level
     ?cost_per_byte
-    ?liquidity_baking_subsidy
-    ?endorsing_reward_per_slot
-    ?baking_reward_bonus_per_slot
-    ?baking_reward_fixed_portion
     ?origination_size
     ?blocks_per_cycle
     ?initial_timestamp
