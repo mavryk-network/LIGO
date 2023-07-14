@@ -7,6 +7,7 @@
   },
   "files": [
     "ligo.js",
+    "js_main.dev.bc.js",
     "js_main.bc.js"
   ],
   "dependencies": {
