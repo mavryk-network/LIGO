@@ -9,8 +9,6 @@
   },
   "esy": {
     "buildsInSource": "_build",
-    "opamOverrideRemote": "https://github.com/ligolang/esy-opam-override",
-    "opamOverrideRemote": "https://github.com/ligolang/esy-opam-override",
     "build": ["dune build -p ligo", "chmod -R a+w #{self.target_dir}"],
     "buildEnv": {
       "OCAMLRUNPARAM": "b",
@@ -109,6 +107,15 @@
     "@opam/index": "opam:1.6.1",
     "@opam/progress": "opam:0.2.1",
     "@opam/octez-plompiler": "opam:18.0",
+    "@opam/ctypes": {
+      "version": "opam:0.20.2",
+      "override": {
+        "dependencies": {
+          "yarn-pkg-config": "*",
+          "esy-libffi": "*"
+        }
+      }
+    },
     "@opam/tezos-sapling": {
       "version": "opam:18.0",
       "override": {
@@ -169,6 +176,18 @@
     "@opam/tezos-rust-libs": "opam:1.5",
     "esy-rustup": "esy-packages/esy-rustup:esy.json#3872ef2eaefb6c2207bd7cb4386d073a27381bfe",
     "@opam/semver": "callistonianembrace/ocaml-semver:semver.opam#bf23370adb1cdf8efa60c19fe6e1ff195ee1f2ae",
+    "@opam/conf-c++": {
+      "source": "no-source:",
+      "override": {
+        "build": "true"
+      }
+    },
+    "@opam/conf-g++": {
+      "source": "no-source:",
+      "override": {
+        "build": "true"
+      }
+    },
     "@opam/conf-gmp-powm-sec": {
       "source": "no-source:",
       "override": {
