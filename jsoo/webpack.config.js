@@ -13,6 +13,8 @@ try {
   commitHash = "";
 }
 
+let { NODE_ENV = "development" } = process.env;
+
 module.exports = {
   resolve: {
     fallback: {
@@ -24,7 +26,7 @@ module.exports = {
       crypto: require.resolve("crypto-browserify"),
     },
   },
-  mode: "development",
+  mode: NODE_ENV,
   entry: {
     app: "./src/app.ts",
   },
@@ -60,9 +62,7 @@ module.exports = {
       "process.browser": JSON.stringify(true),
       "process.nextTick": "window.setImmediate", //./node_modules/levelup/lib/write-stream.js
       "process.env.NODE_DEBUG": JSON.stringify(process.env.NODE_DEBUG || ""),
-      "process.env.NODE_ENV": JSON.stringify(
-        process.env.NODE_ENV || "development"
-      ),
+      "process.env.NODE_ENV": JSON.stringify(NODE_ENV),
     }),
     new HtmlWebpackPlugin({
       title: "Ligo.js",
