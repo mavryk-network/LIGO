@@ -49,7 +49,7 @@ let op_list ~raise =
       : Memory_proto_alpha.Protocol.Script_typed_ir.packed_internal_operation
     =
     Memory_proto_alpha.Protocol.Script_typed_ir.(
-      Internal_operation { source; operation; nonce = 0 })
+      Internal_operation { sender = source; operation; nonce = 0 })
   in
   let opbytes =
     let contents =
