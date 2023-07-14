@@ -377,7 +377,6 @@ and print_field :
 and print_field_id state = function
   F_Name i -> print_F_Name state i
 | F_Num  i -> print_F_Num  state i
-| F_Cap  i -> print_F_Cap  state i
 | F_Str  i -> print_F_Str  state i
 
 and print_F_Name state (node: field_name) =
@@ -385,9 +384,6 @@ and print_F_Name state (node: field_name) =
 
 and print_F_Num state (node: int_literal) =
   Tree.make_int "F_Num" state node
-
-and print_F_Cap state (node: capitalised_id) =
-  Tree.(make_unary state "F_Cap" make_literal node)
 
 and print_F_Str state (node: string_literal) =
   Tree.make_string "F_Str" state node
@@ -438,11 +434,9 @@ and print_pattern state = function
 | P_Int      p -> print_P_Int      state p
 | P_Mutez    p -> print_P_Mutez    state p
 | P_Nat      p -> print_P_Nat      state p
-| P_Par      p -> print_P_Par      state p
 | P_Record   p -> print_P_Record   state p
 | P_String   p -> print_P_String   state p
 | P_Tuple    p -> print_P_Tuple    state p
-| P_Typed    p -> print_P_Typed    state p
 | P_Var      p -> print_P_Var      state p
 | P_Verbatim p -> print_P_Verbatim state p
 
@@ -481,11 +475,6 @@ and print_P_Mutez state (node : (lexeme * Int64.t) wrap) =
 and print_P_Nat state (node : (lexeme * Z.t) wrap) =
   Tree.make_int "P_Nat" state node
 
-(* Parenthesised patterns *)
-
-and print_P_Par state (node: pattern par) =
-  Tree.make_unary state "P_Par" print_pattern node.value.inside
-
 (* Record patterns *)
 
 and print_P_Record state (node: pattern record) =
@@ -515,16 +504,6 @@ and print_component :
   fun print state -> function
     None, component -> print state component
   | Some _ellipsis, component -> Tree.make_unary state "..." print component
-
-(* Typed pattern *)
-
-and print_P_Typed state (node : typed_pattern reg) =
-  let Region.{value; region} = node in
-  let pattern, type_annot = value in
-  let children = Tree.[
-    mk_child print_pattern         pattern;
-    mk_child print_type_annotation type_annot]
-  in Tree.make state "P_Typed" ~region children
 
 (* A pattern variable *)
 
@@ -715,7 +694,8 @@ and print_fun_body state = function
 | ExprBody b -> print_ExprBody state b
 
 and print_FunBody state (node: statements braces) =
-  Tree.of_nsep_or_term state "FunBody" print_statement node.value.inside
+  Tree.of_nseq state "FunBody"
+               (fun state -> print_statement state <@ fst) node.value.inside
 
 and print_ExprBody state (node: expr) =
   Tree.make_unary state "ExprBody" print_expr node
@@ -835,11 +815,15 @@ and print_E_Proj state (node : projection reg) =
   in Tree.make state ~region "E_Proj" children
 
 and print_selection state = function
-  Field     s -> print_Field     state s
+  FieldName s -> print_FieldName state s
+| FieldStr  s -> print_FieldStr  state s
 | Component s -> print_Component state s
 
-and print_Field state (node : dot * field_id) =
-  Tree.make_unary state "Field" print_field_id (snd node)
+and print_FieldName state (node : dot * field_name) =
+  Tree.(make_unary state "FieldName" make_literal (snd node))
+
+and print_FieldStr state (node : dot * string_literal) =
+  Tree.make_string "FieldStr" state (snd node)
 
 and print_Component state (node : int_literal brackets) =
   Tree.(make_int "Component" state node.value.inside)
@@ -928,7 +912,8 @@ and print_S_Attr state (node: attribute * statement) =
 and print_S_Block state (node: statements braces) =
   let Region.{region; value} = node in
   let stmts = value.inside in
-  Tree.of_nsep_or_term ~region state "S_Block" print_statement stmts
+  Tree.of_nseq ~region state "S_Block"
+               (fun state -> print_statement state <@ fst) stmts
 
 (* Break statement *)
 
@@ -977,7 +962,7 @@ and print_S_For state (node: for_stmt reg) =
     mk_child_opt print_initialiser initialiser;
     mk_child_opt print_cond        condition]
   @ mk_children_nsepseq_opt ~root:"<afterthought>" print_expr afterthought
-  @ [mk_child_opt print_loop_body for_body]
+  @ [mk_child print_loop_body for_body]
   in make state ~region "S_For" children
 
 and print_loop_body state = Tree.make_unary state "<body>" print_statement
@@ -1048,7 +1033,8 @@ and print_switch_default state (node: switch_default reg) =
       Tree.make_unary ~region state "Default" print_statements stmts
 
 and print_statements state (node: statements) =
-  Tree.of_nsep_or_term state "<statements>" print_statement node
+  Tree.of_nseq state "<statements>"
+               (fun state -> print_statement state <@ fst) node
 
 (* While-loop statement *)
 

@@ -120,7 +120,6 @@ type language    = lexeme wrap
 type attribute   = Attr.t wrap
 
 type string_literal   = lexeme wrap
-type capitalised_id   = lexeme wrap
 type int_literal      = (lexeme * Z.t) wrap
 type nat_literal      = int_literal
 type bytes_literal    = (lexeme * Hex.t) wrap
@@ -335,8 +334,7 @@ and 'a field = {
 
 and field_id =
   F_Name of field_name
-| F_Num  of nat_literal
-| F_Cap  of capitalised_id
+| F_Num  of int_literal
 | F_Str  of string_literal
 
 (* Discriminated unions *)
@@ -369,13 +367,26 @@ and pattern =
 | P_Int      of int_literal              (* 42              *)
 | P_Mutez    of mutez_literal            (* 5mutez          *)
 | P_Nat      of nat_literal              (* 4n              *)
-| P_Par      of pattern par              (* ({x : 0})       *)
 | P_Record   of pattern record           (* {x, y : 0}      *)
-| P_String   of lexeme wrap              (* "string"        *)
+| P_String   of string_literal           (* "string"        *)
 | P_Tuple    of pattern tuple            (* [x, ...y, z] [] *)
-| P_Typed    of typed_pattern reg        (* [] : list<int>  *)
 | P_Var      of variable                 (* x               *)
 | P_Verbatim of verbatim_literal         (* {|foo|}         *)
+
+(*
+and 'a expr_pattern =
+  EP_Attr     of (attribute * 'a expr_pattern)    (* @a [x, _]       *)
+| EP_Bytes    of bytes_literal            (* 0xFFFA          *)
+| EP_Ctor     of ctor                     (* C               *)
+| EP_Int      of int_literal              (* 42              *)
+| EP_Mutez    of mutez_literal            (* 5mutez          *)
+| EP_Nat      of nat_literal              (* 4n              *)
+| EP_Record   of 'a expr_pattern record           (* {x, y : 0}      *)
+| EP_String   of string_literal           (* "string"        *)
+| EP_Tuple    of pattern tuple            (* [x, ...y, z] [] *)
+| EP_Var      of variable                 (* x               *)
+| EP_Verbatim of verbatim_literal         (* {|foo|}         *)
+*)
 
 (* Tuple *)
 
@@ -405,7 +416,7 @@ and statement =
 | S_Switch of switch_stmt reg
 | S_While  of while_stmt reg
 
-and statements = (statement, semi) nsep_or_term
+and statements = (statement * semi option) nseq
 
 (* Conditional statement *)
 
@@ -421,7 +432,7 @@ and cond_stmt = {
 and for_stmt = {
   kwd_for  : kwd_for;
   range    : range_for par;
-  for_body : statement option
+  for_body : statement
 }
 
 and range_for = {
@@ -576,11 +587,6 @@ and update_expr = {
   sep      : field_sep;
   updates  : (expr field reg, field_sep) nsep_or_term
 }
-(*
-and path =
-  FieldId of field_id
-| Path    of projection reg
-*)
 
 (* Ternary conditional *)
 
@@ -609,8 +615,9 @@ and projection = {
 }
 
 and selection =
-  Field     of (dot * field_id)
-| Component of int_literal brackets
+  FieldName of (dot * field_name)     (* Records *)
+| FieldStr  of (dot * string_literal) (* Records *)
+| Component of int_literal brackets   (* Tuples  *)
 
 (* Code injection.  Note how the field [language] wraps a region in
    another: the outermost region covers the header "[%<language>" and
@@ -665,11 +672,9 @@ let rec pattern_to_region = function
 | P_Int    w -> w#region
 | P_Mutez  w -> w#region
 | P_Nat    w -> w#region
-| P_Par    {region; _}
 | P_Record {region; _} -> region
 | P_String w-> w#region
-| P_Tuple  {region; _}
-| P_Typed  {region; _} -> region
+| P_Tuple  {region; _} -> region
 | P_Var w -> w#region
 | P_Verbatim w -> w#region
 
@@ -740,7 +745,6 @@ let var_kind_to_region = function
 let field_id_to_region = function
   F_Name i -> i#region
 | F_Num  i -> i#region
-| F_Cap  i -> i#region
 | F_Str  i -> i#region
 
 let parameters_to_region = function
