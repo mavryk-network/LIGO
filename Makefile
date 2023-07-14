@@ -1,4 +1,6 @@
 # last refactor: 2021-05-05
+JSOO_DUNE_PROFILE ?= dev
+
 .ONESHELL:
 
 all: test
@@ -63,7 +65,7 @@ run-vscode: install-vscode
 _build/default/src/bin/js_main.bc.js: ./src/bin/js_main.ml ./src/bin/dune
 	patch -d vendors/tezos-ligo -p1 < ./0001-Nairobi-JSOO-Gas-free.patch
 	patch -d vendors/tezos-ligo -p1 < ./0002-JSOO-Use-lib_hacl-compatible-with-hacl-star-0.4.1.patch
-	opam exec -- dune build $(<:.ml=.bc.js)
+	opam exec -- dune build --profile $(JSOO_DUNE_PROFILE) $(<:.ml=.bc.js)
 	patch -d vendors/tezos-ligo -R -p1 < 0001-Nairobi-JSOO-Gas-free.patch
 	patch -d vendors/tezos-ligo -R -p1 < 0002-JSOO-Use-lib_hacl-compatible-with-hacl-star-0.4.1.patch
 
