@@ -572,7 +572,6 @@ nterm_stmt:
   "[@attr]" nterm_stmt            { S_Attr  ($1,$2) }
 | block_stmt                      { S_Block      $1 }
 | switch_stmt                     { S_Switch     $1 }
-| for_stmt(nterm_stmt)            { S_For        $1 }
 | for_of_stmt(nterm_stmt)         { S_ForOf      $1 }
 | while_stmt(nterm_stmt)          { S_While      $1 }
 | if_else_stmt(nterm_stmt)
@@ -659,7 +658,7 @@ if_cond:
 (* For-loop statement *)
 
 for_stmt(right_stmt):
-  "for" par(range_for) right_stmt {
+  "for" par(range_for) ioption(right_stmt) {
     let region = cover $1#region (statement_to_region $3)
     and value  = {kwd_for=$1; test=$2; for_body=$3}
     in {region; value} }

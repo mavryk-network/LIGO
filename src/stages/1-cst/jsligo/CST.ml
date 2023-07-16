@@ -432,7 +432,7 @@ and cond_stmt = {
 and for_stmt = {
   kwd_for  : kwd_for;
   range    : range_for par;
-  for_body : statement
+  for_body : statement option
 }
 
 and range_for = {

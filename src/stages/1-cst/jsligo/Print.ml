@@ -962,7 +962,7 @@ and print_S_For state (node: for_stmt reg) =
     mk_child_opt print_initialiser initialiser;
     mk_child_opt print_cond        condition]
   @ mk_children_nsepseq_opt ~root:"<afterthought>" print_expr afterthought
-  @ [mk_child print_loop_body for_body]
+  @ [mk_child_opt print_loop_body for_body]
   in make state ~region "S_For" children
 
 and print_loop_body state = Tree.make_unary state "<body>" print_statement
