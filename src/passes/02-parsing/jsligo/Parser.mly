@@ -197,20 +197,12 @@ module_name     : "<uident>" { $1 }
 intf_name       : "<uident>" { $1 }
 ctor            : "<uident>" { $1 }
 file_path       : "<string>" { $1 }
-record_name     : "<ident>"  { $1 }
 
 %inline
 record_or_tuple : "<ident>"  { $1 }
 
 %inline
 lang_name   : "<ident>" | "<uident>" { $1 }
-
-(* Attributes *)
-
-%inline
-attributes:
-  ioption(nseq("[@attr]") { Utils.nseq_to_list $1 }) {
-    Option.value ~default:[] $1 }
 
 (* ENTRY POINTS *)
 
@@ -572,24 +564,24 @@ nterm_stmt:
   "[@attr]" nterm_stmt            { S_Attr  ($1,$2) }
 | block_stmt                      { S_Block      $1 }
 | switch_stmt                     { S_Switch     $1 }
-| for_of_stmt(nterm_stmt)         { S_ForOf      $1 }
-| while_stmt(nterm_stmt)          { S_While      $1 }
-| if_else_stmt(nterm_stmt)
-| if_stmt(nterm_stmt)             {              $1 }
+| for_of_stmt (nterm_stmt)        { S_ForOf      $1 }
+| while_stmt (nterm_stmt)         { S_While      $1 }
+| if_else_stmt (nterm_stmt)
+| if_stmt (nterm_stmt)            {              $1 }
 
 statement:
   base_stmt(statement) | if_stmt(statement) { $1 }
 
 base_stmt(right_stmt):
   "[@attr]" base_stmt(right_stmt) { S_Attr  ($1,$2) }
-| expr_stmt(expr)                 { S_Expr       $1 }
+| expr_stmt (expr)                { S_Expr       $1 }
 | return_stmt                     { S_Return     $1 }
 | block_stmt                      { S_Block      $1 }
 | switch_stmt                     { S_Switch     $1 }
-| for_stmt(right_stmt)            { S_For        $1 }
-| for_of_stmt(right_stmt)         { S_ForOf      $1 }
-| while_stmt(right_stmt)          { S_While      $1 }
-| if_else_stmt(right_stmt)        {              $1 }
+| for_stmt (right_stmt)           { S_For        $1 }
+| for_of_stmt (right_stmt)        { S_ForOf      $1 }
+| while_stmt (right_stmt)         { S_While      $1 }
+| if_else_stmt (right_stmt)       {              $1 }
 
 closed_stmt:
   base_stmt(closed_stmt) { $1 }
@@ -597,20 +589,24 @@ closed_stmt:
 (* Expressions as statements *)
 
 expr_stmt(right_expr):
-  declaration                                          { S_Decl $1 }
-| non_decl_expr_stmt(right_expr,expr_stmt(right_expr)) { S_Expr $1 }
+  declaration                                             { S_Decl $1 }
+| non_decl_expr_stmt (right_expr, expr_stmt (right_expr)) { S_Expr $1 }
 
 non_decl_expr_stmt(right_expr,right_stmt):
-  assign_stmt(right_expr)
+  app_expr (no_attr_core_expr)
+| assign_stmt (right_expr)
 | incr_expr
 | decr_expr
-| app_expr
-| typed_expr
-| ternary_test(non_decl_expr_stmt(disj_expr_level,right_stmt)) { $1 }
+| ternary_stmt (right_stmt)
 | par(expr) { E_Par $1 }
 
 closed_non_decl_expr_stmt(right_expr):
-  non_decl_expr_stmt(right_expr,closed_non_decl_expr_stmt(right_expr)) { $1 }
+  non_decl_expr_stmt (right_expr, closed_non_decl_expr_stmt (right_expr)) { $1 }
+
+(* Ternary statement *)
+
+ternary_stmt(right_stmt):
+  ternary_expr (no_attr_core_expr, non_decl_expr_stmt (disj_expr_level, right_stmt)) { $1 }
 
 (* Assignments *)
 
@@ -629,7 +625,7 @@ path:
 (* Block of statement *)
 
 block_stmt:
-  braces(statements) { $1 } (* : statement braces } *)
+  braces(statements) { $1 }
 
 (* Conditional statement *)
 
@@ -767,10 +763,10 @@ while_cond:
 (* EXPRESSIONS *)
 
 expr:
-  fun_expr           { E_Fun $1 }
+  fun_expr { E_Fun $1 }
 | typed_expr
-| ternary_test(disj_expr_level)
-| disj_expr_level               { $1 }
+| ternary_expr (disj_expr_level, disj_expr_level)
+| disj_expr_level { $1 }
 
 (* Functional expressions *)
 
@@ -797,11 +793,6 @@ parameter:
         in P_Typed {region; value = $1,$2}
     | None -> $1 }
 
-(* Note: we use [expr] to avoid an LR conflict, and obtain instead
-   the item
-   ## par(expr) -> LPAR expr . RPAR [ ... ]
-   ## parameter -> expr . type_annotation [ RPAR COMMA ] *)
-
 fun_body:
   braces(statements) { FunBody  $1 }
 | expr               { ExprBody $1 }
@@ -816,8 +807,8 @@ typed_expr:
 
 (* Ternary conditional operator *)
 
-ternary_test(branch):
-  disj_expr_level "?" branch ":" branch {
+ternary_expr(left_expr,branch):
+  left_expr "?" branch ":" branch {
     let region = cover (expr_to_region $1) (expr_to_region $5)
     and value  = {condition=$1; qmark=$2; truthy=$3; colon=$4; falsy=$5}
     in E_Ternary {value; region} }
@@ -869,19 +860,23 @@ mult_expr_level:
 (* Logical and arithmetic negation *)
 
 unary_expr_level:
-  "-" app_expr_level {
-    let region = cover $1#region (expr_to_region $2)
-    and value  = {op=$1; arg=$2}
-    in E_Neg {region; value}
-  }
-| "!" app_expr_level {
-    let region = cover $1#region (expr_to_region $2)
-    and value  = {op=$1; arg=$2}
-    in E_Not {region; value}
-  }
+  minus_expr
+| not_expr
 | incr_expr
 | decr_expr
 | app_expr_level { $1 }
+
+minus_expr:
+  "-" app_expr_level {
+    let region = cover $1#region (expr_to_region $2)
+    and value  = {op=$1; arg=$2}
+    in E_Neg {region; value} }
+
+not_expr:
+  "!" app_expr_level {
+    let region = cover $1#region (expr_to_region $2)
+    and value  = {op=$1; arg=$2}
+    in E_Not {region; value} }
 
 (* Increment & decrement operators *)
 
@@ -915,15 +910,13 @@ app_expr_level:
     and value  = {kwd_contract_of=$1; module_path=$2}
     in E_Contract {region; value}
   }
-| lambda { $1 }
+| app_expr(core_expr)
+| core_expr { $1 }
 
-app_expr:
-  lambda arguments {
+app_expr(left_expr):
+  core_expr arguments {
     let region = cover (expr_to_region $1) $2.region
     in E_App {region; value=($1,$2)} }
-
-lambda:
-  app_expr | no_attr_core_expr { $1 }
 
 arguments:
   par(ioption(nsepseq(argument,","))) { $1 }
