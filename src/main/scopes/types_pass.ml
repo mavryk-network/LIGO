@@ -52,6 +52,7 @@ module Of_Ast_typed = struct
       | E_update _
       | E_constant _ -> return []
       | E_type_inst _ -> return []
+      | E_coerce _ -> return []
       | E_variable v -> return [ v, exp.type_expression ]
       | E_lambda { binder; _ } -> return [ Param.get_var binder, Param.get_ascr binder ]
       | E_recursive { fun_name; fun_type; lambda = { binder; _ }; force_lambdarec = _ } ->
@@ -110,6 +111,7 @@ module Of_Ast_typed = struct
       | M_struct ds ->
         List.fold_left ds ~init:prev ~f:(fun prev d ->
             extract_binding_types prev d.wrap_content))
+    | D_module_include _ -> prev (* TODO *)
 end
 
 module Of_Ast_core = struct
@@ -257,6 +259,7 @@ module Of_Ast_core = struct
       declarations bindings decls
     | D_module { module_ = { wrap_content = M_variable _; _ }; _ }
     | D_module { module_ = { wrap_content = M_module_path _; _ }; _ } -> bindings
+    | D_module_include _ -> bindings (* TODO *)
     | D_signature _ -> bindings
 
 

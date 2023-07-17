@@ -9,36 +9,48 @@ let untype_value_attr : O.ValueAttr.t -> I.ValueAttr.t =
   { inline; no_mutation; view; public; hidden; thunk; entry }
 
 
-let rec untype_type_expression (t : O.type_expression) : I.type_expression =
+(* use_orig_var param allows us to preserve the orininal type variables names, e.g. if
+   we have [type t = A | B] then type of [Some A] will be transformed to [t option]
+  instead of default [(A | B) option].
+  It needs to be done during untyping, since O.type_expression can have orig_var
+  and I.type_expression can't *)
+let rec untype_type_expression ?(use_orig_var = false) (t : O.type_expression)
+    : I.type_expression
+  =
   let loc = t.location in
-  let self = untype_type_expression in
+  let self = untype_type_expression ~use_orig_var in
   let return t = I.make_t ~loc t in
-  match t.type_content with
-  | O.T_sum { fields; layout } ->
-    let fields = Map.map fields ~f:self in
-    return @@ I.T_sum { fields; layout = Some layout }
-  | O.T_record { fields; layout } ->
-    let fields = Map.map fields ~f:self in
-    return @@ I.T_record { fields; layout = Some layout }
-  | O.T_variable name -> return @@ I.T_variable name
-  | O.T_arrow arr ->
-    let arr = Arrow.map self arr in
-    return @@ I.T_arrow arr
-  | O.T_constant { language = _; injection; parameters } ->
-    let arguments = List.map ~f:self parameters in
-    let type_operator = Type_var.of_input_var ~loc (Literal_types.to_string injection) in
-    return
-    @@
-    (match arguments with
-    | [] -> I.T_variable type_operator
-    | _ -> I.T_app { type_operator = Module_access.make_el @@ type_operator; arguments })
-  | O.T_singleton l -> return @@ I.T_singleton l
-  | O.T_abstraction x ->
-    let x = Abstraction.map self x in
-    return @@ T_abstraction x
-  | O.T_for_all x ->
-    let x = Abstraction.map self x in
-    return @@ T_for_all x
+  return
+  @@
+  match t.orig_var with
+  | Some orig_var when use_orig_var -> I.T_variable orig_var
+  | _ ->
+    (match t.type_content with
+    | O.T_sum { fields; layout } ->
+      let fields = Map.map fields ~f:self in
+      I.T_sum { fields; layout = Some layout }
+    | O.T_record { fields; layout } ->
+      let fields = Map.map fields ~f:self in
+      I.T_record { fields; layout = Some layout }
+    | O.T_variable name -> I.T_variable name
+    | O.T_arrow arr ->
+      let arr = Arrow.map self arr in
+      I.T_arrow arr
+    | O.T_constant { language = _; injection; parameters } ->
+      let arguments = List.map ~f:self parameters in
+      let type_operator =
+        Type_var.of_input_var ~loc (Literal_types.to_string injection)
+      in
+      (match arguments with
+      | [] -> I.T_variable type_operator
+      | _ -> I.T_app { type_operator = Module_access.make_el @@ type_operator; arguments })
+    | O.T_singleton l -> I.T_singleton l
+    | O.T_abstraction x ->
+      let x = Abstraction.map self x in
+      T_abstraction x
+    | O.T_for_all x ->
+      let x = Abstraction.map self x in
+      T_for_all x)
 
 
 let untype_type_expression_option x = Option.return @@ untype_type_expression x
@@ -125,6 +137,9 @@ and untype_expression_content ~loc (ec : O.expression_content) : I.expression =
     let while_loop = While_loop.map self while_loop in
     return @@ I.make_e ~loc @@ E_while while_loop
   | E_deref var -> return @@ I.make_e ~loc @@ E_variable var
+  | E_coerce asc ->
+    let asc = Ascription.map self self_type asc in
+    return @@ I.make_e ~loc @@ E_ascription asc
   | E_type_inst { forall; type_ = type_inst } ->
     (match forall.type_expression.type_content with
     | T_for_all { ty_binder; type_; kind = _ } ->
@@ -242,6 +257,9 @@ and untype_declaration =
     | D_type dt ->
       let dt = untype_declaration_type dt in
       return @@ D_type dt
+    | D_module_include module_ ->
+      let module_ = untype_module_expr module_ in
+      return @@ D_module_include module_
     | D_module dm ->
       let dm = untype_declaration_module dm in
       let dm = { dm with annotation = None } in
