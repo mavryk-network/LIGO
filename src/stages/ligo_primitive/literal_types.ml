@@ -68,7 +68,6 @@ type t =
   | Ast_contract [@only_interpreter]
   | Typed_address [@only_interpreter]
   | Mutation [@only_interpreter]
-  | Tx_rollup_l2_address
   | External of External.t
   | Gen [@only_interpreter]
   | Int64 [@only_interpreter]
@@ -111,7 +110,6 @@ let to_string = function
   | Ast_contract -> "ast_contract"
   | Typed_address -> "typed_address"
   | Mutation -> "mutation"
-  | Tx_rollup_l2_address -> "tx_rollup_l2_address"
   | External s -> "external_" ^ External.to_string s
   | Gen -> "pbt_gen"
   | Int64 -> "int64"
@@ -154,7 +152,6 @@ let of_string_opt = function
   | "ast_contract" -> Some Ast_contract
   | "typed_address" -> Some Typed_address
   | "mutation" -> Some Mutation
-  | "tx_rollup_l2_address" -> Some Tx_rollup_l2_address
   | "pbt_gen" -> Some Gen
   | "int64" -> Some Int64
   | "views" -> Some Views
@@ -209,7 +206,6 @@ let to_arity = function
   | Ast_contract -> 0
   | Typed_address -> 2
   | Mutation -> 0
-  | Tx_rollup_l2_address -> 0
   | External Bytes -> 1
   | External Int -> 1
   | External Ediv -> 2
@@ -262,7 +258,6 @@ let michelson_contract = Michelson_contract
 let ast_contract = Ast_contract
 let typed_address = Typed_address
 let mutation = Mutation
-let tx_rollup_l2_address = Tx_rollup_l2_address
 let external_int = External Int
 let external_ediv = External Ediv
 let gen = Gen
@@ -305,7 +300,6 @@ let v_michelson_contract = Type_var.of_input_var (to_string Michelson_contract)
 let v_ast_contract = Type_var.of_input_var (to_string Ast_contract)
 let v_typed_address = Type_var.of_input_var (to_string Typed_address)
 let v_mutation = Type_var.of_input_var (to_string Mutation)
-let v_tx_rollup_l2_address = Type_var.of_input_var (to_string Tx_rollup_l2_address)
 let v_external_int = Type_var.of_input_var (to_string @@ External Int)
 let v_external_bytes = Type_var.of_input_var (to_string @@ External Bytes)
 let v_external_ediv = Type_var.of_input_var (to_string @@ External Ediv)

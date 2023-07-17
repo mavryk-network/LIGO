@@ -66,7 +66,6 @@ let t__type_ ~loc () : type_expression = t_constant ~loc _type_ []
       , "mutation"
       , "pvss_key"
       , "baker_hash"
-      , "tx_rollup_l2_address"
       , "michelson_contract"
       , "ast_contract"
       , "int64" )]

@@ -230,7 +230,6 @@ let t__type_ ~loc () : t = t_construct Literal_types._type_ [] ~loc ()
       , "mutation"
       , "pvss_key"
       , "baker_hash"
-      , "tx_rollup_l2_address"
       , "michelson_contract"
       , "ast_contract"
       , "int64"

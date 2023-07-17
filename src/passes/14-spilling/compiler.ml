@@ -55,7 +55,6 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
     | (Signature,       []) -> return (T_base TB_signature)
     | (Baker_hash,      []) -> return (T_base TB_baker_hash)
     | (Pvss_key,        []) -> return (T_base TB_pvss_key)
-    | (Tx_rollup_l2_address, []) -> return (T_base TB_tx_rollup_l2_address)
     | (Baker_operation, []) -> return (T_base TB_baker_operation)
     | (Bls12_381_g1,    []) -> return (T_base TB_bls12_381_g1)
     | (Bls12_381_g2,    []) -> return (T_base TB_bls12_381_g2)
@@ -163,7 +162,7 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
       Set          | Tez       | Michelson_pair       |
       Never                    | Ast_contract         |
       Bytes        | Mutation  | Typed_address        |
-      External _   | List      | Tx_rollup_l2_address |
+      External _   | List      |
       Views        ), _::_) -> raise.error @@ corner_case ~loc:__LOC__ (Format.asprintf "wrong constant\n%a\n" Ast_aggregated.PP.type_expression t)
   )
   | T_sum _ when Option.is_some (AST.get_t_bool t) ->

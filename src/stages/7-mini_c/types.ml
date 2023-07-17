@@ -46,7 +46,6 @@ and type_base =
   | TB_bls12_381_g2
   | TB_bls12_381_fr
   | TB_never
-  | TB_tx_rollup_l2_address
   | TB_type_int of Z.t
 
 and environment_element = Value_var.t * type_expression
