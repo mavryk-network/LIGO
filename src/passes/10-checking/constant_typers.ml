@@ -1024,6 +1024,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                ; t_int ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
                ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
                ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
+               ; t_bool ~loc () ^-> t_bool ~loc () ^~> t_bool ~loc ()
                ]) )
     ; ( C_LOR
       , of_type
@@ -1033,6 +1034,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
                ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
                ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
+               ; t_bool ~loc () ^-> t_bool ~loc () ^~> t_bool ~loc ()
                ]) )
     ; ( C_LXOR
       , of_type
@@ -1042,6 +1044,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
                ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
                ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
+               ; t_bool ~loc () ^-> t_bool ~loc () ^~> t_bool ~loc ()
                ]) )
     ; ( C_LSL
       , of_type
