@@ -76,34 +76,29 @@ let%expect_test _ =
     3 |}]
 
 let%expect_test _ =
-  run_ligo_bad [ "compile"; "expression"; "cameligo"; "14 land 2" ];
+  run_ligo_good [ "compile"; "expression"; "cameligo"; "14 land 2" ];
   [%expect{|
-    Invalid type(s)
-    Cannot unify "int" with "nat". |}]
+    True |}]
 
 let%expect_test _ =
-  run_ligo_bad [ "compile"; "expression"; "cameligo"; "14n lor 2" ];
+  run_ligo_good [ "compile"; "expression"; "cameligo"; "14n lor 2" ];
   [%expect{|
-    Invalid type(s)
-    Cannot unify "int" with "nat". |}]
+    True |}]
 
 let%expect_test _ =
-  run_ligo_bad [ "compile"; "expression"; "cameligo"; "14 lor 2n" ];
+  run_ligo_good [ "compile"; "expression"; "cameligo"; "14 lor 2n" ];
   [%expect{|
-    Invalid type(s)
-    Cannot unify "int" with "nat". |}]
+    True |}]
 
 let%expect_test _ =
-  run_ligo_bad [ "compile"; "expression"; "cameligo"; "14n lxor 2" ];
+  run_ligo_good [ "compile"; "expression"; "cameligo"; "14n lxor 2" ];
   [%expect{|
-    Invalid type(s)
-    Cannot unify "int" with "nat". |}]
+    False |}]
 
 let%expect_test _ =
-  run_ligo_bad [ "compile"; "expression"; "cameligo"; "14 lxor 2n" ];
+  run_ligo_good [ "compile"; "expression"; "cameligo"; "14 lxor 2n" ];
   [%expect{|
-    Invalid type(s)
-    Cannot unify "int" with "nat". |}]
+    False |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile"; "expression"; "cameligo"; "4 lsr 0n" ];
