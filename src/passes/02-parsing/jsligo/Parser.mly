@@ -248,7 +248,7 @@ bindings:
   nsepseq(val_binding,",") { $1 }
 
 val_binding:
-  pattern ioption(type_vars) ioption(type_annotation) "=" expr {
+  pattern ioption(type_vars) ioption(type_annotation(type_expr)) "=" expr {
     let region = cover (pattern_to_region $1) (expr_to_region $5)
     and value  = {pattern=$1; type_vars=$2; rhs_type=$3; eq=$4; rhs_expr=$5}
     in {region; value} }
@@ -256,8 +256,8 @@ val_binding:
 type_vars:
   chevrons(sep_or_term(type_var,",")) { $1 }
 
-type_annotation:
-  ":" type_expr { $1,$2 }
+type_annotation(right_type_expr):
+  ":" right_type_expr { $1,$2 }
 
 (* Import declaration *)
 
@@ -323,7 +323,7 @@ intf_type:
     in {region; value} }
 
 intf_const:
-  "const" variable type_annotation {
+  "const" variable type_annotation(type_expr) {
     let _, t   = $3 in
     let stop   = type_expr_to_region in
     let region = cover $1#region (type_expr_to_region t)
@@ -370,13 +370,13 @@ type_expr:
 (* Functional types *)
 
 fun_type:
-  par(sep_or_term(fun_type_param,",")) "=>" type_expr {
+  par(sep_or_term(fun_type_param,",") EOF { $1 }) "=>" type_expr {
     let stop   = type_expr_to_region $3 in
     let region = cover $1.region stop
     in T_Fun {region; value=($1,$2,$3)} }
 
 fun_type_param:
-  "<ident>" type_annotation {
+  "<ident>" type_annotation(type_expr) {
     let region = cover $1#region (type_expr_to_region (snd $2))
     in {region; value = ($1,$2)} }
 
@@ -419,18 +419,21 @@ ctor_param:
    ["C"]. *)
 
 core_type:
-  "<string>"          { T_String $1 }
-| core_type_no_string {          $1 }
+  "<string>"          { T_String    $1 }
+| core_type_no_string {             $1 }
 
 core_type_no_string:
- "<int>"            { T_Int       $1 }
-| type_name         { T_Var       $1 } (* "_" unsupported in type-checker *)
-| type_ctor_app     { T_App       $1 }
-| type_tuple        { T_Cart      $1 }
-| par(type_expr)    { T_Par       $1 }
-| parameter_of_type { T_Parameter $1 }
-| qualified_type
-| attr_type         {             $1 }
+| par(type_expr)      { T_Par       $1 }
+| attr_type
+| no_par_type_expr    {             $1 }
+
+no_par_type_expr:
+  "<int>"             { T_Int       $1 }
+| type_name           { T_Var       $1 } (* "_" unsupported in type-checker *)
+| type_ctor_app       { T_App       $1 }
+| type_tuple          { T_Cart      $1 }
+| parameter_of_type   { T_Parameter $1 }
+| qualified_type      {             $1 }
 
 (* Attributed core type *)
 
@@ -509,8 +512,7 @@ qualified_type:
     let region = cover start stop
     in T_App {region; value=$2,$1}
   }
-| type_in_module(type_name      { T_Var $1 })
-| type_in_module(par(type_expr) { T_Par $1 }) { $1 }
+| type_in_module(type_name { T_Var $1 }) { $1 }
 
 type_in_module(type_expr):
   module_path(type_expr) {
@@ -598,7 +600,7 @@ non_decl_expr_stmt(right_expr,right_stmt):
 | incr_expr
 | decr_expr
 | ternary_stmt (right_stmt)
-| par(expr) { E_Par $1 }
+| par(no_tuple_expr) { E_Par $1 }
 
 closed_non_decl_expr_stmt(right_expr):
   non_decl_expr_stmt (right_expr, closed_non_decl_expr_stmt (right_expr)) { $1 }
@@ -611,16 +613,32 @@ ternary_stmt(right_stmt):
 (* Assignments *)
 
 assign_stmt(right_expr):
-  bin_op(path,  "=", right_expr) { E_Assign  $1 }
-| bin_op(path, "*=", right_expr) { E_TimesEq $1 }
-| bin_op(path, "/=", right_expr) { E_DivEq   $1 }
-| bin_op(path, "%=", right_expr) { E_ModEq   $1 }
-| bin_op(path, "+=", right_expr) { E_AddEq   $1 }
-| bin_op(path, "-=", right_expr) { E_MinusEq $1 }
+  bin_op(var_path,  "=", right_expr) { E_Assign  $1 }
+| bin_op(var_path, "*=", right_expr) { E_TimesEq $1 }
+| bin_op(var_path, "/=", right_expr) { E_DivEq   $1 }
+| bin_op(var_path, "%=", right_expr) { E_ModEq   $1 }
+| bin_op(var_path, "+=", right_expr) { E_AddEq   $1 }
+| bin_op(var_path, "-=", right_expr) { E_MinusEq $1 }
 
-path:
-  projection { E_Proj $1 }
-| variable   { E_Var  $1 }
+var_path:
+  path(record_or_tuple { E_Var $1 }) { $1 }
+
+path(root):
+  root nseq(selection) {
+    let stop   = nseq_to_region selection_to_region $2 in
+    let region = cover (expr_to_region $1) stop
+    and value  = {record_or_tuple=$1; field_path=$2}
+    in E_Proj {region; value}
+  }
+| root { $1 }
+
+selection:
+  "." field_index   { Field ($1,$2) }
+| brackets("<int>") { Component $1  }
+
+field_index:
+  field_name { NameIdx $1 }
+| "<string>" { StrIdx  $1 }
 
 (* Block of statement *)
 
@@ -771,27 +789,47 @@ expr:
 (* Functional expressions *)
 
 fun_expr:
-  ioption(type_vars) parameters ioption(type_annotation) "=>" fun_body {
+  ioption(type_vars) parameters_arrow "=>" fun_body {
+    let start  = match $1 with
+                   None -> parameters_to_region $2
+                 | Some {region; _} -> region in
+    let region = cover start (fun_body_to_region $4) in
+    let value  = {type_vars=$1; parameters=$2;
+                  lhs_type=None; arrow=$3; fun_body=$4}
+    in {region; value} }
+| ioption(type_vars) parameters_colon type_annotation(no_par_type_expr)
+  "=>" fun_body {
     let start  = match $1 with
                    None -> parameters_to_region $2
                  | Some {region; _} -> region in
     let region = cover start (fun_body_to_region $5) in
     let value  = {type_vars=$1; parameters=$2;
-                  lhs_type=$3; arrow=$4; fun_body=$5}
+                  lhs_type=(Some $3); arrow=$4; fun_body=$5}
     in {region; value} }
 
-parameters:
+%inline
+parameters_colon:
   par(sep_or_term(parameter,",")) { Params   $1 }
 | variable | "_"                  { OneParam $1 }
 
+%inline
+parameters_arrow:
+  par(sep_or_term(parameter,",") EOF { $1 }) { Params   $1 }
+| variable | "_"                             { OneParam $1 }
+
 parameter:
-  pattern ioption(type_annotation) {
-    match $2 with
-      Some (_, type_expr) ->
-        let stop   = type_expr_to_region type_expr in
-        let region = cover (pattern_to_region $1) stop
-        in P_Typed {region; value = $1,$2}
-    | None -> $1 }
+  param_pattern type_annotation(type_expr) {
+    let _, t   = $2 in
+    let stop   = type_expr_to_region t in
+    let region = cover (pattern_to_region $1) stop
+    in P_Typed {region; value = $1,$2}
+  }
+| param_pattern { $1 }
+
+%inline
+param_pattern:
+  "_" | variable       { P_Var   $1 }
+| tuple(param_pattern) { P_Tuple $1 }
 
 fun_body:
   braces(statements) { FunBody  $1 }
@@ -914,7 +952,7 @@ app_expr_level:
 | core_expr { $1 }
 
 app_expr(left_expr):
-  core_expr arguments {
+  no_attr_core_expr arguments {
     let region = cover (expr_to_region $1) $2.region
     in E_App {region; value=($1,$2)} }
 
@@ -931,6 +969,10 @@ core_expr:
 | no_attr_core_expr   {             $1 }
 
 no_attr_core_expr:
+  path(tuple(expr) { E_Tuple $1 })
+| no_tuple_expr { $1 }
+
+no_tuple_expr:
   "<int>"       { E_Int      $1 }
 | "<nat>"       { E_Nat      $1 }
 | "<mutez>"     { E_Mutez    $1 }
@@ -941,7 +983,6 @@ no_attr_core_expr:
 | code_inj      { E_CodeInj  $1 }
 | record_update { E_Update   $1 }
 | ctor          { E_Ctor     $1 }
-| tuple(expr)   { E_Tuple    $1 }
 | path_expr     {            $1 }
 
 (* Code injection *)
@@ -962,22 +1003,7 @@ update_expr:
     {ellipsis=$1; record=$2; sep=$3; updates=$4} }
 
 updates:
-  nsep_or_term(field(path),field_sep) { $1 }
-
-projection:
-  record_or_tuple nseq(selection) {
-    let stop   = nseq_to_region selection_to_region $2 in
-    let region = cover (expr_to_region $1) stop
-    and value  = {record_or_tuple=$1; field_path=$2}
-    in {region; value} }
-
-selection:
-  "." field_index   { Field ($1,$2) }
-| brackets("<int>") { Component $1  }
-
-field_index:
-  field_name { NameIdx $1 }
-| "<string>" { StrIdx  $1 }
+  nsep_or_term(field(var_path),field_sep) { $1 }
 
 (* Tuples (a.k.a "arrays" is JS) *)
 
@@ -1000,31 +1026,13 @@ component(item):
       * nested fields and components from an expression: "(e).a[0][1]b" *)
 
 path_expr:
-  module_path(selected_expr) { E_ModPath (mk_mod_path $1 expr_to_region) }
-| local_path                 { $1 }
+  module_path(selected_expr)   { E_ModPath (mk_mod_path $1 expr_to_region) }
+| path(par(no_tuple_expr) { E_Par $1 })
+| var_path                     { $1 }
 
 selected_expr:
-  field_path {        $1 }
-| ctor       { E_Ctor $1 }
-
-field_path:
-  variable nseq(selection) {
-    let stop   = nseq_to_region selection_to_region $2 in
-    let region = cover (expr_to_region $1) stop
-    and value  = {record_or_tuple=(E_Var $1); field_path=$2}
-    in E_Proj {region; value}
-  }
-| par(expr) { E_Par $1 }
-| variable  { E_Var $1 }
-
-local_path:
-  par(expr) nseq(selection) {
-    let stop   = nseq_to_region selection_to_region $2 in
-    let region = cover (expr_to_region $1) stop
-    and value  = {record_or_tuple=(E_Par $1); field_path=$2}
-    in E_Proj {region; value}
-  }
-| field_path { $1 }
+  ctor     { E_Ctor $1 }
+| var_path {        $1 }
 
 (* PATTERNS *)
 

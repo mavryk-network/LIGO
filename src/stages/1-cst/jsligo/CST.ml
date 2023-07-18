@@ -373,30 +373,11 @@ and pattern =
 | P_Var      of variable                 (* x               *)
 | P_Verbatim of verbatim_literal         (* {|foo|}         *)
 
-(*
-and 'a expr_pattern =
-  EP_Attr     of (attribute * 'a expr_pattern)    (* @a [x, _]       *)
-| EP_Bytes    of bytes_literal            (* 0xFFFA          *)
-| EP_Ctor     of ctor                     (* C               *)
-| EP_Int      of int_literal              (* 42              *)
-| EP_Mutez    of mutez_literal            (* 5mutez          *)
-| EP_Nat      of nat_literal              (* 4n              *)
-| EP_Record   of 'a expr_pattern record           (* {x, y : 0}      *)
-| EP_String   of string_literal           (* "string"        *)
-| EP_Tuple    of pattern tuple            (* [x, ...y, z] [] *)
-| EP_Var      of variable                 (* x               *)
-| EP_Verbatim of verbatim_literal         (* {|foo|}         *)
-*)
-
 (* Tuple *)
 
 and 'a tuple = ('a component, comma) sep_or_term brackets
 
 and 'a component = ellipsis option * 'a
-
-(* Typed pattern *)
-
-and typed_pattern = pattern * type_annotation
 
 (* STATEMENTS *)
 
