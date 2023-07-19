@@ -6,7 +6,7 @@ open Region
 type 'a fold_control = 'a Cst_shared.Fold.fold_control
 
 type _ sing =
-  | S_all_cases : all_cases sing
+     S_all_cases : all_cases sing
   | S_arguments : arguments sing
   | S_arrow : arrow sing
   | S_attr : Attr.t sing
@@ -45,7 +45,7 @@ type _ sing =
   | S_field_id : field_id sing
   | S_field_name : field_name sing
   | S_field_sep : field_sep sing
-  | S_file_path : file_path  sing
+  | S_file_path : file_path sing
   | S_for_of_stmt : for_of_stmt sing
   | S_for_stmt : for_stmt sing
   | S_fun_body : fun_body sing
@@ -206,7 +206,7 @@ let fold
 
   and fold : some_node -> unit =
   function (Some_node (node, sing)) -> match sing with
-  | S_all_cases -> process @@ node -| S_tuple_2
+    S_all_cases -> process @@ node -| S_tuple_2
     (S_nseq (S_reg S_switch_case), S_option (S_reg S_switch_default))
   | S_arguments -> process
     ( node -| (S_par (S_sepseq (S_expr, S_comma)))
@@ -214,8 +214,7 @@ let fold
   | S_arrow -> process @@ node -| S_wrap S_lexeme
   | S_attr -> () (* Leaf *)
   | S_attribute -> process @@ node -| S_wrap S_attr
-  | S_bin_op sing ->
-    let { arg1; op; arg2 } = node in
+  | S_bin_op sing -> let { arg1; op; arg2 } = node in
     process_list
     [ arg1 -| S_expr
     ; op -| sing
@@ -223,15 +222,13 @@ let fold
   | S_bool_and -> process @@ node -| S_wrap S_lexeme
   | S_bool_or -> process @@ node -| S_wrap S_lexeme
   | S_braces sing -> process @@ node -| S_reg (S_braces' sing)
-  | S_braces' sing ->
-    let { lbrace; inside; rbrace } = node in
+  | S_braces' sing -> let { lbrace; inside; rbrace } = node in
     process_list
     [ lbrace -| S_lbrace
     ; inside -| sing
     ; rbrace -| S_rbrace ]
   | S_brackets sing -> process @@ node -| S_reg (S_brackets' sing)
-  | S_brackets' sing ->
-    let { lbracket; inside; rbracket } = node in
+  | S_brackets' sing -> let { lbracket; inside; rbracket } = node in
     process_list
     [ lbracket -| S_lbracket
     ; inside -| sing
@@ -240,18 +237,16 @@ let fold
   | S_cartesian -> process @@ node -| S_brackets (S_nsep_or_term (S_type_expr, S_comma))
   | S_cases -> process
     ( match node with
-    | AllCases node -> node -| S_all_cases
+      AllCases node -> node -| S_all_cases
     | Default node -> node -| S_reg S_switch_default
     )
   | S_chevrons sing -> process @@ node -| S_reg (S_chevrons' sing)
-  | S_chevrons' sing ->
-  let { lchevron; inside; rchevron } = node in
+  | S_chevrons' sing -> let { lchevron; inside; rchevron } = node in
     process_list
     [ lchevron -| S_lt
     ; inside -| sing
     ; rchevron -| S_gt ]
-  | S_code_inj ->
-    let { language; code } = node in
+  | S_code_inj -> let { language; code } = node in
     process_list
     [ language -| S_language
     ; code -| S_expr ]
@@ -264,20 +259,18 @@ let fold
     ; test -| S_par S_expr
     ; if_so -| S_statement
     ; if_not -| S_option (S_tuple_2 (S_kwd_else, S_statement))]
-  | S_contract_of_expr ->
-    let { kwd_contract_of; module_path } = node in
+  | S_contract_of_expr -> let { kwd_contract_of; module_path } = node in
     process_list
     [ kwd_contract_of -| S_kwd_contract_of
     ; module_path -| S_par S_module_selection ]
-  | S_cst ->
-    let { decl; eof } = node in
+  | S_cst -> let { decl; eof } = node in
     process_list
     [ decl -| S_nseq S_top_decl
     ; eof -| S_eof ]
   | S_ctor -> process @@ node -| S_wrap S_lexeme
   | S_declaration -> process
     ( match node with
-    | D_Value node -> node -| S_reg S_value_decl
+      D_Value node -> node -| S_reg S_value_decl
     | D_Import node -> node -| S_import_decl
     | D_Interface node -> node -| S_reg S_interface_decl
     | D_Module node -> node -| S_reg S_module_decl
@@ -293,7 +286,7 @@ let fold
   | S_equal_cmp -> process @@ node -| S_wrap S_lexeme
   | S_expr -> process
     ( match node with
-    | E_Add node -> node -| S_reg (S_bin_op S_plus)
+      E_Add node -> node -| S_reg (S_bin_op S_plus)
     | E_AddEq node -> node -| S_reg (S_bin_op S_plus_eq)
     | E_And node -> node -| S_reg (S_bin_op S_bool_and)
     | E_App node -> node -| S_reg (S_tuple_2 (S_expr, S_arguments))
@@ -309,7 +302,7 @@ let fold
     | E_Fun node -> node -| S_reg (S_fun_expr)
     | E_Geq node -> node -| S_reg (S_bin_op S_geq)
     | E_Gt node -> node -| S_reg (S_bin_op S_gt)
-    | E_Int node ->  node -| S_int_literal
+    | E_Int node -> node -| S_int_literal
     | E_Leq node -> node -| S_reg (S_bin_op S_leq)
     | E_Lt node -> node -| S_reg (S_bin_op S_lt)
     | E_MinusEq node -> node -| S_reg (S_bin_op S_minus_eq)
@@ -347,15 +340,14 @@ let fold
   ; field_rhs -| S_option (S_tuple_2 (S_colon, sing)) ]
   | S_field_id -> process
     ( match node with
-    | F_Name node -> node -| S_field_name
+      F_Name node -> node -| S_field_name
     | F_Num node -> node -| S_int_literal
     | F_Str node -> node -| S_string_literal
     )
   | S_field_name -> process @@ node -| S_wrap S_lexeme
   | S_field_sep -> process @@ node -| S_wrap S_lexeme
   | S_file_path -> process @@ node -| S_wrap S_lexeme
-  | S_for_of_stmt ->
-    let { kwd_for; range; for_of_body } = node in
+  | S_for_of_stmt -> let { kwd_for; range; for_of_body } = node in
     process_list
     [ kwd_for -| S_kwd_for
     ; range -| S_par S_range_of
@@ -368,7 +360,7 @@ let fold
     ; for_body -| S_option (S_statement)]
   | S_fun_body -> process
     ( match node with
-    | FunBody node -> node -| S_braces S_statements
+      FunBody node -> node -| S_braces S_statements
     | ExprBody node -> node -| S_expr )
   | S_fun_expr ->
     let { type_vars; parameters; rhs_type; arrow; fun_body } = node in
@@ -399,8 +391,8 @@ let fold
   ; kwd_from -| S_kwd_from
   ; file_path -| S_file_path ]
   | S_import_decl -> process
-    (match node with
-    | AliasModule node -> node -|  S_reg S_import_alias
+    ( match node with
+      AliasModule node -> node -| S_reg S_import_alias
     | ImportAll node -> node -| S_reg S_import_all_as
     | ImportSome node -> node -| S_reg S_import_from )
   | S_import_from -> let { kwd_import; imported; kwd_from; file_path } = node in
@@ -427,13 +419,13 @@ let fold
   | S_intf_entries -> process @@ node -| S_sep_or_term (S_intf_entry, S_semi)
   | S_intf_entry -> process
     ( match node with
-    | I_Attr node ->  node -| S_tuple_2 (S_attribute, S_intf_entry)
+      I_Attr node -> node -| S_tuple_2 (S_attribute, S_intf_entry)
     | I_Type node -> node -| S_reg S_intf_type
     | I_Const node -> node -| S_reg S_intf_const
     )
   | S_intf_expr -> process
     ( match node with
-    | I_Body node ->  node -| S_intf_body
+      I_Body node -> node -| S_intf_body
     | I_Path node -> node -| S_module_selection
     )
   | S_intf_name -> process @@ node -| S_wrap S_lexeme
@@ -483,7 +475,7 @@ let fold
   ; module_body -| S_braces S_statements ]
   | S_module_name -> process @@ node -| S_wrap S_lexeme
   | S_module_path sing ->
-    let {module_path; selector; field} =  node in
+    let {module_path; selector; field} = node in
     process_list
     [ module_path -| S_nsepseq (S_module_name, S_dot)
     ; selector -| S_dot
@@ -496,23 +488,22 @@ let fold
   | S_neq -> process @@ node -| S_wrap S_lexeme
   | S_nsep_or_pref (a_sing, b_sing) -> process
     ( match node with
-    | `Sep node -> node -| S_nsepseq (a_sing, b_sing)
+      `Sep node -> node -| S_nsepseq (a_sing, b_sing)
     | `Pref node -> node -| S_nseq (S_tuple_2 (b_sing, a_sing)))
   | S_nsep_or_term (a_sing, b_sing) -> process
     ( match node with
-    | `Sep node -> node -| S_nsepseq (a_sing, b_sing)
+      `Sep node -> node -| S_nsepseq (a_sing, b_sing)
     | `Term node -> node -| S_nseq (S_tuple_2 (a_sing, b_sing)))
   | S_nsepseq (sing_1, sing_2) ->
     process @@ node -| S_tuple_2 (sing_1, S_list (S_tuple_2 (sing_2, sing_1)))
   | S_nseq sing -> process @@ node -| S_tuple_2 (sing, S_list sing)
   | S_option sing ->
     ( match node with
-    |  None -> () (* Leaf *)
+      None -> () (* Leaf *)
     | Some node -> process @@ node -| sing
     )
   | S_par sing -> process @@ node -| S_reg (S_par' sing)
-  | S_par' sing ->
-    let { lpar; inside; rpar } = node in
+  | S_par' sing -> let { lpar; inside; rpar } = node in
     process_list
     [ lpar -| S_lpar
     ; inside -| sing
@@ -523,12 +514,12 @@ let fold
   ; module_path -| S_module_selection ]
   | S_parameters -> process
     ( match node with
-    | Params node -> node -| S_par (S_sep_or_term (S_pattern, S_comma))
+      Params node -> node -| S_par (S_sep_or_term (S_pattern, S_comma))
     | OneParam node -> node -| S_variable
     )
   | S_pattern -> process
     ( match node with
-    | P_Attr node -> node -| S_tuple_2 (S_attribute, S_pattern)
+      P_Attr node -> node -| S_tuple_2 (S_attribute, S_pattern)
     | P_Bytes node -> node -| S_bytes_literal
     | P_Ctor node -> node -| S_ctor
     | P_Int node -> node -| S_int_literal
@@ -564,8 +555,7 @@ let fold
   | S_rbrace -> process @@ node -| S_wrap S_lexeme
   | S_rbracket -> process @@ node -| S_wrap S_lexeme
   | S_record sing -> process @@ node -| S_braces (S_sep_or_term (S_reg (S_field sing), S_semi))
-  | S_reg sing ->
-    let { region; value } = node in
+  | S_reg sing -> let { region; value } = node in
     process_list
     [ region -| S_region
     ; value -| sing ]
@@ -574,7 +564,7 @@ let fold
   | S_rpar -> process @@ node -| S_wrap S_lexeme
   | S_selection -> process
     ( match node with
-    | FieldName node -> node -| S_tuple_2 (S_dot, S_field_name)
+      FieldName node -> node -| S_tuple_2 (S_dot, S_field_name)
     | FieldStr node -> node -| S_tuple_2 (S_dot, S_string_literal)
     | Component node -> node -| S_brackets S_nat_literal
     )
@@ -585,7 +575,7 @@ let fold
   | S_slash -> process @@ node -| S_wrap S_lexeme
   | S_statement -> process
     ( match node with
-    | S_Attr node -> node -| S_tuple_2 (S_attribute, S_statement)
+      S_Attr node -> node -| S_tuple_2 (S_attribute, S_statement)
     | S_Block node -> node -| S_braces S_statements
     | S_Break node -> node -| S_kwd_break
     | S_Cond node -> node -| S_reg S_cond_stmt
@@ -626,7 +616,7 @@ let fold
   | S_times_eq -> process @@ node -| S_wrap S_lexeme
   | S_top_decl -> process
     ( match node with
-    | TL_Decl node -> node -| S_tuple_2 (S_declaration, S_option S_semi)
+      TL_Decl node -> node -| S_tuple_2 (S_declaration, S_option S_semi)
     | TL_Attr node -> node -| S_tuple_2 (S_attribute , S_top_decl)
     | TL_Export node -> node -| S_reg (S_tuple_2 (S_kwd_export, S_top_decl))
     | TL_Directive node -> node -| S_directive
@@ -662,7 +652,7 @@ let fold
   ; type_expr -| S_type_expr ]
   | S_type_expr -> process
     ( match node with
-    | T_App node -> node -| S_reg (S_tuple_2 (S_type_ctor, S_type_ctor_args))
+      T_App node -> node -| S_reg (S_tuple_2 (S_type_ctor, S_type_ctor_args))
     | T_Attr node -> node -| S_tuple_2 (S_attribute, S_type_expr)
     | T_Cart node -> node -| S_cartesian
     | T_Fun node -> node -| S_fun_type
@@ -680,8 +670,7 @@ let fold
   | S_type_vars -> process @@ node -| S_chevrons (S_sep_or_term (S_type_var, S_comma))
   | S_typed_expr -> process @@ node -| S_tuple_3 (S_expr, S_kwd_as, S_type_expr)
   | S_typed_pattern -> process @@ node -| S_tuple_2 (S_pattern, S_type_annotation)
-  | S_un_op sing ->
-    let { op; arg } = node in
+  | S_un_op sing -> let { op; arg } = node in
     process_list
     [ op -| sing
     ; arg -| S_expr ]
@@ -699,13 +688,13 @@ let fold
   ; rhs_type -| S_option S_type_annotation
   ; eq -| S_equal
   ; rhs_expr -| S_expr ]
-  | S_value_decl -> let { kind; bindings }  = node in
+  | S_value_decl -> let { kind; bindings } = node in
   process_list
   [ kind -| S_var_kind
   ; bindings -| S_sep_or_term (S_reg S_val_binding, S_comma) ]
   | S_var_kind -> process @@
     ( match node with
-    | `Let node -> node -| S_kwd_let
+      `Let node -> node -| S_kwd_let
     | `Const node -> node -| S_kwd_const
     )
   | S_variable -> process @@ node -| S_wrap S_lexeme
