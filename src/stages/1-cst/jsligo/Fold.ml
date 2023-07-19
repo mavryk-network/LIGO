@@ -334,10 +334,10 @@ let fold
     | E_Verbatim node -> node -| S_verbatim_literal
     )
   | S_field sing -> let { attributes; field_id; field_rhs } = node in
-  process_list
-  [ attributes -| S_list S_attribute
-  ; field_id -| S_field_id
-  ; field_rhs -| S_option (S_tuple_2 (S_colon, sing)) ]
+    process_list
+    [ attributes -| S_list S_attribute
+    ; field_id -| S_field_id
+    ; field_rhs -| S_option (S_tuple_2 (S_colon, sing)) ]
   | S_field_id -> process
     ( match node with
       F_Name node -> node -| S_field_name
@@ -377,45 +377,45 @@ let fold
   | S_gt -> process @@ node -| S_wrap S_lexeme
   | S_hex -> () (* Leaf *)
   | S_import_alias -> let { kwd_import; alias; equal; module_path } = node in
-  process_list
-  [ kwd_import -| S_kwd_import
-  ; alias -| S_module_name
-  ; equal -| S_equal
-  ; module_path -| S_module_selection ]
+    process_list
+    [ kwd_import -| S_kwd_import
+    ; alias -| S_module_name
+    ; equal -| S_equal
+    ; module_path -| S_module_selection ]
   | S_import_all_as -> let { kwd_import; times; kwd_as; alias; kwd_from; file_path } = node in
-  process_list
-  [ kwd_import -| S_kwd_import
-  ; times -| S_times
-  ; kwd_as -| S_kwd_as
-  ; alias -| S_module_name
-  ; kwd_from -| S_kwd_from
-  ; file_path -| S_file_path ]
+    process_list
+    [ kwd_import -| S_kwd_import
+    ; times -| S_times
+    ; kwd_as -| S_kwd_as
+    ; alias -| S_module_name
+    ; kwd_from -| S_kwd_from
+    ; file_path -| S_file_path ]
   | S_import_decl -> process
     ( match node with
       AliasModule node -> node -| S_reg S_import_alias
     | ImportAll node -> node -| S_reg S_import_all_as
     | ImportSome node -> node -| S_reg S_import_from )
   | S_import_from -> let { kwd_import; imported; kwd_from; file_path } = node in
-  process_list
-  [ kwd_import -| S_kwd_import
-  ; imported -| S_braces (S_sep_or_term (S_field_name, S_comma))
-  ; kwd_from -| S_kwd_from
-  ; file_path -| S_file_path ]
+    process_list
+    [ kwd_import -| S_kwd_import
+    ; imported -| S_braces (S_sep_or_term (S_field_name, S_comma))
+    ; kwd_from -| S_kwd_from
+    ; file_path -| S_file_path ]
   | S_increment -> process @@ node -| S_wrap S_lexeme
   | S_int_literal -> process @@ node -| S_wrap (S_tuple_2 (S_lexeme, S_z))
   | S_int64 -> () (* Leaf *)
   | S_interface -> process @@ node -| S_reg (S_tuple_2 (S_kwd_implements, S_intf_expr))
   | S_interface_decl -> let { kwd_interface; intf_name; intf_body } = node in
-  process_list
-  [ kwd_interface -| S_kwd_interface
-  ; intf_name -| S_intf_name
-  ; intf_body -| S_intf_body ]
+    process_list
+    [ kwd_interface -| S_kwd_interface
+    ; intf_name -| S_intf_name
+    ; intf_body -| S_intf_body ]
   | S_intf_body -> process @@ node -| S_braces S_intf_entries
   | S_intf_const -> let { kwd_const; const_name; const_type } = node in
-  process_list
-  [ kwd_const -| S_kwd_const
-  ; const_name -| S_variable
-  ; const_type -| S_type_annotation ]
+    process_list
+    [ kwd_const -| S_kwd_const
+    ; const_name -| S_variable
+    ; const_type -| S_type_annotation ]
   | S_intf_entries -> process @@ node -| S_sep_or_term (S_intf_entry, S_semi)
   | S_intf_entry -> process
     ( match node with
@@ -430,10 +430,10 @@ let fold
     )
   | S_intf_name -> process @@ node -| S_wrap S_lexeme
   | S_intf_type -> let { kwd_type; type_name; type_rhs } = node in
-  process_list
-  [ kwd_type -| S_kwd_type
-  ; type_name -| S_type_name
-  ; type_rhs -| S_option (S_tuple_2 (S_equal, S_type_expr)) ]
+    process_list
+    [ kwd_type -| S_kwd_type
+    ; type_name -| S_type_name
+    ; type_rhs -| S_option (S_tuple_2 (S_equal, S_type_expr)) ]
   | S_kwd_as -> process @@ node -| S_wrap S_lexeme
   | S_kwd_break -> process @@ node -| S_wrap S_lexeme
   | S_kwd_case -> process @@ node -| S_wrap S_lexeme
@@ -468,11 +468,11 @@ let fold
   | S_minus_eq -> process @@ node -| S_wrap S_lexeme
   | S_mod_eq -> process @@ node -| S_wrap S_lexeme
   | S_module_decl -> let { kwd_namespace; module_name; module_type; module_body } = node in
-  process_list
-  [ kwd_namespace -| S_kwd_namespace
-  ; module_name -| S_module_name
-  ; module_type -| S_option S_interface
-  ; module_body -| S_braces S_statements ]
+    process_list
+    [ kwd_namespace -| S_kwd_namespace
+    ; module_name -| S_module_name
+    ; module_type -| S_option S_interface
+    ; module_body -| S_braces S_statements ]
   | S_module_name -> process @@ node -| S_wrap S_lexeme
   | S_module_path sing ->
     let {module_path; selector; field} = node in
@@ -509,9 +509,9 @@ let fold
     ; inside -| sing
     ; rpar -| S_rpar ]
   | S_parameter_of_type -> let { kwd_parameter_of; module_path } = node in
-  process_list
-  [ kwd_parameter_of -| S_kwd_parameter_of
-  ; module_path -| S_module_selection ]
+    process_list
+    [ kwd_parameter_of -| S_kwd_parameter_of
+    ; module_path -| S_module_selection ]
   | S_parameters -> process
     ( match node with
       Params node -> node -| S_par (S_sep_or_term (S_pattern, S_comma))
@@ -535,23 +535,23 @@ let fold
   | S_plus -> process @@ node -| S_wrap S_lexeme
   | S_plus_eq -> process @@ node -| S_wrap S_lexeme
   | S_projection -> let { record_or_tuple; field_path } = node in
-  process_list
-  [ record_or_tuple -| S_expr
-  ; field_path -| S_nseq S_selection ]
+    process_list
+    [ record_or_tuple -| S_expr
+    ; field_path -| S_nseq S_selection ]
   | S_qmark -> process @@ node -| S_wrap S_lexeme
   | S_range_for -> let { initialiser; semi1; condition; semi2; afterthought } = node in
-  process_list
-  [ initialiser -| S_option S_statement
-  ; semi1 -| S_semi
-  ; condition -| S_option S_expr
-  ; semi2 -| S_semi
-  ; afterthought -| S_option (S_nsepseq (S_expr, S_comma))]
+    process_list
+    [ initialiser -| S_option S_statement
+    ; semi1 -| S_semi
+    ; condition -| S_option S_expr
+    ; semi2 -| S_semi
+    ; afterthought -| S_option (S_nsepseq (S_expr, S_comma)) ]
   | S_range_of -> let { index_kind; index; kwd_of; expr } = node in
-  process_list
-  [ index_kind -| S_var_kind
-  ; index -| S_variable
-  ; kwd_of -| S_kwd_of
-  ; expr -| S_expr ]
+    process_list
+    [ index_kind -| S_var_kind
+    ; index -| S_variable
+    ; kwd_of -| S_kwd_of
+    ; expr -| S_expr ]
   | S_rbrace -> process @@ node -| S_wrap S_lexeme
   | S_rbracket -> process @@ node -| S_wrap S_lexeme
   | S_record sing -> process @@ node -| S_braces (S_sep_or_term (S_reg (S_field sing), S_semi))
@@ -590,28 +590,28 @@ let fold
   | S_statements -> process @@ node -| S_nseq (S_tuple_2 (S_statement, S_option S_semi))
   | S_string_literal -> process @@ node -| S_wrap S_lexeme
   | S_switch_case -> let { kwd_case; expr; colon; case_body } = node in
-  process_list
-  [ kwd_case -| S_kwd_case
-  ; expr -| S_expr
-  ; colon -| S_colon
-  ; case_body -| S_option S_statements ]
+    process_list
+    [ kwd_case -| S_kwd_case
+    ; expr -| S_expr
+    ; colon -| S_colon
+    ; case_body -| S_option S_statements ]
   | S_switch_default -> let { kwd_default; colon; default_body } = node in
-  process_list
-  [ kwd_default -| S_kwd_default
-  ; colon -| S_colon
-  ; default_body -| S_option S_statements ]
+    process_list
+    [ kwd_default -| S_kwd_default
+    ; colon -| S_colon
+    ; default_body -| S_option S_statements ]
   | S_switch_stmt -> let { kwd_switch; subject; cases } = node in
-  process_list
-  [ kwd_switch -| S_kwd_switch
-  ; subject -| S_par S_expr
-  ; cases -| S_braces S_cases ]
+    process_list
+    [ kwd_switch -| S_kwd_switch
+    ; subject -| S_par S_expr
+    ; cases -| S_braces S_cases ]
   | S_ternary -> let {condition; qmark; truthy; colon; falsy } = node in
-  process_list
-  [ condition -| S_expr
-  ; qmark -| S_qmark
-  ; truthy -| S_expr
-  ; colon -| S_colon
-  ; falsy -| S_expr ]
+    process_list
+    [ condition -| S_expr
+    ; qmark -| S_qmark
+    ; truthy -| S_expr
+    ; colon -| S_colon
+    ; falsy -| S_expr ]
   | S_times -> process @@ node -| S_wrap S_lexeme
   | S_times_eq -> process @@ node -| S_wrap S_lexeme
   | S_top_decl -> process
@@ -623,33 +623,33 @@ let fold
     )
   | S_tuple sing -> process @@ node -| S_brackets (S_sep_or_term (S_component sing, S_comma))
   | S_tuple_2 (sing_1, sing_2) ->
-    (match node with
+    ( match node with
       (node_1, node_2) -> process_list
       [ node_1 -| sing_1
-      ; node_2 -| sing_2 ])
+      ; node_2 -| sing_2 ] )
   | S_tuple_3 (sing_1, sing_2, sing_3) ->
-    (match node with
+    ( match node with
       (node_1, node_2, node_3) -> process_list
       [ node_1 -| sing_1
       ; node_2 -| sing_2
-      ; node_3 -| sing_3 ])
+      ; node_3 -| sing_3 ] )
   | S_tuple_4 (sing_1, sing_2, sing_3, sing_4) ->
-    (match node with
+    ( match node with
       (node_1, node_2, node_3, node_4) -> process_list
       [ node_1 -| sing_1
       ; node_2 -| sing_2
       ; node_3 -| sing_3
-      ; node_4 -| sing_4 ])
+      ; node_4 -| sing_4 ] )
   | S_type_annotation -> process @@ node -| S_tuple_2 (S_colon, S_type_expr)
   | S_type_ctor -> process @@ node -| S_wrap S_lexeme
   | S_type_ctor_args -> process @@ node -| S_chevrons (S_nsep_or_term (S_type_expr, S_comma))
   | S_type_decl -> let { kwd_type; name; type_vars; eq; type_expr } = node in
-  process_list
-  [ kwd_type -| S_kwd_type
-  ; name -| S_type_name
-  ; type_vars -| S_option S_type_vars
-  ; eq -| S_equal
-  ; type_expr -| S_type_expr ]
+    process_list
+    [ kwd_type -| S_kwd_type
+    ; name -| S_type_name
+    ; type_vars -| S_option S_type_vars
+    ; eq -| S_equal
+    ; type_expr -| S_type_expr ]
   | S_type_expr -> process
     ( match node with
       T_App node -> node -| S_reg (S_tuple_2 (S_type_ctor, S_type_ctor_args))
@@ -676,22 +676,22 @@ let fold
     ; arg -| S_expr ]
   | S_union_type -> process @@ node -| S_reg (S_nsep_or_pref (S_record S_type_expr, S_vbar))
   | S_update_expr -> let { ellipsis; record; sep; updates } = node in
-  process_list
-  [ ellipsis -| S_ellipsis
-  ; record -| S_expr
-  ; sep -| S_field_sep
-  ; updates -| S_nsep_or_term (S_reg (S_field S_expr), S_semi) ]
+    process_list
+    [ ellipsis -| S_ellipsis
+    ; record -| S_expr
+    ; sep -| S_field_sep
+    ; updates -| S_nsep_or_term (S_reg (S_field S_expr), S_semi) ]
   | S_val_binding -> let { pattern; type_vars; rhs_type; eq; rhs_expr } = node in
-  process_list
-  [ pattern -| S_pattern
-  ; type_vars -| S_option S_type_vars
-  ; rhs_type -| S_option S_type_annotation
-  ; eq -| S_equal
-  ; rhs_expr -| S_expr ]
+    process_list
+    [ pattern -| S_pattern
+    ; type_vars -| S_option S_type_vars
+    ; rhs_type -| S_option S_type_annotation
+    ; eq -| S_equal
+    ; rhs_expr -| S_expr ]
   | S_value_decl -> let { kind; bindings } = node in
-  process_list
-  [ kind -| S_var_kind
-  ; bindings -| S_sep_or_term (S_reg S_val_binding, S_comma) ]
+    process_list
+    [ kind -| S_var_kind
+    ; bindings -| S_sep_or_term (S_reg S_val_binding, S_comma) ]
   | S_var_kind -> process @@
     ( match node with
       `Let node -> node -| S_kwd_let
@@ -699,21 +699,21 @@ let fold
     )
   | S_variable -> process @@ node -| S_wrap S_lexeme
   | S_variant -> let { attributes; tuple } = node in
-  process_list
-  [ attributes -| S_list S_attribute
-  ; tuple -| S_brackets S_variant_comp ]
+    process_list
+    [ attributes -| S_list S_attribute
+    ; tuple -| S_brackets S_variant_comp ]
   | S_variant_comp -> let { ctor; ctor_params } = node in
-  process_list
-  [ ctor -| S_ctor
-  ; ctor_params -| S_option (S_tuple_2 (S_comma, S_nsep_or_term (S_type_expr, S_comma))) ]
+    process_list
+    [ ctor -| S_ctor
+    ; ctor_params -| S_option (S_tuple_2 (S_comma, S_nsep_or_term (S_type_expr, S_comma))) ]
   | S_variant_type -> process @@ node -| S_reg (S_nsep_or_pref (S_reg S_variant, S_vbar))
   | S_vbar -> process @@ node -| S_wrap S_lexeme
   | S_verbatim_literal -> process @@ node -| S_wrap S_lexeme
   | S_while_stmt -> let { kwd_while; invariant; while_body } = node in
-  process_list
-  [ kwd_while -| S_kwd_while
-  ; invariant -| S_par S_expr
-  ; while_body -| S_statement ]
+    process_list
+    [ kwd_while -| S_kwd_while
+    ; invariant -| S_par S_expr
+    ; while_body -| S_statement ]
   | S_wild -> process @@ node -| S_wrap S_lexeme
   | S_wrap sing -> process_list
     [ node#payload -| sing
