@@ -112,7 +112,6 @@ val build_module
   :  raise:(Main_errors.all, Main_warnings.all) Simple_utils.Trace.raise
   -> options:Compiler_options.t
   -> string
-  -> string list
   -> Source_input.code_input
   -> contract_michelson
 

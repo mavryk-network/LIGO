@@ -431,10 +431,10 @@ type view_michelson = (Ligo_prim.Value_var.t, Stacking.compiled_expression) name
 
 
 let rec build_module_aggregated ~raise
-    :  options:Compiler_options.t -> string -> string list
+    :  options:Compiler_options.t -> string
     -> Source_input.code_input -> _
   =
- fun ~options module_ cli_views source ->
+ fun ~options module_ source ->
   let module_path = parse_module_path ~loc module_ in
   let typed_prg = qualified_typed ~raise ~options source in
   let contract_info, typed_contract =
@@ -447,13 +447,8 @@ let rec build_module_aggregated ~raise
   let entry_point, contract_type = contract_info in
   let _, typed_views =
     let form =
-      let command_line_views =
-        match cli_views with
-        | [] -> None
-        | x -> Some x
-      in
       Ligo_compile.Of_core.View
-        { command_line_views; contract_entry = entry_point; module_path; contract_type }
+        { command_line_views = None; contract_entry = entry_point; module_path; contract_type }
     in
     trace ~raise self_ast_typed_tracer
     @@ Ligo_compile.Of_core.specific_passes ~options form typed_prg
@@ -606,15 +601,15 @@ and build_view_aggregated ~raise
 
 
 and build_module_stacking ~raise
-    :  options:Compiler_options.t -> string -> string list
+    :  options:Compiler_options.t -> string
     -> Source_input.code_input
     -> _
        * (Stacking.compiled_expression * _)
        * ((Value_var.t * Stacking.compiled_expression) list * _)
   =
- fun ~options module_ cli_views source ->
+ fun ~options module_ source ->
   let entrypoint, _, aggregated, agg_views =
-    build_module_aggregated ~raise ~options module_ cli_views source
+    build_module_aggregated ~raise ~options module_ source
   in
   let expanded = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
   let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
@@ -665,9 +660,9 @@ and build_contract ~raise ~options entry_point module_ views source =
 
 
 (* building a module contract in michelson *)
-and build_module ~raise ~options module_ views source =
+and build_module ~raise ~options module_ source =
   let entrypoint, (contract, _), (views, _) =
-    build_module_stacking ~raise ~options module_ views source
+    build_module_stacking ~raise ~options module_ source
   in
   let entrypoint = { name = entrypoint; value = contract } in
   let views = List.map ~f:(fun (name, value) -> { name; value }) views in

@@ -63,7 +63,6 @@ let module_ (raw_options : Raw_options.t) source michelson_code_format michelson
       in
       let Compiler_options.
             { disable_michelson_typechecking = disable_typecheck
-            ; views
             ; constants
             ; file_constants
             ; _
@@ -85,7 +84,7 @@ let module_ (raw_options : Raw_options.t) source michelson_code_format michelson
             Raw { id = "source_of_text" ^ Syntax.to_ext syntax; code = source_code })
       in
       let Build.{ entrypoint; views } =
-        Build.build_module ~raise ~options module_ views source
+        Build.build_module ~raise ~options module_ source
       in
       let code = entrypoint.value in
       let views = List.map ~f:(fun { name; value } -> name, value) views in
