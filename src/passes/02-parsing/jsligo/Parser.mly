@@ -370,10 +370,13 @@ type_expr:
 (* Functional types *)
 
 fun_type:
-  par(sep_or_term(fun_type_param,",") EOF { $1 }) "=>" type_expr {
+  par(fun_type_params) "=>" type_expr {
     let stop   = type_expr_to_region $3 in
     let region = cover $1.region stop
     in T_Fun {region; value=($1,$2,$3)} }
+
+fun_type_params:
+  sep_or_term(fun_type_param,",") EOF { $1 }
 
 fun_type_param:
   "<ident>" type_annotation(type_expr) {
@@ -423,13 +426,13 @@ core_type:
 | core_type_no_string {             $1 }
 
 core_type_no_string:
-| par(type_expr)      { T_Par       $1 }
+  par(type_expr)      { T_Par       $1 }
 | attr_type
 | no_par_type_expr    {             $1 }
 
 no_par_type_expr:
   "<int>"             { T_Int       $1 }
-| type_name           { T_Var       $1 } (* "_" unsupported in type-checker *)
+| "_" | type_name     { T_Var       $1 }
 | type_ctor_app       { T_App       $1 }
 | type_tuple          { T_Cart      $1 }
 | parameter_of_type   { T_Parameter $1 }
@@ -595,7 +598,7 @@ expr_stmt(right_expr):
 | non_decl_expr_stmt (right_expr, expr_stmt (right_expr)) { S_Expr $1 }
 
 non_decl_expr_stmt(right_expr,right_stmt):
-  app_expr (no_attr_core_expr)
+  app_expr
 | assign_stmt (right_expr)
 | incr_expr
 | decr_expr
@@ -741,7 +744,7 @@ cases:
 | switch_default                            { Default       $1 }
 
 switch_case:
-  "case" disj_expr_level ":" ioption(case_statements) {
+  "case" disj_expr_level ":" ioption(case_statements) { (* : *)
     let stop = match $4 with
                  None -> $3#region
                | Some `Sep (hd,_)
@@ -789,7 +792,7 @@ expr:
 (* Functional expressions *)
 
 fun_expr:
-  ioption(type_vars) parameters_arrow "=>" fun_body {
+  ioption(type_vars) params_before_arrow "=>" fun_body {
     let start  = match $1 with
                    None -> parameters_to_region $2
                  | Some {region; _} -> region in
@@ -797,8 +800,8 @@ fun_expr:
     let value  = {type_vars=$1; parameters=$2;
                   lhs_type=None; arrow=$3; fun_body=$4}
     in {region; value} }
-| ioption(type_vars) parameters_colon type_annotation(no_par_type_expr)
-  "=>" fun_body {
+| ioption(type_vars)
+  params_before_colon type_annotation(no_par_type_expr) "=>" fun_body {
     let start  = match $1 with
                    None -> parameters_to_region $2
                  | Some {region; _} -> region in
@@ -808,12 +811,16 @@ fun_expr:
     in {region; value} }
 
 %inline
-parameters_colon:
-  par(sep_or_term(parameter,",")) { Params   $1 }
-| variable | "_"                  { OneParam $1 }
+params_before_colon:
+  par(parameters) { Params   $1 }
+| variable | "_"  { OneParam $1 }
+
+parameters:
+  parameter "," nsep_or_term(parameter,",") {
+    Utils.nsep_or_term_cons $1 $2 $3 }
 
 %inline
-parameters_arrow:
+params_before_arrow:
   par(sep_or_term(parameter,",") EOF { $1 }) { Params   $1 }
 | variable | "_"                             { OneParam $1 }
 
@@ -846,7 +853,7 @@ typed_expr:
 (* Ternary conditional operator *)
 
 ternary_expr(left_expr,branch):
-  left_expr "?" branch ":" branch {
+  left_expr "?" branch ":" branch { (* : *)
     let region = cover (expr_to_region $1) (expr_to_region $5)
     and value  = {condition=$1; qmark=$2; truthy=$3; colon=$4; falsy=$5}
     in E_Ternary {value; region} }
@@ -948,10 +955,10 @@ app_expr_level:
     and value  = {kwd_contract_of=$1; module_path=$2}
     in E_Contract {region; value}
   }
-| app_expr(core_expr)
+| app_expr
 | core_expr { $1 }
 
-app_expr(left_expr):
+app_expr:
   no_attr_core_expr arguments {
     let region = cover (expr_to_region $1) $2.region
     in E_App {region; value=($1,$2)} }
@@ -969,8 +976,10 @@ core_expr:
 | no_attr_core_expr   {             $1 }
 
 no_attr_core_expr:
-  path(tuple(expr) { E_Tuple $1 })
-| no_tuple_expr { $1 }
+  tuple_path | no_tuple_expr { $1 }
+
+tuple_path:
+  path(tuple(expr) { E_Tuple $1 }) { $1 }
 
 no_tuple_expr:
   "<int>"       { E_Int      $1 }

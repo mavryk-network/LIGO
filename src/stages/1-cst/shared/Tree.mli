@@ -124,13 +124,13 @@ val mk_children_nseq :
   'a printer -> ?root:root -> 'a Utils.nseq -> child list
 
 val mk_children_sep_or_term :
-  'a printer -> ?root:root -> ('a,_) Nodes.sep_or_term -> child list
+  'a printer -> ?root:root -> ('a,_) Utils.sep_or_term -> child list
 
 val mk_children_nsep_or_term :
-  'a printer -> ?root:root -> ('a,_) Nodes.nsep_or_term -> child list
+  'a printer -> ?root:root -> ('a,_) Utils.nsep_or_term -> child list
 
 val mk_children_nsep_or_pref :
-  'a printer -> ?root:root -> ('a,_) Nodes.nsep_or_pref -> child list
+  'a printer -> ?root:root -> ('a,_) Utils.nsep_or_pref -> child list
 
 
 (* PRINTING LISTS AND SEQUENCES *)
@@ -177,7 +177,7 @@ val of_sep_or_term :
   -> state
   -> root
   -> 'a printer
-  -> ('a,_) Nodes.sep_or_term
+  -> ('a,_) Utils.sep_or_term
   -> unit
 
 val of_nsep_or_term :
@@ -185,7 +185,7 @@ val of_nsep_or_term :
   -> state
   -> root
   -> 'a printer
-  -> ('a,_) Nodes.nsep_or_term
+  -> ('a,_) Utils.nsep_or_term
   -> unit
 
 val of_nsep_or_pref :
@@ -193,7 +193,7 @@ val of_nsep_or_pref :
   -> state
   -> root
   -> 'a printer
-  -> ('a,_) Nodes.nsep_or_pref
+  -> ('a,_) Utils.nsep_or_pref
   -> unit
 
 (* PRINTING TOKENS (NODES) *)

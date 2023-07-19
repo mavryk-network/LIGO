@@ -23,10 +23,6 @@ module Nodes = Cst_shared.Nodes
 type 'a reg = 'a Region.reg
 type 'payload wrap = 'payload Wrap.t
 
-type ('a, 'sep) sep_or_term  = ('a, 'sep) Nodes.sep_or_term
-type ('a, 'sep) nsep_or_term = ('a, 'sep) Nodes.nsep_or_term
-type ('a, 'sep) nsep_or_pref = ('a, 'sep) Nodes.nsep_or_pref
-
 open Utils
 
 type lexeme = string

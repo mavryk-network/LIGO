@@ -127,13 +127,13 @@ let mk_children_nseq print ?root =
   mk_children_list print ?root <@ Utils.nseq_to_list
 
 let mk_children_sep_or_term print ?root =
-  mk_children_list print ?root <@ Nodes.sep_or_term_to_list
+  mk_children_list print ?root <@ Utils.sep_or_term_to_list
 
 let mk_children_nsep_or_term print ?root =
-  mk_children_list print ?root <@ Nodes.nsep_or_term_to_list
+  mk_children_list print ?root <@ Utils.nsep_or_term_to_list
 
 let mk_children_nsep_or_pref print ?root =
-  mk_children_list print ?root <@ Nodes.nsep_or_pref_to_list
+  mk_children_list print ?root <@ Utils.nsep_or_pref_to_list
 
 (* PRINTING UNARY TREES *)
 
