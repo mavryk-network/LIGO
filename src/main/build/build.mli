@@ -108,6 +108,14 @@ val dependency_graph
      * (string * Ligo_compile.Helpers.meta * Buffer.t * (string * string) list)
        Stdlib__Map.Make(Stdlib__String).t
 
+val build_module
+  :  raise:(Main_errors.all, Main_warnings.all) Simple_utils.Trace.raise
+  -> options:Compiler_options.t
+  -> string
+  -> string list
+  -> Source_input.code_input
+  -> contract_michelson
+
 val build_contract
   :  raise:(Main_errors.all, Main_warnings.all) Simple_utils.Trace.raise
   -> options:Compiler_options.t

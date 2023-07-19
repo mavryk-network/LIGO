@@ -40,6 +40,85 @@ type source =
   | Text of string * Syntax_types.t
   | File of Path.t
 
+let module_ (raw_options : Raw_options.t) source michelson_code_format michelson_comments
+  =
+  ( Formatter.Michelson_formatter.michelson_format michelson_code_format michelson_comments
+  , fun ~raise ->
+      let syntax =
+        match source with
+        | Text (_source_code, syntax) -> syntax
+        | File source_file ->
+          Syntax.of_string_opt
+            ~raise
+            ~support_pascaligo:raw_options.deprecated
+            (Syntax_name raw_options.syntax)
+            (Some source_file)
+      in
+      let protocol_version =
+        Helpers.protocol_to_variant ~raise raw_options.protocol_version
+      in
+      let options =
+        let has_env_comments = has_env_comments michelson_comments in
+        Compiler_options.make ~raw_options ~syntax ~protocol_version ~has_env_comments ()
+      in
+      let Compiler_options.
+            { disable_michelson_typechecking = disable_typecheck
+            ; views
+            ; constants
+            ; file_constants
+            ; _
+            }
+        =
+        options.backend
+      in
+      let Compiler_options.{ module_; _ } = options.frontend in
+      let source_filename =
+        match source with
+        | Text (_source_code, _syntax) -> ""
+        | File source_file -> source_file
+      in
+      let source =
+        match source with
+        | File filename -> BuildSystem.Source_input.From_file filename
+        | Text (source_code, syntax) ->
+          BuildSystem.Source_input.(
+            Raw { id = "source_of_text" ^ Syntax.to_ext syntax; code = source_code })
+      in
+      let Build.{ entrypoint; views } =
+        Build.build_module ~raise ~options module_ views source
+      in
+      let code = entrypoint.value in
+      let views = List.map ~f:(fun { name; value } -> name, value) views in
+      let file_constants = read_file_constants ~raise file_constants in
+      let constants = constants @ file_constants in
+      let compiled_contract =
+        Ligo_compile.Of_michelson.build_contract
+          ~raise
+          ~enable_typed_opt:options.backend.enable_typed_opt
+          ~protocol_version:options.middle_end.protocol_version
+          ~has_env_comments:options.backend.has_env_comments
+          ~disable_typecheck
+          ~constants
+          code
+          views
+      in
+      let compiled_contract_size =
+        Ligo_compile.Of_michelson.measure ~raise compiled_contract
+      in
+      let contract_discriminant = Int.to_string (String.hash source_filename) in
+      let analytics_input_compilation_size =
+        Analytics.
+          { group =
+              Gauge_compilation_size
+                { contract_discriminant
+                ; syntax = Syntax.to_string syntax
+                ; protocol = Environment.Protocols.variant_to_string protocol_version
+                }
+          ; metric_value = Int.to_float compiled_contract_size
+          }
+      in
+      compiled_contract, [ analytics_input_compilation_size ] )
+
 let contract (raw_options : Raw_options.t) source michelson_code_format michelson_comments
   =
   ( Formatter.Michelson_formatter.michelson_format michelson_code_format michelson_comments
