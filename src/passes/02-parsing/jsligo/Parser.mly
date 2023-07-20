@@ -376,7 +376,7 @@ fun_type:
     in T_Fun {region; value=($1,$2,$3)} }
 
 fun_type_params:
-  sep_or_term(fun_type_param,",") EOF { $1 }
+  sep_or_term(fun_type_param,",") PARAMS { $1 }
 
 fun_type_param:
   "<ident>" type_annotation(type_expr) {
@@ -619,7 +619,7 @@ assign_stmt(right_expr):
   bin_op(var_path,  "=", right_expr) { E_Assign  $1 }
 | bin_op(var_path, "*=", right_expr) { E_TimesEq $1 }
 | bin_op(var_path, "/=", right_expr) { E_DivEq   $1 }
-| bin_op(var_path, "%=", right_expr) { E_ModEq   $1 }
+| bin_op(var_path, "%=", right_expr) { E_RemEq   $1 }
 | bin_op(var_path, "+=", right_expr) { E_AddEq   $1 }
 | bin_op(var_path, "-=", right_expr) { E_MinusEq $1 }
 
@@ -821,8 +821,8 @@ parameters:
 
 %inline
 params_before_arrow:
-  par(sep_or_term(parameter,",") EOF { $1 }) { Params   $1 }
-| variable | "_"                             { OneParam $1 }
+  par(sep_or_term(parameter,",") PARAMS { $1 }) { Params   $1 }
+| variable | "_"                                { OneParam $1 }
 
 parameter:
   param_pattern type_annotation(type_expr) {
