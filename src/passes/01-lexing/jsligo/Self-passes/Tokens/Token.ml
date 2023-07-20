@@ -76,10 +76,10 @@ module T =
     | COLON      of lexeme Wrap.t  (* :    *)
     | DOT        of lexeme Wrap.t  (* .    *)
     | ELLIPSIS   of lexeme Wrap.t  (* ...  *)
-    | BOOL_OR    of lexeme Wrap.t  (* ||   *)
-    | BOOL_AND   of lexeme Wrap.t  (* &&   *)
-    | BOOL_NOT   of lexeme Wrap.t  (* !    *)
-    | BOOL_XOR   of lexeme Wrap.t  (* ^^   *)
+    | OR         of lexeme Wrap.t  (* ||   *)
+    | AND        of lexeme Wrap.t  (* &&   *)
+    | NOT        of lexeme Wrap.t  (* !    *)
+    | XOR        of lexeme Wrap.t  (* ^^   *)
     | BIT_AND    of lexeme Wrap.t  (* &    *)
     | BIT_NOT    of lexeme Wrap.t  (* ~    *)
     | BIT_XOR    of lexeme Wrap.t  (* ^    *)
@@ -202,10 +202,10 @@ module T =
     | COLON      t
     | DOT        t
     | ELLIPSIS   t
-    | BOOL_OR    t
-    | BOOL_AND   t
-    | BOOL_NOT   t
-    | BOOL_XOR   t
+    | OR         t
+    | AND        t
+    | NOT        t
+    | XOR        t
     | BIT_AND    t
     | BIT_NOT    t
     | BIT_XOR    t
@@ -472,10 +472,10 @@ module T =
     let wrap_colon      = wrap ":"
     let wrap_dot        = wrap "."
     let wrap_ellipsis   = wrap "..."
-    let wrap_bool_or    = wrap "||"
-    let wrap_bool_and   = wrap "&&"
-    let wrap_bool_not   = wrap "!"
-    let wrap_bool_xor   = wrap "^^"
+    let wrap_or    = wrap "||"
+    let wrap_and   = wrap "&&"
+    let wrap_not   = wrap "!"
+    let wrap_xor   = wrap "^^"
     let wrap_bit_and    = wrap "&"
     let wrap_bit_not    = wrap "~"
     let wrap_bit_xor    = wrap "^"
@@ -525,10 +525,10 @@ module T =
     let mk_COLON      region = COLON      (wrap_colon      region)
     let mk_DOT        region = DOT        (wrap_dot        region)
     let mk_ELLIPSIS   region = ELLIPSIS   (wrap_ellipsis   region)
-    let mk_BOOL_OR    region = BOOL_OR    (wrap_bool_or    region)
-    let mk_BOOL_AND   region = BOOL_AND   (wrap_bool_and   region)
-    let mk_BOOL_NOT   region = BOOL_NOT   (wrap_bool_not   region)
-    let mk_BOOL_XOR   region = BOOL_XOR   (wrap_bool_xor   region)
+    let mk_OR         region = OR         (wrap_or         region)
+    let mk_AND        region = AND        (wrap_and        region)
+    let mk_NOT        region = NOT        (wrap_not        region)
+    let mk_XOR        region = XOR        (wrap_xor        region)
     let mk_BIT_AND    region = BIT_AND    (wrap_bit_and    region)
     let mk_BIT_NOT    region = BIT_NOT    (wrap_bit_not    region)
     let mk_BIT_XOR    region = BIT_XOR    (wrap_bit_xor    region)
@@ -576,10 +576,10 @@ module T =
       mk_COLON;
       mk_DOT;
       mk_ELLIPSIS;
-      mk_BOOL_OR;
-      mk_BOOL_AND;
-      mk_BOOL_NOT;
-      mk_BOOL_XOR;
+      mk_OR;
+      mk_AND;
+      mk_NOT;
+      mk_XOR;
       mk_BIT_AND;
       mk_BIT_NOT;
       mk_BIT_XOR;
@@ -638,10 +638,10 @@ module T =
     let ghost_colon      = wrap_colon      Region.ghost
     let ghost_dot        = wrap_dot        Region.ghost
     let ghost_ellipsis   = wrap_ellipsis   Region.ghost
-    let ghost_bool_or    = wrap_bool_or    Region.ghost
-    let ghost_bool_and   = wrap_bool_and   Region.ghost
-    let ghost_bool_not   = wrap_bool_not   Region.ghost
-    let ghost_bool_xor   = wrap_bool_xor   Region.ghost
+    let ghost_or    = wrap_or    Region.ghost
+    let ghost_and   = wrap_and   Region.ghost
+    let ghost_not   = wrap_not   Region.ghost
+    let ghost_xor   = wrap_xor   Region.ghost
     let ghost_bit_and    = wrap_bit_and    Region.ghost
     let ghost_bit_not    = wrap_bit_not    Region.ghost
     let ghost_bit_xor    = wrap_bit_xor    Region.ghost
@@ -689,10 +689,10 @@ module T =
     let ghost_COLON      = COLON      ghost_colon
     let ghost_DOT        = DOT        ghost_dot
     let ghost_ELLIPSIS   = ELLIPSIS   ghost_ellipsis
-    let ghost_BOOL_OR    = BOOL_OR    ghost_bool_or
-    let ghost_BOOL_AND   = BOOL_AND   ghost_bool_and
-    let ghost_BOOL_NOT   = BOOL_NOT   ghost_bool_not
-    let ghost_BOOL_XOR   = BOOL_XOR   ghost_bool_xor
+    let ghost_OR         = OR         ghost_or
+    let ghost_AND        = AND        ghost_and
+    let ghost_NOT        = NOT        ghost_not
+    let ghost_XOR        = XOR        ghost_xor
     let ghost_BIT_AND    = BIT_AND    ghost_bit_and
     let ghost_BIT_NOT    = BIT_NOT    ghost_bit_not
     let ghost_BIT_XOR    = BIT_XOR    ghost_bit_xor
@@ -829,10 +829,10 @@ module T =
     | "COLON"      -> ghost_colon#payload
     | "DOT"        -> ghost_dot#payload
     | "ELLIPSIS"   -> ghost_ellipsis#payload
-    | "BOOL_OR"    -> ghost_bool_or#payload
-    | "BOOL_AND"   -> ghost_bool_and#payload
-    | "BOOL_NOT"   -> ghost_bool_not#payload
-    | "BOOL_XOR"   -> ghost_bool_xor#payload
+    | "OR"         -> ghost_or#payload
+    | "AND"        -> ghost_and#payload
+    | "NOT"        -> ghost_not#payload
+    | "XOR"        -> ghost_xor#payload
     | "BIT_AND"    -> ghost_bit_and#payload
     | "BIT_NOT"    -> ghost_bit_not#payload
     | "BIT_XOR"    -> ghost_bit_xor#payload
@@ -969,10 +969,10 @@ module T =
     | COLON      t -> t#region, sprintf "COLON%s" (comments t)
     | DOT        t -> t#region, sprintf "DOT%s" (comments t)
     | ELLIPSIS   t -> t#region, sprintf "ELLIPSIS%s" (comments t)
-    | BOOL_OR    t -> t#region, sprintf "BOOL_OR%s" (comments t)
-    | BOOL_AND   t -> t#region, sprintf "BOOL_AND%s" (comments t)
-    | BOOL_NOT   t -> t#region, sprintf "BOOL_NOT%s" (comments t)
-    | BOOL_XOR   t -> t#region, sprintf "BOOL_XOR%s" (comments t)
+    | OR         t -> t#region, sprintf "OR%s" (comments t)
+    | AND        t -> t#region, sprintf "AND%s" (comments t)
+    | NOT        t -> t#region, sprintf "NOT%s" (comments t)
+    | XOR        t -> t#region, sprintf "XOR%s" (comments t)
     | BIT_AND    t -> t#region, sprintf "BIT_AND%s" (comments t)
     | BIT_NOT    t -> t#region, sprintf "BIT_NOT%s" (comments t)
     | BIT_XOR    t -> t#region, sprintf "BIT_XOR%s" (comments t)
@@ -1176,10 +1176,10 @@ module T =
     | COLON _
     | DOT _
     | ELLIPSIS _
-    | BOOL_OR _
-    | BOOL_AND _
-    | BOOL_NOT _
-    | BOOL_XOR _
+    | OR _
+    | AND _
+    | NOT _
+    | XOR _
     | BIT_AND _
     | BIT_NOT _
     | BIT_XOR _

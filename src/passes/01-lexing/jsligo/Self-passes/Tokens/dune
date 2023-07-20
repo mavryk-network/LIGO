@@ -50,20 +50,3 @@
   hex)
  (flags
   (:standard -open Lexing_shared -open Wrap)))
-
-;; --------------------------------------------------------------------
-;; Building the PreParser
-
-;; (menhir
-;;  (merge_into PreParser)
-;;  (modules ../../../../02-parsing/jsligo/ParToken PreParser)
-;;  (flags
-;;   -la
-;;   1
-;;   --table
-;;   --strict
-;;   --explain
-;;   --inspection
-;;   --cmly
-;;   --external-tokens
-;;   Token))

@@ -626,14 +626,14 @@ assign_stmt(right_expr):
 var_path:
   path(record_or_tuple { E_Var $1 }) { $1 }
 
-path(root):
-  root nseq(selection) {
+path(root_expr):
+  root_expr nseq(selection) {
     let stop   = nseq_to_region selection_to_region $2 in
     let region = cover (expr_to_region $1) stop
     and value  = {record_or_tuple=$1; field_path=$2}
     in E_Proj {region; value}
   }
-| root { $1 }
+| root_expr { $1 }
 
 selection:
   "." field_index   { Field ($1,$2) }
@@ -853,7 +853,7 @@ typed_expr:
 (* Ternary conditional operator *)
 
 ternary_expr(left_expr,branch):
-  left_expr "?" branch ":" branch { (* : *)
+  left_expr "?" branch ":" branch {
     let region = cover (expr_to_region $1) (expr_to_region $5)
     and value  = {condition=$1; qmark=$2; truthy=$3; colon=$4; falsy=$5}
     in E_Ternary {value; region} }
@@ -873,8 +873,8 @@ bin_op(arg1,op,arg2):
 (* Logical conjunction *)
 
 conj_expr_level:
-  bin_op(conj_expr_level, "&&", comp_expr_level) { E_And $1 }
-| comp_expr_level                                {       $1 }
+  bin_op(conj_expr_level, "&&", bit_or_level) { E_And $1 }
+| comp_expr_level                             {       $1 }
 
 (* Comparisons *)
 

@@ -19,6 +19,15 @@ open CST (* THE ONLY GLOBAL OPENING *)
 
 let (<@) = Utils.(<@)
 
+(*
+type 'a nseq = 'a Utils.nseq
+type ('a,'sep) nsepseq = ('a,'sep) Utils.nsepseq
+type ('a,'sep)  sepseq = ('a,'sep) Utils.sepseq
+*)
+type ('a,'sep) nsep_or_term = ('a,'sep) Utils.nsep_or_term
+type ('a,'sep) sep_or_term = ('a,'sep) Utils.sep_or_term
+(*type ('a,'sep) nsep_or_pref = ('a,'sep) Utils.nsep_or_pref *)
+
 let print_attribute state (node : Attr.t wrap) =
   let key, val_opt = node#payload in
   match val_opt with
@@ -524,6 +533,13 @@ and print_expr state = function
 | E_App      e -> print_E_App      state e
 | E_Assign   e -> print_E_Assign   state e
 | E_Attr     e -> print_E_Attr     state e
+| E_BitAnd   e -> print_E_BitAnd   state e
+| E_BitAndEq e -> print_E_BitAndEq state e
+| E_BitNeg   e -> print_E_BitNeg   state e
+| E_BitOr    e -> print_E_BitOr    state e
+| E_BitOrEq  e -> print_E_BitOrEq  state e
+| E_BitXor   e -> print_E_BitXor   state e
+| E_BitXorEq e -> print_E_BitXorEq state e
 | E_Bytes    e -> print_E_Bytes    state e
 | E_CodeInj  e -> print_E_CodeInj  state e
 | E_Contract e -> print_E_Contract state e
@@ -564,6 +580,7 @@ and print_expr state = function
 | E_Update   e -> print_E_Update   state e
 | E_Var      e -> print_E_Var      state e
 | E_Verbatim e -> print_E_Verbatim state e
+| E_Xor      e -> print_E_Xor      state e
 
 (* Arithmetic addition *)
 
@@ -615,6 +632,41 @@ and print_E_Attr state (node : attribute * expr) =
     mk_child print_attribute attribute;
     mk_child print_expr      expr]
   in Tree.make state "E_Attr" children
+
+(* Bitwise conjunction *)
+
+and print_E_BitAnd state (node : bit_and bin_op reg) =
+  print_bin_op state "E_BitAnd" node
+
+(* Bitwise conjunction & Assignment *)
+
+and print_E_BitAndEq state (node : bit_and_eq bin_op reg) =
+  print_bin_op state "E_BitAndEq" node
+
+(* Bitwise negation *)
+
+and print_E_BitNeg state (node : bit_neg un_op reg) =
+  print_un_op state "E_Neg" node
+
+(* Bitwise disjunction *)
+
+and print_E_BitOr state (node : bit_or bin_op reg) =
+  print_bin_op state "E_Or" node
+
+(* Bitwise disjunction & Assignment *)
+
+and print_E_BitOrEq state (node : bit_or_eq bin_op reg) =
+  print_bin_op state "E_OrEq" node
+
+(* Bitwise exclusive disjunction *)
+
+and print_E_BitXor state (node : bit_xor bin_op reg) =
+  print_bin_op state "E_BitXor" node
+
+(* Bitwise exclusive disjunction *)
+
+and print_E_BitXorEq state (node : bit_xor_eq bin_op reg) =
+  print_bin_op state "E_BitXorEq" node
 
 (* Bytes as expressions *)
 
@@ -833,11 +885,17 @@ and print_Component state (node : int_literal brackets) =
 and print_E_Record state (node: expr record) =
   print_record print_expr "E_Record" state node
 
+(* Strings as expressions *)
+
 and print_E_String state (node: lexeme wrap) =
   Tree.make_string "E_String" state node
 
+(* Arithmetic subtraction *)
+
 and print_E_Sub state (node: minus bin_op reg) =
   print_bin_op state "E_Sub" node
+
+(* Ternary conditional expression *)
 
 and print_E_Ternary state (node: ternary reg) =
   let Region.{value; region} = node in
@@ -852,11 +910,17 @@ and print_E_Ternary state (node: ternary reg) =
     mk_child print_falsy  falsy]
   in Tree.make state ~region "E_Ternary" children
 
+(* Multiplication & Assignment *)
+
 and print_E_TimesEq state (node: times_eq bin_op reg) =
   print_bin_op state "E_TimesEq" node
 
+(* Tuple of expressions *)
+
 and print_E_Tuple state (node: expr tuple) =
   print_tuple print_expr "E_Tuple" state node
+
+(* Typed expressions *)
 
 and print_E_Typed state (node: typed_expr reg) =
   let Region.{value; region} = node in
@@ -865,6 +929,8 @@ and print_E_Typed state (node: typed_expr reg) =
     mk_child print_expr      expr;
     mk_child print_type_expr type_expr]
   in Tree.make state ~region "E_Typed" children
+
+(* Record functional updates *)
 
 and print_E_Update state (node: update_expr braces) =
   let Region.{region; value} = node in
@@ -877,11 +943,20 @@ and print_E_Update state (node: update_expr braces) =
     mk_child print_updates updates]
   in Tree.make state ~region "E_Update" children
 
+(* Variables denoting expressions *)
+
 and print_E_Var state (node: variable) =
   Tree.(make_unary state "E_Var" make_literal node)
 
-and print_E_Verbatim state (node: lexeme wrap) =
+(* Verbatim strings as expressions *)
+
+and print_E_Verbatim state (node: verbatim_literal) =
   Tree.make_verbatim "E_Verbatim" state node
+
+(* Logical exclusive disjunction *)
+
+and print_E_Xor state (node : bool_xor bin_op reg) =
+  print_bin_op state "E_Xor" node
 
 (* STATEMENTS *)
 

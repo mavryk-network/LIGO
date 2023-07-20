@@ -57,43 +57,55 @@ type kwd_while        = lexeme wrap
 
 (* Symbols *)
 
-type arrow     = lexeme wrap  (* =>  *)
-type dot       = lexeme wrap  (* .   *)
-type ellipsis  = lexeme wrap  (* ... *)
-type equal     = lexeme wrap  (* =   *)
-type minus     = lexeme wrap  (* -   *)
-type plus      = lexeme wrap  (* +   *)
-type slash     = lexeme wrap  (* /   *)
-type modulo    = lexeme wrap  (* %   *)
-type times     = lexeme wrap  (* *   *)
-type increment = lexeme wrap  (* ++  *)
-type decrement = lexeme wrap  (* --  *)
-type qmark     = lexeme wrap  (* ?   *)
-type bool_or   = lexeme wrap  (* ||  *)
-type bool_and  = lexeme wrap  (* &&  *)
-type negation  = lexeme wrap  (* !   *)
-type equal_cmp = lexeme wrap  (* ==  *)
-type neq       = lexeme wrap  (* !=  *)
-type lt        = lexeme wrap  (* <   *)
-type gt        = lexeme wrap  (* >   *)
-type leq       = lexeme wrap  (* <=  *)
-type geq       = lexeme wrap  (* >=  *)
-type lpar      = lexeme wrap  (* (   *)
-type rpar      = lexeme wrap  (* )   *)
-type lbracket  = lexeme wrap  (* [   *)
-type rbracket  = lexeme wrap  (* ]   *)
-type lbrace    = lexeme wrap  (* {   *)
-type rbrace    = lexeme wrap  (* }   *)
-type comma     = lexeme wrap  (* ,   *)
-type semi      = lexeme wrap  (* ;   *)
-type vbar      = lexeme wrap  (* |   *)
-type colon     = lexeme wrap  (* :   *)
-type wild      = lexeme wrap  (* _   *)
-type times_eq  = lexeme wrap  (* *=  *)
-type div_eq    = lexeme wrap  (* /=  *)
-type minus_eq  = lexeme wrap  (* -=  *)
-type plus_eq   = lexeme wrap  (* +=  *)
-type mod_eq    = lexeme wrap  (* %=  *)
+type arrow      = lexeme wrap  (* =>  *)
+type dot        = lexeme wrap  (* .   *)
+type ellipsis   = lexeme wrap  (* ... *)
+type equal      = lexeme wrap  (* =   *)
+type minus      = lexeme wrap  (* -   *)
+type plus       = lexeme wrap  (* +   *)
+type slash      = lexeme wrap  (* /   *)
+type modulo     = lexeme wrap  (* %   *)
+type times      = lexeme wrap  (* *   *)
+type increment  = lexeme wrap  (* ++  *)
+type decrement  = lexeme wrap  (* --  *)
+type qmark      = lexeme wrap  (* ?   *)
+type bool_or    = lexeme wrap  (* ||  *)
+type bool_and   = lexeme wrap  (* &&  *)
+type bool_xor   = lexeme wrap  (* ^^  *)
+type negation   = lexeme wrap  (* !   *)
+type bit_and    = lexeme wrap  (* &   *)
+type bit_neg    = lexeme wrap  (* ~   *)
+type bit_or     = lexeme wrap  (* |   *)
+type bit_xor    = lexeme wrap  (* ^   *)
+type bit_sl     = lexeme wrap  (* <<  *)
+type bit_sr     = lexeme wrap  (* >>  *)
+type equal_cmp  = lexeme wrap  (* ==  *)
+type neq        = lexeme wrap  (* !=  *)
+type lt         = lexeme wrap  (* <   *)
+type gt         = lexeme wrap  (* >   *)
+type leq        = lexeme wrap  (* <=  *)
+type geq        = lexeme wrap  (* >=  *)
+type lpar       = lexeme wrap  (* (   *)
+type rpar       = lexeme wrap  (* )   *)
+type lbracket   = lexeme wrap  (* [   *)
+type rbracket   = lexeme wrap  (* ]   *)
+type lbrace     = lexeme wrap  (* {   *)
+type rbrace     = lexeme wrap  (* }   *)
+type comma      = lexeme wrap  (* ,   *)
+type semi       = lexeme wrap  (* ;   *)
+type vbar       = lexeme wrap  (* |   *)
+type colon      = lexeme wrap  (* :   *)
+type wild       = lexeme wrap  (* _   *)
+type times_eq   = lexeme wrap  (* *=  *)
+type div_eq     = lexeme wrap  (* /=  *)
+type minus_eq   = lexeme wrap  (* -=  *)
+type plus_eq    = lexeme wrap  (* +=  *)
+type mod_eq     = lexeme wrap  (* %=  *)
+type bit_sl_eq  = lexeme wrap  (* <<= *)
+type bit_sr_eq  = lexeme wrap  (* >>= *)
+type bit_and_eq = lexeme wrap  (* &=  *)
+type bit_or_eq  = lexeme wrap  (* |=  *)
+type bit_xor_eq = lexeme wrap  (* ^=  *)
 
 type field_sep = lexeme wrap  (* , ; *)
 
@@ -486,6 +498,13 @@ and expr =
 | E_App      of (expr * arguments) reg  (* f(x)   Foo()      *)
 | E_Assign   of equal bin_op reg        (* x = y             *)
 | E_Attr     of (attribute * expr)      (* @a [x, y]         *)
+| E_BitAnd   of bit_and bin_op reg      (* x & y             *)
+| E_BitAndEq of bit_and_eq bin_op reg   (* x &= y            *)
+| E_BitNeg   of bit_neg un_op reg       (* ~x                *)
+| E_BitOr    of bit_or bin_op reg       (* x | y             *)
+| E_BitOrEq  of bit_or_eq bin_op reg    (* x |= y            *)
+| E_BitXor   of bit_xor bin_op reg      (* x ^ y             *)
+| E_BitXorEq of bit_xor_eq bin_op reg   (* x ^= y            *)
 | E_Bytes    of bytes_literal           (* 0xFFFA            *)
 | E_CodeInj  of code_inj reg
 | E_Contract of contract_of_expr reg    (* contract_of (M.N) *)
@@ -526,6 +545,7 @@ and expr =
 | E_Update   of update_expr braces      (* {...x, y : z}     *)
 | E_Var      of variable                (* x                 *)
 | E_Verbatim of verbatim_literal        (* {|foo|}           *)
+| E_Xor      of bool_xor bin_op reg     (* x ^^ y            *)
 
 (* Applications *)
 
@@ -662,6 +682,13 @@ let rec expr_to_region = function
 | E_App      {region; _}
 | E_Assign   {region; _} -> region
 | E_Attr     (_, e) -> expr_to_region e
+| E_BitAnd   {region; _}
+| E_BitAndEq {region; _}
+| E_BitNeg   {region; _}
+| E_BitOr    {region; _}
+| E_BitOrEq  {region; _}
+| E_BitXor   {region; _}
+| E_BitXorEq {region; _} -> region
 | E_Bytes    w -> w#region
 | E_CodeInj  {region; _}
 | E_Contract {region; _} -> region
@@ -702,6 +729,7 @@ let rec expr_to_region = function
 | E_Update   {region; _} -> region
 | E_Var      w
 | E_Verbatim w -> w#region
+| E_Xor {region; _} -> region
 
 let rec statement_to_region = function
   S_Attr   (_, s) -> statement_to_region s
