@@ -55,3 +55,16 @@ export const networkConnect = {
     },
   },
 };
+
+export const offline = {
+  default: false,
+  persist: true,
+  actions: {
+    SET_OFFLINE_STATUS: {
+      reducer: (_, { payload }) => payload,
+    },
+    TOGGLE_OFFLINE_STATUS: {
+      reducer: (state) => !state,
+    },
+  },
+};
