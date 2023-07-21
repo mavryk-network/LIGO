@@ -72,6 +72,21 @@ module Names = struct
 
   let init matchee_label matchee_var = OccuranceMap.singleton matchee_label matchee_var
 
+  let preserve : Label.t -> Value_var.t -> t -> t =
+   fun label var names ->
+    match OccuranceMap.find names label with
+    (* If an occurance in found in the map and the correponding var is not the
+       same as the previously bound var, this means we have different names for
+       the same constructor in the same column, in this case we need a fresh var *)
+    | Some v when not (Value_var.is_generated v) && not (Value_var.equal v var) ->
+      OccuranceMap.update names label ~f:(function
+          | None -> v
+          | Some _ ->
+            Value_var.fresh ~loc:Location.generated ~name:(Label.to_string label) ())
+    | Some _ -> names
+    | None -> OccuranceMap.add_exn names ~key:label ~data:var
+
+
   let get : Label.t -> t -> Value_var.t * t =
    fun label names ->
     match OccuranceMap.find names label with
@@ -87,7 +102,7 @@ end
 type signature = ConstructorSet.t
 
 type simple_pattern =
-  | SP_Var of Value_var.t * (O.type_expression[@sexp.opaque])
+  | SP_Var of Location.t * (O.type_expression[@sexp.opaque])
   | SP_Constructor of
       { name : Label.t
       ; args : simple_pattern list
@@ -112,10 +127,7 @@ let get_number_of_fields : O.type_expression -> int =
 
 
 let rec n_vars ~loc n =
-  if n = 0
-  then []
-  else
-    SP_Var (Value_var.fresh ~loc (), I.Combinators.t_unit ~loc ()) :: n_vars ~loc (n - 1)
+  if n = 0 then [] else SP_Var (loc, I.Combinators.t_unit ~loc ()) :: n_vars ~loc (n - 1)
 
 
 let empty_label = Label.of_string ""
@@ -224,14 +236,34 @@ let get_vars_and_projections
  fun path names p ->
   fold_pattern_with_path
     (fun path (vp, names) p ->
-      let _, names = Names.get path names in
+      let new_var, names = Names.get path names in
       match Location.unwrap p with
       | I.Pattern.P_var b ->
         let bound_var = Binder.get_var b in
-        let new_var, names = Names.get path names in
-        { bound_var; new_var } :: vp, names
+        if Value_var.equal new_var bound_var
+        then vp, names
+        else { bound_var; new_var } :: vp, names
       | _ -> vp, names)
     ([], names)
+    path
+    p
+
+
+(** This function scans a pattern an find occurances for each sub-pattern
+    and preserves the variables bound in the pattern *)
+let preserve_vars_bound_in_pattern
+    : Label.t -> Names.t -> O.type_expression I.Pattern.t -> Names.t
+  =
+ fun path names p ->
+  fold_pattern_with_path
+    (fun path names p ->
+      match Location.unwrap p with
+      | I.Pattern.P_var b ->
+        let bound_var = Binder.get_var b in
+        let names = Names.preserve path bound_var names in
+        names
+      | _ -> names)
+    names
     path
     p
 
@@ -287,8 +319,7 @@ let rec to_simple_pattern
   match Location.unwrap p with
   | P_unit ->
     assert (C.is_t_unit ty);
-    let v = Value_var.fresh ~loc ~name:"unit_pattern" () in
-    [ SP_Var (v, ty) ]
+    [ SP_Var (loc, ty) ]
   | P_var b ->
     let loc = Binder.get_loc b in
     n_vars ~loc (get_number_of_fields ty)
@@ -384,9 +415,7 @@ let specialize : Label.t -> int -> matrix -> matrix =
         :: ps
         when Label.equal c c' -> Some (qs @ ps, body)
       | SP_Constructor _ :: _ -> None
-      | SP_Var (v, _) :: ps ->
-        let loc = Value_var.get_location v in
-        Some (n_vars ~loc a @ ps, body))
+      | SP_Var (loc, _) :: ps -> Some (n_vars ~loc a @ ps, body))
 
 
 (** This function takes a list of [occurance] (o1, o2, ... , on) and returns the 
@@ -733,6 +762,10 @@ let compile
     first_case.body.type_expression
   in
   let names = Names.init matchee_label matchee in
+  let names =
+    List.fold cases ~init:names ~f:(fun names { pattern; body = _ } ->
+        preserve_vars_bound_in_pattern matchee_label names pattern)
+  in
   let names, matrix =
     List.fold_map cases ~init:names ~f:(fun names { pattern; body } ->
         let vars_projs, names = get_vars_and_projections matchee_label names pattern in
