@@ -463,10 +463,7 @@ let rec build_module_aggregated ~raise
       module_path
   in
   ignore build_aggregated_separated_views;
-  let agg_views =
-    match typed_views with
-    | [] -> None
-    | _ -> build_aggregated_views ~raise ~options ~contract_type module_path typed_views
+  let agg_views = build_aggregated_separated_views ~raise ~contract_type module_path typed_views
   in
   let parameter_ty, storage_ty =
     trace_option
@@ -615,7 +612,7 @@ and build_module_stacking ~raise
   let expanded = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
   let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
   let contract = Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c in
-  let views = build_views ~raise ~options agg_views in
+  let views = build_separated_views ~raise ~options agg_views in
   entrypoint, (contract, aggregated), (views, agg_views)
 
 
@@ -789,3 +786,20 @@ and build_views ~raise
         (List.map ~f:snd michelsons)
     in
     michelsons
+
+
+and build_separated_views ~raise
+    :  options:Compiler_options.t -> (Value_var.t * Ast_aggregated.expression) list
+    -> (Value_var.t * Stacking.compiled_expression) list
+  =
+  fun ~options lst ->
+  let f (name, aggregated) =
+    let expanded = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+    let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
+    let mini_c =
+      trace ~raise self_mini_c_tracer @@ Self_mini_c.all_expression options mini_c
+    in
+    let stacking = Ligo_compile.Of_mini_c.compile_view ~raise ~options mini_c in
+    name, stacking
+  in
+  List.map ~f lst
