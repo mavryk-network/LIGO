@@ -503,7 +503,9 @@ and expr =
 | E_BitNeg   of bit_neg un_op reg       (* ~x                *)
 | E_BitOr    of bit_or bin_op reg       (* x | y             *)
 | E_BitOrEq  of bit_or_eq bin_op reg    (* x |= y            *)
+| E_BitSl    of bit_sl bin_op reg       (* x << y            *)
 | E_BitSlEq  of bit_sl_eq bin_op reg    (* x <<= y           *)
+| E_BitSr    of bit_sr bin_op reg       (* x >> y            *)
 | E_BitSrEq  of bit_sr_eq bin_op reg    (* x >>= y           *)
 | E_BitXor   of bit_xor bin_op reg      (* x ^ y             *)
 | E_BitXorEq of bit_xor_eq bin_op reg   (* x ^= y            *)
@@ -689,7 +691,9 @@ let rec expr_to_region = function
 | E_BitNeg   {region; _}
 | E_BitOr    {region; _}
 | E_BitOrEq  {region; _}
+| E_BitSl    {region; _}
 | E_BitSlEq  {region; _}
+| E_BitSr    {region; _}
 | E_BitSrEq  {region; _}
 | E_BitXor   {region; _}
 | E_BitXorEq {region; _} -> region

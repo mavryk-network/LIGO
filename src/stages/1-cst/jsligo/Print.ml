@@ -538,7 +538,9 @@ and print_expr state = function
 | E_BitNeg   e -> print_E_BitNeg   state e
 | E_BitOr    e -> print_E_BitOr    state e
 | E_BitOrEq  e -> print_E_BitOrEq  state e
+| E_BitSl    e -> print_E_BitSl    state e
 | E_BitSlEq  e -> print_E_BitSlEq  state e
+| E_BitSr    e -> print_E_BitSr    state e
 | E_BitSrEq  e -> print_E_BitSrEq  state e
 | E_BitXor   e -> print_E_BitXor   state e
 | E_BitXorEq e -> print_E_BitXorEq state e
@@ -660,10 +662,20 @@ and print_E_BitOr state (node : bit_or bin_op reg) =
 and print_E_BitOrEq state (node : bit_or_eq bin_op reg) =
   print_bin_op state "E_OrEq" node
 
+(* Bitwise left shift *)
+
+and print_E_BitSl state (node : bit_sl bin_op reg) =
+  print_bin_op state "E_BitSl" node
+
 (* Bitwise left shift & Assignment *)
 
 and print_E_BitSlEq state (node : bit_sl_eq bin_op reg) =
   print_bin_op state "E_BitSlEq" node
+
+(* Bitwise right shift *)
+
+and print_E_BitSr state (node : bit_sr bin_op reg) =
+  print_bin_op state "E_BitSr" node
 
 (* Bitwise right shift & Assignment *)
 
