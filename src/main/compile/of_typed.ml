@@ -6,6 +6,26 @@ open Main_errors
 module Var = Simple_utils.Var
 module SMap = Map.Make (String)
 
+let compile_context
+    ~raise
+    : Ast_typed.program -> Data.t
+  =
+ fun ctxt ->
+  let data =
+    trace ~raise aggregation_tracer @@ Aggregation.compile_context ctxt
+  in
+  data
+
+let compile_expressions_in_context
+    ~raise
+    : Data.t -> Ast_typed.expression list -> Ast_aggregated.expression list
+  =
+  fun data exprs ->
+  let exprs =
+    trace ~raise aggregation_tracer @@ Aggregation.compile_expressions data exprs
+  in
+  exprs
+
 let compile_expression_in_context
     ~raise
     ~options
@@ -180,6 +200,37 @@ let apply_to_entrypoint_view ~raise ~options
   in
   let e = compile_expression_in_context ~raise ~options prg tuple_view in
   Self_ast_aggregated.remove_check_self e
+
+
+let apply_to_separated_view ~raise
+    :  Module_var.t list -> Ast_typed.program
+    -> (Ast_typed.type_expression * _ Binder.t) list -> Ast_aggregated.expression list
+  =
+ fun module_path prg views_info ->
+  let loc = Location.dummy in
+  let aux : int -> _ -> int * expression =
+   fun i (view_ty, view_binder) ->
+    let a_ty, s_ty, r_ty =
+      (* at this point the self-pass on views has been applied, we assume the types are correct *)
+      trace_option ~raise main_unknown @@ Ast_typed.get_view_form view_ty
+    in
+    let ty = t_arrow ~loc (t_pair ~loc a_ty s_ty) r_ty () in
+    let ep_expr =
+      let open Ast_typed in
+      match module_path with
+      | [] -> e_a_variable ~loc (Binder.get_var view_binder) ty
+      | _ ->
+        e_module_accessor ~loc { module_path; element = Binder.get_var view_binder } ty
+    in
+    i, ep_expr
+  in
+  let tuple_view =
+    List.mapi ~f:aux views_info
+  in
+  let d = compile_context ~raise prg in
+  let exprs = List.map ~f:snd tuple_view in
+  let exprs = compile_expressions ~raise d exprs in
+  List.map ~f:(Self_ast_aggregated.remove_check_self) exprs
 
 
 (* 

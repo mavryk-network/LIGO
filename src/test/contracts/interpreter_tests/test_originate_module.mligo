@@ -17,4 +17,5 @@ let test =
   let c : (Bar.Foo parameter_of) contract = Test.to_contract ta in
   let _ = Test.transfer_to_contract_exn c (Add 42) 0tez in
   let () = Test.println ("Storage after call: " ^ Test.to_string (Test.get_storage ta)) in
+  let () = Test.log (Tezos.call_view "get_diff" 5 (Tezos.address c) : int option) in
   ()
