@@ -852,7 +852,7 @@ and print_E_Neq state (node : neq bin_op reg) =
 
 (* Logical negation *)
 
-and print_E_Not state (node : negation un_op reg) =
+and print_E_Not state (node : bool_neg un_op reg) =
   print_un_op state "E_Not" node
 
 (* Logical disjunction *)

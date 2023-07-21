@@ -13,5 +13,4 @@
   ;; Third party
   hex
   zarith)
- (modules CST Print))
-          ;; Fold))  TODO: TEMPORARY
+ (modules CST Print Fold))
