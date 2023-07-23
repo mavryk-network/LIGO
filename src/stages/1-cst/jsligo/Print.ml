@@ -107,8 +107,8 @@ and print_var_kind state = function
   `Let   kwd_let   -> Tree.make_literal state kwd_let
 | `Const kwd_const -> Tree.make_literal state kwd_const
 
-and mk_children_bindings (node: (val_binding reg, comma) sep_or_term) =
-  Tree.mk_children_sep_or_term print_val_binding node
+and mk_children_bindings (node: (val_binding reg, comma) Utils.nsepseq) =
+  Tree.mk_children_nsepseq print_val_binding node
 
 and print_val_binding state (node: val_binding reg) =
   let Region.{region; value} = node in
@@ -292,12 +292,12 @@ and print_type_expr state = function
 
 (* Application of type constructors *)
 
-and print_T_App state (node: (type_ctor * type_ctor_args) reg) =
+and print_T_App state (node: (type_expr * type_ctor_args) reg) =
   let Region.{region; value} = node in
   let type_ctor, args = value in
   let args = args.value.inside in
   let children = Tree.(
-    mk_child make_literal type_ctor
+    mk_child print_type_expr type_ctor
     :: mk_children_nsep_or_term ~root:"<arguments>" print_type_expr args)
   in Tree.make state ~region "T_App" children
 
@@ -385,14 +385,14 @@ and print_field :
 
 and print_field_id state = function
   F_Name i -> print_F_Name state i
-| F_Num  i -> print_F_Num  state i
+| F_Int  i -> print_F_Int  state i
 | F_Str  i -> print_F_Str  state i
 
 and print_F_Name state (node: field_name) =
   Tree.(make_unary state "F_Name" make_literal node)
 
-and print_F_Num state (node: int_literal) =
-  Tree.make_int "F_Num" state node
+and print_F_Int state (node: int_literal) =
+  Tree.make_int "F_Int" state node
 
 and print_F_Str state (node: string_literal) =
   Tree.make_string "F_Str" state node
@@ -420,15 +420,14 @@ and print_T_Variant state (node : variant_type) =
   let Region.{value; region} = node in
   Tree.of_nsep_or_pref ~region state "T_Variant" print_variant value
 
-and print_variant state (node : variant reg) =
-  let Region.{value; region} = node in
-  let {attributes; tuple} = value in
+and print_variant state (node : variant) =
+  let {attributes; tuple} = node in
   let {ctor; ctor_params} = tuple.value.inside in
   let children = Tree.(
       mk_child make_literal ctor
    :: [mk_child print_ctor_params ctor_params]
     @ mk_children_attr attributes)
-  in Tree.make ~region state ctor#payload children
+  in Tree.make ~region:tuple.region state ctor#payload children
 
 and print_ctor_params state = function
   None       -> ()
@@ -446,6 +445,7 @@ and print_pattern state = function
 | P_Record   p -> print_P_Record   state p
 | P_String   p -> print_P_String   state p
 | P_Tuple    p -> print_P_Tuple    state p
+| P_Typed    p -> print_P_Typed    state p
 | P_Var      p -> print_P_Var      state p
 | P_Verbatim p -> print_P_Verbatim state p
 
@@ -514,6 +514,16 @@ and print_component :
     None, component -> print state component
   | Some _ellipsis, component -> Tree.make_unary state "..." print component
 
+(* Typed pattern (function parameter) *)
+
+and print_P_Typed state (node : typed_pattern reg) =
+  let Region.{value; region} = node in
+  let pattern, (_, type_expr) = value in
+  let children = Tree.[
+    mk_child print_pattern   pattern;
+    mk_child print_type_expr type_expr]
+  in Tree.make state ~region "P_Typed" children
+
 (* A pattern variable *)
 
 and print_P_Var state (node : variable) =
@@ -558,8 +568,8 @@ and print_expr state = function
 | E_Leq      e -> print_E_Leq      state e
 | E_Lt       e -> print_E_Lt       state e
 | E_MinusEq  e -> print_E_MinusEq  state e
-| E_Mod      e -> print_E_Mod      state e
-| E_ModEq    e -> print_E_ModEq    state e
+| E_Rem      e -> print_E_Rem      state e
+| E_RemEq    e -> print_E_RemEq    state e
 | E_ModPath  e -> print_E_ModPath  state e
 | E_Mult     e -> print_E_Mult     state e
 | E_Mutez    e -> print_E_Mutez    state e
@@ -756,14 +766,19 @@ and print_E_Fun state (node : fun_expr reg) =
 and print_parameters state = function
   Params   p -> print_Params   state p
 | OneParam p -> print_OneParam state p
+| NoParam  p -> print_NoParam  state p
 
-and print_Params state (node: (pattern, comma) sep_or_term par) =
+and print_Params state (node: many_params par) =
   let Region.{value; region} = node in
-  let params = value.inside in
-  Tree.of_sep_or_term ~region state "Params" print_pattern params
+  let fst_param, comma, more_params = value.inside in
+  let seq = Utils.nsep_or_term_cons fst_param comma more_params in
+  Tree.of_nsep_or_term ~region state "Params" print_pattern seq
 
 and print_OneParam state (node: variable) =
   Tree.(make_unary state "OneParam" make_literal node)
+
+and print_NoParam state (node: (lpar * rpar) reg) =
+  Tree.make_node ~region:node.region state "NoParam"
 
 and print_fun_body state = function
   FunBody  b -> print_FunBody  state b
@@ -808,13 +823,13 @@ and print_E_MinusEq state (node: minus_eq bin_op reg) =
 
 (* Arithmetic modulo *)
 
-and print_E_Mod state (node : modulo bin_op reg) =
-  print_bin_op state "E_Mod" node
+and print_E_Rem state (node : remainder bin_op reg) =
+  print_bin_op state "E_Rem" node
 
 (* Arithmetic module & assignment *)
 
-and print_E_ModEq state (node: mod_eq bin_op reg) =
-  print_bin_op state "E_ModEq" node
+and print_E_RemEq state (node: rem_eq bin_op reg) =
+  print_bin_op state "E_RemEq" node
 
 (* Qualified expression *)
 

@@ -64,7 +64,7 @@ type equal      = lexeme wrap  (* =   *)
 type minus      = lexeme wrap  (* -   *)
 type plus       = lexeme wrap  (* +   *)
 type slash      = lexeme wrap  (* /   *)
-type modulo     = lexeme wrap  (* %   *)
+type remainder  = lexeme wrap  (* %   *)
 type times      = lexeme wrap  (* *   *)
 type increment  = lexeme wrap  (* ++  *)
 type decrement  = lexeme wrap  (* --  *)
@@ -100,7 +100,7 @@ type times_eq   = lexeme wrap  (* *=  *)
 type div_eq     = lexeme wrap  (* /=  *)
 type minus_eq   = lexeme wrap  (* -=  *)
 type plus_eq    = lexeme wrap  (* +=  *)
-type mod_eq     = lexeme wrap  (* %=  *)
+type rem_eq     = lexeme wrap  (* %=  *)
 type bit_sl_eq  = lexeme wrap  (* <<= *)
 type bit_sr_eq  = lexeme wrap  (* >>= *)
 type bit_and_eq = lexeme wrap  (* &=  *)
@@ -175,7 +175,7 @@ and declaration =
 
 and value_decl = {
   kind     : var_kind;
-  bindings : (val_binding reg, comma) sep_or_term
+  bindings : (val_binding reg, comma) nsepseq
 }
 
 and var_kind = [
@@ -295,7 +295,7 @@ and type_decl = {
    add or modify some, please make sure they remain in order. *)
 
 and type_expr =
-  T_App       of (type_ctor * type_ctor_args) reg  (* <u,v> M.t         *)
+  T_App       of (type_expr * type_ctor_args) reg  (* <u,v> M.t         *)
 | T_Attr      of (attribute * type_expr)           (* @a e              *)
 | T_Cart      of cartesian                         (* [t, [u, v]]       *)
 | T_Fun       of fun_type                          (* (a : t) => u      *)
@@ -342,7 +342,7 @@ and 'a field = {
 
 and field_id =
   F_Name of field_name
-| F_Num  of int_literal
+| F_Int  of int_literal
 | F_Str  of string_literal
 
 (* Discriminated unions *)
@@ -351,7 +351,7 @@ and union_type = (type_expr record, vbar) nsep_or_pref reg
 
 (* Variant type *)
 
-and variant_type = (variant reg, vbar) nsep_or_pref reg
+and variant_type = (variant, vbar) nsep_or_pref reg
 
 and variant = {
   attributes : attribute list;
@@ -378,6 +378,7 @@ and pattern =
 | P_Record   of pattern record           (* {x, y : 0}      *)
 | P_String   of string_literal           (* "string"        *)
 | P_Tuple    of pattern tuple            (* [x, ...y, z] [] *)
+| P_Typed    of typed_pattern reg        (* [x,y] : t       *)
 | P_Var      of variable                 (* x               *)
 | P_Verbatim of verbatim_literal         (* {|foo|}         *)
 
@@ -386,6 +387,10 @@ and pattern =
 and 'a tuple = ('a component, comma) sep_or_term brackets
 
 and 'a component = ellipsis option * 'a
+
+(* Typed patterns (function parameters) *)
+
+and typed_pattern = pattern * type_annotation
 
 (* STATEMENTS *)
 
@@ -523,8 +528,8 @@ and expr =
 | E_Leq      of leq bin_op reg          (* x <= y            *)
 | E_Lt       of lt bin_op reg           (* x < y             *)
 | E_MinusEq  of minus_eq bin_op reg     (* x -= y            *)
-| E_Mod      of modulo bin_op reg       (* x % n             *)
-| E_ModEq    of mod_eq bin_op reg       (* x %= y            *)
+| E_Rem      of remainder bin_op reg    (* x % n             *)
+| E_RemEq    of rem_eq bin_op reg       (* x %= y            *)
 | E_ModPath  of expr module_path reg    (* M.N.x.0           *)
 | E_Mult     of times bin_op reg        (* x * y             *)
 | E_Mutez    of mutez_literal           (* 5mutez            *)
@@ -566,8 +571,11 @@ and fun_expr = {
 }
 
 and parameters =
-  Params   of (pattern, comma) sep_or_term par
+  Params   of many_params par
 | OneParam of variable
+| NoParam  of (lpar * rpar) reg
+
+and many_params = pattern * comma * (pattern, comma) nsep_or_term
 
 and fun_body =
   FunBody  of statements braces
@@ -675,7 +683,8 @@ let rec pattern_to_region = function
 | P_Nat    w -> w#region
 | P_Record {region; _} -> region
 | P_String w-> w#region
-| P_Tuple  {region; _} -> region
+| P_Tuple {region; _}
+| P_Typed {region; _} -> region
 | P_Var w -> w#region
 | P_Verbatim w -> w#region
 
@@ -711,8 +720,8 @@ let rec expr_to_region = function
 | E_Leq      {region; _}
 | E_Lt       {region; _}
 | E_MinusEq  {region; _}
-| E_Mod      {region; _}
-| E_ModEq    {region; _}
+| E_Rem      {region; _}
+| E_RemEq    {region; _}
 | E_ModPath  {region; _}
 | E_Mult     {region; _} -> region
 | E_Mutez    w -> w#region
@@ -757,13 +766,25 @@ let var_kind_to_region = function
 
 let field_id_to_region = function
   F_Name i -> i#region
-| F_Num  i -> i#region
+| F_Int  i -> i#region
 | F_Str  i -> i#region
 
 let parameters_to_region = function
   Params {region; _} -> region
 | OneParam w -> w#region
+| NoParam {region; _} -> region
 
 let fun_body_to_region = function
   FunBody {region; _} -> region
 | ExprBody e -> expr_to_region e
+
+let selection_to_region = function
+  FieldName (dot, field_name) ->
+    Region.cover dot#region field_name#region
+| FieldStr (dot, string_literal) ->
+    Region.cover dot#region string_literal#region
+| Component brackets -> brackets.region
+
+let intf_expr_to_region = function
+  I_Body {region; _}
+| I_Path {region; _} -> region

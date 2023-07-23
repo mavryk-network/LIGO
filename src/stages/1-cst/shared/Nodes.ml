@@ -5,6 +5,10 @@
 module Utils  = Simple_utils.Utils
 module Region = Simple_utils.Region
 
+(* Utilities *)
+
+let (<@) = Utils.(<@)
+
 (* Lists *)
 
 (* Conversions to the type list *)
@@ -30,4 +34,4 @@ let nsep_or_term_to_region to_region = function
 let nsep_or_pref_to_region to_region = function
   `Sep  s -> nsepseq_to_region to_region s
 | `Pref s -> Utils.nseq_map (fun (x,y) -> (y,x)) s
-             |> nseq_to_region to_region
+             |> nseq_to_region (to_region <@ fst)

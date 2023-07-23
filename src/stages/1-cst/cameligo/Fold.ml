@@ -6,7 +6,7 @@ open Region
 type 'a fold_control = 'a Cst_shared.Fold.fold_control
 
 type _ sing =
-  | S_append : append sing
+    S_append : append sing
   | S_arrow : arrow sing
   | S_ass : ass sing
   | S_assign : assign sing
