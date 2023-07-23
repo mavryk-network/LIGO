@@ -806,21 +806,20 @@ fun_expr:
 params_before_colon:
   par(parameters) { Params   $1 }
 | variable | "_"  { OneParam $1 }
-| "(" ")"         { NoParam {region = cover $1#region $2#region; value=$1,$2} }
+| "(" ")" { NoParam {region = cover $1#region $2#region; value=$1,$2} }
 
 %inline
 params_before_arrow:
   par(parameters PARAMS { $1 }) { Params   $1 }
-| variable | "_"  { OneParam $1 }
-| "(" ")"         { NoParam {region = cover $1#region $2#region; value=$1,$2} }
+| variable | "_"                { OneParam $1 }
+| "(" ")" { NoParam {region = cover $1#region $2#region; value=$1,$2} }
 
 parameters:
   parameter "," nsep_or_term(parameter,",") { $1,$2,$3 }
 
 parameter:
   param_pattern type_annotation(type_expr) {
-    let _, t   = $2 in
-    let stop   = type_expr_to_region t in
+    let stop   = type_expr_to_region (snd $2) in
     let region = cover (pattern_to_region $1) stop
     in P_Typed {region; value = $1,$2}
   }
