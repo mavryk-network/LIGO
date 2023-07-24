@@ -693,21 +693,6 @@ and update = {
 
 (* PROJECTING REGIONS *)
 
-let rec last to_region = function
-    [] -> Region.ghost
-|  [x] -> to_region x
-| _::t -> last to_region t
-
-let nseq_to_region to_region (hd, tl) =
-  Region.cover (to_region hd) (last to_region tl)
-
-let nsepseq_to_region to_region (hd, tl) =
-  Region.cover (to_region hd) (last (to_region <@ snd) tl)
-
-let sepseq_to_region to_region = function
-      None -> Region.ghost
-| Some seq -> nsepseq_to_region to_region seq
-
 (* IMPORTANT: In the following function definition, the data
    constructors are sorted alphabetically. If you add or modify some,
    please make sure they remain in order. *)
