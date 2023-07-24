@@ -51,6 +51,8 @@
   (-open
    Cst_pascaligo ;; for CST in Parser.mli
    -open
+   Cst_shared ;; for Nodes in Parser.mli
+   -open
    Lexing_shared)))
 
 ;; for Attr, Wrap in Parser.mli
