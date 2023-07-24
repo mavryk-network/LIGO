@@ -202,7 +202,7 @@ let apply_to_entrypoint_view ~raise ~options
   Self_ast_aggregated.remove_check_self e
 
 
-let apply_to_separated_view ~raise
+let apply_to_separated_view ~raise ~options
     :  Module_var.t list -> Ast_typed.program
     -> (Ast_typed.type_expression * _ Binder.t) list -> Ast_aggregated.expression list
   =
@@ -230,7 +230,10 @@ let apply_to_separated_view ~raise
   let d = compile_context ~raise prg in
   let exprs = List.map ~f:snd tuple_view in
   let exprs = compile_expressions ~raise d exprs in
-  List.map ~f:(Self_ast_aggregated.remove_check_self) exprs
+  let exprs = List.map ~f:(Self_ast_aggregated.remove_check_self) exprs in
+  let () = List.iter ~f:(fun e -> print_endline (Format.asprintf "%a" Ast_aggregated.PP.expression e)) exprs in
+  let exprs = List.map ~f:(trace ~raise self_ast_aggregated_tracer @@ Self_ast_aggregated.all_expression ~options) exprs in
+  exprs
 
 
 (* 

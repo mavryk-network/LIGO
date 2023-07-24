@@ -463,8 +463,10 @@ let rec build_module_aggregated ~raise
       module_path
   in
   ignore build_aggregated_separated_views;
-  let agg_views = build_aggregated_separated_views ~raise ~contract_type module_path typed_views
+  let agg_views = build_aggregated_separated_views ~raise ~contract_type ~options module_path typed_views
   in
+  print_endline (Format.asprintf "%a" (Ast_typed.PP.program ~use_hidden:true) typed_views);
+  let () = List.iter ~f:(fun (_, e) -> print_endline (Format.asprintf "%a" Ast_aggregated.PP.expression e)) agg_views in
   let parameter_ty, storage_ty =
     trace_option
       ~raise
@@ -692,28 +694,26 @@ and build_contract_meta_ligo ~raise ~options entry_point views file_name =
 
 
 and build_aggregated_separated_views ~raise ~(contract_type : Self_ast_typed.Helpers.contract_type)
-    :  Module_var.t list -> Ast_typed.program
+    :  options:Compiler_options.t -> Module_var.t list -> Ast_typed.program
     -> (Value_var.t * Ast_aggregated.expression) list
   =
- fun module_path contract ->
+ fun ~options module_path contract ->
   let contract, view_info =
     Self_ast_typed.Helpers.update_module
       module_path
       (Ast_typed.fetch_views_in_program ~storage_ty:contract_type.storage)
       contract
   in
-  match view_info with
-  | [] -> []
-  | _ ->
-    let aggregated =
-      Ligo_compile.Of_typed.apply_to_separated_view
-        ~raise:{ raise with warning = (fun _ -> ()) }
-        module_path
-        contract
-        view_info
-    in
-    let view_names = List.map ~f:(fun (_, b) -> Binder.get_var b) view_info in
-    List.zip_exn view_names aggregated
+  let aggregated =
+    Ligo_compile.Of_typed.apply_to_separated_view
+      ~raise:{ raise with warning = (fun _ -> ()) }
+      ~options:options.middle_end
+      module_path
+      contract
+      view_info
+  in
+  let view_names = List.map ~f:(fun (_, b) -> Binder.get_var b) view_info in
+  List.zip_exn view_names aggregated
 
 
 and build_aggregated_views ~raise ~contract_type

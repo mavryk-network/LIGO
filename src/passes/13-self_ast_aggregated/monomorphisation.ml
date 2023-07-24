@@ -385,11 +385,12 @@ let rec mono_polymorphic_expression ~raise
     let data, update = self data update in
     data, return (E_update { struct_; path; update })
   | E_type_inst _ ->
+    print_endline (Format.asprintf "expr = %a" AST.PP.expression expr);
     let rec aux type_insts (e : AST.expression) =
       match e.expression_content with
       | E_type_inst { forall; type_ } -> aux (type_ :: type_insts) forall
       | E_variable variable -> List.rev type_insts, variable
-      | _ -> raise.Trace.error (Errors.monomorphisation_non_var expr)
+      | _ -> print_endline "aca"; raise.Trace.error (Errors.monomorphisation_non_var e)
     in
     let type_instances, lid = aux [] expr in
     let type_ = expr.type_expression in

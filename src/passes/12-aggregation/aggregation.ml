@@ -26,8 +26,12 @@ let compile_context ~raise
 let compile_expressions ~raise : Data.t -> Ast_typed.expression list -> Ast_aggregated.expression list =
  fun data exprs ->
  ignore raise;
-  let f expr = Compiler.compile_expression data.env expr in
-  List.map ~f exprs
+ let context = Compiler.build_context data in
+ let f expr =
+   let expr = Ast_aggregated.context_apply context @@ Compiler.compile_expression data.env expr in
+   expr
+ in
+ List.map ~f exprs
 
 
 let decompile : Ast_aggregated.expression -> Ast_typed.expression = Decompiler.decompile

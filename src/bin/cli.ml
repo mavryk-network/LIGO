@@ -706,6 +706,123 @@ let compile_file =
     <*> libraries)
 
 
+
+let compile_module =
+  let f
+      source_file
+      entry_point
+      module_
+      views
+      syntax
+      protocol_version
+      display_format
+      disable_michelson_typechecking
+      experimental_disable_optimizations_for_debugging
+      enable_typed_opt
+      no_stdlib
+      michelson_format
+      output_file
+      show_warnings
+      warning_as_error
+      no_colour
+      no_metadata_check
+      deprecated
+      skip_analytics
+      michelson_comments
+      constants
+      file_constants
+      project_root
+      transpiled
+      warn_unused_rec
+      warn_infinite_loop
+      libraries
+      ()
+    =
+    let raw_options =
+      Raw_options.make
+        ~entry_point
+        ~module_
+        ~syntax
+        ~views
+        ~protocol_version
+        ~disable_michelson_typechecking
+        ~experimental_disable_optimizations_for_debugging
+        ~enable_typed_opt
+        ~no_stdlib
+        ~warning_as_error
+        ~no_colour
+        ~no_metadata_check
+        ~deprecated
+        ~constants
+        ~file_constants
+        ~project_root
+        ~transpiled
+        ~warn_unused_rec
+        ~warn_infinite_loop
+        ~libraries
+        ()
+    in
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"compile_contract"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~show_warnings
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+      ?output_file
+    @@ Api.Compile.module_
+         raw_options
+         (Api.Compile.File source_file)
+         michelson_format
+         michelson_comments
+  in
+  let summary = "compile a contract." in
+  let readme () =
+    "This sub-command compiles a contract to Michelson code. It expects a source file \
+     and an entrypoint function that has the type of a contract: \"parameter * storage \
+     -> operations list * storage\"."
+  in
+  Command.basic
+    ~summary
+    ~readme
+    (f
+    <$> source_file
+    <*> entry_point
+    <*> module_
+    <*> on_chain_views
+    <*> syntax
+    <*> protocol_version
+    <*> display_format
+    <*> disable_michelson_typechecking
+    <*> experimental_disable_optimizations_for_debugging
+    <*> enable_michelson_typed_opt
+    <*> no_stdlib
+    <*> michelson_code_format
+    <*> output_file
+    <*> warn
+    <*> werror
+    <*> no_colour
+    <*> no_metadata_check
+    <*> deprecated
+    <*> skip_analytics
+    <*> michelson_comments
+    <*> constants
+    <*> file_constants
+    <*> project_root
+    <*> transpiled
+    <*> warn_unused_rec
+    <*> warn_infinite_loop
+    <*> libraries)
+
+
 let compile_parameter =
   let f
       source_file
@@ -1203,6 +1320,7 @@ let compile_view =
 let compile_group =
   Command.group ~summary:"compile a ligo program to michelson"
   @@ [ "contract", compile_file
+     ; "module", compile_module
      ; "expression", compile_expression
      ; "parameter", compile_parameter
      ; "storage", compile_storage

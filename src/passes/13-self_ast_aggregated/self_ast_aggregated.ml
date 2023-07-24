@@ -101,8 +101,10 @@ let all_aggregated_expression ~raise e =
 
 
 let all_expression ~raise ~(options : Compiler_options.middle_end) e =
+  print_endline "paso 1";
   let e = map_expression Polymorphic_replace.expression e in
   let e = map_expression (Coerce_replace.expression ~raise) e in
+  print_endline "paso 2";
   let e =
     if not options.test
     then (
@@ -111,6 +113,7 @@ let all_expression ~raise ~(options : Compiler_options.middle_end) e =
       e)
     else e
   in
+  print_endline "paso 3";
   all_aggregated_expression ~raise e
 
 
