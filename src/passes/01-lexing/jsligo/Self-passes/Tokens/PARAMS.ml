@@ -15,9 +15,9 @@ let inject (tokens : tokens) : tokens =
   let open Token in
   let rec aux acc = function
     [] -> List.rev acc
-  | LPAR _ as lpar :: (ARROW _ as arrow) :: tokens ->
-      let params = mk_PARAMS (to_region lpar) in
-      aux (arrow :: lpar :: params :: acc) tokens
+  | RPAR _ as rpar :: (COLON _ | ARROW _ as next) :: tokens ->
+      let params = mk_PARAMS (to_region rpar) in
+      aux (next :: rpar :: params :: acc) tokens
   | token :: tokens -> aux (token :: acc) tokens
   in aux [] tokens
 

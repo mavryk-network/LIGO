@@ -144,6 +144,7 @@ module T =
 
     | ZWSP   of lexeme Wrap.t  (* Zero-Width SPace *)
     | PARAMS of lexeme Wrap.t  (* Mark function's parameters *)
+    | ES6FUN of lexeme Wrap.t  (* Mark candidate lambda *)
 
     (* End-Of-File *)
 
@@ -165,20 +166,20 @@ module T =
 
       (* Comments *)
 
-    | LineCom t  -> sprintf "// %s" t#payload
+    | LineCom  t -> sprintf "// %s" t#payload
     | BlockCom t -> sprintf "/* %s */" t#payload
 
       (* Literals *)
 
-    | String t   -> sprintf "%S" t#payload  (* Escaped *)
+    | String   t -> sprintf "%S" t#payload  (* Escaped *)
     | Verbatim t -> String.escaped t#payload
-    | Bytes t    -> fst t#payload
-    | Int t      -> fst t#payload
-    | Nat t      -> fst t#payload
-    | Mutez t    -> fst t#payload
-    | Ident t
-    | UIdent t   -> t#payload
-    | Attr t     -> Attr.to_lexeme t#payload
+    | Bytes    t -> fst t#payload
+    | Int      t -> fst t#payload
+    | Nat      t -> fst t#payload
+    | Mutez    t -> fst t#payload
+    | Ident    t
+    | UIdent   t -> t#payload
+    | Attr     t -> Attr.to_lexeme t#payload
  (* | Lang lang  -> "[%" ^ Region.(lang.value.value) *)
 
     (* Symbols *)
@@ -269,8 +270,8 @@ module T =
     (* Virtual tokens *)
 
     | ZWSP _
-    | PARAMS _ -> ""
-
+    | PARAMS _
+    | ES6FUN _ -> ""
 
     (* End-Of-File *)
 
@@ -785,6 +786,11 @@ module T =
     let mk_PARAMS region = PARAMS (wrap_params region)
     let ghost_PARAMS     = mk_PARAMS Region.ghost
 
+    let wrap_es6fun      = wrap ""
+    let ghost_es6fun     = wrap_es6fun Region.ghost
+    let mk_ES6FUN region = ES6FUN (wrap_es6fun region)
+    let ghost_ES6FUN     = mk_ES6FUN Region.ghost
+
     (* END-OF-FILE TOKEN *)
 
     let wrap_eof      = wrap ""
@@ -892,7 +898,8 @@ module T =
     (* Virtual tokens *)
 
     | "ZWSP"
-    | "PARAMS" -> ""
+    | "PARAMS"
+    | "ES6FUN" -> ""
 
     (* End-Of-File *)
 
@@ -1038,6 +1045,7 @@ module T =
 
     | ZWSP   t -> t#region, sprintf "ZWSP%s" (comments t)
     | PARAMS t -> t#region, sprintf "PARAMS%s" (comments t)
+    | ES6FUN t -> t#region, sprintf "ES6FUN%s" (comments t)
 
     (* End-Of-File *)
 

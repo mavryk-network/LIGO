@@ -131,10 +131,13 @@ let add_comment (comment : Wrap.comment) : Token.t -> Token.t = function
 
 | ZWSP   w -> ZWSP (w#add_comment comment)
 | PARAMS w -> PARAMS (w#add_comment comment)
+| ES6FUN w -> ES6FUN (w#add_comment comment)
 
 (* End-Of-File *)
 
 | EOF w -> EOF (w#add_comment comment)
+
+(* Filter *)
 
 let rec hook_comments_to_token (t : Token.t) (acc : Token.t list) = function
   Token.BlockCom w :: tokens ->

@@ -25,6 +25,7 @@ module Nodes = Cst_shared.Nodes
 let (<@) = Utils.(<@)
 let nseq_to_region = Nodes.nseq_to_region
 let nsepseq_to_region = Nodes.nsepseq_to_region
+let nsep_or_pref_to_region = Nodes.nsep_or_pref_to_region
 
 let mk_mod_path :
   (module_name * dot) Utils.nseq * 'a ->
@@ -111,9 +112,13 @@ ge:
 (* Compound constructs *)
 
 par(X):
-  "(" X ")" {
-    let region = cover $1#region $3#region
-    and value  = {lpar=$1; inside=$2; rpar=$3}
+  ioption(ES6FUN) "(" X ")" {
+    let region = cover $2#region $4#region
+    and value  = {lpar=$2; inside=$3; rpar=$4}
+    in {region; value} }
+| "(" X PARAMS ")" {
+    let region = cover $1#region $4#region
+    and value  = {lpar=$1; inside=$2; rpar=$4}
     in {region; value} }
 
 chevrons(X):
@@ -184,22 +189,18 @@ nsep_or_pref(item,sep):
 (* Helpers *)
 
 %inline
- variable        : "<ident>"  { $1 }
+variable        : "<ident>"  { $1 }
 
 type_var        : "<ident>" | "<uident>" { $1 }
 type_name       : "<ident>" | "<uident>" { $1 }
 type_ctor       : "<ident>" | "<uident>" { $1 }
 field_name      : "<ident>" | "<uident>" { $1 }
+lang_name       : "<ident>" | "<uident>" { $1 }
 module_name     : "<uident>" { $1 }
 intf_name       : "<uident>" { $1 }
-ctor            : "<uident>" { $1 }
+ctor            : "<uident>" { E_Ctor $1 }
 file_path       : "<string>" { $1 }
-
-%inline
-record_or_tuple : "<ident>"  { $1 }
-
-%inline
-lang_name   : "<ident>" | "<uident>" { $1 }
+record_or_tuple : "<ident>"  { E_Var $1 }
 
 (* ENTRY POINTS *)
 
@@ -362,16 +363,15 @@ type_expr:
 (* Functional types *)
 
 fun_type:
-  par(fun_type_params) "=>" type_expr {
-    let stop   = type_expr_to_region $3 in
-    let region = cover $1.region stop
+  parameters(fun_type_param) "=>" type_expr {
+    let region = cover $1.region (type_expr_to_region $3)
     in T_Fun {region; value=($1,$2,$3)} }
 
-fun_type_params:
-  sep_or_term(fun_type_param,",") PARAMS { $1 }
+parameters(param_kind):
+  ES6FUN par(sep_or_term(param_kind,",") PARAMS { $1 }) { $2 }
 
 fun_type_param:
-  "<ident>" type_annotation(type_expr) {
+  variable type_annotation(type_expr) {
     let region = cover $1#region (type_expr_to_region (snd $2))
     in {region; value = ($1,$2)} }
 
@@ -425,10 +425,17 @@ core_type_no_string:
 no_par_type_expr:
   "<int>"             { T_Int       $1 }
 | "_" | type_name     { T_Var       $1 }
-| type_ctor_app       { T_App       $1 }
+| type_ctor_app(type_expr)       { T_App       $1 }
 | cartesian           { T_Cart      $1 }
 | parameter_of_type   { T_Parameter $1 }
-| qualified_type      {             $1 }
+| qualified_type(type_expr)      {             $1 }
+
+(* Return types *)
+(*
+return_type:
+  type_name { T_Var $1 }
+| type_
+*)
 
 (* Attributed core type *)
 
@@ -437,15 +444,15 @@ attr_type:
 
 (* Application of type arguments to type constructors *)
 
-type_ctor_app:
-  type_ctor type_ctor_args {
+type_ctor_app(type_expr):
+  type_ctor type_ctor_args(type_expr) {
     let region = cover $1#region $2.region
     in {region; value = (T_Var $1, $2)} }
 
-type_ctor_args:
-  chevrons(nsep_or_term(type_ctor_arg,",")) { $1 }
+type_ctor_args(type_expr):
+  chevrons(nsep_or_term(type_ctor_arg(type_expr),",")) { $1 }
 
-type_ctor_arg:
+type_ctor_arg(type_expr):
   type_expr { $1 }
 
 (* Tuples of types *)
@@ -498,15 +505,15 @@ parameter_of_type:
    Unfortunately, this creates a shift/reduce conflict (on "."),
    whence our more involved solution. *)
 
-qualified_type:
-  type_in_module(type_ctor { T_Var $1 }) type_ctor_args {
+qualified_type (type_expr):
+  type_in_module(type_ctor { T_Var $1 }) type_ctor_args(type_expr) {
     let region = cover (type_expr_to_region $1) $2.region
     in T_App {region; value=$1,$2}
   }
-| type_in_module(type_name { T_Var $1 }) { $1 }
+| type_in_module (type_name { T_Var $1 }) { $1 }
 
-type_in_module(type_expr):
-  module_path(type_expr) {
+type_in_module (type_expr):
+  module_path (type_expr) {
     T_ModPath (mk_mod_path $1 type_expr_to_region) }
 
 (* Union or record type *)
@@ -515,7 +522,7 @@ union_or_record:
   nsep_or_pref(record_type,"|") {
     match $1 with
      `Sep (t,[]) -> T_Record t
-    | _ -> let region = Nodes.nsep_or_pref_to_region (fun b -> b.region) $1
+    | _ -> let region = nsep_or_pref_to_region (fun b -> b.region) $1
            in T_Union {region; value=$1}
   }
 | "[@attr]" union_or_record { T_Attr ($1,$2) }
@@ -523,10 +530,10 @@ union_or_record:
 (* Record types (a.k.a. "object types" in JS) *)
 
 record_type:
-  braces(sep_or_term(field_type,field_sep)) { $1 }
+  braces (sep_or_term (field_type, field_sep)) { $1 }
 
 field_type:
-  field_id ioption(":" type_expr { $1,$2 }) {
+  field_id ioption(type_annotation (type_expr)) {
     let start = field_id_to_region $1 in
     let region =
       match $2 with
@@ -551,10 +558,15 @@ field_id:
 (* STATEMENTS *)
 
 statements:
-  statement                { ($1, None),    []                }
-| statement ";"            { ($1, Some $2), []                }
-| statement ";" statements { Utils.nseq_cons ($1, Some $2) $3 }
-| nterm_stmt statements    { Utils.nseq_cons ($1, None)    $2 }
+  statement                 { ($1, None),    []                }
+| statement ";"             { ($1, Some $2), []                }
+| statement ";" statements  { Utils.nseq_cons ($1, Some $2) $3 }
+| nterm_stmt non_expr_stmts { Utils.nseq_cons ($1, None)    $2 }
+
+non_expr_stmts:
+  non_expr_stmt                { ($1, None),    []                }
+| non_expr_stmt ";"            { ($1, Some $2), []                }
+| non_expr_stmt ";" statements { Utils.nseq_cons ($1, Some $2) $3 }
 
 nterm_stmt:
   "[@attr]" nterm_stmt            { S_Attr  ($1,$2) }
@@ -562,13 +574,20 @@ nterm_stmt:
 | switch_stmt                     { S_Switch     $1 }
 | for_of_stmt (nterm_stmt)        { S_ForOf      $1 }
 | while_stmt (nterm_stmt)         { S_While      $1 }
+| assign_stmt (expr)              { S_Expr       $1 }
 | if_else_stmt (nterm_stmt)
 | if_stmt (nterm_stmt)            {              $1 }
 
 statement:
-  base_stmt(statement) | if_stmt(statement) { $1 }
+  base_stmt (statement) | if_stmt (statement) { $1 }
 
-base_stmt(right_stmt):
+base_stmt (right_stmt):
+  expr_stmt (expr) | non_expr_base_stmt (right_stmt) { $1 }
+
+closed_stmt:
+  base_stmt (closed_stmt) { $1 }
+
+non_expr_base_stmt (right_stmt):
   "[@attr]" base_stmt(right_stmt) { S_Attr  ($1,$2) }
 | return_stmt                     { S_Return     $1 }
 | block_stmt                      { S_Block      $1 }
@@ -576,19 +595,20 @@ base_stmt(right_stmt):
 | for_stmt (right_stmt)           { S_For        $1 }
 | for_of_stmt (right_stmt)        { S_ForOf      $1 }
 | while_stmt (right_stmt)         { S_While      $1 }
-| if_else_stmt (right_stmt)
-| expr_stmt (expr)                { $1 }
+| if_else_stmt (right_stmt)       {              $1 }
 
-closed_stmt:
-  base_stmt(closed_stmt) { $1 }
+non_expr_stmt:
+  non_expr_base_stmt (non_expr_stmt) | if_stmt (non_expr_stmt) { $1 }
+
+
 
 (* Expressions as statements *)
 
-expr_stmt(right_expr):
+expr_stmt (right_expr):
   declaration                                             { S_Decl $1 }
 | non_decl_expr_stmt (right_expr, expr_stmt (right_expr)) { S_Expr $1 }
 
-non_decl_expr_stmt(right_expr,right_stmt):
+non_decl_expr_stmt (right_expr, right_stmt):
   app_expr
 | assign_stmt (right_expr)
 | incr_expr
@@ -596,18 +616,22 @@ non_decl_expr_stmt(right_expr,right_stmt):
 | ternary_stmt (right_stmt) { $1 }
 | par(no_tuple_expr) { E_Par $1 }
 
-closed_non_decl_expr_stmt(right_expr):
+closed_non_decl_expr_stmt (right_expr):
   non_decl_expr_stmt (right_expr, closed_non_decl_expr_stmt (right_expr)) { $1 }
 
 (* Ternary statement *)
 
-ternary_stmt(right_stmt):
+ternary_stmt (right_stmt):
   ternary_expr (no_attr_core_expr,
-                non_decl_expr_stmt (disj_expr_level, right_stmt)) { $1 }
+                ternary_branch (right_stmt),
+                ternary_branch (right_stmt)) { $1 }
+
+ternary_branch (right_stmt):
+  non_decl_expr_stmt (disj_expr_level, right_stmt) { $1 }
 
 (* Assignments *)
 
-assign_stmt(right_expr):
+assign_stmt (right_expr):
   bin_op(var_path,   "=", right_expr) { E_Assign   $1 }
 | bin_op(var_path,  "*=", right_expr) { E_TimesEq  $1 }
 | bin_op(var_path,  "/=", right_expr) { E_DivEq    $1 }
@@ -621,22 +645,19 @@ assign_stmt(right_expr):
 | bin_op(var_path, ">>=", right_expr) { E_BitSrEq  $1 }
 
 var_path:
-  path(record_or_tuple { E_Var $1 }) { $1 }
+  path (record_or_tuple) | record_or_tuple { $1 }
 
-path(root_expr):
+path (root_expr):
   root_expr nseq(selection) {
     let stop   = nseq_to_region selection_to_region $2 in
     let region = cover (expr_to_region $1) stop
     and value  = {record_or_tuple=$1; field_path=$2}
-    in E_Proj {region; value}
-  }
-| root_expr { $1 }
+    in E_Proj {region; value} }
 
 selection:
   "." field_name    { FieldName ($1,$2) }
 | "." "<string>"    { FieldStr  ($1,$2) }
 | brackets("<int>") { Component      $1 }
-
 
 (* Block of statement *)
 
@@ -684,7 +705,7 @@ range_for:
     {initialiser=$1; semi1=$2; condition=$3; semi2=$4; afterthought=$5} }
 
 initialiser:
-  expr_stmt(expr) { $1 }
+  expr_stmt (expr) { $1 }
 
 condition:
   expr { $1 }
@@ -734,21 +755,24 @@ cases:
 | switch_default                            { Default       $1 }
 
 switch_case:
-  "case" disj_expr_level ":" ioption(case_statements) {
+  "case" case_expr ":" ioption(case_statements) {
     let stop =
       match $4 with
         None       -> $3#region
-      | Some stmts -> Nodes.nseq_to_region (statement_to_region <@ fst) stmts in
+      | Some stmts -> nseq_to_region (statement_to_region <@ fst) stmts in
     let region = cover $1#region stop
     and value  = {kwd_case=$1; expr=$2; colon=$3; case_body=$4}
     in {region; value} }
+
+case_expr:
+  ctor | literal_expr | path_expr { $1 }
 
 switch_default:
   "default" ":" ioption(case_statements) {
     let stop =
       match $3 with
         None       -> $2#region
-      | Some stmts -> Nodes.nseq_to_region (statement_to_region <@ fst) stmts in
+      | Some stmts -> nseq_to_region (statement_to_region <@ fst) stmts in
     let region = cover $1#region stop
     and value  = {kwd_default=$1; colon=$2; default_body=$3}
     in {region; value} }
@@ -776,48 +800,33 @@ while_cond:
 (* EXPRESSIONS *)
 
 expr:
-  fun_expr { E_Fun $1 }
-| typed_expr
-| ternary_expr (disj_expr_level, disj_expr_level)
-| disj_expr_level { $1 }
+  tuple(expr)   { E_Tuple $1 }
+| no_tuple_expr {         $1 }
+
+no_tuple_expr:
+  fun_expr | typed_expr | disj_expr_level
+| ternary_expr (disj_expr_level, disj_expr_level, disj_expr_level) { $1 }
 
 (* Functional expressions *)
 
 fun_expr:
-  ioption(type_vars) params_before_arrow "=>" fun_body {
-    let start  = match $1 with
-                   None -> parameters_to_region $2
-                 | Some {region; _} -> region in
-    let region = cover start (fun_body_to_region $4) in
-    let value  = {type_vars=$1; parameters=$2;
-                  rhs_type=None; arrow=$3; fun_body=$4}
-    in {region; value} }
-| ioption(type_vars)
-  params_before_colon type_annotation(no_par_type_expr) "=>" fun_body {
+  ioption(type_vars) fun_params ioption(ret_type) "=>" fun_body {
     let start  = match $1 with
                    None -> parameters_to_region $2
                  | Some {region; _} -> region in
     let region = cover start (fun_body_to_region $5) in
     let value  = {type_vars=$1; parameters=$2;
-                  rhs_type=(Some $3); arrow=$4; fun_body=$5}
-    in {region; value} }
+                  rhs_type=$3; arrow=$4; fun_body=$5}
+    in E_Fun {region; value} }
 
-%inline
-params_before_colon:
-  par(parameters) { Params   $1 }
-| variable | "_"  { OneParam $1 }
-| "(" ")" { NoParam {region = cover $1#region $2#region; value=$1,$2} }
+ret_type:
+  type_annotation (no_par_type_expr) { $1 }
 
-%inline
-params_before_arrow:
-  par(parameters PARAMS { $1 }) { Params   $1 }
-| variable | "_"                { OneParam $1 }
-| "(" ")" { NoParam {region = cover $1#region $2#region; value=$1,$2} }
+fun_params:
+  parameters (fun_param)       { ParParams $1 }
+| ES6FUN variable | ES6FUN "_" { VarParam  $2 }
 
-parameters:
-  parameter "," nsep_or_term(parameter,",") { $1,$2,$3 }
-
-parameter:
+fun_param:
   param_pattern type_annotation(type_expr) {
     let stop   = type_expr_to_region (snd $2) in
     let region = cover (pattern_to_region $1) stop
@@ -825,14 +834,13 @@ parameter:
   }
 | param_pattern { $1 }
 
-%inline
 param_pattern:
-  "_" | variable       { P_Var   $1 }
-| tuple(param_pattern) { P_Tuple $1 }
+  "_" | variable        { P_Var   $1 }
+| tuple (param_pattern) { P_Tuple $1 }
 
 fun_body:
-  braces(statements) { FunBody  $1 }
-| expr               { ExprBody $1 }
+  braces (statements) { FunBody  $1 }
+| expr                { ExprBody $1 }
 
 (* Typed expressions *)
 
@@ -844,22 +852,22 @@ typed_expr:
 
 (* Ternary conditional operator *)
 
-ternary_expr(left_expr,branch):
-  left_expr "?" branch ":" branch {
+ternary_expr (left_expr, if_so, if_not):
+  left_expr "?" if_so ":" if_not {
     let region = cover (expr_to_region $1) (expr_to_region $5)
     and value  = {condition=$1; qmark=$2; truthy=$3; colon=$4; falsy=$5}
     in E_Ternary {value; region} }
 
-(* Logical disjuction *)
+(* Logical disjunction *)
 
 disj_expr_level:
-  bin_op(disj_expr_level, "||", conj_expr_level) { E_Or     $1 }
-| bin_op(disj_expr_level, "^^", conj_expr_level) { E_Xor    $1 }
-| bin_op(disj_expr_level,  "|", conj_expr_level) { E_BitOr  $1 }
-| bin_op(disj_expr_level,  "^", conj_expr_level) { E_BitXor $1 }
-| conj_expr_level                                {          $1 }
+  bin_op (disj_expr_level, "||", conj_expr_level) { E_Or     $1 }
+| bin_op (disj_expr_level, "^^", conj_expr_level) { E_Xor    $1 }
+| bin_op (disj_expr_level,  "|", conj_expr_level) { E_BitOr  $1 }
+| bin_op (disj_expr_level,  "^", conj_expr_level) { E_BitXor $1 }
+| conj_expr_level                                 {          $1 }
 
-bin_op(arg1,op,arg2):
+bin_op (arg1,op,arg2):
   arg1 op arg2 {
     let region = cover (expr_to_region $1) (expr_to_region $3)
     and value  = {arg1=$1; op=$2; arg2=$3}
@@ -868,42 +876,42 @@ bin_op(arg1,op,arg2):
 (* Logical conjunction *)
 
 conj_expr_level:
-  bin_op(conj_expr_level, "&&", bit_shift_level) { E_And    $1 }
-| bin_op(conj_expr_level,  "&", bit_shift_level) { E_BitAnd $1 }
-| bit_shift_level                                {          $1 }
+  bin_op (conj_expr_level, "&&", bit_shift_level) { E_And    $1 }
+| bin_op (conj_expr_level,  "&", bit_shift_level) { E_BitAnd $1 }
+| bit_shift_level                                 {          $1 }
 
 (* Bitwise shifts *)
 
 bit_shift_level:
-  bin_op(bit_shift_level, "<<", comp_expr_level) { E_BitSl $1 }
-| bin_op(bit_shift_level, ">>", comp_expr_level) { E_BitSr $1 }
-| comp_expr_level                                {         $1 }
+  bin_op (bit_shift_level, "<<", comp_expr_level) { E_BitSl $1 }
+| bin_op (bit_shift_level, ">>", comp_expr_level) { E_BitSr $1 }
+| comp_expr_level                                 {         $1 }
 
 (* Comparisons *)
 
 comp_expr_level:
-  bin_op(comp_expr_level,  "<", add_expr_level) { E_Lt    $1 }
-| bin_op(comp_expr_level, "<=", add_expr_level) { E_Leq   $1 }
-| bin_op(comp_expr_level,   gt, add_expr_level) { E_Gt    $1 }
-| bin_op(comp_expr_level,   ge, add_expr_level) { E_Geq   $1 }
-| bin_op(comp_expr_level, "==", add_expr_level) { E_Equal $1 }
-| bin_op(comp_expr_level, "!=", add_expr_level) { E_Neq   $1 }
-| add_expr_level                                {         $1 }
+  bin_op (comp_expr_level,  "<", add_expr_level) { E_Lt    $1 }
+| bin_op (comp_expr_level, "<=", add_expr_level) { E_Leq   $1 }
+| bin_op (comp_expr_level,   gt, add_expr_level) { E_Gt    $1 }
+| bin_op (comp_expr_level,   ge, add_expr_level) { E_Geq   $1 }
+| bin_op (comp_expr_level, "==", add_expr_level) { E_Equal $1 }
+| bin_op (comp_expr_level, "!=", add_expr_level) { E_Neq   $1 }
+| add_expr_level                                 {         $1 }
 
 (* Addition & subtraction *)
 
 add_expr_level:
-  bin_op(add_expr_level, "+", mult_expr_level)  { E_Add $1 }
-| bin_op(add_expr_level, "-", mult_expr_level)  { E_Sub $1 }
-| mult_expr_level                               {       $1 }
+  bin_op (add_expr_level, "+", mult_expr_level)  { E_Add $1 }
+| bin_op (add_expr_level, "-", mult_expr_level)  { E_Sub $1 }
+| mult_expr_level                                {       $1 }
 
 (* Multiplications & division *)
 
 mult_expr_level:
-  bin_op(mult_expr_level, "*", unary_expr_level) { E_Mult $1 }
-| bin_op(mult_expr_level, "/", unary_expr_level) { E_Div  $1 }
-| bin_op(mult_expr_level, "%", unary_expr_level) { E_Rem  $1 }
-| unary_expr_level                               {        $1 }
+  bin_op (mult_expr_level, "*", unary_expr_level) { E_Mult $1 }
+| bin_op (mult_expr_level, "/", unary_expr_level) { E_Div  $1 }
+| bin_op (mult_expr_level, "%", unary_expr_level) { E_Rem  $1 }
+| unary_expr_level                                {        $1 }
 
 (* Logical and arithmetic negation *)
 
@@ -956,12 +964,13 @@ decr_expr:
 (* Function calls & data constructor applications *)
 
 app_expr_level:
+  contract_of_expr | app_expr | core_expr { $1 }
+
+contract_of_expr:
   "contract_of" par(module_selection) {
     let region = cover $1#region $2.region
     and value  = {kwd_contract_of=$1; module_path=$2}
-    in E_Contract {region; value}
-  }
-| app_expr | core_expr { $1 }
+    in E_Contract {region; value} }
 
 app_expr:
   no_attr_core_expr arguments {
@@ -969,7 +978,7 @@ app_expr:
     in E_App {region; value=($1,$2)} }
 
 arguments:
-  par(ioption(nsepseq(argument,","))) { $1 }
+  par (ioption (nsepseq (argument, ","))) { $1 }
 
 argument:
   expr { $1 }
@@ -981,31 +990,29 @@ core_expr:
 | no_attr_core_expr   {             $1 }
 
 no_attr_core_expr:
-  tuple_path | no_tuple_expr { $1 }
+  record_expr        { E_Record   $1 }
+| code_inj           { E_CodeInj  $1 }
+| record_update      { E_Update   $1 }
+| par(no_tuple_expr) { E_Par      $1 }
+| ctor
+| literal_expr
+| path_expr          {            $1 }
 
-tuple_path:
-  path(tuple(expr) { E_Tuple $1 }) { $1 }
-
-no_tuple_expr:
-  "<int>"       { E_Int      $1 }
-| "<nat>"       { E_Nat      $1 }
-| "<mutez>"     { E_Mutez    $1 }
-| "<string>"    { E_String   $1 }
-| "<verbatim>"  { E_Verbatim $1 }
-| "<bytes>"     { E_Bytes    $1 }
-| record_expr   { E_Record   $1 }
-| code_inj      { E_CodeInj  $1 }
-| record_update { E_Update   $1 }
-| ctor          { E_Ctor     $1 }
-| path_expr     {            $1 }
+literal_expr:
+  "<int>"            { E_Int      $1 }
+| "<nat>"            { E_Nat      $1 }
+| "<mutez>"          { E_Mutez    $1 }
+| "<string>"         { E_String   $1 }
+| "<verbatim>"       { E_Verbatim $1 }
+| "<bytes>"          { E_Bytes    $1 }
 
 (* Record expressions *)
 
 record_expr:
-  braces(sep_or_term(field_expr,field_sep)) { $1 }
+  braces (sep_or_term (field (expr), field_sep)) { $1 }
 
-field_expr:
-  field_id ioption(":" expr { $1,$2 }) {
+field (right_expr):
+  field_id ioption(":" right_expr { $1,$2 }) {
     let start = field_id_to_region $1 in
     let region =
       match $2 with
@@ -1014,7 +1021,7 @@ field_expr:
     and value : _ field = {attributes=[]; field_id=$1; field_rhs=$2}
     in {region; value}
   }
-| "[@attr]" field_expr {
+| "[@attr]" field(right_expr) {
     let attributes = ($2 : _ field reg).value.attributes in
     let value : _ field = {$2.value with attributes = $1::attributes}
     in {$2 with value} }
@@ -1030,34 +1037,19 @@ code_inj:
 (* Functional updates of records *)
 
 record_update:
-  braces(update_expr) { $1 }
+  braces (update_expr) { $1 }
 
 update_expr:
   "..." expr field_sep updates {
     {ellipsis=$1; record=$2; sep=$3; updates=$4} }
 
 updates:
-  nsep_or_term(field_path,field_sep) { $1 }
-
-field_path:
-  field_id ioption(":" var_path { $1,$2 }) {
-    let start = field_id_to_region $1 in
-    let region =
-      match $2 with
-        None -> start
-      | Some (_,k) -> cover start (expr_to_region k)
-    and value : _ field = {attributes=[]; field_id=$1; field_rhs=$2}
-    in {region; value}
-  }
-| "[@attr]" field_path {
-    let attributes = ($2 : _ field reg).value.attributes in
-    let value : _ field = {$2.value with attributes = $1::attributes}
-    in {$2 with value} }
+  nsep_or_term (field (var_path), field_sep) { $1 }
 
 (* Tuples (a.k.a "arrays" is JS) *)
 
 tuple(item):
-  brackets(sep_or_term(component(item),",")) { $1 }
+  brackets (sep_or_term (component (item), ",")) { $1 }
 
 component(item):
   ioption("...") item { $1,$2 }
@@ -1075,13 +1067,12 @@ component(item):
       * nested fields and components from an expression: "(e).a[0][1]b" *)
 
 path_expr:
-  module_path(selected_expr)   { E_ModPath (mk_mod_path $1 expr_to_region) }
-| path(par(no_tuple_expr) { E_Par $1 })
-| var_path                     { $1 }
+  module_path (selected_expr) { E_ModPath (mk_mod_path $1 expr_to_region) }
+| var_path
+| path (par (no_tuple_expr) { E_Par $1 }) { $1 }
 
 selected_expr:
-  ctor     { E_Ctor $1 }
-| var_path {        $1 }
+  ctor | var_path { $1 }
 
 (* PATTERNS *)
 
@@ -1100,7 +1091,7 @@ pattern:
 (* Record pattern *)
 
 record_pattern:
-  braces(sep_or_term(field_pattern,field_sep)) { $1 }
+  braces (sep_or_term (field_pattern, field_sep)) { $1 }
 
 field_pattern:
   field_id ioption(":" pattern { $1,$2 }) {

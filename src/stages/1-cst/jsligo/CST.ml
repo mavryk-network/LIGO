@@ -571,11 +571,8 @@ and fun_expr = {
 }
 
 and parameters =
-  Params   of many_params par
-| OneParam of variable
-| NoParam  of (lpar * rpar) reg
-
-and many_params = pattern * comma * (pattern, comma) nsep_or_term
+  ParParams of (pattern, comma) sep_or_term par
+| VarParam  of variable
 
 and fun_body =
   FunBody  of statements braces
@@ -769,11 +766,6 @@ let field_id_to_region = function
 | F_Int  i -> i#region
 | F_Str  i -> i#region
 
-let parameters_to_region = function
-  Params {region; _} -> region
-| OneParam w -> w#region
-| NoParam {region; _} -> region
-
 let fun_body_to_region = function
   FunBody {region; _} -> region
 | ExprBody e -> expr_to_region e
@@ -788,3 +780,7 @@ let selection_to_region = function
 let intf_expr_to_region = function
   I_Body {region; _}
 | I_Path {region; _} -> region
+
+let parameters_to_region = function
+  ParParams {region; _} -> region
+| VarParam w -> w#region

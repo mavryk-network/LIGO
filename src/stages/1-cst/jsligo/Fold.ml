@@ -115,7 +115,6 @@ type _ sing =
   | S_list : 'a sing -> 'a list sing
   | S_lpar : lpar sing
   | S_lt : lt sing
-  | S_many_params : many_params sing
   | S_minus : minus sing
   | S_minus_eq : minus_eq sing
   | S_rem_eq : rem_eq sing
@@ -502,12 +501,6 @@ let fold
   | S_list sing -> process_list @@ List.map ~f:(fun x -> x -| sing) node
   | S_lpar -> process @@ node -| S_wrap S_lexeme
   | S_lt -> process @@ node -| S_wrap S_lexeme
-  | S_many_params ->
-      let fst_pattern, comma, more_patterns = node in
-      process_list
-      [ fst_pattern -| S_pattern;
-        comma -| S_comma;
-        more_patterns -| S_nsep_or_term (S_pattern, S_comma)]
   | S_minus -> process @@ node -| S_wrap S_lexeme
   | S_minus_eq -> process @@ node -| S_wrap S_lexeme
   | S_rem_eq -> process @@ node -| S_wrap S_lexeme
@@ -559,9 +552,8 @@ let fold
     ; module_path -| S_module_selection ]
   | S_parameters -> process
     ( match node with
-        Params node -> node -| S_par S_many_params
-      | OneParam node -> node -| S_variable
-      | NoParam node -> node -| S_no_param
+        ParParams node -> node -| S_par (S_sep_or_term (S_pattern, S_comma))
+      | VarParam node -> node -| S_variable
     )
   | S_pattern -> process
     ( match node with

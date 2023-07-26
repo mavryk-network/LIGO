@@ -626,7 +626,10 @@ and print_E_App state (node : (expr * arguments) reg) =
   and mk_func state =
     Tree.make_unary state "<fun or ctor>" print_expr
   and mk_args state (node : arguments) =
-    Tree.of_sepseq state "<arguments>" print_expr node.value.inside
+    let Region.{region; value} = node in
+    match value.inside with
+      None -> Tree.make_node ~region state "()"
+    | Some args -> Tree.of_nsepseq state "<arguments>" print_expr args
   in
   let children = Tree.[
     mk_child mk_func fun_or_ctor;
@@ -757,28 +760,26 @@ and print_E_Fun state (node : fun_expr reg) =
   let Region.{value; region} = node in
   let {type_vars; parameters; rhs_type; arrow=_; fun_body} = value in
   let children = Tree.[
-    mk_child_opt print_type_vars       type_vars;
-    mk_child     print_parameters      parameters;
-    mk_child_opt print_type_annotation rhs_type;
-    mk_child     print_fun_body        fun_body]
+    mk_child_opt print_type_vars  type_vars;
+    mk_child     print_parameters parameters;
+    mk_child_opt print_rhs_type   rhs_type;
+    mk_child     print_fun_body   fun_body]
   in Tree.make ~region state "E_Fun" children
 
+and print_rhs_type state (node: type_annotation) =
+  Tree.make_unary state "<rhs_type>" print_type_expr (snd node)
+
 and print_parameters state = function
-  Params   p -> print_Params   state p
-| OneParam p -> print_OneParam state p
-| NoParam  p -> print_NoParam  state p
+  ParParams p -> print_ParParams state p
+| VarParam  p -> print_VarParams state p
 
-and print_Params state (node: many_params par) =
+and print_ParParams state (node: (pattern, comma) sep_or_term par) =
   let Region.{value; region} = node in
-  let fst_param, comma, more_params = value.inside in
-  let seq = Utils.nsep_or_term_cons fst_param comma more_params in
-  Tree.of_nsep_or_term ~region state "Params" print_pattern seq
+  let seq = value.inside in
+  Tree.of_sep_or_term ~region state "ParParams" print_pattern seq
 
-and print_OneParam state (node: variable) =
-  Tree.(make_unary state "OneParam" make_literal node)
-
-and print_NoParam state (node: (lpar * rpar) reg) =
-  Tree.make_node ~region:node.region state "NoParam"
+and print_VarParams state (node: variable) =
+  Tree.(make_unary state "VarParams" make_literal node)
 
 and print_fun_body state = function
   FunBody  b -> print_FunBody  state b

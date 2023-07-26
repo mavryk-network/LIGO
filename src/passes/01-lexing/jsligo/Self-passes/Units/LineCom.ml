@@ -23,6 +23,7 @@ let add_comment (comment : string Region.reg) : Token.t -> Token.t = function
 | LineCom  _
 | ZWSP _
 | PARAMS _
+| ES6FUN _
 | EOF _ as token -> token
 
   (* Literals *)

@@ -155,6 +155,7 @@
 
 %token <string Wrap.t> ZWSP   [@recover.expr Token.wrap_zwsp   $loc]
 %token <string Wrap.t> PARAMS [@recover.expr Token.wrap_params $loc]
+%token <string Wrap.t> ES6FUN [@recover.expr Token.wrap_es6fun $loc]
 
 (* End of File *)
 

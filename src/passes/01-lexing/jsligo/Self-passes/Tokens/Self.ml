@@ -28,6 +28,7 @@ module Make (Options : Options.S) =
        [filters]) *)
 
     let filters : t = [
+      ES6FUN.filter;
       PARAMS.filter;
       Attributes.filter;
       Comments.filter
