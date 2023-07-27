@@ -1506,8 +1506,17 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     return @@ v_views @@ ((n, f) :: vs)
   | C_TEST_CONS_VIEWS, _ -> fail @@ error_type ()
   | C_TEST_WRAP_OP_TRANSFER, [ V_Ct (C_contract contract); param; V_Ct (C_mutez amount) ] ->
+    let>> param = Eval (loc, param, nth_type 1) in
+    let param = trace_option ~raise (Errors.corner_case ()) @@ get_michelson_expr param in
     return @@ v_test_operation @@ Transfer { contract ; param; amount }
   | C_TEST_WRAP_OP_TRANSFER, _ -> fail @@ error_type ()
+  | C_TEST_BAKE_OPS, [ V_List ops ] ->
+    let ops = List.map
+        ~f:(fun x -> trace_option ~raise (Errors.corner_case ()) @@ get_test_operation x)
+        ops in
+    ignore ops;
+    failwith "IMPLEMENT ME"
+  | C_TEST_BAKE_OPS, _ -> fail @@ error_type ()
   | C_POLYMORPHIC_ADD, _ ->
     fail @@ Errors.generic_error loc "POLYMORPHIC_ADD is solved in checking."
   | C_POLYMORPHIC_SUB, _ ->
@@ -1530,7 +1539,6 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       | C_BIG_MAP
       | C_BIG_MAP_LITERAL
       | C_CREATE_CONTRACT
-      | C_TEST_BAKE_OPS
       | C_GLOBAL_CONSTANT )
     , _ ) -> fail @@ Errors.generic_error loc "Unbound primitive."
 
