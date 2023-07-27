@@ -52,6 +52,7 @@ let rec is_dup (t : type_expression) =
           | Gen
           | Int64
           | Views
+          | Test_operation
           (* Externals are dup *)
           | External _ )
       ; _

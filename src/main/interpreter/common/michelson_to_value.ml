@@ -438,6 +438,7 @@ let rec decompile_value
         | Mutation
         | External _
         | Views
+        | Test_operation
         | Tx_rollup_l2_address )
       , _ ) -> v)
   | T_sum _ when Option.is_some (Ast_aggregated.get_t_bool t) -> v

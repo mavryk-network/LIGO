@@ -144,7 +144,7 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
       | T_base TB_nat, T_base TB_nat -> return (T_base TB_nat)
       | T_base TB_bytes, T_base TB_nat -> return (T_base TB_bytes)
       | _ -> raise.error (corner_case ~loc:__LOC__ "invalid external_lsr application"))
-    | ((Michelson_or               | Sapling_transaction |
+    | ((Michelson_or               | Sapling_transaction  | Test_operation      |
         Ticket          | Int64    | Sapling_state        | Michelson_contract  |
         Contract        | Map      | Big_map              | Typed_address       |
         Michelson_pair  | Set      | Mutation             | Ast_contract        |
@@ -152,7 +152,7 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
         -> raise.error @@ corner_case ~loc:__LOC__ "wrong constant"
     | ((Int64      | Unit      | Baker_operation      |
       Nat          | Timestamp | Michelson_or         |
-      String       | Gen       |
+      String       | Gen       | Test_operation       |
       Address      | Operation | Bls12_381_fr         |
       Key_hash     | Chain_id  | Sapling_transaction  |
       Baker_hash   | Pvss_key  | Michelson_contract   |

@@ -73,6 +73,7 @@ type t =
   | Gen [@only_interpreter]
   | Int64 [@only_interpreter]
   | Views [@only_interpreter]
+  | Test_operation [@only_interpreter]
 [@@deriving ord, eq, yojson, hash, sexp, is { tags = [ "only_interpreter" ] }]
 
 let to_string = function
@@ -116,6 +117,7 @@ let to_string = function
   | Gen -> "pbt_gen"
   | Int64 -> "int64"
   | Views -> "views"
+  | Test_operation -> "test_operation"
 
 
 let of_string_opt = function
@@ -158,6 +160,7 @@ let of_string_opt = function
   | "pbt_gen" -> Some Gen
   | "int64" -> Some Int64
   | "views" -> Some Views
+  | "test_operation" -> Some Test_operation
   | "external_bytes" -> Some (External Bytes)
   | "external_int" -> Some (External Int)
   | "external_ediv" -> Some (External Ediv)
@@ -225,6 +228,7 @@ let to_arity = function
   | Gen -> 1
   | Int64 -> 0
   | Views -> 1
+  | Test_operation -> 0
 
 
 let string = String
@@ -268,6 +272,7 @@ let external_ediv = External Ediv
 let gen = Gen
 let int64 = Int64
 let views = Views
+let test_operation = Test_operation
 let v_bool = Type_var.of_input_var "bool"
 let v_string = Type_var.of_input_var (to_string String)
 let v_bytes = Type_var.of_input_var (to_string Bytes)
@@ -325,3 +330,4 @@ let v_external_map_remove_value =
 let v_gen = Type_var.of_input_var (to_string @@ Gen)
 let v_int64 = Type_var.of_input_var (to_string @@ Int64)
 let v_views = Type_var.of_input_var (to_string @@ Views)
+let v_test_operation = Type_var.of_input_var (to_string @@ Test_operation)
