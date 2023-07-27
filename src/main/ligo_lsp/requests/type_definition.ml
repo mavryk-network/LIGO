@@ -25,20 +25,21 @@ let get_type (vdef : Scopes.Types.vdef) : type_info option =
         ~f:(fun x -> Ast_core.{ type_content = T_variable x; location })
         ty.orig_var (* This is non-empty in case there is a name for our type *)
     in
-    Some
-      { var_name = orig_var
-      ; contents =
-          (* We want to preserve both the type var and type expression here, so we
-            set [use_orig_var = True] so this expression will be pretty,
-            and we also set [orig_var = None] before untyping so we're getting
-            full expression and not just `T_variable` *)
-          Trace.try_with
-            (fun ~raise ~catch:_ ->
-              Checking.untype_type_expression ~raise
-                ~use_orig_var:true
-                { ty with orig_var = None })
-            (fun ~catch:_ _ -> failwith "Untyper failed AAA")
-      }
+    (* We want to preserve both the type var and type expression here, so we
+      set [use_orig_var = True] so this expression will be pretty,
+      and we also set [orig_var = None] before untyping so we're getting
+      full expression and not just `T_variable` *)
+    Trace.try_with
+      (fun ~raise ~catch:_ ->
+        Option.some
+        @@ { var_name = orig_var
+           ; contents =
+               Checking.untype_type_expression
+                 ~raise
+                 ~use_orig_var:true
+                 { ty with orig_var = None }
+           })
+      (fun ~catch:_ _ -> None (* TODO logging *))
   | Unresolved -> None
 
 
