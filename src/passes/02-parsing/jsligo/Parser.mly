@@ -570,15 +570,16 @@ non_expr_stmts:
 | non_expr_stmt ";" statements { Utils.nseq_cons ($1, Some $2) $3 }
 
 nterm_stmt:
-  "[@attr]" nterm_stmt      { S_Attr  ($1,$2) }
-| block_stmt                { S_Block      $1 }
-| switch_stmt               { S_Switch     $1 }
-| for_of_stmt (nterm_stmt)  { S_ForOf      $1 }
-| while_stmt (nterm_stmt)   { S_While      $1 }
-| assign_stmt (expr)        { S_Expr       $1 }
-| export_stmt (nterm_stmt)  { S_Export     $1 }
+  "[@attr]" nterm_stmt       { S_Attr  ($1,$2) }
+| block_stmt                 { S_Block      $1 }
+| switch_stmt                { S_Switch     $1 }
+| for_of_stmt (nterm_stmt)   { S_ForOf      $1 }
+| full_for_stmt (nterm_stmt) { S_For        $1 }
+| while_stmt (nterm_stmt)    { S_While      $1 }
+| non_decl_expr_stmt (expr, expr_stmt (expr)) { S_Expr $1 }
+| export_stmt (nterm_stmt)   { S_Export     $1 }
 | if_else_stmt (nterm_stmt)
-| if_stmt (nterm_stmt)      {              $1 }
+| if_stmt (nterm_stmt)       {              $1 }
 
 statement:
   base_stmt (statement) | if_stmt (statement) { $1 }
@@ -599,6 +600,7 @@ non_expr_base_stmt (right_stmt):
 | for_of_stmt (right_stmt)        { S_ForOf      $1 }
 | while_stmt (right_stmt)         { S_While      $1 }
 | if_else_stmt (right_stmt)       {              $1 }
+(*| value_decl { S_Decl $1 } *)
 
 non_expr_stmt:
   non_expr_base_stmt (non_expr_stmt) | if_stmt (non_expr_stmt) { $1 }
@@ -662,9 +664,9 @@ path (root_expr):
     in E_Proj {region; value} }
 
 selection:
-  "." field_name    { FieldName ($1,$2) }
-| "." "<string>"    { FieldStr  ($1,$2) }
-| brackets("<int>") { Component      $1 }
+  "." field_name       { FieldName ($1,$2) }
+| brackets("<string>") { FieldStr       $1 }
+| brackets("<int>")    { Component      $1 }
 
 (* Block of statement *)
 
@@ -697,14 +699,19 @@ if_cond:
 
 (* For-loop statement *)
 
-for_stmt(right_stmt):
-  "for" par(range_for) ioption(right_stmt) {
-    let stop =
-      match $3 with
-        None -> $2.region
-      | Some stmt -> statement_to_region stmt in
-    let region = cover $1#region stop
-    and value  = {kwd_for=$1; range=$2; for_body=$3}
+for_stmt (right_stmt):
+  empty_for_stmt | full_for_stmt (right_stmt) { $1 }
+
+empty_for_stmt:
+  "for" par(range_for) {
+    let region = cover $1#region $2.region in
+    let value  = {kwd_for=$1; range=$2; for_body=None}
+    in {region; value} }
+
+full_for_stmt (right_stmt):
+  "for" par(range_for) right_stmt {
+    let region = cover $1#region (statement_to_region $3) in
+    let value  = {kwd_for=$1; range=$2; for_body = Some $3}
     in {region; value} }
 
 range_for:
