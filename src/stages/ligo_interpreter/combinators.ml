@@ -211,7 +211,7 @@ let get_baker_policy : value -> _ option =
   | _ -> None
 
 
-let get_test_operation : value -> _ option =
+let get_test_operation : value -> test_operation option =
   fun value ->
   match value with
   | V_Test_operation top -> Some top
@@ -414,6 +414,6 @@ let rec compare_value (v : value) (v' : value) : int =
 and compare_test_operation (top : test_operation) (top' : test_operation) =
   match top, top' with
   | Transfer { contract; param; amount }, Transfer { contract = contract'; param = param'; amount = amount' } ->
-    Tuple3.compare ~cmp1:compare_contract ~cmp2:compare_value ~cmp3:Z.compare (contract, param, amount) (contract', param', amount')
+    Tuple3.compare ~cmp1:compare_contract ~cmp2:Caml.compare ~cmp3:Z.compare (contract, param, amount) (contract', param', amount')
 
 let equal_value (v : value) (v' : value) : bool = Int.equal (compare_value v v') 0

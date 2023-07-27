@@ -167,7 +167,7 @@ and gen =
   }
 
 and test_operation =
-  | Transfer of { contract : contract; param : value ; amount : Z.t }
+  | Transfer of { contract : contract; param : typed_michelson_code ; amount : Z.t }
 
 and value =
   | V_Ct of constant_val [@name "constant"]
