@@ -162,6 +162,7 @@ type constant' =
   | C_TEST_NIL_VIEWS [@only_interpreter]
   | C_TEST_CONS_VIEWS [@only_interpreter]
   | C_TEST_WRAP_OP_TRANSFER [@only_interpreter]
+  | C_TEST_BAKE_OPS [@only_interpreter]
   (* New with EDO*)
   | C_GLOBAL_CONSTANT [@pure]
   (* JsLIGO *)
