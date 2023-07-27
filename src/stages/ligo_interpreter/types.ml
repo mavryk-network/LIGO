@@ -153,6 +153,9 @@ and gen =
   ; gen_type : Ast_aggregated.type_expression
   }
 
+and test_operation =
+  | Transfer of { contract : contract; param : value ; amount : Z.t }
+
 and value =
   | V_Ct of constant_val [@name "constant"]
   | V_List of value list [@name "list"]
@@ -177,6 +180,7 @@ and value =
   | V_Typed_address of Contract.t
       (* This is a copy of C_address in constant *) [@name "typed_address"]
   | V_Views of (string * func_val) list
+  | V_Test_operation of test_operation
 [@@deriving yojson]
 
 type bigmap_state = (value * value) list
