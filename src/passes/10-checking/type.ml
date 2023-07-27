@@ -234,7 +234,8 @@ let t__type_ ~loc () : t = t_construct Literal_types._type_ [] ~loc ()
       , "michelson_contract"
       , "ast_contract"
       , "int64"
-      , "michelson_program" )]
+      , "michelson_program"
+      , "test_operation" )]
 
 
 let t_michelson_code = t_michelson_program
