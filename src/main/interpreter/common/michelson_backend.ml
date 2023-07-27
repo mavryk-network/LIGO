@@ -1092,7 +1092,7 @@ let rec compile_value ~raise ~options ~loc
     (* TODO-er: if we want support for entrypoints, this should be fixed: *)
     (match c.entrypoint with
     | None -> Tezos_micheline.Micheline.String ((), x)
-    | Some e -> Tezos_micheline.Micheline.String ((), x ^ "%" ^ e))
+    | Some e -> Tezos_micheline.Micheline.String ((), Format.asprintf "%s%%%a" x Ligo_interpreter.Types.Entrypoint_repr.pp e))
   | V_Ct (C_key_hash kh) ->
     let () =
       trace_option

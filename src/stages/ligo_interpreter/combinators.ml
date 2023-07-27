@@ -211,6 +211,13 @@ let get_baker_policy : value -> _ option =
   | _ -> None
 
 
+let get_test_operation : value -> _ option =
+  fun value ->
+  match value with
+  | V_Test_operation top -> Some top
+  | _ -> None
+
+
 let tag_constant_val : constant_val -> int = function
   | C_unit -> 0
   | C_bool _ -> 1
@@ -232,7 +239,7 @@ let tag_constant_val : constant_val -> int = function
   | C_chain_id _ -> 17
 
 let compare_contract ({ address ; entrypoint } : contract) ({ address = address' ; entrypoint = entrypoint' } : contract) : int =
-  Tuple2.compare ~cmp1:Tezos_protocol.Protocol.Alpha_context.Contract.compare ~cmp2:(Option.compare String.compare) (address, entrypoint) (address', entrypoint')
+  Tuple2.compare ~cmp1:Tezos_protocol.Protocol.Alpha_context.Contract.compare ~cmp2:(Option.compare Entrypoint_repr.compare) (address, entrypoint) (address', entrypoint')
 
 let compare_constant_val (c : constant_val) (c' : constant_val) : int =
   match c, c' with
@@ -249,7 +256,7 @@ let compare_constant_val (c : constant_val) (c' : constant_val) : int =
   | ( C_contract { address = a; entrypoint = e }
     , C_contract { address = a'; entrypoint = e' } ) ->
     (match Tezos_protocol.Protocol.Alpha_context.Contract.compare a a' with
-    | 0 -> Option.compare String.compare e e'
+    | 0 -> Option.compare Entrypoint_repr.compare e e'
     | c -> c)
   | C_key_hash kh, C_key_hash kh' -> Tezos_crypto.Signature.Public_key_hash.compare kh kh'
   | C_key k, C_key k' -> Tezos_crypto.Signature.Public_key.compare k k'
