@@ -826,6 +826,7 @@ let rec val_to_ast ~raise ~loc
   | V_Typed_address _ ->
     raise.error @@ Errors.generic_error loc "Cannot be abstracted: typed_address"
   | V_Views _ -> raise.error @@ Errors.generic_error loc "Cannot be abstracted: views"
+  | V_Test_operation _ -> raise.error @@ Errors.generic_error loc "Cannot be abstracted: test_operation"
 
 
 and make_ast_func ~raise ?name env mut_flag arg body orig =

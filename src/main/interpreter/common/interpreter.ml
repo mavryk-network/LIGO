@@ -358,7 +358,8 @@ let rec apply_comparison ~no_colour ~raise
       | V_Gen _
       | V_Location _
       | V_Typed_address _
-      | V_Views _ )
+      | V_Views _
+      | V_Test_operation _ )
     , ( V_Ct _
       | V_List _
       | V_Record _
@@ -373,7 +374,8 @@ let rec apply_comparison ~no_colour ~raise
       | V_Gen _
       | V_Location _
       | V_Typed_address _
-      | V_Views _ ) ) ->
+      | V_Views _
+      | V_Test_operation _ ) ) ->
     let msg =
       Format.asprintf
         "Different value types, cannot be compared: %a"
@@ -1499,6 +1501,9 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_TEST_CONS_VIEWS, [ V_Ct (C_string n); V_Func_val f; V_Views vs ] ->
     return @@ v_views @@ ((n, f) :: vs)
   | C_TEST_CONS_VIEWS, _ -> fail @@ error_type ()
+  | C_TEST_WRAP_OP_TRANSFER, [ V_Ct (C_contract contract); param; V_Ct (C_mutez amount) ] ->
+    return @@ v_test_operation @@ Transfer { contract ; param; amount }
+  | C_TEST_WRAP_OP_TRANSFER, _ -> fail @@ error_type ()
   | C_POLYMORPHIC_ADD, _ ->
     fail @@ Errors.generic_error loc "POLYMORPHIC_ADD is solved in checking."
   | C_POLYMORPHIC_SUB, _ ->
@@ -1521,7 +1526,6 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       | C_BIG_MAP
       | C_BIG_MAP_LITERAL
       | C_CREATE_CONTRACT
-      | C_TEST_WRAP_OP_TRANSFER
       | C_GLOBAL_CONSTANT )
     , _ ) -> fail @@ Errors.generic_error loc "Unbound primitive."
 

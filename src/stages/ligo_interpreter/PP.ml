@@ -81,3 +81,4 @@ let rec pp_value ~no_colour : Format.formatter -> value -> unit =
     | V_Typed_address c ->
       Format.fprintf ppf "%a" Tezos_protocol.Protocol.Alpha_context.Contract.pp c
     | V_Views _ -> Format.fprintf ppf "views"
+    | V_Test_operation _ -> Format.fprintf ppf "test_operation"
