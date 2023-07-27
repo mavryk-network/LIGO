@@ -1538,7 +1538,7 @@ and infer_declaration (decl : I.declaration)
         let%bind annoted_sig =
           With_default_layout.evaluate_signature_expr signature_expr
         in
-        let%bind annoted_sig, entries = cast_signature inferred_sig annoted_sig in
+        let%bind _annoted_sig (* FIXME *), entries = cast_signature inferred_sig annoted_sig in
         let%bind () =
           match Generator.check_entries inferred_sig entries with
           | `All_found -> return ()
