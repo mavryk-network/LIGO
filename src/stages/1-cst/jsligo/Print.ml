@@ -148,11 +148,9 @@ and print_import_decl state = function
 and print_AliasModule state (node: import_alias reg) =
   let Region.{value; region} = node in
   let {kwd_import=_; alias; equal=_; module_path} = value in
-  let print_module_path =
-    print_module_path Tree.make_literal "<module_path>" in
   let children = Tree.[
-    mk_child print_alias       alias;
-    mk_child print_module_path module_path]
+    mk_child print_alias            alias;
+    mk_child print_module_selection module_path]
   in Tree.make ~region state "AliasModule" children
 
 and print_alias state (node: module_name) =
@@ -259,8 +257,18 @@ and print_intf_expr state = function
 
 and print_I_Body state (node: intf_body) =
   Tree.make state "I_Body" (mk_children_intf_body node)
-and print_I_Path state (node: module_selection) =
-  print_module_path Tree.make_literal "I_Path" state node
+
+and print_I_Path state = print_module_selection state
+
+and print_module_selection state = function
+  M_Path  p -> print_M_Path  state p
+| M_Alias p -> print_M_Alias state p
+
+and print_M_Path state (node: module_name module_path reg) =
+  print_module_path Tree.make_literal "M_Path" state node
+
+and print_M_Alias state (node: module_name) =
+  Tree.(make_unary state "M_Alias" make_literal node)
 
 (* Type declaration *)
 
@@ -326,10 +334,8 @@ and print_T_Fun state (node : fun_type) =
     mk_child print_codomain        codomain]
   in Tree.make state "T_Fun" ~region children
 
-and print_fun_type_params state (node: fun_type_params) =
-  let Region.{value; region} = node in
-  Tree.of_sep_or_term ~region state "<parameters>"
-                      print_fun_type_param value.inside
+and print_fun_type_params state =
+  print_parameters print_fun_type_param state
 
 and print_fun_type_param state (node: fun_type_param reg) =
   let Region.{region; value} = node in
@@ -361,7 +367,7 @@ and print_T_Par state (node : type_expr par) =
 
 and print_T_Parameter state (node : parameter_of_type reg) =
   let {kwd_parameter_of=_; module_path} = node.value in
-  print_module_path Tree.make_literal "T_Parameter" state module_path
+  Tree.make_unary state "T_Parameter" print_module_selection module_path
 
 and print_T_Record state (node : type_expr record) =
   print_record print_type_expr "T_Record" state node
@@ -731,7 +737,7 @@ and print_code state (node : expr) =
 and print_E_Contract state (node: contract_of_expr reg) =
   let {kwd_contract_of=_; module_path} = node.value in
   let path = module_path.value.inside in
-  print_module_path Tree.make_literal "E_Contract" state path
+  Tree.make_unary state "E_Contract" print_module_selection path
 
 (* Data constructor as expressions *)
 
@@ -761,22 +767,27 @@ and print_E_Fun state (node : fun_expr reg) =
   let {type_vars; parameters; rhs_type; arrow=_; fun_body} = value in
   let children = Tree.[
     mk_child_opt print_type_vars  type_vars;
-    mk_child     print_parameters parameters;
+    mk_child     print_fun_params parameters;
     mk_child_opt print_rhs_type   rhs_type;
     mk_child     print_fun_body   fun_body]
   in Tree.make ~region state "E_Fun" children
 
+and print_fun_params state = print_parameters print_pattern state
+
 and print_rhs_type state (node: type_annotation) =
   Tree.make_unary state "<rhs_type>" print_type_expr (snd node)
 
-and print_parameters state = function
-  ParParams p -> print_ParParams state p
-| VarParam  p -> print_VarParams state p
+and print_parameters :
+  'a.'a Tree.printer -> Tree.state -> 'a parameters -> unit =
+  fun print state -> function
+    ParParams p -> print_ParParams print state p
+  | VarParam  p -> print_VarParams state p
 
-and print_ParParams state (node: (pattern, comma) sep_or_term par) =
-  let Region.{value; region} = node in
-  let seq = value.inside in
-  Tree.of_sep_or_term ~region state "ParParams" print_pattern seq
+and print_ParParams :
+  'a.'a Tree.printer -> Tree.state -> ('a, comma) sep_or_term par -> unit =
+  fun print state node ->
+    let Region.{value; region} = node in
+    Tree.of_sep_or_term ~region state "ParParams" print value.inside
 
 and print_VarParams state (node: variable) =
   Tree.(make_unary state "VarParams" make_literal node)
@@ -1006,6 +1017,7 @@ and print_statement state = function
 | S_Break  s -> print_S_Break  state s
 | S_Cond   s -> print_S_Cond   state s
 | S_Decl   s -> print_S_Decl   state s
+| S_Export s -> print_S_Export state s
 | S_Expr   s -> print_S_Expr   state s
 | S_For    s -> print_S_For    state s
 | S_ForOf  s -> print_S_ForOf  state s
@@ -1057,6 +1069,12 @@ and print_S_Cond state (node: cond_stmt reg) =
 
 and print_S_Decl state (node: declaration) =
   Tree.make_unary state "S_Decl" print_declaration node
+
+(* Export statement *)
+
+and print_S_Export state (node: export_stmt reg) =
+  let Region.{value; region} = node in
+  Tree.make_unary ~region state "S_Export" print_statement (snd value)
 
 (* Expression as a statement *)
 

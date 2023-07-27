@@ -209,7 +209,9 @@ and import_alias = {
   module_path : module_selection
 }
 
-and module_selection = module_name module_path reg
+and module_selection =
+  M_Path  of module_name module_path reg
+| M_Alias of module_name
 
 and import_all_as = {
   kwd_import : kwd_import;
@@ -320,7 +322,7 @@ and cartesian = (type_expr, comma) nsep_or_term brackets
 (* Functional type *)
 
 and fun_type        = (fun_type_params * arrow * type_expr) reg
-and fun_type_params = (fun_type_param reg, comma) sep_or_term par
+and fun_type_params = fun_type_param reg parameters
 and fun_type_param  = variable * type_annotation
 
 (* Parameter of type *)
@@ -403,6 +405,7 @@ and statement =
 | S_Break  of kwd_break
 | S_Cond   of cond_stmt reg
 | S_Decl   of declaration
+| S_Export of export_stmt reg
 | S_Expr   of expr
 | S_For    of for_stmt reg
 | S_ForOf  of for_of_stmt reg
@@ -411,6 +414,10 @@ and statement =
 | S_While  of while_stmt reg
 
 and statements = (statement * semi option) nseq
+
+(* Export statement *)
+
+and export_stmt = kwd_export * statement
 
 (* Conditional statement *)
 
@@ -564,14 +571,14 @@ and arguments = (expr, comma) sepseq par
 
 and fun_expr = {
   type_vars  : type_vars option;
-  parameters : parameters;
+  parameters : pattern parameters;
   rhs_type   : type_annotation option;
   arrow      : arrow;
   fun_body   : fun_body
 }
 
-and parameters =
-  ParParams of (pattern, comma) sep_or_term par
+and 'a parameters =
+  ParParams of ('a, comma) sep_or_term par
 | VarParam  of variable
 
 and fun_body =
@@ -751,6 +758,7 @@ let rec statement_to_region = function
 | S_Break  w -> w#region
 | S_Cond   {region; _} -> region
 | S_Decl   d -> declaration_to_region d
+| S_Export {region; _} -> region
 | S_Expr   e -> expr_to_region e
 | S_For    {region; _}
 | S_ForOf  {region; _}
@@ -777,9 +785,13 @@ let selection_to_region = function
     Region.cover dot#region string_literal#region
 | Component brackets -> brackets.region
 
+let module_selection_to_region = function
+  M_Path {region; _} -> region
+| M_Alias w -> w#region
+
 let intf_expr_to_region = function
-  I_Body {region; _}
-| I_Path {region; _} -> region
+  I_Body {region; _} -> region
+| I_Path path -> module_selection_to_region path
 
 let parameters_to_region = function
   ParParams {region; _} -> region

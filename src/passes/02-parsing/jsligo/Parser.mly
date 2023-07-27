@@ -212,10 +212,13 @@ contract:
 (* TOP-LEVEL DECLARATIONS *)
 
 top_decl:
-  declaration ";"?   { TL_Decl      ($1,$2) }
-| "[@attr]" top_decl { TL_Attr      ($1,$2) }
-| "<directive>"      { TL_Directive      $1 }
-| "export" top_decl  {
+  "<directive>"      { TL_Directive $1 }
+| no_dir_top_decl    {              $1 }
+
+no_dir_top_decl:
+  declaration ";"?          { TL_Decl      ($1,$2) }
+| "[@attr]" no_dir_top_decl { TL_Attr      ($1,$2) }
+| "export" no_dir_top_decl  {
      let region = cover $1#region (top_decl_to_region $2)
      in TL_Export {region; value=($1,$2)} }
 
@@ -261,7 +264,7 @@ type_annotation(right_type_expr):
 
 import_decl:
   "import" module_name "=" module_selection {
-    let region = cover $1#region $4.region
+    let region = cover $1#region (module_selection_to_region $4)
     and value  = {kwd_import=$1; alias=$2; equal=$3; module_path=$4}
     in AliasModule {region; value}
   }
@@ -277,7 +280,8 @@ import_decl:
     in ImportSome {region; value} }
 
 module_selection:
-  module_path(module_name) { mk_mod_path $1 (fun w -> w#region) }
+  module_path(module_name) { M_Path (mk_mod_path $1 (fun w -> w#region)) }
+| module_name              { M_Alias $1 }
 
 module_path(selected):
   module_name "." module_path(selected) {
@@ -364,11 +368,15 @@ type_expr:
 
 fun_type:
   parameters(fun_type_param) "=>" type_expr {
-    let region = cover $1.region (type_expr_to_region $3)
+    let region = cover (parameters_to_region $1) (type_expr_to_region $3)
     in T_Fun {region; value=($1,$2,$3)} }
 
-parameters(param_kind):
-  ES6FUN par(sep_or_term(param_kind,",") PARAMS { $1 }) { $2 }
+parameters (param_kind):
+  ES6FUN parameters_suffix(param_kind) { $2 }
+
+parameters_suffix (param_kind):
+  par(sep_or_term(param_kind,",") PARAMS { $1 }) { ParParams $1 }
+| variable | "_"                                 { VarParam  $1 }
 
 fun_type_param:
   variable type_annotation(type_expr) {
@@ -423,19 +431,12 @@ core_type_no_string:
 | no_par_type_expr    {             $1 }
 
 no_par_type_expr:
-  "<int>"             { T_Int       $1 }
-| "_" | type_name     { T_Var       $1 }
-| type_ctor_app(type_expr)       { T_App       $1 }
-| cartesian           { T_Cart      $1 }
-| parameter_of_type   { T_Parameter $1 }
-| qualified_type(type_expr)      {             $1 }
-
-(* Return types *)
-(*
-return_type:
-  type_name { T_Var $1 }
-| type_
-*)
+  "<int>"                   { T_Int       $1 }
+| "_" | type_name           { T_Var       $1 }
+| type_ctor_app(type_expr)  { T_App       $1 }
+| cartesian                 { T_Cart      $1 }
+| parameter_of_type         { T_Parameter $1 }
+| qualified_type(type_expr) {             $1 }
 
 (* Attributed core type *)
 
@@ -477,8 +478,8 @@ type_component:
 
 parameter_of_type:
   "parameter_of" module_selection {
-    let region = cover $1#region $2.region
-    and value = {kwd_parameter_of=$1; module_path=$2}
+    let region = cover $1#region (module_selection_to_region $2)
+    and value  = {kwd_parameter_of=$1; module_path=$2}
     in {region; value} }
 
 (* Type qualifications
@@ -569,14 +570,15 @@ non_expr_stmts:
 | non_expr_stmt ";" statements { Utils.nseq_cons ($1, Some $2) $3 }
 
 nterm_stmt:
-  "[@attr]" nterm_stmt            { S_Attr  ($1,$2) }
-| block_stmt                      { S_Block      $1 }
-| switch_stmt                     { S_Switch     $1 }
-| for_of_stmt (nterm_stmt)        { S_ForOf      $1 }
-| while_stmt (nterm_stmt)         { S_While      $1 }
-| assign_stmt (expr)              { S_Expr       $1 }
+  "[@attr]" nterm_stmt      { S_Attr  ($1,$2) }
+| block_stmt                { S_Block      $1 }
+| switch_stmt               { S_Switch     $1 }
+| for_of_stmt (nterm_stmt)  { S_ForOf      $1 }
+| while_stmt (nterm_stmt)   { S_While      $1 }
+| assign_stmt (expr)        { S_Expr       $1 }
+| export_stmt (nterm_stmt)  { S_Export     $1 }
 | if_else_stmt (nterm_stmt)
-| if_stmt (nterm_stmt)            {              $1 }
+| if_stmt (nterm_stmt)      {              $1 }
 
 statement:
   base_stmt (statement) | if_stmt (statement) { $1 }
@@ -592,6 +594,7 @@ non_expr_base_stmt (right_stmt):
 | return_stmt                     { S_Return     $1 }
 | block_stmt                      { S_Block      $1 }
 | switch_stmt                     { S_Switch     $1 }
+| export_stmt (right_stmt)        { S_Export     $1 }
 | for_stmt (right_stmt)           { S_For        $1 }
 | for_of_stmt (right_stmt)        { S_ForOf      $1 }
 | while_stmt (right_stmt)         { S_While      $1 }
@@ -600,7 +603,12 @@ non_expr_base_stmt (right_stmt):
 non_expr_stmt:
   non_expr_base_stmt (non_expr_stmt) | if_stmt (non_expr_stmt) { $1 }
 
+(* Export statements *)
 
+export_stmt(right_stmt):
+  "export" right_stmt {
+     let region = cover $1#region (statement_to_region $2)
+     in {region; value=($1,$2)} }
 
 (* Expressions as statements *)
 
@@ -609,15 +617,14 @@ expr_stmt (right_expr):
 | non_decl_expr_stmt (right_expr, expr_stmt (right_expr)) { S_Expr $1 }
 
 non_decl_expr_stmt (right_expr, right_stmt):
-  app_expr
+  app_expr | incr_expr | decr_expr
 | assign_stmt (right_expr)
-| incr_expr
-| decr_expr
 | ternary_stmt (right_stmt) { $1 }
-| par(no_tuple_expr) { E_Par $1 }
+| par(no_tuple_expr)        { E_Par $1 }
 
 closed_non_decl_expr_stmt (right_expr):
-  non_decl_expr_stmt (right_expr, closed_non_decl_expr_stmt (right_expr)) { $1 }
+  non_decl_expr_stmt (right_expr,
+                      closed_non_decl_expr_stmt (right_expr)) { $1 }
 
 (* Ternary statement *)
 
@@ -820,11 +827,10 @@ fun_expr:
     in E_Fun {region; value} }
 
 ret_type:
-  type_annotation (no_par_type_expr) { $1 }
+  type_annotation (ES6FUN? no_par_type_expr { $2 }) { $1 }
 
 fun_params:
-  parameters (fun_param)       { ParParams $1 }
-| ES6FUN variable | ES6FUN "_" { VarParam  $2 }
+  parameters (fun_param) { $1 }
 
 fun_param:
   param_pattern type_annotation(type_expr) {

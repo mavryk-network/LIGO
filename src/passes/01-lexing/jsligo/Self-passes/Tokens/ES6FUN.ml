@@ -16,12 +16,18 @@ let inject (tokens : tokens) : tokens =
   let open Token in
   let rec aux acc previous current next =
     match previous, current, next with
-      _, _, [] -> List.rev (current :: previous :: acc)
-    | (LPAR _ | EQ _ | COMMA _ | COLON _),
+      (LPAR _ | EQ _ | COMMA _ | COLON _ | GT _),
       LPAR _,
       (RPAR _ | LBRACKET _ | WILD _ | Ident _ as next) :: tokens ->
         let lambda = mk_ES6FUN (to_region current) in
         aux (lambda :: previous :: acc) current next tokens
+    | Ident _ , ARROW _, [] -> (* Syntax error but we process it. *)
+        let lambda = mk_ES6FUN (to_region previous) in
+        List.rev (current :: previous :: lambda :: acc)
+    | Ident _ , ARROW _, next :: tokens ->
+        let lambda = mk_ES6FUN (to_region previous) in
+        aux (previous :: lambda :: acc) current next tokens
+    | _, _, [] -> List.rev (current :: previous :: acc)
     | _, _, next :: tokens -> (* Shift *)
         aux (previous :: acc) current next tokens
   in match tokens with
