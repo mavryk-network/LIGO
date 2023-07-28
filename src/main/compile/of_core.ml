@@ -16,8 +16,7 @@ type form =
       ; contract_type : Self_ast_typed.Helpers.contract_type
       ; module_path : Module_var.t list
       }
-  | Module of
-      { module_path : Module_var.t list }
+  | Module of { module_path : Module_var.t list }
 
 let specific_passes ~raise ~options cform prg =
   match cform with
@@ -35,8 +34,7 @@ let specific_passes ~raise ~options cform prg =
         prg
     in
     (contract_entry, contract_type), prg
-  | Module { module_path } ->
-    Self_ast_typed.all_contract ~raise [] module_path prg
+  | Module { module_path } -> Self_ast_typed.all_contract ~raise [] module_path prg
 
 
 let typecheck_with_signature

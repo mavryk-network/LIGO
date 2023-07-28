@@ -390,7 +390,9 @@ let rec mono_polymorphic_expression ~raise
       match e.expression_content with
       | E_type_inst { forall; type_ } -> aux (type_ :: type_insts) forall
       | E_variable variable -> List.rev type_insts, variable
-      | _ -> print_endline "aca"; raise.Trace.error (Errors.monomorphisation_non_var e)
+      | _ ->
+        print_endline "aca";
+        raise.Trace.error (Errors.monomorphisation_non_var e)
     in
     let type_instances, lid = aux [] expr in
     let type_ = expr.type_expression in

@@ -6,25 +6,21 @@ open Main_errors
 module Var = Simple_utils.Var
 module SMap = Map.Make (String)
 
-let compile_context
-    ~raise
-    : Ast_typed.program -> Data.t
-  =
+let compile_context ~raise : Ast_typed.program -> Data.t =
  fun ctxt ->
-  let data =
-    trace ~raise aggregation_tracer @@ Aggregation.compile_context ctxt
-  in
+  let data = trace ~raise aggregation_tracer @@ Aggregation.compile_context ctxt in
   data
 
-let compile_expressions_in_context
-    ~raise
+
+let compile_expressions_in_context ~raise
     : Data.t -> Ast_typed.expression list -> Ast_aggregated.expression list
   =
-  fun data exprs ->
+ fun data exprs ->
   let exprs =
     trace ~raise aggregation_tracer @@ Aggregation.compile_expressions data exprs
   in
   exprs
+
 
 let compile_expression_in_context
     ~raise
@@ -224,15 +220,23 @@ let apply_to_separated_view ~raise ~options
     in
     i, ep_expr
   in
-  let tuple_view =
-    List.mapi ~f:aux views_info
-  in
+  let tuple_view = List.mapi ~f:aux views_info in
   let d = compile_context ~raise prg in
   let exprs = List.map ~f:snd tuple_view in
   let exprs = compile_expressions ~raise d exprs in
-  let exprs = List.map ~f:(Self_ast_aggregated.remove_check_self) exprs in
-  let () = List.iter ~f:(fun e -> print_endline (Format.asprintf "%a" Ast_aggregated.PP.expression e)) exprs in
-  let exprs = List.map ~f:(trace ~raise self_ast_aggregated_tracer @@ Self_ast_aggregated.all_expression ~options) exprs in
+  let exprs = List.map ~f:Self_ast_aggregated.remove_check_self exprs in
+  let () =
+    List.iter
+      ~f:(fun e -> print_endline (Format.asprintf "%a" Ast_aggregated.PP.expression e))
+      exprs
+  in
+  let exprs =
+    List.map
+      ~f:
+        (trace ~raise self_ast_aggregated_tracer
+        @@ Self_ast_aggregated.all_expression ~options)
+      exprs
+  in
   exprs
 
 
@@ -249,7 +253,8 @@ let rec list_declarations
   =
   let is_generated_main b =
     let v = Binder.get_var b in
-    (not (Value_var.is_generated v)) && String.is_prefix ~prefix:"$" (Value_var.to_name_exn v)
+    (not (Value_var.is_generated v))
+    && String.is_prefix ~prefix:"$" (Value_var.to_name_exn v)
   in
   let should_skip b = skip_generated && is_generated_main b in
   List.fold_left
@@ -269,7 +274,9 @@ let rec list_declarations
              && not (should_skip binder)
           then Binder.get_var binder :: prev
           else prev
-        else if not (should_skip binder) then Binder.get_var binder :: prev else prev
+        else if not (should_skip binder)
+        then Binder.get_var binder :: prev
+        else prev
       | D_module_include _ -> assert false (* What TODO here ? *)
       | D_module
           { module_binder; module_ = { module_content = M_struct m; _ }; module_attr; _ }

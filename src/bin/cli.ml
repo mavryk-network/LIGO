@@ -341,6 +341,13 @@ let with_types =
   flag ~doc name no_arg
 
 
+let defs_only =
+  let open Command.Param in
+  let name = "--defs-only" in
+  let doc = "Gets only list of definitions (without scopes)." in
+  flag ~doc name no_arg
+
+
 let now =
   let open Command.Param in
   let name = "--now" in
@@ -704,7 +711,6 @@ let compile_file =
     <*> warn_unused_rec
     <*> warn_infinite_loop
     <*> libraries)
-
 
 
 let compile_module =
@@ -2168,6 +2174,7 @@ let get_scope =
       no_colour
       deprecated
       with_types
+      defs_only
       project_root
       no_stdlib
       ()
@@ -2177,6 +2184,7 @@ let get_scope =
         ~protocol_version
         ~libraries
         ~with_types
+        ~defs_only
         ~project_root
         ~deprecated
         ~no_stdlib
@@ -2190,11 +2198,13 @@ let get_scope =
         ()
     in
     return_with_custom_formatter ~skip_analytics:false ~cli_analytics ~return
-    @@ Lsp_helpers.Ligo_interface.Get_scope.get_scope_cli_result
-         raw_options
-         source_file
-         display_format
-         no_colour
+    @@ fun () ->
+    Lsp_helpers.Ligo_interface.Get_scope.get_scope_cli_result
+      raw_options
+      ~source_file
+      ~display_format
+      ~no_colour
+      ~defs_only
   in
   let summary = "return the JSON encoded environment for a given file." in
   let readme () =
@@ -2212,6 +2222,7 @@ let get_scope =
     <*> no_colour
     <*> deprecated
     <*> with_types
+    <*> defs_only
     <*> project_root
     <*> no_stdlib)
 

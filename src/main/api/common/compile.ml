@@ -40,8 +40,7 @@ type source =
   | Text of string * Syntax_types.t
   | File of Path.t
 
-let module_ (raw_options : Raw_options.t) source michelson_code_format michelson_comments
-  =
+let module_ (raw_options : Raw_options.t) source michelson_code_format michelson_comments =
   ( Formatter.Michelson_formatter.michelson_format michelson_code_format michelson_comments
   , fun ~raise ->
       let syntax =
@@ -117,6 +116,7 @@ let module_ (raw_options : Raw_options.t) source michelson_code_format michelson
           }
       in
       compiled_contract, [ analytics_input_compilation_size ] )
+
 
 let contract (raw_options : Raw_options.t) source michelson_code_format michelson_comments
   =
@@ -580,7 +580,7 @@ let view (raw_options : Raw_options.t) source view_name michelson_code_format =
           BuildSystem.Source_input.(
             Raw { id = "source_of_text" ^ Syntax.to_ext syntax; code = source_code })
       in
-      let { name ; value } : Build.view_michelson =
+      let ({ name; value } : Build.view_michelson) =
         Build.build_view ~raise ~options entry_point module_ view_name source
       in
       let compiled_view = Ligo_compile.Of_michelson.build_view ~raise name value in

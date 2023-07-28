@@ -15,23 +15,25 @@ let compile_program ~raise
   Compiler.compile Compiler.Data.empty hole program
 
 
-let compile_context ~raise
-   : Ast_typed.program -> Data.t
-   =
-   fun program ->
-   ignore raise;
-   Compiler.compile_declarations Compiler.Data.empty [] program
+let compile_context ~raise : Ast_typed.program -> Data.t =
+ fun program ->
+  ignore raise;
+  Compiler.compile_declarations Compiler.Data.empty [] program
 
 
-let compile_expressions ~raise : Data.t -> Ast_typed.expression list -> Ast_aggregated.expression list =
+let compile_expressions ~raise
+    : Data.t -> Ast_typed.expression list -> Ast_aggregated.expression list
+  =
  fun data exprs ->
- ignore raise;
- let context = Compiler.build_context data in
- let f expr =
-   let expr = Ast_aggregated.context_apply context @@ Compiler.compile_expression data.env expr in
-   expr
- in
- List.map ~f exprs
+  ignore raise;
+  let context = Compiler.build_context data in
+  let f expr =
+    let expr =
+      Ast_aggregated.context_apply context @@ Compiler.compile_expression data.env expr
+    in
+    expr
+  in
+  List.map ~f exprs
 
 
 let decompile : Ast_aggregated.expression -> Ast_typed.expression = Decompiler.decompile

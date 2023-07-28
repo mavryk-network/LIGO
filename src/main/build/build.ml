@@ -429,10 +429,8 @@ type contract_michelson =
 
 type view_michelson = (Ligo_prim.Value_var.t, Stacking.compiled_expression) named
 
-
 let rec build_module_aggregated ~raise
-    :  options:Compiler_options.t -> string
-    -> Source_input.code_input -> _
+    : options:Compiler_options.t -> string -> Source_input.code_input -> _
   =
  fun ~options module_ source ->
   let module_path = parse_module_path ~loc module_ in
@@ -448,7 +446,11 @@ let rec build_module_aggregated ~raise
   let _, typed_views =
     let form =
       Ligo_compile.Of_core.View
-        { command_line_views = None; contract_entry = entry_point; module_path; contract_type }
+        { command_line_views = None
+        ; contract_entry = entry_point
+        ; module_path
+        ; contract_type
+        }
     in
     trace ~raise self_ast_typed_tracer
     @@ Ligo_compile.Of_core.specific_passes ~options form typed_prg
@@ -463,10 +465,21 @@ let rec build_module_aggregated ~raise
       module_path
   in
   ignore build_aggregated_separated_views;
-  let agg_views = build_aggregated_separated_views ~raise ~contract_type ~options module_path typed_views
+  let agg_views =
+    build_aggregated_separated_views
+      ~raise
+      ~contract_type
+      ~options
+      module_path
+      typed_views
   in
   print_endline (Format.asprintf "%a" (Ast_typed.PP.program ~use_hidden:true) typed_views);
-  let () = List.iter ~f:(fun (_, e) -> print_endline (Format.asprintf "%a" Ast_aggregated.PP.expression e)) agg_views in
+  let () =
+    List.iter
+      ~f:(fun (_, e) ->
+        print_endline (Format.asprintf "%a" Ast_aggregated.PP.expression e))
+      agg_views
+  in
   let parameter_ty, storage_ty =
     trace_option
       ~raise
@@ -593,16 +606,15 @@ and build_view_aggregated ~raise
       Ast_aggregated.get_t_pair input_ty)
   in
   match agg_views with
-  | Some ([ name ], expr) ->
-    entry_point, (parameter_ty, storage_ty), name, expr
+  | Some ([ name ], expr) -> entry_point, (parameter_ty, storage_ty), name, expr
   | _ ->
-    raise.error (`Self_ast_aggregated_tracer
+    raise.error
+      (`Self_ast_aggregated_tracer
         (Self_ast_aggregated.Errors.corner_case "Could not find compiled view"))
 
 
 and build_module_stacking ~raise
-    :  options:Compiler_options.t -> string
-    -> Source_input.code_input
+    :  options:Compiler_options.t -> string -> Source_input.code_input
     -> _
        * (Stacking.compiled_expression * _)
        * ((Value_var.t * Stacking.compiled_expression) list * _)
@@ -693,7 +705,9 @@ and build_contract_meta_ligo ~raise ~options entry_point views file_name =
   entry_point, contract, views
 
 
-and build_aggregated_separated_views ~raise ~(contract_type : Self_ast_typed.Helpers.contract_type)
+and build_aggregated_separated_views
+    ~raise
+    ~(contract_type : Self_ast_typed.Helpers.contract_type)
     :  options:Compiler_options.t -> Module_var.t list -> Ast_typed.program
     -> (Value_var.t * Ast_aggregated.expression) list
   =
@@ -792,7 +806,7 @@ and build_separated_views ~raise
     :  options:Compiler_options.t -> (Value_var.t * Ast_aggregated.expression) list
     -> (Value_var.t * Stacking.compiled_expression) list
   =
-  fun ~options lst ->
+ fun ~options lst ->
   let f (name, aggregated) =
     let expanded = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
     let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
