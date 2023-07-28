@@ -750,6 +750,13 @@ let%expect_test _ =
     - test_cli_arg exited with value [1 ; 2 ; 3]. |}]
 
 let%expect_test _ =
+  run_ligo_good [ "run"; "test"; test "test_incremental.mligo" ];
+  [%expect
+    {|
+    Everything at the top-level was executed.
+    - test_increment exited with value (). |}]
+
+let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "reset_time.mligo" ];
   [%expect
     {|
