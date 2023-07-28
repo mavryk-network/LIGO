@@ -281,6 +281,22 @@ let source =
   flag ~doc name spec
 
 
+let allow_json_download =
+  let open Command.Param in
+  let name = "--allow-json-download" in
+  let doc = "Allow LIGO to download JSON files for metadata check." in
+  flag ~doc name no_arg
+
+
+let disallow_json_download =
+  let open Command.Param in
+  let name = "--disallow-json-download" in
+  let doc =
+    "Disallow LIGO to download JSON files for metadata check (and do not show message)."
+  in
+  flag ~doc name no_arg
+
+
 let disable_michelson_typechecking =
   let open Command.Param in
   let name = "--disable-michelson-typechecking" in
@@ -1040,6 +1056,8 @@ let compile_storage =
       display_format
       no_colour
       no_metadata_check
+      allow_json_download
+      disallow_json_download
       deprecated
       skip_analytics
       michelson_format
@@ -1054,6 +1072,13 @@ let compile_storage =
       libraries
       ()
     =
+    let json_download =
+      if disallow_json_download
+      then Some false
+      else if allow_json_download
+      then Some true
+      else None
+    in
     let raw_options =
       Raw_options.make
         ~entry_point
@@ -1069,6 +1094,7 @@ let compile_storage =
         ~warn_infinite_loop
         ~libraries
         ~no_metadata_check
+        ~json_download
         ()
     in
     let cli_analytics =
@@ -1122,6 +1148,8 @@ let compile_storage =
     <*> display_format
     <*> no_colour
     <*> no_metadata_check
+    <*> allow_json_download
+    <*> disallow_json_download
     <*> deprecated
     <*> skip_analytics
     <*> michelson_code_format
