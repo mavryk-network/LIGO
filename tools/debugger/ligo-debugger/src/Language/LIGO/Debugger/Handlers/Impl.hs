@@ -20,14 +20,16 @@ import Data.Default (def)
 import Data.HashMap.Strict qualified as HM
 import Data.Singletons (demote)
 import Data.Time.Clock.POSIX (getPOSIXTime)
-import Fmt (Builder, blockListF, pretty)
+import Fmt.Buildable (blockListF, pretty)
+import Fmt.Utils (Doc)
 import GHC.Conc (unsafeIOToSTM)
 import System.FilePath (takeFileName, (<.>), (</>))
-import Text.Interpolation.Nyan
+import Text.Interpolation.Nyan hiding (rmode')
 import UnliftIO (UnliftIO (..), askUnliftIO, withRunInIO)
 import UnliftIO.Directory (doesFileExist)
 import UnliftIO.Exception (Handler (..), catches, throwIO, try)
 import UnliftIO.STM (modifyTVar)
+import Util
 
 import Control.AbortingThreadPool qualified as AbortingThreadPool
 import Control.DelayedValues (Manager (mComputation))
@@ -56,7 +58,7 @@ import Morley.Michelson.Interpret
   MichelsonFailureWithStack (mfwsErrorSrcPos), RemainingSteps (RemainingSteps), ceContracts,
   ceMaxSteps, mfwsFailed)
 import Morley.Michelson.Parser.Types (MichelsonSource)
-import Morley.Michelson.Printer.Util (RenderDoc (renderDoc), doesntNeedParens, printDocB)
+import Morley.Michelson.Printer.Util (RenderDoc (renderDoc), doesntNeedParens)
 import Morley.Michelson.Runtime (ContractState (..), mkVotingPowers)
 import Morley.Michelson.Runtime.Dummy (dummyMaxSteps)
 import Morley.Michelson.Typed
@@ -123,12 +125,13 @@ instance HasSpecificMessages LIGO where
     ReachedStart -> writeStoppedEvent PlainPaused "entry"
     where
       writeTerminatedEvent = do
+        entrypointType <- getEntrypointTypeH
+
+        let (_, storageType, opsAndStorageType) = getParameterStorageAndOpsTypes entrypointType
+
         InterpretSnapshot{..} <- zoom dsDebuggerState $ frozen curSnapshot
         let someValues = head isStackFrames ^.. sfStackL . each . siValueL
-        let types = head isStackFrames ^.. sfStackL . each . siLigoDescL
-              <&> \case
-                LigoStackEntry LigoExposedStackEntry{..} -> leseType
-                _ -> LigoType Nothing
+        let types = [opsAndStorageType, storageType]
 
         let convertInfos = zipWith PreLigoConvertInfo someValues types
 
@@ -169,14 +172,14 @@ instance HasSpecificMessages LIGO where
           }
         pushMessage $ DAPEvent $ TerminatedEvent $ DAP.defaultTerminatedEvent
           where
-            buildOpsAndNewStorage :: (MonadThrow m) => LigoOrMichValue -> m (Builder, Builder)
+            buildOpsAndNewStorage :: (MonadThrow m) => LigoOrMichValue -> m (Doc, Doc)
             buildOpsAndNewStorage = \case
               LigoValue ligoType ligoValue -> case toTupleMaybe ligoValue of
                 Just [LVList ops, st] -> do
                   let (fstType, sndType) = maybe (LigoType Nothing, LigoType Nothing) (bimap LigoType LigoType) do
                         LTCRecord LigoTypeTable{..} <- _lteTypeContent <$> unLigoType ligoType
-                        let fstTyp = _ltfAssociatedType <$> HM.lookup "0" _lttFields
-                        let sndTyp = _ltfAssociatedType <$> HM.lookup "1" _lttFields
+                        let fstTyp = HM.lookup "0" _lttFields
+                        let sndTyp = HM.lookup "1" _lttFields
                         pure (fstTyp, sndTyp)
                   pure
                     ( blockListF (buildLigoValue fstType <$> ops)
@@ -188,23 +191,20 @@ instance HasSpecificMessages LIGO where
                 (T.VPair (T.VList ops, r :: T.Value r)) ->
                   case T.valueTypeSanity r of
                     T.Dict ->
-                      case T.checkOpPresence (T.sing @r) of
-                        T.OpAbsent -> pure
-                          ( blockListF ops
-                          , printDocB False $ renderDoc doesntNeedParens r
-                          )
+                      case T.checkTPresence T.SPSOp (T.sing @r) of
+                        T.TAbsent -> pure (blockListF ops, renderDoc doesntNeedParens r)
                         _ -> throwM invalidStorage
                 _ -> throwM badLastElement
               _ -> throwM notComputed
 
-            buildOldStorage :: (MonadThrow m) => LigoOrMichValue -> m Builder
+            buildOldStorage :: (MonadThrow m) => LigoOrMichValue -> m Doc
             buildOldStorage = \case
               LigoValue ligoType ligoValue -> pure $ buildLigoValue ligoType ligoValue
               MichValue _ (SomeValue (st :: T.Value r)) ->
                 case T.valueTypeSanity st of
                   T.Dict ->
-                    case T.checkOpPresence (T.sing @r) of
-                      T.OpAbsent -> pure $ printDocB False $ renderDoc doesntNeedParens st
+                    case T.checkTPresence T.SPSOp (T.sing @r) of
+                      T.TAbsent -> pure $ renderDoc doesntNeedParens st
                       _ -> throwM invalidStorage
               _ -> throwM notComputed
 
@@ -326,6 +326,7 @@ instance HasSpecificMessages LIGO where
 
   handleScopesRequest DAP.ScopesRequest{..} = do
     lServVar <- getServerStateH
+    ligoTypesVec <- getLigoTypesVecH
     -- We follow the implementation from morley-debugger
     snap <- zoom dsDebuggerState $ frozen curSnapshot
 
@@ -351,7 +352,8 @@ instance HasSpecificMessages LIGO where
     ligoVals <- fmap catMaybes $ forM stackItems \stackItem ->
       runMaybeT do
         StackItem desc michVal <- pure stackItem
-        LigoStackEntry (LigoExposedStackEntry mDecl typ) <- pure desc
+        LigoStackEntry (LigoExposedStackEntry mDecl typRef) <- pure desc
+        let typ = readLigoType ligoTypesVec typRef
         let varName = maybe (pretty unknownVariable) pretty mDecl
 
         ligoVal <- decompileValue (PreLigoConvertInfo michVal typ) valConvertManager
@@ -434,7 +436,7 @@ instance HasSpecificMessages LIGO where
         return $ ShouldStop False
 
     , Handler \(SomeException err) -> do
-        writeErrResponse @ImpossibleHappened
+        writeErrResponse @ImpossibleHappened $
           [int||Internal (unhandled) error: #exc{err}|]
         return $ ShouldStop False
     ]
@@ -589,6 +591,7 @@ handleSetLigoConfig LigoSetLigoConfigRequest {..} = do
     , lsBinaryPath = binaryPathMb
     , lsParsedContracts = Nothing
     , lsLambdaLocs = Nothing
+    , lsLigoTypesVec = Nothing
     , lsToLigoValueConverter = toLigoValueConverter
     , lsVarsComputeThreadPool = varsComputeThreadPool
     , lsMoveId = 0
@@ -642,7 +645,7 @@ handleValidateEntrypoint LigoValidateEntrypointRequest{..} = do
   let pickedEntrypoint = entrypointLigoValidateEntrypointRequestArguments
 
   program <- getProgram
-  result <- void <$> try @_ @LigoCallException (compileLigoContractDebug pickedEntrypoint program)
+  result <- try @_ @LigoCallException (checkCompilation pickedEntrypoint program)
 
   writeResponse $ ExtraResponse $ ValidateEntrypointResponse LigoValidateEntrypointResponse
     { seqLigoValidateEntrypointResponse = 0
@@ -682,8 +685,8 @@ handleGetContractMetadata LigoGetContractMetadataRequest{..} = do
     Right ligoDebugInfo -> do
       logMessage $ "Successfully read the LIGO debug output for " <> pretty program
 
-      (exprLocs, someContract, allFiles, lambdaLocs, entrypointType) <-
-        readLigoMapper ligoDebugInfo typesReplaceRules instrReplaceRules
+      (exprLocs, someContract, allFiles, lambdaLocs, entrypointType, ligoTypesVec) <-
+        readLigoMapper ligoDebugInfo
         & either (throwIO . MichelsonDecodeException) pure
 
       do
@@ -705,6 +708,7 @@ handleGetContractMetadata LigoGetContractMetadataRequest{..} = do
           , lsAllLocs = Just allLocs
           , lsParsedContracts = Just parsedContracts
           , lsLambdaLocs = Just lambdaLocs
+          , lsLigoTypesVec = Just ligoTypesVec
           , lsEntrypointType = Just entrypointType
           }
 
@@ -751,7 +755,7 @@ handleValidateValue LigoValidateValueRequest {..} = do
   program <- getProgram
   entrypointType <- getEntrypointType
 
-  let (parameterType, storageType) = getParameterAndStorageTypes entrypointType
+  let (parameterType, storageType, _) = getParameterStorageAndOpsTypes entrypointType
 
   parseRes <- case category of
     "parameter" ->
@@ -794,7 +798,7 @@ handleValidateConfig LigoValidateConfigRequest{..} = do
   program <- getProgram
   entrypointType <- getEntrypointType
 
-  let (parameterType, storageType) = getParameterAndStorageTypes entrypointType
+  let (parameterType, storageType, _) = getParameterStorageAndOpsTypes entrypointType
 
   withMichelsonEntrypoint contract michelsonEntrypointMb
     \(_ :: T.Notes arg) epc -> do
@@ -861,13 +865,14 @@ initDebuggerSession LigoLaunchRequestArguments {..} = do
   logMessage [int||Contract state: #{contractState}|]
 
   maxStepsMb <- getMaxStepsMb
-  entrypointType <- getEntrypointType
 
   contractEnv <-
     initContractEnv
       contractState
       (contractEnvLigoLaunchRequestArguments ?: def)
       (fromMaybe dummyMaxSteps maxStepsMb)
+
+  ligoTypesVec <- getLigoTypesVec
 
   his <-
     withRunInIO \unlifter ->
@@ -883,7 +888,7 @@ initDebuggerSession LigoLaunchRequestArguments {..} = do
         (unlifter . logMessage)
         lambdaLocs
         (isJust maxStepsMb)
-        entrypointType
+        ligoTypesVec
 
   let ds = initDebuggerState his allLocs
 

@@ -147,6 +147,7 @@ and expression_content ppf (ec : expression_content) =
       attributes
       expression
       let_result
+  | E_coerce a -> Ascription.pp expression type_expression ppf a
   | E_assign a -> Assign.pp expression type_expression ppf a
   | E_deref n -> Format.fprintf ppf "!%a" Value_var.pp n
   | E_for for_loop -> For_loop.pp expression ppf for_loop
@@ -176,6 +177,7 @@ and declaration ?(use_hidden = true) ppf (d : declaration) =
     if md.module_attr.hidden && use_hidden
     then ()
     else Types.Module_decl.pp module_expr (fun _ () -> ()) ppf md
+  | D_module_include x -> fprintf ppf "include %a" module_expr x
 
 
 and decl ppf d = declaration ppf d

@@ -185,12 +185,27 @@ let apply_to_entrypoint_view ~raise ~options
 (* 
   if only_ep, we only list the declarations with types fiting an entrypoint
   TODO (when we have module signature): extract declaration names from sig type
+  Notes: a Ast_typed.program, would have to hold a signature too..
 *)
-let list_declarations (only_ep : bool) (m : Ast_typed.program) : Value_var.t list =
+let rec list_declarations
+    ~(skip_generated : bool)
+    (only_ep : bool)
+    (m : Ast_typed.program)
+    : Value_var.t list
+  =
+  let is_generated_main b =
+    let v = Binder.get_var b in
+    (not (Value_var.is_generated v))
+    && String.is_prefix ~prefix:"$" (Value_var.to_name_exn v)
+  in
+  let should_skip b = skip_generated && is_generated_main b in
   List.fold_left
     ~f:(fun prev el ->
       let open Simple_utils.Location in
       match el.wrap_content with
+      | D_irrefutable_match { pattern = { wrap_content = P_var binder; _ }; attr; _ }
+      | D_value { binder; attr; _ }
+        when attr.entry && not (should_skip binder) -> Binder.get_var binder :: prev
       | D_irrefutable_match { pattern = { wrap_content = P_var binder; _ }; attr; expr }
       | D_value { binder; attr; expr }
         when not attr.hidden ->
@@ -198,9 +213,24 @@ let list_declarations (only_ep : bool) (m : Ast_typed.program) : Value_var.t lis
         then
           if is_some
                (Ast_typed.Misc.get_type_of_contract expr.type_expression.type_content)
+             && not (should_skip binder)
           then Binder.get_var binder :: prev
           else prev
-        else Binder.get_var binder :: prev
+        else if not (should_skip binder)
+        then Binder.get_var binder :: prev
+        else prev
+      | D_module_include _ -> assert false (* What TODO here ? *)
+      | D_module
+          { module_binder; module_ = { module_content = M_struct m; _ }; module_attr; _ }
+        when not module_attr.hidden ->
+        (m
+        |> list_declarations ~skip_generated only_ep
+        |> List.map ~f:(fun v ->
+               Value_var.of_input_var
+                 ~loc:Location.generated
+                 (Format.asprintf "%a." Module_var.pp module_binder
+                 ^ Format.asprintf "%a" Value_var.pp v)))
+        @ prev
       | D_value _ | D_irrefutable_match _ | D_type _ | D_module _ -> prev)
     ~init:[]
     m

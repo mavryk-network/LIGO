@@ -59,6 +59,11 @@ let source_file =
   Command.Param.(anon (name %: create_arg_type Fn.id))
 
 
+let view_name =
+  let name = "VIEW" in
+  Command.Param.(anon (name %: create_arg_type Fn.id))
+
+
 let package_name =
   let name = "PACKAGE_NAME" in
   Command.Param.(anon (maybe (name %: string)))
@@ -290,6 +295,13 @@ let only_ep =
   flag ~doc name no_arg
 
 
+let skip_generated =
+  let open Command.Param in
+  let name = "--skip-generated" in
+  let doc = "Skip generated declarations" in
+  flag ~doc name no_arg
+
+
 let experimental_disable_optimizations_for_debugging =
   let open Command.Param in
   let name = "--experimental-disable-optimizations-for-debugging" in
@@ -326,6 +338,13 @@ let with_types =
   let open Command.Param in
   let name = "--with-types" in
   let doc = "Tries to infer types for all named expressions" in
+  flag ~doc name no_arg
+
+
+let defs_only =
+  let open Command.Param in
+  let name = "--defs-only" in
+  let doc = "Gets only list of definitions (without scopes)." in
   flag ~doc name no_arg
 
 
@@ -1076,6 +1095,118 @@ let compile_constant =
     <*> libraries)
 
 
+let compile_view =
+  let f
+      source_file
+      view_name
+      entry_point
+      module_
+      syntax
+      protocol_version
+      display_format
+      disable_michelson_typechecking
+      experimental_disable_optimizations_for_debugging
+      enable_typed_opt
+      no_stdlib
+      michelson_format
+      output_file
+      show_warnings
+      warning_as_error
+      no_colour
+      no_metadata_check
+      deprecated
+      skip_analytics
+      constants
+      file_constants
+      project_root
+      transpiled
+      warn_unused_rec
+      warn_infinite_loop
+      libraries
+      ()
+    =
+    let raw_options =
+      Raw_options.make
+        ~entry_point
+        ~module_
+        ~syntax
+        ~protocol_version
+        ~disable_michelson_typechecking
+        ~experimental_disable_optimizations_for_debugging
+        ~enable_typed_opt
+        ~no_stdlib
+        ~warning_as_error
+        ~no_colour
+        ~no_metadata_check
+        ~deprecated
+        ~constants
+        ~file_constants
+        ~project_root
+        ~transpiled
+        ~warn_unused_rec
+        ~warn_infinite_loop
+        ~libraries
+        ()
+    in
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"compile_view"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~skip_analytics
+      ~cli_analytics
+      ~return
+      ~show_warnings
+      ~display_format
+      ~no_colour
+      ~warning_as_error:raw_options.warning_as_error
+      ?output_file
+    @@ Api.Compile.view
+         raw_options
+         (Api.Compile.File source_file)
+         view_name
+         michelson_format
+  in
+  let summary = "compile a view." in
+  let readme () =
+    "This sub-command compiles a view to Michelson code. It expects a source file and a \
+     view function that has the type of a view: \"parameter * storage -> result\"."
+  in
+  Command.basic
+    ~summary
+    ~readme
+    (f
+    <$> source_file
+    <*> view_name
+    <*> entry_point
+    <*> module_
+    <*> syntax
+    <*> protocol_version
+    <*> display_format
+    <*> disable_michelson_typechecking
+    <*> experimental_disable_optimizations_for_debugging
+    <*> enable_michelson_typed_opt
+    <*> no_stdlib
+    <*> michelson_code_format
+    <*> output_file
+    <*> warn
+    <*> werror
+    <*> no_colour
+    <*> no_metadata_check
+    <*> deprecated
+    <*> skip_analytics
+    <*> constants
+    <*> file_constants
+    <*> project_root
+    <*> transpiled
+    <*> warn_unused_rec
+    <*> warn_infinite_loop
+    <*> libraries)
+
+
 let compile_group =
   Command.group ~summary:"compile a ligo program to michelson"
   @@ [ "contract", compile_file
@@ -1083,6 +1214,7 @@ let compile_group =
      ; "parameter", compile_parameter
      ; "storage", compile_storage
      ; "constant", compile_constant
+     ; "view", compile_view
      ]
 
 
@@ -1780,6 +1912,7 @@ let list_declarations =
   let f
       source_file
       only_ep
+      skip_generated
       syntax
       display_format
       no_colour
@@ -1790,7 +1923,14 @@ let list_declarations =
       ()
     =
     let raw_options =
-      Raw_options.make ~only_ep ~syntax ~project_root ~deprecated ~libraries ()
+      Raw_options.make
+        ~only_ep
+        ~skip_generated
+        ~syntax
+        ~project_root
+        ~deprecated
+        ~libraries
+        ()
     in
     let cli_analytics =
       Analytics.generate_cli_metrics_with_syntax_and_protocol
@@ -1819,6 +1959,7 @@ let list_declarations =
     (f
     <$> source_file
     <*> only_ep
+    <*> skip_generated
     <*> syntax
     <*> display_format
     <*> no_colour
@@ -1916,6 +2057,7 @@ let get_scope =
       no_colour
       deprecated
       with_types
+      defs_only
       project_root
       no_stdlib
       ()
@@ -1925,6 +2067,7 @@ let get_scope =
         ~protocol_version
         ~libraries
         ~with_types
+        ~defs_only
         ~project_root
         ~deprecated
         ~no_stdlib
@@ -1938,11 +2081,13 @@ let get_scope =
         ()
     in
     return_with_custom_formatter ~skip_analytics:false ~cli_analytics ~return
-    @@ Lsp_helpers.Ligo_interface.Get_scope.get_scope_cli_result
-         raw_options
-         source_file
-         display_format
-         no_colour
+    @@ fun () ->
+    Lsp_helpers.Ligo_interface.Get_scope.get_scope_cli_result
+      raw_options
+      ~source_file
+      ~display_format
+      ~no_colour
+      ~defs_only
   in
   let summary = "return the JSON encoded environment for a given file." in
   let readme () =
@@ -1960,6 +2105,7 @@ let get_scope =
     <*> no_colour
     <*> deprecated
     <*> with_types
+    <*> defs_only
     <*> project_root
     <*> no_stdlib)
 

@@ -297,13 +297,13 @@ let test_cases_cameligo =
         [ CompletionItem.create
             ~label:"add"
             ~kind:CompletionItemKind.Variable
-            ~detail:"int -> (int -> storage)"
+            ~detail:"int -> int -> storage"
             ~sortText:"\x05"
             ()
         ; CompletionItem.create
             ~label:"sub"
             ~kind:CompletionItemKind.Variable
-            ~detail:"int -> (int -> storage)"
+            ~detail:"int -> int -> storage"
             ~sortText:"\x05"
             ()
         ; CompletionItem.create
@@ -621,25 +621,13 @@ let test_cases_jsligo =
         [ CompletionItem.create
             ~label:"add"
             ~kind:CompletionItemKind.Variable
-            ~detail:
-              "(_: int) => (_: int) => {\n\
-              \  number: int;\n\
-              \  previous_action: | [\"Add\", int]\n\
-              \  | [\"Reset\", unit]\n\
-              \  | [\"Sub\", int]\n\
-               }"
+            ~detail:"(_: int) => (_: int) => storage"
             ~sortText:"\x05"
             ()
         ; CompletionItem.create
             ~label:"sub"
             ~kind:CompletionItemKind.Variable
-            ~detail:
-              "(_: int) => (_: int) => {\n\
-              \  number: int;\n\
-              \  previous_action: | [\"Add\", int]\n\
-              \  | [\"Reset\", unit]\n\
-              \  | [\"Sub\", int]\n\
-               }"
+            ~detail:"(_: int) => (_: int) => storage"
             ~sortText:"\x05"
             ()
         ; CompletionItem.create
@@ -945,25 +933,13 @@ let test_cases_pascaligo =
         [ CompletionItem.create
             ~label:"add"
             ~kind:CompletionItemKind.Variable
-            ~detail:
-              "int -> int -> record[number -> int ,\n\
-              \                     previous_action -> sum[Add -> int ,\n\
-              \                                            Reset -> unit ,\n\
-              \                                            Sub -> int(({ name: Add }, { \
-               name: Reset }), { name: Sub })]({ name: number }, { name: previous_action \
-               })]"
+            ~detail:"int -> int -> storage"
             ~sortText:"\x05"
             ()
         ; CompletionItem.create
             ~label:"sub"
             ~kind:CompletionItemKind.Variable
-            ~detail:
-              "int -> int -> record[number -> int ,\n\
-              \                     previous_action -> sum[Add -> int ,\n\
-              \                                            Reset -> unit ,\n\
-              \                                            Sub -> int(({ name: Add }, { \
-               name: Reset }), { name: Sub })]({ name: number }, { name: previous_action \
-               })]"
+            ~detail:"int -> int -> storage"
             ~sortText:"\x05"
             ()
         ; CompletionItem.create

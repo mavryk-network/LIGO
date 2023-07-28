@@ -215,13 +215,15 @@
         "lint": "eslint client --ext .ts",
         "build-tests": "tsc -p ./test/",
         "test": "npm run build-tests && node client/out/test/driver.js",
-        "extest": "npm run build-tests && extest setup-and-run --yarn --offline client/out/test/vsc-test/commands.test.js"
+        "extest": "npm run build-tests && extest setup-and-run --yarn --offline client/out/test/vsc-test/commands.test.js",
+        "extest-deploy": "npm run build-tests && extest setup-and-run --yarn --offline client/out/test/vsc-test/commands-deploy.test.js"
     },
     "dependencies": {
         "@airgap/beacon-sdk": "^3.0.0",
-        "@taquito/signer": "^12.0.3",
-        "@taquito/taquito": "^12.0.3",
-        "axios": "^0.21.1",
+        "@taquito/signer": "^17.0.0",
+        "@taquito/taquito": "^17.0.0",
+        "axios": "^1.4.0",
+        "detect-installer": "git+https://github.com/ligolang/detect-installer.git",
         "fs-extra": "^11.1.0",
         "node-fetch": "^3.2.3",
         "semver": "^7.3.5",
@@ -230,6 +232,7 @@
     "devDependencies": {
         "@types/chai": "^4.3.5",
         "@types/copy-paste": "^1.1.30",
+        "@types/glob": "^7.2.0",
         "@types/mocha": "^10.0.1",
         "@types/node": "^20.1.0",
         "@types/vscode": "^1.78.0",

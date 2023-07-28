@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | Evaluation of snapshots in LIGO code execution.
 module Language.LIGO.Debugger.Snapshots
   ( StackItem (..)
@@ -7,7 +9,8 @@ module Language.LIGO.Debugger.Snapshots
   , InterpretEvent (..)
   , statusExpressionEvaluatedP
   , InterpretSnapshot (..)
-  , LambdaMeta (..)
+  , LambdaMeta
+  , LambdaMeta' (..)
   , ContractEnv
   , CollectorState (..)
   , InterpretHistory (..)
@@ -15,7 +18,7 @@ module Language.LIGO.Debugger.Snapshots
   , runInstrCollect
   , runCollectInterpretSnapshots
   , collectInterpretSnapshots
-  , stripSuffixHashFromSnapshots
+  , makeConciseSnapshots
 
     -- * Lenses
   , siLigoDescL
@@ -52,13 +55,13 @@ import Data.Conduit qualified as C
 import Data.Conduit.Lazy (MonadActive, lazyConsume)
 import Data.Conduit.Lift qualified as CL
 import Data.Default (def)
-import Data.HashMap.Strict qualified as HM
 import Data.HashSet qualified as HS
 import Data.List.NonEmpty (cons)
 import Data.Vinyl (Rec (..))
-import Fmt (Buildable (..), genericF, pretty)
-import Text.Interpolation.Nyan
+import Fmt.Buildable (Buildable, build, pretty)
+import Text.Interpolation.Nyan hiding (rmode')
 import UnliftIO (MonadUnliftIO, throwIO)
+import Util
 
 import Morley.Debugger.Core.Common (fromCanonicalLoc)
 import Morley.Debugger.Core.Navigate
@@ -67,13 +70,15 @@ import Morley.Debugger.Core.Navigate
   SnapshotEndedWith (SnapshotEndedWithFail, SnapshotEndedWithOk), curSnapshot, frozen, moveRaw,
   unfreezeLocally)
 import Morley.Debugger.Core.Snapshots
-  (DebuggerFailure (DebuggerInfiniteLoop), FinalStack (ContractFinalStack), InterpretHistory (..))
+  (DebuggerFailure (DebuggerInfiniteLoop), FinalStack (ContractFinalStack, ViewFinalStack),
+  InterpretHistory (..))
 import Morley.Michelson.ErrorPos (ErrorSrcPos (ErrorSrcPos), Pos (Pos), SrcPos (SrcPos))
 import Morley.Michelson.Interpret
   (ContractEnv' (ceMaxSteps), InstrRunner, InterpreterState (InterpreterState),
   InterpreterStateMonad (..), MichelsonFailed (MichelsonExt, MichelsonFailedWith),
   MichelsonFailureWithStack (MichelsonFailureWithStack, mfwsErrorSrcPos, mfwsFailed),
-  MorleyLogsBuilder, StkEl (StkEl), isRemainingSteps, mkInitStack, runInstrImpl)
+  MorleyLogsBuilder, NoStkElMeta (NoStkElMeta), StkEl (MkStkEl, StkEl), isRemainingSteps,
+  runInstrImpl)
 import Morley.Michelson.Runtime.Dummy (dummyBigMapCounter, dummyGlobalCounter)
 import Morley.Michelson.TypeCheck.Helpers (handleError)
 import Morley.Michelson.Typed as T
@@ -84,6 +89,7 @@ import Duplo (leq)
 import Language.LIGO.AST (LIGO, Lang (Caml))
 import Language.LIGO.Debugger.CLI
 import Language.LIGO.Debugger.Common
+import Language.LIGO.Debugger.Error
 import Language.LIGO.Debugger.Functions
 import Language.LIGO.Parser (ParsedInfo)
 import Language.LIGO.Range (HasRange (getRange), LigoPosition (LigoPosition), Range (..))
@@ -92,12 +98,11 @@ import Language.LIGO.Range (HasRange (getRange), LigoPosition (LigoPosition), Ra
 data StackItem u = StackItem
   { siLigoDesc :: LigoStackEntry u
   , siValue :: SomeValue
-  } deriving stock (Show, Generic)
+  } deriving stock (Generic)
+    deriving anyclass (Buildable)
 
+deriving stock instance (Show (LigoTypeF u)) => Show (StackItem u)
 deriving stock instance Eq (StackItem 'Concise)
-
-instance (SingI u) => Buildable (StackItem u) where
-  build = genericF
 
 -- | Stack frame provides information about execution in some scope.
 --
@@ -115,12 +120,11 @@ data StackFrame u = StackFrame
   , sfStack :: [StackItem u]
     -- ^ Ligo stack available at the current position of this stack frame.
     -- Top of the stack goes first.
-  } deriving stock (Show, Generic)
+  } deriving stock (Generic)
+    deriving anyclass (Buildable)
 
+deriving stock instance (Show (LigoTypeF u)) => Show (StackFrame u)
 deriving stock instance Eq (StackFrame 'Concise)
-
-instance (SingI u) => Buildable (StackFrame u) where
-  build = genericF
 
 -- | Snapshot type, depends on which event has triggered the snapshot
 -- recording.
@@ -196,12 +200,11 @@ data InterpretSnapshot u = InterpretSnapshot
     -- ^ Type of snapshot.
   , isStackFrames :: NonEmpty (StackFrame u)
     -- ^ Stack frames, top-level frame goes last.
-  } deriving stock (Show, Generic)
+  } deriving stock (Generic)
+    deriving anyclass (Buildable)
 
+deriving stock instance (Show (LigoTypeF u)) => Show (InterpretSnapshot u)
 deriving stock instance Eq (InterpretSnapshot 'Concise)
-
-instance (SingI u) => Buildable (InterpretSnapshot u) where
-  build = genericF
 
 instance NavigableSnapshot (InterpretSnapshot u) where
   getExecutedPosition = do
@@ -261,6 +264,8 @@ data CollectorState m = CollectorState
     --
     -- We need it because we want to record a paired @EventExpressionEvaluated@
     -- for the same location.
+  , csLigoTypesVec :: LigoTypesVec
+    -- ^ Vector with LIGO types. It's needed to map @LigoTypeRef@ into bare @LigoType@.
   }
 
 makeLensesWith postfixLFields ''StackItem
@@ -268,9 +273,9 @@ makeLensesWith postfixLFields ''StackFrame
 makeLensesWith postfixLFields ''InterpretSnapshot
 makeLensesWith postfixLFields ''CollectorState
 
-stripSuffixHashFromSnapshots :: InterpretSnapshot 'Unique -> InterpretSnapshot 'Concise
-stripSuffixHashFromSnapshots snap =
-  snap & isStackFramesL . each . sfStackL . each . siLigoDescL %~ stripSuffixHashLigoStackEntry
+makeConciseSnapshots :: LigoTypesVec -> InterpretSnapshot 'Unique -> InterpretSnapshot 'Concise
+makeConciseSnapshots vec snap =
+  snap & isStackFramesL . each . sfStackL . each . siLigoDescL %~ makeConciseLigoStackEntry vec
 
 -- | Lens giving an access to the top-most frame - which is also
 -- the only active one.
@@ -318,13 +323,17 @@ makePrisms ''InterpretEvent
 statusExpressionEvaluatedP :: Traversal' InterpretStatus SomeValue
 statusExpressionEvaluatedP = _InterpretRunning . _EventExpressionEvaluated . _2 . _Just
 
-logMessage :: forall m. (Monad m) => String -> CollectingEvalOp m ()
-logMessage str = do
+logMessage :: (Monad m) => (ForInternalUse => String) -> CollectingEvalOp m ()
+logMessage msg = logMessageM (pure msg)
+
+logMessageM :: (Monad m) => (ForInternalUse => CollectingEvalOp m String) -> CollectingEvalOp m ()
+logMessageM mkMsg = do
   logger <- use csLoggingFunctionL
-  lift $ logger [int||[SnapshotCollecting] #{str}|]
+  msg <- itIsForInternalUse mkMsg
+  lift $ logger [int||[SnapshotCollecting] #{msg}|]
 
 -- | Executes the code and collects snapshots of execution.
-runInstrCollect :: forall m. (Monad m) => InstrRunner (CollectingEvalOp m)
+runInstrCollect :: forall m. (Monad m) => InstrRunner NoStkElMeta (CollectingEvalOp m)
 runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
   let (embeddedMetaMb, inner) = getMetaMbAndUnwrap instr
 
@@ -343,7 +352,9 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
           Would be ignored: #{shouldIgnoreMeta loc inner contracts}
         |]
 
-  let stack = maybe oldStack (embedFunctionNames oldStack) (liiEnvironment =<< embeddedMetaMb)
+  ligoTypesVec <- use csLigoTypesVecL
+
+  let stack = maybe oldStack (embedFunctionNames ligoTypesVec oldStack) (liiEnvironment =<< embeddedMetaMb)
 
   preExecutedStage embeddedMetaMb inner stack
   newStack <- surroundExecutionInner embeddedMetaMb (runInstrImpl runInstrCollect) inner stack
@@ -359,7 +370,7 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
     preExecutedStage
       :: Maybe EmbeddedLigoMeta
       -> Instr i o
-      -> Rec StkEl i
+      -> Rec (StkEl meta) i
       -> CollectingEvalOp m ()
     preExecutedStage embeddedMetaMb instr stack = case embeddedMetaMb of
       Just LigoIndexedInfo{..} -> do
@@ -408,8 +419,8 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
     postExecutedStage
       :: Maybe EmbeddedLigoMeta
       -> Instr i o
-      -> Rec StkEl o
-      -> CollectingEvalOp m (Rec StkEl o)
+      -> Rec (StkEl meta) o
+      -> CollectingEvalOp m (Rec (StkEl meta) o)
     postExecutedStage embeddedMetaMb instr newStack = case embeddedMetaMb of
       Just LigoIndexedInfo{..} -> do
         whenJust liiLocation \loc -> do
@@ -424,16 +435,18 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
 
           contracts <- use csParsedFilesL
 
+          ligoTypesVec <- use csLigoTypesVecL
+
           whenM (use csRecordedFirstTimeL) do
             unless (shouldIgnoreMeta loc instr contracts) do
-              recordSnapshot loc (EventExpressionEvaluated liiSourceType evaluatedVal)
+              recordSnapshot loc (EventExpressionEvaluated (ligoTypesVec `readLigoType` join liiSourceType) evaluatedVal)
 
         pure newStack
       Nothing -> pure newStack
 
     -- When we want to go inside a function call or loop-like thing (e,g, @for-of@ or @while@)
     -- we need to clean up remembered locations and after interpreting restore them.
-    wrapAction :: Instr i o -> CollectingEvalOp m (Rec StkEl o) -> CollectingEvalOp m (Rec StkEl o)
+    wrapAction :: Instr i o -> CollectingEvalOp m (Rec (StkEl meta) o) -> CollectingEvalOp m (Rec (StkEl meta) o)
     wrapAction instr act
       | isExecOrLoopLike instr = do
           -- <<.= sets a variable and returns its previous value (yeah, it's a bit confusing)
@@ -465,10 +478,10 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
     -- This function is executed after 'preExecutedStage' and before 'postExecutedStage'.
     surroundExecutionInner
       :: Maybe EmbeddedLigoMeta
-      -> (Instr i o -> Rec StkEl i -> CollectingEvalOp m (Rec StkEl o))
+      -> (Instr i o -> Rec (StkEl meta) i -> CollectingEvalOp m (Rec (StkEl meta) o))
       -> Instr i o
-      -> Rec StkEl i
-      -> CollectingEvalOp m (Rec StkEl o)
+      -> Rec (StkEl meta) i
+      -> CollectingEvalOp m (Rec (StkEl meta) o)
     surroundExecutionInner _embeddedMetaMb runInstr instr stack = wrapAction instr $
       case (instr, stack) of
 
@@ -482,7 +495,7 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
         -- creating a @lambda arg1 (lambda arg2 res)@ value
         -- and using @EXEC@ after it to perform application.
         (EXEC{}, _ :& StkEl lam :& _) -> do
-          let meta@LambdaMeta{..} = getLambdaMeta lam
+          let meta = getLambdaMeta lam
           logMessage
             [int||
               Meta #{meta} for lambda #{lam}
@@ -490,7 +503,7 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
 
           oldStackFrames <- use csStackFramesL
 
-          forM_ lmVariables \name -> do
+          forM_ (lmAllFuncNames meta) \name -> do
             let sfName = pretty name
             loc <- use $ csActiveStackFrameL . sfLocL
             let newStackFrame = StackFrame
@@ -501,7 +514,7 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
 
             mainFunctionName <- use csMainFunctionNameL
 
-            unless (mainFunctionName `matchesUniqueLambdaName` name) do
+            unless (name `compareUniqueNames` mainFunctionName) do
               logMessage
                 [int||
                   Created new stack frame #{newStackFrame}
@@ -512,12 +525,12 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
           newStack <- runInstr instr stack
 
           csStackFramesL .= oldStackFrames
-          logMessage =<< [int|m|
+          logMessageM [int|m|
             Restored stack frames, new active frame: #{sfName <$> use csActiveStackFrameL}
             |]
 
           case newStack of
-            StkEl newLam@VLam{} :& stkEls -> do
+            MkStkEl m newLam@VLam{} :& stkEls -> do
               -- There might be a case when after executing function
               -- we'll get another function. In order not to lose stack frames
               -- we need to embed all future stack frame names into resulting
@@ -529,7 +542,7 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
                 into lambda #{embeddedLam}
                 |]
 
-              return $ StkEl embeddedLam :& stkEls
+              return $ MkStkEl m embeddedLam :& stkEls
             _ -> return newStack
 
         _ -> runInstr instr stack
@@ -620,14 +633,14 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
       if isLambdaLoc && not isLambda
       then pure []
       else do
-        let statements = filterAndReverseStatements isLambdaLoc (getRange parsedLigo) $ spineAtPoint range parsedLigo
+        let statements = filterAndReverseStatements isLambda isLambdaLoc (getRange parsedLigo) $ spineAtPoint range parsedLigo
 
         pure $ getRange <$> statements
       where
         -- Here we're looking for statements and the nearest scope locations.
         -- These statements are filtered by strict inclusivity of their ranges to this scope.
-        filterAndReverseStatements :: Bool -> Range -> [LIGO ParsedInfo] -> [LIGO ParsedInfo]
-        filterAndReverseStatements = \isLambdaLoc startRange nodes ->
+        filterAndReverseStatements :: Bool -> Bool -> Range -> [LIGO ParsedInfo] -> [LIGO ParsedInfo]
+        filterAndReverseStatements isLambda = \isLambdaLoc startRange nodes ->
           let (statements, scopeRange) = usingState startRange $ go [] nodes isLambdaLoc False
           in filter (\(getRange -> stmtRange) -> stmtRange `leq` scopeRange && stmtRange /= scopeRange) statements
           where
@@ -643,7 +656,14 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
                 -- to treat it as a statement. From observations we'll see that it's a statement
                 -- if and only if it's discovered as a first statement that cover the given range.
 
-                onSuccess x xs = decide True x (go (x : acc) xs)
+                onSuccess x xs =
+                  let newAcc
+                        -- We want to ignore body location if it's assigned
+                        -- to @LAMBDA@ instr.
+                        | getRange x == range && isLambda = acc
+                        | otherwise = x : acc
+                  in
+                  decide True x (go newAcc xs)
                 onFail x xs = decide False x (go acc xs)
 
                 decide :: Bool -> LIGO ParsedInfo -> (Bool -> Bool -> State Range [LIGO ParsedInfo]) -> State Range [LIGO ParsedInfo]
@@ -662,9 +682,8 @@ runCollectInterpretSnapshots
   -> ContractEnv m
   -> CollectorState m
   -> Value st
-  -> LigoType
   -> m (InterpretHistory (InterpretSnapshot 'Unique))
-runCollectInterpretSnapshots act env initSt initStorage (LigoType entrypointTypeMb) =
+runCollectInterpretSnapshots act env initSt initStorage =
   -- This should be safe because we yield at least one snapshot in the end
   InterpretHistory . fromList <$>
   lazyConsume do
@@ -687,40 +706,29 @@ runCollectInterpretSnapshots act env initSt initStorage (LigoType entrypointType
           }
 
       Right finalStack -> do
-        let opsAndStorageTypeMb = do
-              LTCArrow LigoTypeArrow{..} <- _lteTypeContent <$> entrypointTypeMb
-              pure _ltaType2
+        let lastValue =
+              case finalStack of
+                ContractFinalStack (StkEl x :& RNil) -> SomeValue x
+                ViewFinalStack (StkEl x :& RNil) -> SomeValue x
 
-        let storageTypeMb = do
-              LTCRecord LigoTypeTable{..} <- _lteTypeContent <$> opsAndStorageTypeMb
-              _ltfAssociatedType <$> _lttFields HM.!? "1"
+        let stackItemWithOpsAndStorage = StackItem
+              { siLigoDesc = LigoStackEntry $ LigoExposedStackEntry Nothing Nothing
+              , siValue = lastValue
+              }
+        let oldStorage = StackItem
+              { siLigoDesc = LigoStackEntry $ LigoExposedStackEntry Nothing Nothing
+              , siValue = withValueTypeSanity initStorage (SomeValue initStorage)
+              }
 
-        let isStackFrames = either error id do
-              lastSnap <-
-                maybeToRight
-                  "Internal error: No snapshots were recorded while interpreting Michelson code"
-                  do csLastRecordedSnapshot endState
+        lastSnap <-
+          maybe
+            (throwIO $ ImpossibleHappened "No snapshots were recorded while interpreting Michelson code")
+            pure
+            (csLastRecordedSnapshot endState)
 
-              case isStatus lastSnap of
-                InterpretRunning (EventExpressionEvaluated _ (Just val)) -> do
-                  let stackItemWithOpsAndStorage = StackItem
-                        { siLigoDesc = LigoStackEntry $ LigoExposedStackEntry Nothing (LigoType opsAndStorageTypeMb)
-                        , siValue = val
-                        }
-                  let oldStorage = StackItem
-                        { siLigoDesc = LigoStackEntry $ LigoExposedStackEntry Nothing (LigoType storageTypeMb)
-                        , siValue = withValueTypeSanity initStorage (SomeValue initStorage)
-                        }
-                  pure
-                    $ (lastSnap ^. isStackFramesL)
-                        & ix 0 . sfStackL .~ [stackItemWithOpsAndStorage, oldStorage]
-                status ->
-                  throwError
-                    [int||
-                    Internal error:
-                    Expected "Interpret running" status with evaluated expression status.
+        let isStackFrames = (lastSnap ^. isStackFramesL)
+              & ix 0 . sfStackL .~ [stackItemWithOpsAndStorage, oldStorage]
 
-                    Got #{status}|]
         C.yield InterpretSnapshot
           { isStatus = InterpretTerminatedOk finalStack
           , ..
@@ -742,7 +750,7 @@ collectInterpretSnapshots
   -> (String -> m ())
   -> HashSet Range
   -> Bool -- ^ should we track steps amount
-  -> LigoType -- ^ type of an entrypoint
+  -> LigoTypesVec
   -> m (InterpretHistory (InterpretSnapshot 'Unique))
 collectInterpretSnapshots
   mainFile
@@ -756,15 +764,14 @@ collectInterpretSnapshots
   logger
   lambdaLocs
   trackMaxSteps
-  entrypointType =
+  ligoTypesVec =
     runCollectInterpretSnapshots
       (ContractFinalStack <$> runInstrCollect (stripDuplicates $ unContractCode cCode) initStack)
       env
       collSt
       initStore
-      entrypointType
     where
-      initStack = mkInitStack (liftCallArg epc param) initStore
+      initStack = MkStkEl NoStkElMeta (T.VPair (liftCallArg epc param, initStore)) :& RNil
       initSt =
         InterpreterState (ceMaxSteps env)
           dummyGlobalCounter dummyBigMapCounter
@@ -789,6 +796,7 @@ collectInterpretSnapshots
         , csLambdaLocs = lambdaLocs
         , csCheckStepsAmount = trackMaxSteps
         , csRecordedFirstTime = False
+        , csLigoTypesVec = ligoTypesVec
         }
 
       -- Strip duplicate locations.

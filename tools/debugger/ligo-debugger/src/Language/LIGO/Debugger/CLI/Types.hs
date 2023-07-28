@@ -7,7 +7,7 @@ module Language.LIGO.Debugger.CLI.Types
 
 import Prelude hiding (Element, Product (..), sum)
 
-import Control.Lens (AsEmpty (..), Each (each), _head, forOf, makePrisms, prism)
+import Control.Lens (AsEmpty (..), Each (each), _head, makePrisms, prism)
 import Control.Lens.Prism (_Just)
 import Data.Aeson
   (FromJSON (..), Options (constructorTagModifier, fieldLabelModifier, sumEncoding),
@@ -16,7 +16,6 @@ import Data.Aeson
 import Data.Aeson qualified as Aeson
 import Data.Aeson.KeyMap (toAscList)
 import Data.Aeson.KeyMap qualified as Aeson
-import Data.Aeson.Lens (key, values)
 import Data.Aeson.Parser (scientific)
 import Data.Aeson.Types (Parser)
 import Data.Aeson.Types qualified as Aeson
@@ -33,12 +32,13 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
 import Data.Vector qualified as V
 import Debug qualified
-import Fmt (Buildable (..), Builder, blockListF, nameF, pretty, unlinesF)
+import Fmt.Buildable (Buildable, blockListF, build, nameF, pretty, unlinesF)
+import Fmt.Utils (Doc)
 import Generics.SYB (everywhere, mkT)
 import System.Console.ANSI
   (Color (Red), ColorIntensity (Dull), ConsoleIntensity (BoldIntensity), ConsoleLayer (Foreground),
   SGR (Reset, SetColor, SetConsoleIntensity))
-import Text.Interpolation.Nyan (int, rmode')
+import Text.Interpolation.Nyan (int)
 import Util
 
 import Morley.Micheline.Expression qualified as Micheline
@@ -47,7 +47,7 @@ import Morley.Util.Lens
 import Duplo
   (Apply, Cofree ((:<)), Comonad (extract), Element, Lattice (leq), Tree, inject, layer, text)
 
-import Language.LIGO.AST.Pretty
+import Language.LIGO.AST.Pretty hiding (Doc)
 import Language.LIGO.AST.Skeleton hiding (Name)
 import Language.LIGO.AST.Skeleton qualified as AST
 import Language.LIGO.Debugger.CLI.Helpers
@@ -70,10 +70,8 @@ newtype LigoVariable (u :: NameType) = LigoVariable
 deriving stock instance Eq (LigoVariable 'Concise)
 
 -- | Reference to type description in the types map.
---
--- Not used at the moment.
-newtype LigoTypeRef = LigoTypeRef { unLigoTypeRef :: Word }
-  deriving stock (Show, Eq, Ord, Generic)
+newtype LigoTypeRef = LigoTypeRef { unLigoTypeRef :: Int }
+  deriving stock (Show, Eq, Ord, Data, Generic)
   deriving anyclass (NFData)
 
 -- | Inner object representing type content that depends on `name` in `LigoTypeContent`.
@@ -152,16 +150,15 @@ type LigoTypeSum = LigoTypeTable
 type LigoTypeRecord = LigoTypeTable
 
 data LigoTypeTable = LigoTypeTable
-  { _lttFields :: HM.HashMap Text LigoTableField
-  , _lttLayout  :: Maybe LigoLayout
+  { _lttFields  :: HM.HashMap Text LigoTypeExpression
+  , _lttLayout  :: LigoLayout
   }
   deriving stock (Generic, Show, Eq, Data)
   deriving anyclass (NFData, Hashable)
-  deriving (FromJSON) via LigoJSON 3 LigoTypeTable
 
 data LigoLayout
-  = LTree
-  | LComb
+  = LLInner [LigoLayout]
+  | LLField Text
   deriving stock (Generic, Show, Eq, Data)
   deriving anyclass (NFData, Hashable)
 
@@ -203,24 +200,6 @@ data LigoTypeForAll = LigoTypeForAll
   deriving stock (Generic, Show, Eq, Data)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON) via LigoJSON 4 LigoTypeForAll
-
--- | Record field type value.
--- ```
--- { "type_content": ["T_record", { "key": LigoTableField } ] }
--- ```
-data LigoTableField = LigoTableField
-  { -- | Declaration position (don't ask me I too don't know what actual
-    -- position is this since from all the example it's somewhat always 0).
-    _ltfDeclPos        :: Int
-    -- | How the value is represented in michelson, currently ignored
-    -- during parsing.
-  , _lrfMichelsonAnnotation :: Value
-  , -- | The type itself.
-    _ltfAssociatedType :: LigoTypeExpression
-  }
-  deriving stock (Generic, Show, Eq, Data)
-  deriving anyclass (NFData, Hashable)
-  deriving (FromJSON) via LigoJSON 3 LigoTableField
 
 -- | Location of definition.
 -- ```
@@ -282,16 +261,15 @@ data LigoTypeExpression = LigoTypeExpression
     -- | `"location"`
   , _lteLocation    :: LigoRange
   ---- 4th stage specific
-  , _lteSugar       :: Maybe Value
-  ---- 5th stage specific
-      -- | `"type_meta"`
-  , _lteTypeMeta    :: Maybe LigoTypeExpression
-    -- | `"orig_var"`
   , _lteOrigVar     :: Maybe LigoTypeVariable
   }
   deriving stock (Generic, Show, Eq, Data)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON) via LigoJSON 3 LigoTypeExpression
+
+newtype LigoTypesVec = LigoTypesVec { unLigoTypesVec :: Vector LigoTypeExpression }
+  deriving stock (Data, Generic)
+  deriving newtype (Show, NFData, FromJSON)
 
 newtype LigoType = LigoType { unLigoType :: Maybe LigoTypeExpression }
   deriving stock (Data)
@@ -300,13 +278,32 @@ newtype LigoType = LigoType { unLigoType :: Maybe LigoTypeExpression }
 pattern LigoTypeResolved :: LigoTypeExpression -> LigoType
 pattern LigoTypeResolved typ = LigoType (Just typ)
 
+pattern LigoTypeUnresolved :: LigoType
+pattern LigoTypeUnresolved = LigoType Nothing
+
+{-# COMPLETE LigoTypeResolved, LigoTypeUnresolved #-}
+
+type family LigoTypeF (u :: NameType) where
+  LigoTypeF 'Unique  = Maybe LigoTypeRef
+  LigoTypeF 'Concise = LigoType
+
+-- | Prints type in Cameligo.
+--
+-- This is restricted for internal use only to avoid using it for producing
+-- user-visible output, for such purpose 'buildType' with an appropriate
+-- dialect must be used.
+instance ForInternalUse => Buildable LigoType where
+  build = allowedForInternalUseOnly $ buildType Caml
+
 -- | An element of the stack with some information interesting for us.
 data LigoExposedStackEntry u = LigoExposedStackEntry
   { leseDeclaration :: Maybe (LigoVariable u)
-  , leseType        :: LigoType
-  } deriving stock (Show, Generic, Data)
-    deriving anyclass (NFData)
+  , leseType        :: LigoTypeF u
+  } deriving stock (Generic)
 
+deriving stock instance (Typeable u, Data (LigoTypeF u)) => Data (LigoExposedStackEntry u)
+deriving stock instance (Show (LigoTypeF u)) => Show (LigoExposedStackEntry u)
+deriving anyclass instance (NFData (LigoTypeF u)) => NFData (LigoExposedStackEntry u)
 deriving stock instance Eq (LigoExposedStackEntry 'Concise)
 
 -- | An element of the stack.
@@ -317,12 +314,14 @@ data LigoStackEntry u
     -- ^ Stack entry that is unknown.
     -- This can denote some auxiliary entry added by LIGO, like
     -- reusable functions or part of sum type when unfolding via @IF_LEFT@s.
-  deriving stock (Show, Generic, Data)
-  deriving anyclass (NFData)
+  deriving stock (Generic)
 
+deriving stock instance (Typeable u, Data (LigoTypeF u)) => Data (LigoStackEntry u)
+deriving stock instance (Show (LigoTypeF u)) => Show (LigoStackEntry u)
+deriving anyclass instance (NFData (LigoTypeF u)) => NFData (LigoStackEntry u)
 deriving stock instance Eq (LigoStackEntry 'Concise)
 
-pattern LigoStackEntryNoVar :: LigoType -> LigoStackEntry u
+pattern LigoStackEntryNoVar :: LigoTypeF u -> LigoStackEntry u
 pattern LigoStackEntryNoVar ty = LigoStackEntry LigoExposedStackEntry
   { leseDeclaration = Nothing
   , leseType = ty
@@ -375,37 +374,40 @@ data LigoIndexedInfo u = LigoIndexedInfo
 
     -}
 
-  , liiSourceType :: LigoType
+  , liiSourceType :: Maybe (LigoTypeF u)
     {- ^ A type for the last computed value.
 
       Comes with location meta.
 
     -}
-  } deriving stock (Show, Generic, Data)
-    deriving anyclass (NFData)
+  } deriving stock (Generic)
 
+deriving stock instance (Typeable u, Data (LigoTypeF u)) => Data (LigoIndexedInfo u)
+deriving stock instance (Show (LigoTypeF u)) => Show (LigoIndexedInfo u)
+deriving anyclass instance (NFData (LigoTypeF u)) => NFData (LigoIndexedInfo u)
 deriving stock instance Eq (LigoIndexedInfo 'Concise)
 
 pattern LigoEmptyLocationInfo :: LigoIndexedInfo u
-pattern LigoEmptyLocationInfo = LigoIndexedInfo Nothing Nothing (LigoType Nothing)
+pattern LigoEmptyLocationInfo = LigoIndexedInfo Nothing Nothing Nothing
 
-pattern LigoMereLocInfo :: Range -> LigoType -> LigoIndexedInfo u
+pattern LigoMereLocInfo :: Range -> LigoTypeF u -> LigoIndexedInfo u
 pattern LigoMereLocInfo loc typ = LigoIndexedInfo
   { liiLocation = Just loc
   , liiEnvironment = Nothing
-  , liiSourceType = typ
+  , liiSourceType = Just typ
   }
 
 pattern LigoMereEnvInfo :: LigoStack u -> LigoIndexedInfo u
 pattern LigoMereEnvInfo env = LigoIndexedInfo
   { liiLocation = Nothing
   , liiEnvironment = Just env
-  , liiSourceType = LigoType Nothing
+  , liiSourceType = Nothing
   }
 
 -- | The debug output produced by LIGO.
 data LigoMapper u = LigoMapper
   { lmLocations :: [LigoIndexedInfo u]
+  , lmTypes :: LigoTypesVec
   , lmMichelsonCode :: Micheline.Expression
   }
 
@@ -603,6 +605,25 @@ instance FromJSON LigoString where
     , constructorTagModifier = drop 2
     }
 
+instance FromJSON LigoTypeTable where
+  parseJSON = withObject "LigoTypeTable" \o -> do
+    _lttFields <- parseFields =<< o .: "fields"
+    _lttLayout <- o .: "layout"
+    pure LigoTypeTable{..}
+    where
+      parseFields :: [Value] -> Parser (HashMap Text LigoTypeExpression)
+      parseFields = pure . HM.fromList <=< mapM parseElem
+
+      parseElem :: Value -> Parser (Text, LigoTypeExpression)
+      parseElem = withArray "TypeTableField" \arr -> do
+        case V.toList arr of
+          [ctor, content] -> do
+            (_ :: Value, ctorValue) <- parseJSON ctor
+            ctorName <- parseFromStringOrNumber ctorValue
+            typeExpr <- parseJSON content
+            pure (ctorName, typeExpr)
+          _ -> fail "Expected two element array"
+
 -- [ "t_variable", ...]
 instance FromJSON LigoTypeContent where
   parseJSON = genericParseJSON defaultOptions
@@ -620,32 +641,44 @@ instance FromJSON LigoRange where
     }
 
 instance FromJSON LigoLayout where
-  parseJSON val = asum
-    [ LTree <$ guardOneElemList "L_tree" val
-    , LComb <$ guardOneElemList "L_comb" val
-    ]
+  parseJSON = withArray "LigoLayout" \arr -> do
+    case V.toList arr of
+      [String ctor, val]
+        | ctor == "Inner" -> LLInner <$> parseJSON val
+        | ctor == "Field" ->
+            case val of
+              Object obj -> do
+                (_ :: Value, nameValue) <- obj .: "name"
+                name <- parseFromStringOrNumber nameValue
+                pure $ LLField name
+              _ -> fail [int||Expected object in constructor "Field"|]
+        | otherwise -> fail [int||Unexpected constructor #{ctor}|]
+      _ -> fail "Expected a two element array"
 
 instance FromJSON (LigoVariable u) where
   parseJSON = fmap LigoVariable . parseJSON
 
 instance Buildable LigoTypeRef where
-  build (LigoTypeRef i) = [int||type##{i}|]
+  build (LigoTypeRef i) =  [int||type##{i}|]
 
 -- We're writing this instance because sometimes
 -- it's hard to construct @LigoType@ by hand (e.g. in tests).
 -- So, we'll treat that types are equal if only their prettified representations
 -- are equal.
 instance Eq LigoType where
-  lhs == rhs = buildType Caml lhs == buildType Caml rhs
+  lhs == rhs = pretty @_ @Text (buildType Caml lhs) == pretty @_ @Text (buildType Caml rhs)
 
 instance (SingI u) => Buildable (LigoExposedStackEntry u) where
   build (LigoExposedStackEntry decl ty) =
     let declB = maybe (build unknownVariable) build decl
-    in [int||elem #{declB} of #{buildType Caml ty}|]
+    in [int||elem #{declB} of #{buildLigoTypeF @u ty}|]
 
-instance FromJSON (LigoExposedStackEntry u) where
+instance FromJSON LigoTypeRef where
+  parseJSON val = parseJSON val >>= \(TextualNumber n) -> pure $ LigoTypeRef n
+
+instance FromJSON (LigoExposedStackEntry 'Unique) where
   parseJSON = withObject "LIGO exposed stack entry" \o -> do
-    leseType <- LigoType <$> o .:! "source_type"
+    leseType <- o .:! "source_type"
     leseDeclaration <- o .:! "name"
     return LigoExposedStackEntry{..}
 
@@ -654,7 +687,7 @@ instance (SingI u) => Buildable (LigoStackEntry u) where
     LigoStackEntry ese   -> build ese
     LigoHiddenStackEntry -> "<hidden elem>"
 
-instance FromJSON (LigoStackEntry u) where
+instance FromJSON (LigoStackEntry 'Unique) where
   parseJSON v = case v of
     Aeson.Null       -> pure LigoHiddenStackEntry
     Aeson.Object o
@@ -669,16 +702,16 @@ instance (SingI u) => Buildable (LigoIndexedInfo u) where
   build = \case
     LigoEmptyLocationInfo -> "none"
     LigoIndexedInfo mLoc mEnv typ -> unlinesF $ catMaybes
-      [ mLoc <&> \loc -> [int||location: #{loc}|]
+      [ mLoc <&> \loc ->  [int||location: #{loc}|]
       , mEnv <&> \env -> nameF "environment stack" $ blockListF env
-      , case typ of { LigoTypeResolved{} -> Just [int||source type: #{buildType Caml typ}|] ; _ -> Nothing }
+      , case typ of { Just ty -> Just [int||source type: #{buildLigoTypeF @u ty}|] ; _ -> Nothing }
       ]
 
-instance FromJSON (LigoIndexedInfo u) where
+instance FromJSON (LigoIndexedInfo 'Unique) where
   parseJSON = withObject "location info" \o -> do
     liiLocation <- o .:! "location"
     liiEnvironment <- o .:! "environment"
-    liiSourceType <- LigoType <$> o .:! "source_type"
+    liiSourceType <-  o .:! "source_type"
     return LigoIndexedInfo{..}
 
 instance AsEmpty (LigoIndexedInfo u) where
@@ -689,7 +722,7 @@ instance AsEmpty (LigoIndexedInfo u) where
 instance {-# OVERLAPPING #-} (SingI u) => Buildable [LigoIndexedInfo u] where
   build = blockListF
 
-instance FromJSON (LigoMapper u) where
+instance FromJSON (LigoMapper 'Unique) where
   parseJSON = withObject "ligo output" \o -> do
     mich <- o .: "michelson"
     lmMichelsonCode <- mich .: "expression"
@@ -699,21 +732,8 @@ instance FromJSON (LigoMapper u) where
     -- Also, we need to replace textual numbers with fair
     -- json ones because the json-schema from source mapper
     -- differs from @ligo info get-scopes@ one in this place.
-    Array types <- replaceTextualNumbers <$> o .: "types"
-
-    let inlineType :: Value -> Parser Value
-        inlineType val = do
-          TextualNumber index <- parseJSON val
-          maybe (fail $ "Undexpected out of bounds with index " <> show index) pure (types V.!? index)
-
-    locations <- mich .: "locations"
-    envInlined <-
-      forOf (values . key "environment" . values . key "source_type") (Array locations) inlineType
-
-    locationsInlined <-
-      forOf (values . key "source_type") envInlined inlineType
-
-    lmLocations <- parseJSON locationsInlined
+    lmTypes <- parseJSON . replaceTextualNumbers =<< o .: "types"
+    lmLocations <- mich .: "locations"
     return LigoMapper{..}
     where
       replaceTextualNumbers :: Value -> Value
@@ -742,6 +762,14 @@ instance Buildable LigoError where
 ----------------------------------------------------------------------------
 -- Helpers
 ----------------------------------------------------------------------------
+
+parseFromStringOrNumber :: Value -> Parser Text
+parseFromStringOrNumber val = asum
+  [ do
+      TextualNumber (n :: Int) <- parseJSON val
+      pure $ pretty n
+  , parseJSON val
+  ]
 
 guardOneElemList :: Text -> Value -> Parser ()
 guardOneElemList expected = withArray (toString expected) \arr -> do
@@ -829,14 +857,14 @@ fromLigoType st = \case
         make' (st, TProduct (fromLigoTypeExpression <$> tupleTypes))
       Nothing ->
         let record' = fromLigoTable FieldProduct record in
-        let ligoLayout = fromMaybe LTree (_lttLayout record) in
+        let ligoLayout = _lttLayout record in
         make' (st, TRecord (ligoLayoutToLayout ligoLayout) record')
 
   LTCSum sum ->
     case fromLigoTable FieldSum sum of
       [] -> mkErr "malformed sum type, please report this as a bug"
       v : vs ->
-        let ligoLayout = fromMaybe LTree (_lttLayout sum) in
+        let ligoLayout = _lttLayout sum in
         make' (st, TSum (ligoLayoutToLayout ligoLayout) (v :| vs))
 
   LTCSingleton literalValue -> fromLigoTypeLiteralValue literalValue
@@ -862,12 +890,29 @@ fromLigoType st = \case
     tryConvertToTuple :: LigoTypeTable -> Maybe [LigoTypeExpression]
     tryConvertToTuple LigoTypeTable{..} =
       forM [0..HM.size _lttFields - 1] \i ->
-        _ltfAssociatedType <$> _lttFields HM.!? show i
+        _lttFields HM.!? show i
 
     ligoLayoutToLayout :: LigoLayout -> Layout
-    ligoLayoutToLayout = \case
-      LTree -> Tree
-      LComb -> Comb
+    ligoLayoutToLayout layoutTree
+      | depth layoutTree > 1 || (length ctorOrder <= 2 && isSorted ctorOrder) = Tree
+      | otherwise = Comb
+      where
+        depth :: LigoLayout -> Int
+        depth = \case
+          LLField{} -> 0
+          LLInner children -> 1 + maximum (0 :| map depth children)
+
+        isSorted = \case
+          [] -> True
+          [_] -> True
+          x : xs@(y : _) -> x <= y && isSorted xs
+
+        ctorOrder = getOrderFromLayoutTree layoutTree
+
+    getOrderFromLayoutTree :: LigoLayout -> [Text]
+    getOrderFromLayoutTree = \case
+      LLField ctor -> [ctor]
+      LLInner children -> foldMap getOrderFromLayoutTree children
 
     fromLigoTypeLiteralValue :: LigoTypeLiteralValue -> LIGO Info
     fromLigoTypeLiteralValue = \case
@@ -912,20 +957,23 @@ fromLigoType st = \case
       make' (st, TApply n p)
 
     fromLigoTable fieldKind x =
-      map (uncurry (fromLigoTableField fieldKind)) $ sortBy comp $ toPairs $ _lttFields x
+      map (uncurry (fromLigoTableField fieldKind)) ctorsAndFields
       where
-        comp :: (Text, LigoTableField) -> (Text, LigoTableField) -> Ordering
-        comp (_, LigoTableField{_ltfDeclPos = lhs}) (_, LigoTableField{_ltfDeclPos = rhs}) = compare lhs rhs
+        ctorsAndFields :: [(Text, LigoTypeExpression)]
+        ctorsAndFields = _lttLayout x
+          & getOrderFromLayoutTree
+          <&> do \ctor -> (ctor,) <$> HM.lookup ctor (_lttFields x)
+          & catMaybes
 
     fromLigoTableField
       :: FieldKind
       -> Text
-      -> LigoTableField
+      -> LigoTypeExpression
       -> LIGO Info
-    fromLigoTableField fieldKind name LigoTableField {..} =
+    fromLigoTableField fieldKind name typeExpr =
       let n = fromLigoPrimitive (NameField fieldKind) name in
       -- FIXME: Type annotation is optional.
-      let type' = Just $ fromLigoTypeExpression _ltfAssociatedType in
+      let type' = Just $ fromLigoTypeExpression typeExpr in
       case fieldKind of
         FieldSum     -> make' (st, Variant n type')
         FieldProduct -> make' (st, TField  n type')
@@ -977,8 +1025,6 @@ mkTypeExpression :: LigoTypeContent -> LigoTypeExpression
 mkTypeExpression content = LigoTypeExpression
   { _lteTypeContent = content
   , _lteLocation = LRVirtual "dummy"
-  , _lteSugar = Nothing
-  , _lteTypeMeta = Nothing
   , _lteOrigVar = Nothing
   }
 
@@ -1003,18 +1049,7 @@ mkArrowType domain codomain = mkTypeExpression $ LTCArrow $
 infixr 2 ~>
 
 mkTypeTable :: LigoLayout -> [(Text, LigoTypeExpression)] -> LigoTypeTable
-mkTypeTable layout keyValues = keyValues
-  & zipWith (\i (str, expr) -> (str, (i, expr))) [0..]
-  & map (second $ uncurry mkTableField)
-  & HM.fromList
-  & flip LigoTypeTable (Just layout)
-  where
-    mkTableField :: Int -> LigoTypeExpression -> LigoTableField
-    mkTableField declPos expr = LigoTableField
-      { _ltfDeclPos = declPos
-      , _lrfMichelsonAnnotation = Null
-      , _ltfAssociatedType = expr
-      }
+mkTypeTable layout keyValues = LigoTypeTable (HM.fromList keyValues) layout
 
 mkRecordType :: LigoLayout -> [(Text, LigoTypeExpression)] -> LigoTypeExpression
 mkRecordType layout keyValues = mkTypeTable layout keyValues
@@ -1030,13 +1065,18 @@ mkSimpleConstantType :: Text -> LigoTypeExpression
 mkSimpleConstantType typ = mkConstantType typ []
 
 mkPairType :: LigoTypeExpression -> LigoTypeExpression -> LigoTypeExpression
-mkPairType fstElem sndElem = mkRecordType LTree
+mkPairType fstElem sndElem = mkRecordType pairLayout
   [ ("0", fstElem)
   , ("1", sndElem)
   ]
+  where
+    pairLayout = LLInner
+      [ LLField "0"
+      , LLField "1"
+      ]
 
 -- | Prettify @LigoType@ in provided dialect.
-buildType :: Lang -> LigoType -> Builder
+buildType :: Lang -> LigoType -> Doc
 buildType lang LigoType{..} = case unLigoType of
   Nothing -> ""
   Just typExpr ->
@@ -1048,13 +1088,6 @@ buildType lang LigoType{..} = case unLigoType of
         ]
     in show ppr
 
-stripSuffixHashLigoStackEntry :: LigoStackEntry 'Unique -> LigoStackEntry 'Concise
-stripSuffixHashLigoStackEntry = \case
-  LigoStackEntry lese@LigoExposedStackEntry{..} -> LigoStackEntry lese
-    { leseDeclaration = stripSuffixHashVariable <$> leseDeclaration
-    }
-  LigoHiddenStackEntry -> LigoHiddenStackEntry
-
 -- | If we have malformed LIGO contract then we'll see
 -- in error @ligo@ binary output a red-colored text
 -- which represents a place where error occurred.
@@ -1064,13 +1097,29 @@ replaceANSI =
   . T.replace
       [int||#ansi{[SetConsoleIntensity BoldIntensity, SetColor Foreground Dull Red]}|] "-->"
 
+buildLigoTypeF :: forall u. (SingI u) => LigoTypeF u -> Doc
+buildLigoTypeF typ = case sing @u of
+  SUnique -> build typ
+  SConcise -> buildType Caml typ
+
 makeLensesWith postfixLFields ''LigoExposedStackEntry
 makeLensesWith postfixLFields ''LigoIndexedInfo
 makePrisms ''LigoStackEntry
 
-stripSuffixHashFromLigoIndexedInfo :: LigoIndexedInfo 'Unique -> LigoIndexedInfo 'Concise
-stripSuffixHashFromLigoIndexedInfo indexedInfo =
-  indexedInfo & liiEnvironmentL . _Just . each %~ stripSuffixHashLigoStackEntry
+makeConciseLigoStackEntry :: LigoTypesVec -> LigoStackEntry 'Unique -> LigoStackEntry 'Concise
+makeConciseLigoStackEntry vec = \case
+  LigoStackEntry lese@LigoExposedStackEntry{..} -> LigoStackEntry lese
+    { leseDeclaration = stripSuffixHashVariable <$> leseDeclaration
+    , leseType = vec `readLigoType` leseType
+    }
+  LigoHiddenStackEntry -> LigoHiddenStackEntry
+
+makeConciseLigoIndexedInfo :: LigoTypesVec -> LigoIndexedInfo 'Unique -> LigoIndexedInfo 'Concise
+makeConciseLigoIndexedInfo vec indexedInfo =
+  indexedInfo
+    { liiEnvironment = liiEnvironment indexedInfo & _Just . each %~ makeConciseLigoStackEntry vec
+    , liiSourceType = readLigoType vec <$> liiSourceType indexedInfo
+    }
 
 parseEntrypointsList :: Text -> Maybe EntrypointsList
 parseEntrypointsList (lines -> parts) = do
@@ -1082,3 +1131,8 @@ parseEntrypointsList (lines -> parts) = do
 
     safeInit :: [a] -> Maybe [a]
     safeInit = fmap init . nonEmpty
+
+readLigoType :: LigoTypesVec -> Maybe LigoTypeRef -> LigoType
+readLigoType (LigoTypesVec v) = \case
+  Nothing -> LigoType Nothing
+  Just (LigoTypeRef n) -> LigoType $ v V.!? n

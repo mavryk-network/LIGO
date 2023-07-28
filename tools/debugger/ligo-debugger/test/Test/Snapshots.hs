@@ -21,7 +21,7 @@ import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (Assertion, (@=?))
 import Test.Util
 import Test.Util.Options (minor, reinsuring)
-import Text.Interpolation.Nyan
+import Text.Interpolation.Nyan hiding (rmode')
 import UnliftIO (forConcurrently_)
 
 import Morley.Debugger.Core
@@ -34,7 +34,7 @@ import Morley.Debugger.DAP.Types.Morley ()
 import Morley.Michelson.ErrorPos (ErrorSrcPos (ErrorSrcPos), Pos (Pos), SrcPos (SrcPos))
 import Morley.Michelson.Interpret
   (MichelsonFailed (MichelsonExt), MichelsonFailureWithStack (MichelsonFailureWithStack),
-  StkEl (StkEl))
+  NoStkElMeta (NoStkElMeta), StkEl (MkStkEl))
 import Morley.Michelson.Parser.Types (MichelsonSource (MSFile))
 import Morley.Michelson.Typed (SomeValue)
 import Morley.Michelson.Typed qualified as T
@@ -126,7 +126,7 @@ test_Snapshots = testGroup "Snapshots collection"
                 , SomeLorentzValue (0 :: Integer)
                 )
               ]
-            contractOut = StkEl $ T.toVal ([] :: [T.Operation], 42 :: Integer)
+            contractOut = MkStkEl NoStkElMeta $ T.toVal ([] :: [T.Operation], 42 :: Integer)
 
             operationListType' = mkConstantType "List" [mkSimpleConstantType "Operation"]
             operationListType = LigoTypeResolved operationListType'
@@ -247,7 +247,7 @@ test_Snapshots = testGroup "Snapshots collection"
           InterpretSnapshot
             { isStatus = InterpretRunning EventFacedStatement
             , isStackFrames = StackFrame
-                { sfLoc = Range (LigoPosition 2 3) (LigoPosition 4 18) _
+                { sfLoc = Range (LigoPosition 2 3) (LigoPosition 4 16) _
                 } :| []
             } -> pass
           sp -> unexpectedSnapshot sp
@@ -432,7 +432,7 @@ test_Snapshots = testGroup "Snapshots collection"
                   | actualPos == pos -> pass
                 loc -> liftIO $ assertFailure [int||Expected stopping at line #{pos + 1}, got #{loc}|]
 
-        let stepNextLine :: HistoryReplayM (InterpretSnapshot 'Unique) IO ()
+        let stepNextLine :: ReaderT TestCtx (HistoryReplayM (InterpretSnapshot 'Unique) IO) ()
             stepNextLine = void $ moveTill Forward $ FrozenPredicate do
               curSnapshot >>= \case
                 InterpretSnapshot
@@ -537,8 +537,8 @@ test_Snapshots = testGroup "Snapshots collection"
               $ flip elem variables
               <$> [ "foo"
                   , "foo"
-                  , "id"
-                  , "fold_left"
+                  , "TestId.One.id"
+                  , "List.fold_left"
                   , "poly_troll42_"
                   , "s"
                   ]
@@ -615,10 +615,8 @@ test_Snapshots = testGroup "Snapshots collection"
           concat
             ( replicate 4
               [ Range (LigoPosition 6 5) (LigoPosition 6 28) file2
-              -- TODO: these 2 next statements have the wrong order.
-              -- Wait for #1685 and check it again
-              , Range (LigoPosition 8 5) (LigoPosition 8 14) file2
               , Range (LigoPosition 7 5) (LigoPosition 7 22) file2
+              , Range (LigoPosition 8 5) (LigoPosition 8 14) file2
               ]
             )
           ++ [Range (LigoPosition 11 3) (LigoPosition 11 46) file2]
@@ -632,7 +630,7 @@ test_Snapshots = testGroup "Snapshots collection"
             , crdStorage = 42 :: Integer
             }
 
-      (allLocs, his) <- mkSnapshotsFor runData
+      (allLocs, his, ep, ligoTypesVec) <- mkSnapshotsFor runData
 
       let his' = InterpretHistory $
             fromList (take 1000 (toList $ unInterpretHistory his)) <>
@@ -643,7 +641,7 @@ test_Snapshots = testGroup "Snapshots collection"
       step "Evaluating prefix of interpret history"
       res <-
         timeout tenSeconds do
-          withSnapshots (allLocs, his') do
+          withSnapshots (allLocs, his', ep, ligoTypesVec) do
             replicateM_ 3 $ move Forward
             frozen curSnapshot
 
@@ -878,7 +876,7 @@ test_Snapshots = testGroup "Snapshots collection"
             , crdStorage = 0 :: Integer
             }
 
-      let stackFramesCheck :: ([[Text]] -> Bool) -> HistoryReplayM (InterpretSnapshot u) IO ()
+      let stackFramesCheck :: ([[Text]] -> Bool) -> ReaderT TestCtx (HistoryReplayM (InterpretSnapshot u) IO) ()
           stackFramesCheck namesCheck = do
             (_, fmap getStackFrameNames . tsAfterInstrs -> stackFrameNames) <-
               listen $ moveTill Forward false
@@ -959,7 +957,7 @@ test_Snapshots = testGroup "Snapshots collection"
         checkSnapshot \case
           InterpretSnapshot
             { isStackFrames = StackFrame
-                { sfName = "main"
+                { sfName = "EURO.main"
                 , sfLoc = loc1
                 } :|
                   [ StackFrame
@@ -969,7 +967,7 @@ test_Snapshots = testGroup "Snapshots collection"
                   ]
             } | loc1 /= loc2 -> pass
           snap -> unexpectedSnapshot snap
-        checkSnapshot ((@=?) ["main", "main"] . getStackFrameNames)
+        checkSnapshot ((@=?) ["EURO.main", "main"] . getStackFrameNames)
 
   , testCaseSteps "Stack frames in a contract with partially applied function" \step -> do
       let file = contractsDir </> "apply.mligo"
@@ -1150,10 +1148,6 @@ test_Snapshots = testGroup "Snapshots collection"
                 , sfName = "failwith"
                 } :|
                   StackFrame
-                    { sfName = "failwith"
-                    }
-                  :
-                  StackFrame
                     { sfName = "unsafeCompute"
                     }
                   : _
@@ -1175,7 +1169,15 @@ test_Snapshots = testGroup "Snapshots collection"
           -- Skip arguments
           void $ move Forward
 
-          let expectedType = LigoTypeResolved $ mkRecordType LTree
+          let expectedLayout = LLInner
+                [ LLInner
+                    [ LLField "a"
+                    , LLField "b"
+                    ]
+                , LLField "c"
+                ]
+
+          let expectedType = LigoTypeResolved $ mkRecordType expectedLayout
                 [ ("a", intType')
                 , ("b", mkSimpleConstantType "nat")
                 , ("c", mkSimpleConstantType "string")
@@ -1206,7 +1208,7 @@ test_Snapshots = testGroup "Snapshots collection"
               }
 
         testWithSnapshots runData do
-          let expectedType = LigoTypeResolved $ mkSumType LTree
+          let expectedType = LigoTypeResolved $ mkSumType (twoElemTreeLayout "Variant1" "Variant2")
                 [ ("Variant1", intType')
                 , ("Variant2", unitType')
                 ]
@@ -1287,7 +1289,8 @@ test_Snapshots = testGroup "Snapshots collection"
                         }
                       : _
                   } :| _
-              } | typ1 == expectedOperationListType && typ2 == expectedIntType -> pass
+              } | typ1 == expectedOperationListType
+                , typ2 == expectedIntType -> pass
             snap -> unexpectedSnapshot snap
 
     , testCaseSteps "Nested structures have types" \step -> do
@@ -1304,10 +1307,10 @@ test_Snapshots = testGroup "Snapshots collection"
             isAtLine 15
 
           let expectedComplexType = LigoTypeResolved
-                $ mkRecordType LTree
+                $ mkRecordType (twoElemTreeLayout "simple_field" "complex_field")
                     [ ("simple_field", mkSimpleConstantType "String")
                     , ("complex_field"
-                      , mkRecordType LTree
+                      , mkRecordType (twoElemTreeLayout "inner_field1" "inner_field2")
                           [ ("inner_field1", intType')
                           , ("inner_field2", intType')
                           ]
@@ -1339,15 +1342,15 @@ test_Snapshots = testGroup "Snapshots collection"
 
         testWithSnapshots runData do
           let expectedType = LigoTypeResolved
-                $ mkSumType LTree
+                $ mkSumType (twoElemTreeLayout "A" "B")
                     [ ( "A"
-                      , mkRecordType LTree
+                      , mkRecordType (twoElemTreeLayout "a1" "a2")
                           [ ("a1", intType')
                           , ("a2", mkSimpleConstantType "String")
                           ]
                       )
                     , ( "B"
-                      , mkRecordType LTree
+                      , mkRecordType (twoElemTreeLayout "b1" "b2")
                           [ ("b1", mkSimpleConstantType "String")
                           , ("b2", intType')
                           ]
@@ -1577,7 +1580,7 @@ test_Snapshots = testGroup "Snapshots collection"
 
         testWithSnapshots runData do
           let combedType = LigoTypeResolved
-                $ mkRecordType LComb
+                $ mkRecordType (combLayout ["a", "b", "c"])
                     [ ("a", intType')
                     , ("b", mkSimpleConstantType "Nat")
                     , ("c", mkSimpleConstantType "String")
@@ -1619,7 +1622,7 @@ test_Snapshots = testGroup "Snapshots collection"
           InterpretSnapshot
               { isStatus = InterpretRunning EventExpressionPreview{}
               , isStackFrames = StackFrame
-                  { sfLoc = Range (LigoPosition 2 13) (LigoPosition 2 21) _
+                  { sfLoc = Range (LigoPosition 2 11) (LigoPosition 2 19) _
                   } :| _
               } -> pass
           snap -> unexpectedSnapshot snap
@@ -1659,19 +1662,6 @@ test_Snapshots = testGroup "Snapshots collection"
         -- Skip list
         replicateM_ 3 do
           move Forward
-
-        liftIO $ step "Check location for lambda inside \"List.fold\""
-        checkSnapshot \case
-          InterpretSnapshot
-              { isStatus = InterpretRunning EventExpressionPreview{}
-              , isStackFrames = StackFrame
-                  { sfLoc = Range (LigoPosition 9 24) (LigoPosition 9 51) _
-                  } :| _
-              } -> pass
-          snap -> unexpectedSnapshot snap
-
-        void $ move Forward
-        void $ move Forward
 
         replicateM_ 3 do
           let loc = Range (LigoPosition 9 42) (LigoPosition 9 51) file
@@ -1741,7 +1731,7 @@ test_Snapshots = testGroup "Snapshots collection"
                     do \InterpretSnapshot{..} -> isStatus == InterpretRunning EventFacedStatement
               >>> toListOf (each . isStackFramesL . ix 0 . sfLocL)
 
-        (_, getLocations . coerce -> locs) <- mkSnapshotsFor runData
+        (_, getLocations . coerce -> locs, _, _) <- mkSnapshotsFor runData
         pure locs
     in
     [ testCase "Last statement in function" do
@@ -1881,6 +1871,8 @@ test_Snapshots = testGroup "Snapshots collection"
             }
 
       testWithSnapshots runData do
+        ligoTypesVec <- asks tcLigoTypesVec
+
         liftIO $ step "Go to some line"
         void $ moveTill Forward
           $ goesAfter (SrcLoc 19 0)
@@ -1888,15 +1880,15 @@ test_Snapshots = testGroup "Snapshots collection"
         snap <- frozen curSnapshot
 
         liftIO $ step "Extract values and types"
-        let convertInfos = extractConvertInfos snap
+        let convertInfos = extractConvertInfos ligoTypesVec snap
 
         let expected =
               [ LVConstructor
                   ( "Go"
                   , LVRecord $ HM.fromList
-                      [ ("ch", LVCt $ LCChainId "\0\0\0\0")
-                      , ("state", LVConstructor ("A", LVCt $ LCTimestamp "100"))
-                      , ("s", LVCt $ LCString "large")
+                      [ (LLabel "ch", LVCt $ LCChainId "\0\0\0\0")
+                      , (LLabel "state", LVConstructor ("A", LVCt $ LCTimestamp "100"))
+                      , (LLabel "s", LVCt $ LCString "large")
                       ]
                   )
               , LVCt $ LCInt "0"
@@ -1908,7 +1900,7 @@ test_Snapshots = testGroup "Snapshots collection"
           liftIO (convertMichelsonValuesToLigo dummyLoggingFunction convertInfos)
             <&> mapMaybe (\case{LigoValue _ v -> Just v ; _ -> Nothing})
 
-        expected @?= actual
+        actual @?= expected
 
   , testCaseSteps "Check max steps" \step -> do
       let runData = ContractRunData
@@ -1941,19 +1933,25 @@ test_Snapshots = testGroup "Snapshots collection"
             }
 
       testWithSnapshots runData do
+        ep <- asks tcEntrypointType
+
         liftIO $ step "Go to last snapshot"
         void $ moveTill Forward false
 
         snap <- frozen curSnapshot
 
+        let (_, storageType, _) = getParameterStorageAndOpsTypes ep
+
         liftIO $ step "Extract new storage convert info"
-        let storageConvertInfo = extractConvertInfos snap Unsafe.!! 1
+        let someValues = snap ^.. isStackFramesL . ix 0 . sfStackL . each . siValueL
+
+        let storageConvertInfo = PreLigoConvertInfo (someValues Unsafe.!! 1) storageType
 
         let expected =
               [ LVRecord $ HM.fromList
-                  [ ("a", LVCt $ LCInt "0")
-                  , ("b", LVCt $ LCNat "0")
-                  , ("c", LVCt $ LCString "!")
+                  [ (LLabel "a", LVCt $ LCInt "0")
+                  , (LLabel "b", LVCt $ LCNat "0")
+                  , (LLabel "c", LVCt $ LCString "!")
                   ]
               ]
 
@@ -1962,7 +1960,7 @@ test_Snapshots = testGroup "Snapshots collection"
           liftIO (convertMichelsonValuesToLigo dummyLoggingFunction [storageConvertInfo])
             <&> mapMaybe (\case{LigoValue _ v -> Just v ; _ -> Nothing})
 
-        expected @?= actual
+        actual @?= expected
 
   , testCaseSteps "Check evaluated record in LIGO format" \step -> do
       let runData = ContractRunData
@@ -1985,9 +1983,9 @@ test_Snapshots = testGroup "Snapshots collection"
             } -> do
               let expected =
                     [ LVRecord $ HM.fromList
-                        [ ("a", LVCt $ LCInt "42")
-                        , ("b", LVCt $ LCNat "0")
-                        , ("c", LVCt $ LCString "!")
+                        [ (LLabel "a", LVCt $ LCInt "42")
+                        , (LLabel "b", LVCt $ LCNat "0")
+                        , (LLabel "c", LVCt $ LCString "!")
                         ]
                     ]
 
@@ -1996,7 +1994,7 @@ test_Snapshots = testGroup "Snapshots collection"
                 liftIO (convertMichelsonValuesToLigo dummyLoggingFunction [PreLigoConvertInfo value typ])
                   <&> mapMaybe (\case{LigoValue _ v -> Just v ; _ -> Nothing})
 
-              expected @?= actual
+              actual @?= expected
           snap -> unexpectedSnapshot snap
   ]
 
@@ -2039,8 +2037,8 @@ test_Contracts_are_sensible = reinsuring $ testCase "Contracts are sensible" do
 
       ligoMapper <- compileLigoContractDebug (fromMaybe "main" coEntrypoint) (contractsDir </> contractName)
 
-      (locations, _, _, _, _) <-
-        case readLigoMapper ligoMapper typesReplaceRules instrReplaceRules of
+      (locations, _, _, _, _, _) <-
+        case readLigoMapper ligoMapper of
           Right v -> pure v
           Left err -> assertFailure $ pretty err
 

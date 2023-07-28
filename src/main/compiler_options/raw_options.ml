@@ -18,9 +18,11 @@ type t =
   ; (* Tools *)
     with_types : bool
   ; self_pass : bool
+  ; only_ep : bool
+  ; skip_generated : bool
+  ; defs_only : bool
   ; (* Test framework *)
-    only_ep : bool
-  ; test : bool
+    test : bool
   ; steps : int
   ; generator : string
   ; cli_expr_inj : string option
@@ -62,6 +64,8 @@ module Default_options = struct
   let only_ep = false
   let with_types = false
   let self_pass = false
+  let skip_generated = false
+  let defs_only = false
 
   (* Test framework *)
   let test = false
@@ -99,12 +103,14 @@ let make
     ?(only_ep = Default_options.only_ep)
     ?(with_types = Default_options.with_types)
     ?(self_pass = Default_options.self_pass)
+    ?(skip_generated = Default_options.skip_generated)
     ?(test = Default_options.test)
     ?(steps = Default_options.steps)
     ?(generator = Default_options.generator)
     ?(cli_expr_inj = Default_options.cli_expr_inj)
     ?(protocol_version = Default_options.protocol_version)
     ?(no_stdlib = Default_options.no_stdlib)
+    ?(defs_only = Default_options.defs_only)
     ?(disable_michelson_typechecking = Default_options.disable_michelson_typechecking)
     ?(experimental_disable_optimizations_for_debugging =
       Default_options.experimental_disable_optimizations_for_debugging)
@@ -135,6 +141,8 @@ let make
     only_ep
   ; with_types
   ; self_pass
+  ; skip_generated
+  ; defs_only
   ; (* Test framework *)
     test
   ; steps
