@@ -657,6 +657,7 @@ let bake_ops
   let f = function (Transfer { contract = { address ; entrypoint } ; param ; amount ; source }) ->
     let open Tezos_alpha_test_helpers in
     let parameters = ligo_to_canonical ~raise ~loc ~calltrace param.micheline_repr.code in
+    fun incr ->
     let operation : Tezos_raw_protocol.Alpha_context.packed_operation =
       Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace)
       @@
@@ -669,11 +670,11 @@ let bake_ops
         ~fee:(Test_tez.of_int 1)
         ~parameters
         ?entrypoint
-        (B ctxt.raw)
+        (I incr)
         source
         address
         (Test_tez.of_mutez_exn amt) in
-    Fun.const operation
+    operation
   in
   match bake_ops ~raise ~loc ~calltrace ctxt (List.map ~f:f ops) with
  | Success (ctxt, _) -> ctxt

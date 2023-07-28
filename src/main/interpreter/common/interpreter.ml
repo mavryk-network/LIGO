@@ -1514,8 +1514,8 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let ops = List.map
         ~f:(fun x -> trace_option ~raise (Errors.corner_case ()) @@ get_test_operation x)
         ops in
-    ignore ops;
-    failwith "IMPLEMENT ME"
+    let>> () = Bake_ops (loc, calltrace, ops) in
+    return @@ v_unit ()
   | C_TEST_BAKE_OPS, _ -> fail @@ error_type ()
   | C_POLYMORPHIC_ADD, _ ->
     fail @@ Errors.generic_error loc "POLYMORPHIC_ADD is solved in checking."
