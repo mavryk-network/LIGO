@@ -1338,4 +1338,54 @@ expected payload type.
 
 Helper functions for working with tickets in the LIGO Testing framework.
 
-Find the complete API reference [here](./proxy_ticket.md) 
+Find the complete API reference [here](./proxy_ticket.md)
+
+### Incremental
+
+Inside `Test` there is a module/namespace `Incremental` that can be
+used to bake multiple transfer operations on a single block.
+
+The following definitions are local to `Incremental`:
+
+<SyntaxTitle syntax="pascaligo">
+type operation
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+type operation
+</SyntaxTitle>
+
+<SyntaxTitle syntax="jsligo">
+type operation
+</SyntaxTitle>
+
+A type for incremental operations (not to confuse with top-level `operation`).
+
+
+<SyntaxTitle syntax="pascaligo">
+val Test.incremental.transfer&lt;a&gt; : contract a -> a -> tez -> address -> Test.Incremental.operation
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val Test.incremental.transfer : 'a contract -> 'a -> tez -> address -> Test.Incremental.operation
+</SyntaxTitle>
+
+<SyntaxTitle syntax="jsligo">
+let Test.incremental.transfer : contract&lt;&apos;a&gt; => &apos;a => tez => address => Test.Incremental.operation;
+</SyntaxTitle>
+
+Constructs an incremental operation representing a new transfer. The
+arguments represent the destination contract, parameter, amount and
+source for the transfer.
+
+
+<SyntaxTitle syntax="pascaligo">
+val Test.incremental.bake : list Test.Incremental.operation -> unit
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val Test.incremental.bake : Test.Incremental.operation list -> unit
+</SyntaxTitle>
+
+<SyntaxTitle syntax="jsligo">
+let Test.incremental.bake : list&lt;Test.Incremental.operation&gt; => unit;
+</SyntaxTitle>
+
+Bakes a list of operations, executing them effectively.
