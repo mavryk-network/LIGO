@@ -1362,14 +1362,14 @@ A type for incremental operations (not to confuse with top-level `operation`).
 
 
 <SyntaxTitle syntax="pascaligo">
-val Test.incremental.transfer&lt;a&gt; : contract a -> a -> tez -> address -> Test.Incremental.operation
+val Test.Incremental.transfer&lt;a&gt; : contract a -> a -> tez -> address -> Test.Incremental.operation
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-val Test.incremental.transfer : 'a contract -> 'a -> tez -> address -> Test.Incremental.operation
+val Test.Incremental.transfer : 'a contract -> 'a -> tez -> address -> Test.Incremental.operation
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let Test.incremental.transfer : contract&lt;&apos;a&gt; => &apos;a => tez => address => Test.Incremental.operation;
+let Test.Incremental.transfer : contract&lt;&apos;a&gt; => &apos;a => tez => address => Test.Incremental.operation;
 </SyntaxTitle>
 
 Constructs an incremental operation representing a new transfer. The
@@ -1378,14 +1378,14 @@ source for the transfer.
 
 
 <SyntaxTitle syntax="pascaligo">
-val Test.incremental.bake : list Test.Incremental.operation -> unit
+val Test.Incremental.bake : list Test.Incremental.operation -> unit
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-val Test.incremental.bake : Test.Incremental.operation list -> unit
+val Test.Incremental.bake : Test.Incremental.operation list -> unit
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let Test.incremental.bake : list&lt;Test.Incremental.operation&gt; => unit;
+let Test.Incremental.bake : list&lt;Test.Incremental.operation&gt; => unit;
 </SyntaxTitle>
 
 Bakes a list of operations, executing them effectively.
