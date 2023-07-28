@@ -1378,14 +1378,14 @@ source for the transfer.
 
 
 <SyntaxTitle syntax="pascaligo">
-val Test.Incremental.bake : list Test.Incremental.operation -> unit
+val Test.Incremental.bake_exn : list Test.Incremental.operation -> unit
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-val Test.Incremental.bake : Test.Incremental.operation list -> unit
+val Test.Incremental.bake_exn : Test.Incremental.operation list -> unit
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let Test.Incremental.bake : list&lt;Test.Incremental.operation&gt; => unit;
+let Test.Incremental.bake_exn : list&lt;Test.Incremental.operation&gt; => unit;
 </SyntaxTitle>
 
 Bakes a list of operations, executing them effectively.
