@@ -666,7 +666,7 @@ let bake_ops
       (* TODO: might let user choose here *)
       Op.transaction
         ~force_reveal:true
-        ~gas_limit:Max
+        ~gas_limit:High
         ~fee:(Test_tez.of_int 1)
         ~parameters
         ?entrypoint
