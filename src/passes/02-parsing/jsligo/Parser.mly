@@ -576,82 +576,72 @@ nterm_stmt:
 | for_of_stmt (nterm_stmt)   { S_ForOf      $1 }
 | full_for_stmt (nterm_stmt) { S_For        $1 }
 | while_stmt (nterm_stmt)    { S_While      $1 }
-| non_decl_expr_stmt (expr, expr_stmt (expr)) { S_Expr $1 }
-| export_stmt (nterm_stmt)   { S_Export     $1 }
+| export_stmt                { S_Export     $1 }
+| expr_stmt                  { S_Expr       $1 }
 | if_else_stmt (nterm_stmt)
 | if_stmt (nterm_stmt)       {              $1 }
 
 statement:
-  base_stmt (statement) | if_stmt (statement) { $1 }
+  expr_stmt     { S_Expr $1 }
+| non_expr_stmt {        $1 }
 
-base_stmt (right_stmt):
-  expr_stmt (expr) | non_expr_base_stmt (right_stmt) { $1 }
+non_if_stmt (right_stmt):
+  decl_expr_stmt | non_decl_expr_non_if_stmt (right_stmt) { $1 }
 
-closed_stmt:
-  base_stmt (closed_stmt) { $1 }
+closed_non_if_stmt:
+  non_if_stmt (closed_non_if_stmt) { $1 }
 
-non_expr_base_stmt (right_stmt):
-  "[@attr]" base_stmt(right_stmt) { S_Attr  ($1,$2) }
-| return_stmt                     { S_Return     $1 }
-| block_stmt                      { S_Block      $1 }
-| switch_stmt                     { S_Switch     $1 }
-| export_stmt (right_stmt)        { S_Export     $1 }
-| for_stmt (right_stmt)           { S_For        $1 }
-| for_of_stmt (right_stmt)        { S_ForOf      $1 }
-| while_stmt (right_stmt)         { S_While      $1 }
-| if_else_stmt (right_stmt)       {              $1 }
-(*| value_decl { S_Decl $1 } *)
+non_decl_expr_non_if_stmt (right_stmt):
+  "[@attr]" non_if_stmt(right_stmt) { S_Attr  ($1,$2) }
+| block_stmt                        { S_Block      $1 }
+| switch_stmt                       { S_Switch     $1 }
+| for_of_stmt (right_stmt)          { S_ForOf      $1 }
+| for_stmt (right_stmt)             { S_For        $1 }
+| while_stmt (right_stmt)           { S_While      $1 }
+| export_stmt                       { S_Export     $1 }
+| return_stmt                       { S_Return     $1 }
+| if_else_stmt (right_stmt)         {              $1 }
 
 non_expr_stmt:
-  non_expr_base_stmt (non_expr_stmt) | if_stmt (non_expr_stmt) { $1 }
+  decl_stmt
+| if_stmt (statement)
+| non_decl_expr_non_if_stmt (statement) { $1 }
 
 (* Export statements *)
 
-export_stmt(right_stmt):
-  "export" right_stmt {
+export_stmt:
+  "export" decl_stmt {
      let region = cover $1#region (statement_to_region $2)
      in {region; value=($1,$2)} }
 
 (* Expressions as statements *)
 
-expr_stmt (right_expr):
-  declaration                                             { S_Decl $1 }
-| non_decl_expr_stmt (right_expr, expr_stmt (right_expr)) { S_Expr $1 }
+expr_stmt:
+  app_expr | incr_expr | decr_expr | assign_expr
+| ternary_expr (no_attr_core_expr, expr_stmt)    { $1 }
+| par (no_tuple_expr)                            { E_Par $1 }
 
-non_decl_expr_stmt (right_expr, right_stmt):
-  app_expr | incr_expr | decr_expr
-| assign_stmt (right_expr)
-| ternary_stmt (right_stmt) { $1 }
-| par(no_tuple_expr)        { E_Par $1 }
+decl_expr_stmt:
+  decl_stmt {        $1 }
+| expr_stmt { S_Expr $1 }
 
-closed_non_decl_expr_stmt (right_expr):
-  non_decl_expr_stmt (right_expr,
-                      closed_non_decl_expr_stmt (right_expr)) { $1 }
-
-(* Ternary statement *)
-
-ternary_stmt (right_stmt):
-  ternary_expr (no_attr_core_expr,
-                ternary_branch (right_stmt),
-                ternary_branch (right_stmt)) { $1 }
-
-ternary_branch (right_stmt):
-  non_decl_expr_stmt (disj_expr_level, right_stmt) { $1 }
+decl_stmt:
+  declaration { S_Decl $1 }
 
 (* Assignments *)
 
-assign_stmt (right_expr):
-  bin_op(var_path,   "=", right_expr) { E_Assign   $1 }
-| bin_op(var_path,  "*=", right_expr) { E_TimesEq  $1 }
-| bin_op(var_path,  "/=", right_expr) { E_DivEq    $1 }
-| bin_op(var_path,  "%=", right_expr) { E_RemEq    $1 }
-| bin_op(var_path,  "+=", right_expr) { E_AddEq    $1 }
-| bin_op(var_path,  "-=", right_expr) { E_MinusEq  $1 }
-| bin_op(var_path,  "|=", right_expr) { E_BitOrEq  $1 }
-| bin_op(var_path,  "^=", right_expr) { E_BitXorEq $1 }
-| bin_op(var_path,  "&=", right_expr) { E_BitAndEq $1 }
-| bin_op(var_path, "<<=", right_expr) { E_BitSlEq  $1 }
-| bin_op(var_path, ">>=", right_expr) { E_BitSrEq  $1 }
+assign_expr:
+  bin_op (var_path,   "=", expr) { E_Assign   $1 }
+| bin_op (var_path,  "*=", expr) { E_TimesEq  $1 }
+| bin_op (var_path,  "/=", expr) { E_DivEq    $1 }
+| bin_op (var_path,  "%=", expr) { E_RemEq    $1 }
+| bin_op (var_path,  "+=", expr) { E_AddEq    $1 }
+| bin_op (var_path,  "-=", expr) { E_MinusEq  $1 }
+| bin_op (var_path,  "|=", expr) { E_BitOrEq  $1 }
+| bin_op (var_path,  "^=", expr) { E_BitXorEq $1 }
+| bin_op (var_path,  "&=", expr) { E_BitAndEq $1 }
+| bin_op (var_path, "<<=", expr) { E_BitSlEq  $1 }
+| bin_op (var_path, ">>=", expr) { E_BitSrEq  $1 }
 
 var_path:
   path (record_or_tuple) | record_or_tuple { $1 }
@@ -664,14 +654,14 @@ path (root_expr):
     in E_Proj {region; value} }
 
 selection:
-  "." field_name       { FieldName ($1,$2) }
-| brackets("<string>") { FieldStr       $1 }
-| brackets("<int>")    { Component      $1 }
+  "." field_name        { FieldName ($1,$2) }
+| brackets ("<string>") { FieldStr       $1 }
+| brackets ("<int>")    { Component      $1 }
 
-(* Block of statement *)
+(* Block of statements *)
 
 block_stmt:
-  braces(statements) { $1 }
+  braces (statements) { $1 }
 
 (* Conditional statement *)
 
@@ -689,7 +679,7 @@ if_stmt(right_stmt):
     in S_Cond {region; value} }
 
 if_else_stmt(right_stmt):
-  "if" par(if_cond) closed_stmt "else" right_stmt {
+  "if" par(if_cond) closed_non_if_stmt "else" right_stmt {
     let region = cover $1#region (statement_to_region $5)
     and value  = {kwd_if=$1; test=$2; if_so=$3; if_not = Some ($4,$5)}
     in S_Cond {region; value} }
@@ -719,13 +709,13 @@ range_for:
     {initialiser=$1; semi1=$2; condition=$3; semi2=$4; afterthought=$5} }
 
 initialiser:
-  expr_stmt (expr) { $1 }
+  decl_expr_stmt { $1 }
 
 condition:
   expr { $1 }
 
 afterthought:
-  nsepseq(expr,",") { $1 }
+  nsepseq (expr, ",") { $1 }
 
 (* For-of loop statement *)
 
@@ -819,7 +809,7 @@ expr:
 
 no_tuple_expr:
   fun_expr | typed_expr | disj_expr_level
-| ternary_expr (disj_expr_level, disj_expr_level, disj_expr_level) { $1 }
+| ternary_expr (disj_expr_level, disj_expr_level) { $1 }
 
 (* Functional expressions *)
 
@@ -865,8 +855,8 @@ typed_expr:
 
 (* Ternary conditional operator *)
 
-ternary_expr (left_expr, if_so, if_not):
-  left_expr "?" if_so ":" if_not {
+ternary_expr (left_expr, branch):
+  left_expr "?" branch ":" branch {
     let region = cover (expr_to_region $1) (expr_to_region $5)
     and value  = {condition=$1; qmark=$2; truthy=$3; colon=$4; falsy=$5}
     in E_Ternary {value; region} }
