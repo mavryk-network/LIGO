@@ -656,7 +656,7 @@ let bake_ops
   fun ~raise ~loc ~calltrace ctxt ops ->
   let f = function (Transfer { contract = { address ; entrypoint } ; param ; amount ; source }) ->
     let open Tezos_alpha_test_helpers in
-    let parameters = ligo_to_canonical ~raise ~loc ~calltrace param.micheline_repr.code in
+    let parameters = ligo_to_canonical ~raise ~loc ~calltrace param in
     fun incr ->
     let operation : Tezos_raw_protocol.Alpha_context.packed_operation =
       Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace)
