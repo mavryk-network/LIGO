@@ -748,16 +748,7 @@ let compile
                 { let_binder = Binder.make to_subst ascr
                 ; rhs = O.e_variable new_var ascr ~loc:Location.generated
                 ; let_result = body
-                ; (* ??? *)
-                  attributes =
-                    { inline = false
-                    ; no_mutation = false
-                    ; view = false
-                    ; entry = false
-                    ; public = false
-                    ; hidden = false
-                    ; thunk = false
-                    }
+                ; attributes = Ligo_prim.Value_attr.default_attributes
                 }
                 body_type
                 ~loc:Location.generated)

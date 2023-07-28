@@ -129,6 +129,7 @@ and expression_content ppf (ec : expression_content) =
           ; entry = _
           ; hidden = true
           ; thunk = _
+          ; dyn_entry = _
           }
       } -> fprintf ppf "%a" expression let_result
   | E_mod_in mi -> Mod_in.pp expression module_expr ppf mi
