@@ -413,7 +413,7 @@ let rec compare_value (v : value) (v' : value) : int =
 
 and compare_test_operation (top : test_operation) (top' : test_operation) =
   match top, top' with
-  | Transfer { contract; param; amount }, Transfer { contract = contract'; param = param'; amount = amount' } ->
-    Tuple3.compare ~cmp1:compare_contract ~cmp2:Caml.compare ~cmp3:Z.compare (contract, param, amount) (contract', param', amount')
+  | Transfer { contract; param; amount; source }, Transfer { contract = contract'; param = param'; amount = amount'; source = source' } ->
+    Tuple3.compare ~cmp1:(Tuple2.compare ~cmp1:compare_contract ~cmp2:Contract.compare) ~cmp2:Caml.compare ~cmp3:Z.compare ((contract, source), param, amount) ((contract', source'), param', amount')
 
 let equal_value (v : value) (v' : value) : bool = Int.equal (compare_value v v') 0

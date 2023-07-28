@@ -1505,10 +1505,10 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_TEST_CONS_VIEWS, [ V_Ct (C_string n); V_Func_val f; V_Views vs ] ->
     return @@ v_views @@ ((n, f) :: vs)
   | C_TEST_CONS_VIEWS, _ -> fail @@ error_type ()
-  | C_TEST_WRAP_OP_TRANSFER, [ V_Ct (C_contract contract); param; V_Ct (C_mutez amount) ] ->
+  | C_TEST_WRAP_OP_TRANSFER, [ V_Ct (C_contract contract); param; V_Ct (C_mutez amount); V_Ct (C_address source) ] ->
     let>> param = Eval (loc, param, nth_type 1) in
     let param = trace_option ~raise (Errors.corner_case ()) @@ get_michelson_expr param in
-    return @@ v_test_operation @@ Transfer { contract ; param; amount }
+    return @@ v_test_operation @@ Transfer { contract ; param; amount; source }
   | C_TEST_WRAP_OP_TRANSFER, _ -> fail @@ error_type ()
   | C_TEST_BAKE_OPS, [ V_List ops ] ->
     let ops = List.map

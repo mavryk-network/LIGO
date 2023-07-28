@@ -1467,11 +1467,12 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
           (for_all "a"
           @@ fun a ->
           create
-            ~mode_annot:[ Checked; Inferred; Checked ]
+            ~mode_annot:[ Checked; Inferred; Checked; Checked ]
             ~types:
               [ t_contract ~loc a ()
                 ^-> a
                 ^-> t_mutez ~loc ()
+                ^-> t_address ~loc ()
                 ^~> t_test_operation ~loc ()
               ]) )
     ; ( C_TEST_BAKE_OPS
