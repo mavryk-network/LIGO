@@ -640,4 +640,12 @@ module Test = struct
         addr
       | None -> failwith "internal error"
   end
+  module Incremental = struct
+    type operation = "%constant:test_operation"
+
+    let transfer (type a) (c : a contract) (p : a) (t : tez) (a : address) : operation =
+      let m = compile_value p in
+      [%external ("TEST_WRAP_OP_TRANSFER", c, m, t, a)]
+    let bake (l : operation list) : unit = [%external ("TEST_BAKE_OPS", l)]
+  end
 end
