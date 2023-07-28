@@ -1,4 +1,3 @@
-open Simple_utils.Trace
 open Errors
 open Ligo_prim
 
@@ -189,7 +188,7 @@ let generated_helpers
             [ key; set; get ]))
 
 
-let make ~raise prg =
+let make ~raise:_ prg =
   let f d =
     match Location.unwrap d with
     | Ast_typed.D_module
