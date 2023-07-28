@@ -74,9 +74,11 @@ module Entrypoint_repr = struct
 
   let to_yojson (c : t) = [%to_yojson: string] (to_string c)
   let of_yojson _ = failwith "entrypoint_of_yojson: not implemented"
+
   let of_string_exn s =
-    match Memory_proto_alpha.Raw_protocol.Entrypoint_repr.of_annot_lax_opt
-      (Memory_proto_alpha.Raw_protocol.Non_empty_string.of_string_exn s)
+    match
+      Memory_proto_alpha.Raw_protocol.Entrypoint_repr.of_annot_lax_opt
+        (Memory_proto_alpha.Raw_protocol.Non_empty_string.of_string_exn s)
     with
     | Some x -> x
     | None -> failwith (Format.asprintf "Testing framework: Invalid entrypoint %s" s)
@@ -167,7 +169,12 @@ and gen =
   }
 
 and test_operation =
-  | Transfer of { contract : contract; param : mcode ; amount : Z.t ; source : Contract.t }
+  | Transfer of
+      { contract : contract
+      ; param : mcode
+      ; amount : Z.t
+      ; source : Contract.t
+      }
 
 and value =
   | V_Ct of constant_val [@name "constant"]

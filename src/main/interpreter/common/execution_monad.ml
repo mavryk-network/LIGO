@@ -111,9 +111,7 @@ module Command = struct
         * Z.t
         -> [ `Exec_failed of Tezos_state.state_error | `Exec_ok of Z.t ] tezos_command
     | Bake_ops :
-        Location.t
-        * Ligo_interpreter.Types.calltrace
-        * LT.test_operation list
+        Location.t * Ligo_interpreter.Types.calltrace * LT.test_operation list
         -> unit tezos_command
     | State_error_to_value : Tezos_state.state_error -> LT.value tezos_command
     | Get_storage_of_address :

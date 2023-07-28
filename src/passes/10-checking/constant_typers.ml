@@ -1478,11 +1478,8 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
     ; ( C_TEST_BAKE_OPS
       , of_type
           (create
-            ~mode_annot:[ Checked ]
-            ~types:
-              [ t_list ~loc (t_test_operation ~loc ()) ()
-                ^~> t_unit ~loc ()
-              ]) )
+             ~mode_annot:[ Checked ]
+             ~types:[ t_list ~loc (t_test_operation ~loc ()) () ^~> t_unit ~loc () ]) )
     ; C_EQ, of_comparator Comparable.comparator
     ; C_NEQ, of_comparator Comparable.comparator
     ; C_LT, of_comparator Comparable.comparator

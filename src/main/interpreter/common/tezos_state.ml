@@ -653,32 +653,34 @@ let bake_ops
     :  raise:r -> loc:Location.t -> calltrace:calltrace -> context -> test_operation list
     -> context
   =
-  fun ~raise ~loc ~calltrace ctxt ops ->
-  let f = function (Transfer { contract = { address ; entrypoint } ; param ; amount ; source }) ->
-    let open Tezos_alpha_test_helpers in
-    let parameters = ligo_to_canonical ~raise ~loc ~calltrace param in
-    fun incr ->
-    let operation : Tezos_raw_protocol.Alpha_context.packed_operation =
-      Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace)
-      @@
-      (* TODO: fee? *)
-      let amt = Int64.of_int (Z.to_int amount) in
-      (* TODO: might let user choose here *)
-      Op.transaction
-        ~force_reveal:true
-        ~gas_limit:High
-        ~fee:(Test_tez.of_int 1)
-        ~parameters
-        ?entrypoint
-        (I incr)
-        source
-        address
-        (Test_tez.of_mutez_exn amt) in
-    operation
+ fun ~raise ~loc ~calltrace ctxt ops ->
+  let f = function
+    | Transfer { contract = { address; entrypoint }; param; amount; source } ->
+      let open Tezos_alpha_test_helpers in
+      let parameters = ligo_to_canonical ~raise ~loc ~calltrace param in
+      fun incr ->
+        let operation : Tezos_raw_protocol.Alpha_context.packed_operation =
+          Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace)
+          @@
+          (* TODO: fee? *)
+          let amt = Int64.of_int (Z.to_int amount) in
+          (* TODO: might let user choose here *)
+          Op.transaction
+            ~force_reveal:true
+            ~gas_limit:High
+            ~fee:(Test_tez.of_int 1)
+            ~parameters
+            ?entrypoint
+            (I incr)
+            source
+            address
+            (Test_tez.of_mutez_exn amt)
+        in
+        operation
   in
-  match bake_ops ~raise ~loc ~calltrace ctxt (List.map ~f:f ops) with
- | Success (ctxt, _) -> ctxt
- | Fail errs -> raise.error (target_lang_error loc calltrace errs)
+  match bake_ops ~raise ~loc ~calltrace ctxt (List.map ~f ops) with
+  | Success (ctxt, _) -> ctxt
+  | Fail errs -> raise.error (target_lang_error loc calltrace errs)
 
 
 let bake_until_n_cycle_end ~raise ~loc ~calltrace (ctxt : context) n =

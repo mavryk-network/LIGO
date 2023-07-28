@@ -826,7 +826,8 @@ let rec val_to_ast ~raise ~loc
   | V_Typed_address _ ->
     raise.error @@ Errors.generic_error loc "Cannot be abstracted: typed_address"
   | V_Views _ -> raise.error @@ Errors.generic_error loc "Cannot be abstracted: views"
-  | V_Test_operation _ -> raise.error @@ Errors.generic_error loc "Cannot be abstracted: test_operation"
+  | V_Test_operation _ ->
+    raise.error @@ Errors.generic_error loc "Cannot be abstracted: test_operation"
 
 
 and make_ast_func ~raise ?name env mut_flag arg body orig =
@@ -1092,7 +1093,9 @@ let rec compile_value ~raise ~options ~loc
     (* TODO-er: if we want support for entrypoints, this should be fixed: *)
     (match c.entrypoint with
     | None -> Tezos_micheline.Micheline.String ((), x)
-    | Some e -> Tezos_micheline.Micheline.String ((), Format.asprintf "%s%%%a" x Ligo_interpreter.Types.Entrypoint_repr.pp e))
+    | Some e ->
+      Tezos_micheline.Micheline.String
+        ((), Format.asprintf "%s%%%a" x Ligo_interpreter.Types.Entrypoint_repr.pp e))
   | V_Ct (C_key_hash kh) ->
     let () =
       trace_option

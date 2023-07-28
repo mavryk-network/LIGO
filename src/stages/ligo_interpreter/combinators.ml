@@ -212,7 +212,7 @@ let get_baker_policy : value -> _ option =
 
 
 let get_test_operation : value -> test_operation option =
-  fun value ->
+ fun value ->
   match value with
   | V_Test_operation top -> Some top
   | _ -> None
@@ -238,8 +238,18 @@ let tag_constant_val : constant_val -> int = function
   | C_int64 _ -> 16
   | C_chain_id _ -> 17
 
-let compare_contract ({ address ; entrypoint } : contract) ({ address = address' ; entrypoint = entrypoint' } : contract) : int =
-  Tuple2.compare ~cmp1:Tezos_protocol.Protocol.Alpha_context.Contract.compare ~cmp2:(Option.compare Entrypoint_repr.compare) (address, entrypoint) (address', entrypoint')
+
+let compare_contract
+    ({ address; entrypoint } : contract)
+    ({ address = address'; entrypoint = entrypoint' } : contract)
+    : int
+  =
+  Tuple2.compare
+    ~cmp1:Tezos_protocol.Protocol.Alpha_context.Contract.compare
+    ~cmp2:(Option.compare Entrypoint_repr.compare)
+    (address, entrypoint)
+    (address', entrypoint')
+
 
 let compare_constant_val (c : constant_val) (c' : constant_val) : int =
   match c, c' with
@@ -325,6 +335,7 @@ let tag_value : value -> int = function
   | V_Views _ -> 14
   | V_Test_operation _ -> 15
 
+
 let rec compare_value (v : value) (v' : value) : int =
   match v, v' with
   | V_Ct c, V_Ct c' -> compare_constant_val c c'
@@ -376,8 +387,7 @@ let rec compare_value (v : value) (v' : value) : int =
     Tezos_protocol.Protocol.Alpha_context.Contract.compare a a'
   | V_Views vs, V_Views vs' ->
     List.compare (Tuple2.compare ~cmp1:String.compare ~cmp2:Caml.compare) vs vs'
-  | V_Test_operation top, V_Test_operation top' ->
-    compare_test_operation top top'
+  | V_Test_operation top, V_Test_operation top' -> compare_test_operation top top'
   | ( ( V_Ct _
       | V_List _
       | V_Record _
@@ -411,9 +421,18 @@ let rec compare_value (v : value) (v' : value) : int =
       | V_Views _
       | V_Test_operation _ ) ) -> Int.compare (tag_value v) (tag_value v')
 
+
 and compare_test_operation (top : test_operation) (top' : test_operation) =
   match top, top' with
-  | Transfer { contract; param; amount; source }, Transfer { contract = contract'; param = param'; amount = amount'; source = source' } ->
-    Tuple3.compare ~cmp1:(Tuple2.compare ~cmp1:compare_contract ~cmp2:Contract.compare) ~cmp2:Caml.compare ~cmp3:Z.compare ((contract, source), param, amount) ((contract', source'), param', amount')
+  | ( Transfer { contract; param; amount; source }
+    , Transfer
+        { contract = contract'; param = param'; amount = amount'; source = source' } ) ->
+    Tuple3.compare
+      ~cmp1:(Tuple2.compare ~cmp1:compare_contract ~cmp2:Contract.compare)
+      ~cmp2:Caml.compare
+      ~cmp3:Z.compare
+      ((contract, source), param, amount)
+      ((contract', source'), param', amount')
+
 
 let equal_value (v : value) (v' : value) : bool = Int.equal (compare_value v v') 0
