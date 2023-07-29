@@ -26,6 +26,7 @@ let (<@) = Utils.(<@)
 let nseq_to_region = Nodes.nseq_to_region
 let nsepseq_to_region = Nodes.nsepseq_to_region
 let nsep_or_pref_to_region = Nodes.nsep_or_pref_to_region
+let nseq_cons = Utils.nseq_cons
 
 let mk_mod_path :
   (module_name * dot) Utils.nseq * 'a ->
@@ -559,71 +560,79 @@ field_id:
 (* STATEMENTS *)
 
 statements:
-  statement                 { ($1, None),    []                }
-| statement ";"             { ($1, Some $2), []                }
-| statement ";" statements  { Utils.nseq_cons ($1, Some $2) $3 }
-| nterm_stmt non_expr_stmts { Utils.nseq_cons ($1, None)    $2 }
+  statement ";"?                        { ($1, $2), []               }
+| statement ";" statements              { nseq_cons ($1, Some $2) $3 }
+| cat_stmt after_cat_stmt
+| export_decl_expr_stmt after_expr_stmt { nseq_cons ($1, None) $2    }
 
-non_expr_stmts:
-  non_expr_stmt                { ($1, None),    []                }
-| non_expr_stmt ";"            { ($1, Some $2), []                }
-| non_expr_stmt ";" statements { Utils.nseq_cons ($1, Some $2) $3 }
+after_cat_stmt:
+  after_expr_stmt             { $1 }
+| expr_stmt   ";"?            { ($1, None), [] }
+| expr_stmt   ";" statements  { nseq_cons ($1, Some $2) $3 }
+| export_stmt ";" statements  { nseq_cons ($1, Some $2) $3 }
+| decl_stmt   ";" statements  { nseq_cons ($1, Some $2) $3 }
+| expr_stmt   after_expr_stmt { nseq_cons ($1,    None) $2 }
+| export_stmt after_expr_stmt { nseq_cons ($1,    None) $2 }
+| decl_stmt   after_expr_stmt { nseq_cons ($1,    None) $2 }
 
-nterm_stmt:
-  "[@attr]" nterm_stmt       { S_Attr  ($1,$2) }
-| block_stmt                 { S_Block      $1 }
-| switch_stmt                { S_Switch     $1 }
-| for_of_stmt (nterm_stmt)   { S_ForOf      $1 }
-| full_for_stmt (nterm_stmt) { S_For        $1 }
-| while_stmt (nterm_stmt)    { S_While      $1 }
-| export_stmt                { S_Export     $1 }
-| expr_stmt                  { S_Expr       $1 }
-| if_else_stmt (nterm_stmt)
-| if_stmt (nterm_stmt)       {              $1 }
+after_expr_stmt:
+  semi_or_last_stmt ";"?
+| export_stmt ";"?
+| decl_stmt ";"?
+| cat_stmt ";"?           { ($1,$2), [] }
+| cat_stmt ";" statements { nseq_cons ($1, Some $2) $3 }
+| cat_stmt after_cat_stmt { nseq_cons ($1,    None) $2 }
+
+open_cat_stmt(right_stmt):
+  core_stmt (right_stmt) | if_stmt (right_stmt) { $1 }
+
+cat_stmt: open_cat_stmt (cat_stmt) { $1 }
+
+semi_or_last_stmt:
+  return_stmt    { S_Return $1 }
+| empty_for_stmt { S_For    $1 }
 
 statement:
-  expr_stmt     { S_Expr $1 }
-| non_expr_stmt {        $1 }
+  non_if_stmt (statement) | if_stmt (statement) { $1 }
 
 non_if_stmt (right_stmt):
-  decl_expr_stmt | non_decl_expr_non_if_stmt (right_stmt) { $1 }
+  core_stmt (right_stmt)
+| export_decl_expr_stmt
+| semi_or_last_stmt     { $1 }
+
+export_decl_expr_stmt:
+  decl_expr_stmt | export_stmt { $1 }
+
+core_stmt (right_stmt):
+  "[@attr]" right_stmt       { S_Attr  ($1,$2) }
+| block_stmt                 { S_Block      $1 }
+| switch_stmt                { S_Switch     $1 }
+| for_of_stmt (right_stmt)   { S_ForOf      $1 }
+| full_for_stmt (right_stmt) { S_For        $1 }
+| while_stmt (right_stmt)    { S_While      $1 }
+| if_else_stmt (right_stmt)  {              $1 }
 
 closed_non_if_stmt:
   non_if_stmt (closed_non_if_stmt) { $1 }
-
-non_decl_expr_non_if_stmt (right_stmt):
-  "[@attr]" non_if_stmt(right_stmt) { S_Attr  ($1,$2) }
-| block_stmt                        { S_Block      $1 }
-| switch_stmt                       { S_Switch     $1 }
-| for_of_stmt (right_stmt)          { S_ForOf      $1 }
-| for_stmt (right_stmt)             { S_For        $1 }
-| while_stmt (right_stmt)           { S_While      $1 }
-| export_stmt                       { S_Export     $1 }
-| return_stmt                       { S_Return     $1 }
-| if_else_stmt (right_stmt)         {              $1 }
-
-non_expr_stmt:
-  decl_stmt
-| if_stmt (statement)
-| non_decl_expr_non_if_stmt (statement) { $1 }
 
 (* Export statements *)
 
 export_stmt:
   "export" decl_stmt {
      let region = cover $1#region (statement_to_region $2)
-     in {region; value=($1,$2)} }
+     in S_Export {region; value=($1,$2)} }
 
 (* Expressions as statements *)
 
-expr_stmt:
+pre_expr_stmt:
   app_expr | incr_expr | decr_expr | assign_expr
-| ternary_expr (no_attr_core_expr, expr_stmt)    { $1 }
-| par (no_tuple_expr)                            { E_Par $1 }
+| ternary_expr (no_attr_core_expr, pre_expr_stmt) { $1       }
+| par (no_tuple_expr)                             { E_Par $1 }
+
+expr_stmt: pre_expr_stmt { S_Expr $1 }
 
 decl_expr_stmt:
-  decl_stmt {        $1 }
-| expr_stmt { S_Expr $1 }
+  decl_stmt | expr_stmt { $1 }
 
 decl_stmt:
   declaration { S_Decl $1 }
