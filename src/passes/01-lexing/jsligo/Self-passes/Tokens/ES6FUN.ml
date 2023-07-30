@@ -10,13 +10,13 @@ module Std    = Simple_utils.Std
 
 type tokens = Token.t list
 
-(* Filter with Injection *)
+(* Filter with injection *)
 
 let inject (tokens : tokens) : tokens =
   let open Token in
   let rec aux acc previous current next =
     match previous, current, next with
-      (LPAR _ | EQ _ | COMMA _ | COLON _ | GT _),
+      (LPAR _ | EQ _ | COMMA _ | COLON _ | GT _ | ARROW _),
       LPAR _,
       (RPAR _ | LBRACKET _ | WILD _ | Ident _ as next) :: tokens ->
         let lambda = mk_ES6FUN (to_region current) in

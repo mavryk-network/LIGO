@@ -129,22 +129,23 @@ module T =
 
     (* TypeScript keywords *)
 
-    | As          of lexeme Wrap.t  (* as         *)
-    | Implements  of lexeme Wrap.t  (* implements *)
-    | Interface   of lexeme Wrap.t  (* interface  *)
-    | Namespace   of lexeme Wrap.t  (* namespace  *)
-    | Type        of lexeme Wrap.t  (* type       *)
+    | As         of lexeme Wrap.t  (* as         *)
+    | Implements of lexeme Wrap.t  (* implements *)
+    | Interface  of lexeme Wrap.t  (* interface  *)
+    | Namespace  of lexeme Wrap.t  (* namespace  *)
+    | Type       of lexeme Wrap.t  (* type       *)
 
     (* Contract keywords *)
 
-    | ContractOf  of lexeme Wrap.t  (* contract_of *)
+    | ContractOf  of lexeme Wrap.t  (* contract_of  *)
     | ParameterOf of lexeme Wrap.t  (* parameter_of *)
 
     (* Virtual tokens *)
 
-    | ZWSP   of lexeme Wrap.t  (* Zero-Width SPace *)
-    | PARAMS of lexeme Wrap.t  (* Mark function's parameters *)
-    | ES6FUN of lexeme Wrap.t  (* Mark candidate lambda *)
+    | ZWSP      of lexeme Wrap.t  (* Zero-Width SPace *)
+    | PARAMS    of lexeme Wrap.t  (* Mark function's parameters *)
+    | ES6FUN    of lexeme Wrap.t  (* Mark candidate lambda *)
+    | SEMI_ELSE of (lexeme Wrap.t * lexeme Wrap.t) (* ; else *)
 
     (* End-Of-File *)
 
@@ -162,24 +163,24 @@ module T =
     let to_lexeme = function
       (* Directives *)
 
-      Directive d -> (Directive.to_lexeme d).Region.value
+      Directive d -> [(Directive.to_lexeme d).Region.value]
 
       (* Comments *)
 
-    | LineCom  t -> sprintf "// %s" t#payload
-    | BlockCom t -> sprintf "/* %s */" t#payload
+    | LineCom  t -> [sprintf "// %s" t#payload]
+    | BlockCom t -> [sprintf "/* %s */" t#payload]
 
       (* Literals *)
 
-    | String   t -> sprintf "%S" t#payload  (* Escaped *)
-    | Verbatim t -> String.escaped t#payload
-    | Bytes    t -> fst t#payload
-    | Int      t -> fst t#payload
-    | Nat      t -> fst t#payload
-    | Mutez    t -> fst t#payload
+    | String   t -> [sprintf "%S" t#payload]  (* Escaped *)
+    | Verbatim t -> [String.escaped t#payload]
+    | Bytes    t -> [fst t#payload]
+    | Int      t -> [fst t#payload]
+    | Nat      t -> [fst t#payload]
+    | Mutez    t -> [fst t#payload]
     | Ident    t
-    | UIdent   t -> t#payload
-    | Attr     t -> Attr.to_lexeme t#payload
+    | UIdent   t -> [t#payload]
+    | Attr     t -> [Attr.to_lexeme t#payload]
  (* | Lang lang  -> "[%" ^ Region.(lang.value.value) *)
 
     (* Symbols *)
@@ -265,17 +266,18 @@ module T =
     (* Contract keywords *)
 
     | ContractOf  t
-    | ParameterOf t -> t#payload
+    | ParameterOf t -> [t#payload]
 
     (* Virtual tokens *)
 
     | ZWSP _
     | PARAMS _
-    | ES6FUN _ -> ""
+    | ES6FUN _ -> [""]
+    | SEMI_ELSE (l1,l2) -> [l1#payload; l2#payload]
 
     (* End-Of-File *)
 
-    | EOF _ -> ""
+    | EOF _ -> [""]
 
 
     (* KEYWORDS *)
@@ -383,7 +385,9 @@ module T =
           `Ok map -> map
         | `Duplicate -> map in
       let apply map mk_kwd =
-        add map (to_lexeme (mk_kwd Region.ghost), mk_kwd)
+        let lexemes = to_lexeme (mk_kwd Region.ghost) in
+        List.fold_left ~f:(fun map lex -> add map (lex, mk_kwd))
+                       ~init:map lexemes
       in List.fold_left ~f:apply ~init:SMap.empty keywords
 
     (* Ghost keywords *)
@@ -614,8 +618,10 @@ module T =
         match SMap.add ~key ~data map with
           `Ok map -> map
         | `Duplicate -> map in
-      let apply map mk_kwd =
-        add map (to_lexeme (mk_kwd Region.ghost), mk_kwd)
+      let apply map mk_sym =
+        let lexemes = to_lexeme (mk_sym Region.ghost) in
+        List.fold_left ~f:(fun map lex -> add map (lex, mk_sym))
+                       ~init:map lexemes
       in List.fold_left ~f:apply ~init:SMap.empty symbols
 
     (* Ghost symbols *)
@@ -791,6 +797,10 @@ module T =
     let mk_ES6FUN region = ES6FUN (wrap_es6fun region)
     let ghost_ES6FUN     = mk_ES6FUN Region.ghost
 
+    let wrap_semi_else r1 r2 = wrap_semi r1, wrap_else r2
+    let ghost_semi_else      = ghost_semi, ghost_else
+    let ghost_SEMI_ELSE      = SEMI_ELSE ghost_semi_else
+
     (* END-OF-FILE TOKEN *)
 
     let wrap_eof      = wrap ""
@@ -900,6 +910,8 @@ module T =
     | "ZWSP"
     | "PARAMS"
     | "ES6FUN" -> ""
+    | "SEMI_ELSE" ->
+        (fst ghost_semi_else)#payload ^ " " ^ (snd ghost_semi_else)#payload
 
     (* End-Of-File *)
 
@@ -1043,9 +1055,15 @@ module T =
 
     (* Virtual tokens *)
 
-    | ZWSP   t -> t#region, sprintf "ZWSP%s" (comments t)
-    | PARAMS t -> t#region, sprintf "PARAMS%s" (comments t)
-    | ES6FUN t -> t#region, sprintf "ES6FUN%s" (comments t)
+    | ZWSP      t -> t#region, sprintf "ZWSP%s" (comments t)
+    | PARAMS    t -> t#region, sprintf "PARAMS%s" (comments t)
+    | ES6FUN    t -> t#region, sprintf "ES6FUN%s" (comments t)
+    | SEMI_ELSE (t1, t2) ->
+        let region   = Region.cover t1#region t2#region
+        and comments =
+          if Caml.(t1#comments = []) && Caml.(t2#comments = []) then ""
+          else " + comments"
+        in region, sprintf "SEMI_ELSE%s" comments
 
     (* End-Of-File *)
 

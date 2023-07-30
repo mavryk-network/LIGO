@@ -129,9 +129,10 @@ let add_comment (comment : Wrap.comment) : Token.t -> Token.t = function
 
 (* Virtual tokens *)
 
-| ZWSP   w -> ZWSP (w#add_comment comment)
-| PARAMS w -> PARAMS (w#add_comment comment)
-| ES6FUN w -> ES6FUN (w#add_comment comment)
+| ZWSP      w -> ZWSP (w#add_comment comment)
+| PARAMS    w -> PARAMS (w#add_comment comment)
+| ES6FUN    w -> ES6FUN (w#add_comment comment)
+| SEMI_ELSE (w1, w2) -> SEMI_ELSE (w1, w2#add_comment comment)
 
 (* End-Of-File *)
 

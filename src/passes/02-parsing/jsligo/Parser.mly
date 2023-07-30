@@ -569,19 +569,20 @@ after_cat_stmt:
   after_expr_stmt             { $1 }
 | expr_stmt   ";"?            { ($1, None), [] }
 | expr_stmt   ";" statements  { nseq_cons ($1, Some $2) $3 }
-| export_stmt ";" statements  { nseq_cons ($1, Some $2) $3 }
-| decl_stmt   ";" statements  { nseq_cons ($1, Some $2) $3 }
-| expr_stmt   after_expr_stmt { nseq_cons ($1,    None) $2 }
-| export_stmt after_expr_stmt { nseq_cons ($1,    None) $2 }
+| expr_stmt   after_expr_stmt
+| export_stmt after_expr_stmt
 | decl_stmt   after_expr_stmt { nseq_cons ($1,    None) $2 }
 
 after_expr_stmt:
   semi_or_last_stmt ";"?
-| export_stmt ";"?
-| decl_stmt ";"?
-| cat_stmt ";"?           { ($1,$2), [] }
-| cat_stmt ";" statements { nseq_cons ($1, Some $2) $3 }
-| cat_stmt after_cat_stmt { nseq_cons ($1,    None) $2 }
+| export_stmt       ";"?
+| decl_stmt         ";"?
+| cat_stmt          ";"?           { ($1,$2), [] }
+| semi_or_last_stmt ";" statements
+| export_stmt       ";" statements
+| decl_stmt         ";" statements
+| cat_stmt          ";" statements { nseq_cons ($1, Some $2) $3 }
+| cat_stmt after_cat_stmt          { nseq_cons ($1,    None) $2 }
 
 open_cat_stmt(right_stmt):
   core_stmt (right_stmt) | if_stmt (right_stmt) { $1 }
@@ -691,6 +692,11 @@ if_else_stmt(right_stmt):
   "if" par(if_cond) closed_non_if_stmt "else" right_stmt {
     let region = cover $1#region (statement_to_region $5)
     and value  = {kwd_if=$1; test=$2; if_so=$3; if_not = Some ($4,$5)}
+    in S_Cond {region; value} }
+| "if" par(if_cond) closed_non_if_stmt "; else" right_stmt {
+    let region = cover $1#region (statement_to_region $5)
+    (* TODO: Append [fst $4] (";") at the end of [$3] *)
+    and value  = {kwd_if=$1; test=$2; if_so=$3; if_not = Some (snd $4, $5)}
     in S_Cond {region; value} }
 
 if_cond:

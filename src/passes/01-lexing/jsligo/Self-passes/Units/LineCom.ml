@@ -119,6 +119,10 @@ let add_comment (comment : string Region.reg) : Token.t -> Token.t = function
 | ContractOf  w -> ContractOf (w#add_line_comment comment)
 | ParameterOf w -> ParameterOf (w#add_line_comment comment)
 
+(* Virtual tokens *)
+
+| SEMI_ELSE (w1, w2) -> SEMI_ELSE (w1, w2#add_line_comment comment)
+
 
 let filter (units : Token.t Unit.t list) : Token.t Unit.t list =
   let open! Token in

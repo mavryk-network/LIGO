@@ -153,9 +153,12 @@
 
 (* Virtual tokens *)
 
-%token <string Wrap.t> ZWSP   [@recover.expr Token.wrap_zwsp   $loc]
-%token <string Wrap.t> PARAMS [@recover.expr Token.wrap_params $loc]
-%token <string Wrap.t> ES6FUN [@recover.expr Token.wrap_es6fun $loc]
+%token <string Wrap.t> ZWSP   [@recover.expr Token.wrap_zwsp      $loc]
+%token <string Wrap.t> PARAMS [@recover.expr Token.wrap_params    $loc]
+%token <string Wrap.t> ES6FUN [@recover.expr Token.wrap_es6fun    $loc]
+
+%token <string Wrap.t * string Wrap.t> SEMI_ELSE "; else"
+                                       (* [@recover.expr ???] *)
 
 (* End of File *)
 
