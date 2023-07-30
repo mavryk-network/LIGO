@@ -628,9 +628,9 @@ and projection = {
 }
 
 and selection =
-  FieldName of (dot * field_name)     (* Records *)
-| FieldStr  of (dot * string_literal) (* Records *)
-| Component of int_literal brackets   (* Tuples  *)
+  FieldName of (dot * field_name)      (* Records *)
+| FieldStr  of string_literal brackets (* Records *)
+| Component of int_literal brackets    (* Tuples  *)
 
 (* Code injection.  Note how the field [language] wraps a region in
    another: the outermost region covers the header "[%<language>" and
@@ -781,8 +781,7 @@ let fun_body_to_region = function
 let selection_to_region = function
   FieldName (dot, field_name) ->
     Region.cover dot#region field_name#region
-| FieldStr (dot, string_literal) ->
-    Region.cover dot#region string_literal#region
+| FieldStr brackets -> brackets.region
 | Component brackets -> brackets.region
 
 let module_selection_to_region = function

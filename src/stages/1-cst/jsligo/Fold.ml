@@ -607,7 +607,7 @@ let fold
   | S_selection -> process
     ( match node with
       FieldName node -> node -| S_tuple_2 (S_dot, S_field_name)
-    | FieldStr node -> node -| S_tuple_2 (S_dot, S_string_literal)
+    | FieldStr node -> node -| S_brackets S_string_literal
     | Component node -> node -| S_brackets S_nat_literal
     )
   | S_semi -> process @@ node -| S_wrap S_lexeme

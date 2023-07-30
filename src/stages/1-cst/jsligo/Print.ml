@@ -925,8 +925,8 @@ and print_selection state = function
 and print_FieldName state (node : dot * field_name) =
   Tree.(make_unary state "FieldName" make_literal (snd node))
 
-and print_FieldStr state (node : dot * string_literal) =
-  Tree.make_string "FieldStr" state (snd node)
+and print_FieldStr state (node : string_literal brackets) =
+  Tree.(make_string "FieldStr" state node.value.inside)
 
 and print_Component state (node : int_literal brackets) =
   Tree.(make_int "Component" state node.value.inside)
