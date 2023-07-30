@@ -38,8 +38,8 @@ let get_type (vdef : Scopes.Types.vdef) : type_info option =
 let on_req_type_definition : Position.t -> Path.t -> Locations.t option Handler.t =
  fun pos file ->
   with_cached_doc file None
-  @@ fun { get_scope_info; _ } ->
-  when_some' (Go_to_definition.get_definition pos file get_scope_info.definitions)
+  @@ fun { definitions; _ } ->
+  when_some' (Go_to_definition.get_definition pos file definitions)
   @@ fun def ->
   when_some'
     (let from_def_location : Def.t -> Def.Loc_in_file.t option =
@@ -54,14 +54,16 @@ let on_req_type_definition : Position.t -> Path.t -> Locations.t option Handler.
        let open Option.Monad_infix in
        get_type vdef
        >>= fun type_expression ->
-       let location = Def.Def_location.of_loc (use_var_name_if_availiable type_expression).location in
+       let location =
+         Def.Def_location.of_loc (use_var_name_if_availiable type_expression).location
+       in
        (match location with
        | StdLib _ | Virtual _ ->
          None (* We can't return any position to user: type of this vdef is inferred *)
        | File { range; path } ->
          Option.some
          @@ Option.value ~default:Def.Loc_in_file.{ range; path }
-         @@ (Go_to_definition.get_definition range.start file get_scope_info.definitions
+         @@ (Go_to_definition.get_definition range.start file definitions
             >>= from_def_location))
      | Module _mdef -> None)
   @@ fun { range; path } ->

@@ -281,6 +281,22 @@ let source =
   flag ~doc name spec
 
 
+let allow_json_download =
+  let open Command.Param in
+  let name = "--allow-json-download" in
+  let doc = "Allow LIGO to download JSON files for metadata check." in
+  flag ~doc name no_arg
+
+
+let disallow_json_download =
+  let open Command.Param in
+  let name = "--disallow-json-download" in
+  let doc =
+    "Disallow LIGO to download JSON files for metadata check (and do not show message)."
+  in
+  flag ~doc name no_arg
+
+
 let disable_michelson_typechecking =
   let open Command.Param in
   let name = "--disable-michelson-typechecking" in
@@ -338,6 +354,13 @@ let with_types =
   let open Command.Param in
   let name = "--with-types" in
   let doc = "Tries to infer types for all named expressions" in
+  flag ~doc name no_arg
+
+
+let defs_only =
+  let open Command.Param in
+  let name = "--defs-only" in
+  let doc = "Gets only list of definitions (without scopes)." in
   flag ~doc name no_arg
 
 
@@ -917,6 +940,8 @@ let compile_storage =
       display_format
       no_colour
       no_metadata_check
+      allow_json_download
+      disallow_json_download
       deprecated
       skip_analytics
       michelson_format
@@ -931,6 +956,13 @@ let compile_storage =
       libraries
       ()
     =
+    let json_download =
+      if disallow_json_download
+      then Some false
+      else if allow_json_download
+      then Some true
+      else None
+    in
     let raw_options =
       Raw_options.make
         ~entry_point
@@ -946,6 +978,7 @@ let compile_storage =
         ~warn_infinite_loop
         ~libraries
         ~no_metadata_check
+        ~json_download
         ()
     in
     let cli_analytics =
@@ -999,6 +1032,8 @@ let compile_storage =
     <*> display_format
     <*> no_colour
     <*> no_metadata_check
+    <*> allow_json_download
+    <*> disallow_json_download
     <*> deprecated
     <*> skip_analytics
     <*> michelson_code_format
@@ -2050,6 +2085,7 @@ let get_scope =
       no_colour
       deprecated
       with_types
+      defs_only
       project_root
       no_stdlib
       ()
@@ -2059,6 +2095,7 @@ let get_scope =
         ~protocol_version
         ~libraries
         ~with_types
+        ~defs_only
         ~project_root
         ~deprecated
         ~no_stdlib
@@ -2072,11 +2109,13 @@ let get_scope =
         ()
     in
     return_with_custom_formatter ~skip_analytics:false ~cli_analytics ~return
-    @@ Lsp_helpers.Ligo_interface.Get_scope.get_scope_cli_result
-         raw_options
-         source_file
-         display_format
-         no_colour
+    @@ fun () ->
+    Lsp_helpers.Ligo_interface.Get_scope.get_scope_cli_result
+      raw_options
+      ~source_file
+      ~display_format
+      ~no_colour
+      ~defs_only
   in
   let summary = "return the JSON encoded environment for a given file." in
   let readme () =
@@ -2094,6 +2133,7 @@ let get_scope =
     <*> no_colour
     <*> deprecated
     <*> with_types
+    <*> defs_only
     <*> project_root
     <*> no_stdlib)
 

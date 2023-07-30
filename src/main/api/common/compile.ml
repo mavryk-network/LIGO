@@ -462,19 +462,24 @@ let storage
           module_
           typed_store
       in
-      let options =
-        Run.make_dry_run_options
-          ~raise
-          ~constants
-          { now; amount; balance; sender; source; parameter_ty = None }
+      let michelson_value =
+        let options =
+          Run.make_dry_run_options
+            ~raise
+            ~constants
+            { now; amount; balance; sender; source; parameter_ty = None }
+        in
+        Run.evaluate_expression ~raise ~options compiled_param.expr compiled_param.expr_ty
       in
-      ( no_comment
-          (Run.evaluate_expression
-             ~raise
-             ~options
-             compiled_param.expr
-             compiled_param.expr_ty)
-      , [] ) )
+      let () =
+        Run.Checks.storage
+          ~raise
+          ~options
+          ~loc:typed_store.location
+          ~type_:compiled_param.expr_ty
+          michelson_value
+      in
+      no_comment michelson_value, [] )
 
 
 let view (raw_options : Raw_options.t) source view_name michelson_code_format =
@@ -502,7 +507,7 @@ let view (raw_options : Raw_options.t) source view_name michelson_code_format =
           BuildSystem.Source_input.(
             Raw { id = "source_of_text" ^ Syntax.to_ext syntax; code = source_code })
       in
-      let { name ; value } : Build.view_michelson =
+      let ({ name; value } : Build.view_michelson) =
         Build.build_view ~raise ~options entry_point module_ view_name source
       in
       let compiled_view = Ligo_compile.Of_michelson.build_view ~raise name value in

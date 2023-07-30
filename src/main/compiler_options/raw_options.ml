@@ -18,8 +18,10 @@ type t =
   ; (* Tools *)
     with_types : bool
   ; self_pass : bool
+  ; json_download : bool option
   ; only_ep : bool
   ; skip_generated : bool
+  ; defs_only : bool
   ; (* Test framework *)
     test : bool
   ; steps : int
@@ -63,7 +65,9 @@ module Default_options = struct
   let only_ep = false
   let with_types = false
   let self_pass = false
+  let json_download = None
   let skip_generated = false
+  let defs_only = false
 
   (* Test framework *)
   let test = false
@@ -89,6 +93,7 @@ let make
     ?(warning_as_error = Default_options.warning_as_error)
     ?(no_colour = Default_options.no_colour)
     ?(no_metadata_check = Default_options.no_metadata_check)
+    ?(json_download = Default_options.json_download)
     ?(deprecated = Default_options.deprecated)
     ?(warn_unused_rec = Default_options.warn_unused_rec)
     ?(warn_infinite_loop = Default_options.warn_infinite_loop)
@@ -108,6 +113,7 @@ let make
     ?(cli_expr_inj = Default_options.cli_expr_inj)
     ?(protocol_version = Default_options.protocol_version)
     ?(no_stdlib = Default_options.no_stdlib)
+    ?(defs_only = Default_options.defs_only)
     ?(disable_michelson_typechecking = Default_options.disable_michelson_typechecking)
     ?(experimental_disable_optimizations_for_debugging =
       Default_options.experimental_disable_optimizations_for_debugging)
@@ -138,7 +144,9 @@ let make
     only_ep
   ; with_types
   ; self_pass
+  ; json_download
   ; skip_generated
+  ; defs_only
   ; (* Test framework *)
     test
   ; steps
