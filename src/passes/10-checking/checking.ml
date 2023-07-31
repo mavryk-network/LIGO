@@ -1440,7 +1440,9 @@ and try_infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, 
   let open Let_syntax in
   try_ (infer_expression expr) ~with_:(fun error ->
       let%bind loc = loc () in
-      (* Use an arbitrary type for the erroneous expression *)
+      (* If the type can be inferred anyway - we want to use inferred type.
+         E.g. `x : int` has type `int` even if `x` is not in scope.
+          Otherwise we create an exsistensial type  *)
       let%bind ret_type =
         match Ast_core.Combinators.get_e_ascription_opt expr with
         | Some ascr -> With_default_layout.evaluate_type ascr.type_annotation
@@ -1538,7 +1540,9 @@ and infer_declaration (decl : I.declaration)
         let%bind annoted_sig =
           With_default_layout.evaluate_signature_expr signature_expr
         in
-        let%bind _annoted_sig (* FIXME *), entries = cast_signature inferred_sig annoted_sig in
+        let%bind _annoted_sig (* FIXME *), entries =
+          cast_signature inferred_sig annoted_sig
+        in
         let%bind () =
           match Generator.check_entries inferred_sig entries with
           | `All_found -> return ()

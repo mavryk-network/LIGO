@@ -364,7 +364,8 @@ and compile_declarations ~raise : Data.t -> Data.path -> I.module_ -> Data.t =
       Data.add_exp acc_scope exp
     | I.D_module { module_binder; module_; module_attr = _ } ->
       let rhs_glob =
-        compile_module_expr ~raise
+        compile_module_expr
+          ~raise
           acc_scope.env
           (Data.extend_debug_path path module_binder)
           module_
@@ -420,17 +421,20 @@ and compile_type ~(raise : _ Trace.raise) : I.type_expression -> O.type_expressi
   | T_for_all x -> return (T_for_all (Abstraction.map self x))
 
 
-and compile_expression ~raise : Data.env -> ?debug_path:Data.path -> I.expression -> O.expression
+and compile_expression ~raise
+    : Data.env -> ?debug_path:Data.path -> I.expression -> O.expression
   =
  fun env ?(debug_path = []) expr ->
-  let self ?(env = env) ?(debug_path = debug_path) = compile_expression ~raise env ~debug_path in
+  let self ?(env = env) ?(debug_path = debug_path) =
+    compile_expression ~raise env ~debug_path
+  in
   let self_ty = compile_type ~raise in
   let return expression_content : O.expression =
     let type_expression = compile_type ~raise expr.type_expression in
     { expression_content; type_expression; location = expr.location }
   in
   match expr.expression_content with
-  | I.E_error _ -> raise.error @@ cannot_compile_erroneous_expression expr expr.location
+  | I.E_error error -> raise.error @@ cannot_compile_erroneous_expression error
   (* resolving variable names *)
   | I.E_variable v ->
     let v = Data.resolve_variable env v in
