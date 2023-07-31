@@ -5,7 +5,9 @@
 
 cd "$(dirname "${BASH_SOURCE[0]}"/..)"
 
-./scripts/changelog-json.sh > changelog.json
+CHANGELOG_ENTRY_FOLDER=${1:-"changelog"}
+
+./scripts/changelog-json.sh $CHANGELOG_ENTRY_FOLDER > changelog.json
 
 jq '
   .changelog[].changes |=

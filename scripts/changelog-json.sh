@@ -7,6 +7,7 @@ set -euET -o pipefail
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"/..
 
+CHANGELOG_ENTRY_FOLDER=$1
 
 TEMP_VERSION="{}"
 mapfile -t VERSIONS < <(git tag | grep -E "^[0-9]+\.[0-9]+\.[0-9]+$" | sort -Vr; git log --format=format:%H | tail -n 1)
@@ -19,7 +20,7 @@ for VERSION in "${VERSIONS[@]}"; do
         PREV_VERSION="$VERSION"
         continue
     fi
-    CHANGES="$(git diff --diff-filter=A --name-only "$VERSION" "$PREV_VERSION" -- changelog | sort -r --general-numeric-sort)"
+    CHANGES="$(git diff --diff-filter=A --name-only "$VERSION" "$PREV_VERSION" -- $CHANGELOG_ENTRY_FOLDER | sort -r --general-numeric-sort)"
     export PREV_VERSION
     export name
     if [[ "$PREV_VERSION" == "HEAD" ]]; then
