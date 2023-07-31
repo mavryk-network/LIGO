@@ -852,7 +852,7 @@ File "../../test/contracts/negative/create_contract_toplevel.mligo", line 4, cha
       ^^^^^^^^
   9 |   in
 
-Not all free variables could be inlined in Tezos.create_contract usage: gen#242. |}];
+Not all free variables could be inlined in Tezos.create_contract usage: gen#243. |}];
   run_ligo_good [ "compile"; "contract"; contract "create_contract_var.mligo" ];
   [%expect
     {|
@@ -944,7 +944,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#242.
           ^^^^^^^^
      12 |   in
 
-    Not all free variables could be inlined in Tezos.create_contract usage: gen#243. |}];
+    Not all free variables could be inlined in Tezos.create_contract usage: gen#244. |}];
   run_ligo_bad [ "compile"; "contract"; bad_contract "create_contract_no_inline.mligo" ];
   [%expect
     {|
@@ -999,7 +999,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#242.
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      10 |   let toto : operation list = [ op ] in
 
-    Not all free variables could be inlined in Tezos.create_contract usage: foo#257. |}];
+    Not all free variables could be inlined in Tezos.create_contract usage: foo#258. |}];
   run_ligo_good [ "compile"; "contract"; contract "create_contract.mligo" ];
   [%expect
     {|
@@ -1594,30 +1594,30 @@ let%expect_test _ =
                  LAMBDA
                    unit
                    unit
-                   { { /* x#218 */ } ;
+                   { { /* x#219 */ } ;
                      { /* File "../../test/contracts/noop.mligo", line 2, characters 28-29 */ } } } ;
-               { /* f#217, _ */ } ;
+               { /* f#218, _ */ } ;
                { /* File "../../test/contracts/noop.mligo", line 3, character 2 to line 6, character 28 */
                  { /* File "../../test/contracts/noop.mligo", line 3, characters 18-21 */
                    SWAP ;
                    { /* File "../../test/contracts/noop.mligo", line 3, characters 18-19 */ DUP 2 } ;
                    SWAP ;
                    EXEC } ;
-                 { /* s2#219, f#217 */ } ;
+                 { /* s2#220, f#218 */ } ;
                  { /* File "../../test/contracts/noop.mligo", line 4, character 2 to line 6, character 28 */
                    { /* File "../../test/contracts/noop.mligo", line 4, characters 18-22 */
                      { /* File "../../test/contracts/noop.mligo", line 4, characters 20-22 */ } ;
                      { /* File "../../test/contracts/noop.mligo", line 4, characters 18-19 */ DUP 2 } ;
                      SWAP ;
                      EXEC } ;
-                   { /* s3#220, f#217 */ } ;
+                   { /* s3#221, f#218 */ } ;
                    { /* File "../../test/contracts/noop.mligo", line 5, character 2 to line 6, character 28 */
                      { /* File "../../test/contracts/noop.mligo", line 5, characters 10-14 */
                        { /* File "../../test/contracts/noop.mligo", line 5, characters 12-14 */ } ;
                        { /* File "../../test/contracts/noop.mligo", line 5, characters 10-11 */ SWAP } ;
                        SWAP ;
                        EXEC } ;
-                     { /* s#221 */ } ;
+                     { /* s#222 */ } ;
                      { /* File "../../test/contracts/noop.mligo", line 6, characters 3-27 */
                        { /* File "../../test/contracts/noop.mligo", line 6, characters 26-27 */ } ;
                        { /* File "../../test/contracts/noop.mligo", line 6, characters 3-24 */

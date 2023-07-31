@@ -112,7 +112,7 @@ module Command = struct
         -> [ `Exec_failed of Tezos_state.state_error | `Exec_ok of Z.t ] tezos_command
     | Bake_ops :
         Location.t * Ligo_interpreter.Types.calltrace * LT.test_operation list
-        -> unit tezos_command
+        -> [ `Exec_failed of Tezos_state.state_error | `Exec_ok of Z.t ] tezos_command
     | State_error_to_value : Tezos_state.state_error -> LT.value tezos_command
     | Get_storage_of_address :
         Location.t * Ligo_interpreter.Types.calltrace * LT.value
@@ -316,8 +316,10 @@ module Command = struct
       | Success (ctxt', gas_consumed) -> `Exec_ok gas_consumed, ctxt'
       | Fail errs -> `Exec_failed errs, ctxt)
     | Bake_ops (loc, calltrace, ops) ->
-      let ctxt' = Tezos_state.bake_ops ~raise ~loc ~calltrace ctxt ops in
-      (), ctxt'
+      let x = Tezos_state.bake_ops ~raise ~loc ~calltrace ctxt ops in
+      (match x with
+      | Success (ctxt', gas_consumed) -> `Exec_ok gas_consumed, ctxt'
+      | Fail errs -> `Exec_failed errs, ctxt)
     | State_error_to_value errs ->
       let open Tezos_protocol.Protocol in
       let open Tezos_protocol_env in

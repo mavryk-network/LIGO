@@ -652,7 +652,7 @@ let bake_op
 
 let bake_ops
     :  raise:r -> loc:Location.t -> calltrace:calltrace -> context -> test_operation list
-    -> context
+    -> add_operation_outcome
   =
  fun ~raise ~loc ~calltrace ctxt ops ->
   let f = function
@@ -679,9 +679,7 @@ let bake_ops
         in
         operation
   in
-  match bake_ops ~raise ~loc ~calltrace ctxt (List.map ~f ops) with
-  | Success (ctxt, _) -> ctxt
-  | Fail errs -> raise.error (target_lang_error loc calltrace errs)
+  bake_ops ~raise ~loc ~calltrace ctxt (List.map ~f ops)
 
 
 let bake_until_n_cycle_end ~raise ~loc ~calltrace (ctxt : context) n =
