@@ -626,7 +626,8 @@ let bake_ops
   match List.fold_result ~f:aux ~init:incr operation with
   | Ok incr ->
     let last_operations = get_last_operations_result incr in
-    let consum = get_consumed_gas (List.hd_exn last_operations) in
+    let all_consum = List.map ~f:get_consumed_gas last_operations in
+    let consum = List.fold_right ~f:Z.( + ) ~init:Z.zero all_consum in
     let raw =
       Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace)
       @@ Incremental.finalize_block incr
