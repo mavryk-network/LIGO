@@ -642,7 +642,7 @@ module Test = struct
   end
   module Incremental = struct
     type operation = "%constant:test_operation"
-    type bake_result = test_exec_result (* Success of nat list | Fail of nat * test_exec_error *)
+    type bake_result = Success of nat | Fail of nat * test_exec_error
 
     let transfer (type a) (c : a contract) (p : a) (t : tez) (a : address) : operation =
       let m = compile_value p in

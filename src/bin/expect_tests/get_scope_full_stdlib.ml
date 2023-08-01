@@ -408,7 +408,9 @@ let%expect_test _ =
       File "", line 615, characters 28-31 ,
       File "", line 618, characters 35-38 ,
       File "", line 630, characters 28-31 ,
-      File "", line 633, characters 35-38
+      File "", line 633, characters 35-38 ,
+      File "", line 646, characters 34-37 ,
+      File "", line 646, characters 48-51
     (unit#7:5-9 -> unit)
     Range: File "", line 7, characters 5-9
     Body Range: File "", line 7, characters 12-28
@@ -1298,7 +1300,9 @@ let%expect_test _ =
     Content: : |sum[Balance_too_low -> test_exec_error_balance_too_low ,
                     Other -> string ,
                     Rejected -> ( michelson_program * address )]|
-    references: File "", line 280, characters 49-64
+    references:
+      File "", line 280, characters 49-64 ,
+      File "", line 646, characters 54-69
     (test_exec_result#280:5-21 -> test_exec_result)
     Range: File "", line 280, characters 5-21
     Body Range: File "", line 280, characters 24-64
@@ -1306,8 +1310,7 @@ let%expect_test _ =
     references:
       File "", line 390, characters 65-81 ,
       File "", line 405, characters 73-89 ,
-      File "", line 610, characters 47-63 ,
-      File "", line 646, characters 23-39
+      File "", line 610, characters 47-63
     (test_baker_policy#282:5-22 -> test_baker_policy)
     Range: File "", line 282, characters 5-22
     Body Range: File "", line 283, character 4 to line 285, character 24
@@ -3162,8 +3165,10 @@ let%expect_test _ =
                                           File "", line 652, characters 22-31
                                         (bake_result#646:9-20 -> bake_result)
                                         Range: File "", line 646, characters 9-20
-                                        Body Range: File "", line 646, characters 23-39
-                                        Content: : |test_exec_result|
+                                        Body Range: File "", line 646, characters 23-69
+                                        Content: : |sum[Fail -> ( nat *
+                                                                  test_exec_error ) ,
+                                                        Success -> nat]|
                                         references:
                                           File "", line 651, characters 36-47
                                         Module definitions:

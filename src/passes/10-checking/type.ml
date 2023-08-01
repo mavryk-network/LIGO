@@ -312,6 +312,15 @@ let t_test_exec_result ~loc () =
   t_sum_ez ~loc [ "Success", t_nat ~loc (); "Fail", t_test_exec_error ~loc () ] ()
 
 
+let t_test_bake_result ~loc () =
+  t_sum_ez
+    ~loc
+    [ "Success", t_nat ~loc ()
+    ; "Fail", t_pair ~loc (t_nat ~loc ()) (t_test_exec_error ~loc ()) ()
+    ]
+    ()
+
+
 let get_t_construct t constr =
   match t.content with
   | T_construct { constructor = constr'; parameters; _ }
