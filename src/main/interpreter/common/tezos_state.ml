@@ -553,7 +553,7 @@ let upd_transduced_data
 (* result of baking an operation *)
 type add_operation_outcome =
   | Success of (context * Z.t (* gas consumed *))
-  | Fail of state_error
+  | Fail of (int * state_error)
 
 let get_last_operations_result (incr : Tezos_alpha_test_helpers.Incremental.t) =
   match Tezos_alpha_test_helpers.Incremental.rev_tickets incr with
@@ -620,11 +620,13 @@ let bake_ops
     Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace)
     @@ Incremental.begin_construction ~policy:ctxt.internals.baker_policy ctxt.raw
   in
-  let aux incr op =
-    Lwt_main.run @@ Incremental.add_operation ~check_size:false incr (op incr)
+  let aux (n, incr) op =
+    match Lwt_main.run @@ Incremental.add_operation ~check_size:false incr (op incr) with
+    | Ok incr -> Ok (n + 1, incr)
+    | Error err -> Error (n, err)
   in
-  match List.fold_result ~f:aux ~init:incr operation with
-  | Ok incr ->
+  match List.fold_result ~f:aux ~init:(0, incr) operation with
+  | Ok (_, incr) ->
     let last_operations = get_last_operations_result incr in
     let all_consum = List.map ~f:get_consumed_gas last_operations in
     let consum = List.fold_right ~f:Z.( + ) ~init:Z.zero all_consum in
@@ -639,7 +641,7 @@ let bake_ops
         last_operations
     in
     Success (ctxt, consum)
-  | Error errs -> Fail errs
+  | Error (n, errs) -> Fail (n, errs)
 
 
 let bake_op
@@ -700,7 +702,7 @@ let register_delegate ~raise ~loc ~calltrace (ctxt : context) pkh =
   in
   match bake_op ~raise ~loc ~calltrace ctxt operation with
   | Success (ctxt, _) -> ctxt
-  | Fail errs -> raise.error (target_lang_error loc calltrace errs)
+  | Fail (_, errs) -> raise.error (target_lang_error loc calltrace errs)
 
 
 let register_constant ~raise ~loc ~calltrace (ctxt : context) ~source ~value =
@@ -723,7 +725,7 @@ let register_constant ~raise ~loc ~calltrace (ctxt : context) ~source ~value =
   in
   match bake_op ~raise ~loc ~calltrace ctxt operation with
   | Success (ctxt, _) -> hash, ctxt
-  | Fail errs -> raise.error (target_lang_error loc calltrace errs)
+  | Fail (_, errs) -> raise.error (target_lang_error loc calltrace errs)
 
 
 let read_file_constants ~raise fn =
@@ -765,7 +767,7 @@ let register_file_constants ~raise ~loc ~calltrace fn (ctxt : context) ~source =
     in
     match bake_op ~raise ~loc ~calltrace ctxt op with
     | Success (ctxt, _) -> ctxt
-    | Fail errs -> raise.error (target_lang_error loc calltrace errs)
+    | Fail (_, errs) -> raise.error (target_lang_error loc calltrace errs)
   in
   let ctxt = List.fold_right ~f:aux ~init:ctxt constants in
   hashes, ctxt
@@ -879,7 +881,7 @@ let originate_contract
       | Some ligo_ty -> (dst, ligo_ty) :: ctxt.internals.storage_tys
     in
     addr, { ctxt with internals = { ctxt.internals with storage_tys } }
-  | Fail errs -> raise.error (target_lang_error loc calltrace errs)
+  | Fail (_, errs) -> raise.error (target_lang_error loc calltrace errs)
 
 
 let get_bootstrapped_contract ~raise (n : int) =

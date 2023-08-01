@@ -314,12 +314,12 @@ module Command = struct
       in
       (match x with
       | Success (ctxt', gas_consumed) -> `Exec_ok gas_consumed, ctxt'
-      | Fail errs -> `Exec_failed errs, ctxt)
+      | Fail (_, errs) -> `Exec_failed errs, ctxt)
     | Bake_ops (loc, calltrace, ops) ->
       let x = Tezos_state.bake_ops ~raise ~loc ~calltrace ctxt ops in
       (match x with
       | Success (ctxt', gas_consumed) -> `Exec_ok gas_consumed, ctxt'
-      | Fail errs -> `Exec_failed errs, ctxt)
+      | Fail (_, errs) -> `Exec_failed errs, ctxt)
     | State_error_to_value errs ->
       let open Tezos_protocol.Protocol in
       let open Tezos_protocol_env in
