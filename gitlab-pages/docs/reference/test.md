@@ -1362,6 +1362,28 @@ A type for incremental operations (not to confuse with top-level `operation`).
 
 
 <SyntaxTitle syntax="pascaligo">
+type bake_result =
+  Success of nat
+| Fail of nat * test_exec_error
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+type bake_result =
+  Success of nat
+| Fail of nat * test_exec_error
+</SyntaxTitle>
+
+<SyntaxTitle syntax="jsligo">
+type bake_result =
+  ["Success", nat]
+| ["Fail", [nat, test_exec_error]]
+</SyntaxTitle>
+
+A test execution result:
+ - The `Success` case means the baking went through without an issue. Its argument represent the total amount of gas consumed by the sum of all transactions
+ - The "Fail reason" case means something went wrong. Its first argument encodes the operation number that failed, its second argument encode the causes of the failure (see type `test_exec_error`)
+
+
+<SyntaxTitle syntax="pascaligo">
 val Test.Incremental.transfer&lt;a&gt; : contract a -> a -> tez -> address -> Test.Incremental.operation
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
@@ -1386,6 +1408,20 @@ val Test.Incremental.bake_exn : Test.Incremental.operation list -> unit
 
 <SyntaxTitle syntax="jsligo">
 let Test.Incremental.bake_exn : list&lt;Test.Incremental.operation&gt; => unit;
+</SyntaxTitle>
+
+Bakes a list of operations, executing them effectively, raises failure in case of an error.
+
+
+<SyntaxTitle syntax="pascaligo">
+val Test.Incremental.bake : list Test.Incremental.operation -> Test.Incremental.bake_result
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val Test.Incremental.bake : Test.Incremental.operation list -> Test.Incremental.bake_result
+</SyntaxTitle>
+
+<SyntaxTitle syntax="jsligo">
+let Test.Incremental.bake : list&lt;Test.Incremental.operation&gt; => Test.Incremental.bake_result;
 </SyntaxTitle>
 
 Bakes a list of operations, executing them effectively.
