@@ -2,12 +2,12 @@ A React component for embedding Ligo code snippets on a page.
 
 # Quick start
 
-1. Install package `yarn add @ligolang/ligo-snippets`
+1. Install package `yarn add @ligolang/ligo-ci-test-snippets`
 2. Add `LigoSnippet` component to a page
 
 
 ```jsx
-import { LigoSnippet } from "@ligolang/ligo-snippets";
+import { LigoSnippet } from "@ligolang/ligo-ci-test-snippets";
 
 const App = () => {
     const code = `type storage is int

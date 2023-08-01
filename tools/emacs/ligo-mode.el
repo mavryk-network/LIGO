@@ -3,7 +3,7 @@
 
 ;; Version: 0.2.0
 ;; Author: LigoLang SASU
-;; Url: https://gitlab.com/ligolang/ligo/-/tree/dev/tools/emacs
+;; Url: https://gitlab.com/ligolang/ligo-ci-test/-/tree/dev/tools/emacs
 ;; Keywords: languages
 ;; Package-Requires: ((emacs "27.1"))
 

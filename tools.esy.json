@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "ocaml": "4.14.0",
+    "@opam/reason": "*",
+    "@opam/opam-file": "*",
+    "@opam/opam-file-format": "*",
+    "@opam/opam-state": "*"
+  }
+}

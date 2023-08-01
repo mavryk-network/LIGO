@@ -7,7 +7,7 @@
     "version": "0.1.3",
     "repository": {
         "type": "git",
-        "url": "https://gitlab.com/ligolang/ligo"
+        "url": "https://gitlab.com/ligolang/ligo-ci-test"
     },
     "publisher": "ligolang-publish",
     "categories": [

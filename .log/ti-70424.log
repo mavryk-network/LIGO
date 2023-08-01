@@ -1,0 +1,17 @@
+[19:8:0.321] Global cache location '/Users/manas/Library/Caches/typescript/3.0', safe file path '/users/manas/.config/yarn/global/node_modules/typescript/lib/typingsafelist.json', types map path /users/manas/.config/yarn/global/node_modules/typescript/lib/typesmap.json
+[19:8:0.322] Processing cache location '/Users/manas/Library/Caches/typescript/3.0'
+[19:8:0.323] Trying to find '/Users/manas/Library/Caches/typescript/3.0/package.json'...
+[19:8:0.324] Finished processing cache location '/Users/manas/Library/Caches/typescript/3.0'
+[19:8:0.324] Process id: 70425
+[19:8:0.324] NPM location: "/opt/homebrew/Cellar/node/19.9.0/bin/npm" (explicit '--npmLocation' not  provided)
+[19:8:0.324] Npm config file: /Users/manas/Library/Caches/typescript/3.0/package.json
+[19:8:0.324] Npm config file: '/Users/manas/Library/Caches/typescript/3.0/package.json' is missing, creating new one...
+[19:8:0.324] Updating types-registry npm package...
+[19:8:0.325] Exec: "/opt/homebrew/Cellar/node/19.9.0/bin/npm" install --ignore-scripts types-registry@latest
+[19:8:0.330]     Failed. stdout:
+    
+    stderr:
+    /bin/sh: /opt/homebrew/Cellar/node/19.9.0/bin/npm: No such file or directory
+    
+[19:8:0.330] Updated types-registry npm package
+[19:8:0.330] Types registry file '/Users/manas/Library/Caches/typescript/3.0/node_modules/types-registry/index.json' does not exist

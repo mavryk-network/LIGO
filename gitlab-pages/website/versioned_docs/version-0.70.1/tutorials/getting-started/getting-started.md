@@ -24,14 +24,14 @@ Alternatively, you can decide to use our [webide](https://ide.ligolang.org/). Th
 
 The `ligo` executable is statically linked. It should run on most modern Linux distributions.
 
-You can get the rolling release [here](https://gitlab.com/ligolang/ligo/-/jobs/4736572090/artifacts/raw/ligo), make it executable, and you are done!
+You can get the rolling release [here](https://gitlab.com/ligolang/ligo-ci-test/-/jobs/4736572090/artifacts/raw/ligo), make it executable, and you are done!
 
 ```zsh
-wget https://gitlab.com/ligolang/ligo/-/jobs/4736572090/artifacts/raw/ligo
+wget https://gitlab.com/ligolang/ligo-ci-test/-/jobs/4736572090/artifacts/raw/ligo
 chmod +x ./ligo
 ```
 
-For a specific version, you can visit our [release page](https://gitlab.com/ligolang/ligo/-/releases/).
+For a specific version, you can visit our [release page](https://gitlab.com/ligolang/ligo-ci-test/-/releases/).
 Optionally, you can put it somewhere in your `PATH` for easy access:
 
 ```zsh
@@ -43,14 +43,14 @@ sudo cp ./ligo /usr/local/bin
 Try our tap,
 
 ```
-brew tap ligolang/ligo https://gitlab.com/ligolang/ligo.git
-brew install ligolang/ligo/ligo
+brew tap ligolang/ligo-ci-test https://gitlab.com/ligolang/ligo-ci-test.git
+brew install ligolang/ligo-ci-test/ligo
 ```
 
 ### Debian Linux package installation
 
 A `.deb` package containing the static `ligo` executable is also available.
-First, download [the package](https://gitlab.com/ligolang/ligo/-/jobs/4736572090/artifacts/raw/ligo.deb), and then install using:
+First, download [the package](https://gitlab.com/ligolang/ligo-ci-test/-/jobs/4736572090/artifacts/raw/ligo.deb), and then install using:
 
 ```zsh
 sudo apt install ./ligo.deb
@@ -63,13 +63,13 @@ If you've [installed 🐳 Docker](https://docs.docker.com/install/), you can run
 Linux or OSX:
 
 > ```sh
-> docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:
+> docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo-ci-test:
 > ```
 >
 > For convenience you can alias the above command
 >
 > ```sh
-> alias ligo="docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:"
+> alias ligo="docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo-ci-test:"
 > ```
 >
 > To make this `alias` persistent across terminal sessions you need to configure your shell.
@@ -78,13 +78,13 @@ Linux or OSX:
 Windows:
 
 > ```dos
-> docker run --rm -v "%CD%":/cd -w /cd ligolang/ligo:`
+> docker run --rm -v "%CD%":/cd -w /cd ligolang/ligo-ci-test:`
 > ```
 >
 > For convenience you can alias the above command
 >
 > ```dos
-> doskey ligo=docker run --rm -v "%CD%":/cd -w /cd ligolang/ligo: $*
+> doskey ligo=docker run --rm -v "%CD%":/cd -w /cd ligolang/ligo-ci-test: $*
 > ```
 >
 > To make the alias persistent across terminal sessions you need to add the `doskey` to the Windows Registry.
@@ -92,7 +92,7 @@ Windows:
 
 Or if you want the development version, replace the version above with `next`.
 
-Or run one of the older versions found on [DockerHub](https://hub.docker.com/r/ligolang/ligo/tags).
+Or run one of the older versions found on [DockerHub](https://hub.docker.com/r/ligolang/ligo-ci-test/tags).
 
 ## Setting up the editor
 
@@ -102,9 +102,9 @@ In this tutorial, we will use vs-code.
 
 - For vs-code, simply go to the extension menu in the left bar (Ctrl + Shift + X) and search for the `ligo-vscode` extension and install it.
 
-- For emacs, follow the instruction [here](https://gitlab.com/ligolang/ligo/-/blob/dev/tools/emacs/README.md)
+- For emacs, follow the instruction [here](https://gitlab.com/ligolang/ligo-ci-test/-/blob/dev/tools/emacs/README.md)
 
-- For vim, follow the instruction [here](https://gitlab.com/ligolang/ligo/-/blob/dev/tools/vim/ligo/start/ligo/README.md)
+- For vim, follow the instruction [here](https://gitlab.com/ligolang/ligo-ci-test/-/blob/dev/tools/vim/ligo/start/ligo/README.md)
 
 Once, you've done it, you are ready to make your first smart-contract
 
@@ -126,7 +126,7 @@ Rather you're curious to see how to make NFT or randomness in LIGO, or you want 
 
 In this section and the following one we will use a simple smart-contract that is present as example on our webide. We will cover the LIGO language and smart-contract development in the following tutorials.
 
-First, create a `ligo_tutorial` folder on your computer. Then download and put the contract in this folder. It is available in [CameLIGO](https://gitlab.com/ligolang/ligo/-/raw/dev/src/test/contracts/starting.mligo) and [JsLIGO](https://gitlab.com/ligolang/ligo/-/raw/dev/src/test/contracts/starting.jsligo)
+First, create a `ligo_tutorial` folder on your computer. Then download and put the contract in this folder. It is available in [CameLIGO](https://gitlab.com/ligolang/ligo-ci-test/-/raw/dev/src/test/contracts/starting.mligo) and [JsLIGO](https://gitlab.com/ligolang/ligo-ci-test/-/raw/dev/src/test/contracts/starting.jsligo)
 
 <Syntax syntax="cameligo">
 

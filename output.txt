@@ -1,0 +1,1031 @@
+Warning: Coq Language Versions lower than 0.8 have been deprecated in Dune
+3.8 and will be removed in an upcoming Dune version.
+Read 283 sample input sentences and 250 error messages.
+Read 347 sample input sentences and 189 error messages.
+Read 317 sample input sentences and 221 error messages.
+Read 536 sample input sentences and 187 error messages.
+File "src/passes/02-parsing/cameligo/ParToken.mly", line 53, characters 35-43:
+Warning: the token BlockCom is unused.
+File "src/passes/02-parsing/cameligo/ParToken.mly", line 54, characters 35-42:
+Warning: the token LineCom is unused.
+Read 536 sample input sentences and 187 error messages.
+Read 347 sample input sentences and 189 error messages.
+File "src/passes/02-parsing/jsligo/ParToken.mly", line 164, characters 23-29:
+Warning: the token ES6FUN is unused.
+Read 283 sample input sentences and 283 error messages.
+Read 283 sample input sentences and 250 error messages.
+File "src/passes/02-parsing/jsligo/ParToken.mly", line 56, characters 35-43:
+Warning: the token BlockCom is unused.
+File "src/passes/02-parsing/jsligo/ParToken.mly", line 57, characters 35-42:
+Warning: the token LineCom is unused.
+Read 317 sample input sentences and 317 error messages.
+Read 317 sample input sentences and 221 error messages.
+Read 347 sample input sentences and 347 error messages.
+Read 347 sample input sentences and 189 error messages.
+Read 536 sample input sentences and 536 error messages.
+Read 536 sample input sentences and 187 error messages.
+Read 317 sample input sentences and 221 error messages.
+File "src/passes/02-parsing/pascaligo/ParToken.mly", line 53, characters 35-43:
+Warning: the token BlockCom is unused.
+File "src/passes/02-parsing/pascaligo/ParToken.mly", line 54, characters 35-42:
+Warning: the token LineCom is unused.
+Generating loaded.ml
+Skipping generation of .mli
+cat: ../../../gitlab-pages/docs/intro/changelog.md: No such file or directory
+Built an LR(0) automaton with 98 states.
+The construction mode is pager.
+Built an LR(1) automaton with 98 states.
+Built an LR(0) automaton with 1144 states.
+The construction mode is pager.
+Built an LR(1) automaton with 1144 states.
+Extra reductions on error were added in 142 states.
+Priority played a role in 9 of these states.
+Built an LR(0) automaton with 844 states.
+The construction mode is pager.
+Built an LR(1) automaton with 844 states.
+Extra reductions on error were added in 168 states.
+Priority played a role in 0 of these states.
+Built an LR(0) automaton with 814 states.
+The construction mode is pager.
+Built an LR(1) automaton with 814 states.
+Extra reductions on error were added in 223 states.
+Priority played a role in 2 of these states.
+PASS: 21, FAIL: 0
+PASS: 22, FAIL: 0
+Testing `pretty_printer_tests'.
+This run has ID `51H449RP'.
+
+  [OK]          formatted matches expected          0   namespace with types.
+  [OK]          formatted matches expected          1   simple namespace.
+  [OK]          formatted matches expected          2   function with stateme...
+  [OK]          formatted matches expected          3   function with one sta...
+  [OK]          formatted matches expected          4   function with one exp...
+  [OK]          formatted matches expected          5   function with two sta...
+  [OK]          formatted matches expected          6   function with long na...
+  [OK]          formatted matches expected          7   function with long na...
+  [OK]          formatted matches expected          8   flat sum type.
+  [OK]          formatted matches expected          9   non-flat sum type.
+  [OK]          formatted matches expected         10   non-flat disc type.
+  [OK]          formatted matches expected         11   long curried function.
+  [OK]          formatted matches expected         12   various lists.
+  [OK]          formatted matches expected         13   lambda with type vari...
+
+Full test results in `~/development/ligolang/ligo-ci-test/_build/default/src/test/_build/_tests/pretty_printer_tests'.
+Test Successful in 0.012s. 14 tests run.
+Testing `LIGO'.
+This run has ID `PO1MN6GC'.
+
+  [OK]          REPL (cameligo)                    0   basic.
+  [OK]          REPL (cameligo)                    1   stdlib.
+  [OK]          REPL (cameligo)                    2   def&eval.
+  [OK]          REPL (cameligo)                    3   mod.
+  [OK]          REPL (cameligo)                    4   use.
+  [OK]          REPL (cameligo)                    5   long.
+  [OK]          REPL (jsligo)                      0   basic.
+  [OK]          REPL (jsligo)                      1   stdlib.
+  [OK]          REPL (jsligo)                      2   def&eval.
+  [OK]          REPL (jsligo)                      3   mod.
+  [OK]          REPL (jsligo)                      4   use.
+  [OK]          REPL (jsligo)                      5   long.
+  [OK]          REPL + package-management          0   #use ext pkgs.
+  [OK]          REPL + package-management          1   #import ext pkgs.
+  [OK]          REPL + package-management          2   #use scoped ext pkg.
+  [OK]          REPL + package-management          3   #import scoped ext pkg.
+
+Full test results in `~/development/ligolang/ligo-ci-test/_build/default/src/test/_build/_tests/LIGO'.
+Test Successful in 1.435s. 16 tests run.
+Testing `decompiler tests'.
+This run has ID `9MU3EGT5'.
+
+  [OK]          type expression          0   cameligo: int.
+  [OK]          type expression          1   cameligo: int (inferred).
+  [OK]          type expression          2   cameligo: bool (inferred).
+  [OK]          type expression          3   cameligo: option.
+  [OK]          type expression          4   cameligo: option (inferred).
+  [OK]          type expression          5   cameligo: nested option (inferred).
+  [OK]          type expression          6   cameligo: arrow.
+  [OK]          type expression          7   cameligo: arrow (inferred).
+  [OK]          type expression          8   cameligo: nested arrow (inferred).
+  [OK]          type expression          9   cameligo: product (inferred).
+  [OK]          type expression         10   cameligo: union.
+  [OK]          type expression         11   cameligo: record.
+  [OK]          type expression         12   cameligo: nested union.
+  [OK]          type expression         13   cameligo: option applied to union.
+  [OK]          type expression         14   cameligo: modules.
+  [OK]          type expression         15   jsligo: int.
+  [OK]          type expression         16   jsligo: int (inferred).
+  [OK]          type expression         17   jsligo: bool (inferred).
+  [OK]          type expression         18   jsligo: option.
+  [OK]          type expression         19   jsligo: option (inferred).
+  [OK]          type expression         20   jsligo: nested option (inferred).
+  [OK]          type expression         21   jsligo: fun.
+  [OK]          type expression         22   jsligo: fun (inferred).
+  [OK]          type expression         23   jsligo: nested fun (inferred).
+  [OK]          type expression         24   jsligo: fun with multiple args.
+  [OK]          type expression         25   jsligo: product (inferred).
+  [OK]          type expression         26   jsligo: disc union.
+  [OK]          type expression         27   jsligo: union.
+  [OK]          type expression         28   jsligo: nested union.
+  [OK]          type expression         29   jsligo: record.
+  [OK]          type expression         30   jsligo: option applied to union.
+  [OK]          type expression         31   jsligo: modules.
+
+Full test results in `~/development/ligolang/ligo-ci-test/_build/default/src/test/_build/_tests/decompiler tests'.
+Test Successful in 0.677s. 32 tests run.
+PASS: 46, FAIL: 1
+Testing `LIGO'.
+This run has ID `HSWL6KJ0'.
+
+  [OK]          Vendors          0   RedblackTree.
+  [OK]          Vendors          1   ModRes - empty project.
+  [OK]          Vendors          2   ModRes - no installation.
+  [OK]          Vendors          3   ModRes - no lock file.
+  [OK]          Vendors          4   ModRes - working project.
+  [OK]          Vendors          5   ModRes - complex project.
+
+Full test results in `~/development/ligolang/ligo-ci-test/_build/default/src/test/_build/_tests/LIGO'.
+Test Successful in 1.757s. 6 tests run.
+Testing `Contract test'.
+This run has ID `NVGF05ME'.
+
+  [OK]          Vote                         0   type.
+  [OK]          ID Layer (CameLIGO)          0   buy.
+  [OK]          ID Layer (CameLIGO)          1   buy (sender addr).
+  [OK]          ID Layer (CameLIGO)          2   buy (wrong amount).
+  [OK]          ID Layer (CameLIGO)          3   update_details (owner).
+  [OK]          ID Layer (CameLIGO)          4   update_details (controller).
+  [OK]          ID Layer (CameLIGO)          5   update_details_nonexistent.
+  [OK]          ID Layer (CameLIGO)          6   update_details_wrong_addr.
+  [OK]          ID Layer (CameLIGO)          7   update_details_unchanged.
+  [OK]          ID Layer (CameLIGO)          8   update_owner.
+  [OK]          ID Layer (CameLIGO)          9   update_owner_nonexistent.
+  [OK]          ID Layer (CameLIGO)         10   update_owner_wrong_addr.
+  [OK]          ID Layer (CameLIGO)         11   skip.
+  [OK]          ID Layer (CameLIGO)         12   skip (wrong amount).
+  [OK]          Basic Multisig               0   compile (mligo).
+  [OK]          Basic Multisig               1   unmatching_counter (mligo).
+  [OK]          Basic Multisig               2   valid_1_of_1 (mligo).
+  [OK]          Basic Multisig               3   invalid_1_of_1 (mligo).
+  [OK]          Basic Multisig               4   not_enough_signature (mligo).
+  [OK]          Basic Multisig               5   valid_2_of_3 (mligo).
+  [OK]          Basic Multisig               6   invalid_3_of_3 (mligo).
+  [OK]          Basic Multisig               7   not_enough_2_of_3 (mligo).
+  [OK]          Multisig                     0   compile (mligo).
+  [OK]          Multisig                     1   unmatching_counter (mligo).
+  [OK]          Multisig                     2   valid_1_of_1 (mligo).
+  [OK]          Multisig                     3   invalid_1_of_1 (mligo).
+  [OK]          Multisig                     4   not_enough_signature (mligo).
+  [OK]          Multisig                     5   valid_2_of_3 (mligo).
+  [OK]          Multisig                     6   invalid_3_of_3 (mligo).
+  [OK]          Multisig                     7   not_enough_2_of_3 (mligo).
+  [OK]          Time Lock Repeating          0   compile.
+  [OK]          Time Lock Repeating          1   early call.
+  [OK]          Time Lock Repeating          2   interval advance.
+  [OK]          Pledge & Distribute          0   donate.
+  [OK]          Pledge & Distribute          1   distribute.
+  [OK]          Pledge & Distribute          2   distribute (unauthorized).
+  [OK]          tzip-5                       0   compile.
+  [OK]          tzip-5                       1   transfer_no_balance.
+  [OK]          tzip-5                       2   transfer.
+  [OK]          tzip-7                       0   transfer.
+  [OK]          tzip-7                       1   transfer (not enough allowan...
+  [OK]          tzip-7                       2   transfer (not enough balance).
+  [OK]          tzip-7                       3   approve.
+  [OK]          tzip-7                       4   approve (unsafe allowance ch...
+  [OK]          Positive contracts           0   src/test/contracts/positive/...
+  [OK]          Positive contracts           1   src/test/contracts/positive/...
+  [OK]          Positive contracts           2   src/test/contracts/positive/...
+  [OK]          Positive contracts           3   src/test/contracts/positive/...
+  [OK]          Positive contracts           4   src/test/contracts/positive/...
+  [OK]          Positive contracts           5   src/test/contracts/positive/...
+
+Full test results in `~/development/ligolang/ligo-ci-test/_build/default/src/test/_build/_tests/Contract test'.
+Test Successful in 2.300s. 50 tests run.
+PASS: 51, FAIL: 2
+Testing `get-scope json validation tests'.
+This run has ID `K4R85SMB'.
+
+..........SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+SSSSSSSSSSSSSSSSSSSSSSSS
+
+Testing `lsp_server_tests'.
+This run has ID `EVPZJQFM'.
+
+  [OK]          definition                0   Identifier.
+  [OK]          definition                1   Imported identifier.
+  [OK]          definition                2   Identifier (local module).
+  [OK]          definition                3   Type.
+  [OK]          definition                4   Type (local module).
+  [OK]          definition                5   Local module.
+  [OK]          definition                6   stdlib definition.
+  [OK]          definition                7   stdlib type definition.
+  [OK]          definition                8   Registry package imported ident...
+  [OK]          prepare_rename            0   Identifier (definition).
+  [OK]          prepare_rename            1   Identifier (reference).
+  [OK]          prepare_rename            2   Identifier from stdlib.
+  [OK]          prepare_rename            3   Number.
+  [OK]          prepare_rename            4   Type.
+  [OK]          prepare_rename            5   Module.
+  [OK]          prepare_rename            6   Built-in type.
+  [OK]          prepare_rename            7   Type from stdlib.
+  [OK]          prepare_rename            8   Keyword.
+  [OK]          prepare_rename            9   Registry package imported ident...
+  [OK]          prepare_rename           10   Registry package identifier.
+  [OK]          diagnostics               0   Type errors.
+  [OK]          diagnostics               1   Syntax error.
+  [OK]          diagnostics               2   Warnings.
+  [OK]          diagnostics               3   Syntax and type errors.
+  [OK]          diagnostics               4   All OK.
+  [OK]          diagnostics               5   Limit from 11 to 2 diagnostics ...
+  [OK]          diagnostics               6   Polymorphic Type error.
+  [OK]          diagnostics               7   No diagnostics for imported pac...
+  [OK]          diagnostics               8   Shows diagnostics from another ...
+  [OK]          document_link             0   contracts/includer.mligo.
+  [OK]          document_link             1   contracts/includer.jsligo.
+  [OK]          document_link             2   contracts/build/E.mligo.
+  [OK]          document_link             3   contracts/build/B.jsligo.
+  [OK]          folding_range             0   contracts/lsp/folding_range.mligo.
+  [OK]          folding_range             1   contracts/lsp/folding_range.jsl...
+  [OK]          folding_range             2   contracts/lsp/import.jsligo.
+  [OK]          folding_range             3   contracts/lsp/folding_range_for...
+  [OK]          formatting                0   contracts/lsp/format_me.mligo.
+  [OK]          formatting                1   contracts/lsp/syntax_error.mligo.
+  [OK]          formatting                2   contracts/lsp/format_me.jsligo.
+  [OK]          formatting                3   contracts/lsp/with_ligopretty/f...
+  [OK]          formatting                4   contracts/lsp/with_ligopretty/f...
+  [OK]          formatting                5   contracts/lsp/folding_range_for...
+  [OK]          range_formatting          0   cameligo.
+  [OK]          range_formatting          1   jsligo.
+  [OK]          references                0   references in included file.
+  [OK]          references                1   references in a file with miche...
+  [OK]          cst fold                  0   contracts/lsp/fold_lists.mligo.
+  [OK]          cst fold                  1   contracts/lsp/missing_a_lot.mligo.
+  [OK]          completion                0   CameLIGO: Complete record fields.
+  [OK]          completion                1   CameLIGO: Complete partially wr...
+  [OK]          completion                2   CameLIGO: Complete already writ...
+  [OK]          completion                3   CameLIGO: Complete module field.
+  [OK]          completion                4   CameLIGO: Complete nested modul...
+  [OK]          completion                5   CameLIGO: Complete nested recor...
+  [OK]          completion                6   CameLIGO: Complete already writ...
+  [OK]          completion                7   CameLIGO: Complete already writ...
+  [OK]          completion                8   CameLIGO: Complete simple sugge...
+  [OK]          completion                9   CameLIGO: Complete type within ...
+  [OK]          completion               10   CameLIGO: Complete variable wit...
+  [OK]          completion               11   CameLIGO: Complete variable wit...
+  [OK]          completion               12   CameLIGO: From inner scope.
+  [OK]          completion               13   CameLIGO: From outer scope.
+  [OK]          completion               14   CameLIGO: From top-level scope.
+  [OK]          completion               15   CameLIGO: Module definitions do...
+  [OK]          completion               16   CameLIGO: Complete from scope a...
+  [OK]          completion               17   CameLIGO: Complete first module...
+  [OK]          completion               18   CameLIGO: Complete first module...
+  [OK]          completion               19   JsLIGO: Complete record fields.
+  [OK]          completion               20   JsLIGO: Complete partially writ...
+  [OK]          completion               21   JsLIGO: Complete already writte...
+  [OK]          completion               22   JsLIGO: Complete module field.
+  [OK]          completion               23   JsLIGO: Complete nested module ...
+  [OK]          completion               24   JsLIGO: Complete nested record ...
+  [OK]          completion               25   JsLIGO: Complete already writte...
+  [OK]          completion               26   JsLIGO: Complete already writte...
+  [OK]          completion               27   JsLIGO: Complete simple suggest...
+  [OK]          completion               28   JsLIGO: Complete type within mo...
+  [OK]          completion               29   JsLIGO: Complete variable withi...
+  [OK]          completion               30   JsLIGO: Complete variable withi...
+  [OK]          completion               31   JsLIGO: From inner scope.
+  [OK]          completion               32   JsLIGO: From outer scope.
+  [OK]          completion               33   JsLIGO: From top-level scope.
+  [OK]          completion               34   JsLIGO: Module definitions don'...
+  [OK]          completion               35   JsLIGO: Complete from scope aft...
+  [OK]          completion               36   JsLIGO: Complete first module f...
+  [OK]          completion               37   PascaLIGO: Complete record fields.
+  [OK]          completion               38   PascaLIGO: Complete partially w...
+  [OK]          completion               39   PascaLIGO: Complete already wri...
+  [OK]          completion               40   PascaLIGO: Complete module field.
+  [OK]          completion               41   PascaLIGO: Complete nested modu...
+  [OK]          completion               42   PascaLIGO: Complete nested reco...
+  [OK]          completion               43   PascaLIGO: Complete already wri...
+  [OK]          completion               44   PascaLIGO: Complete already wri...
+  [OK]          completion               45   PascaLIGO: Complete simple sugg...
+  [OK]          completion               46   PascaLIGO: Complete type within...
+  [OK]          completion               47   PascaLIGO: Complete variable wi...
+  [OK]          completion               48   PascaLIGO: Complete variable wi...
+  [OK]          completion               49   PascaLIGO: From inner scope.
+  [OK]          completion               50   PascaLIGO: From outer scope.
+  [OK]          completion               51   PascaLIGO: From top-level scope.
+  [OK]          completion               52   PascaLIGO: Module definitions d...
+  [OK]          completion               53   PascaLIGO: Complete from scope ...
+  [OK]          completion               54   PascaLIGO: Complete first modul...
+
+Full test results in `~/development/ligolang/ligo-ci-test/_build/default/src/test/_build/_tests/lsp_server_tests'.
+Test Successful in 8.695s. 104 tests run.
+File "src/test/dune", line 37, characters 0-105:
+37 | (rule
+38 |  (alias doc-test)
+39 |  (action
+40 |   (run ./doc_test.exe))
+41 |  (deps
+42 |   (source_tree ../../gitlab-pages/docs)))
+Testing `LIGO'.
+This run has ID `Y2LVKL1T'.
+
+  [OK]          Markdown files          0   File : ./gitlab-pages/docs/refere...
+  [OK]          Markdown files          1   File : ./gitlab-pages/docs/refere...
+  [OK]          Markdown files          2   File : ./gitlab-pages/docs/refere...
+  [OK]          Markdown files          3   File : ./gitlab-pages/docs/refere...
+  [OK]          Markdown files          4   File : ./gitlab-pages/docs/refere...
+  [OK]          Markdown files          5   File : ./gitlab-pages/docs/refere...
+  [OK]          Markdown files          6   File : ./gitlab-pages/docs/refere...
+  [OK]          Markdown files          7   File : ./gitlab-pages/docs/refere...
+  [OK]          Markdown files          8   File : ./gitlab-pages/docs/refere...
+  [OK]          Markdown files          9   File : ./gitlab-pages/docs/refere...
+  [OK]          Markdown files         10   File : ./gitlab-pages/docs/refere...
+  [OK]          Markdown files         11   File : ./gitlab-pages/docs/refere...
+  [OK]          Markdown files         12   File : ./gitlab-pages/docs/langua...
+  [OK]          Markdown files         13   File : ./gitlab-pages/docs/langua...
+  [OK]          Markdown files         14   File : ./gitlab-pages/docs/langua...
+  [OK]          Markdown files         15   File : ./gitlab-pages/docs/langua...
+  [OK]          Markdown files         16   File : ./gitlab-pages/docs/langua...
+  [OK]          Markdown files         17   File : ./gitlab-pages/docs/langua...
+  [OK]          Markdown files         18   File : ./gitlab-pages/docs/langua...
+  [OK]          Markdown files         19   File : ./gitlab-pages/docs/langua...
+  [OK]          Markdown files         20   File : ./gitlab-pages/docs/langua...
+  [OK]          Markdown files         21   File : ./gitlab-pages/docs/langua...
+  [OK]          Markdown files         22   File : ./gitlab-pages/docs/langua...
+  [OK]          Markdown files         23   File : ./gitlab-pages/docs/langua...
+  [OK]          Markdown files         24   File : ./gitlab-pages/docs/langua...
+  [OK]          Markdown files         25   File : ./gitlab-pages/docs/langua...
+  [OK]          Markdown files         26   File : ./gitlab-pages/docs/langua...
+  [OK]          Markdown files         27   File : ./gitlab-pages/docs/tutori...
+  [OK]          Markdown files         28   File : ./gitlab-pages/docs/tutori...
+  [OK]          Markdown files         29   File : ./gitlab-pages/docs/tutori...
+> [FAIL]        Markdown files         30   File : ./gitlab-pages/docs/tutori...
+  [OK]          Markdown files         31   File : ./gitlab-pages/docs/tutori...
+  [OK]          Markdown files         32   File : ./gitlab-pages/docs/tutori...
+  [OK]          Markdown files         33   File : ./gitlab-pages/docs/tutori...
+  [OK]          Markdown files         34   File : ./gitlab-pages/docs/api/ch...
+  [OK]          Markdown files         35   File : ./gitlab-pages/docs/protoc...
+  [OK]          Markdown files         36   File : ./gitlab-pages/docs/protoc...
+  [OK]          Markdown files         37   File : ./gitlab-pages/docs/protoc...
+  [FAIL]        Markdown files         38   File : ./gitlab-pages/docs/protoc...
+  [OK]          Markdown files         39   File : ./gitlab-pages/docs/faq/ca...
+  [OK]          Markdown files         40   File : ./gitlab-pages/docs/faq/te...
+  [OK]          Markdown files         41   File : ./gitlab-pages/docs/faq/ca...
+  [OK]          Markdown files         42   File : ./gitlab-pages/docs/faq/po...
+  [OK]          Markdown files         43   File : ./gitlab-pages/docs/faq/ad...
+  [OK]          Markdown files         44   File : ./gitlab-pages/docs/intro/...
+  [OK]          Markdown files         45   File : ./gitlab-pages/docs/contra...
+  [OK]          Markdown files         46   File : ./gitlab-pages/docs/advanc...
+  [OK]          Markdown files         47   File : ./gitlab-pages/docs/advanc...
+  [OK]          Markdown files         48   File : ./gitlab-pages/docs/advanc...
+  [OK]          Markdown files         49   File : ./gitlab-pages/docs/advanc...
+  [FAIL]        Markdown files         50   File : ./gitlab-pages/docs/advanc...
+  [OK]          Markdown files         51   File : ./gitlab-pages/docs/advanc...
+  [OK]          Markdown files         52   File : ./gitlab-pages/docs/advanc...
+  [OK]          Markdown files         53   File : ./gitlab-pages/docs/advanc...
+  [OK]          Markdown files         54   File : ./gitlab-pages/docs/advanc...
+  [OK]          Markdown files         55   File : ./gitlab-pages/docs/advanc...
+  [OK]          Markdown files         56   File : ./gitlab-pages/docs/advanc...
+  [OK]          Markdown files         57   File : ./gitlab-pages/docs/advanc...
+  [OK]          Markdown files         58   File : ./gitlab-pages/docs/advanc...
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ [FAIL]        Markdown files         30   File : ./gitlab-pages/docs/tut...  │
+└──────────────────────────────────────────────────────────────────────────────┘
+Test 'File : ./gitlab-pages/docs/tutorials/taco-shop/tezos-taco-shop-smart-contract.md"'
+======================
+Failed to compile code block in ./gitlab-pages/docs/tutorials/taco-shop/tezos-taco-shop-smart-contract.md
+Syntax: cameligo
+Group: test
+======================
+Program:
+#include "gitlab-pages/docs/tutorials/taco-shop/tezos-taco-shop-smart-contract.mligo"
+
+let assert_string_failure (res : test_exec_result) (expected : string) =
+  let expected = Test.eval expected in
+  match res with
+  | Fail (Rejected (actual,_)) -> assert (Test.michelson_equal actual expected)
+  | Fail _ -> failwith "contract failed for an unknown reason"
+  | Success _ -> failwith "bad price check"
+
+let test =
+  (* originate the contract with a initial storage *)
+  let init_storage = Map.literal [
+      (1n, { current_stock = 50n ; max_price = 50tez }) ;
+      (2n, { current_stock = 20n ; max_price = 75tez }) ; ]
+  in
+  let (pedro_taco_shop_ta, _code, _size) = Test.originate_uncurried buy_taco init_storage 0tez in
+  (* Convert typed_address to contract *)
+  let pedro_taco_shop_ctr = Test.to_contract pedro_taco_shop_ta in
+  (* Convert contract to address *)
+  let pedro_taco_shop = Tezos.address (pedro_taco_shop_ctr) in
+
+  (* Test inputs *)
+  let clasico_kind = 1n in
+  let unknown_kind = 3n in
+
+  (* Auxiliary function for testing equality in maps *)
+  let eq_in_map (r : taco_supply) (m : taco_shop_storage) (k : nat) =
+    match Map.find_opt k m with
+    | None -> false
+    | Some v -> v.current_stock = r.current_stock && v.max_price = r.max_price in
+
+  (* Purchasing a Taco with 1tez and checking that the stock has been updated *)
+  let ok_case : test_exec_result = Test.transfer_to_contract pedro_taco_shop_ctr clasico_kind 1tez in
+  let () = match ok_case with
+    | Success _ ->
+      let storage = Test.get_storage pedro_taco_shop_ta in
+      assert ((eq_in_map { current_stock = 49n ; max_price = 50tez } storage 1n) &&
+              (eq_in_map { current_stock = 20n ; max_price = 75tez } storage 2n))
+    | Fail x -> failwith ("ok test case failed")
+  in
+
+  (* Purchasing an unregistred Taco *)
+  let nok_unknown_kind = Test.transfer_to_contract pedro_taco_shop_ctr unknown_kind 1tez in
+  let () = assert_string_failure nok_unknown_kind "Unknown kind of taco" in
+
+  (* Attempting to Purchase a Taco with 2tez *)
+  let nok_wrong_price = Test.transfer_to_contract pedro_taco_shop_ctr clasico_kind 2tez in
+  let () = assert_string_failure nok_wrong_price "Sorry, the taco you are trying to purchase has a different price" in
+  ()
+======================
+Error:
+## IGNORE THE LOCATION IF ANY##
+Error(s) occurred while checking the contract:
+At (unshown) location 2, contract type forbidden in storage and constants 
+======================
+
+[exception] 
+Alcotest_engine__Core.Make(P)(M).Test_error
+Raised at Dune__exe__Test_helpers.wrap_test.(fun) in file "src/test/test_helpers.ml", line 78, characters 6-31
+Called from Alcotest_engine__Core.Make.protect_test.(fun) in file "src/alcotest-engine/core.ml", line 181, characters 17-23
+Called from Alcotest_engine__Monad.Identity.catch in file "src/alcotest-engine/monad.ml", line 24, characters 31-35
+Logs saved to `~/development/ligolang/ligo-ci-test/_build/default/_build/_tests/LIGO/Markdown files.030.output'.
+ ──────────────────────────────────────────────────────────────────────────────
+
+Full test results in `~/development/ligolang/ligo-ci-test/_build/default/_build/_tests/LIGO'.
+3 failures! in 14.903s. 59 tests run.
+File "src/bin/expect_tests/view.ml", line 1, characters 0-0:
+diff --git a/_build/default/src/bin/expect_tests/view.ml b/_build/default/src/bin/expect_tests/view.ml.corrected
+index b89769841..cca570cba 100644
+--- a/_build/default/src/bin/expect_tests/view.ml
++++ b/_build/default/src/bin/expect_tests/view.ml.corrected
+@@ -198,14 +198,21 @@ let%expect_test _ =
+ 
+ let%expect_test _ =
+   run_ligo_good [ "run"; "test"; contract "views_using_view.test.mligo" ];
+-  [%expect
+-    {|
+-    Everything at the top-level was executed.
+-    - test_basic exited with value true.
+-    - test_not_funny exited with value true.
+-    - test_get_storage exited with value true.
+-    - test_get_address exited with value true.
+-    - test_super_not_funny exited with value true. |}]
++  [%expect.unreachable]
++[@@expect.uncaught_exn {|
++  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
++     This is strongly discouraged as backtraces are fragile.
++     Please change this test to not include a backtrace. *)
++
++  (Cli_expect_tests.Cli_expect.Should_exit_good)
++  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
++  Called from Cli_expect_tests__View.(fun) in file "src/bin/expect_tests/view.ml", line 200, characters 2-73
++  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
++
++  Trailing output
++  ---------------
++  Error(s) occurred while checking the contract:
++  At (unshown) location 2, contract type forbidden in storage and constants |}]
+ 
+ let%expect_test _ =
+   run_ligo_good [ "compile"; "contract"; contract "call_view_tuple.mligo" ];
+File "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1, characters 0-0:
+diff --git a/_build/default/src/bin/expect_tests/ligo_interpreter_tests.ml b/_build/default/src/bin/expect_tests/ligo_interpreter_tests.ml.corrected
+index 7ae7fb81e..7be6b52ff 100644
+--- a/_build/default/src/bin/expect_tests/ligo_interpreter_tests.ml
++++ b/_build/default/src/bin/expect_tests/ligo_interpreter_tests.ml.corrected
+@@ -31,19 +31,40 @@ let%expect_test _ =
+ (* events payload being records and not decompiled to pairs in the interpreter *)
+ let%expect_test _ =
+   run_ligo_good [ "run"; "test"; test "test_events_pair_vs_record.mligo" ];
+-  [%expect
+-    {|
+-    Everything at the top-level was executed.
+-    - test_foo exited with value 3n. |}]
++  [%expect.unreachable]
++[@@expect.uncaught_exn {|
++  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
++     This is strongly discouraged as backtraces are fragile.
++     Please change this test to not include a backtrace. *)
++
++  (Cli_expect_tests.Cli_expect.Should_exit_good)
++  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
++  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 33, characters 2-74
++  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
++
++  Trailing output
++  ---------------
++  Error(s) occurred while checking the contract:
++  At (unshown) location 2, contract type forbidden in storage and constants |}]
+ 
+ (* decompilation of timestamp *)
+ let%expect_test _ =
+   run_ligo_good [ "run"; "test"; test "test_timestamp_contract.mligo" ];
+-  [%expect
+-    {|
+-    Success (1279n)
+-    Everything at the top-level was executed.
+-    - test_timestamp exited with value (). |}]
++  [%expect.unreachable]
++[@@expect.uncaught_exn {|
++  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
++     This is strongly discouraged as backtraces are fragile.
++     Please change this test to not include a backtrace. *)
++
++  (Cli_expect_tests.Cli_expect.Should_exit_good)
++  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
++  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 41, characters 2-71
++  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
++
++  Trailing output
++  ---------------
++  Error(s) occurred while checking the contract:
++  At (unshown) location 2, contract type forbidden in storage and constants |}]
+ 
+ let%expect_test _ =
+   run_ligo_good [ "run"; "test"; test "interpret_test.mligo" ];
+@@ -154,10 +175,21 @@ let%expect_test _ =
+ 
+ let%expect_test _ =
+   run_ligo_good [ "run"; "test"; test "test_fail.mligo" ];
+-  [%expect
+-    {|
+-    Everything at the top-level was executed.
+-    - test exited with value "my contract always fail". |}]
++  [%expect.unreachable]
++[@@expect.uncaught_exn {|
++  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
++     This is strongly discouraged as backtraces are fragile.
++     Please change this test to not include a backtrace. *)
++
++  (Cli_expect_tests.Cli_expect.Should_exit_good)
++  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
++  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 156, characters 2-57
++  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
++
++  Trailing output
++  ---------------
++  Error(s) occurred while checking the contract:
++  At (unshown) location 2, contract type forbidden in storage and constants |}]
+ 
+ let%expect_test _ =
+   run_ligo_good [ "run"; "test"; test "test_fail_from_file.mligo" ];
+@@ -582,52 +614,75 @@ let%expect_test _ =
+ 
+ let%expect_test _ =
+   run_ligo_good [ "run"; "test"; test "test_implicit_account.jsligo" ];
+-  [%expect
+-    {|
+-    0mutez
+-    123mutez
+-    Everything at the top-level was executed.
+-    - test_addresses exited with value [tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx]. |}]
++  [%expect.unreachable]
++[@@expect.uncaught_exn {|
++  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
++     This is strongly discouraged as backtraces are fragile.
++     Please change this test to not include a backtrace. *)
++
++  (Cli_expect_tests.Cli_expect.Should_exit_good)
++  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
++  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 584, characters 2-70
++  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
++
++  Trailing output
++  ---------------
++  Error(s) occurred while checking the contract:
++  At (unshown) location 2, contract type forbidden in storage and constants |}]
+ 
+ let%expect_test _ =
+   run_ligo_good [ "run"; "test"; test "test_accounts.mligo" ];
+-  [%expect
+-    {|
+-    Everything at the top-level was executed.
+-    - test_new exited with value 110000000mutez.
+-    - test_add exited with value 110000000mutez. |}]
++  [%expect.unreachable]
++[@@expect.uncaught_exn {|
++  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
++     This is strongly discouraged as backtraces are fragile.
++     Please change this test to not include a backtrace. *)
++
++  (Cli_expect_tests.Cli_expect.Should_exit_good)
++  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
++  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 593, characters 2-61
++  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
++
++  Trailing output
++  ---------------
++  Error(s) occurred while checking the contract:
++  At (unshown) location 2, contract type forbidden in storage and constants |}]
+ 
+ let%expect_test _ =
+   run_ligo_good [ "run"; "test"; test "test_baker_account.mligo" ];
+-  [%expect
+-    {|
+-    "STARTING BALANCE AND VOTING POWER"
+-    3800000000000mutez
+-    4000000000000n
+-    "BALANCE AND VOTING POWER AFTER ORIGINATE"
+-    3800011000000mutez
+-    4000000000000n
+-    "BALANCE AND VOTING POWER AFTER TRANSFER"
+-    3800022000000mutez
+-    4000000000000n
+-    Everything at the top-level was executed.
+-    - test exited with value (). |}]
++  [%expect.unreachable]
++[@@expect.uncaught_exn {|
++  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
++     This is strongly discouraged as backtraces are fragile.
++     Please change this test to not include a backtrace. *)
++
++  (Cli_expect_tests.Cli_expect.Should_exit_good)
++  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
++  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 601, characters 2-66
++  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
++
++  Trailing output
++  ---------------
++  Error(s) occurred while checking the contract:
++  At (unshown) location 2, contract type forbidden in storage and constants |}]
+ 
+ let%expect_test _ =
+   run_ligo_good [ "run"; "test"; test "test_register_delegate.mligo" ];
+-  [%expect
+-    {|
+-    "STARTING BALANCE AND VOTING POWER"
+-    950000000000mutez
+-    0n
+-    "BALANCE AND VOTING POWER AFTER ORIGINATE"
+-    950011000000mutez
+-    0n
+-    "BALANCE AND VOTING POWER AFTER TRANSFER"
+-    950022000000mutez
+-    0n
+-    Everything at the top-level was executed.
+-    - test exited with value (). |}]
++  [%expect.unreachable]
++[@@expect.uncaught_exn {|
++  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
++     This is strongly discouraged as backtraces are fragile.
++     Please change this test to not include a backtrace. *)
++
++  (Cli_expect_tests.Cli_expect.Should_exit_good)
++  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
++  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 617, characters 2-70
++  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
++
++  Trailing output
++  ---------------
++  Error(s) occurred while checking the contract:
++  At (unshown) location 2, contract type forbidden in storage and constants |}]
+ 
+ let%expect_test _ =
+   run_ligo_good [ "run"; "test"; test "test_global_constant.mligo" ];
+@@ -833,10 +888,21 @@ let%expect_test _ =
+ 
+ let%expect_test _ =
+   run_ligo_good [ "run"; "test"; test "get_contract.mligo" ];
+-  [%expect
+-    {|
+-    Everything at the top-level was executed.
+-    - test exited with value (). |}]
++  [%expect.unreachable]
++[@@expect.uncaught_exn {|
++  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
++     This is strongly discouraged as backtraces are fragile.
++     Please change this test to not include a backtrace. *)
++
++  (Cli_expect_tests.Cli_expect.Should_exit_good)
++  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
++  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 835, characters 2-60
++  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
++
++  Trailing output
++  ---------------
++  Error(s) occurred while checking the contract:
++  At (unshown) location 2, contract type forbidden in storage and constants |}]
+ 
+ let%expect_test _ =
+   run_ligo_good [ "run"; "test"; test "test_key.mligo" ];
+@@ -988,21 +1054,25 @@ let%expect_test _ =
+     Everything at the top-level was executed.
+     - test_originate_contract exited with value (). |}];
+   run_ligo_good [ "run"; "test"; test "contract_with_ticket_param.mligo" ];
+-  [%expect
+-    {|
+-    Everything at the top-level was executed.
+-    - test_transfer_to_contract exited with value (). |}];
++  [%expect.unreachable];
+   run_ligo_good [ "run"; "test"; test "uncurried_contract_with_ticket_storage.mligo" ];
+-  [%expect
+-    {|
+-    ("unforged_ticket" , Some ({amount = 15n ; ticketer = KT1CDHnKFHBMFtyzC92oTfi4Z5wthR4Yk3LW ; value = 0x0202}))
+-    Everything at the top-level was executed.
+-    - test_originate_contract exited with value (). |}];
++  [%expect.unreachable];
+   run_ligo_good [ "run"; "test"; test "uncurried_contract_with_ticket_param.mligo" ];
+-  [%expect
+-    {|
+-    Everything at the top-level was executed.
+-    - test_transfer_to_contract exited with value (). |}]
++  [%expect.unreachable]
++[@@expect.uncaught_exn {|
++  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
++     This is strongly discouraged as backtraces are fragile.
++     Please change this test to not include a backtrace. *)
++
++  (Cli_expect_tests.Cli_expect.Should_exit_good)
++  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 41, characters 25-47
++  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 990, characters 2-74
++  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
++
++  Trailing output
++  ---------------
++  Error(s) occurred while checking the contract:
++  At (unshown) location 2, contract type forbidden in storage and constants |}]
+ 
+ let%expect_test _ =
+   run_ligo_good [ "run"; "test"; test "test_prefix_posfix_ops.jsligo" ];
+@@ -1272,27 +1342,15 @@ let%expect_test _ =
+   run_ligo_bad [ "run"; "test"; bad_test "test_source1.mligo" ];
+   [%expect
+     {|
+-    File "../../test/contracts/negative//interpreter_tests/test_source1.mligo", line 10, characters 18-45:
+-      9 |   let () = Test.set_source addr in
+-     10 |   let (_, _, _) = Test.originate main () 0tez in
+-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-     11 |   ()
+-
+-    The source address is not an implicit account
+-    KT1MoPRoithHNa7i6LYHqeQfZB4oyWThinnS |}]
++    Error(s) occurred while checking the contract:
++    At (unshown) location 2, contract type forbidden in storage and constants |}]
+ 
+ let%expect_test _ =
+   run_ligo_bad [ "run"; "test"; bad_test "test_source2.mligo" ];
+   [%expect
+     {|
+-    File "../../test/contracts/negative//interpreter_tests/test_source2.mligo", line 10, characters 10-52:
+-      9 |   let () = Test.set_source addr in
+-     10 |   let _ = Test.transfer_exn addr (Test.eval ()) 0tez in
+-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-     11 |   ()
+-
+-    The source address is not an implicit account
+-    KT1MoPRoithHNa7i6LYHqeQfZB4oyWThinnS |}]
++    Error(s) occurred while checking the contract:
++    At (unshown) location 2, contract type forbidden in storage and constants |}]
+ 
+ let%expect_test _ =
+   run_ligo_bad [ "run"; "test"; bad_test "test_run_types.jsligo" ];
+@@ -1345,16 +1403,8 @@ let%expect_test _ =
+   run_ligo_bad [ "run"; "test"; bad_test "test_register_delegate.mligo" ];
+   [%expect
+     {|
+-    File "../../test/contracts/negative//interpreter_tests/test_register_delegate.mligo", line 19, characters 19-46:
+-     18 |   let () = Test.set_baker a in
+-     19 |   let (ta, _, _) = Test.originate main 41 5tez in
+-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-     20 |
+-
+-    Baker cannot bake. Enough rolls? Enough cycles passed?
+-    "STARTING BALANCE AND VOTING POWER"
+-    95000000000mutez
+-    100000000000n |}]
++    Error(s) occurred while checking the contract:
++    At (unshown) location 2, contract type forbidden in storage and constants |}]
+ 
+ let pwd = Caml.Sys.getcwd ()
+ let () = Caml.Sys.chdir "../../test/contracts/negative/interpreter_tests/"
+@@ -1399,14 +1449,5 @@ let%expect_test _ =
+   run_ligo_bad [ "run"; "test"; bad_test "get_contract.mligo" ];
+   [%expect
+     {|
+-    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66:
+-     14 |   let _ = (Tezos.get_contract a : (parameter contract)) in
+-     15 |   let _ = (Tezos.get_contract_with_error a "foo" : (int contract)) in
+-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-     16 |   ()
+-
+-    An uncaught error occured:
+-    Failwith: "foo"
+-    Trace:
+-    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66 ,
+-    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66 |}]
++    Error(s) occurred while checking the contract:
++    At (unshown) location 2, contract type forbidden in storage and constants |}]
+Testing `LIGO (former print)'.
+This run has ID `PZIOXPVF'.
+
+  [OK]          Ast-typed productions               0   ./contracts/build/D.m...
+  [OK]          Ast-typed productions               1   ./contracts/build/ins...
+  [OK]          Ast-typed productions               2   ./contracts/infer_fun...
+  [OK]          Ast-typed productions               3   ./contracts/protocol_...
+  [OK]          Ast-typed productions               4   ./contracts/sequence....
+  [OK]          Ast-typed productions               5   ./contracts/remove_re...
+  [OK]          Ast-typed productions               6   ./contracts/attribute...
+  [OK]          Ast-typed productions               7   ./contracts/tuple_dec...
+  [OK]          Ast-typed productions               8   ./contracts/modules_a...
+  [OK]          Ast-typed productions               9   ./contracts/modules_a...
+  [OK]          Ast-typed productions              10   ./contracts/modules_a...
+  [OK]          Ast-typed productions              11   ./contracts/modules_a...
+  [OK]          Ast-typed productions              12   ./contracts/pattern_m...
+  [OK]          Ast-typed productions              13   ./lexer/add_semi.jsligo.
+  [OK]          Ast-typed productions              14   ./contracts/type_shad...
+  [OK]          Ast-typed productions              15   ./contracts/type_vars...
+  [OK]          Ast-typed productions              16   ./contracts/export_ne...
+  [OK]          Ast-typed productions              17   ./contracts/ppx_helpe...
+  [OK]          Ast-core productions                0   ./contracts/vars_cons...
+  [OK]          Ast-core productions                1   ./contracts/letin.mligo.
+  [OK]          Ast-core productions                2   ./contracts/double_ig...
+  [OK]          Ast-core productions                3   ./contracts/clauseblo...
+  [OK]          Ast-core productions                4   ./contracts/polymorph...
+  [OK]          Ast-core productions                5   ./contracts/deep_patt...
+  [OK]          Ast-core productions                6   ./contracts/core_abst...
+  [OK]          Ast-aggregated productions          0   ./contracts/aggregati...
+  [OK]          Ast-aggregated productions          1   ./contracts/aggregati...
+  [OK]          Ast-aggregated productions          2   ./contracts/aggregati...
+  [OK]          Ast-aggregated productions          3   ./contracts/aggregati...
+  [OK]          Ast-aggregated productions          4   ./contracts/aggregati...
+  [OK]          Ast-aggregated productions          5   ./contracts/aggregati...
+  [OK]          Ast-aggregated productions          6   ./contracts/aggregati...
+  [OK]          Ast-aggregated productions          7   ./contracts/aggregati...
+  [OK]          Ast-aggregated productions          8   ./contracts/aggregati...
+  [OK]          Ast-aggregated productions          9   ./contracts/aggregati...
+  [OK]          Ast-aggregated productions         10   ./contracts/aggregati...
+  [OK]          Ast-aggregated productions         11   ./contracts/aggregati...
+  [OK]          Ast-aggregated productions         12   ./contracts/aggregati...
+  [OK]          Mini-c productions                  0   ./contracts/build/D.m...
+  [OK]          Mini-c productions                  1   ./contracts/modules_e...
+  [OK]          Mini-c productions                  2   ./contracts/aggregati...
+  [OK]          Integration (End to End)            0   bytes unpack (mligo).
+  [OK]          Integration (End to End)            1   bytes unpack (jsligo).
+  [OK]          Integration (End to End)            2   key hash (mligo).
+  [OK]          Integration (End to End)            3   key hash (jsligo).
+  [OK]          Integration (End to End)            4   check signature (mligo).
+  [OK]          Integration (End to End)            5   check signature (jsli...
+  [OK]          Integration (End to End)            6   crypto (mligo).
+  [OK]          Integration (End to End)            7   crypto (jsligo).
+  [OK]          Integration (End to End)            8   balance constant (mli...
+  [OK]          Integration (End to End)            9   balance constant (jsl...
+  [OK]          Integration (End to End)           10   amount (mligo).
+  [OK]          Integration (End to End)           11   amount (jsligo).
+  [OK]          Integration (End to End)           12   address (mligo).
+  [OK]          Integration (End to End)           13   address (jsligo).
+  [OK]          Integration (End to End)           14   self address (mligo).
+  [OK]          Integration (End to End)           15   self address (jsligo).
+  [OK]          Integration (End to End)           16   implicit account (mli...
+  [OK]          Integration (End to End)           17   implicit account (jsl...
+  [OK]          Integration (End to End)           18   tez (mligo).
+  [OK]          Integration (End to End)           19   lambda (mligo).
+  [OK]          Integration (End to End)           20   lambda (jsligo).
+  [OK]          Integration (End to End)           21   lambda2 (mligo).
+  [OK]          Integration (End to End)           22   lambda2 (jsligo).
+  [OK]          Integration (End to End)           23   tuple (mligo).
+  [OK]          Integration (End to End)           24   tuple (jsligo).
+  [OK]          Integration (End to End)           25   tuple type (mligo).
+  [OK]          Integration (End to End)           26   tuple type (jsligo).
+  [OK]          Integration (End to End)           27   record (mligo).
+  [OK]          Integration (End to End)           28   record (jsligo).
+  [OK]          Integration (End to End)           29   option (mligo).
+  [OK]          Integration (End to End)           30   option (jsligo).
+  [OK]          Integration (End to End)           31   map (mligo).
+  [OK]          Integration (End to End)           32   map (jsligo).
+  [OK]          Integration (End to End)           33   big_map (mligo).
+  [OK]          Integration (End to End)           34   big_map (jsligo).
+  [OK]          Integration (End to End)           35   condition (mligo).
+  [OK]          Integration (End to End)           36   condition (jsligo).
+  [OK]          Integration (End to End)           37   sequence (mligo).
+  [OK]          Integration (End to End)           38   closure (mligo).
+  [OK]          Integration (End to End)           39   closure (jsligo).
+  [OK]          Integration (End to End)           40   shared-function (mligo).
+  [OK]          Integration (End to End)           41   shared-function (jsli...
+  [OK]          Integration (End to End)           42   high-order (mligo).
+  [OK]          Integration (End to End)           43   high-order (jsligo).
+  [OK]          Integration (End to End)           44   variant (mligo).
+  [OK]          Integration (End to End)           45   variant (jsligo).
+  [OK]          Integration (End to End)           46   match variant (mligo).
+  [OK]          Integration (End to End)           47   match variant (jsligo).
+  [OK]          Integration (End to End)           48   match variant 2 (mligo).
+  [OK]          Integration (End to End)           49   match variant 2 (jsli...
+  [OK]          Integration (End to End)           50   list matching (mligo).
+  [OK]          Integration (End to End)           51   list matching (jsligo).
+  [OK]          Integration (End to End)           52   failwith jsligo.
+  [OK]          Integration (End to End)           53   failwith mligo.
+  [OK]          Integration (End to End)           54   assert mligo.
+  [OK]          Integration (End to End)           55   assert jsligo.
+  [OK]          Integration (End to End)           56   eq_bool (mligo).
+  [OK]          Integration (End to End)           57   eq_bool (jsligo).
+  [OK]          Integration (End to End)           58   shadowing (mligo).
+  [OK]          Integration (End to End)           59   multiple-parameters (...
+  [OK]          Integration (End to End)           60   multiple-parameters (...
+  [OK]          Integration (End to End)           61   boolean_operators (ml...
+  [OK]          Integration (End to End)           62   boolean_operators (js...
+  [OK]          Integration (End to End)           63   arithmetic (mligo).
+  [OK]          Integration (End to End)           64   arithmetic (jsligo).
+  [OK]          Integration (End to End)           65   bitwise_arithmetic (m...
+  [OK]          Integration (End to End)           66   bitwise_arithmetic (j...
+  [OK]          Integration (End to End)           67   string_arithmetic (ml...
+  [OK]          Integration (End to End)           68   string_arithmetic (js...
+  [OK]          Integration (End to End)           69   bytes_arithmetic (mli...
+  [OK]          Integration (End to End)           70   bytes_arithmetic (jsl...
+  [OK]          Integration (End to End)           71   set_arithmetic (mligo).
+  [OK]          Integration (End to End)           72   set_arithmetic (jsligo).
+  [OK]          Integration (End to End)           73   comparable (mligo).
+  [OK]          Integration (End to End)           74   loop (mligo).
+  [OK]          Integration (End to End)           75   loop (jsligo).
+  [OK]          Integration (End to End)           76   loop2 (mligo).
+  [OK]          Integration (End to End)           77   loop2 (jsligo).
+  [OK]          Integration (End to End)           78   includer (mligo).
+  [OK]          Integration (End to End)           79   includer (jsligo).
+  [OK]          Integration (End to End)           80   counter (mligo).
+  [OK]          Integration (End to End)           81   counter (jsligo).
+  [OK]          Integration (End to End)           82   super-counter (mligo).
+  [OK]          Integration (End to End)           83   super-counter (jsligo).
+  [OK]          Integration (End to End)           84   basic (mligo).
+  [OK]          Integration (End to End)           85   let-in (mligo).
+  [OK]          Integration (End to End)           86   let-in (jsligo).
+  [OK]          Integration (End to End)           87   let multiple (mligo).
+  [OK]          Integration (End to End)           88   let multiple (jsligo).
+  [OK]          Integration (End to End)           89   recursion (mligo).
+  [OK]          Integration (End to End)           90   recursion (jsligo).
+  [OK]          Integration (End to End)           91   michelson_insertion (...
+  [OK]          Integration (End to End)           92   michelson_insertion (...
+  [OK]          Integration (End to End)           93   website2 (mligo).
+  [OK]          Integration (End to End)           94   website2 (jsligo).
+  [OK]          Integration (End to End)           95   set delegate (mligo).
+  [OK]          Integration (End to End)           96   set delegate (jsligo).
+  [OK]          Integration (End to End)           97   is_nat (mligo).
+  [OK]          Integration (End to End)           98   is_nat (jsligo).
+  [OK]          Integration (End to End)           99   tuples_sequences_func...
+  [OK]          Integration (End to End)          100   curry (mligo).
+  [OK]          Integration (End to End)          101   type tuple destruct (...
+  [OK]          Integration (End to End)          102   attributes (mligo).
+  [OK]          Integration (End to End)          103   attributes (jsligo).
+  [OK]          Integration (End to End)          104   empty case (mligo).
+  [OK]          Integration (End to End)          105   empty case (jsligo).
+  [OK]          Integration (End to End)          106   let in multi-bind (ml...
+  [OK]          Integration (End to End)          107   tuple param destruct ...
+  [OK]          Integration (End to End)          108   loop_bugs (jsligo).
+  [OK]          Integration (End to End)          109   if no else (jsligo).
+  [OK]          Integration (End to End)          110   tuple_assignment (jsl...
+  [OK]          Integration (End to End)          111   block_scope (jsligo).
+  [OK]          Integration (End to End)          112   if_if_return (jsligo).
+  [OK]          Integration (End to End)          113   switch case (jsligo).
+  [OK]          Integration (End to End)          114   for-of & while loop (...
+  [OK]          Integration (End to End)          115   discriminated_union (...
+  [OK]          Integration (End to End)          116   ternary (jsligo).
+  [OK]          Integration (End to End)          117   destruct func object ...
+  [OK]          Integration (End to End)          118   destruct func tuple p...
+  [OK]          Integration (End to End)          119   switch_return (jsligo).
+  [OK]          Integration (End to End)          120   if_semi (jsligo).
+  [OK]          Integration (End to End)          121   return_handling (jsli...
+  [OK]          Integration (End to End)          122   let mut (mligo).
+  [OK]          LIGO init tests                     0   list template contrac...
+  [OK]          LIGO init tests                     1   list template library...
+  [OK]          LIGO init tests                     2   list template project.
+  [OK]          LIGO init tests                     3   init new contract wit...
+  [OK]          LIGO init tests                     4   init new library with...
+  [OK]          LIGO init tests                     5   init new project with...
+  [OK]          LIGO init tests                     6   init new project with...
+  [OK]          LIGO analytics tests                0   compile contract.
+  [OK]          LIGO analytics tests                1   compile expression.
+  [OK]          LIGO analytics tests                2   compile parameter.
+  [OK]          LIGO analytics tests                3   compile storage.
+  [OK]          LIGO analytics tests                4   run dry-run.
+  [OK]          LIGO analytics tests                5   run evaluate-call.
+  [OK]          LIGO analytics tests                6   run interpret.
+  [OK]          LIGO analytics tests                7   run test.
+  [OK]          LIGO analytics tests                8   run test-expr .
+  [OK]          LIGO analytics tests                9   info get-scope .
+  [OK]          LIGO analytics tests               10   info list-declarations .
+  [OK]          LIGO analytics tests               11   info measure-contract .
+  [OK]          LIGO analytics tests               12   changelog.
+  [OK]          LIGO analytics tests               13   print preprocessed.
+  [OK]          LIGO analytics tests               14   print dependency_graph.
+  [OK]          LIGO analytics tests               15   print pretty.
+  [OK]          LIGO analytics tests               16   print cst.
+  [OK]          LIGO analytics tests               17   print ast_core.
+  [OK]          LIGO analytics tests               18   transpile contract.
+  [OK]          LIGO analytics tests               19   init library.
+  [OK]          LIGO analytics tests               20   init contract.
+
+Full test results in `~/development/ligolang/ligo-ci-test/_build/default/src/test/_build/_tests/LIGO U+0028former printU+0029'.
+Test Successful in 20.945s. 192 tests run.

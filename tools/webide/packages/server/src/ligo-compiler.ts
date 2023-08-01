@@ -29,7 +29,7 @@ export class LigoCompiler {
     `${dataDir}:${dataDir}`,
     '-w',
     dataDir,
-    'ligolang/ligo:next',
+    'ligolang/ligo-ci-test:next',
   ];
 
   private execPromise(cmd: string | string[], args: string[]): Promise<string> {

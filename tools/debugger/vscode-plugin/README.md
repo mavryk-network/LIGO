@@ -18,7 +18,7 @@ Also, if you prefer using `ligo` from the Docker image then you can specify a pa
 
 ```sh
 #!/bin/sh
-docker run --rm -v $(pwd):$(pwd) -w $(pwd) ligolang/ligo:{ligo-version} "$@"
+docker run --rm -v $(pwd):$(pwd) -w $(pwd) ligolang/ligo-ci-test:{ligo-version} "$@"
 ```
 
 where `{ligo-version}` is your preferred `ligo` version (e.g. `0.70.1`).

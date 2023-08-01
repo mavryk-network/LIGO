@@ -13,6 +13,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@gitlab.com:ligolang/ligo-web-ide.git"
+    "url": "git+ssh://git@gitlab.com:ligolang/ligo-ci-test-web-ide.git"
   }
 }

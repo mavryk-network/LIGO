@@ -155,7 +155,7 @@ async function getLatestLigoRelease(): Promise<Release | undefined> {
 }
 
 function openLigoReleases(): Thenable<boolean> {
-  return vscode.env.openExternal(vscode.Uri.parse('https://gitlab.com/ligolang/ligo/-/releases'))
+  return vscode.env.openExternal(vscode.Uri.parse('https://gitlab.com/ligolang/ligo-ci-test/-/releases'))
     .then((result) => {
       if (!result) {
         vscode.window.showErrorMessage('Failed to open LIGO releases page.')
@@ -175,15 +175,15 @@ const ligoTempDownloadTemplate: string = path.join(os.tmpdir(), 'ligo-bin-')
 
 async function runBrewInstaller(client: LanguageClient): Promise<null> {
   const terminal = mkTerminal()
-  terminal.sendText(`brew tap ligolang/ligo https://gitlab.com/ligolang/ligo.git`)
-  await withClientRestart(client, () => terminal.sendText(`brew install ligolang/ligo/ligo`))
+  terminal.sendText(`brew tap ligolang/ligo-ci-test https://gitlab.com/ligolang/ligo-ci-test.git`)
+  await withClientRestart(client, () => terminal.sendText(`brew install ligolang/ligo-ci-test/ligo`))
   return null
 }
 
 async function runBrewUpgrade(client: LanguageClient): Promise<null> {
   const terminal = mkTerminal()
   terminal.sendText(`brew update`)
-  await withClientRestart(client, () => terminal.sendText(`brew upgrade ligolang/ligo/ligo`))
+  await withClientRestart(client, () => terminal.sendText(`brew upgrade ligolang/ligo-ci-test/ligo`))
   return null
 }
 
