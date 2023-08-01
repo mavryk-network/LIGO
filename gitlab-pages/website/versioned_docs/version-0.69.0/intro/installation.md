@@ -14,7 +14,7 @@ You can also try LIGO in a Gitpod environment
 
 ## Releases
 
-Releases are available at the [releases page of GitLab project](https://gitlab.com/ligolang/ligo/-/releases). All the artifacts are attached there.
+Releases are available at the [releases page of GitLab project](https://gitlab.com/ligolang/ligo-ci-test/-/releases). All the artifacts are attached there.
 
 If you wish to see the changelog, you can either run `ligo changelog` or go to [this page](https://ligolang.org/docs/next/intro/changelog). It contains links to corresponding releases, should you wish to download the artifacts.
 
@@ -33,14 +33,14 @@ If you wish to see the changelog, you can either run `ligo changelog` or go to [
 
 The `ligo` executable is statically linked. It should run on most modern Linux distributions.
 
-You can get the rolling release [here](https://gitlab.com/ligolang/ligo/-/jobs/4736572090/artifacts/raw/ligo), make it executable, and you are done!
+You can get the rolling release [here](https://gitlab.com/ligolang/ligo-ci-test/-/jobs/4736572090/artifacts/raw/ligo), make it executable, and you are done!
 
 ```zsh
-wget https://gitlab.com/ligolang/ligo/-/jobs/4736572090/artifacts/raw/ligo
+wget https://gitlab.com/ligolang/ligo-ci-test/-/jobs/4736572090/artifacts/raw/ligo
 chmod +x ./ligo
 ```
 
-For a specific version, you can visit our [release page](https://gitlab.com/ligolang/ligo/-/releases/).  
+For a specific version, you can visit our [release page](https://gitlab.com/ligolang/ligo-ci-test/-/releases/).  
 Optionally, you can put it somewhere in your `PATH` for easy access:
 
 ```zsh
@@ -52,7 +52,7 @@ sudo cp ./ligo /usr/local/bin
 Try our tap :
 
 ```bash
-brew tap ligolang/ligo https://gitlab.com/ligolang/ligo.git
+brew tap ligolang/ligo https://gitlab.com/ligolang/ligo-ci-test.git
 brew install ligolang/ligo/ligo
 ```
 
@@ -67,7 +67,7 @@ brew upgrade ligolang/ligo/ligo
 <TabItem value="deb">
 
 A `.deb` package containing the static `ligo` executable is also available.
-First, download [the package](https://gitlab.com/ligolang/ligo/-/jobs/4736572090/artifacts/raw/ligo.deb), and then install using: 
+First, download [the package](https://gitlab.com/ligolang/ligo-ci-test/-/jobs/4736572090/artifacts/raw/ligo.deb), and then install using: 
 
 ```zsh
 sudo apt install ./ligo.deb
@@ -137,7 +137,7 @@ npm i -g ligolang@windows
 
 ### via GUI installer
 
-You can download the installer from [here hosted on our Gitlab](https://gitlab.com/ligolang/ligo/-/jobs/4736572090/artifacts/raw/ligo_installer.exe?inline=false).
+You can download the installer from [here hosted on our Gitlab](https://gitlab.com/ligolang/ligo-ci-test/-/jobs/4736572090/artifacts/raw/ligo_installer.exe?inline=false).
 
 #### Prerequisite
 

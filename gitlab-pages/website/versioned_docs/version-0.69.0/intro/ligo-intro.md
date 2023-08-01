@@ -120,7 +120,7 @@ This LIGO contract accepts the following LIGO expressions:
 ## Runnable code snippets
 
 Some of the sections in this documentation will include runnable code snippets. Sources for those are available at
-the [LIGO GitLab repository](https://gitlab.com/ligolang/ligo).
+the [LIGO GitLab repository](https://gitlab.com/ligolang/ligo-ci-test).
 
 ### Snippets
 

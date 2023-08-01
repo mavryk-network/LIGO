@@ -332,7 +332,7 @@ update-ligo-bin-PKGBUILD:
   stage: pretooling
   script:
     - LAST_TAG_JOB_ID=`./.ci/scripts/release_metadata/read_release_metadata.sh LAST_TAG_JOB_ID`
-    - ./.ci/scripts/AUR/create_new_pkgbuild_version.sh https://gitlab.com/ligolang/ligo/-/jobs/$LAST_TAG_JOB_ID/artifacts/raw/ligo.deb $RELEASE_VERSION
+    - ./.ci/scripts/AUR/create_new_pkgbuild_version.sh https://gitlab.com/ligolang/ligo-ci-test/-/jobs/$LAST_TAG_JOB_ID/artifacts/raw/ligo.deb $RELEASE_VERSION
     - cp ./.ci/scripts/AUR/ligo.PKGBUILD ./ligo-bin/PKGBUILD
   needs:
     - job: initialize-aur-repo
@@ -377,7 +377,7 @@ calculate_nix_SRI:
       when: always
   script: 
     - LAST_TAG_JOB_ID=`./.ci/scripts/release_metadata/read_release_metadata.sh LAST_TAG_JOB_ID`
-    - BINARY_GITLAB_ARTIFACT_URL="https://gitlab.com/ligolang/ligo/-/jobs/$LAST_TAG_JOB_ID/artifacts/raw/ligo"
+    - BINARY_GITLAB_ARTIFACT_URL="https://gitlab.com/ligolang/ligo-ci-test/-/jobs/$LAST_TAG_JOB_ID/artifacts/raw/ligo"
     - SRI_LIGO_BINARY_HASH=$(nix --extra-experimental-features nix-command hash to-sri --type sha256 $(nix-prefetch-url --type sha256 --quiet $BINARY_GITLAB_ARTIFACT_URL))
     - echo "SRI_LIGO_BINARY_HASH=${SRI_LIGO_BINARY_HASH}" >> nixSriLigoBinary.env
   artifacts:

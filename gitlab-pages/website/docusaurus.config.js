@@ -129,7 +129,7 @@ const config = {
               },
               {
                 label: 'Website sources',
-                href: 'https://gitlab.com/ligolang/ligo',
+                href: 'https://gitlab.com/ligolang/ligo-ci-test',
               }
             ],
           },

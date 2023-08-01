@@ -14,8 +14,8 @@ DISTRIBUTION_URL_GITLAB_ARTIFACT_REGEX_PATTERN_RELEASE="(.*https://gitlab\.com/l
 
 VERSION_REGEX_PATTERN="ligo:[0-9]+\.[0-9]+\.[0-9]+"
 
-DEB_GITLAB_ARTIFACT_URL="https://gitlab.com/ligolang/ligo/-/jobs/$1/artifacts/raw/ligo.deb"
-BINARY_GITLAB_ARTIFACT_URL="https://gitlab.com/ligolang/ligo/-/jobs/$1/artifacts/raw/ligo"
+DEB_GITLAB_ARTIFACT_URL="https://gitlab.com/ligolang/ligo-ci-test/-/jobs/$1/artifacts/raw/ligo.deb"
+BINARY_GITLAB_ARTIFACT_URL="https://gitlab.com/ligolang/ligo-ci-test/-/jobs/$1/artifacts/raw/ligo"
 
 FILES_PATH_TO_EDIT=(
     "$ROOT_FOLDER/tools/webide-new/ligo-webide-backend/Dockerfile"

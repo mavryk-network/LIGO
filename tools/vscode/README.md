@@ -8,7 +8,7 @@ Language Server capabilities on Windows are supported only if running in WSL mod
 Note: You need a LIGO build with support for `ligo lsp`.
 LIGO version 0.61.0 and greater will come with support for language server capabilities.
 
-To report bugs in the LIGO Language Server (LLS), please open an issue in [GitLab](https://gitlab.com/ligolang/ligo/-/issues).
+To report bugs in the LIGO Language Server (LLS), please open an issue in [GitLab](https://gitlab.com/ligolang/ligo-ci-test/-/issues).
 You should find a file called `ligo_language_server.log` in your temporary directory. For example, in Linux, this should be inside `/tmp/`, which might contain information that the devs would find useful to debug your problem.
 
 Version 0.5.0 brings a rewrite of the language server in OCaml to improve the perfomance, stability, and more functionalities implemented in the LIGO compiler.
