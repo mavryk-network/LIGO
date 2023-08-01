@@ -70,7 +70,7 @@ let%expect_test _ =
               ^^^^^^^
       5 |   });
 
-    Pattern not of the expected type "test_exec_result". |}]
+    Pattern not of the expected type "Test.Incremental.bake_result". |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print"; "ast-typed"; bad_test "pattern_match6.jsligo" ];
