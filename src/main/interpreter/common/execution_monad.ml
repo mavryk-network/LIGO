@@ -17,7 +17,16 @@ open Errors
 
 type execution_trace = unit
 
-module ExecErrors = struct
+module ExecErrors : sig
+  type t
+
+  val to_value : t -> LT.value
+
+  val parse
+    :  raise:(interpreter_error, Main_warnings.all) raise
+    -> Tezos_state.state_error
+    -> t
+end = struct
   open Tezos_protocol.Protocol
 
   type t =
@@ -25,8 +34,7 @@ module ExecErrors = struct
     | Fail_balance_too_low of Alpha_context.Contract.t * Z.t * Z.t
     | Fail_other of string
 
-  let to_value (x : t) =
-    match x with
+  let to_value = function
     | Fail_rejected (code, contract) ->
       LC.v_ctor
         "Rejected"
