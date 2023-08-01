@@ -82,7 +82,7 @@ else
         else
             echo "opam file hash doesn't match what was recorded at time of signature verification!"
             echo "(If you actually get this message, you should probably file an issue)"
-            echo "https://gitlab.com/ligolang/ligo-ci-test/issues"
+            echo "https://gitlab.com/ligolang/ligo/issues"
             exit 1
         fi
     fi

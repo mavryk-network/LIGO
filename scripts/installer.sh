@@ -4,7 +4,7 @@ set -e
 # code quality: medium 2021-05-04
 
 # You can run this installer like this:
-# curl https://gitlab.com/ligolang/ligo-ci-test/-/raw/dev/scripts/installer.sh | bash
+# curl https://gitlab.com/ligolang/ligo/-/raw/dev/scripts/installer.sh | bash
 # Make sure the marigold/ligo image is published at docker hub first
 
 # Check that we have one argument, that it contains only one line, and that it matches the regexp (next|[0-9.]*)

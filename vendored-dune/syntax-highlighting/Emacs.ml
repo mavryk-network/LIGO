@@ -367,7 +367,7 @@ For debugging.
 
     fprintf fmt ";; Version: 0.2.0\n";
     fprintf fmt ";; Author: LigoLang SASU\n";
-    fprintf fmt ";; Url: https://gitlab.com/ligolang/ligo-ci-test/-/tree/dev/tools/emacs\n";
+    fprintf fmt ";; Url: https://gitlab.com/ligolang/ligo/-/tree/dev/tools/emacs\n";
     fprintf fmt ";; Keywords: languages\n";
     fprintf fmt ";; Package-Requires: ((emacs \"27.1\"))\n\n";
 

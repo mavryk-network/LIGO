@@ -412,7 +412,7 @@ let main (p, s : parameter * storage) =
 </Syntax>
 
 
-Now imagine we want to control a contract with the following interface (we omit the full code of the contract for clarity; you can find it in the [examples folder](https://gitlab.com/ligolang/ligo-ci-test/-/tree/dev/gitlab-pages/docs/tutorials/inter-contract-calls/examples)):
+Now imagine we want to control a contract with the following interface (we omit the full code of the contract for clarity; you can find it in the [examples folder](https://gitlab.com/ligolang/ligo/-/tree/dev/gitlab-pages/docs/tutorials/inter-contract-calls/examples)):
 
 <Syntax syntax="pascaligo">
 
