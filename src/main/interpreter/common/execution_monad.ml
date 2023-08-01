@@ -25,7 +25,7 @@ module ExecErrors = struct
     | Fail_balance_too_low of Alpha_context.Contract.t * Z.t * Z.t
     | Fail_other of string
 
-  let value (x : t) =
+  let to_value (x : t) =
     match x with
     | Fail_rejected (code, contract) ->
       LC.v_ctor
@@ -384,7 +384,7 @@ module Command = struct
       (match x with
       | Success (ctxt', gas_consumed) -> `Exec_ok gas_consumed, ctxt'
       | Fail (n, errs) -> `Exec_failed (n, errs), ctxt)
-    | State_error_to_value errs -> ExecErrors.(value @@ parse ~raise errs), ctxt
+    | State_error_to_value errs -> ExecErrors.(to_value @@ parse ~raise errs), ctxt
     | Get_balance (loc, calltrace, addr) ->
       let addr = trace_option ~raise (corner_case ()) @@ LC.get_address addr in
       let balance = Tezos_state.get_balance ~raise ~loc ~calltrace ctxt addr in
