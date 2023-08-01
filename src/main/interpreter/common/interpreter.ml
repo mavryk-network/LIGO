@@ -464,7 +464,13 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     | `Exec_ok gas -> return (LC.v_ctor "Success" (LC.v_nat gas))
     | `Exec_failed e ->
       let>> a = State_error_to_value e in
-      return a
+      return @@ LC.v_ctor "Fail" a
+  in
+  let return_bake_exec = function
+    | `Exec_ok gas -> return (LC.v_ctor "Success" (LC.v_nat gas))
+    | `Exec_failed (n, e) ->
+      let>> a = State_error_to_value e in
+      return @@ LC.v_pair (LC.v_nat (Z.of_int n), LC.v_ctor "Fail" a)
   in
   let source_file = get_file_from_location loc in
   match c, operands with
@@ -1520,7 +1526,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
         ops
     in
     let>> res = Bake_ops (loc, calltrace, ops) in
-    return_contract_exec @@ res
+    return_bake_exec @@ res
   | C_TEST_BAKE_OPS, _ -> fail @@ error_type ()
   | C_POLYMORPHIC_ADD, _ ->
     fail @@ Errors.generic_error loc "POLYMORPHIC_ADD is solved in checking."

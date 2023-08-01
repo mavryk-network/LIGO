@@ -17,6 +17,69 @@ open Errors
 
 type execution_trace = unit
 
+module ExecErrors = struct
+  open Tezos_protocol.Protocol
+
+  type t =
+    | Fail_rejected of Tezos_state.ligo_repr * Alpha_context.Contract.t
+    | Fail_balance_too_low of Alpha_context.Contract.t * Z.t * Z.t
+    | Fail_other of string
+
+  let value (x : t) =
+    match x with
+    | Fail_rejected (code, contract) ->
+      LC.v_ctor
+        "Rejected"
+        (LC.v_pair (LT.V_Michelson (Untyped_code code), LC.v_address contract))
+    | Fail_balance_too_low (contract, contract_balance, spend_request) ->
+      let rej_data =
+        LC.(
+          v_record
+            [ "contract_too_low", v_address contract
+            ; "contract_balance", v_mutez contract_balance
+            ; "spend_request", v_mutez spend_request
+            ])
+      in
+      LC.v_ctor "Balance_too_low" rej_data
+    | Fail_other s -> LC.v_ctor "Other" (LC.v_string s)
+
+
+  let parse ~raise errs =
+    let open Tezos_protocol_env in
+    let errs_as_str =
+      Format.asprintf
+        "%a"
+        (Tezos_client.Michelson_v1_error_reporter.report_errors
+           ~details:true
+           ~show_source:true
+           ?parsed:None)
+        errs
+    in
+    match errs with
+    | Ecoproto_error (Script_interpreter.Runtime_contract_error contract_failing) :: rest
+      ->
+      let contract_failing = Tezos_state.contract_of_hash ~raise contract_failing in
+      (match rest with
+      | Ecoproto_error (Script_interpreter.Reject (_, x, _)) :: _ ->
+        let code = Tezos_state.canonical_to_ligo x in
+        Fail_rejected (code, contract_failing)
+      | Ecoproto_error (Script_interpreter.Bad_contract_parameter _addr) :: _ ->
+        Fail_other errs_as_str
+      | _ -> Fail_other errs_as_str)
+    (* this error is only caught because we have local modifications in tezos-ligo *)
+    | Ecoproto_error
+        (Contract_storage.Balance_too_low
+          (contract_too_low, contract_balance, spend_request))
+      :: _ ->
+      let contract_too_low : LT.Contract.t =
+        Michelson_backend.contract_to_contract contract_too_low
+      in
+      let contract_balance = Michelson_backend.tez_to_z contract_balance in
+      let spend_request = Michelson_backend.tez_to_z spend_request in
+      Fail_balance_too_low (contract_too_low, contract_balance, spend_request)
+    | _ -> Fail_other errs_as_str
+end
+
 module Heap : sig
   type value := LT.value
   type loc := LT.location
@@ -112,7 +175,8 @@ module Command = struct
         -> [ `Exec_failed of Tezos_state.state_error | `Exec_ok of Z.t ] tezos_command
     | Bake_ops :
         Location.t * Ligo_interpreter.Types.calltrace * LT.test_operation list
-        -> [ `Exec_failed of Tezos_state.state_error | `Exec_ok of Z.t ] tezos_command
+        -> [ `Exec_failed of int * Tezos_state.state_error | `Exec_ok of Z.t ]
+           tezos_command
     | State_error_to_value : Tezos_state.state_error -> LT.value tezos_command
     | Get_storage_of_address :
         Location.t * Ligo_interpreter.Types.calltrace * LT.value
@@ -319,63 +383,8 @@ module Command = struct
       let x = Tezos_state.bake_ops ~raise ~loc ~calltrace ctxt ops in
       (match x with
       | Success (ctxt', gas_consumed) -> `Exec_ok gas_consumed, ctxt'
-      | Fail (_, errs) -> `Exec_failed errs, ctxt)
-    | State_error_to_value errs ->
-      let open Tezos_protocol.Protocol in
-      let open Tezos_protocol_env in
-      let fail_ctor arg = LC.v_ctor "Fail" arg in
-      let fail_other () =
-        let errs_as_str =
-          Format.asprintf
-            "%a"
-            (Tezos_client.Michelson_v1_error_reporter.report_errors
-               ~details:true
-               ~show_source:true
-               ?parsed:None)
-            errs
-        in
-        let rej = LC.v_ctor "Other" (LC.v_string errs_as_str) in
-        fail_ctor rej
-      in
-      (match errs with
-      | Ecoproto_error (Script_interpreter.Runtime_contract_error contract_failing)
-        :: rest ->
-        let contract_failing =
-          LT.V_Ct (C_address (Tezos_state.contract_of_hash ~raise contract_failing))
-        in
-        (match rest with
-        | Ecoproto_error (Script_interpreter.Reject (_, x, _)) :: _ ->
-          let code = Tezos_state.canonical_to_ligo x in
-          let v = LT.V_Michelson (Untyped_code code) in
-          let rej = LC.v_ctor "Rejected" (LC.v_pair (v, contract_failing)) in
-          fail_ctor rej, ctxt
-        | Ecoproto_error (Script_interpreter.Bad_contract_parameter _addr) :: _ ->
-          fail_other (), ctxt
-        | _ -> fail_other (), ctxt)
-      (* this error is only caught because we have local modifications in tezos-ligo *)
-      | Ecoproto_error
-          (Contract_storage.Balance_too_low
-            (contract_too_low, contract_balance, spend_request))
-        :: _ ->
-        let contract_too_low : LT.Contract.t =
-          Michelson_backend.contract_to_contract contract_too_low
-        in
-        let contract_too_low = LT.V_Ct (C_address contract_too_low) in
-        let contract_balance, spend_request =
-          let contract_balance = Michelson_backend.tez_to_z contract_balance in
-          let spend_request = Michelson_backend.tez_to_z spend_request in
-          LT.V_Ct (C_mutez contract_balance), LT.V_Ct (C_mutez spend_request)
-        in
-        let rej_data =
-          LC.v_record
-            [ "contract_too_low", contract_too_low
-            ; "contract_balance", contract_balance
-            ; "spend_request", spend_request
-            ]
-        in
-        let rej = LC.v_ctor "Balance_too_low" rej_data in
-        fail_ctor rej, ctxt
-      | _ -> fail_other (), ctxt)
+      | Fail (n, errs) -> `Exec_failed (n, errs), ctxt)
+    | State_error_to_value errs -> ExecErrors.(value @@ parse ~raise errs), ctxt
     | Get_balance (loc, calltrace, addr) ->
       let addr = trace_option ~raise (corner_case ()) @@ LC.get_address addr in
       let balance = Tezos_state.get_balance ~raise ~loc ~calltrace ctxt addr in
