@@ -753,15 +753,22 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_incremental.mligo" ];
   [%expect
     {|
-    "Increment"
+    Increment
     timestamp(1970-01-01T00:00:00Z)
     timestamp(1970-01-01T00:00:53Z)
-    "Separate"
+    Separate
     timestamp(1970-01-01T00:00:00Z)
     timestamp(1970-01-01T00:29:59Z)
+    Increment (gas)
+    Success (1659n)
+    Separate (gas)
+    Success (1287n)
+    Success (372n)
     Everything at the top-level was executed.
     - test_increment exited with value ().
-    - test_separate exited with value (). |}]
+    - test_separate exited with value ().
+    - test_increment_gas exited with value ().
+    - test_increment_gas exited with value (). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "reset_time.mligo" ];

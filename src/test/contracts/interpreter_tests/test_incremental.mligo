@@ -20,7 +20,7 @@ end
 let initial_storage = 42
 
 let test_increment =
-  let () = Test.log "Increment" in
+  let () = Test.println "Increment" in
   let () = Test.reset_state 10n ([] : tez list) in
   let () = Test.log (Test.get_time ()) in
   let (taddr, _, _) =
@@ -40,7 +40,7 @@ let test_increment =
   assert (Test.get_storage taddr = initial_storage + 6)
 
 let test_separate =
-  let () = Test.log "Separate" in
+  let () = Test.println "Separate" in
   let () = Test.reset_state 10n ([] : tez list) in
   let () = Test.log (Test.get_time ()) in
   let (taddr, _, _) =
@@ -52,3 +52,27 @@ let test_separate =
   let _ = Test.transfer_to_contract_exn contr (Increment 3) 0mutez in
   let () = Test.log (Test.get_time ()) in
   assert (Test.get_storage taddr = initial_storage + 6)
+
+let test_increment_gas =
+  let () = Test.println "Increment (gas)" in
+  let () = Test.reset_state 10n ([] : tez list) in
+  let (taddr, _, _) =
+    Test.originate_module (contract_of  IncDec) initial_storage 0mutez in
+  let contr = Test.to_contract taddr in
+  let a_ = Test.nth_bootstrap_account 0 in
+  let b_ = Test.nth_bootstrap_account 1 in
+  let op0 = Test.Incremental.transfer contr (Increment 0) 0mutez a_ in
+  let op1 = Test.Incremental.transfer contr (Increment 1) 0mutez b_ in
+  let ops : Test.Incremental.operation list = [op0; op1] in
+  let () = Test.log (Test.Incremental.bake ops) in
+  assert (Test.get_storage taddr = initial_storage + 1)
+
+let test_increment_gas =
+  let () = Test.println "Separate (gas)" in
+  let () = Test.reset_state 10n ([] : tez list) in
+  let (taddr, _, _) =
+    Test.originate_module (contract_of  IncDec) initial_storage 0mutez in
+  let contr = Test.to_contract taddr in
+  let () = Test.log (Test.transfer_to_contract contr (Increment 0) 0mutez) in
+  let () = Test.log (Test.transfer_to_contract contr (Increment 1) 0mutez) in
+  assert (Test.get_storage taddr = initial_storage + 1)
