@@ -402,15 +402,25 @@ module Test = struct
   let baker_account (p : string * key) (o : tez option) : unit = [%external ("TEST_BAKER_ACCOUNT", p, o)]
   let set_big_map (type a b) (i : int) (m : (a, b) big_map) : unit = [%external ("TEST_SET_BIG_MAP", i, m)]
   let transfer_to_contract (type p) (c : p contract) (s : p) (t : tez) : test_exec_result =
-    let a : address = [%external ("TEST_ADDRESS", c)] in
-    let e : string option = [%external ("TEST_GET_ENTRYPOINT", c)] in
     let s : michelson_program = eval s in
-    [%external ("TEST_EXTERNAL_CALL_TO_ADDRESS", a, e, s, t)]
+    type operation = "%constant:test_operation" in
+    type source = | Custom of address | Source of unit in
+    type bake_result = Success of nat | Fail of nat * test_exec_error in
+    let source : source = Source () in
+    let op : operation = [%external ("TEST_WRAP_OP_TRANSFER", c, s, t, source)] in
+    let v : bake_result = [%external ("TEST_BAKE_OPS", false, [op])] in
+    let r : test_exec_result = match v with | Success n -> Success n | Fail (_, e) -> Fail e in
+    r
   let transfer_to_contract_exn (type p) (c : p contract) (s : p) (t : tez) : nat =
-      let a : address = [%external ("TEST_ADDRESS", c)] in
-      let e : string option = [%external ("TEST_GET_ENTRYPOINT", c)] in
-      let s : michelson_program = eval s in
-      [%external ("TEST_EXTERNAL_CALL_TO_ADDRESS_EXN", a, e, s, t)]
+    let s : michelson_program = eval s in
+    type operation = "%constant:test_operation" in
+    type source = | Custom of address | Source of unit in
+    type bake_result = Success of nat | Fail of nat * test_exec_error in
+    let source : source = Source () in
+    let op : operation = [%external ("TEST_WRAP_OP_TRANSFER", c, s, t, source)] in
+    let v : bake_result = [%external ("TEST_BAKE_OPS", true, [op])] in
+    let r : nat = match v with | Success n -> n | Fail (_, _) -> failwith "internal error in stdlib" in
+    r
   let michelson_equal (m1 : michelson_program) (m2 : michelson_program) : bool = m1 = m2
   let to_entrypoint (type a b c) (s : string) (t : (a, b) typed_address) : c contract =
     let s = if String.length s > 0n then
