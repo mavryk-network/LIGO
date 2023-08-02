@@ -475,7 +475,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     | `Exec_ok gas -> return (LC.v_ctor "Success" (LC.v_nat gas))
     | `Exec_failed (n, e) ->
       let>> a = State_error_to_value e in
-      return @@ LC.v_pair (LC.v_nat (Z.of_int n), LC.v_ctor "Fail" a)
+      return @@ LC.v_ctor "Fail" @@ LC.v_pair (LC.v_nat (Z.of_int n), a)
   in
   let source_file = get_file_from_location loc in
   match c, operands with
