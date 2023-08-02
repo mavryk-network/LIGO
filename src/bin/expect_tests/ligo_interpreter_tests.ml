@@ -766,7 +766,7 @@ let%expect_test _ =
     Success (1294n)
     Success (372n)
     Increment fail
-    (2n , Fail (Rejected (("oops" , KT1WbaKQjsFRBcZwV7zbjgofBzyRqBrwQbL5))))
+    Fail ((2n , Rejected (("oops" , KT1WbaKQjsFRBcZwV7zbjgofBzyRqBrwQbL5))))
     Everything at the top-level was executed.
     - test_increment exited with value ().
     - test_separate exited with value ().
