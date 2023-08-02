@@ -74,6 +74,8 @@ to_dos:
 
 # TODO: https://docs.gitlab.com/ee/ci/yaml/#onlychangesexceptchanges ?
 docker_build:
+  tags:
+    - ligo-ci-runner-unix
   stage: build
   rules:
     - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "ligolang/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
