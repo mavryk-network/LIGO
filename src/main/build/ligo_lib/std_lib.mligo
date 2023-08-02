@@ -646,7 +646,8 @@ module Test = struct
 
     let transfer (type a) (c : a contract) (p : a) (t : tez) (a : address) : operation =
       let m = compile_value p in
-      [%external ("TEST_WRAP_OP_TRANSFER", c, m, t, a)]
+      type source = | Custom of address | Source of unit in
+      [%external ("TEST_WRAP_OP_TRANSFER", c, m, t, Custom a)]
     let bake (l : operation list) : bake_result = [%external ("TEST_BAKE_OPS", l)]
     let bake_exn (l : operation list) : unit =
       let _ = [%external ("TEST_BAKE_OPS", l)] in

@@ -1472,7 +1472,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
               [ t_contract ~loc a ()
                 ^-> t_michelson_code ~loc ()
                 ^-> t_mutez ~loc ()
-                ^-> t_address ~loc ()
+                ^-> t_sum_ez ~loc [ "Custom", t_address ~loc (); "Source", t_unit ~loc () ] ()
                 ^~> t_test_operation ~loc ()
               ]) )
     ; ( C_TEST_BAKE_OPS

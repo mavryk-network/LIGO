@@ -229,6 +229,7 @@ module Command = struct
         Location.t * Ligo_interpreter.Types.calltrace * LT.value * LT.value * Z.t
         -> LT.value tezos_command
     | Set_source : LT.value -> unit tezos_command
+    | Get_source : LT.Contract.t tezos_command
     | Set_baker : Location.t * LT.calltrace * LT.value -> unit tezos_command
     | Get_voting_power :
         Location.t
@@ -673,6 +674,8 @@ module Command = struct
     | Set_source source ->
       let source = trace_option ~raise (corner_case ()) @@ LC.get_address source in
       (), { ctxt with internals = { ctxt.internals with source } }
+    | Get_source ->
+      ctxt.internals.source, ctxt
     | Set_baker (loc, calltrace, baker_policy) ->
       let baker_policy =
         trace_option ~raise (corner_case ()) @@ LC.get_baker_policy baker_policy
