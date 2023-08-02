@@ -468,8 +468,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   in
   let return_bake_exec_exn = function
     | `Exec_ok gas -> return (LC.v_ctor "Success" (LC.v_nat gas))
-    | `Exec_failed (_, e) ->
-      fail @@ Errors.target_lang_error loc calltrace e
+    | `Exec_failed (_, e) -> fail @@ Errors.target_lang_error loc calltrace e
   in
   let return_bake_exec = function
     | `Exec_ok gas -> return (LC.v_ctor "Success" (LC.v_nat gas))
@@ -1528,12 +1527,12 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       ; V_Michelson
           (Ty_code { micheline_repr = { code = param; _ }; _ } | Untyped_code param)
       ; V_Ct (C_mutez amount)
-      ; V_Construct ("Source", V_Ct (C_unit))
+      ; V_Construct ("Source", V_Ct C_unit)
       ] ) ->
     let>> source = Get_source in
     return @@ v_test_operation @@ Transfer { contract; param; amount; source }
   | C_TEST_WRAP_OP_TRANSFER, _ -> fail @@ error_type ()
-  | C_TEST_BAKE_OPS, [ V_Ct (C_bool false) ; V_List ops ] ->
+  | C_TEST_BAKE_OPS, [ V_Ct (C_bool false); V_List ops ] ->
     let ops =
       List.map
         ~f:(fun x -> trace_option ~raise (Errors.corner_case ()) @@ get_test_operation x)
@@ -1541,7 +1540,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     in
     let>> res = Bake_ops (loc, calltrace, ops) in
     return_bake_exec @@ res
-  | C_TEST_BAKE_OPS, [ V_Ct (C_bool true) ; V_List ops ] ->
+  | C_TEST_BAKE_OPS, [ V_Ct (C_bool true); V_List ops ] ->
     let ops =
       List.map
         ~f:(fun x -> trace_option ~raise (Errors.corner_case ()) @@ get_test_operation x)

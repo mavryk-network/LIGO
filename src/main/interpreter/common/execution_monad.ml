@@ -674,8 +674,7 @@ module Command = struct
     | Set_source source ->
       let source = trace_option ~raise (corner_case ()) @@ LC.get_address source in
       (), { ctxt with internals = { ctxt.internals with source } }
-    | Get_source ->
-      ctxt.internals.source, ctxt
+    | Get_source -> ctxt.internals.source, ctxt
     | Set_baker (loc, calltrace, baker_policy) ->
       let baker_policy =
         trace_option ~raise (corner_case ()) @@ LC.get_baker_policy baker_policy
