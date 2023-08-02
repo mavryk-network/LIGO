@@ -75,7 +75,8 @@ let%expect_test _ =
     Content: |core: bool|
     references:
       File "", line 361, characters 88-92 ,
-      File "", line 366, characters 68-72
+      File "", line 366, characters 68-72 ,
+      File "", line 654, characters 43-47
     Mod Path =
     Def Type = Global
     (false#249:14-19 -> false)
@@ -85,7 +86,8 @@ let%expect_test _ =
     references:
       File "", line 317, characters 51-56 ,
       File "", line 362, characters 90-95 ,
-      File "", line 365, characters 62-67
+      File "", line 365, characters 62-67 ,
+      File "", line 652, characters 79-84
     Mod Path =
     Def Type = Global
     (unit#250:14-18 -> unit)
@@ -410,7 +412,8 @@ let%expect_test _ =
       File "", line 630, characters 28-31 ,
       File "", line 633, characters 35-38 ,
       File "", line 646, characters 34-37 ,
-      File "", line 646, characters 48-51
+      File "", line 646, characters 48-51 ,
+      File "", line 653, characters 40-43
     (unit#7:5-9 -> unit)
     Range: File "", line 7, characters 5-9
     Body Range: File "", line 7, characters 12-28
@@ -518,8 +521,7 @@ let%expect_test _ =
       File "", line 599, characters 52-56 ,
       File "", line 602, characters 51-55 ,
       File "", line 602, characters 76-80 ,
-      File "", line 650, characters 52-56 ,
-      File "", line 653, characters 40-44
+      File "", line 650, characters 52-56
     (operation#10:5-14 -> operation)
     Range: File "", line 10, characters 5-14
     Body Range: File "", line 10, characters 17-38
@@ -2338,7 +2340,7 @@ let%expect_test _ =
 
     (Test#294:7-11 -> Test)
     Range: File "", line 294, characters 7-11
-    Body Range: File "", line 294, character 14 to line 657, character 3
+    Body Range: File "", line 294, character 14 to line 659, character 3
     Content: Members: Variable definitions:
                       (run#296:6-9 -> run)
                       Range: File "", line 296, characters 6-9
@@ -2388,7 +2390,8 @@ let%expect_test _ =
                         File "", line 571, characters 98-106 ,
                         File "", line 572, characters 113-121 ,
                         File "", line 627, characters 16-24 ,
-                        File "", line 642, characters 16-24
+                        File "", line 642, characters 16-24 ,
+                        File "", line 657, characters 13-21
                       Mod Path = "Test"
                       Def Type = Module_field
                       (to_contract#302:6-17 -> to_contract)
@@ -3133,7 +3136,7 @@ let%expect_test _ =
 
                       (Incremental#644:9-20 -> Incremental)
                       Range: File "", line 644, characters 9-20
-                      Body Range: File "", line 644, character 23 to line 656, character 5
+                      Body Range: File "", line 644, character 23 to line 658, character 5
                       Content: Members: Variable definitions:
                                         (transfer#648:8-16 -> transfer)
                                         Range: File "", line 648, characters 8-16
@@ -3144,15 +3147,15 @@ let%expect_test _ =
                                         Def Type = Module_field
                                         (bake#652:8-12 -> bake)
                                         Range: File "", line 652, characters 8-12
-                                        Body Range: File "", line 652, characters 50-82
+                                        Body Range: File "", line 652, characters 50-89
                                         Content: |core: list (operation) -> bake_result|
                                         references: []
                                         Mod Path = "Test""Incremental"
                                         Def Type = Module_field
                                         (bake_exn#653:8-16 -> bake_exn)
                                         Range: File "", line 653, characters 8-16
-                                        Body Range: File "", line 654, character 6 to line 655, character 8
-                                        Content: |core: list (operation) -> unit|
+                                        Body Range: File "", line 654, character 6 to line 657, character 7
+                                        Content: |core: list (operation) -> nat|
                                         references: []
                                         Mod Path = "Test""Incremental"
                                         Def Type = Module_field

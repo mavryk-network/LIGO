@@ -37,8 +37,9 @@ let test_increment =
   let op2 = Test.Incremental.transfer contr (Increment 2) 0mutez c_ in
   let op3 = Test.Incremental.transfer contr (Increment 3) 0mutez d_ in
   let ops : Test.Incremental.operation list = [op0; op1; op2; op3] in
-  let () = Test.Incremental.bake_exn ops in
+  let _n = Test.Incremental.bake_exn ops in
   let () = Test.log (Test.get_time ()) in
+  let () = Test.log _n in
   assert (Test.get_storage taddr = initial_storage + 6)
 
 let test_separate =

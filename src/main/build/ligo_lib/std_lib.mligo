@@ -648,9 +648,11 @@ module Test = struct
       let m = compile_value p in
       type source = | Custom of address | Source of unit in
       [%external ("TEST_WRAP_OP_TRANSFER", c, m, t, Custom a)]
-    let bake (l : operation list) : bake_result = [%external ("TEST_BAKE_OPS", l)]
-    let bake_exn (l : operation list) : unit =
-      let _ = [%external ("TEST_BAKE_OPS", l)] in
-      ()
+    let bake (l : operation list) : bake_result = [%external ("TEST_BAKE_OPS", false, l)]
+    let bake_exn (l : operation list) : nat =
+      let v = [%external ("TEST_BAKE_OPS", true, l)] in
+      match v with
+      | Success n -> n
+      | _ -> failwith "internal error"
   end
 end

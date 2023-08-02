@@ -756,6 +756,7 @@ let%expect_test _ =
     Increment
     timestamp(1970-01-01T00:00:00Z)
     timestamp(1970-01-01T00:00:53Z)
+    2410n
     Separate
     timestamp(1970-01-01T00:00:00Z)
     timestamp(1970-01-01T00:29:59Z)
@@ -1169,6 +1170,23 @@ let%expect_test _ =
 
     Invalid usage of a Test type: typed_address (unit ,
     unit) in record[x -> int , y -> typed_address (unit , unit)] cannot be translated to Michelson. |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "run"; "test"; bad_test "test_incremental.mligo" ];
+  [%expect
+    {|
+    File "../../test/contracts/negative//interpreter_tests/test_incremental.mligo", line 39, characters 11-40:
+     38 |   let ops : Test.Incremental.operation list = [op0; op1; op2; op3] in
+     39 |   let _n = Test.Incremental.bake_exn ops in
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     40 |   let () = Test.log (Test.get_time ()) in
+
+    An uncaught error occured:
+    Counter 2 not yet reached for contract tz1MBWU1WkszFfkEER2pgn4ATKXE9ng7x1sR (expected 1)
+    Trace:
+    File "../../test/contracts/negative//interpreter_tests/test_incremental.mligo", line 39, characters 11-40
+    Increment
+    timestamp(1970-01-01T00:00:00Z) |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_random.mligo" ];
