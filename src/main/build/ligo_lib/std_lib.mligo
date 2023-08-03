@@ -409,8 +409,10 @@ module Test = struct
     type operation = "%constant:test_operation" in
     type source = | Custom of address | Source of unit in
     type bake_result = Success of nat | Fail of nat * test_exec_error in
+    type dest = | Contract of p contract | Address of address * string option in
     let source : source = Source () in
-    let op : operation = [%external ("TEST_WRAP_OP_TRANSFER", c, s, t, source)] in
+    let dest : dest = Contract c in
+    let op : operation = [%external ("TEST_WRAP_OP_TRANSFER", dest, s, t, source)] in
     let v : bake_result = [%external ("TEST_BAKE_OPS", false, [op])] in
     let r : test_exec_result = match v with | Success n -> Success n | Fail (_, e) -> Fail e in
     r
@@ -419,8 +421,10 @@ module Test = struct
     type operation = "%constant:test_operation" in
     type source = | Custom of address | Source of unit in
     type bake_result = Success of nat | Fail of nat * test_exec_error in
+    type dest = | Contract of p contract | Address of address * string option in
     let source : source = Source () in
-    let op : operation = [%external ("TEST_WRAP_OP_TRANSFER", c, s, t, source)] in
+    let dest : dest = Contract c in
+    let op : operation = [%external ("TEST_WRAP_OP_TRANSFER", dest, s, t, source)] in
     let v : bake_result = [%external ("TEST_BAKE_OPS", true, [op])] in
     let r : nat = match v with | Success n -> n | Fail (_, _) -> failwith "internal error in stdlib" in
     r
@@ -660,7 +664,9 @@ module Test = struct
     let transfer (type a) (c : a contract) (p : a) (t : tez) (a : address) : operation =
       let m = compile_value p in
       type source = | Custom of address | Source of unit in
-      [%external ("TEST_WRAP_OP_TRANSFER", c, m, t, Custom a)]
+      type dest = | Contract of a contract | Address of address * string option in
+      let dest : dest = Contract c in
+      [%external ("TEST_WRAP_OP_TRANSFER", dest, m, t, Custom a)]
     let bake (l : operation list) : bake_result = [%external ("TEST_BAKE_OPS", false, l)]
     let bake_exn (l : operation list) : nat =
       let v = [%external ("TEST_BAKE_OPS", true, l)] in
