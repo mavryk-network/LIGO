@@ -1306,18 +1306,6 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
           create
             ~mode_annot:[ Inferred ]
             ~types:[ t_contract a ~loc () ^~> t_typed_address a b ~loc () ]) )
-    ; ( C_TEST_EXTERNAL_CALL_TO_ADDRESS
-      , of_type
-          (create
-             ~mode_annot:[ Checked; Checked; Checked; Checked; Checked ]
-             ~types:
-               [ t_bool ~loc ()
-                 ^-> t_address ~loc ()
-                 ^-> t_option (t_string ~loc ()) ~loc ()
-                 ^-> t_michelson_code ~loc ()
-                 ^-> t_mutez ~loc ()
-                 ^~> t_test_exec_result ~loc ()
-               ]) )
     ; ( C_TEST_SET_BIG_MAP
       , of_type
           (for_all "a"
