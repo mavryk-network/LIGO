@@ -60,11 +60,11 @@ let inject (tokens : tokens) : tokens =
       (RPAR _ as next) :: tokens (* () *)
     | Ident _ , ARROW _, next :: tokens -> (* x => *)
         let es6fun = mk_ES6FUN (to_region current) in
-        aux (current, es6fun :: previous :: acc) next tokens
+        aux (current, previous :: es6fun :: acc) next tokens
     | Ident _ , ARROW _, [] -> (* x => *)
         (* Syntax error, but we assume a function *)
         let es6fun = mk_ES6FUN (to_region previous) in
-        List.rev (current :: es6fun :: previous :: acc)
+        List.rev (current :: previous :: es6fun :: acc)
 
     | (LBRACKET _ | LPAR _ | EQ _ | COMMA _ | COLON _ | GT _ | ARROW _),
       LPAR _,
