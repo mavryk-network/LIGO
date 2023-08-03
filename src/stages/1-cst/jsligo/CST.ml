@@ -250,9 +250,9 @@ and intf_body = intf_entries braces
 and intf_entries = (intf_entry, semi) sep_or_term
 
 and intf_entry =
-  I_Attr    of (attribute * intf_entry)
-| I_Type    of intf_type reg
-| I_Const   of intf_const reg
+  I_Attr  of (attribute * intf_entry)
+| I_Type  of intf_type reg
+| I_Const of intf_const reg
 
 and intf_type = {
   kwd_type  : kwd_type;
