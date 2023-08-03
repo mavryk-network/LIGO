@@ -386,8 +386,11 @@ module Test = struct
       else acc
     in
     List.fold f event_map ([]: a list)
-  let transfer (a : address) (s : michelson_program) (t : tez) : test_exec_result = [%external ("TEST_EXTERNAL_CALL_TO_ADDRESS", a, (None : string option), s, t)]
-  let transfer_exn (a : address) (s : michelson_program) (t : tez) : nat = [%external ("TEST_EXTERNAL_CALL_TO_ADDRESS_EXN", a, (None : string option), s, t)]
+  let transfer (a : address) (s : michelson_program) (t : tez) : test_exec_result = [%external ("TEST_EXTERNAL_CALL_TO_ADDRESS", false, a, (None : string option), s, t)]
+  let transfer_exn (a : address) (s : michelson_program) (t : tez) : nat =
+    let v = [%external ("TEST_EXTERNAL_CALL_TO_ADDRESS", true, a, (None : string option), s, t)] in
+    let r = match v with | Success n -> n | Fail _ -> failwith "internal error in stdlib" in
+    r
   let log (type a) (v : a) : unit =
     let nl = [%external ("TEST_UNESCAPE_STRING", "\n")] in
     let s = to_string v ^ nl in

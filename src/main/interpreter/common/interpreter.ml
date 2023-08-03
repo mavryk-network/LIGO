@@ -457,7 +457,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     @@ List.nth types n
   in
   let return_contract_exec_exn = function
-    | `Exec_ok gas -> return (v_nat gas)
+    | `Exec_ok gas -> return (LC.v_ctor "Success" (LC.v_nat gas))
     | `Exec_failed e -> fail @@ Errors.target_lang_error loc calltrace e
   in
   let return_contract_exec = function
@@ -1165,8 +1165,9 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let>> code = Compile_contract_from_file (contract_file, entryp, views, mutation) in
     return @@ code
   | C_TEST_COMPILE_CONTRACT_FROM_FILE, _ -> fail @@ error_type ()
-  | ( C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN
-    , [ V_Ct (C_address address)
+  | ( C_TEST_EXTERNAL_CALL_TO_ADDRESS
+    , [ V_Ct (C_bool true)
+      ; V_Ct (C_address address)
       ; entrypoint
       ; V_Michelson (Ty_code { micheline_repr = { code = param; _ }; _ })
       ; V_Ct (C_mutez amt)
@@ -1176,9 +1177,9 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let contract = { address; entrypoint } in
     let>> res = External_call (loc, calltrace, contract, param, amt) in
     return_contract_exec_exn res
-  | C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN, _ -> fail @@ error_type ()
   | ( C_TEST_EXTERNAL_CALL_TO_ADDRESS
-    , [ V_Ct (C_address address)
+    , [ V_Ct (C_bool false)
+      ; V_Ct (C_address address)
       ; entrypoint
       ; V_Michelson (Ty_code { micheline_repr = { code = param; _ }; _ })
       ; V_Ct (C_mutez amt)
