@@ -1449,7 +1449,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
             ~types:
               [ t_sum_ez
                       ~loc
-                      [ "Address", t_pair ~loc (t_address ~loc ()) (t_option ~loc (t_string ~loc ()) ()) (); "Contract", t_contract ~loc a () ]
+                      [ "Address", t_address ~loc (); "Contract", t_contract ~loc a () ]
                       ()
                 ^-> t_michelson_code ~loc ()
                 ^-> t_mutez ~loc ()

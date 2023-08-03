@@ -261,15 +261,11 @@ let%expect_test _ =
       File "", line 347, characters 22-28 ,
       File "", line 358, characters 19-25 ,
       File "", line 382, characters 76-82 ,
-      File "", line 394, characters 67-73 ,
-      File "", line 405, characters 67-73 ,
       File "", line 420, characters 25-31 ,
       File "", line 420, characters 50-56 ,
       File "", line 421, characters 17-23 ,
       File "", line 422, characters 23-29 ,
       File "", line 423, characters 25-31 ,
-      File "", line 430, characters 64-70 ,
-      File "", line 442, characters 64-70 ,
       File "", line 450, characters 38-44 ,
       File "", line 483, characters 39-45 ,
       File "", line 483, characters 52-58 ,
@@ -285,8 +281,7 @@ let%expect_test _ =
       File "", line 535, characters 82-88 ,
       File "", line 604, characters 40-46 ,
       File "", line 605, characters 58-64 ,
-      File "", line 606, characters 58-64 ,
-      File "", line 685, characters 66-72
+      File "", line 606, characters 58-64
     (bytes#4:5-10 -> bytes)
     Range: File "", line 4, characters 5-10
     Body Range: File "", line 4, characters 13-30
@@ -1155,14 +1150,10 @@ let%expect_test _ =
       File "", line 259, characters 43-49 ,
       File "", line 260, characters 43-49 ,
       File "", line 347, characters 29-35 ,
-      File "", line 394, characters 74-80 ,
-      File "", line 405, characters 74-80 ,
       File "", line 416, characters 102-108 ,
       File "", line 419, characters 63-69 ,
       File "", line 420, characters 57-63 ,
       File "", line 423, characters 48-54 ,
-      File "", line 430, characters 71-77 ,
-      File "", line 442, characters 71-77 ,
       File "", line 484, characters 100-106 ,
       File "", line 491, characters 74-80 ,
       File "", line 494, characters 52-58 ,
@@ -1184,8 +1175,7 @@ let%expect_test _ =
       File "", line 655, characters 76-82 ,
       File "", line 667, characters 50-56 ,
       File "", line 667, characters 85-91 ,
-      File "", line 670, characters 76-82 ,
-      File "", line 685, characters 73-79
+      File "", line 670, characters 76-82
     (michelson_program#263:5-22 -> michelson_program)
     Range: File "", line 263, characters 5-22
     Body Range: File "", line 263, characters 25-54

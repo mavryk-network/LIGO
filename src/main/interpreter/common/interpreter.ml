@@ -1499,15 +1499,8 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let* contract = match contract with
       | V_Construct ("Contract", V_Ct (C_contract contract)) ->
         return contract
-      | V_Construct ("Address", pair) when Option.is_some (LC.get_pair pair) ->
-        let address, entrypoint = Option.value_exn @@ LC.get_pair pair in
-        let* address = match LC.get_address address with
-          | Some address -> return address
-          | None -> fail @@ error_type ()
-        in
-        let entrypoint = Option.join @@ LC.get_string_option entrypoint in
-        let entrypoint = Option.map ~f:Entrypoint_repr.of_string_exn entrypoint in
-        return { address; entrypoint }
+      | V_Construct ("Address", V_Ct (C_address address)) ->
+        return { address; entrypoint = None }
       | _ -> fail @@ error_type ()
     in
     return @@ v_test_operation @@ Transfer { contract; param; amount; source }
