@@ -386,7 +386,17 @@ module Test = struct
       else acc
     in
     List.fold f event_map ([]: a list)
-  let transfer (a : address) (s : michelson_program) (t : tez) : test_exec_result = [%external ("TEST_EXTERNAL_CALL_TO_ADDRESS", false, a, (None : string option), s, t)]
+  let transfer (a : address) (s : michelson_program) (t : tez) : test_exec_result =
+    type operation = "%constant:test_operation" in
+    type source = | Custom of address | Source of unit in
+    type bake_result = Success of nat | Fail of nat * test_exec_error in
+    type dest = | Contract of unit contract | Address of address * string option in
+    let source : source = Source () in
+    let dest : dest = Address (a, None) in
+    let op : operation = [%external ("TEST_WRAP_OP_TRANSFER", dest, s, t, source)] in
+    let v : bake_result = [%external ("TEST_BAKE_OPS", false, [op])] in
+    let r : test_exec_result = match v with | Success n -> Success n | Fail (_, e) -> Fail e in
+    r
   let transfer_exn (a : address) (s : michelson_program) (t : tez) : nat =
     type operation = "%constant:test_operation" in
     type source = | Custom of address | Source of unit in
