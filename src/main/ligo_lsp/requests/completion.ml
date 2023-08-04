@@ -111,8 +111,26 @@ let defs_to_completion_items
           let sortText = completion_context_priority ?same_file context in
           let kind, detail =
             match def with
-            | Scopes.Types.Variable _ ->
-              CompletionItemKind.Variable, Some (Req_hover.hover_string syntax def)
+            | Scopes.Types.Variable vdef ->
+              let show_type : Ast_core.type_expression -> string =
+                (* VSCode is ignoring any newlines in completion detail *)
+                let pp_mode = Ligo_interface.{ width = 60; indent = 2 } in
+                fun te ->
+                  match
+                    Ligo_interface.pretty_print_type_expression pp_mode ~syntax te
+                  with
+                  | `Ok str -> str
+                  | `Nonpretty (_exn, str) -> str
+                (* Sending log messages from here or adding exn to return type will make the code
+                less straightforward, so we're just silently ignoring it
+                since one can use hover on this term to see the exn anyway. *)
+              in
+              ( CompletionItemKind.Variable
+              , Option.some
+                @@ Option.value_map
+                     ~default:(Helpers_pretty.unresolved_type_as_comment syntax)
+                     ~f:(show_type <@ Type_definition.use_var_name_if_availiable)
+                @@ Type_definition.get_type vdef )
             | Scopes.Types.Type _ -> CompletionItemKind.TypeParameter, None
             | Scopes.Types.Module _ -> CompletionItemKind.Module, None
           in
@@ -124,11 +142,12 @@ let get_defs_completions
     (syntax : Syntax_types.t)
     (cst : Dialect_cst.t)
     (pos : Position.t)
-    (get_scope_info : Ligo_interface.get_scope_info)
+    (scopes : Ligo_interface.scopes)
+    (definitions : Def.t list)
     : CompletionItem.t list
   =
   let scope =
-    List.find (Option.value ~default:[] get_scope_info.scopes) ~f:(fun (loc, _defs) ->
+    List.find scopes ~f:(fun (loc, _defs) ->
         match Range.of_loc loc with
         | None -> false
         | Some loc -> Range.contains_position pos loc)
@@ -174,7 +193,7 @@ let get_defs_completions
        the user so the completions aren't empty. This happens because scopes
        aren't accurate and may be missing on some ranges. As soon as scopes are
        improved, we should remove this workaround. *)
-    (Option.value_map scope ~default:get_scope_info.definitions ~f:snd)
+    (Option.value_map scope ~default:definitions ~f:snd)
 
 
 let complete_files (pos : Position.t) (code : string) (files : string list)
@@ -265,7 +284,7 @@ let complete_fields
     (syntax : Syntax_types.t)
     (cst : Dialect_cst.t)
     (pos : Position.t)
-    (get_scope_info : Ligo_interface.get_scope_info)
+    (definitions : Def.t list)
     : CompletionItem.t list
   =
   (* Recursively resolve a projection path. This is done with
@@ -285,7 +304,7 @@ let complete_fields
     | T_record row -> Some row
     | T_variable var ->
       Option.bind
-        (List.find_map get_scope_info.definitions ~f:(function
+        (List.find_map definitions ~f:(function
             | Type tdef ->
               if Ligo_prim.Type_var.is_name var tdef.name then Some tdef else None
             | Variable _ | Module _ -> None))
@@ -337,12 +356,14 @@ let complete_fields
       | Def defs -> Some (module_defs_to_completion_items defs)
       | Alias (_alias, resolved) ->
         Option.bind resolved ~f:(fun resolved ->
-            List.find_map get_scope_info.definitions ~f:(function
+            List.find_map definitions ~f:(function
                 | Variable _ | Type _ -> None
                 | Module m ->
-                  if String.(m.name = resolved) then get_module_defs m.mod_case else None))
+                  if Scopes.Types.Uid.(m.uid = resolved)
+                  then get_module_defs m.mod_case
+                  else None))
     in
-    Go_to_definition.get_definition module_pos path get_scope_info.definitions
+    Go_to_definition.get_definition module_pos path definitions
     >>= function
     | Module { mod_case; _ } -> get_module_defs mod_case
     | Variable _ | Type _ -> None
@@ -352,7 +373,7 @@ let complete_fields
       (proj_fields_before_cursor : string option list)
       : CompletionItem.t list option
     =
-    match Go_to_definition.get_definition struct_pos path get_scope_info.definitions with
+    match Go_to_definition.get_definition struct_pos path definitions with
     | Some (Variable { t; _ }) ->
       let mk_completions t =
         Option.map ~f:core_record_to_completion_items
@@ -819,16 +840,19 @@ let on_req_completion (pos : Position.t) (path : Path.t)
      keywords to the user. *)
   let completions_so_far = mk_completion_list completions_without_scopes in
   with_cached_doc path completions_so_far
-  @@ fun { get_scope_info; _ } ->
+  @@ fun { definitions; code; _ } ->
   with_cst path completions_so_far
   @@ fun cst ->
-  let field_completions = complete_fields path syntax cst pos get_scope_info in
+  let field_completions = complete_fields path syntax cst pos definitions in
   let all_completions =
     (* If we are completing a record or module field, there is no need to also
        suggest scopes or keywords. *)
     if List.is_empty field_completions
     then (
-      let scope_completions = get_defs_completions path syntax cst pos get_scope_info in
+      let scopes = Ligo_interface.get_scopes ~definitions ~deprecated:true ~code path in
+      let scope_completions =
+        get_defs_completions path syntax cst pos scopes definitions
+      in
       let field_and_scope_completions =
         (* Keep the first item to deal with shadowing. *)
         List.remove_consecutive_duplicates

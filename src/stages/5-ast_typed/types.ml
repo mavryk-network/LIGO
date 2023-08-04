@@ -6,7 +6,6 @@ type type_variable = Type_var.t [@@deriving compare, hash]
 type expression_variable = Value_var.t [@@deriving compare, hash]
 type module_variable = Module_var.t [@@deriving compare, hash]
 
-
 type type_content =
   | T_variable of Type_var.t
   | T_constant of type_injection
@@ -63,6 +62,7 @@ type expression_content =
   | E_raw_code of expr Raw_code.t
   | E_type_inst of type_inst
   | E_type_abstraction of expr Type_abs.t
+  | E_coerce of (expr, ty_expr) Ascription.t
   (* Variant *)
   | E_constructor of expr Constructor.t (* For user defined constructors *)
   | E_matching of (expr, ty_expr) Match_expr.t
@@ -97,6 +97,7 @@ and declaration_content =
   | D_irrefutable_match of (expr, ty_expr) Pattern_decl.t
   | D_type of ty_expr Type_decl.t
   | D_module of (module_expr, unit) Module_decl.t
+  | D_module_include of module_expr
 
 and declaration = declaration_content Location.wrap
 and decl = declaration [@@deriving eq, compare, yojson, hash]

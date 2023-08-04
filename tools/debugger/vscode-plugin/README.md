@@ -7,27 +7,23 @@ In the future, this package will be deprecated and joined with the LIGO Language
 
 ## Connecting the `ligo` executable
 
+You will need the `ligo` executable available on your computer. You can find out more from the [installation instructions](https://www.ligolang.org/docs/intro/installation/).
+
 You can specify a path to the `ligo` executable in `settings.json`. The debugger will look for it in the following order:
 1. The debugger will use this path if this field is filled.
 2. If this field is blank, the debugger will try to find the `ligo` executable in the `$PATH` variable.
 3. Otherwise, the debugger will use the path from the `$LIGO_BINARY_PATH` variable.
 
-Also, if you prefer using `ligo` from the docker image then you can specify a path to the next script which runs `ligo` from docker:
+Also, if you prefer using `ligo` from the Docker image then you can specify a path to the next script which runs `ligo` from Docker:
+
 ```sh
 #!/bin/sh
 docker run --rm -v $(pwd):$(pwd) -w $(pwd) ligolang/ligo:{ligo-version} "$@"
 ```
-where `{ligo-version}` is your preferred `ligo` version (e.g. `0.59.0`).
 
-At this moment running `ligo` from docker is slow, so, it's better to use static binary.
+where `{ligo-version}` is your preferred `ligo` version (e.g. `0.70.1`).
 
-For MacOS users, you might need to build LIGO from the repository.
-
-1. Install the LIGO Debugger VS Code extension.
-2. Clone the LIGO repo from https://gitlab.com/ligolang/ligo/-/tree/0.59.0?ref_type=tags and checkout the 0.59.0 branch.
-3. Follow the [INSTALL.md](https://gitlab.com/ligolang/ligo/-/blob/0.59.0/INSTALL.md). In there, you will find the instructions and dependencies to build LIGO.
-4. After running `make build`, you will be able to find LIGO in `_build/install/default/bin/ligo`. Copy this to somewhere easy to find.
-5. In the VS Code settings, set the path to LIGO binary to the one where LIGO is. Alternatively, you can put `ligo` in your `PATH`.
+At this moment running `ligo` from Docker is slow, so it's better to use the static binary.
 
 ## Functionality support
 
@@ -37,13 +33,13 @@ What is supported as part of MVP:
 * All stepping commands (including `Step Back`) with statement and expression granularities;
 * Display of variables, including records, constructors, lists, and combinations of them;
 * Stack frames display;
-* Breakpoints (but not guaranteed to work properly in all the cases at the moment).
+* Breakpoints (but not guaranteed to work properly in all the cases at the moment);
+* Providing custom environment (`Tezos.get_now`, `Tezos.get_balance`, etc).
 
 Bits of functionality that will be added very soon:
 * Contracts related functionality:
   - [ ] Running contract with embedded Michelson.
   - [ ] Running contract with other contracts origination.
-  - [ ] Providing custom environment (`NOW`, `BALANCE`, e.t.c).
   - [ ] Running contracts with global constants.
   - [ ] Running corner cases of contracts with tickets (the current support is partial).
 * Others:
@@ -122,6 +118,39 @@ With such a contract, you can specify in `launch.json`:
     "parameter": 5
 }
 ```
+
+### Passing a custom environment
+The debugger supports providing a custom environment for your contracts. You can customize it in the `contractEnv` field. An example of configuration:
+```json
+...
+"contractEnv": {
+  "now": "2020-01-01T00:00:00Z",
+  "level": "10000",
+  "sender": "tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY",
+  "source": "tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY",
+  "self": "KT1XQcegsEtio9oGbLUHA8SKX4iZ2rpEXY9b",
+  "amount": "0",
+  "balance": "1000000",
+  "chainId": "NetXH12Aer3be93",
+  "votingPowers": {
+    "kind": "simple",
+    "contents": {
+      "tz1aZcxeRT4DDZZkYcU3vuBaaBRtnxyTmQRr": "100"
+    }
+  }
+}
+...
+```
+All these fields are optional. Let's describe what they mean:
+1. `now`. The value returned by `Tezos.get_now()`. Default: current system time.
+2. `level`. The value returned by `Tezos.get_level()`. Default: `"10000"`.
+3. `sender`. The value returned by `Tezos.get_sender()`. Default: `"tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY"`.
+4. `source`. The value returned by `Tezos.get_source()`. Default: `"tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY"`.
+5. `self`. The value returned by `Tezos.get_self_address()`. Default: `"KT1XQcegsEtio9oGbLUHA8SKX4iZ2rpEXY9b"`.
+6. `amount`. The value returned by `Tezos.get_amount()`. Default: `"0"`.
+7. `balance`. The value returned by `Tezos.get_balance()`. Default: `"1000000"`.
+8. `chainId`. The value returned by `Tezos.get_chain_id()`. Default: `"NetXH12Aer3be93"`.
+9. `votingPowers`. At this moment only the `simple` kind is supported. In the `contents` field you should specify key hashes and their voting powers. Default: `{ "kind": "simple", "contents": { "tz1aZcxeRT4DDZZkYcU3vuBaaBRtnxyTmQRr": "100" } }`.
 
 ## Stepping
 

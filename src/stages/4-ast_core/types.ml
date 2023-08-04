@@ -4,7 +4,6 @@ module List = Simple_utils.List
 module Ligo_string = Simple_utils.Ligo_string
 module Row = Row.With_optional_layout
 
-
 type type_content =
   | T_variable of Type_var.t
   | T_constant of Literal_types.t * int
@@ -83,6 +82,7 @@ and declaration_content =
   | D_irrefutable_match of (expr, ty_expr option) Pattern_decl.t
   | D_type of ty_expr Type_decl.t
   | D_module of (module_expr, signature_expr option) Module_decl.t
+  | D_module_include of module_expr
   | D_signature of signature_expr Signature_decl.t
 
 and declaration = declaration_content Location.wrap

@@ -15,6 +15,7 @@ import { registerCommands } from './command'
 import { initializeExtensionState } from './ui'
 import updateExtension from './updateExtension'
 import updateLigo from './updateLigo'
+import { BinaryNotFoundException } from './exceptions'
 
 import { extensions } from './common'
 import { changeLastContractPath, getBinaryPath, ligoBinaryInfo } from './commands/common';
@@ -23,9 +24,9 @@ let client: LanguageClient;
 let ligoOptionButton: vscode.StatusBarItem;
 let deployOptionButton: vscode.StatusBarItem;
 
-// Hides compilation button in case current active text editor is not .(m/re)ligo file
+// Hides compilation button in case current active text editor is not .{m,js,p,}ligo file
 // If currently active text window is not an opened file (terminal, explorer, etc.)
-// button will remain in it's previous state
+// button will remain in its previous state.
 function updateLigoButton(button: vscode.StatusBarItem) {
   if (!vscode.window.activeTextEditor) {
     button.hide()
@@ -75,7 +76,17 @@ function initializeStatusBarButton(
 
 export async function activate(context: vscode.ExtensionContext) {
   const config = vscode.workspace.getConfiguration()
-  const ligoPath = getBinaryPath(ligoBinaryInfo, config)
+  let ligoPath: string
+  try {
+    ligoPath = getBinaryPath(ligoBinaryInfo, config)
+  } catch (err) {
+    if (err instanceof BinaryNotFoundException) {
+      ligoPath = undefined
+    } else {
+      throw err
+    }
+  }
+
   const serverOptions: ServerOptions = {
     command: ligoPath,
     args: ["lsp"],
@@ -126,7 +137,9 @@ export async function activate(context: vscode.ExtensionContext) {
   registerCommands(client);
 
   // Start the client. This will also launch the server
-  client.start();
+  if (ligoPath) {
+    client.start()
+  }
 }
 
 export function deactivate(): Thenable<void> | undefined {

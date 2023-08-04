@@ -30,10 +30,7 @@ include Let_syntax
 
 let rec decode (type_ : Type.t) ~raise subst =
   let return type_content : O.type_expression =
-    { type_content
-    ; orig_var = type_.orig_var
-    ; location = type_.location
-    }
+    { type_content; orig_var = type_.orig_var; location = type_.location }
   in
   let decode type_ = decode type_ ~raise subst in
   let decode_row row = decode_row row ~raise subst in
@@ -104,7 +101,7 @@ let decode type_ ~raise subst =
            else loc)))
 
 
-let decode_attribute (attr : Context.Attr.t) : O.sig_item_attribute =
+let decode_attribute (attr : Context.Attrs.Value.t) : O.sig_item_attribute =
   { entry = attr.entry; view = attr.view }
 
 
@@ -113,9 +110,10 @@ let rec decode_signature (sig_ : Context.Signature.t) ~raise subst : O.signature
     match item with
     | S_value (var, type_, attr) ->
       [ S_value (var, decode ~raise type_ subst, decode_attribute attr) ]
-    | S_type (var, type_) -> [ S_type (var, decode ~raise type_ subst) ]
-    | S_module (var, sig_) -> [ S_module (var, decode_signature ~raise sig_ subst) ]
-    | S_module_type _ -> [ ]
+    | S_type (var, type_, _attr) -> [ S_type (var, decode ~raise type_ subst) ]
+    | S_module (var, sig_, _attr) ->
+      [ S_module (var, decode_signature ~raise sig_ subst) ]
+    | S_module_type _ -> []
   in
   List.concat_map ~f:decode_item sig_
 

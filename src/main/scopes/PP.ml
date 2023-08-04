@@ -10,7 +10,8 @@ let scopes : Format.formatter -> scopes -> unit =
           Simple_utils.Location_ordered.compare (get_range d1) (get_range d2))
     in
     let pp_bindings f defs =
-      List.iter defs ~f:(fun def -> Format.fprintf f "%s " (get_def_uid def))
+      List.iter defs ~f:(fun def ->
+          Format.fprintf f "%s " (Uid.to_string @@ get_def_uid def))
     in
     Format.fprintf f "[ %a ] %a" pp_bindings defs Location.pp loc
   in
@@ -40,6 +41,12 @@ let rec definitions : Format.formatter -> def list -> unit =
         PP_helpers.(list_sep Location.pp (tag " ,@ "))
         locs
   in
+  let pp_def_type ppf = function
+    | Local -> Format.fprintf ppf "Local"
+    | Global -> Format.fprintf ppf "Global"
+    | Parameter -> Format.fprintf ppf "Parameter"
+    | Module_field -> Format.fprintf ppf "Module_field"
+  in
   let pp_content ppf = function
     | Variable v ->
       let typ ppf t =
@@ -48,7 +55,17 @@ let rec definitions : Format.formatter -> def list -> unit =
         | Resolved t -> Format.fprintf ppf "resolved: %a" Ast_typed.PP.type_expression t
         | Unresolved -> Format.fprintf ppf "unresolved"
       in
-      Format.fprintf ppf "|%a|@ %a" typ v.t refs v.references
+      Format.fprintf
+        ppf
+        "|%a|@ %a @ Mod Path = %a @ Def Type = %a"
+        typ
+        v.t
+        refs
+        v.references
+        (PP_helpers.list String.pp)
+        v.mod_path
+        pp_def_type
+        v.def_type
     | Type t ->
       Format.fprintf
         ppf
@@ -58,7 +75,12 @@ let rec definitions : Format.formatter -> def list -> unit =
         refs
         t.references
     | Module { mod_case = Alias (a, _resolved); references; _ } ->
-      Format.fprintf ppf "Alias: %s @ %a @ " (String.concat ~sep:"." a) refs references
+      Format.fprintf
+        ppf
+        "Alias: %s @ %a @ "
+        (String.concat ~sep:"." @@ List.map ~f:Uid.to_string a)
+        refs
+        references
     | Module { mod_case = Def d; references; _ } ->
       Format.fprintf ppf "Members: %a @ %a @ " definitions d refs references
   in
@@ -81,7 +103,7 @@ let rec definitions : Format.formatter -> def list -> unit =
         Format.fprintf
           f
           "(%s -> %s) @ Range: %a @ Body Range: %a @ Content: %a@ "
-          (get_def_uid def)
+          (Uid.to_string @@ get_def_uid def)
           (get_def_name def)
           Location.pp
           (get_range def)
@@ -159,14 +181,14 @@ let rec def_to_yojson : def -> string * Yojson.Safe.t =
         ; def_type = _
         ; mod_path = _
         } ->
-      let alias = `List (List.map a ~f:(fun s -> `String s)) in
+      let alias = `List (List.map a ~f:(fun s -> `String (Uid.to_string s))) in
       ( uid
       , `Assoc
           [ "definition", defintion ~name ~range ~body_range ~references ~t:Unresolved
           ; "alias", alias
           ] )
   in
-  aux def
+  Tuple2.map_fst ~f:Uid.to_string @@ aux def
 
 
 and defs_json (defs : def list) : Yojson.Safe.t =
@@ -210,9 +232,15 @@ let scopes_json (scopes : scopes) : Yojson.Safe.t =
                | Type _ -> true
                | Module _ | Variable _ -> false)
          in
-         let vs = List.map ~f:(fun def -> `String (get_def_uid def)) variables in
-         let ts = List.map ~f:(fun def -> `String (get_def_uid def)) types in
-         let ms = List.map ~f:(fun def -> `String (get_def_uid def)) modules in
+         let vs =
+           List.map ~f:(fun def -> `String (Uid.to_string @@ get_def_uid def)) variables
+         in
+         let ts =
+           List.map ~f:(fun def -> `String (Uid.to_string @@ get_def_uid def)) types
+         in
+         let ms =
+           List.map ~f:(fun def -> `String (Uid.to_string @@ get_def_uid def)) modules
+         in
          `Assoc
            [ "range", Location.to_yojson loc
            ; "expression_environment", `List vs

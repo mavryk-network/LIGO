@@ -13,18 +13,6 @@ export async function activateExtension() {
 }
 
 export function run(): Promise<void> {
-
-  function initializationScript() {
-    const ex = new Error('Failed to initialize the LIGO extension for tests after 3 minutes');
-    let timer: NodeJS.Timer | undefined;
-    const failed = new Promise((_, reject) => {
-        timer = setTimeout(() => reject(ex), 180_000);
-    });
-    const promise = Promise.race([activateExtension(), failed]);
-    promise.then(() => clearTimeout(timer!)).catch(() => clearTimeout(timer!));
-    return promise;
-  }
-
   // Create the mocha test
   const mocha = new Mocha({
     ui: 'tdd',
@@ -34,14 +22,22 @@ export function run(): Promise<void> {
   const testsRoot = path.resolve(__dirname, '..')
 
   return new Promise((c, e) => {
-    glob('**/**.test.js', { cwd: testsRoot }, (err, files) => {
+    glob('**/**.test.js', { cwd: testsRoot }, (err: any, files: string[]) => {
       if (err) {
         e(err)
         return
       }
 
       // Add files to the test suite
-      files.forEach((f) => mocha.addFile(path.resolve(testsRoot, f)))
+      files.forEach((f) => {
+        // TODO: eventually rewrite every test with vscode-extension-tester and
+        // change package.json to only use extest. This file can be deleted
+        // after that.
+        const basename = path.basename(f, '.js')
+        if (basename !== 'commands.test' && basename !== 'commands-deploy.test' && basename !== 'commands-common') {
+          mocha.addFile(path.resolve(testsRoot, f))
+        }
+      })
 
       try {
         // Run the mocha test

@@ -7,7 +7,6 @@ module Trace       = Simple_utils.Trace
 module Lexbuf      = Simple_utils.Lexbuf
 module Unit        = LexerLib.Unit
 module Config      = Preprocessor.Config
-module Options     = ParserLib.Options
 module type PARSER = ParserLib.LowAPI.PARSER
 
 (* Internal dependencies *)
@@ -66,7 +65,29 @@ module MakeParser
 
     type raise = (Errors.t, Main_warnings.all) Trace.raise
 
-    type 'a parser = ?preprocess:bool -> ?project_root:file_path -> raise:raise -> Buffer.t -> 'a
+    type 'a parser =
+      ?jsligo:string option option ->
+      ?preprocess:bool ->
+      ?project_root:file_path ->
+      raise:raise ->
+      Buffer.t ->
+      'a
+    module type ParserLexer = sig
+      module Parser : ParserLib.LowAPI.S
+        with type token = Token.t and type tree = CST.tree
+      module Lexer : Lexing_shared.TopAPI.S
+      module DefaultPreprocParams : Preprocessor.CLI.PARAMETERS
+    end
+
+    module type ParserLexerOptions = sig
+      val jsligo : file_path option option
+      val preprocess : bool
+      val project_root : file_path option
+      val raise : raise
+      val file_path : file_path option
+    end
+
+    module ParserLexerGenerator (Options : ParserLexerOptions) : ParserLexer
 
     val parse_file   : (file_path -> CST.tree) parser
     val parse_string : CST.tree parser
@@ -145,7 +166,13 @@ module MakeTwoParsers
 
     type raise = (Errors.t, Main_warnings.all) Trace.raise
 
-    type 'a parser = ?preprocess:bool -> ?project_root:file_path -> raise:raise -> Buffer.t -> 'a
+    type 'a parser =
+      ?jsligo:string option option ->
+      ?preprocess:bool ->
+      ?project_root:file_path ->
+      raise:raise ->
+      Buffer.t ->
+      'a
 
     val parse_file   : (file_path -> CST.t) parser
     val parse_string : CST.t parser
@@ -183,7 +210,8 @@ module MakePretty (CST    : CST)
        terminal is selected. If none, it is set to 60-character
        wide. *)
 
-    val pretty_print_pattern : ?cols:int -> Pretty.state -> CST.pattern -> Buffer.t
+    val pretty_print_pattern :
+      ?cols:int -> Pretty.state -> CST.pattern -> Buffer.t
 
     (* Pretty-print a type expression from its CST *)
 

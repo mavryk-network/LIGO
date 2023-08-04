@@ -58,7 +58,11 @@ let get_declarations_typed (typed_prg : Ast_typed.program) =
                Option.return @@ [ `Type a.type_binder ]
              | D_module a when not a.module_attr.hidden ->
                Option.return @@ [ `Module a.module_binder ]
-             | D_value _ | D_irrefutable_match _ | D_type _ | D_module _ -> None)
+             | D_value _
+             | D_irrefutable_match _
+             | D_type _
+             | D_module _
+             | D_module_include _ -> None)
   @@ typed_prg
 
 
@@ -108,7 +112,9 @@ let repl_result_jsonformat = function
     in
     `Assoc [ "definitions", `List (func_defs @ type_defs) ]
   | Defined_values_typed module' ->
-    let func_declarations = Ligo_compile.Of_typed.list_declarations false module' in
+    let func_declarations =
+      Ligo_compile.Of_typed.list_declarations ~skip_generated:false false module'
+    in
     let type_declarations = Ligo_compile.Of_typed.list_type_declarations module' in
     let func_defs =
       List.map ~f:(fun n -> `Assoc [ "name", Value_var.to_yojson n ]) func_declarations

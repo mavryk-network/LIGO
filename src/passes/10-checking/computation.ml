@@ -19,10 +19,7 @@ type ('a, 'err, 'wrn) t =
 
 let rec encode (type_ : Ast_typed.type_expression) : Type.t =
   let return content : Type.t =
-    { content
-    ; orig_var = type_.orig_var
-    ; location = type_.location
-    }
+    { content; orig_var = type_.orig_var; location = type_.location }
   in
   match type_.type_content with
   | T_variable tvar -> return @@ T_variable tvar
@@ -59,16 +56,19 @@ and encode_sig_item (item : Ast_typed.sig_item) : Context.Signature.item =
   match item with
   | Ast_typed.S_value (v, ty, attr) ->
     Context.Signature.S_value (v, encode ty, encode_sig_item_attribute attr)
-  | S_type (v, ty) -> Context.Signature.S_type (v, encode ty)
-  | S_module (v, sig_) -> Context.Signature.S_module (v, encode_signature sig_)
+  | S_type (v, ty) -> Context.Signature.S_type (v, encode ty, Context.Attrs.Type.default)
+  | S_module (v, sig_) ->
+    Context.Signature.S_module (v, encode_signature sig_, Context.Attrs.Module.default)
 
 
 and encode_signature (sig_ : Ast_typed.signature) : Context.Signature.t =
   List.map ~f:encode_sig_item sig_
 
 
-and encode_sig_item_attribute (attr : Ast_typed.sig_item_attribute) : Context.Attr.t =
-  { view = attr.view; entry = attr.entry }
+and encode_sig_item_attribute (attr : Ast_typed.sig_item_attribute)
+    : Context.Attrs.Value.t
+  =
+  { view = attr.view; entry = attr.entry; public = true }
 
 
 (* Load context from the outside declarations *)
@@ -215,7 +215,7 @@ type 'a exit =
 module Context_ = Context
 
 module Context = struct
-  module Attr = Context.Attr
+  module Attr = Context.Attrs.Value
   module Signature = Context.Signature
 
   let lift_var ~get_vars ~add_var ~add_eq ~at ~fresh ~var' t =
@@ -343,10 +343,22 @@ module Context = struct
     lift_ctx (fun ctx -> Context.get_texists_var ctx tvar) >>= raise_opt ~error
 
 
-  let get_module_of_path path : _ t = lift_ctx (fun ctx -> Context.get_module_of_path ctx path)
-  let get_module_of_path_exn path ~error : _ t = get_module_of_path path >>= raise_opt ~error
-  let get_module_type_of_path path : _ t = lift_ctx (fun ctx -> Context.get_module_type_of_path ctx path)
-  let get_module_type_of_path_exn path ~error : _ t = get_module_type_of_path path >>= raise_opt ~error
+  let get_module_of_path path : _ t =
+    lift_ctx (fun ctx -> Context.get_module_of_path ctx path)
+
+
+  let get_module_of_path_exn path ~error : _ t =
+    get_module_of_path path >>= raise_opt ~error
+
+
+  let get_module_type_of_path path : _ t =
+    lift_ctx (fun ctx -> Context.get_module_type_of_path ctx path)
+
+
+  let get_module_type_of_path_exn path ~error : _ t =
+    get_module_type_of_path path >>= raise_opt ~error
+
+
   let get_module mvar : _ t = lift_ctx (fun ctx -> Context.get_module ctx mvar)
   let get_module_exn mvar ~error : _ t = get_module mvar >>= raise_opt ~error
   let get_sum constr : _ t = lift_ctx (fun ctx -> Context.get_sum ctx constr)
@@ -673,6 +685,21 @@ let rec subtype ~(received : Type.t) ~(expected : Type.t)
     when Type_var.equal tvar1 tvar2 -> return E.return
   | T_exists tvar1, _ -> subtype_texists ~mode:Contravariant tvar1 expected
   | _, T_exists tvar2 -> subtype_texists ~mode:Covariant tvar2 received
+  | T_construct { constructor = Nat; _ }, _
+  | T_construct { constructor = Int; _ }, _
+  | T_construct { constructor = Tez; _ }, _
+  | T_construct { constructor = String; _ }, _
+  | T_construct { constructor = Bytes; _ }, _
+  | T_construct { constructor = List; _ }, _
+  | T_construct { constructor = Set; _ }, _
+  | T_construct { constructor = Map; _ }, _
+    when Option.is_some (Type.get_t_bool expected) ->
+    return
+      E.(
+        fun hole ->
+          let%bind expected = decode expected in
+          return
+          @@ O.e_coerce ~loc { anno_expr = hole; type_annotation = expected } expected)
   | _, _ ->
     let%bind () = unify received expected in
     return E.return

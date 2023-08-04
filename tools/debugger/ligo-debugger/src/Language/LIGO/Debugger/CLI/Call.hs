@@ -1,5 +1,6 @@
 module Language.LIGO.Debugger.CLI.Call
-  ( compileLigoContractDebug
+  ( checkCompilation
+  , compileLigoContractDebug
   , compileLigoExpression
   , getAvailableEntrypoints
   , decompileLigoValues
@@ -30,19 +31,21 @@ import Data.ByteString.Lazy qualified as BSL
 import Data.Coerce (coerce)
 import Data.Map qualified as M
 import Data.SemVer qualified as SemVer
+import Data.SemVer.QQ qualified
 import Data.Text qualified as T
 import Data.Text qualified as Text
-import Fmt (Buildable, build, pretty)
+import Fmt.Buildable (Buildable, build, pretty)
 import GHC.IO.Exception qualified as IOException
 import System.Exit (ExitCode (ExitSuccess))
 import System.FilePath (isPathSeparator, takeDirectory, (</>))
 import System.Process (cwd, proc)
 import System.Process.ByteString.Lazy qualified as PExtras
-import Text.Interpolation.Nyan
+import Text.Interpolation.Nyan hiding (rmode')
 
-import UnliftIO (MonadUnliftIO, hFlush, handle, throwIO, try, withSystemTempFile)
+import UnliftIO
+  (Handler (Handler), MonadUnliftIO, catches, hFlush, handle, throwIO, try, withSystemTempFile)
 import UnliftIO.Directory (doesFileExist)
-import UnliftIO.Exception (fromEither, mapExceptionM)
+import UnliftIO.Exception (fromEither)
 import UnliftIO.Process (readCreateProcessWithExitCode)
 
 import Morley.Michelson.Parser qualified as MP
@@ -84,6 +87,13 @@ strArg = LigoCliArg . protect . toString
       ('-' : _) -> ' ' : arg
       _ -> arg
 
+rewrapIOError :: MonadUnliftIO m => m a -> m a
+rewrapIOError = UnliftIO.handle \exc@IOException.IOError{} ->
+  UnliftIO.throwIO LigoIOException
+    { lieType = IOException.ioe_type exc
+    , lieDescription = toText $ IOException.ioe_description exc
+    }
+
 callLigoBS :: HasLigoClient m => Maybe FilePath -> [LigoCliArg] -> Maybe Source -> m LByteString
 callLigoBS _rootDir args conM = do
   LigoClientEnv {..} <- getLigoClientEnv
@@ -102,12 +112,6 @@ callLigoBS _rootDir args conM = do
     unless (ec == ExitSuccess && le == mempty) $ -- TODO: separate JSON errors and other ones
       UnliftIO.throwIO $ LigoClientFailureException (lazyBytesToText lo) (lazyBytesToText le) fpM (Just ec)
     pure lo
-  where
-    rewrapIOError = UnliftIO.handle \exc@IOException.IOError{} ->
-      UnliftIO.throwIO LigoIOException
-        { lieType = IOException.ioe_type exc
-        , lieDescription = toText $ IOException.ioe_description exc
-        }
 
 -- | Calls the LIGO binary (extracted from 'getLigoClientEnv') with the provided
 -- root directory (ignored for now), arguments, and contract.
@@ -127,6 +131,7 @@ callLigo rootDir args conM = do
   let raw = maybe "" (toString . srcText) conM
   let process = (proc _lceClientPath $ coerce args){cwd = rootDir}
   (ec, lo, le) <- readCreateProcessWithExitCode process raw
+    & rewrapIOError
   unless (ec == ExitSuccess && null le) $ -- TODO: separate JSON errors and other ones
     UnliftIO.throwIO $ LigoClientFailureException (toText lo) (toText le) fpM (Just ec)
   pure $ toText lo
@@ -258,9 +263,20 @@ handleLigoMessages path encodedErr = do
 -- LIGO Debugger stuff
 ----------------------------------------------------------------------------
 
-withMapLigoExc :: (MonadUnliftIO m) => m a -> m a
-withMapLigoExc = mapExceptionM \(e :: LigoClientFailureException) ->
-  [int||#{cfeStderr e}|] :: LigoCallException
+withMapLigoExc :: (HasLigoClient m) => m a -> m a
+withMapLigoExc = flip catches
+  [ Handler \(e :: LigoClientFailureException) ->
+      throwIO ([int||#{cfeStderr e}|] :: LigoCallException)
+
+  , Handler \(e :: LigoIOException) -> do
+      LigoClientEnv ligoPath <- getLigoClientEnv
+      let callException :: LigoCallException =
+            [int||#{displayException e}
+            Perhaps you specified a wrong path to LIGO executable: #{ligoPath}
+            |]
+
+      throwIO callException
+  ]
 
 {-
   Here and in the next calling @ligo@ binary functions
@@ -273,20 +289,37 @@ withMapLigoExc = mapExceptionM \(e :: LigoClientFailureException) ->
   and it would be painful to resolve it on our side.
 -}
 
--- | Run ligo to compile the contract with all the necessary debug info.
-compileLigoContractDebug :: forall m. (HasLigoClient m) => String -> FilePath -> m (LigoMapper 'Unique)
-compileLigoContractDebug entrypoint file = withMapLigoExc $
+-- | When user picks an entrypoint we want to be sure that
+-- the contract will compile with it.
+checkCompilation :: (HasLigoClient m) => EntrypointName -> FilePath -> m ()
+checkCompilation EntrypointName{..} file = void $ withMapLigoExc $
   callLigoBS Nothing
-    [ "compile", "contract"
-    , "--no-warn"
-    , "--michelson-format", "json"
-    , "--michelson-comments", "location"
-    , "--michelson-comments", "env"
-    , "-e", strArg entrypoint
-    , "--experimental-disable-optimizations-for-debugging"
-    , "--disable-michelson-typechecking"
-    , strArg file
-    ] Nothing
+    do concat
+        [ ["compile", "contract"]
+        , ["--no-warn"]
+        , guard (not $ T.null enModule      ) >> ["-m", strArg enModule]
+        , guard (enName /= generatedMainName) >> ["-e", strArg enName]
+        , [strArg file]
+        ]
+    Nothing
+
+-- | Run ligo to compile the contract with all the necessary debug info.
+compileLigoContractDebug :: forall m. (HasLigoClient m) => EntrypointName -> FilePath -> m (LigoMapper 'Unique)
+compileLigoContractDebug EntrypointName{..} file = withMapLigoExc $
+  callLigoBS Nothing
+    do concat
+        [ ["compile", "contract"]
+        , ["--no-warn"]
+        , ["--michelson-format", "json"]
+        , ["--michelson-comments", "location"]
+        , ["--michelson-comments", "env"]
+        , guard (not $ T.null enModule      ) >> ["-m", strArg enModule]
+        , guard (enName /= generatedMainName) >> ["-e", strArg enName]
+        , ["--experimental-disable-optimizations-for-debugging"]
+        , ["--disable-michelson-typechecking"]
+        , [strArg file]
+        ]
+    Nothing
     >>= either (throwIO . LigoDecodeException "decoding source mapper" . toText) pure
       . Aeson.eitherDecode
 
@@ -408,7 +441,7 @@ instance Buildable VersionSupport where
 
 -- | See how much do we support the provided version of @ligo@.
 isSupportedVersion :: SemVer.Version -> VersionSupport
-isSupportedVersion ver = fromMaybe VersionSupported $ asum
+isSupportedVersion ver = fromMaybe fullSupport $ asum
   -- List of rules to detect an unsupported version.
   --
   -- Rules in `docs/ligo-versions.md` make sure that this function
@@ -422,8 +455,14 @@ isSupportedVersion ver = fromMaybe VersionSupported $ asum
   --   ?- noSupport
   -- @
   [
+    -- The latest LIGO version. We hardcode it because
+    -- from @semver@'s point of view it's lower than
+    -- the minimal supported one.
+    ver == [Data.SemVer.QQ.version|0.0.20230804|]
+      ?- fullSupport
+
     -- Debug information in the necessary format is not available in old versions
-    ver < minimalSupportedVersion
+  , ver < minimalSupportedVersion
       ?- noSupport
 
     -- Future versions that we didn't check yet
@@ -438,6 +477,7 @@ isSupportedVersion ver = fromMaybe VersionSupported $ asum
 
     noSupport = VersionUnsupported
     partialSupport = VersionPartiallySupported
+    fullSupport = VersionSupported
 
   -- Implementation note: in case in the future we'll want to provide the users
   -- with the full list of supported versions, we can define rules in terms of

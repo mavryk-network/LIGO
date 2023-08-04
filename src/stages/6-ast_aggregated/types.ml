@@ -34,7 +34,6 @@ and ty_expr = type_expression [@@deriving equal, compare, yojson, hash]
 module ValueAttr = Ast_typed.ValueAttr
 module ModuleAttr = Ast_typed.TypeOrModuleAttr
 module Value_decl = Value_decl (ValueAttr)
-
 module Pattern = Linear_pattern
 module Accessor = Accessor (Access_label)
 module Update = Update (Access_label)
@@ -55,6 +54,7 @@ type expression_content =
   | E_raw_code of expr Raw_code.t
   | E_type_inst of type_inst
   | E_type_abstraction of expr Type_abs.t
+  | E_coerce of (expr, ty_expr) Ascription.t
   (* Variant *)
   | E_constructor of expr Constructor.t (* For user defined constructors *)
   | E_matching of (expr, ty_expr) Match_expr.t

@@ -39,7 +39,8 @@ let at_prefix (b : Ast_core.type_expression option Binder.t) =
 let internalize_core (ds : Ast_core.program) : Ast_core.program =
   let open Ast_core in
   let rec module_decl
-      ({ module_binder; module_; module_attr; annotation } : (module_expr, _) Module_decl.t)
+      ({ module_binder; module_; module_attr; annotation } :
+        (module_expr, _) Module_decl.t)
     =
     let module_ =
       match module_ with
@@ -78,6 +79,7 @@ let internalize_core (ds : Ast_core.program) : Ast_core.program =
         | D_irrefutable_match pattern_decl' ->
           let pattern_decl' = pattern_decl pattern_decl' in
           D_irrefutable_match pattern_decl'
+        | D_module_include x -> D_module_include x
         | D_signature signature' ->
           (* TODO *)
           D_signature signature')

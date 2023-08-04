@@ -1,6 +1,6 @@
 cabal-version: 2.0
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
 
@@ -82,6 +82,7 @@ library
       NamedFieldPuns
       NumDecimals
       OverloadedStrings
+      OverloadedLabels
       PackageImports
       QuantifiedConstraints
       QuasiQuotes
@@ -96,6 +97,7 @@ library
       TypeApplications
       TypeFamilies
       TypeOperators
+      UndecidableInstances
       ViewPatterns
   ghc-options: -Weverything -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-implicit-prelude -Wno-partial-fields -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages
   include-dirs:
@@ -106,6 +108,8 @@ library
       grammar/camligo/src/scanner.c
       grammar/jsligo/src/parser.c
       grammar/jsligo/src/scanner.c
+  build-tool-depends:
+      record-dot-preprocessor:record-dot-preprocessor
   build-depends:
       aeson
     , ansi-terminal
@@ -124,16 +128,19 @@ library
     , free
     , hashable
     , lens
-    , lens-aeson
     , monad-stm
     , morley
     , morley-debugger
     , morley-prelude
     , mtl
+    , named
     , nyan-interpolation
     , nyan-interpolation-core
     , process
     , process-extras
+    , record-dot-preprocessor
+    , record-hasfield
+    , reflection
     , regex-tdfa
     , scientific
     , semver
@@ -193,6 +200,7 @@ executable ligo-debugger
       NamedFieldPuns
       NumDecimals
       OverloadedStrings
+      OverloadedLabels
       PackageImports
       QuantifiedConstraints
       QuasiQuotes
@@ -207,6 +215,7 @@ executable ligo-debugger
       TypeApplications
       TypeFamilies
       TypeOperators
+      UndecidableInstances
       ViewPatterns
   ghc-options: -Weverything -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-implicit-prelude -Wno-partial-fields -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -threaded -eventlog -rtsopts "-with-rtsopts=-N -A64m -AL256m"
   build-depends:
@@ -227,6 +236,8 @@ test-suite ligo-debugger-test
       Test.Breakpoints
       Test.DebugInfo
       Test.DelayedValues
+      Test.Functions
+      Test.Handlers
       Test.LigoCall
       Test.Navigation
       Test.Pretty
@@ -235,6 +246,8 @@ test-suite ligo-debugger-test
       Test.Util.Golden
       Test.Util.Options
       Test.Variables
+      Paths_ligo_debugger
+  autogen-modules:
       Paths_ligo_debugger
   hs-source-dirs:
       test
@@ -267,6 +280,7 @@ test-suite ligo-debugger-test
       NamedFieldPuns
       NumDecimals
       OverloadedStrings
+      OverloadedLabels
       PackageImports
       QuantifiedConstraints
       QuasiQuotes
@@ -281,10 +295,12 @@ test-suite ligo-debugger-test
       TypeApplications
       TypeFamilies
       TypeOperators
+      UndecidableInstances
       ViewPatterns
   ghc-options: -Weverything -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-implicit-prelude -Wno-partial-fields -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -threaded -eventlog -rtsopts "-with-rtsopts=-N -A64m -AL256m"
   build-tool-depends:
-      tasty-discover:tasty-discover
+      record-dot-preprocessor:record-dot-preprocessor
+    , tasty-discover:tasty-discover
   build-depends:
       Diff
     , HUnit
@@ -294,7 +310,6 @@ test-suite ligo-debugger-test
     , directory
     , duplo
     , filepath
-    , fmt
     , hedgehog
     , hspec-expectations
     , lens
@@ -304,6 +319,7 @@ test-suite ligo-debugger-test
     , morley-debugger
     , morley-prelude
     , mtl
+    , named
     , nyan-interpolation
     , nyan-interpolation-core
     , singletons

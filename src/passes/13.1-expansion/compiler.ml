@@ -101,6 +101,7 @@ let rec compile_expression : I.expression -> O.expression =
   | E_deref x -> return (O.E_deref x)
   | E_literal x -> return (O.E_literal x)
   | E_variable x -> return (O.E_variable x)
+  | E_coerce { anno_expr; _ } -> self anno_expr
 
 
 and compile_matching
@@ -108,20 +109,24 @@ and compile_matching
     -> (I.expression, I.type_expression) I.Match_expr.match_case list -> O.expression
   =
  fun ~loc ?attributes ~mut matchee cases ->
+  ignore loc;
+  (* TODO? *)
   let matchee_type = matchee.type_expression in
-  let eqs =
-    List.map cases ~f:(fun { pattern; body } ->
-        let body = compile_expression body in
-        pattern, matchee_type, body)
+  let var = Value_var.fresh ~loc:Location.generated ~name:"match_" () in
+  let match_expr =
+    let cases =
+      List.map cases ~f:(fun { pattern; body } ->
+          let body = compile_expression body in
+          I.Match_expr.{ pattern; body })
+    in
+    Decision_tree.compile matchee.type_expression var cases ~mut
   in
-  let var = Value_var.fresh ~loc ~name:"match_" () in
-  let match_expr = Pattern_matching.compile_matching var eqs in
   let match_expr = if mut then destruct_mut_let_in match_expr else match_expr in
   O.e_a_let_in
-    ~loc
+    ~loc:Location.generated
     { let_binder = Binder.make var matchee_type
     ; rhs = matchee
-    ; let_result = { match_expr with location = loc }
+    ; let_result = { match_expr with location = Location.generated }
     ; attributes = Option.value attributes ~default:O.ValueAttr.default_attributes
     }
 

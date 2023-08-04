@@ -1,10 +1,14 @@
-module Ligo (runLigo) where
+module Ligo (runLigo, moduleOption) where
 
 import System.Exit (ExitCode)
 import System.Process (proc, readCreateProcessWithExitCode)
 
 import Common (WebIDEM)
 import Config (scDockerizedLigoVersion, scLigoPath)
+
+moduleOption :: Maybe FilePath -> [FilePath]
+moduleOption (Just moduleName) = ["-m", moduleName]
+moduleOption Nothing = []
 
 runLigo :: FilePath -> [String] -> WebIDEM (ExitCode, String, String)
 runLigo dirPath commands = do
@@ -20,7 +24,7 @@ runLigo dirPath commands = do
         , dirPath ++ ":" ++ dirPath
         , "-w"
         , dirPath
-        , "ligolang/ligo:" ++ version
+        , "ligolang/ligo_ci:" ++ version
         ]
         ++ commands
     Nothing -> do

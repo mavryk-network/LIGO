@@ -30,7 +30,12 @@ module type PRINTER =
     type state
 
     val mk_state :
-      ?buffer:Buffer.t -> offsets:bool -> [`Point | `Byte] -> state
+      ?buffer:Buffer.t ->
+      regions:bool ->
+      layout:bool ->
+      offsets:bool ->
+      [`Point | `Byte] ->
+      state
 
     type ('src, 'dst) printer = state -> 'src -> 'dst
 
@@ -148,9 +153,12 @@ module Make
         (* Printing the syntax tree to source code *)
         let doc = Pretty.(print default_state) tree in
         let width =
-          match Terminal_size.get_columns () with
-            None -> 60
-          | Some c -> c in
+          match Options.width with
+            Some width -> width
+          | None ->
+              match Terminal_size.get_columns () with
+                Some c -> c
+              | None -> 60 (* Default *) in
         let buffer = Buffer.create 2000 in
         let () =
           PPrint.ToBuffer.pretty 1.0 width buffer doc in
@@ -159,10 +167,13 @@ module Make
         if Options.cst then
           (* Printing the syntax tree as ASCII *)
           let buffer = Buffer.create 2000 in
+          let open Options in
           let state  = Print.mk_state
                          ~buffer
-                         ~offsets:Options.offsets
-                         Options.mode in
+                         ~layout
+                         ~regions
+                         ~offsets
+                         mode in
           let string = Print.to_string state tree
           in Std.(add_line std.out string)
 
@@ -170,7 +181,8 @@ module Make
 
     let format_errors ~no_colour std errors : unit =
       let print Region.{value; region} =
-        let contents = MainParser.format_error ~no_colour ~file:true value region
+        let contents =
+          MainParser.format_error ~no_colour ~file:true value region
         in Std.(add_line std.err contents.Region.value)
       in List.iter ~f:print @@ List.rev errors
     (* Converting results from ParserLib and handling CLI options *)
@@ -219,9 +231,9 @@ module Make
 
     (* Putting preprocessor, lexer and parser together *)
 
-    let parse : no_colour:bool -> parser =
-      fun ~no_colour ->
+    let parse : parser =
       fun (input : Lexbuf.input) ->
+          let no_colour = Options.no_colour in
           let from_stdin () =
             let std   = Std.empty
             and stdin = In_channel.stdin in
@@ -235,8 +247,8 @@ module Make
                 else
                   MainParser.incr_from_channel ~no_colour (module ParErr) stdin
                   |> mk_single std
-            in std, result in
-
+            in std, result
+          in
           let from_file file =
             let std = Std.empty in
             let result =
@@ -249,10 +261,10 @@ module Make
                 else
                   MainParser.incr_from_file ~no_colour (module ParErr) file
                   |> mk_single std
-            in std, result in
-
-          let file_path = Lexbuf.file_from_input input in
-
+            in std, result
+          in
+          let file_path = Lexbuf.file_from_input input
+          in
           if String.(file_path = "")
           then from_stdin ()
           else from_file file_path

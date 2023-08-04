@@ -9,8 +9,8 @@ open Simple_utils.Trace
   To_core and From_core module help moving from a "fixpoint" AST representation (in the style of AST_unified)
   to a "classical" AST representation (in the style of AST_core).
   It must be trivial and no code transformation should happen at this point
-  
-  
+
+
   Note/TODO : We are handling attributes here. We could (and should ?) do it in a nanopass ? but it would
   add quite a lot of nodes to AST_unified for not much ...
 *)
@@ -55,7 +55,7 @@ end = struct
       ; declaration = declaration ~raise
       ; program_entry = program_entry ~raise
       ; program = Fun.id
-      ; sig_expr = sig_expr
+      ; sig_expr
       ; sig_entry = sig_entry ~raise
       }
 
@@ -86,9 +86,11 @@ end = struct
     | { key = "hidden"; value = None } -> { o_attr with hidden = true }
     | { key = "thunk"; value = None } -> { o_attr with thunk = true }
     | { key = "entry"; value = None } -> { o_attr with entry = true }
+    | { key = "comment"; value = _ } -> o_attr (* TODO: We might want to keep it *)
     | _ ->
       raise.warning (`Nanopasses_attribute_ignored loc);
       Value_attr.default_attributes
+
 
   and conv_vsigitem_attr ~raise
       : Location.t -> O.sig_item_attribute -> I.Attribute.t -> O.sig_item_attribute
@@ -97,9 +99,10 @@ end = struct
     match i_attr with
     | { key = "view"; value = None } -> { o_attr with view = true }
     | { key = "entry"; value = None } -> { o_attr with entry = true }
+    | { key = "comment"; value = _ } -> o_attr (* TODO: We might want to keep it *)
     | _ ->
       raise.warning (`Nanopasses_attribute_ignored loc);
-      let default : O.sig_item_attribute = { entry = false ; view = false } in
+      let default : O.sig_item_attribute = { entry = false; view = false } in
       default
 
 
@@ -111,6 +114,7 @@ end = struct
     | { key = "thunk"; value = None } -> { o_attr with thunk = true }
     | { key = "private"; value = None } -> { o_attr with public = false }
     | { key = "public"; value = None } -> { o_attr with public = true }
+    | { key = "comment"; value = _ } -> o_attr (* TODO: We might want to keep it *)
     | _ ->
       raise.warning (`Nanopasses_attribute_ignored loc);
       Value_attr.default_attributes
@@ -124,6 +128,7 @@ end = struct
     | { key = "private"; value = None } -> { o_attr with public = false }
     | { key = "public"; value = None } -> { o_attr with public = true }
     | { key = "hidden"; value = None } -> { o_attr with hidden = true }
+    | { key = "comment"; value = _ } -> o_attr (* TODO: We might want to keep it *)
     | _ ->
       raise.warning (`Nanopasses_attribute_ignored loc);
       Type_or_module_attr.default_attributes
@@ -156,6 +161,7 @@ end = struct
       ret
       @@ D_module
            { x with module_attr = conv_modtydecl_attr ~raise location x.module_attr attr }
+    | D_attr (_attr, O.{ wrap_content = D_signature x; _ }) -> ret @@ D_signature x
     | D_const { type_params = None; pattern; rhs_type; let_rhs }
     | D_var { type_params = None; pattern; rhs_type; let_rhs } ->
       let let_rhs =
@@ -188,11 +194,7 @@ end = struct
            ; module_attr = O.TypeOrModuleAttr.default_attributes
            }
     | D_signature { name; sig_expr } ->
-      ret
-      @@ D_signature
-           { signature_binder = name
-           ; signature = sig_expr
-           }
+      ret @@ D_signature { signature_binder = name; signature = sig_expr }
     | D_type { name; type_expr } ->
       ret
       @@ D_type
@@ -202,6 +204,7 @@ end = struct
            }
     | D_irrefutable_match { pattern; expr } ->
       ret @@ D_irrefutable_match { pattern; expr; attr = Value_attr.default_attributes }
+    | D_module_include x -> ret @@ D_module_include x
     | D_let _ | D_import _ | D_export _ | D_var _ | D_multi_const _ | D_multi_var _
     | D_const { type_params = Some _; _ }
     | _ ->
@@ -436,9 +439,11 @@ end = struct
       ret location
       @@ D_module
            { x with module_attr = conv_modtydecl_attr ~raise location x.module_attr attr }
+    | PE_attr (_, (O.{ wrap_content = D_module_include _; location } as d)) ->
+      raise.warning (`Nanopasses_attribute_ignored location);
+      program_entry ~raise (PE_declaration d)
     | PE_attr (_TODO, O.{ wrap_content = D_signature x; location }) ->
-      ret location
-      @@ D_signature x
+      ret location @@ D_signature x
     | PE_declaration d -> d
     | PE_preproc_directive _ -> Location.wrap ~loc:Location.generated (dummy_top_level ())
     | PE_top_level_instruction _ -> invariant "pe"
@@ -453,33 +458,38 @@ end = struct
     | I.M_path x -> ret @@ M_module_path x
     | I.M_var x -> ret @@ M_variable x
 
-  and sig_expr : (O.signature_expr, O.sig_item, O.type_expression) I.Types.sig_expr_ -> O.signature_expr =
-    fun se ->
-    let sig_expr (se : (O.signature_expr, O.sig_item, O.type_expression) I.Types.sig_expr_) =
+
+  and sig_expr
+      :  (O.signature_expr, O.sig_item, O.type_expression) I.Types.sig_expr_
+      -> O.signature_expr
+    =
+   fun se ->
+    let sig_expr
+        (se : (O.signature_expr, O.sig_item, O.type_expression) I.Types.sig_expr_)
+      =
       let loc = Location.get_location se in
       match Location.unwrap se with
-      | I.Types.S_body m -> (
-          Location.wrap ~loc @@ O.S_sig m
-        )
+      | I.Types.S_body m -> Location.wrap ~loc @@ O.S_sig m
       | S_path p -> Location.wrap ~loc @@ O.S_path p
     in
     sig_expr se
 
-  and sig_entry ~raise : (O.signature_expr, O.sig_item, O.type_expression) I.Types.sig_entry_ -> O.sig_item =
-    fun item ->
-      let attr : O.sig_item_attribute = { entry = false ; view = false } in
-      match Location.unwrap item with
-      | S_value (v, ty) -> S_value (v, ty, attr)
-      | S_type (v, ty) -> S_type (v, ty)
-      | S_type_var v -> S_type_var v
-      | S_attr (attr', S_value (v, ty, attr)) ->
-        let location = Location.get_location item in
-        let attr = conv_vsigitem_attr ~raise location attr attr' in
-        S_value (v, ty, attr)
-      | _ ->
-        invariant
-        @@ Format.asprintf "%a" Sexp.pp_hum (I.sexp_of_sig_entry_ ig ig ig item)
-  
+
+  and sig_entry ~raise
+      : (O.signature_expr, O.sig_item, O.type_expression) I.Types.sig_entry_ -> O.sig_item
+    =
+   fun item ->
+    let attr : O.sig_item_attribute = { entry = false; view = false } in
+    match Location.unwrap item with
+    | S_value (v, ty) -> S_value (v, ty, attr)
+    | S_type (v, ty) -> S_type (v, ty)
+    | S_type_var v -> S_type_var v
+    | S_attr (attr', S_value (v, ty, attr)) ->
+      let location = Location.get_location item in
+      let attr = conv_vsigitem_attr ~raise location attr attr' in
+      S_value (v, ty, attr)
+    | _ ->
+      invariant @@ Format.asprintf "%a" Sexp.pp_hum (I.sexp_of_sig_entry_ ig ig ig item)
 end
 
 module From_core : sig
@@ -640,7 +650,7 @@ end = struct
            { constr
            ; type_args =
                List.Ne.singleton arg
-               (* XXX for some reason matching on [I.get_t_option ty] transforms "int option" 
+               (* XXX for some reason matching on [I.get_t_option ty] transforms "int option"
                         to "a option" so we have manual matching here instead *)
            }
     | T_sum { fields; layout } ->

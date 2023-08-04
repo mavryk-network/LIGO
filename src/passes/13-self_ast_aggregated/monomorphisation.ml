@@ -4,6 +4,7 @@ open Ligo_prim
 module Row = AST.Row
 
 let fold_map_expression = AST.Helpers.fold_map_expression
+let map_expression = AST.Helpers.map_expression
 let poly_name ~loc v = Value_var.fresh_like ~loc v
 
 module Instance = struct
@@ -88,6 +89,9 @@ let apply_table_expr table (expr : AST.expression) =
         | E_assign { binder; expression } ->
           let binder = Binder.map apply_table_type binder in
           return @@ E_assign { binder; expression }
+        | E_coerce { anno_expr; type_annotation } ->
+          let type_annotation = apply_table_type type_annotation in
+          return @@ E_coerce { anno_expr; type_annotation }
         | E_variable _var when AST.equal_expression e expr ->
           let _, types =
             List.fold_map ~init:e.type_expression table ~f:(fun te (v, t) ->
@@ -201,6 +205,9 @@ let subst_external_term et t (e : AST.expression) =
         | E_assign { binder; expression } ->
           let binder = Binder.map (subst_external_type et t) binder in
           return @@ E_assign { binder; expression }
+        | E_coerce { anno_expr; type_annotation } ->
+          let type_annotation = subst_external_type et t type_annotation in
+          return @@ E_coerce { anno_expr; type_annotation }
         (* Again not applying to E_let_in ?? What? *)
         | E_let_in _
         | E_let_mut_in _
@@ -395,6 +402,9 @@ let rec mono_polymorphic_expression ~raise
   | E_assign { binder; expression } ->
     let data, expression = self data expression in
     data, return (E_assign { binder; expression })
+  | E_coerce { anno_expr; type_annotation } ->
+    let data, anno_expr = self data anno_expr in
+    data, return (E_coerce { anno_expr; type_annotation })
   | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
     let data, rhs = self data rhs in
     let data, let_result = self data let_result in
@@ -450,8 +460,57 @@ let check_if_polymorphism_present ~raise e =
   e
 
 
+(* This function commutes `(let x = t in u)@{T}` into `let x = t in
+   (u@{T})` to cover more cases, as the next pass assumes that type
+   instantiation was on variable or another type instance *)
+let commute e =
+  let e =
+    map_expression
+      (fun e ->
+        match e.expression_content with
+        | E_type_inst
+            { forall =
+                { expression_content =
+                    E_let_in { let_binder; rhs; let_result; attributes }
+                ; _
+                }
+            ; type_
+            } ->
+          let let_result =
+            { let_result with
+              expression_content = E_type_inst { forall = let_result; type_ }
+            ; type_expression = e.type_expression
+            }
+          in
+          { e with
+            expression_content = E_let_in { let_binder; rhs; let_result; attributes }
+          }
+        | E_type_inst
+            { forall =
+                { expression_content =
+                    E_let_mut_in { let_binder; rhs; let_result; attributes }
+                ; _
+                }
+            ; type_
+            } ->
+          let let_result =
+            { let_result with
+              expression_content = E_type_inst { forall = let_result; type_ }
+            ; type_expression = e.type_expression
+            }
+          in
+          { e with
+            expression_content = E_let_mut_in { let_binder; rhs; let_result; attributes }
+          }
+        | _ -> e)
+      e
+  in
+  e
+
+
 let mono_polymorphic_expr ~raise e =
   let e = Deduplicate_binders.program e in
+  let e = commute e in
   let _, m = mono_polymorphic_expression ~raise Data.empty e in
   let m = check_if_polymorphism_present ~raise m in
   m

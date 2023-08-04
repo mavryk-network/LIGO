@@ -35,7 +35,6 @@ let%expect_test _ =
       add-user                   . [BETA] create a new user for the LIGO package
                                    registry
       login                      . [BETA] login to the LIGO package registry
-      daemon                     . launch a long running LIGO process
       lsp                        . [BETA] launch a LIGO lsp server
       analytics                  . Manage analytics
       version                    . print version information
@@ -210,6 +209,8 @@ let%expect_test _ =
 
     === flags ===
 
+      [--allow-json-download]    . Allow LIGO to download JSON files for metadata
+                                   check.
       [--amount INT]             . the tezos amount the Michelson interpreter will
                                    use for the transaction.
       [--balance INT]            . the balance the Michelson interpreter will use
@@ -218,6 +219,8 @@ let%expect_test _ =
                                  . A list of global constants that will be assumed
                                    in the context, separated by ','
       [--deprecated]             . enable deprecated language PascaLIGO
+      [--disallow-json-download] . Disallow LIGO to download JSON files for metadata
+                                   check (and do not show message).
       [--display-format FORMAT], --format
                                  . the format that will be used by the CLI.
                                    Available formats are 'dev', 'json', and
@@ -560,6 +563,7 @@ let%expect_test _ =
       [--project-root PATH]      . The path to root of the project.
       [--skip-analytics]         . Avoid ligo analytics publication. Configurable
                                    with environment variable LIGO_SKIP_ANALYTICS too
+      [--skip-generated]         . Skip generated declarations
       [--syntax SYNTAX], -s      . the syntax that will be used. Currently supported
                                    syntaxes are "cameligo" and "jsligo". By default,
                                    the syntax is guessed from the extension (.mligo

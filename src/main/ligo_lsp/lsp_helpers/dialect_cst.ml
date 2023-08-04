@@ -13,23 +13,23 @@ type ('cameligo, 'jsligo, 'pascaligo, 'result) from_dialect =
   ; pascaligo : 'pascaligo -> 'result
   }
 
-let from_dialect : ('a,'b,'c,'result) from_dialect -> ('a,'b,'c) dialect -> 'result =
-  fun f -> function
+let from_dialect : ('a, 'b, 'c, 'result) from_dialect -> ('a, 'b, 'c) dialect -> 'result =
+ fun f -> function
   | CameLIGO x -> f.cameligo x
   | JsLIGO x -> f.jsligo x
   | PascaLIGO x -> f.pascaligo x
+
 
 type t = (Parsing.Cameligo.CST.t, Parsing.Jsligo.CST.t, Parsing.Pascaligo.CST.t) dialect
 type parsing_raise = (Parsing.Errors.t, Main_warnings.all) Simple_utils.Trace.raise
 
 exception Fatal_cst_error of string
 
-let parsing_error_to_string (err : Parsing.Errors.t) : string =
-  let ({ content = { message; _ }; _ } : Simple_utils.Error.t) =
-    Parsing.Errors.error_json err
-  in
-  message
-
+module Config = Preprocessing_cameligo.Config
+module PreprocParams = Preprocessor.CLI.MakeDefault (Config)
+module LexerParams = LexerLib.CLI.MakeDefault (PreprocParams)
+module Parameters = ParserLib.CLI.MakeDefault (LexerParams)
+module Options = Parameters.Options
 
 let get_cst ~(strict : bool) ~(file : Path.t) (syntax : Syntax_types.t) (code : string)
     : (t, string) result
@@ -38,10 +38,13 @@ let get_cst ~(strict : bool) ~(file : Path.t) (syntax : Syntax_types.t) (code : 
   (* Warnings and errors will be reported to the user via diagnostics, so we
      ignore them here unless the strict mode is enabled. *)
   let raise : parsing_raise =
-    { error = (fun err -> raise @@ Fatal_cst_error (parsing_error_to_string err))
+    { error =
+        (fun err -> raise @@ Fatal_cst_error (Helpers_pretty.parsing_error_to_string err))
     ; warning = (fun _ -> ())
     ; log_error =
-        (fun err -> if strict then raise @@ Fatal_cst_error (parsing_error_to_string err))
+        (fun err ->
+          if strict
+          then raise @@ Fatal_cst_error (Helpers_pretty.parsing_error_to_string err))
     ; fast_fail = false
     }
   in
@@ -54,10 +57,13 @@ let get_cst ~(strict : bool) ~(file : Path.t) (syntax : Syntax_types.t) (code : 
     let open Parsing in
     match syntax with
     | CameLIGO ->
-      Ok (CameLIGO (Cameligo.parse_file ~preprocess ~project_root ~raise buffer file))
+      let module Parse = Cameligo.Make (Options) in
+      Ok (CameLIGO (Parse.parse_file ~preprocess ~project_root ~raise buffer file))
     | JsLIGO ->
-      Ok (JsLIGO (Jsligo.parse_file ~preprocess ~project_root ~raise buffer file))
+      let module Parse = Jsligo.Make (Options) in
+      Ok (JsLIGO (Parse.parse_file ~preprocess ~project_root ~raise buffer file))
     | PascaLIGO ->
-      Ok (PascaLIGO (Pascaligo.parse_file ~preprocess ~project_root ~raise buffer file))
+      let module Parse = Pascaligo.Make (Options) in
+      Ok (PascaLIGO (Parse.parse_file ~preprocess ~project_root ~raise buffer file))
   with
   | Fatal_cst_error err -> Error err

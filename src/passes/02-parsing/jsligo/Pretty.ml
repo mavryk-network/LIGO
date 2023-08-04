@@ -44,10 +44,6 @@ let pp_line_comment comment = string "//" ^^ string comment.value
 let pp_block_comment comment =
   string "/*" ^^ string comment.value ^^ string "*/"
 
-let pp_line_comment_opt prefix = function
-  None -> prefix
-| Some comment -> prefix ^^ space ^^ pp_line_comment comment
-
 let pp_comment = function
   Wrap.Block comment -> pp_block_comment comment
 | Wrap.Line  comment -> pp_line_comment  comment
@@ -57,6 +53,10 @@ let pp_comments = function
 | comments -> separate_map hardline pp_comment comments ^^ hardline
 
 (* Tokens *)
+
+let pp_line_comment_opt prefix = function
+  None -> prefix
+| Some comment -> prefix ^^ space ^^ pp_line_comment comment
 
 let token (t : string Wrap.t) : document =
   let prefix = pp_comments t#comments ^/^ string t#payload
@@ -795,8 +795,13 @@ and pp_variant_comp state (node: variant_comp) =
              ^^ pp_nsepseq (break 1) (pp_type_expr state) params)
 
 and pp_attribute state (node : Attr.t wrap) =
+  let cst_attr = ["entry"; "inline"; "view"; "no_mutation";
+                  "private"; "public"; "hidden"; "thunk"] in
   let key, val_opt = node#payload in
-  let thread = string "// @" ^^ string key in
+  let thread =
+    if List.mem cst_attr key ~equal:String.equal then
+      string "@" ^^ string key
+    else string "// @" ^^ string key in
   let thread = match val_opt with
                  Some Ident value ->
                    group (thread ^/^ nest state#indent (string value))
@@ -827,7 +832,7 @@ and pp_ne_injection :
   'a.state -> ('a -> document) -> 'a ne_injection reg -> document =
   fun state printer {value; _} ->
     let {compound; ne_elements; attributes; _} = value in
-    let elements = pp_nsepseq (break 1) printer ne_elements in
+    let elements = pp_nsepseq hardline printer ne_elements in
     let inj =
       match compound with
         None -> elements
@@ -837,7 +842,7 @@ and pp_ne_injection :
         pp_brackets_like_document state elements lbracket rbracket
     in
     let inj = if List.is_empty attributes then inj
-              else break 0 ^^ pp_attributes state attributes ^/^ inj
+              else hardline ^^ pp_attributes state attributes ^/^ inj
     in inj
 
 and pp_type_app state (node: (type_constr * type_params) reg) =

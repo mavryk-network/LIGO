@@ -261,12 +261,20 @@ let get_t_map_or_big_map (t : type_expression)
   | _ -> None
 
 
+let get_t__type__exn t =
+  match get_t__type_ t with
+  | Some x -> x
+  | None -> raise (Failure ("Internal error: broken invariant at " ^ __LOC__))
+  [@@map _type_, ("list", "set", "map", "typed_address", "big_map")]
+
+
 let is_t__type_ t = Option.is_some (get_t__type_ t)
   [@@map
     _type_
     , ( "list"
       , "set"
       , "nat"
+      , "bool"
       , "string"
       , "bytes"
       , "int"
@@ -280,15 +288,6 @@ let is_t__type_ t = Option.is_some (get_t__type_ t)
 
 
 let is_t_mutez t = is_t_tez t
-
-let is_t_bool t =
-  match t.type_content with
-  | T_sum { fields; _ } ->
-    (match Record.labels fields with
-    | [ Label "True"; Label "False" ] -> true
-    | _ -> false)
-  | _ -> false
-
 
 let ez_e_record (lst : (Label.t * expression) list) : expression_content =
   E_record (Record.of_list lst)
@@ -465,6 +464,12 @@ let rec get_e_applications t =
     | [] -> [ lamb; args ]
     | apps -> apps @ [ args ])
   | None -> []
+
+
+let get_lambda_with_type e =
+  match e.expression_content, e.type_expression.type_content with
+  | E_lambda l, T_arrow { type1; type2 } -> Some (l, (type1, type2))
+  | _ -> None
 
 
 (* This function re-builds a term prefixed with E_type_abstraction:

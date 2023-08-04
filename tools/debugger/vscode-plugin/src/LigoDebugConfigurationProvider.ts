@@ -5,6 +5,7 @@ import { LigoDebugContext } from './LigoDebugContext'
 import { LigoProtocolClient } from './LigoProtocolClient'
 import { ValidateValueCategory } from './messages'
 import { createRememberingQuickPick, getEntrypoint, getParameterOrStorage } from './ui'
+import * as path from 'path'
 
 function createLogDir(logDir: string): void | undefined {
 	if (!fs.existsSync(logDir)) {
@@ -21,10 +22,12 @@ export type ConfigField
 	| "michelsonEntrypoint"
 	| "parameter"
 	| "storage"
+	| "program"
 	;
 
 export type ConfigCommand
 	= "AskOnStart"
+	| "CurrentFile"
 	;
 
 export default class LigoDebugConfigurationProvider implements vscode.DebugConfigurationProvider {
@@ -37,7 +40,23 @@ export default class LigoDebugConfigurationProvider implements vscode.DebugConfi
 	}
 
 	private async resolveConfig(config: vscode.DebugConfiguration): Promise<vscode.DebugConfiguration> {
-		const currentFilePath = vscode.window.activeTextEditor?.document.uri.fsPath;
+		const currentWorkspacePath: Maybe<vscode.Uri> = vscode.workspace.workspaceFolders?.[0].uri;
+
+		let defaultPath: Maybe<string>;
+		if (path.isAbsolute(config.program)) {
+			defaultPath = config.program;
+		} else if (isDefined(currentWorkspacePath)) {
+			defaultPath = vscode.Uri.joinPath(currentWorkspacePath, config.program).fsPath;
+		}
+
+		const currentFilePath: Maybe<string> =
+			await tryExecuteCommand(
+				"program",
+				"CurrentFile",
+				config.program,
+				async () => vscode.window.activeTextEditor?.document.fileName,
+				defaultPath
+			);
 
 		if (!isDefined(currentFilePath)) {
 			throw new Error("Can't find current file");
@@ -50,8 +69,8 @@ export default class LigoDebugConfigurationProvider implements vscode.DebugConfi
 		const maxSteps = pluginConfig.get<Maybe<number>>('ligoDebugger.maxSteps');
 		await this.client.sendMsg('setLigoConfig', { binaryPath, maxSteps });
 
-		const entrypoints: string[] =
-			(await this.client.sendMsg('setProgramPath', { program: currentFilePath })).entrypoints.reverse();
+		const entrypoints: [string, string][] =
+			(await this.client.sendMsg('setProgramPath', { program: currentFilePath })).body.entrypoints.reverse();
 
 		const entrypoint: string =
 			await tryExecuteCommand(
@@ -61,7 +80,7 @@ export default class LigoDebugConfigurationProvider implements vscode.DebugConfi
 				() => getEntrypoint(
 					this.context,
 					async (entrypoint) => {
-						return (await this.client.sendMsg('validateEntrypoint', { entrypoint })).message;
+						return (await this.client.sendMsg('validateEntrypoint', { entrypoint })).body?.errorMessage;
 					},
 					entrypoints
 				)
@@ -69,7 +88,7 @@ export default class LigoDebugConfigurationProvider implements vscode.DebugConfi
 		config.entrypoint = entrypoint;
 
 		const contractMetadata: ContractMetadata =
-			(await this.client.sendMsg('getContractMetadata', { entrypoint })).contractMetadata;
+			(await this.client.sendMsg('getContractMetadata', { entrypoint })).body;
 
 		const michelsonEntrypoint: Maybe<string> =
 			await tryExecuteCommand(
@@ -89,7 +108,7 @@ export default class LigoDebugConfigurationProvider implements vscode.DebugConfi
 					'validateValue',
 					{ value, category, valueLang, pickedMichelsonEntrypoint: michelsonEntrypoint }
 				)
-			).message;
+			).body?.errorMessage;
 		}
 
 		const [parameter, parameterLang]: [string, InputValueLang] =
@@ -147,7 +166,7 @@ export default class LigoDebugConfigurationProvider implements vscode.DebugConfi
 				config.type = 'ligo'
 				config.name = 'Launch LIGO'
 				config.request = 'launch'
-				config.program = '${file}'
+				config.program = '(*@CurrentFile@*)'
 				config.entrypoint = '(*@AskOnStart@*)'
 				config.parameter = '(*@AskOnStart@*)'
 				config.storage = '(*@AskOnStart@*)'
@@ -158,7 +177,7 @@ export default class LigoDebugConfigurationProvider implements vscode.DebugConfi
 		config.type ??= 'ligo'
 		config.request ??= 'launch'
 		config.stopOnEntry ??= true
-		config.program ??= '${file}'
+		config.program ??= '(*@CurrentFile@*)'
 		config.entrypoint ??= '(*@AskOnStart@*)'
 		config.parameterLang ??= 'LIGO'
 		config.storageLang ??= 'LIGO'

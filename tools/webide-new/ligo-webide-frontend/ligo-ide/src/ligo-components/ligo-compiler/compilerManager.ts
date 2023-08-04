@@ -6,6 +6,8 @@ import { WebIdeApi } from "~/components/api/api";
 import ProjectManager from "~/base-components/workspace/ProjectManager/ProjectManager";
 import Terminal from "~/base-components/terminal";
 
+import redux from "~/base-components/redux";
+
 export class CompilerManager {
   static terminal: Terminal | null = null;
 
@@ -43,19 +45,37 @@ export class CompilerManager {
       }
       return;
     }
-
+    const module: string = projectManager.projectSettings?.get("module") ?? "";
+    const moduleArg = module !== "" ? `-m ${module}` : "";
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { protocol } = redux.getState();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const name: string = protocol?.name ?? "";
+    const protocolArg = name !== "" ? `--protocol ${name}` : "";
     if (CompilerManager.terminal) {
       CompilerManager.terminal.writeCmdToTerminal(
-        `ligo compile contract ${projectManager.mainFilePath}`
+        `ligo compile contract ${projectManager.mainFilePath} ${protocolArg} ${moduleArg}`
       );
     }
 
-    WebIdeApi.compileContract({
-      project: {
-        sourceFiles: contractFiles,
-        main: projectManager.mainFilePath,
-      },
-    })
+    // UGLY FIX : pass module value only if it is non-empty
+    const project =
+      module !== ""
+        ? {
+            project: {
+              sourceFiles: contractFiles,
+              main: projectManager.mainFilePath,
+              module,
+            },
+          }
+        : {
+            project: {
+              sourceFiles: contractFiles,
+              main: projectManager.mainFilePath,
+            },
+          };
+
+    WebIdeApi.compileContract(project)
       .then(async (resp) => {
         if (CompilerManager.terminal) {
           CompilerManager.terminal.writeToTerminal(resp.data.replace(/\n/g, "\n\r"));

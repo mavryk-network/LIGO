@@ -60,11 +60,11 @@ pin-depends: [
 
   [
     "linol.0.4"
-    "git+https://github.com/c-cube/linol.git#439534e0c5b7a3fbf93ba05fae7d171426153763"
+    "git+https://github.com/c-cube/linol.git#09311ae258c55c53c62cb5eda3641682e61fe191"
   ]
   [
     "linol-lwt.0.4"
-    "git+https://github.com/c-cube/linol.git#439534e0c5b7a3fbf93ba05fae7d171426153763"
+    "git+https://github.com/c-cube/linol.git#09311ae258c55c53c62cb5eda3641682e61fe191"
   ]
   [
     "ocaml-recovery-parser.0.2.4"
@@ -184,9 +184,9 @@ depends: [
   "lwt_react" {= "1.2.0"}
   "macaddr" {= "5.5.0"}
   "magic-mime" {= "1.3.0"}
-  "menhir" {= "20211128"}
-  "menhirLib" {= "20211128"}
-  "menhirSdk" {= "20211128"}
+  "menhir" {= "20230608"}
+  "menhirLib" {= "20230608"}
+  "menhirSdk" {= "20230608"}
   "mew" {= "0.1.0"}
   "mew_vi" {= "0.5.0"}
   "mirage-crypto" {= "0.10.7"}

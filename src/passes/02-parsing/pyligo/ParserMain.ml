@@ -8,10 +8,20 @@ module Lexbuf = Simple_utils.Lexbuf
 
 (* Internal dependencies *)
 
-module Config      = Preprocessing_pyligo.Config
+module Config = Preprocessing_pyligo.Config
+
+(* CLIs *)
+
+module PreprocParams = Preprocessor.CLI.Make (Config)
+module LexerParams   = LexerLib.CLI.Make (PreprocParams)
+module Parameters    = ParserLib.CLI.Make (LexerParams)
+module Options       = Parameters.Options
+
+(* Internal dependencies *)
+
 module Token       = Lexing_pyligo.Token
-module UnitPasses  = Lx_py_self_units.Self
-module TokenPasses = Lx_py_self_tokens.Self
+module UnitPasses  = Lx_py_self_units.Self.Make (Options)
+module TokenPasses = Lx_py_self_tokens.Self.Make (Options)
 module ParErr      = Parsing_pyligo.ParErr
 module Tree        = Cst_shared.Tree
 module CST         = Cst_pyligo.CST
@@ -21,13 +31,6 @@ module CST         = Cst_pyligo.CST
 module PreprocAPI = Preprocessor.TopAPI
 module LexerAPI   = Lexing_shared.TopAPI
 module ParserAPI  = Parsing_shared.TopAPI
-
-(* CLIs *)
-
-module PreprocParams = Preprocessor.CLI.Make (Config)
-module LexerParams   = LexerLib.CLI.Make (PreprocParams)
-module Parameters    = ParserLib.CLI.Make (LexerParams)
-module Options       = Parameters.Options
 
 (* Instantiating preprocessor and lexer *)
 
@@ -99,8 +102,7 @@ let () =
   match check_cli () with
     Ok ->
       let file = Option.value Options.input ~default:"" in
-      let no_colour = Options.no_colour in
-      let std, _cst = parse ~no_colour (Lexbuf.File file) in
+      let std, _cst = parse (Lexbuf.File file) in
       let () = Std.(add_nl std.out) in
       let () = Std.(add_nl std.err) in
       Printf.printf  "%s%!" (Std.string_of std.out);

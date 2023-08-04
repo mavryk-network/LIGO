@@ -13,6 +13,7 @@ module Language.LIGO.Debugger.CLI.Helpers
   , ligoBinaryPath
   , compareUniqueNames
   , toSnakeCase
+  , generatedMainName
   ) where
 
 import Control.Monad.IO.Unlift (MonadUnliftIO)
@@ -25,14 +26,16 @@ import Data.Default (Default (..))
 import Data.List qualified as L
 import Data.Singletons.TH
 import Data.Text qualified as T
-import Fmt (Buildable (build), Builder)
-import Fmt.Internal.Core (FromBuilder)
+import Fmt.Buildable (Buildable, FromDoc, build)
+import Fmt.Utils (Doc)
 import GHC.Generics (Generic (Rep))
 import GHC.TypeLits (Nat)
+import Protocol.DAP qualified as DAP
 import System.Environment (getEnv)
 import System.IO.Error (isDoesNotExistError)
-import Text.Interpolation.Nyan
+import Text.Interpolation.Nyan hiding (rmode')
 import UnliftIO.Exception as UnliftIO (catch, throwIO)
+import Util
 
 import Morley.Util.TypeLits (ErrorMessage (Text), TypeError)
 
@@ -63,6 +66,9 @@ instance HasLigoClient IO where
     pure def
       { _lceClientPath
       }
+
+instance HasLigoClient m => HasLigoClient (DAP.EventSubmitIO m) where
+  getLigoClientEnv = lift getLigoClientEnv
 
 -- | Type marker, which stores information about
 -- hashes presence in variable names.
@@ -107,7 +113,7 @@ newtype Name (u :: NameType) = Name Text
   deriving stock (Data)
   deriving newtype (Show, NFData, FromJSON)
 
-deriving newtype instance FromBuilder (Name 'Concise)
+deriving newtype instance FromDoc (Name 'Concise)
 deriving newtype instance IsString (Name 'Concise)
 deriving newtype instance Eq (Name 'Concise)
 
@@ -118,6 +124,10 @@ instance (TypeError ('Text "You can't compare unique names directly. Please use 
 compareUniqueNames :: Name 'Unique -> Name 'Unique -> Bool
 compareUniqueNames (Name lhs) (Name rhs) = lhs == rhs
 
+-- | A name for a generated module entrypoint.
+generatedMainName :: Text
+generatedMainName = "$main"
+
 instance (SingI u) => Buildable (Name u) where
   build (Name varName) = case sing @u of
     SConcise -> build varName
@@ -126,7 +136,7 @@ instance (SingI u) => Buildable (Name u) where
       -- Here we want to pretty-print monomorphed variables.
       -- They have format like "poly_#SomeModule#NestedModule#foo_name_42"
       -- and we want to pretty-print them like "SomeModule.NestedModule.foo_name$42".
-      buildUnique :: Text -> Builder
+      buildUnique :: Text -> Doc
       buildUnique (T.stripPrefix "poly_" -> Just name)
         | not (T.null index) && T.all isDigit index && T.any (== '_') functionWithIndex =
           [int||#{moduleName}#{functionName}$#{index}|]
@@ -137,7 +147,7 @@ instance (SingI u) => Buildable (Name u) where
           functionWithIndex = L.last splitted
           index = T.takeWhileEnd (/= '_') functionWithIndex
           moduleName
-            | null moduleParts = ""
+            | null moduleParts || (T.isPrefixOf "Mangled" <$> safeHead moduleParts) == Just True = ""
             | otherwise = T.intercalate "." moduleParts <> "."
           -- This @breakOnEnd@ shouldn't crash because of
           -- "T.any (== '_') functionWithIndex" check in guard above.
@@ -146,10 +156,14 @@ instance (SingI u) => Buildable (Name u) where
       buildUnique name =
         -- Some variables may look like "varName#123". We want to strip that identifier.
         if T.all isDigit suffix
-        then build $ T.dropEnd 1 $ T.dropWhileEnd (/= '#') name
-        else build name
+        then build $ T.dropEnd 1 $ T.dropWhileEnd (/= '#') prettyName
+        else build prettyName
         where
           suffix = T.takeWhileEnd (/= '#') name
+          strippedMangledModule
+            | "Mangled" `T.isPrefixOf` name = T.drop 1 . T.dropWhile (/= '.') $ name
+            | otherwise = name
+          prettyName = T.replace generatedMainName "<module main>" strippedMangledModule
 
 newtype LigoJSON (n :: Nat) a = LigoJSON a
 

@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
 import { LanguageClient } from 'vscode-languageclient/node'
-import { createRememberingInputBox, createQuickPickBox, Maybe } from '../ui'
+import { createRememberingInputBox, createQuickPickBox } from '../ui'
 import {
-  CommandRequiredArguments, executeCommand,
+  CommandRequiredArguments, executeCommand, ligoBinaryInfo
 } from './common';
+import { Maybe } from '../common'
 import * as ex from '../exceptions'
 
 /* eslint-disable no-bitwise */
@@ -27,8 +28,6 @@ export type SilentCompilationOptions = {
   onPath: Maybe<string>,
   flags: string[]
 }
-
-const ligoBinaryInfo = { name: 'ligo', path: 'ligoLanguageServer.ligoBinaryPath' }
 
 const withProjectRootFlag = (args: string[]) => (projectRootDirectory: Maybe<string>) => {
   if (projectRootDirectory) {
@@ -168,20 +167,26 @@ export async function executeCompileStorage(
 }
 
 export async function executeCompileExpression(client: LanguageClient) {
-  const listOfExpressions = await executeCommand(
+  const declarations = await executeCommand(
     ligoBinaryInfo,
     (path: string) => withProjectRootFlag(withDeprecated([
       'info',
       'list-declarations',
       path,
+      '--format',
+      'json',
     ])),
     client,
     CommandRequiredArguments.Path | CommandRequiredArguments.ProjectRoot,
     false,
   )
 
-  const exp = listOfExpressions.toString().split(':')[1].replace(/\s+/g, ' ').split(' ').slice(1, -1);
-  const maybeExpression = await createQuickPickBox(exp, 'Expressions', 'Possible expressions for this contract')
+  const listOfExpressions: string[] = JSON.parse(declarations).declarations
+  const maybeExpression = await createQuickPickBox(
+    listOfExpressions,
+    'Expressions',
+    'Possible expressions for this contract',
+  )
 
   return executeCommand(
     ligoBinaryInfo,
@@ -201,6 +206,12 @@ export async function executeCompileExpression(client: LanguageClient) {
 }
 
 export async function executeDryRun(client: LanguageClient) {
+  const maybeEntrypoint = await createRememberingInputBox({
+    title: 'Entrypoint',
+    placeHolder: 'Enter entrypoint to compile',
+    rememberingKey: 'dry-run-entrypoint',
+    defaultValue: 'main',
+  });
   const maybeParameter = await createRememberingInputBox({
     title: 'Parameter',
     placeHolder: 'Entrypoint parameter',
@@ -213,12 +224,6 @@ export async function executeDryRun(client: LanguageClient) {
     rememberingKey: 'dry-run-storage',
     defaultValue: undefined,
   })
-  const maybeEntrypoint = await createRememberingInputBox({
-    title: 'Entrypoint',
-    placeHolder: 'Enter entrypoint to compile',
-    rememberingKey: 'dry-run-entrypoint',
-    defaultValue: 'main',
-  });
 
   return executeCommand(
     ligoBinaryInfo,
@@ -237,15 +242,15 @@ export async function executeDryRun(client: LanguageClient) {
 
 export async function executeEvaluateFunction(client: LanguageClient) {
   const maybeEntrypoint = await createRememberingInputBox({
-    title: 'Entrypoint',
-    placeHolder: 'Enter function to compile',
-    rememberingKey: 'call-entrypoint',
+    title: 'Function',
+    placeHolder: 'Enter function to evaluate',
+    rememberingKey: 'evaluate-function',
     defaultValue: 'main',
   });
   const maybeExpr = await createRememberingInputBox({
-    title: 'Arguments',
-    placeHolder: 'Function arguments',
-    rememberingKey: 'call-arg',
+    title: 'Parameter',
+    placeHolder: 'Parameter expression',
+    rememberingKey: 'param-expr',
     defaultValue: undefined,
   })
 
@@ -255,9 +260,8 @@ export async function executeEvaluateFunction(client: LanguageClient) {
       'run',
       'evaluate-call',
       path,
-      maybeExpr,
-      '-e',
       maybeEntrypoint,
+      maybeExpr,
     ])),
     client,
   )

@@ -1,9 +1,16 @@
+{-# OPTIONS_GHC -Wno-orphans #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module Util
   ( groupByKey
+  , ForInternalUse
+  , itIsForInternalUse
+  , allowedForInternalUseOnly
   , readSemVerQ
   , resourcesFolder
   , rmode'semv
   , rmode'ansi
+  , rmode'
   , everywhereM'
   , foldMapM
   , safeIndex
@@ -29,12 +36,14 @@ import Data.Bitraversable (bitraverse)
 import Data.Char qualified as Char
 import Data.List (groupBy, singleton)
 import Data.Map.Internal qualified as MI
+import Data.Reflection (Given, give, given)
 import Data.Scientific qualified as Sci
 import Data.SemVer qualified as SemVer
 import Data.Text qualified as Text
 import Data.Text.Lazy.Encoding qualified as TL
 import Debug qualified
-import Fmt (build)
+import Fmt.Buildable (Buildable, FromDoc, pretty)
+import Fmt.Internal.Core (FromBuilder, fromBuilder)
 import Generics.SYB (Data (gmapM), GenericM)
 import Language.Haskell.TH.Syntax (Code (..), Q, liftTyped)
 import System.Console.ANSI (SGR, setSGRCode)
@@ -54,6 +63,27 @@ extractGroup :: (a -> k) -> (a -> v) -> [[a]] -> [(k, [v])]
 extractGroup _ _ [] = []
 extractGroup f g ([] : xs) = extractGroup f g xs
 extractGroup f g (ys@(y : _) : xs) = (f y, g <$> ys) : extractGroup f g xs
+
+-- | This constraint indicates that the given value/function must be used
+-- only where it will affect us, developers, and would be invisible for the users
+-- (it is fine if users can find it if they try hard though).
+--
+-- It serves as a safety measure.
+--
+-- Examples:
+--
+-- * A function that is to be used in tests only;
+-- * A function that prints too verbose information.
+type ForInternalUse = Given IsForInternalUse
+data IsForInternalUse = IsForInternalUse
+
+-- | Allow using values that require 'ForInternalUse'.
+itIsForInternalUse :: (ForInternalUse => a) -> a
+itIsForInternalUse = give IsForInternalUse
+
+allowedForInternalUseOnly :: ForInternalUse => a -> a
+allowedForInternalUseOnly =
+  case given @IsForInternalUse of IsForInternalUse -> id
 
 -- | Read a 'SemVer.Version' from a file at compile time.
 --
@@ -77,10 +107,10 @@ resourcesFolder :: FilePath
 resourcesFolder = "src" </> "resources"
 
 rmode'semv :: RMode SemVer.Version
-rmode'semv = RMode (build . SemVer.toText)
+rmode'semv = RMode (pretty . SemVer.toText)
 
 rmode'ansi :: RMode [SGR]
-rmode'ansi = RMode (build . concatMap (setSGRCode . singleton))
+rmode'ansi = RMode (pretty . concatMap (setSGRCode . singleton))
 
 -- | Monadic variation on everywhere'
 everywhereM' :: forall m. Monad m => GenericM m -> GenericM m
@@ -161,6 +191,8 @@ lazyBytesToText = toText . TL.decodeUtf8
 textToLazyBytes :: Text -> LByteString
 textToLazyBytes = TL.encodeUtf8 . fromStrict
 
+rmode' :: (Buildable a) => RMode a
+rmode' = RMode pretty
 
 -- | Sometimes numbers are carried as strings in order to fit into
 -- common limits for sure.
@@ -182,3 +214,6 @@ instance Integral a => FromJSON (TextualNumber a) where
       fromIntegralNoOverflow i
         & either (fail . displayException) (pure . TextualNumber)
     other -> Aeson.unexpected other
+
+instance {-# OVERLAPPABLE #-} (FromDoc a) => FromBuilder a where
+  fromBuilder = pretty
