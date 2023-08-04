@@ -456,7 +456,7 @@ test_Snapshots = testGroup "Snapshots collection"
         goAndCheckLinePosition 7
 
         liftIO $ step "check that \"s2\" is not inlined"
-        goToNextBreakpoint
+        goToNextBreakpoint Forward
         checkSnapshot \snap -> do
           let stackItems = snap ^?! isStackFramesL . ix 0 . sfStackL
           let s2ItemMb = stackItems
@@ -2000,12 +2000,12 @@ test_Snapshots = testGroup "Snapshots collection"
 
 -- | Special options for checking contract.
 data CheckingOptions = CheckingOptions
-  { coEntrypoint :: Maybe Text
+  { coEntrypoint :: Maybe EntrypointName
   , coCheckSourceLocations :: Bool
   , coCheckEntrypointsList :: Bool
   } deriving stock (Show)
 
-coEntrypointL :: Lens' CheckingOptions (Maybe Text)
+coEntrypointL :: Lens' CheckingOptions (Maybe EntrypointName)
 coEntrypointL = lens
   do \CheckingOptions{..} -> coEntrypoint
   do \(CheckingOptions _ locs eps) ep -> CheckingOptions ep locs eps
@@ -2035,7 +2035,10 @@ test_Contracts_are_sensible = reinsuring $ testCase "Contracts are sensible" do
     testContract contractName = do
       let CheckingOptions{..} = fromMaybe def (specialContracts M.!? dropExtension contractName)
 
-      ligoMapper <- compileLigoContractDebug (fromMaybe "main" coEntrypoint) (contractsDir </> contractName)
+      ligoMapper <-
+        compileLigoContractDebug
+          (fromMaybe "main" coEntrypoint)
+          (contractsDir </> contractName)
 
       (locations, _, _, _, _, _) <-
         case readLigoMapper ligoMapper of
@@ -2077,6 +2080,7 @@ test_Contracts_are_sensible = reinsuring $ testCase "Contracts are sensible" do
       , ("computations-in-list", def & coCheckSourceLocationsL .~ False) -- no filename at some locations
       , ("complex-function-type", def & coCheckSourceLocationsL .~ False) -- no filename at some locations
       , ("builtins-locations", def & coCheckSourceLocationsL .~ False) -- no filename at some locations
+      , ("module-entrypoints", def & coEntrypointL ?~ "IncDec.$main")
       ]
 
     -- Valid contracts that can't be used in debugger for some reason.

@@ -4,15 +4,15 @@ class Ligo < Formula
   license "MIT"
 
   # We clone repo explicitely to preserve the information about git submodules
-  url "https://gitlab.com/ligolang/ligo.git", tag: "0.70.1", revision: "06791c7c53c9ab0a519af7472c699372377def11"
-  version "0.70.1"
+  url "https://gitlab.com/ligolang/ligo.git", tag: "0.71.0", revision: "bdd69fa7cd9adc8756ca9e688ede0335672e29cf"
+  version "0.71.0"
   head "https://gitlab.com/ligolang/ligo.git", branch: "dev"
 
 
   bottle do
     root_url "https://gitlab.com/api/v4/projects/12294987/packages/generic/ligo_bottle/current"
-  sha256 cellar: :any, arm64_ventura: "be2782ff6eea4e1de52a0edf0d524e9d18eb26dc140a830cff91facf9ed6818a"
-  sha256 cellar: :any, ventura: "06a8698feefab4f8e367273ecf303f9e9e8d17215ac21ded6919ba259f8e537a"
+  sha256 cellar: :any, arm64_ventura: "c56bb5dd203515a4c0861d5a4f2d34ce216dc3f4c4fc37d4294be5ec0680cc3b"
+  sha256 cellar: :any, ventura: "d432824ac3d974ad7b7564ce80f71aed20dc9b263fa8967c7f5500ab5dbe0f17"
   end
 
   build_dependencies = %w[opam rust hidapi pkg-config gnu-sed cmake gcc]
@@ -32,7 +32,7 @@ class Ligo < Formula
 
   def install
     # ligo version is taken from the environment variable in build-time
-    ENV["LIGO_VERSION"] = "0.70.1"
+    ENV["LIGO_VERSION"] = "0.71.0"
     # avoid opam prompts
     ENV["OPAMYES"] = "true"
 

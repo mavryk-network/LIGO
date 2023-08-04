@@ -31,6 +31,7 @@ import Data.ByteString.Lazy qualified as BSL
 import Data.Coerce (coerce)
 import Data.Map qualified as M
 import Data.SemVer qualified as SemVer
+import Data.SemVer.QQ qualified
 import Data.Text qualified as T
 import Data.Text qualified as Text
 import Fmt.Buildable (Buildable, build, pretty)
@@ -290,29 +291,35 @@ withMapLigoExc = flip catches
 
 -- | When user picks an entrypoint we want to be sure that
 -- the contract will compile with it.
-checkCompilation :: (HasLigoClient m) => Text -> FilePath -> m ()
-checkCompilation entrypoint file = void $ withMapLigoExc $
+checkCompilation :: (HasLigoClient m) => EntrypointName -> FilePath -> m ()
+checkCompilation EntrypointName{..} file = void $ withMapLigoExc $
   callLigoBS Nothing
-    [ "compile", "contract"
-    , "--no-warn"
-    , "-e", strArg entrypoint
-    , strArg file
-    ] Nothing
+    do concat
+        [ ["compile", "contract"]
+        , ["--no-warn"]
+        , guard (not $ T.null enModule      ) >> ["-m", strArg enModule]
+        , guard (enName /= generatedMainName) >> ["-e", strArg enName]
+        , [strArg file]
+        ]
+    Nothing
 
 -- | Run ligo to compile the contract with all the necessary debug info.
-compileLigoContractDebug :: forall m. (HasLigoClient m) => Text -> FilePath -> m (LigoMapper 'Unique)
-compileLigoContractDebug entrypoint file = withMapLigoExc $
+compileLigoContractDebug :: forall m. (HasLigoClient m) => EntrypointName -> FilePath -> m (LigoMapper 'Unique)
+compileLigoContractDebug EntrypointName{..} file = withMapLigoExc $
   callLigoBS Nothing
-    [ "compile", "contract"
-    , "--no-warn"
-    , "--michelson-format", "json"
-    , "--michelson-comments", "location"
-    , "--michelson-comments", "env"
-    , "-e", strArg entrypoint
-    , "--experimental-disable-optimizations-for-debugging"
-    , "--disable-michelson-typechecking"
-    , strArg file
-    ] Nothing
+    do concat
+        [ ["compile", "contract"]
+        , ["--no-warn"]
+        , ["--michelson-format", "json"]
+        , ["--michelson-comments", "location"]
+        , ["--michelson-comments", "env"]
+        , guard (not $ T.null enModule      ) >> ["-m", strArg enModule]
+        , guard (enName /= generatedMainName) >> ["-e", strArg enName]
+        , ["--experimental-disable-optimizations-for-debugging"]
+        , ["--disable-michelson-typechecking"]
+        , [strArg file]
+        ]
+    Nothing
     >>= either (throwIO . LigoDecodeException "decoding source mapper" . toText) pure
       . Aeson.eitherDecode
 
@@ -434,7 +441,7 @@ instance Buildable VersionSupport where
 
 -- | See how much do we support the provided version of @ligo@.
 isSupportedVersion :: SemVer.Version -> VersionSupport
-isSupportedVersion ver = fromMaybe VersionSupported $ asum
+isSupportedVersion ver = fromMaybe fullSupport $ asum
   -- List of rules to detect an unsupported version.
   --
   -- Rules in `docs/ligo-versions.md` make sure that this function
@@ -448,8 +455,14 @@ isSupportedVersion ver = fromMaybe VersionSupported $ asum
   --   ?- noSupport
   -- @
   [
+    -- The latest LIGO version. We hardcode it because
+    -- from @semver@'s point of view it's lower than
+    -- the minimal supported one.
+    ver == [Data.SemVer.QQ.version|0.0.20230804|]
+      ?- fullSupport
+
     -- Debug information in the necessary format is not available in old versions
-    ver < minimalSupportedVersion
+  , ver < minimalSupportedVersion
       ?- noSupport
 
     -- Future versions that we didn't check yet
@@ -464,6 +477,7 @@ isSupportedVersion ver = fromMaybe VersionSupported $ asum
 
     noSupport = VersionUnsupported
     partialSupport = VersionPartiallySupported
+    fullSupport = VersionSupported
 
   -- Implementation note: in case in the future we'll want to provide the users
   -- with the full list of supported versions, we can define rules in terms of
