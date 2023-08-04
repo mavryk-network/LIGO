@@ -723,7 +723,7 @@ let fold
     [ ellipsis -| S_ellipsis
     ; record -| S_expr
     ; sep -| S_field_sep
-    ; updates -| S_nsep_or_term (S_reg (S_field S_expr), S_semi) ]
+    ; updates -| S_sep_or_term (S_reg (S_field S_expr), S_semi) ]
   | S_val_binding -> let { pattern; type_vars; rhs_type; eq; rhs_expr } = node in
     process_list
     [ pattern -| S_pattern

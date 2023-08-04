@@ -19,14 +19,7 @@ open CST (* THE ONLY GLOBAL OPENING *)
 
 let (<@) = Utils.(<@)
 
-(*
-type 'a nseq = 'a Utils.nseq
-type ('a,'sep) nsepseq = ('a,'sep) Utils.nsepseq
-type ('a,'sep)  sepseq = ('a,'sep) Utils.sepseq
-*)
-type ('a,'sep) nsep_or_term = ('a,'sep) Utils.nsep_or_term
 type ('a,'sep) sep_or_term = ('a,'sep) Utils.sep_or_term
-(*type ('a,'sep) nsep_or_pref = ('a,'sep) Utils.nsep_or_pref *)
 
 let print_attribute state (node : Attr.t wrap) =
   let key, val_opt = node#payload in
@@ -986,9 +979,9 @@ and print_E_Typed state (node: typed_expr reg) =
 and print_E_Update state (node: update_expr braces) =
   let Region.{region; value} = node in
   let {ellipsis=_; record; sep=_; updates} = value.inside in
-  let print_updates state (node: (expr field reg, semi) nsep_or_term) =
+  let print_updates state (node: (expr field reg, semi) sep_or_term) =
     let print = print_field print_expr in
-    Tree.of_nsep_or_term state "<updates>" print node in
+    Tree.of_sep_or_term state "<updates>" print node in
   let children = Tree.[
     mk_child print_expr    record;
     mk_child print_updates updates]

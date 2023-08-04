@@ -598,7 +598,7 @@ and update_expr = {
   ellipsis : ellipsis;
   record   : expr;
   sep      : field_sep;
-  updates  : (expr field reg, field_sep) nsep_or_term
+  updates  : (expr field reg, field_sep) sep_or_term
 }
 
 (* Ternary conditional *)

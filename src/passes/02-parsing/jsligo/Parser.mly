@@ -291,7 +291,7 @@ module_selection:
   module_path(module_name) { M_Path (mk_mod_path $1 (fun w -> w#region)) }
 | module_name              { M_Alias $1 }
 
-module_path(selected):
+module_path (selected):
   module_name "." module_path(selected) {
     let (head, tail), selected = $3 in
     (($1,$2), head::tail), selected
@@ -375,16 +375,13 @@ type_expr:
 (* Functional types *)
 
 fun_type:
-  parameters(fun_type_param) "=>" type_expr {
-    let region = cover (parameters_to_region $1) (type_expr_to_region $3)
-    in T_Fun {region; value=($1,$2,$3)} }
+  ES6FUN fun_type_params "=>" type_expr {
+    let region = cover (parameters_to_region $2) (type_expr_to_region $4)
+    in T_Fun {region; value=($2,$3,$4)} }
 
-parameters (param_kind):
-  ES6FUN parameters_suffix(param_kind) { $2 }
-
-parameters_suffix (param_kind):
-  par(sep_or_term(param_kind,",") PARAMS { $1 }) { ParParams $1 }
-| variable | "_"                                 { VarParam  $1 }
+fun_type_params:
+  par(sep_or_term(fun_type_param,",") PARAMS { $1 }) { ParParams $1 }
+| variable | "_"                                     { VarParam  $1 }
 
 fun_type_param:
   variable type_annotation(type_expr) {
@@ -438,14 +435,14 @@ core_type_no_string:
 | no_par_type_expr    {             $1 }
 
 no_par_type_expr:
-  "<int>"                   { T_Int       $1 }
-| "_" | type_name           { T_Var       $1 }
-| type_ctor_app(type_expr)  { T_App       $1 }
-| cartesian                 { T_Cart      $1 }
-| parameter_of_type         { T_Parameter $1 }
-| qualified_type(type_expr) {             $1 }
+  "<int>"                    { T_Int       $1 }
+| "_" | type_name            { T_Var       $1 }
+| type_ctor_app (type_expr)  { T_App       $1 }
+| cartesian                  { T_Cart      $1 }
+| parameter_of_type          { T_Parameter $1 }
+| qualified_type (type_expr) {             $1 }
 | attr_type
-| union_or_record           { $1 }
+| union_or_record            {             $1 }
 
 (* Attributed core type *)
 
@@ -568,9 +565,13 @@ field_id:
 
 statements:
   statement ";"?                        { ($1, $2), []               }
-| statement ";" statements              { nseq_cons ($1, Some $2) $3 }
+| statement ";" after_statement         { nseq_cons ($1, Some $2) $3 }
 | cat_stmt after_cat_stmt
-| export_decl_expr_stmt after_expr_stmt { nseq_cons ($1, None) $2    }
+| export_decl_expr_stmt after_expr_stmt { nseq_cons ($1,    None) $2 }
+
+after_statement:
+  literal_expr | path_expr { (S_Expr $1, None), [] }
+| statements               { $1 }
 
 after_cat_stmt:
   after_expr_stmt             { $1 }
@@ -660,11 +661,6 @@ assign_expr:
 | bin_op (var_path,  "&=", expr) { E_BitAndEq $1 }
 | bin_op (var_path, "<<=", expr) { E_BitSlEq  $1 }
 | bin_op (var_path, ">>=", expr) { E_BitSrEq  $1 }
-
-(*
-assign_rhs:
-  expr | assign_expr { $1 }
-*)
 
 var_path:
   path (record_or_tuple) | record_or_tuple { $1 }
@@ -837,13 +833,13 @@ fun_expr:
     let value  = {type_vars=$1; parameters=$2;
                   rhs_type=$3; arrow=$4; fun_body=$5}
     in E_Fun {region; value} }
-| ioption(type_vars) fun_var_param "=>" fun_body {
+| ioption(type_vars) ES6FUN fun_var_param "=>" fun_body {
     let start  = match $1 with
-                   None -> $2#region
+                   None -> $3#region
                  | Some {region; _} -> region in
-    let region = cover start (fun_body_to_region $4) in
-    let value  = {type_vars=$1; parameters = VarParam $2;
-                  rhs_type=None; arrow=$3; fun_body=$4}
+    let region = cover start (fun_body_to_region $5) in
+    let value  = {type_vars=$1; parameters = VarParam $3;
+                  rhs_type=None; arrow=$4; fun_body=$5}
     in E_Fun {region; value} }
 
 ret_type:
@@ -853,7 +849,7 @@ fun_par_params:
   ES6FUN par(sep_or_term(fun_param,",") PARAMS { $1 }) { ParParams $2 }
 
 fun_var_param:
-  ES6FUN variable | ES6FUN WILD { $2 }
+  variable | WILD { $1 }
 
 fun_param:
   param_pattern type_annotation(type_expr) {
@@ -1077,7 +1073,7 @@ update_expr:
     {ellipsis=$1; record=$2; sep=$3; updates=$4} }
 
 updates:
-  nsep_or_term (field (var_path), field_sep) { $1 }
+  sep_or_term (field (expr), field_sep) { $1 }
 
 (* Tuples (a.k.a "arrays" is JS) *)
 

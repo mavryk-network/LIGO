@@ -20,7 +20,7 @@ type state = {
   region : Region.t (* Region of "(" for possible parameters. *)
 }
 
-let mk_acc state =
+let commit state =
   let previous, rest = state.params
   in previous, rest @ state.prefix
 
@@ -45,64 +45,66 @@ let shift token state =
 
 let push token state =
   {state with params = Utils.nseq_cons token state.params;
-              level = state.level + 1}
+              level  = state.level + 1}
 
 let pop token state =
   {state with params = Utils.nseq_cons token state.params;
-              level = max 0 (state.level - 1)}
+              level  = max 0 (state.level - 1)}
+
+let rec scan (previous, acc) current tokens =
+  let open Token in
+  match previous, current, tokens with
+    (* Likely a function *)
+    (LBRACKET _ | LPAR _ | EQ _ | COMMA _ | COLON _ | GT _ | ARROW _),
+    LPAR _,
+    (RPAR _ as next) :: tokens -> (* = () *)
+      let es6fun = mk_ES6FUN (to_region previous) in
+      scan (current, es6fun :: previous :: acc) next tokens
+  | Ident _, ARROW _, next :: tokens -> (* x => ... *)
+      (* Could be wrong if "(x) : t => ..." or "= int => ..." *)
+      let es6fun = mk_ES6FUN (to_region previous) in
+      scan (current, previous :: es6fun :: acc) next tokens
+  | Ident _, ARROW _, [] -> (* x => *)
+      (* Syntax error, but we assume a function *)
+      let es6fun = mk_ES6FUN (to_region previous) in
+      List.rev (current :: previous :: es6fun :: acc)
+
+    (* Maybe a function: trying harder by scanning parameters *)
+  | (LBRACKET _ | LPAR _ | EQ _ | COMMA _ | COLON _ | GT _ | ARROW _),
+    LPAR _,
+    ((LBRACKET _ | Ident _ | WILD _) :: _ as tokens) -> (* = ([  = (x *)
+      scan_parameters (init_state acc previous current) tokens
+    (* Likely not a function *)
+  | _, _, next :: tokens -> (* Sliding left the 3-token window *)
+      scan (current, previous :: acc) next tokens
+
+    (* No more tokens *)
+  | _, _, [] -> List.rev (current :: previous :: acc)
+
+and scan_parameters state = function
+  (* Likely a function: insert ES6FUN and return to [scan]. *)
+  (RPAR  _ as current) :: ((COLON _ | ARROW _) :: _ as tokens)
+| (COLON _ as current) :: tokens
+| (COMMA _ as current) :: tokens when state.level = 0 ->
+    scan (mk_fun state) current tokens
+
+  (* Undetermined: push, pop or shift a token, and try again. *)
+| LBRACKET _ as current :: tokens ->
+    scan_parameters (push current state) tokens
+| RBRACKET _ as current :: tokens ->
+    scan_parameters (pop current state) tokens
+| (ELLIPSIS _ | COMMA _ | Ident _ | WILD _ as current) :: tokens ->
+    scan_parameters (shift current state) tokens
+
+  (* Likely not a function: return to [scan]. *)
+| current :: tokens -> scan (commit state) current tokens
+
+  (* No more tokens *)
+| [] -> return state
 
 let inject (tokens : tokens) : tokens =
-  let open Token in
-  let rec aux (previous, acc) current tokens =
-    match previous, current, tokens with
-      (LBRACKET _ | LPAR _ | EQ _ | COMMA _ | COLON _ | GT _ | ARROW _),
-      LPAR _,
-      (RPAR _ as next) :: tokens (* () *)
-    | Ident _ , ARROW _, next :: tokens -> (* x => *)
-        let es6fun = mk_ES6FUN (to_region current) in
-        aux (current, previous :: es6fun :: acc) next tokens
-    | Ident _ , ARROW _, [] -> (* x => *)
-        (* Syntax error, but we assume a function *)
-        let es6fun = mk_ES6FUN (to_region previous) in
-        List.rev (current :: previous :: es6fun :: acc)
-
-    | (LBRACKET _ | LPAR _ | EQ _ | COMMA _ | COLON _ | GT _ | ARROW _),
-      LPAR _,
-      (LBRACKET _ as next) :: tokens -> (* ([ *)
-        let state = init_state acc previous current
-        in scan_parameters (push next state) tokens
-
-    | (LBRACKET _ | LPAR _ | EQ _ | COMMA _ | COLON _ | GT _ | ARROW _),
-      LPAR _,
-      (Ident _ | WILD _ as next) :: tokens -> (* (x  (_ *)
-        let state = init_state acc previous current
-        in scan_parameters (shift next state) tokens
-
-    | _, _, next :: tokens -> (* Sliding left the 3-token window *)
-       aux (current, previous :: acc) next tokens
-    | _, _, [] -> List.rev (current :: previous :: acc)
-
-  and scan_parameters state = function
-    (* Likely a function *)
-    RPAR _ as current :: ((COLON _ | ARROW _) :: _ as tokens) ->
-      aux (mk_fun state) current tokens
-  | COMMA _ as current :: tokens when state.level = 0 ->
-      aux (mk_fun state) current tokens
-  | COLON _ as current :: tokens ->
-      aux (mk_fun state) current tokens
-    (* Undetermined *)
-  | LBRACKET _ as current :: tokens ->
-      scan_parameters (push current state) tokens
-  | RBRACKET _ as current :: tokens ->
-      scan_parameters (pop current state) tokens
-  | (COMMA _ | Ident _ | WILD _ as current) :: tokens ->
-      scan_parameters (shift current state) tokens
-    (* Likely not a function *)
-  | []                -> return state
-  | current :: tokens -> aux (mk_acc state) current tokens
-  in
   match tokens with
-    fst :: snd :: tokens -> aux (fst, []) snd tokens
+    fst :: snd :: tokens -> scan (fst, []) snd tokens
   | _ -> tokens
 
 let inject tokens = Ok (inject tokens)
