@@ -13,6 +13,7 @@ module Language.LIGO.Debugger.CLI.Helpers
   , ligoBinaryPath
   , compareUniqueNames
   , toSnakeCase
+  , generatedMainName
   ) where
 
 import Control.Monad.IO.Unlift (MonadUnliftIO)
@@ -29,6 +30,7 @@ import Fmt.Buildable (Buildable, FromDoc, build)
 import Fmt.Utils (Doc)
 import GHC.Generics (Generic (Rep))
 import GHC.TypeLits (Nat)
+import Protocol.DAP qualified as DAP
 import System.Environment (getEnv)
 import System.IO.Error (isDoesNotExistError)
 import Text.Interpolation.Nyan hiding (rmode')
@@ -64,6 +66,9 @@ instance HasLigoClient IO where
     pure def
       { _lceClientPath
       }
+
+instance HasLigoClient m => HasLigoClient (DAP.EventSubmitIO m) where
+  getLigoClientEnv = lift getLigoClientEnv
 
 -- | Type marker, which stores information about
 -- hashes presence in variable names.
@@ -119,6 +124,10 @@ instance (TypeError ('Text "You can't compare unique names directly. Please use 
 compareUniqueNames :: Name 'Unique -> Name 'Unique -> Bool
 compareUniqueNames (Name lhs) (Name rhs) = lhs == rhs
 
+-- | A name for a generated module entrypoint.
+generatedMainName :: Text
+generatedMainName = "$main"
+
 instance (SingI u) => Buildable (Name u) where
   build (Name varName) = case sing @u of
     SConcise -> build varName
@@ -147,13 +156,14 @@ instance (SingI u) => Buildable (Name u) where
       buildUnique name =
         -- Some variables may look like "varName#123". We want to strip that identifier.
         if T.all isDigit suffix
-        then build $ T.dropEnd 1 $ T.dropWhileEnd (/= '#') strippedMangledModule
-        else build strippedMangledModule
+        then build $ T.dropEnd 1 $ T.dropWhileEnd (/= '#') prettyName
+        else build prettyName
         where
           suffix = T.takeWhileEnd (/= '#') name
           strippedMangledModule
             | "Mangled" `T.isPrefixOf` name = T.drop 1 . T.dropWhile (/= '.') $ name
             | otherwise = name
+          prettyName = T.replace generatedMainName "<module main>" strippedMangledModule
 
 newtype LigoJSON (n :: Nat) a = LigoJSON a
 

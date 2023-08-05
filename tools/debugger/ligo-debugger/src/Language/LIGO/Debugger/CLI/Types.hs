@@ -411,7 +411,13 @@ data LigoMapper u = LigoMapper
   , lmMichelsonCode :: Micheline.Expression
   }
 
-newtype EntrypointsList = EntrypointsList { unEntrypoints :: [String] }
+data EntrypointName = EntrypointName
+  { enModule :: Text
+  , enName :: Text
+  } deriving stock (Show, Eq, Ord, Generic, Data)
+    deriving anyclass (NFData)
+
+newtype EntrypointsList = EntrypointsList { unEntrypoints :: [EntrypointName] }
   deriving newtype (Buildable)
 
 -- | Node representing ligo error with additional meta
@@ -741,6 +747,22 @@ instance FromJSON (LigoMapper 'Unique) where
         str@(String val) -> parseOnly scientific (T.encodeUtf8 val)
           & either (const str) Number
         other -> other
+
+-- This @Buildable@ instance handles only generated
+-- main functions for module entrypoints.
+-- For example:
+-- 1. someFoo -> someFoo
+-- 2. SomeModule.$main -> SomeModule
+-- 3. $main -> Current module
+instance Buildable EntrypointName where
+  build EntrypointName{..}
+    | not (T.null enModule) && enName /= generatedMainName = [int||#{enModule}.#{enName}|]
+    | not (T.null enModule) || enName /= generatedMainName =
+        [int||#{enModule}#{if enName == generatedMainName then "" else enName}|]
+    | otherwise = [int||Current module|]
+
+instance IsString EntrypointName where
+  fromString = mkEntrypointName . toText
 
 ----------------------------------------------------------------------------
 -- Pretty
@@ -1075,18 +1097,20 @@ mkPairType fstElem sndElem = mkRecordType pairLayout
       , LLField "1"
       ]
 
--- | Prettify @LigoType@ in provided dialect.
+-- | Prettify 'LigoType' in provided dialect.
 buildType :: Lang -> LigoType -> Doc
-buildType lang LigoType{..} = case unLigoType of
-  Nothing -> ""
-  Just typExpr ->
-    let
-      tree = fromLigoTypeFull $ LTFResolved typExpr
-      ppr = fromMaybe "" $ asum
-        [ lppDialect lang <$> layer @AST.Type tree
-        , lppDialect lang <$> layer @AST.TypeName tree
-        ]
-    in show ppr
+buildType lang LigoType{..} = maybe "" (buildTypeExpr lang) unLigoType
+
+-- | Prettify 'LigoTypeExpression' in provided dialect.
+buildTypeExpr :: Lang -> LigoTypeExpression -> Doc
+buildTypeExpr lang typExpr =
+  let
+    tree = fromLigoTypeFull $ LTFResolved typExpr
+    ppr = fromMaybe "" $ asum
+      [ lppDialect lang <$> layer @AST.Type tree
+      , lppDialect lang <$> layer @AST.TypeName tree
+      ]
+  in show ppr
 
 -- | If we have malformed LIGO contract then we'll see
 -- in error @ligo@ binary output a red-colored text
@@ -1101,6 +1125,12 @@ buildLigoTypeF :: forall u. (SingI u) => LigoTypeF u -> Doc
 buildLigoTypeF typ = case sing @u of
   SUnique -> build typ
   SConcise -> buildType Caml typ
+
+mkEntrypointName :: Text -> EntrypointName
+mkEntrypointName txt =
+  let enName = T.takeWhileEnd (/= '.') txt in
+  let enModule = T.dropEnd (T.length enName + 1) txt in
+  EntrypointName{..}
 
 makeLensesWith postfixLFields ''LigoExposedStackEntry
 makeLensesWith postfixLFields ''LigoIndexedInfo
@@ -1124,7 +1154,7 @@ makeConciseLigoIndexedInfo vec indexedInfo =
 parseEntrypointsList :: Text -> Maybe EntrypointsList
 parseEntrypointsList (lines -> parts) = do
   entrypoints <- safeTail >=> safeInit $ parts
-  pure $ EntrypointsList (toString <$> entrypoints)
+  pure $ EntrypointsList (mkEntrypointName <$> entrypoints)
   where
     safeTail :: [a] -> Maybe [a]
     safeTail = fmap tail . nonEmpty
