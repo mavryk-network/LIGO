@@ -1,5 +1,5 @@
-(* Injecting the virtual token ES6FUN before a '(' that looks like a
-   lambda *)
+(* Injecting the virtual token ES6FUN before a '(' that looks like an
+   arrow function (a.k.a. a lambda) *)
 
 (* Vendor dependencies *)
 
@@ -14,10 +14,9 @@ let (<@) = Utils.(<@)
 type tokens = Token.t list
 
 type state = {
-  prefix : tokens;  (* Tokens from the start, up to "(" excluded. *)
-  level  : int;     (* Nesting of arrays as parameters. *)
-  params : Token.t Utils.nseq; (* Tokens from "(" for possible parameters. *)
-  region : Region.t (* Region of "(" for possible parameters. *)
+  prefix : tokens;             (* Tokens up to "(" excluded. *)
+  params : Token.t Utils.nseq; (* Tokens from "(" included.  *)
+  level  : int                 (* Nesting of arrays.         *)
 }
 
 let commit state =
@@ -28,16 +27,15 @@ let return state =
   List.rev (Utils.nseq_to_list state.params @ state.prefix)
 
 let mk_fun state =
-  let {prefix; params; region; _} = state in
-  let previous, rest = params
-  and es6fun = Token.mk_ES6FUN region
+  let {prefix; params; _} = state in
+  let previous, rest = params in
+  let es6fun = Token.(mk_ES6FUN (to_region previous))
   in previous, rest @ es6fun :: prefix
 
 let init_state acc previous current = {
-  prefix   = previous :: acc;
-  level    = 0;
-  params   = current, [];
-  region   = Token.to_region current
+  prefix = previous :: acc;
+  params = current, [];
+  level  = 0
 }
 
 let shift token state =
@@ -57,23 +55,32 @@ let rec scan (previous, acc) current tokens =
     (* Likely a function *)
     (LBRACKET _ | LPAR _ | EQ _ | COMMA _ | COLON _ | GT _ | ARROW _),
     LPAR _,
-    (RPAR _ as next) :: tokens -> (* = () *)
+    (RPAR _ as next) :: tokens -> (* "= ()" *)
       let es6fun = mk_ES6FUN (to_region previous) in
       scan (current, es6fun :: previous :: acc) next tokens
-  | Ident _, ARROW _, next :: tokens -> (* x => ... *)
-      (* Could be wrong if "(x) : t => ..." or "= int => ..." *)
+
+  | (LBRACKET _ | LPAR _ | EQ _ | COMMA _ | COLON _ | GT _ | ARROW _),
+    Ident _,
+    (ARROW _ as next) :: tokens ->
+    (* Could be wrong if "type u = t =>" *)
+      let es6fun = mk_ES6FUN (to_region current) in
+      scan (current, es6fun :: previous :: acc) next tokens
+
+(*| Ident _, ARROW _, next :: tokens -> (* "x =>" *)
+      (* Could be wrong if ": t =>" or "= t =>" *)
       let es6fun = mk_ES6FUN (to_region previous) in
       scan (current, previous :: es6fun :: acc) next tokens
-  | Ident _, ARROW _, [] -> (* x => *)
+  | Ident _, ARROW _, [] -> (* "x =>" *)
       (* Syntax error, but we assume a function *)
       let es6fun = mk_ES6FUN (to_region previous) in
-      List.rev (current :: previous :: es6fun :: acc)
+      List.rev (current :: previous :: es6fun :: acc) *)
 
     (* Maybe a function: trying harder by scanning parameters *)
   | (LBRACKET _ | LPAR _ | EQ _ | COMMA _ | COLON _ | GT _ | ARROW _),
     LPAR _,
-    ((LBRACKET _ | Ident _ | WILD _) :: _ as tokens) -> (* = ([  = (x *)
+    ((LBRACKET _ | Ident _ | WILD _) :: _ as tokens) -> (* "= ([" "= (x" *)
       scan_parameters (init_state acc previous current) tokens
+
     (* Likely not a function *)
   | _, _, next :: tokens -> (* Sliding left the 3-token window *)
       scan (current, previous :: acc) next tokens

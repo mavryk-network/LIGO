@@ -376,12 +376,11 @@ type_expr:
 
 fun_type:
   ES6FUN fun_type_params "=>" type_expr {
-    let region = cover (parameters_to_region $2) (type_expr_to_region $4)
+    let region = cover $2.region (type_expr_to_region $4)
     in T_Fun {region; value=($2,$3,$4)} }
 
 fun_type_params:
-  par(sep_or_term(fun_type_param,",") PARAMS { $1 }) { ParParams $1 }
-| variable | "_"                                     { VarParam  $1 }
+  par(sep_or_term(fun_type_param,",") PARAMS { $1 }) { $1 }
 
 fun_type_param:
   variable type_annotation(type_expr) {
@@ -568,6 +567,23 @@ statements:
 | statement ";" after_statement         { nseq_cons ($1, Some $2) $3 }
 | cat_stmt after_cat_stmt
 | export_decl_expr_stmt after_expr_stmt { nseq_cons ($1,    None) $2 }
+| empty_return_stmt ";"?                { ($1, $2), []               }
+| empty_return_stmt ";" after_statement { nseq_cons ($1, Some $2) $3 }
+| empty_return_stmt after_return        { nseq_cons ($1,    None) $2 }
+
+after_return:
+  decl_stmt         after_expr_stmt
+| export_stmt       after_expr_stmt
+| full_return_stmt  after_expr_stmt
+| empty_return_stmt after_return    { nseq_cons ($1, None) $2 }
+| decl_stmt         ";"?
+| export_stmt       ";"?
+| full_return_stmt  ";"?
+| empty_return_stmt ";"?            { ($1,$2), [] }
+| decl_stmt         ";" statements
+| export_stmt       ";" statements
+| full_return_stmt  ";" statements
+| empty_return_stmt ";" statements  { nseq_cons ($1, Some $2) $3 }
 
 after_statement:
   literal_expr | path_expr { (S_Expr $1, None), [] }
@@ -578,28 +594,26 @@ after_cat_stmt:
 | expr_stmt   ";"?            { ($1, None), [] }
 | expr_stmt   ";" statements  { nseq_cons ($1, Some $2) $3 }
 | expr_stmt   after_expr_stmt
-| export_stmt after_expr_stmt
-| decl_stmt   after_expr_stmt { nseq_cons ($1,    None) $2 }
+| export_stmt after_expr_stmt { nseq_cons ($1,    None) $2 }
 
 after_expr_stmt:
-  semi_or_last_stmt ";"?
+  empty_for_stmt    ";"?
 | export_stmt       ";"?
 | decl_stmt         ";"?
-| cat_stmt          ";"?           { ($1,$2), [] }
-| semi_or_last_stmt ";" statements
+| full_return_stmt  ";"?
+| cat_stmt          ";"?            { ($1,$2), [] }
+| empty_for_stmt    ";" statements
 | export_stmt       ";" statements
 | decl_stmt         ";" statements
-| cat_stmt          ";" statements { nseq_cons ($1, Some $2) $3 }
-| cat_stmt after_cat_stmt          { nseq_cons ($1,    None) $2 }
+| cat_stmt          ";" statements  { nseq_cons ($1, Some $2) $3 }
+| cat_stmt          after_cat_stmt
+| decl_stmt         after_expr_stmt
+| full_return_stmt  after_expr_stmt { nseq_cons ($1,    None) $2 }
 
 open_cat_stmt(right_stmt):
   core_stmt (right_stmt) | if_stmt (right_stmt) { $1 }
 
 cat_stmt: open_cat_stmt (cat_stmt) { $1 }
-
-semi_or_last_stmt:
-  return_stmt    { S_Return $1 }
-| empty_for_stmt { S_For    $1 }
 
 statement:
   non_if_stmt (statement) | if_stmt (statement) { $1 }
@@ -607,19 +621,19 @@ statement:
 non_if_stmt (right_stmt):
   core_stmt (right_stmt)
 | export_decl_expr_stmt
-| semi_or_last_stmt     { $1 }
+| empty_for_stmt { $1 }
 
 export_decl_expr_stmt:
-  decl_expr_stmt | export_stmt { $1 }
+  decl_expr_stmt | export_stmt | full_return_stmt { $1 }
 
 core_stmt (right_stmt):
   "[@attr]" right_stmt       { S_Attr  ($1,$2) }
 | block_stmt                 { S_Block      $1 }
 | switch_stmt                { S_Switch     $1 }
 | for_of_stmt (right_stmt)   { S_ForOf      $1 }
-| full_for_stmt (right_stmt) { S_For        $1 }
 | while_stmt (right_stmt)    { S_While      $1 }
 | "break"                    { S_Break      $1 }
+| full_for_stmt (right_stmt)
 | if_else_stmt (right_stmt)  {              $1 }
 
 closed_non_if_stmt:
@@ -691,17 +705,18 @@ block_stmt:
    [core_expr: ... | par(expr)]
    so the context is clear: a general expression between parentheses. *)
 
-if_stmt(right_stmt):
+if_stmt (right_stmt):
   "if" par(if_cond) right_stmt {
     let region = cover $1#region (statement_to_region $3)
     and value  = {kwd_if=$1; test=$2; if_so=$3; if_not=None}
     in S_Cond {region; value} }
 
-if_else_stmt(right_stmt):
+if_else_stmt (right_stmt):
   "if" par(if_cond) closed_non_if_stmt "else" right_stmt {
     let region = cover $1#region (statement_to_region $5)
     and value  = {kwd_if=$1; test=$2; if_so=$3; if_not = Some ($4,$5)}
-    in S_Cond {region; value} }
+    in S_Cond {region; value}
+  }
 | "if" par(if_cond) closed_non_if_stmt "; else" right_stmt {
     let region = cover $1#region (statement_to_region $5)
     (* TODO: Append [fst $4] (";") at the end of [$3] *)
@@ -720,13 +735,13 @@ empty_for_stmt:
   "for" par(range_for) {
     let region = cover $1#region $2.region in
     let value  = {kwd_for=$1; range=$2; for_body=None}
-    in {region; value} }
+    in S_For {region; value} }
 
 full_for_stmt (right_stmt):
   "for" par(range_for) right_stmt {
     let region = cover $1#region (statement_to_region $3) in
     let value  = {kwd_for=$1; range=$2; for_body = Some $3}
-    in {region; value} }
+    in S_For {region; value} }
 
 range_for:
   ioption(initialiser) ";" ioption(condition) ";" ioption(afterthought) {
@@ -760,12 +775,18 @@ index_kind:
 
 (* Return statement *)
 
+(*
 return_stmt:
+  full_return_stmt | empty_return_stmt { S_Return $1 }
+*)
+
+full_return_stmt:
   "return" expr {
     let region = cover $1#region (expr_to_region $2)
-    in {region; value = ($1, Some $2)}
-  }
-| "return" { {region=$1#region; value = ($1, None)} }
+    in S_Return {region; value = ($1, Some $2)} }
+
+empty_return_stmt:
+  "return" { S_Return {region=$1#region; value = ($1, None)} }
 
 (* Switch statement *)
 
@@ -825,13 +846,13 @@ expr:
 (* Functional expressions *)
 
 fun_expr:
-  ioption(type_vars) fun_par_params ret_type? "=>" fun_body {
+  ioption(type_vars) ES6FUN fun_par_params ret_type? "=>" fun_body {
     let start  = match $1 with
-                   None -> parameters_to_region $2
+                   None -> parameters_to_region $3
                  | Some {region; _} -> region in
-    let region = cover start (fun_body_to_region $5) in
-    let value  = {type_vars=$1; parameters=$2;
-                  rhs_type=$3; arrow=$4; fun_body=$5}
+    let region = cover start (fun_body_to_region $6) in
+    let value  = {type_vars=$1; parameters=$3;
+                  rhs_type=$4; arrow=$5; fun_body=$6}
     in E_Fun {region; value} }
 | ioption(type_vars) ES6FUN fun_var_param "=>" fun_body {
     let start  = match $1 with
@@ -846,7 +867,7 @@ ret_type:
   type_annotation (ES6FUN? no_par_type_expr { $2 }) { $1 }
 
 fun_par_params:
-  ES6FUN par(sep_or_term(fun_param,",") PARAMS { $1 }) { ParParams $2 }
+  par (sep_or_term(fun_param,",") PARAMS { $1 }) { ParParams $1 }
 
 fun_var_param:
   variable | WILD { $1 }
