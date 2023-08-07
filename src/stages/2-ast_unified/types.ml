@@ -20,7 +20,8 @@ module Field = Nano_prim.Field
 module Array_repr = Nano_prim.Array_repr
 module Object_ = Nano_prim.Object_
 module Selection = Nano_prim.Selection
-module Projection = Ligo_prim.Accessor (Nano_prim.Selection)
+
+(* module Projection = Ligo_prim.Accessor (Nano_prim.Selection) *)
 module Update = Nano_prim.Update
 module Param = Nano_prim.Param
 module Poly_fun = Nano_prim.Poly_fun
@@ -341,7 +342,7 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
       'self Array_repr.t (* [1, 2, 3] , [42] , [] , [2 ...3] (specific to jsligo) *)
   | E_object of 'self Object_.t (* {a : 1, b : 2}  ; { a ... n } *)
   | E_list of 'self list (* [ 1; 2; 3; 4; 5] *)
-  | E_proj of 'self Projection.t (* x.y.1   y is a field name, 1 is a tuple component *)
+  | E_proj of 'self * 'self Selection.t list (* x.y.1 *)
   | E_module_open_in of
       (Mod_variable.t Simple_utils.List.Ne.t, 'self) Mod_access.t (* M.N.a or M.N.(a.x)*)
   | E_update of 'self Update.t
