@@ -45,6 +45,15 @@ let%expect_test _ =
     Everything at the top-level was executed.
     - test_timestamp exited with value (). |}]
 
+(* check that Test.get_real_timestamp accounts for time *)
+let%expect_test _ =
+  run_ligo_good [ "run"; "test"; test "real_timestamp.mligo" ];
+  [%expect
+    {|
+    Took more than 1sec
+    Everything at the top-level was executed.
+    - test exited with value (). |}]
+
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "interpret_test.mligo" ];
   [%expect
