@@ -1521,7 +1521,8 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       | C_BIG_MAP
       | C_BIG_MAP_LITERAL
       | C_CREATE_CONTRACT
-      | C_GLOBAL_CONSTANT )
+      | C_GLOBAL_CONSTANT
+      | C_TEST_GET_REAL_TIMESTAMP )
     , _ ) -> fail @@ Errors.generic_error loc "Unbound primitive."
 
 
