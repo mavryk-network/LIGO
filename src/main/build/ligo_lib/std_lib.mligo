@@ -562,6 +562,8 @@ module Test = struct
       | Passed (b, m) -> mutation_nth ((b, m) :: acc) (n + 1n) in
     mutation_nth ([] : (b * mutation) list) 0n
 
+  let get_real_timestamp () : timestamp = [%external ("TEST_GET_REAL_TIMESTAMP", ())]
+
   let assert (b : bool) : unit = if b then () else failwith "failed assertion"
   let assert_some (type a) (v : a option) : unit = match v with | None -> failwith "failed assert some" | Some _ -> ()
   let assert_none (type a) (v : a option) : unit = match v with | None -> () | Some _ -> failwith "failed assert none"
