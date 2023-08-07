@@ -47,7 +47,7 @@ let%expect_test _ =
 
 (* check that Test.get_real_timestamp accounts for time *)
 let%expect_test _ =
-  run_ligo_good [ "run"; "test"; test "real_timestamp.mligo" ];
+  run_ligo_good [ "run"; "test"; test "wallclock_timestamp.mligo" ];
   [%expect
     {|
     Took more than 1sec
