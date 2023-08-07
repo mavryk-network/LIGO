@@ -1466,10 +1466,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
       , of_type
           (create
              ~mode_annot:[ Checked ]
-             ~types:
-               [ t_unit ~loc ()
-                 ^~> t_timestamp ~loc ()
-               ]) )
+             ~types:[ t_unit ~loc () ^~> t_timestamp ~loc () ]) )
     ; C_EQ, of_comparator Comparable.comparator
     ; C_NEQ, of_comparator Comparable.comparator
     ; C_LT, of_comparator Comparable.comparator

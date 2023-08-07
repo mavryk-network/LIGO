@@ -1499,8 +1499,10 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_TEST_CONS_VIEWS, [ V_Ct (C_string n); V_Func_val f; V_Views vs ] ->
     return @@ v_views @@ ((n, f) :: vs)
   | C_TEST_CONS_VIEWS, _ -> fail @@ error_type ()
-  | C_TEST_GET_REAL_TIMESTAMP, [ V_Ct (C_unit) ] ->
-    return @@ v_timestamp (Z.of_float @@ Time.Span.to_sec @@ Time.to_span_since_epoch @@ Time.now ())
+  | C_TEST_GET_REAL_TIMESTAMP, [ V_Ct C_unit ] ->
+    return
+    @@ v_timestamp
+         (Z.of_float @@ Time.Span.to_sec @@ Time.to_span_since_epoch @@ Time.now ())
   | C_TEST_GET_REAL_TIMESTAMP, _ -> fail @@ error_type ()
   | C_POLYMORPHIC_ADD, _ ->
     fail @@ Errors.generic_error loc "POLYMORPHIC_ADD is solved in checking."
