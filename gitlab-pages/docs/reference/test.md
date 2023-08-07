@@ -1249,6 +1249,20 @@ let sign: (secret_key: string, data: bytes) => signature
 Creates a signature of `bytes` from a `string` representing a secret
 key, it can be checked with `Crypto.check`.
 
+<SyntaxTitle syntax="pascaligo">
+val get_real_timestamp : unit -> timestamp
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val get_real_timestamp : unit -> timestamp
+</SyntaxTitle>
+
+<SyntaxTitle syntax="jsligo">
+let get_real_timestamp: (_u: unit) => timestamp
+</SyntaxTitle>
+
+Gets the timestamp corresponding to current time, taken from the
+system. Timestamp returned with respect to UTC.
+
 ### Failwith and asserts
 
 
