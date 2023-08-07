@@ -1488,17 +1488,17 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       ; V_Ct (C_mutez amount)
       ; source
       ] ) ->
-    let* source = match source with
-      | V_Construct ("Custom", V_Ct (C_address source)) ->
-        return source
+    let* source =
+      match source with
+      | V_Construct ("Custom", V_Ct (C_address source)) -> return source
       | V_Construct ("Source", V_Ct C_unit) ->
         let>> source = Get_source in
         return source
       | _ -> fail @@ error_type ()
     in
-    let* contract = match contract with
-      | V_Construct ("Contract", V_Ct (C_contract contract)) ->
-        return contract
+    let* contract =
+      match contract with
+      | V_Construct ("Contract", V_Ct (C_contract contract)) -> return contract
       | V_Construct ("Address", V_Ct (C_address address)) ->
         return { address; entrypoint = None }
       | _ -> fail @@ error_type ()

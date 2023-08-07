@@ -1448,9 +1448,9 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
             ~mode_annot:[ Inferred; Checked; Checked; Checked ]
             ~types:
               [ t_sum_ez
-                      ~loc
-                      [ "Address", t_address ~loc (); "Contract", t_contract ~loc a () ]
-                      ()
+                  ~loc
+                  [ "Address", t_address ~loc (); "Contract", t_contract ~loc a () ]
+                  ()
                 ^-> t_michelson_code ~loc ()
                 ^-> t_mutez ~loc ()
                 ^-> t_sum_ez
