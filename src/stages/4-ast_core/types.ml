@@ -43,6 +43,7 @@ type expression_content =
   (* Base *)
   | E_variable of Value_var.t
   | E_literal of Literal_value.t
+  | E_array of expr Array.t
   | E_constant of
       expr Constant.t (* For language constants, like (Cons hd tl) or (plus i j) *)
   | E_application of expr Application.t

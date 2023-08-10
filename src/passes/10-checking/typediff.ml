@@ -33,7 +33,7 @@ let field_types_of_row (row : Type.row) : Type.t list =
   row.fields |> Map.to_alist |> List.map ~f:snd
 
 
-let field_types_array_of_row row = Array.of_list @@ List.rev @@ field_types_of_row row
+let field_types_array_of_row row = Core.Array.of_list @@ List.rev @@ field_types_of_row row
 
 module rec Arg : sig
   val weight : Define.change -> int

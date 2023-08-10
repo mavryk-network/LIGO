@@ -238,6 +238,8 @@ let rec expression : AST.expression -> references -> env -> references =
     in
     refs
   | E_literal _ -> refs
+  | E_array arguments ->
+    List.fold arguments ~init:refs ~f:(fun refs arg -> expression arg refs env)
   | E_constant { arguments; cons_name = _ } ->
     List.fold arguments ~init:refs ~f:(fun refs arg -> expression arg refs env)
   | E_application { lamb; args } ->

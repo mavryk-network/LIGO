@@ -36,6 +36,7 @@ module Match_expr = Match_expr
 module Record = Record
 module Accessor (Path : Access_path.S) = Accessor.Make (Path)
 module Update (Path : Access_path.S) = Update.Make (Path)
+module Array = Array
 
 (* Sugar *)
 module Conditional = Conditional

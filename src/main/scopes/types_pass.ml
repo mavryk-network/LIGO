@@ -186,6 +186,7 @@ module Of_Ast_core = struct
     match expr.expression_content with
     | E_literal _ | E_variable _ | E_module_accessor _ -> bindings
     | E_raw_code { code; _ } -> expression bindings code
+    | E_array arguments -> List.fold arguments ~init:bindings ~f:expression
     | E_constant { arguments; _ } -> List.fold arguments ~init:bindings ~f:expression
     | E_application { lamb; args } ->
       let bindings = expression bindings lamb in

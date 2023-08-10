@@ -17,6 +17,10 @@ let rec assert_list_eq f a b =
 let rec assert_value_eq ((a, b) : expression * expression) : unit option =
   match a.expression_content, b.expression_content with
   | E_literal a, E_literal b -> Literal_value.assert_eq (a, b)
+  | E_array a, E_array b ->
+    if Array.equal (fun t1 t2 -> Option.is_some @@ assert_value_eq (t1, t2)) a b
+    then Some ()
+    else None
   | E_constant ca, E_constant cb when Caml.( = ) ca.cons_name cb.cons_name ->
     let lst = List.zip_exn ca.arguments cb.arguments in
     let all = List.map ~f:assert_value_eq lst in
@@ -60,6 +64,7 @@ let rec assert_value_eq ((a, b) : expression * expression) : unit option =
   | E_matching _, _
   | E_module_accessor _, _ -> None
   | E_literal _, _
+  | E_array _, _
   | E_constant _, E_constant _
   | E_constant _, _
   | E_constructor _, E_constructor _

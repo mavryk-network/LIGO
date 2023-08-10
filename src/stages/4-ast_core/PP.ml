@@ -55,6 +55,7 @@ let rec expression ppf (e : expression) =
 and expression_content ppf (ec : expression_content) =
   match ec with
   | E_literal l -> Literal_value.pp ppf l
+  | E_array l -> Array.pp expression ppf l
   | E_variable n -> Value_var.pp ppf n
   | E_application a -> Application.pp expression ppf a
   | E_constructor c -> Constructor.pp expression ppf c

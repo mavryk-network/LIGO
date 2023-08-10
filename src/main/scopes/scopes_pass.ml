@@ -55,6 +55,8 @@ module Of_Ast = struct
     | E_module_accessor _ -> add_current_expr scopes
     (* TODO : Should we recursively call on the maccess.element ? *)
     | E_literal _ -> add_current_expr scopes (* c.f. match.mligo:3 *)
+    | E_array es ->
+      List.fold es ~init:scopes ~f:(fun scopes e -> self e scopes env)
     | E_constant { arguments; cons_name = _ } ->
       (* c.f. constant.mligo,
        NOTE : 4-2 6-14 should be 4-2 6-33 instead *)

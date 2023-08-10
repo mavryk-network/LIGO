@@ -235,6 +235,9 @@ end = struct
       @@ E_let_mut_in
            { x with attributes = conv_exp_attr ~raise location x.attributes attr }
     | E_literal x -> ret @@ E_literal x
+    | E_array es ->
+      let es = List.map ~f:(function Expr_entry e | Rest_entry e -> e) es in
+      ret @@ E_array es
     | E_variable x -> ret @@ E_variable x
     | E_record_pun fields ->
       let x =

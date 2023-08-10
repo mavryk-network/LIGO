@@ -450,6 +450,7 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
   let%bind syntax = Options.syntax () in
   match expr.expression_content with
   | E_literal lit -> infer_literal lit
+  | E_array es -> ignore es; failwith "IMPLEMENT ME"
   | E_constant { cons_name = const; arguments = args } -> infer_constant const args
   | E_variable var ->
     let%bind mut_flag, type_, _ =

@@ -76,6 +76,8 @@ let rec expression : AST.expression -> t -> env -> t =
   | E_variable _ -> m_alias
   | E_module_accessor _ -> m_alias
   | E_literal _ -> m_alias
+  | E_array arguments ->
+    List.fold arguments ~init:m_alias ~f:(fun m_alias arg -> expression arg m_alias env)
   | E_constant { arguments; cons_name = _ } ->
     List.fold arguments ~init:m_alias ~f:(fun m_alias arg -> expression arg m_alias env)
   | E_application { lamb; args } ->
