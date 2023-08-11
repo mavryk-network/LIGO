@@ -99,9 +99,37 @@ module Def = struct
   (* match find_def_opt new_def prg_defs with
     | Some _ as ok -> ok
     | None -> pp Format.err_formatter new_def; None *)
-
+  
   let defs_to_types_defs (prg_defs : Types.def list) : def list -> Types.def list =
-   fun new_defs -> List.filter_map ~f:(to_types_def_opt prg_defs) new_defs
+    fun new_defs ->
+    let new_defs_tbl = 
+      let tbl = Caml.Hashtbl.create @@ Caml.List.length new_defs in
+      List.iter new_defs ~f:(fun x -> Caml.Hashtbl.add tbl x (get_location x));
+      tbl in
+    let old_defs_tbl =
+      let tbl = Caml.Hashtbl.create @@ Caml.List.length prg_defs in
+      List.iter prg_defs ~f:(fun x -> Caml.Hashtbl.add tbl (Types.get_range x) x);
+      tbl in
+    (* let before = Core.Time_ns.now () in *)
+    let old_output = List.filter_map ~f:(to_types_def_opt prg_defs) new_defs in
+    let output = 
+      let loc_list = List.map new_defs ~f:(Caml.Hashtbl.find new_defs_tbl) in
+      List.map loc_list ~f:(Caml.Hashtbl.find old_defs_tbl) in
+    let suc_fail = (List.zip_exn old_output output 
+      |> List.map ~f:(fun (a,b) -> Types.def_equal a b) 
+      |> List.fold ~init:true ~f:(fun acc x -> acc && x)
+      |> fun decision -> if decision then "success" else "failure"
+    ) in
+    Printf.printf "%s\n" suc_fail;
+    (* (if (List.length old_output) = (List.length output) then (List.iter2 old_output output
+    ~f:(fun a b -> if Types.def_equal a b then Printf.printf "equal\n" else Printf.printf "broke\n")) else Printf.printf "shubham\n"); *)
+    (* if (List.length old_output) = (List.length output) then Printf.printf "success\n" else Printf.printf "failure\n"; *)
+    (* let after = Core.Time_ns.now () in
+    let diff = Core.Time_ns.(abs_diff after before |> Span.to_ns) in
+    Printf.printf "diff = %f\n" diff; *)
+    (* let eq = if (List.length output) = (List.length old_output) then "success" else "failure" in
+    Printf.printf "%s\n" eq; *)
+    output
 end
 
 type def = Def.t
