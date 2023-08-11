@@ -10,15 +10,6 @@ let compile ~raise =
    fun e ->
     let loc = Location.get_location e in
     match Location.unwrap e with
-    (* | E_array elements -> *)
-    (*   (match elements with *)
-    (*   | [] -> e_unit ~loc *)
-    (*   | hd :: tl -> *)
-    (*     let f = function *)
-    (*       | Array_repr.Expr_entry e -> e *)
-    (*       | Rest_entry e -> raise.error @@ unsupported_rest_property e *)
-    (*     in *)
-    (*     e_tuple ~loc (List.Ne.map f (hd, tl))) *)
     | E_let_in { lhs = ({ fp = { wrap_content = P_tuple _ ; _ } }, _) as lhs; rhs; body; is_rec; type_params; rhs_type = None } ->
       let rhs = (match Location.unwrap rhs.fp with
           | E_array [] -> e_unit ~loc
