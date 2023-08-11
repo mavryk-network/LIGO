@@ -365,6 +365,25 @@ let rec check_expression (expr : I.expression) (type_ : Type.t)
       E.(
         let%bind lambda = lambda in
         return @@ O.E_lambda lambda)
+  | E_array _record, T_record row ->
+    let record = Record.record_of_tuple _record in
+    let%bind () =
+      assert_
+        (Set.equal (Map.key_set record) (Map.key_set row.fields))
+        ~error:(record_mismatch expr type_)
+    in
+    let%bind record =
+      record
+      |> Map.mapi ~f:(fun ~key:label ~data:expr ->
+             (* Invariant: [Map.key_set record = Map.key_set row.fields]  *)
+             let type_ = Map.find_exn row.fields label in
+             check expr type_)
+      |> all_lmap
+    in
+    const
+      E.(
+        let%bind record = all_lmap record in
+        return @@ O.E_record record)
   | E_record record, T_record row ->
     let%bind () =
       assert_
@@ -490,7 +509,42 @@ and infer_expression (expr : I.expression) : (Type.t * O.expression E.t, _, _) C
   let%bind syntax = Options.syntax () in
   match expr.expression_content with
   | E_literal lit -> infer_literal lit
-  | E_array es -> ignore es; failwith "IMPLEMENT ME"
+  | E_array es ->
+    (match es with
+    | [] ->
+      let%bind tvar = fresh_type_var () in
+      let%bind ret_type =
+        create_type @@ Type.t_variable tvar
+      in
+      let%bind ret_type =
+        create_type @@ Type.(t_list ret_type)
+      in
+      let%bind ret_type =
+         create_type @@ Type.t_for_all { ty_binder = tvar; kind = Type; type_ = ret_type }
+      in
+      const E.(
+          return (O.E_constant { cons_name = C_LIST_EMPTY ; arguments = [] })
+         ) ret_type
+    | hd :: tl ->
+      let%bind t, hd = infer hd in
+      let%bind tl = tl |>
+                    List.map ~f:(fun e -> check e t) |> all
+      in
+      let%bind ret_type =
+        create_type @@ Type.(t_list t)
+      in
+      let l = hd :: tl in
+      let%bind loc = loc () in
+      return (ret_type, E.(
+          let%bind ret_type = decode ret_type in
+          let init = return @@ O.make_e ~loc (O.E_constant { cons_name = C_LIST_EMPTY ; arguments = [] }) ret_type in
+          let f (hd : O.expression E.t) (tl : O.expression E.t) : O.expression E.t =
+            let%bind hd = hd in
+            let%bind tl = tl in
+            return @@ O.make_e ~loc (O.E_constant { cons_name = C_CONS ; arguments = [ hd ; tl ] }) ret_type
+          in
+          List.fold_right ~f ~init l
+        )))
   | E_constant { cons_name = const; arguments = args } -> infer_constant const args
   | E_variable var ->
     let%bind mut_flag, type_, _ =
