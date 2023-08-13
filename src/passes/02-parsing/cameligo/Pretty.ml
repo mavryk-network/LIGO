@@ -335,7 +335,7 @@ and print_S_Value state (node : (kwd_val * variable * colon * type_expr) reg) =
 (* Module declaration (structure) *)
 
 and print_D_Module state (node : module_decl reg) =
-  let {kwd_module; name; eq; module_expr; annotation = _} = node.value in
+  let {kwd_module; name; eq; module_expr; annotation=_} = node.value in
   let name        = print_ident name
   and module_expr = print_module_expr state module_expr
   in group (token kwd_module ^^ space ^^ name ^^ space ^^ token eq
@@ -1081,7 +1081,7 @@ and print_E_Mod state (node : kwd_mod bin_op reg) = print_bin_op state node
 and print_E_ModIn state (node : module_in reg) =
   let {mod_decl; kwd_in; body} = node.value in
   let {kwd_module; name; eq; module_expr; annotation = _} = mod_decl
-  in group (token kwd_module
+  in group (token kwd_module ^^ space
             ^^ print_ident name ^^ space ^^ token eq ^^ space
             ^^ print_module_expr state module_expr
             ^^ space ^^ token kwd_in ^^ hardline ^^ print_expr state body)
