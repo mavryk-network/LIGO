@@ -9,14 +9,12 @@ module Utils  = Simple_utils.Utils
 
 (* Utilities *)
 
-let (<@) = Utils.(<@)
-
 type tokens = Token.t list
 
 type state = {
-  prefix : tokens;             (* Tokens up to "(" excluded. *)
-  params : Token.t Utils.nseq; (* Tokens from "(" included.  *)
-  level  : int                 (* Nesting of arrays.         *)
+  prefix : tokens;             (* Tokens up to "(" excluded.     *)
+  params : Token.t Utils.nseq; (* Tokens from "(" included.      *)
+  depth  : int                 (* Nesting of arrays and objects. *)
 }
 
 let commit state =
@@ -35,19 +33,14 @@ let mk_fun state =
 let init_state acc previous current = {
   prefix = previous :: acc;
   params = current, [];
-  level  = 0
+  depth  = 0
 }
+
+let pop  state = {state with depth = max 0 (state.depth - 1)}
+let push state = {state with depth = state.depth + 1}
 
 let shift token state =
   {state with params = Utils.nseq_cons token state.params}
-
-let push token state =
-  {state with params = Utils.nseq_cons token state.params;
-              level  = state.level + 1}
-
-let pop token state =
-  {state with params = Utils.nseq_cons token state.params;
-              level  = max 0 (state.level - 1)}
 
 let rec scan (previous, acc) current tokens =
   let open Token in
@@ -66,19 +59,11 @@ let rec scan (previous, acc) current tokens =
       let es6fun = mk_ES6FUN (to_region current) in
       scan (current, es6fun :: previous :: acc) next tokens
 
-(*| Ident _, ARROW _, next :: tokens -> (* "x =>" *)
-      (* Could be wrong if ": t =>" or "= t =>" *)
-      let es6fun = mk_ES6FUN (to_region previous) in
-      scan (current, previous :: es6fun :: acc) next tokens
-  | Ident _, ARROW _, [] -> (* "x =>" *)
-      (* Syntax error, but we assume a function *)
-      let es6fun = mk_ES6FUN (to_region previous) in
-      List.rev (current :: previous :: es6fun :: acc) *)
-
     (* Maybe a function: trying harder by scanning parameters *)
   | (LBRACKET _ | LPAR _ | EQ _ | COMMA _ | COLON _ | GT _ | ARROW _),
     LPAR _,
-    ((LBRACKET _ | Ident _ | WILD _) :: _ as tokens) -> (* "= ([" "= (x" *)
+    ((LBRACE _ | LBRACKET _ | Ident _ | WILD _) :: _ as tokens) ->
+      (* "= ({" or "= ([" or "= (x" or "= (_" *)
       scan_parameters (init_state acc previous current) tokens
 
     (* Likely not a function *)
@@ -92,15 +77,19 @@ and scan_parameters state = function
   (* Likely a function: insert ES6FUN and return to [scan]. *)
   (RPAR  _ as current) :: ((COLON _ | ARROW _) :: _ as tokens)
 | (COLON _ as current) :: tokens
-| (COMMA _ as current) :: tokens when state.level = 0 ->
+| (COMMA _ as current) :: tokens when state.depth = 0 ->
     scan (mk_fun state) current tokens
 
-  (* Undetermined: push, pop or shift a token, and try again. *)
-| LBRACKET _ as current :: tokens ->
-    scan_parameters (push current state) tokens
-| RBRACKET _ as current :: tokens ->
-    scan_parameters (pop current state) tokens
-| (ELLIPSIS _ | COMMA _ | Ident _ | WILD _ as current) :: tokens ->
+  (* Undetermined: push or pop a token, and try again. *)
+
+| (LBRACE _ | LBRACKET _ as current) :: tokens ->
+    scan_parameters (push @@ shift current state) tokens
+| (RBRACE _ | RBRACKET _ as current) :: tokens ->
+    scan_parameters (pop @@ shift current state) tokens
+| (COLON _ | ELLIPSIS _ | SEMI _ | COMMA _
+  | Ident _ | WILD _ | Verbatim _ | Bytes _
+  | Int _ | Nat _ | Mutez _ as current)
+  :: tokens ->
     scan_parameters (shift current state) tokens
 
   (* Likely not a function: return to [scan]. *)

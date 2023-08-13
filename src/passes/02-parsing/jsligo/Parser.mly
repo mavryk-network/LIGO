@@ -927,8 +927,9 @@ fun_param:
 | param_pattern { $1 }
 
 param_pattern:
-  "_" | variable        { P_Var   $1 }
-| tuple (param_pattern) { P_Tuple $1 }
+  "_" | variable                 { P_Var    $1 }
+| tuple (param_pattern)          { P_Tuple  $1 }
+| record_pattern (param_pattern) { P_Record $1 }
 
 fun_body:
   braces (statements) { StmtBody  $1 }
@@ -1180,23 +1181,23 @@ selected_expr:
 (* PATTERNS *)
 
 pattern:
-  "[@attr]" pattern { P_Attr ($1,$2) }
-| "<int>"           { P_Int       $1 }
-| "<nat>"           { P_Nat       $1 }
-| "<bytes>"         { P_Bytes     $1 }
-| "<string>"        { P_String    $1 }
-| "<verbatim>"      { P_Verbatim  $1 }
-| "<mutez>"         { P_Mutez     $1 }
-| "_" | variable    { P_Var       $1 }
-| record_pattern    { P_Record    $1 }
-| tuple(pattern)    { P_Tuple     $1 }
+  "[@attr]" pattern        { P_Attr ($1,$2) }
+| "<int>"                  { P_Int       $1 }
+| "<nat>"                  { P_Nat       $1 }
+| "<bytes>"                { P_Bytes     $1 }
+| "<string>"               { P_String    $1 }
+| "<verbatim>"             { P_Verbatim  $1 }
+| "<mutez>"                { P_Mutez     $1 }
+| "_" | variable           { P_Var       $1 }
+| record_pattern (pattern) { P_Record    $1 }
+| tuple (pattern)          { P_Tuple     $1 }
 
 (* Record pattern *)
 
-record_pattern:
-  braces (sep_or_term (field_pattern, field_sep)) { $1 }
+record_pattern (pattern):
+  braces (sep_or_term (field_pattern (pattern), field_sep)) { $1 }
 
-field_pattern:
+field_pattern (pattern):
   field_id ioption(":" pattern { $1,$2 }) {
     let start = field_id_to_region $1 in
     let region =
@@ -1206,7 +1207,7 @@ field_pattern:
     and value : _ field = {attributes=[]; field_id=$1; field_rhs=$2}
     in {region; value}
   }
-| "[@attr]" field_pattern {
+| "[@attr]" field_pattern(pattern) {
     let attributes = ($2 : _ field reg).value.attributes in
     let value : _ field = {$2.value with attributes = $1::attributes}
     in {$2 with value} }
