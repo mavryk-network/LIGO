@@ -7,6 +7,12 @@ module I = Cst.Jsligo
 
 let ghost : string I.wrap = I.Wrap.ghost ""
 
+let sep_or_term_to_nelist : ('a, _) Utils.sep_or_term -> 'a List.Ne.t option =
+  Option.map ~f:(function
+      | `Sep x -> nsepseq_to_nseq x
+      | `Term x -> nseq_map snd x)
+
+
 module TODO_do_in_parsing = struct
   let conv_attr attr_reg =
     let (key, value), _loc = w_split attr_reg in
@@ -19,40 +25,41 @@ module TODO_do_in_parsing = struct
 
   let conv_attrs = List.map ~f:conv_attr
 
-  let constructor_element arg_opt =
-    Option.value ~default:(I.EUnit (Region.wrap_ghost (ghost, ghost))) arg_opt
-
+  (* let constructor_element arg_opt =
+    Option.value ~default:(I.E_unit (Region.wrap_ghost (ghost, ghost))) arg_opt *)
 
   let weird_attr _ = ()
 
-  let labelize_pattern p =
+  (* let labelize_pattern p =
     match p with
     (* would be better to emit a label/string directly ? *)
     | I.PVar var ->
       Location.wrap ~loc:(r_snd var) @@ O.Label.of_string @@ var.value.variable#payload
-    | _ -> failwith "labelize_pattern: impossible??"
-
+    | _ -> failwith "labelize_pattern: impossible??" *)
 
   let unused_node () = failwith "unused node, can we clean ?"
   let labelize x = O.Label.of_string x
 
-  let t_disc_locs (objs : (I.obj_type, I.vbar) nsepseq) =
+  (* let t_disc_locs (objs : (I.obj_type, I.vbar) nsepseq) =
     (* The region of the discriminated union TDisc
       is the union of all its objects' regions *)
     let locations = List.Ne.map (fun obj -> snd @@ r_split obj) (nsepseq_to_nseq objs) in
-    List.Ne.fold_left locations ~init:Location.dummy ~f:Location.cover
-
+    List.Ne.fold_left locations ~init:Location.dummy ~f:Location.cover *)
 
   let pattern_to_param pattern = O.Param.{ pattern; param_kind = `Const }
 
-  let field_as_open_t (ma : I.type_expr) =
+  (* let field_as_open_t (ma : I.type_expr) =
     (* here, we should use module expressions, maybe ? *)
     match ma with
     | I.TPar _ -> true
+    | _ -> false *)
+
+  let is_open = function
+    | I.E_Par _ -> true
     | _ -> false
 
 
-  let flatten_moda ({ module_name; selector = _; field } : I.expr I.module_access) =
+  (* let flatten_moda ({ module_name; selector = _; field } : I.expr I.module_access) =
     let rec aux : I.module_name List.Ne.t -> I.expr -> I.module_name List.Ne.t * I.expr =
      fun acc expr ->
       match expr with
@@ -66,10 +73,9 @@ module TODO_do_in_parsing = struct
       | I.EPar _ -> true
       | _ -> false
     in
-    (path, field), is_open
+    (path, field), is_open *)
 
-
-  let control_flow_clause compile_statement (x : I.statement) =
+  (* let control_flow_clause compile_statement (x : I.statement) =
     (* if the statement is a block containing a single instruction,
        we do not want to emit a ClauseBlock, but a ClauseInstr *)
     let single_stmt_block (x : I.statement) =
@@ -84,8 +90,7 @@ module TODO_do_in_parsing = struct
         | _ -> O.Test_clause.ClauseBlock (single_stmt_block x))
       | _ -> O.Test_clause.ClauseBlock inside)
     | S_instr i -> O.Test_clause.ClauseInstr i
-    | _ -> O.Test_clause.ClauseBlock (single_stmt_block x)
-
+    | _ -> O.Test_clause.ClauseBlock (single_stmt_block x) *)
 
   let mvar x = Ligo_prim.Module_var.of_input_var ~loc:(Location.File x#region) x#payload
   let var x = Ligo_prim.Value_var.of_input_var ~loc:(Location.File x#region) x#payload
@@ -95,32 +100,16 @@ end
 module Eq = struct
   type expr = I.expr
   type ty_expr = I.type_expr
-
-  (*
-    The most troubling thing with jsligo: functions parameters is a single expression
-    `<parameters:expr> : <lhs_type:type> => ..` (see EFun node bellow)
-     I believe they should really be parsed as a pattern list
-
-    note:
-      as of today, this is a value expression `([x ,...[y, ...z]]) => x`
-      while this is not a valid declaration `const [x ,...[y, ...z]] = toto`.
-      in the first case, it's an "expression as a pattern". In the second case, it's a
-      pattern
-  *)
-  type pattern =
-    [ `Pattern of I.pattern
-    | `Expr of I.expr
-    ]
-
+  type pattern = I.pattern
   type statement = I.statement
   type block = I.statements
   type mod_expr = I.statements
   type instruction = I.statement
   type declaration = I.statement
-  type program_entry = I.toplevel_statement
+  type program_entry = I.top_decl
   type program = I.t
-  type sig_expr = I.interface_expr
-  type sig_entry = I.interface_entry
+  type sig_expr = I.interface_decl
+  type sig_entry = I.intf_body
 end
 
 let pattern_of_expr x = `Expr x
@@ -141,131 +130,107 @@ let rec expr : Eq.expr -> Folding.expr =
     O.E_unary_op { operator = Location.wrap ~loc sign; arg }
   in
   match e with
-  | EVar var -> return @@ O.E_variable (TODO_do_in_parsing.var var)
-  | EPar par -> expr par.value.inside
-  | EUnit _ -> return @@ E_literal Literal_unit
-  | EBytes b ->
+  | E_Var var -> return @@ O.E_variable (TODO_do_in_parsing.var var)
+  | E_Par par -> expr par.value.inside
+  (* | E_Unit _ -> return @@ E_literal Literal_unit *)
+  | E_Bytes b ->
     let _lexeme, b = b#payload in
     return @@ E_literal (Literal_bytes (Hex.to_bytes b))
-  | EString str ->
-    let str =
-      match str with
-      | String str -> Simple_utils.Ligo_string.Standard str#payload
-      | Verbatim str -> Simple_utils.Ligo_string.Verbatim str#payload
-    in
-    return @@ E_literal (Literal_string str)
-  | EArith arth ->
-    return
-    @@
-    (match arth with
-    | Add plus -> compile_bin_op PLUS plus
-    | Sub minus -> compile_bin_op MINUS minus
-    | Mult times -> compile_bin_op STAR times
-    | Div slash -> compile_bin_op SLASH slash
-    | Mod mod_ -> compile_bin_op PRCENT mod_
-    | Neg minus -> compile_unary_op MINUS minus
-    | Int i -> E_literal (Literal_int (snd i#payload)))
-  | ELogic logic ->
-    (match logic with
-    | BoolExpr be ->
-      return
-      @@
-      (match be with
-      | Or or_ -> compile_bin_op DPIPE or_
-      | And and_ -> compile_bin_op DAMPERSAND and_
-      | Not not_ -> compile_unary_op EX_MARK not_)
-    | CompExpr ce ->
-      return
-      @@
-      (match ce with
-      | Lt lt -> compile_bin_op LT lt
-      | Leq le -> compile_bin_op LE le
-      | Gt gt -> compile_bin_op GT gt
-      | Geq ge -> compile_bin_op GE ge
-      | Equal eq -> compile_bin_op DEQ eq
-      | Neq ne -> compile_bin_op EQ_SLASH_EQ ne))
-  | ECall { value = expr, args; _ } ->
-    let args =
-      match args with
-      | Unit reg ->
-        let loc = r_snd reg in
-        Location.wrap ~loc []
-      | Multiple args ->
-        let loc = r_snd args in
-        Location.wrap ~loc @@ nsepseq_to_list (r_fst args).inside
-    in
+  | E_String str ->
+    return @@ E_literal (Literal_string (Simple_utils.Ligo_string.Standard str#payload))
+  | E_Add plus -> return @@ compile_bin_op PLUS plus
+  | E_Sub minus -> return @@ compile_bin_op MINUS minus
+  | E_Mult times -> return @@ compile_bin_op STAR times
+  | E_Div slash -> return @@ compile_bin_op SLASH slash
+  | E_Rem mod_ -> return @@ compile_bin_op PRCENT mod_
+  | E_Neg minus -> return @@ compile_unary_op MINUS minus
+  | E_Int i -> return @@ E_literal (Literal_int (snd i#payload))
+  | E_Or or_ -> return @@ compile_bin_op DPIPE or_
+  | E_And and_ -> return @@ compile_bin_op DAMPERSAND and_
+  | E_Not not_ -> return @@ compile_unary_op EX_MARK not_
+  | E_Lt lt -> return @@ compile_bin_op LT lt
+  | E_Leq le -> return @@ compile_bin_op LE le
+  | E_Gt gt -> return @@ compile_bin_op GT gt
+  | E_Geq ge -> return @@ compile_bin_op GE ge
+  | E_Equal eq -> return @@ compile_bin_op DEQ eq
+  | E_Neq ne -> return @@ compile_bin_op EQ_SLASH_EQ ne
+  | E_App { value = expr, args; _ } ->
+    let args = Location.wrap ~loc @@ sepseq_to_list args.value.inside in
     return @@ E_call (expr, args)
-  | EConstr { value = ctor, arg_opt; _ } ->
-    let element = TODO_do_in_parsing.constructor_element arg_opt in
-    return
-    @@ E_applied_constructor { constructor = O.Label.of_string ctor#payload; element }
-  | EArray { value = items; _ } ->
+  | E_Ctor c ->
+    (* TODO in unified types (one type might not be necessary) *)
+    return @@ E_constr (O.Label.of_string c#payload)
+  | E_Tuple { value = items; _ } ->
     let items =
-      let translate_array_item : I.array_item -> _ AST.Array_repr.item = function
-        | Expr_entry e -> Expr_entry e
-        | Rest_entry e -> Rest_entry (r_fst e).expr
+      let translate_array_item : I.expr I.component -> _ AST.Array_repr.item = function
+        | None, e -> Expr_entry e
+        | Some _, e -> Rest_entry e
       in
       Option.value_map items.inside ~default:[] ~f:(fun lst ->
-          List.map ~f:translate_array_item (nsepseq_to_list lst))
+          List.map ~f:translate_array_item (nsep_or_term_to_list lst))
     in
     return @@ E_array items
-  | EObject { value; _ } ->
-    let props : _ AST.Object_.t =
-      let translate_property : I.property -> _ O.Object_.property = function
-        | Punned_property e -> Punned_property (r_fst e)
-        | Property p ->
-          let I.{ name; value; _ } = p.value in
-          Property (name, value)
-        | Property_rest p -> Property_rest p.value.expr
+  | E_Record { value; _ } ->
+    let f x =
+      let I.{ attributes; field_id; field_rhs } = r_fst x in
+      TODO_do_in_parsing.weird_attr attributes;
+      let open O.Object_ in
+      let field_id =
+        match field_id with
+        | F_Name n -> F_Name (O.Label.of_string n#payload)
+        | F_Int i -> F_Int (snd i#payload)
+        | F_Str s -> F_Str s#payload
       in
-      nseq_map translate_property @@ nsepseq_to_nseq value.inside
+      O.Object_.{ field_id; field_rhs = Option.map ~f:snd field_rhs }
     in
-    return @@ E_object props
-  | EProj { value = { expr; selection }; _ } ->
-    let path : _ O.Selection.t =
-      match selection with
-      | FieldName name ->
-        let name = (r_fst name).value#payload in
-        FieldName (O.Label.of_string name)
+    return @@ E_object (List.map ~f (sep_or_term_to_list value.inside))
+  | E_Proj { value = { record_or_tuple; field_path }; _ } ->
+    let f : I.selection -> _ O.Selection.t = function
+      | I.FieldStr fstr ->
+        (* TODO, not clear to me. need the parser to compile in order to decide *)
+        assert false
+      | I.FieldName (_dot, name) -> FieldName (O.Label.of_string name#payload)
       | Component comp ->
-        let comp = (r_fst comp).inside in
-        Component_expr comp
+        let comp = (r_fst comp).inside#payload in
+        Component_num comp
     in
-    return @@ E_proj { struct_ = expr; path }
-  | EModA { value = ma; _ } ->
-    let (module_path, field), field_as_open = TODO_do_in_parsing.flatten_moda ma in
-    let module_path = List.Ne.map TODO_do_in_parsing.mvar module_path in
+    return @@ E_proj (record_or_tuple, List.map ~f (nseq_to_list field_path))
+  | E_ModPath { value = { module_path; field; _ }; _ } ->
+    let field_as_open = TODO_do_in_parsing.is_open field in
+    let module_path =
+      nsepseq_to_nseq @@ nsepseq_map TODO_do_in_parsing.mvar module_path
+    in
     return @@ E_module_open_in { module_path; field; field_as_open }
-  | EFun f ->
-    let I.{ type_params; parameters; lhs_type; arrow = _; body } = f.value in
+  | E_Fun f ->
+    let I.{ type_vars; parameters; rhs_type; arrow = _; fun_body } = f.value in
     let type_params =
-      Option.map type_params ~f:(fun (tp : I.type_generics) ->
-          List.Ne.map TODO_do_in_parsing.tvar (nsepseq_to_nseq (r_fst tp).inside))
+      let open Simple_utils.Option in
+      let* type_vars in
+      let* tvs = sep_or_term_to_nelist type_vars.value.inside in
+      return (List.Ne.map TODO_do_in_parsing.tvar tvs)
     in
     let parameters =
       match parameters with
-      | EPar { value = { inside = ESeq x; _ }; _ } ->
-        List.map
-          ~f:(TODO_do_in_parsing.pattern_to_param <@ pattern_of_expr)
-          (nsepseq_to_list x.value)
-      | EPar { value = { inside = x; _ }; _ } | x ->
-        [ x |> pattern_of_expr |> TODO_do_in_parsing.pattern_to_param ]
+      | ParParams x ->
+        x.value.inside
+        |> sep_or_term_to_list
+        |> List.map ~f:TODO_do_in_parsing.pattern_to_param
+      | VarParam x -> [ TODO_do_in_parsing.pattern_to_param (I.P_Var x) ]
     in
-    let ret_type = Option.map ~f:snd lhs_type in
-    (match body with
-    | FunctionBody body ->
+    let ret_type = Option.map ~f:snd rhs_type in
+    (match fun_body with
+    | FunBody body ->
       return
       @@ E_block_poly_fun { type_params; parameters; ret_type; body = body.value.inside }
-    | ExpressionBody body ->
-      return @@ E_poly_fun { type_params; parameters; ret_type; body })
-  | EAnnot a ->
+    | ExprBody body -> return @@ E_poly_fun { type_params; parameters; ret_type; body })
+  | E_Typed a ->
     let e, _, te = a.value in
     return @@ E_annot (e, te)
-  | ECodeInj { value = { language; code; _ }; _ } ->
+  | E_CodeInj { value = { language; code; _ }; _ } ->
     let language = w_fst language in
     return @@ E_raw_code { language; code }
-  | ESeq seq -> return @@ E_sequence (nsepseq_to_list seq.value)
-  | EAssign (expr1, op, expr2) ->
+  (* | E_Seq seq -> return @@ E_sequence (nsepseq_to_list seq.value) *)
+  | E_Assign { value = { arg1; op; arg2 } } ->
     let op =
       O.Assign_chainable.(
         match op.value with
