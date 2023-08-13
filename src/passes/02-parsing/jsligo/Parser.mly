@@ -587,7 +587,7 @@ poly_stmt:
 open_stmt_not_starting_with_expr_nor_block1 (right_stmt):
   import_decl | value_decl | type_decl { S_Decl $1 }
 | export (import_decl) | export (value_decl) | export (type_decl)
-| full_return_stmt | right_stmt (*right_rec_stmt (right_stmt)*) { $1 }
+| full_return_stmt | right_stmt { $1 }
 
 stmt_not_starting_with_expr_nor_block1:
   open_stmt_not_starting_with_expr_nor_block1
@@ -596,7 +596,7 @@ stmt_not_starting_with_expr_nor_block1:
 open_stmt_not_starting_with_expr_nor_block2 (right_stmt):
   interface_decl | module_decl { S_Decl $1 }
 | export (interface_decl) | export (module_decl)
-| break_stmt | switch_stmt | right_stmt (* right_rec_stmt (right_stmt)*) { $1 }
+| break_stmt | switch_stmt | right_stmt { $1 }
 
 stmt_not_starting_with_expr_nor_block2:
   open_stmt_not_starting_with_expr_nor_block2
