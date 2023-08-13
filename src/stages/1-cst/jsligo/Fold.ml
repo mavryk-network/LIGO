@@ -135,7 +135,7 @@ type _ sing =
   | S_par : 'a sing -> 'a par sing
   | S_par' : 'a sing -> 'a par' sing
   | S_parameter_of_type : parameter_of_type sing
-  | S_parameters : 'a sing -> 'a parameters sing
+  | S_fun_expr_params : fun_expr_params sing
   | S_pattern : pattern sing
   | S_plus : plus sing
   | S_plus_eq : plus_eq sing
@@ -397,20 +397,20 @@ let fold
     ; for_body -| S_option (S_statement)]
   | S_fun_body -> process
     ( match node with
-      FunBody node -> node -| S_braces S_statements
+      StmtBody node -> node -| S_braces S_statements
     | ExprBody node -> node -| S_expr )
   | S_fun_expr ->
     let { type_vars; parameters; rhs_type; arrow; fun_body } = node in
     process_list
     [ type_vars -| S_option S_type_vars
-    ; parameters -| S_parameters S_pattern
+    ; parameters -| S_fun_expr_params
     ; rhs_type -| S_option (S_tuple_2 (S_colon, S_type_expr))
     ; arrow -| S_arrow
     ; fun_body -| S_fun_body ]
   | S_fun_type -> process @@ node -| S_reg (S_tuple_3 (S_fun_type_params, S_arrow, S_type_expr))
   | S_fun_type_param -> process @@ node -| S_tuple_2 (S_variable, S_type_annotation)
   | S_fun_type_params ->
-      process @@ node -| S_parameters (S_reg S_fun_type_param)
+      process @@ node -| S_par (S_sep_or_term (S_reg S_fun_type_param, S_comma))
   | S_geq -> process @@ node -| S_wrap S_lexeme
   | S_gt -> process @@ node -| S_wrap S_lexeme
   | S_hex -> () (* Leaf *)
@@ -554,10 +554,10 @@ let fold
     process_list
     [ kwd_parameter_of -| S_kwd_parameter_of
     ; module_path -| S_module_selection ]
-  | S_parameters sing -> process
+  | S_fun_expr_params -> process
     ( match node with
-        ParParams node -> node -| S_par (S_sep_or_term (sing, S_comma))
-      | VarParam node -> node -| S_variable
+        ParParams node -> node -| S_par (S_sep_or_term (S_pattern, S_comma))
+      | NakedParam node -> node -| S_pattern
     )
   | S_pattern -> process
     ( match node with
@@ -622,7 +622,7 @@ let fold
     | S_Break node -> node -| S_kwd_break
     | S_Cond node -> node -| S_reg S_cond_stmt
     | S_Decl node -> node -| S_declaration
-    | S_Export node -> node -| S_reg (S_tuple_2 (S_kwd_export, S_statement))
+    | S_Export node -> node -| S_reg (S_tuple_2 (S_kwd_export, S_declaration))
     | S_Expr node -> node -| S_expr
     | S_For node -> node -| S_reg S_for_stmt
     | S_ForOf node -> node -| S_reg S_for_of_stmt

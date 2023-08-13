@@ -322,7 +322,7 @@ and cartesian = (type_expr, comma) nsep_or_term brackets
 (* Functional type *)
 
 and fun_type        = (fun_type_params * arrow * type_expr) reg
-and fun_type_params = fun_type_param reg parameters
+and fun_type_params = (fun_type_param reg, comma) sep_or_term par
 and fun_type_param  = variable * type_annotation
 
 (* Parameter of type *)
@@ -417,7 +417,7 @@ and statements = (statement * semi option) nseq
 
 (* Export statement *)
 
-and export_stmt = kwd_export * statement
+and export_stmt = kwd_export * declaration
 
 (* Conditional statement *)
 
@@ -571,18 +571,18 @@ and arguments = (expr, comma) sepseq par
 
 and fun_expr = {
   type_vars  : type_vars option;
-  parameters : pattern parameters;
+  parameters : fun_expr_params;
   rhs_type   : type_annotation option;
   arrow      : arrow;
   fun_body   : fun_body
 }
 
-and 'a parameters =
-  ParParams of ('a, comma) sep_or_term par
-| VarParam  of variable
+and fun_expr_params =
+  ParParams  of (pattern, comma) sep_or_term par
+| NakedParam of pattern
 
 and fun_body =
-  FunBody  of statements braces
+  StmtBody of statements braces
 | ExprBody of expr
 
 (* Contract of expression *)
@@ -775,7 +775,7 @@ let field_id_to_region = function
 | F_Str  i -> i#region
 
 let fun_body_to_region = function
-  FunBody {region; _} -> region
+  StmtBody {region; _} -> region
 | ExprBody e -> expr_to_region e
 
 let selection_to_region = function
@@ -794,4 +794,4 @@ let intf_expr_to_region = function
 
 let parameters_to_region = function
   ParParams {region; _} -> region
-| VarParam w -> w#region
+| NakedParam p -> pattern_to_region p

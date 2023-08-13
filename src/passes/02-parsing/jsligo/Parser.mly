@@ -226,11 +226,7 @@ no_dir_top_decl:
 (* INNER DECLARATIONS (AS STATEMENTS) *)
 
 declaration:
-  value_decl     { D_Value     $1 }
-| import_decl    { D_Import    $1 }
-| interface_decl { D_Interface $1 }
-| module_decl    { D_Module    $1 }
-| type_decl      { D_Type      $1 }
+  value_decl | import_decl | interface_decl | module_decl | type_decl { $1 }
 
 (* Value declaration (constant and mutable) *)
 
@@ -239,7 +235,7 @@ value_decl:
     let stop   = nsepseq_to_region (fun x -> x.region) $2 in
     let region = cover (var_kind_to_region $1) stop
     and value  = {kind=$1; bindings=$2}
-    in {region; value} }
+    in D_Value {region; value} }
 
 %inline
 var_kind:
@@ -274,18 +270,18 @@ import_decl:
   "import" module_name "=" module_selection {
     let region = cover $1#region (module_selection_to_region $4)
     and value  = {kwd_import=$1; alias=$2; equal=$3; module_path=$4}
-    in AliasModule {region; value}
+    in D_Import (AliasModule {region; value})
   }
 | "import" "*" "as" module_name "from" file_path {
     let region = cover $1#region $6#region
     and value  = {kwd_import=$1; times=$2; kwd_as=$3; alias=$4;
                   kwd_from=$5; file_path=$6}
-    in ImportAll {region; value}
+    in D_Import (ImportAll {region; value})
   }
 | "import" braces(sep_or_term(variable, ",")) "from" file_path {
     let region = cover $1#region $4#region
     and value  = {kwd_import=$1; imported=$2; kwd_from=$3; file_path=$4}
-    in ImportSome {region; value} }
+    in D_Import (ImportSome {region; value}) }
 
 module_selection:
   module_path(module_name) { M_Path (mk_mod_path $1 (fun w -> w#region)) }
@@ -304,7 +300,7 @@ interface_decl:
   "interface" intf_name intf_body {
     let region = cover $1#region $3.region
     and value  = {kwd_interface=$1; intf_name=$2; intf_body=$3}
-    in {region; value} }
+    in D_Interface {region; value} }
 
 intf_body:
   braces(intf_entries) { $1 }
@@ -342,7 +338,7 @@ module_decl:
      let region = cover $1#region $4.region
      and value  = {kwd_namespace=$1; module_name=$2; module_type=$3;
                    module_body=$4}
-     in {region; value} }
+     in D_Module {region; value} }
 
 module_binder:
   module_name | "_" { $1 }
@@ -362,7 +358,7 @@ type_decl:
   "type" type_binder ioption(type_vars) "=" type_expr {
     let region = cover $1#region (type_expr_to_region $5)
     and value  = {kwd_type=$1; name=$2; type_vars=$3; eq=$4; type_expr=$5}
-    in {region; value} }
+    in D_Type {region; value} }
 
 type_binder:
   type_name | "_" { $1 }
@@ -563,62 +559,106 @@ field_id:
 (* STATEMENTS *)
 
 statements:
-  cat_stmt          after_cat_stmt
-| end_with_expr     after_expr_stmt
-| expr_stmt         after_expr_stmt
-| empty_return_stmt (*after_expr_stmt*) after_return { nseq_cons ($1,    None) $2 }
-| last_or_more (statement)          { $1 }
+  stmt_ending_with_expr stmts_not_starting_with_expr
+| poly_stmt             statements
+| empty_return_stmt     stmts_not_starting_with_expr_nor_block
+| expr_stmt             stmts_not_starting_with_expr
+                           { nseq_cons ($1, None) $2 }
+| last_or_more (statement) { $1 }
 
-end_with_expr: (* and does not start with [expr] *)
-  value_decl | import_decl | type_decl
-| export (value_decl) | export (import_decl) | export (type_decl)
-| full_return_stmt { $1 } (* [expr_stmt] is missing on purpose *)
+stmt_ending_with_expr: (* and not starting with [expr] *)
+  import_decl | value_decl | type_decl { S_Decl $1 }
+| export (import_decl) | export (value_decl) | export (type_decl)
+| full_return_stmt | right_rec_stmt (stmt_ending_with_expr) { $1 }
 
-kwd_stmt (right_stmt):
-  decl_stmt | export_stmt | switch_stmt | for_of_stmt (right_stmt)
-| while_stmt (right_stmt) | break_stmt | for_stmt (right_stmt)
-| return_stmt | if_stmt (right_stmt) | if_else_stmt (right_stmt) { $1 }
+right_rec_stmt (right_stmt):
+  "[@attr]" right_stmt                { S_Attr ($1,$2) }
+| no_attr_right_rec_stmt (right_stmt) {             $1 }
 
-after_cat_stmt:
-  after_expr_stmt
-| last_or_more (expr_stmt)    { $1 }
-| expr_stmt   after_expr_stmt
-| export_stmt after_expr_stmt { nseq_cons ($1, None) $2 }
+no_attr_right_rec_stmt (right_stmt):
+  if_stmt (right_stmt) | if_else_stmt (right_stmt)
+| full_for_stmt (right_stmt) | for_of_stmt (right_stmt)
+| while_stmt (right_stmt) { $1 }
 
-after_expr_stmt:
-  cat_stmt         after_cat_stmt
-| decl_stmt        after_expr_stmt
-| full_return_stmt after_expr_stmt { nseq_cons ($1,    None) $2 }
-| last_or_more (kwd_stmt (statement)) { $1 }
+poly_stmt:
+  open_stmt_not_starting_with_expr_nor_block2 (right_rec_stmt (poly_stmt))
+| block_stmt { $1 }
 
-after_return:
-  end_with_expr     after_expr_stmt
-| empty_return_stmt after_return      { nseq_cons ($1, None) $2 }
-| last_or_more (kwd_stmt (statement)) { $1 }
+open_stmt_not_starting_with_expr_nor_block1 (right_stmt):
+  import_decl | value_decl | type_decl { S_Decl $1 }
+| export (import_decl) | export (value_decl) | export (type_decl)
+| full_return_stmt | right_stmt (*right_rec_stmt (right_stmt)*) { $1 }
 
-open_cat_stmt(right_stmt):
-  core_stmt (right_stmt) | if_stmt (right_stmt) | block_stmt { $1 }
+stmt_not_starting_with_expr_nor_block1:
+  open_stmt_not_starting_with_expr_nor_block1
+    (right_rec_stmt (stmt_not_starting_with_expr_nor_block1)) { $1 }
 
-cat_stmt: open_cat_stmt (cat_stmt) { $1 }
+open_stmt_not_starting_with_expr_nor_block2 (right_stmt):
+  interface_decl | module_decl { S_Decl $1 }
+| export (interface_decl) | export (module_decl)
+| break_stmt | switch_stmt | right_stmt (* right_rec_stmt (right_stmt)*) { $1 }
+
+stmt_not_starting_with_expr_nor_block2:
+  open_stmt_not_starting_with_expr_nor_block2
+    (right_rec_stmt (stmt_not_starting_with_expr_nor_block2)) { $1 }
+
+stmts_not_starting_with_expr_nor_block:
+  stmt_not_starting_with_expr_nor_block1 stmts_not_starting_with_expr
+| stmt_not_starting_with_expr_nor_block2 statements
+| empty_return_stmt stmts_not_starting_with_expr_nor_block
+    { nseq_cons ($1, None) $2 }
+| last_or_more (stmt_not_starting_with_expr_nor_block) { $1 }
+
+stmt_not_starting_with_expr_nor_block:
+  stmt_not_starting_with_expr_nor_block1
+| stmt_not_starting_with_expr_nor_block2
+| empty_return_stmt { $1 }
+
+(*
+stmts_not_starting_with_attr_expr_nor_block:
+  stmt_not_starting_with_attr_expr_nor_block1
+| stmt_not_starting_with_attr_expr_nor_block2
+| empty_return_stmt { $1 }
+
+stmt_not_starting_with_attr_expr_nor_block1:
+  open_stmt_not_starting_with_attr_expr_nor_block1
+    (no_attr_right_rec_stmt
+      (stmt_not_starting_with_attr_expr_nor_block1)) { $1 }
+
+stmt_not_starting_with_attr_expr_nor_block2:
+  open_stmt_not_starting_with_attr_expr_nor_block2
+    (no_attr_right_rec_stmt
+      (stmt_not_starting_with_attr_expr_nor_block2)) { $1 }
+
+open_stmt_not_starting_with_attr_expr_nor_block1 (right_stmt):
+  import_decl | value_decl | type_decl { S_Decl $1 }
+| export (import_decl) | export (value_decl) | export (type_decl)
+| full_return_stmt | right_stmt { $1 }
+
+open_stmt_not_starting_with_attr_expr_nor_block2 (right_stmt):
+  interface_decl | module_decl { S_Decl $1 }
+| export (interface_decl) | export (module_decl)
+| break_stmt | switch_stmt | right_stmt (* right_rec_stmt (right_stmt)*) { $1 }
+*)
+
+stmts_not_starting_with_expr:
+  block_stmt statements { nseq_cons ($1, None) $2 }
+| stmts_not_starting_with_expr_nor_block
+| last_or_more (block_stmt) { $1 }
 
 statement:
   non_if_stmt (statement) | if_stmt (statement) { $1 }
 
 non_if_stmt (right_stmt):
-  core_stmt (right_stmt) | empty_for_stmt | decl_stmt | expr_stmt
-| block_stmt | export_stmt | return_stmt { $1 }
+  core_stmt (right_stmt) | block_stmt | empty_for_stmt
+| decl_stmt | expr_stmt | export_stmt | return_stmt { $1 }
 
 core_stmt (right_stmt):
-  "[@attr]" right_stmt       { S_Attr  ($1,$2) }
-| switch_stmt | for_of_stmt (right_stmt)
-| while_stmt (right_stmt)  | break_stmt | full_for_stmt (right_stmt)
-| if_else_stmt (right_stmt)  { $1 }
+  "[@attr]" right_stmt { S_Attr ($1,$2) }
+| switch_stmt | for_of_stmt (right_stmt) | while_stmt (right_stmt)
+| break_stmt | full_for_stmt (right_stmt) | if_else_stmt (right_stmt) { $1 }
 
-break_stmt:
-  "break" { S_Break $1 }
-
-closed_non_if_stmt:
-  non_if_stmt (closed_non_if_stmt) { $1 }
+closed_non_if_stmt: non_if_stmt (closed_non_if_stmt) { $1 }
 
 last_or_more (left_stmt):
   left_stmt ";"?           { ($1,$2), [] }
@@ -628,22 +668,27 @@ after_semi:
   literal_expr | path_expr { (S_Expr $1, None), [] }
 | statements               { $1 }
 
+(* Break statement *)
+
+break_stmt:
+  "break" { S_Break $1 }
+
 (* Export statements *)
 
-export (right_stmt):
-  "export" right_stmt {
-     let region = cover $1#region (statement_to_region $2)
-     in S_Export {region; value=($1,$2)} }
+export (right_decl):
+  "export" right_decl {
+    let region = cover $1#region (declaration_to_region $2)
+    in S_Export {region; value=($1,$2)} }
 
 export_stmt:
-  export (decl_stmt) { $1 }
+  export (declaration) { $1 }
 
 (* Expressions as statements *)
 
 %inline
 pre_expr_stmt:
   app_expr | incr_expr | decr_expr | assign_expr
-| ternary_expr (no_attr_core_expr, pre_expr_stmt) { $1       }
+| ternary_expr (core_expr, pre_expr_stmt) { $1       }
 | par (expr)                                      { E_Par $1 }
 
 expr_stmt: pre_expr_stmt { S_Expr $1 }
@@ -769,7 +814,7 @@ return_stmt:
   full_return_stmt | empty_return_stmt { $1 }
 
 full_return_stmt:
-  "return" expr {
+  "return" no_attr_expr {
     let region = cover $1#region (expr_to_region $2)
     in S_Return {region; value = ($1, Some $2)} }
 
@@ -828,7 +873,11 @@ while_cond:
 (* EXPRESSIONS *)
 
 expr:
-  record_level_expr | non_record_expr   { $1 }
+  "[@attr]" expr { E_Attr ($1,$2) }
+| no_attr_expr   { $1 }
+
+no_attr_expr:
+  non_record_expr | record_level_expr { $1 }
 
 non_record_expr:
   fun_expr | typed_expr | assign_expr | disj_expr_level
@@ -856,7 +905,7 @@ fun_expr:
                    None -> $3#region
                  | Some {region; _} -> region in
     let region = cover start (fun_body_to_region $5) in
-    let value  = {type_vars=$1; parameters = VarParam $3;
+    let value  = {type_vars=$1; parameters = NakedParam (P_Var $3);
                   rhs_type=None; arrow=$4; fun_body=$5}
     in E_Fun {region; value} }
 
@@ -1032,7 +1081,7 @@ app_expr:
     in E_App {region; value=($1,$2)} }
 
 lambda:
-  app_expr | no_attr_core_expr { $1 }
+  app_expr | core_expr { $1 }
 
 arguments:
   par (ioption (nsepseq (argument, ","))) { $1 }
@@ -1043,24 +1092,22 @@ argument:
 (* Core expressions *)
 
 core_expr:
-  "[@attr]" core_expr { E_Attr ($1,$2) }
-| no_attr_core_expr   {             $1 }
-
-no_attr_core_expr:
-  code_inj            { E_CodeInj  $1 }
-| par (expr)          { E_Par      $1 }
-| tuple (expr)        { E_Tuple    $1 }
+  code_inj     { E_CodeInj  $1 }
+| par (expr)   { E_Par      $1 }
+| tuple (expr) { E_Tuple    $1 }
 | ctor
 | literal_expr
-| path_expr           {            $1 }
+| path_expr    { $1 }
+
+(* Literal expressions *)
 
 literal_expr:
-  "<int>"             { E_Int      $1 }
-| "<nat>"             { E_Nat      $1 }
-| "<mutez>"           { E_Mutez    $1 }
-| "<string>"          { E_String   $1 }
-| "<verbatim>"        { E_Verbatim $1 }
-| "<bytes>"           { E_Bytes    $1 }
+  "<int>"      { E_Int      $1 }
+| "<nat>"      { E_Nat      $1 }
+| "<mutez>"    { E_Mutez    $1 }
+| "<string>"   { E_String   $1 }
+| "<verbatim>" { E_Verbatim $1 }
+| "<bytes>"    { E_Bytes    $1 }
 
 (* Record expressions *)
 

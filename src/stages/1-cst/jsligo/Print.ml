@@ -321,14 +321,11 @@ and print_T_Cart state (node : cartesian) =
 
 and print_T_Fun state (node : fun_type) =
   let Region.{value; region} = node in
-  let fun_type_params, _, codomain = value in
-  let children = Tree.[
-    mk_child print_fun_type_params fun_type_params;
-    mk_child print_codomain        codomain]
+  let params, _, codomain = value in
+  let children =
+    Tree.mk_children_sep_or_term print_fun_type_param params.value.inside
+  @ [Tree.mk_child print_codomain codomain]
   in Tree.make state "T_Fun" ~region children
-
-and print_fun_type_params state =
-  print_parameters print_fun_type_param state
 
 and print_fun_type_param state (node: fun_type_param reg) =
   let Region.{region; value} = node in
@@ -759,38 +756,32 @@ and print_E_Fun state (node : fun_expr reg) =
   let Region.{value; region} = node in
   let {type_vars; parameters; rhs_type; arrow=_; fun_body} = value in
   let children = Tree.[
-    mk_child_opt print_type_vars  type_vars;
-    mk_child     print_fun_params parameters;
-    mk_child_opt print_rhs_type   rhs_type;
-    mk_child     print_fun_body   fun_body]
+    mk_child_opt print_type_vars       type_vars;
+    mk_child     print_fun_expr_params parameters;
+    mk_child_opt print_rhs_type        rhs_type;
+    mk_child     print_fun_body        fun_body]
   in Tree.make ~region state "E_Fun" children
-
-and print_fun_params state = print_parameters print_pattern state
 
 and print_rhs_type state (node: type_annotation) =
   Tree.make_unary state "<rhs_type>" print_type_expr (snd node)
 
-and print_parameters :
-  'a.'a Tree.printer -> Tree.state -> 'a parameters -> unit =
-  fun print state -> function
-    ParParams p -> print_ParParams print state p
-  | VarParam  p -> print_VarParams state p
+and print_fun_expr_params state = function
+  ParParams  p -> print_ParParams  state p
+| NakedParam p -> print_NakedParam state p
 
-and print_ParParams :
-  'a.'a Tree.printer -> Tree.state -> ('a, comma) sep_or_term par -> unit =
-  fun print state node ->
-    let Region.{value; region} = node in
-    Tree.of_sep_or_term ~region state "ParParams" print value.inside
+and print_ParParams state (node: (pattern, comma) sep_or_term par) =
+  let Region.{value; region} = node in
+  Tree.of_sep_or_term ~region state "ParParams" print_pattern value.inside
 
-and print_VarParams state (node: variable) =
-  Tree.(make_unary state "VarParams" make_literal node)
+and print_NakedParam state (node: pattern) =
+  Tree.(make_unary state "NakedParam" print_pattern node)
 
 and print_fun_body state = function
-  FunBody  b -> print_FunBody  state b
+  StmtBody b -> print_StmtBody  state b
 | ExprBody b -> print_ExprBody state b
 
-and print_FunBody state (node: statements braces) =
-  Tree.of_nseq state "FunBody"
+and print_StmtBody state (node: statements braces) =
+  Tree.of_nseq state "StmtBody"
                (fun state -> print_statement state <@ fst) node.value.inside
 
 and print_ExprBody state (node: expr) =
@@ -1067,7 +1058,7 @@ and print_S_Decl state (node: declaration) =
 
 and print_S_Export state (node: export_stmt reg) =
   let Region.{value; region} = node in
-  Tree.make_unary ~region state "S_Export" print_statement (snd value)
+  Tree.make_unary ~region state "S_Export" print_declaration (snd value)
 
 (* Expression as a statement *)
 
