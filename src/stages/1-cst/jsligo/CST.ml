@@ -3,7 +3,6 @@
 (* Disabling warnings *)
 
 [@@@warning "-30"] (* multiply-defined record labels *)
-(* [@@@warning "-30-40-42"] *)
 
 (* Vendor dependencies *)
 
@@ -115,17 +114,17 @@ type eof = lexeme wrap
 
 (* Literals *)
 
-type variable    = lexeme wrap
-type type_name   = lexeme wrap
-type type_var    = lexeme wrap
-type type_ctor   = lexeme wrap
-type ctor        = lexeme wrap
-type field_name  = lexeme wrap
-type module_name = lexeme wrap
-type intf_name   = lexeme wrap
-type file_path   = lexeme wrap
-type language    = lexeme wrap
-type attribute   = Attr.t wrap
+type variable       = lexeme wrap
+type type_name      = lexeme wrap
+type type_var       = lexeme wrap
+type type_ctor      = lexeme wrap
+type ctor           = lexeme wrap
+type field_name     = lexeme wrap
+type namespace_name = lexeme wrap
+type intf_name      = lexeme wrap
+type file_path      = lexeme wrap
+type language       = lexeme wrap
+type attribute      = Attr.t wrap
 
 type string_literal   = lexeme wrap
 type int_literal      = (lexeme * Z.t) wrap
@@ -168,7 +167,7 @@ and declaration =
   D_Value     of value_decl reg
 | D_Import    of import_decl
 | D_Interface of interface_decl reg
-| D_Module    of module_decl reg
+| D_Namespace of namespace_decl reg
 | D_Type      of type_decl reg
 
 (* Value declaration *)
@@ -198,26 +197,26 @@ and type_annotation = colon * type_expr
 (* Import declaration *)
 
 and import_decl =
-  AliasModule of import_alias reg
-| ImportAll   of import_all_as reg
-| ImportSome  of import_from reg
+  ImportAlias of import_alias reg
+| ImportAllAs of import_all_as reg
+| ImportFrom  of import_from reg
 
 and import_alias = {
-  kwd_import  : kwd_import;
-  alias       : module_name;
-  equal       : equal;
-  module_path : module_selection
+  kwd_import     : kwd_import;
+  alias          : namespace_name;
+  equal          : equal;
+  namespace_path : namespace_selection
 }
 
-and module_selection =
-  M_Path  of module_name module_path reg
-| M_Alias of module_name
+and namespace_selection =
+  M_Path  of namespace_name namespace_path reg
+| M_Alias of namespace_name
 
 and import_all_as = {
   kwd_import : kwd_import;
   times      : times;
   kwd_as     : kwd_as;
-  alias      : module_name;
+  alias      : namespace_name;
   kwd_from   : kwd_from;
   file_path  : file_path
 }
@@ -229,10 +228,10 @@ and import_from = {
   file_path  : file_path
 }
 
-(* Module paths *)
+(* Namespace paths *)
 
-and 'a module_path = {
-  module_path : (module_name, dot) nsepseq;
+and 'a namespace_path = {
+  namespace_path : (namespace_name, dot) nsepseq;
   selector    : dot;
   field       : 'a
 }
@@ -266,20 +265,20 @@ and intf_const = {
   const_type : type_annotation
 }
 
-(* Module declaration *)
+(* Namespace declaration *)
 
-and module_decl = {
-  kwd_namespace : kwd_namespace;
-  module_name   : module_name;
-  module_type   : interface option;
-  module_body   : statements braces
+and namespace_decl = {
+  kwd_namespace  : kwd_namespace;
+  namespace_name : namespace_name;
+  namespace_type : interface option;
+  namespace_body : statements braces
 }
 
 and interface = (kwd_implements * intf_expr) reg
 
 and intf_expr =
   I_Body of intf_body
-| I_Path of module_selection
+| I_Path of namespace_selection
 
 (* Type declarations *)
 
@@ -302,10 +301,10 @@ and type_expr =
 | T_Cart      of cartesian                         (* [t, [u, v]]       *)
 | T_Fun       of fun_type                          (* (a : t) => u      *)
 | T_Int       of int_literal                       (* 42                *)
-| T_ModPath   of type_expr module_path reg         (* A.B.list<u>       *)
+| T_NamePath  of type_expr namespace_path reg      (* A.B.list<u>       *)
 | T_Par       of type_expr par                     (* (t)               *)
 | T_Parameter of parameter_of_type reg             (* parameter_of m    *)
-| T_Record    of type_expr record                  (* {x; @a y : t}     *)
+| T_Object    of type_expr _object                 (* {x; @a y : t}     *)
 | T_String    of string_literal                    (* "x"               *)
 | T_Union     of union_type                        (* {kind: "C", x: t} *)
 | T_Var       of variable                          (* t                 *)
@@ -329,12 +328,12 @@ and fun_type_param  = variable * type_annotation
 
 and parameter_of_type = {
   kwd_parameter_of : kwd_parameter_of;
-  module_path      : module_selection
+  namespace_path   : namespace_selection
 }
 
-(* Record type *)
+(* Object type *)
 
-and 'a record = ('a field reg, field_sep) sep_or_term braces
+and 'a _object = ('a field reg, field_sep) sep_or_term braces
 
 and 'a field = {
   attributes : attribute list;
@@ -349,7 +348,7 @@ and field_id =
 
 (* Discriminated unions *)
 
-and union_type = (type_expr record, vbar) nsep_or_pref reg
+and union_type = (type_expr _object, vbar) nsep_or_pref reg
 
 (* Variant type *)
 
@@ -377,16 +376,16 @@ and pattern =
 | P_Int      of int_literal              (* 42              *)
 | P_Mutez    of mutez_literal            (* 5mutez          *)
 | P_Nat      of nat_literal              (* 4n              *)
-| P_Record   of pattern record           (* {x, y : 0}      *)
+| P_Object   of pattern _object          (* {x, y : 0}      *)
 | P_String   of string_literal           (* "string"        *)
-| P_Tuple    of pattern tuple            (* [x, ...y, z] [] *)
+| P_Array    of pattern _array           (* [x, ...y, z] [] *)
 | P_Typed    of typed_pattern reg        (* [x,y] : t       *)
 | P_Var      of variable                 (* x               *)
 | P_Verbatim of verbatim_literal         (* {|foo|}         *)
 
 (* Tuple *)
 
-and 'a tuple = ('a component, comma) sep_or_term brackets
+and 'a _array = ('a component, comma) sep_or_term brackets
 
 and 'a component = ellipsis option * 'a
 
@@ -424,7 +423,7 @@ and export_stmt = kwd_export * declaration
 and cond_stmt = {
   kwd_if : kwd_if;
   test   : expr par;
-  if_so  : statement;
+  if_so  : statement * semi option;
   if_not : (kwd_else * statement) option
 }
 
@@ -537,7 +536,7 @@ and expr =
 | E_MinusEq  of minus_eq bin_op reg     (* x -= y            *)
 | E_Rem      of remainder bin_op reg    (* x % n             *)
 | E_RemEq    of rem_eq bin_op reg       (* x %= y            *)
-| E_ModPath  of expr module_path reg    (* M.N.x.0           *)
+| E_NamePath of expr namespace_path reg (* M.N.x.0           *)
 | E_Mult     of times bin_op reg        (* x * y             *)
 | E_Mutez    of mutez_literal           (* 5mutez            *)
 | E_Nat      of nat_literal             (* 42n               *)
@@ -551,12 +550,12 @@ and expr =
 | E_PreDecr  of decrement un_op reg     (* --x               *)
 | E_PreIncr  of increment un_op reg     (* ++x               *)
 | E_Proj     of projection reg          (* e.x.1             *)
-| E_Record   of expr record             (* {x : e, y}        *)
+| E_Object   of expr _object            (* {x : e, y}        *)
 | E_String   of string_literal          (* "abcdef"          *)
 | E_Sub      of minus bin_op reg        (* x - y             *)
 | E_Ternary  of ternary reg             (* x ? y : z         *)
 | E_TimesEq  of times_eq bin_op reg     (* x *= y            *)
-| E_Tuple    of expr tuple              (* [x, ...y, z]  []  *)
+| E_Array    of expr _array             (* [x, ...y, z]  []  *)
 | E_Typed    of typed_expr reg          (* e as t            *)
 | E_Update   of update_expr braces      (* {...x, y : z}     *)
 | E_Var      of variable                (* x                 *)
@@ -589,14 +588,14 @@ and fun_body =
 
 and contract_of_expr = {
   kwd_contract_of : kwd_contract_of;
-  module_path     : module_selection par
+  namespace_path  : namespace_selection par
 }
 
-(* Functional update of record expressions *)
+(* Functional update of object expressions *)
 
 and update_expr = {
   ellipsis : ellipsis;
-  record   : expr;
+  _object  : expr;
   sep      : field_sep;
   updates  : (expr field reg, field_sep) sep_or_term
 }
@@ -623,14 +622,14 @@ and 'a  un_op = {op: 'a; arg: expr}
 (* Projections *)
 
 and projection = {
-  record_or_tuple : expr;
+  object_or_array : expr;
   field_path      : selection nseq
 }
 
 and selection =
-  FieldName of (dot * field_name)      (* Records *)
-| FieldStr  of string_literal brackets (* Records *)
-| Component of int_literal brackets    (* Tuples  *)
+  FieldName of (dot * field_name)      (* Objects *)
+| FieldStr  of string_literal brackets (* Objects *)
+| Component of int_literal brackets    (* Arrays  *)
 
 (* Code injection.  Note how the field [language] wraps a region in
    another: the outermost region covers the header "[%<language>" and
@@ -646,15 +645,15 @@ and code_inj = {
 (* Projecting regions from some nodes of the AST *)
 
 let import_decl_to_region = function
-  AliasModule {region; _}
-| ImportAll   {region; _}
-| ImportSome  {region; _} -> region
+  ImportAlias {region; _}
+| ImportAllAs {region; _}
+| ImportFrom  {region; _} -> region
 
 let declaration_to_region = function
   D_Value     {region; _} -> region
 | D_Import    d -> import_decl_to_region d
 | D_Interface {region; _}
-| D_Module    {region; _}
+| D_Namespace {region; _}
 | D_Type      {region; _} -> region
 
 let rec top_decl_to_region = function
@@ -669,10 +668,10 @@ let rec type_expr_to_region = function
 | T_Cart      {region; _}
 | T_Fun       {region; _} -> region
 | T_Int       w -> w#region
-| T_ModPath   {region; _}
+| T_NamePath  {region; _}
 | T_Par       {region; _}
 | T_Parameter {region; _}
-| T_Record    {region; _} -> region
+| T_Object    {region; _} -> region
 | T_String    w -> w#region
 | T_Union     {region; _} -> region
 | T_Var       w -> w#region
@@ -685,9 +684,9 @@ let rec pattern_to_region = function
 | P_Int    w -> w#region
 | P_Mutez  w -> w#region
 | P_Nat    w -> w#region
-| P_Record {region; _} -> region
+| P_Object {region; _} -> region
 | P_String w-> w#region
-| P_Tuple {region; _}
+| P_Array {region; _}
 | P_Typed {region; _} -> region
 | P_Var w -> w#region
 | P_Verbatim w -> w#region
@@ -726,7 +725,7 @@ let rec expr_to_region = function
 | E_MinusEq  {region; _}
 | E_Rem      {region; _}
 | E_RemEq    {region; _}
-| E_ModPath  {region; _}
+| E_NamePath {region; _}
 | E_Mult     {region; _} -> region
 | E_Mutez    w -> w#region
 | E_Nat      w -> w#region
@@ -734,7 +733,7 @@ let rec expr_to_region = function
 | E_Neq      {region; _}
 | E_Not      {region; _}
 | E_Or       {region; _}
-| E_Record   {region; _}
+| E_Object   {region; _}
 | E_Par      {region; _}
 | E_PostDecr {region; _}
 | E_PostIncr {region; _}
@@ -745,7 +744,7 @@ let rec expr_to_region = function
 | E_Sub      {region; _}
 | E_Ternary  {region; _}
 | E_TimesEq  {region; _}
-| E_Tuple    {region; _}
+| E_Array    {region; _}
 | E_Typed    {region; _}
 | E_Update   {region; _} -> region
 | E_Var      w
@@ -784,13 +783,13 @@ let selection_to_region = function
 | FieldStr brackets -> brackets.region
 | Component brackets -> brackets.region
 
-let module_selection_to_region = function
+let namespace_selection_to_region = function
   M_Path {region; _} -> region
 | M_Alias w -> w#region
 
 let intf_expr_to_region = function
   I_Body {region; _} -> region
-| I_Path path -> module_selection_to_region path
+| I_Path path -> namespace_selection_to_region path
 
 let parameters_to_region = function
   ParParams {region; _} -> region

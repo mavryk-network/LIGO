@@ -23,20 +23,23 @@ open CST
 open! Region
 open! PPrint
 
+
 (* Utilities and local shadowings *)
 
+type state = PrettyComb.state
+(*
 let prefix = PrettyComb.prefix
 let (^/^)  = PrettyComb.(^/^)
-type state = PrettyComb.state
+*)
 
 (* Placement *)
 
-let default_state : PrettyComb.state =
+let default_state : state =
   object
     method indent       = 2
     method leading_vbar = PrettyComb.Only_on_new_line
   end
-
+(*
 (* Comments *)
 
 let pp_line_comment comment = string "//" ^^ string comment.value
@@ -919,10 +922,23 @@ and pp_contract state {value; _} =
 let print_type_expr = pp_type_expr
 let print_pattern   = pp_pattern
 let print_expr      = pp_expr
-let print_toplevel_statement = pp_toplevel_statement
+let print_top_decl  = pp_top_decl
 
 type cst                = CST.t
 type expr               = CST.expr
 type type_expr          = CST.type_expr
 type pattern            = CST.pattern
-type toplevel_statement = CST.toplevel_statement
+type top_decl = CST.top_decl
+*)
+
+let print           _ = failwith "Pretty"
+let print_expr      _ = failwith "Pretty"
+let print_type_expr _ = failwith "Pretty"
+let print_pattern   _ = failwith "Pretty"
+let print_top_decl  _ = failwith "Pretty"
+
+type cst       = CST.t
+type expr      = CST.expr
+type type_expr = CST.type_expr
+type pattern   = CST.pattern
+type top_decl  = CST.top_decl

@@ -84,7 +84,7 @@ and print_declaration state = function
   D_Value     d -> print_D_Value     state d
 | D_Import    d -> print_D_Import    state d
 | D_Interface d -> print_D_Interface state d
-| D_Module    d -> print_D_Module    state d
+| D_Namespace d -> print_D_Namespace state d
 | D_Type      d -> print_D_Type      state d
 
 (* Value declaration *)
@@ -134,52 +134,52 @@ and print_D_Import state (node: import_decl) =
   Tree.make_unary state "D_Import" print_import_decl node
 
 and print_import_decl state = function
-  AliasModule d -> print_AliasModule state d
-| ImportAll   d -> print_ImportAll   state d
-| ImportSome  d -> print_ImportSome  state d
+  ImportAlias d -> print_ImportAlias state d
+| ImportAllAs d -> print_ImportAllAs state d
+| ImportFrom  d -> print_ImportFrom  state d
 
-and print_AliasModule state (node: import_alias reg) =
+and print_ImportAlias state (node: import_alias reg) =
   let Region.{value; region} = node in
-  let {kwd_import=_; alias; equal=_; module_path} = value in
+  let {kwd_import=_; alias; equal=_; namespace_path} = value in
   let children = Tree.[
     mk_child print_alias            alias;
-    mk_child print_module_selection module_path]
-  in Tree.make ~region state "AliasModule" children
+    mk_child print_namespace_selection namespace_path]
+  in Tree.make ~region state "ImportAlias" children
 
-and print_alias state (node: module_name) =
+and print_alias state (node: namespace_name) =
   Tree.(make_unary state "<alias>" make_literal node)
 
-and print_module_path :
-  'a.'a Tree.printer -> Tree.root -> Tree.state -> 'a module_path reg -> unit =
+and print_namespace_path :
+  'a.'a Tree.printer -> Tree.root -> Tree.state -> 'a namespace_path reg -> unit =
   fun print root state {value; region} ->
     let children = Tree.(
-        mk_children_nsepseq make_literal value.module_path
+        mk_children_nsepseq make_literal value.namespace_path
       @ [Tree.mk_child print value.field])
     in Tree.make state root ~region children
 
-and print_ImportAll state (node: import_all_as reg) =
+and print_ImportAllAs state (node: import_all_as reg) =
   let Region.{value; region} = node in
   let {kwd_import=_; times=_; kwd_as=_; alias;
        kwd_from=_; file_path} = value in
   let children = Tree.[
     mk_child print_alias     alias;
     mk_child print_file_path file_path]
-  in Tree.make ~region state "ImportAll" children
+  in Tree.make ~region state "ImportAllAs" children
 
 and print_file_path state (node: string wrap) =
   Tree.(make_unary state "<file path>" make_literal node)
 
-and print_ImportSome state (node: import_from reg) =
+and print_ImportFrom state (node: import_from reg) =
   let Region.{value; region} = node in
   let {kwd_import=_; imported; kwd_from=_; file_path} = value in
   let children = Tree.[
     mk_child print_imported  imported;
     mk_child print_file_path file_path]
-  in Tree.make ~region state "ImportSome" children
+  in Tree.make ~region state "ImportFrom" children
 
 and print_imported state (node: (field_name, comma) sep_or_term braces) =
   let Region.{region; value} = node in
-  Tree.(of_sep_or_term state ~region "<module path>"
+  Tree.(of_sep_or_term state ~region "<namespace path>"
                        make_literal value.inside)
 
 (* Interface declaration *)
@@ -227,17 +227,18 @@ and print_I_Const state (node : intf_const reg) =
 
 (* Modules *)
 
-and print_D_Module state (node: module_decl reg) =
+and print_D_Namespace state (node: namespace_decl reg) =
   let Region.{value; region} = node in
-  let {kwd_namespace=_; module_name; module_type; module_body} = value in
+  let {kwd_namespace=_; namespace_name; namespace_type; namespace_body} =
+    value in
   let children = Tree.[
-    mk_child     print_module_name module_name;
-    mk_child_opt print_interface   module_type;
-    mk_child     print_statements  module_body.value.inside]
-  in Tree.make ~region state "D_Module" children
+    mk_child     print_namespace_name namespace_name;
+    mk_child_opt print_interface      namespace_type;
+    mk_child     print_statements     namespace_body.value.inside]
+  in Tree.make ~region state "D_Namespace" children
 
-and print_module_name state (node: module_name) =
-  Tree.(make_unary state "<module>" make_literal node)
+and print_namespace_name state (node: namespace_name) =
+  Tree.(make_unary state "<namespace>" make_literal node)
 
 and print_interface state (node: interface) =
   let Region.{value; region} = node in
@@ -251,16 +252,16 @@ and print_intf_expr state = function
 and print_I_Body state (node: intf_body) =
   Tree.make state "I_Body" (mk_children_intf_body node)
 
-and print_I_Path state = print_module_selection state
+and print_I_Path state = print_namespace_selection state
 
-and print_module_selection state = function
+and print_namespace_selection state = function
   M_Path  p -> print_M_Path  state p
 | M_Alias p -> print_M_Alias state p
 
-and print_M_Path state (node: module_name module_path reg) =
-  print_module_path Tree.make_literal "M_Path" state node
+and print_M_Path state (node: namespace_name namespace_path reg) =
+  print_namespace_path Tree.make_literal "M_Path" state node
 
-and print_M_Alias state (node: module_name) =
+and print_M_Alias state (node: namespace_name) =
   Tree.(make_unary state "M_Alias" make_literal node)
 
 (* Type declaration *)
@@ -282,10 +283,10 @@ and print_type_expr state = function
 | T_Cart      t -> print_T_Cart      state t
 | T_Fun       t -> print_T_Fun       state t
 | T_Int       t -> print_T_Int       state t
-| T_ModPath   t -> print_T_ModPath   state t
+| T_NamePath  t -> print_T_NamePath  state t
 | T_Par       t -> print_T_Par       state t
 | T_Parameter t -> print_T_Parameter state t
-| T_Record    t -> print_T_Record    state t
+| T_Object    t -> print_T_Object    state t
 | T_String    t -> print_T_String    state t
 | T_Union     t -> print_T_Union     state t
 | T_Var       t -> print_T_Var       state t
@@ -343,10 +344,10 @@ and print_codomain state (node: type_expr) =
 and print_T_Int state (node : int_literal) =
   Tree.make_int "T_Int" state node
 
-(* Module paths in type expressions *)
+(* Namespace paths in type expressions *)
 
-and print_T_ModPath state (node : type_expr module_path reg) =
-  print_module_path print_type_expr "T_ModPath" state node
+and print_T_NamePath state (node : type_expr namespace_path reg) =
+  print_namespace_path print_type_expr "T_NamePath" state node
 
 (* Parenthesised type expressions *)
 
@@ -356,14 +357,14 @@ and print_T_Par state (node : type_expr par) =
 (* Type parameter *)
 
 and print_T_Parameter state (node : parameter_of_type reg) =
-  let {kwd_parameter_of=_; module_path} = node.value in
-  Tree.make_unary state "T_Parameter" print_module_selection module_path
+  let {kwd_parameter_of=_; namespace_path} = node.value in
+  Tree.make_unary state "T_Parameter" print_namespace_selection namespace_path
 
-and print_T_Record state (node : type_expr record) =
-  print_record print_type_expr "T_Record" state node
+and print_T_Object state (node : type_expr _object) =
+  print_object print_type_expr "T_Object" state node
 
-and print_record :
-  'a.'a Tree.printer -> Tree.root -> Tree.state -> 'a record -> unit =
+and print_object :
+  'a.'a Tree.printer -> Tree.root -> Tree.state -> 'a _object -> unit =
   fun print root state {value; region} ->
     Tree.of_sep_or_term ~region state root (print_field print) value.inside
 
@@ -402,7 +403,7 @@ and print_T_String state (node: string_literal) =
 
 and print_T_Union state (node: union_type) =
   let Region.{region; value} = node
-  and print = print_record print_type_expr "<subset>" in
+  and print = print_object print_type_expr "<subset>" in
   Tree.of_nsep_or_pref ~region state "T_Union" print value
 
 (* Type variable *)
@@ -438,9 +439,9 @@ and print_pattern state = function
 | P_Int      p -> print_P_Int      state p
 | P_Mutez    p -> print_P_Mutez    state p
 | P_Nat      p -> print_P_Nat      state p
-| P_Record   p -> print_P_Record   state p
+| P_Object   p -> print_P_Object   state p
 | P_String   p -> print_P_String   state p
-| P_Tuple    p -> print_P_Tuple    state p
+| P_Array    p -> print_P_Array    state p
 | P_Typed    p -> print_P_Typed    state p
 | P_Var      p -> print_P_Var      state p
 | P_Verbatim p -> print_P_Verbatim state p
@@ -482,10 +483,10 @@ and print_P_Nat state (node : (lexeme * Z.t) wrap) =
 
 (* Record patterns *)
 
-and print_P_Record state (node: pattern record) =
+and print_P_Object state (node: pattern _object) =
   let Region.{value; region} = node in
   let print = print_field print_pattern in
-  Tree.of_sep_or_term ~region state "P_Record" print value.inside
+  Tree.of_sep_or_term ~region state "P_Object" print value.inside
 
 (* String literals as patterns *)
 
@@ -494,11 +495,11 @@ and print_P_String state (node : lexeme wrap) =
 
 (* Tuple patterns *)
 
-and print_P_Tuple state (node: pattern tuple) =
-  print_tuple print_pattern "P_Tuple" state node
+and print_P_Array state (node: pattern _array) =
+  print_array print_pattern "P_Array" state node
 
-and print_tuple :
-  'a.'a Tree.printer -> Tree.root -> Tree.state -> 'a tuple -> unit =
+and print_array :
+  'a.'a Tree.printer -> Tree.root -> Tree.state -> 'a _array -> unit =
   fun print root state brackets ->
     let Region.{region; value} = brackets in
     let components = value.inside in
@@ -566,7 +567,7 @@ and print_expr state = function
 | E_MinusEq  e -> print_E_MinusEq  state e
 | E_Rem      e -> print_E_Rem      state e
 | E_RemEq    e -> print_E_RemEq    state e
-| E_ModPath  e -> print_E_ModPath  state e
+| E_NamePath e -> print_E_NamePath state e
 | E_Mult     e -> print_E_Mult     state e
 | E_Mutez    e -> print_E_Mutez    state e
 | E_Nat      e -> print_E_Nat      state e
@@ -580,12 +581,12 @@ and print_expr state = function
 | E_PreDecr  e -> print_E_PreDecr  state e
 | E_PreIncr  e -> print_E_PreIncr  state e
 | E_Proj     e -> print_E_Proj     state e
-| E_Record   e -> print_E_Record   state e
+| E_Object   e -> print_E_Object   state e
 | E_String   e -> print_E_String   state e
 | E_Sub      e -> print_E_Sub      state e
 | E_Ternary  e -> print_E_Ternary  state e
 | E_TimesEq  e -> print_E_TimesEq  state e
-| E_Tuple    e -> print_E_Tuple    state e
+| E_Array    e -> print_E_Array    state e
 | E_Typed    e -> print_E_Typed    state e
 | E_Update   e -> print_E_Update   state e
 | E_Var      e -> print_E_Var      state e
@@ -725,9 +726,9 @@ and print_code state (node : expr) =
 (* Contract of expression *)
 
 and print_E_Contract state (node: contract_of_expr reg) =
-  let {kwd_contract_of=_; module_path} = node.value in
-  let path = module_path.value.inside in
-  Tree.make_unary state "E_Contract" print_module_selection path
+  let {kwd_contract_of=_; namespace_path} = node.value in
+  let path = namespace_path.value.inside in
+  Tree.make_unary state "E_Contract" print_namespace_selection path
 
 (* Data constructor as expressions *)
 
@@ -777,7 +778,7 @@ and print_NakedParam state (node: pattern) =
   Tree.(make_unary state "NakedParam" print_pattern node)
 
 and print_fun_body state = function
-  StmtBody b -> print_StmtBody  state b
+  StmtBody b -> print_StmtBody state b
 | ExprBody b -> print_ExprBody state b
 
 and print_StmtBody state (node: statements braces) =
@@ -822,15 +823,15 @@ and print_E_MinusEq state (node: minus_eq bin_op reg) =
 and print_E_Rem state (node : remainder bin_op reg) =
   print_bin_op state "E_Rem" node
 
-(* Arithmetic module & assignment *)
+(* Arithmetic modulo & assignment *)
 
 and print_E_RemEq state (node: rem_eq bin_op reg) =
   print_bin_op state "E_RemEq" node
 
 (* Qualified expression *)
 
-and print_E_ModPath state (node : expr module_path reg) =
-  print_module_path print_expr "E_ModPath" state node
+and print_E_NamePath state (node : expr namespace_path reg) =
+  print_namespace_path print_expr "E_NamePath" state node
 
 (* Multiplication *)
 
@@ -895,9 +896,9 @@ and print_E_PreIncr state (node: increment un_op reg) =
 
 and print_E_Proj state (node : projection reg) =
   let Region.{value; region} = node in
-  let {record_or_tuple; field_path} = value in
+  let {object_or_array; field_path} = value in
   let children = Tree.(
-       mk_child         print_expr      record_or_tuple
+       mk_child         print_expr      object_or_array
     :: mk_children_nseq print_selection field_path)
   in Tree.make state ~region "E_Proj" children
 
@@ -917,8 +918,8 @@ and print_Component state (node : int_literal brackets) =
 
 (* Record expressions *)
 
-and print_E_Record state (node: expr record) =
-  print_record print_expr "E_Record" state node
+and print_E_Object state (node: expr _object) =
+  print_object print_expr "E_Object" state node
 
 (* Strings as expressions *)
 
@@ -952,8 +953,8 @@ and print_E_TimesEq state (node: times_eq bin_op reg) =
 
 (* Tuple of expressions *)
 
-and print_E_Tuple state (node: expr tuple) =
-  print_tuple print_expr "E_Tuple" state node
+and print_E_Array state (node: expr _array) =
+  print_array print_expr "E_Array" state node
 
 (* Typed expressions *)
 
@@ -969,12 +970,12 @@ and print_E_Typed state (node: typed_expr reg) =
 
 and print_E_Update state (node: update_expr braces) =
   let Region.{region; value} = node in
-  let {ellipsis=_; record; sep=_; updates} = value.inside in
+  let {ellipsis=_; _object; sep=_; updates} = value.inside in
   let print_updates state (node: (expr field reg, semi) sep_or_term) =
     let print = print_field print_expr in
     Tree.of_sep_or_term state "<updates>" print node in
   let children = Tree.[
-    mk_child print_expr    record;
+    mk_child print_expr    _object;
     mk_child print_updates updates]
   in Tree.make state ~region "E_Update" children
 
@@ -1037,8 +1038,8 @@ and print_S_Cond state (node: cond_stmt reg) =
   let Region.{value; region} = node in
   let {kwd_if=_; test; if_so; if_not} = value in
 
-  let print_if_so state (node: statement) =
-    Tree.make_unary state "<true>" print_statement node
+  let print_if_so state (node: statement * semi option) =
+    Tree.make_unary state "<true>" print_statement (fst node)
 
   and print_if_not state (node: kwd_else * statement) =
     Tree.make_unary state "<false>" print_statement (snd node) in

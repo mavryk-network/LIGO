@@ -29,9 +29,9 @@ let nsep_or_pref_to_region = Nodes.nsep_or_pref_to_region
 let nseq_cons = Utils.nseq_cons
 
 let mk_mod_path :
-  (module_name * dot) Utils.nseq * 'a ->
+  (namespace_name * dot) Utils.nseq * 'a ->
   ('a -> Region.t) ->
-  'a CST.module_path Region.reg =
+  'a CST.namespace_path Region.reg =
   fun (nseq, field) to_region ->
     let (first, sep), tail = nseq in
     let rec trans (seq, prev_sep as acc) = function
@@ -39,10 +39,10 @@ let mk_mod_path :
     | (item, next_sep) :: others ->
         trans ((prev_sep, item) :: seq, next_sep) others in
     let list, last_dot = trans ([], sep) tail in
-    let module_path = first, List.rev list in
+    let namespace_path = first, List.rev list in
     let region = Nodes.nseq_to_region (fun (x,_) -> x#region) nseq in
     let region = Region.cover region (to_region field)
-    and value = {module_path; selector=last_dot; field}
+    and value = {namespace_path; selector=last_dot; field}
     in {value; region}
 
 
@@ -67,7 +67,7 @@ let mk_mod_path :
 (* %on_error_reduce core_expr *)
 (* %on_error_reduce add_expr_level *)
 (* %on_error_reduce nsepseq(binding_initializer,COMMA) *)
-(* %on_error_reduce nsepseq(module_name,DOT) *)
+(* %on_error_reduce nsepseq(namespace_name,DOT) *)
 (* %on_error_reduce base_stmt(statement) *)
 (* %on_error_reduce unary_expr_level *)
 (* %on_error_reduce bin_op(comp_expr_level,NE,add_expr_level) *)
@@ -86,7 +86,7 @@ let mk_mod_path :
 (* %on_error_reduce nsepseq(variant,VBAR) *)
 (* %on_error_reduce nsepseq(object_type,VBAR) *)
 (* %on_error_reduce nsepseq(field_name,COMMA) *)
-(* %on_error_reduce module_var_t *)
+(* %on_error_reduce namespace_var_t *)
 (* %on_error_reduce for_stmt(statement) *)
 (* %on_error_reduce chevrons(nsepseq(type_var,COMMA)) *)
 
@@ -190,18 +190,17 @@ nsep_or_pref(item,sep):
 (* Helpers *)
 
 %inline
-variable        : "<ident>"  { $1 }
-
+variable        : "<ident>"              { $1 }
 type_var        : "<ident>" | "<uident>" { $1 }
 type_name       : "<ident>" | "<uident>" { $1 }
 type_ctor       : "<ident>" | "<uident>" { $1 }
 field_name      : "<ident>" | "<uident>" { $1 }
 lang_name       : "<ident>" | "<uident>" { $1 }
-module_name     : "<uident>" { $1 }
-intf_name       : "<uident>" { $1 }
-ctor            : "<uident>" { E_Ctor $1 }
-file_path       : "<string>" { $1 }
-record_or_tuple : "<ident>"  { E_Var $1 }
+namespace_name  : "<uident>"             { $1 }
+intf_name       : "<uident>"             { $1 }
+file_path       : "<string>"             { $1 }
+ctor            : "<uident>"      { E_Ctor $1 }
+object_or_array : "<ident>"       { E_Var  $1 }
 
 (* ENTRY POINTS *)
 
@@ -226,7 +225,8 @@ no_dir_top_decl:
 (* INNER DECLARATIONS (AS STATEMENTS) *)
 
 declaration:
-  value_decl | import_decl | interface_decl | module_decl | type_decl { $1 }
+  value_decl | import_decl | interface_decl
+| namespace_decl | type_decl { $1 }
 
 (* Value declaration (constant and mutable) *)
 
@@ -267,32 +267,34 @@ type_vars:
 (* Import declaration *)
 
 import_decl:
-  "import" module_name "=" module_selection {
-    let region = cover $1#region (module_selection_to_region $4)
-    and value  = {kwd_import=$1; alias=$2; equal=$3; module_path=$4}
-    in D_Import (AliasModule {region; value})
+  "import" namespace_name "=" namespace_selection {
+    let region = cover $1#region (namespace_selection_to_region $4)
+    and value  = {kwd_import=$1; alias=$2; equal=$3; namespace_path=$4}
+    in D_Import (ImportAlias {region; value})
   }
-| "import" "*" "as" module_name "from" file_path {
+| "import" "*" "as" namespace_name "from" file_path {
     let region = cover $1#region $6#region
     and value  = {kwd_import=$1; times=$2; kwd_as=$3; alias=$4;
                   kwd_from=$5; file_path=$6}
-    in D_Import (ImportAll {region; value})
+    in D_Import (ImportAllAs {region; value})
   }
 | "import" braces(sep_or_term(variable, ",")) "from" file_path {
     let region = cover $1#region $4#region
     and value  = {kwd_import=$1; imported=$2; kwd_from=$3; file_path=$4}
-    in D_Import (ImportSome {region; value}) }
+    in D_Import (ImportFrom {region; value}) }
 
-module_selection:
-  module_path(module_name) { M_Path (mk_mod_path $1 (fun w -> w#region)) }
-| module_name              { M_Alias $1 }
+namespace_selection:
+  namespace_path(namespace_name) {
+    M_Path (mk_mod_path $1 (fun w -> w#region))
+  }
+| namespace_name { M_Alias $1 }
 
-module_path (selected):
-  module_name "." module_path(selected) {
+namespace_path (selected):
+  namespace_name "." namespace_path(selected) {
     let (head, tail), selected = $3 in
     (($1,$2), head::tail), selected
   }
-| module_name "." selected { (($1,$2), []), $3 }
+| namespace_name "." selected { (($1,$2), []), $3 }
 
 (* Interface declaration *)
 
@@ -333,15 +335,15 @@ intf_const:
 
 (* Module declaration *)
 
-module_decl:
-  "namespace" module_binder ioption(interface) braces(statements) {
+namespace_decl:
+  "namespace" namespace_binder ioption(interface) braces(statements) {
      let region = cover $1#region $4.region
-     and value  = {kwd_namespace=$1; module_name=$2; module_type=$3;
-                   module_body=$4}
-     in D_Module {region; value} }
+     and value  = {kwd_namespace=$1; namespace_name=$2; namespace_type=$3;
+                   namespace_body=$4}
+     in D_Namespace {region; value} }
 
-module_binder:
-  module_name | "_" { $1 }
+namespace_binder:
+  namespace_name | "_" { $1 }
 
 interface:
   "implements" intf_expr {
@@ -349,8 +351,8 @@ interface:
      in {region; value=($1,$2)} }
 
 intf_expr:
-  intf_body        { I_Body $1 }
-| module_selection { I_Path $1 }
+  intf_body           { I_Body $1 }
+| namespace_selection { I_Path $1 }
 
 (* Type declaration *)
 
@@ -418,7 +420,7 @@ ctor_param:
 
 (* The production [core_type_no_string] is here to avoid a conflict
    with a variant for a constant constructor, e.g. [["C"]], which
-   could be interpreted otherwise as an type tuple (array) of the type
+   could be interpreted otherwise as a type array of the type
    ["C"]. *)
 
 core_type:
@@ -437,7 +439,7 @@ no_par_type_expr:
 | parameter_of_type          { T_Parameter $1 }
 | qualified_type (type_expr) {             $1 }
 | attr_type
-| union_or_record            {             $1 }
+| union_or_object            {             $1 }
 
 (* Attributed core type *)
 
@@ -457,7 +459,7 @@ type_ctor_args(type_expr):
 type_ctor_arg(type_expr):
   type_expr { $1 }
 
-(* Tuples of types *)
+(* Arrays of types *)
 
 cartesian:
   brackets(type_components) { $1 }
@@ -478,14 +480,14 @@ type_component:
 (* Parameter of contract *)
 
 parameter_of_type:
-  "parameter_of" module_selection {
-    let region = cover $1#region (module_selection_to_region $2)
-    and value  = {kwd_parameter_of=$1; module_path=$2}
+  "parameter_of" namespace_selection {
+    let region = cover $1#region (namespace_selection_to_region $2)
+    and value  = {kwd_parameter_of=$1; namespace_path=$2}
     in {region; value} }
 
 (* Type qualifications
 
-   The rule [module_path] is parameterised by what is derived after a
+   The rule [namespace_path] is parameterised by what is derived after a
    series of selections of modules inside modules (nested modules),
    like [A.B.C.D]. For example, here, we want to qualify ("select") a
    type in a module, so the parameter is [type_name], because only
@@ -495,42 +497,41 @@ parameter_of_type:
    [type_in_module] we call the function [mk_mod_path] to reorganise
    the steps of the path and thus fit our CST. That complicated step
    is necessary because we need an LR(1) grammar. Indeed, rule
-   [module_path] is right-recursive, yielding the reverse order of
+   [namespace_path] is right-recursive, yielding the reverse order of
    selection: "A.(B.(C))" instead of the expected "((A).B).C": the
-   function [mk_mod_path] the semantic action of [type_in_module]
+   function [mk_mod_path] the semantic action of [type_in_namespace]
    reverses that path. We could have chosen to leave the associativity
    unspecified, like so:
 
-     type_in_module(type_expr):
-       nsepseq(module_name,".") "." type_expr { ... }
+     type_in_namespace (type_expr):
+       nsepseq(namespace_name,".") "." type_expr { ... }
 
    Unfortunately, this creates a shift/reduce conflict (on "."),
    whence our more involved solution. *)
 
 qualified_type (type_expr):
-  type_in_module(type_ctor { T_Var $1 }) type_ctor_args(type_expr) {
+  type_in_namespace(type_ctor { T_Var $1 }) type_ctor_args(type_expr) {
     let region = cover (type_expr_to_region $1) $2.region
     in T_App {region; value=$1,$2}
   }
-| type_in_module (type_name { T_Var $1 }) { $1 }
+| type_in_namespace (type_name { T_Var $1 }) { $1 }
 
-type_in_module (type_expr):
-  module_path (type_expr) {
-    T_ModPath (mk_mod_path $1 type_expr_to_region) }
+type_in_namespace (type_expr):
+  namespace_path (type_expr) {
+    T_NamePath (mk_mod_path $1 type_expr_to_region) }
 
-(* Union or record type *)
+(* Union or object type *)
 
-union_or_record:
-  nsep_or_pref(record_type,"|") {
+union_or_object:
+  nsep_or_pref (object_type,"|") {
     match $1 with
-     `Sep (t,[]) -> T_Record t
+     `Sep (t,[]) -> T_Object t
     | _ -> let region = nsep_or_pref_to_region (fun b -> b.region) $1
-           in T_Union {region; value=$1}
-  }
+           in T_Union {region; value=$1} }
 
-(* Record types (a.k.a. "object types" in JS) *)
+(* Object types *)
 
-record_type:
+object_type:
   braces (sep_or_term (field_type, field_sep)) { $1 }
 
 field_type:
@@ -594,8 +595,8 @@ stmt_not_starting_with_expr_nor_block1:
     (right_rec_stmt (stmt_not_starting_with_expr_nor_block1)) { $1 }
 
 open_stmt_not_starting_with_expr_nor_block2 (right_stmt):
-  interface_decl | module_decl { S_Decl $1 }
-| export (interface_decl) | export (module_decl)
+  interface_decl | namespace_decl { S_Decl $1 }
+| export (interface_decl) | export (namespace_decl)
 | break_stmt | switch_stmt | right_stmt { $1 }
 
 stmt_not_starting_with_expr_nor_block2:
@@ -661,8 +662,8 @@ export_stmt:
 %inline
 pre_expr_stmt:
   app_expr | incr_expr | decr_expr | assign_expr
-| ternary_expr (core_expr, pre_expr_stmt) { $1       }
-| par (expr)                                      { E_Par $1 }
+| ternary_expr (core_expr, pre_expr_stmt)        { $1 }
+| par (expr)                                     { E_Par $1 }
 
 expr_stmt: pre_expr_stmt { S_Expr $1 }
 
@@ -685,13 +686,13 @@ assign_expr:
 | bin_op (var_path, ">>=", expr) { E_BitSrEq  $1 }
 
 var_path:
-  path (record_or_tuple) | record_or_tuple { $1 }
+  path (object_or_array) | object_or_array { $1 }
 
 path (root_expr):
   root_expr nseq(selection) {
     let stop   = nseq_to_region selection_to_region $2 in
     let region = cover (expr_to_region $1) stop
-    and value  = {record_or_tuple=$1; field_path=$2}
+    and value  = {object_or_array=$1; field_path=$2}
     in E_Proj {region; value} }
 
 selection:
@@ -716,19 +717,21 @@ block_stmt:
 if_stmt (right_stmt):
   "if" par(if_cond) right_stmt {
     let region = cover $1#region (statement_to_region $3)
-    and value  = {kwd_if=$1; test=$2; if_so=$3; if_not=None}
+    and value  = {kwd_if=$1; test=$2; if_so=($3,None); if_not=None}
     in S_Cond {region; value} }
 
 if_else_stmt (right_stmt):
   "if" par(if_cond) closed_non_if_stmt "else" right_stmt {
     let region = cover $1#region (statement_to_region $5)
-    and value  = {kwd_if=$1; test=$2; if_so=$3; if_not = Some ($4,$5)}
+    and value  = {kwd_if=$1; test=$2; if_so = $3, None;
+                  if_not = Some ($4,$5)}
     in S_Cond {region; value}
   }
 | "if" par(if_cond) closed_non_if_stmt "; else" right_stmt {
+    let semi, kwd_else = $4 in
     let region = cover $1#region (statement_to_region $5)
-    (* TODO: Append [fst $4] (";") at the end of [$3] *)
-    and value  = {kwd_if=$1; test=$2; if_so=$3; if_not = Some (snd $4, $5)}
+    and value  = {kwd_if=$1; test=$2; if_so = $3, Some semi;
+                  if_not = Some (kwd_else, $5)}
     in S_Cond {region; value} }
 
 if_cond:
@@ -850,17 +853,17 @@ expr:
 | no_attr_expr   { $1 }
 
 no_attr_expr:
-  non_record_expr | record_level_expr { $1 }
+  non_object_expr | object_level_expr { $1 }
 
-non_record_expr:
+non_object_expr:
   fun_expr | typed_expr | assign_expr | disj_expr_level
 | ternary_expr (disj_expr_level, expr) { $1 }
 
-(* Record expressions *)
+(* Object expressions *)
 
-record_level_expr:
-  record_expr   { E_Record   $1 }
-| record_update { E_Update   $1 }
+object_level_expr:
+  object_expr   { E_Object $1 }
+| object_update { E_Update $1 }
 
 (* Functional expressions *)
 
@@ -901,12 +904,12 @@ fun_param:
 
 param_pattern:
   "_" | variable                 { P_Var    $1 }
-| tuple (param_pattern)          { P_Tuple  $1 }
-| record_pattern (param_pattern) { P_Record $1 }
+| array (param_pattern)          { P_Array  $1 }
+| object_pattern (param_pattern) { P_Object $1 }
 
 fun_body:
   braces (statements) { StmtBody  $1 }
-| non_record_expr     { ExprBody $1 }
+| non_object_expr     { ExprBody $1 }
 
 (* Typed expressions *)
 
@@ -1044,9 +1047,9 @@ app_expr_level:
   contract_of_expr | app_expr | core_expr { $1 }
 
 contract_of_expr:
-  "contract_of" par(module_selection) {
+  "contract_of" par(namespace_selection) {
     let region = cover $1#region $2.region
-    and value  = {kwd_contract_of=$1; module_path=$2}
+    and value  = {kwd_contract_of=$1; namespace_path=$2}
     in E_Contract {region; value} }
 
 app_expr:
@@ -1066,9 +1069,9 @@ argument:
 (* Core expressions *)
 
 core_expr:
-  code_inj     { E_CodeInj  $1 }
-| par (expr)   { E_Par      $1 }
-| tuple (expr) { E_Tuple    $1 }
+  code_inj     { E_CodeInj $1 }
+| par (expr)   { E_Par     $1 }
+| array (expr) { E_Array   $1 }
 | ctor
 | literal_expr
 | path_expr    { $1 }
@@ -1083,9 +1086,9 @@ literal_expr:
 | "<verbatim>" { E_Verbatim $1 }
 | "<bytes>"    { E_Bytes    $1 }
 
-(* Record expressions *)
+(* Object expressions *)
 
-record_expr:
+object_expr:
   braces (sep_or_term (field (expr), field_sep)) { $1 }
 
 field (right_expr):
@@ -1111,21 +1114,21 @@ code_inj:
     and value  = {language=$1; code = E_Verbatim $2}
     in {region; value} }
 
-(* Functional updates of records *)
+(* Functional updates of objects *)
 
-record_update:
+object_update:
   braces (update_expr) { $1 }
 
 update_expr:
   "..." expr field_sep updates {
-    {ellipsis=$1; record=$2; sep=$3; updates=$4} }
+    {ellipsis=$1; _object=$2; sep=$3; updates=$4} }
 
 updates:
   sep_or_term (field (expr), field_sep) { $1 }
 
-(* Tuples (a.k.a "arrays" is JS) *)
+(* Arrays *)
 
-tuple(item):
+array(item):
   brackets (sep_or_term (component (item), ",")) { $1 }
 
 component(item):
@@ -1144,7 +1147,7 @@ component(item):
       * nested fields and components from an expression: "(e).a[0][1]b" *)
 
 path_expr:
-  module_path (selected_expr) { E_ModPath (mk_mod_path $1 expr_to_region) }
+  namespace_path (selected_expr) { E_NamePath (mk_mod_path $1 expr_to_region) }
 | var_path
 | path (app_expr)
 | path (par (expr) { E_Par $1 }) { $1 }
@@ -1163,12 +1166,12 @@ pattern:
 | "<verbatim>"             { P_Verbatim  $1 }
 | "<mutez>"                { P_Mutez     $1 }
 | "_" | variable           { P_Var       $1 }
-| record_pattern (pattern) { P_Record    $1 }
-| tuple (pattern)          { P_Tuple     $1 }
+| object_pattern (pattern) { P_Object    $1 }
+| array (pattern)          { P_Array     $1 }
 
 (* Record pattern *)
 
-record_pattern (pattern):
+object_pattern (pattern):
   braces (sep_or_term (field_pattern (pattern), field_sep)) { $1 }
 
 field_pattern (pattern):
