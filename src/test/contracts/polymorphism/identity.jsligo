@@ -28,7 +28,7 @@ const x : int = snd("Hello", id(1) + ident(1));
 
 type return_ = [list <operation>, storage];
 
-const main = (_ : parameter, _ : storage) : return_ => {
+const main = (_p : parameter, _s : storage) : return_ => {
  return [
    (list([]) as list <operation>), x
   ]

@@ -117,7 +117,7 @@ let test_cases =
               }
           }
         ; { severity = DiagnosticSeverity.Error
-          ; message = "Variable \"_#N\" not found. "
+          ; message = "Variable \"_\" not found. "
           ; location =
               { range = point 4 14
               ; path = Path.from_relative "contracts/lsp/syntax_plus_type_errors.jsligo"

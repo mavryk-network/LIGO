@@ -185,7 +185,7 @@ let test =
 
 let _test = () : bool => {
   let initial_storage = 42 as int;
-  let [taddr, _, _] = Test.originate(main, initial_storage, 0 as tez);
+  let [taddr, _code, _size] = Test.originate(main, initial_storage, 0 as tez);
   return (Test.get_storage(taddr) == initial_storage);
 };
 
@@ -286,7 +286,7 @@ let test2 =
 
 let _test2 = () : bool => {
   let initial_storage = 42 as int;
-  let [taddr, _, _] = Test.originate(main, initial_storage, 0 as tez);
+  let [taddr, _code, _test] = Test.originate(main, initial_storage, 0 as tez);
   let contr = Test.to_contract(taddr);
   let gas_cons = Test.transfer_to_contract_exn(contr, (Increment (1)), 1 as mutez);
   let _ = Test.log(["gas consumption", gas_cons]);
@@ -424,14 +424,14 @@ let test_transfer_to_contract =
 ```jsligo test-ligo group=usage_transfer
 type param = [ int , ticket<string>]
 
-const main = (p: param, _: [string , address]) : [list<operation> , [string , address]] => {
-  let [_,ticket] = p ;
-  let [[_,[v,_]] , _] = Tezos.read_ticket (ticket) ;
+const main = (p: param, _s: [string , address]) : [list<operation> , [string , address]] => {
+  let [_v,ticket] = p ;
+  let [[_addr,[v,_t]] , _ticket] = Tezos.read_ticket (ticket) ;
   return ([list([]) , [v, Tezos.get_sender ()]])
 };
 
 const test_transfer_to_contract_ = () : unit => {
-  let [main_taddr, _ , _] = Test.originate (main, ["bye",Test.nth_bootstrap_account (1)], 1 as mutez) ;
+  let [main_taddr, _code , _size] = Test.originate (main, ["bye",Test.nth_bootstrap_account (1)], 1 as mutez) ;
   let main_addr = Tezos.address (Test.to_contract (main_taddr)) ;
 
   /* mk_param is executed __by the proxy contract__ */
@@ -439,16 +439,16 @@ const test_transfer_to_contract_ = () : unit => {
   /* Use this address everytime you want to send tickets from the same proxy-contract */
   /* initialize a proxy contract in charge of creating and sending your tickets */
   let proxy_taddr = Test.Proxy_ticket.init_transfer (mk_param) ;
-  let _ = Test.log (["poxy addr:", proxy_taddr]) ;
+  Test.log (["poxy addr:", proxy_taddr]) ;
 
   /* ticket_info lets you control the amount and the value of the tickets you send */
   let ticket_info1 = ["hello",10 as nat] ;
   /* we send ticket to main through the proxy-contract */
-  let _ = Test.Proxy_ticket.transfer (proxy_taddr, [ticket_info1,main_addr]) ;
-  let _ = Test.log (Test.get_storage (main_taddr)) ;
+  let _tx1 = Test.Proxy_ticket.transfer (proxy_taddr, [ticket_info1,main_addr]) ;
+  Test.log (Test.get_storage (main_taddr)) ;
 
   let ticket_info2 = ["world",5 as nat] ;
-  let _ = Test.Proxy_ticket.transfer (proxy_taddr, [ticket_info2,main_addr]) ;
+  let _tx2 = Test.Proxy_ticket.transfer (proxy_taddr, [ticket_info2,main_addr]) ;
   Test.log (Test.get_storage (main_taddr));
 };
 
@@ -528,11 +528,11 @@ let test_originate_contract =
 type storage = option< ticket<bytes> >
 type unforged_storage = option< unforged_ticket<bytes> >
 
-const main = (_: unit, s: storage) : [ list<operation> , storage] => {
+const main = (_p: unit, s: storage) : [ list<operation> , storage] => {
   let x =
     match (s, {
       Some: (ticket: ticket<bytes>) => {
-        let [_ , t] = Tezos.read_ticket (ticket) ;
+        let [_v , t] = Tezos.read_ticket (ticket) ;
         return Some (t)
       },
       None: () => { return None () }
@@ -551,10 +551,10 @@ const test_originate_contract_ = () : unit => {
 
   match (unforged_storage, {
   Some: (x: unforged_ticket<bytes>) => {
-    let _ = Test.log (["unforged_ticket", x]) ;
+    Test.log (["unforged_ticket", x]) ;
     let { ticketer , value , amount } = x ;
-    let _ = assert (value == ticket_info[0]) ;
-    let _ = assert (amount == ticket_info[1]) ;
+    assert (value == ticket_info[0]) ;
+    assert (amount == ticket_info[1]) ;
     return unit
   },
   None: () => failwith ("impossible")
@@ -1035,8 +1035,8 @@ let main = (p: [int, int], _: unit) => {
   };
 
 let test = (() : [list<[int,int]>, list<int>] => {
-  let [ta, _, _] = Test.originate(main, unit, 0 as tez);
-  let _ = Test.transfer_to_contract_exn(Test.to_contract(ta), [1,2], 0 as tez);
+  let [ta, _code, _size] = Test.originate(main, unit, 0 as tez);
+  let _t1 = Test.transfer_to_contract_exn(Test.to_contract(ta), [1,2], 0 as tez);
   return [Test.get_last_events_from(ta, "foo") as list<[int, int]>, Test.get_last_events_from(ta, "foo") as list<int>];
 }) ();
 ```

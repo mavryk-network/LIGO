@@ -11,7 +11,7 @@ namespace Foo {
   const decrement = (delta: int, store: storage): ret =>
     [list([]), store - delta];
   // @entry
-  const reset = (_: unit, _: storage): ret => [list([]), 0]
+  const reset = (_u: unit, _: storage): ret => [list([]), 0]
 };
 
 
