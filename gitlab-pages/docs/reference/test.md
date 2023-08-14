@@ -1250,6 +1250,47 @@ Creates a signature of `bytes` from a `string` representing a secret
 key, it can be checked with `Crypto.check`.
 
 <SyntaxTitle syntax="pascaligo">
+val set_print_values : unit -> unit
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val set_print_values : unit -> unit
+</SyntaxTitle>
+
+<SyntaxTitle syntax="jsligo">
+let set_print_values = (u: unit) => unit
+</SyntaxTitle>
+
+Turns on the printing of `test` prefixed values at the end of tests. This is the default behaviour.
+
+<SyntaxTitle syntax="pascaligo">
+val unset_print_values : unit -> unit
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val unset_print_values : unit -> unit
+</SyntaxTitle>
+
+<SyntaxTitle syntax="jsligo">
+let unset_print_values = (u: unit) => unit
+</SyntaxTitle>
+
+Turns off the printing of `test` prefixed values at the end of tests.
+
+<SyntaxTitle syntax="pascaligo">
+val get_last_events_from&lt;a,p,s&gt; : typed_address (p,s) -> string -> list (a)
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val get_last_events_from : ('p,'s) typed_address -> string -> 'a list
+</SyntaxTitle>
+
+<SyntaxTitle syntax="jsligo">
+let get_last_events_from: typed_address &lt;&apos;p,&apos;s&gt; => string => list &lt;&apos;a&gt;
+</SyntaxTitle>
+
+Returns the list of all the event payloads emited with a given tag by
+a given address. Any call to this function must be annotated with the
+expected payload type.
+
+<SyntaxTitle syntax="pascaligo">
 val get_real_timestamp : unit -> timestamp
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
@@ -1306,47 +1347,6 @@ let assert_with_error: (condition: bool, message: string) => unit
 
 Check if a certain condition has been met. If not the testing
 framework will fail with the string passed as message.
-
-<SyntaxTitle syntax="pascaligo">
-val set_print_values : unit -> unit
-</SyntaxTitle>
-<SyntaxTitle syntax="cameligo">
-val set_print_values : unit -> unit
-</SyntaxTitle>
-
-<SyntaxTitle syntax="jsligo">
-let set_print_values = (u: unit) => unit
-</SyntaxTitle>
-
-Turns on the printing of `test` prefixed values at the end of tests. This is the default behaviour.
-
-<SyntaxTitle syntax="pascaligo">
-val unset_print_values : unit -> unit
-</SyntaxTitle>
-<SyntaxTitle syntax="cameligo">
-val unset_print_values : unit -> unit
-</SyntaxTitle>
-
-<SyntaxTitle syntax="jsligo">
-let unset_print_values = (u: unit) => unit
-</SyntaxTitle>
-
-Turns off the printing of `test` prefixed values at the end of tests.
-
-<SyntaxTitle syntax="pascaligo">
-val get_last_events_from&lt;a,p,s&gt; : typed_address (p,s) -> string -> list (a)
-</SyntaxTitle>
-<SyntaxTitle syntax="cameligo">
-val get_last_events_from : ('p,'s) typed_address -> string -> 'a list
-</SyntaxTitle>
-
-<SyntaxTitle syntax="jsligo">
-let get_last_events_from: typed_address &lt;&apos;p,&apos;s&gt; => string => list &lt;&apos;a&gt;
-</SyntaxTitle>
-
-Returns the list of all the event payloads emited with a given tag by
-a given address. Any call to this function must be annotated with the
-expected payload type.
 
 ### Proxy_ticket
 
