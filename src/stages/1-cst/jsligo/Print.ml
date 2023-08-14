@@ -279,14 +279,14 @@ and print_D_Type state (node: type_decl reg) =
 
 and print_type_expr state = function
   T_App       t -> print_T_App       state t
+| T_Array     t -> print_T_Array     state t
 | T_Attr      t -> print_T_Attr      state t
-| T_Cart      t -> print_T_Cart      state t
 | T_Fun       t -> print_T_Fun       state t
 | T_Int       t -> print_T_Int       state t
 | T_NamePath  t -> print_T_NamePath  state t
+| T_Object    t -> print_T_Object    state t
 | T_Par       t -> print_T_Par       state t
 | T_Parameter t -> print_T_Parameter state t
-| T_Object    t -> print_T_Object    state t
 | T_String    t -> print_T_String    state t
 | T_Union     t -> print_T_Union     state t
 | T_Var       t -> print_T_Var       state t
@@ -312,11 +312,11 @@ and print_T_Attr state (node : attribute * type_expr) =
     mk_child print_type_expr type_expr]
   in Tree.make state "T_Attr"children
 
-(* Cartesian products *)
+(* Array types *)
 
-and print_T_Cart state (node : cartesian) =
+and print_T_Array state (node : array_type) =
   let Region.{value; region} = node in
-  Tree.of_nsep_or_term ~region state "T_Cart" print_type_expr value.inside
+  Tree.of_nsep_or_term ~region state "T_Array" print_type_expr value.inside
 
 (* Functional types *)
 
@@ -434,6 +434,7 @@ and print_ctor_params state = function
 
 and print_pattern state = function
   P_Attr     p -> print_P_Attr     state p
+| P_Array    p -> print_P_Array    state p
 | P_Bytes    p -> print_P_Bytes    state p
 | P_Ctor     p -> print_P_Ctor     state p
 | P_Int      p -> print_P_Int      state p
@@ -441,7 +442,6 @@ and print_pattern state = function
 | P_Nat      p -> print_P_Nat      state p
 | P_Object   p -> print_P_Object   state p
 | P_String   p -> print_P_String   state p
-| P_Array    p -> print_P_Array    state p
 | P_Typed    p -> print_P_Typed    state p
 | P_Var      p -> print_P_Var      state p
 | P_Verbatim p -> print_P_Verbatim state p
@@ -538,6 +538,7 @@ and print_expr state = function
 | E_AddEq    e -> print_E_AddEq    state e
 | E_And      e -> print_E_And      state e
 | E_App      e -> print_E_App      state e
+| E_Array    e -> print_E_Array    state e
 | E_Assign   e -> print_E_Assign   state e
 | E_Attr     e -> print_E_Attr     state e
 | E_BitAnd   e -> print_E_BitAnd   state e
@@ -574,6 +575,7 @@ and print_expr state = function
 | E_Neg      e -> print_E_Neg      state e
 | E_Neq      e -> print_E_Neq      state e
 | E_Not      e -> print_E_Not      state e
+| E_Object   e -> print_E_Object   state e
 | E_Or       e -> print_E_Or       state e
 | E_Par      e -> print_E_Par      state e
 | E_PostDecr e -> print_E_PostDecr state e
@@ -581,12 +583,10 @@ and print_expr state = function
 | E_PreDecr  e -> print_E_PreDecr  state e
 | E_PreIncr  e -> print_E_PreIncr  state e
 | E_Proj     e -> print_E_Proj     state e
-| E_Object   e -> print_E_Object   state e
 | E_String   e -> print_E_String   state e
 | E_Sub      e -> print_E_Sub      state e
 | E_Ternary  e -> print_E_Ternary  state e
 | E_TimesEq  e -> print_E_TimesEq  state e
-| E_Array    e -> print_E_Array    state e
 | E_Typed    e -> print_E_Typed    state e
 | E_Update   e -> print_E_Update   state e
 | E_Var      e -> print_E_Var      state e

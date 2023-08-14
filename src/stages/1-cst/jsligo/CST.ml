@@ -298,25 +298,25 @@ and type_decl = {
 and type_expr =
   T_App       of (type_expr * type_ctor_args) reg  (* <u,v> M.t         *)
 | T_Attr      of (attribute * type_expr)           (* @a e              *)
-| T_Cart      of cartesian                         (* [t, [u, v]]       *)
+| T_Array     of array_type                        (* [t, [u, v]]       *)
 | T_Fun       of fun_type                          (* (a : t) => u      *)
 | T_Int       of int_literal                       (* 42                *)
 | T_NamePath  of type_expr namespace_path reg      (* A.B.list<u>       *)
+| T_Object    of type_expr _object                 (* {x; @a y : t}     *)
 | T_Par       of type_expr par                     (* (t)               *)
 | T_Parameter of parameter_of_type reg             (* parameter_of m    *)
-| T_Object    of type_expr _object                 (* {x; @a y : t}     *)
 | T_String    of string_literal                    (* "x"               *)
 | T_Union     of union_type                        (* {kind: "C", x: t} *)
 | T_Var       of variable                          (* t                 *)
 | T_Variant   of variant_type                      (* ["A"] | ["B", t]  *)
 
-(*  Type application *)
+(* Type application *)
 
 and type_ctor_args = (type_expr, comma) nsep_or_term chevrons
 
-(* Cartesian type *)
+(* Array type type *)
 
-and cartesian = (type_expr, comma) nsep_or_term brackets
+and array_type = (type_expr, comma) nsep_or_term brackets
 
 (* Functional type *)
 
@@ -342,8 +342,8 @@ and 'a field = {
 }
 
 and field_id =
-  F_Name of field_name
-| F_Int  of int_literal
+  F_Int  of int_literal
+| F_Name of field_name
 | F_Str  of string_literal
 
 (* Discriminated unions *)
@@ -370,7 +370,8 @@ and variant_comp = {
    add or modify some, please make sure they remain in order. *)
 
 and pattern =
-  P_Attr     of (attribute * pattern)    (* @a [x, _]       *)
+  P_Array    of pattern _array           (* [x, ...y, z] [] *)
+| P_Attr     of (attribute * pattern)    (* @a [x, _]       *)
 | P_Bytes    of bytes_literal            (* 0xFFFA          *)
 | P_Ctor     of ctor                     (* C               *)
 | P_Int      of int_literal              (* 42              *)
@@ -378,7 +379,6 @@ and pattern =
 | P_Nat      of nat_literal              (* 4n              *)
 | P_Object   of pattern _object          (* {x, y : 0}      *)
 | P_String   of string_literal           (* "string"        *)
-| P_Array    of pattern _array           (* [x, ...y, z] [] *)
 | P_Typed    of typed_pattern reg        (* [x,y] : t       *)
 | P_Var      of variable                 (* x               *)
 | P_Verbatim of verbatim_literal         (* {|foo|}         *)
@@ -507,6 +507,7 @@ and expr =
 | E_AddEq    of plus_eq bin_op reg      (* x += y            *)
 | E_And      of bool_and bin_op reg     (* x && y            *)
 | E_App      of (expr * arguments) reg  (* f(x)   Foo()      *)
+| E_Array    of expr _array             (* [x, ...y, z]  []  *)
 | E_Assign   of equal bin_op reg        (* x = y             *)
 | E_Attr     of (attribute * expr)      (* @a [x, y]         *)
 | E_BitAnd   of bit_and bin_op reg      (* x & y             *)
@@ -534,15 +535,16 @@ and expr =
 | E_Leq      of leq bin_op reg          (* x <= y            *)
 | E_Lt       of lt bin_op reg           (* x < y             *)
 | E_MinusEq  of minus_eq bin_op reg     (* x -= y            *)
+| E_NamePath of expr namespace_path reg (* M.N.x.0           *)
 | E_Rem      of remainder bin_op reg    (* x % n             *)
 | E_RemEq    of rem_eq bin_op reg       (* x %= y            *)
-| E_NamePath of expr namespace_path reg (* M.N.x.0           *)
 | E_Mult     of times bin_op reg        (* x * y             *)
 | E_Mutez    of mutez_literal           (* 5mutez            *)
 | E_Nat      of nat_literal             (* 42n               *)
 | E_Neg      of minus un_op reg         (* -x                *)
 | E_Neq      of neq bin_op reg          (* x != y            *)
 | E_Not      of bool_neg un_op reg      (* !x                *)
+| E_Object   of expr _object            (* {x : e, y}        *)
 | E_Or       of bool_or bin_op reg      (* x || y            *)
 | E_Par      of expr par                (* (x + y)           *)
 | E_PostDecr of decrement un_op reg     (* x--               *)
@@ -550,12 +552,10 @@ and expr =
 | E_PreDecr  of decrement un_op reg     (* --x               *)
 | E_PreIncr  of increment un_op reg     (* ++x               *)
 | E_Proj     of projection reg          (* e.x.1             *)
-| E_Object   of expr _object            (* {x : e, y}        *)
 | E_String   of string_literal          (* "abcdef"          *)
 | E_Sub      of minus bin_op reg        (* x - y             *)
 | E_Ternary  of ternary reg             (* x ? y : z         *)
 | E_TimesEq  of times_eq bin_op reg     (* x *= y            *)
-| E_Array    of expr _array             (* [x, ...y, z]  []  *)
 | E_Typed    of typed_expr reg          (* e as t            *)
 | E_Update   of update_expr braces      (* {...x, y : z}     *)
 | E_Var      of variable                (* x                 *)
@@ -663,22 +663,23 @@ let rec top_decl_to_region = function
 | TL_Directive d -> Directive.to_region d
 
 let rec type_expr_to_region = function
-  T_App       {region; _} -> region
+  T_App       {region; _}
+| T_Array     {region; _} -> region
 | T_Attr      (_, t) -> type_expr_to_region t
-| T_Cart      {region; _}
 | T_Fun       {region; _} -> region
 | T_Int       w -> w#region
 | T_NamePath  {region; _}
+| T_Object    {region; _}
 | T_Par       {region; _}
-| T_Parameter {region; _}
-| T_Object    {region; _} -> region
+| T_Parameter {region; _} -> region
 | T_String    w -> w#region
 | T_Union     {region; _} -> region
 | T_Var       w -> w#region
 | T_Variant   {region; _} -> region
 
 let rec pattern_to_region = function
-  P_Attr   (_, p) -> pattern_to_region p
+  P_Array {region; _} -> region
+| P_Attr   (_, p) -> pattern_to_region p
 | P_Bytes  w -> w#region
 | P_Ctor   w -> w#region
 | P_Int    w -> w#region
@@ -686,7 +687,6 @@ let rec pattern_to_region = function
 | P_Nat    w -> w#region
 | P_Object {region; _} -> region
 | P_String w-> w#region
-| P_Array {region; _}
 | P_Typed {region; _} -> region
 | P_Var w -> w#region
 | P_Verbatim w -> w#region
@@ -696,6 +696,7 @@ let rec expr_to_region = function
 | E_AddEq    {region; _}
 | E_And      {region; _}
 | E_App      {region; _}
+| E_Array    {region; _}
 | E_Assign   {region; _} -> region
 | E_Attr     (_, e) -> expr_to_region e
 | E_BitAnd   {region; _}
@@ -723,17 +724,17 @@ let rec expr_to_region = function
 | E_Leq      {region; _}
 | E_Lt       {region; _}
 | E_MinusEq  {region; _}
+| E_NamePath {region; _}
 | E_Rem      {region; _}
 | E_RemEq    {region; _}
-| E_NamePath {region; _}
 | E_Mult     {region; _} -> region
 | E_Mutez    w -> w#region
 | E_Nat      w -> w#region
 | E_Neg      {region; _}
 | E_Neq      {region; _}
 | E_Not      {region; _}
-| E_Or       {region; _}
 | E_Object   {region; _}
+| E_Or       {region; _}
 | E_Par      {region; _}
 | E_PostDecr {region; _}
 | E_PostIncr {region; _}
@@ -744,7 +745,6 @@ let rec expr_to_region = function
 | E_Sub      {region; _}
 | E_Ternary  {region; _}
 | E_TimesEq  {region; _}
-| E_Array    {region; _}
 | E_Typed    {region; _}
 | E_Update   {region; _} -> region
 | E_Var      w

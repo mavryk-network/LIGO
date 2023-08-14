@@ -8,6 +8,11 @@ type 'a fold_control = 'a Cst_shared.Fold.fold_control
 type _ sing =
     S_all_cases : all_cases sing
   | S_arguments : arguments sing
+  | S_array : 'a sing -> 'a _array sing
+  | S_array_2 : 'a sing * 'b sing -> ('a * 'b) sing
+  | S_array_3 : 'a sing * 'b sing * 'c sing -> ('a * 'b * 'c) sing
+  | S_array_4 : 'a sing * 'b sing * 'c sing * 'd sing -> ('a * 'b * 'c * 'd) sing
+  | S_array_type : array_type sing
   | S_arrow : arrow sing
   | S_attr : Attr.t sing
   | S_attribute : attribute sing
@@ -32,7 +37,6 @@ type _ sing =
   | S_brackets : 'a sing -> 'a brackets sing
   | S_brackets' : 'a sing -> 'a brackets' sing
   | S_bytes_literal : bytes_literal sing
-  | S_cartesian : cartesian sing
   | S_cases : cases sing
   | S_chevrons : 'a sing -> 'a chevrons sing
   | S_chevrons' : 'a sing -> 'a chevrons' sing
@@ -63,6 +67,7 @@ type _ sing =
   | S_for_stmt : for_stmt sing
   | S_fun_body : fun_body sing
   | S_fun_expr : fun_expr sing
+  | S_fun_expr_params : fun_expr_params sing
   | S_fun_type : fun_type sing
   | S_fun_type_param : fun_type_param sing
   | S_fun_type_params : fun_type_params sing
@@ -117,13 +122,11 @@ type _ sing =
   | S_lt : lt sing
   | S_minus : minus sing
   | S_minus_eq : minus_eq sing
-  | S_rem_eq : rem_eq sing
+  | S_mutez_literal : mutez_literal sing
   | S_namespace_decl : namespace_decl sing
   | S_namespace_name : namespace_name sing
   | S_namespace_path : 'a sing -> 'a namespace_path sing
   | S_namespace_selection : namespace_selection sing
-  | S_remainder : remainder sing
-  | S_mutez_literal : mutez_literal sing
   | S_nat_literal : nat_literal sing
   | S_neq : neq sing
   | S_no_param : (lpar * rpar) reg sing
@@ -131,11 +134,11 @@ type _ sing =
   | S_nsep_or_term : 'a sing * 'b sing -> ('a, 'b) Utils.nsep_or_term sing
   | S_nsepseq : 'a sing * 'b sing -> ('a, 'b) Utils.nsepseq sing
   | S_nseq : 'a sing -> 'a Utils.nseq sing
+  | S_object : 'a sing -> 'a _object sing
   | S_option : 'a sing -> 'a option sing
   | S_par : 'a sing -> 'a par sing
   | S_par' : 'a sing -> 'a par' sing
   | S_parameter_of_type : parameter_of_type sing
-  | S_fun_expr_params : fun_expr_params sing
   | S_pattern : pattern sing
   | S_plus : plus sing
   | S_plus_eq : plus_eq sing
@@ -145,7 +148,8 @@ type _ sing =
   | S_range_of : range_of sing
   | S_rbrace : rbrace sing
   | S_rbracket : rbracket sing
-  | S_object : 'a sing -> 'a _object sing
+  | S_rem_eq : rem_eq sing
+  | S_remainder : remainder sing
   | S_reg : 'a sing -> 'a reg sing
   | S_region : region sing
   | S_return_stmt : return_stmt sing
@@ -165,10 +169,6 @@ type _ sing =
   | S_times : times sing
   | S_times_eq : times_eq sing
   | S_top_decl : top_decl sing
-  | S_array : 'a sing -> 'a _array sing
-  | S_array_2 : 'a sing * 'b sing -> ('a * 'b) sing
-  | S_array_3 : 'a sing * 'b sing * 'c sing -> ('a * 'b * 'c) sing
-  | S_array_4 : 'a sing * 'b sing * 'c sing * 'd sing -> ('a * 'b * 'c * 'd) sing
   | S_type_annotation : type_annotation sing
   | S_type_ctor : type_ctor sing
   | S_type_ctor_args : type_ctor_args sing
@@ -222,8 +222,7 @@ let fold
     S_all_cases -> process @@ node -| S_array_2
     (S_nseq (S_reg S_switch_case), S_option (S_reg S_switch_default))
   | S_arguments -> process
-    ( node -| (S_par (S_sepseq (S_expr, S_comma)))
-    )
+    (node -| (S_par (S_sepseq (S_expr, S_comma))))
   | S_arrow -> process @@ node -| S_wrap S_lexeme
   | S_attr -> () (* Leaf *)
   | S_attribute -> process @@ node -| S_wrap S_attr
@@ -259,7 +258,7 @@ let fold
     ; inside -| sing
     ; rbracket -| S_rbracket ]
   | S_bytes_literal -> process @@ node -| S_wrap (S_array_2 (S_lexeme, S_hex))
-  | S_cartesian -> process @@ node -| S_brackets (S_nsep_or_term (S_type_expr, S_comma))
+  | S_array_type -> process @@ node -| S_brackets (S_nsep_or_term (S_type_expr, S_comma))
   | S_cases -> process
     ( match node with
       AllCases node -> node -| S_all_cases
@@ -696,14 +695,14 @@ let fold
   | S_type_expr -> process
     ( match node with
       T_App node -> node -| S_reg (S_array_2 (S_type_expr, S_type_ctor_args))
+    | T_Array node -> node -| S_array_type
     | T_Attr node -> node -| S_array_2 (S_attribute, S_type_expr)
-    | T_Cart node -> node -| S_cartesian
     | T_Fun node -> node -| S_fun_type
     | T_Int node -> node -| S_int_literal
     | T_NamePath node -> node -| S_reg (S_namespace_path S_type_expr)
+    | T_Object node -> node -| S_object S_type_expr
     | T_Par node -> node -| S_par S_type_expr
     | T_Parameter node -> node -| S_reg S_parameter_of_type
-    | T_Object node -> node -| S_object S_type_expr
     | T_String node -> node -| S_string_literal
     | T_Union node -> node -| S_union_type
     | T_Var node -> node -| S_variable
