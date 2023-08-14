@@ -58,16 +58,15 @@ type _ sing =
   | S_equal : equal sing
   | S_equal_cmp : equal_cmp sing
   | S_expr : expr sing
-  | S_field : 'a sing -> 'a field sing
-  | S_field_id : field_id sing
-  | S_field_name : field_name sing
-  | S_field_sep : field_sep sing
   | S_file_path : file_path sing
   | S_for_of_stmt : for_of_stmt sing
   | S_for_stmt : for_stmt sing
   | S_fun_body : fun_body sing
+  | S_fun_decl : fun_decl sing
   | S_fun_expr : fun_expr sing
-  | S_fun_expr_params : fun_expr_params sing
+  | S_fun_name : fun_name sing
+  | S_fun_params : fun_params sing
+  | S_arrow_fun_params : arrow_fun_params sing
   | S_fun_type : fun_type sing
   | S_fun_type_param : fun_type_param sing
   | S_fun_type_params : fun_type_params sing
@@ -100,6 +99,7 @@ type _ sing =
   | S_kwd_export : kwd_export sing
   | S_kwd_for : kwd_for sing
   | S_kwd_from : kwd_from sing
+  | S_kwd_function : kwd_function sing
   | S_kwd_if : kwd_if sing
   | S_kwd_implements : kwd_implements sing
   | S_kwd_import : kwd_import sing
@@ -143,6 +143,10 @@ type _ sing =
   | S_plus : plus sing
   | S_plus_eq : plus_eq sing
   | S_projection : projection sing
+  | S_property : 'a sing -> 'a property sing
+  | S_property_id : property_id sing
+  | S_property_name : property_name sing
+  | S_property_sep : property_sep sing
   | S_qmark : qmark sing
   | S_range_for : range_for sing
   | S_range_of : range_of sing
@@ -224,6 +228,11 @@ let fold
   | S_arguments -> process
     (node -| (S_par (S_sepseq (S_expr, S_comma))))
   | S_arrow -> process @@ node -| S_wrap S_lexeme
+  | S_arrow_fun_params -> process
+    ( match node with
+        ParParams node -> node -| S_par (S_sep_or_term (S_pattern, S_comma))
+      | NakedParam node -> node -| S_pattern
+    )
   | S_attr -> () (* Leaf *)
   | S_attribute -> process @@ node -| S_wrap S_attr
   | S_bin_op sing -> let { arg1; op; arg2 } = node in
@@ -294,11 +303,12 @@ let fold
   | S_ctor -> process @@ node -| S_wrap S_lexeme
   | S_declaration -> process
     ( match node with
-      D_Import node -> node -| S_import_decl
-    | D_Interface node -> node -| S_reg S_interface_decl
-    | D_Namespace node -> node -| S_reg S_namespace_decl
-    | D_Type node -> node -| S_reg S_type_decl
-    | D_Value node -> node -| S_reg S_value_decl
+        D_Fun node -> node -| S_reg S_fun_decl
+      | D_Import node -> node -| S_import_decl
+      | D_Interface node -> node -| S_reg S_interface_decl
+      | D_Namespace node -> node -| S_reg S_namespace_decl
+      | D_Type node -> node -| S_reg S_type_decl
+      | D_Value node -> node -| S_reg S_value_decl
     )
   | S_decrement -> process @@ node -| S_wrap S_lexeme
   | S_directive -> () (* Leaf *)
@@ -369,19 +379,6 @@ let fold
     | E_Verbatim node -> node -| S_verbatim_literal
     | E_Xor node -> node -| S_reg (S_bin_op S_bool_xor)
     )
-  | S_field sing -> let { attributes; field_id; field_rhs } = node in
-    process_list
-    [ attributes -| S_list S_attribute
-    ; field_id -| S_field_id
-    ; field_rhs -| S_option (S_array_2 (S_colon, sing)) ]
-  | S_field_id -> process
-    ( match node with
-      F_Name node -> node -| S_field_name
-    | F_Int node -> node -| S_int_literal
-    | F_Str node -> node -| S_string_literal
-    )
-  | S_field_name -> process @@ node -| S_wrap S_lexeme
-  | S_field_sep -> process @@ node -| S_wrap S_lexeme
   | S_file_path -> process @@ node -| S_wrap S_lexeme
   | S_for_of_stmt -> let { kwd_for; range; for_of_body } = node in
     process_list
@@ -394,15 +391,29 @@ let fold
     [ kwd_for -| S_kwd_for
     ; range -| S_par S_range_for
     ; for_body -| S_option (S_statement)]
+  | S_kwd_function -> process @@ node -| S_wrap S_lexeme
   | S_fun_body -> process
     ( match node with
       StmtBody node -> node -| S_braces S_statements
     | ExprBody node -> node -| S_expr )
+  | S_fun_name -> process @@ node -| S_wrap S_lexeme
+  | S_fun_decl ->
+    let {kwd_function; fun_name; type_vars; parameters;
+         rhs_type; fun_body } = node in
+    process_list
+    [ kwd_function -| S_kwd_function
+    ; fun_name -| S_fun_name
+    ; type_vars -| S_option S_type_vars
+    ; parameters -| S_fun_params
+    ; rhs_type -| S_option (S_array_2 (S_colon, S_type_expr))
+    ; fun_body -| S_braces S_statements ]
+  | S_fun_params ->
+      process @@ node -| S_par (S_sep_or_term (S_pattern, S_comma))
   | S_fun_expr ->
     let { type_vars; parameters; rhs_type; arrow; fun_body } = node in
     process_list
     [ type_vars -| S_option S_type_vars
-    ; parameters -| S_fun_expr_params
+    ; parameters -| S_arrow_fun_params
     ; rhs_type -| S_option (S_array_2 (S_colon, S_type_expr))
     ; arrow -| S_arrow
     ; fun_body -| S_fun_body ]
@@ -435,7 +446,7 @@ let fold
   | S_import_from -> let { kwd_import; imported; kwd_from; file_path } = node in
     process_list
     [ kwd_import -| S_kwd_import
-    ; imported -| S_braces (S_sep_or_term (S_field_name, S_comma))
+    ; imported -| S_braces (S_sep_or_term (S_property_name, S_comma))
     ; kwd_from -| S_kwd_from
     ; file_path -| S_file_path ]
   | S_increment -> process @@ node -| S_wrap S_lexeme
@@ -512,11 +523,11 @@ let fold
     ; namespace_body -| S_braces S_statements ]
   | S_namespace_name -> process @@ node -| S_wrap S_lexeme
   | S_namespace_path sing ->
-    let {namespace_path; selector; field} = node in
+    let {namespace_path; selector; property} = node in
     process_list
     [ namespace_path -| S_nsepseq (S_namespace_name, S_dot)
     ; selector -| S_dot
-    ; field -| sing ]
+    ; property -| sing ]
   | S_namespace_selection -> process
       (match node with
          M_Path  node -> node -| S_reg (S_namespace_path S_namespace_name)
@@ -553,11 +564,19 @@ let fold
     process_list
     [ kwd_parameter_of -| S_kwd_parameter_of
     ; namespace_path -| S_namespace_selection ]
-  | S_fun_expr_params -> process
+  | S_property sing -> let { attributes; property_id; property_rhs } = node in
+    process_list
+    [ attributes -| S_list S_attribute
+    ; property_id -| S_property_id
+    ; property_rhs -| S_option (S_array_2 (S_colon, sing)) ]
+  | S_property_id -> process
     ( match node with
-        ParParams node -> node -| S_par (S_sep_or_term (S_pattern, S_comma))
-      | NakedParam node -> node -| S_pattern
+      F_Name node -> node -| S_property_name
+    | F_Int node -> node -| S_int_literal
+    | F_Str node -> node -| S_string_literal
     )
+  | S_property_name -> process @@ node -| S_wrap S_lexeme
+  | S_property_sep -> process @@ node -| S_wrap S_lexeme
   | S_pattern -> process
     ( match node with
       P_Attr node -> node -| S_array_2 (S_attribute, S_pattern)
@@ -575,10 +594,10 @@ let fold
     )
   | S_plus -> process @@ node -| S_wrap S_lexeme
   | S_plus_eq -> process @@ node -| S_wrap S_lexeme
-  | S_projection -> let { object_or_array; field_path } = node in
+  | S_projection -> let { object_or_array; property_path } = node in
     process_list
     [ object_or_array -| S_expr
-    ; field_path -| S_nseq S_selection ]
+    ; property_path -| S_nseq S_selection ]
   | S_qmark -> process @@ node -| S_wrap S_lexeme
   | S_range_for -> let { initialiser; semi1; condition; semi2; afterthought } = node in
     process_list
@@ -595,7 +614,7 @@ let fold
     ; expr -| S_expr ]
   | S_rbrace -> process @@ node -| S_wrap S_lexeme
   | S_rbracket -> process @@ node -| S_wrap S_lexeme
-  | S_object sing -> process @@ node -| S_braces (S_sep_or_term (S_reg (S_field sing), S_semi))
+  | S_object sing -> process @@ node -| S_braces (S_sep_or_term (S_reg (S_property sing), S_semi))
   | S_reg sing -> let { region; value } = node in
     process_list
     [ region -| S_region
@@ -605,7 +624,7 @@ let fold
   | S_rpar -> process @@ node -| S_wrap S_lexeme
   | S_selection -> process
     ( match node with
-      FieldName node -> node -| S_array_2 (S_dot, S_field_name)
+      FieldName node -> node -| S_array_2 (S_dot, S_property_name)
     | FieldStr node -> node -| S_brackets S_string_literal
     | Component node -> node -| S_brackets S_nat_literal
     )
@@ -721,8 +740,8 @@ let fold
     process_list
     [ ellipsis -| S_ellipsis
     ; _object -| S_expr
-    ; sep -| S_field_sep
-    ; updates -| S_sep_or_term (S_reg (S_field S_expr), S_semi) ]
+    ; sep -| S_property_sep
+    ; updates -| S_sep_or_term (S_reg (S_property S_expr), S_semi) ]
   | S_val_binding -> let { pattern; type_vars; rhs_type; eq; rhs_expr } = node in
     process_list
     [ pattern -| S_pattern

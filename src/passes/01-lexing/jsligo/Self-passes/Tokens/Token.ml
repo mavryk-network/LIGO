@@ -107,35 +107,36 @@ module T =
 
     (* JavaScript Keywords *)
 
-    | Break    of lexeme Wrap.t  (* break   *)
-    | Case     of lexeme Wrap.t  (* case    *)
- (* | Class    of lexeme Wrap.t  (* class   *) *)
-    | Const    of lexeme Wrap.t  (* const   *)
-    | Default  of lexeme Wrap.t  (* default *)
-    | Else     of lexeme Wrap.t  (* else    *)
-    | Export   of lexeme Wrap.t  (* export  *)
-    | For      of lexeme Wrap.t  (* for     *)
-    | From     of lexeme Wrap.t  (* from    *)
-    | If       of lexeme Wrap.t  (* if      *)
-    | Import   of lexeme Wrap.t  (* import  *)
-    | Let      of lexeme Wrap.t  (* let     *)
-    | Of       of lexeme Wrap.t  (* of      *)
-    | Return   of lexeme Wrap.t  (* return  *)
-    | Switch   of lexeme Wrap.t  (* switch  *)
- (* | This     of lexeme Wrap.t  (* this    *)
-    | Void     of lexeme Wrap.t  (* void    *) *)
-    | While    of lexeme Wrap.t  (* while   *)
- (* | With     of lexeme Wrap.t  (* with    *) *)
+    | Break    of lexeme Wrap.t  (* break    *)
+    | Case     of lexeme Wrap.t  (* case     *)
+ (* | Class    of lexeme Wrap.t  (* class    *) *)
+    | Const    of lexeme Wrap.t  (* const    *)
+    | Default  of lexeme Wrap.t  (* default  *)
+    | Else     of lexeme Wrap.t  (* else     *)
+    | Export   of lexeme Wrap.t  (* export   *)
+    | For      of lexeme Wrap.t  (* for      *)
+    | From     of lexeme Wrap.t  (* from     *)
+    | If       of lexeme Wrap.t  (* if       *)
+    | Import   of lexeme Wrap.t  (* import   *)
+    | Let      of lexeme Wrap.t  (* let      *)
+    | Of       of lexeme Wrap.t  (* of       *)
+    | Return   of lexeme Wrap.t  (* return   *)
+    | Switch   of lexeme Wrap.t  (* switch   *)
+ (* | This     of lexeme Wrap.t  (* this     *)
+    | Void     of lexeme Wrap.t  (* void     *) *)
+    | While    of lexeme Wrap.t  (* while    *)
+ (* | With     of lexeme Wrap.t  (* with     *) *)
 
     (* TypeScript keywords *)
 
     | As         of lexeme Wrap.t  (* as         *)
+    | Function   of lexeme Wrap.t  (* function   *)
     | Implements of lexeme Wrap.t  (* implements *)
     | Interface  of lexeme Wrap.t  (* interface  *)
     | Namespace  of lexeme Wrap.t  (* namespace  *)
     | Type       of lexeme Wrap.t  (* type       *)
 
-    (* Contract keywords *)
+    (* JsLIGO-specific keywords *)
 
     | ContractOf  of lexeme Wrap.t  (* contract_of  *)
     | ParameterOf of lexeme Wrap.t  (* parameter_of *)
@@ -258,12 +259,13 @@ module T =
     (* TypeScript keywords *)
 
     | As         t
+    | Function   t
     | Implements t
     | Interface  t
     | Namespace  t
     | Type       t
 
-    (* Contract keywords *)
+    (* JsLIGO-specific keywords *)
 
     | ContractOf  t
     | ParameterOf t -> [t#payload]
@@ -284,25 +286,26 @@ module T =
 
     (* JavaScript Keywords *)
 
-     let wrap_break   = wrap "break"
-     let wrap_case    = wrap "case"
-  (* let wrap_class   = wrap "class"   *)
-     let wrap_const   = wrap "const"
-     let wrap_default = wrap "default"
-     let wrap_else    = wrap "else"
-     let wrap_export  = wrap "export"
-     let wrap_for     = wrap "for"
-     let wrap_from    = wrap "from"
-     let wrap_if      = wrap "if"
-     let wrap_import  = wrap "import"
-     let wrap_let     = wrap "let"
-     let wrap_of      = wrap "of"
-     let wrap_return  = wrap "return"
-     let wrap_switch  = wrap "switch"
-  (* let wrap_this    = wrap "this"
-     let wrap_void    = wrap "void"    *)
-     let wrap_while   = wrap "while"
-  (* let wrap_with    = wrap "with"    *)
+     let wrap_break    = wrap "break"
+     let wrap_case     = wrap "case"
+  (* let wrap_class    = wrap "class"   *)
+     let wrap_const    = wrap "const"
+     let wrap_default  = wrap "default"
+     let wrap_else     = wrap "else"
+     let wrap_export   = wrap "export"
+     let wrap_for      = wrap "for"
+     let wrap_from     = wrap "from"
+     let wrap_function = wrap "function"
+     let wrap_if       = wrap "if"
+     let wrap_import   = wrap "import"
+     let wrap_let      = wrap "let"
+     let wrap_of       = wrap "of"
+     let wrap_return   = wrap "return"
+     let wrap_switch   = wrap "switch"
+  (* let wrap_this     = wrap "this"
+     let wrap_void     = wrap "void"    *)
+     let wrap_while    = wrap "while"
+  (* let wrap_with     = wrap "with"    *)
 
      let mk_Break   region = Break   (wrap_break   region)
      let mk_Case    region = Case    (wrap_case    region)
@@ -333,6 +336,7 @@ module T =
      let wrap_type       = wrap "type"
 
      let mk_As         region = As         (wrap_as         region)
+     let mk_Function   region = Function   (wrap_function   region)
      let mk_Implements region = Implements (wrap_implements region)
      let mk_Interface  region = Interface  (wrap_interface  region)
      let mk_Namespace  region = Namespace  (wrap_namespace  region)
@@ -368,11 +372,14 @@ module T =
        mk_Void;   *)
        mk_While;
   (*   mk_With;   *)
+
        mk_As;
+       mk_Function;
        mk_Implements;
        mk_Interface;
        mk_Namespace;
        mk_Type;
+
        mk_ContractOf;
        mk_ParameterOf
      ]
@@ -439,10 +446,12 @@ module T =
     let ghost_as         = wrap_as         Region.ghost
     let ghost_implements = wrap_implements Region.ghost
     let ghost_interface  = wrap_interface  Region.ghost
+    let ghost_function   = wrap_function   Region.ghost
     let ghost_namespace  = wrap_namespace  Region.ghost
     let ghost_type       = wrap_type       Region.ghost
 
     let ghost_As         = As         ghost_as
+    let ghost_Function   = Function   ghost_function
     let ghost_Implements = Implements ghost_implements
     let ghost_Interface  = Interface  ghost_interface
     let ghost_Namespace  = Namespace  ghost_namespace
@@ -480,7 +489,7 @@ module T =
     let wrap_or         = wrap "||"
     let wrap_and        = wrap "&&"
     let wrap_not        = wrap "!"
-    let wrap_xor         = wrap "^^"
+    let wrap_xor        = wrap "^^"
     let wrap_bit_and    = wrap "&"
     let wrap_bit_not    = wrap "~"
     let wrap_bit_xor    = wrap "^"
@@ -876,7 +885,7 @@ module T =
 
     (* JavaScript Keywords *)
 
- (* | "Break"    -> ghost_break#payload *)
+    | "Break"    -> ghost_break#payload
     | "Case"     -> ghost_case#payload
  (* | "Class"    -> ghost_class#payload *)
     | "Const"    -> ghost_const#payload
@@ -884,22 +893,22 @@ module T =
     | "Else"     -> ghost_else#payload
     | "Export"   -> ghost_export#payload
     | "For"      -> ghost_for#payload
+    | "From"     -> ghost_from#payload
     | "If"       -> ghost_if#payload
     | "Import"   -> ghost_import#payload
     | "Let"      -> ghost_let#payload
     | "Of"       -> ghost_of#payload
     | "Return"   -> ghost_return#payload
-    | "Break"    -> ghost_break#payload
     | "Switch"   -> ghost_switch#payload
  (* | "This"     -> ghost_this#payload
     | "Void"     -> ghost_void#payload *)
     | "While"    -> ghost_while#payload
-    | "From"     -> ghost_from#payload
  (* | "With"     -> ghost_with#payload *)
 
     (* TypeScript keywords *)
 
     | "As"         -> ghost_as#payload
+    | "Function"   -> ghost_function#payload
     | "Implements" -> ghost_implements#payload
     | "Interface"  -> ghost_interface#payload
     | "Namespace"  -> ghost_namespace#payload
@@ -1044,12 +1053,13 @@ module T =
     (* TypeScript keywords *)
 
     | As          t -> t#region, sprintf "As%s" (comments t)
+    | Function    t -> t#region, sprintf "Function%s" (comments t)
     | Implements  t -> t#region, sprintf "Implements%s" (comments t)
     | Interface   t -> t#region, sprintf "Interface%s" (comments t)
     | Namespace   t -> t#region, sprintf "Namespace%s" (comments t)
     | Type        t -> t#region, sprintf "Type%s" (comments t)
 
-    (* Contract keywords *)
+    (* JsLIGO-specific keywords *)
 
     | ContractOf  t -> t#region, sprintf "ContractOf%s" (comments t)
     | ParameterOf t -> t#region, sprintf "ParameterOf%s" (comments t)

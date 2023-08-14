@@ -107,8 +107,8 @@ interactive_expr: UIdent As VBAR ZWSP
 ##
 ## Ends in an error in state: 22.
 ##
-## nseq(__anonymous_1(record_type,VBAR)) -> VBAR . record_type [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ]
-## nseq(__anonymous_1(record_type,VBAR)) -> VBAR . record_type nseq(__anonymous_1(record_type,VBAR)) [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ]
+## nseq(__anonymous_1(object_type,VBAR)) -> VBAR . object_type [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ]
+## nseq(__anonymous_1(object_type,VBAR)) -> VBAR . object_type nseq(__anonymous_1(object_type,VBAR)) [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ]
 ## nseq(__anonymous_4) -> VBAR . variant [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ]
 ## nseq(__anonymous_4) -> VBAR . variant nseq(__anonymous_4) [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ]
 ##
@@ -160,7 +160,7 @@ interactive_expr: UIdent As UIdent ZWSP
 ##
 ## Ends in an error in state: 27.
 ##
-## module_name -> UIdent . [ DOT ]
+## namespace_name -> UIdent . [ DOT ]
 ## type_ctor -> UIdent . [ LT ]
 ## type_name -> UIdent . [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
 ##
@@ -174,7 +174,7 @@ interactive_expr: UIdent As ParameterOf ZWSP
 ##
 ## Ends in an error in state: 29.
 ##
-## parameter_of_type -> ParameterOf . module_selection [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
+## parameter_of_type -> ParameterOf . namespace_selection [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
 ##
 ## The known suffix of the stack is as follows:
 ## ParameterOf
@@ -186,12 +186,12 @@ interactive_expr: ContractOf LPAR UIdent ZWSP
 ##
 ## Ends in an error in state: 33.
 ##
-## module_path(module_name) -> module_name . DOT module_path(module_name) [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
-## module_path(module_name) -> module_name . DOT module_name [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
-## module_selection -> module_name . [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
+## namespace_path(namespace_name) -> namespace_name . DOT namespace_path(namespace_name) [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
+## namespace_path(namespace_name) -> namespace_name . DOT namespace_name [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
+## namespace_selection -> namespace_name . [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
 ##
 ## The known suffix of the stack is as follows:
-## module_name
+## namespace_name
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -200,11 +200,11 @@ interactive_expr: ContractOf LPAR UIdent DOT ZWSP
 ##
 ## Ends in an error in state: 34.
 ##
-## module_path(module_name) -> module_name DOT . module_path(module_name) [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
-## module_path(module_name) -> module_name DOT . module_name [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
+## namespace_path(namespace_name) -> namespace_name DOT . namespace_path(namespace_name) [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
+## namespace_path(namespace_name) -> namespace_name DOT . namespace_name [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
 ##
 ## The known suffix of the stack is as follows:
-## module_name DOT
+## namespace_name DOT
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -213,12 +213,12 @@ interactive_expr: ContractOf LPAR UIdent DOT UIdent ZWSP
 ##
 ## Ends in an error in state: 36.
 ##
-## module_path(module_name) -> module_name . DOT module_path(module_name) [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
-## module_path(module_name) -> module_name . DOT module_name [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
-## module_path(module_name) -> module_name DOT module_name . [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
+## namespace_path(namespace_name) -> namespace_name . DOT namespace_path(namespace_name) [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
+## namespace_path(namespace_name) -> namespace_name . DOT namespace_name [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
+## namespace_path(namespace_name) -> namespace_name DOT namespace_name . [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
 ##
 ## The known suffix of the stack is as follows:
-## module_name DOT module_name
+## namespace_name DOT namespace_name
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -254,7 +254,7 @@ interactive_expr: UIdent As LBRACE ZWSP
 ##
 ## Ends in an error in state: 39.
 ##
-## braces(sep_or_term(field_type,field_sep)) -> LBRACE . sep_or_term(field_type,field_sep) RBRACE [ While VBAR Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
+## braces(sep_or_term(property_type,property_sep)) -> LBRACE . sep_or_term(property_type,property_sep) RBRACE [ While VBAR Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
 ##
 ## The known suffix of the stack is as follows:
 ## LBRACE
@@ -266,7 +266,7 @@ interactive_expr: UIdent As LBRACE Attr ZWSP
 ##
 ## Ends in an error in state: 44.
 ##
-## field_type -> Attr . field_type [ SEMI RBRACE COMMA ]
+## property_type -> Attr . property_type [ SEMI RBRACE COMMA ]
 ##
 ## The known suffix of the stack is as follows:
 ## Attr
@@ -278,11 +278,11 @@ interactive_expr: UIdent As LBRACE Ident ZWSP
 ##
 ## Ends in an error in state: 47.
 ##
-## field_type -> field_id . [ SEMI RBRACE COMMA ]
-## field_type -> field_id . type_annotation(type_expr) [ SEMI RBRACE COMMA ]
+## property_type -> property_id . [ SEMI RBRACE COMMA ]
+## property_type -> property_id . type_annotation(type_expr) [ SEMI RBRACE COMMA ]
 ##
 ## The known suffix of the stack is as follows:
-## field_id
+## property_id
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -522,25 +522,25 @@ interactive_expr: UIdent As Ident LT Ident COMMA ZWSP
 
 interactive_expr: UIdent As LBRACE RBRACE ZWSP
 ##
-## Ends in an error in state: 90.
+## Ends in an error in state: 93.
 ##
-## nsepseq(record_type,VBAR) -> record_type . [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
-## nsepseq(record_type,VBAR) -> record_type . VBAR nsepseq(record_type,VBAR) [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
+## nsepseq(object_type,VBAR) -> object_type . [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
+## nsepseq(object_type,VBAR) -> object_type . VBAR nsepseq(object_type,VBAR) [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
 ##
 ## The known suffix of the stack is as follows:
-## record_type
+## object_type
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 interactive_expr: UIdent As LBRACE RBRACE VBAR ZWSP
 ##
-## Ends in an error in state: 91.
+## Ends in an error in state: 94.
 ##
-## nsepseq(record_type,VBAR) -> record_type VBAR . nsepseq(record_type,VBAR) [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
+## nsepseq(object_type,VBAR) -> object_type VBAR . nsepseq(object_type,VBAR) [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
 ##
 ## The known suffix of the stack is as follows:
-## record_type VBAR
+## object_type VBAR
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -549,13 +549,13 @@ interactive_expr: UIdent As UIdent DOT ZWSP
 ##
 ## Ends in an error in state: 108.
 ##
-## module_path(__anonymous_5) -> module_name DOT . module_path(__anonymous_5) [ LT ]
-## module_path(__anonymous_5) -> module_name DOT . type_ctor [ LT ]
-## module_path(__anonymous_6) -> module_name DOT . module_path(__anonymous_6) [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
-## module_path(__anonymous_6) -> module_name DOT . type_name [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
+## namespace_path(__anonymous_5) -> namespace_name DOT . namespace_path(__anonymous_5) [ LT ]
+## namespace_path(__anonymous_5) -> namespace_name DOT . type_ctor [ LT ]
+## namespace_path(__anonymous_6) -> namespace_name DOT . namespace_path(__anonymous_6) [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
+## namespace_path(__anonymous_6) -> namespace_name DOT . type_name [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
 ##
 ## The known suffix of the stack is as follows:
-## module_name DOT
+## namespace_name DOT
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -575,29 +575,29 @@ interactive_expr: UIdent As Ident LT Ident GT XOR
 
 interactive_expr: UIdent As LBRACE Ident COLON Int ZWSP
 ##
-## Ends in an error in state: 136.
+## Ends in an error in state: 133.
 ##
-## nsepseq(field_type,field_sep) -> field_type . [ RBRACE ]
-## nsepseq(field_type,field_sep) -> field_type . field_sep nsepseq(field_type,field_sep) [ RBRACE ]
-## nseq(__anonymous_0(field_type,field_sep)) -> field_type . field_sep [ RBRACE ]
-## nseq(__anonymous_0(field_type,field_sep)) -> field_type . field_sep nseq(__anonymous_0(field_type,field_sep)) [ RBRACE ]
+## nsepseq(property_type,property_sep) -> property_type . [ RBRACE ]
+## nsepseq(property_type,property_sep) -> property_type . property_sep nsepseq(property_type,property_sep) [ RBRACE ]
+## nseq(__anonymous_0(property_type,property_sep)) -> property_type . property_sep [ RBRACE ]
+## nseq(__anonymous_0(property_type,property_sep)) -> property_type . property_sep nseq(__anonymous_0(property_type,property_sep)) [ RBRACE ]
 ##
 ## The known suffix of the stack is as follows:
-## field_type
+## property_type
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 interactive_expr: UIdent As LBRACE Ident COMMA ZWSP
 ##
-## Ends in an error in state: 139.
+## Ends in an error in state: 136.
 ##
-## nsepseq(field_type,field_sep) -> field_type field_sep . nsepseq(field_type,field_sep) [ RBRACE ]
-## nseq(__anonymous_0(field_type,field_sep)) -> field_type field_sep . [ RBRACE ]
-## nseq(__anonymous_0(field_type,field_sep)) -> field_type field_sep . nseq(__anonymous_0(field_type,field_sep)) [ RBRACE ]
+## nsepseq(property_type,property_sep) -> property_type property_sep . nsepseq(property_type,property_sep) [ RBRACE ]
+## nseq(__anonymous_0(property_type,property_sep)) -> property_type property_sep . [ RBRACE ]
+## nseq(__anonymous_0(property_type,property_sep)) -> property_type property_sep . nseq(__anonymous_0(property_type,property_sep)) [ RBRACE ]
 ##
 ## The known suffix of the stack is as follows:
-## field_type field_sep
+## property_type property_sep
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -740,11 +740,11 @@ interactive_expr: UIdent As VBAR LBRACE RBRACE ZWSP
 ##
 ## Ends in an error in state: 174.
 ##
-## nseq(__anonymous_1(record_type,VBAR)) -> VBAR record_type . [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
-## nseq(__anonymous_1(record_type,VBAR)) -> VBAR record_type . nseq(__anonymous_1(record_type,VBAR)) [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
+## nseq(__anonymous_1(object_type,VBAR)) -> VBAR object_type . [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
+## nseq(__anonymous_1(object_type,VBAR)) -> VBAR object_type . nseq(__anonymous_1(object_type,VBAR)) [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
 ##
 ## The known suffix of the stack is as follows:
-## VBAR record_type
+## VBAR object_type
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -753,8 +753,8 @@ interactive_expr: UIdent As VBAR LBRACE RBRACE VBAR ZWSP
 ##
 ## Ends in an error in state: 175.
 ##
-## nseq(__anonymous_1(record_type,VBAR)) -> VBAR . record_type [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
-## nseq(__anonymous_1(record_type,VBAR)) -> VBAR . record_type nseq(__anonymous_1(record_type,VBAR)) [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
+## nseq(__anonymous_1(object_type,VBAR)) -> VBAR . object_type [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
+## nseq(__anonymous_1(object_type,VBAR)) -> VBAR . object_type nseq(__anonymous_1(object_type,VBAR)) [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Directive Default Const Case COMMA COLON Break Attr ARROW ]
 ##
 ## The known suffix of the stack is as follows:
 ## VBAR
@@ -797,8 +797,8 @@ contract: Namespace ZWSP
 ##
 ## Ends in an error in state: 182.
 ##
-## module_decl -> Namespace . module_binder braces(statements) [ While Verbatim UIdent Type Switch String SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Else EOF Directive Default Const Case Bytes Break Attr ]
-## module_decl -> Namespace . module_binder interface braces(statements) [ While Verbatim UIdent Type Switch String SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Else EOF Directive Default Const Case Bytes Break Attr ]
+## namespace_decl -> Namespace . namespace_binder braces(statements) [ While Verbatim UIdent Type Switch String SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Else EOF Directive Default Const Case Bytes Break Attr ]
+## namespace_decl -> Namespace . namespace_binder interface braces(statements) [ While Verbatim UIdent Type Switch String SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Else EOF Directive Default Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## Namespace
@@ -810,11 +810,11 @@ contract: Namespace UIdent ZWSP
 ##
 ## Ends in an error in state: 185.
 ##
-## module_decl -> Namespace module_binder . braces(statements) [ While Verbatim UIdent Type Switch String SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Else EOF Directive Default Const Case Bytes Break Attr ]
-## module_decl -> Namespace module_binder . interface braces(statements) [ While Verbatim UIdent Type Switch String SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Else EOF Directive Default Const Case Bytes Break Attr ]
+## namespace_decl -> Namespace namespace_binder . braces(statements) [ While Verbatim UIdent Type Switch String SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Else EOF Directive Default Const Case Bytes Break Attr ]
+## namespace_decl -> Namespace namespace_binder . interface braces(statements) [ While Verbatim UIdent Type Switch String SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Else EOF Directive Default Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
-## Namespace module_binder
+## Namespace namespace_binder
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -864,7 +864,7 @@ interactive_expr: UIdent ZWSP
 ##
 ## ctor -> UIdent . [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LPAR LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
 ## lang_name -> UIdent . [ Verbatim ]
-## module_name -> UIdent . [ DOT ]
+## namespace_name -> UIdent . [ DOT ]
 ##
 ## The known suffix of the stack is as follows:
 ## UIdent
@@ -949,7 +949,7 @@ interactive_expr: LBRACE ZWSP
 ##
 ## Ends in an error in state: 202.
 ##
-## braces(sep_or_term(field(expr),field_sep)) -> LBRACE . sep_or_term(field(expr),field_sep) RBRACE [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case COMMA COLON Break Attr ]
+## braces(sep_or_term(property(expr),property_sep)) -> LBRACE . sep_or_term(property(expr),property_sep) RBRACE [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case COMMA COLON Break Attr ]
 ## braces(update_expr) -> LBRACE . update_expr RBRACE [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case COMMA COLON Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
@@ -962,7 +962,7 @@ interactive_expr: LBRACE ELLIPSIS ZWSP
 ##
 ## Ends in an error in state: 203.
 ##
-## update_expr -> ELLIPSIS . expr field_sep updates [ RBRACE ]
+## update_expr -> ELLIPSIS . expr property_sep updates [ RBRACE ]
 ##
 ## The known suffix of the stack is as follows:
 ## ELLIPSIS
@@ -975,9 +975,9 @@ interactive_expr: Ident ZWSP
 ## Ends in an error in state: 205.
 ##
 ## lang_name -> Ident . [ Verbatim ]
+## object_or_array -> Ident . [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM_EQ REM RBRACKET RBRACE QMARK PLUS_EQ PLUS PARAMS OR Namespace NE MULT_EQ MINUS_EQ MINUS Let LT LPAR LE LBRACKET LBRACE Interface Import If GT For Export Else EQ2 EQ EOF Directive Default DOT DIV_EQ Const Case COMMA COLON Break BIT_XOR_EQ BIT_XOR BIT_SR_EQ BIT_SR BIT_SL_EQ BIT_SL BIT_OR_EQ BIT_AND_EQ BIT_AND Attr As AND ]
 ## post_decr_expr -> Ident . MINUS2 [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr AND ]
 ## post_incr_expr -> Ident . PLUS2 [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr AND ]
-## record_or_tuple -> Ident . [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM_EQ REM RBRACKET RBRACE QMARK PLUS_EQ PLUS PARAMS OR Namespace NE MULT_EQ MINUS_EQ MINUS Let LT LPAR LE LBRACKET LBRACE Interface Import If GT For Export Else EQ2 EQ EOF Directive Default DOT DIV_EQ Const Case COMMA COLON Break BIT_XOR_EQ BIT_XOR BIT_SR_EQ BIT_SR BIT_SL_EQ BIT_SL BIT_OR_EQ BIT_AND_EQ BIT_AND Attr As AND ]
 ##
 ## The known suffix of the stack is as follows:
 ## Ident
@@ -1027,7 +1027,7 @@ interactive_expr: ES6FUN LPAR LBRACE ZWSP
 ##
 ## Ends in an error in state: 213.
 ##
-## braces(sep_or_term(field_pattern(param_pattern),field_sep)) -> LBRACE . sep_or_term(field_pattern(param_pattern),field_sep) RBRACE [ SEMI RBRACKET RBRACE PARAMS COMMA COLON ]
+## braces(sep_or_term(property_pattern(param_pattern),property_sep)) -> LBRACE . sep_or_term(property_pattern(param_pattern),property_sep) RBRACE [ SEMI RBRACKET RBRACE PARAMS COMMA COLON ]
 ##
 ## The known suffix of the stack is as follows:
 ## LBRACE
@@ -1039,7 +1039,7 @@ interactive_expr: ES6FUN LPAR LBRACE Attr ZWSP
 ##
 ## Ends in an error in state: 214.
 ##
-## field_pattern(param_pattern) -> Attr . field_pattern(param_pattern) [ SEMI RBRACE COMMA ]
+## property_pattern(param_pattern) -> Attr . property_pattern(param_pattern) [ SEMI RBRACE COMMA ]
 ##
 ## The known suffix of the stack is as follows:
 ## Attr
@@ -1051,11 +1051,11 @@ interactive_expr: ES6FUN LPAR LBRACE Ident ZWSP
 ##
 ## Ends in an error in state: 216.
 ##
-## field_pattern(param_pattern) -> field_id . [ SEMI RBRACE COMMA ]
-## field_pattern(param_pattern) -> field_id . COLON param_pattern [ SEMI RBRACE COMMA ]
+## property_pattern(param_pattern) -> property_id . [ SEMI RBRACE COMMA ]
+## property_pattern(param_pattern) -> property_id . COLON param_pattern [ SEMI RBRACE COMMA ]
 ##
 ## The known suffix of the stack is as follows:
-## field_id
+## property_id
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -1064,39 +1064,39 @@ interactive_expr: ES6FUN LPAR LBRACE Ident COLON ZWSP
 ##
 ## Ends in an error in state: 217.
 ##
-## field_pattern(param_pattern) -> field_id COLON . param_pattern [ SEMI RBRACE COMMA ]
+## property_pattern(param_pattern) -> property_id COLON . param_pattern [ SEMI RBRACE COMMA ]
 ##
 ## The known suffix of the stack is as follows:
-## field_id COLON
+## property_id COLON
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 interactive_expr: ES6FUN LPAR LBRACE Ident COLON Ident ZWSP
 ##
-## Ends in an error in state: 229.
+## Ends in an error in state: 226.
 ##
-## nsepseq(field_pattern(param_pattern),field_sep) -> field_pattern(param_pattern) . [ RBRACE ]
-## nsepseq(field_pattern(param_pattern),field_sep) -> field_pattern(param_pattern) . field_sep nsepseq(field_pattern(param_pattern),field_sep) [ RBRACE ]
-## nseq(__anonymous_0(field_pattern(param_pattern),field_sep)) -> field_pattern(param_pattern) . field_sep [ RBRACE ]
-## nseq(__anonymous_0(field_pattern(param_pattern),field_sep)) -> field_pattern(param_pattern) . field_sep nseq(__anonymous_0(field_pattern(param_pattern),field_sep)) [ RBRACE ]
+## nsepseq(property_pattern(param_pattern),property_sep) -> property_pattern(param_pattern) . [ RBRACE ]
+## nsepseq(property_pattern(param_pattern),property_sep) -> property_pattern(param_pattern) . property_sep nsepseq(property_pattern(param_pattern),property_sep) [ RBRACE ]
+## nseq(__anonymous_0(property_pattern(param_pattern),property_sep)) -> property_pattern(param_pattern) . property_sep [ RBRACE ]
+## nseq(__anonymous_0(property_pattern(param_pattern),property_sep)) -> property_pattern(param_pattern) . property_sep nseq(__anonymous_0(property_pattern(param_pattern),property_sep)) [ RBRACE ]
 ##
 ## The known suffix of the stack is as follows:
-## field_pattern(param_pattern)
+## property_pattern(param_pattern)
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 interactive_expr: ES6FUN LPAR LBRACE Ident COMMA ZWSP
 ##
-## Ends in an error in state: 230.
+## Ends in an error in state: 227.
 ##
-## nsepseq(field_pattern(param_pattern),field_sep) -> field_pattern(param_pattern) field_sep . nsepseq(field_pattern(param_pattern),field_sep) [ RBRACE ]
-## nseq(__anonymous_0(field_pattern(param_pattern),field_sep)) -> field_pattern(param_pattern) field_sep . [ RBRACE ]
-## nseq(__anonymous_0(field_pattern(param_pattern),field_sep)) -> field_pattern(param_pattern) field_sep . nseq(__anonymous_0(field_pattern(param_pattern),field_sep)) [ RBRACE ]
+## nsepseq(property_pattern(param_pattern),property_sep) -> property_pattern(param_pattern) property_sep . nsepseq(property_pattern(param_pattern),property_sep) [ RBRACE ]
+## nseq(__anonymous_0(property_pattern(param_pattern),property_sep)) -> property_pattern(param_pattern) property_sep . [ RBRACE ]
+## nseq(__anonymous_0(property_pattern(param_pattern),property_sep)) -> property_pattern(param_pattern) property_sep . nseq(__anonymous_0(property_pattern(param_pattern),property_sep)) [ RBRACE ]
 ##
 ## The known suffix of the stack is as follows:
-## field_pattern(param_pattern) field_sep
+## property_pattern(param_pattern) property_sep
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -1237,7 +1237,7 @@ interactive_expr: ContractOf ZWSP
 ##
 ## Ends in an error in state: 263.
 ##
-## contract_of_expr -> ContractOf . par(module_selection) [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
+## contract_of_expr -> ContractOf . par(namespace_selection) [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
 ##
 ## The known suffix of the stack is as follows:
 ## ContractOf
@@ -1249,8 +1249,8 @@ interactive_expr: ContractOf LPAR ZWSP
 ##
 ## Ends in an error in state: 264.
 ##
-## par(module_selection) -> LPAR . module_selection RPAR [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
-## par(module_selection) -> LPAR . module_selection PARAMS RPAR [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
+## par(namespace_selection) -> LPAR . namespace_selection RPAR [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
+## par(namespace_selection) -> LPAR . namespace_selection PARAMS RPAR [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
 ##
 ## The known suffix of the stack is as follows:
 ## LPAR
@@ -1262,17 +1262,17 @@ interactive_expr: ContractOf LPAR UIdent While
 ##
 ## Ends in an error in state: 265.
 ##
-## par(module_selection) -> LPAR module_selection . RPAR [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
-## par(module_selection) -> LPAR module_selection . PARAMS RPAR [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
+## par(namespace_selection) -> LPAR namespace_selection . RPAR [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
+## par(namespace_selection) -> LPAR namespace_selection . PARAMS RPAR [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
 ##
 ## The known suffix of the stack is as follows:
-## LPAR module_selection
+## LPAR namespace_selection
 ##
 ## WARNING: This example involves spurious reductions.
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 33, spurious reduction of production module_selection -> module_name
+## In state 33, spurious reduction of production namespace_selection -> namespace_name
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -1281,10 +1281,10 @@ interactive_expr: ContractOf LPAR UIdent PARAMS ZWSP
 ##
 ## Ends in an error in state: 267.
 ##
-## par(module_selection) -> LPAR module_selection PARAMS . RPAR [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
+## par(namespace_selection) -> LPAR namespace_selection PARAMS . RPAR [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
 ##
 ## The known suffix of the stack is as follows:
-## LPAR module_selection PARAMS
+## LPAR namespace_selection PARAMS
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -1306,7 +1306,7 @@ interactive_expr: BIT_NOT Ident ZWSP
 ## Ends in an error in state: 272.
 ##
 ## lang_name -> Ident . [ Verbatim ]
-## record_or_tuple -> Ident . [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LPAR LE LBRACKET LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default DOT Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr AND ]
+## object_or_array -> Ident . [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LPAR LE LBRACKET LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default DOT Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr AND ]
 ##
 ## The known suffix of the stack is as follows:
 ## Ident
@@ -1314,22 +1314,22 @@ interactive_expr: BIT_NOT Ident ZWSP
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-interactive_expr: UIdent DOT Ident ZWSP
+interactive_expr: LPAR UIdent RPAR ZWSP
 ##
-## Ends in an error in state: 275.
+## Ends in an error in state: 278.
 ##
-## path(record_or_tuple) -> record_or_tuple . nseq(selection) [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM_EQ REM RBRACKET RBRACE QMARK PLUS_EQ PLUS PARAMS OR Namespace NE MULT_EQ MINUS_EQ MINUS Let LT LPAR LE LBRACE Interface Import If GT For Export Else EQ2 EQ EOF Directive Default DIV_EQ Const Case COMMA COLON Break BIT_XOR_EQ BIT_XOR BIT_SR_EQ BIT_SR BIT_SL_EQ BIT_SL BIT_OR_EQ BIT_AND_EQ BIT_AND Attr As AND ]
-## var_path -> record_or_tuple . [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM_EQ REM RBRACKET RBRACE QMARK PLUS_EQ PLUS PARAMS OR Namespace NE MULT_EQ MINUS_EQ MINUS Let LT LPAR LE LBRACE Interface Import If GT For Export Else EQ2 EQ EOF Directive Default DIV_EQ Const Case COMMA COLON Break BIT_XOR_EQ BIT_XOR BIT_SR_EQ BIT_SR BIT_SL_EQ BIT_SL BIT_OR_EQ BIT_AND_EQ BIT_AND Attr As AND ]
+## core_expr -> par(expr) . [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LPAR LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
+## path(__anonymous_10) -> par(expr) . nseq(selection) [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LPAR LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
 ##
 ## The known suffix of the stack is as follows:
-## record_or_tuple
+## par(expr)
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 interactive_expr: Ident LBRACKET ZWSP
 ##
-## Ends in an error in state: 276.
+## Ends in an error in state: 279.
 ##
 ## brackets(Int) -> LBRACKET . Int RBRACKET [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM_EQ REM RBRACKET RBRACE QMARK PLUS_EQ PLUS PARAMS OR Namespace NE MULT_EQ MINUS_EQ MINUS Let LT LPAR LE LBRACKET LBRACE Interface Import If GT For Export Else EQ2 EQ EOF Directive Default DOT DIV_EQ Const Case COMMA COLON Break BIT_XOR_EQ BIT_XOR BIT_SR_EQ BIT_SR BIT_SL_EQ BIT_SL BIT_OR_EQ BIT_AND_EQ BIT_AND Attr As AND ]
 ## brackets(String) -> LBRACKET . String RBRACKET [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM_EQ REM RBRACKET RBRACE QMARK PLUS_EQ PLUS PARAMS OR Namespace NE MULT_EQ MINUS_EQ MINUS Let LT LPAR LE LBRACKET LBRACE Interface Import If GT For Export Else EQ2 EQ EOF Directive Default DOT DIV_EQ Const Case COMMA COLON Break BIT_XOR_EQ BIT_XOR BIT_SR_EQ BIT_SR BIT_SL_EQ BIT_SL BIT_OR_EQ BIT_AND_EQ BIT_AND Attr As AND ]
@@ -1342,7 +1342,7 @@ interactive_expr: Ident LBRACKET ZWSP
 
 interactive_expr: Ident LBRACKET String ZWSP
 ##
-## Ends in an error in state: 277.
+## Ends in an error in state: 280.
 ##
 ## brackets(String) -> LBRACKET String . RBRACKET [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM_EQ REM RBRACKET RBRACE QMARK PLUS_EQ PLUS PARAMS OR Namespace NE MULT_EQ MINUS_EQ MINUS Let LT LPAR LE LBRACKET LBRACE Interface Import If GT For Export Else EQ2 EQ EOF Directive Default DOT DIV_EQ Const Case COMMA COLON Break BIT_XOR_EQ BIT_XOR BIT_SR_EQ BIT_SR BIT_SL_EQ BIT_SL BIT_OR_EQ BIT_AND_EQ BIT_AND Attr As AND ]
 ##
@@ -1354,7 +1354,7 @@ interactive_expr: Ident LBRACKET String ZWSP
 
 interactive_expr: Ident LBRACKET Int ZWSP
 ##
-## Ends in an error in state: 279.
+## Ends in an error in state: 282.
 ##
 ## brackets(Int) -> LBRACKET Int . RBRACKET [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM_EQ REM RBRACKET RBRACE QMARK PLUS_EQ PLUS PARAMS OR Namespace NE MULT_EQ MINUS_EQ MINUS Let LT LPAR LE LBRACKET LBRACE Interface Import If GT For Export Else EQ2 EQ EOF Directive Default DOT DIV_EQ Const Case COMMA COLON Break BIT_XOR_EQ BIT_XOR BIT_SR_EQ BIT_SR BIT_SL_EQ BIT_SL BIT_OR_EQ BIT_AND_EQ BIT_AND Attr As AND ]
 ##
@@ -1366,9 +1366,9 @@ interactive_expr: Ident LBRACKET Int ZWSP
 
 interactive_expr: Ident DOT ZWSP
 ##
-## Ends in an error in state: 281.
+## Ends in an error in state: 284.
 ##
-## selection -> DOT . field_name [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM_EQ REM RBRACKET RBRACE QMARK PLUS_EQ PLUS PARAMS OR Namespace NE MULT_EQ MINUS_EQ MINUS Let LT LPAR LE LBRACKET LBRACE Interface Import If GT For Export Else EQ2 EQ EOF Directive Default DOT DIV_EQ Const Case COMMA COLON Break BIT_XOR_EQ BIT_XOR BIT_SR_EQ BIT_SR BIT_SL_EQ BIT_SL BIT_OR_EQ BIT_AND_EQ BIT_AND Attr As AND ]
+## selection -> DOT . property_name [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM_EQ REM RBRACKET RBRACE QMARK PLUS_EQ PLUS PARAMS OR Namespace NE MULT_EQ MINUS_EQ MINUS Let LT LPAR LE LBRACKET LBRACE Interface Import If GT For Export Else EQ2 EQ EOF Directive Default DOT DIV_EQ Const Case COMMA COLON Break BIT_XOR_EQ BIT_XOR BIT_SR_EQ BIT_SR BIT_SL_EQ BIT_SL BIT_OR_EQ BIT_AND_EQ BIT_AND Attr As AND ]
 ##
 ## The known suffix of the stack is as follows:
 ## DOT
@@ -1378,7 +1378,7 @@ interactive_expr: Ident DOT ZWSP
 
 interactive_expr: Ident DOT Ident ZWSP
 ##
-## Ends in an error in state: 283.
+## Ends in an error in state: 286.
 ##
 ## nseq(selection) -> selection . [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM_EQ REM RBRACKET RBRACE QMARK PLUS_EQ PLUS PARAMS OR Namespace NE MULT_EQ MINUS_EQ MINUS Let LT LPAR LE LBRACE Interface Import If GT For Export Else EQ2 EQ EOF Directive Default DIV_EQ Const Case COMMA COLON Break BIT_XOR_EQ BIT_XOR BIT_SR_EQ BIT_SR BIT_SL_EQ BIT_SL BIT_OR_EQ BIT_AND_EQ BIT_AND Attr As AND ]
 ## nseq(selection) -> selection . nseq(selection) [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM_EQ REM RBRACKET RBRACE QMARK PLUS_EQ PLUS PARAMS OR Namespace NE MULT_EQ MINUS_EQ MINUS Let LT LPAR LE LBRACE Interface Import If GT For Export Else EQ2 EQ EOF Directive Default DIV_EQ Const Case COMMA COLON Break BIT_XOR_EQ BIT_XOR BIT_SR_EQ BIT_SR BIT_SL_EQ BIT_SL BIT_OR_EQ BIT_AND_EQ BIT_AND Attr As AND ]
@@ -1389,38 +1389,38 @@ interactive_expr: Ident DOT Ident ZWSP
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-interactive_expr: LPAR UIdent RPAR ZWSP
+interactive_expr: UIdent DOT Ident ZWSP
 ##
-## Ends in an error in state: 292.
+## Ends in an error in state: 291.
 ##
-## core_expr -> par(expr) . [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LPAR LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
-## path(__anonymous_10) -> par(expr) . nseq(selection) [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LPAR LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
+## path(object_or_array) -> object_or_array . nseq(selection) [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM_EQ REM RBRACKET RBRACE QMARK PLUS_EQ PLUS PARAMS OR Namespace NE MULT_EQ MINUS_EQ MINUS Let LT LPAR LE LBRACE Interface Import If GT For Export Else EQ2 EQ EOF Directive Default DIV_EQ Const Case COMMA COLON Break BIT_XOR_EQ BIT_XOR BIT_SR_EQ BIT_SR BIT_SL_EQ BIT_SL BIT_OR_EQ BIT_AND_EQ BIT_AND Attr As AND ]
+## var_path -> object_or_array . [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM_EQ REM RBRACKET RBRACE QMARK PLUS_EQ PLUS PARAMS OR Namespace NE MULT_EQ MINUS_EQ MINUS Let LT LPAR LE LBRACE Interface Import If GT For Export Else EQ2 EQ EOF Directive Default DIV_EQ Const Case COMMA COLON Break BIT_XOR_EQ BIT_XOR BIT_SR_EQ BIT_SR BIT_SL_EQ BIT_SL BIT_OR_EQ BIT_AND_EQ BIT_AND Attr As AND ]
 ##
 ## The known suffix of the stack is as follows:
-## par(expr)
+## object_or_array
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 interactive_expr: UIdent DOT ZWSP
 ##
-## Ends in an error in state: 296.
+## Ends in an error in state: 295.
 ##
-## module_path(selected_expr) -> module_name DOT . module_path(selected_expr) [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LPAR LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
-## module_path(selected_expr) -> module_name DOT . selected_expr [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LPAR LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
+## namespace_path(selected_expr) -> namespace_name DOT . namespace_path(selected_expr) [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LPAR LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
+## namespace_path(selected_expr) -> namespace_name DOT . selected_expr [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LPAR LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
 ##
 ## The known suffix of the stack is as follows:
-## module_name DOT
+## namespace_name DOT
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 interactive_expr: UIdent DOT UIdent ZWSP
 ##
-## Ends in an error in state: 297.
+## Ends in an error in state: 296.
 ##
 ## ctor -> UIdent . [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LPAR LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
-## module_name -> UIdent . [ DOT ]
+## namespace_name -> UIdent . [ DOT ]
 ##
 ## The known suffix of the stack is as follows:
 ## UIdent
@@ -1428,9 +1428,9 @@ interactive_expr: UIdent DOT UIdent ZWSP
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-contract: Namespace UIdent LBRACE Switch LPAR UIdent RPAR LBRACE Case Ident Verbatim XOR
+contract: Namespace UIdent LBRACE Switch LPAR UIdent RPAR LBRACE Case LBRACKET RBRACKET XOR
 ##
-## Ends in an error in state: 306.
+## Ends in an error in state: 305.
 ##
 ## app_expr -> lambda . arguments [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LPAR LE LBRACKET LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default DOT Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
 ##
@@ -1442,7 +1442,7 @@ contract: Namespace UIdent LBRACE Switch LPAR UIdent RPAR LBRACE Case Ident Verb
 
 interactive_expr: UIdent LPAR ZWSP
 ##
-## Ends in an error in state: 307.
+## Ends in an error in state: 306.
 ##
 ## par(ioption(nsepseq(argument,COMMA))) -> LPAR . RPAR [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LPAR LE LBRACKET LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default DOT Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
 ## par(ioption(nsepseq(argument,COMMA))) -> LPAR . nsepseq(argument,COMMA) RPAR [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LPAR LE LBRACKET LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default DOT Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
@@ -1457,7 +1457,7 @@ interactive_expr: UIdent LPAR ZWSP
 
 interactive_expr: UIdent LPAR PARAMS ZWSP
 ##
-## Ends in an error in state: 309.
+## Ends in an error in state: 308.
 ##
 ## par(ioption(nsepseq(argument,COMMA))) -> LPAR PARAMS . RPAR [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LPAR LE LBRACKET LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default DOT Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
 ##
@@ -1469,7 +1469,7 @@ interactive_expr: UIdent LPAR PARAMS ZWSP
 
 interactive_expr: Attr ZWSP
 ##
-## Ends in an error in state: 311.
+## Ends in an error in state: 310.
 ##
 ## expr -> Attr . expr [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case COMMA COLON Break Attr ]
 ##
@@ -1481,7 +1481,7 @@ interactive_expr: Attr ZWSP
 
 interactive_expr: Ident REM_EQ ZWSP
 ##
-## Ends in an error in state: 313.
+## Ends in an error in state: 312.
 ##
 ## bin_op(var_path,REM_EQ,expr) -> var_path REM_EQ . expr [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case COMMA COLON Break Attr ]
 ##
@@ -1493,7 +1493,7 @@ interactive_expr: Ident REM_EQ ZWSP
 
 interactive_expr: LT GT WILD
 ##
-## Ends in an error in state: 316.
+## Ends in an error in state: 315.
 ##
 ## fun_expr -> type_vars . ES6FUN fun_par_params option(ret_type) ARROW fun_body [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case COMMA COLON Break Attr ]
 ## fun_expr -> type_vars . ES6FUN fun_var_param ARROW fun_body [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case COMMA COLON Break Attr ]
@@ -1513,7 +1513,7 @@ interactive_expr: LT GT WILD
 
 interactive_expr: LT GT ES6FUN ZWSP
 ##
-## Ends in an error in state: 317.
+## Ends in an error in state: 316.
 ##
 ## fun_expr -> type_vars ES6FUN . fun_par_params option(ret_type) ARROW fun_body [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case COMMA COLON Break Attr ]
 ## fun_expr -> type_vars ES6FUN . fun_var_param ARROW fun_body [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case COMMA COLON Break Attr ]
@@ -1526,7 +1526,7 @@ interactive_expr: LT GT ES6FUN ZWSP
 
 interactive_expr: LT GT ES6FUN Ident ZWSP
 ##
-## Ends in an error in state: 318.
+## Ends in an error in state: 317.
 ##
 ## fun_expr -> type_vars ES6FUN fun_var_param . ARROW fun_body [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case COMMA COLON Break Attr ]
 ##
@@ -1538,7 +1538,7 @@ interactive_expr: LT GT ES6FUN Ident ZWSP
 
 interactive_expr: LT GT ES6FUN Ident ARROW ZWSP
 ##
-## Ends in an error in state: 319.
+## Ends in an error in state: 318.
 ##
 ## fun_expr -> type_vars ES6FUN fun_var_param ARROW . fun_body [ While Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case COMMA COLON Break Attr ]
 ##
@@ -1550,7 +1550,7 @@ interactive_expr: LT GT ES6FUN Ident ARROW ZWSP
 
 interactive_expr: Ident MINUS2 ZWSP
 ##
-## Ends in an error in state: 328.
+## Ends in an error in state: 327.
 ##
 ## add_expr_level -> mult_expr_level . [ XOR While VBAR Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr AND ]
 ## bin_op(mult_expr_level,REM,unary_expr_level) -> mult_expr_level . REM unary_expr_level [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr AND ]
@@ -1565,7 +1565,7 @@ interactive_expr: Ident MINUS2 ZWSP
 
 interactive_expr: UIdent TIMES ZWSP
 ##
-## Ends in an error in state: 329.
+## Ends in an error in state: 328.
 ##
 ## bin_op(mult_expr_level,TIMES,unary_expr_level) -> mult_expr_level TIMES . unary_expr_level [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr AND ]
 ##
@@ -1577,7 +1577,7 @@ interactive_expr: UIdent TIMES ZWSP
 
 interactive_expr: Bytes ZWSP
 ##
-## Ends in an error in state: 335.
+## Ends in an error in state: 334.
 ##
 ## app_expr_level -> core_expr . [ XOR While VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Directive Default Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
 ## lambda -> core_expr . [ LPAR ]
@@ -1678,11 +1678,11 @@ interactive_expr: UIdent LT UIdent NE
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 339, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -1716,10 +1716,10 @@ interactive_expr: UIdent PLUS UIdent As
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 339, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -1753,10 +1753,10 @@ interactive_expr: UIdent MINUS UIdent As
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 339, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -1789,11 +1789,11 @@ interactive_expr: UIdent LE UIdent NE
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 339, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -1841,11 +1841,11 @@ interactive_expr: UIdent GT UIdent NE
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 339, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -1878,11 +1878,11 @@ interactive_expr: UIdent GT ZWSP EQ UIdent NE
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 339, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -1985,18 +1985,18 @@ interactive_expr: UIdent QMARK UIdent While
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 427, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ## In state 383, spurious reduction of production eq_expr_level -> add_expr_level
 ## In state 348, spurious reduction of production comp_expr_level -> eq_expr_level
 ## In state 353, spurious reduction of production bit_shift_level -> comp_expr_level
 ## In state 394, spurious reduction of production conj_expr_level -> bit_shift_level
 ## In state 408, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 349, spurious reduction of production non_record_expr -> disj_expr_level
-## In state 403, spurious reduction of production no_attr_expr -> non_record_expr
+## In state 349, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 403, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 404, spurious reduction of production expr -> no_attr_expr
 ##
 
@@ -2294,18 +2294,18 @@ interactive_expr: UIdent LPAR UIdent While
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 427, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ## In state 383, spurious reduction of production eq_expr_level -> add_expr_level
 ## In state 348, spurious reduction of production comp_expr_level -> eq_expr_level
 ## In state 353, spurious reduction of production bit_shift_level -> comp_expr_level
 ## In state 394, spurious reduction of production conj_expr_level -> bit_shift_level
 ## In state 408, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 349, spurious reduction of production non_record_expr -> disj_expr_level
-## In state 403, spurious reduction of production no_attr_expr -> non_record_expr
+## In state 349, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 403, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 404, spurious reduction of production expr -> no_attr_expr
 ## In state 473, spurious reduction of production argument -> expr
 ##
@@ -2364,7 +2364,7 @@ interactive_expr: LBRACE ELLIPSIS UIdent While
 ##
 ## Ends in an error in state: 485.
 ##
-## update_expr -> ELLIPSIS expr . field_sep updates [ RBRACE ]
+## update_expr -> ELLIPSIS expr . property_sep updates [ RBRACE ]
 ##
 ## The known suffix of the stack is as follows:
 ## ELLIPSIS expr
@@ -2374,18 +2374,18 @@ interactive_expr: LBRACE ELLIPSIS UIdent While
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 427, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ## In state 383, spurious reduction of production eq_expr_level -> add_expr_level
 ## In state 348, spurious reduction of production comp_expr_level -> eq_expr_level
 ## In state 353, spurious reduction of production bit_shift_level -> comp_expr_level
 ## In state 394, spurious reduction of production conj_expr_level -> bit_shift_level
 ## In state 408, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 349, spurious reduction of production non_record_expr -> disj_expr_level
-## In state 403, spurious reduction of production no_attr_expr -> non_record_expr
+## In state 349, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 403, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 404, spurious reduction of production expr -> no_attr_expr
 ##
 
@@ -2395,10 +2395,10 @@ interactive_expr: LBRACE ELLIPSIS UIdent COMMA ZWSP
 ##
 ## Ends in an error in state: 486.
 ##
-## update_expr -> ELLIPSIS expr field_sep . updates [ RBRACE ]
+## update_expr -> ELLIPSIS expr property_sep . updates [ RBRACE ]
 ##
 ## The known suffix of the stack is as follows:
-## ELLIPSIS expr field_sep
+## ELLIPSIS expr property_sep
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -2407,7 +2407,7 @@ interactive_expr: LBRACE Attr ZWSP
 ##
 ## Ends in an error in state: 487.
 ##
-## field(expr) -> Attr . field(expr) [ SEMI RBRACE COMMA ]
+## property(expr) -> Attr . property(expr) [ SEMI RBRACE COMMA ]
 ##
 ## The known suffix of the stack is as follows:
 ## Attr
@@ -2419,11 +2419,11 @@ interactive_expr: LBRACE Ident ZWSP
 ##
 ## Ends in an error in state: 488.
 ##
-## field(expr) -> field_id . [ SEMI RBRACE COMMA ]
-## field(expr) -> field_id . COLON expr [ SEMI RBRACE COMMA ]
+## property(expr) -> property_id . [ SEMI RBRACE COMMA ]
+## property(expr) -> property_id . COLON expr [ SEMI RBRACE COMMA ]
 ##
 ## The known suffix of the stack is as follows:
-## field_id
+## property_id
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -2432,59 +2432,59 @@ interactive_expr: LBRACE Ident COLON ZWSP
 ##
 ## Ends in an error in state: 489.
 ##
-## field(expr) -> field_id COLON . expr [ SEMI RBRACE COMMA ]
+## property(expr) -> property_id COLON . expr [ SEMI RBRACE COMMA ]
 ##
 ## The known suffix of the stack is as follows:
-## field_id COLON
+## property_id COLON
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 interactive_expr: LBRACE Ident COLON UIdent While
 ##
-## Ends in an error in state: 497.
+## Ends in an error in state: 494.
 ##
-## nsepseq(field(expr),field_sep) -> field(expr) . [ RBRACE ]
-## nsepseq(field(expr),field_sep) -> field(expr) . field_sep nsepseq(field(expr),field_sep) [ RBRACE ]
-## nseq(__anonymous_0(field(expr),field_sep)) -> field(expr) . field_sep [ RBRACE ]
-## nseq(__anonymous_0(field(expr),field_sep)) -> field(expr) . field_sep nseq(__anonymous_0(field(expr),field_sep)) [ RBRACE ]
+## nsepseq(property(expr),property_sep) -> property(expr) . [ RBRACE ]
+## nsepseq(property(expr),property_sep) -> property(expr) . property_sep nsepseq(property(expr),property_sep) [ RBRACE ]
+## nseq(__anonymous_0(property(expr),property_sep)) -> property(expr) . property_sep [ RBRACE ]
+## nseq(__anonymous_0(property(expr),property_sep)) -> property(expr) . property_sep nseq(__anonymous_0(property(expr),property_sep)) [ RBRACE ]
 ##
 ## The known suffix of the stack is as follows:
-## field(expr)
+## property(expr)
 ##
 ## WARNING: This example involves spurious reductions.
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 427, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ## In state 383, spurious reduction of production eq_expr_level -> add_expr_level
 ## In state 348, spurious reduction of production comp_expr_level -> eq_expr_level
 ## In state 353, spurious reduction of production bit_shift_level -> comp_expr_level
 ## In state 394, spurious reduction of production conj_expr_level -> bit_shift_level
 ## In state 408, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 349, spurious reduction of production non_record_expr -> disj_expr_level
-## In state 403, spurious reduction of production no_attr_expr -> non_record_expr
+## In state 349, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 403, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 404, spurious reduction of production expr -> no_attr_expr
-## In state 490, spurious reduction of production field(expr) -> field_id COLON expr
+## In state 490, spurious reduction of production property(expr) -> property_id COLON expr
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 interactive_expr: LBRACE Ident COMMA ZWSP
 ##
-## Ends in an error in state: 498.
+## Ends in an error in state: 495.
 ##
-## nsepseq(field(expr),field_sep) -> field(expr) field_sep . nsepseq(field(expr),field_sep) [ RBRACE ]
-## nseq(__anonymous_0(field(expr),field_sep)) -> field(expr) field_sep . [ RBRACE ]
-## nseq(__anonymous_0(field(expr),field_sep)) -> field(expr) field_sep . nseq(__anonymous_0(field(expr),field_sep)) [ RBRACE ]
+## nsepseq(property(expr),property_sep) -> property(expr) property_sep . nsepseq(property(expr),property_sep) [ RBRACE ]
+## nseq(__anonymous_0(property(expr),property_sep)) -> property(expr) property_sep . [ RBRACE ]
+## nseq(__anonymous_0(property(expr),property_sep)) -> property(expr) property_sep . nseq(__anonymous_0(property(expr),property_sep)) [ RBRACE ]
 ##
 ## The known suffix of the stack is as follows:
-## field(expr) field_sep
+## property(expr) property_sep
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -2518,18 +2518,18 @@ interactive_expr: LBRACKET UIdent While
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 427, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ## In state 383, spurious reduction of production eq_expr_level -> add_expr_level
 ## In state 348, spurious reduction of production comp_expr_level -> eq_expr_level
 ## In state 353, spurious reduction of production bit_shift_level -> comp_expr_level
 ## In state 394, spurious reduction of production conj_expr_level -> bit_shift_level
 ## In state 408, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 349, spurious reduction of production non_record_expr -> disj_expr_level
-## In state 403, spurious reduction of production no_attr_expr -> non_record_expr
+## In state 349, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 403, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 404, spurious reduction of production expr -> no_attr_expr
 ## In state 512, spurious reduction of production component(expr) -> expr
 ##
@@ -2565,18 +2565,18 @@ interactive_expr: LPAR UIdent While
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 427, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ## In state 383, spurious reduction of production eq_expr_level -> add_expr_level
 ## In state 348, spurious reduction of production comp_expr_level -> eq_expr_level
 ## In state 353, spurious reduction of production bit_shift_level -> comp_expr_level
 ## In state 394, spurious reduction of production conj_expr_level -> bit_shift_level
 ## In state 408, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 349, spurious reduction of production non_record_expr -> disj_expr_level
-## In state 403, spurious reduction of production no_attr_expr -> non_record_expr
+## In state 349, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 403, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 404, spurious reduction of production expr -> no_attr_expr
 ##
 
@@ -2609,18 +2609,18 @@ contract: Namespace UIdent LBRACE While LPAR UIdent While
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 427, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ## In state 383, spurious reduction of production eq_expr_level -> add_expr_level
 ## In state 348, spurious reduction of production comp_expr_level -> eq_expr_level
 ## In state 353, spurious reduction of production bit_shift_level -> comp_expr_level
 ## In state 394, spurious reduction of production conj_expr_level -> bit_shift_level
 ## In state 408, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 349, spurious reduction of production non_record_expr -> disj_expr_level
-## In state 403, spurious reduction of production no_attr_expr -> non_record_expr
+## In state 349, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 403, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 404, spurious reduction of production expr -> no_attr_expr
 ## In state 527, spurious reduction of production while_cond -> expr
 ##
@@ -2693,18 +2693,18 @@ contract: Namespace UIdent LBRACE Switch LPAR UIdent While
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 427, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ## In state 383, spurious reduction of production eq_expr_level -> add_expr_level
 ## In state 348, spurious reduction of production comp_expr_level -> eq_expr_level
 ## In state 353, spurious reduction of production bit_shift_level -> comp_expr_level
 ## In state 394, spurious reduction of production conj_expr_level -> bit_shift_level
 ## In state 408, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 349, spurious reduction of production non_record_expr -> disj_expr_level
-## In state 403, spurious reduction of production no_attr_expr -> non_record_expr
+## In state 349, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 403, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 404, spurious reduction of production expr -> no_attr_expr
 ## In state 535, spurious reduction of production subject -> expr
 ##
@@ -2814,7 +2814,7 @@ contract: Const LBRACE ZWSP
 ##
 ## Ends in an error in state: 549.
 ##
-## braces(sep_or_term(field_pattern(pattern),field_sep)) -> LBRACE . sep_or_term(field_pattern(pattern),field_sep) RBRACE [ SEMI RBRACKET RBRACE EQ COMMA COLON ]
+## braces(sep_or_term(property_pattern(pattern),property_sep)) -> LBRACE . sep_or_term(property_pattern(pattern),property_sep) RBRACE [ SEMI RBRACKET RBRACE EQ COMMA COLON ]
 ##
 ## The known suffix of the stack is as follows:
 ## LBRACE
@@ -2826,7 +2826,7 @@ contract: Const LBRACE Attr ZWSP
 ##
 ## Ends in an error in state: 550.
 ##
-## field_pattern(pattern) -> Attr . field_pattern(pattern) [ SEMI RBRACE COMMA ]
+## property_pattern(pattern) -> Attr . property_pattern(pattern) [ SEMI RBRACE COMMA ]
 ##
 ## The known suffix of the stack is as follows:
 ## Attr
@@ -2838,11 +2838,11 @@ contract: Const LBRACE Ident ZWSP
 ##
 ## Ends in an error in state: 552.
 ##
-## field_pattern(pattern) -> field_id . [ SEMI RBRACE COMMA ]
-## field_pattern(pattern) -> field_id . COLON pattern [ SEMI RBRACE COMMA ]
+## property_pattern(pattern) -> property_id . [ SEMI RBRACE COMMA ]
+## property_pattern(pattern) -> property_id . COLON pattern [ SEMI RBRACE COMMA ]
 ##
 ## The known suffix of the stack is as follows:
-## field_id
+## property_id
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -2851,10 +2851,10 @@ contract: Const LBRACE Ident COLON ZWSP
 ##
 ## Ends in an error in state: 553.
 ##
-## field_pattern(pattern) -> field_id COLON . pattern [ SEMI RBRACE COMMA ]
+## property_pattern(pattern) -> property_id COLON . pattern [ SEMI RBRACE COMMA ]
 ##
 ## The known suffix of the stack is as follows:
-## field_id COLON
+## property_id COLON
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -2873,29 +2873,29 @@ contract: Const Attr ZWSP
 
 contract: Const LBRACE Ident COLON Bytes ZWSP
 ##
-## Ends in an error in state: 569.
+## Ends in an error in state: 566.
 ##
-## nsepseq(field_pattern(pattern),field_sep) -> field_pattern(pattern) . [ RBRACE ]
-## nsepseq(field_pattern(pattern),field_sep) -> field_pattern(pattern) . field_sep nsepseq(field_pattern(pattern),field_sep) [ RBRACE ]
-## nseq(__anonymous_0(field_pattern(pattern),field_sep)) -> field_pattern(pattern) . field_sep [ RBRACE ]
-## nseq(__anonymous_0(field_pattern(pattern),field_sep)) -> field_pattern(pattern) . field_sep nseq(__anonymous_0(field_pattern(pattern),field_sep)) [ RBRACE ]
+## nsepseq(property_pattern(pattern),property_sep) -> property_pattern(pattern) . [ RBRACE ]
+## nsepseq(property_pattern(pattern),property_sep) -> property_pattern(pattern) . property_sep nsepseq(property_pattern(pattern),property_sep) [ RBRACE ]
+## nseq(__anonymous_0(property_pattern(pattern),property_sep)) -> property_pattern(pattern) . property_sep [ RBRACE ]
+## nseq(__anonymous_0(property_pattern(pattern),property_sep)) -> property_pattern(pattern) . property_sep nseq(__anonymous_0(property_pattern(pattern),property_sep)) [ RBRACE ]
 ##
 ## The known suffix of the stack is as follows:
-## field_pattern(pattern)
+## property_pattern(pattern)
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 contract: Const LBRACE Ident COMMA ZWSP
 ##
-## Ends in an error in state: 570.
+## Ends in an error in state: 567.
 ##
-## nsepseq(field_pattern(pattern),field_sep) -> field_pattern(pattern) field_sep . nsepseq(field_pattern(pattern),field_sep) [ RBRACE ]
-## nseq(__anonymous_0(field_pattern(pattern),field_sep)) -> field_pattern(pattern) field_sep . [ RBRACE ]
-## nseq(__anonymous_0(field_pattern(pattern),field_sep)) -> field_pattern(pattern) field_sep . nseq(__anonymous_0(field_pattern(pattern),field_sep)) [ RBRACE ]
+## nsepseq(property_pattern(pattern),property_sep) -> property_pattern(pattern) property_sep . nsepseq(property_pattern(pattern),property_sep) [ RBRACE ]
+## nseq(__anonymous_0(property_pattern(pattern),property_sep)) -> property_pattern(pattern) property_sep . [ RBRACE ]
+## nseq(__anonymous_0(property_pattern(pattern),property_sep)) -> property_pattern(pattern) property_sep . nseq(__anonymous_0(property_pattern(pattern),property_sep)) [ RBRACE ]
 ##
 ## The known suffix of the stack is as follows:
-## field_pattern(pattern) field_sep
+## property_pattern(pattern) property_sep
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -2956,18 +2956,18 @@ contract: Const Bytes EQ UIdent RPAR
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 427, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ## In state 383, spurious reduction of production eq_expr_level -> add_expr_level
 ## In state 348, spurious reduction of production comp_expr_level -> eq_expr_level
 ## In state 353, spurious reduction of production bit_shift_level -> comp_expr_level
 ## In state 394, spurious reduction of production conj_expr_level -> bit_shift_level
 ## In state 408, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 349, spurious reduction of production non_record_expr -> disj_expr_level
-## In state 403, spurious reduction of production no_attr_expr -> non_record_expr
+## In state 349, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 403, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 404, spurious reduction of production expr -> no_attr_expr
 ## In state 595, spurious reduction of production val_binding -> pattern option(binding_type) EQ expr
 ##
@@ -3197,8 +3197,8 @@ contract: Import ZWSP
 ##
 ## Ends in an error in state: 627.
 ##
-## import_decl -> Import . module_name EQ module_selection [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case Break Attr ]
-## import_decl -> Import . TIMES As module_name From file_path [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case Break Attr ]
+## import_decl -> Import . namespace_name EQ namespace_selection [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case Break Attr ]
+## import_decl -> Import . TIMES As namespace_name From file_path [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case Break Attr ]
 ## import_decl -> Import . braces(sep_or_term(variable,COMMA)) From file_path [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
@@ -3211,7 +3211,7 @@ contract: Import TIMES ZWSP
 ##
 ## Ends in an error in state: 628.
 ##
-## import_decl -> Import TIMES . As module_name From file_path [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case Break Attr ]
+## import_decl -> Import TIMES . As namespace_name From file_path [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## Import TIMES
@@ -3223,7 +3223,7 @@ contract: Import TIMES As ZWSP
 ##
 ## Ends in an error in state: 629.
 ##
-## import_decl -> Import TIMES As . module_name From file_path [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case Break Attr ]
+## import_decl -> Import TIMES As . namespace_name From file_path [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## Import TIMES As
@@ -3235,10 +3235,10 @@ contract: Import TIMES As UIdent ZWSP
 ##
 ## Ends in an error in state: 630.
 ##
-## import_decl -> Import TIMES As module_name . From file_path [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case Break Attr ]
+## import_decl -> Import TIMES As namespace_name . From file_path [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
-## Import TIMES As module_name
+## Import TIMES As namespace_name
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -3247,10 +3247,10 @@ contract: Import TIMES As UIdent From ZWSP
 ##
 ## Ends in an error in state: 631.
 ##
-## import_decl -> Import TIMES As module_name From . file_path [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case Break Attr ]
+## import_decl -> Import TIMES As namespace_name From . file_path [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
-## Import TIMES As module_name From
+## Import TIMES As namespace_name From
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -3300,10 +3300,10 @@ contract: Import UIdent ZWSP
 ##
 ## Ends in an error in state: 644.
 ##
-## import_decl -> Import module_name . EQ module_selection [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case Break Attr ]
+## import_decl -> Import namespace_name . EQ namespace_selection [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
-## Import module_name
+## Import namespace_name
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -3312,10 +3312,10 @@ contract: Import UIdent EQ ZWSP
 ##
 ## Ends in an error in state: 645.
 ##
-## import_decl -> Import module_name EQ . module_selection [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case Break Attr ]
+## import_decl -> Import namespace_name EQ . namespace_selection [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Directive Default Const Case Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
-## Import module_name EQ
+## Import namespace_name EQ
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -3392,18 +3392,18 @@ contract: Namespace UIdent LBRACE If LPAR UIdent While
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 427, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ## In state 383, spurious reduction of production eq_expr_level -> add_expr_level
 ## In state 348, spurious reduction of production comp_expr_level -> eq_expr_level
 ## In state 353, spurious reduction of production bit_shift_level -> comp_expr_level
 ## In state 394, spurious reduction of production conj_expr_level -> bit_shift_level
 ## In state 408, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 349, spurious reduction of production non_record_expr -> disj_expr_level
-## In state 403, spurious reduction of production no_attr_expr -> non_record_expr
+## In state 349, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 403, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 404, spurious reduction of production expr -> no_attr_expr
 ## In state 656, spurious reduction of production if_cond -> expr
 ##
@@ -3594,18 +3594,18 @@ contract: Namespace UIdent LBRACE For LPAR SEMI SEMI UIdent While
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 427, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ## In state 383, spurious reduction of production eq_expr_level -> add_expr_level
 ## In state 348, spurious reduction of production comp_expr_level -> eq_expr_level
 ## In state 353, spurious reduction of production bit_shift_level -> comp_expr_level
 ## In state 394, spurious reduction of production conj_expr_level -> bit_shift_level
 ## In state 408, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 349, spurious reduction of production non_record_expr -> disj_expr_level
-## In state 403, spurious reduction of production no_attr_expr -> non_record_expr
+## In state 349, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 403, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 404, spurious reduction of production expr -> no_attr_expr
 ##
 
@@ -3638,18 +3638,18 @@ contract: Namespace UIdent LBRACE For LPAR SEMI UIdent While
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 427, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ## In state 383, spurious reduction of production eq_expr_level -> add_expr_level
 ## In state 348, spurious reduction of production comp_expr_level -> eq_expr_level
 ## In state 353, spurious reduction of production bit_shift_level -> comp_expr_level
 ## In state 394, spurious reduction of production conj_expr_level -> bit_shift_level
 ## In state 408, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 349, spurious reduction of production non_record_expr -> disj_expr_level
-## In state 403, spurious reduction of production no_attr_expr -> non_record_expr
+## In state 349, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 403, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 404, spurious reduction of production expr -> no_attr_expr
 ## In state 671, spurious reduction of production condition -> expr
 ##
@@ -3760,18 +3760,18 @@ contract: Namespace UIdent LBRACE For LPAR Const Ident Of UIdent While
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 427, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ## In state 383, spurious reduction of production eq_expr_level -> add_expr_level
 ## In state 348, spurious reduction of production comp_expr_level -> eq_expr_level
 ## In state 353, spurious reduction of production bit_shift_level -> comp_expr_level
 ## In state 394, spurious reduction of production conj_expr_level -> bit_shift_level
 ## In state 408, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 349, spurious reduction of production non_record_expr -> disj_expr_level
-## In state 403, spurious reduction of production no_attr_expr -> non_record_expr
+## In state 349, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 403, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 404, spurious reduction of production expr -> no_attr_expr
 ## In state 682, spurious reduction of production range_of -> Const Ident Of expr
 ##
@@ -3874,18 +3874,18 @@ contract: Namespace UIdent LBRACE For LPAR Ident MINUS2 SEMI UIdent While
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 427, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ## In state 383, spurious reduction of production eq_expr_level -> add_expr_level
 ## In state 348, spurious reduction of production comp_expr_level -> eq_expr_level
 ## In state 353, spurious reduction of production bit_shift_level -> comp_expr_level
 ## In state 394, spurious reduction of production conj_expr_level -> bit_shift_level
 ## In state 408, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 349, spurious reduction of production non_record_expr -> disj_expr_level
-## In state 403, spurious reduction of production no_attr_expr -> non_record_expr
+## In state 349, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 403, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 404, spurious reduction of production expr -> no_attr_expr
 ## In state 671, spurious reduction of production condition -> expr
 ##
@@ -3955,7 +3955,7 @@ contract: Namespace UIdent LBRACE UIdent XOR
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
+## In state 333, spurious reduction of production core_expr -> ctor
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -4276,18 +4276,18 @@ contract: Namespace UIdent LBRACE UIdent QMARK Ident BIT_AND_EQ UIdent While
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 427, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ## In state 383, spurious reduction of production eq_expr_level -> add_expr_level
 ## In state 348, spurious reduction of production comp_expr_level -> eq_expr_level
 ## In state 353, spurious reduction of production bit_shift_level -> comp_expr_level
 ## In state 394, spurious reduction of production conj_expr_level -> bit_shift_level
 ## In state 408, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 349, spurious reduction of production non_record_expr -> disj_expr_level
-## In state 403, spurious reduction of production no_attr_expr -> non_record_expr
+## In state 349, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 403, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 404, spurious reduction of production expr -> no_attr_expr
 ## In state 467, spurious reduction of production bin_op(var_path,BIT_AND_EQ,expr) -> var_path BIT_AND_EQ expr
 ## In state 421, spurious reduction of production assign_expr -> bin_op(var_path,BIT_AND_EQ,expr)
@@ -4440,7 +4440,7 @@ contract: Namespace UIdent LBRACE Export ZWSP
 ## export(declaration) -> Export . declaration [ SEMI_ELSE SEMI RBRACE Else Default Case ]
 ## export(import_decl) -> Export . import_decl [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Const Break Attr ]
 ## export(interface_decl) -> Export . interface_decl [ While Verbatim UIdent Type Switch String Return PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Const Bytes Break Attr ]
-## export(module_decl) -> Export . module_decl [ While Verbatim UIdent Type Switch String Return PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Const Bytes Break Attr ]
+## export(namespace_decl) -> Export . namespace_decl [ While Verbatim UIdent Type Switch String Return PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Const Bytes Break Attr ]
 ## export(type_decl) -> Export . type_decl [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Const Break Attr ]
 ## export(value_decl) -> Export . value_decl [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Const Break Attr ]
 ##
@@ -4477,18 +4477,18 @@ contract: Namespace UIdent LBRACE Export Const Bytes EQ UIdent EOF
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 427, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ## In state 383, spurious reduction of production eq_expr_level -> add_expr_level
 ## In state 348, spurious reduction of production comp_expr_level -> eq_expr_level
 ## In state 353, spurious reduction of production bit_shift_level -> comp_expr_level
 ## In state 394, spurious reduction of production conj_expr_level -> bit_shift_level
 ## In state 408, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 349, spurious reduction of production non_record_expr -> disj_expr_level
-## In state 403, spurious reduction of production no_attr_expr -> non_record_expr
+## In state 349, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 403, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 404, spurious reduction of production expr -> no_attr_expr
 ## In state 595, spurious reduction of production val_binding -> pattern option(binding_type) EQ expr
 ## In state 585, spurious reduction of production nsepseq(val_binding,COMMA) -> val_binding
@@ -4515,11 +4515,11 @@ contract: Namespace UIdent LBRACE Export Namespace UIdent LBRACE Return RBRACE Z
 ##
 ## Ends in an error in state: 768.
 ##
-## declaration -> module_decl . [ SEMI_ELSE SEMI RBRACE Else Default Case ]
-## export(module_decl) -> Export module_decl . [ While Verbatim UIdent Type Switch String Return PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Const Bytes Break Attr ]
+## declaration -> namespace_decl . [ SEMI_ELSE SEMI RBRACE Else Default Case ]
+## export(namespace_decl) -> Export namespace_decl . [ While Verbatim UIdent Type Switch String Return PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Const Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
-## Export module_decl
+## Export namespace_decl
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -4551,8 +4551,8 @@ contract: Namespace UIdent LBRACE Export Import UIdent EQ UIdent RPAR
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 33, spurious reduction of production module_selection -> module_name
-## In state 646, spurious reduction of production import_decl -> Import module_name EQ module_selection
+## In state 33, spurious reduction of production namespace_selection -> namespace_name
+## In state 646, spurious reduction of production import_decl -> Import namespace_name EQ namespace_selection
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -4587,18 +4587,18 @@ contract: Namespace UIdent LBRACE Const Bytes EQ UIdent EOF
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 427, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ## In state 383, spurious reduction of production eq_expr_level -> add_expr_level
 ## In state 348, spurious reduction of production comp_expr_level -> eq_expr_level
 ## In state 353, spurious reduction of production bit_shift_level -> comp_expr_level
 ## In state 394, spurious reduction of production conj_expr_level -> bit_shift_level
 ## In state 408, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 349, spurious reduction of production non_record_expr -> disj_expr_level
-## In state 403, spurious reduction of production no_attr_expr -> non_record_expr
+## In state 349, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 403, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 404, spurious reduction of production expr -> no_attr_expr
 ## In state 595, spurious reduction of production val_binding -> pattern option(binding_type) EQ expr
 ## In state 585, spurious reduction of production nsepseq(val_binding,COMMA) -> val_binding
@@ -4659,11 +4659,11 @@ contract: Namespace UIdent LBRACE Namespace UIdent LBRACE Return RBRACE ZWSP
 ##
 ## Ends in an error in state: 792.
 ##
-## declaration -> module_decl . [ SEMI_ELSE SEMI RBRACE Else Default Case ]
-## open_stmt_not_starting_with_expr_nor_block2(right_rec_stmt(poly_stmt)) -> module_decl . [ While Verbatim UIdent Type Switch String Return PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Const Bytes Break Attr ]
+## declaration -> namespace_decl . [ SEMI_ELSE SEMI RBRACE Else Default Case ]
+## open_stmt_not_starting_with_expr_nor_block2(right_rec_stmt(poly_stmt)) -> namespace_decl . [ While Verbatim UIdent Type Switch String Return PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Const Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
-## module_decl
+## namespace_decl
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -4695,8 +4695,8 @@ contract: Namespace UIdent LBRACE Import UIdent EQ UIdent RPAR
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 33, spurious reduction of production module_selection -> module_name
-## In state 646, spurious reduction of production import_decl -> Import module_name EQ module_selection
+## In state 33, spurious reduction of production namespace_selection -> namespace_name
+## In state 646, spurious reduction of production import_decl -> Import namespace_name EQ namespace_selection
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -4716,18 +4716,18 @@ contract: Namespace UIdent LBRACE Return UIdent RPAR
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 427, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ## In state 383, spurious reduction of production eq_expr_level -> add_expr_level
 ## In state 348, spurious reduction of production comp_expr_level -> eq_expr_level
 ## In state 353, spurious reduction of production bit_shift_level -> comp_expr_level
 ## In state 394, spurious reduction of production conj_expr_level -> bit_shift_level
 ## In state 408, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 349, spurious reduction of production non_record_expr -> disj_expr_level
-## In state 403, spurious reduction of production no_attr_expr -> non_record_expr
+## In state 349, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 403, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 541, spurious reduction of production full_return_stmt -> Return no_attr_expr
 ##
 
@@ -5125,7 +5125,7 @@ contract: Namespace UIdent LBRACE Return If LPAR UIdent RPAR Export ZWSP
 ## export(declaration) -> Export . declaration [ SEMI_ELSE Else ]
 ## export(import_decl) -> Export . import_decl [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Default Const Case Break Attr ]
 ## export(interface_decl) -> Export . interface_decl [ While Verbatim UIdent Type Switch String SEMI Return RBRACE PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Default Const Case Bytes Break Attr ]
-## export(module_decl) -> Export . module_decl [ While Verbatim UIdent Type Switch String SEMI Return RBRACE PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Default Const Case Bytes Break Attr ]
+## export(namespace_decl) -> Export . namespace_decl [ While Verbatim UIdent Type Switch String SEMI Return RBRACE PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Default Const Case Bytes Break Attr ]
 ## export(type_decl) -> Export . type_decl [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Default Const Case Break Attr ]
 ## export(value_decl) -> Export . value_decl [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Default Const Case Break Attr ]
 ##
@@ -5150,18 +5150,18 @@ contract: Namespace UIdent LBRACE Return If LPAR UIdent RPAR Export Const Bytes 
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 427, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ## In state 383, spurious reduction of production eq_expr_level -> add_expr_level
 ## In state 348, spurious reduction of production comp_expr_level -> eq_expr_level
 ## In state 353, spurious reduction of production bit_shift_level -> comp_expr_level
 ## In state 394, spurious reduction of production conj_expr_level -> bit_shift_level
 ## In state 408, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 349, spurious reduction of production non_record_expr -> disj_expr_level
-## In state 403, spurious reduction of production no_attr_expr -> non_record_expr
+## In state 349, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 403, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 404, spurious reduction of production expr -> no_attr_expr
 ## In state 595, spurious reduction of production val_binding -> pattern option(binding_type) EQ expr
 ## In state 585, spurious reduction of production nsepseq(val_binding,COMMA) -> val_binding
@@ -5188,11 +5188,11 @@ contract: Namespace UIdent LBRACE Return If LPAR UIdent RPAR Export Namespace UI
 ##
 ## Ends in an error in state: 885.
 ##
-## declaration -> module_decl . [ SEMI_ELSE Else ]
-## export(module_decl) -> Export module_decl . [ While Verbatim UIdent Type Switch String SEMI Return RBRACE PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Default Const Case Bytes Break Attr ]
+## declaration -> namespace_decl . [ SEMI_ELSE Else ]
+## export(namespace_decl) -> Export namespace_decl . [ While Verbatim UIdent Type Switch String SEMI Return RBRACE PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Default Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
-## Export module_decl
+## Export namespace_decl
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -5224,8 +5224,8 @@ contract: Namespace UIdent LBRACE Return If LPAR UIdent RPAR Export Import UIden
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 33, spurious reduction of production module_selection -> module_name
-## In state 646, spurious reduction of production import_decl -> Import module_name EQ module_selection
+## In state 33, spurious reduction of production namespace_selection -> namespace_name
+## In state 646, spurious reduction of production import_decl -> Import namespace_name EQ namespace_selection
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -5259,18 +5259,18 @@ contract: Namespace UIdent LBRACE Return If LPAR UIdent RPAR Const Bytes EQ UIde
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 427, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ## In state 383, spurious reduction of production eq_expr_level -> add_expr_level
 ## In state 348, spurious reduction of production comp_expr_level -> eq_expr_level
 ## In state 353, spurious reduction of production bit_shift_level -> comp_expr_level
 ## In state 394, spurious reduction of production conj_expr_level -> bit_shift_level
 ## In state 408, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 349, spurious reduction of production non_record_expr -> disj_expr_level
-## In state 403, spurious reduction of production no_attr_expr -> non_record_expr
+## In state 349, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 403, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 404, spurious reduction of production expr -> no_attr_expr
 ## In state 595, spurious reduction of production val_binding -> pattern option(binding_type) EQ expr
 ## In state 585, spurious reduction of production nsepseq(val_binding,COMMA) -> val_binding
@@ -5310,11 +5310,11 @@ contract: Namespace UIdent LBRACE Return If LPAR UIdent RPAR Namespace UIdent LB
 ##
 ## Ends in an error in state: 903.
 ##
-## declaration -> module_decl . [ SEMI_ELSE Else ]
-## open_stmt_not_starting_with_expr_nor_block2(right_rec_stmt(stmt_not_starting_with_expr_nor_block2)) -> module_decl . [ While Verbatim UIdent Type Switch String SEMI Return RBRACE PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Default Const Case Bytes Break Attr ]
+## declaration -> namespace_decl . [ SEMI_ELSE Else ]
+## open_stmt_not_starting_with_expr_nor_block2(right_rec_stmt(stmt_not_starting_with_expr_nor_block2)) -> namespace_decl . [ While Verbatim UIdent Type Switch String SEMI Return RBRACE PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Default Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
-## module_decl
+## namespace_decl
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -5346,8 +5346,8 @@ contract: Namespace UIdent LBRACE Return If LPAR UIdent RPAR Import UIdent EQ UI
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 33, spurious reduction of production module_selection -> module_name
-## In state 646, spurious reduction of production import_decl -> Import module_name EQ module_selection
+## In state 33, spurious reduction of production namespace_selection -> namespace_name
+## In state 646, spurious reduction of production import_decl -> Import namespace_name EQ namespace_selection
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -5367,18 +5367,18 @@ contract: Namespace UIdent LBRACE Return If LPAR UIdent RPAR Return UIdent RPAR
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 427, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ## In state 383, spurious reduction of production eq_expr_level -> add_expr_level
 ## In state 348, spurious reduction of production comp_expr_level -> eq_expr_level
 ## In state 353, spurious reduction of production bit_shift_level -> comp_expr_level
 ## In state 394, spurious reduction of production conj_expr_level -> bit_shift_level
 ## In state 408, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 349, spurious reduction of production non_record_expr -> disj_expr_level
-## In state 403, spurious reduction of production no_attr_expr -> non_record_expr
+## In state 349, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 403, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 541, spurious reduction of production full_return_stmt -> Return no_attr_expr
 ##
 
@@ -5537,7 +5537,7 @@ contract: Namespace UIdent LBRACE Return Export ZWSP
 ##
 ## export(import_decl) -> Export . import_decl [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Default Const Case Break Attr ]
 ## export(interface_decl) -> Export . interface_decl [ While Verbatim UIdent Type Switch String SEMI Return RBRACE PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Default Const Case Bytes Break Attr ]
-## export(module_decl) -> Export . module_decl [ While Verbatim UIdent Type Switch String SEMI Return RBRACE PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Default Const Case Bytes Break Attr ]
+## export(namespace_decl) -> Export . namespace_decl [ While Verbatim UIdent Type Switch String SEMI Return RBRACE PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Default Const Case Bytes Break Attr ]
 ## export(type_decl) -> Export . type_decl [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Default Const Case Break Attr ]
 ## export(value_decl) -> Export . value_decl [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Default Const Case Break Attr ]
 ##
@@ -5665,18 +5665,18 @@ contract: Namespace UIdent LBRACE Return Return UIdent RPAR
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 427, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ## In state 383, spurious reduction of production eq_expr_level -> add_expr_level
 ## In state 348, spurious reduction of production comp_expr_level -> eq_expr_level
 ## In state 353, spurious reduction of production bit_shift_level -> comp_expr_level
 ## In state 394, spurious reduction of production conj_expr_level -> bit_shift_level
 ## In state 408, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 349, spurious reduction of production non_record_expr -> disj_expr_level
-## In state 403, spurious reduction of production no_attr_expr -> non_record_expr
+## In state 349, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 403, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 541, spurious reduction of production full_return_stmt -> Return no_attr_expr
 ## In state 959, spurious reduction of production open_stmt_not_starting_with_expr_nor_block1(right_rec_stmt(stmt_not_starting_with_expr_nor_block1)) -> full_return_stmt
 ## In state 900, spurious reduction of production stmt_not_starting_with_expr_nor_block1 -> open_stmt_not_starting_with_expr_nor_block1(right_rec_stmt(stmt_not_starting_with_expr_nor_block1))
@@ -5711,9 +5711,9 @@ contract: Namespace UIdent LBRACE Return SEMI Ident XOR
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 205, spurious reduction of production record_or_tuple -> Ident
-## In state 275, spurious reduction of production var_path -> record_or_tuple
-## In state 312, spurious reduction of production path_expr -> var_path
+## In state 205, spurious reduction of production object_or_array -> Ident
+## In state 291, spurious reduction of production var_path -> object_or_array
+## In state 311, spurious reduction of production path_expr -> var_path
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -5823,8 +5823,8 @@ contract: Namespace UIdent LBRACE Switch LPAR UIdent RPAR LBRACE Case Ident XOR
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 272, spurious reduction of production record_or_tuple -> Ident
-## In state 275, spurious reduction of production var_path -> record_or_tuple
+## In state 272, spurious reduction of production object_or_array -> Ident
+## In state 291, spurious reduction of production var_path -> object_or_array
 ## In state 273, spurious reduction of production path_expr -> var_path
 ##
 
@@ -5954,17 +5954,17 @@ contract: Namespace UIdent Implements UIdent While
 ##
 ## Ends in an error in state: 1020.
 ##
-## module_decl -> Namespace module_binder interface . braces(statements) [ While Verbatim UIdent Type Switch String SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Else EOF Directive Default Const Case Bytes Break Attr ]
+## namespace_decl -> Namespace namespace_binder interface . braces(statements) [ While Verbatim UIdent Type Switch String SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident For Export Else EOF Directive Default Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
-## Namespace module_binder interface
+## Namespace namespace_binder interface
 ##
 ## WARNING: This example involves spurious reductions.
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 33, spurious reduction of production module_selection -> module_name
-## In state 1017, spurious reduction of production intf_expr -> module_selection
+## In state 33, spurious reduction of production namespace_selection -> namespace_name
+## In state 1017, spurious reduction of production intf_expr -> namespace_selection
 ## In state 1018, spurious reduction of production interface -> Implements intf_expr
 ##
 
@@ -6045,18 +6045,18 @@ interactive_expr: UIdent While
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 190, spurious reduction of production ctor -> UIdent
-## In state 334, spurious reduction of production core_expr -> ctor
-## In state 335, spurious reduction of production app_expr_level -> core_expr
+## In state 333, spurious reduction of production core_expr -> ctor
+## In state 334, spurious reduction of production app_expr_level -> core_expr
 ## In state 427, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 314, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 328, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 313, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 327, spurious reduction of production add_expr_level -> mult_expr_level
 ## In state 383, spurious reduction of production eq_expr_level -> add_expr_level
 ## In state 348, spurious reduction of production comp_expr_level -> eq_expr_level
 ## In state 353, spurious reduction of production bit_shift_level -> comp_expr_level
 ## In state 394, spurious reduction of production conj_expr_level -> bit_shift_level
 ## In state 408, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 349, spurious reduction of production non_record_expr -> disj_expr_level
-## In state 403, spurious reduction of production no_attr_expr -> non_record_expr
+## In state 349, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 403, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 404, spurious reduction of production expr -> no_attr_expr
 ##
 

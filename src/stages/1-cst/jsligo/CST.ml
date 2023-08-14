@@ -41,6 +41,7 @@ type kwd_else         = lexeme wrap
 type kwd_export       = lexeme wrap
 type kwd_for          = lexeme wrap
 type kwd_from         = lexeme wrap
+type kwd_function     = lexeme wrap
 type kwd_if           = lexeme wrap
 type kwd_implements   = lexeme wrap
 type kwd_import       = lexeme wrap
@@ -106,7 +107,7 @@ type bit_and_eq = lexeme wrap  (* &=  *)
 type bit_or_eq  = lexeme wrap  (* |=  *)
 type bit_xor_eq = lexeme wrap  (* ^=  *)
 
-type field_sep = lexeme wrap  (* , ; *)
+type property_sep = lexeme wrap  (* , ; *)
 
 (* End-Of-File *)
 
@@ -115,11 +116,12 @@ type eof = lexeme wrap
 (* Literals *)
 
 type variable       = lexeme wrap
+type fun_name       = lexeme wrap
 type type_name      = lexeme wrap
 type type_var       = lexeme wrap
 type type_ctor      = lexeme wrap
 type ctor           = lexeme wrap
-type field_name     = lexeme wrap
+type property_name  = lexeme wrap
 type namespace_name = lexeme wrap
 type intf_name      = lexeme wrap
 type file_path      = lexeme wrap
@@ -164,35 +166,25 @@ and top_decl =
    add or modify some, please make sure they remain in order. *)
 
 and declaration =
-  D_Import    of import_decl
+  D_Fun       of fun_decl reg
+| D_Import    of import_decl
 | D_Interface of interface_decl reg
 | D_Namespace of namespace_decl reg
 | D_Type      of type_decl reg
 | D_Value     of value_decl reg
 
-(* Value declaration *)
+(* Function declaration *)
 
-and value_decl = {
-  kind     : var_kind;
-  bindings : (val_binding reg, comma) nsepseq
+and fun_decl = {
+  kwd_function : kwd_function;
+  fun_name     : fun_name;
+  type_vars    : type_vars option;
+  parameters   : fun_params;
+  rhs_type     : type_annotation option;
+  fun_body     : statements braces
 }
 
-and var_kind = [
-  `Let   of kwd_let
-| `Const of kwd_const
-]
-
-and val_binding = {
-  pattern   : pattern;
-  type_vars : type_vars option;
-  rhs_type  : type_annotation option;
-  eq        : equal;
-  rhs_expr  : expr
-}
-
-and type_vars = (type_var, comma) sep_or_term chevrons
-
-and type_annotation = colon * type_expr
+and fun_params = (pattern, comma) sep_or_term par
 
 (* Import declaration *)
 
@@ -233,7 +225,7 @@ and import_from = {
 and 'a namespace_path = {
   namespace_path : (namespace_name, dot) nsepseq;
   selector    : dot;
-  field       : 'a
+  property       : 'a
 }
 
 (* Interfaces *)
@@ -290,6 +282,30 @@ and type_decl = {
   type_expr : type_expr
 }
 
+(* Value declaration *)
+
+and value_decl = {
+  kind     : var_kind;
+  bindings : (val_binding reg, comma) nsepseq
+}
+
+and var_kind = [
+  `Let   of kwd_let
+| `Const of kwd_const
+]
+
+and val_binding = {
+  pattern   : pattern;
+  type_vars : type_vars option;
+  rhs_type  : type_annotation option;
+  eq        : equal;
+  rhs_expr  : expr
+}
+
+and type_vars = (type_var, comma) sep_or_term chevrons
+
+and type_annotation = colon * type_expr
+
 (* TYPE EXPRESSIONS *)
 
 (* IMPORTANT: The data constructors are sorted alphabetically. If you
@@ -333,17 +349,17 @@ and parameter_of_type = {
 
 (* Object type *)
 
-and 'a _object = ('a field reg, field_sep) sep_or_term braces
+and 'a _object = ('a property reg, property_sep) sep_or_term braces
 
-and 'a field = {
+and 'a property = {
   attributes : attribute list;
-  field_id   : field_id;
-  field_rhs  : (colon * 'a) option (* [None] means punning *)
+  property_id   : property_id;
+  property_rhs  : (colon * 'a) option (* [None] means punning *)
 }
 
-and field_id =
+and property_id =
   F_Int  of int_literal
-| F_Name of field_name
+| F_Name of property_name
 | F_Str  of string_literal
 
 (* Discriminated unions *)
@@ -570,14 +586,14 @@ and arguments = (expr, comma) sepseq par
 
 and fun_expr = {
   type_vars  : type_vars option;
-  parameters : fun_expr_params;
+  parameters : arrow_fun_params;
   rhs_type   : type_annotation option;
   arrow      : arrow;
   fun_body   : fun_body
 }
 
-and fun_expr_params =
-  ParParams  of (pattern, comma) sep_or_term par
+and arrow_fun_params =
+  ParParams  of fun_params
 | NakedParam of pattern
 
 and fun_body =
@@ -596,8 +612,8 @@ and contract_of_expr = {
 and update_expr = {
   ellipsis : ellipsis;
   _object  : expr;
-  sep      : field_sep;
-  updates  : (expr field reg, field_sep) sep_or_term
+  sep      : property_sep;
+  updates  : (expr property reg, property_sep) sep_or_term
 }
 
 (* Ternary conditional *)
@@ -623,11 +639,11 @@ and 'a  un_op = {op: 'a; arg: expr}
 
 and projection = {
   object_or_array : expr;
-  field_path      : selection nseq
+  property_path      : selection nseq
 }
 
 and selection =
-  FieldName of (dot * field_name)      (* Objects *)
+  FieldName of (dot * property_name)      (* Objects *)
 | FieldStr  of string_literal brackets (* Objects *)
 | Component of int_literal brackets    (* Arrays  *)
 
@@ -650,7 +666,8 @@ let import_decl_to_region = function
 | ImportFrom  {region; _} -> region
 
 let declaration_to_region = function
-  D_Import    d -> import_decl_to_region d
+  D_Fun       {region; _} -> region
+| D_Import    d -> import_decl_to_region d
 | D_Interface {region; _}
 | D_Namespace {region; _}
 | D_Type      {region; _} -> region
@@ -768,7 +785,7 @@ let rec statement_to_region = function
 let var_kind_to_region = function
   `Let w | `Const w -> w#region
 
-let field_id_to_region = function
+let property_id_to_region = function
   F_Name i -> i#region
 | F_Int  i -> i#region
 | F_Str  i -> i#region
@@ -778,8 +795,8 @@ let fun_body_to_region = function
 | ExprBody e -> expr_to_region e
 
 let selection_to_region = function
-  FieldName (dot, field_name) ->
-    Region.cover dot#region field_name#region
+  FieldName (dot, property_name) ->
+    Region.cover dot#region property_name#region
 | FieldStr brackets -> brackets.region
 | Component brackets -> brackets.region
 

@@ -129,6 +129,7 @@
 %token <string Wrap.t> Else    "else"    [@recover.expr Token.wrap_else    $loc]
 %token <string Wrap.t> Export  "export"  [@recover.expr Token.wrap_export  $loc]
 %token <string Wrap.t> For     "for"     [@recover.expr Token.wrap_for     $loc]
+%token <string Wrap.t> From    "from"    [@recover.expr Token.wrap_from    $loc]
 %token <string Wrap.t> If      "if"      [@recover.expr Token.wrap_if      $loc]
 %token <string Wrap.t> Import  "import"  [@recover.expr Token.wrap_import  $loc]
 %token <string Wrap.t> Let     "let"     [@recover.expr Token.wrap_let     $loc]
@@ -136,11 +137,11 @@
 %token <string Wrap.t> Return  "return"  [@recover.expr Token.wrap_return  $loc]
 %token <string Wrap.t> Switch  "switch"  [@recover.expr Token.wrap_switch  $loc]
 %token <string Wrap.t> While   "while"   [@recover.expr Token.wrap_while   $loc]
-%token <string Wrap.t> From    "from"    [@recover.expr Token.wrap_from    $loc]
 
 (* TypeScript keywords *)
 
 %token <string Wrap.t> As         "as"         [@recover.expr Token.wrap_as         $loc]
+%token <string Wrap.t> Function   "function"   [@recover.expr Token.wrap_function   $loc]
 %token <string Wrap.t> Implements "implements" [@recover.expr Token.wrap_implements $loc]
 %token <string Wrap.t> Interface  "interface"  [@recover.expr Token.wrap_interface  $loc]
 %token <string Wrap.t> Namespace  "namespace"  [@recover.expr Token.wrap_namespace  $loc]

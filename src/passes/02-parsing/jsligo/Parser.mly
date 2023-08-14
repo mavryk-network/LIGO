@@ -32,7 +32,7 @@ let mk_mod_path :
   (namespace_name * dot) Utils.nseq * 'a ->
   ('a -> Region.t) ->
   'a CST.namespace_path Region.reg =
-  fun (nseq, field) to_region ->
+  fun (nseq, property) to_region ->
     let (first, sep), tail = nseq in
     let rec trans (seq, prev_sep as acc) = function
       [] -> acc
@@ -41,8 +41,8 @@ let mk_mod_path :
     let list, last_dot = trans ([], sep) tail in
     let namespace_path = first, List.rev list in
     let region = Nodes.nseq_to_region (fun (x,_) -> x#region) nseq in
-    let region = Region.cover region (to_region field)
-    and value = {namespace_path; selector=last_dot; field}
+    let region = Region.cover region (to_region property)
+    and value = {namespace_path; selector=last_dot; property}
     in {value; region}
 
 
@@ -85,7 +85,7 @@ let mk_mod_path :
 (* %on_error_reduce nsepseq(statement,SEMI) *)
 (* %on_error_reduce nsepseq(variant,VBAR) *)
 (* %on_error_reduce nsepseq(object_type,VBAR) *)
-(* %on_error_reduce nsepseq(field_name,COMMA) *)
+(* %on_error_reduce nsepseq(property_name,COMMA) *)
 (* %on_error_reduce namespace_var_t *)
 (* %on_error_reduce for_stmt(statement) *)
 (* %on_error_reduce chevrons(nsepseq(type_var,COMMA)) *)
@@ -194,7 +194,7 @@ variable        : "<ident>"              { $1 }
 type_var        : "<ident>" | "<uident>" { $1 }
 type_name       : "<ident>" | "<uident>" { $1 }
 type_ctor       : "<ident>" | "<uident>" { $1 }
-field_name      : "<ident>" | "<uident>" { $1 }
+property_name      : "<ident>" | "<uident>" { $1 }
 lang_name       : "<ident>" | "<uident>" { $1 }
 namespace_name  : "<uident>"             { $1 }
 intf_name       : "<uident>"             { $1 }
@@ -435,7 +435,7 @@ no_par_type_expr:
   "<int>"                    { T_Int       $1 }
 | "_" | type_name            { T_Var       $1 }
 | type_ctor_app (type_expr)  { T_App       $1 }
-| cartesian                  { T_Cart      $1 }
+| array_type                  { T_Array     $1 }
 | parameter_of_type          { T_Parameter $1 }
 | qualified_type (type_expr) {             $1 }
 | attr_type
@@ -461,8 +461,8 @@ type_ctor_arg(type_expr):
 
 (* Arrays of types *)
 
-cartesian:
-  brackets(type_components) { $1 }
+array_type:
+  brackets (type_components) { $1 }
 
 type_components:
   type_component_no_string {
@@ -532,28 +532,28 @@ union_or_object:
 (* Object types *)
 
 object_type:
-  braces (sep_or_term (field_type, field_sep)) { $1 }
+  braces (sep_or_term (property_type, property_sep)) { $1 }
 
-field_type:
-  field_id ioption(type_annotation (type_expr)) {
-    let start = field_id_to_region $1 in
+property_type:
+  property_id ioption(type_annotation (type_expr)) {
+    let start = property_id_to_region $1 in
     let region =
       match $2 with
         None -> start
       | Some (_,k) -> cover start (type_expr_to_region k)
-    and value = {attributes=[]; field_id=$1; field_rhs=$2}
+    and value = {attributes=[]; property_id=$1; property_rhs=$2}
     in {region; value}
   }
-| "[@attr]" field_type {
-    let attributes = ($2 : _ field reg).value.attributes in
-    let value : _ field = {$2.value with attributes = $1::attributes}
+| "[@attr]" property_type {
+    let attributes = ($2 : _ property reg).value.attributes in
+    let value : _ property = {$2.value with attributes = $1::attributes}
     in {$2 with value} }
 
-field_sep:
+property_sep:
   ";" | "," { $1 }
 
-field_id:
-  field_name { F_Name $1 }
+property_id:
+  property_name { F_Name $1 }
 | "<int>"    { F_Int  $1 }
 | "<string>" { F_Str  $1 }
 
@@ -692,11 +692,11 @@ path (root_expr):
   root_expr nseq(selection) {
     let stop   = nseq_to_region selection_to_region $2 in
     let region = cover (expr_to_region $1) stop
-    and value  = {object_or_array=$1; field_path=$2}
+    and value  = {object_or_array=$1; property_path=$2}
     in E_Proj {region; value} }
 
 selection:
-  "." field_name        { FieldName ($1,$2) }
+  "." property_name        { FieldName ($1,$2) }
 | brackets ("<string>") { FieldStr       $1 }
 | brackets ("<int>")    { Component      $1 }
 
@@ -1089,21 +1089,21 @@ literal_expr:
 (* Object expressions *)
 
 object_expr:
-  braces (sep_or_term (field (expr), field_sep)) { $1 }
+  braces (sep_or_term (property (expr), property_sep)) { $1 }
 
-field (right_expr):
-  field_id ioption(":" right_expr { $1,$2 }) {
-    let start = field_id_to_region $1 in
+property (right_expr):
+  property_id ioption(":" right_expr { $1,$2 }) {
+    let start = property_id_to_region $1 in
     let region =
       match $2 with
         None -> start
       | Some (_,k) -> cover start (expr_to_region k)
-    and value : _ field = {attributes=[]; field_id=$1; field_rhs=$2}
+    and value : _ property = {attributes=[]; property_id=$1; property_rhs=$2}
     in {region; value}
   }
-| "[@attr]" field(right_expr) {
-    let attributes = ($2 : _ field reg).value.attributes in
-    let value : _ field = {$2.value with attributes = $1::attributes}
+| "[@attr]" property(right_expr) {
+    let attributes = ($2 : _ property reg).value.attributes in
+    let value : _ property = {$2.value with attributes = $1::attributes}
     in {$2 with value} }
 
 (* Code injection *)
@@ -1120,11 +1120,11 @@ object_update:
   braces (update_expr) { $1 }
 
 update_expr:
-  "..." expr field_sep updates {
+  "..." expr property_sep updates {
     {ellipsis=$1; _object=$2; sep=$3; updates=$4} }
 
 updates:
-  sep_or_term (field (expr), field_sep) { $1 }
+  sep_or_term (property (expr), property_sep) { $1 }
 
 (* Arrays *)
 
@@ -1142,9 +1142,9 @@ component(item):
 
       * a single variable: "a" or "@0" or "@type" etc.
       * a single variable in a nested module: "A.B.a"
-      * nested fields and compoments from a variable: "a[0][1]b"
+      * nested properties and compoments from a variable: "a[0][1]b"
       * same within a nested module: "A.B.a[0][1].b"
-      * nested fields and components from an expression: "(e).a[0][1]b" *)
+      * nested properties and components from an expression: "(e).a[0][1]b" *)
 
 path_expr:
   namespace_path (selected_expr) { E_NamePath (mk_mod_path $1 expr_to_region) }
@@ -1172,19 +1172,19 @@ pattern:
 (* Record pattern *)
 
 object_pattern (pattern):
-  braces (sep_or_term (field_pattern (pattern), field_sep)) { $1 }
+  braces (sep_or_term (property_pattern (pattern), property_sep)) { $1 }
 
-field_pattern (pattern):
-  field_id ioption(":" pattern { $1,$2 }) {
-    let start = field_id_to_region $1 in
+property_pattern (pattern):
+  property_id ioption(":" pattern { $1,$2 }) {
+    let start = property_id_to_region $1 in
     let region =
       match $2 with
         None -> start
       | Some (_,k) -> cover start (pattern_to_region k)
-    and value : _ field = {attributes=[]; field_id=$1; field_rhs=$2}
+    and value : _ property = {attributes=[]; property_id=$1; property_rhs=$2}
     in {region; value}
   }
-| "[@attr]" field_pattern(pattern) {
-    let attributes = ($2 : _ field reg).value.attributes in
-    let value : _ field = {$2.value with attributes = $1::attributes}
+| "[@attr]" property_pattern(pattern) {
+    let attributes = ($2 : _ property reg).value.attributes in
+    let value : _ property = {$2.value with attributes = $1::attributes}
     in {$2 with value} }
