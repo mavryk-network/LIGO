@@ -1146,6 +1146,7 @@ component(item):
 path_expr:
   module_path (selected_expr) { E_ModPath (mk_mod_path $1 expr_to_region) }
 | var_path
+| path (app_expr)
 | path (par (expr) { E_Par $1 }) { $1 }
 
 selected_expr:
