@@ -256,7 +256,7 @@ let decompiler_ty_expr_tests =
       ; syntax = JsLIGO
       }
     ; { name = "product (inferred)"
-      ; code = "let x = [5, Some (\"s\")]"
+      ; code = "let x : [int, option<string>] = [5, Some (\"s\")]"
       ; expected = "[int, option<string>]"
       ; syntax = JsLIGO
       }

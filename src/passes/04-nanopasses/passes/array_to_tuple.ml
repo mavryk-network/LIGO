@@ -28,17 +28,20 @@ let compile ~raise =
     let loc = Location.get_location d in
     match Location.unwrap d with
     | D_multi_const ds ->
-      let f ({ pattern = { fp = { wrap_content = P_tuple _ ; _ } } as pattern; type_params; rhs_type = None; let_rhs } : (pattern, expr, ty_expr) Simple_decl.t) : (pattern, expr, ty_expr) Simple_decl.t =
-        let let_rhs = (match Location.unwrap let_rhs.fp with
-            | E_array [] -> e_unit ~loc
-            | E_array (hd :: tl) ->
-              let f = function
-                | Array_repr.Expr_entry e -> e
-                | Rest_entry e -> raise.error @@ unsupported_rest_property e
-              in
-              e_tuple ~loc (List.Ne.map f (hd, tl))
-            | _ -> let_rhs) in
-        { pattern; type_params; rhs_type = None; let_rhs }
+      let f (d : (pattern, expr, ty_expr) Simple_decl.t) : (pattern, expr, ty_expr) Simple_decl.t =
+        match d with
+        | { pattern = { fp = { wrap_content = P_tuple _ ; _ } } as pattern; type_params; rhs_type = None; let_rhs } ->
+          let let_rhs = (match Location.unwrap let_rhs.fp with
+              | E_array [] -> e_unit ~loc
+              | E_array (hd :: tl) ->
+                let f = function
+                  | Array_repr.Expr_entry e -> e
+                  | Rest_entry e -> raise.error @@ unsupported_rest_property e
+                in
+                e_tuple ~loc (List.Ne.map f (hd, tl))
+              | _ -> let_rhs) in
+          { pattern; type_params; rhs_type = None; let_rhs }
+        | _ -> d
       in
       make_d ~loc @@ D_multi_const (List.Ne.map f ds)
     | d -> make_d ~loc d
