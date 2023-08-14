@@ -164,11 +164,11 @@ and top_decl =
    add or modify some, please make sure they remain in order. *)
 
 and declaration =
-  D_Value     of value_decl reg
-| D_Import    of import_decl
+  D_Import    of import_decl
 | D_Interface of interface_decl reg
 | D_Namespace of namespace_decl reg
 | D_Type      of type_decl reg
+| D_Value     of value_decl reg
 
 (* Value declaration *)
 
@@ -650,11 +650,11 @@ let import_decl_to_region = function
 | ImportFrom  {region; _} -> region
 
 let declaration_to_region = function
-  D_Value     {region; _} -> region
-| D_Import    d -> import_decl_to_region d
+  D_Import    d -> import_decl_to_region d
 | D_Interface {region; _}
 | D_Namespace {region; _}
 | D_Type      {region; _} -> region
+| D_Value     {region; _} -> region
 
 let rec top_decl_to_region = function
   TL_Decl      (d, _) -> declaration_to_region d

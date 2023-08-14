@@ -81,11 +81,11 @@ and print_TL_Export state (node : (kwd_export * top_decl) reg) =
 (* INNER DECLARATIONS (AS STATEMENTS) *)
 
 and print_declaration state = function
-  D_Value     d -> print_D_Value     state d
-| D_Import    d -> print_D_Import    state d
+  D_Import    d -> print_D_Import    state d
 | D_Interface d -> print_D_Interface state d
 | D_Namespace d -> print_D_Namespace state d
 | D_Type      d -> print_D_Type      state d
+| D_Value     d -> print_D_Value     state d
 
 (* Value declaration *)
 

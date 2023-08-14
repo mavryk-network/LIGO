@@ -294,11 +294,11 @@ let fold
   | S_ctor -> process @@ node -| S_wrap S_lexeme
   | S_declaration -> process
     ( match node with
-      D_Value node -> node -| S_reg S_value_decl
-    | D_Import node -> node -| S_import_decl
+      D_Import node -> node -| S_import_decl
     | D_Interface node -> node -| S_reg S_interface_decl
     | D_Namespace node -> node -| S_reg S_namespace_decl
     | D_Type node -> node -| S_reg S_type_decl
+    | D_Value node -> node -| S_reg S_value_decl
     )
   | S_decrement -> process @@ node -| S_wrap S_lexeme
   | S_directive -> () (* Leaf *)
