@@ -28,8 +28,6 @@ type lexeme = string
 
 (* Keywords of CameLIGO *)
 
-(* IMPORTANT: The types are sorted alphabetically. If you add or
-   modify some, please make sure they remain in order. *)
 
 type kwd_begin  = lexeme wrap
 type kwd_do     = lexeme wrap
