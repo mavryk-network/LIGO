@@ -899,27 +899,27 @@ module T =
 
     (* JavaScript Keywords *)
 
-    | "Break"    -> ghost_break#payload
-    | "Case"     -> ghost_case#payload
- (* | "Class"    -> ghost_class#payload *)
-    | "Const"    -> ghost_const#payload
-    | "Default"  -> ghost_default#payload
-    | "Else"     -> ghost_else#payload
-    | "Export"   -> ghost_export#payload
-    | "False"    -> ghost_false#payload
-    | "For"      -> ghost_for#payload
-    | "From"     -> ghost_from#payload
-    | "If"       -> ghost_if#payload
-    | "Import"   -> ghost_import#payload
-    | "Let"      -> ghost_let#payload
-    | "Of"       -> ghost_of#payload
-    | "Return"   -> ghost_return#payload
-    | "Switch"   -> ghost_switch#payload
- (* | "This"     -> ghost_this#payload *)
-    | "True"     -> ghost_true#payload
- (* | "Void"     -> ghost_void#payload *)
-    | "While"    -> ghost_while#payload
- (* | "With"     -> ghost_with#payload *)
+    | "Break"   -> ghost_break#payload
+    | "Case"    -> ghost_case#payload
+ (* | "Class"   -> ghost_class#payload *)
+    | "Const"   -> ghost_const#payload
+    | "Default" -> ghost_default#payload
+    | "Else"    -> ghost_else#payload
+    | "Export"  -> ghost_export#payload
+    | "False"   -> ghost_false#payload
+    | "For"     -> ghost_for#payload
+    | "From"    -> ghost_from#payload
+    | "If"      -> ghost_if#payload
+    | "Import"  -> ghost_import#payload
+    | "Let"     -> ghost_let#payload
+    | "Of"      -> ghost_of#payload
+    | "Return"  -> ghost_return#payload
+    | "Switch"  -> ghost_switch#payload
+ (* | "This"    -> ghost_this#payload *)
+    | "True"    -> ghost_true#payload
+ (* | "Void"    -> ghost_void#payload *)
+    | "While"   -> ghost_while#payload
+ (* | "With"    -> ghost_with#payload *)
 
     (* TypeScript keywords *)
 
@@ -990,8 +990,8 @@ module T =
     | UIdent t ->
         t#region, sprintf "UIdent %S%s" t#payload (comments t)
     | Attr t ->
-      t#region, sprintf "Attr %s%s"
-                        (Attr.to_string t#payload) (comments t)
+        t#region, sprintf "Attr %s%s"
+                          (Attr.to_string t#payload) (comments t)
  (* | Lang {value = {value = payload; _}; region; _} ->
         region, sprintf "Lang %S" payload *)
 

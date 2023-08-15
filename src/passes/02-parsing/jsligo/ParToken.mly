@@ -129,7 +129,6 @@
 %token <string Wrap.t> Else    "else"    [@recover.expr Token.wrap_else    $loc]
 %token <string Wrap.t> Export  "export"  [@recover.expr Token.wrap_export  $loc]
 %token <string Wrap.t> False   "false"   [@recover.expr Token.wrap_false   $loc]
-
 %token <string Wrap.t> For     "for"     [@recover.expr Token.wrap_for     $loc]
 %token <string Wrap.t> From    "from"    [@recover.expr Token.wrap_from    $loc]
 %token <string Wrap.t> If      "if"      [@recover.expr Token.wrap_if      $loc]

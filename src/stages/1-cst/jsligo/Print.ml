@@ -301,19 +301,19 @@ and print_type_annotation state (node : type_annotation) =
 (* TYPE EXPRESSIONS *)
 
 and print_type_expr state = function
-  T_App       t -> print_T_App       state t
-| T_Array     t -> print_T_Array     state t
-| T_Attr      t -> print_T_Attr      state t
-| T_Fun       t -> print_T_Fun       state t
-| T_Int       t -> print_T_Int       state t
-| T_NamePath  t -> print_T_NamePath  state t
-| T_Object    t -> print_T_Object    state t
-| T_Par       t -> print_T_Par       state t
-| T_Parameter t -> print_T_Parameter state t
-| T_String    t -> print_T_String    state t
-| T_Union     t -> print_T_Union     state t
-| T_Var       t -> print_T_Var       state t
-| T_Variant   t -> print_T_Variant   state t
+  T_App         t -> print_T_App          state t
+| T_Array       t -> print_T_Array        state t
+| T_Attr        t -> print_T_Attr         state t
+| T_Fun         t -> print_T_Fun          state t
+| T_Int         t -> print_T_Int          state t
+| T_NamePath    t -> print_T_NamePath     state t
+| T_Object      t -> print_T_Object       state t
+| T_Par         t -> print_T_Par          state t
+| T_ParameterOf  t -> print_T_ParameterOf state t
+| T_String      t -> print_T_String       state t
+| T_Union       t -> print_T_Union        state t
+| T_Var         t -> print_T_Var          state t
+| T_Variant     t -> print_T_Variant      state t
 
 (* Application of type constructors *)
 
@@ -379,9 +379,10 @@ and print_T_Par state (node : type_expr par) =
 
 (* Type parameter *)
 
-and print_T_Parameter state (node : parameter_of_type reg) =
+and print_T_ParameterOf state (node : parameter_of_type reg) =
   let {kwd_parameter_of=_; namespace_path} = node.value in
-  Tree.make_unary state "T_Parameter" print_namespace_selection namespace_path
+  Tree.make_unary state "T_ParameterOf" print_namespace_selection
+                  namespace_path
 
 and print_T_Object state (node : type_expr _object) =
   print_object print_type_expr "T_Object" state node
@@ -557,66 +558,66 @@ and print_P_Verbatim state (node : lexeme wrap) =
 (* EXPRESSIONS *)
 
 and print_expr state = function
-  E_Add      e -> print_E_Add      state e
-| E_AddEq    e -> print_E_AddEq    state e
-| E_And      e -> print_E_And      state e
-| E_App      e -> print_E_App      state e
-| E_Array    e -> print_E_Array    state e
-| E_Assign   e -> print_E_Assign   state e
-| E_Attr     e -> print_E_Attr     state e
-| E_BitAnd   e -> print_E_BitAnd   state e
-| E_BitAndEq e -> print_E_BitAndEq state e
-| E_BitNeg   e -> print_E_BitNeg   state e
-| E_BitOr    e -> print_E_BitOr    state e
-| E_BitOrEq  e -> print_E_BitOrEq  state e
-| E_BitSl    e -> print_E_BitSl    state e
-| E_BitSlEq  e -> print_E_BitSlEq  state e
-| E_BitSr    e -> print_E_BitSr    state e
-| E_BitSrEq  e -> print_E_BitSrEq  state e
-| E_BitXor   e -> print_E_BitXor   state e
-| E_BitXorEq e -> print_E_BitXorEq state e
-| E_Bytes    e -> print_E_Bytes    state e
-| E_CodeInj  e -> print_E_CodeInj  state e
-| E_Contract e -> print_E_Contract state e
-| E_Ctor     e -> print_E_Ctor     state e
-| E_Div      e -> print_E_Div      state e
-| E_DivEq    e -> print_E_DivEq    state e
-| E_Equal    e -> print_E_Equal    state e
-| E_False    e -> print_E_False    state e
-| E_Fun      e -> print_E_Fun      state e
-| E_Geq      e -> print_E_Geq      state e
-| E_Gt       e -> print_E_Gt       state e
-| E_Int      e -> print_E_Int      state e
-| E_Leq      e -> print_E_Leq      state e
-| E_Lt       e -> print_E_Lt       state e
-| E_MinusEq  e -> print_E_MinusEq  state e
-| E_Rem      e -> print_E_Rem      state e
-| E_RemEq    e -> print_E_RemEq    state e
-| E_NamePath e -> print_E_NamePath state e
-| E_Mult     e -> print_E_Mult     state e
-| E_Mutez    e -> print_E_Mutez    state e
-| E_Nat      e -> print_E_Nat      state e
-| E_Neg      e -> print_E_Neg      state e
-| E_Neq      e -> print_E_Neq      state e
-| E_Not      e -> print_E_Not      state e
-| E_Object   e -> print_E_Object   state e
-| E_Or       e -> print_E_Or       state e
-| E_Par      e -> print_E_Par      state e
-| E_PostDecr e -> print_E_PostDecr state e
-| E_PostIncr e -> print_E_PostIncr state e
-| E_PreDecr  e -> print_E_PreDecr  state e
-| E_PreIncr  e -> print_E_PreIncr  state e
-| E_Proj     e -> print_E_Proj     state e
-| E_String   e -> print_E_String   state e
-| E_Sub      e -> print_E_Sub      state e
-| E_Ternary  e -> print_E_Ternary  state e
-| E_TimesEq  e -> print_E_TimesEq  state e
-| E_True     e -> print_E_True     state e
-| E_Typed    e -> print_E_Typed    state e
-| E_Update   e -> print_E_Update   state e
-| E_Var      e -> print_E_Var      state e
-| E_Verbatim e -> print_E_Verbatim state e
-| E_Xor      e -> print_E_Xor      state e
+  E_Add        e -> print_E_Add        state e
+| E_AddEq      e -> print_E_AddEq      state e
+| E_And        e -> print_E_And        state e
+| E_App        e -> print_E_App        state e
+| E_Array      e -> print_E_Array      state e
+| E_Assign     e -> print_E_Assign     state e
+| E_Attr       e -> print_E_Attr       state e
+| E_BitAnd     e -> print_E_BitAnd     state e
+| E_BitAndEq   e -> print_E_BitAndEq   state e
+| E_BitNeg     e -> print_E_BitNeg     state e
+| E_BitOr      e -> print_E_BitOr      state e
+| E_BitOrEq    e -> print_E_BitOrEq    state e
+| E_BitSl      e -> print_E_BitSl      state e
+| E_BitSlEq    e -> print_E_BitSlEq    state e
+| E_BitSr      e -> print_E_BitSr      state e
+| E_BitSrEq    e -> print_E_BitSrEq    state e
+| E_BitXor     e -> print_E_BitXor     state e
+| E_BitXorEq   e -> print_E_BitXorEq   state e
+| E_Bytes      e -> print_E_Bytes      state e
+| E_CodeInj    e -> print_E_CodeInj    state e
+| E_ContractOf e -> print_E_ContractOf state e
+| E_Ctor       e -> print_E_Ctor       state e
+| E_Div        e -> print_E_Div        state e
+| E_DivEq      e -> print_E_DivEq      state e
+| E_Equal      e -> print_E_Equal      state e
+| E_False      e -> print_E_False      state e
+| E_Fun        e -> print_E_Fun        state e
+| E_Geq        e -> print_E_Geq        state e
+| E_Gt         e -> print_E_Gt         state e
+| E_Int        e -> print_E_Int        state e
+| E_Leq        e -> print_E_Leq        state e
+| E_Lt         e -> print_E_Lt         state e
+| E_MinusEq    e -> print_E_MinusEq    state e
+| E_Rem        e -> print_E_Rem        state e
+| E_RemEq      e -> print_E_RemEq      state e
+| E_NamePath   e -> print_E_NamePath   state e
+| E_Mult       e -> print_E_Mult       state e
+| E_Mutez      e -> print_E_Mutez      state e
+| E_Nat        e -> print_E_Nat        state e
+| E_Neg        e -> print_E_Neg        state e
+| E_Neq        e -> print_E_Neq        state e
+| E_Not        e -> print_E_Not        state e
+| E_Object     e -> print_E_Object     state e
+| E_Or         e -> print_E_Or         state e
+| E_Par        e -> print_E_Par        state e
+| E_PostDecr   e -> print_E_PostDecr   state e
+| E_PostIncr   e -> print_E_PostIncr   state e
+| E_PreDecr    e -> print_E_PreDecr    state e
+| E_PreIncr    e -> print_E_PreIncr    state e
+| E_Proj       e -> print_E_Proj       state e
+| E_String     e -> print_E_String     state e
+| E_Sub        e -> print_E_Sub        state e
+| E_Ternary    e -> print_E_Ternary    state e
+| E_TimesEq    e -> print_E_TimesEq    state e
+| E_True       e -> print_E_True       state e
+| E_Typed      e -> print_E_Typed      state e
+| E_Update     e -> print_E_Update     state e
+| E_Var        e -> print_E_Var        state e
+| E_Verbatim   e -> print_E_Verbatim   state e
+| E_Xor        e -> print_E_Xor        state e
 
 (* Arithmetic addition *)
 
@@ -750,10 +751,10 @@ and print_code state (node : expr) =
 
 (* Contract of expression *)
 
-and print_E_Contract state (node: contract_of_expr reg) =
+and print_E_ContractOf state (node: contract_of_expr reg) =
   let {kwd_contract_of=_; namespace_path} = node.value in
   let path = namespace_path.value.inside in
-  Tree.make_unary state "E_Contract" print_namespace_selection path
+  Tree.make_unary state "E_ContractOf" print_namespace_selection path
 
 (* Data constructor as expressions *)
 

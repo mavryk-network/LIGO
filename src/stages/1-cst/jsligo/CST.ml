@@ -314,19 +314,19 @@ and type_annotation = colon * type_expr
    add or modify some, please make sure they remain in order. *)
 
 and type_expr =
-  T_App       of (type_expr * type_ctor_args) reg  (* <u,v> M.t         *)
-| T_Attr      of (attribute * type_expr)           (* @a e              *)
-| T_Array     of array_type                        (* [t, [u, v]]       *)
-| T_Fun       of fun_type                          (* (a : t) => u      *)
-| T_Int       of int_literal                       (* 42                *)
-| T_NamePath  of type_expr namespace_path reg      (* A.B.list<u>       *)
-| T_Object    of type_expr _object                 (* {x; @a y : t}     *)
-| T_Par       of type_expr par                     (* (t)               *)
-| T_Parameter of parameter_of_type reg             (* parameter_of m    *)
-| T_String    of string_literal                    (* "x"               *)
-| T_Union     of union_type                        (* {kind: "C", x: t} *)
-| T_Var       of variable                          (* t                 *)
-| T_Variant   of variant_type                      (* ["A"] | ["B", t]  *)
+  T_App         of (type_expr * type_ctor_args) reg (* <u,v> M.t      *)
+| T_Attr        of (attribute * type_expr)          (* @a e           *)
+| T_Array       of array_type                       (* [t, [u, v]]    *)
+| T_Fun         of fun_type                         (* (a : t) => u   *)
+| T_Int         of int_literal                      (* 42             *)
+| T_NamePath    of type_expr namespace_path reg     (* A.B.list<u>    *)
+| T_Object      of type_expr _object                (* {x; @a y : t}  *)
+| T_Par         of type_expr par                    (* (t)            *)
+| T_ParameterOf of parameter_of_type reg            (* parameter_of m *)
+| T_String      of string_literal                   (* "x"            *)
+| T_Union       of union_type                    (* {kind: "C", x: t} *)
+| T_Var         of variable                      (* t                 *)
+| T_Variant     of variant_type                  (* ["A"] | ["B", t]  *)
 
 (* Type application *)
 
@@ -521,66 +521,66 @@ and while_stmt = {
    add or modify some, please make sure they remain in order. *)
 
 and expr =
-  E_Add      of plus bin_op reg         (* x + y             *)
-| E_AddEq    of plus_eq bin_op reg      (* x += y            *)
-| E_And      of bool_and bin_op reg     (* x && y            *)
-| E_App      of (expr * arguments) reg  (* f(x)   Foo()      *)
-| E_Array    of expr _array             (* [x, ...y, z]  []  *)
-| E_Assign   of equal bin_op reg        (* x = y             *)
-| E_Attr     of (attribute * expr)      (* @a [x, y]         *)
-| E_BitAnd   of bit_and bin_op reg      (* x & y             *)
-| E_BitAndEq of bit_and_eq bin_op reg   (* x &= y            *)
-| E_BitNeg   of bit_neg un_op reg       (* ~x                *)
-| E_BitOr    of bit_or bin_op reg       (* x | y             *)
-| E_BitOrEq  of bit_or_eq bin_op reg    (* x |= y            *)
-| E_BitSl    of bit_sl bin_op reg       (* x << y            *)
-| E_BitSlEq  of bit_sl_eq bin_op reg    (* x <<= y           *)
-| E_BitSr    of bit_sr bin_op reg       (* x >> y            *)
-| E_BitSrEq  of bit_sr_eq bin_op reg    (* x >>= y           *)
-| E_BitXor   of bit_xor bin_op reg      (* x ^ y             *)
-| E_BitXorEq of bit_xor_eq bin_op reg   (* x ^= y            *)
-| E_Bytes    of bytes_literal           (* 0xFFFA            *)
-| E_CodeInj  of code_inj reg
-| E_Contract of contract_of_expr reg    (* contract_of (M.N) *)
-| E_Ctor     of ctor                    (* C                 *)
-| E_Div      of slash bin_op reg        (* x / y             *)
-| E_DivEq    of div_eq bin_op reg       (* x /= y            *)
-| E_Equal    of equal_cmp bin_op reg    (* x == y            *)
-| E_False    of false_const             (* false             *)
-| E_Fun      of fun_expr reg            (* (x : int) => e    *)
-| E_Geq      of geq bin_op reg          (* x >= y            *)
-| E_Gt       of gt bin_op reg           (* x > y             *)
-| E_Int      of int_literal             (* 42                *)
-| E_Leq      of leq bin_op reg          (* x <= y            *)
-| E_Lt       of lt bin_op reg           (* x < y             *)
-| E_MinusEq  of minus_eq bin_op reg     (* x -= y            *)
-| E_NamePath of expr namespace_path reg (* M.N.x.0           *)
-| E_Rem      of remainder bin_op reg    (* x % n             *)
-| E_RemEq    of rem_eq bin_op reg       (* x %= y            *)
-| E_Mult     of times bin_op reg        (* x * y             *)
-| E_Mutez    of mutez_literal           (* 5mutez            *)
-| E_Nat      of nat_literal             (* 42n               *)
-| E_Neg      of minus un_op reg         (* -x                *)
-| E_Neq      of neq bin_op reg          (* x != y            *)
-| E_Not      of bool_neg un_op reg      (* !x                *)
-| E_Object   of expr _object            (* {x : e, y}        *)
-| E_Or       of bool_or bin_op reg      (* x || y            *)
-| E_Par      of expr par                (* (x + y)           *)
-| E_PostDecr of decrement un_op reg     (* x--               *)
-| E_PostIncr of increment un_op reg     (* x++               *)
-| E_PreDecr  of decrement un_op reg     (* --x               *)
-| E_PreIncr  of increment un_op reg     (* ++x               *)
-| E_Proj     of projection reg          (* e.x.1             *)
-| E_String   of string_literal          (* "abcdef"          *)
-| E_Sub      of minus bin_op reg        (* x - y             *)
-| E_Ternary  of ternary reg             (* x ? y : z         *)
-| E_TimesEq  of times_eq bin_op reg     (* x *= y            *)
-| E_True     of true_const              (* true              *)
-| E_Typed    of typed_expr reg          (* e as t            *)
-| E_Update   of update_expr braces      (* {...x, y : z}     *)
-| E_Var      of variable                (* x                 *)
-| E_Verbatim of verbatim_literal        (* {|foo|}           *)
-| E_Xor      of bool_xor bin_op reg     (* x ^^ y            *)
+  E_Add        of plus bin_op reg         (* x + y             *)
+| E_AddEq      of plus_eq bin_op reg      (* x += y            *)
+| E_And        of bool_and bin_op reg     (* x && y            *)
+| E_App        of (expr * arguments) reg  (* f(x)   Foo()      *)
+| E_Array      of expr _array             (* [x, ...y, z]  []  *)
+| E_Assign     of equal bin_op reg        (* x = y             *)
+| E_Attr       of (attribute * expr)      (* @a [x, y]         *)
+| E_BitAnd     of bit_and bin_op reg      (* x & y             *)
+| E_BitAndEq   of bit_and_eq bin_op reg   (* x &= y            *)
+| E_BitNeg     of bit_neg un_op reg       (* ~x                *)
+| E_BitOr      of bit_or bin_op reg       (* x | y             *)
+| E_BitOrEq    of bit_or_eq bin_op reg    (* x |= y            *)
+| E_BitSl      of bit_sl bin_op reg       (* x << y            *)
+| E_BitSlEq    of bit_sl_eq bin_op reg    (* x <<= y           *)
+| E_BitSr      of bit_sr bin_op reg       (* x >> y            *)
+| E_BitSrEq    of bit_sr_eq bin_op reg    (* x >>= y           *)
+| E_BitXor     of bit_xor bin_op reg      (* x ^ y             *)
+| E_BitXorEq   of bit_xor_eq bin_op reg   (* x ^= y            *)
+| E_Bytes      of bytes_literal           (* 0xFFFA            *)
+| E_CodeInj    of code_inj reg
+| E_ContractOf of contract_of_expr reg    (* contract_of (M.N) *)
+| E_Ctor       of ctor                    (* C                 *)
+| E_Div        of slash bin_op reg        (* x / y             *)
+| E_DivEq      of div_eq bin_op reg       (* x /= y            *)
+| E_Equal      of equal_cmp bin_op reg    (* x == y            *)
+| E_False      of false_const             (* false             *)
+| E_Fun        of fun_expr reg            (* (x : int) => e    *)
+| E_Geq        of geq bin_op reg          (* x >= y            *)
+| E_Gt         of gt bin_op reg           (* x > y             *)
+| E_Int        of int_literal             (* 42                *)
+| E_Leq        of leq bin_op reg          (* x <= y            *)
+| E_Lt         of lt bin_op reg           (* x < y             *)
+| E_MinusEq    of minus_eq bin_op reg     (* x -= y            *)
+| E_NamePath   of expr namespace_path reg (* M.N.x.0           *)
+| E_Rem        of remainder bin_op reg    (* x % n             *)
+| E_RemEq      of rem_eq bin_op reg       (* x %= y            *)
+| E_Mult       of times bin_op reg        (* x * y             *)
+| E_Mutez      of mutez_literal           (* 5mutez            *)
+| E_Nat        of nat_literal             (* 42n               *)
+| E_Neg        of minus un_op reg         (* -x                *)
+| E_Neq        of neq bin_op reg          (* x != y            *)
+| E_Not        of bool_neg un_op reg      (* !x                *)
+| E_Object     of expr _object            (* {x : e, y}        *)
+| E_Or         of bool_or bin_op reg      (* x || y            *)
+| E_Par        of expr par                (* (x + y)           *)
+| E_PostDecr   of decrement un_op reg     (* x--               *)
+| E_PostIncr   of increment un_op reg     (* x++               *)
+| E_PreDecr    of decrement un_op reg     (* --x               *)
+| E_PreIncr    of increment un_op reg     (* ++x               *)
+| E_Proj       of projection reg          (* e.x.1             *)
+| E_String     of string_literal          (* "abcdef"          *)
+| E_Sub        of minus bin_op reg        (* x - y             *)
+| E_Ternary    of ternary reg             (* x ? y : z         *)
+| E_TimesEq    of times_eq bin_op reg     (* x *= y            *)
+| E_True       of true_const              (* true              *)
+| E_Typed      of typed_expr reg          (* e as t            *)
+| E_Update     of update_expr braces      (* {...x, y : z}     *)
+| E_Var        of variable                (* x                 *)
+| E_Verbatim   of verbatim_literal        (* {|foo|}           *)
+| E_Xor        of bool_xor bin_op reg     (* x ^^ y            *)
 
 (* Applications *)
 
@@ -684,19 +684,19 @@ let rec top_decl_to_region = function
 | TL_Directive d -> Directive.to_region d
 
 let rec type_expr_to_region = function
-  T_App       {region; _}
-| T_Array     {region; _} -> region
-| T_Attr      (_, t) -> type_expr_to_region t
-| T_Fun       {region; _} -> region
-| T_Int       w -> w#region
-| T_NamePath  {region; _}
-| T_Object    {region; _}
-| T_Par       {region; _}
-| T_Parameter {region; _} -> region
-| T_String    w -> w#region
-| T_Union     {region; _} -> region
-| T_Var       w -> w#region
-| T_Variant   {region; _} -> region
+  T_App         {region; _}
+| T_Array       {region; _} -> region
+| T_Attr        (_, t) -> type_expr_to_region t
+| T_Fun         {region; _} -> region
+| T_Int         w -> w#region
+| T_NamePath    {region; _}
+| T_Object      {region; _}
+| T_Par         {region; _}
+| T_ParameterOf {region; _} -> region
+| T_String      w -> w#region
+| T_Union       {region; _} -> region
+| T_Var         w -> w#region
+| T_Variant     {region; _} -> region
 
 let rec pattern_to_region = function
   P_Array {region; _} -> region
@@ -713,66 +713,66 @@ let rec pattern_to_region = function
 | P_Verbatim w -> w#region
 
 let rec expr_to_region = function
-  E_Add      {region; _}
-| E_AddEq    {region; _}
-| E_And      {region; _}
-| E_App      {region; _}
-| E_Array    {region; _}
-| E_Assign   {region; _} -> region
-| E_Attr     (_, e) -> expr_to_region e
-| E_BitAnd   {region; _}
-| E_BitAndEq {region; _}
-| E_BitNeg   {region; _}
-| E_BitOr    {region; _}
-| E_BitOrEq  {region; _}
-| E_BitSl    {region; _}
-| E_BitSlEq  {region; _}
-| E_BitSr    {region; _}
-| E_BitSrEq  {region; _}
-| E_BitXor   {region; _}
-| E_BitXorEq {region; _} -> region
-| E_Bytes    w -> w#region
-| E_CodeInj  {region; _}
-| E_Contract {region; _} -> region
-| E_Ctor     w -> w#region
-| E_Div      {region; _}
-| E_DivEq    {region; _}
-| E_Equal    {region; _} -> region
-| E_False    w -> w#region
-| E_Fun      {region; _}
-| E_Geq      {region; _}
-| E_Gt       {region; _} -> region
-| E_Int      w -> w#region
-| E_Leq      {region; _}
-| E_Lt       {region; _}
-| E_MinusEq  {region; _}
-| E_NamePath {region; _}
-| E_Rem      {region; _}
-| E_RemEq    {region; _}
-| E_Mult     {region; _} -> region
-| E_Mutez    w -> w#region
-| E_Nat      w -> w#region
-| E_Neg      {region; _}
-| E_Neq      {region; _}
-| E_Not      {region; _}
-| E_Object   {region; _}
-| E_Or       {region; _}
-| E_Par      {region; _}
-| E_PostDecr {region; _}
-| E_PostIncr {region; _}
-| E_PreDecr  {region; _}
-| E_PreIncr  {region; _}
-| E_Proj     {region; _} -> region
-| E_String   w -> w#region
-| E_Sub      {region; _}
-| E_Ternary  {region; _}
-| E_TimesEq  {region; _} -> region
-| E_True     w -> w#region
-| E_Typed    {region; _}
-| E_Update   {region; _} -> region
-| E_Var      w
-| E_Verbatim w -> w#region
-| E_Xor {region; _} -> region
+  E_Add        {region; _}
+| E_AddEq      {region; _}
+| E_And        {region; _}
+| E_App        {region; _}
+| E_Array      {region; _}
+| E_Assign     {region; _} -> region
+| E_Attr       (_, e) -> expr_to_region e
+| E_BitAnd     {region; _}
+| E_BitAndEq   {region; _}
+| E_BitNeg     {region; _}
+| E_BitOr      {region; _}
+| E_BitOrEq    {region; _}
+| E_BitSl      {region; _}
+| E_BitSlEq    {region; _}
+| E_BitSr      {region; _}
+| E_BitSrEq    {region; _}
+| E_BitXor     {region; _}
+| E_BitXorEq   {region; _} -> region
+| E_Bytes      w -> w#region
+| E_CodeInj    {region; _}
+| E_ContractOf {region; _} -> region
+| E_Ctor       w -> w#region
+| E_Div        {region; _}
+| E_DivEq      {region; _}
+| E_Equal      {region; _} -> region
+| E_False      w -> w#region
+| E_Fun        {region; _}
+| E_Geq        {region; _}
+| E_Gt         {region; _} -> region
+| E_Int        w -> w#region
+| E_Leq        {region; _}
+| E_Lt         {region; _}
+| E_MinusEq    {region; _}
+| E_NamePath   {region; _}
+| E_Rem        {region; _}
+| E_RemEq      {region; _}
+| E_Mult       {region; _} -> region
+| E_Mutez      w -> w#region
+| E_Nat        w -> w#region
+| E_Neg        {region; _}
+| E_Neq        {region; _}
+| E_Not        {region; _}
+| E_Object     {region; _}
+| E_Or         {region; _}
+| E_Par        {region; _}
+| E_PostDecr   {region; _}
+| E_PostIncr   {region; _}
+| E_PreDecr    {region; _}
+| E_PreIncr    {region; _}
+| E_Proj       {region; _} -> region
+| E_String     w -> w#region
+| E_Sub        {region; _}
+| E_Ternary    {region; _}
+| E_TimesEq    {region; _} -> region
+| E_True       w -> w#region
+| E_Typed      {region; _}
+| E_Update     {region; _} -> region
+| E_Var        w
+| E_Verbatim   w -> w#region
+| E_Xor        {region; _} -> region
 
 let rec statement_to_region = function
   S_Attr   (_, s) -> statement_to_region s

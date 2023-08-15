@@ -341,7 +341,7 @@ let fold
     | E_BitXorEq node -> node -| S_reg (S_bin_op S_bit_xor_eq)
     | E_Bytes node -> node -| S_bytes_literal
     | E_CodeInj node -> node -| S_reg S_code_inj
-    | E_Contract node -> node -| S_reg S_contract_of_expr
+    | E_ContractOf node -> node -| S_reg S_contract_of_expr
     | E_Ctor node -> node -| S_ctor
     | E_Div node -> node -| S_reg (S_bin_op S_slash)
     | E_DivEq node -> node -| S_reg (S_bin_op S_div_eq)
@@ -727,7 +727,7 @@ let fold
     | T_NamePath node -> node -| S_reg (S_namespace_path S_type_expr)
     | T_Object node -> node -| S_object S_type_expr
     | T_Par node -> node -| S_par S_type_expr
-    | T_Parameter node -> node -| S_reg S_parameter_of_type
+    | T_ParameterOf node -> node -| S_reg S_parameter_of_type
     | T_String node -> node -| S_string_literal
     | T_Union node -> node -| S_union_type
     | T_Var node -> node -| S_variable

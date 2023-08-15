@@ -451,22 +451,22 @@ ctor_param:
    ["C"]. *)
 
 core_type:
-  "<string>"          { T_String    $1 }
-| core_type_no_string {             $1 }
+  "<string>"          { T_String $1 }
+| core_type_no_string {          $1 }
 
 core_type_no_string:
-  par(type_expr)      { T_Par       $1 }
-| no_par_type_expr    {             $1 }
+  par(type_expr)      { T_Par $1 }
+| no_par_type_expr    {       $1 }
 
 no_par_type_expr:
-  "<int>"                    { T_Int       $1 }
-| "_" | type_name            { T_Var       $1 }
-| type_ctor_app (type_expr)  { T_App       $1 }
-| array_type                  { T_Array     $1 }
-| parameter_of_type          { T_Parameter $1 }
-| qualified_type (type_expr) {             $1 }
+  "<int>"                    { T_Int         $1 }
+| "_" | type_name            { T_Var         $1 }
+| type_ctor_app (type_expr)  { T_App         $1 }
+| array_type                 { T_Array       $1 }
+| parameter_of_type          { T_ParameterOf $1 }
+| qualified_type (type_expr)
 | attr_type
-| union_or_object            {             $1 }
+| union_or_object            { $1 }
 
 (* Attributed core type *)
 
@@ -1064,7 +1064,7 @@ contract_of_expr:
   "contract_of" par(namespace_selection) {
     let region = cover $1#region $2.region
     and value  = {kwd_contract_of=$1; namespace_path=$2}
-    in E_Contract {region; value} }
+    in E_ContractOf {region; value} }
 
 app_expr:
   lambda arguments {
