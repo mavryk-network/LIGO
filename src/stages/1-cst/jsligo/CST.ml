@@ -643,9 +643,9 @@ and projection = {
 }
 
 and selection =
-  FieldName of (dot * property_name)      (* Objects *)
-| FieldStr  of string_literal brackets (* Objects *)
-| Component of int_literal brackets    (* Arrays  *)
+  PropertyName of (dot * property_name)   (* Objects *)
+| PropertyStr  of string_literal brackets (* Objects *)
+| Component    of int_literal brackets    (* Arrays  *)
 
 (* Code injection.  Note how the field [language] wraps a region in
    another: the outermost region covers the header "[%<language>" and
@@ -795,9 +795,9 @@ let fun_body_to_region = function
 | ExprBody e -> expr_to_region e
 
 let selection_to_region = function
-  FieldName (dot, property_name) ->
+  PropertyName (dot, property_name) ->
     Region.cover dot#region property_name#region
-| FieldStr brackets -> brackets.region
+| PropertyStr brackets -> brackets.region
 | Component brackets -> brackets.region
 
 let namespace_selection_to_region = function

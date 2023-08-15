@@ -787,7 +787,7 @@ and print_E_Fun state (node : fun_expr reg) =
   in Tree.make ~region state "E_Fun" children
 
 and print_rhs_type state (node: type_annotation) =
-  Tree.make_unary state "<rhs_type>" print_type_expr (snd node)
+  Tree.make_unary state "<rhs type>" print_type_expr (snd node)
 
 and print_arrow_fun_params state = function
   ParParams  p -> print_ParParams  state p
@@ -926,15 +926,15 @@ and print_E_Proj state (node : projection reg) =
   in Tree.make state ~region "E_Proj" children
 
 and print_selection state = function
-  FieldName s -> print_FieldName state s
-| FieldStr  s -> print_FieldStr  state s
-| Component s -> print_Component state s
+  PropertyName s -> print_PropertyName state s
+| PropertyStr  s -> print_PropertyStr  state s
+| Component    s -> print_Component    state s
 
-and print_FieldName state (node : dot * property_name) =
-  Tree.(make_unary state "FieldName" make_literal (snd node))
+and print_PropertyName state (node : dot * property_name) =
+  Tree.(make_unary state "PropertyName" make_literal (snd node))
 
-and print_FieldStr state (node : string_literal brackets) =
-  Tree.(make_string "FieldStr" state node.value.inside)
+and print_PropertyStr state (node : string_literal brackets) =
+  Tree.(make_string "PropertyStr" state node.value.inside)
 
 and print_Component state (node : int_literal brackets) =
   Tree.(make_int "Component" state node.value.inside)

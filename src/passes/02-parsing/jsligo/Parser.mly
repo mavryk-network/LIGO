@@ -191,10 +191,11 @@ nsep_or_pref(item,sep):
 
 %inline
 variable        : "<ident>"              { $1 }
+fun_name        : "<ident>"              { $1 }
 type_var        : "<ident>" | "<uident>" { $1 }
 type_name       : "<ident>" | "<uident>" { $1 }
 type_ctor       : "<ident>" | "<uident>" { $1 }
-property_name      : "<ident>" | "<uident>" { $1 }
+property_name   : "<ident>" | "<uident>" { $1 }
 lang_name       : "<ident>" | "<uident>" { $1 }
 namespace_name  : "<uident>"             { $1 }
 intf_name       : "<uident>"             { $1 }
@@ -225,10 +226,39 @@ no_dir_top_decl:
 (* INNER DECLARATIONS (AS STATEMENTS) *)
 
 declaration:
-  value_decl | import_decl | interface_decl
+  fun_decl | value_decl | import_decl | interface_decl
 | namespace_decl | type_decl { $1 }
 
-(* Value declaration (constant and mutable) *)
+(* Function declaration *)
+
+fun_decl:
+  "function" fun_name ioption(type_vars)
+  ES6FUN? par(fun_params) ret_type? braces(statements) {
+    let region = cover $1#region $7.region
+    and value  = {kwd_function=$1; fun_name=$2; type_vars=$3;
+                  parameters=$5; rhs_type=$6; fun_body=$7}
+    in D_Fun {value; region} }
+
+type_vars:
+  chevrons(sep_or_term(type_var,",")) { $1 }
+
+fun_params:
+  sep_or_term (fun_param,",") { $1 }
+
+fun_param:
+  param_pattern type_annotation(type_expr) {
+    let stop   = type_expr_to_region (snd $2) in
+    let region = cover (pattern_to_region $1) stop
+    in P_Typed {region; value = $1,$2}
+  }
+| param_pattern { $1 }
+
+param_pattern:
+  "_" | variable                 { P_Var    $1 }
+| array (param_pattern)          { P_Array  $1 }
+| object_pattern (param_pattern) { P_Object $1 }
+
+(* Value declaration (constant and mutable, function or not) *)
 
 value_decl:
   var_kind bindings {
@@ -260,9 +290,6 @@ binding_type:
 
 type_annotation (right_type_expr):
   ":" right_type_expr { $1,$2 }
-
-type_vars:
-  chevrons(sep_or_term(type_var,",")) { $1 }
 
 (* Import declaration *)
 
@@ -696,9 +723,9 @@ path (root_expr):
     in E_Proj {region; value} }
 
 selection:
-  "." property_name        { FieldName ($1,$2) }
-| brackets ("<string>") { FieldStr       $1 }
-| brackets ("<int>")    { Component      $1 }
+  "." property_name     { PropertyName ($1,$2) }
+| brackets ("<string>") { PropertyStr       $1 }
+| brackets ("<int>")    { Component         $1 }
 
 (* Block of statements *)
 
@@ -889,23 +916,10 @@ ret_type:
   type_annotation (ES6FUN? no_par_type_expr { $2 }) { $1 }
 
 fun_par_params:
-  par (sep_or_term(fun_param,",") PARAMS { $1 }) { ParParams $1 }
+  par (fun_params PARAMS { $1 }) { ParParams $1 }
 
 fun_var_param:
-  variable | WILD { $1 }
-
-fun_param:
-  param_pattern type_annotation(type_expr) {
-    let stop   = type_expr_to_region (snd $2) in
-    let region = cover (pattern_to_region $1) stop
-    in P_Typed {region; value = $1,$2}
-  }
-| param_pattern { $1 }
-
-param_pattern:
-  "_" | variable                 { P_Var    $1 }
-| array (param_pattern)          { P_Array  $1 }
-| object_pattern (param_pattern) { P_Object $1 }
+  variable | "_" { $1 }
 
 fun_body:
   braces (statements) { StmtBody  $1 }

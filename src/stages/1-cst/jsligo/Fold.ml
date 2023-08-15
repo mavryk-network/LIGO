@@ -624,8 +624,8 @@ let fold
   | S_rpar -> process @@ node -| S_wrap S_lexeme
   | S_selection -> process
     ( match node with
-      FieldName node -> node -| S_array_2 (S_dot, S_property_name)
-    | FieldStr node -> node -| S_brackets S_string_literal
+      PropertyName node -> node -| S_array_2 (S_dot, S_property_name)
+    | PropertyStr node -> node -| S_brackets S_string_literal
     | Component node -> node -| S_brackets S_nat_literal
     )
   | S_semi -> process @@ node -| S_wrap S_lexeme
