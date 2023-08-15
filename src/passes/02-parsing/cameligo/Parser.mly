@@ -338,7 +338,7 @@ parameter_of_type:
   nsepseq(module_name,".") "parameter_of" {
     let start  = nsepseq_to_region (fun x -> x#region) $1 in
     let region = cover start $2#region
-    in T_Parameter {region; value=$1} }
+    in T_ParameterOf {region; value=$1} }
 
 (* Variant types.
 
@@ -1004,7 +1004,7 @@ app_expr:
 | "contract_of" nsepseq(module_name,".") {
     let stop   = nsepseq_to_region (fun x -> x#region) $2 in
     let region = cover $1#region stop
-    in E_Contract {region; value=$2} }
+    in E_ContractOf {region; value=$2} }
 
 arguments:
   nseq(no_attr_expr) { $1 }
@@ -1016,13 +1016,7 @@ core_expr:
 | no_attr_expr        { $1 }
 
 no_attr_expr:
-  "<int>"         { E_Int      $1 }
-| "<nat>"         { E_Nat      $1 }
-| "<mutez>"       { E_Mutez    $1 }
-| "<string>"      { E_String   $1 }
-| "<verbatim>"    { E_Verbatim $1 }
-| "<bytes>"       { E_Bytes    $1 }
-| unit            { E_Unit     $1 }
+  unit            { E_Unit     $1 }
 | list_of(expr)   { E_List     $1 }
 | record_expr     { E_Record   $1 }
 | code_inj        { E_CodeInj  $1 }
@@ -1030,7 +1024,21 @@ no_attr_expr:
 | sequence_expr   { E_Seq      $1 }
 | record_update   { E_Update   $1 }
 | ctor            { E_Ctor     $1 }
+| literal_expr
 | path_expr       { $1 }
+
+(* Literal expressions *)
+
+%inline
+literal_expr:
+  "<int>"      { E_Int      $1 }
+| "<nat>"      { E_Nat      $1 }
+| "<mutez>"    { E_Mutez    $1 }
+| "<string>"   { E_String   $1 }
+| "<verbatim>" { E_Verbatim $1 }
+| "<bytes>"    { E_Bytes    $1 }
+| "true"       { E_True     $1 }
+| "false"      { E_False    $1 }
 
 (* Code injection *)
 

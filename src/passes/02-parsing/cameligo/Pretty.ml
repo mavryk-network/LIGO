@@ -437,19 +437,19 @@ and print_S_TypeVar (node : (kwd_type * variable) reg) =
    add or modify some, please make sure they remain in order. *)
 
 and print_type_expr state = function
-  T_App       t -> print_T_App       state t
-| T_Arg       t -> print_T_Arg             t
-| T_Attr      t -> print_T_Attr      state t
-| T_Cart      t -> print_T_Cart      state t
-| T_Fun       t -> print_T_Fun       state t
-| T_Int       t -> print_T_Int             t
-| T_ModPath   t -> print_T_ModPath   state t
-| T_Par       t -> print_T_Par       state t
-| T_Record    t -> print_T_Record    state t
-| T_String    t -> print_T_String          t
-| T_Variant   t -> print_T_Variant   state t
-| T_Var       t -> print_T_Var             t
-| T_Parameter t -> print_T_Parameter       t
+  T_App         t -> print_T_App       state t
+| T_Arg         t -> print_T_Arg             t
+| T_Attr        t -> print_T_Attr      state t
+| T_Cart        t -> print_T_Cart      state t
+| T_Fun         t -> print_T_Fun       state t
+| T_Int         t -> print_T_Int             t
+| T_ModPath     t -> print_T_ModPath   state t
+| T_Par         t -> print_T_Par       state t
+| T_Record      t -> print_T_Record    state t
+| T_String      t -> print_T_String          t
+| T_Variant     t -> print_T_Variant   state t
+| T_Var         t -> print_T_Var             t
+| T_ParameterOf t -> print_T_ParameterOf     t
 
 (* Type application *)
 
@@ -616,7 +616,7 @@ and print_T_Var (node : variable) = print_ident node
 
 (* Parameter of *)
 
-and print_T_Parameter (node : (module_name, dot) Utils.nsepseq reg) =
+and print_T_ParameterOf (node : (module_name, dot) Utils.nsepseq reg) =
   let path = print_nsepseq (break 0) print_ident node.value in
   let path = group (nest 0 (break 1 ^^ path))
   in path ^^ space ^^ string "parameter_of"
@@ -786,62 +786,64 @@ and print_P_Unit (node : the_unit reg) =
    add or modify some, please make sure they remain in order. *)
 
 and print_expr state = function
-  E_Add      e -> print_E_Add      state e
-| E_And      e -> print_E_And      state e
-| E_App      e -> print_E_App      state e
-| E_Assign   e -> print_E_Assign   state e
-| E_Attr     e -> print_E_Attr     state e
-| E_Bytes    e -> print_E_Bytes          e
-| E_Cat      e -> print_E_Cat      state e
-| E_CodeInj  e -> print_E_CodeInj  state e
-| E_Cond     e -> print_E_Cond     state e
-| E_Cons     e -> print_E_Cons     state e
-| E_Contract e -> print_E_Contract       e
-| E_Ctor     e -> print_E_Ctor           e
-| E_Div      e -> print_E_Div      state e
-| E_Equal    e -> print_E_Equal    state e
-| E_For      e -> print_E_For      state e
-| E_ForIn    e -> print_E_ForIn    state e
-| E_Fun      e -> print_E_Fun      state e
-| E_Geq      e -> print_E_Geq      state e
-| E_Gt       e -> print_E_Gt       state e
-| E_Int      e -> print_E_Int            e
-| E_Land     e -> print_E_Land     state e
-| E_Leq      e -> print_E_Leq      state e
-| E_LetIn    e -> print_E_LetIn    state e
-| E_LetMutIn e -> print_E_LetMutIn state e
-| E_List     e -> print_E_List     state e
-| E_Lor      e -> print_E_Lor      state e
-| E_Lsl      e -> print_E_Lsl      state e
-| E_Lsr      e -> print_E_Lsr      state e
-| E_Lt       e -> print_E_Lt       state e
-| E_Lxor     e -> print_E_Lxor     state e
-| E_Match    e -> print_E_Match    state e
-| E_Mod      e -> print_E_Mod      state e
-| E_ModIn    e -> print_E_ModIn    state e
-| E_ModPath  e -> print_E_ModPath  state e
-| E_Mult     e -> print_E_Mult     state e
-| E_Mutez    e -> print_E_Mutez          e
-| E_Nat      e -> print_E_Nat            e
-| E_Neg      e -> print_E_Neg      state e
-| E_Neq      e -> print_E_Neq      state e
-| E_Not      e -> print_E_Not      state e
-| E_Or       e -> print_E_Or       state e
-| E_Par      e -> print_E_Par      state e
-| E_Proj     e -> print_E_Proj     state e
-| E_Record   e -> print_E_Record   state e
-| E_RevApp   e -> print_E_RevApp   state e
-| E_Seq      e -> print_E_Seq      state e
-| E_String   e -> print_E_String         e
-| E_Sub      e -> print_E_Sub      state e
-| E_Tuple    e -> print_E_Tuple    state e
-| E_Typed    e -> print_E_Typed    state e
-| E_TypeIn   e -> print_E_TypeIn   state e
-| E_Unit     e -> print_E_Unit           e
-| E_Update   e -> print_E_Update   state e
-| E_Var      e -> print_E_Var            e
-| E_Verbatim e -> print_E_Verbatim       e
-| E_While    e -> print_E_While    state e
+  E_Add        e -> print_E_Add      state e
+| E_And        e -> print_E_And      state e
+| E_App        e -> print_E_App      state e
+| E_Assign     e -> print_E_Assign   state e
+| E_Attr       e -> print_E_Attr     state e
+| E_Bytes      e -> print_E_Bytes          e
+| E_Cat        e -> print_E_Cat      state e
+| E_CodeInj    e -> print_E_CodeInj  state e
+| E_Cond       e -> print_E_Cond     state e
+| E_Cons       e -> print_E_Cons     state e
+| E_ContractOf e -> print_E_ContractOf     e
+| E_Ctor       e -> print_E_Ctor           e
+| E_Div        e -> print_E_Div      state e
+| E_Equal      e -> print_E_Equal    state e
+| E_False      e -> print_E_False          e
+| E_For        e -> print_E_For      state e
+| E_ForIn      e -> print_E_ForIn    state e
+| E_Fun        e -> print_E_Fun      state e
+| E_Geq        e -> print_E_Geq      state e
+| E_Gt         e -> print_E_Gt       state e
+| E_Int        e -> print_E_Int            e
+| E_Land       e -> print_E_Land     state e
+| E_Leq        e -> print_E_Leq      state e
+| E_LetIn      e -> print_E_LetIn    state e
+| E_LetMutIn   e -> print_E_LetMutIn state e
+| E_List       e -> print_E_List     state e
+| E_Lor        e -> print_E_Lor      state e
+| E_Lsl        e -> print_E_Lsl      state e
+| E_Lsr        e -> print_E_Lsr      state e
+| E_Lt         e -> print_E_Lt       state e
+| E_Lxor       e -> print_E_Lxor     state e
+| E_Match      e -> print_E_Match    state e
+| E_Mod        e -> print_E_Mod      state e
+| E_ModIn      e -> print_E_ModIn    state e
+| E_ModPath    e -> print_E_ModPath  state e
+| E_Mult       e -> print_E_Mult     state e
+| E_Mutez      e -> print_E_Mutez          e
+| E_Nat        e -> print_E_Nat            e
+| E_Neg        e -> print_E_Neg      state e
+| E_Neq        e -> print_E_Neq      state e
+| E_Not        e -> print_E_Not      state e
+| E_Or         e -> print_E_Or       state e
+| E_Par        e -> print_E_Par      state e
+| E_Proj       e -> print_E_Proj     state e
+| E_Record     e -> print_E_Record   state e
+| E_RevApp     e -> print_E_RevApp   state e
+| E_Seq        e -> print_E_Seq      state e
+| E_String     e -> print_E_String         e
+| E_Sub        e -> print_E_Sub      state e
+| E_True       e -> print_E_True           e
+| E_Tuple      e -> print_E_Tuple    state e
+| E_Typed      e -> print_E_Typed    state e
+| E_TypeIn     e -> print_E_TypeIn   state e
+| E_Unit       e -> print_E_Unit           e
+| E_Update     e -> print_E_Update   state e
+| E_Var        e -> print_E_Var            e
+| E_Verbatim   e -> print_E_Verbatim       e
+| E_While      e -> print_E_While    state e
 
 (* Addition *)
 
@@ -921,7 +923,7 @@ and print_E_Cond state (node : cond_expr reg) =
 
 and print_E_Cons state (node : cons bin_op reg) = print_bin_op state node
 
-and print_E_Contract (node : (module_name, dot) Utils.nsepseq reg) =
+and print_E_ContractOf (node : (module_name, dot) Utils.nsepseq reg) =
   let path = print_nsepseq (break 0) print_ident node.value in
   string "contract_of" ^^ space ^^ group (nest 0 (break 1 ^^ path))
 
@@ -936,6 +938,10 @@ and print_E_Div state (node : slash bin_op reg) = print_bin_op state node
 (* Equality *)
 
 and print_E_Equal state (node : equal bin_op reg) = print_bin_op state node
+
+(* "false" Boolean constant *)
+
+and print_E_False (node : false_const) = print_ident node
 
 (* For loop *)
 
@@ -1168,6 +1174,10 @@ and print_E_String (node : lexeme wrap) = print_string node
 (* Arithmetic subtraction *)
 
 and print_E_Sub state (node : minus bin_op reg) = print_bin_op state node
+
+(* "true" Boolean constant *)
+
+and print_E_True (node : true_const) = print_ident node
 
 (* Tuple expression *)
 

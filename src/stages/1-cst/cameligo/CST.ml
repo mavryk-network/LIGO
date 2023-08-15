@@ -31,42 +31,42 @@ type lexeme = string
 (* IMPORTANT: The types are sorted alphabetically. If you add or
    modify some, please make sure they remain in order. *)
 
-type kwd_begin  = lexeme wrap
-type kwd_do     = lexeme wrap
-type kwd_done   = lexeme wrap
-type kwd_downto = lexeme wrap
-type kwd_else   = lexeme wrap
-type kwd_end    = lexeme wrap
-type kwd_false  = lexeme wrap
-type kwd_for    = lexeme wrap
-type kwd_fun    = lexeme wrap
-type kwd_if     = lexeme wrap
-type kwd_in     = lexeme wrap
-type kwd_let    = lexeme wrap
-type kwd_land   = lexeme wrap
-type kwd_lor    = lexeme wrap
-type kwd_lxor   = lexeme wrap
-type kwd_lsl    = lexeme wrap
-type kwd_lsr    = lexeme wrap
-type kwd_match  = lexeme wrap
-type kwd_mod    = lexeme wrap
-type kwd_module = lexeme wrap
-type kwd_mut    = lexeme wrap
-type kwd_not    = lexeme wrap
-type kwd_of     = lexeme wrap
-type kwd_or     = lexeme wrap
-type kwd_rec    = lexeme wrap
+type kwd_begin     = lexeme wrap
+type kwd_do        = lexeme wrap
+type kwd_done      = lexeme wrap
+type kwd_downto    = lexeme wrap
+type kwd_else      = lexeme wrap
+type kwd_end       = lexeme wrap
+type kwd_false     = lexeme wrap
+type kwd_for       = lexeme wrap
+type kwd_fun       = lexeme wrap
+type kwd_if        = lexeme wrap
+type kwd_in        = lexeme wrap
+type kwd_include   = lexeme wrap
+type kwd_let       = lexeme wrap
+type kwd_land      = lexeme wrap
+type kwd_lor       = lexeme wrap
+type kwd_lxor      = lexeme wrap
+type kwd_lsl       = lexeme wrap
+type kwd_lsr       = lexeme wrap
+type kwd_match     = lexeme wrap
+type kwd_mod       = lexeme wrap
+type kwd_module    = lexeme wrap
+type kwd_mut       = lexeme wrap
+type kwd_not       = lexeme wrap
+type kwd_of        = lexeme wrap
+type kwd_or        = lexeme wrap
+type kwd_rec       = lexeme wrap
 type kwd_signature = lexeme wrap
-type kwd_sig    = lexeme wrap
-type kwd_struct = lexeme wrap
-type kwd_then   = lexeme wrap
-type kwd_true   = lexeme wrap
-type kwd_type   = lexeme wrap
-type kwd_upto   = lexeme wrap
-type kwd_val    = lexeme wrap
-type kwd_while  = lexeme wrap
-type kwd_with   = lexeme wrap
-type kwd_include = lexeme wrap
+type kwd_sig       = lexeme wrap
+type kwd_struct    = lexeme wrap
+type kwd_then      = lexeme wrap
+type kwd_true      = lexeme wrap
+type kwd_type      = lexeme wrap
+type kwd_upto      = lexeme wrap
+type kwd_val       = lexeme wrap
+type kwd_while     = lexeme wrap
+type kwd_with      = lexeme wrap
 
 (* Symbols *)
 
@@ -128,6 +128,8 @@ type nat_literal      = int_literal
 type bytes_literal    = (lexeme * Hex.t) wrap
 type mutez_literal    = (lexeme * Int64.t) wrap
 type verbatim_literal = lexeme wrap
+type false_const      = lexeme wrap
+type true_const       = lexeme wrap
 
 (* Parentheses, braces, brackets *)
 
@@ -262,19 +264,19 @@ and 'a tuple = ('a, comma) nsepseq
    add or modify some, please make sure they remain in order. *)
 
 and type_expr =
-  T_App       of (type_expr * type_ctor_arg) reg     (* M.t (x,y,z)     *)
-| T_Arg       of type_var                            (* 'a              *)
-| T_Attr      of (attribute * type_expr)             (* [@a] x          *)
-| T_Cart      of cartesian                           (* x * (y * z)     *)
-| T_Fun       of (type_expr * arrow * type_expr) reg (* x -> y          *)
-| T_Int       of int_literal                         (* 42              *)
-| T_ModPath   of type_expr module_path reg           (* A.B.(x * y)     *)
-| T_Par       of type_expr par                       (* (t)             *)
-| T_Parameter of (module_name, dot) nsepseq reg      (* parameter_of m  *)
-| T_Record    of field_decl reg record               (* {a; [@x] b: t}  *)
-| T_String    of string_literal                      (* "x"             *)
-| T_Var       of variable                            (* x               *)
-| T_Variant   of variant_type reg                    (* [@a] A | B of t *)
+  T_App         of (type_expr * type_ctor_arg) reg (* M.t (x,y,z)     *)
+| T_Arg         of type_var                        (* 'a              *)
+| T_Attr        of (attribute * type_expr)         (* [@a] x          *)
+| T_Cart        of cartesian                       (* x * (y * z)     *)
+| T_Fun         of (type_expr * arrow * type_expr) reg (* x -> y      *)
+| T_Int         of int_literal                     (* 42              *)
+| T_ModPath     of type_expr module_path reg       (* A.B.(x * y)     *)
+| T_Par         of type_expr par                   (* (t)             *)
+| T_ParameterOf of (module_name, dot) nsepseq reg  (* parameter_of m  *)
+| T_Record      of field_decl reg record           (* {a; [@x] b: t}  *)
+| T_String      of string_literal                  (* "x"             *)
+| T_Var         of variable                        (* x               *)
+| T_Variant     of variant_type reg                (* [@a] A | B of t *)
 
 (* Type application *)
 
@@ -374,62 +376,64 @@ and the_unit = lpar * rpar
    add or modify some, please make sure they remain in order. *)
 
 and expr =
-  E_Add      of plus bin_op reg          (* x + y               *)
-| E_And      of bool_and bin_op reg      (* x && y              *)
-| E_App      of (expr * expr nseq) reg   (* f x y     C (x,y)   *)
-| E_Assign   of assign reg               (* x := e              *)
-| E_Attr     of (attribute * expr)       (* [@a] e              *)
-| E_Bytes    of bytes_literal            (* 0xFFFA              *)
-| E_Cat      of caret bin_op reg         (* "Hello" ^ world     *)
-| E_CodeInj  of code_inj reg
-| E_Cond     of cond_expr reg            (* if x then y         *)
-| E_Cons     of cons bin_op reg          (* head :: tail        *)
-| E_Contract of (module_name, dot) nsepseq reg (* contract_of M *)
-| E_Ctor     of ctor                     (* C                   *)
-| E_Div      of slash bin_op reg         (* x / y               *)
-| E_Equal    of equal bin_op reg         (* x = y               *)
-| E_For      of for_loop reg             (* for x = e1 upto e2 do e3 done *)
-| E_ForIn    of for_in_loop reg          (* for x in e1 do e2 done *)
-| E_Fun      of fun_expr reg             (* fun x -> x          *)
-| E_Geq      of geq bin_op reg           (* x >= y              *)
-| E_Gt       of gt bin_op reg            (* x > y               *)
-| E_Int      of int_literal              (* 42                  *)
-| E_Land     of kwd_land bin_op reg      (* x land y            *)
-| E_Leq      of leq bin_op reg           (* x <= y              *)
-| E_LetIn    of let_in reg               (* let x = e1 in e2    *)
-| E_LetMutIn of let_mut_in reg           (* let mut x = e1 in e2 *)
-| E_List     of expr list_               (* [f x; 5]            *)
-| E_Lor      of kwd_lor bin_op reg       (* x lor y             *)
-| E_Lsl      of kwd_lsl bin_op reg       (* x lsl y             *)
-| E_Lsr      of kwd_lsr bin_op reg       (* x lsr y             *)
-| E_Lt       of lt bin_op reg            (* x < y               *)
-| E_Lxor     of kwd_lxor bin_op reg      (* x lxor y            *)
-| E_Match    of match_expr reg           (* match e with p -> i *)
-| E_Mod      of kwd_mod bin_op reg       (* x mod n             *)
-| E_ModIn    of module_in reg            (* module M = N in e   *)
-| E_ModPath  of expr module_path reg     (* M.N.x.0             *)
-| E_Mult     of times bin_op reg         (* x * y               *)
-| E_Mutez    of mutez_literal            (* 5mutez              *)
-| E_Nat      of nat_literal              (* 4n                  *)
-| E_Neg      of minus un_op reg          (* -a                  *)
-| E_Neq      of neq bin_op reg           (* x <> y              *)
-| E_Not      of kwd_not un_op reg        (* not x               *)
-| E_Or       of kwd_or bin_op reg        (* x or y              *)
-| E_Par      of expr par                 (* (x - M.y)           *)
-| E_Proj     of projection reg           (* e.x.1               *)
-| E_Record   of record_expr              (* {x=y; z}            *)
-| E_RevApp   of rev_app bin_op reg       (* y |> f |> g x       *)
-| E_Seq      of sequence_expr reg        (* x; 3                *)
-| E_String   of string_literal           (* "string"            *)
-| E_Sub      of minus bin_op reg         (* a - b               *)
-| E_Tuple    of expr tuple reg           (* (1, x)              *)
-| E_Typed    of typed_expr par           (* (x : int)           *)
-| E_TypeIn   of type_in reg              (* type t = u in e     *)
-| E_Unit     of the_unit reg             (* ()                  *)
-| E_Update   of update_expr braces       (* {x with y=z}        *)
-| E_Var      of variable                 (* x                   *)
-| E_Verbatim of verbatim_literal         (* {|foo|}             *)
-| E_While    of while_loop reg           (* while e1 do e2 done *)
+  E_Add        of plus bin_op reg          (* x + y               *)
+| E_And        of bool_and bin_op reg      (* x && y              *)
+| E_App        of (expr * expr nseq) reg   (* f x y     C (x,y)   *)
+| E_Assign     of assign reg               (* x := e              *)
+| E_Attr       of (attribute * expr)       (* [@a] e              *)
+| E_Bytes      of bytes_literal            (* 0xFFFA              *)
+| E_Cat        of caret bin_op reg         (* "Hello" ^ world     *)
+| E_CodeInj    of code_inj reg
+| E_Cond       of cond_expr reg            (* if x then y         *)
+| E_Cons       of cons bin_op reg          (* head :: tail        *)
+| E_ContractOf of (module_name, dot) nsepseq reg (* contract_of M *)
+| E_Ctor       of ctor                     (* C                   *)
+| E_Div        of slash bin_op reg         (* x / y               *)
+| E_Equal      of equal bin_op reg         (* x = y               *)
+| E_False      of false_const              (* false               *)
+| E_For        of for_loop reg   (* for x = e1 upto e2 do e3 done *)
+| E_ForIn      of for_in_loop reg       (* for x in e1 do e2 done *)
+| E_Fun        of fun_expr reg             (* fun x -> x          *)
+| E_Geq        of geq bin_op reg           (* x >= y              *)
+| E_Gt         of gt bin_op reg            (* x > y               *)
+| E_Int        of int_literal              (* 42                  *)
+| E_Land       of kwd_land bin_op reg      (* x land y            *)
+| E_Leq        of leq bin_op reg           (* x <= y              *)
+| E_LetIn      of let_in reg               (* let x = e1 in e2    *)
+| E_LetMutIn   of let_mut_in reg          (* let mut x = e1 in e2 *)
+| E_List       of expr list_               (* [f x; 5]            *)
+| E_Lor        of kwd_lor bin_op reg       (* x lor y             *)
+| E_Lsl        of kwd_lsl bin_op reg       (* x lsl y             *)
+| E_Lsr        of kwd_lsr bin_op reg       (* x lsr y             *)
+| E_Lt         of lt bin_op reg            (* x < y               *)
+| E_Lxor       of kwd_lxor bin_op reg      (* x lxor y            *)
+| E_Match      of match_expr reg           (* match e with p -> i *)
+| E_Mod        of kwd_mod bin_op reg       (* x mod n             *)
+| E_ModIn      of module_in reg            (* module M = N in e   *)
+| E_ModPath    of expr module_path reg     (* M.N.x.0             *)
+| E_Mult       of times bin_op reg         (* x * y               *)
+| E_Mutez      of mutez_literal            (* 5mutez              *)
+| E_Nat        of nat_literal              (* 4n                  *)
+| E_Neg        of minus un_op reg          (* -a                  *)
+| E_Neq        of neq bin_op reg           (* x <> y              *)
+| E_Not        of kwd_not un_op reg        (* not x               *)
+| E_Or         of kwd_or bin_op reg        (* x or y              *)
+| E_Par        of expr par                 (* (x - M.y)           *)
+| E_Proj       of projection reg           (* e.x.1               *)
+| E_Record     of record_expr              (* {x=y; z}            *)
+| E_RevApp     of rev_app bin_op reg       (* y |> f |> g x       *)
+| E_Seq        of sequence_expr reg        (* x; 3                *)
+| E_String     of string_literal           (* "string"            *)
+| E_Sub        of minus bin_op reg         (* a - b               *)
+| E_True       of true_const               (* true                *)
+| E_Tuple      of expr tuple reg           (* (1, x)              *)
+| E_Typed      of typed_expr par           (* (x : int)           *)
+| E_TypeIn     of type_in reg              (* type t = u in e     *)
+| E_Unit       of the_unit reg             (* ()                  *)
+| E_Update     of update_expr braces       (* {x with y=z}        *)
+| E_Var        of variable                 (* x                   *)
+| E_Verbatim   of verbatim_literal         (* {|foo|}             *)
+| E_While      of while_loop reg           (* while e1 do e2 done *)
 
 (* Binary and unary arithmetic operators *)
 
@@ -638,11 +642,11 @@ let rec type_expr_to_region = function
 | T_Int     w -> w#region
 | T_ModPath {region; _}
 | T_Par     {region; _}
+| T_ParameterOf {region; _}
 | T_Record  {region; _} -> region
 | T_String  w -> w#region
 | T_Variant {region; _} -> region
 | T_Var     w -> w#region
-| T_Parameter {region; _} -> region
 
 let rec pattern_to_region = function
   P_App      {region; _} -> region
@@ -665,62 +669,64 @@ let rec pattern_to_region = function
 | P_Unit     {region; _} -> region
 
 let rec expr_to_region = function
-  E_Add      {region; _}
-| E_And      {region; _}
-| E_App      {region; _} -> region
-| E_Attr     (_, e) -> expr_to_region e
-| E_Bytes    e -> e#region
-| E_Cat      {region; _}
-| E_CodeInj  {region; _}
-| E_Cond     {region; _} -> region
-| E_Ctor     e -> e#region
-| E_Cons     {region; _}
-| E_Contract {region; _}
-| E_Div      {region; _}
-| E_Equal    {region; _}
-| E_Fun      {region; _}
-| E_Geq      {region; _}
-| E_Gt       {region; _} -> region
-| E_Int      e -> e#region
-| E_Land     {region; _}
-| E_LetIn    {region; _}
-| E_LetMutIn {region; _}
-| E_Assign   {region; _}
-| E_Leq      {region; _}
-| E_List     {region; _}
-| E_Lor      {region; _}
-| E_Lsl      {region; _}
-| E_Lsr      {region; _}
-| E_Lt       {region; _}
-| E_Lxor     {region; _}
-| E_Match    {region; _}
-| E_Mod      {region; _}
-| E_ModIn    {region; _}
-| E_ModPath  {region; _}
-| E_Mult     {region; _} -> region
-| E_Mutez    e -> e#region
-| E_Nat      e -> e#region
-| E_Neg      {region; _}
-| E_Neq      {region; _}
-| E_Not      {region; _}
-| E_Or       {region; _}
-| E_Par      {region; _}
-| E_Proj     {region; _}
-| E_Record   {region; _} -> region
-| E_String   e -> e#region
-| E_Sub      {region; _}
-| E_Tuple    {region; _}
-| E_Typed    {region; _}
-| E_TypeIn   {region; _}
-| E_Unit     {region; _}
-| E_Update   {region; _} -> region
-| E_Var      e -> e#region
-| E_Verbatim e -> e#region
-| E_Seq      {region; _}
-| E_RevApp   {region; _} -> region
-| E_While    {region; _}
-| E_For      {region; _}
-| E_ForIn    {region; _} -> region
+  E_Add        {region; _}
+| E_And        {region; _}
+| E_App        {region; _} -> region
+| E_Attr       (_, e) -> expr_to_region e
+| E_Bytes      e -> e#region
+| E_Cat        {region; _}
+| E_CodeInj    {region; _}
+| E_Cond       {region; _} -> region
+| E_Ctor       e -> e#region
+| E_Cons       {region; _}
+| E_ContractOf {region; _}
+| E_Div        {region; _}
+| E_Equal      {region; _} -> region
+| E_False      e -> e#region
+| E_Fun        {region; _}
+| E_Geq        {region; _}
+| E_Gt         {region; _} -> region
+| E_Int        e -> e#region
+| E_Land       {region; _}
+| E_LetIn      {region; _}
+| E_LetMutIn   {region; _}
+| E_Assign     {region; _}
+| E_Leq        {region; _}
+| E_List       {region; _}
+| E_Lor        {region; _}
+| E_Lsl        {region; _}
+| E_Lsr        {region; _}
+| E_Lt         {region; _}
+| E_Lxor       {region; _}
+| E_Match      {region; _}
+| E_Mod        {region; _}
+| E_ModIn      {region; _}
+| E_ModPath    {region; _}
+| E_Mult       {region; _} -> region
+| E_Mutez      e -> e#region
+| E_Nat        e -> e#region
+| E_Neg        {region; _}
+| E_Neq        {region; _}
+| E_Not        {region; _}
+| E_Or         {region; _}
+| E_Par        {region; _}
+| E_Proj       {region; _}
+| E_Record     {region; _} -> region
+| E_String     e -> e#region
+| E_Sub        {region; _} -> region
+| E_True       e -> e#region
+| E_Tuple      {region; _}
+| E_Typed      {region; _}
+| E_TypeIn     {region; _}
+| E_Unit       {region; _}
+| E_Update     {region; _} -> region
+| E_Var        e -> e#region
+| E_Verbatim   e -> e#region
+| E_Seq        {region; _}
+| E_RevApp     {region; _} -> region
+| E_While      {region; _}
+| E_For        {region; _}
+| E_ForIn      {region; _} -> region
 
 let selection_to_region = function
   FieldName v -> v#region
