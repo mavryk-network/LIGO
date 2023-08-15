@@ -104,6 +104,7 @@ let add_comment (comment : Wrap.comment) : Token.t -> Token.t = function
 | Default  w -> Default (w#add_comment comment)
 | Else     w -> Else (w#add_comment comment)
 | Export   w -> Export (w#add_comment comment)
+| False    w -> False (w#add_comment comment)
 | For      w -> For (w#add_comment comment)
 | From     w -> From (w#add_comment comment)
 | If       w -> If (w#add_comment comment)
@@ -112,6 +113,7 @@ let add_comment (comment : Wrap.comment) : Token.t -> Token.t = function
 | Of       w -> Of (w#add_comment comment)
 | Return   w -> Return (w#add_comment comment)
 | Switch   w -> Switch (w#add_comment comment)
+| True     w -> True (w#add_comment comment)
 | While    w -> While (w#add_comment comment)
 
 (* TypeScript keywords *)

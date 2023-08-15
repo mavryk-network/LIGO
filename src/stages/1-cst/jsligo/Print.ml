@@ -582,6 +582,7 @@ and print_expr state = function
 | E_Div      e -> print_E_Div      state e
 | E_DivEq    e -> print_E_DivEq    state e
 | E_Equal    e -> print_E_Equal    state e
+| E_False    e -> print_E_False    state e
 | E_Fun      e -> print_E_Fun      state e
 | E_Geq      e -> print_E_Geq      state e
 | E_Gt       e -> print_E_Gt       state e
@@ -610,6 +611,7 @@ and print_expr state = function
 | E_Sub      e -> print_E_Sub      state e
 | E_Ternary  e -> print_E_Ternary  state e
 | E_TimesEq  e -> print_E_TimesEq  state e
+| E_True     e -> print_E_True     state e
 | E_Typed    e -> print_E_Typed    state e
 | E_Update   e -> print_E_Update   state e
 | E_Var      e -> print_E_Var      state e
@@ -773,6 +775,11 @@ and print_E_DivEq state (node: div_eq bin_op reg) =
 
 and print_E_Equal state (node : equal_cmp bin_op reg) =
   print_bin_op state "E_Equal" node
+
+(* "false" boolean constant *)
+
+and print_E_False state (node : false_const) =
+  Tree.make_node ~region:node#region state node#payload
 
 (* Functional expressions *)
 
@@ -974,6 +981,11 @@ and print_E_Ternary state (node: ternary reg) =
 and print_E_TimesEq state (node: times_eq bin_op reg) =
   print_bin_op state "E_TimesEq" node
 
+(* "true" Boolean constant *)
+
+and print_E_True state (node : true_const) =
+  Tree.make_node ~region:node#region state node#payload
+
 (* Tuple of expressions *)
 
 and print_E_Array state (node: expr _array) =
@@ -1127,7 +1139,10 @@ and print_S_ForOf state (node: for_of_stmt reg) =
 (* return statement *)
 
 and print_S_Return state (node: return_stmt reg) =
-  Tree.make_node ~region:node.region state "S_Return"
+  let Region.{value; region} = node in
+  match snd value with
+    None -> Tree.make_node ~region state "S_Return"
+  | Some e -> Tree.make_unary ~region state "S_Return" print_expr e
 
 (* Switch statement *)
 

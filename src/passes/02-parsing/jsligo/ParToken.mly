@@ -53,21 +53,21 @@
 
 (* Literals *)
 
-%token             <string Wrap.t> BlockCom  "<block_comment>" [@recover.expr mk_block_com $loc]
-%token             <string Wrap.t> LineCom   "<line_comment>"  [@recover.expr mk_line_com  $loc]
+%token            <string Wrap.t> BlockCom  "<block_comment>" [@recover.expr mk_block_com $loc]
+%token            <string Wrap.t> LineCom   "<line_comment>"  [@recover.expr mk_line_com  $loc]
 
-%token     <Preprocessor.Directive.t> Directive "<directive>" [@recover.expr mk_Directive  $loc]
-%token                <string Wrap.t> String    "<string>"    [@recover.expr mk_string     $loc]
-%token                <string Wrap.t> Verbatim  "<verbatim>"  [@recover.expr mk_verbatim   $loc]
-%token      <(string * Hex.t) Wrap.t> Bytes     "<bytes>"     [@recover.expr mk_bytes      $loc]
-%token        <(string * Z.t) Wrap.t> Int       "<int>"       [@recover.expr mk_int        $loc]
-%token                <string Wrap.t> Ident     "<ident>"     [@recover.expr mk_ident      $loc] [@recover.cost 900]
-%token                <string Wrap.t> UIdent    "<uident>"    [@recover.expr mk_uident     $loc]
-%token                <Attr.t Wrap.t> Attr      "[@attr]"     [@recover.expr mk_attr       $loc]
-%token        <(string * Z.t) Wrap.t> Nat       "<nat>"       [@recover.expr mk_nat        $loc]
-%token    <(string * Int64.t) Wrap.t> Mutez     "<mutez>"     [@recover.expr mk_mutez      $loc]
+%token     <Preprocessor.Directive.t> Directive "<directive>" [@recover.expr mk_Directive $loc]
+%token                <string Wrap.t> String    "<string>"    [@recover.expr mk_string    $loc]
+%token                <string Wrap.t> Verbatim  "<verbatim>"  [@recover.expr mk_verbatim  $loc]
+%token      <(string * Hex.t) Wrap.t> Bytes     "<bytes>"     [@recover.expr mk_bytes     $loc]
+%token        <(string * Z.t) Wrap.t> Int       "<int>"       [@recover.expr mk_int       $loc]
+%token                <string Wrap.t> Ident     "<ident>"     [@recover.expr mk_ident     $loc] [@recover.cost 900]
+%token                <string Wrap.t> UIdent    "<uident>"    [@recover.expr mk_uident    $loc]
+%token                <Attr.t Wrap.t> Attr      "[@attr]"     [@recover.expr mk_attr      $loc]
+%token        <(string * Z.t) Wrap.t> Nat       "<nat>"       [@recover.expr mk_nat       $loc]
+%token    <(string * Int64.t) Wrap.t> Mutez     "<mutez>"     [@recover.expr mk_mutez     $loc]
 (*
-%token     <string Region.reg Wrap.t> Lang      "[%lang"      [@recover.expr mk_lang       $loc]
+%token     <string Region.reg Wrap.t> Lang      "[%lang"      [@recover.expr mk_lang      $loc]
 *)
 
 (* Symbols *)
@@ -128,6 +128,8 @@
 %token <string Wrap.t> Default "default" [@recover.expr Token.wrap_default $loc]
 %token <string Wrap.t> Else    "else"    [@recover.expr Token.wrap_else    $loc]
 %token <string Wrap.t> Export  "export"  [@recover.expr Token.wrap_export  $loc]
+%token <string Wrap.t> False   "false"   [@recover.expr Token.wrap_false   $loc]
+
 %token <string Wrap.t> For     "for"     [@recover.expr Token.wrap_for     $loc]
 %token <string Wrap.t> From    "from"    [@recover.expr Token.wrap_from    $loc]
 %token <string Wrap.t> If      "if"      [@recover.expr Token.wrap_if      $loc]
@@ -136,6 +138,7 @@
 %token <string Wrap.t> Of      "of"      [@recover.expr Token.wrap_of      $loc]
 %token <string Wrap.t> Return  "return"  [@recover.expr Token.wrap_return  $loc]
 %token <string Wrap.t> Switch  "switch"  [@recover.expr Token.wrap_switch  $loc]
+%token <string Wrap.t> True    "true"    [@recover.expr Token.wrap_true    $loc]
 %token <string Wrap.t> While   "while"   [@recover.expr Token.wrap_while   $loc]
 
 (* TypeScript keywords *)

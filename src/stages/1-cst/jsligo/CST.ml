@@ -127,6 +127,8 @@ type intf_name      = lexeme wrap
 type file_path      = lexeme wrap
 type language       = lexeme wrap
 type attribute      = Attr.t wrap
+type true_const     = lexeme wrap
+type false_const    = lexeme wrap
 
 type string_literal   = lexeme wrap
 type int_literal      = (lexeme * Z.t) wrap
@@ -544,6 +546,7 @@ and expr =
 | E_Div      of slash bin_op reg        (* x / y             *)
 | E_DivEq    of div_eq bin_op reg       (* x /= y            *)
 | E_Equal    of equal_cmp bin_op reg    (* x == y            *)
+| E_False    of false_const             (* false             *)
 | E_Fun      of fun_expr reg            (* (x : int) => e    *)
 | E_Geq      of geq bin_op reg          (* x >= y            *)
 | E_Gt       of gt bin_op reg           (* x > y             *)
@@ -572,6 +575,7 @@ and expr =
 | E_Sub      of minus bin_op reg        (* x - y             *)
 | E_Ternary  of ternary reg             (* x ? y : z         *)
 | E_TimesEq  of times_eq bin_op reg     (* x *= y            *)
+| E_True     of true_const              (* true              *)
 | E_Typed    of typed_expr reg          (* e as t            *)
 | E_Update   of update_expr braces      (* {...x, y : z}     *)
 | E_Var      of variable                (* x                 *)
@@ -733,7 +737,8 @@ let rec expr_to_region = function
 | E_Ctor     w -> w#region
 | E_Div      {region; _}
 | E_DivEq    {region; _}
-| E_Equal    {region; _}
+| E_Equal    {region; _} -> region
+| E_False    w -> w#region
 | E_Fun      {region; _}
 | E_Geq      {region; _}
 | E_Gt       {region; _} -> region
@@ -761,7 +766,8 @@ let rec expr_to_region = function
 | E_String   w -> w#region
 | E_Sub      {region; _}
 | E_Ternary  {region; _}
-| E_TimesEq  {region; _}
+| E_TimesEq  {region; _} -> region
+| E_True     w -> w#region
 | E_Typed    {region; _}
 | E_Update   {region; _} -> region
 | E_Var      w

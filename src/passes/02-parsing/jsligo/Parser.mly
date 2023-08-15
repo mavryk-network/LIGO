@@ -1099,6 +1099,8 @@ literal_expr:
 | "<string>"   { E_String   $1 }
 | "<verbatim>" { E_Verbatim $1 }
 | "<bytes>"    { E_Bytes    $1 }
+| "true"       { E_True     $1 }
+| "false"      { E_False    $1 }
 
 (* Object expressions *)
 

@@ -114,6 +114,7 @@ module T =
     | Default  of lexeme Wrap.t  (* default  *)
     | Else     of lexeme Wrap.t  (* else     *)
     | Export   of lexeme Wrap.t  (* export   *)
+    | False    of lexeme Wrap.t  (* false    *)
     | For      of lexeme Wrap.t  (* for      *)
     | From     of lexeme Wrap.t  (* from     *)
     | If       of lexeme Wrap.t  (* if       *)
@@ -122,8 +123,9 @@ module T =
     | Of       of lexeme Wrap.t  (* of       *)
     | Return   of lexeme Wrap.t  (* return   *)
     | Switch   of lexeme Wrap.t  (* switch   *)
- (* | This     of lexeme Wrap.t  (* this     *)
-    | Void     of lexeme Wrap.t  (* void     *) *)
+(*  | This     of lexeme Wrap.t  (* this     *) *)
+    | True     of lexeme Wrap.t  (* true     *)
+(*  | Void     of lexeme Wrap.t  (* void     *) *)
     | While    of lexeme Wrap.t  (* while    *)
  (* | With     of lexeme Wrap.t  (* with     *) *)
 
@@ -243,6 +245,7 @@ module T =
     | Default  t
     | Else     t
     | Export   t
+    | False    t
     | For      t
     | From     t
     | If       t
@@ -251,8 +254,9 @@ module T =
     | Of       t
     | Return   t
     | Switch   t
- (* | This     t
-    | Void     t *)
+(*  | This     t *)
+    | True     t
+(*  | Void     t *)
     | While    t
  (* | With     t *)
 
@@ -293,6 +297,7 @@ module T =
      let wrap_default  = wrap "default"
      let wrap_else     = wrap "else"
      let wrap_export   = wrap "export"
+     let wrap_false    = wrap "false"
      let wrap_for      = wrap "for"
      let wrap_from     = wrap "from"
      let wrap_function = wrap "function"
@@ -302,8 +307,9 @@ module T =
      let wrap_of       = wrap "of"
      let wrap_return   = wrap "return"
      let wrap_switch   = wrap "switch"
-  (* let wrap_this     = wrap "this"
-     let wrap_void     = wrap "void"    *)
+  (* let wrap_this     = wrap "this"    *)
+     let wrap_true     = wrap "true"
+  (* let wrap_void     = wrap "void"    *)
      let wrap_while    = wrap "while"
   (* let wrap_with     = wrap "with"    *)
 
@@ -314,6 +320,7 @@ module T =
      let mk_Default region = Default (wrap_default region)
      let mk_Else    region = Else    (wrap_else    region)
      let mk_Export  region = Export  (wrap_export  region)
+     let mk_False   region = False   (wrap_false   region)
      let mk_For     region = For     (wrap_for     region)
      let mk_From    region = From    (wrap_from    region)
      let mk_If      region = If      (wrap_if      region)
@@ -322,8 +329,9 @@ module T =
      let mk_Of      region = Of      (wrap_of      region)
      let mk_Return  region = Return  (wrap_return  region)
      let mk_Switch  region = Switch  (wrap_switch  region)
-  (* let mk_This    region = This    (wrap_this    region)
-     let mk_Void    region = Void    (wrap_void    region) *)
+  (* let mk_This    region = This    (wrap_this    region) *)
+     let mk_True    region = True    (wrap_true    region)
+  (* let mk_Void    region = Void    (wrap_void    region) *)
      let mk_While   region = While   (wrap_while   region)
   (* let mk_With    region = With    (wrap_with    region) *)
 
@@ -360,6 +368,7 @@ module T =
        mk_Default;
        mk_Else;
        mk_Export;
+       mk_False;
        mk_For;
        mk_From;
        mk_If;
@@ -368,8 +377,9 @@ module T =
        mk_Of;
        mk_Return;
        mk_Switch;
-  (*   mk_This;
-       mk_Void;   *)
+  (*   mk_This;   *)
+       mk_True;
+  (*   mk_Void;   *)
        mk_While;
   (*   mk_With;   *)
 
@@ -408,6 +418,7 @@ module T =
     let ghost_default = wrap_default Region.ghost
     let ghost_else    = wrap_else    Region.ghost
     let ghost_export  = wrap_export  Region.ghost
+    let ghost_false   = wrap_false   Region.ghost
     let ghost_for     = wrap_for     Region.ghost
     let ghost_from    = wrap_from    Region.ghost
     let ghost_if      = wrap_if      Region.ghost
@@ -416,8 +427,9 @@ module T =
     let ghost_of      = wrap_of      Region.ghost
     let ghost_return  = wrap_return  Region.ghost
     let ghost_switch  = wrap_switch  Region.ghost
- (* let ghost_this    = wrap_this    Region.ghost
-    let ghost_void    = wrap_void    Region.ghost *)
+ (* let ghost_this    = wrap_this    Region.ghost *)
+    let ghost_true    = wrap_true    Region.ghost
+ (* let ghost_void    = wrap_void    Region.ghost *)
     let ghost_while   = wrap_while   Region.ghost
  (* let ghost_with    = wrap_with    Region.ghost *)
 
@@ -428,6 +440,7 @@ module T =
     let ghost_Default = Default ghost_default
     let ghost_Else    = Else    ghost_else
     let ghost_Export  = Export  ghost_export
+    let ghost_False   = False   ghost_false
     let ghost_For     = For     ghost_for
     let ghost_From    = From    ghost_from
     let ghost_If      = If      ghost_if
@@ -436,8 +449,9 @@ module T =
     let ghost_Of      = Of      ghost_of
     let ghost_Return  = Return  ghost_return
     let ghost_Switch  = Switch  ghost_switch
- (* let ghost_This    = This    ghost_this
-    let ghost_Void    = Void    ghost_void     *)
+ (* let ghost_This    = This    ghost_this     *)
+    let ghost_True    = True    ghost_true
+ (* let ghost_Void    = Void    ghost_void     *)
     let ghost_While   = While   ghost_while
  (* let ghost_With    = With    ghost_with     *)
 
@@ -654,10 +668,10 @@ module T =
     let ghost_colon      = wrap_colon      Region.ghost
     let ghost_dot        = wrap_dot        Region.ghost
     let ghost_ellipsis   = wrap_ellipsis   Region.ghost
-    let ghost_or    = wrap_or    Region.ghost
-    let ghost_and   = wrap_and   Region.ghost
-    let ghost_not   = wrap_not   Region.ghost
-    let ghost_xor   = wrap_xor   Region.ghost
+    let ghost_or         = wrap_or         Region.ghost
+    let ghost_and        = wrap_and        Region.ghost
+    let ghost_not        = wrap_not        Region.ghost
+    let ghost_xor        = wrap_xor        Region.ghost
     let ghost_bit_and    = wrap_bit_and    Region.ghost
     let ghost_bit_not    = wrap_bit_not    Region.ghost
     let ghost_bit_xor    = wrap_bit_xor    Region.ghost
@@ -892,6 +906,7 @@ module T =
     | "Default"  -> ghost_default#payload
     | "Else"     -> ghost_else#payload
     | "Export"   -> ghost_export#payload
+    | "False"    -> ghost_false#payload
     | "For"      -> ghost_for#payload
     | "From"     -> ghost_from#payload
     | "If"       -> ghost_if#payload
@@ -900,8 +915,9 @@ module T =
     | "Of"       -> ghost_of#payload
     | "Return"   -> ghost_return#payload
     | "Switch"   -> ghost_switch#payload
- (* | "This"     -> ghost_this#payload
-    | "Void"     -> ghost_void#payload *)
+ (* | "This"     -> ghost_this#payload *)
+    | "True"     -> ghost_true#payload
+ (* | "Void"     -> ghost_void#payload *)
     | "While"    -> ghost_while#payload
  (* | "With"     -> ghost_with#payload *)
 
@@ -919,8 +935,8 @@ module T =
     | "ZWSP"
     | "PARAMS"
     | "ES6FUN" -> ""
-    | "SEMI_ELSE" ->
-        (fst ghost_semi_else)#payload ^ " " ^ (snd ghost_semi_else)#payload
+    | "SEMI_ELSE" -> (fst ghost_semi_else)#payload ^ " "
+                     ^ (snd ghost_semi_else)#payload
 
     (* End-Of-File *)
 
@@ -961,7 +977,8 @@ module T =
         sprintf "Bytes (%S, \"0x%s\")%s" s (Hex.show b) (comments t)
     | Int t ->
         let s, n = t#payload in
-        t#region, sprintf "Int (%S, %s)%s" s (Z.to_string n) (comments t)
+        t#region, sprintf "Int (%S, %s)%s"
+                          s (Z.to_string n) (comments t)
     | Nat t ->
         let s, n = t#payload in
         t#region, sprintf "Nat (%S, %s)" s (Z.to_string n)
@@ -973,7 +990,8 @@ module T =
     | UIdent t ->
         t#region, sprintf "UIdent %S%s" t#payload (comments t)
     | Attr t ->
-        t#region, sprintf "Attr %s%s" (Attr.to_string t#payload) (comments t)
+      t#region, sprintf "Attr %s%s"
+                        (Attr.to_string t#payload) (comments t)
  (* | Lang {value = {value = payload; _}; region; _} ->
         region, sprintf "Lang %S" payload *)
 
@@ -1036,6 +1054,7 @@ module T =
     | Default  t -> t#region, sprintf "Default%s" (comments t)
     | Else     t -> t#region, sprintf "Else%s" (comments t)
     | Export   t -> t#region, sprintf "Export%s" (comments t)
+    | False    t -> t#region, sprintf "False%s" (comments t)
     | For      t -> t#region, sprintf "For%s" (comments t)
     | If       t -> t#region, sprintf "If%s" (comments t)
     | Import   t -> t#region, sprintf "Import%s" (comments t)
@@ -1044,8 +1063,9 @@ module T =
     | Return   t -> t#region, sprintf "Return%s" (comments t)
     | Break    t -> t#region, sprintf "Break%s" (comments t)
     | Switch   t -> t#region, sprintf "Switch%s" (comments t)
- (* | This     t -> t#region, sprintf "This%s" (comments t)
-    | Void     t -> t#region, sprintf "Void%s" (comments t)*)
+ (* | This     t -> t#region, sprintf "This%s" (comments t) *)
+    | True     t -> t#region, sprintf "True%s" (comments t)
+ (* | Void     t -> t#region, sprintf "Void%s" (comments t) *)
     | While    t -> t#region, sprintf "While%s" (comments t)
     | From     t -> t#region, sprintf "From%s" (comments t)
  (* | With     t -> t#region, sprintf "With%s" (comments t) *)

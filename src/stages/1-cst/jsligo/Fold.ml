@@ -58,6 +58,7 @@ type _ sing =
   | S_equal : equal sing
   | S_equal_cmp : equal_cmp sing
   | S_expr : expr sing
+  | S_false : false_const sing
   | S_file_path : file_path sing
   | S_for_of_stmt : for_of_stmt sing
   | S_for_stmt : for_stmt sing
@@ -173,6 +174,7 @@ type _ sing =
   | S_times : times sing
   | S_times_eq : times_eq sing
   | S_top_decl : top_decl sing
+  | S_true : true_const sing
   | S_type_annotation : type_annotation sing
   | S_type_ctor : type_ctor sing
   | S_type_ctor_args : type_ctor_args sing
@@ -344,6 +346,7 @@ let fold
     | E_Div node -> node -| S_reg (S_bin_op S_slash)
     | E_DivEq node -> node -| S_reg (S_bin_op S_div_eq)
     | E_Equal node -> node -| S_reg (S_bin_op S_equal_cmp)
+    | E_False node -> node -| S_false
     | E_Fun node -> node -| S_reg (S_fun_expr)
     | E_Geq node -> node -| S_reg (S_bin_op S_geq)
     | E_Gt node -> node -| S_reg (S_bin_op S_gt)
@@ -372,6 +375,7 @@ let fold
     | E_Sub node -> node -| S_reg (S_bin_op S_minus)
     | E_Ternary node -> node -| S_reg S_ternary
     | E_TimesEq node -> node -| S_reg (S_bin_op S_times_eq)
+    | E_True node -> node -| S_true
     | E_Array node -> node -| S_array S_expr
     | E_Typed node -> node -| S_reg S_typed_expr
     | E_Update node -> node -| S_braces S_update_expr
@@ -379,6 +383,7 @@ let fold
     | E_Verbatim node -> node -| S_verbatim_literal
     | E_Xor node -> node -| S_reg (S_bin_op S_bool_xor)
     )
+  | S_false -> process @@ node -| S_wrap S_lexeme
   | S_file_path -> process @@ node -| S_wrap S_lexeme
   | S_for_of_stmt -> let { kwd_for; range; for_of_body } = node in
     process_list
@@ -682,6 +687,7 @@ let fold
     | TL_Export node -> node -| S_reg (S_array_2 (S_kwd_export, S_top_decl))
     | TL_Directive node -> node -| S_directive
     )
+  | S_true -> process @@ node -| S_wrap S_lexeme
   | S_array sing -> process @@ node -| S_brackets (S_sep_or_term (S_component sing, S_comma))
   | S_array_2 (sing_1, sing_2) ->
     ( match node with
