@@ -1175,15 +1175,20 @@ selected_expr:
 
 pattern:
   "[@attr]" pattern        { P_Attr ($1,$2) }
-| "<int>"                  { P_Int       $1 }
-| "<nat>"                  { P_Nat       $1 }
-| "<bytes>"                { P_Bytes     $1 }
-| "<string>"               { P_String    $1 }
-| "<verbatim>"             { P_Verbatim  $1 }
-| "<mutez>"                { P_Mutez     $1 }
 | "_" | variable           { P_Var       $1 }
 | object_pattern (pattern) { P_Object    $1 }
 | array (pattern)          { P_Array     $1 }
+| literal_pattern          {             $1 }
+
+literal_pattern:
+  "<int>"      { P_Int      $1 }
+| "<nat>"      { P_Nat      $1 }
+| "<mutez>"    { P_Mutez    $1 }
+| "<string>"   { P_String   $1 }
+| "<verbatim>" { P_Verbatim $1 }
+| "<bytes>"    { P_Bytes    $1 }
+| "true"       { P_True     $1 }
+| "false"      { P_False    $1 }
 
 (* Record pattern *)
 

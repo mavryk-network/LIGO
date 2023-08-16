@@ -585,14 +585,16 @@ let fold
   | S_pattern -> process
     ( match node with
       P_Attr node -> node -| S_array_2 (S_attribute, S_pattern)
+    | P_Array node -> node -| S_array S_pattern
     | P_Bytes node -> node -| S_bytes_literal
     | P_Ctor node -> node -| S_ctor
+    | P_False node -> node -| S_false
     | P_Int node -> node -| S_int_literal
     | P_Mutez node -> node -| S_mutez_literal
     | P_Nat node -> node -| S_nat_literal
     | P_Object node -> node -| S_object S_pattern
     | P_String node -> node -| S_string_literal
-    | P_Array node -> node -| S_array S_pattern
+    | P_True node -> node -| S_true
     | P_Typed node -> node -| S_reg S_typed_pattern
     | P_Var node -> node -| S_variable
     | P_Verbatim node -> node -| S_verbatim_literal
