@@ -324,6 +324,7 @@ and pattern =
 | P_Bytes    of bytes_literal                   (* 0xFFFA    *)
 | P_Cons     of (pattern * cons * pattern) reg  (* x :: y    *)
 | P_Ctor     of ctor                            (* C         *)
+| P_False    of false_const                     (* false     *)
 | P_Int      of int_literal                     (* 42        *)
 | P_List     of pattern list_                   (* [x; 4]    *)
 | P_ModPath  of pattern module_path reg         (* M.N.x     *)
@@ -332,6 +333,7 @@ and pattern =
 | P_Par      of pattern par                     (* (C, 4)    *)
 | P_Record   of record_pattern                  (* {x=y; z}  *)
 | P_String   of string_literal                  (* "string"  *)
+| P_True     of true_const                      (* true      *)
 | P_Tuple    of pattern tuple reg               (* 1, x      *)
 | P_Typed    of typed_pattern reg               (* (x : int) *)
 | P_Unit     of the_unit reg                    (* ()        *)
@@ -654,6 +656,7 @@ let rec pattern_to_region = function
 | P_Bytes    p -> p#region
 | P_Cons     {region; _} -> region
 | P_Ctor     p -> p#region
+| P_False    p -> p#region
 | P_Int      p -> p#region
 | P_List     {region; _}
 | P_ModPath  {region; _} -> region
@@ -662,6 +665,7 @@ let rec pattern_to_region = function
 | P_Par      {region; _}
 | P_Record   {region; _} -> region
 | P_String   p -> p#region
+| P_True     p -> p#region
 | P_Tuple    {region; _}
 | P_Typed    {region; _} -> region
 | P_Var      p -> p#region

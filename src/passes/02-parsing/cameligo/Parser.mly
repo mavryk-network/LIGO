@@ -643,20 +643,26 @@ cons_pattern_level:
 | core_pattern { $1 }
 
 core_pattern:
-  "<int>"                      { P_Int      $1 }
-| "<nat>"                      { P_Nat      $1 }
-| "<bytes>"                    { P_Bytes    $1 }
-| "<string>"                   { P_String   $1 }
-| "<verbatim>"                 { P_Verbatim $1 }
-| "<mutez>"                    { P_Mutez    $1 }
-| "_" | variable               { P_Var      $1 }
+  "_" | variable               { P_Var      $1 }
 | unit                         { P_Unit     $1 }
 | list_pattern                 { P_List     $1 }
 | ctor_app_pattern             { P_App      $1 }
 | record_pattern(core_pattern) { P_Record   $1 }
 | attr_pattern                 { P_Attr     $1 }
+| literal_pattern
 | in_pattern
 | qualified_pattern            { $1            }
+
+%inline
+literal_pattern:
+  "<int>"      { P_Int      $1 }
+| "<nat>"      { P_Nat      $1 }
+| "<bytes>"    { P_Bytes    $1 }
+| "<string>"   { P_String   $1 }
+| "<verbatim>" { P_Verbatim $1 }
+| "<mutez>"    { P_Mutez    $1 }
+| "true"       { P_True     $1 }
+| "false"      { P_False    $1 }
 
 (* Parenthesised patterns *)
 

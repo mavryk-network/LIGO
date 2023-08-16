@@ -541,6 +541,7 @@ let fold
     | P_Bytes node -> node -| S_wrap (S_tuple_2 (S_lexeme, S_hex))
     | P_Cons node -> node -| S_reg (S_tuple_3 (S_pattern, S_cons, S_pattern))
     | P_Ctor node -> node -| S_ctor
+    | P_False node -> node -| S_false
     | P_Int node -> node -| S_wrap (S_tuple_2 (S_lexeme, S_z))
     | P_List node -> node -| S_list_ S_pattern
     | P_ModPath node -> node -| S_reg (S_module_path S_pattern)
@@ -549,6 +550,7 @@ let fold
     | P_Par node -> node -| S_par S_pattern
     | P_Record node -> node -| S_record_pattern
     | P_String node -> node -| S_wrap S_lexeme
+    | P_True node -> node -| S_true
     | P_Tuple node -> node -| S_reg (S_tuple S_pattern)
     | P_Typed node -> node -| S_reg S_typed_pattern
     | P_Var node -> node -| S_variable

@@ -632,6 +632,7 @@ and print_pattern state = function
 | P_Bytes    p -> print_P_Bytes          p
 | P_Cons     p -> print_P_Cons     state p
 | P_Ctor     p -> print_P_Ctor           p
+| P_False    p -> print_P_False          p
 | P_Int      p -> print_P_Int            p
 | P_List     p -> print_P_List     state p
 | P_ModPath  p -> print_P_ModPath  state p
@@ -640,6 +641,7 @@ and print_pattern state = function
 | P_Par      p -> print_P_Par      state p
 | P_Record   p -> print_P_Record   state p
 | P_String   p -> print_P_String         p
+| P_True     p -> print_P_True           p
 | P_Tuple    p -> print_P_Tuple    state p
 | P_Typed    p -> print_P_Typed    state p
 | P_Var      p -> print_P_Var            p
@@ -676,6 +678,10 @@ and print_P_Cons state (node : (pattern * cons * pattern) reg) =
 (* Constructor in a pattern *)
 
 and print_P_Ctor (node : ctor) = print_ident node
+
+(* "false" as pattern *)
+
+and print_P_False (node : false_const) = print_ident node
 
 (* Integer in a pattern *)
 
@@ -744,6 +750,10 @@ and print_field :
 (* String patterns *)
 
 and print_P_String (node : lexeme wrap) = print_string node
+
+(* "true" as pattern *)
+
+and print_P_True (node : true_const) = print_ident node
 
 (* Tuple patterns *)
 
@@ -939,7 +949,7 @@ and print_E_Div state (node : slash bin_op reg) = print_bin_op state node
 
 and print_E_Equal state (node : equal bin_op reg) = print_bin_op state node
 
-(* "false" Boolean constant *)
+(* "false" as expression *)
 
 and print_E_False (node : false_const) = print_ident node
 
@@ -1175,7 +1185,7 @@ and print_E_String (node : lexeme wrap) = print_string node
 
 and print_E_Sub state (node : minus bin_op reg) = print_bin_op state node
 
-(* "true" Boolean constant *)
+(* "true" as expression *)
 
 and print_E_True (node : true_const) = print_ident node
 

@@ -391,6 +391,7 @@ and print_pattern state = function
 | P_Bytes    p -> print_P_Bytes    state p
 | P_Cons     p -> print_P_Cons     state p
 | P_Ctor     p -> print_P_Ctor     state p
+| P_False    p -> print_P_False    state p
 | P_Int      p -> print_P_Int      state p
 | P_List     p -> print_P_List     state p
 | P_ModPath  p -> print_P_ModPath  state p
@@ -399,6 +400,7 @@ and print_pattern state = function
 | P_Par      p -> print_P_Par      state p
 | P_Record   p -> print_P_Record   state p
 | P_String   p -> print_P_String   state p
+| P_True     p -> print_P_True     state p
 | P_Tuple    p -> print_P_Tuple    state p
 | P_Typed    p -> print_P_Typed    state p
 | P_Unit     p -> print_P_Unit     state p
@@ -444,6 +446,11 @@ and print_P_Cons state (node : (pattern * cons * pattern) reg) =
 and print_P_Ctor state (node : ctor) =
   let region = node#region in
   Tree.(make_unary ~region state "P_Ctor" make_literal node)
+
+(* "false" as pattern *)
+
+and print_P_False state (node : false_const) =
+  Tree.make_node ~region:node#region state "P_False"
 
 (* Integers in patterns *)
 
@@ -534,6 +541,11 @@ and print_update_lens state = function
 
 and print_P_String state (node : lexeme wrap) =
   Tree.make_string "P_String" state node
+
+(* "true" as pattern *)
+
+and print_P_True state (node : true_const) =
+  Tree.make_node ~region:node#region state "P_True"
 
 (* The pattern matching a tuple *)
 
@@ -751,10 +763,10 @@ and print_E_Div state (node : slash bin_op reg) =
 and print_E_Equal state (node : equal bin_op reg) =
   print_bin_op state "E_Equal" node
 
-(* "false" boolean constant *)
+(* "false" as expression *)
 
 and print_E_False state (node : false_const) =
-  Tree.make_node ~region:node#region state node#payload
+  Tree.make_node ~region:node#region state "E_False"
 
 (* For loops *)
 
@@ -1002,10 +1014,10 @@ and print_E_String state (node : lexeme wrap) =
 and print_E_Sub state (node : minus bin_op reg) =
   print_bin_op state "E_Sub" node
 
-(* "true" Boolean constant *)
+(* "true" as expression *)
 
 and print_E_True state (node : true_const) =
-  Tree.make_node ~region:node#region state node#payload
+  Tree.make_node ~region:node#region state "E_True"
 
 (* Tuple of expression *)
 
