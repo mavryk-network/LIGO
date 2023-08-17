@@ -36,6 +36,18 @@ let array_to_list ~raise ~loc (arguments : expr Array_repr.t) =
     e_list ~loc arguments
 
 
+let array_to_kv ~raise (arguments : expr Array_repr.t) =
+  let arguments =
+    List.map arguments ~f:(function
+        | Expr_entry x ->
+          (match get_e x with
+           | E_array [Expr_entry k; Expr_entry v] -> (k, v)
+           | _ -> raise.error (wrong_reduction "OOPS"))
+        | Rest_entry e -> raise.error (array_rest_not_supported e))
+  in
+  arguments
+
+
 let compile ~raise =
   let pass_expr : _ expr_ -> expr =
    fun e ->
@@ -46,6 +58,10 @@ let compile ~raise =
       (match get_e f, get_e args with
       | E_variable v, E_array args when Variable.is_name v "list" ->
         array_to_list ~raise ~loc args
+      | E_variable v, E_array args when Variable.is_name v "map_literal" ->
+        e_map ~loc @@ array_to_kv ~raise args
+      | E_variable v, E_array args when Variable.is_name v "big_map_literal" ->
+        e_big_map ~loc @@ array_to_kv ~raise args
       | _ -> same)
     | _ -> same
   in
