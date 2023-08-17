@@ -12,6 +12,7 @@ let default_config : config =
   ; disabled_features = []
   ; deprecated = false
   ; max_line_width = None
+  ; completion_implementation = `WithScopes
   }
 
 

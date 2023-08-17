@@ -822,7 +822,7 @@ let mk_completion_list (items : CompletionItem.t list)
   Option.some @@ `CompletionList (CompletionList.create ~isIncomplete:false ~items ())
 
 
-let on_req_completion (pos : Position.t) (path : Path.t)
+let on_req_completion_full (pos : Position.t) (path : Path.t)
     : [ `CompletionList of CompletionList.t | `List of CompletionItem.t list ] option
     Handler.t
   =
