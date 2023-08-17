@@ -6,7 +6,7 @@ const f = () => {
 }
 const [a, b, c] = f ()
 
-const [a1, b1, c1] = [1 as nat, 1, "Hello"]
+const [a1, b1, c1] : [nat, int, string] = [1 as nat, 1, "Hello"]
 
 const _test = () => {
     assert (a == a1);

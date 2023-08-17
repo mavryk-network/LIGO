@@ -3,9 +3,9 @@ type foobar = map <int, int>;
 let empty_map: foobar = Map.empty;
 
 let map1 : foobar =
-  Map.literal (list([[144, 23], [51, 23], [42, 23], [120, 23], [421, 23]]));
+  map_literal ([[144, 23], [51, 23], [42, 23], [120, 23], [421, 23]]);
 
-let map2 : foobar = Map.literal (list([[23, 0], [42, 0]]));
+let map2 : foobar = map_literal ([[23, 0], [42, 0]]);
 
 let set_ = ([n, m]: [int, foobar]) : foobar => Map.update (23, Some (n), m);
 
@@ -16,17 +16,17 @@ let rm = (m: foobar) : foobar => Map.remove (42, m);
 /* Dummy test so that we can add the same test for PascaLIGO */
 
 let patch_ = (_m : foobar) : foobar =>
-  Map.literal (list([[0, 5], [1, 6], [2, 7]]));
+  map_literal ([[0, 5], [1, 6], [2, 7]]);
 
 /* Second dummy test, see above */
 
 let patch_empty = (_m : foobar) : foobar =>
-  Map.literal (list([[0, 0], [1, 1], [2, 2]]));
+  map_literal ([[0, 0], [1, 1], [2, 2]]);
 
 /* Third dummy test, see above */
 
 let patch_deep = (_m : [foobar, nat]) : [foobar, nat] =>
-  [Map.literal(list([[0, 0], [1, 9], [2, 2]])), (10 as nat)];
+  [map_literal([[0, 0], [1, 9], [2, 2]]), (10 as nat)];
 
 let size_ = (m : foobar) : nat => Map.size (m);
 

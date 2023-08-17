@@ -106,9 +106,9 @@ let moves : register =
 
 ```jsligo group=maps
 let moves: register =
-  Map.literal(list([
-    [("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address), [1, 2]],
-    [("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), [0, 3]]]));
+  map_literal([
+    [("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address), ([1, 2] as move)],
+    [("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), ([0, 3] as move)]]);
 ```
 
 </Syntax>
@@ -222,7 +222,7 @@ let updated_map : register =
 ```jsligo group=maps
 let updated_map : register =
   Map.update
-    (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), Some ([4, 9]), moves);
+    (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), Some ([4, 9] as move), moves);
 ```
 
 </Syntax>
@@ -303,7 +303,7 @@ let add (m : register) : register =
 ```jsligo group=maps
 let add = (m: register): register =>
   Map.add
-    (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), [4, 9], m);
+    (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), ([4, 9] as move), m);
 ```
 
 </Syntax>

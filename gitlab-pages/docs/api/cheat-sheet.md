@@ -1003,11 +1003,11 @@ Maps
 ```jsligo
 type prices = map<nat, tez>;
 
-let prices: prices = Map.literal(list([
+let prices: prices = map_literal([
   [10 as nat, 60 as mutez],
   [50 as nat, 30 as mutez],
   [100 as nat, 10 as mutez]
-]));
+]);
 
 let price: option<tez> = Map.find_opt(50 as nat, prices)
 

@@ -117,9 +117,9 @@ let moves : register =
 
 ```jsligo group=big_map
 let moves: register =
-  Big_map.literal (list([
-    [("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address), [1, 2]],
-    [("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), [0, 3]]]));
+  big_map_literal ([
+    [("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address), ([1, 2] as move)],
+    [("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), ([0, 3] as move)]]);
 ```
 
 </Syntax>
@@ -273,7 +273,7 @@ let updated_map : register =
 ```jsligo group=big_map
 let updated_map: register =
   Big_map.update
-    (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), Some([4,9]), moves);
+    (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), Some([4,9] as move), moves);
 ```
 
 </Syntax>
@@ -324,7 +324,7 @@ let add (m : register) : register =
 ```jsligo group=big_map
 let add = (m: register): register =>
   Big_map.add
-    (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), [4,9], m);
+    (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), ([4,9] as move), m);
 ```
 
 </Syntax>
