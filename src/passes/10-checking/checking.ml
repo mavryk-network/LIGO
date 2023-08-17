@@ -365,6 +365,10 @@ let rec check_expression (expr : I.expression) (type_ : Type.t)
       E.(
         let%bind lambda = lambda in
         return @@ O.E_lambda lambda)
+  | E_array [], T_construct { language = _; constructor = Unit; parameters = [] } ->
+    const
+      E.(
+        return @@ O.e_unit ())
   | E_array _record, T_record row ->
     let record = Record.record_of_tuple _record in
     let%bind () =
