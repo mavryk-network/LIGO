@@ -21,7 +21,8 @@ type config =
         (** Enable support for the deprecated PascaLIGO syntax. Defaults to [false]. *)
   ; max_line_width : int option
         (** Override the max line width for formatted file (80 by default) *)
-  ; completion_implementation : [`WithScopes | `AllDefinitions | `OnlyKeywordsAnrRecordFields]
+  ; completion_implementation :
+      [ `WithScopes | `AllDefinitions | `OnlyKeywordsAndRecordFields ]
   }
 
 (** We can send diagnostics to user or just save them to list in case of testing *)

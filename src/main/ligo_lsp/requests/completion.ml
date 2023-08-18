@@ -865,3 +865,10 @@ let on_req_completion_full (pos : Position.t) (path : Path.t)
     else field_completions
   in
   return @@ mk_completion_list all_completions
+
+
+let on_req_completion (pos : Position.t) (path : Path.t)
+    : [ `CompletionList of CompletionList.t | `List of CompletionItem.t list ] option
+    Handler.t
+  =
+  on_req_completion_full pos path

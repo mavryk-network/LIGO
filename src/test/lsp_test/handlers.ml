@@ -8,6 +8,7 @@ let default_test_config : config =
   ; disabled_features = []
   ; deprecated = true
   ; max_line_width = None
+  ; completion_implementation = `WithScopes
   }
 
 

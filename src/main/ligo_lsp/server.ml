@@ -89,8 +89,7 @@ class lsp_server =
         =
       let open Yojson.Safe.Util in
       config
-        <- { config with
-             max_number_of_problems =
+        <- { max_number_of_problems =
                ligo_language_server
                |> member "maxNumberOfProblems"
                |> to_int_option
@@ -117,6 +116,7 @@ class lsp_server =
                |> Option.value ~default:default_config.deprecated
            ; max_line_width =
                ligo_language_server |> member "maxLineWidth" |> to_int_option
+           ; completion_implementation
            }
 
     method! on_req_initialize
