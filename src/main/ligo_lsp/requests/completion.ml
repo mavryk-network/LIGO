@@ -839,9 +839,9 @@ let on_req_completion_full (pos : Position.t) (path : Path.t)
   (* Even if scopes fail for whatever reason, we can at least show files and
      keywords to the user. *)
   let completions_so_far = mk_completion_list completions_without_scopes in
-  with_cached_doc path completions_so_far
+  with_cached_doc path ~default:completions_so_far
   @@ fun { definitions; code; _ } ->
-  with_cst path completions_so_far
+  with_cst path ~default:completions_so_far
   @@ fun cst ->
   let field_completions = complete_fields path syntax cst pos definitions in
   let all_completions =

@@ -65,7 +65,7 @@ let hover_string : Syntax_types.t -> Scopes.def -> string Handler.t =
 
 let on_req_hover : Position.t -> Path.t -> Hover.t option Handler.t =
  fun pos file ->
-  with_cached_doc file None
+  with_cached_doc file ~default:None
   @@ fun { definitions; syntax; _ } ->
   when_some' (Go_to_definition.get_definition pos file definitions)
   @@ fun definition ->

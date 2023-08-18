@@ -49,7 +49,7 @@ let on_req_document_link (file : Path.t) : DocumentLink.t list option handler =
   let@ () = send_debug_msg @@ "On document_link:" ^ Path.to_string file in
   let dir = Path.dirname file in
   let@ directives_opt =
-    with_cst file None
+    with_cst file ~default:None
     @@ fun cst ->
     return
     @@ Option.some

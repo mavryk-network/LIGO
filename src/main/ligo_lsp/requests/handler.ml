@@ -175,8 +175,9 @@ Also returns default value if `get_scope` for this file fails, unless
 `return_default_if_no_info = false` was specified
 *)
 let with_cached_doc
-    (path : Path.t)
-    (default : 'a) (* Default value in case cached doc not found *)
+    ~(default : 'a)
+    (* Default value in case cached doc not found *)
+      (path : Path.t)
     (f : Ligo_interface.file_data -> 'a Handler.t)
     : 'a Handler.t
   =
@@ -187,13 +188,13 @@ let with_cached_doc
 
 
 let with_cached_doc_pure
+    ~(default : 'a)
     (path : Path.t)
-    (default : 'a)
     (f : Ligo_interface.file_data -> 'a)
     : 'a Handler.t
   =
   let f' = return <@ f in
-  with_cached_doc path default f'
+  with_cached_doc path ~default f'
 
 
 (** Like with_cached_doc, but parses a CST from code. If `strict` is passed, error
@@ -205,15 +206,15 @@ let with_cached_doc_pure
     but should when e.g. formatting failed because of syntax error.
 *)
 let with_cst
+    ~(default : 'a)
     ?(strict = false)
     ?(on_error : string -> unit handler =
       fun err -> send_debug_msg @@ "Unable to get CST: " ^ err)
     (path : Path.t)
-    (default : 'a)
     (f : Dialect_cst.t -> 'a Handler.t)
     : 'a Handler.t
   =
-  with_cached_doc path default
+  with_cached_doc path ~default
   @@ fun { syntax; code; _ } ->
   match Dialect_cst.get_cst ~strict ~file:path syntax code with
   | Error err ->
