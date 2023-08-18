@@ -7,7 +7,7 @@ let get_definition : Position.t -> Path.t -> Scopes.def list -> Scopes.def optio
 
 let on_req_definition : Position.t -> Path.t -> Locations.t option Handler.t =
  fun pos file ->
-  with_cached_doc file None
+  with_cached_doc file ~default:None
   @@ fun { definitions; _ } ->
   when_some' (get_definition pos file definitions)
   @@ fun definition ->

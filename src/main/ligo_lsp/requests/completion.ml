@@ -629,7 +629,7 @@ let on_req_completion (pos : Position.t) (path : Path.t)
   let keyword_completions = get_keyword_completions syntax in
   (* TODO (#1657): After a project system is implemented, we should support
      completing from files here. Meanwhile, we leave it with []. *)
-  (* with_code path None
+  (* with_code path ~default:None
   @@ fun _code ->
   let file_completions = complete_files pos code files in *)
   let file_completions = [] in
@@ -637,9 +637,9 @@ let on_req_completion (pos : Position.t) (path : Path.t)
   (* Even if scopes fail for whatever reason, we can at least show files and
      keywords to the user. *)
   let completions_so_far = mk_completion_list completions_without_scopes in
-  with_cached_doc path completions_so_far
+  with_cached_doc path ~default:completions_so_far
   @@ fun { definitions; code; _ } ->
-  with_cst path completions_so_far
+  with_cst path ~default:completions_so_far
   @@ fun cst ->
   let field_completions = complete_fields path syntax cst pos definitions in
   let all_completions =

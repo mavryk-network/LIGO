@@ -57,7 +57,7 @@ let get_all_references : Def_location.t -> Docs_cache.t -> Loc_in_file.t list =
 let on_req_references : Position.t -> Path.t -> Location.t list option Handler.t =
  fun pos file ->
   let@ get_scope_buffers = ask_docs_cache in
-  with_cached_doc file None
+  with_cached_doc file ~default:None
   @@ fun { definitions; _ } ->
   when_some (Go_to_definition.get_definition pos file definitions)
   @@ fun definition ->
