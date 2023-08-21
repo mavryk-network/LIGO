@@ -7,6 +7,7 @@ type 'a fold_control = 'a Cst_shared.Fold.fold_control
 
 type _ sing =
     S_all_cases : all_cases sing
+  | S_all_match_clauses : all_match_clauses sing
   | S_arguments : arguments sing
   | S_array : 'a sing -> 'a _array sing
   | S_array_2 : 'a sing * 'b sing -> ('a * 'b) sing
@@ -106,12 +107,14 @@ type _ sing =
   | S_kwd_import : kwd_import sing
   | S_kwd_interface : kwd_interface sing
   | S_kwd_let : kwd_let sing
+  | S_kwd_match : kwd_match sing
   | S_kwd_namespace : kwd_namespace sing
   | S_kwd_of : kwd_of sing
   | S_kwd_parameter_of : kwd_parameter_of sing
   | S_kwd_return : kwd_return sing
   | S_kwd_switch : kwd_switch sing
   | S_kwd_type : kwd_type sing
+  | S_kwd_when : kwd_when sing
   | S_kwd_while : kwd_while sing
   | S_language : language sing
   | S_lbrace : lbrace sing
@@ -121,6 +124,10 @@ type _ sing =
   | S_list : 'a sing -> 'a list sing
   | S_lpar : lpar sing
   | S_lt : lt sing
+  | S_match_clause : match_clause sing
+  | S_match_clauses : match_clauses sing
+  | S_match_default : match_default sing
+  | S_match_expr : match_expr sing
   | S_minus : minus sing
   | S_minus_eq : minus_eq sing
   | S_mutez_literal : mutez_literal sing
@@ -227,6 +234,8 @@ let fold
   function (Some_node (node, sing)) -> match sing with
     S_all_cases -> process @@ node -| S_array_2
     (S_nseq (S_reg S_switch_case), S_option (S_reg S_switch_default))
+  | S_all_match_clauses -> process @@ node -| S_array_2
+    (S_nseq (S_reg S_match_clause), S_option (S_reg S_match_default))
   | S_arguments -> process
     (node -| (S_par (S_sepseq (S_expr, S_comma))))
   | S_arrow -> process @@ node -| S_wrap S_lexeme
@@ -353,12 +362,11 @@ let fold
     | E_Int node -> node -| S_int_literal
     | E_Leq node -> node -| S_reg (S_bin_op S_leq)
     | E_Lt node -> node -| S_reg (S_bin_op S_lt)
+    | E_Match node -> node -| S_reg S_match_expr
     | E_MinusEq node -> node -| S_reg (S_bin_op S_minus_eq)
-    | E_Rem node -> node -| S_reg (S_bin_op S_remainder)
-    | E_RemEq node -> node -| S_reg (S_bin_op S_rem_eq)
-    | E_NamePath node -> node -| S_reg (S_namespace_path S_expr)
     | E_Mult node -> node -| S_reg (S_bin_op S_times)
     | E_Mutez node -> node -| S_mutez_literal
+    | E_NamePath node -> node -| S_reg (S_namespace_path S_expr)
     | E_Nat node -> node -| S_nat_literal
     | E_Neg node -> node -| S_reg (S_un_op S_minus)
     | E_Neq node -> node -| S_reg (S_bin_op S_neq)
@@ -370,6 +378,8 @@ let fold
     | E_PreDecr node -> node -| S_reg (S_un_op S_decrement)
     | E_PreIncr node -> node -| S_reg (S_un_op S_increment)
     | E_Proj node -> node -| S_reg S_projection
+    | E_Rem node -> node -| S_reg (S_bin_op S_remainder)
+    | E_RemEq node -> node -| S_reg (S_bin_op S_rem_eq)
     | E_Object node -> node -| S_object S_expr
     | E_String node -> node -| S_string_literal
     | E_Sub node -> node -| S_reg (S_bin_op S_minus)
@@ -502,12 +512,14 @@ let fold
   | S_kwd_import -> process @@ node -| S_wrap S_lexeme
   | S_kwd_interface -> process @@ node -| S_wrap S_lexeme
   | S_kwd_let -> process @@ node -| S_wrap S_lexeme
+  | S_kwd_match -> process @@ node -| S_wrap S_lexeme
   | S_kwd_namespace -> process @@ node -| S_wrap S_lexeme
   | S_kwd_of -> process @@ node -| S_wrap S_lexeme
   | S_kwd_parameter_of -> process @@ node -| S_wrap S_lexeme
   | S_kwd_return -> process @@ node -| S_wrap S_lexeme
   | S_kwd_switch -> process @@ node -| S_wrap S_lexeme
   | S_kwd_type -> process @@ node -| S_wrap S_lexeme
+  | S_kwd_when -> process @@ node -| S_wrap S_lexeme
   | S_kwd_while -> process @@ node -| S_wrap S_lexeme
   | S_language -> process @@ node -| S_wrap S_lexeme
   | S_lbrace -> process @@ node -| S_wrap S_lexeme
@@ -517,9 +529,32 @@ let fold
   | S_list sing -> process_list @@ List.map ~f:(fun x -> x -| sing) node
   | S_lpar -> process @@ node -| S_wrap S_lexeme
   | S_lt -> process @@ node -| S_wrap S_lexeme
+  | S_match_expr ->
+    let {kwd_match; subject; clauses} = node in
+    process_list
+    [ kwd_match -| S_kwd_match
+    ; subject -| S_par S_expr
+    ; clauses -| S_braces S_match_clauses]
+  | S_match_clauses -> process
+    (match node with
+       AllClauses node -> node -| S_all_match_clauses
+     | DefaultClause node-> node -| S_reg S_match_default)
+  | S_match_clause ->
+    let {kwd_when; filter; colon; clause_expr} = node in
+    process_list
+    [ kwd_when -| S_kwd_when
+    ; filter -| S_par S_pattern
+    ; colon -| S_colon
+    ; clause_expr -| S_expr]
+  | S_match_default ->
+    let {kwd_default; colon; default_expr} = node in
+    process_list
+    [ kwd_default -| S_kwd_default
+    ; colon -| S_colon
+    ; default_expr -| S_expr]
   | S_minus -> process @@ node -| S_wrap S_lexeme
   | S_minus_eq -> process @@ node -| S_wrap S_lexeme
-  | S_rem_eq -> process @@ node -| S_wrap S_lexeme
+  | S_mutez_literal -> process @@ node -| S_wrap (S_array_2 (S_lexeme, S_int64))
   | S_namespace_decl -> let { kwd_namespace; namespace_name; namespace_type; namespace_body } = node in
     process_list
     [ kwd_namespace -| S_kwd_namespace
@@ -537,8 +572,6 @@ let fold
       (match node with
          M_Path  node -> node -| S_reg (S_namespace_path S_namespace_name)
        | M_Alias node -> node -| S_namespace_name)
-  | S_remainder -> process @@ node -| S_wrap S_lexeme
-  | S_mutez_literal -> process @@ node -| S_wrap (S_array_2 (S_lexeme, S_int64))
   | S_nat_literal -> process @@ node -| S_wrap (S_array_2 (S_lexeme, S_z))
   | S_bool_neg -> process @@ node -| S_wrap S_lexeme
   | S_neq -> process @@ node -| S_wrap S_lexeme
@@ -621,6 +654,8 @@ let fold
     ; expr -| S_expr ]
   | S_rbrace -> process @@ node -| S_wrap S_lexeme
   | S_rbracket -> process @@ node -| S_wrap S_lexeme
+  | S_remainder -> process @@ node -| S_wrap S_lexeme
+  | S_rem_eq -> process @@ node -| S_wrap S_lexeme
   | S_object sing -> process @@ node -| S_braces (S_sep_or_term (S_reg (S_property sing), S_semi))
   | S_reg sing -> let { region; value } = node in
     process_list

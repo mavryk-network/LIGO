@@ -47,12 +47,14 @@ type kwd_implements   = lexeme wrap
 type kwd_import       = lexeme wrap
 type kwd_interface    = lexeme wrap
 type kwd_let          = lexeme wrap
+type kwd_match        = lexeme wrap
 type kwd_namespace    = lexeme wrap
 type kwd_of           = lexeme wrap
 type kwd_parameter_of = lexeme wrap
 type kwd_return       = lexeme wrap
 type kwd_switch       = lexeme wrap
 type kwd_type         = lexeme wrap
+type kwd_when         = lexeme wrap
 type kwd_while        = lexeme wrap
 
 (* Symbols *)
@@ -555,12 +557,11 @@ and expr =
 | E_Int        of int_literal             (* 42                *)
 | E_Leq        of leq bin_op reg          (* x <= y            *)
 | E_Lt         of lt bin_op reg           (* x < y             *)
+| E_Match      of match_expr reg          (* match (e) { ... } *)
 | E_MinusEq    of minus_eq bin_op reg     (* x -= y            *)
-| E_NamePath   of expr namespace_path reg (* M.N.x.0           *)
-| E_Rem        of remainder bin_op reg    (* x % n             *)
-| E_RemEq      of rem_eq bin_op reg       (* x %= y            *)
 | E_Mult       of times bin_op reg        (* x * y             *)
 | E_Mutez      of mutez_literal           (* 5mutez            *)
+| E_NamePath   of expr namespace_path reg (* M.N.x.0           *)
 | E_Nat        of nat_literal             (* 42n               *)
 | E_Neg        of minus un_op reg         (* -x                *)
 | E_Neq        of neq bin_op reg          (* x != y            *)
@@ -573,6 +574,8 @@ and expr =
 | E_PreDecr    of decrement un_op reg     (* --x               *)
 | E_PreIncr    of increment un_op reg     (* ++x               *)
 | E_Proj       of projection reg          (* e.x.1             *)
+| E_Rem        of remainder bin_op reg    (* x % n             *)
+| E_RemEq      of rem_eq bin_op reg       (* x %= y            *)
 | E_String     of string_literal          (* "abcdef"          *)
 | E_Sub        of minus bin_op reg        (* x - y             *)
 | E_Ternary    of ternary reg             (* x ? y : z         *)
@@ -605,6 +608,33 @@ and arrow_fun_params =
 and fun_body =
   StmtBody of statements braces
 | ExprBody of expr
+
+(* Pattern matching *)
+
+and match_expr = {
+  kwd_match : kwd_match;
+  subject   : expr par;
+  clauses   : match_clauses braces
+}
+
+and match_clauses =
+  AllClauses    of all_match_clauses
+| DefaultClause of match_default reg
+
+and all_match_clauses = match_clause reg nseq * match_default reg option
+
+and match_clause = {
+  kwd_when    : kwd_when;
+  filter      : pattern par;
+  colon       : colon;
+  clause_expr : expr
+}
+
+and match_default = {
+  kwd_default  : kwd_default;
+  colon        : colon;
+  default_expr : expr
+}
 
 (* Contract of expression *)
 
@@ -749,12 +779,11 @@ let rec expr_to_region = function
 | E_Int        w -> w#region
 | E_Leq        {region; _}
 | E_Lt         {region; _}
+| E_Match      {region; _}
 | E_MinusEq    {region; _}
-| E_NamePath   {region; _}
-| E_Rem        {region; _}
-| E_RemEq      {region; _}
 | E_Mult       {region; _} -> region
 | E_Mutez      w -> w#region
+| E_NamePath   {region; _} -> region
 | E_Nat        w -> w#region
 | E_Neg        {region; _}
 | E_Neq        {region; _}
@@ -766,7 +795,9 @@ let rec expr_to_region = function
 | E_PostIncr   {region; _}
 | E_PreDecr    {region; _}
 | E_PreIncr    {region; _}
-| E_Proj       {region; _} -> region
+| E_Proj       {region; _}
+| E_Rem        {region; _}
+| E_RemEq      {region; _} -> region
 | E_String     w -> w#region
 | E_Sub        {region; _}
 | E_Ternary    {region; _}

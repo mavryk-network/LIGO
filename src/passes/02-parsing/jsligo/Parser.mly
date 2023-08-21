@@ -827,12 +827,12 @@ empty_return_stmt:
 (* Switch statement *)
 
 switch_stmt:
-  "switch" par(subject) braces(cases) {
+  "switch" par(switch_subject) braces(cases) {
     let region = cover $1#region $3.region
     and value  = {kwd_switch=$1; subject=$2; cases=$3}
     in S_Switch {region; value} }
 
-subject:
+switch_subject:
   expr { $1 }
 
 cases:
@@ -884,7 +884,7 @@ no_attr_expr:
 
 non_object_expr:
   fun_expr | typed_expr | assign_expr | disj_expr_level
-| ternary_expr (disj_expr_level, expr) { $1 }
+| match_expr | ternary_expr (disj_expr_level, expr) { $1 }
 
 (* Object expressions *)
 
@@ -940,6 +940,33 @@ ternary_expr (left_expr, branch):
     let region = cover (expr_to_region $1) (expr_to_region $5)
     and value  = {condition=$1; qmark=$2; truthy=$3; colon=$4; falsy=$5}
     in E_Ternary {value; region} }
+
+(* Pattern matching *)
+
+match_expr:
+  "match" match_subject braces(match_clauses) {
+    let region = cover $1#region $3.region
+    and value  = {kwd_match=$1; subject=$2; clauses=$3}
+    in E_Match {region; value} }
+
+match_subject:
+  par(expr) { $1 }
+
+match_clauses:
+  nseq(match_clause) ioption(match_default) { AllClauses ($1,$2) }
+| match_default                             { DefaultClause   $1 }
+
+match_clause:
+  "when" par(pattern) ":" expr {
+     let region = cover $1#region (expr_to_region $4)
+     and value  = {kwd_when=$1; filter=$2; colon=$3; clause_expr=$4}
+    in {region; value} }
+
+match_default:
+  "default" ":" expr {
+    let region = cover $1#region (expr_to_region $3)
+    and value  = {kwd_default=$1; colon=$2; default_expr=$3}
+    in {region; value} }
 
 (* Logical disjunction *)
 

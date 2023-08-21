@@ -602,12 +602,11 @@ and print_expr state = function
 | E_Int        e -> print_E_Int        state e
 | E_Leq        e -> print_E_Leq        state e
 | E_Lt         e -> print_E_Lt         state e
+| E_Match      e -> print_E_Match      state e
 | E_MinusEq    e -> print_E_MinusEq    state e
-| E_Rem        e -> print_E_Rem        state e
-| E_RemEq      e -> print_E_RemEq      state e
-| E_NamePath   e -> print_E_NamePath   state e
 | E_Mult       e -> print_E_Mult       state e
 | E_Mutez      e -> print_E_Mutez      state e
+| E_NamePath   e -> print_E_NamePath   state e
 | E_Nat        e -> print_E_Nat        state e
 | E_Neg        e -> print_E_Neg        state e
 | E_Neq        e -> print_E_Neq        state e
@@ -620,6 +619,8 @@ and print_expr state = function
 | E_PreDecr    e -> print_E_PreDecr    state e
 | E_PreIncr    e -> print_E_PreIncr    state e
 | E_Proj       e -> print_E_Proj       state e
+| E_Rem        e -> print_E_Rem        state e
+| E_RemEq      e -> print_E_RemEq      state e
 | E_String     e -> print_E_String     state e
 | E_Sub        e -> print_E_Sub        state e
 | E_Ternary    e -> print_E_Ternary    state e
@@ -855,6 +856,45 @@ and print_E_Leq state (node : leq bin_op reg) =
 
 and print_E_Lt state (node : lt bin_op reg) =
   print_bin_op state "E_lt" node
+
+(* Pattern matching *)
+
+and print_E_Match state (node : match_expr reg) =
+  let Region.{value; region} = node in
+  let {kwd_match=_; subject; clauses} = value in
+  let subject = subject.value.inside
+  and clauses = clauses.value.inside in
+  let children = Tree.[
+    mk_child print_subject       subject;
+    mk_child print_match_clauses clauses]
+  in Tree.make state ~region "E_Match" children
+
+and print_match_clauses state = function
+  AllClauses    c -> print_AllClauses    state c
+| DefaultClause c -> print_DefaultClause state c
+
+and print_AllClauses state (node : all_match_clauses) =
+  let normal_clauses, default_clause_opt = node in
+  let children = Tree.(
+    mk_children_nseq print_match_clause normal_clauses
+    @ [mk_child_opt print_match_default default_clause_opt])
+  in Tree.make state "AllClauses" children
+
+and print_DefaultClause state (node : match_default reg) =
+  print_match_default state node
+
+and print_match_clause state (node : match_clause reg) =
+  let Region.{value; region} = node in
+  let {kwd_when=_; filter; colon=_; clause_expr} = value in
+  let children = Tree.[
+    mk_child print_pattern  filter.value.inside;
+    mk_child print_expr     clause_expr]
+  in Tree.make ~region state "<clause>" children
+
+and print_match_default state (node : match_default reg) =
+  let Region.{value; region} = node in
+  let {kwd_default=_; colon=_; default_expr} = value in
+  Tree.make_unary state ~region "DefaultClause" print_expr default_expr
 
 (* Subtraction & assignment *)
 
@@ -1164,12 +1204,13 @@ and print_S_Switch state (node: switch_stmt reg) =
   let {kwd_switch=_; subject; cases} = value in
   let subject = subject.value.inside
   and cases   = cases.value.inside in
-  let print_subject state (node: expr) =
-    Tree.make_unary state "<subject>" print_expr node in
   let children = Tree.[
     mk_child print_subject subject;
     mk_child print_cases   cases]
   in Tree.make state ~region "S_Switch" children
+
+and print_subject state (node: expr) =
+  Tree.make_unary state "<subject>" print_expr node
 
 and print_cases state = function
   AllCases c -> print_AllCases state c

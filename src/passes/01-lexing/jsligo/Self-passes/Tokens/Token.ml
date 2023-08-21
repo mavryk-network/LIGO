@@ -141,7 +141,9 @@ module T =
     (* JsLIGO-specific keywords *)
 
     | ContractOf  of lexeme Wrap.t  (* contract_of  *)
+    | Match       of lexeme Wrap.t  (* match        *)
     | ParameterOf of lexeme Wrap.t  (* parameter_of *)
+    | When        of lexeme Wrap.t  (* when         *)
 
     (* Virtual tokens *)
 
@@ -272,7 +274,9 @@ module T =
     (* JsLIGO-specific keywords *)
 
     | ContractOf  t
-    | ParameterOf t -> [t#payload]
+    | Match       t
+    | ParameterOf t
+    | When        t -> [t#payload]
 
     (* Virtual tokens *)
 
@@ -353,10 +357,14 @@ module T =
      (* JsLIGO-specific keywords *)
 
      let wrap_contract_of  = wrap "contract_of"
+     let wrap_match        = wrap "match"
      let wrap_parameter_of = wrap "parameter_of"
+     let wrap_when         = wrap "when"
 
      let mk_ContractOf  region = ContractOf  (wrap_contract_of  region)
+     let mk_Match       region = Match       (wrap_match        region)
      let mk_ParameterOf region = ParameterOf (wrap_parameter_of region)
+     let mk_When        region = When        (wrap_when         region)
 
     (* All keywords as smart constructors *)
 
@@ -391,7 +399,9 @@ module T =
        mk_Type;
 
        mk_ContractOf;
-       mk_ParameterOf
+       mk_Match;
+       mk_ParameterOf;
+       mk_When
      ]
 
     (* All keywords *)
@@ -474,10 +484,14 @@ module T =
     (* JsLIGO-specific keywords *)
 
     let ghost_contract_of  = wrap_contract_of  Region.ghost
+    let ghost_match        = wrap_match        Region.ghost
     let ghost_parameter_of = wrap_parameter_of Region.ghost
+    let ghost_when         = wrap_when         Region.ghost
 
     let ghost_ContractOf   = ContractOf  ghost_contract_of
+    let ghost_Match        = Match       ghost_match
     let ghost_ParameterOf  = ParameterOf ghost_parameter_of
+    let ghost_When         = When        ghost_when
 
     (* SYMBOLS *)
 
@@ -930,6 +944,13 @@ module T =
     | "Namespace"  -> ghost_namespace#payload
     | "Type"       -> ghost_type#payload
 
+    (* JsLIGO-specific keywords *)
+
+    | "ContractOf"  -> ghost_contract_of#payload
+    | "Match"       -> ghost_match#payload
+    | "ParameterOf" -> ghost_parameter_of#payload
+    | "When"        -> ghost_when#payload
+
     (* Virtual tokens *)
 
     | "ZWSP"
@@ -1082,7 +1103,9 @@ module T =
     (* JsLIGO-specific keywords *)
 
     | ContractOf  t -> t#region, sprintf "ContractOf%s" (comments t)
+    | Match       t -> t#region, sprintf "Match%s" (comments t)
     | ParameterOf t -> t#region, sprintf "ParameterOf%s" (comments t)
+    | When        t -> t#region, sprintf "When%s" (comments t)
 
     (* Virtual tokens *)
 
