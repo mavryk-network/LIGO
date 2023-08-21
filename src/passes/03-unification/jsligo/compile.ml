@@ -160,7 +160,7 @@ let rec expr : Eq.expr -> Folding.expr =
   | E_Ctor c ->
     (* TODO in unified types (one type might not be necessary) *)
     return @@ E_constr (O.Label.of_string c#payload)
-  | E_Tuple { value = items; _ } ->
+  | E_Array { value = items; _ } ->
     let items =
       let translate_array_item : I.expr I.component -> _ AST.Array_repr.item = function
         | None, e -> Expr_entry e
@@ -170,37 +170,38 @@ let rec expr : Eq.expr -> Folding.expr =
           List.map ~f:translate_array_item (nsep_or_term_to_list lst))
     in
     return @@ E_array items
-  | E_Record { value; _ } ->
+  | E_Object { value; _ } ->
     let f x =
-      let I.{ attributes; field_id; field_rhs } = r_fst x in
+      let I.{ attributes; property_id; property_rhs } = r_fst x in
       TODO_do_in_parsing.weird_attr attributes;
       let open O.Object_ in
       let field_id =
-        match field_id with
+        match property_id with
         | F_Name n -> F_Name (O.Label.of_string n#payload)
         | F_Int i -> F_Int (snd i#payload)
         | F_Str s -> F_Str s#payload
       in
-      O.Object_.{ field_id; field_rhs = Option.map ~f:snd field_rhs }
+      O.Object_.{ field_id; field_rhs = Option.map ~f:snd property_rhs }
     in
     return @@ E_object (List.map ~f (sep_or_term_to_list value.inside))
-  | E_Proj { value = { record_or_tuple; field_path }; _ } ->
+  | E_Proj { value = { object_or_array; property_path }; _ } ->
     let f : I.selection -> _ O.Selection.t = function
-      | I.FieldStr fstr ->
+      | I.PropertyStr fstr ->
         (* TODO, not clear to me. need the parser to compile in order to decide *)
         assert false
-      | I.FieldName (_dot, name) -> FieldName (O.Label.of_string name#payload)
+      | I.PropertyName (_dot, name) -> FieldName (O.Label.of_string name#payload)
       | Component comp ->
         let comp = (r_fst comp).inside#payload in
         Component_num comp
     in
-    return @@ E_proj (record_or_tuple, List.map ~f (nseq_to_list field_path))
-  | E_ModPath { value = { module_path; field; _ }; _ } ->
-    let field_as_open = TODO_do_in_parsing.is_open field in
-    let module_path =
-      nsepseq_to_nseq @@ nsepseq_map TODO_do_in_parsing.mvar module_path
+    let property_path = nseq_map f property_path in
+    return @@ E_proj (object_or_array, nseq_to_list @@ property_path)
+  | E_NamePath { value = { namespace_path; property; _ }; _ } ->
+    let property_as_open = TODO_do_in_parsing.is_open property in
+    let namespace_path =
+      nsepseq_to_nseq @@ nsepseq_map TODO_do_in_parsing.mvar namespace_path
     in
-    return @@ E_module_open_in { module_path; field; field_as_open }
+    return @@ E_module_open_in { module_path = namespace_path; field = property; field_as_open = property_as_open }
   | E_Fun f ->
     let I.{ type_vars; parameters; rhs_type; arrow = _; fun_body } = f.value in
     let type_params =
@@ -215,11 +216,11 @@ let rec expr : Eq.expr -> Folding.expr =
         x.value.inside
         |> sep_or_term_to_list
         |> List.map ~f:TODO_do_in_parsing.pattern_to_param
-      | VarParam x -> [ TODO_do_in_parsing.pattern_to_param (I.P_Var x) ]
+      | NakedParam x -> [ TODO_do_in_parsing.pattern_to_param x ]
     in
     let ret_type = Option.map ~f:snd rhs_type in
     (match fun_body with
-    | FunBody body ->
+    | StmtBody body ->
       return
       @@ E_block_poly_fun { type_params; parameters; ret_type; body = body.value.inside }
     | ExprBody body -> return @@ E_poly_fun { type_params; parameters; ret_type; body })
@@ -230,30 +231,47 @@ let rec expr : Eq.expr -> Folding.expr =
     let language = w_fst language in
     return @@ E_raw_code { language; code }
   (* | E_Seq seq -> return @@ E_sequence (nsepseq_to_list seq.value) *)
-  | E_Assign { value = { arg1; op; arg2 } } ->
-    let op =
-      O.Assign_chainable.(
-        match op.value with
-        | I.Eq -> Eq
-        | Assignment_operator aop ->
-          Assignment_operator
-            (match aop with
-            | Times_eq -> Times_eq
-            | Div_eq -> Div_eq
-            | Min_eq -> Min_eq
-            | Plus_eq -> Plus_eq
-            | Mod_eq -> Mod_eq))
-    in
-    (* Parser miscomputes location here *)
+  | E_Assign { value = { arg1; op; arg2 }; _ } ->
     let loc =
-      Location.lift @@ Region.cover (I.expr_to_region expr1) (I.expr_to_region expr2)
+      Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
     in
-    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1; op; expr2 }
-  | ETernary { value = { condition; truthy; falsy; _ }; _ } ->
+    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op = Eq; expr2 = arg2 }
+  | E_AddEq { value = { arg1; op; arg2 }; _ } ->
+    let loc =
+      Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
+    in
+    let op = O.Assign_chainable.Assignment_operator Plus_eq in
+    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
+  | E_MinusEq { value = { arg1; op; arg2 }; _ } ->
+    let loc =
+      Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
+    in
+    let op = O.Assign_chainable.Assignment_operator Min_eq in
+    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
+  | E_TimesEq { value = { arg1; op; arg2 }; _ } ->
+    let loc =
+      Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
+    in
+    let op = O.Assign_chainable.Assignment_operator Times_eq in
+    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
+  | E_DivEq { value = { arg1; op; arg2 }; _ } ->
+    let loc =
+      Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
+    in
+    let op = O.Assign_chainable.Assignment_operator Div_eq in
+    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
+  | E_RemEq { value = { arg1; op; arg2 }; _ } ->
+    let loc =
+      Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
+    in
+    let op = O.Assign_chainable.Assignment_operator Mod_eq in
+    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
+  | E_Ternary { value = { condition; truthy; falsy; _ }; _ } ->
     let ifnot = Some falsy in
     return @@ E_cond { test = condition; ifso = truthy; ifnot }
-  | EContract { value = c; _ } ->
-    let lst = List.Ne.map TODO_do_in_parsing.mvar (nsepseq_to_nseq c) in
+  | E_ContractOf { value = c; _ } ->
+    let selection = c.namespace_path.value.inside in
+    let lst = List.Ne.map TODO_do_in_parsing.mvar (nsepseq_to_nseq ) in
     return @@ E_contract lst
   | EPrefix { region = _; value = { update_type = Increment op; variable } } ->
     let loc = Location.lift op#region in
@@ -289,7 +307,7 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
       return @@ O.T_attr (hd, attr tl)
   in
   match t with
-  | TProd { inside; attributes } ->
+  | T_Array { value = { inside; _ } ; _ } ->
     let t = nsepseq_to_nseq inside.value.inside in
     return_attr attributes ~no_attr:(T_prod t) ~attr:(fun attributes ->
         I.TProd { inside; attributes })

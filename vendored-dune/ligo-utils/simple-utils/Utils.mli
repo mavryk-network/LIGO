@@ -127,6 +127,7 @@ val nsepseq_of_nseq : sep:'b -> 'a nseq -> ('a,'b) nsepseq
 (* Convertions from lists *)
 
 val list_to_sepseq : 'a list -> 's -> ('a, 's) sepseq
+val list_to_nsepseq_opt : 'a list -> 's -> ('a, 's) nsepseq option
 
 (* Effectful symbol generator *)
 
