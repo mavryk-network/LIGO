@@ -109,14 +109,16 @@ This sub-command compiles a contract to Michelson code. It expects a source file
                                and .jsligo respectively).
   [--transpiled]             . Disable checks that are unapplicable to
                                transpiled contracts.
-  [--views VIEWS], -v        . A list of declaration name that will be compiled
-                               as on-chain views, separated by ','
+  [--views VIEWS], -v        . (this command is deprecated) A list of
+                               declaration name that will be compiled as
+                               on-chain views, separated by ','
   [--warn-infinite-loop]     . warn about infinite loop
   [--warn-unused-rec]        . warn about unused recursion in a recursive
                                function
   [--werror]                 . treat warnings as errors
   [-e ENTRY-POINT], --entry-point
-                             . the entry-point that will be compiled.
+                             . (this command is deprecated) the entry-point that
+                               will be compiled.
   [-m MODULE], --module      . the entry-point will be compiled from that
                                module.
   [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
@@ -187,7 +189,8 @@ let%expect_test _ =
                                    function
       [--werror]                 . treat warnings as errors
       [-e ENTRY-POINT], --entry-point
-                                 . the entry-point that will be compiled.
+                                 . the entry-point to be matched against the
+                                   parameter expression
       [-m MODULE], --module      . the entry-point will be compiled from that
                                    module.
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
@@ -263,7 +266,8 @@ let%expect_test _ =
                                    function
       [--werror]                 . treat warnings as errors
       [-e ENTRY-POINT], --entry-point
-                                 . the entry-point that will be compiled.
+                                 . (this command is deprecated) the entry-point that
+                                   will be compiled.
       [-m MODULE], --module      . the entry-point will be compiled from that
                                    module.
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
@@ -362,7 +366,8 @@ let%expect_test _ =
                                    function
       [--werror]                 . treat warnings as errors
       [-e ENTRY-POINT], --entry-point
-                                 . the entry-point that will be compiled.
+                                 . (this command is deprecated) the entry-point that
+                                   will be compiled.
       [-m MODULE], --module      . the entry-point will be compiled from that
                                    module.
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
@@ -431,7 +436,7 @@ let%expect_test _ =
     {|
     evaluate a given definition.
 
-      ligo run evaluate-expr SOURCE_FILE
+      ligo run evaluate-expr SOURCE_FILE EXPR_EXPRESSION
 
     This sub-command evaluates a LIGO definition. The context is initialized from a source file where the definition is written. The interpretation is done using a Michelson interpreter.
 
@@ -471,8 +476,6 @@ let%expect_test _ =
       [--warn-unused-rec]        . warn about unused recursion in a recursive
                                    function
       [--werror]                 . treat warnings as errors
-      [-e ENTRY-POINT], --entry-point
-                                 . the entry-point that will be compiled.
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
                                    the LIGO environment (mumbai ,
                                    nairobi). By default, the current protocol
@@ -507,6 +510,7 @@ let%expect_test _ =
                                  . A file with a JSON list of strings with Michelson
                                    code. Those Michelson values will be registered
                                    as global constants in the context.
+      [--function-body]          . compile expression as a function body
       [--init-file FILENAME]     . the path to the smart contract file to be used
                                    for context initialization.
       [--library LIBS], -l       . A comma-separated list of paths to directories
