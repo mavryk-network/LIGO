@@ -575,6 +575,7 @@ and print_expr state = function
 | E_And        e -> print_E_And        state e
 | E_App        e -> print_E_App        state e
 | E_Array      e -> print_E_Array      state e
+| E_ArrowFun   e -> print_E_ArrowFun   state e
 | E_Assign     e -> print_E_Assign     state e
 | E_Attr       e -> print_E_Attr       state e
 | E_BitAnd     e -> print_E_BitAnd     state e
@@ -596,7 +597,7 @@ and print_expr state = function
 | E_DivEq      e -> print_E_DivEq      state e
 | E_Equal      e -> print_E_Equal      state e
 | E_False      e -> print_E_False      state e
-| E_Fun        e -> print_E_Fun        state e
+| E_Function   e -> print_E_Function   state e
 | E_Geq        e -> print_E_Geq        state e
 | E_Gt         e -> print_E_Gt         state e
 | E_Int        e -> print_E_Int        state e
@@ -795,17 +796,17 @@ and print_E_Equal state (node : equal_cmp bin_op reg) =
 and print_E_False state (node : false_const) =
   Tree.make_node ~region:node#region state "E_False"
 
-(* Functional expressions *)
+(* Functional expressions introduced with the keyword "function" *)
 
-and print_E_Fun state (node : fun_expr reg) =
+and print_E_Function state (node : function_expr reg) =
   let Region.{value; region} = node in
-  let {type_vars; parameters; rhs_type; arrow=_; fun_body} = value in
+  let {kwd_function=_; type_vars; parameters; rhs_type; fun_body} = value in
   let children = Tree.[
     mk_child_opt print_type_vars        type_vars;
     mk_child     print_arrow_fun_params parameters;
     mk_child_opt print_rhs_type         rhs_type;
     mk_child     print_fun_body         fun_body]
-  in Tree.make ~region state "E_Fun" children
+  in Tree.make ~region state "E_Function" children
 
 and print_rhs_type state (node: type_annotation) =
   Tree.make_unary state "<rhs type>" print_type_expr (snd node)
@@ -1043,6 +1044,18 @@ and print_E_True state (node : true_const) =
 
 and print_E_Array state (node: expr _array) =
   print_array print_expr "E_Array" state node
+
+(* Arrow functions *)
+
+and print_E_ArrowFun state (node : arrow_fun_expr reg) =
+  let Region.{value; region} = node in
+  let {type_vars; parameters; rhs_type; arrow=_; fun_body} = value in
+  let children = Tree.[
+    mk_child_opt print_type_vars        type_vars;
+    mk_child     print_arrow_fun_params parameters;
+    mk_child_opt print_rhs_type         rhs_type;
+    mk_child     print_fun_body         fun_body]
+  in Tree.make ~region state "E_ArrowFun" children
 
 (* Typed expressions *)
 

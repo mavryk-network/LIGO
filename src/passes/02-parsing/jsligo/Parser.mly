@@ -902,22 +902,33 @@ object_level_expr:
 (* Functional expressions *)
 
 fun_expr:
+  arrow_fun_expr { E_ArrowFun $1 }
+| function_expr  { E_Function $1 }
+
+arrow_fun_expr:
   ioption(type_vars) ES6FUN fun_par_params ret_type? "=>" fun_body {
     let start  = match $1 with
                    None -> parameters_to_region $3
                  | Some {region; _} -> region in
-    let region = cover start (fun_body_to_region $6) in
-    let value  = {type_vars=$1; parameters=$3;
+    let region = cover start (fun_body_to_region $6)
+    and value  = {type_vars=$1; parameters=$3;
                   rhs_type=$4; arrow=$5; fun_body=$6}
-    in E_Fun {region; value} }
+    in {region; value} }
 | ioption(type_vars) ES6FUN fun_var_param "=>" fun_body {
     let start  = match $1 with
                    None -> $3#region
                  | Some {region; _} -> region in
-    let region = cover start (fun_body_to_region $5) in
-    let value  = {type_vars=$1; parameters = NakedParam (P_Var $3);
+    let region = cover start (fun_body_to_region $5)
+    and value  = {type_vars=$1; parameters = NakedParam (P_Var $3);
                   rhs_type=None; arrow=$4; fun_body=$5}
-    in E_Fun {region; value} }
+    in {region; value} }
+
+function_expr:
+  "function" ioption(type_vars) fun_par_params ret_type? braces(statements) {
+    let region = cover $1#region $5.region
+    and value  = {kwd_function=$1; type_vars=$2; parameters=$3;
+                  rhs_type=$4; fun_body = StmtBody $5}
+    in {region; value} }
 
 ret_type:
   type_annotation (ES6FUN? no_par_type_expr { $2 }) { $1 }
@@ -929,7 +940,7 @@ fun_var_param:
   variable | "_" { $1 }
 
 fun_body:
-  braces (statements) { StmtBody  $1 }
+  braces (statements) { StmtBody $1 }
 | non_object_expr     { ExprBody $1 }
 
 (* Typed expressions *)

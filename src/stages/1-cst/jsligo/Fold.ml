@@ -15,6 +15,7 @@ type _ sing =
   | S_array_4 : 'a sing * 'b sing * 'c sing * 'd sing -> ('a * 'b * 'c * 'd) sing
   | S_array_type : array_type sing
   | S_arrow : arrow sing
+  | S_arrow_fun_expr : arrow_fun_expr sing
   | S_attr : Attr.t sing
   | S_attribute : attribute sing
   | S_bin_op : 'a sing -> 'a bin_op sing
@@ -65,7 +66,7 @@ type _ sing =
   | S_for_stmt : for_stmt sing
   | S_fun_body : fun_body sing
   | S_fun_decl : fun_decl sing
-  | S_fun_expr : fun_expr sing
+  | S_function_expr : function_expr sing
   | S_fun_name : fun_name sing
   | S_fun_params : fun_params sing
   | S_arrow_fun_params : arrow_fun_params sing
@@ -336,6 +337,8 @@ let fold
     | E_AddEq node -> node -| S_reg (S_bin_op S_plus_eq)
     | E_And node -> node -| S_reg (S_bin_op S_bool_and)
     | E_App node -> node -| S_reg (S_array_2 (S_expr, S_arguments))
+    | E_Array node -> node -| S_array S_expr
+    | E_ArrowFun node -> node -| S_reg S_arrow_fun_expr
     | E_Assign node -> node -| S_reg (S_bin_op S_equal)
     | E_Attr node -> node -| S_array_2 (S_attribute, S_expr)
     | E_BitAnd node -> node -| S_reg (S_bin_op S_bit_and)
@@ -357,7 +360,7 @@ let fold
     | E_DivEq node -> node -| S_reg (S_bin_op S_div_eq)
     | E_Equal node -> node -| S_reg (S_bin_op S_equal_cmp)
     | E_False node -> node -| S_false
-    | E_Fun node -> node -| S_reg (S_fun_expr)
+    | E_Function node -> node -| S_reg (S_function_expr)
     | E_Geq node -> node -| S_reg (S_bin_op S_geq)
     | E_Gt node -> node -| S_reg (S_bin_op S_gt)
     | E_Int node -> node -| S_int_literal
@@ -387,7 +390,6 @@ let fold
     | E_Ternary node -> node -| S_reg S_ternary
     | E_TimesEq node -> node -| S_reg (S_bin_op S_times_eq)
     | E_True node -> node -| S_true
-    | E_Array node -> node -| S_array S_expr
     | E_Typed node -> node -| S_reg S_typed_expr
     | E_Update node -> node -| S_braces S_update_expr
     | E_Var node -> node -| S_variable
@@ -413,6 +415,14 @@ let fold
       StmtBody node -> node -| S_braces S_statements
     | ExprBody node -> node -| S_expr )
   | S_fun_name -> process @@ node -| S_wrap S_lexeme
+  | S_function_expr ->
+    let { kwd_function; type_vars; parameters; rhs_type; fun_body } = node in
+    process_list
+    [ kwd_function -| S_kwd_function
+    ; type_vars -| S_option S_type_vars
+    ; parameters -| S_arrow_fun_params
+    ; rhs_type -| S_option (S_array_2 (S_colon, S_type_expr))
+    ; fun_body -| S_fun_body ]
   | S_fun_decl ->
     let {kwd_function; fun_name; type_vars; parameters;
          rhs_type; fun_body } = node in
@@ -425,7 +435,7 @@ let fold
     ; fun_body -| S_braces S_statements ]
   | S_fun_params ->
       process @@ node -| S_par (S_sep_or_term (S_pattern, S_comma))
-  | S_fun_expr ->
+  | S_arrow_fun_expr ->
     let { type_vars; parameters; rhs_type; arrow; fun_body } = node in
     process_list
     [ type_vars -| S_option S_type_vars

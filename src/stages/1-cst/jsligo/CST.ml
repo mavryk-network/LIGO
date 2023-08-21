@@ -532,6 +532,7 @@ and expr =
 | E_And        of bool_and bin_op reg     (* x && y            *)
 | E_App        of (expr * arguments) reg  (* f(x)   Foo()      *)
 | E_Array      of expr _array             (* [x, ...y, z]  []  *)
+| E_ArrowFun   of arrow_fun_expr reg      (* (x : int) => e    *)
 | E_Assign     of equal bin_op reg        (* x = y             *)
 | E_Attr       of (attribute * expr)      (* @a [x, y]         *)
 | E_BitAnd     of bit_and bin_op reg      (* x & y             *)
@@ -553,7 +554,7 @@ and expr =
 | E_DivEq      of div_eq bin_op reg       (* x /= y            *)
 | E_Equal      of equal_cmp bin_op reg    (* x == y            *)
 | E_False      of false_const             (* false             *)
-| E_Fun        of fun_expr reg            (* (x : int) => e    *)
+| E_Function   of function_expr reg       (* function (x) { ... } *)
 | E_Geq        of geq bin_op reg          (* x >= y            *)
 | E_Gt         of gt bin_op reg           (* x > y             *)
 | E_Int        of int_literal             (* 42                *)
@@ -595,12 +596,20 @@ and arguments = (expr, comma) sepseq par
 
 (* Functional expressions *)
 
-and fun_expr = {
+and arrow_fun_expr = {
   type_vars  : type_vars option;
   parameters : arrow_fun_params;
   rhs_type   : type_annotation option;
   arrow      : arrow;
   fun_body   : fun_body
+}
+
+and function_expr = {
+  kwd_function : kwd_function;
+  type_vars    : type_vars option;
+  parameters   : arrow_fun_params;
+  rhs_type     : type_annotation option;
+  fun_body     : fun_body
 }
 
 and arrow_fun_params =
@@ -754,6 +763,7 @@ let rec expr_to_region = function
 | E_And        {region; _}
 | E_App        {region; _}
 | E_Array      {region; _}
+| E_ArrowFun   {region; _}
 | E_Assign     {region; _} -> region
 | E_Attr       (_, e) -> expr_to_region e
 | E_BitAnd     {region; _}
@@ -775,7 +785,7 @@ let rec expr_to_region = function
 | E_DivEq      {region; _}
 | E_Equal      {region; _} -> region
 | E_False      w -> w#region
-| E_Fun        {region; _}
+| E_Function   {region; _}
 | E_Geq        {region; _}
 | E_Gt         {region; _} -> region
 | E_Int        w -> w#region
