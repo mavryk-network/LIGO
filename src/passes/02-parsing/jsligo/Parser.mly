@@ -624,7 +624,7 @@ stmt_not_starting_with_expr_nor_block1:
 open_stmt_not_starting_with_expr_nor_block2 (right_stmt):
   interface_decl | namespace_decl { S_Decl $1 }
 | export (interface_decl) | export (namespace_decl)
-| break_stmt | switch_stmt | right_stmt { $1 }
+| break_stmt | continue_stmt | switch_stmt | right_stmt { $1 }
 
 stmt_not_starting_with_expr_nor_block2:
   open_stmt_not_starting_with_expr_nor_block2
@@ -657,7 +657,8 @@ non_if_stmt (right_stmt):
 core_stmt (right_stmt):
   "[@attr]" right_stmt { S_Attr ($1,$2) }
 | switch_stmt | for_of_stmt (right_stmt) | while_stmt (right_stmt)
-| break_stmt | full_for_stmt (right_stmt) | if_else_stmt (right_stmt) { $1 }
+| break_stmt | continue_stmt
+| full_for_stmt (right_stmt) | if_else_stmt (right_stmt) { $1 }
 
 closed_non_if_stmt: non_if_stmt (closed_non_if_stmt) { $1 }
 
@@ -673,6 +674,11 @@ after_semi:
 
 break_stmt:
   "break" { S_Break $1 }
+
+(* Continue statement *)
+
+continue_stmt:
+  "continue" { S_Continue $1 }
 
 (* Export statements *)
 
@@ -746,21 +752,21 @@ if_stmt (right_stmt):
   "if" par(if_cond) right_stmt {
     let region = cover $1#region (statement_to_region $3)
     and value  = {kwd_if=$1; test=$2; if_so=($3,None); if_not=None}
-    in S_Cond {region; value} }
+    in S_If {region; value} }
 
 if_else_stmt (right_stmt):
   "if" par(if_cond) closed_non_if_stmt "else" right_stmt {
     let region = cover $1#region (statement_to_region $5)
     and value  = {kwd_if=$1; test=$2; if_so = $3, None;
                   if_not = Some ($4,$5)}
-    in S_Cond {region; value}
+    in S_If {region; value}
   }
 | "if" par(if_cond) closed_non_if_stmt "; else" right_stmt {
     let semi, kwd_else = $4 in
     let region = cover $1#region (statement_to_region $5)
     and value  = {kwd_if=$1; test=$2; if_so = $3, Some semi;
                   if_not = Some (kwd_else, $5)}
-    in S_Cond {region; value} }
+    in S_If {region; value} }
 
 if_cond:
   expr { $1 }

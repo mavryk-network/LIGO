@@ -111,6 +111,7 @@ module T =
     | Case     of lexeme Wrap.t  (* case     *)
  (* | Class    of lexeme Wrap.t  (* class    *) *)
     | Const    of lexeme Wrap.t  (* const    *)
+    | Continue of lexeme Wrap.t  (* continue *)
     | Default  of lexeme Wrap.t  (* default  *)
     | Else     of lexeme Wrap.t  (* else     *)
     | Export   of lexeme Wrap.t  (* export   *)
@@ -244,6 +245,7 @@ module T =
     | Case     t
  (* | Class    t *)
     | Const    t
+    | Continue t
     | Default  t
     | Else     t
     | Export   t
@@ -298,6 +300,7 @@ module T =
      let wrap_case     = wrap "case"
   (* let wrap_class    = wrap "class"   *)
      let wrap_const    = wrap "const"
+     let wrap_continue = wrap "continue"
      let wrap_default  = wrap "default"
      let wrap_else     = wrap "else"
      let wrap_export   = wrap "export"
@@ -317,27 +320,28 @@ module T =
      let wrap_while    = wrap "while"
   (* let wrap_with     = wrap "with"    *)
 
-     let mk_Break   region = Break   (wrap_break   region)
-     let mk_Case    region = Case    (wrap_case    region)
-  (* let mk_Class   region = Class   (wrap_class   region) *)
-     let mk_Const   region = Const   (wrap_const   region)
-     let mk_Default region = Default (wrap_default region)
-     let mk_Else    region = Else    (wrap_else    region)
-     let mk_Export  region = Export  (wrap_export  region)
-     let mk_False   region = False   (wrap_false   region)
-     let mk_For     region = For     (wrap_for     region)
-     let mk_From    region = From    (wrap_from    region)
-     let mk_If      region = If      (wrap_if      region)
-     let mk_Import  region = Import  (wrap_import  region)
-     let mk_Let     region = Let     (wrap_let     region)
-     let mk_Of      region = Of      (wrap_of      region)
-     let mk_Return  region = Return  (wrap_return  region)
-     let mk_Switch  region = Switch  (wrap_switch  region)
-  (* let mk_This    region = This    (wrap_this    region) *)
-     let mk_True    region = True    (wrap_true    region)
-  (* let mk_Void    region = Void    (wrap_void    region) *)
-     let mk_While   region = While   (wrap_while   region)
-  (* let mk_With    region = With    (wrap_with    region) *)
+     let mk_Break    region = Break    (wrap_break    region)
+     let mk_Case     region = Case     (wrap_case     region)
+  (* let mk_Class    region = Class    (wrap_class    region) *)
+     let mk_Const    region = Const    (wrap_const    region)
+     let mk_Continue region = Continue (wrap_continue region)
+     let mk_Default  region = Default  (wrap_default  region)
+     let mk_Else     region = Else     (wrap_else     region)
+     let mk_Export   region = Export   (wrap_export   region)
+     let mk_False    region = False    (wrap_false    region)
+     let mk_For      region = For      (wrap_for      region)
+     let mk_From     region = From     (wrap_from     region)
+     let mk_If       region = If       (wrap_if       region)
+     let mk_Import   region = Import   (wrap_import   region)
+     let mk_Let      region = Let      (wrap_let      region)
+     let mk_Of       region = Of       (wrap_of       region)
+     let mk_Return   region = Return   (wrap_return   region)
+     let mk_Switch   region = Switch   (wrap_switch   region)
+  (* let mk_This     region = This     (wrap_this     region) *)
+     let mk_True     region = True     (wrap_true     region)
+  (* let mk_Void     region = Void     (wrap_void     region) *)
+     let mk_While    region = While    (wrap_while    region)
+  (* let mk_With     region = With     (wrap_with     region) *)
 
      (* TypeScript keywords *)
 
@@ -373,6 +377,7 @@ module T =
        mk_Case;
   (*   mk_Class; *)
        mk_Const;
+       mk_Continue;
        mk_Default;
        mk_Else;
        mk_Export;
@@ -421,49 +426,50 @@ module T =
 
     (* JavaScript Keywords *)
 
-    let ghost_break   = wrap_break   Region.ghost
-    let ghost_case    = wrap_case    Region.ghost
- (* let ghost_class   = wrap_class   Region.ghost *)
-    let ghost_const   = wrap_const   Region.ghost
-    let ghost_default = wrap_default Region.ghost
-    let ghost_else    = wrap_else    Region.ghost
-    let ghost_export  = wrap_export  Region.ghost
-    let ghost_false   = wrap_false   Region.ghost
-    let ghost_for     = wrap_for     Region.ghost
-    let ghost_from    = wrap_from    Region.ghost
-    let ghost_if      = wrap_if      Region.ghost
-    let ghost_import  = wrap_import  Region.ghost
-    let ghost_let     = wrap_let     Region.ghost
-    let ghost_of      = wrap_of      Region.ghost
-    let ghost_return  = wrap_return  Region.ghost
-    let ghost_switch  = wrap_switch  Region.ghost
- (* let ghost_this    = wrap_this    Region.ghost *)
-    let ghost_true    = wrap_true    Region.ghost
- (* let ghost_void    = wrap_void    Region.ghost *)
-    let ghost_while   = wrap_while   Region.ghost
- (* let ghost_with    = wrap_with    Region.ghost *)
+    let ghost_break    = wrap_break    Region.ghost
+    let ghost_case     = wrap_case     Region.ghost
+ (* let ghost_class    = wrap_class    Region.ghost *)
+    let ghost_const    = wrap_const    Region.ghost
+    let ghost_continue = wrap_continue Region.ghost
+    let ghost_default  = wrap_default  Region.ghost
+    let ghost_else     = wrap_else     Region.ghost
+    let ghost_export   = wrap_export   Region.ghost
+    let ghost_false    = wrap_false    Region.ghost
+    let ghost_for      = wrap_for      Region.ghost
+    let ghost_from     = wrap_from     Region.ghost
+    let ghost_if       = wrap_if       Region.ghost
+    let ghost_import   = wrap_import   Region.ghost
+    let ghost_let      = wrap_let      Region.ghost
+    let ghost_of       = wrap_of       Region.ghost
+    let ghost_return   = wrap_return   Region.ghost
+    let ghost_switch   = wrap_switch   Region.ghost
+ (* let ghost_this     = wrap_this     Region.ghost *)
+    let ghost_true     = wrap_true     Region.ghost
+ (* let ghost_void     = wrap_void     Region.ghost *)
+    let ghost_while    = wrap_while    Region.ghost
+ (* let ghost_with     = wrap_with     Region.ghost *)
 
-    let ghost_Break   = Break   ghost_break
-    let ghost_Case    = Case    ghost_case
- (* let ghost_Class   = Class   ghost_class    *)
-    let ghost_Const   = Const   ghost_const
-    let ghost_Default = Default ghost_default
-    let ghost_Else    = Else    ghost_else
-    let ghost_Export  = Export  ghost_export
-    let ghost_False   = False   ghost_false
-    let ghost_For     = For     ghost_for
-    let ghost_From    = From    ghost_from
-    let ghost_If      = If      ghost_if
-    let ghost_Import  = Import  ghost_import
-    let ghost_Let     = Let     ghost_let
-    let ghost_Of      = Of      ghost_of
-    let ghost_Return  = Return  ghost_return
-    let ghost_Switch  = Switch  ghost_switch
- (* let ghost_This    = This    ghost_this     *)
-    let ghost_True    = True    ghost_true
- (* let ghost_Void    = Void    ghost_void     *)
-    let ghost_While   = While   ghost_while
- (* let ghost_With    = With    ghost_with     *)
+    let ghost_Break    = Break   ghost_break
+    let ghost_Case     = Case    ghost_case
+ (* let ghost_Class    = Class   ghost_class    *)
+    let ghost_Const    = Const   ghost_const
+    let ghost_Default  = Default ghost_default
+    let ghost_Else     = Else    ghost_else
+    let ghost_Export   = Export  ghost_export
+    let ghost_False    = False   ghost_false
+    let ghost_For      = For     ghost_for
+    let ghost_From     = From    ghost_from
+    let ghost_If       = If      ghost_if
+    let ghost_Import   = Import  ghost_import
+    let ghost_Let      = Let     ghost_let
+    let ghost_Of       = Of      ghost_of
+    let ghost_Return   = Return  ghost_return
+    let ghost_Switch   = Switch  ghost_switch
+ (* let ghost_This     = This    ghost_this     *)
+    let ghost_True     = True    ghost_true
+ (* let ghost_Void     = Void    ghost_void     *)
+    let ghost_While    = While   ghost_while
+ (* let ghost_With     = With    ghost_with     *)
 
     (* TypeScript keywords *)
 
@@ -913,27 +919,28 @@ module T =
 
     (* JavaScript Keywords *)
 
-    | "Break"   -> ghost_break#payload
-    | "Case"    -> ghost_case#payload
- (* | "Class"   -> ghost_class#payload *)
-    | "Const"   -> ghost_const#payload
-    | "Default" -> ghost_default#payload
-    | "Else"    -> ghost_else#payload
-    | "Export"  -> ghost_export#payload
-    | "False"   -> ghost_false#payload
-    | "For"     -> ghost_for#payload
-    | "From"    -> ghost_from#payload
-    | "If"      -> ghost_if#payload
-    | "Import"  -> ghost_import#payload
-    | "Let"     -> ghost_let#payload
-    | "Of"      -> ghost_of#payload
-    | "Return"  -> ghost_return#payload
-    | "Switch"  -> ghost_switch#payload
- (* | "This"    -> ghost_this#payload *)
-    | "True"    -> ghost_true#payload
- (* | "Void"    -> ghost_void#payload *)
-    | "While"   -> ghost_while#payload
- (* | "With"    -> ghost_with#payload *)
+    | "Break"    -> ghost_break#payload
+    | "Case"     -> ghost_case#payload
+ (* | "Class"    -> ghost_class#payload *)
+    | "Const"    -> ghost_const#payload
+    | "Continue" -> ghost_continue#payload
+    | "Default"  -> ghost_default#payload
+    | "Else"     -> ghost_else#payload
+    | "Export"   -> ghost_export#payload
+    | "False"    -> ghost_false#payload
+    | "For"      -> ghost_for#payload
+    | "From"     -> ghost_from#payload
+    | "If"       -> ghost_if#payload
+    | "Import"   -> ghost_import#payload
+    | "Let"      -> ghost_let#payload
+    | "Of"       -> ghost_of#payload
+    | "Return"   -> ghost_return#payload
+    | "Switch"   -> ghost_switch#payload
+ (* | "This"     -> ghost_this#payload *)
+    | "True"     -> ghost_true#payload
+ (* | "Void"     -> ghost_void#payload *)
+    | "While"    -> ghost_while#payload
+ (* | "With"     -> ghost_with#payload *)
 
     (* TypeScript keywords *)
 
@@ -1072,6 +1079,7 @@ module T =
     | Case     t -> t#region, sprintf "Case%s" (comments t)
  (* | Class    t -> t#region, sprintf "Class%s (comments t)" *)
     | Const    t -> t#region, sprintf "Const%s" (comments t)
+    | Continue t -> t#region, sprintf "Continue%s" (comments t)
     | Default  t -> t#region, sprintf "Default%s" (comments t)
     | Else     t -> t#region, sprintf "Else%s" (comments t)
     | Export   t -> t#region, sprintf "Export%s" (comments t)

@@ -1085,18 +1085,19 @@ and print_E_Xor state (node : bool_xor bin_op reg) =
 (* STATEMENTS *)
 
 and print_statement state = function
-  S_Attr   s -> print_S_Attr   state s
-| S_Block  s -> print_S_Block  state s
-| S_Break  s -> print_S_Break  state s
-| S_Cond   s -> print_S_Cond   state s
-| S_Decl   s -> print_S_Decl   state s
-| S_Export s -> print_S_Export state s
-| S_Expr   s -> print_S_Expr   state s
-| S_For    s -> print_S_For    state s
-| S_ForOf  s -> print_S_ForOf  state s
-| S_Return s -> print_S_Return state s
-| S_Switch s -> print_S_Switch state s
-| S_While  s -> print_S_While  state s
+  S_Attr     s -> print_S_Attr     state s
+| S_Block    s -> print_S_Block    state s
+| S_Break    s -> print_S_Break    state s
+| S_Continue s -> print_S_Continue state s
+| S_Decl     s -> print_S_Decl     state s
+| S_Export   s -> print_S_Export   state s
+| S_Expr     s -> print_S_Expr     state s
+| S_For      s -> print_S_For      state s
+| S_ForOf    s -> print_S_ForOf    state s
+| S_If       s -> print_S_If       state s
+| S_Return   s -> print_S_Return   state s
+| S_Switch   s -> print_S_Switch   state s
+| S_While    s -> print_S_While    state s
 
 (* Attributed statement *)
 
@@ -1120,9 +1121,14 @@ and print_S_Block state (node: statements braces) =
 and print_S_Break state (node: kwd_break) =
   Tree.make_node ~region:node#region state "S_Break"
 
+(* Continue statement *)
+
+and print_S_Continue state (node : kwd_continue) =
+  Tree.make_node ~region:node#region state "S_Continue"
+
 (* Conditional statement *)
 
-and print_S_Cond state (node: cond_stmt reg) =
+and print_S_If state (node: if_stmt reg) =
   let Region.{value; region} = node in
   let {kwd_if=_; test; if_so; if_not} = value in
 
@@ -1136,7 +1142,7 @@ and print_S_Cond state (node: cond_stmt reg) =
     mk_child     print_expr   test.value.inside;
     mk_child     print_if_so  if_so;
     mk_child_opt print_if_not if_not]
-  in Tree.make ~region state "S_Cond" children
+  in Tree.make ~region state "S_If" children
 
 (* Declaration as a statement *)
 

@@ -101,6 +101,7 @@ let add_comment (comment : Wrap.comment) : Token.t -> Token.t = function
 | Break    w -> Break (w#add_comment comment)
 | Case     w -> Case (w#add_comment comment)
 | Const    w -> Const (w#add_comment comment)
+| Continue w -> Continue (w#add_comment comment)
 | Default  w -> Default (w#add_comment comment)
 | Else     w -> Else (w#add_comment comment)
 | Export   w -> Export (w#add_comment comment)

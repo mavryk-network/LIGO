@@ -93,6 +93,7 @@ let add_comment (comment : string Region.reg) : Token.t -> Token.t = function
 | Break    w -> Break (w#add_line_comment comment)
 | Case     w -> Case (w#add_line_comment comment)
 | Const    w -> Const (w#add_line_comment comment)
+| Continue w -> Continue (w#add_line_comment comment)
 | Default  w -> Default (w#add_line_comment comment)
 | Else     w -> Else (w#add_line_comment comment)
 | Export   w -> Export (w#add_line_comment comment)

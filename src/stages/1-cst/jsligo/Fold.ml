@@ -45,7 +45,7 @@ type _ sing =
   | S_colon : colon sing
   | S_comma : comma sing
   | S_component : 'a sing -> 'a component sing
-  | S_cond_stmt : cond_stmt sing
+  | S_if_stmt : if_stmt sing
   | S_contract_of_expr : contract_of_expr sing
   | S_cst : CST.t sing
   | S_ctor : ctor sing
@@ -95,6 +95,7 @@ type _ sing =
   | S_kwd_break : kwd_break sing
   | S_kwd_case : kwd_case sing
   | S_kwd_const : kwd_const sing
+  | S_kwd_continue : kwd_continue sing
   | S_kwd_contract_of : kwd_contract_of sing
   | S_kwd_default : kwd_default sing
   | S_kwd_else : kwd_else sing
@@ -297,7 +298,7 @@ let fold
   | S_colon -> process @@ node -| S_wrap S_lexeme
   | S_comma -> process @@ node -| S_wrap S_lexeme
   | S_component sing -> process @@ node -| S_array_2 (S_option S_ellipsis, sing)
-  | S_cond_stmt -> let {kwd_if; test; if_so; if_not} = node in
+  | S_if_stmt -> let {kwd_if; test; if_so; if_not} = node in
     process_list
     [kwd_if -| S_kwd_if
     ; test -| S_par S_expr
@@ -501,6 +502,7 @@ let fold
   | S_kwd_break -> process @@ node -| S_wrap S_lexeme
   | S_kwd_case -> process @@ node -| S_wrap S_lexeme
   | S_kwd_const -> process @@ node -| S_wrap S_lexeme
+  | S_kwd_continue -> process @@ node -| S_wrap S_lexeme
   | S_kwd_contract_of -> process @@ node -| S_wrap S_lexeme
   | S_kwd_default -> process @@ node -| S_wrap S_lexeme
   | S_kwd_else -> process @@ node -| S_wrap S_lexeme
@@ -680,7 +682,8 @@ let fold
       S_Attr node -> node -| S_array_2 (S_attribute, S_statement)
     | S_Block node -> node -| S_braces S_statements
     | S_Break node -> node -| S_kwd_break
-    | S_Cond node -> node -| S_reg S_cond_stmt
+    | S_Continue node -> node -| S_kwd_continue
+    | S_If node -> node -| S_reg S_if_stmt
     | S_Decl node -> node -| S_declaration
     | S_Export node -> node -| S_reg (S_array_2 (S_kwd_export, S_declaration))
     | S_Expr node -> node -| S_expr

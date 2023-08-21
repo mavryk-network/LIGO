@@ -35,6 +35,7 @@ type kwd_as           = lexeme wrap
 type kwd_break        = lexeme wrap
 type kwd_case         = lexeme wrap
 type kwd_const        = lexeme wrap
+type kwd_continue     = lexeme wrap
 type kwd_contract_of  = lexeme wrap
 type kwd_default      = lexeme wrap
 type kwd_else         = lexeme wrap
@@ -421,18 +422,19 @@ and typed_pattern = pattern * type_annotation
    add or modify some, please make sure they remain in order. *)
 
 and statement =
-  S_Attr   of (attribute * statement)
-| S_Block  of statements braces
-| S_Break  of kwd_break
-| S_Cond   of cond_stmt reg
-| S_Decl   of declaration
-| S_Export of export_stmt reg
-| S_Expr   of expr
-| S_For    of for_stmt reg
-| S_ForOf  of for_of_stmt reg
-| S_Return of return_stmt reg
-| S_Switch of switch_stmt reg
-| S_While  of while_stmt reg
+  S_Attr     of (attribute * statement)
+| S_Block    of statements braces
+| S_Break    of kwd_break
+| S_Continue of kwd_continue
+| S_Decl     of declaration
+| S_Export   of export_stmt reg
+| S_Expr     of expr
+| S_For      of for_stmt reg
+| S_ForOf    of for_of_stmt reg
+| S_If       of if_stmt reg
+| S_Return   of return_stmt reg
+| S_Switch   of switch_stmt reg
+| S_While    of while_stmt reg
 
 and statements = (statement * semi option) nseq
 
@@ -442,7 +444,7 @@ and export_stmt = kwd_export * declaration
 
 (* Conditional statement *)
 
-and cond_stmt = {
+and if_stmt = {
   kwd_if : kwd_if;
   test   : expr par;
   if_so  : statement * semi option;
@@ -810,18 +812,19 @@ let rec expr_to_region = function
 | E_Xor        {region; _} -> region
 
 let rec statement_to_region = function
-  S_Attr   (_, s) -> statement_to_region s
-| S_Block  {region; _} -> region
-| S_Break  w -> w#region
-| S_Cond   {region; _} -> region
-| S_Decl   d -> declaration_to_region d
-| S_Export {region; _} -> region
-| S_Expr   e -> expr_to_region e
-| S_For    {region; _}
-| S_ForOf  {region; _}
-| S_Return {region; _}
-| S_Switch {region; _}
-| S_While  {region; _} -> region
+  S_Attr     (_, s) -> statement_to_region s
+| S_Block    {region; _} -> region
+| S_Break    w -> w#region
+| S_Continue w -> w#region
+| S_Decl     d -> declaration_to_region d
+| S_Export   {region; _} -> region
+| S_Expr     e -> expr_to_region e
+| S_For      {region; _}
+| S_ForOf    {region; _}
+| S_If       {region; _} -> region
+| S_Return   {region; _}
+| S_Switch   {region; _}
+| S_While    {region; _} -> region
 
 let var_kind_to_region = function
   `Let w | `Const w -> w#region
