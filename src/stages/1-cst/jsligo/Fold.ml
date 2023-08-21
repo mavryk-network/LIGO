@@ -444,7 +444,7 @@ let fold
     ; arrow -| S_arrow
     ; fun_body -| S_fun_body ]
   | S_fun_type -> process @@ node -| S_reg (S_array_3 (S_fun_type_params, S_arrow, S_type_expr))
-  | S_fun_type_param -> process @@ node -| S_array_2 (S_variable, S_type_annotation)
+  | S_fun_type_param -> process @@ node -| S_array_2 (S_pattern, S_type_annotation)
   | S_fun_type_params ->
       process @@ node -| S_par (S_sep_or_term (S_reg S_fun_type_param, S_comma))
   | S_geq -> process @@ node -| S_wrap S_lexeme

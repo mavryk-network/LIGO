@@ -353,9 +353,9 @@ and print_T_Fun state (node : fun_type) =
 
 and print_fun_type_param state (node: fun_type_param reg) =
   let Region.{region; value} = node in
-  let parameter, type_annotation = value in
+  let pattern, type_annotation = value in
   let children = Tree.[
-    mk_child make_literal          parameter;
+    mk_child print_pattern         pattern;
     mk_child print_type_annotation type_annotation]
   in Tree.make ~region state "<parameter>" children
 

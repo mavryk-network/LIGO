@@ -410,7 +410,7 @@ fun_type_params:
 fun_type_param:
   variable type_annotation(type_expr) {
     let region = cover $1#region (type_expr_to_region (snd $2))
-    in {region; value = ($1,$2)} }
+    in {region; value = (P_Var $1, $2)} }
 
 (* Variant types *)
 

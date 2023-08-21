@@ -343,7 +343,7 @@ and array_type = (type_expr, comma) nsep_or_term brackets
 
 and fun_type        = (fun_type_params * arrow * type_expr) reg
 and fun_type_params = (fun_type_param reg, comma) sep_or_term par
-and fun_type_param  = variable * type_annotation
+and fun_type_param  = pattern * type_annotation
 
 (* Parameter of type *)
 
