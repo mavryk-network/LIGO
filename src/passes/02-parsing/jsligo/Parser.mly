@@ -973,11 +973,11 @@ bit_shift_level:
 (* Comparisons *)
 
 comp_expr_level:
-  bin_op (comp_expr_level,  "<", add_expr_level) { E_Lt    $1 }
-| bin_op (comp_expr_level, "<=", add_expr_level) { E_Leq   $1 }
-| bin_op (comp_expr_level,   gt, add_expr_level) { E_Gt    $1 }
-| bin_op (comp_expr_level,   ge, add_expr_level) { E_Geq   $1 }
-| eq_expr_level                                  {         $1 }
+  bin_op (comp_expr_level,  "<", add_expr_level) { E_Lt  $1 }
+| bin_op (comp_expr_level, "<=", add_expr_level) { E_Leq $1 }
+| bin_op (comp_expr_level,   gt, add_expr_level) { E_Gt  $1 }
+| bin_op (comp_expr_level,   ge, add_expr_level) { E_Geq $1 }
+| eq_expr_level                                  {       $1 }
 
 eq_expr_level:
   bin_op (add_expr_level, "==", eq_expr_level) { E_Equal $1 }
