@@ -354,11 +354,11 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
       return @@ O.T_attr (hd, attr tl)
   in
   match t with
+  | T_Attr _ -> failwith "IMPLEMENT ME"
   | T_Array { value = { inside; _ } ; _ } ->
-    let t = nsepseq_to_nseq inside.value.inside in
-    return_attr attributes ~no_attr:(T_prod t) ~attr:(fun attributes ->
-        I.T_Array { inside; attributes })
-  | TSum { value = { variants; attributes; _ } as v; region } ->
+    let t = List.Ne.of_list @@ nsep_or_term_to_list inside in
+    return @@ T_prod t
+  | T_Variant { value = { variants; attributes; _ } as v; region } ->
     let destruct : I.variant -> _ =
      fun { tuple; attributes } ->
       let I.{ constr; params } = (r_fst tuple).inside in
@@ -391,7 +391,7 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
          in
          T_sum_raw variants)
       ~attr:(fun attributes -> I.TSum { value = { v with variants; attributes }; region })
-  | TObject { value = { ne_elements; attributes; _ } as v; region } ->
+  | T_Object { value = { ne_elements; attributes; _ } as v; region } ->
     let fields =
       let destruct I.{ field_name; field_type; attributes; _ } =
         ( TODO_do_in_parsing.labelize field_name#payload
@@ -403,12 +403,12 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
     in
     return_attr attributes ~no_attr:(T_record_raw fields) ~attr:(fun attributes ->
         I.TObject { value = { v with ne_elements; attributes }; region })
-  | TApp t ->
+  | T_App t ->
     let constr, args = t.value in
     let constr = I.TVar constr in
     let type_args = nsepseq_to_nseq (r_fst args).inside in
     return @@ T_app { constr; type_args }
-  | TFun { value = fta, _, te2; _ } ->
+  | T_Fun { value = fta, _, te2; _ } ->
     let fun_type_args =
       let compile_fun_type_arg : I.fun_type_arg -> _ O.Named_fun.fun_type_arg =
        fun { name; type_expr; _ } -> { name = name#payload; type_expr }
@@ -417,17 +417,17 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
     in
     let type_expr = te2 in
     return @@ T_named_fun (fun_type_args, type_expr)
-  | TPar t -> ty_expr (r_fst t).inside
-  | TVar t -> return @@ T_var (TODO_do_in_parsing.tvar t)
-  | TString t -> return @@ T_string t#payload
-  | TInt t ->
+  | T_Par t -> ty_expr (r_fst t).inside
+  | T_Var t -> return @@ T_var (TODO_do_in_parsing.tvar t)
+  | T_String t -> return @@ T_string t#payload
+  | T_Int t ->
     let s, z = t#payload in
     return @@ T_int (s, z)
-  | TModA { value = { module_name; field; _ }; _ } ->
+  | T_NamePath { value = { module_name; field; _ }; _ } ->
     let module_path = TODO_do_in_parsing.mvar module_name in
     let field_as_open = TODO_do_in_parsing.field_as_open_t t in
     return @@ T_module_open_in { module_path; field; field_as_open }
-  | TParameter { value; region } ->
+  | T_ParameterOf { value; region } ->
     let loc = Location.lift region in
     return
     @@ T_module_access
@@ -435,7 +435,7 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
          ; field = Ligo_prim.Type_var.of_input_var ~loc "$parameter"
          ; field_as_open = false
          }
-  | TDisc t ->
+  | T_Union t ->
     let fields =
       let destruct_obj (x : I.obj_type) =
         let I.{ attributes; ne_elements; _ } = x.value in
