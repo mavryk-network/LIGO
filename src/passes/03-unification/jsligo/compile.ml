@@ -30,12 +30,12 @@ module TODO_do_in_parsing = struct
 
   let weird_attr _ = ()
 
-  (* let labelize_pattern p =
-    match p with
-    (* would be better to emit a label/string directly ? *)
-    | I.PVar var ->
-      Location.wrap ~loc:(r_snd var) @@ O.Label.of_string @@ var.value.variable#payload
-    | _ -> failwith "labelize_pattern: impossible??" *)
+  (* let labelize_pattern p = *)
+  (*   match p with *)
+  (*   (\* would be better to emit a label/string directly ? *\) *)
+  (*   | I.P_Var var -> *)
+  (*     Location.wrap ~loc @@ O.Label.of_string @@ var.variable#payload *)
+  (*   | _ -> failwith "labelize_pattern: impossible??" *)
 
   let unused_node () = failwith "unused node, can we clean ?"
   let labelize x = O.Label.of_string x
@@ -458,27 +458,12 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
          }
   | T_Union t ->
     let fields =
-      let destruct_obj (x : I.union_type) =
-        let ne_elements = nsep_or_pref_to_list x.value in
-        let ne_elements = List.map ~f:(function { value ; _ } -> value.inside) ne_elements in
-        let obj =
-          Region.wrap_ghost
-            I.
-              { compound = None (* (I.field_decl Region.reg, I.semi) nsepseq *)
-              ; ne_elements
-              ; terminator = None
-              ; attributes = []
-              }
-        in
-        ( () (* , t_record_raw ~loc (Non_linear_rows.make lst) *)
-        , I.T_Object obj
-        , TODO_do_in_parsing.conv_attrs attributes )
+      let destruct_obj (x : I.type_expr I._object) : unit * I.type_expr * O.Attribute.t list =
+        ((), I.T_Object x, [])
       in
       let lst = List.map ~f:destruct_obj (nsep_or_pref_to_list t.value) in
       O.Non_linear_disc_rows.make lst
     in
-    (* locs miscomputed here *)
-    let loc = TODO_do_in_parsing.t_disc_locs t in
     Location.wrap ~loc @@ O.T_disc_union fields
 
 
