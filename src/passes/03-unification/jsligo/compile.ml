@@ -138,6 +138,28 @@ let rec expr : Eq.expr -> Folding.expr =
     let I.{ op = _; arg } = r_fst op in
     O.E_unary_op { operator = Location.wrap ~loc sign; arg }
   in
+  let compile_function (type_vars : I.type_vars option) parameters rhs_type fun_body =
+    let type_params =
+      let open Simple_utils.Option in
+      let* type_vars in
+      let* tvs = sep_or_term_to_nelist type_vars.value.inside in
+      return (List.Ne.map TODO_do_in_parsing.tvar tvs)
+    in
+    let parameters =
+      match parameters with
+      | I.ParParams x ->
+        x.value.inside
+        |> sep_or_term_to_list
+        |> List.map ~f:TODO_do_in_parsing.pattern_to_param
+      | NakedParam x -> [ TODO_do_in_parsing.pattern_to_param x ]
+    in
+    let ret_type = Option.map ~f:snd rhs_type in
+    (match fun_body with
+    | I.StmtBody body ->
+      return
+      @@ O.E_block_poly_fun { type_params; parameters; ret_type; body = body.value.inside }
+    | ExprBody body -> return @@ E_poly_fun { type_params; parameters; ret_type; body })
+  in
   let get_variable (e : I.expr) =
     match e with
     | E_Var v -> Some v
@@ -146,12 +168,15 @@ let rec expr : Eq.expr -> Folding.expr =
   match e with
   | E_Var var -> return @@ O.E_variable (TODO_do_in_parsing.var var)
   | E_Par par -> expr par.value.inside
-  (* | E_Unit _ -> return @@ E_literal Literal_unit *)
+  | E_False _ -> return @@ E_constr (Ligo_prim.Label.of_string "False")
+  | E_True _ -> return @@ E_constr (Ligo_prim.Label.of_string "True")
   | E_Bytes b ->
     let _lexeme, b = b#payload in
     return @@ E_literal (Literal_bytes (Hex.to_bytes b))
   | E_String str ->
     return @@ E_literal (Literal_string (Simple_utils.Ligo_string.Standard str#payload))
+  | E_Verbatim str ->
+    return @@ E_literal (Literal_string (Simple_utils.Ligo_string.Verbatim str#payload))
   | E_Add plus -> return @@ compile_bin_op PLUS plus
   | E_Sub minus -> return @@ compile_bin_op MINUS minus
   | E_Mult times -> return @@ compile_bin_op STAR times
@@ -218,26 +243,10 @@ let rec expr : Eq.expr -> Folding.expr =
     return @@ E_module_open_in { module_path = namespace_path; field = property; field_as_open = property_as_open }
   | E_ArrowFun f ->
     let I.{ type_vars; parameters; rhs_type; arrow = _; fun_body } = f.value in
-    let type_params =
-      let open Simple_utils.Option in
-      let* type_vars in
-      let* tvs = sep_or_term_to_nelist type_vars.value.inside in
-      return (List.Ne.map TODO_do_in_parsing.tvar tvs)
-    in
-    let parameters =
-      match parameters with
-      | ParParams x ->
-        x.value.inside
-        |> sep_or_term_to_list
-        |> List.map ~f:TODO_do_in_parsing.pattern_to_param
-      | NakedParam x -> [ TODO_do_in_parsing.pattern_to_param x ]
-    in
-    let ret_type = Option.map ~f:snd rhs_type in
-    (match fun_body with
-    | StmtBody body ->
-      return
-      @@ E_block_poly_fun { type_params; parameters; ret_type; body = body.value.inside }
-    | ExprBody body -> return @@ E_poly_fun { type_params; parameters; ret_type; body })
+    compile_function type_vars parameters rhs_type fun_body
+  | E_Function f ->
+    let I.{ type_vars; parameters; rhs_type; kwd_function = _; fun_body } = f.value in
+    compile_function type_vars parameters rhs_type fun_body
   | E_Typed a ->
     let e, _, te = a.value in
     return @@ E_annot (e, te)
@@ -315,7 +324,23 @@ let rec expr : Eq.expr -> Folding.expr =
       | Some variable -> variable | _ -> failwith "Expected variable in postfix op." in
     let variable = TODO_do_in_parsing.var variable in
     return @@ E_postfix { post_op; variable }
-
+  | E_Nat n -> return @@ E_literal (Literal_nat (snd n#payload))
+  | E_Mutez m -> return @@ E_literal (Literal_mutez (Z.of_int64 (snd m#payload)))
+  | E_BitAnd bitand -> return @@ compile_bin_op WORD_LAND bitand
+  | E_BitNeg bitneg -> return @@ compile_unary_op WORD_NOT bitneg
+  | E_BitOr bitor -> return @@ compile_bin_op WORD_LOR bitor
+  | E_BitXor bitxor -> return @@ compile_bin_op WORD_LXOR bitxor
+  | E_BitSl lsl_ -> return @@ compile_bin_op WORD_LSL lsl_
+  | E_BitSr lsr_ -> return @@ compile_bin_op WORD_LSR lsr_
+  | E_Attr (x, y) -> return @@ E_attr (TODO_do_in_parsing.conv_attr x, y)
+  | E_Match _
+  | E_Update _ -> failwith "IMPLEMENT ME"
+  | E_Xor _
+  | E_BitAndEq _
+  | E_BitOrEq _
+  | E_BitSlEq _
+  | E_BitSrEq _
+  | E_BitXorEq _ -> failwith "NOT IMPLEMENTED"
 
 let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
  fun t ->
