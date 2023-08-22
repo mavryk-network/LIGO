@@ -357,9 +357,9 @@ and parameter_of_type = {
 and 'a _object = ('a property reg, property_sep) sep_or_term braces
 
 and 'a property = {
-  attributes : attribute list;
-  property_id   : property_id;
-  property_rhs  : (colon * 'a) option (* [None] means punning *)
+  attributes   : attribute list;
+  property_id  : property_id;
+  property_rhs : (colon * 'a) option (* [None] means punning *)
 }
 
 and property_id =
