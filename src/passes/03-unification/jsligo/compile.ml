@@ -95,6 +95,15 @@ module TODO_do_in_parsing = struct
   let mvar x = Ligo_prim.Module_var.of_input_var ~loc:(Location.File x#region) x#payload
   let var x = Ligo_prim.Value_var.of_input_var ~loc:(Location.File x#region) x#payload
   let tvar x = Ligo_prim.Type_var.of_input_var ~loc:(Location.File x#region) x#payload
+
+  let selection_path (t : I.namespace_selection) = match t with
+    | M_Alias p -> List.Ne.singleton p
+    | M_Path path ->
+      let path = path.value in
+      let last = path.property in
+      let init = path.namespace_path in
+      let init = nsepseq_to_list init in
+      List.Ne.of_list (init @ [ last ])
 end
 
 module Eq = struct
@@ -129,15 +138,45 @@ let rec expr : Eq.expr -> Folding.expr =
     let I.{ op = _; arg } = r_fst op in
     O.E_unary_op { operator = Location.wrap ~loc sign; arg }
   in
+  let compile_function (type_vars : I.type_vars option) parameters rhs_type fun_body =
+    let type_params =
+      let open Simple_utils.Option in
+      let* type_vars in
+      let* tvs = sep_or_term_to_nelist type_vars.value.inside in
+      return (List.Ne.map TODO_do_in_parsing.tvar tvs)
+    in
+    let parameters =
+      match parameters with
+      | I.ParParams x ->
+        x.value.inside
+        |> sep_or_term_to_list
+        |> List.map ~f:TODO_do_in_parsing.pattern_to_param
+      | NakedParam x -> [ TODO_do_in_parsing.pattern_to_param x ]
+    in
+    let ret_type = Option.map ~f:snd rhs_type in
+    (match fun_body with
+    | I.StmtBody body ->
+      return
+      @@ O.E_block_poly_fun { type_params; parameters; ret_type; body = body.value.inside }
+    | ExprBody body -> return @@ E_poly_fun { type_params; parameters; ret_type; body })
+  in
+  let get_variable (e : I.expr) =
+    match e with
+    | E_Var v -> Some v
+    | _ -> None
+  in
   match e with
   | E_Var var -> return @@ O.E_variable (TODO_do_in_parsing.var var)
   | E_Par par -> expr par.value.inside
-  (* | E_Unit _ -> return @@ E_literal Literal_unit *)
+  | E_False _ -> return @@ E_constr (Ligo_prim.Label.of_string "False")
+  | E_True _ -> return @@ E_constr (Ligo_prim.Label.of_string "True")
   | E_Bytes b ->
     let _lexeme, b = b#payload in
     return @@ E_literal (Literal_bytes (Hex.to_bytes b))
   | E_String str ->
     return @@ E_literal (Literal_string (Simple_utils.Ligo_string.Standard str#payload))
+  | E_Verbatim str ->
+    return @@ E_literal (Literal_string (Simple_utils.Ligo_string.Verbatim str#payload))
   | E_Add plus -> return @@ compile_bin_op PLUS plus
   | E_Sub minus -> return @@ compile_bin_op MINUS minus
   | E_Mult times -> return @@ compile_bin_op STAR times
@@ -160,7 +199,7 @@ let rec expr : Eq.expr -> Folding.expr =
   | E_Ctor c ->
     (* TODO in unified types (one type might not be necessary) *)
     return @@ E_constr (O.Label.of_string c#payload)
-  | E_Tuple { value = items; _ } ->
+  | E_Array { value = items; _ } ->
     let items =
       let translate_array_item : I.expr I.component -> _ AST.Array_repr.item = function
         | None, e -> Expr_entry e
@@ -170,59 +209,44 @@ let rec expr : Eq.expr -> Folding.expr =
           List.map ~f:translate_array_item (nsep_or_term_to_list lst))
     in
     return @@ E_array items
-  | E_Record { value; _ } ->
+  | E_Object { value; _ } ->
     let f x =
-      let I.{ attributes; field_id; field_rhs } = r_fst x in
+      let I.{ attributes; property_id; property_rhs } = r_fst x in
       TODO_do_in_parsing.weird_attr attributes;
       let open O.Object_ in
       let field_id =
-        match field_id with
+        match property_id with
         | F_Name n -> F_Name (O.Label.of_string n#payload)
         | F_Int i -> F_Int (snd i#payload)
         | F_Str s -> F_Str s#payload
       in
-      O.Object_.{ field_id; field_rhs = Option.map ~f:snd field_rhs }
+      O.Object_.{ field_id; field_rhs = Option.map ~f:snd property_rhs }
     in
     return @@ E_object (List.map ~f (sep_or_term_to_list value.inside))
-  | E_Proj { value = { record_or_tuple; field_path }; _ } ->
+  | E_Proj { value = { object_or_array; property_path }; _ } ->
     let f : I.selection -> _ O.Selection.t = function
-      | I.FieldStr fstr ->
+      | I.PropertyStr fstr ->
         (* TODO, not clear to me. need the parser to compile in order to decide *)
         assert false
-      | I.FieldName (_dot, name) -> FieldName (O.Label.of_string name#payload)
+      | I.PropertyName (_dot, name) -> FieldName (O.Label.of_string name#payload)
       | Component comp ->
         let comp = (r_fst comp).inside#payload in
         Component_num comp
     in
-    return @@ E_proj (record_or_tuple, List.map ~f (nseq_to_list field_path))
-  | E_ModPath { value = { module_path; field; _ }; _ } ->
-    let field_as_open = TODO_do_in_parsing.is_open field in
-    let module_path =
-      nsepseq_to_nseq @@ nsepseq_map TODO_do_in_parsing.mvar module_path
+    let property_path = nseq_map f property_path in
+    return @@ E_proj (object_or_array, nseq_to_list @@ property_path)
+  | E_NamePath { value = { namespace_path; property; _ }; _ } ->
+    let property_as_open = TODO_do_in_parsing.is_open property in
+    let namespace_path =
+      nsepseq_to_nseq @@ nsepseq_map TODO_do_in_parsing.mvar namespace_path
     in
-    return @@ E_module_open_in { module_path; field; field_as_open }
-  | E_Fun f ->
+    return @@ E_module_open_in { module_path = namespace_path; field = property; field_as_open = property_as_open }
+  | E_ArrowFun f ->
     let I.{ type_vars; parameters; rhs_type; arrow = _; fun_body } = f.value in
-    let type_params =
-      let open Simple_utils.Option in
-      let* type_vars in
-      let* tvs = sep_or_term_to_nelist type_vars.value.inside in
-      return (List.Ne.map TODO_do_in_parsing.tvar tvs)
-    in
-    let parameters =
-      match parameters with
-      | ParParams x ->
-        x.value.inside
-        |> sep_or_term_to_list
-        |> List.map ~f:TODO_do_in_parsing.pattern_to_param
-      | VarParam x -> [ TODO_do_in_parsing.pattern_to_param (I.P_Var x) ]
-    in
-    let ret_type = Option.map ~f:snd rhs_type in
-    (match fun_body with
-    | FunBody body ->
-      return
-      @@ E_block_poly_fun { type_params; parameters; ret_type; body = body.value.inside }
-    | ExprBody body -> return @@ E_poly_fun { type_params; parameters; ret_type; body })
+    compile_function type_vars parameters rhs_type fun_body
+  | E_Function f ->
+    let I.{ type_vars; parameters; rhs_type; kwd_function = _; fun_body } = f.value in
+    compile_function type_vars parameters rhs_type fun_body
   | E_Typed a ->
     let e, _, te = a.value in
     return @@ E_annot (e, te)
@@ -230,52 +254,93 @@ let rec expr : Eq.expr -> Folding.expr =
     let language = w_fst language in
     return @@ E_raw_code { language; code }
   (* | E_Seq seq -> return @@ E_sequence (nsepseq_to_list seq.value) *)
-  | E_Assign { value = { arg1; op; arg2 } } ->
-    let op =
-      O.Assign_chainable.(
-        match op.value with
-        | I.Eq -> Eq
-        | Assignment_operator aop ->
-          Assignment_operator
-            (match aop with
-            | Times_eq -> Times_eq
-            | Div_eq -> Div_eq
-            | Min_eq -> Min_eq
-            | Plus_eq -> Plus_eq
-            | Mod_eq -> Mod_eq))
-    in
-    (* Parser miscomputes location here *)
+  | E_Assign { value = { arg1; op; arg2 }; _ } ->
     let loc =
-      Location.lift @@ Region.cover (I.expr_to_region expr1) (I.expr_to_region expr2)
+      Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
     in
-    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1; op; expr2 }
-  | ETernary { value = { condition; truthy; falsy; _ }; _ } ->
+    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op = Eq; expr2 = arg2 }
+  | E_AddEq { value = { arg1; op; arg2 }; _ } ->
+    let loc =
+      Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
+    in
+    let op = O.Assign_chainable.Assignment_operator Plus_eq in
+    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
+  | E_MinusEq { value = { arg1; op; arg2 }; _ } ->
+    let loc =
+      Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
+    in
+    let op = O.Assign_chainable.Assignment_operator Min_eq in
+    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
+  | E_TimesEq { value = { arg1; op; arg2 }; _ } ->
+    let loc =
+      Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
+    in
+    let op = O.Assign_chainable.Assignment_operator Times_eq in
+    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
+  | E_DivEq { value = { arg1; op; arg2 }; _ } ->
+    let loc =
+      Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
+    in
+    let op = O.Assign_chainable.Assignment_operator Div_eq in
+    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
+  | E_RemEq { value = { arg1; op; arg2 }; _ } ->
+    let loc =
+      Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
+    in
+    let op = O.Assign_chainable.Assignment_operator Mod_eq in
+    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
+  | E_Ternary { value = { condition; truthy; falsy; _ }; _ } ->
     let ifnot = Some falsy in
     return @@ E_cond { test = condition; ifso = truthy; ifnot }
-  | EContract { value = c; _ } ->
-    let lst = List.Ne.map TODO_do_in_parsing.mvar (nsepseq_to_nseq c) in
+  | E_ContractOf { value = { namespace_path = { value = { inside = selection ; _ }; _ }; _ }; _ } ->
+    let selection = TODO_do_in_parsing.selection_path selection in
+    let lst = List.Ne.map TODO_do_in_parsing.mvar selection in
     return @@ E_contract lst
-  | EPrefix { region = _; value = { update_type = Increment op; variable } } ->
+  | E_PreIncr { region = _; value = { op ; arg } } ->
     let loc = Location.lift op#region in
     let pre_op = Location.wrap ~loc O.Prefix_postfix.Increment in
+    let variable = match get_variable arg with
+      | Some variable -> variable | _ -> failwith "Expected variable in prefix op." in
     let variable = TODO_do_in_parsing.var variable in
     return @@ E_prefix { pre_op; variable }
-  | EPrefix { region = _; value = { update_type = Decrement op; variable } } ->
+  | E_PreDecr { region = _; value = { op ; arg } } ->
     let loc = Location.lift op#region in
     let pre_op = Location.wrap ~loc O.Prefix_postfix.Decrement in
+    let variable = match get_variable arg with
+      | Some variable -> variable | _ -> failwith "Expected variable in prefix op." in
     let variable = TODO_do_in_parsing.var variable in
     return @@ E_prefix { pre_op; variable }
-  | EPostfix { region = _; value = { update_type = Increment op; variable } } ->
+  | E_PostIncr { region = _; value = { op ; arg } } ->
     let loc = Location.lift op#region in
     let post_op = Location.wrap ~loc O.Prefix_postfix.Increment in
+    let variable = match get_variable arg with
+      | Some variable -> variable | _ -> failwith "Expected variable in postfix op." in
     let variable = TODO_do_in_parsing.var variable in
     return @@ E_postfix { post_op; variable }
-  | EPostfix { region = _; value = { update_type = Decrement op; variable } } ->
+  | E_PostDecr { region = _; value = { op ; arg } } ->
     let loc = Location.lift op#region in
     let post_op = Location.wrap ~loc O.Prefix_postfix.Decrement in
+    let variable = match get_variable arg with
+      | Some variable -> variable | _ -> failwith "Expected variable in postfix op." in
     let variable = TODO_do_in_parsing.var variable in
     return @@ E_postfix { post_op; variable }
-
+  | E_Nat n -> return @@ E_literal (Literal_nat (snd n#payload))
+  | E_Mutez m -> return @@ E_literal (Literal_mutez (Z.of_int64 (snd m#payload)))
+  | E_BitAnd bitand -> return @@ compile_bin_op WORD_LAND bitand
+  | E_BitNeg bitneg -> return @@ compile_unary_op WORD_NOT bitneg
+  | E_BitOr bitor -> return @@ compile_bin_op WORD_LOR bitor
+  | E_BitXor bitxor -> return @@ compile_bin_op WORD_LXOR bitxor
+  | E_BitSl lsl_ -> return @@ compile_bin_op WORD_LSL lsl_
+  | E_BitSr lsr_ -> return @@ compile_bin_op WORD_LSR lsr_
+  | E_Attr (x, y) -> return @@ E_attr (TODO_do_in_parsing.conv_attr x, y)
+  | E_Match _
+  | E_Update _ -> failwith "IMPLEMENT ME"
+  | E_Xor _
+  | E_BitAndEq _
+  | E_BitOrEq _
+  | E_BitSlEq _
+  | E_BitSrEq _
+  | E_BitXorEq _ -> failwith "NOT IMPLEMENTED"
 
 let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
  fun t ->
@@ -289,11 +354,11 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
       return @@ O.T_attr (hd, attr tl)
   in
   match t with
-  | TProd { inside; attributes } ->
-    let t = nsepseq_to_nseq inside.value.inside in
-    return_attr attributes ~no_attr:(T_prod t) ~attr:(fun attributes ->
-        I.TProd { inside; attributes })
-  | TSum { value = { variants; attributes; _ } as v; region } ->
+  | T_Attr _ -> failwith "IMPLEMENT ME"
+  | T_Array { value = { inside; _ } ; _ } ->
+    let t = List.Ne.of_list @@ nsep_or_term_to_list inside in
+    return @@ T_prod t
+  | T_Variant { value = { variants; attributes; _ } as v; region } ->
     let destruct : I.variant -> _ =
      fun { tuple; attributes } ->
       let I.{ constr; params } = (r_fst tuple).inside in
@@ -326,7 +391,7 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
          in
          T_sum_raw variants)
       ~attr:(fun attributes -> I.TSum { value = { v with variants; attributes }; region })
-  | TObject { value = { ne_elements; attributes; _ } as v; region } ->
+  | T_Object { value = { ne_elements; attributes; _ } as v; region } ->
     let fields =
       let destruct I.{ field_name; field_type; attributes; _ } =
         ( TODO_do_in_parsing.labelize field_name#payload
@@ -338,12 +403,12 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
     in
     return_attr attributes ~no_attr:(T_record_raw fields) ~attr:(fun attributes ->
         I.TObject { value = { v with ne_elements; attributes }; region })
-  | TApp t ->
+  | T_App t ->
     let constr, args = t.value in
     let constr = I.TVar constr in
     let type_args = nsepseq_to_nseq (r_fst args).inside in
     return @@ T_app { constr; type_args }
-  | TFun { value = fta, _, te2; _ } ->
+  | T_Fun { value = fta, _, te2; _ } ->
     let fun_type_args =
       let compile_fun_type_arg : I.fun_type_arg -> _ O.Named_fun.fun_type_arg =
        fun { name; type_expr; _ } -> { name = name#payload; type_expr }
@@ -352,17 +417,17 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
     in
     let type_expr = te2 in
     return @@ T_named_fun (fun_type_args, type_expr)
-  | TPar t -> ty_expr (r_fst t).inside
-  | TVar t -> return @@ T_var (TODO_do_in_parsing.tvar t)
-  | TString t -> return @@ T_string t#payload
-  | TInt t ->
+  | T_Par t -> ty_expr (r_fst t).inside
+  | T_Var t -> return @@ T_var (TODO_do_in_parsing.tvar t)
+  | T_String t -> return @@ T_string t#payload
+  | T_Int t ->
     let s, z = t#payload in
     return @@ T_int (s, z)
-  | TModA { value = { module_name; field; _ }; _ } ->
+  | T_NamePath { value = { module_name; field; _ }; _ } ->
     let module_path = TODO_do_in_parsing.mvar module_name in
     let field_as_open = TODO_do_in_parsing.field_as_open_t t in
     return @@ T_module_open_in { module_path; field; field_as_open }
-  | TParameter { value; region } ->
+  | T_ParameterOf { value; region } ->
     let loc = Location.lift region in
     return
     @@ T_module_access
@@ -370,7 +435,7 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
          ; field = Ligo_prim.Type_var.of_input_var ~loc "$parameter"
          ; field_as_open = false
          }
-  | TDisc t ->
+  | T_Union t ->
     let fields =
       let destruct_obj (x : I.obj_type) =
         let I.{ attributes; ne_elements; _ } = x.value in
@@ -492,17 +557,18 @@ let rec statement : Eq.statement -> Folding.statement =
   let loc = Location.lift (I.statement_to_region s) in
   let return = Location.wrap ~loc in
   match s with
-  | SInterface _ | SNamespace _ | SImport _ | SExport _ | SLet _ | SConst _ | SType _ ->
+  | S_Export _ | S_Decl _ | S_Attr _ ->
     return @@ O.S_decl s
-  | SBlock _
-  | SExpr _
-  | SCond _
-  | SReturn _
-  | SSwitch _
-  | SBreak _
-  | SWhile _
-  | SForOf _
-  | SFor _ -> return @@ S_instr s
+  | S_Block _
+  | S_Expr _
+  | S_Return _
+  | S_Switch _
+  | S_Break _
+  | S_Continue _
+  | S_If _
+  | S_While _
+  | S_ForOf _
+  | S_For _ -> return @@ S_instr s
 
 
 and instruction : Eq.instruction -> Folding.instruction =

@@ -196,7 +196,7 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
   let needs_parens : CST.type_expr -> bool = function
     (* When we apply type constr to some type, sometimes we need to add parens
       e.g. [A of int] -> [(A of int) option] vs [{a : int}] -> [{ a : int }] option. *)
-    | T_Fun _ | T_Cart _ | T_Variant _ | T_Attr _ | T_Parameter _ -> true
+    | T_Fun _ | T_Cart _ | T_Variant _ | T_Attr _ | T_ParameterOf _ -> true
     | T_Par _
     | T_App _
     | T_Var _
