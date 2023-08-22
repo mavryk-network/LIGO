@@ -30,12 +30,12 @@ module TODO_do_in_parsing = struct
 
   let weird_attr _ = ()
 
-  (* let labelize_pattern p =
-    match p with
-    (* would be better to emit a label/string directly ? *)
-    | I.PVar var ->
-      Location.wrap ~loc:(r_snd var) @@ O.Label.of_string @@ var.value.variable#payload
-    | _ -> failwith "labelize_pattern: impossible??" *)
+  (* let labelize_pattern p = *)
+  (*   match p with *)
+  (*   (\* would be better to emit a label/string directly ? *\) *)
+  (*   | I.P_Var var -> *)
+  (*     Location.wrap ~loc @@ O.Label.of_string @@ var.variable#payload *)
+  (*   | _ -> failwith "labelize_pattern: impossible??" *)
 
   let unused_node () = failwith "unused node, can we clean ?"
   let labelize x = O.Label.of_string x
@@ -48,11 +48,11 @@ module TODO_do_in_parsing = struct
 
   let pattern_to_param pattern = O.Param.{ pattern; param_kind = `Const }
 
-  (* let field_as_open_t (ma : I.type_expr) =
+  let field_as_open_t (ma : I.type_expr) =
     (* here, we should use module expressions, maybe ? *)
     match ma with
-    | I.TPar _ -> true
-    | _ -> false *)
+    | I.T_Par t -> Some t.value.inside
+    | _ -> None
 
   let is_open = function
     | I.E_Par _ -> true
@@ -104,6 +104,8 @@ module TODO_do_in_parsing = struct
       let init = path.namespace_path in
       let init = nsepseq_to_list init in
       List.Ne.of_list (init @ [ last ])
+
+  let compile_rows = O.Non_linear_rows.make
 end
 
 module Eq = struct
@@ -114,11 +116,11 @@ module Eq = struct
   type block = I.statements
   type mod_expr = I.statements
   type instruction = I.statement
-  type declaration = I.statement
+  type declaration = I.declaration
   type program_entry = I.top_decl
   type program = I.t
-  type sig_expr = I.interface_decl
-  type sig_entry = I.intf_body
+  type sig_expr = I.intf_expr
+  type sig_entry = I.intf_entry
 end
 
 let pattern_of_expr x = `Expr x
@@ -346,26 +348,31 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
  fun t ->
   let loc = Location.lift (I.type_expr_to_region t) in
   let return = Location.wrap ~loc in
-  let return_attr attributes ~attr ~no_attr =
-    match attributes with
-    | [] -> return @@ no_attr
-    | hd :: tl ->
-      let hd = TODO_do_in_parsing.conv_attr hd in
-      return @@ O.T_attr (hd, attr tl)
+  let get_ty_variable (e : I.type_expr) =
+    match e with
+    | T_Var v -> Some v
+    | _ -> None
+  in
+  let get_p_variable (e : I.pattern) =
+    match e with
+    | P_Var v -> Some v
+    | _ -> None
   in
   match t with
-  | T_Attr _ -> failwith "IMPLEMENT ME"
+  | T_Attr (attr, t) ->
+    return @@ O.T_attr (TODO_do_in_parsing.conv_attr attr, t)
   | T_Array { value = { inside; _ } ; _ } ->
     let t = List.Ne.of_list @@ nsep_or_term_to_list inside in
     return @@ T_prod t
-  | T_Variant { value = { variants; attributes; _ } as v; region } ->
+  | T_Variant { value = variants; region } ->
+    let variants = nsep_or_pref_to_list variants in
     let destruct : I.variant -> _ =
      fun { tuple; attributes } ->
-      let I.{ constr; params } = (r_fst tuple).inside in
+      let I.{ ctor; ctor_params } = (r_fst tuple).inside in
       let ty =
         Option.map
           ~f:(fun lst ->
-            let p = (nsepseq_to_nseq <@ snd) lst in
+            let p = List.Ne.of_list @@ nsep_or_term_to_list @@ snd lst in
             match p with
             | x, [] -> x
             | _ ->
@@ -373,47 +380,52 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
                 Region.wrap_ghost
                 @@ I.{ lbracket = ghost; inside = snd lst; rbracket = ghost }
               in
-              I.TProd { inside; attributes = [] })
-          params
+              I.T_Array inside)
+          ctor_params
       in
-      ( TODO_do_in_parsing.labelize constr#payload
-      , ty
-      , TODO_do_in_parsing.conv_attrs attributes )
+      ( TODO_do_in_parsing.labelize ctor#payload
+      , ty , TODO_do_in_parsing.conv_attrs attributes )
     in
-    return_attr
-      attributes
-      ~no_attr:
-        (let variants =
-           r_fst variants
-           |> nsepseq_to_list
-           |> List.map ~f:(destruct <@ r_fst)
-           |> O.Non_linear_rows.make
-         in
-         T_sum_raw variants)
-      ~attr:(fun attributes -> I.TSum { value = { v with variants; attributes }; region })
-  | T_Object { value = { ne_elements; attributes; _ } as v; region } ->
+    let variants =
+      variants
+      |> List.map ~f:destruct
+      |> TODO_do_in_parsing.compile_rows
+    in
+    return @@ T_sum_raw variants
+  | T_Object { value = { inside = ne_elements ; _ }; region } ->
     let fields =
-      let destruct I.{ field_name; field_type; attributes; _ } =
-        ( TODO_do_in_parsing.labelize field_name#payload
-        , Some field_type
+      let destruct (I.{ property_id; property_rhs; attributes } : _ I.property) =
+        let property_id =
+          match property_id with
+          | F_Name n -> O.Label.of_string n#payload
+          | F_Int i -> O.Label.of_string @@ fst i#payload
+          | F_Str s -> O.Label.of_string s#payload
+        in
+        let property_rhs = Option.map ~f:snd property_rhs in
+        ( property_id
+        , property_rhs
         , TODO_do_in_parsing.conv_attrs attributes )
       in
-      let lst = List.map ~f:(destruct <@ r_fst) @@ nsepseq_to_list ne_elements in
+      let lst = List.map ~f:(destruct <@ r_fst) @@ sep_or_term_to_list ne_elements in
       O.Non_linear_rows.make lst
     in
-    return_attr attributes ~no_attr:(T_record_raw fields) ~attr:(fun attributes ->
-        I.TObject { value = { v with ne_elements; attributes }; region })
+    return @@ T_record_raw fields
   | T_App t ->
     let constr, args = t.value in
-    let constr = I.TVar constr in
-    let type_args = nsepseq_to_nseq (r_fst args).inside in
+    let args = args.value.inside in
+    let type_args = List.Ne.of_list @@ nsep_or_term_to_list args in
     return @@ T_app { constr; type_args }
   | T_Fun { value = fta, _, te2; _ } ->
     let fun_type_args =
-      let compile_fun_type_arg : I.fun_type_arg -> _ O.Named_fun.fun_type_arg =
-       fun { name; type_expr; _ } -> { name = name#payload; type_expr }
+      let compile_fun_type_arg : I.fun_type_param Region.reg -> _ O.Named_fun.fun_type_arg =
+        fun { value = (pat, type_expr) ; _ } ->
+          let name = match get_p_variable pat with
+            | Some pvar -> pvar | None -> failwith "Expected pattern variable"
+          in
+          let type_expr = snd type_expr in
+          { name = name#payload; type_expr }
       in
-      List.map ~f:compile_fun_type_arg (nsepseq_to_list fta.inside)
+      List.map ~f:compile_fun_type_arg (sep_or_term_to_list fta.value.inside)
     in
     let type_expr = te2 in
     return @@ T_named_fun (fun_type_args, type_expr)
@@ -423,55 +435,50 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
   | T_Int t ->
     let s, z = t#payload in
     return @@ T_int (s, z)
-  | T_NamePath { value = { module_name; field; _ }; _ } ->
-    let module_path = TODO_do_in_parsing.mvar module_name in
-    let field_as_open = TODO_do_in_parsing.field_as_open_t t in
-    return @@ T_module_open_in { module_path; field; field_as_open }
-  | T_ParameterOf { value; region } ->
+  | T_NamePath { value = { namespace_path; property; _ }; _ } ->
+    let namespace_path = List.Ne.of_list @@ nsepseq_to_list namespace_path in
+    let module_path = List.Ne.map TODO_do_in_parsing.mvar namespace_path in
+    let field_as_open, property = match TODO_do_in_parsing.field_as_open_t property with
+      | Some t -> true, t | None -> false, property
+    in
+    let field = match get_ty_variable property with
+      | Some tvar -> TODO_do_in_parsing.tvar tvar
+      | None -> failwith "Expected variable property."
+    in
+    return @@ T_module_access { module_path; field; field_as_open }
+  | T_ParameterOf { value = { namespace_path ; _ } ; region } ->
     let loc = Location.lift region in
+    let namespace_path = TODO_do_in_parsing.selection_path namespace_path in
+    let namespace_path = List.Ne.map TODO_do_in_parsing.mvar namespace_path in
     return
     @@ T_module_access
-         { module_path = (nseq_map TODO_do_in_parsing.mvar <@ nsepseq_to_nseq) value
+         { module_path = namespace_path
          ; field = Ligo_prim.Type_var.of_input_var ~loc "$parameter"
          ; field_as_open = false
          }
   | T_Union t ->
     let fields =
-      let destruct_obj (x : I.obj_type) =
-        let I.{ attributes; ne_elements; _ } = x.value in
-        let obj =
-          Region.wrap_ghost
-            I.
-              { compound = None (* (I.field_decl Region.reg, I.semi) nsepseq *)
-              ; ne_elements
-              ; terminator = None
-              ; attributes = []
-              }
-        in
-        ( () (* , t_record_raw ~loc (Non_linear_rows.make lst) *)
-        , I.TObject obj
-        , TODO_do_in_parsing.conv_attrs attributes )
+      let destruct_obj (x : I.type_expr I._object) : unit * I.type_expr * O.Attribute.t list =
+        ((), I.T_Object x, [])
       in
-      let lst = List.map ~f:destruct_obj (nsepseq_to_list t) in
+      let lst = List.map ~f:destruct_obj (nsep_or_pref_to_list t.value) in
       O.Non_linear_disc_rows.make lst
     in
-    (* locs miscomputed here *)
-    let loc = TODO_do_in_parsing.t_disc_locs t in
     Location.wrap ~loc @@ O.T_disc_union fields
 
 
 let rec pattern : Eq.pattern -> Folding.pattern =
  fun p ->
-  match p with
-  | `Pattern p ->
+  (* match p with *)
+  (* | `Pattern p -> *)
     let loc = Location.lift (I.pattern_to_region p) in
     let return = Location.wrap ~loc in
     (match p with
-    | PConstr _p -> TODO_do_in_parsing.unused_node ()
-    | PAssign _p -> TODO_do_in_parsing.unused_node ()
-    | PDestruct _p -> TODO_do_in_parsing.unused_node ()
-    | PRest p -> return @@ O.P_rest (TODO_do_in_parsing.labelize p.value.rest#payload)
-    | PVar p ->
+    | P_Ctor _p -> TODO_do_in_parsing.unused_node ()
+    (* | P_Assign _p -> TODO_do_in_parsing.unused_node () *)
+    (* | PDestruct _p -> TODO_do_in_parsing.unused_node () *)
+    (* | PRest p -> return @@ O.P_rest (TODO_do_in_parsing.labelize p.value.rest#payload) *)
+    | P_Var p ->
       let I.{ variable; attributes } = r_fst p in
       (match attributes with
       | [] -> return @@ P_var (TODO_do_in_parsing.var variable)
@@ -479,7 +486,7 @@ let rec pattern : Eq.pattern -> Folding.pattern =
         let attr = TODO_do_in_parsing.conv_attr hd in
         let p = { p with value = { p.value with attributes = tl } } in
         return @@ P_attr (attr, pattern_of_pattern @@ I.PVar p))
-    | PObject o ->
+    | P_Object o ->
       let lps =
         List.map
           ~f:(fun p ->
@@ -488,43 +495,45 @@ let rec pattern : Eq.pattern -> Folding.pattern =
           (Utils.nsepseq_to_list o.value.inside)
       in
       return @@ P_pun_record lps
-    | PArray p ->
+    | P_Array p ->
       let p = nsepseq_to_list p.value.inside in
-      return @@ P_tuple (List.map ~f:pattern_of_pattern p))
-  | `Expr e ->
-    let loc = Location.lift (I.expr_to_region e) in
-    let return = Location.wrap ~loc in
-    (match e with
-    | EPar x -> pattern (pattern_of_expr x.value.inside)
-    | EVar v -> return @@ O.P_var (TODO_do_in_parsing.var v)
-    | EUnit _ -> return @@ P_unit
-    | EAnnot { value = expr, _, type_expr; _ } ->
-      return @@ P_typed (type_expr, pattern_of_expr expr)
-    | EArray { value = items; _ } ->
-      (match sepseq_to_list items.inside with
-      | [] -> return @@ P_list (List [])
-      | [ Expr_entry hd; Rest_entry tl ] ->
-        (* [x ,...[y, ...z]] *)
-        (* see https://tezos-dev.slack.com/archives/GMHV0U3Q9/p1670929406569099 *)
-        return @@ P_list (Cons (pattern_of_expr hd, pattern_of_expr tl.value.expr))
-      | lst ->
-        return
-        @@ P_tuple
-             (List.map lst ~f:(function
-                 | Expr_entry x -> pattern_of_expr x
-                 | _ -> failwith "incorrect pattern")))
-    | EObject obj ->
-      let lst = nsepseq_to_list obj.value.inside in
-      let aux : I.property -> (_, _) O.Field.t = function
-        | Punned_property { value = EVar v; _ } ->
-          let loc = Location.File v#region in
-          Punned (Location.wrap ~loc @@ O.Label.of_string v#payload)
-        | Property { value = { name = EVar v; value; _ }; _ } ->
-          Complete (O.Label.of_string v#payload, pattern_of_expr value)
-        | _ -> failwith "unrecognized pattern"
-      in
-      return @@ P_pun_record (List.map ~f:aux lst)
-    | _ -> failwith "unrecognized pattern")
+      return @@ P_tuple (List.map ~f:pattern_of_pattern p)
+    | _ -> failwith "IMPLEMENT ME"
+    )
+  (* | `Expr e -> *)
+  (*   let loc = Location.lift (I.expr_to_region e) in *)
+  (*   let return = Location.wrap ~loc in *)
+  (*   (match e with *)
+  (*   | EPar x -> pattern (pattern_of_expr x.value.inside) *)
+  (*   | EVar v -> return @@ O.P_var (TODO_do_in_parsing.var v) *)
+  (*   | EUnit _ -> return @@ P_unit *)
+  (*   | EAnnot { value = expr, _, type_expr; _ } -> *)
+  (*     return @@ P_typed (type_expr, pattern_of_expr expr) *)
+  (*   | EArray { value = items; _ } -> *)
+  (*     (match sepseq_to_list items.inside with *)
+  (*     | [] -> return @@ P_list (List []) *)
+  (*     | [ Expr_entry hd; Rest_entry tl ] -> *)
+  (*       (\* [x ,...[y, ...z]] *\) *)
+  (*       (\* see https://tezos-dev.slack.com/archives/GMHV0U3Q9/p1670929406569099 *\) *)
+  (*       return @@ P_list (Cons (pattern_of_expr hd, pattern_of_expr tl.value.expr)) *)
+  (*     | lst -> *)
+  (*       return *)
+  (*       @@ P_tuple *)
+  (*            (List.map lst ~f:(function *)
+  (*                | Expr_entry x -> pattern_of_expr x *)
+  (*                | _ -> failwith "incorrect pattern"))) *)
+  (*   | EObject obj -> *)
+  (*     let lst = nsepseq_to_list obj.value.inside in *)
+  (*     let aux : I.property -> (_, _) O.Field.t = function *)
+  (*       | Punned_property { value = EVar v; _ } -> *)
+  (*         let loc = Location.File v#region in *)
+  (*         Punned (Location.wrap ~loc @@ O.Label.of_string v#payload) *)
+  (*       | Property { value = { name = EVar v; value; _ }; _ } -> *)
+  (*         Complete (O.Label.of_string v#payload, pattern_of_expr value) *)
+  (*       | _ -> failwith "unrecognized pattern" *)
+  (*     in *)
+  (*     return @@ P_pun_record (List.map ~f:aux lst) *)
+  (*   | _ -> failwith "unrecognized pattern") *)
 
 
 (* in JSLIGO, instruction ; statements and declaration are all statement *)
