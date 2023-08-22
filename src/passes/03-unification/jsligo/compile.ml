@@ -95,6 +95,15 @@ module TODO_do_in_parsing = struct
   let mvar x = Ligo_prim.Module_var.of_input_var ~loc:(Location.File x#region) x#payload
   let var x = Ligo_prim.Value_var.of_input_var ~loc:(Location.File x#region) x#payload
   let tvar x = Ligo_prim.Type_var.of_input_var ~loc:(Location.File x#region) x#payload
+
+  let selection_path (t : I.namespace_selection) = match t with
+    | M_Alias p -> List.Ne.singleton p
+    | M_Path path ->
+      let path = path.value in
+      let last = path.property in
+      let init = path.namespace_path in
+      let init = nsepseq_to_list init in
+      List.Ne.of_list (init @ [ last ])
 end
 
 module Eq = struct
@@ -128,6 +137,11 @@ let rec expr : Eq.expr -> Folding.expr =
   let compile_unary_op (sign : AST.Operators.op) op =
     let I.{ op = _; arg } = r_fst op in
     O.E_unary_op { operator = Location.wrap ~loc sign; arg }
+  in
+  let get_variable (e : I.expr) =
+    match e with
+    | E_Var v -> Some v
+    | _ -> None
   in
   match e with
   | E_Var var -> return @@ O.E_variable (TODO_do_in_parsing.var var)
@@ -202,7 +216,7 @@ let rec expr : Eq.expr -> Folding.expr =
       nsepseq_to_nseq @@ nsepseq_map TODO_do_in_parsing.mvar namespace_path
     in
     return @@ E_module_open_in { module_path = namespace_path; field = property; field_as_open = property_as_open }
-  | E_Fun f ->
+  | E_ArrowFun f ->
     let I.{ type_vars; parameters; rhs_type; arrow = _; fun_body } = f.value in
     let type_params =
       let open Simple_utils.Option in
@@ -269,28 +283,36 @@ let rec expr : Eq.expr -> Folding.expr =
   | E_Ternary { value = { condition; truthy; falsy; _ }; _ } ->
     let ifnot = Some falsy in
     return @@ E_cond { test = condition; ifso = truthy; ifnot }
-  | E_ContractOf { value = c; _ } ->
-    let selection = c.namespace_path.value.inside in
-    let lst = List.Ne.map TODO_do_in_parsing.mvar (nsepseq_to_nseq ) in
+  | E_ContractOf { value = { namespace_path = { value = { inside = selection ; _ }; _ }; _ }; _ } ->
+    let selection = TODO_do_in_parsing.selection_path selection in
+    let lst = List.Ne.map TODO_do_in_parsing.mvar selection in
     return @@ E_contract lst
-  | EPrefix { region = _; value = { update_type = Increment op; variable } } ->
+  | E_PreIncr { region = _; value = { op ; arg } } ->
     let loc = Location.lift op#region in
     let pre_op = Location.wrap ~loc O.Prefix_postfix.Increment in
+    let variable = match get_variable arg with
+      | Some variable -> variable | _ -> failwith "Expected variable in prefix op." in
     let variable = TODO_do_in_parsing.var variable in
     return @@ E_prefix { pre_op; variable }
-  | EPrefix { region = _; value = { update_type = Decrement op; variable } } ->
+  | E_PreDecr { region = _; value = { op ; arg } } ->
     let loc = Location.lift op#region in
     let pre_op = Location.wrap ~loc O.Prefix_postfix.Decrement in
+    let variable = match get_variable arg with
+      | Some variable -> variable | _ -> failwith "Expected variable in prefix op." in
     let variable = TODO_do_in_parsing.var variable in
     return @@ E_prefix { pre_op; variable }
-  | EPostfix { region = _; value = { update_type = Increment op; variable } } ->
+  | E_PostIncr { region = _; value = { op ; arg } } ->
     let loc = Location.lift op#region in
     let post_op = Location.wrap ~loc O.Prefix_postfix.Increment in
+    let variable = match get_variable arg with
+      | Some variable -> variable | _ -> failwith "Expected variable in postfix op." in
     let variable = TODO_do_in_parsing.var variable in
     return @@ E_postfix { post_op; variable }
-  | EPostfix { region = _; value = { update_type = Decrement op; variable } } ->
+  | E_PostDecr { region = _; value = { op ; arg } } ->
     let loc = Location.lift op#region in
     let post_op = Location.wrap ~loc O.Prefix_postfix.Decrement in
+    let variable = match get_variable arg with
+      | Some variable -> variable | _ -> failwith "Expected variable in postfix op." in
     let variable = TODO_do_in_parsing.var variable in
     return @@ E_postfix { post_op; variable }
 
@@ -310,7 +332,7 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
   | T_Array { value = { inside; _ } ; _ } ->
     let t = nsepseq_to_nseq inside.value.inside in
     return_attr attributes ~no_attr:(T_prod t) ~attr:(fun attributes ->
-        I.TProd { inside; attributes })
+        I.T_Array { inside; attributes })
   | TSum { value = { variants; attributes; _ } as v; region } ->
     let destruct : I.variant -> _ =
      fun { tuple; attributes } ->
@@ -510,17 +532,18 @@ let rec statement : Eq.statement -> Folding.statement =
   let loc = Location.lift (I.statement_to_region s) in
   let return = Location.wrap ~loc in
   match s with
-  | SInterface _ | SNamespace _ | SImport _ | SExport _ | SLet _ | SConst _ | SType _ ->
+  | S_Export _ | S_Decl _ | S_Attr _ ->
     return @@ O.S_decl s
-  | SBlock _
-  | SExpr _
-  | SCond _
-  | SReturn _
-  | SSwitch _
-  | SBreak _
-  | SWhile _
-  | SForOf _
-  | SFor _ -> return @@ S_instr s
+  | S_Block _
+  | S_Expr _
+  | S_Return _
+  | S_Switch _
+  | S_Break _
+  | S_Continue _
+  | S_If _
+  | S_While _
+  | S_ForOf _
+  | S_For _ -> return @@ S_instr s
 
 
 and instruction : Eq.instruction -> Folding.instruction =
