@@ -33,23 +33,30 @@ and decompile_attr : AST.Attribute.t -> CST.attribute =
  fun { key; value } -> ghost_attr key (Option.map ~f:(fun x -> Attr.String x) value)
 (* ^ XXX Attr.String or Attr.Ident? *)
 
+and decompile_to_namespace_path
+    : type a.
+      AST.Mod_variable.t Simple_utils.List.Ne.t -> a
+      -> a CST.namespace_path
+  =
+ fun module_path field ->
+  let f v = ghost_ident @@ Format.asprintf "%a" AST.Mod_variable.pp v in
+  let module_path = List.Ne.map f module_path in
+  let namespace_path = Utils.nsepseq_of_nseq ~sep:ghost_dot module_path in
+  (* XXX: What is [field_as_open]?? Do we expect module path with more than 1 element here? *)
+  CST.{ namespace_path = namespace_path; selector = ghost_dot; property = field }
 
-and decompile_mod_path
+
+and decompile_namespace_path
     : type a.
       (AST.Mod_variable.t Simple_utils.List.Ne.t, a) AST.Mod_access.t
-      -> a CST.module_access
+      -> a CST.namespace_path
   =
  fun { module_path; field; field_as_open = _ } ->
-  let f = Format.asprintf "%a" AST.Mod_variable.pp in
-  let module_name =
-    (* FIXME should create nested `CST.module_access` instead, this is a workaround
-       created because `CST.module_access` will accept module path soon.
-       It works correctly for pretty printers, but the CST itself is incorrect,
-       because it contains one module name with dots instead of nested module applications *)
-    ghost_ident @@ String.concat ~sep:"." @@ List.map ~f @@ Utils.nseq_to_list module_path
-  in
+  let f v = ghost_ident @@ Format.asprintf "%a" AST.Mod_variable.pp v in
+  let module_path = List.Ne.map f module_path in
+  let namespace_path = Utils.nsepseq_of_nseq ~sep:ghost_dot module_path in
   (* XXX: What is [field_as_open]?? Do we expect module path with more than 1 element here? *)
-  CST.{ module_name; selector = ghost_dot; field }
+  CST.{ namespace_path = namespace_path; selector = ghost_dot; property = field }
 
 
 (* Decompilers: expect that all Ast nodes are initial, i.e.
@@ -60,27 +67,27 @@ and expr : (CST.expr, CST.type_expr, CST.pattern, unit, unit) AST.expression_ ->
   let w = Region.wrap_ghost in
   match Location.unwrap e with
   | E_attr (_attr, e) -> e (* FIXME should EAttr be added to JsLIGO CST?? *)
-  | E_variable v -> EVar (ghost_ident (Format.asprintf "%a" AST.Variable.pp v))
+  | E_variable v -> E_Var (ghost_ident (Format.asprintf "%a" AST.Variable.pp v))
   | E_binary_op { operator; left; right } ->
     let binop op : 'a CST.wrap CST.bin_op CST.reg =
       w @@ CST.{ op; arg1 = left; arg2 = right }
     in
     (match Location.unwrap operator with
-    | PLUS -> EArith (Add (binop ghost_plus))
-    | MINUS -> EArith (Sub (binop ghost_minus))
-    | STAR -> EArith (Mult (binop ghost_times))
-    | SLASH -> EArith (Div (binop ghost_slash))
-    | PRCENT -> EArith (Mod (binop ghost_rem))
-    | DAMPERSAND -> ELogic (BoolExpr (And (binop ghost_bool_and)))
-    | LT -> ELogic (CompExpr (Lt (binop ghost_lt)))
-    | GT -> ELogic (CompExpr (Gt (binop ghost_gt)))
-    | GE -> ELogic (CompExpr (Geq (binop ghost_ge)))
-    | LE -> ELogic (CompExpr (Leq (binop ghost_le)))
-    | SEQ -> ELogic (CompExpr (Equal (binop ghost_eq)))
-    | LTGT -> ELogic (CompExpr (Neq (binop ghost_ne)))
-    | DPIPE -> ELogic (BoolExpr (Or (binop ghost_bool_or)))
-    | DEQ -> ELogic (CompExpr (Equal (binop ghost_eq2)))
-    | EQ_SLASH_EQ -> ELogic (CompExpr (Neq (binop ghost_ne)))
+    | PLUS -> E_Add (binop ghost_plus)
+    | MINUS -> E_Sub (binop ghost_minus)
+    | STAR -> E_Mult (binop ghost_times)
+    | SLASH -> E_Div (binop ghost_slash)
+    | PRCENT -> E_Rem (binop ghost_rem)
+    | DAMPERSAND -> E_And (binop ghost_and)
+    | LT -> E_Lt (binop ghost_lt)
+    | GT -> E_Gt (binop ghost_gt)
+    | GE -> E_Geq (binop ghost_ge)
+    | LE -> E_Leq (binop ghost_le)
+    | SEQ -> E_Equal (binop ghost_eq) (* TODO: or it should be E_Assign? *)
+    | LTGT -> E_Neq (binop ghost_ne)
+    | DPIPE -> E_Or (binop ghost_or)
+    | DEQ -> E_Equal (binop ghost_eq2)
+    | EQ_SLASH_EQ -> E_Neq (binop ghost_ne)
     | DCOLON
     | WORD_LSL
     | WORD_LSR
