@@ -339,8 +339,9 @@ let%expect_test _ =
     {|
     Everything at the top-level was executed.
     - tester exited with value <fun>.
-    - test exited with value [(() , Mutation at: File "adder.mligo", line 1, characters 58-63:
-      1 | let main (p : int) (k : int) : operation list * int = [], p + k
+    - test exited with value [(() , Mutation at: File "adder.mligo", line 2, characters 58-63:
+      1 | [@entry]
+      2 | let main (p : int) (k : int) : operation list * int = [], p + k
                                                                     ^^^^^
 
     Replacing by: p ^ k.

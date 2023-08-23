@@ -15,9 +15,7 @@ let%expect_test _ =
 (* view + #import : no view expected *)
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "view_import.mligo" ];
-  [%expect
-    {| 
-    { parameter unit ; storage int ; code { CDR ; NIL operation ; PAIR } } |}]
+  [%expect {| { parameter unit ; storage int ; code { CDR ; NIL operation ; PAIR } } |}]
 
 (* view inside module : no view expected *)
 let%expect_test _ =
@@ -96,11 +94,11 @@ let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; bad_test "views_shadow.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative/views_shadow.mligo", line 3, characters 12-14:
-      2 |
-      3 | [@view] let v1 (n : int) (s: int) : int = s + n + 1
-                      ^^
-      4 | let v1 (n : int) (s: int) : int = s + n + 111111
+    File "../../test/contracts/negative/views_shadow.mligo", line 4, characters 4-6:
+      3 | [@view]
+      4 | let v1 (n : int) (s : int) : int = s + n + 1
+              ^^
+      5 |
 
     This declaration holds an annotation and is later shadowed. |}]
 
@@ -108,11 +106,11 @@ let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; bad_test "views_shadow_top_pat.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative/views_shadow_top_pat.mligo", line 3, characters 12-14:
-      2 |
-      3 | [@view] let v1 = fun (n : int) (s : int) : int -> s + n + 1
-                      ^^
-      4 | let v1 = fun (n : int) (s: int) : int -> s + n + 111111
+    File "../../test/contracts/negative/views_shadow_top_pat.mligo", line 4, characters 4-6:
+      3 | [@view]
+      4 | let v1 = fun (n : int) (s : int) : int -> s + n + 1
+              ^^
+      5 |
 
     This declaration holds an annotation and is later shadowed. |}]
 

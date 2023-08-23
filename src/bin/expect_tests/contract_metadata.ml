@@ -28,11 +28,11 @@ let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; test "metadata_tzip16.mligo"; "-m"; entrypoint ];
   [%expect
     {|
-    File "../../test/contracts/contract_metadata/metadata_tzip16.mligo", line 20, characters 16-19:
-     19 |      data : int;
-     20 |      metadata : nat
+    File "../../test/contracts/contract_metadata/metadata_tzip16.mligo", line 21, characters 16-19:
+     20 |      data : int;
+     21 |      metadata : nat
                           ^^^
-     21 |     }
+     22 |     }
     :
     Warning: If the following metadata is meant to be TZIP-16 compliant,
     then it should be a 'big_map' from 'string' to 'bytes'.
@@ -48,11 +48,11 @@ let%expect_test _ =
     [ "compile"; "storage"; test "metadata_tzip16.mligo"; "-m"; entrypoint; storage ];
   [%expect
     {|
-    File "../../test/contracts/contract_metadata/metadata_tzip16.mligo", line 20, characters 16-19:
-     19 |      data : int;
-     20 |      metadata : nat
+    File "../../test/contracts/contract_metadata/metadata_tzip16.mligo", line 21, characters 16-19:
+     20 |      data : int;
+     21 |      metadata : nat
                           ^^^
-     21 |     }
+     22 |     }
     :
     Warning: If the following metadata is meant to be TZIP-16 compliant,
     then it should be a 'big_map' from 'string' to 'bytes'.
@@ -69,11 +69,11 @@ let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; test "metadata_tzip16.jsligo"; "-m"; entrypoint ];
   [%expect
     {|
-    File "../../test/contracts/contract_metadata/metadata_tzip16.jsligo", line 18, characters 14-17:
-     17 |     data: int,
-     18 |     metadata: nat
+    File "../../test/contracts/contract_metadata/metadata_tzip16.jsligo", line 19, characters 14-17:
+     18 |     data: int,
+     19 |     metadata: nat
                         ^^^
-     19 |   };
+     20 |   };
     :
     Warning: If the following metadata is meant to be TZIP-16 compliant,
     then it should be a 'big_map' from 'string' to 'bytes'.
@@ -89,11 +89,11 @@ let%expect_test _ =
     [ "compile"; "storage"; test "metadata_tzip16.jsligo"; "-m"; entrypoint; storage ];
   [%expect
     {|
-    File "../../test/contracts/contract_metadata/metadata_tzip16.jsligo", line 18, characters 14-17:
-     17 |     data: int,
-     18 |     metadata: nat
+    File "../../test/contracts/contract_metadata/metadata_tzip16.jsligo", line 19, characters 14-17:
+     18 |     data: int,
+     19 |     metadata: nat
                         ^^^
-     19 |   };
+     20 |   };
     :
     Warning: If the following metadata is meant to be TZIP-16 compliant,
     then it should be a 'big_map' from 'string' to 'bytes'.
@@ -110,13 +110,12 @@ let%expect_test _ =
 let%expect_test _ =
   let entrypoint = "Entry_invalid_metadata_2" in
   run_ligo_good [ "compile"; "contract"; test "metadata_tzip16.mligo"; "-m"; entrypoint ];
-  [%expect
-    {|
-    File "../../test/contracts/contract_metadata/metadata_tzip16.mligo", line 34, characters 16-31:
-     33 |      data : int;
-     34 |      metadata : (bytes, string) big_map
+  [%expect{|
+    File "../../test/contracts/contract_metadata/metadata_tzip16.mligo", line 36, characters 16-31:
+     35 |      data : int;
+     36 |      metadata : (bytes, string) big_map
                           ^^^^^^^^^^^^^^^
-     35 |     }
+     37 |     }
     :
     Warning: If the following metadata is meant to be TZIP-16 compliant,
     then it should be a 'big_map' from 'string' to 'bytes'.
@@ -132,13 +131,12 @@ let%expect_test _ =
   in
   run_ligo_good
     [ "compile"; "storage"; test "metadata_tzip16.mligo"; "-m"; entrypoint; storage ];
-  [%expect
-    {|
-    File "../../test/contracts/contract_metadata/metadata_tzip16.mligo", line 34, characters 16-31:
-     33 |      data : int;
-     34 |      metadata : (bytes, string) big_map
+  [%expect{|
+    File "../../test/contracts/contract_metadata/metadata_tzip16.mligo", line 36, characters 16-31:
+     35 |      data : int;
+     36 |      metadata : (bytes, string) big_map
                           ^^^^^^^^^^^^^^^
-     35 |     }
+     37 |     }
     :
     Warning: If the following metadata is meant to be TZIP-16 compliant,
     then it should be a 'big_map' from 'string' to 'bytes'.
@@ -155,11 +153,11 @@ let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; test "metadata_tzip16.jsligo"; "-m"; entrypoint ];
   [%expect
     {|
-    File "../../test/contracts/contract_metadata/metadata_tzip16.jsligo", line 30, characters 14-36:
-     29 |     data: int,
-     30 |     metadata: big_map<bytes, string>
+    File "../../test/contracts/contract_metadata/metadata_tzip16.jsligo", line 32, characters 14-36:
+     31 |     data: int,
+     32 |     metadata: big_map<bytes, string>
                         ^^^^^^^^^^^^^^^^^^^^^^
-     31 |   };
+     33 |   };
     :
     Warning: If the following metadata is meant to be TZIP-16 compliant,
     then it should be a 'big_map' from 'string' to 'bytes'.
@@ -177,11 +175,11 @@ let%expect_test _ =
     [ "compile"; "storage"; test "metadata_tzip16.jsligo"; "-m"; entrypoint; storage ];
   [%expect
     {|
-    File "../../test/contracts/contract_metadata/metadata_tzip16.jsligo", line 30, characters 14-36:
-     29 |     data: int,
-     30 |     metadata: big_map<bytes, string>
+    File "../../test/contracts/contract_metadata/metadata_tzip16.jsligo", line 32, characters 14-36:
+     31 |     data: int,
+     32 |     metadata: big_map<bytes, string>
                         ^^^^^^^^^^^^^^^^^^^^^^
-     31 |   };
+     33 |   };
     :
     Warning: If the following metadata is meant to be TZIP-16 compliant,
     then it should be a 'big_map' from 'string' to 'bytes'.
@@ -200,11 +198,11 @@ let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; test "metadata_tzip16.mligo"; "-m"; entrypoint ];
   [%expect
     {|
-    File "../../test/contracts/contract_metadata/metadata_tzip16.mligo", line 48, characters 33-48:
-     47 |      data : int;
-     48 |      [@annot metadata] notdata : (bytes, string) big_map
+    File "../../test/contracts/contract_metadata/metadata_tzip16.mligo", line 51, characters 33-48:
+     50 |      data : int;
+     51 |      [@annot metadata] notdata : (bytes, string) big_map
                                            ^^^^^^^^^^^^^^^
-     49 |     }
+     52 |     }
     :
     Warning: If the following metadata is meant to be TZIP-16 compliant,
     then it should be a 'big_map' from 'string' to 'bytes'.
@@ -222,11 +220,11 @@ let%expect_test _ =
     [ "compile"; "storage"; test "metadata_tzip16.mligo"; "-m"; entrypoint; storage ];
   [%expect
     {|
-    File "../../test/contracts/contract_metadata/metadata_tzip16.mligo", line 48, characters 33-48:
-     47 |      data : int;
-     48 |      [@annot metadata] notdata : (bytes, string) big_map
+    File "../../test/contracts/contract_metadata/metadata_tzip16.mligo", line 51, characters 33-48:
+     50 |      data : int;
+     51 |      [@annot metadata] notdata : (bytes, string) big_map
                                            ^^^^^^^^^^^^^^^
-     49 |     }
+     52 |     }
     :
     Warning: If the following metadata is meant to be TZIP-16 compliant,
     then it should be a 'big_map' from 'string' to 'bytes'.
