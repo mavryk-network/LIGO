@@ -54,41 +54,62 @@ let mk_mod_path :
 
 (* Reductions on error *)
 
-(* %on_error_reduce gt *)
-(* %on_error_reduce nseq(Attr) *)
-(* %on_error_reduce bin_op(add_expr_level,PLUS,mult_expr_level) *)
-(* %on_error_reduce bin_op(add_expr_level,MINUS,mult_expr_level) *)
-(* %on_error_reduce app_expr_level *)
-(* %on_error_reduce bin_op(disj_expr_level,BOOL_OR,conj_expr_level) *)
-(* %on_error_reduce type_expr *)
-(* %on_error_reduce core_type *)
-(* %on_error_reduce chevrons(type_ctor_args) *)
-(* %on_error_reduce disj_expr_level *)
-(* %on_error_reduce core_expr *)
-(* %on_error_reduce add_expr_level *)
-(* %on_error_reduce nsepseq(binding_initializer,COMMA) *)
-(* %on_error_reduce nsepseq(namespace_name,DOT) *)
-(* %on_error_reduce base_stmt(statement) *)
-(* %on_error_reduce unary_expr_level *)
-(* %on_error_reduce bin_op(comp_expr_level,NE,add_expr_level) *)
-(* %on_error_reduce bin_op(comp_expr_level,LT,add_expr_level) *)
-(* %on_error_reduce bin_op(comp_expr_level,LE,add_expr_level) *)
-(* %on_error_reduce bin_op(comp_expr_level,gt,add_expr_level) *)
-(* %on_error_reduce bin_op(comp_expr_level,ge,add_expr_level) *)
-(* %on_error_reduce bin_op(comp_expr_level,EQ2,add_expr_level) *)
-(* %on_error_reduce expr_stmt *)
-(* %on_error_reduce expr *)
-(* %on_error_reduce comp_expr_level *)
-(* %on_error_reduce conj_expr_level *)
-(* %on_error_reduce bin_op(conj_expr_level,BOOL_AND,comp_expr_level) *)
-(* %on_error_reduce return_stmt *)
-(* %on_error_reduce nsepseq(statement,SEMI) *)
-(* %on_error_reduce nsepseq(variant,VBAR) *)
-(* %on_error_reduce nsepseq(object_type,VBAR) *)
-(* %on_error_reduce nsepseq(property_name,COMMA) *)
-(* %on_error_reduce namespace_var_t *)
-(* %on_error_reduce for_stmt(statement) *)
-(* %on_error_reduce chevrons(nsepseq(type_var,COMMA)) *)
+%on_error_reduce
+  chevrons(sep_or_term(type_var,COMMA))
+  type_name
+  namespace_selection
+  namespace_path(namespace_name)
+  nsepseq(variant,VBAR)
+  nsepseq(object_type,VBAR)
+  chevrons(nsep_or_term(type_ctor_arg(type_expr),COMMA))
+  nseq(__anonymous_4)
+  nseq(__anonymous_1(object_type,VBAR))
+  ctor
+  app_expr_level
+  unary_expr_level
+  add_expr_level
+  eq_expr_level
+  object_or_array
+  var_path
+  path_expr
+  bit_shift_level
+  core_expr
+  conj_expr_level
+  nseq(selection)
+  disj_expr_level
+  non_object_expr
+  bin_op(disj_expr_level,XOR,conj_expr_level)
+  bin_op(comp_expr_level,LT,add_expr_level)
+  bin_op(add_expr_level,PLUS,mult_expr_level)
+  bin_op(add_expr_level,MINUS,mult_expr_level)
+  bin_op(comp_expr_level,LE,add_expr_level)
+  gt
+  bin_op(comp_expr_level,gt,add_expr_level)
+  bin_op(comp_expr_level,ge,add_expr_level)
+  bin_op(conj_expr_level,BIT_AND,bit_shift_level)
+  bin_op(bit_shift_level,BIT_SR,comp_expr_level)
+  bin_op(bit_shift_level,BIT_SL,comp_expr_level)
+  bin_op(conj_expr_level,AND,bit_shift_level)
+  bin_op(disj_expr_level,VBAR,conj_expr_level)
+  bin_op(disj_expr_level,OR,conj_expr_level)
+  bin_op(disj_expr_level,BIT_XOR,conj_expr_level)
+  empty_return_stmt
+  return_stmt
+  nsepseq(val_binding,COMMA)
+%on_error_reduce
+  ternary_expr(core_expr,pre_expr_stmt)
+  non_if_stmt(statement)
+  last_or_more(statement)
+  expr_stmt
+  declaration
+  core_stmt(statement)
+  empty_for_stmt
+  stmt_not_starting_with_expr_nor_block
+  last_or_more(stmt_not_starting_with_expr_nor_block)
+%on_error_reduce
+  open_stmt_not_starting_with_expr_nor_block2(right_rec_stmt(stmt_not_starting_with_expr_nor_block2))
+  last_or_more(block_stmt)
+
 
 (* See [ParToken.mly] for the definition of tokens. *)
 
@@ -663,7 +684,7 @@ core_stmt (right_stmt):
 closed_non_if_stmt: non_if_stmt (closed_non_if_stmt) { $1 }
 
 last_or_more (left_stmt):
-  left_stmt ";"?           { ($1,$2), [] }
+  left_stmt ioption(";")   { ($1,$2), [] }
 | left_stmt ";" after_semi { nseq_cons ($1, Some $2) $3 }
 
 after_semi:
