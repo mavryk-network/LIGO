@@ -88,9 +88,9 @@ let compile ~raise =
       let open Simple_utils.Option in
       let* { switchee; cases } = get_i_switch i in
       let cases = List.Ne.to_list cases in
-      let* { struct_; path } = get_e_proj switchee in
+      let* (struct_, path) = get_e_proj switchee in
       let* matchee_var = get_e_variable struct_ in
-      let* proj_name = Selection.get_field_name path in
+      let* proj_name = failwith "TODO disc_union_types" (* Selection.get_field_name path *) in
       let* cases =
         Option.all
         @@ List.map

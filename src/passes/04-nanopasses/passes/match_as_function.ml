@@ -33,16 +33,18 @@ let object_to_matching_clause ~raise
       (Label.of_string (Variable.to_name_exn ctor))
       params
   in
-  function
-  | Property (name, value) ->
-    (match get_e name, get_e value with
-    | E_variable ctor, E_poly_fun { parameters; ret_type; body; type_params = None } ->
-      { pattern = pattern_of_params ctor parameters ret_type; rhs = expr_in_block body }
-    | E_variable ctor, E_block_poly_fun { parameters; ret_type; body; type_params = None }
-      -> { pattern = pattern_of_params ctor parameters ret_type; rhs = body }
-    | _, _ -> raise.error (invalid_case name))
-  | Punned_property e | Property_rest e ->
-    raise.error (unsupported_match_object_property e)
+  ignore pattern_of_params;
+  failwith "TODO match_as_function"
+  (* function *)
+  (* | Property (name, value) -> *)
+  (*   (match get_e name, get_e value with *)
+  (*   | E_variable ctor, E_poly_fun { parameters; ret_type; body; type_params = None } -> *)
+  (*     { pattern = pattern_of_params ctor parameters ret_type; rhs = expr_in_block body } *)
+  (*   | E_variable ctor, E_block_poly_fun { parameters; ret_type; body; type_params = None } *)
+  (*     -> { pattern = pattern_of_params ctor parameters ret_type; rhs = body } *)
+  (*   | _, _ -> raise.error (invalid_case name)) *)
+  (* | Punned_property e | Property_rest e -> *)
+  (*   raise.error (unsupported_match_object_property e) *)
 
 
 let list_to_matching_clause ~raise : expr -> (pattern, block) Case.clause =
@@ -69,7 +71,8 @@ let compile ~raise =
     | E_call (f, { wrap_content = [ matchee; cases ]; location = _ }) ->
       (match get_e f, get_e cases with
       | E_variable v, E_object args when Variable.is_name v "match" ->
-        let cases = Simple_utils.List.Ne.map (object_to_matching_clause ~raise) args in
+        let cases = List.map ~f:(object_to_matching_clause ~raise) args in
+        let cases = List.Ne.of_list cases in
         e_match_block ~loc { expr = matchee; cases }
       | E_variable v, E_list args when Variable.is_name v "match" ->
         let cases = List.map ~f:(list_to_matching_clause ~raise) args in
