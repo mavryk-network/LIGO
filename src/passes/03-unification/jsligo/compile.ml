@@ -121,6 +121,8 @@ module Eq = struct
   type program = I.t
   type sig_expr = I.intf_expr
   type sig_entry = I.intf_entry
+
+  let not_part_of_the_language _ = assert false
 end
 
 let pattern_of_expr x = `Expr x
@@ -467,7 +469,7 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
     Location.wrap ~loc @@ O.T_disc_union fields
 
 
-let rec pattern : Eq.pattern -> Folding.pattern =
+let pattern : Eq.pattern -> Folding.pattern =
  fun p ->
  let loc = Location.lift (I.pattern_to_region p) in
  let return = Location.wrap ~loc in
@@ -524,26 +526,24 @@ let rec pattern : Eq.pattern -> Folding.pattern =
 (* in JSLIGO, instruction ; statements and declaration are all statement *)
 
 let block : Eq.block -> Folding.block =
- fun stmts ->
-  let loc =
-    nsepseq_foldl
-      Location.cover
-      Location.generated
-      (nsepseq_map (Location.lift <@ I.statement_to_region) stmts)
-  in
-  Location.wrap ~loc (nsepseq_to_nseq stmts)
+  fun stmts ->
+  let stmts = nseq_to_list stmts in
+  let locs = List.map ~f:(fun x -> Location.lift @@ I.statement_to_region @@ fst x) stmts in
+  let stmts = List.map ~f:fst stmts in
+  let loc = List.fold_left ~f:Location.cover ~init:Location.generated locs in
+  Location.wrap ~loc (List.Ne.of_list stmts)
 
-
-let mod_expr : Eq.mod_expr -> Folding.mod_expr =
- fun stmts ->
-  let loc =
-    Location.(
-      stmts
-      |> nsepseq_map (lift <@ I.statement_to_region)
-      |> nsepseq_foldl cover generated)
-  in
-  let stmts = stmts |> nsepseq_to_nseq |> nseq_map (fun x -> I.TopLevel (x, None)) in
-  Location.wrap ~loc (O.M_body I.{ statements = stmts; eof = ghost })
+(* It seems we do no have module expressions in JsLIGO? *)
+let mod_expr : Eq.mod_expr -> Folding.mod_expr = Eq.not_part_of_the_language
+ (* fun stmts ->  *)
+  (* let stmts = nseq_to_list stmts in *)
+  (* let locs = List.map ~f:(fun x -> Location.lift @@ I.statement_to_region @@ fst x) stmts in *)
+  (* let stmts = List.map ~f:fst stmts in *)
+  (* let loc = List.fold_left ~f:Location.cover ~init:Location.generated locs in *)
+  (* let decl : I.top_decl nseq = stmts |> List.map ~f:(function *)
+  (*       I.S_Decl d -> I.TL_Decl (d, None) *)
+  (*     | _ -> failwith "Something fishy?") |> List.Ne.of_list in *)
+  (* Location.wrap ~loc (O.M_body I.{ decl; eof = ghost }) *)
 
 
 let rec statement : Eq.statement -> Folding.statement =
