@@ -535,16 +535,16 @@ let block : Eq.block -> Folding.block =
   Location.wrap ~loc (List.Ne.of_list stmts)
 
 (* It seems we do no have module expressions in JsLIGO? *)
-let mod_expr : Eq.mod_expr -> Folding.mod_expr = Eq.not_part_of_the_language
- (* fun stmts ->  *)
-  (* let stmts = nseq_to_list stmts in *)
-  (* let locs = List.map ~f:(fun x -> Location.lift @@ I.statement_to_region @@ fst x) stmts in *)
-  (* let stmts = List.map ~f:fst stmts in *)
-  (* let loc = List.fold_left ~f:Location.cover ~init:Location.generated locs in *)
-  (* let decl : I.top_decl nseq = stmts |> List.map ~f:(function *)
-  (*       I.S_Decl d -> I.TL_Decl (d, None) *)
-  (*     | _ -> failwith "Something fishy?") |> List.Ne.of_list in *)
-  (* Location.wrap ~loc (O.M_body I.{ decl; eof = ghost }) *)
+let mod_expr : Eq.mod_expr -> Folding.mod_expr =
+ fun stmts ->
+  let stmts = nseq_to_list stmts in
+  let locs = List.map ~f:(fun x -> Location.lift @@ I.statement_to_region @@ fst x) stmts in
+  let stmts = List.map ~f:fst stmts in
+  let loc = List.fold_left ~f:Location.cover ~init:Location.generated locs in
+  let decl : I.top_decl nseq = stmts |> List.map ~f:(function
+        I.S_Decl d -> I.TL_Decl (d, None)
+      | _ -> failwith "Something fishy?") |> List.Ne.of_list in
+  Location.wrap ~loc (O.M_body I.{ decl; eof = ghost })
 
 
 let rec statement : Eq.statement -> Folding.statement =
