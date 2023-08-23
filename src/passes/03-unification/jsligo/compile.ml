@@ -75,22 +75,23 @@ module TODO_do_in_parsing = struct
     in
     (path, field), is_open *)
 
-  (* let control_flow_clause compile_statement (x : I.statement) =
+  let control_flow_clause compile_statement (x : I.statement) : (I.statement, I.statements) O.Test_clause.t =
     (* if the statement is a block containing a single instruction,
        we do not want to emit a ClauseBlock, but a ClauseInstr *)
     let single_stmt_block (x : I.statement) =
-      nsepseq_of_nseq ~sep:ghost (List.Ne.singleton x)
+      List.Ne.singleton @@ (x, None)
     in
     match Location.unwrap @@ compile_statement x with
-    | O.S_instr (I.SBlock { value = { inside; _ }; _ }) ->
-      (match nsepseq_to_list inside with
-      | [ one ] ->
+    | O.S_instr (I.S_Block { value = { inside; _ }; _ }) ->
+      (match nseq_to_list inside with
+      | [ one, _ ] ->
         (match Location.unwrap @@ compile_statement one with
         | S_instr i -> O.Test_clause.ClauseInstr i
         | _ -> O.Test_clause.ClauseBlock (single_stmt_block x))
-      | _ -> O.Test_clause.ClauseBlock inside)
+      | _ ->
+        O.Test_clause.ClauseBlock inside)
     | S_instr i -> O.Test_clause.ClauseInstr i
-    | _ -> O.Test_clause.ClauseBlock (single_stmt_block x) *)
+    | _ -> O.Test_clause.ClauseBlock (single_stmt_block x)
 
   let mvar x = Ligo_prim.Module_var.of_input_var ~loc:(Location.File x#region) x#payload
   let var x = Ligo_prim.Value_var.of_input_var ~loc:(Location.File x#region) x#payload
@@ -551,8 +552,12 @@ let rec statement : Eq.statement -> Folding.statement =
   let loc = Location.lift (I.statement_to_region s) in
   let return = Location.wrap ~loc in
   match s with
-  | S_Export _ | S_Decl _ | S_Attr _ ->
-    return @@ O.S_decl s
+  | S_Decl d ->
+    return @@ O.S_decl d
+  | S_Attr (attr, s) ->
+    return @@ O.S_attr (TODO_do_in_parsing.conv_attr attr, s)
+  | S_Export r ->
+    return @@ O.S_instr I.(S_Export r)
   | S_Block _
   | S_Expr _
   | S_Return _
