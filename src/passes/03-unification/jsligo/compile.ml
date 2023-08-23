@@ -469,71 +469,56 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
 
 let rec pattern : Eq.pattern -> Folding.pattern =
  fun p ->
-  (* match p with *)
-  (* | `Pattern p -> *)
-    let loc = Location.lift (I.pattern_to_region p) in
-    let return = Location.wrap ~loc in
-    (match p with
-    | P_Ctor _p -> TODO_do_in_parsing.unused_node ()
-    (* | P_Assign _p -> TODO_do_in_parsing.unused_node () *)
-    (* | PDestruct _p -> TODO_do_in_parsing.unused_node () *)
-    (* | PRest p -> return @@ O.P_rest (TODO_do_in_parsing.labelize p.value.rest#payload) *)
-    | P_Var p ->
-      let I.{ variable; attributes } = r_fst p in
-      (match attributes with
-      | [] -> return @@ P_var (TODO_do_in_parsing.var variable)
-      | hd :: tl ->
-        let attr = TODO_do_in_parsing.conv_attr hd in
-        let p = { p with value = { p.value with attributes = tl } } in
-        return @@ P_attr (attr, pattern_of_pattern @@ I.PVar p))
-    | P_Object o ->
-      let lps =
-        List.map
-          ~f:(fun p ->
-            let l = TODO_do_in_parsing.labelize_pattern p in
-            O.Field.Punned l)
-          (Utils.nsepseq_to_list o.value.inside)
-      in
-      return @@ P_pun_record lps
-    | P_Array p ->
-      let p = nsepseq_to_list p.value.inside in
-      return @@ P_tuple (List.map ~f:pattern_of_pattern p)
-    | _ -> failwith "IMPLEMENT ME"
-    )
-  (* | `Expr e -> *)
-  (*   let loc = Location.lift (I.expr_to_region e) in *)
-  (*   let return = Location.wrap ~loc in *)
-  (*   (match e with *)
-  (*   | EPar x -> pattern (pattern_of_expr x.value.inside) *)
-  (*   | EVar v -> return @@ O.P_var (TODO_do_in_parsing.var v) *)
-  (*   | EUnit _ -> return @@ P_unit *)
-  (*   | EAnnot { value = expr, _, type_expr; _ } -> *)
-  (*     return @@ P_typed (type_expr, pattern_of_expr expr) *)
-  (*   | EArray { value = items; _ } -> *)
-  (*     (match sepseq_to_list items.inside with *)
-  (*     | [] -> return @@ P_list (List []) *)
-  (*     | [ Expr_entry hd; Rest_entry tl ] -> *)
-  (*       (\* [x ,...[y, ...z]] *\) *)
-  (*       (\* see https://tezos-dev.slack.com/archives/GMHV0U3Q9/p1670929406569099 *\) *)
-  (*       return @@ P_list (Cons (pattern_of_expr hd, pattern_of_expr tl.value.expr)) *)
-  (*     | lst -> *)
-  (*       return *)
-  (*       @@ P_tuple *)
-  (*            (List.map lst ~f:(function *)
-  (*                | Expr_entry x -> pattern_of_expr x *)
-  (*                | _ -> failwith "incorrect pattern"))) *)
-  (*   | EObject obj -> *)
-  (*     let lst = nsepseq_to_list obj.value.inside in *)
-  (*     let aux : I.property -> (_, _) O.Field.t = function *)
-  (*       | Punned_property { value = EVar v; _ } -> *)
-  (*         let loc = Location.File v#region in *)
-  (*         Punned (Location.wrap ~loc @@ O.Label.of_string v#payload) *)
-  (*       | Property { value = { name = EVar v; value; _ }; _ } -> *)
-  (*         Complete (O.Label.of_string v#payload, pattern_of_expr value) *)
-  (*       | _ -> failwith "unrecognized pattern" *)
-  (*     in *)
-  (*     return @@ P_pun_record (List.map ~f:aux lst) *)
-  (*   | _ -> failwith "unrecognized pattern") *)
+ let loc = Location.lift (I.pattern_to_region p) in
+ let return = Location.wrap ~loc in
+ match p with
+ | P_Attr (attr, p) -> return @@ O.P_attr (TODO_do_in_parsing.conv_attr attr, p)
+ | P_Ctor v -> return @@ P_ctor (TODO_do_in_parsing.labelize v#payload)
+ | P_False _ -> return @@ P_ctor (Ligo_prim.Label.of_string "False")
+ | P_True _ -> return @@ P_ctor (Ligo_prim.Label.of_string "True")
+ | P_Var p -> return @@ P_var (TODO_do_in_parsing.var p)
+ | P_Int v -> return @@ P_literal (Literal_int (snd (w_fst v)))
+ | P_Nat v -> return @@ P_literal (Literal_nat (snd (w_fst v)))
+ | P_Mutez v -> return @@ P_literal (Literal_mutez (Z.of_int64 (snd (w_fst v))))
+ | P_Bytes v -> return @@ P_literal (Literal_bytes (Hex.to_bytes (snd (w_fst v))))
+ | P_String v ->
+    return @@ P_literal (Literal_string (Simple_utils.Ligo_string.standard (w_fst v)))
+ | P_Verbatim v ->
+   return @@ P_literal (Literal_string (Simple_utils.Ligo_string.verbatim (w_fst v)))
+ | P_Typed { value = pattern, (_, ty); _ } -> return @@ P_typed (ty, pattern)
+ | P_Object { value = { inside = p; _ }; _ } ->
+   let p = Utils.sep_or_term_to_list p in
+   let compile_property_pattern ({ value ; region } : I.pattern I.property Region.reg) : (O.Label.t, I.pattern) O.Field.t =
+     let property_id = value.property_id in
+     let property_id =
+       match property_id with
+       | F_Name n -> O.Label.of_string n#payload
+       | F_Int i -> O.Label.of_string @@ fst i#payload
+       | F_Str s -> O.Label.of_string s#payload
+     in
+     match value.property_rhs with
+     | Some (_, p) ->
+       O.Field.Complete (property_id, p)
+     | None ->
+       O.Field.Punned Location.(wrap ~loc:(lift region) property_id)
+   in
+   let lps =
+     List.map
+       ~f:compile_property_pattern p
+   in
+   return @@ P_pun_record lps
+ | P_Array { value = { inside = p ; _ }; _ } ->
+   let p = sep_or_term_to_list p in
+   match p with
+   | [] -> return @@ P_list (List [])
+   | [ None, hd; Some _, tl ] -> return @@ P_list (Cons (hd, tl))
+   | lst ->
+     let f (v : I.pattern I.component) =
+       match v with
+       | Some _, _ -> failwith "Invalid ellipsis in pattern"
+       | None, p -> p
+     in
+     return @@ P_tuple (List.map ~f p)
 
 
 (* in JSLIGO, instruction ; statements and declaration are all statement *)
