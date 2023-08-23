@@ -13,7 +13,6 @@ let compile ~raise:_ =
   let rec expr : (expr, ty_expr, pattern, _, _) expr_ -> expr =
    fun e ->
      let loc = Location.get_location e in
-     ignore syntax;
      match Location.unwrap e with
      | E_proj (struct_, []) ->
        struct_
