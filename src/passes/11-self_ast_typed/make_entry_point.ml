@@ -389,5 +389,5 @@ let program ~raise ?signature
  fun prg ->
   let annoted_entry_points = get_entries_of_module ?signature prg |> List.map ~f:fst in
   match annoted_entry_points with
-  | [] -> default_entrypoint_var, prg
+  | [] -> raise.error no_entrypoint
   | hd :: tl -> make_main_entrypoint ~raise (hd, tl) prg

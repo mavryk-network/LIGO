@@ -9,6 +9,7 @@ let stage = "self_ast_typed"
 type self_ast_typed_error =
   [ `Self_ast_typed_recursive_call_is_only_allowed_as_the_last_operation of
     Value_var.t * Location.t
+  | `Self_ast_typed_no_entrypoint
   | `Self_ast_typed_bad_self_type of
     Ast_typed.type_expression * Ast_typed.type_expression * Location.t
   | `Self_ast_typed_bad_format_entrypoint_ann of string * Location.t
@@ -58,6 +59,11 @@ let error_ppformat
   match display_format with
   | Human_readable | Dev ->
     (match a with
+    | `Self_ast_typed_no_entrypoint ->
+      Format.fprintf
+        f
+        "@[<hv>No entrypoints, invalid contract.@.Hint: If your contract previously used \
+         a `main`-style entrypoint, try adding an `entry` annotation to `main`.@]"
     | `Self_ast_typed_annotated_declaration_shadowed loc ->
       Format.fprintf
         f
@@ -244,6 +250,10 @@ let error_json : self_ast_typed_error -> Simple_utils.Error.t =
  fun e ->
   let open Simple_utils.Error in
   match e with
+  | `Self_ast_typed_no_entrypoint ->
+    let message = "Failed to compile contract, no entrypoints." in
+    let content = make_content ~message () in
+    make ~stage ~content
   | `Self_ast_typed_annotated_declaration_shadowed location ->
     let message = "This declaration holds an annotation and is later shadowed." in
     let content = make_content ~message ~location () in
