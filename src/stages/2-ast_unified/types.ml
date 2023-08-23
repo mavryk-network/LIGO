@@ -410,6 +410,7 @@ type ('self, 'declaration, 'instruction) program_entry_ =
   | PE_declaration of 'declaration
   | PE_top_level_instruction of 'instruction
   | PE_preproc_directive of unit (* directive ignored for now *)
+  | PE_export of 'self
 [@@deriving
   map
   , fold
