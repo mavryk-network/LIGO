@@ -49,8 +49,7 @@ let mk_mod_path :
 (* END HEADER *)
 %}
 
-(* %attribute nsepseq(case_statement,SEMI) [@recover.cost 1004] *)
-(* %attribute nsepseq(statement,SEMI)      [@recover.cost 1004] *)
+%attribute statements [@recover.cost 1004]
 
 (* Reductions on error *)
 
@@ -62,7 +61,6 @@ let mk_mod_path :
   nsepseq(variant,VBAR)
   nsepseq(object_type,VBAR)
   chevrons(nsep_or_term(type_ctor_arg(type_expr),COMMA))
-  nseq(__anonymous_4)
   nseq(__anonymous_1(object_type,VBAR))
   ctor
   app_expr_level
@@ -109,7 +107,7 @@ let mk_mod_path :
 %on_error_reduce
   open_stmt_not_starting_with_expr_nor_block2(right_rec_stmt(stmt_not_starting_with_expr_nor_block2))
   last_or_more(block_stmt)
-
+  nseq(__anonymous_3)
 
 (* See [ParToken.mly] for the definition of tokens. *)
 
@@ -426,7 +424,7 @@ fun_type:
     in T_Fun {region; value=($2,$3,$4)} }
 
 fun_type_params:
-  par(sep_or_term(fun_type_param,",") PARAMS { $1 }) { $1 }
+  par(sep_or_term(fun_type_param,",")) { $1 }
 
 fun_type_param:
   variable type_annotation(type_expr) {
@@ -476,8 +474,8 @@ core_type:
 | core_type_no_string {          $1 }
 
 core_type_no_string:
-  par(type_expr)      { T_Par $1 }
-| no_par_type_expr    {       $1 }
+  par (type_expr)  { T_Par $1 }
+| no_par_type_expr {       $1 }
 
 no_par_type_expr:
   "<int>"                    { T_Int         $1 }
@@ -510,19 +508,19 @@ type_ctor_arg(type_expr):
 (* Arrays of types *)
 
 array_type:
-  brackets (type_components) { $1 }
+  brackets (type_elements) { $1 }
 
-type_components:
-  type_component_no_string {
+type_elements:
+  type_element_no_string {
     `Sep ($1,[])
   }
-| type_component_no_string "," nsep_or_term(type_component,",") {
+| type_element_no_string "," nsep_or_term(type_element,",") {
     Utils.nsep_or_term_cons $1 $2 $3 }
 
-type_component_no_string:
+type_element_no_string:
   fun_type | variant_type | core_type_no_string { $1 }
 
-type_component:
+type_element:
   type_expr { $1 }
 
 (* Parameter of contract *)
@@ -580,9 +578,9 @@ union_or_object:
 (* Object types *)
 
 object_type:
-  braces (sep_or_term (property_type, property_sep)) { $1 }
+  braces (sep_or_term (property_decl, property_sep)) { $1 }
 
-property_type:
+property_decl:
   property_id ioption(type_annotation (type_expr)) {
     let start = property_id_to_region $1 in
     let region =
@@ -592,7 +590,7 @@ property_type:
     and value = {attributes=[]; property_id=$1; property_rhs=$2}
     in {region; value}
   }
-| "[@attr]" property_type {
+| "[@attr]" property_decl {
     let attributes = ($2 : _ property reg).value.attributes in
     let value : _ property = {$2.value with attributes = $1::attributes}
     in {$2 with value} }
@@ -602,8 +600,8 @@ property_sep:
 
 property_id:
   property_name { F_Name $1 }
-| "<int>"    { F_Int  $1 }
-| "<string>" { F_Str  $1 }
+| "<int>"       { F_Int  $1 }
+| "<string>"    { F_Str  $1 }
 
 (* STATEMENTS *)
 
