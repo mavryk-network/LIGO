@@ -746,34 +746,26 @@ and sig_expr : Eq.sig_expr -> Folding.sig_expr = function
 and sig_entry : Eq.sig_entry -> Folding.sig_entry =
  fun se ->
   let return ~loc = Location.wrap ~loc in
-  let return_attr attributes ~loc ~attr ~no_attr =
-    match attributes with
-    | [] -> return ~loc @@ no_attr
-    | hd :: tl ->
-      let hd = TODO_do_in_parsing.conv_attr hd in
-      return ~loc @@ (S_attr (hd, attr tl) : _ O.sig_entry_content_)
+  (* TODO: Wouldn't it better to have a region in I_Attr? *)
+  let rec get_intf_entry_loc (x : I.intf_entry) : Location.t =
+    match x with
+    | I_Type { region; _ } -> Location.lift region
+    | I_Const { region; _ } -> Location.lift region
+    | I_Attr (attr, entry) ->
+      Location.cover (Location.lift attr#region) @@ get_intf_entry_loc entry
   in
+  let loc = get_intf_entry_loc se in
   match se with
-  | IType { region; value = attributes, kwd_type, v, equal, ty } ->
-    let loc = Location.lift region in
-    return_attr
-      attributes
-      ~loc
-      ~no_attr:(O.S_type (TODO_do_in_parsing.tvar v, ty))
-      ~attr:(fun attributes ->
-        I.IType { region; value = attributes, kwd_type, v, equal, ty })
-  | IType_var { region; value = attributes, kwd_type, v } ->
-    let loc = Location.lift region in
-    return_attr
-      attributes
-      ~loc
-      ~no_attr:(O.S_type_var (TODO_do_in_parsing.tvar v))
-      ~attr:(fun attributes -> I.IType_var { region; value = attributes, kwd_type, v })
-  | IConst { region; value = attributes, kwd_type, v, equal, ty } ->
-    let loc = Location.lift region in
-    return_attr
-      attributes
-      ~loc
-      ~no_attr:(O.S_value (TODO_do_in_parsing.var v, ty))
-      ~attr:(fun attributes ->
-        I.IConst { region; value = attributes, kwd_type, v, equal, ty })
+  | I_Attr (attr, entry) ->
+    return ~loc @@ (O.S_attr (TODO_do_in_parsing.conv_attr attr, entry) : _ O.sig_entry_content_)
+  | I_Type { value; _ } ->
+    let I.{ type_name ; type_rhs ; _ } = value in
+    let var = TODO_do_in_parsing.tvar type_name in
+    (match type_rhs with
+     | None -> return ~loc @@ O.S_type_var var
+     | Some (_, type_rhs) -> return ~loc @@ O.S_type (var, type_rhs))
+  | I_Const { value; _ } ->
+    let I.{ const_name ; const_type ; _ } = value in
+    let var = TODO_do_in_parsing.var const_name in
+    let _, type_ = const_type in
+    return ~loc @@ O.S_value (var, type_)
