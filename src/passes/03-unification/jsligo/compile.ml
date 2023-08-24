@@ -543,6 +543,7 @@ let mod_expr : Eq.mod_expr -> Folding.mod_expr =
   let loc = List.fold_left ~f:Location.cover ~init:Location.generated locs in
   let decl : I.top_decl nseq = stmts |> List.map ~f:(function
         I.S_Decl d -> I.TL_Decl (d, None)
+      | I.S_Export { region ; value = kwd, d } -> I.TL_Export { region ; value = kwd, I.TL_Decl (d, None) }
       | _ -> failwith "Something fishy?") |> List.Ne.of_list in
   Location.wrap ~loc (O.M_body I.{ decl; eof = ghost })
 
@@ -722,12 +723,10 @@ and declaration : Eq.declaration -> Folding.declaration =
 
 
 and program_entry : Eq.program_entry -> Folding.program_entry = function
-  | I.TopLevel (s, _) ->
-    (match Location.unwrap @@ statement s with
-    | O.S_decl _ -> PE_declaration s
-    | O.S_instr _ -> PE_top_level_instruction s
-    | _ -> assert false)
-  | I.Directive _ -> PE_preproc_directive ()
+  | I.TL_Export { value = _, td; _ } -> O.PE_export td
+  | I.TL_Attr (attr, td) -> O.PE_attr (TODO_do_in_parsing.conv_attr attr, td)
+  | I.TL_Decl (s, _) -> O.PE_declaration s
+  | I.TL_Directive _ -> PE_preproc_directive ()
 
 
 and program : Eq.program -> Folding.program = fun x -> List.Ne.to_list x.statements
