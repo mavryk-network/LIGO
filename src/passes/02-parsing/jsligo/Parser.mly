@@ -953,7 +953,7 @@ ret_type:
   type_annotation (ES6FUN? no_par_type_expr { $2 }) { $1 }
 
 fun_par_params:
-  par (fun_params PARAMS { $1 }) { ParParams $1 }
+  par (fun_params) { ParParams $1 }
 
 fun_var_param:
   variable | "_" { $1 }
@@ -1208,10 +1208,10 @@ updates:
 
 (* Arrays *)
 
-array(item):
-  brackets (sep_or_term (component (item), ",")) { $1 }
+array (item):
+  brackets (sep_or_term (element (item), ",")) { $1 }
 
-component(item):
+element (item):
   ioption("...") item { $1,$2 }
 
 (* Path expressions
@@ -1224,7 +1224,7 @@ component(item):
       * a single variable in a nested module: "A.B.a"
       * nested properties and compoments from a variable: "a[0][1]b"
       * same within a nested module: "A.B.a[0][1].b"
-      * nested properties and components from an expression: "(e).a[0][1]b" *)
+      * nested properties and elements from an expression: "(e).a[0][1]b" *)
 
 path_expr:
   namespace_path (selected_expr) { E_NamePath (mk_mod_path $1 expr_to_region) }
