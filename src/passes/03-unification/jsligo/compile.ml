@@ -118,7 +118,7 @@ module Eq = struct
   type mod_expr = I.statements
   type instruction = I.statement
   type declaration = I.declaration
-  type program_entry = I.top_decl
+  type program_entry = I.statement
   type program = I.t
   type sig_expr = I.intf_expr
   type sig_entry = I.intf_entry
@@ -199,7 +199,13 @@ let rec expr : Eq.expr -> Folding.expr =
   | E_Equal eq -> return @@ compile_bin_op DEQ eq
   | E_Neq ne -> return @@ compile_bin_op EQ_SLASH_EQ ne
   | E_App { value = expr, args; _ } ->
-    let args = Location.wrap ~loc @@ sepseq_to_list args.value.inside in
+    let args = match sepseq_to_list args.value.inside with
+      | [] ->
+        let region = args.region in
+        let value = I.{ lbracket = ghost ; rbracket = ghost ; inside = None } in
+        [ I.E_Array { region ; value }  ] | args -> args
+    in
+    let args = Location.wrap ~loc @@ args in
     return @@ E_call (expr, args)
   | E_Ctor c ->
     (* TODO in unified types (one type might not be necessary) *)
@@ -541,11 +547,8 @@ let mod_expr : Eq.mod_expr -> Folding.mod_expr =
   let locs = List.map ~f:(fun x -> Location.lift @@ I.statement_to_region @@ fst x) stmts in
   let stmts = List.map ~f:fst stmts in
   let loc = List.fold_left ~f:Location.cover ~init:Location.generated locs in
-  let decl : I.top_decl nseq = stmts |> List.map ~f:(function
-        I.S_Decl d -> I.TL_Decl (d, None)
-      | I.S_Export { region ; value = kwd, d } -> I.TL_Export { region ; value = kwd, I.TL_Decl (d, None) }
-      | _ -> failwith "Something fishy?") |> List.Ne.of_list in
-  Location.wrap ~loc (O.M_body I.{ decl; eof = ghost })
+  let statements = stmts |> List.map ~f:(fun s -> (s, None)) |> List.Ne.of_list in
+  Location.wrap ~loc (O.M_body I.{ statements; eof = ghost })
 
 
 let rec statement : Eq.statement -> Folding.statement =
@@ -557,8 +560,10 @@ let rec statement : Eq.statement -> Folding.statement =
     return @@ O.S_decl d
   | S_Attr (attr, s) ->
     return @@ O.S_attr (TODO_do_in_parsing.conv_attr attr, s)
-  | S_Export r ->
-    return @@ O.S_instr I.(S_Export r)
+  | S_Export { value = _, decl ; _ } ->
+    return @@ O.S_export decl
+  | S_Directive _ ->
+    return @@ O.S_directive ()
   | S_Block _
   | S_Expr _
   | S_Return _
@@ -579,6 +584,7 @@ and instruction : Eq.instruction -> Folding.instruction =
       List.Ne.singleton @@ (x, None)
   in
   match i with
+  | S_Directive _ -> failwith "DIRECTIVE"
   | S_Attr (attr, s) -> failwith "TODO: add attribute on instruction?"
   | S_Continue _ -> failwith "TODO: add continue on instruction?"
   | S_Block s -> return @@ O.I_block s.value.inside
@@ -737,15 +743,19 @@ and declaration : Eq.declaration -> Folding.declaration =
     return @@ O.D_multi_const ({ type_params ; pattern ; rhs_type = ret_type ; let_rhs }, [])
 
 
-and program_entry : Eq.program_entry -> Folding.program_entry = function
-  | I.TL_Export { value = _, td; _ } -> O.PE_export td
-  | I.TL_Attr (attr, td) -> O.PE_attr (TODO_do_in_parsing.conv_attr attr, td)
-  | I.TL_Decl (s, _) -> O.PE_declaration s
-  | I.TL_Directive _ -> PE_preproc_directive ()
+and program_entry : Eq.program_entry -> Folding.program_entry =
+  fun s ->
+  (match Location.unwrap @@ statement s with
+    | O.S_export d -> PE_export I.(S_Decl d)
+    | O.S_decl d -> PE_declaration d
+    | O.S_instr _ -> PE_top_level_instruction s
+    | O.S_directive () -> PE_preproc_directive ()
+    | O.S_attr (attr, s) -> PE_attr (attr, s)
+    )
 
 
 and program : Eq.program -> Folding.program = function
-  | { decl ; eof = _ } -> nseq_to_list decl
+  | { statements ; eof = _ } -> List.map ~f:fst @@ nseq_to_list statements
   
 
 and sig_expr : Eq.sig_expr -> Folding.sig_expr = function
