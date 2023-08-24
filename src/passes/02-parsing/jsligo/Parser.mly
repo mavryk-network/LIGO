@@ -227,22 +227,9 @@ object_or_array : "<ident>"       { E_Var  $1 }
 interactive_expr: expr EOF { $1 }
 
 contract:
-  nseq(top_decl) EOF { {decl=$1; eof=$2} }
+  statements EOF { {statements=$1; eof=$2} }
 
-(* TOP-LEVEL DECLARATIONS *)
-
-top_decl:
-  "<directive>"      { TL_Directive $1 }
-| no_dir_top_decl    {              $1 }
-
-no_dir_top_decl:
-  declaration ";"?          { TL_Decl      ($1,$2) }
-| "[@attr]" no_dir_top_decl { TL_Attr      ($1,$2) }
-| "export" no_dir_top_decl  {
-     let region = cover $1#region (top_decl_to_region $2)
-     in TL_Export {region; value=($1,$2)} }
-
-(* INNER DECLARATIONS (AS STATEMENTS) *)
+(* DECLARATIONS *)
 
 declaration:
   fun_decl | value_decl | import_decl | interface_decl
@@ -611,6 +598,7 @@ statements:
 | empty_return_stmt     stmts_not_starting_with_expr_nor_block
 | expr_stmt             stmts_not_starting_with_expr
                            { nseq_cons ($1, None) $2 }
+| directive_stmt           { ($1, None), [] }
 | last_or_more (statement) { $1 }
 
 stmt_ending_with_expr: (* and not starting with [expr] *)
@@ -629,7 +617,7 @@ no_attr_right_rec_stmt (right_stmt):
 
 poly_stmt:
   open_stmt_not_starting_with_expr_nor_block2 (right_rec_stmt (poly_stmt))
-| block_stmt { $1 }
+| directive_stmt | block_stmt { $1 }
 
 open_stmt_not_starting_with_expr_nor_block1 (right_stmt):
   import_decl | value_decl | type_decl { S_Decl $1 }
@@ -682,7 +670,7 @@ core_stmt (right_stmt):
 closed_non_if_stmt: non_if_stmt (closed_non_if_stmt) { $1 }
 
 last_or_more (left_stmt):
-  left_stmt ioption(";")   { ($1,$2), [] }
+  left_stmt ioption(";")   { ($1,$2),   [] }
 | left_stmt ";" after_semi { nseq_cons ($1, Some $2) $3 }
 
 after_semi:
@@ -698,6 +686,11 @@ break_stmt:
 
 continue_stmt:
   "continue" { S_Continue $1 }
+
+(* Directive statement *)
+
+directive_stmt:
+  "<directive>" { S_Directive $1 }
 
 (* Export statements *)
 

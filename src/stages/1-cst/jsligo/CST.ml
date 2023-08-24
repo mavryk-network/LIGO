@@ -153,19 +153,11 @@ type 'a chevrons  = 'a chevrons' reg
 
 (* The Abstract Syntax Tree *)
 
-type t = {decl : top_decl nseq; eof : eof}
+type t = {statements : statements; eof : eof}
 
 and cst = t
 
-(* TOP-LEVEL DECLARATIONS *)
-
-and top_decl =
-  TL_Decl      of (declaration * semi option)
-| TL_Attr      of (attribute * top_decl)
-| TL_Export    of (kwd_export * top_decl) reg
-| TL_Directive of Directive.t
-
-(* INNER DECLARATIONS (AS STATEMENTS) *)
+(* DECLARATIONS *)
 
 (* IMPORTANT: The data constructors are sorted alphabetically. If you
    add or modify some, please make sure they remain in order. *)
@@ -422,19 +414,20 @@ and typed_pattern = pattern * type_annotation
    add or modify some, please make sure they remain in order. *)
 
 and statement =
-  S_Attr     of (attribute * statement)
-| S_Block    of statements braces
-| S_Break    of kwd_break
-| S_Continue of kwd_continue
-| S_Decl     of declaration
-| S_Export   of export_stmt reg
-| S_Expr     of expr
-| S_For      of for_stmt reg
-| S_ForOf    of for_of_stmt reg
-| S_If       of if_stmt reg
-| S_Return   of return_stmt reg
-| S_Switch   of switch_stmt reg
-| S_While    of while_stmt reg
+  S_Attr      of (attribute * statement)
+| S_Block     of statements braces
+| S_Break     of kwd_break
+| S_Continue  of kwd_continue
+| S_Decl      of declaration
+| S_Directive of Directive.t
+| S_Export    of export_stmt reg
+| S_Expr      of expr
+| S_For       of for_stmt reg
+| S_ForOf     of for_of_stmt reg
+| S_If        of if_stmt reg
+| S_Return    of return_stmt reg
+| S_Switch    of switch_stmt reg
+| S_While     of while_stmt reg
 
 and statements = (statement * semi option) nseq
 
@@ -720,12 +713,6 @@ let declaration_to_region = function
 | D_Type      {region; _} -> region
 | D_Value     {region; _} -> region
 
-let rec top_decl_to_region = function
-  TL_Decl      (d, _) -> declaration_to_region d
-| TL_Attr      (_, d) -> top_decl_to_region d
-| TL_Export    {region; _} -> region
-| TL_Directive d -> Directive.to_region d
-
 let rec type_expr_to_region = function
   T_App         {region; _}
 | T_Array       {region; _} -> region
@@ -822,19 +809,20 @@ let rec expr_to_region = function
 | E_Xor        {region; _} -> region
 
 let rec statement_to_region = function
-  S_Attr     (_, s) -> statement_to_region s
-| S_Block    {region; _} -> region
-| S_Break    w -> w#region
-| S_Continue w -> w#region
-| S_Decl     d -> declaration_to_region d
-| S_Export   {region; _} -> region
-| S_Expr     e -> expr_to_region e
-| S_For      {region; _}
-| S_ForOf    {region; _}
-| S_If       {region; _} -> region
-| S_Return   {region; _}
-| S_Switch   {region; _}
-| S_While    {region; _} -> region
+  S_Attr      (_, s) -> statement_to_region s
+| S_Block     {region; _} -> region
+| S_Break     w -> w#region
+| S_Continue  w -> w#region
+| S_Decl      d -> declaration_to_region d
+| S_Directive d -> Directive.to_region d
+| S_Export    {region; _} -> region
+| S_Expr      e -> expr_to_region e
+| S_For       {region; _}
+| S_ForOf     {region; _}
+| S_If        {region; _} -> region
+| S_Return    {region; _}
+| S_Switch    {region; _}
+| S_While     {region; _} -> region
 
 let var_kind_to_region = function
   `Let w | `Const w -> w#region

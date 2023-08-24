@@ -182,7 +182,6 @@ type _ sing =
   | S_ternary : ternary sing
   | S_times : times sing
   | S_times_eq : times_eq sing
-  | S_top_decl : top_decl sing
   | S_true : true_const sing
   | S_type_annotation : type_annotation sing
   | S_type_ctor : type_ctor sing
@@ -309,9 +308,9 @@ let fold
     process_list
     [ kwd_contract_of -| S_kwd_contract_of
     ; namespace_path -| S_par S_namespace_selection ]
-  | S_cst -> let { decl; eof } = node in
+  | S_cst -> let { statements; eof } = node in
     process_list
-    [ decl -| S_nseq S_top_decl
+    [ statements -| S_nseq (S_array_2 (S_statement, S_option S_semi))
     ; eof -| S_eof ]
   | S_ctor -> process @@ node -| S_wrap S_lexeme
   | S_declaration -> process
@@ -695,6 +694,7 @@ let fold
     | S_Continue node -> node -| S_kwd_continue
     | S_If node -> node -| S_reg S_if_stmt
     | S_Decl node -> node -| S_declaration
+    | S_Directive node -> node -| S_directive
     | S_Export node -> node -| S_reg (S_array_2 (S_kwd_export, S_declaration))
     | S_Expr node -> node -| S_expr
     | S_For node -> node -| S_reg S_for_stmt
@@ -730,13 +730,6 @@ let fold
     ; falsy -| S_expr ]
   | S_times -> process @@ node -| S_wrap S_lexeme
   | S_times_eq -> process @@ node -| S_wrap S_lexeme
-  | S_top_decl -> process
-    ( match node with
-      TL_Decl node -> node -| S_array_2 (S_declaration, S_option S_semi)
-    | TL_Attr node -> node -| S_array_2 (S_attribute , S_top_decl)
-    | TL_Export node -> node -| S_reg (S_array_2 (S_kwd_export, S_top_decl))
-    | TL_Directive node -> node -| S_directive
-    )
   | S_true -> process @@ node -| S_wrap S_lexeme
   | S_array sing -> process @@ node -| S_brackets (S_sep_or_term (S_component sing, S_comma))
   | S_array_2 (sing_1, sing_2) ->

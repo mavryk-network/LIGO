@@ -40,45 +40,19 @@ let print_attribute state (node : Attr.t wrap) =
 let mk_children_attr (node : Attr.t wrap list) =
   Tree.mk_children_list print_attribute ~root:"<attributes>" node
 
-(* Preprocessing directives *)
+(* Preprocessing directives as statements *)
 
-let print_TL_Directive state (node : Directive.t) =
+let print_S_Directive state (node : Directive.t) =
   let region, string = Directive.project node in
-  Tree.(make_unary state "Directive" make_node ~region string)
+  Tree.(make_unary state "S_Directive" make_node ~region string)
 
 (* PRINTING THE CST *)
 
 let rec print_cst state (node : cst) =
-  Tree.of_nseq state "<cst>" print_top_decl node.decl
+  Tree.of_nseq state "<cst>" (fun state -> print_statement state <@ fst)
+               node.statements
 
-(* TOP-LEVEL *)
-
-and print_top_decl state = function
-  TL_Decl      d -> print_TL_Decl      state d
-| TL_Attr      d -> print_TL_Attr      state d
-| TL_Export    d -> print_TL_Export    state d
-| TL_Directive d -> print_TL_Directive state d
-
-(* Normal declaration *)
-
-and print_TL_Decl state (d, _) = print_declaration state d
-
-(* Attributed declaration *)
-
-and print_TL_Attr state (node: attribute * top_decl) =
-  let attribute, top_decl = node in
-  let children = Tree.[
-    mk_child print_attribute attribute;
-    mk_child print_top_decl  top_decl]
-  in Tree.make state "TL_Attr" children
-
-(* Export declaration *)
-
-and print_TL_Export state (node : (kwd_export * top_decl) reg) =
-  let Region.{region; value} = node in
-  Tree.make_unary ~region state "TL_Export" print_top_decl (snd value)
-
-(* INNER DECLARATIONS (AS STATEMENTS) *)
+(* DECLARATIONS *)
 
 and print_declaration state = function
   D_Fun       d -> print_D_Fun       state d
@@ -1098,19 +1072,20 @@ and print_E_Xor state (node : bool_xor bin_op reg) =
 (* STATEMENTS *)
 
 and print_statement state = function
-  S_Attr     s -> print_S_Attr     state s
-| S_Block    s -> print_S_Block    state s
-| S_Break    s -> print_S_Break    state s
-| S_Continue s -> print_S_Continue state s
-| S_Decl     s -> print_S_Decl     state s
-| S_Export   s -> print_S_Export   state s
-| S_Expr     s -> print_S_Expr     state s
-| S_For      s -> print_S_For      state s
-| S_ForOf    s -> print_S_ForOf    state s
-| S_If       s -> print_S_If       state s
-| S_Return   s -> print_S_Return   state s
-| S_Switch   s -> print_S_Switch   state s
-| S_While    s -> print_S_While    state s
+  S_Attr      s -> print_S_Attr      state s
+| S_Block     s -> print_S_Block     state s
+| S_Break     s -> print_S_Break     state s
+| S_Continue  s -> print_S_Continue  state s
+| S_Decl      s -> print_S_Decl      state s
+| S_Directive s -> print_S_Directive state s
+| S_Export    s -> print_S_Export    state s
+| S_Expr      s -> print_S_Expr      state s
+| S_For       s -> print_S_For       state s
+| S_ForOf     s -> print_S_ForOf     state s
+| S_If        s -> print_S_If        state s
+| S_Return    s -> print_S_Return    state s
+| S_Switch    s -> print_S_Switch    state s
+| S_While     s -> print_S_While     state s
 
 (* Attributed statement *)
 

@@ -11,7 +11,7 @@ open Lsp_helpers
 
 type declaration =
   ( Cst_cameligo.CST.declaration
-  , Cst_jsligo.CST.top_decl
+  , Cst_jsligo.CST.statement
   , Cst_pascaligo.CST.declaration )
   Dialect_cst.dialect
 
@@ -19,7 +19,7 @@ let decl_range : declaration -> Range.t =
   Range.of_region
   <@ Dialect_cst.from_dialect
        { cameligo = Cst_cameligo.CST.declaration_to_region
-       ; jsligo = Cst_jsligo.CST.top_decl_to_region
+       ; jsligo = Cst_jsligo.CST.statement_to_region
        ; pascaligo = Cst_pascaligo.CST.region_of_S_Decl
        }
 
@@ -46,7 +46,7 @@ let print_decl : Ligo_interface.pp_mode -> declaration -> string =
   Ligo_interface.with_pp_mode
     pp_mode
     { cameligo = uncurry CameLIGO_pretty.print_declaration
-    ; jsligo = uncurry JsLIGO_pretty.print_top_decl
+    ; jsligo = uncurry JsLIGO_pretty.print_statement
     ; pascaligo = uncurry PascaLIGO_pretty.print_declaration
     }
 

@@ -931,14 +931,14 @@ type pattern            = CST.pattern
 type top_decl = CST.top_decl
 *)
 
-let print           _ = failwith "Pretty"
-let print_expr      _ = failwith "Pretty"
-let print_type_expr _ = failwith "Pretty"
-let print_pattern   _ = failwith "Pretty"
-let print_top_decl  _ = failwith "Pretty"
+let print           _state _cst = PPrint.empty
+let print_expr      _state _cst = PPrint.empty
+let print_type_expr _state _cst = PPrint.empty
+let print_pattern   _state _cst = PPrint.empty
+let print_statement _state _cst = PPrint.empty
 
 type cst       = CST.t
 type expr      = CST.expr
 type type_expr = CST.type_expr
 type pattern   = CST.pattern
-type top_decl  = CST.top_decl
+type statement = CST.statement
