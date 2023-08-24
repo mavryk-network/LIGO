@@ -199,14 +199,11 @@ let rec expr : Eq.expr -> Folding.expr =
   | E_Equal eq -> return @@ compile_bin_op DEQ eq
   | E_Neq ne -> return @@ compile_bin_op EQ_SLASH_EQ ne
   | E_App { value = expr, args; _ } ->
-    let args = match sepseq_to_list args.value.inside with
-      | [] ->
-        let region = args.region in
-        let value = I.{ lbracket = ghost ; rbracket = ghost ; inside = None } in
-        [ I.E_Array { region ; value }  ] | args -> args
-    in
-    let args = Location.wrap ~loc @@ args in
-    return @@ E_call (expr, args)
+    let args = sepseq_to_list args.value.inside in
+    (match expr with
+     | E_Ctor ctor -> return @@ E_ctor_app (expr, List.Ne.of_list_opt args)
+     | _ ->
+       return @@ E_call (expr, Location.wrap ~loc @@ args))
   | E_Ctor c ->
     (* TODO in unified types (one type might not be necessary) *)
     return @@ E_constr (O.Label.of_string c#payload)

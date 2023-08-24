@@ -319,8 +319,10 @@ and statement ~raise : statement -> Statement_result.t =
   | S_attr (attr, x) ->
     let s = statement ~raise x in
     Statement_result.merge (Binding (fun x -> e_attr ~loc:(get_e_loc x) (attr, x))) s
+  | S_export d -> decl d (* export is ignored, here it should not happen? *)
   | S_instr i -> instr ~raise i
   | S_decl d -> decl d
+  | S_directive () -> Binding (fun x -> x)
 
 
 let compile ~raise =
