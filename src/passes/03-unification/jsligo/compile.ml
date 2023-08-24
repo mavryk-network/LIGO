@@ -576,53 +576,68 @@ and instruction : Eq.instruction -> Folding.instruction =
   let loc = Location.lift (I.statement_to_region i) in
   let return = Location.wrap ~loc in
   let single_stmt_block (x : I.statement) =
-    nsepseq_of_nseq ~sep:ghost (List.Ne.singleton x)
+      List.Ne.singleton @@ (x, None)
   in
   match i with
-  | SBlock s -> return @@ O.I_block s.value.inside
-  | SExpr (attr, expr) ->
-    TODO_do_in_parsing.weird_attr attr;
+  | S_Attr (attr, s) -> failwith "TODO: add attribute on instruction?"
+  | S_Continue _ -> failwith "TODO: add continue on instruction?"
+  | S_Block s -> return @@ O.I_block s.value.inside
+  | S_Expr expr ->
     return @@ I_expr expr
-  | SCond c ->
+  | S_If c ->
     let c = c.value in
-    let I.{ ifso; ifnot; test; _ } = c in
-    let ifso = TODO_do_in_parsing.control_flow_clause statement ifso in
+    let I.{ if_so = if_so, _; if_not; test; _ } = c in
+    let ifso = TODO_do_in_parsing.control_flow_clause statement if_so in
     let ifnot =
-      Option.map ifnot ~f:(TODO_do_in_parsing.control_flow_clause statement <@ snd)
+      Option.map if_not ~f:(TODO_do_in_parsing.control_flow_clause statement <@ snd)
     in
-    return @@ I_cond { test = test.inside; ifso; ifnot }
-  | SReturn s -> return @@ I_return s.value.expr
-  | SSwitch s ->
+    return @@ I_cond { test = test.value.inside; ifso; ifnot }
+  | S_Return s -> return @@ I_return (snd s.value)
+  | S_Switch s ->
+    let cases = s.value.cases.value.inside in
+    let subject = s.value.subject.value.inside in
     let cases =
-      List.Ne.map
-        (function
-          | I.Switch_case { expr; statements; _ } ->
-            O.Switch.Switch_case (expr, statements)
-          | I.Switch_default_case { statements; _ } ->
-            O.Switch.Switch_default_case statements)
-        s.value.cases
+      match cases with
+      | AllCases (cases, default) ->
+        let cases =
+          List.Ne.map (function (case : I.switch_case Region.reg) ->
+              let I.{ expr; case_body; _ } = case.value in
+              O.Switch.Switch_case (expr, case_body))
+            cases
+        in
+        (match default with
+        | None -> cases
+        | Some default ->
+          let I.{ default_body ; _ } = default.value in
+          List.Ne.append cases @@ List.Ne.singleton @@ O.Switch.Switch_default_case default_body)
+      | Default case ->
+        let I.{ default_body ; _ } = case.value in
+        List.Ne.singleton @@ O.Switch.Switch_default_case default_body
     in
-    return @@ I_switch { switchee = s.value.expr; cases }
-  | SBreak _ -> return @@ I_break
-  | SWhile s ->
-    let cond = s.value.expr in
-    let block = single_stmt_block s.value.statement in
+    return @@ I_switch { switchee = subject; cases }
+  | S_Break _ -> return @@ I_break
+  | S_While s ->
+    let I.{ invariant ; while_body ; _ } = s.value in
+    let cond = invariant.value.inside in
+    let block = single_stmt_block while_body in
     return @@ I_while { cond; block }
-  | SForOf s ->
-    let I.{ index_kind; index; expr; statement; _ } = r_fst s in
+  | S_ForOf s ->
+    let I.{ range; for_of_body; _} = s.value in
+    let I.{ index_kind; index; expr; _ } = range.value.inside in
     let index_kind =
       match index_kind with
       | `Let _ -> `Let
       | `Const _ -> `Const
     in
     let index = TODO_do_in_parsing.var index in
-    return @@ I_for_of { index_kind; index; expr; for_stmt = statement }
-  | SFor s ->
-    let I.{ initialiser; condition; afterthought; statement; _ } = r_fst s in
+    return @@ I_for_of { index_kind; index; expr; for_stmt = for_of_body }
+  | S_For s ->
+    let I.{ range; for_body; _ } = s.value in
+    let I.{ initialiser; condition; afterthought; _ } = range.value.inside in
     let afterthought = Option.map afterthought ~f:Utils.nsepseq_to_nseq in
-    return @@ I_for_stmt { initialiser; condition; afterthought; statement }
+    return @@ I_for_stmt { initialiser; condition; afterthought; statement = for_body }
   (* impossible, if triggered, look at functions 'statement' *)
-  | SLet _ | SConst _ | SType _ | SInterface _ | SNamespace _ | SExport _ | SImport _ ->
+  | S_Decl _ | S_Export _ ->
     assert false
 
 
@@ -729,17 +744,20 @@ and program_entry : Eq.program_entry -> Folding.program_entry = function
   | I.TL_Directive _ -> PE_preproc_directive ()
 
 
-and program : Eq.program -> Folding.program = fun x -> List.Ne.to_list x.statements
+and program : Eq.program -> Folding.program = function
+  | { decl ; eof = _ } -> nseq_to_list decl
+  
 
 and sig_expr : Eq.sig_expr -> Folding.sig_expr = function
-  | IInterface { value = { inside; lbrace = _; rbrace = _ }; region } ->
+  | I_Body { value = { inside; lbrace = _; rbrace = _ }; region } ->
     let loc = Location.lift region in
-    let sig_items = nsepseq_to_list inside in
+    let sig_items = sep_or_term_to_list inside in
     Location.wrap ~loc @@ O.S_body sig_items
-  | IPath { value; region } ->
-    let loc = Location.lift region in
-    let value = nsepseq_to_nseq value in
-    let value = List.Ne.map TODO_do_in_parsing.mvar value in
+  | I_Path selection ->
+    let selection = TODO_do_in_parsing.selection_path selection in
+    let locs = List.Ne.map (fun (n : I.namespace_name) -> Location.lift n#region) selection in
+    let loc = List.Ne.fold_left1 ~f:Location.cover locs in
+    let value = List.Ne.map TODO_do_in_parsing.mvar selection in
     Location.wrap ~loc @@ O.S_path value
 
 
