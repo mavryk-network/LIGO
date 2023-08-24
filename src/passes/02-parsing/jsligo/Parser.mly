@@ -239,7 +239,7 @@ declaration:
 
 fun_decl:
   "function" fun_name ioption(type_vars)
-  ES6FUN? par(fun_params) ret_type? braces(statements) {
+  ES6FUN? par(fun_params) ioption(ret_type) braces(statements) {
     let region = cover $1#region $7.region
     and value  = {kwd_function=$1; fun_name=$2; type_vars=$3;
                   parameters=$5; rhs_type=$6; fun_body=$7}
@@ -918,7 +918,7 @@ fun_expr:
 | function_expr  { E_Function $1 }
 
 arrow_fun_expr:
-  ioption(type_vars) ES6FUN fun_par_params ret_type? "=>" fun_body {
+  ioption(type_vars) ES6FUN fun_par_params ioption(ret_type) "=>" fun_body {
     let start  = match $1 with
                    None -> parameters_to_region $3
                  | Some {region; _} -> region in
@@ -936,7 +936,7 @@ arrow_fun_expr:
     in {region; value} }
 
 function_expr:
-  "function" ioption(type_vars) fun_par_params ret_type? braces(statements) {
+  "function" ioption(type_vars) fun_par_params ioption(ret_type) braces(statements) {
     let region = cover $1#region $5.region
     and value  = {kwd_function=$1; type_vars=$2; parameters=$3;
                   rhs_type=$4; fun_body = StmtBody $5}
