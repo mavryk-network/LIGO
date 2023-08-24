@@ -201,8 +201,10 @@ type ('self, 'instruction, 'declaration) statement_ =
 
 and ('self, 'instruction, 'declaration) statement_content_ =
   | S_attr of (Attribute.t * 'self)
+  | S_export of 'declaration
   | S_instr of 'instruction
   | S_decl of 'declaration
+  | S_directive of unit (* directive ignored for now *)
 [@@deriving
   map
   , fold
