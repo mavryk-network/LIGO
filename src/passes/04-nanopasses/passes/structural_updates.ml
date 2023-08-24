@@ -43,7 +43,7 @@ let path_of_lvalue ~raise : expr -> Variable.t * expr Selection.t list =
   let rec aux (lhs : expr) (cpath : expr Selection.t list) =
     match get_e lhs with
     | E_variable v -> v, cpath
-    | E_proj { struct_; path } -> aux struct_ (path :: cpath)
+    | E_proj (struct_, path) -> aux struct_ (path @ cpath)
     | E_map_lookup { map; keys } ->
       let sels =
         List.map ~f:(fun e -> Selection.Component_expr e) (List.Ne.to_list keys)

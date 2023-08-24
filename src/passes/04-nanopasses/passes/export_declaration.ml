@@ -35,6 +35,7 @@ let compile ~raise:_ =
     | PE_declaration d when no_visibility (Location.unwrap d.fp) ->
       let loc = Location.generated in
       pe_declaration (d_attr ~loc (Attribute.{ key = "private"; value = None }, d))
+    | PE_export t -> pe_attr Attribute.{ key = "public"; value = None } t
     | e -> make_pe e
   in
   Fold { idle_fold with declaration; program_entry }

@@ -75,22 +75,23 @@ module TODO_do_in_parsing = struct
     in
     (path, field), is_open *)
 
-  (* let control_flow_clause compile_statement (x : I.statement) =
+  let control_flow_clause compile_statement (x : I.statement) : (I.statement, I.statements) O.Test_clause.t =
     (* if the statement is a block containing a single instruction,
        we do not want to emit a ClauseBlock, but a ClauseInstr *)
     let single_stmt_block (x : I.statement) =
-      nsepseq_of_nseq ~sep:ghost (List.Ne.singleton x)
+      List.Ne.singleton @@ (x, None)
     in
     match Location.unwrap @@ compile_statement x with
-    | O.S_instr (I.SBlock { value = { inside; _ }; _ }) ->
-      (match nsepseq_to_list inside with
-      | [ one ] ->
+    | O.S_instr (I.S_Block { value = { inside; _ }; _ }) ->
+      (match nseq_to_list inside with
+      | [ one, _ ] ->
         (match Location.unwrap @@ compile_statement one with
         | S_instr i -> O.Test_clause.ClauseInstr i
         | _ -> O.Test_clause.ClauseBlock (single_stmt_block x))
-      | _ -> O.Test_clause.ClauseBlock inside)
+      | _ ->
+        O.Test_clause.ClauseBlock inside)
     | S_instr i -> O.Test_clause.ClauseInstr i
-    | _ -> O.Test_clause.ClauseBlock (single_stmt_block x) *)
+    | _ -> O.Test_clause.ClauseBlock (single_stmt_block x)
 
   let mvar x = Ligo_prim.Module_var.of_input_var ~loc:(Location.File x#region) x#payload
   let var x = Ligo_prim.Value_var.of_input_var ~loc:(Location.File x#region) x#payload
@@ -121,6 +122,8 @@ module Eq = struct
   type program = I.t
   type sig_expr = I.intf_expr
   type sig_entry = I.intf_entry
+
+  let not_part_of_the_language _ = assert false
 end
 
 let pattern_of_expr x = `Expr x
@@ -467,7 +470,7 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
     Location.wrap ~loc @@ O.T_disc_union fields
 
 
-let rec pattern : Eq.pattern -> Folding.pattern =
+let pattern : Eq.pattern -> Folding.pattern =
  fun p ->
  let loc = Location.lift (I.pattern_to_region p) in
  let return = Location.wrap ~loc in
@@ -524,26 +527,25 @@ let rec pattern : Eq.pattern -> Folding.pattern =
 (* in JSLIGO, instruction ; statements and declaration are all statement *)
 
 let block : Eq.block -> Folding.block =
- fun stmts ->
-  let loc =
-    nsepseq_foldl
-      Location.cover
-      Location.generated
-      (nsepseq_map (Location.lift <@ I.statement_to_region) stmts)
-  in
-  Location.wrap ~loc (nsepseq_to_nseq stmts)
+  fun stmts ->
+  let stmts = nseq_to_list stmts in
+  let locs = List.map ~f:(fun x -> Location.lift @@ I.statement_to_region @@ fst x) stmts in
+  let stmts = List.map ~f:fst stmts in
+  let loc = List.fold_left ~f:Location.cover ~init:Location.generated locs in
+  Location.wrap ~loc (List.Ne.of_list stmts)
 
-
+(* It seems we do no have module expressions in JsLIGO? *)
 let mod_expr : Eq.mod_expr -> Folding.mod_expr =
  fun stmts ->
-  let loc =
-    Location.(
-      stmts
-      |> nsepseq_map (lift <@ I.statement_to_region)
-      |> nsepseq_foldl cover generated)
-  in
-  let stmts = stmts |> nsepseq_to_nseq |> nseq_map (fun x -> I.TopLevel (x, None)) in
-  Location.wrap ~loc (O.M_body I.{ statements = stmts; eof = ghost })
+  let stmts = nseq_to_list stmts in
+  let locs = List.map ~f:(fun x -> Location.lift @@ I.statement_to_region @@ fst x) stmts in
+  let stmts = List.map ~f:fst stmts in
+  let loc = List.fold_left ~f:Location.cover ~init:Location.generated locs in
+  let decl : I.top_decl nseq = stmts |> List.map ~f:(function
+        I.S_Decl d -> I.TL_Decl (d, None)
+      | I.S_Export { region ; value = kwd, d } -> I.TL_Export { region ; value = kwd, I.TL_Decl (d, None) }
+      | _ -> failwith "Something fishy?") |> List.Ne.of_list in
+  Location.wrap ~loc (O.M_body I.{ decl; eof = ghost })
 
 
 let rec statement : Eq.statement -> Folding.statement =
@@ -551,8 +553,12 @@ let rec statement : Eq.statement -> Folding.statement =
   let loc = Location.lift (I.statement_to_region s) in
   let return = Location.wrap ~loc in
   match s with
-  | S_Export _ | S_Decl _ | S_Attr _ ->
-    return @@ O.S_decl s
+  | S_Decl d ->
+    return @@ O.S_decl d
+  | S_Attr (attr, s) ->
+    return @@ O.S_attr (TODO_do_in_parsing.conv_attr attr, s)
+  | S_Export r ->
+    return @@ O.S_instr I.(S_Export r)
   | S_Block _
   | S_Expr _
   | S_Return _
@@ -621,117 +627,106 @@ and instruction : Eq.instruction -> Folding.instruction =
 
 
 and declaration : Eq.declaration -> Folding.declaration =
- fun d ->
-  let loc = Location.lift (I.statement_to_region d) in
+  fun d ->
+  let region = I.declaration_to_region d in
+  let loc = Location.lift region in
   let return = Location.wrap ~loc in
+  let return_region (value : _) : _ Region.reg = { value ; region } in
   let compile_val_binding
       : I.val_binding -> (Eq.pattern, I.expr, I.type_expr) O.Simple_decl.t
     =
-   fun { binders; type_params; lhs_type; eq = _; expr } ->
-    let pattern = `Pattern binders in
+   fun { pattern; type_vars; rhs_type; eq = _; rhs_expr } ->
     let type_params =
-      Option.map type_params ~f:(fun (tp : I.type_generics) ->
-          nseq_map TODO_do_in_parsing.tvar (nsepseq_to_nseq (r_fst tp).inside))
+      Option.map type_vars ~f:(fun (tp : I.type_vars) ->
+          let tp = sep_or_term_to_list (r_fst tp).inside in
+          let tp = List.map ~f:TODO_do_in_parsing.tvar tp in
+          match tp with
+          | [] -> failwith "Parameter list cannot be empty?"
+          | _ -> List.Ne.of_list @@ tp)
     in
-    let rhs_type = Option.map ~f:snd lhs_type in
-    { type_params; pattern; rhs_type; let_rhs = expr }
-  in
-  let return_attr attributes ~attr ~no_attr =
-    match attributes with
-    | [] -> return @@ no_attr
-    | hd :: tl ->
-      let hd = TODO_do_in_parsing.conv_attr hd in
-      return @@ O.D_attr (hd, attr tl)
+    let rhs_type = Option.map ~f:snd rhs_type in
+    { type_params; pattern; rhs_type; let_rhs = rhs_expr }
   in
   match d with
-  | SNamespace ({ value; _ } as n) ->
-    let kwd, module_name, interface_annotation, statements, attributes = value in
+  | D_Namespace { value ; _ } ->
+    let I.{ kwd_namespace; namespace_name; namespace_type; namespace_body } = value in
     let annotation =
-      Option.map ~f:(fun { region = _; value = _, value } -> value) interface_annotation
+      Option.map ~f:(fun { region = _; value = _, value } -> value) namespace_type
     in
-    return_attr
-      attributes
-      ~no_attr:
-        (let name = TODO_do_in_parsing.mvar module_name in
-         O.D_module { name; mod_expr = statements.value.inside; annotation })
-      ~attr:(fun attributes ->
-        I.SNamespace
-          { n with
-            value = kwd, module_name, interface_annotation, statements, attributes
-          })
-  | SImport { value = s; _ } ->
+    let name = TODO_do_in_parsing.mvar namespace_name in
+    let mod_expr = namespace_body.value.inside in
+    return @@ O.D_module { name ; mod_expr ; annotation }
+  | D_Import s ->
     let import =
       match s with
-      | Import_rename { alias; module_path; _ } ->
+      | ImportAlias { value = { alias; namespace_path; _ } ; _ } ->
         let alias = TODO_do_in_parsing.mvar alias in
         let module_path =
-          List.Ne.map TODO_do_in_parsing.mvar (nsepseq_to_nseq module_path)
+          List.Ne.map TODO_do_in_parsing.mvar (TODO_do_in_parsing.selection_path namespace_path)
         in
         O.Import.Import_rename { alias; module_path }
-      | Import_all_as s ->
-        let alias = TODO_do_in_parsing.mvar s.alias in
-        let module_str = s.module_path#payload in
+      | ImportAllAs { value = { alias; file_path; _ }; _ } ->
+        let alias = TODO_do_in_parsing.mvar alias in
+        let module_str = file_path#payload in
         O.Import.Import_all_as { alias; module_str }
-      | Import_selected { imported; module_path; _ } ->
-        let imported =
-          List.Ne.map TODO_do_in_parsing.var (nsepseq_to_nseq (r_fst imported).inside)
+      | ImportFrom { value = { imported; file_path; _ }; _ } ->
+        let imported = match sep_or_term_to_nelist (r_fst imported).inside with
+          | Some imported -> imported | None -> failwith "Expected imported name?"
         in
-        let module_str = module_path#payload in
+        let imported =
+          List.Ne.map TODO_do_in_parsing.var imported
+        in
+        let module_str = file_path#payload in
         O.Import.Import_selected { imported; module_str }
     in
     return @@ D_import import
-  | SInterface ({ value; _ } as n) ->
-    let kwd, module_name, interface_body, attributes = value in
-    return_attr
-      attributes
-      ~no_attr:
-        (let name = TODO_do_in_parsing.mvar module_name in
-         O.D_signature { name; sig_expr = IInterface interface_body })
-      ~attr:(fun attributes ->
-        I.SInterface { n with value = kwd, module_name, interface_body, attributes })
-  | SExport { value = _, statement; _ } -> return @@ D_export statement
-  | SLet ({ value = { bindings; attributes; _ }; _ } as l) ->
-    return_attr
-      attributes
-      ~no_attr:
-        (let bindings =
-           List.Ne.map (compile_val_binding <@ r_fst) (nsepseq_to_nseq bindings)
-         in
-         D_multi_var bindings)
-      ~attr:(fun attributes -> I.SLet { l with value = { l.value with attributes } })
-  | SConst ({ value = { bindings; attributes; _ }; _ } as l) ->
-    return_attr
-      attributes
-      ~no_attr:
-        (let bindings =
-           List.Ne.map (compile_val_binding <@ r_fst) (nsepseq_to_nseq bindings)
-         in
-         D_multi_const bindings)
-      ~attr:(fun attributes -> I.SConst { l with value = { l.value with attributes } })
-  | SType { value = { attributes; name; params; type_expr; _ } as v; region } ->
-    return_attr
-      attributes
-      ~no_attr:
-        (let name = TODO_do_in_parsing.tvar name in
-         let params =
-           Option.map
-             ~f:(fun tv ->
-               List.Ne.map TODO_do_in_parsing.tvar (nsepseq_to_nseq (r_fst tv).inside))
-             params
-         in
-         D_type_abstraction { name; params; type_expr })
-      ~attr:(fun attributes -> SType { value = { v with attributes }; region })
-  (* impossible, if triggered, look at functions 'statement' *)
-  | _ -> assert false
+  | D_Interface { value; _ } ->
+    let I.{ kwd_interface; intf_name; intf_body } = value in
+    let name = TODO_do_in_parsing.mvar intf_name in
+    return @@ O.D_signature { name; sig_expr = I_Body intf_body }
+  | D_Value { value ; _ } ->
+    let I.{ kind; bindings } = value in
+    let bindings = List.Ne.map (compile_val_binding <@ r_fst) (nsepseq_to_nseq bindings) in
+    (match kind with
+     | `Let _ -> return @@ O.D_multi_var bindings
+     | `Const _ -> return @@ O.D_multi_const bindings
+    )
+  | D_Type { value ; region } ->
+    let I.{ name ; type_vars; type_expr; _ } = value in
+    let name = TODO_do_in_parsing.tvar name in
+    let params =
+      Option.map type_vars ~f:(fun (tp : I.type_vars) ->
+          let tp = sep_or_term_to_list (r_fst tp).inside in
+          let tp = List.map ~f:TODO_do_in_parsing.tvar tp in
+          match tp with
+          | [] -> failwith "Parameter list cannot be empty?"
+          | _ -> List.Ne.of_list @@ tp)
+    in
+    return @@ O.D_type_abstraction { name; params; type_expr }
+  | D_Fun { value ; _ } ->
+    let I.{ kwd_function ; fun_name ; type_vars ; parameters ; rhs_type ; fun_body } = value in
+    let let_rhs : I.expr =
+      let fun_body : I.fun_body = StmtBody fun_body in
+      let parameters : I.arrow_fun_params = ParParams parameters in
+      let function_expr : I.function_expr = { kwd_function ; type_vars ; parameters ; rhs_type ; fun_body } in
+      E_Function (return_region function_expr)
+    in
+    let type_params =
+      let open Simple_utils.Option in
+      let* type_vars in
+      let* tvs = sep_or_term_to_nelist type_vars.value.inside in
+      return (List.Ne.map TODO_do_in_parsing.tvar tvs)
+    in
+    let ret_type = Option.map ~f:snd rhs_type in
+    let pattern : I.pattern = P_Var fun_name in
+    return @@ O.D_multi_const ({ type_params ; pattern ; rhs_type = ret_type ; let_rhs }, [])
 
 
 and program_entry : Eq.program_entry -> Folding.program_entry = function
-  | I.TopLevel (s, _) ->
-    (match Location.unwrap @@ statement s with
-    | O.S_decl _ -> PE_declaration s
-    | O.S_instr _ -> PE_top_level_instruction s
-    | _ -> assert false)
-  | I.Directive _ -> PE_preproc_directive ()
+  | I.TL_Export { value = _, td; _ } -> O.PE_export td
+  | I.TL_Attr (attr, td) -> O.PE_attr (TODO_do_in_parsing.conv_attr attr, td)
+  | I.TL_Decl (s, _) -> O.PE_declaration s
+  | I.TL_Directive _ -> PE_preproc_directive ()
 
 
 and program : Eq.program -> Folding.program = fun x -> List.Ne.to_list x.statements
@@ -751,34 +746,26 @@ and sig_expr : Eq.sig_expr -> Folding.sig_expr = function
 and sig_entry : Eq.sig_entry -> Folding.sig_entry =
  fun se ->
   let return ~loc = Location.wrap ~loc in
-  let return_attr attributes ~loc ~attr ~no_attr =
-    match attributes with
-    | [] -> return ~loc @@ no_attr
-    | hd :: tl ->
-      let hd = TODO_do_in_parsing.conv_attr hd in
-      return ~loc @@ (S_attr (hd, attr tl) : _ O.sig_entry_content_)
+  (* TODO: Wouldn't it better to have a region in I_Attr? *)
+  let rec get_intf_entry_loc (x : I.intf_entry) : Location.t =
+    match x with
+    | I_Type { region; _ } -> Location.lift region
+    | I_Const { region; _ } -> Location.lift region
+    | I_Attr (attr, entry) ->
+      Location.cover (Location.lift attr#region) @@ get_intf_entry_loc entry
   in
+  let loc = get_intf_entry_loc se in
   match se with
-  | IType { region; value = attributes, kwd_type, v, equal, ty } ->
-    let loc = Location.lift region in
-    return_attr
-      attributes
-      ~loc
-      ~no_attr:(O.S_type (TODO_do_in_parsing.tvar v, ty))
-      ~attr:(fun attributes ->
-        I.IType { region; value = attributes, kwd_type, v, equal, ty })
-  | IType_var { region; value = attributes, kwd_type, v } ->
-    let loc = Location.lift region in
-    return_attr
-      attributes
-      ~loc
-      ~no_attr:(O.S_type_var (TODO_do_in_parsing.tvar v))
-      ~attr:(fun attributes -> I.IType_var { region; value = attributes, kwd_type, v })
-  | IConst { region; value = attributes, kwd_type, v, equal, ty } ->
-    let loc = Location.lift region in
-    return_attr
-      attributes
-      ~loc
-      ~no_attr:(O.S_value (TODO_do_in_parsing.var v, ty))
-      ~attr:(fun attributes ->
-        I.IConst { region; value = attributes, kwd_type, v, equal, ty })
+  | I_Attr (attr, entry) ->
+    return ~loc @@ (O.S_attr (TODO_do_in_parsing.conv_attr attr, entry) : _ O.sig_entry_content_)
+  | I_Type { value; _ } ->
+    let I.{ type_name ; type_rhs ; _ } = value in
+    let var = TODO_do_in_parsing.tvar type_name in
+    (match type_rhs with
+     | None -> return ~loc @@ O.S_type_var var
+     | Some (_, type_rhs) -> return ~loc @@ O.S_type (var, type_rhs))
+  | I_Const { value; _ } ->
+    let I.{ const_name ; const_type ; _ } = value in
+    let var = TODO_do_in_parsing.var const_name in
+    let _, type_ = const_type in
+    return ~loc @@ O.S_value (var, type_)
