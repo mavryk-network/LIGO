@@ -219,7 +219,7 @@ lang_name       : "<ident>" | "<uident>" { $1 }
 namespace_name  : "<uident>"             { $1 }
 intf_name       : "<uident>"             { $1 }
 file_path       : "<string>"             { $1 }
-ctor            : "<uident>"      { E_Ctor $1 }
+ctor            : "<uident>"             { $1 }
 object_or_array : "<ident>"       { E_Var  $1 }
 
 (* ENTRY POINTS *)
@@ -869,7 +869,8 @@ switch_case:
     in {region; value} }
 
 case_expr:
-  ctor | literal_expr | path_expr { $1 }
+  ctor                     { E_Ctor $1 }
+| literal_expr | path_expr { $1 }
 
 switch_default:
   "default" ":" ioption(statements) {
@@ -987,13 +988,13 @@ match_clauses:
 | match_default                             { DefaultClause   $1 }
 
 match_clause:
-  "when" par(pattern) ":" expr {
+  "when" par(pattern) ":" expr ioption(";") {
      let region = cover $1#region (expr_to_region $4)
      and value  = {kwd_when=$1; filter=$2; colon=$3; clause_expr=$4}
     in {region; value} }
 
 match_default:
-  "default" ":" expr {
+  "default" ":" expr ioption(";") {
     let region = cover $1#region (expr_to_region $3)
     and value  = {kwd_default=$1; colon=$2; default_expr=$3}
     in {region; value} }
@@ -1143,7 +1144,7 @@ core_expr:
   code_inj     { E_CodeInj $1 }
 | par (expr)   { E_Par     $1 }
 | array (expr) { E_Array   $1 }
-| ctor
+| ctor         { E_Ctor    $1 }
 | literal_expr
 | path_expr    { $1 }
 
@@ -1226,7 +1227,7 @@ path_expr:
 | path (par (expr) { E_Par $1 }) { $1 }
 
 selected_expr:
-  ctor | var_path { $1 }
+  ctor { E_Ctor $1 } | var_path { $1 }
 
 (* PATTERNS *)
 
@@ -1235,6 +1236,7 @@ pattern:
 | "_" | variable           { P_Var       $1 }
 | object_pattern (pattern) { P_Object    $1 }
 | array (pattern)          { P_Array     $1 }
+| ctor                     { P_Ctor      $1 }
 | literal_pattern          {             $1 }
 
 literal_pattern:
