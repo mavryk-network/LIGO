@@ -53,12 +53,12 @@ let list_to_matching_clause ~raise : expr -> (pattern, block) Case.clause =
   | E_poly_fun { parameters = [ { pattern; _ } ]; ret_type; body; type_params = None } ->
     ignore ret_type;
     let rhs = expr_in_block body in
-    { pattern; rhs }
+    { pattern = Some pattern; rhs }
   | E_block_poly_fun
       { parameters = [ { pattern; _ } ]; ret_type; body; type_params = None } ->
     ignore ret_type;
     (* TODO: warning here, this type is ignored *)
-    { pattern; rhs = body }
+    { pattern = Some pattern; rhs = body }
   | _ -> raise.error (invalid_list_pattern_match (get_e_loc e))
 
 

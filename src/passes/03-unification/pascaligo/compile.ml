@@ -439,7 +439,7 @@ and compile_case_clause
  fun f c ->
   let pattern = compile_pattern c.pattern in
   let rhs = f c.rhs in
-  { pattern; rhs }
+  { pattern = Some pattern; rhs }
 
 
 and compile_case : type a b. (a -> b) -> a CST.case -> (_, _, b) AST.Case.t =

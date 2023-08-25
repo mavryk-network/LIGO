@@ -120,7 +120,7 @@ let compile ~raise =
                    | None -> ClauseInstr (i_skip ~loc)
                    | Some block -> ClauseBlock block
                  in
-                 Case.{ pattern; rhs })
+                 Case.{ pattern = Some pattern; rhs })
         in
         let expr = e_annot ~loc:(get_e_loc struct_) (struct_, matching_ty) in
         i_case ~loc { expr; cases }
