@@ -530,21 +530,17 @@ let pattern : Eq.pattern -> Folding.pattern =
 (* in JSLIGO, instruction ; statements and declaration are all statement *)
 
 let block : Eq.block -> Folding.block =
-  fun stmts ->
-  let stmts = nseq_to_list stmts in
-  let locs = List.map ~f:(fun x -> Location.lift @@ I.statement_to_region @@ fst x) stmts in
-  let stmts = List.map ~f:fst stmts in
-  let loc = List.fold_left ~f:Location.cover ~init:Location.generated locs in
-  Location.wrap ~loc (List.Ne.of_list stmts)
+  fun statements ->
+  let locs = nseq_map (fun x -> Location.lift @@ I.statement_to_region @@ fst x) statements in
+  let loc = List.Ne.fold_left1 ~f:Location.cover locs in
+  let statements = nseq_map fst statements in
+  Location.wrap ~loc statements
 
 (* It seems we do no have module expressions in JsLIGO? *)
 let mod_expr : Eq.mod_expr -> Folding.mod_expr =
- fun stmts ->
-  let stmts = nseq_to_list stmts in
-  let locs = List.map ~f:(fun x -> Location.lift @@ I.statement_to_region @@ fst x) stmts in
-  let stmts = List.map ~f:fst stmts in
-  let loc = List.fold_left ~f:Location.cover ~init:Location.generated locs in
-  let statements = stmts |> List.map ~f:(fun s -> (s, None)) |> List.Ne.of_list in
+ fun statements ->
+  let locs = nseq_map (fun x -> Location.lift @@ I.statement_to_region @@ fst x) statements in
+  let loc = List.Ne.fold_left1 ~f:Location.cover locs in
   Location.wrap ~loc (O.M_body I.{ statements; eof = ghost })
 
 
