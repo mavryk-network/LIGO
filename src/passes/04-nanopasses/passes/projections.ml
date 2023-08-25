@@ -17,7 +17,7 @@ let compile ~raise:_ =
      | E_proj (struct_, []) ->
        struct_
      | E_proj (struct_, path) ->
-       let last, init = match List.rev path with | [] -> failwith "Impossible" | hd :: tl -> hd, tl in
+       let last, init = match List.rev path with | [] -> failwith "Impossible" | hd :: tl -> hd, List.rev tl in
        let struct_ = expr (Location.wrap ~loc @@ E_proj (struct_, init)) in
        (match last with
         | FieldName label -> e_record_access ~loc { struct_; label }
