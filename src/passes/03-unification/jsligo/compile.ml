@@ -231,6 +231,22 @@ let rec expr : Eq.expr -> Folding.expr =
       O.Object_.{ field_id; field_rhs = Option.map ~f:snd property_rhs }
     in
     return @@ E_object (List.map ~f (sep_or_term_to_list value.inside))
+  | E_Update { value = { inside ; _ } ; _ } ->
+    let I.{ _object ; updates ; _ } = inside in
+    let f x =
+      let I.{ attributes; property_id; property_rhs } = r_fst x in
+      TODO_do_in_parsing.weird_attr attributes;
+      let open O.Object_ in
+      let field_id =
+        match property_id with
+        | F_Name n -> F_Name (O.Label.of_string n#payload)
+        | F_Int i -> F_Int (snd i#payload)
+        | F_Str s -> F_Str s#payload
+      in
+      O.Object_.{ field_id; field_rhs = Option.map ~f:snd property_rhs }
+    in
+    let updates = List.map ~f (sep_or_term_to_list updates) in
+    return @@ E_object_update { object_ = _object ; updates }
   | E_Proj { value = { object_or_array; property_path }; _ } ->
     let f : I.selection -> _ O.Selection.t = function
       | I.PropertyStr fstr ->
@@ -365,7 +381,6 @@ let rec expr : Eq.expr -> Folding.expr =
         List.Ne.singleton (default_to_clause default_expr)
     in
     return @@ E_match { expr ; cases }
-  | E_Update { value = { inside ; _ } ; _ } -> failwith "IMPLEMENT ME"
   | E_Xor _
   | E_BitAndEq _
   | E_BitOrEq _

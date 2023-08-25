@@ -9,4 +9,9 @@ and 'expr property =
   }
 
 and 'expr t = 'expr property list
+
+and 'expr update =
+  { object_ : 'expr
+  ; updates : 'expr t
+  }
 [@@deriving yojson, map, fold, iter, sexp, eq, compare, hash]
