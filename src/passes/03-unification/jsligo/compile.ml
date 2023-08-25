@@ -250,9 +250,9 @@ let rec expr : Eq.expr -> Folding.expr =
   | E_Proj { value = { object_or_array; property_path }; _ } ->
     let f : I.selection -> _ O.Selection.t = function
       | I.PropertyStr fstr ->
-        (* TODO, not clear to me. need the parser to compile in order to decide *)
-        assert false
-      | I.PropertyName (_dot, name) -> FieldName (O.Label.of_string name#payload)
+        Component_expr I.(E_String fstr.value.inside)
+      | I.PropertyName (_dot, name) ->
+        FieldName (O.Label.of_string name#payload)
       | Component comp ->
         let comp = (r_fst comp).inside#payload in
         Component_num comp
