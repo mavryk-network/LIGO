@@ -106,29 +106,21 @@ and expr : (CST.expr, CST.type_expr, CST.pattern, unit, unit) AST.expression_ ->
   | E_unary_op { operator; arg } ->
     let unop op : 'a CST.wrap CST.un_op CST.reg = w @@ CST.{ op; arg } in
     (match Location.unwrap operator with
-    | MINUS -> EArith (Neg (unop ghost_minus))
-    | WORD_NOT -> ELogic (BoolExpr (Not (unop ghost_bool_not)))
+    | MINUS -> E_Neg (unop ghost_minus)
+    | WORD_NOT -> E_Not (unop ghost_not)
     | _ -> failwith "Impossible")
-  | E_literal Literal_unit -> CST.EUnit (w (ghost_lpar, ghost_rpar))
-  | E_literal (Literal_int x) -> CST.EArith (Int (ghost_int x))
-  | E_literal (Literal_nat x) ->
-    CST.EAnnot
-      (w @@ (CST.EArith (Int (ghost_int x)), ghost_as, CST.TVar (ghost_ident "nat")))
-  | E_literal (Literal_string x) ->
-    CST.EString
-      (match x with
-      | Standard s -> String (ghost_string s)
-      | Verbatim v -> Verbatim (ghost_verbatim v))
-  | E_literal (Literal_mutez x) ->
-    CST.EAnnot
-      (w @@ (CST.EArith (Int (ghost_int x)), ghost_as, CST.TVar (ghost_ident "tez")))
-  | E_module_open_in m -> EModA (w @@ decompile_mod_path m)
+  | E_literal Literal_unit -> CST.E_Array (w CST.{ lbracket = ghost_lbracket; inside = None; rbracket = ghost_rbracket })
+  | E_literal (Literal_int x) -> CST.E_Int (ghost_int x)
+  | E_literal (Literal_nat x) -> CST.E_Nat (ghost_nat x)
+  | E_literal (Literal_string (Standard s)) -> CST.E_String (ghost_string s)
+  | E_literal (Literal_string (Verbatim v)) -> CST.E_Verbatim (ghost_verbatim v)
+  | E_literal (Literal_mutez x) -> CST.E_Mutez (ghost_mutez @@ Z.to_int64 x)
+  | E_module_open_in m -> E_NamePath (w @@ decompile_namespace_path m)
   | E_application { lamb; args } ->
-    CST.ECall
+    CST.E_App
       (w
       @@ ( lamb
-         , CST.Multiple
-             (w @@ CST.{ lpar = ghost_lpar; rpar = ghost_rpar; inside = args, [] }) ))
+         , w @@ CST.{ lpar = ghost_lpar; rpar = ghost_rpar; inside = Some (args, []) } ) )
   | expr when AST.expr_is_not_initial expr ->
     Helpers.failwith_not_initial_node_decompiler @@ `Expr e
   | _ ->
@@ -151,94 +143,83 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
   (* ^ XXX we should split generated names on '#'? Can we just extract the name somehow?
         Why [t.name] is not working?? *)
   let decompile_tvar : AST.Ty_variable.t -> CST.type_expr =
-   fun t -> TVar (ghost_ident @@ Format.asprintf "%a" Ligo_prim.Type_var.pp t)
+   fun t -> T_Var (ghost_ident @@ Format.asprintf "%a" Ligo_prim.Type_var.pp t)
    (* XXX we should split generated names on '#'? Can we just extract the name somehow?
          Why [t.name] is not working?? *)
   and decompile_variant
       : AST.Label.t -> CST.type_expr option -> AST.Attribute.t list -> CST.variant
     =
    fun (AST.Label.Label constr_name) t attributes ->
-    let params =
-      (* Looks like it's the correct way to decompile a constr with multiple params,
-    we should add tests for this scenario *)
-      match t with
-      | None -> None
-      | Some (TProd types) -> Some (ghost_comma, types.inside.value.inside)
-      | Some t -> Some (ghost_comma, (t, []))
-      (* ^ XXX leading comma? *)
-    in
-    let inside = CST.{ constr = ghost_ident constr_name; params } in
-    { tuple = w CST.{ lbracket = ghost_lbracket; inside; rbracket = ghost_rbracket }
-    ; attributes = List.map ~f:decompile_attr attributes
-    }
+    let ctor : CST.ctor = ghost_ident constr_name in
+    let ctor_params : (CST.comma * (CST.type_expr, CST.comma) Utils.nsep_or_term) option =
+      Option.map ~f:(fun t ->
+          match t with
+          | T_Array { value ; _ } ->
+            let CST.{ inside ; _ } : (_, _) Utils.nsep_or_term CST.brackets' = value in
+            ghost_comma, inside
+          | t -> ghost_comma, `Sep (t, [])
+      ) t in
+    let inside : CST.variant_comp = { ctor ; ctor_params } in
+    let tuple = w CST.{ lbracket = ghost_lbracket; inside; rbracket = ghost_rbracket } in
+    let attributes = List.map ~f:decompile_attr attributes in
+    { attributes ; tuple }
   and decompile_field
-      : AST.Label.t -> CST.type_expr -> AST.Attribute.t list -> CST.field_decl
+      : AST.Label.t -> CST.type_expr -> AST.Attribute.t list -> _ CST.property
     =
    fun (AST.Label.Label field_name) t attributes ->
-    { field_name = ghost_ident field_name
-    ; colon = ghost_colon
-    ; field_type = t
+    { property_id = F_Name (ghost_string field_name)
+    ; property_rhs = Some (ghost_comma, t)
     ; attributes = List.map ~f:decompile_attr attributes
     }
-  and mk_object : (CST.field_decl CST.reg, CST.semi) Utils.nsepseq -> CST.obj_type =
-   fun nsepseq ->
-    w
-    @@ CST.
-         { compound = Some braces_compound
-         ; ne_elements = nsepseq
-         ; terminator = None
-         ; attributes = []
-         }
+  and mk_object : (CST.type_expr CST.property Region.reg, CST.semi) Utils.nsepseq -> CST.type_expr Cst_jsligo.CST._object =
+    fun nsepseq ->
+     let inside : (CST.type_expr CST.property CST.reg, CST.property_sep) Utils.sep_or_term = Some (`Sep nsepseq) in
+     w
+    @@ CST.{ lbrace = ghost_lbrace ; rbrace = ghost_rbrace ; inside }
   in
   match Location.unwrap te with
   | T_attr (_attr, t) -> t (* FIXME should TAttr be added to JsLIGO CST?? *)
   | T_var v -> decompile_tvar v
-  | T_int (_, z) -> TInt (ghost_int z)
-  | T_string s -> TString (ghost_string s)
+  | T_int (_, z) -> T_Int (ghost_int z)
+  | T_string s -> T_String (ghost_string s)
   | T_module_open_in { module_path; field; field_as_open } ->
-    TModA (w @@ decompile_mod_path { module_path = module_path, []; field; field_as_open })
+    let module_path = module_path, [] in
+    let v : CST.type_expr CST.namespace_path = decompile_to_namespace_path module_path field in    
+    T_NamePath (w v)
   | T_module_access { module_path; field; field_as_open } ->
-    TModA
-      (w
-      @@ decompile_mod_path { module_path; field = decompile_tvar field; field_as_open })
-  | T_arg s -> TVar (ghost_ident s)
+    let field : CST.type_expr = T_Var (ghost_ident (Format.asprintf "%a" AST.Ty_variable.pp field)) in
+    let v : CST.type_expr CST.namespace_path = decompile_to_namespace_path module_path field in
+    T_NamePath (w v)
+  | T_arg s -> T_Var (ghost_ident s)
   (* ^ XXX is this correct? CameLIGO has separate T_Arg in CST *)
   | T_app { constr; type_args } ->
     let params_nsepseq = Utils.nsepseq_of_nseq type_args ~sep:ghost_comma in
     let params =
-      CST.{ lchevron = ghost_lt; inside = params_nsepseq; rchevron = ghost_gt }
+      CST.{ lchevron = ghost_lt; inside = `Sep params_nsepseq; rchevron = ghost_gt }
     in
-    let constr =
-      match constr with
-      | TVar v -> v
-      | _ -> failwith "Decompiler: T_app 's first argument decompiled not to a TVar"
-      (* XXX CST constr shpould be a ty_expr, not just a string, cause it can be a module access *)
-    in
-    TApp (w (constr, w params))
+    T_App (w (constr, w params))
   | T_prod types ->
-    TProd
-      { attributes = []
-      ; inside =
-          w
-            CST.
-              { lbracket = ghost_lbracket
-              ; inside = Utils.nsepseq_of_nseq types ~sep:ghost_comma
-              ; rbracket = ghost_rbracket
-              }
-      }
-  | T_named_fun (args, f) ->
-    let decompile_arg : CST.type_expr AST.Named_fun.fun_type_arg -> CST.fun_type_arg =
-     fun { name; type_expr } ->
-      { name = ghost_ident @@ name; colon = ghost_colon; type_expr }
+    let inside = Utils.nsepseq_of_nseq types ~sep:ghost_comma in
+    let inside : (CST.type_expr, CST.comma) Utils.nsep_or_term = `Sep inside in
+    let v : (CST.type_expr, CST.comma) Utils.nsep_or_term CST.brackets' =
+      CST.{ lbracket = ghost_lbracket; rbracket = ghost_rbracket; inside }
     in
-    let args =
+    T_Array (w v)
+  | T_named_fun (args, t) ->
+    let decompile_arg : CST.type_expr AST.Named_fun.fun_type_arg -> CST.fun_type_param CST.reg =
+      fun { name; type_expr } ->
+        w @@ (CST.P_Var (ghost_ident name), (ghost_colon, type_expr))
+    in
+    let args : CST.fun_type_params =
       match Utils.list_to_nsepseq_opt (List.map ~f:decompile_arg args) ghost_comma with
-      | Some nsepseq -> CST.{ rpar = ghost_rpar; inside = nsepseq; lpar = ghost_lpar }
+      | Some nsepseq ->
+        let inside : (CST.fun_type_param CST.reg, CST.comma) Utils.sep_or_term = Some (`Sep nsepseq) in
+        w @@ CST.{ rpar = ghost_rpar; inside; lpar = ghost_lpar }
       | None -> failwith "Decompiler: got a T_named_fun with no args"
     in
-    TFun (w (args, ghost_arrow, f))
+    T_Fun (w (args, ghost_arrow, t))
   | T_record_raw fields ->
-    let f : CST.type_expr option AST.Non_linear_rows.row -> CST.field_decl CST.reg =
+    let f : CST.type_expr option AST.Non_linear_rows.row -> _ CST.property CST.reg =
      fun (field_name, { associated_type; attributes; _ }) ->
       match associated_type with
       | None -> failwith "Decompiler: got a field with no associated type in T_record_raw"
@@ -246,47 +227,49 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
     in
     (match Utils.list_to_nsepseq_opt (List.map ~f fields) ghost_semi with
     | None -> failwith "Decompiler: got a T_record_raw with no fields"
-    | Some nsepseq -> TObject (mk_object nsepseq))
+    | Some nsepseq -> T_Object (mk_object nsepseq))
   | T_sum_raw variants ->
-    let f : CST.type_expr option AST.Non_linear_rows.row -> CST.variant CST.reg =
+    let f : CST.type_expr option AST.Non_linear_rows.row -> CST.variant =
      fun (constr, { associated_type; attributes; _ }) ->
-      w @@ decompile_variant constr associated_type attributes
+      decompile_variant constr associated_type attributes
     in
     (match Utils.list_to_nsepseq_opt (List.map ~f variants) ghost_vbar with
     | None -> failwith "Decompiler: got a T_sum_raw with no fields"
     | Some nsepseq ->
-      TSum
-        (w
-        @@ CST.{ leading_vbar = Some ghost_vbar; variants = w nsepseq; attributes = [] }))
+      let variant : (CST.variant, CST.vbar) Utils.nsep_or_pref = `Sep nsepseq in
+      T_Variant (w variant))
   | T_disc_union objects ->
-    let f : CST.type_expr AST.Non_linear_disc_rows.row -> CST.obj_type =
+    let f : CST.type_expr AST.Non_linear_disc_rows.row -> CST.type_expr CST._object =
      fun (_empty_label, obj) ->
       match obj.associated_type with
-      | TObject obj -> obj
+      | T_Object obj -> obj
       | _ -> failwith "Decompiler: field of T_disc_union should be decompiled to TObject"
     in
     (match Utils.list_to_nsepseq_opt (List.map ~f objects) ghost_vbar with
     | None -> failwith "Decompiler: got a T_disc_union with no fields"
-    | Some nsepseq -> TDisc nsepseq)
+    | Some nsepseq ->
+      let variant : (CST.type_expr Cst_jsligo.CST._object, CST.vbar) Utils.nsep_or_pref = `Sep nsepseq in
+      T_Union (w variant))
   | T_sum { fields; layout = _ } ->
     (* XXX those are not initial, but backwards nanopass T_sum -> T_sum_row and
          T_record -> T_record_raw is not implemented, so we need to handle those here*)
-    let f : AST.Label.t * CST.type_expr -> CST.variant CST.reg =
-     fun (constr, t) -> w @@ decompile_variant constr (Some t) []
+    let f : AST.Label.t * CST.type_expr -> CST.variant =
+     fun (constr, t) -> decompile_variant constr (Some t) []
     in
     let pairs =
       match Utils.list_to_sepseq (AST.Label.Map.to_alist fields) ghost_vbar with
       | None -> failwith "Decompiler: got a T_sum with no elements"
       | Some nsepseq -> Utils.nsepseq_map f nsepseq
     in
-    TSum (w @@ CST.{ leading_vbar = Some ghost_vbar; variants = w pairs; attributes = [] })
+    let variant : (CST.variant, CST.vbar) Utils.nsep_or_pref = `Sep pairs in
+    T_Variant (w variant)
   | T_record { fields; layout = _ } ->
-    let f : AST.Label.t * CST.type_expr -> CST.field_decl CST.reg =
+    let f : AST.Label.t * CST.type_expr -> CST.type_expr CST.property CST.reg =
      fun (field_name, t) -> w @@ decompile_field field_name t []
     in
     (match Utils.list_to_sepseq (AST.Label.Map.to_alist fields) ghost_semi with
     | None -> failwith "Decompiler: got a T_record with no elements"
-    | Some nsepseq -> TObject (mk_object @@ Utils.nsepseq_map f nsepseq))
+    | Some nsepseq -> T_Object (mk_object @@ Utils.nsepseq_map f nsepseq))
   | T_fun _ ->
     failwith
       "Decompiler: T_fun is not initial for JsLIGO, should be transformed to T_named_fun \
@@ -301,7 +284,3 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
   | T_for_all Ligo_prim.Abstraction.{ ty_binder = _; kind = _; type_ } -> type_
   | T_module_app _ | T_constant _ ->
     Helpers.failwith_not_initial_node_decompiler @@ `Ty_expr te
-
-
-and bracket_compound = CST.Brackets (ghost_lbracket, ghost_rbracket)
-and braces_compound = CST.Braces (ghost_lbrace, ghost_rbrace)

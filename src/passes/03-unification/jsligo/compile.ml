@@ -199,14 +199,11 @@ let rec expr : Eq.expr -> Folding.expr =
   | E_Equal eq -> return @@ compile_bin_op DEQ eq
   | E_Neq ne -> return @@ compile_bin_op EQ_SLASH_EQ ne
   | E_App { value = expr, args; _ } ->
-    let args = match sepseq_to_list args.value.inside with
-      | [] ->
-        let region = args.region in
-        let value = I.{ lbracket = ghost ; rbracket = ghost ; inside = None } in
-        [ I.E_Array { region ; value }  ] | args -> args
-    in
-    let args = Location.wrap ~loc @@ args in
-    return @@ E_call (expr, args)
+    let args = sepseq_to_list args.value.inside in
+    (match expr with
+     | E_Ctor ctor -> return @@ E_ctor_app (expr, List.Ne.of_list_opt args)
+     | _ ->
+       return @@ E_call (expr, Location.wrap ~loc @@ args))
   | E_Ctor c ->
     (* TODO in unified types (one type might not be necessary) *)
     return @@ E_constr (O.Label.of_string c#payload)
@@ -533,21 +530,17 @@ let pattern : Eq.pattern -> Folding.pattern =
 (* in JSLIGO, instruction ; statements and declaration are all statement *)
 
 let block : Eq.block -> Folding.block =
-  fun stmts ->
-  let stmts = nseq_to_list stmts in
-  let locs = List.map ~f:(fun x -> Location.lift @@ I.statement_to_region @@ fst x) stmts in
-  let stmts = List.map ~f:fst stmts in
-  let loc = List.fold_left ~f:Location.cover ~init:Location.generated locs in
-  Location.wrap ~loc (List.Ne.of_list stmts)
+  fun statements ->
+  let locs = nseq_map (fun x -> Location.lift @@ I.statement_to_region @@ fst x) statements in
+  let loc = List.Ne.fold_left1 ~f:Location.cover locs in
+  let statements = nseq_map fst statements in
+  Location.wrap ~loc statements
 
 (* It seems we do no have module expressions in JsLIGO? *)
 let mod_expr : Eq.mod_expr -> Folding.mod_expr =
- fun stmts ->
-  let stmts = nseq_to_list stmts in
-  let locs = List.map ~f:(fun x -> Location.lift @@ I.statement_to_region @@ fst x) stmts in
-  let stmts = List.map ~f:fst stmts in
-  let loc = List.fold_left ~f:Location.cover ~init:Location.generated locs in
-  let statements = stmts |> List.map ~f:(fun s -> (s, None)) |> List.Ne.of_list in
+ fun statements ->
+  let locs = nseq_map (fun x -> Location.lift @@ I.statement_to_region @@ fst x) statements in
+  let loc = List.Ne.fold_left1 ~f:Location.cover locs in
   Location.wrap ~loc (O.M_body I.{ statements; eof = ghost })
 
 
