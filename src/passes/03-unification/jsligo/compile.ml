@@ -341,8 +341,31 @@ let rec expr : Eq.expr -> Folding.expr =
   | E_BitSl lsl_ -> return @@ compile_bin_op WORD_LSL lsl_
   | E_BitSr lsr_ -> return @@ compile_bin_op WORD_LSR lsr_
   | E_Attr (x, y) -> return @@ E_attr (TODO_do_in_parsing.conv_attr x, y)
-  | E_Match _
-  | E_Update _ -> failwith "IMPLEMENT ME"
+  | E_Match { region = _ ; value } ->
+    let I.{ kwd_match ; subject ; clauses } = value in
+    let expr = subject.value.inside in
+    let default_to_clause (rhs : I.expr) : (I.pattern, I.expr) O.Case.clause =
+      { pattern = None ; rhs }
+    in
+    let cases = match clauses.value.inside with
+      | AllClauses (clauses, default_expr) ->
+        let f ({ value ; _ } : I.match_clause I.reg) : (I.pattern, I.expr) O.Case.clause =
+          let I.{ filter; clause_expr; _ } = value in
+          let pattern = filter.value.inside in
+          { pattern = Some pattern ; rhs = clause_expr }
+        in
+        let clauses = List.Ne.map f clauses in
+        (match default_expr with
+         | None -> clauses
+         | Some default_expr ->
+           let I.{ default_expr; _ } = default_expr.value in
+           List.Ne.append clauses @@ List.Ne.singleton @@ default_to_clause default_expr)
+      | DefaultClause { value ; _ } ->
+        let I.{ default_expr ; _ } = value in
+        List.Ne.singleton (default_to_clause default_expr)
+    in
+    return @@ E_match { expr ; cases }
+  | E_Update { value = { inside ; _ } ; _ } -> failwith "IMPLEMENT ME"
   | E_Xor _
   | E_BitAndEq _
   | E_BitOrEq _
