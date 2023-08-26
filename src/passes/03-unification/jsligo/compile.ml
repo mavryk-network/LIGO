@@ -231,12 +231,28 @@ let rec expr : Eq.expr -> Folding.expr =
       O.Object_.{ field_id; field_rhs = Option.map ~f:snd property_rhs }
     in
     return @@ E_object (List.map ~f (sep_or_term_to_list value.inside))
+  | E_Update { value = { inside ; _ } ; _ } ->
+    let I.{ _object ; updates ; _ } = inside in
+    let f x =
+      let I.{ attributes; property_id; property_rhs } = r_fst x in
+      TODO_do_in_parsing.weird_attr attributes;
+      let open O.Object_ in
+      let field_id =
+        match property_id with
+        | F_Name n -> F_Name (O.Label.of_string n#payload)
+        | F_Int i -> F_Int (snd i#payload)
+        | F_Str s -> F_Str s#payload
+      in
+      O.Object_.{ field_id; field_rhs = Option.map ~f:snd property_rhs }
+    in
+    let updates = List.map ~f (sep_or_term_to_list updates) in
+    return @@ E_object_update { object_ = _object ; updates }
   | E_Proj { value = { object_or_array; property_path }; _ } ->
     let f : I.selection -> _ O.Selection.t = function
       | I.PropertyStr fstr ->
-        (* TODO, not clear to me. need the parser to compile in order to decide *)
-        assert false
-      | I.PropertyName (_dot, name) -> FieldName (O.Label.of_string name#payload)
+        Component_expr I.(E_String fstr.value.inside)
+      | I.PropertyName (_dot, name) ->
+        FieldName (O.Label.of_string name#payload)
       | Component comp ->
         let comp = (r_fst comp).inside#payload in
         Component_num comp
@@ -341,8 +357,30 @@ let rec expr : Eq.expr -> Folding.expr =
   | E_BitSl lsl_ -> return @@ compile_bin_op WORD_LSL lsl_
   | E_BitSr lsr_ -> return @@ compile_bin_op WORD_LSR lsr_
   | E_Attr (x, y) -> return @@ E_attr (TODO_do_in_parsing.conv_attr x, y)
-  | E_Match _
-  | E_Update _ -> failwith "IMPLEMENT ME"
+  | E_Match { region = _ ; value } ->
+    let I.{ kwd_match ; subject ; clauses } = value in
+    let expr = subject.value.inside in
+    let default_to_clause (rhs : I.expr) : (I.pattern, I.expr) O.Case.clause =
+      { pattern = None ; rhs }
+    in
+    let cases = match clauses.value.inside with
+      | AllClauses (clauses, default_expr) ->
+        let f ({ value ; _ } : I.match_clause I.reg) : (I.pattern, I.expr) O.Case.clause =
+          let I.{ filter; clause_expr; _ } = value in
+          let pattern = filter.value.inside in
+          { pattern = Some pattern ; rhs = clause_expr }
+        in
+        let clauses = List.Ne.map f clauses in
+        (match default_expr with
+         | None -> clauses
+         | Some default_expr ->
+           let I.{ default_expr; _ } = default_expr.value in
+           List.Ne.append clauses @@ List.Ne.singleton @@ default_to_clause default_expr)
+      | DefaultClause { value ; _ } ->
+        let I.{ default_expr ; _ } = value in
+        List.Ne.singleton (default_to_clause default_expr)
+    in
+    return @@ E_match { expr ; cases }
   | E_Xor _
   | E_BitAndEq _
   | E_BitOrEq _

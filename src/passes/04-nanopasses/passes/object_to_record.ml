@@ -41,13 +41,9 @@ let compile ~raise =
    fun e ->
     let loc = Location.get_location e in
     match Location.unwrap e with
-    (* TODO *)
-    (* | E_object _ -> *)
-    (*   let update = List.map ~f:(field_update_of_property ~raise) fields in *)
-    (*   e_update ~loc { structure; update } *)
-    (* | E_object (Property_rest structure, fields) -> *)
-    (*   let update = List.map ~f:(field_update_of_property ~raise) fields in *)
-    (*   e_update ~loc { structure; update } *)
+    | E_object_update { object_ ; updates } ->
+      let update = List.map ~f:(field_update_of_property ~raise) updates in
+      e_update ~loc { structure = object_ ; update }
     | E_object fields ->
       let fields = List.map ~f:(field_of_property ~raise) fields in
       e_record_pun ~loc fields

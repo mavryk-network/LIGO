@@ -44,8 +44,8 @@ let gen_getters : ty_expr option Non_linear_rows.t * Location.t -> declaration l
              ~loc
              { expr = ev_x
              ; cases =
-                 ( { pattern = p_variant ~loc label (Some p_x); rhs = e_some ~loc ev_x }
-                 , [ { pattern = p_var ~loc (Variable.fresh ~loc ()); rhs = e_none ~loc }
+                 ( { pattern = Some (p_variant ~loc label (Some p_x)); rhs = e_some ~loc ev_x }
+                 , [ { pattern = Some (p_var ~loc (Variable.fresh ~loc ())); rhs = e_none ~loc }
                    ] )
              }
          in

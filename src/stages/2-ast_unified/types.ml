@@ -343,6 +343,7 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_array of
       'self Array_repr.t (* [1, 2, 3] , [42] , [] , [2 ...3] (specific to jsligo) *)
   | E_object of 'self Object_.t (* {a : 1, b : 2}  ; { a ... n } *)
+  | E_object_update of 'self Object_.update
   | E_list of 'self list (* [ 1; 2; 3; 4; 5] *)
   | E_proj of 'self * 'self Selection.t list (* x.y.1 *)
   | E_module_open_in of

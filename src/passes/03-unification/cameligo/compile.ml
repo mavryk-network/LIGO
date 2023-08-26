@@ -281,7 +281,7 @@ let rec expr : Eq.expr -> Folding.expr =
     let cases, loc2 = r_split clauses in
     let loc = Location.cover (Location.lift region) loc2 in
     let cases =
-      let compile_case_clause I.{ pattern; rhs; _ } = O.Case.{ pattern; rhs } in
+      let compile_case_clause I.{ pattern; rhs; _ } = O.Case.{ pattern = Some pattern; rhs } in
       nseq_map (compile_case_clause <@ r_fst) @@ nsepseq_to_nseq cases
     in
     Location.wrap ~loc @@ O.E_match { expr = subject; cases }
