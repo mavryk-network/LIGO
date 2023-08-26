@@ -57,6 +57,7 @@ module T =
 
     (* Symbols *)
 
+    | APPLY      of lexeme Wrap.t  (* #[   *)
     | MINUS      of lexeme Wrap.t  (* -    *)
     | PLUS       of lexeme Wrap.t  (* +    *)
     | SLASH      of lexeme Wrap.t  (* /    *)
@@ -191,6 +192,7 @@ module T =
 
     (* Symbols *)
 
+    | APPLY      t
     | MINUS      t
     | PLUS       t
     | SLASH      t
@@ -501,6 +503,7 @@ module T =
 
     (* SYMBOLS *)
 
+    let wrap_apply      = wrap "#["
     let wrap_minus      = wrap "-"
     let wrap_plus       = wrap "+"
     let wrap_slash      = wrap "/"
@@ -554,6 +557,7 @@ module T =
 
     (* Smart constructors *)
 
+    let mk_APPLY      region = APPLY      (wrap_apply      region)
     let mk_MINUS      region = MINUS      (wrap_minus      region)
     let mk_PLUS       region = PLUS       (wrap_plus       region)
     let mk_SLASH      region = SLASH      (wrap_slash      region)
@@ -605,6 +609,7 @@ module T =
     (* All symbol smart constructors *)
 
     let symbols = [
+      mk_APPLY;
       mk_MINUS;
       mk_PLUS;
       mk_SLASH;
@@ -669,6 +674,7 @@ module T =
 
     (* Ghost symbols *)
 
+    let ghost_apply      = wrap_apply      Region.ghost
     let ghost_minus      = wrap_minus      Region.ghost
     let ghost_plus       = wrap_plus       Region.ghost
     let ghost_slash      = wrap_slash      Region.ghost
@@ -720,6 +726,7 @@ module T =
     let ghost_incr       = wrap_incr       Region.ghost
     let ghost_decr       = wrap_decr       Region.ghost
 
+    let ghost_APPLY      = APPLY      ghost_apply
     let ghost_MINUS      = MINUS      ghost_minus
     let ghost_PLUS       = PLUS       ghost_plus
     let ghost_SLASH      = SLASH      ghost_slash
@@ -869,6 +876,7 @@ module T =
 
     (* Symbols *)
 
+    | "APPLY"      -> ghost_apply#payload
     | "MINUS"      -> ghost_minus#payload
     | "PLUS"       -> ghost_plus#payload
     | "SLASH"      -> ghost_slash#payload
@@ -1025,6 +1033,7 @@ module T =
 
     (* Symbols *)
 
+    | APPLY      t -> t#region, sprintf "APPLY%s" (comments t)
     | MINUS      t -> t#region, sprintf "MINUS%s" (comments t)
     | PLUS       t -> t#region, sprintf "PLUS%s" (comments t)
     | SLASH      t -> t#region, sprintf "SLASH%s" (comments t)
@@ -1245,7 +1254,8 @@ module T =
     | _ -> false
 
     let is_sym = function
-      MINUS _
+      APPLY _
+    | MINUS _
     | PLUS _
     | SLASH _
     | TIMES _

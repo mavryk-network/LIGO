@@ -45,6 +45,11 @@ let mk_mod_path :
     and value = {namespace_path; selector=last_dot; property}
     in {value; region}
 
+let mk_app ctor = function
+  None                       -> `Sep (ctor, [])
+| Some (comma, None)         -> `Term ((ctor, comma), [])
+| Some (comma, Some `Sep s)  -> `Sep (Utils.nsepseq_cons ctor comma s)
+| Some (comma, Some `Term s) -> `Term (Utils.nseq_cons (ctor, comma) s)
 
 (* END HEADER *)
 %}
@@ -62,8 +67,8 @@ let mk_mod_path :
   nsepseq(object_type,VBAR)
   chevrons(nsep_or_term(type_ctor_arg(type_expr),COMMA))
   nseq(__anonymous_1(object_type,VBAR))
-  ctor
   app_expr_level
+  app_expr
   unary_expr_level
   add_expr_level
   eq_expr_level
@@ -93,6 +98,7 @@ let mk_mod_path :
   bin_op(disj_expr_level,BIT_XOR,conj_expr_level)
   empty_return_stmt
   return_stmt
+  poly_stmt
   nsepseq(val_binding,COMMA)
 %on_error_reduce
   ternary_expr(core_expr,pre_expr_stmt)
@@ -210,7 +216,7 @@ nsep_or_pref(item,sep):
 
 %inline
 variable        : "<ident>"              { $1 }
-fun_name        : "<ident>"              { $1 }
+fun_name        : "<ident>" | "<uident>" { $1 }
 type_var        : "<ident>" | "<uident>" { $1 }
 type_name       : "<ident>" | "<uident>" { $1 }
 type_ctor       : "<ident>" | "<uident>" { $1 }
@@ -219,8 +225,6 @@ lang_name       : "<ident>" | "<uident>" { $1 }
 namespace_name  : "<uident>"             { $1 }
 intf_name       : "<uident>"             { $1 }
 file_path       : "<string>"             { $1 }
-ctor            : "<uident>"             { $1 }
-object_or_array : "<ident>"       { E_Var  $1 }
 
 (* ENTRY POINTS *)
 
@@ -282,7 +286,7 @@ bindings:
   nsepseq(val_binding,",") { $1 }
 
 val_binding:
-  pattern binding_type? "=" expr {
+  pattern ioption(binding_type) "=" expr {
     let region = cover (pattern_to_region $1) (expr_to_region $4) in
     let type_vars, rhs_type =
       match $2 with
@@ -435,34 +439,24 @@ attr_variant:
 | "[@attr]" attr_variant { T_Attr ($1,$2) }
 
 variant:
-  "[@attr]" variant      { {$2 with attributes = $1::$2.attributes} }
-| brackets(variant_comp) { {attributes=[]; tuple=$1}                }
+  "[@attr]" variant  { {$2 with attributes = $1::$2.attributes} }
+| ctor_app_type_expr { {attributes=[]; tuple=$1}                }
 
-%inline
-variant_comp:
-  "<string>"                 { {ctor=$1; ctor_params = None}         }
-| "<string>" "," ctor_params { {ctor=$1; ctor_params = Some ($2,$3)} }
+ctor_app_type_expr:
+  "#[" "<string>" ctor_arguments(type_expr)? "]" {
+    let region = cover $1#region $4#region
+    and value = {apply=$1; app = mk_app (T_String $2) $3; rbracket=$4}
+    in {region; value} }
 
-ctor_params:
-  nsep_or_term(ctor_param,",") { $1 }
-
-ctor_param:
-  type_expr { $1 }
+ctor_arguments (kind):
+  "," sep_or_term(kind,",") { $1,$2 }
 
 (* Core types *)
 
-(* The production [core_type_no_string] is here to avoid a conflict
-   with a variant for a constant constructor, e.g. [["C"]], which
-   could be interpreted otherwise as a type array of the type
-   ["C"]. *)
-
 core_type:
-  "<string>"          { T_String $1 }
-| core_type_no_string {          $1 }
-
-core_type_no_string:
-  par (type_expr)  { T_Par $1 }
-| no_par_type_expr {       $1 }
+  "<string>"       { T_String $1 }
+| par (type_expr)  { T_Par    $1 }
+| no_par_type_expr {          $1 }
 
 no_par_type_expr:
   "<int>"                    { T_Int         $1 }
@@ -470,14 +464,9 @@ no_par_type_expr:
 | type_ctor_app (type_expr)  { T_App         $1 }
 | array_type                 { T_Array       $1 }
 | parameter_of_type          { T_ParameterOf $1 }
+| "[@attr]" core_type        { T_Attr   ($1,$2) }
 | qualified_type (type_expr)
-| attr_type
 | union_or_object            { $1 }
-
-(* Attributed core type *)
-
-attr_type:
-  "[@attr]" core_type_no_string { T_Attr ($1,$2) }
 
 (* Application of type arguments to type constructors *)
 
@@ -486,10 +475,10 @@ type_ctor_app(type_expr):
     let region = cover $1#region $2.region
     in {region; value = (T_Var $1, $2)} }
 
-type_ctor_args(type_expr):
-  chevrons(nsep_or_term(type_ctor_arg(type_expr),",")) { $1 }
+type_ctor_args (type_expr):
+  chevrons (nsep_or_term (type_ctor_arg (type_expr),",")) { $1 }
 
-type_ctor_arg(type_expr):
+type_ctor_arg (type_expr):
   type_expr { $1 }
 
 (* Arrays of types *)
@@ -505,7 +494,7 @@ type_elements:
     Utils.nsep_or_term_cons $1 $2 $3 }
 
 type_element_no_string:
-  fun_type | variant_type | core_type_no_string { $1 }
+  fun_type | variant_type | core_type { $1 }
 
 type_element:
   type_expr { $1 }
@@ -734,6 +723,8 @@ assign_expr:
 var_path:
   path (object_or_array) | object_or_array { $1 }
 
+object_or_array : "<ident>" { E_Var  $1 }
+
 path (root_expr):
   root_expr nseq(selection) {
     let stop   = nseq_to_region selection_to_region $2 in
@@ -869,7 +860,7 @@ switch_case:
     in {region; value} }
 
 case_expr:
-  ctor                     { E_Ctor $1 }
+  ctor_app_expr { E_CtorApp $1 }
 | literal_expr | path_expr { $1 }
 
 switch_default:
@@ -1125,12 +1116,16 @@ contract_of_expr:
     in E_ContractOf {region; value} }
 
 app_expr:
+  call_expr     { $1 }
+| ctor_app_expr { E_CtorApp $1 }
+
+call_expr:
   lambda arguments {
     let region = cover (expr_to_region $1) $2.region
     in E_App {region; value=($1,$2)} }
 
 lambda:
-  app_expr | core_expr { $1 }
+  call_expr | core_expr { $1 }
 
 arguments:
   par (ioption (nsepseq (argument, ","))) { $1 }
@@ -1138,13 +1133,18 @@ arguments:
 argument:
   expr { $1 }
 
+ctor_app_expr:
+  "#[" "<string>" ctor_arguments(expr)? "]" {
+    let region = cover $1#region $4#region
+    and value = {apply=$1; app = mk_app (E_String $2) $3; rbracket=$4}
+    in {region; value} }
+
 (* Core expressions *)
 
 core_expr:
   code_inj     { E_CodeInj $1 }
 | par (expr)   { E_Par     $1 }
 | array (expr) { E_Array   $1 }
-| ctor         { E_Ctor    $1 }
 | literal_expr
 | path_expr    { $1 }
 
@@ -1227,7 +1227,8 @@ path_expr:
 | path (par (expr) { E_Par $1 }) { $1 }
 
 selected_expr:
-  ctor { E_Ctor $1 } | var_path { $1 }
+  "<string>" { E_String $1 } (* For data constructors *)
+| var_path   {          $1 }
 
 (* PATTERNS *)
 
@@ -1236,8 +1237,14 @@ pattern:
 | "_" | variable           { P_Var       $1 }
 | object_pattern (pattern) { P_Object    $1 }
 | array (pattern)          { P_Array     $1 }
-| ctor                     { P_Ctor      $1 }
+| ctor_app_pattern         { P_CtorApp   $1 }
 | literal_pattern          {             $1 }
+
+ctor_app_pattern:
+  "#[" "<string>" ctor_arguments(pattern)? "]" {
+    let region = cover $1#region $4#region
+    and value = {apply=$1; app = mk_app (P_String $2) $3; rbracket=$4}
+    in {region; value} }
 
 literal_pattern:
   "<int>"      { P_Int      $1 }

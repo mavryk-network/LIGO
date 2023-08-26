@@ -60,6 +60,7 @@ type kwd_while        = lexeme wrap
 
 (* Symbols *)
 
+type apply      = lexeme wrap  (* @[  *)
 type arrow      = lexeme wrap  (* =>  *)
 type dot        = lexeme wrap  (* .   *)
 type ellipsis   = lexeme wrap  (* ... *)
@@ -369,12 +370,15 @@ and variant_type = (variant, vbar) nsep_or_pref reg
 
 and variant = {
   attributes : attribute list;
-  tuple      : variant_comp brackets
+  tuple      : type_expr ctor_app reg
 }
 
-and variant_comp = {
-  ctor        : ctor;
-  ctor_params : (comma * (type_expr, comma) nsep_or_term) option
+(* Data constructor applications *)
+
+and 'a ctor_app = {
+  apply    : apply;
+  app      : ('a, comma) nsep_or_term;
+  rbracket : rbracket
 }
 
 (* PATTERNS *)
@@ -383,26 +387,27 @@ and variant_comp = {
    add or modify some, please make sure they remain in order. *)
 
 and pattern =
-  P_Array    of pattern _array           (* [x, ...y, z] [] *)
-| P_Attr     of (attribute * pattern)    (* @a [x, _]       *)
-| P_Bytes    of bytes_literal            (* 0xFFFA          *)
-| P_Ctor     of ctor                     (* C               *)
-| P_False    of false_const              (* false           *)
-| P_Int      of int_literal              (* 42              *)
-| P_Mutez    of mutez_literal            (* 5mutez          *)
-| P_Nat      of nat_literal              (* 4n              *)
-| P_Object   of pattern _object          (* {x, y : 0}      *)
-| P_String   of string_literal           (* "string"        *)
-| P_True     of true_const               (* true            *)
-| P_Typed    of typed_pattern reg        (* [x,y] : t       *)
-| P_Var      of variable                 (* x               *)
-| P_Verbatim of verbatim_literal         (* {|foo|}         *)
+  P_Array    of pattern _array            (* [x, ...y, z] [] *)
+| P_Attr     of (attribute * pattern)     (* @a [x, _]       *)
+| P_Bytes    of bytes_literal             (* 0xFFFA          *)
+| P_CtorApp  of pattern ctor_app reg      (* #["C",4]        *)
+| P_False    of false_const               (* false           *)
+| P_Int      of int_literal               (* 42              *)
+| P_Mutez    of mutez_literal             (* 5mutez          *)
+ (* | P_NamePath of pattern namespace_path reg (* M.N.x.{y}     *) *)
+| P_Nat      of nat_literal               (* 4n              *)
+| P_Object   of pattern _object           (* {x, y : 0}      *)
+| P_String   of string_literal            (* "string"        *)
+| P_True     of true_const                (* true            *)
+| P_Typed    of typed_pattern reg         (* [x,y] : t       *)
+| P_Var      of variable                  (* x               *)
+| P_Verbatim of verbatim_literal          (* {|foo|}         *)
 
-(* Tuple *)
+(* Array pattern *)
 
-and 'a _array = ('a component, comma) sep_or_term brackets
+and 'a _array = ('a element, comma) sep_or_term brackets
 
-and 'a component = ellipsis option * 'a
+and 'a element = ellipsis option * 'a
 
 (* Typed patterns (function parameters) *)
 
@@ -542,7 +547,7 @@ and expr =
 | E_Bytes      of bytes_literal           (* 0xFFFA            *)
 | E_CodeInj    of code_inj reg
 | E_ContractOf of contract_of_expr reg    (* contract_of (M.N) *)
-| E_Ctor       of ctor                    (* C                 *)
+| E_CtorApp    of expr ctor_app reg       (* #["C",4]          *)
 | E_Div        of slash bin_op reg        (* x / y             *)
 | E_DivEq      of div_eq bin_op reg       (* x /= y            *)
 | E_Equal      of equal_cmp bin_op reg    (* x == y            *)
@@ -583,7 +588,7 @@ and expr =
 | E_Verbatim   of verbatim_literal        (* {|foo|}           *)
 | E_Xor        of bool_xor bin_op reg     (* x ^^ y            *)
 
-(* Applications *)
+(* Arguments of function calls *)
 
 and arguments = (expr, comma) sepseq par
 
@@ -732,7 +737,7 @@ let rec pattern_to_region = function
   P_Array    {region; _} -> region
 | P_Attr     (_, p) -> pattern_to_region p
 | P_Bytes    w -> w#region
-| P_Ctor     w -> w#region
+| P_CtorApp  {region; _} -> region
 | P_False    w -> w#region
 | P_Int      w -> w#region
 | P_Mutez    w -> w#region
@@ -766,8 +771,8 @@ let rec expr_to_region = function
 | E_BitXorEq   {region; _} -> region
 | E_Bytes      w -> w#region
 | E_CodeInj    {region; _}
-| E_ContractOf {region; _} -> region
-| E_Ctor       w -> w#region
+| E_ContractOf {region; _}
+| E_CtorApp    {region; _}
 | E_Div        {region; _}
 | E_DivEq      {region; _}
 | E_Equal      {region; _} -> region

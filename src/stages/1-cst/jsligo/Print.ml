@@ -98,7 +98,7 @@ and print_ImportAlias state (node: import_alias reg) =
   let Region.{value; region} = node in
   let {kwd_import=_; alias; equal=_; namespace_path} = value in
   let children = Tree.[
-    mk_child print_alias            alias;
+    mk_child print_alias               alias;
     mk_child print_namespace_selection namespace_path]
   in Tree.make ~region state "ImportAlias" children
 
@@ -417,16 +417,19 @@ and print_T_Variant state (node : variant_type) =
 
 and print_variant state (node : variant) =
   let {attributes; tuple} = node in
-  let {ctor; ctor_params} = tuple.value.inside in
-  let children = Tree.(
-      mk_child make_literal ctor
-   :: [mk_child print_ctor_params ctor_params]
-    @ mk_children_attr attributes)
-  in Tree.make ~region:tuple.region state ctor#payload children
-
-and print_ctor_params state = function
-  None       -> ()
-| Some (_,s) -> Tree.of_nsep_or_term state "<parameters>" print_type_expr s
+  let Region.{region; value} = tuple in
+  let {apply=_; app; rbracket=_} = value in
+  let ctor, ctor_params =
+    match app with
+      `Sep p -> p
+    | `Term ((ctor,_), ctor_params) ->
+         ctor, List.map ~f:(fun (x,y) -> (y,x)) ctor_params in
+  let print state (_, arg) = print_type_expr state arg in
+  let children =
+    Tree.(mk_child print_type_expr ctor) ::
+    Tree.mk_children_list print ~root:"<parameters>" ctor_params
+    @ mk_children_attr attributes
+  in Tree.make ~region state "<variant>" children
 
 (* PATTERNS *)
 
@@ -434,7 +437,7 @@ and print_pattern state = function
   P_Attr     p -> print_P_Attr     state p
 | P_Array    p -> print_P_Array    state p
 | P_Bytes    p -> print_P_Bytes    state p
-| P_Ctor     p -> print_P_Ctor     state p
+| P_CtorApp  p -> print_P_CtorApp  state p
 | P_False    p -> print_P_False    state p
 | P_Int      p -> print_P_Int      state p
 | P_Mutez    p -> print_P_Mutez    state p
@@ -460,11 +463,10 @@ and print_P_Attr state (node : attribute * pattern) =
 and print_P_Bytes state (node: (lexeme * Hex.t) wrap) =
   Tree.make_bytes "P_Bytes" state node
 
-(* Data constructors in patterns *)
+(* Application of data constructors in patterns *)
 
-and print_P_Ctor state (node: ctor) =
-  let region = node#region in
-  Tree.(make_unary ~region state "P_Ctor" make_literal node)
+and print_P_CtorApp state (node: pattern ctor_app reg) =
+  print_ctor_app print_pattern "P_CtorApp" state node
 
 (* "false" as a pattern *)
 
@@ -512,14 +514,14 @@ and print_array :
   'a.'a Tree.printer -> Tree.root -> Tree.state -> 'a _array -> unit =
   fun print root state brackets ->
     let Region.{region; value} = brackets in
-    let components = value.inside in
-    Tree.of_sep_or_term ~region state root (print_component print) components
+    let elements = value.inside in
+    Tree.of_sep_or_term ~region state root (print_element print) elements
 
-and print_component :
-  'a.'a Tree.printer -> Tree.state -> 'a component -> unit =
+and print_element :
+  'a.'a Tree.printer -> Tree.state -> 'a element -> unit =
   fun print state -> function
-    None, component -> print state component
-  | Some _ellipsis, component -> Tree.make_unary state "..." print component
+    None, element -> print state element
+  | Some _ellipsis, element -> Tree.make_unary state "..." print element
 
 (* Typed pattern (function parameter) *)
 
@@ -566,7 +568,7 @@ and print_expr state = function
 | E_Bytes      e -> print_E_Bytes      state e
 | E_CodeInj    e -> print_E_CodeInj    state e
 | E_ContractOf e -> print_E_ContractOf state e
-| E_Ctor       e -> print_E_Ctor       state e
+| E_CtorApp    e -> print_E_CtorApp    state e
 | E_Div        e -> print_E_Div        state e
 | E_DivEq      e -> print_E_DivEq      state e
 | E_Equal      e -> print_E_Equal      state e
@@ -744,11 +746,25 @@ and print_E_ContractOf state (node: contract_of_expr reg) =
   let path = namespace_path.value.inside in
   Tree.make_unary state "E_ContractOf" print_namespace_selection path
 
-(* Data constructor as expressions *)
+(* Application of data constructor as expressions *)
 
-and print_E_Ctor state (node : ctor) =
-  let region = node#region in
-  Tree.(make_unary ~region state "E_Ctor" make_literal node)
+and print_E_CtorApp state (node : expr ctor_app reg) =
+  print_ctor_app print_expr "E_CtorApp" state node
+
+and print_ctor_app :
+  'a.'a Tree.printer -> Tree.root -> Tree.state -> 'a ctor_app reg -> unit =
+  fun print root state {region; value} ->
+  let {apply=_; app; rbracket=_} = value in
+  let ctor, ctor_params =
+    match app with
+      `Sep p -> p
+    | `Term ((ctor,_), ctor_params) ->
+         ctor, List.map ~f:(fun (x,y) -> (y,x)) ctor_params in
+  let print' state (_, arg) = print state arg in
+  let children =
+    Tree.(mk_child print ctor) ::
+    Tree.mk_children_list print' ~root:"<parameters>" ctor_params
+  in Tree.make ~region state root children
 
 (* The Euclidean quotient *)
 

@@ -8,6 +8,7 @@ type 'a fold_control = 'a Cst_shared.Fold.fold_control
 type _ sing =
     S_all_cases : all_cases sing
   | S_all_match_clauses : all_match_clauses sing
+  | S_apply : apply sing
   | S_arguments : arguments sing
   | S_array : 'a sing -> 'a _array sing
   | S_array_2 : 'a sing * 'b sing -> ('a * 'b) sing
@@ -45,11 +46,12 @@ type _ sing =
   | S_code_inj : code_inj sing
   | S_colon : colon sing
   | S_comma : comma sing
-  | S_component : 'a sing -> 'a component sing
+  | S_element : 'a sing -> 'a element sing
   | S_if_stmt : if_stmt sing
   | S_contract_of_expr : contract_of_expr sing
   | S_cst : CST.t sing
   | S_ctor : ctor sing
+  | S_ctor_app : 'a sing -> 'a ctor_app sing
   | S_declaration : declaration sing
   | S_decrement : decrement sing
   | S_directive : Directive.t sing
@@ -201,7 +203,6 @@ type _ sing =
   | S_var_kind : var_kind sing
   | S_variable : variable sing
   | S_variant : variant sing
-  | S_variant_comp : variant_comp sing
   | S_variant_type : variant_type sing
   | S_vbar : vbar sing
   | S_verbatim_literal : verbatim_literal sing
@@ -235,8 +236,10 @@ let fold
   function (Some_node (node, sing)) -> match sing with
     S_all_cases -> process @@ node -| S_array_2
     (S_nseq (S_reg S_switch_case), S_option (S_reg S_switch_default))
-  | S_all_match_clauses -> process @@ node -| S_array_2
-    (S_nseq (S_reg S_match_clause), S_option (S_reg S_match_default))
+    | S_all_match_clauses ->
+      process @@ node -| S_array_2 (S_nseq (S_reg S_match_clause),
+                                    S_option (S_reg S_match_default))
+  | S_apply -> process @@ node -| S_wrap S_lexeme
   | S_arguments -> process
     (node -| (S_par (S_sepseq (S_expr, S_comma))))
   | S_arrow -> process @@ node -| S_wrap S_lexeme
@@ -297,7 +300,7 @@ let fold
     ; code -| S_expr ]
   | S_colon -> process @@ node -| S_wrap S_lexeme
   | S_comma -> process @@ node -| S_wrap S_lexeme
-  | S_component sing -> process @@ node -| S_array_2 (S_option S_ellipsis, sing)
+  | S_element sing -> process @@ node -| S_array_2 (S_option S_ellipsis, sing)
   | S_if_stmt -> let {kwd_if; test; if_so; if_not} = node in
     process_list
     [kwd_if -| S_kwd_if
@@ -312,7 +315,13 @@ let fold
     process_list
     [ statements -| S_nseq (S_array_2 (S_statement, S_option S_semi))
     ; eof -| S_eof ]
-  | S_ctor -> process @@ node -| S_wrap S_lexeme
+  | S_ctor ->process @@  node -| S_wrap S_lexeme
+  | S_ctor_app sing ->
+    let {apply; app; rbracket} = node in
+    process_list
+    [ apply -| S_apply
+    ; app -| S_nsep_or_term (sing, S_comma)
+    ; rbracket -| S_rbracket]
   | S_declaration -> process
     ( match node with
         D_Fun node -> node -| S_reg S_fun_decl
@@ -354,7 +363,7 @@ let fold
     | E_Bytes node -> node -| S_bytes_literal
     | E_CodeInj node -> node -| S_reg S_code_inj
     | E_ContractOf node -> node -| S_reg S_contract_of_expr
-    | E_Ctor node -> node -| S_ctor
+    | E_CtorApp node -> node -| S_reg (S_ctor_app S_expr)
     | E_Div node -> node -| S_reg (S_bin_op S_slash)
     | E_DivEq node -> node -| S_reg (S_bin_op S_div_eq)
     | E_Equal node -> node -| S_reg (S_bin_op S_equal_cmp)
@@ -631,7 +640,7 @@ let fold
       P_Attr node -> node -| S_array_2 (S_attribute, S_pattern)
     | P_Array node -> node -| S_array S_pattern
     | P_Bytes node -> node -| S_bytes_literal
-    | P_Ctor node -> node -| S_ctor
+    | P_CtorApp node -> node -| S_reg (S_ctor_app S_pattern)
     | P_False node -> node -| S_false
     | P_Int node -> node -| S_int_literal
     | P_Mutez node -> node -| S_mutez_literal
@@ -731,7 +740,7 @@ let fold
   | S_times -> process @@ node -| S_wrap S_lexeme
   | S_times_eq -> process @@ node -| S_wrap S_lexeme
   | S_true -> process @@ node -| S_wrap S_lexeme
-  | S_array sing -> process @@ node -| S_brackets (S_sep_or_term (S_component sing, S_comma))
+  | S_array sing -> process @@ node -| S_brackets (S_sep_or_term (S_element sing, S_comma))
   | S_array_2 (sing_1, sing_2) ->
     ( match node with
       (node_1, node_2) -> process_list
@@ -811,11 +820,7 @@ let fold
   | S_variant -> let { attributes; tuple } = node in
     process_list
     [ attributes -| S_list S_attribute
-    ; tuple -| S_brackets S_variant_comp ]
-  | S_variant_comp -> let { ctor; ctor_params } = node in
-    process_list
-    [ ctor -| S_ctor
-    ; ctor_params -| S_option (S_array_2 (S_comma, S_nsep_or_term (S_type_expr, S_comma))) ]
+    ; tuple -| S_reg (S_ctor_app S_type_expr)]
   | S_variant_type -> process @@ node -| S_reg (S_nsep_or_pref (S_variant, S_vbar))
   | S_vbar -> process @@ node -| S_wrap S_lexeme
   | S_verbatim_literal -> process @@ node -| S_wrap S_lexeme

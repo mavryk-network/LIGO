@@ -40,6 +40,7 @@ let add_comment (comment : string Region.reg) : Token.t -> Token.t = function
 
 (* Symbols *)
 
+| APPLY      w -> APPLY (w#add_line_comment comment)
 | MINUS      w -> MINUS (w#add_line_comment comment)
 | PLUS       w -> PLUS (w#add_line_comment comment)
 | SLASH      w -> SLASH (w#add_line_comment comment)
