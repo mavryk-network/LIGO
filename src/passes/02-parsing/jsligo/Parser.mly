@@ -1134,10 +1134,15 @@ argument:
   expr { $1 }
 
 ctor_app_expr:
-  "#[" "<string>" ctor_arguments(expr)? "]" {
+  "#[" ctor_expr ctor_arguments(expr)? "]" {
     let region = cover $1#region $4#region
-    and value = {apply=$1; app = mk_app (E_String $2) $3; rbracket=$4}
+    and value = {apply=$1; app = mk_app $2 $3; rbracket=$4}
     in {region; value} }
+
+ctor_expr:
+  "<string>" { E_String $1 }
+| namespace_path ("<string>" { E_String $1 }) {
+    E_NamePath (mk_mod_path $1 expr_to_region) }
 
 (* Core expressions *)
 
@@ -1238,13 +1243,32 @@ pattern:
 | object_pattern (pattern) { P_Object    $1 }
 | array (pattern)          { P_Array     $1 }
 | ctor_app_pattern         { P_CtorApp   $1 }
+| qualified_pattern
 | literal_pattern          {             $1 }
 
+(* Qualified patterns (patterns modulo module paths) *)
+
+qualified_pattern:
+  pattern_in_namespace(qualifiable_pattern) { $1 }
+
+qualifiable_pattern:
+  variable                 { P_Var    $1 }
+| object_pattern (pattern) { P_Object $1 }
+
+pattern_in_namespace(pattern):
+  namespace_path(pattern) {
+    P_NamePath (mk_mod_path $1 pattern_to_region) }
+
 ctor_app_pattern:
-  "#[" "<string>" ctor_arguments(pattern)? "]" {
+  "#[" ctor_pattern ctor_arguments(pattern)? "]" {
     let region = cover $1#region $4#region
-    and value = {apply=$1; app = mk_app (P_String $2) $3; rbracket=$4}
+    and value = {apply=$1; app = mk_app $2 $3; rbracket=$4}
     in {region; value} }
+
+ctor_pattern:
+  "<string>" { P_String $1 }
+| namespace_path ("<string>" { P_String $1 }) {
+    P_NamePath (mk_mod_path $1 pattern_to_region) }
 
 literal_pattern:
   "<int>"      { P_Int      $1 }

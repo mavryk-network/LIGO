@@ -644,6 +644,7 @@ let fold
     | P_False node -> node -| S_false
     | P_Int node -> node -| S_int_literal
     | P_Mutez node -> node -| S_mutez_literal
+    | P_NamePath node -> node -| S_reg (S_namespace_path S_pattern)
     | P_Nat node -> node -| S_nat_literal
     | P_Object node -> node -| S_object S_pattern
     | P_String node -> node -| S_string_literal

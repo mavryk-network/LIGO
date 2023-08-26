@@ -387,21 +387,21 @@ and 'a ctor_app = {
    add or modify some, please make sure they remain in order. *)
 
 and pattern =
-  P_Array    of pattern _array            (* [x, ...y, z] [] *)
-| P_Attr     of (attribute * pattern)     (* @a [x, _]       *)
-| P_Bytes    of bytes_literal             (* 0xFFFA          *)
-| P_CtorApp  of pattern ctor_app reg      (* #["C",4]        *)
-| P_False    of false_const               (* false           *)
-| P_Int      of int_literal               (* 42              *)
-| P_Mutez    of mutez_literal             (* 5mutez          *)
- (* | P_NamePath of pattern namespace_path reg (* M.N.x.{y}     *) *)
-| P_Nat      of nat_literal               (* 4n              *)
-| P_Object   of pattern _object           (* {x, y : 0}      *)
-| P_String   of string_literal            (* "string"        *)
-| P_True     of true_const                (* true            *)
-| P_Typed    of typed_pattern reg         (* [x,y] : t       *)
-| P_Var      of variable                  (* x               *)
-| P_Verbatim of verbatim_literal          (* {|foo|}         *)
+  P_Array    of pattern _array             (* [x, ...y, z] [] *)
+| P_Attr     of (attribute * pattern)      (* @a [x, _]       *)
+| P_Bytes    of bytes_literal              (* 0xFFFA          *)
+| P_CtorApp  of pattern ctor_app reg       (* #["C",4]        *)
+| P_False    of false_const                (* false           *)
+| P_Int      of int_literal                (* 42              *)
+| P_Mutez    of mutez_literal              (* 5mutez          *)
+| P_NamePath of pattern namespace_path reg (* M.N.{x, y : 0}  *)
+| P_Nat      of nat_literal                (* 4n              *)
+| P_Object   of pattern _object            (* {x, y : 0}      *)
+| P_String   of string_literal             (* "string"        *)
+| P_True     of true_const                 (* true            *)
+| P_Typed    of typed_pattern reg          (* [x,y] : t       *)
+| P_Var      of variable                   (* x               *)
+| P_Verbatim of verbatim_literal           (* {|foo|}         *)
 
 (* Array pattern *)
 
@@ -741,6 +741,7 @@ let rec pattern_to_region = function
 | P_False    w -> w#region
 | P_Int      w -> w#region
 | P_Mutez    w -> w#region
+| P_NamePath {region; _} -> region
 | P_Nat      w -> w#region
 | P_Object   {region; _} -> region
 | P_String   w-> w#region

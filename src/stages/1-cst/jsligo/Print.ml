@@ -441,6 +441,7 @@ and print_pattern state = function
 | P_False    p -> print_P_False    state p
 | P_Int      p -> print_P_Int      state p
 | P_Mutez    p -> print_P_Mutez    state p
+| P_NamePath p -> print_P_NamePath state p
 | P_Nat      p -> print_P_Nat      state p
 | P_Object   p -> print_P_Object   state p
 | P_String   p -> print_P_String   state p
@@ -482,6 +483,11 @@ and print_P_Int state (node : (lexeme * Z.t) wrap) =
 
 and print_P_Mutez state (node : (lexeme * Int64.t) wrap) =
   Tree.make_mutez "P_Mutez" state node
+
+(* Qualified patterns *)
+
+and print_P_NamePath state (node : pattern namespace_path reg) =
+  print_namespace_path print_pattern "P_NamePath" state node
 
 (* Natural numbers in patterns *)
 
