@@ -237,9 +237,11 @@ module Make (Options : Options.S) (Token : Token.S) =
 
     let mk_sym state buffer =
       let state, Region.{region; value} = state#sync buffer in
+      let () = Printf.eprintf "Lexer.mk_sym: %s\n%!" value in
       match Token.mk_sym value region with
         Ok token -> token, state
       | Error Token.Invalid_symbol string ->
+          let () = Printf.eprintf "Lexer.mk_sym: Invalid %S" string in
           fail region (Invalid_symbol string)
 
     (* End-of-File *)
@@ -292,7 +294,7 @@ let     common_sym =   ";" | "," | "(" | ")"  | "[" | "]"  | "{" | "}"
 let  pascaligo_sym = "->" | "=/=" | "#" | ":=" | "^"
 let   cameligo_sym = "->" | "<>" | "::" | "||" | "&&" | "'" | "|>" | "^"
 let     jsligo_sym =   "..." | "?" | "!" | "%" | "==" | "!=" | "+=" | "-="
-                     | "*=" | "/="| "%=" | "=>" | "++" | "--" | "#["
+                     | "*=" | "/="| "%=" | "=>" | "++" | "--" | "#"
 let     pyligo_sym = "->" | "^"   | "**"  | "//" | "%"  | "@"  | "|" | "&"
                    | "~"  | "`"   | "\\"
                    | "==" | "!=" | "+=" | "-="
@@ -320,20 +322,20 @@ rule scan state = parse
       in scan_verbatim verb_close thread state lexbuf |> mk_verbatim
     else mk_sym state lexbuf }
 
-| "[@" str_attr "]"  { mk_str_attr key ?value state lexbuf }
-| "[@" id_attr  "]"  { mk_id_attr  key ?value state lexbuf }
-| ident | ext_ident  { mk_ident               state lexbuf }
-| uident             { mk_uident              state lexbuf }
-| bytes              { mk_bytes bytes         state lexbuf }
-| nat "n"            { mk_nat   nat           state lexbuf }
-| nat "mutez"        { mk_mutez nat           state lexbuf }
-| nat tz_or_tez      { mk_tez   nat tez       state lexbuf }
-| natural            { mk_int                 state lexbuf }
-| symbol             { mk_sym                 state lexbuf }
-| eof                { mk_eof                 state lexbuf }
-| code_inj           { mk_lang  start lang    state lexbuf }
-| decimal tz_or_tez  { mk_tez_dec integral fractional
-                                          tez state lexbuf }
+| "[@" str_attr "]" { mk_str_attr key ?value state lexbuf }
+| "[@" id_attr  "]" { mk_id_attr  key ?value state lexbuf }
+| ident | ext_ident { mk_ident               state lexbuf }
+| uident            { mk_uident              state lexbuf }
+| bytes             { mk_bytes    bytes      state lexbuf }
+| nat "n"           { mk_nat      nat        state lexbuf }
+| nat "mutez"       { mk_mutez    nat        state lexbuf }
+| nat tz_or_tez     { mk_tez      nat tez    state lexbuf }
+| natural           { mk_int                 state lexbuf }
+| symbol            { mk_sym                 state lexbuf }
+| eof               { mk_eof                 state lexbuf }
+| code_inj          { mk_lang     start lang state lexbuf }
+| decimal tz_or_tez { mk_tez_dec integral
+                              fractional tez state lexbuf }
 
 | _ as c { let _, Region.{region; _} = state#sync lexbuf
            in fail region (Unexpected_character c) }

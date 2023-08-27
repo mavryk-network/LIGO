@@ -418,12 +418,16 @@ and print_T_Variant state (node : variant_type) =
 and print_variant state (node : variant) =
   let {attributes; tuple} = node in
   let Region.{region; value} = tuple in
-  let {apply=_; app; rbracket=_} = value in
+  let _, app = value in
   let ctor, ctor_params =
     match app with
-      `Sep p -> p
-    | `Term ((ctor,_), ctor_params) ->
-         ctor, List.map ~f:(fun (x,y) -> (y,x)) ctor_params in
+      ZeroArg ctor -> ctor, []
+    | MultArg brackets ->
+        let app = brackets.value.inside in
+        match app with
+         `Sep p -> p
+        | `Term ((ctor,_), ctor_params) ->
+             ctor, List.map ~f:(fun (x,y) -> (y,x)) ctor_params in
   let print state (_, arg) = print_type_expr state arg in
   let children =
     Tree.(mk_child print_type_expr ctor) ::
@@ -760,12 +764,16 @@ and print_E_CtorApp state (node : expr ctor_app reg) =
 and print_ctor_app :
   'a.'a Tree.printer -> Tree.root -> Tree.state -> 'a ctor_app reg -> unit =
   fun print root state {region; value} ->
-  let {apply=_; app; rbracket=_} = value in
+  let _, app = value in
   let ctor, ctor_params =
     match app with
-      `Sep p -> p
-    | `Term ((ctor,_), ctor_params) ->
-         ctor, List.map ~f:(fun (x,y) -> (y,x)) ctor_params in
+      ZeroArg ctor -> ctor, []
+    | MultArg brackets ->
+        let app = brackets.value.inside in
+        match app with
+          `Sep p -> p
+        | `Term ((ctor,_), ctor_params) ->
+          ctor, List.map ~f:(fun (x,y) -> (y,x)) ctor_params in
   let print' state (_, arg) = print state arg in
   let children =
     Tree.(mk_child print ctor) ::

@@ -60,7 +60,7 @@ type kwd_while        = lexeme wrap
 
 (* Symbols *)
 
-type apply      = lexeme wrap  (* @[  *)
+type sharp      = lexeme wrap  (* #   *)
 type arrow      = lexeme wrap  (* =>  *)
 type dot        = lexeme wrap  (* .   *)
 type ellipsis   = lexeme wrap  (* ... *)
@@ -222,7 +222,7 @@ and import_from = {
 
 and 'a namespace_path = {
   namespace_path : (namespace_name, dot) nsepseq;
-  selector    : dot;
+  selector       : dot;
   property       : 'a
 }
 
@@ -375,11 +375,11 @@ and variant = {
 
 (* Data constructor applications *)
 
-and 'a ctor_app = {
-  apply    : apply;
-  app      : ('a, comma) nsep_or_term;
-  rbracket : rbracket
-}
+and 'a ctor_app = sharp * 'a app
+
+and 'a app =
+  ZeroArg of 'a
+| MultArg of ('a, comma) nsep_or_term brackets
 
 (* PATTERNS *)
 
@@ -552,7 +552,7 @@ and expr =
 | E_DivEq      of div_eq bin_op reg       (* x /= y            *)
 | E_Equal      of equal_cmp bin_op reg    (* x == y            *)
 | E_False      of false_const             (* false             *)
-| E_Function   of function_expr reg       (* function (x) { ... } *)
+| E_Function   of function_expr reg       (* function (x) {...} *)
 | E_Geq        of geq bin_op reg          (* x >= y            *)
 | E_Gt         of gt bin_op reg           (* x > y             *)
 | E_Int        of int_literal             (* 42                *)

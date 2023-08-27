@@ -72,7 +72,7 @@
 
 (* Symbols *)
 
-%token <string Wrap.t> APPLY      "#["  [@recover.expr Token.wrap_apply    $loc]
+%token <string Wrap.t> SHARP      "#"   [@recover.expr Token.wrap_sharp    $loc]
 %token <string Wrap.t> MINUS      "-"   [@recover.expr Token.wrap_minus    $loc]
 %token <string Wrap.t> PLUS       "+"   [@recover.expr Token.wrap_plus     $loc]
 %token <string Wrap.t> SLASH      "/"   [@recover.expr Token.wrap_slash    $loc]

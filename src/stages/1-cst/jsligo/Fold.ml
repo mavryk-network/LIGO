@@ -8,7 +8,8 @@ type 'a fold_control = 'a Cst_shared.Fold.fold_control
 type _ sing =
     S_all_cases : all_cases sing
   | S_all_match_clauses : all_match_clauses sing
-  | S_apply : apply sing
+  | S_app : 'a sing -> 'a app sing
+  | S_sharp : sharp sing
   | S_arguments : arguments sing
   | S_array : 'a sing -> 'a _array sing
   | S_array_2 : 'a sing * 'b sing -> ('a * 'b) sing
@@ -239,7 +240,7 @@ let fold
     | S_all_match_clauses ->
       process @@ node -| S_array_2 (S_nseq (S_reg S_match_clause),
                                     S_option (S_reg S_match_default))
-  | S_apply -> process @@ node -| S_wrap S_lexeme
+  | S_sharp -> process @@ node -| S_wrap S_lexeme
   | S_arguments -> process
     (node -| (S_par (S_sepseq (S_expr, S_comma))))
   | S_arrow -> process @@ node -| S_wrap S_lexeme
@@ -317,11 +318,15 @@ let fold
     ; eof -| S_eof ]
   | S_ctor ->process @@  node -| S_wrap S_lexeme
   | S_ctor_app sing ->
-    let {apply; app; rbracket} = node in
+    let sharp, app = node in
     process_list
-    [ apply -| S_apply
-    ; app -| S_nsep_or_term (sing, S_comma)
-    ; rbracket -| S_rbracket]
+    [ sharp -| S_sharp
+    ; app -| S_app sing
+    ]
+  | S_app sing -> process
+    ( match node with
+        ZeroArg node -> node -| sing
+      | MultArg node -> node -| S_brackets (S_nsep_or_term (sing, S_comma)))
   | S_declaration -> process
     ( match node with
         D_Fun node -> node -| S_reg S_fun_decl

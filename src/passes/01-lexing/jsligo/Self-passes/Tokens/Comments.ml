@@ -48,7 +48,7 @@ let add_comment (comment : Wrap.comment) : Token.t -> Token.t = function
 
 (* Symbols *)
 
-| APPLY      w -> APPLY (w#add_comment comment)
+| SHARP      w -> SHARP (w#add_comment comment)
 | MINUS      w -> MINUS (w#add_comment comment)
 | PLUS       w -> PLUS (w#add_comment comment)
 | SLASH      w -> SLASH (w#add_comment comment)

@@ -65,7 +65,7 @@ let mk_app ctor = function
   namespace_path(namespace_name)
   nsepseq(variant,VBAR)
   nsepseq(object_type,VBAR)
-  chevrons(nsep_or_term(type_ctor_arg(type_expr),COMMA))
+  chevrons(nsep_or_term(type_ctor_arg,COMMA))
   nseq(__anonymous_1(object_type,VBAR))
   app_expr_level
   app_expr
@@ -439,17 +439,24 @@ attr_variant:
 | "[@attr]" attr_variant { T_Attr ($1,$2) }
 
 variant:
-  "[@attr]" variant  { {$2 with attributes = $1::$2.attributes} }
-| ctor_app_type_expr { {attributes=[]; tuple=$1}                }
+  "[@attr]" variant  {
+    {$2 with attributes = $1::$2.attributes} }
+| "#" brackets(bracketed_variant) {
+    let region = cover $1#region $2.region
+    and value  = $1, MultArg $2
+    in {attributes=[]; tuple = {region; value}} }
+| "#" "<string>" {
+    let region = cover $1#region $2#region
+    and value  = $1, ZeroArg (T_String $2)
+    in {attributes=[]; tuple = {region; value}} }
 
-ctor_app_type_expr:
-  "#[" "<string>" ctor_arguments(type_expr)? "]" {
-    let region = cover $1#region $4#region
-    and value = {apply=$1; app = mk_app (T_String $2) $3; rbracket=$4}
-    in {region; value} }
+bracketed_variant:
+  "<string>" ctor_arguments(type_expr)? { mk_app (T_String $1) $2 }
 
 ctor_arguments (kind):
-  "," sep_or_term(kind,",") { $1,$2 }
+  "," sep_or_term(ctor_arg(kind),",") { $1,$2 }
+
+ctor_arg(kind): kind { $1 } (* For clearer error messages *)
 
 (* Core types *)
 
@@ -459,27 +466,26 @@ core_type:
 | no_par_type_expr {          $1 }
 
 no_par_type_expr:
-  "<int>"                    { T_Int         $1 }
-| "_" | type_name            { T_Var         $1 }
-| type_ctor_app (type_expr)  { T_App         $1 }
-| array_type                 { T_Array       $1 }
-| parameter_of_type          { T_ParameterOf $1 }
-| "[@attr]" core_type        { T_Attr   ($1,$2) }
-| qualified_type (type_expr)
-| union_or_object            { $1 }
+  "<int>"             { T_Int         $1 }
+| "_" | type_name     { T_Var         $1 }
+| type_ctor_app       { T_App         $1 }
+| array_type          { T_Array       $1 }
+| parameter_of_type   { T_ParameterOf $1 }
+| "[@attr]" core_type { T_Attr   ($1,$2) }
+| qualified_type
+| union_or_object     { $1 }
 
 (* Application of type arguments to type constructors *)
 
-type_ctor_app(type_expr):
-  type_ctor type_ctor_args(type_expr) {
+type_ctor_app:
+  type_ctor type_ctor_args {
     let region = cover $1#region $2.region
     in {region; value = (T_Var $1, $2)} }
 
-type_ctor_args (type_expr):
-  chevrons (nsep_or_term (type_ctor_arg (type_expr),",")) { $1 }
+type_ctor_args:
+  chevrons (nsep_or_term (type_ctor_arg,",")) { $1 }
 
-type_ctor_arg (type_expr):
-  type_expr { $1 }
+type_ctor_arg: type_expr { $1 }
 
 (* Arrays of types *)
 
@@ -487,17 +493,13 @@ array_type:
   brackets (type_elements) { $1 }
 
 type_elements:
-  type_element_no_string {
+  type_element {
     `Sep ($1,[])
   }
-| type_element_no_string "," nsep_or_term(type_element,",") {
+| type_element "," nsep_or_term(type_element,",") {
     Utils.nsep_or_term_cons $1 $2 $3 }
 
-type_element_no_string:
-  fun_type | variant_type | core_type { $1 }
-
-type_element:
-  type_expr { $1 }
+type_element: type_expr { $1 }
 
 (* Parameter of contract *)
 
@@ -531,8 +533,8 @@ parameter_of_type:
    Unfortunately, this creates a shift/reduce conflict (on "."),
    whence our more involved solution. *)
 
-qualified_type (type_expr):
-  type_in_namespace(type_ctor { T_Var $1 }) type_ctor_args(type_expr) {
+qualified_type:
+  type_in_namespace(type_ctor { T_Var $1 }) type_ctor_args {
     let region = cover (type_expr_to_region $1) $2.region
     in T_App {region; value=$1,$2}
   }
@@ -814,7 +816,7 @@ for_of_stmt(right_stmt):
 
 range_of:
   index_kind variable "of" expr {
-   {index_kind=$1; index=$2; kwd_of=$3; expr=$4} }
+    {index_kind=$1; index=$2; kwd_of=$3; expr=$4} }
 
 %inline
 index_kind:
@@ -972,7 +974,7 @@ match_expr:
     in E_Match {region; value} }
 
 match_subject:
-  par(expr) { $1 }
+  par (expr) { $1 }
 
 match_clauses:
   nseq(match_clause) ioption(match_default) { AllClauses ($1,$2) }
@@ -1134,10 +1136,17 @@ argument:
   expr { $1 }
 
 ctor_app_expr:
-  "#[" ctor_expr ctor_arguments(expr)? "]" {
-    let region = cover $1#region $4#region
-    and value = {apply=$1; app = mk_app $2 $3; rbracket=$4}
+  "#" brackets(bracketed_ctor_app_expr) {
+    let region = cover $1#region $2.region
+    and value  = $1, MultArg $2
     in {region; value} }
+| "#" "<string>" {
+   let region = cover $1#region $2#region in
+   let value  = $1, ZeroArg (E_String $2)
+   in {region; value} }
+
+bracketed_ctor_app_expr:
+  ctor_expr ctor_arguments(expr)? { mk_app $1 $2 }
 
 ctor_expr:
   "<string>" { E_String $1 }
@@ -1147,11 +1156,13 @@ ctor_expr:
 (* Core expressions *)
 
 core_expr:
-  code_inj     { E_CodeInj $1 }
-| par (expr)   { E_Par     $1 }
-| array (expr) { E_Array   $1 }
+  code_inj           { E_CodeInj $1 }
+| par (expr)         { E_Par     $1 }
+| array (item(expr)) { E_Array   $1 }
 | literal_expr
-| path_expr    { $1 }
+| path_expr          { $1 }
+
+item(expr): expr { $1 }
 
 (* Literal expressions *)
 
@@ -1255,15 +1266,22 @@ qualifiable_pattern:
   variable                 { P_Var    $1 }
 | object_pattern (pattern) { P_Object $1 }
 
-pattern_in_namespace(pattern):
-  namespace_path(pattern) {
+pattern_in_namespace (pattern):
+  namespace_path (pattern) {
     P_NamePath (mk_mod_path $1 pattern_to_region) }
 
 ctor_app_pattern:
-  "#[" ctor_pattern ctor_arguments(pattern)? "]" {
-    let region = cover $1#region $4#region
-    and value = {apply=$1; app = mk_app $2 $3; rbracket=$4}
+  "#" brackets(bracketed_ctor_app_pattern) {
+    let region = cover $1#region $2.region
+    and value  = $1, MultArg $2
     in {region; value} }
+| "#" "<string>" {
+   let region = cover $1#region $2#region in
+   let value  = $1, ZeroArg (P_String $2)
+   in {region; value} }
+
+bracketed_ctor_app_pattern:
+   ctor_pattern ctor_arguments(pattern)? { mk_app $1 $2 }
 
 ctor_pattern:
   "<string>" { P_String $1 }
