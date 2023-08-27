@@ -1,4 +1,5 @@
-let main = ([_, s] : [unit, int]) : [list<operation>, int] => {
+@entry
+let main = (_ : unit, s : int) : [list<operation>, int] => {
   if (s > 10) {
     failwith("no branches????")
   }

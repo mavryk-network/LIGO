@@ -1,4 +1,5 @@
-let main (_, s : unit * int) : operation list * int =
+[@entry]
+let main () (s : int) : operation list * int =
   let foo (a, b : int * int) : int = a + b in
   let s1 = foo(s, s + 2) in
   let bar (a : int) (b : int) : int = a - b in

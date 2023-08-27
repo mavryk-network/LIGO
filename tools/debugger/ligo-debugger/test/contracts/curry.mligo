@@ -7,7 +7,8 @@ let add (a : int) (b : int) = a + b
 
 let sub (a : int) (b : int) = a - b
 
-let main (_, s : unit * int) : operation list * int =
+[@entry]
+let main () (s : int) : operation list * int =
   let f1 = applyOp add in
   let f2 = applyOp sub in
   (([] : operation list), (applyOp add (s, s + 2)) * (applyOp sub (s, s - 4)))

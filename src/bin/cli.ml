@@ -33,11 +33,23 @@ let create_arg_type ?key of_string =
 let entry_point =
   let open Command.Param in
   let name = "e" in
-  let doc = "ENTRY-POINT the entry-point that will be compiled." in
+  let doc =
+    "ENTRY-POINT (this command is deprecated) the entry-point that will be compiled."
+  in
   let spec =
-    optional_with_default Default_options.entry_point
+    optional_with_default []
     @@ Command.Arg_type.comma_separated ~strip_whitespace:true ~unique_values:true string
   in
+  flag ~doc ~aliases:[ "--entry-point" ] name spec
+
+
+let parameter_entrypoint =
+  let open Command.Param in
+  let name = "e" in
+  let doc =
+    "ENTRY-POINT the entry-point to be matched against the parameter expression"
+  in
+  let spec = optional string in
   flag ~doc ~aliases:[ "--entry-point" ] name spec
 
 
@@ -59,14 +71,25 @@ let source_file =
   Command.Param.(anon (name %: create_arg_type Fn.id))
 
 
-let view_name =
-  let name = "VIEW" in
-  Command.Param.(anon (name %: create_arg_type Fn.id))
-
-
 let package_name =
   let name = "PACKAGE_NAME" in
   Command.Param.(anon (maybe (name %: string)))
+
+
+let named_arg_package_name =
+  let open Command.Param in
+  let name = "--package-name" in
+  let doc = "Name of the package on which publish/unpublish is executed" in
+  let spec = optional string in
+  flag ~doc name spec
+
+
+let named_arg_package_version =
+  let open Command.Param in
+  let name = "--package-version" in
+  let doc = "Version of the package on which publish/unpublish is executed" in
+  let spec = optional string in
+  flag ~doc name spec
 
 
 let expression purpose =
@@ -160,11 +183,11 @@ let nanopass =
 let on_chain_views : _ Command.Param.t =
   let open Command.Param in
   let doc =
-    "VIEWS A list of declaration name that will be compiled as on-chain views, separated \
-     by ','"
+    "VIEWS (this command is deprecated) A list of declaration name that will be compiled \
+     as on-chain views, separated by ','"
   in
   let spec =
-    optional_with_default Default_options.views
+    optional_with_default []
     @@ Command.Arg_type.comma_separated ~strip_whitespace:true ~unique_values:true string
   in
   flag ~doc ~aliases:[ "v" ] "--views" spec
@@ -433,6 +456,13 @@ let deprecated =
   flag ~doc name no_arg
 
 
+let function_body =
+  let open Command.Param in
+  let name = "--function-body" in
+  let doc = "compile expression as a function body" in
+  flag ~doc name no_arg
+
+
 let display_format =
   let open Command.Param in
   let open Simple_utils.Display in
@@ -646,10 +676,8 @@ let compile_file =
     =
     let raw_options =
       Raw_options.make
-        ~entry_point
         ~module_
         ~syntax
-        ~views
         ~protocol_version
         ~disable_michelson_typechecking
         ~experimental_disable_optimizations_for_debugging
@@ -686,9 +714,11 @@ let compile_file =
       ?output_file
     @@ Api.Compile.contract
          raw_options
+         entry_point
          (Api.Compile.File source_file)
          michelson_format
          michelson_comments
+         views
   in
   let summary = "compile a contract." in
   let readme () =
@@ -732,7 +762,7 @@ let compile_file =
 let compile_parameter =
   let f
       source_file
-      entry_point
+      parameter_entrypoint_opt
       module_
       expression
       syntax
@@ -761,7 +791,6 @@ let compile_parameter =
     let raw_options =
       Raw_options.make
         ~syntax
-        ~entry_point
         ~module_
         ~protocol_version
         ~warning_as_error
@@ -792,6 +821,7 @@ let compile_parameter =
       ?output_file
     @@ Api.Compile.parameter
          raw_options
+         parameter_entrypoint_opt
          source_file
          expression
          amount
@@ -812,7 +842,7 @@ let compile_parameter =
     ~readme
     (f
     <$> source_file
-    <*> entry_point
+    <*> parameter_entrypoint
     <*> module_
     <*> expression "parameter"
     <*> syntax
@@ -859,6 +889,7 @@ let compile_expression =
       warn_unused_rec
       warn_infinite_loop
       libraries
+      function_body
       ()
     =
     let raw_options =
@@ -875,6 +906,7 @@ let compile_expression =
         ~warn_unused_rec
         ~warn_infinite_loop
         ~libraries
+        ~function_body
         ()
     in
     let cli_analytics =
@@ -921,7 +953,8 @@ let compile_expression =
     <*> project_root
     <*> warn_unused_rec
     <*> warn_infinite_loop
-    <*> libraries)
+    <*> libraries
+    <*> function_body)
 
 
 let compile_storage =
@@ -965,7 +998,6 @@ let compile_storage =
     in
     let raw_options =
       Raw_options.make
-        ~entry_point
         ~module_
         ~syntax
         ~protocol_version
@@ -999,6 +1031,7 @@ let compile_storage =
       ?output_file
     @@ Api.Compile.storage
          raw_options
+         entry_point
          source_file
          expression
          amount
@@ -1123,118 +1156,6 @@ let compile_constant =
     <*> libraries)
 
 
-let compile_view =
-  let f
-      source_file
-      view_name
-      entry_point
-      module_
-      syntax
-      protocol_version
-      display_format
-      disable_michelson_typechecking
-      experimental_disable_optimizations_for_debugging
-      enable_typed_opt
-      no_stdlib
-      michelson_format
-      output_file
-      show_warnings
-      warning_as_error
-      no_colour
-      no_metadata_check
-      deprecated
-      skip_analytics
-      constants
-      file_constants
-      project_root
-      transpiled
-      warn_unused_rec
-      warn_infinite_loop
-      libraries
-      ()
-    =
-    let raw_options =
-      Raw_options.make
-        ~entry_point
-        ~module_
-        ~syntax
-        ~protocol_version
-        ~disable_michelson_typechecking
-        ~experimental_disable_optimizations_for_debugging
-        ~enable_typed_opt
-        ~no_stdlib
-        ~warning_as_error
-        ~no_colour
-        ~no_metadata_check
-        ~deprecated
-        ~constants
-        ~file_constants
-        ~project_root
-        ~transpiled
-        ~warn_unused_rec
-        ~warn_infinite_loop
-        ~libraries
-        ()
-    in
-    let cli_analytics =
-      Analytics.generate_cli_metrics_with_syntax_and_protocol
-        ~command:"compile_view"
-        ~raw_options
-        ~source_file
-        ()
-    in
-    return_result
-      ~skip_analytics
-      ~cli_analytics
-      ~return
-      ~show_warnings
-      ~display_format
-      ~no_colour
-      ~warning_as_error:raw_options.warning_as_error
-      ?output_file
-    @@ Api.Compile.view
-         raw_options
-         (Api.Compile.File source_file)
-         view_name
-         michelson_format
-  in
-  let summary = "compile a view." in
-  let readme () =
-    "This sub-command compiles a view to Michelson code. It expects a source file and a \
-     view function that has the type of a view: \"parameter * storage -> result\"."
-  in
-  Command.basic
-    ~summary
-    ~readme
-    (f
-    <$> source_file
-    <*> view_name
-    <*> entry_point
-    <*> module_
-    <*> syntax
-    <*> protocol_version
-    <*> display_format
-    <*> disable_michelson_typechecking
-    <*> experimental_disable_optimizations_for_debugging
-    <*> enable_michelson_typed_opt
-    <*> no_stdlib
-    <*> michelson_code_format
-    <*> output_file
-    <*> warn
-    <*> werror
-    <*> no_colour
-    <*> no_metadata_check
-    <*> deprecated
-    <*> skip_analytics
-    <*> constants
-    <*> file_constants
-    <*> project_root
-    <*> transpiled
-    <*> warn_unused_rec
-    <*> warn_infinite_loop
-    <*> libraries)
-
-
 let compile_group =
   Command.group ~summary:"compile a ligo program to michelson"
   @@ [ "contract", compile_file
@@ -1242,7 +1163,6 @@ let compile_group =
      ; "parameter", compile_parameter
      ; "storage", compile_storage
      ; "constant", compile_constant
-     ; "view", compile_view
      ]
 
 
@@ -1588,7 +1508,6 @@ let dry_run =
     =
     let raw_options =
       Raw_options.make
-        ~entry_point
         ~module_
         ~syntax
         ~protocol_version
@@ -1617,6 +1536,7 @@ let dry_run =
       ~warning_as_error:raw_options.warning_as_error
     @@ Api.Run.dry_run
          raw_options
+         entry_point
          source_file
          parameter
          storage
@@ -1757,7 +1677,7 @@ let evaluate_call =
 let evaluate_expr =
   let f
       source_file
-      entry_point
+      exp
       amount
       balance
       sender
@@ -1779,7 +1699,6 @@ let evaluate_expr =
     =
     let raw_options =
       Raw_options.make
-        ~entry_point
         ~syntax
         ~protocol_version
         ~warning_as_error
@@ -1805,7 +1724,7 @@ let evaluate_expr =
       ~display_format
       ~no_colour
       ~warning_as_error:raw_options.warning_as_error
-    @@ Api.Run.evaluate_expr raw_options source_file amount balance sender source now
+    @@ Api.Run.evaluate_expr raw_options source_file exp amount balance sender source now
   in
   let summary = "evaluate a given definition." in
   let readme () =
@@ -1818,7 +1737,7 @@ let evaluate_expr =
     ~readme
     (f
     <$> source_file
-    <*> entry_point
+    <*> expression "EXPR"
     <*> amount
     <*> balance
     <*> sender
@@ -2001,7 +1920,6 @@ let measure_contract =
   let f
       source_file
       entry_point
-      views
       syntax
       protocol_version
       display_format
@@ -2019,10 +1937,8 @@ let measure_contract =
     =
     let raw_options =
       Raw_options.make
-        ~entry_point
         ~syntax
         ~protocol_version
-        ~views
         ~warning_as_error
         ~project_root
         ~deprecated
@@ -2047,7 +1963,7 @@ let measure_contract =
       ~display_format
       ~no_colour
       ~warning_as_error:raw_options.warning_as_error
-    @@ Api.Info.measure_contract raw_options source_file
+    @@ Api.Info.measure_contract raw_options entry_point source_file
   in
   let summary = "measure a contract's compiled size in bytes." in
   let readme () =
@@ -2060,7 +1976,6 @@ let measure_contract =
     (f
     <$> source_file
     <*> entry_point
-    <*> on_chain_views
     <*> syntax
     <*> protocol_version
     <*> display_format
@@ -2138,6 +2053,34 @@ let get_scope =
     <*> no_stdlib)
 
 
+let resolve_config =
+  let f source_file display_format () =
+    let raw_options = Raw_options.make () in
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"info_resolve-config"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~skip_analytics:true
+      ~cli_analytics
+      ~return
+      ~display_format
+      ~no_colour:true
+      ~warning_as_error:raw_options.warning_as_error
+    @@ Api.Info.resolve_config raw_options source_file
+  in
+  let summary = "Resolves a config for the LIGO debugger" in
+  let readme () =
+    "This sub-command resolves a configuration written in LIGO which can be used for the \
+     LIGO debugger.\n\n\
+    \    For more information, read the debugger's read me."
+  in
+  Command.basic ~summary ~readme (f <$> source_file <*> display_format)
+
+
 let info_group =
   let summary = "tools to get information from contracts" in
   Command.group
@@ -2145,6 +2088,7 @@ let info_group =
     [ "list-declarations", list_declarations
     ; "measure-contract", measure_contract
     ; "get-scope", get_scope
+    ; "resolve-config", resolve_config
     ]
 
 
@@ -2997,7 +2941,7 @@ let install =
     (f <$> package_name <*> cache_path <*> ligo_registry <*> skip_analytics)
 
 
-let publish =
+let registry_publish =
   let summary = "[BETA] publish the LIGO package declared in package.json" in
   let readme () =
     "[BETA] Packs the pacakage directory contents into a tarball and uploads it to the \
@@ -3018,6 +2962,30 @@ let publish =
     <*> project_root
     <*> dry_run_flag
     <*> ligo_bin_path
+    <*> skip_analytics)
+
+
+let registry_unpublish =
+  let summary = "[BETA] unpublish the LIGO package" in
+  let readme () = "[BETA] Unpublishes a package from the registry" in
+  let cli_analytic = Analytics.generate_cli_metric ~command:"unpublish" in
+  let f package_name package_version ligo_registry ligorc_path skip_analytics () =
+    return_with_custom_formatter ~skip_analytics ~cli_analytics:[ cli_analytic ] ~return
+    @@ fun () ->
+    Unpublish.unpublish
+      ~name:package_name
+      ~version:package_version
+      ~ligo_registry
+      ~ligorc_path
+  in
+  Command.basic
+    ~summary
+    ~readme
+    (f
+    <$> named_arg_package_name
+    <*> named_arg_package_version
+    <*> ligo_registry
+    <*> ligorc_path
     <*> skip_analytics)
 
 
@@ -3046,6 +3014,15 @@ let login =
     @@ fun () -> User.create_or_login ~ligo_registry ~ligorc_path
   in
   Command.basic ~summary ~readme (f <$> ligo_registry <*> ligorc_path <*> skip_analytics)
+
+
+let registry_group =
+  Command.group ~summary:"Commands to interact with Ligo Package Registry"
+  @@ [ "login", login
+     ; "add-user", add_user
+     ; "publish", registry_publish
+     ; "unpublish", registry_unpublish
+     ]
 
 
 module Lsp_server = struct
@@ -3141,11 +3118,9 @@ let main =
      ; "changelog", changelog
      ; "print", print_group
      ; "install", install
-     ; "publish", publish
-     ; "add-user", add_user
-     ; "login", login
      ; "lsp", lsp
      ; "analytics", analytics
+     ; "registry", registry_group
      ]
 
 

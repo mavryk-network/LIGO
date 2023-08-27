@@ -3,17 +3,107 @@ InterpretSnapshot:
   isStackFrames:
     [ StackFrame:
       sfName: main
-      sfLoc: test/contracts/local-function-assignments.mligo@2:3-2:43
+      sfLoc: test/contracts/local-function-assignments.mligo@3:3-3:43
       sfStack:
         [ StackItem:
           siLigoDesc: elem s of int
-          siValue: 0 ] ]
+          siValue: 0 ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/local-function-assignments.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { DROP;
+              LAMBDA
+                int
+                (pair (list operation) int)
+                { {  };
+                  { { LAMBDA
+                        (pair int int)
+                        int
+                        { {  };
+                          {  };
+                          UNPAIR;
+                          {  };
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          { {  }; { SWAP }; ADD } } };
+                    {  };
+                    { { { { { PUSH int 2 }; { DUP 3 }; ADD }; { DUP 3 }; PAIR };
+                        { SWAP };
+                        SWAP;
+                        EXEC };
+                      {  };
+                      { { LAMBDA
+                            (pair int int)
+                            int
+                            { {  };
+                              UNPAIR;
+                              {  };
+                              {  };
+                              SWAP;
+                              {  };
+                              { {  }; { SWAP }; SUB } } };
+                        {  };
+                        { { { { PUSH int 2 }; { DUP 4 }; SUB };
+                            { DUP 4 };
+                            PAIR;
+                            { SWAP };
+                            SWAP;
+                            EXEC };
+                          {  };
+                          { { LAMBDA
+                                (pair int int int)
+                                int
+                                { {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  { { {  }; { SWAP }; MUL };
+                                    { SWAP };
+                                    ADD } } };
+                            {  };
+                            { { { { DIG 3 }; { DUP 3 }; PAIR };
+                                { DUP 4 };
+                                PAIR;
+                                { SWAP };
+                                SWAP;
+                                EXEC };
+                              {  };
+                              { { {  }; { { SWAP }; { DIG 2 }; ADD }; ADD };
+                                { NIL operation };
+                                PAIR } } } } } } } } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
     [ StackFrame:
       sfName: main
-      sfLoc: test/contracts/local-function-assignments.mligo@3:3-3:25
+      sfLoc: test/contracts/local-function-assignments.mligo@4:3-4:25
       sfStack:
         [ StackItem:
           siLigoDesc: elem foo of int * int -> int
@@ -32,13 +122,103 @@ InterpretSnapshot:
               { {  }; { SWAP }; ADD } }
         , StackItem:
           siLigoDesc: elem s of int
-          siValue: 0 ] ]
+          siValue: 0 ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/local-function-assignments.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { DROP;
+              LAMBDA
+                int
+                (pair (list operation) int)
+                { {  };
+                  { { LAMBDA
+                        (pair int int)
+                        int
+                        { {  };
+                          {  };
+                          UNPAIR;
+                          {  };
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          { {  }; { SWAP }; ADD } } };
+                    {  };
+                    { { { { { PUSH int 2 }; { DUP 3 }; ADD }; { DUP 3 }; PAIR };
+                        { SWAP };
+                        SWAP;
+                        EXEC };
+                      {  };
+                      { { LAMBDA
+                            (pair int int)
+                            int
+                            { {  };
+                              UNPAIR;
+                              {  };
+                              {  };
+                              SWAP;
+                              {  };
+                              { {  }; { SWAP }; SUB } } };
+                        {  };
+                        { { { { PUSH int 2 }; { DUP 4 }; SUB };
+                            { DUP 4 };
+                            PAIR;
+                            { SWAP };
+                            SWAP;
+                            EXEC };
+                          {  };
+                          { { LAMBDA
+                                (pair int int int)
+                                int
+                                { {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  { { {  }; { SWAP }; MUL };
+                                    { SWAP };
+                                    ADD } } };
+                            {  };
+                            { { { { DIG 3 }; { DUP 3 }; PAIR };
+                                { DUP 4 };
+                                PAIR;
+                                { SWAP };
+                                SWAP;
+                                EXEC };
+                              {  };
+                              { { {  }; { { SWAP }; { DIG 2 }; ADD }; ADD };
+                                { NIL operation };
+                                PAIR } } } } } } } } } ] ]
 InterpretSnapshot:
   isStatus: running / upon function call
   isStackFrames:
     [ StackFrame:
       sfName: main
-      sfLoc: test/contracts/local-function-assignments.mligo@3:12-3:25
+      sfLoc: test/contracts/local-function-assignments.mligo@4:12-4:25
       sfStack:
         [ StackItem:
           siLigoDesc: elem foo of int * int -> int
@@ -57,13 +237,103 @@ InterpretSnapshot:
               { {  }; { SWAP }; ADD } }
         , StackItem:
           siLigoDesc: elem s of int
-          siValue: 0 ] ]
+          siValue: 0 ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/local-function-assignments.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { DROP;
+              LAMBDA
+                int
+                (pair (list operation) int)
+                { {  };
+                  { { LAMBDA
+                        (pair int int)
+                        int
+                        { {  };
+                          {  };
+                          UNPAIR;
+                          {  };
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          { {  }; { SWAP }; ADD } } };
+                    {  };
+                    { { { { { PUSH int 2 }; { DUP 3 }; ADD }; { DUP 3 }; PAIR };
+                        { SWAP };
+                        SWAP;
+                        EXEC };
+                      {  };
+                      { { LAMBDA
+                            (pair int int)
+                            int
+                            { {  };
+                              UNPAIR;
+                              {  };
+                              {  };
+                              SWAP;
+                              {  };
+                              { {  }; { SWAP }; SUB } } };
+                        {  };
+                        { { { { PUSH int 2 }; { DUP 4 }; SUB };
+                            { DUP 4 };
+                            PAIR;
+                            { SWAP };
+                            SWAP;
+                            EXEC };
+                          {  };
+                          { { LAMBDA
+                                (pair int int int)
+                                int
+                                { {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  { { {  }; { SWAP }; MUL };
+                                    { SWAP };
+                                    ADD } } };
+                            {  };
+                            { { { { DIG 3 }; { DUP 3 }; PAIR };
+                                { DUP 4 };
+                                PAIR;
+                                { SWAP };
+                                SWAP;
+                                EXEC };
+                              {  };
+                              { { {  }; { { SWAP }; { DIG 2 }; ADD }; ADD };
+                                { NIL operation };
+                                PAIR } } } } } } } } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
     [ StackFrame:
       sfName: foo
-      sfLoc: test/contracts/local-function-assignments.mligo@2:38-2:43
+      sfLoc: test/contracts/local-function-assignments.mligo@3:38-3:43
       sfStack:
         [ StackItem:
           siLigoDesc: elem b of int
@@ -73,7 +343,7 @@ InterpretSnapshot:
           siValue: 0 ]
     , StackFrame:
       sfName: main
-      sfLoc: test/contracts/local-function-assignments.mligo@3:16-3:24
+      sfLoc: test/contracts/local-function-assignments.mligo@4:16-4:24
       sfStack:
         [ StackItem:
           siLigoDesc: elem foo of int * int -> int
@@ -92,26 +362,206 @@ InterpretSnapshot:
               { {  }; { SWAP }; ADD } }
         , StackItem:
           siLigoDesc: elem s of int
-          siValue: 0 ] ]
+          siValue: 0 ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/local-function-assignments.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { DROP;
+              LAMBDA
+                int
+                (pair (list operation) int)
+                { {  };
+                  { { LAMBDA
+                        (pair int int)
+                        int
+                        { {  };
+                          {  };
+                          UNPAIR;
+                          {  };
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          { {  }; { SWAP }; ADD } } };
+                    {  };
+                    { { { { { PUSH int 2 }; { DUP 3 }; ADD }; { DUP 3 }; PAIR };
+                        { SWAP };
+                        SWAP;
+                        EXEC };
+                      {  };
+                      { { LAMBDA
+                            (pair int int)
+                            int
+                            { {  };
+                              UNPAIR;
+                              {  };
+                              {  };
+                              SWAP;
+                              {  };
+                              { {  }; { SWAP }; SUB } } };
+                        {  };
+                        { { { { PUSH int 2 }; { DUP 4 }; SUB };
+                            { DUP 4 };
+                            PAIR;
+                            { SWAP };
+                            SWAP;
+                            EXEC };
+                          {  };
+                          { { LAMBDA
+                                (pair int int int)
+                                int
+                                { {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  { { {  }; { SWAP }; MUL };
+                                    { SWAP };
+                                    ADD } } };
+                            {  };
+                            { { { { DIG 3 }; { DUP 3 }; PAIR };
+                                { DUP 4 };
+                                PAIR;
+                                { SWAP };
+                                SWAP;
+                                EXEC };
+                              {  };
+                              { { {  }; { { SWAP }; { DIG 2 }; ADD }; ADD };
+                                { NIL operation };
+                                PAIR } } } } } } } } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
     [ StackFrame:
       sfName: main
-      sfLoc: test/contracts/local-function-assignments.mligo@4:3-4:44
+      sfLoc: test/contracts/local-function-assignments.mligo@5:3-5:44
       sfStack:
         [ StackItem:
           siLigoDesc: elem s1 of int
           siValue: 2
         , StackItem:
           siLigoDesc: elem s of int
-          siValue: 0 ] ]
+          siValue: 0 ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/local-function-assignments.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { DROP;
+              LAMBDA
+                int
+                (pair (list operation) int)
+                { {  };
+                  { { LAMBDA
+                        (pair int int)
+                        int
+                        { {  };
+                          {  };
+                          UNPAIR;
+                          {  };
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          { {  }; { SWAP }; ADD } } };
+                    {  };
+                    { { { { { PUSH int 2 }; { DUP 3 }; ADD }; { DUP 3 }; PAIR };
+                        { SWAP };
+                        SWAP;
+                        EXEC };
+                      {  };
+                      { { LAMBDA
+                            (pair int int)
+                            int
+                            { {  };
+                              UNPAIR;
+                              {  };
+                              {  };
+                              SWAP;
+                              {  };
+                              { {  }; { SWAP }; SUB } } };
+                        {  };
+                        { { { { PUSH int 2 }; { DUP 4 }; SUB };
+                            { DUP 4 };
+                            PAIR;
+                            { SWAP };
+                            SWAP;
+                            EXEC };
+                          {  };
+                          { { LAMBDA
+                                (pair int int int)
+                                int
+                                { {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  { { {  }; { SWAP }; MUL };
+                                    { SWAP };
+                                    ADD } } };
+                            {  };
+                            { { { { DIG 3 }; { DUP 3 }; PAIR };
+                                { DUP 4 };
+                                PAIR;
+                                { SWAP };
+                                SWAP;
+                                EXEC };
+                              {  };
+                              { { {  }; { { SWAP }; { DIG 2 }; ADD }; ADD };
+                                { NIL operation };
+                                PAIR } } } } } } } } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
     [ StackFrame:
       sfName: main
-      sfLoc: test/contracts/local-function-assignments.mligo@5:3-5:25
+      sfLoc: test/contracts/local-function-assignments.mligo@6:3-6:25
       sfStack:
         [ StackItem:
           siLigoDesc: elem bar of int -> int -> int
@@ -122,13 +572,103 @@ InterpretSnapshot:
           siValue: 2
         , StackItem:
           siLigoDesc: elem s of int
-          siValue: 0 ] ]
+          siValue: 0 ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/local-function-assignments.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { DROP;
+              LAMBDA
+                int
+                (pair (list operation) int)
+                { {  };
+                  { { LAMBDA
+                        (pair int int)
+                        int
+                        { {  };
+                          {  };
+                          UNPAIR;
+                          {  };
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          { {  }; { SWAP }; ADD } } };
+                    {  };
+                    { { { { { PUSH int 2 }; { DUP 3 }; ADD }; { DUP 3 }; PAIR };
+                        { SWAP };
+                        SWAP;
+                        EXEC };
+                      {  };
+                      { { LAMBDA
+                            (pair int int)
+                            int
+                            { {  };
+                              UNPAIR;
+                              {  };
+                              {  };
+                              SWAP;
+                              {  };
+                              { {  }; { SWAP }; SUB } } };
+                        {  };
+                        { { { { PUSH int 2 }; { DUP 4 }; SUB };
+                            { DUP 4 };
+                            PAIR;
+                            { SWAP };
+                            SWAP;
+                            EXEC };
+                          {  };
+                          { { LAMBDA
+                                (pair int int int)
+                                int
+                                { {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  { { {  }; { SWAP }; MUL };
+                                    { SWAP };
+                                    ADD } } };
+                            {  };
+                            { { { { DIG 3 }; { DUP 3 }; PAIR };
+                                { DUP 4 };
+                                PAIR;
+                                { SWAP };
+                                SWAP;
+                                EXEC };
+                              {  };
+                              { { {  }; { { SWAP }; { DIG 2 }; ADD }; ADD };
+                                { NIL operation };
+                                PAIR } } } } } } } } } ] ]
 InterpretSnapshot:
   isStatus: running / upon function call
   isStackFrames:
     [ StackFrame:
       sfName: main
-      sfLoc: test/contracts/local-function-assignments.mligo@5:12-5:25
+      sfLoc: test/contracts/local-function-assignments.mligo@6:12-6:25
       sfStack:
         [ StackItem:
           siLigoDesc: elem bar of int -> int -> int
@@ -139,13 +679,103 @@ InterpretSnapshot:
           siValue: 2
         , StackItem:
           siLigoDesc: elem s of int
-          siValue: 0 ] ]
+          siValue: 0 ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/local-function-assignments.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { DROP;
+              LAMBDA
+                int
+                (pair (list operation) int)
+                { {  };
+                  { { LAMBDA
+                        (pair int int)
+                        int
+                        { {  };
+                          {  };
+                          UNPAIR;
+                          {  };
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          { {  }; { SWAP }; ADD } } };
+                    {  };
+                    { { { { { PUSH int 2 }; { DUP 3 }; ADD }; { DUP 3 }; PAIR };
+                        { SWAP };
+                        SWAP;
+                        EXEC };
+                      {  };
+                      { { LAMBDA
+                            (pair int int)
+                            int
+                            { {  };
+                              UNPAIR;
+                              {  };
+                              {  };
+                              SWAP;
+                              {  };
+                              { {  }; { SWAP }; SUB } } };
+                        {  };
+                        { { { { PUSH int 2 }; { DUP 4 }; SUB };
+                            { DUP 4 };
+                            PAIR;
+                            { SWAP };
+                            SWAP;
+                            EXEC };
+                          {  };
+                          { { LAMBDA
+                                (pair int int int)
+                                int
+                                { {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  { { {  }; { SWAP }; MUL };
+                                    { SWAP };
+                                    ADD } } };
+                            {  };
+                            { { { { DIG 3 }; { DUP 3 }; PAIR };
+                                { DUP 4 };
+                                PAIR;
+                                { SWAP };
+                                SWAP;
+                                EXEC };
+                              {  };
+                              { { {  }; { { SWAP }; { DIG 2 }; ADD }; ADD };
+                                { NIL operation };
+                                PAIR } } } } } } } } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
     [ StackFrame:
       sfName: bar
-      sfLoc: test/contracts/local-function-assignments.mligo@4:39-4:44
+      sfLoc: test/contracts/local-function-assignments.mligo@5:39-5:44
       sfStack:
         [ StackItem:
           siLigoDesc: elem b of int
@@ -155,7 +785,7 @@ InterpretSnapshot:
           siValue: 0 ]
     , StackFrame:
       sfName: main
-      sfLoc: test/contracts/local-function-assignments.mligo@5:19-5:24
+      sfLoc: test/contracts/local-function-assignments.mligo@6:19-6:24
       sfStack:
         [ StackItem:
           siLigoDesc: elem bar of int -> int -> int
@@ -166,13 +796,103 @@ InterpretSnapshot:
           siValue: 2
         , StackItem:
           siLigoDesc: elem s of int
-          siValue: 0 ] ]
+          siValue: 0 ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/local-function-assignments.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { DROP;
+              LAMBDA
+                int
+                (pair (list operation) int)
+                { {  };
+                  { { LAMBDA
+                        (pair int int)
+                        int
+                        { {  };
+                          {  };
+                          UNPAIR;
+                          {  };
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          { {  }; { SWAP }; ADD } } };
+                    {  };
+                    { { { { { PUSH int 2 }; { DUP 3 }; ADD }; { DUP 3 }; PAIR };
+                        { SWAP };
+                        SWAP;
+                        EXEC };
+                      {  };
+                      { { LAMBDA
+                            (pair int int)
+                            int
+                            { {  };
+                              UNPAIR;
+                              {  };
+                              {  };
+                              SWAP;
+                              {  };
+                              { {  }; { SWAP }; SUB } } };
+                        {  };
+                        { { { { PUSH int 2 }; { DUP 4 }; SUB };
+                            { DUP 4 };
+                            PAIR;
+                            { SWAP };
+                            SWAP;
+                            EXEC };
+                          {  };
+                          { { LAMBDA
+                                (pair int int int)
+                                int
+                                { {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  { { {  }; { SWAP }; MUL };
+                                    { SWAP };
+                                    ADD } } };
+                            {  };
+                            { { { { DIG 3 }; { DUP 3 }; PAIR };
+                                { DUP 4 };
+                                PAIR;
+                                { SWAP };
+                                SWAP;
+                                EXEC };
+                              {  };
+                              { { {  }; { { SWAP }; { DIG 2 }; ADD }; ADD };
+                                { NIL operation };
+                                PAIR } } } } } } } } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
     [ StackFrame:
       sfName: main
-      sfLoc: test/contracts/local-function-assignments.mligo@6:3-6:57
+      sfLoc: test/contracts/local-function-assignments.mligo@7:3-7:57
       sfStack:
         [ StackItem:
           siLigoDesc: elem s2 of int
@@ -182,13 +902,103 @@ InterpretSnapshot:
           siValue: 2
         , StackItem:
           siLigoDesc: elem s of int
-          siValue: 0 ] ]
+          siValue: 0 ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/local-function-assignments.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { DROP;
+              LAMBDA
+                int
+                (pair (list operation) int)
+                { {  };
+                  { { LAMBDA
+                        (pair int int)
+                        int
+                        { {  };
+                          {  };
+                          UNPAIR;
+                          {  };
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          { {  }; { SWAP }; ADD } } };
+                    {  };
+                    { { { { { PUSH int 2 }; { DUP 3 }; ADD }; { DUP 3 }; PAIR };
+                        { SWAP };
+                        SWAP;
+                        EXEC };
+                      {  };
+                      { { LAMBDA
+                            (pair int int)
+                            int
+                            { {  };
+                              UNPAIR;
+                              {  };
+                              {  };
+                              SWAP;
+                              {  };
+                              { {  }; { SWAP }; SUB } } };
+                        {  };
+                        { { { { PUSH int 2 }; { DUP 4 }; SUB };
+                            { DUP 4 };
+                            PAIR;
+                            { SWAP };
+                            SWAP;
+                            EXEC };
+                          {  };
+                          { { LAMBDA
+                                (pair int int int)
+                                int
+                                { {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  { { {  }; { SWAP }; MUL };
+                                    { SWAP };
+                                    ADD } } };
+                            {  };
+                            { { { { DIG 3 }; { DUP 3 }; PAIR };
+                                { DUP 4 };
+                                PAIR;
+                                { SWAP };
+                                SWAP;
+                                EXEC };
+                              {  };
+                              { { {  }; { { SWAP }; { DIG 2 }; ADD }; ADD };
+                                { NIL operation };
+                                PAIR } } } } } } } } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
     [ StackFrame:
       sfName: main
-      sfLoc: test/contracts/local-function-assignments.mligo@7:3-7:26
+      sfLoc: test/contracts/local-function-assignments.mligo@8:3-8:26
       sfStack:
         [ StackItem:
           siLigoDesc: elem baz of int -> int * int -> int
@@ -218,13 +1028,103 @@ InterpretSnapshot:
           siValue: 2
         , StackItem:
           siLigoDesc: elem s of int
-          siValue: 0 ] ]
+          siValue: 0 ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/local-function-assignments.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { DROP;
+              LAMBDA
+                int
+                (pair (list operation) int)
+                { {  };
+                  { { LAMBDA
+                        (pair int int)
+                        int
+                        { {  };
+                          {  };
+                          UNPAIR;
+                          {  };
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          { {  }; { SWAP }; ADD } } };
+                    {  };
+                    { { { { { PUSH int 2 }; { DUP 3 }; ADD }; { DUP 3 }; PAIR };
+                        { SWAP };
+                        SWAP;
+                        EXEC };
+                      {  };
+                      { { LAMBDA
+                            (pair int int)
+                            int
+                            { {  };
+                              UNPAIR;
+                              {  };
+                              {  };
+                              SWAP;
+                              {  };
+                              { {  }; { SWAP }; SUB } } };
+                        {  };
+                        { { { { PUSH int 2 }; { DUP 4 }; SUB };
+                            { DUP 4 };
+                            PAIR;
+                            { SWAP };
+                            SWAP;
+                            EXEC };
+                          {  };
+                          { { LAMBDA
+                                (pair int int int)
+                                int
+                                { {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  { { {  }; { SWAP }; MUL };
+                                    { SWAP };
+                                    ADD } } };
+                            {  };
+                            { { { { DIG 3 }; { DUP 3 }; PAIR };
+                                { DUP 4 };
+                                PAIR;
+                                { SWAP };
+                                SWAP;
+                                EXEC };
+                              {  };
+                              { { {  }; { { SWAP }; { DIG 2 }; ADD }; ADD };
+                                { NIL operation };
+                                PAIR } } } } } } } } } ] ]
 InterpretSnapshot:
   isStatus: running / upon function call
   isStackFrames:
     [ StackFrame:
       sfName: main
-      sfLoc: test/contracts/local-function-assignments.mligo@7:12-7:26
+      sfLoc: test/contracts/local-function-assignments.mligo@8:12-8:26
       sfStack:
         [ StackItem:
           siLigoDesc: elem baz of int -> int * int -> int
@@ -254,13 +1154,103 @@ InterpretSnapshot:
           siValue: 2
         , StackItem:
           siLigoDesc: elem s of int
-          siValue: 0 ] ]
+          siValue: 0 ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/local-function-assignments.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { DROP;
+              LAMBDA
+                int
+                (pair (list operation) int)
+                { {  };
+                  { { LAMBDA
+                        (pair int int)
+                        int
+                        { {  };
+                          {  };
+                          UNPAIR;
+                          {  };
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          { {  }; { SWAP }; ADD } } };
+                    {  };
+                    { { { { { PUSH int 2 }; { DUP 3 }; ADD }; { DUP 3 }; PAIR };
+                        { SWAP };
+                        SWAP;
+                        EXEC };
+                      {  };
+                      { { LAMBDA
+                            (pair int int)
+                            int
+                            { {  };
+                              UNPAIR;
+                              {  };
+                              {  };
+                              SWAP;
+                              {  };
+                              { {  }; { SWAP }; SUB } } };
+                        {  };
+                        { { { { PUSH int 2 }; { DUP 4 }; SUB };
+                            { DUP 4 };
+                            PAIR;
+                            { SWAP };
+                            SWAP;
+                            EXEC };
+                          {  };
+                          { { LAMBDA
+                                (pair int int int)
+                                int
+                                { {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  { { {  }; { SWAP }; MUL };
+                                    { SWAP };
+                                    ADD } } };
+                            {  };
+                            { { { { DIG 3 }; { DUP 3 }; PAIR };
+                                { DUP 4 };
+                                PAIR;
+                                { SWAP };
+                                SWAP;
+                                EXEC };
+                              {  };
+                              { { {  }; { { SWAP }; { DIG 2 }; ADD }; ADD };
+                                { NIL operation };
+                                PAIR } } } } } } } } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
     [ StackFrame:
       sfName: baz
-      sfLoc: test/contracts/local-function-assignments.mligo@6:48-6:57
+      sfLoc: test/contracts/local-function-assignments.mligo@7:48-7:57
       sfStack:
         [ StackItem:
           siLigoDesc: elem c of int
@@ -273,7 +1263,7 @@ InterpretSnapshot:
           siValue: 2 ]
     , StackFrame:
       sfName: main
-      sfLoc: test/contracts/local-function-assignments.mligo@7:20-7:25
+      sfLoc: test/contracts/local-function-assignments.mligo@8:20-8:25
       sfStack:
         [ StackItem:
           siLigoDesc: elem baz of int -> int * int -> int
@@ -303,13 +1293,103 @@ InterpretSnapshot:
           siValue: 2
         , StackItem:
           siLigoDesc: elem s of int
-          siValue: 0 ] ]
+          siValue: 0 ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/local-function-assignments.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { DROP;
+              LAMBDA
+                int
+                (pair (list operation) int)
+                { {  };
+                  { { LAMBDA
+                        (pair int int)
+                        int
+                        { {  };
+                          {  };
+                          UNPAIR;
+                          {  };
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          { {  }; { SWAP }; ADD } } };
+                    {  };
+                    { { { { { PUSH int 2 }; { DUP 3 }; ADD }; { DUP 3 }; PAIR };
+                        { SWAP };
+                        SWAP;
+                        EXEC };
+                      {  };
+                      { { LAMBDA
+                            (pair int int)
+                            int
+                            { {  };
+                              UNPAIR;
+                              {  };
+                              {  };
+                              SWAP;
+                              {  };
+                              { {  }; { SWAP }; SUB } } };
+                        {  };
+                        { { { { PUSH int 2 }; { DUP 4 }; SUB };
+                            { DUP 4 };
+                            PAIR;
+                            { SWAP };
+                            SWAP;
+                            EXEC };
+                          {  };
+                          { { LAMBDA
+                                (pair int int int)
+                                int
+                                { {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  { { {  }; { SWAP }; MUL };
+                                    { SWAP };
+                                    ADD } } };
+                            {  };
+                            { { { { DIG 3 }; { DUP 3 }; PAIR };
+                                { DUP 4 };
+                                PAIR;
+                                { SWAP };
+                                SWAP;
+                                EXEC };
+                              {  };
+                              { { {  }; { { SWAP }; { DIG 2 }; ADD }; ADD };
+                                { NIL operation };
+                                PAIR } } } } } } } } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
     [ StackFrame:
       sfName: main
-      sfLoc: test/contracts/local-function-assignments.mligo@8:3-8:40
+      sfLoc: test/contracts/local-function-assignments.mligo@9:3-9:40
       sfStack:
         [ StackItem:
           siLigoDesc: elem s3 of int
@@ -319,17 +1399,197 @@ InterpretSnapshot:
           siValue: 2
         , StackItem:
           siLigoDesc: elem s1 of int
-          siValue: 2 ] ]
+          siValue: 2 ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/local-function-assignments.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { DROP;
+              LAMBDA
+                int
+                (pair (list operation) int)
+                { {  };
+                  { { LAMBDA
+                        (pair int int)
+                        int
+                        { {  };
+                          {  };
+                          UNPAIR;
+                          {  };
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          { {  }; { SWAP }; ADD } } };
+                    {  };
+                    { { { { { PUSH int 2 }; { DUP 3 }; ADD }; { DUP 3 }; PAIR };
+                        { SWAP };
+                        SWAP;
+                        EXEC };
+                      {  };
+                      { { LAMBDA
+                            (pair int int)
+                            int
+                            { {  };
+                              UNPAIR;
+                              {  };
+                              {  };
+                              SWAP;
+                              {  };
+                              { {  }; { SWAP }; SUB } } };
+                        {  };
+                        { { { { PUSH int 2 }; { DUP 4 }; SUB };
+                            { DUP 4 };
+                            PAIR;
+                            { SWAP };
+                            SWAP;
+                            EXEC };
+                          {  };
+                          { { LAMBDA
+                                (pair int int int)
+                                int
+                                { {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  { { {  }; { SWAP }; MUL };
+                                    { SWAP };
+                                    ADD } } };
+                            {  };
+                            { { { { DIG 3 }; { DUP 3 }; PAIR };
+                                { DUP 4 };
+                                PAIR;
+                                { SWAP };
+                                SWAP;
+                                EXEC };
+                              {  };
+                              { { {  }; { { SWAP }; { DIG 2 }; ADD }; ADD };
+                                { NIL operation };
+                                PAIR } } } } } } } } } ] ]
 InterpretSnapshot:
   isStatus: terminated ok
   isStackFrames:
     [ StackFrame:
       sfName: main
-      sfLoc: test/contracts/local-function-assignments.mligo@8:4-8:39
+      sfLoc: test/contracts/local-function-assignments.mligo@9:4-9:39
       sfStack:
         [ StackItem:
           siLigoDesc: elem ? of 
           siValue: Pair { } 6
         , StackItem:
           siLigoDesc: elem ? of 
-          siValue: 0 ] ]
+          siValue: 0 ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/local-function-assignments.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { DROP;
+              LAMBDA
+                int
+                (pair (list operation) int)
+                { {  };
+                  { { LAMBDA
+                        (pair int int)
+                        int
+                        { {  };
+                          {  };
+                          UNPAIR;
+                          {  };
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          SWAP;
+                          {  };
+                          { {  }; { SWAP }; ADD } } };
+                    {  };
+                    { { { { { PUSH int 2 }; { DUP 3 }; ADD }; { DUP 3 }; PAIR };
+                        { SWAP };
+                        SWAP;
+                        EXEC };
+                      {  };
+                      { { LAMBDA
+                            (pair int int)
+                            int
+                            { {  };
+                              UNPAIR;
+                              {  };
+                              {  };
+                              SWAP;
+                              {  };
+                              { {  }; { SWAP }; SUB } } };
+                        {  };
+                        { { { { PUSH int 2 }; { DUP 4 }; SUB };
+                            { DUP 4 };
+                            PAIR;
+                            { SWAP };
+                            SWAP;
+                            EXEC };
+                          {  };
+                          { { LAMBDA
+                                (pair int int int)
+                                int
+                                { {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  {  };
+                                  UNPAIR;
+                                  {  };
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  SWAP;
+                                  {  };
+                                  { { {  }; { SWAP }; MUL };
+                                    { SWAP };
+                                    ADD } } };
+                            {  };
+                            { { { { DIG 3 }; { DUP 3 }; PAIR };
+                                { DUP 4 };
+                                PAIR;
+                                { SWAP };
+                                SWAP;
+                                EXEC };
+                              {  };
+                              { { {  }; { { SWAP }; { DIG 2 }; ADD }; ADD };
+                                { NIL operation };
+                                PAIR } } } } } } } } } ] ]

@@ -2,7 +2,8 @@ type variants =
     ["Variant1", int]
   | ["Variant2"];
 
-let main = ([p, s] : [variants, int]) : [list<operation>, int] => {
+@entry
+let main = (p : variants, s : int) : [list<operation>, int] => {
   const s2 = match(p, {
     Variant1: (x : int) => s + x,
     Variant2: () => s

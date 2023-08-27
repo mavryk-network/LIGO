@@ -6,6 +6,7 @@ type combed = [@layout comb]
 
 let default_value = { a = 0 ; b = 1n ; c = "" }
 
-let main (_, s : unit * int) : operation list * int =
+[@entry]
+let main () (s : int) : operation list * int =
   let v = default_value in
   (([] : operation list), s + v.a + v.b + String.length v.c)

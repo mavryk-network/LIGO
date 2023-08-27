@@ -4,33 +4,20 @@ open Ligo_prim
 module Location = Simple_utils.Location
 
 type form =
-  | Contract of
-      { entrypoints : string list
-      ; module_path : Module_var.t list
-      }
+  | Contract of Module_var.t list
   | View of
-      { (* views declared as command line arguments if any *)
-        command_line_views : string list option
-      ; (* contract main function name *)
+      { (* contract main function name *)
         contract_entry : Value_var.t
       ; contract_type : Self_ast_typed.Helpers.contract_type
       ; module_path : Module_var.t list
       }
 
-let specific_passes ~raise ~options cform prg =
+let specific_passes ~raise cform prg =
   match cform with
-  | Contract { entrypoints; module_path } ->
-    ignore options;
-    Self_ast_typed.all_contract ~raise entrypoints module_path prg
-  | View { command_line_views; contract_entry; module_path; contract_type } ->
+  | Contract module_path -> Self_ast_typed.all_contract ~raise module_path prg
+  | View { contract_entry; module_path; contract_type } ->
     let prg =
-      Self_ast_typed.all_view
-        ~raise
-        command_line_views
-        contract_entry
-        module_path
-        contract_type
-        prg
+      Self_ast_typed.all_view ~raise contract_entry module_path contract_type prg
     in
     (contract_entry, contract_type), prg
 
@@ -78,7 +65,7 @@ let typecheck
     | None -> typed
     | Some cform ->
       trace ~raise self_ast_typed_tracer
-      @@ fun ~raise -> snd @@ specific_passes ~raise ~options cform typed
+      @@ fun ~raise -> snd @@ specific_passes ~raise cform typed
   in
   applied
 

@@ -20,6 +20,7 @@ import Unsafe qualified
 import Control.Lens (Each (each), _Just, ix, magnify, traversed, (+~), (.=), (^?!))
 import Data.Default (def)
 import Data.HashMap.Strict qualified as HM
+import Data.Map qualified as M
 import Data.Singletons (demote)
 import Data.Text qualified as Text
 import Data.Time.Clock.POSIX (getPOSIXTime)
@@ -69,7 +70,7 @@ import Morley.Michelson.Runtime (ContractState (..), mkVotingPowers)
 import Morley.Michelson.Runtime.Dummy (dummyMaxSteps)
 import Morley.Michelson.Typed
   (Constrained (SomeValue), Contract, Contract' (..), ContractCode' (unContractCode),
-  SomeContract (..))
+  SomeContract (..), pattern DefEpName)
 import Morley.Michelson.Typed qualified as T
 import Morley.Michelson.Untyped qualified as U
 import Morley.Tezos.Address (Constrained (Constrained), ta)
@@ -104,7 +105,8 @@ instance HasLigoClient (RIO LIGO) where
 
 ligoCustomHandlers :: DAP.HandlersSet (RIO LIGO)
 ligoCustomHandlers =
-  [ initializeLoggerHandler
+  [ resolveConfigFromLigo
+  , initializeLoggerHandler
   , setLigoConfigHandler
   , setProgramPathHandler
   , validateEntrypointHandler
@@ -561,6 +563,10 @@ decompileValue convertInfo@(PreLigoConvertInfo val typ) manager = do
   mLigoVal <- DV.compute manager convertInfo
   pure $ fromMaybe ToBeComputed mLigoVal
 
+resolveConfigFromLigo :: DAP.Handler (RIO LIGO)
+resolveConfigFromLigo = mkLigoHandler \req@LigoResolveConfigFromLigoRequest{} ->
+  respond =<< resolveConfig req.configPath
+
 initializeLoggerHandler :: DAP.Handler (RIO LIGO)
 initializeLoggerHandler = mkLigoHandler \req@LigoInitializeLoggerRequest{} -> do
   let file = req.file
@@ -705,13 +711,13 @@ getContractMetadataHandler = mkLigoHandler \req@LigoGetContractMetadataRequest{}
 
         let
           paramNotes = cParamNotes contract
-          handleImplicit
-              -- If the user wants to use module entrypoint then it would be
-              -- convenient to exclude default Michelson entrypoint.
-            | enName entrypointName == generatedMainName = U.WithoutImplicitDefaultEp
-            | otherwise = U.WithImplicitDefaultEp
           michelsonEntrypoints =
-            T.flattenEntrypoints handleImplicit paramNotes
+            T.flattenEntrypoints U.WithImplicitDefaultEp paramNotes
+            -- Now we have only module entrypoints. If the contract has
+            -- only one @entry then we should provide default entrypoint.
+            -- Otherwise, we can provide only a list of entrypoints without
+            -- a default one.
+            & \mp -> if M.size mp > 1 then M.delete DefEpName mp else mp
 
         atomically $ modifyTVar lServVar $ fmap \lServ -> lServ
           { lsCollectedRunInfo = Just $ onlyContractRunInfo contract

@@ -10,7 +10,6 @@ type t =
   ; warn_infinite_loop : bool
   ; (* Frontend *)
     syntax : string
-  ; entry_point : string list
   ; module_ : string
   ; libraries : string list
   ; project_root : string option
@@ -35,9 +34,9 @@ type t =
   ; experimental_disable_optimizations_for_debugging : bool
   ; enable_typed_opt : bool
   ; without_run : bool
-  ; views : string list
   ; constants : string list
   ; file_constants : string option
+  ; function_body : bool
   }
 
 module Default_options = struct
@@ -55,7 +54,6 @@ module Default_options = struct
 
   (* Frontend *)
   let syntax = "auto"
-  let entry_point = []
   let module_ = ""
   let libraries = []
   let project_root = None
@@ -84,9 +82,9 @@ module Default_options = struct
   let experimental_disable_optimizations_for_debugging = false
   let enable_typed_opt = false
   let without_run = false
-  let views = []
   let constants = []
   let file_constants = None
+  let function_body = false
 end
 
 let make
@@ -98,7 +96,6 @@ let make
     ?(warn_unused_rec = Default_options.warn_unused_rec)
     ?(warn_infinite_loop = Default_options.warn_infinite_loop)
     ?(syntax = Default_options.syntax)
-    ?(entry_point = Default_options.entry_point)
     ?(module_ = Default_options.module_)
     ?(libraries = Default_options.libraries)
     ?(project_root = Default_options.project_root)
@@ -119,9 +116,9 @@ let make
       Default_options.experimental_disable_optimizations_for_debugging)
     ?(enable_typed_opt = Default_options.enable_typed_opt)
     ?(without_run = Default_options.without_run)
-    ?(views = Default_options.views)
     ?(constants = Default_options.constants)
     ?(file_constants = Default_options.file_constants)
+    ?(function_body = Default_options.function_body)
     ()
   =
   { (* Formatter *)
@@ -135,7 +132,6 @@ let make
   ; warn_infinite_loop
   ; (* Frontend *)
     syntax
-  ; entry_point
   ; module_
   ; libraries
   ; project_root
@@ -160,7 +156,7 @@ let make
   ; experimental_disable_optimizations_for_debugging
   ; enable_typed_opt
   ; without_run
-  ; views
   ; constants
   ; file_constants
+  ; function_body
   }

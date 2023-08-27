@@ -1,4 +1,5 @@
-let main = ([_, s] : [unit, option<int>]) : [list<operation>, option<int>] => {
+@entry
+let main = (_ : unit, s : option<int>) : [list<operation>, option<int>] => {
   const s2 = match(s, {
     Some: (x : int) => x + 1,
     None: () => 0
