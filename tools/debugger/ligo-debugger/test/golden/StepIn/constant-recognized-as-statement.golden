@@ -3,7 +3,7 @@ InterpretSnapshot:
   isStackFrames:
     [ StackFrame:
       sfName: main
-      sfLoc: test/contracts/constant_as_statement.mligo@13:3-13:33
+      sfLoc: test/contracts/constant_as_statement.mligo@14:3-14:33
       sfStack:
         [ StackItem:
           siLigoDesc: elem s of int
@@ -19,13 +19,92 @@ InterpretSnapshot:
           siValue: { DROP; PUSH int 42 }
         , StackItem:
           siLigoDesc: elem String.length of string -> nat
-          siValue: { {  }; { {  }; SIZE } } ] ]
+          siValue: { {  }; { {  }; SIZE } } ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/constant_as_statement.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair
+                  (lambda unit int)
+                  (lambda unit string)
+                  (lambda unit int)
+                  (lambda string nat))
+                (Pair
+                   { PUSH int 10; PAIR; { CAR; {  }; {  } } }
+                   (Pair
+                      { DROP; PUSH string "100" }
+                      (Pair { DROP; PUSH int 42 } { {  }; { {  }; SIZE } })));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                DROP;
+                {  };
+                {  };
+                LAMBDA
+                  (pair
+                    (pair
+                      (lambda unit int)
+                      (lambda unit string)
+                      (lambda unit int)
+                      (lambda string nat))
+                    int)
+                  (pair (list operation) int)
+                  { UNPAIR;
+                    UNPAIR 4;
+                    DIG 4;
+                    {  };
+                    { { { { PUSH int 7 }; { PUSH int 1000 }; SUB }; SOME };
+                      {  };
+                      { {  };
+                        {  };
+                        IF_NONE
+                          { {  }; { PUSH int 42 } }
+                          { DROP; {  }; {  }; { PUSH int 100 } };
+                        {  };
+                        { { PUSH int 12 };
+                          {  };
+                          { { { { UNIT }; { DIG 4 }; SWAP; EXEC };
+                              { { { { UNIT }; { DIG 5 }; SWAP; EXEC };
+                                  { DIG 6 };
+                                  SWAP;
+                                  EXEC };
+                                { { { UNIT }; { DIG 6 }; SWAP; EXEC };
+                                  { { DIG 3 };
+                                    { { DIG 4 }; { DIG 5 }; ADD };
+                                    ADD };
+                                  ADD };
+                                ADD };
+                              ADD };
+                            { NIL operation };
+                            PAIR } } } } };
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                PAIR 4;
+                APPLY;
+                SWAP;
+                DIG 2;
+                DIG 3;
+                DIG 4;
+                DROP 4 } } ] ]
 InterpretSnapshot:
   isStatus: running / upon function call
   isStackFrames:
     [ StackFrame:
       sfName: main
-      sfLoc: test/contracts/constant_as_statement.mligo@13:18-13:33
+      sfLoc: test/contracts/constant_as_statement.mligo@14:18-14:33
       sfStack:
         [ StackItem:
           siLigoDesc: elem s of int
@@ -41,13 +120,92 @@ InterpretSnapshot:
           siValue: { DROP; PUSH int 42 }
         , StackItem:
           siLigoDesc: elem String.length of string -> nat
-          siValue: { {  }; { {  }; SIZE } } ] ]
+          siValue: { {  }; { {  }; SIZE } } ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/constant_as_statement.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair
+                  (lambda unit int)
+                  (lambda unit string)
+                  (lambda unit int)
+                  (lambda string nat))
+                (Pair
+                   { PUSH int 10; PAIR; { CAR; {  }; {  } } }
+                   (Pair
+                      { DROP; PUSH string "100" }
+                      (Pair { DROP; PUSH int 42 } { {  }; { {  }; SIZE } })));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                DROP;
+                {  };
+                {  };
+                LAMBDA
+                  (pair
+                    (pair
+                      (lambda unit int)
+                      (lambda unit string)
+                      (lambda unit int)
+                      (lambda string nat))
+                    int)
+                  (pair (list operation) int)
+                  { UNPAIR;
+                    UNPAIR 4;
+                    DIG 4;
+                    {  };
+                    { { { { PUSH int 7 }; { PUSH int 1000 }; SUB }; SOME };
+                      {  };
+                      { {  };
+                        {  };
+                        IF_NONE
+                          { {  }; { PUSH int 42 } }
+                          { DROP; {  }; {  }; { PUSH int 100 } };
+                        {  };
+                        { { PUSH int 12 };
+                          {  };
+                          { { { { UNIT }; { DIG 4 }; SWAP; EXEC };
+                              { { { { UNIT }; { DIG 5 }; SWAP; EXEC };
+                                  { DIG 6 };
+                                  SWAP;
+                                  EXEC };
+                                { { { UNIT }; { DIG 6 }; SWAP; EXEC };
+                                  { { DIG 3 };
+                                    { { DIG 4 }; { DIG 5 }; ADD };
+                                    ADD };
+                                  ADD };
+                                ADD };
+                              ADD };
+                            { NIL operation };
+                            PAIR } } } } };
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                PAIR 4;
+                APPLY;
+                SWAP;
+                DIG 2;
+                DIG 3;
+                DIG 4;
+                DROP 4 } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
     [ StackFrame:
       sfName: main
-      sfLoc: test/contracts/constant_as_statement.mligo@14:3-17:17
+      sfLoc: test/contracts/constant_as_statement.mligo@15:3-18:17
       sfStack:
         [ StackItem:
           siLigoDesc: elem some_int of (None of (unit) | Some of (int))
@@ -66,13 +224,92 @@ InterpretSnapshot:
           siValue: { DROP; PUSH int 42 }
         , StackItem:
           siLigoDesc: elem String.length of string -> nat
-          siValue: { {  }; { {  }; SIZE } } ] ]
+          siValue: { {  }; { {  }; SIZE } } ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/constant_as_statement.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair
+                  (lambda unit int)
+                  (lambda unit string)
+                  (lambda unit int)
+                  (lambda string nat))
+                (Pair
+                   { PUSH int 10; PAIR; { CAR; {  }; {  } } }
+                   (Pair
+                      { DROP; PUSH string "100" }
+                      (Pair { DROP; PUSH int 42 } { {  }; { {  }; SIZE } })));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                DROP;
+                {  };
+                {  };
+                LAMBDA
+                  (pair
+                    (pair
+                      (lambda unit int)
+                      (lambda unit string)
+                      (lambda unit int)
+                      (lambda string nat))
+                    int)
+                  (pair (list operation) int)
+                  { UNPAIR;
+                    UNPAIR 4;
+                    DIG 4;
+                    {  };
+                    { { { { PUSH int 7 }; { PUSH int 1000 }; SUB }; SOME };
+                      {  };
+                      { {  };
+                        {  };
+                        IF_NONE
+                          { {  }; { PUSH int 42 } }
+                          { DROP; {  }; {  }; { PUSH int 100 } };
+                        {  };
+                        { { PUSH int 12 };
+                          {  };
+                          { { { { UNIT }; { DIG 4 }; SWAP; EXEC };
+                              { { { { UNIT }; { DIG 5 }; SWAP; EXEC };
+                                  { DIG 6 };
+                                  SWAP;
+                                  EXEC };
+                                { { { UNIT }; { DIG 6 }; SWAP; EXEC };
+                                  { { DIG 3 };
+                                    { { DIG 4 }; { DIG 5 }; ADD };
+                                    ADD };
+                                  ADD };
+                                ADD };
+                              ADD };
+                            { NIL operation };
+                            PAIR } } } } };
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                PAIR 4;
+                APPLY;
+                SWAP;
+                DIG 2;
+                DIG 3;
+                DIG 4;
+                DROP 4 } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
     [ StackFrame:
       sfName: main
-      sfLoc: test/contracts/constant_as_statement.mligo@15:11-15:19
+      sfLoc: test/contracts/constant_as_statement.mligo@16:11-16:19
       sfStack:
         [ StackItem:
           siLigoDesc: elem some_int of (None of (unit) | Some of (int))
@@ -91,13 +328,92 @@ InterpretSnapshot:
           siValue: { DROP; PUSH int 42 }
         , StackItem:
           siLigoDesc: elem String.length of string -> nat
-          siValue: { {  }; { {  }; SIZE } } ] ]
+          siValue: { {  }; { {  }; SIZE } } ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/constant_as_statement.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair
+                  (lambda unit int)
+                  (lambda unit string)
+                  (lambda unit int)
+                  (lambda string nat))
+                (Pair
+                   { PUSH int 10; PAIR; { CAR; {  }; {  } } }
+                   (Pair
+                      { DROP; PUSH string "100" }
+                      (Pair { DROP; PUSH int 42 } { {  }; { {  }; SIZE } })));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                DROP;
+                {  };
+                {  };
+                LAMBDA
+                  (pair
+                    (pair
+                      (lambda unit int)
+                      (lambda unit string)
+                      (lambda unit int)
+                      (lambda string nat))
+                    int)
+                  (pair (list operation) int)
+                  { UNPAIR;
+                    UNPAIR 4;
+                    DIG 4;
+                    {  };
+                    { { { { PUSH int 7 }; { PUSH int 1000 }; SUB }; SOME };
+                      {  };
+                      { {  };
+                        {  };
+                        IF_NONE
+                          { {  }; { PUSH int 42 } }
+                          { DROP; {  }; {  }; { PUSH int 100 } };
+                        {  };
+                        { { PUSH int 12 };
+                          {  };
+                          { { { { UNIT }; { DIG 4 }; SWAP; EXEC };
+                              { { { { UNIT }; { DIG 5 }; SWAP; EXEC };
+                                  { DIG 6 };
+                                  SWAP;
+                                  EXEC };
+                                { { { UNIT }; { DIG 6 }; SWAP; EXEC };
+                                  { { DIG 3 };
+                                    { { DIG 4 }; { DIG 5 }; ADD };
+                                    ADD };
+                                  ADD };
+                                ADD };
+                              ADD };
+                            { NIL operation };
+                            PAIR } } } } };
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                PAIR 4;
+                APPLY;
+                SWAP;
+                DIG 2;
+                DIG 3;
+                DIG 4;
+                DROP 4 } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
     [ StackFrame:
       sfName: main
-      sfLoc: test/contracts/constant_as_statement.mligo@16:17-16:20
+      sfLoc: test/contracts/constant_as_statement.mligo@17:17-17:20
       sfStack:
         [ StackItem:
           siLigoDesc: elem s of int
@@ -113,13 +429,92 @@ InterpretSnapshot:
           siValue: { DROP; PUSH int 42 }
         , StackItem:
           siLigoDesc: elem String.length of string -> nat
-          siValue: { {  }; { {  }; SIZE } } ] ]
+          siValue: { {  }; { {  }; SIZE } } ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/constant_as_statement.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair
+                  (lambda unit int)
+                  (lambda unit string)
+                  (lambda unit int)
+                  (lambda string nat))
+                (Pair
+                   { PUSH int 10; PAIR; { CAR; {  }; {  } } }
+                   (Pair
+                      { DROP; PUSH string "100" }
+                      (Pair { DROP; PUSH int 42 } { {  }; { {  }; SIZE } })));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                DROP;
+                {  };
+                {  };
+                LAMBDA
+                  (pair
+                    (pair
+                      (lambda unit int)
+                      (lambda unit string)
+                      (lambda unit int)
+                      (lambda string nat))
+                    int)
+                  (pair (list operation) int)
+                  { UNPAIR;
+                    UNPAIR 4;
+                    DIG 4;
+                    {  };
+                    { { { { PUSH int 7 }; { PUSH int 1000 }; SUB }; SOME };
+                      {  };
+                      { {  };
+                        {  };
+                        IF_NONE
+                          { {  }; { PUSH int 42 } }
+                          { DROP; {  }; {  }; { PUSH int 100 } };
+                        {  };
+                        { { PUSH int 12 };
+                          {  };
+                          { { { { UNIT }; { DIG 4 }; SWAP; EXEC };
+                              { { { { UNIT }; { DIG 5 }; SWAP; EXEC };
+                                  { DIG 6 };
+                                  SWAP;
+                                  EXEC };
+                                { { { UNIT }; { DIG 6 }; SWAP; EXEC };
+                                  { { DIG 3 };
+                                    { { DIG 4 }; { DIG 5 }; ADD };
+                                    ADD };
+                                  ADD };
+                                ADD };
+                              ADD };
+                            { NIL operation };
+                            PAIR } } } } };
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                PAIR 4;
+                APPLY;
+                SWAP;
+                DIG 2;
+                DIG 3;
+                DIG 4;
+                DROP 4 } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
     [ StackFrame:
       sfName: main
-      sfLoc: test/contracts/constant_as_statement.mligo@19:3-19:13
+      sfLoc: test/contracts/constant_as_statement.mligo@20:3-20:13
       sfStack:
         [ StackItem:
           siLigoDesc: elem res of int
@@ -138,13 +533,92 @@ InterpretSnapshot:
           siValue: { DROP; PUSH int 42 }
         , StackItem:
           siLigoDesc: elem String.length of string -> nat
-          siValue: { {  }; { {  }; SIZE } } ] ]
+          siValue: { {  }; { {  }; SIZE } } ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/constant_as_statement.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair
+                  (lambda unit int)
+                  (lambda unit string)
+                  (lambda unit int)
+                  (lambda string nat))
+                (Pair
+                   { PUSH int 10; PAIR; { CAR; {  }; {  } } }
+                   (Pair
+                      { DROP; PUSH string "100" }
+                      (Pair { DROP; PUSH int 42 } { {  }; { {  }; SIZE } })));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                DROP;
+                {  };
+                {  };
+                LAMBDA
+                  (pair
+                    (pair
+                      (lambda unit int)
+                      (lambda unit string)
+                      (lambda unit int)
+                      (lambda string nat))
+                    int)
+                  (pair (list operation) int)
+                  { UNPAIR;
+                    UNPAIR 4;
+                    DIG 4;
+                    {  };
+                    { { { { PUSH int 7 }; { PUSH int 1000 }; SUB }; SOME };
+                      {  };
+                      { {  };
+                        {  };
+                        IF_NONE
+                          { {  }; { PUSH int 42 } }
+                          { DROP; {  }; {  }; { PUSH int 100 } };
+                        {  };
+                        { { PUSH int 12 };
+                          {  };
+                          { { { { UNIT }; { DIG 4 }; SWAP; EXEC };
+                              { { { { UNIT }; { DIG 5 }; SWAP; EXEC };
+                                  { DIG 6 };
+                                  SWAP;
+                                  EXEC };
+                                { { { UNIT }; { DIG 6 }; SWAP; EXEC };
+                                  { { DIG 3 };
+                                    { { DIG 4 }; { DIG 5 }; ADD };
+                                    ADD };
+                                  ADD };
+                                ADD };
+                              ADD };
+                            { NIL operation };
+                            PAIR } } } } };
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                PAIR 4;
+                APPLY;
+                SWAP;
+                DIG 2;
+                DIG 3;
+                DIG 4;
+                DROP 4 } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
     [ StackFrame:
       sfName: main
-      sfLoc: test/contracts/constant_as_statement.mligo@20:3-20:97
+      sfLoc: test/contracts/constant_as_statement.mligo@21:3-21:97
       sfStack:
         [ StackItem:
           siLigoDesc: elem y of int
@@ -166,13 +640,92 @@ InterpretSnapshot:
           siValue: { DROP; PUSH int 42 }
         , StackItem:
           siLigoDesc: elem String.length of string -> nat
-          siValue: { {  }; { {  }; SIZE } } ] ]
+          siValue: { {  }; { {  }; SIZE } } ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/constant_as_statement.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair
+                  (lambda unit int)
+                  (lambda unit string)
+                  (lambda unit int)
+                  (lambda string nat))
+                (Pair
+                   { PUSH int 10; PAIR; { CAR; {  }; {  } } }
+                   (Pair
+                      { DROP; PUSH string "100" }
+                      (Pair { DROP; PUSH int 42 } { {  }; { {  }; SIZE } })));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                DROP;
+                {  };
+                {  };
+                LAMBDA
+                  (pair
+                    (pair
+                      (lambda unit int)
+                      (lambda unit string)
+                      (lambda unit int)
+                      (lambda string nat))
+                    int)
+                  (pair (list operation) int)
+                  { UNPAIR;
+                    UNPAIR 4;
+                    DIG 4;
+                    {  };
+                    { { { { PUSH int 7 }; { PUSH int 1000 }; SUB }; SOME };
+                      {  };
+                      { {  };
+                        {  };
+                        IF_NONE
+                          { {  }; { PUSH int 42 } }
+                          { DROP; {  }; {  }; { PUSH int 100 } };
+                        {  };
+                        { { PUSH int 12 };
+                          {  };
+                          { { { { UNIT }; { DIG 4 }; SWAP; EXEC };
+                              { { { { UNIT }; { DIG 5 }; SWAP; EXEC };
+                                  { DIG 6 };
+                                  SWAP;
+                                  EXEC };
+                                { { { UNIT }; { DIG 6 }; SWAP; EXEC };
+                                  { { DIG 3 };
+                                    { { DIG 4 }; { DIG 5 }; ADD };
+                                    ADD };
+                                  ADD };
+                                ADD };
+                              ADD };
+                            { NIL operation };
+                            PAIR } } } } };
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                PAIR 4;
+                APPLY;
+                SWAP;
+                DIG 2;
+                DIG 3;
+                DIG 4;
+                DROP 4 } } ] ]
 InterpretSnapshot:
   isStatus: running / upon function call
   isStackFrames:
     [ StackFrame:
       sfName: main
-      sfLoc: test/contracts/constant_as_statement.mligo@20:85-20:96
+      sfLoc: test/contracts/constant_as_statement.mligo@21:85-21:96
       sfStack:
         [ StackItem:
           siLigoDesc: elem y of int
@@ -194,13 +747,92 @@ InterpretSnapshot:
           siValue: { DROP; PUSH int 42 }
         , StackItem:
           siLigoDesc: elem String.length of string -> nat
-          siValue: { {  }; { {  }; SIZE } } ] ]
+          siValue: { {  }; { {  }; SIZE } } ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/constant_as_statement.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair
+                  (lambda unit int)
+                  (lambda unit string)
+                  (lambda unit int)
+                  (lambda string nat))
+                (Pair
+                   { PUSH int 10; PAIR; { CAR; {  }; {  } } }
+                   (Pair
+                      { DROP; PUSH string "100" }
+                      (Pair { DROP; PUSH int 42 } { {  }; { {  }; SIZE } })));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                DROP;
+                {  };
+                {  };
+                LAMBDA
+                  (pair
+                    (pair
+                      (lambda unit int)
+                      (lambda unit string)
+                      (lambda unit int)
+                      (lambda string nat))
+                    int)
+                  (pair (list operation) int)
+                  { UNPAIR;
+                    UNPAIR 4;
+                    DIG 4;
+                    {  };
+                    { { { { PUSH int 7 }; { PUSH int 1000 }; SUB }; SOME };
+                      {  };
+                      { {  };
+                        {  };
+                        IF_NONE
+                          { {  }; { PUSH int 42 } }
+                          { DROP; {  }; {  }; { PUSH int 100 } };
+                        {  };
+                        { { PUSH int 12 };
+                          {  };
+                          { { { { UNIT }; { DIG 4 }; SWAP; EXEC };
+                              { { { { UNIT }; { DIG 5 }; SWAP; EXEC };
+                                  { DIG 6 };
+                                  SWAP;
+                                  EXEC };
+                                { { { UNIT }; { DIG 6 }; SWAP; EXEC };
+                                  { { DIG 3 };
+                                    { { DIG 4 }; { DIG 5 }; ADD };
+                                    ADD };
+                                  ADD };
+                                ADD };
+                              ADD };
+                            { NIL operation };
+                            PAIR } } } } };
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                PAIR 4;
+                APPLY;
+                SWAP;
+                DIG 2;
+                DIG 3;
+                DIG 4;
+                DROP 4 } } ] ]
 InterpretSnapshot:
   isStatus: running / upon function call
   isStackFrames:
     [ StackFrame:
       sfName: main
-      sfLoc: test/contracts/constant_as_statement.mligo@20:53-20:82
+      sfLoc: test/contracts/constant_as_statement.mligo@21:53-21:82
       sfStack:
         [ StackItem:
           siLigoDesc: elem y of int
@@ -222,13 +854,92 @@ InterpretSnapshot:
           siValue: { DROP; PUSH int 42 }
         , StackItem:
           siLigoDesc: elem String.length of string -> nat
-          siValue: { {  }; { {  }; SIZE } } ] ]
+          siValue: { {  }; { {  }; SIZE } } ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/constant_as_statement.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair
+                  (lambda unit int)
+                  (lambda unit string)
+                  (lambda unit int)
+                  (lambda string nat))
+                (Pair
+                   { PUSH int 10; PAIR; { CAR; {  }; {  } } }
+                   (Pair
+                      { DROP; PUSH string "100" }
+                      (Pair { DROP; PUSH int 42 } { {  }; { {  }; SIZE } })));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                DROP;
+                {  };
+                {  };
+                LAMBDA
+                  (pair
+                    (pair
+                      (lambda unit int)
+                      (lambda unit string)
+                      (lambda unit int)
+                      (lambda string nat))
+                    int)
+                  (pair (list operation) int)
+                  { UNPAIR;
+                    UNPAIR 4;
+                    DIG 4;
+                    {  };
+                    { { { { PUSH int 7 }; { PUSH int 1000 }; SUB }; SOME };
+                      {  };
+                      { {  };
+                        {  };
+                        IF_NONE
+                          { {  }; { PUSH int 42 } }
+                          { DROP; {  }; {  }; { PUSH int 100 } };
+                        {  };
+                        { { PUSH int 12 };
+                          {  };
+                          { { { { UNIT }; { DIG 4 }; SWAP; EXEC };
+                              { { { { UNIT }; { DIG 5 }; SWAP; EXEC };
+                                  { DIG 6 };
+                                  SWAP;
+                                  EXEC };
+                                { { { UNIT }; { DIG 6 }; SWAP; EXEC };
+                                  { { DIG 3 };
+                                    { { DIG 4 }; { DIG 5 }; ADD };
+                                    ADD };
+                                  ADD };
+                                ADD };
+                              ADD };
+                            { NIL operation };
+                            PAIR } } } } };
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                PAIR 4;
+                APPLY;
+                SWAP;
+                DIG 2;
+                DIG 3;
+                DIG 4;
+                DROP 4 } } ] ]
 InterpretSnapshot:
   isStatus: running / upon function call
   isStackFrames:
     [ StackFrame:
       sfName: main
-      sfLoc: test/contracts/constant_as_statement.mligo@20:67-20:81
+      sfLoc: test/contracts/constant_as_statement.mligo@21:67-21:81
       sfStack:
         [ StackItem:
           siLigoDesc: elem y of int
@@ -250,13 +961,92 @@ InterpretSnapshot:
           siValue: { DROP; PUSH int 42 }
         , StackItem:
           siLigoDesc: elem String.length of string -> nat
-          siValue: { {  }; { {  }; SIZE } } ] ]
+          siValue: { {  }; { {  }; SIZE } } ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/constant_as_statement.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair
+                  (lambda unit int)
+                  (lambda unit string)
+                  (lambda unit int)
+                  (lambda string nat))
+                (Pair
+                   { PUSH int 10; PAIR; { CAR; {  }; {  } } }
+                   (Pair
+                      { DROP; PUSH string "100" }
+                      (Pair { DROP; PUSH int 42 } { {  }; { {  }; SIZE } })));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                DROP;
+                {  };
+                {  };
+                LAMBDA
+                  (pair
+                    (pair
+                      (lambda unit int)
+                      (lambda unit string)
+                      (lambda unit int)
+                      (lambda string nat))
+                    int)
+                  (pair (list operation) int)
+                  { UNPAIR;
+                    UNPAIR 4;
+                    DIG 4;
+                    {  };
+                    { { { { PUSH int 7 }; { PUSH int 1000 }; SUB }; SOME };
+                      {  };
+                      { {  };
+                        {  };
+                        IF_NONE
+                          { {  }; { PUSH int 42 } }
+                          { DROP; {  }; {  }; { PUSH int 100 } };
+                        {  };
+                        { { PUSH int 12 };
+                          {  };
+                          { { { { UNIT }; { DIG 4 }; SWAP; EXEC };
+                              { { { { UNIT }; { DIG 5 }; SWAP; EXEC };
+                                  { DIG 6 };
+                                  SWAP;
+                                  EXEC };
+                                { { { UNIT }; { DIG 6 }; SWAP; EXEC };
+                                  { { DIG 3 };
+                                    { { DIG 4 }; { DIG 5 }; ADD };
+                                    ADD };
+                                  ADD };
+                                ADD };
+                              ADD };
+                            { NIL operation };
+                            PAIR } } } } };
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                PAIR 4;
+                APPLY;
+                SWAP;
+                DIG 2;
+                DIG 3;
+                DIG 4;
+                DROP 4 } } ] ]
 InterpretSnapshot:
   isStatus: running / upon function call
   isStackFrames:
     [ StackFrame:
       sfName: main
-      sfLoc: test/contracts/constant_as_statement.mligo@20:41-20:50
+      sfLoc: test/contracts/constant_as_statement.mligo@21:41-21:50
       sfStack:
         [ StackItem:
           siLigoDesc: elem y of int
@@ -278,17 +1068,175 @@ InterpretSnapshot:
           siValue: { DROP; PUSH int 42 }
         , StackItem:
           siLigoDesc: elem String.length of string -> nat
-          siValue: { {  }; { {  }; SIZE } } ] ]
+          siValue: { {  }; { {  }; SIZE } } ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/constant_as_statement.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair
+                  (lambda unit int)
+                  (lambda unit string)
+                  (lambda unit int)
+                  (lambda string nat))
+                (Pair
+                   { PUSH int 10; PAIR; { CAR; {  }; {  } } }
+                   (Pair
+                      { DROP; PUSH string "100" }
+                      (Pair { DROP; PUSH int 42 } { {  }; { {  }; SIZE } })));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                DROP;
+                {  };
+                {  };
+                LAMBDA
+                  (pair
+                    (pair
+                      (lambda unit int)
+                      (lambda unit string)
+                      (lambda unit int)
+                      (lambda string nat))
+                    int)
+                  (pair (list operation) int)
+                  { UNPAIR;
+                    UNPAIR 4;
+                    DIG 4;
+                    {  };
+                    { { { { PUSH int 7 }; { PUSH int 1000 }; SUB }; SOME };
+                      {  };
+                      { {  };
+                        {  };
+                        IF_NONE
+                          { {  }; { PUSH int 42 } }
+                          { DROP; {  }; {  }; { PUSH int 100 } };
+                        {  };
+                        { { PUSH int 12 };
+                          {  };
+                          { { { { UNIT }; { DIG 4 }; SWAP; EXEC };
+                              { { { { UNIT }; { DIG 5 }; SWAP; EXEC };
+                                  { DIG 6 };
+                                  SWAP;
+                                  EXEC };
+                                { { { UNIT }; { DIG 6 }; SWAP; EXEC };
+                                  { { DIG 3 };
+                                    { { DIG 4 }; { DIG 5 }; ADD };
+                                    ADD };
+                                  ADD };
+                                ADD };
+                              ADD };
+                            { NIL operation };
+                            PAIR } } } } };
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                PAIR 4;
+                APPLY;
+                SWAP;
+                DIG 2;
+                DIG 3;
+                DIG 4;
+                DROP 4 } } ] ]
 InterpretSnapshot:
   isStatus: terminated ok
   isStackFrames:
     [ StackFrame:
       sfName: main
-      sfLoc: test/contracts/constant_as_statement.mligo@20:4-20:96
+      sfLoc: test/contracts/constant_as_statement.mligo@21:4-21:96
       sfStack:
         [ StackItem:
           siLigoDesc: elem ? of 
           siValue: Pair { } 167
         , StackItem:
           siLigoDesc: elem ? of 
-          siValue: 0 ] ]
+          siValue: 0 ]
+    , StackFrame:
+      sfName: main
+      sfLoc: test/contracts/constant_as_statement.mligo@1:1-1:1
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem ? of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem ? of unit
+          siValue: Unit
+        , StackItem:
+          siLigoDesc: elem main of unit -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair
+                  (lambda unit int)
+                  (lambda unit string)
+                  (lambda unit int)
+                  (lambda string nat))
+                (Pair
+                   { PUSH int 10; PAIR; { CAR; {  }; {  } } }
+                   (Pair
+                      { DROP; PUSH string "100" }
+                      (Pair { DROP; PUSH int 42 } { {  }; { {  }; SIZE } })));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                DROP;
+                {  };
+                {  };
+                LAMBDA
+                  (pair
+                    (pair
+                      (lambda unit int)
+                      (lambda unit string)
+                      (lambda unit int)
+                      (lambda string nat))
+                    int)
+                  (pair (list operation) int)
+                  { UNPAIR;
+                    UNPAIR 4;
+                    DIG 4;
+                    {  };
+                    { { { { PUSH int 7 }; { PUSH int 1000 }; SUB }; SOME };
+                      {  };
+                      { {  };
+                        {  };
+                        IF_NONE
+                          { {  }; { PUSH int 42 } }
+                          { DROP; {  }; {  }; { PUSH int 100 } };
+                        {  };
+                        { { PUSH int 12 };
+                          {  };
+                          { { { { UNIT }; { DIG 4 }; SWAP; EXEC };
+                              { { { { UNIT }; { DIG 5 }; SWAP; EXEC };
+                                  { DIG 6 };
+                                  SWAP;
+                                  EXEC };
+                                { { { UNIT }; { DIG 6 }; SWAP; EXEC };
+                                  { { DIG 3 };
+                                    { { DIG 4 }; { DIG 5 }; ADD };
+                                    ADD };
+                                  ADD };
+                                ADD };
+                              ADD };
+                            { NIL operation };
+                            PAIR } } } } };
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                DUP 5;
+                PAIR 4;
+                APPLY;
+                SWAP;
+                DIG 2;
+                DIG 3;
+                DIG 4;
+                DROP 4 } } ] ]

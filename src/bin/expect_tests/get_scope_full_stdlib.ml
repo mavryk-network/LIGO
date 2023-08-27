@@ -268,17 +268,9 @@ let%expect_test _ =
       File "", line 423, characters 25-31 ,
       File "", line 450, characters 38-44 ,
       File "", line 483, characters 39-45 ,
-      File "", line 483, characters 52-58 ,
-      File "", line 483, characters 65-71 ,
       File "", line 486, characters 32-38 ,
-      File "", line 486, characters 45-51 ,
-      File "", line 486, characters 58-64 ,
       File "", line 515, characters 52-58 ,
-      File "", line 515, characters 65-71 ,
-      File "", line 515, characters 78-84 ,
       File "", line 535, characters 56-62 ,
-      File "", line 535, characters 69-75 ,
-      File "", line 535, characters 82-88 ,
       File "", line 604, characters 40-46 ,
       File "", line 605, characters 58-64 ,
       File "", line 606, characters 58-64
@@ -336,7 +328,7 @@ let%expect_test _ =
       File "", line 459, characters 127-130 ,
       File "", line 469, characters 136-139 ,
       File "", line 476, characters 134-137 ,
-      File "", line 486, characters 139-142 ,
+      File "", line 486, characters 108-111 ,
       File "", line 516, characters 78-81 ,
       File "", line 536, characters 82-85 ,
       File "", line 556, characters 90-93 ,
@@ -403,12 +395,12 @@ let%expect_test _ =
       File "", line 441, characters 34-37 ,
       File "", line 441, characters 48-51 ,
       File "", line 447, characters 12-15 ,
-      File "", line 484, characters 96-99 ,
+      File "", line 484, characters 90-93 ,
       File "", line 494, characters 30-33 ,
       File "", line 506, characters 58-61 ,
-      File "", line 522, characters 96-99 ,
+      File "", line 522, characters 90-93 ,
       File "", line 525, characters 30-33 ,
-      File "", line 542, characters 96-99 ,
+      File "", line 542, characters 90-93 ,
       File "", line 545, characters 58-61 ,
       File "", line 567, characters 30-33 ,
       File "", line 589, characters 58-61 ,
@@ -595,9 +587,9 @@ let%expect_test _ =
       File "", line 459, characters 75-78 ,
       File "", line 469, characters 84-87 ,
       File "", line 476, characters 82-85 ,
-      File "", line 486, characters 101-104 ,
-      File "", line 515, characters 120-123 ,
-      File "", line 535, characters 124-127 ,
+      File "", line 486, characters 70-73 ,
+      File "", line 515, characters 89-92 ,
+      File "", line 535, characters 93-96 ,
       File "", line 555, characters 95-98 ,
       File "", line 577, characters 99-102 ,
       File "", line 682, characters 56-59
@@ -653,7 +645,7 @@ let%expect_test _ =
       File "", line 440, characters 30-37 ,
       File "", line 442, characters 54-61 ,
       File "", line 458, characters 86-93 ,
-      File "", line 486, characters 108-115 ,
+      File "", line 486, characters 77-84 ,
       File "", line 516, characters 47-54 ,
       File "", line 536, characters 51-58 ,
       File "", line 611, characters 33-40 ,
@@ -765,14 +757,10 @@ let%expect_test _ =
       File "", line 459, characters 52-56 ,
       File "", line 466, characters 71-75 ,
       File "", line 469, characters 61-65 ,
-      File "", line 483, characters 72-76 ,
-      File "", line 486, characters 65-69 ,
       File "", line 503, characters 78-82 ,
       File "", line 506, characters 47-51 ,
       File "", line 506, characters 80-84 ,
       File "", line 514, characters 38-42 ,
-      File "", line 515, characters 85-89 ,
-      File "", line 535, characters 89-93 ,
       File "", line 536, characters 109-113 ,
       File "", line 545, characters 47-51 ,
       File "", line 545, characters 80-84 ,
@@ -1154,13 +1142,13 @@ let%expect_test _ =
       File "", line 419, characters 63-69 ,
       File "", line 420, characters 57-63 ,
       File "", line 423, characters 48-54 ,
-      File "", line 484, characters 100-106 ,
+      File "", line 484, characters 94-100 ,
       File "", line 491, characters 74-80 ,
       File "", line 494, characters 52-58 ,
       File "", line 516, characters 105-111 ,
-      File "", line 522, characters 100-106 ,
+      File "", line 522, characters 94-100 ,
       File "", line 525, characters 52-58 ,
-      File "", line 542, characters 100-106 ,
+      File "", line 542, characters 94-100 ,
       File "", line 556, characters 117-123 ,
       File "", line 567, characters 52-58 ,
       File "", line 601, characters 34-40 ,
@@ -1198,9 +1186,9 @@ let%expect_test _ =
       File "", line 449, characters 28-45 ,
       File "", line 449, characters 53-70 ,
       File "", line 458, characters 55-72 ,
-      File "", line 486, characters 76-93 ,
-      File "", line 515, characters 96-113 ,
-      File "", line 535, characters 100-117
+      File "", line 486, characters 45-62 ,
+      File "", line 515, characters 65-82 ,
+      File "", line 535, characters 69-86
     (typed_address#264:5-18 -> typed_address)
     Range: File "", line 264, characters 5-18
     Body Range: File "", line 264, characters 21-46
@@ -1270,8 +1258,8 @@ let%expect_test _ =
       File "", line 466, characters 98-116 ,
       File "", line 469, characters 115-133 ,
       File "", line 476, characters 113-131 ,
-      File "", line 483, characters 80-98 ,
-      File "", line 486, characters 118-136 ,
+      File "", line 483, characters 49-67 ,
+      File "", line 486, characters 87-105 ,
       File "", line 516, characters 57-75 ,
       File "", line 536, characters 61-79 ,
       File "", line 556, characters 68-86 ,
@@ -2931,14 +2919,14 @@ let%expect_test _ =
                       (compile_contract_from_file#483:6-32 -> compile_contract_from_file)
                       Range: File "", line 483, characters 6-32
                       Body Range: File "", line 484, character 4 to line 485, character 52
-                      Content: |core: string -> string -> list (string) -> michelson_contract|
+                      Content: |core: string -> michelson_contract|
                       references: File "", line 487, characters 12-38
                       Mod Path = "Test"
                       Def Type = Module_field
                       (originate_from_file#486:6-25 -> originate_from_file)
                       Range: File "", line 486, characters 6-25
                       Body Range: File "", line 487, character 4 to line 490, character 13
-                      Content: |core: string -> string -> list (string) -> michelson_program -> tez ->
+                      Content: |core: string -> michelson_program -> tez ->
                       ( address *
                         michelson_contract *
                         int )|
@@ -2966,7 +2954,7 @@ let%expect_test _ =
                       (originate_from_file_and_mutate#515:6-36 -> originate_from_file_and_mutate)
                       Range: File "", line 515, characters 6-36
                       Body Range: File "", line 517, character 4 to line 534, character 19
-                      Content: |core: ∀ b : * . string -> string -> list (string) -> michelson_program -> tez ->
+                      Content: |core: ∀ b : * . string -> michelson_program -> tez ->
                       ( address *
                         michelson_contract *
                         int ) -> b -> option (( b * mutation ))|
@@ -2976,7 +2964,7 @@ let%expect_test _ =
                       (originate_from_file_and_mutate_all#535:6-40 -> originate_from_file_and_mutate_all)
                       Range: File "", line 535, characters 6-40
                       Body Range: File "", line 537, character 4 to line 554, character 46
-                      Content: |core: ∀ b : * . string -> string -> list (string) -> michelson_program -> tez ->
+                      Content: |core: ∀ b : * . string -> michelson_program -> tez ->
                       ( address *
                         michelson_contract *
                         int ) -> b -> list (( b * mutation ))|

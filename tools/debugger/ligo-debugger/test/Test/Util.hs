@@ -58,6 +58,7 @@ module Test.Util
   , unitType'
   , boolType'
   , intType
+  , unitType
   , boolType
   , twoElemTreeLayout
   , combLayout
@@ -294,7 +295,7 @@ mkSnapshotsForImpl
   -> ContractRunData
   -> IO (Set SourceLocation, InterpretHistory (InterpretSnapshot 'Unique), LigoType, LigoTypesVec)
 mkSnapshotsForImpl logger maxStepsMb (ContractRunData file mEntrypoint (param :: param) (st :: st)) = do
-  let entrypoint = mEntrypoint ?: "main"
+  let entrypoint = mEntrypoint ?: "$main"
   ligoMapper <- compileLigoContractDebug (mkEntrypointName $ toText entrypoint) file
   (exprLocs, T.SomeContract (contract@T.Contract{} :: T.Contract cp' st'), allFiles, lambdaLocs, entrypointType, ligoTypesVec) <-
     case readLigoMapper ligoMapper of
@@ -458,6 +459,9 @@ boolType' = mkSumType (twoElemTreeLayout "True" "False")
   [ ("True", unitType')
   , ("False", unitType')
   ]
+
+unitType :: LigoType
+unitType = LigoTypeResolved unitType'
 
 intType :: LigoType
 intType = LigoTypeResolved intType'

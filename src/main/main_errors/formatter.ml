@@ -560,7 +560,17 @@ let rec error_ppformat
          Or check if template exists on LIGO registry.\n"
       @@ String.concat ~sep:"\n- " lststr
     | `Ligo_init_registry_template_error e -> Format.fprintf f "@[<hv>@.%s@.@]" e
-    | `Ligo_init_git_template_error e -> Format.fprintf f "@[<hv>@.%s@.@]" e)
+    | `Ligo_init_git_template_error e -> Format.fprintf f "@[<hv>@.%s@.@]" e
+    | `Main_deprecated_views_cli s -> Format.fprintf f "%s" s
+    | `Resolve_config_type_mismatch (field, expected_type, got, type_formatter) ->
+      Format.fprintf
+        f
+        "Type mismatch in field %s\nExpected an expression of %s type\nGot: %a"
+        field
+        expected_type
+        type_formatter
+        got
+    | `Resolve_config_corner_case err -> Format.fprintf f "Corner case: %s" err)
 
 
 let rec error_json : Types.all -> Simple_utils.Error.t list =
@@ -747,6 +757,21 @@ let rec error_json : Types.all -> Simple_utils.Error.t list =
   | `Repl_unexpected ->
     let content = make_content ~message:"REPL tracer" () in
     [ make ~stage:"repl" ~content ]
+  | `Main_deprecated_views_cli s ->
+    let content = make_content ~message:s () in
+    [ make ~stage:"deprecated command" ~content ]
+  | `Resolve_config_type_mismatch _ as resolve_config_exc ->
+    let message =
+      Format.asprintf
+        "%a"
+        (error_ppformat ~display_format:Human_readable ~no_colour:true)
+        resolve_config_exc
+    in
+    let content = make_content ~message () in
+    [ make ~stage:"resolve_config" ~content ]
+  | `Resolve_config_corner_case err ->
+    let content = make_content ~message:(Format.asprintf "Corner case: %s" err) () in
+    [ make ~stage:"resolve_config" ~content ]
 
 
 let error_jsonformat : Types.all -> Yojson.Safe.t =

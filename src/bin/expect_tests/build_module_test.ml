@@ -50,23 +50,23 @@ let%expect_test _ =
     } |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile"; "contract"; contract "B.mligo"; "-e"; "f" ];
+  run_ligo_good [ "compile"; "contract"; contract "B.mligo" ];
   [%expect
     {|
-  { parameter unit ;
-    storage int ;
-    code { PUSH int 1 ;
-           PUSH int 42 ;
-           DUP 2 ;
-           ADD ;
-           DIG 2 ;
-           CDR ;
-           SWAP ;
-           DUG 2 ;
-           ADD ;
-           ADD ;
-           NIL operation ;
-           PAIR } } |}]
+    { parameter unit ;
+      storage int ;
+      code { PUSH int 1 ;
+             PUSH int 42 ;
+             DUP 2 ;
+             ADD ;
+             DIG 2 ;
+             CDR ;
+             SWAP ;
+             DUG 2 ;
+             ADD ;
+             ADD ;
+             NIL operation ;
+             PAIR } } |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "instance/main.mligo" ];

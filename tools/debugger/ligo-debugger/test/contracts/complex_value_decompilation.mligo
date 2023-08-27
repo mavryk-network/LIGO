@@ -15,7 +15,8 @@ type ep =
 
 let test_val : ep = Go ( { ch = ("NetXH12Aer3be93" : chain_id) ; state = A ("1970-01-01T00:01:40Z" : timestamp) ; s = "large" } )
 
-let main (_, s : unit * int) : operation list * int =
+[@entry]
+let main () (s : int) : operation list * int =
   let v = test_val in
   let l =
     match v with
