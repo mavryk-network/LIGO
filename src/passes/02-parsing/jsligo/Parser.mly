@@ -804,7 +804,9 @@ condition:
   expr { $1 }
 
 afterthought:
-  nsepseq (expr, ",") { $1 }
+  nsepseq (after(expr), ",") { $1 }
+
+after(expr) : expr { $1 }
 
 (* For-of loop statement *)
 
@@ -1156,13 +1158,11 @@ ctor_expr:
 (* Core expressions *)
 
 core_expr:
-  code_inj           { E_CodeInj $1 }
-| par (expr)         { E_Par     $1 }
-| array (item(expr)) { E_Array   $1 }
+  code_inj     { E_CodeInj $1 }
+| par (expr)   { E_Par     $1 }
+| array (expr) { E_Array   $1 }
 | literal_expr
-| path_expr          { $1 }
-
-item(expr): expr { $1 }
+| path_expr    { $1 }
 
 (* Literal expressions *)
 
