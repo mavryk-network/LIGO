@@ -100,6 +100,15 @@ contract: Type Ident EQ ZWSP
 ## The known suffix of the stack is as follows:
 ## Type type_binder EQ
 ##
+contract: Type Ident LT GT EQ ZWSP
+##
+## Ends in an error in state: 356.
+##
+## type_decl -> Type type_binder type_vars EQ . type_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case Break Attr ]
+##
+## The known suffix of the stack is as follows:
+## Type type_binder type_vars EQ
+##
 
 Ill-formed type declaration.
 At this point, a type is expected.
@@ -151,19 +160,6 @@ contract: Type Ident LT GT XOR
 Ill-formed generic type declaration.
 At this point, if the type parameters are complete, the assignment
 symbol '=' is expected, followed by a type.
-
-contract: Type Ident LT GT EQ ZWSP
-##
-## Ends in an error in state: 356.
-##
-## type_decl -> Type type_binder type_vars EQ . type_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case Break Attr ]
-##
-## The known suffix of the stack is as follows:
-## Type type_binder type_vars EQ
-##
-
-Ill-formed generic type declaration.
-At this point, a type is expected.
 
 contract: Namespace ZWSP
 ##
@@ -330,7 +326,7 @@ interactive_expr: ES6FUN LPAR LBRACE ZWSP
 ##
 
 Ill-formed object pattern.
-At this point, a pattern for the first property is expected.
+At this point, a pattern matching the first property is expected.
 
 contract: Const LBRACE Attr ZWSP
 ##
@@ -345,9 +341,7 @@ contract: Const LBRACE Attr ZWSP
 Ill-formed decorated property pattern.
 At this point, one of the following is expected:
   * another decorator;
-  * a property name;
-  * an integer denoting the property;
-  * a string denoting the property.
+  * a property pattern.
 
 contract: Const LBRACE Ident ZWSP
 ##
@@ -417,10 +411,10 @@ interactive_expr: ES6FUN LPAR LBRACE Attr ZWSP
 ## Attr
 ##
 
-Ill-formed decorated pattern.
-At this point, one of the follwing is expected:
+Ill-formed decorated parameter.
+At this point, one of the following is expected:
   * another decorator;
-  * a pattern.
+  * a pattern matching a function parameter.
 
 contract: Const LBRACE Ident COLON Bytes ZWSP
 ##
@@ -500,7 +494,7 @@ interactive_expr: ES6FUN LPAR LBRACKET ELLIPSIS ZWSP
 ##
 
 Ill-formed array pattern.
-At this point, a rest pattern is expected.
+At this point, a pattern matching the rest of the array is expected.
 
 contract: Const LBRACKET Bytes ZWSP
 ##
@@ -530,7 +524,7 @@ interactive_expr: ES6FUN LPAR LBRACKET Ident ZWSP
 Ill-formed array pattern.
 At this point, one of following is expected:
   * a comma ',' followed by another element pattern;
-  * a closing bracket ']' is no more elements.
+  * a closing bracket ']' if no more elements.
 
 contract: Const LBRACKET Bytes COMMA ZWSP
 ##
@@ -558,7 +552,7 @@ interactive_expr: ES6FUN LPAR LBRACKET Ident COMMA ZWSP
 Ill-formed array pattern.
 At this point, one of the following is expected:
   * a pattern matching an element;
-  * a closing bracket ']' is no more elements.
+  * a closing bracket ']' if no more elements.
 
 interactive_expr: MINUS2 ZWSP
 ##
@@ -584,7 +578,7 @@ interactive_expr: LBRACKET ZWSP
 ##
 
 Ill-formed array expression.
-At this point, the first element is expected as an expression.
+At this point, the first element is expected.
 
 interactive_expr: LBRACE ZWSP
 ##
@@ -613,7 +607,7 @@ interactive_expr: LBRACE ELLIPSIS ZWSP
 ##
 
 Ill-formed object update.
-At this point, the object to update is expected as an expression.
+At this point, the object to update is expected.
 
 interactive_expr: Function ZWSP
 ##
@@ -630,8 +624,7 @@ interactive_expr: Function ZWSP
 
 Ill-formed function expression.
 At this point, one of the following is expected:
-  * an opening parenthesis '(' optionally followed by function
-    parameters;
+  * an opening parenthesis '(' optionally followed by parameters;
   * an opening chevron '<' optionally followed by type parameters.
 
 interactive_expr: ES6FUN LPAR ZWSP
@@ -707,7 +700,7 @@ interactive_expr: ES6FUN LPAR Ident COLON Ident XOR
 Ill-formed function.
 At this point, one of the following is expected:
   * a comma ',' followed by another parameter;
-  * a closing parenthesis ')', if no more parameters.
+  * a closing parenthesis ')' if no more parameters.
 
 interactive_expr: ES6FUN LPAR Ident COMMA ZWSP
 ##
@@ -723,8 +716,8 @@ interactive_expr: ES6FUN LPAR Ident COMMA ZWSP
 
 Ill-formed function.
 At this point, one of the following is expected:
-  * another parameter as a variable;
-  * a closing parenthesis ')' if no more parameters.
+  * another parameter;
+  * a closing parenthesis ')' otherwise.
 
 interactive_expr: Function LT GT XOR
 ##
@@ -767,6 +760,12 @@ interactive_expr: Function LPAR PARAMS RPAR ZWSP
 ## The known suffix of the stack is as follows:
 ## Function fun_par_params
 ##
+
+Ill-formed function.
+At this point, one of the following is expected:
+  * a colon ':' followed by the return type;
+  * the body as a block of statements.
+
 interactive_expr: LT GT ES6FUN LPAR PARAMS RPAR ZWSP
 ##
 ## Ends in an error in state: 542.
@@ -788,10 +787,10 @@ interactive_expr: ES6FUN LPAR PARAMS RPAR ZWSP
 ## ES6FUN fun_par_params
 ##
 
-Ill-formed function.
+Ill-formed arrow function.
 At this point, one of the following is expected:
   * a colon ':' followed by the return type;
-  * an opening brace '{' followed by the body as statements.
+  * an arrow '=>' followed by the body.
 
 interactive_expr: ES6FUN LPAR PARAMS RPAR COLON ZWSP
 ##
@@ -813,7 +812,7 @@ interactive_expr: ES6FUN LPAR PARAMS RPAR COLON ES6FUN ZWSP
 ##
 
 Ill-formed function.
-At this point, a type without parentheses is expected.
+At this point, a type (without parentheses) is expected.
 
 interactive_expr: ES6FUN LPAR PARAMS RPAR COLON LBRACKET ZWSP
 ##
@@ -881,7 +880,7 @@ interactive_expr: Function LPAR PARAMS RPAR COLON Ident XOR
 ##
 
 Ill-formed function expression.
-At this point, an opening brace '{' is expected, followed by statements.
+At this point, if the return type is complete, the body is expected.
 
 interactive_expr: ES6FUN ZWSP
 ##
@@ -925,7 +924,9 @@ interactive_expr: LT GT ES6FUN ZWSP
 ##
 
 Ill-formed arrow function.
-At this point, an opening parenthesis '(' is expected.
+At this point, one of the following is expected:
+  * an opening parenthesis '(';
+  * a single parameter (variable).
 
 interactive_expr: ES6FUN Ident ZWSP
 ##
@@ -1067,19 +1068,6 @@ interactive_expr: ContractOf LPAR UIdent PARAMS ZWSP
 Ill-formed contract from a namespace.
 At this point, a closing parenthesis ')' is expected.
 
-interactive_expr: BIT_NOT ZWSP
-##
-## Ends in an error in state: 375.
-##
-## neg_expr -> BIT_NOT . app_expr_level [ XOR While When VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Default Continue Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr AND ]
-##
-## The known suffix of the stack is as follows:
-## BIT_NOT
-##
-
-Ill-formed bitwise negation.
-At this point, an expression is expected.
-
 interactive_expr: Ident LBRACKET ZWSP
 ##
 ## Ends in an error in state: 383.
@@ -1144,8 +1132,9 @@ interactive_expr: UIdent DOT ZWSP
 
 Ill-formed namespace selection.
 At this point, one of the following is expected:
-  * a variable,
-  * a selection through arrays and objects.
+  * a namespace name;
+  * a string denoting a constructor;
+  * an object or array.
 
 interactive_expr: Attr ZWSP
 ##
@@ -1264,28 +1253,6 @@ interactive_expr: Ident BIT_AND_EQ ZWSP
 
 Ill-formed assigment.
 At this point, the right-hand side is expected as an expression.
-
-interactive_expr: MINUS ZWSP
-##
-## Ends in an error in state: 126.
-##
-## minus_expr -> MINUS . app_expr_level [ XOR While When VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Default Continue Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr AND ]
-##
-## The known suffix of the stack is as follows:
-## MINUS
-##
-interactive_expr: NOT ZWSP
-##
-## Ends in an error in state: 22.
-##
-## not_expr -> NOT . app_expr_level [ XOR While When VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Default Continue Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr AND ]
-##
-## The known suffix of the stack is as follows:
-## NOT
-##
-
-Ill-formed expression.
-At this point, an expression is expected.
 
 interactive_expr: LT GT ES6FUN LPAR PARAMS RPAR COLON Ident XOR
 ##
@@ -1519,8 +1486,8 @@ contract: Const Bytes COLON Ident XOR
 ##
 
 Ill-formed value declaration.
-At this point, if the type is complete, the assignment symbol '='
-followed by an expression.
+At this point, if the type is complete, the assignment symbol '=' is
+expected, followed by an expression.
 
 interactive_expr: Bytes WILD
 ##
@@ -1577,7 +1544,7 @@ contract: Bytes LPAR RPAR ZWSP
 Ill-formed contract.
 At this point, if the statement is complete, one of the followin is
 expected:
-  * a semicolon ';' followed by a statement;
+  * a semicolon ';' followed by another statement;
   * some statement;
   * the end of the contract.
 
@@ -1797,8 +1764,7 @@ contract: Import TIMES As ZWSP
 ##
 
 Ill-formed import declaration.
-At this point, the name of the namespace to import all entries from is
-expected.
+At this point, the name of the namespace is expected.
 
 contract: Import TIMES As UIdent ZWSP
 ##
@@ -2020,7 +1986,7 @@ contract: Function ZWSP
 ##
 
 Ill-formed function declaration.
-At this pount the function name is expected.
+At this point, the function name is expected.
 
 contract: Function Ident ZWSP
 ##
@@ -2037,8 +2003,8 @@ contract: Function Ident ZWSP
 
 Ill-formed function declaration.
 At this point, one of the following is expected:
-  * an opening parenthesis '(', optionally followed by parameters;
-  * an opening chevron '<', optionally followed by type parameters.
+  * an opening parenthesis '(' optionally followed by parameters;
+  * an opening chevron '<' optionally followed by type parameters.
 
 contract: Function Ident LT GT XOR
 ##
@@ -2105,7 +2071,7 @@ contract: Function Ident LPAR RPAR ZWSP
 Ill-formed function declaration.
 At this point, one of the following is expected:
   * a colon ':' followed by the return type;
-  * an opening brace '{' followed by the body as statements.
+  * the body as a block of statements.
 
 contract: Function Ident LT GT LPAR RPAR COLON Ident XOR
 ##
@@ -2145,8 +2111,8 @@ contract: Function Ident LPAR RPAR COLON Ident XOR
 ##
 
 Ill-formed function declaration.
-At this point, if the return type is complete, an opening brace '{' is
-expected, followed by statements.
+At this point, if the return type is complete, the body is expected as
+a block of statements.
 
 contract: Namespace UIdent LBRACE For LPAR ZWSP
 ##
@@ -2162,7 +2128,7 @@ contract: Namespace UIdent LBRACE For LPAR ZWSP
 ##
 
 Ill-formed for-loop.
-At thus point, one of the following is expected:
+At this point, one of the following is expected:
   * the initialisation as a statement;
   * a semicolon ';' if no initialisation;
   * the keywords 'const' or 'let' followed by a variable.
@@ -2182,7 +2148,7 @@ contract: Namespace UIdent LBRACE For LPAR SEMI ZWSP
 
 Ill-formed for-loop.
 At this point, one of the following is expected:
-  * the invariant condition as a boolean expression;
+  * the invariant as a boolean expression;
   * a semicolon ';' if no condition.
 
 contract: Match LPAR Bytes RPAR ZWSP
@@ -2340,7 +2306,7 @@ interactive_expr: Bytes As LBRACE Ident ZWSP
 ##
 
 Ill-formed object type.
-At thuis point, one of the following is expected:
+At this point, one of the following is expected:
   * a property separator (',' or ';');
   * a closing brace '}' if no more properties;
   * a colon ':' followed by the type of the property.
@@ -2504,7 +2470,7 @@ interactive_expr: Bytes As ES6FUN LPAR Ident COLON Ident XOR
 Ill-formed function type.
 At this point, one of the following is expected:
   * a comma ',' followed by another parameter;
-  * a closing parenthesis ')', if no more parameters.
+  * a closing parenthesis ')' if no more parameters.
 
 interactive_expr: Bytes As ES6FUN LPAR Ident COLON Ident COMMA ZWSP
 ##
@@ -2561,7 +2527,7 @@ interactive_expr: Bytes As Ident LT ZWSP
 ##
 
 Ill-formed generic type.
-At this point, a type argument is expected as a type.
+At this point, a type is expected.
 
 interactive_expr: Bytes As Ident LT Ident XOR
 ##
@@ -2588,7 +2554,7 @@ interactive_expr: Bytes As Ident LT Ident XOR
 
 Ill-formed generic type.
 At this point, one of the following is expected:
-  * a comma ',' followed by another type argument as a type;
+  * a comma ',' followed by another type;
   * a closing chevron '>' if no more arguments.
 
 interactive_expr: Bytes As Ident LT Ident COMMA ZWSP
@@ -2618,9 +2584,8 @@ interactive_expr: Bytes As LBRACE RBRACE VBAR ZWSP
 ## object_type VBAR
 ##
 
-Ill-formed object type.
-At this point, an object type is expected to start with an opening
-brace '{'.
+Ill-formed union type.
+At this point, an object type is expected.
 
 interactive_expr: Bytes As UIdent DOT ZWSP
 ##
@@ -2637,7 +2602,7 @@ interactive_expr: Bytes As UIdent DOT ZWSP
 
 Ill-formed selection of a type in a namespace.
 At this point, one of the following is expected:
-  * a generic type name;
+  * a type name;
   * another namespace name.
 
 interactive_expr: Bytes As LPAR Ident XOR
@@ -2726,8 +2691,8 @@ contract: Bytes LPAR ZWSP
 
 Ill-formed function call.
 At this point, one of the following is expected:
-  * a argument as an expression;
-  * a closing parenthesis ')' if no argument.
+  * an argument;
+  * a closing parenthesis ')' otherwise.
 
 contract: Bytes LPAR PARAMS ZWSP
 ##
@@ -2928,51 +2893,35 @@ interactive_expr: Bytes TIMES ZWSP
 ## The known suffix of the stack is as follows:
 ## mult_expr_level TIMES
 ##
+interactive_expr: MINUS ZWSP
+##
+## Ends in an error in state: 126.
+##
+## minus_expr -> MINUS . app_expr_level [ XOR While When VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Default Continue Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr AND ]
+##
+## The known suffix of the stack is as follows:
+## MINUS
+##
+interactive_expr: NOT ZWSP
+##
+## Ends in an error in state: 22.
+##
+## not_expr -> NOT . app_expr_level [ XOR While When VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Default Continue Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr AND ]
+##
+## The known suffix of the stack is as follows:
+## NOT
+##
+interactive_expr: BIT_NOT ZWSP
+##
+## Ends in an error in state: 375.
+##
+## neg_expr -> BIT_NOT . app_expr_level [ XOR While When VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LE LBRACE Interface Import If GT For Export Else EQ2 EOF Default Continue Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr AND ]
+##
+## The known suffix of the stack is as follows:
+## BIT_NOT
+##
 
 Ill-formed expression.
-At this point, an expression is expected.
-
-interactive_expr: Bytes QMARK Bytes WILD
-##
-## Ends in an error in state: 511.
-##
-## ternary_expr(disj_expr_level,expr) -> disj_expr_level QMARK expr . COLON expr [ While When Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COMMA COLON Break Attr ]
-##
-## The known suffix of the stack is as follows:
-## disj_expr_level QMARK expr
-##
-## WARNING: This example involves spurious reductions.
-## This implies that, although the LR(1) items shown above provide an
-## accurate view of the past (what has been recognized so far), they
-## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 437, spurious reduction of production app_expr_level -> core_expr
-## In state 534, spurious reduction of production unary_expr_level -> app_expr_level
-## In state 416, spurious reduction of production mult_expr_level -> unary_expr_level
-## In state 430, spurious reduction of production add_expr_level -> mult_expr_level
-## In state 489, spurious reduction of production eq_expr_level -> add_expr_level
-## In state 454, spurious reduction of production comp_expr_level -> eq_expr_level
-## In state 459, spurious reduction of production bit_shift_level -> comp_expr_level
-## In state 500, spurious reduction of production conj_expr_level -> bit_shift_level
-## In state 514, spurious reduction of production disj_expr_level -> conj_expr_level
-## In state 455, spurious reduction of production non_object_expr -> disj_expr_level
-## In state 509, spurious reduction of production no_attr_expr -> non_object_expr
-## In state 510, spurious reduction of production expr -> no_attr_expr
-##
-
-Ill-formed ternary conditional expression.
-At this point, a colon ':' is expected, followed by an expresion.
-
-interactive_expr: Bytes QMARK Bytes COLON ZWSP
-##
-## Ends in an error in state: 512.
-##
-## ternary_expr(disj_expr_level,expr) -> disj_expr_level QMARK expr COLON . expr [ While When Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COMMA COLON Break Attr ]
-##
-## The known suffix of the stack is as follows:
-## disj_expr_level QMARK expr COLON
-##
-
-Ill-formed ternary conditional expression.
 At this point, an expression is expected.
 
 interactive_expr: Bytes As ZWSP
@@ -3020,7 +2969,7 @@ contract: Bytes LPAR Bytes WILD
 Ill-formed function call.
 At this point, one of the following is expected:
    * a comma ',' followed by another argument;
-   * a closing parenthesis ')' if no more arguments.
+   * a closing parenthesis ')' otherwise.
 
 contract: Bytes LPAR Bytes COMMA ZWSP
 ##
@@ -3071,6 +3020,7 @@ contract: Switch LPAR Bytes RPAR LBRACE ZWSP
 ## LBRACE
 ##
 
+Ill-formed switch.
 At this point, one of the following is expected:
   * the keyword 'case' introducing a new case;
   * the keyword 'default' introducing the default case.
@@ -3115,7 +3065,7 @@ contract: Switch LPAR Bytes RPAR LBRACE Default COLON ZWSP
 
 Ill-formed default switch case
 At this point, one of the following is expected:
-  * a colon ':' optionally followed by statements;
+  * statements for the case;
   * a closing brace '}' if no more cases.
 
 contract: If LPAR Bytes RPAR While LPAR Bytes RPAR ZWSP
@@ -3194,7 +3144,7 @@ contract: LBRACKET Bytes COMMA ZWSP
 Ill-formed array.
 At this point, one of the following is expected:
   * another element;
-  * a closing bracket ']' is no more elements.
+  * a closing bracket ']' if no more elements.
 
 contract: Match LPAR Bytes RPAR LBRACE When LPAR Bytes RPAR COLON Bytes WILD
 ##
@@ -3296,11 +3246,11 @@ contract: Const UIdent DOT ZWSP
 ## namespace_name DOT
 ##
 
-Ill-formed selection in a nested namespaces.
+Ill-formed selection in a nested namespace.
 At this point, one of the following is expected:
   * a namespace name;
   * an object pattern;
-  * a variable as a pattern.
+  * a variable.
 
 contract: Namespace UIdent LBRACE For LPAR SEMI SEMI ZWSP
 ##
@@ -3346,7 +3296,7 @@ contract: For LPAR Ident MINUS2 SEMI Bytes SEMI ZWSP
 Ill-formed for-loop.
 At this point, one of the following is expected:
   * an afterthought, e.g. incrementing a variable;
-  * a closing parenthesis ')' if no afterthought.
+  * a closing parenthesis ')' otherwise.
 
 contract: Namespace UIdent LBRACE For LPAR Let ZWSP
 ##
@@ -3397,7 +3347,7 @@ Ill-formed for-loop.
 At this point, one of the following is expected:
   * the keyword 'of' if defining a for-of loop;
   * the assignment operator '=' to define the initialiser;
-  * a colon ':' to give the type of the initialiser.
+  * a colon ':' followed by the type of the initialiser.
 
 contract: Namespace UIdent LBRACE For LPAR Let Ident Of ZWSP
 ##
@@ -3639,7 +3589,9 @@ contract: Attr ZWSP
 ##
 
 Ill-formed decorated statement.
-At this point, a statement is expected (except a block).
+At this point, one of the following is expected:
+  * another decorator;
+  * a statement.
 
 contract: Namespace UIdent LBRACE Return For LPAR SEMI SEMI RPAR ZWSP
 ##
@@ -3680,7 +3632,8 @@ Ill-formed block of statements.
 At this point, if the statement is complete, one of the following is
 expected:
   * a semicolon ';' followed by another statement;
-  * a losing brace '}' if nor more statements.
+  * some statement;
+  * a closing brace '}' if no more statements.
 
 contract: Namespace UIdent Implements ZWSP
 ##
@@ -3714,8 +3667,7 @@ contract: Namespace UIdent Implements UIdent ZWSP
 ##
 
 Ill-formed namespace declaration.
-At this point, a block of statements is expected to start with an
-opening brace '{'.
+At this point, a block of statements is expected.
 
 interactive_expr: ZWSP
 ##
@@ -3756,7 +3708,7 @@ contract: Const SHARP ZWSP
 
 Ill-formed pattern of constructor application.
 At this point, one of the following is expected:
-   * a constructor as a string;
+   * a constant constructor as a string;
    * an array defining the application pattern.
 
 contract: SHARP ZWSP
@@ -3772,7 +3724,7 @@ contract: SHARP ZWSP
 
 Ill-formed constructor application.
 At this point, one of the following is expected:
-   * a constructor as a string;
+   * a constant constructor as a string;
    * an array defining the constructor application.
 
 contract: Const Bytes COLON Ident EQ ZWSP
@@ -3839,11 +3791,30 @@ interactive_expr: Bytes As Attr ZWSP
 ## The known suffix of the stack is as follows:
 ## Attr
 ##
+interactive_expr: Bytes As SHARP String VBAR ZWSP
+##
+## Ends in an error in state: 247.
+##
+## nsepseq(variant,VBAR) -> variant VBAR . nsepseq(variant,VBAR) [ While When Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Default Continue Const Case COMMA COLON Break Attr ]
+##
+## The known suffix of the stack is as follows:
+## variant VBAR
+##
+interactive_expr: Bytes As VBAR SHARP String VBAR ZWSP
+##
+## Ends in an error in state: 325.
+##
+## nseq(__anonymous_3) -> VBAR . variant [ While When Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Default Continue Const Case COMMA COLON Break Attr ]
+## nseq(__anonymous_3) -> VBAR . variant nseq(__anonymous_3) [ While When Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Default Continue Const Case COMMA COLON Break Attr ]
+##
+## The known suffix of the stack is as follows:
+## VBAR
+##
 
 Ill-formed variant type.
 At this point, one of the following is expected:
-  * a decorator;
-  * a variant starting with '#['.
+  * a decorator for the variant;
+  * a variant starting with '#'.
 
 interactive_expr: Bytes As SHARP ZWSP
 ##
@@ -3857,7 +3828,9 @@ interactive_expr: Bytes As SHARP ZWSP
 ##
 
 Ill-formed variant type.
-At this point, a constructor is expected as a string.
+At this point, one of the following is expected:
+  * a constant constructor as a string;
+  * an array defining the constructor and its arguments.
 
 interactive_expr: Bytes As VBAR ZWSP
 ##
@@ -3875,7 +3848,7 @@ interactive_expr: Bytes As VBAR ZWSP
 Ill-formed variant or union type.
 At this point, one of the following is expected:
   * an object type if defining a union type;
-  * a variant (starting with '#[') otherwise.
+  * a variant (starting with '#') otherwise.
 
 interactive_expr: Bytes As LBRACKET Ident XOR
 ##
@@ -3990,7 +3963,7 @@ contract: Switch LPAR Bytes WILD
 ## In state 598, spurious reduction of production switch_subject -> expr
 ##
 
-Ill-formed switch statement.
+Ill-formed switch.
 At this point, a closing parenthesis ')' is expected.
 
 contract: If LPAR Bytes WILD
@@ -4102,7 +4075,7 @@ contract: Return If LPAR Bytes RPAR If LPAR Bytes RPAR ZWSP
 ##
 
 Ill-formed conditional statement.
-At this point, a statement is expected for when the condition is true.
+At this point, a statement for a true condition is true.
 
 contract: If LPAR Bytes RPAR While ZWSP
 ##
@@ -4152,7 +4125,7 @@ contract: For LPAR SEMI SEMI Bytes WILD
 Ill-formed for-loop.
 At this point, one of the following is expected:
   * a comma ',' followed by another afterthought expression;
-  * a closing parenthesis ')' is none.
+  * a closing parenthesis ')' otherwise.
 
 contract: For LPAR SEMI SEMI Bytes COMMA ZWSP
 ##
@@ -4210,7 +4183,7 @@ contract: For LPAR Const Ident Of Bytes PARAMS ZWSP
 ##
 
 Ill-formed for-loop.
-At this poin, a closing parenthesis ')' is expected.
+At this point, a closing parenthesis ')' is expected.
 
 contract: For LPAR Ident MINUS2 SEMI Bytes WILD
 ##
@@ -4407,7 +4380,8 @@ contract: For LPAR Const Ident Of Bytes WILD
 ##
 
 Ill-formed for-loop.
-At this point, a closing parenthesis ')' is expected.
+At this point, if the range expression is complete, a closing
+parenthesis ')' is expected.
 
 contract: Bytes QMARK Bytes QMARK Ident MINUS2 COLON Ident MINUS2 BIT_AND
 ##
@@ -4525,9 +4499,35 @@ contract: Bytes QMARK Bytes LPAR RPAR XOR
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 440, spurious reduction of production app_expr -> call_expr
 ##
+interactive_expr: Bytes QMARK Bytes WILD
+##
+## Ends in an error in state: 511.
+##
+## ternary_expr(disj_expr_level,expr) -> disj_expr_level QMARK expr . COLON expr [ While When Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COMMA COLON Break Attr ]
+##
+## The known suffix of the stack is as follows:
+## disj_expr_level QMARK expr
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 437, spurious reduction of production app_expr_level -> core_expr
+## In state 534, spurious reduction of production unary_expr_level -> app_expr_level
+## In state 416, spurious reduction of production mult_expr_level -> unary_expr_level
+## In state 430, spurious reduction of production add_expr_level -> mult_expr_level
+## In state 489, spurious reduction of production eq_expr_level -> add_expr_level
+## In state 454, spurious reduction of production comp_expr_level -> eq_expr_level
+## In state 459, spurious reduction of production bit_shift_level -> comp_expr_level
+## In state 500, spurious reduction of production conj_expr_level -> bit_shift_level
+## In state 514, spurious reduction of production disj_expr_level -> conj_expr_level
+## In state 455, spurious reduction of production non_object_expr -> disj_expr_level
+## In state 509, spurious reduction of production no_attr_expr -> non_object_expr
+## In state 510, spurious reduction of production expr -> no_attr_expr
+##
 
-Ill-formed ternary conditional.
-At this point, a colon ':' is expected, followed by an expression.
+Ill-formed ternary conditional expression.
+At this point, a colon ':' is expected, followed by an expresion.
 
 contract: Bytes QMARK Bytes QMARK Ident MINUS2 COLON Ident MINUS2 COLON ZWSP
 ##
@@ -4633,6 +4633,15 @@ contract: Bytes QMARK Bytes LPAR RPAR COLON ZWSP
 ##
 ## The known suffix of the stack is as follows:
 ## core_expr QMARK app_expr COLON
+##
+interactive_expr: Bytes QMARK Bytes COLON ZWSP
+##
+## Ends in an error in state: 512.
+##
+## ternary_expr(disj_expr_level,expr) -> disj_expr_level QMARK expr COLON . expr [ While When Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COMMA COLON Break Attr ]
+##
+## The known suffix of the stack is as follows:
+## disj_expr_level QMARK expr COLON
 ##
 
 Ill-formed ternary conditional.
@@ -4805,8 +4814,7 @@ contract: Return If LPAR Bytes RPAR Return Else ZWSP
 ##
 
 Ill-formed conditional statement.
-At this point, the statement in case of a false condition is
-expected.
+At this point, a statement for a false condition is expected.
 
 contract: Return If LPAR Bytes RPAR If LPAR Bytes RPAR Return BIT_AND
 ##
@@ -4855,7 +4863,7 @@ contract: Return If LPAR Bytes RPAR Return BIT_AND
 
 Ill-formed conditional statement.
 At this point, one of the following is expected:
-  * a semicolon ';',
+  * a semicolon ';' followed by the keyword 'else';
   * the keyword 'else'.
 
 contract: Switch LPAR Bytes RPAR LBRACE Case ZWSP
@@ -4946,7 +4954,7 @@ Ill-formed switch.
 At this point, if the case is complete, one of the following is
 expected:
   * another case;
-  * a closing brace '}' is no more cases.
+  * a closing brace '}' if no more cases.
 
 interactive_expr: LBRACE ELLIPSIS Bytes WILD
 ##
@@ -4976,7 +4984,8 @@ interactive_expr: LBRACE ELLIPSIS Bytes WILD
 ##
 
 Ill-formed object update.
-At this point, a property separator (';' or ',') is expected.
+At this point, if the object to update is complete, a property
+separator (';' or ',') is expected.
 
 interactive_expr: LBRACE Ident COLON Bytes WILD
 ##
@@ -5143,7 +5152,7 @@ contract: LPAR Bytes WILD
 ##
 
 Ill-formed parenthesised expression.
-At this point, a closing parenthesis ')'is expected.
+At this point, a closing parenthesis ')' is expected.
 
 contract: While LPAR Bytes WILD
 ##
@@ -5225,6 +5234,16 @@ contract: SHARP LBRACKET UIdent ZWSP
 ## The known suffix of the stack is as follows:
 ## namespace_name
 ##
+contract: Const SHARP LBRACKET UIdent ZWSP
+##
+## Ends in an error in state: 40.
+##
+## namespace_path(__anonymous_10) -> namespace_name . DOT namespace_path(__anonymous_10) [ RBRACKET COMMA ]
+## namespace_path(__anonymous_10) -> namespace_name . DOT String [ RBRACKET COMMA ]
+##
+## The known suffix of the stack is as follows:
+## namespace_name
+##
 
 Ill-formed constructor application.
 At this point, the selection operator '.' is expected.
@@ -5258,7 +5277,7 @@ contract: SHARP LBRACKET String ZWSP
 Ill-formed constructor application.
 At this point, one of the following is expected:
   * a comma ',' followed by an argument;
-  * a closing bracket ']'.
+  * a closing bracket ']' if none.
 
 contract: SHARP LBRACKET String COMMA ZWSP
 ##
@@ -5289,20 +5308,6 @@ Ill-formed pattern of constructor application.
 At this point, one of the following is expected:
   * a string denoting the constructor;
   * a namespace where to select the constructor.
-
-contract: Const SHARP LBRACKET UIdent ZWSP
-##
-## Ends in an error in state: 40.
-##
-## namespace_path(__anonymous_10) -> namespace_name . DOT namespace_path(__anonymous_10) [ RBRACKET COMMA ]
-## namespace_path(__anonymous_10) -> namespace_name . DOT String [ RBRACKET COMMA ]
-##
-## The known suffix of the stack is as follows:
-## namespace_name
-##
-
-Ill-formed constructor application.
-At this point, a selection operator '.' is expected.
 
 contract: Const SHARP LBRACKET String ZWSP
 ##
@@ -5394,7 +5399,8 @@ interactive_expr: Bytes As SHARP LBRACKET String ZWSP
 
 Ill-formed variant type.
 At this point, one of the following is expected:
-  * a comma ',' is expected, followed by a type;
+  * a comma ',' is expected, followed by the type of the first
+    argument;
   * a closing bracket ']' if the constructor is constant.
 
 interactive_expr: Bytes As SHARP LBRACKET String COMMA ZWSP
@@ -5420,36 +5426,8 @@ interactive_expr: Bytes As SHARP LBRACKET String COMMA Ident COMMA ZWSP
 
 Ill-formed variant type.
 At this point, one of the following is expected:
-  * a type for the first argument;
+  * an argument type;
   * a closing bracket ']' if the constructor is constant.
-
-interactive_expr: Bytes As SHARP String VBAR ZWSP
-##
-## Ends in an error in state: 247.
-##
-## nsepseq(variant,VBAR) -> variant VBAR . nsepseq(variant,VBAR) [ While When Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Default Continue Const Case COMMA COLON Break Attr ]
-##
-## The known suffix of the stack is as follows:
-## variant VBAR
-##
-interactive_expr: Bytes As VBAR SHARP String VBAR ZWSP
-##
-## Ends in an error in state: 325.
-##
-## nseq(__anonymous_3) -> VBAR . variant [ While When Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Default Continue Const Case COMMA COLON Break Attr ]
-## nseq(__anonymous_3) -> VBAR . variant nseq(__anonymous_3) [ While When Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If GT For Export Else EQ EOF Default Continue Const Case COMMA COLON Break Attr ]
-##
-## The known suffix of the stack is as follows:
-## VBAR
-##
-
-Ill-formed variant type.
-At this point, one of the following is expected:
-  * a decorator for the variant;
-  * the prefix '#' followed by an array declaring the constructor and
-    its arguments;
-  * the prefix '#' followed by a string denoting a constant
-    constructor.
 
 interactive_expr: Bytes As SHARP LBRACKET String COMMA Ident XOR
 ##
@@ -5543,4 +5521,4 @@ contract: SHARP LBRACKET String COMMA Bytes COMMA ZWSP
 Ill-formed constructor application.
 At this point, one of the following is expected:
   * a comma ',' followed by an argument;
-  * a closing bracket ']' is none.
+  * a closing bracket ']' if none.
