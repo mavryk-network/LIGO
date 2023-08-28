@@ -11,7 +11,7 @@ type flags =
   ; duplicate_identifier : bool
   ; for_to_while_loop : bool
   ; restrict_projection : bool
-  ; export_declaration : bool
+  ; export : bool
   ; special_unit_constructor : bool
   ; freeze_operators : Syntax_types.t
   ; constructor_application : Syntax_types.t
@@ -34,7 +34,7 @@ let passes ~(flags : flags) : (module T) list =
       ; duplicate_identifier
       ; for_to_while_loop
       ; restrict_projection
-      ; export_declaration
+      ; export
       ; special_unit_constructor
       ; list_as_function
       ; array_to_tuple
@@ -67,7 +67,8 @@ let passes ~(flags : flags) : (module T) list =
   ; entry (module Linear_signature) ~flag:always ~arg:()
   ; entry (module Restrict_projections) ~flag:restrict_projection ~arg:()
   ; entry (module Single_switch_block) ~flag:always ~arg:()
-  ; entry (module Export_declaration) ~flag:export_declaration ~arg:()
+  ; entry (module Export_program_entry) ~flag:export ~arg:()
+  ; entry (module Export_declaration) ~flag:export ~arg:()
   ; entry (module Top_level_restriction) ~flag:always ~arg:()
   ; entry (module Contract_hack) ~flag:always ~arg:()
   ; entry (module Pattern_restriction) ~flag:always ~arg:()
@@ -140,7 +141,7 @@ let extract_flags_from_options : disable_initial_check:bool -> Compiler_options.
   ; duplicate_identifier
   ; for_to_while_loop = options.frontend.warn_infinite_loop
   ; restrict_projection = is_jsligo
-  ; export_declaration = is_jsligo
+  ; export = is_jsligo
   ; special_unit_constructor = is_pascaligo
   ; list_as_function = is_jsligo
   ; array_to_tuple = is_jsligo
