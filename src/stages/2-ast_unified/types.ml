@@ -149,6 +149,7 @@ and ('self, 'ty_expr) pattern_content_ =
   | P_mod_access of (Mod_variable.t Simple_utils.List.Ne.t, 'self) Mod_access.t
   | P_app of 'self * 'self option
   | P_ctor of Label.t
+  | P_ctor_app of 'self Simple_utils.List.Ne.t
   | P_var_typed of 'ty_expr * Variable.t [@not_initial]
 [@@deriving
   map
@@ -183,6 +184,7 @@ and ('self, 'expr, 'pattern, 'statement, 'block) instruction_content_ =
   | I_return of 'expr option [@sexp.option]
   | I_switch of ('expr, 'block) Switch.t
   | I_break
+  | I_continue
   | I_assign of Variable.t * 'expr [@not_initial]
 [@@deriving
   map
