@@ -643,7 +643,7 @@ and instruction : Eq.instruction -> Folding.instruction =
   match i with
   | S_Directive _ -> failwith "DIRECTIVE"
   | S_Attr (attr, s) -> failwith "TODO: add attribute on instruction?"
-  | S_Continue _ -> failwith "TODO: add continue on instruction?"
+  | S_Continue _ -> return @@ O.I_continue
   | S_Block s -> return @@ O.I_block s.value.inside
   | S_Expr expr ->
     return @@ I_expr expr
