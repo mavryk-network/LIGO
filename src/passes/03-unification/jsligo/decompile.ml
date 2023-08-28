@@ -150,7 +150,6 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
       : AST.Label.t -> CST.type_expr option -> AST.Attribute.t list -> CST.variant
     =
    fun (AST.Label.Label constr_name) t attributes ->
-    let ctor : CST.ctor = ghost_ident constr_name in
     let ctor_params : (CST.comma * (CST.type_expr, CST.comma) Utils.nsep_or_term) option =
       Option.map ~f:(fun t ->
           match t with
@@ -158,9 +157,19 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
             let CST.{ inside ; _ } : (_, _) Utils.nsep_or_term CST.brackets' = value in
             ghost_comma, inside
           | t -> ghost_comma, `Sep (t, [])
-      ) t in
-    let inside : CST.variant_comp = { ctor ; ctor_params } in
-    let tuple = w CST.{ lbracket = ghost_lbracket; inside; rbracket = ghost_rbracket } in
+        ) t in
+    let ctor = CST.T_String (ghost_string constr_name) in
+    let inside : CST.type_expr CST.ctor_app = ghost_sharp, match ctor_params with
+      | None -> ZeroArg ctor
+      | Some (comma, args) ->
+        let inside : (CST.type_expr, CST.comma) Utils.nsep_or_term =
+          Utils.nsep_or_term_cons ctor comma args
+        in
+        let args : (CST.type_expr, CST.comma) Utils.nsep_or_term CST.brackets = w @@
+          CST.{ lbracket = ghost_lbracket ; rbracket = ghost_rbracket ; inside }
+        in
+        MultArg args in
+    let tuple : CST.type_expr CST.ctor_app Region.reg = w inside in
     let attributes = List.map ~f:decompile_attr attributes in
     { attributes ; tuple }
   and decompile_field
