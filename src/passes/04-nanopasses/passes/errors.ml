@@ -36,6 +36,8 @@ type t =
   | `Small_passes_bad_format_literal of expr * string
   | `Small_passes_duplicate_identifier of Variable.t
   | `Small_passes_duplicate_ty_identifier of Ty_variable.t
+  | `Small_passes_only_variable_in_prefix of expr
+  | `Small_passes_only_variable_in_postfix of expr
   ]
 [@@deriving poly_constructor { prefix = "small_passes_" }, sexp]
 
@@ -214,7 +216,11 @@ let error_ppformat
       Format.fprintf f "@[<hv>%a@ Duplicate identifier. @]" snippet_pp loc
     | `Small_passes_duplicate_ty_identifier x ->
       let loc = Ty_variable.get_location x in
-      Format.fprintf f "@[<hv>%a@ Duplicate identifier. @]" snippet_pp loc)
+      Format.fprintf f "@[<hv>%a@ Duplicate identifier. @]" snippet_pp loc
+    | `Small_passes_only_variable_in_prefix e ->
+      Format.fprintf f "@[<hv>%a@ Only variables are accepted in prefix operators. @]" snippet_pp (get_e_loc e)
+    | `Small_passes_only_variable_in_postfix e ->
+      Format.fprintf f "@[<hv>%a@ Only variables are accepted in postfix operators. @]" snippet_pp (get_e_loc e))
 
 
 let error_json : t -> Simple_utils.Error.t =
@@ -411,5 +417,15 @@ let error_json : t -> Simple_utils.Error.t =
   | `Small_passes_unsupported_disc_union_type ty ->
     let location = get_t_loc ty in
     let message = "Unsupported disc union type" in
+    let content = make_content ~message ~location () in
+    make ~stage ~content
+  | `Small_passes_only_variable_in_prefix e ->
+    let location = get_e_loc e in
+    let message = "Only variables are accepted in prefix operators" in
+    let content = make_content ~message ~location () in
+    make ~stage ~content
+  | `Small_passes_only_variable_in_postfix e ->
+    let location = get_e_loc e in
+    let message = "Only variables are accepted in postfix operators" in
     let content = make_content ~message ~location () in
     make ~stage ~content

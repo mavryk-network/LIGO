@@ -396,8 +396,8 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_module_access of (Mod_variable.t Simple_utils.List.Ne.t, Variable.t) Mod_access.t
       [@not_initial]
   | E_match_block of ('self, 'pattern, 'block) Case.t [@not_initial]
-  | E_prefix of Prefix_postfix.prefix
-  | E_postfix of Prefix_postfix.postfix
+  | E_prefix of 'self Prefix_postfix.prefix
+  | E_postfix of 'self Prefix_postfix.postfix
 [@@deriving
   map
   , fold
