@@ -237,11 +237,9 @@ module Make (Options : Options.S) (Token : Token.S) =
 
     let mk_sym state buffer =
       let state, Region.{region; value} = state#sync buffer in
-      let () = Printf.eprintf "Lexer.mk_sym: %s\n%!" value in
       match Token.mk_sym value region with
         Ok token -> token, state
       | Error Token.Invalid_symbol string ->
-          let () = Printf.eprintf "Lexer.mk_sym: Invalid %S" string in
           fail region (Invalid_symbol string)
 
     (* End-of-File *)
