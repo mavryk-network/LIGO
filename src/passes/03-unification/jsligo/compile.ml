@@ -322,6 +322,36 @@ let rec expr : Eq.expr -> Folding.expr =
     in
     let op = O.Assign_chainable.Assignment_operator Mod_eq in
     Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
+  | E_BitAndEq { value = { arg1; op; arg2 }; _ } ->
+    let loc =
+      Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
+    in
+    let op = O.Assign_chainable.Assignment_operator BitAnd_eq in
+    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
+  | E_BitOrEq { value = { arg1; op; arg2 }; _ } ->
+    let loc =
+      Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
+    in
+    let op = O.Assign_chainable.Assignment_operator BitOr_eq in
+    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
+  | E_BitXorEq { value = { arg1; op; arg2 }; _ } ->
+    let loc =
+      Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
+    in
+    let op = O.Assign_chainable.Assignment_operator BitXor_eq in
+    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
+  | E_BitSlEq { value = { arg1; op; arg2 }; _ } ->
+    let loc =
+      Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
+    in
+    let op = O.Assign_chainable.Assignment_operator BitSl_eq in
+    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
+  | E_BitSrEq { value = { arg1; op; arg2 }; _ } ->
+    let loc =
+      Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
+    in
+    let op = O.Assign_chainable.Assignment_operator BitSr_eq in
+    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
   | E_Ternary { value = { condition; truthy; falsy; _ }; _ } ->
     let ifnot = Some falsy in
     return @@ E_cond { test = condition; ifso = truthy; ifnot }
@@ -378,12 +408,7 @@ let rec expr : Eq.expr -> Folding.expr =
         List.Ne.singleton (default_to_clause default_expr)
     in
     return @@ E_match { expr ; cases }
-  | E_Xor _
-  | E_BitAndEq _
-  | E_BitOrEq _
-  | E_BitSlEq _
-  | E_BitSrEq _
-  | E_BitXorEq _ -> failwith "NOT IMPLEMENTED"
+  | E_Xor _ -> failwith "NOT IMPLEMENTED"
 
 let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
  fun t ->
