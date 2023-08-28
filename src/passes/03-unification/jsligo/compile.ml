@@ -13,6 +13,20 @@ let sep_or_term_to_nelist : ('a, _) Utils.sep_or_term -> 'a List.Ne.t option =
       | `Term x -> nseq_map snd x)
 
 
+let nsep_or_term_to_nelist : ('a, 'b) Utils.nsep_or_term -> 'a List.Ne.t =
+  function
+  | `Sep x -> nsepseq_to_nseq x
+  | `Term x -> nseq_map fst x
+
+
+let nsep_or_term_hd : ('a, 'b) Utils.nsep_or_term -> 'a * ('a, 'b) Utils.sep_or_term =
+  function
+  | `Sep (a, []) -> (a, None)
+  | `Sep (a, (b, a_) :: tl) -> (a, Some (`Sep (a_, tl)))
+  | `Term ((a, s), []) -> (a, None)
+  | `Term ((a, s), (a_, b) :: tl) -> (a, Some (`Term ((a_, b), tl)))
+
+
 module TODO_do_in_parsing = struct
   let conv_attr attr_reg =
     let (key, value), _loc = w_split attr_reg in
@@ -200,16 +214,16 @@ let rec expr : Eq.expr -> Folding.expr =
   | E_Neq ne -> return @@ compile_bin_op EQ_SLASH_EQ ne
   | E_App { value = expr, args; _ } ->
     let args = sepseq_to_list args.value.inside in
-    (match expr with
-     | E_Ctor ctor -> return @@ E_ctor_app (expr, List.Ne.of_list_opt args)
-     | _ ->
-       return @@ E_call (expr, Location.wrap ~loc @@ args))
-  | E_Ctor c ->
-    (* TODO in unified types (one type might not be necessary) *)
-    return @@ E_constr (O.Label.of_string c#payload)
+    return @@ E_call (expr, Location.wrap ~loc @@ args)
+  | E_CtorApp { value = _, ZeroArg ctor ; _ } ->
+    return @@ E_ctor_app (ctor, None)
+  | E_CtorApp { value = _, MultArg app ; _ } ->
+    let ctor, args = nsep_or_term_to_nelist app.value.inside in
+    let args = List.Ne.of_list_opt args in
+    return @@ E_ctor_app (ctor, args)
   | E_Array { value = items; _ } ->
     let items =
-      let translate_array_item : I.expr I.component -> _ AST.Array_repr.item = function
+      let translate_array_item : I.expr I.element -> _ AST.Array_repr.item = function
         | None, e -> Expr_entry e
         | Some _, e -> Rest_entry e
       in
@@ -411,24 +425,30 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
   | T_Variant { value = variants; region } ->
     let variants = nsep_or_pref_to_list variants in
     let destruct : I.variant -> _ =
-     fun { tuple; attributes } ->
-      let I.{ ctor; ctor_params } = (r_fst tuple).inside in
-      let ty =
-        Option.map
-          ~f:(fun lst ->
-            let p = List.Ne.of_list @@ nsep_or_term_to_list @@ snd lst in
-            match p with
-            | x, [] -> x
-            | _ ->
-              let inside =
-                Region.wrap_ghost
-                @@ I.{ lbracket = ghost; inside = snd lst; rbracket = ghost }
-              in
-              I.T_Array inside)
-          ctor_params
-      in
-      ( TODO_do_in_parsing.labelize ctor#payload
-      , ty , TODO_do_in_parsing.conv_attrs attributes )
+      fun { tuple; attributes } ->
+        let ctor, ctor_params = match snd (r_fst tuple) with
+          | I.ZeroArg ctor -> ctor, None
+          | MultArg args ->
+            let ctor, args = nsep_or_term_to_nelist args.value.inside in
+            let args = List.Ne.of_list_opt args in
+            ctor, args
+        in
+        let ctor = match ctor with
+          | T_String s -> s
+          | _ -> failwith "Expected string from parser."
+        in
+        let ctor_params : (I.type_expr, I.comma) nsep_or_term option = Option.map ~f:(fun x -> `Sep (nsepseq_of_nseq ~sep:ghost x)) ctor_params in
+        let ty = match ctor_params with
+          | None -> None
+          | Some ctor_params ->
+            let inside : I.array_type =
+              Region.wrap_ghost
+              @@ I.{ lbracket = ghost; inside = ctor_params; rbracket = ghost }
+            in
+            Some (I.T_Array inside)
+        in
+        ( TODO_do_in_parsing.labelize ctor#payload
+        , ty , TODO_do_in_parsing.conv_attrs attributes )
     in
     let variants =
       variants
@@ -517,7 +537,13 @@ let pattern : Eq.pattern -> Folding.pattern =
  let return = Location.wrap ~loc in
  match p with
  | P_Attr (attr, p) -> return @@ O.P_attr (TODO_do_in_parsing.conv_attr attr, p)
- | P_Ctor v -> return @@ P_ctor (TODO_do_in_parsing.labelize v#payload)
+ | P_CtorApp { value = _, app ; _ } ->
+   let ctor, args = match app with
+     | ZeroArg ctor -> ctor, []
+     | MultArg all -> nsep_or_term_to_nelist all.value.inside
+   in
+   return @@ (P_ctor_app (ctor, args))
+ | P_NamePath _ -> failwith "NamePath pattern not supported in unification"
  | P_False _ -> return @@ P_ctor (Ligo_prim.Label.of_string "False")
  | P_True _ -> return @@ P_ctor (Ligo_prim.Label.of_string "True")
  | P_Var p -> return @@ P_var (TODO_do_in_parsing.var p)
@@ -557,7 +583,7 @@ let pattern : Eq.pattern -> Folding.pattern =
    | [] -> return @@ P_list (List [])
    | [ None, hd; Some _, tl ] -> return @@ P_list (Cons (hd, tl))
    | lst ->
-     let f (v : I.pattern I.component) =
+     let f (v : I.pattern I.element) =
        match v with
        | Some _, _ -> failwith "Invalid ellipsis in pattern"
        | None, p -> p
