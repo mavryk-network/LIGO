@@ -642,7 +642,6 @@ and instruction : Eq.instruction -> Folding.instruction =
   in
   match i with
   | S_Directive _ -> failwith "DIRECTIVE"
-  | S_Attr (attr, s) -> failwith "TODO: add attribute on instruction?"
   | S_Continue _ -> return @@ O.I_continue
   | S_Block s -> return @@ O.I_block s.value.inside
   | S_Expr expr ->
@@ -700,7 +699,7 @@ and instruction : Eq.instruction -> Folding.instruction =
     let afterthought = Option.map afterthought ~f:Utils.nsepseq_to_nseq in
     return @@ I_for_stmt { initialiser; condition; afterthought; statement = for_body }
   (* impossible, if triggered, look at functions 'statement' *)
-  | S_Decl _ | S_Export _ ->
+  | S_Decl _ | S_Export _ | S_Attr _ ->
     assert false
 
 
