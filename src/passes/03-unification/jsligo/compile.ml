@@ -519,15 +519,9 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
     in
     return @@ T_module_access { module_path; field; field_as_open }
   | T_ParameterOf { value = { namespace_path ; _ } ; region } ->
-    let loc = Location.lift region in
     let namespace_path = TODO_do_in_parsing.selection_path namespace_path in
     let namespace_path = List.Ne.map TODO_do_in_parsing.mvar namespace_path in
-    return
-    @@ T_module_access
-         { module_path = namespace_path
-         ; field = Ligo_prim.Type_var.of_input_var ~loc "$parameter"
-         ; field_as_open = false
-         }
+    return @@ T_contract_parameter namespace_path
   | T_Union t ->
     let fields =
       let destruct_obj (x : I.type_expr I._object) : unit * I.type_expr * O.Attribute.t list =

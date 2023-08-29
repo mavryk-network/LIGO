@@ -70,7 +70,6 @@ let passes ~(flags : flags) : (module T) list =
   ; entry (module Export_program_entry) ~flag:export ~arg:()
   ; entry (module Export_declaration) ~flag:export ~arg:()
   ; entry (module Top_level_restriction) ~flag:always ~arg:()
-  ; entry (module Contract_hack) ~flag:always ~arg:()
   ; entry
       (module Pattern_constructor_application)
       ~flag:always
