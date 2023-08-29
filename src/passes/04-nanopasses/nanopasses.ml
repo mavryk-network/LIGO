@@ -71,6 +71,10 @@ let passes ~(flags : flags) : (module T) list =
   ; entry (module Export_declaration) ~flag:export ~arg:()
   ; entry (module Top_level_restriction) ~flag:always ~arg:()
   ; entry (module Contract_hack) ~flag:always ~arg:()
+  ; entry
+      (module Pattern_constructor_application)
+      ~flag:always
+      ~arg:pattern_constructor_application
   ; entry (module Pattern_restriction) ~flag:always ~arg:()
   ; entry (module Unpuning) ~flag:always ~arg:()
   ; entry (module Module_open_restriction) ~flag:always ~arg:()
@@ -80,10 +84,6 @@ let passes ~(flags : flags) : (module T) list =
   ; entry (module T_constant) ~flag:always ~arg:()
   ; entry (module T_arg) ~flag:always ~arg:()
   ; entry (module Constructor_application) ~flag:always ~arg:constructor_application
-  ; entry
-      (module Pattern_constructor_application)
-      ~flag:always
-      ~arg:pattern_constructor_application
   ; entry (module Standalone_constructor_removal) ~flag:always ~arg:()
   ; entry (module Special_unit_constructor) ~flag:special_unit_constructor ~arg:()
   ; entry (module Type_abstraction_declaration) ~flag:always ~arg:()
