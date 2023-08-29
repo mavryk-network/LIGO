@@ -159,7 +159,7 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
           | t -> ghost_comma, `Sep (t, [])
         ) t in
     let ctor = CST.T_String (ghost_string constr_name) in
-    let inside : CST.type_expr CST.ctor_app = ghost_sharp, match ctor_params with
+    let inside : CST.type_expr CST.ctor_app = None, match ctor_params with
       | None -> ZeroArg ctor
       | Some (comma, args) ->
         let inside : (CST.type_expr, CST.comma) Utils.nsep_or_term =
