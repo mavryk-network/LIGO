@@ -31,6 +31,8 @@ and decompile_pattern p = AST.Catamorphism.cata_pattern ~f:folder p
 
 and decompile_attr : AST.Attribute.t -> CST.attribute =
  fun { key; value } -> ghost_attr key (Option.map ~f:(fun x -> Attr.String x) value)
+
+
 (* ^ XXX Attr.String or Attr.Ident? *)
 
 and decompile_to_namespace_path
@@ -44,6 +46,26 @@ and decompile_to_namespace_path
   let namespace_path = Utils.nsepseq_of_nseq ~sep:ghost_dot module_path in
   (* XXX: What is [field_as_open]?? Do we expect module path with more than 1 element here? *)
   CST.{ namespace_path = namespace_path; selector = ghost_dot; property = field }
+
+
+and decompile_to_namespace_selection
+    : AST.Mod_variable.t Simple_utils.List.Ne.t
+      -> CST.namespace_selection
+  =
+ fun module_path ->
+  let f v = ghost_ident @@ Format.asprintf "%a" AST.Mod_variable.pp v in
+  let module_path = List.Ne.map f module_path in
+  let namespace_path = Utils.nsepseq_of_nseq ~sep:ghost_dot module_path in
+  (* XXX: What is [field_as_open]?? Do we expect module path with more than 1 element here? *)
+  match namespace_path with
+  | (m, []) -> M_Alias m
+  | _ ->
+    let last, rev_init = Utils.nsepseq_rev namespace_path in
+    let rev_init = match rev_init with [] -> assert false | (_, hd) :: tl -> hd, tl in
+    let init = Utils.nsepseq_rev rev_init in
+    M_Path (Region.wrap_ghost CST.{ namespace_path = init ; selector = ghost_dot ; property = last })
+
+and decompile_mvar x = Format.asprintf "%a" AST.Mod_variable.pp x
 
 
 and decompile_namespace_path
@@ -159,7 +181,7 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
           | t -> ghost_comma, `Sep (t, [])
         ) t in
     let ctor = CST.T_String (ghost_string constr_name) in
-    let inside : CST.type_expr CST.ctor_app = ghost_sharp, match ctor_params with
+    let inside : CST.type_expr CST.ctor_app = None, match ctor_params with
       | None -> ZeroArg ctor
       | Some (comma, args) ->
         let inside : (CST.type_expr, CST.comma) Utils.nsep_or_term =
@@ -283,6 +305,9 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
     failwith
       "Decompiler: T_fun is not initial for JsLIGO, should be transformed to T_named_fun \
        via backwards nanopass"
+  | T_contract_parameter x ->
+    let namespace_path = decompile_to_namespace_selection x in
+    T_ParameterOf (w CST.{ kwd_parameter_of = ghost_parameter_of ; namespace_path })
   (* This node is not initial,
   i.e. types like [∀ a : * . option (a) -> bool] can not exist at Ast_unified level,
   so type declaration that contains expression with abstraction should be transformed to

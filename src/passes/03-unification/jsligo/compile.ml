@@ -519,15 +519,9 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
     in
     return @@ T_module_access { module_path; field; field_as_open }
   | T_ParameterOf { value = { namespace_path ; _ } ; region } ->
-    let loc = Location.lift region in
     let namespace_path = TODO_do_in_parsing.selection_path namespace_path in
     let namespace_path = List.Ne.map TODO_do_in_parsing.mvar namespace_path in
-    return
-    @@ T_module_access
-         { module_path = namespace_path
-         ; field = Ligo_prim.Type_var.of_input_var ~loc "$parameter"
-         ; field_as_open = false
-         }
+    return @@ T_contract_parameter namespace_path
   | T_Union t ->
     let fields =
       let destruct_obj (x : I.type_expr I._object) : unit * I.type_expr * O.Attribute.t list =
@@ -722,12 +716,10 @@ and declaration : Eq.declaration -> Folding.declaration =
     =
    fun { pattern; type_vars; rhs_type; eq = _; rhs_expr } ->
     let type_params =
-      Option.map type_vars ~f:(fun (tp : I.type_vars) ->
-          let tp = sep_or_term_to_list (r_fst tp).inside in
-          let tp = List.map ~f:TODO_do_in_parsing.tvar tp in
-          match tp with
-          | [] -> failwith "Parameter list cannot be empty?"
-          | _ -> List.Ne.of_list @@ tp)
+      let open Simple_utils.Option in
+      let* type_vars in
+      let* tvs = sep_or_term_to_nelist (r_fst type_vars).inside in
+      return (List.Ne.map TODO_do_in_parsing.tvar tvs)
     in
     let rhs_type = Option.map ~f:snd rhs_type in
     { type_params; pattern; rhs_type; let_rhs = rhs_expr }
@@ -780,12 +772,10 @@ and declaration : Eq.declaration -> Folding.declaration =
     let I.{ name ; type_vars; type_expr; _ } = value in
     let name = TODO_do_in_parsing.tvar name in
     let params =
-      Option.map type_vars ~f:(fun (tp : I.type_vars) ->
-          let tp = sep_or_term_to_list (r_fst tp).inside in
-          let tp = List.map ~f:TODO_do_in_parsing.tvar tp in
-          match tp with
-          | [] -> failwith "Parameter list cannot be empty?"
-          | _ -> List.Ne.of_list @@ tp)
+      let open Simple_utils.Option in
+      let* type_vars in
+      let* tvs = sep_or_term_to_nelist (r_fst type_vars).inside in
+      return (List.Ne.map TODO_do_in_parsing.tvar tvs)
     in
     return @@ O.D_type_abstraction { name; params; type_expr }
   | D_Fun { value ; _ } ->
