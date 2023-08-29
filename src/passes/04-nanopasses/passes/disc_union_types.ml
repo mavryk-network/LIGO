@@ -90,7 +90,10 @@ let compile ~raise =
       let cases = List.Ne.to_list cases in
       let* (struct_, path) = get_e_proj switchee in
       let* matchee_var = get_e_variable struct_ in
-      let* proj_name = failwith "TODO disc_union_types" (* Selection.get_field_name path *) in
+      let proj_name = match path with
+        | [FieldName s] -> s
+        | _ -> failwith "TODO disc_union_types"
+      in
       let* cases =
         Option.all
         @@ List.map
