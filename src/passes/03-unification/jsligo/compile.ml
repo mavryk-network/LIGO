@@ -179,11 +179,6 @@ let rec expr : Eq.expr -> Folding.expr =
       @@ O.E_block_poly_fun { type_params; parameters; ret_type; body = body.value.inside }
     | ExprBody body -> return @@ E_poly_fun { type_params; parameters; ret_type; body })
   in
-  let get_variable (e : I.expr) =
-    match e with
-    | E_Var v -> Some v
-    | _ -> None
-  in
   match e with
   | E_Var var -> return @@ O.E_variable (TODO_do_in_parsing.var var)
   | E_Par par -> expr par.value.inside
@@ -327,6 +322,36 @@ let rec expr : Eq.expr -> Folding.expr =
     in
     let op = O.Assign_chainable.Assignment_operator Mod_eq in
     Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
+  | E_BitAndEq { value = { arg1; op; arg2 }; _ } ->
+    let loc =
+      Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
+    in
+    let op = O.Assign_chainable.Assignment_operator BitAnd_eq in
+    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
+  | E_BitOrEq { value = { arg1; op; arg2 }; _ } ->
+    let loc =
+      Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
+    in
+    let op = O.Assign_chainable.Assignment_operator BitOr_eq in
+    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
+  | E_BitXorEq { value = { arg1; op; arg2 }; _ } ->
+    let loc =
+      Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
+    in
+    let op = O.Assign_chainable.Assignment_operator BitXor_eq in
+    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
+  | E_BitSlEq { value = { arg1; op; arg2 }; _ } ->
+    let loc =
+      Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
+    in
+    let op = O.Assign_chainable.Assignment_operator BitSl_eq in
+    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
+  | E_BitSrEq { value = { arg1; op; arg2 }; _ } ->
+    let loc =
+      Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
+    in
+    let op = O.Assign_chainable.Assignment_operator BitSr_eq in
+    Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
   | E_Ternary { value = { condition; truthy; falsy; _ }; _ } ->
     let ifnot = Some falsy in
     return @@ E_cond { test = condition; ifso = truthy; ifnot }
@@ -334,34 +359,22 @@ let rec expr : Eq.expr -> Folding.expr =
     let selection = TODO_do_in_parsing.selection_path selection in
     let lst = List.Ne.map TODO_do_in_parsing.mvar selection in
     return @@ E_contract lst
-  | E_PreIncr { region = _; value = { op ; arg } } ->
+  | E_PreIncr { region = _; value = { op ; arg = expr } } ->
     let loc = Location.lift op#region in
     let pre_op = Location.wrap ~loc O.Prefix_postfix.Increment in
-    let variable = match get_variable arg with
-      | Some variable -> variable | _ -> failwith "Expected variable in prefix op." in
-    let variable = TODO_do_in_parsing.var variable in
-    return @@ E_prefix { pre_op; variable }
-  | E_PreDecr { region = _; value = { op ; arg } } ->
+    return @@ E_prefix { pre_op; expr }
+  | E_PreDecr { region = _; value = { op ; arg = expr } } ->
     let loc = Location.lift op#region in
     let pre_op = Location.wrap ~loc O.Prefix_postfix.Decrement in
-    let variable = match get_variable arg with
-      | Some variable -> variable | _ -> failwith "Expected variable in prefix op." in
-    let variable = TODO_do_in_parsing.var variable in
-    return @@ E_prefix { pre_op; variable }
-  | E_PostIncr { region = _; value = { op ; arg } } ->
+    return @@ E_prefix { pre_op; expr }
+  | E_PostIncr { region = _; value = { op ; arg = expr } } ->
     let loc = Location.lift op#region in
     let post_op = Location.wrap ~loc O.Prefix_postfix.Increment in
-    let variable = match get_variable arg with
-      | Some variable -> variable | _ -> failwith "Expected variable in postfix op." in
-    let variable = TODO_do_in_parsing.var variable in
-    return @@ E_postfix { post_op; variable }
-  | E_PostDecr { region = _; value = { op ; arg } } ->
+    return @@ E_postfix { post_op; expr }
+  | E_PostDecr { region = _; value = { op ; arg = expr } } ->
     let loc = Location.lift op#region in
     let post_op = Location.wrap ~loc O.Prefix_postfix.Decrement in
-    let variable = match get_variable arg with
-      | Some variable -> variable | _ -> failwith "Expected variable in postfix op." in
-    let variable = TODO_do_in_parsing.var variable in
-    return @@ E_postfix { post_op; variable }
+    return @@ E_postfix { post_op; expr }
   | E_Nat n -> return @@ E_literal (Literal_nat (snd n#payload))
   | E_Mutez m -> return @@ E_literal (Literal_mutez (Z.of_int64 (snd m#payload)))
   | E_BitAnd bitand -> return @@ compile_bin_op WORD_LAND bitand
@@ -395,12 +408,7 @@ let rec expr : Eq.expr -> Folding.expr =
         List.Ne.singleton (default_to_clause default_expr)
     in
     return @@ E_match { expr ; cases }
-  | E_Xor _
-  | E_BitAndEq _
-  | E_BitOrEq _
-  | E_BitSlEq _
-  | E_BitSrEq _
-  | E_BitXorEq _ -> failwith "NOT IMPLEMENTED"
+  | E_Xor _ -> failwith "NOT IMPLEMENTED"
 
 let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
  fun t ->
@@ -642,7 +650,6 @@ and instruction : Eq.instruction -> Folding.instruction =
   in
   match i with
   | S_Directive _ -> failwith "DIRECTIVE"
-  | S_Attr (attr, s) -> failwith "TODO: add attribute on instruction?"
   | S_Continue _ -> return @@ O.I_continue
   | S_Block s -> return @@ O.I_block s.value.inside
   | S_Expr expr ->
@@ -700,7 +707,7 @@ and instruction : Eq.instruction -> Folding.instruction =
     let afterthought = Option.map afterthought ~f:Utils.nsepseq_to_nseq in
     return @@ I_for_stmt { initialiser; condition; afterthought; statement = for_body }
   (* impossible, if triggered, look at functions 'statement' *)
-  | S_Decl _ | S_Export _ ->
+  | S_Decl _ | S_Export _ | S_Attr _ ->
     assert false
 
 

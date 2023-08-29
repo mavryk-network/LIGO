@@ -16,17 +16,21 @@ let get_operator =
   | Decrement -> MINUS
 
 
-let compile ~raise:_ =
+let compile ~raise =
   let expr : (expr, ty_expr, pattern, _, _) expr_ -> expr =
    fun e ->
     let loc = Location.get_location e in
     let open Prefix_postfix in
     match Location.unwrap e with
-    | E_prefix { pre_op; variable = v } ->
+    | E_prefix { pre_op; expr } ->
       (* Prefix operators (++p) are turned into
          ```      
          let () = p := p + 1 in p
          ``` *)
+      let v = match get_e expr with
+        | E_variable v -> v
+        | _ -> raise.error (only_variable_in_prefix expr)
+      in
       let pre_op = Location.unwrap pre_op in
       e_simple_let_in
         ~loc
@@ -45,13 +49,17 @@ let compile ~raise:_ =
               }
         ; let_result = e_variable ~loc v
         }
-    | E_postfix { post_op; variable = v } ->
+    | E_postfix { post_op; expr } ->
       (* Postfix operators (p++) are turned into
          ```
          let interal_postfix_old_value#1 = p in
          let () = p := p + 1 in
          interal_postfix_old_value#1
          ``` *)
+      let v = match get_e expr with
+        | E_variable v -> v
+        | _ -> raise.error (only_variable_in_postfix expr)
+      in
       let post_op = Location.unwrap post_op in
       let old_value = Variable.fresh ~loc ~name:interal_postfix_old_value () in
       e_simple_let_in
@@ -126,12 +134,12 @@ let decompile ~raise:_ =
         return
         @@ e_postfix
              ~loc
-             { post_op = Location.wrap ~loc Prefix_postfix.Increment; variable = var }
+             { post_op = Location.wrap ~loc Prefix_postfix.Increment; expr = rhs }
       | MINUS ->
         return
         @@ e_postfix
              ~loc
-             { post_op = Location.wrap ~loc Prefix_postfix.Decrement; variable = var }
+             { post_op = Location.wrap ~loc Prefix_postfix.Decrement; expr = rhs }
       | _ -> None
     in
     let prefix Simple_let_in.{ binder; rhs; let_result } =
@@ -151,12 +159,12 @@ let decompile ~raise:_ =
         return
         @@ e_prefix
              ~loc
-             { pre_op = Location.wrap ~loc Prefix_postfix.Increment; variable = var }
+             { pre_op = Location.wrap ~loc Prefix_postfix.Increment; expr = rhs }
       | MINUS ->
         return
         @@ e_prefix
              ~loc
-             { pre_op = Location.wrap ~loc Prefix_postfix.Decrement; variable = var }
+             { pre_op = Location.wrap ~loc Prefix_postfix.Decrement; expr = rhs }
       | _ -> None
     in
     match Location.unwrap e with

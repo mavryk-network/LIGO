@@ -75,6 +75,9 @@ let program : _ program_ -> program =
       | PE_attr (attr, pe) ->
         let lst = aux pe [] in
         List.map lst ~f:(fun pe -> pe_attr attr pe) @ acc
+      | PE_export pe ->
+        let lst = aux pe [] in
+        List.map lst ~f:(fun pe -> pe_export pe) @ acc
       | PE_declaration d -> f d @ acc
       | x -> make_pe x :: acc
     in
