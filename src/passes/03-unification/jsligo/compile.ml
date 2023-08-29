@@ -448,6 +448,8 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
         let ctor_params : (I.type_expr, I.comma) nsep_or_term option = Option.map ~f:(fun x -> `Sep (nsepseq_of_nseq ~sep:ghost x)) ctor_params in
         let ty = match ctor_params with
           | None -> None
+          | Some (`Sep (t, [])) | Some (`Term ((t, _), _)) ->
+            Some t
           | Some ctor_params ->
             let inside : I.array_type =
               Region.wrap_ghost
