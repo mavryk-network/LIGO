@@ -47,6 +47,7 @@ let compile ~raise:_ =
     | P_ctor_app ({ fp = { wrap_content = P_literal (Literal_string ctor_name) ; _ } }, args) ->
       let args = match args with
         | [] -> None
+        | [u] -> Some u
         | _ -> Some (p_tuple ~loc args)
       in
       p_variant ~loc (Label.of_string (Ligo_string.extract ctor_name)) args
