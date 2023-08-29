@@ -1226,7 +1226,7 @@ literal_expr:
   "<int>"      { E_Int      $1 }
 | "<nat>"      { E_Nat      $1 }
 | "<mutez>"    { E_Mutez    $1 }
-(*| "<string>"   { E_String   $1 } *)
+| "<string>"   { E_String   $1 }
 | "<verbatim>" { E_Verbatim $1 }
 | "<bytes>"    { E_Bytes    $1 }
 | "true"       { E_True     $1 }
