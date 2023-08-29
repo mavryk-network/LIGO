@@ -215,16 +215,17 @@ nsep_or_pref(item,sep):
 (* Helpers *)
 
 %inline
-variable        : "<ident>"              { $1 }
-fun_name        : "<ident>" | "<uident>" { $1 }
-type_var        : "<ident>" | "<uident>" { $1 }
-type_name       : "<ident>" | "<uident>" { $1 }
-type_ctor       : "<ident>" | "<uident>" { $1 }
-property_name   : "<ident>" | "<uident>" { $1 }
-lang_name       : "<ident>" | "<uident>" { $1 }
-namespace_name  : "<uident>"             { $1 }
-intf_name       : "<uident>"             { $1 }
-file_path       : "<string>"             { $1 }
+variable       : "<ident>"              { $1 }
+fun_name       : "<ident>" | "<uident>" { $1 }
+type_var       : "<ident>" | "<uident>" { $1 }
+type_name      : "<ident>" | "<uident>" { $1 }
+type_ctor      : "<ident>" | "<uident>" { $1 }
+property_name  : "<ident>" | "<uident>" { $1 }
+lang_name      : "<ident>" | "<uident>" { $1 }
+namespace_name : "<uident>"             { $1 }
+intf_name      : "<uident>"             { $1 }
+file_path      : "<string>"             { $1 }
+ctor           : "<uident>"             { $1 }
 
 (* ENTRY POINTS *)
 
@@ -443,12 +444,29 @@ variant:
     {$2 with attributes = $1::$2.attributes} }
 | "#" brackets(bracketed_variant) {
     let region = cover $1#region $2.region
-    and value  = $1, MultArg $2
+    and value  = Some $1, MultArg $2
     in {attributes=[]; tuple = {region; value}} }
 | "#" "<string>" {
     let region = cover $1#region $2#region
-    and value  = $1, ZeroArg (T_String $2)
+    and value  = Some $1, ZeroArg (T_String $2)
     in {attributes=[]; tuple = {region; value}} }
+| brackets (legacy_variant) {
+    let region = $1.region
+    and value  = None, MultArg $1
+    in {attributes=[]; tuple = {region; value}} }
+
+%inline
+legacy_variant:
+  "<string>" "," legacy_ctor_params {
+    `Sep (Utils.nsepseq_cons (T_String $1) $2 $3)
+  }
+| "<string>" { `Sep (T_String $1, []) }
+
+legacy_ctor_params:
+  nsepseq (legacy_ctor_param,",") { $1 }
+
+legacy_ctor_param:
+  type_expr { $1 }
 
 bracketed_variant:
   "<string>" ctor_arguments(type_expr)? { mk_app (T_String $1) $2 }
@@ -460,9 +478,18 @@ ctor_arg(kind): kind { $1 } (* For clearer error messages *)
 
 (* Core types *)
 
+(* The production [core_type_no_string] is here to avoid a conflict
+   with a variant for a constant contructor, e.g. [["C"]], which could
+   be interpreted otherwise as an type tuple (array) of the type
+   ["C"]. *)
+
 core_type:
-  "<string>"       { T_String $1 }
-| par (type_expr)  { T_Par    $1 }
+  "<string>"          { T_String $1 }
+| core_type_no_string { $1 }
+
+%inline
+core_type_no_string:
+  par (type_expr)  { T_Par    $1 }
 | no_par_type_expr {          $1 }
 
 no_par_type_expr:
@@ -471,9 +498,15 @@ no_par_type_expr:
 | type_ctor_app       { T_App         $1 }
 | array_type          { T_Array       $1 }
 | parameter_of_type   { T_ParameterOf $1 }
-| "[@attr]" core_type { T_Attr   ($1,$2) }
+| attr_type
+(*| "[@attr]" core_type { T_Attr   ($1,$2) }*)
 | qualified_type
 | union_or_object     { $1 }
+
+(* Decorated core type *)
+
+attr_type:
+  "[@attr]" core_type_no_string { T_Attr ($1,$2) }
 
 (* Application of type arguments to type constructors *)
 
@@ -493,11 +526,14 @@ array_type:
   brackets (type_elements) { $1 }
 
 type_elements:
-  type_element {
+  type_element_no_string {
     `Sep ($1,[])
   }
-| type_element "," nsep_or_term(type_element,",") {
+| type_element_no_string "," nsep_or_term(type_element,",") {
     Utils.nsep_or_term_cons $1 $2 $3 }
+
+type_element_no_string:
+  fun_type | variant_type | core_type_no_string { $1 }
 
 type_element: type_expr { $1 }
 
@@ -1140,12 +1176,32 @@ argument:
 ctor_app_expr:
   "#" brackets(bracketed_ctor_app_expr) {
     let region = cover $1#region $2.region
-    and value  = $1, MultArg $2
-    in {region; value} }
+    and value  = Some $1, MultArg $2
+    in {region; value}
+  }
 | "#" "<string>" {
    let region = cover $1#region $2#region in
-   let value  = $1, ZeroArg (E_String $2)
-   in {region; value} }
+   let value  = Some $1, ZeroArg (E_String $2)
+   in {region; value}
+  }
+| ctor ctor_app_expr_args {
+   let region, app = $2 (E_String $1) in
+   {region; value = None, app} }
+
+ctor_app_expr_args:
+  par (ioption (nsepseq (expr, ","))) {
+    let region = $1.region
+    and {lpar; inside; rpar} = $1.value in
+    fun ctor ->
+      match inside with
+        None -> region, ZeroArg ctor
+      | Some seq ->
+          let lbracket = Token.wrap_lbracket lpar#region
+          and rbracket = Token.wrap_rbracket rpar#region
+          and comma    = Token.ghost_comma in
+          let inside   = `Sep (Utils.nsepseq_cons ctor comma seq) in
+          let value    = {lbracket; inside; rbracket}
+          in region, MultArg {region; value} }
 
 bracketed_ctor_app_expr:
   ctor_expr ctor_arguments(expr)? { mk_app $1 $2 }
@@ -1170,7 +1226,7 @@ literal_expr:
   "<int>"      { E_Int      $1 }
 | "<nat>"      { E_Nat      $1 }
 | "<mutez>"    { E_Mutez    $1 }
-| "<string>"   { E_String   $1 }
+(*| "<string>"   { E_String   $1 } *)
 | "<verbatim>" { E_Verbatim $1 }
 | "<bytes>"    { E_Bytes    $1 }
 | "true"       { E_True     $1 }
@@ -1273,12 +1329,32 @@ pattern_in_namespace (pattern):
 ctor_app_pattern:
   "#" brackets(bracketed_ctor_app_pattern) {
     let region = cover $1#region $2.region
-    and value  = $1, MultArg $2
-    in {region; value} }
+    and value  = Some $1, MultArg $2
+    in {region; value}
+  }
 | "#" "<string>" {
    let region = cover $1#region $2#region in
-   let value  = $1, ZeroArg (P_String $2)
-   in {region; value} }
+   let value  = Some $1, ZeroArg (P_String $2)
+   in {region; value}
+  }
+| ctor ctor_app_pattern_args {
+   let region, app = $2 (P_String $1) in
+   {region; value = None, app} }
+
+ctor_app_pattern_args:
+  par (ioption (nsepseq (pattern, ","))) {
+    let region = $1.region
+    and {lpar; inside; rpar} = $1.value in
+    fun ctor ->
+      match inside with
+        None -> region, ZeroArg ctor
+      | Some seq ->
+          let lbracket = Token.wrap_lbracket lpar#region
+          and rbracket = Token.wrap_rbracket rpar#region
+          and comma    = Token.ghost_comma in
+          let inside   = `Sep (Utils.nsepseq_cons ctor comma seq) in
+          let value    = {lbracket; inside; rbracket}
+          in region, MultArg {region; value} }
 
 bracketed_ctor_app_pattern:
    ctor_pattern ctor_arguments(pattern)? { mk_app $1 $2 }

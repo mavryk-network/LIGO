@@ -375,7 +375,7 @@ and variant = {
 
 (* Data constructor applications *)
 
-and 'a ctor_app = sharp * 'a app
+and 'a ctor_app = sharp option * 'a app
 
 and 'a app =
   ZeroArg of 'a

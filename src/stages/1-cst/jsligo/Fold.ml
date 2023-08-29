@@ -320,7 +320,7 @@ let fold
   | S_ctor_app sing ->
     let sharp, app = node in
     process_list
-    [ sharp -| S_sharp
+    [ sharp -| S_option S_sharp
     ; app -| S_app sing
     ]
   | S_app sing -> process

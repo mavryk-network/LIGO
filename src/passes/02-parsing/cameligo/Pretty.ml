@@ -66,8 +66,7 @@ let token (t : string Wrap.t) : document =
 let print_enclosed_document
     state ?(force_hardline : bool option) (thread : document)
     break_size left right =
-  let left  = token left
-  and right = token right in
+  let left, right = token left, token right in
   group (
     match force_hardline with
       None | Some false ->
@@ -157,7 +156,7 @@ let unroll_D_Attr (attr, decl) =
   | decl                              -> List.rev attrs, decl
   in aux [attr] decl
 
-let unroll_S_attr (attr, sig_item) =
+let unroll_S_Attr (attr, sig_item) =
   let rec aux attrs = function
     S_Attr {value = (attr, sig_item); _ } -> aux (attr :: attrs) sig_item
   | sig_item                              -> List.rev attrs, sig_item
@@ -246,10 +245,10 @@ and print_sig_item_list state (node : sig_item list) =
   |> separate_map hardline group
 
 and print_sig_item state = function
-  S_Attr      d -> print_S_Attr    state d
-| S_Value     d -> print_S_Value   state d ^^ hardline
-| S_Type      d -> print_S_Type    state d ^^ hardline
-| S_TypeVar   d -> print_S_TypeVar       d ^^ hardline
+  S_Attr    d -> print_S_Attr    state d
+| S_Value   d -> print_S_Value   state d ^^ hardline
+| S_Type    d -> print_S_Type    state d ^^ hardline
+| S_TypeVar d -> print_S_TypeVar       d ^^ hardline
 
 (* Attributed declaration *)
 
@@ -276,7 +275,7 @@ and print_attributes state thread = function
 (* Attributed sig. item *)
 
 and print_S_Attr state (node : (attribute * sig_item) reg) =
-  let attributes, sig_item = unroll_S_attr node.value in
+  let attributes, sig_item = unroll_S_Attr node.value in
   let thread = print_sig_item state sig_item
   in print_attributes state thread attributes
 
