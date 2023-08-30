@@ -66,6 +66,7 @@ let passes ~(flags : flags) : (module T) list =
   ; entry (module Duplicate_identifier) ~flag:duplicate_identifier ~arg:()
   ; entry (module Linear_signature) ~flag:always ~arg:()
   ; entry (module Restrict_projections) ~flag:restrict_projection ~arg:()
+  ; entry (module Break_continue_outside) ~flag:always ~arg:()
   ; entry (module Single_switch_block) ~flag:always ~arg:()
   ; entry (module Export_program_entry) ~flag:export ~arg:()
   ; entry (module Export_declaration) ~flag:export ~arg:()

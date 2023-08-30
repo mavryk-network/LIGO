@@ -11,6 +11,7 @@
   map_lookup
   errors
   unit_test_helpers
+  break_continue_outside
   single_switch_block
   t_constant
   t_arg
