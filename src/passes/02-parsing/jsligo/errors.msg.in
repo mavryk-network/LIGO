@@ -165,8 +165,8 @@ contract: Namespace ZWSP
 ##
 ## Ends in an error in state: 550.
 ##
-## namespace_decl -> Namespace . namespace_binder braces(statements) [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default Continue Const Case Bytes Break Attr ]
-## namespace_decl -> Namespace . namespace_binder interface braces(statements) [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## namespace_decl -> Namespace . namespace_binder braces(statements) [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
+## namespace_decl -> Namespace . namespace_binder interface braces(statements) [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## Namespace
@@ -179,8 +179,8 @@ contract: Namespace UIdent ZWSP
 ##
 ## Ends in an error in state: 553.
 ##
-## namespace_decl -> Namespace namespace_binder . braces(statements) [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default Continue Const Case Bytes Break Attr ]
-## namespace_decl -> Namespace namespace_binder . interface braces(statements) [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## namespace_decl -> Namespace namespace_binder . braces(statements) [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
+## namespace_decl -> Namespace namespace_binder . interface braces(statements) [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## Namespace namespace_binder
@@ -195,7 +195,7 @@ contract: Namespace UIdent LBRACE ZWSP
 ##
 ## Ends in an error in state: 273.
 ##
-## braces(statements) -> LBRACE . statements RBRACE [ XOR While When Verbatim VBAR UIdent Type True TIMES Switch String SLASH SHARP SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS2 PLUS PARAMS OR Nat Namespace NE Mutez Match MINUS2 MINUS Let LT LPAR LE LBRACKET LBRACE Interface Int Import If Ident GT Function For False Export Else EQ2 EOF Do Directive Default Continue Const Case COMMA COLON Bytes Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
+## braces(statements) -> LBRACE . statements RBRACE [ XOR While When Verbatim VBAR UIdent Type True TIMES Switch String SLASH SHARP SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS2 PLUS PARAMS OR Nat Namespace NE Mutez Match MINUS2 MINUS Let LT LPAR LE LBRACKET LBRACE Interface Int Import If Ident GT Function For False Export Else EQ2 EOF Do Directive Default ContractOf Continue Const Case COMMA COLON Bytes Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
 ##
 ## The known suffix of the stack is as follows:
 ## LBRACE
@@ -208,7 +208,7 @@ contract: Namespace UIdent LBRACE While ZWSP
 ##
 ## Ends in an error in state: 1.
 ##
-## while_stmt(poly_stmt) -> While . par(while_cond) poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## while_stmt(poly_stmt) -> While . par(while_cond) poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## while_stmt(statement) -> While . par(while_cond) statement [ SEMI RBRACE EOF Default Case ]
 ## while_stmt(stmt_ending_with_expr) -> While . par(while_cond) stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ##
@@ -217,11 +217,11 @@ contract: Namespace UIdent LBRACE While ZWSP
 ##
 contract: Return If LPAR Bytes RPAR While ZWSP
 ##
-## Ends in an error in state: 987.
+## Ends in an error in state: 1006.
 ##
 ## while_stmt(closed_non_if_stmt) -> While . par(while_cond) closed_non_if_stmt [ SEMI_ELSE Else ]
 ## while_stmt(stmt_not_starting_with_expr_nor_block1) -> While . par(while_cond) stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## while_stmt(stmt_not_starting_with_expr_nor_block2) -> While . par(while_cond) stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## while_stmt(stmt_not_starting_with_expr_nor_block2) -> While . par(while_cond) stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## While
@@ -234,8 +234,8 @@ contract: Namespace UIdent LBRACE While LPAR ZWSP
 ##
 ## Ends in an error in state: 2.
 ##
-## par(while_cond) -> LPAR . while_cond RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
-## par(while_cond) -> LPAR . while_cond PARAMS RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## par(while_cond) -> LPAR . while_cond RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
+## par(while_cond) -> LPAR . while_cond PARAMS RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## LPAR
@@ -752,7 +752,7 @@ interactive_expr: Function LT GT LPAR PARAMS RPAR ZWSP
 ##
 interactive_expr: Function LPAR PARAMS RPAR ZWSP
 ##
-## Ends in an error in state: 1130.
+## Ends in an error in state: 1149.
 ##
 ## function_expr -> Function fun_par_params . braces(statements) [ While When Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COMMA COLON Break Attr ]
 ## function_expr -> Function fun_par_params . ret_type braces(statements) [ While When Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COMMA COLON Break Attr ]
@@ -845,7 +845,7 @@ At this point, one of the following is expected:
 
 interactive_expr: Function LT GT LPAR PARAMS RPAR COLON Ident XOR
 ##
-## Ends in an error in state: 1127.
+## Ends in an error in state: 1146.
 ##
 ## function_expr -> Function type_vars fun_par_params ret_type . braces(statements) [ While When Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COMMA COLON Break Attr ]
 ##
@@ -863,7 +863,7 @@ interactive_expr: Function LT GT LPAR PARAMS RPAR COLON Ident XOR
 ##
 interactive_expr: Function LPAR PARAMS RPAR COLON Ident XOR
 ##
-## Ends in an error in state: 1131.
+## Ends in an error in state: 1150.
 ##
 ## function_expr -> Function fun_par_params ret_type . braces(statements) [ While When Type Switch SEMI_ELSE SEMI Return RPAR RBRACKET RBRACE PARAMS Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COMMA COLON Break Attr ]
 ##
@@ -1298,7 +1298,7 @@ expected.
 
 interactive_expr: LBRACE Attr ZWSP
 ##
-## Ends in an error in state: 1136.
+## Ends in an error in state: 1155.
 ##
 ## property(expr) -> Attr . property(expr) [ SEMI RBRACE COMMA ]
 ##
@@ -1313,7 +1313,7 @@ At this point, one of the following is expected:
 
 interactive_expr: LBRACE Ident ZWSP
 ##
-## Ends in an error in state: 1137.
+## Ends in an error in state: 1156.
 ##
 ## property(expr) -> property_id . [ SEMI RBRACE COMMA ]
 ## property(expr) -> property_id . COLON expr [ SEMI RBRACE COMMA ]
@@ -1330,7 +1330,7 @@ At this point, one of the following is expected:
 
 interactive_expr: LBRACE Ident COLON ZWSP
 ##
-## Ends in an error in state: 1138.
+## Ends in an error in state: 1157.
 ##
 ## property(expr) -> property_id COLON . expr [ SEMI RBRACE COMMA ]
 ##
@@ -1343,7 +1343,7 @@ Att his point, an expression is expected for the property.
 
 interactive_expr: LBRACE Ident COMMA ZWSP
 ##
-## Ends in an error in state: 1144.
+## Ends in an error in state: 1163.
 ##
 ## nsepseq(property(expr),property_sep) -> property(expr) property_sep . nsepseq(property(expr),property_sep) [ RBRACE ]
 ## nseq(__anonymous_0(property(expr),property_sep)) -> property(expr) property_sep . [ RBRACE ]
@@ -1360,7 +1360,7 @@ At this point, one of the following is expected:
 
 interactive_expr: LBRACKET ELLIPSIS ZWSP
 ##
-## Ends in an error in state: 1154.
+## Ends in an error in state: 1173.
 ##
 ## element(expr) -> ELLIPSIS . expr [ RBRACKET COMMA ]
 ##
@@ -1375,7 +1375,7 @@ contract: Namespace UIdent LBRACE Switch ZWSP
 ##
 ## Ends in an error in state: 286.
 ##
-## switch_stmt -> Switch . par(switch_subject) braces(cases) [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## switch_stmt -> Switch . par(switch_subject) braces(cases) [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## Switch
@@ -1492,7 +1492,7 @@ expected, followed by an expression.
 
 interactive_expr: Bytes WILD
 ##
-## Ends in an error in state: 1222.
+## Ends in an error in state: 1241.
 ##
 ## interactive_expr -> expr . EOF [ # ]
 ##
@@ -1523,7 +1523,7 @@ expected.
 
 contract: Bytes LPAR RPAR ZWSP
 ##
-## Ends in an error in state: 1217.
+## Ends in an error in state: 1236.
 ##
 ## contract -> statements . EOF [ # ]
 ##
@@ -1535,11 +1535,11 @@ contract: Bytes LPAR RPAR ZWSP
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 397, spurious reduction of production app_expr -> call_expr
-## In state 868, spurious reduction of production expr_stmt -> app_expr
-## In state 1086, spurious reduction of production non_if_stmt(statement) -> expr_stmt
-## In state 896, spurious reduction of production statement -> non_if_stmt(statement)
-## In state 1080, spurious reduction of production last_or_more(statement) -> statement
-## In state 1085, spurious reduction of production statements -> last_or_more(statement)
+## In state 887, spurious reduction of production expr_stmt -> app_expr
+## In state 1105, spurious reduction of production non_if_stmt(statement) -> expr_stmt
+## In state 915, spurious reduction of production statement -> non_if_stmt(statement)
+## In state 1099, spurious reduction of production last_or_more(statement) -> statement
+## In state 1104, spurious reduction of production statements -> last_or_more(statement)
 ##
 
 Ill-formed contract.
@@ -1553,7 +1553,7 @@ contract: Interface ZWSP
 ##
 ## Ends in an error in state: 696.
 ##
-## interface_decl -> Interface . intf_name intf_body [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## interface_decl -> Interface . intf_name intf_body [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## Interface
@@ -1566,7 +1566,7 @@ contract: Interface UIdent ZWSP
 ##
 ## Ends in an error in state: 698.
 ##
-## interface_decl -> Interface intf_name . intf_body [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## interface_decl -> Interface intf_name . intf_body [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## Interface intf_name
@@ -1579,7 +1579,7 @@ contract: Interface UIdent LBRACE ZWSP
 ##
 ## Ends in an error in state: 555.
 ##
-## braces(intf_entries) -> LBRACE . intf_entries RBRACE [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## braces(intf_entries) -> LBRACE . intf_entries RBRACE [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## LBRACE
@@ -1892,13 +1892,13 @@ contract: Namespace UIdent LBRACE If ZWSP
 ##
 ## Ends in an error in state: 723.
 ##
-## if_else_stmt(poly_stmt) -> If . par(if_cond) closed_non_if_stmt Else poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
-## if_else_stmt(poly_stmt) -> If . par(if_cond) closed_non_if_stmt SEMI_ELSE poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## if_else_stmt(poly_stmt) -> If . par(if_cond) closed_non_if_stmt Else poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
+## if_else_stmt(poly_stmt) -> If . par(if_cond) closed_non_if_stmt SEMI_ELSE poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## if_else_stmt(statement) -> If . par(if_cond) closed_non_if_stmt Else statement [ SEMI RBRACE EOF Default Case ]
 ## if_else_stmt(statement) -> If . par(if_cond) closed_non_if_stmt SEMI_ELSE statement [ SEMI RBRACE EOF Default Case ]
 ## if_else_stmt(stmt_ending_with_expr) -> If . par(if_cond) closed_non_if_stmt Else stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ## if_else_stmt(stmt_ending_with_expr) -> If . par(if_cond) closed_non_if_stmt SEMI_ELSE stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
-## if_stmt(poly_stmt) -> If . par(if_cond) poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## if_stmt(poly_stmt) -> If . par(if_cond) poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## if_stmt(statement) -> If . par(if_cond) statement [ SEMI RBRACE EOF Default Case ]
 ## if_stmt(stmt_ending_with_expr) -> If . par(if_cond) stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ##
@@ -1907,14 +1907,14 @@ contract: Namespace UIdent LBRACE If ZWSP
 ##
 contract: Namespace UIdent LBRACE Return If ZWSP
 ##
-## Ends in an error in state: 985.
+## Ends in an error in state: 1004.
 ##
 ## if_else_stmt(stmt_not_starting_with_expr_nor_block1) -> If . par(if_cond) closed_non_if_stmt Else stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
 ## if_else_stmt(stmt_not_starting_with_expr_nor_block1) -> If . par(if_cond) closed_non_if_stmt SEMI_ELSE stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If . par(if_cond) closed_non_if_stmt Else stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
-## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If . par(if_cond) closed_non_if_stmt SEMI_ELSE stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If . par(if_cond) closed_non_if_stmt Else stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
+## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If . par(if_cond) closed_non_if_stmt SEMI_ELSE stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ## if_stmt(stmt_not_starting_with_expr_nor_block1) -> If . par(if_cond) stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## if_stmt(stmt_not_starting_with_expr_nor_block2) -> If . par(if_cond) stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## if_stmt(stmt_not_starting_with_expr_nor_block2) -> If . par(if_cond) stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## If
@@ -1925,13 +1925,13 @@ contract: If LPAR Bytes RPAR If ZWSP
 ##
 ## if_else_stmt(closed_non_if_stmt) -> If . par(if_cond) closed_non_if_stmt Else closed_non_if_stmt [ SEMI_ELSE Else ]
 ## if_else_stmt(closed_non_if_stmt) -> If . par(if_cond) closed_non_if_stmt SEMI_ELSE closed_non_if_stmt [ SEMI_ELSE Else ]
-## if_else_stmt(poly_stmt) -> If . par(if_cond) closed_non_if_stmt Else poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
-## if_else_stmt(poly_stmt) -> If . par(if_cond) closed_non_if_stmt SEMI_ELSE poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## if_else_stmt(poly_stmt) -> If . par(if_cond) closed_non_if_stmt Else poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
+## if_else_stmt(poly_stmt) -> If . par(if_cond) closed_non_if_stmt SEMI_ELSE poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## if_else_stmt(statement) -> If . par(if_cond) closed_non_if_stmt Else statement [ SEMI RBRACE EOF Default Case ]
 ## if_else_stmt(statement) -> If . par(if_cond) closed_non_if_stmt SEMI_ELSE statement [ SEMI RBRACE EOF Default Case ]
 ## if_else_stmt(stmt_ending_with_expr) -> If . par(if_cond) closed_non_if_stmt Else stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ## if_else_stmt(stmt_ending_with_expr) -> If . par(if_cond) closed_non_if_stmt SEMI_ELSE stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
-## if_stmt(poly_stmt) -> If . par(if_cond) poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## if_stmt(poly_stmt) -> If . par(if_cond) poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## if_stmt(statement) -> If . par(if_cond) statement [ SEMI RBRACE EOF Default Case ]
 ## if_stmt(stmt_ending_with_expr) -> If . par(if_cond) stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ##
@@ -1940,16 +1940,16 @@ contract: If LPAR Bytes RPAR If ZWSP
 ##
 contract: Return If LPAR Bytes RPAR If ZWSP
 ##
-## Ends in an error in state: 989.
+## Ends in an error in state: 1008.
 ##
 ## if_else_stmt(closed_non_if_stmt) -> If . par(if_cond) closed_non_if_stmt Else closed_non_if_stmt [ SEMI_ELSE Else ]
 ## if_else_stmt(closed_non_if_stmt) -> If . par(if_cond) closed_non_if_stmt SEMI_ELSE closed_non_if_stmt [ SEMI_ELSE Else ]
 ## if_else_stmt(stmt_not_starting_with_expr_nor_block1) -> If . par(if_cond) closed_non_if_stmt Else stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
 ## if_else_stmt(stmt_not_starting_with_expr_nor_block1) -> If . par(if_cond) closed_non_if_stmt SEMI_ELSE stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If . par(if_cond) closed_non_if_stmt Else stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
-## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If . par(if_cond) closed_non_if_stmt SEMI_ELSE stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If . par(if_cond) closed_non_if_stmt Else stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
+## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If . par(if_cond) closed_non_if_stmt SEMI_ELSE stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ## if_stmt(stmt_not_starting_with_expr_nor_block1) -> If . par(if_cond) stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## if_stmt(stmt_not_starting_with_expr_nor_block2) -> If . par(if_cond) stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## if_stmt(stmt_not_starting_with_expr_nor_block2) -> If . par(if_cond) stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## If
@@ -1963,8 +1963,8 @@ contract: Namespace UIdent LBRACE If LPAR ZWSP
 ##
 ## Ends in an error in state: 724.
 ##
-## par(if_cond) -> LPAR . if_cond RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
-## par(if_cond) -> LPAR . if_cond PARAMS RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## par(if_cond) -> LPAR . if_cond RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
+## par(if_cond) -> LPAR . if_cond PARAMS RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## LPAR
@@ -2119,10 +2119,10 @@ contract: Namespace UIdent LBRACE For LPAR ZWSP
 ##
 ## Ends in an error in state: 751.
 ##
-## par(range_for) -> LPAR . range_for RPAR [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default Continue Const Case Bytes Break Attr ]
-## par(range_for) -> LPAR . range_for PARAMS RPAR [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default Continue Const Case Bytes Break Attr ]
-## par(range_of) -> LPAR . range_of RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
-## par(range_of) -> LPAR . range_of PARAMS RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## par(range_for) -> LPAR . range_for RPAR [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
+## par(range_for) -> LPAR . range_for PARAMS RPAR [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
+## par(range_of) -> LPAR . range_of RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
+## par(range_of) -> LPAR . range_of PARAMS RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## LPAR
@@ -2154,7 +2154,7 @@ At this point, one of the following is expected:
 
 contract: Match LPAR Bytes RPAR ZWSP
 ##
-## Ends in an error in state: 1172.
+## Ends in an error in state: 1191.
 ##
 ## match_expr -> Match match_subject . braces(match_clauses) [ XOR While When VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LPAR LE LBRACE Interface Import If GT For Export Else EQ2 EOF Default Continue Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
 ##
@@ -2167,7 +2167,7 @@ At this point, an opening brace '{' is expected.
 
 contract: Match LPAR Bytes RPAR LBRACE ZWSP
 ##
-## Ends in an error in state: 1173.
+## Ends in an error in state: 1192.
 ##
 ## braces(match_clauses) -> LBRACE . match_clauses RBRACE [ XOR While When VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LPAR LE LBRACE Interface Import If GT For Export Else EQ2 EOF Default Continue Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
 ##
@@ -2182,7 +2182,7 @@ At this point, one of the following is expected:
 
 contract: Match LPAR Bytes RPAR LBRACE When ZWSP
 ##
-## Ends in an error in state: 1174.
+## Ends in an error in state: 1193.
 ##
 ## match_clause -> When . par(pattern) COLON expr [ When RBRACE Default ]
 ## match_clause -> When . par(pattern) COLON expr SEMI [ When RBRACE Default ]
@@ -2196,7 +2196,7 @@ At this point, a pattern is expected between parentheses.
 
 contract: Match LPAR Bytes RPAR LBRACE When LPAR ZWSP
 ##
-## Ends in an error in state: 1175.
+## Ends in an error in state: 1194.
 ##
 ## par(pattern) -> LPAR . pattern RPAR [ COLON ]
 ## par(pattern) -> LPAR . pattern PARAMS RPAR [ COLON ]
@@ -2210,7 +2210,7 @@ At this point, a pattern for the clause is expected.
 
 contract: Match LPAR Bytes RPAR LBRACE When LPAR Bytes ZWSP
 ##
-## Ends in an error in state: 1176.
+## Ends in an error in state: 1195.
 ##
 ## par(pattern) -> LPAR pattern . RPAR [ COLON ]
 ## par(pattern) -> LPAR pattern . PARAMS RPAR [ COLON ]
@@ -2220,7 +2220,7 @@ contract: Match LPAR Bytes RPAR LBRACE When LPAR Bytes ZWSP
 ##
 contract: Match LPAR Bytes RPAR LBRACE When LPAR Bytes PARAMS ZWSP
 ##
-## Ends in an error in state: 1178.
+## Ends in an error in state: 1197.
 ##
 ## par(pattern) -> LPAR pattern PARAMS . RPAR [ COLON ]
 ##
@@ -2233,7 +2233,7 @@ At this point, a closing parenthesis ')' is expected.
 
 contract: Match LPAR Bytes RPAR LBRACE When LPAR Bytes RPAR ZWSP
 ##
-## Ends in an error in state: 1180.
+## Ends in an error in state: 1199.
 ##
 ## match_clause -> When par(pattern) . COLON expr [ When RBRACE Default ]
 ## match_clause -> When par(pattern) . COLON expr SEMI [ When RBRACE Default ]
@@ -2243,7 +2243,7 @@ contract: Match LPAR Bytes RPAR LBRACE When LPAR Bytes RPAR ZWSP
 ##
 contract: Match LPAR Bytes RPAR LBRACE Default ZWSP
 ##
-## Ends in an error in state: 1184.
+## Ends in an error in state: 1203.
 ##
 ## match_default -> Default . COLON expr [ RBRACE ]
 ## match_default -> Default . COLON expr SEMI [ RBRACE ]
@@ -2257,7 +2257,7 @@ At this point, a colon ':' is expected, followed by an expression.
 
 contract: Match LPAR Bytes RPAR LBRACE When LPAR Bytes RPAR COLON ZWSP
 ##
-## Ends in an error in state: 1181.
+## Ends in an error in state: 1200.
 ##
 ## match_clause -> When par(pattern) COLON . expr [ When RBRACE Default ]
 ## match_clause -> When par(pattern) COLON . expr SEMI [ When RBRACE Default ]
@@ -2267,7 +2267,7 @@ contract: Match LPAR Bytes RPAR LBRACE When LPAR Bytes RPAR COLON ZWSP
 ##
 contract: Match LPAR Bytes RPAR LBRACE Default COLON ZWSP
 ##
-## Ends in an error in state: 1185.
+## Ends in an error in state: 1204.
 ##
 ## match_default -> Default COLON . expr [ RBRACE ]
 ## match_default -> Default COLON . expr SEMI [ RBRACE ]
@@ -2670,8 +2670,8 @@ contract: Switch LPAR Bytes RPAR LBRACE Case Bytes ZWSP
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 1110, spurious reduction of production core_expr -> literal_expr
-## In state 1112, spurious reduction of production lambda -> core_expr
+## In state 1129, spurious reduction of production core_expr -> literal_expr
+## In state 1131, spurious reduction of production lambda -> core_expr
 ##
 
 Ill-formed function call.
@@ -2934,6 +2934,22 @@ interactive_expr: Bytes As ZWSP
 ## The known suffix of the stack is as follows:
 ## app_expr_level As
 ##
+contract: Bytes QMARK Bytes LPAR RPAR XOR
+##
+## Ends in an error in state: 814.
+##
+## typed_expr -> app_expr_level . As type_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+##
+## The known suffix of the stack is as follows:
+## app_expr_level
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 397, spurious reduction of production app_expr -> call_expr
+## In state 876, spurious reduction of production app_expr_level -> app_expr
+##
 
 Ill-formed typed expression.
 At this point, a type is expected.
@@ -3002,7 +3018,7 @@ contract: Switch LPAR Bytes RPAR ZWSP
 ##
 ## Ends in an error in state: 544.
 ##
-## switch_stmt -> Switch par(switch_subject) . braces(cases) [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## switch_stmt -> Switch par(switch_subject) . braces(cases) [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## Switch par(switch_subject)
@@ -3015,7 +3031,7 @@ contract: Switch LPAR Bytes RPAR LBRACE ZWSP
 ##
 ## Ends in an error in state: 545.
 ##
-## braces(cases) -> LBRACE . cases RBRACE [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## braces(cases) -> LBRACE . cases RBRACE [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## LBRACE
@@ -3074,7 +3090,7 @@ contract: If LPAR Bytes RPAR While LPAR Bytes RPAR ZWSP
 ## Ends in an error in state: 732.
 ##
 ## while_stmt(closed_non_if_stmt) -> While par(while_cond) . closed_non_if_stmt [ SEMI_ELSE Else ]
-## while_stmt(poly_stmt) -> While par(while_cond) . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## while_stmt(poly_stmt) -> While par(while_cond) . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## while_stmt(statement) -> While par(while_cond) . statement [ SEMI RBRACE EOF Default Case ]
 ## while_stmt(stmt_ending_with_expr) -> While par(while_cond) . stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ##
@@ -3083,30 +3099,30 @@ contract: If LPAR Bytes RPAR While LPAR Bytes RPAR ZWSP
 ##
 contract: Return While LPAR Bytes RPAR ZWSP
 ##
-## Ends in an error in state: 983.
+## Ends in an error in state: 1002.
 ##
 ## while_stmt(stmt_not_starting_with_expr_nor_block1) -> While par(while_cond) . stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## while_stmt(stmt_not_starting_with_expr_nor_block2) -> While par(while_cond) . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## while_stmt(stmt_not_starting_with_expr_nor_block2) -> While par(while_cond) . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## While par(while_cond)
 ##
 contract: Return If LPAR Bytes RPAR While LPAR Bytes RPAR ZWSP
 ##
-## Ends in an error in state: 988.
+## Ends in an error in state: 1007.
 ##
 ## while_stmt(closed_non_if_stmt) -> While par(while_cond) . closed_non_if_stmt [ SEMI_ELSE Else ]
 ## while_stmt(stmt_not_starting_with_expr_nor_block1) -> While par(while_cond) . stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## while_stmt(stmt_not_starting_with_expr_nor_block2) -> While par(while_cond) . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## while_stmt(stmt_not_starting_with_expr_nor_block2) -> While par(while_cond) . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## While par(while_cond)
 ##
 contract: While LPAR Bytes RPAR ZWSP
 ##
-## Ends in an error in state: 1216.
+## Ends in an error in state: 1235.
 ##
-## while_stmt(poly_stmt) -> While par(while_cond) . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## while_stmt(poly_stmt) -> While par(while_cond) . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## while_stmt(statement) -> While par(while_cond) . statement [ SEMI RBRACE EOF Default Case ]
 ## while_stmt(stmt_ending_with_expr) -> While par(while_cond) . stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ##
@@ -3119,7 +3135,7 @@ At this point, the body is expected as a statement.
 
 interactive_expr: LBRACE ELLIPSIS Bytes COMMA ZWSP
 ##
-## Ends in an error in state: 1135.
+## Ends in an error in state: 1154.
 ##
 ## update_expr -> ELLIPSIS expr property_sep . updates [ RBRACE ]
 ##
@@ -3132,7 +3148,7 @@ At this point, property assignments are expected.
 
 contract: LBRACKET Bytes COMMA ZWSP
 ##
-## Ends in an error in state: 1163.
+## Ends in an error in state: 1182.
 ##
 ## nsepseq(element(expr),COMMA) -> element(expr) COMMA . nsepseq(element(expr),COMMA) [ RBRACKET ]
 ## nseq(__anonymous_0(element(expr),COMMA)) -> element(expr) COMMA . [ RBRACKET ]
@@ -3149,7 +3165,7 @@ At this point, one of the following is expected:
 
 contract: Match LPAR Bytes RPAR LBRACE When LPAR Bytes RPAR COLON Bytes WILD
 ##
-## Ends in an error in state: 1182.
+## Ends in an error in state: 1201.
 ##
 ## match_clause -> When par(pattern) COLON expr . [ When RBRACE Default ]
 ## match_clause -> When par(pattern) COLON expr . SEMI [ When RBRACE Default ]
@@ -3184,7 +3200,7 @@ following is expected:
 
 contract: LPAR Bytes PARAMS ZWSP
 ##
-## Ends in an error in state: 1169.
+## Ends in an error in state: 1188.
 ##
 ## par(expr) -> LPAR expr PARAMS . RPAR [ XOR While When VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LPAR LE LBRACKET LBRACE Interface Import If GT For Export Else EQ2 EOF Default DOT Continue Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
 ##
@@ -3275,7 +3291,7 @@ contract: Namespace UIdent LBRACE For LPAR SEMI SEMI ZWSP
 ##
 contract: Namespace UIdent LBRACE For LPAR Ident MINUS2 SEMI SEMI ZWSP
 ##
-## Ends in an error in state: 790.
+## Ends in an error in state: 791.
 ##
 ## range_for -> initialiser SEMI SEMI . [ RPAR PARAMS ]
 ## range_for -> initialiser SEMI SEMI . afterthought [ RPAR PARAMS ]
@@ -3295,7 +3311,7 @@ contract: For LPAR SEMI Bytes SEMI ZWSP
 ##
 contract: For LPAR Ident MINUS2 SEMI Bytes SEMI ZWSP
 ##
-## Ends in an error in state: 793.
+## Ends in an error in state: 794.
 ##
 ## range_for -> initialiser SEMI condition SEMI . [ RPAR PARAMS ]
 ## range_for -> initialiser SEMI condition SEMI . afterthought [ RPAR PARAMS ]
@@ -3384,9 +3400,9 @@ At this point, the range is expected as an expression.
 
 contract: Namespace UIdent LBRACE For LPAR SEMI SEMI PARAMS ZWSP
 ##
-## Ends in an error in state: 782.
+## Ends in an error in state: 783.
 ##
-## par(range_for) -> LPAR range_for PARAMS . RPAR [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## par(range_for) -> LPAR range_for PARAMS . RPAR [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## LPAR range_for PARAMS
@@ -3397,7 +3413,7 @@ At this point, a closing parenthesis ')' is expected.
 
 contract: Namespace UIdent LBRACE For LPAR Ident MINUS2 BIT_AND
 ##
-## Ends in an error in state: 788.
+## Ends in an error in state: 789.
 ##
 ## range_for -> initialiser . SEMI SEMI [ RPAR PARAMS ]
 ## range_for -> initialiser . SEMI SEMI afterthought [ RPAR PARAMS ]
@@ -3413,7 +3429,7 @@ At this point, a semicolon ';' is expected.
 
 contract: Namespace UIdent LBRACE For LPAR Ident MINUS2 SEMI ZWSP
 ##
-## Ends in an error in state: 789.
+## Ends in an error in state: 790.
 ##
 ## range_for -> initialiser SEMI . SEMI [ RPAR PARAMS ]
 ## range_for -> initialiser SEMI . SEMI afterthought [ RPAR PARAMS ]
@@ -3431,7 +3447,7 @@ At this point, one of the following is expected:
 
 contract: Const ZWSP
 ##
-## Ends in an error in state: 871.
+## Ends in an error in state: 890.
 ##
 ## value_decl -> Const . bindings [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case Break Attr ]
 ##
@@ -3444,13 +3460,13 @@ At this point, a pattern is expected, e.g. a variable.
 
 contract: Namespace UIdent LBRACE For ZWSP
 ##
-## Ends in an error in state: 967.
+## Ends in an error in state: 986.
 ##
 ## empty_for_stmt -> For . par(range_for) [ SEMI RBRACE EOF Default Case ]
-## for_of_stmt(poly_stmt) -> For . par(range_of) poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## for_of_stmt(poly_stmt) -> For . par(range_of) poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## for_of_stmt(statement) -> For . par(range_of) statement [ SEMI RBRACE EOF Default Case ]
 ## for_of_stmt(stmt_ending_with_expr) -> For . par(range_of) stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
-## full_for_stmt(poly_stmt) -> For . par(range_for) poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## full_for_stmt(poly_stmt) -> For . par(range_for) poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## full_for_stmt(statement) -> For . par(range_for) statement [ SEMI RBRACE EOF Default Case ]
 ## full_for_stmt(stmt_ending_with_expr) -> For . par(range_for) stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ##
@@ -3459,12 +3475,12 @@ contract: Namespace UIdent LBRACE For ZWSP
 ##
 contract: Namespace UIdent LBRACE Return For ZWSP
 ##
-## Ends in an error in state: 1056.
+## Ends in an error in state: 1075.
 ##
 ## for_of_stmt(stmt_not_starting_with_expr_nor_block1) -> For . par(range_of) stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## for_of_stmt(stmt_not_starting_with_expr_nor_block2) -> For . par(range_of) stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## for_of_stmt(stmt_not_starting_with_expr_nor_block2) -> For . par(range_of) stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ## full_for_stmt(stmt_not_starting_with_expr_nor_block1) -> For . par(range_for) stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## full_for_stmt(stmt_not_starting_with_expr_nor_block2) -> For . par(range_for) stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## full_for_stmt(stmt_not_starting_with_expr_nor_block2) -> For . par(range_for) stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## For
@@ -3475,11 +3491,11 @@ contract: If LPAR Bytes RPAR For ZWSP
 ##
 ## empty_for_stmt -> For . par(range_for) [ SEMI_ELSE SEMI RBRACE Else EOF Default Case ]
 ## for_of_stmt(closed_non_if_stmt) -> For . par(range_of) closed_non_if_stmt [ SEMI_ELSE Else ]
-## for_of_stmt(poly_stmt) -> For . par(range_of) poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## for_of_stmt(poly_stmt) -> For . par(range_of) poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## for_of_stmt(statement) -> For . par(range_of) statement [ SEMI RBRACE EOF Default Case ]
 ## for_of_stmt(stmt_ending_with_expr) -> For . par(range_of) stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ## full_for_stmt(closed_non_if_stmt) -> For . par(range_for) closed_non_if_stmt [ SEMI_ELSE Else ]
-## full_for_stmt(poly_stmt) -> For . par(range_for) poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## full_for_stmt(poly_stmt) -> For . par(range_for) poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## full_for_stmt(statement) -> For . par(range_for) statement [ SEMI RBRACE EOF Default Case ]
 ## full_for_stmt(stmt_ending_with_expr) -> For . par(range_for) stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ##
@@ -3488,15 +3504,15 @@ contract: If LPAR Bytes RPAR For ZWSP
 ##
 contract: Return If LPAR Bytes RPAR For ZWSP
 ##
-## Ends in an error in state: 991.
+## Ends in an error in state: 1010.
 ##
 ## empty_for_stmt -> For . par(range_for) [ SEMI_ELSE Else ]
 ## for_of_stmt(closed_non_if_stmt) -> For . par(range_of) closed_non_if_stmt [ SEMI_ELSE Else ]
 ## for_of_stmt(stmt_not_starting_with_expr_nor_block1) -> For . par(range_of) stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## for_of_stmt(stmt_not_starting_with_expr_nor_block2) -> For . par(range_of) stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## for_of_stmt(stmt_not_starting_with_expr_nor_block2) -> For . par(range_of) stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ## full_for_stmt(closed_non_if_stmt) -> For . par(range_for) closed_non_if_stmt [ SEMI_ELSE Else ]
 ## full_for_stmt(stmt_not_starting_with_expr_nor_block1) -> For . par(range_for) stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## full_for_stmt(stmt_not_starting_with_expr_nor_block2) -> For . par(range_for) stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## full_for_stmt(stmt_not_starting_with_expr_nor_block2) -> For . par(range_for) stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## For
@@ -3507,10 +3523,10 @@ At this point, an opening parenthesis '(' is expected.
 
 contract: Namespace UIdent LBRACE Return While ZWSP
 ##
-## Ends in an error in state: 982.
+## Ends in an error in state: 1001.
 ##
 ## while_stmt(stmt_not_starting_with_expr_nor_block1) -> While . par(while_cond) stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## while_stmt(stmt_not_starting_with_expr_nor_block2) -> While . par(while_cond) stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## while_stmt(stmt_not_starting_with_expr_nor_block2) -> While . par(while_cond) stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## While
@@ -3521,7 +3537,7 @@ At this point, an opening parenthesis '(' is expected.
 
 contract: Namespace UIdent LBRACE Return Attr Return ZWSP
 ##
-## Ends in an error in state: 984.
+## Ends in an error in state: 1003.
 ##
 ## full_return_stmt -> Return . no_attr_expr [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
 ##
@@ -3534,11 +3550,11 @@ At this point, an expression (without decorator) is expected.
 
 contract: Namespace UIdent LBRACE Return Export ZWSP
 ##
-## Ends in an error in state: 1058.
+## Ends in an error in state: 1077.
 ##
 ## export(import_decl) -> Export . import_decl [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## export(interface_decl) -> Export . interface_decl [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
-## export(namespace_decl) -> Export . namespace_decl [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## export(interface_decl) -> Export . interface_decl [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
+## export(namespace_decl) -> Export . namespace_decl [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ## export(type_decl) -> Export . type_decl [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
 ## export(value_decl) -> Export . value_decl [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
 ##
@@ -3547,12 +3563,12 @@ contract: Namespace UIdent LBRACE Return Export ZWSP
 ##
 contract: Export ZWSP
 ##
-## Ends in an error in state: 870.
+## Ends in an error in state: 889.
 ##
 ## export(declaration) -> Export . declaration [ SEMI_ELSE SEMI RBRACE Else EOF Default Case ]
 ## export(import_decl) -> Export . import_decl [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
-## export(interface_decl) -> Export . interface_decl [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
-## export(namespace_decl) -> Export . namespace_decl [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## export(interface_decl) -> Export . interface_decl [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
+## export(namespace_decl) -> Export . namespace_decl [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## export(type_decl) -> Export . type_decl [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ## export(value_decl) -> Export . value_decl [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ##
@@ -3561,12 +3577,12 @@ contract: Export ZWSP
 ##
 contract: Return If LPAR Bytes RPAR Export ZWSP
 ##
-## Ends in an error in state: 993.
+## Ends in an error in state: 1012.
 ##
 ## export(declaration) -> Export . declaration [ SEMI_ELSE Else ]
 ## export(import_decl) -> Export . import_decl [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## export(interface_decl) -> Export . interface_decl [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
-## export(namespace_decl) -> Export . namespace_decl [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## export(interface_decl) -> Export . interface_decl [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
+## export(namespace_decl) -> Export . namespace_decl [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ## export(type_decl) -> Export . type_decl [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
 ## export(value_decl) -> Export . value_decl [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
 ##
@@ -3579,20 +3595,20 @@ At this point, a declaration is expected.
 
 contract: Namespace UIdent LBRACE Return Attr ZWSP
 ##
-## Ends in an error in state: 1064.
+## Ends in an error in state: 1083.
 ##
 ## right_rec_stmt(stmt_not_starting_with_expr_nor_block1) -> Attr . stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## right_rec_stmt(stmt_not_starting_with_expr_nor_block2) -> Attr . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## right_rec_stmt(stmt_not_starting_with_expr_nor_block2) -> Attr . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## Attr
 ##
 contract: Attr ZWSP
 ##
-## Ends in an error in state: 969.
+## Ends in an error in state: 988.
 ##
 ## core_stmt(statement) -> Attr . statement [ SEMI RBRACE EOF Default Case ]
-## right_rec_stmt(poly_stmt) -> Attr . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## right_rec_stmt(poly_stmt) -> Attr . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## right_rec_stmt(stmt_ending_with_expr) -> Attr . stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
@@ -3606,10 +3622,10 @@ At this point, one of the following is expected:
 
 contract: Namespace UIdent LBRACE Return For LPAR SEMI SEMI RPAR ZWSP
 ##
-## Ends in an error in state: 1074.
+## Ends in an error in state: 1093.
 ##
 ## full_for_stmt(stmt_not_starting_with_expr_nor_block1) -> For par(range_for) . stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## full_for_stmt(stmt_not_starting_with_expr_nor_block2) -> For par(range_for) . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## full_for_stmt(stmt_not_starting_with_expr_nor_block2) -> For par(range_for) . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## For par(range_for)
@@ -3620,9 +3636,9 @@ At this point, the body is expected as a statement (but not a block).
 
 contract: Namespace UIdent LBRACE Return BIT_AND
 ##
-## Ends in an error in state: 1125.
+## Ends in an error in state: 1144.
 ##
-## braces(statements) -> LBRACE statements . RBRACE [ XOR While When Verbatim VBAR UIdent Type True TIMES Switch String SLASH SHARP SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS2 PLUS PARAMS OR Nat Namespace NE Mutez Match MINUS2 MINUS Let LT LPAR LE LBRACKET LBRACE Interface Int Import If Ident GT Function For False Export Else EQ2 EOF Do Directive Default Continue Const Case COMMA COLON Bytes Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
+## braces(statements) -> LBRACE statements . RBRACE [ XOR While When Verbatim VBAR UIdent Type True TIMES Switch String SLASH SHARP SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS2 PLUS PARAMS OR Nat Namespace NE Mutez Match MINUS2 MINUS Let LT LPAR LE LBRACKET LBRACE Interface Int Import If Ident GT Function For False Export Else EQ2 EOF Do Directive Default ContractOf Continue Const Case COMMA COLON Bytes Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
 ##
 ## The known suffix of the stack is as follows:
 ## LBRACE statements
@@ -3632,11 +3648,11 @@ contract: Namespace UIdent LBRACE Return BIT_AND
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 548, spurious reduction of production empty_return_stmt -> Return
-## In state 1094, spurious reduction of production return_stmt -> empty_return_stmt
-## In state 971, spurious reduction of production non_if_stmt(statement) -> return_stmt
-## In state 896, spurious reduction of production statement -> non_if_stmt(statement)
-## In state 1080, spurious reduction of production last_or_more(statement) -> statement
-## In state 1085, spurious reduction of production statements -> last_or_more(statement)
+## In state 1113, spurious reduction of production return_stmt -> empty_return_stmt
+## In state 990, spurious reduction of production non_if_stmt(statement) -> return_stmt
+## In state 915, spurious reduction of production statement -> non_if_stmt(statement)
+## In state 1099, spurious reduction of production last_or_more(statement) -> statement
+## In state 1104, spurious reduction of production statements -> last_or_more(statement)
 ##
 
 Ill-formed block of statements.
@@ -3663,7 +3679,7 @@ contract: Namespace UIdent Implements UIdent ZWSP
 ##
 ## Ends in an error in state: 581.
 ##
-## namespace_decl -> Namespace namespace_binder interface . braces(statements) [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## namespace_decl -> Namespace namespace_binder interface . braces(statements) [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## Namespace namespace_binder interface
@@ -3682,7 +3698,7 @@ At this point, a block of statements is expected.
 
 interactive_expr: ZWSP
 ##
-## Ends in an error in state: 1220.
+## Ends in an error in state: 1239.
 ##
 ## interactive_expr' -> . interactive_expr [ # ]
 ##
@@ -3695,7 +3711,7 @@ At this point, an expression is expected.
 
 contract: Attr Directive ZWSP
 ##
-## Ends in an error in state: 1083.
+## Ends in an error in state: 1102.
 ##
 ## statements -> poly_stmt . statements [ RBRACE EOF Default Case ]
 ##
@@ -3981,8 +3997,8 @@ contract: If LPAR Bytes WILD
 ##
 ## Ends in an error in state: 725.
 ##
-## par(if_cond) -> LPAR if_cond . RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
-## par(if_cond) -> LPAR if_cond . PARAMS RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## par(if_cond) -> LPAR if_cond . RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
+## par(if_cond) -> LPAR if_cond . PARAMS RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## LPAR if_cond
@@ -4009,7 +4025,7 @@ contract: If LPAR Bytes PARAMS ZWSP
 ##
 ## Ends in an error in state: 727.
 ##
-## par(if_cond) -> LPAR if_cond PARAMS . RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## par(if_cond) -> LPAR if_cond PARAMS . RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## LPAR if_cond PARAMS
@@ -4022,13 +4038,13 @@ contract: If LPAR Bytes RPAR ZWSP
 ##
 ## Ends in an error in state: 730.
 ##
-## if_else_stmt(poly_stmt) -> If par(if_cond) . closed_non_if_stmt Else poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
-## if_else_stmt(poly_stmt) -> If par(if_cond) . closed_non_if_stmt SEMI_ELSE poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## if_else_stmt(poly_stmt) -> If par(if_cond) . closed_non_if_stmt Else poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
+## if_else_stmt(poly_stmt) -> If par(if_cond) . closed_non_if_stmt SEMI_ELSE poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## if_else_stmt(statement) -> If par(if_cond) . closed_non_if_stmt Else statement [ SEMI RBRACE EOF Default Case ]
 ## if_else_stmt(statement) -> If par(if_cond) . closed_non_if_stmt SEMI_ELSE statement [ SEMI RBRACE EOF Default Case ]
 ## if_else_stmt(stmt_ending_with_expr) -> If par(if_cond) . closed_non_if_stmt Else stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ## if_else_stmt(stmt_ending_with_expr) -> If par(if_cond) . closed_non_if_stmt SEMI_ELSE stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
-## if_stmt(poly_stmt) -> If par(if_cond) . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## if_stmt(poly_stmt) -> If par(if_cond) . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## if_stmt(statement) -> If par(if_cond) . statement [ SEMI RBRACE EOF Default Case ]
 ## if_stmt(stmt_ending_with_expr) -> If par(if_cond) . stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ##
@@ -4041,13 +4057,13 @@ contract: If LPAR Bytes RPAR If LPAR Bytes RPAR ZWSP
 ##
 ## if_else_stmt(closed_non_if_stmt) -> If par(if_cond) . closed_non_if_stmt Else closed_non_if_stmt [ SEMI_ELSE Else ]
 ## if_else_stmt(closed_non_if_stmt) -> If par(if_cond) . closed_non_if_stmt SEMI_ELSE closed_non_if_stmt [ SEMI_ELSE Else ]
-## if_else_stmt(poly_stmt) -> If par(if_cond) . closed_non_if_stmt Else poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
-## if_else_stmt(poly_stmt) -> If par(if_cond) . closed_non_if_stmt SEMI_ELSE poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## if_else_stmt(poly_stmt) -> If par(if_cond) . closed_non_if_stmt Else poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
+## if_else_stmt(poly_stmt) -> If par(if_cond) . closed_non_if_stmt SEMI_ELSE poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## if_else_stmt(statement) -> If par(if_cond) . closed_non_if_stmt Else statement [ SEMI RBRACE EOF Default Case ]
 ## if_else_stmt(statement) -> If par(if_cond) . closed_non_if_stmt SEMI_ELSE statement [ SEMI RBRACE EOF Default Case ]
 ## if_else_stmt(stmt_ending_with_expr) -> If par(if_cond) . closed_non_if_stmt Else stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ## if_else_stmt(stmt_ending_with_expr) -> If par(if_cond) . closed_non_if_stmt SEMI_ELSE stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
-## if_stmt(poly_stmt) -> If par(if_cond) . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## if_stmt(poly_stmt) -> If par(if_cond) . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## if_stmt(statement) -> If par(if_cond) . statement [ SEMI RBRACE EOF Default Case ]
 ## if_stmt(stmt_ending_with_expr) -> If par(if_cond) . stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ##
@@ -4056,30 +4072,30 @@ contract: If LPAR Bytes RPAR If LPAR Bytes RPAR ZWSP
 ##
 contract: Return If LPAR Bytes RPAR ZWSP
 ##
-## Ends in an error in state: 986.
+## Ends in an error in state: 1005.
 ##
 ## if_else_stmt(stmt_not_starting_with_expr_nor_block1) -> If par(if_cond) . closed_non_if_stmt Else stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
 ## if_else_stmt(stmt_not_starting_with_expr_nor_block1) -> If par(if_cond) . closed_non_if_stmt SEMI_ELSE stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) . closed_non_if_stmt Else stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
-## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) . closed_non_if_stmt SEMI_ELSE stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) . closed_non_if_stmt Else stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
+## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) . closed_non_if_stmt SEMI_ELSE stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ## if_stmt(stmt_not_starting_with_expr_nor_block1) -> If par(if_cond) . stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## if_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## if_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## If par(if_cond)
 ##
 contract: Return If LPAR Bytes RPAR If LPAR Bytes RPAR ZWSP
 ##
-## Ends in an error in state: 990.
+## Ends in an error in state: 1009.
 ##
 ## if_else_stmt(closed_non_if_stmt) -> If par(if_cond) . closed_non_if_stmt Else closed_non_if_stmt [ SEMI_ELSE Else ]
 ## if_else_stmt(closed_non_if_stmt) -> If par(if_cond) . closed_non_if_stmt SEMI_ELSE closed_non_if_stmt [ SEMI_ELSE Else ]
 ## if_else_stmt(stmt_not_starting_with_expr_nor_block1) -> If par(if_cond) . closed_non_if_stmt Else stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
 ## if_else_stmt(stmt_not_starting_with_expr_nor_block1) -> If par(if_cond) . closed_non_if_stmt SEMI_ELSE stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) . closed_non_if_stmt Else stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
-## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) . closed_non_if_stmt SEMI_ELSE stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) . closed_non_if_stmt Else stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
+## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) . closed_non_if_stmt SEMI_ELSE stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ## if_stmt(stmt_not_starting_with_expr_nor_block1) -> If par(if_cond) . stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## if_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## if_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## If par(if_cond)
@@ -4093,7 +4109,7 @@ contract: If LPAR Bytes RPAR While ZWSP
 ## Ends in an error in state: 731.
 ##
 ## while_stmt(closed_non_if_stmt) -> While . par(while_cond) closed_non_if_stmt [ SEMI_ELSE Else ]
-## while_stmt(poly_stmt) -> While . par(while_cond) poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## while_stmt(poly_stmt) -> While . par(while_cond) poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## while_stmt(statement) -> While . par(while_cond) statement [ SEMI RBRACE EOF Default Case ]
 ## while_stmt(stmt_ending_with_expr) -> While . par(while_cond) stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ##
@@ -4185,9 +4201,9 @@ At this point, a semicolon ';' is expected.
 
 contract: For LPAR Const Ident Of Bytes PARAMS ZWSP
 ##
-## Ends in an error in state: 778.
+## Ends in an error in state: 779.
 ##
-## par(range_of) -> LPAR range_of PARAMS . RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## par(range_of) -> LPAR range_of PARAMS . RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## LPAR range_of PARAMS
@@ -4198,7 +4214,7 @@ At this point, a closing parenthesis ')' is expected.
 
 contract: For LPAR Ident MINUS2 SEMI Bytes WILD
 ##
-## Ends in an error in state: 792.
+## Ends in an error in state: 793.
 ##
 ## range_for -> initialiser SEMI condition . SEMI [ RPAR PARAMS ]
 ## range_for -> initialiser SEMI condition . SEMI afterthought [ RPAR PARAMS ]
@@ -4239,13 +4255,14 @@ interactive_expr: Bytes QMARK ZWSP
 ##
 contract: Bytes QMARK ZWSP
 ##
-## Ends in an error in state: 803.
+## Ends in an error in state: 804.
 ##
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . app_expr COLON app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . app_expr COLON incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . app_expr COLON decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . app_expr COLON assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . app_expr COLON match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . app_expr COLON typed_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . app_expr COLON ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . app_expr COLON par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . incr_expr COLON app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
@@ -4253,6 +4270,7 @@ contract: Bytes QMARK ZWSP
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . incr_expr COLON decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . incr_expr COLON assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . incr_expr COLON match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . incr_expr COLON typed_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . incr_expr COLON ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . incr_expr COLON par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . decr_expr COLON app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
@@ -4260,6 +4278,7 @@ contract: Bytes QMARK ZWSP
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . decr_expr COLON decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . decr_expr COLON assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . decr_expr COLON match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . decr_expr COLON typed_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . decr_expr COLON ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . decr_expr COLON par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . assign_expr COLON app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
@@ -4267,6 +4286,7 @@ contract: Bytes QMARK ZWSP
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . assign_expr COLON decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . assign_expr COLON assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . assign_expr COLON match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . assign_expr COLON typed_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . assign_expr COLON ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . assign_expr COLON par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . match_expr COLON app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
@@ -4274,13 +4294,23 @@ contract: Bytes QMARK ZWSP
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . match_expr COLON decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . match_expr COLON assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . match_expr COLON match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . match_expr COLON typed_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . match_expr COLON ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . match_expr COLON par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . typed_expr COLON app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . typed_expr COLON incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . typed_expr COLON decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . typed_expr COLON assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . typed_expr COLON match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . typed_expr COLON typed_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . typed_expr COLON ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . typed_expr COLON par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . ternary_expr(core_expr,pre_expr_stmt) COLON app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . ternary_expr(core_expr,pre_expr_stmt) COLON incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . ternary_expr(core_expr,pre_expr_stmt) COLON decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . ternary_expr(core_expr,pre_expr_stmt) COLON assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . ternary_expr(core_expr,pre_expr_stmt) COLON match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . ternary_expr(core_expr,pre_expr_stmt) COLON typed_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . ternary_expr(core_expr,pre_expr_stmt) COLON ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . ternary_expr(core_expr,pre_expr_stmt) COLON par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . par(expr) COLON app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
@@ -4288,6 +4318,7 @@ contract: Bytes QMARK ZWSP
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . par(expr) COLON decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . par(expr) COLON assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . par(expr) COLON match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . par(expr) COLON typed_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . par(expr) COLON ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK . par(expr) COLON par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ##
@@ -4300,10 +4331,10 @@ At this point, the expression for a true condition is expected.
 
 contract: For LPAR Const Ident Of Bytes WILD
 ##
-## Ends in an error in state: 776.
+## Ends in an error in state: 777.
 ##
-## par(range_of) -> LPAR range_of . RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
-## par(range_of) -> LPAR range_of . PARAMS RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## par(range_of) -> LPAR range_of . RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
+## par(range_of) -> LPAR range_of . PARAMS RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## LPAR range_of
@@ -4333,92 +4364,30 @@ parenthesis ')' is expected.
 
 contract: Bytes QMARK Bytes QMARK Ident MINUS2 COLON Ident MINUS2 BIT_AND
 ##
-## Ends in an error in state: 804.
+## Ends in an error in state: 816.
 ##
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK ternary_expr(core_expr,pre_expr_stmt) . COLON app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK ternary_expr(core_expr,pre_expr_stmt) . COLON incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK ternary_expr(core_expr,pre_expr_stmt) . COLON decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK ternary_expr(core_expr,pre_expr_stmt) . COLON assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK ternary_expr(core_expr,pre_expr_stmt) . COLON match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK ternary_expr(core_expr,pre_expr_stmt) . COLON typed_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK ternary_expr(core_expr,pre_expr_stmt) . COLON ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK ternary_expr(core_expr,pre_expr_stmt) . COLON par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## core_expr QMARK ternary_expr(core_expr,pre_expr_stmt)
 ##
-contract: Bytes QMARK Match LPAR Bytes RPAR LBRACE Default COLON Bytes RBRACE ZWSP
-##
-## Ends in an error in state: 802.
-##
-## lambda -> core_expr . [ LPAR ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK app_expr COLON app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK app_expr COLON incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK app_expr COLON decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK app_expr COLON assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK app_expr COLON match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK app_expr COLON ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK app_expr COLON par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK incr_expr COLON app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK incr_expr COLON incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK incr_expr COLON decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK incr_expr COLON assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK incr_expr COLON match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK incr_expr COLON ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK incr_expr COLON par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK decr_expr COLON app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK decr_expr COLON incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK decr_expr COLON decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK decr_expr COLON assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK decr_expr COLON match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK decr_expr COLON ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK decr_expr COLON par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK assign_expr COLON app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK assign_expr COLON incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK assign_expr COLON decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK assign_expr COLON assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK assign_expr COLON match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK assign_expr COLON ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK assign_expr COLON par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK match_expr COLON app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK match_expr COLON incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK match_expr COLON decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK match_expr COLON assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK match_expr COLON match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK match_expr COLON ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK match_expr COLON par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK ternary_expr(core_expr,pre_expr_stmt) COLON app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK ternary_expr(core_expr,pre_expr_stmt) COLON incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK ternary_expr(core_expr,pre_expr_stmt) COLON decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK ternary_expr(core_expr,pre_expr_stmt) COLON assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK ternary_expr(core_expr,pre_expr_stmt) COLON match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK ternary_expr(core_expr,pre_expr_stmt) COLON ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK ternary_expr(core_expr,pre_expr_stmt) COLON par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK par(expr) COLON app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK par(expr) COLON incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK par(expr) COLON decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK par(expr) COLON assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK par(expr) COLON match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK par(expr) COLON ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr . QMARK par(expr) COLON par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-##
-## The known suffix of the stack is as follows:
-## core_expr
-##
-## WARNING: This example involves spurious reductions.
-## This implies that, although the LR(1) items shown above provide an
-## accurate view of the past (what has been recognized so far), they
-## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 822, spurious reduction of production core_expr -> match_expr
-##
 contract: Bytes QMARK Ident PLUS2 ZWSP
 ##
-## Ends in an error in state: 831.
+## Ends in an error in state: 846.
 ##
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK incr_expr . COLON app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK incr_expr . COLON incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK incr_expr . COLON decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK incr_expr . COLON assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK incr_expr . COLON match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK incr_expr . COLON typed_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK incr_expr . COLON ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK incr_expr . COLON par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ##
@@ -4427,13 +4396,14 @@ contract: Bytes QMARK Ident PLUS2 ZWSP
 ##
 contract: Bytes QMARK Ident MINUS2 ZWSP
 ##
-## Ends in an error in state: 840.
+## Ends in an error in state: 856.
 ##
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK decr_expr . COLON app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK decr_expr . COLON incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK decr_expr . COLON decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK decr_expr . COLON assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK decr_expr . COLON match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK decr_expr . COLON typed_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK decr_expr . COLON ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK decr_expr . COLON par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ##
@@ -4442,13 +4412,14 @@ contract: Bytes QMARK Ident MINUS2 ZWSP
 ##
 contract: Bytes QMARK Ident BIT_AND_EQ Bytes WILD
 ##
-## Ends in an error in state: 849.
+## Ends in an error in state: 866.
 ##
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK assign_expr . COLON app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK assign_expr . COLON incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK assign_expr . COLON decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK assign_expr . COLON assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK assign_expr . COLON match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK assign_expr . COLON typed_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK assign_expr . COLON ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK assign_expr . COLON par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ##
@@ -4473,28 +4444,6 @@ contract: Bytes QMARK Ident BIT_AND_EQ Bytes WILD
 ## In state 381, spurious reduction of production expr -> no_attr_expr
 ## In state 519, spurious reduction of production bin_op(var_path,BIT_AND_EQ,expr) -> var_path BIT_AND_EQ expr
 ## In state 468, spurious reduction of production assign_expr -> bin_op(var_path,BIT_AND_EQ,expr)
-##
-contract: Bytes QMARK Bytes LPAR RPAR XOR
-##
-## Ends in an error in state: 858.
-##
-## path(app_expr) -> app_expr . nseq(selection) [ QMARK LPAR ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK app_expr . COLON app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK app_expr . COLON incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK app_expr . COLON decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK app_expr . COLON assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK app_expr . COLON match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK app_expr . COLON ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK app_expr . COLON par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
-##
-## The known suffix of the stack is as follows:
-## core_expr QMARK app_expr
-##
-## WARNING: This example involves spurious reductions.
-## This implies that, although the LR(1) items shown above provide an
-## accurate view of the past (what has been recognized so far), they
-## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 397, spurious reduction of production app_expr -> call_expr
 ##
 interactive_expr: Bytes QMARK Bytes WILD
 ##
@@ -4522,19 +4471,46 @@ interactive_expr: Bytes QMARK Bytes WILD
 ## In state 380, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 381, spurious reduction of production expr -> no_attr_expr
 ##
+contract: Bytes QMARK Bytes As Ident XOR
+##
+## Ends in an error in state: 805.
+##
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK typed_expr . COLON app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK typed_expr . COLON incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK typed_expr . COLON decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK typed_expr . COLON assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK typed_expr . COLON match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK typed_expr . COLON typed_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK typed_expr . COLON ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK typed_expr . COLON par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+##
+## The known suffix of the stack is as follows:
+## core_expr QMARK typed_expr
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 131, spurious reduction of production type_name -> Ident
+## In state 153, spurious reduction of production no_par_type_expr -> type_name
+## In state 185, spurious reduction of production core_type -> no_par_type_expr
+## In state 195, spurious reduction of production type_expr -> core_type
+## In state 477, spurious reduction of production typed_expr -> app_expr_level As type_expr
+##
 
 Ill-formed ternary conditional expression.
 At this point, a colon ':' is expected, followed by an expresion.
 
 contract: Bytes QMARK Bytes QMARK Ident MINUS2 COLON Ident MINUS2 COLON ZWSP
 ##
-## Ends in an error in state: 805.
+## Ends in an error in state: 817.
 ##
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK ternary_expr(core_expr,pre_expr_stmt) COLON . app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK ternary_expr(core_expr,pre_expr_stmt) COLON . incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK ternary_expr(core_expr,pre_expr_stmt) COLON . decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK ternary_expr(core_expr,pre_expr_stmt) COLON . assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK ternary_expr(core_expr,pre_expr_stmt) COLON . match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK ternary_expr(core_expr,pre_expr_stmt) COLON . typed_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK ternary_expr(core_expr,pre_expr_stmt) COLON . ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK ternary_expr(core_expr,pre_expr_stmt) COLON . par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ##
@@ -4543,13 +4519,14 @@ contract: Bytes QMARK Bytes QMARK Ident MINUS2 COLON Ident MINUS2 COLON ZWSP
 ##
 contract: Bytes QMARK LPAR Bytes RPAR COLON ZWSP
 ##
-## Ends in an error in state: 814.
+## Ends in an error in state: 827.
 ##
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK par(expr) COLON . app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK par(expr) COLON . incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK par(expr) COLON . decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK par(expr) COLON . assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK par(expr) COLON . match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK par(expr) COLON . typed_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK par(expr) COLON . ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK par(expr) COLON . par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ##
@@ -4558,13 +4535,14 @@ contract: Bytes QMARK LPAR Bytes RPAR COLON ZWSP
 ##
 contract: Bytes QMARK Match LPAR Bytes RPAR LBRACE Default COLON Bytes RBRACE COLON ZWSP
 ##
-## Ends in an error in state: 823.
+## Ends in an error in state: 837.
 ##
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK match_expr COLON . app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK match_expr COLON . incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK match_expr COLON . decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK match_expr COLON . assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK match_expr COLON . match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK match_expr COLON . typed_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK match_expr COLON . ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK match_expr COLON . par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ##
@@ -4573,13 +4551,14 @@ contract: Bytes QMARK Match LPAR Bytes RPAR LBRACE Default COLON Bytes RBRACE CO
 ##
 contract: Bytes QMARK Ident PLUS2 COLON ZWSP
 ##
-## Ends in an error in state: 832.
+## Ends in an error in state: 847.
 ##
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK incr_expr COLON . app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK incr_expr COLON . incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK incr_expr COLON . decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK incr_expr COLON . assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK incr_expr COLON . match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK incr_expr COLON . typed_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK incr_expr COLON . ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK incr_expr COLON . par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ##
@@ -4588,13 +4567,14 @@ contract: Bytes QMARK Ident PLUS2 COLON ZWSP
 ##
 contract: Bytes QMARK Ident MINUS2 COLON ZWSP
 ##
-## Ends in an error in state: 841.
+## Ends in an error in state: 857.
 ##
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK decr_expr COLON . app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK decr_expr COLON . incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK decr_expr COLON . decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK decr_expr COLON . assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK decr_expr COLON . match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK decr_expr COLON . typed_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK decr_expr COLON . ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK decr_expr COLON . par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ##
@@ -4603,13 +4583,14 @@ contract: Bytes QMARK Ident MINUS2 COLON ZWSP
 ##
 contract: Bytes QMARK Ident BIT_AND_EQ Bytes COLON ZWSP
 ##
-## Ends in an error in state: 850.
+## Ends in an error in state: 867.
 ##
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK assign_expr COLON . app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK assign_expr COLON . incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK assign_expr COLON . decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK assign_expr COLON . assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK assign_expr COLON . match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK assign_expr COLON . typed_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK assign_expr COLON . ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK assign_expr COLON . par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ##
@@ -4618,13 +4599,14 @@ contract: Bytes QMARK Ident BIT_AND_EQ Bytes COLON ZWSP
 ##
 contract: Bytes QMARK Bytes LPAR RPAR COLON ZWSP
 ##
-## Ends in an error in state: 859.
+## Ends in an error in state: 877.
 ##
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK app_expr COLON . app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK app_expr COLON . incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK app_expr COLON . decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK app_expr COLON . assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK app_expr COLON . match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK app_expr COLON . typed_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK app_expr COLON . ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK app_expr COLON . par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
 ##
@@ -4640,16 +4622,32 @@ interactive_expr: Bytes QMARK Bytes COLON ZWSP
 ## The known suffix of the stack is as follows:
 ## disj_expr_level QMARK expr COLON
 ##
+contract: Bytes QMARK Bytes As Ident COLON ZWSP
+##
+## Ends in an error in state: 806.
+##
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK typed_expr COLON . app_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK typed_expr COLON . incr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK typed_expr COLON . decr_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK typed_expr COLON . assign_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK typed_expr COLON . match_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK typed_expr COLON . typed_expr [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK typed_expr COLON . ternary_expr(core_expr,pre_expr_stmt) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+## ternary_expr(core_expr,pre_expr_stmt) -> core_expr QMARK typed_expr COLON . par(expr) [ While Type Switch SEMI_ELSE SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export Else EOF Default Continue Const Case COLON Break Attr ]
+##
+## The known suffix of the stack is as follows:
+## core_expr QMARK typed_expr COLON
+##
 
 Ill-formed ternary conditional.
 At this point, the expression for a false condition is expected.
 
 contract: If LPAR Bytes RPAR For LPAR Const Ident Of Bytes RPAR ZWSP
 ##
-## Ends in an error in state: 869.
+## Ends in an error in state: 888.
 ##
 ## for_of_stmt(closed_non_if_stmt) -> For par(range_of) . closed_non_if_stmt [ SEMI_ELSE Else ]
-## for_of_stmt(poly_stmt) -> For par(range_of) . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## for_of_stmt(poly_stmt) -> For par(range_of) . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## for_of_stmt(statement) -> For par(range_of) . statement [ SEMI RBRACE EOF Default Case ]
 ## for_of_stmt(stmt_ending_with_expr) -> For par(range_of) . stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ##
@@ -4658,9 +4656,9 @@ contract: If LPAR Bytes RPAR For LPAR Const Ident Of Bytes RPAR ZWSP
 ##
 contract: For LPAR Const Ident Of Bytes RPAR ZWSP
 ##
-## Ends in an error in state: 968.
+## Ends in an error in state: 987.
 ##
-## for_of_stmt(poly_stmt) -> For par(range_of) . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## for_of_stmt(poly_stmt) -> For par(range_of) . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## for_of_stmt(statement) -> For par(range_of) . statement [ SEMI RBRACE EOF Default Case ]
 ## for_of_stmt(stmt_ending_with_expr) -> For par(range_of) . stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ##
@@ -4669,21 +4667,21 @@ contract: For LPAR Const Ident Of Bytes RPAR ZWSP
 ##
 contract: Return If LPAR Bytes RPAR For LPAR Const Ident Of Bytes RPAR ZWSP
 ##
-## Ends in an error in state: 992.
+## Ends in an error in state: 1011.
 ##
 ## for_of_stmt(closed_non_if_stmt) -> For par(range_of) . closed_non_if_stmt [ SEMI_ELSE Else ]
 ## for_of_stmt(stmt_not_starting_with_expr_nor_block1) -> For par(range_of) . stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## for_of_stmt(stmt_not_starting_with_expr_nor_block2) -> For par(range_of) . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## for_of_stmt(stmt_not_starting_with_expr_nor_block2) -> For par(range_of) . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## For par(range_of)
 ##
 contract: Return For LPAR Const Ident Of Bytes RPAR ZWSP
 ##
-## Ends in an error in state: 1057.
+## Ends in an error in state: 1076.
 ##
 ## for_of_stmt(stmt_not_starting_with_expr_nor_block1) -> For par(range_of) . stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## for_of_stmt(stmt_not_starting_with_expr_nor_block2) -> For par(range_of) . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## for_of_stmt(stmt_not_starting_with_expr_nor_block2) -> For par(range_of) . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## For par(range_of)
@@ -4694,11 +4692,11 @@ At this point, the body is expected as a statement.
 
 contract: If LPAR Bytes RPAR Attr ZWSP
 ##
-## Ends in an error in state: 881.
+## Ends in an error in state: 900.
 ##
 ## core_stmt(closed_non_if_stmt) -> Attr . closed_non_if_stmt [ SEMI_ELSE Else ]
 ## core_stmt(statement) -> Attr . statement [ SEMI RBRACE EOF Default Case ]
-## right_rec_stmt(poly_stmt) -> Attr . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## right_rec_stmt(poly_stmt) -> Attr . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## right_rec_stmt(stmt_ending_with_expr) -> Attr . stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
@@ -4706,11 +4704,11 @@ contract: If LPAR Bytes RPAR Attr ZWSP
 ##
 contract: Return If LPAR Bytes RPAR Attr ZWSP
 ##
-## Ends in an error in state: 999.
+## Ends in an error in state: 1018.
 ##
 ## core_stmt(closed_non_if_stmt) -> Attr . closed_non_if_stmt [ SEMI_ELSE Else ]
 ## right_rec_stmt(stmt_not_starting_with_expr_nor_block1) -> Attr . stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## right_rec_stmt(stmt_not_starting_with_expr_nor_block2) -> Attr . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## right_rec_stmt(stmt_not_starting_with_expr_nor_block2) -> Attr . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## Attr
@@ -4723,10 +4721,10 @@ At this point, one of the following is expected:
 
 contract: If LPAR Bytes RPAR If LPAR Bytes RPAR Break SEMI_ELSE ZWSP
 ##
-## Ends in an error in state: 951.
+## Ends in an error in state: 970.
 ##
 ## if_else_stmt(closed_non_if_stmt) -> If par(if_cond) closed_non_if_stmt SEMI_ELSE . closed_non_if_stmt [ SEMI_ELSE Else ]
-## if_else_stmt(poly_stmt) -> If par(if_cond) closed_non_if_stmt SEMI_ELSE . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## if_else_stmt(poly_stmt) -> If par(if_cond) closed_non_if_stmt SEMI_ELSE . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## if_else_stmt(statement) -> If par(if_cond) closed_non_if_stmt SEMI_ELSE . statement [ SEMI RBRACE EOF Default Case ]
 ## if_else_stmt(stmt_ending_with_expr) -> If par(if_cond) closed_non_if_stmt SEMI_ELSE . stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ##
@@ -4735,10 +4733,10 @@ contract: If LPAR Bytes RPAR If LPAR Bytes RPAR Break SEMI_ELSE ZWSP
 ##
 contract: If LPAR Bytes RPAR If LPAR Bytes RPAR Break Else ZWSP
 ##
-## Ends in an error in state: 956.
+## Ends in an error in state: 975.
 ##
 ## if_else_stmt(closed_non_if_stmt) -> If par(if_cond) closed_non_if_stmt Else . closed_non_if_stmt [ SEMI_ELSE Else ]
-## if_else_stmt(poly_stmt) -> If par(if_cond) closed_non_if_stmt Else . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## if_else_stmt(poly_stmt) -> If par(if_cond) closed_non_if_stmt Else . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## if_else_stmt(statement) -> If par(if_cond) closed_non_if_stmt Else . statement [ SEMI RBRACE EOF Default Case ]
 ## if_else_stmt(stmt_ending_with_expr) -> If par(if_cond) closed_non_if_stmt Else . stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ##
@@ -4747,9 +4745,9 @@ contract: If LPAR Bytes RPAR If LPAR Bytes RPAR Break Else ZWSP
 ##
 contract: If LPAR Bytes RPAR Break SEMI_ELSE ZWSP
 ##
-## Ends in an error in state: 966.
+## Ends in an error in state: 985.
 ##
-## if_else_stmt(poly_stmt) -> If par(if_cond) closed_non_if_stmt SEMI_ELSE . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## if_else_stmt(poly_stmt) -> If par(if_cond) closed_non_if_stmt SEMI_ELSE . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## if_else_stmt(statement) -> If par(if_cond) closed_non_if_stmt SEMI_ELSE . statement [ SEMI RBRACE EOF Default Case ]
 ## if_else_stmt(stmt_ending_with_expr) -> If par(if_cond) closed_non_if_stmt SEMI_ELSE . stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ##
@@ -4758,9 +4756,9 @@ contract: If LPAR Bytes RPAR Break SEMI_ELSE ZWSP
 ##
 contract: If LPAR Bytes RPAR Break Else ZWSP
 ##
-## Ends in an error in state: 980.
+## Ends in an error in state: 999.
 ##
-## if_else_stmt(poly_stmt) -> If par(if_cond) closed_non_if_stmt Else . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## if_else_stmt(poly_stmt) -> If par(if_cond) closed_non_if_stmt Else . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## if_else_stmt(statement) -> If par(if_cond) closed_non_if_stmt Else . statement [ SEMI RBRACE EOF Default Case ]
 ## if_else_stmt(stmt_ending_with_expr) -> If par(if_cond) closed_non_if_stmt Else . stmt_ending_with_expr [ While Type Switch Return Namespace Let LBRACE Interface Import If For Export Continue Const Break Attr ]
 ##
@@ -4769,42 +4767,42 @@ contract: If LPAR Bytes RPAR Break Else ZWSP
 ##
 contract: Return If LPAR Bytes RPAR If LPAR Bytes RPAR Return SEMI_ELSE ZWSP
 ##
-## Ends in an error in state: 1046.
+## Ends in an error in state: 1065.
 ##
 ## if_else_stmt(closed_non_if_stmt) -> If par(if_cond) closed_non_if_stmt SEMI_ELSE . closed_non_if_stmt [ SEMI_ELSE Else ]
 ## if_else_stmt(stmt_not_starting_with_expr_nor_block1) -> If par(if_cond) closed_non_if_stmt SEMI_ELSE . stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) closed_non_if_stmt SEMI_ELSE . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) closed_non_if_stmt SEMI_ELSE . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## If par(if_cond) closed_non_if_stmt SEMI_ELSE
 ##
 contract: Return If LPAR Bytes RPAR If LPAR Bytes RPAR Return Else ZWSP
 ##
-## Ends in an error in state: 1049.
+## Ends in an error in state: 1068.
 ##
 ## if_else_stmt(closed_non_if_stmt) -> If par(if_cond) closed_non_if_stmt Else . closed_non_if_stmt [ SEMI_ELSE Else ]
 ## if_else_stmt(stmt_not_starting_with_expr_nor_block1) -> If par(if_cond) closed_non_if_stmt Else . stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) closed_non_if_stmt Else . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) closed_non_if_stmt Else . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## If par(if_cond) closed_non_if_stmt Else
 ##
 contract: Return If LPAR Bytes RPAR Return SEMI_ELSE ZWSP
 ##
-## Ends in an error in state: 1055.
+## Ends in an error in state: 1074.
 ##
 ## if_else_stmt(stmt_not_starting_with_expr_nor_block1) -> If par(if_cond) closed_non_if_stmt SEMI_ELSE . stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) closed_non_if_stmt SEMI_ELSE . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) closed_non_if_stmt SEMI_ELSE . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## If par(if_cond) closed_non_if_stmt SEMI_ELSE
 ##
 contract: Return If LPAR Bytes RPAR Return Else ZWSP
 ##
-## Ends in an error in state: 1075.
+## Ends in an error in state: 1094.
 ##
 ## if_else_stmt(stmt_not_starting_with_expr_nor_block1) -> If par(if_cond) closed_non_if_stmt Else . stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) closed_non_if_stmt Else . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) closed_non_if_stmt Else . stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## If par(if_cond) closed_non_if_stmt Else
@@ -4815,14 +4813,14 @@ At this point, a statement for a false condition is expected.
 
 contract: Return If LPAR Bytes RPAR If LPAR Bytes RPAR Return BIT_AND
 ##
-## Ends in an error in state: 1045.
+## Ends in an error in state: 1064.
 ##
 ## if_else_stmt(closed_non_if_stmt) -> If par(if_cond) closed_non_if_stmt . Else closed_non_if_stmt [ SEMI_ELSE Else ]
 ## if_else_stmt(closed_non_if_stmt) -> If par(if_cond) closed_non_if_stmt . SEMI_ELSE closed_non_if_stmt [ SEMI_ELSE Else ]
 ## if_else_stmt(stmt_not_starting_with_expr_nor_block1) -> If par(if_cond) closed_non_if_stmt . Else stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
 ## if_else_stmt(stmt_not_starting_with_expr_nor_block1) -> If par(if_cond) closed_non_if_stmt . SEMI_ELSE stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) closed_non_if_stmt . Else stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
-## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) closed_non_if_stmt . SEMI_ELSE stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) closed_non_if_stmt . Else stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
+## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) closed_non_if_stmt . SEMI_ELSE stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## If par(if_cond) closed_non_if_stmt
@@ -4832,18 +4830,18 @@ contract: Return If LPAR Bytes RPAR If LPAR Bytes RPAR Return BIT_AND
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 548, spurious reduction of production empty_return_stmt -> Return
-## In state 927, spurious reduction of production return_stmt -> empty_return_stmt
-## In state 1009, spurious reduction of production non_if_stmt(closed_non_if_stmt) -> return_stmt
-## In state 897, spurious reduction of production closed_non_if_stmt -> non_if_stmt(closed_non_if_stmt)
+## In state 946, spurious reduction of production return_stmt -> empty_return_stmt
+## In state 1028, spurious reduction of production non_if_stmt(closed_non_if_stmt) -> return_stmt
+## In state 916, spurious reduction of production closed_non_if_stmt -> non_if_stmt(closed_non_if_stmt)
 ##
 contract: Return If LPAR Bytes RPAR Return BIT_AND
 ##
-## Ends in an error in state: 1054.
+## Ends in an error in state: 1073.
 ##
 ## if_else_stmt(stmt_not_starting_with_expr_nor_block1) -> If par(if_cond) closed_non_if_stmt . Else stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
 ## if_else_stmt(stmt_not_starting_with_expr_nor_block1) -> If par(if_cond) closed_non_if_stmt . SEMI_ELSE stmt_not_starting_with_expr_nor_block1 [ While Type Switch SEMI Return RBRACE Namespace Let LBRACE Interface Import If For Export EOF Default Continue Const Case Break Attr ]
-## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) closed_non_if_stmt . Else stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
-## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) closed_non_if_stmt . SEMI_ELSE stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) closed_non_if_stmt . Else stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
+## if_else_stmt(stmt_not_starting_with_expr_nor_block2) -> If par(if_cond) closed_non_if_stmt . SEMI_ELSE stmt_not_starting_with_expr_nor_block2 [ While Verbatim UIdent Type True Switch String SHARP SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## If par(if_cond) closed_non_if_stmt
@@ -4853,9 +4851,9 @@ contract: Return If LPAR Bytes RPAR Return BIT_AND
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 548, spurious reduction of production empty_return_stmt -> Return
-## In state 927, spurious reduction of production return_stmt -> empty_return_stmt
-## In state 1009, spurious reduction of production non_if_stmt(closed_non_if_stmt) -> return_stmt
-## In state 897, spurious reduction of production closed_non_if_stmt -> non_if_stmt(closed_non_if_stmt)
+## In state 946, spurious reduction of production return_stmt -> empty_return_stmt
+## In state 1028, spurious reduction of production non_if_stmt(closed_non_if_stmt) -> return_stmt
+## In state 916, spurious reduction of production closed_non_if_stmt -> non_if_stmt(closed_non_if_stmt)
 ##
 
 Ill-formed conditional statement.
@@ -4865,7 +4863,7 @@ At this point, one of the following is expected:
 
 contract: Switch LPAR Bytes RPAR LBRACE Case ZWSP
 ##
-## Ends in an error in state: 1108.
+## Ends in an error in state: 1127.
 ##
 ## switch_case -> Case . case_expr COLON [ RBRACE Default Case ]
 ## switch_case -> Case . case_expr COLON statements [ RBRACE Default Case ]
@@ -4879,7 +4877,7 @@ At this point, a case expression is expected.
 
 contract: Switch LPAR Bytes RPAR LBRACE Case Bytes COLON ZWSP
 ##
-## Ends in an error in state: 1114.
+## Ends in an error in state: 1133.
 ##
 ## switch_case -> Case case_expr COLON . [ RBRACE Default Case ]
 ## switch_case -> Case case_expr COLON . statements [ RBRACE Default Case ]
@@ -4897,7 +4895,7 @@ At this point, one of the following is expected:
 
 contract: Switch LPAR Bytes RPAR LBRACE Case Bytes COLON Return BIT_AND
 ##
-## Ends in an error in state: 1118.
+## Ends in an error in state: 1137.
 ##
 ## nseq(switch_case) -> switch_case . [ RBRACE Default ]
 ## nseq(switch_case) -> switch_case . nseq(switch_case) [ RBRACE Default ]
@@ -4910,12 +4908,12 @@ contract: Switch LPAR Bytes RPAR LBRACE Case Bytes COLON Return BIT_AND
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 548, spurious reduction of production empty_return_stmt -> Return
-## In state 1094, spurious reduction of production return_stmt -> empty_return_stmt
-## In state 971, spurious reduction of production non_if_stmt(statement) -> return_stmt
-## In state 896, spurious reduction of production statement -> non_if_stmt(statement)
-## In state 1080, spurious reduction of production last_or_more(statement) -> statement
-## In state 1085, spurious reduction of production statements -> last_or_more(statement)
-## In state 1115, spurious reduction of production switch_case -> Case case_expr COLON statements
+## In state 1113, spurious reduction of production return_stmt -> empty_return_stmt
+## In state 990, spurious reduction of production non_if_stmt(statement) -> return_stmt
+## In state 915, spurious reduction of production statement -> non_if_stmt(statement)
+## In state 1099, spurious reduction of production last_or_more(statement) -> statement
+## In state 1104, spurious reduction of production statements -> last_or_more(statement)
+## In state 1134, spurious reduction of production switch_case -> Case case_expr COLON statements
 ##
 
 Ill-formed switch.
@@ -4926,9 +4924,9 @@ At this point, one of the following is expected:
 
 contract: Switch LPAR Bytes RPAR LBRACE Default COLON Return BIT_AND
 ##
-## Ends in an error in state: 1122.
+## Ends in an error in state: 1141.
 ##
-## braces(cases) -> LBRACE cases . RBRACE [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default Continue Const Case Bytes Break Attr ]
+## braces(cases) -> LBRACE cases . RBRACE [ While Verbatim UIdent Type True Switch String SHARP SEMI_ELSE SEMI Return RBRACE PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Else EOF Do Directive Default ContractOf Continue Const Case Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## LBRACE cases
@@ -4938,13 +4936,13 @@ contract: Switch LPAR Bytes RPAR LBRACE Default COLON Return BIT_AND
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 548, spurious reduction of production empty_return_stmt -> Return
-## In state 1094, spurious reduction of production return_stmt -> empty_return_stmt
-## In state 971, spurious reduction of production non_if_stmt(statement) -> return_stmt
-## In state 896, spurious reduction of production statement -> non_if_stmt(statement)
-## In state 1080, spurious reduction of production last_or_more(statement) -> statement
-## In state 1085, spurious reduction of production statements -> last_or_more(statement)
-## In state 1107, spurious reduction of production switch_default -> Default COLON statements
-## In state 1117, spurious reduction of production cases -> switch_default
+## In state 1113, spurious reduction of production return_stmt -> empty_return_stmt
+## In state 990, spurious reduction of production non_if_stmt(statement) -> return_stmt
+## In state 915, spurious reduction of production statement -> non_if_stmt(statement)
+## In state 1099, spurious reduction of production last_or_more(statement) -> statement
+## In state 1104, spurious reduction of production statements -> last_or_more(statement)
+## In state 1126, spurious reduction of production switch_default -> Default COLON statements
+## In state 1136, spurious reduction of production cases -> switch_default
 ##
 
 Ill-formed switch.
@@ -4955,7 +4953,7 @@ expected:
 
 interactive_expr: LBRACE ELLIPSIS Bytes WILD
 ##
-## Ends in an error in state: 1134.
+## Ends in an error in state: 1153.
 ##
 ## update_expr -> ELLIPSIS expr . property_sep updates [ RBRACE ]
 ##
@@ -4986,7 +4984,7 @@ separator (';' or ',') is expected.
 
 interactive_expr: LBRACE Ident COLON Bytes WILD
 ##
-## Ends in an error in state: 1143.
+## Ends in an error in state: 1162.
 ##
 ## nsepseq(property(expr),property_sep) -> property(expr) . [ RBRACE ]
 ## nsepseq(property(expr),property_sep) -> property(expr) . property_sep nsepseq(property(expr),property_sep) [ RBRACE ]
@@ -5012,7 +5010,7 @@ interactive_expr: LBRACE Ident COLON Bytes WILD
 ## In state 388, spurious reduction of production non_object_expr -> disj_expr_level
 ## In state 380, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 381, spurious reduction of production expr -> no_attr_expr
-## In state 1139, spurious reduction of production property(expr) -> property_id COLON expr
+## In state 1158, spurious reduction of production property(expr) -> property_id COLON expr
 ##
 
 Ill-formed object.
@@ -5022,7 +5020,7 @@ At this point, one of the following is expected:
 
 contract: LBRACKET Bytes WILD
 ##
-## Ends in an error in state: 1162.
+## Ends in an error in state: 1181.
 ##
 ## nsepseq(element(expr),COMMA) -> element(expr) . [ RBRACKET ]
 ## nsepseq(element(expr),COMMA) -> element(expr) . COMMA nsepseq(element(expr),COMMA) [ RBRACKET ]
@@ -5048,7 +5046,7 @@ contract: LBRACKET Bytes WILD
 ## In state 388, spurious reduction of production non_object_expr -> disj_expr_level
 ## In state 380, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 381, spurious reduction of production expr -> no_attr_expr
-## In state 1161, spurious reduction of production element(expr) -> expr
+## In state 1180, spurious reduction of production element(expr) -> expr
 ##
 
 Ill-formed array.
@@ -5058,7 +5056,7 @@ At this point, one of the following is expected:
 
 contract: Match LPAR Bytes RPAR LBRACE Default COLON Bytes WILD
 ##
-## Ends in an error in state: 1186.
+## Ends in an error in state: 1205.
 ##
 ## match_default -> Default COLON expr . [ RBRACE ]
 ## match_default -> Default COLON expr . SEMI [ RBRACE ]
@@ -5092,7 +5090,7 @@ expected:
 
 contract: Match LPAR Bytes RPAR LBRACE Default COLON Bytes SEMI ZWSP
 ##
-## Ends in an error in state: 1191.
+## Ends in an error in state: 1210.
 ##
 ## braces(match_clauses) -> LBRACE match_clauses . RBRACE [ XOR While When VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LPAR LE LBRACE Interface Import If GT For Export Else EQ2 EOF Default Continue Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
 ##
@@ -5105,7 +5103,7 @@ At this point, a closing brace is expected '}'.
 
 contract: Match LPAR Bytes RPAR LBRACE When LPAR Bytes RPAR COLON Bytes SEMI ZWSP
 ##
-## Ends in an error in state: 1193.
+## Ends in an error in state: 1212.
 ##
 ## nseq(match_clause) -> match_clause . [ RBRACE Default ]
 ## nseq(match_clause) -> match_clause . nseq(match_clause) [ RBRACE Default ]
@@ -5122,7 +5120,7 @@ At this point, one of the following is expected:
 
 contract: LPAR Bytes WILD
 ##
-## Ends in an error in state: 1167.
+## Ends in an error in state: 1186.
 ##
 ## par(expr) -> LPAR expr . RPAR [ XOR While When VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LPAR LE LBRACKET LBRACE Interface Import If GT For Export Else EQ2 EOF Default DOT Continue Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
 ## par(expr) -> LPAR expr . PARAMS RPAR [ XOR While When VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LPAR LE LBRACKET LBRACE Interface Import If GT For Export Else EQ2 EOF Default DOT Continue Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
@@ -5153,10 +5151,10 @@ At this point, a closing parenthesis ')' is expected.
 
 contract: While LPAR Bytes WILD
 ##
-## Ends in an error in state: 1211.
+## Ends in an error in state: 1230.
 ##
-## par(while_cond) -> LPAR while_cond . RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
-## par(while_cond) -> LPAR while_cond . PARAMS RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## par(while_cond) -> LPAR while_cond . RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
+## par(while_cond) -> LPAR while_cond . PARAMS RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## LPAR while_cond
@@ -5177,13 +5175,13 @@ contract: While LPAR Bytes WILD
 ## In state 388, spurious reduction of production non_object_expr -> disj_expr_level
 ## In state 380, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 381, spurious reduction of production expr -> no_attr_expr
-## In state 1215, spurious reduction of production while_cond -> expr
+## In state 1234, spurious reduction of production while_cond -> expr
 ##
 contract: While LPAR Bytes PARAMS ZWSP
 ##
-## Ends in an error in state: 1213.
+## Ends in an error in state: 1232.
 ##
-## par(while_cond) -> LPAR while_cond PARAMS . RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive Continue Const Bytes Break Attr ]
+## par(while_cond) -> LPAR while_cond PARAMS . RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## LPAR while_cond PARAMS
@@ -5456,7 +5454,7 @@ At this point, one of the following is expected:
 
 contract: Switch LPAR Bytes RPAR LBRACE Case SHARP String ZWSP
 ##
-## Ends in an error in state: 1116.
+## Ends in an error in state: 1135.
 ##
 ## path(app_expr) -> app_expr . nseq(selection) [ LPAR COLON ]
 ##
@@ -5467,7 +5465,7 @@ contract: Switch LPAR Bytes RPAR LBRACE Case SHARP String ZWSP
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 1111, spurious reduction of production app_expr -> ctor_app_expr
+## In state 1130, spurious reduction of production app_expr -> ctor_app_expr
 ##
 
 Ill-formed selection in a namespace.
@@ -5475,7 +5473,7 @@ At this point, a namespace name is expected.
 
 contract: SHARP LBRACKET String COMMA Bytes While
 ##
-## Ends in an error in state: 1202.
+## Ends in an error in state: 1221.
 ##
 ## nsepseq(ctor_arg(expr),COMMA) -> ctor_arg(expr) . [ RBRACKET ]
 ## nsepseq(ctor_arg(expr),COMMA) -> ctor_arg(expr) . COMMA nsepseq(ctor_arg(expr),COMMA) [ RBRACKET ]
@@ -5501,11 +5499,11 @@ contract: SHARP LBRACKET String COMMA Bytes While
 ## In state 388, spurious reduction of production non_object_expr -> disj_expr_level
 ## In state 380, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 381, spurious reduction of production expr -> no_attr_expr
-## In state 1201, spurious reduction of production ctor_arg(expr) -> expr
+## In state 1220, spurious reduction of production ctor_arg(expr) -> expr
 ##
 contract: SHARP LBRACKET String COMMA Bytes COMMA ZWSP
 ##
-## Ends in an error in state: 1203.
+## Ends in an error in state: 1222.
 ##
 ## nsepseq(ctor_arg(expr),COMMA) -> ctor_arg(expr) COMMA . nsepseq(ctor_arg(expr),COMMA) [ RBRACKET ]
 ## nseq(__anonymous_0(ctor_arg(expr),COMMA)) -> ctor_arg(expr) COMMA . [ RBRACKET ]

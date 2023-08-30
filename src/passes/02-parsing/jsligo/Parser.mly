@@ -734,7 +734,7 @@ export_stmt:
 %inline
 pre_expr_stmt:
   app_expr | incr_expr | decr_expr
-| assign_expr | match_expr
+| assign_expr | match_expr | typed_expr
 | ternary_expr (core_expr, pre_expr_stmt) { $1 }
 | par (expr)                              { E_Par $1 }
 
