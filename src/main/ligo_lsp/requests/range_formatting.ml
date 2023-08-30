@@ -31,7 +31,7 @@ let decls_of_cst : Dialect_cst.t -> declaration Nseq.nseq =
           fun cst -> Nseq.nseq_map (fun x -> Dialect_cst.CameLIGO x) cst.decl)
     ; jsligo =
         Cst_jsligo.CST.(
-          fun cst ->
+          fun (cst : t) ->
             Nseq.nseq_map
               (fun (x, _) -> Dialect_cst.JsLIGO x)
               cst.statements (* Type inference is not working here *))

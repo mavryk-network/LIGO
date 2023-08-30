@@ -409,6 +409,7 @@ let rec expr : Eq.expr -> Folding.expr =
     in
     return @@ E_match { expr ; cases }
   | E_Xor _ -> failwith "NOT IMPLEMENTED"
+  | E_Do _ -> failwith "NOT IMPLEMENTED"
 
 let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
  fun t ->
