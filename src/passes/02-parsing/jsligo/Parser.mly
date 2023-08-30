@@ -935,7 +935,7 @@ no_attr_expr:
 
 non_object_expr:
   fun_expr | typed_expr | assign_expr | disj_expr_level
-| match_expr | ternary_expr (disj_expr_level, expr) { $1 }
+| ternary_expr (disj_expr_level, expr) { $1 }
 
 (* Object expressions *)
 
@@ -1217,6 +1217,7 @@ core_expr:
   code_inj     { E_CodeInj $1 }
 | par (expr)   { E_Par     $1 }
 | array (expr) { E_Array   $1 }
+| match_expr
 | do_expr
 | literal_expr
 | path_expr    { $1 }
