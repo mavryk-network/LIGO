@@ -38,6 +38,7 @@ type kwd_const        = lexeme wrap
 type kwd_continue     = lexeme wrap
 type kwd_contract_of  = lexeme wrap
 type kwd_default      = lexeme wrap
+type kwd_do           = lexeme wrap
 type kwd_else         = lexeme wrap
 type kwd_export       = lexeme wrap
 type kwd_for          = lexeme wrap
@@ -381,6 +382,13 @@ and 'a app =
   ZeroArg of 'a
 | MultArg of ('a, comma) nsep_or_term brackets
 
+(* Do-expressions *)
+
+and do_expr = {
+  kwd_do     : kwd_do;
+  statements : statements braces
+}
+
 (* PATTERNS *)
 
 (* IMPORTANT: The data constructors are sorted alphabetically. If you
@@ -550,6 +558,7 @@ and expr =
 | E_CtorApp    of expr ctor_app reg       (* #["C",4]          *)
 | E_Div        of slash bin_op reg        (* x / y             *)
 | E_DivEq      of div_eq bin_op reg       (* x /= y            *)
+| E_Do         of do_expr reg             (* do { return 4 }   *)
 | E_Equal      of equal_cmp bin_op reg    (* x == y            *)
 | E_False      of false_const             (* false             *)
 | E_Function   of function_expr reg       (* function (x) {...} *)
@@ -774,6 +783,7 @@ let rec expr_to_region = function
 | E_CodeInj    {region; _}
 | E_ContractOf {region; _}
 | E_CtorApp    {region; _}
+| E_Do         {region; _}
 | E_Div        {region; _}
 | E_DivEq      {region; _}
 | E_Equal      {region; _} -> region

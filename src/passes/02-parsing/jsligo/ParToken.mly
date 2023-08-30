@@ -154,6 +154,7 @@
 (* JsLIGO-specific keywords *)
 
 %token <string Wrap.t> ContractOf  "contract_of"  [@recover.expr Token.wrap_contract_of  $loc]
+%token <string Wrap.t> Do          "do"           [@recover.expr Token.wrap_do           $loc]
 %token <string Wrap.t> Match       "match"        [@recover.expr Token.wrap_match        $loc]
 %token <string Wrap.t> ParameterOf "parameter_of" [@recover.expr Token.wrap_parameter_of $loc]
 %token <string Wrap.t> When        "when"         [@recover.expr Token.wrap_when         $loc]

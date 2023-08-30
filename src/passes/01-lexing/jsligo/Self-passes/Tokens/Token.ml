@@ -143,6 +143,7 @@ module T =
     (* JsLIGO-specific keywords *)
 
     | ContractOf  of lexeme Wrap.t  (* contract_of  *)
+    | Do          of lexeme Wrap.t  (* do           *)
     | Match       of lexeme Wrap.t  (* match        *)
     | ParameterOf of lexeme Wrap.t  (* parameter_of *)
     | When        of lexeme Wrap.t  (* when         *)
@@ -278,6 +279,7 @@ module T =
     (* JsLIGO-specific keywords *)
 
     | ContractOf  t
+    | Do          t
     | Match       t
     | ParameterOf t
     | When        t -> [t#payload]
@@ -363,11 +365,13 @@ module T =
      (* JsLIGO-specific keywords *)
 
      let wrap_contract_of  = wrap "contract_of"
+     let wrap_do           = wrap "do"
      let wrap_match        = wrap "match"
      let wrap_parameter_of = wrap "parameter_of"
      let wrap_when         = wrap "when"
 
      let mk_ContractOf  region = ContractOf  (wrap_contract_of  region)
+     let mk_Do          region = Do          (wrap_do           region)
      let mk_Match       region = Match       (wrap_match        region)
      let mk_ParameterOf region = ParameterOf (wrap_parameter_of region)
      let mk_When        region = When        (wrap_when         region)
@@ -406,6 +410,7 @@ module T =
        mk_Type;
 
        mk_ContractOf;
+       mk_Do;
        mk_Match;
        mk_ParameterOf;
        mk_When
@@ -492,11 +497,13 @@ module T =
     (* JsLIGO-specific keywords *)
 
     let ghost_contract_of  = wrap_contract_of  Region.ghost
+    let ghost_do           = wrap_do           Region.ghost
     let ghost_match        = wrap_match        Region.ghost
     let ghost_parameter_of = wrap_parameter_of Region.ghost
     let ghost_when         = wrap_when         Region.ghost
 
     let ghost_ContractOf   = ContractOf  ghost_contract_of
+    let ghost_Do           = Do          ghost_do
     let ghost_Match        = Match       ghost_match
     let ghost_ParameterOf  = ParameterOf ghost_parameter_of
     let ghost_When         = When        ghost_when
@@ -962,6 +969,7 @@ module T =
     (* JsLIGO-specific keywords *)
 
     | "ContractOf"  -> ghost_contract_of#payload
+    | "Do"          -> ghost_do#payload
     | "Match"       -> ghost_match#payload
     | "ParameterOf" -> ghost_parameter_of#payload
     | "When"        -> ghost_when#payload
@@ -1120,6 +1128,7 @@ module T =
     (* JsLIGO-specific keywords *)
 
     | ContractOf  t -> t#region, sprintf "ContractOf%s" (comments t)
+    | Do          t -> t#region, sprintf "Do%s" (comments t)
     | Match       t -> t#region, sprintf "Match%s" (comments t)
     | ParameterOf t -> t#region, sprintf "ParameterOf%s" (comments t)
     | When        t -> t#region, sprintf "When%s" (comments t)

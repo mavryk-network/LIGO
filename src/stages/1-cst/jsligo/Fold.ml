@@ -47,6 +47,7 @@ type _ sing =
   | S_code_inj : code_inj sing
   | S_colon : colon sing
   | S_comma : comma sing
+  | S_do_expr : do_expr sing
   | S_element : 'a sing -> 'a element sing
   | S_if_stmt : if_stmt sing
   | S_contract_of_expr : contract_of_expr sing
@@ -102,6 +103,7 @@ type _ sing =
   | S_kwd_continue : kwd_continue sing
   | S_kwd_contract_of : kwd_contract_of sing
   | S_kwd_default : kwd_default sing
+  | S_kwd_do : kwd_do sing
   | S_kwd_else : kwd_else sing
   | S_kwd_export : kwd_export sing
   | S_kwd_for : kwd_for sing
@@ -323,6 +325,12 @@ let fold
     [ sharp -| S_option S_sharp
     ; app -| S_app sing
     ]
+  | S_do_expr ->
+     let {kwd_do; statements} = node in
+     process_list
+     [ kwd_do -| S_kwd_do
+     ; statements -| S_braces S_statements
+     ]
   | S_app sing -> process
     ( match node with
         ZeroArg node -> node -| sing
@@ -339,6 +347,7 @@ let fold
   | S_decrement -> process @@ node -| S_wrap S_lexeme
   | S_directive -> () (* Leaf *)
   | S_div_eq -> process @@ node -| S_wrap S_lexeme
+  | S_kwd_do -> process @@ node -| S_wrap S_lexeme
   | S_dot -> process @@ node -| S_wrap S_lexeme
   | S_ellipsis -> process @@ node -| S_wrap S_lexeme
   | S_eof -> process @@ node -| S_wrap S_lexeme
@@ -371,6 +380,7 @@ let fold
     | E_CtorApp node -> node -| S_reg (S_ctor_app S_expr)
     | E_Div node -> node -| S_reg (S_bin_op S_slash)
     | E_DivEq node -> node -| S_reg (S_bin_op S_div_eq)
+    | E_Do node -> node -| S_reg S_do_expr
     | E_Equal node -> node -| S_reg (S_bin_op S_equal_cmp)
     | E_False node -> node -| S_false
     | E_Function node -> node -| S_reg (S_function_expr)

@@ -122,6 +122,7 @@ let add_comment (comment : string Region.reg) : Token.t -> Token.t = function
 (* JsLIGO-specific keywords *)
 
 | ContractOf  w -> ContractOf (w#add_line_comment comment)
+| Do          w -> Do (w#add_line_comment comment)
 | Match       w -> Match (w#add_line_comment comment)
 | ParameterOf w -> ParameterOf (w#add_line_comment comment)
 | When        w -> When (w#add_line_comment comment)

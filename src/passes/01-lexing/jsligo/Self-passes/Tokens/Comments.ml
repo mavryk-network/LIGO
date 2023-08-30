@@ -130,6 +130,7 @@ let add_comment (comment : Wrap.comment) : Token.t -> Token.t = function
 (* JsLIGO-specific keywords *)
 
 | ContractOf  w -> ContractOf (w#add_comment comment)
+| Do          w -> Do (w#add_comment comment)
 | Match       w -> Match (w#add_comment comment)
 | ParameterOf w -> ParameterOf (w#add_comment comment)
 | When        w -> When (w#add_comment comment)

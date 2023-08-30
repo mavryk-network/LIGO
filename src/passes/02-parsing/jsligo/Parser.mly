@@ -251,7 +251,7 @@ fun_decl:
     in D_Fun {value; region} }
 
 type_vars:
-  chevrons(sep_or_term(type_var,",")) { $1 }
+  chevrons (sep_or_term (type_var, ",")) { $1 }
 
 fun_params:
   sep_or_term (fun_param,",") { $1 }
@@ -1217,8 +1217,17 @@ core_expr:
   code_inj     { E_CodeInj $1 }
 | par (expr)   { E_Par     $1 }
 | array (expr) { E_Array   $1 }
+| do_expr
 | literal_expr
 | path_expr    { $1 }
+
+(* Do-expressions *)
+
+do_expr:
+  "do" braces(statements) {
+    let region = cover $1#region $2.region in
+    let value  = {kwd_do=$1; statements=$2}
+    in E_Do {region; value} }
 
 (* Literal expressions *)
 

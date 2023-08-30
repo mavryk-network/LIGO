@@ -581,6 +581,7 @@ and print_expr state = function
 | E_CtorApp    e -> print_E_CtorApp    state e
 | E_Div        e -> print_E_Div        state e
 | E_DivEq      e -> print_E_DivEq      state e
+| E_Do         e -> print_E_Do         state e
 | E_Equal      e -> print_E_Equal      state e
 | E_False      e -> print_E_False      state e
 | E_Function   e -> print_E_Function   state e
@@ -789,6 +790,15 @@ and print_E_Div state (node : slash bin_op reg) =
 
 and print_E_DivEq state (node: div_eq bin_op reg) =
   print_bin_op state "E_DivEq" node
+
+(* Do expressions *)
+
+and print_E_Do state (node : do_expr reg) =
+  let Region.{region; value} = node in
+  let {kwd_do=_; statements} = value in
+  let stmts = statements.value.inside in
+  Tree.of_nseq ~region state "E_Do"
+               (fun state -> print_statement state <@ fst) stmts
 
 (* Equality *)
 
