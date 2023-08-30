@@ -215,7 +215,7 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
   | T_string s -> T_String (ghost_string s)
   | T_module_open_in { module_path; field; field_as_open } ->
     let module_path = module_path, [] in
-    let v : CST.type_expr CST.namespace_path = decompile_to_namespace_path module_path field in    
+    let v : CST.type_expr CST.namespace_path = decompile_to_namespace_path module_path field in
     T_NamePath (w v)
   | T_module_access { module_path; field; field_as_open } ->
     let field : CST.type_expr = T_Var (ghost_ident (Format.asprintf "%a" AST.Ty_variable.pp field)) in
@@ -242,7 +242,7 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
         w @@ (CST.P_Var (ghost_ident name), (ghost_colon, type_expr))
     in
     let args : CST.fun_type_params =
-      match Utils.list_to_nsepseq_opt (List.map ~f:decompile_arg args) ghost_comma with
+      match Utils.list_to_sepseq (List.map ~f:decompile_arg args) ghost_comma with
       | Some nsepseq ->
         let inside : (CST.fun_type_param CST.reg, CST.comma) Utils.sep_or_term = Some (`Sep nsepseq) in
         w @@ CST.{ rpar = ghost_rpar; inside; lpar = ghost_lpar }
@@ -256,7 +256,7 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
       | None -> failwith "Decompiler: got a field with no associated type in T_record_raw"
       | Some t -> w @@ decompile_field field_name t attributes
     in
-    (match Utils.list_to_nsepseq_opt (List.map ~f fields) ghost_semi with
+    (match Utils.list_to_sepseq (List.map ~f fields) ghost_semi with
     | None -> failwith "Decompiler: got a T_record_raw with no fields"
     | Some nsepseq -> T_Object (mk_object nsepseq))
   | T_sum_raw variants ->
@@ -264,7 +264,7 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
      fun (constr, { associated_type; attributes; _ }) ->
       decompile_variant constr associated_type attributes
     in
-    (match Utils.list_to_nsepseq_opt (List.map ~f variants) ghost_vbar with
+    (match Utils.list_to_sepseq (List.map ~f variants) ghost_vbar with
     | None -> failwith "Decompiler: got a T_sum_raw with no fields"
     | Some nsepseq ->
       let variant : (CST.variant, CST.vbar) Utils.nsep_or_pref = `Sep nsepseq in
@@ -276,7 +276,7 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
       | T_Object obj -> obj
       | _ -> failwith "Decompiler: field of T_disc_union should be decompiled to TObject"
     in
-    (match Utils.list_to_nsepseq_opt (List.map ~f objects) ghost_vbar with
+    (match Utils.list_to_sepseq (List.map ~f objects) ghost_vbar with
     | None -> failwith "Decompiler: got a T_disc_union with no fields"
     | Some nsepseq ->
       let variant : (CST.type_expr Cst_jsligo.CST._object, CST.vbar) Utils.nsep_or_pref = `Sep nsepseq in

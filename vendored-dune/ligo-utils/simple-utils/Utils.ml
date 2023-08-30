@@ -210,11 +210,6 @@ let list_to_sepseq (lst : 'a list) (sep : 's) : ('a, 's) sepseq =
     [] -> None
   | hd :: tl -> Some (hd, List.map ~f:(fun e -> sep, e) tl)
 
-let list_to_nsepseq_opt (lst : 'a list) (sep : 's) : ('a, 's) nsepseq option =
-  match lst with
-    [] -> None
-  | hd :: tl -> Some (hd, List.map ~f:(fun e -> sep, e) tl)
-
 (* Map and concatenate lists *)
 
 let    nseq_concat_map s ~f = List.concat_map (nseq_to_list    s) ~f

@@ -149,7 +149,7 @@ and pattern : (CST.pattern, CST.type_expr) AST.pattern_ -> CST.pattern =
     | None -> constr
     | Some pat -> P_App (w (constr, Some pat)))
   | P_tuple lst ->
-    let lst = Utils.list_to_nsepseq_opt lst ghost_comma in
+    let lst = Utils.list_to_sepseq lst ghost_comma in
     let lst =
       match lst with
       | None -> failwith "Decompiler: empty P_tuple"
@@ -304,7 +304,7 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
     T_Record (w CST.{ lbrace = ghost_lbrace; inside = pairs; rbrace = ghost_rbrace })
   | T_sum_raw row ->
     let pairs =
-      Utils.list_to_nsepseq_opt
+      Utils.list_to_sepseq
         (List.map
            ~f:(fun (Label.Label constr, { associated_type; attributes; decl_pos = _ }) ->
              w
