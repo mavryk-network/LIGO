@@ -96,7 +96,7 @@ let passes ~(flags : flags) : (module T) list =
   ; entry (module Of_file) ~flag:always ~arg:mod_res
   ; entry (module List_as_function) ~flag:list_as_function ~arg:()
   ; entry (module Array_to_tuple) ~flag:array_to_tuple ~arg:()
-  ; entry (module Match_as_function) ~flag:match_as_function ~arg:()
+  ; entry (module Match_tc39) ~flag:match_as_function ~arg:()
   ; entry (module Object_to_record) ~flag:object_to_record ~arg:()
   ; entry (module Hack_literalize_jsligo) ~flag:hack_literalize_jsligo ~arg:()
   ; entry (module Restrict_t_app) ~flag:always ~arg:()

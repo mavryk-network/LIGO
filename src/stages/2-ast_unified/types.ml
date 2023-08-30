@@ -20,6 +20,7 @@ module Field = Nano_prim.Field
 module Array_repr = Nano_prim.Array_repr
 module Object_ = Nano_prim.Object_
 module Selection = Nano_prim.Selection
+module Match_tc39 = Nano_prim.Match_tc39
 
 (* module Projection = Ligo_prim.Accessor (Nano_prim.Selection) *)
 module Update = Nano_prim.Update
@@ -361,6 +362,7 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_applied_constructor of 'self Constructor.t (* MyCtor (42, 43, 44), PascaLigo only *)
   | E_call of 'self * 'self list Location.wrap (* f (x, y) ; f x y *)
   | E_match of ('self, 'pattern, 'self) Case.t (* match e with | A -> ... | B -> ... *)
+  | E_match_tc39 of ('self, 'pattern) Match_tc39.t
   | E_annot of ('self * 'ty_expr) (* 42 : int *)
   | E_cond of ('self, 'self) Cond.t (* if b then 42 else 24 *)
   | E_set of 'self list (* set [x; 1] *)
