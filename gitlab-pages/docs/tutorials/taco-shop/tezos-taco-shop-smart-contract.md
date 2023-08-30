@@ -725,15 +725,14 @@ let test = ((_: unit): unit => {
 
   /* Purchasing a Taco with 1tez and checking that the stock has been updated */
   let ok_case : test_exec_result = Test.transfer_to_contract (pedro_taco_shop_ctr, clasico_kind, 1 as tez) ;
-  /* TODO FIXME
   let _u = match (ok_case) {
-    when(Success(_)): (([pedro_taco_shop_ta, eq_in_map]) => {
+    when(Success(_)): do {
       let storage = Test.get_storage (pedro_taco_shop_ta) ;
       assert (eq_in_map({ current_stock : 49 as nat, max_price : 50 as tez }, storage, 1 as nat) &&
-              eq_in_map({ current_stock : 20 as nat, max_price : 75 as tez }, storage, 2 as nat)); })([pedro_taco_shop_ta, eq_in_map]);
+              eq_in_map({ current_stock : 20 as nat, max_price : 75 as tez }, storage, 2 as nat));
+    };
     when(Fail(_)):failwith ("ok test case failed")
   };
-  */
 
   /* Purchasing an unregistred Taco */
   let nok_unknown_kind = Test.transfer_to_contract (pedro_taco_shop_ctr, unknown_kind, 1 as tez) ;
