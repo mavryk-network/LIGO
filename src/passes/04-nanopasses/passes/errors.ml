@@ -17,6 +17,7 @@ type t =
   | `Small_passes_michelson_type_wrong of string * ty_expr
   | `Small_passes_wrong_lvalue of expr
   | `Small_passes_unsupported_return of statement list
+  | `Small_passes_unsupported_break of Location.t
   | `Small_passes_unsupported_continue of Location.t
   | `Small_passes_unsupported_control_flow of block
   | `Small_passes_unsupported_top_level_statement of instruction
@@ -112,6 +113,12 @@ let error_ppformat
       Format.fprintf
         f
         "@[<hv>%a@.Return statement is currently not supported in this position@]"
+        snippet_pp
+        loc
+    | `Small_passes_unsupported_break loc ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Break statement is not supported in that position@]"
         snippet_pp
         loc
     | `Small_passes_unsupported_continue loc ->
@@ -291,6 +298,14 @@ let error_json : t -> Simple_utils.Error.t =
     let content =
       make_content
         ~message:"Return statement is currently not supported in this position"
+        ~location
+        ()
+    in
+    make ~stage ~content
+  | `Small_passes_unsupported_break location ->
+    let content =
+      make_content
+        ~message:"Break statement is not supported in that position"
         ~location
         ()
     in
