@@ -1342,13 +1342,16 @@ ctor_app_pattern:
     in {region; value}
   }
 | "#" "<string>" {
-   let region = cover $1#region $2#region in
-   let value  = Some $1, ZeroArg (P_String $2)
-   in {region; value}
+    let region = cover $1#region $2#region in
+    let value  = Some $1, ZeroArg (P_String $2)
+    in {region; value}
   }
 | ctor ctor_app_pattern_args {
    let region, app = $2 (P_String $1) in
-   {region; value = None, app} }
+   {region; value = None, app}
+  }
+| ctor {
+   {region = $1#region; value = None, ZeroArg (P_String $1)} }
 
 ctor_app_pattern_args:
   par (ioption (nsepseq (pattern, ","))) {

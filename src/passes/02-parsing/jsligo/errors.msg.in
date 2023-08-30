@@ -3200,7 +3200,7 @@ contract: Const UIdent ZWSP
 ##
 ## Ends in an error in state: 33.
 ##
-## ctor -> UIdent . [ LPAR ]
+## ctor -> UIdent . [ SEMI RPAR RBRACKET RBRACE PARAMS LPAR EQ COMMA COLON ]
 ## namespace_name -> UIdent . [ DOT ]
 ##
 ## The known suffix of the stack is as follows:
