@@ -394,7 +394,7 @@ let rec expr : Eq.expr -> Folding.expr =
   | E_Match { region = _; value } ->
     let I.{ kwd_match = _; subject; clauses } = value in
     let aux : I.match_clause I.reg -> (_, _) O.Match_tc39.match_clause =
-     fun { value = { filter; clause_expr } } ->
+     fun { value = { filter; clause_expr; _ }; _ } ->
       { filter = filter.value.inside; clause_expr }
     in
     let match_clauses =
@@ -407,7 +407,9 @@ let rec expr : Eq.expr -> Folding.expr =
     in
     return @@ E_match_tc39 { subject = subject.value.inside; match_clauses }
   | E_Xor _ -> failwith "NOT IMPLEMENTED"
-  | E_Do _ -> failwith "NOT IMPLEMENTED"
+  | E_Do { region = _ ; value } ->
+    let I.{ kwd_do = _; statements } = value in
+    return @@ E_do statements.value.inside
 
 
 let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =

@@ -374,6 +374,7 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_mod_in of ('self, 'mod_expr) Mod_in.t (* module M = struct let x = 42 end in M.x *)
   | E_raw_code of 'self Raw_code.t
   | E_block_with of ('self, 'block) Block_with.t (* { let x = 1 ; x := 2 } with x *)
+  | E_do of 'block
   | E_struct_assign_chainable of
       'self Assign_chainable.structural (* x := y ; which has the type of x/y *)
   | E_let_mut_in of ('pattern, 'self, 'ty_expr) Let_binding.t (* let mut x = 1 *)
