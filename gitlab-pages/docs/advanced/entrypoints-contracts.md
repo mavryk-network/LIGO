@@ -195,10 +195,10 @@ const entry_B = (s: string, store: storage): return_ =>
   [list([]), {...store, name: s}];
 
 const main = (action: parameter, store: storage): return_ =>
-  match(action, {
-    Action_A: n => entry_A(n, store),
-    Action_B: s => entry_B(s, store)
-  });
+  match(action) {
+    when(Action_A(n)): entry_A(n, store);
+    when(Action_B(s)): entry_B(s, store)
+  };
 ```
 
 </Syntax>
@@ -448,10 +448,10 @@ const dest = "KT19wgxcuXG9VH4Af5Tpm1vqEKdaMFpznXT3" as address;
 
 const proxy = (action: parameter, store: storage): return_ => {
   let counter =
-    match (Tezos.get_contract_opt(dest), {
-      Some: contract => contract,
-      None: () => failwith("Contract not found.")
-    });
+    match (Tezos.get_contract_opt(dest)) {
+      when(Some(contract)): contract;
+      when(None()): failwith("Contract not found.")
+    };
   /* Reuse the parameter in the subsequent
      transaction or use another one, `mock_param`. */
   let mock_param = Increment(5 as nat);

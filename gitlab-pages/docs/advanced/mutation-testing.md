@@ -238,11 +238,10 @@ let test_mutation =
 
 ```jsligo test-ligo group=twice
 const test_mutation =
-  match(Test.mutation_test(twice, simple_tests), {
-    None: () => unit,
-    Some: pmutation => { Test.log(pmutation[1]);
-                         Test.println("Some mutation also passes the tests! ^^") }
-  });
+  match(Test.mutation_test(twice, simple_tests)) {
+    when(None()): unit;
+    when(Some(pmutation)): (() => { Test.log(pmutation[1]); Test.println("Some mutation also passes the tests! ^^") })()
+  };
 ```
 
 </Syntax>
@@ -488,9 +487,10 @@ const sub = (store: storage, delta: int): storage => store - delta;
 const main = (action: parameter, store: storage) : return_ => {
   return [
     list([]) as list<operation>,    // No operations
-    match(action, {
-      Increment:(n: int) => add (store, n),
-      Decrement:(n: int) => sub (store, n)})
+    match(action) {
+      when(Increment(n)): add (store, n);
+      when(Decrement(n)): sub (store, n)
+    }
   ]
 };
 ```
@@ -589,11 +589,10 @@ let test_mutation =
 
 ```jsligo test-ligo group=frontpage
 const test_mutation =
-  match(Test.mutation_test(main, originate_and_test), {
-    None: () => unit,
-    Some: pmutation => { Test.log(pmutation[1]);
-                         Test.println("Some mutation also passes the tests! ^^") }
-  });
+  match(Test.mutation_test(main, originate_and_test)) {
+    when(None()): unit;
+    when(Some(pmutation)): (() => { Test.log(pmutation[1]); Test.println("Some mutation also passes the tests! ^^") })()
+  };
 ```
 
 </Syntax>
@@ -788,9 +787,9 @@ let test_mutation_all =
 
 ```jsligo test-ligo group=frontpage
 const test_mutation_all =
-  match(Test.mutation_test_all(main, originate_and_test_dec), list([
-    ([]: list<[unit, mutation]>) => unit,
-    ([hd,...tl]: list<[unit, mutation]>) => {
+  match(Test.mutation_test_all(main, originate_and_test_dec)) {
+    when([]): unit;
+    when([hd,...tl]): (([hd, tl]: [[unit, mutation], list<[unit, mutation]>]) => {
                          let ms = list([hd,...tl]);
                          for (const m of ms) {
                            let [_, mutation] = m;
@@ -798,8 +797,8 @@ const test_mutation_all =
                            Test.log("saved at:");
                            Test.log(path);
                          };
-                         Test.println("Some mutation also passes the tests! ^^") }
-  ]));
+                         Test.println("Some mutation also passes the tests! ^^") })([hd, tl])
+  };
 ```
 
 </Syntax>
@@ -923,9 +922,10 @@ const main = (action: parameter, store: storage) : return_ => {
   /* @no_mutation */ let _ = assert (0 == 0);
   return [
     list([]) as list<operation>,    // No operations
-    match(action, {
-      Increment:(n: int) => add (store, n),
-      Decrement:(n: int) => sub (store, n)})
+    match(action) {
+      when(Increment(n)): add (store, n);
+      when(Decrement(n)): sub (store, n)
+    }
   ]
 };
 ```
