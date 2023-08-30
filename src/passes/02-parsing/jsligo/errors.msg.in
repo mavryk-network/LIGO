@@ -1492,7 +1492,7 @@ expected, followed by an expression.
 
 interactive_expr: Bytes WILD
 ##
-## Ends in an error in state: 1241.
+## Ends in an error in state: 1244.
 ##
 ## interactive_expr -> expr . EOF [ # ]
 ##
@@ -1523,7 +1523,7 @@ expected.
 
 contract: Bytes LPAR RPAR ZWSP
 ##
-## Ends in an error in state: 1236.
+## Ends in an error in state: 1239.
 ##
 ## contract -> statements . EOF [ # ]
 ##
@@ -2184,8 +2184,8 @@ contract: Match LPAR Bytes RPAR LBRACE When ZWSP
 ##
 ## Ends in an error in state: 1193.
 ##
-## match_clause -> When . par(pattern) COLON expr [ When RBRACE Default ]
-## match_clause -> When . par(pattern) COLON expr SEMI [ When RBRACE Default ]
+## match_clause -> When . par(when_pattern) COLON expr [ When RBRACE Default ]
+## match_clause -> When . par(when_pattern) COLON expr SEMI [ When RBRACE Default ]
 ##
 ## The known suffix of the stack is as follows:
 ## When
@@ -2198,8 +2198,8 @@ contract: Match LPAR Bytes RPAR LBRACE When LPAR ZWSP
 ##
 ## Ends in an error in state: 1194.
 ##
-## par(pattern) -> LPAR . pattern RPAR [ COLON ]
-## par(pattern) -> LPAR . pattern PARAMS RPAR [ COLON ]
+## par(when_pattern) -> LPAR . when_pattern RPAR [ COLON ]
+## par(when_pattern) -> LPAR . when_pattern PARAMS RPAR [ COLON ]
 ##
 ## The known suffix of the stack is as follows:
 ## LPAR
@@ -2210,22 +2210,22 @@ At this point, a pattern for the clause is expected.
 
 contract: Match LPAR Bytes RPAR LBRACE When LPAR Bytes ZWSP
 ##
-## Ends in an error in state: 1195.
+## Ends in an error in state: 1200.
 ##
-## par(pattern) -> LPAR pattern . RPAR [ COLON ]
-## par(pattern) -> LPAR pattern . PARAMS RPAR [ COLON ]
+## typed_pattern -> pattern . type_annotation(type_expr) [ RPAR PARAMS ]
+## when_pattern -> pattern . [ RPAR PARAMS ]
 ##
 ## The known suffix of the stack is as follows:
-## LPAR pattern
+## pattern
 ##
 contract: Match LPAR Bytes RPAR LBRACE When LPAR Bytes PARAMS ZWSP
 ##
 ## Ends in an error in state: 1197.
 ##
-## par(pattern) -> LPAR pattern PARAMS . RPAR [ COLON ]
+## par(when_pattern) -> LPAR when_pattern PARAMS . RPAR [ COLON ]
 ##
 ## The known suffix of the stack is as follows:
-## LPAR pattern PARAMS
+## LPAR when_pattern PARAMS
 ##
 
 Ill-formed pattern matching.
@@ -2233,17 +2233,17 @@ At this point, a closing parenthesis ')' is expected.
 
 contract: Match LPAR Bytes RPAR LBRACE When LPAR Bytes RPAR ZWSP
 ##
-## Ends in an error in state: 1199.
+## Ends in an error in state: 1202.
 ##
-## match_clause -> When par(pattern) . COLON expr [ When RBRACE Default ]
-## match_clause -> When par(pattern) . COLON expr SEMI [ When RBRACE Default ]
+## match_clause -> When par(when_pattern) . COLON expr [ When RBRACE Default ]
+## match_clause -> When par(when_pattern) . COLON expr SEMI [ When RBRACE Default ]
 ##
 ## The known suffix of the stack is as follows:
-## When par(pattern)
+## When par(when_pattern)
 ##
 contract: Match LPAR Bytes RPAR LBRACE Default ZWSP
 ##
-## Ends in an error in state: 1203.
+## Ends in an error in state: 1206.
 ##
 ## match_default -> Default . COLON expr [ RBRACE ]
 ## match_default -> Default . COLON expr SEMI [ RBRACE ]
@@ -2257,17 +2257,17 @@ At this point, a colon ':' is expected, followed by an expression.
 
 contract: Match LPAR Bytes RPAR LBRACE When LPAR Bytes RPAR COLON ZWSP
 ##
-## Ends in an error in state: 1200.
+## Ends in an error in state: 1203.
 ##
-## match_clause -> When par(pattern) COLON . expr [ When RBRACE Default ]
-## match_clause -> When par(pattern) COLON . expr SEMI [ When RBRACE Default ]
+## match_clause -> When par(when_pattern) COLON . expr [ When RBRACE Default ]
+## match_clause -> When par(when_pattern) COLON . expr SEMI [ When RBRACE Default ]
 ##
 ## The known suffix of the stack is as follows:
-## When par(pattern) COLON
+## When par(when_pattern) COLON
 ##
 contract: Match LPAR Bytes RPAR LBRACE Default COLON ZWSP
 ##
-## Ends in an error in state: 1204.
+## Ends in an error in state: 1207.
 ##
 ## match_default -> Default COLON . expr [ RBRACE ]
 ## match_default -> Default COLON . expr SEMI [ RBRACE ]
@@ -3120,7 +3120,7 @@ contract: Return If LPAR Bytes RPAR While LPAR Bytes RPAR ZWSP
 ##
 contract: While LPAR Bytes RPAR ZWSP
 ##
-## Ends in an error in state: 1235.
+## Ends in an error in state: 1238.
 ##
 ## while_stmt(poly_stmt) -> While par(while_cond) . poly_stmt [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## while_stmt(statement) -> While par(while_cond) . statement [ SEMI RBRACE EOF Default Case ]
@@ -3165,13 +3165,13 @@ At this point, one of the following is expected:
 
 contract: Match LPAR Bytes RPAR LBRACE When LPAR Bytes RPAR COLON Bytes WILD
 ##
-## Ends in an error in state: 1201.
+## Ends in an error in state: 1204.
 ##
-## match_clause -> When par(pattern) COLON expr . [ When RBRACE Default ]
-## match_clause -> When par(pattern) COLON expr . SEMI [ When RBRACE Default ]
+## match_clause -> When par(when_pattern) COLON expr . [ When RBRACE Default ]
+## match_clause -> When par(when_pattern) COLON expr . SEMI [ When RBRACE Default ]
 ##
 ## The known suffix of the stack is as follows:
-## When par(pattern) COLON expr
+## When par(when_pattern) COLON expr
 ##
 ## WARNING: This example involves spurious reductions.
 ## This implies that, although the LR(1) items shown above provide an
@@ -3197,6 +3197,32 @@ following is expected:
   * the keyword 'when' to introduce a new clause;
   * the keyword 'default' to introduce the default clause;
   * a closing brace '}' if no more clauses.
+
+contract: Match LPAR Bytes RPAR LBRACE When LPAR UIdent COLON Ident XOR
+##
+## Ends in an error in state: 1195.
+##
+## par(when_pattern) -> LPAR when_pattern . RPAR [ COLON ]
+## par(when_pattern) -> LPAR when_pattern . PARAMS RPAR [ COLON ]
+##
+## The known suffix of the stack is as follows:
+## LPAR when_pattern
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 131, spurious reduction of production type_name -> Ident
+## In state 153, spurious reduction of production no_par_type_expr -> type_name
+## In state 185, spurious reduction of production core_type -> no_par_type_expr
+## In state 195, spurious reduction of production type_expr -> core_type
+## In state 257, spurious reduction of production type_annotation(type_expr) -> COLON type_expr
+## In state 1201, spurious reduction of production typed_pattern -> pattern type_annotation(type_expr)
+## In state 1199, spurious reduction of production when_pattern -> typed_pattern
+##
+
+Ill-formed pattern matching.
+At this point, a closing parenthesis ')' is expected.
 
 contract: LPAR Bytes PARAMS ZWSP
 ##
@@ -3698,7 +3724,7 @@ At this point, a block of statements is expected.
 
 interactive_expr: ZWSP
 ##
-## Ends in an error in state: 1239.
+## Ends in an error in state: 1242.
 ##
 ## interactive_expr' -> . interactive_expr [ # ]
 ##
@@ -5056,7 +5082,7 @@ At this point, one of the following is expected:
 
 contract: Match LPAR Bytes RPAR LBRACE Default COLON Bytes WILD
 ##
-## Ends in an error in state: 1205.
+## Ends in an error in state: 1208.
 ##
 ## match_default -> Default COLON expr . [ RBRACE ]
 ## match_default -> Default COLON expr . SEMI [ RBRACE ]
@@ -5090,7 +5116,7 @@ expected:
 
 contract: Match LPAR Bytes RPAR LBRACE Default COLON Bytes SEMI ZWSP
 ##
-## Ends in an error in state: 1210.
+## Ends in an error in state: 1213.
 ##
 ## braces(match_clauses) -> LBRACE match_clauses . RBRACE [ XOR While When VBAR Type TIMES Switch SLASH SEMI_ELSE SEMI Return RPAR REM RBRACKET RBRACE QMARK PLUS PARAMS OR Namespace NE MINUS Let LT LPAR LE LBRACE Interface Import If GT For Export Else EQ2 EOF Default Continue Const Case COMMA COLON Break BIT_XOR BIT_SR BIT_SL BIT_AND Attr As AND ]
 ##
@@ -5103,7 +5129,7 @@ At this point, a closing brace is expected '}'.
 
 contract: Match LPAR Bytes RPAR LBRACE When LPAR Bytes RPAR COLON Bytes SEMI ZWSP
 ##
-## Ends in an error in state: 1212.
+## Ends in an error in state: 1215.
 ##
 ## nseq(match_clause) -> match_clause . [ RBRACE Default ]
 ## nseq(match_clause) -> match_clause . nseq(match_clause) [ RBRACE Default ]
@@ -5151,7 +5177,7 @@ At this point, a closing parenthesis ')' is expected.
 
 contract: While LPAR Bytes WILD
 ##
-## Ends in an error in state: 1230.
+## Ends in an error in state: 1233.
 ##
 ## par(while_cond) -> LPAR while_cond . RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ## par(while_cond) -> LPAR while_cond . PARAMS RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
@@ -5175,11 +5201,11 @@ contract: While LPAR Bytes WILD
 ## In state 388, spurious reduction of production non_object_expr -> disj_expr_level
 ## In state 380, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 381, spurious reduction of production expr -> no_attr_expr
-## In state 1234, spurious reduction of production while_cond -> expr
+## In state 1237, spurious reduction of production while_cond -> expr
 ##
 contract: While LPAR Bytes PARAMS ZWSP
 ##
-## Ends in an error in state: 1232.
+## Ends in an error in state: 1235.
 ##
 ## par(while_cond) -> LPAR while_cond PARAMS . RPAR [ While Verbatim UIdent Type True Switch String SHARP Return PLUS2 Nat Namespace Mutez Match MINUS2 Let LPAR LBRACKET LBRACE Interface Int Import If Ident Function For False Export Do Directive ContractOf Continue Const Bytes Break Attr ]
 ##
@@ -5473,7 +5499,7 @@ At this point, a namespace name is expected.
 
 contract: SHARP LBRACKET String COMMA Bytes While
 ##
-## Ends in an error in state: 1221.
+## Ends in an error in state: 1224.
 ##
 ## nsepseq(ctor_arg(expr),COMMA) -> ctor_arg(expr) . [ RBRACKET ]
 ## nsepseq(ctor_arg(expr),COMMA) -> ctor_arg(expr) . COMMA nsepseq(ctor_arg(expr),COMMA) [ RBRACKET ]
@@ -5499,11 +5525,11 @@ contract: SHARP LBRACKET String COMMA Bytes While
 ## In state 388, spurious reduction of production non_object_expr -> disj_expr_level
 ## In state 380, spurious reduction of production no_attr_expr -> non_object_expr
 ## In state 381, spurious reduction of production expr -> no_attr_expr
-## In state 1220, spurious reduction of production ctor_arg(expr) -> expr
+## In state 1223, spurious reduction of production ctor_arg(expr) -> expr
 ##
 contract: SHARP LBRACKET String COMMA Bytes COMMA ZWSP
 ##
-## Ends in an error in state: 1222.
+## Ends in an error in state: 1225.
 ##
 ## nsepseq(ctor_arg(expr),COMMA) -> ctor_arg(expr) COMMA . nsepseq(ctor_arg(expr),COMMA) [ RBRACKET ]
 ## nseq(__anonymous_0(ctor_arg(expr),COMMA)) -> ctor_arg(expr) COMMA . [ RBRACKET ]
@@ -5535,19 +5561,6 @@ Ill-formed pattern of constructor application.
 At this point, one of the following is expected:
   * a pattern matching an argument;
   * a closing parenthesis ')' if the constructor is constant.
-
-contract: Const UIdent LPAR PARAMS ZWSP
-##
-## Ends in an error in state: 631.
-##
-## par(ioption(nsepseq(pattern,COMMA))) -> LPAR PARAMS . RPAR [ SEMI RPAR RBRACKET RBRACE PARAMS EQ COMMA COLON ]
-##
-## The known suffix of the stack is as follows:
-## LPAR PARAMS
-##
-
-Ill-formed pattern of constructor application.
-At this point, a closing parenthesis ')' is expected.
 
 contract: Const UIdent LPAR Bytes ZWSP
 ##
@@ -5586,6 +5599,15 @@ contract: Const UIdent LPAR Bytes PARAMS ZWSP
 ##
 ## The known suffix of the stack is as follows:
 ## LPAR nsepseq(pattern,COMMA) PARAMS
+##
+contract: Const UIdent LPAR PARAMS ZWSP
+##
+## Ends in an error in state: 631.
+##
+## par(ioption(nsepseq(pattern,COMMA))) -> LPAR PARAMS . RPAR [ SEMI RPAR RBRACKET RBRACE PARAMS EQ COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## LPAR PARAMS
 ##
 
 Ill-formed pattern of constructor application.

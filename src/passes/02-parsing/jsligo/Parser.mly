@@ -284,7 +284,7 @@ var_kind:
 | "const" { `Const $1 }
 
 bindings:
-  nsepseq(val_binding,",") { $1 }
+  nsepseq (val_binding,",") { $1 }
 
 val_binding:
   pattern ioption(binding_type) "=" expr {
@@ -1019,10 +1019,20 @@ match_clauses:
 | match_default                             { DefaultClause   $1 }
 
 match_clause:
-  "when" par(pattern) ":" expr ioption(";") {
+  "when" par(when_pattern) ":" expr ioption(";") {
      let region = cover $1#region (expr_to_region $4)
      and value  = {kwd_when=$1; filter=$2; colon=$3; clause_expr=$4}
     in {region; value} }
+
+when_pattern:
+  pattern | typed_pattern { $1 }
+
+typed_pattern:
+  pattern type_annotation(type_expr) {
+    let start  = pattern_to_region $1
+    and stop   = type_expr_to_region (snd $2) in
+    let region = cover start stop
+    in P_Typed {region; value=($1,$2)} }
 
 match_default:
   "default" ":" expr ioption(";") {
