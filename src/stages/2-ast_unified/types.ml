@@ -137,6 +137,8 @@ and 'self list_pattern =
   | Cons of 'self * 'self
   | List of 'self list
 
+and 'self element_pattern = { ellipsis : bool ; pattern : 'self }
+
 and ('self, 'ty_expr) pattern_content_ =
   | P_unit
   | P_typed of 'ty_expr * 'self
@@ -145,6 +147,7 @@ and ('self, 'ty_expr) pattern_content_ =
   | P_list of 'self list_pattern
   | P_variant of Label.t * 'self option
   | P_tuple of 'self list
+  | P_tuple_with_ellipsis of ('self element_pattern) list
   | P_pun_record of (Label.t, 'self) Field.t list
   | P_rest of Label.t
   | P_attr of Attribute.t * 'self
