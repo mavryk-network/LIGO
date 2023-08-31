@@ -222,21 +222,18 @@ and print_nat (node : (lexeme * Z.t) wrap) =
 let rec print state (node : CST.t) =
   let {statements; eof} = node in
   let prog = Utils.nseq_to_list statements
-             |> List.map ~f:(print_statement_semi ~top:true state)
+             |> List.map ~f:(print_statement_semi state)
              |> separate_map hardline group
   in match eof#comments with
        [] -> prog
      | comments -> prog ^/^ print_comments comments
 
-(*| Directive dir ->
-    string (Directive.to_lexeme dir).Region.value *)
-
-and print_statement ?top state = function
-  S_Attr      s -> print_S_Attr ?top state s
+and print_statement state = function
+  S_Attr      s -> print_S_Attr      state s
 | S_Block     s -> print_S_Block     state s
 | S_Break     s -> print_S_Break     state s
 | S_Continue  s -> print_S_Continue  state s
-| S_Decl      s -> print_S_Decl ?top state s
+| S_Decl      s -> print_S_Decl      state s
 | S_Directive s -> print_S_Directive state s
 | S_Export    s -> print_S_Export    state s
 | S_Expr      s -> print_S_Expr      state s
@@ -255,9 +252,9 @@ and print_statement ?top state = function
 
 (* Decorated statements *)
 
-and print_S_Attr ?top state (node : attribute * statement) =
+and print_S_Attr state (node : attribute * statement) =
   let attributes, stmt = unroll_S_Attr node in
-  let thread = print_statement ?top state stmt
+  let thread = print_statement state stmt
   in print_attributes state thread attributes
 
 (* Blocks of statements *)
@@ -269,9 +266,9 @@ and print_block state (node : statements braces) =
   let print = print_nseq (print_statement_semi state)
   in print_braces ~force_hardline:true state print node
 
-and print_statement_semi ?top state (node : statement * semi option) =
+and print_statement_semi state (node : statement * semi option) =
   let statement, semi_opt = node in
-  let thread = print_statement ?top state statement in
+  let thread = print_statement state statement in
   thread ^^ Option.value_map semi_opt ~default:empty ~f:token
 
 (* Break statement *)
@@ -284,17 +281,19 @@ and print_S_Continue state (node : kwd_continue) = token node
 
 (* Declarations as statements *)
 
-and print_S_Decl ?top state = function
-  D_Fun       d -> print_D_Fun       ?top state d
-| D_Import    d -> print_D_Import         state d
-| D_Interface d -> print_D_Interface      state d
-| D_Namespace d -> print_D_Namespace      state d
-| D_Type      d -> print_D_Type           state d
-| D_Value     d -> print_D_Value     ?top state d
+and print_S_Decl state (node : declaration) = print_declaration state node
+
+and print_declaration state = function
+  D_Fun       d -> print_D_Fun       state d
+| D_Import    d -> print_D_Import    state d
+| D_Interface d -> print_D_Interface state d
+| D_Namespace d -> print_D_Namespace state d
+| D_Type      d -> print_D_Type      state d
+| D_Value     d -> print_D_Value     state d
 
 (* Function declaration *)
 
-and print_D_Fun ?top state (node : fun_decl reg) =
+and print_D_Fun state (node : fun_decl reg) =
   let {kwd_function; fun_name; type_vars;
        parameters; rhs_type; fun_body} = node.value in
   let thread = token kwd_function ^^ space ^^ print_ident fun_name in
@@ -439,24 +438,63 @@ and print_D_Type state (node : type_decl reg) =
   let thread = token kwd_type ^^ space ^^ token name in
   let thread = thread ^^ print_type_vars_opt state type_vars in
   let rhs = print_type_expr state type_expr in
-  if is_enclosed_type type_expr
-  then thread ^^ space ^^ token eq ^^ space ^^ rhs
-  else thread ^^ prefix state#indent 1 (space ^^ token eq) rhs
+  group (thread ^^
+         if is_enclosed_type type_expr
+         then space ^^ token eq ^^ space ^^ rhs
+         else prefix state#indent 1 (space ^^ token eq) rhs)
 
-(* XXX *)
+(* Value declarations *)
+
+and print_D_Value state (node : value_decl reg) =
+  let {kind; bindings} = node.value in
+  let thread = print_value_kind state kind ^^ space in
+  group (thread ^^
+         print_nsepseq (break 1) (print_val_binding state) bindings)
+
+and print_value_kind state = function
+  `Let   kwd_let   -> token kwd_let
+| `Const kwd_const -> token kwd_const
+
+and print_val_binding state (node : val_binding reg) =
+  let {pattern; type_vars; rhs_type; eq; rhs_expr} = node.value in
+  let thread = print_pattern state pattern in
+  let thread = thread ^^ space ^^
+  match rhs_type with
+    None -> empty
+  | Some (colon, type_expr) ->
+      let rhs = print_type_vars_opt state type_vars
+                ^^ print_type_expr state type_expr in
+      nest state#indent (break 0 ^^ token colon ^^ space ^^ rhs) in
+  let thread = thread ^^ space ^^ token eq ^^ space
+  in prefix state#indent 1 thread (print_expr state rhs_expr)
+
+(* Preprocessing directives *)
+
+and print_S_Directive state (node : Directive.t) =
+  string (Directive.to_lexeme node).Region.value
+
+(* Export statements *)
+
+and print_S_Export state (node : export_stmt reg) =
+  let kwd_export, declaration = node.value in
+  token kwd_export ^^ space ^^ print_declaration state declaration
 
 (* Expressions as statements *)
 
-and print_S_Expr state (node: attribute list * expr) =
-  let attr, expr = node in
-  let expr_doc   = print_expr state expr in
-  if List.is_empty attr then expr_doc
-  else print_attributes state attr ^/^ expr_doc
+and print_S_Expr state (node : expr) = print_expr state node
 
-and print_for state (node: for_stmt reg) =
-  let { attributes; kwd_for; lpar; initialiser;
-        semi1; condition; semi2; afterthought; rpar;
-        statement} = node.value in
+(* For-loops *)
+
+and print_S_For state (node : for_stmt reg) =
+  let {kwd_for; range; for_body} = node.value in
+  let thread = token kwd_for ^^ space ^^ print_range_for state range in
+  match for_body with
+    None -> thread
+  | Some stmt -> prefix state#indent 1 thread (print_statement state stmt)
+
+and print_range_for state (node : range_for par) =
+  let {lpar; inside; rpar} = node.value in
+  let {initialiser; semi1; condition; semi2; afterthought} = inside in
   let par =
     Option.value_map initialiser ~default:space ~f:(print_statement state)
     ^^ token semi1
@@ -464,12 +502,12 @@ and print_for state (node: for_stmt reg) =
                         ~f:(fun expr -> break 1 ^^ print_expr state expr)
     ^^ token semi2
     ^^ Option.value_map afterthought ~default:empty
-         ~f:(fun seq -> break 1 ^^ print_nsepseq (break 1) (print_expr state) seq)
-  in
-  let par = print_par_like_document state par lpar rpar
-  in print_attributes state attributes ^^
-  token kwd_for ^^ space ^^ par ^^ space ^^
-  Option.value_map statement ~default:empty ~f:(print_statement state)
+      ~f:(fun s -> break 1 ^^ print_nsepseq (break 1) (print_expr state) s)
+  in print_par_like_document state par lpar rpar
+
+(* For-of loops *)
+
+(* XXX *)
 
 and print_for_of state (node: for_of reg) =
   let {kwd_for; lpar; index_kind; index; kwd_of;
@@ -490,9 +528,6 @@ and print_while state (node: while_stmt reg) =
   token kwd_while ^^ space
   ^^ print_par_like_document state (print_expr state expr) lpar rpar
   ^^ space ^^ print_statement state statement
-
-and print_export state {value = (kwd_export, statement); _} =
-  token kwd_export ^^ space ^^ print_statement state statement
 
 and print_namespace ?top state (node: namespace_statement reg) =
   let kwd_namespace, name, interface_annotation, statements, attributes = node.value in
@@ -541,56 +576,6 @@ and print_return state {value = {kwd_return; expr}; _} =
 
 and filter_private (attributes: CST.attribute list) : CST.attribute list =
   List.filter ~f:(fun (v: CST.attribute) -> not (String.equal (fst v#payload) "private")) attributes
-
-and print_let_or_const ?top state (node : (let_decl reg, const_decl reg) Either.t) : document =
-  let attributes, kwd, bindings =
-    Either.fold node
-      ~left:(fun ({value; _} : let_decl reg) -> value.attributes,
-                                                value.kwd_let,
-                                                value.bindings)
-      ~right:(fun ({value; _} : const_decl reg) -> value.attributes,
-                                                   value.kwd_const,
-                                                   value.bindings) in
-  let top = match top with Some true -> true | _ -> false in
-  let is_private =
-    List.exists ~f:(fun a -> String.equal (fst a#payload) "private")
-                attributes in
-  let attributes = filter_private attributes in
-  print_attributes state attributes ^/^
-  (if (top && is_private || not top) then empty else string "export" ^^ space)
-  ^^ token kwd ^^ space
-  ^^ print_nsepseq (break 1) (print_val_binding state) bindings
-
-and print_let ?top state (node : let_decl reg) =
-  print_let_or_const ?top state (Left node)
-
-and print_const state (node : const_decl reg) = print_let_or_const state (Right node)
-
-and print_val_binding state {value = {binders; type_params = _; lhs_type; eq; expr}; _} =
-  (* In case the RHS is a lambda function, we want to try to display
-     it in the same line instead of causing a line break. For example,
-     we want to see this:
-
-     let f = (x: int) => x
-
-     And not this:
-
-     let f =
-       (x: int) => x
-  *)
-  let join_lhs_with_rhs =
-    function
-      EFun _ -> ( ^^ )
-    | expr when is_enclosed_expr expr -> ( ^^ )
-    | _      -> prefix state#indent 0
-  in
-  join_lhs_with_rhs expr
-    ((match lhs_type with
-        Some (colon, type_expr) ->
-          print_pattern state binders ^^ print_type_annot_rhs state colon type_expr
-      | None -> print_pattern state binders)
-     ^^ space ^^ token eq ^^ space)
-    (print_expr state expr)
 
 and print_switch state {value = {kwd_switch; lpar; expr; rpar; lbrace; cases; rbrace}; _} =
   token kwd_switch ^^ space ^^ print_par_like_document state (print_expr state expr) lpar rpar
@@ -1085,7 +1070,6 @@ let print_pattern   = print_pattern
 let print_expr      = print_expr
 let print_statement = print_statement
 *)
-
 type cst       = CST.t
 type expr      = CST.expr
 type type_expr = CST.type_expr
