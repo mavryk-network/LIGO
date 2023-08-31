@@ -167,12 +167,11 @@ let get_defs_completions
     | JsLIGO cst ->
       let open Cst_jsligo.Fold in
       let collect (Some_node (node, sing)) =
-        ignore node; (* FIXME *)
         match sing with
-        (* | S_reg S_namespace_statement *)
-        (*   when Range.(contains_position pos (of_region node.region)) -> *)
-        (*   let _, name, _, _, _ = node.value in *)
-        (*   Continue name *)
+        | S_reg S_namespace_decl
+          when Range.(contains_position pos (of_region node.region)) ->
+          let { namespace_name ; _ } : Cst_jsligo.CST.namespace_decl = node.value in
+          Continue namespace_name
         | _ -> Skip
       in
       fold [] (Fn.flip List.cons) collect cst
