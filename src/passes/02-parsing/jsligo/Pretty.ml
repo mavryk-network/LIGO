@@ -47,7 +47,7 @@ let print_line_comment comment = string "//" ^^ string comment.value
 let print_block_comment comment =
   string "/*" ^^ string comment.value ^^ string "*/"
 
-let print_line_comment_opt ?(sep = empty) prefix = function
+let print_line_comment_opt ?(sep=empty) prefix = function
   Some comment -> prefix ^^ space ^^ print_line_comment comment ^^ hardline
 | None -> prefix ^^ sep
 
@@ -61,7 +61,7 @@ let print_comments = function
 
 (* Tokens *)
 
-let token ?(sep = empty) (t : string Wrap.t) : document =
+let token ?(sep=empty) (t : string Wrap.t) : document =
   let prefix = print_comments t#comments ^/^ string t#payload
   in print_line_comment_opt ~sep prefix t#line_comment
 
@@ -86,38 +86,38 @@ let print_braces_like_document
   state inside ?(force_hardline : bool option) left right =
   print_enclosed_document state ?force_hardline inside 1 left right
 
-let print_braces state printer
+let print_braces state print
   ?(force_hardline : bool option) (node : 'a braces) =
   let {lbrace; inside; rbrace} = node.value in
   print_braces_like_document
-    state ?force_hardline (printer inside) lbrace rbrace
+    state ?force_hardline (print inside) lbrace rbrace
 
 let print_brackets_like_document
   state inside ?(force_hardline : bool option) left right =
   print_enclosed_document state ?force_hardline inside 0 left right
 
-let print_brackets state printer (node : 'a brackets) =
+let print_brackets state print (node : 'a brackets) =
   let {lbracket; inside; rbracket} = node.value in
   print_brackets_like_document
-    state ~force_hardline:false (printer inside) lbracket rbracket
+    state ~force_hardline:false (print inside) lbracket rbracket
 
 let print_chevrons_like_document
   state inside ?(force_hardline : bool option) left right =
   print_enclosed_document state ?force_hardline inside 0 left right
 
-let print_chevrons state printer (node : 'a chevrons) =
+let print_chevrons state print (node : 'a chevrons) =
   let {lchevron; inside; rchevron} = node.value in
   print_chevrons_like_document
-    state ~force_hardline:false (printer inside) lchevron rchevron
+    state ~force_hardline:false (print inside) lchevron rchevron
 
 let print_par_like_document
   state inside ?(force_hardline : bool option) left right =
   print_enclosed_document state ?force_hardline inside 0 left right
 
-let print_par state printer (node : 'a par) =
+let print_par state print (node : 'a par) =
   let {lpar; inside; rpar} = node.value in
   print_par_like_document
-    state ~force_hardline:false (printer inside) lpar rpar
+    state ~force_hardline:false (print inside) lpar rpar
 
 (* The separator [sep] here represents some extra spacing (like spaces
    or newlines) that will be printed after every separator in a
@@ -126,20 +126,42 @@ let print_par state printer (node : 'a par) =
 let print_nsepseq :
   'a.document ->
   ('a -> document) -> ('a, lexeme Wrap.t) Utils.nsepseq -> document =
-  fun sep printer elements ->
+  fun sep print elements ->
     let hd, tl = elements in
     let rec separate_map = function
       []            -> empty
-    | (sep', x)::xs -> token ~sep sep' ^^ printer x ^^ separate_map xs
-    in printer hd ^^ separate_map tl
+    | (sep', x)::xs -> token ~sep sep' ^^ print x ^^ separate_map xs
+    in print hd ^^ separate_map tl
+
+let print_sepseq :
+  'a.document -> ('a -> document) ->
+  ('a, lexeme wrap) Utils.sepseq -> document =
+  fun sep print -> function
+    None     -> empty
+  | Some seq -> print_nsepseq sep print seq
 
 let print_nseq : 'a.('a -> document) -> 'a Utils.nseq -> document =
   fun print (head, tail) -> separate_map (break 1) print (head::tail)
 
+let print_nsep_or_term :
+  'a.document -> ('a -> document) ->
+  ('a, lexeme wrap) Utils.nsep_or_term -> document =
+  fun sep print -> function
+    `Sep  seq -> print_nsepseq sep print seq
+  | `Term seq -> let print (item, term) = print item ^^ token term
+                 in print_nseq print seq
+
+let print_sep_or_term :
+  'a.document -> ('a -> document) ->
+  ('a, lexeme wrap) Utils.sep_or_term -> document =
+  fun sep print -> function
+    None     -> empty
+  | Some seq -> print_nsep_or_term sep print seq
+
 (* Enclosed structures *)
 
 let is_enclosed_expr = function
-  E_Par _ | E_Array _ | E_Object _ -> true
+  E_Par _ | E_Array _ | E_Object _ | E_Update _ | E_Do _ -> true
 | _ -> false
 
 let is_enclosed_statement = function
@@ -148,7 +170,7 @@ let is_enclosed_statement = function
 | _         -> false
 
 let is_enclosed_type = function
-  T_Array _ | T_Object _ -> true
+  T_Par _ | T_Array _ | T_Object _ -> true
 | _ -> false
 
 (* UTILITIES *)
@@ -160,6 +182,12 @@ let unroll_S_Attr (attr, stmt) =
     S_Attr (attr, stmt) -> aux (attr :: attrs) stmt
   | stmt                -> List.rev attrs, stmt
   in aux [attr] stmt
+
+let unroll_I_Attr (attr, entry) =
+  let rec aux attrs = function
+    I_Attr (attr, entry) -> aux (attr :: attrs) entry
+  | entry                -> List.rev attrs, entry
+  in aux [attr] entry
 
 (* PRINTING LITERALS *)
 
@@ -194,7 +222,7 @@ and print_nat (node : (lexeme * Z.t) wrap) =
 let rec print state (node : CST.t) =
   let {statements; eof} = node in
   let prog = Utils.nseq_to_list statements
-             |> List.map ~f:(print_statement ~top:true state <@ fst)
+             |> List.map ~f:(print_statement_semi ~top:true state)
              |> separate_map hardline group
   in match eof#comments with
        [] -> prog
@@ -204,11 +232,11 @@ let rec print state (node : CST.t) =
     string (Directive.to_lexeme dir).Region.value *)
 
 and print_statement ?top state = function
-  S_Attr      s -> print_S_Attr      ?top state s
+  S_Attr      s -> print_S_Attr ?top state s
 | S_Block     s -> print_S_Block     state s
 | S_Break     s -> print_S_Break     state s
 | S_Continue  s -> print_S_Continue  state s
-| S_Decl      s -> print_S_Decl      ?top state s
+| S_Decl      s -> print_S_Decl ?top state s
 | S_Directive s -> print_S_Directive state s
 | S_Export    s -> print_S_Export    state s
 | S_Expr      s -> print_S_Expr      state s
@@ -229,20 +257,197 @@ and print_statement ?top state = function
 
 and print_S_Attr ?top state (node : attribute * statement) =
   let attributes, stmt = unroll_S_Attr node in
-  let thread = print_statement ?top stmt
+  let thread = print_statement ?top state stmt
   in print_attributes state thread attributes
 
 (* Blocks of statements *)
 
 and print_S_Block state (node : statements braces) =
-  let print = print_nseq (break 1) (print_statement state)
-  in print_braces state print ~force_hardline:true node
+  print_block state node
+
+and print_block state (node : statements braces) =
+  let print = print_nseq (print_statement_semi state)
+  in print_braces ~force_hardline:true state print node
+
+and print_statement_semi ?top state (node : statement * semi option) =
+  let statement, semi_opt = node in
+  let thread = print_statement ?top state statement in
+  thread ^^ Option.value_map semi_opt ~default:empty ~f:token
 
 (* Break statement *)
 
-and print_S_Break
+and print_S_Break state (node : kwd_break) = token node
 
-and print_SExpr state (node: attribute list * expr) =
+(* Continue statement *)
+
+and print_S_Continue state (node : kwd_continue) = token node
+
+(* Declarations as statements *)
+
+and print_S_Decl ?top state = function
+  D_Fun       d -> print_D_Fun       ?top state d
+| D_Import    d -> print_D_Import         state d
+| D_Interface d -> print_D_Interface      state d
+| D_Namespace d -> print_D_Namespace      state d
+| D_Type      d -> print_D_Type           state d
+| D_Value     d -> print_D_Value     ?top state d
+
+(* Function declaration *)
+
+and print_D_Fun ?top state (node : fun_decl reg) =
+  let {kwd_function; fun_name; type_vars;
+       parameters; rhs_type; fun_body} = node.value in
+  let thread = token kwd_function ^^ space ^^ print_ident fun_name in
+  let thread = thread ^/^ print_type_vars_opt state type_vars in
+  let thread = thread ^/^ print_fun_params state parameters in
+  let thread = thread ^/^ print_type_annotation_opt state rhs_type
+  in group (thread ^/^ print_fun_body state fun_body)
+
+and print_fun_body state (node : statements braces) =
+  print_block state node
+
+and print_type_vars_opt state (node : type_vars option) =
+  Option.value_map node ~default:empty ~f:(print_type_vars state)
+
+and print_type_vars state (node : type_vars) =
+  print_chevrons state (print_sep_or_term (break 1) print_ident) node
+
+and print_fun_params state (node : fun_params) =
+  let print = print_sep_or_term (break 1) (print_pattern state)
+  in print_par state print node
+
+and print_type_annotation_opt state (node : type_annotation option) =
+  Option.value_map node ~default:empty ~f:(print_type_annotation state)
+
+and print_type_annotation state (node : type_annotation) =
+  let colon, type_expr = node in
+  let rhs = print_type_expr state type_expr in
+  group (nest state#indent (break 0 ^^ token colon ^^ space ^^ rhs))
+
+(* Import declaration *)
+
+and print_D_Import state = function
+  ImportAlias i -> print_ImportAlias state i
+| ImportAllAs i -> print_ImportAllAs state i
+| ImportFrom  i -> print_ImportFrom  state i
+
+and print_ImportAlias state (node : import_alias reg) =
+  let {kwd_import; alias; equal; namespace_path} = node.value
+  in group (token kwd_import ^^ space ^^ token alias
+            ^^ space ^^ token equal ^^ space
+            ^^ print_namespace_selection state namespace_path)
+
+and print_namespace_selection state = function
+  M_Path  s -> print_M_Path  state s
+| M_Alias s -> print_M_Alias s
+
+and print_M_Path state (node : namespace_name namespace_path reg) =
+  print_namespace_path state print_ident node.value
+
+and print_namespace_path :
+  'a.state -> ('a -> document) -> 'a namespace_path -> document =
+  fun state print node ->
+    let {namespace_path; selector; property} = node in
+    let thread = print_nsepseq (break 0) print_ident namespace_path
+    in group (thread ^^ token selector ^^ break 0 ^^ print property)
+
+and print_M_Alias (node : namespace_name) = print_ident node
+
+and print_ImportAllAs state (node : import_all_as reg) =
+  let {kwd_import; times; kwd_as; alias; kwd_from; file_path} = node.value
+  in group (token kwd_import ^^ space ^^ token times ^^ space
+            ^^ token kwd_as ^^ space ^^ token alias ^^ space
+            ^^ token kwd_from ^^ space ^^ print_string file_path)
+
+and print_ImportFrom state (node : import_from reg) =
+  let {kwd_import; imported; kwd_from; file_path} = node.value in
+  let print_idents = print_sep_or_term (break 1) print_ident in
+  group (token kwd_import ^^ space ^^
+         print_braces ~force_hardline:true state print_idents imported
+         ^^ space ^^ token kwd_from ^^ space ^^ print_string file_path)
+
+(* Interfaces *)
+
+and print_D_Interface state (node : interface_decl reg) =
+  let {kwd_interface; intf_name; intf_body} = node.value in
+  group (token kwd_interface ^^ space ^^ token intf_name ^^ space
+         ^^ print_intf_body state intf_body)
+
+and print_intf_body state (node : intf_body) =
+  print_braces ~force_hardline:true state (print_intf_entries state) node
+
+and print_intf_entries state (node : intf_entries) =
+  print_sep_or_term (break 1) (print_intf_entry state) node
+
+and print_intf_entry state = function
+  I_Attr  i -> print_I_Attr  state i
+| I_Type  i -> print_I_Type  state i
+| I_Const i -> print_I_Const state i
+
+and print_I_Attr state (node : attribute * intf_entry) =
+  let attributes, entry = unroll_I_Attr node in
+  let thread = print_intf_entry state entry
+  in print_attributes state thread attributes
+
+and print_I_Type state (node : intf_type reg) =
+  let {kwd_type; type_name; type_rhs} = node.value in
+  let thread = token kwd_type ^^ space ^^ token type_name
+  in group (print_rhs state thread type_rhs)
+
+and print_rhs state thread (node : (equal * type_expr) option) =
+  let print state (eq, type_expr) =
+    let rhs = print_type_expr state type_expr in
+    if is_enclosed_type type_expr
+    then thread ^^ space ^^ token eq ^^ space ^^ rhs
+    else thread ^^ prefix state#indent 1 (space ^^ token eq) rhs
+  in Option.value_map node ~default:thread ~f:(print state)
+
+and print_I_Const state (node : intf_const reg) =
+  let {kwd_const; const_name; const_type} = node.value in
+  let thread = token kwd_const ^^ space ^^ token const_name
+  in group (thread ^/^ print_type_annotation state const_type)
+
+(* Namespace declaration *)
+
+and print_D_Namespace state (node : namespace_decl reg) =
+  let {kwd_namespace; namespace_name;
+       namespace_type; namespace_body} = node.value in
+  let thread = token kwd_namespace ^^ space ^^ token namespace_name in
+  let thread = print_namespace_type state thread namespace_type
+  in group (thread ^^ print_block state namespace_body)
+
+and print_namespace_type state thread (node: interface option) =
+  Option.value_map node ~default:thread ~f:(print_interface state)
+
+and print_interface state (node : interface) =
+  let kwd_implements, e = node.value in
+  token kwd_implements ^^ space ^^ print_intf_expr state e
+
+and print_intf_expr state = function
+  I_Body i -> print_I_Body state i
+| I_Path i -> print_I_Path state i
+
+and print_I_Body state (node : intf_body) = print_intf_body state node
+
+and print_I_Path state (node : namespace_selection) =
+  print_namespace_selection state node
+
+(* Type declarations *)
+
+and print_D_Type state (node : type_decl reg) =
+  let {kwd_type; name; type_vars; eq; type_expr} = node.value in
+  let thread = token kwd_type ^^ space ^^ token name in
+  let thread = thread ^^ print_type_vars_opt state type_vars in
+  let rhs = print_type_expr state type_expr in
+  if is_enclosed_type type_expr
+  then thread ^^ space ^^ token eq ^^ space ^^ rhs
+  else thread ^^ prefix state#indent 1 (space ^^ token eq) rhs
+
+(* XXX *)
+
+(* Expressions as statements *)
+
+and print_S_Expr state (node: attribute list * expr) =
   let attr, expr = node in
   let expr_doc   = print_expr state expr in
   if List.is_empty attr then expr_doc
@@ -286,22 +491,6 @@ and print_while state (node: while_stmt reg) =
   ^^ print_par_like_document state (print_expr state expr) lpar rpar
   ^^ space ^^ print_statement state statement
 
-and print_import state (node : CST.import Region.reg) =
-  match node.value with
-    Import_rename {kwd_import; alias; equal; module_path} ->
-      token kwd_import ^^ space ^^ token alias
-      ^^ space ^^ token equal ^^ space
-      ^^ print_nsepseq empty (fun a -> string a#payload) module_path
-  | Import_all_as {kwd_import; times; kwd_as; alias; kwd_from; module_path} ->
-      token kwd_import ^^ space ^^ token times ^^ space
-      ^^ token kwd_as ^^ space ^^ token alias ^^ space
-      ^^ token kwd_from ^^ space ^^ print_string module_path
-  | Import_selected {kwd_import; imported; kwd_from; module_path} ->
-      let print_idents = print_nsepseq (break 1) print_ident in
-      token kwd_import ^^ space ^^
-      print_braces state print_idents imported ^^ space
-      ^^ token kwd_from ^^ space ^^ print_string module_path
-
 and print_export state {value = (kwd_export, statement); _} =
   token kwd_export ^^ space ^^ print_statement state statement
 
@@ -323,15 +512,6 @@ and print_namespace ?top state (node: namespace_statement reg) =
     ^^ (match interface_annotation with None -> empty | Some ia -> print_interface_annotation state ia ^^ space)
     ^^ print_braces state ~force_hardline:true print_statements statements)
 
-and print_interface state (node: interface_statement reg) =
-  let kwd_interface, name, interface_body, attributes = node.value in
-  group (
-    (if List.is_empty attributes then empty
-     else print_attributes state attributes)
-    ^/^ token kwd_interface ^^ space ^^ token name
-    ^^ space
-    ^^ print_interface_body state interface_body)
-
 and print_interface_annotation state ({value; _}: interface_annotation) =
   let kwd_implements, interface_expr = value in
   token kwd_implements ^^ space ^^ print_interface_expr state interface_expr
@@ -339,46 +519,6 @@ and print_interface_annotation state ({value; _}: interface_annotation) =
 and print_interface_expr state = function
     IInterface ib -> print_interface_body state ib
   | IPath p -> print_nsepseq empty (fun a -> string a#payload) p.value
-
-and print_interface_body state (node: interface_body) =
-  let interface_entries = node in
-  let print_interface_entries = print_nsepseq (break 1) (print_interface_entry state) in
-  print_braces state ~force_hardline:true print_interface_entries interface_entries
-
-and print_interface_entry state = function
-    IType t -> print_itype state t
-  | IType_var t -> print_itype_var state t
-  | IConst c -> print_iconst state c
-
-and print_itype state ({value; _}: (attributes * kwd_type * variable * equal * type_expr) reg) =
-  let attributes, kwd_type, name, eq, type_expr = value in
-  let attributes = filter_private attributes in
-  let lhs = token kwd_type ^^ space ^^ token name in
-  let rhs = group (print_type_expr state type_expr) in
-  let type_doc =
-    if is_enclosed_type type_expr
-    then lhs ^^ space ^^ token eq ^^ space ^^ rhs
-    else lhs ^^ prefix state#indent 1 (space ^^ token eq) rhs
-  in
-  if List.is_empty attributes
-  then type_doc
-  else print_attributes state attributes ^/^ type_doc
-
-and print_itype_var state ({value; _}: (attributes * kwd_type * variable) reg) =
-  let attributes, kwd_type, name = value in
-  let attributes = filter_private attributes in
-  let lhs = token kwd_type ^^ space ^^ token name in
-  let type_doc = lhs
-  in
-  if List.is_empty attributes
-  then type_doc
-  else print_attributes state attributes ^/^ type_doc
-
-and print_iconst state ({value; _} : (attributes * kwd_const * variable * colon * type_expr) reg) =
-  let attributes, kwd_const, name, colon, type_expr = value in
-  print_attributes state attributes ^/^
-  token kwd_const ^^ space
-  ^^ print_ident name ^^ print_type_annot_rhs state colon type_expr
 
 and print_cond_expr state {value; _} =
   let {attributes; test; ifso; ifnot; _} = value in
@@ -483,26 +623,6 @@ and print_case state node =
   | Switch_default_case {kwd_default; colon; statements} ->
       let label = token kwd_default ^^ token colon
       in print_label_and_statements label statements
-
-and print_type state {value; _} =
-  let ({attributes; kwd_type; name; params; eq; type_expr}: type_decl) = value in
-  let attributes = filter_private attributes in
-  let lhs = token kwd_type ^^ space ^^ token name
-            ^^ print_type_params state params
-  in
-  let rhs = group (print_type_expr state type_expr) in
-  let type_doc =
-    if is_enclosed_type type_expr
-    then lhs ^^ space ^^ token eq ^^ space ^^ rhs
-    else lhs ^^ prefix state#indent 1 (space ^^ token eq) rhs
-  in
-  if List.is_empty attributes
-  then type_doc
-  else print_attributes state attributes ^/^ type_doc
-
-and print_type_params state = function
-  None -> empty
-| Some value -> print_chevrons state (print_nsepseq (break 1) print_ident) value
 
 and print_expr state = function
   EFun      e -> print_fun state e
@@ -676,8 +796,8 @@ and print_par_expr state (node: expr par) =
   print_par_like_document state (print_expr state inside) lpar rpar
 
 and print_type_annot_rhs state colon value =
-  group (nest state#indent
-              (break 0 ^^ token colon ^^ space ^^ print_type_expr state value))
+  group (nest state#indent (break 0 ^^ token colon ^^ space
+                            ^^ print_type_expr state value))
 
 (* In flat mode, we may render the arguments like so:
 
@@ -874,9 +994,9 @@ and print_field_decl state {value; _} =
 
 and print_ne_injection :
   'a.state -> ('a -> document) -> 'a ne_injection reg -> document =
-  fun state printer {value; _} ->
+  fun state print {value; _} ->
     let {compound; ne_elements; attributes; _} = value in
-    let elements = print_nsepseq hardline printer ne_elements in
+    let elements = print_nsepseq hardline print ne_elements in
     let inj =
       match compound with
         None -> elements
@@ -965,6 +1085,7 @@ let print_pattern   = print_pattern
 let print_expr      = print_expr
 let print_statement = print_statement
 *)
+
 type cst       = CST.t
 type expr      = CST.expr
 type type_expr = CST.type_expr
