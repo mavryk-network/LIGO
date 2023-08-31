@@ -339,8 +339,9 @@ let%expect_test _ =
     {|
     Everything at the top-level was executed.
     - tester exited with value <fun>.
-    - test exited with value [(() , Mutation at: File "adder.mligo", line 1, characters 58-63:
-      1 | let main (p : int) (k : int) : operation list * int = [], p + k
+    - test exited with value [(() , Mutation at: File "adder.mligo", line 2, characters 58-63:
+      1 | [@entry]
+      2 | let main (p : int) (k : int) : operation list * int = [], p + k
                                                                     ^^^^^
 
     Replacing by: p ^ k.
@@ -1169,7 +1170,8 @@ let%expect_test _ =
      13 |
 
     Invalid usage of a Test type: typed_address (unit ,
-    unit) in record[x -> int , y -> typed_address (unit , unit)] cannot be translated to Michelson. |}]
+    unit) in record[x -> int ,
+                    y -> typed_address (unit , unit)({ name: x }, { name: y })] cannot be translated to Michelson. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_incremental.mligo" ];
@@ -1325,11 +1327,47 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_source2.mligo" ];
-  [%expect
-    {|
-    An internal error ocurred. Please, contact the developers.
-    (Invalid_argument Helpers.Context.counter).
-    KT1MoPRoithHNa7i6LYHqeQfZB4oyWThinnS |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Invalid_argument Helpers.Context.counter)
+  Raised at Stdlib.invalid_arg in file "stdlib.ml", line 30, characters 20-45
+  Called from Tz17_testhelpers__Op.manager_operation_with_fixed_gas_limit in file "vendors/tezos-ligo/src/proto_017_PtNairob/lib_protocol/test/helpers/op.ml", line 350, characters 12-48
+  Called from Tz17_testhelpers__Op.manager_operation in file "vendors/tezos-ligo/src/proto_017_PtNairob/lib_protocol/test/helpers/op.ml", line 408, characters 2-183
+  Called from Tz17_testhelpers__Op.unsafe_transaction.(fun) in file "vendors/tezos-ligo/src/proto_017_PtNairob/lib_protocol/test/helpers/op.ml", line 563, characters 2-126
+  Called from Interpreter__Tezos_state.bake_ops.f.(fun) in file "src/main/interpreter/common/tezos_state.ml", line 671, characters 10-268
+  Called from Interpreter__Tezos_state.bake_ops.aux in file "src/main/interpreter/common/tezos_state.ml", line 624, characters 75-84
+  Called from Base__Container.fold_result.(fun) in file "src/container.ml", line 23, characters 15-25
+  Called from Stdlib__List.fold_left in file "list.ml", line 121, characters 24-34
+  Called from Base__Container.fold_result.(fun) in file "src/container.ml", line 22, characters 6-136
+  Called from Base__With_return.with_return in file "src/with_return.ml", line 21, characters 12-24
+  Re-raised at Base__With_return.with_return in file "src/with_return.ml", line 29, characters 12-21
+  Called from Base__List.fold_result in file "src/list.ml" (inlined), line 1318, characters 29-67
+  Called from Interpreter__Tezos_state.bake_ops in file "src/main/interpreter/common/tezos_state.ml", line 628, characters 8-57
+  Called from Interpreter__Execution_monad.Command.eval_tezos in file "src/main/interpreter/common/execution_monad.ml", line 390, characters 14-66
+  Called from Interpreter__Execution_monad.Command.eval in file "src/main/interpreter/common/execution_monad.ml", line 854, characters 22-82
+  Called from Interpreter__Execution_monad.eval in file "src/main/interpreter/common/execution_monad.ml", line 899, characters 19-52
+  Called from Interpreter__Execution_monad.eval in file "src/main/interpreter/common/execution_monad.ml", line 899, characters 19-52
+  Called from Interpreter__Execution_monad.eval in file "src/main/interpreter/common/execution_monad.ml", line 899, characters 19-52
+  Called from Interpreter__Execution_monad.eval in file "src/main/interpreter/common/execution_monad.ml", line 899, characters 19-52
+  Called from Interpreter.try_eval in file "src/main/interpreter/common/interpreter.ml" (inlined), line 2168, characters 2-83
+  Called from Interpreter.eval_expression in file "src/main/interpreter/common/interpreter.ml", line 2192, characters 18-87
+  Called from Interpreter.eval_test in file "src/main/interpreter/common/interpreter.ml", line 2229, characters 8-85
+  Called from Ligo_api__Run.test.(fun) in file "src/main/api/common/run.ml", line 33, characters 6-56
+  Called from Simple_utils__Trace.to_stdlib_result.(fun) in file "vendored-dune/ligo-utils/simple-utils/trace.ml", line 54, characters 14-22
+  Called from Simple_utils__Trace.try_with in file "vendored-dune/ligo-utils/simple-utils/trace.ml", line 47, characters 6-20
+  Called from Cli_helpers.return_result in file "src/main/helpers/cli_helpers.ml", line 103, characters 19-43
+  Re-raised at Cli.run in file "src/bin/cli.ml", line 3140, characters 22-31
+  Called from Cli_expect_tests__Cli_expect.run_ligo_bad in file "src/bin/expect_tests/cli_expect.ml", line 45, characters 18-31
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1329, characters 2-63
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  KT1MoPRoithHNa7i6LYHqeQfZB4oyWThinnS |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_run_types.jsligo" ];
