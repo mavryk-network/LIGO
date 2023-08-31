@@ -38,6 +38,39 @@ let rec wrap_multi_bindings
   | _ -> [ default ]
 
 
+let rec wrap_ne_multi_bindings
+    : type a.
+      wrap:(loc:Location.t -> declaration -> a) -> declaration -> a List.Ne.t option
+  =
+ fun ~wrap d ->
+  let loc_of_sdecl Simple_decl.{ type_params = _; pattern; rhs_type; let_rhs } =
+    List.fold
+      ~f:Location.cover
+      ~init:Location.generated
+      [ get_p_loc pattern
+      ; Option.value_map ~default:Location.generated ~f:get_t_loc rhs_type
+      ; get_e_loc let_rhs
+      ]
+  in
+  match get_d d with
+  | D_attr (attr, x) ->
+    let wrap ~loc d = wrap ~loc @@ d_attr ~loc (attr, d) in
+    wrap_ne_multi_bindings ~wrap x
+  | D_multi_const x ->
+    Some (List.Ne.map
+      (fun x ->
+        let loc = loc_of_sdecl x in
+        wrap ~loc @@ d_const ~loc x)
+      x)
+  | D_multi_var x ->
+    Some (List.Ne.map
+      (fun x ->
+        let loc = loc_of_sdecl x in
+        wrap ~loc @@ d_var ~loc x)
+      x)
+  | _ -> None
+
+
 let block : _ block_ -> block =
  fun block ->
   let dig_attr : statement -> f:(declaration -> _ program_) -> statement list =
@@ -68,31 +101,30 @@ let block : _ block_ -> block =
 
 let program : _ program_ -> program =
  fun prg ->
-  let dig_attr : program_entry -> f:(declaration -> _ program_) -> program_entry list =
+  let dig_attr : program_entry -> f:(declaration -> _ List.Ne.t option) -> program_entry List.Ne.t =
    fun pe ~f ->
-    let rec aux pe acc : program_entry list =
+    let rec aux pe : program_entry List.Ne.t =
       match get_pe pe with
       | PE_attr (attr, pe) ->
-        let lst = aux pe [] in
-        List.map lst ~f:(fun pe -> pe_attr attr pe) @ acc
+        List.Ne.map (fun pe -> pe_attr attr pe) (aux pe)
       | PE_export pe ->
-        let lst = aux pe [] in
-        List.map lst ~f:(fun pe -> pe_export pe) @ acc
-      | PE_declaration d -> f d @ acc
-      | x -> make_pe x :: acc
+        List.Ne.map (fun pe -> pe_export pe) (aux pe)
+      | PE_declaration d ->
+        Option.value_or_thunk ~default:(fun () -> List.Ne.singleton @@ pe_declaration d) (f d)
+      | x -> List.Ne.singleton @@ make_pe x
     in
-    aux pe []
+    aux pe
   in
   let f : program_entry -> _ program_ -> _ program_ =
    fun pe acc ->
     let extended =
       (* turn one program entry into multiple one in case it's a multi declaration *)
       let f d =
-        wrap_multi_bindings ~default:pe ~wrap:(fun ~loc:_ d -> pe_declaration d) d
+        wrap_ne_multi_bindings ~wrap:(fun ~loc:_ d -> pe_declaration d) d
       in
       dig_attr pe ~f
     in
-    extended @ acc
+    List.Ne.to_list extended @ acc
   in
   make_prg @@ List.fold_right ~f ~init:[] prg
 
