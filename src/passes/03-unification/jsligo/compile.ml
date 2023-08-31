@@ -590,15 +590,13 @@ let pattern : Eq.pattern -> Folding.pattern =
   | P_Array { value = { inside = p; _ }; _ } ->
     let p = sep_or_term_to_list p in
     (match p with
-    | [] -> return @@ P_list (List [])
-    | [ (None, hd); (Some _, tl) ] -> return @@ P_list (Cons (hd, tl))
     | lst ->
       let f (v : I.pattern I.element) =
         match v with
-        | Some _, _ -> failwith "Invalid ellipsis in pattern"
-        | None, p -> p
+        | None, pattern -> O.{ pattern ; ellipsis = false }
+        | Some _, pattern -> { pattern ; ellipsis = true }
       in
-      return @@ P_tuple (List.map ~f p))
+      return @@ P_tuple_with_ellipsis (List.map ~f p))
 
 
 (* in JSLIGO, instruction ; statements and declaration are all statement *)
