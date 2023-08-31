@@ -160,11 +160,11 @@ let%expect_test "compile" =
          (E_match
           ((expr (E_variable x))
            (cases
-            (((pattern (P_variant (Label Foo) ((P_var x))))
+            (((pattern ((P_variant (Label Foo) ((P_var x)))))
               (rhs
                (E_applied_constructor
                 ((constructor (Label Some)) (element (E_variable x))))))
-             ((pattern (P_var gen))
+             ((pattern ((P_var gen)))
               (rhs
                (E_applied_constructor
                 ((constructor (Label None)) (element (E_literal Literal_unit))))))))))))))
@@ -175,11 +175,11 @@ let%expect_test "compile" =
          (E_match
           ((expr (E_variable x))
            (cases
-            (((pattern (P_variant (Label Bar) ((P_var x))))
+            (((pattern ((P_variant (Label Bar) ((P_var x)))))
               (rhs
                (E_applied_constructor
                 ((constructor (Label Some)) (element (E_variable x))))))
-             ((pattern (P_var gen))
+             ((pattern ((P_var gen)))
               (rhs
                (E_applied_constructor
                 ((constructor (Label None)) (element (E_literal Literal_unit))))))))))))))
