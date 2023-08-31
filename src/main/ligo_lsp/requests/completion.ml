@@ -565,152 +565,159 @@ let complete_fields
     then []
     else Option.value ~default:[] (fold_map first_monoid field_completion cst)
   | JsLIGO cst ->
-    ignore cst; []
-  (*   let open! Cst_jsligo.CST in *)
-  (*   let open Cst_jsligo.Fold in *)
-  (*   let farthest_dot_position_before_cursor, farthest_lexeme_position_before_cursor = *)
-  (*     let empty = completion_distance_monoid.empty in *)
-  (*     let collect (Some_node (node, sing)) = *)
-  (*       match sing with *)
-  (*       | S_dot -> Last { empty with dot = mk_dist node#region } *)
-  (*       | S_eof -> Stop *)
-  (*       | S_wrap wrapped -> *)
-  (*         (\* There is no way to distinguish a semicolon inserted with ASI from *)
-  (*            one that was inserted by the user, unfortunately, so we need this *)
-  (*            workaround. *\) *)
-  (*         (match wrapped with *)
-  (*         | S_lexeme when String.(node#payload = ";") -> Stop *)
-  (*         | _ -> Last { empty with lexeme = mk_dist node#region }) *)
-  (*       | S_reg _ -> Continue { empty with lexeme = mk_dist node.region } *)
-  (*       | _ -> Skip *)
-  (*     in *)
-  (*     let { dot; lexeme } = fold_map completion_distance_monoid collect cst in *)
-  (*     Option.value_map *)
-  (*       (Option.both dot lexeme) *)
-  (*       ~default:(pos, pos) *)
-  (*       ~f:(fun (dot, lexeme) -> dot.range.start, lexeme.range.start) *)
-  (*   in *)
-  (*   let rec linearize_expr : expr -> (variable, dot) Either.t list = function *)
-  (*     | EVar name -> [ Either.First name ] *)
-  (*     | EProj proj -> linearize_projection proj *)
-  (*     | EModA access -> linearize_module_access_expr access *)
-  (*     | EPar expr -> linearize_expr expr.value.inside *)
-  (*     (\*| EObject obj -> expr.value.inside._*\) *)
-  (*     | _ -> [] *)
-  (*   and linearize_module_access_expr (access : expr module_access reg) *)
-  (*       : (variable, dot) Either.t list *)
-  (*     = *)
-  (*     Either.First access.value.module_name *)
-  (*     :: Either.Second access.value.selector *)
-  (*     :: linearize_expr access.value.field *)
-  (*   and linearize_projection (proj : projection reg) : (variable, dot) Either.t list = *)
-  (*     match proj.value.selection with *)
-  (*     | FieldName { value = { dot; value }; region = _ } -> *)
-  (*       linearize_expr proj.value.expr @ [ Either.Second dot; Either.First value ] *)
-  (*     | Component _ -> [] *)
-  (*   in *)
-  (*   let rec linearize_type_expr : type_expr -> (variable, dot) Either.t list = function *)
-  (*     | TVar name -> [ Either.First name ] *)
-  (*     | TModA access -> linearize_module_access_type_expr access *)
-  (*     | TPar expr -> linearize_type_expr expr.value.inside *)
-  (*     (\*| TObject obj -> expr.value.inside._*\) *)
-  (*     | _ -> [] *)
-  (*   and linearize_module_access_type_expr (access : type_expr module_access reg) *)
-  (*       : (variable, dot) Either.t list *)
-  (*     = *)
-  (*     Either.First access.value.module_name *)
-  (*     :: Either.Second access.value.selector *)
-  (*     :: linearize_type_expr access.value.field *)
-  (*   in *)
-  (*   let rec either_list_to_nsepseq *)
-  (*       : ('a, 'sep) Either.t list -> ('a, 'sep) Simple_utils.Utils.nsepseq option *)
-  (*     = function *)
-  (*     | [ Either.First name ] -> Some (name, []) *)
-  (*     | Either.First name :: Either.Second dot :: tl -> *)
-  (*       Option.map *)
-  (*         ~f:(Simple_utils.Utils.nsepseq_cons name dot) *)
-  (*         (either_list_to_nsepseq tl) *)
-  (*     | _ -> None *)
-  (*   in *)
-  (*   let path_expr_impl (is_type_expr : bool) (fields : (dot * lexeme wrap) list) *)
-  (*       : CompletionItem.t list option *)
-  (*     = *)
-  (*     let module_names_before_cursor, rest = *)
-  (*       List.split_while fields ~f:(fun (dot, module_name) -> *)
-  (*           Char.is_uppercase (String.get module_name#payload 0) *)
-  (*           && Position.( *)
-  (*                is_to_the_left *)
-  (*                  (of_pos dot#region#stop) *)
-  (*                  farthest_dot_position_before_cursor)) *)
-  (*     in *)
-  (*     let rest = *)
-  (*       List.take_while rest ~f:(fun (dot, _field) -> *)
-  (*           Position.( *)
-  (*             is_to_the_left (of_pos dot#region#stop) farthest_dot_position_before_cursor)) *)
-  (*     in *)
-  (*     match rest with *)
-  (*     | (dot, struct') :: tl *)
-  (*       when Position.( *)
-  (*              is_to_the_left *)
-  (*                (of_pos dot#region#start) *)
-  (*                farthest_dot_position_before_cursor) -> *)
-  (*       let struct_pos = Position.of_pos struct'#region#start in *)
-  (*       let proj_fields_before_cursor = *)
-  (*         List.take_while tl ~f:(fun (dot, _field) -> *)
-  (*             Position.( *)
-  (*               is_to_the_left *)
-  (*                 (of_pos dot#region#stop) *)
-  (*                 farthest_dot_position_before_cursor)) *)
-  (*         |> List.map ~f:(fun (_dot, field) -> Some field#payload) *)
-  (*       in *)
-  (*       projection_impl struct_pos proj_fields_before_cursor *)
-  (*     | _ -> *)
-  (*       (if is_type_expr then module_path_impl_type_expr else module_path_impl_expr) *)
-  (*       @@ List.map module_names_before_cursor ~f:snd *)
-  (*   in *)
-  (*   let complete_jsligo *)
-  (*       (node : *)
-  (*         (expr module_access reg, type_expr module_access reg, projection reg) expr_kind) *)
-  (*       : CompletionItem.t list option *)
-  (*     = *)
-  (*     match *)
-  (*       either_list_to_nsepseq *)
-  (*         (match node with *)
-  (*         | Module_path_expr module_access -> linearize_module_access_expr module_access *)
-  (*         | Module_path_type_expr module_access -> *)
-  (*           linearize_module_access_type_expr module_access *)
-  (*         | Projection proj -> linearize_projection proj) *)
-  (*     with *)
-  (*     | None -> None *)
-  (*     | Some (hd, tl) -> *)
-  (*       let is_type_expr = *)
-  (*         match node with *)
-  (*         | Module_path_expr _ | Projection _ -> false *)
-  (*         | Module_path_type_expr _ -> true *)
-  (*       in *)
-  (*       (\* We always want to take the first field, otherwise the cursor would be *)
-  (*          before the completion, which is impossible. So this ghost is OK. *\) *)
-  (*       path_expr_impl is_type_expr ((Lexing_shared.Wrap.ghost ".", hd) :: tl) *)
-  (*   in *)
-  (*   let is_reg_node_of_interest (type a) (node : a reg) : bool = *)
-  (*     let open Range in *)
-  (*     let range = of_region node.region in *)
-  (*     contains_position farthest_dot_position_before_cursor range *)
-  (*     && contains_position farthest_lexeme_position_before_cursor range *)
-  (*   in *)
-  (*   let field_completion (Some_node (node, sing)) = *)
-  (*     match sing with *)
-  (*     | S_reg S_projection when is_reg_node_of_interest node -> *)
-  (*       Continue (complete_jsligo (Projection node)) *)
-  (*     | S_reg (S_module_access S_expr) when is_reg_node_of_interest node -> *)
-  (*       Continue (complete_jsligo (Module_path_expr node)) *)
-  (*     | S_reg (S_module_access S_type_expr) when is_reg_node_of_interest node -> *)
-  (*       Continue (complete_jsligo (Module_path_type_expr node)) *)
-  (*     | _ -> Skip *)
-  (*   in *)
-  (*   if Position.equal pos farthest_dot_position_before_cursor *)
-  (*   then [] *)
-  (*   else Option.value ~default:[] (fold_map first_monoid field_completion cst) *)
+    let open! Cst_jsligo.CST in
+    let open Cst_jsligo.Fold in
+    let farthest_dot_position_before_cursor, farthest_lexeme_position_before_cursor =
+      let empty = completion_distance_monoid.empty in
+      let collect (Some_node (node, sing)) =
+        match sing with
+        | S_dot -> Last { empty with dot = mk_dist node#region }
+        | S_eof -> Stop
+        | S_wrap wrapped ->
+          (* There is no way to distinguish a semicolon inserted with ASI from
+             one that was inserted by the user, unfortunately, so we need this
+             workaround. *)
+          (match wrapped with
+          | S_lexeme when String.(node#payload = ";") -> Stop
+          | _ -> Last { empty with lexeme = mk_dist node#region })
+        | S_reg _ -> Continue { empty with lexeme = mk_dist node.region }
+        | _ -> Skip
+      in
+      let { dot; lexeme } = fold_map completion_distance_monoid collect cst in
+      Option.value_map
+        (Option.both dot lexeme)
+        ~default:(pos, pos)
+        ~f:(fun (dot, lexeme) -> dot.range.start, lexeme.range.start)
+    in
+    let rec linearize_expr : expr -> (variable, dot) Either.t list = function
+      | E_Var name -> [ Either.First name ]
+      | E_Proj proj -> linearize_projection proj
+      | E_NamePath access -> linearize_module_access_expr access
+      | E_Par expr -> linearize_expr expr.value.inside
+      (*| EObject obj -> expr.value.inside._*) (* TODO? *)
+      | _ -> []
+    and linearize_module_access_expr (access : expr namespace_path reg)
+        : (variable, dot) Either.t list
+      =
+      linearize_nsepseq access.value.namespace_path @
+      Either.Second access.value.selector
+      :: linearize_expr access.value.property
+    and linearize_nsepseq (nsepseq : ('a, 'b) Utils.nsepseq) : ('a, 'b) Either.t list =
+      match nsepseq with
+      | a, r -> Either.First a ::
+                List.concat_map ~f:(fun (a, b) -> [Either.Second a; Either.First b]) r
+    and linearize_selection (property_path : selection) : (variable, dot) Either.t list =
+      match property_path with
+      | PropertyName (dot, name) ->
+        [ Either.Second dot ; Either.First name ]
+      | _ -> [ ]
+    and linearize_projection (proj : projection reg) : (variable, dot) Either.t list =
+      match proj.value with
+      | { object_or_array ; property_path } ->
+        linearize_expr object_or_array @ List.concat_map ~f:linearize_selection (Utils.nseq_to_list property_path)
+    in
+    let rec linearize_type_expr : type_expr -> (variable, dot) Either.t list = function
+      | T_Var name -> [ Either.First name ]
+      | T_NamePath access -> linearize_module_access_type_expr access
+      | T_Par expr -> linearize_type_expr expr.value.inside
+      (*| TObject obj -> expr.value.inside._*)
+      | _ -> []
+    and linearize_module_access_type_expr (access : type_expr namespace_path reg)
+        : (variable, dot) Either.t list
+      =
+      linearize_nsepseq access.value.namespace_path @
+      Either.Second access.value.selector
+      :: linearize_type_expr access.value.property
+    in
+    let rec either_list_to_nsepseq
+        : ('a, 'sep) Either.t list -> ('a, 'sep) Simple_utils.Utils.nsepseq option
+      = function
+      | [ Either.First name ] -> Some (name, [])
+      | Either.First name :: Either.Second dot :: tl ->
+        Option.map
+          ~f:(Simple_utils.Utils.nsepseq_cons name dot)
+          (either_list_to_nsepseq tl)
+      | _ -> None
+    in
+    let path_expr_impl (is_type_expr : bool) (fields : (dot * lexeme wrap) list)
+        : CompletionItem.t list option
+      =
+      let module_names_before_cursor, rest =
+        List.split_while fields ~f:(fun (dot, module_name) ->
+            Char.is_uppercase (String.get module_name#payload 0)
+            && Position.(
+                 is_to_the_left
+                   (of_pos dot#region#stop)
+                   farthest_dot_position_before_cursor))
+      in
+      let rest =
+        List.take_while rest ~f:(fun (dot, _field) ->
+            Position.(
+              is_to_the_left (of_pos dot#region#stop) farthest_dot_position_before_cursor))
+      in
+      match rest with
+      | (dot, struct') :: tl
+        when Position.(
+               is_to_the_left
+                 (of_pos dot#region#start)
+                 farthest_dot_position_before_cursor) ->
+        let struct_pos = Position.of_pos struct'#region#start in
+        let proj_fields_before_cursor =
+          List.take_while tl ~f:(fun (dot, _field) ->
+              Position.(
+                is_to_the_left
+                  (of_pos dot#region#stop)
+                  farthest_dot_position_before_cursor))
+          |> List.map ~f:(fun (_dot, field) -> Some field#payload)
+        in
+        projection_impl struct_pos proj_fields_before_cursor
+      | _ ->
+        (if is_type_expr then module_path_impl_type_expr else module_path_impl_expr)
+        @@ List.map module_names_before_cursor ~f:snd
+    in
+    let complete_jsligo
+        (node :
+          (expr namespace_path reg, type_expr namespace_path reg, projection reg) expr_kind)
+        : CompletionItem.t list option
+      =
+      match
+        either_list_to_nsepseq
+          (match node with
+          | Module_path_expr module_access -> linearize_module_access_expr module_access
+          | Module_path_type_expr module_access ->
+            linearize_module_access_type_expr module_access
+          | Projection proj -> linearize_projection proj)
+      with
+      | None -> None
+      | Some (hd, tl) ->
+        let is_type_expr =
+          match node with
+          | Module_path_expr _ | Projection _ -> false
+          | Module_path_type_expr _ -> true
+        in
+        (* We always want to take the first field, otherwise the cursor would be
+           before the completion, which is impossible. So this ghost is OK. *)
+        path_expr_impl is_type_expr ((Lexing_shared.Wrap.ghost ".", hd) :: tl)
+    in
+    let is_reg_node_of_interest (type a) (node : a reg) : bool =
+      let open Range in
+      let range = of_region node.region in
+      contains_position farthest_dot_position_before_cursor range
+      && contains_position farthest_lexeme_position_before_cursor range
+    in
+    let field_completion (Some_node (node, sing)) =
+      match sing with
+      | S_reg S_projection when is_reg_node_of_interest node ->
+        Continue (complete_jsligo (Projection node))
+      | S_reg (S_namespace_path S_expr) when is_reg_node_of_interest node ->
+        Continue (complete_jsligo (Module_path_expr node))
+      | S_reg (S_namespace_path S_type_expr) when is_reg_node_of_interest node ->
+        Continue (complete_jsligo (Module_path_type_expr node))
+      | _ -> Skip
+    in
+    if Position.equal pos farthest_dot_position_before_cursor
+    then []
+    else Option.value ~default:[] (fold_map first_monoid field_completion cst)
   | PascaLIGO cst ->
     (* PascaLIGO's completion code is just a copy and paste of CameLIGO's
        completion code because their CSTs are very similar, unlike JsLIGO. *)
