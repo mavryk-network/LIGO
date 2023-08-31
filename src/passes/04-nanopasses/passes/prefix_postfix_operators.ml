@@ -180,7 +180,7 @@ open Unit_test_helpers.Expr
 
 let%expect_test "compile & decompile x++" =
   {|
-  (E_postfix ((post_op Increment) (variable x)))
+  (E_postfix ((post_op Increment) (expr (E_variable x))))
   |} |-> compile;
   [%expect
     {|
@@ -215,12 +215,20 @@ let%expect_test "compile & decompile x++" =
   |}
   |-> decompile;
   [%expect {|
-    (E_postfix ((post_op Increment) (variable x)))
+    (E_postfix
+     ((post_op Increment)
+      (expr
+       (E_assign_unitary
+        ((binder ((var x) (ascr ())))
+         (expression
+          (E_binary_op
+           ((operator PLUS) (left (E_variable x))
+            (right (E_literal (Literal_int 1)))))))))))
     |}]
 
 let%expect_test "compile & decompile x--" =
   {|
-  (E_postfix ((post_op Decrement) (variable x)))
+  (E_postfix ((post_op Decrement) (expr (E_variable x))))
     |} |-> compile;
   [%expect
     {|
@@ -256,12 +264,20 @@ let%expect_test "compile & decompile x--" =
     |}
   |-> decompile;
   [%expect {| 
-    (E_postfix ((post_op Decrement) (variable x)))
+    (E_postfix
+     ((post_op Decrement)
+      (expr
+       (E_assign_unitary
+        ((binder ((var x) (ascr ())))
+         (expression
+          (E_binary_op
+           ((operator MINUS) (left (E_variable x))
+            (right (E_literal (Literal_int 1)))))))))))
       |}]
 
 let%expect_test "compile & decompile ++x" =
   {|
-  (E_prefix ((pre_op Increment) (variable x)))
+  (E_prefix ((pre_op Increment) (expr (E_variable x))))
       |} |-> compile;
   [%expect
     {|
@@ -290,12 +306,20 @@ let%expect_test "compile & decompile ++x" =
             |}
   |-> decompile;
   [%expect {|
-    (E_prefix ((pre_op Increment) (variable x)))
+    (E_prefix
+     ((pre_op Increment)
+      (expr
+       (E_assign_unitary
+        ((binder ((var x) (ascr ())))
+         (expression
+          (E_binary_op
+           ((operator PLUS) (left (E_variable x))
+            (right (E_literal (Literal_int 1)))))))))))
             |}]
 
 let%expect_test "compile & decompile --x" =
   {|
-  (E_prefix ((pre_op Decrement) (variable x)))
+  (E_prefix ((pre_op Decrement) (expr (E_variable x))))
         |} |-> compile;
   [%expect
     {|
@@ -324,5 +348,13 @@ let%expect_test "compile & decompile --x" =
         |}
   |-> decompile;
   [%expect {|
-    (E_prefix ((pre_op Decrement) (variable x)))
+    (E_prefix
+     ((pre_op Decrement)
+      (expr
+       (E_assign_unitary
+        ((binder ((var x) (ascr ())))
+         (expression
+          (E_binary_op
+           ((operator MINUS) (left (E_variable x))
+            (right (E_literal (Literal_int 1)))))))))))
           |}]
