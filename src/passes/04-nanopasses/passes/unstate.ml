@@ -345,6 +345,9 @@ let compile ~raise =
       in
       let res = Statement_result.(to_expression (merge_block block_with_res)) in
       { fp = { res.fp with location = loc } }
+    | E_do block ->
+      let res = block_to_expression ~raise block in
+      { fp = { res.fp with location = loc } }
     | e -> make_e ~loc e
   in
   Fold { idle_fold with expr }

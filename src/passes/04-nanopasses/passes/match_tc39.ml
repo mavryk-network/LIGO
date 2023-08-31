@@ -17,32 +17,21 @@ let compile ~raise =
    fun e ->
     let loc = Location.get_location e in
     let same = make_e ~loc e.wrap_content in
-    let make_block (e : expr) =
-      let loc = get_e_loc e in
-      match get_e e with
-      | E_do b ->
-        b
-      | _ ->
-        make_b ~loc (List.Ne.singleton (make_s ~loc (S_instr (make_i ~loc (I_return (Some e))))))
-    in
     match Location.unwrap e with
     | E_match_tc39 { subject; match_clauses = DefaultClause expr } ->
-      let block = make_block expr in
-      e_match_block ~loc { expr = subject; cases = List.Ne.singleton (wild_case block) }
+      e_match ~loc { expr = subject; cases = List.Ne.singleton (wild_case expr) }
     | E_match_tc39 { subject; match_clauses = AllClauses (clauses, default_opt) } ->
       let clauses =
         List.Ne.map
           (fun Match_tc39.{ filter; clause_expr } ->
-             let block = make_block clause_expr in
-            Case.{ pattern = Some filter; rhs = block })
+            Case.{ pattern = Some filter; rhs = clause_expr })
           clauses
       in
       let cases =
         Option.value_map default_opt ~default:clauses ~f:(fun expr ->
-            let block : block = make_block expr in
-            List.Ne.append clauses (List.Ne.singleton @@ wild_case block))
+            List.Ne.append clauses (List.Ne.singleton @@ wild_case expr))
       in
-      e_match_block ~loc { expr = subject; cases }
+      e_match ~loc { expr = subject; cases }
     | _ -> same
   in
   Fold { idle_fold with expr }
