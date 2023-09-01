@@ -550,13 +550,13 @@ const test_originate_contract_ = () : unit => {
   /* the ticket 'unforged_storage' can be manipulated freely without caring about ticket linearity */
 
   match (unforged_storage) {
-    when(Some(x)): (([x, ticket_info]: [unforged_ticket<bytes>, [bytes, nat]]) => {
+    when(Some(x)): do {
       let _ = Test.log (["unforged_ticket", x]) ;
       let { ticketer , value , amount } = x ;
       let _ = assert (value == ticket_info[0]) ;
       let _ = assert (amount == ticket_info[1]) ;
       return unit
-    })([x, ticket_info]);
+    };
     when(None()): failwith ("impossible")
   }
 };
