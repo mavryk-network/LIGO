@@ -82,10 +82,10 @@ let back = ([param, store] : [unit, storage]) : [list<operation>, storage] => { 
   }
   else {
     return match(Map.find_opt (Tezos.get_sender(), store.backers)) {
-      when(None()): (([no_op, store]: [list<operation>, storage]) => {
+      when(None()): do {
         let backers = Map.update(Tezos.get_sender(), Some(Tezos.get_amount()), store.backers);
         return [no_op, {...store, backers:backers}];
-      })([no_op, store]);
+      };
       when(Some(x)): [no_op, store]
     }
   };

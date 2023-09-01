@@ -5,9 +5,9 @@ const match_with_block = () => {
   return
     match(Some(1)) {
       when(None()): failwith(1);
-      when(Some(org)): ((x) => {
+      when(Some(org)): do {
         let y = x + 1 ;
         return y
-      })(x)
+      }
     };
 };

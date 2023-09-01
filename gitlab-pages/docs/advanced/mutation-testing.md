@@ -240,7 +240,10 @@ let test_mutation =
 const test_mutation =
   match(Test.mutation_test(twice, simple_tests)) {
     when(None()): unit;
-    when(Some(pmutation)): (() => { Test.log(pmutation[1]); Test.println("Some mutation also passes the tests! ^^") })()
+    when(Some(pmutation)): do {
+      Test.log(pmutation[1]);
+      Test.println("Some mutation also passes the tests! ^^")
+    }
   };
 ```
 
@@ -591,7 +594,10 @@ let test_mutation =
 const test_mutation =
   match(Test.mutation_test(main, originate_and_test)) {
     when(None()): unit;
-    when(Some(pmutation)): (() => { Test.log(pmutation[1]); Test.println("Some mutation also passes the tests! ^^") })()
+    when(Some(pmutation)): do {
+      Test.log(pmutation[1]);
+      Test.println("Some mutation also passes the tests! ^^")
+    }
   };
 ```
 
@@ -789,15 +795,16 @@ let test_mutation_all =
 const test_mutation_all =
   match(Test.mutation_test_all(main, originate_and_test_dec)) {
     when([]): unit;
-    when([hd,...tl]): (([hd, tl]: [[unit, mutation], list<[unit, mutation]>]) => {
-                         let ms = list([hd,...tl]);
-                         for (const m of ms) {
-                           let [_, mutation] = m;
-                           let path = Test.save_mutation(".", mutation);
-                           Test.log("saved at:");
-                           Test.log(path);
-                         };
-                         Test.println("Some mutation also passes the tests! ^^") })([hd, tl])
+    when([hd,...tl]): do {
+      let ms = list([hd,...tl]);
+      for (const m of ms) {
+        let [_, mutation] = m;
+        let path = Test.save_mutation(".", mutation);
+        Test.log("saved at:");
+        Test.log(path);
+      };
+      Test.println("Some mutation also passes the tests! ^^")
+    }
   };
 ```
 
