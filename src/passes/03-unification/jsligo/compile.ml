@@ -571,7 +571,7 @@ let block : Eq.block -> Folding.block =
   let locs =
     nseq_map (fun x -> Location.lift @@ I.statement_to_region @@ fst x) statements
   in
-  let loc = List.Ne.fold_left1 ~f:Location.cover locs in
+  let loc = List.Ne.fold_right1 ~f:Location.cover locs in
   let statements = nseq_map fst statements in
   Location.wrap ~loc statements
 
@@ -582,7 +582,7 @@ let mod_expr : Eq.mod_expr -> Folding.mod_expr =
   let locs =
     nseq_map (fun x -> Location.lift @@ I.statement_to_region @@ fst x) statements
   in
-  let loc = List.Ne.fold_left1 ~f:Location.cover locs in
+  let loc = List.Ne.fold_right1 ~f:Location.cover locs in
   Location.wrap ~loc (O.M_body I.{ statements; eof = ghost })
 
 
@@ -788,7 +788,7 @@ and sig_expr : Eq.sig_expr -> Folding.sig_expr = function
     let locs =
       List.Ne.map (fun (n : I.namespace_name) -> Location.lift n#region) selection
     in
-    let loc = List.Ne.fold_left1 ~f:Location.cover locs in
+    let loc = List.Ne.fold_right1 ~f:Location.cover locs in
     let value = List.Ne.map TODO_do_in_parsing.mvar selection in
     Location.wrap ~loc @@ O.S_path value
 
