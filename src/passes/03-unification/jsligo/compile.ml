@@ -37,28 +37,9 @@ module TODO_do_in_parsing = struct
 
 
   let conv_attrs = List.map ~f:conv_attr
-
-  (* let constructor_element arg_opt =
-    Option.value ~default:(I.E_unit (Region.wrap_ghost (ghost, ghost))) arg_opt *)
-
   let weird_attr _ = ()
-
-  (* let labelize_pattern p = *)
-  (*   match p with *)
-  (*   (\* would be better to emit a label/string directly ? *\) *)
-  (*   | I.P_Var var -> *)
-  (*     Location.wrap ~loc @@ O.Label.of_string @@ var.variable#payload *)
-  (*   | _ -> failwith "labelize_pattern: impossible??" *)
-
   let unused_node () = failwith "unused node, can we clean ?"
   let labelize x = O.Label.of_string x
-
-  (* let t_disc_locs (objs : (I.obj_type, I.vbar) nsepseq) =
-    (* The region of the discriminated union TDisc
-      is the union of all its objects' regions *)
-    let locations = List.Ne.map (fun obj -> snd @@ r_split obj) (nsepseq_to_nseq objs) in
-    List.Ne.fold_left locations ~init:Location.dummy ~f:Location.cover *)
-
   let pattern_to_param pattern = O.Param.{ pattern; param_kind = `Const }
 
   let field_as_open_t (ma : I.type_expr) =
@@ -72,22 +53,6 @@ module TODO_do_in_parsing = struct
     | I.E_Par _ -> true
     | _ -> false
 
-
-  (* let flatten_moda ({ module_name; selector = _; field } : I.expr I.module_access) =
-    let rec aux : I.module_name List.Ne.t -> I.expr -> I.module_name List.Ne.t * I.expr =
-     fun acc expr ->
-      match expr with
-      | EModA { value = { module_name; field; _ }; _ } ->
-        aux (List.Ne.append acc (List.Ne.singleton module_name)) field
-      | _ -> acc, expr
-    in
-    let path, field = aux (List.Ne.singleton module_name) field in
-    let is_open =
-      match field with
-      | I.EPar _ -> true
-      | _ -> false
-    in
-    (path, field), is_open *)
 
   let control_flow_clause compile_statement (x : I.statement)
       : (I.statement, I.statements) O.Test_clause.t
@@ -407,7 +372,7 @@ let rec expr : Eq.expr -> Folding.expr =
     in
     return @@ E_match_tc39 { subject = subject.value.inside; match_clauses }
   | E_Xor _ -> failwith "NOT IMPLEMENTED"
-  | E_Do { region = _ ; value } ->
+  | E_Do { region = _; value } ->
     let I.{ kwd_do = _; statements } = value in
     return @@ E_do statements.value.inside
 
@@ -661,32 +626,22 @@ and instruction : Eq.instruction -> Folding.instruction =
     in
     return @@ I_cond { test = test.value.inside; ifso; ifnot }
   | S_Return s -> return @@ I_return (snd s.value)
-  | S_Switch s ->
-    let cases = s.value.cases.value.inside in
-    let subject = s.value.subject.value.inside in
+  | S_Switch { value = { cases; subject; _ }; _ } ->
     let cases =
-      match cases with
+      match cases.value.inside with
       | AllCases (cases, default) ->
         let cases =
           List.Ne.map
-            (function
-              | (case : I.switch_case Region.reg) ->
-                let I.{ expr; case_body; _ } = case.value in
-                O.Switch.Switch_case (expr, case_body))
+            (fun case ->
+              let I.{ expr; case_body; _ } = case.Region.value in
+              O.Switch.{ expr; case_body })
             cases
         in
-        (match default with
-        | None -> cases
-        | Some default ->
-          let I.{ default_body; _ } = default.value in
-          List.Ne.append cases
-          @@ List.Ne.singleton
-          @@ O.Switch.Switch_default_case default_body)
-      | Default case ->
-        let I.{ default_body; _ } = case.value in
-        List.Ne.singleton @@ O.Switch.Switch_default_case default_body
+        let default_opt = Option.map ~f:(fun x -> x.value.default_body) default in
+        O.Switch.AllCases (cases, default_opt)
+      | Default case -> O.Switch.Default case.value.default_body
     in
-    return @@ I_switch { switchee = subject; cases }
+    return @@ I_switch { subject = subject.value.inside; cases }
   | S_Break _ -> return @@ I_break
   | S_While s ->
     let I.{ invariant; while_body; _ } = s.value in
