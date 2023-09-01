@@ -304,13 +304,13 @@ let rec expr : Eq.expr -> Folding.expr =
     in
     let op = O.Assign_chainable.Assignment_operator Plus_eq in
     Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
-  | E_MinusEq { value = { arg1; op; arg2 }; _ } ->
+  | E_SubEq { value = { arg1; op; arg2 }; _ } ->
     let loc =
       Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
     in
     let op = O.Assign_chainable.Assignment_operator Min_eq in
     Location.wrap ~loc @@ O.E_struct_assign_chainable { expr1 = arg1; op; expr2 = arg2 }
-  | E_TimesEq { value = { arg1; op; arg2 }; _ } ->
+  | E_MultEq { value = { arg1; op; arg2 }; _ } ->
     let loc =
       Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
     in

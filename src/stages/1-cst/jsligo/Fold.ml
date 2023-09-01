@@ -390,8 +390,8 @@ let fold
     | E_Leq node -> node -| S_reg (S_bin_op S_leq)
     | E_Lt node -> node -| S_reg (S_bin_op S_lt)
     | E_Match node -> node -| S_reg S_match_expr
-    | E_MinusEq node -> node -| S_reg (S_bin_op S_minus_eq)
     | E_Mult node -> node -| S_reg (S_bin_op S_times)
+    | E_MultEq node -> node -| S_reg (S_bin_op S_times_eq)
     | E_Mutez node -> node -| S_mutez_literal
     | E_NamePath node -> node -| S_reg (S_namespace_path S_expr)
     | E_Nat node -> node -| S_nat_literal
@@ -410,8 +410,8 @@ let fold
     | E_Object node -> node -| S_object S_expr
     | E_String node -> node -| S_string_literal
     | E_Sub node -> node -| S_reg (S_bin_op S_minus)
+    | E_SubEq node -> node -| S_reg (S_bin_op S_minus_eq)
     | E_Ternary node -> node -| S_reg S_ternary
-    | E_TimesEq node -> node -| S_reg (S_bin_op S_times_eq)
     | E_True node -> node -| S_true
     | E_Typed node -> node -| S_reg S_typed_expr
     | E_Update node -> node -| S_braces S_update_expr

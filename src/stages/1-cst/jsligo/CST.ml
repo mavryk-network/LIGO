@@ -311,7 +311,7 @@ and type_annotation = colon * type_expr
    add or modify some, please make sure they remain in order. *)
 
 and type_expr =
-  T_App         of (type_expr * type_ctor_args) reg (* <u,v> M.t      *)
+  T_App         of (type_expr * type_ctor_args) reg (* M.t<u,v>       *)
 | T_Attr        of (attribute * type_expr)          (* @a e           *)
 | T_Array       of array_type                       (* [t, [u, v]]    *)
 | T_Fun         of fun_type                         (* (a : t) => u   *)
@@ -536,7 +536,7 @@ and expr =
   E_Add        of plus bin_op reg         (* x + y             *)
 | E_AddEq      of plus_eq bin_op reg      (* x += y            *)
 | E_And        of bool_and bin_op reg     (* x && y            *)
-| E_App        of (expr * arguments) reg  (* f(x)   Foo()      *)
+| E_App        of (expr * arguments) reg  (* f(x,y)  foo()     *)
 | E_Array      of expr _array             (* [x, ...y, z]  []  *)
 | E_ArrowFun   of arrow_fun_expr reg      (* (x : int) => e    *)
 | E_Assign     of equal bin_op reg        (* x = y             *)
@@ -568,8 +568,8 @@ and expr =
 | E_Leq        of leq bin_op reg          (* x <= y            *)
 | E_Lt         of lt bin_op reg           (* x < y             *)
 | E_Match      of match_expr reg          (* match (e) { ... } *)
-| E_MinusEq    of minus_eq bin_op reg     (* x -= y            *)
 | E_Mult       of times bin_op reg        (* x * y             *)
+| E_MultEq     of times_eq bin_op reg     (* x *= y            *)
 | E_Mutez      of mutez_literal           (* 5mutez            *)
 | E_NamePath   of expr namespace_path reg (* M.N.x.0           *)
 | E_Nat        of nat_literal             (* 42n               *)
@@ -588,8 +588,8 @@ and expr =
 | E_RemEq      of rem_eq bin_op reg       (* x %= y            *)
 | E_String     of string_literal          (* "abcdef"          *)
 | E_Sub        of minus bin_op reg        (* x - y             *)
+| E_SubEq      of minus_eq bin_op reg     (* x -= y            *)
 | E_Ternary    of ternary reg             (* x ? y : z         *)
-| E_TimesEq    of times_eq bin_op reg     (* x *= y            *)
 | E_True       of true_const              (* true              *)
 | E_Typed      of typed_expr reg          (* e as t            *)
 | E_Update     of update_expr braces      (* {...x, y : z}     *)
@@ -693,7 +693,7 @@ and 'a  un_op = {op: 'a; arg: expr}
 
 and projection = {
   object_or_array : expr;
-  property_path      : selection nseq
+  property_path   : selection nseq
 }
 
 and selection =
@@ -795,8 +795,8 @@ let rec expr_to_region = function
 | E_Leq        {region; _}
 | E_Lt         {region; _}
 | E_Match      {region; _}
-| E_MinusEq    {region; _}
-| E_Mult       {region; _} -> region
+| E_Mult       {region; _}
+| E_MultEq    {region; _} -> region
 | E_Mutez      w -> w#region
 | E_NamePath   {region; _} -> region
 | E_Nat        w -> w#region
@@ -815,8 +815,8 @@ let rec expr_to_region = function
 | E_RemEq      {region; _} -> region
 | E_String     w -> w#region
 | E_Sub        {region; _}
-| E_Ternary    {region; _}
-| E_TimesEq    {region; _} -> region
+| E_SubEq      {region; _}
+| E_Ternary    {region; _} -> region
 | E_True       w -> w#region
 | E_Typed      {region; _}
 | E_Update     {region; _} -> region

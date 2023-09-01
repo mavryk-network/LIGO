@@ -747,11 +747,11 @@ decl_stmt:
 
 assign_expr:
   bin_op (var_path,   "=", expr) { E_Assign   $1 }
-| bin_op (var_path,  "*=", expr) { E_TimesEq  $1 }
+| bin_op (var_path,  "*=", expr) { E_MultEq   $1 }
 | bin_op (var_path,  "/=", expr) { E_DivEq    $1 }
 | bin_op (var_path,  "%=", expr) { E_RemEq    $1 }
 | bin_op (var_path,  "+=", expr) { E_AddEq    $1 }
-| bin_op (var_path,  "-=", expr) { E_MinusEq  $1 }
+| bin_op (var_path,  "-=", expr) { E_SubEq    $1 }
 | bin_op (var_path,  "|=", expr) { E_BitOrEq  $1 }
 | bin_op (var_path,  "^=", expr) { E_BitXorEq $1 }
 | bin_op (var_path,  "&=", expr) { E_BitAndEq $1 }

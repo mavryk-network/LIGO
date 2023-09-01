@@ -591,8 +591,8 @@ and print_expr state = function
 | E_Leq        e -> print_E_Leq        state e
 | E_Lt         e -> print_E_Lt         state e
 | E_Match      e -> print_E_Match      state e
-| E_MinusEq    e -> print_E_MinusEq    state e
 | E_Mult       e -> print_E_Mult       state e
+| E_MultEq     e -> print_E_MultEq     state e
 | E_Mutez      e -> print_E_Mutez      state e
 | E_NamePath   e -> print_E_NamePath   state e
 | E_Nat        e -> print_E_Nat        state e
@@ -611,8 +611,8 @@ and print_expr state = function
 | E_RemEq      e -> print_E_RemEq      state e
 | E_String     e -> print_E_String     state e
 | E_Sub        e -> print_E_Sub        state e
+| E_SubEq      e -> print_E_SubEq      state e
 | E_Ternary    e -> print_E_Ternary    state e
-| E_TimesEq    e -> print_E_TimesEq    state e
 | E_True       e -> print_E_True       state e
 | E_Typed      e -> print_E_Typed      state e
 | E_Update     e -> print_E_Update     state e
@@ -911,11 +911,6 @@ and print_match_default state (node : match_default reg) =
   let {kwd_default=_; colon=_; default_expr} = value in
   Tree.make_unary state ~region "DefaultClause" print_expr default_expr
 
-(* Subtraction & assignment *)
-
-and print_E_MinusEq state (node: minus_eq bin_op reg) =
-  print_bin_op state "E_MinusEq" node
-
 (* Arithmetic modulo *)
 
 and print_E_Rem state (node : remainder bin_op reg) =
@@ -1029,6 +1024,11 @@ and print_E_String state (node: lexeme wrap) =
 and print_E_Sub state (node: minus bin_op reg) =
   print_bin_op state "E_Sub" node
 
+(* Subtraction & assignment *)
+
+and print_E_SubEq state (node: minus_eq bin_op reg) =
+  print_bin_op state "E_SubEq" node
+
 (* Ternary conditional expression *)
 
 and print_E_Ternary state (node: ternary reg) =
@@ -1046,8 +1046,8 @@ and print_E_Ternary state (node: ternary reg) =
 
 (* Multiplication & Assignment *)
 
-and print_E_TimesEq state (node: times_eq bin_op reg) =
-  print_bin_op state "E_TimesEq" node
+and print_E_MultEq state (node: times_eq bin_op reg) =
+  print_bin_op state "E_MultEq" node
 
 (* "true" as an expression *)
 
