@@ -65,7 +65,7 @@ const pokeAndGetFeedback = (oracleAddress : address, store : storage) => {
     when (None()): failwith("User does not have tickets => not allowed");
     when (Some(_t)):
       match (feedbackOpt) {
-        when (Some(feedback)): ((pokeTraces) => {
+        when (Some(feedback)): do {
           let feedbackMessage = { receiver: oracleAddress, feedback: feedback };
           return [
             list([]) as list<operation>,
@@ -79,7 +79,7 @@ const pokeAndGetFeedback = (oracleAddress : address, store : storage) => {
               ticketOwnership: tom,
             }
           ]
-        })(pokeTraces);
+        };
         when (None()): failwith("Cannot find view feedback on given oracle address");
       };
   };

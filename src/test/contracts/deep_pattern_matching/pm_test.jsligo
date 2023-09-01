@@ -8,26 +8,26 @@ let t2 = (x: myt, y: myt): int => {
     when(Nil()):
       match(y) {
         when(Nil()): 1;
-        when(Cons(p)): ((p: [int, int]) => {
+        when(Cons(p)): do {
           let [_a, b] = p;
           let a1 = "a";
           return (int(String.length(a1))) + b;
-        })(p)
+        }
       };
-    when(Cons(p)): ((p: [int, int]) => {
+    when(Cons(p)): do {
       let [a, b]: [int, int] = p;
       let old_b = b;
       let b_fn = (a: int, b: int): int => {
         return match(y) {
-          when(Nil()): (() => {
+          when(Nil()): do {
             let f = (b: int): int => b + a;
             return f(b + 1)
-          })();
+          };
           when(Cons(_)): a + b
         }
       };
       b = b_fn(a, b);
       return a + b + old_b;
-    })(p)
+    }
   }
 }
