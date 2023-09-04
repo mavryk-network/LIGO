@@ -1360,7 +1360,7 @@ let%expect_test _ =
   Called from Simple_utils__Trace.to_stdlib_result.(fun) in file "vendored-dune/ligo-utils/simple-utils/trace.ml", line 54, characters 14-22
   Called from Simple_utils__Trace.try_with in file "vendored-dune/ligo-utils/simple-utils/trace.ml", line 47, characters 6-20
   Called from Cli_helpers.return_result in file "src/main/helpers/cli_helpers.ml", line 103, characters 19-43
-  Re-raised at Cli.run in file "src/bin/cli.ml", line 3140, characters 22-31
+  Re-raised at Cli.run in file "src/bin/cli.ml", line 3142, characters 4-13
   Called from Cli_expect_tests__Cli_expect.run_ligo_bad in file "src/bin/expect_tests/cli_expect.ml", line 45, characters 18-31
   Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 1329, characters 2-63
   Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19

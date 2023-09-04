@@ -621,7 +621,7 @@ val get_contract_with_error : address -> string -> 'param contract
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let get_contract_with_error : (a: address,s: string) => contract&lt;&apos;param&gt;&gt;
+let get_contract_with_error : (a: address,s: string) => contract&lt;&apos;param&gt;
 </SyntaxTitle>
 
 Get a contract from an address.
@@ -833,10 +833,10 @@ let f (tr : tr) =
 
 ```jsligo group=sap_t
 let f = (tr : tr) =>
-  match (Tezos.sapling_verify_update(tr, x), {
-    Some: p => p[1],
-    None: () => failwith ("failed")
-  });
+  match (Tezos.sapling_verify_update(tr, x)) {
+    when(Some(p)): p[1];
+    when(None()): failwith ("failed")
+  };
 ```
 
 </Syntax>
