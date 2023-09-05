@@ -187,8 +187,7 @@ let should_uncurry_entry entry_ty =
   | None -> `Bad
 
 
-(* We cannot really tell the difference, this is just an heuristic when we try with curried first *)
-let should_uncurry_view ~storage_ty view_ty =
+let is_curried_view ~storage_ty view_ty =
   match Combinators.get_t_arrow view_ty with
   | Some { type1 = tin; type2 = return } ->
     (match Combinators.get_t_arrow return with
@@ -309,7 +308,7 @@ let rec fetch_views_in_module ~storage_ty
     match Location.unwrap declt with
     | D_value ({ binder; expr; attr } as dvalue) when attr.view ->
       let var = Binder.get_var binder in
-      (match should_uncurry_view ~storage_ty expr.type_expression with
+      (match is_curried_view ~storage_ty expr.type_expression with
       | `Yes _ ->
         let expr =
           Option.value_exn @@ uncurry_wrap ~loc ~type_:expr.type_expression var
@@ -322,7 +321,7 @@ let rec fetch_views_in_module ~storage_ty
           :: prog
         , (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
           :: views )
-      | `No _ | `Bad | `Bad_not_function | `Bad_storage _ ->
+      | `Bad | `Bad_not_function | `Bad_storage _ ->
         ( (Location.wrap ~loc:declt.location @@ D_value dvalue) :: prog
         , (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
           :: views ))
@@ -331,7 +330,7 @@ let rec fetch_views_in_module ~storage_ty
         dirref)
       when attr.view ->
       let var = Binder.get_var binder in
-      (match should_uncurry_view ~storage_ty expr.type_expression with
+      (match is_curried_view ~storage_ty expr.type_expression with
       | `Yes _ ->
         let expr =
           Option.value_exn @@ uncurry_wrap ~loc ~type_:expr.type_expression var
@@ -346,7 +345,7 @@ let rec fetch_views_in_module ~storage_ty
           :: prog
         , (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
           :: views )
-      | `No _ | `Bad | `Bad_not_function | `Bad_storage _ ->
+      | `Bad | `Bad_not_function | `Bad_storage _ ->
         ( (Location.wrap ~loc:declt.location @@ D_irrefutable_match dirref) :: prog
         , (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
           :: views ))

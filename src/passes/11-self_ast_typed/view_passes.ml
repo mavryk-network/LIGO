@@ -14,8 +14,8 @@ let check_view_type ~raise
  fun ~err_data:(main_name, view_binder) { storage = c_storage; _ } view_ty ->
   let view_loc = Value_var.get_location @@ Binder.get_var view_binder in
   let arg, v_storage, return =
-    match Ast_typed.should_uncurry_view ~storage_ty:c_storage view_ty with
-    | `Yes v | `No v -> v
+    match Ast_typed.is_curried_view ~storage_ty:c_storage view_ty with
+    | `Yes v -> v
     | `Bad_storage v_storage ->
       raise.error
       @@ storage_view_contract

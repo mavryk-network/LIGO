@@ -75,9 +75,8 @@ let e_views ~storage_type view_types =
     ~f:(fun (view, view_type) views_list ->
       let name = Value_var.to_name_exn view in
       let view_expr =
-        match Ast_typed.should_uncurry_view ~storage_ty:storage_type view_type with
+        match Ast_typed.is_curried_view ~storage_ty:storage_type view_type with
         | `Yes _ -> Option.value_exn @@ Ast_typed.uncurry_wrap ~loc ~type_:view_type view
-        | `No _ -> e_a_variable ~loc view view_type
         | `Bad | `Bad_not_function | `Bad_storage _ -> failwith "wrong view"
       in
       e_a_test_cons_views

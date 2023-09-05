@@ -34,13 +34,12 @@ val uncurry_wrap
   -> Types.expression_variable
   -> Types.expression option
 
-val should_uncurry_view
+val is_curried_view
   :  storage_ty:Types.type_expression
   -> Types.type_expression
   -> [> `Bad
      | `Bad_not_function
      | `Bad_storage of Types.type_expression
-     | `No of Types.type_expression * Types.type_expression * Types.type_expression
      | `Yes of Types.type_expression * Types.type_expression * Types.type_expression
      ]
 
