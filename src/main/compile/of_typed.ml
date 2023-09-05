@@ -123,18 +123,14 @@ let apply_to_entrypoint_view ~raise ~options
   let loc = Location.dummy in
   let aux : int -> _ -> Label.t * expression =
    fun i (view_ty, view_binder) ->
-    let a_ty, s_ty, r_ty =
-      (* at this point the self-pass on views has been applied, we assume the types are correct *)
-      trace_option ~raise main_unknown @@ Ast_typed.get_view_form view_ty
-    in
-    let ty = t_arrow ~loc (t_pair ~loc a_ty s_ty) r_ty () in
     let ep_expr =
       let open Ast_typed in
       match module_path with
-      | [] -> e_a_variable ~loc (Binder.get_var view_binder) ty
+      | [] -> e_a_variable ~loc (Binder.get_var view_binder) view_ty
       | _ ->
-        e_module_accessor ~loc { module_path; element = Binder.get_var view_binder } ty
+        e_module_accessor ~loc { module_path; element = Binder.get_var view_binder } view_ty
     in
+    let ep_expr = trace_option ~raise main_unknown @@ Ast_typed.uncurry_expression_wrap ~loc ~type_:view_ty @@ ep_expr in
     Label.of_int i, ep_expr
   in
   let tuple_view =

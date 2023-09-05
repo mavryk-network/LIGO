@@ -34,6 +34,12 @@ val uncurry_wrap
   -> Types.expression_variable
   -> Types.expression option
 
+val uncurry_expression_wrap
+  :  loc:Location.t
+  -> type_:Types.type_expression
+  -> Types.expression
+  -> Types.expression option
+
 val is_curried_view
   :  Types.type_expression
   -> [> `Bad

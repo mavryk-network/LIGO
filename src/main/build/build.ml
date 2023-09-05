@@ -540,7 +540,7 @@ and build_aggregated_views ~raise
       (Ast_typed.fetch_views_in_module ~storage_ty)
       contract.pr_module
   in
-  let contract = { contract with pr_module = module_upd_views } in
+  (* let contract = { contract with pr_module = module_upd_views } in *)
   match view_info with
   | [] -> None
   | _ ->
