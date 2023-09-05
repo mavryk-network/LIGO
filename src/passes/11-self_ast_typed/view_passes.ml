@@ -14,9 +14,9 @@ let check_view_type ~raise
  fun ~err_data:(main_name, view_binder) { storage = c_storage; _ } view_ty ->
   let view_loc = Value_var.get_location @@ Binder.get_var view_binder in
   let arg, v_storage, return =
-    match Ast_typed.is_curried_view ~storage_ty:c_storage view_ty with
-    | `Yes v -> v
-    | `Bad_storage v_storage ->
+    match Ast_typed.is_curried_view view_ty with
+    | `Yes (in_, v_storage, out) when Option.is_some (Ast_typed.assert_type_expression_eq (v_storage, c_storage)) -> (in_, v_storage, out)
+    | `Yes (_, v_storage, _) ->
       raise.error
       @@ storage_view_contract
            view_loc

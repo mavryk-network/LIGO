@@ -187,12 +187,11 @@ let should_uncurry_entry entry_ty =
   | None -> `Bad
 
 
-let is_curried_view ~storage_ty view_ty =
+let is_curried_view view_ty =
   match Combinators.get_t_arrow view_ty with
   | Some { type1 = tin; type2 = return } ->
     (match Combinators.get_t_arrow return with
-    | Some { type1 = storage; type2 = return }
-      when Option.is_some (assert_type_expression_eq (storage_ty, storage)) ->
+    | Some { type1 = storage; type2 = return } ->
       `Yes (tin, storage, return)
     | _ -> `Bad)
   | None -> `Bad_not_function
@@ -308,7 +307,7 @@ let rec fetch_views_in_module ~storage_ty
     match Location.unwrap declt with
     | D_value ({ binder; expr; attr } as dvalue) when attr.view ->
       let var = Binder.get_var binder in
-      (match is_curried_view ~storage_ty expr.type_expression with
+      (match is_curried_view expr.type_expression with
       | `Yes _ ->
         let expr =
           Option.value_exn @@ uncurry_wrap ~loc ~type_:expr.type_expression var
@@ -321,7 +320,7 @@ let rec fetch_views_in_module ~storage_ty
           :: prog
         , (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
           :: views )
-      | `Bad | `Bad_not_function | `Bad_storage _ ->
+      | `Bad | `Bad_not_function ->
         ( (Location.wrap ~loc:declt.location @@ D_value dvalue) :: prog
         , (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
           :: views ))
@@ -330,8 +329,8 @@ let rec fetch_views_in_module ~storage_ty
         dirref)
       when attr.view ->
       let var = Binder.get_var binder in
-      (match is_curried_view ~storage_ty expr.type_expression with
-      | `Yes _ ->
+      (match is_curried_view expr.type_expression with
+      | `Yes (_, storage_ty', _) when Option.is_some (assert_type_expression_eq (storage_ty, storage_ty')) ->
         let expr =
           Option.value_exn @@ uncurry_wrap ~loc ~type_:expr.type_expression var
         in
@@ -345,7 +344,8 @@ let rec fetch_views_in_module ~storage_ty
           :: prog
         , (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
           :: views )
-      | `Bad | `Bad_not_function | `Bad_storage _ ->
+      | `Yes _ -> failwith "unexpected type mismatch"
+      | `Bad | `Bad_not_function ->
         ( (Location.wrap ~loc:declt.location @@ D_irrefutable_match dirref) :: prog
         , (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
           :: views ))
