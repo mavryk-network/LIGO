@@ -599,7 +599,7 @@ let assert_t_list_operation (t : t) : unit option =
   | None -> None
 
 
-let should_uncurry_entry entry_ty =
+let is_curried_entry entry_ty =
   let is_t_list_operation listop = Option.is_some @@ assert_t_list_operation listop in
   match get_t_arrow entry_ty with
   | Some { type1 = tin; type2 = return } ->
@@ -638,8 +638,8 @@ let parameter_from_entrypoints
   in
   let (entrypoint, entrypoint_type), rest = entrypoints in
   let%bind parameter, storage =
-    match should_uncurry_entry entrypoint_type with
-    | `Yes (parameter, storage) | `No (parameter, storage) ->
+    match is_curried_entry entrypoint_type with
+    | `Yes (parameter, storage) ->
       Result.Ok (parameter, storage)
     | `Bad -> Result.Error (`Not_entry_point_form entrypoint_type)
   in
@@ -648,7 +648,7 @@ let parameter_from_entrypoints
       ~init:[ String.capitalize (Value_var.to_name_exn entrypoint), parameter ]
       ~f:(fun parameters (ep, ep_type) ->
         let%bind parameter_, storage_ =
-          match should_uncurry_entry ep_type with
+          match is_curried_entry ep_type with
           | `Yes (parameter, storage) | `No (parameter, storage) ->
             Result.Ok (parameter, storage)
           | `Bad -> Result.Error (`Not_entry_point_form entrypoint_type)
