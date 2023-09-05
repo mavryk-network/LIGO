@@ -315,7 +315,7 @@ let rec fetch_views_in_module ~storage_ty
         let binder = Binder.set_var binder (Value_var.fresh_like var) in
         let binder = Binder.set_ascr binder expr.type_expression in
         (* Add both `main` and the new `main#FRESH` version that calls `main` but it's curried *)
-        ( (Location.wrap ~loc:declt.location @@ D_value dvalue)
+        ( (Location.wrap ~loc:declt.location @@ D_value { dvalue with attr = { attr with view = false } })
           :: (Location.wrap ~loc:declt.location @@ D_value { dvalue with binder; expr })
           :: prog
         , (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
@@ -338,7 +338,7 @@ let rec fetch_views_in_module ~storage_ty
         let binder = Binder.set_ascr binder expr.type_expression in
         let pattern = Pattern.{ pattern with wrap_content = P_var binder } in
         (* Add both `main` and the new `main#FRESH` version that calls `main` but it's curried *)
-        ( (Location.wrap ~loc:declt.location @@ D_irrefutable_match dirref)
+        ( (Location.wrap ~loc:declt.location @@ D_irrefutable_match { dirref with attr = { attr with view = false } })
           :: (Location.wrap ~loc:declt.location
              @@ D_irrefutable_match { dirref with expr; pattern })
           :: prog
