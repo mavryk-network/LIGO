@@ -474,7 +474,7 @@ let () = Caml.Sys.chdir pwd
 let () = Caml.Sys.chdir "publish_invalid_storage"
 
 let%expect_test _ =
-  run_ligo_bad [ "registry"; "publish"; "--dry-run"; "--ligo-bin-path"; ligo_bin_path ];
+  run_ligo_bad [ "registry"; "publish"; "--dry-run" ];
   [%expect
     {|
     ==> Reading manifest... Done
@@ -539,7 +539,7 @@ let () = Caml.Sys.chdir pwd
 let () = Caml.Sys.chdir "publish_contract_lt_1mb"
 
 let%expect_test _ =
-  run_ligo_good [ "registry"; "publish"; "--dry-run"; "--ligo-bin-path"; ligo_bin_path ];
+  run_ligo_good [ "registry"; "publish"; "--dry-run" ];
   let dry_run_log = remove_dynamic_info_from_log [%expect.output] in
   print_endline dry_run_log;
   [%expect
@@ -561,7 +561,7 @@ let () = Caml.Sys.chdir pwd
 let () = Caml.Sys.chdir "publish_contract_gt_1mb"
 
 let%expect_test _ =
-  run_ligo_good [ "registry"; "publish"; "--dry-run"; "--ligo-bin-path"; ligo_bin_path ];
+  run_ligo_good [ "registry"; "publish"; "--dry-run" ];
   let dry_run_log = remove_dynamic_info_from_log [%expect.output] in
   print_endline dry_run_log;
   [%expect
@@ -583,7 +583,7 @@ let () = Caml.Sys.chdir pwd
 let () = Caml.Sys.chdir "publish_contract_slash_in_pkg_name"
 
 let%expect_test _ =
-  run_ligo_good [ "registry"; "publish"; "--dry-run"; "--ligo-bin-path"; ligo_bin_path ];
+  run_ligo_good [ "registry"; "publish"; "--dry-run" ];
   let dry_run_log = remove_dynamic_info_from_log [%expect.output] in
   print_endline dry_run_log;
   [%expect
@@ -605,7 +605,7 @@ let () = Caml.Sys.chdir pwd
 let () = Caml.Sys.chdir "test_ligoignore"
 
 let%expect_test _ =
-  run_ligo_good [ "registry"; "publish"; "--dry-run"; "--ligo-bin-path"; ligo_bin_path ];
+  run_ligo_good [ "registry"; "publish"; "--dry-run" ];
   let dry_run_log = remove_dynamic_info_from_log [%expect.output] in
   print_endline dry_run_log;
   [%expect
@@ -627,7 +627,7 @@ let () = Caml.Sys.chdir pwd
 let () = Caml.Sys.chdir "test_ligoignore_with_empty_lines"
 
 let%expect_test _ =
-  run_ligo_good [ "registry"; "publish"; "--dry-run"; "--ligo-bin-path"; ligo_bin_path ];
+  run_ligo_good [ "registry"; "publish"; "--dry-run" ];
   let dry_run_log = remove_dynamic_info_from_log [%expect.output] in
   print_endline dry_run_log;
   [%expect

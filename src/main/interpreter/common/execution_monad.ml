@@ -181,6 +181,12 @@ module Command = struct
         * Ligo_interpreter.Types.calltrace
         * Tezos_protocol.Protocol.Alpha_context.public_key_hash
         -> LT.value tezos_command
+    | Stake :
+        Location.t
+        * Ligo_interpreter.Types.calltrace
+        * Tezos_protocol.Protocol.Alpha_context.public_key_hash
+        * Z.t
+        -> LT.value tezos_command
     | Bake_until_n_cycle_end :
         Location.t * Ligo_interpreter.Types.calltrace * Z.t
         -> LT.value tezos_command
@@ -772,6 +778,10 @@ module Command = struct
       (), ctxt
     | Register_delegate (loc, calltrace, pkh) ->
       let ctxt = Tezos_state.register_delegate ~raise ~loc ~calltrace ctxt pkh in
+      let value = LC.v_unit () in
+      value, ctxt
+    | Stake (loc, calltrace, pkh, amt) ->
+      let ctxt = Tezos_state.stake ~raise ~loc ~calltrace ctxt pkh amt in
       let value = LC.v_unit () in
       value, ctxt
     | Bake_until_n_cycle_end (loc, calltrace, n) ->
