@@ -3026,7 +3026,7 @@ module Lsp_server = struct
   module Requests = Ligo_lsp.Server.Requests
   module Server = Ligo_lsp.Server
 
-  let run () ?(log_requests = true) () =
+  let run ?(log_requests = true) () =
     let run_lsp () =
       let s = new Server.lsp_server in
       let server = Linol_lwt.Jsonrpc2.create_stdio (s :> Linol_lwt.Jsonrpc2.server) in
@@ -3088,7 +3088,7 @@ let lsp =
   let f disable_logging () =
     let log_requests = not disable_logging in
     return_with_custom_formatter ~skip_analytics:true ~cli_analytics:[] ~return
-    @@ fun () -> Lsp_server.run ~log_requests ()
+    @@ Lsp_server.run ~log_requests
   in
   Command.basic ~summary ~readme (f <$> disable_lsp_request_logging)
 
