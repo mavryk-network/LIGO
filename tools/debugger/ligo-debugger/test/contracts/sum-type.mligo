@@ -2,7 +2,8 @@ type parameter =
   | Variant1 of int
   | Variant2
 
-let main (p, s : parameter * int) : operation list * int =
+[@entry]
+let main (p : parameter) (s : int) : operation list * int =
   let x = s + s in
   let y =
     match p with

@@ -21,6 +21,25 @@ let compile ~raise =
             e_tuple ~loc (List.Ne.map f (hd, tl))
           | _ -> rhs) in
       make_e ~loc @@ E_let_in { lhs; rhs; body; is_rec; type_params; rhs_type = None }
+    | E_array elements ->
+      (match elements with
+      | [] -> e_unit ~loc
+      | hd :: tl ->
+        let f = function
+          | Array_repr.Expr_entry e -> e
+          | Rest_entry e -> raise.error @@ unsupported_rest_property e
+        in
+        e_tuple ~loc (List.Ne.map f (hd, tl)))
+    | E_block_poly_fun { type_params; parameters = []; ret_type; body } ->
+      let parameters : pattern Param.t list =
+        [ { param_kind = `Const; pattern = make_p ~loc:Location.generated P_unit } ]
+      in
+      e_block_poly_fun ~loc { type_params; parameters; ret_type; body }
+    | E_poly_fun { type_params; parameters = []; ret_type; body } ->
+      let parameters : pattern Param.t list =
+        [ { param_kind = `Const; pattern = make_p ~loc:Location.generated P_unit } ]
+      in
+      e_poly_fun ~loc { type_params; parameters; ret_type; body }
     | e -> make_e ~loc e
   in
   let declaration : (declaration, expr, ty_expr, pattern, mod_expr, sig_expr) declaration_ -> declaration =

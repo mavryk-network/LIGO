@@ -14,7 +14,7 @@ module Bugs = struct
       let email = Util.to_string_option @@ Util.member "email" json in
       Ok { url; email }
     with
-    | e -> Error e
+    | _ -> Error "Failed to parse url and email from json"
 
 
   let to_yojson { url; email } =
@@ -30,6 +30,14 @@ module Semver = struct
 
   let equal v1 v2 = compare v1 v2 = 0
   let to_yojson s = `String (to_string s)
+
+  let of_yojson y =
+    match y with
+    | `String s ->
+      (match of_string s with
+      | Some s -> Ok s
+      | None -> Error "Semver.of_yojson failed: Semver.of_string failed")
+    | _ -> Error "Semver.of_yojson failed: didn't received String as expected"
 end
 
 type t =
@@ -50,24 +58,25 @@ type t =
   ; ligo_manifest_path : string
   ; bugs : Bugs.t
   }
-[@@deriving to_yojson]
+[@@deriving yojson]
 
-let validate_storage ~ligo_bin_path ~main ~storage_fn ~storage_arg () =
+let validate_storage ~main ~storage_fn ~storage_arg () =
   match storage_fn, storage_arg with
   | Some storage_fn, Some storage_arg ->
+    let raw_options = Compiler_options.Raw_options.make () in
     let expression = Format.sprintf "%s %s" storage_fn storage_arg in
-    let cmd = Constants.ligo_compile_storage ~ligo:ligo_bin_path ~main ~expression () in
-    let status =
-      Lwt_process.with_process_none ~stdout:`Dev_null ~stderr:`Dev_null cmd (fun p ->
-          Lwt.map
-            (fun status ->
-              match status with
-              | Ligo_unix.WEXITED 0 -> Ok ()
-              | _ -> Error "Error: unknown error")
-            p#status)
-    in
-    let result = Lwt_main.run status in
-    (match result with
+    let _, run_me = Ligo_api.Compile.storage
+         raw_options
+         []
+         main
+         expression
+         "0"
+         "0"
+         None
+         None
+         None
+         `Json in
+    (match Simple_utils.Trace.to_stdlib_result run_me with
     | Ok _ -> Ok ()
     | Error _ ->
       Error
@@ -94,12 +103,12 @@ let validate_main_file ~main =
        Please specify a valid LIGO file in package.json."
 
 
-let validate ~ligo_bin_path t =
+let validate t =
   let { main; storage_fn; storage_arg; _ } = t in
   (* stat main file here *)
   let* () = validate_main_file ~main in
   (* check storage *)
-  let* () = validate_storage ~ligo_bin_path ~main ~storage_fn ~storage_arg () in
+  let* () = validate_storage ~main ~storage_fn ~storage_arg () in
   Ok ()
 
 

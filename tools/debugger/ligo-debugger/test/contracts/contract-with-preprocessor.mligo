@@ -5,5 +5,6 @@ let foo (a, b : int * int) : int =
   a + b
 #endif
 
-let main (_, s : unit * int) : operation list * int =
+[@entry]
+let main () (s : int) : operation list * int =
   (([] : operation list), foo(s, s + 42))

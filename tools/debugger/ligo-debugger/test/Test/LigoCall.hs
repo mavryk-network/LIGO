@@ -37,22 +37,26 @@ test_Compilation = testGroup "Getting debug info"
       let (a, b) <-> (c, d) = Range (LigoPosition a b) (LigoPosition c d) file
       res <- compileLigoContractDebug "main" file
 
-      let mainType = LigoTypeResolved $
+      let returnType = mkPairType
+            (mkConstantType "List" [mkSimpleConstantType "Operation"])
+            intType'
+
+      let uncurriedMainType = LigoTypeResolved $
             mkPairType
-              unitType'
+              (mkSumType (LLField "Main") [("Main", unitType')])
               intType'
-            ~>
-            mkPairType
-              (mkConstantType "List" [mkSimpleConstantType "Operation"])
-              intType'
+            ~> returnType
+
+      let curriedMainType = LigoTypeResolved $
+            unitType' ~> intType' ~> returnType
 
       take 15 (makeConciseLigoIndexedInfo (lmTypes res) <$> toList (lmLocations res)) @?= mconcat
         [ replicate 7 LigoEmptyLocationInfo
 
         , [ LigoMereEnvInfo [LigoHiddenStackEntry] ]
 
-        , [ LigoMereLocInfo ((1, 1) <-> (4, 30)) mainType ]
-        , [ LigoMereLocInfo ((1, 1) <-> (4, 30)) mainType ]
+        , [ LigoMereLocInfo ((2, 1) <-> (5, 30)) uncurriedMainType ]
+        , [ LigoMereLocInfo ((2, 1) <-> (5, 30)) curriedMainType ]
 
         , replicate 5 LigoEmptyLocationInfo
         ]
@@ -94,18 +98,18 @@ test_ExpressionCompilation = testGroup "Compiling expression"
     ]
   ]
 
-test_EntrypointsCollection :: TestTree
-test_EntrypointsCollection = testGroup "Getting entrypoints"
-  [ testCase "Two entrypoints" do
-      let file = contractsDir </> "two-entrypoints.mligo"
+test_ModuleNamesCollection :: TestTree
+test_ModuleNamesCollection = testGroup "Getting module names"
+  [ testCase "Two module names" do
+      let file = contractsDir </> "two-module-names.mligo"
 
-      EntrypointsList res <- getAvailableEntrypoints file
-      res @~=? ["main1", "main2"]
+      ModuleNamesList res <- getAvailableModules file
+      res @~=? ["Main1.$main", "Main2.$main"]
 
-  , testCase "Zero entrypoints" do
-      let file = contractsDir </> "no-entrypoint.mligo"
+  , testCase "Zero module names" do
+      let file = contractsDir </> "no-modules.mligo"
 
-      EntrypointsList res <- getAvailableEntrypoints file
+      ModuleNamesList res <- getAvailableModules file
       res @?= []
   ]
 
@@ -130,7 +134,7 @@ test_Regressions = testGroup "Regressions"
 
       let file = contractsDir </> "module_contracts" </> "imported.mligo"
 
-      EntrypointsList _res <- getAvailableEntrypoints file
+      ModuleNamesList _res <- getAvailableModules file
       pass
   ]
 
@@ -392,7 +396,7 @@ test_config_resolution = testGroup "LIGO config resolution"
             { noDebug = Nothing
             , logDir = Just "tmp/contract.log"
             , program = Just "main.mligo"
-            , michelsonEntrypoint = Just "default"
+            , moduleName = Just "default"
             , storage = Just [int||"some_storage"|]
             , entrypoint = Just "main"
             , parameter = Just [int||"some_param"|]
@@ -420,7 +424,7 @@ test_config_resolution = testGroup "LIGO config resolution"
             { noDebug = Nothing
             , logDir = Just "tmp/contract.log"
             , program = Nothing
-            , michelsonEntrypoint = Just "default"
+            , moduleName = Just "default"
             , storage = Nothing
             , entrypoint = Nothing
             , parameter = Just [int||"some_param"|]
@@ -445,7 +449,7 @@ test_config_resolution = testGroup "LIGO config resolution"
             { noDebug = Nothing
             , logDir = Nothing
             , program = Nothing
-            , michelsonEntrypoint = Nothing
+            , moduleName = Nothing
             , storage = Just [int||Unit|]
             , entrypoint = Just [int||main|]
             , parameter = Just [int||(Pair 200 "just a regular string")|]
@@ -472,9 +476,9 @@ test_config_resolution = testGroup "LIGO config resolution"
             { noDebug = Nothing
             , logDir = Nothing
             , program = Nothing
-            , michelsonEntrypoint = Nothing
-            , storage = Nothing
             , entrypoint = Nothing
+            , storage = Nothing
+            , moduleName = Nothing
             , parameter = Nothing
             , contractEnv = Nothing
             }

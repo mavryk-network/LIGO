@@ -64,12 +64,7 @@ let test_expression (raw_options : Raw_options.t) expr source_file =
         Option.value_map source_file ~f ~default
       in
       let typed =
-        Ligo_compile.Utils.type_expression
-          ~raise
-          ~options
-          syntax
-          expr
-          (Ast_typed.Misc.to_signature init_prg)
+        Ligo_compile.Utils.type_expression ~raise ~options syntax expr init_prg.pr_sig
       in
       let b, v = Interpreter.eval_expression ~raise ~steps ~options init_prg typed in
       (b, [ "eval", v ]), [] )
@@ -77,6 +72,7 @@ let test_expression (raw_options : Raw_options.t) expr source_file =
 
 let dry_run
     (raw_options : Raw_options.t)
+    entry_point
     source_file
     parameter
     storage
@@ -98,27 +94,32 @@ let dry_run
           (Syntax_name raw_options.syntax)
           (Some source_file)
       in
+      Deprecation.entry_cli ~raise syntax entry_point;
       let options = Compiler_options.make ~protocol_version ~syntax ~raw_options () in
-      let Compiler_options.{ entry_point; module_; _ } = options.frontend in
+      let Compiler_options.{ module_; _ } = options.frontend in
       let module_path = Build.parse_module_path ~loc:Location.dummy module_ in
       let typed_prg =
         Build.qualified_typed ~raise ~options (Build.Source_input.From_file source_file)
       in
-      let contract_info, typed_contract =
+      let typed_contract =
         Trace.trace ~raise Main_errors.self_ast_typed_tracer
-        @@ Ligo_compile.Of_core.specific_passes
-             ~options
-             (Ligo_compile.Of_core.Contract { entrypoints = entry_point; module_path })
-             typed_prg
+        @@ Self_ast_typed.all_program typed_prg
       in
-      let entry_point, _contract_type = contract_info in
       let aggregated_prg =
-        Compile.Of_typed.apply_to_entrypoint_contract
+        let _sig, contract_sig =
+          Trace.trace_option
+            ~raise
+            (`Self_ast_aggregated_tracer
+              (Self_ast_aggregated.Errors.corner_case
+                 "Could not recover types from contract"))
+            (Ast_typed.Misc.get_contract_signature typed_prg.pr_sig module_path)
+        in
+        Compile.Of_typed.apply_to_entrypoint_with_contract_type
           ~raise
           ~options:options.middle_end
           typed_contract
-          entry_point
           module_path
+          contract_sig
       in
       let expanded_prg = Compile.Of_aggregated.compile_expression ~raise aggregated_prg in
       let mini_c_prg = Compile.Of_expanded.compile_expression ~raise expanded_prg in
@@ -257,13 +258,14 @@ let evaluate_call
         Compile.Of_core.compile_expression
           ~raise
           ~options
-          ~context:(Ast_typed.Misc.to_signature init_prog)
+          ~context:(Ast_typed.to_signature init_prog.pr_module)
           app
       in
       let app_aggregated =
         Compile.Of_typed.compile_expression_in_context
           ~raise
           ~options:options.middle_end
+          None
           init_prog
           typed_app
       in
@@ -286,6 +288,7 @@ let evaluate_call
 let evaluate_expr
     (raw_options : Raw_options.t)
     source_file
+    exp
     amount
     balance
     sender
@@ -307,10 +310,8 @@ let evaluate_expr
         in
         Compiler_options.make ~protocol_version ~raw_options ~syntax ()
       in
-      let Compiler_options.{ entry_point; _ } = options.frontend in
-      let entry_point = List.hd_exn entry_point in
       let Build.{ expression; ast_type } =
-        Build.build_expression ~raise ~options syntax entry_point (Some source_file)
+        Build.build_expression ~raise ~options syntax exp (Some source_file)
       in
       let options =
         Run.make_dry_run_options

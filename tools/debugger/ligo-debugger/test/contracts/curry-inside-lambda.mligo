@@ -1,4 +1,5 @@
-let main (_, s : unit * int) : operation list * int =
+[@entry]
+let main () (s : int) : operation list * int =
   let lambdaFun =
     fun (a, b : int * int) ->
       let apply (f : int -> int -> int) (a : int) (b : int) = f a b in

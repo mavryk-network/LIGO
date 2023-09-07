@@ -565,11 +565,11 @@ Construct an operation that originates a contract from a function. The
 optional argument of type `key_hash` represents a delegate.
 
 <SyntaxTitle syntax="cameligo">
-val create_contract : ('param * 'storage -> operation list * 'storage) -> key_hash option -> tez -> 'storage -> (operation * address)
+val create_contract_uncurried : ('param * 'storage -> operation list * 'storage) -> key_hash option -> tez -> 'storage -> (operation * address)
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let create_contract = (contract: ['param, 'storage] => (list &lt;operation&gt;, &apos;storage), delegate: option&lt;key_hash&gt;, balance: tez, init: 'storage) => [operation, address]
+let create_contract_uncurried = (contract: ['param, 'storage] => (list &lt;operation&gt;, &apos;storage), delegate: option&lt;key_hash&gt;, balance: tez, init: 'storage) => [operation, address]
 </SyntaxTitle>
 
 Construct an operation that originates a contract from an uncurried function. The
@@ -621,7 +621,7 @@ val get_contract_with_error : address -> string -> 'param contract
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let get_contract_with_error : (a: address,s: string) => contract&lt;&apos;param&gt;&gt;
+let get_contract_with_error : (a: address,s: string) => contract&lt;&apos;param&gt;
 </SyntaxTitle>
 
 Get a contract from an address.
@@ -833,10 +833,10 @@ let f (tr : tr) =
 
 ```jsligo group=sap_t
 let f = (tr : tr) =>
-  match (Tezos.sapling_verify_update(tr, x), {
-    Some: p => p[1],
-    None: () => failwith ("failed")
-  });
+  match (Tezos.sapling_verify_update(tr, x)) {
+    when(Some(p)): p[1];
+    when(None()): failwith ("failed")
+  };
 ```
 
 </Syntax>

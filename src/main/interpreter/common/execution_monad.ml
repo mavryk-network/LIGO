@@ -120,9 +120,7 @@ module Command = struct
         -> LT.value tezos_command
     | Get_last_originations : unit -> LT.value tezos_command
     | Get_last_events : string * LT.type_expression -> LT.value tezos_command
-    | Compile_contract_from_file :
-        string * string * string list * Z.t option
-        -> LT.value tezos_command
+    | Compile_contract_from_file : string * Z.t option -> LT.value tezos_command
     | Read_contract_from_file :
         Location.t * LT.calltrace * string
         -> LT.value tezos_command
@@ -180,6 +178,12 @@ module Command = struct
         Location.t
         * Ligo_interpreter.Types.calltrace
         * Tezos_protocol.Protocol.Alpha_context.public_key_hash
+        -> LT.value tezos_command
+    | Stake :
+        Location.t
+        * Ligo_interpreter.Types.calltrace
+        * Tezos_protocol.Protocol.Alpha_context.public_key_hash
+        * Z.t
         -> LT.value tezos_command
     | Bake_until_n_cycle_end :
         Location.t * Ligo_interpreter.Types.calltrace * Z.t
@@ -403,17 +407,10 @@ module Command = struct
       | _ ->
         raise.error
         @@ Errors.generic_error Location.generated "Trying to measure a non-contract")
-    | Compile_contract_from_file (source_file, entry_point, views, _mutation) ->
-      let options = Compiler_options.set_entry_point options [ entry_point ] in
-      let options = Compiler_options.set_views options views in
+    | Compile_contract_from_file (source_file, _mutation) ->
       let options = Compiler_options.set_test_flag options false in
       let main, views =
-        Michelson_backend.compile_contract_file
-          ~raise
-          ~options
-          source_file
-          [ entry_point ]
-          views
+        Michelson_backend.compile_contract_file ~raise ~options source_file
       in
       let views =
         match views with
@@ -772,6 +769,10 @@ module Command = struct
       (), ctxt
     | Register_delegate (loc, calltrace, pkh) ->
       let ctxt = Tezos_state.register_delegate ~raise ~loc ~calltrace ctxt pkh in
+      let value = LC.v_unit () in
+      value, ctxt
+    | Stake (loc, calltrace, pkh, amt) ->
+      let ctxt = Tezos_state.stake ~raise ~loc ~calltrace ctxt pkh amt in
       let value = LC.v_unit () in
       value, ctxt
     | Bake_until_n_cycle_end (loc, calltrace, n) ->

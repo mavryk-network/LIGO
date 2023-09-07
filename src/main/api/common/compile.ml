@@ -40,7 +40,13 @@ type source =
   | Text of string * Syntax_types.t
   | File of Path.t
 
-let contract (raw_options : Raw_options.t) source michelson_code_format michelson_comments
+let contract
+    (raw_options : Raw_options.t)
+    entry_point
+    source
+    michelson_code_format
+    michelson_comments
+    views
   =
   ( Formatter.Michelson_formatter.michelson_format michelson_code_format michelson_comments
   , fun ~raise ->
@@ -54,6 +60,8 @@ let contract (raw_options : Raw_options.t) source michelson_code_format michelso
             (Syntax_name raw_options.syntax)
             (Some source_file)
       in
+      Deprecation.view_cli ~raise syntax views;
+      Deprecation.entry_cli ~raise syntax entry_point;
       let protocol_version =
         Helpers.protocol_to_variant ~raise raw_options.protocol_version
       in
@@ -63,7 +71,6 @@ let contract (raw_options : Raw_options.t) source michelson_code_format michelso
       in
       let Compiler_options.
             { disable_michelson_typechecking = disable_typecheck
-            ; views
             ; constants
             ; file_constants
             ; _
@@ -71,7 +78,7 @@ let contract (raw_options : Raw_options.t) source michelson_code_format michelso
         =
         options.backend
       in
-      let Compiler_options.{ entry_point; module_; _ } = options.frontend in
+      let Compiler_options.{ module_; _ } = options.frontend in
       let source_filename =
         match source with
         | Text (_source_code, _syntax) -> ""
@@ -85,7 +92,7 @@ let contract (raw_options : Raw_options.t) source michelson_code_format michelso
             Raw { id = "source_of_text" ^ Syntax.to_ext syntax; code = source_code })
       in
       let Build.{ entrypoint; views } =
-        Build.build_contract ~raise ~options entry_point module_ views source
+        Build.build_contract ~raise ~options module_ source
       in
       let code = entrypoint.value in
       let views = List.map ~f:(fun { name; value } -> name, value) views in
@@ -141,7 +148,7 @@ let expression (raw_options : Raw_options.t) expression init_file michelson_form
           ~has_env_comments:false
           ()
       in
-      let Compiler_options.{ without_run; _ } = options.backend in
+      let Compiler_options.{ without_run; function_body; _ } = options.backend in
       let Compiler_options.{ constants; file_constants; _ } = options.backend in
       let file_constants = read_file_constants ~raise file_constants in
       let constants = constants @ file_constants in
@@ -151,7 +158,7 @@ let expression (raw_options : Raw_options.t) expression init_file michelson_form
       let mich =
         no_comment
         @@
-        if without_run
+        if without_run || function_body
         then Run.clean_expression expression.expr
         else (
           let options =
@@ -209,32 +216,53 @@ let typed_contract_and_expression
     ~(options : Compiler_options.t)
     ~syntax
     ~source_file
+    ?entrypoint_ctor
     ~expression
     check_type
   =
   let Compiler_options.{ constants; file_constants; _ } = options.backend in
-  let Compiler_options.{ entry_point; module_; _ } = options.frontend in
+  let Compiler_options.{ module_; _ } = options.frontend in
   let file_constants = read_file_constants ~raise file_constants in
   let constants = constants @ file_constants in
   let module_path = Build.parse_module_path ~loc module_ in
   let typed_prg =
     Build.qualified_typed ~raise ~options (Build.Source_input.From_file source_file)
   in
-  let (entry_point, contract_type), app_typed_prg =
+  let app_typed_prg =
     Trace.trace ~raise Main_errors.self_ast_typed_tracer
-    @@ Ligo_compile.Of_core.specific_passes
-         ~options
-         (Ligo_compile.Of_core.Contract { entrypoints = entry_point; module_path })
-         typed_prg
+    @@ Self_ast_typed.all_program typed_prg
   in
-  let app_typed_sig = Ast_typed.Misc.to_signature app_typed_prg in
-  let Self_ast_typed.Helpers.{ parameter = parameter_ty; storage = storage_ty } =
-    contract_type
+  let _, ctrct_sig =
+    let sig_ = Ast_typed.to_extended_signature typed_prg in
+    Trace.trace_option
+      ~raise
+      (Main_errors.self_ast_typed_tracer @@ `Self_ast_typed_not_a_contract module_)
+      (Ast_typed.get_contract_signature sig_ module_path)
   in
+  let ctrct_sig =
+    { ctrct_sig with
+      parameter =
+        (* to handle single entrypoints:
+        parameter type for single entry-point contracts such as
+        `[@entry] let main (p:p) (s:s) = ...`
+        are now compiled to `| Main of p`
+        This representation do not yet persist up until the michelson representation
+        due to "optimisations" :  `| Main of p` compiles to `p`
+        When using `compile parameter /path/to/file` without using the -e CLI option,
+        we assume the given expression is of type `p` and not `| Main of p`   
+        *)
+        (match
+           Option.map (Ast_typed.get_t_sum ctrct_sig.parameter) ~f:Ast_typed.Row.to_alist
+         with
+        | Some [ (_, ty) ] -> ty
+        | _ -> ctrct_sig.parameter)
+    }
+  in
+  let app_typed_sig = Ast_typed.to_signature app_typed_prg.pr_module in
   let annotation =
     match check_type with
-    | Runned_result.Check_storage -> Checking.untype_type_expression storage_ty
-    | Check_parameter -> Checking.untype_type_expression parameter_ty
+    | Runned_result.Check_storage -> Checking.untype_type_expression ctrct_sig.storage
+    | Check_parameter -> Checking.untype_type_expression ctrct_sig.parameter
   in
   let typed_expr =
     Trace.try_with
@@ -242,6 +270,7 @@ let typed_contract_and_expression
         Ligo_compile.Utils.type_expression
           ~raise
           ~options
+          ?wrap_variant:entrypoint_ctor
           ~annotation
           syntax
           expression
@@ -251,6 +280,8 @@ let typed_contract_and_expression
           Ligo_compile.Utils.type_expression
             ~raise
             ~options
+            ~annotation
+            ?wrap_variant:entrypoint_ctor
             syntax
             expression
             app_typed_sig
@@ -259,17 +290,17 @@ let typed_contract_and_expression
           Ligo_compile.Of_typed.assert_equal_contract_type
             ~raise
             check_type
-            entry_point
-            app_typed_prg
+            ctrct_sig
             typed_param
         in
         typed_param)
   in
-  typed_expr, app_typed_prg, constants, contract_type, entry_point, module_path
+  typed_expr, app_typed_prg, constants, ctrct_sig, module_path
 
 
 let parameter
     (raw_options : Raw_options.t)
+    (parameter_entrypoint_opt : string option)
     source_file
     expression
     amount
@@ -299,13 +330,14 @@ let parameter
           ~has_env_comments:false
           ()
       in
-      let typed_param, app_typed_prg, constants, contract_type, entry_point, module_path =
+      let typed_param, app_typed_prg, constants, contract_type, module_path =
         typed_contract_and_expression
           ~raise
           ~options
           ~syntax
           ~source_file
           ~expression
+          ?entrypoint_ctor:parameter_entrypoint_opt
           Check_parameter
       in
       let (_ : Mini_c.meta Run.Michelson.michelson) =
@@ -314,7 +346,6 @@ let parameter
             ~raise
             ~options:options.middle_end
             app_typed_prg
-            entry_point
             module_path
             contract_type
         in
@@ -336,6 +367,7 @@ let parameter
         Ligo_compile.Of_typed.compile_expression_in_context
           ~raise
           ~options:options.middle_end
+          None
           app_typed_prg
           typed_param
       in
@@ -347,15 +379,6 @@ let parameter
       in
       let compiled_param =
         Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c_param
-      in
-      let module_ = Self_ast_typed.Helpers.get_module module_path app_typed_prg in
-      let () =
-        Ligo_compile.Of_typed.assert_equal_contract_type
-          ~raise
-          Check_parameter
-          entry_point
-          module_
-          typed_param
       in
       let options =
         Run.make_dry_run_options
@@ -374,6 +397,7 @@ let parameter
 
 let storage
     (raw_options : Raw_options.t)
+    entry_point
     source_file
     expression
     amount
@@ -395,6 +419,7 @@ let storage
           (Syntax_name raw_options.syntax)
           (Some source_file)
       in
+      Deprecation.entry_cli ~raise syntax entry_point;
       let options =
         Compiler_options.make
           ~raw_options
@@ -403,7 +428,7 @@ let storage
           ~has_env_comments:false
           ()
       in
-      let typed_store, app_typed_prg, constants, contract_type, entry_point, module_path =
+      let typed_store, app_typed_prg, constants, contract_type, module_path =
         typed_contract_and_expression
           ~raise
           ~options
@@ -417,9 +442,7 @@ let storage
           Ligo_compile.Of_typed.apply_to_entrypoint_with_contract_type
             ~raise
             ~options:options.middle_end
-            ~contract_pass:true
             app_typed_prg
-            entry_point
             module_path
             contract_type
         in
@@ -441,6 +464,7 @@ let storage
         Ligo_compile.Of_typed.compile_expression_in_context
           ~raise
           ~options:options.middle_end
+          None
           app_typed_prg
           typed_store
       in
@@ -452,15 +476,6 @@ let storage
       in
       let compiled_param =
         Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c_param
-      in
-      let module_ = Self_ast_typed.Helpers.get_module module_path app_typed_prg in
-      let () =
-        Ligo_compile.Of_typed.assert_equal_contract_type
-          ~raise
-          Check_storage
-          entry_point
-          module_
-          typed_store
       in
       let michelson_value =
         let options =
@@ -480,35 +495,3 @@ let storage
           michelson_value
       in
       no_comment michelson_value, [] )
-
-
-let view (raw_options : Raw_options.t) source view_name michelson_code_format =
-  ( Formatter.Michelson_formatter.view_michelson_format michelson_code_format
-  , fun ~raise ->
-      let syntax =
-        match source with
-        | Text (_source_code, syntax) -> syntax
-        | File source_file ->
-          Syntax.of_string_opt
-            ~raise
-            ~support_pascaligo:raw_options.deprecated
-            (Syntax_name raw_options.syntax)
-            (Some source_file)
-      in
-      let protocol_version =
-        Helpers.protocol_to_variant ~raise raw_options.protocol_version
-      in
-      let options = Compiler_options.make ~raw_options ~syntax ~protocol_version () in
-      let Compiler_options.{ entry_point; module_; _ } = options.frontend in
-      let source =
-        match source with
-        | File filename -> BuildSystem.Source_input.From_file filename
-        | Text (source_code, syntax) ->
-          BuildSystem.Source_input.(
-            Raw { id = "source_of_text" ^ Syntax.to_ext syntax; code = source_code })
-      in
-      let ({ name; value } : Build.view_michelson) =
-        Build.build_view ~raise ~options entry_point module_ view_name source
-      in
-      let compiled_view = Ligo_compile.Of_michelson.build_view ~raise name value in
-      compiled_view, [] )

@@ -2,7 +2,7 @@ module Language.LIGO.Debugger.CLI.Call
   ( checkCompilation
   , compileLigoContractDebug
   , compileLigoExpression
-  , getAvailableEntrypoints
+  , getAvailableModules
   , decompileLigoValues
   , resolveConfig
 
@@ -33,6 +33,7 @@ import Data.Aeson.Types (Parser, parseEither)
 import Data.ByteString.Lazy qualified as BSL
 import Data.Coerce (coerce)
 import Data.Map qualified as M
+import Data.MessagePack (errorMessages, unpackEither)
 import Data.SemVer qualified as SemVer
 import Data.Text qualified as T
 import Data.Text qualified as Text
@@ -294,37 +295,37 @@ withMapLigoExc = flip catches
 
 -- | When user picks an entrypoint we want to be sure that
 -- the contract will compile with it.
-checkCompilation :: (HasLigoClient m) => EntrypointName -> FilePath -> m ()
-checkCompilation EntrypointName{..} file = void $ withMapLigoExc $
+checkCompilation :: (HasLigoClient m) => ModuleName -> FilePath -> m ()
+checkCompilation ModuleName{..} file = void $ withMapLigoExc $
   callLigoBS Nothing
     do concat
         [ ["compile", "contract"]
         , ["--no-warn"]
-        , guard (not $ T.null enModule      ) >> ["-m", strArg enModule]
-        , guard (enName /= generatedMainName) >> ["-e", strArg enName]
-        , [strArg file]
-        ]
-    Nothing
-
--- | Run ligo to compile the contract with all the necessary debug info.
-compileLigoContractDebug :: forall m. (HasLigoClient m) => EntrypointName -> FilePath -> m (LigoMapper 'Unique)
-compileLigoContractDebug EntrypointName{..} file = withMapLigoExc $
-  callLigoBS Nothing
-    do concat
-        [ ["compile", "contract"]
-        , ["--no-warn"]
-        , ["--michelson-format", "json"]
-        , ["--michelson-comments", "location"]
-        , ["--michelson-comments", "env"]
-        , guard (not $ T.null enModule      ) >> ["-m", strArg enModule]
-        , guard (enName /= generatedMainName) >> ["-e", strArg enName]
+        , guard (not $ T.null enModule) >> ["-m", strArg enModule]
         , ["--experimental-disable-optimizations-for-debugging"]
         , ["--disable-michelson-typechecking"]
         , [strArg file]
         ]
     Nothing
-    >>= either (throwIO . LigoDecodeException "decoding source mapper" . toText) pure
-      . Aeson.eitherDecode
+
+-- | Run ligo to compile the contract with all the necessary debug info.
+compileLigoContractDebug :: forall m. (HasLigoClient m) => ModuleName -> FilePath -> m (LigoMapper 'Unique)
+compileLigoContractDebug ModuleName{..} file = withMapLigoExc $
+  callLigoBS Nothing
+    do concat
+        [ ["compile", "contract"]
+        , ["--no-warn"]
+        , ["--michelson-format", "msgpack"]
+        , ["--michelson-comments", "location"]
+        , ["--michelson-comments", "env"]
+        , guard (not $ T.null enModule) >> ["-m", strArg enModule]
+        , ["--experimental-disable-optimizations-for-debugging"]
+        , ["--disable-michelson-typechecking"]
+        , [strArg file]
+        ]
+    Nothing
+    >>= either (throwIO . LigoDecodeException "decoding source mapper" . unlines . fmap toText . errorMessages) pure
+      . unpackEither
 
 -- | Run ligo to compile expression into Michelson in the context of the
 -- given file.
@@ -346,9 +347,9 @@ compileLigoExpression valueOrigin ctxFile expr = withMapLigoExc $
         & first (LigoDecodeException "parsing Michelson value" .  pretty)
         & fromEither
 
-getAvailableEntrypoints :: forall m. (HasLigoClient m)
-                        => FilePath -> m EntrypointsList
-getAvailableEntrypoints file = withMapLigoExc $
+getAvailableModules :: forall m. (HasLigoClient m)
+                        => FilePath -> m ModuleNamesList
+getAvailableModules file = withMapLigoExc $
   callLigo Nothing
     [ "info", "list-declarations"
     , "--only-ep"
@@ -356,12 +357,12 @@ getAvailableEntrypoints file = withMapLigoExc $
     ] Nothing
     >>= decodeOutput
   where
-    decodeOutput :: Text -> m EntrypointsList
+    decodeOutput :: Text -> m ModuleNamesList
     decodeOutput txt =
       maybe
         do throwIO $ LigoDecodeException "decoding list declarations" txt
         pure
-        do parseEntrypointsList txt
+        do parseModuleNamesList txt
 
 -- | Tries to decompile Michelson values with @LigoType@s in @LIGO@ ones.
 decompileLigoValues :: forall m. (HasLigoClient m) => [(LigoType, T.SomeValue)] -> m [Maybe LigoValue]
@@ -402,9 +403,9 @@ resolveConfig configPath = withMapLigoExc do
       let noDebug = Nothing
       logDir <- o .:? "log_dir"
       program <- o .:? "program"
-      michelsonEntrypoint <- o .:? "michelson_entrypoint"
-      storage <- o .:? "storage"
       entrypoint <- o .:? "entrypoint"
+      storage <- o .:? "storage"
+      moduleName <- o .:? "module_name"
       parameter <- o .:? "parameter"
       contractEnv <- traverse parseContractEnv =<< o .:? "contract_env"
       pure LigoLaunchRequest{..}

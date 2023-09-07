@@ -239,6 +239,7 @@ end = struct
       let es = List.map ~f:(function Expr_entry e | Rest_entry e -> e) es in
       ret @@ E_array es
     | E_variable x -> ret @@ E_variable x
+    | E_contract x -> ret @@ E_contract x
     | E_record_pun fields ->
       let x =
         List.map
@@ -262,6 +263,17 @@ end = struct
            { matchee = expr
            ; cases =
                List.map (List.Ne.to_list cases) ~f:(function I.Case.{ pattern; rhs } ->
+                   let default : O.type_expression option O.Pattern.t =
+                     Location.wrap
+                       ~loc:rhs.location
+                       O.Pattern.(
+                         P_var
+                           Ligo_prim.Binder.(
+                             make
+                               (I.Variable.fresh ~loc:rhs.location ~name:"default" ())
+                               None))
+                   in
+                   let pattern = Option.value ~default pattern in
                    O.Match_expr.{ pattern; body = rhs })
            }
     | E_annot (anno_expr, type_annotation) ->
@@ -347,6 +359,7 @@ end = struct
     match Location.unwrap t with
     | T_attr (_, ty) -> ty
     | T_var v -> ret @@ T_variable v
+    | T_contract_parameter x -> ret @@ T_contract_parameter x
     | T_constant t ->
       (match Ligo_prim.Literal_types.of_string_opt t with
       | Some t -> ret @@ T_constant (t, Ligo_prim.Literal_types.to_arity t)
@@ -377,7 +390,8 @@ end = struct
     | T_record r -> ret @@ T_record r
     | T_abstraction abs -> ret @@ T_abstraction abs
     | T_for_all forall -> ret @@ T_for_all forall
-    | _ -> invariant @@ Format.asprintf "%a" Sexp.pp_hum (I.sexp_of_ty_expr_ ig t)
+    | _ ->
+      invariant @@ Format.asprintf "To_core : %a" Sexp.pp_hum (I.sexp_of_ty_expr_ ig t)
 
 
   and pattern
@@ -450,6 +464,7 @@ end = struct
     | PE_declaration d -> d
     | PE_preproc_directive _ -> Location.wrap ~loc:Location.generated (dummy_top_level ())
     | PE_top_level_instruction _ -> invariant "pe"
+    | PE_export _ -> invariant "pe"
 
 
   and mod_expr : (O.module_expr, O.program) I.mod_expr_ -> O.module_expr =
@@ -627,6 +642,7 @@ end = struct
     in
     match ty.type_content with
     | T_variable v -> ret @@ T_var v
+    | T_contract_parameter x -> ret @@ T_contract_parameter x
     | T_constant (t, _) -> ret @@ T_constant (Ligo_prim.Literal_types.to_string t)
     | T_app { type_operator; arguments } ->
       ignore type_operator.module_path;

@@ -1,4 +1,5 @@
-let main (_, s : unit * int) : operation list * int =
+[@entry]
+let main () (s : int) : operation list * int =
   let a = Some 42 in
   let b =
     match a with

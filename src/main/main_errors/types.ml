@@ -12,6 +12,7 @@ type all =
   | `Main_invalid_protocol_version of string list * string
   | `Main_deprecated_pascaligo_filename of string
   | `Main_deprecated_pascaligo_syntax of unit
+  | `Main_deprecated_views_cli of string
   | `Main_transpilation_unsupported_syntaxes of string * string
   | `Main_transpilation_unspecified_dest_syntax
   | `Main_transpilation_same_source_and_dest_syntax of string
@@ -67,6 +68,7 @@ type all =
   | `Main_decompile_typed of Checking.Errors.typer_error
   | `Main_entrypoint_not_a_function
   | `Main_entrypoint_not_found
+  | `Main_declaration_not_found
   | `Main_view_not_a_function of Value_var.t
   | `Main_view_rule_violated of Location.t
   | `Main_invalid_balance of string
