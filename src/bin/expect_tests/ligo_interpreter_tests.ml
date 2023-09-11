@@ -615,10 +615,10 @@ let%expect_test _ =
     3800000000000mutez
     4000000000000n
     "BALANCE AND VOTING POWER AFTER ORIGINATE"
-    3800011000000mutez
+    3800005999999mutez
     4000000000000n
     "BALANCE AND VOTING POWER AFTER TRANSFER"
-    3800022000000mutez
+    3800011999998mutez
     4000000000000n
     Everything at the top-level was executed.
     - test exited with value (). |}]
@@ -628,14 +628,14 @@ let%expect_test _ =
   [%expect
     {|
     "STARTING BALANCE AND VOTING POWER"
-    950000000000mutez
-    0n
+    0mutez
+    1000000000000n
     "BALANCE AND VOTING POWER AFTER ORIGINATE"
-    950011000000mutez
-    0n
+    5999999mutez
+    1000000000000n
     "BALANCE AND VOTING POWER AFTER TRANSFER"
-    950022000000mutez
-    0n
+    11999998mutez
+    1000000000000n
     Everything at the top-level was executed.
     - test exited with value (). |}]
 
@@ -713,18 +713,18 @@ let%expect_test _ =
   [%expect
     {|
     Everything at the top-level was executed.
-    - test_x exited with value (KT1E7ftEB5z7eL6SET1dBWbg2Tf1VXaLtHyv , { parameter unit ;
+    - test_x exited with value (KT1RCTMT7fm32ZVaTT5pqtNnPsRvbMxkpVMd , { parameter unit ;
       storage
-        (pair (pair (big_map %metadata string bytes) (set %participants address))
-              (map %secrets address bool)) ;
+        (pair (set %participants address)
+              (map %secrets address bool)
+              (big_map %metadata string bytes)) ;
       code { CDR ;
              PUSH bool True ;
              DUP 2 ;
              CAR ;
-             CDR ;
              ITER { SWAP ;
                     DUP 3 ;
-                    CDR ;
+                    GET 3 ;
                     DIG 2 ;
                     GET ;
                     IF_NONE { PUSH bool False ; AND } { DROP ; PUSH bool True ; AND } } ;
@@ -732,7 +732,6 @@ let%expect_test _ =
              PUSH bool True ;
              DUP 2 ;
              CAR ;
-             CDR ;
              ITER { SWAP ;
                     EMPTY_MAP address bool ;
                     DIG 2 ;
@@ -740,7 +739,7 @@ let%expect_test _ =
                     IF_NONE { PUSH bool False ; AND } { DROP ; PUSH bool True ; AND } } ;
              DROP ;
              NIL operation ;
-             PAIR } } , 222). |}]
+             PAIR } } , 226). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_read_contract.mligo" ];
@@ -854,7 +853,7 @@ let%expect_test _ =
     {|
     edpktom5rsehpEY6Kp2NShwsnpaaEjWxKFMJ3Rjp99VMJuHS93wxD6
     Everything at the top-level was executed.
-    - test exited with value Success (1968n). |}]
+    - test exited with value Success (1722n). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_tickets_and_bigmaps.mligo" ];
@@ -879,7 +878,7 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_to_json.mligo" ];
   [%expect
     {|
-    ["typed_address","KT1CHLcGYthioYYsY5dETp1m7rm7FdX9HH1K"]
+    ["typed_address","KT19SRGEVxDMKdou6Fu7vZrtPy6X9GB7Dwna"]
     ["record",[[["Label","bar"],["list",[["constant",["string","hello"]],["constant",["string","world"]]]]],[["Label","foo"],["constant",["int","42"]]]]] |}]
 
 (*
@@ -971,9 +970,9 @@ let%expect_test _ =
   [%expect
     {test|
     Deployed the contract:
-    { parameter (or (int %add) (int %sub)) ;
+    { parameter (or (int %sub) (int %add)) ;
       storage int ;
-      code { UNPAIR ; IF_LEFT { ADD } { SWAP ; SUB } ; NIL operation ; PAIR } ;
+      code { UNPAIR ; IF_LEFT { SWAP ; SUB } { ADD } ; NIL operation ; PAIR } ;
       view "get" unit int { CDR } ;
       view "get_diff" int int { UNPAIR ; SWAP ; SUB } }
     With storage: 0
@@ -1364,8 +1363,8 @@ let%expect_test _ =
 
     Baker cannot bake. Enough rolls? Enough cycles passed?
     "STARTING BALANCE AND VOTING POWER"
-    95000000000mutez
-    100000000000n |}]
+    100000000000mutez
+    0n |}]
 
 let pwd = Caml.Sys.getcwd ()
 let () = Caml.Sys.chdir "../../test/contracts/negative/interpreter_tests/"
