@@ -90,9 +90,13 @@ let compile_expr env e =
   let p = To_micheline.translate_prog p in
   Seq (null, drops @ p)
 
-let compile_function_body e =
+let compile_function_body ~(options : Compiler_options.t) e =
   let p = compile_binds [] e in
-  let (rs, p) = To_micheline.strengthen_prog p [true] in
+  let (rs, p) =
+    if options.backend.experimental_disable_optimizations_for_debugging
+    then [true], p
+    else To_micheline.strengthen_prog p [true]
+  in
   let p = To_micheline.translate_prog p in
   (* hmm, why did this end up here *)
   if Option.value ~default:false (List.hd rs)

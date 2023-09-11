@@ -403,7 +403,14 @@ runInstrCollect = \instr oldStack -> michFailureHandler `handleError` do
           -- Here stripping occurs, as the second list keeps the entire stack,
           -- while the first list (@env@) - only stack related to the current
           -- stack frame. And this is good.
-          let stackHere = zipWith StackItem env (refineStack stack)
+          let stackZipper val = \case
+                LigoHiddenStackEntry -> Nothing
+                LigoStackEntry (LigoExposedStackEntry Nothing _) -> Nothing
+                stackEntry -> Just $ StackItem stackEntry val
+
+          let stackHere = zipWith (flip stackZipper) env (refineStack stack)
+                & catMaybes
+
           logMessage
             [int||
               Stack at preExecutedStage: #{stackHere}

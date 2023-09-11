@@ -11,18 +11,26 @@ InterpretSnapshot:
         , StackItem:
           siLigoDesc: elem foo of int * int -> int
           siValue:
-            { {  };
-              {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              { {  }; { SWAP }; ADD } } ] ]
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 3 } } } ] ]
 InterpretSnapshot:
   isStatus: running / upon expression
   isStackFrames:
@@ -36,18 +44,26 @@ InterpretSnapshot:
         , StackItem:
           siLigoDesc: elem foo of int * int -> int
           siValue:
-            { {  };
-              {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              { {  }; { SWAP }; ADD } } ] ]
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 3 } } } ] ]
 InterpretSnapshot:
   isStatus: running / upon function call
   isStackFrames:
@@ -61,18 +77,26 @@ InterpretSnapshot:
         , StackItem:
           siLigoDesc: elem foo of int * int -> int
           siValue:
-            { {  };
-              {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              { {  }; { SWAP }; ADD } } ] ]
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 3 } } } ] ]
 InterpretSnapshot:
   isStatus: running / upon expression
   isStackFrames:
@@ -86,18 +110,26 @@ InterpretSnapshot:
         , StackItem:
           siLigoDesc: elem foo of int * int -> int
           siValue:
-            { {  };
-              {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              { {  }; { SWAP }; ADD } } ] ]
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 3 } } } ] ]
 InterpretSnapshot:
   isStatus: running / upon expression
   isStackFrames:
@@ -111,18 +143,26 @@ InterpretSnapshot:
         , StackItem:
           siLigoDesc: elem foo of int * int -> int
           siValue:
-            { {  };
-              {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              { {  }; { SWAP }; ADD } } ] ]
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 3 } } } ] ]
 InterpretSnapshot:
   isStatus: running / expression evaluated (42 : int)
   isStackFrames:
@@ -136,18 +176,26 @@ InterpretSnapshot:
         , StackItem:
           siLigoDesc: elem foo of int * int -> int
           siValue:
-            { {  };
-              {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              { {  }; { SWAP }; ADD } } ] ]
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 3 } } } ] ]
 InterpretSnapshot:
   isStatus: running / expression evaluated (Pair 0 42 : int * int)
   isStackFrames:
@@ -161,18 +209,26 @@ InterpretSnapshot:
         , StackItem:
           siLigoDesc: elem foo of int * int -> int
           siValue:
-            { {  };
-              {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              { {  }; { SWAP }; ADD } } ] ]
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 3 } } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
@@ -196,18 +252,26 @@ InterpretSnapshot:
         , StackItem:
           siLigoDesc: elem foo of int * int -> int
           siValue:
-            { {  };
-              {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              { {  }; { SWAP }; ADD } } ] ]
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 3 } } } ] ]
 InterpretSnapshot:
   isStatus: running / expression evaluated (42 : int)
   isStackFrames:
@@ -231,18 +295,26 @@ InterpretSnapshot:
         , StackItem:
           siLigoDesc: elem foo of int * int -> int
           siValue:
-            { {  };
-              {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              { {  }; { SWAP }; ADD } } ] ]
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 3 } } } ] ]
 InterpretSnapshot:
   isStatus: running / expression evaluated (42 : int)
   isStackFrames:
@@ -256,18 +328,26 @@ InterpretSnapshot:
         , StackItem:
           siLigoDesc: elem foo of int * int -> int
           siValue:
-            { {  };
-              {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              { {  }; { SWAP }; ADD } } ] ]
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 3 } } } ] ]
 InterpretSnapshot:
   isStatus: running / upon expression
   isStackFrames:
@@ -281,18 +361,26 @@ InterpretSnapshot:
         , StackItem:
           siLigoDesc: elem foo of int * int -> int
           siValue:
-            { {  };
-              {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              { {  }; { SWAP }; ADD } } ] ]
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 3 } } } ] ]
 InterpretSnapshot:
   isStatus: running / expression evaluated ({ } : operation list)
   isStackFrames:
@@ -306,18 +394,26 @@ InterpretSnapshot:
         , StackItem:
           siLigoDesc: elem foo of int * int -> int
           siValue:
-            { {  };
-              {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              { {  }; { SWAP }; ADD } } ] ]
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 3 } } } ] ]
 InterpretSnapshot:
   isStatus: running / expression evaluated (Pair { } 42 : operation list * int)
   isStackFrames:
@@ -331,18 +427,26 @@ InterpretSnapshot:
         , StackItem:
           siLigoDesc: elem foo of int * int -> int
           siValue:
-            { {  };
-              {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              { {  }; { SWAP }; ADD } } ] ]
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 3 } } } ] ]
 InterpretSnapshot:
   isStatus: terminated ok
   isStackFrames:

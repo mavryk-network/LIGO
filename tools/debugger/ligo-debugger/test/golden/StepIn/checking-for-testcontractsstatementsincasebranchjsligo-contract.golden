@@ -10,7 +10,13 @@ InterpretSnapshot:
           siValue: 0
         , StackItem:
           siLigoDesc: elem p of string
-          siValue: "Variant1" ] ]
+          siValue: "Variant1"
+        , StackItem:
+          siLigoDesc: elem p of string
+          siValue: "Variant1"
+        , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0 ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
@@ -19,9 +25,6 @@ InterpretSnapshot:
       sfLoc: test/contracts/statements-in-case-branch.jsligo@4:10-4:11
       sfStack:
         [ StackItem:
-          siLigoDesc: elem ? of (False of (unit) | True of (unit))
-          siValue: False
-        , StackItem:
           siLigoDesc: elem s2 of int
           siValue: 0
         , StackItem:
@@ -29,7 +32,13 @@ InterpretSnapshot:
           siValue: 0
         , StackItem:
           siLigoDesc: elem p of string
-          siValue: "Variant1" ] ]
+          siValue: "Variant1"
+        , StackItem:
+          siLigoDesc: elem p of string
+          siValue: "Variant1"
+        , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0 ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
@@ -38,12 +47,6 @@ InterpretSnapshot:
       sfLoc: test/contracts/statements-in-case-branch.jsligo@6:7-6:18
       sfStack:
         [ StackItem:
-          siLigoDesc: elem ? of (False of (unit) | True of (unit))
-          siValue: True
-        , StackItem:
-          siLigoDesc: elem ? of (False of (unit) | True of (unit))
-          siValue: False
-        , StackItem:
           siLigoDesc: elem s2 of int
           siValue: 0
         , StackItem:
@@ -51,7 +54,13 @@ InterpretSnapshot:
           siValue: 0
         , StackItem:
           siLigoDesc: elem p of string
-          siValue: "Variant1" ] ]
+          siValue: "Variant1"
+        , StackItem:
+          siLigoDesc: elem p of string
+          siValue: "Variant1"
+        , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0 ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
@@ -62,6 +71,15 @@ InterpretSnapshot:
         [ StackItem:
           siLigoDesc: elem s2 of int
           siValue: 42
+        , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem p of string
+          siValue: "Variant1"
+        , StackItem:
+          siLigoDesc: elem p of string
+          siValue: "Variant1"
         , StackItem:
           siLigoDesc: elem s of int
           siValue: 0 ] ]

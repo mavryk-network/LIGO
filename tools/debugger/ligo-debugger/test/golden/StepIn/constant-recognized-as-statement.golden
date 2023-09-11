@@ -10,16 +10,186 @@ InterpretSnapshot:
           siValue: 0
         , StackItem:
           siLigoDesc: elem get_const of unit -> int
-          siValue: { PUSH int 10; PAIR; { CAR; {  }; {  } } }
+          siValue:
+            { PUSH
+                (pair
+                  (lambda unit string)
+                  (lambda unit int)
+                  int
+                  (lambda string nat)
+                  unit
+                  int)
+                (Pair
+                   { PUSH
+                       (pair (lambda unit int) int (lambda string nat) unit int)
+                       (Pair
+                          { PUSH
+                              (pair int (lambda string nat) unit int)
+                              (Pair
+                                 10
+                                 (Pair
+                                    { PUSH (pair unit int) (Pair Unit 0);
+                                      PAIR;
+                                      { UNPAIR;
+                                        SWAP;
+                                        {  };
+                                        { { DUP }; SIZE };
+                                        DIP { DROP 2 } } }
+                                    (Pair Unit 0)));
+                            PAIR;
+                            { UNPAIR;
+                              UNPAIR 3;
+                              DIG 3;
+                              {  };
+                              DUP;
+                              {  };
+                              DROP 5;
+                              PUSH int 42 } }
+                          (Pair
+                             10
+                             (Pair
+                                { PUSH (pair unit int) (Pair Unit 0);
+                                  PAIR;
+                                  { UNPAIR;
+                                    SWAP;
+                                    {  };
+                                    { { DUP }; SIZE };
+                                    DIP { DROP 2 } } }
+                                (Pair Unit 0))));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR 4;
+                       DIG 4;
+                       {  };
+                       DUP;
+                       {  };
+                       DROP 6;
+                       PUSH string "100" } }
+                   (Pair
+                      { PUSH
+                          (pair int (lambda string nat) unit int)
+                          (Pair
+                             10
+                             (Pair
+                                { PUSH (pair unit int) (Pair Unit 0);
+                                  PAIR;
+                                  { UNPAIR;
+                                    SWAP;
+                                    {  };
+                                    { { DUP }; SIZE };
+                                    DIP { DROP 2 } } }
+                                (Pair Unit 0)));
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 3;
+                          DIG 3;
+                          {  };
+                          DUP;
+                          {  };
+                          DROP 5;
+                          PUSH int 42 } }
+                      (Pair
+                         10
+                         (Pair
+                            { PUSH (pair unit int) (Pair Unit 0);
+                              PAIR;
+                              { UNPAIR;
+                                SWAP;
+                                {  };
+                                { { DUP }; SIZE };
+                                DIP { DROP 2 } } }
+                            (Pair Unit 0)))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 5;
+                DIG 5;
+                {  };
+                DUP;
+                {  };
+                DUP 5;
+                DIP { DROP 7 } } }
         , StackItem:
           siLigoDesc: elem get_verbatim of unit -> string
-          siValue: { DROP; PUSH string "100" }
+          siValue:
+            { PUSH
+                (pair (lambda unit int) int (lambda string nat) unit int)
+                (Pair
+                   { PUSH
+                       (pair int (lambda string nat) unit int)
+                       (Pair
+                          10
+                          (Pair
+                             { PUSH (pair unit int) (Pair Unit 0);
+                               PAIR;
+                               { UNPAIR;
+                                 SWAP;
+                                 {  };
+                                 { { DUP }; SIZE };
+                                 DIP { DROP 2 } } }
+                             (Pair Unit 0)));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR 3;
+                       DIG 3;
+                       {  };
+                       DUP;
+                       {  };
+                       DROP 5;
+                       PUSH int 42 } }
+                   (Pair
+                      10
+                      (Pair
+                         { PUSH (pair unit int) (Pair Unit 0);
+                           PAIR;
+                           { UNPAIR;
+                             SWAP;
+                             {  };
+                             { { DUP }; SIZE };
+                             DIP { DROP 2 } } }
+                         (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DROP 6;
+                PUSH string "100" } }
         , StackItem:
           siLigoDesc: elem get_val of unit -> int
-          siValue: { DROP; PUSH int 42 }
+          siValue:
+            { PUSH
+                (pair int (lambda string nat) unit int)
+                (Pair
+                   10
+                   (Pair
+                      { PUSH (pair unit int) (Pair Unit 0);
+                        PAIR;
+                        { UNPAIR;
+                          SWAP;
+                          {  };
+                          { { DUP }; SIZE };
+                          DIP { DROP 2 } } }
+                      (Pair Unit 0)));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 3;
+                DIG 3;
+                {  };
+                DUP;
+                {  };
+                DROP 5;
+                PUSH int 42 } }
+        , StackItem:
+          siLigoDesc: elem EURO.some_const of int
+          siValue: 10
         , StackItem:
           siLigoDesc: elem String.length of string -> nat
-          siValue: { {  }; { {  }; SIZE } } ] ]
+          siValue:
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR; SWAP; {  }; { { DUP }; SIZE }; DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / upon function call
   isStackFrames:
@@ -32,16 +202,186 @@ InterpretSnapshot:
           siValue: 0
         , StackItem:
           siLigoDesc: elem get_const of unit -> int
-          siValue: { PUSH int 10; PAIR; { CAR; {  }; {  } } }
+          siValue:
+            { PUSH
+                (pair
+                  (lambda unit string)
+                  (lambda unit int)
+                  int
+                  (lambda string nat)
+                  unit
+                  int)
+                (Pair
+                   { PUSH
+                       (pair (lambda unit int) int (lambda string nat) unit int)
+                       (Pair
+                          { PUSH
+                              (pair int (lambda string nat) unit int)
+                              (Pair
+                                 10
+                                 (Pair
+                                    { PUSH (pair unit int) (Pair Unit 0);
+                                      PAIR;
+                                      { UNPAIR;
+                                        SWAP;
+                                        {  };
+                                        { { DUP }; SIZE };
+                                        DIP { DROP 2 } } }
+                                    (Pair Unit 0)));
+                            PAIR;
+                            { UNPAIR;
+                              UNPAIR 3;
+                              DIG 3;
+                              {  };
+                              DUP;
+                              {  };
+                              DROP 5;
+                              PUSH int 42 } }
+                          (Pair
+                             10
+                             (Pair
+                                { PUSH (pair unit int) (Pair Unit 0);
+                                  PAIR;
+                                  { UNPAIR;
+                                    SWAP;
+                                    {  };
+                                    { { DUP }; SIZE };
+                                    DIP { DROP 2 } } }
+                                (Pair Unit 0))));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR 4;
+                       DIG 4;
+                       {  };
+                       DUP;
+                       {  };
+                       DROP 6;
+                       PUSH string "100" } }
+                   (Pair
+                      { PUSH
+                          (pair int (lambda string nat) unit int)
+                          (Pair
+                             10
+                             (Pair
+                                { PUSH (pair unit int) (Pair Unit 0);
+                                  PAIR;
+                                  { UNPAIR;
+                                    SWAP;
+                                    {  };
+                                    { { DUP }; SIZE };
+                                    DIP { DROP 2 } } }
+                                (Pair Unit 0)));
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 3;
+                          DIG 3;
+                          {  };
+                          DUP;
+                          {  };
+                          DROP 5;
+                          PUSH int 42 } }
+                      (Pair
+                         10
+                         (Pair
+                            { PUSH (pair unit int) (Pair Unit 0);
+                              PAIR;
+                              { UNPAIR;
+                                SWAP;
+                                {  };
+                                { { DUP }; SIZE };
+                                DIP { DROP 2 } } }
+                            (Pair Unit 0)))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 5;
+                DIG 5;
+                {  };
+                DUP;
+                {  };
+                DUP 5;
+                DIP { DROP 7 } } }
         , StackItem:
           siLigoDesc: elem get_verbatim of unit -> string
-          siValue: { DROP; PUSH string "100" }
+          siValue:
+            { PUSH
+                (pair (lambda unit int) int (lambda string nat) unit int)
+                (Pair
+                   { PUSH
+                       (pair int (lambda string nat) unit int)
+                       (Pair
+                          10
+                          (Pair
+                             { PUSH (pair unit int) (Pair Unit 0);
+                               PAIR;
+                               { UNPAIR;
+                                 SWAP;
+                                 {  };
+                                 { { DUP }; SIZE };
+                                 DIP { DROP 2 } } }
+                             (Pair Unit 0)));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR 3;
+                       DIG 3;
+                       {  };
+                       DUP;
+                       {  };
+                       DROP 5;
+                       PUSH int 42 } }
+                   (Pair
+                      10
+                      (Pair
+                         { PUSH (pair unit int) (Pair Unit 0);
+                           PAIR;
+                           { UNPAIR;
+                             SWAP;
+                             {  };
+                             { { DUP }; SIZE };
+                             DIP { DROP 2 } } }
+                         (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DROP 6;
+                PUSH string "100" } }
         , StackItem:
           siLigoDesc: elem get_val of unit -> int
-          siValue: { DROP; PUSH int 42 }
+          siValue:
+            { PUSH
+                (pair int (lambda string nat) unit int)
+                (Pair
+                   10
+                   (Pair
+                      { PUSH (pair unit int) (Pair Unit 0);
+                        PAIR;
+                        { UNPAIR;
+                          SWAP;
+                          {  };
+                          { { DUP }; SIZE };
+                          DIP { DROP 2 } } }
+                      (Pair Unit 0)));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 3;
+                DIG 3;
+                {  };
+                DUP;
+                {  };
+                DROP 5;
+                PUSH int 42 } }
+        , StackItem:
+          siLigoDesc: elem EURO.some_const of int
+          siValue: 10
         , StackItem:
           siLigoDesc: elem String.length of string -> nat
-          siValue: { {  }; { {  }; SIZE } } ] ]
+          siValue:
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR; SWAP; {  }; { { DUP }; SIZE }; DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
@@ -57,16 +397,186 @@ InterpretSnapshot:
           siValue: 0
         , StackItem:
           siLigoDesc: elem get_const of unit -> int
-          siValue: { PUSH int 10; PAIR; { CAR; {  }; {  } } }
+          siValue:
+            { PUSH
+                (pair
+                  (lambda unit string)
+                  (lambda unit int)
+                  int
+                  (lambda string nat)
+                  unit
+                  int)
+                (Pair
+                   { PUSH
+                       (pair (lambda unit int) int (lambda string nat) unit int)
+                       (Pair
+                          { PUSH
+                              (pair int (lambda string nat) unit int)
+                              (Pair
+                                 10
+                                 (Pair
+                                    { PUSH (pair unit int) (Pair Unit 0);
+                                      PAIR;
+                                      { UNPAIR;
+                                        SWAP;
+                                        {  };
+                                        { { DUP }; SIZE };
+                                        DIP { DROP 2 } } }
+                                    (Pair Unit 0)));
+                            PAIR;
+                            { UNPAIR;
+                              UNPAIR 3;
+                              DIG 3;
+                              {  };
+                              DUP;
+                              {  };
+                              DROP 5;
+                              PUSH int 42 } }
+                          (Pair
+                             10
+                             (Pair
+                                { PUSH (pair unit int) (Pair Unit 0);
+                                  PAIR;
+                                  { UNPAIR;
+                                    SWAP;
+                                    {  };
+                                    { { DUP }; SIZE };
+                                    DIP { DROP 2 } } }
+                                (Pair Unit 0))));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR 4;
+                       DIG 4;
+                       {  };
+                       DUP;
+                       {  };
+                       DROP 6;
+                       PUSH string "100" } }
+                   (Pair
+                      { PUSH
+                          (pair int (lambda string nat) unit int)
+                          (Pair
+                             10
+                             (Pair
+                                { PUSH (pair unit int) (Pair Unit 0);
+                                  PAIR;
+                                  { UNPAIR;
+                                    SWAP;
+                                    {  };
+                                    { { DUP }; SIZE };
+                                    DIP { DROP 2 } } }
+                                (Pair Unit 0)));
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 3;
+                          DIG 3;
+                          {  };
+                          DUP;
+                          {  };
+                          DROP 5;
+                          PUSH int 42 } }
+                      (Pair
+                         10
+                         (Pair
+                            { PUSH (pair unit int) (Pair Unit 0);
+                              PAIR;
+                              { UNPAIR;
+                                SWAP;
+                                {  };
+                                { { DUP }; SIZE };
+                                DIP { DROP 2 } } }
+                            (Pair Unit 0)))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 5;
+                DIG 5;
+                {  };
+                DUP;
+                {  };
+                DUP 5;
+                DIP { DROP 7 } } }
         , StackItem:
           siLigoDesc: elem get_verbatim of unit -> string
-          siValue: { DROP; PUSH string "100" }
+          siValue:
+            { PUSH
+                (pair (lambda unit int) int (lambda string nat) unit int)
+                (Pair
+                   { PUSH
+                       (pair int (lambda string nat) unit int)
+                       (Pair
+                          10
+                          (Pair
+                             { PUSH (pair unit int) (Pair Unit 0);
+                               PAIR;
+                               { UNPAIR;
+                                 SWAP;
+                                 {  };
+                                 { { DUP }; SIZE };
+                                 DIP { DROP 2 } } }
+                             (Pair Unit 0)));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR 3;
+                       DIG 3;
+                       {  };
+                       DUP;
+                       {  };
+                       DROP 5;
+                       PUSH int 42 } }
+                   (Pair
+                      10
+                      (Pair
+                         { PUSH (pair unit int) (Pair Unit 0);
+                           PAIR;
+                           { UNPAIR;
+                             SWAP;
+                             {  };
+                             { { DUP }; SIZE };
+                             DIP { DROP 2 } } }
+                         (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DROP 6;
+                PUSH string "100" } }
         , StackItem:
           siLigoDesc: elem get_val of unit -> int
-          siValue: { DROP; PUSH int 42 }
+          siValue:
+            { PUSH
+                (pair int (lambda string nat) unit int)
+                (Pair
+                   10
+                   (Pair
+                      { PUSH (pair unit int) (Pair Unit 0);
+                        PAIR;
+                        { UNPAIR;
+                          SWAP;
+                          {  };
+                          { { DUP }; SIZE };
+                          DIP { DROP 2 } } }
+                      (Pair Unit 0)));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 3;
+                DIG 3;
+                {  };
+                DUP;
+                {  };
+                DROP 5;
+                PUSH int 42 } }
+        , StackItem:
+          siLigoDesc: elem EURO.some_const of int
+          siValue: 10
         , StackItem:
           siLigoDesc: elem String.length of string -> nat
-          siValue: { {  }; { {  }; SIZE } } ] ]
+          siValue:
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR; SWAP; {  }; { { DUP }; SIZE }; DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
@@ -82,16 +592,186 @@ InterpretSnapshot:
           siValue: 0
         , StackItem:
           siLigoDesc: elem get_const of unit -> int
-          siValue: { PUSH int 10; PAIR; { CAR; {  }; {  } } }
+          siValue:
+            { PUSH
+                (pair
+                  (lambda unit string)
+                  (lambda unit int)
+                  int
+                  (lambda string nat)
+                  unit
+                  int)
+                (Pair
+                   { PUSH
+                       (pair (lambda unit int) int (lambda string nat) unit int)
+                       (Pair
+                          { PUSH
+                              (pair int (lambda string nat) unit int)
+                              (Pair
+                                 10
+                                 (Pair
+                                    { PUSH (pair unit int) (Pair Unit 0);
+                                      PAIR;
+                                      { UNPAIR;
+                                        SWAP;
+                                        {  };
+                                        { { DUP }; SIZE };
+                                        DIP { DROP 2 } } }
+                                    (Pair Unit 0)));
+                            PAIR;
+                            { UNPAIR;
+                              UNPAIR 3;
+                              DIG 3;
+                              {  };
+                              DUP;
+                              {  };
+                              DROP 5;
+                              PUSH int 42 } }
+                          (Pair
+                             10
+                             (Pair
+                                { PUSH (pair unit int) (Pair Unit 0);
+                                  PAIR;
+                                  { UNPAIR;
+                                    SWAP;
+                                    {  };
+                                    { { DUP }; SIZE };
+                                    DIP { DROP 2 } } }
+                                (Pair Unit 0))));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR 4;
+                       DIG 4;
+                       {  };
+                       DUP;
+                       {  };
+                       DROP 6;
+                       PUSH string "100" } }
+                   (Pair
+                      { PUSH
+                          (pair int (lambda string nat) unit int)
+                          (Pair
+                             10
+                             (Pair
+                                { PUSH (pair unit int) (Pair Unit 0);
+                                  PAIR;
+                                  { UNPAIR;
+                                    SWAP;
+                                    {  };
+                                    { { DUP }; SIZE };
+                                    DIP { DROP 2 } } }
+                                (Pair Unit 0)));
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 3;
+                          DIG 3;
+                          {  };
+                          DUP;
+                          {  };
+                          DROP 5;
+                          PUSH int 42 } }
+                      (Pair
+                         10
+                         (Pair
+                            { PUSH (pair unit int) (Pair Unit 0);
+                              PAIR;
+                              { UNPAIR;
+                                SWAP;
+                                {  };
+                                { { DUP }; SIZE };
+                                DIP { DROP 2 } } }
+                            (Pair Unit 0)))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 5;
+                DIG 5;
+                {  };
+                DUP;
+                {  };
+                DUP 5;
+                DIP { DROP 7 } } }
         , StackItem:
           siLigoDesc: elem get_verbatim of unit -> string
-          siValue: { DROP; PUSH string "100" }
+          siValue:
+            { PUSH
+                (pair (lambda unit int) int (lambda string nat) unit int)
+                (Pair
+                   { PUSH
+                       (pair int (lambda string nat) unit int)
+                       (Pair
+                          10
+                          (Pair
+                             { PUSH (pair unit int) (Pair Unit 0);
+                               PAIR;
+                               { UNPAIR;
+                                 SWAP;
+                                 {  };
+                                 { { DUP }; SIZE };
+                                 DIP { DROP 2 } } }
+                             (Pair Unit 0)));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR 3;
+                       DIG 3;
+                       {  };
+                       DUP;
+                       {  };
+                       DROP 5;
+                       PUSH int 42 } }
+                   (Pair
+                      10
+                      (Pair
+                         { PUSH (pair unit int) (Pair Unit 0);
+                           PAIR;
+                           { UNPAIR;
+                             SWAP;
+                             {  };
+                             { { DUP }; SIZE };
+                             DIP { DROP 2 } } }
+                         (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DROP 6;
+                PUSH string "100" } }
         , StackItem:
           siLigoDesc: elem get_val of unit -> int
-          siValue: { DROP; PUSH int 42 }
+          siValue:
+            { PUSH
+                (pair int (lambda string nat) unit int)
+                (Pair
+                   10
+                   (Pair
+                      { PUSH (pair unit int) (Pair Unit 0);
+                        PAIR;
+                        { UNPAIR;
+                          SWAP;
+                          {  };
+                          { { DUP }; SIZE };
+                          DIP { DROP 2 } } }
+                      (Pair Unit 0)));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 3;
+                DIG 3;
+                {  };
+                DUP;
+                {  };
+                DROP 5;
+                PUSH int 42 } }
+        , StackItem:
+          siLigoDesc: elem EURO.some_const of int
+          siValue: 10
         , StackItem:
           siLigoDesc: elem String.length of string -> nat
-          siValue: { {  }; { {  }; SIZE } } ] ]
+          siValue:
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR; SWAP; {  }; { { DUP }; SIZE }; DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
@@ -100,20 +780,193 @@ InterpretSnapshot:
       sfLoc: test/contracts/constant_as_statement.mligo@17:17-17:20
       sfStack:
         [ StackItem:
+          siLigoDesc: elem some_int of (None of (unit) | Some of (int))
+          siValue: Some 993
+        , StackItem:
           siLigoDesc: elem s of int
           siValue: 0
         , StackItem:
           siLigoDesc: elem get_const of unit -> int
-          siValue: { PUSH int 10; PAIR; { CAR; {  }; {  } } }
+          siValue:
+            { PUSH
+                (pair
+                  (lambda unit string)
+                  (lambda unit int)
+                  int
+                  (lambda string nat)
+                  unit
+                  int)
+                (Pair
+                   { PUSH
+                       (pair (lambda unit int) int (lambda string nat) unit int)
+                       (Pair
+                          { PUSH
+                              (pair int (lambda string nat) unit int)
+                              (Pair
+                                 10
+                                 (Pair
+                                    { PUSH (pair unit int) (Pair Unit 0);
+                                      PAIR;
+                                      { UNPAIR;
+                                        SWAP;
+                                        {  };
+                                        { { DUP }; SIZE };
+                                        DIP { DROP 2 } } }
+                                    (Pair Unit 0)));
+                            PAIR;
+                            { UNPAIR;
+                              UNPAIR 3;
+                              DIG 3;
+                              {  };
+                              DUP;
+                              {  };
+                              DROP 5;
+                              PUSH int 42 } }
+                          (Pair
+                             10
+                             (Pair
+                                { PUSH (pair unit int) (Pair Unit 0);
+                                  PAIR;
+                                  { UNPAIR;
+                                    SWAP;
+                                    {  };
+                                    { { DUP }; SIZE };
+                                    DIP { DROP 2 } } }
+                                (Pair Unit 0))));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR 4;
+                       DIG 4;
+                       {  };
+                       DUP;
+                       {  };
+                       DROP 6;
+                       PUSH string "100" } }
+                   (Pair
+                      { PUSH
+                          (pair int (lambda string nat) unit int)
+                          (Pair
+                             10
+                             (Pair
+                                { PUSH (pair unit int) (Pair Unit 0);
+                                  PAIR;
+                                  { UNPAIR;
+                                    SWAP;
+                                    {  };
+                                    { { DUP }; SIZE };
+                                    DIP { DROP 2 } } }
+                                (Pair Unit 0)));
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 3;
+                          DIG 3;
+                          {  };
+                          DUP;
+                          {  };
+                          DROP 5;
+                          PUSH int 42 } }
+                      (Pair
+                         10
+                         (Pair
+                            { PUSH (pair unit int) (Pair Unit 0);
+                              PAIR;
+                              { UNPAIR;
+                                SWAP;
+                                {  };
+                                { { DUP }; SIZE };
+                                DIP { DROP 2 } } }
+                            (Pair Unit 0)))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 5;
+                DIG 5;
+                {  };
+                DUP;
+                {  };
+                DUP 5;
+                DIP { DROP 7 } } }
         , StackItem:
           siLigoDesc: elem get_verbatim of unit -> string
-          siValue: { DROP; PUSH string "100" }
+          siValue:
+            { PUSH
+                (pair (lambda unit int) int (lambda string nat) unit int)
+                (Pair
+                   { PUSH
+                       (pair int (lambda string nat) unit int)
+                       (Pair
+                          10
+                          (Pair
+                             { PUSH (pair unit int) (Pair Unit 0);
+                               PAIR;
+                               { UNPAIR;
+                                 SWAP;
+                                 {  };
+                                 { { DUP }; SIZE };
+                                 DIP { DROP 2 } } }
+                             (Pair Unit 0)));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR 3;
+                       DIG 3;
+                       {  };
+                       DUP;
+                       {  };
+                       DROP 5;
+                       PUSH int 42 } }
+                   (Pair
+                      10
+                      (Pair
+                         { PUSH (pair unit int) (Pair Unit 0);
+                           PAIR;
+                           { UNPAIR;
+                             SWAP;
+                             {  };
+                             { { DUP }; SIZE };
+                             DIP { DROP 2 } } }
+                         (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DROP 6;
+                PUSH string "100" } }
         , StackItem:
           siLigoDesc: elem get_val of unit -> int
-          siValue: { DROP; PUSH int 42 }
+          siValue:
+            { PUSH
+                (pair int (lambda string nat) unit int)
+                (Pair
+                   10
+                   (Pair
+                      { PUSH (pair unit int) (Pair Unit 0);
+                        PAIR;
+                        { UNPAIR;
+                          SWAP;
+                          {  };
+                          { { DUP }; SIZE };
+                          DIP { DROP 2 } } }
+                      (Pair Unit 0)));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 3;
+                DIG 3;
+                {  };
+                DUP;
+                {  };
+                DROP 5;
+                PUSH int 42 } }
+        , StackItem:
+          siLigoDesc: elem EURO.some_const of int
+          siValue: 10
         , StackItem:
           siLigoDesc: elem String.length of string -> nat
-          siValue: { {  }; { {  }; SIZE } } ] ]
+          siValue:
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR; SWAP; {  }; { { DUP }; SIZE }; DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
@@ -125,20 +978,193 @@ InterpretSnapshot:
           siLigoDesc: elem res of int
           siValue: 100
         , StackItem:
+          siLigoDesc: elem some_int of (None of (unit) | Some of (int))
+          siValue: Some 993
+        , StackItem:
           siLigoDesc: elem s of int
           siValue: 0
         , StackItem:
           siLigoDesc: elem get_const of unit -> int
-          siValue: { PUSH int 10; PAIR; { CAR; {  }; {  } } }
+          siValue:
+            { PUSH
+                (pair
+                  (lambda unit string)
+                  (lambda unit int)
+                  int
+                  (lambda string nat)
+                  unit
+                  int)
+                (Pair
+                   { PUSH
+                       (pair (lambda unit int) int (lambda string nat) unit int)
+                       (Pair
+                          { PUSH
+                              (pair int (lambda string nat) unit int)
+                              (Pair
+                                 10
+                                 (Pair
+                                    { PUSH (pair unit int) (Pair Unit 0);
+                                      PAIR;
+                                      { UNPAIR;
+                                        SWAP;
+                                        {  };
+                                        { { DUP }; SIZE };
+                                        DIP { DROP 2 } } }
+                                    (Pair Unit 0)));
+                            PAIR;
+                            { UNPAIR;
+                              UNPAIR 3;
+                              DIG 3;
+                              {  };
+                              DUP;
+                              {  };
+                              DROP 5;
+                              PUSH int 42 } }
+                          (Pair
+                             10
+                             (Pair
+                                { PUSH (pair unit int) (Pair Unit 0);
+                                  PAIR;
+                                  { UNPAIR;
+                                    SWAP;
+                                    {  };
+                                    { { DUP }; SIZE };
+                                    DIP { DROP 2 } } }
+                                (Pair Unit 0))));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR 4;
+                       DIG 4;
+                       {  };
+                       DUP;
+                       {  };
+                       DROP 6;
+                       PUSH string "100" } }
+                   (Pair
+                      { PUSH
+                          (pair int (lambda string nat) unit int)
+                          (Pair
+                             10
+                             (Pair
+                                { PUSH (pair unit int) (Pair Unit 0);
+                                  PAIR;
+                                  { UNPAIR;
+                                    SWAP;
+                                    {  };
+                                    { { DUP }; SIZE };
+                                    DIP { DROP 2 } } }
+                                (Pair Unit 0)));
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 3;
+                          DIG 3;
+                          {  };
+                          DUP;
+                          {  };
+                          DROP 5;
+                          PUSH int 42 } }
+                      (Pair
+                         10
+                         (Pair
+                            { PUSH (pair unit int) (Pair Unit 0);
+                              PAIR;
+                              { UNPAIR;
+                                SWAP;
+                                {  };
+                                { { DUP }; SIZE };
+                                DIP { DROP 2 } } }
+                            (Pair Unit 0)))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 5;
+                DIG 5;
+                {  };
+                DUP;
+                {  };
+                DUP 5;
+                DIP { DROP 7 } } }
         , StackItem:
           siLigoDesc: elem get_verbatim of unit -> string
-          siValue: { DROP; PUSH string "100" }
+          siValue:
+            { PUSH
+                (pair (lambda unit int) int (lambda string nat) unit int)
+                (Pair
+                   { PUSH
+                       (pair int (lambda string nat) unit int)
+                       (Pair
+                          10
+                          (Pair
+                             { PUSH (pair unit int) (Pair Unit 0);
+                               PAIR;
+                               { UNPAIR;
+                                 SWAP;
+                                 {  };
+                                 { { DUP }; SIZE };
+                                 DIP { DROP 2 } } }
+                             (Pair Unit 0)));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR 3;
+                       DIG 3;
+                       {  };
+                       DUP;
+                       {  };
+                       DROP 5;
+                       PUSH int 42 } }
+                   (Pair
+                      10
+                      (Pair
+                         { PUSH (pair unit int) (Pair Unit 0);
+                           PAIR;
+                           { UNPAIR;
+                             SWAP;
+                             {  };
+                             { { DUP }; SIZE };
+                             DIP { DROP 2 } } }
+                         (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DROP 6;
+                PUSH string "100" } }
         , StackItem:
           siLigoDesc: elem get_val of unit -> int
-          siValue: { DROP; PUSH int 42 }
+          siValue:
+            { PUSH
+                (pair int (lambda string nat) unit int)
+                (Pair
+                   10
+                   (Pair
+                      { PUSH (pair unit int) (Pair Unit 0);
+                        PAIR;
+                        { UNPAIR;
+                          SWAP;
+                          {  };
+                          { { DUP }; SIZE };
+                          DIP { DROP 2 } } }
+                      (Pair Unit 0)));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 3;
+                DIG 3;
+                {  };
+                DUP;
+                {  };
+                DROP 5;
+                PUSH int 42 } }
+        , StackItem:
+          siLigoDesc: elem EURO.some_const of int
+          siValue: 10
         , StackItem:
           siLigoDesc: elem String.length of string -> nat
-          siValue: { {  }; { {  }; SIZE } } ] ]
+          siValue:
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR; SWAP; {  }; { { DUP }; SIZE }; DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
@@ -153,20 +1179,193 @@ InterpretSnapshot:
           siLigoDesc: elem res of int
           siValue: 100
         , StackItem:
+          siLigoDesc: elem some_int of (None of (unit) | Some of (int))
+          siValue: Some 993
+        , StackItem:
           siLigoDesc: elem s of int
           siValue: 0
         , StackItem:
           siLigoDesc: elem get_const of unit -> int
-          siValue: { PUSH int 10; PAIR; { CAR; {  }; {  } } }
+          siValue:
+            { PUSH
+                (pair
+                  (lambda unit string)
+                  (lambda unit int)
+                  int
+                  (lambda string nat)
+                  unit
+                  int)
+                (Pair
+                   { PUSH
+                       (pair (lambda unit int) int (lambda string nat) unit int)
+                       (Pair
+                          { PUSH
+                              (pair int (lambda string nat) unit int)
+                              (Pair
+                                 10
+                                 (Pair
+                                    { PUSH (pair unit int) (Pair Unit 0);
+                                      PAIR;
+                                      { UNPAIR;
+                                        SWAP;
+                                        {  };
+                                        { { DUP }; SIZE };
+                                        DIP { DROP 2 } } }
+                                    (Pair Unit 0)));
+                            PAIR;
+                            { UNPAIR;
+                              UNPAIR 3;
+                              DIG 3;
+                              {  };
+                              DUP;
+                              {  };
+                              DROP 5;
+                              PUSH int 42 } }
+                          (Pair
+                             10
+                             (Pair
+                                { PUSH (pair unit int) (Pair Unit 0);
+                                  PAIR;
+                                  { UNPAIR;
+                                    SWAP;
+                                    {  };
+                                    { { DUP }; SIZE };
+                                    DIP { DROP 2 } } }
+                                (Pair Unit 0))));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR 4;
+                       DIG 4;
+                       {  };
+                       DUP;
+                       {  };
+                       DROP 6;
+                       PUSH string "100" } }
+                   (Pair
+                      { PUSH
+                          (pair int (lambda string nat) unit int)
+                          (Pair
+                             10
+                             (Pair
+                                { PUSH (pair unit int) (Pair Unit 0);
+                                  PAIR;
+                                  { UNPAIR;
+                                    SWAP;
+                                    {  };
+                                    { { DUP }; SIZE };
+                                    DIP { DROP 2 } } }
+                                (Pair Unit 0)));
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 3;
+                          DIG 3;
+                          {  };
+                          DUP;
+                          {  };
+                          DROP 5;
+                          PUSH int 42 } }
+                      (Pair
+                         10
+                         (Pair
+                            { PUSH (pair unit int) (Pair Unit 0);
+                              PAIR;
+                              { UNPAIR;
+                                SWAP;
+                                {  };
+                                { { DUP }; SIZE };
+                                DIP { DROP 2 } } }
+                            (Pair Unit 0)))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 5;
+                DIG 5;
+                {  };
+                DUP;
+                {  };
+                DUP 5;
+                DIP { DROP 7 } } }
         , StackItem:
           siLigoDesc: elem get_verbatim of unit -> string
-          siValue: { DROP; PUSH string "100" }
+          siValue:
+            { PUSH
+                (pair (lambda unit int) int (lambda string nat) unit int)
+                (Pair
+                   { PUSH
+                       (pair int (lambda string nat) unit int)
+                       (Pair
+                          10
+                          (Pair
+                             { PUSH (pair unit int) (Pair Unit 0);
+                               PAIR;
+                               { UNPAIR;
+                                 SWAP;
+                                 {  };
+                                 { { DUP }; SIZE };
+                                 DIP { DROP 2 } } }
+                             (Pair Unit 0)));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR 3;
+                       DIG 3;
+                       {  };
+                       DUP;
+                       {  };
+                       DROP 5;
+                       PUSH int 42 } }
+                   (Pair
+                      10
+                      (Pair
+                         { PUSH (pair unit int) (Pair Unit 0);
+                           PAIR;
+                           { UNPAIR;
+                             SWAP;
+                             {  };
+                             { { DUP }; SIZE };
+                             DIP { DROP 2 } } }
+                         (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DROP 6;
+                PUSH string "100" } }
         , StackItem:
           siLigoDesc: elem get_val of unit -> int
-          siValue: { DROP; PUSH int 42 }
+          siValue:
+            { PUSH
+                (pair int (lambda string nat) unit int)
+                (Pair
+                   10
+                   (Pair
+                      { PUSH (pair unit int) (Pair Unit 0);
+                        PAIR;
+                        { UNPAIR;
+                          SWAP;
+                          {  };
+                          { { DUP }; SIZE };
+                          DIP { DROP 2 } } }
+                      (Pair Unit 0)));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 3;
+                DIG 3;
+                {  };
+                DUP;
+                {  };
+                DROP 5;
+                PUSH int 42 } }
+        , StackItem:
+          siLigoDesc: elem EURO.some_const of int
+          siValue: 10
         , StackItem:
           siLigoDesc: elem String.length of string -> nat
-          siValue: { {  }; { {  }; SIZE } } ] ]
+          siValue:
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR; SWAP; {  }; { { DUP }; SIZE }; DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / upon function call
   isStackFrames:
@@ -181,20 +1380,193 @@ InterpretSnapshot:
           siLigoDesc: elem res of int
           siValue: 100
         , StackItem:
+          siLigoDesc: elem some_int of (None of (unit) | Some of (int))
+          siValue: Some 993
+        , StackItem:
           siLigoDesc: elem s of int
           siValue: 0
         , StackItem:
           siLigoDesc: elem get_const of unit -> int
-          siValue: { PUSH int 10; PAIR; { CAR; {  }; {  } } }
+          siValue:
+            { PUSH
+                (pair
+                  (lambda unit string)
+                  (lambda unit int)
+                  int
+                  (lambda string nat)
+                  unit
+                  int)
+                (Pair
+                   { PUSH
+                       (pair (lambda unit int) int (lambda string nat) unit int)
+                       (Pair
+                          { PUSH
+                              (pair int (lambda string nat) unit int)
+                              (Pair
+                                 10
+                                 (Pair
+                                    { PUSH (pair unit int) (Pair Unit 0);
+                                      PAIR;
+                                      { UNPAIR;
+                                        SWAP;
+                                        {  };
+                                        { { DUP }; SIZE };
+                                        DIP { DROP 2 } } }
+                                    (Pair Unit 0)));
+                            PAIR;
+                            { UNPAIR;
+                              UNPAIR 3;
+                              DIG 3;
+                              {  };
+                              DUP;
+                              {  };
+                              DROP 5;
+                              PUSH int 42 } }
+                          (Pair
+                             10
+                             (Pair
+                                { PUSH (pair unit int) (Pair Unit 0);
+                                  PAIR;
+                                  { UNPAIR;
+                                    SWAP;
+                                    {  };
+                                    { { DUP }; SIZE };
+                                    DIP { DROP 2 } } }
+                                (Pair Unit 0))));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR 4;
+                       DIG 4;
+                       {  };
+                       DUP;
+                       {  };
+                       DROP 6;
+                       PUSH string "100" } }
+                   (Pair
+                      { PUSH
+                          (pair int (lambda string nat) unit int)
+                          (Pair
+                             10
+                             (Pair
+                                { PUSH (pair unit int) (Pair Unit 0);
+                                  PAIR;
+                                  { UNPAIR;
+                                    SWAP;
+                                    {  };
+                                    { { DUP }; SIZE };
+                                    DIP { DROP 2 } } }
+                                (Pair Unit 0)));
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 3;
+                          DIG 3;
+                          {  };
+                          DUP;
+                          {  };
+                          DROP 5;
+                          PUSH int 42 } }
+                      (Pair
+                         10
+                         (Pair
+                            { PUSH (pair unit int) (Pair Unit 0);
+                              PAIR;
+                              { UNPAIR;
+                                SWAP;
+                                {  };
+                                { { DUP }; SIZE };
+                                DIP { DROP 2 } } }
+                            (Pair Unit 0)))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 5;
+                DIG 5;
+                {  };
+                DUP;
+                {  };
+                DUP 5;
+                DIP { DROP 7 } } }
         , StackItem:
           siLigoDesc: elem get_verbatim of unit -> string
-          siValue: { DROP; PUSH string "100" }
+          siValue:
+            { PUSH
+                (pair (lambda unit int) int (lambda string nat) unit int)
+                (Pair
+                   { PUSH
+                       (pair int (lambda string nat) unit int)
+                       (Pair
+                          10
+                          (Pair
+                             { PUSH (pair unit int) (Pair Unit 0);
+                               PAIR;
+                               { UNPAIR;
+                                 SWAP;
+                                 {  };
+                                 { { DUP }; SIZE };
+                                 DIP { DROP 2 } } }
+                             (Pair Unit 0)));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR 3;
+                       DIG 3;
+                       {  };
+                       DUP;
+                       {  };
+                       DROP 5;
+                       PUSH int 42 } }
+                   (Pair
+                      10
+                      (Pair
+                         { PUSH (pair unit int) (Pair Unit 0);
+                           PAIR;
+                           { UNPAIR;
+                             SWAP;
+                             {  };
+                             { { DUP }; SIZE };
+                             DIP { DROP 2 } } }
+                         (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DROP 6;
+                PUSH string "100" } }
         , StackItem:
           siLigoDesc: elem get_val of unit -> int
-          siValue: { DROP; PUSH int 42 }
+          siValue:
+            { PUSH
+                (pair int (lambda string nat) unit int)
+                (Pair
+                   10
+                   (Pair
+                      { PUSH (pair unit int) (Pair Unit 0);
+                        PAIR;
+                        { UNPAIR;
+                          SWAP;
+                          {  };
+                          { { DUP }; SIZE };
+                          DIP { DROP 2 } } }
+                      (Pair Unit 0)));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 3;
+                DIG 3;
+                {  };
+                DUP;
+                {  };
+                DROP 5;
+                PUSH int 42 } }
+        , StackItem:
+          siLigoDesc: elem EURO.some_const of int
+          siValue: 10
         , StackItem:
           siLigoDesc: elem String.length of string -> nat
-          siValue: { {  }; { {  }; SIZE } } ] ]
+          siValue:
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR; SWAP; {  }; { { DUP }; SIZE }; DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / upon function call
   isStackFrames:
@@ -209,20 +1581,193 @@ InterpretSnapshot:
           siLigoDesc: elem res of int
           siValue: 100
         , StackItem:
+          siLigoDesc: elem some_int of (None of (unit) | Some of (int))
+          siValue: Some 993
+        , StackItem:
           siLigoDesc: elem s of int
           siValue: 0
         , StackItem:
           siLigoDesc: elem get_const of unit -> int
-          siValue: { PUSH int 10; PAIR; { CAR; {  }; {  } } }
+          siValue:
+            { PUSH
+                (pair
+                  (lambda unit string)
+                  (lambda unit int)
+                  int
+                  (lambda string nat)
+                  unit
+                  int)
+                (Pair
+                   { PUSH
+                       (pair (lambda unit int) int (lambda string nat) unit int)
+                       (Pair
+                          { PUSH
+                              (pair int (lambda string nat) unit int)
+                              (Pair
+                                 10
+                                 (Pair
+                                    { PUSH (pair unit int) (Pair Unit 0);
+                                      PAIR;
+                                      { UNPAIR;
+                                        SWAP;
+                                        {  };
+                                        { { DUP }; SIZE };
+                                        DIP { DROP 2 } } }
+                                    (Pair Unit 0)));
+                            PAIR;
+                            { UNPAIR;
+                              UNPAIR 3;
+                              DIG 3;
+                              {  };
+                              DUP;
+                              {  };
+                              DROP 5;
+                              PUSH int 42 } }
+                          (Pair
+                             10
+                             (Pair
+                                { PUSH (pair unit int) (Pair Unit 0);
+                                  PAIR;
+                                  { UNPAIR;
+                                    SWAP;
+                                    {  };
+                                    { { DUP }; SIZE };
+                                    DIP { DROP 2 } } }
+                                (Pair Unit 0))));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR 4;
+                       DIG 4;
+                       {  };
+                       DUP;
+                       {  };
+                       DROP 6;
+                       PUSH string "100" } }
+                   (Pair
+                      { PUSH
+                          (pair int (lambda string nat) unit int)
+                          (Pair
+                             10
+                             (Pair
+                                { PUSH (pair unit int) (Pair Unit 0);
+                                  PAIR;
+                                  { UNPAIR;
+                                    SWAP;
+                                    {  };
+                                    { { DUP }; SIZE };
+                                    DIP { DROP 2 } } }
+                                (Pair Unit 0)));
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 3;
+                          DIG 3;
+                          {  };
+                          DUP;
+                          {  };
+                          DROP 5;
+                          PUSH int 42 } }
+                      (Pair
+                         10
+                         (Pair
+                            { PUSH (pair unit int) (Pair Unit 0);
+                              PAIR;
+                              { UNPAIR;
+                                SWAP;
+                                {  };
+                                { { DUP }; SIZE };
+                                DIP { DROP 2 } } }
+                            (Pair Unit 0)))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 5;
+                DIG 5;
+                {  };
+                DUP;
+                {  };
+                DUP 5;
+                DIP { DROP 7 } } }
         , StackItem:
           siLigoDesc: elem get_verbatim of unit -> string
-          siValue: { DROP; PUSH string "100" }
+          siValue:
+            { PUSH
+                (pair (lambda unit int) int (lambda string nat) unit int)
+                (Pair
+                   { PUSH
+                       (pair int (lambda string nat) unit int)
+                       (Pair
+                          10
+                          (Pair
+                             { PUSH (pair unit int) (Pair Unit 0);
+                               PAIR;
+                               { UNPAIR;
+                                 SWAP;
+                                 {  };
+                                 { { DUP }; SIZE };
+                                 DIP { DROP 2 } } }
+                             (Pair Unit 0)));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR 3;
+                       DIG 3;
+                       {  };
+                       DUP;
+                       {  };
+                       DROP 5;
+                       PUSH int 42 } }
+                   (Pair
+                      10
+                      (Pair
+                         { PUSH (pair unit int) (Pair Unit 0);
+                           PAIR;
+                           { UNPAIR;
+                             SWAP;
+                             {  };
+                             { { DUP }; SIZE };
+                             DIP { DROP 2 } } }
+                         (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DROP 6;
+                PUSH string "100" } }
         , StackItem:
           siLigoDesc: elem get_val of unit -> int
-          siValue: { DROP; PUSH int 42 }
+          siValue:
+            { PUSH
+                (pair int (lambda string nat) unit int)
+                (Pair
+                   10
+                   (Pair
+                      { PUSH (pair unit int) (Pair Unit 0);
+                        PAIR;
+                        { UNPAIR;
+                          SWAP;
+                          {  };
+                          { { DUP }; SIZE };
+                          DIP { DROP 2 } } }
+                      (Pair Unit 0)));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 3;
+                DIG 3;
+                {  };
+                DUP;
+                {  };
+                DROP 5;
+                PUSH int 42 } }
+        , StackItem:
+          siLigoDesc: elem EURO.some_const of int
+          siValue: 10
         , StackItem:
           siLigoDesc: elem String.length of string -> nat
-          siValue: { {  }; { {  }; SIZE } } ] ]
+          siValue:
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR; SWAP; {  }; { { DUP }; SIZE }; DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / upon function call
   isStackFrames:
@@ -237,20 +1782,193 @@ InterpretSnapshot:
           siLigoDesc: elem res of int
           siValue: 100
         , StackItem:
+          siLigoDesc: elem some_int of (None of (unit) | Some of (int))
+          siValue: Some 993
+        , StackItem:
           siLigoDesc: elem s of int
           siValue: 0
         , StackItem:
           siLigoDesc: elem get_const of unit -> int
-          siValue: { PUSH int 10; PAIR; { CAR; {  }; {  } } }
+          siValue:
+            { PUSH
+                (pair
+                  (lambda unit string)
+                  (lambda unit int)
+                  int
+                  (lambda string nat)
+                  unit
+                  int)
+                (Pair
+                   { PUSH
+                       (pair (lambda unit int) int (lambda string nat) unit int)
+                       (Pair
+                          { PUSH
+                              (pair int (lambda string nat) unit int)
+                              (Pair
+                                 10
+                                 (Pair
+                                    { PUSH (pair unit int) (Pair Unit 0);
+                                      PAIR;
+                                      { UNPAIR;
+                                        SWAP;
+                                        {  };
+                                        { { DUP }; SIZE };
+                                        DIP { DROP 2 } } }
+                                    (Pair Unit 0)));
+                            PAIR;
+                            { UNPAIR;
+                              UNPAIR 3;
+                              DIG 3;
+                              {  };
+                              DUP;
+                              {  };
+                              DROP 5;
+                              PUSH int 42 } }
+                          (Pair
+                             10
+                             (Pair
+                                { PUSH (pair unit int) (Pair Unit 0);
+                                  PAIR;
+                                  { UNPAIR;
+                                    SWAP;
+                                    {  };
+                                    { { DUP }; SIZE };
+                                    DIP { DROP 2 } } }
+                                (Pair Unit 0))));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR 4;
+                       DIG 4;
+                       {  };
+                       DUP;
+                       {  };
+                       DROP 6;
+                       PUSH string "100" } }
+                   (Pair
+                      { PUSH
+                          (pair int (lambda string nat) unit int)
+                          (Pair
+                             10
+                             (Pair
+                                { PUSH (pair unit int) (Pair Unit 0);
+                                  PAIR;
+                                  { UNPAIR;
+                                    SWAP;
+                                    {  };
+                                    { { DUP }; SIZE };
+                                    DIP { DROP 2 } } }
+                                (Pair Unit 0)));
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 3;
+                          DIG 3;
+                          {  };
+                          DUP;
+                          {  };
+                          DROP 5;
+                          PUSH int 42 } }
+                      (Pair
+                         10
+                         (Pair
+                            { PUSH (pair unit int) (Pair Unit 0);
+                              PAIR;
+                              { UNPAIR;
+                                SWAP;
+                                {  };
+                                { { DUP }; SIZE };
+                                DIP { DROP 2 } } }
+                            (Pair Unit 0)))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 5;
+                DIG 5;
+                {  };
+                DUP;
+                {  };
+                DUP 5;
+                DIP { DROP 7 } } }
         , StackItem:
           siLigoDesc: elem get_verbatim of unit -> string
-          siValue: { DROP; PUSH string "100" }
+          siValue:
+            { PUSH
+                (pair (lambda unit int) int (lambda string nat) unit int)
+                (Pair
+                   { PUSH
+                       (pair int (lambda string nat) unit int)
+                       (Pair
+                          10
+                          (Pair
+                             { PUSH (pair unit int) (Pair Unit 0);
+                               PAIR;
+                               { UNPAIR;
+                                 SWAP;
+                                 {  };
+                                 { { DUP }; SIZE };
+                                 DIP { DROP 2 } } }
+                             (Pair Unit 0)));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR 3;
+                       DIG 3;
+                       {  };
+                       DUP;
+                       {  };
+                       DROP 5;
+                       PUSH int 42 } }
+                   (Pair
+                      10
+                      (Pair
+                         { PUSH (pair unit int) (Pair Unit 0);
+                           PAIR;
+                           { UNPAIR;
+                             SWAP;
+                             {  };
+                             { { DUP }; SIZE };
+                             DIP { DROP 2 } } }
+                         (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DROP 6;
+                PUSH string "100" } }
         , StackItem:
           siLigoDesc: elem get_val of unit -> int
-          siValue: { DROP; PUSH int 42 }
+          siValue:
+            { PUSH
+                (pair int (lambda string nat) unit int)
+                (Pair
+                   10
+                   (Pair
+                      { PUSH (pair unit int) (Pair Unit 0);
+                        PAIR;
+                        { UNPAIR;
+                          SWAP;
+                          {  };
+                          { { DUP }; SIZE };
+                          DIP { DROP 2 } } }
+                      (Pair Unit 0)));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 3;
+                DIG 3;
+                {  };
+                DUP;
+                {  };
+                DROP 5;
+                PUSH int 42 } }
+        , StackItem:
+          siLigoDesc: elem EURO.some_const of int
+          siValue: 10
         , StackItem:
           siLigoDesc: elem String.length of string -> nat
-          siValue: { {  }; { {  }; SIZE } } ] ]
+          siValue:
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR; SWAP; {  }; { { DUP }; SIZE }; DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / upon function call
   isStackFrames:
@@ -265,20 +1983,193 @@ InterpretSnapshot:
           siLigoDesc: elem res of int
           siValue: 100
         , StackItem:
+          siLigoDesc: elem some_int of (None of (unit) | Some of (int))
+          siValue: Some 993
+        , StackItem:
           siLigoDesc: elem s of int
           siValue: 0
         , StackItem:
           siLigoDesc: elem get_const of unit -> int
-          siValue: { PUSH int 10; PAIR; { CAR; {  }; {  } } }
+          siValue:
+            { PUSH
+                (pair
+                  (lambda unit string)
+                  (lambda unit int)
+                  int
+                  (lambda string nat)
+                  unit
+                  int)
+                (Pair
+                   { PUSH
+                       (pair (lambda unit int) int (lambda string nat) unit int)
+                       (Pair
+                          { PUSH
+                              (pair int (lambda string nat) unit int)
+                              (Pair
+                                 10
+                                 (Pair
+                                    { PUSH (pair unit int) (Pair Unit 0);
+                                      PAIR;
+                                      { UNPAIR;
+                                        SWAP;
+                                        {  };
+                                        { { DUP }; SIZE };
+                                        DIP { DROP 2 } } }
+                                    (Pair Unit 0)));
+                            PAIR;
+                            { UNPAIR;
+                              UNPAIR 3;
+                              DIG 3;
+                              {  };
+                              DUP;
+                              {  };
+                              DROP 5;
+                              PUSH int 42 } }
+                          (Pair
+                             10
+                             (Pair
+                                { PUSH (pair unit int) (Pair Unit 0);
+                                  PAIR;
+                                  { UNPAIR;
+                                    SWAP;
+                                    {  };
+                                    { { DUP }; SIZE };
+                                    DIP { DROP 2 } } }
+                                (Pair Unit 0))));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR 4;
+                       DIG 4;
+                       {  };
+                       DUP;
+                       {  };
+                       DROP 6;
+                       PUSH string "100" } }
+                   (Pair
+                      { PUSH
+                          (pair int (lambda string nat) unit int)
+                          (Pair
+                             10
+                             (Pair
+                                { PUSH (pair unit int) (Pair Unit 0);
+                                  PAIR;
+                                  { UNPAIR;
+                                    SWAP;
+                                    {  };
+                                    { { DUP }; SIZE };
+                                    DIP { DROP 2 } } }
+                                (Pair Unit 0)));
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 3;
+                          DIG 3;
+                          {  };
+                          DUP;
+                          {  };
+                          DROP 5;
+                          PUSH int 42 } }
+                      (Pair
+                         10
+                         (Pair
+                            { PUSH (pair unit int) (Pair Unit 0);
+                              PAIR;
+                              { UNPAIR;
+                                SWAP;
+                                {  };
+                                { { DUP }; SIZE };
+                                DIP { DROP 2 } } }
+                            (Pair Unit 0)))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 5;
+                DIG 5;
+                {  };
+                DUP;
+                {  };
+                DUP 5;
+                DIP { DROP 7 } } }
         , StackItem:
           siLigoDesc: elem get_verbatim of unit -> string
-          siValue: { DROP; PUSH string "100" }
+          siValue:
+            { PUSH
+                (pair (lambda unit int) int (lambda string nat) unit int)
+                (Pair
+                   { PUSH
+                       (pair int (lambda string nat) unit int)
+                       (Pair
+                          10
+                          (Pair
+                             { PUSH (pair unit int) (Pair Unit 0);
+                               PAIR;
+                               { UNPAIR;
+                                 SWAP;
+                                 {  };
+                                 { { DUP }; SIZE };
+                                 DIP { DROP 2 } } }
+                             (Pair Unit 0)));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR 3;
+                       DIG 3;
+                       {  };
+                       DUP;
+                       {  };
+                       DROP 5;
+                       PUSH int 42 } }
+                   (Pair
+                      10
+                      (Pair
+                         { PUSH (pair unit int) (Pair Unit 0);
+                           PAIR;
+                           { UNPAIR;
+                             SWAP;
+                             {  };
+                             { { DUP }; SIZE };
+                             DIP { DROP 2 } } }
+                         (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DROP 6;
+                PUSH string "100" } }
         , StackItem:
           siLigoDesc: elem get_val of unit -> int
-          siValue: { DROP; PUSH int 42 }
+          siValue:
+            { PUSH
+                (pair int (lambda string nat) unit int)
+                (Pair
+                   10
+                   (Pair
+                      { PUSH (pair unit int) (Pair Unit 0);
+                        PAIR;
+                        { UNPAIR;
+                          SWAP;
+                          {  };
+                          { { DUP }; SIZE };
+                          DIP { DROP 2 } } }
+                      (Pair Unit 0)));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 3;
+                DIG 3;
+                {  };
+                DUP;
+                {  };
+                DROP 5;
+                PUSH int 42 } }
+        , StackItem:
+          siLigoDesc: elem EURO.some_const of int
+          siValue: 10
         , StackItem:
           siLigoDesc: elem String.length of string -> nat
-          siValue: { {  }; { {  }; SIZE } } ] ]
+          siValue:
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR; SWAP; {  }; { { DUP }; SIZE }; DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: terminated ok
   isStackFrames:

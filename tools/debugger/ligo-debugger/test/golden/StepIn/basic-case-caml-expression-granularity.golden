@@ -11,14 +11,50 @@ InterpretSnapshot:
         , StackItem:
           siLigoDesc: elem g of unit -> int
           siValue:
-            { DROP; { { PUSH int 10 }; { PUSH int 10 }; ADD }; {  }; {  } }
+            { PUSH
+                (pair (lambda int int) unit int)
+                (Pair
+                   { PUSH (pair unit int) (Pair Unit 0);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       { { { PUSH int 100 }; { DUP 2 }; ADD };
+                         {  };
+                         { { { PUSH int 100 }; { DUP 2 }; ADD };
+                           {  };
+                           { DUP };
+                           DIP { DROP } };
+                         DIP { DROP } };
+                       DIP { DROP 2 } } }
+                   (Pair Unit 0));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                {  };
+                { { PUSH int 10 }; { PUSH int 10 }; ADD };
+                {  };
+                { DUP };
+                DIP { DROP 5 } } }
         , StackItem:
           siLigoDesc: elem f of int -> int
           siValue:
-            { {  };
-              { { { PUSH int 100 }; { SWAP }; ADD };
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
                 {  };
-                { { { PUSH int 100 }; { SWAP }; ADD }; {  }; {  } } } } ] ]
+                { { { PUSH int 100 }; { DUP 2 }; ADD };
+                  {  };
+                  { { { PUSH int 100 }; { DUP 2 }; ADD };
+                    {  };
+                    { DUP };
+                    DIP { DROP } };
+                  DIP { DROP } };
+                DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / expression evaluated (1 : int)
   isStackFrames:
@@ -32,14 +68,50 @@ InterpretSnapshot:
         , StackItem:
           siLigoDesc: elem g of unit -> int
           siValue:
-            { DROP; { { PUSH int 10 }; { PUSH int 10 }; ADD }; {  }; {  } }
+            { PUSH
+                (pair (lambda int int) unit int)
+                (Pair
+                   { PUSH (pair unit int) (Pair Unit 0);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       { { { PUSH int 100 }; { DUP 2 }; ADD };
+                         {  };
+                         { { { PUSH int 100 }; { DUP 2 }; ADD };
+                           {  };
+                           { DUP };
+                           DIP { DROP } };
+                         DIP { DROP } };
+                       DIP { DROP 2 } } }
+                   (Pair Unit 0));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                {  };
+                { { PUSH int 10 }; { PUSH int 10 }; ADD };
+                {  };
+                { DUP };
+                DIP { DROP 5 } } }
         , StackItem:
           siLigoDesc: elem f of int -> int
           siValue:
-            { {  };
-              { { { PUSH int 100 }; { SWAP }; ADD };
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
                 {  };
-                { { { PUSH int 100 }; { SWAP }; ADD }; {  }; {  } } } } ] ]
+                { { { PUSH int 100 }; { DUP 2 }; ADD };
+                  {  };
+                  { { { PUSH int 100 }; { DUP 2 }; ADD };
+                    {  };
+                    { DUP };
+                    DIP { DROP } };
+                  DIP { DROP } };
+                DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
@@ -51,16 +123,55 @@ InterpretSnapshot:
           siLigoDesc: elem s2 of int
           siValue: 1
         , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0
+        , StackItem:
           siLigoDesc: elem g of unit -> int
           siValue:
-            { DROP; { { PUSH int 10 }; { PUSH int 10 }; ADD }; {  }; {  } }
+            { PUSH
+                (pair (lambda int int) unit int)
+                (Pair
+                   { PUSH (pair unit int) (Pair Unit 0);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       { { { PUSH int 100 }; { DUP 2 }; ADD };
+                         {  };
+                         { { { PUSH int 100 }; { DUP 2 }; ADD };
+                           {  };
+                           { DUP };
+                           DIP { DROP } };
+                         DIP { DROP } };
+                       DIP { DROP 2 } } }
+                   (Pair Unit 0));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                {  };
+                { { PUSH int 10 }; { PUSH int 10 }; ADD };
+                {  };
+                { DUP };
+                DIP { DROP 5 } } }
         , StackItem:
           siLigoDesc: elem f of int -> int
           siValue:
-            { {  };
-              { { { PUSH int 100 }; { SWAP }; ADD };
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
                 {  };
-                { { { PUSH int 100 }; { SWAP }; ADD }; {  }; {  } } } } ] ]
+                { { { PUSH int 100 }; { DUP 2 }; ADD };
+                  {  };
+                  { { { PUSH int 100 }; { DUP 2 }; ADD };
+                    {  };
+                    { DUP };
+                    DIP { DROP } };
+                  DIP { DROP } };
+                DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / upon function call
   isStackFrames:
@@ -72,16 +183,55 @@ InterpretSnapshot:
           siLigoDesc: elem s2 of int
           siValue: 1
         , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0
+        , StackItem:
           siLigoDesc: elem g of unit -> int
           siValue:
-            { DROP; { { PUSH int 10 }; { PUSH int 10 }; ADD }; {  }; {  } }
+            { PUSH
+                (pair (lambda int int) unit int)
+                (Pair
+                   { PUSH (pair unit int) (Pair Unit 0);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       { { { PUSH int 100 }; { DUP 2 }; ADD };
+                         {  };
+                         { { { PUSH int 100 }; { DUP 2 }; ADD };
+                           {  };
+                           { DUP };
+                           DIP { DROP } };
+                         DIP { DROP } };
+                       DIP { DROP 2 } } }
+                   (Pair Unit 0));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                {  };
+                { { PUSH int 10 }; { PUSH int 10 }; ADD };
+                {  };
+                { DUP };
+                DIP { DROP 5 } } }
         , StackItem:
           siLigoDesc: elem f of int -> int
           siValue:
-            { {  };
-              { { { PUSH int 100 }; { SWAP }; ADD };
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
                 {  };
-                { { { PUSH int 100 }; { SWAP }; ADD }; {  }; {  } } } } ] ]
+                { { { PUSH int 100 }; { DUP 2 }; ADD };
+                  {  };
+                  { { { PUSH int 100 }; { DUP 2 }; ADD };
+                    {  };
+                    { DUP };
+                    DIP { DROP } };
+                  DIP { DROP } };
+                DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
@@ -100,16 +250,55 @@ InterpretSnapshot:
           siLigoDesc: elem s2 of int
           siValue: 1
         , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0
+        , StackItem:
           siLigoDesc: elem g of unit -> int
           siValue:
-            { DROP; { { PUSH int 10 }; { PUSH int 10 }; ADD }; {  }; {  } }
+            { PUSH
+                (pair (lambda int int) unit int)
+                (Pair
+                   { PUSH (pair unit int) (Pair Unit 0);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       { { { PUSH int 100 }; { DUP 2 }; ADD };
+                         {  };
+                         { { { PUSH int 100 }; { DUP 2 }; ADD };
+                           {  };
+                           { DUP };
+                           DIP { DROP } };
+                         DIP { DROP } };
+                       DIP { DROP 2 } } }
+                   (Pair Unit 0));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                {  };
+                { { PUSH int 10 }; { PUSH int 10 }; ADD };
+                {  };
+                { DUP };
+                DIP { DROP 5 } } }
         , StackItem:
           siLigoDesc: elem f of int -> int
           siValue:
-            { {  };
-              { { { PUSH int 100 }; { SWAP }; ADD };
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
                 {  };
-                { { { PUSH int 100 }; { SWAP }; ADD }; {  }; {  } } } } ] ]
+                { { { PUSH int 100 }; { DUP 2 }; ADD };
+                  {  };
+                  { { { PUSH int 100 }; { DUP 2 }; ADD };
+                    {  };
+                    { DUP };
+                    DIP { DROP } };
+                  DIP { DROP } };
+                DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / expression evaluated (101 : int)
   isStackFrames:
@@ -128,16 +317,55 @@ InterpretSnapshot:
           siLigoDesc: elem s2 of int
           siValue: 1
         , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0
+        , StackItem:
           siLigoDesc: elem g of unit -> int
           siValue:
-            { DROP; { { PUSH int 10 }; { PUSH int 10 }; ADD }; {  }; {  } }
+            { PUSH
+                (pair (lambda int int) unit int)
+                (Pair
+                   { PUSH (pair unit int) (Pair Unit 0);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       { { { PUSH int 100 }; { DUP 2 }; ADD };
+                         {  };
+                         { { { PUSH int 100 }; { DUP 2 }; ADD };
+                           {  };
+                           { DUP };
+                           DIP { DROP } };
+                         DIP { DROP } };
+                       DIP { DROP 2 } } }
+                   (Pair Unit 0));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                {  };
+                { { PUSH int 10 }; { PUSH int 10 }; ADD };
+                {  };
+                { DUP };
+                DIP { DROP 5 } } }
         , StackItem:
           siLigoDesc: elem f of int -> int
           siValue:
-            { {  };
-              { { { PUSH int 100 }; { SWAP }; ADD };
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
                 {  };
-                { { { PUSH int 100 }; { SWAP }; ADD }; {  }; {  } } } } ] ]
+                { { { PUSH int 100 }; { DUP 2 }; ADD };
+                  {  };
+                  { { { PUSH int 100 }; { DUP 2 }; ADD };
+                    {  };
+                    { DUP };
+                    DIP { DROP } };
+                  DIP { DROP } };
+                DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
@@ -147,7 +375,10 @@ InterpretSnapshot:
       sfStack:
         [ StackItem:
           siLigoDesc: elem x of int
-          siValue: 101 ]
+          siValue: 101
+        , StackItem:
+          siLigoDesc: elem a of int
+          siValue: 1 ]
     , StackFrame:
       sfName: main
       sfLoc: test/contracts/functions-visiting.mligo@13:18-13:23
@@ -156,16 +387,55 @@ InterpretSnapshot:
           siLigoDesc: elem s2 of int
           siValue: 1
         , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0
+        , StackItem:
           siLigoDesc: elem g of unit -> int
           siValue:
-            { DROP; { { PUSH int 10 }; { PUSH int 10 }; ADD }; {  }; {  } }
+            { PUSH
+                (pair (lambda int int) unit int)
+                (Pair
+                   { PUSH (pair unit int) (Pair Unit 0);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       { { { PUSH int 100 }; { DUP 2 }; ADD };
+                         {  };
+                         { { { PUSH int 100 }; { DUP 2 }; ADD };
+                           {  };
+                           { DUP };
+                           DIP { DROP } };
+                         DIP { DROP } };
+                       DIP { DROP 2 } } }
+                   (Pair Unit 0));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                {  };
+                { { PUSH int 10 }; { PUSH int 10 }; ADD };
+                {  };
+                { DUP };
+                DIP { DROP 5 } } }
         , StackItem:
           siLigoDesc: elem f of int -> int
           siValue:
-            { {  };
-              { { { PUSH int 100 }; { SWAP }; ADD };
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
                 {  };
-                { { { PUSH int 100 }; { SWAP }; ADD }; {  }; {  } } } } ] ]
+                { { { PUSH int 100 }; { DUP 2 }; ADD };
+                  {  };
+                  { { { PUSH int 100 }; { DUP 2 }; ADD };
+                    {  };
+                    { DUP };
+                    DIP { DROP } };
+                  DIP { DROP } };
+                DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / expression evaluated (201 : int)
   isStackFrames:
@@ -175,7 +445,10 @@ InterpretSnapshot:
       sfStack:
         [ StackItem:
           siLigoDesc: elem x of int
-          siValue: 101 ]
+          siValue: 101
+        , StackItem:
+          siLigoDesc: elem a of int
+          siValue: 1 ]
     , StackFrame:
       sfName: main
       sfLoc: test/contracts/functions-visiting.mligo@13:18-13:23
@@ -184,16 +457,55 @@ InterpretSnapshot:
           siLigoDesc: elem s2 of int
           siValue: 1
         , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0
+        , StackItem:
           siLigoDesc: elem g of unit -> int
           siValue:
-            { DROP; { { PUSH int 10 }; { PUSH int 10 }; ADD }; {  }; {  } }
+            { PUSH
+                (pair (lambda int int) unit int)
+                (Pair
+                   { PUSH (pair unit int) (Pair Unit 0);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       { { { PUSH int 100 }; { DUP 2 }; ADD };
+                         {  };
+                         { { { PUSH int 100 }; { DUP 2 }; ADD };
+                           {  };
+                           { DUP };
+                           DIP { DROP } };
+                         DIP { DROP } };
+                       DIP { DROP 2 } } }
+                   (Pair Unit 0));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                {  };
+                { { PUSH int 10 }; { PUSH int 10 }; ADD };
+                {  };
+                { DUP };
+                DIP { DROP 5 } } }
         , StackItem:
           siLigoDesc: elem f of int -> int
           siValue:
-            { {  };
-              { { { PUSH int 100 }; { SWAP }; ADD };
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
                 {  };
-                { { { PUSH int 100 }; { SWAP }; ADD }; {  }; {  } } } } ] ]
+                { { { PUSH int 100 }; { DUP 2 }; ADD };
+                  {  };
+                  { { { PUSH int 100 }; { DUP 2 }; ADD };
+                    {  };
+                    { DUP };
+                    DIP { DROP } };
+                  DIP { DROP } };
+                DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
@@ -203,7 +515,13 @@ InterpretSnapshot:
       sfStack:
         [ StackItem:
           siLigoDesc: elem x2 of int
-          siValue: 201 ]
+          siValue: 201
+        , StackItem:
+          siLigoDesc: elem x of int
+          siValue: 101
+        , StackItem:
+          siLigoDesc: elem a of int
+          siValue: 1 ]
     , StackFrame:
       sfName: main
       sfLoc: test/contracts/functions-visiting.mligo@13:18-13:23
@@ -212,16 +530,55 @@ InterpretSnapshot:
           siLigoDesc: elem s2 of int
           siValue: 1
         , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0
+        , StackItem:
           siLigoDesc: elem g of unit -> int
           siValue:
-            { DROP; { { PUSH int 10 }; { PUSH int 10 }; ADD }; {  }; {  } }
+            { PUSH
+                (pair (lambda int int) unit int)
+                (Pair
+                   { PUSH (pair unit int) (Pair Unit 0);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       { { { PUSH int 100 }; { DUP 2 }; ADD };
+                         {  };
+                         { { { PUSH int 100 }; { DUP 2 }; ADD };
+                           {  };
+                           { DUP };
+                           DIP { DROP } };
+                         DIP { DROP } };
+                       DIP { DROP 2 } } }
+                   (Pair Unit 0));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                {  };
+                { { PUSH int 10 }; { PUSH int 10 }; ADD };
+                {  };
+                { DUP };
+                DIP { DROP 5 } } }
         , StackItem:
           siLigoDesc: elem f of int -> int
           siValue:
-            { {  };
-              { { { PUSH int 100 }; { SWAP }; ADD };
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
                 {  };
-                { { { PUSH int 100 }; { SWAP }; ADD }; {  }; {  } } } } ] ]
+                { { { PUSH int 100 }; { DUP 2 }; ADD };
+                  {  };
+                  { { { PUSH int 100 }; { DUP 2 }; ADD };
+                    {  };
+                    { DUP };
+                    DIP { DROP } };
+                  DIP { DROP } };
+                DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / expression evaluated (201 : int)
   isStackFrames:
@@ -233,16 +590,55 @@ InterpretSnapshot:
           siLigoDesc: elem s2 of int
           siValue: 1
         , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0
+        , StackItem:
           siLigoDesc: elem g of unit -> int
           siValue:
-            { DROP; { { PUSH int 10 }; { PUSH int 10 }; ADD }; {  }; {  } }
+            { PUSH
+                (pair (lambda int int) unit int)
+                (Pair
+                   { PUSH (pair unit int) (Pair Unit 0);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       { { { PUSH int 100 }; { DUP 2 }; ADD };
+                         {  };
+                         { { { PUSH int 100 }; { DUP 2 }; ADD };
+                           {  };
+                           { DUP };
+                           DIP { DROP } };
+                         DIP { DROP } };
+                       DIP { DROP 2 } } }
+                   (Pair Unit 0));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                {  };
+                { { PUSH int 10 }; { PUSH int 10 }; ADD };
+                {  };
+                { DUP };
+                DIP { DROP 5 } } }
         , StackItem:
           siLigoDesc: elem f of int -> int
           siValue:
-            { {  };
-              { { { PUSH int 100 }; { SWAP }; ADD };
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
                 {  };
-                { { { PUSH int 100 }; { SWAP }; ADD }; {  }; {  } } } } ] ]
+                { { { PUSH int 100 }; { DUP 2 }; ADD };
+                  {  };
+                  { { { PUSH int 100 }; { DUP 2 }; ADD };
+                    {  };
+                    { DUP };
+                    DIP { DROP } };
+                  DIP { DROP } };
+                DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / upon function call
   isStackFrames:
@@ -254,23 +650,78 @@ InterpretSnapshot:
           siLigoDesc: elem s2 of int
           siValue: 1
         , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0
+        , StackItem:
           siLigoDesc: elem g of unit -> int
           siValue:
-            { DROP; { { PUSH int 10 }; { PUSH int 10 }; ADD }; {  }; {  } }
+            { PUSH
+                (pair (lambda int int) unit int)
+                (Pair
+                   { PUSH (pair unit int) (Pair Unit 0);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       { { { PUSH int 100 }; { DUP 2 }; ADD };
+                         {  };
+                         { { { PUSH int 100 }; { DUP 2 }; ADD };
+                           {  };
+                           { DUP };
+                           DIP { DROP } };
+                         DIP { DROP } };
+                       DIP { DROP 2 } } }
+                   (Pair Unit 0));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                {  };
+                { { PUSH int 10 }; { PUSH int 10 }; ADD };
+                {  };
+                { DUP };
+                DIP { DROP 5 } } }
         , StackItem:
           siLigoDesc: elem f of int -> int
           siValue:
-            { {  };
-              { { { PUSH int 100 }; { SWAP }; ADD };
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
                 {  };
-                { { { PUSH int 100 }; { SWAP }; ADD }; {  }; {  } } } } ] ]
+                { { { PUSH int 100 }; { DUP 2 }; ADD };
+                  {  };
+                  { { { PUSH int 100 }; { DUP 2 }; ADD };
+                    {  };
+                    { DUP };
+                    DIP { DROP } };
+                  DIP { DROP } };
+                DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
     [ StackFrame:
       sfName: g
       sfLoc: test/contracts/functions-visiting.mligo@7:5-7:20
-      sfStack: []
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem f of int -> int
+          siValue:
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                { { { PUSH int 100 }; { DUP 2 }; ADD };
+                  {  };
+                  { { { PUSH int 100 }; { DUP 2 }; ADD };
+                    {  };
+                    { DUP };
+                    DIP { DROP } };
+                  DIP { DROP } };
+                DIP { DROP 2 } } } ]
     , StackFrame:
       sfName: main
       sfLoc: test/contracts/functions-visiting.mligo@13:12-13:15
@@ -279,23 +730,78 @@ InterpretSnapshot:
           siLigoDesc: elem s2 of int
           siValue: 1
         , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0
+        , StackItem:
           siLigoDesc: elem g of unit -> int
           siValue:
-            { DROP; { { PUSH int 10 }; { PUSH int 10 }; ADD }; {  }; {  } }
+            { PUSH
+                (pair (lambda int int) unit int)
+                (Pair
+                   { PUSH (pair unit int) (Pair Unit 0);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       { { { PUSH int 100 }; { DUP 2 }; ADD };
+                         {  };
+                         { { { PUSH int 100 }; { DUP 2 }; ADD };
+                           {  };
+                           { DUP };
+                           DIP { DROP } };
+                         DIP { DROP } };
+                       DIP { DROP 2 } } }
+                   (Pair Unit 0));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                {  };
+                { { PUSH int 10 }; { PUSH int 10 }; ADD };
+                {  };
+                { DUP };
+                DIP { DROP 5 } } }
         , StackItem:
           siLigoDesc: elem f of int -> int
           siValue:
-            { {  };
-              { { { PUSH int 100 }; { SWAP }; ADD };
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
                 {  };
-                { { { PUSH int 100 }; { SWAP }; ADD }; {  }; {  } } } } ] ]
+                { { { PUSH int 100 }; { DUP 2 }; ADD };
+                  {  };
+                  { { { PUSH int 100 }; { DUP 2 }; ADD };
+                    {  };
+                    { DUP };
+                    DIP { DROP } };
+                  DIP { DROP } };
+                DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / expression evaluated (20 : int)
   isStackFrames:
     [ StackFrame:
       sfName: g
       sfLoc: test/contracts/functions-visiting.mligo@7:13-7:20
-      sfStack: []
+      sfStack:
+        [ StackItem:
+          siLigoDesc: elem f of int -> int
+          siValue:
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                { { { PUSH int 100 }; { DUP 2 }; ADD };
+                  {  };
+                  { { { PUSH int 100 }; { DUP 2 }; ADD };
+                    {  };
+                    { DUP };
+                    DIP { DROP } };
+                  DIP { DROP } };
+                DIP { DROP 2 } } } ]
     , StackFrame:
       sfName: main
       sfLoc: test/contracts/functions-visiting.mligo@13:12-13:15
@@ -304,16 +810,55 @@ InterpretSnapshot:
           siLigoDesc: elem s2 of int
           siValue: 1
         , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0
+        , StackItem:
           siLigoDesc: elem g of unit -> int
           siValue:
-            { DROP; { { PUSH int 10 }; { PUSH int 10 }; ADD }; {  }; {  } }
+            { PUSH
+                (pair (lambda int int) unit int)
+                (Pair
+                   { PUSH (pair unit int) (Pair Unit 0);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       { { { PUSH int 100 }; { DUP 2 }; ADD };
+                         {  };
+                         { { { PUSH int 100 }; { DUP 2 }; ADD };
+                           {  };
+                           { DUP };
+                           DIP { DROP } };
+                         DIP { DROP } };
+                       DIP { DROP 2 } } }
+                   (Pair Unit 0));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                {  };
+                { { PUSH int 10 }; { PUSH int 10 }; ADD };
+                {  };
+                { DUP };
+                DIP { DROP 5 } } }
         , StackItem:
           siLigoDesc: elem f of int -> int
           siValue:
-            { {  };
-              { { { PUSH int 100 }; { SWAP }; ADD };
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
                 {  };
-                { { { PUSH int 100 }; { SWAP }; ADD }; {  }; {  } } } } ] ]
+                { { { PUSH int 100 }; { DUP 2 }; ADD };
+                  {  };
+                  { { { PUSH int 100 }; { DUP 2 }; ADD };
+                    {  };
+                    { DUP };
+                    DIP { DROP } };
+                  DIP { DROP } };
+                DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
@@ -323,7 +868,23 @@ InterpretSnapshot:
       sfStack:
         [ StackItem:
           siLigoDesc: elem y of int
-          siValue: 20 ]
+          siValue: 20
+        , StackItem:
+          siLigoDesc: elem f of int -> int
+          siValue:
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                { { { PUSH int 100 }; { DUP 2 }; ADD };
+                  {  };
+                  { { { PUSH int 100 }; { DUP 2 }; ADD };
+                    {  };
+                    { DUP };
+                    DIP { DROP } };
+                  DIP { DROP } };
+                DIP { DROP 2 } } } ]
     , StackFrame:
       sfName: main
       sfLoc: test/contracts/functions-visiting.mligo@13:12-13:15
@@ -332,16 +893,55 @@ InterpretSnapshot:
           siLigoDesc: elem s2 of int
           siValue: 1
         , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0
+        , StackItem:
           siLigoDesc: elem g of unit -> int
           siValue:
-            { DROP; { { PUSH int 10 }; { PUSH int 10 }; ADD }; {  }; {  } }
+            { PUSH
+                (pair (lambda int int) unit int)
+                (Pair
+                   { PUSH (pair unit int) (Pair Unit 0);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       { { { PUSH int 100 }; { DUP 2 }; ADD };
+                         {  };
+                         { { { PUSH int 100 }; { DUP 2 }; ADD };
+                           {  };
+                           { DUP };
+                           DIP { DROP } };
+                         DIP { DROP } };
+                       DIP { DROP 2 } } }
+                   (Pair Unit 0));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                {  };
+                { { PUSH int 10 }; { PUSH int 10 }; ADD };
+                {  };
+                { DUP };
+                DIP { DROP 5 } } }
         , StackItem:
           siLigoDesc: elem f of int -> int
           siValue:
-            { {  };
-              { { { PUSH int 100 }; { SWAP }; ADD };
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
                 {  };
-                { { { PUSH int 100 }; { SWAP }; ADD }; {  }; {  } } } } ] ]
+                { { { PUSH int 100 }; { DUP 2 }; ADD };
+                  {  };
+                  { { { PUSH int 100 }; { DUP 2 }; ADD };
+                    {  };
+                    { DUP };
+                    DIP { DROP } };
+                  DIP { DROP } };
+                DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / expression evaluated (20 : int)
   isStackFrames:
@@ -353,16 +953,55 @@ InterpretSnapshot:
           siLigoDesc: elem s2 of int
           siValue: 1
         , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0
+        , StackItem:
           siLigoDesc: elem g of unit -> int
           siValue:
-            { DROP; { { PUSH int 10 }; { PUSH int 10 }; ADD }; {  }; {  } }
+            { PUSH
+                (pair (lambda int int) unit int)
+                (Pair
+                   { PUSH (pair unit int) (Pair Unit 0);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       { { { PUSH int 100 }; { DUP 2 }; ADD };
+                         {  };
+                         { { { PUSH int 100 }; { DUP 2 }; ADD };
+                           {  };
+                           { DUP };
+                           DIP { DROP } };
+                         DIP { DROP } };
+                       DIP { DROP 2 } } }
+                   (Pair Unit 0));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                {  };
+                { { PUSH int 10 }; { PUSH int 10 }; ADD };
+                {  };
+                { DUP };
+                DIP { DROP 5 } } }
         , StackItem:
           siLigoDesc: elem f of int -> int
           siValue:
-            { {  };
-              { { { PUSH int 100 }; { SWAP }; ADD };
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
                 {  };
-                { { { PUSH int 100 }; { SWAP }; ADD }; {  }; {  } } } } ] ]
+                { { { PUSH int 100 }; { DUP 2 }; ADD };
+                  {  };
+                  { { { PUSH int 100 }; { DUP 2 }; ADD };
+                    {  };
+                    { DUP };
+                    DIP { DROP } };
+                  DIP { DROP } };
+                DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / expression evaluated (221 : int)
   isStackFrames:
@@ -374,16 +1013,55 @@ InterpretSnapshot:
           siLigoDesc: elem s2 of int
           siValue: 1
         , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0
+        , StackItem:
           siLigoDesc: elem g of unit -> int
           siValue:
-            { DROP; { { PUSH int 10 }; { PUSH int 10 }; ADD }; {  }; {  } }
+            { PUSH
+                (pair (lambda int int) unit int)
+                (Pair
+                   { PUSH (pair unit int) (Pair Unit 0);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       { { { PUSH int 100 }; { DUP 2 }; ADD };
+                         {  };
+                         { { { PUSH int 100 }; { DUP 2 }; ADD };
+                           {  };
+                           { DUP };
+                           DIP { DROP } };
+                         DIP { DROP } };
+                       DIP { DROP 2 } } }
+                   (Pair Unit 0));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                {  };
+                { { PUSH int 10 }; { PUSH int 10 }; ADD };
+                {  };
+                { DUP };
+                DIP { DROP 5 } } }
         , StackItem:
           siLigoDesc: elem f of int -> int
           siValue:
-            { {  };
-              { { { PUSH int 100 }; { SWAP }; ADD };
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
                 {  };
-                { { { PUSH int 100 }; { SWAP }; ADD }; {  }; {  } } } } ] ]
+                { { { PUSH int 100 }; { DUP 2 }; ADD };
+                  {  };
+                  { { { PUSH int 100 }; { DUP 2 }; ADD };
+                    {  };
+                    { DUP };
+                    DIP { DROP } };
+                  DIP { DROP } };
+                DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / faced statement
   isStackFrames:
@@ -393,7 +1071,60 @@ InterpretSnapshot:
       sfStack:
         [ StackItem:
           siLigoDesc: elem s3 of int
-          siValue: 221 ] ]
+          siValue: 221
+        , StackItem:
+          siLigoDesc: elem s2 of int
+          siValue: 1
+        , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem g of unit -> int
+          siValue:
+            { PUSH
+                (pair (lambda int int) unit int)
+                (Pair
+                   { PUSH (pair unit int) (Pair Unit 0);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       { { { PUSH int 100 }; { DUP 2 }; ADD };
+                         {  };
+                         { { { PUSH int 100 }; { DUP 2 }; ADD };
+                           {  };
+                           { DUP };
+                           DIP { DROP } };
+                         DIP { DROP } };
+                       DIP { DROP 2 } } }
+                   (Pair Unit 0));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                {  };
+                { { PUSH int 10 }; { PUSH int 10 }; ADD };
+                {  };
+                { DUP };
+                DIP { DROP 5 } } }
+        , StackItem:
+          siLigoDesc: elem f of int -> int
+          siValue:
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                { { { PUSH int 100 }; { DUP 2 }; ADD };
+                  {  };
+                  { { { PUSH int 100 }; { DUP 2 }; ADD };
+                    {  };
+                    { DUP };
+                    DIP { DROP } };
+                  DIP { DROP } };
+                DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / expression evaluated ({ } : operation list)
   isStackFrames:
@@ -403,7 +1134,60 @@ InterpretSnapshot:
       sfStack:
         [ StackItem:
           siLigoDesc: elem s3 of int
-          siValue: 221 ] ]
+          siValue: 221
+        , StackItem:
+          siLigoDesc: elem s2 of int
+          siValue: 1
+        , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem g of unit -> int
+          siValue:
+            { PUSH
+                (pair (lambda int int) unit int)
+                (Pair
+                   { PUSH (pair unit int) (Pair Unit 0);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       { { { PUSH int 100 }; { DUP 2 }; ADD };
+                         {  };
+                         { { { PUSH int 100 }; { DUP 2 }; ADD };
+                           {  };
+                           { DUP };
+                           DIP { DROP } };
+                         DIP { DROP } };
+                       DIP { DROP 2 } } }
+                   (Pair Unit 0));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                {  };
+                { { PUSH int 10 }; { PUSH int 10 }; ADD };
+                {  };
+                { DUP };
+                DIP { DROP 5 } } }
+        , StackItem:
+          siLigoDesc: elem f of int -> int
+          siValue:
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                { { { PUSH int 100 }; { DUP 2 }; ADD };
+                  {  };
+                  { { { PUSH int 100 }; { DUP 2 }; ADD };
+                    {  };
+                    { DUP };
+                    DIP { DROP } };
+                  DIP { DROP } };
+                DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / expression evaluated (Pair { } 221 : operation list * int)
   isStackFrames:
@@ -413,7 +1197,60 @@ InterpretSnapshot:
       sfStack:
         [ StackItem:
           siLigoDesc: elem s3 of int
-          siValue: 221 ] ]
+          siValue: 221
+        , StackItem:
+          siLigoDesc: elem s2 of int
+          siValue: 1
+        , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem g of unit -> int
+          siValue:
+            { PUSH
+                (pair (lambda int int) unit int)
+                (Pair
+                   { PUSH (pair unit int) (Pair Unit 0);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       { { { PUSH int 100 }; { DUP 2 }; ADD };
+                         {  };
+                         { { { PUSH int 100 }; { DUP 2 }; ADD };
+                           {  };
+                           { DUP };
+                           DIP { DROP } };
+                         DIP { DROP } };
+                       DIP { DROP 2 } } }
+                   (Pair Unit 0));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                {  };
+                { { PUSH int 10 }; { PUSH int 10 }; ADD };
+                {  };
+                { DUP };
+                DIP { DROP 5 } } }
+        , StackItem:
+          siLigoDesc: elem f of int -> int
+          siValue:
+            { PUSH (pair unit int) (Pair Unit 0);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                { { { PUSH int 100 }; { DUP 2 }; ADD };
+                  {  };
+                  { { { PUSH int 100 }; { DUP 2 }; ADD };
+                    {  };
+                    { DUP };
+                    DIP { DROP } };
+                  DIP { DROP } };
+                DIP { DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: terminated ok
   isStackFrames:

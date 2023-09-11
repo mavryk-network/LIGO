@@ -10,30 +10,211 @@ InterpretSnapshot:
           siValue: 100
         , StackItem:
           siLigoDesc: elem delta of int
-          siValue: 42 ]
+          siValue: 42
+        , StackItem:
+          siLigoDesc: elem delta of int
+          siValue: 42
+        , StackItem:
+          siLigoDesc: elem store of int
+          siValue: 100
+        , StackItem:
+          siLigoDesc:
+            elem IncDec.increment of int -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair (or unit (or int int)) int)
+                (Pair (Right (Left 42)) 100);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { { DUP 2 }; { DUP 2 }; ADD }; { NIL operation }; PAIR };
+                DIP { DROP 4; DROP 2 } } } ]
     , StackFrame:
       sfName: IncDec.<module main>
       sfLoc: test/contracts/module-entrypoints.mligo@1:1-1:1
       sfStack:
         [ StackItem:
-          siLigoDesc:
-            elem ? of ([@layout comb] |
-               Reset of (unit) | Decrement of (int) | Increment of (int)) * int
-          siValue: 42
-        , StackItem:
           siLigoDesc: elem s of int
           siValue: 100
         , StackItem:
           siLigoDesc:
+            elem p of ([@layout comb] |
+               Reset of (unit) | Decrement of (int) | Increment of (int))
+          siValue: Right (Left 42)
+        , StackItem:
+          siLigoDesc: elem IncDec.reset of unit -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair
+                  (lambda (pair int int) (pair (list operation) int))
+                  (lambda (pair int int) (pair (list operation) int))
+                  (or unit (or int int))
+                  int)
+                (Pair
+                   { PUSH
+                       (pair
+                         (lambda (pair int int) (pair (list operation) int))
+                         (or unit (or int int))
+                         int)
+                       (Pair
+                          { PUSH
+                              (pair (or unit (or int int)) int)
+                              (Pair (Right (Left 42)) 100);
+                            PAIR;
+                            { UNPAIR;
+                              SWAP;
+                              {  };
+                              DUP;
+                              UNPAIR;
+                              {  };
+                              DUP;
+                              {  };
+                              DUP 3;
+                              {  };
+                              { { { DUP 2 }; { DUP 2 }; ADD };
+                                { NIL operation };
+                                PAIR };
+                              DIP { DROP 4; DROP 2 } } }
+                          (Pair (Right (Left 42)) 100));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR;
+                       DIG 2;
+                       {  };
+                       DUP;
+                       UNPAIR;
+                       {  };
+                       DUP;
+                       {  };
+                       DUP 3;
+                       {  };
+                       { { { DUP 2 }; { DUP 2 }; SUB };
+                         { NIL operation };
+                         PAIR };
+                       DIP { DROP 4; DROP 3 } } }
+                   (Pair
+                      { PUSH
+                          (pair (or unit (or int int)) int)
+                          (Pair (Right (Left 42)) 100);
+                        PAIR;
+                        { UNPAIR;
+                          SWAP;
+                          {  };
+                          DUP;
+                          UNPAIR;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP 3;
+                          {  };
+                          { { { DUP 2 }; { DUP 2 }; ADD };
+                            { NIL operation };
+                            PAIR };
+                          DIP { DROP 4; DROP 2 } } }
+                      (Pair (Right (Left 42)) 100)));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 3;
+                DIG 3;
+                {  };
+                DUP;
+                {  };
+                LAMBDA
+                  (pair
+                    (pair
+                      unit
+                      unit
+                      (lambda (pair int int) (pair (list operation) int))
+                      (lambda (pair int int) (pair (list operation) int))
+                      (or unit (or int int))
+                      int)
+                    int)
+                  (pair (list operation) int)
+                  { UNPAIR;
+                    UNPAIR 5;
+                    DIG 5;
+                    {  };
+                    { { PUSH int 0 }; { NIL operation }; PAIR };
+                    DIP { DROP 6 } };
+                DUP 6;
+                DUP 6;
+                DUP 6;
+                DUP 6;
+                DUP 6;
+                PAIR 5;
+                APPLY;
+                DIP { DROP 5 } } }
+        , StackItem:
+          siLigoDesc:
             elem IncDec.decrement of int -> int -> operation list * int
           siValue:
-            { {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              { { { SWAP }; { SWAP }; SUB }; { NIL operation }; PAIR } } ] ]
+            { PUSH
+                (pair
+                  (lambda (pair int int) (pair (list operation) int))
+                  (or unit (or int int))
+                  int)
+                (Pair
+                   { PUSH
+                       (pair (or unit (or int int)) int)
+                       (Pair (Right (Left 42)) 100);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       DUP;
+                       UNPAIR;
+                       {  };
+                       DUP;
+                       {  };
+                       DUP 3;
+                       {  };
+                       { { { DUP 2 }; { DUP 2 }; ADD };
+                         { NIL operation };
+                         PAIR };
+                       DIP { DROP 4; DROP 2 } } }
+                   (Pair (Right (Left 42)) 100));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { { DUP 2 }; { DUP 2 }; SUB }; { NIL operation }; PAIR };
+                DIP { DROP 4; DROP 3 } } }
+        , StackItem:
+          siLigoDesc:
+            elem IncDec.increment of int -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair (or unit (or int int)) int)
+                (Pair (Right (Left 42)) 100);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { { DUP 2 }; { DUP 2 }; ADD }; { NIL operation }; PAIR };
+                DIP { DROP 4; DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / upon expression
   isStackFrames:
@@ -46,30 +227,211 @@ InterpretSnapshot:
           siValue: 100
         , StackItem:
           siLigoDesc: elem delta of int
-          siValue: 42 ]
+          siValue: 42
+        , StackItem:
+          siLigoDesc: elem delta of int
+          siValue: 42
+        , StackItem:
+          siLigoDesc: elem store of int
+          siValue: 100
+        , StackItem:
+          siLigoDesc:
+            elem IncDec.increment of int -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair (or unit (or int int)) int)
+                (Pair (Right (Left 42)) 100);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { { DUP 2 }; { DUP 2 }; ADD }; { NIL operation }; PAIR };
+                DIP { DROP 4; DROP 2 } } } ]
     , StackFrame:
       sfName: IncDec.<module main>
       sfLoc: test/contracts/module-entrypoints.mligo@1:1-1:1
       sfStack:
         [ StackItem:
-          siLigoDesc:
-            elem ? of ([@layout comb] |
-               Reset of (unit) | Decrement of (int) | Increment of (int)) * int
-          siValue: 42
-        , StackItem:
           siLigoDesc: elem s of int
           siValue: 100
         , StackItem:
           siLigoDesc:
+            elem p of ([@layout comb] |
+               Reset of (unit) | Decrement of (int) | Increment of (int))
+          siValue: Right (Left 42)
+        , StackItem:
+          siLigoDesc: elem IncDec.reset of unit -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair
+                  (lambda (pair int int) (pair (list operation) int))
+                  (lambda (pair int int) (pair (list operation) int))
+                  (or unit (or int int))
+                  int)
+                (Pair
+                   { PUSH
+                       (pair
+                         (lambda (pair int int) (pair (list operation) int))
+                         (or unit (or int int))
+                         int)
+                       (Pair
+                          { PUSH
+                              (pair (or unit (or int int)) int)
+                              (Pair (Right (Left 42)) 100);
+                            PAIR;
+                            { UNPAIR;
+                              SWAP;
+                              {  };
+                              DUP;
+                              UNPAIR;
+                              {  };
+                              DUP;
+                              {  };
+                              DUP 3;
+                              {  };
+                              { { { DUP 2 }; { DUP 2 }; ADD };
+                                { NIL operation };
+                                PAIR };
+                              DIP { DROP 4; DROP 2 } } }
+                          (Pair (Right (Left 42)) 100));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR;
+                       DIG 2;
+                       {  };
+                       DUP;
+                       UNPAIR;
+                       {  };
+                       DUP;
+                       {  };
+                       DUP 3;
+                       {  };
+                       { { { DUP 2 }; { DUP 2 }; SUB };
+                         { NIL operation };
+                         PAIR };
+                       DIP { DROP 4; DROP 3 } } }
+                   (Pair
+                      { PUSH
+                          (pair (or unit (or int int)) int)
+                          (Pair (Right (Left 42)) 100);
+                        PAIR;
+                        { UNPAIR;
+                          SWAP;
+                          {  };
+                          DUP;
+                          UNPAIR;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP 3;
+                          {  };
+                          { { { DUP 2 }; { DUP 2 }; ADD };
+                            { NIL operation };
+                            PAIR };
+                          DIP { DROP 4; DROP 2 } } }
+                      (Pair (Right (Left 42)) 100)));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 3;
+                DIG 3;
+                {  };
+                DUP;
+                {  };
+                LAMBDA
+                  (pair
+                    (pair
+                      unit
+                      unit
+                      (lambda (pair int int) (pair (list operation) int))
+                      (lambda (pair int int) (pair (list operation) int))
+                      (or unit (or int int))
+                      int)
+                    int)
+                  (pair (list operation) int)
+                  { UNPAIR;
+                    UNPAIR 5;
+                    DIG 5;
+                    {  };
+                    { { PUSH int 0 }; { NIL operation }; PAIR };
+                    DIP { DROP 6 } };
+                DUP 6;
+                DUP 6;
+                DUP 6;
+                DUP 6;
+                DUP 6;
+                PAIR 5;
+                APPLY;
+                DIP { DROP 5 } } }
+        , StackItem:
+          siLigoDesc:
             elem IncDec.decrement of int -> int -> operation list * int
           siValue:
-            { {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              { { { SWAP }; { SWAP }; SUB }; { NIL operation }; PAIR } } ] ]
+            { PUSH
+                (pair
+                  (lambda (pair int int) (pair (list operation) int))
+                  (or unit (or int int))
+                  int)
+                (Pair
+                   { PUSH
+                       (pair (or unit (or int int)) int)
+                       (Pair (Right (Left 42)) 100);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       DUP;
+                       UNPAIR;
+                       {  };
+                       DUP;
+                       {  };
+                       DUP 3;
+                       {  };
+                       { { { DUP 2 }; { DUP 2 }; ADD };
+                         { NIL operation };
+                         PAIR };
+                       DIP { DROP 4; DROP 2 } } }
+                   (Pair (Right (Left 42)) 100));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { { DUP 2 }; { DUP 2 }; SUB }; { NIL operation }; PAIR };
+                DIP { DROP 4; DROP 3 } } }
+        , StackItem:
+          siLigoDesc:
+            elem IncDec.increment of int -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair (or unit (or int int)) int)
+                (Pair (Right (Left 42)) 100);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { { DUP 2 }; { DUP 2 }; ADD }; { NIL operation }; PAIR };
+                DIP { DROP 4; DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / expression evaluated (58 : int)
   isStackFrames:
@@ -82,30 +444,211 @@ InterpretSnapshot:
           siValue: 100
         , StackItem:
           siLigoDesc: elem delta of int
-          siValue: 42 ]
+          siValue: 42
+        , StackItem:
+          siLigoDesc: elem delta of int
+          siValue: 42
+        , StackItem:
+          siLigoDesc: elem store of int
+          siValue: 100
+        , StackItem:
+          siLigoDesc:
+            elem IncDec.increment of int -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair (or unit (or int int)) int)
+                (Pair (Right (Left 42)) 100);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { { DUP 2 }; { DUP 2 }; ADD }; { NIL operation }; PAIR };
+                DIP { DROP 4; DROP 2 } } } ]
     , StackFrame:
       sfName: IncDec.<module main>
       sfLoc: test/contracts/module-entrypoints.mligo@1:1-1:1
       sfStack:
         [ StackItem:
-          siLigoDesc:
-            elem ? of ([@layout comb] |
-               Reset of (unit) | Decrement of (int) | Increment of (int)) * int
-          siValue: 42
-        , StackItem:
           siLigoDesc: elem s of int
           siValue: 100
         , StackItem:
           siLigoDesc:
+            elem p of ([@layout comb] |
+               Reset of (unit) | Decrement of (int) | Increment of (int))
+          siValue: Right (Left 42)
+        , StackItem:
+          siLigoDesc: elem IncDec.reset of unit -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair
+                  (lambda (pair int int) (pair (list operation) int))
+                  (lambda (pair int int) (pair (list operation) int))
+                  (or unit (or int int))
+                  int)
+                (Pair
+                   { PUSH
+                       (pair
+                         (lambda (pair int int) (pair (list operation) int))
+                         (or unit (or int int))
+                         int)
+                       (Pair
+                          { PUSH
+                              (pair (or unit (or int int)) int)
+                              (Pair (Right (Left 42)) 100);
+                            PAIR;
+                            { UNPAIR;
+                              SWAP;
+                              {  };
+                              DUP;
+                              UNPAIR;
+                              {  };
+                              DUP;
+                              {  };
+                              DUP 3;
+                              {  };
+                              { { { DUP 2 }; { DUP 2 }; ADD };
+                                { NIL operation };
+                                PAIR };
+                              DIP { DROP 4; DROP 2 } } }
+                          (Pair (Right (Left 42)) 100));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR;
+                       DIG 2;
+                       {  };
+                       DUP;
+                       UNPAIR;
+                       {  };
+                       DUP;
+                       {  };
+                       DUP 3;
+                       {  };
+                       { { { DUP 2 }; { DUP 2 }; SUB };
+                         { NIL operation };
+                         PAIR };
+                       DIP { DROP 4; DROP 3 } } }
+                   (Pair
+                      { PUSH
+                          (pair (or unit (or int int)) int)
+                          (Pair (Right (Left 42)) 100);
+                        PAIR;
+                        { UNPAIR;
+                          SWAP;
+                          {  };
+                          DUP;
+                          UNPAIR;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP 3;
+                          {  };
+                          { { { DUP 2 }; { DUP 2 }; ADD };
+                            { NIL operation };
+                            PAIR };
+                          DIP { DROP 4; DROP 2 } } }
+                      (Pair (Right (Left 42)) 100)));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 3;
+                DIG 3;
+                {  };
+                DUP;
+                {  };
+                LAMBDA
+                  (pair
+                    (pair
+                      unit
+                      unit
+                      (lambda (pair int int) (pair (list operation) int))
+                      (lambda (pair int int) (pair (list operation) int))
+                      (or unit (or int int))
+                      int)
+                    int)
+                  (pair (list operation) int)
+                  { UNPAIR;
+                    UNPAIR 5;
+                    DIG 5;
+                    {  };
+                    { { PUSH int 0 }; { NIL operation }; PAIR };
+                    DIP { DROP 6 } };
+                DUP 6;
+                DUP 6;
+                DUP 6;
+                DUP 6;
+                DUP 6;
+                PAIR 5;
+                APPLY;
+                DIP { DROP 5 } } }
+        , StackItem:
+          siLigoDesc:
             elem IncDec.decrement of int -> int -> operation list * int
           siValue:
-            { {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              { { { SWAP }; { SWAP }; SUB }; { NIL operation }; PAIR } } ] ]
+            { PUSH
+                (pair
+                  (lambda (pair int int) (pair (list operation) int))
+                  (or unit (or int int))
+                  int)
+                (Pair
+                   { PUSH
+                       (pair (or unit (or int int)) int)
+                       (Pair (Right (Left 42)) 100);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       DUP;
+                       UNPAIR;
+                       {  };
+                       DUP;
+                       {  };
+                       DUP 3;
+                       {  };
+                       { { { DUP 2 }; { DUP 2 }; ADD };
+                         { NIL operation };
+                         PAIR };
+                       DIP { DROP 4; DROP 2 } } }
+                   (Pair (Right (Left 42)) 100));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { { DUP 2 }; { DUP 2 }; SUB }; { NIL operation }; PAIR };
+                DIP { DROP 4; DROP 3 } } }
+        , StackItem:
+          siLigoDesc:
+            elem IncDec.increment of int -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair (or unit (or int int)) int)
+                (Pair (Right (Left 42)) 100);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { { DUP 2 }; { DUP 2 }; ADD }; { NIL operation }; PAIR };
+                DIP { DROP 4; DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / upon expression
   isStackFrames:
@@ -118,30 +661,211 @@ InterpretSnapshot:
           siValue: 100
         , StackItem:
           siLigoDesc: elem delta of int
-          siValue: 42 ]
+          siValue: 42
+        , StackItem:
+          siLigoDesc: elem delta of int
+          siValue: 42
+        , StackItem:
+          siLigoDesc: elem store of int
+          siValue: 100
+        , StackItem:
+          siLigoDesc:
+            elem IncDec.increment of int -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair (or unit (or int int)) int)
+                (Pair (Right (Left 42)) 100);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { { DUP 2 }; { DUP 2 }; ADD }; { NIL operation }; PAIR };
+                DIP { DROP 4; DROP 2 } } } ]
     , StackFrame:
       sfName: IncDec.<module main>
       sfLoc: test/contracts/module-entrypoints.mligo@1:1-1:1
       sfStack:
         [ StackItem:
-          siLigoDesc:
-            elem ? of ([@layout comb] |
-               Reset of (unit) | Decrement of (int) | Increment of (int)) * int
-          siValue: 42
-        , StackItem:
           siLigoDesc: elem s of int
           siValue: 100
         , StackItem:
           siLigoDesc:
+            elem p of ([@layout comb] |
+               Reset of (unit) | Decrement of (int) | Increment of (int))
+          siValue: Right (Left 42)
+        , StackItem:
+          siLigoDesc: elem IncDec.reset of unit -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair
+                  (lambda (pair int int) (pair (list operation) int))
+                  (lambda (pair int int) (pair (list operation) int))
+                  (or unit (or int int))
+                  int)
+                (Pair
+                   { PUSH
+                       (pair
+                         (lambda (pair int int) (pair (list operation) int))
+                         (or unit (or int int))
+                         int)
+                       (Pair
+                          { PUSH
+                              (pair (or unit (or int int)) int)
+                              (Pair (Right (Left 42)) 100);
+                            PAIR;
+                            { UNPAIR;
+                              SWAP;
+                              {  };
+                              DUP;
+                              UNPAIR;
+                              {  };
+                              DUP;
+                              {  };
+                              DUP 3;
+                              {  };
+                              { { { DUP 2 }; { DUP 2 }; ADD };
+                                { NIL operation };
+                                PAIR };
+                              DIP { DROP 4; DROP 2 } } }
+                          (Pair (Right (Left 42)) 100));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR;
+                       DIG 2;
+                       {  };
+                       DUP;
+                       UNPAIR;
+                       {  };
+                       DUP;
+                       {  };
+                       DUP 3;
+                       {  };
+                       { { { DUP 2 }; { DUP 2 }; SUB };
+                         { NIL operation };
+                         PAIR };
+                       DIP { DROP 4; DROP 3 } } }
+                   (Pair
+                      { PUSH
+                          (pair (or unit (or int int)) int)
+                          (Pair (Right (Left 42)) 100);
+                        PAIR;
+                        { UNPAIR;
+                          SWAP;
+                          {  };
+                          DUP;
+                          UNPAIR;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP 3;
+                          {  };
+                          { { { DUP 2 }; { DUP 2 }; ADD };
+                            { NIL operation };
+                            PAIR };
+                          DIP { DROP 4; DROP 2 } } }
+                      (Pair (Right (Left 42)) 100)));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 3;
+                DIG 3;
+                {  };
+                DUP;
+                {  };
+                LAMBDA
+                  (pair
+                    (pair
+                      unit
+                      unit
+                      (lambda (pair int int) (pair (list operation) int))
+                      (lambda (pair int int) (pair (list operation) int))
+                      (or unit (or int int))
+                      int)
+                    int)
+                  (pair (list operation) int)
+                  { UNPAIR;
+                    UNPAIR 5;
+                    DIG 5;
+                    {  };
+                    { { PUSH int 0 }; { NIL operation }; PAIR };
+                    DIP { DROP 6 } };
+                DUP 6;
+                DUP 6;
+                DUP 6;
+                DUP 6;
+                DUP 6;
+                PAIR 5;
+                APPLY;
+                DIP { DROP 5 } } }
+        , StackItem:
+          siLigoDesc:
             elem IncDec.decrement of int -> int -> operation list * int
           siValue:
-            { {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              { { { SWAP }; { SWAP }; SUB }; { NIL operation }; PAIR } } ] ]
+            { PUSH
+                (pair
+                  (lambda (pair int int) (pair (list operation) int))
+                  (or unit (or int int))
+                  int)
+                (Pair
+                   { PUSH
+                       (pair (or unit (or int int)) int)
+                       (Pair (Right (Left 42)) 100);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       DUP;
+                       UNPAIR;
+                       {  };
+                       DUP;
+                       {  };
+                       DUP 3;
+                       {  };
+                       { { { DUP 2 }; { DUP 2 }; ADD };
+                         { NIL operation };
+                         PAIR };
+                       DIP { DROP 4; DROP 2 } } }
+                   (Pair (Right (Left 42)) 100));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { { DUP 2 }; { DUP 2 }; SUB }; { NIL operation }; PAIR };
+                DIP { DROP 4; DROP 3 } } }
+        , StackItem:
+          siLigoDesc:
+            elem IncDec.increment of int -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair (or unit (or int int)) int)
+                (Pair (Right (Left 42)) 100);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { { DUP 2 }; { DUP 2 }; ADD }; { NIL operation }; PAIR };
+                DIP { DROP 4; DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / expression evaluated ({ } : operation list)
   isStackFrames:
@@ -154,30 +878,211 @@ InterpretSnapshot:
           siValue: 100
         , StackItem:
           siLigoDesc: elem delta of int
-          siValue: 42 ]
+          siValue: 42
+        , StackItem:
+          siLigoDesc: elem delta of int
+          siValue: 42
+        , StackItem:
+          siLigoDesc: elem store of int
+          siValue: 100
+        , StackItem:
+          siLigoDesc:
+            elem IncDec.increment of int -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair (or unit (or int int)) int)
+                (Pair (Right (Left 42)) 100);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { { DUP 2 }; { DUP 2 }; ADD }; { NIL operation }; PAIR };
+                DIP { DROP 4; DROP 2 } } } ]
     , StackFrame:
       sfName: IncDec.<module main>
       sfLoc: test/contracts/module-entrypoints.mligo@1:1-1:1
       sfStack:
         [ StackItem:
-          siLigoDesc:
-            elem ? of ([@layout comb] |
-               Reset of (unit) | Decrement of (int) | Increment of (int)) * int
-          siValue: 42
-        , StackItem:
           siLigoDesc: elem s of int
           siValue: 100
         , StackItem:
           siLigoDesc:
+            elem p of ([@layout comb] |
+               Reset of (unit) | Decrement of (int) | Increment of (int))
+          siValue: Right (Left 42)
+        , StackItem:
+          siLigoDesc: elem IncDec.reset of unit -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair
+                  (lambda (pair int int) (pair (list operation) int))
+                  (lambda (pair int int) (pair (list operation) int))
+                  (or unit (or int int))
+                  int)
+                (Pair
+                   { PUSH
+                       (pair
+                         (lambda (pair int int) (pair (list operation) int))
+                         (or unit (or int int))
+                         int)
+                       (Pair
+                          { PUSH
+                              (pair (or unit (or int int)) int)
+                              (Pair (Right (Left 42)) 100);
+                            PAIR;
+                            { UNPAIR;
+                              SWAP;
+                              {  };
+                              DUP;
+                              UNPAIR;
+                              {  };
+                              DUP;
+                              {  };
+                              DUP 3;
+                              {  };
+                              { { { DUP 2 }; { DUP 2 }; ADD };
+                                { NIL operation };
+                                PAIR };
+                              DIP { DROP 4; DROP 2 } } }
+                          (Pair (Right (Left 42)) 100));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR;
+                       DIG 2;
+                       {  };
+                       DUP;
+                       UNPAIR;
+                       {  };
+                       DUP;
+                       {  };
+                       DUP 3;
+                       {  };
+                       { { { DUP 2 }; { DUP 2 }; SUB };
+                         { NIL operation };
+                         PAIR };
+                       DIP { DROP 4; DROP 3 } } }
+                   (Pair
+                      { PUSH
+                          (pair (or unit (or int int)) int)
+                          (Pair (Right (Left 42)) 100);
+                        PAIR;
+                        { UNPAIR;
+                          SWAP;
+                          {  };
+                          DUP;
+                          UNPAIR;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP 3;
+                          {  };
+                          { { { DUP 2 }; { DUP 2 }; ADD };
+                            { NIL operation };
+                            PAIR };
+                          DIP { DROP 4; DROP 2 } } }
+                      (Pair (Right (Left 42)) 100)));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 3;
+                DIG 3;
+                {  };
+                DUP;
+                {  };
+                LAMBDA
+                  (pair
+                    (pair
+                      unit
+                      unit
+                      (lambda (pair int int) (pair (list operation) int))
+                      (lambda (pair int int) (pair (list operation) int))
+                      (or unit (or int int))
+                      int)
+                    int)
+                  (pair (list operation) int)
+                  { UNPAIR;
+                    UNPAIR 5;
+                    DIG 5;
+                    {  };
+                    { { PUSH int 0 }; { NIL operation }; PAIR };
+                    DIP { DROP 6 } };
+                DUP 6;
+                DUP 6;
+                DUP 6;
+                DUP 6;
+                DUP 6;
+                PAIR 5;
+                APPLY;
+                DIP { DROP 5 } } }
+        , StackItem:
+          siLigoDesc:
             elem IncDec.decrement of int -> int -> operation list * int
           siValue:
-            { {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              { { { SWAP }; { SWAP }; SUB }; { NIL operation }; PAIR } } ] ]
+            { PUSH
+                (pair
+                  (lambda (pair int int) (pair (list operation) int))
+                  (or unit (or int int))
+                  int)
+                (Pair
+                   { PUSH
+                       (pair (or unit (or int int)) int)
+                       (Pair (Right (Left 42)) 100);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       DUP;
+                       UNPAIR;
+                       {  };
+                       DUP;
+                       {  };
+                       DUP 3;
+                       {  };
+                       { { { DUP 2 }; { DUP 2 }; ADD };
+                         { NIL operation };
+                         PAIR };
+                       DIP { DROP 4; DROP 2 } } }
+                   (Pair (Right (Left 42)) 100));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { { DUP 2 }; { DUP 2 }; SUB }; { NIL operation }; PAIR };
+                DIP { DROP 4; DROP 3 } } }
+        , StackItem:
+          siLigoDesc:
+            elem IncDec.increment of int -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair (or unit (or int int)) int)
+                (Pair (Right (Left 42)) 100);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { { DUP 2 }; { DUP 2 }; ADD }; { NIL operation }; PAIR };
+                DIP { DROP 4; DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: running / expression evaluated (Pair { } 58 : operation list * int)
   isStackFrames:
@@ -190,30 +1095,211 @@ InterpretSnapshot:
           siValue: 100
         , StackItem:
           siLigoDesc: elem delta of int
-          siValue: 42 ]
+          siValue: 42
+        , StackItem:
+          siLigoDesc: elem delta of int
+          siValue: 42
+        , StackItem:
+          siLigoDesc: elem store of int
+          siValue: 100
+        , StackItem:
+          siLigoDesc:
+            elem IncDec.increment of int -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair (or unit (or int int)) int)
+                (Pair (Right (Left 42)) 100);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { { DUP 2 }; { DUP 2 }; ADD }; { NIL operation }; PAIR };
+                DIP { DROP 4; DROP 2 } } } ]
     , StackFrame:
       sfName: IncDec.<module main>
       sfLoc: test/contracts/module-entrypoints.mligo@1:1-1:1
       sfStack:
         [ StackItem:
-          siLigoDesc:
-            elem ? of ([@layout comb] |
-               Reset of (unit) | Decrement of (int) | Increment of (int)) * int
-          siValue: 42
-        , StackItem:
           siLigoDesc: elem s of int
           siValue: 100
         , StackItem:
           siLigoDesc:
+            elem p of ([@layout comb] |
+               Reset of (unit) | Decrement of (int) | Increment of (int))
+          siValue: Right (Left 42)
+        , StackItem:
+          siLigoDesc: elem IncDec.reset of unit -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair
+                  (lambda (pair int int) (pair (list operation) int))
+                  (lambda (pair int int) (pair (list operation) int))
+                  (or unit (or int int))
+                  int)
+                (Pair
+                   { PUSH
+                       (pair
+                         (lambda (pair int int) (pair (list operation) int))
+                         (or unit (or int int))
+                         int)
+                       (Pair
+                          { PUSH
+                              (pair (or unit (or int int)) int)
+                              (Pair (Right (Left 42)) 100);
+                            PAIR;
+                            { UNPAIR;
+                              SWAP;
+                              {  };
+                              DUP;
+                              UNPAIR;
+                              {  };
+                              DUP;
+                              {  };
+                              DUP 3;
+                              {  };
+                              { { { DUP 2 }; { DUP 2 }; ADD };
+                                { NIL operation };
+                                PAIR };
+                              DIP { DROP 4; DROP 2 } } }
+                          (Pair (Right (Left 42)) 100));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR;
+                       DIG 2;
+                       {  };
+                       DUP;
+                       UNPAIR;
+                       {  };
+                       DUP;
+                       {  };
+                       DUP 3;
+                       {  };
+                       { { { DUP 2 }; { DUP 2 }; SUB };
+                         { NIL operation };
+                         PAIR };
+                       DIP { DROP 4; DROP 3 } } }
+                   (Pair
+                      { PUSH
+                          (pair (or unit (or int int)) int)
+                          (Pair (Right (Left 42)) 100);
+                        PAIR;
+                        { UNPAIR;
+                          SWAP;
+                          {  };
+                          DUP;
+                          UNPAIR;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP 3;
+                          {  };
+                          { { { DUP 2 }; { DUP 2 }; ADD };
+                            { NIL operation };
+                            PAIR };
+                          DIP { DROP 4; DROP 2 } } }
+                      (Pair (Right (Left 42)) 100)));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 3;
+                DIG 3;
+                {  };
+                DUP;
+                {  };
+                LAMBDA
+                  (pair
+                    (pair
+                      unit
+                      unit
+                      (lambda (pair int int) (pair (list operation) int))
+                      (lambda (pair int int) (pair (list operation) int))
+                      (or unit (or int int))
+                      int)
+                    int)
+                  (pair (list operation) int)
+                  { UNPAIR;
+                    UNPAIR 5;
+                    DIG 5;
+                    {  };
+                    { { PUSH int 0 }; { NIL operation }; PAIR };
+                    DIP { DROP 6 } };
+                DUP 6;
+                DUP 6;
+                DUP 6;
+                DUP 6;
+                DUP 6;
+                PAIR 5;
+                APPLY;
+                DIP { DROP 5 } } }
+        , StackItem:
+          siLigoDesc:
             elem IncDec.decrement of int -> int -> operation list * int
           siValue:
-            { {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              { { { SWAP }; { SWAP }; SUB }; { NIL operation }; PAIR } } ] ]
+            { PUSH
+                (pair
+                  (lambda (pair int int) (pair (list operation) int))
+                  (or unit (or int int))
+                  int)
+                (Pair
+                   { PUSH
+                       (pair (or unit (or int int)) int)
+                       (Pair (Right (Left 42)) 100);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       DUP;
+                       UNPAIR;
+                       {  };
+                       DUP;
+                       {  };
+                       DUP 3;
+                       {  };
+                       { { { DUP 2 }; { DUP 2 }; ADD };
+                         { NIL operation };
+                         PAIR };
+                       DIP { DROP 4; DROP 2 } } }
+                   (Pair (Right (Left 42)) 100));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { { DUP 2 }; { DUP 2 }; SUB }; { NIL operation }; PAIR };
+                DIP { DROP 4; DROP 3 } } }
+        , StackItem:
+          siLigoDesc:
+            elem IncDec.increment of int -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair (or unit (or int int)) int)
+                (Pair (Right (Left 42)) 100);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { { DUP 2 }; { DUP 2 }; ADD }; { NIL operation }; PAIR };
+                DIP { DROP 4; DROP 2 } } } ] ]
 InterpretSnapshot:
   isStatus: terminated ok
   isStackFrames:
@@ -232,21 +1318,176 @@ InterpretSnapshot:
       sfLoc: test/contracts/module-entrypoints.mligo@1:1-1:1
       sfStack:
         [ StackItem:
-          siLigoDesc:
-            elem ? of ([@layout comb] |
-               Reset of (unit) | Decrement of (int) | Increment of (int)) * int
-          siValue: 42
-        , StackItem:
           siLigoDesc: elem s of int
           siValue: 100
         , StackItem:
           siLigoDesc:
+            elem p of ([@layout comb] |
+               Reset of (unit) | Decrement of (int) | Increment of (int))
+          siValue: Right (Left 42)
+        , StackItem:
+          siLigoDesc: elem IncDec.reset of unit -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair
+                  (lambda (pair int int) (pair (list operation) int))
+                  (lambda (pair int int) (pair (list operation) int))
+                  (or unit (or int int))
+                  int)
+                (Pair
+                   { PUSH
+                       (pair
+                         (lambda (pair int int) (pair (list operation) int))
+                         (or unit (or int int))
+                         int)
+                       (Pair
+                          { PUSH
+                              (pair (or unit (or int int)) int)
+                              (Pair (Right (Left 42)) 100);
+                            PAIR;
+                            { UNPAIR;
+                              SWAP;
+                              {  };
+                              DUP;
+                              UNPAIR;
+                              {  };
+                              DUP;
+                              {  };
+                              DUP 3;
+                              {  };
+                              { { { DUP 2 }; { DUP 2 }; ADD };
+                                { NIL operation };
+                                PAIR };
+                              DIP { DROP 4; DROP 2 } } }
+                          (Pair (Right (Left 42)) 100));
+                     PAIR;
+                     { UNPAIR;
+                       UNPAIR;
+                       DIG 2;
+                       {  };
+                       DUP;
+                       UNPAIR;
+                       {  };
+                       DUP;
+                       {  };
+                       DUP 3;
+                       {  };
+                       { { { DUP 2 }; { DUP 2 }; SUB };
+                         { NIL operation };
+                         PAIR };
+                       DIP { DROP 4; DROP 3 } } }
+                   (Pair
+                      { PUSH
+                          (pair (or unit (or int int)) int)
+                          (Pair (Right (Left 42)) 100);
+                        PAIR;
+                        { UNPAIR;
+                          SWAP;
+                          {  };
+                          DUP;
+                          UNPAIR;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP 3;
+                          {  };
+                          { { { DUP 2 }; { DUP 2 }; ADD };
+                            { NIL operation };
+                            PAIR };
+                          DIP { DROP 4; DROP 2 } } }
+                      (Pair (Right (Left 42)) 100)));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 3;
+                DIG 3;
+                {  };
+                DUP;
+                {  };
+                LAMBDA
+                  (pair
+                    (pair
+                      unit
+                      unit
+                      (lambda (pair int int) (pair (list operation) int))
+                      (lambda (pair int int) (pair (list operation) int))
+                      (or unit (or int int))
+                      int)
+                    int)
+                  (pair (list operation) int)
+                  { UNPAIR;
+                    UNPAIR 5;
+                    DIG 5;
+                    {  };
+                    { { PUSH int 0 }; { NIL operation }; PAIR };
+                    DIP { DROP 6 } };
+                DUP 6;
+                DUP 6;
+                DUP 6;
+                DUP 6;
+                DUP 6;
+                PAIR 5;
+                APPLY;
+                DIP { DROP 5 } } }
+        , StackItem:
+          siLigoDesc:
             elem IncDec.decrement of int -> int -> operation list * int
           siValue:
-            { {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              { { { SWAP }; { SWAP }; SUB }; { NIL operation }; PAIR } } ] ]
+            { PUSH
+                (pair
+                  (lambda (pair int int) (pair (list operation) int))
+                  (or unit (or int int))
+                  int)
+                (Pair
+                   { PUSH
+                       (pair (or unit (or int int)) int)
+                       (Pair (Right (Left 42)) 100);
+                     PAIR;
+                     { UNPAIR;
+                       SWAP;
+                       {  };
+                       DUP;
+                       UNPAIR;
+                       {  };
+                       DUP;
+                       {  };
+                       DUP 3;
+                       {  };
+                       { { { DUP 2 }; { DUP 2 }; ADD };
+                         { NIL operation };
+                         PAIR };
+                       DIP { DROP 4; DROP 2 } } }
+                   (Pair (Right (Left 42)) 100));
+              PAIR;
+              { UNPAIR;
+                UNPAIR;
+                DIG 2;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { { DUP 2 }; { DUP 2 }; SUB }; { NIL operation }; PAIR };
+                DIP { DROP 4; DROP 3 } } }
+        , StackItem:
+          siLigoDesc:
+            elem IncDec.increment of int -> int -> operation list * int
+          siValue:
+            { PUSH
+                (pair (or unit (or int int)) int)
+                (Pair (Right (Left 42)) 100);
+              PAIR;
+              { UNPAIR;
+                SWAP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { { DUP 2 }; { DUP 2 }; ADD }; { NIL operation }; PAIR };
+                DIP { DROP 4; DROP 2 } } } ] ]

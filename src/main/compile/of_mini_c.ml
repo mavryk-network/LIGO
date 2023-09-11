@@ -10,14 +10,14 @@ let dummy : Stacking.meta =
 
 
 let dummy_locations : 'l 'p. ('l, 'p) Micheline.node -> (meta, 'p) Micheline.node =
- fun e -> Micheline.(inject_locations (fun _ -> dummy) (strip_locations e))
+  fun e -> Micheline.(inject_locations (fun _ -> dummy) (strip_locations e))
 
 
 (* Tells optimizer whether a node has an important comment, in order
    to preserve Seq nodes which are used only for comments. Currently
    only env data is important. *)
 let has_comment : Compiler_options.t -> meta -> bool =
- fun options { env; location; binder = _; source_type = _ } ->
+  fun options { env; location; binder = _; source_type = _ } ->
   options.backend.has_env_comments
   && ((not (List.is_empty env)) || not (Location.is_dummy_or_generated location))
 
@@ -49,16 +49,16 @@ let compile_type e =
 
 
 let compile_contract ~raise
-    : options:Compiler_options.t -> expression -> Stacking.compiled_expression
+  : options:Compiler_options.t -> expression -> Stacking.compiled_expression
   =
- fun ~options e ->
+  fun ~options e ->
   let input_ty, contract = optimize_for_contract ~raise options e in
   let protocol_version = options.backend.protocol_version in
   let de_bruijn =
     trace ~raise scoping_tracer
     @@ Scoping.translate_closed_function ~proto:protocol_version contract input_ty
   in
-  let de_bruijn = Stacking.Program.compile_function_body de_bruijn in
+  let de_bruijn = Stacking.Program.compile_function_body ~options de_bruijn in
   let expr =
     Self_michelson.optimize protocol_version ~has_comment:(has_comment options) de_bruijn
   in
@@ -68,9 +68,9 @@ let compile_contract ~raise
 
 
 let compile_view ~raise
-    : options:Compiler_options.t -> expression -> Stacking.compiled_expression
+  : options:Compiler_options.t -> expression -> Stacking.compiled_expression
   =
- fun ~options e ->
+  fun ~options e ->
   let input_ty, output_ty =
     trace ~raise self_mini_c_tracer @@ Self_mini_c.get_t_function e.type_expression
   in
@@ -88,7 +88,7 @@ let compile_view ~raise
     trace ~raise scoping_tracer
     @@ Scoping.translate_closed_function ~proto:protocol_version view input_ty
   in
-  let de_bruijn = Stacking.Program.compile_function_body de_bruijn in
+  let de_bruijn = Stacking.Program.compile_function_body ~options de_bruijn in
   let expr =
     Self_michelson.optimize protocol_version ~has_comment:(has_comment options) de_bruijn
   in
@@ -103,9 +103,9 @@ let compile_view ~raise
 
 
 let compile_expression ~raise
-    : options:Compiler_options.t -> expression -> compiled_expression
+  : options:Compiler_options.t -> expression -> compiled_expression
   =
- fun ~options e ->
+  fun ~options e ->
   let e = trace ~raise self_mini_c_tracer @@ Self_mini_c.all_expression options e in
   let protocol_version = options.backend.protocol_version in
   let expr =
@@ -121,9 +121,9 @@ let compile_expression ~raise
 
 
 let compile_expression_function ~raise
-    : options:Compiler_options.t -> expression -> compiled_expression
+  : options:Compiler_options.t -> expression -> compiled_expression
   =
- fun ~options e ->
+  fun ~options e ->
   let protocol_version = options.backend.protocol_version in
   let input_ty, _ =
     trace ~raise self_mini_c_tracer @@ Self_mini_c.get_t_function e.type_expression
@@ -141,7 +141,7 @@ let compile_expression_function ~raise
     trace ~raise scoping_tracer
     @@ Scoping.translate_closed_function ~proto:protocol_version expr input_ty
   in
-  let de_bruijn = Stacking.Program.compile_function_body de_bruijn in
+  let de_bruijn = Stacking.Program.compile_function_body ~options de_bruijn in
   let expr =
     Self_michelson.optimize protocol_version ~has_comment:(has_comment options) de_bruijn
   in

@@ -55,6 +55,9 @@ InterpretSnapshot:
           siLigoDesc: elem x of int
           siValue: 42
         , StackItem:
+          siLigoDesc: elem a of (None of (unit) | Some of (int))
+          siValue: Some 42
+        , StackItem:
           siLigoDesc: elem s of int
           siValue: 0 ] ]
 InterpretSnapshot:
@@ -66,7 +69,13 @@ InterpretSnapshot:
       sfStack:
         [ StackItem:
           siLigoDesc: elem b of int
-          siValue: 42 ] ]
+          siValue: 42
+        , StackItem:
+          siLigoDesc: elem a of (None of (unit) | Some of (int))
+          siValue: Some 42
+        , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0 ] ]
 InterpretSnapshot:
   isStatus: terminated ok
   isStackFrames:

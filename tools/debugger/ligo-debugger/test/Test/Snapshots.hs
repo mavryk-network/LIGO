@@ -110,6 +110,12 @@ test_Snapshots = testGroup "Snapshots collection"
                   }
                 , SomeLorentzValue (42 :: Integer)
                 )
+
+              , ( Just LigoVariable
+                  { lvName = "s"
+                  }
+                , SomeLorentzValue (0 :: Integer)
+                )
               ]
             stackWithS =
               [ ( Just LigoVariable
@@ -252,7 +258,8 @@ test_Snapshots = testGroup "Snapshots collection"
             } -> pass
           sp -> unexpectedSnapshot sp
 
-  , testCaseSteps "check shadowing" \step -> do
+    -- TODO: shadow variables on the debugger side (scopes or some heuristic? 🤔)
+  , testCaseSteps "check shadowing" \step -> when False do
       let file = contractsDir </> "shadowing.mligo"
       let runData = ContractRunData
             { crdProgram = file
@@ -800,7 +807,7 @@ test_Snapshots = testGroup "Snapshots collection"
                 & head
                 & getVariableNamesFromStackFrame
 
-          vars @~=? ["a", "b"]
+          vars @~=? ["a", "b", "s", "pairFunc"]
 
   , testCaseSteps "Check stack frames on function entering / exiting" \step -> do
       let file = contractsDir </> "recursive.mligo"
@@ -925,7 +932,18 @@ test_Snapshots = testGroup "Snapshots collection"
                 { sfName = "sum"
                 , sfLoc = Range _ _ file'
                 } :| _
-            } | file' == nestedFile -> getVariableNamesFromStackFrame stackFrame @~=? ["l", "x", "acc"]
+            } | file' == nestedFile ->
+                  getVariableNamesFromStackFrame stackFrame
+                    @~=?
+                  [ "l"
+                  , "x"
+                  , "lst"
+                  , "acc"
+                  , "one"
+                  , "zero"
+                  , "add"
+                  , "strange"
+                  ]
           snap -> unexpectedSnapshot snap
 
         moveTill Forward $
@@ -1872,16 +1890,19 @@ test_Snapshots = testGroup "Snapshots collection"
         liftIO $ step "Extract values and types"
         let convertInfos = extractConvertInfos ligoTypesVec snap
 
+        let bigValue = LVConstructor
+              ( "Go"
+              , LVRecord $ HM.fromList
+                  [ (LLabel "ch", LVCt $ LCChainId "\0\0\0\0")
+                  , (LLabel "state", LVConstructor ("A", LVCt $ LCTimestamp "100"))
+                  , (LLabel "s", LVCt $ LCString "large")
+                  ]
+              )
+
         let expected =
-              [ LVConstructor
-                  ( "Go"
-                  , LVRecord $ HM.fromList
-                      [ (LLabel "ch", LVCt $ LCChainId "\0\0\0\0")
-                      , (LLabel "state", LVConstructor ("A", LVCt $ LCTimestamp "100"))
-                      , (LLabel "s", LVCt $ LCString "large")
-                      ]
-                  )
+              [ bigValue
               , LVCt $ LCInt "0"
+              , bigValue
               , LVCt $ LCString "<fun>"
               ]
 

@@ -106,7 +106,24 @@ test_SourceMapper = testGroup "Reading source mapper"
             ?- SomeInstr dummyInstr
 
         , LigoMereEnvInfo
-            [LigoStackEntryVar "s" intType]
+            [ LigoStackEntryNoVar unitType
+            , LigoHiddenStackEntry
+            ]
+            ?- SomeInstr dummyInstr
+
+        , LigoMereEnvInfo
+            [ LigoStackEntryNoVar unitType
+            , LigoStackEntryNoVar unitType
+            , LigoHiddenStackEntry
+            ]
+            ?- SomeInstr dummyInstr
+
+        , LigoMereEnvInfo
+            [ LigoStackEntryVar "s" intType
+            , LigoStackEntryNoVar unitType
+            , LigoStackEntryNoVar unitType
+            , LigoHiddenStackEntry
+            ]
             ?- SomeInstr dummyInstr
 
         , LigoMereLocInfo
@@ -120,12 +137,17 @@ test_SourceMapper = testGroup "Reading source mapper"
             ?- SomeInstr
                 (    T.Nested
                 $    T.Nested (T.PUSH @'T.TInt (T.VInt 42))
-                T.:# T.Nested (T.SWAP)
+                T.:# T.Nested (T.DUPN @_ @_ @_ @'T.TInt $ toPeanoNatural' @2)
                 T.:# T.ADD @'T.TInt @'T.TInt
                 )
 
         , LigoMereEnvInfo
-            [LigoStackEntryVar "s2" intType]
+            [ LigoStackEntryVar "s2" intType
+            , LigoStackEntryVar "s" intType
+            , LigoStackEntryNoVar unitType
+            , LigoStackEntryNoVar unitType
+            , LigoHiddenStackEntry
+            ]
             ?- SomeInstr dummyInstr
 
         , LigoMereLocInfo
@@ -160,11 +182,16 @@ test_SourceMapper = testGroup "Reading source mapper"
                        T.:# T.MUL @'T.TInt @'T.TInt
                        )
                 T.:# T.MUL
-                T.:# T.DROP
                 )
 
         , LigoMereEnvInfo
-            [LigoStackEntryVar "s2" intType]
+            [ LigoStackEntryVar "s3" intType
+            , LigoStackEntryVar "s2" intType
+            , LigoStackEntryVar "s" intType
+            , LigoStackEntryNoVar unitType
+            , LigoStackEntryNoVar unitType
+            , LigoHiddenStackEntry
+            ]
             ?- SomeInstr dummyInstr
 
         , LigoMereLocInfo
@@ -182,7 +209,7 @@ test_SourceMapper = testGroup "Reading source mapper"
             resultType
             ?- SomeInstr
                 (    T.Nested
-                $    T.Nested T.Nop
+                $    T.Nested (T.DUPN @_ @_ @_ @'T.TInt $ toPeanoNatural' @2)
                 T.:# T.Nested (T.NIL @'T.TOperation)
                 T.:# T.PAIR
                 )
@@ -190,79 +217,137 @@ test_SourceMapper = testGroup "Reading source mapper"
         , LigoMereEnvInfo
             [ LigoStackEntryVar "main" curriedMainType
             , LigoHiddenStackEntry
+            , LigoHiddenStackEntry
             ]
             ?- SomeInstr dummyInstr
 
         , LigoMereEnvInfo
             [ LigoStackEntryNoVar unitIntTuple
             , LigoStackEntryVar "main" curriedMainType
+            , LigoHiddenStackEntry
             ]
             ?- SomeInstr dummyInstr
 
         , LigoMereEnvInfo
             [ LigoStackEntryNoVar unitIntTuple
+            , LigoStackEntryNoVar unitIntTuple
             , LigoStackEntryVar "main" curriedMainType
+            , LigoHiddenStackEntry
             ]
             ?- SomeInstr dummyInstr
 
         , LigoMereEnvInfo
             [ LigoStackEntryNoVar unitType
             , LigoStackEntryNoVar intType
+            , LigoStackEntryNoVar unitIntTuple
+            , LigoStackEntryNoVar unitIntTuple
             , LigoStackEntryVar "main" curriedMainType
+            , LigoHiddenStackEntry
             ]
             ?- SomeInstr dummyInstr
 
         , LigoMereEnvInfo
             [ LigoStackEntryNoVar unitType
+            , LigoStackEntryNoVar unitType
             , LigoStackEntryNoVar intType
+            , LigoStackEntryNoVar unitIntTuple
+            , LigoStackEntryNoVar unitIntTuple
             , LigoStackEntryVar "main" curriedMainType
+            , LigoHiddenStackEntry
             ]
             ?- SomeInstr dummyInstr
 
         , LigoMereEnvInfo
             [ LigoStackEntryNoVar intType
             , LigoStackEntryNoVar unitType
+            , LigoStackEntryNoVar unitType
+            , LigoStackEntryNoVar intType
+            , LigoStackEntryNoVar unitIntTuple
+            , LigoStackEntryNoVar unitIntTuple
             , LigoStackEntryVar "main" curriedMainType
+            , LigoHiddenStackEntry
             ]
             ?- SomeInstr dummyInstr
 
         , LigoMereEnvInfo
             [ LigoStackEntryVar "p" unitType
             , LigoStackEntryNoVar intType
+            , LigoStackEntryNoVar unitType
+            , LigoStackEntryNoVar unitType
+            , LigoStackEntryNoVar intType
+            , LigoStackEntryNoVar unitIntTuple
+            , LigoStackEntryNoVar unitIntTuple
             , LigoStackEntryVar "main" curriedMainType
+            , LigoHiddenStackEntry
             ]
             ?- SomeInstr dummyInstr
 
         , LigoMereEnvInfo
             [ LigoStackEntryVar "s" intType
             , LigoStackEntryVar "p" unitType
+            , LigoStackEntryNoVar intType
+            , LigoStackEntryNoVar unitType
+            , LigoStackEntryNoVar unitType
+            , LigoStackEntryNoVar intType
+            , LigoStackEntryNoVar unitIntTuple
+            , LigoStackEntryNoVar unitIntTuple
             , LigoStackEntryVar "main" curriedMainType
+            , LigoHiddenStackEntry
             ]
             ?- SomeInstr dummyInstr
 
         , LigoMereEnvInfo
             [ LigoStackEntryNoVar unitType
             , LigoStackEntryVar "s" intType
+            , LigoStackEntryVar "p" unitType
+            , LigoStackEntryNoVar intType
+            , LigoStackEntryNoVar unitType
+            , LigoStackEntryNoVar unitType
+            , LigoStackEntryNoVar intType
+            , LigoStackEntryNoVar unitIntTuple
+            , LigoStackEntryNoVar unitIntTuple
             , LigoStackEntryVar "main" curriedMainType
+            , LigoHiddenStackEntry
             ]
             ?- SomeInstr dummyInstr
 
         , LigoMereEnvInfo
             [ LigoStackEntryNoVar unitType
+            , LigoStackEntryNoVar unitType
             , LigoStackEntryVar "s" intType
+            , LigoStackEntryVar "p" unitType
+            , LigoStackEntryNoVar intType
+            , LigoStackEntryNoVar unitType
+            , LigoStackEntryNoVar unitType
+            , LigoStackEntryNoVar intType
+            , LigoStackEntryNoVar unitIntTuple
+            , LigoStackEntryNoVar unitIntTuple
             , LigoStackEntryVar "main" curriedMainType
+            , LigoHiddenStackEntry
             ]
             ?- SomeInstr dummyInstr
 
         , LigoMereEnvInfo
             [ LigoStackEntryNoVar unitIntTuple
+            , LigoStackEntryNoVar unitType
+            , LigoStackEntryNoVar unitType
             , LigoStackEntryVar "s" intType
+            , LigoStackEntryVar "p" unitType
+            , LigoStackEntryNoVar intType
+            , LigoStackEntryNoVar unitType
+            , LigoStackEntryNoVar unitType
+            , LigoStackEntryNoVar intType
+            , LigoStackEntryNoVar unitIntTuple
+            , LigoStackEntryNoVar unitIntTuple
             , LigoStackEntryVar "main" curriedMainType
+            , LigoHiddenStackEntry
             ]
             ?- SomeInstr dummyInstr
 
         , LigoMereEnvInfo
             [ LigoStackEntryVar "<module main>" uncurriedMainType
+            , LigoStackEntryVar "main" curriedMainType
+            , LigoHiddenStackEntry
             , LigoHiddenStackEntry
             ]
             ?- SomeInstr dummyInstr

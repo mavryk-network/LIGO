@@ -16,4 +16,4 @@ open Ligo_coq_ocaml.Compiler
 
 val compile_expr: (meta, (meta, string) Tezos_micheline.Micheline.node) ty list -> (meta, (meta, string) node, Literal_value.t, (meta, string) node) expr -> (meta, string) node
 
-val compile_function_body : (meta, (meta, string) node, Literal_value.t, (meta, string) node) binds -> (meta, string) node
+val compile_function_body : options:Compiler_options.t -> (meta, (meta, string) node, Literal_value.t, (meta, string) node) binds -> (meta, string) node

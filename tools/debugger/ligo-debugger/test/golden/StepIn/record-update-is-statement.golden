@@ -45,7 +45,12 @@ InterpretSnapshot:
           siLigoDesc:
             elem newStorage of [@layout comb]
               { a: int; b: string; c: (False of (unit) | True of (unit)); }
-          siValue: Pair 0 (Pair "\"str\"" True) ] ]
+          siValue: Pair 0 (Pair "\"str\"" True)
+        , StackItem:
+          siLigoDesc:
+            elem s of [@layout comb]
+              { a: int; b: string; c: (False of (unit) | True of (unit)); }
+          siValue: Pair 0 (Pair "\"str\"" False) ] ]
 InterpretSnapshot:
   isStatus: terminated ok
   isStackFrames:

@@ -18,18 +18,29 @@ InterpretSnapshot:
         [ StackItem:
           siLigoDesc: elem foo of int * int -> int
           siValue:
-            { {  };
-              {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              { {  }; { SWAP }; ADD } }
+            { PUSH
+                (pair int unit unit unit int)
+                (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 6 } } }
         , StackItem:
           siLigoDesc: elem s of int
           siValue: 0 ] ]
@@ -43,18 +54,29 @@ InterpretSnapshot:
         [ StackItem:
           siLigoDesc: elem foo of int * int -> int
           siValue:
-            { {  };
-              {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              { {  }; { SWAP }; ADD } }
+            { PUSH
+                (pair int unit unit unit int)
+                (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 6 } } }
         , StackItem:
           siLigoDesc: elem s of int
           siValue: 0 ] ]
@@ -70,6 +92,9 @@ InterpretSnapshot:
           siValue: 2
         , StackItem:
           siLigoDesc: elem a of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem s of int
           siValue: 0 ]
     , StackFrame:
       sfName: main
@@ -78,18 +103,29 @@ InterpretSnapshot:
         [ StackItem:
           siLigoDesc: elem foo of int * int -> int
           siValue:
-            { {  };
-              {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              { {  }; { SWAP }; ADD } }
+            { PUSH
+                (pair int unit unit unit int)
+                (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 6 } } }
         , StackItem:
           siLigoDesc: elem s of int
           siValue: 0 ] ]
@@ -104,6 +140,32 @@ InterpretSnapshot:
           siLigoDesc: elem s1 of int
           siValue: 2
         , StackItem:
+          siLigoDesc: elem foo of int * int -> int
+          siValue:
+            { PUSH
+                (pair int unit unit unit int)
+                (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 6 } } }
+        , StackItem:
           siLigoDesc: elem s of int
           siValue: 0 ] ]
 InterpretSnapshot:
@@ -116,10 +178,78 @@ InterpretSnapshot:
         [ StackItem:
           siLigoDesc: elem bar of int -> int -> int
           siValue:
-            { {  }; UNPAIR; {  }; {  }; SWAP; {  }; { {  }; { SWAP }; SUB } }
+            { PUSH
+                (pair int (lambda (pair int int) int) int unit unit unit int)
+                (Pair
+                   2
+                   (Pair
+                      { PUSH
+                          (pair int unit unit unit int)
+                          (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 4;
+                          DIG 4;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP;
+                          UNPAIR;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP 3;
+                          {  };
+                          DUP 2;
+                          {  };
+                          DUP 2;
+                          {  };
+                          { { DUP }; { DUP 3 }; ADD };
+                          DIP { DROP 6; DROP 6 } } }
+                      (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 6;
+                DIG 6;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { DUP }; { DUP 3 }; SUB };
+                DIP { DROP 4; DROP 7 } } }
         , StackItem:
           siLigoDesc: elem s1 of int
           siValue: 2
+        , StackItem:
+          siLigoDesc: elem foo of int * int -> int
+          siValue:
+            { PUSH
+                (pair int unit unit unit int)
+                (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 6 } } }
         , StackItem:
           siLigoDesc: elem s of int
           siValue: 0 ] ]
@@ -133,10 +263,78 @@ InterpretSnapshot:
         [ StackItem:
           siLigoDesc: elem bar of int -> int -> int
           siValue:
-            { {  }; UNPAIR; {  }; {  }; SWAP; {  }; { {  }; { SWAP }; SUB } }
+            { PUSH
+                (pair int (lambda (pair int int) int) int unit unit unit int)
+                (Pair
+                   2
+                   (Pair
+                      { PUSH
+                          (pair int unit unit unit int)
+                          (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 4;
+                          DIG 4;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP;
+                          UNPAIR;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP 3;
+                          {  };
+                          DUP 2;
+                          {  };
+                          DUP 2;
+                          {  };
+                          { { DUP }; { DUP 3 }; ADD };
+                          DIP { DROP 6; DROP 6 } } }
+                      (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 6;
+                DIG 6;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { DUP }; { DUP 3 }; SUB };
+                DIP { DROP 4; DROP 7 } } }
         , StackItem:
           siLigoDesc: elem s1 of int
           siValue: 2
+        , StackItem:
+          siLigoDesc: elem foo of int * int -> int
+          siValue:
+            { PUSH
+                (pair int unit unit unit int)
+                (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 6 } } }
         , StackItem:
           siLigoDesc: elem s of int
           siValue: 0 ] ]
@@ -152,6 +350,44 @@ InterpretSnapshot:
           siValue: -2
         , StackItem:
           siLigoDesc: elem a of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem a of int
+          siValue: 0
+        , StackItem:
+          siLigoDesc: elem b of int
+          siValue: -2
+        , StackItem:
+          siLigoDesc: elem s1 of int
+          siValue: 2
+        , StackItem:
+          siLigoDesc: elem foo of int * int -> int
+          siValue:
+            { PUSH
+                (pair int unit unit unit int)
+                (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 6 } } }
+        , StackItem:
+          siLigoDesc: elem s of int
           siValue: 0 ]
     , StackFrame:
       sfName: main
@@ -160,10 +396,78 @@ InterpretSnapshot:
         [ StackItem:
           siLigoDesc: elem bar of int -> int -> int
           siValue:
-            { {  }; UNPAIR; {  }; {  }; SWAP; {  }; { {  }; { SWAP }; SUB } }
+            { PUSH
+                (pair int (lambda (pair int int) int) int unit unit unit int)
+                (Pair
+                   2
+                   (Pair
+                      { PUSH
+                          (pair int unit unit unit int)
+                          (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 4;
+                          DIG 4;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP;
+                          UNPAIR;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP 3;
+                          {  };
+                          DUP 2;
+                          {  };
+                          DUP 2;
+                          {  };
+                          { { DUP }; { DUP 3 }; ADD };
+                          DIP { DROP 6; DROP 6 } } }
+                      (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 6;
+                DIG 6;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { DUP }; { DUP 3 }; SUB };
+                DIP { DROP 4; DROP 7 } } }
         , StackItem:
           siLigoDesc: elem s1 of int
           siValue: 2
+        , StackItem:
+          siLigoDesc: elem foo of int * int -> int
+          siValue:
+            { PUSH
+                (pair int unit unit unit int)
+                (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 6 } } }
         , StackItem:
           siLigoDesc: elem s of int
           siValue: 0 ] ]
@@ -178,8 +482,80 @@ InterpretSnapshot:
           siLigoDesc: elem s2 of int
           siValue: 2
         , StackItem:
+          siLigoDesc: elem bar of int -> int -> int
+          siValue:
+            { PUSH
+                (pair int (lambda (pair int int) int) int unit unit unit int)
+                (Pair
+                   2
+                   (Pair
+                      { PUSH
+                          (pair int unit unit unit int)
+                          (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 4;
+                          DIG 4;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP;
+                          UNPAIR;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP 3;
+                          {  };
+                          DUP 2;
+                          {  };
+                          DUP 2;
+                          {  };
+                          { { DUP }; { DUP 3 }; ADD };
+                          DIP { DROP 6; DROP 6 } } }
+                      (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 6;
+                DIG 6;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { DUP }; { DUP 3 }; SUB };
+                DIP { DROP 4; DROP 7 } } }
+        , StackItem:
           siLigoDesc: elem s1 of int
           siValue: 2
+        , StackItem:
+          siLigoDesc: elem foo of int * int -> int
+          siValue:
+            { PUSH
+                (pair int unit unit unit int)
+                (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 6 } } }
         , StackItem:
           siLigoDesc: elem s of int
           siValue: 0 ] ]
@@ -193,29 +569,205 @@ InterpretSnapshot:
         [ StackItem:
           siLigoDesc: elem baz of int -> int * int -> int
           siValue:
-            { {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              { { {  }; { SWAP }; MUL }; { SWAP }; ADD } }
+            { PUSH
+                (pair
+                  int
+                  (lambda (pair int int) int)
+                  int
+                  (lambda (pair int int) int)
+                  int
+                  unit
+                  unit
+                  unit
+                  int)
+                (Pair
+                   2
+                   (Pair
+                      { PUSH
+                          (pair
+                            int
+                            (lambda (pair int int) int)
+                            int
+                            unit
+                            unit
+                            unit
+                            int)
+                          (Pair
+                             2
+                             (Pair
+                                { PUSH
+                                    (pair int unit unit unit int)
+                                    (Pair
+                                       0
+                                       (Pair Unit (Pair Unit (Pair Unit 0))));
+                                  PAIR;
+                                  { UNPAIR;
+                                    UNPAIR 4;
+                                    DIG 4;
+                                    {  };
+                                    DUP;
+                                    {  };
+                                    DUP;
+                                    UNPAIR;
+                                    {  };
+                                    DUP;
+                                    {  };
+                                    DUP 3;
+                                    {  };
+                                    DUP 2;
+                                    {  };
+                                    DUP 2;
+                                    {  };
+                                    { { DUP }; { DUP 3 }; ADD };
+                                    DIP { DROP 6; DROP 6 } } }
+                                (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0)))))
+                          );
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 6;
+                          DIG 6;
+                          {  };
+                          DUP;
+                          UNPAIR;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP 3;
+                          {  };
+                          { { DUP }; { DUP 3 }; SUB };
+                          DIP { DROP 4; DROP 7 } } }
+                      (Pair
+                         2
+                         (Pair
+                            { PUSH
+                                (pair int unit unit unit int)
+                                (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+                              PAIR;
+                              { UNPAIR;
+                                UNPAIR 4;
+                                DIG 4;
+                                {  };
+                                DUP;
+                                {  };
+                                DUP;
+                                UNPAIR;
+                                {  };
+                                DUP;
+                                {  };
+                                DUP 3;
+                                {  };
+                                DUP 2;
+                                {  };
+                                DUP 2;
+                                {  };
+                                { { DUP }; { DUP 3 }; ADD };
+                                DIP { DROP 6; DROP 6 } } }
+                            (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))))))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 8;
+                DIG 8;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { { DUP }; { DUP 3 }; MUL }; { DUP 10 }; ADD };
+                DIP { DROP 6; DROP 5; DROP 9 } } }
         , StackItem:
           siLigoDesc: elem s2 of int
           siValue: 2
         , StackItem:
+          siLigoDesc: elem bar of int -> int -> int
+          siValue:
+            { PUSH
+                (pair int (lambda (pair int int) int) int unit unit unit int)
+                (Pair
+                   2
+                   (Pair
+                      { PUSH
+                          (pair int unit unit unit int)
+                          (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 4;
+                          DIG 4;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP;
+                          UNPAIR;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP 3;
+                          {  };
+                          DUP 2;
+                          {  };
+                          DUP 2;
+                          {  };
+                          { { DUP }; { DUP 3 }; ADD };
+                          DIP { DROP 6; DROP 6 } } }
+                      (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 6;
+                DIG 6;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { DUP }; { DUP 3 }; SUB };
+                DIP { DROP 4; DROP 7 } } }
+        , StackItem:
           siLigoDesc: elem s1 of int
           siValue: 2
+        , StackItem:
+          siLigoDesc: elem foo of int * int -> int
+          siValue:
+            { PUSH
+                (pair int unit unit unit int)
+                (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 6 } } }
         , StackItem:
           siLigoDesc: elem s of int
           siValue: 0 ] ]
@@ -229,29 +781,205 @@ InterpretSnapshot:
         [ StackItem:
           siLigoDesc: elem baz of int -> int * int -> int
           siValue:
-            { {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              { { {  }; { SWAP }; MUL }; { SWAP }; ADD } }
+            { PUSH
+                (pair
+                  int
+                  (lambda (pair int int) int)
+                  int
+                  (lambda (pair int int) int)
+                  int
+                  unit
+                  unit
+                  unit
+                  int)
+                (Pair
+                   2
+                   (Pair
+                      { PUSH
+                          (pair
+                            int
+                            (lambda (pair int int) int)
+                            int
+                            unit
+                            unit
+                            unit
+                            int)
+                          (Pair
+                             2
+                             (Pair
+                                { PUSH
+                                    (pair int unit unit unit int)
+                                    (Pair
+                                       0
+                                       (Pair Unit (Pair Unit (Pair Unit 0))));
+                                  PAIR;
+                                  { UNPAIR;
+                                    UNPAIR 4;
+                                    DIG 4;
+                                    {  };
+                                    DUP;
+                                    {  };
+                                    DUP;
+                                    UNPAIR;
+                                    {  };
+                                    DUP;
+                                    {  };
+                                    DUP 3;
+                                    {  };
+                                    DUP 2;
+                                    {  };
+                                    DUP 2;
+                                    {  };
+                                    { { DUP }; { DUP 3 }; ADD };
+                                    DIP { DROP 6; DROP 6 } } }
+                                (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0)))))
+                          );
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 6;
+                          DIG 6;
+                          {  };
+                          DUP;
+                          UNPAIR;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP 3;
+                          {  };
+                          { { DUP }; { DUP 3 }; SUB };
+                          DIP { DROP 4; DROP 7 } } }
+                      (Pair
+                         2
+                         (Pair
+                            { PUSH
+                                (pair int unit unit unit int)
+                                (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+                              PAIR;
+                              { UNPAIR;
+                                UNPAIR 4;
+                                DIG 4;
+                                {  };
+                                DUP;
+                                {  };
+                                DUP;
+                                UNPAIR;
+                                {  };
+                                DUP;
+                                {  };
+                                DUP 3;
+                                {  };
+                                DUP 2;
+                                {  };
+                                DUP 2;
+                                {  };
+                                { { DUP }; { DUP 3 }; ADD };
+                                DIP { DROP 6; DROP 6 } } }
+                            (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))))))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 8;
+                DIG 8;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { { DUP }; { DUP 3 }; MUL }; { DUP 10 }; ADD };
+                DIP { DROP 6; DROP 5; DROP 9 } } }
         , StackItem:
           siLigoDesc: elem s2 of int
           siValue: 2
         , StackItem:
+          siLigoDesc: elem bar of int -> int -> int
+          siValue:
+            { PUSH
+                (pair int (lambda (pair int int) int) int unit unit unit int)
+                (Pair
+                   2
+                   (Pair
+                      { PUSH
+                          (pair int unit unit unit int)
+                          (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 4;
+                          DIG 4;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP;
+                          UNPAIR;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP 3;
+                          {  };
+                          DUP 2;
+                          {  };
+                          DUP 2;
+                          {  };
+                          { { DUP }; { DUP 3 }; ADD };
+                          DIP { DROP 6; DROP 6 } } }
+                      (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 6;
+                DIG 6;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { DUP }; { DUP 3 }; SUB };
+                DIP { DROP 4; DROP 7 } } }
+        , StackItem:
           siLigoDesc: elem s1 of int
           siValue: 2
+        , StackItem:
+          siLigoDesc: elem foo of int * int -> int
+          siValue:
+            { PUSH
+                (pair int unit unit unit int)
+                (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 6 } } }
         , StackItem:
           siLigoDesc: elem s of int
           siValue: 0 ] ]
@@ -270,7 +998,91 @@ InterpretSnapshot:
           siValue: 2
         , StackItem:
           siLigoDesc: elem a of int
-          siValue: 2 ]
+          siValue: 2
+        , StackItem:
+          siLigoDesc: elem a of int
+          siValue: 2
+        , StackItem:
+          siLigoDesc: elem s2 of int
+          siValue: 2
+        , StackItem:
+          siLigoDesc: elem bar of int -> int -> int
+          siValue:
+            { PUSH
+                (pair int (lambda (pair int int) int) int unit unit unit int)
+                (Pair
+                   2
+                   (Pair
+                      { PUSH
+                          (pair int unit unit unit int)
+                          (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 4;
+                          DIG 4;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP;
+                          UNPAIR;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP 3;
+                          {  };
+                          DUP 2;
+                          {  };
+                          DUP 2;
+                          {  };
+                          { { DUP }; { DUP 3 }; ADD };
+                          DIP { DROP 6; DROP 6 } } }
+                      (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 6;
+                DIG 6;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { DUP }; { DUP 3 }; SUB };
+                DIP { DROP 4; DROP 7 } } }
+        , StackItem:
+          siLigoDesc: elem s1 of int
+          siValue: 2
+        , StackItem:
+          siLigoDesc: elem foo of int * int -> int
+          siValue:
+            { PUSH
+                (pair int unit unit unit int)
+                (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 6 } } }
+        , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0 ]
     , StackFrame:
       sfName: main
       sfLoc: test/contracts/local-function-assignments.mligo@8:20-8:25
@@ -278,29 +1090,205 @@ InterpretSnapshot:
         [ StackItem:
           siLigoDesc: elem baz of int -> int * int -> int
           siValue:
-            { {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              {  };
-              UNPAIR;
-              {  };
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              SWAP;
-              {  };
-              { { {  }; { SWAP }; MUL }; { SWAP }; ADD } }
+            { PUSH
+                (pair
+                  int
+                  (lambda (pair int int) int)
+                  int
+                  (lambda (pair int int) int)
+                  int
+                  unit
+                  unit
+                  unit
+                  int)
+                (Pair
+                   2
+                   (Pair
+                      { PUSH
+                          (pair
+                            int
+                            (lambda (pair int int) int)
+                            int
+                            unit
+                            unit
+                            unit
+                            int)
+                          (Pair
+                             2
+                             (Pair
+                                { PUSH
+                                    (pair int unit unit unit int)
+                                    (Pair
+                                       0
+                                       (Pair Unit (Pair Unit (Pair Unit 0))));
+                                  PAIR;
+                                  { UNPAIR;
+                                    UNPAIR 4;
+                                    DIG 4;
+                                    {  };
+                                    DUP;
+                                    {  };
+                                    DUP;
+                                    UNPAIR;
+                                    {  };
+                                    DUP;
+                                    {  };
+                                    DUP 3;
+                                    {  };
+                                    DUP 2;
+                                    {  };
+                                    DUP 2;
+                                    {  };
+                                    { { DUP }; { DUP 3 }; ADD };
+                                    DIP { DROP 6; DROP 6 } } }
+                                (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0)))))
+                          );
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 6;
+                          DIG 6;
+                          {  };
+                          DUP;
+                          UNPAIR;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP 3;
+                          {  };
+                          { { DUP }; { DUP 3 }; SUB };
+                          DIP { DROP 4; DROP 7 } } }
+                      (Pair
+                         2
+                         (Pair
+                            { PUSH
+                                (pair int unit unit unit int)
+                                (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+                              PAIR;
+                              { UNPAIR;
+                                UNPAIR 4;
+                                DIG 4;
+                                {  };
+                                DUP;
+                                {  };
+                                DUP;
+                                UNPAIR;
+                                {  };
+                                DUP;
+                                {  };
+                                DUP 3;
+                                {  };
+                                DUP 2;
+                                {  };
+                                DUP 2;
+                                {  };
+                                { { DUP }; { DUP 3 }; ADD };
+                                DIP { DROP 6; DROP 6 } } }
+                            (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))))))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 8;
+                DIG 8;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { { DUP }; { DUP 3 }; MUL }; { DUP 10 }; ADD };
+                DIP { DROP 6; DROP 5; DROP 9 } } }
         , StackItem:
           siLigoDesc: elem s2 of int
           siValue: 2
         , StackItem:
+          siLigoDesc: elem bar of int -> int -> int
+          siValue:
+            { PUSH
+                (pair int (lambda (pair int int) int) int unit unit unit int)
+                (Pair
+                   2
+                   (Pair
+                      { PUSH
+                          (pair int unit unit unit int)
+                          (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 4;
+                          DIG 4;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP;
+                          UNPAIR;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP 3;
+                          {  };
+                          DUP 2;
+                          {  };
+                          DUP 2;
+                          {  };
+                          { { DUP }; { DUP 3 }; ADD };
+                          DIP { DROP 6; DROP 6 } } }
+                      (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 6;
+                DIG 6;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { DUP }; { DUP 3 }; SUB };
+                DIP { DROP 4; DROP 7 } } }
+        , StackItem:
           siLigoDesc: elem s1 of int
           siValue: 2
+        , StackItem:
+          siLigoDesc: elem foo of int * int -> int
+          siValue:
+            { PUSH
+                (pair int unit unit unit int)
+                (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 6 } } }
         , StackItem:
           siLigoDesc: elem s of int
           siValue: 0 ] ]
@@ -315,11 +1303,210 @@ InterpretSnapshot:
           siLigoDesc: elem s3 of int
           siValue: 2
         , StackItem:
+          siLigoDesc: elem baz of int -> int * int -> int
+          siValue:
+            { PUSH
+                (pair
+                  int
+                  (lambda (pair int int) int)
+                  int
+                  (lambda (pair int int) int)
+                  int
+                  unit
+                  unit
+                  unit
+                  int)
+                (Pair
+                   2
+                   (Pair
+                      { PUSH
+                          (pair
+                            int
+                            (lambda (pair int int) int)
+                            int
+                            unit
+                            unit
+                            unit
+                            int)
+                          (Pair
+                             2
+                             (Pair
+                                { PUSH
+                                    (pair int unit unit unit int)
+                                    (Pair
+                                       0
+                                       (Pair Unit (Pair Unit (Pair Unit 0))));
+                                  PAIR;
+                                  { UNPAIR;
+                                    UNPAIR 4;
+                                    DIG 4;
+                                    {  };
+                                    DUP;
+                                    {  };
+                                    DUP;
+                                    UNPAIR;
+                                    {  };
+                                    DUP;
+                                    {  };
+                                    DUP 3;
+                                    {  };
+                                    DUP 2;
+                                    {  };
+                                    DUP 2;
+                                    {  };
+                                    { { DUP }; { DUP 3 }; ADD };
+                                    DIP { DROP 6; DROP 6 } } }
+                                (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0)))))
+                          );
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 6;
+                          DIG 6;
+                          {  };
+                          DUP;
+                          UNPAIR;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP 3;
+                          {  };
+                          { { DUP }; { DUP 3 }; SUB };
+                          DIP { DROP 4; DROP 7 } } }
+                      (Pair
+                         2
+                         (Pair
+                            { PUSH
+                                (pair int unit unit unit int)
+                                (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+                              PAIR;
+                              { UNPAIR;
+                                UNPAIR 4;
+                                DIG 4;
+                                {  };
+                                DUP;
+                                {  };
+                                DUP;
+                                UNPAIR;
+                                {  };
+                                DUP;
+                                {  };
+                                DUP 3;
+                                {  };
+                                DUP 2;
+                                {  };
+                                DUP 2;
+                                {  };
+                                { { DUP }; { DUP 3 }; ADD };
+                                DIP { DROP 6; DROP 6 } } }
+                            (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))))))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 8;
+                DIG 8;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { { DUP }; { DUP 3 }; MUL }; { DUP 10 }; ADD };
+                DIP { DROP 6; DROP 5; DROP 9 } } }
+        , StackItem:
           siLigoDesc: elem s2 of int
           siValue: 2
         , StackItem:
+          siLigoDesc: elem bar of int -> int -> int
+          siValue:
+            { PUSH
+                (pair int (lambda (pair int int) int) int unit unit unit int)
+                (Pair
+                   2
+                   (Pair
+                      { PUSH
+                          (pair int unit unit unit int)
+                          (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+                        PAIR;
+                        { UNPAIR;
+                          UNPAIR 4;
+                          DIG 4;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP;
+                          UNPAIR;
+                          {  };
+                          DUP;
+                          {  };
+                          DUP 3;
+                          {  };
+                          DUP 2;
+                          {  };
+                          DUP 2;
+                          {  };
+                          { { DUP }; { DUP 3 }; ADD };
+                          DIP { DROP 6; DROP 6 } } }
+                      (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 6;
+                DIG 6;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                { { DUP }; { DUP 3 }; SUB };
+                DIP { DROP 4; DROP 7 } } }
+        , StackItem:
           siLigoDesc: elem s1 of int
-          siValue: 2 ] ]
+          siValue: 2
+        , StackItem:
+          siLigoDesc: elem foo of int * int -> int
+          siValue:
+            { PUSH
+                (pair int unit unit unit int)
+                (Pair 0 (Pair Unit (Pair Unit (Pair Unit 0))));
+              PAIR;
+              { UNPAIR;
+                UNPAIR 4;
+                DIG 4;
+                {  };
+                DUP;
+                {  };
+                DUP;
+                UNPAIR;
+                {  };
+                DUP;
+                {  };
+                DUP 3;
+                {  };
+                DUP 2;
+                {  };
+                DUP 2;
+                {  };
+                { { DUP }; { DUP 3 }; ADD };
+                DIP { DROP 6; DROP 6 } } }
+        , StackItem:
+          siLigoDesc: elem s of int
+          siValue: 0 ] ]
 InterpretSnapshot:
   isStatus: terminated ok
   isStackFrames:
