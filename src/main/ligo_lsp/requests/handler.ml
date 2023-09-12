@@ -237,6 +237,13 @@ let with_cached_doc_pure
   with_cached_doc path default f'
 
 
+let with_code (path : Path.t) (default : 'a) (f : string -> 'a Handler.t) : 'a Handler.t =
+  let@ docs = ask_docs_cache in
+  match Docs_cache.find docs path with
+  | Some file_data -> f file_data.code
+  | None -> return default
+
+
 (** Like with_cached_doc, but parses a CST from code. If `strict` is passed, error
     recovery for parsing is disabled, so default arg will be returned in case of
     any parse error.

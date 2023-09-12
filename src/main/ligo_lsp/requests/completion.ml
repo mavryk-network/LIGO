@@ -84,67 +84,56 @@ let defs_to_completion_items
     (context : completion_context)
     (path : Path.t)
     (syntax : Syntax_types.t)
-    : Scopes.Types.def list -> CompletionItem.t list
+    (defs : Scopes.Types.def list)
+    : CompletionItem.t list
   =
-  let rec drop_common_prefix scope_path cxt_path =
-    match scope_path, cxt_path with
-    | mod_scope :: mods_scope, mod_cxt :: mods_cxt when String.(mod_scope = mod_cxt) ->
-      drop_common_prefix mods_scope mods_cxt
-    | _, _ -> scope_path
-  in
-  let format_label mod_path name =
-    match context with
-    | Scope cxt_path ->
-      let path = drop_common_prefix mod_path cxt_path in
-      Option.some_if (List.is_empty path) name
-    | _ -> Some name
-  in
-  List.filter_map ~f:(fun def ->
-      let label = format_label (Def.get_mod_path def) (Def.get_name def) in
-      Option.map label ~f:(fun label ->
-          let same_file = Option.map (Def.get_path def) ~f:(Path.equal path) in
-          let sortText = completion_context_priority ?same_file context in
-          let kind, detail =
-            match def with
-            | Scopes.Types.Variable vdef ->
-              let show_type : Ast_core.type_expression -> string =
-                (* VSCode is ignoring any newlines in completion detail *)
-                let pp_mode = Pretty.{ width = 60; indent = 2 } in
-                fun te ->
-                  match Pretty.pretty_print_type_expression pp_mode ~syntax te with
-                  | `Ok str -> str
-                  | `Nonpretty (_exn, str) -> str
-                (* Sending log messages from here or adding exn to return type will make the code
+  List.map defs ~f:(fun def ->
+      let name = Def.get_name def in
+      let same_file = Option.map (Def.get_path def) ~f:(Path.equal path) in
+      let sortText = completion_context_priority ?same_file context in
+      let kind, detail =
+        match def with
+        | Scopes.Types.Variable vdef ->
+          let show_type : Ast_core.type_expression -> string =
+            (* VSCode is ignoring any newlines in completion detail *)
+            let pp_mode = Pretty.{ width = 60; indent = 2 } in
+            fun te ->
+              match Pretty.pretty_print_type_expression pp_mode ~syntax te with
+              | `Ok str -> str
+              | `Nonpretty (_exn, str) -> str
+            (* Sending log messages from here or adding exn to return type will make the code
                 less straightforward, so we're just silently ignoring it
                 since one can use hover on this term to see the exn anyway. *)
-              in
-              ( CompletionItemKind.Variable
-              , Option.some
-                @@ Option.value_map
-                     ~default:(Helpers_pretty.unresolved_type_as_comment syntax)
-                     ~f:(show_type <@ Type_definition.use_var_name_if_availiable)
-                @@ Type_definition.get_type vdef )
-            | Scopes.Types.Type _ -> CompletionItemKind.TypeParameter, None
-            | Scopes.Types.Module _ -> CompletionItemKind.Module, None
           in
-          CompletionItem.create ~label ~kind ~sortText ?detail ()))
+          ( CompletionItemKind.Variable
+          , Option.some
+            @@ Option.value_map
+                 ~default:(Helpers_pretty.unresolved_type_as_comment syntax)
+                 ~f:(show_type <@ Type_definition.use_var_name_if_availiable)
+            @@ Type_definition.get_type vdef )
+        | Scopes.Types.Type _ -> CompletionItemKind.TypeParameter, None
+        | Scopes.Types.Module _ -> CompletionItemKind.Module, None
+      in
+      CompletionItem.create ~label:name ~kind ~sortText ?detail ())
 
 
+(* Definitions that are
+   Returns [None] if position is not contained in any scopes.
+   We want to show only completions *)
 let get_defs_completions
-    (path : Path.t)
-    (syntax : Syntax_types.t)
     (cst : Dialect_cst.t)
     (pos : Position.t)
     (scopes : Ligo_interface.scopes)
-    (definitions : Def.t list)
-    : CompletionItem.t list
+    : Def.t list option
   =
-  let scope =
-    List.find scopes ~f:(fun (loc, _defs) ->
-        match Range.of_loc loc with
-        | None -> false
-        | Some loc -> Range.contains_position pos loc)
+  let scope_defs =
+    Option.map ~f:snd
+    @@ List.find scopes ~f:(fun (loc, _defs) ->
+           match Range.of_loc loc with
+           | None -> false
+           | Some loc -> Range.contains_position pos loc)
   in
+  (* Is cursor located in some module? *)
   let module_path =
     let open Cst_shared.Fold in
     match cst with
@@ -168,15 +157,13 @@ let get_defs_completions
       in
       fold_cst [] (Fn.flip List.cons) collect cst
   in
-  defs_to_completion_items
-    (Scope (List.rev_map ~f:(fun name -> name#payload) module_path))
-    path
-    syntax
-    (* TODO: In case we found [None], let's at least show the entire scope to
-       the user so the completions aren't empty. This happens because scopes
-       aren't accurate and may be missing on some ranges. As soon as scopes are
-       improved, we should remove this workaround. *)
-    (Option.value_map scope ~default:definitions ~f:snd)
+  (* We want to show [M1.M2.x] in completions only if cursor is located in [M1.M2] (or [M1.M2.M3]),
+     since if we're at toplevel we're already showing [M1] *)
+  let availiable_in_current_module (def : Def.t) : bool =
+    List.is_prefix ~prefix:(Def.get_mod_path def) ~equal:String.equal
+    @@ List.map ~f:(fun x -> x#payload) module_path
+  in
+  Option.map ~f:(List.filter ~f:availiable_in_current_module) scope_defs
 
 
 let complete_files (pos : Position.t) (code : string) (files : string list)
@@ -198,13 +185,6 @@ let complete_files (pos : Position.t) (code : string) (files : string list)
           ~sortText:(completion_context_priority File)
           ())
   else []
-
-
-let with_code (path : Path.t) (f : string -> 'a Handler.t) : 'a Handler.t =
-  let@ docs = ask_docs_cache in
-  match Docs_cache.find docs path with
-  | None -> return None
-  | Some file_data -> f file_data.code
 
 
 (** Collects the absolute range of some CST node as well as the distance of that
@@ -649,7 +629,7 @@ let on_req_completion (pos : Position.t) (path : Path.t)
   let keyword_completions = get_keyword_completions syntax in
   (* TODO (#1657): After a project system is implemented, we should support
      completing from files here. Meanwhile, we leave it with []. *)
-  (*with_code path
+  (* with_code path None
   @@ fun _code ->
   let file_completions = complete_files pos code files in *)
   let file_completions = [] in
@@ -675,7 +655,16 @@ let on_req_completion (pos : Position.t) (path : Path.t)
           path
       in
       let scope_completions =
-        get_defs_completions path syntax cst pos scopes definitions
+        (* TODO: In case we found [None], let's at least show the entire scope to
+       the user so the completions aren't empty. This happens because scopes
+       aren't accurate and may be missing on some ranges. As soon as scopes are
+       improved, we should remove this workaround. *)
+        defs_to_completion_items
+          (Scope [ (* FIXME remove mod path from scope *) ])
+          path
+          syntax
+        @@ Option.value ~default:definitions
+        @@ get_defs_completions cst pos scopes
       in
       let field_and_scope_completions =
         (* Keep the first item to deal with shadowing. *)
