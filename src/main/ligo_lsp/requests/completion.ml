@@ -12,7 +12,7 @@ type completion_context =
   | File
   | Record_field
   | Module_field
-  | Scope of module_path
+  | Scope
   | Keyword
 
 (** Obtain the [CompletionItem.t.sortText] for some completion item given its
@@ -28,7 +28,7 @@ let completion_context_priority
     | File -> 0
     | Record_field -> 1
     | Module_field -> 2
-    | Scope _ -> 3
+    | Scope -> 3
     | Keyword -> 4
   in
   let scores = [| type_aware; same_file |] in
@@ -659,10 +659,7 @@ let on_req_completion (pos : Position.t) (path : Path.t)
        the user so the completions aren't empty. This happens because scopes
        aren't accurate and may be missing on some ranges. As soon as scopes are
        improved, we should remove this workaround. *)
-        defs_to_completion_items
-          (Scope [ (* FIXME remove mod path from scope *) ])
-          path
-          syntax
+        defs_to_completion_items Scope path syntax
         @@ Option.value ~default:definitions
         @@ get_defs_completions cst pos scopes
       in
