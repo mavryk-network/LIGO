@@ -312,37 +312,49 @@ let get_constructor_of_record (record : I.expression Record.t) =
   let open Let_syntax in
   let%bind () = Option.some_if (Record.is_tuple record) () in
   let record = Record.tuple_of_record record in
-  let%bind constructor, element = match record with
+  let%bind constructor, element =
+    match record with
     | hd :: tl -> return (hd, tl)
-    | [] -> None in
+    | [] -> None
+  in
   let _, constructor = constructor in
   let%bind constructor = I.get_e_literal constructor in
-  let%bind constructor = match constructor with | Literal_value.Literal_string s -> Some (Simple_utils.Ligo_string.extract s) | _ -> None in
+  let%bind constructor =
+    match constructor with
+    | Literal_value.Literal_string s -> Some (Simple_utils.Ligo_string.extract s)
+    | _ -> None
+  in
   let constructor = Label.of_string constructor in
   let element = List.mapi ~f:(fun i (_, s) -> Label.of_int i, s) element in
-  let element = match element with
+  let element =
+    match element with
     | [] -> I.e_unit ~loc:Location.generated ()
-    | [(_, e)] -> e
-    | _ -> I.e_record ~loc:Location.generated Record.(of_list element) () in
+    | [ (_, e) ] -> e
+    | _ -> I.e_record ~loc:Location.generated Record.(of_list element) ()
+  in
   return (constructor, element)
+
 
 let get_constructor_of_pattern tuple_pat =
   let open Simple_utils.Option in
   let open Let_syntax in
-  let%bind constructor, arg_pat = match tuple_pat with
+  let%bind constructor, arg_pat =
+    match tuple_pat with
     | [] -> None
     | c :: ps ->
       (match Location.unwrap c with
-       | I.Pattern.P_variant (l, _) -> Some (l, ps)
-       | _ -> None)
+      | I.Pattern.P_variant (l, _) -> Some (l, ps)
+      | _ -> None)
   in
-  let arg_pat = match arg_pat with
+  let arg_pat =
+    match arg_pat with
     | [] -> I.Pattern.P_unit
-    | [p] -> Location.unwrap p
+    | [ p ] -> Location.unwrap p
     | _ -> I.Pattern.P_tuple arg_pat
   in
   let arg_pat = Location.wrap ~loc:Location.generated arg_pat in
   return (constructor, arg_pat)
+
 
 let rec check_expression (expr : I.expression) (type_ : Type.t)
     : (O.expression E.t, _, _) C.t
@@ -427,8 +439,8 @@ let rec check_expression (expr : I.expression) (type_ : Type.t)
         return @@ O.E_record record)
   | E_record record, T_sum row ->
     let%bind constructor, element =
-      raise_opt ~error:(corner_case "Expected record") @@
-      get_constructor_of_record record in
+      raise_opt ~error:(corner_case "Expected record") @@ get_constructor_of_record record
+    in
     let%bind constr_row_elem =
       raise_opt ~error:(bad_constructor constructor type_)
       @@ Map.find row.fields constructor
@@ -699,59 +711,58 @@ and infer_expression (expr : I.expression)
         and fun_type = decode fun_type in
         return @@ O.E_recursive { fun_name; fun_type; lambda; force_lambdarec })
       fun_type
-  | E_record record -> (
-      let record_infer () =
-                  let%bind fields, record =
-            Label.Map.fold
-              ~f:(fun ~key:label ~data:expr result ->
-                  let%bind fields, record = result in
-                  let%bind expr_type, expr = infer expr in
-                  let fields = Map.set fields ~key:label ~data:expr_type in
-                  let record = Map.set record ~key:label ~data:expr in
-                  return (fields, record))
-              record
-              ~init:(return Label.Map.(empty, empty))
-          in
-          let%bind record_type =
-            match%bind Context.get_record fields with
-            | None ->
-              let%bind layout = lexists (Map.key_set fields) in
-              create_type @@ Type.t_record { fields; layout }
-            | Some (orig_var, row) -> create_type @@ Type.t_record_with_orig_var row ~orig_var
-          in
-          const
-            E.(
-              let%bind record = all_lmap record in
-              return @@ O.E_record record)
-            record_type
+  | E_record record ->
+    let record_infer () =
+      let%bind fields, record =
+        Label.Map.fold
+          ~f:(fun ~key:label ~data:expr result ->
+            let%bind fields, record = result in
+            let%bind expr_type, expr = infer expr in
+            let fields = Map.set fields ~key:label ~data:expr_type in
+            let record = Map.set record ~key:label ~data:expr in
+            return (fields, record))
+          record
+          ~init:(return Label.Map.(empty, empty))
       in
-      match get_constructor_of_record record with
-      | Some (constructor, arg) -> (
-        match%bind Context.get_sum constructor with
-        | [] -> record_infer ()
-        | (tvar, tvars, arg_type, sum_type) :: other ->
-          let%bind () = warn_ambiguous_constructor_expr ~expr ~tvar ~arg_type other in
-          let%bind subst =
-            tvars
-            |> List.map ~f:(fun tvar ->
-                let%bind texists = exists Type in
-                return (tvar, texists))
-            |> all
-          in
-          let apply_subst type_ =
-            List.fold_right subst ~init:type_ ~f:(fun (tvar, texists) type_ ->
-                Type.subst type_ ~tvar ~type_:texists)
-          in
-          let arg_type = apply_subst arg_type in
-          let sum_type = apply_subst sum_type in
-          let%bind arg = check arg arg_type in
-          const
-            E.(
-              let%bind arg = arg in
-              return @@ O.E_constructor { constructor; element = arg })
-            sum_type)
-        | None -> record_infer ()
-    )
+      let%bind record_type =
+        match%bind Context.get_record fields with
+        | None ->
+          let%bind layout = lexists (Map.key_set fields) in
+          create_type @@ Type.t_record { fields; layout }
+        | Some (orig_var, row) -> create_type @@ Type.t_record_with_orig_var row ~orig_var
+      in
+      const
+        E.(
+          let%bind record = all_lmap record in
+          return @@ O.E_record record)
+        record_type
+    in
+    (match get_constructor_of_record record with
+    | Some (constructor, arg) ->
+      (match%bind Context.get_sum constructor with
+      | [] -> record_infer ()
+      | (tvar, tvars, arg_type, sum_type) :: other ->
+        let%bind () = warn_ambiguous_constructor_expr ~expr ~tvar ~arg_type other in
+        let%bind subst =
+          tvars
+          |> List.map ~f:(fun tvar ->
+                 let%bind texists = exists Type in
+                 return (tvar, texists))
+          |> all
+        in
+        let apply_subst type_ =
+          List.fold_right subst ~init:type_ ~f:(fun (tvar, texists) type_ ->
+              Type.subst type_ ~tvar ~type_:texists)
+        in
+        let arg_type = apply_subst arg_type in
+        let sum_type = apply_subst sum_type in
+        let%bind arg = check arg arg_type in
+        const
+          E.(
+            let%bind arg = arg in
+            return @@ O.E_constructor { constructor; element = arg })
+          sum_type)
+    | None -> record_infer ())
   | E_accessor { struct_; path = field } ->
     let%bind record_type, struct_ = infer struct_ in
     let%bind row =
@@ -1240,8 +1251,10 @@ and check_pattern ~mut (pat : I.type_expression option I.Pattern.t) (type_ : Typ
         let%bind arg_pat = arg_pat in
         return @@ P.P_variant (label, arg_pat))
   | P_tuple tuple_pat, T_sum row ->
-    let%bind label, arg_pat = raise_opt ~error:(corner_case "Expected constructor pattern")
-      @@ get_constructor_of_pattern tuple_pat in
+    let%bind label, arg_pat =
+      raise_opt ~error:(corner_case "Expected constructor pattern")
+      @@ get_constructor_of_pattern tuple_pat
+    in
     let%bind label_row_elem = raise_opt ~error:err @@ Map.find row.fields label in
     let%bind arg_pat = check arg_pat label_row_elem in
     const
@@ -1352,25 +1365,25 @@ and infer_pattern ~mut (pat : I.type_expression option I.Pattern.t)
         let%bind list_pat = all list_pat in
         return @@ P.P_list (List list_pat))
       t_list
-  | P_tuple tuple_pat -> (
+  | P_tuple tuple_pat ->
     let f () =
       let%bind tuple_types, tuple_pat =
         tuple_pat
         |> List.mapi ~f:(fun i pat ->
-            let%bind pat_type, pat = infer pat in
-            return ((Label.Label (Int.to_string i), pat_type), pat))
+               let%bind pat_type, pat = infer pat in
+               return ((Label.Label (Int.to_string i), pat_type), pat))
         |> all
         >>| List.unzip
       in
       let%bind tuple_type =
         create_type
         @@ Type.t_record
-          { fields = Record.of_list tuple_types
-          ; layout =
-              Type.default_layout
-                (tuple_types
-                 |> List.map ~f:(fun (i, _type) -> { Layout.name = i; annot = None }))
-          }
+             { fields = Record.of_list tuple_types
+             ; layout =
+                 Type.default_layout
+                   (tuple_types
+                   |> List.map ~f:(fun (i, _type) -> { Layout.name = i; annot = None }))
+             }
       in
       const
         E.(
@@ -1378,17 +1391,17 @@ and infer_pattern ~mut (pat : I.type_expression option I.Pattern.t)
           return @@ P.P_tuple tuple_pat)
         tuple_type
     in
-    match get_constructor_of_pattern tuple_pat with
-    | Some (constructor, arg_pat) -> (
-      match%bind Context.get_sum constructor with
+    (match get_constructor_of_pattern tuple_pat with
+    | Some (constructor, arg_pat) ->
+      (match%bind Context.get_sum constructor with
       | [] -> f ()
       | (tvar, tvars, arg_type, sum_type) :: other ->
         let%bind () = lift @@ warn_ambiguous_constructor_pat ~pat ~tvar ~arg_type other in
         let%bind subst =
           tvars
           |> List.map ~f:(fun tvar ->
-              let%bind texists = exists Type in
-              return (tvar, texists))
+                 let%bind texists = exists Type in
+                 return (tvar, texists))
           |> all
         in
         let apply_subst type_ =
@@ -1402,11 +1415,8 @@ and infer_pattern ~mut (pat : I.type_expression option I.Pattern.t)
           E.(
             let%bind arg_pat = arg_pat in
             return @@ P.P_variant (constructor, arg_pat))
-          sum_type
-    )
-    | None ->
-      f ()
-  )
+          sum_type)
+    | None -> f ())
   | P_variant (constructor, arg_pat) ->
     let%bind tvars, arg_type, sum_type =
       match%bind Context.get_sum constructor with
@@ -1438,11 +1448,11 @@ and infer_pattern ~mut (pat : I.type_expression option I.Pattern.t)
     let%bind fields, record_pat =
       Map.fold
         ~f:(fun ~key:label ~data:expr result ->
-            let%bind fields, record = result in
-            let%bind expr_type, expr = infer expr in
-            let fields = Map.set fields ~key:label ~data:expr_type in
-            let record = Map.set record ~key:label ~data:expr in
-            return (fields, record))
+          let%bind fields, record = result in
+          let%bind expr_type, expr = infer expr in
+          let fields = Map.set fields ~key:label ~data:expr_type in
+          let record = Map.set record ~key:label ~data:expr in
+          return (fields, record))
         record_pat
         ~init:(return Label.Map.(empty, empty))
     in
