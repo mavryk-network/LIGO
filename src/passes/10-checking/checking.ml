@@ -713,7 +713,7 @@ and infer_expression (expr : I.expression)
         return @@ O.E_recursive { fun_name; fun_type; lambda; force_lambdarec })
       fun_type
   | E_record record ->
-    let record_infer () =
+    let infer_record () =
       let%bind fields, record =
         Label.Map.fold
           ~f:(fun ~key:label ~data:expr result ->
@@ -741,7 +741,7 @@ and infer_expression (expr : I.expression)
     (match get_constructor_of_record record with
     | Some (constructor, arg) ->
       (match%bind Context.get_sum constructor with
-      | [] -> record_infer ()
+      | [] -> infer_record ()
       | (tvar, tvars, arg_type, sum_type) :: other ->
         let%bind () = warn_ambiguous_constructor_expr ~expr ~tvar ~arg_type other in
         let%bind subst =
@@ -763,7 +763,7 @@ and infer_expression (expr : I.expression)
             let%bind arg = arg in
             return @@ O.E_constructor { constructor; element = arg })
           sum_type)
-    | None -> record_infer ())
+    | None -> infer_record ())
   | E_accessor { struct_; path = field } ->
     let%bind record_type, struct_ = infer struct_ in
     let%bind row =
@@ -1368,7 +1368,7 @@ and infer_pattern ~mut (pat : I.type_expression option I.Pattern.t)
         return @@ P.P_list (List list_pat))
       t_list
   | P_tuple tuple_pat ->
-    let f () =
+    let infer_tuple_pattern () =
       let%bind tuple_types, tuple_pat =
         tuple_pat
         |> List.mapi ~f:(fun i pat ->
@@ -1396,7 +1396,7 @@ and infer_pattern ~mut (pat : I.type_expression option I.Pattern.t)
     (match get_constructor_of_pattern tuple_pat with
     | Some (constructor, arg_pat) ->
       (match%bind Context.get_sum constructor with
-      | [] -> f ()
+      | [] -> infer_tuple_pattern ()
       | (tvar, tvars, arg_type, sum_type) :: other ->
         let%bind () = lift @@ warn_ambiguous_constructor_pat ~pat ~tvar ~arg_type other in
         let%bind subst =
@@ -1418,7 +1418,7 @@ and infer_pattern ~mut (pat : I.type_expression option I.Pattern.t)
             let%bind arg_pat = arg_pat in
             return @@ P.P_variant (constructor, arg_pat))
           sum_type)
-    | None -> f ())
+    | None -> infer_tuple_pattern ())
   | P_variant (constructor, arg_pat) ->
     let%bind tvars, arg_type, sum_type =
       match%bind Context.get_sum constructor with

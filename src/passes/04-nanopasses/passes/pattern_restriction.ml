@@ -12,6 +12,7 @@ let is_literal_string (x : Literal_value.t) =
   | Literal_string s -> true
   | _ -> false
 
+
 let compile ~raise =
   let pattern : _ pattern_ -> pattern = function
     | { wrap_content = P_unit; location = loc } ->
