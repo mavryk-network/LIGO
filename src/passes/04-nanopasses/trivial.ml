@@ -427,6 +427,7 @@ end = struct
           lst
       in
       ret @@ P_record (Ligo_prim.Record.of_list lst)
+    | P_literal (Literal_string s) -> ret @@ P_variant (Ligo_prim.Label.of_string Ligo_string.(extract s), Location.wrap ~loc:location O.Pattern.P_unit)
     | _ -> invariant @@ Format.asprintf "%a" Sexp.pp_hum (I.sexp_of_pattern_ ig ig p)
 
 
