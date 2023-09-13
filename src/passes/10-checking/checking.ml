@@ -437,7 +437,7 @@ let rec check_expression (expr : I.expression) (type_ : Type.t)
       E.(
         let%bind record = all_lmap record in
         return @@ O.E_record record)
-  | E_record record, T_sum row ->
+  | E_record record, T_sum row when Option.is_some (get_constructor_of_record record) ->
     let%bind constructor, element =
       raise_opt ~error:(corner_case "Expected constructor record")
       @@ get_constructor_of_record record
@@ -1251,7 +1251,8 @@ and check_pattern ~mut (pat : I.type_expression option I.Pattern.t) (type_ : Typ
       E.(
         let%bind arg_pat = arg_pat in
         return @@ P.P_variant (label, arg_pat))
-  | P_tuple tuple_pat, T_sum row ->
+  | P_tuple tuple_pat, T_sum row
+    when Option.is_some (get_constructor_of_pattern tuple_pat) ->
     let%bind label, arg_pat =
       raise_opt ~error:(corner_case "Expected constructor pattern")
       @@ get_constructor_of_pattern tuple_pat

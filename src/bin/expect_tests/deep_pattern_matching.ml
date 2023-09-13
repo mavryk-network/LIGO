@@ -137,8 +137,9 @@ let%expect_test _ =
       7 |   | Cons (a,b) , Cons (c,d) -> a + b + c + d
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    A type system corner case occurred:
-    Expected constructor pattern |}]
+    Invalid type(s)
+    Cannot unify "( ^a * ^b * ^c )" with "myt".
+    Hint: "^a", "^b", "^c" represent placeholder type(s). |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print"; "ast-typed"; bad_test "pm_fail5.mligo" ];
