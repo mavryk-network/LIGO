@@ -439,7 +439,8 @@ let rec check_expression (expr : I.expression) (type_ : Type.t)
         return @@ O.E_record record)
   | E_record record, T_sum row ->
     let%bind constructor, element =
-      raise_opt ~error:(corner_case "Expected record") @@ get_constructor_of_record record
+      raise_opt ~error:(corner_case "Expected constructor record")
+      @@ get_constructor_of_record record
     in
     let%bind constr_row_elem =
       raise_opt ~error:(bad_constructor constructor type_)
