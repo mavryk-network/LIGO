@@ -280,6 +280,7 @@ let dry_run
         Ligo_compile.Of_typed.compile_expression_in_context
           ~raise
           ~options:options.middle_end
+          ~self_program:false
           None
           app_typed_prg
           typed_storage
@@ -297,6 +298,7 @@ let dry_run
         Ligo_compile.Of_typed.compile_expression_in_context
           ~raise
           ~options:options.middle_end
+          ~self_program:false
           None
           app_typed_prg
           typed_parameter
@@ -314,6 +316,7 @@ let dry_run
         Compile.Of_typed.apply_to_entrypoint_with_contract_type
           ~raise
           ~options:options.middle_end
+          ~self_program:false
           app_typed_prg
           module_path
           contract_type

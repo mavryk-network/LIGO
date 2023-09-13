@@ -57,7 +57,7 @@ let compile_expression ~raise ~options : Ast_typed.expression -> Ast_aggregated.
   trace ~raise self_ast_aggregated_tracer @@ Self_ast_aggregated.all_expression ~options x
 
 
-let apply_to_entrypoint_with_contract_type ~raise ~options
+let apply_to_entrypoint_with_contract_type ~raise ~options ?(self_program = true)
     :  Ast_typed.program -> Module_var.t list -> Ast_typed.contract_sig
     -> Ast_aggregated.expression
   =
@@ -81,7 +81,13 @@ let apply_to_entrypoint_with_contract_type ~raise ~options
         { module_path; element = Ligo_prim.Magic_vars.generated_main }
         ty
   in
-  compile_expression_in_context ~raise ~options (Some contract_type) prg ep_expr
+  compile_expression_in_context
+    ~raise
+    ~options
+    ~self_program
+    (Some contract_type)
+    prg
+    ep_expr
 
 
 let apply_to_var ~raise ~options
