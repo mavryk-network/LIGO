@@ -55,7 +55,7 @@ let ligo_registry = "https://packages.ligolang.org/-/api"
 let workflow_path = "install_tests/workflow/"
 let lockfile_path = workflow_path ^ "esy.lock/"
 let ligo_package_dir_path = workflow_path ^ ".ligo/"
-let installation_json_path = workflow_path ^ "_esy/"
+let installation_json_path = workflow_path ^ "_ligo/"
 
 let batch_rm_rf path_list =
   let f path = rm_rf ~path in

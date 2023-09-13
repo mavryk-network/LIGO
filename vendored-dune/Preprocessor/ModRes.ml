@@ -199,7 +199,7 @@ module Esy =
     (* Path to installation.json *)
 
     let installation_json_path path =
-      path / "_esy" / "ligo" / "installation.json"
+      path / "_ligo" / "ligo" / "installation.json"
 
     (* Path to the lock file *)
 
