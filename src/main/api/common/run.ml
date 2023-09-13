@@ -73,6 +73,135 @@ let test_expression (raw_options : Raw_options.t) expr source_file =
       (b, [ "eval", v ]), [] )
 
 
+let typed_contract_and_expression_impl
+    ~raise
+    ~(options : Compiler_options.t)
+    ~syntax
+    ~(typed_prg : Ast_typed.program)
+    ~expressions
+    ?entrypoint_ctor
+    ()
+  =
+  let Compiler_options.{ constants; file_constants; _ } = options.backend in
+  let Compiler_options.{ module_; _ } = options.frontend in
+  let module_path = Build.parse_module_path ~loc:Location.generated module_ in
+  let app_typed_prg =
+    Trace.trace ~raise Main_errors.self_ast_typed_tracer
+    @@ Self_ast_typed.all_program typed_prg
+  in
+  let storage_expression, parameter_expression = expressions in
+  let _, ctrct_sig =
+    let sig_ = Ast_typed.to_extended_signature typed_prg in
+    Trace.trace_option
+      ~raise
+      (Main_errors.self_ast_typed_tracer @@ `Self_ast_typed_not_a_contract module_)
+      (Ast_typed.get_contract_signature sig_ module_path)
+  in
+  let ctrct_sig =
+    { ctrct_sig with
+      parameter =
+        (* to handle single entrypoints:
+        parameter type for single entry-point contracts such as
+        `[@entry] let main (p:p) (s:s) = ...`
+        are now compiled to `| Main of p`
+        This representation do not yet persist up until the michelson representation
+        due to "optimisations" :  `| Main of p` compiles to `p`
+        When using `compile parameter /path/to/file` without using the -e CLI option,
+        we assume the given expression is of type `p` and not `| Main of p`
+        *)
+        (match
+           Option.map (Ast_typed.get_t_sum ctrct_sig.parameter) ~f:Ast_typed.Row.to_alist
+         with
+        | Some [ (_, ty) ] -> ty
+        | _ -> ctrct_sig.parameter)
+    }
+  in
+  let app_typed_sig = Ast_typed.to_signature app_typed_prg.pr_module in
+  let storage_expr =
+    Trace.try_with
+      (fun ~raise ~catch:_ ->
+        Ligo_compile.Utils.type_expression
+          ~raise
+          ~options
+          ?wrap_variant:entrypoint_ctor
+          ~annotation:(Checking.untype_type_expression ctrct_sig.storage)
+          syntax
+          storage_expression
+          app_typed_sig)
+      (fun ~catch:_ _ ->
+        let typed_param =
+          Ligo_compile.Utils.type_expression
+            ~raise
+            ~options
+            ~annotation:(Checking.untype_type_expression ctrct_sig.storage)
+            ?wrap_variant:entrypoint_ctor
+            syntax
+            storage_expression
+            app_typed_sig
+        in
+        let () =
+          Ligo_compile.Of_typed.assert_equal_contract_type
+            ~raise
+            Runned_result.Check_storage
+            ctrct_sig
+            typed_param
+        in
+        typed_param)
+  in
+  let parameter_expr =
+    Trace.try_with
+      (fun ~raise ~catch:_ ->
+        Ligo_compile.Utils.type_expression
+          ~raise
+          ~options
+          ?wrap_variant:entrypoint_ctor
+          ~annotation:(Checking.untype_type_expression ctrct_sig.parameter)
+          syntax
+          parameter_expression
+          app_typed_sig)
+      (fun ~catch:_ _ ->
+        let typed_param =
+          Ligo_compile.Utils.type_expression
+            ~raise
+            ~options
+            ~annotation:(Checking.untype_type_expression ctrct_sig.parameter)
+            ?wrap_variant:entrypoint_ctor
+            syntax
+            parameter_expression
+            app_typed_sig
+        in
+        let () =
+          Ligo_compile.Of_typed.assert_equal_contract_type
+            ~raise
+            Runned_result.Check_parameter
+            ctrct_sig
+            typed_param
+        in
+        typed_param)
+  in
+  storage_expr, parameter_expr, app_typed_prg, constants, ctrct_sig, module_path
+
+
+let typed_contract_and_expression
+    ~raise
+    ~(options : Compiler_options.t)
+    ~syntax
+    ~(source_file : Build.Source_input.code_input)
+    ~expressions
+    ?entrypoint_ctor
+    ()
+  =
+  let typed_prg = Build.qualified_typed ~raise ~options source_file in
+  typed_contract_and_expression_impl
+    ~raise
+    ~options
+    ~syntax
+    ~typed_prg
+    ~expressions
+    ?entrypoint_ctor
+    ()
+
+
 let dry_run
     (raw_options : Raw_options.t)
     entry_point
@@ -98,32 +227,96 @@ let dry_run
           (Syntax_name raw_options.syntax)
           (Some source_file)
       in
-      Deprecation.entry_cli ~raise syntax entry_point;
-      let options = Compiler_options.make ~protocol_version ~syntax ~raw_options () in
-      let Compiler_options.{ module_; _ } = options.frontend in
-      let module_path = Build.parse_module_path ~loc:Location.dummy module_ in
-      let typed_prg =
-        Build.qualified_typed ~raise ~options (Build.Source_input.From_file source_file)
+      let options =
+        Compiler_options.make
+          ~raw_options
+          ~syntax
+          ~protocol_version
+          ~has_env_comments:false
+          ()
       in
-      let typed_contract =
-        Trace.trace ~raise Main_errors.self_ast_typed_tracer
-        @@ Self_ast_typed.all_program typed_prg
+      let expressions = storage, parameter in
+      let ( typed_storage
+          , typed_parameter
+          , app_typed_prg
+          , constants
+          , contract_type
+          , module_path )
+        =
+        typed_contract_and_expression
+          ~raise
+          ~options
+          ~syntax
+          ~source_file:(From_file source_file)
+          ~expressions
+          ()
+      in
+      let%bind (_ : Mini_c.meta Run.Michelson.michelson) =
+        let aggregated_contract =
+          Ligo_compile.Of_typed.apply_to_entrypoint_with_contract_type
+            ~raise
+            ~options:options.middle_end
+            app_typed_prg
+            module_path
+            contract_type
+        in
+        let expanded =
+          Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_contract
+        in
+        let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
+        let%bind michelson =
+          Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c
+        in
+        (* fails if the given entry point is not a valid contract *)
+        Ligo_compile.Of_michelson.build_contract
+          ~raise
+          ~enable_typed_opt:options.backend.enable_typed_opt
+          ~protocol_version
+          ~constants
+          michelson
+          []
+      in
+      let aggregated_storage =
+        Ligo_compile.Of_typed.compile_expression_in_context
+          ~raise
+          ~options:options.middle_end
+          None
+          app_typed_prg
+          typed_storage
+      in
+      let expanded_storage =
+        Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_storage
+      in
+      let mini_c_storage =
+        Ligo_compile.Of_expanded.compile_expression ~raise expanded_storage
+      in
+      let%bind compiled_storage =
+        Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c_storage
+      in
+      let aggregated_parameter =
+        Ligo_compile.Of_typed.compile_expression_in_context
+          ~raise
+          ~options:options.middle_end
+          None
+          app_typed_prg
+          typed_parameter
+      in
+      let expanded_parameter =
+        Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_parameter
+      in
+      let mini_c_parameter =
+        Ligo_compile.Of_expanded.compile_expression ~raise expanded_parameter
+      in
+      let%bind compiled_parameter =
+        Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c_parameter
       in
       let aggregated_prg =
-        let _sig, contract_sig =
-          Trace.trace_option
-            ~raise
-            (`Self_ast_aggregated_tracer
-              (Self_ast_aggregated.Errors.corner_case
-                 "Could not recover types from contract"))
-            (Ast_typed.Misc.get_contract_signature typed_prg.pr_sig module_path)
-        in
         Compile.Of_typed.apply_to_entrypoint_with_contract_type
           ~raise
           ~options:options.middle_end
-          typed_contract
+          app_typed_prg
           module_path
-          contract_sig
+          contract_type
       in
       let expanded_prg = Compile.Of_aggregated.compile_expression ~raise aggregated_prg in
       let mini_c_prg = Compile.Of_expanded.compile_expression ~raise expanded_prg in
@@ -149,7 +342,7 @@ let dry_run
           parameter
           storage
           syntax
-          typed_contract
+          app_typed_prg
       in
       let%bind args_michelson =
         Run.evaluate_expression ~raise compiled_input.expr compiled_input.expr_ty
