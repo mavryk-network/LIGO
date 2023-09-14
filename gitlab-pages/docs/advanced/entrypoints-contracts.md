@@ -38,7 +38,7 @@ namespace IncDec {
     [list([]), store - delta];
 
   @entry
-  const reset = (_ : unit, _ : storage) : ret =>
+  const reset = (_p : unit, _s : storage) : ret =>
     [list([]), 0];
 };
 ```
