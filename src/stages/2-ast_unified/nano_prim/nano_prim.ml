@@ -48,3 +48,5 @@ module Record_update = Record_update
 module Record_access = Record_access
 module Prefix_postfix = Prefix_postfix
 module Match_tc39 = Match_tc39
+module List_pattern = List_pattern
+module Ellipsis_pattern = Ellipsis_pattern

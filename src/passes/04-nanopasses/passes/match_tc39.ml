@@ -21,10 +21,20 @@ let compile ~raise =
     | E_match_tc39 { subject; match_clauses = DefaultClause expr } ->
       e_match ~loc { expr = subject; cases = List.Ne.singleton (wild_case expr) }
     | E_match_tc39 { subject; match_clauses = AllClauses (clauses, default_opt) } ->
+      let probably_a_match_on_list =
+        clauses
+        |> List.Ne.to_list
+        |> List.exists ~f:(fun x -> is_p_list x.Match_tc39.filter)
+      in
       let clauses =
         List.Ne.map
           (fun Match_tc39.{ filter; clause_expr } ->
-            Case.{ pattern = Some filter; rhs = clause_expr })
+            let pattern =
+              if probably_a_match_on_list && is_p_unit filter
+              then Some (p_list ~loc (List []))
+              else Some filter
+            in
+            Case.{ pattern; rhs = clause_expr })
           clauses
       in
       let cases =

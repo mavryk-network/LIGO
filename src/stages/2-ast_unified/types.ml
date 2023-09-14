@@ -21,6 +21,8 @@ module Array_repr = Nano_prim.Array_repr
 module Object_ = Nano_prim.Object_
 module Selection = Nano_prim.Selection
 module Match_tc39 = Nano_prim.Match_tc39
+module List_pattern = Nano_prim.List_pattern
+module Ellipsis_pattern = Nano_prim.Ellipsis_pattern
 
 (* module Projection = Ligo_prim.Accessor (Nano_prim.Selection) *)
 module Update = Nano_prim.Update
@@ -133,24 +135,15 @@ and 'self type_expression_content_ =
 (* ========================== PATTERNS ===================================== *)
 type ('self, 'ty_expr) pattern_ = ('self, 'ty_expr) pattern_content_ Location.wrap
 
-and 'self list_pattern =
-  | Cons of 'self * 'self
-  | List of 'self list
-
-and 'self element_pattern =
-  { ellipsis : bool
-  ; pattern : 'self
-  }
-
 and ('self, 'ty_expr) pattern_content_ =
   | P_unit
   | P_typed of 'ty_expr * 'self
   | P_literal of Literal_value.t
   | P_var of Variable.t
-  | P_list of 'self list_pattern
+  | P_list of 'self List_pattern.t
   | P_variant of Label.t * 'self option
   | P_tuple of 'self list
-  | P_tuple_with_ellipsis of 'self element_pattern list
+  | P_tuple_with_ellipsis of 'self Ellipsis_pattern.t
   | P_pun_record of (Label.t, 'self) Field.t list
   | P_rest of Label.t
   | P_attr of Attribute.t * 'self

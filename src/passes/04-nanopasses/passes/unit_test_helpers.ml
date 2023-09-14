@@ -34,6 +34,12 @@ module Dummies = struct
       in
       dummy "TY_EXPR" f
     in
+    let dummy_pattern =
+      let f str =
+        S_exp.sexp_of_pattern @@ p_var ~loc (Variable.of_input_var ~loc ("#" ^ str))
+      in
+      dummy "PATTERN" f
+    in
     let dummy_expr =
       let f str =
         S_exp.sexp_of_expr @@ e_variable ~loc (Variable.of_input_var ~loc ("#" ^ str))
@@ -85,7 +91,12 @@ module Dummies = struct
     in
     List.map
       ~f:(Simple_utils.Pair.map_snd ~f:Sexp.to_string)
-      (dummy_ty_expr @ dummy_expr @ dummy_statement @ dummy_block @ dummy_declaration)
+      (dummy_pattern
+      @ dummy_ty_expr
+      @ dummy_expr
+      @ dummy_statement
+      @ dummy_block
+      @ dummy_declaration)
 
 
   let in_output ((dummy, sexp) : t) = dummy, sexp

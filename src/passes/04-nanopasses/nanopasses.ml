@@ -76,7 +76,6 @@ let passes ~(flags : flags) : (module T) list =
       ~flag:always
       ~arg:pattern_constructor_application
   ; entry (module Pattern_restriction) ~flag:always ~arg:()
-  ; entry (module Pattern_heuristic) ~flag:always ~arg:()
   ; entry (module Unpuning) ~flag:always ~arg:()
   ; entry (module Module_open_restriction) ~flag:always ~arg:()
   ; entry (module Import_restriction) ~flag:always ~arg:()
@@ -97,6 +96,7 @@ let passes ~(flags : flags) : (module T) list =
   ; entry (module Of_file) ~flag:always ~arg:mod_res
   ; entry (module List_as_function) ~flag:list_as_function ~arg:()
   ; entry (module Array_to_tuple) ~flag:array_to_tuple ~arg:()
+  ; entry (module Pattern_heuristic) ~flag:always ~arg:()
   ; entry (module Match_tc39) ~flag:match_as_function ~arg:()
   ; entry (module Object_to_record) ~flag:object_to_record ~arg:()
   ; entry (module Hack_literalize_jsligo) ~flag:hack_literalize_jsligo ~arg:()

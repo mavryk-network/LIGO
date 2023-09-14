@@ -555,15 +555,14 @@ let pattern : Eq.pattern -> Folding.pattern =
     let lps = List.map ~f:compile_property_pattern p in
     return @@ P_pun_record lps
   | P_Array { value = { inside = p; _ }; _ } ->
-    let p = sep_or_term_to_list p in
-    (match p with
-    | lst ->
-      let f (v : I.pattern I.element) =
+    let lst = sep_or_term_to_list p in
+    let f (v : I.pattern I.element) =
+      O.Ellipsis_pattern.(
         match v with
-        | None, pattern -> O.{ pattern; ellipsis = false }
-        | Some _, pattern -> { pattern; ellipsis = true }
-      in
-      return @@ P_tuple_with_ellipsis (List.map ~f p))
+        | None, pattern -> { pattern; ellipsis = false }
+        | Some _, pattern -> { pattern; ellipsis = true })
+    in
+    return @@ P_tuple_with_ellipsis (List.map ~f lst)
 
 
 (* in JSLIGO, instruction ; statements and declaration are all statement *)
