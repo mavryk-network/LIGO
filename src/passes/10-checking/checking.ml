@@ -1099,7 +1099,11 @@ and infer_constant const args : (Type.t * O.expression E.t, _, _) C.t =
              { type_ with location = loc }) )
 
 
-and check_pattern ~mut ~single (pat : I.type_expression option I.Pattern.t) (type_ : Type.t)
+and check_pattern
+    ~mut
+    ~single
+    (pat : I.type_expression option I.Pattern.t)
+    (type_ : Type.t)
     : (O.type_expression O.Pattern.t E.t, _, _) C.With_frag.t
   =
   let open C.With_frag in
@@ -1146,20 +1150,25 @@ and check_pattern ~mut ~single (pat : I.type_expression option I.Pattern.t) (typ
         return @@ P.P_variant (label, arg_pat))
   | ( P_tuple []
     , T_construct { constructor = Literal_types.List; parameters = [ elt_type ]; _ } ) ->
-    const
-      E.(
-        return @@ P.P_list (List []))
+    const E.(return @@ P.P_list (List []))
   | ( P_tuple list_pat
     , T_construct { constructor = Literal_types.List; parameters = [ elt_type ]; _ } ) ->
     let elts, tail = List.drop_last_exn list_pat, List.last_exn list_pat in
-    let%bind elts = elts |> List.map ~f:(fun (pat, _IGNORED) -> check pat elt_type) |> all in
-    let%bind tail = tail |> function (pat, _IGNORED) -> check pat type_ in
+    let%bind elts =
+      elts |> List.map ~f:(fun (pat, _IGNORED) -> check pat elt_type) |> all
+    in
+    let%bind tail =
+      tail
+      |> function
+      | pat, _IGNORED -> check pat type_
+    in
     const
       E.(
         let%bind elts = all elts in
         let%bind tail = tail in
         let list_pat =
-          List.fold_right elts ~init:tail ~f:(fun p q -> Location.wrap ~loc:Location.generated (P.P_list (Cons (p, q))))
+          List.fold_right elts ~init:tail ~f:(fun p q ->
+              Location.wrap ~loc:Location.generated (P.P_list (Cons (p, q))))
         in
         return @@ Location.unwrap list_pat)
   | P_tuple tuple_pat, T_record row when Map.length row.fields = List.length tuple_pat ->
@@ -1268,29 +1277,30 @@ and infer_pattern ~mut ~single (pat : I.type_expression option I.Pattern.t)
       t_list
   | P_tuple [] when single ->
     let%bind unit_type = create_type @@ Type.t_unit in
-    const
-      E.(
-        return @@ P.P_unit)
-      unit_type
+    const E.(return @@ P.P_unit) unit_type
   | P_tuple [] when not single ->
     let%bind elt_type = exists Type in
     let%bind t_list = create_type @@ Type.t_list elt_type in
-    const
-      E.(
-        return @@ P.P_list (List []))
-      t_list
+    const E.(return @@ P.P_list (List [])) t_list
   | P_tuple list_pat when List.exists ~f:(fun (_, b) -> b) list_pat ->
     let%bind elt_type = exists Type in
     let%bind t_list = create_type @@ Type.t_list elt_type in
     let elts, tail = List.drop_last_exn list_pat, List.last_exn list_pat in
-    let%bind elts = elts |> List.map ~f:(fun (pat, _IGNORED) -> check pat elt_type) |> all in
-    let%bind tail = tail |> function (pat, _IGNORED) -> check pat t_list in
+    let%bind elts =
+      elts |> List.map ~f:(fun (pat, _IGNORED) -> check pat elt_type) |> all
+    in
+    let%bind tail =
+      tail
+      |> function
+      | pat, _IGNORED -> check pat t_list
+    in
     const
       E.(
         let%bind elts = all elts in
         let%bind tail = tail in
         let list_pat =
-          List.fold_right elts ~init:tail ~f:(fun p q -> Location.wrap ~loc:Location.generated (P.P_list (Cons (p, q))))
+          List.fold_right elts ~init:tail ~f:(fun p q ->
+              Location.wrap ~loc:Location.generated (P.P_list (Cons (p, q))))
         in
         return @@ Location.unwrap list_pat)
       t_list

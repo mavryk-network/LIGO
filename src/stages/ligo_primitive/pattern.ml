@@ -134,7 +134,9 @@ module Make (Container : Container) (Decoration : Decoration) = struct
       acc, Location.wrap ~loc (P_variant (l, lp))
     | P_tuple lp ->
       let ds = List.map ~f:snd lp in
-      let acc, lp = List.fold_map ~f:(fold_map_pattern f) ~init:acc @@ List.map ~f:fst lp in
+      let acc, lp =
+        List.fold_map ~f:(fold_map_pattern f) ~init:acc @@ List.map ~f:fst lp
+      in
       let lp = List.zip_exn lp ds in
       acc, Location.wrap ~loc (P_tuple lp)
     | P_record lps ->
@@ -238,6 +240,23 @@ module Make (Container : Container) (Decoration : Decoration) = struct
       t
 end
 
-module Non_linear_pattern = Make (Label.Assoc) (struct type t = unit [@@deriving eq, compare, yojson, hash, sexp] end)
-module Linear_pattern = Make (Record) (struct type t = unit [@@deriving eq, compare, yojson, hash, sexp] end)
-module Linear_pattern_with_ellipsis = Make (Record) (struct type t = bool [@@deriving eq, compare, yojson, hash, sexp] end)
+module Non_linear_pattern =
+  Make
+    (Label.Assoc)
+    (struct
+      type t = unit [@@deriving eq, compare, yojson, hash, sexp]
+    end)
+
+module Linear_pattern =
+  Make
+    (Record)
+    (struct
+      type t = unit [@@deriving eq, compare, yojson, hash, sexp]
+    end)
+
+module Linear_pattern_with_ellipsis =
+  Make
+    (Record)
+    (struct
+      type t = bool [@@deriving eq, compare, yojson, hash, sexp]
+    end)

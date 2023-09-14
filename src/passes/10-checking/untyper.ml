@@ -162,7 +162,7 @@ and untype_match_expr
   let matchee = untype_expression matchee in
   let cases =
     List.map cases ~f:(fun { pattern; body } ->
-        let pattern = untype_pattern @@ Linear_pattern.map (Fn.const None)  pattern in
+        let pattern = untype_pattern @@ Linear_pattern.map (Fn.const None) pattern in
         let body = untype_expression body in
         I.Match_expr.{ pattern; body })
   in
@@ -188,7 +188,7 @@ and untype_pattern : I.type_expression option O.Pattern.t -> _ I.Pattern.t =
     let p = self p in
     Location.wrap ~loc (I.Pattern.P_variant (l, p))
   | P_tuple ps ->
-    let ps = List.map ~f:(fun (p, ()) -> (self p, false)) ps in
+    let ps = List.map ~f:(fun (p, ()) -> self p, false) ps in
     Location.wrap ~loc (I.Pattern.P_tuple ps)
   | P_record lps ->
     let lps = Record.map ~f:self lps in
@@ -253,7 +253,10 @@ and untype_declaration =
       let dc = untype_declaration_constant untype_expression dc in
       return @@ D_value dc
     | D_irrefutable_match x ->
-      let x = untype_declaration_pattern untype_expression @@ O.Pattern_decl.map Fn.id (Fn.const None) x in
+      let x =
+        untype_declaration_pattern untype_expression
+        @@ O.Pattern_decl.map Fn.id (Fn.const None) x
+      in
       return @@ D_irrefutable_match x
     | D_type dt ->
       let dt = untype_declaration_type dt in

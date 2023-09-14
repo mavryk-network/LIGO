@@ -306,8 +306,10 @@ end = struct
         (* REMITODO : specific pass for E_for_in*)
         match Location.unwrap pattern with
         | P_var var -> Ligo_prim.Binder.get_var var, None
-        | P_tuple [ { wrap_content = P_var vl; _ }, false; { wrap_content = P_var vr; _ }, false ] ->
-          Ligo_prim.Binder.get_var vl, Some (Ligo_prim.Binder.get_var vr)
+        | P_tuple
+            [ ({ wrap_content = P_var vl; _ }, false)
+            ; ({ wrap_content = P_var vr; _ }, false)
+            ] -> Ligo_prim.Binder.get_var vl, Some (Ligo_prim.Binder.get_var vr)
         | _ -> assert false
       in
       ret @@ E_for_each { fe_binder; collection; collection_type = Any; fe_body = block }
@@ -414,8 +416,9 @@ end = struct
     | P_variant (l, Some p) -> ret @@ P_variant (l, p)
     | P_variant (l, None) ->
       ret @@ P_variant (l, Location.wrap ~loc:location O.Pattern.P_unit)
-    | P_tuple lst -> ret @@ P_tuple (List.map ~f:(fun p -> (p, false)) lst)
-    | P_tuple_with_ellipsis lst -> ret @@ P_tuple (List.map ~f:(fun { pattern ; ellipsis } -> (pattern, ellipsis)) lst)
+    | P_tuple lst -> ret @@ P_tuple (List.map ~f:(fun p -> p, false) lst)
+    | P_tuple_with_ellipsis lst ->
+      ret @@ P_tuple (List.map ~f:(fun { pattern; ellipsis } -> pattern, ellipsis) lst)
     | P_pun_record lst
       when List.for_all lst ~f:(function
                | Punned _ -> false
@@ -709,7 +712,11 @@ end = struct
     | P_list (Cons (l, r)) -> ret @@ P_list (Cons (l, r))
     | P_variant (l, p) -> ret @@ P_variant (l, Some p)
     | P_tuple lst ->
-      ret @@ P_tuple_with_ellipsis (List.map ~f:(fun (pattern, ellipsis) -> ({ ellipsis ; pattern } : _ O.element_pattern)) lst)
+      ret
+      @@ P_tuple_with_ellipsis
+           (List.map
+              ~f:(fun (pattern, ellipsis) : _ O.element_pattern -> { ellipsis; pattern })
+              lst)
     | P_record lst ->
       let lst =
         List.map ~f:(fun (l, p) -> O.Field.Complete (l, p)) (O.Record.to_list lst)
