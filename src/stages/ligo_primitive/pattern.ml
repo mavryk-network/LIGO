@@ -10,6 +10,10 @@ module type Container = sig
   val to_list : 'a t -> (Label.t * 'a) list
 end
 
+module type Decoration = sig
+  type t [@@deriving eq, compare, yojson, hash, sexp]
+end
+
 module type S = sig
   type 't t [@@deriving eq, compare, yojson, hash]
 
@@ -25,7 +29,7 @@ module type S = sig
   val pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit
 end
 
-module Make (Container : Container) = struct
+module Make (Container : Container) (Decoration : Decoration) = struct
   type 'ty_exp list_pattern =
     | Cons of 'ty_exp t * 'ty_exp t
     | List of 'ty_exp t list
@@ -35,7 +39,7 @@ module Make (Container : Container) = struct
     | P_var of 'ty_exp Binder.t
     | P_list of 'ty_exp list_pattern
     | P_variant of Label.t * 'ty_exp t
-    | P_tuple of 'ty_exp t list
+    | P_tuple of ('ty_exp t * Decoration.t) list
     | P_record of 'ty_exp t Container.t
 
   and 't t = 't pattern_repr Location.wrap [@@deriving eq, compare, yojson, hash, sexp]
@@ -72,7 +76,7 @@ module Make (Container : Container) = struct
         ppf
         "(%a)"
         Simple_utils.PP_helpers.(list_sep (pp type_expression) (tag ","))
-        pl
+        (List.map ~f:fst pl)
     | P_record lps ->
       let aux ppf (l, p) = fprintf ppf "%a = %a" Label.pp l (pp type_expression) p in
       fprintf
@@ -92,7 +96,7 @@ module Make (Container : Container) = struct
       iter f pb
     | P_list (List lp) -> List.iter ~f:(iter f) lp
     | P_variant (_, p) -> iter f p
-    | P_tuple lp -> List.iter ~f:(iter f) lp
+    | P_tuple lp -> List.iter ~f:(iter f) (List.map ~f:fst lp)
     | P_record lps -> Container.iter ~f:(iter f) lps
 
 
@@ -106,7 +110,7 @@ module Make (Container : Container) = struct
       | Cons (pa, pb) -> fold_pattern f (fold_pattern f acc pb) pa
       | List lp -> List.fold_left ~f:(fold_pattern f) ~init:acc lp)
     | P_variant (_, p) -> fold_pattern f acc p
-    | P_tuple lp -> List.fold_left ~f:(fold_pattern f) ~init:acc lp
+    | P_tuple lp -> List.fold_left ~f:(fold_pattern f) ~init:acc @@ List.map ~f:fst lp
     | P_record lps -> Container.fold ~f:(fold_pattern f) ~init:acc lps
 
 
@@ -129,7 +133,9 @@ module Make (Container : Container) = struct
       let acc, lp = fold_map_pattern f acc p in
       acc, Location.wrap ~loc (P_variant (l, lp))
     | P_tuple lp ->
-      let acc, lp = List.fold_map ~f:(fold_map_pattern f) ~init:acc lp in
+      let ds = List.map ~f:snd lp in
+      let acc, lp = List.fold_map ~f:(fold_map_pattern f) ~init:acc @@ List.map ~f:fst lp in
+      let lp = List.zip_exn lp ds in
       acc, Location.wrap ~loc (P_tuple lp)
     | P_record lps ->
       let acc, lps = Container.fold_map ~f:(fold_map_pattern f) ~init:acc lps in
@@ -148,7 +154,7 @@ module Make (Container : Container) = struct
       | Cons (pa, pb) -> fold f (fold f acc pb) pa
       | List lp -> List.fold_left ~f:(fold f) ~init:acc lp)
     | P_variant (_, p) -> fold f acc p
-    | P_tuple lp -> List.fold_left ~f:(fold f) ~init:acc lp
+    | P_tuple lp -> List.fold_left ~f:(fold f) ~init:acc @@ List.map ~f:fst lp
     | P_record lps -> Container.fold ~f:(fold f) ~init:acc lps
 
 
@@ -177,7 +183,9 @@ module Make (Container : Container) = struct
         let p = self p in
         P_variant (l, p)
       | P_tuple lp ->
-        let lp = List.map ~f:self lp in
+        let ds = List.map ~f:snd lp in
+        let lp = List.map ~f:self @@ List.map ~f:fst lp in
+        let lp = List.zip_exn lp ds in
         P_tuple lp
       | P_record lps ->
         let lps = Container.map ~f:self lps in
@@ -211,7 +219,9 @@ module Make (Container : Container) = struct
       let acc, p = self acc p in
       ret acc @@ P_variant (l, p)
     | P_tuple lp ->
-      let acc, lp = List.fold_map ~f:self ~init:acc lp in
+      let ds = List.map ~f:snd lp in
+      let acc, lp = List.fold_map ~f:self ~init:acc @@ List.map ~f:fst lp in
+      let lp = List.zip_exn lp ds in
       ret acc @@ P_tuple lp
     | P_record lps ->
       let acc, lps = Container.fold_map ~f:self ~init:acc lps in
@@ -228,5 +238,6 @@ module Make (Container : Container) = struct
       t
 end
 
-module Non_linear_pattern = Make (Label.Assoc)
-module Linear_pattern = Make (Record)
+module Non_linear_pattern = Make (Label.Assoc) (struct type t = unit [@@deriving eq, compare, yojson, hash, sexp] end)
+module Linear_pattern = Make (Record) (struct type t = unit [@@deriving eq, compare, yojson, hash, sexp] end)
+module Linear_pattern_with_ellipsis = Make (Record) (struct type t = bool [@@deriving eq, compare, yojson, hash, sexp] end)

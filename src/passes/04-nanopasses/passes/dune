@@ -40,7 +40,6 @@
   sum_type_helper_generator
   standalone_constructor_removal
   pattern_constructor_application
-  pattern_heuristic
   object_to_record
   array_to_tuple
   let_syntax

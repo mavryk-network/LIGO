@@ -275,7 +275,7 @@ let rec expression : AST.expression -> references -> env -> references =
   | E_type_abstraction { type_binder = _; result } -> expression result refs env
   | E_let_mut_in { let_binder; rhs; let_result; attributes = _ }
   | E_let_in { let_binder; rhs; let_result; attributes = _ } ->
-    let binders = Linear_pattern.binders let_binder in
+    let binders = Linear_pattern_with_ellipsis.binders let_binder in
     let vars = List.map binders ~f:Binder.get_var in
     let refs = expression rhs refs env in
     let env = List.fold_right vars ~init:env ~f:Env.add_vvar in
@@ -289,7 +289,7 @@ let rec expression : AST.expression -> references -> env -> references =
   | E_matching { matchee; cases } ->
     let refs = expression matchee refs env in
     List.fold cases ~init:refs ~f:(fun refs { pattern; body } ->
-        let binders = Linear_pattern.binders pattern in
+        let binders = Linear_pattern_with_ellipsis.binders pattern in
         let vars = List.map binders ~f:Binder.get_var in
         let env = List.fold_right vars ~init:env ~f:Env.add_vvar in
         expression body refs env)
@@ -423,7 +423,7 @@ and declaration : AST.declaration -> references -> env -> references * env =
     let env = Env.add_vvar var env in
     refs, env
   | D_irrefutable_match { pattern; expr; attr = _ } ->
-    let binder = Linear_pattern.binders pattern in
+    let binder = Linear_pattern_with_ellipsis.binders pattern in
     let tys = List.map binder ~f:Binder.get_ascr in
     let refs =
       List.fold tys ~init:refs ~f:(fun refs ty_opt ->

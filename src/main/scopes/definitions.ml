@@ -99,12 +99,12 @@ let defs_of_mvar ~(bindee : Ast_core.module_expr) ~(mod_case : mod_case)
 
 
 let rec defs_of_pattern ~(body : AST.expression)
-    :  AST.type_expression option Linear_pattern.t -> def_type -> string list -> def list
+    :  AST.type_expression option Linear_pattern_with_ellipsis.t -> def_type -> string list -> def list
     -> def list
   =
  fun ptrn def_type mod_path acc ->
   let self ~body p = defs_of_pattern ~body p in
-  let ptrn_binders = AST.Pattern.binders ptrn in
+  let ptrn_binders = Ast_core.Pattern.binders ptrn in
   let f defs binder = defs_of_binder ~body binder def_type mod_path defs in
   let defs = List.fold ~init:acc ~f ptrn_binders in
   defs

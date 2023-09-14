@@ -1152,8 +1152,8 @@ and check_pattern ~mut ~single (pat : I.type_expression option I.Pattern.t) (typ
   | ( P_tuple list_pat
     , T_construct { constructor = Literal_types.List; parameters = [ elt_type ]; _ } ) ->
     let elts, tail = List.drop_last_exn list_pat, List.last_exn list_pat in
-    let%bind elts = elts |> List.map ~f:(fun pat -> check pat elt_type) |> all in
-    let%bind tail = tail |> fun pat -> check pat type_ in
+    let%bind elts = elts |> List.map ~f:(fun (pat, _IGNORED) -> check pat elt_type) |> all in
+    let%bind tail = tail |> function (pat, _IGNORED) -> check pat type_ in
     const
       E.(
         let%bind elts = all elts in
@@ -1165,7 +1165,7 @@ and check_pattern ~mut ~single (pat : I.type_expression option I.Pattern.t) (typ
   | P_tuple tuple_pat, T_record row when Map.length row.fields = List.length tuple_pat ->
     let%bind tuple_pat =
       tuple_pat
-      |> List.mapi ~f:(fun i pat ->
+      |> List.mapi ~f:(fun i (pat, _IGNORED) ->
              let%bind pat_row_elem =
                raise_opt ~error:err @@ Map.find row.fields (Label (Int.to_string i))
              in
@@ -1176,7 +1176,7 @@ and check_pattern ~mut ~single (pat : I.type_expression option I.Pattern.t) (typ
     const
       E.(
         let%bind tuple_pat = all tuple_pat in
-        return @@ P.P_tuple tuple_pat)
+        return @@ P.P_tuple (List.map ~f:(fun p -> p, ()) tuple_pat))
   | P_record record_pat, T_record row when Map.length row.fields = Map.length record_pat
     ->
     let%bind record_pat =
@@ -1267,13 +1267,11 @@ and infer_pattern ~mut ~single (pat : I.type_expression option I.Pattern.t)
         return @@ P.P_list (List list_pat))
       t_list
   | P_tuple [] when single ->
-    let%bind tuple_type =
-      create_type @@ Type.t_unit
-    in
+    let%bind unit_type = create_type @@ Type.t_unit in
     const
       E.(
-        return @@ P.P_tuple [])
-      tuple_type
+        return @@ P.P_unit)
+      unit_type
   | P_tuple [] when not single ->
     let%bind elt_type = exists Type in
     let%bind t_list = create_type @@ Type.t_list elt_type in
@@ -1281,10 +1279,25 @@ and infer_pattern ~mut ~single (pat : I.type_expression option I.Pattern.t)
       E.(
         return @@ P.P_list (List []))
       t_list
+  | P_tuple list_pat when List.exists ~f:(fun (_, b) -> b) list_pat ->
+    let%bind elt_type = exists Type in
+    let%bind t_list = create_type @@ Type.t_list elt_type in
+    let elts, tail = List.drop_last_exn list_pat, List.last_exn list_pat in
+    let%bind elts = elts |> List.map ~f:(fun (pat, _IGNORED) -> check pat elt_type) |> all in
+    let%bind tail = tail |> function (pat, _IGNORED) -> check pat t_list in
+    const
+      E.(
+        let%bind elts = all elts in
+        let%bind tail = tail in
+        let list_pat =
+          List.fold_right elts ~init:tail ~f:(fun p q -> Location.wrap ~loc:Location.generated (P.P_list (Cons (p, q))))
+        in
+        return @@ Location.unwrap list_pat)
+      t_list
   | P_tuple tuple_pat ->
     let%bind tuple_types, tuple_pat =
       tuple_pat
-      |> List.mapi ~f:(fun i pat ->
+      |> List.mapi ~f:(fun i (pat, _IGNORED) ->
              let%bind pat_type, pat = infer pat in
              return ((Label.Label (Int.to_string i), pat_type), pat))
       |> all
@@ -1303,7 +1316,7 @@ and infer_pattern ~mut ~single (pat : I.type_expression option I.Pattern.t)
     const
       E.(
         let%bind tuple_pat = all tuple_pat in
-        return @@ P.P_tuple tuple_pat)
+        return @@ P.P_tuple (List.map ~f:(fun p -> p, ()) tuple_pat))
       tuple_type
   | P_variant (constructor, arg_pat) ->
     let%bind tvars, arg_type, sum_type =

@@ -3,6 +3,7 @@ module Label = Label
 module Binder = Binder
 module Param = Param
 module Linear_pattern = Pattern.Linear_pattern
+module Linear_pattern_with_ellipsis = Pattern.Linear_pattern_with_ellipsis
 module Non_linear_pattern = Pattern.Non_linear_pattern
 module Access_path = Access_path
 module Layout = Layout
