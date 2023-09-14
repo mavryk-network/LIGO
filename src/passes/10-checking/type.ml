@@ -271,8 +271,8 @@ let t_tuple ts ~loc () =
 let t_pair t1 t2 ~loc () = t_tuple [ t1; t2 ] ~loc ()
 let t_triplet t1 t2 t3 ~loc () = t_tuple [ t1; t2; t3 ] ~loc ()
 let t_sum_ez fields ~loc ?layout () = t_sum ~loc (row_ez fields ?layout ()) ()
-let t_bool ~loc () = t_sum_ez ~loc [ "True", t_unit ~loc (); "False", t_unit ~loc () ] ()
-let t_option t ~loc () = t_sum_ez ~loc [ "Some", t; "None", t_unit ~loc () ] ()
+let t_bool ~loc () = t_sum_ez ~loc [ "False", t_unit ~loc (); "True", t_unit ~loc () ] ()
+let t_option t ~loc () = t_sum_ez ~loc [ "None", t_unit ~loc (); "Some", t ] ()
 let t_arrow param result ~loc () : t = t_arrow ~loc { type1 = param; type2 = result } ()
 let t_mutez = t_tez
 
@@ -283,8 +283,8 @@ let t_record_with_orig_var row ~orig_var ~loc () =
 let t_test_baker_policy ~loc () =
   t_sum_ez
     ~loc
-    [ "By_round", t_int ~loc ()
-    ; "By_account", t_address ~loc ()
+    [ "By_account", t_address ~loc ()
+    ; "By_round", t_int ~loc ()
     ; "Excluding", t_list ~loc (t_address ~loc ()) ()
     ]
     ()
@@ -293,22 +293,22 @@ let t_test_baker_policy ~loc () =
 let t_test_exec_error ~loc () =
   t_sum_ez
     ~loc
-    [ "Rejected", t_pair ~loc (t_michelson_code ~loc ()) (t_address ~loc ()) ()
-    ; ( "Balance_too_low"
+    [ ( "Balance_too_low"
       , t_record_ez
           ~loc
-          [ "contract_too_low", t_address ~loc ()
-          ; "contract_balance", t_mutez ~loc ()
+          [ "contract_balance", t_mutez ~loc ()
+          ; "contract_too_low", t_address ~loc ()
           ; "spend_request", t_mutez ~loc ()
           ]
           () )
     ; "Other", t_string ~loc ()
+    ; "Rejected", t_pair ~loc (t_michelson_code ~loc ()) (t_address ~loc ()) ()
     ]
     ()
 
 
 let t_test_exec_result ~loc () =
-  t_sum_ez ~loc [ "Success", t_nat ~loc (); "Fail", t_test_exec_error ~loc () ] ()
+  t_sum_ez ~loc [ "Fail", t_test_exec_error ~loc (); "Success", t_nat ~loc () ] ()
 
 
 let get_t_construct t constr =
@@ -566,13 +566,18 @@ let pp =
 
 
 (* Helpers for generators *)
-let build_entry_type p_ty s_ty =
+let t_entrypoint p_ty s_ty =
   let loc = Location.generated in
   t_arrow
     ~loc
     (t_pair ~loc p_ty s_ty ())
     (t_pair ~loc (t_list ~loc (t_operation ~loc ()) ()) s_ty ())
     ()
+
+
+let t_contract_of p_ty s_ty =
+  let loc = Location.generated in
+  t_pair ~loc (t_entrypoint p_ty s_ty) (t_views ~loc s_ty ()) ()
 
 
 let get_t_inj (t : t) (v : Literal_types.t) : t list option =
@@ -598,22 +603,16 @@ let should_uncurry_entry entry_ty =
   let is_t_list_operation listop = Option.is_some @@ assert_t_list_operation listop in
   match get_t_arrow entry_ty with
   | Some { type1 = tin; type2 = return } ->
-    (match get_t_tuple tin, get_t_tuple return with
-    | Some [ parameter; storage ], Some [ listop; storage' ] ->
-      if is_t_list_operation listop && equal storage storage'
-      then `No (parameter, storage)
-      else `Bad
-    | _ ->
-      let parameter = tin in
-      (match get_t_arrow return with
-      | Some { type1 = storage; type2 = return } ->
-        (match get_t_pair return with
-        | Some (listop, storage') ->
-          if is_t_list_operation listop && equal storage storage'
-          then `Yes (parameter, storage)
-          else `Bad
-        | _ -> `Bad)
-      | None -> `Bad))
+    let parameter = tin in
+    (match get_t_arrow return with
+    | Some { type1 = storage; type2 = return } ->
+      (match get_t_pair return with
+      | Some (listop, storage') ->
+        if is_t_list_operation listop && equal storage storage'
+        then `Yes (parameter, storage)
+        else `Bad
+      | _ -> `Bad)
+    | None -> `Bad)
   | None -> `Bad
 
 
@@ -622,12 +621,22 @@ let parameter_from_entrypoints
     -> ( t * t
        , [> `Not_entry_point_form of t
          | `Storage_does_not_match of Value_var.t * t * Value_var.t * t
+         | `Duplicate_entrypoint of Value_var.t
          ] )
        result
   =
- fun ((entrypoint, entrypoint_type), rest) ->
+ fun entrypoints ->
   let equal_t = equal in
   let open Result.Let_syntax in
+  let%bind () =
+    (* check entrypoints have no duplicates *)
+    entrypoints
+    |> Simple_utils.List.Ne.to_list
+    |> List.find_a_dup ~compare:(fun a b -> Value_var.compare (fst a) (fst b))
+    |> Option.value_map ~default:(Result.Ok ()) ~f:(fun (x, _ty) ->
+           Result.Error (`Duplicate_entrypoint x))
+  in
+  let (entrypoint, entrypoint_type), rest = entrypoints in
   let%bind parameter, storage =
     match should_uncurry_entry entrypoint_type with
     | `Yes (parameter, storage) | `No (parameter, storage) ->

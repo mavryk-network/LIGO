@@ -26,13 +26,18 @@
   interpreter
   alcotest
   tezos-utils
-  tezos-crypto
+  octez-libs.tezos-crypto
   ligo_api
   cli
   prometheus
   prometheus_format
   prometheus_push
-  lsp_test_requests))
+  lsp_test_requests
+  package_management
+  lwt
+  lwt.unix)
+ (preprocess
+  (pps ppx_let)))
 
 (rule
  (alias doc-test)
@@ -66,7 +71,8 @@
   (glob_files contracts/vars_consts/*)
   (glob_files contracts/positive/*)
   (glob_files contracts/negative/*)
-  (glob_files preprocessor/*)))
+  (glob_files preprocessor/*)
+  (glob_files install_tests/workflow/*)))
 
 (rule
  (alias vendors_test)
@@ -83,10 +89,10 @@
    "%{pos}"
    (run ./contract_test.exe)))
  (deps
-  (glob_files contracts/*)
+  (glob_files_rec contracts/*)
   (:pos
-   (glob_files contracts/positive/*))
-  (glob_files contracts/negative/*)
+   (glob_files_rec contracts/positive/*))
+  (glob_files_rec contracts/negative/*)
   (glob_files preprocessor/*)))
 
 (rule

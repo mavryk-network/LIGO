@@ -15,6 +15,7 @@
   repl
   install
   publish
+  unpublish
   user
   ligo.cli_helpers
   ligo_api)
@@ -31,29 +32,41 @@
  (name install)
  (instrumentation
   (backend bisect_ppx))
- (libraries cli_helpers simple-utils lwt lwt.unix yojson)
- (modules install))
-
-(library
- (name publish)
- (instrumentation
-  (backend bisect_ppx))
  (libraries
   cli_helpers
   simple-utils
   lwt
   lwt.unix
-  tar
-  tar-unix
-  decompress.gz
-  bigstringaf
-  base64
-  cohttp-lwt-unix
   yojson
-  digestif
-  ligo.unix)
+  cohttp-lwt
+  cohttp
+  cohttp-lwt-unix
+  ligo_init
+  ligo_unix
+  package_management
+  str
+  fpath
+  bos
+  semver
+  lambda-term)
  (preprocess
   (pps ppx_deriving_yojson))
+ (modules install))
+
+(library
+ (name unpublish)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries package_management)
+ (preprocess
+  (pps ppx_deriving_yojson))
+ (modules unpublish))
+
+(library
+ (name publish)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries package_management)
  (modules publish))
 
 (library
@@ -103,32 +116,3 @@
  (flags -open Core)
  (modules runligo)
  (package ligo))
-
-;; Make sure the vendored Tezos is gas free to build testing
-;; framework for browser
-
-(executable
- (name js_main)
- (ocamlc_flags -g)
- (js_of_ocaml
-  (link_flags "--source-map-root=%{project_root}")
-  (javascript_files
-   threads.js
-   others.js
-   bls12-polynomial.js
-   stdint.js
-   digestif.js))
- (libraries
-  core
-  simple-utils-js
-  simple-utils-js.http_uri
-  zarith_stubs_js
-  integers_stubs_js
-  ctypes_stubs_js
-  ligo_api
-  ligo.main_interpreter
-  js_of_ocaml)
- (modes js)
- (preprocess
-  (pps js_of_ocaml-ppx))
- (modules js_main))

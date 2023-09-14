@@ -14,7 +14,7 @@ first-class support for such distributable units (i.e. packages).
 ## Packages
 
 Reusable modules that developers intend to share with others can be
-distributed as packages by placing a `package.json` (a manifest file)
+distributed as packages by placing a `ligo.json` (a manifest file)
 next to their Ligo modules.
 
 ```bash
@@ -34,7 +34,7 @@ $ ls
 </colgroup>
 <tbody>
 <tr>
-<td class="org-left">package.json</td>
+<td class="org-left">ligo.json</td>
 <td class="org-left">set.mligo</td>
 <td class="org-left">list.mligo</td>
 </tr>
@@ -42,7 +42,7 @@ $ ls
 </table>
 
 Any directory (recursively) containing `.mligo` files can be turned into a package
-by simply placing a manifest file, `package.json` over there.
+by simply placing a manifest file, `ligo.json` over there.
 
 ## LIGO registry
 
@@ -55,11 +55,11 @@ LIGO libraries can be published to [LIGO's registry](https://packages.ligolang.o
 Using `ligo install` command we can fetch these ligo libraries (It internally invokes the [esy](https://esy.sh/) package manager).
 
 Pre-requites:
-1. Install esy ([link](https://esy.sh/docs/en/getting-started.html))
+1. Install esy ([link](https://esy.sh/docs/getting-started))
 
 ### Workflow
 
-Start with an empty `package.json` file
+Start with an empty `ligo.json` file
 
 ```json
 {}
@@ -197,9 +197,11 @@ let test =
 
 const test = (() => {
     let storage = Test.compile_value(list([1, 2, 3]));
-    let [addr, _, _] = Test.originate_from_file("./main.jsligo", "main", (list([]) as list<string>), storage, 0 as tez);    let taddr : typed_address<parameter, storage> = Test.cast_address(addr);
+    let [addr, _, _] = Test.originate_from_file("./main.jsligo",
+    "main", (list([]) as list<string>), storage, 0tez);
+    let taddr : typed_address<parameter, storage> = Test.cast_address(addr);
     let contr : contract<parameter> = Test.to_contract(taddr);
-    let _ = Test.transfer_to_contract_exn(contr, Reverse(), 1 as mutez);
+    let _ = Test.transfer_to_contract_exn(contr, Reverse(), 1mutez);
     assert (Test.get_storage(taddr) == list([3, 2, 1]))
 })();
 
@@ -271,7 +273,7 @@ $ ligo install
 ### Upgrading the version of a LIGO package
 
 During the lifecycle of a project, if you wish to upgrade the version of a LIGO package,
-Just update the package version to the desired one in the `package.json`. e.g.
+Just update the package version to the desired one in the `ligo.json`. e.g.
 
 ```diff
 {
@@ -362,7 +364,7 @@ contents, its version, and other useful information.
 
 This is an important step, as it will help the tools and your users/collaborators, provide vital information about your package.
 
-For LIGO packages, authors must provide a manifest file (package.json).
+For LIGO packages, authors must provide a manifest file (ligo.json).
 
 The structure of a LIGO manifest is as follows,
 
@@ -390,7 +392,7 @@ The `bugs` fields follows a [structure same as npm](https://docs.npmjs.com/cli/v
 - **`dev_dependencies`** : A object (key-value pairs) of dev_dependencies of the package where key is a `package_name` and value is a `package_version`
 
 
-Sample LIGO manifest (`package.json`) with some of the above information:
+Sample LIGO manifest (`ligo.json`) with some of the above information:
 
 ```json
 {
@@ -685,6 +687,35 @@ $ ligo publish --dry-run
 
 This will only display the report on the command line what it would have done in the case of `ligo publish`.
 
+## Unpublishing Packages
+
+Packages can be published in two ways,
+
+1. Completely delete the entry
+2. Only unpublish a specific version
+
+`unpublish` is that subcommand, grouped under `registry` subcommand, removes a package or a specific version of it from the registry
+
+Summary
+```
+  [--package-name Name]      . of the package on which publish/unpublish is
+                               executed
+  [--package-version Version]
+                             . of the package on which publish/unpublish is
+                               executed
+```
+
+To unpublish a package, run `ligo registry unpublish --package-name <name> --package-version <version>` from anywhere on the CLI (not necessarily from within a project)
+
+Examples,
+
+```
+ligo registry unpublish --package-name foo --package-version 1.0.0
+```
+
+If `--package-version` is skipped, the entire package is unpublished.
+
+
 
 ## Notes
 
@@ -724,7 +755,3 @@ let test =
 
 In this case, the main function will be used in tests.
 
-### 3. What happens if package.json is already in use (maybe because of another tool like npm or taqueria)?
-
-In that case, you can name your LIGO manifest as `esy.json` to avoid conflicts with other tools.
-Also, there is a plan in the future to introduce `ligo.json` as manifest.

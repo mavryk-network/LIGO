@@ -54,7 +54,7 @@ collectContractMetas parsedContracts = collectCodeMetas parsedContracts . T.unCo
 -- | Run the given contract + entrypoint, build code with embedded ligo metadata.
 buildSourceMapper
   :: FilePath
-  -> EntrypointName
+  -> ModuleName
   -> IO (Set ExpressionSourceLocation, T.SomeContract, [FilePath], HashSet Range, LigoType, LigoTypesVec)
 buildSourceMapper file entrypoint = do
   ligoMapper <- compileLigoContractDebug entrypoint file
@@ -85,8 +85,8 @@ test_SourceMapper = testGroup "Reading source mapper"
             collectContractMetas parsedContracts contract
 
       let unitIntTuple' = mkPairType
-            (mkSimpleConstantType "Unit")
-            (mkSimpleConstantType "Int")
+            (mkSumType (LLField "Main") [("Main", unitType')])
+            intType'
 
       let unitIntTuple = LigoTypeResolved unitIntTuple'
 
@@ -96,7 +96,8 @@ test_SourceMapper = testGroup "Reading source mapper"
       let resultType' = mkPairType operationList' intType'
       let resultType = LigoTypeResolved resultType'
 
-      let mainType = LigoTypeResolved $ unitIntTuple' ~> resultType'
+      let curriedMainType = LigoTypeResolved $ unitType' ~> intType' ~> resultType'
+      let uncurriedMainType = LigoTypeResolved $ unitIntTuple' ~> resultType'
 
       nonEmptyMetasAndInstrs
         @?=
@@ -105,40 +106,16 @@ test_SourceMapper = testGroup "Reading source mapper"
             ?- SomeInstr dummyInstr
 
         , LigoMereEnvInfo
-            [LigoStackEntryNoVar unitIntTuple]
-            ?- SomeInstr dummyInstr
-
-        , LigoMereEnvInfo
-            [LigoStackEntryNoVar unitIntTuple]
-            ?- SomeInstr dummyInstr
-
-        , LigoMereEnvInfo
-            [LigoStackEntryNoVar intType]
-            ?- SomeInstr dummyInstr
-
-        , LigoMereEnvInfo
-            [LigoStackEntryNoVar intType]
-            ?- SomeInstr dummyInstr
-
-        , LigoMereEnvInfo
-            [LigoStackEntryNoVar intType]
-            ?- SomeInstr dummyInstr
-
-        , LigoMereEnvInfo
-            [LigoStackEntryNoVar intType]
-            ?- SomeInstr dummyInstr
-
-        , LigoMereEnvInfo
             [LigoStackEntryVar "s" intType]
             ?- SomeInstr dummyInstr
 
         , LigoMereLocInfo
-            (Range (LigoPosition 2 12) (LigoPosition 2 18) file)
+            (Range (LigoPosition 3 12) (LigoPosition 3 18) file)
             intType
             ?- SomeInstr (T.ADD @'T.TInt @'T.TInt)
 
         , LigoMereLocInfo
-            (Range (LigoPosition 2 12) (LigoPosition 2 18) file)
+            (Range (LigoPosition 3 12) (LigoPosition 3 18) file)
             intType
             ?- SomeInstr
                 (    T.Nested
@@ -152,12 +129,12 @@ test_SourceMapper = testGroup "Reading source mapper"
             ?- SomeInstr dummyInstr
 
         , LigoMereLocInfo
-            (Range (LigoPosition 3 12) (LigoPosition 3 19) file)
+            (Range (LigoPosition 4 12) (LigoPosition 4 19) file)
             intType
             ?- SomeInstr (T.MUL @'T.TInt @'T.TInt)
 
         , LigoMereLocInfo
-            (Range (LigoPosition 3 12) (LigoPosition 3 19) file)
+            (Range (LigoPosition 4 12) (LigoPosition 4 19) file)
             intType
             ?- SomeInstr
                 (    T.Nested
@@ -167,12 +144,12 @@ test_SourceMapper = testGroup "Reading source mapper"
                 )
 
         , LigoMereLocInfo
-            (Range (LigoPosition 3 12) (LigoPosition 3 23) file)
+            (Range (LigoPosition 4 12) (LigoPosition 4 23) file)
             intType
             ?- SomeInstr (T.MUL @'T.TInt @'T.TInt)
 
         , LigoMereLocInfo
-            (Range (LigoPosition 3 12) (LigoPosition 3 23) file)
+            (Range (LigoPosition 4 12) (LigoPosition 4 23) file)
             intType
             ?- SomeInstr
                 (    T.Nested
@@ -191,17 +168,17 @@ test_SourceMapper = testGroup "Reading source mapper"
             ?- SomeInstr dummyInstr
 
         , LigoMereLocInfo
-            (Range (LigoPosition 4 4) (LigoPosition 4 25) file)
+            (Range (LigoPosition 5 4) (LigoPosition 5 25) file)
             operationList
             ?- SomeInstr (T.NIL @'T.TOperation)
 
         , LigoMereLocInfo
-            (Range (LigoPosition 4 4) (LigoPosition 4 25) file)
+            (Range (LigoPosition 5 4) (LigoPosition 5 25) file)
             operationList
             ?- SomeInstr (T.Nested $ T.NIL @'T.TOperation)
 
         , LigoMereLocInfo
-            (Range (LigoPosition 4 4) (LigoPosition 4 29) file)
+            (Range (LigoPosition 5 4) (LigoPosition 5 29) file)
             resultType
             ?- SomeInstr
                 (    T.Nested
@@ -211,7 +188,81 @@ test_SourceMapper = testGroup "Reading source mapper"
                 )
 
         , LigoMereEnvInfo
-            [ LigoStackEntryVar "main" mainType
+            [ LigoStackEntryVar "main" curriedMainType
+            , LigoHiddenStackEntry
+            ]
+            ?- SomeInstr dummyInstr
+
+        , LigoMereEnvInfo
+            [ LigoStackEntryNoVar unitIntTuple
+            , LigoStackEntryVar "main" curriedMainType
+            ]
+            ?- SomeInstr dummyInstr
+
+        , LigoMereEnvInfo
+            [ LigoStackEntryNoVar unitIntTuple
+            , LigoStackEntryVar "main" curriedMainType
+            ]
+            ?- SomeInstr dummyInstr
+
+        , LigoMereEnvInfo
+            [ LigoStackEntryNoVar unitType
+            , LigoStackEntryNoVar intType
+            , LigoStackEntryVar "main" curriedMainType
+            ]
+            ?- SomeInstr dummyInstr
+
+        , LigoMereEnvInfo
+            [ LigoStackEntryNoVar unitType
+            , LigoStackEntryNoVar intType
+            , LigoStackEntryVar "main" curriedMainType
+            ]
+            ?- SomeInstr dummyInstr
+
+        , LigoMereEnvInfo
+            [ LigoStackEntryNoVar intType
+            , LigoStackEntryNoVar unitType
+            , LigoStackEntryVar "main" curriedMainType
+            ]
+            ?- SomeInstr dummyInstr
+
+        , LigoMereEnvInfo
+            [ LigoStackEntryVar "p" unitType
+            , LigoStackEntryNoVar intType
+            , LigoStackEntryVar "main" curriedMainType
+            ]
+            ?- SomeInstr dummyInstr
+
+        , LigoMereEnvInfo
+            [ LigoStackEntryVar "s" intType
+            , LigoStackEntryVar "p" unitType
+            , LigoStackEntryVar "main" curriedMainType
+            ]
+            ?- SomeInstr dummyInstr
+
+        , LigoMereEnvInfo
+            [ LigoStackEntryNoVar unitType
+            , LigoStackEntryVar "s" intType
+            , LigoStackEntryVar "main" curriedMainType
+            ]
+            ?- SomeInstr dummyInstr
+
+        , LigoMereEnvInfo
+            [ LigoStackEntryNoVar unitType
+            , LigoStackEntryVar "s" intType
+            , LigoStackEntryVar "main" curriedMainType
+            ]
+            ?- SomeInstr dummyInstr
+
+        , LigoMereEnvInfo
+            [ LigoStackEntryNoVar unitIntTuple
+            , LigoStackEntryVar "s" intType
+            , LigoStackEntryVar "main" curriedMainType
+            ]
+            ?- SomeInstr dummyInstr
+
+        , LigoMereEnvInfo
+            [ LigoStackEntryVar "<module main>" uncurriedMainType
             , LigoHiddenStackEntry
             ]
             ?- SomeInstr dummyInstr
@@ -222,20 +273,20 @@ test_SourceMapper = testGroup "Reading source mapper"
         @?=
         -- Note: the order of entries below is not the interpretation order
         -- because we extracted these pairs from Set with its lexicographical order
-        [ ( SrcLoc 1 11
-          , SrcLoc 1 17
+        [ ( SrcLoc 2 11
+          , SrcLoc 2 17
           )
-        , ( SrcLoc 2 11
-          , SrcLoc 2 18
+        , ( SrcLoc 3 11
+          , SrcLoc 3 18
           )
-        , ( SrcLoc 2 11
-          , SrcLoc 2 22
+        , ( SrcLoc 3 11
+          , SrcLoc 3 22
           )
-        , ( SrcLoc 3 3
-          , SrcLoc 3 24
+        , ( SrcLoc 4 3
+          , SrcLoc 4 24
           )
-        , ( SrcLoc 3 3
-          , SrcLoc 3 28
+        , ( SrcLoc 4 3
+          , SrcLoc 4 28
           )
         ]
 
@@ -248,9 +299,9 @@ test_SourceMapper = testGroup "Reading source mapper"
       forM_ @_ @_ @() (collectContractMetas parsedContracts contract)
         \(LigoIndexedInfo{..}, SomeInstr instr) -> case instr of
           T.MUL -> liiLocation @?= Just
-            do Range (LigoPosition 2 27) (LigoPosition 2 32) file
+            do Range (LigoPosition 3 27) (LigoPosition 3 32) file
           T.CAR -> liiLocation @?= Just
-            do Range (LigoPosition 2 38) (LigoPosition 2 43) file
+            do Range (LigoPosition 3 38) (LigoPosition 3 43) file
           _ -> pass
 
   ]
@@ -288,9 +339,9 @@ test_Function_call_locations = testGroup "Function call locations"
   in
   [ testCase "Locations for built-ins" do
       let expectedLocs =
-            [ ((2, 10), (2, 16)) -- "is_nat" location
-            , ((3, 11), (3, 17)) -- "assert" location
-            , ((9, 12), (9, 21)) -- "List.fold" location
+            [ ((3, 10), (3, 16)) -- "is_nat" location
+            , ((4, 11), (4, 17)) -- "assert" location
+            , ((10, 12), (10, 21)) -- "List.fold" location
             ]
 
       checkLocations "builtins-locations.mligo" expectedLocs
@@ -298,7 +349,7 @@ test_Function_call_locations = testGroup "Function call locations"
   , testCase "Locations for user-defined functions" do
       let expectedLocs =
             [ ((3, 32), (3, 35)) -- "add" location
-            , ((7, 12), (7, 16)) -- "add5" location
+            , ((8, 12), (8, 16)) -- "add5" location
             ]
 
       checkLocations "apply.mligo" expectedLocs

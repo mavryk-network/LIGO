@@ -5,6 +5,37 @@ open Simple_utils.Trace
 open Main_errors
 module Raw_options = Compiler_options.Raw_options
 
+let make_options
+    ?tezos_context
+    ?constants
+    ?now
+    ?sender
+    ?self
+    ?parameter_ty
+    ?source
+    ?amount
+    ?balance
+    ?chain_id
+    ()
+  =
+  Lwt_main.run
+    Proto_alpha_utils.Memory_proto_alpha.(
+      Lwt.bind (test_environment ()) (fun env ->
+          make_options
+            ~env
+            ?tezos_context
+            ?constants
+            ?now
+            ?sender
+            ?self
+            ?parameter_ty
+            ?source
+            ?amount
+            ?balance
+            ?chain_id
+            ()))
+
+
 type test_case = unit Alcotest.test_case
 
 type test =
@@ -168,16 +199,19 @@ let expression_to_core ~raise expression =
   core
 
 
-let pack_payload ~raise (program : Ast_typed.program) (payload : Ast_unified.expr) : bytes
+let pack_payload ~raise (program : Ast_typed.program) (payload : Ast_unified.expr)
+    : bytes Lwt.t
   =
-  let code =
+  let open Lwt.Let_syntax in
+  let%bind code =
     let core = expression_to_core ~raise payload in
     let typed =
-      Ligo_compile.Of_core.compile_expression
-        ~raise
-        ~options
-        ~context:(Ast_typed.Misc.to_signature program)
-        core
+      let context =
+        (* can't use the contract signature directly because
+         it would force users to export declaration in Jsligo *)
+        Ast_typed.to_signature program.pr_module
+      in
+      Ligo_compile.Of_core.compile_expression ~raise ~options ~context core
     in
     let aggregated =
       Ligo_compile.Of_typed.compile_expression ~raise ~options:options.middle_end typed
@@ -187,31 +221,34 @@ let pack_payload ~raise (program : Ast_typed.program) (payload : Ast_unified.exp
     Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c
   in
   let payload_ty = code.expr_ty in
-  let (payload : _ Tezos_utils.Michelson.michelson) =
+  let%bind (payload : _ Tezos_utils.Michelson.michelson) =
     Ligo_run.Of_michelson.evaluate_expression ~raise code.expr code.expr_ty
   in
   Ligo_run.Of_michelson.pack_payload ~raise payload payload_ty
 
 
 let sign_message ~raise (program : Ast_typed.program) (payload : Ast_unified.expr) sk
-    : string
+    : string Lwt.t
   =
+  let open Lwt.Let_syntax in
   let open Tezos_crypto in
-  let packed_payload = pack_payload ~raise program payload in
+  let%map packed_payload = pack_payload ~raise program payload in
   let signed_data = Signature.sign sk packed_payload in
   let signature_str = Signature.to_b58check signed_data in
   signature_str
 
 
 let contract id =
+  let open Lwt.Let_syntax in
   let open Proto_alpha_utils.Memory_proto_alpha in
-  let id = List.nth_exn (test_environment ()).identities id in
+  let%map env = test_environment () in
+  let id = List.nth_exn env.identities id in
   id.implicit_contract
 
 
 let addr id =
   let open Proto_alpha_utils.Memory_proto_alpha in
-  Protocol.Alpha_context.Contract.to_b58check @@ contract id
+  Lwt.map Protocol.Alpha_context.Contract.to_b58check @@ contract id
 
 
 let gen_keys () =
@@ -233,8 +270,9 @@ let typed_program_with_imperative_input_to_michelson
     (program : Ast_typed.program)
     (entry_point : string)
     (input : Ast_unified.expr)
-    : Stacking.compiled_expression * Ast_aggregated.type_expression
+    : (Stacking.compiled_expression * Ast_aggregated.type_expression) Lwt.t
   =
+  let open Lwt.Let_syntax in
   Printexc.record_backtrace true;
   let core = expression_to_core ~raise input in
   let entry_point =
@@ -242,24 +280,25 @@ let typed_program_with_imperative_input_to_michelson
   in
   let app = Ligo_compile.Of_core.apply entry_point core in
   let typed_app =
-    Ligo_compile.Of_core.compile_expression
-      ~raise
-      ~options
-      ~context:(Ast_typed.Misc.to_signature program)
-      app
+    let context =
+      (* can't use the contract signature directly because
+       it would force users to export declaration in Jsligo *)
+      Ast_typed.to_signature program.pr_module
+    in
+    Ligo_compile.Of_core.compile_expression ~raise ~options ~context app
   in
-  (* let compiled_applied = Ligo_compile.Of_typed.compile_expression ~raise typed_app in *)
   let aggregated =
     Ligo_compile.Of_typed.compile_expression_in_context
       ~raise
       ~options:options.middle_end
+      None
       program
       typed_app
   in
   let expanded = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
   let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
-  ( Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c
-  , aggregated.type_expression )
+  let%map mich = Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c in
+  mich, aggregated.type_expression
 
 
 let typed_program_with_imperative_input_to_michelson_twice
@@ -268,31 +307,34 @@ let typed_program_with_imperative_input_to_michelson_twice
     (entry_point : string)
     (input1 : Ast_unified.expr)
     (input2 : Ast_unified.expr)
-    : Stacking.compiled_expression * Ast_aggregated.type_expression
+    : (Stacking.compiled_expression * Ast_aggregated.type_expression) Lwt.t
   =
+  let open Lwt.Let_syntax in
   Printexc.record_backtrace true;
   let core1 = expression_to_core ~raise input1 in
   let core2 = expression_to_core ~raise input2 in
   let app = Ligo_compile.Of_core.apply_twice entry_point core1 core2 in
   let typed_app =
-    Ligo_compile.Of_core.compile_expression
-      ~raise
-      ~options
-      ~context:(Ast_typed.Misc.to_signature program)
-      app
+    let context =
+      (* can't use the contract signature directly because
+       it would force users to export declaration in Jsligo *)
+      Ast_typed.to_signature program.pr_module
+    in
+    Ligo_compile.Of_core.compile_expression ~raise ~options ~context app
   in
   (* let compiled_applied = Ligo_compile.Of_typed.compile_expression ~raise typed_app in *)
   let aggregated =
     Ligo_compile.Of_typed.compile_expression_in_context
       ~raise
       ~options:options.middle_end
+      None
       program
       typed_app
   in
   let expanded = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
   let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
-  ( Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c
-  , aggregated.type_expression )
+  let%map mich = Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c in
+  mich, aggregated.type_expression
 
 
 let run_typed_program_with_imperative_input
@@ -301,12 +343,13 @@ let run_typed_program_with_imperative_input
     (program : Ast_typed.program)
     (entry_point : string)
     (input : Ast_unified.expr)
-    : Ast_core.expression
+    : Ast_core.expression Lwt.t
   =
-  let michelson_program, ty =
+  let open Lwt.Let_syntax in
+  let%bind michelson_program, ty =
     typed_program_with_imperative_input_to_michelson ~raise program entry_point input
   in
-  let michelson_output =
+  let%map michelson_output =
     Ligo_run.Of_michelson.run_no_failwith
       ~raise
       ?options
@@ -331,9 +374,10 @@ let run_typed_program_with_imperative_input_twice
     (entry_point : string)
     (input1 : Ast_unified.expr)
     (input2 : Ast_unified.expr)
-    : Ast_core.expression
+    : Ast_core.expression Lwt.t
   =
-  let michelson_program, ty =
+  let open Lwt.Let_syntax in
+  let%bind michelson_program, ty =
     typed_program_with_imperative_input_to_michelson_twice
       ~raise
       program
@@ -341,7 +385,7 @@ let run_typed_program_with_imperative_input_twice
       input1
       input2
   in
-  let michelson_output =
+  let%map michelson_output =
     Ligo_run.Of_michelson.run_no_failwith
       ~raise
       ?options
@@ -361,7 +405,8 @@ let run_typed_program_with_imperative_input_twice
 
 let expect ~raise ?options program entry_point input expecter =
   let result =
-    trace ~raise (test_run_tracer entry_point)
+    Lwt_main.run
+    @@ trace ~raise (test_run_tracer entry_point)
     @@ run_typed_program_with_imperative_input ?options program entry_point input
   in
   expecter result
@@ -369,7 +414,8 @@ let expect ~raise ?options program entry_point input expecter =
 
 let expect_twice ~raise ?options program entry_point input1 input2 expecter =
   let result =
-    trace ~raise (test_run_tracer entry_point)
+    Lwt_main.run
+    @@ trace ~raise (test_run_tracer entry_point)
     @@ run_typed_program_with_imperative_input_twice
          ?options
          program
@@ -384,14 +430,19 @@ let expect_fail ~raise ?options program entry_point input =
   trace ~raise (test_run_tracer entry_point)
   @@ fun ~raise ->
   Assert.assert_fail ~raise test_expected_to_fail
-  @@ run_typed_program_with_imperative_input ?options program entry_point input
+  @@ fun ~raise ->
+  Lwt_main.run
+  @@ run_typed_program_with_imperative_input ~raise ?options program entry_point input
 
 
 let expect_fail_twice ~raise ?options program entry_point input1 input2 =
   trace ~raise (test_run_tracer entry_point)
   @@ fun ~raise ->
   Assert.assert_fail ~raise test_expected_to_fail
+  @@ fun ~raise ->
+  Lwt_main.run
   @@ run_typed_program_with_imperative_input_twice
+       ~raise
        ?options
        program
        entry_point
@@ -400,10 +451,13 @@ let expect_fail_twice ~raise ?options program entry_point input1 input2 =
 
 
 let expect_string_failwith ~raise ?options program entry_point input expected_failwith =
-  let michelson_program, _ =
+  Lwt_main.run
+  @@
+  let open Lwt.Let_syntax in
+  let%bind michelson_program, _ =
     typed_program_with_imperative_input_to_michelson ~raise program entry_point input
   in
-  let err =
+  let%map err =
     Ligo_run.Of_michelson.run_failwith
       ~raise
       ?options
@@ -424,7 +478,10 @@ let expect_string_failwith_twice
     input2
     expected_failwith
   =
-  let michelson_program, _ =
+  Lwt_main.run
+  @@
+  let open Lwt.Let_syntax in
+  let%bind michelson_program, _ =
     typed_program_with_imperative_input_to_michelson_twice
       ~raise
       program
@@ -432,7 +489,7 @@ let expect_string_failwith_twice
       input1
       input2
   in
-  let err =
+  let%map err =
     Ligo_run.Of_michelson.run_failwith
       ~raise
       ?options
@@ -471,10 +528,13 @@ let expect_eq_core ~raise ?options program entry_point input expected =
 
 
 let expect_evaluate ~raise (program : Ast_typed.program) entry_point expecter =
+  let open Lwt.Let_syntax in
   trace ~raise (test_run_tracer entry_point)
+  @@ fun ~raise ->
+  Lwt_main.run
   @@
   let aggregated =
-    Ligo_compile.Of_typed.apply_to_entrypoint
+    Ligo_compile.Of_typed.apply_to_var
       ~raise
       ~options:options.middle_end
       program
@@ -482,10 +542,10 @@ let expect_evaluate ~raise (program : Ast_typed.program) entry_point expecter =
   in
   let expanded = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
   let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
-  let michelson_value =
+  let%bind michelson_value =
     Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c
   in
-  let res_michelson =
+  let%map res_michelson =
     Ligo_run.Of_michelson.run_no_failwith
       ~raise
       michelson_value.expr
@@ -507,7 +567,7 @@ let expect_evaluate ~raise (program : Ast_typed.program) entry_point expecter =
 
 let expect_eq_evaluate ~raise (program : Ast_typed.program) entry_point expected =
   let expected = expression_to_core ~raise expected in
-  let expecter result ~raise =
+  let expecter result =
     trace_option ~raise (test_expect_tracer expected result)
     @@ Ast_core.Misc.assert_value_eq (expected, result)
   in
@@ -585,23 +645,36 @@ let expect_eq_b_bool a b c =
 
 
 let compile_main ~raise f () =
+  let open Lwt.Let_syntax in
+  let typed_prg = get_program ~raise f () in
+  let typed_prg =
+    Simple_utils.Trace.trace ~raise self_ast_typed_tracer
+    @@ Self_ast_typed.all_program typed_prg
+  in
+  let _, contract_info =
+    Option.value_exn ~message:"not a contract"
+    @@ Ast_typed.get_contract_signature (Ast_typed.to_extended_signature typed_prg) []
+  in
   let agg =
-    Ligo_compile.Of_typed.apply_to_entrypoint_contract
+    Ligo_compile.Of_typed.apply_to_entrypoint_with_contract_type
       ~raise
       ~options:options.middle_end
-      (get_program ~raise f ())
-      (Ligo_prim.Value_var.of_input_var ~loc "main")
+      typed_prg
       []
+      contract_info
   in
   let expanded = Ligo_compile.Of_aggregated.compile_expression ~raise agg in
   let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
-  let michelson_prg = Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c in
-  let _contract : _ Tezos_utils.Michelson.michelson =
-    (* fails if the given entry point is not a valid contract *)
-    Ligo_compile.Of_michelson.build_contract
-      ~raise
-      ~protocol_version:Environment.Protocols.in_use
-      michelson_prg
-      []
-  in
-  ()
+  Lwt_main.run
+  @@ let%bind michelson_prg =
+       Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c
+     in
+     let%map _contract : _ Tezos_utils.Michelson.michelson Lwt.t =
+       (* fails if the given entry point is not a valid contract *)
+       Ligo_compile.Of_michelson.build_contract
+         ~raise
+         ~protocol_version:Environment.Protocols.in_use
+         michelson_prg
+         []
+     in
+     ()

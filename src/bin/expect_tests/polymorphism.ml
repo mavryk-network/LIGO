@@ -84,9 +84,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; test "ctrct.mligo" ];
-  [%expect
-    {|
-    { parameter unit ; storage int ; code { CDR ; NIL operation ; PAIR } } |}]
+  [%expect {| { parameter unit ; storage int ; code { CDR ; NIL operation ; PAIR } } |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test.mligo" ];
@@ -146,7 +144,7 @@ let%expect_test _ =
     ; "--init-file"
     ; test "use_monad.mligo"
     ];
-  [%expect {| { Pair (Pair 3 4) 5 ; Pair (Pair 4 3) 5 } |}]
+  [%expect {| { Pair 3 4 5 ; Pair 4 3 5 } |}]
 
 let%expect_test _ =
   run_ligo_good
@@ -157,7 +155,7 @@ let%expect_test _ =
     ; "--init-file"
     ; test "use_monad_set.mligo"
     ];
-  [%expect {| { Pair (Pair 3 4) 5 ; Pair (Pair 4 3) 5 } |}]
+  [%expect {| { Pair 3 4 5 ; Pair 4 3 5 } |}]
 
 let%expect_test _ =
   run_ligo_good
@@ -169,7 +167,7 @@ let%expect_test _ =
     ; test "use_monad.jsligo"
     ];
   [%expect {|
-    { Pair (Pair 3 4) 5 ; Pair (Pair 6 8) 10 } |}]
+    { Pair 3 4 5 ; Pair 6 8 10 } |}]
 
 let%expect_test _ =
   run_ligo_good
@@ -231,8 +229,8 @@ let%expect_test _ =
   [%expect
     {|
     { parameter string ;
-      storage (pair (string %name) (pair %state int (sapling_state 8))) ;
-      code { UNPAIR ; SWAP ; CDR ; SWAP ; PAIR ; NIL operation ; PAIR } } |}]
+      storage (pair (pair %state int (sapling_state 8)) (string %name)) ;
+      code { UNPAIR ; SWAP ; CAR ; PAIR ; NIL operation ; PAIR } } |}]
 
 let%expect_test _ =
   run_ligo_good
@@ -427,23 +425,21 @@ let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; test "monomorphisation_fail2.mligo" ];
   [%expect
     {|
-    File "./monomorphisation_fail2.mligo", line 2, character 2 to line 8, character 6:
+    File "./monomorphisation_fail2.mligo", line 2, character 2 to line 7, character 3:
       1 | let nested (type a) =
       2 |   let x (type b) =
             ^^^^^^^^^^^^^^^^
       3 |     let y (type c) =
           ^^^^^^^^^^^^^^^^^^^^
-      4 |       let z =
-          ^^^^^^^^^^^^^
-      5 |         (failwith("nested") : a -> b -> c)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      6 |       in z
+      4 |       let z = (failwith ("nested") : a -> b -> c) in
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      5 |       z in
           ^^^^^^^^^^
-      7 |     in y
+      6 |     y in
           ^^^^^^^^
-      8 |   in x
-          ^^^^^^
-      9 |
+      7 |   x
+          ^^^
+      8 |
 
     Cannot monomorphise the expression. |}]
 

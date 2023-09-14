@@ -135,15 +135,13 @@ const sub = (store: storage, delta: int): storage => store - delta;
 
 /* Main access point that dispatches to the entrypoints according to
    the smart contract parameter. */
-const main = (action: parameter, store: storage) : @return => {
-  return [
-    list([]) as list<operation>,    // No operations
-    match(action, {
-      Increment:(n: int) => add (store, n),
-      Decrement:(n: int) => sub (store, n),
-      Reset: ()          => 0})
-  ]
-};
+const main = (action: parameter, store: storage) : @return => [
+  list([]) as list<operation>,    // No operations
+  match(action) {
+    when(Increment(n)): add (store, n);
+    when(Decrement(n)): sub (store, n);
+    when(Reset()): 0}
+];
 ```
 
 </Syntax>
@@ -185,7 +183,7 @@ let test =
 
 let _test = () : bool => {
   let initial_storage = 42 as int;
-  let [taddr, _code, _size] = Test.originate(main, initial_storage, 0 as tez);
+  let [taddr, _code, _size] = Test.originate(main, initial_storage, 0tez);
   return (Test.get_storage(taddr) == initial_storage);
 };
 
@@ -284,11 +282,11 @@ let test2 =
 ```jsligo test-ligo group=frontpage
 // This continues testnew.jsligo
 
-let _test2 = () : bool => {
+function _test2 () : bool {
   let initial_storage = 42 as int;
-  let [taddr, _code, _test] = Test.originate(main, initial_storage, 0 as tez);
+  let [taddr, _code, _test] = Test.originate(main, initial_storage, 0tez);
   let contr = Test.to_contract(taddr);
-  let gas_cons = Test.transfer_to_contract_exn(contr, (Increment (1)), 1 as mutez);
+  let gas_cons = Test.transfer_to_contract_exn(contr, (Increment (1)), 1mutez);
   let _ = Test.log(["gas consumption", gas_cons]);
   return (Test.get_storage(taddr) == initial_storage + 1);
 }
@@ -424,14 +422,14 @@ let test_transfer_to_contract =
 ```jsligo test-ligo group=usage_transfer
 type param = [ int , ticket<string>]
 
-const main = (p: param, _s: [string , address]) : [list<operation> , [string , address]] => {
+function main (p: param, _s: [string , address]) : [list<operation> , [string , address]] {
   let [_v,ticket] = p ;
   let [[_addr,[v,_t]] , _ticket] = Tezos.read_ticket (ticket) ;
   return ([list([]) , [v, Tezos.get_sender ()]])
 };
 
 const test_transfer_to_contract_ = () : unit => {
-  let [main_taddr, _code , _size] = Test.originate (main, ["bye",Test.nth_bootstrap_account (1)], 1 as mutez) ;
+  let [main_taddr, _code , _size] = Test.originate (main, ["bye",Test.nth_bootstrap_account (1)], 1mutez) ;
   let main_addr = Tezos.address (Test.to_contract (main_taddr)) ;
 
   /* mk_param is executed __by the proxy contract__ */
@@ -442,12 +440,12 @@ const test_transfer_to_contract_ = () : unit => {
   Test.log (["poxy addr:", proxy_taddr]) ;
 
   /* ticket_info lets you control the amount and the value of the tickets you send */
-  let ticket_info1 = ["hello",10 as nat] ;
+  let ticket_info1 = ["hello", 10n];
   /* we send ticket to main through the proxy-contract */
   let _tx1 = Test.Proxy_ticket.transfer (proxy_taddr, [ticket_info1,main_addr]) ;
   Test.log (Test.get_storage (main_taddr)) ;
 
-  let ticket_info2 = ["world",5 as nat] ;
+  let ticket_info2 = ["world",5n] ;
   let _tx2 = Test.Proxy_ticket.transfer (proxy_taddr, [ticket_info2,main_addr]) ;
   Test.log (Test.get_storage (main_taddr));
 };
@@ -530,36 +528,35 @@ type unforged_storage = option< unforged_ticket<bytes> >
 
 const main = (_p: unit, s: storage) : [ list<operation> , storage] => {
   let x =
-    match (s, {
-      Some: (ticket: ticket<bytes>) => {
+    match (s) {
+      when(Some(ticket)): ((ticket: ticket<bytes>) => {
         let [_v , t] = Tezos.read_ticket (ticket) ;
         return Some (t)
-      },
-      None: () => { return None () }
-    });
+      })(ticket);
+      when(None()): None()
+    };
   return [list ([]), x]
 };
 
 const test_originate_contract_ = () : unit => {
   const mk_storage = (t:ticket<bytes>) : storage => { return (Some (t)) } ;
-  let ticket_info = [0x0202, 15 as nat] ;
+  let ticket_info = [0x0202, 15n];
   let addr = Test.Proxy_ticket.originate (ticket_info, mk_storage, main) ;
   let storage : michelson_program = Test.get_storage_of_address (addr) ;
   let unforged_storage = (Test.decompile (storage) as unforged_storage) ;
 
   /* the ticket 'unforged_storage' can be manipulated freely without caring about ticket linearity */
 
-  match (unforged_storage, {
-  Some: (x: unforged_ticket<bytes>) => {
-    Test.log (["unforged_ticket", x]) ;
-    let { ticketer , value , amount } = x ;
-    assert (value == ticket_info[0]) ;
-    assert (amount == ticket_info[1]) ;
-    return unit
-  },
-  None: () => failwith ("impossible")
+  match (unforged_storage) {
+    when(Some(x)): do {
+      Test.log (["unforged_ticket", x]) ;
+      let { ticketer , value , amount } = x ;
+      assert (value == ticket_info[0]) ;
+      assert (amount == ticket_info[1]) ;
+      return unit
+    };
+    when(None()): failwith ("impossible")
   }
-  )
 };
 
 const test_originate_contract = test_originate_contract_ ();
@@ -657,7 +654,7 @@ const _u = Test.reset_state (5n, (list [] : list (tez)))
 
 ```jsligo test-ligo group=rmv_bal_test
 #include "./gitlab-pages/docs/advanced/src/remove-balance.jsligo"
-let x = Test.reset_state (5 as nat, list([]) as list <tez>);
+let x = Test.reset_state (5n, list([]) as list <tez>);
 ```
 
 </Syntax>
@@ -689,9 +686,9 @@ const balances : balances = {
 
 ```jsligo test-ligo group=rmv_bal_test
 let balances : balances =
-  Map.literal(list([[Test.nth_bootstrap_account(1), 10 as tez],
-                    [Test.nth_bootstrap_account(2), 100 as tez],
-                    [Test.nth_bootstrap_account(3), 1000 as tez]]));
+  Map.literal(list([[Test.nth_bootstrap_account(1), 10tez],
+                    [Test.nth_bootstrap_account(2), 100tez],
+                    [Test.nth_bootstrap_account(3), 1000tez]]));
 ```
 
 </Syntax>
@@ -761,7 +758,7 @@ let test =
       let unit__ = Test.log (["actual",size]) ;
       return (assert (Test.michelson_equal (size,expected_size_)))
     },
-    list ([ [15 as tez,2 as nat] , [130 as tez,1 as nat] , [1200 as tez,0 as nat]]) );
+    list ([ [15tez, 2n] , [130tez, 1n] , [1200tez, 0n]]) );
 ```
 
 </Syntax>
@@ -919,10 +916,11 @@ let sub = (store: storage, delta: int): storage => store - delta;
 let main = (action: parameter, store: storage) : @return => {
   return [
     list([]) as list<operation>,    // No operations
-    match(action, {
-      Increment:(n: int) => add (store, n),
-      Decrement:(n: int) => sub (store, n),
-      Reset: ()          => 0})
+    match(action) {
+      when(Increment(n)): add (store, n);
+      when(Decrement(n)): sub (store, n);
+      when(Reset()): 0
+    }
   ]
 };
 ```
@@ -1035,8 +1033,8 @@ let main = (p: [int, int], _: unit) => {
   };
 
 let test = (() : [list<[int,int]>, list<int>] => {
-  let [ta, _code, _size] = Test.originate(main, unit, 0 as tez);
-  let _t1 = Test.transfer_to_contract_exn(Test.to_contract(ta), [1,2], 0 as tez);
+  let [ta, _code, _size] = Test.originate(main, unit, 0tez);
+  let _t1 = Test.transfer_to_contract_exn(Test.to_contract(ta), [1,2], 0tez);
   return [Test.get_last_events_from(ta, "foo") as list<[int, int]>, Test.get_last_events_from(ta, "foo") as list<int>];
 }) ();
 ```
@@ -1065,10 +1063,10 @@ namespace C {
 
 const testC = () => {
     let initial_storage = 42;
-    let [taddr, _contract, _size] = Test.originate_module(contract_of(C), initial_storage, 0 as tez);
+    let [taddr, _contract, _size] = Test.originate_module(contract_of(C), initial_storage, 0tez);
     let contr : contract<parameter_of C> = Test.to_contract(taddr);
     let p : parameter_of C = Increment(1);
-    let _ = Test.transfer_to_contract_exn(contr, p, 1 as mutez);
+    let _ = Test.transfer_to_contract_exn(contr, p, 1mutez);
     return assert(Test.get_storage(taddr) == initial_storage + 1);
 }
 ```

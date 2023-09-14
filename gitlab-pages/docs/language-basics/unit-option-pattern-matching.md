@@ -70,7 +70,7 @@ union type, which should be familiar for developers coming from TypeScript.
 type foo =
   { kind: "increment", amount: int}
 | { kind: "decrement", amount: int}
-| { kind: "reset"}
+| { kind: "reset"};
 ```
 
 Here, the `kind` field is unique among the objects. If not, an error will be
@@ -81,19 +81,19 @@ Creating an object from a discriminated union type requires all the fields
 to be fully written. So for increment that would be:
 
 ```jsligo
-let obj = { kind: "increment", amount: 3}
+let obj = { kind: "increment", amount: 3};
 ```
 
 or
 
 ```jsligo
-let obj2 = { kind: "reset" }
+let obj2 = { kind: "reset" };
 ```
 
 Pattern matching over a discriminated union type works like this:
 
 ```jsligo
-let foo = (item: foo) => {
+function foo (item: foo) {
   let state = 0;
   switch(item.kind) {
     case "increment":
@@ -216,7 +216,7 @@ type user =
 | ["Manager", id]
 | ["Guest"];
 
-let u : user = Admin(1000 as nat);
+let u : user = Admin(1000n);
 let g : user = Guest();
 ```
 
@@ -378,12 +378,8 @@ let div (a, b : nat * nat) : nat option =
 <Syntax syntax="jsligo">
 
 ```jsligo group=d
-let div = (a: nat, b: nat): option<nat> => {
-  if(b == (0 as nat)){
-    return None();
-  } else {
-    return (Some (a/b));
-  };
+function div (a: nat, b: nat): option<nat> {
+  if (b == 0n) return None() else return (Some (a/b))
 };
 ```
 
@@ -462,10 +458,10 @@ type color =
 | ["Default"];
 
 let int_of_color = (c : color) : int =>
-  match(c, {
-    RGB: rgb => 16 + rgb[2] + rgb[1] * 6 + rgb[0] * 36,
-    Gray: i => 232 + i,
-    Default: () => 0 });
+  match(c) {
+    when(RGB(rgb)): 16 + rgb[2] + rgb[1] * 6 + rgb[0] * 36;
+    when(Gray(i)): 232 + i;
+    when(Default()): 0 };
 ```
 
 </Syntax>
@@ -547,10 +543,10 @@ function weird_length (const v : list (int)) : int is
 
 ```jsligo group=pm_lists
 let weird_length = (v : list<int>) : int =>
-  match(v, list([
-    ([] : list<int>) => -1,
-    ([hd, ...tl] : list<int>) => 1 + int(List.length(tl))
-  ]));
+  match(v) {
+    when([]): -1;
+    when([hd, ...tl]): 1 + int(List.length(tl))
+  };
 ```
 
 </Syntax>
@@ -590,4 +586,3 @@ function complex (const x : complex_t; const y : complex_t) is
 ```
 
 </Syntax>
-

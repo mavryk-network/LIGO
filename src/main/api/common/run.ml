@@ -7,6 +7,7 @@ module Raw_options = Compiler_options.Raw_options
 let test (raw_options : Raw_options.t) code_input =
   ( Ligo_interpreter.Formatter.tests_format
   , fun ~raise ->
+      let open Lwt.Let_syntax in
       let raw_options =
         { raw_options with
           protocol_version = Environment.Protocols.(variant_to_string in_use)
@@ -30,12 +31,14 @@ let test (raw_options : Raw_options.t) code_input =
       let options = Compiler_options.make ~protocol_version ~syntax ~raw_options () in
       let Compiler_options.{ steps; _ } = options.test_framework in
       let typed = Build.qualified_typed ~raise ~options code_input in
-      Interpreter.eval_test ~raise ~steps ~options typed, [] )
+      let%map result = Interpreter.eval_test ~raise ~steps ~options typed in
+      result, [] )
 
 
 let test_expression (raw_options : Raw_options.t) expr source_file =
   ( Ligo_interpreter.Formatter.tests_format
   , fun ~raise ->
+      let open Lwt.Let_syntax in
       let raw_options =
         { raw_options with
           protocol_version = Environment.Protocols.(variant_to_string in_use)
@@ -64,19 +67,15 @@ let test_expression (raw_options : Raw_options.t) expr source_file =
         Option.value_map source_file ~f ~default
       in
       let typed =
-        Ligo_compile.Utils.type_expression
-          ~raise
-          ~options
-          syntax
-          expr
-          (Ast_typed.Misc.to_signature init_prg)
+        Ligo_compile.Utils.type_expression ~raise ~options syntax expr init_prg.pr_sig
       in
-      let b, v = Interpreter.eval_expression ~raise ~steps ~options init_prg typed in
+      let%map b, v = Interpreter.eval_expression ~raise ~steps ~options init_prg typed in
       (b, [ "eval", v ]), [] )
 
 
 let dry_run
     (raw_options : Raw_options.t)
+    entry_point
     source_file
     parameter
     storage
@@ -88,6 +87,7 @@ let dry_run
   =
   ( Decompile.Formatter.expression_format
   , fun ~raise ->
+      let open Lwt.Let_syntax in
       let protocol_version =
         Helpers.protocol_to_variant ~raise raw_options.protocol_version
       in
@@ -98,34 +98,41 @@ let dry_run
           (Syntax_name raw_options.syntax)
           (Some source_file)
       in
+      Deprecation.entry_cli ~raise syntax entry_point;
       let options = Compiler_options.make ~protocol_version ~syntax ~raw_options () in
-      let Compiler_options.{ entry_point; module_; _ } = options.frontend in
+      let Compiler_options.{ module_; _ } = options.frontend in
       let module_path = Build.parse_module_path ~loc:Location.dummy module_ in
       let typed_prg =
         Build.qualified_typed ~raise ~options (Build.Source_input.From_file source_file)
       in
-      let contract_info, typed_contract =
+      let typed_contract =
         Trace.trace ~raise Main_errors.self_ast_typed_tracer
-        @@ Ligo_compile.Of_core.specific_passes
-             ~options
-             (Ligo_compile.Of_core.Contract { entrypoints = entry_point; module_path })
-             typed_prg
+        @@ Self_ast_typed.all_program typed_prg
       in
-      let entry_point, _contract_type = contract_info in
       let aggregated_prg =
-        Compile.Of_typed.apply_to_entrypoint_contract
+        let _sig, contract_sig =
+          Trace.trace_option
+            ~raise
+            (`Self_ast_aggregated_tracer
+              (Self_ast_aggregated.Errors.corner_case
+                 "Could not recover types from contract"))
+            (Ast_typed.Misc.get_contract_signature typed_prg.pr_sig module_path)
+        in
+        Compile.Of_typed.apply_to_entrypoint_with_contract_type
           ~raise
           ~options:options.middle_end
           typed_contract
-          entry_point
           module_path
+          contract_sig
       in
       let expanded_prg = Compile.Of_aggregated.compile_expression ~raise aggregated_prg in
       let mini_c_prg = Compile.Of_expanded.compile_expression ~raise expanded_prg in
-      let compile_exp = Compile.Of_mini_c.compile_contract ~raise ~options mini_c_prg in
-      let parameter_ty =
+      let%bind compile_exp =
+        Compile.Of_mini_c.compile_contract ~raise ~options mini_c_prg
+      in
+      let%bind parameter_ty =
         (* fails if the given entry point is not a valid contract *)
-        let _contract : Mini_c.meta Tezos_utils.Michelson.michelson =
+        let%map _contract : Mini_c.meta Tezos_utils.Michelson.michelson Lwt.t =
           Compile.Of_michelson.build_contract
             ~raise
             ~enable_typed_opt:options.backend.enable_typed_opt
@@ -135,7 +142,7 @@ let dry_run
         in
         Option.map ~f:fst @@ Self_michelson.fetch_contract_ty_inputs compile_exp.expr_ty
       in
-      let compiled_input =
+      let%bind compiled_input =
         Compile.Utils.compile_contract_input
           ~raise
           ~options
@@ -144,15 +151,15 @@ let dry_run
           syntax
           typed_contract
       in
-      let args_michelson =
+      let%bind args_michelson =
         Run.evaluate_expression ~raise compiled_input.expr compiled_input.expr_ty
       in
-      let options =
+      let%bind options =
         Run.make_dry_run_options
           ~raise
           { now; amount; balance; sender; source; parameter_ty }
       in
-      let runres =
+      let%map runres =
         Run.run_contract
           ~raise
           ~options
@@ -179,6 +186,7 @@ let interpret
   =
   ( Decompile.Formatter.expression_format
   , fun ~raise ->
+      let open Lwt.Let_syntax in
       let syntax =
         Syntax.of_string_opt
           ~raise
@@ -192,15 +200,15 @@ let interpret
         in
         Compiler_options.make ~protocol_version ~raw_options ~syntax ()
       in
-      let Build.{ expression; ast_type } =
+      let%bind Build.{ expression; ast_type } =
         Build.build_expression ~raise ~options syntax expression init_file
       in
-      let options =
+      let%bind options =
         Run.make_dry_run_options
           ~raise
           { now; amount; balance; sender; source; parameter_ty = None }
       in
-      let runres =
+      let%map runres =
         Run.run_expression ~raise ~options expression.expr expression.expr_ty
       in
       Decompile.Of_michelson.decompile_expression ~raise ast_type runres, [] )
@@ -219,6 +227,7 @@ let evaluate_call
   =
   ( Decompile.Formatter.expression_format
   , fun ~raise ->
+      let open Lwt.Let_syntax in
       let syntax =
         Syntax.of_string_opt
           ~raise
@@ -257,25 +266,30 @@ let evaluate_call
         Compile.Of_core.compile_expression
           ~raise
           ~options
-          ~context:(Ast_typed.Misc.to_signature init_prog)
+          ~context:(Ast_typed.to_signature init_prog.pr_module)
           app
       in
       let app_aggregated =
         Compile.Of_typed.compile_expression_in_context
           ~raise
           ~options:options.middle_end
+          None
           init_prog
           typed_app
       in
       let app_expanded = Compile.Of_aggregated.compile_expression ~raise app_aggregated in
       let app_mini_c = Compile.Of_expanded.compile_expression ~raise app_expanded in
-      let michelson = Compile.Of_mini_c.compile_expression ~raise ~options app_mini_c in
-      let options =
+      let%bind michelson =
+        Compile.Of_mini_c.compile_expression ~raise ~options app_mini_c
+      in
+      let%bind options =
         Run.make_dry_run_options
           ~raise
           { now; amount; balance; sender; source; parameter_ty = None }
       in
-      let runres = Run.run_expression ~raise ~options michelson.expr michelson.expr_ty in
+      let%map runres =
+        Run.run_expression ~raise ~options michelson.expr michelson.expr_ty
+      in
       ( Decompile.Of_michelson.decompile_expression
           ~raise
           app_aggregated.type_expression
@@ -286,6 +300,7 @@ let evaluate_call
 let evaluate_expr
     (raw_options : Raw_options.t)
     source_file
+    exp
     amount
     balance
     sender
@@ -294,6 +309,7 @@ let evaluate_expr
   =
   ( Decompile.Formatter.expression_format
   , fun ~raise ->
+      let open Lwt.Let_syntax in
       let syntax =
         Syntax.of_string_opt
           ~raise
@@ -307,17 +323,15 @@ let evaluate_expr
         in
         Compiler_options.make ~protocol_version ~raw_options ~syntax ()
       in
-      let Compiler_options.{ entry_point; _ } = options.frontend in
-      let entry_point = List.hd_exn entry_point in
-      let Build.{ expression; ast_type } =
-        Build.build_expression ~raise ~options syntax entry_point (Some source_file)
+      let%bind Build.{ expression; ast_type } =
+        Build.build_expression ~raise ~options syntax exp (Some source_file)
       in
-      let options =
+      let%bind options =
         Run.make_dry_run_options
           ~raise
           { now; amount; balance; sender; source; parameter_ty = None }
       in
-      let runres =
+      let%map runres =
         Run.run_expression ~raise ~options expression.expr expression.expr_ty
       in
       Decompile.Of_michelson.decompile_expression ~raise ast_type runres, [] )

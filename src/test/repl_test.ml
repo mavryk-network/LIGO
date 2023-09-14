@@ -3,7 +3,9 @@ open Simple_utils.Trace
 module Raw_options = Compiler_options.Raw_options
 
 let dry_run_options =
-  Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ())
+  Lwt_main.run
+    Proto_alpha_utils.Memory_proto_alpha.(
+      Lwt.bind (test_environment ()) (fun env -> make_options ~env ()))
 
 
 let raw_options = Raw_options.make ()
@@ -108,7 +110,7 @@ let test_long ~raise ~raw_options () =
     ; "#import \"contracts/build/B.mligo\" \"MYMOD\""
     ; "MYMOD.toto"
     ; "MYMOD.A.toto"
-    ; "let f (x : int) = MYMOD.f (unit, x)"
+    ; "let f (x : int) = MYMOD.main unit x"
     ; "f 4"
     ; "module EURO = struct\n\
        type t = nat\n\

@@ -38,14 +38,14 @@ type michelson_contract
 A type for Michelson compiled contracts.
 
 <SyntaxTitle syntax="pascaligo">
-type test_exec_error_balance_too_low = record [ contract_too_low : address ; contract_balance : tez ; spend_request : tez ]
+type test_exec_error_balance_too_low = record [ contract_balance : tez ; contract_too_low : address ; spend_request : tez ]
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-type test_exec_error_balance_too_low = &#x007b; contract_too_low : address ; contract_balance : tez ; spend_request : tez &#x007d;
+type test_exec_error_balance_too_low = &#x007b; contract_balance : tez ; contract_too_low : address ; spend_request : tez &#x007d;
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-type test_exec_error_balance_too_low = &#x007b; contract_too_low : address , contract_balance : tez , spend_request : tez &#x007d;
+type test_exec_error_balance_too_low = &#x007b; contract_balance : tez , contract_too_low : address , spend_request : tez &#x007d;
 </SyntaxTitle>
 
 <SyntaxTitle syntax="pascaligo">
@@ -220,7 +220,7 @@ let addr, contract, size =
 <Syntax syntax="jsligo">
 
 ```jsligo skip
-let [addr, contract, size] = Test.originate_from_file(testme_test, "main", list([]), init_storage, 0 as tez);
+let [addr, contract, size] = Test.originate_from_file(testme_test, "main", list([]), init_storage, 0tez);
 ```
 
 </Syntax>
@@ -252,19 +252,6 @@ let originate = (contract: (p: 'param, s: 'storage) => [list &lt;operation&gt;, 
 
 Originate a contract with an entrypoint function in curried form, initial storage and initial balance.
 
-<SyntaxTitle syntax="pascaligo">
-val originate_uncurried &lt;param, storage&gt; : (param * storage -> list (operation) * storage) -> storage -> tez -> typed_address (param, storage) * michelson_contract * int
-</SyntaxTitle>
-<SyntaxTitle syntax="cameligo">
-val originate_uncurried : ('param * 'storage -> operation list * 'storage) -> 'storage -> tez -> (('param, 'storage) typed_address * michelson_contract * int)
-</SyntaxTitle>
-
-<SyntaxTitle syntax="jsligo">
-let originate_uncurried = (contract: (ps: ['param, 'storage]) => [list &lt;operation&gt;, &apos;storage], init: 'storage, balance: tez) => [typed_address &lt;&apos;param, &apos;storage&gt;, michelson_contract, int]
-</SyntaxTitle>
-
-Originate a contract with an entrypoint function in uncurried form, initial storage and initial balance.
-
 <SyntaxTitle syntax="cameligo">
 val originate_module : (('param, 'storage) module_contract) -> 'storage -> tez -> (('param, 'storage) typed_address * michelson_contract * int)
 </SyntaxTitle>
@@ -288,7 +275,7 @@ let taddr, contract, size =
 <Syntax syntax="jsligo">
 
 ```jsligo skip
-let [taddr, contract, size] = Test.originate_module(contract_of(C), init_storage, 0 as tez);
+let [taddr, contract, size] = Test.originate_module(contract_of(C), init_storage, 0tez);
 ```
 
 </Syntax>
@@ -993,7 +980,7 @@ let f = (x: some_r) : int => x.one;
 
 let test_example =
   Test.run (((x : [int, nat, string, bytes, unit]) => f ({ one : x[0] , two : x[1] , three : x[2] , four : x[3] , five : x[4] })),
-           [1 + 3 + 2, ((1 as nat) + (2 as nat)), ("a" + "b"), 0xFF00, unit]);
+           [1 + 3 + 2, 1n + 2n, ("a" + "b"), 0xFF00, unit]);
 ```
 
 </Syntax>
@@ -1338,4 +1325,4 @@ framework will fail with the string passed as message.
 
 Helper functions for working with tickets in the LIGO Testing framework.
 
-Find the complete API reference [here](./proxy_ticket.md) 
+Find the complete API reference [here](./proxy_ticket.md)

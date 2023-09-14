@@ -4,7 +4,7 @@ module Signature = Tezos_base.TzPervasives.Signature
 module Data_encoding = Alpha_environment.Data_encoding
 module MBytes = Bytes
 module Error_monad = X_error_monad
-module Proto_env = Tpe_017
+module Proto_env = Tezos_protocol_environment_018_Proxford
 open Error_monad
 open Protocol
 
@@ -82,6 +82,7 @@ module Context_init = struct
         Alpha_context.Parameters.{
           bootstrap_accounts ;
           bootstrap_contracts = [] ;
+          bootstrap_smart_rollups = [] ;
           commitments ;
           constants ;
           security_deposit_ramp_up_cycles ;
@@ -91,7 +92,7 @@ module Context_init = struct
     let proto_params =
       Data_encoding.Binary.to_bytes_exn Data_encoding.json json
     in
-    let* ctxt = Tpenv.(
+    let* ctxt = Tezos_protocol_environment.(
       Context.add Memory_context.empty ["version"] (MBytes.of_string "genesis")
       )
     in
@@ -156,14 +157,14 @@ module Context_init = struct
   let contents
         ~predecessor_hash
         ?(proof_of_work_nonce = default_proof_of_work_nonce)
-        ?(payload_round = Alpha_context.Round.zero) ?seed_nonce_hash ?(liquidity_baking_toggle_vote = Liquidity_baking_repr.LB_off) () =
+        ?(payload_round = Alpha_context.Round.zero) ?seed_nonce_hash ?(per_block_votes = Per_block_votes_repr.{ liquidity_baking_vote = Per_block_vote_off; adaptive_issuance_vote = Per_block_vote_off; }) () =
     let payload_hash = Alpha_context.Block_payload.hash ~predecessor_hash ~payload_round [] in (* TODO: check if this is correct *)
     Alpha_context.Block_header.({
         payload_hash ;
         payload_round ;
         proof_of_work_nonce ;
         seed_nonce_hash ;
-        liquidity_baking_toggle_vote ;
+        per_block_votes ;
       })
 
   let begin_validation_and_application ctxt chain_id mode ~predecessor =
@@ -229,22 +230,28 @@ let init_environment ?(n = 2) () =
 
 let dummy_environment_ : environment option ref = ref None
 
-let dummy_environment () : environment =
+let dummy_environment () : environment Lwt.t =
   match ! dummy_environment_ with
   | None ->
-     let dummy_environment = (X_error_monad.force_lwt ~msg:"Init_proto_alpha : initing dummy environment" @@
-                                init_environment ()) in
+     let open Lwt.Let_syntax in
+     let%bind dummy_environment =
+       Lwt.map (force_ok ~msg:"Init_proto_alpha : initing dummy environment")
+       @@ init_environment ()
+     in
      dummy_environment_ := Some dummy_environment ;
-     dummy_environment
-  | Some dummy_environment -> dummy_environment
+     Lwt.return dummy_environment
+  | Some dummy_environment -> Lwt.return dummy_environment
 
 let test_environment_ : environment option ref = ref None
 
-let test_environment () =
+let test_environment () : environment Lwt.t =
   match ! test_environment_ with
   | None ->
-     let test_environment = (X_error_monad.force_lwt ~msg:"Init_proto_alpha : initing dummy environment" @@
-                               init_environment ~n:6 ()) in
+     let open Lwt.Let_syntax in
+     let%bind test_environment =
+       Lwt.map (force_ok ~msg:"Init_proto_alpha : initing dummy environment")
+       @@ init_environment ~n:6 ()
+     in
      test_environment_ := Some test_environment ;
-     test_environment
-  | Some test_environment -> test_environment
+     Lwt.return test_environment
+  | Some test_environment -> Lwt.return test_environment

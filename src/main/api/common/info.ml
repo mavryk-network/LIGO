@@ -3,9 +3,10 @@ module Helpers = Ligo_compile.Helpers
 module Raw_options = Compiler_options.Raw_options
 module Formatter = Ligo_formatter
 
-let measure_contract (raw_options : Raw_options.t) source_file =
+let measure_contract (raw_options : Raw_options.t) entry_point source_file =
   ( Formatter.contract_size_format
   , fun ~raise ->
+      let open Lwt.Let_syntax in
       let protocol_version =
         Helpers.protocol_to_variant ~raise raw_options.protocol_version
       in
@@ -16,21 +17,19 @@ let measure_contract (raw_options : Raw_options.t) source_file =
           (Syntax_name raw_options.syntax)
           (Some source_file)
       in
+      Deprecation.entry_cli ~raise syntax entry_point;
       let options = Compiler_options.make ~protocol_version ~raw_options ~syntax () in
-      let Compiler_options.{ entry_point; module_; _ } = options.frontend in
-      let Compiler_options.{ views; _ } = options.backend in
-      let Build.{ entrypoint; views } =
+      let Compiler_options.{ module_; _ } = options.frontend in
+      let%bind Build.{ entrypoint; views } =
         Build.build_contract
           ~raise
           ~options
-          entry_point
           module_
-          views
           (Build.Source_input.From_file source_file)
       in
       let michelson = entrypoint.value in
       let views = List.map ~f:(fun { name; value } -> name, value) views in
-      let contract =
+      let%bind contract =
         Compile.Of_michelson.build_contract
           ~raise
           ~enable_typed_opt:options.backend.enable_typed_opt
@@ -38,7 +37,8 @@ let measure_contract (raw_options : Raw_options.t) source_file =
           michelson
           views
       in
-      Compile.Of_michelson.measure ~raise contract, [] )
+      let%map measure = Compile.Of_michelson.measure ~raise contract in
+      measure, [] )
 
 
 let list_declarations (raw_options : Raw_options.t) source_file =
@@ -66,3 +66,29 @@ let list_declarations (raw_options : Raw_options.t) source_file =
           prg
       in
       (source_file, declarations), [] )
+
+
+let resolve_config (raw_options : Raw_options.t) source_file =
+  ( Resolve_config.config_format
+  , fun ~raise ->
+      let open Lwt.Let_syntax in
+      let syntax =
+        Syntax.of_string_opt
+          ~support_pascaligo:raw_options.deprecated
+          ~raise
+          (Syntax_name raw_options.syntax)
+          (Some source_file)
+      in
+      let options =
+        let protocol_version =
+          Helpers.protocol_to_variant ~raise raw_options.protocol_version
+        in
+        Compiler_options.make
+          ~raw_options
+          ~syntax
+          ~protocol_version
+          ~has_env_comments:false
+          ()
+      in
+      let%map config = Resolve_config.resolve_config ~raise ~options syntax source_file in
+      config, [] )

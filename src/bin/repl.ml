@@ -63,7 +63,7 @@ let get_declarations_typed (typed_prg : Ast_typed.program) =
              | D_type _
              | D_module _
              | D_module_include _ -> None)
-  @@ typed_prg
+  @@ typed_prg.pr_module
 
 
 let pp_declaration ppf = function
@@ -144,13 +144,14 @@ type state =
 let try_eval ~raise ~raw_options state s =
   let options = Compiler_options.make ~raw_options ~syntax:state.syntax () in
   let typed_exp =
-    Ligo_compile.Utils.type_expression_string ~raise ~options state.syntax s
-    @@ Ast_typed.Misc.to_signature state.top_level
+    let sig_ = Ast_typed.Misc.to_signature state.top_level.pr_module in
+    Ligo_compile.Utils.type_expression_string ~raise ~options state.syntax s sig_
   in
   let aggregated_exp =
     Ligo_compile.Of_typed.compile_expression_in_context
       ~raise
       ~options:options.middle_end
+      None
       state.top_level
       typed_exp
   in
@@ -158,10 +159,13 @@ let try_eval ~raise ~raw_options state s =
     Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_exp
   in
   let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded_exp in
-  let compiled_exp = Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c in
+  let compiled_exp =
+    Lwt_main.run @@ Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c
+  in
   let options = state.dry_run_opts in
   let runres =
-    Run.run_expression ~raise ~options compiled_exp.expr compiled_exp.expr_ty
+    Lwt_main.run
+    @@ Run.run_expression ~raise ~options compiled_exp.expr compiled_exp.expr_ty
   in
   let x =
     Decompile.Of_michelson.decompile_expression
@@ -179,8 +183,13 @@ let try_eval ~raise ~raw_options state s =
 let concat_modules ~declaration (m1 : Ast_typed.program) (m2 : Ast_typed.program)
     : Ast_typed.program
   =
-  let () = if declaration then assert (List.length m2 = 1) in
-  m1 @ m2
+  let open Ast_typed in
+  let () = if declaration then assert (List.length m2.pr_module = 1) in
+  let si1 = to_signature m1.pr_module
+  and si2 = to_signature m2.pr_module in
+  { pr_module = m1.pr_module @ m2.pr_module
+  ; pr_sig = { m1.pr_sig with sig_items = si1.sig_items @ si2.sig_items }
+  }
 
 
 let try_declaration ~raise ~raw_options state s =
@@ -192,7 +201,7 @@ let try_declaration ~raise ~raw_options state s =
           Ligo_compile.Utils.type_program_string
             ~raise
             ~options
-            ~context:(Ast_typed.Misc.to_signature state.top_level)
+            ~context:(Ast_typed.to_extended_signature state.top_level)
             state.syntax
             s
         in
@@ -221,14 +230,17 @@ let import_file ~raise ~raw_options state file_name module_name =
       ()
   in
   let module_ =
-    let prg, signature =
+    let Ast_typed.{ pr_module; pr_sig } =
       Build.qualified_typed_with_signature
         ~raise
         ~options
         (Build.Source_input.From_file file_name)
     in
     Ast_typed.
-      { module_content = Module_expr.M_struct prg; module_location = loc; signature }
+      { module_content = Module_expr.M_struct pr_module
+      ; module_location = loc
+      ; signature = Ast_typed.to_extended_signature { pr_module; pr_sig }
+      }
   in
   let module_ =
     Ast_typed.
@@ -241,8 +253,11 @@ let import_file ~raise ~raw_options state file_name module_name =
              }
       ]
   in
+  let prg =
+    Ast_typed.{ pr_module = module_; pr_sig = Ast_typed.Misc.to_signature module_ }
+  in
   let state =
-    { state with top_level = concat_modules ~declaration:true state.top_level module_ }
+    { state with top_level = concat_modules ~declaration:true state.top_level prg }
   in
   state, Just_ok
 
@@ -443,7 +458,12 @@ let main
     let history = LTerm_history.create [] in
     let options = Compiler_options.make ~raw_options ~syntax () in
     let state =
-      make_initial_state syntax protocol dry_run_opts raw_options.project_root options
+      make_initial_state
+        syntax
+        protocol
+        (Lwt_main.run dry_run_opts)
+        raw_options.project_root
+        options
     in
     let state =
       match init_file with

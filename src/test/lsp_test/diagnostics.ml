@@ -89,6 +89,16 @@ let test_cases =
     ; file_path = "contracts/lsp/warnings.jsligo"
     ; diagnostics =
         [ { severity = DiagnosticSeverity.Warning
+          ; message =
+              "\n\
+               Warning: unused variable \"x\".\n\
+               Hint: replace it by \"_x\" to prevent this warning.\n"
+          ; location =
+              { range = interval 2 10 11
+              ; path = Path.from_relative "contracts/lsp/warnings.jsligo"
+              }
+          }
+        ; { severity = DiagnosticSeverity.Warning
           ; message = "Toplevel let declaration is silently changed to const declaration."
           ; location =
               { range = interval 0 7 17
@@ -102,10 +112,16 @@ let test_cases =
     ; file_path = "contracts/lsp/syntax_plus_type_errors.jsligo"
     ; diagnostics =
         [ { severity = DiagnosticSeverity.Error
-          ; message =
-              "Ill-formed expression.\nAt this point, an expression is expected.\n"
+          ; message = "Variable \"ghost_ident\" not found. "
           ; location =
-              { range = interval 4 15 18
+              { range = point 4 18
+              ; path = Path.from_relative "contracts/lsp/syntax_plus_type_errors.jsligo"
+              }
+          }
+        ; { severity = DiagnosticSeverity.Error
+          ; message = "Variable \"ghost_ident\" not found. "
+          ; location =
+              { range = point 4 14
               ; path = Path.from_relative "contracts/lsp/syntax_plus_type_errors.jsligo"
               }
           }
@@ -117,9 +133,26 @@ let test_cases =
               }
           }
         ; { severity = DiagnosticSeverity.Error
-          ; message = "Variable \"_\" not found. "
+          ; message =
+              "Ill-formed expression.\nAt this point, an expression is expected.\n"
           ; location =
-              { range = point 4 14
+              { range = interval 4 15 18
+              ; path = Path.from_relative "contracts/lsp/syntax_plus_type_errors.jsligo"
+              }
+          }
+        ; { severity = DiagnosticSeverity.Error
+          ; message =
+              "Ill-formed value declaration.\n\
+               At this point, a pattern is expected, e.g. a variable.\n"
+          ; location =
+              { range = point 4 18
+              ; path = Path.from_relative "contracts/lsp/syntax_plus_type_errors.jsligo"
+              }
+          }
+        ; { severity = DiagnosticSeverity.Warning
+          ; message = "Toplevel let declaration is silently changed to const declaration."
+          ; location =
+              { range = interval 4 15 18
               ; path = Path.from_relative "contracts/lsp/syntax_plus_type_errors.jsligo"
               }
           }
@@ -140,7 +173,7 @@ let test_cases =
                \"ttop2\" but could be of type \"ttop\".\n\
                Hint: You might want to add a type annotation. \n"
           ; location =
-              { range = interval 64 14 23
+              { range = interval 85 14 23
               ; path = Path.from_relative "contracts/warning_sum_types.mligo"
               }
           }
@@ -150,7 +183,7 @@ let test_cases =
                but could be of type \"ta\".\n\
                Hint: You might want to add a type annotation. \n"
           ; location =
-              { range = interval 65 14 21
+              { range = interval 87 14 21
               ; path = Path.from_relative "contracts/warning_sum_types.mligo"
               }
           }
@@ -182,6 +215,16 @@ let test_cases =
     ; file_path = "contracts/lsp/import_warnings.jsligo"
     ; diagnostics =
         [ { severity = DiagnosticSeverity.Warning
+          ; message =
+              "\n\
+               Warning: unused variable \"x\".\n\
+               Hint: replace it by \"_x\" to prevent this warning.\n"
+          ; location =
+              { range = interval 2 10 11
+              ; path = Path.from_relative "contracts/lsp/warnings.jsligo"
+              }
+          }
+        ; { severity = DiagnosticSeverity.Warning
           ; message = "Toplevel let declaration is silently changed to const declaration."
           ; location =
               { range = interval 0 7 17
@@ -191,7 +234,40 @@ let test_cases =
         ]
     ; max_number_of_problems = None
     }
+  ; { test_name = "Shows TZIP-16 checks with a top-level storage."
+    ; file_path = "contracts/lsp/test_metadata.mligo"
+    ; diagnostics =
+        [ { severity = DiagnosticSeverity.Warning
+          ; message =
+              "Warning: If the following metadata is meant to be TZIP-16 compliant,\n\
+               then it should be a 'big_map' from 'string' to 'bytes'.\n\
+               Hint: The corresponding type should be :\n\
+              \  (string, bytes) big_map\n\
+               You can disable this warning with the '--no-metadata-check' flag.\n"
+          ; location =
+              { range = interval 2 15 19
+              ; path = Path.from_relative "contracts/lsp/test_metadata.mligo"
+              }
+          }
+        ; { severity = DiagnosticSeverity.Warning
+          ; message = "Cannot parse big-map metadata."
+          ; location =
+              { range = interval 4 4 11
+              ; path = Path.from_relative "contracts/lsp/test_metadata.mligo"
+              }
+          }
+        ]
+    ; max_number_of_problems = None
+    }
   ]
+
+
+let send_virtual_change : Range.t -> string -> Path.t -> string -> unit Requests.Handler.t
+  =
+ fun range text file contents ->
+  let change = TextDocumentContentChangeEvent.create ~range ~text () in
+  let changes = [ change ] in
+  Requests.on_doc ~changes file contents
 
 
 let tests = "diagnostics", List.map ~f:get_diagnostics_test test_cases

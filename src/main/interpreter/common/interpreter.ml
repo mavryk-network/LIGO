@@ -1136,21 +1136,14 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
          calltrace
          catch_env)
   | C_TEST_TRY_WITH, _ -> fail @@ error_type ()
-  | ( C_TEST_COMPILE_CONTRACT_FROM_FILE
-    , [ V_Ct (C_string contract_file); V_Ct (C_string entryp); V_List views; mutation ] )
-    ->
+  | C_TEST_COMPILE_CONTRACT_FROM_FILE, [ V_Ct (C_string contract_file); mutation ] ->
     let@ mod_res = Get_mod_res () in
     let contract_file = resolve_contract_file ~mod_res ~source_file ~contract_file in
-    let views =
-      List.map
-        ~f:(fun x -> trace_option ~raise (Errors.corner_case ()) @@ get_string x)
-        views
-    in
     let* mutation =
       monad_option (Errors.generic_error loc "Expected option")
       @@ LC.get_nat_option mutation
     in
-    let>> code = Compile_contract_from_file (contract_file, entryp, views, mutation) in
+    let>> code = Compile_contract_from_file (contract_file, mutation) in
     return @@ code
   | C_TEST_COMPILE_CONTRACT_FROM_FILE, _ -> fail @@ error_type ()
   | ( C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN
@@ -1429,6 +1422,10 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let>> v = Register_delegate (loc, calltrace, pkh) in
     return @@ v
   | C_TEST_REGISTER_DELEGATE, _ -> fail @@ error_type ()
+  | C_TEST_STAKE, [ V_Ct (C_key_hash pkh); V_Ct (C_mutez amt) ] ->
+    let>> v = Stake (loc, calltrace, pkh, amt) in
+    return @@ v
+  | C_TEST_STAKE, _ -> fail @@ error_type ()
   | C_TEST_BAKE_UNTIL_N_CYCLE_END, [ V_Ct (C_nat n) ] ->
     let>> v = Bake_until_n_cycle_end (loc, calltrace, n) in
     return @@ v
@@ -2153,11 +2150,12 @@ and try_eval ~raise ~steps ~options expr env state r =
 
 
 let eval_expression ~raise ~steps ~options
-    : Ast_typed.program -> Ast_typed.expression -> bool * value
+    : Ast_typed.program -> Ast_typed.expression -> (bool * value) Lwt.t
   =
  fun prg expr ->
+  let open Lwt.Let_syntax in
   (* Compile new context *)
-  let initial_state = Execution_monad.make_state ~raise ~options in
+  let%bind initial_state = Execution_monad.make_state ~raise ~options in
   let prg =
     trace ~raise Main_errors.self_ast_typed_tracer @@ Self_ast_typed.all_program prg
   in
@@ -2165,6 +2163,7 @@ let eval_expression ~raise ~steps ~options
     Ligo_compile.Of_typed.compile_expression_in_context
       ~raise
       ~options:options.middle_end
+      None
       prg
       expr
   in
@@ -2172,33 +2171,37 @@ let eval_expression ~raise ~steps ~options
     trace ~raise Main_errors.self_ast_aggregated_tracer
     @@ Self_ast_aggregated.all_expression ~options:options.middle_end expr
   in
-  let value, st = try_eval ~raise ~steps ~options expr Env.empty_env initial_state None in
+  let%map value, st =
+    try_eval ~raise ~steps ~options expr Env.empty_env initial_state None
+  in
   st.print_values, value
 
 
-let eval_test ~raise ~steps ~options : Ast_typed.program -> bool * toplevel_env =
+let eval_test ~raise ~steps ~options : Ast_typed.program -> (bool * toplevel_env) Lwt.t =
  fun prg ->
-  let decl_lst = prg in
-  (* Pass over declarations, for each "test"-prefixed one, add a new
-     declaration and in the end, gather all of them together *)
-  let aux decl r =
-    let ds, defs = r in
-    let loc = Location.get_location decl in
-    match decl.Location.wrap_content with
-    | Ast_typed.D_irrefutable_match
-        { pattern = { wrap_content = P_var binder; _ }; expr; _ }
-    | Ast_typed.D_value { binder; expr; _ } ->
-      let var = Binder.get_var binder in
-      if (not (Value_var.is_generated var))
-         && Base.String.is_prefix (Value_var.to_name_exn var) ~prefix:"test"
-      then (
-        let expr = Ast_typed.(e_a_variable ~loc var expr.type_expression) in
-        (* TODO: check that variables are unique, as they are ignored *)
-        decl :: ds, (binder, expr.type_expression) :: defs)
-      else decl :: ds, defs
-    | _ -> decl :: ds, defs
+  let open Lwt.Let_syntax in
+  let decl_lst = prg.pr_module in
+  let lst =
+    (* Pass over declarations, for each "test"-prefixed one, add a new
+       declaration and in the end, gather all of them together *)
+    let aux decl =
+      let loc = Location.get_location decl in
+      match decl.Location.wrap_content with
+      | Ast_typed.D_irrefutable_match
+          { pattern = { wrap_content = P_var binder; _ }; expr; _ }
+      | Ast_typed.D_value { binder; expr; _ } ->
+        let var = Binder.get_var binder in
+        if (not (Value_var.is_generated var))
+           && Base.String.is_prefix (Value_var.to_name_exn var) ~prefix:"test"
+        then (
+          let expr = Ast_typed.(e_a_variable ~loc var expr.type_expression) in
+          (* TODO: check that variables are unique, as they are ignored *)
+          Some (binder, expr.type_expression))
+        else None
+      | _ -> None
+    in
+    List.filter_map ~f:aux decl_lst
   in
-  let decl_lst, lst = List.fold_right ~f:aux ~init:([], []) decl_lst in
   (* Compile new context *)
   let f (n, t) r =
     let var = Binder.get_var n in
@@ -2208,7 +2211,9 @@ let eval_test ~raise ~steps ~options : Ast_typed.program -> bool * toplevel_env 
   in
   let map = List.fold_right lst ~f ~init:Record.empty in
   let expr = Ast_typed.e_a_record ~loc:Location.dummy map in
-  match eval_expression ~raise ~steps ~options decl_lst expr with
+  match%map
+    eval_expression ~raise ~steps ~options { prg with pr_module = decl_lst } expr
+  with
   | b, V_Record m ->
     let f (n, _) r =
       let s, _ = Value_var.internal_get_name_and_counter @@ Binder.get_var n in

@@ -55,7 +55,7 @@ LIGO libraries can be published to [LIGO's registry](https://packages.ligolang.o
 Using `ligo install` command we can fetch these ligo libraries (It internally invokes the [esy](https://esy.sh/) package manager).
 
 Pre-requites:
-1. Install esy ([link](https://esy.sh/docs/en/getting-started.html))
+1. Install esy ([link](https://esy.sh/docs/getting-started))
 
 ### Workflow
 
@@ -726,5 +726,5 @@ In this case, the main function will be used in tests.
 
 ### 3. What happens if package.json is already in use (maybe because of another tool like npm or taqueria)?
 
-In that case, you can name your LIGO manifest as `esy.json` to avoid conflicts with other tools.
+In that case, you can name your LIGO manifest as `ligo.json` to avoid conflicts with other tools.
 Also, there is a plan in the future to introduce `ligo.json` as manifest.

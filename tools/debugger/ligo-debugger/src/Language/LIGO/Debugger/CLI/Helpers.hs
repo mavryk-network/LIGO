@@ -14,18 +14,24 @@ module Language.LIGO.Debugger.CLI.Helpers
   , compareUniqueNames
   , toSnakeCase
   , generatedMainName
+  , replaceTextualNumbers
   ) where
 
 import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Data.Aeson
-  (FromJSON (parseJSON), GFromJSON, Options (fieldLabelModifier), Zero, defaultOptions,
-  genericParseJSON)
+  (FromJSON (parseJSON), GFromJSON, Options (fieldLabelModifier), Value (Number, String), Zero,
+  defaultOptions, genericParseJSON)
+import Data.Aeson.Parser (scientific)
+import Data.Attoparsec.ByteString (endOfInput, parseOnly)
 import Data.Char (isDigit, isUpper, toLower)
 import Data.Data (Data)
 import Data.Default (Default (..))
+import Data.Generics (everywhere, mkT)
 import Data.List qualified as L
+import Data.MessagePack (MessagePack (..), Object (..))
 import Data.Singletons.TH
 import Data.Text qualified as T
+import Data.Text.Encoding qualified as T
 import Fmt.Buildable (Buildable, FromDoc, build)
 import Fmt.Utils (Doc)
 import GHC.Generics (Generic (Rep))
@@ -165,6 +171,10 @@ instance (SingI u) => Buildable (Name u) where
             | otherwise = name
           prettyName = T.replace generatedMainName "<module main>" strippedMangledModule
 
+instance MessagePack (Name u) where
+  toObject _ = const ObjectNil
+  fromObjectWith cfg = fmap Name . fromObjectWith cfg
+
 newtype LigoJSON (n :: Nat) a = LigoJSON a
 
 -- | Converts string to snake_case
@@ -181,3 +191,15 @@ instance forall n a. (Generic a, GFromJSON Zero (Rep a), KnownNat n) => FromJSON
       genericDrop (natVal (Proxy @n) + 2)
       . toSnakeCase
     }
+
+-- | Replaces textual numbers in the @JSON@ representation
+-- with the actual numbers.
+--
+-- Example:
+-- 1. "123" -> 123
+-- 2. "123ImNotANumber" -> "123ImNotANumber"
+replaceTextualNumbers :: Value -> Value
+replaceTextualNumbers = everywhere $ mkT \case
+  str@(String val) -> parseOnly (scientific <* endOfInput) (T.encodeUtf8 val)
+    & either (const str) Number
+  other -> other

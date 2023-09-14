@@ -96,12 +96,14 @@ instance Hashable PreLigoConvertInfo where
 data LigoLanguageServerState = LigoLanguageServerState
   { lsProgram :: Maybe FilePath
   , lsCollectedRunInfo :: Maybe CollectedRunInfo
-  , lsEntrypoint :: Maybe String  -- ^ @main@ method to use
   , lsAllLocs :: Maybe (Set SourceLocation)
   , lsBinaryPath :: Maybe FilePath
   , lsParsedContracts :: Maybe (HashMap FilePath (LIGO ParsedInfo))
   , lsLambdaLocs :: Maybe (HashSet Range)
   , lsLigoTypesVec :: Maybe LigoTypesVec
+  , lsEntrypoints :: Maybe (Map U.EpName U.Ty)
+    -- ^ A list of available @Michelson@ entrypoints.
+  , lsPickedEntrypoint :: Maybe Text
   , lsVarsComputeThreadPool :: AbortingThreadPool.Pool
   , lsToLigoValueConverter :: DelayedValues.Manager PreLigoConvertInfo LigoOrMichValue
   , lsMoveId :: Word
@@ -122,17 +124,14 @@ instance Buildable LigoLanguageServerState where
 withMichelsonEntrypoint
   :: (MonadIO m)
   => T.Contract param st
-  -> Maybe Text
+  -> Text
   -> (forall arg. SingI arg => T.Notes arg -> T.EntrypointCallT param arg -> m a)
   -> m a
-withMichelsonEntrypoint contract@T.Contract{} mEntrypoint cont = do
+withMichelsonEntrypoint contract@T.Contract{} entrypoint cont = do
   let noParseEntrypointErr = ConfigurationException .
         [int|m|Could not parse entrypoint: #{id}|]
-  michelsonEntrypoint <- case mEntrypoint of
-    Nothing -> pure U.DefEpName
-    -- extension may return default entrypoints as "default"
-    Just "default" -> pure U.DefEpName
-    Just ep -> U.buildEpName (toText $ firstLetterToLowerCase $ toString ep)
+  michelsonEntrypoint <- case entrypoint of
+    ep -> U.buildEpName (toText $ firstLetterToLowerCase $ toString ep)
       & first noParseEntrypointErr
       & fromEither
 
@@ -254,6 +253,16 @@ getLigoTypesVec
   => MonadRIO ext m => m LigoTypesVec
 getLigoTypesVec = "Ligo types are not initialized" `expectInitialized` (lsLigoTypesVec <$> getServerState)
 
+getEntrypoints
+  :: (LanguageServerStateExt ext ~ LigoLanguageServerState)
+  => MonadRIO ext m => m (Map U.EpName U.Ty)
+getEntrypoints = "Entrypoints are not initialized" `expectInitialized` (lsEntrypoints <$> getServerState)
+
+getPickedEntrypoint
+  :: (LanguageServerStateExt ext ~ LigoLanguageServerState)
+  => MonadRIO ext m => m Text
+getPickedEntrypoint = "Picked entrypoint is not initialized" `expectInitialized` (lsPickedEntrypoint <$> getServerState)
+
 getParameterStorageAndOpsTypes :: LigoType -> (LigoType, LigoType, LigoType)
 getParameterStorageAndOpsTypes (LigoTypeResolved typ) =
   fromMaybe (LigoType Nothing, LigoType Nothing, LigoType Nothing) do
@@ -298,6 +307,7 @@ instance Exception SomeDebuggerException where
       , SomeDebuggerException <$> fromException @PluginCommunicationException e
       , SomeDebuggerException <$> fromException @ImpossibleHappened e
       , SomeDebuggerException <$> fromException @LigoIOException e
+      , SomeDebuggerException <$> fromException @LigoResolveConfigException e
       , cast @_ @SomeDebuggerException e'
       ]
 

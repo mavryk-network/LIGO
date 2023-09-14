@@ -20,6 +20,7 @@ import Unsafe qualified
 import Control.Lens (Each (each), _Just, ix, magnify, traversed, (+~), (.=), (^?!))
 import Data.Default (def)
 import Data.HashMap.Strict qualified as HM
+import Data.Map qualified as M
 import Data.Singletons (demote)
 import Data.Text qualified as Text
 import Data.Time.Clock.POSIX (getPOSIXTime)
@@ -69,7 +70,7 @@ import Morley.Michelson.Runtime (ContractState (..), mkVotingPowers)
 import Morley.Michelson.Runtime.Dummy (dummyMaxSteps)
 import Morley.Michelson.Typed
   (Constrained (SomeValue), Contract, Contract' (..), ContractCode' (unContractCode),
-  SomeContract (..))
+  SomeContract (..), pattern DefEpName)
 import Morley.Michelson.Typed qualified as T
 import Morley.Michelson.Untyped qualified as U
 import Morley.Tezos.Address (Constrained (Constrained), ta)
@@ -104,11 +105,13 @@ instance HasLigoClient (RIO LIGO) where
 
 ligoCustomHandlers :: DAP.HandlersSet (RIO LIGO)
 ligoCustomHandlers =
-  [ initializeLoggerHandler
+  [ resolveConfigFromLigo
+  , initializeLoggerHandler
   , setLigoConfigHandler
   , setProgramPathHandler
-  , validateEntrypointHandler
+  , validateModuleNameHandler
   , getContractMetadataHandler
+  , validateEntrypointHandler
   , validateValueHandler
   , validateConfigHandler
   ]
@@ -561,6 +564,10 @@ decompileValue convertInfo@(PreLigoConvertInfo val typ) manager = do
   mLigoVal <- DV.compute manager convertInfo
   pure $ fromMaybe ToBeComputed mLigoVal
 
+resolveConfigFromLigo :: DAP.Handler (RIO LIGO)
+resolveConfigFromLigo = mkLigoHandler \req@LigoResolveConfigFromLigoRequest{} ->
+  respond =<< resolveConfig req.configPath
+
 initializeLoggerHandler :: DAP.Handler (RIO LIGO)
 initializeLoggerHandler = mkLigoHandler \req@LigoInitializeLoggerRequest{} -> do
   let file = req.file
@@ -607,12 +614,13 @@ setLigoConfigHandler = mkLigoHandler \req@LigoSetLigoConfigRequest{} -> do
   atomically $ writeTVar lServVar $ Just LigoLanguageServerState
     { lsProgram = Nothing
     , lsCollectedRunInfo = Nothing
-    , lsEntrypoint = Nothing
     , lsAllLocs = Nothing
     , lsBinaryPath = req.binaryPath
     , lsParsedContracts = Nothing
     , lsLambdaLocs = Nothing
     , lsLigoTypesVec = Nothing
+    , lsEntrypoints = Nothing
+    , lsPickedEntrypoint = Nothing
     , lsToLigoValueConverter = toLigoValueConverter
     , lsVarsComputeThreadPool = varsComputeThreadPool
     , lsMoveId = 0
@@ -638,25 +646,25 @@ setProgramPathHandler = mkLigoHandler \req@LigoSetProgramPathRequest{} -> do
   getExt req.program
     & either throwIO (void . pure)
 
-  EntrypointsList{..} <- getAvailableEntrypoints req.program
+  ModuleNamesList{..} <- getAvailableModules req.program
 
   lServVar <- asks _rcLSState
   atomically $ modifyTVar lServVar $ fmap \lServ -> lServ
     { lsProgram = Just req.program
     }
   LigoSetProgramPathResponse
-    { entrypoints = unEntrypoints
-        <&> \ep@EntrypointName{..} -> ([int||#{enModule}.#{enName}|], pretty ep)
+    { moduleNames = unModuleNamesList
+        <&> \modName@ModuleName{..} -> ([int||#{enModule}.#{enName}|], pretty modName)
     }
     `respondAndAlso` do
 
     let program = req.program
     logMessage [int||Setting program path #{program} is finished|]
 
-validateEntrypointHandler :: DAP.Handler (RIO LIGO)
-validateEntrypointHandler = mkLigoHandler \req@LigoValidateEntrypointRequest{} -> do
+validateModuleNameHandler :: DAP.Handler (RIO LIGO)
+validateModuleNameHandler = mkLigoHandler \req@LigoValidateModuleNameRequest{} -> do
   program <- getProgram
-  result <- try @_ @LigoCallException (checkCompilation (mkEntrypointName req.entrypoint) program)
+  result <- try @_ @LigoCallException (checkCompilation (mkModuleName req.moduleName) program)
 
   respond $ ligoValidateFromEither (first pretty result)
 
@@ -668,23 +676,23 @@ getContractMetadataHandler = mkLigoHandler \req@LigoGetContractMetadataRequest{}
   unlessM (doesFileExist program) $
     throwIO $ ConfigurationException [int||Contract file not found: #{toText program}|]
 
-  let entrypointName = mkEntrypointName req.entrypoint
+  let moduleName = mkModuleName req.moduleName
 
   -- Here we're catching exception explicitly in order to store it
   -- inside language server state and rethrow it in @initDebuggerSession@
-  try (compileLigoContractDebug entrypointName program) >>= \case
+  try (compileLigoContractDebug moduleName program) >>= \case
     Left (LigoCallException msg) -> do
       -- Since we're packing this exception in @handleGetContractMetadata@
       -- when calling @compileLigoContractDebug@ this exception signalizes
-      -- about the problem with an entrypoint.
+      -- about the problem with a module name.
       --
       -- Here is explanation. @compileLigoContractDebug@ can fail in 3 cases:
       -- 1. Something is wrong with @ligo@ binary.
       -- 2. Our contract is malformed.
-      -- 3. Can't compile the contract with the given entrypoint.
+      -- 3. Can't compile the contract with the given module name.
       --
       -- 1 and 2 are cutting of after @handleSetProgramPath@ because of calling
-      -- @getAvailableEntrypoints@.
+      -- @getAvailableModules@.
       throwIO $ ConfigurationException msg
 
     Right ligoDebugInfo -> do
@@ -705,13 +713,13 @@ getContractMetadataHandler = mkLigoHandler \req@LigoGetContractMetadataRequest{}
 
         let
           paramNotes = cParamNotes contract
-          handleImplicit
-              -- If the user wants to use module entrypoint then it would be
-              -- convenient to exclude default Michelson entrypoint.
-            | enName entrypointName == generatedMainName = U.WithoutImplicitDefaultEp
-            | otherwise = U.WithImplicitDefaultEp
           michelsonEntrypoints =
-            T.flattenEntrypoints handleImplicit paramNotes
+            T.flattenEntrypoints U.WithImplicitDefaultEp paramNotes
+            -- Now we have only module entrypoints. If the contract has
+            -- only one @entry then we should provide default entrypoint.
+            -- Otherwise, we can provide only a list of entrypoints without
+            -- a default one.
+            & \mp -> if M.size mp > 1 then M.delete DefEpName mp else mp
 
         atomically $ modifyTVar lServVar $ fmap \lServ -> lServ
           { lsCollectedRunInfo = Just $ onlyContractRunInfo contract
@@ -719,6 +727,7 @@ getContractMetadataHandler = mkLigoHandler \req@LigoGetContractMetadataRequest{}
           , lsParsedContracts = Just parsedContracts
           , lsLambdaLocs = Just lambdaLocs
           , lsLigoTypesVec = Just ligoTypesVec
+          , lsEntrypoints = Just michelsonEntrypoints
           , lsEntrypointType = Just entrypointType
           }
 
@@ -735,9 +744,25 @@ getContractMetadataHandler = mkLigoHandler \req@LigoGetContractMetadataRequest{}
               JsonFromBuildable (T.convertParamNotes paramNotes)
           , storageMichelsonType =
               JsonFromBuildable (T.mkUType $ T.cStoreNotes contract)
-          , michelsonEntrypoints =
+          , entrypoints =
               JsonFromBuildable <$> michelsonEntrypoints
           }
+
+validateEntrypointHandler :: DAP.Handler (RIO LIGO)
+validateEntrypointHandler = mkLigoHandler \req@LigoValidateEntrypointRequest{} -> do
+  let pickedEntrypoint = U.UnsafeEpName req.pickedEntrypoint
+  entrypoints <- getEntrypoints
+
+  if pickedEntrypoint `M.member` entrypoints
+  then do
+    lServVar <- asks (_rcLSState @LIGO)
+    atomically $ modifyTVar lServVar $ fmap \lServ -> lServ
+      { lsPickedEntrypoint = Just req.pickedEntrypoint
+      }
+
+    respond LigoValidateOk
+  else
+    respond $ LigoValidateFailed [int||Entrypoint #{pickedEntrypoint} doesn't exist|]
 
 validateValueHandler :: DAP.Handler (RIO LIGO)
 validateValueHandler = mkLigoHandler \req@LigoValidateValueRequest{} -> do
@@ -750,9 +775,11 @@ validateValueHandler = mkLigoHandler \req@LigoValidateValueRequest{} -> do
 
   let (parameterType, storageType, _) = getParameterStorageAndOpsTypes entrypointType
 
+  pickedEntrypoint <- getPickedEntrypoint
+
   parseRes <- case req.category of
     "parameter" ->
-      withMichelsonEntrypoint contract req.pickedMichelsonEntrypoint $
+      withMichelsonEntrypoint contract pickedEntrypoint $
         \(_ :: T.Notes arg) _ ->
         void <$> parseValue @arg program
           req.category req.value req.valueLang parameterType
@@ -782,7 +809,9 @@ validateConfigHandler = mkLigoHandler \req@LigoValidateConfigRequest{} -> do
 
   let (parameterType, storageType, _) = getParameterStorageAndOpsTypes entrypointType
 
-  withMichelsonEntrypoint contract req.michelsonEntrypoint
+  entrypoint <- getPickedEntrypoint
+
+  withMichelsonEntrypoint contract entrypoint
     \(_ :: T.Notes arg) epc -> do
       do let param = req.parameter; paramLang = req.parameterLang
          logMessage [int||

@@ -238,11 +238,13 @@ let test_mutation =
 
 ```jsligo test-ligo group=twice
 const test_mutation =
-  match(Test.mutation_test(twice, simple_tests), {
-    None: () => unit,
-    Some: pmutation => { Test.log(pmutation[1]);
-                         Test.println("Some mutation also passes the tests! ^^") }
-  });
+  match(Test.mutation_test(twice, simple_tests)) {
+    when(None()): unit;
+    when(Some(pmutation)): do {
+      Test.log(pmutation[1]);
+      Test.println("Some mutation also passes the tests! ^^")
+    }
+  };
 ```
 
 </Syntax>
@@ -488,9 +490,10 @@ const sub = (store: storage, delta: int): storage => store - delta;
 const main = (action: parameter, store: storage) : return_ => {
   return [
     list([]) as list<operation>,    // No operations
-    match(action, {
-      Increment:(n: int) => add (store, n),
-      Decrement:(n: int) => sub (store, n)})
+    match(action) {
+      when(Increment(n)): add (store, n);
+      when(Decrement(n)): sub (store, n)
+    }
   ]
 };
 ```
@@ -547,9 +550,9 @@ let test = originate_and_test main
 
 const originate_and_test = (mainf : (p: parameter) => (s: storage) => return_) : unit => {
   let initial_storage = 5 as int;
-  let [taddr, _code, _size] = Test.originate(mainf, initial_storage, 0 as tez);
+  let [taddr, _code, _size] = Test.originate(mainf, initial_storage, 0tez);
   let contr = Test.to_contract(taddr);
-  let _t = Test.transfer_to_contract_exn(contr, (Increment (7)), 1 as mutez);
+  let _t = Test.transfer_to_contract_exn(contr, (Increment (7)), 1mutez);
   assert (Test.get_storage(taddr) == initial_storage + 7);
 };
 
@@ -589,11 +592,13 @@ let test_mutation =
 
 ```jsligo test-ligo group=frontpage
 const test_mutation =
-  match(Test.mutation_test(main, originate_and_test), {
-    None: () => unit,
-    Some: pmutation => { Test.log(pmutation[1]);
-                         Test.println("Some mutation also passes the tests! ^^") }
-  });
+  match(Test.mutation_test(main, originate_and_test)) {
+    when(None()): unit;
+    when(Some(pmutation)): do {
+      Test.log(pmutation[1]);
+      Test.println("Some mutation also passes the tests! ^^")
+    }
+  };
 ```
 
 </Syntax>
@@ -707,8 +712,8 @@ const originate_and_test_dec = (mainf : ((p: parameter, s: storage) => return_))
   let initial_storage = 5 as int;
   let [taddr, _code, _size] = Test.originate(mainf, initial_storage, 0 as tez);
   let contr = Test.to_contract(taddr);
-  let _t1 = Test.transfer_to_contract_exn(contr, (Increment (7)), 1 as mutez);
-  let _t2 = Test.transfer_to_contract_exn(contr, (Decrement (3)), 1 as mutez);
+  let _t1 = Test.transfer_to_contract_exn(contr, (Increment (7)), 1mutez);
+  let _t2 = Test.transfer_to_contract_exn(contr, (Decrement (3)), 1mutez);
   assert (Test.get_storage(taddr) == initial_storage + 4);
 };
 ```
@@ -788,18 +793,19 @@ let test_mutation_all =
 
 ```jsligo test-ligo group=frontpage
 const test_mutation_all =
-  match(Test.mutation_test_all(main, originate_and_test_dec), list([
-    ([]: list<[unit, mutation]>) => unit,
-    ([hd,...tl]: list<[unit, mutation]>) => {
-                         let ms = list([hd,...tl]);
-                         for (const m of ms) {
-                           let [_, mutation] = m;
-                           let path = Test.save_mutation(".", mutation);
-                           Test.log("saved at:");
-                           Test.log(path);
-                         };
-                         Test.println("Some mutation also passes the tests! ^^") }
-  ]));
+  match(Test.mutation_test_all(main, originate_and_test_dec)) {
+    when([]): unit;
+    when([hd,...tl]): do {
+      let ms = list([hd,...tl]);
+      for (const m of ms) {
+        let [_, mutation] = m;
+        let path = Test.save_mutation(".", mutation);
+        Test.log("saved at:");
+        Test.log(path);
+      };
+      Test.println("Some mutation also passes the tests! ^^")
+    }
+  };
 ```
 
 </Syntax>
@@ -923,9 +929,10 @@ const main = (action: parameter, store: storage) : return_ => {
   /* @no_mutation */ let _ = assert (0 == 0);
   return [
     list([]) as list<operation>,    // No operations
-    match(action, {
-      Increment:(n: int) => add (store, n),
-      Decrement:(n: int) => sub (store, n)})
+    match(action) {
+      when(Increment(n)): add (store, n);
+      when(Decrement(n)): sub (store, n)
+    }
   ]
 };
 ```

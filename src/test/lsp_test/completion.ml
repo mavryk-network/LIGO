@@ -449,7 +449,7 @@ let test_cases_jsligo =
         [ CompletionItem.create
             ~label:"nested"
             ~kind:CompletionItemKind.Variable
-            ~detail:"{\n  left: int;\n  right: int\n}"
+            ~detail:"{ left: int; right: int }"
             ~sortText:"\x05"
             ()
         ]
@@ -493,7 +493,7 @@ let test_cases_jsligo =
         [ CompletionItem.create
             ~label:"nested"
             ~kind:CompletionItemKind.Variable
-            ~detail:"{\n  left: int;\n  right: int\n}"
+            ~detail:"{ left: int; right: int }"
             ~sortText:"\x05"
             ()
         ]

@@ -5,7 +5,8 @@ let someCheck(a, b : int * int) =
   then failwith "bruh"
   else ()
 
-let main (_, s : unit * int) : operation list * int = begin
+[@entry]
+let main () (s : int) : operation list * int = begin
   let a = s + 2 in
   someCheck(10, 15);
   let b = add(a, s + a) in let c = 1000 - 7 in

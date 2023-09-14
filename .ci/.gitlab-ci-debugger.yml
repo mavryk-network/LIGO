@@ -44,11 +44,13 @@ debugger-danger-instant-checks:
         - tools/debugger/**/*
         - danger/**/*
   needs: []
+  allow_failure: true
   interruptible: true
   script:
     - nix develop ./tools/debugger#ci -c danger --fail-on-errors=true
         --dangerfile=./danger/instant-checks.rb
         --danger_id=instant
+  allow_failure: true
 
 debugger-danger-hlint:
   stage: tools-precheck
@@ -83,9 +85,7 @@ debugger-build:
 
 debugger-weeder:
   stage: tools-check
-  rules: &debugger_mr_dev
-    - !reference [.debugger_mr_changes]
-    - !reference [.dev]
+  rules: *debugger_mr_dev
   needs: [debugger-build]
   script:
     - cd ./tools/debugger
@@ -94,7 +94,8 @@ debugger-weeder:
 
 debugger-test-ligo-recommended:
   stage: tools-check
-  rules: *debugger_mr_dev
+  rules:
+    - !reference [.vscode_production]
   needs: [debugger-build]
   variables:
     LIGO_VERSION_FILE: "./tools/debugger/ligo-debugger/src/resources/versions/recommended"
@@ -135,27 +136,3 @@ debugger-test-ligo-minimal-supported:
   before_script: *get_release_ligo_binary
   script: *run_ligo_debugger_tests
   allow_failure: true
-
-vscode-debugger-extension:
-  stage: tooling
-  rules:
-    - !reference [.debugger_mr_changes]
-    - !reference [.dev]
-    - !reference [.vscode_production]
-  needs: []
-  script:
-    - nix build $FLAKE_FLAGS ./tools/debugger#ligo-debugger-extension
-    - cp -Lr --no-preserve=mode,ownership,timestamps result/*.vsix ligo-debugger-extension.vsix
-  artifacts:
-    paths:
-      - ligo-debugger-extension.vsix
-
-vscode-debugger-extension-publish:
-  stage: push
-  rules:
-    - !reference [.vscode_production]
-  needs: [vscode-debugger-extension]
-  when: manual
-  script:
-    - nix develop ./tools/vsce --command vsce publish --packagePath *.vsix # Uses VSCE_PAT env variable as personal access token
-    - nix develop ./tools/vsce --command ovsx publish *.vsix # Uses OVSX_PAT env variable as personal access token

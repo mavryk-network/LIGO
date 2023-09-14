@@ -36,22 +36,16 @@ print the ligo changelog
 print intermediary program representation. Warning: Intended for development of LIGO and can break at any time
 
 **install**
-install LIGO dependencies declared in package.json
-
-**publish**
-[BETA] publish the LIGO package declared in package.json
-
-**add-user**
-[BETA] create a new user for the LIGO package registry
-
-**login**
-[BETA] login to the LIGO package registry
+install LIGO dependencies declared in ligo.json
 
 **lsp**
 [BETA] launch a LIGO lsp server
 
 **analytics**
 Manage analytics
+
+**registry**
+Commands to interact with Ligo Package Registry
 
 **version**
 print version information

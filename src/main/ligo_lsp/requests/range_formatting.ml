@@ -11,7 +11,7 @@ open Lsp_helpers
 
 type declaration =
   ( Cst_cameligo.CST.declaration
-  , Cst_jsligo.CST.toplevel_statement
+  , Cst_jsligo.CST.statement
   , Cst_pascaligo.CST.declaration )
   Dialect_cst.dialect
 
@@ -19,7 +19,7 @@ let decl_range : declaration -> Range.t =
   Range.of_region
   <@ Dialect_cst.from_dialect
        { cameligo = Cst_cameligo.CST.declaration_to_region
-       ; jsligo = Cst_jsligo.CST.toplevel_statement_to_region
+       ; jsligo = Cst_jsligo.CST.statement_to_region
        ; pascaligo = Cst_pascaligo.CST.region_of_S_Decl
        }
 
@@ -31,22 +31,22 @@ let decls_of_cst : Dialect_cst.t -> declaration Nseq.nseq =
           fun cst -> Nseq.nseq_map (fun x -> Dialect_cst.CameLIGO x) cst.decl)
     ; jsligo =
         Cst_jsligo.CST.(
-          fun cst ->
+          fun (cst : t) ->
             Nseq.nseq_map
-              (fun x -> Dialect_cst.JsLIGO x)
-              (cst : t).statements (* Type inference is not working here *))
+              (fun (x, _) -> Dialect_cst.JsLIGO x)
+              cst.statements (* Type inference is not working here *))
     ; pascaligo =
         Cst_pascaligo.CST.(
           fun cst -> Nseq.nseq_map (fun x -> Dialect_cst.PascaLIGO x) cst.decl)
     }
 
 
-let print_decl : Ligo_interface.pp_mode -> declaration -> string =
+let print_decl : Pretty.pp_mode -> declaration -> string =
  fun pp_mode ->
-  Ligo_interface.with_pp_mode
+  Pretty.with_pp_mode
     pp_mode
     { cameligo = uncurry CameLIGO_pretty.print_declaration
-    ; jsligo = uncurry JsLIGO_pretty.print_toplevel_statement
+    ; jsligo = uncurry JsLIGO_pretty.print_statement
     ; pascaligo = uncurry PascaLIGO_pretty.print_declaration
     }
 
@@ -56,7 +56,7 @@ let print_decl : Ligo_interface.pp_mode -> declaration -> string =
 let strip_trailing_newline (s : string) : string = String.rstrip s
 
 let range_formatting
-    (pp_mode : Ligo_interface.pp_mode)
+    (pp_mode : Pretty.pp_mode)
     (decls : declaration Nseq.nseq)
     (range : Range.t)
     : TextEdit.t list option
@@ -89,7 +89,7 @@ let on_req_range_formatting
     @@ Format.asprintf
          "Formatting request on %s, mode: %a"
          (Path.to_string file)
-         Ligo_interface.pp_pp_mode
+         Pretty.pp_pp_mode
          pp_mode
   in
   if Helpers_file.is_packaged file

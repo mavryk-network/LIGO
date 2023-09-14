@@ -2,6 +2,7 @@ module CST = Cst.Cameligo
 module AST = Ast_unified
 module Helpers = Unification_shared.Helpers
 open Simple_utils
+open Simple_utils.Function
 module Label = Ligo_prim.Label
 open Lexing_cameligo.Token
 
@@ -27,6 +28,7 @@ and decompile_program p = AST.Catamorphism.cata_program ~f:folder p
 and decompile_expression e = AST.Catamorphism.cata_expr ~f:folder e
 and decompile_pattern p = AST.Catamorphism.cata_pattern ~f:folder p
 and decompile_type_expression t = AST.Catamorphism.cata_ty_expr ~f:folder t
+and decompile_mvar x = Format.asprintf "%a" AST.Mod_variable.pp x
 
 (* Helpers *)
 
@@ -147,7 +149,7 @@ and pattern : (CST.pattern, CST.type_expr) AST.pattern_ -> CST.pattern =
     | None -> constr
     | Some pat -> P_App (w (constr, Some pat)))
   | P_tuple lst ->
-    let lst = Utils.list_to_nsepseq_opt lst ghost_comma in
+    let lst = Utils.list_to_sepseq lst ghost_comma in
     let lst =
       match lst with
       | None -> failwith "Decompiler: empty P_tuple"
@@ -196,7 +198,7 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
   let needs_parens : CST.type_expr -> bool = function
     (* When we apply type constr to some type, sometimes we need to add parens
       e.g. [A of int] -> [(A of int) option] vs [{a : int}] -> [{ a : int }] option. *)
-    | T_Fun _ | T_Cart _ | T_Variant _ | T_Attr _ | T_Parameter _ -> true
+    | T_Fun _ | T_Cart _ | T_Variant _ | T_Attr _ | T_ParameterOf _ -> true
     | T_Par _
     | T_App _
     | T_Var _
@@ -302,7 +304,7 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
     T_Record (w CST.{ lbrace = ghost_lbrace; inside = pairs; rbrace = ghost_rbrace })
   | T_sum_raw row ->
     let pairs =
-      Utils.list_to_nsepseq_opt
+      Utils.list_to_sepseq
         (List.map
            ~f:(fun (Label.Label constr, { associated_type; attributes; decl_pos = _ }) ->
              w
@@ -335,6 +337,11 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
       @@ decompile_mod_path { module_path; field = decompile_tvar field; field_as_open })
   | T_disc_union _ -> failwith "Decompiler: disc unions should appear only in JsLIGO"
   | T_named_fun _ -> failwith "Decompiler: Named arguments should appear only in JsLIGO"
+  | T_contract_parameter x ->
+    let lst =
+      Utils.nsepseq_of_nseq (List.Ne.map (Wrap.ghost <@ decompile_mvar) x) ~sep:ghost_dot
+    in
+    T_ParameterOf (w lst)
   (* This node is not initial,
   i.e. types like [∀ a : * . option (a) -> bool] can not exist at Ast_unified level,
   so type declaration that contains expression with abstraction should be transformed to
