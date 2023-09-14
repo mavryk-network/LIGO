@@ -1155,12 +1155,17 @@ and check_pattern
     , T_construct { constructor = Literal_types.List; parameters = [ elt_type ]; _ } ) ->
     let elts, tail = List.drop_last_exn list_pat, List.last_exn list_pat in
     let%bind elts =
-      elts |> List.map ~f:(fun (pat, _IGNORED) -> check pat elt_type) |> all
+      elts
+      |> List.map ~f:(function
+             | pat, false -> check pat elt_type
+             | _ -> raise @@ corner_case "Expected non-ellipses on elements of the list")
+      |> all
     in
     let%bind tail =
       tail
       |> function
-      | pat, _IGNORED -> check pat type_
+      | pat, true -> check pat type_
+      | _ -> raise @@ corner_case "Expected ellipsis at the tail of the list"
     in
     const
       E.(
@@ -1287,12 +1292,17 @@ and infer_pattern ~mut ~single (pat : I.type_expression option I.Pattern.t)
     let%bind t_list = create_type @@ Type.t_list elt_type in
     let elts, tail = List.drop_last_exn list_pat, List.last_exn list_pat in
     let%bind elts =
-      elts |> List.map ~f:(fun (pat, _IGNORED) -> check pat elt_type) |> all
+      elts
+      |> List.map ~f:(function
+             | pat, false -> check pat elt_type
+             | _ -> raise @@ corner_case "Expected non-ellipses on elements of the list")
+      |> all
     in
     let%bind tail =
       tail
       |> function
-      | pat, _IGNORED -> check pat t_list
+      | pat, true -> check pat t_list
+      | _ -> raise @@ corner_case "Expected ellipsis at the tail of the list"
     in
     const
       E.(
