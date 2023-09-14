@@ -28,7 +28,7 @@ let hover_string : Syntax_types.t -> Scopes.def -> string Handler.t =
     let type_info = Type_definition.get_type vdef in
     Option.value_map
       ~default:(return @@ Helpers_pretty.unresolved_type_as_comment syntax)
-      ~f:(print_type_with_prefix ~prefix <@ Type_definition.use_var_name_if_availiable)
+      ~f:(print_type_with_prefix ~prefix <@ Type_definition.use_var_name_if_available)
       type_info
   | Type tdef ->
     let rec get_params (t : Ast_core.type_content) =

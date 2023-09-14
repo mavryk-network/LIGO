@@ -10,7 +10,7 @@ type type_info =
   }
 
 (* Use most compact type expression available *)
-let use_var_name_if_availiable : type_info -> Ast_core.type_expression =
+let use_var_name_if_available : type_info -> Ast_core.type_expression =
  fun { var_name; contents } -> Option.value ~default:contents var_name
 
 
@@ -55,7 +55,7 @@ let on_req_type_definition : Position.t -> Path.t -> Locations.t option Handler.
        get_type vdef
        >>= fun type_expression ->
        let location =
-         Def.Def_location.of_loc (use_var_name_if_availiable type_expression).location
+         Def.Def_location.of_loc (use_var_name_if_available type_expression).location
        in
        (match location with
        | StdLib _ | Virtual _ ->
