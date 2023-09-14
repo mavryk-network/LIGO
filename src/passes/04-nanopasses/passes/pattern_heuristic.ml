@@ -1,7 +1,7 @@
 open Ast_unified
 open Pass_type
-open Errors
-open Simple_utils.Trace
+(* open Errors *)
+(* open Simple_utils.Trace *)
 module Location = Simple_utils.Location
 
 (* A series of heuristics for patterns, focused on JsLIGO patterns *)
@@ -56,16 +56,16 @@ let tuple_to_list (p : pattern) =
 
 
 (* Replace all ellipsis for tuple *)
-let remove_ellipsis ~raise (p : pattern) =
+let remove_ellipsis ~raise:_ (p : pattern) =
   let loc, p = destruct_p p in
   match p with
   | P_tuple_with_ellipsis l ->
     let l =
       List.map
-        ~f:(fun { pattern; ellipsis } ->
-          if ellipsis
-          then raise.error (invalid_list_pattern_match (get_p_loc pattern))
-          else pattern)
+        ~f:(fun { pattern; ellipsis } -> ignore ellipsis; pattern)
+          (* if ellipsis *)
+          (* then raise.error (invalid_list_pattern_match (get_p_loc pattern)) *)
+          (* else pattern) *)
         l
     in
     true, make_p ~loc (P_tuple l)
@@ -77,7 +77,7 @@ let compile ~raise =
    fun p ->
     let loc = Location.get_location p in
     let p = make_p ~loc (Location.unwrap p) in
-    let p = map_pattern ~f:tuple_to_list p in
+    (* let p = map_pattern ~f:tuple_to_list p in *)
     let p = map_pattern ~f:(remove_ellipsis ~raise) p in
     p
   in

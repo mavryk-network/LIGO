@@ -1137,23 +1137,37 @@ and check_pattern ~mut (pat : I.type_expression option I.Pattern.t) (type_ : Typ
       E.(
         let%bind type_ = decode type_ in
         return @@ P.P_var (Binder.set_ascr binder type_))
-  | ( P_list (Cons (hd_pat, tl_pat))
-    , T_construct { constructor = Literal_types.List; parameters = [ elt_type ]; _ } ) ->
-    let%bind hd_pat = check hd_pat elt_type in
-    let%bind tl_pat = check tl_pat type_ in
-    const
-      E.(
-        let%bind hd_pat = hd_pat
-        and tl_pat = tl_pat in
-        return @@ P.P_list (Cons (hd_pat, tl_pat)))
-  | ( P_list (List list_pat)
-    , T_construct { constructor = Literal_types.List; parameters = [ elt_type ]; _ } ) ->
-    let%bind list_pat = list_pat |> List.map ~f:(fun pat -> check pat elt_type) |> all in
-    const
-      E.(
-        let%bind list_pat = all list_pat in
-        return @@ P.P_list (List list_pat))
   | P_variant (label, arg_pat), T_sum row ->
+    let%bind label_row_elem = raise_opt ~error:err @@ Map.find row.fields label in
+    let%bind arg_pat = check arg_pat label_row_elem in
+    const
+      E.(
+        let%bind arg_pat = arg_pat in
+        return @@ P.P_variant (label, arg_pat))
+  | ( P_tuple []
+    , T_construct { constructor = Literal_types.List; parameters = [ elt_type ]; _ } ) ->
+    const
+      E.(
+        return @@ P.P_list (List []))
+  | ( P_tuple list_pat
+    , T_construct { constructor = Literal_types.List; parameters = [ elt_type ]; _ } ) ->
+    let elts, tail = List.drop_last_exn list_pat, List.last_exn list_pat in
+    let%bind elts = elts |> List.map ~f:(fun pat -> check pat elt_type) |> all in
+    let%bind tail = tail |> fun pat -> check pat type_ in
+    const
+      E.(
+        let%bind elts = all elts in
+        let%bind tail = tail in
+        let list_pat =
+          List.fold_right elts ~init:tail ~f:(fun p q -> Location.wrap ~loc:Location.generated (P.P_list (Cons (p, q))))
+        in
+        return @@ Location.unwrap list_pat)
+  | P_tuple tuple_pat, T_sum row
+    when Option.is_some (get_constructor_of_pattern tuple_pat) ->
+    let%bind label, arg_pat =
+      raise_opt ~error:(corner_case "Expected constructor pattern")
+      @@ get_constructor_of_pattern tuple_pat
+    in
     let%bind label_row_elem = raise_opt ~error:err @@ Map.find row.fields label in
     let%bind arg_pat = check arg_pat label_row_elem in
     const
