@@ -1141,6 +1141,22 @@ and check_pattern
       E.(
         let%bind type_ = decode type_ in
         return @@ P.P_var (Binder.set_ascr binder type_))
+  | ( P_list (Cons (hd_pat, tl_pat))
+    , T_construct { constructor = Literal_types.List; parameters = [ elt_type ]; _ } ) ->
+    let%bind hd_pat = check hd_pat elt_type in
+    let%bind tl_pat = check tl_pat type_ in
+    const
+      E.(
+        let%bind hd_pat = hd_pat
+        and tl_pat = tl_pat in
+        return @@ P.P_list (Cons (hd_pat, tl_pat)))
+  | ( P_list (List list_pat)
+    , T_construct { constructor = Literal_types.List; parameters = [ elt_type ]; _ } ) ->
+    let%bind list_pat = list_pat |> List.map ~f:(fun pat -> check pat elt_type) |> all in
+    const
+      E.(
+        let%bind list_pat = all list_pat in
+        return @@ P.P_list (List list_pat))
   | P_variant (label, arg_pat), T_sum row ->
     let%bind label_row_elem = raise_opt ~error:err @@ Map.find row.fields label in
     let%bind arg_pat = check arg_pat label_row_elem in
