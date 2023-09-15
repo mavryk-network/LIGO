@@ -156,11 +156,11 @@ and pattern : (CST.pattern, CST.type_expr) AST.pattern_ -> CST.pattern =
       | Some lst -> lst
     in
     P_Par (w CST.{ lpar = ghost_lpar; inside = P_Tuple (w lst); rpar = ghost_rpar })
-  | P_tuple_with_ellipsis lst ->
+  | P_array lst ->
     let lst =
       List.map
         ~f:(function
-          | { pattern; _ } -> pattern)
+          | Expr_entry pattern | Rest_entry pattern -> pattern)
         lst
     in
     let lst = Utils.list_to_sepseq lst ghost_comma in

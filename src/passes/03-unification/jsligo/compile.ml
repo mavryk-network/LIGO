@@ -560,10 +560,10 @@ let pattern : Eq.pattern -> Folding.pattern =
     | lst ->
       let f (v : I.pattern I.element) =
         match v with
-        | None, pattern -> O.{ pattern; ellipsis = false }
-        | Some _, pattern -> { pattern; ellipsis = true }
+        | None, pattern -> O.Array_repr.Expr_entry pattern
+        | Some _, pattern -> Rest_entry pattern
       in
-      return @@ P_tuple_with_ellipsis (List.map ~f p))
+      return @@ P_array (List.map ~f p))
 
 
 (* in JSLIGO, instruction ; statements and declaration are all statement *)

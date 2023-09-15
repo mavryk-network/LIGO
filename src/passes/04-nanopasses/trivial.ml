@@ -417,8 +417,14 @@ end = struct
     | P_variant (l, None) ->
       ret @@ P_variant (l, Location.wrap ~loc:location O.Pattern.P_unit)
     | P_tuple lst -> ret @@ P_tuple (List.map ~f:(fun p -> p, false) lst)
-    | P_tuple_with_ellipsis lst ->
-      ret @@ P_tuple (List.map ~f:(fun { pattern; ellipsis } -> pattern, ellipsis) lst)
+    | P_array lst ->
+      ret
+      @@ P_tuple
+           (List.map
+              ~f:(function
+                | Expr_entry pattern -> pattern, false
+                | Rest_entry pattern -> pattern, true)
+              lst)
     | P_pun_record lst
       when List.for_all lst ~f:(function
                | Punned _ -> false
@@ -713,9 +719,11 @@ end = struct
     | P_variant (l, p) -> ret @@ P_variant (l, Some p)
     | P_tuple lst ->
       ret
-      @@ P_tuple_with_ellipsis
+      @@ P_array
            (List.map
-              ~f:(fun (pattern, ellipsis) : _ O.element_pattern -> { ellipsis; pattern })
+              ~f:(function
+                | pattern, ellipsis ->
+                  if ellipsis then O.Array_repr.Rest_entry pattern else Expr_entry pattern)
               lst)
     | P_record lst ->
       let lst =

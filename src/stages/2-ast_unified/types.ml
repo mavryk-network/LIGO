@@ -150,7 +150,8 @@ and ('self, 'ty_expr) pattern_content_ =
   | P_list of 'self list_pattern
   | P_variant of Label.t * 'self option
   | P_tuple of 'self list
-  | P_tuple_with_ellipsis of 'self element_pattern list
+  | P_array of
+      'self Array_repr.t (* [1, 2, 3] , [42] , [] , [2 ...3] (specific to jsligo) *)
   | P_pun_record of (Label.t, 'self) Field.t list
   | P_rest of Label.t
   | P_attr of Attribute.t * 'self
