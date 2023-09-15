@@ -1172,9 +1172,14 @@ and check_pattern
   | P_tuple tuple_pat, T_record row when Map.length row.fields = List.length tuple_pat ->
     let%bind tuple_pat =
       tuple_pat
-      |> List.mapi ~f:(fun i (pat, _IGNORED) ->
+      |> List.mapi ~f:(fun i (pat, has_ellipsis) ->
              let%bind pat_row_elem =
                raise_opt ~error:err @@ Map.find row.fields (Label (Int.to_string i))
+             in
+             let%bind () =
+               assert_
+                 ~error:(corner_case "Ellipsis not expected in this position")
+                 (not has_ellipsis)
              in
              let%bind pat_type = Context.tapply pat_row_elem in
              check pat pat_type)
@@ -1260,7 +1265,12 @@ and infer_tuple_pattern
   | tuple_pat ->
     let%bind tuple_types, tuple_pat =
       tuple_pat
-      |> List.mapi ~f:(fun i (pat, _IGNORED) ->
+      |> List.mapi ~f:(fun i (pat, has_ellipsis) ->
+             let%bind () =
+               assert_
+                 ~error:(corner_case "Ellipsis not expected in this position")
+                 (not has_ellipsis)
+             in
              let%bind pat_type, pat = infer pat in
              return ((Label.Label (Int.to_string i), pat_type), pat))
       |> all
@@ -1674,9 +1684,9 @@ and infer_module (module_ : I.module_) : (Signature.t * O.module_ E.t, _, _) C.t
   in
   let%bind inferred_module_sig, module_expr = loop module_ in
   (* A module is said to have a 'contract'ual signature if:
-      - it contains at least 1 entrypoint
-      - it contains zero or more views
-   *)
+     - it contains at least 1 entrypoint
+     - it contains zero or more views
+  *)
   let entrypoints =
     List.filter_map inferred_module_sig.items ~f:(function
         | S_value (var, type_, attr) when attr.entry -> Some (var, type_)
