@@ -1151,22 +1151,14 @@ and check_pattern
   | ( P_tuple []
     , T_construct { constructor = Literal_types.List; parameters = [ elt_type ]; _ } ) ->
     const E.(return @@ P.P_list (List []))
-  | ( P_tuple list_pat
+  | ( P_tuple tuple_pat
     , T_construct { constructor = Literal_types.List; parameters = [ elt_type ]; _ } ) ->
-    let elts, tail = List.drop_last_exn list_pat, List.last_exn list_pat in
-    let%bind elts =
-      elts
-      |> List.map ~f:(function
-             | pat, false -> check pat elt_type
-             | _ -> raise @@ corner_case "Expected non-ellipses on elements of the list")
-      |> all
+    let%bind elts, tail =
+      raise_opt ~error:(corner_case "Expected a list pattern")
+      @@ I.Pattern.get_list_of_tuple_pattern tuple_pat
     in
-    let%bind tail =
-      tail
-      |> function
-      | pat, true -> check pat type_
-      | _ -> raise @@ corner_case "Expected ellipsis at the tail of the list"
-    in
+    let%bind elts = elts |> List.map ~f:(fun pat -> check pat elt_type) |> all in
+    let%bind tail = check tail type_ in
     let%bind loc = loc () in
     const
       E.(
@@ -1245,23 +1237,15 @@ and infer_tuple_pattern
     let%bind elt_type = exists Type in
     let%bind t_list = create_type @@ Type.t_list elt_type in
     const E.(return @@ P.P_list (List [])) t_list
-  | list_pat when List.exists ~f:(fun (_, b) -> b) list_pat ->
+  | _ when Option.is_some (I.Pattern.get_list_of_tuple_pattern tuple_pat) ->
     let%bind elt_type = exists Type in
     let%bind t_list = create_type @@ Type.t_list elt_type in
-    let elts, tail = List.drop_last_exn list_pat, List.last_exn list_pat in
-    let%bind elts =
-      elts
-      |> List.map ~f:(function
-             | pat, false -> check pat elt_type
-             | _ -> raise @@ corner_case "Expected non-ellipses on elements of the list")
-      |> all
+    let%bind elts, tail =
+      raise_opt ~error:(corner_case "Expected a list pattern")
+      @@ I.Pattern.get_list_of_tuple_pattern tuple_pat
     in
-    let%bind tail =
-      tail
-      |> function
-      | pat, true -> check pat t_list
-      | _ -> raise @@ corner_case "Expected ellipsis at the tail of the list"
-    in
+    let%bind elts = elts |> List.map ~f:(fun pat -> check pat elt_type) |> all in
+    let%bind tail = check tail t_list in
     let%bind loc = loc () in
     const
       E.(

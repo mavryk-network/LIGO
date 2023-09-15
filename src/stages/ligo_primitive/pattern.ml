@@ -278,21 +278,46 @@ module Linear_pattern =
       let pp ppf x = ppf x
     end)
 
-module Linear_pattern_with_ellipsis =
-  Make
-    (Record)
-    (struct
-      type 'a t = 'a * bool [@@deriving eq, compare, yojson, hash, sexp]
+module Linear_pattern_with_ellipsis = struct
+  include
+    Make
+      (Record)
+      (struct
+        type 'a t = 'a * bool [@@deriving eq, compare, yojson, hash, sexp]
 
-      let get_value (x, _) = x
-      let map (x, d) ~f = f x, d
+        let get_value (x, _) = x
+        let map (x, d) ~f = f x, d
 
-      let map_acc (x, d) ~f =
-        let acc, fx = f x in
-        acc, (fx, d)
+        let map_acc (x, d) ~f =
+          let acc, fx = f x in
+          acc, (fx, d)
 
 
-      let pp ppfx ppf = function
-        | x, false -> ppfx ppf x
-        | x, true -> Format.fprintf ppf "...%a" ppfx x
-    end)
+        let pp ppfx ppf = function
+          | x, false -> ppfx ppf x
+          | x, true -> Format.fprintf ppf "...%a" ppfx x
+      end)
+
+  let get_list_of_tuple_pattern (v : 'a t Decorator.t list) =
+    let open Simple_utils.Option in
+    let open Let_syntax in
+    let rec aux v =
+      match v with
+      | [] -> None
+      | [ (pattern, true) ] -> return ([], pattern)
+      | [ (_, false) ] -> None
+      | (pattern, false) :: tl ->
+        let%bind init, last = aux tl in
+        return (pattern :: init, last)
+      | _ -> None
+    in
+    aux v
+
+
+  let get_list_of_pattern (v : 'a t) =
+    let open Simple_utils.Option in
+    let open Let_syntax in
+    match Location.unwrap v with
+    | P_tuple v -> return @@ get_list_of_tuple_pattern v
+    | _ -> None
+end
