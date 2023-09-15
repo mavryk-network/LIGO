@@ -22,6 +22,9 @@ end
 module type S = sig
   type 't t [@@deriving eq, compare, yojson, hash]
 
+  module Decorator : Decorator
+  module Container : Container
+
   val fold_pattern : ('a -> 'b t -> 'a) -> 'a -> 'b t -> 'a
   val fold_map_pattern : ('a -> 'b t -> 'a * 'c t) -> 'a -> 'b t -> 'a * 'c t
   val map_pattern : ('a t -> 'b t) -> 'a t -> 'b t
@@ -32,6 +35,8 @@ module type S = sig
   val binders : 'a t -> 'a Binder.t list
   val var : loc:Location.t -> 'a Binder.t -> 'a t
   val pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit
+  val record_pattern : loc:Location.t -> 'ty t Container.t -> 'ty t
+  val variant_pattern : loc:Location.t -> Label.t * 'ty t -> 'ty t
 end
 
 module Make (Container : Container) (Decorator : Decorator) = struct
@@ -49,15 +54,18 @@ module Make (Container : Container) (Decorator : Decorator) = struct
 
   and 't t = 't pattern_repr Location.wrap [@@deriving eq, compare, yojson, hash, sexp]
 
+  module Container = Container
+  module Decorator = Decorator
+
   let var : loc:Location.t -> 'ty Binder.t -> 'ty t =
    fun ~loc b -> Location.wrap ~loc (P_var b)
 
 
-  let record_pattern : loc:Location.t -> 'ty_exp t Container.t -> 'ty t =
+  let record_pattern : loc:Location.t -> 'ty t Container.t -> 'ty t =
    fun ~loc b -> Location.wrap ~loc (P_record b)
 
 
-  let variant_pattern : loc:Location.t -> Label.t * 'ty_exp t -> 'ty t =
+  let variant_pattern : loc:Location.t -> Label.t * 'ty t -> 'ty t =
    fun ~loc (label, pat) -> Location.wrap ~loc (P_variant (label, pat))
 
 

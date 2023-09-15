@@ -1217,6 +1217,89 @@ and check_pattern
     return pat
 
 
+and infer_tuple_pattern
+    ~mut
+    ~single
+    ~pat_loc
+    (tuple_pat : I.type_expression option I.Pattern.t I.Pattern.Decorator.t list)
+    : (Type.t * O.type_expression O.Pattern.t E.t, _, _) C.With_frag.t
+  =
+  let open C.With_frag in
+  let open Let_syntax in
+  let module P = O.Pattern in
+  let check = check_pattern ~mut ~single in
+  let infer = infer_pattern ~mut ~single in
+  let const content type_ =
+    let%bind loc = loc () in
+    return
+      ( type_
+      , E.(
+          let%bind content = content in
+          return @@ (Location.wrap ~loc content : O.type_expression O.Pattern.t)) )
+  in
+  set_loc pat_loc
+  @@
+  match tuple_pat with
+  | [] when single ->
+    let%bind unit_type = create_type @@ Type.t_unit in
+    const E.(return @@ P.P_unit) unit_type
+  | [] when not single ->
+    let%bind elt_type = exists Type in
+    let%bind t_list = create_type @@ Type.t_list elt_type in
+    const E.(return @@ P.P_list (List [])) t_list
+  | list_pat when List.exists ~f:(fun (_, b) -> b) list_pat ->
+    let%bind elt_type = exists Type in
+    let%bind t_list = create_type @@ Type.t_list elt_type in
+    let elts, tail = List.drop_last_exn list_pat, List.last_exn list_pat in
+    let%bind elts =
+      elts
+      |> List.map ~f:(function
+             | pat, false -> check pat elt_type
+             | _ -> raise @@ corner_case "Expected non-ellipses on elements of the list")
+      |> all
+    in
+    let%bind tail =
+      tail
+      |> function
+      | pat, true -> check pat t_list
+      | _ -> raise @@ corner_case "Expected ellipsis at the tail of the list"
+    in
+    const
+      E.(
+        let%bind elts = all elts in
+        let%bind tail = tail in
+        let list_pat =
+          List.fold_right elts ~init:tail ~f:(fun p q ->
+              Location.wrap ~loc:Location.generated (P.P_list (Cons (p, q))))
+        in
+        return @@ Location.unwrap list_pat)
+      t_list
+  | tuple_pat ->
+    let%bind tuple_types, tuple_pat =
+      tuple_pat
+      |> List.mapi ~f:(fun i (pat, _IGNORED) ->
+             let%bind pat_type, pat = infer pat in
+             return ((Label.Label (Int.to_string i), pat_type), pat))
+      |> all
+      >>| List.unzip
+    in
+    let%bind tuple_type =
+      create_type
+      @@ Type.t_record
+           { fields = Record.of_list tuple_types
+           ; layout =
+               Type.default_layout
+                 (tuple_types
+                 |> List.map ~f:(fun (i, _type) -> { Layout.name = i; annot = None }))
+           }
+    in
+    const
+      E.(
+        let%bind tuple_pat = all tuple_pat in
+        return @@ P.P_tuple tuple_pat)
+      tuple_type
+
+
 and infer_pattern ~mut ~single (pat : I.type_expression option I.Pattern.t)
     : (Type.t * O.type_expression O.Pattern.t E.t, _, _) C.With_frag.t
   =
@@ -1280,64 +1363,7 @@ and infer_pattern ~mut ~single (pat : I.type_expression option I.Pattern.t)
         let%bind list_pat = all list_pat in
         return @@ P.P_list (List list_pat))
       t_list
-  | P_tuple [] when single ->
-    let%bind unit_type = create_type @@ Type.t_unit in
-    const E.(return @@ P.P_unit) unit_type
-  | P_tuple [] when not single ->
-    let%bind elt_type = exists Type in
-    let%bind t_list = create_type @@ Type.t_list elt_type in
-    const E.(return @@ P.P_list (List [])) t_list
-  | P_tuple list_pat when List.exists ~f:(fun (_, b) -> b) list_pat ->
-    let%bind elt_type = exists Type in
-    let%bind t_list = create_type @@ Type.t_list elt_type in
-    let elts, tail = List.drop_last_exn list_pat, List.last_exn list_pat in
-    let%bind elts =
-      elts
-      |> List.map ~f:(function
-             | pat, false -> check pat elt_type
-             | _ -> raise @@ corner_case "Expected non-ellipses on elements of the list")
-      |> all
-    in
-    let%bind tail =
-      tail
-      |> function
-      | pat, true -> check pat t_list
-      | _ -> raise @@ corner_case "Expected ellipsis at the tail of the list"
-    in
-    const
-      E.(
-        let%bind elts = all elts in
-        let%bind tail = tail in
-        let list_pat =
-          List.fold_right elts ~init:tail ~f:(fun p q ->
-              Location.wrap ~loc:Location.generated (P.P_list (Cons (p, q))))
-        in
-        return @@ Location.unwrap list_pat)
-      t_list
-  | P_tuple tuple_pat ->
-    let%bind tuple_types, tuple_pat =
-      tuple_pat
-      |> List.mapi ~f:(fun i (pat, _IGNORED) ->
-             let%bind pat_type, pat = infer pat in
-             return ((Label.Label (Int.to_string i), pat_type), pat))
-      |> all
-      >>| List.unzip
-    in
-    let%bind tuple_type =
-      create_type
-      @@ Type.t_record
-           { fields = Record.of_list tuple_types
-           ; layout =
-               Type.default_layout
-                 (tuple_types
-                 |> List.map ~f:(fun (i, _type) -> { Layout.name = i; annot = None }))
-           }
-    in
-    const
-      E.(
-        let%bind tuple_pat = all tuple_pat in
-        return @@ P.P_tuple tuple_pat)
-      tuple_type
+  | P_tuple tuple_pat -> infer_tuple_pattern ~mut ~single ~pat_loc:pat.location tuple_pat
   | P_variant (constructor, arg_pat) ->
     let%bind tvars, arg_type, sum_type =
       match%bind Context.get_sum constructor with
