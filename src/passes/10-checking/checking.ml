@@ -1434,7 +1434,7 @@ and check_cases
   =
   let open C in
   let open Let_syntax in
-  let single = List.length cases <= 0 in
+  let single = List.length cases <= 1 in
   let check_case { I.Match_expr.pattern; body } =
     let%bind matchee_type = Context.tapply matchee_type in
     let%bind frag, pattern =

@@ -1,0 +1,6 @@
+const f = ([] : unit) : unit => [];
+const g = ([]) : unit => [];
+const h = (l) => match (l) { when([]): 42; }
+const i = (l : unit) => match (l) { when([]): 42; }
+const j = (l) => match (l) { when([]): 42; default: 0; }
+const k = (l : list<int>) => match (l) { when([]): 42; default: 0; }

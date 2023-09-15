@@ -2,6 +2,18 @@ open Cli_expect
 
 let%expect_test _ =
   run_ligo_good
+    [ "compile"
+    ; "expression"
+    ; "jsligo"
+    ; "k"
+    ; "--init-file"
+    ; test "infer_tuple_pattern.jsligo"
+    ];
+  [%expect {|
+    { IF_CONS { DROP 2 ; PUSH int 0 } { PUSH int 42 } } |}]
+
+let%expect_test _ =
+  run_ligo_good
     [ "run"
     ; "interpret"
     ; "match_with_block()"
