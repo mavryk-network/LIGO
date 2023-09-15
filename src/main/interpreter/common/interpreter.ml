@@ -115,7 +115,7 @@ let rec pattern_env_extend_ ~(no_colour : bool) ~(attributes : ValueAttr.t) ~(mu
           let* ty = get_prod_ty ty label in
           self (locs, env) pattern ty value)
   | P_tuple tups, V_Record vf ->
-    let pf = List.mapi ~f:(fun i (x, ()) -> Label.of_int i, x) tups in
+    let pf = List.mapi ~f:(fun i x -> Label.of_int i, x) tups in
     let* lst =
       match List.zip pf (Record.tuple_of_record vf) with
       | Ok pf -> return pf

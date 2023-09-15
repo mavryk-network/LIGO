@@ -1190,7 +1190,7 @@ and check_pattern
     const
       E.(
         let%bind tuple_pat = all tuple_pat in
-        return @@ P.P_tuple (List.map ~f:(fun p -> p, ()) tuple_pat))
+        return @@ P.P_tuple tuple_pat)
   | P_record record_pat, T_record row when Map.length row.fields = Map.length record_pat
     ->
     let%bind record_pat =
@@ -1336,7 +1336,7 @@ and infer_pattern ~mut ~single (pat : I.type_expression option I.Pattern.t)
     const
       E.(
         let%bind tuple_pat = all tuple_pat in
-        return @@ P.P_tuple (List.map ~f:(fun p -> p, ()) tuple_pat))
+        return @@ P.P_tuple tuple_pat)
       tuple_type
   | P_variant (constructor, arg_pat) ->
     let%bind tvars, arg_type, sum_type =

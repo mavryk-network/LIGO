@@ -10,8 +10,12 @@ module type Container = sig
   val to_list : 'a t -> (Label.t * 'a) list
 end
 
-module type Decoration = sig
-  type t [@@deriving eq, compare, yojson, hash, sexp]
+module type Decorator = sig
+  type 'a t [@@deriving eq, compare, yojson, hash, sexp]
+
+  val get_value : 'a t -> 'a
+  val map : 'a t -> f:('a -> 'b) -> 'b t
+  val map_acc : 'a t -> f:('a -> 'acc * 'b) -> 'acc * 'b t
 end
 
 module type S = sig
@@ -29,7 +33,7 @@ module type S = sig
   val pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit
 end
 
-module Make (Container : Container) (Decoration : Decoration) = struct
+module Make (Container : Container) (Decorator : Decorator) = struct
   type 'ty_exp list_pattern =
     | Cons of 'ty_exp t * 'ty_exp t
     | List of 'ty_exp t list
@@ -39,7 +43,7 @@ module Make (Container : Container) (Decoration : Decoration) = struct
     | P_var of 'ty_exp Binder.t
     | P_list of 'ty_exp list_pattern
     | P_variant of Label.t * 'ty_exp t
-    | P_tuple of ('ty_exp t * Decoration.t) list
+    | P_tuple of 'ty_exp t Decorator.t list
     | P_record of 'ty_exp t Container.t
 
   and 't t = 't pattern_repr Location.wrap [@@deriving eq, compare, yojson, hash, sexp]
@@ -76,7 +80,7 @@ module Make (Container : Container) (Decoration : Decoration) = struct
         ppf
         "(%a)"
         Simple_utils.PP_helpers.(list_sep (pp type_expression) (tag ","))
-        (List.map ~f:fst pl)
+        (List.map ~f:Decorator.get_value pl)
     | P_record lps ->
       let aux ppf (l, p) = fprintf ppf "%a = %a" Label.pp l (pp type_expression) p in
       fprintf
@@ -96,7 +100,7 @@ module Make (Container : Container) (Decoration : Decoration) = struct
       iter f pb
     | P_list (List lp) -> List.iter ~f:(iter f) lp
     | P_variant (_, p) -> iter f p
-    | P_tuple lp -> List.iter ~f:(iter f) (List.map ~f:fst lp)
+    | P_tuple lp -> List.iter ~f:(iter f) (List.map ~f:Decorator.get_value lp)
     | P_record lps -> Container.iter ~f:(iter f) lps
 
 
@@ -110,7 +114,8 @@ module Make (Container : Container) (Decoration : Decoration) = struct
       | Cons (pa, pb) -> fold_pattern f (fold_pattern f acc pb) pa
       | List lp -> List.fold_left ~f:(fold_pattern f) ~init:acc lp)
     | P_variant (_, p) -> fold_pattern f acc p
-    | P_tuple lp -> List.fold_left ~f:(fold_pattern f) ~init:acc @@ List.map ~f:fst lp
+    | P_tuple lp ->
+      List.fold_left ~f:(fold_pattern f) ~init:acc @@ List.map ~f:Decorator.get_value lp
     | P_record lps -> Container.fold ~f:(fold_pattern f) ~init:acc lps
 
 
@@ -133,11 +138,12 @@ module Make (Container : Container) (Decoration : Decoration) = struct
       let acc, lp = fold_map_pattern f acc p in
       acc, Location.wrap ~loc (P_variant (l, lp))
     | P_tuple lp ->
-      let ds = List.map ~f:snd lp in
       let acc, lp =
-        List.fold_map ~f:(fold_map_pattern f) ~init:acc @@ List.map ~f:fst lp
+        List.fold_map
+          ~f:(fun v -> Decorator.map_acc ~f:(fold_map_pattern f v))
+          ~init:acc
+          lp
       in
-      let lp = List.zip_exn lp ds in
       acc, Location.wrap ~loc (P_tuple lp)
     | P_record lps ->
       let acc, lps = Container.fold_map ~f:(fold_map_pattern f) ~init:acc lps in
@@ -156,7 +162,8 @@ module Make (Container : Container) (Decoration : Decoration) = struct
       | Cons (pa, pb) -> fold f (fold f acc pb) pa
       | List lp -> List.fold_left ~f:(fold f) ~init:acc lp)
     | P_variant (_, p) -> fold f acc p
-    | P_tuple lp -> List.fold_left ~f:(fold f) ~init:acc @@ List.map ~f:fst lp
+    | P_tuple lp ->
+      List.fold_left ~f:(fold f) ~init:acc @@ List.map ~f:Decorator.get_value lp
     | P_record lps -> Container.fold ~f:(fold f) ~init:acc lps
 
 
@@ -185,9 +192,7 @@ module Make (Container : Container) (Decoration : Decoration) = struct
         let p = self p in
         P_variant (l, p)
       | P_tuple lp ->
-        let ds = List.map ~f:snd lp in
-        let lp = List.map ~f:self @@ List.map ~f:fst lp in
-        let lp = List.zip_exn lp ds in
+        let lp = List.map ~f:(Decorator.map ~f:self) lp in
         P_tuple lp
       | P_record lps ->
         let lps = Container.map ~f:self lps in
@@ -221,9 +226,9 @@ module Make (Container : Container) (Decoration : Decoration) = struct
       let acc, p = self acc p in
       ret acc @@ P_variant (l, p)
     | P_tuple lp ->
-      let ds = List.map ~f:snd lp in
-      let acc, lp = List.fold_map ~f:self ~init:acc @@ List.map ~f:fst lp in
-      let lp = List.zip_exn lp ds in
+      let acc, lp =
+        List.fold_map ~f:(fun v -> Decorator.map_acc ~f:(self v)) ~init:acc lp
+      in
       ret acc @@ P_tuple lp
     | P_record lps ->
       let acc, lps = Container.fold_map ~f:self ~init:acc lps in
@@ -244,19 +249,34 @@ module Non_linear_pattern =
   Make
     (Label.Assoc)
     (struct
-      type t = unit [@@deriving eq, compare, yojson, hash, sexp]
+      type 'a t = 'a [@@deriving eq, compare, yojson, hash, sexp]
+
+      let get_value x = x
+      let map x ~f = f x
+      let map_acc x ~f = f x
     end)
 
 module Linear_pattern =
   Make
     (Record)
     (struct
-      type t = unit [@@deriving eq, compare, yojson, hash, sexp]
+      type 'a t = 'a [@@deriving eq, compare, yojson, hash, sexp]
+
+      let get_value x = x
+      let map x ~f = f x
+      let map_acc x ~f = f x
     end)
 
 module Linear_pattern_with_ellipsis =
   Make
     (Record)
     (struct
-      type t = bool [@@deriving eq, compare, yojson, hash, sexp]
+      type 'a t = 'a * bool [@@deriving eq, compare, yojson, hash, sexp]
+
+      let get_value (x, _) = x
+      let map (x, d) ~f = f x, d
+
+      let map_acc (x, d) ~f =
+        let acc, fx = f x in
+        acc, (fx, d)
     end)

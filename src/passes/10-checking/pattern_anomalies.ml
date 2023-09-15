@@ -94,7 +94,7 @@ let rec to_simple_pattern (ty_pattern : _ AST.Pattern.t * AST.type_expression) =
   | P_tuple ps ->
     let row = Option.value_exn ~here:[%here] (C.get_t_record ty) in
     let ps =
-      List.mapi ps ~f:(fun i (p, ()) ->
+      List.mapi ps ~f:(fun i p ->
           let row_elem =
             Option.value_exn
               ~here:[%here]
@@ -161,7 +161,7 @@ and to_original_pattern ~raise ~loc simple_patterns (ty : AST.type_expression) =
             rest, ps @ [ to_original_pattern ~raise ~loc sps t ])
       in
       if are_keys_numeric labels
-      then Location.wrap ~loc @@ P_tuple (List.map ~f:(fun p -> p, ()) ps)
+      then Location.wrap ~loc @@ P_tuple ps
       else Location.wrap ~loc @@ P_record (Record.of_list (List.zip_exn labels ps))
     | _ -> raise.error @@ Errors.corner_case "edge case: not a record/tuple" ty.location)
 

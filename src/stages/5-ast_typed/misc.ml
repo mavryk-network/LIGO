@@ -280,8 +280,8 @@ let uncurry_wrap ~loc ~type_ var =
               ~loc:Location.generated
               Pattern.(
                 P_tuple
-                  [ Location.wrap ~loc:Location.generated @@ P_var p_binder, ()
-                  ; Location.wrap ~loc:Location.generated @@ P_var s_binder, ()
+                  [ Location.wrap ~loc:Location.generated @@ P_var p_binder
+                  ; Location.wrap ~loc:Location.generated @@ P_var s_binder
                   ])
         ; body = expr
         }

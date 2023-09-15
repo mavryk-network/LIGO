@@ -188,7 +188,7 @@ and untype_pattern : I.type_expression option O.Pattern.t -> _ I.Pattern.t =
     let p = self p in
     Location.wrap ~loc (I.Pattern.P_variant (l, p))
   | P_tuple ps ->
-    let ps = List.map ~f:(fun (p, ()) -> self p, false) ps in
+    let ps = List.map ~f:(fun p -> self p, false) ps in
     Location.wrap ~loc (I.Pattern.P_tuple ps)
   | P_record lps ->
     let lps = Record.map ~f:self lps in

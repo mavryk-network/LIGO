@@ -148,7 +148,7 @@ let cons hd tl ty parent_type loc =
 (* Helpers of converting [P_list] to Cons & Nil *)
 let p_unit ~loc = Location.wrap ~loc I.Pattern.P_unit
 let p_variant ~loc c p = Location.wrap ~loc (I.Pattern.P_variant (c, p))
-let p_pair ~loc a b = Location.wrap ~loc (I.Pattern.P_tuple [ a, (); b, () ])
+let p_pair ~loc a b = Location.wrap ~loc (I.Pattern.P_tuple [ a; b ])
 let p_cons ~loc a b = p_variant ~loc cons_label (p_pair ~loc a b)
 let p_nil ~loc = p_variant ~loc nil_label (p_unit ~loc)
 
@@ -194,7 +194,7 @@ let rec fold_pattern_with_path
     fold_pattern_with_path f acc path p
   | P_tuple lp ->
     List.foldi
-      ~f:(fun i acc (p, ()) ->
+      ~f:(fun i acc p ->
         let path = Label.join path (Label.of_int i) in
         fold_pattern_with_path f acc path p)
       ~init:acc
@@ -317,7 +317,7 @@ let rec to_simple_pattern
     ]
   | P_tuple ps ->
     let row = Option.value_exn ~here:[%here] (C.get_t_record ty) in
-    List.concat_mapi ps ~f:(fun i (p, ()) ->
+    List.concat_mapi ps ~f:(fun i p ->
         let p_ty =
           Option.value_exn ~here:[%here] (OccuranceMap.find row.fields (Label.of_int i))
         in

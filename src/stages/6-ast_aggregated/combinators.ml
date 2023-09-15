@@ -607,8 +607,7 @@ let uncurry_wrap e =
               Pattern.(
                 P_tuple
                   (List.map
-                     ~f:(fun (b, _) ->
-                       Location.wrap ~loc:Location.generated @@ P_var b, ())
+                     ~f:(fun (b, _) -> Location.wrap ~loc:Location.generated @@ P_var b)
                      args_binders))
         ; body = expr
         }
