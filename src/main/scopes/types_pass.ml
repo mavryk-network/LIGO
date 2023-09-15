@@ -199,6 +199,7 @@ module Of_Ast_core = struct
     | E_update { struct_; update; _ } ->
       let bindings = expression bindings struct_ in
       expression bindings update
+    | E_array _ -> failwith "IMPLEMENT ME"
     | E_ascription { anno_expr; _ } -> expression bindings anno_expr
     | E_assign { binder; expression = e } ->
       let bindings = add_binders bindings [ binder ] in

@@ -163,6 +163,7 @@ let rec defs_of_expr : AST.expression -> string list -> def list -> def list =
     self struct_ mod_path acc (* Is it possible to have decl in there ? *)
   | E_update { struct_; path; update } ->
     self struct_ mod_path @@ self update mod_path acc
+  | E_array _ -> failwith "IMPLEMENT ME"
   (* Advanced *)
   | E_ascription { anno_expr; type_annotation } -> self anno_expr mod_path acc
   | E_module_accessor macc -> acc

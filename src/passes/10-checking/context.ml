@@ -1248,9 +1248,9 @@ module Diff = struct
     match (change : diff) with
     | Equal _ -> ()
     | Added iitems ->
-      Array.iter iitems ~f:(fun iitem -> Format.fprintf ppf "+ %a@;" pp_iitem iitem)
+      Core.Array.iter iitems ~f:(fun iitem -> Format.fprintf ppf "+ %a@;" pp_iitem iitem)
     | Deleted iitems ->
-      Array.iter iitems ~f:(fun iitem -> Format.fprintf ppf "- %a@;" pp_iitem iitem)
+      Core.Array.iter iitems ~f:(fun iitem -> Format.fprintf ppf "- %a@;" pp_iitem iitem)
 
 
   let pp ppf (ctx1, ctx2) =
@@ -1260,6 +1260,6 @@ module Diff = struct
       "@[<v>Diff:@;%a@]@."
       loop
       (get_diff
-         (Array.of_list_mapi ctx1 ~f:(fun i item -> i, item))
-         (Array.of_list_mapi ctx2 ~f:(fun i item -> i, item)))
+         (Core.Array.of_list_mapi ctx1 ~f:(fun i item -> i, item))
+         (Core.Array.of_list_mapi ctx2 ~f:(fun i item -> i, item)))
 end

@@ -109,6 +109,7 @@ let rec expression : AST.expression -> t -> env -> t =
   | E_update { struct_; path = _; update } ->
     let m_alias = expression struct_ m_alias env in
     expression update m_alias env
+  | E_array _ -> failwith "IMPLEMENT ME"
   | E_ascription { anno_expr; type_annotation = _ } -> expression anno_expr m_alias env
   | E_assign { binder = _; expression = e } -> expression e m_alias env
   | E_for { binder = _; start; final; incr; f_body } ->

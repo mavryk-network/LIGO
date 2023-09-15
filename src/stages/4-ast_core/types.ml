@@ -62,6 +62,7 @@ type expression_content =
   | E_record of expr Record.t
   | E_accessor of expr Accessor.t
   | E_update of expr Update.t
+  | E_array of expr Array.t
   (* Advanced *)
   | E_ascription of (expr, ty_expr) Ascription.t
   | E_module_accessor of Value_var.t Module_access.t

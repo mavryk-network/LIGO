@@ -700,6 +700,7 @@ and infer_expression (expr : I.expression)
         and update = update in
         return @@ O.E_update { struct_; path; update })
       record_type
+  | E_array _ -> failwith "IMPLEMENT ME"
   | E_constructor { constructor = Label label as constructor; _ }
     when String.(label = "M_right" || label = "M_left") ->
     raise (michelson_or_no_annotation constructor)

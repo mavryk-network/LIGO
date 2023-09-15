@@ -300,6 +300,7 @@ let rec expression : AST.expression -> references -> env -> references =
   | E_update { struct_; path = _; update } ->
     let refs = expression struct_ refs env in
     expression update refs env
+  | E_array _ -> failwith "IMPLEMENT ME"
   | E_ascription { anno_expr; type_annotation } ->
     let refs = type_expression type_annotation refs env in
     expression anno_expr refs env

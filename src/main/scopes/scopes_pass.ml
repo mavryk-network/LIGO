@@ -124,6 +124,7 @@ module Of_Ast = struct
       let scopes = self struct_ scopes env in
       let scopes = self update scopes env in
       scopes
+    | E_array _ -> failwith "IMPLEMENT ME"
     | E_ascription { anno_expr; type_annotation } ->
       let scopes = type_expression type_annotation scopes env in
       let scopes = self anno_expr scopes env in

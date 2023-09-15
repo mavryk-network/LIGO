@@ -74,6 +74,7 @@ and expression_content ppf (ec : expression_content) =
   | E_record m -> Record.pp expression ppf m
   | E_accessor a -> Types.Accessor.pp expression ppf a
   | E_update u -> Types.Update.pp expression ppf u
+  | E_array a -> Array.pp expression ppf a
   | E_lambda l -> Lambda.pp expression type_expression_option ppf l
   | E_type_abstraction e -> Type_abs.pp expression ppf e
   | E_matching m -> Match_expr.pp expression type_expression_option ppf m

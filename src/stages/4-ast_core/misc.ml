@@ -40,6 +40,10 @@ let rec assert_value_eq ((a, b) : expression * expression) : unit option =
       let () = aux (ura.path, urb.path) in
       assert_value_eq (ura.update, urb.update))
   | E_update _, _ -> None
+  | E_array sma, E_array smb ->
+    if Array.equal (fun t1 t2 -> Option.is_some @@ assert_value_eq (t1, t2)) sma smb
+    then Some ()
+    else None
   | E_ascription a, _b' -> assert_value_eq (a.anno_expr, b)
   | _a', E_ascription b -> assert_value_eq (a, b.anno_expr)
   | E_variable _, _
@@ -65,4 +69,5 @@ let rec assert_value_eq ((a, b) : expression * expression) : unit option =
   | E_constant _, _
   | E_constructor _, E_constructor _
   | E_record _, _
+  | E_array _, _
   | E_constructor _, _ -> None
