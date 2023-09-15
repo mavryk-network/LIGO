@@ -16,6 +16,7 @@ module type Decorator = sig
   val get_value : 'a t -> 'a
   val map : 'a t -> f:('a -> 'b) -> 'b t
   val map_acc : 'a t -> f:('a -> 'acc * 'b) -> 'acc * 'b t
+  val pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit
 end
 
 module type S = sig
@@ -79,8 +80,8 @@ module Make (Container : Container) (Decorator : Decorator) = struct
       fprintf
         ppf
         "(%a)"
-        Simple_utils.PP_helpers.(list_sep (pp type_expression) (tag ","))
-        (List.map ~f:Decorator.get_value pl)
+        Simple_utils.PP_helpers.(list_sep (Decorator.pp (pp type_expression)) (tag ","))
+        pl
     | P_record lps ->
       let aux ppf (l, p) = fprintf ppf "%a = %a" Label.pp l (pp type_expression) p in
       fprintf
@@ -254,6 +255,7 @@ module Non_linear_pattern =
       let get_value x = x
       let map x ~f = f x
       let map_acc x ~f = f x
+      let pp ppf x = ppf x
     end)
 
 module Linear_pattern =
@@ -265,6 +267,7 @@ module Linear_pattern =
       let get_value x = x
       let map x ~f = f x
       let map_acc x ~f = f x
+      let pp ppf x = ppf x
     end)
 
 module Linear_pattern_with_ellipsis =
@@ -279,4 +282,9 @@ module Linear_pattern_with_ellipsis =
       let map_acc (x, d) ~f =
         let acc, fx = f x in
         acc, (fx, d)
+
+
+      let pp ppfx ppf = function
+        | x, false -> ppfx ppf x
+        | x, true -> Format.fprintf ppf "...%a" ppfx x
     end)
