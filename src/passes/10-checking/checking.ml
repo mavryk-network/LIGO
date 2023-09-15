@@ -1167,13 +1167,14 @@ and check_pattern
       | pat, true -> check pat type_
       | _ -> raise @@ corner_case "Expected ellipsis at the tail of the list"
     in
+    let%bind loc = loc () in
     const
       E.(
         let%bind elts = all elts in
         let%bind tail = tail in
         let list_pat =
           List.fold_right elts ~init:tail ~f:(fun p q ->
-              Location.wrap ~loc:Location.generated (P.P_list (Cons (p, q))))
+              Location.wrap ~loc (P.P_list (Cons (p, q))))
         in
         return @@ Location.unwrap list_pat)
   | P_tuple tuple_pat, T_record row when Map.length row.fields = List.length tuple_pat ->
@@ -1220,7 +1221,6 @@ and check_pattern
 and infer_tuple_pattern
     ~mut
     ~single
-    ~pat_loc
     (tuple_pat : I.type_expression option I.Pattern.t I.Pattern.Decorator.t list)
     : (Type.t * O.type_expression O.Pattern.t E.t, _, _) C.With_frag.t
   =
@@ -1237,8 +1237,6 @@ and infer_tuple_pattern
           let%bind content = content in
           return @@ (Location.wrap ~loc content : O.type_expression O.Pattern.t)) )
   in
-  set_loc pat_loc
-  @@
   match tuple_pat with
   | [] when single ->
     let%bind unit_type = create_type @@ Type.t_unit in
@@ -1264,13 +1262,14 @@ and infer_tuple_pattern
       | pat, true -> check pat t_list
       | _ -> raise @@ corner_case "Expected ellipsis at the tail of the list"
     in
+    let%bind loc = loc () in
     const
       E.(
         let%bind elts = all elts in
         let%bind tail = tail in
         let list_pat =
           List.fold_right elts ~init:tail ~f:(fun p q ->
-              Location.wrap ~loc:Location.generated (P.P_list (Cons (p, q))))
+              Location.wrap ~loc (P.P_list (Cons (p, q))))
         in
         return @@ Location.unwrap list_pat)
       t_list
@@ -1363,7 +1362,7 @@ and infer_pattern ~mut ~single (pat : I.type_expression option I.Pattern.t)
         let%bind list_pat = all list_pat in
         return @@ P.P_list (List list_pat))
       t_list
-  | P_tuple tuple_pat -> infer_tuple_pattern ~mut ~single ~pat_loc:pat.location tuple_pat
+  | P_tuple tuple_pat -> infer_tuple_pattern ~mut ~single tuple_pat
   | P_variant (constructor, arg_pat) ->
     let%bind tvars, arg_type, sum_type =
       match%bind Context.get_sum constructor with
