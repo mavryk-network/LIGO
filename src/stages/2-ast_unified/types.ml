@@ -137,11 +137,6 @@ and 'self list_pattern =
   | Cons of 'self * 'self
   | List of 'self list
 
-and 'self element_pattern =
-  { ellipsis : bool
-  ; pattern : 'self
-  }
-
 and ('self, 'ty_expr) pattern_content_ =
   | P_unit
   | P_typed of 'ty_expr * 'self
