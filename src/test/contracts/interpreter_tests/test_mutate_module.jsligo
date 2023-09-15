@@ -3,10 +3,10 @@
 const _tester = (a : typed_address<parameter_of Adder, int>, _c : michelson_contract, _i : int) : unit => {
   let c : contract<parameter_of Adder> = Test.to_contract(a);
   /* Test 1 */
-  let _1 = Test.transfer_to_contract_exn(c, Add(0), (0 as tez));
+  let _t1 = Test.transfer_to_contract_exn(c, Add(0), 0tez);
   Test.assert(Test.get_storage(a) == 0);
   /* Test 2 */
-  let _2 = Test.transfer_to_contract_exn(c, Add(1), (0 as tez));
+  let _t2 = Test.transfer_to_contract_exn(c, Add(1), 0tez);
   Test.assert(Test.get_storage(a) == 1);
 };
 
