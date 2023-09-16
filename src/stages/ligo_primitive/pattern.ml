@@ -304,14 +304,29 @@ module Linear_pattern_with_ellipsis = struct
     let rec aux v =
       match v with
       | [] -> None
-      | [ (pattern, true) ] -> return ([], pattern)
-      | [ (_, false) ] -> None
+      | [ (pattern, b) ] -> return ([], (pattern, b))
       | (pattern, false) :: tl ->
         let%bind init, last = aux tl in
         return (pattern :: init, last)
       | _ -> None
     in
     aux v
+
+
+  let get_rest_list_of_tuple_pattern (v : 'a t Decorator.t list) =
+    let open Simple_utils.Option in
+    let open Let_syntax in
+    match%bind get_list_of_tuple_pattern v with
+    | init, (last, true) -> return (init, last)
+    | _ -> None
+
+
+  let get_expr_list_of_tuple_pattern (v : 'a t Decorator.t list) =
+    let open Simple_utils.Option in
+    let open Let_syntax in
+    match%bind get_list_of_tuple_pattern v with
+    | init, (last, false) -> return (init, last)
+    | _ -> None
 
 
   let get_list_of_pattern (v : 'a t) =
