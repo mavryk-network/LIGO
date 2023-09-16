@@ -5,12 +5,11 @@ let%expect_test _ =
     [ "compile"
     ; "expression"
     ; "jsligo"
-    ; "k"
+    ; "fu"
     ; "--init-file"
     ; test "infer_tuple_pattern.jsligo"
     ];
-  [%expect {|
-    { IF_CONS { DROP 2 ; PUSH int 0 } { PUSH int 42 } } |}]
+  [%expect {| { DROP ; UNIT } |}]
 
 let%expect_test _ =
   run_ligo_good
