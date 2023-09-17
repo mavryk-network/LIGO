@@ -375,6 +375,7 @@ module With_frag : sig
   val all_lmap_unit : (unit, 'err, 'wrn) t Label.Map.t -> (unit, 'err, 'wrn) t
   val loc : unit -> (Location.t, 'err, 'wrn) t
   val set_loc : Location.t -> ('a, 'err, 'wrn) t -> ('a, 'err, 'wrn) t
+  val is_unique : unit -> (bool, 'err, 'wrn) t
 
   val raise_result
     :  ('a, 'b) result
@@ -412,7 +413,7 @@ module With_frag : sig
        t
 
   val extend : fragment -> (unit, 'err, 'wrn) t
-  val run : ('a, 'err, 'wrn) t -> (fragment * 'a, 'err, 'wrn) e
+  val run : is_unique:bool -> ('a, 'err, 'wrn) t -> (fragment * 'a, 'err, 'wrn) e
 end
 
 (** {7 Execution}*)

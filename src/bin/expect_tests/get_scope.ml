@@ -418,7 +418,7 @@ let%expect_test _ =
     (i#4:37-38 -> i)
     Range: File "../../test/contracts/get_scope_tests/rec.mligo", line 4, characters 37-38
     Body Range:
-    Content: |core: int|
+    Content: |resolved: int|
     references:
       File "../../test/contracts/get_scope_tests/rec.mligo", line 5, characters 12-13
     Mod Path =
@@ -426,7 +426,7 @@ let%expect_test _ =
     (j#4:39-40 -> j)
     Range: File "../../test/contracts/get_scope_tests/rec.mligo", line 4, characters 39-40
     Body Range:
-    Content: |core: int|
+    Content: |resolved: int|
     references:
       File "../../test/contracts/get_scope_tests/rec.mligo", line 5, characters 16-17
     Mod Path =

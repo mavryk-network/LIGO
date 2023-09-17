@@ -415,7 +415,7 @@ let rec check_expression (expr : I.expression) (type_ : Type.t)
   | E_let_in { let_binder; rhs; let_result; attributes }, _ ->
     let%bind rhs_type, rhs = infer rhs in
     let%bind frag, let_binder =
-      With_frag.run @@ check_pattern ~mut:false ~single:true let_binder rhs_type
+      With_frag.run ~is_unique:true @@ check_pattern ~mut:false let_binder rhs_type
     in
     let%bind let_result = def_frag frag ~on_exit:Drop ~in_:(check let_result type_) in
     const
@@ -427,7 +427,7 @@ let rec check_expression (expr : I.expression) (type_ : Type.t)
   | E_let_mut_in { let_binder; rhs; let_result; attributes }, _ ->
     let%bind rhs_type, rhs = infer rhs in
     let%bind frag, let_binder =
-      With_frag.run @@ check_pattern ~mut:true ~single:true let_binder rhs_type
+      With_frag.run ~is_unique:true @@ check_pattern ~mut:true let_binder rhs_type
     in
     let%bind let_result = def_frag frag ~on_exit:Drop ~in_:(check let_result type_) in
     const
@@ -547,7 +547,7 @@ and infer_expression (expr : I.expression)
     let%bind rhs_type, rhs = infer rhs in
     let%bind rhs_type = Context.tapply rhs_type in
     let%bind frags, let_binder =
-      With_frag.run @@ check_pattern ~mut:false ~single:true let_binder rhs_type
+      With_frag.run ~is_unique:true @@ check_pattern ~mut:false let_binder rhs_type
     in
     let%bind res_type, let_result =
       def_frag frags ~on_exit:Lift_type ~in_:(infer let_result)
@@ -761,7 +761,7 @@ and infer_expression (expr : I.expression)
     let%bind rhs_type, rhs = infer rhs in
     let%bind rhs_type = Context.tapply rhs_type in
     let%bind frags, let_binder =
-      With_frag.run @@ check_pattern ~mut:true ~single:true let_binder rhs_type
+      With_frag.run ~is_unique:true @@ check_pattern ~mut:true let_binder rhs_type
     in
     let%bind res_type, let_result =
       def_frag frags ~on_exit:Lift_type ~in_:(infer let_result)
@@ -1096,18 +1096,14 @@ and infer_constant const args : (Type.t * O.expression E.t, _, _) C.t =
              { type_ with location = loc }) )
 
 
-and check_pattern
-    ~mut
-    ~single
-    (pat : I.type_expression option I.Pattern.t)
-    (type_ : Type.t)
+and check_pattern ~mut (pat : I.type_expression option I.Pattern.t) (type_ : Type.t)
     : (O.type_expression O.Pattern.t E.t, _, _) C.With_frag.t
   =
   let open C.With_frag in
   let open Let_syntax in
   let module P = O.Pattern in
-  let check = check_pattern ~mut ~single in
-  let infer = infer_pattern ~mut ~single in
+  let check = check_pattern ~mut in
+  let infer = infer_pattern ~mut in
   let const content =
     let%bind loc = loc () in
     return
@@ -1166,13 +1162,21 @@ and check_pattern
     const E.(return @@ P.P_list (List []))
   | ( P_tuple tuple_pat
     , T_construct { constructor = Literal_types.List; parameters = [ elt_type ]; _ } ) ->
-    let%bind elts, tail =
+    let%bind elts, (tail, tail_is_ellipsis) =
       raise_opt ~error:(corner_case "Expected a list pattern")
       @@ I.Pattern.get_list_of_tuple_pattern tuple_pat
     in
     let%bind elts = elts |> List.map ~f:(fun pat -> check pat elt_type) |> all in
-    let%bind tail = check tail type_ in
     let%bind loc = loc () in
+    let tail =
+      if tail_is_ellipsis
+      then tail
+      else
+        Location.wrap ~loc
+        @@ Linear_pattern_with_ellipsis.(
+             P_list (Cons (tail, Location.wrap ~loc @@ P_list (List []))))
+    in
+    let%bind tail = check tail type_ in
     const
       E.(
         let%bind elts = all elts in
@@ -1230,15 +1234,14 @@ and check_pattern
 
 and infer_tuple_pattern
     ~mut
-    ~single
     (tuple_pat : I.type_expression option I.Pattern.t I.Pattern.Decorator.t list)
     : (Type.t * O.type_expression O.Pattern.t E.t, _, _) C.With_frag.t
   =
   let open C.With_frag in
   let open Let_syntax in
   let module P = O.Pattern in
-  let check = check_pattern ~mut ~single in
-  let infer = infer_pattern ~mut ~single in
+  let check = check_pattern ~mut in
+  let infer = infer_pattern ~mut in
   let const content type_ =
     let%bind loc = loc () in
     return
@@ -1247,73 +1250,80 @@ and infer_tuple_pattern
           let%bind content = content in
           return @@ (Location.wrap ~loc content : O.type_expression O.Pattern.t)) )
   in
+  let%bind is_unique = is_unique () in
   match tuple_pat with
-  | [] when single ->
+  | [] when is_unique ->
     let%bind unit_type = create_type @@ Type.t_unit in
     const E.(return @@ P.P_unit) unit_type
-  | [] when not single ->
+  | [] ->
     let%bind elt_type = exists Type in
     let%bind t_list = create_type @@ Type.t_list elt_type in
     const E.(return @@ P.P_list (List [])) t_list
-  | _ when Option.is_some (I.Pattern.get_list_of_tuple_pattern tuple_pat) ->
-    let%bind elt_type = exists Type in
-    let%bind t_list = create_type @@ Type.t_list elt_type in
-    let%bind elts, tail =
-      raise_opt ~error:(corner_case "Expected a list pattern")
-      @@ I.Pattern.get_list_of_tuple_pattern tuple_pat
-    in
-    let%bind elts = elts |> List.map ~f:(fun pat -> check pat elt_type) |> all in
-    let%bind tail = check tail t_list in
-    let%bind loc = loc () in
-    const
-      E.(
-        let%bind elts = all elts in
-        let%bind tail = tail in
-        let list_pat =
-          List.fold_right elts ~init:tail ~f:(fun p q ->
-              Location.wrap ~loc (P.P_list (Cons (p, q))))
-        in
-        return @@ Location.unwrap list_pat)
-      t_list
-  | tuple_pat ->
-    let%bind tuple_types, tuple_pat =
-      tuple_pat
-      |> List.mapi ~f:(fun i (pat, has_ellipsis) ->
-             let%bind () =
-               assert_
-                 ~error:(corner_case "Ellipsis not expected in this position")
-                 (not has_ellipsis)
-             in
-             let%bind pat_type, pat = infer pat in
-             return ((Label.Label (Int.to_string i), pat_type), pat))
-      |> all
-      >>| List.unzip
-    in
-    let%bind tuple_type =
-      create_type
-      @@ Type.t_record
-           { fields = Record.of_list tuple_types
-           ; layout =
-               Type.default_layout
-                 (tuple_types
-                 |> List.map ~f:(fun (i, _type) -> { Layout.name = i; annot = None }))
-           }
-    in
-    const
-      E.(
-        let%bind tuple_pat = all tuple_pat in
-        return @@ P.P_tuple tuple_pat)
-      tuple_type
+  | _ ->
+    (match I.Pattern.get_list_of_tuple_pattern tuple_pat with
+    | Some (elts, (tail, tail_is_ellipsis)) when tail_is_ellipsis ->
+      let%bind elt_type = exists Type in
+      let%bind t_list = create_type @@ Type.t_list elt_type in
+      let%bind elts = elts |> List.map ~f:(fun pat -> check pat elt_type) |> all in
+      let%bind loc = loc () in
+      let tail =
+        if tail_is_ellipsis
+        then tail
+        else
+          Location.wrap ~loc
+          @@ Linear_pattern_with_ellipsis.(
+               P_list (Cons (tail, Location.wrap ~loc @@ P_list (List []))))
+      in
+      let%bind tail = check tail t_list in
+      const
+        E.(
+          let%bind elts = all elts in
+          let%bind tail = tail in
+          let list_pat =
+            List.fold_right elts ~init:tail ~f:(fun p q ->
+                Location.wrap ~loc (P.P_list (Cons (p, q))))
+          in
+          return @@ Location.unwrap list_pat)
+        t_list
+    | _ ->
+      let%bind tuple_types, tuple_pat =
+        tuple_pat
+        |> List.mapi ~f:(fun i (pat, has_ellipsis) ->
+               let%bind () =
+                 assert_
+                   ~error:(corner_case "Ellipsis not expected in this position")
+                   (not has_ellipsis)
+               in
+               let%bind pat_type, pat = infer pat in
+               return ((Label.Label (Int.to_string i), pat_type), pat))
+        |> all
+        >>| List.unzip
+      in
+      let%bind tuple_type =
+        create_type
+        @@ Type.t_record
+             { fields = Record.of_list tuple_types
+             ; layout =
+                 Type.default_layout
+                   (tuple_types
+                   |> List.map ~f:(fun (i, _type) -> { Layout.name = i; annot = None }))
+             }
+      in
+      const
+        E.(
+          let%bind tuple_pat = all tuple_pat in
+          return @@ P.P_tuple tuple_pat)
+        tuple_type)
 
 
-and infer_pattern ~mut ~single (pat : I.type_expression option I.Pattern.t)
+and infer_pattern ~mut (pat : I.type_expression option I.Pattern.t)
     : (Type.t * O.type_expression O.Pattern.t E.t, _, _) C.With_frag.t
   =
   let open C.With_frag in
   let open Let_syntax in
   let module P = O.Pattern in
-  let check = check_pattern ~mut ~single in
-  let infer = infer_pattern ~mut ~single in
+  let check = check_pattern ~mut in
+  let infer = infer_pattern ~mut in
   let const content type_ =
     let%bind loc = loc () in
     return
@@ -1369,7 +1379,7 @@ and infer_pattern ~mut ~single (pat : I.type_expression option I.Pattern.t)
         let%bind list_pat = all list_pat in
         return @@ P.P_list (List list_pat))
       t_list
-  | P_tuple tuple_pat -> infer_tuple_pattern ~mut ~single tuple_pat
+  | P_tuple tuple_pat -> infer_tuple_pattern ~mut tuple_pat
   | P_variant (constructor, arg_pat) ->
     let%bind tvars, arg_type, sum_type =
       match%bind Context.get_sum constructor with
@@ -1421,6 +1431,11 @@ and infer_pattern ~mut ~single (pat : I.type_expression option I.Pattern.t)
         let%bind record_pat = all_lmap record_pat in
         return @@ P.P_record record_pat)
       record_type
+  | P_typed (p, None) -> infer p
+  | P_typed (p, Some t) ->
+    let%bind ascr = lift (With_default_layout.evaluate_type t) in
+    let%bind expr = check p ascr in
+    return (ascr, expr)
 
 
 and check_cases
@@ -1431,11 +1446,11 @@ and check_cases
   =
   let open C in
   let open Let_syntax in
-  let single = List.length cases <= 1 in
+  let is_unique = List.length cases <= 1 in
   let check_case { I.Match_expr.pattern; body } =
     let%bind matchee_type = Context.tapply matchee_type in
     let%bind frag, pattern =
-      With_frag.run @@ check_pattern ~mut:false ~single pattern matchee_type
+      With_frag.run ~is_unique @@ check_pattern ~mut:false pattern matchee_type
     in
     let%bind body = def_frag frag ~on_exit:Drop ~in_:(check_expression body ret_type) in
     return
@@ -1630,7 +1645,7 @@ and infer_declaration (decl : I.declaration)
     let attr = infer_value_attr attr in
     let%bind matchee_type = Context.tapply matchee_type in
     let%bind frags, pattern =
-      With_frag.run @@ check_pattern ~mut:false ~single:true pattern matchee_type
+      With_frag.run ~is_unique:true @@ check_pattern ~mut:false pattern matchee_type
     in
     const
       E.(

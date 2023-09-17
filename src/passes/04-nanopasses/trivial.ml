@@ -410,6 +410,7 @@ end = struct
     | P_unit -> ret @@ P_unit
     | P_typed (ty, { wrap_content = P_var x; _ }) ->
       ret @@ P_var (Ligo_prim.Binder.set_ascr x (Some ty))
+    | P_typed (ty, p) -> ret @@ P_typed (p, Some ty)
     | P_var x -> ret @@ P_var (Ligo_prim.Binder.make x None)
     | P_var_typed (ty, x) -> ret @@ P_var (Ligo_prim.Binder.make x (Some ty))
     | P_list (List lst) -> ret @@ P_list (List lst)
@@ -731,4 +732,6 @@ end = struct
         List.map ~f:(fun (l, p) -> O.Field.Complete (l, p)) (O.Record.to_list lst)
       in
       ret @@ P_pun_record lst
+    | P_typed (p, None) -> pattern_ p
+    | P_typed (p, Some t) -> ret @@ P_typed (t, p)
 end

@@ -819,29 +819,29 @@ let try_all (ts : ('a, 'err, 'wrn) t list) : ('a, 'err, 'wrn) t =
 
 module With_frag = struct
   type fragment = (Value_var.t * Param.mutable_flag * Type.t) list
-  type nonrec ('a, 'err, 'wrn) t = (fragment * 'a, 'err, 'wrn) t
+  type nonrec ('a, 'err, 'wrn) t = is_unique:bool -> (fragment * 'a, 'err, 'wrn) t
 
-  let lift t = t >>| fun x -> [], x
+  let lift t ~is_unique:_ = t >>| fun x -> [], x
 
-  let lift_reader f t =
+  let lift_reader f t ~is_unique =
     let open Let_syntax in
-    let%bind frag, x = t in
+    let%bind frag, x = t ~is_unique in
     let%bind y = f (return x) in
     return (frag, y)
 
 
-  let extend frag = return (frag, ())
-  let run t = t
+  let extend frag ~is_unique:_ = return (frag, ())
+  let run ~is_unique t = t ~is_unique
 
   include Monad.Make3 (struct
     type nonrec ('a, 'err, 'wrn) t = ('a, 'err, 'wrn) t
 
-    let return x = return ([], x)
+    let return x ~is_unique:_ = return ([], x)
 
-    let bind t ~f =
+    let bind t ~f ~is_unique =
       let open Let_syntax in
-      let%bind frag1, x = t in
-      let%bind frag2, y = f x in
+      let%bind frag1, x = t ~is_unique in
+      let%bind frag2, y = f x ~is_unique in
       return (frag1 @ frag2, y)
 
 
@@ -849,24 +849,24 @@ module With_frag = struct
   end)
 
   let all_lmap (lmap : ('a, 'err, 'wrn) t Label.Map.t) : ('a Label.Map.t, 'err, 'wrn) t =
-   fun ~raise ~options ~loc state ->
+   fun ~is_unique ~raise ~options ~loc state ->
     let (state, frag), lmap =
       Label.Map.fold_map
         lmap
         ~init:(state, [])
         ~f:(fun ~key:_label ~data:t (state, frag) ->
-          let state, (frag', result) = t ~raise ~options ~loc state in
+          let state, (frag', result) = t ~is_unique ~raise ~options ~loc state in
           (state, frag @ frag'), result)
     in
     state, (frag, lmap)
 
 
   let all_lmap_unit (lmap : (unit, 'err, 'wrn) t Label.Map.t) : (unit, 'err, 'wrn) t =
-   fun ~raise ~options ~loc state ->
+   fun ~is_unique ~raise ~options ~loc state ->
     let state, frag =
       Label.Map.fold
         ~f:(fun ~key:_label ~data:t (state, frag) ->
-          let state, (frag', ()) = t ~raise ~options ~loc state in
+          let state, (frag', ()) = t ~is_unique ~raise ~options ~loc state in
           state, frag @ frag')
         lmap
         ~init:(state, [])
@@ -876,6 +876,7 @@ module With_frag = struct
 
   let loc () = lift (loc ())
   let set_loc loc = lift_reader (set_loc loc)
+  let is_unique () ~is_unique = return ~is_unique is_unique
   let raise_result result ~error = lift (raise_result result ~error)
   let raise_opt opt ~error = lift (raise_opt opt ~error)
   let raise_l ~loc error = lift (raise_l ~loc error)
