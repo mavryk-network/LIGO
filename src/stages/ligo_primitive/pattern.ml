@@ -47,6 +47,7 @@ module type S = sig
   val variant_pattern : loc:Location.t -> Label.t * 'ty t -> 'ty t
   val list_prefix_pattern : loc:Location.t -> 'ty t list -> 'ty t -> 'ty t
   val list_wrap_pattern : loc:Location.t -> 'ty t -> 'ty t
+  val list_nil_pattern : loc:Location.t -> unit -> 'ty t
 end
 
 module Make (Container : Container) (Decorator : Decorator) (Typed : Typed) = struct
@@ -90,6 +91,10 @@ module Make (Container : Container) (Decorator : Decorator) (Typed : Typed) = st
   let list_wrap_pattern : loc:Location.t -> 'ty t -> 'ty t =
    fun ~loc elt ->
     Location.wrap ~loc @@ P_list (Cons (elt, Location.wrap ~loc @@ P_list Nil))
+
+
+  let list_nil_pattern : loc:Location.t -> 'unit -> 'ty t =
+   fun ~loc () -> Location.wrap ~loc @@ P_list Nil
 
 
   let rec pp_list g ppf pl =
