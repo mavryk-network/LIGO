@@ -257,7 +257,7 @@ end
 module MakeCore (Container : Container) (Decorator : Decorator) = struct
   type 'ty_exp list_pattern =
     | Cons of 'ty_exp t * 'ty_exp t
-    | List of 'ty_exp t list
+    | Nil of unit
 
   and 'ty_exp pattern_repr =
     | P_unit
@@ -289,8 +289,7 @@ module MakeCore (Container : Container) (Decorator : Decorator) = struct
     let mpp = pp g in
     match pl with
     | Cons (pl, pr) -> Format.fprintf ppf "%a::%a" mpp pl mpp pr
-    | List pl ->
-      Format.fprintf ppf "[%a]" Simple_utils.PP_helpers.(list_sep mpp (tag " ; ")) pl
+    | Nil () -> Format.fprintf ppf "[]"
 
 
   and pp type_expression ppf p =
@@ -324,7 +323,7 @@ module MakeCore (Container : Container) (Decorator : Decorator) = struct
     | P_list (Cons (pa, pb)) ->
       iter f pa;
       iter f pb
-    | P_list (List lp) -> List.iter ~f:(iter f) lp
+    | P_list (Nil ()) -> ()
     | P_variant (_, p) -> iter f p
     | P_tuple lp -> List.iter ~f:(iter f) (List.map ~f:Decorator.get_value lp)
     | P_record lps -> Container.iter ~f:(iter f) lps
@@ -339,7 +338,7 @@ module MakeCore (Container : Container) (Decorator : Decorator) = struct
     | P_list lp ->
       (match lp with
       | Cons (pa, pb) -> fold_pattern f (fold_pattern f acc pb) pa
-      | List lp -> List.fold_left ~f:(fold_pattern f) ~init:acc lp)
+      | Nil () -> acc)
     | P_variant (_, p) -> fold_pattern f acc p
     | P_tuple lp ->
       List.fold_left ~f:(fold_pattern f) ~init:acc @@ List.map ~f:Decorator.get_value lp
@@ -359,9 +358,7 @@ module MakeCore (Container : Container) (Decorator : Decorator) = struct
         let acc, pa = fold_map_pattern f acc pa in
         let acc, pb = fold_map_pattern f acc pb in
         acc, Location.wrap ~loc (P_list (Cons (pa, pb)))
-      | List lp ->
-        let acc, lp = List.fold_map ~f:(fold_map_pattern f) ~init:acc lp in
-        acc, Location.wrap ~loc (P_list (List lp)))
+      | Nil () -> acc, Location.wrap ~loc (P_list (Nil ())))
     | P_variant (l, p) ->
       let acc, lp = fold_map_pattern f acc p in
       acc, Location.wrap ~loc (P_variant (l, lp))
@@ -391,7 +388,7 @@ module MakeCore (Container : Container) (Decorator : Decorator) = struct
     | P_list lp ->
       (match lp with
       | Cons (pa, pb) -> fold f (fold f acc pb) pa
-      | List lp -> List.fold_left ~f:(fold f) ~init:acc lp)
+      | Nil () -> acc)
     | P_variant (_, p) -> fold f acc p
     | P_tuple lp ->
       List.fold_left ~f:(fold f) ~init:acc @@ List.map ~f:Decorator.get_value lp
@@ -415,9 +412,7 @@ module MakeCore (Container : Container) (Decorator : Decorator) = struct
             let pa = self pa in
             let pb = self pb in
             (Cons (pa, pb) : 'b list_pattern)
-          | List lp ->
-            let lp = List.map ~f:self lp in
-            (List lp : 'b list_pattern)
+          | Nil () -> (Nil () : 'b list_pattern)
         in
         P_list lp
       | P_variant (l, p) ->
@@ -452,9 +447,7 @@ module MakeCore (Container : Container) (Decorator : Decorator) = struct
           let acc, pa = self acc pa in
           let acc, pb = self acc pb in
           acc, (Cons (pa, pb) : 'b list_pattern)
-        | List lp ->
-          let acc, lp = List.fold_map ~f:self ~init:acc lp in
-          acc, (List lp : 'b list_pattern)
+        | Nil () -> acc, (Nil () : 'b list_pattern)
       in
       ret acc @@ P_list lp
     | P_variant (l, p) ->

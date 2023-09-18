@@ -412,7 +412,14 @@ end = struct
       ret @@ P_var (Ligo_prim.Binder.set_ascr x (Some ty))
     | P_typed (ty, p) -> ret @@ P_typed (p, Some ty)
     | P_var x -> ret @@ P_var (Ligo_prim.Binder.make x None)
-    | P_list (List lst) -> ret @@ P_list (List lst)
+    | P_list (List lst) ->
+      let list_pat =
+        List.fold_right
+          lst
+          ~init:(Location.wrap ~loc:location (O.Pattern.P_list (Nil ())))
+          ~f:(fun p q -> Location.wrap ~loc:location (O.Pattern.P_list (Cons (p, q))))
+      in
+      ret @@ Location.unwrap list_pat
     | P_list (Cons (l, r)) -> ret @@ P_list (Cons (l, r))
     | P_variant (l, Some p) -> ret @@ P_variant (l, p)
     | P_variant (l, None) ->
@@ -715,7 +722,7 @@ end = struct
     match Location.unwrap p with
     | P_unit -> ret @@ P_unit
     | P_var v -> ret @@ P_var (Ligo_prim.Binder.get_var v)
-    | P_list (List lst) -> ret @@ P_list (List lst)
+    | P_list (Nil ()) -> ret @@ P_list (List [])
     | P_list (Cons (l, r)) -> ret @@ P_list (Cons (l, r))
     | P_variant (l, p) -> ret @@ P_variant (l, Some p)
     | P_tuple lst ->
