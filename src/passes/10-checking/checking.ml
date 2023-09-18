@@ -1143,9 +1143,9 @@ and check_pattern ~mut (pat : I.type_expression option I.Pattern.t) (type_ : Typ
         let%bind hd_pat = hd_pat
         and tl_pat = tl_pat in
         return @@ P.P_list (Cons (hd_pat, tl_pat)))
-  | ( P_list (Nil ())
+  | ( P_list Nil
     , T_construct { constructor = Literal_types.List; parameters = [ elt_type ]; _ } ) ->
-    const E.(return @@ P.P_list (List []))
+    const E.(return @@ P.P_list Nil)
   | P_variant (label, arg_pat), T_sum row ->
     let%bind label_row_elem = raise_opt ~error:err @@ Map.find row.fields label in
     let%bind arg_pat = check arg_pat label_row_elem in
@@ -1155,7 +1155,7 @@ and check_pattern ~mut (pat : I.type_expression option I.Pattern.t) (type_ : Typ
         return @@ P.P_variant (label, arg_pat))
   | ( P_tuple []
     , T_construct { constructor = Literal_types.List; parameters = [ elt_type ]; _ } ) ->
-    const E.(return @@ P.P_list (List []))
+    const E.(return @@ P.P_list Nil)
   | ( P_tuple tuple_pat
     , T_construct { constructor = Literal_types.List; parameters = [ elt_type ]; _ } ) ->
     let%bind elts, (tail, tail_is_ellipsis) =
@@ -1170,7 +1170,7 @@ and check_pattern ~mut (pat : I.type_expression option I.Pattern.t) (type_ : Typ
       else
         Location.wrap ~loc
         @@ Linear_pattern_with_ellipsis.(
-             P_list (Cons (tail, Location.wrap ~loc @@ P_list (Nil ()))))
+             P_list (Cons (tail, Location.wrap ~loc @@ P_list Nil)))
     in
     let%bind tail = check tail type_ in
     const
@@ -1258,7 +1258,7 @@ and infer_tuple_pattern
   | [] ->
     let%bind elt_type = exists Type in
     let%bind t_list = create_type @@ Type.t_list elt_type in
-    const E.(return @@ P.P_list (List [])) t_list
+    const E.(return @@ P.P_list Nil) t_list
   | _ ->
     (match I.Pattern.get_list_of_tuple_pattern tuple_pat with
     | Some (elts, (tail, tail_is_ellipsis)) when tail_is_ellipsis ->
@@ -1272,7 +1272,7 @@ and infer_tuple_pattern
         else
           Location.wrap ~loc
           @@ Linear_pattern_with_ellipsis.(
-               P_list (Cons (tail, Location.wrap ~loc @@ P_list (Nil ()))))
+               P_list (Cons (tail, Location.wrap ~loc @@ P_list Nil)))
       in
       let%bind tail = check tail t_list in
       const
@@ -1364,10 +1364,10 @@ and infer_pattern ~mut (pat : I.type_expression option I.Pattern.t)
         and tl_pat = tl_pat in
         return @@ P.P_list (Cons (hd_pat, tl_pat)))
       t_list
-  | P_list (Nil ()) ->
+  | P_list Nil ->
     let%bind elt_type = exists Type in
     let%bind t_list = create_type @@ Type.t_list elt_type in
-    const E.(return @@ P.P_list (List [])) t_list
+    const E.(return @@ P.P_list Nil) t_list
   | P_tuple tuple_pat -> infer_tuple_pattern ~mut tuple_pat
   | P_variant (constructor, arg_pat) ->
     let%bind tvars, arg_type, sum_type =

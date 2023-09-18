@@ -416,7 +416,7 @@ end = struct
       let list_pat =
         List.fold_right
           lst
-          ~init:(Location.wrap ~loc:location (O.Pattern.P_list (Nil ())))
+          ~init:(Location.wrap ~loc:location (O.Pattern.P_list Nil))
           ~f:(fun p q -> Location.wrap ~loc:location (O.Pattern.P_list (Cons (p, q))))
       in
       ret @@ Location.unwrap list_pat
@@ -722,7 +722,7 @@ end = struct
     match Location.unwrap p with
     | P_unit -> ret @@ P_unit
     | P_var v -> ret @@ P_var (Ligo_prim.Binder.get_var v)
-    | P_list (Nil ()) -> ret @@ P_list (List [])
+    | P_list Nil -> ret @@ P_list (List [])
     | P_list (Cons (l, r)) -> ret @@ P_list (Cons (l, r))
     | P_variant (l, p) -> ret @@ P_variant (l, Some p)
     | P_tuple lst ->

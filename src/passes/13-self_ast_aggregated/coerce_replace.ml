@@ -49,7 +49,7 @@ let expression ~raise : expression -> expression =
   | E_coerce { anno_expr = value; _ }
     when is_t_bool expr.type_expression && is_t_list value.type_expression ->
     let tcase : _ Match_expr.match_case =
-      { pattern = Location.wrap ~loc:value.location Pattern.(P_list (List []))
+      { pattern = Location.wrap ~loc:value.location Pattern.(P_list Nil)
       ; body = e_a_bool ~loc:value.location false
       }
     in

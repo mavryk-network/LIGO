@@ -136,13 +136,9 @@ let rec pattern_env_extend_ ~(no_colour : bool) ~(attributes : ValueAttr.t) ~(mu
       self (locs, env) phd ty vhd
     in
     self (locs, env) ptl ty (V_List vtl)
-  | P_list (List ps), V_List vs ->
-    (match List.zip ps vs with
-    | Ok lst ->
-      let* ty = get_t_list ty in
-      bind_fold_list lst ~init:(locs, env) ~f:(fun (locs, env) (pattern, value) ->
-          self (locs, env) pattern ty value)
-    | Unequal_lengths -> fail @@ error_type ())
+  | P_list Nil, V_List [] ->
+    let* ty = get_t_list ty in
+    return (locs, env)
   | _ -> fail @@ error_type ()
 
 

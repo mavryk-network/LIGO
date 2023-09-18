@@ -178,15 +178,7 @@ and untype_pattern : I.type_expression option O.Pattern.t -> _ I.Pattern.t =
     let h = self h in
     let t = self t in
     Location.wrap ~loc (I.Pattern.P_list (Cons (h, t)))
-  | P_list (List ps) ->
-    let list_pat = List.map ~f:self ps in
-    let list_pat =
-      List.fold_right
-        list_pat
-        ~init:(Location.wrap ~loc (I.Pattern.P_list (Nil ())))
-        ~f:(fun p q -> Location.wrap ~loc (I.Pattern.P_list (Cons (p, q))))
-    in
-    list_pat
+  | P_list Nil -> Location.wrap ~loc (I.Pattern.P_list Nil)
   | P_variant (l, p) ->
     let p = self p in
     Location.wrap ~loc (I.Pattern.P_variant (l, p))
@@ -196,6 +188,7 @@ and untype_pattern : I.type_expression option O.Pattern.t -> _ I.Pattern.t =
   | P_record lps ->
     let lps = Record.map ~f:self lps in
     Location.wrap ~loc (I.Pattern.P_record lps)
+  | P_typed (_, _) -> .
 
 
 and untype_module_expr : O.module_expr -> I.module_expr =

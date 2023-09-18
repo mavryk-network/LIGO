@@ -78,14 +78,7 @@ let rec to_simple_pattern (ty_pattern : _ AST.Pattern.t * AST.type_expression) =
     let hd_ty = Option.value_exn ~here:[%here] (C.get_t_list ty) in
     let hd_tl = to_simple_pattern (hd, hd_ty) @ to_simple_pattern (tl, ty) in
     [ SP_Constructor (cons_label, hd_tl, ty) ]
-  | P_list (List ps) ->
-    let hd_ty = Option.value_exn ~here:[%here] (C.get_t_list ty) in
-    List.fold_right
-      ps
-      ~init:[ nil_constructor ~loc ty ]
-      ~f:(fun p acc ->
-        let hd_tl = to_simple_pattern (p, hd_ty) @ acc in
-        [ SP_Constructor (cons_label, hd_tl, hd_ty) ])
+  | P_list Nil -> [ nil_constructor ~loc ty ]
   | P_variant (c, p) ->
     let p_ty =
       get_variant_nested_type c (Option.value_exn ~here:[%here] (C.get_t_sum ty))
@@ -111,6 +104,7 @@ let rec to_simple_pattern (ty_pattern : _ AST.Pattern.t * AST.type_expression) =
           to_simple_pattern (p, row_elem))
     in
     List.concat ps
+  | P_typed (_, _) -> .
 
 
 let are_keys_numeric keys =
@@ -120,8 +114,7 @@ let are_keys_numeric keys =
 let rec to_list_pattern ~(raise : raise) ~loc simple_pattern : _ AST.Pattern.t =
   match simple_pattern with
   | SP_Wildcard _ -> Location.wrap ~loc @@ AST.Pattern.P_var (wild_binder ~loc)
-  | SP_Constructor (Label "#NIL", _, _) ->
-    Location.wrap ~loc @@ AST.Pattern.P_list (List [])
+  | SP_Constructor (Label "#NIL", _, _) -> Location.wrap ~loc @@ AST.Pattern.P_list Nil
   | SP_Constructor (Label "#CONS", sps, t) ->
     let rsps = List.rev sps in
     let tl = List.hd_exn rsps in
