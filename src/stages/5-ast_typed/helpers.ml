@@ -284,7 +284,7 @@ let get_views : program -> (Value_var.t * Location.t) list =
         let var = Binder.get_var binder in
         (var, Value_var.get_location var) :: acc
       | D_irrefutable_match
-          { pattern = { wrap_content = P_var binder; _ }; expr = _; attr }
+          { pattern = { wrap_content = Pattern.P_var binder; _ }; expr = _; attr }
         when attr.view ->
         let var = Binder.get_var binder in
         (var, Value_var.get_location var) :: acc
@@ -302,7 +302,8 @@ let fetch_view_type : declaration -> (type_expression * type_expression Binder.t
  fun declt ->
   match Location.unwrap declt with
   | D_value { binder; expr; attr }
-  | D_irrefutable_match { pattern = { wrap_content = P_var binder; _ }; expr; attr }
+  | D_irrefutable_match
+      { pattern = { wrap_content = Pattern.P_var binder; _ }; expr; attr }
     when attr.view ->
     Some (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
   | D_value _ | D_irrefutable_match _ | D_type _ | D_module _ | D_module_include _ -> None

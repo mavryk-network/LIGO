@@ -76,7 +76,6 @@ let passes ~(flags : flags) : (module T) list =
       ~flag:always
       ~arg:pattern_constructor_application
   ; entry (module Pattern_restriction) ~flag:always ~arg:()
-  ; entry (module Pattern_heuristic) ~flag:always ~arg:()
   ; entry (module Unpuning) ~flag:always ~arg:()
   ; entry (module Module_open_restriction) ~flag:always ~arg:()
   ; entry (module Import_restriction) ~flag:always ~arg:()
@@ -120,7 +119,6 @@ let passes ~(flags : flags) : (module T) list =
   ; entry (module Curry) ~flag:always ~arg:()
   ; entry (module Tuple_as_record) ~flag:always ~arg:()
   ; entry (module If_as_pattern_match) ~flag:always ~arg:()
-  ; entry (module Restrict_typed_pattern) ~flag:always ~arg:()
   ; entry (module Compute_layout.Normalize_layout) ~flag:always ~arg:()
   ; entry (module Compute_layout.Normalize_no_layout) ~flag:always ~arg:()
   ]

@@ -96,7 +96,7 @@ module Of_Ast = struct
       let scopes = self rhs scopes env in
       (* Env logic from References *)
       let env =
-        let binders = Linear_pattern.binders let_binder in
+        let binders = Linear_pattern_with_ellipsis.binders let_binder in
         let vars = List.map binders ~f:Binder.get_var in
         List.fold_right vars ~init:env ~f:Env.add_vvar
       in
@@ -112,7 +112,7 @@ module Of_Ast = struct
       let scopes = self matchee scopes env (* c.f. match.mligo:6 *) in
       (* Env update logic from References *)
       List.fold cases ~init:scopes ~f:(fun scopes { pattern; body } ->
-          let binders = Linear_pattern.binders pattern in
+          let binders = Linear_pattern_with_ellipsis.binders pattern in
           let vars = List.map binders ~f:Binder.get_var in
           let env = List.fold_right vars ~init:env ~f:Env.add_vvar in
           self ~env_changed:true body scopes env (* c.f. match.mligo *))
@@ -230,7 +230,7 @@ module Of_Ast = struct
         let env = Env.add_vvar var env in
         scopes, env)
     | D_irrefutable_match { pattern; expr; attr = _ } ->
-      let binder = Linear_pattern.binders pattern in
+      let binder = Linear_pattern_with_ellipsis.binders pattern in
       let tys = List.map binder ~f:Binder.get_ascr in
       let scopes =
         List.fold tys ~init:scopes ~f:(fun scopes ty_opt ->

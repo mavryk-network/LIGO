@@ -225,11 +225,11 @@ module Of_Ast_core = struct
       let bindings = expression bindings matchee in
       List.fold cases ~init:bindings ~f:(fun bindings { pattern; body } ->
           let bindings = expression bindings body in
-          let binders = Pattern.binders pattern in
+          let binders = Ast_core.Pattern.binders pattern in
           add_binders bindings binders)
     | E_let_mut_in { let_binder; rhs; let_result; _ }
     | E_let_in { let_binder; rhs; let_result; _ } ->
-      let binders = Pattern.binders let_binder in
+      let binders = Ast_core.Pattern.binders let_binder in
       let binders, rhs = set_core_type_if_possible binders rhs in
       let bindings = add_binders bindings binders in
       let bindings = expression bindings rhs in
@@ -251,7 +251,7 @@ module Of_Ast_core = struct
       let bindings = add_binders bindings binders in
       expression bindings expr
     | D_irrefutable_match { pattern; expr; _ } ->
-      let binders = Pattern.binders pattern in
+      let binders = Ast_core.Pattern.binders pattern in
       let binders, expr = set_core_type_if_possible binders expr in
       let bindings = add_binders bindings binders in
       expression bindings expr

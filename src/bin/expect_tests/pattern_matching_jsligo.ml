@@ -2,6 +2,17 @@ open Cli_expect
 
 let%expect_test _ =
   run_ligo_good
+    [ "compile"
+    ; "expression"
+    ; "jsligo"
+    ; "fu"
+    ; "--init-file"
+    ; test "infer_tuple_pattern.jsligo"
+    ];
+  [%expect {| { DROP ; UNIT } |}]
+
+let%expect_test _ =
+  run_ligo_good
     [ "run"
     ; "interpret"
     ; "match_with_block()"
@@ -91,7 +102,7 @@ let%expect_test _ =
 
   Error : this pattern-matching is not exhaustive.
   Here are examples of cases that are not matched:
-  - C |}]
+  - C () |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print"; "ast-typed"; bad_test "pattern_match7.jsligo"; "--no-color" ];

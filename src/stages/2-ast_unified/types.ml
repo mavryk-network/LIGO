@@ -137,11 +137,6 @@ and 'self list_pattern =
   | Cons of 'self * 'self
   | List of 'self list
 
-and 'self element_pattern =
-  { ellipsis : bool
-  ; pattern : 'self
-  }
-
 and ('self, 'ty_expr) pattern_content_ =
   | P_unit
   | P_typed of 'ty_expr * 'self
@@ -150,7 +145,8 @@ and ('self, 'ty_expr) pattern_content_ =
   | P_list of 'self list_pattern
   | P_variant of Label.t * 'self option
   | P_tuple of 'self list
-  | P_tuple_with_ellipsis of 'self element_pattern list
+  | P_array of
+      'self Array_repr.t (* [1, 2, 3] , [42] , [] , [2 ...3] (specific to jsligo) *)
   | P_pun_record of (Label.t, 'self) Field.t list
   | P_rest of Label.t
   | P_attr of Attribute.t * 'self
@@ -158,7 +154,6 @@ and ('self, 'ty_expr) pattern_content_ =
   | P_app of 'self * 'self option
   | P_ctor of Label.t
   | P_ctor_app of 'self Simple_utils.List.Ne.t
-  | P_var_typed of 'ty_expr * Variable.t [@not_initial]
 [@@deriving
   map
   , fold

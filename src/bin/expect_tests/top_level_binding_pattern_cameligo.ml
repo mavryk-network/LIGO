@@ -332,7 +332,7 @@ let%expect_test _ =
     Here are examples of cases that are not matched:
     - {
      a = _;
-     b = Bar;
+     b = Bar ();
      c = _
     } |}]
 
@@ -354,7 +354,7 @@ let%expect_test _ =
 
     Error : this pattern-matching is not exhaustive.
     Here are examples of cases that are not matched:
-    - (_, Bar, _) |}]
+    - (_, Bar (), _) |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; contract "cameligo/constr_let_in.mligo" ];
@@ -369,7 +369,7 @@ let%expect_test _ =
 
     Error : this pattern-matching is not exhaustive.
     Here are examples of cases that are not matched:
-    - A |}]
+    - A () |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; contract "cameligo/constr_let_in2.mligo" ];
@@ -384,4 +384,4 @@ let%expect_test _ =
 
     Error : this pattern-matching is not exhaustive.
     Here are examples of cases that are not matched:
-    - False |}]
+    - False () |}]

@@ -180,15 +180,7 @@ let rec fold_pattern_with_path
   | P_unit -> acc
   | P_var _ -> acc
   | P_list (Cons (h, t)) -> fold_pattern_with_path f acc path (p_cons ~loc h t)
-  | P_list (List ps) ->
-    let rec aux ps =
-      match ps with
-      | [] -> p_nil ~loc
-      | p :: ps ->
-        let ps = aux ps in
-        p_cons ~loc p ps
-    in
-    fold_pattern_with_path f acc path (aux ps)
+  | P_list Nil -> fold_pattern_with_path f acc path (p_nil ~loc)
   | P_variant (c, p) ->
     let path = Label.join path c in
     fold_pattern_with_path f acc path p
@@ -206,6 +198,7 @@ let rec fold_pattern_with_path
         fold_pattern_with_path f acc path p)
       ~init:acc
       lps
+  | P_typed (_, _) -> .
 
 
 type vars_and_projections =
@@ -294,15 +287,7 @@ let rec to_simple_pattern
   | P_var b ->
     let loc = Binder.get_loc b in
     n_vars ~loc (get_number_of_fields ty)
-  | P_list (List []) -> [ nil (get_variant_nested_type nil_label ty) ty loc ]
-  | P_list (List ps) ->
-    let hd_ty = Option.value_exn ~here:[%here] (C.get_t_list ty) in
-    List.fold_right
-      ps
-      ~init:[ nil (get_variant_nested_type nil_label ty) ty loc ]
-      ~f:(fun hd tl ->
-        let hd = to_simple_pattern hd_ty hd in
-        [ cons hd tl (get_variant_nested_type cons_label ty) ty loc ])
+  | P_list Nil -> [ nil (get_variant_nested_type nil_label ty) ty loc ]
   | P_list (Cons (h, t)) ->
     let hd_ty = Option.value_exn ~here:[%here] (C.get_t_list ty) in
     let h = to_simple_pattern hd_ty h in
@@ -328,6 +313,7 @@ let rec to_simple_pattern
     List.concat_map ps ~f:(fun (label, p) ->
         let p_ty = Option.value_exn ~here:[%here] (OccuranceMap.find row.fields label) in
         to_simple_pattern p_ty p)
+  | P_typed (_, _) -> .
 
 
 (** This function scans a pattern and returns a list of [occurance] *)

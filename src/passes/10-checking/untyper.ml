@@ -102,7 +102,7 @@ and untype_expression_content ~loc (ec : O.expression_content) : I.expression =
     let rhs = self rhs in
     let result = self let_result in
     let attr : ValueAttr.t = untype_value_attr attributes in
-    let let_binder = O.Pattern.map (Fn.const None) let_binder in
+    let let_binder = untype_pattern @@ Linear_pattern.map (Fn.const None) let_binder in
     return (e_let_mut_in ~loc let_binder rhs result attr)
   | E_mod_in { module_binder; rhs; let_result } ->
     let rhs = untype_module_expr rhs in
@@ -120,7 +120,7 @@ and untype_expression_content ~loc (ec : O.expression_content) : I.expression =
     let rhs = self rhs in
     let result = self let_result in
     let attr : ValueAttr.t = untype_value_attr attributes in
-    let let_binder = O.Pattern.map (Fn.const None) let_binder in
+    let let_binder = untype_pattern @@ Linear_pattern.map (Fn.const None) let_binder in
     return (e_let_in ~loc let_binder rhs result attr)
   | E_assign a ->
     let a = Assign.map self self_type_opt a in
@@ -159,7 +159,7 @@ and untype_match_expr
   let matchee = untype_expression matchee in
   let cases =
     List.map cases ~f:(fun { pattern; body } ->
-        let pattern = O.Pattern.map untype_type_expression_option pattern in
+        let pattern = untype_pattern @@ Linear_pattern.map (Fn.const None) pattern in
         let body = untype_expression body in
         I.Match_expr.{ pattern; body })
   in
@@ -167,7 +167,7 @@ and untype_match_expr
 
 
 (* TODO: check usage *)
-and untype_pattern : _ O.Pattern.t -> _ I.Pattern.t =
+and untype_pattern : I.type_expression option O.Pattern.t -> _ I.Pattern.t =
  fun p ->
   let self = untype_pattern in
   let loc = Location.get_location p in
@@ -178,18 +178,17 @@ and untype_pattern : _ O.Pattern.t -> _ I.Pattern.t =
     let h = self h in
     let t = self t in
     Location.wrap ~loc (I.Pattern.P_list (Cons (h, t)))
-  | P_list (List ps) ->
-    let ps = List.map ~f:self ps in
-    Location.wrap ~loc (I.Pattern.P_list (List ps))
+  | P_list Nil -> Location.wrap ~loc (I.Pattern.P_list Nil)
   | P_variant (l, p) ->
     let p = self p in
     Location.wrap ~loc (I.Pattern.P_variant (l, p))
   | P_tuple ps ->
-    let ps = List.map ~f:self ps in
+    let ps = List.map ~f:(fun p -> self p, false) ps in
     Location.wrap ~loc (I.Pattern.P_tuple ps)
   | P_record lps ->
     let lps = Record.map ~f:self lps in
     Location.wrap ~loc (I.Pattern.P_record lps)
+  | P_typed (_, _) -> .
 
 
 and untype_module_expr : O.module_expr -> I.module_expr =
@@ -221,7 +220,7 @@ and untype_declaration_pattern
   =
  fun untype_expression { pattern; expr; attr } ->
   let ty = untype_type_expression expr.O.type_expression in
-  let pattern = O.Pattern.map (Fn.const None) pattern in
+  let pattern = untype_pattern pattern in
   let expr = untype_expression expr in
   let expr = I.e_ascription ~loc:expr.location expr ty in
   let attr = untype_value_attr attr in
@@ -250,7 +249,10 @@ and untype_declaration =
       let dc = untype_declaration_constant untype_expression dc in
       return @@ D_value dc
     | D_irrefutable_match x ->
-      let x = untype_declaration_pattern untype_expression x in
+      let x =
+        untype_declaration_pattern untype_expression
+        @@ O.Pattern_decl.map Fn.id (Fn.const None) x
+      in
       return @@ D_irrefutable_match x
     | D_type dt ->
       let dt = untype_declaration_type dt in

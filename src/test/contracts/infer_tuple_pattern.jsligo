@@ -1,0 +1,14 @@
+const f = ([] : unit) : unit => [];
+const fu = ([]) : unit => [];
+const g = (l) => match (l) { when([]): 42; }
+const gu = (l : unit) => match (l) { when([]): 42; }
+const h = (l) => match (l) { when([]): 42; default: 0; }
+const hu = (l : list<int>) => match (l) { when([]): 42; default: 0; }
+const i = (l) => match (l) { when([_x, _y, ..._zs]): 42; default: 0 }
+const iu = (l : list<int>) => match (l) { when([_x, _y, ..._zs]): 42; default: 0 }
+const j = (l) => match (l) { when([_x] : list<int>): 1; when([_x, _y]): 2; default: 0 }
+const ju = (l : list<int>) => match (l) { when([_x]): 1; when([_x, _y]): 2; default: 0 }
+const k = (l) => match (l) { when([_x, _y]): 2; }
+const ku = (l : [int, int]) => match (l) { when([_x, _y]): 2; }
+const l = (l) => match (l) { when([_x, _y] : list<int>): 2; default: 0 }
+const lu = (l : list<int>) => match (l) { when([_x, _y]): 2; default: 0 }
