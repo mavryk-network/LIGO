@@ -1145,11 +1145,18 @@ and check_pattern ~mut (pat : I.type_expression option I.Pattern.t) (type_ : Typ
         return @@ P.P_list (Cons (hd_pat, tl_pat)))
   | ( P_list (List list_pat)
     , T_construct { constructor = Literal_types.List; parameters = [ elt_type ]; _ } ) ->
+    let%bind loc = loc () in
     let%bind list_pat = list_pat |> List.map ~f:(fun pat -> check pat elt_type) |> all in
     const
       E.(
         let%bind list_pat = all list_pat in
-        return @@ P.P_list (List list_pat))
+        let list_pat =
+          List.fold_right
+            list_pat
+            ~init:(Location.wrap ~loc (P.P_list (List [])))
+            ~f:(fun p q -> Location.wrap ~loc (P.P_list (Cons (p, q))))
+        in
+        return @@ Location.unwrap list_pat)
   | P_variant (label, arg_pat), T_sum row ->
     let%bind label_row_elem = raise_opt ~error:err @@ Map.find row.fields label in
     let%bind arg_pat = check arg_pat label_row_elem in
@@ -1222,6 +1229,10 @@ and check_pattern ~mut (pat : I.type_expression option I.Pattern.t) (type_ : Typ
       E.(
         let%bind record_pat = all_lmap record_pat in
         return @@ P.P_record record_pat)
+  | P_typed (p, Some ascr), _ ->
+    let%bind ascr = lift @@ With_default_layout.evaluate_type ascr in
+    let%bind () = unify ascr type_ in
+    check p ascr
   | _ ->
     let%bind type_', pat = infer pat in
     let%bind () =
@@ -1374,10 +1385,17 @@ and infer_pattern ~mut (pat : I.type_expression option I.Pattern.t)
       |> all
     in
     let%bind t_list = create_type @@ Type.t_list elt_type in
+    let%bind loc = loc () in
     const
       E.(
         let%bind list_pat = all list_pat in
-        return @@ P.P_list (List list_pat))
+        let list_pat =
+          List.fold_right
+            list_pat
+            ~init:(Location.wrap ~loc (P.P_list (List [])))
+            ~f:(fun p q -> Location.wrap ~loc (P.P_list (Cons (p, q))))
+        in
+        return @@ Location.unwrap list_pat)
       t_list
   | P_tuple tuple_pat -> infer_tuple_pattern ~mut tuple_pat
   | P_variant (constructor, arg_pat) ->
@@ -1432,10 +1450,12 @@ and infer_pattern ~mut (pat : I.type_expression option I.Pattern.t)
         return @@ P.P_record record_pat)
       record_type
   | P_typed (p, None) -> infer p
-  | P_typed (p, Some t) ->
-    let%bind ascr = lift (With_default_layout.evaluate_type t) in
-    let%bind expr = check p ascr in
-    return (ascr, expr)
+  | P_typed (p, Some ascr) ->
+    let%bind ascr = lift (With_default_layout.evaluate_type ascr) in
+    let%bind type_, _p = infer p in
+    let%bind p = check p ascr in
+    let%bind () = unify ascr type_ in
+    return (ascr, p)
 
 
 and check_cases

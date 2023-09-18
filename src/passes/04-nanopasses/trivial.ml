@@ -412,7 +412,6 @@ end = struct
       ret @@ P_var (Ligo_prim.Binder.set_ascr x (Some ty))
     | P_typed (ty, p) -> ret @@ P_typed (p, Some ty)
     | P_var x -> ret @@ P_var (Ligo_prim.Binder.make x None)
-    | P_var_typed (ty, x) -> ret @@ P_var (Ligo_prim.Binder.make x (Some ty))
     | P_list (List lst) -> ret @@ P_list (List lst)
     | P_list (Cons (l, r)) -> ret @@ P_list (Cons (l, r))
     | P_variant (l, Some p) -> ret @@ P_variant (l, p)

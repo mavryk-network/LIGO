@@ -154,7 +154,6 @@ and ('self, 'ty_expr) pattern_content_ =
   | P_app of 'self * 'self option
   | P_ctor of Label.t
   | P_ctor_app of 'self Simple_utils.List.Ne.t
-  | P_var_typed of 'ty_expr * Variable.t [@not_initial]
 [@@deriving
   map
   , fold

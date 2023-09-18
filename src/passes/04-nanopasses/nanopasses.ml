@@ -119,7 +119,6 @@ let passes ~(flags : flags) : (module T) list =
   ; entry (module Curry) ~flag:always ~arg:()
   ; entry (module Tuple_as_record) ~flag:always ~arg:()
   ; entry (module If_as_pattern_match) ~flag:always ~arg:()
-  ; entry (module Restrict_typed_pattern) ~flag:always ~arg:()
   ; entry (module Compute_layout.Normalize_layout) ~flag:always ~arg:()
   ; entry (module Compute_layout.Normalize_no_layout) ~flag:always ~arg:()
   ]

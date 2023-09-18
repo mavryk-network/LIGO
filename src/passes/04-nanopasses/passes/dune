@@ -58,7 +58,6 @@
   if_as_pattern_match
   freeze_containers
   reduce_sequence
-  restrict_typed_pattern
   literalize_annotated
   detect_recursive
   restrict_projections

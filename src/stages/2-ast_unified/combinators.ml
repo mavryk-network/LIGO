@@ -392,7 +392,7 @@ let get_pattern_binders (p : pattern) : Variable.t list =
   let fp : (Variable.t list, unit) pattern_ -> Variable.t list =
    fun p ->
     match Location.unwrap p with
-    | P_var x | P_var_typed (_, x) -> [ x ]
+    | P_var x -> [ x ]
     | _ -> fold_pattern_ List.append (fun lst () -> lst) [] p
   in
   let folder =
