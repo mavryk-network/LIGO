@@ -1167,20 +1167,14 @@ and check_pattern ~mut (pat : I.type_expression option I.Pattern.t) (type_ : Typ
     let tail =
       if tail_is_ellipsis
       then tail
-      else
-        Location.wrap ~loc
-        @@ Linear_pattern_with_ellipsis.(
-             P_list (Cons (tail, Location.wrap ~loc @@ P_list Nil)))
+      else Linear_pattern_with_ellipsis.list_wrap_pattern ~loc tail
     in
     let%bind tail = check tail type_ in
     const
       E.(
         let%bind elts = all elts in
         let%bind tail = tail in
-        let list_pat =
-          List.fold_right elts ~init:tail ~f:(fun p q ->
-              Location.wrap ~loc (P.P_list (Cons (p, q))))
-        in
+        let list_pat = P.list_prefix_pattern ~loc elts tail in
         return @@ Location.unwrap list_pat)
   | P_tuple tuple_pat, T_record row when Map.length row.fields = List.length tuple_pat ->
     let%bind tuple_pat =
@@ -1269,20 +1263,14 @@ and infer_tuple_pattern
       let tail =
         if tail_is_ellipsis
         then tail
-        else
-          Location.wrap ~loc
-          @@ Linear_pattern_with_ellipsis.(
-               P_list (Cons (tail, Location.wrap ~loc @@ P_list Nil)))
+        else Linear_pattern_with_ellipsis.list_wrap_pattern ~loc tail
       in
       let%bind tail = check tail t_list in
       const
         E.(
           let%bind elts = all elts in
           let%bind tail = tail in
-          let list_pat =
-            List.fold_right elts ~init:tail ~f:(fun p q ->
-                Location.wrap ~loc (P.P_list (Cons (p, q))))
-          in
+          let list_pat = P.list_prefix_pattern ~loc elts tail in
           return @@ Location.unwrap list_pat)
         t_list
     | _ ->
