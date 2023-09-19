@@ -44,6 +44,7 @@ import Language.LIGO.Extension
 import Language.LIGO.ParseTree (pathToSrc)
 import Language.LIGO.Parser (ParsedInfo)
 import Language.LIGO.Range
+import Language.LIGO.Scope
 
 -- | Type which caches all things that we need for
 -- launching the contract.
@@ -101,6 +102,9 @@ data LigoLanguageServerState = LigoLanguageServerState
   , lsParsedContracts :: Maybe (HashMap FilePath (LIGO ParsedInfo))
   , lsLambdaLocs :: Maybe (HashSet Range)
   , lsLigoTypesVec :: Maybe LigoTypesVec
+  , lsEntrypoints :: Maybe (Map U.EpName U.Ty)
+    -- ^ A list of available @Michelson@ entrypoints.
+  , lsPickedEntrypoint :: Maybe Text
   , lsVarsComputeThreadPool :: AbortingThreadPool.Pool
   , lsToLigoValueConverter :: DelayedValues.Manager PreLigoConvertInfo LigoOrMichValue
   , lsMoveId :: Word
@@ -111,6 +115,8 @@ data LigoLanguageServerState = LigoLanguageServerState
     -- If it is @Nothing@ then max steps is infinite.
   , lsEntrypointType :: Maybe LigoType
     -- ^ the type of the @main@ method.
+  , lsScopes :: Maybe (HashMap FilePath [Scope])
+    -- ^ Scopes from @get-scope@ command for each contract file.
   }
 
 instance Buildable LigoLanguageServerState where
@@ -134,16 +140,11 @@ withMichelsonEntrypoint contract@T.Contract{} entrypoint cont = do
 
   let noEntrypointErr = ConfigurationException $
         [int||Entrypoint `#{michelsonEntrypoint}` not found|]
+  T.MkEntrypointCallRes notes call <-
+    T.mkEntrypointCall michelsonEntrypoint (cParamNotes contract)
+    & maybe (throwIO noEntrypointErr) pure
 
-  when (U.isDefEpName michelsonEntrypoint) do
-    throwIO noEntrypointErr
-
-  do
-    T.MkEntrypointCallRes notes call <-
-      T.mkEntrypointCall michelsonEntrypoint (cParamNotes contract)
-      & maybe (throwIO noEntrypointErr) pure
-
-    cont notes call
+  cont notes call
   where
     -- LIGO has constructors starting from capital letters,
     -- however in Michelson they appear as field annotations starting from
@@ -254,6 +255,21 @@ getLigoTypesVec
   :: (LanguageServerStateExt ext ~ LigoLanguageServerState)
   => MonadRIO ext m => m LigoTypesVec
 getLigoTypesVec = "Ligo types are not initialized" `expectInitialized` (lsLigoTypesVec <$> getServerState)
+
+getEntrypoints
+  :: (LanguageServerStateExt ext ~ LigoLanguageServerState)
+  => MonadRIO ext m => m (Map U.EpName U.Ty)
+getEntrypoints = "Entrypoints are not initialized" `expectInitialized` (lsEntrypoints <$> getServerState)
+
+getPickedEntrypoint
+  :: (LanguageServerStateExt ext ~ LigoLanguageServerState)
+  => MonadRIO ext m => m Text
+getPickedEntrypoint = "Picked entrypoint is not initialized" `expectInitialized` (lsPickedEntrypoint <$> getServerState)
+
+getLigoScopes
+  :: (LanguageServerStateExt ext ~ LigoLanguageServerState)
+  => MonadRIO ext m => m (HashMap FilePath [Scope])
+getLigoScopes = "Scopes are not initialized" `expectInitialized` (lsScopes <$> getServerState)
 
 getParameterStorageAndOpsTypes :: LigoType -> (LigoType, LigoType, LigoType)
 getParameterStorageAndOpsTypes (LigoTypeResolved typ) =

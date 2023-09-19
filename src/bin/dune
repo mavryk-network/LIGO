@@ -47,7 +47,8 @@
   str
   fpath
   bos
-  semver)
+  semver
+  lambda-term)
  (preprocess
   (pps ppx_deriving_yojson))
  (modules install))
@@ -83,7 +84,7 @@
  ;Remove unused libs
  (preprocess
   (pps ppx_deriving_yojson))
- (modules user))
+ (modules user prompt))
 
 (rule
  (targets version.ml)

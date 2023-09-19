@@ -25,14 +25,6 @@ maintainability of your smart contracts. For example we can choose to
 alias a string type as an animal breed - this will allow us to
 communicate our intent with added clarity.
 
-<Syntax syntax="pascaligo">
-
-```pascaligo group=a
-type breed is string
-const dog_breed : breed = "Saluki"
-```
-
-</Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo group=a
@@ -57,18 +49,6 @@ let dog_breed: breed = "Saluki";
 
 ## Simple types
 
-<Syntax syntax="pascaligo">
-
-```pascaligo group=b
-// The type account_balances denotes maps from addresses to tez
-
-type account_balances is map (address, tez)
-
-const ledger : account_balances =
-  map [("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address) -> 10mutez]
-```
-
-</Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo group=b
@@ -92,7 +72,7 @@ type account_balances = map<address, tez>;
 
 let ledger: account_balances =
   Map.literal
-    (list([["tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address, 10 as mutez]]));
+    (list([["tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address, 10mutez]]));
 ```
 
 </Syntax>

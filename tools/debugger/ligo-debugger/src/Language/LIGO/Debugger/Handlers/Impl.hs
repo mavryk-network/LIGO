@@ -111,6 +111,7 @@ ligoCustomHandlers =
   , setProgramPathHandler
   , validateModuleNameHandler
   , getContractMetadataHandler
+  , validateEntrypointHandler
   , validateValueHandler
   , validateConfigHandler
   ]
@@ -362,7 +363,7 @@ instance HasSpecificMessages LIGO where
     ligoVals <- fmap catMaybes $ forM stackItems \stackItem ->
       runMaybeT do
         StackItem desc michVal <- pure stackItem
-        LigoStackEntry (LigoExposedStackEntry mDecl typRef) <- pure desc
+        LigoStackEntry (LigoExposedStackEntry mDecl typRef _) <- pure desc
         let typ = readLigoType ligoTypesVec typRef
         let varName = maybe (pretty unknownVariable) pretty mDecl
 
@@ -618,11 +619,14 @@ setLigoConfigHandler = mkLigoHandler \req@LigoSetLigoConfigRequest{} -> do
     , lsParsedContracts = Nothing
     , lsLambdaLocs = Nothing
     , lsLigoTypesVec = Nothing
+    , lsEntrypoints = Nothing
+    , lsPickedEntrypoint = Nothing
     , lsToLigoValueConverter = toLigoValueConverter
     , lsVarsComputeThreadPool = varsComputeThreadPool
     , lsMoveId = 0
     , lsMaxSteps = maxStepsMb
     , lsEntrypointType = Nothing
+    , lsScopes = Nothing
     }
   do let binaryPath = req.binaryPath
      logMessage [int||Set LIGO binary path: #s{binaryPath}|]
@@ -704,6 +708,10 @@ getContractMetadataHandler = mkLigoHandler \req@LigoGetContractMetadataRequest{}
         logMessage $ pretty (unContractCode $ cCode contract)
 
         parsedContracts <- parseContracts allFiles
+        scopes <- fmap HM.fromList $
+          forM allFiles \fileName -> do
+            scope <- fromLigoDefinitions <$> getScopes fileName
+            pure (fileName, scope)
 
         let statementLocs = getStatementLocs (getAllSourceLocations exprLocs) parsedContracts
         let allLocs = getInterestingSourceLocations parsedContracts exprLocs <> statementLocs
@@ -724,7 +732,9 @@ getContractMetadataHandler = mkLigoHandler \req@LigoGetContractMetadataRequest{}
           , lsParsedContracts = Just parsedContracts
           , lsLambdaLocs = Just lambdaLocs
           , lsLigoTypesVec = Just ligoTypesVec
+          , lsEntrypoints = Just michelsonEntrypoints
           , lsEntrypointType = Just entrypointType
+          , lsScopes = Just scopes
           }
 
         lServerState <- getServerState
@@ -744,6 +754,22 @@ getContractMetadataHandler = mkLigoHandler \req@LigoGetContractMetadataRequest{}
               JsonFromBuildable <$> michelsonEntrypoints
           }
 
+validateEntrypointHandler :: DAP.Handler (RIO LIGO)
+validateEntrypointHandler = mkLigoHandler \req@LigoValidateEntrypointRequest{} -> do
+  let pickedEntrypoint = U.UnsafeEpName req.pickedEntrypoint
+  entrypoints <- getEntrypoints
+
+  if pickedEntrypoint `M.member` entrypoints
+  then do
+    lServVar <- asks (_rcLSState @LIGO)
+    atomically $ modifyTVar lServVar $ fmap \lServ -> lServ
+      { lsPickedEntrypoint = Just req.pickedEntrypoint
+      }
+
+    respond LigoValidateOk
+  else
+    respond $ LigoValidateFailed [int||Entrypoint #{pickedEntrypoint} doesn't exist|]
+
 validateValueHandler :: DAP.Handler (RIO LIGO)
 validateValueHandler = mkLigoHandler \req@LigoValidateValueRequest{} -> do
   CollectedRunInfo
@@ -755,9 +781,11 @@ validateValueHandler = mkLigoHandler \req@LigoValidateValueRequest{} -> do
 
   let (parameterType, storageType, _) = getParameterStorageAndOpsTypes entrypointType
 
+  pickedEntrypoint <- getPickedEntrypoint
+
   parseRes <- case req.category of
     "parameter" ->
-      withMichelsonEntrypoint contract req.pickedEntrypoint $
+      withMichelsonEntrypoint contract pickedEntrypoint $
         \(_ :: T.Notes arg) _ ->
         void <$> parseValue @arg program
           req.category req.value req.valueLang parameterType
@@ -787,7 +815,9 @@ validateConfigHandler = mkLigoHandler \req@LigoValidateConfigRequest{} -> do
 
   let (parameterType, storageType, _) = getParameterStorageAndOpsTypes entrypointType
 
-  withMichelsonEntrypoint contract req.entrypoint
+  entrypoint <- getPickedEntrypoint
+
+  withMichelsonEntrypoint contract entrypoint
     \(_ :: T.Notes arg) epc -> do
       do let param = req.parameter; paramLang = req.parameterLang
          logMessage [int||
@@ -857,6 +887,7 @@ initDebuggerSession req = do
       (fromMaybe dummyMaxSteps maxStepsMb)
 
   ligoTypesVec <- getLigoTypesVec
+  scopes <- getLigoScopes
 
   his <-
     withRunInIO \unlifter ->
@@ -872,6 +903,7 @@ initDebuggerSession req = do
         lambdaLocs
         (isJust maxStepsMb)
         ligoTypesVec
+        scopes
 
   let ds = initDebuggerState his allLocs
 

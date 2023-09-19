@@ -52,39 +52,6 @@ The storage of a deployed contract can be queried using the
 'storage) typed_address`, returns the `'storage` value.
 
 As a concrete example, suppose we have the following contract:
-<Syntax syntax="pascaligo">
-
-```pascaligo test-ligo group=frontpage
-// This is testnew.ligo
-type storage is int
-
-type parameter is
-  Increment of int
-| Decrement of int
-| Reset
-
-type return is list (operation) * storage
-
-// Two entrypoints
-function add (const store : storage; const delta : int) : storage is
-  store + delta
-
-function sub (const store : storage; const delta : int) : storage is
-  store - delta
-
-(* Main access point that dispatches to the entrypoints according to
-   the smart contract parameter. *)
-
-function main (const action : parameter; const store : storage) : return is
- ((nil : list (operation)),    // No operations
-  case action of [
-    Increment (n) -> add (store, n)
-  | Decrement (n) -> sub (store, n)
-  | Reset         -> 0
-  ])
-```
-
-</Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo test-ligo group=frontpage
@@ -135,15 +102,13 @@ const sub = (store: storage, delta: int): storage => store - delta;
 
 /* Main access point that dispatches to the entrypoints according to
    the smart contract parameter. */
-const main = (action: parameter, store: storage) : @return => {
-  return [
-    list([]) as list<operation>,    // No operations
-    match(action) {
-      when(Increment(n)): add (store, n);
-      when(Decrement(n)): sub (store, n);
-      when(Reset()): 0}
-  ]
-};
+const main = (action: parameter, store: storage) : @return => [
+  list([]) as list<operation>,    // No operations
+  match(action) {
+    when(Increment(n)): add (store, n);
+    when(Decrement(n)): sub (store, n);
+    when(Reset()): 0}
+];
 ```
 
 </Syntax>
@@ -151,20 +116,6 @@ const main = (action: parameter, store: storage) : @return => {
 We can deploy it and query the storage right after, to check that the
 storage is in fact the one which we started with:
 
-<Syntax syntax="pascaligo">
-
-```pascaligo test-ligo group=frontpage
-// This continues testnew.ligo
-
-const test = {
-  const initial_storage = 42;
-  const (taddr, _, _) = Test.originate (main, initial_storage, 0tez);
-  const storage = Test.get_storage (taddr);
-} with storage = initial_storage;
-
-```
-
-</Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo test-ligo group=frontpage
@@ -185,7 +136,7 @@ let test =
 
 let _test = () : bool => {
   let initial_storage = 42 as int;
-  let [taddr, _, _] = Test.originate(main, initial_storage, 0 as tez);
+  let [taddr, _, _] = Test.originate(main, initial_storage, 0tez);
   return (Test.get_storage(taddr) == initial_storage);
 };
 
@@ -200,16 +151,6 @@ definitions evaluate to. If any of the definitions are found to have
 failed, a message will be issued with the line number where the problem
 occurred.
 
-<Syntax syntax="pascaligo">
-
-```shell
-ligo run test gitlab-pages/docs/advanced/src/testnew.ligo
-// Outputs:
-// Everything at the top-level was executed.
-// - test exited with value true.
-```
-
-</Syntax>
 <Syntax syntax="cameligo">
 
 ```shell
@@ -246,23 +187,6 @@ failing in case that there was an error.
 
 We can extend the previous example by executing a transaction that
 increments the storage after deployment, we also print the gas consumption:
-<Syntax syntax="pascaligo">
-
-```pascaligo test-ligo group=frontpage
-// This continues testnew.ligo
-
-const test2 =
-  {
-    const initial_storage = 42;
-    const (taddr, _, _) = Test.originate(main, initial_storage, 0tez);
-    const contr = Test.to_contract(taddr);
-    const gas_cons = Test.transfer_to_contract_exn(contr, Increment(1), 1mutez);
-    Test.log (("gas consumption",gas_cons)) ;
-    const storage = Test.get_storage(taddr);
-  } with (storage = initial_storage + 1);
-```
-
-</Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo test-ligo group=frontpage
@@ -284,11 +208,11 @@ let test2 =
 ```jsligo test-ligo group=frontpage
 // This continues testnew.jsligo
 
-let _test2 = () : bool => {
+function _test2 () : bool {
   let initial_storage = 42 as int;
-  let [taddr, _, _] = Test.originate(main, initial_storage, 0 as tez);
+  let [taddr, _, _] = Test.originate(main, initial_storage, 0tez);
   let contr = Test.to_contract(taddr);
-  let gas_cons = Test.transfer_to_contract_exn(contr, (Increment (1)), 1 as mutez);
+  let gas_cons = Test.transfer_to_contract_exn(contr, (Increment (1)), 1mutez);
   let _ = Test.log(["gas consumption", gas_cons]);
   return (Test.get_storage(taddr) == initial_storage + 1);
 }
@@ -424,14 +348,14 @@ let test_transfer_to_contract =
 ```jsligo test-ligo group=usage_transfer
 type param = [ int , ticket<string>]
 
-const main = (p: param, _: [string , address]) : [list<operation> , [string , address]] => {
+function main (p: param, _: [string , address]) : [list<operation>, [string , address]] {
   let [_,ticket] = p ;
   let [[_,[v,_]] , _] = Tezos.read_ticket (ticket) ;
   return ([list([]) , [v, Tezos.get_sender ()]])
 };
 
 const test_transfer_to_contract_ = () : unit => {
-  let [main_taddr, _ , _] = Test.originate (main, ["bye",Test.nth_bootstrap_account (1)], 1 as mutez) ;
+  let [main_taddr, _ , _] = Test.originate (main, ["bye",Test.nth_bootstrap_account (1)], 1mutez) ;
   let main_addr = Tezos.address (Test.to_contract (main_taddr)) ;
 
   /* mk_param is executed __by the proxy contract__ */
@@ -442,12 +366,12 @@ const test_transfer_to_contract_ = () : unit => {
   let _ = Test.log (["poxy addr:", proxy_taddr]) ;
 
   /* ticket_info lets you control the amount and the value of the tickets you send */
-  let ticket_info1 = ["hello",10 as nat] ;
+  let ticket_info1 = ["hello", 10n];
   /* we send ticket to main through the proxy-contract */
   let _ = Test.Proxy_ticket.transfer (proxy_taddr, [ticket_info1,main_addr]) ;
   let _ = Test.log (Test.get_storage (main_taddr)) ;
 
-  let ticket_info2 = ["world",5 as nat] ;
+  let ticket_info2 = ["world", 5n];
   let _ = Test.Proxy_ticket.transfer (proxy_taddr, [ticket_info2,main_addr]) ;
   Test.log (Test.get_storage (main_taddr));
 };
@@ -542,7 +466,7 @@ const main = (_: unit, s: storage) : [ list<operation> , storage] => {
 
 const test_originate_contract_ = () : unit => {
   const mk_storage = (t:ticket<bytes>) : storage => { return (Some (t)) } ;
-  let ticket_info = [0x0202, 15 as nat] ;
+  let ticket_info = [0x0202, 15n];
   let addr = Test.Proxy_ticket.originate (ticket_info, mk_storage, main) ;
   let storage : michelson_program = Test.get_storage_of_address (addr) ;
   let unforged_storage = (Test.decompile (storage) as unforged_storage) ;
@@ -595,22 +519,6 @@ let balances_under (b:balances) (threshold:tez) : balances =
 
 </Syntax>
 
-<Syntax syntax="pascaligo">
-
-```pascaligo group=rmv_bal
-(* This is remove-balance.ligo *)
-
-type balances is map (address, tez)
-
-function balances_under (const b : balances ; const threshold : tez) is {
-  const f =
-    function (const x : balances * (address * tez)) is {
-      const (acc, (k, v)) = x;
-    } with if v < threshold then Map.remove (k, acc) else acc;
-} with Map.fold (f, b, b)
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=rmv_bal
@@ -643,20 +551,12 @@ let _u = Test.reset_state 5n ([] : tez list)
 ```
 
 </Syntax>
-<Syntax syntax="pascaligo">
-
-```pascaligo test-ligo group=rmv_bal_test
-#include "./gitlab-pages/docs/advanced/src/remove-balance.ligo"
-const _u = Test.reset_state (5n, (list [] : list (tez)))
-```
-
-</Syntax>
 
 <Syntax syntax="jsligo">
 
 ```jsligo test-ligo group=rmv_bal_test
 #include "./gitlab-pages/docs/advanced/src/remove-balance.jsligo"
-let x = Test.reset_state (5 as nat, list([]) as list <tez>);
+let x = Test.reset_state (5n, list([]) as list <tez>);
 ```
 
 </Syntax>
@@ -672,25 +572,13 @@ let balances : balances =
 ```
 
 </Syntax>
-<Syntax syntax="pascaligo">
-
-```pascaligo test-ligo group=rmv_bal_test
-const balances : balances = {
-  const a1 = Test.nth_bootstrap_account (1);
-  const a2 = Test.nth_bootstrap_account (2);
-  const a3 = Test.nth_bootstrap_account (3);
-} with map [a1 -> 10tz; a2 -> 100tz; a3 -> 1000tz]
-```
-
-</Syntax>
-
 <Syntax syntax="jsligo">
 
 ```jsligo test-ligo group=rmv_bal_test
 let balances : balances =
-  Map.literal(list([[Test.nth_bootstrap_account(1), 10 as tez],
-                    [Test.nth_bootstrap_account(2), 100 as tez],
-                    [Test.nth_bootstrap_account(3), 1000 as tez]]));
+  Map.literal(list([[Test.nth_bootstrap_account(1), 10tez],
+                    [Test.nth_bootstrap_account(2), 100tez],
+                    [Test.nth_bootstrap_account(3), 1000tez]]));
 ```
 
 </Syntax>
@@ -729,24 +617,6 @@ let test =
 ```
 
 </Syntax>
-<Syntax syntax="pascaligo">
-
-```pascaligo test-ligo group=rmv_bal_test
-const test =
-  List.iter (
-    (function (const threshold : tez; const expected_size : nat) is {
-        function tester (const input : balances * tez) is
-          Map.size(balances_under (input.0, input.1));
-        const size_ = Test.run (tester, (balances, threshold));
-        const expected_size = Test.eval (expected_size);
-        Test.log (("expected", expected_size));
-        Test.log (("actual", size_));
-      } with assert (Test.michelson_equal (size_, expected_size))),
-    list [(15tez, 2n); (130tez, 1n); (1200tez, 0n)])
-```
-
-</Syntax>
-
 <Syntax syntax="jsligo">
 
 ```jsligo test-ligo group=rmv_bal_test
@@ -760,7 +630,7 @@ let test =
       let unit__ = Test.log (["actual",size]) ;
       return (assert (Test.michelson_equal (size,expected_size_)))
     },
-    list ([ [15 as tez,2 as nat] , [130 as tez,1 as nat] , [1200 as tez,0 as nat]]) );
+    list ([ [15tez, 2n] , [130tez, 1n] , [1200tez, 0n]]) );
 ```
 
 </Syntax>
@@ -784,22 +654,6 @@ You can now execute the test:
 
 </Syntax>
 
-<Syntax syntax="pascaligo">
-
-```shell
-> ligo run test gitlab-pages/docs/advanced/src/unit-remove-balance-mixed.ligo
-// Outputs:
-// ("expected" , 2)
-// ("actual" , 2)
-// ("expected" , 1)
-// ("actual" , 1)
-// ("expected" , 0)
-// ("actual" , 0)
-// Everything at the top-level was executed.
-// - test exited with value ().
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```shell
@@ -826,41 +680,6 @@ Michelson's interpreter.
 We can see how it works on an example. Suppose we want to test the following
 contract.
 
-<Syntax syntax="pascaligo">
-
-```pascaligo
-// This is testme.ligo
-
-type storage is int
-
-type parameter is
-  Increment of int
-| Decrement of int
-| Reset
-
-type return is list (operation) * storage
-
-// Two entrypoints
-
-function add (const store : storage; const delta : int) : storage is
-  store + delta
-
-function sub (const store : storage; const delta : int) : storage is
-  store - delta
-
-(* Main access point that dispatches to the entrypoints according to
-   the smart contract parameter. *)
-
-function main (const action : parameter; const store : storage) : return is
- ((nil : list (operation)),    // No operations
-  case action of [
-    Increment (n) -> add (store, n)
-  | Decrement (n) -> sub (store, n)
-  | Reset         -> 0
-  ])
-```
-
-</Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo
@@ -938,15 +757,6 @@ As a simple property, we check whether starting with a storage of
 a resulting storage of `42`. For checking it, we can interpret the
 `main` function:
 
-<Syntax syntax="pascaligo">
-
-```shell
-ligo run interpret "main (Increment (32), 10)" --init-file gitlab-pages/docs/advanced/src/testing/testme.ligo
-// Outputs:
-// ( LIST_EMPTY() , 42 )
-```
-
-</Syntax>
 <Syntax syntax="cameligo">
 
 ```shell
@@ -997,21 +807,6 @@ arguments:
 
 Here is how you emit events and fetch them from your tests:
 
-<Syntax syntax="pascaligo">
-
-```pascaligo test-ligo group=test_ex
-function main ( const x : (int*int) * unit ) is
-  (list [Tezos.emit ("%foo", x.0) ; Tezos.emit ("%foo", x.0.0)], Unit)
-
-const test_foo = {
-  const (ta, _, _) = Test.originate (main, Unit, 0tez) ;
-  const _ = Test.transfer_to_contract_exn (Test.to_contract (ta), (1,2), 0tez) ;
-  const x = (Test.get_last_events_from (ta, "foo") : list (int*int)) ;
-  const y = (Test.get_last_events_from (ta, "foo") : list (int)) ;
-} with (x,y)
-```
-
-</Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo test-ligo group=test_ex
@@ -1035,8 +830,8 @@ let main = (p: [int, int], _: unit) => {
   };
 
 let test = (() : [list<[int,int]>, list<int>] => {
-  let [ta, _, _] = Test.originate(main, unit, 0 as tez);
-  let _ = Test.transfer_to_contract_exn(Test.to_contract(ta), [1,2], 0 as tez);
+  let [ta, _, _] = Test.originate(main, unit, 0tez);
+  let _ = Test.transfer_to_contract_exn(Test.to_contract(ta), [1,2], 0tez);
   return [Test.get_last_events_from(ta, "foo") as list<[int, int]>, Test.get_last_events_from(ta, "foo") as list<int>];
 }) ();
 ```
@@ -1056,19 +851,19 @@ In the example below, `contract_of(C)` is returns the implicitly-declared `main`
 namespace C {
   type storage = int;
 
-  // @entry
+  @entry
   const increment = (action: int, store: storage) : [list <operation>, storage] => [list([]), store + action];
 
-  // @entry
+  @entry
   const decrement = (action: int, store: storage) : [list <operation>, storage] => [list([]), store - action];
 };
 
 const testC = () => {
     let initial_storage = 42;
-    let [taddr, _contract, _size] = Test.originate_module(contract_of(C), initial_storage, 0 as tez);
+    let [taddr, _contract, _size] = Test.originate_module(contract_of(C), initial_storage, 0tez);
     let contr : contract<parameter_of C> = Test.to_contract(taddr);
     let p : parameter_of C = Increment(1);
-    let _ = Test.transfer_to_contract_exn(contr, p, 1 as mutez);
+    let _ = Test.transfer_to_contract_exn(contr, p, 1mutez);
     return assert(Test.get_storage(taddr) == initial_storage + 1);
 }
 ```

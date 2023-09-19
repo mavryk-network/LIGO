@@ -18,99 +18,6 @@ mutations inside the functions will be.
 
 ## Declaring Functions
 
-<Syntax syntax="pascaligo">
-
-There are two ways in PascaLIGO to define functions: with or without a
-*block*.
-
-### Blocks
-
-In PascaLIGO, *blocks* enable the sequential composition of
-instructions into an isolated scope. Each block needs to include at
-least one instruction.
-
-```pascaligo skip
-{ a := a + 1 }
-```
-
-If we need a placeholder, we use the instruction `skip` which leaves
-the state unchanged.  The rationale for `skip` instead of a truly
-empty block is that it prevents you from writing an empty block by
-mistake.
-
-```pascaligo skip
-{ skip }
-```
-
-> Please note that the idiom above is __temporary__: this is not for
-> production code.
-
-Blocks are more versatile than simply containing instructions: they
-can also contain *declarations* of values, like so:
-
-```pascaligo skip
-{ const a : int = 1 }
-```
-
-Functions in PascaLIGO are defined using the `function` keyword
-followed by their `name`, `parameters` and `return` type definitions.
-
-Here is how you define a basic function that computes the sum of two
-integers:
-
-```pascaligo group=a
-function add (const a : int; const b : int) : int is {
-  const sum = a + b
-} with sum
-```
-
-The function body consists of two parts:
-
-- `{ <instructions and declarations> }` is the logic of the function;
-- `with <value>` is the value returned by the function.
-
-By default, LIGO will warn about unused parameters inside
-functions. In case we do not use a parameter, we can use the wildcard
-`_` to prevent warnings. Either use `_` instead of the parameter
-identifier:
-
-```pascaligo
-function k (const x : int; const _ : int) is x
-```
-
-or use a parameter identifier starting with wildcard:
-
-```pascaligo
-function k (const x : int; const _y : int) is x
-```
-
-### Blockless functions
-
-Functions that can contain all of their logic into a single
-*expression* can be defined without the need of a block:
-
-```pascaligo
-function identity (const n : int) : int is { skip } with n  // Bad! Empty block not needed!
-
-function identity (const n : int) : int is n  // Blockless
-```
-
-The value of the expression is implicitly returned by the
-function. Another example is as follows:
-
-```pascaligo group=b
-function add (const a: int; const b : int) : int is a + b
-```
-
-You can call the function `add` defined above using the LIGO compiler
-like this:
-```shell
-ligo run evaluate-call gitlab-pages/docs/language-basics/src/functions/blockless.ligo '(1,2)' --entry-point add
-# Outputs: 3
-```
-
-</Syntax>
-
 <Syntax syntax="cameligo">
 
 Functions in CameLIGO are defined using the `let` keyword, like other
@@ -230,14 +137,14 @@ Other similar operators will be added when enabling support for custom operator 
 
 <Syntax syntax="jsligo">
 
-Functions in JsLIGO are defined using the `let` or `const` keyword, like
-other values. The difference is that parameters are provided
-after the value name, with its type, then followed by the return type.
-
-Here is how you define a basic function that sums two integers:
+Functions in JsLIGO can be defined in two main ways: using the keyword
+`function` or `const` (the keyword `let` is defaulted to `const` in
+this instance). The latter manner is preferred when the function body
+is an expression. For example, here is how you define a basic function
+that sums two integers:
 
 ```jsligo group=b
-let add = (a: int, b: int) => a + b;
+const add = (a: int, b: int) => a + b;
 ```
 
 You can call the function `add` defined above using the LIGO compiler
@@ -247,16 +154,25 @@ ligo run evaluate-call gitlab-pages/docs/language-basics/src/functions/blockless
 # Outputs: 3
 ```
 
-As in CameLIGO, the function body is a single expression, whose value
-is returned. If the body contains more than a single expression, you
-use block between braces:
+If the body contains statements instead of a single expression, you
+would use a block and a `return` statement:
 
 ```jsligo group=b
-let myFun = (x: int, y: int) => {
-  let doubleX = x + x;
-  let doubleY = y + y;
+const myFun = (x: int, y: int) => {
+  const doubleX = x + x;
+  const doubleY = y + y;
   return doubleX + doubleY;
 };
+```
+
+although it is arguably more readable to use `function`, like so:
+
+```jsligo group=b
+function myFun2 (x: int, y: int) {
+  const doubleX = x + x;
+  const doubleY = y + y;
+  return doubleX + doubleY;
+}
 ```
 
 Note that JsLIGO, like JavaScript, requires the `return` keyword to indicate
@@ -269,13 +185,13 @@ functions. In case we do not use an argument, we can use the wildcard
 identifier:
 
 ```jsligo
-let k = (x: int, _: int) => x;
+const k = (x: int, _: int) => x;
 ```
 
 or use an identifier starting with wildcard:
 
 ```jsligo
-let k_other = (x: int, _y: int) => x;
+const k_other = (x: int, _y: int) => x;
 ```
 
 </Syntax>
@@ -289,22 +205,6 @@ a key in a record or a map.
 
 Here is how to define an anonymous function:
 
-<Syntax syntax="pascaligo">
-
-```pascaligo group=c
-function increment (const b : int) : int is
-   (function (const a) is a + 1) (b)
-const a = increment (1); // a = 2
-```
-
-You can check the value of `a` defined above using the LIGO compiler
-like this:
-```shell
-ligo run evaluate-expr gitlab-pages/docs/language-basics/src/functions/anon.ligo --entry-point a
-# Outputs: 2
-```
-
-</Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo group=c
@@ -343,24 +243,6 @@ pattern for lambdas: to be used as parameters to functions. Consider
 the use case of having a list of integers and mapping the increment
 function to all its elements.
 
-<Syntax syntax="pascaligo">
-
-```pascaligo group=c
-function incr_map (const l : list (int)) is
-  List.map (function (const i) is i + 1, l)
-```
-
-You can call the function `incr_map` defined above using the LIGO
-compiler like so:
-
-```shell
-ligo run evaluate-call
-gitlab-pages/docs/language-basics/src/functions/incr_map.ligo --entry-point incr_map
-"list [1;2;3]"
-# Outputs: CONS(2 , CONS(3 , CONS(4 , LIST_EMPTY()))), equivalent to [ 2 ; 3 ; 4 ]
-```
-
-</Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo group=c
@@ -381,8 +263,7 @@ gitlab-pages/docs/language-basics/src/functions/incr_map.mligo --entry-point inc
 <Syntax syntax="jsligo">
 
 ```jsligo group=c
-let incr_map = l =>
-  List.map(i => i + 1, l);
+let incr_map = l => List.map(i => i + 1, l);
 ```
 You can call the function `incr_map` defined above using the LIGO compiler
 like so:
@@ -401,15 +282,6 @@ gitlab-pages/docs/language-basics/src/functions/incr_map.jsligo --entry-point in
 It is possible to define a functions inside another function. These
 functions have access to variables in the same scope.
 
-<Syntax syntax="pascaligo">
-
-```pascaligo
-function closure_example (const i : int) : int is {
-  function closure (const j) is i + j
-} with closure (i)
-```
-
-</Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo
@@ -423,7 +295,7 @@ let closure_example (i : int) : int =
 <Syntax syntax="jsligo">
 
 ```jsligo
-let closure_example = i => {
+function closure_example (i) {
   let closure = j => i + j;
   return closure(i);
 };
@@ -433,19 +305,6 @@ let closure_example = i => {
 
 
 ## Recursive functions
-
-<Syntax syntax="pascaligo">
-In PascaLIGO, recursive functions are defined using the `recursive`
-keyword:
-
-```pascaligo group=d
-recursive function sum (const n : int; const acc : int) : int is
-  if n < 1 then acc else sum (n-1, acc + n)
-
-recursive function fibo (const n : int; const n_1 : int; const n_0 : int) : int is
-  if n < 2 then n_1 else fibo (n-1, n_1 + n_0, n_1)
-```
-</Syntax>
 
 <Syntax syntax="cameligo">
 In CameLIGO, recursive functions are defined using the `rec` keyword
@@ -464,20 +323,12 @@ let rec fibo (n, n_1, n_0 : int * int * int) : int =
 In JsLigo, recursive functions are defined and called using the same syntax as non-recursive functions.
 
 ```jsligo group=d
-let sum = (n: int, acc: int): int => {
-  if (n < 1) {
-    return acc;
-  } else {
-    return sum (n-1, acc + n);
-  };
+function sum (n: int, acc: int): int {
+  if (n < 1) return acc else return sum(n-1, acc + n);
 };
 
-let fibo = (n: int, n_1: int, n_0: int): int => {
-  if (n < 2) {
-    return  n_1;
-  } else {
-    return fibo (n-1, n_1 + n_0, n_1);
-  };
+function fibo (n: int, n_1: int, n_0: int): int {
+  if (n < 2) return n_1 else return fibo (n-1, n_1 + n_0, n_1);
 };
 ```
 </Syntax>

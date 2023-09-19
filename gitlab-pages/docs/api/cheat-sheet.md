@@ -7,372 +7,6 @@ import Syntax from '@theme/Syntax';
 
 <div className="cheatsheet">
 
-<Syntax syntax="pascaligo">
-
-<div className="codeTable">
-<div className="primitive">Strings</div>
-<div className="example">
-
-```pascaligo
-const name : string = "Tezos"
-```
-
-</div>
-<div className="primitive">
-Characters
-</div>
-<div className="example">
-
-```pascaligo
-const t : string = "t"
-```
-
-</div>
-<div className="primitive">
-Integers
-</div>
-<div className="example">
-
-```pascaligo
-const i : int = 42
-```
-
-</div>
-<div className="primitive">
-Natural numbers
-</div>
-<div className="example">
-
-```pascaligo
-const n : nat = 7n
-```
-
-</div>
-<div className="primitive">
-Unit
-</div>
-<div className="example">
-
-```pascaligo
-const u : unit = unit
-```
-
-</div>
-<div className="primitive">
-Boolean
-</div>
-<div className="example">
-
-```pascaligo
-const hasDriversLicense : bool = False
-const adult : bool = True
-```
-
-</div>
-<div className="primitive">
-Boolean Logic
-</div>
-<div className="example">
-
-```pascaligo
-const booleanLogic : bool =
-    (not True) =
-    False =
-    (False and True) =
-    (False or False)
-```
-
-</div>
-<div className="primitive">
-Mutez (micro tez)
-</div>
-<div className="example">
-
-```pascaligo
-const tez : tez = 42tez
-```
-
-</div>
-<div className="primitive">
-Address
-</div>
-<div className="example">
-
-```pascaligo
-const tz1address : address =
-  ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
-const kt1address : address =
-  ("KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD" : address)
-```
-
-</div>
-<div className="primitive">
-Addition
-</div>
-<div className="example">
-
-```pascaligo
-const add_int : int = 3 + 4
-const add_nat : nat = 3n + 4n
-```
-
-</div>
-<div className="primitive">
-Multiplication & Division
-</div>
-<div className="example">
-
-```pascaligo
-const mul_int : int = 3 * 4
-const mul_nat : nat = 3n * 4n
-
-const div_int : int = 10 / 5
-const div_nat : nat = 10n / 5n
-```
-
-</div>
-<div className="primitive">
-Modulo
-</div>
-<div className="example">
-
-```pascaligo
-const mod_nat : nat = 10 mod 3
-```
-
-</div>
-<div className="primitive">
-Tuples
-</div>
-<div className="example">
-
-```pascaligo
-type name is string * string
-
-const winner : name = ("John", "Doe")
-
-const firstName : string = winner.0
-const lastName  : string = winner.1
-```
-
-</div>
-<div className="primitive">
-Types
-</div>
-<div className="example">
-
-```pascaligo
-type age is int
-type name is string
-```
-
-</div>
-<div className="primitive">
-Includes
-</div>
-<div className="example">
-
-```#include "library.ligo"```
-
-</div>
-<div className="primitive">
-Functions (short form)
-</div>
-<div className="example">
-
-```pascaligo
-function add (const a : int ; const b : int) : int is
-  a + b
-```
-
-</div>
-<div className="primitive">
-Functions (long form)
-</div>
-<div className="example">
-
-```pascaligo
-function add (const a : int; const b : int) : int is {
-  const result: int = a + b;
-} with result
-```
-
-</div>
-<div className="primitive">
-If Statement
-</div>
-<div className="example">
-
-```pascaligo
-function can_drive (const age : nat) : string is
-  if age >= 16n then "yes" else "no"
-```
-
-</div>
-<div className="primitive">
-Options
-</div>
-<div className="example">
-
-```pascaligo
-type middleName is option (string)
-const middleName : middleName = Some ("Foo")
-const middleName : middleName = None
-```
-
-</div>
-<div className="primitive">
-Assignment
-</div>
-<div className="example">
-
-```pascaligo
-const age : int = 5
-```
-
-</div>
-<div className="primitive">
-Reassigning a variable
-</div>
-<div className="example">
-
-:::caution
-This feature is not supported at the top-level scope, you can use it e.g. within functions. Works for records and maps as well.
-:::
-
-```pascaligo
-function assignment_existing (const age : int) : int is {
-  var x : int := 2;
-  x := 3;
-} with x
-```
-
-</div>
-<div className="primitive">
-Type Annotations
-</div>
-<div className="example">
-
-```pascaligo
-const someAddress : address =
-  ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
-```
-
-</div>
-<div className="primitive">
-Variants
-</div>
-<div className="example">
-
-```pascaligo group=variants
-type action is
-  Increment of int
-| Decrement of int
-```
-
-</div>
-<div className="primitive">
-Variant *(pattern)* matching
-</div>
-<div className="example">
-
-```pascaligo group=variants
-function main
-  (const action : action; const input : int) : int is
-  case action of [
-    Increment (n) -> input + 1
-  | Decrement (n) -> input - 1
-  ]
-```
-
-</div>
-<div className="primitive">
-Records
-</div>
-<div className="example">
-
-```pascaligo
-type person is
-  record [
-    age  : int;
-    name : string
-  ]
-
-const john : person =
-  record [
-    age  = 18;
-    name = "john doe"
-  ]
-
-const name : string = john.name
-```
-
-</div>
-<div className="primitive">
-Maps
-</div>
-<div className="example">
-
-```pascaligo
-type prices is map (nat, tez)
-
-const prices : prices =
-  map [
-    10n  -> 60mutez;
-    50n  -> 30mutez;
-    100n -> 10mutez
-  ]
-
-const price : option (tez) = prices[50n]
-
-function mutate (var prices : prices) : prices is { prices[200n] := 10mutez } with prices
-```
-
-</div>
-<div className="primitive">
-Contracts & Accounts
-</div>
-<div className="example">
-
-```pascaligo group=tezos_specific
-const destinationAddress : address =
-  ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
-
-const contract : contract (unit) =
-  case (Tezos.get_contract_opt (Tezos.get_sender()) : option (contract (unit))) of [
-     Some (contract) -> contract
-   | None -> (failwith ("No contract.") : contract (unit))
-  ]
-```
-
-</div>
-<div className="primitive">
-Transactions
-</div>
-<div className="example">
-
-```pascaligo group=tezos_specific
-
-const payment : operation =
-  Tezos.transaction (unit, 100mutez, contract)
-
-```
-
-</div>
-<div className="primitive">
-Exception/Failure
-</div>
-<div className="example">
-
-```pascaligo
-function fail (const u : unit) : unit is
-  failwith ("a failure message")
-```
-
-</div>
-</div>
-
-</Syntax>
 <Syntax syntax="cameligo">
 
 <div className="codeTable">
@@ -747,7 +381,7 @@ Natural numbers
 <div className="example">
 
 ```jsligo
-let n: nat = 7 as nat;
+let n: nat = 7n;
 ```
 
 </div>
@@ -792,8 +426,8 @@ Mutez (micro tez)
 <div className="example">
 
 ```jsligo
-let tez: tez = 42 as tez
-let tez2: tez = 7 as mutez
+let tez: tez = 42tez
+let tez2: tez = 7mutez
 ```
 
 </div>
@@ -817,7 +451,7 @@ Addition
 
 ```jsligo
 let add_int: int = 3 + 4;
-let add_nat: nat = (3 as nat) + (4 as nat);
+let add_nat: nat = 3n + 4n;
 ```
 
 </div>
@@ -828,10 +462,10 @@ Multiplication & Division
 
 ```jsligo
 let mul_int: int = 3 * 4;
-let mul_nat: nat = (3 as nat) * (4 as nat);
+let mul_nat: nat = 3n * 4n;
 
 let div_int: int = 10 / 5;
-let div_nat: nat = (10 as nat) / (5 as nat);
+let div_nat: nat = 10n / 5n;
 ```
 
 </div>
@@ -851,12 +485,12 @@ Tuples
 <div className="example">
 
 ```jsligo
-type name = [string, string]
+type name = [string, string];
 
-let winner: name = ["John", "Doe"]
+let winner: name = ["John", "Doe"];
 
-let firstName: string = winner[0]
-let lastName: string = winner[1]
+let firstName: string = winner[0];
+let lastName: string = winner[1];
 ```
 
 </div>
@@ -910,8 +544,8 @@ If Statement
 <div className="example">
 
 ```jsligo
-let if_statement = (age : nat): string => {
-  if (age >= (16 as nat)) { return "yes"; } else { return "no"; }
+function if_statement (age : nat): string {
+  if (age >= 16n) return "yes" else return "no"
 }
 ```
 
@@ -1004,14 +638,14 @@ Maps
 type prices = map<nat, tez>;
 
 let prices: prices = Map.literal(list([
-  [10 as nat, 60 as mutez],
-  [50 as nat, 30 as mutez],
-  [100 as nat, 10 as mutez]
+  [10n, 60mutez],
+  [50n, 30mutez],
+  [100n, 10mutez]
 ]));
 
-let price: option<tez> = Map.find_opt(50 as nat, prices)
+let price: option<tez> = Map.find_opt(50n, prices)
 
-let prices2: prices = Map.update(200 as nat, (Some (5 as mutez)), prices)
+let prices2: prices = Map.update(200n, Some (5mutez), prices)
 ```
 
 </div>
@@ -1040,7 +674,7 @@ Transactions
 ```jsligo group=tezos_specific
 
 let payment: operation =
-  Tezos.transaction(unit, 100 as mutez, contract);
+  Tezos.transaction(unit, 100mutez, contract);
 
 ```
 
@@ -1065,19 +699,19 @@ contract_of and parameter_of
 namespace C {
   type storage = int;
 
-  // @entry
+  @entry
   const increment = (action: int, store: storage) : [list <operation>, storage] => [list([]), store + action];
 
-  // @entry
+  @entry
   const decrement = (action: int, store: storage) : [list <operation>, storage] => [list([]), store - action];
 };
 
 const testC = () => {
     let initial_storage = 42;
-    let [taddr, _contract, _size] = Test.originate_module(contract_of(C), initial_storage, 0 as tez);
+    let [taddr, _contract, _size] = Test.originate_module(contract_of(C), initial_storage, 0tez);
     let contr : contract<parameter_of C> = Test.to_contract(taddr);
     let p : parameter_of C = Increment(1);
-    let _ = Test.transfer_to_contract_exn(contr, p, 1 as mutez);
+    let _ = Test.transfer_to_contract_exn(contr, p, 1mutez);
     return assert(Test.get_storage(taddr) == initial_storage + 1);
 }
 ```

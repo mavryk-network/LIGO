@@ -19,16 +19,6 @@ force inlining. The declaration still needs to be pure though.
 
 To force inlining you can use the inline attribute.
 
-<Syntax syntax="pascaligo">
-
-```pascaligo
-[@inline] function fst (const p : nat * nat) : nat is p.0;
-
-function main (const p : nat * nat; const s : nat * nat) : list (operation) * (nat * nat) is
-  ((list [] : list (operation)), (fst (p.0, p.1), fst (s.1, s.0)))
-```
-
-</Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo
@@ -44,7 +34,7 @@ let main (p : nat * nat) (s : nat * nat) : operation list * (nat * nat) =
 <Syntax syntax="jsligo">
 
 ```jsligo
-// @inline
+@inline
 const fst = (p: [nat, nat]) => p[0];
 
 const main = (p: [nat, nat], s: [nat, nat]) : [list<operation>, [nat, nat]] =>

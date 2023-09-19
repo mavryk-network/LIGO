@@ -41,7 +41,7 @@ and type_injection ppf { language; injection; parameters } =
 and bool ppf : unit = fprintf ppf "bool"
 
 (* ... don't print layouts because they are ugly and usually useless *)
-and layout = fun _ _ -> ()
+and layout _ _ = ()
 
 and option ppf (te : type_expression) : unit =
   let t = Combinators.get_t_option te in
@@ -135,6 +135,7 @@ and expression_content ppf (ec : expression_content) =
           ; public = __LOC__
           ; view = _
           ; entry = _
+          ; dyn_entry = _
           ; hidden = true
           ; thunk = _
           }

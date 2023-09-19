@@ -14,16 +14,19 @@
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const sidebars = {
   "docs": {
-    "Getting started": [
-      "tutorials/getting-started/getting-started",
-      "intro/installation"
+    "Getting started": [      
+      "intro/introduction",
+      {
+        "type": "category",
+        "label": "Installation",
+        "items": [
+          "intro/installation",
+          "intro/editor-support"
+        ]
+      },
+      "tutorials/getting-started/getting-started"
     ],
     "Learn": [
-      {
-      "type": "link",
-      "label": "Learn with Academy",
-      "href": "https://academy.ligolang.org/",
-      },
       {
         "type": "link",
         "label": "Learn with Marigold",
@@ -44,10 +47,12 @@ const sidebars = {
       "language-basics/math-numbers-tez",
       "language-basics/loops",
       "language-basics/unit-option-pattern-matching",
+      "advanced/entrypoints-contracts",
+      "contract/views",
+      "contract/events",
       "language-basics/tezos-specific"
     ],
     "Writing a Contract": [
-      "intro/introduction",
       {
         "type": "category",
         "label": "First contract",
@@ -56,9 +61,6 @@ const sidebars = {
           "tutorials/taco-shop/tezos-taco-shop-payout"
         ],
       },
-      "advanced/entrypoints-contracts",
-      "contract/views",
-      "contract/events",
       "tutorials/start-a-project-from-a-template",
     ],
     "Testing and Debugging": [
@@ -75,6 +77,7 @@ const sidebars = {
     "Advanced Topics": [
       "advanced/polymorphism",
       "advanced/inline",
+      // "advanced/dynamic-entrypoints",
       "tutorials/inter-contract-calls/inter-contract-calls",
       "tutorials/optimisation/optimisation",
       "tutorials/security/security",
@@ -217,6 +220,7 @@ const sidebars = {
       "reference/bitwise-reference",
       "reference/bytes-reference",
       "reference/crypto-reference",
+      // "reference/dynamic-entrypoints-reference",
       "reference/list-reference",
       "reference/map-reference",
       "reference/set-reference",
@@ -235,7 +239,8 @@ const sidebars = {
       "protocol/kathmandu",
       "protocol/lima",
       "protocol/mumbai",
-      "protocol/nairobi"
+      "protocol/nairobi",
+      "protocol/oxford"
     ],
   },
   "faq": {

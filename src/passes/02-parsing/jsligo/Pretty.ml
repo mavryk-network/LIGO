@@ -240,20 +240,14 @@ and print_nat (node : (lexeme * Z.t) wrap) =
 (* Attributes *)
 
 let print_attribute state (node : Attr.t wrap) =
-  let cst_attr = ["entry"; "inline"; "view"; "no_mutation";
-                  "private"; "public"; "hidden"; "thunk"] in
   let key, val_opt = node#payload in
-  let thread =
-    if List.mem cst_attr key ~equal:String.equal then
-      string "@" ^^ string key
-    else string "// @" ^^ string key in
+  let thread = string "@" ^^ string key in
   let thread = match val_opt with
-                 Some Ident value ->
-                   thread ^/^ nest state#indent (string value)
-               | Some String value ->
-                   thread ^/^
-                   nest state#indent (string ("\"" ^ value ^ "\""))
-               | None -> thread
+                 Some String value ->
+                   thread ^^ string "("
+                   ^^ nest state#indent (string ("\"" ^ value ^ "\""))
+                   ^^ string ")"
+              | _ -> thread
   in group (print_comments node#comments ^/^ thread)
 
 let print_attributes state thread = function
@@ -864,7 +858,7 @@ and print_E_CodeInj state (node : code_inj reg) =
 
 and print_E_ContractOf state (node : contract_of_expr reg) =
   let {kwd_contract_of; namespace_path} = node.value in
-  token kwd_contract_of ^^ space ^^
+  token kwd_contract_of ^^
   print_par state (print_namespace_selection state) namespace_path
 
 (* Constructor application *)
@@ -877,7 +871,7 @@ and print_ctor_app :
   'a ctor_app reg -> document =
   fun state print_ctor print node ->
     match snd node.value with
-      ZeroArg ctor -> print_ctor state ctor
+      ZeroArg ctor -> print_ctor state ctor ^^ string "()"
     | MultArg args ->
         match args.value.inside with
           `Sep (ctor, []) -> print_ctor state ctor
