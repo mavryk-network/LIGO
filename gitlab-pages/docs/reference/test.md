@@ -338,6 +338,31 @@ let transfer_to_contract_exn = (addr: contract&lt;&apos;p&gt;, parameter: &apos;
 
 Similar as `Test.transfer_to_contract`, but fails when anything goes wrong.
 
+<Syntax syntax="cameligo">
+
+```cameligo skip
+val storage_with_dynamic_entrypoints : 'contract ->
+  'storage ->
+  {
+   dynamic_entrypoints : dynamic_entrypoints;
+   storage : 'storage
+  }
+```
+
+</Syntax>
+
+<Syntax syntax="jsligo">
+
+```jsligo skip
+let storage_with_dynamic_entrypoints = (contract: module_contract<'param, 'storage>, 'storage) => 
+  {
+   dynamic_entrypoints : dynamic_entrypoints;
+   storage : 'storage
+  }
+```
+
+</Syntax>
+
 <SyntaxTitle syntax="cameligo">
 val get_storage_of_address : address -> michelson_program
 </SyntaxTitle>
@@ -759,7 +784,10 @@ let test_example =
 <Syntax syntax="jsligo">
 
 ```jsligo test-ligo group=test_run
-type some_r = [@layout comb] { one : int , two : nat , three : string , four : bytes , five : unit };
+type some_r =
+  @layout("comb")
+  { one : int , two : nat , three : string , four : bytes , five : unit };
+
 let f = (x: some_r) : int => x.one;
 
 let test_example =

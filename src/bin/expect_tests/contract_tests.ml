@@ -98,20 +98,7 @@ let%expect_test _ =
     ; "--init-file"
     ; contract "modules.jsligo"
     ];
-  [%expect
-    {|
-    File "../../test/contracts/modules.jsligo", line 2, character 0 to line 4, character 1:
-      1 | // @foo
-      2 | namespace B {
-          ^^^^^^^^^^^^^
-      3 |   export type titi = int;
-          ^^^^^^^^^^^^^^^^^^^^^^^^^
-      4 | };
-          ^
-      5 |
-
-    Warning: unsupported attribute, ignored.
-
+  [%expect {|
     84 |}]
 
 let%expect_test _ =
@@ -330,6 +317,72 @@ let%expect_test _ =
              DIG 2 ;
              CONS ;
              PAIR } } |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile"; "contract"; contract "create_contract_of_file.jsligo" ];
+  [%expect
+    {|
+    { parameter unit ;
+      storage unit ;
+      code { CAR ;
+             PUSH mutez 1000000 ;
+             NONE key_hash ;
+             CREATE_CONTRACT
+               { parameter unit ;
+                 storage unit ;
+                 code { DROP ; UNIT ; NIL operation ; PAIR } } ;
+             SWAP ;
+             DROP ;
+             UNIT ;
+             NIL operation ;
+             DIG 2 ;
+             CONS ;
+             PAIR } } |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile"; "contract"; contract "create_contract_of_file.mligo" ];
+  [%expect
+    {|
+    { parameter unit ;
+      storage unit ;
+      code { CAR ;
+             PUSH mutez 1000000 ;
+             NONE key_hash ;
+             CREATE_CONTRACT
+               { parameter unit ;
+                 storage unit ;
+                 code { DROP ; UNIT ; NIL operation ; PAIR } } ;
+             SWAP ;
+             DROP ;
+             UNIT ;
+             NIL operation ;
+             DIG 2 ;
+             CONS ;
+             PAIR } } |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "compile"; "contract"; bad_contract "of_file.mligo" ];
+  [%expect
+    {xxx|
+    File "../../test/contracts/negative/of_file.mligo", line 4, characters 5-30:
+      3 |   ({| { PUSH unit Unit ; PUSH mutez 300000000 ; NONE key_hash ; CREATE_CONTRACT (codestr $0) ; PAIR } |}
+      4 |      [%of_file "./removed.tz"]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+      5 |    : operation * address)]
+
+    Found a system error: ./removed.tz: No such file or directory. |xxx}]
+
+let%expect_test _ =
+  run_ligo_bad [ "compile"; "contract"; bad_contract "create_contract_of_file.jsligo" ];
+  [%expect
+    {|
+    File "../../test/contracts/negative/create_contract_of_file.jsligo", line 3, characters 21-59:
+      2 | const main = (u : unit, _ : unit) : [list<operation>, unit] => {
+      3 |   let [op, _addr] = (create_contract_of_file `./removed.tz`)(None(), 1tez, u);
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      4 |   return [list([op]), []]
+
+    Found a system error: ./removed.tz: No such file or directory. |}]
 
 let%expect_test _ =
   run_ligo_good
@@ -819,7 +872,7 @@ File "../../test/contracts/negative/create_contract_toplevel.mligo", line 5, cha
       ^^^^^^^^
  10 |   in
 
-Not all free variables could be inlined in Tezos.create_contract usage: gen#243. |}];
+Not all free variables could be inlined in Tezos.create_contract usage: gen#248. |}];
   run_ligo_good [ "compile"; "contract"; contract "create_contract_var.mligo" ];
   [%expect
     {|
@@ -911,7 +964,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#243.
           ^^^^^^^^^^
      15 |   ([toto.0], store)
 
-    Not all free variables could be inlined in Tezos.create_contract usage: gen#244. |}];
+    Not all free variables could be inlined in Tezos.create_contract usage: gen#249. |}];
   run_ligo_bad [ "compile"; "contract"; bad_contract "create_contract_no_inline.mligo" ];
   [%expect
     {|
@@ -974,7 +1027,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#243.
           ^^^^^^^
      15 |   let toto : operation list = [op] in
 
-    Not all free variables could be inlined in Tezos.create_contract usage: foo#258. |}];
+    Not all free variables could be inlined in Tezos.create_contract usage: foo#263. |}];
   run_ligo_good [ "compile"; "contract"; contract "create_contract.mligo" ];
   [%expect
     {|
@@ -1104,11 +1157,7 @@ let%expect_test _ =
 (* uncurrying example *)
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "uncurry_contract.mligo" ];
-  let output = [%expect.output] in
-  let lines = String.split_lines output in
-  let lines = List.take lines 4 in
-  let output = String.concat ~sep:"\n" lines in
-  print_string output;
+  shrink_output [%expect.output];
   [%expect
     {|
     { parameter unit ;
@@ -1571,30 +1620,30 @@ let%expect_test _ =
                  LAMBDA
                    unit
                    unit
-                   { { /* x#215 */ } ;
+                   { { /* x */ } ;
                      { /* File "../../test/contracts/noop.mligo", line 3, characters 28-29 */ } } } ;
-               { /* f#214, _ */ } ;
+               { /* f, _ */ } ;
                { /* File "../../test/contracts/noop.mligo", line 4, character 2 to line 7, character 28 */
                  { /* File "../../test/contracts/noop.mligo", line 4, characters 18-21 */
                    SWAP ;
                    { /* File "../../test/contracts/noop.mligo", line 4, characters 18-19 */ DUP 2 } ;
                    SWAP ;
                    EXEC } ;
-                 { /* s2#216, f#214 */ } ;
+                 { /* s2, f */ } ;
                  { /* File "../../test/contracts/noop.mligo", line 5, character 2 to line 7, character 28 */
                    { /* File "../../test/contracts/noop.mligo", line 5, characters 18-22 */
                      { /* File "../../test/contracts/noop.mligo", line 5, characters 20-22 */ } ;
                      { /* File "../../test/contracts/noop.mligo", line 5, characters 18-19 */ DUP 2 } ;
                      SWAP ;
                      EXEC } ;
-                   { /* s3#217, f#214 */ } ;
+                   { /* s3, f */ } ;
                    { /* File "../../test/contracts/noop.mligo", line 6, character 2 to line 7, character 28 */
                      { /* File "../../test/contracts/noop.mligo", line 6, characters 10-14 */
                        { /* File "../../test/contracts/noop.mligo", line 6, characters 12-14 */ } ;
                        { /* File "../../test/contracts/noop.mligo", line 6, characters 10-11 */ SWAP } ;
                        SWAP ;
                        EXEC } ;
-                     { /* s#218 */ } ;
+                     { /* s */ } ;
                      { /* File "../../test/contracts/noop.mligo", line 7, characters 3-27 */
                        { /* File "../../test/contracts/noop.mligo", line 7, characters 26-27 */ } ;
                        { /* File "../../test/contracts/noop.mligo", line 7, characters 3-24 */
@@ -3092,3 +3141,17 @@ let%expect_test "duplicate entrypoints" =
           ^^^
 
     Duplicate entry-point b |}]
+
+let%expect_test "dry-run module contract" =
+  (* the contract must be accessible even if not exported *)
+  run_ligo_good
+    [ "run"
+    ; "dry-run"
+    ; contract "simple_contract_in_module.jsligo"
+    ; "1n"
+    ; "default_storage"
+    ; "-m"
+    ; "C"
+    ];
+  [%expect {|
+    ( LIST_EMPTY() , unit ) |}]
