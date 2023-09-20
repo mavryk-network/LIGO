@@ -2993,6 +2993,17 @@ let registry_forgot_password =
     (f <$> username <*> ligo_registry <*> ligorc_path <*> skip_analytics)
 
 
+let registry_setup_profile =
+  let summary = "Setup user's profile on the registry" in
+  let readme () = "Setup user's profile on the registry" in
+  let cli_analytic = Analytics.generate_cli_metric ~command:"setup_profile" in
+  let f ligo_registry ligorc_path skip_analytics () =
+    return_with_custom_formatter ~skip_analytics ~cli_analytics:[ cli_analytic ] ~return
+    @@ fun () -> Profile.setup ~ligo_registry ~ligorc_path
+  in
+  Command.basic ~summary ~readme (f <$> ligo_registry <*> ligorc_path <*> skip_analytics)
+
+
 let registry_publish =
   let summary = "[BETA] publish the LIGO package declared in ligo.json" in
   let readme () =
@@ -3073,6 +3084,7 @@ let registry_group =
      ; "publish", registry_publish
      ; "unpublish", registry_unpublish
      ; "forgot-password", registry_forgot_password
+     ; "setup-profile", registry_setup_profile
      ]
 
 

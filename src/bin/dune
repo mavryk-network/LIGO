@@ -25,7 +25,7 @@
   base64
   lambda-term
   ligo_api)
- (modules command_unx forgot_password prompt user cli version))
+ (modules command_unx forgot_password profile prompt user cli version))
 
 (library
  (name repl)
