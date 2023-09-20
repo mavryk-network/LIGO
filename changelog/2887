@@ -1,0 +1,7 @@
+
+author: prometheansacrifice
+description: "\\nAdds a command `setup-profile` for users to create a profile on LIGO package registry\\n"
+merge_request: '2887'
+title: "CLI: add a setup-profile command for user to create a registry profile"
+type: added
+            
