@@ -317,7 +317,7 @@ let fold'
     process_list
     [ statements -| S_nseq (S_array_2 (S_statement, S_option S_semi))
     ; eof -| S_eof ]
-  | S_ctor ->process @@  node -| S_wrap S_lexeme
+  | S_ctor ->process @@  node -| S_variable
   | S_ctor_app sing ->
     let sharp, app = node in
     process_list
@@ -436,7 +436,7 @@ let fold'
     ( match node with
       StmtBody node -> node -| S_braces S_statements
     | ExprBody node -> node -| S_expr )
-  | S_fun_name -> process @@ node -| S_wrap S_lexeme
+  | S_fun_name -> process @@ node -| S_variable
   | S_function_expr ->
     let { kwd_function; type_vars; parameters; rhs_type; fun_body } = node in
     process_list
@@ -555,7 +555,7 @@ let fold'
   | S_kwd_type -> process @@ node -| S_wrap S_lexeme
   | S_kwd_when -> process @@ node -| S_wrap S_lexeme
   | S_kwd_while -> process @@ node -| S_wrap S_lexeme
-  | S_language -> process @@ node -| S_wrap S_lexeme
+  | S_language -> process @@ node -| S_variable
   | S_lbrace -> process @@ node -| S_wrap S_lexeme
   | S_lbracket -> process @@ node -| S_wrap S_lexeme
   | S_leq -> process @@ node -| S_wrap S_lexeme
@@ -647,7 +647,7 @@ let fold'
     | F_Int node -> node -| S_int_literal
     | F_Str node -> node -| S_string_literal
     )
-  | S_property_name -> process @@ node -| S_wrap S_lexeme
+  | S_property_name -> process @@ node -| S_variable
   | S_property_sep -> process @@ node -| S_wrap S_lexeme
   | S_pattern -> process
     ( match node with
@@ -775,7 +775,7 @@ let fold'
       ; node_3 -| sing_3
       ; node_4 -| sing_4 ] )
   | S_type_annotation -> process @@ node -| S_array_2 (S_colon, S_type_expr)
-  | S_type_ctor -> process @@ node -| S_wrap S_lexeme
+  | S_type_ctor -> process @@ node -| S_variable
   | S_type_ctor_args -> process @@ node -| S_chevrons (S_nsep_or_term (S_type_expr, S_comma))
   | S_type_decl -> let { kwd_type; name; type_vars; eq; type_expr } = node in
     process_list
@@ -799,8 +799,8 @@ let fold'
     | T_Union node -> node -| S_union_type
     | T_Var node -> node -| S_variable
     | T_Variant node -> node -| S_variant_type )
-  | S_type_name -> process @@ node -| S_wrap S_lexeme
-  | S_type_var -> process @@ node -| S_wrap S_lexeme
+  | S_type_name -> process @@ node -| S_variable
+  | S_type_var -> process @@ node -| S_variable
   | S_type_vars -> process @@ node -| S_chevrons (S_sep_or_term (S_type_var, S_comma))
   | S_typed_expr -> process @@ node -| S_array_3 (S_expr, S_kwd_as, S_type_expr)
   | S_typed_pattern -> process @@ node -| S_array_2 (S_pattern, S_type_annotation)
@@ -831,7 +831,9 @@ let fold'
       `Let node -> node -| S_kwd_let
     | `Const node -> node -| S_kwd_const
     )
-  | S_variable -> process @@ node -| S_wrap S_lexeme
+  | S_variable -> process
+    ( match node with
+        Var node | Esc node -> node -| S_wrap S_lexeme)
   | S_variant -> let { attributes; tuple } = node in
     process_list
     [ attributes -| S_list S_attribute
