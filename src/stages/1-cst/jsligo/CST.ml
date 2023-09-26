@@ -121,7 +121,7 @@ type eof = lexeme wrap
 (* Literals *)
 
 type variable =
-  Var of lexeme wrap (* foo Foo *)
+  Var of lexeme wrap (* foo  *)
 | Esc of lexeme wrap (* @foo *)
 
 type fun_name       = variable
@@ -132,8 +132,8 @@ type ctor           = variable
 type property_name  = variable
 type language       = variable
 
-type namespace_name = lexeme wrap
-type intf_name      = lexeme wrap
+type namespace_name = lexeme wrap (* N *)
+type intf_name      = lexeme wrap (* I *)
 type file_path      = lexeme wrap
 type attribute      = Attr.t wrap
 type true_const     = lexeme wrap
