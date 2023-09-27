@@ -122,7 +122,7 @@ type eof = lexeme wrap
 
 type variable =
   Var of lexeme wrap (* foo  *)
-| Esc of lexeme wrap (* @foo *)
+| Esc of lexeme wrap (* @foo without the @ *)
 
 type fun_name       = variable
 type type_name      = variable

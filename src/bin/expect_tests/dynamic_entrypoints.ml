@@ -80,8 +80,8 @@ let%expect_test "dynamic entrypoints test (jsligo)" =
   run_ligo_good [ "run"; "test"; test "dynamic_entrypoints_tests.jsligo" ];
   [%expect
     {|
-  Everything at the top-level was executed.
-  - test_dyn exited with value (). |}]
+    Everything at the top-level was executed.
+    - test_dyn exited with value (). |}]
 
 let%expect_test "opt out dynamic_entrypoints (mligo)" =
   (* Here we expect ONLY TWO ENTRIES (with keys 0 and 2) in the generated big map *)
@@ -99,11 +99,11 @@ let%expect_test "opt out dynamic_entrypoints (jsligo)" =
   run_ligo_good [ "compile"; "storage"; test "opt_out_dynamic_entrypoints.jsligo"; "1" ];
   [%expect
     {|
-  (Pair 1
-        { Elt 0
-              0x050200000029032009310000001d035b0765055f036d035b020000000e03200743035b0001053d036d034200000000 ;
-          Elt 2
-              0x050200000029032009310000001d035b0765055f036d035b020000000e03200743035b0003053d036d034200000000 }) |}]
+    (Pair 1
+          { Elt 0
+                0x050200000029032009310000001d035b0765055f036d035b020000000e03200743035b0001053d036d034200000000 ;
+            Elt 2
+                0x050200000029032009310000001d035b0765055f036d035b020000000e03200743035b0003053d036d034200000000 }) |}]
 
 let%expect_test "opt out (mligo)" =
   run_ligo_bad [ "compile"; "contract"; bad_test "opt_out_dynamic_entrypoints.mligo" ];

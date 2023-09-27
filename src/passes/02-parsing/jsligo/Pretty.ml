@@ -64,6 +64,12 @@ let token ?(sep=empty) (t : string Wrap.t) : document =
   let prefix = print_comments t#comments ^/^ string t#payload
   in print_line_comment_opt ~sep prefix t#line_comment
 
+let print_variable ?(sep=empty) = function
+  Var t -> token ~sep t
+| Esc t ->
+    let prefix = print_comments t#comments ^/^ string ("@" ^ t#payload)
+    in print_line_comment_opt ~sep prefix t#line_comment
+
 (* Enclosed documents *)
 
 let print_enclosed_document
@@ -221,11 +227,11 @@ let print_mutez (node : (lexeme * Int64.t) wrap) =
     ^/^ (Int64.to_string (snd node#payload) ^ "mutez" |> string)
   in print_line_comment_opt prefix node#line_comment
 
-let print_ident (node : variable) = token node
+let print_ident (node : variable) = print_variable node
 
-let print_string (node : lexeme wrap) = dquotes (print_ident node)
+let print_string (node : lexeme wrap) = dquotes (token node)
 
-and print_verbatim (node : lexeme wrap) = bquotes (print_ident node)
+and print_verbatim (node : lexeme wrap) = bquotes (token node)
 
 let print_int (node : (lexeme * Z.t) wrap) =
   let prefix = print_comments node#comments
@@ -379,16 +385,16 @@ and print_namespace_selection state = function
 | M_Alias s -> print_M_Alias s
 
 and print_M_Path state (node : namespace_name namespace_path reg) =
-  print_namespace_path state print_ident node.value
+  print_namespace_path state token node.value
 
 and print_namespace_path :
   'a.state -> ('a -> document) -> 'a namespace_path -> document =
   fun state print node ->
     let {namespace_path; selector; property} = node in
-    let thread = print_nsepseq (break 0) print_ident namespace_path
+    let thread = print_nsepseq (break 0) token namespace_path
     in group (thread ^^ token selector ^^ break 0 ^^ print property)
 
-and print_M_Alias (node : namespace_name) = print_ident node
+and print_M_Alias (node : namespace_name) = token node
 
 and print_ImportAllAs state (node : import_all_as reg) =
   let {kwd_import; times; kwd_as; alias; kwd_from; file_path} = node.value
@@ -428,7 +434,7 @@ and print_I_Attr state (node : attribute * intf_entry) =
 
 and print_I_Type state (node : intf_type reg) =
   let {kwd_type; type_name; type_rhs} = node.value in
-  let thread = token kwd_type ^^ space ^^ token type_name
+  let thread = token kwd_type ^^ space ^^ print_variable type_name
   in group (print_rhs state thread type_rhs)
 
 and print_rhs state thread (node : (equal * type_expr) option) =
@@ -441,7 +447,7 @@ and print_rhs state thread (node : (equal * type_expr) option) =
 
 and print_I_Const state (node : intf_const reg) =
   let {kwd_const; const_name; const_type} = node.value in
-  let thread = token kwd_const ^^ space ^^ token const_name
+  let thread = token kwd_const ^^ space ^^ print_variable const_name
   in group (thread ^^ print_type_annotation state const_type)
 
 (* Namespace declaration *)
@@ -473,7 +479,7 @@ and print_I_Path state (node : namespace_selection) =
 
 and print_D_Type state (node : type_decl reg) =
   let {kwd_type; name; type_vars; eq; type_expr} = node.value in
-  let thread = token kwd_type ^^ space ^^ token name in
+  let thread = token kwd_type ^^ space ^^ print_variable name in
   let thread = thread ^^ print_type_vars_opt state type_vars in
   let rhs = print_type_expr state type_expr in
   group (thread ^^
@@ -564,7 +570,7 @@ and print_S_ForOf state (node: for_of_stmt reg) =
 and print_range_for_of state (node : range_of par) =
   let {lpar; inside; rpar} = node.value in
   let {index_kind; index; kwd_of; expr} = inside in
-  let par = print_var_kind index_kind ^^ space ^^ token index
+  let par = print_var_kind index_kind ^^ space ^^ print_variable index
             ^^ space ^^ token kwd_of ^^ space ^^ print_expr state expr
   in print_par_like_document state par lpar rpar
 
@@ -850,7 +856,7 @@ and print_E_Bytes (node : (lexeme * Hex.t) wrap) = print_bytes node
 
 and print_E_CodeInj state (node : code_inj reg) =
   let {language; code} = node.value in
-  let language = token language in
+  let language = print_variable language in
   let code     = print_expr state code
   in group (language ^/^ code)
 
@@ -1063,7 +1069,7 @@ and print_property :
 
 and print_property_id state = function
   F_Int  i -> print_int i
-| F_Name n -> token n
+| F_Name n -> print_variable n
 | F_Str  s -> print_string s
 
 (* Logical disjunction *)
@@ -1102,7 +1108,7 @@ and print_E_PreIncr state (node : increment un_op reg) =
 (* Projections *)
 
 and print_selection state = function
-  PropertyName (dot, n) -> token dot ^^ token n
+  PropertyName (dot, n) -> token dot ^^ print_variable n
 | PropertyStr        s  -> print_brackets state print_string s
 | Component          i  -> print_brackets state print_int i
 
