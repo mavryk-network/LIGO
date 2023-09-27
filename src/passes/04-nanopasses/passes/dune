@@ -8,6 +8,7 @@
   flag
   morphing
   ; nanopasses:
+  wildcards
   map_lookup
   errors
   unit_test_helpers
@@ -61,7 +62,6 @@
   literalize_annotated
   detect_recursive
   restrict_projections
-  special_unit_constructor
   unpuning
   disc_union_types
   prefix_postfix_operators

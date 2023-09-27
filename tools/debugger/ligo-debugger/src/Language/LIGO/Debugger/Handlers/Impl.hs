@@ -352,7 +352,7 @@ instance HasSpecificMessages LIGO where
     -- Here we can see one problem. Variables types would be prettified
     -- in the dialect from the current file.
     -- But some variables can come from, for example, a @CameLIGO@ contract
-    -- and the other ones from a @PascaLIGO@ one.
+    -- and the other ones from a @JsLIGO@ one.
     lang <-
       currentStackFrame ^. sfLocL . rFile
         & getExt @(Either UnsupportedExtension)
@@ -587,14 +587,14 @@ convertMichelsonValuesToLigo logger inps = do
   let typesAndValues = inps
         <&> \(PreLigoConvertInfo val typ) -> (typ, val)
 
-  decompiledValues <- decompileLigoValues typesAndValues
-
   logger [int||
     Decompilation contract: begin
     #{generateDecompilation typesAndValues}
 
     the end.
   |]
+
+  decompiledValues <- decompileLigoValues typesAndValues
 
   pure $
     zipWith

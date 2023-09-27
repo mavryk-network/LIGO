@@ -3,6 +3,7 @@
 type error =
   | NotSupportedInAlpha
   | UnableToAccessRegistry
+  | VersionNotFound of string * string
   | UnableToSerializeSemver
   | UnableToAccessId
   | UnableToAccessName of string
@@ -43,7 +44,12 @@ val string_of_error : error -> string
     3. Generate a map (installation.json) for ModRes.ml (from Preprocessing
 
  *)
-val run : project_root:string -> string -> Fpath.t -> Uri.t -> (unit, error) Lwt_result.t
+val run
+  :  project_root:string
+  -> string option
+  -> Fpath.t
+  -> Uri.t
+  -> (unit, error) Lwt_result.t
 
 type manifest_result =
   [ `Invalid_ligo_json
@@ -55,4 +61,4 @@ type manifest_result =
   | `OK
   ]
 
-val does_json_manifest_exist : unit -> manifest_result
+val does_json_manifest_exist : project_root:string -> manifest_result

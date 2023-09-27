@@ -14,7 +14,7 @@
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const sidebars = {
   "docs": {
-    "Getting started": [      
+    "Getting started": [
       "intro/introduction",
       {
         "type": "category",
@@ -77,7 +77,7 @@ const sidebars = {
     "Advanced Topics": [
       "advanced/polymorphism",
       "advanced/inline",
-      // "advanced/dynamic-entrypoints",
+      "advanced/dynamic-entrypoints",
       "tutorials/inter-contract-calls/inter-contract-calls",
       "tutorials/optimisation/optimisation",
       "tutorials/security/security",
@@ -111,7 +111,7 @@ const sidebars = {
   },
   "API": {
     "CLI": [
-       {
+      {
         "type": "doc",
         "id": "manpages/ligo"
       },
@@ -220,7 +220,7 @@ const sidebars = {
       "reference/bitwise-reference",
       "reference/bytes-reference",
       "reference/crypto-reference",
-      // "reference/dynamic-entrypoints-reference",
+      "reference/dynamic-entrypoints-reference",
       "reference/list-reference",
       "reference/map-reference",
       "reference/set-reference",
@@ -246,6 +246,7 @@ const sidebars = {
   "faq": {
     "FAQ": [
       "faq/intro",
+      "faq/v1-migration-guide",
       "faq/convert-address-to-contract",
       "faq/polymorphic-comparison",
       "faq/catch-error-view",

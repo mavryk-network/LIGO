@@ -62,6 +62,7 @@ let get_declarations_typed (typed_prg : Ast_typed.program) =
              | D_irrefutable_match _
              | D_type _
              | D_module _
+             | D_signature _
              | D_module_include _ -> None)
   @@ typed_prg.pr_module
 
@@ -434,12 +435,7 @@ let main
   let protocol =
     Environment.Protocols.protocols_to_variant raw_options.protocol_version
   in
-  let syntax =
-    Syntax.of_string_opt
-      ~support_pascaligo:raw_options.deprecated
-      (Syntax_name raw_options.syntax)
-      None
-  in
+  let syntax = Syntax.of_string_opt (Syntax_name raw_options.syntax) None in
   let dry_run_opts =
     Ligo_run.Of_michelson.make_dry_run_options
       { now; amount; balance; sender; source; parameter_ty = None }

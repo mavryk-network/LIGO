@@ -111,7 +111,7 @@ namespace C {
   const append = (a: string, s: storage) : [list<operation> , storage] => [list([]), s + a];
 
   @entry
-  const clear = (_: unit, _: storage) : [list<operation>, storage] => [list([]), ""];
+  const clear = (_p: unit, _s: storage) : [list<operation>, storage] => [list([]), ""];
 
   export const v = (expected_length: nat, s: storage) : bool => (String.length (s) == expected_length);
 }
@@ -135,7 +135,6 @@ Output
 </Syntax>
 <Syntax syntax="jsligo">
 
-
 Input
 ```bash
 ❯ ligo compile expression jsligo "C.v" --init-file off_chain.jsligo --function-body
@@ -147,5 +146,6 @@ Output
 
 </Syntax>
 
-
 Notice that `v` is not a contract entry of `C` (no `@entry`) nor a on-chain view (no `@view`), it is just a function declared in the context of the contract, which can be used as an off-chain view.
+
+<!-- updated use of entry -->

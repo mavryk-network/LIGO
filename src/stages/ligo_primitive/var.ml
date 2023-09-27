@@ -19,7 +19,6 @@ module type VAR = sig
   val get_location : t -> Location.t
   val set_location : Location.t -> t -> t
   val is_generated : t -> bool
-  val is_ignored : t -> bool
   val add_prefix : string -> t -> t
 
   (* Prints vars as %s or %s#%d *)
@@ -72,11 +71,7 @@ module Internal () = struct
 
 
   (* should be removed in favor of a lift pass before ast_imperative *)
-  let of_input_var ~loc name =
-    if String.equal name "_"
-    then fresh ~name ~loc ()
-    else { name; counter = 0; generated = false; location = loc }
-
+  let of_input_var ~loc name = { name; counter = 0; generated = false; location = loc }
 
   (* This exception indicates that some code tried to throw away the
    counter of a generated variable. It is not supposed to happen. *)
@@ -100,9 +95,6 @@ module Internal () = struct
     then Format.fprintf ppf "%s#%d" v.name v.counter
     else Format.fprintf ppf "%s" v.name
 
-
-  let wildcard ~loc = { name = "_"; counter = 0; location = loc; generated = false }
-  let is_ignored { name; _ } = String.is_prefix ~prefix:"_" name
 
   include Comparable.Make (T)
 end
