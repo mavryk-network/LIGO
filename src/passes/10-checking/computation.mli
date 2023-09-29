@@ -357,7 +357,7 @@ val subtype
 (** {6 Fragments} *)
 
 (** A fragment is defined as a collection of variable bindings. They're used in the typing
-    of patterns. 
+    of patterns.
     
     For example:
       {|
@@ -368,6 +368,8 @@ val subtype
         | Bar (x, y, { a; b; c }) -> ...
       |}
     would generate the fragment: [ [ "x", int; "y", string; "a", int; "b", bool; "c", char ] ]. 
+
+    The flag `is_unique` is used to mark if the pattern is the only one in a match.
 *)
 
 module With_frag : sig
