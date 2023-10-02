@@ -604,7 +604,7 @@ let assert_t_list_operation (t : t) : unit option =
   | None -> None
 
 
-let get_entrypoint ty =
+let decompose_entrypoint_type ty =
   let ty_eq a b = if equal a b then Some () else None in
   let open Option.Let_syntax in
   let%bind { type1 = parameter; type2 } = get_t_arrow ty in
@@ -619,7 +619,7 @@ let dynamic_entrypoint : t -> (t, [> `Not_entry_point_form of t ]) result =
  fun ty ->
   Result.of_option
     Simple_utils.Option.(
-      let* p, s = get_entrypoint ty in
+      let* p, s = decompose_entrypoint_type ty in
       return @@ t_construct ~loc:ty.location Dynamic_entrypoint [ p; s ] ())
     ~error:(`Not_entry_point_form ty)
 
@@ -648,7 +648,7 @@ let parameter_from_entrypoints
   let (entrypoint, entrypoint_type), rest = entrypoints in
   let%bind parameter, storage =
     Result.of_option
-      (get_entrypoint entrypoint_type)
+      (decompose_entrypoint_type entrypoint_type)
       ~error:(`Not_entry_point_form entrypoint_type)
   in
   let%bind parameter_list =
@@ -657,7 +657,7 @@ let parameter_from_entrypoints
       ~f:(fun parameters (ep, ep_type) ->
         let%bind parameter_, storage_ =
           Result.of_option
-            (get_entrypoint ep_type)
+            (decompose_entrypoint_type ep_type)
             ~error:(`Not_entry_point_form entrypoint_type)
         in
         let%bind () =
