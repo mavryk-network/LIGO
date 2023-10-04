@@ -202,6 +202,20 @@ let decompile_ty_expr ~raise ~syntax =
   <@ Trivial.From_core.type_expression ~raise
 
 
+let decompile_sig_expr ~raise ~syntax =
+  decompile_passes ~raise ~sort:Selector.sig_expr (get_passes_no_options syntax)
+  <@ Trivial.From_core.signature ~raise
+  <@ fun O.{ items } ->
+  O.
+    { items =
+        List.filter items ~f:(function
+            | S_module _ | S_module_type _ | S_include { wrap_content = S_path _; _ } ->
+              false
+            | S_include { wrap_content = S_sig _; _ }
+            | S_value _ | S_type _ | S_type_var _ -> true)
+    }
+
+
 let compile_program ~raise ~(options : Compiler_options.t) ?stop_before
     : I.program -> O.program
   =
