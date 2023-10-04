@@ -59,7 +59,33 @@ let rec deoptionalize xs =
     | None -> None
     | Some xs -> Some (x :: xs))
 
+(** [find_first_dup_pair comparator l] searches for a pair of elements [(x1, x2)] (at distinct positions) in [l] such that [compare x1 x2 = 0] (and [x1] appears before [x2] in the list). If such pairs exist, it returns [Some (x1, x2)] where [(x1, x2)] is the first such pair (meaning that there is a prefix of the list in which it is the only such pair), and otherwise, it returns [None]. *)
+let find_first_dup_pair (type k) ~compare l =
+  let module Elt : Set_intf.Elt_plain with type t = k = struct
+    type t = k
+
+    let compare = compare
+    let sexp_of_t = sexp_of_opaque
+  end
+  in
+  let module EltSet = Set.Make_plain (Elt) in
+  (* Invariant: there exists [l_seen] such that:
+     - [l = List.append l_seen l_unseen];
+     - [seen = EltSet.of_list l_seen]; and
+     - [List.contains_dup ~compare l_seen = false] (or equivalently, [List.length l_seen = EltSet.length seen]). *)
+  let rec aux l_unseen seen =
+    match l_unseen with
+    | [] -> None
+    | hd :: tl ->
+      (match Set.binary_search ~compare seen `First_equal_to hd with
+      | Some x -> Some (x, hd)
+      | None -> aux tl (EltSet.add seen hd))
+  in
+  aux l EltSet.empty
+
 module Ne = struct
+  (** Non-empty lists *)
+
   type 'a t = 'a * 'a list [@@deriving eq, compare, yojson, hash, sexp, fold]
 
   let sexp_of_t (f : 'a -> Sexp.t) ((hd, tl) : 'a t) : Sexp.t = List.sexp_of_t f (hd :: tl)
@@ -158,4 +184,6 @@ module Ne = struct
       (match tl with
       | None -> None
       | Some tl -> Some (hd, tl))
+
+  let find_first_dup_pair ~compare (hd, tl) = find_first_dup_pair ~compare (hd :: tl)
 end

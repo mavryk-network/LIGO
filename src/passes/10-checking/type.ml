@@ -647,13 +647,16 @@ let parameter_from_entrypoints
  fun entrypoints ->
   let equal_t = equal in
   let open Result.Let_syntax in
+  let error_if_has_dup_name ~error_of_dup_pair l =
+    let compare_names a b = Value_var.compare (fst a) (fst b) in
+    match Simple_utils.List.Ne.find_first_dup_pair ~compare:compare_names l with
+    | Some (e1, e2) -> Error (error_of_dup_pair (e1, e2))
+    | None -> Ok ()
+  in
   let%bind () =
-    (* check entrypoints have no duplicates *)
     entrypoints
-    |> Simple_utils.List.Ne.to_list
-    |> List.find_a_dup ~compare:(fun a b -> Value_var.compare (fst a) (fst b))
-    |> Option.value_map ~default:(Result.Ok ()) ~f:(fun (x, _ty) ->
-           Result.Error (`Duplicate_entrypoint x))
+    |> error_if_has_dup_name ~error_of_dup_pair:(fun (_, (x, _)) ->
+           `Duplicate_entrypoint x)
   in
   let (entrypoint, entrypoint_type), rest = entrypoints in
   let%bind parameter, storage = decompose_entrypoint_type_or_error entrypoint_type in
