@@ -604,15 +604,25 @@ let assert_t_list_operation (t : t) : unit option =
   | None -> None
 
 
+let decompose_curried_binary_function_type ty =
+  let open Option.Let_syntax in
+  let%bind { type1 = input1; type2 } = get_t_arrow ty in
+  let%bind { type1 = input2; type2 = output } = get_t_arrow type2 in
+  return (input1, input2, output)
+
+
 let decompose_entrypoint_type ty =
   let ty_eq a b = if equal a b then Some () else None in
   let open Option.Let_syntax in
-  let%bind { type1 = parameter; type2 } = get_t_arrow ty in
-  let%bind { type1 = storage; type2 } = get_t_arrow type2 in
-  let%bind list_op, storage' = get_t_pair type2 in
+  let%bind parameter, storage, output = decompose_curried_binary_function_type ty in
+  let%bind list_op, storage' = get_t_pair output in
   let%bind () = assert_t_list_operation list_op in
   let%bind () = ty_eq storage storage' in
   return (parameter, storage)
+
+
+let decompose_entrypoint_type_or_error ty =
+  decompose_entrypoint_type ty |> Result.of_option ~error:(`Not_entry_point_form ty)
 
 
 let dynamic_entrypoint : t -> (t, [> `Not_entry_point_form of t ]) result =
@@ -646,20 +656,12 @@ let parameter_from_entrypoints
            Result.Error (`Duplicate_entrypoint x))
   in
   let (entrypoint, entrypoint_type), rest = entrypoints in
-  let%bind parameter, storage =
-    Result.of_option
-      (decompose_entrypoint_type entrypoint_type)
-      ~error:(`Not_entry_point_form entrypoint_type)
-  in
+  let%bind parameter, storage = decompose_entrypoint_type_or_error entrypoint_type in
   let%bind parameter_list =
     List.fold_result
       ~init:[ String.capitalize (Value_var.to_name_exn entrypoint), parameter ]
       ~f:(fun parameters (ep, ep_type) ->
-        let%bind parameter_, storage_ =
-          Result.of_option
-            (decompose_entrypoint_type ep_type)
-            ~error:(`Not_entry_point_form entrypoint_type)
-        in
+        let%bind parameter_, storage_ = decompose_entrypoint_type_or_error ep_type in
         let%bind () =
           Result.of_option
             ~error:(`Storage_does_not_match (entrypoint, storage, ep, storage_))
