@@ -41,6 +41,10 @@ projectWithOneSmallFile :: FilePath
 projectWithOneSmallFile = unsafePerformIO $ canonicalizePath "projects/one_small_file/"
 {-# NOINLINE projectWithOneSmallFile #-}
 
+projectBatcher :: FilePath
+projectBatcher = unsafePerformIO $ canonicalizePath "projects/submodules/"
+{-# NOINLINE projectBatcher #-}
+
 openLigoDoc :: FilePath -> LSP.Session LSP.TextDocumentIdentifier
 openLigoDoc fp = LSP.openDoc fp "ligo"
 
