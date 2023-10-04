@@ -658,26 +658,32 @@ let parameter_from_entrypoints
     |> error_if_has_dup_name ~error_of_dup_pair:(fun (_, (x, _)) ->
            `Duplicate_entrypoint x)
   in
-  let (entrypoint, entrypoint_type), rest = entrypoints in
-  let%bind parameter, storage = decompose_entrypoint_type_or_error entrypoint_type in
+  let first_entrypoint = Simple_utils.List.Ne.hd entrypoints in
+  let first_entrypoint_var, first_entrypoint_type = first_entrypoint in
+  let%bind _, first_entrypoint_storage =
+    decompose_entrypoint_type_or_error first_entrypoint_type
+  in
+  let process_entrypoint (entrypoint_var, entrypoint_type) =
+    let%bind parameter, storage = decompose_entrypoint_type_or_error entrypoint_type in
+    if not (equal_t storage first_entrypoint_storage)
+    then
+      Error
+        (`Storage_does_not_match
+          (first_entrypoint_var, first_entrypoint_storage, entrypoint_var, storage))
+    else (
+      let name = String.capitalize (Value_var.to_name_exn entrypoint_var) in
+      Ok (name, parameter))
+  in
   let%bind parameter_list =
-    List.fold_result
-      ~init:[ String.capitalize (Value_var.to_name_exn entrypoint), parameter ]
-      ~f:(fun parameters (ep, ep_type) ->
-        let%bind parameter_, storage_ = decompose_entrypoint_type_or_error ep_type in
-        let%bind () =
-          Result.of_option
-            ~error:(`Storage_does_not_match (entrypoint, storage, ep, storage_))
-          @@ if equal_t storage_ storage then Some () else None
-        in
-        return ((String.capitalize (Value_var.to_name_exn ep), parameter_) :: parameters))
-      rest
+    entrypoints
+    |> Simple_utils.List.Ne.rev_map_result ~f:process_entrypoint
+    |> Result.map ~f:Simple_utils.List.Ne.to_list
   in
   let%bind () =
     (* If storage as a `dynamic_entrypoints` field, we expect only one extra field `storage` *)
     let opt =
       Simple_utils.Option.(
-        let* rows = get_t_record storage in
+        let* rows = get_t_record first_entrypoint_storage in
         let* _ = Row.find_type rows (Label.of_string "dynamic_entrypoints") in
         return rows)
     in
@@ -686,7 +692,8 @@ let parameter_from_entrypoints
     | Some rows_with_dyns
       when Row.mem rows_with_dyns (Label.of_string "storage")
            && Int.equal (Row.length rows_with_dyns) 2 -> return ()
-    | _ -> Error (`Wrong_dynamic_storage_definition storage)
+    | _ -> Error (`Wrong_dynamic_storage_definition first_entrypoint_storage)
   in
   return
-    (t_sum_ez ~loc:Location.generated ~layout:default_layout parameter_list (), storage)
+    ( t_sum_ez ~loc:Location.generated ~layout:default_layout parameter_list ()
+    , first_entrypoint_storage )

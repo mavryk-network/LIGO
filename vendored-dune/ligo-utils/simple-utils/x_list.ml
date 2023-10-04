@@ -59,6 +59,20 @@ let rec deoptionalize xs =
     | None -> None
     | Some xs -> Some (x :: xs))
 
+(** {|
+map_result ~f [x1; ...; xn] = let%bind y1 = f x1 in
+                              ...
+                              let%bind yn = f xn in
+                              [yn; ...; y1] |} *)
+let rev_map_result ~f l =
+  let open Result.Let_syntax in
+  List.fold_result
+    ~init:[]
+    ~f:(fun rev_tl' hd ->
+      let%bind hd' = f hd in
+      Ok (hd' :: rev_tl'))
+    l
+
 (** [find_first_dup_pair comparator l] searches for a pair of elements [(x1, x2)] (at distinct positions) in [l] such that [compare x1 x2 = 0] (and [x1] appears before [x2] in the list). If such pairs exist, it returns [Some (x1, x2)] where [(x1, x2)] is the first such pair (meaning that there is a prefix of the list in which it is the only such pair), and otherwise, it returns [None]. *)
 let find_first_dup_pair (type k) ~compare l =
   let module Elt : Set_intf.Elt_plain with type t = k = struct
@@ -184,6 +198,17 @@ module Ne = struct
       (match tl with
       | None -> None
       | Some tl -> Some (hd, tl))
+
+  let rev_map_result ~f l =
+    let open Result.Let_syntax in
+    let rec loop hd tl rev_l' =
+      let%bind hd' = f hd in
+      match tl with
+      | [] -> Ok (hd', rev_l')
+      | hd2 :: tl2 -> loop hd2 tl2 (hd' :: rev_l')
+    in
+    let hd0, tl0 = l in
+    loop hd0 tl0 []
 
   let find_first_dup_pair ~compare (hd, tl) = find_first_dup_pair ~compare (hd :: tl)
 end
