@@ -2539,6 +2539,7 @@ let print_module_signature =
   let f
       source_file
       syntax
+      module_
       protocol_version
       display_format
       self_pass
@@ -2556,6 +2557,7 @@ let print_module_signature =
         ~syntax
         ~protocol_version
         ~self_pass
+        ~module_
         ~project_root
         ~warn_unused_rec
         ~warn_infinite_loop
@@ -2588,6 +2590,7 @@ let print_module_signature =
     (f
     <$> source_file
     <*> syntax
+    <*> module_
     <*> protocol_version
     <*> display_format
     <*> self_pass

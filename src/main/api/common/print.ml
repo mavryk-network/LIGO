@@ -185,10 +185,16 @@ let signature (raw_options : Raw_options.t) source_file =
         in
         Compiler_options.make ~protocol_version ~raw_options ~syntax ()
       in
-      let typed =
-        Build.qualified_typed ~raise ~options (Build.Source_input.From_file source_file)
+      let sig_ =
+        let Compiler_options.{ module_; _ } = options.frontend in
+        let module_path = Build.parse_module_path ~loc module_ in
+        let typed =
+          Build.qualified_typed ~raise ~options (Build.Source_input.From_file source_file)
+        in
+        Option.value_exn ~message:"could not find module"
+        @@ Ast_typed.Misc.get_path_signature typed.pr_sig module_path
       in
-      let core_sig = Checking.untype_signature ~use_orig_var:true typed.pr_sig in
+      let core_sig = Checking.untype_signature ~use_orig_var:true sig_ in
       let unified_sig_expr =
         Trace.trace ~raise Main_errors.nanopasses_tracer
         @@ Nanopasses.decompile_sig_expr ~syntax core_sig
