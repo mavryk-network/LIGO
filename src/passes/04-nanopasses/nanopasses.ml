@@ -201,6 +201,11 @@ let decompile_ty_expr ~raise ~syntax =
   <@ Trivial.From_core.type_expression
 
 
+let decompile_sig_expr ~raise ~syntax =
+  decompile_passes ~raise ~sort:Selector.sig_expr (get_passes_no_options syntax)
+  <@ Trivial.From_core.signature
+
+
 let compile_program ~raise ~(options : Compiler_options.t) ?stop_before
     : I.program -> O.program
   =

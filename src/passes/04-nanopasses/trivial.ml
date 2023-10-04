@@ -545,6 +545,7 @@ module From_core : sig
   val pattern : Ast_core.type_expression option Ast_core.Pattern.t -> Ast_unified.pattern
   val expression : Ast_core.expression -> Ast_unified.expr
   val type_expression : Ast_core.type_expression -> Ast_unified.ty_expr
+  val signature : Ast_core.signature -> Ast_unified.sig_expr
 end = struct
   module I = Ast_core
   module O = Ast_unified
@@ -565,8 +566,8 @@ end = struct
       ; declaration = (fun _ -> assert false)
       ; program_entry = (fun _ -> assert false)
       ; program = Fun.id
-      ; sig_expr = (fun _ -> assert false)
-      ; sig_entry = (fun _ -> assert false)
+      ; sig_expr
+      ; sig_entry
       }
 
 
@@ -574,10 +575,48 @@ end = struct
   and expression e = Ast_unified.Anamorphism.ana_expr ~f:unfolder e
   and pattern p = Ast_unified.Anamorphism.ana_pattern ~f:unfolder p
   and type_expression t = Ast_unified.Anamorphism.ana_ty_expr ~f:unfolder t
+  and signature s = Ast_unified.Anamorphism.ana_sig_expr ~f:unfolder s
 
   and conv_row_attr : string option -> O.Attribute.t list = function
     | None -> []
     | Some annot -> [ { key = "annot"; value = Some annot } ]
+
+
+  and conv_sig_entry_attr
+      : I.sig_item_attribute -> (O.Attribute.t * I.sig_item_attribute) option
+    =
+   fun ({ dyn_entry; entry; view } as i_attr) ->
+    if dyn_entry
+    then Some ({ key = "dyn_entry"; value = None }, { i_attr with dyn_entry = false })
+    else if entry
+    then Some ({ key = "entry"; value = None }, { i_attr with entry = false })
+    else if view
+    then Some ({ key = "view"; value = None }, { i_attr with view = false })
+    else None
+
+
+  and sig_expr : I.signature -> (I.signature, I.sig_item, I.type_expression) O.sig_expr_ =
+   fun { items } ->
+    let loc = Location.generated in
+    Location.wrap ~loc (O.S_body items)
+
+
+  and sig_entry : I.sig_item -> (I.signature, I.sig_item, I.type_expression) O.sig_entry_ =
+   fun sig_item ->
+    let ret ~loc content : _ O.sig_entry_ = Location.wrap ~loc content in
+    match sig_item with
+    | I.S_value (v, ty, attr) ->
+      (match conv_sig_entry_attr attr with
+      | None -> ret ~loc:ty.location (S_value (v, ty))
+      | Some (attr, attr_rest) ->
+        ret ~loc:ty.location (S_attr (attr, I.S_value (v, ty, attr_rest))))
+    | I.S_type (v, ty) -> ret ~loc:ty.location (S_type (v, ty))
+    | I.S_type_var v -> ret ~loc:(O.Ty_variable.get_location v) (S_type_var v)
+    | I.S_module (_, _) | I.S_module_type (_, _) ->
+      (* TODO, we don't have module in signature yet *)
+      let loc = Location.generated in
+      ret ~loc:Location.generated
+      @@ S_type_var (O.Ty_variable.of_input_var ~loc "submodule_cannot_be_printed")
 
 
   and expr
