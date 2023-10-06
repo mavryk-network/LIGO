@@ -198,7 +198,7 @@ module Data = struct
       -> (Module_var.t list * var_binding) list * t
     =
    fun ~new_bindings data path ->
-    let rec refresh_env : (Module_var.t list * var_binding) list -> env -> env =
+    let refresh_bindings : (Module_var.t list * var_binding) list -> env -> env =
      fun new_bindings { exp; mod_ } ->
       let exp =
         (* select new bindings at top-level only *)
@@ -214,31 +214,17 @@ module Data = struct
             | Some x -> x
             | None -> { old; fresh })
       in
-      let mod_ =
-        List.map mod_ ~f:(fun { name; in_ } ->
-            let news =
-              List.filter_map
-                ~f:(function
-                  | b ->
-                    (match b with
-                    | [], _ -> Some b
-                    | hd :: tl, x when Module_var.equal hd name -> Some (tl, x)
-                    | _ -> None))
-                new_bindings
-            in
-            { name; in_ = { in_ with env = refresh_env news in_.env } })
-      in
       { exp; mod_ }
     in
     let new_bindings, content =
       List.fold_map data.content ~init:new_bindings ~f:(fun new_bindings -> function
         | Pat ({ binding = { old; fresh = _ }; env; _ } as x) ->
-          let env = refresh_env new_bindings env in
+          let env = refresh_bindings new_bindings env in
           let new_binding = { old; fresh = fresh_pattern old path } in
           let nb_pat = List.map ~f:(fun x -> [], x) @@ pat_to_var_bindings new_binding in
           nb_pat @ new_bindings, Pat { x with binding = new_binding; env }
         | Exp ({ binding = { old; fresh = _ }; env; _ } as x) ->
-          let env = refresh_env new_bindings env in
+          let env = refresh_bindings new_bindings env in
           let new_binding = { old; fresh = fresh_var old path } in
           ([], new_binding) :: new_bindings, Exp { x with binding = new_binding; env }
         | Mod { name; in_ } ->
@@ -255,7 +241,7 @@ module Data = struct
           in
           incl_bindings @ new_bindings, Incl x.content)
     in
-    let env = refresh_env new_bindings data.env in
+    let env = refresh_bindings new_bindings data.env in
     new_bindings, { content; env }
 
 
