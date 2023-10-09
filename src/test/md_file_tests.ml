@@ -126,6 +126,30 @@ let get_groups md_file : snippetsmap =
   in
   List.fold_left ~f:aux ~init:SnippetsGroup.empty code_blocks
 
+let write_to_files ~raise md_filename grp_list =
+  let aux
+    : (syntax * group_name * Environment.Protocols.t) * (lang * string) -> unit
+    = fun ((syntax, grp, protocol_version), (lang, contents)) ->
+      let root_dir =
+        if Caml.Sys.file_exists "../../dune-project" then "../.."
+        else if Caml.Sys.file_exists "../../../dune-project" then "../../.."
+        else failwith "Could not find root_dir, please fix src/test/md_file_tsts.ml"
+      in
+      let syntax = Syntax.of_string_opt ~raise (Syntax_name syntax) None in
+      let dirname =
+        if String.equal ".md" (String.sub md_filename ~pos:(String.length md_filename - 3) ~len:3)
+        then
+          let d, b = Filename.split (String.sub md_filename ~pos:0 ~len:(String.length md_filename - 3)) in
+          Filename.of_parts [root_dir; d; "src"; b]
+        else failwith "Unexpected Markdown filename: does not end with .md" in
+      let extension = match syntax with CameLIGO -> ".mligo" | JsLIGO -> ".jsligo" in
+      let output_filename = Filename.of_parts [dirname; grp ^ extension] in
+      let () = Ligo_unix.mkdir_p ~perm:0o777 dirname in
+      (* TODO: only try writing the data if the file has different contents. *)
+      let () = Out_channel.write_all output_filename ~data:contents in
+      ()
+  in
+  List.iter ~f:aux grp_list
 
 (**
   if Meta : evaluate each expression in each programs from the snippets group map
@@ -185,6 +209,7 @@ let compile ~raise filename () =
   (* Format.printf "[compile] Filename: %s@." filename; *)
   let groups = get_groups filename in
   let groups_map = SnippetsGroup.bindings groups in
+  let () = write_to_files ~raise filename groups_map in
   let () = compile_groups ~raise filename groups_map in
   ()
 
