@@ -1,4 +1,4 @@
-#import "gitlab-pages/docs/tutorials/taco-shop/tezos-taco-shop-smart-contract.mligo" "C"
+#import "gitlab-pages/docs/tutorials/taco-shop/src/tezos-taco-shop-smart-contract/TacoShop.mligo" "TacoShop"
 
 let assert_string_failure (res : test_exec_result) (expected : string) =
   let expected = Test.eval expected in
@@ -13,14 +13,14 @@ let test =
       (1n, { current_stock = 50n ; max_price = 50tez }) ;
       (2n, { current_stock = 20n ; max_price = 75tez }) ; ]
   in
-  let { addr ; code = _; size = _ } = Test.originate (contract_of C.TacoShop) init_storage 0tez in
+  let { addr ; code = _; size = _ } = Test.originate (contract_of TacoShop) init_storage 0tez in
 
   (* Test inputs *)
-  let clasico_kind : C.TacoShop parameter_of = Buy_taco 1n in
-  let unknown_kind : C.TacoShop parameter_of = Buy_taco 3n in
+  let clasico_kind : TacoShop parameter_of = Buy_taco 1n in
+  let unknown_kind : TacoShop parameter_of = Buy_taco 3n in
 
   (* Auxiliary function for testing equality in maps *)
-  let eq_in_map (r : C.TacoShop.taco_supply) (m : C.TacoShop.taco_shop_storage) (k : nat) =
+  let eq_in_map (r : TacoShop.taco_supply) (m : TacoShop.taco_shop_storage) (k : nat) =
     match Map.find_opt k m with
     | None -> false
     | Some v -> v.current_stock = r.current_stock && v.max_price = r.max_price in

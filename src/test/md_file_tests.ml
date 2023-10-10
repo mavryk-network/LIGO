@@ -126,9 +126,25 @@ let get_groups md_file : snippetsmap =
   in
   List.fold_left ~f:aux ~init:SnippetsGroup.empty code_blocks
 
-let write_to_files ~raise md_filename grp_list =
+(** Write contents to filename if the file doesn't already have the same contents.
+    This avoids floppy disk wear and spurious updates of timestamps,
+    it also avoids unnecessary attempts to write when building a read-only copy. *)
+let write_if_different (filename : string) ~(contents : string) : bool =
+  let old_contents, same =
+    try
+      let old_contents = Caml.In_channel.with_open_bin filename Caml.In_channel.input_all in
+      old_contents, String.equal old_contents contents
+    with _ -> "<error>", false (* if there is any error while reading, assume we need to write. *)
+  in
+  if same then
+    false
+  else
+    let () = Out_channel.write_all filename ~data:contents in
+    true
+
+let write_to_files ~raise md_filename grp_list : bool =
   let aux
-    : (syntax * group_name * Environment.Protocols.t) * (lang * string) -> unit
+    : (syntax * group_name * Environment.Protocols.t) * (lang * string) -> bool
     = fun ((syntax, grp, protocol_version), (lang, contents)) ->
       let root_dir =
         if Caml.Sys.file_exists "../../dune-project" then "../.."
@@ -140,16 +156,20 @@ let write_to_files ~raise md_filename grp_list =
         if String.equal ".md" (String.sub md_filename ~pos:(String.length md_filename - 3) ~len:3)
         then
           let d, b = Filename.split (String.sub md_filename ~pos:0 ~len:(String.length md_filename - 3)) in
-          Filename.of_parts [root_dir; d; "src"; b]
+          Filename.of_parts [d; "src"; b]
         else failwith "Unexpected Markdown filename: does not end with .md" in
       let extension = match syntax with CameLIGO -> ".mligo" | JsLIGO -> ".jsligo" in
       let output_filename = Filename.of_parts [dirname; grp ^ extension] in
-      let () = Ligo_unix.mkdir_p ~perm:0o777 dirname in
-      (* TODO: only try writing the data if the file has different contents. *)
-      let () = Out_channel.write_all output_filename ~data:contents in
-      ()
+
+      (* Create directory both in _build and in the repository (otherwise the _build uses the old version) *)
+      (*let () = Ligo_unix.mkdir_p ~perm:0o777 dirname in*)
+      let () = Ligo_unix.mkdir_p ~perm:0o777 (Filename.of_parts [root_dir; dirname]) in
+
+      (* Write file both in _build and in the repository (otherwise the _build uses the old version) *)
+      (* let () = write_if_different output_filename ~contents *)
+      write_if_different (Filename.of_parts [root_dir; output_filename]) ~contents
   in
-  List.iter ~f:aux grp_list
+  List.length (List.filter ~f:aux grp_list) > 0
 
 (**
   if Meta : evaluate each expression in each programs from the snippets group map
@@ -204,15 +224,30 @@ let compile_groups ~raise filename grp_list =
   let%map () = Lwt_list.iter_s aux grp_list in
   ()
 
+let write_all_to_files ~raise md_filenames () =
+  let aux filename =
+    (* Tradeoff: This is duplicated with the "compile" function below, but
+       having it duplicated allows having it inside a proper "test". *)
+    let groups = get_groups filename in
+    let groups_map = SnippetsGroup.bindings groups in
+
+    write_to_files ~raise filename groups_map
+  in
+  let updates = List.filter ~f:aux md_filenames in
+  if List.length updates > 0 then
+    failwith ("Some documentation snippets from the following .md were written to external files; please simply re-run `dune runtest'.\n"
+              ^
+              String.concat ~sep:"\n" updates)
+  else
+    ()
 
 let compile ~raise filename () =
   (* Format.printf "[compile] Filename: %s@." filename; *)
   let groups = get_groups filename in
   let groups_map = SnippetsGroup.bindings groups in
-  let () = write_to_files ~raise filename groups_map in
+  let _ : bool = write_to_files ~raise filename groups_map in
   let () = compile_groups ~raise filename groups_map in
   ()
-
 
 let get_all_md_files () =
   let exclude_files = [ "./gitlab-pages/docs/demo/ligo-snippet.md" ] in
@@ -230,14 +265,14 @@ let get_all_md_files () =
     with
     | End_of_file -> In_channel.close ic
   in
-  !all_input
-
+  !all_input  
 
 let main =
   Caml.Sys.chdir "../..";
   test_suite "Markdown files"
-  @@ List.map
-       ~f:(fun md_file ->
-         let test_name = "File : " ^ md_file ^ "\"" in
-         test test_name (compile md_file))
-       (get_all_md_files ())
+  @@ let all_md_files = get_all_md_files () in
+     test ("Update files") (write_all_to_files all_md_files)
+     ::
+     List.map
+       ~f:(fun md_file -> test ("File : " ^ md_file ^ "\"") (compile md_file))
+       all_md_files

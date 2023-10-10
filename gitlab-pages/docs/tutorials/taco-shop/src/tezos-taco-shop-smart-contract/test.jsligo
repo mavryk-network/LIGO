@@ -1,4 +1,4 @@
-#import "gitlab-pages/docs/tutorials/taco-shop/tezos-taco-shop-smart-contract.jsligo" "C"
+#import "gitlab-pages/docs/tutorials/taco-shop/src/tezos-taco-shop-smart-contract/TacoShop.jsligo" "TacoShop"
 
 function assert_string_failure (res: test_exec_result, expected: string) {
   const expected_bis = Test.eval(expected);
@@ -31,15 +31,15 @@ const test = (
           )
         );
       const { addr , code , size } =
-        Test.originate(contract_of(C.TacoShop), init_storage, 0mutez);
+        Test.originate(contract_of(TacoShop), init_storage, 0mutez);
 
       /* Test inputs */
 
-      const clasico_kind : parameter_of C.TacoShop = Buy_taco (1n);
-      const unknown_kind : parameter_of C.TacoShop = Buy_taco (3n);
+      const clasico_kind : parameter_of TacoShop = Buy_taco (1n);
+      const unknown_kind : parameter_of TacoShop = Buy_taco (3n);
       /* Auxiliary function for testing equality in maps */
 
-      const eq_in_map = (r: C.TacoShop.taco_supply, m: C.TacoShop.taco_shop_storage, k: nat) =>
+      const eq_in_map = (r: TacoShop.taco_supply, m: TacoShop.taco_shop_storage, k: nat) =>
         match(Map.find_opt(k, m)) {
           when (None):
             false

@@ -1,3 +1,3 @@
-#include "gitlab-pages/docs/advanced/src/included.mligo"
+#include "gitlab-pages/docs/advanced/src/include/included.mligo"
 
 let bar = foo

@@ -100,7 +100,7 @@ branch when matching on the parameter of our contract:
 
 <Syntax syntax="cameligo">
 
-```cameligo skip
+```cameligo group=never
 type parameter =
   Increment of int
 | Extend of never

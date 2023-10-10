@@ -93,12 +93,12 @@ storage is in fact the one which we started with:
 ```cameligo test-ligo group=mycontract-test
 (* This is mycontract-test.mligo *)
 
-#import "gitlab-pages/docs/advanced/src/mycontract.mligo" "MyContract"
-type param = MyContract parameter_of
+#import "gitlab-pages/docs/advanced/src/testing/mycontract.mligo" "MyContract"
+type param = MyContract.C parameter_of
 
 let test1 =
   let initial_storage = 42 in
-  let {addr ; code = _ ; size = _} = Test.originate (contract_of MyContract) initial_storage 0tez in
+  let {addr ; code = _ ; size = _} = Test.originate (contract_of MyContract.C) initial_storage 0tez in
   assert (Test.get_storage addr = initial_storage)
 ```
 
@@ -109,12 +109,12 @@ let test1 =
 ```jsligo test-ligo group=mycontract-test
 // This is mycontract-test.jligo
 
-#import "gitlab-pages/docs/advanced/src/mycontract.mligo" "MyContract"
-type param = parameter_of MyContract
+#import "gitlab-pages/docs/advanced/src/testing/mycontract.mligo" "MyContract"
+type param = parameter_of MyContract.C
 
 const run_test1 = () : unit => {
   let initial_storage = 42 as int;
-  let {addr , code , size} = Test.originate(contract_of(MyContract), initial_storage, 0tez);
+  let {addr , code , size} = Test.originate(contract_of(MyContract.C), initial_storage, 0tez);
   assert (Test.get_storage(addr) == initial_storage);
 };
 
@@ -172,7 +172,7 @@ increments the storage after deployment, we also print the gas consumption:
 
 let test2 =
   let initial_storage = 42 in
-  let orig = Test.originate (contract_of MyContract) initial_storage 0tez in
+  let orig = Test.originate (contract_of MyContract.C) initial_storage 0tez in
   let gas_cons = Test.transfer_exn orig.addr (Increment (1)) 1mutez in
   let () = Test.log ("gas consumption",gas_cons) in
   assert (Test.get_storage orig.addr = initial_storage + 1)
@@ -190,7 +190,7 @@ it is a block expression which can contain statements and local declarations.
 
 const test2 = do {
   let initial_storage = 42 as int;
-  let orig = Test.originate(contract_of (MyContract), initial_storage, 0tez);
+  let orig = Test.originate(contract_of (MyContract.C), initial_storage, 0tez);
   let gas_cons = Test.transfer_exn(orig.addr, (Increment (1)), 1mutez);
   Test.log(["gas consumption", gas_cons]);
   return (Test.get_storage(orig.addr) == initial_storage + 1);
@@ -481,7 +481,7 @@ Consider a map binding addresses to amounts and a function removing all entries 
 
 <Syntax syntax="cameligo">
 
-```cameligo group=rmv_bal
+```cameligo group=remove-balance
 (* This is remove-balance.mligo *)
 
 type balances = (address, tez) map
@@ -497,7 +497,7 @@ let remove_balances_under (b:balances) (threshold:tez) : balances =
 
 <Syntax syntax="jsligo">
 
-```jsligo group=rmv_bal
+```jsligo group=remove-balance
 // This is remove-balance.jsligo
 
 type balances = map <address, tez>
@@ -522,7 +522,7 @@ the bootstrap addresses later)
 <Syntax syntax="cameligo">
 
 ```cameligo test-ligo group=rmv_bal_test
-#include "./gitlab-pages/docs/advanced/src/remove-balance.mligo"
+#include "./gitlab-pages/docs/advanced/src/testing/remove-balance.mligo"
 let _u = Test.reset_state 5n ([] : tez list)
 ```
 
@@ -531,7 +531,7 @@ let _u = Test.reset_state 5n ([] : tez list)
 <Syntax syntax="jsligo">
 
 ```jsligo test-ligo group=rmv_bal_test
-#include "./gitlab-pages/docs/advanced/src/remove-balance.jsligo"
+#include "./gitlab-pages/docs/advanced/src/testing/remove-balance.jsligo"
 let _u = Test.reset_state (5n, list([]) as list <tez>);
 ```
 

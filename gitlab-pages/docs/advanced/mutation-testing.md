@@ -76,7 +76,7 @@ The function implemented (`twice`) above passes the tests:
 <Syntax syntax="cameligo">
 
 ```shell
-ligo run test gitlab-pages/docs/advanced/src/mutation.mligo
+ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.mligo
 # Outputs:
 # Everything at the top-level was executed.
 # - test exited with value ().
@@ -87,7 +87,7 @@ ligo run test gitlab-pages/docs/advanced/src/mutation.mligo
 <Syntax syntax="jsligo">
 
 ```shell
-ligo run test gitlab-pages/docs/advanced/src/mutation.jsligo
+ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.jsligo
 # Outputs:
 # Everything at the top-level was executed.
 # - test exited with value ().
@@ -197,15 +197,15 @@ Running the tests again, the following output is obtained:
 <Syntax syntax="cameligo">
 
 ```shell
-ligo run test gitlab-pages/docs/advanced/src/mutation.mligo
+ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.mligo
 # Outputs:
-# Mutation at: File "gitlab-pages/docs/advanced/src/mutation.mligo", line 1, characters 22-27:
+# Mutation at: File "gitlab-pages/docs/advanced/src/mutation-testing/mutation.mligo", line 1, characters 22-27:
 #   1 | let twice (x : int) = x + x
 #   2 |
 #
 # Replacing by: MUL(x ,
 # x).
-# File "gitlab-pages/docs/advanced/src/mutation.mligo", line 17, character 26 to line 18, character 76:
+# File "gitlab-pages/docs/advanced/src/mutation-testing/mutation.mligo", line 17, character 26 to line 18, character 76:
 #  16 |     None -> ()
 #  17 |   | Some (_, mutation) -> let () = Test.log(mutation) in
 #  18 |                           failwith "Some mutation also passes the tests! ^^"
@@ -218,15 +218,15 @@ ligo run test gitlab-pages/docs/advanced/src/mutation.mligo
 <Syntax syntax="jsligo">
 
 ```shell
-ligo run test gitlab-pages/docs/advanced/src/mutation.jsligo
+ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.jsligo
 # Outputs:
-# Mutation at: File "gitlab-pages/docs/advanced/src/mutation.jsligo", line 1, characters 31-36:
+# Mutation at: File "gitlab-pages/docs/advanced/src/mutation-testing/mutation.jsligo", line 1, characters 31-36:
 #   1 | let twice = (x : int) : int => x + x;
 #   2 |
 #
 # Replacing by: MUL(x ,
 # x).
-# File "gitlab-pages/docs/advanced/src/mutation.jsligo", line 18, characters 25-77:
+# File "gitlab-pages/docs/advanced/src/mutation-testing/mutation.jsligo", line 18, characters 25-77:
 #  17 |     Some: pmutation => { Test.log(pmutation[1]);
 #  18 |                          failwith ("Some mutation also passes the tests! ^^") }
 #  19 |   });
@@ -282,7 +282,7 @@ the tests proposed:
 <Syntax syntax="cameligo">
 
 ```shell
-ligo run test gitlab-pages/docs/advanced/src/mutation.mligo
+ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.mligo
 # Outputs:
 # Everything at the top-level was executed.
 # - test exited with value ().
@@ -294,7 +294,7 @@ ligo run test gitlab-pages/docs/advanced/src/mutation.mligo
 <Syntax syntax="jsligo">
 
 ```shell
-ligo run test gitlab-pages/docs/advanced/src/mutation.jsligo
+ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.jsligo
 # Outputs:
 # Everything at the top-level was executed.
 # - test exited with value ().
@@ -311,7 +311,7 @@ entrypoints `Add` and `Sub`:
 
 <Syntax syntax="cameligo">
 
-```cameligo test-ligo group=frontpage
+```cameligo test-ligo group=mutation-contract
 // This is mutation-contract.mligo
 module C = struct
   type storage = int
@@ -326,10 +326,10 @@ end
 
 <Syntax syntax="jsligo">
 
-```jsligo test-ligo group=frontpage
+```jsligo test-ligo group=mutation-contract
 // This is mutation-contract.jsligo
-namespace C {
-  type storage = int;
+export namespace C {
+  export type storage = int;
 
   // Two entrypoints
   @entry const add = (delta: int, store: storage): [list<operation>, storage] => [list([]),store + delta];
@@ -352,10 +352,10 @@ the entrypoint `Add(7)` works as intended on an initial storage
 ```cameligo test-ligo group=mutation-contract-test
 (* This is mutation-contract-test.mligo *)
 
-#import "gitlab-pages/docs/advanced/src/mutation-contract.mligo" "MutationContract"
+#import "gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract.mligo" "MutationContract"
 
-type storage = int
-type param = MutationContract parameter_of
+type storage = MutationContract.C.storage
+type param = MutationContract.C parameter_of
 let initial_storage = 7
 
 let tester (taddr : (param, storage) typed_address) (_: (param ,storage) michelson_contract) (_:int) : unit =
@@ -363,7 +363,7 @@ let tester (taddr : (param, storage) typed_address) (_: (param ,storage) michels
   assert (Test.get_storage taddr = initial_storage + 7)
 
 let test_original =
-  let orig = Test.originate (contract_of MutationContract) initial_storage 0tez in
+  let orig = Test.originate (contract_of MutationContract.C) initial_storage 0tez in
   tester orig.addr
 ```
 
@@ -374,9 +374,9 @@ let test_original =
 ```jsligo test-ligo group=mutation-contract-test
 // This is mutation-contract-test.jsligo
 
-#import "gitlab-pages/docs/advanced/src/mutation-contract.jsligo" "MutationContract"
+#import "gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract.jsligo" "MutationContract"
 type storage = int;
-type param = parameter_of MutationContract;
+type param = parameter_of MutationContract.C;
 const initial_storage = 7;
 
 const tester = (taddr : typed_address<param, storage>, _c : michelson_contract<param, storage> , _ : int) : unit => {
@@ -385,7 +385,7 @@ const tester = (taddr : typed_address<param, storage>, _c : michelson_contract<p
 }
 
 const test_original = (() => {
-  let orig = Test.originate(contract_of(MutationContract), initial_storage, 0tez);
+  let orig = Test.originate(contract_of(MutationContract.C), initial_storage, 0tez);
   return tester(orig.addr);
 })();
 ```
@@ -398,7 +398,7 @@ For performing mutation testing as before, we write the following test:
 
 ```cameligo test-ligo group=mutation-contract-test
 let test_mutation =
-  match Test.originate_module_and_mutate (contract_of MutationContract) initial_storage 0tez tester with
+  match Test.originate_module_and_mutate (contract_of MutationContract.C) initial_storage 0tez tester with
     None -> ()
   | Some (_, mutation) ->
     let () = Test.log(mutation) in
@@ -414,7 +414,7 @@ let test_mutation =
 
 ```jsligo test-ligo group=mutation-contract-test
 const test_mutation =
-  match(Test.originate_module_and_mutate(contract_of(MutationContract), initial_storage, 0tez, tester)) {
+  match(Test.originate_module_and_mutate(contract_of(MutationContract.C), initial_storage, 0tez, tester)) {
     when(None()): unit;
     when(Some(pmutation)): do {
       let _l = Test.log(pmutation[1]);
@@ -433,9 +433,9 @@ Running this test, the following output is obtained:
 <Syntax syntax="cameligo">
 
 ```shell
-ligo run test gitlab-pages/docs/advanced/src/mutation-contract-test.mligo
+ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract-test.mligo
 # Outputs:
-# File "gitlab-pages/docs/advanced/src/mutation-contract-test.mligo", line 25, characters 4-65:
+# File "gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract-test.mligo", line 25, characters 4-65:
 #  24 |     let () = Test.log(mutation) in
 #  25 |     failwith "A mutation of the contract still passes the tests!"
 #  26 | 
@@ -443,8 +443,8 @@ ligo run test gitlab-pages/docs/advanced/src/mutation-contract-test.mligo
 # An uncaught error occured:
 # Failwith: "A mutation of the contract still passes the tests!"
 # Trace:
-# File "gitlab-pages/docs/advanced/src/mutation-contract-test.mligo", line 25, characters 4-65
-# Mutation at: File "gitlab-pages/docs/advanced/src/mutation-contract.mligo", line 8, characters 64-77:
+# File "gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract-test.mligo", line 25, characters 4-65
+# Mutation at: File "gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract.mligo", line 8, characters 64-77:
 #   7 | [@entry] let add (delta : int) (store : storage) : result = [], store + delta
 #   8 | [@entry] let sub (delta : int) (store : storage) : result = [], store - delta
 # 
@@ -456,9 +456,9 @@ ligo run test gitlab-pages/docs/advanced/src/mutation-contract-test.mligo
 <Syntax syntax="jsligo">
 
 ```shell
-ligo run test gitlab-pages/docs/advanced/src/mutation-contract-test.jsligo
+ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract-test.jsligo
 # Outputs:
-# File "gitlab-pages/docs/advanced/src/mutation-contract-test.jsligo", line 27, characters 6-68:
+# File "gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract-test.jsligo", line 27, characters 6-68:
 #  26 |       Test.log(pmutation[1]);
 #  27 |       failwith("A mutation of the contract still passes the tests!");
 #  28 |     }
@@ -466,8 +466,8 @@ ligo run test gitlab-pages/docs/advanced/src/mutation-contract-test.jsligo
 # An uncaught error occured:
 # Failwith: "A mutation of the contract still passes the tests!"
 # Trace:
-# File "gitlab-pages/docs/advanced/src/mutation-contract-test.jsligo", line 27, characters 6-68
-# Mutation at: File "gitlab-pages/docs/advanced/src/mutation-contract.jsligo", line 8, characters 73-86:
+# File "gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract-test.jsligo", line 27, characters 6-68
+# Mutation at: File "gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract.jsligo", line 8, characters 73-86:
 #   7 | @entry const add = (delta : int, store : storage) : result => [list([]), store + delta];
 #   8 | @entry const sub = (delta : int, store : storage) : result => [list([]), store - delta];
 # 
@@ -542,7 +542,7 @@ then process the list:
 
 ```cameligo test-ligo group=mutation-contract-test
 let test_mutation_all =
-  match Test.originate_and_mutate_all (contract_of MutationContract) initial_storage 0tez tester_add_and_sub with
+  match Test.originate_and_mutate_all (contract_of MutationContract.C) initial_storage 0tez tester_add_and_sub with
     [] -> ()
   | ms -> let () = List.iter (fun ((_, mutation) : unit * mutation) ->
                               let path = Test.save_mutation "." mutation in
@@ -557,7 +557,7 @@ let test_mutation_all =
 
 ```jsligo test-ligo group=mutation-contract-test
 const test_mutation_all =
-  match(Test.originate_and_mutate_all(contract_of(MutationContract), initial_storage, 0tez, tester_add_and_sub)) {
+  match(Test.originate_and_mutate_all(contract_of(MutationContract.C), initial_storage, 0tez, tester_add_and_sub)) {
     when([]): unit;
     when([hd,...tl]): do {
       let ms = list([hd,...tl]);
