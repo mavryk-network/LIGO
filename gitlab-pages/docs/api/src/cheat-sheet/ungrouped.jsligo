@@ -1,0 +1,65 @@
+let name: string = "Tezos";
+let t: string = "t";
+let i: int = 42;
+let n: nat = 7n;
+let u: unit = unit;
+let has_drivers_license: bool = false
+let adult: bool = true
+let booleanLogic: bool =
+    (!true) ==
+    false ==
+    (false && true) ==
+    (false || false)
+let tez: tez = 42tez
+let tez2: tez = 7mutez
+let tz1address: address =
+  "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address;
+let kt1address: address =
+  "KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD" as address;
+let add_int: int = 3 + 4;
+let add_nat: nat = 3n + 4n;
+let mul_int: int = 3 * 4;
+let mul_nat: nat = 3n * 4n;
+
+let div_int: int = 10 / 5;
+let div_nat: nat = 10n / 5n;
+let mod_nat: nat = 10 % 3
+type name = [string, string];
+
+let winner: name = ["John", "Doe"];
+
+let firstName: string = winner[0];
+let lastName: string = winner[1];
+function if_statement (age : nat): string {
+  if (age >= 16n) return "yes" else return "no"
+}
+type middle_name = option<string>;
+let middle_name : middle_name = Some("Foo");
+let middle_name_ : middle_name = None();
+let age: int = 5
+let someAddress: address =
+  "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address;
+type person = {
+  age: int,
+  name: string
+}
+
+let john : person = {
+  age: 18,
+  name: "john doe"
+}
+
+let name_: string = john.name
+type prices = map<nat, tez>;
+
+let prices: prices = Map.literal(list([
+  [10n, 60mutez],
+  [50n, 30mutez],
+  [100n, 10mutez]
+]));
+
+let price: option<tez> = Map.find_opt(50n, prices)
+
+let prices2: prices = Map.update(200n, Some (5mutez), prices)
+let fail = (u: unit) : unit =>
+  failwith("a failure message")

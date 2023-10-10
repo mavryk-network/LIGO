@@ -1,0 +1,9 @@
+const twice = (x: int): int => x * x;
+// This is mutation-contract.jsligo
+namespace C {
+  type storage = int;
+
+  // Two entrypoints
+  @entry const add = (delta: int, store: storage): [list<operation>, storage] => [list([]),store + delta];
+  @entry const sub = (delta: int, store: storage): [list<operation>, storage] => [list([]),store - delta];
+}
