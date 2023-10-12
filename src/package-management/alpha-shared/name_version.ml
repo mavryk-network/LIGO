@@ -29,20 +29,24 @@ let is_root { version; _ } =
   | _ -> false
 
 
-let find_ligo_json_substring s =
+let is_default s =
+  let f = function
+    | Str.Delim _ -> true
+    | Str.Text _ -> false
+  in
   let regexp = Str.regexp "./ligo.json" in
-  try
-    let index = Str.search_forward regexp s 0 in
-    Some index
-  with
-  | _ -> None
+  let elements = Str.full_split regexp s in
+  let contains_default_string =
+    List.map ~f elements |> List.fold ~init:false ~f:(fun init v -> init || v)
+  in
+  if contains_default_string then Some s else None
 
 
-let version_of_string version =
+let version_of_string ~input_string version =
   match Semver.of_string version with
   | Some v -> Some (SemverVersion v)
   | None ->
-    (match find_ligo_json_substring version with
+    (match is_default input_string with
     | Some _ -> Some (StringVersion version)
     | None -> None)
 
@@ -59,33 +63,33 @@ let to_string { name; version } =
   | StringVersion version -> Printf.sprintf "%s@%s" name version
 
 
-let of_string s =
-  (* This breaks on the default node *)
-  match String.split_on_chars ~on:[ '@' ] s with
+let of_string input_string =
+  match String.split_on_chars ~on:[ '@' ] input_string with
   | [ ""; package_name_with_slash; version; _unused ] ->
     let name = Printf.sprintf "@%s" package_name_with_slash in
-    (match version_of_string version with
+    (match version_of_string ~input_string version with
     | Some version -> Ok { name; version }
     | None ->
-      let msg_str = Printf.sprintf "Couldn't parse version in \"%s\"" s in
+      let msg_str = Printf.sprintf "Couldn't parse version in \"%s\"" input_string in
       let msg = `Msg msg_str in
       Error msg)
   | [ name; version; _unused ] ->
-    (match version_of_string version with
+    (match version_of_string ~input_string version with
     | Some version -> Ok { name; version }
     | None ->
-      let msg_str = Printf.sprintf "Couldn't parse version in \"%s\"" s in
+      (* Note : This where default like -> "@ligo/dao-jsligo@link-dev:./ligo.json" goes and why we pass input_string *)
+      let msg_str = Printf.sprintf "Couldn't parse version in \"%s\"" input_string in
       let msg = `Msg msg_str in
       Error msg)
   | [ name; version ] ->
-    (match version_of_string version with
+    (match version_of_string ~input_string version with
     | Some version -> Ok { name; version }
     | None ->
-      let msg_str = Printf.sprintf "Couldn't parse version in \"%s\"" s in
+      let msg_str = Printf.sprintf "Couldn't parse version in \"%s\"" input_string in
       let msg = `Msg msg_str in
       Error msg)
   | _ ->
-    let msg_str = Printf.sprintf "Couldn't parse \"%s\"" s in
+    let msg_str = Printf.sprintf "Couldn't parse \"%s\"" input_string in
     let msg = `Msg msg_str in
     Error msg
 

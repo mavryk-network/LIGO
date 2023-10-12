@@ -17,7 +17,7 @@ type t =
 val compare : t -> t -> int
 val make : name:string -> version:version -> t
 val is_root : t -> bool
-val version_of_string : string -> version option
+val version_of_string : input_string:string -> string -> version option
 val version_to_string : version -> string
 val to_string : t -> string
 val of_string : string -> (t, [> Rresult.R.msg ]) result
