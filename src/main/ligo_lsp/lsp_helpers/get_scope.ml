@@ -39,11 +39,7 @@ let with_code_input
     | HTTP uri -> Simple_utils.Http_uri.get_filename uri
   in
   let syntax =
-    Syntax.of_string_opt
-      ~support_pascaligo:true
-      ~raise
-      (Syntax_name raw_options.syntax)
-      (Some file_name)
+    Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some file_name)
   in
   let protocol_version =
     Ligo_compile.Helpers.protocol_to_variant ~raise raw_options.protocol_version
@@ -178,9 +174,7 @@ let make_lsp_virtual_main
       (match syntax with
       | CameLIGO -> "[@entry]\nlet %s (_ : never) (s : %s) : operation list * %s = [], s"
       | JsLIGO ->
-        "@entry\nconst %s = (_: never, s: %s): [list<operation>, %s] => [list([]), s]"
-      | PascaLIGO ->
-        "[@entry]\nfunction %s(_: never; s: %s): list(operation) * %s is (nil, s)")
+        "@entry\nconst %s = (_: never, s: %s): [list<operation>, %s] => [list([]), s]")
       virtual_main_name
       storage_type_name
       storage_type_name
@@ -306,6 +300,7 @@ let storage_diagnostics
 (** Returns [true] if this is an expensive check that might require downloading from the
     internet and thus lag the language server, or [false] otherwise. *)
 let is_metadata_check : Main_warnings.all -> bool = function
+  | `Self_ast_aggregated_deprecated _
   | `Self_ast_aggregated_warning_unused _
   | `Self_ast_aggregated_warning_muchused _
   | `Self_ast_aggregated_warning_unused_rec _

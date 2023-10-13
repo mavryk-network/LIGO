@@ -17,8 +17,6 @@ type config =
         (** The level of verbosity when logging. Defaults to Info. *)
   ; disabled_features : string list
         (** Disabled requests, i.e., they are not handled by the language server. Defaults to []. *)
-  ; deprecated : bool
-        (** Enable support for the deprecated PascaLIGO syntax. Defaults to [false]. *)
   ; max_line_width : int option
         (** Override the max line width for formatted file (80 by default) *)
   }
@@ -214,7 +212,13 @@ let with_cst
   =
   with_cached_doc path default
   @@ fun { syntax; code; _ } ->
-  match Dialect_cst.get_cst ~strict ~file:path syntax code with
+  match
+    Ligo_api.Dialect_cst.get_cst
+      ~strict
+      ~file:(Path.to_string path)
+      syntax
+      (Caml.Buffer.of_seq (Caml.String.to_seq code))
+  with
   | Error err ->
     let@ () = on_error err in
     return default

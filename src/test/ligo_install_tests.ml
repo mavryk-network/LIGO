@@ -23,7 +23,7 @@ let cd ~(dir : string) : (unit, [> Rresult.R.msg ]) result =
 
 let ligo_install_pkgs
     ~project_root
-    ~(package_dir : string)
+    ~(package_name : string option)
     ~(cache_path : string)
     ~(ligo_registry : string)
     : (unit, error) result
@@ -31,7 +31,7 @@ let ligo_install_pkgs
   let ligo_registry = Uri.of_string ligo_registry in
   let cache_path = Fpath.v cache_path in
   Lwt_main.run
-  @@ Package_management.Alpha.run ~project_root package_dir cache_path ligo_registry
+  @@ Package_management.Alpha.run ~project_root package_name cache_path ligo_registry
   |> function
   | Ok () -> Ok ()
   | Error s -> Error (InstallTestFails (Package_management.Alpha.string_of_error s))
@@ -51,7 +51,7 @@ let run_cmd_to_string : Cmd.t -> (string, [> Rresult.R.msg ]) result =
 
 let package_dir = "."
 let cache_path = ".ligo"
-let ligo_registry = "https://packages.ligolang.org/-/api"
+let ligo_registry = "https://packages.ligolang.org/"
 let workflow_path = "install_tests/workflow/"
 let lockfile_path = workflow_path ^ "esy.lock/"
 let ligo_package_dir_path = workflow_path ^ ".ligo/"
@@ -75,7 +75,8 @@ let run_workflow_test ~path_list =
   let src = workflow_path ^ "main.mligo" in
   batch_rm_rf path_list;
   let* () =
-    ligo_install_pkgs ~project_root:workflow_path ~package_dir ~cache_path ~ligo_registry
+    let package_name = None in
+    ligo_install_pkgs ~project_root:workflow_path ~package_name ~cache_path ~ligo_registry
     |> error_to_rresult_error
   in
   let output =
@@ -88,7 +89,7 @@ let run_workflow_test ~path_list =
 
 (* #! /bin/sh
 
-CMD="ligo install --package-management-alpha ; ligo compile contract ./main.mligo"
+CMD="ligo install ; ligo compile contract ./main.mligo"
 
 sh -c "rm -rf esy.lock _esy .ligo; $CMD"
 sh -c "rm -rf _esy .ligo; $CMD"
@@ -176,23 +177,23 @@ let main =
   test_suite
     "LIGO install tests"
     [ test
-        "Test workflow when running [ligo install --package-management-alpha] followed \
-         by [ligo compile contract ./main.mligo] in the install_tests/workflow directoy. \
-         In this test by removing .ligo/ and _esy/ directories"
+        "Test workflow when running [ligo install] followed by [ligo compile contract \
+         ./main.mligo] in the install_tests/workflow directoy. In this test by removing \
+         .ligo/ and _esy/ directories"
         test_remove_ligoPackageDir_installationJson
     ; test
-        "Test workflow when running [ligo install --package-management-alpha] followed \
-         by [ligo compile contract ./main.mligo] in the install_tests/workflow directoy. \
-         In this test by removing .ligo/ directory"
+        "Test workflow when running [ligo install] followed by [ligo compile contract \
+         ./main.mligo] in the install_tests/workflow directoy. In this test by removing \
+         .ligo/ directory"
         test_remove_ligoPackageDir
     ; test
-        "Test workflow when running [ligo install --package-management-alpha] followed \
-         by [ligo compile contract ./main.mligo] in the install_tests/workflow directoy. \
-         In this test by removing _esy/ directory"
+        "Test workflow when running [ligo install] followed by [ligo compile contract \
+         ./main.mligo] in the install_tests/workflow directoy. In this test by removing \
+         _esy/ directory"
         test_remove_installationJson
     ; test
-        "Test workflow when running [ligo install --package-management-alpha] followed \
-         by [ligo compile contract ./main.mligo] in the install_tests/workflow directoy. \
-         In this test by removing nothin"
+        "Test workflow when running [ligo install] followed by [ligo compile contract \
+         ./main.mligo] in the install_tests/workflow directoy. In this test by removing \
+         nothin"
         test_remove_nothing
     ]

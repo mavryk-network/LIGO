@@ -3,6 +3,26 @@ module AST = Ast_unified
 module Helpers = Unification_shared.Helpers
 open Simple_utils
 open Lexing_jsligo.Token
+module Value_escaped_var = Nano_prim.Value_escaped_var
+module Ty_escaped_var = Nano_prim.Ty_escaped_var
+
+let ghost_var v = ghost_ident (Format.asprintf "%a" AST.Variable.pp v)
+
+let decompile_var_esc = function
+  | Value_escaped_var.Raw v -> CST.Var (ghost_var v)
+  | Esc v -> Esc (ghost_var v)
+
+
+let ghost_tvar v = ghost_ident (Format.asprintf "%a" AST.Ty_variable.pp v)
+
+let decompile_tvar_esc = function
+  | Ty_escaped_var.Raw v -> CST.T_Var (Var (ghost_tvar v))
+  | Esc v -> T_Var (Esc (ghost_tvar v))
+
+
+let decompile_tvar : AST.Ty_variable.t -> CST.type_expr =
+ fun t -> T_Var (Var (ghost_tvar t))
+
 
 let rec folder =
   let todo _ = failwith ("TODO" ^ __LOC__) in
@@ -84,15 +104,20 @@ and decompile_namespace_path
   CST.{ namespace_path; selector = ghost_dot; property = field }
 
 
-(* Decompilers: expect that all Ast nodes are initial, i.e.
-  that backwards nanopasses were applied to Ast_unified before decompiler *)
+(* Decompilers: expect that all Ast nodes are initial, i.e. that
+    backwards nanopasses were applied to Ast_unified before
+    decompiler *)
+
+(* TODO: The E_variable case can be removed once
+   Nanopasses.Espaced_variables.decompile is implemented. *)
 
 and expr : (CST.expr, CST.type_expr, CST.pattern, unit, unit) AST.expression_ -> CST.expr =
  fun e ->
   let w = Region.wrap_ghost in
   match Location.unwrap e with
   | E_attr (attr, e) -> E_Attr (decompile_attr attr, e)
-  | E_variable v -> E_Var (ghost_ident (Format.asprintf "%a" AST.Variable.pp v))
+  | E_variable v -> E_Var (Var (ghost_var v))
+  | E_variable_esc v -> E_Var (decompile_var_esc v)
   | E_binary_op { operator; left; right } ->
     let binop op : 'a CST.wrap CST.bin_op CST.reg =
       w @@ CST.{ op; arg1 = left; arg2 = right }
@@ -169,12 +194,11 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
   let w = Region.wrap_ghost in
   (* ^ XXX we should split generated names on '#'? Can we just extract the name somehow?
         Why [t.name] is not working?? *)
-  let decompile_tvar : AST.Ty_variable.t -> CST.type_expr =
-   fun t -> T_Var (ghost_ident @@ Format.asprintf "%a" Ligo_prim.Type_var.pp t)
-   (* XXX we should split generated names on '#'? Can we just extract the name somehow?
+  (* XXX we should split generated names on '#'? Can we just extract the name somehow?
          Why [t.name] is not working?? *)
-  and decompile_variant
-      : AST.Label.t -> CST.type_expr option -> AST.Attribute.t list -> CST.variant
+  let decompile_variant
+      :  AST.Label.t -> CST.type_expr option -> AST.Attribute.t list
+      -> CST.type_expr CST.legacy_variant
     =
    fun (AST.Label.Label constr_name) t attributes ->
     let ctor_params : (CST.comma * (CST.type_expr, CST.comma) Utils.nsep_or_term) option =
@@ -187,28 +211,22 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
           | t -> ghost_comma, `Sep (t, []))
         t
     in
-    let ctor = CST.T_String (ghost_string constr_name) in
-    let inside : CST.type_expr CST.ctor_app =
-      ( None
-      , match ctor_params with
-        | None -> ZeroArg ctor
-        | Some (comma, args) ->
-          let inside : (CST.type_expr, CST.comma) Utils.nsep_or_term =
-            Utils.nsep_or_term_cons ctor comma args
-          in
-          let args : (CST.type_expr, CST.comma) Utils.nsep_or_term CST.brackets =
-            w @@ CST.{ lbracket = ghost_lbracket; rbracket = ghost_rbracket; inside }
-          in
-          MultArg args )
+    let ctor = ghost_string constr_name in
+    let args : (CST.comma * CST.type_expr) list =
+      match ctor_params with
+      | None -> []
+      | Some (comma, args) ->
+        List.map ~f:(fun arg -> comma, arg) @@ Utils.nsep_or_term_to_list args
     in
-    let tuple : CST.type_expr CST.ctor_app Region.reg = w inside in
+    let inside : CST.type_expr CST.legacy_variant_args = { ctor; args } in
     let attributes = List.map ~f:decompile_attr attributes in
+    let tuple = w CST.{ lbracket = ghost_lbracket; inside; rbracket = ghost_rbracket } in
     { attributes; tuple }
   and decompile_field
       : AST.Label.t -> CST.type_expr -> AST.Attribute.t list -> _ CST.property
     =
    fun (AST.Label.Label field_name) t attributes ->
-    { property_id = F_Name (ghost_string field_name)
+    { property_id = F_Name (CST.Var (ghost_string field_name))
     ; property_rhs = Some (ghost_colon, t)
     ; attributes = List.map ~f:decompile_attr attributes
     }
@@ -224,7 +242,8 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
   in
   match Location.unwrap te with
   | T_attr (_attr, t) -> t (* FIXME should TAttr be added to JsLIGO CST?? *)
-  | T_var v -> decompile_tvar v
+  | T_var t -> decompile_tvar t
+  | T_var_esc t -> decompile_tvar_esc t
   | T_int (_, z) -> T_Int (ghost_int z)
   | T_string s -> T_String (ghost_string s)
   | T_module_open_in { module_path; field; field_as_open } ->
@@ -234,14 +253,12 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
     in
     T_NamePath (w v)
   | T_module_access { module_path; field; field_as_open } ->
-    let field : CST.type_expr =
-      T_Var (ghost_ident (Format.asprintf "%a" AST.Ty_variable.pp field))
-    in
+    let field : CST.type_expr = decompile_tvar field in
     let v : CST.type_expr CST.namespace_path =
       decompile_to_namespace_path module_path field
     in
     T_NamePath (w v)
-  | T_arg s -> T_Var (ghost_ident s)
+  | T_arg s -> T_Var (Var (ghost_ident s))
   (* ^ XXX is this correct? CameLIGO has separate T_Arg in CST *)
   | T_app { constr; type_args } ->
     let params_nsepseq = Utils.nsepseq_of_nseq type_args ~sep:ghost_comma in
@@ -261,7 +278,7 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
         : CST.type_expr AST.Named_fun.fun_type_arg -> CST.fun_type_param CST.reg
       =
      fun { name; type_expr } ->
-      w @@ (CST.P_Var (ghost_ident name), (ghost_colon, type_expr))
+      w @@ (CST.P_Var (Var (ghost_ident name)), (ghost_colon, type_expr))
     in
     let args : CST.fun_type_params =
       match Utils.list_to_sepseq (List.map ~f:decompile_arg args) ghost_comma with
@@ -284,14 +301,17 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
     | None -> failwith "Decompiler: got a T_record_raw with no fields"
     | Some nsepseq -> T_Object (mk_object nsepseq))
   | T_sum_raw variants ->
-    let f : CST.type_expr option AST.Non_linear_rows.row -> CST.variant =
+    let f : CST.type_expr option AST.Non_linear_rows.row -> CST.type_expr CST.variant_kind
+      =
      fun (constr, { associated_type; attributes; _ }) ->
-      decompile_variant constr associated_type attributes
+      Legacy (w @@ decompile_variant constr associated_type attributes)
     in
     (match Utils.list_to_sepseq (List.map ~f variants) ghost_vbar with
     | None -> failwith "Decompiler: got a T_sum_raw with no fields"
     | Some nsepseq ->
-      let variant : (CST.variant, CST.vbar) Utils.nsep_or_pref = `Sep nsepseq in
+      let variant : (CST.type_expr CST.variant_kind, CST.vbar) Utils.nsep_or_pref =
+        `Sep nsepseq
+      in
       T_Variant (w variant))
   | T_disc_union objects ->
     let f : CST.type_expr AST.Non_linear_disc_rows.row -> CST.type_expr CST._object =
@@ -310,15 +330,17 @@ and ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
   | T_sum { fields; layout = _ } ->
     (* XXX those are not initial, but backwards nanopass T_sum -> T_sum_row and
          T_record -> T_record_raw is not implemented, so we need to handle those here*)
-    let f : AST.Label.t * CST.type_expr -> CST.variant =
-     fun (constr, t) -> decompile_variant constr (Some t) []
+    let f : AST.Label.t * CST.type_expr -> CST.type_expr CST.variant_kind =
+     fun (constr, t) -> Legacy (w @@ decompile_variant constr (Some t) [])
     in
     let pairs =
       match Utils.list_to_sepseq (AST.Label.Map.to_alist fields) ghost_vbar with
       | None -> failwith "Decompiler: got a T_sum with no elements"
       | Some nsepseq -> Utils.nsepseq_map f nsepseq
     in
-    let variant : (CST.variant, CST.vbar) Utils.nsep_or_pref = `Sep pairs in
+    let variant : (CST.type_expr CST.variant_kind, CST.vbar) Utils.nsep_or_pref =
+      `Sep pairs
+    in
     T_Variant (w variant)
   | T_record { fields; layout = _ } ->
     let f : AST.Label.t * CST.type_expr -> CST.type_expr CST.property CST.reg =

@@ -148,6 +148,7 @@ let add_ast_env
         ; thunk = false
         ; entry = false
         ; dyn_entry = false
+        ; deprecated = None
         }
     else e
   in
@@ -834,7 +835,9 @@ let rec val_to_ast ~raise ~loc
     raise.error @@ Errors.generic_error loc "Cannot be abstracted: location"
   | V_Typed_address _ ->
     raise.error @@ Errors.generic_error loc "Cannot be abstracted: typed_address"
-  | V_Views _ -> raise.error @@ Errors.generic_error loc "Cannot be abstracted: views"
+  (* This is a hack to work around a bug with mutation on contract value
+     i.e. `Test.mutation` called with `contract_of X`, see src/test/contracts/interpreter_tests/test_no_mutation.mligo*)
+  | V_Views _ -> e_a_unit ~loc ()
 
 
 and make_ast_func ~raise ?name env mut_flag arg body orig =

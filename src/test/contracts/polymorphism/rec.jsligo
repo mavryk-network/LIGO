@@ -3,7 +3,8 @@ const recursion =
         return recursion(xs);
    };
 
+@entry
 export const main = (parameter: list<string>, storage: int) : [list<operation>, int] => {
-   let _ = recursion(parameter);
+   recursion(parameter);
    return [list([]) as list<operation>, storage]
 }

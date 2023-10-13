@@ -73,8 +73,7 @@ let get : options:Compiler_options.t -> unit -> t =
   let def str = "#define " ^ str ^ "\n" in
   let std =
     match options.middle_end.protocol_version with
-    | Environment.Protocols.Mumbai -> def "MUMBAI"
-    | Environment.Protocols.Nairobi -> def "NAIROBI"
+    | Environment.Protocols.Oxford -> def "OXFORD"
   in
   let legacy_layout_tree =
     if Ligo_prim.Layout.legacy_layout_flag then def "LEGACY_LAYOUT_TREE" else ""
@@ -101,9 +100,9 @@ let get ~options : t =
 
 let select_lib_core (stx : Syntax_types.t) (lib : t) : Ast_core.program =
   match stx with
-  | CameLIGO | JsLIGO | PascaLIGO -> lib.content_core
+  | CameLIGO | JsLIGO -> lib.content_core
 
 
 let select_lib_typed (stx : Syntax_types.t) (lib : t) : Ast_typed.program =
   match stx with
-  | CameLIGO | JsLIGO | PascaLIGO -> lib.content_typed
+  | CameLIGO | JsLIGO -> lib.content_typed

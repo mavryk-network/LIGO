@@ -4,27 +4,33 @@
 
 [@@@warning "-30"] (* multiply-defined record labels *)
 
+module Types = Cst_shared.Types
+
 (* Vendor dependencies *)
 
-module Directive = Preprocessor.Directive
-module Utils     = Simple_utils.Utils
-module Region    = Simple_utils.Region
+module Directive = Types.Directive
+module Utils     = Types.Utils
+module Region    = Types.Region
 
 (* Local dependencies *)
 
-module Wrap = Lexing_shared.Wrap
-module Attr = Lexing_shared.Attr
+module Wrap = Types.Wrap
+module Attr = Types.Attr
 
 (* Utilities *)
 
-type 'a reg = 'a Region.reg
-type 'payload wrap = 'payload Wrap.t
+type 'a reg = 'a Types.reg
+type 'payload wrap = 'payload Types.wrap
 
 open Utils
 
-type lexeme = string
+(* Lexemes *)
+
+type lexeme = Types.lexeme
 
 (* Keywords of PyLIGO *)
+
+open Types
 
 (* IMPORTANT: The types are sorted alphabetically, except the generic
    [keyword]. If you add or modify some, please make sure they remain
@@ -137,11 +143,15 @@ type eof = lexeme wrap
 
 (* Literals *)
 
-type variable    = lexeme wrap
-type fun_name    = lexeme wrap
-type member_name = lexeme wrap
-type module_name = lexeme wrap
-type type_name   = lexeme wrap
+type variable =
+  Var of lexeme wrap (* foo  *)
+| Esc of lexeme wrap (* @foo without the @ *)
+
+type fun_name    = variable
+type member_name = variable
+type type_name   = variable
+type module_name = variable
+
 type class_name  = lexeme wrap
 type ctor        = lexeme wrap
 type language    = lexeme reg   (* Not [wrap] *)
@@ -246,7 +256,7 @@ and const_decl = {
 
 and fun_decl = {
   kwd_def      : kwd_def;
-  fun_name     : variable;
+  fun_name     : fun_name;
   class_params : class_params option;
   fun_params   : (param_decl reg, comma) sepseq par reg;
   return_type  : (arrow * type_expr) option;
@@ -369,7 +379,7 @@ and member_decl =
 
 and member_fun_decl = {
   kwd_def           : kwd_def;
-  fun_name          : variable;
+  fun_name          : fun_name;
   member_fun_params : (member_vars_decl reg, comma) sepseq par reg;
   return_type       : (arrow * type_expr) option;
   colon             : colon;
@@ -486,7 +496,7 @@ and pattern =
 | P_String   of string_literal           (*   "string" *)
 | P_Tuple    of pattern tuple            (*     (1, x) *)
 | P_Typed    of typed_pattern reg        (*  (x : int) *)
-| P_Var      of variable                 (*          x *)
+| P_Var      of variable                 (*   @x     x *)
 | P_Variant  of pattern ctor_call reg    (*      `C(1) *)
 | P_Verbatim of verbatim_literal         (*    {|foo|} *)
 
@@ -531,17 +541,17 @@ and typed_pattern = {
    add or modify some, please make sure they remain in order. *)
 
 and type_expr =
-  T_Attr    of (attribute * type_expr)    (*        [@a] t *)
-| T_Class   of class_type reg             (*  m.C [int, D] *)
-| T_Cart    of cartesian reg              (*   x * (y * z) *)
-| T_Fun     of fun_type reg               (*        x -> y *)
-| T_Int     of int_literal                (*            42 *)
-| T_ModPath of type_expr module_path reg  (*   a.b.(x * y) *)
-| T_Par     of type_expr par reg          (*           (t) *)
-| T_String  of string_literal             (*           "x" *)
-| T_Sum     of sum_type reg               (*      A | B[t] *)
-| T_Tuple   of type_expr tuple            (*    (x, (y, z) *)
-| T_Var     of variable                   (*             x *)
+  T_Attr    of (attribute * type_expr)    (*       [@a] t *)
+| T_Class   of class_type reg             (* m.C [int, D] *)
+| T_Cart    of cartesian reg              (*  x * (y * z) *)
+| T_Fun     of fun_type reg               (*       x -> y *)
+| T_Int     of int_literal                (*           42 *)
+| T_ModPath of type_expr module_path reg  (*  a.b.(x * y) *)
+| T_Par     of type_expr par reg          (*          (t) *)
+| T_String  of string_literal             (*          "x" *)
+| T_Sum     of sum_type reg               (*     A | B[t] *)
+| T_Tuple   of type_expr tuple            (*   (x, (y, z) *)
+| T_Var     of variable                   (*        @x  x *)
 
 (* Functional types *)
 
@@ -616,7 +626,7 @@ and expr =
 | E_Sub        of minus bin_op reg      (* a - b                *)
 | E_Tuple      of expr tuple            (* (1, x)               *)
 | E_Typed      of typed_expr par reg    (* (x : int)            *)
-| E_Var        of variable              (* x                    *)
+| E_Var        of variable              (* x  @x                *)
 | E_Variant    of expr ctor_call reg    (* `Foo(Incr(x))        *)
 | E_Verbatim   of verbatim_literal      (* {|foo|}              *)
 
@@ -795,6 +805,9 @@ and lambda_expr = {
 
 (* PROJECTING REGIONS *)
 
+let variable_to_region = function
+  Var w | Esc w -> w#region
+
 (* IMPORTANT: In the following function definition, the data
    constructors are sorted alphabetically. If you add or modify some,
    please make sure they remain in order. *)
@@ -810,7 +823,7 @@ let rec type_expr_to_region = function
 | T_String  t -> t#region
 | T_Sum     {region; _}
 | T_Tuple   {region; _} -> region
-| T_Var     t -> t#region
+| T_Var     t -> variable_to_region t
 
 (* IMPORTANT: In the following function definition, the data
    constructors are sorted alphabetically. If you add or modify some,
@@ -863,7 +876,7 @@ let rec expr_to_region = function
 | E_Sub        {region; _}
 | E_Tuple      {region; _}
 | E_Typed      {region; _} -> region
-| E_Var        t -> t#region
+| E_Var        t -> variable_to_region t
 | E_Variant    {region; _} -> region
 | E_Verbatim   t -> t#region
 
@@ -885,7 +898,7 @@ let rec pattern_to_region = function
 | P_String   t -> t#region
 | P_Tuple    {region; _}
 | P_Typed    {region; _} -> region
-| P_Var      t -> t#region
+| P_Var      t -> variable_to_region t
 | P_Variant  {region; _} -> region
 | P_Verbatim t -> t#region
 
@@ -903,8 +916,8 @@ let rec declaration_to_region = function
 | D_Directive d -> Directive.to_region d
 
 let selection_to_region = function
-  MemberName name -> name#region
-| Component w -> w#region
+  MemberName n -> variable_to_region n
+| Component  w -> w#region
 
 let qualified_class_to_region = function
   ClassName name -> name#region

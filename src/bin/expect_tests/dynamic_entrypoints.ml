@@ -29,6 +29,35 @@ let%expect_test _ =
                                                          storage -> int].
      We expect two fields "dynamic_entrypoint" and "storage" |}]
 
+let%expect_test _ =
+  run_ligo_bad [ "compile"; "contract"; bad_test "dynamic_entry_wrong_storage.jsligo" ];
+  [%expect
+    {|
+      File "../../test/contracts/negative/dynamic_entry_wrong_storage.jsligo", line 1, character 0 to line 9, character 89:
+        1 | type storage =
+            ^^^^^^^^^^^^^^
+        2 |   {
+            ^^^
+        3 |     storage : int;
+            ^^^^^^^^^^^^^^^^^^
+        4 |     dynamic_entrypoints;
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+        5 |     extra : int
+            ^^^^^^^^^^^^^^^
+        6 |   }
+            ^^^
+        7 |
+  
+        8 | @entry
+            ^^^^^^
+        9 |   const foo = (_u : unit, _storage : storage) : [list<operation>, storage] => failwith ()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  
+       Wrong dynamic entrypoints storage definition record[dynamic_entrypoints -> big_map (nat , bytes) ,
+                                                           extra -> int ,
+                                                           storage -> int].
+       We expect two fields "dynamic_entrypoint" and "storage" |}]
+
 let%expect_test "compile storage with initials (mligo)" =
   run_ligo_good [ "compile"; "storage"; test "dynamic_entrypoints.mligo"; "42" ];
   [%expect
@@ -80,8 +109,8 @@ let%expect_test "dynamic entrypoints test (jsligo)" =
   run_ligo_good [ "run"; "test"; test "dynamic_entrypoints_tests.jsligo" ];
   [%expect
     {|
-  Everything at the top-level was executed.
-  - test_dyn exited with value (). |}]
+    Everything at the top-level was executed.
+    - test_dyn exited with value (). |}]
 
 let%expect_test "opt out dynamic_entrypoints (mligo)" =
   (* Here we expect ONLY TWO ENTRIES (with keys 0 and 2) in the generated big map *)
@@ -99,11 +128,11 @@ let%expect_test "opt out dynamic_entrypoints (jsligo)" =
   run_ligo_good [ "compile"; "storage"; test "opt_out_dynamic_entrypoints.jsligo"; "1" ];
   [%expect
     {|
-  (Pair 1
-        { Elt 0
-              0x050200000029032009310000001d035b0765055f036d035b020000000e03200743035b0001053d036d034200000000 ;
-          Elt 2
-              0x050200000029032009310000001d035b0765055f036d035b020000000e03200743035b0003053d036d034200000000 }) |}]
+    (Pair 1
+          { Elt 0
+                0x050200000029032009310000001d035b0765055f036d035b020000000e03200743035b0001053d036d034200000000 ;
+            Elt 2
+                0x050200000029032009310000001d035b0765055f036d035b020000000e03200743035b0003053d036d034200000000 }) |}]
 
 let%expect_test "opt out (mligo)" =
   run_ligo_bad [ "compile"; "contract"; bad_test "opt_out_dynamic_entrypoints.mligo" ];
@@ -117,3 +146,16 @@ let%expect_test "opt out (mligo)" =
 
   Illegal position for opted out entry.
    Only allowed in contracts "@dyn_entry" top-level declarations right-end side. |}]
+
+let%expect_test "opt out (jsligo)" =
+  run_ligo_bad [ "compile"; "contract"; bad_test "opt_out_dynamic_entrypoints.jsligo" ];
+  [%expect
+    {|
+   File "../../test/contracts/negative/opt_out_dynamic_entrypoints.jsligo", line 9, characters 3-27:
+     8 |   let _i = 1;
+     9 |   (External `OPT_OUT_ENTRY`)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+    10 | }
+ 
+   Illegal position for opted out entry.
+    Only allowed in contracts "@dyn_entry" top-level declarations right-end side. |}]

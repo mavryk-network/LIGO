@@ -36,6 +36,7 @@
   let mk_mutez    = Token.wrap_mutez    Int64.zero
   let mk_ident    = Token.wrap_ident    "ghost_ident"
   let mk_uident   = Token.wrap_uident   "Ghost_uident"
+  let mk_eident   = Token.wrap_eident   "@ghost_eident"
   let mk_attr     = Token.wrap_attr     "ghost_attr" None
 ]
 
@@ -59,6 +60,7 @@
 %token    <(string * Int64.t) Wrap.t> Mutez     "<mutez>"     [@recover.expr mk_mutez     $loc]
 %token                <string Wrap.t> Ident     "<ident>"     [@recover.expr mk_ident     $loc] [@recover.cost 900]
 %token                <string Wrap.t> UIdent    "<uident>"    [@recover.expr mk_uident    $loc]
+%token                <string Wrap.t> EIdent    "<eident>"    [@recover.expr mk_eident   $loc]
 %token            <Attr.t Region.reg> Attr      "[@attr]"     [@recover.expr mk_attr      $loc]
 %token <string Region.reg Region.reg> Lang      "[%lang"      [@recover.expr mk_lang      $loc]
 
@@ -105,7 +107,7 @@
 %token <string Wrap.t> RSHIFT_EQ  ">>=" [@recover.expr Token.wrap_rshift_eq  $loc]
 %token <string Wrap.t> LSHIFT_EQ  "<<=" [@recover.expr Token.wrap_lshift_eq  $loc]
 %token <string Wrap.t> EXP_EQ     "**=" [@recover.expr Token.wrap_exp_eq     $loc]
-%token <string Wrap.t> WILD       "_"   [@recover.expr Token.wrap_wild $loc] [@recover.cost 700]
+%token <string Wrap.t> WILD       "_"   [@recover.expr Token.wrap_wild $loc]
 %token <string Wrap.t> GRAVE      "`"   [@recover.expr Token.wrap_grave      $loc]
 %token <string Wrap.t> BACKSLASH  "\\"  [@recover.expr Token.wrap_backslash  $loc]
 

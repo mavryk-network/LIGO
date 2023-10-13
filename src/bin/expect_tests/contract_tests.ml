@@ -8,6 +8,85 @@ let bad_contract = bad_test
 let () = Ligo_unix.putenv ~key:"TERM" ~data:"dumb"
 
 let%expect_test _ =
+  run_ligo_good [ "run"; "test"; contract "deprecated.mligo" ];
+  [%expect
+    {|
+    File "../../test/contracts/deprecated.mligo", line 5, characters 74-75:
+      4 | module C = struct
+      5 |   [@entry] let foo (() : unit) (m : int) : operation list * int = [], m + f ()
+                                                                                    ^
+      6 | end
+    :
+    Warning: deprecated value.
+    Replace me by...
+    g!
+    mail: foo@bar.com
+
+    File "../../test/contracts/deprecated.mligo", line 8, characters 21-22:
+      7 |
+      8 | let test = Test.log (f ())
+                               ^
+    :
+    Warning: deprecated value.
+    Replace me by...
+    g!
+    mail: foo@bar.com
+
+    1
+    Everything at the top-level was executed.
+    - test exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile"; "contract"; contract "deprecated.mligo"; "-m"; "C" ];
+  [%expect
+    {|
+    File "../../test/contracts/deprecated.mligo", line 5, characters 74-75:
+      4 | module C = struct
+      5 |   [@entry] let foo (() : unit) (m : int) : operation list * int = [], m + f ()
+                                                                                    ^
+      6 | end
+    :
+    Warning: deprecated value.
+    Replace me by...
+    g!
+    mail: foo@bar.com
+
+    { parameter unit ;
+      storage int ;
+      code { CDR ; PUSH int 1 ; ADD ; NIL operation ; PAIR } } |}]
+
+let%expect_test _ =
+  run_ligo_good
+    [ "compile"; "contract"; contract "interfaces.extra.jsligo"; "-m"; "Impl" ];
+  [%expect
+    {|
+    { parameter int ;
+      storage int ;
+      code { UNPAIR ; ADD ; NIL operation ; PAIR } } |}]
+
+let%expect_test _ =
+  run_ligo_good
+    [ "compile"; "expression"; "jsligo"; "_"; "--init-file"; contract "wildcards.jsligo" ];
+  [%expect {| 1 |}]
+
+let%expect_test _ =
+  run_ligo_good
+    [ "compile"
+    ; "expression"
+    ; "jsligo"
+    ; "h2"
+    ; "--init-file"
+    ; contract "wildcard_in_type.jsligo"
+    ];
+  [%expect
+    {|
+    { LAMBDA (pair int int) int { UNPAIR ; ADD } ;
+      DUP 2 ;
+      APPLY ;
+      SWAP ;
+      DROP } |}]
+
+let%expect_test _ =
   run_ligo_good
     [ "compile"
     ; "expression"
@@ -1325,10 +1404,8 @@ let%expect_test _ =
 
 (* using test in compilation *)
 let%expect_test _ =
-  run_ligo_bad [ "compile"; "contract"; bad_contract "compile_test.mligo" ];
-  [%expect
-    {|
-    Invalid usage of a Test primitive: cannot be translated to Michelson. |}]
+  run_ligo_bad [ "compile"; "contract"; bad_contract "compile_test.mligo"; "-m"; "C" ];
+  [%expect {| Invalid usage of a Test primitive: cannot be translated to Michelson. |}]
 
 (* remove unused declarations *)
 let%expect_test _ =
@@ -1676,7 +1753,13 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good
-    [ "compile"; "parameter"; contract "module_contract_simple.mligo"; "Add 999" ];
+    [ "compile"
+    ; "parameter"
+    ; contract "module_contract_simple.mligo"
+    ; "Add 999"
+    ; "-e"
+    ; "main"
+    ];
   [%expect {| (Left 999) |}]
 
 let%expect_test _ =
@@ -1690,7 +1773,13 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good
-    [ "compile"; "parameter"; contract "module_contract_complex.mligo"; "Add 999" ];
+    [ "compile"
+    ; "parameter"
+    ; contract "module_contract_complex.mligo"
+    ; "Add 999"
+    ; "-e"
+    ; "main"
+    ];
   [%expect {| (Left 999) |}]
 
 (* Global constants *)
@@ -1736,6 +1825,8 @@ let%expect_test _ =
     ; "()"
     ; "--constants"
     ; "{ PUSH int 2 ; PUSH int 3 ; DIG 2 ; MUL ; ADD }"
+    ; "-e"
+    ; "main"
     ];
   [%expect {| Unit |}]
 
@@ -1901,7 +1992,7 @@ let%expect_test _ =
     {|
     Invalid file extension for '../../test/contracts/increment.ligo'.
     PascaLIGO is deprecated.
-    Hint: You can enable its support using the --deprecated flag. |}]
+    Hint: You can use LIGO 0.73.0 with the --deprecated flag. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile"; "expression"; "pascaligo"; "1 + 1" ];
@@ -1909,12 +2000,7 @@ let%expect_test _ =
     {|
     Invalid syntax.
     PascaLIGO is deprecated.
-    Hint: You can enable its support using the --deprecated flag. |}]
-
-let%expect_test _ =
-  run_ligo_good [ "compile"; "expression"; "pascaligo"; "1 + 1"; "--deprecated" ];
-  [%expect {|
-    2 |}]
+    Hint: You can use LIGO 0.73.0 with the --deprecated flag. |}]
 
 (* Test compiling a contract with a get_entrypoint_opt to a capitalized entrypoint *)
 let%expect_test _ =
@@ -1939,7 +2025,8 @@ let%expect_test _ =
 
 (* Test compiling parameter in a file which uses test primitives *)
 let%expect_test _ =
-  run_ligo_good [ "compile"; "parameter"; contract "increment_with_test.mligo"; "z.1" ];
+  run_ligo_good
+    [ "compile"; "parameter"; contract "increment_with_test.mligo"; "z.1"; "-e"; "main" ];
   [%expect {| (Left 32) |}]
 
 (* Test compiling storage in a file which uses test primitives *)
@@ -2423,6 +2510,43 @@ let%expect_test _ =
     * "%default" when no entrypoint is used.
     Valid characters in annotation: ('a' .. 'z' | 'A' .. 'Z' | '_' | '.' | '%' | '@' | '0' .. '9'). |}]
 
+(* test compile parameter w.r.t. @entry *)
+let%expect_test _ =
+  run_ligo_good [ "compile"; "parameter"; contract "single.contract.jsligo"; "Poke()" ];
+  [%expect {| Unit |}];
+  run_ligo_good
+    [ "compile"; "parameter"; contract "single.contract.jsligo"; "[]"; "-e"; "poke" ];
+  [%expect {| Unit |}];
+  run_ligo_good
+    [ "compile"
+    ; "parameter"
+    ; contract "single.parameter.jsligo"
+    ; "[]"
+    ; "-e"
+    ; "poke"
+    ; "-m"
+    ; "Contract"
+    ];
+  [%expect {| Unit |}];
+  run_ligo_good
+    [ "compile"
+    ; "parameter"
+    ; contract "single.parameter.jsligo"
+    ; "Poke()"
+    ; "-m"
+    ; "Contract"
+    ];
+  [%expect {| Unit |}];
+  run_ligo_good
+    [ "compile"
+    ; "parameter"
+    ; contract "single.parameter.jsligo"
+    ; "default_parameter"
+    ; "-m"
+    ; "Contract"
+    ];
+  [%expect {| Unit |}]
+
 (* make sure that in compile storage we annotate the type *)
 let%expect_test _ =
   run_ligo_good
@@ -2436,7 +2560,13 @@ let%expect_test _ =
 (* make sure that in compile parameter we annotate the type *)
 let%expect_test _ =
   run_ligo_good
-    [ "compile"; "parameter"; contract "annotated_storage_and_parameter.mligo"; "[]" ];
+    [ "compile"
+    ; "parameter"
+    ; contract "annotated_storage_and_parameter.mligo"
+    ; "[]"
+    ; "-e"
+    ; "main"
+    ];
   [%expect {| {} |}]
 
 (* make sure that in compile parameter we do not allow polymorphic type *)
@@ -2580,9 +2710,11 @@ let%expect_test _ =
     [ "compile"
     ; "parameter"
     ; contract "entrypoint_in_module.mligo"
-    ; "Increment 32"
+    ; "32"
     ; "-m"
     ; "C"
+    ; "-e"
+    ; "increment"
     ];
   [%expect {| (Left 32) |}]
 
@@ -2653,8 +2785,8 @@ let%expect_test _ =
 
       7 | @entry
           ^^^^^^
-      8 | const unique = (_ : organization, _ : storage) => {
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      8 | const unique = (_p : organization, _s : storage) => {
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       9 |     return failwith("You need to be part of Tezos organization to activate an organization");
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      10 | };
@@ -3079,7 +3211,8 @@ let%expect_test _ =
     - test_increment exited with value (). |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile"; "contract"; contract "reverse_string_for_loop.jsligo" ];
+  run_ligo_good
+    [ "compile"; "contract"; contract "reverse_string_for_loop.jsligo"; "-m"; "C" ];
   [%expect
     {|
     { parameter unit ;

@@ -50,7 +50,6 @@ debugger-danger-instant-checks:
     - nix develop ./tools/debugger#ci -c danger --fail-on-errors=true
         --dangerfile=./danger/instant-checks.rb
         --danger_id=instant
-  allow_failure: true
 
 debugger-danger-hlint:
   stage: tools-precheck
@@ -79,6 +78,7 @@ debugger-build:
   rules: &debugger_mr_dev
     - !reference [.debugger_mr_changes]
     - !reference [.dev]
+    - !reference [.vscode_production]
   needs: []
   script:
     - nix build $FLAKE_FLAGS ./tools/debugger#packages.x86_64-linux.ligo-debugger
@@ -118,6 +118,7 @@ debugger-test-static-debugger-binary:
   stage: tools-check
   rules: *debugger_mr_dev
   needs: [debugger-build]
+  allow_failure: true
   script:
     - nix build $FLAKE_FLAGS ./tools/debugger#ligo-debugger-static
     # 'ldd' returns non-zero exit code when binary is not dynamically linked, so || true is needed
@@ -128,7 +129,7 @@ debugger-test-ligo-minimal-supported:
   stage: push
   rules:
     - !reference [.vscode_production]
-  needs: []
+  needs: [debugger-build]
   when: manual
   variables:
     LIGO_VERSION_FILE: "./tools/debugger/ligo-debugger/src/resources/versions/minimal-supported"

@@ -29,7 +29,9 @@ module Of_Ast_typed = struct
     List.fold sig_.sig_items ~init:bindings ~f:(fun bindings -> function
       | S_value (v, t, _) -> add_bindings bindings [ v, t ]
       | S_type _ -> bindings
-      | S_module (_, sig_) -> extract_binding_types_from_signature bindings sig_)
+      | S_type_var _ -> bindings
+      | S_module (_, sig_) -> extract_binding_types_from_signature bindings sig_
+      | S_module_type _ -> failwith "TODO")
 
 
   let rec extract_binding_types : t -> Ast_typed.declaration_content -> t =
@@ -113,6 +115,7 @@ module Of_Ast_typed = struct
         List.fold_left ds ~init:prev ~f:(fun prev d ->
             extract_binding_types prev d.wrap_content))
     | D_module_include _ -> prev (* TODO *)
+    | D_signature _ -> prev (* TODO *)
 end
 
 module Of_Ast_core = struct
@@ -299,6 +302,13 @@ module Typing_env = struct
     in
     Result.(
       match typed_prg with
+      (* FIXME: [Checking.type_declaration] ignores the [Ast_typed.Signature.item list]
+         that is type-checked along with the [Ast_typed.declaration list]. We are probably
+         not handling signatures in scopes. This case below is possible if a contract
+         contains just a signature. *)
+      | Ok ([], ws) ->
+        let () = List.iter ws ~f:raise.warning in
+        tenv
       | Ok (decl, ws) ->
         assert (List.length decl = 1);
         let decl = List.hd_exn decl in

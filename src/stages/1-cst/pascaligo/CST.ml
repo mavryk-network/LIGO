@@ -4,27 +4,33 @@
 
 [@@@warning "-30"] (* multiply-defined record labels *)
 
+module Types = Cst_shared.Types
+
 (* Vendor dependencies *)
 
-module Directive = Preprocessor.Directive
-module Utils     = Simple_utils.Utils
-module Region    = Simple_utils.Region
+module Directive = Types.Directive
+module Utils     = Types.Utils
+module Region    = Types.Region
 
 (* Local dependencies *)
 
-module Wrap = Lexing_shared.Wrap
-module Attr = Lexing_shared.Attr
+module Wrap = Types.Wrap
+module Attr = Types.Attr
 
 (* Utilities *)
 
-type 'a reg = 'a Region.reg
-type 'payload wrap = 'payload Wrap.t
+type 'a reg = 'a Types.reg
+type 'payload wrap = 'payload Types.wrap
 
 open Utils
 
-type lexeme = string
+(* Lexemes *)
+
+type lexeme = Types.lexeme
 
 (* Keywords of PascaLIGO *)
+
+open Types
 
 (* IMPORTANT: The types are sorted alphabetically. If you add or
    modify some, please make sure they remain in order. *)
@@ -109,15 +115,19 @@ type eof = lexeme wrap
 
 (* Literals *)
 
-type variable    = lexeme wrap
-type type_param  = lexeme wrap
-type type_name   = lexeme wrap
-type type_var    = lexeme wrap
-type module_name = lexeme wrap
-type field_name  = lexeme wrap
-type ctor        = lexeme wrap
+type variable =
+  Var of lexeme wrap (* foo  *)
+| Esc of lexeme wrap (* @foo without the @ *)
 
+type type_param  = variable
+type type_name   = variable
+type type_var    = variable
+type field_name  = variable
+
+type module_name = lexeme wrap
+type ctor        = lexeme wrap
 type attribute   = Attr.t wrap
+type collection  = lexeme wrap
 type language    = lexeme Region.reg wrap
 
 type string_literal   = lexeme wrap
@@ -264,7 +274,7 @@ and type_expr =
 | T_Record  of field_decl reg compound reg (* record [a; [@a1] b : t] *)
 | T_String  of string_literal                      (*           "foo" *)
 | T_Sum     of sum_type reg                        (* [@a] A | B of t *)
-| T_Var     of type_var                            (*               t *)
+| T_Var     of type_var                            (*           @t  t *)
 
 (* Application of type constructors *)
 
@@ -295,9 +305,9 @@ and 'a compound = {
 (* Record types *)
 
 and field_decl = {
+  attributes : attribute list;
   field_name : field_name;
   field_type : type_annotation option; (* Type punning if [None] *)
-  attributes : attribute list
 }
 
 (* Sum types *)
@@ -308,9 +318,9 @@ and sum_type = {
 }
 
 and variant = {
+  attributes : attribute list;
   ctor       : ctor;
   ctor_args  : (kwd_of * type_expr) option;
-  attributes : attribute list
 }
 
 (* STATEMENTS *)
@@ -503,7 +513,7 @@ and pattern =
 | P_String   of string_literal                       (*   "string" *)
 | P_Tuple    of pattern tuple                        (*     (1, x) *)
 | P_Typed    of typed_pattern reg                    (*  (x : int) *)
-| P_Var      of variable                             (*          x *)
+| P_Var      of variable                             (*     @x   x *)
 | P_Verbatim of verbatim_literal                     (*    {|foo|} *)
 
 (* Record pattern *)
@@ -519,15 +529,15 @@ and ('lhs, 'rhs) field =
 | Complete of ('lhs, 'rhs) full_field
 
 and 'lhs punned = {
+  attributes : attribute list;
   pun        : 'lhs;
-  attributes : attribute list
 }
 
 and ('lhs, 'rhs) full_field = {
+  attributes : attribute list;
   field_lhs  : 'lhs;
   field_lens : field_lens;
   field_rhs  : 'rhs;
-  attributes : attribute list
 }
 
 and field_lens =
@@ -595,7 +605,7 @@ and expr =
 | E_Tuple     of expr tuple                     (* (1, x)          *)
 | E_Typed     of typed_expr par reg             (* (x : int)       *)
 | E_Update    of update reg                     (* x with y        *)
-| E_Var       of variable                       (* x               *)
+| E_Var       of variable                       (* x  @x           *)
 | E_Verbatim  of verbatim_literal               (* {|foo|}         *)
 
 (* Map binding *)
@@ -629,8 +639,8 @@ and selection =
 (* Binary and unary arithmetic operators *)
 
 and 'a bin_op = {
-  op   : 'a;
   arg1 : expr;
+  op   : 'a;
   arg2 : expr
 }
 
@@ -693,6 +703,9 @@ and update = {
 
 (* PROJECTING REGIONS *)
 
+let variable_to_region = function
+  Var w | Esc w -> w#region
+
 (* IMPORTANT: In the following function definition, the data
    constructors are sorted alphabetically. If you add or modify some,
    please make sure they remain in order. *)
@@ -708,7 +721,7 @@ let rec type_expr_to_region = function
 | T_Record  {region; _} -> region
 | T_String  t -> t#region
 | T_Sum     {region; _} -> region
-| T_Var     t -> t#region
+| T_Var     t -> variable_to_region t
 
 (* IMPORTANT: In the following function definition, the data
    constructors are sorted alphabetically. If you add or modify some,
@@ -759,7 +772,7 @@ let rec expr_to_region = function
 | E_Tuple     {region; _}
 | E_Typed     {region; _}
 | E_Update    {region; _} -> region
-| E_Var       t
+| E_Var       t -> variable_to_region t
 | E_Verbatim  t -> t#region
 
 and module_expr_to_region = function
@@ -805,27 +818,27 @@ let test_clause_to_region = function
    please make sure they remain in order. *)
 
 let rec pattern_to_region = function
-  P_App     {region; _} -> region
-| P_Attr    (_,p) -> pattern_to_region p
-| P_Bytes   t -> t#region
-| P_Cons    {region; _} -> region
-| P_Ctor    t -> t#region
-| P_Int     t -> t#region
-| P_List    {region; _}
-| P_ModPath {region; _} -> region
-| P_Mutez   t -> t#region
-| P_Nat     t -> t#region
-| P_Nil     t -> t#region
-| P_Par     {region; _}
-| P_Record  {region; _} -> region
-| P_String  t -> t#region
-| P_Tuple   {region; _}
-| P_Typed   {region; _} -> region
-| P_Var     t
+  P_App      {region; _} -> region
+| P_Attr     (_,p) -> pattern_to_region p
+| P_Bytes    t -> t#region
+| P_Cons     {region; _} -> region
+| P_Ctor     t -> t#region
+| P_Int      t -> t#region
+| P_List     {region; _}
+| P_ModPath  {region; _} -> region
+| P_Mutez    t -> t#region
+| P_Nat      t -> t#region
+| P_Nil      t -> t#region
+| P_Par      {region; _}
+| P_Record   {region; _} -> region
+| P_String   t -> t#region
+| P_Tuple    {region; _}
+| P_Typed    {region; _} -> region
+| P_Var      t -> variable_to_region t
 | P_Verbatim t -> t#region
 
 let selection_to_region = function
-  FieldName name -> name#region
+  FieldName n -> variable_to_region n
 | Component w -> w#region
 
 let field_lens_to_region = function

@@ -45,12 +45,6 @@ let mk_mod_path :
     and value = {namespace_path; selector=last_dot; property}
     in {value; region}
 
-let mk_app ctor = function
-  None                       -> `Sep (ctor, [])
-| Some (comma, None)         -> `Term ((ctor, comma), [])
-| Some (comma, Some `Sep s)  -> `Sep (Utils.nsepseq_cons ctor comma s)
-| Some (comma, Some `Term s) -> `Term (Utils.nseq_cons (ctor, comma) s)
-
 (* END HEADER *)
 %}
 
@@ -59,6 +53,8 @@ let mk_app ctor = function
 (* Reductions on error *)
 
 %on_error_reduce
+  ctor
+  ctor_app_pattern
   chevrons(sep_or_term(type_var,COMMA))
   type_name
   namespace_selection
@@ -196,38 +192,44 @@ nsepseq(item,sep):
    [sep], and optionally terminated by [sep]. *)
 
 nsep_or_term(item,sep):
-  nsepseq(item,sep)      { `Sep  $1 }
-| nseq(item sep {$1,$2}) { `Term $1 }
+  nsepseq (item, sep)       { `Sep  $1 }
+| nseq (item sep { $1,$2 }) { `Term $1 }
 
 (* The rule [sep_or_term(item,sep)] ("separated or terminated list")
    parses a list of items separated by [sep], and optionally
    terminated by [sep]. *)
 
 sep_or_term(item,sep):
-  ioption(nsep_or_term(item,sep)) { $1 }
+  ioption (nsep_or_term (item, sep)) { $1 }
 
 (* The rule [nsep_or_pref(item,sep)] ("non-empty separated or prefixed
    list") parses a non-empty list of items separated by [sep], and
    optionally prefixed by [sep]. *)
 
 nsep_or_pref(item,sep):
-  nsepseq(item,sep)      { `Sep  $1 }
-| nseq(sep item {$1,$2}) { `Pref $1 }
+  nsepseq (item, sep)     { `Sep  $1 }
+| nseq (sep item {$1,$2}) { `Pref $1 }
 
 (* Helpers *)
 
 %inline
-variable       : "<ident>"              { $1 }
-fun_name       : "<ident>" | "<uident>" { $1 }
-type_var       : "<ident>" | "<uident>" { $1 }
-type_name      : "<ident>" | "<uident>" { $1 }
-type_ctor      : "<ident>" | "<uident>" { $1 }
-property_name  : "<ident>" | "<uident>" { $1 }
-lang_name      : "<ident>" | "<uident>" { $1 }
-namespace_name : "<uident>"             { $1 }
-intf_name      : "<uident>"             { $1 }
-file_path      : "<string>"             { $1 }
-ctor           : "<uident>"             { $1 }
+variable:
+  "_" | "<ident>" { Var $1 }
+| "<eident>"      { Esc $1 }
+
+fun_name      : variable { $1 } | "<uident>" { Var $1 }
+type_var      : variable { $1 } | "<uident>" { Var $1 }
+type_name     : variable { $1 } | "<uident>" { Var $1 }
+type_ctor     : variable { $1 } | "<uident>" { Var $1 }
+property_name : variable { $1 } | "<uident>" { Var $1 }
+
+lang_name : "<ident>" | "<uident>" { $1 }
+
+file_path : "<string>" { $1 }
+ctor      : "<uident>" { $1 }
+
+namespace_name : "<uident>" { $1 }
+interface_name : "<uident>" { $1 }
 
 (* ENTRY POINTS *)
 
@@ -248,7 +250,7 @@ fun_decl:
   "function" fun_name ioption(type_vars)
   ES6FUN? par(fun_params) ioption(ret_type) braces(statements) {
     let region = cover $1#region $7.region
-    and value  = {kwd_function=$1; fun_name=$2; type_vars=$3;
+    and value  = {kwd_function=$1; fun_name=$2; generics=$3;
                   parameters=$5; rhs_type=$6; fun_body=$7}
     in D_Fun {value; region} }
 
@@ -267,7 +269,7 @@ fun_param:
 | param_pattern { $1 }
 
 param_pattern:
-  "_" | variable                 { P_Var    $1 }
+  variable                       { P_Var    $1 }
 | array (param_pattern)          { P_Array  $1 }
 | object_pattern (param_pattern) { P_Object $1 }
 
@@ -291,11 +293,11 @@ bindings:
 val_binding:
   pattern ioption(binding_type) "=" expr {
     let region = cover (pattern_to_region $1) (expr_to_region $4) in
-    let type_vars, rhs_type =
+    let generics, rhs_type =
       match $2 with
         None -> None, None
       | Some (colon, (tv_opt, te)) -> tv_opt, Some (colon, te) in
-    let value = {pattern=$1; type_vars; rhs_type; eq=$3; rhs_expr=$4}
+    let value = {pattern=$1; generics; rhs_type; eq=$3; rhs_expr=$4}
     in {region; value} }
 
 binding_type:
@@ -339,23 +341,23 @@ namespace_path (selected):
 (* Interface declaration *)
 
 interface_decl:
-  "interface" intf_name intf_body {
+  "interface" interface_name interface_body {
     let region = cover $1#region $3.region
     and value  = {kwd_interface=$1; intf_name=$2; intf_body=$3}
     in D_Interface {region; value} }
 
-intf_body:
-  braces(intf_entries) { $1 }
+interface_body:
+  braces(interface_entries) { $1 }
 
-intf_entries:
-  sep_or_term(intf_entry,";") { $1 }
+interface_entries:
+  sep_or_term (interface_entry, ";") { $1 }
 
-intf_entry:
-  "[@attr]" intf_entry { I_Attr  ($1,$2) }
-| intf_type            { I_Type       $1 }
-| intf_const           { I_Const      $1 }
+interface_entry:
+  "[@attr]" interface_entry { I_Attr  ($1,$2) }
+| interface_type            { I_Type       $1 }
+| interface_const           { I_Const      $1 }
 
-intf_type:
+interface_type:
   "type" type_name "=" type_expr {
     let value  = {kwd_type=$1; type_name=$2; type_rhs = Some ($3,$4)}
     and stop   = type_expr_to_region $4 in
@@ -364,10 +366,10 @@ intf_type:
   }
 | "type" type_name {
     let value  = {kwd_type=$1; type_name=$2; type_rhs=None}
-    and region = cover $1#region $2#region
+    and region = cover $1#region (variable_to_region $2)
     in {region; value} }
 
-intf_const:
+interface_const:
   "const" variable type_annotation(type_expr) {
     let region = cover $1#region (type_expr_to_region (snd $3))
     and value  = {kwd_const=$1; const_name=$2; const_type=$3}
@@ -386,24 +388,21 @@ namespace_binder:
   namespace_name | "_" { $1 }
 
 interface:
-  "implements" intf_expr {
+  "implements" interface_expr {
      let region = cover $1#region (intf_expr_to_region $2)
      in {region; value=($1,$2)} }
 
-intf_expr:
-  intf_body           { I_Body $1 }
+interface_expr:
+  interface_body      { I_Body $1 }
 | namespace_selection { I_Path $1 }
 
 (* Type declaration *)
 
 type_decl:
-  "type" type_binder ioption(type_vars) "=" type_expr {
+  "type" type_name ioption(type_vars) "=" type_expr {
     let region = cover $1#region (type_expr_to_region $5)
-    and value  = {kwd_type=$1; name=$2; type_vars=$3; eq=$4; type_expr=$5}
+    and value  = {kwd_type=$1; name=$2; generics=$3; eq=$4; type_expr=$5}
     in D_Type {region; value} }
-
-type_binder:
-  type_name | "_" { $1 }
 
 (* TYPE EXPRESSIONS *)
 
@@ -418,51 +417,60 @@ fun_type:
     in T_Fun {region; value=($2,$3,$4)} }
 
 fun_type_params:
-  par(sep_or_term(fun_type_param,",")) { $1 }
+  par (sep_or_term (fun_type_param, ",")) { $1 }
 
 fun_type_param:
   variable type_annotation(type_expr) {
-    let region = cover $1#region (type_expr_to_region (snd $2))
+    let start  = variable_to_region $1 in
+    let region = cover start (type_expr_to_region (snd $2))
     in {region; value = (P_Var $1, $2)} }
 
 (* Variant types *)
 
 variant_type:
-  nsepseq(variant,"|") {
-    let region = nsepseq_to_region (fun x -> x.tuple.region) $1
+  nsepseq (variant, "|") {
+    let region = nsepseq_to_region variant_kind_to_region $1
     in T_Variant {region; value = `Sep $1}
   }
 | attr_variant { $1 }
 
 attr_variant:
-  nseq("|" variant { $1,$2 }) {
-    let region = nseq_to_region (fun (_,v) -> v.tuple.region) $1
+  nseq ("|" variant {$1,$2}) {
+    let region = nseq_to_region (variant_kind_to_region <@ snd) $1
     in T_Variant {region; value = `Pref $1}
   }
 | "[@attr]" attr_variant { T_Attr ($1,$2) }
 
 variant:
-  "[@attr]" variant  {
-    {$2 with attributes = $1::$2.attributes} }
+  "[@attr]" variant {
+    let region = cover $1#region (variant_kind_to_region $2) in
+    match $2 with
+      Variant   v -> Variant   {region; value={v.value with attributes=$1::v.value.attributes}}
+    | Bracketed v -> Bracketed {region; value={v.value with attributes=$1::v.value.attributes}}
+    | Legacy    v -> Legacy    {region; value={v.value with attributes=$1::v.value.attributes}}
+  }
 | "#" brackets(bracketed_variant) {
     let region = cover $1#region $2.region
-    and value  = Some $1, MultArg $2
-    in {attributes=[]; tuple = {region; value}} }
+    and value  = {attributes=[]; sharp=$1; tuple=$2}
+    in Bracketed {region; value}
+  }
 | "#" "<string>" {
     let region = cover $1#region $2#region
-    and value  = Some $1, ZeroArg (T_String $2)
-    in {attributes=[]; tuple = {region; value}} }
-| brackets (legacy_variant) {
+    and value  = ({attributes=[]; tuple=Some $1, ZeroArg (CtorStr $2)} : type_expr variant)
+    in Variant {region; value}
+  }
+| brackets(legacy_variant) {
     let region = $1.region
-    and value  = None, MultArg $1
-    in {attributes=[]; tuple = {region; value}} }
+    and value  = {attributes=[]; tuple=$1}
+    in Legacy {region; value}
+  }
 
 %inline
 legacy_variant:
   "<string>" "," legacy_ctor_params {
-    `Sep (Utils.nsepseq_cons (T_String $1) $2 $3)
+    let hd, tl = $3 in {ctor=$1; args=($2,hd)::tl}
   }
-| "<string>" { `Sep (T_String $1, []) }
+| "<string>" { {ctor=$1; args=[]} }
 
 legacy_ctor_params:
   nsepseq (legacy_ctor_param,",") { $1 }
@@ -471,7 +479,7 @@ legacy_ctor_param:
   type_expr { $1 }
 
 bracketed_variant:
-  "<string>" ctor_arguments(type_expr)? { mk_app (T_String $1) $2 }
+  "<string>" ctor_arguments(type_expr)? { {ctor=T_String $1; args=$2} }
 
 ctor_arguments (kind):
   "," sep_or_term(ctor_arg(kind),",") { $1,$2 }
@@ -495,14 +503,14 @@ core_type_no_string:
 | no_par_type_expr {          $1 }
 
 no_par_type_expr:
-  "<int>"             { T_Int         $1 }
-| "_" | type_name     { T_Var         $1 }
-| type_ctor_app       { T_App         $1 }
-| array_type          { T_Array       $1 }
-| parameter_of_type   { T_ParameterOf $1 }
+  "<int>"           { T_Int         $1 }
+| type_name         { T_Var         $1 }
+| type_ctor_app     { T_App         $1 }
+| array_type        { T_Array       $1 }
+| parameter_of_type { T_ParameterOf $1 }
 | attr_type
 | qualified_type
-| union_or_object     { $1 }
+| union_or_object   { $1 }
 
 (* Decorated core type *)
 
@@ -513,7 +521,7 @@ attr_type:
 
 type_ctor_app:
   type_ctor type_ctor_args {
-    let region = cover $1#region $2.region
+    let region = cover (variable_to_region $1) $2.region
     in {region; value = (T_Var $1, $2)} }
 
 type_ctor_args:
@@ -765,7 +773,7 @@ assign_expr:
 var_path:
   path (object_or_array) | object_or_array { $1 }
 
-object_or_array : "<ident>" { E_Var  $1 }
+object_or_array: variable { E_Var $1 }
 
 path (root_expr):
   root_expr nseq(selection) {
@@ -959,22 +967,22 @@ arrow_fun_expr:
                    None -> parameters_to_region $3
                  | Some {region; _} -> region in
     let region = cover start (fun_body_to_region $6)
-    and value  = {type_vars=$1; parameters=$3;
+    and value  = {generics=$1; parameters=$3;
                   rhs_type=$4; arrow=$5; fun_body=$6}
     in {region; value} }
-| ioption(type_vars) ES6FUN fun_var_param "=>" fun_body {
+| ioption(type_vars) ES6FUN variable "=>" fun_body {
     let start  = match $1 with
-                   None -> $3#region
+                   None -> variable_to_region $3
                  | Some {region; _} -> region in
     let region = cover start (fun_body_to_region $5)
-    and value  = {type_vars=$1; parameters = NakedParam (P_Var $3);
+    and value  = {generics=$1; parameters = NakedParam (P_Var $3);
                   rhs_type=None; arrow=$4; fun_body=$5}
     in {region; value} }
 
 function_expr:
   "function" ioption(type_vars) fun_par_params ioption(ret_type) braces(statements) {
     let region = cover $1#region $5.region
-    and value  = {kwd_function=$1; type_vars=$2; parameters=$3;
+    and value  = {kwd_function=$1; generics=$2; parameters=$3;
                   rhs_type=$4; fun_body = StmtBody $5}
     in {region; value} }
 
@@ -983,9 +991,6 @@ ret_type:
 
 fun_par_params:
   par (fun_params) { ParParams $1 }
-
-fun_var_param:
-  variable | "_" { $1 }
 
 fun_body:
   braces (statements) { StmtBody $1 }
@@ -1079,7 +1084,7 @@ comp_expr_level:
 | bin_op (comp_expr_level, "<=", add_expr_level) { E_Leq   $1 }
 | bin_op (comp_expr_level,   gt, add_expr_level) { E_Gt    $1 }
 | bin_op (comp_expr_level,   ge, add_expr_level) { E_Geq   $1 }
-| bin_op (comp_expr_level, gt2,  add_expr_level) { E_BitSr $1 } (* Due to LR conflict *)
+| bin_op (comp_expr_level,  gt2, add_expr_level) { E_BitSr $1 } (* Due to LR conflict *)
 | eq_expr_level                                  {         $1 }
 
 eq_expr_level:
@@ -1133,13 +1138,13 @@ incr_expr:
 
 pre_incr_expr:
   "++" variable {
-    let region = cover $1#region $2#region
+    let region = cover $1#region (variable_to_region $2)
     and value  = {op=$1; arg = E_Var $2}
     in E_PreIncr {region; value} }
 
 post_incr_expr:
   variable "++" {
-    let region = cover $1#region $2#region
+    let region = cover (variable_to_region $1) $2#region
     and value  = {op=$2; arg = E_Var $1}
     in E_PostIncr {region; value} }
 
@@ -1148,13 +1153,13 @@ decr_expr:
 
 pre_decr_expr:
   "--" variable {
-    let region = cover $1#region $2#region
+    let region = cover $1#region (variable_to_region $2)
     and value  = {op=$1; arg = E_Var $2}
     in E_PreDecr {region; value} }
 
 post_decr_expr:
   variable "--" {
-    let region = cover $1#region $2#region
+    let region = cover (variable_to_region $1) $2#region
     and value  = {op=$2; arg = E_Var $1}
     in E_PostDecr {region; value} }
 
@@ -1190,17 +1195,18 @@ argument:
 ctor_app_expr:
   "#" brackets(bracketed_ctor_app_expr) {
     let region = cover $1#region $2.region
-    and value  = Some $1, MultArg $2
-    in {region; value}
+    and value  = {attributes=[]; sharp=$1; tuple=$2}
+    in Bracketed {region; value}
   }
 | "#" "<string>" {
    let region = cover $1#region $2#region in
-   let value  = Some $1, ZeroArg (E_String $2)
-   in {region; value}
+   let value  = ({attributes=[]; tuple=Some $1, ZeroArg (CtorStr $2)} : expr variant)
+   in Variant {region; value}
   }
 | ctor ctor_app_expr_args {
-   let region, app = $2 (E_String $1) in
-   {region; value = None, app} }
+   let region_app, app = $2 (CtorName $1) in
+   let region = cover $1#region region_app in
+   Variant {region; value = {attributes=[]; tuple=None, app}} }
 
 ctor_app_expr_args:
   par (ioption (nsepseq (expr, ","))) {
@@ -1210,15 +1216,14 @@ ctor_app_expr_args:
       match inside with
         None -> region, ZeroArg ctor
       | Some seq ->
-          let lbracket = Token.wrap_lbracket lpar#region
-          and rbracket = Token.wrap_rbracket rpar#region
-          and comma    = Token.ghost_comma in
-          let inside   = `Sep (Utils.nsepseq_cons ctor comma seq) in
-          let value    = {lbracket; inside; rbracket}
-          in region, MultArg {region; value} }
+          let lpar   = Token.wrap_lpar lpar#region
+          and rpar   = Token.wrap_rpar rpar#region in
+          let inside = `Sep seq in
+          let value  = {lpar; inside; rpar}
+          in region, MultArg (ctor, {region; value}) }
 
 bracketed_ctor_app_expr:
-  ctor_expr ctor_arguments(expr)? { mk_app $1 $2 }
+  ctor_expr ctor_arguments(expr)? { {ctor=$1; args=$2} }
 
 ctor_expr:
   "<string>" { E_String $1 }
@@ -1330,7 +1335,7 @@ selected_expr:
 
 pattern:
   "[@attr]" pattern        { P_Attr ($1,$2) }
-| "_" | variable           { P_Var       $1 }
+| variable                 { P_Var       $1 }
 | object_pattern (pattern) { P_Object    $1 }
 | array (pattern)          { P_Array     $1 }
 | ctor_app_pattern         { P_CtorApp   $1 }
@@ -1353,20 +1358,22 @@ pattern_in_namespace (pattern):
 ctor_app_pattern:
   "#" brackets(bracketed_ctor_app_pattern) {
     let region = cover $1#region $2.region
-    and value  = Some $1, MultArg $2
-    in {region; value}
+    and value  = {attributes=[]; sharp=$1; tuple=$2}
+    in Bracketed {region; value}
   }
 | "#" "<string>" {
     let region = cover $1#region $2#region in
-    let value  = Some $1, ZeroArg (P_String $2)
-    in {region; value}
+    let value  = ({attributes=[]; tuple=Some $1, ZeroArg (CtorStr $2)} : pattern variant)
+    in Variant {region; value}
   }
 | ctor ctor_app_pattern_args {
-   let region, app = $2 (P_String $1) in
-   {region; value = None, app}
+    let region_app, app = $2 (CtorName $1) in
+    let region = cover $1#region region_app in
+    Variant {region; value = {attributes=[]; tuple=None, app}}
   }
 | ctor {
-   {region = $1#region; value = None, ZeroArg (P_String $1)} }
+    Variant {region = $1#region; value = {attributes=[]; tuple=None, ZeroArg (CtorName $1)}}
+  }
 
 ctor_app_pattern_args:
   par (ioption (nsepseq (pattern, ","))) {
@@ -1376,15 +1383,14 @@ ctor_app_pattern_args:
       match inside with
         None -> region, ZeroArg ctor
       | Some seq ->
-          let lbracket = Token.wrap_lbracket lpar#region
-          and rbracket = Token.wrap_rbracket rpar#region
-          and comma    = Token.ghost_comma in
-          let inside   = `Sep (Utils.nsepseq_cons ctor comma seq) in
-          let value    = {lbracket; inside; rbracket}
-          in region, MultArg {region; value} }
+          let lpar   = Token.wrap_lpar lpar#region
+          and rpar   = Token.wrap_rpar rpar#region in
+          let inside = `Sep seq in
+          let value  = {lpar; inside; rpar}
+          in region, MultArg (ctor, {region; value}) }
 
 bracketed_ctor_app_pattern:
-   ctor_pattern ctor_arguments(pattern)? { mk_app $1 $2 }
+   ctor_pattern ctor_arguments(pattern)? { {ctor=$1; args=$2} }
 
 ctor_pattern:
   "<string>" { P_String $1 }

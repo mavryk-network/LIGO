@@ -7,10 +7,10 @@ module I = Cst.Jsligo
 
 let ghost : string I.wrap = I.Wrap.ghost ""
 
-let sep_or_term_to_nelist : ('a, _) Utils.sep_or_term -> 'a List.Ne.t option =
+let sep_or_term_to_nelist : ('a, 'b) Utils.sep_or_term -> 'a List.Ne.t option =
   Option.map ~f:(function
       | `Sep x -> nsepseq_to_nseq x
-      | `Term x -> nseq_map snd x)
+      | `Term x -> nseq_map fst x)
 
 
 let nsep_or_term_to_nelist : ('a, 'b) Utils.nsep_or_term -> 'a List.Ne.t = function
@@ -72,9 +72,24 @@ module TODO_do_in_parsing = struct
     | _ -> O.Test_clause.ClauseBlock (single_stmt_block x)
 
 
+  let get_var = function
+    | I.Var v | I.Esc v -> v
+
+
   let mvar x = Ligo_prim.Module_var.of_input_var ~loc:(Location.File x#region) x#payload
   let var x = Ligo_prim.Value_var.of_input_var ~loc:(Location.File x#region) x#payload
+
+  let esc_var x =
+    let x = get_var x in
+    Ligo_prim.Value_var.of_input_var ~loc:(Location.File x#region) x#payload
+
+
   let tvar x = Ligo_prim.Type_var.of_input_var ~loc:(Location.File x#region) x#payload
+
+  let esc_tvar x =
+    let x = get_var x in
+    Ligo_prim.Type_var.of_input_var ~loc:(Location.File x#region) x#payload
+
 
   let selection_path (t : I.namespace_selection) =
     match t with
@@ -124,12 +139,12 @@ let rec expr : Eq.expr -> Folding.expr =
     let I.{ op = _; arg } = r_fst op in
     O.E_unary_op { operator = Location.wrap ~loc sign; arg }
   in
-  let compile_function (type_vars : I.type_vars option) parameters rhs_type fun_body =
+  let compile_function (type_vars : I.generics option) parameters rhs_type fun_body =
     let type_params =
       let open Simple_utils.Option in
       let* type_vars in
       let* tvs = sep_or_term_to_nelist type_vars.value.inside in
-      return (List.Ne.map TODO_do_in_parsing.tvar tvs)
+      return (List.Ne.map TODO_do_in_parsing.esc_tvar tvs)
     in
     let parameters =
       match parameters with
@@ -147,8 +162,13 @@ let rec expr : Eq.expr -> Folding.expr =
            { type_params; parameters; ret_type; body = body.value.inside }
     | ExprBody body -> return @@ E_poly_fun { type_params; parameters; ret_type; body }
   in
+  let ctor_app_kind_to_expr : I.ctor_app_kind -> I.expr = function
+    | CtorStr ctor -> E_String ctor
+    | CtorName ctor -> E_String ctor
+  in
   match e with
-  | E_Var var -> return @@ O.E_variable (TODO_do_in_parsing.var var)
+  | E_Var (Var var) -> return @@ O.E_variable_esc (Raw (TODO_do_in_parsing.var var))
+  | E_Var (Esc var) -> return @@ O.E_variable_esc (Esc (TODO_do_in_parsing.var var))
   | E_Par par -> expr par.value.inside
   | E_False _ -> return @@ E_constr (Ligo_prim.Label.of_string "False")
   | E_True _ -> return @@ E_constr (Ligo_prim.Label.of_string "True")
@@ -178,11 +198,27 @@ let rec expr : Eq.expr -> Folding.expr =
   | E_App { value = expr, args; _ } ->
     let args = sepseq_to_list args.value.inside in
     return @@ E_call (expr, Location.wrap ~loc @@ args)
-  | E_CtorApp { value = _, ZeroArg ctor; _ } -> return @@ E_ctor_app (ctor, None)
-  | E_CtorApp { value = _, MultArg app; _ } ->
-    let ctor, args = nsep_or_term_to_nelist app.value.inside in
-    let args = List.Ne.of_list_opt args in
-    return @@ E_ctor_app (ctor, args)
+  | E_CtorApp (Variant { value = { attributes = _; tuple }; region = _ }) ->
+    return
+    @@
+    (match tuple with
+    | _sharp, ZeroArg ctor -> E_ctor_app (ctor_app_kind_to_expr ctor, None)
+    | _sharp, MultArg (ctor, args) ->
+      let args = nsep_or_term_to_nelist args.value.inside in
+      E_ctor_app (ctor_app_kind_to_expr ctor, Some args))
+  | E_CtorApp (Bracketed { value = { attributes = _; sharp = _; tuple }; region = _ }) ->
+    let ({ ctor; args } : I.expr I.bracketed_variant_args) = tuple.value.inside in
+    return
+    @@
+    (match args with
+    | None -> E_ctor_app (ctor, None)
+    | Some (_comma, args) ->
+      let args = sep_or_term_to_nelist args in
+      E_ctor_app (ctor, args))
+  | E_CtorApp (Legacy { value = { attributes = _; tuple }; region = _ }) ->
+    let ({ ctor; args } : I.expr I.legacy_variant_args) = tuple.value.inside in
+    let args = List.Ne.of_list_opt @@ List.map ~f:snd args in
+    return @@ E_ctor_app (E_String ctor, args)
   | E_Array { value = items; _ } ->
     let items =
       let translate_array_item : I.expr I.element -> _ AST.Array_repr.item = function
@@ -200,7 +236,7 @@ let rec expr : Eq.expr -> Folding.expr =
       let open O.Object_ in
       let field_id =
         match property_id with
-        | F_Name n -> F_Name (O.Label.of_string n#payload)
+        | F_Name n -> F_Name (O.Label.of_string (TODO_do_in_parsing.get_var n)#payload)
         | F_Int i -> F_Int (snd i#payload)
         | F_Str s -> F_Str s#payload
       in
@@ -215,7 +251,7 @@ let rec expr : Eq.expr -> Folding.expr =
       let open O.Object_ in
       let field_id =
         match property_id with
-        | F_Name n -> F_Name (O.Label.of_string n#payload)
+        | F_Name n -> F_Name (O.Label.of_string (TODO_do_in_parsing.get_var n)#payload)
         | F_Int i -> F_Int (snd i#payload)
         | F_Str s -> F_Str s#payload
       in
@@ -226,7 +262,8 @@ let rec expr : Eq.expr -> Folding.expr =
   | E_Proj { value = { object_or_array; property_path }; _ } ->
     let f : I.selection -> _ O.Selection.t = function
       | I.PropertyStr fstr -> Component_expr I.(E_String fstr.value.inside)
-      | I.PropertyName (_dot, name) -> FieldName (O.Label.of_string name#payload)
+      | I.PropertyName (_dot, name) ->
+        FieldName (O.Label.of_string (TODO_do_in_parsing.get_var name)#payload)
       | Component comp ->
         let comp = (r_fst comp).inside#payload in
         Component_num comp
@@ -245,11 +282,11 @@ let rec expr : Eq.expr -> Folding.expr =
          ; field_as_open = property_as_open
          }
   | E_ArrowFun f ->
-    let I.{ type_vars; parameters; rhs_type; arrow = _; fun_body } = f.value in
-    compile_function type_vars parameters rhs_type fun_body
+    let I.{ generics; parameters; rhs_type; arrow = _; fun_body } = f.value in
+    compile_function generics parameters rhs_type fun_body
   | E_Function f ->
-    let I.{ type_vars; parameters; rhs_type; kwd_function = _; fun_body } = f.value in
-    compile_function type_vars parameters rhs_type fun_body
+    let I.{ generics; parameters; rhs_type; kwd_function = _; fun_body } = f.value in
+    compile_function generics parameters rhs_type fun_body
   | E_Typed a ->
     let e, _, te = a.value in
     return @@ E_annot (e, te)
@@ -398,38 +435,87 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
     return @@ T_prod t
   | T_Variant { value = variants; region } ->
     let variants = nsep_or_pref_to_list variants in
-    let destruct : I.variant -> _ =
-     fun { tuple; attributes } ->
-      let ctor, ctor_params =
-        match snd (r_fst tuple) with
-        | I.ZeroArg ctor -> ctor, None
-        | MultArg args ->
-          let ctor, args = nsep_or_term_to_nelist args.value.inside in
-          let args = List.Ne.of_list_opt args in
-          ctor, args
-      in
-      let ctor =
-        match ctor with
-        | T_String s -> s
-        | _ -> failwith "Expected string from parser."
-      in
-      let ctor_params : (I.type_expr, I.comma) nsep_or_term option =
-        Option.map ~f:(fun x -> `Sep (nsepseq_of_nseq ~sep:ghost x)) ctor_params
-      in
-      let ty =
-        match ctor_params with
-        | None -> None
-        | Some (`Sep (t, [])) | Some (`Term ((t, _), _)) -> Some t
-        | Some ctor_params ->
-          let inside : I.array_type =
-            Region.wrap_ghost
-            @@ I.{ lbracket = ghost; inside = ctor_params; rbracket = ghost }
-          in
-          Some (I.T_Array inside)
-      in
-      ( TODO_do_in_parsing.labelize ctor#payload
-      , ty
-      , TODO_do_in_parsing.conv_attrs attributes )
+    let destruct : I.type_expr I.variant_kind -> _ = function
+      | Variant { value = { tuple; attributes }; region = _ } ->
+        let ctor, ctor_params =
+          match snd tuple with
+          | I.ZeroArg ctor -> ctor, None
+          | MultArg (ctor, args) ->
+            let args = nsep_or_term_to_nelist args.value.inside in
+            ctor, Some args
+        in
+        let ctor =
+          match ctor with
+          | CtorStr s -> s
+          | CtorName s -> s
+        in
+        let ctor_params : (I.type_expr, I.comma) nsep_or_term option =
+          Option.map ~f:(fun x -> `Sep (nsepseq_of_nseq ~sep:ghost x)) ctor_params
+        in
+        let ty =
+          match ctor_params with
+          | None -> None
+          | Some (`Sep (t, []) | `Term ((t, _), _)) -> Some t
+          | Some ctor_params ->
+            let inside : I.array_type =
+              Region.wrap_ghost
+              @@ I.{ lbracket = ghost; inside = ctor_params; rbracket = ghost }
+            in
+            Some (I.T_Array inside)
+        in
+        ( TODO_do_in_parsing.labelize ctor#payload
+        , ty
+        , TODO_do_in_parsing.conv_attrs attributes )
+      | Bracketed { value = { tuple; sharp; attributes }; region = _ } ->
+        let ({ ctor; args } : I.type_expr I.bracketed_variant_args) =
+          tuple.value.inside
+        in
+        let ctor =
+          match ctor with
+          | T_String s -> s
+          | _ -> failwith "Expected string from parser."
+        in
+        let ctor_params =
+          Option.value_map ~default:None ~f:(sep_or_term_to_nelist <@ snd) args
+        in
+        let ctor_params : (I.type_expr, I.comma) nsep_or_term option =
+          Option.map ~f:(fun x -> `Sep (nsepseq_of_nseq ~sep:ghost x)) ctor_params
+        in
+        let ty =
+          match ctor_params with
+          | None -> None
+          | Some (`Sep (t, []) | `Term ((t, _), _)) -> Some t
+          | Some ctor_params ->
+            let inside : I.array_type =
+              Region.wrap_ghost
+              @@ I.{ lbracket = ghost; inside = ctor_params; rbracket = ghost }
+            in
+            Some (I.T_Array inside)
+        in
+        ( TODO_do_in_parsing.labelize ctor#payload
+        , ty
+        , TODO_do_in_parsing.conv_attrs attributes )
+      | Legacy { value = { attributes; tuple }; region } ->
+        let ({ ctor; args } : I.type_expr I.legacy_variant_args) = tuple.value.inside in
+        let ctor_params =
+          args |> List.map ~f:(fun (x, y) -> y, x) |> List.Ne.of_list_opt
+        in
+        let ty =
+          match ctor_params with
+          | None -> None
+          | Some ((t, _), []) -> Some t
+          | Some ctor_params ->
+            let inside : I.array_type =
+              { value =
+                  I.{ lbracket = ghost; inside = `Term ctor_params; rbracket = ghost }
+              ; region
+              }
+            in
+            Some (I.T_Array inside)
+        in
+        ( TODO_do_in_parsing.labelize ctor#payload
+        , ty
+        , TODO_do_in_parsing.conv_attrs attributes )
     in
     let variants = variants |> List.map ~f:destruct |> TODO_do_in_parsing.compile_rows in
     return @@ T_sum_raw variants
@@ -438,7 +524,7 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
       let destruct (I.{ property_id; property_rhs; attributes } : _ I.property) =
         let property_id =
           match property_id with
-          | F_Name n -> O.Label.of_string n#payload
+          | F_Name n -> O.Label.of_string (TODO_do_in_parsing.get_var n)#payload
           | F_Int i -> O.Label.of_string @@ fst i#payload
           | F_Str s -> O.Label.of_string s#payload
         in
@@ -465,14 +551,15 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
           | None -> failwith "Expected pattern variable"
         in
         let type_expr = snd type_expr in
-        { name = name#payload; type_expr }
+        { name = (TODO_do_in_parsing.get_var name)#payload; type_expr }
       in
       List.map ~f:compile_fun_type_arg (sep_or_term_to_list fta.value.inside)
     in
     let type_expr = te2 in
     return @@ T_named_fun (fun_type_args, type_expr)
   | T_Par t -> ty_expr (r_fst t).inside
-  | T_Var t -> return @@ T_var (TODO_do_in_parsing.tvar t)
+  | T_Var (Var t) -> return @@ T_var_esc (Raw (TODO_do_in_parsing.tvar t))
+  | T_Var (Esc t) -> return @@ T_var_esc (Esc (TODO_do_in_parsing.tvar t))
   | T_String t -> return @@ T_string t#payload
   | T_Int t ->
     let s, z = t#payload in
@@ -487,7 +574,7 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
     in
     let field =
       match get_ty_variable property with
-      | Some tvar -> TODO_do_in_parsing.tvar tvar
+      | Some tvar -> TODO_do_in_parsing.esc_tvar tvar
       | None -> failwith "Expected variable property."
     in
     return @@ T_module_access { module_path; field; field_as_open }
@@ -514,19 +601,34 @@ let pattern : Eq.pattern -> Folding.pattern =
   let return = Location.wrap ~loc in
   match p with
   | P_Attr (attr, p) -> return @@ O.P_attr (TODO_do_in_parsing.conv_attr attr, p)
-  | P_CtorApp { value = _, app; _ } ->
-    let ctor, args =
-      match app with
-      | ZeroArg ctor -> ctor, []
-      | MultArg all -> nsep_or_term_to_nelist all.value.inside
-    in
-    return @@ P_ctor_app (ctor, args)
+  | P_CtorApp variant ->
+    (match variant with
+    | Variant { value = { attributes = _; tuple = _, app }; _ } ->
+      let ctor, args =
+        match app with
+        | ZeroArg ctor -> ctor, []
+        | MultArg (ctor, args) -> ctor, nsep_or_term_to_list args.value.inside
+      in
+      let ctor =
+        match ctor with
+        | CtorStr ctor -> ctor
+        | CtorName ctor -> ctor
+      in
+      return @@ P_ctor_app (P_String ctor, args)
+    | Bracketed { value = { attributes = _; sharp = _; tuple }; _ } ->
+      let ({ ctor; args } : I.pattern I.bracketed_variant_args) = tuple.value.inside in
+      let args = Option.value_map ~default:[] ~f:(sep_or_term_to_list <@ snd) args in
+      return @@ P_ctor_app (ctor, args)
+    | Legacy { value = { attributes = _; tuple }; _ } ->
+      let ({ ctor; args } : I.pattern I.legacy_variant_args) = tuple.value.inside in
+      return @@ P_ctor_app (P_String ctor, List.map ~f:snd args))
   | P_NamePath { value = { namespace_path; property; _ }; _ } ->
     let module_path = nseq_map TODO_do_in_parsing.mvar (nsepseq_to_nseq namespace_path) in
     return @@ P_mod_access { module_path; field = property; field_as_open = false }
   | P_False _ -> return @@ P_ctor (Ligo_prim.Label.of_string "False")
   | P_True _ -> return @@ P_ctor (Ligo_prim.Label.of_string "True")
-  | P_Var p -> return @@ P_var (TODO_do_in_parsing.var p)
+  | P_Var (Var p) -> return @@ P_var_esc (Raw (TODO_do_in_parsing.var p))
+  | P_Var (Esc p) -> return @@ P_var_esc (Esc (TODO_do_in_parsing.var p))
   | P_Int v -> return @@ P_literal (Literal_int (snd (w_fst v)))
   | P_Nat v -> return @@ P_literal (Literal_nat (snd (w_fst v)))
   | P_Mutez v -> return @@ P_literal (Literal_mutez (Z.of_int64 (snd (w_fst v))))
@@ -544,7 +646,7 @@ let pattern : Eq.pattern -> Folding.pattern =
       let property_id = value.property_id in
       let property_id =
         match property_id with
-        | F_Name n -> O.Label.of_string n#payload
+        | F_Name n -> O.Label.of_string (TODO_do_in_parsing.get_var n)#payload
         | F_Int i -> O.Label.of_string @@ fst i#payload
         | F_Str s -> O.Label.of_string s#payload
       in
@@ -657,7 +759,7 @@ and instruction : Eq.instruction -> Folding.instruction =
       | `Let _ -> `Let
       | `Const _ -> `Const
     in
-    let index = TODO_do_in_parsing.var index in
+    let index = TODO_do_in_parsing.esc_var index in
     return @@ I_for_of { index_kind; index; expr; for_stmt = for_of_body }
   | S_For s ->
     let I.{ range; for_body; _ } = s.value in
@@ -677,12 +779,12 @@ and declaration : Eq.declaration -> Folding.declaration =
   let compile_val_binding
       : I.val_binding -> (Eq.pattern, I.expr, I.type_expr) O.Simple_decl.t
     =
-   fun { pattern; type_vars; rhs_type; eq = _; rhs_expr } ->
+   fun { pattern; generics; rhs_type; eq = _; rhs_expr } ->
     let type_params =
       let open Simple_utils.Option in
-      let* type_vars in
-      let* tvs = sep_or_term_to_nelist (r_fst type_vars).inside in
-      return (List.Ne.map TODO_do_in_parsing.tvar tvs)
+      let* generics in
+      let* tvs = sep_or_term_to_nelist (r_fst generics).inside in
+      return (List.Ne.map TODO_do_in_parsing.esc_tvar tvs)
     in
     let rhs_type = Option.map ~f:snd rhs_type in
     { type_params; pattern; rhs_type; let_rhs = rhs_expr }
@@ -717,7 +819,7 @@ and declaration : Eq.declaration -> Folding.declaration =
           | Some imported -> imported
           | None -> failwith "Expected imported name?"
         in
-        let imported = List.Ne.map TODO_do_in_parsing.var imported in
+        let imported = List.Ne.map TODO_do_in_parsing.esc_var imported in
         let module_str = file_path#payload in
         O.Import.Import_selected { imported; module_str }
     in
@@ -735,30 +837,30 @@ and declaration : Eq.declaration -> Folding.declaration =
     | `Let _ -> return @@ O.D_multi_var bindings
     | `Const _ -> return @@ O.D_multi_const bindings)
   | D_Type { value; region } ->
-    let I.{ name; type_vars; type_expr; _ } = value in
-    let name = TODO_do_in_parsing.tvar name in
+    let I.{ name; generics; type_expr; _ } = value in
+    let name = TODO_do_in_parsing.esc_tvar name in
     let params =
       let open Simple_utils.Option in
-      let* type_vars in
-      let* tvs = sep_or_term_to_nelist (r_fst type_vars).inside in
-      return (List.Ne.map TODO_do_in_parsing.tvar tvs)
+      let* generics in
+      let* tvs = sep_or_term_to_nelist (r_fst generics).inside in
+      return (List.Ne.map TODO_do_in_parsing.esc_tvar tvs)
     in
     return @@ O.D_type_abstraction { name; params; type_expr }
   | D_Fun { value; _ } ->
-    let I.{ kwd_function; fun_name; type_vars; parameters; rhs_type; fun_body } = value in
+    let I.{ kwd_function; fun_name; generics; parameters; rhs_type; fun_body } = value in
     let let_rhs : I.expr =
       let fun_body : I.fun_body = StmtBody fun_body in
       let parameters : I.arrow_fun_params = ParParams parameters in
       let function_expr : I.function_expr =
-        { kwd_function; type_vars; parameters; rhs_type; fun_body }
+        { kwd_function; generics; parameters; rhs_type; fun_body }
       in
       E_Function (return_region function_expr)
     in
     let type_params =
       let open Simple_utils.Option in
-      let* type_vars in
-      let* tvs = sep_or_term_to_nelist type_vars.value.inside in
-      return (List.Ne.map TODO_do_in_parsing.tvar tvs)
+      let* generics in
+      let* tvs = sep_or_term_to_nelist generics.value.inside in
+      return (List.Ne.map TODO_do_in_parsing.esc_tvar tvs)
     in
     let pattern : I.pattern = P_Var fun_name in
     return @@ O.D_multi_const ({ type_params; pattern; rhs_type = None; let_rhs }, [])
@@ -811,12 +913,12 @@ and sig_entry : Eq.sig_entry -> Folding.sig_entry =
     @@ (O.S_attr (TODO_do_in_parsing.conv_attr attr, entry) : _ O.sig_entry_content_)
   | I_Type { value; _ } ->
     let I.{ type_name; type_rhs; _ } = value in
-    let var = TODO_do_in_parsing.tvar type_name in
+    let var = TODO_do_in_parsing.esc_tvar type_name in
     (match type_rhs with
     | None -> return ~loc @@ O.S_type_var var
     | Some (_, type_rhs) -> return ~loc @@ O.S_type (var, type_rhs))
   | I_Const { value; _ } ->
     let I.{ const_name; const_type; _ } = value in
-    let var = TODO_do_in_parsing.var const_name in
+    let var = TODO_do_in_parsing.esc_var const_name in
     let _, type_ = const_type in
     return ~loc @@ O.S_value (var, type_)

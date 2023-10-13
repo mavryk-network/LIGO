@@ -71,9 +71,22 @@ let source_file =
   Command.Param.(anon (name %: create_arg_type Fn.id))
 
 
+let source_files =
+  let name = "SOURCE_FILES" in
+  Command.Param.(anon @@ non_empty_sequence_as_pair (name %: create_arg_type Fn.id))
+
+
 let package_name =
   let name = "PACKAGE_NAME" in
   Command.Param.(anon (maybe (name %: string)))
+
+
+let username =
+  let open Command.Param in
+  let name = "--username" in
+  let doc = "Username registered with the registry" in
+  let spec = required string in
+  flag ~doc name spec
 
 
 let named_arg_package_name =
@@ -387,6 +400,13 @@ let defs_only =
   flag ~doc name no_arg
 
 
+let disable_lsp_request_logging =
+  let open Command.Param in
+  let name = "--disable-lsp-requests-logging" in
+  let doc = "Disables request logging for LSP server." in
+  flag ~doc name no_arg
+
+
 let now =
   let open Command.Param in
   let name = "--now" in
@@ -447,13 +467,6 @@ let hide_sort : _ Command.Param.t =
     @@ Command.Arg_type.comma_separated ~strip_whitespace:true ~unique_values:true string
   in
   flag ~doc ~aliases:[ "hide" ] "--hide-sort" spec
-
-
-let deprecated =
-  let open Command.Param in
-  let name = "--deprecated" in
-  let doc = "enable deprecated language PascaLIGO" in
-  flag ~doc name no_arg
 
 
 let function_body =
@@ -610,11 +623,15 @@ let cache_path =
   flag ~doc name spec
 
 
+let command_arg_type_uri = Command.Arg_type.create Uri.of_string
+
 let ligo_registry =
   let open Command.Param in
   let name = "--registry" in
   let doc = "URL The url to a LIGO registry." in
-  let spec = optional_with_default Constants.ligo_registry string in
+  let spec =
+    optional_with_default (Uri.of_string Constants.ligo_registry) command_arg_type_uri
+  in
   flag ~doc name spec
 
 
@@ -626,12 +643,10 @@ let ligorc_path =
   flag ~doc name spec
 
 
-let package_management_alpha =
+let esy_legacy =
   let open Command.Param in
-  let name = "--package-management-alpha" in
-  let doc =
-    "enable installing packages without esy, some features might not be supported"
-  in
+  let name = "--legacy-package-management" in
+  let doc = "enable installing packages with legacy package manager esy" in
   flag ~doc name no_arg
 
 
@@ -664,7 +679,6 @@ let compile_file =
       warning_as_error
       no_colour
       no_metadata_check
-      deprecated
       skip_analytics
       michelson_comments
       constants
@@ -688,7 +702,6 @@ let compile_file =
         ~warning_as_error
         ~no_colour
         ~no_metadata_check
-        ~deprecated
         ~constants
         ~file_constants
         ~project_root
@@ -749,7 +762,6 @@ let compile_file =
     <*> werror
     <*> no_colour
     <*> no_metadata_check
-    <*> deprecated
     <*> skip_analytics
     <*> michelson_comments
     <*> constants
@@ -776,7 +788,6 @@ let compile_parameter =
       now
       display_format
       no_colour
-      deprecated
       skip_analytics
       michelson_format
       output_file
@@ -799,7 +810,6 @@ let compile_parameter =
         ~constants
         ~file_constants
         ~project_root
-        ~deprecated
         ~warn_unused_rec
         ~warn_infinite_loop
         ~libraries
@@ -856,7 +866,6 @@ let compile_parameter =
     <*> now
     <*> display_format
     <*> no_colour
-    <*> deprecated
     <*> skip_analytics
     <*> michelson_code_format
     <*> output_file
@@ -878,7 +887,6 @@ let compile_expression =
       init_file
       display_format
       no_colour
-      deprecated
       skip_analytics
       without_run
       no_stdlib
@@ -904,7 +912,6 @@ let compile_expression =
         ~constants
         ~file_constants
         ~project_root
-        ~deprecated
         ~warn_unused_rec
         ~warn_infinite_loop
         ~libraries
@@ -943,7 +950,6 @@ let compile_expression =
     <*> init_file
     <*> display_format
     <*> no_colour
-    <*> deprecated
     <*> skip_analytics
     <*> without_run
     <*> no_stdlib
@@ -977,7 +983,6 @@ let compile_storage =
       no_metadata_check
       allow_json_download
       disallow_json_download
-      deprecated
       skip_analytics
       michelson_format
       output_file
@@ -1007,7 +1012,6 @@ let compile_storage =
         ~constants
         ~file_constants
         ~project_root
-        ~deprecated
         ~warn_unused_rec
         ~warn_infinite_loop
         ~libraries
@@ -1069,7 +1073,6 @@ let compile_storage =
     <*> no_metadata_check
     <*> allow_json_download
     <*> disallow_json_download
-    <*> deprecated
     <*> skip_analytics
     <*> michelson_code_format
     <*> output_file
@@ -1091,7 +1094,6 @@ let compile_constant =
       init_file
       display_format
       no_colour
-      deprecated
       skip_analytics
       without_run
       show_warnings
@@ -1109,7 +1111,6 @@ let compile_constant =
         ~without_run
         ~warning_as_error
         ~project_root
-        ~deprecated
         ~warn_unused_rec
         ~warn_infinite_loop
         ~libraries
@@ -1147,7 +1148,6 @@ let compile_constant =
     <*> init_file
     <*> display_format
     <*> no_colour
-    <*> deprecated
     <*> skip_analytics
     <*> without_run
     <*> warn
@@ -1345,7 +1345,6 @@ let test =
       cli_expr_inj
       display_format
       no_colour
-      deprecated
       skip_analytics
       show_warnings
       project_root
@@ -1359,7 +1358,6 @@ let test =
         ~syntax
         ~steps
         ~project_root
-        ~deprecated
         ~warn_unused_rec
         ~warn_infinite_loop
         ~cli_expr_inj
@@ -1400,7 +1398,6 @@ let test =
     <*> cli_expr_inj
     <*> display_format
     <*> no_colour
-    <*> deprecated
     <*> skip_analytics
     <*> warn
     <*> project_root
@@ -1418,7 +1415,6 @@ let test_expr =
       cli_expr_inj
       display_format
       no_colour
-      deprecated
       skip_analytics
       show_warnings
       project_root
@@ -1432,7 +1428,6 @@ let test_expr =
         ~syntax
         ~steps
         ~project_root
-        ~deprecated
         ~warn_unused_rec
         ~warn_infinite_loop
         ~cli_expr_inj
@@ -1473,7 +1468,6 @@ let test_expr =
     <*> cli_expr_inj
     <*> display_format
     <*> no_colour
-    <*> deprecated
     <*> skip_analytics
     <*> warn
     <*> project_root
@@ -1498,7 +1492,6 @@ let dry_run =
       protocol_version
       display_format
       no_colour
-      deprecated
       skip_analytics
       show_warnings
       warning_as_error
@@ -1515,7 +1508,6 @@ let dry_run =
         ~protocol_version
         ~warning_as_error
         ~project_root
-        ~deprecated
         ~warn_unused_rec
         ~warn_infinite_loop
         ~libraries
@@ -1572,7 +1564,6 @@ let dry_run =
     <*> protocol_version
     <*> display_format
     <*> no_colour
-    <*> deprecated
     <*> skip_analytics
     <*> warn
     <*> werror
@@ -1596,7 +1587,6 @@ let evaluate_call =
       protocol_version
       display_format
       no_colour
-      deprecated
       skip_analytics
       show_warnings
       warning_as_error
@@ -1612,7 +1602,6 @@ let evaluate_call =
         ~protocol_version
         ~warning_as_error
         ~project_root
-        ~deprecated
         ~warn_unused_rec
         ~warn_infinite_loop
         ~libraries
@@ -1666,7 +1655,6 @@ let evaluate_call =
     <*> protocol_version
     <*> display_format
     <*> no_colour
-    <*> deprecated
     <*> skip_analytics
     <*> warn
     <*> werror
@@ -1689,7 +1677,6 @@ let evaluate_expr =
       protocol_version
       display_format
       no_colour
-      deprecated
       skip_analytics
       show_warnings
       warning_as_error
@@ -1705,7 +1692,6 @@ let evaluate_expr =
         ~protocol_version
         ~warning_as_error
         ~project_root
-        ~deprecated
         ~warn_unused_rec
         ~warn_infinite_loop
         ~libraries
@@ -1749,7 +1735,6 @@ let evaluate_expr =
     <*> protocol_version
     <*> display_format
     <*> no_colour
-    <*> deprecated
     <*> skip_analytics
     <*> warn
     <*> werror
@@ -1772,7 +1757,6 @@ let interpret =
       now
       display_format
       no_colour
-      deprecated
       skip_analytics
       project_root
       warn_unused_rec
@@ -1785,7 +1769,6 @@ let interpret =
         ~syntax
         ~protocol_version
         ~project_root
-        ~deprecated
         ~warn_unused_rec
         ~warn_infinite_loop
         ~libraries
@@ -1836,7 +1819,6 @@ let interpret =
     <*> now
     <*> display_format
     <*> no_colour
-    <*> deprecated
     <*> skip_analytics
     <*> project_root
     <*> warn_unused_rec
@@ -1865,21 +1847,13 @@ let list_declarations =
       syntax
       display_format
       no_colour
-      deprecated
       skip_analytics
       project_root
       libraries
       ()
     =
     let raw_options =
-      Raw_options.make
-        ~only_ep
-        ~skip_generated
-        ~syntax
-        ~project_root
-        ~deprecated
-        ~libraries
-        ()
+      Raw_options.make ~only_ep ~skip_generated ~syntax ~project_root ~libraries ()
     in
     let cli_analytics =
       Analytics.generate_cli_metrics_with_syntax_and_protocol
@@ -1912,7 +1886,6 @@ let list_declarations =
     <*> syntax
     <*> display_format
     <*> no_colour
-    <*> deprecated
     <*> skip_analytics
     <*> project_root
     <*> libraries)
@@ -1926,7 +1899,6 @@ let measure_contract =
       protocol_version
       display_format
       no_colour
-      deprecated
       skip_analytics
       enable_typed_opt
       show_warnings
@@ -1943,7 +1915,6 @@ let measure_contract =
         ~protocol_version
         ~warning_as_error
         ~project_root
-        ~deprecated
         ~warn_unused_rec
         ~warn_infinite_loop
         ~enable_typed_opt
@@ -1982,7 +1953,6 @@ let measure_contract =
     <*> protocol_version
     <*> display_format
     <*> no_colour
-    <*> deprecated
     <*> skip_analytics
     <*> enable_michelson_typed_opt
     <*> warn
@@ -2000,7 +1970,6 @@ let get_scope =
       libraries
       display_format
       no_colour
-      deprecated
       with_types
       defs_only
       project_root
@@ -2014,7 +1983,6 @@ let get_scope =
         ~with_types
         ~defs_only
         ~project_root
-        ~deprecated
         ~no_stdlib
         ()
     in
@@ -2048,7 +2016,6 @@ let get_scope =
     <*> libraries
     <*> display_format
     <*> no_colour
-    <*> deprecated
     <*> with_types
     <*> defs_only
     <*> project_root
@@ -2083,6 +2050,53 @@ let resolve_config =
   Command.basic ~summary ~readme (f <$> source_file <*> display_format)
 
 
+let dump_cst =
+  let f
+      (source_file, source_files)
+      protocol_version
+      libraries
+      display_format
+      with_types
+      skip_analytics
+      no_colour
+      ()
+    =
+    let raw_options = Raw_options.make ~protocol_version ~libraries ~with_types () in
+    let cli_analytics =
+      Analytics.generate_cli_metrics_with_syntax_and_protocol
+        ~command:"info_dump-cst"
+        ~raw_options
+        ~source_file
+        ()
+    in
+    return_result
+      ~return
+      ~display_format
+      ~skip_analytics
+      ~no_colour
+      ~cli_analytics
+      ~warning_as_error:raw_options.warning_as_error
+      ~minify_json:true
+    @@ Api.Info.dump_cst raw_options (source_file :: source_files)
+  in
+  let summary = "dump CST for a contract." in
+  let readme () =
+    "This subcommand returns a concrete syntax tree for a LIGO contract. If format is \
+     not specified, then CST would be returned in the MessagePack format."
+  in
+  Command.basic
+    ~summary
+    ~readme
+    (f
+    <$> source_files
+    <*> protocol_version
+    <*> libraries
+    <*> display_format
+    <*> with_types
+    <*> skip_analytics
+    <*> no_colour)
+
+
 let info_group =
   let summary = "tools to get information from contracts" in
   Command.group
@@ -2091,6 +2105,7 @@ let info_group =
     ; "measure-contract", measure_contract
     ; "get-scope", get_scope
     ; "resolve-config", resolve_config
+    ; "dump-cst", dump_cst
     ]
 
 
@@ -2103,13 +2118,10 @@ let preprocessed =
       display_format
       project_root
       no_colour
-      deprecated
       skip_analytics
       ()
     =
-    let raw_options =
-      Raw_options.make ~syntax ~libraries ~project_root ~no_colour ~deprecated ()
-    in
+    let raw_options = Raw_options.make ~syntax ~libraries ~project_root ~no_colour () in
     let cli_analytics =
       Analytics.generate_cli_metrics_with_syntax_and_protocol
         ~command:"print_preprocessed"
@@ -2145,7 +2157,6 @@ let preprocessed =
      <*> display_format
      <*> project_root
      <*> no_colour
-     <*> deprecated
      <*> skip_analytics)
 
 
@@ -2156,21 +2167,13 @@ let pretty_print =
       display_format
       warning_as_error
       no_colour
-      deprecated
       skip_analytics
       project_root
       libraries
       ()
     =
     let raw_options =
-      Raw_options.make
-        ~syntax
-        ~warning_as_error
-        ~no_colour
-        ~project_root
-        ~deprecated
-        ~libraries
-        ()
+      Raw_options.make ~syntax ~warning_as_error ~no_colour ~project_root ~libraries ()
     in
     let cli_analytics =
       Analytics.generate_cli_metrics_with_syntax_and_protocol
@@ -2201,7 +2204,6 @@ let pretty_print =
      <*> display_format
      <*> werror
      <*> no_colour
-     <*> deprecated
      <*> skip_analytics
      <*> project_root
      <*> libraries)
@@ -2214,14 +2216,11 @@ let print_graph =
       display_format
       project_root
       no_colour
-      deprecated
       skip_analytics
       libraries
       ()
     =
-    let raw_options =
-      Raw_options.make ~syntax ~project_root ~no_colour ~deprecated ~libraries ()
-    in
+    let raw_options = Raw_options.make ~syntax ~project_root ~no_colour ~libraries () in
     let cli_analytics =
       Analytics.generate_cli_metrics_with_syntax_and_protocol
         ~command:"print_dependency-graph"
@@ -2253,7 +2252,6 @@ let print_graph =
      <*> display_format
      <*> project_root
      <*> no_colour
-     <*> deprecated
      <*> skip_analytics
      <*> libraries)
 
@@ -2264,15 +2262,12 @@ let print_cst =
       syntax
       display_format
       no_colour
-      deprecated
       skip_analytics
       project_root
       libraries
       ()
     =
-    let raw_options =
-      Raw_options.make ~syntax ~no_colour ~project_root ~deprecated ~libraries ()
-    in
+    let raw_options = Raw_options.make ~syntax ~no_colour ~project_root ~libraries () in
     let cli_analytics =
       Analytics.generate_cli_metrics_with_syntax_and_protocol
         ~command:"print_cst"
@@ -2302,7 +2297,6 @@ let print_cst =
      <*> syntax
      <*> display_format
      <*> no_colour
-     <*> deprecated
      <*> skip_analytics
      <*> project_root
      <*> libraries)
@@ -2317,15 +2311,12 @@ let print_ast_unified =
       no_colour
       show_loc
       hide_sort
-      deprecated
       skip_analytics
       project_root
       libraries
       ()
     =
-    let raw_options =
-      Raw_options.make ~syntax ~no_colour ~project_root ~deprecated ~libraries ()
-    in
+    let raw_options = Raw_options.make ~syntax ~no_colour ~project_root ~libraries () in
     let cli_analytics =
       Analytics.generate_cli_metrics_with_syntax_and_protocol
         ~command:"print_ast-imperative"
@@ -2358,7 +2349,6 @@ let print_ast_unified =
      <*> no_colour
      <*> show_loc
      <*> hide_sort
-     <*> deprecated
      <*> skip_analytics
      <*> project_root
      <*> libraries)
@@ -2372,20 +2362,12 @@ let print_ast_core =
       self_pass
       project_root
       no_colour
-      deprecated
       skip_analytics
       libraries
       ()
     =
     let raw_options =
-      Raw_options.make
-        ~syntax
-        ~self_pass
-        ~project_root
-        ~no_colour
-        ~deprecated
-        ~libraries
-        ()
+      Raw_options.make ~syntax ~self_pass ~project_root ~no_colour ~libraries ()
     in
     let cli_analytics =
       Analytics.generate_cli_metrics_with_syntax_and_protocol
@@ -2416,7 +2398,6 @@ let print_ast_core =
      <*> self_pass
      <*> project_root
      <*> no_colour
-     <*> deprecated
      <*> skip_analytics
      <*> libraries)
 
@@ -2433,7 +2414,6 @@ let print_ast_typed =
       warn_infinite_loop
       test
       no_colour
-      deprecated
       skip_analytics
       libraries
       ()
@@ -2448,7 +2428,6 @@ let print_ast_typed =
         ~warn_infinite_loop
         ~test
         ~no_colour
-        ~deprecated
         ~libraries
         ()
     in
@@ -2489,7 +2468,6 @@ let print_ast_typed =
      <*> warn_infinite_loop
      <*> test_mode
      <*> no_colour
-     <*> deprecated
      <*> skip_analytics
      <*> libraries)
 
@@ -2506,7 +2484,6 @@ let print_ast_aggregated =
       warn_infinite_loop
       test
       no_colour
-      deprecated
       skip_analytics
       libraries
       ()
@@ -2521,7 +2498,6 @@ let print_ast_aggregated =
         ~warn_infinite_loop
         ~test
         ~no_colour
-        ~deprecated
         ~libraries
         ()
     in
@@ -2562,7 +2538,6 @@ let print_ast_aggregated =
     <*> warn_infinite_loop
     <*> test_mode
     <*> no_colour
-    <*> deprecated
     <*> skip_analytics
     <*> libraries)
 
@@ -2574,7 +2549,6 @@ let print_ast_expanded =
       protocol_version
       display_format
       no_colour
-      deprecated
       skip_analytics
       self_pass
       project_root
@@ -2590,7 +2564,6 @@ let print_ast_expanded =
         ~protocol_version
         ~self_pass
         ~project_root
-        ~deprecated
         ~warn_unused_rec
         ~warn_infinite_loop
         ~test
@@ -2629,7 +2602,6 @@ let print_ast_expanded =
     <*> protocol_version
     <*> display_format
     <*> no_colour
-    <*> deprecated
     <*> skip_analytics
     <*> self_pass
     <*> project_root
@@ -2650,7 +2622,6 @@ let print_mini_c =
       warn_unused_rec
       warn_infinite_loop
       no_colour
-      deprecated
       skip_analytics
       libraries
       ()
@@ -2663,7 +2634,6 @@ let print_mini_c =
         ~warn_unused_rec
         ~warn_infinite_loop
         ~no_colour
-        ~deprecated
         ~libraries
         ()
     in
@@ -2704,7 +2674,6 @@ let print_mini_c =
     <*> warn_unused_rec
     <*> warn_infinite_loop
     <*> no_colour
-    <*> deprecated
     <*> skip_analytics
     <*> libraries)
 
@@ -2876,7 +2845,6 @@ let repl =
       now
       display_format
       no_colour
-      deprecated
       skip_analytics
       init_file
       project_root
@@ -2884,7 +2852,7 @@ let repl =
       ()
     =
     let raw_options =
-      Raw_options.make ~syntax ~protocol_version ~project_root ~deprecated ~libraries ()
+      Raw_options.make ~syntax ~protocol_version ~project_root ~libraries ()
     in
     let cli_analytics =
       Analytics.generate_cli_metrics_with_syntax_and_protocol
@@ -2919,7 +2887,6 @@ let repl =
     <*> now
     <*> display_format
     <*> no_colour
-    <*> deprecated
     <*> skip_analytics
     <*> init_file
     <*> project_root
@@ -2933,23 +2900,10 @@ let install =
      in ligo.json"
   in
   let cli_analytic = Analytics.generate_cli_metric ~command:"install" in
-  let f
-      project_root
-      package_name
-      cache_path
-      ligo_registry
-      package_management_alpha
-      skip_analytics
-      ()
-    =
+  let f project_root package_name cache_path ligo_registry esy_legacy skip_analytics () =
     return_with_custom_formatter ~skip_analytics ~cli_analytics:[ cli_analytic ] ~return
     @@ fun () ->
-    Install.install
-      ~project_root
-      ~package_name
-      ~cache_path
-      ~ligo_registry
-      ~package_management_alpha
+    Install.install ~project_root ~package_name ~cache_path ~ligo_registry ~esy_legacy
   in
   Command.basic
     ~summary
@@ -2959,8 +2913,26 @@ let install =
     <*> package_name
     <*> cache_path
     <*> ligo_registry
-    <*> package_management_alpha
+    <*> esy_legacy
     <*> skip_analytics)
+
+
+let registry_forgot_password =
+  let summary =
+    "Initiate a password resetting the password used to authenticate with the registry"
+  in
+  let readme () =
+    "Initiate a password resetting the password used to authenticate with the registry"
+  in
+  let cli_analytic = Analytics.generate_cli_metric ~command:"forgot_password" in
+  let f username ligo_registry ligorc_path skip_analytics () =
+    return_with_custom_formatter ~skip_analytics ~cli_analytics:[ cli_analytic ] ~return
+    @@ fun () -> Forgot_password.main ~username ~ligo_registry ~ligorc_path
+  in
+  Command.basic
+    ~summary
+    ~readme
+    (f <$> username <*> ligo_registry <*> ligorc_path <*> skip_analytics)
 
 
 let registry_publish =
@@ -3042,6 +3014,7 @@ let registry_group =
      ; "add-user", add_user
      ; "publish", registry_publish
      ; "unpublish", registry_unpublish
+     ; "forgot-password", registry_forgot_password
      ]
 
 
@@ -3053,55 +3026,71 @@ module Lsp_server = struct
   module Requests = Ligo_lsp.Server.Requests
   module Server = Ligo_lsp.Server
 
-  let run () =
-    let reporter ppf =
-      let report _src level ~over k msgf =
-        let k _ =
-          over ();
-          k ()
-        in
-        let with_stamp header _tags k ppf fmt =
-          let time = Time_ns.(to_string_utc @@ now ()) in
-          Format.kfprintf
-            k
-            ppf
-            ("%s %a @[" ^^ fmt ^^ "@]@.")
-            time
-            Logs.pp_header
-            (level, header)
-        in
-        msgf @@ fun ?header ?tags fmt -> with_stamp header tags k ppf fmt
-      in
-      { Logs.report }
+  let run ?(log_requests = true) () =
+    let run_lsp () =
+      let s = new Server.lsp_server in
+      let server = Linol_lwt.Jsonrpc2.create_stdio (s :> Linol_lwt.Jsonrpc2.server) in
+      let shutdown () = Caml.(s#get_status = `ReceivedExit) in
+      let task = Linol_lwt.Jsonrpc2.run ~shutdown server in
+      match Linol_lwt.run task with
+      | () -> Ok ("", "")
+      | exception e ->
+        let e = Caml.Printexc.to_string e in
+        Error ("", e)
     in
-    let log_file = Filename.(temp_dir_name ^/ "ligo_language_server.log") in
-    Out_channel.with_file ~append:true log_file ~f:(fun outc ->
-        Logs.set_reporter (reporter @@ Format.formatter_of_out_channel outc);
-        (* Disable logs for anything that is not linol, as it causes crashes. *)
-        List.iter (Logs.Src.list ()) ~f:(fun src ->
-            match Logs.Src.name src with
-            | "linol" -> Logs.Src.set_level src (Some Logs.Debug)
-            | _ -> Logs.Src.set_level src None);
-        let s = new Server.lsp_server in
-        let server = Linol_lwt.Jsonrpc2.create_stdio (s :> Linol_lwt.Jsonrpc2.server) in
-        let shutdown () = Caml.(s#get_status = `ReceivedExit) in
-        let task = Linol_lwt.Jsonrpc2.run ~shutdown server in
-        Format.eprintf "For LIGO language server logs, see %s\n%!" log_file;
-        match Linol_lwt.run task with
-        | () -> Ok ("", "")
-        | exception e ->
-          let e = Caml.Printexc.to_string e in
-          Error ("", e))
+    let with_request_logging f () =
+      let reporter ppf =
+        let report _src level ~over k msgf =
+          let k _ =
+            over ();
+            k ()
+          in
+          let with_stamp header _tags k ppf fmt =
+            let time = Time_ns.(to_string_utc @@ now ()) in
+            Format.kfprintf
+              k
+              ppf
+              ("%s %a @[" ^^ fmt ^^ "@]@.")
+              time
+              Logs.pp_header
+              (level, header)
+          in
+          msgf @@ fun ?header ?tags fmt -> with_stamp header tags k ppf fmt
+        in
+        { Logs.report }
+      in
+      let log_file = Filename.(temp_dir_name ^/ "ligo_language_server.log") in
+      Out_channel.with_file ~append:true log_file ~f:(fun outc ->
+          Logs.set_reporter (reporter @@ Format.formatter_of_out_channel outc);
+          (* Disable logs for anything that is not linol, as it causes crashes. *)
+          List.iter (Logs.Src.list ()) ~f:(fun src ->
+              match Logs.Src.name src with
+              | "linol" -> Logs.Src.set_level src (Some Logs.Debug)
+              | _ -> Logs.Src.set_level src None);
+          Logs.set_level (Some Logs.Debug);
+          let s = new Server.lsp_server in
+          let server = Linol_lwt.Jsonrpc2.create_stdio (s :> Linol_lwt.Jsonrpc2.server) in
+          let shutdown () = Caml.(s#get_status = `ReceivedExit) in
+          let task = Linol_lwt.Jsonrpc2.run ~shutdown server in
+          Format.eprintf "For LIGO language server logs, see %s\n%!" log_file;
+          match Linol_lwt.run task with
+          | () -> Ok ("", "")
+          | exception e ->
+            let e = Caml.Printexc.to_string e in
+            Error ("", e))
+    in
+    if log_requests then with_request_logging run_lsp () else run_lsp ()
 end
 
 let lsp =
   let summary = "[BETA] launch a LIGO lsp server" in
   let readme () = "[BETA] Run the lsp server which is used by editor extensions" in
-  let f () =
+  let f disable_logging () =
+    let log_requests = not disable_logging in
     return_with_custom_formatter ~skip_analytics:true ~cli_analytics:[] ~return
-    @@ fun () -> Lsp_server.run ()
+    @@ Lsp_server.run ~log_requests
   in
-  Command.basic ~summary ~readme (Command.Param.return f)
+  Command.basic ~summary ~readme (f <$> disable_lsp_request_logging)
 
 
 let analytics_accept =
