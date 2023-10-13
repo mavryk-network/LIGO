@@ -42,7 +42,6 @@ type error =
   | InstallTestFails of string
   | Manifest_not_found
   | Lock_file_not_found
-  | LockFileParserFailure of string
   | PackageJsonEmptyName
   | RootGenerationInLockFileFailed of string
   | NodeGenerationInLockFileFailed of string
@@ -75,9 +74,6 @@ let string_of_error = function
   | LockFileAccessFailed msg -> msg
   | InstallTestFails msg -> msg
   | Lock_file_not_found -> "No lock file found."
-  | LockFileParserFailure m ->
-    "Failed to parse lockfile: Reason: " ^ m
-    (* TODO : add a helpful message sharing where the failure occured *)
   | Manifest_not_found ->
     "No manifest file found." (*TODO link documentation to what is a ligo manifest file *)
   | PackageJsonEmptyName -> "name field in ligo.json is empty/null"
@@ -845,19 +841,27 @@ let run ~project_root package_name cache_path ligo_registry =
     Lwt.return @@ field_to_tuple_list ~field:"devDependencies" ligo_json
   in
   let all_dependencies = dependencies @ dev_dependencies in
+  let get_lock_file ~project_root ~all_dependencies =
+    (* Makes sure,
+       1. Lock file is present
+       2. It's checksum is in sync with all dependencies in ligo manifest. ie lock file reflects a solution for the manifest
+       3. It parses into a valid Lock_file.t
+     *)
+    match get_lock_file_that_is_in_sync ~project_root ~all_dependencies with
+    | Some lock_file_json ->
+      (match Lock_file.of_yojson lock_file_json with
+      | Error _m ->
+        (* TODO log why lock file parser failed *)
+        None
+      | Ok lock_file -> Some lock_file)
+    | None -> None
+  in
   match all_dependencies with
   | [] -> Lwt_result.return ()
   | _ ->
     let* solution, cache =
-      match get_lock_file_that_is_in_sync ~project_root ~all_dependencies with
-      | Some lock_file_json ->
-        let* lock_file =
-          Lwt.return
-          @@
-          match Lock_file.of_yojson lock_file_json with
-          | Error m -> Error (LockFileParserFailure m)
-          | Ok lock_file -> Ok lock_file
-        in
+      match get_lock_file ~project_root ~all_dependencies with
+      | Some lock_file ->
         let solution = Lock_file.(NodeMap.bindings lock_file.node) |> List.map ~f:fst in
         Lwt_result.return (solution, Metadata_cache.empty)
       | None ->

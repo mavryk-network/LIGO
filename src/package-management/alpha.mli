@@ -21,7 +21,6 @@ type error =
   | InstallTestFails of string
   | Manifest_not_found
   | Lock_file_not_found
-  | LockFileParserFailure of string
   | PackageJsonEmptyName
   | RootGenerationInLockFileFailed of string
   | NodeGenerationInLockFileFailed of string
