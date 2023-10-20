@@ -75,7 +75,7 @@ The function implemented (`twice`) above passes the tests:
 
 <Syntax syntax="cameligo">
 
-```shell
+```shell run
 ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.mligo
 # Outputs:
 # Everything at the top-level was executed.
@@ -86,7 +86,7 @@ ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.mligo
 
 <Syntax syntax="jsligo">
 
-```shell
+```shell run
 ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.jsligo
 # Outputs:
 # Everything at the top-level was executed.
@@ -196,7 +196,7 @@ Running the tests again, the following output is obtained:
 
 <Syntax syntax="cameligo">
 
-```shell
+```shell run
 ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.mligo
 # Outputs:
 # Mutation at: File "gitlab-pages/docs/advanced/src/mutation-testing/mutation.mligo", line 1, characters 22-27:
@@ -217,7 +217,7 @@ ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.mligo
 
 <Syntax syntax="jsligo">
 
-```shell
+```shell run
 ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.jsligo
 # Outputs:
 # Mutation at: File "gitlab-pages/docs/advanced/src/mutation-testing/mutation.jsligo", line 1, characters 31-36:
@@ -281,7 +281,7 @@ the tests proposed:
 
 <Syntax syntax="cameligo">
 
-```shell
+```shell run
 ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.mligo
 # Outputs:
 # Everything at the top-level was executed.
@@ -293,7 +293,7 @@ ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.mligo
 
 <Syntax syntax="jsligo">
 
-```shell
+```shell run
 ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.jsligo
 # Outputs:
 # Everything at the top-level was executed.
@@ -432,7 +432,7 @@ Running this test, the following output is obtained:
 
 <Syntax syntax="cameligo">
 
-```shell
+```shell run
 ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract-test.mligo
 # Outputs:
 # File "gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract-test.mligo", line 25, characters 4-65:
@@ -455,7 +455,7 @@ ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract-
 
 <Syntax syntax="jsligo">
 
-```shell
+```shell run
 ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract-test.jsligo
 # Outputs:
 # File "gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract-test.jsligo", line 27, characters 6-68:
