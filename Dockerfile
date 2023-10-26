@@ -21,6 +21,7 @@ RUN apk update && apk upgrade && apk --no-cache add \
 
 # make bls12-381 build ???
 ENV RUSTFLAGS='--codegen target-feature=-crt-static'
+ENV BLST_PORTABLE=y
 
 # Install opam switch & deps
 COPY scripts/setup_switch.sh /ligo/scripts/setup_switch.sh
