@@ -6,7 +6,12 @@ open! Stacking
 open Tezos_micheline
 
 let dummy : Stacking.meta =
-  { location = Location.dummy; env = []; binder = None; source_type = None }
+  { location = Location.dummy
+  ; env = []
+  ; binder = None
+  ; source_type = None
+  ; application = None
+  }
 
 
 let dummy_locations : 'l 'p. ('l, 'p) Micheline.node -> (meta, 'p) Micheline.node =
@@ -17,7 +22,7 @@ let dummy_locations : 'l 'p. ('l, 'p) Micheline.node -> (meta, 'p) Micheline.nod
    to preserve Seq nodes which are used only for comments. Currently
    only env data is important. *)
 let has_comment : Compiler_options.t -> meta -> bool =
- fun options { env; location; binder = _; source_type = _ } ->
+ fun options { env; location; binder = _; source_type = _; application = _ } ->
   options.backend.has_env_comments
   && ((not (List.is_empty env)) || not (Location.is_dummy_or_generated location))
 
@@ -61,7 +66,12 @@ let compile_contract ~raise
   in
   let%map de_bruijn = Stacking.Program.compile_function_body de_bruijn in
   let expr =
-    Self_michelson.optimize protocol_version ~has_comment:(has_comment options) de_bruijn
+    Self_michelson.optimize
+      protocol_version
+      ~experimental_disable_optimizations_for_debugging:
+        options.backend.experimental_disable_optimizations_for_debugging
+      ~has_comment:(has_comment options)
+      de_bruijn
   in
   let expr_ty = compile_type e.type_expression in
   let expr_ty = dummy_locations expr_ty in
@@ -92,7 +102,12 @@ let compile_view ~raise
   in
   let%map de_bruijn = Stacking.Program.compile_function_body de_bruijn in
   let expr =
-    Self_michelson.optimize protocol_version ~has_comment:(has_comment options) de_bruijn
+    Self_michelson.optimize
+      protocol_version
+      ~experimental_disable_optimizations_for_debugging:
+        options.backend.experimental_disable_optimizations_for_debugging
+      ~has_comment:(has_comment options)
+      de_bruijn
   in
   let l, r = trace ~raise self_mini_c_tracer @@ Self_mini_c.get_t_pair input_ty in
   let l = compile_type l in
@@ -117,7 +132,12 @@ let compile_expression ~raise
   in
   let%map expr = Stacking.Program.compile_expr [] expr in
   let expr =
-    Self_michelson.optimize protocol_version ~has_comment:(has_comment options) expr
+    Self_michelson.optimize
+      protocol_version
+      ~experimental_disable_optimizations_for_debugging:
+        options.backend.experimental_disable_optimizations_for_debugging
+      ~has_comment:(has_comment options)
+      expr
   in
   let expr_ty = compile_type e.type_expression in
   ({ expr_ty; expr } : Program.compiled_expression)
@@ -147,7 +167,12 @@ let compile_expression_function ~raise
   in
   let%map de_bruijn = Stacking.Program.compile_function_body de_bruijn in
   let expr =
-    Self_michelson.optimize protocol_version ~has_comment:(has_comment options) de_bruijn
+    Self_michelson.optimize
+      protocol_version
+      ~experimental_disable_optimizations_for_debugging:
+        options.backend.experimental_disable_optimizations_for_debugging
+      ~has_comment:(has_comment options)
+      de_bruijn
   in
   let expr_ty = compile_type e.type_expression in
   ({ expr_ty; expr } : Program.compiled_expression)

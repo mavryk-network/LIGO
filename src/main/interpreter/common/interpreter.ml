@@ -408,7 +408,7 @@ let bind_param
       return result
 
 
-(* 
+(*
 let deref_env env =
   let open Monad in
   bind_map_list
@@ -1193,6 +1193,9 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     (match Z.to_int z with
     | 1 ->
       let json = Ligo_interpreter.Types.value_to_yojson v in
+      return (v_string @@ Yojson.Safe.to_string json)
+    | 2 ->
+      let json = Ligo_interpreter.Combinators.value_to_debugger_yojson v in
       return (v_string @@ Yojson.Safe.to_string json)
     | _ ->
       let s = Format.asprintf "%a" pp_value v in

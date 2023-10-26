@@ -304,10 +304,17 @@ mkSnapshotsForImpl
 mkSnapshotsForImpl logger maxStepsMb (ContractRunData file mModuleName (param :: param) (st :: st)) = do
   let moduleName = mModuleName ?: "$main"
   ligoMapper <- compileLigoContractDebug (mkModuleName $ toText moduleName) file
-  (exprLocs, T.SomeContract (contract@T.Contract{} :: T.Contract cp' st'), allFiles, lambdaLocs, entrypointType, ligoTypesVec) <-
-    case readLigoMapper ligoMapper of
-      Right v -> pure v
-      Left err -> HUnit.assertFailure $ pretty err
+  LigoMapperResult
+    exprLocs
+    (T.SomeContract (contract@T.Contract{} :: T.Contract cp' st'))
+    allFiles
+    lambdaLocs
+    entrypointType
+    ligoTypesVec
+    argumentRanges <-
+      case readLigoMapper ligoMapper of
+        Right v -> pure v
+        Left err -> HUnit.assertFailure $ pretty err
 
   Refl <- sing @cp' `decideEquality` sing @(T.ToT param)
     & maybe
@@ -362,6 +369,7 @@ mkSnapshotsForImpl logger maxStepsMb (ContractRunData file mModuleName (param ::
       (isJust maxStepsMb)
       ligoTypesVec
       scopes
+      argumentRanges
 
   return (allLocs, his, entrypointType, ligoTypesVec)
 
@@ -508,8 +516,7 @@ combLayout = LLInner . fmap LLField
 -- This combinator allows to run tests in legacy mode
 -- with @tree@ layout by default.
 legacyMode :: IO a -> IO a
-legacyMode act = do
-  setEnv "LIGO_LEGACY_LAYOUT_TREE" "1"
-  res <- act
-  unsetEnv "LIGO_LEGACY_LAYOUT_TREE"
-  pure res
+legacyMode act = bracket_
+  (setEnv "LIGO_LEGACY_LAYOUT_TREE" "1")
+  (unsetEnv "LIGO_LEGACY_LAYOUT_TREE")
+  act
