@@ -6,6 +6,7 @@
 set -e
 set -x
 
+#test trigger
 # Install local dependencies
 export PATH=~/.cargo/bin:$PATH
 
