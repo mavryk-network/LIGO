@@ -259,7 +259,7 @@ use its definitions. For example, we could create a `importer.mligo`
 that imports all definitions from `imported.mligo` as the module
 `EURO`:
 
-```cameligo
+```cameligo group=importer
 #import "./gitlab-pages/docs/language-basics/src/modules/imported.mligo" "EURO"
 
 type storage = EURO.t
@@ -278,7 +278,7 @@ use its definitions. For example, we could create a `importer.jsligo`
 that imports all definitions from `imported.jsligo` as the module
 `EURO`:
 
-```jsligo
+```jsligo group=importer
 #import "./gitlab-pages/docs/language-basics/src/modules/imported.jsligo" "EURO"
 
 type storage = EURO.t;

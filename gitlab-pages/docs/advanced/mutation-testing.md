@@ -76,7 +76,7 @@ The function implemented (`twice`) above passes the tests:
 <Syntax syntax="cameligo">
 
 ```shell run
-ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.mligo
+ligo run test gitlab-pages/docs/advanced/src/mutation-testing/twice.mligo
 # Outputs:
 # Everything at the top-level was executed.
 # - test exited with value ().
@@ -87,7 +87,7 @@ ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.mligo
 <Syntax syntax="jsligo">
 
 ```shell run
-ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.jsligo
+ligo run test gitlab-pages/docs/advanced/src/mutation-testing/twice.jsligo
 # Outputs:
 # Everything at the top-level was executed.
 # - test exited with value ().
@@ -197,15 +197,15 @@ Running the tests again, the following output is obtained:
 <Syntax syntax="cameligo">
 
 ```shell run
-ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.mligo
+ligo run test gitlab-pages/docs/advanced/src/mutation-testing/twice.mligo
 # Outputs:
-# Mutation at: File "gitlab-pages/docs/advanced/src/mutation-testing/mutation.mligo", line 1, characters 22-27:
+# Mutation at: File "gitlab-pages/docs/advanced/src/mutation-testing/twice.mligo", line 1, characters 22-27:
 #   1 | let twice (x : int) = x + x
 #   2 |
 #
 # Replacing by: MUL(x ,
 # x).
-# File "gitlab-pages/docs/advanced/src/mutation-testing/mutation.mligo", line 17, character 26 to line 18, character 76:
+# File "gitlab-pages/docs/advanced/src/mutation-testing/twice.mligo", line 17, character 26 to line 18, character 76:
 #  16 |     None -> ()
 #  17 |   | Some (_, mutation) -> let () = Test.log(mutation) in
 #  18 |                           failwith "Some mutation also passes the tests! ^^"
@@ -218,15 +218,15 @@ ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.mligo
 <Syntax syntax="jsligo">
 
 ```shell run
-ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.jsligo
+ligo run test gitlab-pages/docs/advanced/src/mutation-testing/twice.jsligo
 # Outputs:
-# Mutation at: File "gitlab-pages/docs/advanced/src/mutation-testing/mutation.jsligo", line 1, characters 31-36:
+# Mutation at: File "gitlab-pages/docs/advanced/src/mutation-testing/twice.jsligo", line 1, characters 31-36:
 #   1 | let twice = (x : int) : int => x + x;
 #   2 |
 #
 # Replacing by: MUL(x ,
 # x).
-# File "gitlab-pages/docs/advanced/src/mutation-testing/mutation.jsligo", line 18, characters 25-77:
+# File "gitlab-pages/docs/advanced/src/mutation-testing/twice.jsligo", line 18, characters 25-77:
 #  17 |     Some: pmutation => { Test.log(pmutation[1]);
 #  18 |                          failwith ("Some mutation also passes the tests! ^^") }
 #  19 |   });
@@ -282,7 +282,7 @@ the tests proposed:
 <Syntax syntax="cameligo">
 
 ```shell run
-ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.mligo
+ligo run test gitlab-pages/docs/advanced/src/mutation-testing/twice.mligo
 # Outputs:
 # Everything at the top-level was executed.
 # - test exited with value ().
@@ -294,7 +294,7 @@ ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.mligo
 <Syntax syntax="jsligo">
 
 ```shell run
-ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation.jsligo
+ligo run test gitlab-pages/docs/advanced/src/mutation-testing/twice.jsligo
 # Outputs:
 # Everything at the top-level was executed.
 # - test exited with value ().
@@ -352,7 +352,7 @@ the entrypoint `Add(7)` works as intended on an initial storage
 ```cameligo test-ligo group=mutation-contract-test
 (* This is mutation-contract-test.mligo *)
 
-#import "gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract.mligo" "MutationContract"
+#import "mutation-contract.mligo" "MutationContract"
 
 type storage = MutationContract.C.storage
 type param = MutationContract.C parameter_of
@@ -374,7 +374,7 @@ let test_original =
 ```jsligo test-ligo group=mutation-contract-test
 // This is mutation-contract-test.jsligo
 
-#import "gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract.jsligo" "MutationContract"
+#import "mutation-contract.jsligo" "MutationContract"
 type storage = int;
 type param = parameter_of MutationContract.C;
 const initial_storage = 7;

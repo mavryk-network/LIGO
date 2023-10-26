@@ -26,8 +26,9 @@ let gcd (x, y : nat * nat) : nat =
 You can call the function `gcd` defined above using the LIGO compiler
 like so:
 ```shell
-ligo run evaluate-call
-gitlab-pages/docs/language-basics/src/loops/gcd.mligo '(2n*2n*3n*11n, 2n*2n*2n*3n*3n*5n*7n)' --entry-point gcd
+ligo run evaluate-call \
+  gitlab-pages/docs/language-basics/src/loops/gcd.mligo \
+  gcd '(2n*2n*3n*11n, 2n*2n*2n*3n*3n*5n*7n)'
 # Outputs: +12
 ```
 

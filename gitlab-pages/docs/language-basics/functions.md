@@ -24,7 +24,7 @@ Functions in CameLIGO are defined using the `let` keyword, like other
 values. The difference is that a succession of parameters is provided
 after the value name, followed by the return type. This follows OCaml
 syntax. For example:
-```cameligo group=c
+```cameligo group=add
 let add (a : int) (b : int) : int = a + b
 ```
 
@@ -32,7 +32,7 @@ You can call the function `add` defined above using the LIGO compiler
 like this:
 ```shell
 ligo run evaluate-expr \
-  gitlab-pages/docs/language-basics/src/functions/blockless.mligo \
+  gitlab-pages/docs/language-basics/src/functions/add.mligo \
   'add 1 2'
 # Outputs: 3
 ```

@@ -308,7 +308,7 @@ proxy file which declares a single entry point and calls the existing
 <Syntax syntax="cameligo">
 
 ```cameligo group=contract_main_proxy
-#import "gitlab-pages/docs/advanced/src/entrypoints-contracts/contract_main.mligo" "C"
+#import "contract_main.mligo" "C"
 
 module Proxy = struct
 
@@ -322,7 +322,7 @@ end
 The contract can then be compiled using the following command:
 
 ```shell
-ligo compile contract -m Proxy contract_main_proxy.mligo
+ligo compile contract -m Proxy gitlab-pages/docs/advanced/src/entrypoints-contracts/contract_main_proxy.mligo
 ```
 
 </Syntax>
@@ -330,7 +330,7 @@ ligo compile contract -m Proxy contract_main_proxy.mligo
 <Syntax syntax="jsligo">
 
 ```jsligo group=contract_main_proxy
-#import "gitlab-pages/docs/advanced/src/entrypoints-contracts/contract_main.jsligo" "C"
+#import "contract_main.jsligo" "C"
 
 namespace Proxy {
   @entry
@@ -343,7 +343,7 @@ namespace Proxy {
 The contract can then be compiled using the following command:
 
 ```shell
-ligo compile contract -m Proxy contract_main_proxy.jsligo
+ligo compile contract -m Proxy gitlab-pages/docs/advanced/src/entrypoints-contracts/contract_main_proxy.jsligo
 ```
 
 </Syntax>
@@ -355,7 +355,7 @@ constructor:
 <Syntax syntax="cameligo">
 
 ```shell
-ligo compile parameter -m Proxy -e proxy contract_main_proxy.mligo "Action_A(42n)"
+ligo compile parameter -m Proxy -e proxy gitlab-pages/docs/advanced/src/entrypoints-contracts/contract_main_proxy.mligo "Action_A(42n)"
 ```
 
 ```shell

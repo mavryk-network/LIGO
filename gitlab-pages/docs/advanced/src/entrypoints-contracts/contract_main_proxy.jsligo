@@ -1,4 +1,4 @@
-#import "gitlab-pages/docs/advanced/src/entrypoints-contracts/contract_main.jsligo" "C"
+#import "contract_main.jsligo" "C"
 
 namespace Proxy {
   @entry

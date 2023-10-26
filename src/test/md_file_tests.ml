@@ -40,21 +40,26 @@ let in_use_proto = Environment.Protocols.in_use
 
 let execute_command command : int * string =
   Printf.printf "\nExecute %s" command;
-  let ic = Unix.open_process_in command in
+  let ic = Ligo_unix.open_process_in ("set -e; exec 2>&1;\n" ^ command) in
   let all_output = Buffer.create 1024 in
   let exit_code =
     try
       while true do
-        let line = input_line ic in
-        Buffer.add_string all_output line;
-        Buffer.add_char all_output '\n'
+        let line = In_channel.input_line ic in
+        match line with
+        | Some line ->
+          begin
+          Buffer.add_string all_output line;
+          Buffer.add_char all_output '\n'
+          end
+        | None -> raise End_of_file
       done;
       0
     with
     | End_of_file ->
-      let status = Unix.close_process_in ic in
+      let status = Ligo_unix.close_process_in ic in
       (match status with
-       | Unix.WEXITED code | Unix.WSIGNALED code | Unix.WSTOPPED code -> code)
+       | Ligo_unix.WEXITED code | Ligo_unix.WSIGNALED code | Ligo_unix.WSTOPPED code -> code)
   in
   exit_code, Buffer.contents all_output
 
@@ -70,8 +75,8 @@ let get_groups md_file : snippetsmap =
   let channel = In_channel.create md_file in
   let lexbuf = Lexing.from_channel channel in
   let code_blocks = Md.token lexbuf in
-  let aux : snippetsmap -> Md.block -> snippetsmap =
-   fun grp_map el ->
+  let aux : (int * snippetsmap) -> Md.block -> (int * snippetsmap) =
+   fun (nb_shell_blocks, grp_map) el ->
     match el.header with
     | Some "shell" ->
       let () =
@@ -105,19 +110,22 @@ let get_groups md_file : snippetsmap =
       in
       (
         match el.arguments with
-        (* | [ Md.Field "" ] (* Run everything by default on the CI *) *)
+        (* Run everything by default, some code below tests for GITLAB_CI to only actually run things on the CI *)
+        | [ Md.Field "" ]
         | [ Md.Field "run" ] ->
+          nb_shell_blocks + 1,
           SnippetsGroup.update
-            ("shell", "run_shell", current_proto)
+            ("shell", Format.sprintf "run_shell_%d" nb_shell_blocks, current_proto)
             (function
               (* TODO: should use String.concat only once at the top *)
               | Some (Shell, sh) -> Some (Shell, String.concat ~sep:"\n" (sh :: el.contents))
               | None             -> Some (Shell, String.concat ~sep:"\n" el.contents)
-              | Some (_, sh) -> failwith "internal test error: group name shouldn't be 'run_shell'")
+              | Some (_, sh) -> failwith "internal test error: group name shouldn't be 'run_shell_xxx'")
             grp_map
-        | [ Md.Field "skip" ] | _ -> grp_map
+        | [ Md.Field "skip" ] | _ -> nb_shell_blocks, grp_map
       )
     | Some ("cameligo" as s) | Some ("jsligo" as s) ->
+      nb_shell_blocks,
       let () =
         (*sanity check*)
         List.iter
@@ -186,9 +194,10 @@ let get_groups md_file : snippetsmap =
             args
         in
         failwith "Block arguments (above) not supported")
-    | None | Some _ -> grp_map
+    | None | Some _ -> nb_shell_blocks, grp_map
   in
-  List.fold_left ~f:aux ~init:SnippetsGroup.empty code_blocks
+  let ((_nb_shell_blocks : int), grp_map) = List.fold_left ~f:aux ~init:(0, SnippetsGroup.empty) code_blocks in
+  grp_map
 
 (** Write contents to filename if the file doesn't already have the same contents.
     This avoids floppy disk wear and spurious updates of timestamps,
@@ -292,10 +301,14 @@ let compile_groups ~raise filename grp_list =
     | Shell ->
       Lwt.return @@
       let running_in_CI = match Sys.getenv "GITLAB_CI" with Some "true" -> true | _ -> false in
-      if running_in_CI then
-        let () = Format.eprintf "Will run shell command: %s\n" contents in
-        let _ = execute_command contents in
-        ()
+      if running_in_CI then 
+        let () = Format.eprintf "\nWill run shell command from %s:\n%s\n\n" filename contents in
+        let exit_code, output = execute_command contents in
+        if exit_code = 0 then
+          Format.eprintf "The shell command exited successfully"
+        else
+          let () = Format.eprintf "The shell command exited with code %d, output:\n%s\n" exit_code output in
+          failwith "Command failed"
       else
         Format.eprintf "Would run shell command if env var GITLAB_CI was true: %s\n" contents
   in
