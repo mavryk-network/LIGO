@@ -377,31 +377,24 @@ let complete_fields
   in
   let module Fold = Cst_shared.Fold in
   (* All dialects AAAA
-     SOMW PARTS SHOULD BE MOVED TO [Dialect_cst] *)
+     SOME PARTS SHOULD BE MOVED TO [Dialect_cst] *)
   let module D = struct
     type cst = Dialect_cst.t
     type lexeme = string
     type 'a wrap = 'a Lexing_shared.Wrap.t
     type dot = lexeme wrap
-
-    type expr =
-      ( Cst_cameligo.CST.expr
-      , Cst_jsligo.CST.expr
-      , Cst_pascaligo.CST.expr )
-      Dialect_cst.dialect
+    type expr = (Cst_cameligo.CST.expr, Cst_jsligo.CST.expr) Dialect_cst.dialect
 
     let expr_to_region : expr -> Region.t =
       Dialect_cst.from_dialect
         { cameligo = Cst_cameligo.CST.expr_to_region
         ; jsligo = Cst_jsligo.CST.expr_to_region
-        ; pascaligo = Cst_pascaligo.CST.expr_to_region
         }
 
 
     type 'a fold_instruction =
       ( Cst_cameligo.Fold.some_node
       , Cst_jsligo.Fold.some_node
-      , Cst_pascaligo.Fold.some_node
       , 'a Fold.fold_control )
       Dialect_cst.from_dialect
 
@@ -410,24 +403,30 @@ let complete_fields
       Dialect_cst.from_dialect
         { cameligo = Cst_cameligo.Fold.fold_map_cst monoid_witness instr.cameligo
         ; jsligo = Cst_jsligo.Fold.fold_map_cst monoid_witness instr.jsligo
-        ; pascaligo = Cst_pascaligo.Fold.fold_map_cst monoid_witness instr.pascaligo
         }
 
 
     type projection =
-      ( Cst_cameligo.CST.projection
-      , Cst_jsligo.CST.projection
-      , Cst_pascaligo.CST.projection )
-      Dialect_cst.dialect
+      (Cst_cameligo.CST.projection, Cst_jsligo.CST.projection) Dialect_cst.dialect
+
+    let expr_of_projection : projection -> expr =
+      Dialect_cst.map_dialect
+        { cameligo = Cst_cameligo.CST.(fun node -> node.record_or_tuple)
+        ; jsligo = Cst_jsligo.CST.(fun node -> node.object_or_array)
+        }
+
 
     type selection =
       ( dot * Cst_cameligo.CST.selection
-      , Cst_jsligo.CST.selection (* Dot is already an arg of [PropertyName] here *)
-      , dot * Cst_pascaligo.CST.selection )
+      , Cst_jsligo.CST.selection (* Dot is already an arg of [PropertyName] here *) )
       Dialect_cst.dialect
 
-    let expr_of_projection : projection -> selection
-
+    let dot_of_selection : selection -> dot option =
+      Dialect_cst.from_dialect
+      { cameligo = (fun (dot, _expr) -> Some dot)
+      ; jsligo = Cst_jsligo.CST.(function
+        |PropertyName (dot, _) -> Some dot
+        | _ -> None )}
     let selections_of_projection : projection -> selection list =
       Dialect_cst.from_dialect
         { cameligo =
@@ -441,14 +440,7 @@ let complete_fields
             Cst_jsligo.CST.(
               fun node ->
                 List.map ~f:(fun x -> Dialect_cst.JsLIGO x)
-                @@ Simple_utils.Utils.nseq_to_list node.property_path)
-        ; pascaligo =
-            Cst_pascaligo.CST.(
-              fun node ->
-                let hd, tl = node.field_path in
-                List.map
-                  ~f:(fun (d, s) -> Dialect_cst.PascaLIGO (d, s))
-                  ((node.selector, hd) :: tl))
+                @@ Utils.nseq_to_list node.property_path)
         }
   end
   in
@@ -480,15 +472,6 @@ let complete_fields
               | S_wrap _ -> Last { empty with lexeme = mk_dist node#region }
               | S_reg _ -> Continue { empty with lexeme = mk_dist node.region }
               | _ -> Skip)
-        ; pascaligo =
-            (let open Cst_pascaligo.Fold in
-            fun (Some_node (node, sing)) ->
-              match sing with
-              | S_dot -> Last { empty with dot = mk_dist node#region }
-              | S_eof -> Stop
-              | S_wrap _ -> Last { empty with lexeme = mk_dist node#region }
-              | S_reg _ -> Continue { empty with lexeme = mk_dist node.region }
-              | _ -> Skip)
         }
     in
     let { dot; lexeme } = D.fold_map_cst completion_distance_monoid collect cst in
@@ -507,18 +490,17 @@ let complete_fields
   let linearize_projection (node : D.projection)
       : Position.t * D.lexeme D.wrap option list
     =
-    let hd, tl = node.field_path in
-    ( expr_start node.record_or_tuple
-    , List.take_while ((node.selector, hd) :: tl) ~f:(fun (dot, _field) ->
+    ( expr_start @@ D.expr_of_projection node
+    , List.take_while ((D.selections_of_projection node) ~f:(fun (dot, _field) ->
           Position.(is_to_the_left (of_pos dot#region#stop))
             farthest_dot_position_before_cursor)
       |> List.map ~f:(fun (_dot, (field : selection)) ->
              match field with
              | FieldName v ->
-              (match v with
-              | Var name -> Some name#payload
-              | Esc name -> Some ("@" ^ name#payload))
-            | Component _ -> None) ))
+               (match v with
+               | Var name -> Some name#payload
+               | Esc name -> Some ("@" ^ name#payload))
+             | Component _ -> None) )
   in
   let linearize_module_path (type expr) (node : expr module_path) : D.lexeme D.wrap list =
     List.take_while (Simple_utils.Utils.nsepseq_to_list node.module_path) ~f:(fun name ->

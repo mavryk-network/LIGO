@@ -6,15 +6,24 @@ type ('cameligo, 'jsligo) dialect =
   | JsLIGO of 'jsligo
 
 (** Nice form for functions that take [(...) dialect] *)
-type ('cameligo, 'jsligo, 'result) from_dialect =
-  { cameligo : 'cameligo -> 'result
-  ; jsligo : 'jsligo -> 'result
+type ('cameligo, 'jsligo, 'cameligo_result, 'jsligo_result) dialect_fun =
+  { cameligo : 'cameligo -> 'cameligo_result
+  ; jsligo : 'jsligo -> 'jsligo_result
   }
+
+type ('cameligo, 'jsligo, 'result) from_dialect =
+  ('cameligo, 'jsligo, 'result, 'result) dialect_fun
 
 let from_dialect : ('a, 'b, 'result) from_dialect -> ('a, 'b) dialect -> 'result =
  fun f -> function
   | CameLIGO x -> f.cameligo x
   | JsLIGO x -> f.jsligo x
+
+
+let map_dialect : ('a, 'b, 'c, 'd) dialect_fun -> ('a, 'b) dialect -> ('c, 'd) dialect =
+ fun f -> function
+  | CameLIGO x -> CameLIGO (f.cameligo x)
+  | JsLIGO x -> JsLIGO (f.jsligo x)
 
 
 type t = (Parsing.Cameligo.CST.t, Parsing.Jsligo.CST.t) dialect
