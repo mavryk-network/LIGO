@@ -175,7 +175,7 @@ module Of_Ast_core = struct
       Option.value
         ~default:env
         (let open Simple_utils.Option in
-        let* mod_sig = Ast_typed.Misc.get_path_signature prg_sig (List.rev module_path) in
+        let* mod_sig = Ast_typed.Misc.get_path_signature prg_sig module_path in
         let* sig_ =
           List.find_map (List.rev mod_sig.sig_items) ~f:(function
               | S_module_type (n, sig_) when Module_var.equal n name -> Some sig_
