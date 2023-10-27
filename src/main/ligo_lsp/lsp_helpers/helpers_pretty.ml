@@ -44,7 +44,7 @@ let unresolved_type_as_comment syntax =
 type module_pp_mode =
   { module_keyword : string
   ; import_keyword : string
-  ; sign_on_definition : string option
+  ; sign_on_signature : string
   ; sign_on_import : string option
   ; open_ : string
   ; close : string
@@ -54,7 +54,7 @@ type module_pp_mode =
 let cameligo_module =
   { module_keyword = "module"
   ; import_keyword = "module"
-  ; sign_on_definition = Some "="
+  ; sign_on_signature = ":"
   ; sign_on_import = Some "="
   ; open_ = "struct"
   ; close = "end"
@@ -65,7 +65,7 @@ let cameligo_module =
 let jsligo_module =
   { module_keyword = "namespace"
   ; import_keyword = "import"
-  ; sign_on_definition = None
+  ; sign_on_signature = "implements"
   ; sign_on_import = Some "="
   ; open_ = "{"
   ; close = "}"
@@ -74,23 +74,18 @@ let jsligo_module =
 
 
 let print_module_with_description
-    : module_pp_mode -> string * string -> Scopes.Types.mdef -> string
+    : module_pp_mode -> string -> Scopes.Types.mdef -> string
   =
- fun description (opening_comment, closing_comment) mdef ->
+ fun description signature mdef ->
   match mdef.mod_case with
   | Def _ ->
     description.module_keyword
     ^ " "
     ^ mdef.name
-    ^ (Option.value ~default:" "
-      @@ Option.map ~f:(fun s -> " " ^ s ^ " ") description.sign_on_definition)
-    ^ description.open_
     ^ " "
-    ^ opening_comment
-    ^ " ... " (* TODO: print module*)
-    ^ closing_comment
+    ^ description.sign_on_signature
     ^ " "
-    ^ description.close
+    ^ signature
   | Alias (module_path_list, _) ->
     description.import_keyword
     ^ " "
@@ -102,9 +97,9 @@ let print_module_with_description
       |> String.concat ~sep:".")
 
 
-let print_module : Syntax_types.t -> Scopes.Types.mdef -> string = function
-  | CameLIGO -> print_module_with_description cameligo_module (get_comment CameLIGO)
-  | JsLIGO -> print_module_with_description jsligo_module (get_comment JsLIGO)
+let print_module : Syntax_types.t -> string -> Scopes.Types.mdef -> string = function
+  | CameLIGO -> print_module_with_description cameligo_module
+  | JsLIGO -> print_module_with_description jsligo_module
 
 
 (* Functions made for debugging *)

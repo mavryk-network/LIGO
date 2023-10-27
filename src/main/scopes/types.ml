@@ -53,6 +53,11 @@ type type_case =
   | Resolved of Ast_typed.type_expression
   | Unresolved
 
+type signature_case =
+  | Core_sig of Ast_core.signature
+  | Resolved_sig of Ast_typed.signature
+  | Unresolved_sig
+
 type def_type =
   | Local
   | Parameter
@@ -94,6 +99,7 @@ and mdef =
   ; mod_case : mod_case
   ; def_type : def_type
   ; mod_path : string list
+  ; signature : signature_case
   }
 
 and def =

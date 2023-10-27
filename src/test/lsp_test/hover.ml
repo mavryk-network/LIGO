@@ -128,6 +128,96 @@ let test_cases =
             ; pos ~line:46 ~character:55
             ]
     }
+  ; { test_name = "hover_module.mligo"
+    ; file = "contracts/lsp/hover/hover_module.mligo"
+    ; hovers =
+        [ ( pos ~line:0 ~character:7
+          , "module A : sig\n  val foo : int\n\n  val bar : int\n\nend" )
+        ; ( pos ~line:10 ~character:7
+          , "module B : sig\n  type t\n\n  type int = string\n\nend" )
+        ; ( pos ~line:17 ~character:7
+          , "module C : sig\n  val foo : tez\n\n  val another : int\n\nend" )
+        ; ( pos ~line:33 ~character:24
+          , "module Bytes : sig\n\
+            \  val concats : bytes list -> bytes\n\n\
+            \  val pack : a -> bytes\n\n\
+            \  val unpack : bytes -> a option\n\n\
+            \  val length : bytes -> nat\n\n\
+            \  val concat : bytes -> bytes -> bytes\n\n\
+            \  val sub : nat -> nat -> bytes -> bytes\n\n\
+             end" )
+        ; pos ~line:43 ~character:13, "module Mangled : (* Unresolved *)"
+        ; ( pos ~line:48 ~character:12
+          , "module Mangled_with_sig : sig\n  type t\n\n  type int = string\n\nend" )
+        ; ( pos ~line:54 ~character:10
+          , "module Mangled_with_inlined_sig : sig\n  val foo : int\n\nend" )
+        ]
+        @ List.map
+            ~f:(fun p ->
+              ( p
+              , "module Outer : sig\n\
+                \  val outer_foo : int -> int -> int\n\n\
+                \  type submodule_cannot_be_printed\n\n\
+                 end" )) (* For me this "submodule_cannot_be_printed" looks weird tbh *)
+            [ pos ~line:25 ~character:9; pos ~line:41 ~character:21 ]
+        @ List.map
+            ~f:(fun p ->
+              p, "module Inner : sig\n  val inner_foo : int -> int -> int\n\nend")
+            [ pos ~line:28 ~character:11; pos ~line:41 ~character:25 ]
+        @ List.map
+            ~f:(fun p -> p, "module Bytes : sig\n  val overwritten : string\n\nend")
+            [ pos ~line:35 ~character:8; pos ~line:39 ~character:35 ]
+        @ List.map
+            ~f:(fun p -> p, "module M : sig\n  val v : int\n\nend")
+            [ pos ~line:62 ~character:9; pos ~line:64 ~character:9 ]
+    }
+  ; { test_name = "hover_module.jsligo"
+    ; file = "contracts/lsp/hover/hover_module.jsligo"
+    ; hovers =
+        [ ( pos ~line:0 ~character:10
+          , "namespace A implements {\n  const foo: int;\n  const bar: int\n}" )
+        ; ( pos ~line:10 ~character:10
+          , "namespace B implements {\n  type t;\n  type int = string\n}" )
+        ; ( pos ~line:17 ~character:10
+          , "namespace C implements {\n  const foo: tez;\n  const another: int\n}" )
+        ; ( pos ~line:33 ~character:27
+          , "namespace Bytes implements {\n\
+            \  const concats: (_: list<bytes>) => bytes;\n\
+            \  const pack: (_: a) => bytes;\n\
+            \  const unpack: (_: bytes) => option<a>;\n\
+            \  const length: (_: bytes) => nat;\n\
+            \  const concat: (_: bytes) => (_: bytes) => bytes;\n\
+            \  const sub: (_: nat) => (_: nat) => (_: bytes) => bytes\n\
+             }" )
+        ; pos ~line:43 ~character:11, "namespace Mangled implements /* Unresolved */"
+        ; ( pos ~line:48 ~character:13
+          , "namespace Mangled_with_sig implements {\n  type t;\n  type int = string\n}" )
+        ; ( pos ~line:54 ~character:26
+          , "namespace Mangled_with_inlined_sig implements {\n  const foo: int\n}" )
+        ]
+        @ List.map
+            ~f:(fun p ->
+              ( p
+              , "namespace Outer implements {\n\
+                \  const outer_foo: (_: int) => (_: int) => int;\n\
+                \  type submodule_cannot_be_printed\n\
+                 }" )) (* Same here *)
+            [ pos ~line:25 ~character:11; pos ~line:41 ~character:21 ]
+        @ List.map
+            ~f:(fun p ->
+              ( p
+              , "namespace Inner implements {\n\
+                \  const inner_foo: (_: int) => (_: int) => int\n\
+                 }" ))
+            [ pos ~line:28 ~character:20; pos ~line:41 ~character:26 ]
+        @ List.map
+            ~f:(fun p ->
+              p, "namespace Bytes implements {\n  const overwritten: string\n}")
+            [ pos ~line:35 ~character:13; pos ~line:39 ~character:35 ]
+        @ List.map
+            ~f:(fun p -> p, "namespace M implements {\n  const v: int\n}")
+            [ pos ~line:62 ~character:12; pos ~line:65 ~character:9 ]
+    }
   ]
 
 

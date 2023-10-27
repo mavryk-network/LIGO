@@ -1,7 +1,10 @@
 open Simple_utils
 module LMap : Map.S with type key = Location.t
 
-type t = Types.type_case LMap.t
+type t =
+  { type_cases : Types.type_case LMap.t
+  ; module_signatures : Types.signature_case LMap.t
+  }
 
 val empty : t
 
@@ -24,7 +27,7 @@ val resolve
   -> Typing_env.t
 
 module Of_Ast_core : sig
-  val declarations : t -> Ast_core.declaration list -> t
+  val declarations : t -> Ast_typed.signature -> Ast_core.declaration list -> t
 end
 
 val patch : t -> Types.def list -> Types.def list

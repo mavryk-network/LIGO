@@ -93,7 +93,17 @@ let defs_of_mvar ~(bindee : Ast_core.module_expr) ~(mod_case : mod_case)
       in
       let references : LSet.t = LSet.empty (* Filled in a later pass *) in
       let mod_case : mod_case = mod_case in
-      { name; uid; range; body_range; references; mod_case; def_type; mod_path }
+      let signature = Unresolved_sig (* Filled in a later pass *) in
+      { name
+      ; uid
+      ; range
+      ; body_range
+      ; references
+      ; mod_case
+      ; def_type
+      ; mod_path
+      ; signature
+      }
     in
     Module mdef :: acc)
 

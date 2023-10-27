@@ -34,7 +34,9 @@ let defs_and_typed_program
     if options.no_stdlib
     then []
     else (
-      let stdlib_core_types = Types_pass.(Of_Ast_core.declarations empty stdlib_core) in
+      let stdlib_core_types =
+        Types_pass.(Of_Ast_core.declarations empty stdlib_decls.pr_sig stdlib_core)
+      in
       Definitions.Of_Stdlib.definitions stdlib_core |> Types_pass.patch stdlib_core_types)
   in
   let bindings, typed =
@@ -58,12 +60,14 @@ let scopes
     -> prg:Ast_core.module_ -> definitions:def list -> scopes
   =
  fun ~options ~stdlib ~prg ~definitions ->
-  let _stdlib_decls, stdlib_core = stdlib in
+  let stdlib_decls, stdlib_core = stdlib in
   let stdlib_defs, env_preload_decls =
     if options.no_stdlib
     then [], []
     else
-      ( (let stdlib_core_types = Types_pass.(Of_Ast_core.declarations empty stdlib_core) in
+      ( (let stdlib_core_types =
+           Types_pass.(Of_Ast_core.declarations empty stdlib_decls.pr_sig stdlib_core)
+         in
          Definitions.Of_Stdlib.definitions stdlib_core
          |> Types_pass.patch stdlib_core_types)
       , stdlib_core )
