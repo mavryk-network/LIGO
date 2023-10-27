@@ -1,6 +1,6 @@
 (* This is mutation-contract-test.mligo *)
 
-#import "mutation-contract.mligo" "MutationContract"
+#import "gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract.mligo" "MutationContract"
 
 type storage = MutationContract.C.storage
 type param = MutationContract.C parameter_of

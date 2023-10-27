@@ -1,4 +1,4 @@
-#import "./gitlab-pages/docs/language-basics/src/modules/imported.mligo" "EURO"
+#import "gitlab-pages/docs/language-basics/src/modules/imported.mligo" "EURO"
 
 type storage = EURO.t
 

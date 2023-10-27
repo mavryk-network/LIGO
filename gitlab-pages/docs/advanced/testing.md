@@ -55,7 +55,7 @@ As a concrete example, suppose we have the following contract:
 <Syntax syntax="cameligo">
 
 ```cameligo test-ligo group=mycontract
-// This is testnew.mligo
+// This is mycontract.mligo
 module C = struct
   type storage = int
   type result = operation list * storage
@@ -132,7 +132,7 @@ occurred.
 <Syntax syntax="cameligo">
 
 ```shell
-ligo run test gitlab-pages/docs/advanced/src/mycontract-test.mligo
+ligo run test --library . gitlab-pages/docs/advanced/src/testing/mycontract-test.mligo
 # Outputs:
 # Everything at the top-level was executed.
 # - test1 exited with value ().
@@ -143,7 +143,7 @@ ligo run test gitlab-pages/docs/advanced/src/mycontract-test.mligo
 <Syntax syntax="jsligo">
 
 ```shell
-ligo run test gitlab-pages/docs/advanced/src/testnew.jsligo
+ligo run test --library . gitlab-pages/docs/advanced/src/testing/mycontract-test.jsligo
 # Outputs:
 # Everything at the top-level was executed.
 # - test1 exited with value ().
@@ -521,7 +521,7 @@ the bootstrap addresses later)
 
 <Syntax syntax="cameligo">
 
-```cameligo test-ligo group=rmv_bal_test
+```cameligo test-ligo group=unit-remove-balance-mixed
 #include "./gitlab-pages/docs/advanced/src/testing/remove-balance.mligo"
 let _u = Test.reset_state 5n ([] : tez list)
 ```
@@ -530,7 +530,7 @@ let _u = Test.reset_state 5n ([] : tez list)
 
 <Syntax syntax="jsligo">
 
-```jsligo test-ligo group=rmv_bal_test
+```jsligo test-ligo group=unit-remove-balance-mixed
 #include "./gitlab-pages/docs/advanced/src/testing/remove-balance.jsligo"
 let _u = Test.reset_state (5n, list([]) as list <tez>);
 ```
@@ -541,7 +541,7 @@ Now build the `balances` map that will serve as the input of our test.
 
 <Syntax syntax="cameligo">
 
-```cameligo test-ligo group=rmv_bal_test
+```cameligo test-ligo group=unit-remove-balance-mixed
 let balances : balances =
   let a1, a2, a3 = Test.nth_bootstrap_account 1, Test.nth_bootstrap_account 2, Test.nth_bootstrap_account 3
   in Map.literal [(a1, 10tz); (a2, 100tz); (a3, 1000tz)]
@@ -550,7 +550,7 @@ let balances : balances =
 </Syntax>
 <Syntax syntax="jsligo">
 
-```jsligo test-ligo group=rmv_bal_test
+```jsligo test-ligo group=unit-remove-balance-mixed
 let balances : balances =
   Map.literal(list([[Test.nth_bootstrap_account(1), 10tez],
                     [Test.nth_bootstrap_account(2), 100tez],
@@ -578,7 +578,7 @@ We also print the actual and expected sizes for good measure.
 
 <Syntax syntax="cameligo">
 
-```cameligo test-ligo group=rmv_bal_test
+```cameligo test-ligo group=unit-remove-balance-mixed
 let test =
   List.iter
     (fun ((threshold , expected_size) : tez * nat) ->
@@ -595,7 +595,7 @@ let test =
 </Syntax>
 <Syntax syntax="jsligo">
 
-```jsligo test-ligo group=rmv_bal_test
+```jsligo test-ligo group=unit-remove-balance-mixed
 let test =
   List.iter
     ( ([threshold , expected_size] : [tez , nat]) : unit => {
@@ -616,7 +616,7 @@ You can now execute the test:
 <Syntax syntax="cameligo">
 
 ```shell
-> ligo run test gitlab-pages/docs/advanced/src/unit-remove-balance-mixed.mligo
+ligo run test --library . gitlab-pages/docs/advanced/src/testing/unit-remove-balance-mixed.mligo
 # Outputs:
 # ("expected" , 2)
 # ("actual" , 2)
@@ -633,7 +633,7 @@ You can now execute the test:
 <Syntax syntax="jsligo">
 
 ```shell
-> ligo run test gitlab-pages/docs/advanced/src/unit-remove-balance-mixed.jsligo
+ligo run test --library . gitlab-pages/docs/advanced/src/testing/unit-remove-balance-mixed.jsligo
 # Outputs:
 # ("expected" , 2)
 # ("actual" , 2)
@@ -658,7 +658,7 @@ contract.
 
 <Syntax syntax="cameligo">
 
-```cameligo
+```cameligo group=testme
 (* This is testme.mligo *)
 
 type storage = int
@@ -678,7 +678,7 @@ let reset (_ : unit) (_ : storage) : result = [], 0
 
 <Syntax syntax="jsligo">
 
-```jsligo
+```jsligo group=testme
 // This is testme.jsligo
 type storage = int;
 type result = [list<operation>, storage];
@@ -702,7 +702,7 @@ a resulting storage of `42`. For checking it, we can interpret the
 <Syntax syntax="cameligo">
 
 ```shell
-ligo run interpret "increment 32 10" --init-file gitlab-pages/docs/advanced/src/testme.mligo
+ligo run interpret "increment 32 10" --init-file gitlab-pages/docs/advanced/src/testing/testme.mligo
 # Outputs:
 # ( LIST_EMPTY() , 42 )
 ```
@@ -712,7 +712,7 @@ ligo run interpret "increment 32 10" --init-file gitlab-pages/docs/advanced/src/
 <Syntax syntax="jsligo">
 
 ```shell
-ligo run interpret "increment (32, 10)" --init-file gitlab-pages/docs/advanced/src/testme.jsligo
+ligo run interpret "increment (32, 10)" --init-file gitlab-pages/docs/advanced/src/testing/testme.jsligo
 # Outputs:
 # ( LIST_EMPTY() , 42 )
 ```

@@ -1,4 +1,4 @@
-// This is testnew.mligo
+// This is mycontract.mligo
 module C = struct
   type storage = int
   type result = operation list * storage

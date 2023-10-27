@@ -352,7 +352,7 @@ the entrypoint `Add(7)` works as intended on an initial storage
 ```cameligo test-ligo group=mutation-contract-test
 (* This is mutation-contract-test.mligo *)
 
-#import "mutation-contract.mligo" "MutationContract"
+#import "gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract.mligo" "MutationContract"
 
 type storage = MutationContract.C.storage
 type param = MutationContract.C parameter_of
@@ -374,7 +374,7 @@ let test_original =
 ```jsligo test-ligo group=mutation-contract-test
 // This is mutation-contract-test.jsligo
 
-#import "mutation-contract.jsligo" "MutationContract"
+#import "gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract.jsligo" "MutationContract"
 type storage = int;
 type param = parameter_of MutationContract.C;
 const initial_storage = 7;
@@ -433,7 +433,7 @@ Running this test, the following output is obtained:
 <Syntax syntax="cameligo">
 
 ```shell run
-ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract-test.mligo
+ligo run test --library . gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract-test.mligo
 # Outputs:
 # File "gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract-test.mligo", line 25, characters 4-65:
 #  24 |     let () = Test.log(mutation) in
@@ -456,7 +456,7 @@ ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract-
 <Syntax syntax="jsligo">
 
 ```shell run
-ligo run test gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract-test.jsligo
+ligo run test --library . gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract-test.jsligo
 # Outputs:
 # File "gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract-test.jsligo", line 27, characters 6-68:
 #  26 |       Test.log(pmutation[1]);

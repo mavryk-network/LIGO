@@ -260,7 +260,7 @@ that imports all definitions from `imported.mligo` as the module
 `EURO`:
 
 ```cameligo group=importer
-#import "./gitlab-pages/docs/language-basics/src/modules/imported.mligo" "EURO"
+#import "gitlab-pages/docs/language-basics/src/modules/imported.mligo" "EURO"
 
 type storage = EURO.t
 
@@ -279,7 +279,7 @@ that imports all definitions from `imported.jsligo` as the module
 `EURO`:
 
 ```jsligo group=importer
-#import "./gitlab-pages/docs/language-basics/src/modules/imported.jsligo" "EURO"
+#import "gitlab-pages/docs/language-basics/src/modules/imported.jsligo" "EURO"
 
 type storage = EURO.t;
 
@@ -296,7 +296,7 @@ without having to mention the imported file.
 <Syntax syntax="cameligo">
 
 ```shell
-ligo compile contract gitlab-pages/docs/language-basics/src/modules/importer.mligo
+ligo compile contract --library . gitlab-pages/docs/language-basics/src/modules/importer.mligo
 ```
 
 </Syntax>
@@ -304,7 +304,7 @@ ligo compile contract gitlab-pages/docs/language-basics/src/modules/importer.mli
 <Syntax syntax="jsligo">
 
 ```shell
-ligo compile contract gitlab-pages/docs/language-basics/src/modules/importer.jsligo
+ligo compile contract --library . gitlab-pages/docs/language-basics/src/modules/importer.jsligo
 ```
 
 </Syntax>

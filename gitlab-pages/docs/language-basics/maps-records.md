@@ -235,7 +235,7 @@ ligo run evaluate-expr \
 A unique feature of LIGO is the ability to perform nested updates on
 records. For example if you have the following record structure:
 
-```cameligo
+```cameligo group=record_nested_update
 type color = Blue | Green
 
 type preferences = {
@@ -259,7 +259,7 @@ The following however also does the trick.
 
 For example if you have the following record structure:
 
-```jsligo
+```jsligo group=record_nested_update
 type color = ["Blue"] | ["Green"];
 
 type preferences = {
@@ -279,7 +279,7 @@ You can update the nested record with the following code:
 
 <Syntax syntax="cameligo">
 
-```cameligo
+```cameligo group=record_nested_update
 let change_color_preference (account : account) (color : color) : account =
   { account with preferences.color = color }
 ```
@@ -288,7 +288,7 @@ let change_color_preference (account : account) (color : color) : account =
 
 <Syntax syntax="jsligo">
 
-```jsligo
+```jsligo group=record_nested_update
 const change_color_preference = (account : account, color : color) =>
   ({ ...account, preferences: {...account.preferences, color: color }});
 ```
