@@ -60,9 +60,112 @@ let%expect_test _ =
     [ "compile"; "contract"; contract "interfaces.extra.jsligo"; "-m"; "Impl" ];
   [%expect
     {|
-    { parameter int ;
+    { parameter (or (int %extra) (int %add)) ;
       storage int ;
-      code { UNPAIR ; ADD ; NIL operation ; PAIR } } |}]
+      code { UNPAIR ; IF_LEFT { SUB } { ADD } ; NIL operation ; PAIR } } |}];
+  run_ligo_good
+    [ "compile"; "contract"; contract "interfaces.include.jsligo"; "-m"; "ImplAll" ];
+  [%expect
+    {|
+    { parameter
+        (or (unit %other4)
+            (or (int %juju)
+                (or (unit %other3) (or (unit %other2) (or (unit %other1) (unit %transfer)))))) ;
+      storage int ;
+      code { UNPAIR ;
+             IF_LEFT
+               { DROP }
+               { IF_LEFT
+                   { DROP }
+                   { IF_LEFT
+                       { DROP }
+                       { IF_LEFT { DROP } { IF_LEFT { DROP } { DROP } } } } } ;
+             NIL operation ;
+             PAIR } ;
+      view "v1" unit int { CDR } ;
+      view "v2" unit int { CDR } } |}];
+  run_ligo_good
+    [ "compile"; "contract"; contract "interfaces.include.jsligo"; "-m"; "ImplAllNoJuju" ];
+  [%expect
+    {|
+    { parameter
+        (or (unit %other4)
+            (or (unit %other3) (or (unit %other2) (or (unit %other1) (unit %transfer))))) ;
+      storage int ;
+      code { UNPAIR ;
+             IF_LEFT
+               { DROP }
+               { IF_LEFT
+                   { DROP }
+                   { IF_LEFT { DROP } { IF_LEFT { DROP } { DROP } } } } ;
+             NIL operation ;
+             PAIR } ;
+      view "v1" unit int { CDR } ;
+      view "v2" unit int { CDR } } |}];
+  run_ligo_good
+    [ "compile"; "contract"; contract "interfaces.include.mligo"; "-m"; "FA0EXTImpl" ];
+  [%expect
+    {|
+    { parameter (or (unit %transfer2) (unit %transfer)) ;
+      storage unit ;
+      code { LAMBDA
+               (pair unit unit)
+               (pair (list operation) unit)
+               { DROP ; UNIT ; NIL operation ; PAIR } ;
+             SWAP ;
+             UNPAIR ;
+             IF_LEFT { PAIR ; EXEC } { PAIR ; EXEC } } } |}];
+  run_ligo_bad
+    [ "compile"; "contract"; bad_contract "interfaces.optional.jsligo"; "-m"; "FAAll" ];
+  [%expect
+    {|
+    File "../../test/contracts/negative/interfaces.optional.jsligo", line 33, character 0 to line 49, character 1:
+     32 |
+     33 | namespace ImplAll implements FAAll {
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     34 |   type t = int;
+          ^^^^^^^^^^^^^^^
+     35 |
+
+     36 |   @entry const transfer = (_u : unit, s : t) : [list<operation>, t] => [list([]), s];
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     37 |   @entry const other1 = (_u : unit, s : t) : [list<operation>, t] => [list([]), s];
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     38 |   @entry const other2 = (_u : unit, s : t) : [list<operation>, t] => [list([]), s];
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     39 |   @entry const other3 = (_u : unit, s : t) : [list<operation>, t] => [list([]), s];
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     40 |   @view const v1 = (_u : unit, s : t) : t => s;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     41 |   /* this is wrong because juju has a different type */
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     42 |   @entry const juju = (_i : string, s : t) : [list<operation>, t] => [list([]), s];
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     43 |
+
+     44 |   /* foo, other4 and v2 are not in FAAll, but still added, because filtering
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     45 |      is not enabled */
+          ^^^^^^^^^^^^^^^^^^^^^^
+     46 |   export const foo = (s : t) : t => s;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     47 |   @entry const other4 = (_u : unit, s : t) : [list<operation>, t] => [list([]), s];
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     48 |   @view const v2 = (_u : unit, s : t) : t => s;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     49 | }
+          ^
+     50 |
+
+    Value "juju" does not match.
+    Expected "string -> int -> ( list (operation) * int )", but got: "int -> int ->
+    ( list (operation) *
+      int )". |}];
+  run_ligo_good [ "run"; "test"; contract "interfaces.include.jsligo" ];
+  [%expect
+    {|
+    Everything at the top-level was executed.
+    - test exited with value 1297n. |}]
 
 let%expect_test _ =
   run_ligo_good
@@ -951,7 +1054,7 @@ File "../../test/contracts/negative/create_contract_toplevel.mligo", line 5, cha
       ^^^^^^^^
  10 |   in
 
-Not all free variables could be inlined in Tezos.create_contract usage: gen#248. |}];
+Not all free variables could be inlined in Tezos.create_contract usage: gen#249. |}];
   run_ligo_good [ "compile"; "contract"; contract "create_contract_var.mligo" ];
   [%expect
     {|
@@ -1043,7 +1146,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#248.
           ^^^^^^^^^^
      15 |   ([toto.0], store)
 
-    Not all free variables could be inlined in Tezos.create_contract usage: gen#249. |}];
+    Not all free variables could be inlined in Tezos.create_contract usage: gen#250. |}];
   run_ligo_bad [ "compile"; "contract"; bad_contract "create_contract_no_inline.mligo" ];
   [%expect
     {|
@@ -1106,7 +1209,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#248.
           ^^^^^^^
      15 |   let toto : operation list = [op] in
 
-    Not all free variables could be inlined in Tezos.create_contract usage: foo#263. |}];
+    Not all free variables could be inlined in Tezos.create_contract usage: foo#264. |}];
   run_ligo_good [ "compile"; "contract"; contract "create_contract.mligo" ];
   [%expect
     {|
@@ -1159,65 +1262,29 @@ let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; bad_contract "bad_contract.mligo" ];
   [%expect
     {|
-File "../../test/contracts/negative/bad_contract.mligo", line 1, character 0 to line 6, character 69:
-  1 | type storage = int
-      ^^^^^^^^^^^^^^^^^^
-  2 |
-
-  3 | type parameter = nat
-      ^^^^^^^^^^^^^^^^^^^^
-  4 |
-
+File "../../test/contracts/negative/bad_contract.mligo", line 6, characters 4-8:
   5 | [@entry]
-      ^^^^^^^^
   6 | let main (action : parameter) (store : storage) : storage = store + 1
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          ^^^^
 
 Not an entrypoint: nat -> int -> int |}];
   run_ligo_bad [ "compile"; "contract"; bad_contract "bad_contract2.mligo" ];
   [%expect
     {|
-File "../../test/contracts/negative/bad_contract2.mligo", line 1, character 0 to line 8, character 77:
-  1 | type storage = int
-      ^^^^^^^^^^^^^^^^^^
-  2 |
-
-  3 | type parameter = nat
-      ^^^^^^^^^^^^^^^^^^^^
-  4 |
-
-  5 | type return = string * storage
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  6 |
-
+File "../../test/contracts/negative/bad_contract2.mligo", line 8, characters 4-8:
   7 | [@entry]
-      ^^^^^^^^
   8 | let main (action : parameter) (store : storage) : return = ("bad", store + 1)
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          ^^^^
 
 Not an entrypoint: nat -> int -> ( string * int ) |}];
   run_ligo_bad [ "compile"; "contract"; bad_contract "bad_contract3.mligo" ];
   [%expect
     {|
-File "../../test/contracts/negative/bad_contract3.mligo", line 1, character 0 to line 9, character 32:
-  1 | type storage = int
-      ^^^^^^^^^^^^^^^^^^
-  2 |
-
-  3 | type parameter = nat
-      ^^^^^^^^^^^^^^^^^^^^
-  4 |
-
-  5 | type return = operation list * string
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  6 |
-
+File "../../test/contracts/negative/bad_contract3.mligo", line 8, characters 4-8:
   7 | [@entry]
-      ^^^^^^^^
   8 | let main (action : parameter) (store : storage) : return =
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          ^^^^
   9 |   (([] : operation list), "bad")
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Not an entrypoint: nat -> int -> ( list (operation) * string ) |}]
 
@@ -2770,27 +2837,11 @@ let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; bad_contract "entrypoint_no_type.jsligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative/entrypoint_no_type.jsligo", line 1, character 0 to line 10, character 1:
-      1 | type organization = {
-          ^^^^^^^^^^^^^^^^^^^^^
-      2 |    name : string,
-          ^^^^^^^^^^^^^^^^^
-      3 |    admins : int,
-          ^^^^^^^^^^^^^^^^
-      4 | };
-          ^^
-      5 | type storage = int;
-          ^^^^^^^^^^^^^^^^^^^
-      6 |
-
+    File "../../test/contracts/negative/entrypoint_no_type.jsligo", line 8, characters 6-12:
       7 | @entry
-          ^^^^^^
       8 | const unique = (_p : organization, _s : storage) => {
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^^^^^^
       9 |     return failwith("You need to be part of Tezos organization to activate an organization");
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     10 | };
-          ^
 
     Not an entrypoint: record[admins -> int , name -> string] -> ∀ gen#5 : * . int -> gen#5 |}]
 
@@ -3259,19 +3310,11 @@ let%expect_test "duplicate entrypoints" =
   run_ligo_bad [ "compile"; "contract"; bad_contract "duplicate_entrypoints.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative/duplicate_entrypoints.mligo", line 1, character 13 to line 6, character 3:
-      1 | module Foo = struct
-                       ^^^^^^
+    File "../../test/contracts/negative/duplicate_entrypoints.mligo", line 3, characters 6-7:
       2 |   [@entry]
-          ^^^^^^^^^^
       3 |   let b () () : operation list * unit = failwith ()
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^
       4 |   [@entry]
-          ^^^^^^^^^^
-      5 |   let b () () : operation list * unit  = failwith ()
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      6 | end
-          ^^^
 
     Duplicate entry-point b |}]
 
