@@ -33,6 +33,15 @@ const sidebars = {
         "href": "https://www.marigold.dev/learn",
       },
     ],
+    "Comments": [
+      "comments/comments"
+    ],
+    "Keywords": [
+      "keywords/keywords"
+    ],
+    "Numbers": [
+      "numbers/types_and_literals"
+    ],
     "Basics": [
       "language-basics/types",
       "language-basics/composite-types",
