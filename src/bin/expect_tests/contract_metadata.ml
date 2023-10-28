@@ -417,7 +417,7 @@ let%expect_test _ =
     ];
   [%expect
     {|
-    Warning: Could not parse JSON in storage's metadata: "Line 1, bytes 6-7:
+    Warning: Could not parse JSON in storage's metadata: "Line 1, bytes 0-7:
     Invalid token 'nojson!'".
     (Pair 42
           { Elt "" 0x74657a6f732d73746f726167653a68616861 ; Elt "haha" 0x6e6f6a736f6e21 }) |}];
