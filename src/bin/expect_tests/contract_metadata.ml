@@ -431,7 +431,7 @@ let%expect_test _ =
     ];
   [%expect
     {|
-    Warning: Error in JSON in storage's metadata: could not successfully typecheck the view "get-allowance-for-user" w.r.t. to parameter, returntType and storage of the contract.
+    Warning: Error in JSON in storage's metadata: could not successfully typecheck the view "get-allowance-for-user" w.r.t. to parameter, returnType and storage of the contract.
     (Pair 42
           { Elt "" 0x74657a6f732d73746f726167653a68656c6c6f253246776f726c64 ;
             Elt "hello/world"
@@ -472,6 +472,28 @@ let%expect_test _ =
     {|
     Warning: Empty key in metadata big-map is mandatory.
     (Pair 42 { Elt "titi" 0x24 ; Elt "toto" 0x42 }) |}]
+
+let%expect_test _ =
+  let entrypoint = "Entry_valid_metadata_with_dynamic_entrypoints" in
+  run_ligo_good [ "compile"; "contract"; test "metadata_tzip16.mligo"; "-m"; entrypoint ];
+  [%expect
+    {|
+    { parameter int ;
+      storage
+        (pair (pair %storage (int %data) (big_map %metadata string bytes))
+              (big_map %dynamic_entrypoints nat bytes)) ;
+      code { CDR ; NIL operation ; PAIR } } |}];
+  let storage =
+    "{ data  = 42 ; metadata = Big_map.literal [ (\"toto\", 0x42) ; (\"titi\", 0x24) ] }"
+  in
+  run_ligo_good
+    [ "compile"; "storage"; test "metadata_tzip16.mligo"; "-m"; entrypoint; storage ];
+  [%expect
+    {|
+    Warning: Empty key in metadata big-map is mandatory.
+    (Pair (Pair 42 { Elt "titi" 0x24 ; Elt "toto" 0x42 })
+          { Elt 0
+                0x050200000047032009310000003b07650765035b076103680369076103620369096500000014055f036d0765035b076103680369076103620369000000000200000006053d036d034200000000 }) |}]
 
 (* -------------------------------------------------------------------------- *)
 (* Contracts with invalid 'metadata' should pass when the waiver flag is enabled *)

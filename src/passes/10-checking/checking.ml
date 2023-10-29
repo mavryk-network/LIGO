@@ -233,6 +233,7 @@ module With_default_layout = struct
          ; entry = attr.entry
          ; dyn_entry = attr.dyn_entry
          ; public = true
+         ; optional = attr.optional
          }
 
 
@@ -284,6 +285,15 @@ module With_default_layout = struct
              ; items = S_module_type (v, signature, Attrs.Signature.default) :: items
              }
          , () )
+    | S_include s_ :: sig_ ->
+      let%bind signature = evaluate_signature_expr s_ in
+      let%bind { sort; items }, () =
+        def_sig_item
+          signature.items
+          ~on_exit:Drop
+          ~in_:(evaluate_signature { items = sig_ })
+      in
+      return @@ (Signature.{ sort; items = signature.items @ items }, ())
 
 
   and evaluate_signature_expr (sig_expr : Ast_core.signature_expr)
@@ -1454,17 +1464,20 @@ and cast_items
       return (Signature.S_type (v, ty', Attrs.Module.default) :: sig_, entries))
     else raise (signature_not_match_type v ty ty')
   | `S_value (v, ty, attr) :: sig_ ->
-    let%bind ty', attr' =
-      raise_opt (Signature.get_value inferred_sig v) ~error:(signature_not_found_value v)
+    let%bind () =
+      match Signature.get_value inferred_sig v with
+      | Some (ty', attr') ->
+        if Bool.equal attr.entry attr'.entry
+           && Bool.equal attr.view attr'.view
+           && Type.equal ty ty'
+        then return ()
+        else raise (signature_not_match_value v ty ty')
+      | None when attr.optional -> return ()
+      | None -> raise (signature_not_found_value v)
     in
-    if Bool.equal attr.entry attr'.entry
-       && Bool.equal attr.view attr'.view
-       && Type.equal ty ty'
-    then (
-      let%bind sig_, entries = cast_items inferred_sig sig_ in
-      let entries = entries @ if attr.entry then [ v ] else [] in
-      return (Signature.S_value (v, ty', attr') :: sig_, entries))
-    else raise (signature_not_match_value v ty ty')
+    let%bind sig_, entries = cast_items inferred_sig sig_ in
+    let entries = entries @ if attr.entry then [ v ] else [] in
+    return (Signature.S_value (v, ty, attr) :: sig_, entries)
 
 
 and instantiate_var mt ~tvar ~type_ =
@@ -1544,47 +1557,6 @@ and infer_module_expr ?is_annoted_entry (mod_expr : I.module_expr)
     const E.(return @@ M.M_variable mvar) sig_
 
 
-and cast_module_expr
-    ?is_annoted_entry
-    (mod_expr : I.module_expr)
-    (annoted_sig : Signature.t)
-    : (Signature.t * O.module_expr E.t, _, _) C.t
-  =
-  let open C in
-  let open Let_syntax in
-  let module M = Module_expr in
-  let const content sig_ =
-    let%bind loc = loc () in
-    return
-    @@ ( sig_
-       , E.(
-           let%bind module_content = content in
-           let%bind signature = decode_signature sig_ in
-           return ({ module_content; module_location = loc; signature } : O.module_expr))
-       )
-  in
-  set_loc mod_expr.location
-  @@
-  match mod_expr.wrap_content with
-  | M_struct decls ->
-    let%bind sig_, decls = infer_module ?is_annoted_entry decls in
-    const
-      E.(
-        let%bind decls = decls in
-        return @@ M.M_struct decls)
-      sig_
-  | M_module_path path ->
-    (* Check we can access every element in [path] *)
-    let%bind sig_ =
-      Context.get_module_of_path_exn path ~error:(unbound_module (List.Ne.to_list path))
-    in
-    const E.(return @@ M.M_module_path path) sig_
-  | M_variable mvar ->
-    (* Check we can access [mvar] *)
-    let%bind sig_ = Context.get_module_exn mvar ~error:(unbound_module_variable mvar) in
-    const E.(return @@ M.M_variable mvar) sig_
-
-
 and infer_declaration (decl : I.declaration)
     : (Signature.item list * O.declaration list E.t, _, _) C.t
   =
@@ -1622,7 +1594,8 @@ and infer_declaration (decl : I.declaration)
     let%bind expr_type, expr = infer_expression expr in
     let%bind lhs_type =
       match Type.dynamic_entrypoint expr_type with
-      | Error (`Not_entry_point_form x) -> C.raise (not_an_entrypoint expr_type)
+      | Error (`Not_entry_point_form x) ->
+        C.raise_l ~loc:(Value_var.get_location var) (not_an_entrypoint expr_type)
       | Ok t -> return t
     in
     let attr = infer_value_attr attr in
@@ -1674,17 +1647,15 @@ and infer_declaration (decl : I.declaration)
       [ S_value (var, expr_type, Context.Attr.of_core_attr attr) ]
   | D_module
       { module_binder; module_; module_attr = { public; hidden } as attr; annotation } ->
-    let%bind module_, annoted_sig =
+    let%bind module_, sig_ =
       match annotation with
       | None ->
         (* For non-annoted signatures, we use the one inferred *)
         let%bind inferred_sig, module_ = infer_module_expr module_ in
         return (module_, remove_non_public inferred_sig)
-      | Some signature_expr ->
+      | Some { signature; filter } ->
         (* For annoted signtures, we evaluate the signature, cast the inferred signature to it, and check that all entries implemented where declared *)
-        let%bind annoted_sig =
-          With_default_layout.evaluate_signature_expr signature_expr
-        in
+        let%bind annoted_sig = With_default_layout.evaluate_signature_expr signature in
         let annoted_entries =
           List.filter_map
             ~f:(function
@@ -1692,17 +1663,20 @@ and infer_declaration (decl : I.declaration)
               | _ -> None)
             annoted_sig.items
         in
-        let is_annoted_entry = List.mem annoted_entries ~equal:Value_var.equal in
-        let%bind inferred_sig, module_ =
-          cast_module_expr ~is_annoted_entry module_ annoted_sig
+        let is_annoted_entry =
+          if filter
+          then List.mem annoted_entries ~equal:Value_var.equal
+          else fun _ -> true
         in
-        let%bind annoted_sig, _entries = cast_signature inferred_sig annoted_sig in
-        return (module_, remove_non_public annoted_sig)
+        let%bind inferred_sig, module_ = infer_module_expr ~is_annoted_entry module_ in
+        let%bind annoted_sig, _ = cast_signature inferred_sig annoted_sig in
+        let final_sig = if filter then annoted_sig else inferred_sig in
+        return (module_, remove_non_public final_sig)
     in
     const
       E.(
         let%bind module_ = module_ in
-        let%bind signature = decode_signature annoted_sig in
+        let%bind signature = decode_signature sig_ in
         return
         @@ O.D_module
              { module_binder
@@ -1710,7 +1684,7 @@ and infer_declaration (decl : I.declaration)
              ; module_attr = { public; hidden }
              ; annotation = ()
              })
-      [ S_module (module_binder, annoted_sig, Attrs.Module.of_core_attr attr) ]
+      [ S_module (module_binder, sig_, Attrs.Module.of_core_attr attr) ]
   | D_signature { signature_binder; signature; signature_attr } ->
     let%bind signature = With_default_layout.evaluate_signature_expr signature in
     const
@@ -1734,7 +1708,6 @@ and infer_module ?is_annoted_entry (module_ : I.module_)
   =
   let open C in
   let open Let_syntax in
-  let is_annoted_entry = Option.value ~default:(Fn.const true) is_annoted_entry in
   let rec loop (module_ : I.module_) : (Signature.t * O.module_ E.t, _, _) C.t =
     match module_ with
     | [] ->
@@ -1753,36 +1726,47 @@ and infer_module ?is_annoted_entry (module_ : I.module_)
             return (decl @ decls)) )
   in
   let%bind inferred_module_sig, module_expr = loop module_ in
+  let%bind inferred_sort = infer_signature_sort ?is_annoted_entry inferred_module_sig in
+  return ({ inferred_module_sig with sort = inferred_sort }, module_expr)
+
+
+and infer_signature_sort ?is_annoted_entry (old_sig : Signature.t)
+    : (Signature.sort, _, _) C.t
+  =
   (* A module is said to have a 'contract'ual signature if:
      - it contains at least 1 entrypoint
      - it contains zero or more views
      - it contains zero or more dynamic entrypoints
   *)
+  let open C in
+  let open Let_syntax in
+  let is_annoted_entry = Option.value ~default:(Fn.const true) is_annoted_entry in
   let entrypoints =
-    List.filter_map inferred_module_sig.items ~f:(function
+    List.filter_map old_sig.items ~f:(function
         | S_value (var, type_, attr) when attr.entry && is_annoted_entry var ->
           Some (var, type_)
         | _ -> None)
   in
-  let%bind inferred_sort =
-    match List.Ne.of_list_opt entrypoints with
-    | None -> return inferred_module_sig.sort
-    | Some entrypoints ->
-      (* FIXME: This could be improved by using unification to unify the storage
-         types together, permitting more programs to type check. *)
-      let%bind parameter, storage =
-        match Type.parameter_from_entrypoints entrypoints with
-        | Error (`Duplicate_entrypoint v) -> C.raise (duplicate_entrypoint v)
-        | Error (`Not_entry_point_form ep_type) -> C.raise (not_an_entrypoint ep_type)
-        | Error (`Storage_does_not_match (ep_1, storage_1, ep_2, storage_2)) ->
-          C.raise (storage_do_not_match ep_1 storage_1 ep_2 storage_2)
-        | Error (`Wrong_dynamic_storage_definition t) ->
-          C.raise (wrong_dynamic_storage_definition t)
-        | Ok (p, s) -> return (p, s)
-      in
-      return (Signature.Ss_contract { storage; parameter })
-  in
-  return ({ inferred_module_sig with sort = inferred_sort }, module_expr)
+  match List.Ne.of_list_opt entrypoints with
+  | None -> return old_sig.sort
+  | Some entrypoints ->
+    (* FIXME: This could be improved by using unification to unify the storage
+       types together, permitting more programs to type check. *)
+    let%bind parameter, storage =
+      match Type.parameter_from_entrypoints entrypoints with
+      | Error (`Duplicate_entrypoint v) ->
+        C.raise_l ~loc:(Value_var.get_location v) (duplicate_entrypoint v)
+      | Error (`Not_entry_point_form (ep, ep_type)) ->
+        C.raise_l ~loc:(Value_var.get_location ep) (not_an_entrypoint ep_type)
+      | Error (`Storage_does_not_match (ep_1, storage_1, ep_2, storage_2)) ->
+        C.raise_l
+          ~loc:(Value_var.get_location ep_1)
+          (storage_do_not_match ep_1 storage_1 ep_2 storage_2)
+      | Error (`Wrong_dynamic_storage_definition t) ->
+        C.raise_l ~loc:t.location (wrong_dynamic_storage_definition t)
+      | Ok (p, s) -> return (p, s)
+    in
+    return (Signature.Ss_contract { storage; parameter })
 
 
 and remove_non_public (sig_ : Signature.t) =
@@ -1844,5 +1828,16 @@ let type_expression ~raise ~options ?env ?tv_opt expr =
     ~raise
     ~options
     ~loc:expr.location
+    ?env
+    ()
+
+
+let eval_signature_sort ~raise ~options ~loc ?env old_sig =
+  C.run_elab
+    (let%map.C sig_sort = infer_signature_sort (C.encode_signature old_sig) in
+     E.(decode_sig_sort sig_sort))
+    ~raise
+    ~options
+    ~loc
     ?env
     ()

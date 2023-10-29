@@ -145,20 +145,36 @@ let rec get_entry (lst : module_) (name : Value_var.t) : expression option =
 
 
 let get_type_of_contract ty =
-  match ty with
-  | T_arrow { type1; type2 } ->
-    (match type1.type_content, type2.type_content with
-    | T_record tin, T_record tout
-      when Record.is_tuple tin.fields && Record.is_tuple tout.fields ->
+  match Combinators.get_t_arrow ty with
+  | Some { type1; type2 } ->
+    (match Combinators.get_t_pair type1, Combinators.get_t_pair type2 with
+    | Some (parameter, storage), Some (listop, storage') ->
       let open Simple_utils.Option in
-      let* parameter, storage = Combinators.get_t_pair type1 in
-      let* listop, storage' = Combinators.get_t_pair type2 in
       let* () = Combinators.assert_t_list_operation listop in
       let* () = assert_type_expression_eq (storage, storage') in
       (* TODO: on storage/parameter : asert_storable, assert_passable ? *)
       return (parameter, storage)
     | _ -> None)
   | _ -> None
+
+
+let get_type_of_entrypoint ty =
+  let is_t_list_operation listop =
+    Option.is_some @@ Combinators.assert_t_list_operation listop
+  in
+  match Combinators.get_t_arrow ty with
+  | Some { type1 = tin; type2 = return } ->
+    let parameter = tin in
+    (match Combinators.get_t_arrow return with
+    | Some { type1 = storage; type2 = return } ->
+      (match Combinators.get_t_pair return with
+      | Some (listop, storage') ->
+        if is_t_list_operation listop && type_expression_eq (storage, storage')
+        then Some (parameter, storage)
+        else None
+      | _ -> None)
+    | None -> None)
+  | None -> None
 
 
 let build_entry_type p_ty s_ty =
@@ -428,12 +444,17 @@ let to_sig_items (module_ : module_) : sig_item list =
       | D_irrefutable_match { pattern; expr = _; attr = { view; entry; dyn_entry; _ } } ->
         List.fold (Pattern.binders pattern) ~init:ctx ~f:(fun ctx x ->
             ctx
-            @ [ S_value (Binder.get_var x, Binder.get_ascr x, { dyn_entry; view; entry })
+            @ [ S_value
+                  ( Binder.get_var x
+                  , Binder.get_ascr x
+                  , { dyn_entry; view; entry; optional = false } )
               ])
       | D_value { binder; expr; attr = { view; entry; dyn_entry; _ } } ->
         ctx
         @ [ S_value
-              (Binder.get_var binder, expr.type_expression, { view; entry; dyn_entry })
+              ( Binder.get_var binder
+              , expr.type_expression
+              , { view; entry; dyn_entry; optional = false } )
           ]
       | D_type { type_binder; type_expr; type_attr = _ } ->
         ctx @ [ S_type (type_binder, type_expr) ]
