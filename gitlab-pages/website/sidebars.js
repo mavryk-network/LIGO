@@ -37,10 +37,17 @@ const sidebars = {
       "comments/comments"
     ],
     "Keywords": [
-      "keywords/keywords"
+      "keywords/keywords",
+      "keywords/escaped_ids"
     ],
     "Numbers": [
-      "numbers/types_and_literals"
+      "numbers/types_and_literals",
+      "numbers/casting_and_overloading",
+      "numbers/addition",
+      "numbers/subtraction",
+      "numbers/negation",
+      "numbers/multiplication",
+      "numbers/division"
     ],
     "Basics": [
       "language-basics/types",

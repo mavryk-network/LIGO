@@ -19,12 +19,6 @@ need to be valid (properly closed). This enables commenting out a
 random piece of contract that may already contain comments. The
 downside is that you can only comment code or text whose strings and
 comments are valid.
-
-CameLIGO also offers *single line comments* à la JavaScript:
-
-```cameligo group=comments
-let x = 10 // This is a single line comment
-```
 </Syntax>
 
 <Syntax syntax="jsligo">
@@ -43,15 +37,25 @@ random piece of contract that may already contain comments. The
 downside is that you can only comment code or text whose strings and
 comments are valid.
 
-JsLIGO also offers *single line comments* à la JavaScript:
+</Syntax>
+
+LIGO also offers *single line comments* à la JavaScript:
+
+<Syntax syntax="cameligo">
+
+```cameligo group=comments
+let x = 10 // This is a single line comment
+```
+</Syntax>
+
+<Syntax syntax="jsligo">
 
 ```jsligo group=comments
-const x = 10 // This is a single line comment
+const x = 10; // This is a single line comment
 ```
-
-Comments can contain UTF-8 glyphs. Given that the generated Michelson
-does not contain comments, UTF-8 may matter for documentation of the
-source, and error messages display line offsets in the source as
-numbers of such glyphs, not bytes.
-
 </Syntax>
+
+> Comments can contain UTF-8 glyphs. Given that the generated
+> Michelson does not contain comments, UTF-8 may matter for
+> documentation of the source, and error messages display line offsets
+> in the source as numbers of such glyphs, not bytes.
