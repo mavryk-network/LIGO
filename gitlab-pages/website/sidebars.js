@@ -38,7 +38,12 @@ const sidebars = {
     ],
     "Keywords": [
       "keywords/keywords",
-      "keywords/escaped_ids"
+      "keywords/escaped_vars"
+    ],
+    "Constants & variables": [
+      "constants_and_variables/constants",
+      "constants_and_variables/silent_vars",
+      "constants_and_variables/mutable_vars"
     ],
     "Numbers": [
       "numbers/types_and_literals",

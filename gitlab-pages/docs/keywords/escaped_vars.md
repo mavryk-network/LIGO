@@ -1,6 +1,6 @@
 ---
-id: escaped_ids
-title: Escaped identifiers
+id: escaped_vars
+title: Escaped variables
 ---
 
 import Syntax from '@theme/Syntax';
