@@ -54,6 +54,13 @@ const sidebars = {
       "numbers/multiplication",
       "numbers/division"
     ],
+    "Strings": [
+      "strings/strings",
+      "strings/concatenation",
+      "strings/length",
+      "strings/slicing",
+      "strings/verbatim"
+    ],
     "Basics": [
       "language-basics/types",
       "language-basics/composite-types",
