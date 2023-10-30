@@ -3,6 +3,7 @@ module Req_hover = Hover
 open Lsp_helpers
 module Utils = Simple_utils.Utils
 module SMap = Map.Make (String)
+module Fold = Cst_shared.Fold
 
 type module_path = string list
 
@@ -237,6 +238,105 @@ type ('module_expr, 'module_type_expr) expr_kind =
   | Module_path_expr of 'module_expr
   | Module_path_type_expr of 'module_type_expr
 
+type lexeme = Cst_shared.Types.lexeme
+type 'a wrap = 'a Cst_shared.Types.wrap
+type dot = lexeme wrap
+
+module type Fields_CST = sig
+  type cst
+  type expr
+  type type_expr
+  type projection
+  type selection (* Note: this selection must include the dot (as in JsLIGO) *)
+  type 'a fold_instruction
+  type 'a module_path
+
+  val expr_to_region : expr -> Region.t
+  val fold_map_cst : 'a Fold.monoid -> 'a fold_instruction -> cst -> 'a
+  val expr_of_projection : projection -> expr
+  val try_get_projection : expr -> projection option
+  val dot_of_selection : selection -> dot option
+  val lexeme_of_selection : selection -> lexeme option
+  val selections_of_projection : projection -> selection Utils.nseq
+
+  val lexemes_of_module_path
+    :  (expr module_path, type_expr module_path) expr_kind
+    -> lexeme wrap list
+end
+
+module Fields_JsLIGO : Fields_CST = struct
+  include Cst_jsligo.CST
+
+  type 'a module_path = 'a namespace_path
+  type 'a fold_instruction = Cst_jsligo.Fold.some_node -> 'a Fold.fold_control
+
+  let fold_map_cst = Cst_jsligo.Fold.fold_map_cst
+  let expr_of_projection node = node.object_or_array
+
+  let try_get_projection = function
+    | E_Proj proj -> Some proj.value
+    | _ -> None
+
+
+  let dot_of_selection = function
+    | PropertyName (dot, _) -> Some dot
+    | _ -> None
+
+
+  let lexeme_of_selection = function
+    | PropertyName (_dot, v) ->
+      (match v with
+      | Var name -> Some name#payload
+      | Esc name -> Some ("@" ^ name#payload))
+    | PropertyStr _ -> None
+    | Component _ -> None
+
+
+  let selections_of_projection node = node.property_path
+
+  let lexemes_of_module_path = function
+    | Module_path_expr (node : _ namespace_path) ->
+      Utils.nsepseq_to_list node.namespace_path
+    | Module_path_type_expr (node : _ namespace_path) ->
+      Utils.nsepseq_to_list node.namespace_path
+end
+
+module Fields_CameLIGO : Fields_CST = struct
+  include Cst_cameligo.CST
+
+  type nonrec selection = dot * selection
+  type 'a fold_instruction = Cst_cameligo.Fold.some_node -> 'a Fold.fold_control
+
+  let fold_map_cst = Cst_cameligo.Fold.fold_map_cst
+  let expr_of_projection node = node.record_or_tuple
+
+  let try_get_projection = function
+    | E_Proj proj -> Some proj.value
+    | _ -> None
+
+
+  let dot_of_selection (dot, _expr) = Some dot
+
+  let lexeme_of_selection (_dot, expr) =
+    expr
+    |> function
+    | FieldName v ->
+      (match v with
+      | Var name -> Some name#payload
+      | Esc name -> Some ("@" ^ name#payload))
+    | Component _ -> None
+
+
+  let selections_of_projection node =
+    let hd, tl = node.field_path in
+    (node.selector, hd), tl
+
+
+  let lexemes_of_module_path = function
+    | Module_path_expr node -> Utils.nsepseq_to_list node.module_path
+    | Module_path_type_expr node -> Utils.nsepseq_to_list node.module_path
+end
+
 (* TODO: we should handle field completion using ast_typed rather than scopes *)
 let complete_fields
     (path : Path.t)
@@ -348,7 +448,7 @@ let complete_fields
     | None | Some (Type _ | Module _) -> None
   in
   let module_path_impl
-      (module_names_before_cursor : Cst_shared.Tree.lexeme Lexing_shared.Wrap.t list)
+      (module_names_before_cursor : lexeme wrap list)
       (filter_def : Scopes.def -> bool)
       : CompletionItem.t list option
     =
@@ -356,16 +456,14 @@ let complete_fields
         let module_pos = Position.of_pos module_name#region#start in
         get_module_from_pos filter_def module_pos)
   in
-  let module_path_impl_expr
-      (module_names_before_cursor : Cst_shared.Tree.lexeme Lexing_shared.Wrap.t list)
+  let module_path_impl_expr (module_names_before_cursor : lexeme wrap list)
       : CompletionItem.t list option
     =
     module_path_impl module_names_before_cursor (function
         | Type _ -> false
         | Variable _ | Module _ -> true)
   in
-  let module_path_impl_type_expr
-      (module_names_before_cursor : Cst_shared.Tree.lexeme Lexing_shared.Wrap.t list)
+  let module_path_impl_type_expr (module_names_before_cursor : lexeme wrap list)
       : CompletionItem.t list option
     =
     module_path_impl module_names_before_cursor (function
@@ -376,12 +474,9 @@ let complete_fields
     let range = Range.of_region region in
     Option.map (distance_to_pos range) ~f:(fun dist -> { range; dist })
   in
-  let module Fold = Cst_shared.Fold in
   (* All dialects AAAA
      SOME PARTS SHOULD BE MOVED TO [Dialect_cst] or to [Cst.Shared.Nodes] *)
   let module D = struct
-    type lexeme = string
-    type 'a wrap = 'a Lexing_shared.Wrap.t
     type dot = lexeme wrap
     type expr = (Cst_cameligo.CST.expr, Cst_jsligo.CST.expr) Dialect_cst.dialect
 
@@ -580,7 +675,7 @@ let complete_fields
        last name that appears (module or field). The returned position is that
        of the start of the record or tuple being completed, in this case, ["d"],
        which will be missing from the list. *)
-  let linearize_projection (node : D.projection) : Position.t * D.lexeme option list =
+  let linearize_projection (node : D.projection) : Position.t * lexeme option list =
     ( expr_start @@ D.expr_of_projection node
     , List.take_while
         (Utils.nseq_to_list @@ D.selections_of_projection node)
@@ -592,9 +687,7 @@ let complete_fields
               farthest_dot_position_before_cursor)
       |> List.map ~f:D.lexeme_of_selection )
   in
-  let linearize_module_path (node : D.expr_or_type_expr_module_path)
-      : D.lexeme D.wrap list
-    =
+  let linearize_module_path (node : D.expr_or_type_expr_module_path) : lexeme wrap list =
     List.take_while (D.lexemes_of_module_path node) ~f:(fun name ->
         Position.(is_to_the_left (of_pos name#region#stop))
           farthest_dot_position_before_cursor)
@@ -603,7 +696,7 @@ let complete_fields
        before the cursor, and the list of field names before the cursor ([None]
        means it's a [Component] rather than [FieldName]). *)
   let linearize_module_path_expr (node : D.expr_module_path)
-      : Position.t option * D.lexeme D.wrap list * D.lexeme option list
+      : Position.t option * lexeme wrap list * lexeme option list
     =
     let module_names_before_cursor = linearize_module_path (`ExprMP node) in
     let struct', proj_fields_before_cursor =
@@ -742,15 +835,15 @@ let on_req_completion (pos : Position.t) (path : Path.t)
         @@ Option.value ~default:definitions
         @@ get_defs_completions cst pos scopes
       in
-      let field_and_scope_completions =
+      let scope_completions =
         (* Keep the first item to deal with shadowing. *)
         List.remove_consecutive_duplicates
           ~which_to_keep:`First
           ~equal:(fun x y -> String.equal x.label y.label)
-          (List.sort (field_completions @ scope_completions) ~compare:(fun x y ->
+          (List.sort scope_completions ~compare:(fun x y ->
                String.compare x.label y.label))
       in
-      field_and_scope_completions @ completions_without_scopes)
+      scope_completions @ completions_without_scopes)
     else field_completions
   in
   return @@ mk_completion_list all_completions
