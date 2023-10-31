@@ -66,7 +66,8 @@ const sidebars = {
       "booleans/or",
       "booleans/and",
       "booleans/not",
-      "booleans/comparisons"
+      "booleans/comparisons",
+      "booleans/conditionals"
     ],
     "Basics": [
       "language-basics/types",
