@@ -61,6 +61,13 @@ const sidebars = {
       "strings/slicing",
       "strings/verbatim"
     ],
+    "Booleans": [
+      "booleans/booleans",
+      "booleans/or",
+      "booleans/and",
+      "booleans/not",
+      "booleans/comparisons"
+    ],
     "Basics": [
       "language-basics/types",
       "language-basics/composite-types",
