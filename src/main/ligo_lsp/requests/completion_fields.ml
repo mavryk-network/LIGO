@@ -40,7 +40,7 @@ module type Compatible_CST = sig
     -> lexeme wrap list
 end
 
-module C_CameLIGO : Compatible_CST = struct
+module C_CameLIGO : Compatible_CST with type cst = Cst_cameligo.CST.t = struct
   include Cst_cameligo.CST
 
   type nonrec selection = dot * selection
@@ -79,7 +79,7 @@ module C_CameLIGO : Compatible_CST = struct
     | Module_path_type_expr node -> Utils.nsepseq_to_list node.module_path
 end
 
-module C_JsLIGO : Compatible_CST = struct
+module C_JsLIGO : Compatible_CST with type cst = Cst_jsligo.CST.t = struct
   include Cst_jsligo.CST
 
   type 'a module_path = 'a namespace_path
@@ -119,33 +119,22 @@ module C_JsLIGO : Compatible_CST = struct
       Utils.nsepseq_to_list node.namespace_path
 end
 
-module type CST_arg = sig
-  module CST : Compatible_CST
-
-  val cst : CST.cst
-end
-
 let complete_fields
-    (module ARG : CST_arg)
+    (type a)
+    (module C : Compatible_CST with type cst = a)
+    (cst : a)
     (path : Path.t)
     (syntax : Syntax_types.t)
     (pos : Position.t)
     (definitions : Def.t list)
     : CompletionItem.t list
   =
-  let module C = ARG.CST in
   failwith "LETS SUPPOSE I HAVE AN IMPLEMENTATION HERE"
 
-(* let complete_fields
+
+let complete_fields
     :  Dialect_cst.t -> Path.t -> Syntax_types.t -> Position.t -> Def.t list
     -> CompletionItem.t list
   = function
-  | CameLIGO cameligo_cst ->
-    let module ARG : CST_arg = struct
-      module CST = C_CameLIGO
-
-      let cst = cameligo_cst
-    end
-    in
-    failwith ""
-  | JsLIGO cst -> failwith "" *)
+  | CameLIGO cst -> complete_fields (module C_CameLIGO) cst
+  | JsLIGO cst -> complete_fields (module C_JsLIGO) cst

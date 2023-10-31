@@ -717,7 +717,9 @@ let on_req_completion (pos : Position.t) (path : Path.t)
   @@ fun { definitions; code; _ } ->
   with_cst path ~default:completions_so_far
   @@ fun cst ->
-  let field_completions = complete_fields path syntax cst pos definitions in
+  let field_completions =
+    Completion_fields.complete_fields cst path syntax pos definitions
+  in
   let all_completions =
     (* If we are completing a record or module field, there is no need to also
        suggest scopes or keywords. *)
