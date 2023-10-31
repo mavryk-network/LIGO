@@ -32,11 +32,13 @@ instead of `const` for constants. All assignments use the `=`
 operator, like so:
 
 ```jsligo group=mutable_vars
-let add = (a : int, b : int) : int => {
-  let c = a;
+const a = 3;
+const b = 5;
+const sum = do {
+  let c = a; // not const!
   c = c + b;
-  return c; // The returned value is a + b
-}
+  return c;  // sum == a + b
+};
 ```
 
 By contrast, here is an invalid reassignment:

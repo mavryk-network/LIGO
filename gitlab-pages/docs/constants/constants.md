@@ -20,6 +20,15 @@ let a = 1
 let b : int = a // Type ascription (a.k.a. annotation)
 ```
 
+Note that constants can be redefined in the same scope:
+
+```cameligo group=constants
+let x = 1
+let x = 2 // No error: this x shadows the previous one.
+```
+
+This is also called *shadowing*.
+
 </Syntax>
 
 <Syntax syntax="jsligo">
@@ -31,13 +40,11 @@ const a = 1;
 const b : int = a; // Type ascription (a.k.a. annotation)
 ```
 
-Note that variables cannot be redefined in the same block scope:
+Note that constants cannot be redefined in the same block scope:
 
 ```jsligo skip
-const c = do {
-  const x = 1;
-  const x = 2; // Yields an error
-};
+const x = 1;
+const x = 2; // Yields an error
 ```
 
 However, the following does work:
@@ -46,7 +53,7 @@ However, the following does work:
 const d = do {
   const x = 1;
   {
-    const x = 2; // Does not yield an error: another block
+    const x = 2; // No error: a sub-block
     return x;
   }
 };
