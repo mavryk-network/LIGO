@@ -127,7 +127,7 @@ release:
     paths:
       - ligo
       - ligo.deb
-      - ligo_installer.exe
+      - highlighting
     reports:
       dotenv: releaseCiJobId.env
   script:
@@ -137,7 +137,11 @@ release:
           --name "Release $CI_COMMIT_TAG" \
           --description "$(cat release-notes.md)" \
           --assets-link '{"name": "Static Linux binary", "url": "'"$CI_PROJECT_URL"'/-/jobs/'"$CI_JOB_ID"'/artifacts/raw/ligo"}' \
-          --assets-link '{"name": "deb package", "url": "'"$CI_PROJECT_URL"'/-/jobs/'"$CI_JOB_ID"'/artifacts/raw/ligo.deb"}'
+          --assets-link '{"name": "deb package", "url": "'"$CI_PROJECT_URL"'/-/jobs/'"$CI_JOB_ID"'/artifacts/raw/ligo.deb"}' \
+          --assets-link '{"name": "jsligo configuration", "url": "'"$CI_PROJECT_URL"'/-/jobs/'"$CI_JOB_ID"'/highlighting/vscode/jsligo.configuration.json"}' \
+          --assets-link '{"name": "jsligo highlighting", "url": "'"$CI_PROJECT_URL"'/-/jobs/'"$CI_JOB_ID"'/highlighting/vscode/jsligo.tmLanguage.json"}' \
+          --assets-link '{"name": "mligo configuration", "url": "'"$CI_PROJECT_URL"'/-/jobs/'"$CI_JOB_ID"'/highlighting/vscode/mligo.configuration.json"}' \
+          --assets-link '{"name": "mligo highlighting", "url": "'"$CI_PROJECT_URL"'/-/jobs/'"$CI_JOB_ID"'/highlighting/vscode/mligo.tmLanguage.json"}'
       fi
     - echo "RELEASE_CI_JOB_ID=${CI_JOB_ID}" >> releaseCiJobId.env
 
@@ -411,7 +415,7 @@ update-repository-status:
     - ./.ci/scripts/versioning_website.sh $RELEASE_VERSION
     - LAST_TAG_JOB_ID=`./.ci/scripts/release_metadata/read_release_metadata.sh LAST_TAG_JOB_ID`
     - ./.ci/scripts/update_distribution_references_with_release.sh $LAST_TAG_JOB_ID $RELEASE_VERSION $SRI_LIGO_BINARY_HASH
-    - git add tools/webide-new/ligo-webide-backend/Dockerfile vendors/tezos-ligo HomebrewFormula/ gitlab-pages/docs/tutorials/. gitlab-pages/docs/intro/installation.md gitlab-pages/website/versioned_docs/. gitlab-pages/website/versioned_sidebars/. gitlab-pages/website/versions.json tools/webide/Dockerfile gitlab-pages/docs/manpages
+    - git add tools/webide-new/ligo-webide-backend/Dockerfile vendors/tezos-ligo HomebrewFormula/ gitlab-pages/docs/tutorials/. gitlab-pages/docs/intro/installation.md gitlab-pages/website/versioned_docs/. gitlab-pages/website/versioned_sidebars/. gitlab-pages/website/versions.json gitlab-pages/docs/manpages
     - git commit -m "[Bot] Docs $RELEASE_VERSION"
     - git push -o ci.skip origin HEAD:$CI_COMMIT_REF_NAME
   needs:
