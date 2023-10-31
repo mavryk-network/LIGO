@@ -197,7 +197,8 @@ let signature (raw_options : Raw_options.t) source_file =
       let core_sig = Checking.untype_signature ~use_orig_var:true sig_ in
       let unified_sig_expr =
         Trace.trace ~raise Main_errors.nanopasses_tracer
-        @@ Nanopasses.decompile_sig_expr ~syntax core_sig
+        @@ Nanopasses.decompile_sig_expr ~syntax
+        @@ Location.wrap ~loc:Location.generated (Ast_core.S_sig core_sig)
       in
       let to_syntax =
         match syntax with

@@ -593,7 +593,7 @@ module From_core : sig
 
   val signature
     :  raise:(Passes.Errors.t, Main_warnings.all) Simple_utils.Trace.raise
-    -> Ast_core.signature
+    -> Ast_core.signature_expr
     -> Ast_unified.sig_expr
 end = struct
   module I = Ast_core
@@ -650,13 +650,18 @@ end = struct
     else None
 
 
-  and sig_expr : I.signature -> (I.signature, I.sig_item, I.type_expression) O.sig_expr_ =
-   fun { items } ->
-    let loc = Location.generated in
-    Location.wrap ~loc (O.S_body items)
+  and sig_expr
+      : I.signature_expr -> (I.signature_expr, I.sig_item, I.type_expression) O.sig_expr_
+    =
+   fun { wrap_content = content; location = loc } ->
+    match content with
+    | S_sig { items } -> Location.wrap ~loc (O.S_body items)
+    | S_path path -> Location.wrap ~loc (O.S_path path)
 
 
-  and sig_entry : I.sig_item -> (I.signature, I.sig_item, I.type_expression) O.sig_entry_ =
+  and sig_entry
+      : I.sig_item -> (I.signature_expr, I.sig_item, I.type_expression) O.sig_entry_
+    =
    fun sig_item ->
     let ret ~loc content : _ O.sig_entry_ = Location.wrap ~loc content in
     match sig_item with
@@ -667,10 +672,7 @@ end = struct
         ret ~loc:ty.location (S_attr (attr, I.S_value (v, ty, attr_rest))))
     | I.S_type (v, ty) -> ret ~loc:ty.location (S_type (v, ty))
     | I.S_type_var v -> ret ~loc:(O.Ty_variable.get_location v) (S_type_var v)
-    | I.S_include { wrap_content = content; location = loc } ->
-      (match content with
-      | S_sig signature -> ret ~loc (S_include signature)
-      | S_path _ -> failwith "Impossible")
+    | I.S_include se -> ret ~loc:se.location (S_include se)
     | I.S_module (_, _) | I.S_module_type (_, _) -> failwith "Impossible"
 
 
