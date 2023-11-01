@@ -74,7 +74,7 @@ let error_ppformat
       Format.fprintf
         f
         "@[<hv>%a@ Ill-formed data constructor \"%s\".@.Data constructors have a maximum \
-         length of 32 characters, which is a limitation imposed by annotations in Tezos. \
+         length of 32 characters, which is a limitation imposed by annotations in Mavryk. \
          @]"
         snippet_pp
         e.location
@@ -178,7 +178,7 @@ let error_json : self_ast_imperative_error -> Simple_utils.Error.t =
     let message =
       Format.sprintf
         " Ill-formed data constructor \"%s\".@.Data constructors have a maximum length \
-         of 32 characters, which is a limitation imposed by annotations in Tezos."
+         of 32 characters, which is a limitation imposed by annotations in Mavryk."
         c
     in
     let location = e.location in

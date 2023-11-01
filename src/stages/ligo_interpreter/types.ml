@@ -87,7 +87,7 @@ type constant_val =
   | C_timestamp of Z.t [@name "timestamp"]
   | C_string of string [@name "string"]
   | C_bytes of bytes [@name "bytes"]
-  | C_mutez of Z.t [@name "mutez"]
+  | C_mumav of Z.t [@name "mumav"]
   | C_address of Contract.t
       (*should be represented as michelson data ? not convenient *)
       [@name "address"]

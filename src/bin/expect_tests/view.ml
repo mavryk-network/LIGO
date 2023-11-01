@@ -118,7 +118,7 @@ let%expect_test _ =
              LAMBDA
                int
                (pair operation address)
-               { PUSH mutez 0 ;
+               { PUSH mumav 0 ;
                  NONE key_hash ;
                  CREATE_CONTRACT
                    { parameter unit ; storage int ; code { CDR ; NIL operation ; PAIR } } ;
@@ -131,7 +131,7 @@ let%expect_test _ =
     { parameter int ;
       storage (pair (pair (pair string nat) string nat) string) ;
       code { CDR ; NIL operation ; PAIR } ;
-      view "v" int mutez { DROP ; PUSH mutez 1000000 } } |}]
+      view "v" int mumav { DROP ; PUSH mumav 1000000 } } |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "view_shadow_ann.mligo" ];
@@ -207,7 +207,7 @@ let%expect_test _ =
   [%expect
     {|
     { parameter unit ;
-      storage (pair (pair (int %a) (nat %b)) (mutez %c) (address %d)) ;
+      storage (pair (pair (int %a) (nat %b)) (mumav %c) (address %d)) ;
       code { CDR ;
              PUSH int 1 ;
              SOME ;

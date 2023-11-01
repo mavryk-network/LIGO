@@ -301,9 +301,9 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
     | Nat n ->
       let (_, n), loc = r_split n in
       return @@ e_nat_z ~loc n
-    | Mutez mtez ->
-      let (_, mtez), loc = r_split mtez in
-      return @@ e_mutez_z ~loc (Z.of_int64 mtez))
+    | Mumav mmav ->
+      let (_, mmav), loc = r_split mmav in
+      return @@ e_mumav_z ~loc (Z.of_int64 mmav))
   | ELogic logic ->
     (match logic with
     | BoolExpr be ->

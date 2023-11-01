@@ -13,7 +13,7 @@ let muchuse_neutral : muchuse = M.empty, []
 
 (* class Dup _:
  *   Dup (never | unit | bool | nat | int | string | bytes | chain_id
- *    | mutez | key_hash | key | signature | timestamp | address
+ *    | mumav | key_hash | key | signature | timestamp | address
  *    | operation | bls12_381_g1 | bls12_381_g2 | bls12_381_fr
  *    | sapling_transaction _ | sapling_state _)
  *   Dup 'a => Dup (option 'a | list 'a | set 'a)

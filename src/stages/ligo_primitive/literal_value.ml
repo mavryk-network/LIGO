@@ -15,7 +15,7 @@ type t =
   | Literal_int of Z.t
   | Literal_nat of Z.t
   | Literal_timestamp of Z.t
-  | Literal_mutez of Z.t
+  | Literal_mumav of Z.t
   | Literal_string of ligo_string
   | Literal_bytes of bytes
   | Literal_address of string
@@ -36,7 +36,7 @@ let to_enum = function
   | Literal_int _ -> 2
   | Literal_nat _ -> 3
   | Literal_timestamp _ -> 4
-  | Literal_mutez _ -> 5
+  | Literal_mumav _ -> 5
   | Literal_string _ -> 6
   | Literal_bytes _ -> 7
   | Literal_address _ -> 8
@@ -61,7 +61,7 @@ let pp ppf (l : t) =
   | Literal_int z -> fprintf ppf "%a" Z.pp_print z
   | Literal_nat z -> fprintf ppf "+%a" Z.pp_print z
   | Literal_timestamp z -> fprintf ppf "+%a" Z.pp_print z
-  | Literal_mutez z -> fprintf ppf "%amutez" Z.pp_print z
+  | Literal_mumav z -> fprintf ppf "%amumav" Z.pp_print z
   | Literal_string s -> fprintf ppf "%a" Simple_utils.Ligo_string.pp s
   | Literal_bytes b -> fprintf ppf "0x%a" Hex.pp (Hex.of_bytes b)
   | Literal_address s -> fprintf ppf "@%S" s

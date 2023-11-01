@@ -947,7 +947,7 @@ call_expr:
 
 core_expr:
   "<int>"                             {               EArith (Int (unwrap $1)) }
-| "<mutez>"                           {             EArith (Mutez  (unwrap $1)) }
+| "<mumav>"                           {             EArith (Mumav  (unwrap $1)) }
 | "<nat>"                             {               EArith (Nat  (unwrap $1)) }
 | "<bytes>"                           {                     EBytes (unwrap $1) }
 | "<ident>"                           {                       EVar (unwrap $1) }

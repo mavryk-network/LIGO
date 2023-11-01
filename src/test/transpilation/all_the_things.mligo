@@ -83,7 +83,7 @@ let getAllowance (p,s : getAllowance * storage) : operation list * storage =
     Some value -> value
   |  None -> 0n
   in
-  let op = Tezos.transaction value 0mutez p.callback in
+  let op = Tezos.transaction value 0mumav p.callback in
   ([op],s)
 
 let getBalance (p,s : getBalance * storage) : operation list * storage =
@@ -91,12 +91,12 @@ let getBalance (p,s : getBalance * storage) : operation list * storage =
     Some value -> value
   |  None -> 0n
   in
-  let op = Tezos.transaction value 0mutez p.callback in
+  let op = Tezos.transaction value 0mumav p.callback in
   ([op],s)
 
 let getTotalSupply (p,s : getTotalSupply * storage) : operation list * storage =
   let total = s.total_amount in
-  let op    = Tezos.transaction total 0mutez p.callback in
+  let op    = Tezos.transaction total 0mumav p.callback in
   ([op],s)
 
 
@@ -112,15 +112,15 @@ let main (p : key_hash) =
   in Tezos.address c
 let check_ (p : unit) : int = if Tezos.get_amount () = 100tez then 42 else 0
 (* should return a constant function *)
-let f1 (x : unit) : unit -> tez =
-  let amt : tez = Current.amount in
+let f1 (x : unit) : unit -> mav =
+  let amt : mav = Current.amount in
   fun (x : unit) -> amt
 
 (* should return an impure function *)
-let f2 (x : unit) : unit -> tez =
+let f2 (x : unit) : unit -> mav =
   fun (x : unit) -> Current.amount
 
-let main (b,s : bool * (unit -> tez)) : operation list * (unit -> tez) =
+let main (b,s : bool * (unit -> mav)) : operation list * (unit -> mav) =
   (([] : operation list), (if b then f1 () else f2 ()))
 type comb_two = [@layout comb] {
   [@annot anbfoo]
@@ -324,7 +324,7 @@ generated. unrecognized constant: {"constant":"BALANCE","location":"generated"}
 *)
 
 type parameter = unit
-type storage = tez
+type storage = mav
 type return = operation list * storage
 
 let main (p, s : parameter * storage) : return =
@@ -421,7 +421,7 @@ let test (k : int) : int =
 let int_ (a: int) = a < a
 let nat_ (a: nat) = a < a
 let bool_ (a: bool) = a < a
-let mutez_ (a: tez) = a < a
+let mumav_ (a: mav) = a < a
 let string_ (a: string) = a < a
 let bytes_ (a: bytes) = a < a
 let address_ (a: address) = a < a
@@ -703,8 +703,8 @@ type action =
 type storage = {
   identities: (id, id_details) big_map;
   next_id: int;
-  name_price: tez;
-  skip_price: tez;
+  name_price: mav;
+  skip_price: mav;
 }
 
 type return = operation list * storage
@@ -750,7 +750,7 @@ let buy (parameter, storage: buy * storage) =
                         }
 
 let update_owner (parameter, storage: update_owner * storage) =
-  if (amount <> 0mutez)
+  if (amount <> 0mumav)
   then (failwith "Updating owner doesn't cost anything.": (operation list) * storage)
   else
   let id = parameter.id in
@@ -776,7 +776,7 @@ let update_owner (parameter, storage: update_owner * storage) =
   ([]: operation list), {storage with identities = updated_identities}
 
 let update_details (parameter, storage: update_details * storage) =
-  if (amount <> 0mutez)
+  if (amount <> 0mumav)
   then (failwith "Updating details doesn't cost anything.": (operation list) * storage)
   else
   let id = parameter.id in
@@ -1634,11 +1634,11 @@ let main (action, store : parameter * storage) : return =
     | Increment n -> store + n
     | Decrement n -> store - n
   in ([] : operation list), store
-let add_tez : tez = 21mutez + 0.000_021tez
-let sub_tez : tez = 0.000021tez - 0.000_020tez
-let not_enough_tez : tez = 461_168_601_842_738_7903mutez
+let add_tez : mav = 21mumav + 0.000_021tez
+let sub_tez : mav = 0.000021tez - 0.000_020tez
+let not_enough_tez : mav = 461_168_601_842_738_7903mumav
 
-let add_more_tez : tez =
+let add_more_tez : mav =
   100tez + 10tez + 1tez + 0.1tez + 0.01tez + 0.001tez
 (*
 Modelled after:
@@ -1663,7 +1663,7 @@ type storage =
 
 let main (arg : parameter * storage) : operation list * storage =
   begin
-    assert (Tezos.get_amount () = 0mutez);
+    assert (Tezos.get_amount () = 0mumav);
     let (p,s) = arg in
     match p with
     | Burn ticket ->
@@ -1676,7 +1676,7 @@ let main (arg : parameter * storage) : operation list * storage =
       begin
         assert (Tezos.get_sender () = s.admin);
         let ticket = Tezos.create_ticket () mint.amount in
-        let op = Tezos.transaction ticket 0mutez mint.destination in
+        let op = Tezos.transaction ticket 0mumav mint.destination in
         ([op], s)
       end
   end
@@ -1705,7 +1705,7 @@ type storage =
 
 let main (arg : parameter * storage) : operation list * storage =
   begin
-    assert (Tezos.get_amount () = 0mutez);
+    assert (Tezos.get_amount () = 0mumav);
     let (p,storage) = arg in
     let {manager = manager ; tickets = tickets } = storage in
     ( match p with
@@ -1741,7 +1741,7 @@ let main (arg : parameter * storage) : operation list * storage =
               | Some split_tickets ->
                 let (send_ticket,keep_ticket) = split_tickets in
                 let (_, tickets) = Big_map.get_and_update send.ticketer (Some keep_ticket) tickets in
-                let op = Tezos.transaction send_ticket 0mutez send.destination in
+                let op = Tezos.transaction send_ticket 0mumav send.destination in
                 ([op], {manager = manager; tickets = tickets})
             )
         )

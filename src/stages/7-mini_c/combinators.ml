@@ -41,9 +41,9 @@ let get_nat (v : value) =
   | _ -> None
 
 
-let get_mutez (v : value) =
+let get_mumav (v : value) =
   match v with
-  | D_mutez n -> Some n
+  | D_mumav n -> Some n
   | _ -> None
 
 

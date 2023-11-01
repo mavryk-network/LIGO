@@ -136,7 +136,7 @@ let map_constant cons_name arguments final_type_expression =
       then [ C_ADD; C_MUL; C_DIV; C_SUB ]
       else if is_t_bool t1 && is_t_bool t2 && is_t_bool t3
       then [ C_OR; C_AND; C_XOR ]
-      else if is_t_mutez t1 && is_t_mutez t2 && is_t_mutez t3
+      else if is_t_mumav t1 && is_t_mumav t2 && is_t_mumav t3
       then [ C_ADD; C_SUB ]
       else if is_t_int t1 && is_t_nat t2 && is_t_int t3
       then [ C_ADD; C_MUL; C_SUB ]
@@ -221,11 +221,11 @@ module Mutator = struct
       let* t = transform_nat in
       let m = t n in
       return (Literal_nat (Z.of_int m), n <> m)
-    | Literal_mutez z ->
+    | Literal_mumav z ->
       let n = Z.to_int z in
       let* t = transform_nat in
       let m = t n in
-      return (Literal_mutez (Z.of_int m), n <> m)
+      return (Literal_mumav (Z.of_int m), n <> m)
     | Literal_string (Standard s) ->
       let* t = transform_string in
       let m = t s in

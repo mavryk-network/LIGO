@@ -1,7 +1,8 @@
 # last refactor: 2021-05-05
 .ONESHELL:
 
-all: test
+all: build
+#all: test
 
 # Use install-deps instead of 'install' because usually 'make install' adds a
 # binary to the system path and we don't want to confuse users

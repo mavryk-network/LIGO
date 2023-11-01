@@ -31,7 +31,7 @@ and type_base =
   | TB_bytes
   | TB_nat
   | TB_int
-  | TB_mutez
+  | TB_mumav
   | TB_operation
   | TB_address
   | TB_key
@@ -63,7 +63,7 @@ type value =
   | D_bool of bool
   | D_nat of Z.t
   | D_timestamp of Z.t
-  | D_mutez of Z.t
+  | D_mumav of Z.t
   | D_int of Z.t
   | D_string of string
   | D_bytes of bytes

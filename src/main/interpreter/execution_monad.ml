@@ -210,7 +210,7 @@ module Command = struct
     | Drop_context : unit -> unit tezos_command
 
   type 'a t =
-    | Tezos : 'a tezos_command -> 'a t
+    | Mavryk : 'a tezos_command -> 'a t
     | Get_mod_res : unit -> ModRes.t option t
     | Check_obj_ligo : LT.expression -> unit t
     | Alloc : LT.value -> LT.location t
@@ -265,7 +265,7 @@ module Command = struct
       in
       let contract = Tezos_state.get_bootstrapped_contract ~raise n in
       (contract, parameter_ty, storage_ty), ctxt
-    | Bootstrap_contract (mutez, contract, storage, contract_ty) ->
+    | Bootstrap_contract (mumav, contract, storage, contract_ty) ->
       let contract =
         trace_option ~raise (corner_case ()) @@ LC.get_michelson_contract contract
       in
@@ -281,7 +281,7 @@ module Command = struct
         trace_option ~raise (corner_case ()) @@ LC.get_michelson_expr storage
       in
       let next_bootstrapped_contracts =
-        (mutez, contract, storage, parameter_ty, storage_ty)
+        (mumav, contract, storage, parameter_ty, storage_ty)
         :: ctxt.internals.next_bootstrapped_contracts
       in
       let ctxt =
@@ -297,7 +297,7 @@ module Command = struct
       let amts =
         List.map
           ~f:(fun x ->
-            let x = trace_option ~raise (corner_case ()) @@ LC.get_mutez x in
+            let x = trace_option ~raise (corner_case ()) @@ LC.get_mumav x in
             Z.to_int64 x)
           amts
       in
@@ -377,9 +377,9 @@ module Command = struct
         in
         let contract_too_low = LT.V_Ct (C_address contract_too_low) in
         let contract_balance, spend_request =
-          let contract_balance = Michelson_backend.tez_to_z contract_balance in
-          let spend_request = Michelson_backend.tez_to_z spend_request in
-          LT.V_Ct (C_mutez contract_balance), LT.V_Ct (C_mutez spend_request)
+          let contract_balance = Michelson_backend.mav_to_z contract_balance in
+          let spend_request = Michelson_backend.mav_to_z spend_request in
+          LT.V_Ct (C_mumav contract_balance), LT.V_Ct (C_mumav spend_request)
         in
         let rej_data =
           LC.v_record
@@ -394,8 +394,8 @@ module Command = struct
     | Get_balance (loc, calltrace, addr) ->
       let addr = trace_option ~raise (corner_case ()) @@ LC.get_address addr in
       let balance = Tezos_state.get_balance ~raise ~loc ~calltrace ctxt addr in
-      let mutez = Michelson_backend.int_of_mutez balance in
-      let balance = LT.V_Ct (C_mutez mutez) in
+      let mumav = Michelson_backend.int_of_mumav balance in
+      let balance = LT.V_Ct (C_mumav mumav) in
       balance, ctxt
     | Get_storage_of_address (loc, calltrace, addr) ->
       let addr = trace_option ~raise (corner_case ()) @@ LC.get_address addr in
@@ -772,17 +772,17 @@ module Command = struct
       let value = LC.v_pair (V_Ct (C_string sk), V_Ct (C_key pk)) in
       value, ctxt
     | Baker_account (acc, opt) ->
-      let tez = trace_option ~raise (corner_case ()) @@ LC.get_option opt in
-      let tez =
+      let mav = trace_option ~raise (corner_case ()) @@ LC.get_option opt in
+      let mav =
         Option.map
-          ~f:(fun v -> trace_option ~raise (corner_case ()) @@ LC.get_mutez v)
-          tez
+          ~f:(fun v -> trace_option ~raise (corner_case ()) @@ LC.get_mumav v)
+          mav
       in
-      let tez = Option.map ~f:(fun t -> Z.to_int64 t) tez in
+      let mav = Option.map ~f:(fun t -> Z.to_int64 t) mav in
       let sk, pk = trace_option ~raise (corner_case ()) @@ LC.get_pair acc in
       let sk = trace_option ~raise (corner_case ()) @@ LC.get_string sk in
       let pk = trace_option ~raise (corner_case ()) @@ LC.get_key pk in
-      let next_baker_accounts = (sk, pk, tez) :: ctxt.internals.next_baker_accounts in
+      let next_baker_accounts = (sk, pk, mav) :: ctxt.internals.next_baker_accounts in
       let ctxt = { ctxt with internals = { ctxt.internals with next_baker_accounts } } in
       (), ctxt
     | Register_delegate (loc, calltrace, pkh) ->
@@ -849,8 +849,8 @@ module Command = struct
     =
    fun ~raise ~options command state log ->
     match command with
-    | Tezos tezos_cmd ->
-      let ret, ctxt = eval_tezos ~raise ~options tezos_cmd state.tezos_context log in
+    | Mavryk tezos_cmd ->
+      let ret, ctxt = eval_tezos ~raise ~options tezos_cmd state.mavos_context log in
       ret, { state with tezos_context = ctxt }
     | Check_obj_ligo e ->
       let _ =
@@ -916,7 +916,7 @@ let fail err : 'a t = Fail_ligo err
 let return (x : 'a) : 'a t = Return x
 let call (command : 'a Command.t) : 'a t = Call command
 let try_or (c : 'a t) (handler : 'a t) : 'a t = Try_or (c, handler)
-let ( let>> ) o f = Bind (call (Tezos o), f)
+let ( let>> ) o f = Bind (call (Mavryk o), f)
 let ( let@ ) cmd in_ = Bind (call cmd, in_)
 let ( let* ) o f = Bind (o, f)
 

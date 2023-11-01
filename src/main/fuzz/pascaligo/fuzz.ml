@@ -52,15 +52,15 @@ module Mutator (M : Monad) = struct
       let* f = transform_nat |> map_return |> oneof in
       let z = Z.of_int (f z) in
       return (E_Nat (Wrap.wrap ~attributes:i#attributes (s, z) i#region))
-    | E_Mutez i ->
+    | E_Mumav i ->
       let s, z = i#payload in
       (match Int64.to_int z with
       | Some z ->
         let* z = mutate_nat z in
         let* f = transform_nat |> map_return |> oneof in
         let z = Int64.of_int (f z) in
-        return (E_Mutez (Wrap.wrap ~attributes:i#attributes (s, z) i#region))
-      | None -> return (E_Mutez i))
+        return (E_Mumav (Wrap.wrap ~attributes:i#attributes (s, z) i#region))
+      | None -> return (E_Mumav i))
     | E_Lt op | E_Leq op | E_Gt op | E_Geq op | E_Equal op | E_Neq op ->
       let* ctor = comp_bin_op_ctor |> map_return |> oneof in
       return (ctor op)

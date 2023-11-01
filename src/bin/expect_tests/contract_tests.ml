@@ -150,7 +150,7 @@ let%expect_test _ =
         (or (or (nat %buy_single) (nat %sell_single))
             (pair %transfer_single (nat %card_to_transfer) (address %destination))) ;
       storage
-        (pair (pair (map %card_patterns nat (pair (mutez %coefficient) (nat %quantity)))
+        (pair (pair (map %card_patterns nat (pair (mumav %coefficient) (nat %quantity)))
                     (map %cards nat (pair (address %card_owner) (nat %card_pattern))))
               (nat %next_id)) ;
       code { UNPAIR ;
@@ -882,7 +882,7 @@ let%expect_test _ =
     (or (ticket %receive unit)
         (pair %send (contract %destination (ticket unit)) (nat %amount) (address %ticketer))) ;
   storage (pair (address %manager) (big_map %tickets address (ticket unit))) ;
-  code { PUSH mutez 0 ;
+  code { PUSH mumav 0 ;
          AMOUNT ;
          COMPARE ;
          EQ ;
@@ -949,7 +949,7 @@ let%expect_test _ =
                      DROP ;
                      DIG 2 ;
                      CAR ;
-                     PUSH mutez 0 ;
+                     PUSH mumav 0 ;
                      DIG 3 ;
                      TRANSFER_TOKENS ;
                      SWAP ;
@@ -977,7 +977,7 @@ Hint: replace it by "_ticket" to prevent this warning.
     (or (ticket %burn unit)
         (pair %mint (contract %destination (ticket unit)) (nat %amount))) ;
   storage address ;
-  code { PUSH mutez 0 ;
+  code { PUSH mumav 0 ;
          AMOUNT ;
          COMPARE ;
          EQ ;
@@ -1006,7 +1006,7 @@ Hint: replace it by "_ticket" to prevent this warning.
              IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
              SWAP ;
              CAR ;
-             PUSH mutez 0 ;
+             PUSH mumav 0 ;
              DIG 2 ;
              TRANSFER_TOKENS ;
              SWAP ;
@@ -1095,7 +1095,7 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts/amount_lambda.mligo", line 4, characters 7-8:
-      3 |   let amt : tez = Tezos.get_amount () in
+      3 |   let amt : mav = Tezos.get_amount () in
       4 |   fun (x : unit) -> amt
       5 |
     :
@@ -1104,14 +1104,14 @@ let%expect_test _ =
 
     File "../../test/contracts/amount_lambda.mligo", line 2, characters 8-9:
       1 | (* should return a constant function *)
-      2 | let f1 (x : unit) : unit -> tez =
-      3 |   let amt : tez = Tezos.get_amount () in
+      2 | let f1 (x : unit) : unit -> mav =
+      3 |   let amt : mav = Tezos.get_amount () in
     :
     Warning: unused variable "x".
     Hint: replace it by "_x" to prevent this warning.
 
     File "../../test/contracts/amount_lambda.mligo", line 8, characters 7-8:
-      7 | let f2 (x : unit) : unit -> tez =
+      7 | let f2 (x : unit) : unit -> mav =
       8 |   fun (x : unit) -> Tezos.get_amount ()
       9 |
     :
@@ -1120,7 +1120,7 @@ let%expect_test _ =
 
     File "../../test/contracts/amount_lambda.mligo", line 7, characters 8-9:
       6 | (* should return an impure function *)
-      7 | let f2 (x : unit) : unit -> tez =
+      7 | let f2 (x : unit) : unit -> mav =
       8 |   fun (x : unit) -> Tezos.get_amount ()
     :
     Warning: unused variable "x".
@@ -1128,17 +1128,17 @@ let%expect_test _ =
 
     File "../../test/contracts/amount_lambda.mligo", line 10, characters 12-13:
       9 |
-     10 | let main (b,s : bool * (unit -> tez)) : operation list * (unit -> tez) =
+     10 | let main (b,s : bool * (unit -> mav)) : operation list * (unit -> mav) =
      11 |   (([] : operation list), (if b then f1 () else f2 ()))
     :
     Warning: unused variable "s".
     Hint: replace it by "_s" to prevent this warning.
 
     { parameter bool ;
-      storage (lambda unit mutez) ;
+      storage (lambda unit mumav) ;
       code { CAR ;
-             IF { LAMBDA unit mutez { DROP ; AMOUNT } }
-                { LAMBDA unit mutez { DROP ; AMOUNT } } ;
+             IF { LAMBDA unit mumav { DROP ; AMOUNT } }
+                { LAMBDA unit mumav { DROP ; AMOUNT } } ;
              NIL operation ;
              PAIR } } |}]
 
@@ -1370,7 +1370,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#175.
       storage string ;
       code { CDR ;
              PUSH int 1 ;
-             PUSH mutez 300000000 ;
+             PUSH mumav 300000000 ;
              NONE key_hash ;
              CREATE_CONTRACT
                { parameter nat ;
@@ -1500,7 +1500,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#175.
       storage string ;
       code { CDR ;
              PUSH string "un" ;
-             PUSH mutez 300000000 ;
+             PUSH mumav 300000000 ;
              NONE key_hash ;
              CREATE_CONTRACT
                { parameter nat ;
@@ -1638,7 +1638,7 @@ let%expect_test _ =
       storage nat ;
       code { CDR ;
              SELF %toto ;
-             PUSH mutez 300000000 ;
+             PUSH mumav 300000000 ;
              PUSH int 2 ;
              TRANSFER_TOKENS ;
              SWAP ;
@@ -1661,7 +1661,7 @@ let%expect_test _ =
       storage nat ;
       code { CDR ;
              SELF %default ;
-             PUSH mutez 300000000 ;
+             PUSH mumav 300000000 ;
              PUSH int 2 ;
              TRANSFER_TOKENS ;
              SWAP ;
@@ -1873,7 +1873,7 @@ let%expect_test _ =
       storage unit ;
       code { DROP ;
              SELF %foo ;
-             PUSH mutez 0 ;
+             PUSH mumav 0 ;
              UNIT ;
              TRANSFER_TOKENS ;
              UNIT ;
@@ -2108,7 +2108,7 @@ let%expect_test _ =
         (or (ticket %receive unit)
             (pair %send (contract %destination (ticket unit)) (nat %amount) (address %ticketer))) ;
       storage (pair (address %manager) (big_map %tickets address (ticket unit))) ;
-      code { PUSH mutez 0 ;
+      code { PUSH mumav 0 ;
              AMOUNT ;
              COMPARE ;
              EQ ;
@@ -2175,7 +2175,7 @@ let%expect_test _ =
                          DROP ;
                          DIG 2 ;
                          CAR ;
-                         PUSH mutez 0 ;
+                         PUSH mumav 0 ;
                          DIG 3 ;
                          TRANSFER_TOKENS ;
                          SWAP ;
@@ -3406,7 +3406,7 @@ let%expect_test _ =
              CONTRACT %Upper unit ;
              IF_NONE
                { PUSH string "lol" ; FAILWITH }
-               { PUSH mutez 0 ;
+               { PUSH mumav 0 ;
                  UNIT ;
                  TRANSFER_TOKENS ;
                  UNIT ;
@@ -3576,7 +3576,7 @@ let%expect_test _ =
   SWAP ;
   NIL operation ;
   DIG 2 ;
-  PUSH mutez 0 ;
+  PUSH mumav 0 ;
   UNIT ;
   TRANSFER_TOKENS ;
   CONS ;
@@ -3648,7 +3648,7 @@ let%expect_test _ =
   storage string ;
   code { CDR ;
          SENDER ;
-         PUSH mutez 1000000 ;
+         PUSH mumav 1000000 ;
          NONE key_hash ;
          CREATE_CONTRACT
            { parameter nat ;
@@ -3715,7 +3715,7 @@ let%expect_test _ =
     File "../../test/contracts/negative/bad_contract_return_type.mligo", line 5, characters 4-8:
       4 |
       5 | let main (_,s : paramater * storage) : _return =
-      6 |     [], s, 1tez
+      6 |     [], s, 1mav
 
     Invalid type for entrypoint "main".
     An entrypoint must of type "parameter * storage -> operation list * storage".

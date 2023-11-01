@@ -329,7 +329,7 @@ let%expect_test _ =
   [%expect
     {|
     File "./test_mutate_from_file.mligo", line 7, characters 11-65:
-      6 |   let _ = Test.transfer_exn a (Test.eval 1) 0tez in
+      6 |   let _ = Test.transfer_exn a (Test.eval 1) 0mav in
       7 |   let () = assert (Test.get_storage_of_address a = (Test.eval 1)) in
       8 |   ()
 
@@ -941,7 +941,7 @@ let%expect_test _ =
       6 |   let test = PBT.make_test (PBT.gen_small : ((int contract) list) pbt_gen) (fun (xs : (int contract) list) -> List.length xs = 42n) in
       7 |   (* And run it *)
 
-    Generator for type contract (int) is not implemented. For now, only unit, string, bytes, address, int, nat, tez, records, sums, lists, sets, maps and big_maps can be generated. |}]
+    Generator for type contract (int) is not implemented. For now, only unit, string, bytes, address, int, nat, mav, records, sums, lists, sets, maps and big_maps can be generated. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_failure1.mligo" ];
@@ -986,9 +986,9 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts/negative//interpreter_tests/bad_balances_reset.mligo", line 1, characters 11-48:
-      1 | let test = Test.reset_state 2n [4000tez;4000tez]
+      1 | let test = Test.reset_state 2n [4000mav;4000mav]
 
-     baker account initial balance must at least reach 6000 tez |}]
+     baker account initial balance must at least reach 6000 mav |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_failure3.mligo" ];
@@ -996,7 +996,7 @@ let%expect_test _ =
     {|
     File "../../test/contracts/negative//interpreter_tests/test_failure3.mligo", line 3, characters 17-18:
       2 |   let f = (fun (_ : (unit * unit)) -> ()) in
-      3 |   Test.originate f () 0tez
+      3 |   Test.originate f () 0mav
 
     Invalid type(s)
     Cannot unify "unit" with "( list (operation) * unit )". |}]
@@ -1037,7 +1037,7 @@ let%expect_test _ =
     File "../../test/contracts/negative//interpreter_tests/test_trace2.mligo", line 6, characters 10-88:
       5 | let make_call (contr : unit contract) =
       6 |   let _ = Test.get_storage_of_address ("KT1RYW6Zm24t3rSquhw1djfcgQeH9gBdsmiL" : address) in
-      7 |   Test.transfer_to_contract_exn contr () 10tez
+      7 |   Test.transfer_to_contract_exn contr () 10mav
 
     An uncaught error occured:
     Did not find service: GET ocaml:context/contracts/KT1RYW6Zm24t3rSquhw1djfcgQeH9gBdsmiL/storage
@@ -1075,7 +1075,7 @@ let%expect_test _ =
     {|
     File "../../test/contracts/negative//interpreter_tests/test_source1.mligo", line 10, characters 18-45:
       9 |   let () = Test.set_source addr in
-     10 |   let (_, _, _) = Test.originate main () 0tez in
+     10 |   let (_, _, _) = Test.originate main () 0mav in
      11 |   ()
 
     The source address is not an implicit account
@@ -1087,7 +1087,7 @@ let%expect_test _ =
     {|
     File "../../test/contracts/negative//interpreter_tests/test_source2.mligo", line 10, characters 10-52:
       9 |   let () = Test.set_source addr in
-     10 |   let _ = Test.transfer_exn addr (Test.eval ()) 0tez in
+     10 |   let _ = Test.transfer_exn addr (Test.eval ()) 0mav in
      11 |   ()
 
     The source address is not an implicit account
@@ -1143,7 +1143,7 @@ let%expect_test _ =
     {|
     File "../../test/contracts/negative//interpreter_tests/test_register_delegate.mligo", line 19, characters 19-46:
      18 |   let () = Test.set_baker a in
-     19 |   let (ta, _, _) = Test.originate main 41 5tez in
+     19 |   let (ta, _, _) = Test.originate main 41 5mav in
      20 |
 
     Baker cannot bake. Enough rolls? Enough cycles passed?

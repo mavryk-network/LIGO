@@ -47,7 +47,7 @@ and type_constant ppf (tb : type_base) : unit =
     | TB_bytes -> "bytes"
     | TB_nat -> "nat"
     | TB_int -> "int"
-    | TB_mutez -> "mutez"
+    | TB_mumav -> "mumav"
     | TB_bool -> "bool"
     | TB_operation -> "operation"
     | TB_address -> "address"
@@ -79,7 +79,7 @@ let rec value ppf : value -> unit = function
   | D_int n -> fprintf ppf "%a" Z.pp_print n
   | D_nat n -> fprintf ppf "+%a" Z.pp_print n
   | D_timestamp n -> fprintf ppf "+%a" Z.pp_print n
-  | D_mutez n -> fprintf ppf "%amutez" Z.pp_print n
+  | D_mumav n -> fprintf ppf "%amumav" Z.pp_print n
   | D_unit -> fprintf ppf "unit"
   | D_string s -> fprintf ppf "\"%s\"" s
   | D_bytes x -> fprintf ppf "0x%a" Hex.pp @@ Hex.of_bytes x

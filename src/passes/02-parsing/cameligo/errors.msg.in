@@ -441,7 +441,7 @@ interactive_expr: Begin Fun WILD ARROW Bytes SEMI
 ##
 ## Ends in an error in state: 1074.
 ##
-## sequence -> Begin series . End [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
+## sequence -> Begin series . End [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mumav Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## Begin series
@@ -1291,8 +1291,8 @@ interactive_expr: Begin With
 ##
 ## Ends in an error in state: 282.
 ##
-## sequence -> Begin . End [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
-## sequence -> Begin . series End [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
+## sequence -> Begin . End [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mumav Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
+## sequence -> Begin . series End [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mumav Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## Begin
@@ -4451,7 +4451,7 @@ interactive_expr: UIdent DOT With
 ##
 ## Ends in an error in state: 127.
 ##
-## module_access_e -> UIdent DOT . module_var_e [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
+## module_access_e -> UIdent DOT . module_var_e [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mumav Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## UIdent DOT
@@ -4477,7 +4477,7 @@ interactive_expr: UIdent DOT Ident DOT With
 ##
 ## Ends in an error in state: 131.
 ##
-## projection -> Ident DOT . nsepseq(selection,DOT) [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
+## projection -> Ident DOT . nsepseq(selection,DOT) [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mumav Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## Ident DOT
@@ -4486,7 +4486,7 @@ interactive_expr: Ident DOT Int DOT With
 ##
 ## Ends in an error in state: 135.
 ##
-## nsepseq(selection,DOT) -> selection DOT . nsepseq(selection,DOT) [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
+## nsepseq(selection,DOT) -> selection DOT . nsepseq(selection,DOT) [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mumav Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## selection DOT
@@ -4502,7 +4502,7 @@ interactive_expr: LBRACE Ident DOT Ident Verbatim
 ##
 ## Ends in an error in state: 1148.
 ##
-## update_record -> LBRACE path . With sep_or_term_list(field_path_assignment,SEMI) RBRACE [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
+## update_record -> LBRACE path . With sep_or_term_list(field_path_assignment,SEMI) RBRACE [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mumav Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## LBRACE path
@@ -4799,7 +4799,7 @@ interactive_expr: LBRACE Ident With With
 ##
 ## Ends in an error in state: 1149.
 ##
-## update_record -> LBRACE path With . sep_or_term_list(field_path_assignment,SEMI) RBRACE [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
+## update_record -> LBRACE path With . sep_or_term_list(field_path_assignment,SEMI) RBRACE [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mumav Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## LBRACE path With
@@ -4813,8 +4813,8 @@ interactive_expr: LBRACE With
 ##
 ## Ends in an error in state: 274.
 ##
-## record_expr -> LBRACE . sep_or_term_list(field_assignment,SEMI) RBRACE [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
-## update_record -> LBRACE . path With sep_or_term_list(field_path_assignment,SEMI) RBRACE [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
+## record_expr -> LBRACE . sep_or_term_list(field_assignment,SEMI) RBRACE [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mumav Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
+## update_record -> LBRACE . path With sep_or_term_list(field_path_assignment,SEMI) RBRACE [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mumav Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## LBRACE
@@ -4898,7 +4898,7 @@ interactive_expr: LPAR Verbatim COLON Ident VBAR
 ##
 ## Ends in an error in state: 1225.
 ##
-## par(typed_expr) -> LPAR typed_expr . RPAR [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
+## par(typed_expr) -> LPAR typed_expr . RPAR [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mumav Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## LPAR typed_expr
@@ -4921,7 +4921,7 @@ interactive_expr: LPAR Verbatim With
 ##
 ## Ends in an error in state: 1227.
 ##
-## par(expr) -> LPAR expr . RPAR [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
+## par(expr) -> LPAR expr . RPAR [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mumav Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
 ## typed_expr -> expr . COLON type_expr [ RPAR ]
 ##
 ## The known suffix of the stack is as follows:
@@ -4958,7 +4958,7 @@ interactive_expr: Lang Verbatim With
 ##
 ## Ends in an error in state: 1232.
 ##
-## code_inj -> Lang expr . RBRACKET [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
+## code_inj -> Lang expr . RBRACKET [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mumav Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## Lang expr
@@ -5064,7 +5064,7 @@ interactive_expr: Verbatim GT With
 ## Ends in an error in state: 483.
 ##
 ## bin_op(comp_expr_level,GT,cat_expr_level) -> comp_expr_level GT . cat_expr_level [ With VBAR Type To Then SEMI RPAR REV_APP RBRACKET RBRACE Or NE Module Let LT LE In GT End Else EQ EOF Downto Done Do Directive COMMA COLON BOOL_OR BOOL_AND Attr ]
-## ge -> GT . ZWSP EQ [ Verbatim UIdent String Not Nat Mutez MINUS Lang LPAR LBRACKET LBRACE Int Ident Bytes Begin ]
+## ge -> GT . ZWSP EQ [ Verbatim UIdent String Not Nat Mumav MINUS Lang LPAR LBRACKET LBRACE Int Ident Bytes Begin ]
 ##
 ## The known suffix of the stack is as follows:
 ## comp_expr_level GT
@@ -5242,7 +5242,7 @@ interactive_expr: UIdent DOT UIdent With
 ##
 ## Ends in an error in state: 128.
 ##
-## module_access_e -> UIdent . DOT module_var_e [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
+## module_access_e -> UIdent . DOT module_var_e [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mumav Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## UIdent
@@ -7352,7 +7352,7 @@ interactive_expr: Lang With
 ##
 ## Ends in an error in state: 144.
 ##
-## code_inj -> Lang . expr RBRACKET [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
+## code_inj -> Lang . expr RBRACKET [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mumav Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## Lang
@@ -7366,9 +7366,9 @@ interactive_expr: LPAR With
 ##
 ## Ends in an error in state: 146.
 ##
-## par(expr) -> LPAR . expr RPAR [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
-## par(typed_expr) -> LPAR . typed_expr RPAR [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
-## unit -> LPAR . RPAR [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
+## par(expr) -> LPAR . expr RPAR [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mumav Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
+## par(typed_expr) -> LPAR . typed_expr RPAR [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mumav Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
+## unit -> LPAR . RPAR [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mumav Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## LPAR
@@ -7546,7 +7546,7 @@ interactive_expr: LBRACKET With
 ##
 ## Ends in an error in state: 150.
 ##
-## list_of(expr) -> LBRACKET . option(sep_or_term_list(expr,SEMI)) RBRACKET [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mutez Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
+## list_of(expr) -> LBRACKET . option(sep_or_term_list(expr,SEMI)) RBRACKET [ With Verbatim VBAR UIdent Type To Then TIMES String SLASH SEMI RPAR REV_APP RBRACKET RBRACE PLUS Or Nat NE Mumav Module Mod MINUS Lxor Lsr Lsl Lor Let Lang Land LT LPAR LE LBRACKET LBRACE Int In Ident GT End Else EQ EOF Downto Done Do Directive CONS COMMA COLON CARET Bytes Begin BOOL_OR BOOL_AND Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## LBRACKET
@@ -10602,7 +10602,7 @@ interactive_expr: Bytes GT ZWSP ZWSP
 ##
 ## Ends in an error in state: 484.
 ##
-## ge -> GT ZWSP . EQ [ Verbatim UIdent String Not Nat Mutez MINUS Lang LPAR LBRACKET LBRACE Int Ident Bytes Begin ]
+## ge -> GT ZWSP . EQ [ Verbatim UIdent String Not Nat Mumav MINUS Lang LPAR LBRACKET LBRACE Int Ident Bytes Begin ]
 ##
 ## The known suffix of the stack is as follows:
 ## GT ZWSP

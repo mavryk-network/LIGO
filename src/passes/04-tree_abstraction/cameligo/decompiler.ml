@@ -279,7 +279,7 @@ let rec decompile_expression : AST.expression -> CST.expr =
       let ty = decompile_type_expr @@ AST.t_timestamp ~loc () in
       let time = CST.EString (String (wrap time)) in
       return_expr @@ CST.EAnnot (wrap @@ par (time, Token.ghost_colon, ty))
-    | Literal_mutez mtez -> return_expr @@ CST.EArith (Mutez (wrap ("", Z.to_int64 mtez)))
+    | Literal_mumav mmav -> return_expr @@ CST.EArith (Mumav (wrap ("", Z.to_int64 mmav)))
     | Literal_string (Standard str) -> return_expr @@ CST.EString (String (wrap str))
     | Literal_string (Verbatim ver) -> return_expr @@ CST.EString (Verbatim (wrap ver))
     | Literal_bytes b ->

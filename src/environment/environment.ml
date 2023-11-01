@@ -79,7 +79,7 @@ let basic_types : (Type_var.t * type_expression) list =
 
 let michelson_base : (Type_var.t * type_expression) list =
   [ v_operation ~loc, t_operation ~loc ()
-  ; v_tez ~loc, t_constant ~loc Tez []
+  ; v_mav ~loc, t_constant ~loc Tez []
   ; v_address ~loc, t_address ~loc ()
   ; v_signature ~loc, t_signature ~loc ()
   ; v_key ~loc, t_key ~loc ()

@@ -79,8 +79,8 @@ let rec decompile_value ~(raise : (stacking_error,_) raise) :
       let open Tezos_base.TzPervasives.Time.Protocol in
       let n = Z.of_int64 (to_seconds (of_notation_exn n)) in
       D_timestamp n
-  | Prim (_, "mutez", [], _), Int (_, n) ->
-      D_mutez n
+  | Prim (_, "mumav", [], _), Int (_, n) ->
+      D_mumav n
   | Prim (_, "bool", [], _), Prim (_, "True", [], _) ->
       D_bool true
   | Prim (_, "bool", [], _), Prim (_, "False", [], _) ->

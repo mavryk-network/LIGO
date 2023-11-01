@@ -345,10 +345,10 @@ and pp_arith_expr = function
 | Neg   e -> string "-" ^^ pp_expr e.value.arg
 | Int   e -> pp_int e
 | Nat   e -> pp_nat e
-| Mutez e -> pp_mutez e
+| Mumav e -> pp_mumav e
 
-and pp_mutez {value; _} =
-  Int64.to_string (snd value) ^ "mutez" |> string
+and pp_mumav {value; _} =
+  Int64.to_string (snd value) ^ "mumav" |> string
 
 and pp_string_expr = function
      Cat e -> pp_bin_op "^" e

@@ -65,7 +65,7 @@ let literal_type_prim (l : Literal_value.t) : string =
   | Literal_int _ -> "int"
   | Literal_nat _ -> "nat"
   | Literal_timestamp _ -> "timestamp"
-  | Literal_mutez _ -> "mutez"
+  | Literal_mumav _ -> "mumav"
   | Literal_string _ -> "string"
   | Literal_bytes _ -> "bytes"
   | Literal_address _ -> "address"
@@ -89,7 +89,7 @@ let literal_value (l : Literal_value.t) : (meta, string) node =
   | Literal_int x -> Int (null, x)
   | Literal_nat x -> Int (null, x)
   | Literal_timestamp x -> Int (null, x)
-  | Literal_mutez x -> Int (null, x)
+  | Literal_mumav x -> Int (null, x)
   | Literal_string x -> String (null, Simple_utils.Ligo_string.extract x)
   | Literal_bytes x -> Bytes (null, x)
   | Literal_address x -> String (null, x)
@@ -152,8 +152,8 @@ let rec translate_type (t : ('l, ('l, 'p) node) Compiler.ty) : ('l, 'p) node =
     Prim (l, "int", [], [])
   | T_nat l ->
     Prim (l, "nat", [], [])
-  | T_mutez l ->
-    Prim (l, "mutez", [], [])
+  | T_mumav l ->
+    Prim (l, "mumav", [], [])
   | T_string l ->
     Prim (l, "string", [], [])
   | T_bytes l ->

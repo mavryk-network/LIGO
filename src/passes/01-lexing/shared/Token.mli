@@ -76,13 +76,13 @@ module type S =
     val mk_nat :
       lexeme -> Z.t -> Region.t -> (token, nat_err) result
 
-    (* Mutez *)
+    (* Mumav *)
 
-    type mutez_err = Wrong_mutez_syntax of string (* Hint *)
+    type mumav_err = Wrong_mumav_syntax of string (* Hint *)
 
-    val mk_mutez :
+    val mk_mumav :
       lexeme -> suffix:string -> Int64.t ->
-      Region.t -> (token, mutez_err) result
+      Region.t -> (token, mumav_err) result
 
     (* Symbols *)
 

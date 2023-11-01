@@ -48,7 +48,7 @@ module Comparable = struct
 
   (* [simple_comparator ~raise loc name] checks
      returns type [bool] if argument types are of the form [ t1; t2 ]
-     where [t1 = t2] and [t1, t2] in [ address ; bool ; bytes ; chain_id; int; key; key_hash; mutez; nat ; ... ].
+     where [t1 = t2] and [t1, t2] in [ address ; bool ; bytes ; chain_id; int; key; key_hash; mumav; nat ; ... ].
   *)
   let simple_comparator : (_, _) t =
     let open C in
@@ -62,7 +62,7 @@ module Comparable = struct
         ; t_int
         ; t_key
         ; t_key_hash
-        ; t_mutez
+        ; t_mumav
         ; t_nat
         ; t_signature
         ; t_string
@@ -789,7 +789,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
               [ (t_pair a b ~loc ()
                 @-> t_pair (t_list (t_operation ~loc ()) ~loc ()) b ~loc ())
                 ^-> t_option (t_key_hash ~loc ()) ~loc ()
-                ^-> t_mutez ~loc ()
+                ^-> t_mumav ~loc ()
                 ^-> b
                 ^~> t_pair (t_operation ~loc ()) (t_address ~loc ()) ~loc ()
               ]) )
@@ -812,7 +812,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                [ t_int ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
                ; t_string ~loc () ^-> t_string ~loc () ^~> t_string ~loc ()
                ; t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-               ; t_mutez ~loc () ^-> t_mutez ~loc () ^~> t_mutez ~loc ()
+               ; t_mumav ~loc () ^-> t_mumav ~loc () ^~> t_mumav ~loc ()
                ; t_int ~loc () ^-> t_nat ~loc () ^~> t_int ~loc ()
                ; t_nat ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
                ; t_timestamp ~loc () ^-> t_int ~loc () ^~> t_timestamp ~loc ()
@@ -839,9 +839,9 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                ; t_int ~loc () ^-> t_nat ~loc () ^~> t_int ~loc ()
                ; t_timestamp ~loc () ^-> t_timestamp ~loc () ^~> t_int ~loc ()
                ; t_timestamp ~loc () ^-> t_int ~loc () ^~> t_timestamp ~loc ()
-               ; t_mutez ~loc ()
-                 ^-> t_mutez ~loc ()
-                 ^~> t_option (t_mutez ~loc ()) ~loc ()
+               ; t_mumav ~loc ()
+                 ^-> t_mumav ~loc ()
+                 ^~> t_option (t_mumav ~loc ()) ~loc ()
                ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
                ; t_bls12_381_g1 ~loc ()
                  ^-> t_bls12_381_g1 ~loc ()
@@ -861,7 +861,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                [ t_int ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
                ; t_int ~loc () ^-> t_nat ~loc () ^~> t_int ~loc ()
                ; t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-               ; t_mutez ~loc () ^-> t_mutez ~loc () ^~> t_mutez ~loc ()
+               ; t_mumav ~loc () ^-> t_mumav ~loc () ^~> t_mumav ~loc ()
                ; t_nat ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
                ; t_timestamp ~loc () ^-> t_int ~loc () ^~> t_timestamp ~loc ()
                ; t_int ~loc () ^-> t_timestamp ~loc () ^~> t_timestamp ~loc ()
@@ -887,8 +887,8 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                ; t_bls12_381_fr ~loc () ^-> t_nat ~loc () ^~> t_bls12_381_fr ~loc ()
                ; t_bls12_381_fr ~loc () ^-> t_int ~loc () ^~> t_bls12_381_fr ~loc ()
                ; t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-               ; t_nat ~loc () ^-> t_mutez ~loc () ^~> t_mutez ~loc ()
-               ; t_mutez ~loc () ^-> t_nat ~loc () ^~> t_mutez ~loc ()
+               ; t_nat ~loc () ^-> t_mumav ~loc () ^~> t_mumav ~loc ()
+               ; t_mumav ~loc () ^-> t_nat ~loc () ^~> t_mumav ~loc ()
                ; t_int ~loc () ^-> t_nat ~loc () ^~> t_int ~loc ()
                ; t_nat ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
                ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
@@ -922,7 +922,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                ; t_nat ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
                ; t_timestamp ~loc () ^-> t_timestamp ~loc () ^~> t_int ~loc ()
                ; t_timestamp ~loc () ^-> t_int ~loc () ^~> t_timestamp ~loc ()
-               ; t_mutez ~loc () ^-> t_mutez ~loc () ^~> t_mutez ~loc ()
+               ; t_mumav ~loc () ^-> t_mumav ~loc () ^~> t_mumav ~loc ()
                ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
                ]) )
     ; ( C_SUB_MUTEZ
@@ -930,9 +930,9 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
           (create
              ~mode_annot:[ Checked; Checked ]
              ~types:
-               [ t_mutez ~loc ()
-                 ^-> t_mutez ~loc ()
-                 ^~> t_option (t_mutez ~loc ()) ~loc ()
+               [ t_mumav ~loc ()
+                 ^-> t_mumav ~loc ()
+                 ^~> t_option (t_mumav ~loc ()) ~loc ()
                ]) )
     ; ( C_DIV
       , of_type
@@ -943,8 +943,8 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                ; t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
                ; t_nat ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
                ; t_int ~loc () ^-> t_nat ~loc () ^~> t_int ~loc ()
-               ; t_mutez ~loc () ^-> t_nat ~loc () ^~> t_mutez ~loc ()
-               ; t_mutez ~loc () ^-> t_mutez ~loc () ^~> t_nat ~loc ()
+               ; t_mumav ~loc () ^-> t_nat ~loc () ^~> t_mumav ~loc ()
+               ; t_mumav ~loc () ^-> t_mumav ~loc () ^~> t_nat ~loc ()
                ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
                ]) )
     ; ( C_MOD
@@ -956,8 +956,8 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                ; t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
                ; t_nat ~loc () ^-> t_int ~loc () ^~> t_nat ~loc ()
                ; t_int ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-               ; t_mutez ~loc () ^-> t_nat ~loc () ^~> t_mutez ~loc ()
-               ; t_mutez ~loc () ^-> t_mutez ~loc () ^~> t_mutez ~loc ()
+               ; t_mumav ~loc () ^-> t_nat ~loc () ^~> t_mumav ~loc ()
+               ; t_mumav ~loc () ^-> t_mumav ~loc () ^~> t_mumav ~loc ()
                ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
                ]) )
     ; ( C_NEG
@@ -1063,7 +1063,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
              ~types:
                [ t_michelson_contract ~loc ()
                  ^-> t_michelson_code ~loc ()
-                 ^-> t_mutez ~loc ()
+                 ^-> t_mumav ~loc ()
                  ^~> t_address ~loc ()
                ]) )
     ; ( C_TEST_BOOTSTRAP_CONTRACT
@@ -1078,7 +1078,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
               [ (t_pair a b ~loc ()
                 @-> t_pair (t_list (t_operation ~loc ()) ~loc ()) b ~loc ())
                 ^-> b
-                ^-> t_mutez ~loc ()
+                ^-> t_mumav ~loc ()
                 ^~> t_unit ~loc ()
               ]) )
     ; ( C_TEST_LAST_ORIGINATIONS
@@ -1133,7 +1133,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
       , of_type
           (create
              ~mode_annot:[ Checked ]
-             ~types:[ t_address ~loc () ^~> t_mutez ~loc () ]) )
+             ~types:[ t_address ~loc () ^~> t_mumav ~loc () ]) )
     ; ( C_TEST_GET_NTH_BS
       , of_type
           (create
@@ -1171,7 +1171,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
              ~types:
                [ t_option (t_timestamp ~loc ()) ~loc ()
                  ^-> t_nat ~loc ()
-                 ^-> t_list (t_mutez ~loc ()) ~loc ()
+                 ^-> t_list (t_mumav ~loc ()) ~loc ()
                  ^~> t_unit ~loc ()
                ]) )
     ; ( C_TEST_GET_VOTING_POWER
@@ -1280,7 +1280,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                [ t_address ~loc ()
                  ^-> t_option (t_string ~loc ()) ~loc ()
                  ^-> t_michelson_code ~loc ()
-                 ^-> t_mutez ~loc ()
+                 ^-> t_mumav ~loc ()
                  ^~> t_test_exec_result ~loc ()
                ]) )
     ; ( C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN
@@ -1291,7 +1291,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                [ t_address ~loc ()
                  ^-> t_option (t_string ~loc ()) ~loc ()
                  ^-> t_michelson_code ~loc ()
-                 ^-> t_mutez ~loc ()
+                 ^-> t_mumav ~loc ()
                  ^~> t_nat ~loc ()
                ]) )
     ; ( C_TEST_SET_BIG_MAP
@@ -1309,7 +1309,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
              ~mode_annot:[ Checked; Checked ]
              ~types:
                [ t_pair (t_string ~loc ()) (t_key ~loc ()) ~loc ()
-                 ^-> t_option (t_mutez ~loc ()) ~loc ()
+                 ^-> t_option (t_mumav ~loc ()) ~loc ()
                  ^~> t_unit ~loc ()
                ]) )
     ; ( C_TEST_REGISTER_DELEGATE
@@ -1588,12 +1588,12 @@ module External_types = struct
          ; t_int ~loc ()
            ^-> t_nat ~loc ()
            ^~> t_option (t_pair (t_int ~loc ()) (t_nat ~loc ()) ~loc ()) ~loc ()
-         ; t_mutez ~loc ()
-           ^-> t_mutez ~loc ()
-           ^~> t_option (t_pair (t_nat ~loc ()) (t_mutez ~loc ()) ~loc ()) ~loc ()
-         ; t_mutez ~loc ()
+         ; t_mumav ~loc ()
+           ^-> t_mumav ~loc ()
+           ^~> t_option (t_pair (t_nat ~loc ()) (t_mumav ~loc ()) ~loc ()) ~loc ()
+         ; t_mumav ~loc ()
            ^-> t_nat ~loc ()
-           ^~> t_option (t_pair (t_mutez ~loc ()) (t_mutez ~loc ()) ~loc ()) ~loc ()
+           ^~> t_option (t_pair (t_mumav ~loc ()) (t_mumav ~loc ()) ~loc ()) ~loc ()
          ])
 
 

@@ -221,7 +221,7 @@ module Fold_helpers (M : Monad) = struct
       return @@ EArith (Neg { value; region })
     | EArith (Int _) -> return @@ e
     (* | EArith Nat   _ *)
-    (* | EArith Mutez _ as e  *)
+    (* | EArith Mumav _ as e  *)
     | ECall { value = e, a; region } ->
       let map_arguments = function
         | Multiple { value; region } ->

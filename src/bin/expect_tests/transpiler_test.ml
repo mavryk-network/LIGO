@@ -8,7 +8,7 @@ let%expect_test _ =
     type card_pattern_id is nat
 
     type card_pattern is
-      record [coefficient : tez; quantity : nat]
+      record [coefficient : mav; quantity : nat]
 
     type card_patterns is map (card_pattern_id, card_pattern)
 
@@ -132,7 +132,7 @@ let%expect_test _ =
             = (Operator.times
                  (card_pattern.coefficient,
                   card_pattern.quantity)
-               : tez);
+               : mav);
 
             const receiver
             = (case (Tezos.get_contract_opt
@@ -174,7 +174,7 @@ let%expect_test _ =
             = (Operator.times
                  (card_pattern.coefficient,
                   Operator.add (card_pattern.quantity, 1n))
-               : tez);
+               : mav);
 
             if Operator.gt (price, Tezos.get_amount (Unit))
             then failwith ("Not enough money")

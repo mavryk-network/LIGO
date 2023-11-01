@@ -25,7 +25,7 @@ end
 val get_bool : value -> bool option
 val get_int : value -> Z.t option
 val get_nat : value -> Z.t option
-val get_mutez : value -> Z.t option
+val get_mumav : value -> Z.t option
 val get_timestamp : value -> Z.t option
 val get_string : value -> string option
 val get_bytes : value -> bytes option

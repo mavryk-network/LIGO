@@ -303,9 +303,9 @@ let rec compile_expression
   | E_Nat n ->
     let (_, n), loc = w_split n in
     e_nat_z ~loc n
-  | E_Mutez mtez ->
-    let (_, mtez), loc = w_split mtez in
-    e_mutez_z ~loc (Z.of_int64 mtez)
+  | E_Mumav mmav ->
+    let (_, mmav), loc = w_split mmav in
+    e_mumav_z ~loc (Z.of_int64 mmav)
   | E_Or or_ -> compile_bin_op C_OR or_
   | E_And and_ -> compile_bin_op C_AND and_
   | E_Not not_ -> compile_un_op C_NOT not_
@@ -709,7 +709,7 @@ and compile_pattern ~raise : CST.pattern -> AST.ty_expr option Pattern.t =
     (match x#payload with
     | "Unit" -> Location.wrap ~loc P_unit
     | _ -> Location.wrap ~loc (P_variant (Label c, Location.wrap ~loc P_unit)))
-  | P_ModPath _ | P_Mutez _ | P_Bytes _ | P_Int _ | P_Nat _ | P_String _ ->
+  | P_ModPath _ | P_Mumav _ | P_Bytes _ | P_Int _ | P_Nat _ | P_String _ ->
     raise.error @@ unsupported_pattern_type p
 
 

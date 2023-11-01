@@ -64,7 +64,7 @@ let t__type_ ~loc () : type_expression = t_variable ~loc (v__type_ ~loc)
       , "int"
       , "operation"
       , "nat"
-      , "tez"
+      , "mav"
       , "unit"
       , "address"
       , "signature"
@@ -160,11 +160,11 @@ let e__type_ ~loc p : expression = make_e ~loc @@ E_literal (Literal__type_ p)
 
 
 let e__type__z ~loc n : expression = make_e ~loc @@ E_literal (Literal__type_ n)
-  [@@map _type_, ("int", "nat", "timestamp", "mutez")]
+  [@@map _type_, ("int", "nat", "timestamp", "mumav")]
 
 
 let e__type_ ~loc n : expression = e__type__z ~loc @@ Z.of_int n
-  [@@map _type_, ("int", "nat", "timestamp", "mutez")]
+  [@@map _type_, ("int", "nat", "timestamp", "mumav")]
 
 
 let e_string ~loc s : expression = make_e ~loc @@ E_literal (Literal_string (Standard s))

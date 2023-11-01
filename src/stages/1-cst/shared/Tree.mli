@@ -111,4 +111,4 @@ val print_verbatim : string Wrap.t printer
 val print_int : label -> (lexeme * Z.t) Wrap.t printer
 val print_nat : label -> (lexeme * Z.t) Wrap.t printer
 val print_bytes : label -> (lexeme * Hex.t) Wrap.t printer
-val print_mutez : label -> (lexeme * Int64.t) Wrap.t printer
+val print_mumav : label -> (lexeme * Int64.t) Wrap.t printer

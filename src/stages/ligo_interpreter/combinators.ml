@@ -25,7 +25,7 @@ let v_some : value -> value = fun v -> V_Construct ("Some", v)
 let v_nat : Z.t -> value = fun v -> V_Ct (C_nat v)
 let v_int : Z.t -> value = fun v -> V_Ct (C_int v)
 let v_int64 : int64 -> value = fun v -> V_Ct (C_int64 v)
-let v_mutez : Z.t -> value = fun v -> V_Ct (C_mutez v)
+let v_mumav : Z.t -> value = fun v -> V_Ct (C_mumav v)
 let v_timestamp : Z.t -> value = fun v -> V_Ct (C_timestamp v)
 let v_bls12_381_g1 : Bls12_381.G1.t -> value = fun v -> V_Ct (C_bls12_381_g1 v)
 let v_bls12_381_g2 : Bls12_381.G2.t -> value = fun v -> V_Ct (C_bls12_381_g2 v)
@@ -120,8 +120,8 @@ let get_nat : value -> Z.t option = function
   | _ -> None
 
 
-let get_mutez : value -> Z.t option = function
-  | V_Ct (C_mutez x) -> Some x
+let get_mumav : value -> Z.t option = function
+  | V_Ct (C_mumav x) -> Some x
   | _ -> None
 
 
@@ -268,7 +268,7 @@ let tag_constant_val : constant_val -> int = function
   | C_timestamp _ -> 4
   | C_string _ -> 5
   | C_bytes _ -> 6
-  | C_mutez _ -> 7
+  | C_mumav _ -> 7
   | C_address _ -> 8
   | C_contract _ -> 9
   | C_key_hash _ -> 10
@@ -290,7 +290,7 @@ let compare_constant_val (c : constant_val) (c' : constant_val) : int =
   | C_timestamp t, C_timestamp t' -> Z.compare t t'
   | C_string s, C_string s' -> String.compare s s'
   | C_bytes b, C_bytes b' -> Bytes.compare b b'
-  | C_mutez m, C_mutez m' -> Z.compare m m'
+  | C_mumav m, C_mumav m' -> Z.compare m m'
   | C_address a, C_address a' ->
     Tezos_protocol.Protocol.Alpha_context.Contract.compare a a'
   | ( C_contract { address = a; entrypoint = e }
@@ -316,7 +316,7 @@ let compare_constant_val (c : constant_val) (c' : constant_val) : int =
       | C_timestamp _
       | C_string _
       | C_bytes _
-      | C_mutez _
+      | C_mumav _
       | C_address _
       | C_contract _
       | C_key_hash _
@@ -334,7 +334,7 @@ let compare_constant_val (c : constant_val) (c' : constant_val) : int =
       | C_timestamp _
       | C_string _
       | C_bytes _
-      | C_mutez _
+      | C_mumav _
       | C_address _
       | C_contract _
       | C_key_hash _

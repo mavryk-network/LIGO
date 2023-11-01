@@ -71,7 +71,7 @@ let t__type_ ~loc ?sugar () : type_expression = t_constant ~loc ?sugar _type_ []
       , "address"
       , "operation"
       , "nat"
-      , "tez"
+      , "mav"
       , "timestamp"
       , "unit"
       , "bls12_381_g1"
@@ -93,7 +93,7 @@ let t__type_ ~loc ?sugar t t' : type_expression = t_constant ~loc ?sugar _type_ 
   [@@map _type_, ("map", "big_map", "typed_address")]
 
 
-let t_mutez = t_tez
+let t_mumav = t_mav
 
 let t_abstraction1 ~loc ?sugar name kind : type_expression =
   let ty_binder = Type_var.fresh ~loc ~name:"_a" () in
@@ -246,7 +246,7 @@ let e__type_ ~loc ?sugar p : expression =
     _type_
     , ( "int"
       , "nat"
-      , "mutez"
+      , "mumav"
       , "string"
       , "bytes"
       , "timestamp"

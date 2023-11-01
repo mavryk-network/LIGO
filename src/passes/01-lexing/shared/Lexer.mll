@@ -35,11 +35,11 @@ module Make (Options : Options.S) (Token : Token.S) =
     | Non_canonical_zero
     | Invalid_symbol of string
     | Wrong_nat_syntax of string
-    | Wrong_mutez_syntax of string
+    | Wrong_mumav_syntax of string
     | Wrong_lang_syntax of string
     | Unterminated_verbatim of string
-    | Overflow_mutez
-    | Underflow_mutez
+    | Overflow_mumav
+    | Underflow_mumav
     | Invalid_directive of Preprocessor.Error.t
     | Unterminated_comment
 
@@ -56,18 +56,18 @@ module Make (Options : Options.S) (Token : Token.S) =
                  Hint: Check the LIGO syntax you use." s
     | Wrong_nat_syntax hint ->
         sprintf "Wrong nat syntax.\n%s" hint
-    | Wrong_mutez_syntax hint ->
-        sprintf "Wrong mutez syntax.\n%s" hint
+    | Wrong_mumav_syntax hint ->
+        sprintf "Wrong mumav syntax.\n%s" hint
     | Wrong_lang_syntax hint ->
         sprintf "Wrong code injection syntax.\n%s" hint
     | Unterminated_verbatim term ->
         sprintf "Unterminated verbatim.\n\
                  Hint: Close with %S." term
-    | Overflow_mutez ->
-        "Mutez amount too large.\n\
+    | Overflow_mumav ->
+        "Mumav amount too large.\n\
          Note: From 0 to 2^63-1=9_223_372_036_854_775_807."
-    | Underflow_mutez ->
-        "Mutez amount not an integer."
+    | Underflow_mumav ->
+        "Mumav amount not an integer."
     | Invalid_directive err ->
         Preprocessor.Error.to_string err
     | Unterminated_comment ->
@@ -135,37 +135,37 @@ module Make (Options : Options.S) (Token : Token.S) =
            | Error Token.Wrong_nat_syntax hint ->
                fail region (Wrong_nat_syntax hint)
 
-    (* Mutez *)
+    (* Mumav *)
 
-    let mk_mutez nat state buffer =
+    let mk_mumav nat state buffer =
       let state, Region.{region; _} = state#sync buffer in
       match Int64.of_string_opt nat with
-        None -> fail region Overflow_mutez
-      | Some mutez_64 ->
-          if   Int64.equal mutez_64 Int64.zero && String.(nat <> "0")
+        None -> fail region Overflow_mumav
+      | Some mumav_64 ->
+          if   Int64.equal mumav_64 Int64.zero && String.(nat <> "0")
           then fail region Non_canonical_zero
-          else let suffix = "mutez" in
-               match Token.mk_mutez nat ~suffix mutez_64 region with
+          else let suffix = "mumav" in
+               match Token.mk_mumav nat ~suffix mumav_64 region with
                  Ok token -> token, state
-               | Error Token.Wrong_mutez_syntax hint ->
-                   fail region (Wrong_mutez_syntax hint)
+               | Error Token.Wrong_mumav_syntax hint ->
+                   fail region (Wrong_mumav_syntax hint)
 
-    (* Integral Tez (internally converted to mutez) *)
+    (* Integral Tez (internally converted to mumav) *)
 
-    let mk_tez nat suffix state buffer =
+    let mk_mav nat suffix state buffer =
       let state, Region.{region; _} = state#sync buffer
-      and mutez = Z.mul (Z.of_int 1_000_000) (Z.of_string nat) in
+      and mumav = Z.mul (Z.of_int 1_000_000) (Z.of_string nat) in
       try
-        let mutez_64 = Z.to_int64 mutez in
-        if   Int64.equal mutez_64 Int64.zero && String.(nat <> "0")
+        let mumav_64 = Z.to_int64 mumav in
+        if   Int64.equal mumav_64 Int64.zero && String.(nat <> "0")
         then fail region Non_canonical_zero
-        else match Token.mk_mutez nat ~suffix mutez_64 region with
+        else match Token.mk_mumav nat ~suffix mumav_64 region with
                Ok token -> token, state
-             | Error Token.Wrong_mutez_syntax hint ->
-                 fail region (Wrong_mutez_syntax hint)
-      with Z.Overflow -> fail region Overflow_mutez
+             | Error Token.Wrong_mumav_syntax hint ->
+                 fail region (Wrong_mumav_syntax hint)
+      with Z.Overflow -> fail region Overflow_mumav
 
-    (* Tez as a decimal number (internally converted to mutez) *)
+    (* Tez as a decimal number (internally converted to mumav) *)
 
     let mk_tez_dec integral fractional suffix state buffer =
       let state, Region.{region; _} = state#sync buffer in
@@ -175,20 +175,20 @@ module Make (Options : Options.S) (Token : Token.S) =
       and frac_length = String.length fractional' in
       let denominator = Z.of_string ("1" ^ String.make frac_length '0')
       and million     = Q.of_string "1_000_000" in
-      let q_mutez     = Q.make numerator denominator |> Q.mul million in
-      if Z.equal (Q.den q_mutez) Z.one then
+      let q_mumav     = Q.make numerator denominator |> Q.mul million in
+      if Z.equal (Q.den q_mumav) Z.one then
         try
-          let mutez_64 = Z.to_int64 (Q.num q_mutez) in
-          if   Int64.equal mutez_64 Int64.zero
+          let mumav_64 = Z.to_int64 (Q.num q_mumav) in
+          if   Int64.equal mumav_64 Int64.zero
                && String.(integral <> "0" || fractional <> "0")
           then fail region Non_canonical_zero
           else let lexeme = integral ^ "." ^ fractional in
-               match Token.mk_mutez lexeme ~suffix mutez_64 region with
+               match Token.mk_mumav lexeme ~suffix mumav_64 region with
                  Ok token -> token, state
-               | Error Token.Wrong_mutez_syntax hint ->
-                   fail region (Wrong_mutez_syntax hint)
-        with Z.Overflow -> fail region Overflow_mutez
-      else fail region Underflow_mutez
+               | Error Token.Wrong_mumav_syntax hint ->
+                   fail region (Wrong_mumav_syntax hint)
+        with Z.Overflow -> fail region Overflow_mumav
+      else fail region Underflow_mumav
 
     (* Identifiers *)
 
@@ -265,7 +265,7 @@ let blank     = ' ' | '\t'
 let digit     = ['0'-'9']
 let natural   = digit | digit (digit | '_')* digit
 let nat       = natural as nat
-let tz_or_tez = "tz" | "tez" as tez
+let tz_or_mav = "tz" | "mav" as mav
 let decimal   = (natural as integral) '.' (natural as fractional)
 let small     = ['a'-'z']
 let capital   = ['A'-'Z']
@@ -330,14 +330,14 @@ rule scan state = parse
 | uident             { mk_uident              state lexbuf }
 | bytes              { mk_bytes bytes         state lexbuf }
 | nat "n"            { mk_nat   nat           state lexbuf }
-| nat "mutez"        { mk_mutez nat           state lexbuf }
-| nat tz_or_tez      { mk_tez   nat tez       state lexbuf }
+| nat "mumav"        { mk_mumav nat           state lexbuf }
+| nat tz_or_mav      { mk_mav   nat mav       state lexbuf }
 | natural            { mk_int                 state lexbuf }
 | symbol             { mk_sym                 state lexbuf }
 | eof                { mk_eof                 state lexbuf }
 | code_inj           { mk_lang  start lang    state lexbuf }
-| decimal tz_or_tez  { mk_tez_dec integral fractional
-                                          tez state lexbuf }
+| decimal tz_or_mav  { mk_tez_dec integral fractional
+                                          mav state lexbuf }
 
 | _ as c { let _, Region.{region; _} = state#sync lexbuf
            in fail region (Unexpected_character c) }

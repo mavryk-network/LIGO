@@ -296,7 +296,7 @@ and print_int state {value=lexeme,z; region} =
   print_loc_node (state#pad 2 0) lexeme region;
   print_node     (state#pad 2 1) (Z.to_string z)
 
-and print_mutez state {value=lexeme,int64; region} =
+and print_mumav state {value=lexeme,int64; region} =
   print_loc_node (state#pad 2 0) lexeme region;
   print_node     (state#pad 2 1) (Int64.to_string int64)
 
@@ -784,9 +784,9 @@ and print_arith_expr state = function
 | Nat n ->
     print_node state "Nat";
     print_int  state n
-| Mutez m ->
-    print_node state "Mutez";
-    print_mutez  state m
+| Mumav m ->
+    print_node state "Mumav";
+    print_mumav  state m
 
 and print_e_logic state = function
   BoolExpr e ->

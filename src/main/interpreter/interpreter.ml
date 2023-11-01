@@ -211,7 +211,7 @@ let compare_constants ~no_colour ~raise o1 o2 loc calltrace =
   match o1, o2 with
   | V_Ct (C_int64 a'), V_Ct (C_int64 b') -> Int64.compare a' b'
   | V_Ct (C_int a'), V_Ct (C_int b')
-  | V_Ct (C_mutez a'), V_Ct (C_mutez b')
+  | V_Ct (C_mumav a'), V_Ct (C_mumav b')
   | V_Ct (C_timestamp a'), V_Ct (C_timestamp b')
   | V_Ct (C_nat a'), V_Ct (C_nat b') -> Z.compare a' b'
   | V_Ct (C_bool a), V_Ct (C_bool b) -> Bool.compare a b
@@ -522,14 +522,14 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_SUB, [ V_Ct (C_int a' | C_timestamp a'); V_Ct (C_timestamp b' | C_int b') ] ->
     let res = Michelson_backend.Tezos_eq.timestamp_sub a' b' in
     return @@ v_timestamp res
-  | C_SUB, [ V_Ct (C_mutez a'); V_Ct (C_mutez b') ] ->
-    (match Michelson_backend.Tezos_eq.mutez_sub a' b' with
-    | Some res -> return @@ v_mutez res
+  | C_SUB, [ V_Ct (C_mumav a'); V_Ct (C_mumav b') ] ->
+    (match Michelson_backend.Tezos_eq.mumav_sub a' b' with
+    | Some res -> return @@ v_mumav res
     | None ->
-      fail (Errors.meta_lang_eval loc calltrace (v_string "Mutez underflow/overflow")))
-  | C_SUB_MUTEZ, [ V_Ct (C_mutez a'); V_Ct (C_mutez b') ] ->
-    (match Michelson_backend.Tezos_eq.mutez_sub a' b' with
-    | Some res -> return @@ v_some @@ v_mutez res
+      fail (Errors.meta_lang_eval loc calltrace (v_string "Mumav underflow/overflow")))
+  | C_SUB_MUTEZ, [ V_Ct (C_mumav a'); V_Ct (C_mumav b') ] ->
+    (match Michelson_backend.Tezos_eq.mumav_sub a' b' with
+    | Some res -> return @@ v_some @@ v_mumav res
     | None -> return @@ v_none ())
   | C_SUB, _ -> fail @@ error_type ()
   | C_SUB_MUTEZ, _ -> fail @@ error_type ()
@@ -547,11 +547,11 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_ADD, [ V_Ct (C_int a' | C_timestamp a'); V_Ct (C_timestamp b' | C_int b') ] ->
     let res = Michelson_backend.Tezos_eq.timestamp_add a' b' in
     return @@ v_timestamp res
-  | C_ADD, [ V_Ct (C_mutez a'); V_Ct (C_mutez b') ] ->
-    (match Michelson_backend.Tezos_eq.mutez_add a' b' with
-    | Some res -> return @@ v_mutez res
+  | C_ADD, [ V_Ct (C_mumav a'); V_Ct (C_mumav b') ] ->
+    (match Michelson_backend.Tezos_eq.mumav_add a' b' with
+    | Some res -> return @@ v_mumav res
     | None ->
-      fail (Errors.meta_lang_eval loc calltrace (v_string "Mutez underflow/overflow")))
+      fail (Errors.meta_lang_eval loc calltrace (v_string "Mumav underflow/overflow")))
   | C_ADD, [ V_Ct (C_bls12_381_g1 a); V_Ct (C_bls12_381_g1 b) ] ->
     let r = Bls12_381.G1.(add a b) in
     return (v_bls12_381_g1 r)
@@ -571,12 +571,12 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_MUL, [ V_Ct (C_nat a); V_Ct (C_nat b) ] ->
     let r = Z.mul a b in
     return (v_nat r)
-  | C_MUL, [ V_Ct (C_nat a); V_Ct (C_mutez b) ] ->
+  | C_MUL, [ V_Ct (C_nat a); V_Ct (C_mumav b) ] ->
     let r = Z.mul a b in
-    return (v_mutez r)
-  | C_MUL, [ V_Ct (C_mutez a); V_Ct (C_nat b) ] ->
+    return (v_mumav r)
+  | C_MUL, [ V_Ct (C_mumav a); V_Ct (C_nat b) ] ->
     let r = Z.mul a b in
-    return (v_mutez r)
+    return (v_mumav r)
   | C_MUL, [ V_Ct (C_bls12_381_g1 a); V_Ct (C_bls12_381_fr b) ] ->
     let r = Bls12_381.G1.(mul a b) in
     return (v_bls12_381_g1 r)
@@ -611,15 +611,15 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     (match a with
     | Some (res, _) -> return @@ v_nat res
     | None -> fail @@ Errors.meta_lang_eval loc calltrace div_by_zero_str)
-  | C_DIV, [ V_Ct (C_mutez a'); V_Ct (C_mutez b') ] ->
+  | C_DIV, [ V_Ct (C_mumav a'); V_Ct (C_mumav b') ] ->
     let a = Michelson_backend.Tezos_eq.int_ediv a' b' in
     (match a with
     | Some (res, _) -> return @@ v_nat res
     | None -> fail @@ Errors.meta_lang_eval loc calltrace div_by_zero_str)
-  | C_DIV, [ V_Ct (C_mutez a'); V_Ct (C_nat b') ] ->
+  | C_DIV, [ V_Ct (C_mumav a'); V_Ct (C_nat b') ] ->
     let a = Michelson_backend.Tezos_eq.int_ediv a' b' in
     (match a with
-    | Some (res, _) -> return @@ v_mutez res
+    | Some (res, _) -> return @@ v_mumav res
     | None -> fail @@ Errors.meta_lang_eval loc calltrace div_by_zero_str)
   | C_DIV, _ -> fail @@ error_type ()
   | C_MOD, [ V_Ct (C_int64 a'); V_Ct (C_int64 b') ] -> return @@ v_int64 Int64.(rem a' b')
@@ -1136,7 +1136,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     , [ V_Ct (C_address address)
       ; entrypoint
       ; V_Michelson (Ty_code { micheline_repr = { code = param; _ }; _ })
-      ; V_Ct (C_mutez amt)
+      ; V_Ct (C_mumav amt)
       ] ) ->
     let entrypoint = Option.join @@ LC.get_string_option entrypoint in
     let contract = { address; entrypoint } in
@@ -1147,7 +1147,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     , [ V_Ct (C_address address)
       ; entrypoint
       ; V_Michelson (Ty_code { micheline_repr = { code = param; _ }; _ })
-      ; V_Ct (C_mutez amt)
+      ; V_Ct (C_mumav amt)
       ] ) ->
     let entrypoint = Option.join @@ LC.get_string_option entrypoint in
     let contract = { address; entrypoint } in
@@ -1190,7 +1190,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_TEST_TO_STRING, _ -> fail @@ error_type ()
   | C_TEST_UNESCAPE_STRING, [ V_Ct (C_string s) ] -> return (v_string (Scanf.unescaped s))
   | C_TEST_UNESCAPE_STRING, _ -> fail @@ error_type ()
-  | C_TEST_BOOTSTRAP_CONTRACT, [ V_Ct (C_mutez z); contract; storage ] ->
+  | C_TEST_BOOTSTRAP_CONTRACT, [ V_Ct (C_mumav z); contract; storage ] ->
     let contract_ty = nth_type 1 in
     let storage_ty = nth_type 2 in
     let>> code = Compile_contract (loc, contract) in
@@ -1337,7 +1337,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let>> size = Get_size contract in
     return @@ size
   | C_TEST_SIZE, _ -> fail @@ error_type ()
-  | C_TEST_ORIGINATE, [ contract; storage; V_Ct (C_mutez amt) ] ->
+  | C_TEST_ORIGINATE, [ contract; storage; V_Ct (C_mumav amt) ] ->
     let>> addr = Inject_script (loc, calltrace, contract, storage, amt) in
     return @@ addr
   | C_TEST_ORIGINATE, _ -> fail @@ error_type ()
@@ -1514,7 +1514,7 @@ and eval_literal : Ligo_prim.Literal_value.t -> value Monad.t = function
   | Literal_timestamp i -> Monad.return @@ v_timestamp i
   | Literal_string s -> Monad.return @@ v_string (Ligo_string.extract s)
   | Literal_bytes s -> Monad.return @@ v_bytes s
-  | Literal_mutez s -> Monad.return @@ v_mutez s
+  | Literal_mumav s -> Monad.return @@ v_mumav s
   | Literal_key_hash s ->
     (match Tezos_crypto.Signature.Public_key_hash.of_b58check s with
     | Ok kh -> Monad.return @@ v_key_hash kh

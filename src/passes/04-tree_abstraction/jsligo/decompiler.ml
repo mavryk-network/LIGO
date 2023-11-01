@@ -331,14 +331,14 @@ let rec decompile_expression_in : AST.expression -> statement_or_expr list =
       let time = CST.EString (String (Region.wrap_ghost time)) in
       return_expr
       @@ [ Expr (CST.EAnnot (Region.wrap_ghost @@ (time, Token.ghost_colon, ty))) ]
-    | Literal_mutez mtez ->
+    | Literal_mumav mmav ->
       return_expr
       @@ [ Expr
              (CST.EAnnot
                 { value =
-                    ( CST.EArith (Int (Region.wrap_ghost (Z.to_string mtez, mtez)))
+                    ( CST.EArith (Int (Region.wrap_ghost (Z.to_string mmav, mmav)))
                     , Token.ghost_colon
-                    , CST.TVar { value = "mutez"; region = Region.ghost } )
+                    , CST.TVar { value = "mumav"; region = Region.ghost } )
                 ; region = Region.ghost
                 })
          ]

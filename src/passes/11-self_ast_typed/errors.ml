@@ -103,7 +103,7 @@ let error_ppformat
       Format.fprintf
         f
         "@[<hv>%a@.Invalid type annotation.@.\"%a\" was given, but \"%a\" was \
-         expected.@.Note that \"Tezos.self\" refers to this contract, so the parameters \
+         expected.@.Note that \"Mavryk.self\" refers to this contract, so the parameters \
          should be the same. @]"
         snippet_pp
         loc
@@ -281,7 +281,7 @@ let error_json : self_ast_typed_error -> Simple_utils.Error.t =
     let message =
       Format.asprintf
         "Invalid type annotation.@.\"%a\" was given, but \"%a\" was expected.@.Note that \
-         \"Tezos.self\" refers to this contract, so the parameters should be the same."
+         \"Mavryk.self\" refers to this contract, so the parameters should be the same."
         Ast_typed.PP.type_expression
         got
         Ast_typed.PP.type_expression

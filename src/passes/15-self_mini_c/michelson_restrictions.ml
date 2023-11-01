@@ -26,7 +26,7 @@ let rec check_comparable ~raise (error : type_expression -> _) : type_expression
   let self = check_comparable ~raise error in
   match t.type_content with
   | T_base TB_unit | T_base TB_never | T_base TB_bool | T_base TB_int
-  | T_base TB_nat | T_base TB_string | T_base TB_timestamp | T_base TB_mutez
+  | T_base TB_nat | T_base TB_string | T_base TB_timestamp | T_base TB_mumav
   | T_base TB_chain_id | T_base TB_bytes | T_base TB_key_hash | T_base TB_address
   | T_base TB_key | T_base TB_signature -> ()
   | T_tuple ts ->

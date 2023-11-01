@@ -256,15 +256,15 @@ File "../../test/lexer/Lexing/wrong_nat_syntax.jsligo", line 1, characters 14-16
 Wrong nat syntax.
 Example: "12334 as nat".
 |test}];
-  (* Wrong mutez syntax *)
+  (* Wrong mumav syntax *)
   run_ligo_bad
     [ "compile"; "contract"; "../../test/lexer/Lexing/wrong_mutez_syntax.jsligo" ];
   [%expect
     {test|
 File "../../test/lexer/Lexing/wrong_mutez_syntax.jsligo", line 1, characters 14-20:
-  1 | let x : tez = 5mutez;
-Wrong mutez syntax.
-Example: "1234 as mutez".
+  1 | let x : mav = 5mutez;
+Wrong mumav syntax.
+Example: "1234 as mumav".
 |test}];
   (* Wrong lang syntax *)
   run_ligo_bad
@@ -293,22 +293,22 @@ Hint: Close with "|}".
        it is not possible to generate a test for this case (the preprocessor
        would fail on a linemarker). *)
 
-  (* Overflow mutez *)
+  (* Overflow mumav *)
   run_ligo_bad [ "compile"; "contract"; "../../test/lexer/Lexing/overflow_mutez.ligo" ];
   [%expect
     {test|
 File "../../test/lexer/Lexing/overflow_mutez.ligo", line 1, characters 16-40:
-  1 | const m : tez = 9223372036854775808mutez (* 2^63 *)
-Mutez amount too large.
+  1 | const m : mav = 9223372036854775808mutez (* 2^63 *)
+Mumav amount too large.
 Note: From 0 to 2^63-1=9_223_372_036_854_775_807.
 |test}];
-  (* Underflow mutez *)
+  (* Underflow mumav *)
   run_ligo_bad [ "compile"; "contract"; "../../test/lexer/Lexing/underflow_mutez.ligo" ];
   [%expect
     {test|
 File "../../test/lexer/Lexing/underflow_mutez.ligo", line 1, characters 16-34:
-  1 | const x : tez = 0.000_000_000_1tez
-Mutez amount not an integer.
+  1 | const x : mav = 0.000_000_000_1mav
+Mumav amount not an integer.
 |test}];
   (* 3. Errors from Style.ml: They can be specific to a given
        concrete syntax or not. *)

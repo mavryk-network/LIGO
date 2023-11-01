@@ -828,7 +828,7 @@ let transfer ~raise ~loc ~calltrace (ctxt : context) ?entrypoint dst parameter a
       (B ctxt.raw)
       source
       dst
-      (Test_tez.of_mutez_exn amt)
+      (Test_tez.of_mumav_exn amt)
   in
   bake_op ~raise ~loc ~calltrace ctxt operation
 
@@ -847,7 +847,7 @@ let originate_contract
   let open Tezos_alpha_test_helpers in
   let source = unwrap_source ~raise ~loc ~calltrace ctxt.internals.source in
   let amt =
-    try Some (Test_tez.of_mutez_exn (Int64.of_int (Z.to_int amt))) with
+    try Some (Test_tez.of_mumav_exn (Int64.of_int (Z.to_int amt))) with
     | _ -> None
   in
   let script = script_of_compiled_code ~raise ~loc ~calltrace contract storage in
@@ -929,8 +929,8 @@ let init
         let pkh = Signature.Public_key.hash pk in
         let amt =
           match amt with
-          | None -> Tez.of_mutez_exn 4_000_000_000_000L
-          | Some v -> Tez.of_mutez_exn v
+          | None -> Tez.of_mumav_exn 4_000_000_000_000L
+          | Some v -> Tez.of_mumav_exn v
         in
         Account.{ sk; pk; pkh }, amt, None)
   in
@@ -977,7 +977,7 @@ let init_ctxt
       let max =
         Tezos_protocol_parameters.Default_parameters.constants_test.minimal_stake
       in
-      if Tez.( < ) (Alpha_context.Tez.of_mutez_exn baker) max
+      if Tez.( < ) (Alpha_context.Tez.of_mumav_exn baker) max
       then raise.error (Errors.not_enough_initial_accounts loc max)
       else ()
   in

@@ -59,7 +59,7 @@ let t__type_ ~loc () : type_expression = t_constant ~loc _type_ []
       , "address"
       , "operation"
       , "nat"
-      , "tez"
+      , "mav"
       , "timestamp"
       , "unit"
       , "bls12_381_g1"
@@ -81,7 +81,7 @@ let t__type_ ~loc t t' : type_expression = t_constant ~loc _type_ [ t; t' ]
   [@@map _type_, ("map", "big_map", "typed_address")]
 
 
-let t_mutez = t_tez
+let t_mumav = t_mav
 
 let t_record ~loc ~layout fields : type_expression =
   make_t ~loc (T_record { fields; layout })
@@ -276,7 +276,7 @@ let get_t__type_ (t : type_expression) : unit option = get_t_base_inj t _type_
     , ( "int"
       , "nat"
       , "unit"
-      , "tez"
+      , "mav"
       , "timestamp"
       , "address"
       , "bytes"
@@ -298,7 +298,7 @@ let get_t__type_ (t : type_expression) : type_expression option = get_t_unary_in
     , ("contract", "list", "set", "ticket", "sapling_state", "sapling_transaction", "gen")]
 
 
-let get_t_mutez (t : type_expression) : unit option = get_t_tez t
+let get_t_mumav (t : type_expression) : unit option = get_t_mav t
 let get_t_michelson_code (t : type_expression) : unit option = get_t_michelson_program t
 
 let tuple_of_record (m : _ Record.t) =
@@ -386,14 +386,14 @@ let is_t__type_ t = Option.is_some (get_t__type_ t)
       , "int"
       , "unit"
       , "address"
-      , "tez"
+      , "mav"
       , "contract"
       , "map"
       , "big_map"
       , "typed_address" )]
 
 
-let is_t_mutez t = is_t_tez t
+let is_t_mumav t = is_t_mav t
 
 let is_t_bool t =
   match t.type_content with
@@ -416,7 +416,7 @@ let assert_t__type_ : type_expression -> unit option = fun t -> get_t__type_ t
    , ( "int"
      , "nat"
      , "unit"
-     , "mutez"
+     , "mumav"
      , "key"
      , "signature"
      , "key_hash"
@@ -458,7 +458,7 @@ let e__type_ p : expression_content = E_literal (Literal__type_ p)
     _type_
     , ( "int"
       , "nat"
-      , "mutez"
+      , "mumav"
       , "string"
       , "bytes"
       , "timestamp"
@@ -496,7 +496,7 @@ let e_a__type_ ~loc p = make_e ~loc (e__type_ p) (t__type_ ~loc ())
     , ( "unit"
       , "int"
       , "nat"
-      , "mutez"
+      , "mumav"
       , "timestamp"
       , "key_hash"
       , "string"

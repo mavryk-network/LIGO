@@ -228,7 +228,7 @@ let t__type_ ~loc ?meta () : t = t_construct Literal_types._type_ [] ~loc ?meta 
       , "address"
       , "operation"
       , "nat"
-      , "tez"
+      , "mav"
       , "timestamp"
       , "unit"
       , "bls12_381_g1"
@@ -292,7 +292,7 @@ let t_option t ~loc ?meta () =
   t_sum_ez ~loc ?meta [ "Some", t; "None", t_unit ~loc () ] ()
 
 
-let t_mutez = t_tez
+let t_mumav = t_mav
 
 let t_record_with_orig_var row ~orig_var ~loc ?meta () =
   { (t_record row ~loc ?meta ()) with orig_var }
@@ -318,8 +318,8 @@ let t_test_exec_error ~loc ?meta () =
       , t_record_ez
           ~loc
           [ "contract_too_low", t_address ~loc ()
-          ; "contract_balance", t_mutez ~loc ()
-          ; "spend_request", t_mutez ~loc ()
+          ; "contract_balance", t_mumav ~loc ()
+          ; "spend_request", t_mumav ~loc ()
           ]
           () )
     ; "Other", t_string ~loc ()

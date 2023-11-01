@@ -52,8 +52,8 @@ let rec decompile ~raise (v : value) (t : AST.type_expression) : AST.expression 
     | (Tez, [])  -> (
         let n =
           trace_option ~raise (wrong_mini_c_value t v) @@
-          get_mutez v in
-        return (E_literal (Literal_mutez n))
+          get_mumav v in
+        return (E_literal (Literal_mumav n))
       )
     | (String, []) -> (
         let n =

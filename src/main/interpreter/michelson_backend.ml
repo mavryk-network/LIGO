@@ -5,15 +5,15 @@ open Simple_utils.Option
 
 let storage_retreival_dummy_ty = Tezos_utils.Michelson.prim "int"
 
-let int_of_mutez t =
-  Z.of_int64 @@ Memory_proto_alpha.Protocol.Alpha_context.Tez.to_mutez t
+let int_of_mumav t =
+  Z.of_int64 @@ Memory_proto_alpha.Protocol.Alpha_context.Tez.to_mumav t
 
 
 let tez_to_z : Memory_proto_alpha.Protocol.Tez_repr.t -> Z.t =
  fun t ->
   let enc = Memory_proto_alpha.Protocol.Tez_repr.encoding in
   let c = Data_encoding.Binary.to_bytes_exn enc t in
-  int_of_mutez
+  int_of_mumav
   @@ Data_encoding.Binary.of_bytes_exn
        Memory_proto_alpha.Protocol.Alpha_context.Tez.encoding
        c
@@ -86,33 +86,33 @@ module Tezos_eq = struct
     sub_delta t (Memory_proto_alpha.Protocol.Script_int.of_zint n) |> to_zint
 
 
-  let mutez_add : Z.t -> Z.t -> Z.t option =
+  let mumav_add : Z.t -> Z.t -> Z.t option =
    fun x y ->
     let open Memory_proto_alpha.Protocol.Alpha_context.Tez in
     let open Option in
     try
       let x = Z.to_int64 x in
       let y = Z.to_int64 y in
-      let* x = of_mutez x in
-      let* y = of_mutez y in
+      let* x = of_mumav x in
+      let* y = of_mumav y in
       match x +? y with
-      | Ok t -> some @@ Z.of_int64 (to_mutez t)
+      | Ok t -> some @@ Z.of_int64 (to_mumav t)
       | _ -> None
     with
     | Z.Overflow -> None
 
 
-  let mutez_sub : Z.t -> Z.t -> Z.t option =
+  let mumav_sub : Z.t -> Z.t -> Z.t option =
    fun x y ->
     let open Memory_proto_alpha.Protocol.Alpha_context.Tez in
     let open Option in
     try
       let x = Z.to_int64 x in
       let y = Z.to_int64 y in
-      let* x = of_mutez x in
-      let* y = of_mutez y in
+      let* x = of_mumav x in
+      let* y = of_mumav y in
       match x -? y with
-      | Ok t -> some @@ Z.of_int64 (to_mutez t)
+      | Ok t -> some @@ Z.of_int64 (to_mumav t)
       | _ -> None
     with
     | Z.Overflow -> None
@@ -210,7 +210,7 @@ let make_options ~raise ?param ctxt =
     ; source
     ; payer = source
     ; self = source
-    ; amount = Memory_proto_alpha.Protocol.Alpha_context.Tez.of_mutez_exn 100000000L
+    ; amount = Memory_proto_alpha.Protocol.Alpha_context.Tez.of_mumav_exn 100000000L
     ; chain_id = Memory_proto_alpha.Alpha_environment.Chain_id.zero
     ; balance = Memory_proto_alpha.Protocol.Alpha_context.Tez.zero
     ; now = timestamp
@@ -448,19 +448,19 @@ let rec val_to_ast ~raise ~loc
         (get_t_nat ty)
     in
     e_a_nat ~loc x
-  | V_Ct (C_mutez x) ->
+  | V_Ct (C_mumav x) ->
     let () =
       trace_option
         ~raise
         (Errors.generic_error
            loc
            (Format.asprintf
-              "Expected mutez but got %a"
+              "Expected mumav but got %a"
               Ast_aggregated.PP.type_expression
               ty))
-        (get_t_mutez ty)
+        (get_t_mumav ty)
     in
-    e_a_mutez ~loc x
+    e_a_mumav ~loc x
   | V_Ct (C_timestamp t) ->
     let () =
       trace_option
@@ -989,17 +989,17 @@ let rec compile_value ~raise ~options ~loc
         (get_t_nat ty)
     in
     Tezos_micheline.Micheline.Int ((), x)
-  | V_Ct (C_mutez x) ->
+  | V_Ct (C_mumav x) ->
     let () =
       trace_option
         ~raise
         (Errors.generic_error
            loc
            (Format.asprintf
-              "Expected mutez but got %a"
+              "Expected mumav but got %a"
               Ast_aggregated.PP.type_expression
               ty))
-        (get_t_mutez ty)
+        (get_t_mumav ty)
     in
     Tezos_micheline.Micheline.Int ((), x)
   | V_Ct C_unit ->

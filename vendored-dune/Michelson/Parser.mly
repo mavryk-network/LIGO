@@ -100,7 +100,7 @@ comparable_type:
 | "nat"
 | "string"
 | "bytes"
-| "mutez"
+| "mumav"
 | "bool"
 | "key_hash"
 | "timestamp" {}

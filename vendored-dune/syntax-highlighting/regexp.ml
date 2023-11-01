@@ -65,9 +65,9 @@ let c_block_comment_end: Core.regexp = {
 }
 
 let numeric_literals_match: Core.regexp = {
-  emacs    = "\\\\b[-+]?\\\\([0-9]+\\\\)\\\\(n\\\\|\\\\tz\\\\|tez\\\\|mutez\\\\|\\\\)\\\\b";
-  textmate = "(\\+|\\-)?[0-9]+(n|tz|tez|mutez|)\\b";
-  vim      = "\\<[0-9]+\\(n\\|tz\\|tez\\|mutez\\|\\)\\>"
+  emacs    = "\\\\b[-+]?\\\\([0-9]+\\\\)\\\\(n\\\\|\\\\tz\\\\|mav\\\\|mumav\\\\|\\\\)\\\\b";
+  textmate = "(\\+|\\-)?[0-9]+(n|tz|mav|mumav|)\\b";
+  vim      = "\\<[0-9]+\\(n\\|tz\\|mav\\|mumav\\|\\)\\>"
 }
 
 let attributes_match: Core.regexp = {

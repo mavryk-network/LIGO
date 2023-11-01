@@ -216,9 +216,9 @@ and assert_literal_eq ((a, b) : Literal_value.t * Literal_value.t) : unit option
   | Literal_timestamp a, Literal_timestamp b when Z.equal a b -> Some ()
   | Literal_timestamp _, Literal_timestamp _ -> None
   | Literal_timestamp _, _ -> None
-  | Literal_mutez a, Literal_mutez b when Z.equal a b -> Some ()
-  | Literal_mutez _, Literal_mutez _ -> None
-  | Literal_mutez _, _ -> None
+  | Literal_mumav a, Literal_mumav b when Z.equal a b -> Some ()
+  | Literal_mumav _, Literal_mumav _ -> None
+  | Literal_mumav _, _ -> None
   | Literal_string a, Literal_string b when Ligo_string.equal a b -> Some ()
   | Literal_string _, Literal_string _ -> None
   | Literal_string _, _ -> None

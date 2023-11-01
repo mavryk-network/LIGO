@@ -564,7 +564,7 @@ type m_type =
 | T_lambda    of Region.t  (* "lambda"    *)
 | T_list      of Region.t  (* "list"      *)
 | T_map       of Region.t  (* "map"       *)
-| T_mutez     of Region.t  (* "mutez"     *)
+| T_mumav     of Region.t  (* "mumav"     *)
 | T_nat       of Region.t  (* "nat"       *)
 | T_operation of Region.t  (* "operation" *)
 | T_option    of Region.t  (* "option"    *)
@@ -589,7 +589,7 @@ let type_list = [
   (fun reg -> T_lambda     reg);
   (fun reg -> T_list       reg);
   (fun reg -> T_map        reg);
-  (fun reg -> T_mutez      reg);
+  (fun reg -> T_mumav      reg);
   (fun reg -> T_nat        reg);
   (fun reg -> T_operation  reg);
   (fun reg -> T_option     reg);
@@ -615,7 +615,7 @@ let type_to_lexeme = function
 | T_lambda    _ -> "lambda"
 | T_list      _ -> "list"
 | T_map       _ -> "map"
-| T_mutez     _ -> "mutez"
+| T_mumav     _ -> "mumav"
 | T_nat       _ -> "nat"
 | T_operation _ -> "operation"
 | T_option    _ -> "option"
@@ -640,7 +640,7 @@ let proj_type = function
 | T_lambda    region -> region, "T_lambda"
 | T_list      region -> region, "T_list"
 | T_map       region -> region, "T_map"
-| T_mutez     region -> region, "T_mutez"
+| T_mumav     region -> region, "T_mumav"
 | T_nat       region -> region, "T_nat"
 | T_operation region -> region, "T_operation"
 | T_option    region -> region, "T_option"

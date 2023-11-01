@@ -2061,7 +2061,7 @@ interactive_expr: Verbatim GT With
 ## Ends in an error in state: 346.
 ##
 ## bin_op(comp_expr_level,GT,cat_expr_level) -> comp_expr_level GT . cat_expr_level [ VBAR Type To Then Step SEMI Recursive RPAR RBRACKET RBRACE Or Of NE Module LT LE LBRACE GT Function From End Else EQ EOF Directive Const COMMA COLON Block Begin Attr And ARROW ]
-## ge -> GT . ZWSP EQ [ Verbatim UIdent String Set Record Not Nil Nat Mutez Map MINUS List Lang LPAR Int Ident Bytes BigMap Attr ]
+## ge -> GT . ZWSP EQ [ Verbatim UIdent String Set Record Not Nil Nat Mumav Map MINUS List Lang LPAR Int Ident Bytes BigMap Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## comp_expr_level GT
@@ -5292,7 +5292,7 @@ interactive_expr: UIdent GT ZWSP ZWSP
 ##
 ## Ends in an error in state: 347.
 ##
-## ge -> GT ZWSP . EQ [ Verbatim UIdent String Set Record Not Nil Nat Mutez Map MINUS List Lang LPAR Int Ident Bytes BigMap Attr ]
+## ge -> GT ZWSP . EQ [ Verbatim UIdent String Set Record Not Nil Nat Mumav Map MINUS List Lang LPAR Int Ident Bytes BigMap Attr ]
 ##
 ## The known suffix of the stack is as follows:
 ## GT ZWSP

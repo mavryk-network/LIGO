@@ -64,10 +64,10 @@ module Mutator (M : Monad) = struct
       let* n = mutate_nat (Z.to_int z) in
       let* t = oneof (List.map ~f:return transform_nat) in
       return (Literal_nat (Z.of_int (t n)))
-    | Literal_mutez z ->
+    | Literal_mumav z ->
       let* n = mutate_nat (Z.to_int z) in
       let* t = oneof (List.map ~f:return transform_nat) in
-      return (Literal_mutez (Z.of_int (t n)))
+      return (Literal_mumav (Z.of_int (t n)))
     | Literal_string (Standard s) ->
       let* s = mutate_string s in
       let* t = oneof (List.map ~f:return transform_string) in

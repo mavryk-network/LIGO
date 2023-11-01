@@ -44,10 +44,10 @@ let arity : _ node list -> string -> int option =
  | "CREATE_CONTRACT" -> None
  | "TRANSFER_TOKENS" -> None
  | "SET_DELEGATE" -> None
- (* tez arithmetic (can fail) *)
+ (* mav arithmetic (can fail) *)
  | "ADD" -> None
  | "MUL" -> None
- | "SUB" -> None (* can fail for tez *)
+ | "SUB" -> None (* can fail for mav *)
  (* etc *)
  | "CONCAT" -> None (* sometimes 1, sometimes 2 :( *)
  | "CAST" -> None
@@ -166,10 +166,10 @@ let is_injective : string -> bool = function
  | "CREATE_CONTRACT" -> false
  | "TRANSFER_TOKENS" -> false
  | "SET_DELEGATE" -> true
- (* tez arithmetic (can fail) *)
+ (* mav arithmetic (can fail) *)
  | "ADD" -> false
  | "MUL" -> false
- | "SUB" -> false (* can fail for tez *)
+ | "SUB" -> false (* can fail for mav *)
  (* etc *)
  | "CONCAT" -> false (* sometimes 1, sometimes 2 :( *)
  | "CAST" -> false

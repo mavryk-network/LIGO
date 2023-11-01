@@ -105,10 +105,10 @@ let rec value_gen
   then
     QCheck.Gen.(
       (if small then small_nat else nat) >>= fun n -> return (v_nat (Z.of_int n)))
-  else if is_t_tez type_expr
+  else if is_t_mav type_expr
   then
     QCheck.Gen.(
-      (if small then small_nat else nat) >>= fun n -> return (v_mutez (Z.of_int n)))
+      (if small then small_nat else nat) >>= fun n -> return (v_mumav (Z.of_int n)))
   else if is_t_list type_expr
   then (
     match get_t_list type_expr with
@@ -188,7 +188,7 @@ let rec value_gen
       (Errors.generic_error type_expr.location
       @@ Format.asprintf
            "Generator for type %a is not implemented. For now, only unit, string, bytes, \
-            address, int, nat, tez, records, sums, lists, sets, maps and big_maps can be \
+            address, int, nat, mav, records, sums, lists, sets, maps and big_maps can be \
             generated."
            Ast_aggregated.PP.type_expression
            type_expr)

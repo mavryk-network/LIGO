@@ -229,7 +229,7 @@ let rec error_ppformat
       Format.fprintf
         f
         "@[<hv>Invalid command line option \"--source\". @.The provided source address \
-         \"%s\" is invalid. A valid Tezos address is a string prefixed by either tz1, \
+         \"%s\" is invalid. A valid Mavryk address is a string prefixed by either tz1, \
          tz2, tz3 or KT1 and followed by a Base58 encoded hash and terminated by a \
          4-byte checksum.@]"
         a
@@ -237,7 +237,7 @@ let rec error_ppformat
       Format.fprintf
         f
         "@[<hv>Invalid command line option \"--sender\". @.The provided sender address \
-         \"%s\" is invalid. A valid Tezos address is a string prefixed by either tz1, \
+         \"%s\" is invalid. A valid Mavryk address is a string prefixed by either tz1, \
          tz2, tz3 or KT1 and followed by a Base58 encoded hash and terminated by a \
          4-byte checksum.@]"
         a
@@ -364,7 +364,7 @@ let rec error_ppformat
     | `Main_interpret_not_enough_initial_accounts (loc, max) ->
       Format.fprintf
         f
-        "@[<hv>%a@. baker account initial balance must at least reach %a tez @]"
+        "@[<hv>%a@. baker account initial balance must at least reach %a mav @]"
         snippet_pp
         loc
         Memory_proto_alpha.Protocol.Alpha_context.Tez.pp
@@ -528,9 +528,9 @@ let rec error_ppformat
       Format.fprintf
         f
         "@[<hv>%a@.View rule violated:\n\
-        \      - Tezos.create_contract ; Tezos.set_delegate and Tezos.transaction cannot \
+        \      - Mavryk.create_contract ; Mavryk.set_delegate and Mavryk.transaction cannot \
          be used because they are stateful (expect in lambdas)\n\
-        \      - Tezos.self can't be used because the entry-point does not make sense in \
+        \      - Mavryk.self can't be used because the entry-point does not make sense in \
          a view@.@]"
         snippet_pp
         loc

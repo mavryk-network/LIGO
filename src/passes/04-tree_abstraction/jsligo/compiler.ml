@@ -868,13 +868,13 @@ and compile_expression ~raise : CST.expr -> AST.expr =
   | EAnnot { value = EArith (Int i), _, TVar { value = "nat"; _ }; region = _ } ->
     let (_, i), loc = r_split i in
     return @@ e_nat_z ~loc i
-  | EAnnot { value = EArith (Int i), _, TVar { value = "tez"; _ }; region = _ } ->
+  | EAnnot { value = EArith (Int i), _, TVar { value = "mav"; _ }; region = _ } ->
     let (_, i), loc = r_split i in
-    let mutez = Z.mul (Z.of_int 1_000_000) i in
-    return @@ e_mutez_z ~loc mutez
-  | EAnnot { value = EArith (Int i), _, TVar { value = "mutez"; _ }; region = _ } ->
+    let mumav = Z.mul (Z.of_int 1_000_000) i in
+    return @@ e_mumav_z ~loc mumav
+  | EAnnot { value = EArith (Int i), _, TVar { value = "mumav"; _ }; region = _ } ->
     let (_, i), loc = r_split i in
-    return @@ e_mutez_z ~loc i
+    return @@ e_mumav_z ~loc i
   | EAnnot
       { value = ECodeInj { value = { language; code }; _ }, kwd_as, type_expr; region } ->
     let value : CST.code_inj =

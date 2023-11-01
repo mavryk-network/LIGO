@@ -183,7 +183,7 @@ module Fold_helpers (M : Monad) = struct
       let* arg = self value.arg in
       let value = { value with arg } in
       return @@ E_Neg { value; region }
-    | (E_Int _ | E_Nat _ | E_Mutez _) as e -> return e
+    | (E_Int _ | E_Nat _ | E_Mumav _) as e -> return e
     | E_Cat { value; region } ->
       let* value = bin_op value in
       return @@ E_Cat { value; region }

@@ -412,9 +412,9 @@ and decompile_eos
       let ty = decompile_type_expr @@ AST.t_timestamp ~loc () in
       let time = CST.E_String (Wrap.ghost time) in
       return_typed time ty
-    | Literal_mutez mtez ->
-      let str = Z.to_string mtez in
-      return_expr @@ CST.E_Mutez (Wrap.ghost (str, Z.to_int64 mtez))
+    | Literal_mumav mmav ->
+      let str = Z.to_string mmav in
+      return_expr @@ CST.E_Mumav (Wrap.ghost (str, Z.to_int64 mmav))
     | Literal_string (Standard str) -> return_expr @@ CST.E_String (Wrap.ghost str)
     | Literal_string (Verbatim ver) -> return_expr @@ CST.E_Verbatim (Wrap.ghost ver)
     | Literal_bytes b ->

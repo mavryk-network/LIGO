@@ -226,7 +226,7 @@ let infer_literal lit : (Type.t * O.expression E.t, _, _) C.t =
   | Literal_int _ -> const Type.t_int
   | Literal_nat _ -> const Type.t_nat
   | Literal_timestamp _ -> const Type.t_timestamp
-  | Literal_mutez _ -> const Type.t_tez
+  | Literal_mumav _ -> const Type.t_mav
   | Literal_address _ -> const Type.t_address
   | Literal_operation _ -> const Type.t_operation
   | Literal_bls12_381_g1 _ -> const Type.t_bls12_381_g1

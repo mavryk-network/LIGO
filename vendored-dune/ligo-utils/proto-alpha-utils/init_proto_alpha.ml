@@ -18,7 +18,7 @@ module Context_init = struct
     }
 
   let generate_accounts n : (account * Alpha_context.Tez.t) list =
-    let amount = Alpha_context.Tez.of_mutez_exn 4_000_000_000_000L in
+    let amount = Alpha_context.Tez.of_mumav_exn 4_000_000_000_000L in
     List.map ~f:(fun _ ->
         let (pkh, pk, sk) = Signature.generate_key () in
         let account = { pkh ; pk ; sk } in

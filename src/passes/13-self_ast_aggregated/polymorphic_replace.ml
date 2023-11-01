@@ -15,7 +15,7 @@ let expression : expression -> expression =
   | E_constant { cons_name = C_POLYMORPHIC_SUB; arguments } ->
     let decide e =
       match e with
-      | { type_expression; _ } when is_t_tez type_expression -> Some C_SUB_MUTEZ
+      | { type_expression; _ } when is_t_mav type_expression -> Some C_SUB_MUTEZ
       | _ -> None
     in
     let cons_name = Option.value ~default:C_SUB @@ List.find_map arguments ~f:decide in

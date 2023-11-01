@@ -51,7 +51,7 @@ type ts2 = {x : ts2 ; y : int}
 (* This time, it's shadowed but not referenced by the shadower
 so it should not be accessible, so there should be no warning *)
 type ts3 = TopS3 of int 
-type ts3 = tez
+type ts3 = mav
 
 type ttop =
   | TopTop of int

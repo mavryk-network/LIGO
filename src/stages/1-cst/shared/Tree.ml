@@ -143,4 +143,4 @@ let print_num to_string label state (wrap : 'a Wrap.t) =
 let print_int   = print_num Z.to_string
 let print_nat   = print_int
 let print_bytes = print_num Hex.show
-let print_mutez = print_num Int64.to_string
+let print_mumav = print_num Int64.to_string
