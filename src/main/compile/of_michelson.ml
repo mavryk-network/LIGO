@@ -136,7 +136,7 @@ let build_contract ~raise
     in
     (* Update the Tezos context by registering the global constants *)
     let tezos_context =
-      List.fold_left constants ~init:environment.mavos_context ~f:(fun ctxt cnt ->
+      List.fold_left constants ~init:environment.tezos_context ~f:(fun ctxt cnt ->
           let ctxt, _, _ =
             Trace.trace_alpha_tzresult_lwt
               ~raise
@@ -189,7 +189,7 @@ let build_contract ~raise
     let environment = Proto_pre_alpha_utils.Memory_proto_alpha.dummy_environment () in
     (* Update the Tezos context by registering the global constants *)
     let tezos_context =
-      List.fold_left constants ~init:environment.mavos_context ~f:(fun ctxt cnt ->
+      List.fold_left constants ~init:environment.tezos_context ~f:(fun ctxt cnt ->
           let ctxt, _, _ =
             Proto_pre_alpha_utils.Trace.trace_alpha_tzresult_lwt
               ~raise

@@ -9,7 +9,7 @@ let int_of_mumav t =
   Z.of_int64 @@ Memory_proto_alpha.Protocol.Alpha_context.Tez.to_mumav t
 
 
-let tez_to_z : Memory_proto_alpha.Protocol.Tez_repr.t -> Z.t =
+let mav_to_z : Memory_proto_alpha.Protocol.Tez_repr.t -> Z.t =
  fun t ->
   let enc = Memory_proto_alpha.Protocol.Tez_repr.encoding in
   let c = Data_encoding.Binary.to_bytes_exn enc t in

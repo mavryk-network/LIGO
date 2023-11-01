@@ -342,7 +342,7 @@ let run_expression
   let tezos_context =
     match options with
     | None -> None
-    | Some o -> Some o.Memory_proto_alpha.mavos_context
+    | Some o -> Some o.Memory_proto_alpha.tezos_context
   in
   let descr =
     Trace.trace_tzresult_lwt ~raise Errors.parsing_code_tracer
@@ -411,7 +411,7 @@ let evaluate_constant ~raise ?options exp exp_type =
     let _, hash, _ =
       Trace.trace_alpha_tzresult_lwt ~raise (fun _ -> Errors.main_unknown)
       @@ Memory_proto_alpha.(
-           register_constant (dummy_environment ()).mavos_context value_)
+           register_constant (dummy_environment ()).tezos_context value_)
     in
     hash, value
   | Fail res -> raise.error @@ Errors.main_execution_failed res
@@ -431,6 +431,6 @@ let clean_constant ~raise exp =
   in
   let _, hash, _ =
     Trace.trace_alpha_tzresult_lwt ~raise (fun _ -> Errors.main_unknown)
-    @@ Memory_proto_alpha.(register_constant (dummy_environment ()).mavos_context value_)
+    @@ Memory_proto_alpha.(register_constant (dummy_environment ()).tezos_context value_)
   in
   hash, value
