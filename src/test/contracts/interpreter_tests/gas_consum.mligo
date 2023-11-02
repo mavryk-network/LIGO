@@ -11,15 +11,15 @@ let test =
       if p = 0 then acc else aux (p::acc) (p-1)
     in aux ([]:int list) 2000
   in
-  let (ta, _, _) =  Test.originate main big_list 0tez in
+  let (ta, _, _) =  Test.originate main big_list 0mav in
   let c : parameter contract = Test.to_contract ta in
   let _caching =
     (* some caching is happening on the first transaction *)
-    Test.transfer_to_contract c true 0tez
+    Test.transfer_to_contract c true 0mav
   in
-  let tx1 = Test.transfer_to_contract c false 0tez in
-  let tx2 = Test.transfer_to_contract c true 0tez in
-  let tx3 = Test.transfer_to_contract c true 0tez in
+  let tx1 = Test.transfer_to_contract c false 0mav in
+  let tx2 = Test.transfer_to_contract c true 0mav in
+  let tx3 = Test.transfer_to_contract c true 0mav in
   match (tx1 , tx2, tx3) with
   | Success cons1 , Success cons2, Success cons3 ->
     let () = assert ((cons1 < cons2) && (cons2 = cons3)) in

@@ -16,10 +16,10 @@ const balances : michelson_program =
       list [("a1", bs_addr (1)); ("a2", bs_addr (2)); ("a3", bs_addr (3))] )
 
 // PART 2
-function to_tez (const i : nat) is
+function to_mav (const i : nat) is
   Test.compile_expression_subst
     ( (None : option (string)),
-      [%pascaligo ({| $i * 1tez |} : ligo_program)],
+      [%pascaligo ({| $i * 1mav |} : ligo_program)],
       list [("i", Test.compile_value (i))] )
 
 const test =
@@ -29,7 +29,7 @@ const test =
        const size_ = Test.compile_expression_subst
           (under_test,
            [%pascaligo ({| Map.size (balances_under ($b, $threshold)) |} : ligo_program)],
-           list [("b", balances); ("threshold", to_tez (threshold))]
+           list [("b", balances); ("threshold", to_mav (threshold))]
           );
         Test.log (("expected", expected_size));
         Test.log (("actual", size_));

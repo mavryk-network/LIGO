@@ -11,7 +11,7 @@ let main (p, store : key * storage) : operation list * storage =
 
 let test =
   let (_, pub_key, _) = Test.get_bootstrap_account 1n in
-  let (taddr, _, _) = Test.originate main {registry = (Big_map.empty : registry); next_id = 1n} 0mutez in
+  let (taddr, _, _) = Test.originate main {registry = (Big_map.empty : registry); next_id = 1n} 0mumav in
   let contr = Test.to_contract taddr in
   let () = Test.log pub_key in
-  Test.transfer_to_contract contr pub_key 0mutez
+  Test.transfer_to_contract contr pub_key 0mumav

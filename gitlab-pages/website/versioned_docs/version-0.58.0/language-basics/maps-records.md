@@ -737,7 +737,7 @@ And here is how to create a non-empty map value:
 ```pascaligo group=maps
 const moves : register =
   map [
-    ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address) -> (1,2);
+    ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address) -> (1,2);
     ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) -> (0,3)]
 ```
 
@@ -752,7 +752,7 @@ a keyword.
 ```cameligo group=maps
 let moves : register =
   Map.literal [
-    (("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address), (1,2));
+    (("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address), (1,2));
     (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address), (0,3))]
 ```
 
@@ -767,7 +767,7 @@ that we type-cast a string into an address.
 ```reasonligo group=maps
 let moves : register =
   Map.literal ([
-    ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address, (1,2)),
+    ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address, (1,2)),
     ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address, (0,3))]);
 ```
 
@@ -782,7 +782,7 @@ that we type-cast a string into an address.
 ```jsligo group=maps
 let moves : register =
   Map.literal (list([
-    ["tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address, [1,2]],
+    ["mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address, [1,2]],
     ["tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address, [0,3]]]));
 ```
 
@@ -915,7 +915,7 @@ instruction* for maps, similar to that for records.
 function assignments (var m : register) : register is {
   patch m with map [
     ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) -> (4,9);
-    ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address) -> (1,2)
+    ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address) -> (1,2)
   ]
 } with m
 ```
@@ -1307,7 +1307,7 @@ And here is how to create a non-empty map value:
 ```pascaligo group=big_maps
 const moves : register =
   big_map [
-    ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address) -> (1,2);
+    ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address) -> (1,2);
     ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) -> (0,3)]
 ```
 
@@ -1322,7 +1322,7 @@ address. -->
 ```cameligo group=big_maps
 let moves : register =
   Big_map.literal [
-    (("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address), (1,2));
+    (("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address), (1,2));
     (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address), (0,3))]
 ```
 
@@ -1337,7 +1337,7 @@ value>" : address)` means that we cast a string into an address.
 ```reasonligo group=big_maps
 let moves : register =
   Big_map.literal ([
-    ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address, (1,2)),
+    ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address, (1,2)),
     ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address, (0,3))]);
 ```
 
@@ -1352,7 +1352,7 @@ value>" : address)` means that we cast a string into an address.
 ```jsligo group=big_maps
 let moves : register =
   Big_map.literal (list([
-    ["tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address, [1, 2]],
+    ["mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address, [1, 2]],
     ["tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address, [0, 3]]]));
 ```
 
@@ -1427,7 +1427,7 @@ instruction* for maps, similar to that for records.
 function assignments (var m : register) : register is {
   patch m with map [
     ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) -> (4,9);
-    ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address) -> (1,2)
+    ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address) -> (1,2)
   ]
 } with m
 ```

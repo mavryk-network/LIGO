@@ -6,10 +6,10 @@ let ct : michelson_program = Test.constant_to_michelson_program "{ PUSH int 2 ; 
 let ct : string = Test.register_constant ct
 
 let main ((), store : parameter * storage) : return =
- ([] : operation list), ((Tezos.constant ct : int -> int) store)
+ ([] : operation list), ((Mavryk.constant ct : int -> int) store)
 
 let test =
-  let (taddr, _, _) = Test.originate main 1 0tez in
+  let (taddr, _, _) = Test.originate main 1 0mav in
   let ctr = Test.to_contract taddr in
-  let _ = Test.transfer_to_contract_exn ctr () 0tez in
+  let _ = Test.transfer_to_contract_exn ctr () 0mav in
   assert (Test.get_storage taddr = 5)

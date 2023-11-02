@@ -219,7 +219,7 @@ module Command = struct
     | Deref : LT.location -> LT.value t
     | Set_print_values : bool -> bool t
 
-  let eval_tezos
+  let eval_mavos
       : type a.
         raise:(Errors.interpreter_error, Main_warnings.all) raise
         -> options:Compiler_options.t
@@ -850,7 +850,7 @@ module Command = struct
    fun ~raise ~options command state log ->
     match command with
     | Mavryk tezos_cmd ->
-      let ret, ctxt = eval_tezos ~raise ~options tezos_cmd state.tezos_context log in
+      let ret, ctxt = eval_mavos ~raise ~options tezos_cmd state.tezos_context log in
       ret, { state with tezos_context = ctxt }
     | Check_obj_ligo e ->
       let _ =

@@ -173,9 +173,9 @@ let check_signature =
 ## Contract's Own Address
 
 Often you want to get the address of the contract being executed. You
-can do it with `Tezos.get_self_address`.
+can do it with `Mavryk.get_self_address`.
 
-> ⚠️ Due to limitations in Michelson, `Tezos.get_self_address` in a
+> ⚠️ Due to limitations in Michelson, `Mavryk.get_self_address` in a
 > contract is only allowed at the top-level. Using it in an embedded
 > function will cause an error.
 
@@ -184,44 +184,44 @@ can do it with `Tezos.get_self_address`.
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=d
-const current_addr : address = Tezos.get_self_address()
+const current_addr : address = Mavryk.get_self_address()
 ```
 
 </Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo group=d
-let current_addr : address = Tezos.get_self_address ()
+let current_addr : address = Mavryk.get_self_address ()
 ```
 
 </Syntax>
 <Syntax syntax="reasonligo">
 
 ```reasonligo group=d
-let current_addr : address = Tezos.get_self_address ();
+let current_addr : address = Mavryk.get_self_address ();
 ```
 
 </Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=d
-let current_addr = Tezos.get_self_address();
+let current_addr = Mavryk.get_self_address();
 ```
 
 </Syntax>
 
 ## Origination of a contract
 
-`Tezos.create_contract` allows you to originate a contract given its code, delegate (if any), initial balance and initial storage.
+`Mavryk.create_contract` allows you to originate a contract given its code, delegate (if any), initial balance and initial storage.
 The return value is a pair of type `(operation * address)`.
 
-> ⚠️ Due to limitations in Michelson, `Tezos.create_contract` first argument
+> ⚠️ Due to limitations in Michelson, `Mavryk.create_contract` first argument
 > must be inlined and must not contain references to free variables
 
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=e
-const origination : operation * address = Tezos.create_contract (
+const origination : operation * address = Mavryk.create_contract (
   function (const p : nat; const s : string): list(operation) * string is (nil, s),
   None,
   3tz,
@@ -232,7 +232,7 @@ const origination : operation * address = Tezos.create_contract (
 <Syntax syntax="cameligo">
 
 ```cameligo group=e
-let origination : operation * address = Tezos.create_contract
+let origination : operation * address = Mavryk.create_contract
   (fun (p, s : nat * string) -> ([], s))
   None
   3tz
@@ -243,7 +243,7 @@ let origination : operation * address = Tezos.create_contract
 <Syntax syntax="reasonligo">
 
 ```reasonligo group=e
-let origination : (operation, address) = Tezos.create_contract (
+let origination : (operation, address) = Mavryk.create_contract (
   ((p, s) : (nat,string)) : (list(operation),string) => ([], s),
   None,
   3tz,
@@ -254,10 +254,10 @@ let origination : (operation, address) = Tezos.create_contract (
 <Syntax syntax="jsligo">
 
 ```jsligo group=e
-let origination = Tezos.create_contract ((p: nat, s: string) => 
+let origination = Mavryk.create_contract ((p: nat, s: string) => 
 [list([]), s],
   None(),
-  3 as tez,
+  3 as mav,
   "initial_storage");
 ```
 

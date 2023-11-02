@@ -4,13 +4,13 @@ type param = [ int , ticket<string>]
 
 const main = ( [p,_] : [param , [string , address]] ) : [list<operation> , [string , address]] => {
   let [_,ticket] = p ;
-  let [[_,[v,_]] , _] = Tezos.read_ticket (ticket) ;
-  return ([list([]) , [v, Tezos.get_sender ()]])
+  let [[_,[v,_]] , _] = Mavryk.read_ticket (ticket) ;
+  return ([list([]) , [v, Mavryk.get_sender ()]])
 };
 
 const test_transfer_to_contract_ = () : unit => {
-  let [main_taddr, _ , _] = Test.originate (main, ["bye",Test.nth_bootstrap_account (1)], 1 as mutez) ;
-  let main_addr = Tezos.address (Test.to_contract (main_taddr)) ;
+  let [main_taddr, _ , _] = Test.originate (main, ["bye",Test.nth_bootstrap_account (1)], 1 as mumav) ;
+  let main_addr = Mavryk.address (Test.to_contract (main_taddr)) ;
 
   /* mk_param is executed __by the proxy contract__ */
   let mk_param = (t:ticket<string>) : param => { return [42,t] } ;

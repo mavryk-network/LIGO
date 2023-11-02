@@ -527,12 +527,12 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     | Some res -> return @@ v_mumav res
     | None ->
       fail (Errors.meta_lang_eval loc calltrace (v_string "Mumav underflow/overflow")))
-  | C_SUB_MUTEZ, [ V_Ct (C_mumav a'); V_Ct (C_mumav b') ] ->
+  | C_SUB_MUMAV, [ V_Ct (C_mumav a'); V_Ct (C_mumav b') ] ->
     (match Michelson_backend.Tezos_eq.mumav_sub a' b' with
     | Some res -> return @@ v_some @@ v_mumav res
     | None -> return @@ v_none ())
   | C_SUB, _ -> fail @@ error_type ()
-  | C_SUB_MUTEZ, _ -> fail @@ error_type ()
+  | C_SUB_MUMAV, _ -> fail @@ error_type ()
   | C_CONS, [ v; V_List vl ] -> return @@ V_List (v :: vl)
   | C_CONS, _ -> fail @@ error_type ()
   | C_ADD, [ V_Ct (C_int64 a); V_Ct (C_int64 b) ] -> return @@ v_int64 Int64.(a + b)

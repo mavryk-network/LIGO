@@ -1,31 +1,31 @@
 function create_and_call (const st : list (address)) is {
   const create_contract_result = 
-      Tezos.create_contract(
+      Mavryk.create_contract(
           (function (const p : int; const s : int) is
             ((list [] : list (operation)), p + s)),
           (None : option (key_hash)),
-          0mutez,
+          0mumav,
           1
       );
   const create_op = create_contract_result.0;
   const addr = create_contract_result.1;
   const call_op =
-      Tezos.transaction(
+      Mavryk.transaction(
           (addr, 41),
-          0mutez,
-          (Tezos.self ("%callback") : contract (address * int))
+          0mumav,
+          (Mavryk.self ("%callback") : contract (address * int))
       )
 } with (list [create_op; call_op], (addr # st))
 
 function call_counter (const addr : address; const n : int) is {
-  assert (Tezos.get_sender() = Tezos.get_self_address());
-  const callee_opt : option (contract (int)) = Tezos.get_contract_opt (addr);
+  assert (Mavryk.get_sender() = Mavryk.get_self_address());
+  const callee_opt : option (contract (int)) = Mavryk.get_contract_opt (addr);
   const callee =
       case callee_opt of [
       | Some (contract) -> contract
       | None -> (failwith ("Could not find contract") : contract (int))
       ]
-} with Tezos.transaction (n, 0mutez, callee)
+} with Mavryk.transaction (n, 0mumav, callee)
 
 type parameter is
 | Callback of address * int

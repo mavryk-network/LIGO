@@ -211,8 +211,8 @@ how those built-ins can be utilised.
 
 ### Accepting or Declining Tokens in a Smart Contract
 
-This example shows how `Tezos.get_amount` and `failwith` can be used to
-decline any transaction that sends more tez than `0tez`, that is, no
+This example shows how `Mavryk.get_amount` and `failwith` can be used to
+decline any transaction that sends more mav than `0mav`, that is, no
 incoming tokens are accepted.
 
 <Syntax syntax="pascaligo">
@@ -223,7 +223,7 @@ type storage is unit
 type return is list (operation) * storage
 
 function deny (const action : parameter; const store : storage) : return is
-  if Tezos.get_amount() > 0tez then
+  if Mavryk.get_amount() > 0mav then
     failwith ("This contract does not accept tokens.")
   else (nil, store)
 ```
@@ -238,7 +238,7 @@ type storage = unit
 type return = operation list * storage
 
 let deny (action, store : parameter * storage) : return =
-  if Tezos.get_amount () > 0tez then
+  if Mavryk.get_amount () > 0mav then
     failwith "This contract does not accept tokens."
   else ([], store)
 ```
@@ -253,7 +253,7 @@ type storage = unit;
 type return_ = [list<operation>, storage];
 
 const deny = (action: parameter, store: storage): return_ => {
-  if (Tezos.get_amount() > (0 as tez)) {
+  if (Mavryk.get_amount() > (0 as mav)) {
     return failwith("This contract does not accept tokens.");
   } else {
     return [list([]), store];
@@ -265,16 +265,16 @@ const deny = (action: parameter, store: storage): return_ => {
 
 ### Access Control
 
-This example shows how `Tezos.get_sender` can be used to deny access to an
+This example shows how `Mavryk.get_sender` can be used to deny access to an
 entrypoint.
 
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=c
-const owner : address = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx": address);
+const owner : address = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE": address);
 
 function main (const action : parameter; const store : storage) : return is
-  if Tezos.get_sender() =/= owner then failwith ("Access denied.")
+  if Mavryk.get_sender() =/= owner then failwith ("Access denied.")
   else (nil, store)
 ```
 
@@ -282,10 +282,10 @@ function main (const action : parameter; const store : storage) : return is
 <Syntax syntax="cameligo">
 
 ```cameligo group=c
-let owner = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx": address)
+let owner = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE": address)
 
 let main (action, store: parameter * storage) : return =
-  if Tezos.get_sender () <> owner then failwith "Access denied."
+  if Mavryk.get_sender () <> owner then failwith "Access denied."
   else ([], store)
 ```
 
@@ -294,18 +294,18 @@ let main (action, store: parameter * storage) : return =
 <Syntax syntax="jsligo">
 
 ```jsligo group=c
-const owner = "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address;
+const owner = "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address;
 
 const main = (action: parameter, store: storage): return_ => {
-  if (Tezos.get_sender() != owner) { return failwith("Access denied."); }
+  if (Mavryk.get_sender() != owner) { return failwith("Access denied."); }
   else { return [list([]), store]; };
 };
 ```
 
 </Syntax>
 
-> Note that we do not use `Tezos.get_source`, but instead
-> `Tezos.get_sender`. In our [tutorial about
+> Note that we do not use `Mavryk.get_source`, but instead
+> `Mavryk.get_sender`. In our [tutorial about
 > security](../tutorials/security/security.md#incorrect-authorisation-checks)
 > you can read more about it.
 
@@ -363,7 +363,7 @@ const dest : address = ("KT19wgxcuXG9VH4Af5Tpm1vqEKdaMFpznXT3" : address)
 
 function proxy (const action : parameter; const store : storage): return is {
   const counter : contract (parameter) =
-    case (Tezos.get_contract_opt (dest) : option (contract (parameter))) of [
+    case (Mavryk.get_contract_opt (dest) : option (contract (parameter))) of [
       Some (contract) -> contract
     | None -> failwith ("Contract not found.")
     ];
@@ -372,7 +372,7 @@ function proxy (const action : parameter; const store : storage): return is {
      transaction or use another one, `mock_param`. *)
 
   const mock_param : parameter = Increment (5n);
-  const op = Tezos.transaction (action, 0tez, counter);
+  const op = Mavryk.transaction (action, 0mav, counter);
 } with (list[op], store)
 ```
 
@@ -406,14 +406,14 @@ let dest = ("KT19wgxcuXG9VH4Af5Tpm1vqEKdaMFpznXT3" : address)
 
 let proxy (action, store : parameter * storage) : return =
   let counter : parameter contract =
-    match Tezos.get_contract_opt (dest) with
+    match Mavryk.get_contract_opt (dest) with
       Some contract -> contract
     | None -> failwith "Contract not found."
   in
   (* Reuse the parameter in the subsequent
      transaction or use another one, `mock_param`. *)
   let mock_param = Increment (5n) in
-  let op = Tezos.transaction action 0tez counter
+  let op = Mavryk.transaction action 0mav counter
   in [op], store
 ```
 
@@ -448,14 +448,14 @@ const dest = "KT19wgxcuXG9VH4Af5Tpm1vqEKdaMFpznXT3" as address;
 
 const proxy = (action: parameter, store: storage): return_ => {
   let counter =
-    match (Tezos.get_contract_opt(dest), {
+    match (Mavryk.get_contract_opt(dest), {
       Some: contract => contract,
       None: () => failwith("Contract not found.")
     });
   /* Reuse the parameter in the subsequent
      transaction or use another one, `mock_param`. */
   let mock_param = Increment(5 as nat);
-  let op = Tezos.transaction(action, 0 as tez, counter);
+  let op = Mavryk.transaction(action, 0 as mav, counter);
   return [list([op]), store];
 };
 ```

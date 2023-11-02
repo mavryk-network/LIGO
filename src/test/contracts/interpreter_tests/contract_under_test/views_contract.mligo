@@ -3,7 +3,7 @@ type 'a return = operation list * 'a
 let sto_plus_n (n,s: int * int) : int = s + n + 1
 
 let main_calling ((addr,_s): address * int) : int return =
-  let x : int option = Tezos.call_view "sto_plus_n" 1 addr in
+  let x : int option = Mavryk.call_view "sto_plus_n" 1 addr in
   let ret =
     match x with
     | None -> (failwith "view call failed" : int)

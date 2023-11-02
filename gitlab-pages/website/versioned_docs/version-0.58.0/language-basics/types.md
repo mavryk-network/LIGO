@@ -69,51 +69,51 @@ let dog_breed: breed = "Saluki";
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=b
-// The type account_balances denotes maps from addresses to tez
+// The type account_balances denotes maps from addresses to mav
 
-type account_balances is map (address, tez)
+type account_balances is map (address, mav)
 
 const ledger : account_balances =
-  map [("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address) -> 10mutez]
+  map [("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address) -> 10mumav]
 ```
 
 </Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo group=b
-// The type account_balances denotes maps from addresses to tez
+// The type account_balances denotes maps from addresses to mav
 
-type account_balances = (address, tez) map
+type account_balances = (address, mav) map
 
 let ledger : account_balances =
   Map.literal
-    [(("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address), 10mutez)]
+    [(("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address), 10mumav)]
 ```
 
 </Syntax>
 <Syntax syntax="reasonligo">
 
 ```reasonligo group=b
-// The type account_balances denotes maps from addresses to tez
+// The type account_balances denotes maps from addresses to mav
 
-type account_balances = map (address, tez);
+type account_balances = map (address, mav);
 
 let ledger: account_balances =
   Map.literal
-    ([("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address, 10mutez)]);
+    ([("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address, 10mumav)]);
 ```
 
 </Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=b
-// The type account_balances denotes maps from addresses to tez
+// The type account_balances denotes maps from addresses to mav
 
-type account_balances = map<address, tez>;
+type account_balances = map<address, mav>;
 
 let ledger: account_balances =
   Map.literal
-    (list([["tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address, 10 as mutez]]));
+    (list([["mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address, 10 as mumav]]));
 ```
 
 </Syntax>
@@ -142,7 +142,7 @@ type number_of_transactions is nat
 // The type account_data is a record with two fields.
 
 type account_data is record [
-  balance : tez;
+  balance : mav;
   transactions : number_of_transactions
 ]
 
@@ -151,9 +151,9 @@ type account_data is record [
 type ledger is map (account, account_data)
 
 const my_ledger : ledger = map [
-  ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address) ->
+  ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address) ->
   record [
-    balance = 10mutez;
+    balance = 10mumav;
     transactions = 5n
   ]
 ]
@@ -171,7 +171,7 @@ type number_of_transactions = nat
 // The type account_data is a record with two fields.
 
 type account_data = {
-  balance : tez;
+  balance : mav;
   transactions : number_of_transactions
 }
 
@@ -180,8 +180,8 @@ type account_data = {
 type ledger = (account, account_data) map
 
 let my_ledger : ledger = Map.literal
-  [(("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address),
-    {balance = 10mutez; transactions = 5n})]
+  [(("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address),
+    {balance = 10mumav; transactions = 5n})]
 ```
 
 </Syntax>
@@ -196,7 +196,7 @@ type number_of_transactions = nat;
 // The type account_data is a record with two fields.
 
 type account_data = {
-  balance : tez,
+  balance : mav,
   transactions : number_of_transactions
 };
 
@@ -206,8 +206,8 @@ type ledger = map (account, account_data);
 
 let my_ledger : ledger =
   Map.literal([
-    ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address,
-     {balance: 10mutez, transactions: 5n})]);
+    ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address,
+     {balance: 10mumav, transactions: 5n})]);
 ```
 
 </Syntax>
@@ -222,7 +222,7 @@ type number_of_transactions = nat;
 // The type account_data is a record with two fields.
 
 type account_data = {
-  balance: tez,
+  balance: mav,
   transactions: number_of_transactions
 };
 
@@ -232,8 +232,8 @@ type ledger = map <account, account_data>;
 
 let my_ledger : ledger =
   Map.literal(list([
-    ["tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address,
-     {balance: 10 as mutez, transactions: 5 as nat}]]));
+    ["mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address,
+     {balance: 10 as mumav, transactions: 5 as nat}]]));
 ```
 
 </Syntax>
@@ -255,16 +255,16 @@ type parameter is Back | Claim | Withdraw
 
 type storage is
   record [
-    goal     : tez;
+    goal     : mav;
     deadline : timestamp;
-    backers  : map (address, tez);
+    backers  : map (address, mav);
     funded   : bool
   ]
 
 function back (var action : unit; var store : storage) : list (operation) * storage is { // Type annotation
-  if Tezos.get_now() > store.deadline then failwith ("Deadline passed.");
-  case store.backers[Tezos.get_sender()] of [
-    None -> store.backers[Tezos.get_sender()] := Tezos.get_amount()
+  if Mavryk.get_now() > store.deadline then failwith ("Deadline passed.");
+  case store.backers[Mavryk.get_sender()] of [
+    None -> store.backers[Mavryk.get_sender()] := Mavryk.get_amount()
   | Some (_) -> skip
   ]
 } with (nil, store)
@@ -278,18 +278,18 @@ type parameter = Back | Claim | Withdraw
 
 type storage = {
   owner    : address;
-  goal     : tez;
+  goal     : mav;
   deadline : timestamp;
-  backers  : (address, tez) map;
+  backers  : (address, mav) map;
   funded   : bool
 }
 
 let back (param, store : unit * storage) : operation list * storage = // Annotation
-  if Tezos.get_now () > store.deadline then failwith "Deadline passed."
+  if Mavryk.get_now () > store.deadline then failwith "Deadline passed."
   else
-    match Map.find_opt (Tezos.get_sender ()) store.backers with
+    match Map.find_opt (Mavryk.get_sender ()) store.backers with
       None ->
-        let backers = Map.update (Tezos.get_sender ()) (Some (Tezos.get_amount ())) store.backers
+        let backers = Map.update (Mavryk.get_sender ()) (Some (Mavryk.get_amount ())) store.backers
         in [], {store with backers=backers}
     | Some (x) -> [], store
 ```
@@ -302,20 +302,20 @@ type parameter = | Back | Claim | Withdraw;
 
 type storage = {
   owner    : address,
-  goal     : tez,
+  goal     : mav,
   deadline : timestamp,
-  backers  : map (address, tez),
+  backers  : map (address, mav),
   funded   : bool,
 };
 
 let back = ((param, store) : (unit, storage)) : (list (operation), storage) => { // Annotation
-  if (Tezos.get_now () > store.deadline) {
+  if (Mavryk.get_now () > store.deadline) {
     failwith ("Deadline passed.");
   }
   else {
-    switch (Map.find_opt (Tezos.get_sender(), store.backers)) {
+    switch (Map.find_opt (Mavryk.get_sender(), store.backers)) {
     | None => {
-        let backers = Map.update (Tezos.get_sender(), Some (Tezos.get_amount()), store.backers);
+        let backers = Map.update (Mavryk.get_sender(), Some (Mavryk.get_amount()), store.backers);
         ([], {...store, backers:backers}) }
     | Some (x) => ([], store)
     }
@@ -334,21 +334,21 @@ type parameter =
 
 type storage = {
   owner    : address,
-  goal     : tez,
+  goal     : mav,
   deadline : timestamp,
-  backers  : map<address, tez>,
+  backers  : map<address, mav>,
   funded   : bool
 };
 
 let back = ([param, store] : [unit, storage]) : [list<operation>, storage] => { // Annotation
   let no_op = list([]);
-  if (Tezos.get_now() > store.deadline) {
+  if (Mavryk.get_now() > store.deadline) {
     return failwith ("Deadline passed.");
   }
   else {
-    return match(Map.find_opt (Tezos.get_sender(), store.backers), {
+    return match(Map.find_opt (Mavryk.get_sender(), store.backers), {
       None: () => {
-        let backers = Map.update(Tezos.get_sender(), Some(Tezos.get_amount()), store.backers);
+        let backers = Map.update(Mavryk.get_sender(), Some(Mavryk.get_amount()), store.backers);
         return [no_op, {...store, backers:backers}];
       },
       Some: x => [no_op, store]

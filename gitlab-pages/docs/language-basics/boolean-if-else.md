@@ -413,7 +413,7 @@ In LIGO, only values of the same type can be compared. Moreover, not
 all values of the same type can be compared, only those with
 *comparable types*, which is a concept lifted from
 Michelson. Comparable types include, for instance, `int`, `nat`,
-`string`, `tez`, `timestamp`, `address`, etc. As an example of
+`string`, `mav`, `timestamp`, `address`, etc. As an example of
 non-comparable types: maps, sets or lists are not comparable: if you
 wish to compare them, you will have to write your own comparison
 function.
@@ -502,17 +502,17 @@ let h = (a != b);
 
 </Syntax>
 
-### Comparing tez
+### Comparing mav
 
-> 💡 Comparing `tez` values is especially useful when dealing with an
+> 💡 Comparing `mav` values is especially useful when dealing with an
 > amount sent in a transaction.
 
 
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=d
-const a : tez  = 5mutez
-const b : tez  = 10mutez
+const a : mav  = 5mumav
+const b : mav  = 10mumav
 const c : bool = (a = b) // False
 ```
 
@@ -520,8 +520,8 @@ const c : bool = (a = b) // False
 <Syntax syntax="cameligo">
 
 ```cameligo group=d
-let a : tez  = 5mutez
-let b : tez  = 10mutez
+let a : mav  = 5mumav
+let b : mav  = 10mumav
 let c : bool = (a = b) // false
 ```
 
@@ -530,8 +530,8 @@ let c : bool = (a = b) // false
 <Syntax syntax="jsligo">
 
 ```jsligo group=d
-let a: tez  = 5 as mutez;
-let b: tez  = 10 as mutez;
+let a: mav  = 5 as mumav;
+let b: mav  = 10 as mumav;
 let c = (a == b); // false
 ```
 

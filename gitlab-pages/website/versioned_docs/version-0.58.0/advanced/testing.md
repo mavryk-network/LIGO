@@ -186,7 +186,7 @@ storage is in fact the one which we started with:
 
 const test = {
   const initial_storage = 42;
-  const (taddr, _, _) = Test.originate (main, initial_storage, 0tez);
+  const (taddr, _, _) = Test.originate (main, initial_storage, 0mav);
   const storage = Test.get_storage (taddr);
 } with storage = initial_storage;
 
@@ -200,7 +200,7 @@ const test = {
 
 let test =
   let initial_storage = 42 in
-  let taddr, _, _ = Test.originate main initial_storage 0tez in
+  let taddr, _, _ = Test.originate main initial_storage 0mav in
   assert (Test.get_storage taddr = initial_storage)
 ```
 
@@ -212,7 +212,7 @@ let test =
 
 let test =
   let initial_storage = 42;
-  let (taddr, _, _) = Test.originate(main, initial_storage, 0tez);
+  let (taddr, _, _) = Test.originate(main, initial_storage, 0mav);
   assert (Test.get_storage(taddr) == initial_storage)
 ```
 
@@ -224,7 +224,7 @@ let test =
 
 let _test = () : bool => {
   let initial_storage = 42 as int;
-  let [taddr, _, _] = Test.originate(main, initial_storage, 0 as tez);
+  let [taddr, _, _] = Test.originate(main, initial_storage, 0 as mav);
   return (Test.get_storage(taddr) == initial_storage);
 };
 
@@ -282,7 +282,7 @@ ligo run test gitlab-pages/docs/advanced/src/testnew.jsligo
 
 The function `Test.transfer_to_contract` allows to bake a transaction.
 It takes a target account of type `'parameter contract`, the parameter
-of type `'parameter` and an amount of type `tez`. This function
+of type `'parameter` and an amount of type `mav`. This function
 performs the transaction, and returns a `test_exec_result` which
 can be matched on to know whether the transaction was successful or not.
 In case of success you will get access to the gas consumed by the execution
@@ -302,9 +302,9 @@ increments the storage after deployment, we also print the gas consumption:
 const test2 =
   {
     const initial_storage = 42;
-    const (taddr, _, _) = Test.originate(main, initial_storage, 0tez);
+    const (taddr, _, _) = Test.originate(main, initial_storage, 0mav);
     const contr = Test.to_contract(taddr);
-    const gas_cons = Test.transfer_to_contract_exn(contr, Increment(1), 1mutez);
+    const gas_cons = Test.transfer_to_contract_exn(contr, Increment(1), 1mumav);
     Test.log (("gas consumption",gas_cons)) ;
     const storage = Test.get_storage(taddr);
   } with (storage = initial_storage + 1);
@@ -318,9 +318,9 @@ const test2 =
 
 let test2 =
   let initial_storage = 42 in
-  let taddr, _, _ = Test.originate main initial_storage 0tez in
+  let taddr, _, _ = Test.originate main initial_storage 0mav in
   let contr = Test.to_contract taddr in
-  let gas_cons = Test.transfer_to_contract_exn contr (Increment (1)) 1mutez in
+  let gas_cons = Test.transfer_to_contract_exn contr (Increment (1)) 1mumav in
   let () = Test.log ("gas consumption",gas_cons) in
   assert (Test.get_storage taddr = initial_storage + 1)
 ```
@@ -333,9 +333,9 @@ let test2 =
 
 let test2 =
   let initial_storage = 42;
-  let (taddr, _, _) = Test.originate(main, initial_storage, 0tez);
+  let (taddr, _, _) = Test.originate(main, initial_storage, 0mav);
   let contr = Test.to_contract(taddr);
-  let gas_cons = Test.transfer_to_contract_exn(contr, (Increment (1)), 1mutez);
+  let gas_cons = Test.transfer_to_contract_exn(contr, (Increment (1)), 1mumav);
   let _unit = Test.log(("gas consumption",gas_cons));
   assert (Test.get_storage(taddr) == initial_storage + 1)
 ```
@@ -348,9 +348,9 @@ let test2 =
 
 let _test2 = () : bool => {
   let initial_storage = 42 as int;
-  let [taddr, _, _] = Test.originate(main, initial_storage, 0 as tez);
+  let [taddr, _, _] = Test.originate(main, initial_storage, 0 as mav);
   let contr = Test.to_contract(taddr);
-  let gas_cons = Test.transfer_to_contract_exn(contr, (Increment (1)), 1 as mutez);
+  let gas_cons = Test.transfer_to_contract_exn(contr, (Increment (1)), 1 as mumav);
   let _ = Test.log(["gas consumption", gas_cons]);
   return (Test.get_storage(taddr) == initial_storage + 1);
 }
@@ -379,7 +379,7 @@ Now imagine you have a value of type `parameter_ty`/`storage_ty` containing a ti
 in the operation data, tickets will be represented in Michelson as pairs:
 
 ```bash
-> ligo compile expression cameligo 'Tezos.create_ticket 0x0202 10n'
+> ligo compile expression cameligo 'Mavryk.create_ticket 0x0202 10n'
 (Pair "KT1DUMMYDUMMYDUMMYDUMMYDUMMYDUMu2oHG" 0x0202 10)
 ```
 
@@ -403,10 +403,10 @@ Here is the proposed interface for creating proxy-contracts:
     ( (p,_)    : ((vt * nat) * address) * unit )
     : operation list * unit =
   let ((v,amt),dst_addr) = p in
-  let ticket = Option.unopt (Tezos.create_ticket v amt) in
+  let ticket = Option.unopt (Mavryk.create_ticket v amt) in
   let tx_param = mk_param ticket in
-  let c : whole_p contract = Tezos.get_contract_with_error dst_addr "Testing proxy: you provided a wrong address" in
-  let op = Tezos.transaction tx_param 1mutez c in
+  let c : whole_p contract = Mavryk.get_contract_with_error dst_addr "Testing proxy: you provided a wrong address" in
+  let op = Mavryk.transaction tx_param 1mumav c in
   [op], ()
 
 [@private] let proxy_originate_contract (type vt whole_s vp)
@@ -415,9 +415,9 @@ Here is the proposed interface for creating proxy-contracts:
     ( (p,_)      : (vt * nat) * address option )
     : operation list * address option =
   let (v,amt) = p in
-  let ticket = Option.unopt (Tezos.create_ticket v amt) in
+  let ticket = Option.unopt (Mavryk.create_ticket v amt) in
   let init_storage : whole_s = mk_storage ticket in
-  let op,addr = Tezos.create_contract main (None: key_hash option) 0mutez init_storage in
+  let op,addr = Mavryk.create_contract main (None: key_hash option) 0mumav init_storage in
   [op], Some addr
 
 
@@ -428,14 +428,14 @@ let init_transfer (type vt whole_p) (mk_param: vt ticket -> whole_p) : vt proxy_
   let proxy_transfer : ((vt * nat) * address) * unit -> operation list * unit =
     proxy_transfer_contract mk_param
   in
-  let (taddr_proxy, _, _) = Test.originate proxy_transfer () 1tez in
+  let (taddr_proxy, _, _) = Test.originate proxy_transfer () 1mav in
   taddr_proxy
 
 let transfer (type vt)
     (taddr_proxy : vt proxy_address)
     (info        : (vt * nat) * address) : test_exec_result = 
   let ticket_info, dst_addr = info in
-  Test.transfer_to_contract (Test.to_contract taddr_proxy) (ticket_info , dst_addr) 1mutez
+  Test.transfer_to_contract (Test.to_contract taddr_proxy) (ticket_info , dst_addr) 1mumav
 
 let originate (type vt whole_s vp)
     (ticket_info : vt * nat)
@@ -444,8 +444,8 @@ let originate (type vt whole_s vp)
   let proxy_origination : (vt * nat) * address option -> operation list * address option =
     proxy_originate_contract mk_storage contract
   in
-  let (taddr_proxy, _, _) = Test.originate proxy_origination (None : address option) 1tez in
-  let _ = Test.transfer_to_contract_exn (Test.to_contract taddr_proxy) ticket_info 0tez in
+  let (taddr_proxy, _, _) = Test.originate proxy_origination (None : address option) 1mav in
+  let _ = Test.transfer_to_contract_exn (Test.to_contract taddr_proxy) ticket_info 0mav in
   match Test.get_storage taddr_proxy with
   | Some addr ->
     let _taddr = (Test.cast_address addr : (vp,whole_s) typed_address) in
@@ -468,11 +468,11 @@ const proxy_transfer_contract :
     (p : [[[vt , nat] , address] , unit] ) => {
     const [p,_] = p ;
     const [[v,amt],dst_addr] = p ;
-    const ticket = Option.unopt (Tezos.create_ticket (v, amt)) ;
+    const ticket = Option.unopt (Mavryk.create_ticket (v, amt)) ;
     const tx_param = mk_param (ticket) ;
     const c : contract<whole_p> =
-      Tezos.get_contract_with_error (dst_addr, "Testing proxy: you provided a wrong address") ;
-    const op = Tezos.transaction (tx_param, 1 as mutez, c) ;
+      Mavryk.get_contract_with_error (dst_addr, "Testing proxy: you provided a wrong address") ;
+    const op = Mavryk.transaction (tx_param, 1 as mumav, c) ;
     return ([ list([op]), unit ])
   };
 };
@@ -492,9 +492,9 @@ const proxy_originate_contract :
       (p : [[vt , nat] , option<address>]) => {
         const [p,_] = p;
         const [v,amt] = p ;
-        const ticket = Option.unopt (Tezos.create_ticket (v, amt)) ;
+        const ticket = Option.unopt (Mavryk.create_ticket (v, amt)) ;
         const init_storage : whole_s = mk_storage (ticket) ;
-        const [op,addr] = Tezos.create_contract(main, (None () as option<key_hash>), (0 as mutez), init_storage) ;
+        const [op,addr] = Mavryk.create_contract(main, (None () as option<key_hash>), (0 as mumav), init_storage) ;
         return ([list([op]), Some(addr)])
   };
 };
@@ -507,7 +507,7 @@ const init_transfer :
     const proxy_transfer : ((x : ([[[vt , nat] , address] , unit])) => [list<operation> , unit]) =
       proxy_transfer_contract (mk_param)
     ;
-    const [taddr_proxy, _, _] = Test.originate (proxy_transfer, unit, 1 as tez) ;
+    const [taddr_proxy, _, _] = Test.originate (proxy_transfer, unit, 1 as mav) ;
     return taddr_proxy
   };
 
@@ -516,7 +516,7 @@ const transfer :
   ( [taddr_proxy, info] : [proxy_address<vt> , [[vt , nat] , address]]) => {
     const [ticket_info, dst_addr] = info ;
     return (
-      Test.transfer_to_contract(Test.to_contract (taddr_proxy), [ticket_info , dst_addr], 1 as mutez)
+      Test.transfer_to_contract(Test.to_contract (taddr_proxy), [ticket_info , dst_addr], 1 as mumav)
     )
   };
 
@@ -525,8 +525,8 @@ const originate : <vt, whole_s, vp>
   ([ ticket_info , mk_storage , contract] : [ [vt , nat] , (t:ticket<vt>) => whole_s, (ps:[vp , whole_s]) => [list<operation> , whole_s] ] ) => {
       const proxy_origination : (x : ([[vt , nat] , option<address>])) => [list<operation> , option<address>] =
         proxy_originate_contract (mk_storage, contract) ;
-      const [taddr_proxy, _, _] = Test.originate (proxy_origination, (None () as option<address> ),1 as tez) ;
-      const _ = Test.transfer_to_contract_exn (Test.to_contract (taddr_proxy), ticket_info, 0 as tez) ;
+      const [taddr_proxy, _, _] = Test.originate (proxy_origination, (None () as option<address> ),1 as mav) ;
+      const _ = Test.transfer_to_contract_exn (Test.to_contract (taddr_proxy), ticket_info, 0 as mav) ;
       match (Test.get_storage (taddr_proxy), {
         Some: (addr:address) => {
         const _taddr = (Test.cast_address(addr) as typed_address<vp,whole_s> ) ;
@@ -592,12 +592,12 @@ type param = int * string ticket
 
 let main ( (p,_) : param * (string * address)) : operation list * (string * address) =
   let (_,ticket) = p in
-  let (_,(v,_)) , _ = Tezos.read_ticket ticket in
-  [] , (v, Tezos.get_sender ())
+  let (_,(v,_)) , _ = Mavryk.read_ticket ticket in
+  [] , (v, Mavryk.get_sender ())
 
 let test_transfer_to_contract =
-  let (main_taddr, _ , _) = Test.originate main ("bye",Test.nth_bootstrap_account 1) 1mutez in
-  let main_addr = Tezos.address (Test.to_contract main_taddr) in
+  let (main_taddr, _ , _) = Test.originate main ("bye",Test.nth_bootstrap_account 1) 1mumav in
+  let main_addr = Mavryk.address (Test.to_contract main_taddr) in
   
   (* Use this address everytime you want to send tickets from the same proxy-contract *)
   let proxy_taddr =
@@ -635,13 +635,13 @@ type param = [ int , ticket<string>]
 
 const main = (p: param, _: [string , address]) : [list<operation> , [string , address]] => {
   let [_,ticket] = p ;
-  let [[_,[v,_]] , _] = Tezos.read_ticket (ticket) ;
-  return ([list([]) , [v, Tezos.get_sender ()]])
+  let [[_,[v,_]] , _] = Mavryk.read_ticket (ticket) ;
+  return ([list([]) , [v, Mavryk.get_sender ()]])
 };
 
 const test_transfer_to_contract_ = () : unit => {
-  let [main_taddr, _ , _] = Test.originate (main, ["bye",Test.nth_bootstrap_account (1)], 1 as mutez) ;
-  let main_addr = Tezos.address (Test.to_contract (main_taddr)) ;
+  let [main_taddr, _ , _] = Test.originate (main, ["bye",Test.nth_bootstrap_account (1)], 1 as mumav) ;
+  let main_addr = Mavryk.address (Test.to_contract (main_taddr)) ;
 
   /* mk_param is executed __by the proxy contract__ */
   const mk_param = (t:ticket<string>) : param => { return [42,t] } ;
@@ -708,7 +708,7 @@ let main ( ((),s) : unit * storage) : operation list * storage =
   [] , (
     match s with
     | Some ticket ->
-      let (_ , t) = Tezos.read_ticket ticket in
+      let (_ , t) = Mavryk.read_ticket ticket in
       Some t
     | None -> None
   )
@@ -746,7 +746,7 @@ const main = (_: unit, s: storage) : [ list<operation> , storage] => {
   let x =
     match (s, {
       Some: (ticket: ticket<bytes>) => {
-        let [_ , t] = Tezos.read_ticket (ticket) ;
+        let [_ , t] = Mavryk.read_ticket (ticket) ;
         Some (t)
       },
       None: () => { None () }
@@ -799,11 +799,11 @@ Consider a map binding addresses to amounts and a function removing all entries 
 ```cameligo group=rmv_bal
 (* This is remove-balance.mligo *)
 
-type balances = (address, tez) map
+type balances = (address, mav) map
 
-let balances_under (b:balances) (threshold:tez) : balances =
+let balances_under (b:balances) (threshold:mav) : balances =
   Map.fold
-    (fun ((acc, (k, v)) : balances * (address * tez)) ->
+    (fun ((acc, (k, v)) : balances * (address * mav)) ->
        if v < threshold then Map.remove k acc else acc)
     b b
 ```
@@ -815,11 +815,11 @@ let balances_under (b:balances) (threshold:tez) : balances =
 ```pascaligo group=rmv_bal
 (* This is remove-balance.ligo *)
 
-type balances is map (address, tez)
+type balances is map (address, mav)
 
-function balances_under (const b : balances ; const threshold : tez) is {
+function balances_under (const b : balances ; const threshold : mav) is {
   const f =
-    function (const x : balances * (address * tez)) is {
+    function (const x : balances * (address * mav)) is {
       const (acc, (k, v)) = x;
     } with if v < threshold then Map.remove (k, acc) else acc;
 } with Map.fold (f, b, b)
@@ -832,10 +832,10 @@ function balances_under (const b : balances ; const threshold : tez) is {
 ```reasonligo group=rmv_bal
 // This is remove-balance.religo
 
-type balances = map(address, tez);
+type balances = map(address, mav);
 
-let balances_under = ( (b, threshold) : (balances, tez) ) : balances =>
-  let f = ( (acc,(k,v)) : (balances, (address, tez)) ) =>  if (v < threshold) { Map.remove (k,acc) } else {acc} ;
+let balances_under = ( (b, threshold) : (balances, mav) ) : balances =>
+  let f = ( (acc,(k,v)) : (balances, (address, mav)) ) =>  if (v < threshold) { Map.remove (k,acc) } else {acc} ;
   Map.fold (f,b,b)
 ```
 
@@ -846,10 +846,10 @@ let balances_under = ( (b, threshold) : (balances, tez) ) : balances =>
 ```jsligo group=rmv_bal
 // This is remove-balance.jsligo
 
-type balances = map <address, tez>
+type balances = map <address, mav>
 
-const balances_under = (b : balances, threshold:tez) : balances => {
-  let f = (acc : balances, kv :[address , tez] ) : balances => {
+const balances_under = (b : balances, threshold:mav) : balances => {
+  let f = (acc : balances, kv :[address , mav] ) : balances => {
     let [k,v] = kv ;
     if (v < threshold) { return Map.remove (k,acc) } else {return acc}
   };
@@ -869,7 +869,7 @@ the bootstrap addresses later)
 
 ```cameligo test-ligo group=rmv_bal_test
 #include "./gitlab-pages/docs/advanced/src/remove-balance.mligo"
-let _u = Test.reset_state 5n ([] : tez list)
+let _u = Test.reset_state 5n ([] : mav list)
 ```
 
 </Syntax>
@@ -877,7 +877,7 @@ let _u = Test.reset_state 5n ([] : tez list)
 
 ```pascaligo test-ligo group=rmv_bal_test
 #include "./gitlab-pages/docs/advanced/src/remove-balance.ligo"
-const _u = Test.reset_state (5n, (list [] : list (tez)))
+const _u = Test.reset_state (5n, (list [] : list (mav)))
 ```
 
 </Syntax>
@@ -885,7 +885,7 @@ const _u = Test.reset_state (5n, (list [] : list (tez)))
 
 ```reasonligo test-ligo group=rmv_bal_test
 #include "./gitlab-pages/docs/advanced/src/remove-balance.religo"
-let _u = Test.reset_state (5n, ([] : list(tez)));
+let _u = Test.reset_state (5n, ([] : list(mav)));
 ```
 
 </Syntax>
@@ -893,7 +893,7 @@ let _u = Test.reset_state (5n, ([] : list(tez)));
 
 ```jsligo test-ligo group=rmv_bal_test
 #include "./gitlab-pages/docs/advanced/src/remove-balance.jsligo"
-let x = Test.reset_state (5 as nat, list([]) as list <tez>);
+let x = Test.reset_state (5 as nat, list([]) as list <mav>);
 ```
 
 </Syntax>
@@ -933,9 +933,9 @@ let balances : balances =
 
 ```jsligo test-ligo group=rmv_bal_test
 let balances : balances =
-  Map.literal(list([[Test.nth_bootstrap_account(1), 10 as tez],
-                    [Test.nth_bootstrap_account(2), 100 as tez],
-                    [Test.nth_bootstrap_account(3), 1000 as tez]]));
+  Map.literal(list([[Test.nth_bootstrap_account(1), 10 as mav],
+                    [Test.nth_bootstrap_account(2), 100 as mav],
+                    [Test.nth_bootstrap_account(3), 1000 as mav]]));
 ```
 
 </Syntax>
@@ -962,15 +962,15 @@ We also print the actual and expected sizes for good measure.
 ```cameligo test-ligo group=rmv_bal_test
 let test =
   List.iter
-    (fun ((threshold , expected_size) : tez * nat) ->
-      let tester (balances, threshold : balances * tez) = Map.size (balances_under balances threshold) in
+    (fun ((threshold , expected_size) : mav * nat) ->
+      let tester (balances, threshold : balances * mav) = Map.size (balances_under balances threshold) in
       let size = Test.run tester (balances, threshold) in
       let expected_size = Test.eval expected_size in
       let () = Test.log ("expected", expected_size) in
       let () = Test.log ("actual",size) in
       assert (Test.michelson_equal size expected_size)
     )
-    [(15tez,2n);(130tez,1n);(1200tez,0n)]
+    [(15mav,2n);(130mav,1n);(1200mav,0n)]
 ```
 
 </Syntax>
@@ -979,15 +979,15 @@ let test =
 ```pascaligo test-ligo group=rmv_bal_test
 const test =
   List.iter (
-    (function (const threshold : tez; const expected_size : nat) is {
-        function tester (const input : balances * tez) is
+    (function (const threshold : mav; const expected_size : nat) is {
+        function tester (const input : balances * mav) is
           Map.size(balances_under (input.0, input.1));
         const size_ = Test.run (tester, (balances, threshold));
         const expected_size = Test.eval (expected_size);
         Test.log (("expected", expected_size));
         Test.log (("actual", size_));
       } with assert (Test.michelson_equal (size_, expected_size))),
-    list [(15tez, 2n); (130tez, 1n); (1200tez, 0n)])
+    list [(15mav, 2n); (130mav, 1n); (1200mav, 0n)])
 ```
 
 </Syntax>
@@ -996,14 +996,14 @@ const test =
 ```reasonligo test-ligo group=rmv_bal_test
 let test =
   List.iter (
-    (((threshold , expected_size) : (tez, nat)) =>
-      let tester = ((balances, threshold) : (balances, tez)) => Map.size (balances_under (balances, threshold));
+    (((threshold , expected_size) : (mav, nat)) =>
+      let tester = ((balances, threshold) : (balances, mav)) => Map.size (balances_under (balances, threshold));
       let size = Test.run(tester, (balances, threshold));
       let expected_size = Test.eval(expected_size) ;
       let _u = Test.log (("expected", expected_size)) ;
       let _u = Test.log (("actual", size)) ;
       assert ( Test.michelson_equal (size, expected_size) )),
-    [ (15tez, 2n), (130tez, 1n), (1200tez, 0n)] );
+    [ (15mav, 2n), (130mav, 1n), (1200mav, 0n)] );
 ```
 
 </Syntax>
@@ -1012,15 +1012,15 @@ let test =
 ```jsligo test-ligo group=rmv_bal_test
 let test =
   List.iter
-    ( ([threshold , expected_size] : [tez , nat]) : unit => {
-      let tester = ([balances, threshold] : [balances, tez]) : nat => Map.size (balances_under (balances, threshold));
+    ( ([threshold , expected_size] : [mav , nat]) : unit => {
+      let tester = ([balances, threshold] : [balances, mav]) : nat => Map.size (balances_under (balances, threshold));
       let size = Test.run(tester, [balances, threshold]);
       let expected_size_ = Test.eval(expected_size) ;
       let unit_ = Test.log (["expected", expected_size]) ;
       let unit__ = Test.log (["actual",size]) ;
       return (assert (Test.michelson_equal (size,expected_size_)))
     },
-    list ([ [15 as tez,2 as nat] , [130 as tez,1 as nat] , [1200 as tez,0 as nat]]) );
+    list ([ [15 as mav,2 as nat] , [130 as mav,1 as nat] , [1200 as mav,0 as nat]]) );
 ```
 
 </Syntax>
@@ -1316,11 +1316,11 @@ Here is how you emit events and fetch them from your tests:
 
 ```pascaligo test-ligo group=test_ex
 function main ( const x : (int*int) * unit ) is
-  (list [Tezos.emit ("%foo", x.0) ; Tezos.emit ("%foo", x.0.0)], Unit)
+  (list [Mavryk.emit ("%foo", x.0) ; Mavryk.emit ("%foo", x.0.0)], Unit)
 
 const test_foo = {
-  const (ta, _, _) = Test.originate (main, Unit, 0tez) ;
-  const _ = Test.transfer_to_contract_exn (Test.to_contract (ta), (1,2), 0tez) ;
+  const (ta, _, _) = Test.originate (main, Unit, 0mav) ;
+  const _ = Test.transfer_to_contract_exn (Test.to_contract (ta), (1,2), 0mav) ;
   const x = (Test.get_last_events_from (ta, "foo") : list (int*int)) ;
   const y = (Test.get_last_events_from (ta, "foo") : list (int)) ;
 } with (x,y)
@@ -1331,11 +1331,11 @@ const test_foo = {
 
 ```cameligo test-ligo group=test_ex
 let main (p,_ : (int*int) * unit ) =
-  [Tezos.emit "%foo" p ; Tezos.emit "%foo" p.0],()
+  [Mavryk.emit "%foo" p ; Mavryk.emit "%foo" p.0],()
 
 let test_foo =
-  let (ta, _, _) = Test.originate main () 0tez in
-  let _ = Test.transfer_to_contract_exn (Test.to_contract ta) (1,2) 0tez in
+  let (ta, _, _) = Test.originate main () 0mav in
+  let _ = Test.transfer_to_contract_exn (Test.to_contract ta) (1,2) 0mav in
   (Test.get_last_events_from ta "foo" : (int*int) list),(Test.get_last_events_from ta "foo" : int list)
 ```
 
@@ -1344,14 +1344,14 @@ let test_foo =
 
 ```jsligo test-ligo group=test_ex
 let main = ([p, _] : [[int, int], unit]) => {
-  let op1 = Tezos.emit("%foo", p);
-  let op2 = Tezos.emit("%foo", p[0]);
+  let op1 = Mavryk.emit("%foo", p);
+  let op2 = Mavryk.emit("%foo", p[0]);
   return [list([op1, op2]), unit];
   };
 
 let test = (() : [list<[int,int]>, list<int>] => {
-  let [ta, _, _] = Test.originate(main, unit, 0 as tez);
-  let _ = Test.transfer_to_contract_exn(Test.to_contract(ta), [1,2], 0 as tez);
+  let [ta, _, _] = Test.originate(main, unit, 0 as mav);
+  let _ = Test.transfer_to_contract_exn(Test.to_contract(ta), [1,2], 0 as mav);
   return [Test.get_last_events_from(ta, "foo") as list<[int, int]>, Test.get_last_events_from(ta, "foo") as list<int>];
 }) ();
 ```

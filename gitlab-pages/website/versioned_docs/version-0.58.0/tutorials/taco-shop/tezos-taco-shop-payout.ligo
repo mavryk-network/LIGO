@@ -1,7 +1,7 @@
 type taco_supply is
   record [
     current_stock : nat;
-    max_price     : tez
+    max_price     : mav
   ]
 
 type taco_shop_storage is map (nat, taco_supply)
@@ -9,7 +9,7 @@ type taco_shop_storage is map (nat, taco_supply)
 type return is list (operation) * taco_shop_storage
 
 const ownerAddress : address = ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV" : address)
-const donationAddress : address = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
+const donationAddress : address = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
 
 function buy_taco (const taco_kind_index : nat; var taco_shop_storage : taco_shop_storage) : return is {
     // Retrieve the taco_kind from the contract's storage or fail
@@ -19,10 +19,10 @@ function buy_taco (const taco_kind_index : nat; var taco_shop_storage : taco_sho
       | None -> (failwith ("Unknown kind of taco.") : taco_supply)
       ];
 
-    const current_purchase_price : tez =
+    const current_purchase_price : mav =
       taco_kind.max_price / taco_kind.current_stock;
 
-    if Tezos.get_amount() =/= current_purchase_price then
+    if Mavryk.get_amount() =/= current_purchase_price then
       // We won't sell tacos if the amount is not correct
       failwith ("Sorry, the taco you are trying to purchase has a different price");
 
@@ -33,21 +33,21 @@ function buy_taco (const taco_kind_index : nat; var taco_shop_storage : taco_sho
     taco_shop_storage[taco_kind_index] := taco_kind;
 
     const receiver : contract (unit) =
-      case (Tezos.get_contract_opt (ownerAddress): option(contract (unit))) of [
+      case (Mavryk.get_contract_opt (ownerAddress): option(contract (unit))) of [
         Some (contract) -> contract
       | None -> (failwith ("Not a contract") : contract (unit))
       ];
 
     const donationReceiver : contract (unit) =
-      case (Tezos.get_contract_opt (donationAddress): option(contract (unit))) of [
+      case (Mavryk.get_contract_opt (donationAddress): option(contract (unit))) of [
         Some (contract) -> contract
       | None  -> (failwith ("Not a contract") : contract (unit))
       ];
 
-    const donationAmount : tez = Tezos.get_amount() / 10n;
+    const donationAmount : mav = Mavryk.get_amount() / 10n;
 
     const operations : list (operation) = list [
-      Tezos.transaction (unit, Tezos.get_amount() - donationAmount, receiver);
-      Tezos.transaction (unit, donationAmount, donationReceiver);
+      Mavryk.transaction (unit, Mavryk.get_amount() - donationAmount, receiver);
+      Mavryk.transaction (unit, donationAmount, donationReceiver);
     ]
   } with (operations, taco_shop_storage)

@@ -26,4 +26,4 @@ let init_storage : storage = {
   metadata = (Big_map.empty : (string,bytes) big_map) ;
 }
 
-let test_x = Test.originate main init_storage 0mutez
+let test_x = Test.originate main init_storage 0mumav

@@ -401,9 +401,9 @@ Add the following line at the end of `increment.ligo`
 ```pascaligo test-ligo group=a
 const test_increment = {
     const initial_storage = 10;
-    const (taddr, _, _) = Test.originate(main, initial_storage, 0tez);
+    const (taddr, _, _) = Test.originate(main, initial_storage, 0mav);
     const contr = Test.to_contract(taddr);
-    const _ = Test.transfer_to_contract_exn(contr, Increment(1), 1mutez);
+    const _ = Test.transfer_to_contract_exn(contr, Increment(1), 1mumav);
     const storage = Test.get_storage(taddr);
   } with assert (storage = initial_storage + 1);
 ```
@@ -416,9 +416,9 @@ Add the following line at the end of `increment.mligo`
 ```cameligo test-ligo group=a
 let test_increment =
   let initial_storage = 10 in
-  let (taddr, _, _) = Test.originate main  initial_storage 0tez in
+  let (taddr, _, _) = Test.originate main  initial_storage 0mav in
   let contr = Test.to_contract(taddr) in
-  let _ = Test.transfer_to_contract_exn contr (Increment (32)) 1mutez  in
+  let _ = Test.transfer_to_contract_exn contr (Increment (32)) 1mumav  in
   assert (Test.get_storage(taddr) = initial_storage + 32)
 ```
 
@@ -430,9 +430,9 @@ Add the following line at the end of `increment.religo`
 ```reasonligo test-ligo group=a
 let test_increment = {
   let initial_storage = 10;
-  let (taddr, _, _) = Test.originate(main, initial_storage, 0tez);
+  let (taddr, _, _) = Test.originate(main, initial_storage, 0mav);
   let contr = Test.to_contract(taddr);
-  let _ = Test.transfer_to_contract_exn(contr, (Increment (1)), 1mutez);
+  let _ = Test.transfer_to_contract_exn(contr, (Increment (1)), 1mumav);
   assert (Test.get_storage(taddr) == initial_storage + 1)
 };
 ```
@@ -445,9 +445,9 @@ Add the following line at the end of `increment.jsligo`
 ```jsligo test-ligo group=a
 const test_increment = (() : unit => {
   let initial_storage = 10 as int;
-  let [taddr, _, _] = Test.originate(main, initial_storage, 0 as tez);
+  let [taddr, _, _] = Test.originate(main, initial_storage, 0 as mav);
   let contr = Test.to_contract(taddr);
-  let _ = Test.transfer_to_contract_exn(contr, (Increment (1)), 1 as mutez);
+  let _ = Test.transfer_to_contract_exn(contr, (Increment (1)), 1 as mumav);
   return assert(Test.get_storage(taddr) == initial_storage + 1);
 }) ()
 ```

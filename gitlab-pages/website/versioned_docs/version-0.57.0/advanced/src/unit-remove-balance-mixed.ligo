@@ -2,7 +2,7 @@
 
 #include "remove-balance.ligo"
 
-const _u = Test.reset_state (5n, (list [] : list (tez)))
+const _u = Test.reset_state (5n, (list [] : list (mav)))
 
 (*PART 1*)
 
@@ -15,12 +15,12 @@ const balances : balances = {
 (*PART 2*)
 const test =
   List.iter (
-    (function (const threshold : tez; const expected_size : nat) is {
-       function tester(const input : (balances * tez)) is Map.size(balances_under(input.0, input.1));
+    (function (const threshold : mav; const expected_size : nat) is {
+       function tester(const input : (balances * mav)) is Map.size(balances_under(input.0, input.1));
        const size_ = Test.run(tester, (balances, threshold));
        const expected_size = Test.eval(expected_size);
        Test.log (("expected", expected_size));
        Test.log (("actual", size_));
      } with
        assert (Test.michelson_equal (size_, expected_size))),
-    list [(15tez, 2n); (130tez, 1n); (1200tez, 0n)])
+    list [(15mav, 2n); (130mav, 1n); (1200mav, 0n)])

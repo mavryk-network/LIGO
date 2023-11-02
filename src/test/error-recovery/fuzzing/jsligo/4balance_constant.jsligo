@@ -10,12 +10,12 @@
 
 
 
- type storage = tez ;
+ type storage = mav ;
 
- let main3 = ( [ _unit , _storage ] : [ unit , storage ] ) : [ list < operation > , tez ] =>
- [ ( list [ ] ) as list < operation > ) , Tezos . balance ] ;
+ let main3 = ( [ _unit , _storage ] : [ unit , storage ] ) : [ list < operation > , mav ] =>
+ [ ( list [ ] ) as list < operation > ) , Mavryk . balance ] ;
 
- let main = ( x : [ unit storage ] ) : [ list < operation > , tez ] => main3 ( [ x [ 0 ] , x [ 1 ] ] ) ;
+ let main = ( x : [ unit storage ] ) : [ list < operation > , mav ] => main3 ( [ x [ 0 ] , x [ 1 ] ] ) ;
 
 /*
 Mutation chance is 4

@@ -12,7 +12,7 @@
         hashed=0x0e2ab5866b0ec701a0204881645dc50e1d60668f1433a385e999f0af1b6cd8ce; 
         unused=False; 
         commits=big_map [
-          ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)->record [
+          ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)->record [
             date=("2020-05-29T11:22:33Z" : timestamp); 
             salted_hash=0x0e2ab5866b0ec701a0204881645dc50e1d60668f1433a385e999f0af1b6cd8ce
             ]
@@ -25,7 +25,7 @@
         hashed=0x0e2ab5866b0ec701a0204881645dc50e1d60668f1433a385e999f0af1b6cd8ce; 
         unused=False; 
         commits=big_map [
-          ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)->record [
+          ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)->record [
             date=("2020-05-29T11:22:33Z" : timestamp); 
             salted_hash=0x0e2ab5866b0ec701a0204881645dc50e1d60668f1433a385e999f0af1b6cd8ce
             ]
@@ -42,7 +42,7 @@
           hashed=0x0e2ab5866b0ec701a0204881645dc50e1d60668f1433a385e999f0af1b6cd8ce; 
           unused=False; 
           commits=big_map[
-            ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)->record [
+            ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)->record [
               date=("2020-05-29T11:22:33Z" : timestamp); 
               salted_hash=0x0e2ab5866b0ec701a0204881645dc50e1d60668f1433a385e999f0af1b6cd8ce
               ]
@@ -57,7 +57,7 @@
         hashed=0x0e2ab5866b0ec701a0204881645dc50e1d60668f1433a385e999f0af1b6cd8ce; 
         unused=False; 
         commits=big_map [
-          ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)->record [
+          ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)->record [
             date=("2020-05-29T11:22:33Z" : timestamp); 
             salted_hash=0x0e2ab5866b0ec701a0204881645dc50e1d60668f1433a385e999f0af1b6cd8ce
             ]
@@ -92,8 +92,8 @@ type return is list(operation) * storage
 
 function commit (const p : bytes; var s: storage) : return is
   begin
-    const commit : commit = record [date = Tezos.get_now() + 86_400; salted_hash = p];
-    const updated_map: commit_set = Big_map.update(Tezos.get_sender(), Some(commit), s.commits);
+    const commit : commit = record [date = Mavryk.get_now() + 86_400; salted_hash = p];
+    const updated_map: commit_set = Big_map.update(Mavryk.get_sender(), Some(commit), s.commits);
     s := s with record [commits = updated_map];    
   end with ((nil : list(operation)), s)
 
@@ -102,15 +102,15 @@ function reveal (const p: reveal; var s: storage) : return is
     if not s.unused
     then failwith("This contract has already been used.");
     var commit : commit := record [date = (0: timestamp); salted_hash = ("": bytes)];
-    case Big_map.find_opt(Tezos.get_sender(), s.commits) of [
+    case Big_map.find_opt(Mavryk.get_sender(), s.commits) of [
     | Some (c) -> commit := c
     | None -> failwith("You have not made a commitment to hash against yet.")
     ];
-    if Tezos.get_now() < commit.date
+    if Mavryk.get_now() < commit.date
     then failwith("It has not been 24 hours since your commit yet.");
     const salted : bytes =
       Crypto.sha256(
-        Bytes.concat(p.hashable, Bytes.pack(Tezos.get_sender()))
+        Bytes.concat(p.hashable, Bytes.pack(Mavryk.get_sender()))
       );
     if salted =/= commit.salted_hash
     then failwith("This reveal does not match your commitment.");

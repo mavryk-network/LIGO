@@ -5,6 +5,6 @@ type return is list (operation) * storage
 
 function main (const _p : parameter; const _s : storage) : return is
   {
-    const s : contract(parameter) = Tezos.self("%default") ;
+    const s : contract(parameter) = Mavryk.self("%default") ;
   }
-  with ((nil: list(operation)), Tezos.address (s))
+  with ((nil: list(operation)), Mavryk.address (s))

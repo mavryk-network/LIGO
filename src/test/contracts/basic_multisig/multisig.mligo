@@ -34,7 +34,7 @@ let main (p, s : parameter * storage) : return =
       (failwith "Counters does not match" : storage)
     else
       let packed_payload : bytes =
-        Bytes.pack (payload, p.counter, s.id, Tezos.get_chain_id ()) in
+        Bytes.pack (payload, p.counter, s.id, Mavryk.get_chain_id ()) in
       let valid : nat = 0n in
       let keys : authorized_keys = s.auth in
       let aux =
@@ -57,9 +57,9 @@ let main (p, s : parameter * storage) : return =
         (failwith ("Not enough signatures passed the check") : storage)
       else {s with counter = s.counter + 1n}
     in
-    let contract_opt : payload contract option = Tezos.get_contract_opt(c_address) in
+    let contract_opt : payload contract option = Mavryk.get_contract_opt(c_address) in
     let op = match contract_opt with
-        Some (c) -> [Tezos.transaction payload 0tez c]
+        Some (c) -> [Mavryk.transaction payload 0mav c]
       | None     -> (failwith ("Contract not found") : operation list)
     in
     op, s

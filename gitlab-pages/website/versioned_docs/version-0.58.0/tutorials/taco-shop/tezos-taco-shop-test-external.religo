@@ -13,33 +13,33 @@ let test =
   /* originate the contract with a initial storage */
   let init_storage = Test.compile_expression ((Some filename),
     [%reasonligo ({| Map.literal ([
-      (1n, { current_stock : 50n , max_price : 50tez }) ,
-      (2n, { current_stock : 20n , max_price : 75tez }) , ])
+      (1n, { current_stock : 50n , max_price : 50mav }) ,
+      (2n, { current_stock : 20n , max_price : 75mav }) , ])
     |} : ligo_program) ]) ;
-  let (pedro_taco_shop, _code, _size) = Test.originate_from_file (filename, "buy_taco", ([] : list(string)), init_storage, 0tez) ;
+  let (pedro_taco_shop, _code, _size) = Test.originate_from_file (filename, "buy_taco", ([] : list(string)), init_storage, 0mav) ;
   /* compile test inputs */
   let classico_kind = Test.compile_value (1n) ;
   let unknown_kind = Test.compile_value (3n) ;
 
-  /* Purchasing a Taco with 1tez and checking that the stock has been updated */
-  let ok_case : test_exec_result = Test.transfer (pedro_taco_shop, classico_kind, 1tez) ;
+  /* Purchasing a Taco with 1mav and checking that the stock has been updated */
+  let ok_case : test_exec_result = Test.transfer (pedro_taco_shop, classico_kind, 1mav) ;
   let _u = switch (ok_case) {
     | Success  =>
       let storage = Test.get_storage_of_address (pedro_taco_shop) ;
       let expected = Test.compile_expression ((Some filename),
         [%reasonligo ({| Map.literal ([
-          (1n, { current_stock : 49n , max_price : 50tez }) ,
-          (2n, { current_stock : 20n , max_price : 75tez }) , ])
+          (1n, { current_stock : 49n , max_price : 50mav }) ,
+          (2n, { current_stock : 20n , max_price : 75mav }) , ])
         |} : ligo_program) ]) ;
       assert (Test.michelson_equal (expected, storage))
     | Fail (x) => failwith ("ok test case failed")
   } ;
 
   /* Purchasing an unregistred Taco */
-  let nok_unknown_kind = Test.transfer (pedro_taco_shop, unknown_kind, 1tez) ;
+  let nok_unknown_kind = Test.transfer (pedro_taco_shop, unknown_kind, 1mav) ;
   let _u = assert_string_failure (nok_unknown_kind, "Unknown kind of taco") ;
 
-  /* Attempting to Purchase a Taco with 2tez */
-  let nok_wrong_price = Test.transfer (pedro_taco_shop, classico_kind, 2tez) ;
+  /* Attempting to Purchase a Taco with 2mav */
+  let nok_wrong_price = Test.transfer (pedro_taco_shop, classico_kind, 2mav) ;
   let _u = assert_string_failure (nok_wrong_price, "Sorry, the taco you are trying to purchase has a different price") ;
   ()

@@ -5,10 +5,10 @@ let test =
 
   let acc = Test.new_account () in
   let pkh = Crypto.hash_key acc.1 in
-  let c = Tezos.implicit_account pkh in
-  let a = Tezos.address c in
+  let c = Mavryk.implicit_account pkh in
+  let a = Mavryk.address c in
 
-  let _ = Test.transfer_to_contract_exn c () 1000000tez in
+  let _ = Test.transfer_to_contract_exn c () 1000000mav in
   let () = Test.register_delegate pkh in
   let () = Test.bake_until_n_cycle_end 8n in
 
@@ -16,13 +16,13 @@ let test =
   let () = Test.log(Test.get_balance a) in
   let () = Test.log(Test.get_voting_power pkh) in
   let () = Test.set_baker a in
-  let (ta, _, _) = Test.originate main 41 5tez in
+  let (ta, _, _) = Test.originate main 41 5mav in
 
   let () = Test.log "BALANCE AND VOTING POWER AFTER ORIGINATE" in
   let () = Test.log(Test.get_balance a) in
   let () = Test.log(Test.get_voting_power pkh) in
   let cc = Test.to_contract ta in
-  let _ = Test.transfer_to_contract cc 1 3tez in
+  let _ = Test.transfer_to_contract cc 1 3mav in
 
   let () = Test.log "BALANCE AND VOTING POWER AFTER TRANSFER" in
   let () = Test.log(Test.get_balance a) in

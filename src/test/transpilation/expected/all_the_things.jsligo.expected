@@ -36,13 +36,13 @@ let transfer =
      storage]): 
     [list<operation>,
      storage] => {let new_allowances = 0;
-   if(Tezos.get_sender() == p.address_from) {new_allowances = s.allowances} else {let opt = 
-      Big_map.find_opt([Tezos.get_sender(), p.address_from], s.allowances);
+   if(Mavryk.get_sender() == p.address_from) {new_allowances = s.allowances} else {let opt = 
+      Big_map.find_opt([Mavryk.get_sender(), p.address_from], s.allowances);
     let authorized_value: nat = 
       match(opt, {Some: (value: nat) => value,
        None: () => (0 as nat)});
     if(authorized_value < p.value) {(failwith("Not Enough Allowance")
-       as allowances)} else {new_allowances = Big_map.update([Tezos.
+       as allowances)} else {new_allowances = Big_map.update([Mavryk.
       get_sender(),
       p.address_from], (Some
         (abs(authorized_value - p.value))), s.allowances)}};

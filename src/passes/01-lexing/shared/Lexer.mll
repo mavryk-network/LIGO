@@ -167,7 +167,7 @@ module Make (Options : Options.S) (Token : Token.S) =
 
     (* Tez as a decimal number (internally converted to mumav) *)
 
-    let mk_tez_dec integral fractional suffix state buffer =
+    let mk_mav_dec integral fractional suffix state buffer =
       let state, Region.{region; _} = state#sync buffer in
       let integral'   = Str.(global_replace (regexp "_") "" integral)
       and fractional' = Str.(global_replace (regexp "_") "" fractional) in
@@ -336,7 +336,7 @@ rule scan state = parse
 | symbol             { mk_sym                 state lexbuf }
 | eof                { mk_eof                 state lexbuf }
 | code_inj           { mk_lang  start lang    state lexbuf }
-| decimal tz_or_mav  { mk_tez_dec integral fractional
+| decimal tz_or_mav  { mk_mav_dec integral fractional
                                           mav state lexbuf }
 
 | _ as c { let _, Region.{region; _} = state#sync lexbuf

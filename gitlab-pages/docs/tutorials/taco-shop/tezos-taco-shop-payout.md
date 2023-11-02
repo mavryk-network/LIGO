@@ -32,7 +32,7 @@ people have spent at his shop when buying tacos.
 type taco_supply is
   record [
     current_stock : nat;
-    max_price     : tez
+    max_price     : mav
   ]
 
 type taco_shop_storage is map (nat, taco_supply)
@@ -47,10 +47,10 @@ function buy_taco (const taco_kind_index : nat; var taco_shop_storage : taco_sho
     | None -> (failwith ("Unknown kind of taco.") : taco_supply)
     ];
 
-   const current_purchase_price : tez =
+   const current_purchase_price : mav =
      taco_kind.max_price / taco_kind.current_stock;
 
-  if (Tezos.get_amount ()) =/= current_purchase_price then
+  if (Mavryk.get_amount ()) =/= current_purchase_price then
     // We won't sell tacos if the amount is not correct
     failwith ("Sorry, the taco you are trying to purchase has a different price");
 
@@ -68,7 +68,7 @@ function buy_taco (const taco_kind_index : nat; var taco_shop_storage : taco_sho
 ```cameligo group=a
 type taco_supply = {
     current_stock : nat ;
-    max_price     : tez
+    max_price     : mav
 }
 
 type taco_shop_storage = (nat, taco_supply) map 
@@ -83,12 +83,12 @@ let buy_taco (taco_kind_index, taco_shop_storage : nat * taco_shop_storage) : re
     | None -> (failwith ("Unknown kind of taco.") : taco_supply)
   in
 
-  let current_purchase_price : tez =
+  let current_purchase_price : mav =
     taco_kind.max_price / taco_kind.current_stock in
 
   // We won't sell tacos if the amount is not correct
   let () = 
-    assert_with_error ((Tezos.get_amount ()) <> current_purchase_price) 
+    assert_with_error ((Mavryk.get_amount ()) <> current_purchase_price) 
       "Sorry, the taco you are trying to purchase has a different price" in
 
   // Decrease the stock by 1n, because we have just sold one
@@ -106,7 +106,7 @@ let buy_taco (taco_kind_index, taco_shop_storage : nat * taco_shop_storage) : re
 ```jsligo group=a
 type taco_supply = {
     current_stock : nat ,
-    max_price     : tez
+    max_price     : mav
 };
 
 type taco_shop_storage = map<nat, taco_supply>;
@@ -121,12 +121,12 @@ let buy_taco = ([taco_kind_index, taco_shop_storage] : [nat, taco_shop_storage])
       None: () => (failwith ("Unknown kind of taco.") as taco_supply)
   });
 
-  let current_purchase_price : tez =
+  let current_purchase_price : mav =
     taco_kind.max_price / taco_kind.current_stock;
 
   // We won't sell tacos if the amount is not correct
   let _ = 
-    assert_with_error (((Tezos.get_amount ()) != current_purchase_price),
+    assert_with_error (((Mavryk.get_amount ()) != current_purchase_price),
       "Sorry, the taco you are trying to purchase has a different price");
 
   // Decrease the stock by 1n, because we have just sold one
@@ -148,7 +148,7 @@ at a price based on a simple formula.
 <Syntax syntax="pascaligo">
 
 ```pascaligo skip
-const current_purchase_price : tez =
+const current_purchase_price : mav =
   taco_kind.max_price / taco_kind.current_stock
 ```
 
@@ -156,7 +156,7 @@ const current_purchase_price : tez =
 <Syntax syntax="cameligo">
 
 ```cameligo skip
-let current_purchase_price : tez =
+let current_purchase_price : mav =
   taco_kind.max_price / taco_kind.current_stock
 ```
 
@@ -165,7 +165,7 @@ let current_purchase_price : tez =
 <Syntax syntax="jsligo">
 
 ```jsligo skip
-const current_purchase_price : tez =
+const current_purchase_price : mav =
   taco_kind.max_price / taco_kind.current_stock
 ```
 
@@ -210,7 +210,7 @@ contract with no parameters, or an implicit account.
 ```pascaligo group=ex1
 const ownerAddress : address = ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV" : address);
 const receiver : contract (unit) =
-  case (Tezos.get_contract_opt (ownerAddress): option(contract(unit))) of [
+  case (Mavryk.get_contract_opt (ownerAddress): option(contract(unit))) of [
     Some (contract) -> contract
   | None -> (failwith ("Not a contract") : (contract(unit)))
   ];
@@ -222,7 +222,7 @@ const receiver : contract (unit) =
 ```cameligo group=ex1
 let ownerAddress : address = ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV" : address)
 let receiver : unit contract =
-  match (Tezos.get_contract_opt ownerAddress : unit contract option) with
+  match (Mavryk.get_contract_opt ownerAddress : unit contract option) with
     Some (contract) -> contract
   | None -> (failwith "Not a contract" : unit contract)
 ```
@@ -234,7 +234,7 @@ let receiver : unit contract =
 ```jsligo group=ex1
 let ownerAddress = ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV" as address)
 let receiver : contract<unit> =
-  match ((Tezos.get_contract_opt(ownerAddress) as option<contract<unit>>), {
+  match ((Mavryk.get_contract_opt(ownerAddress) as option<contract<unit>>), {
     Some: (contract : contract<unit>) => contract,
     None: () => (failwith ("Not a contract") as contract<unit>)
   })
@@ -256,7 +256,7 @@ contract.
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=ex1
-const payoutOperation : operation = Tezos.transaction (unit, Tezos.get_amount (), receiver) ;
+const payoutOperation : operation = Mavryk.transaction (unit, Mavryk.get_amount (), receiver) ;
 const operations : list (operation) = list [payoutOperation];
 ```
 
@@ -264,7 +264,7 @@ const operations : list (operation) = list [payoutOperation];
 <Syntax syntax="cameligo">
 
 ```cameligo group=ex1
-let payoutOperation : operation = Tezos.transaction () (Tezos.get_amount ()) receiver
+let payoutOperation : operation = Mavryk.transaction () (Mavryk.get_amount ()) receiver
 let operations : operation list = [payoutOperation]
 ```
 
@@ -273,7 +273,7 @@ let operations : operation list = [payoutOperation]
 <Syntax syntax="jsligo">
 
 ```jsligo group=ex1
-const payoutOperation : operation = Tezos.transaction (unit, Tezos.get_amount (), receiver) ;
+const payoutOperation : operation = Mavryk.transaction (unit, Mavryk.get_amount (), receiver) ;
 const operations : list <operation> = list([payoutOperation]);
 ```
 
@@ -291,7 +291,7 @@ const operations : list <operation> = list([payoutOperation]);
 type taco_supply is
   record [
     current_stock : nat;
-    max_price     : tez
+    max_price     : mav
   ]
 
 type taco_shop_storage is map (nat, taco_supply)
@@ -309,10 +309,10 @@ function buy_taco (const taco_kind_index : nat ; var taco_shop_storage : taco_sh
     | None -> (failwith ("Unknown kind of taco.") : taco_supply)
     ];
 
-   const current_purchase_price : tez =
+   const current_purchase_price : mav =
      taco_kind.max_price / taco_kind.current_stock;
 
-  if (Tezos.get_amount ()) =/= current_purchase_price then
+  if (Mavryk.get_amount ()) =/= current_purchase_price then
     // We won't sell tacos if the amount is not correct
     failwith ("Sorry, the taco you are trying to purchase has a different price");
 
@@ -323,12 +323,12 @@ function buy_taco (const taco_kind_index : nat ; var taco_shop_storage : taco_sh
   taco_shop_storage[taco_kind_index] := taco_kind;
 
   const receiver : contract (unit) =
-    case (Tezos.get_contract_opt (ownerAddress): option(contract(unit))) of [
+    case (Mavryk.get_contract_opt (ownerAddress): option(contract(unit))) of [
       Some (contract) -> contract
     | None -> (failwith ("Not a contract") : (contract(unit)))
     ];
 
-  const payoutOperation : operation = Tezos.transaction (unit, Tezos.get_amount (), receiver);
+  const payoutOperation : operation = Mavryk.transaction (unit, Mavryk.get_amount (), receiver);
   const operations : list(operation) = list [payoutOperation]
 } with ((operations : list (operation)), taco_shop_storage)
 ```
@@ -339,7 +339,7 @@ function buy_taco (const taco_kind_index : nat ; var taco_shop_storage : taco_sh
 ```cameligo group=b
 type taco_supply = {
     current_stock : nat ;
-    max_price     : tez
+    max_price     : mav
 }
 
 type taco_shop_storage = (nat, taco_supply) map 
@@ -357,12 +357,12 @@ let buy_taco (taco_kind_index, taco_shop_storage : nat * taco_shop_storage) : re
     | None -> (failwith ("Unknown kind of taco.") : taco_supply)
   in
 
-  let current_purchase_price : tez =
+  let current_purchase_price : mav =
     taco_kind.max_price / taco_kind.current_stock in
 
   // We won't sell tacos if the amount is not correct
   let () = 
-    assert_with_error ((Tezos.get_amount ()) <> current_purchase_price) 
+    assert_with_error ((Mavryk.get_amount ()) <> current_purchase_price) 
       "Sorry, the taco you are trying to purchase has a different price" in
 
   // Decrease the stock by 1n, because we have just sold one
@@ -372,12 +372,12 @@ let buy_taco (taco_kind_index, taco_shop_storage : nat * taco_shop_storage) : re
   let taco_shop_storage = Map.update taco_kind_index (Some taco_kind) taco_shop_storage in
 
   let receiver : unit contract =
-    match (Tezos.get_contract_opt ownerAddress: unit contract option) with
+    match (Mavryk.get_contract_opt ownerAddress: unit contract option) with
       Some (contract) -> contract
     | None -> (failwith ("Not a contract") : unit contract)
   in
 
-  let payoutOperation : operation = Tezos.transaction () (Tezos.get_amount ()) receiver in
+  let payoutOperation : operation = Mavryk.transaction () (Mavryk.get_amount ()) receiver in
   let operations : operation list = [payoutOperation] in
 
   operations, taco_shop_storage
@@ -390,7 +390,7 @@ let buy_taco (taco_kind_index, taco_shop_storage : nat * taco_shop_storage) : re
 ```jsligo group=b
 type taco_supply = {
     current_stock : nat ,
-    max_price     : tez
+    max_price     : mav
 };
 
 type taco_shop_storage = map<nat, taco_supply>;
@@ -408,12 +408,12 @@ let buy_taco = ([taco_kind_index, taco_shop_storage] : [nat, taco_shop_storage])
       None: () => (failwith ("Unknown kind of taco.") as taco_supply)
   });
 
-  let current_purchase_price : tez =
+  let current_purchase_price : mav =
     taco_kind.max_price / taco_kind.current_stock;
 
   // We won't sell tacos if the amount is not correct
   let _ = 
-    assert_with_error (((Tezos.get_amount ()) != current_purchase_price),
+    assert_with_error (((Mavryk.get_amount ()) != current_purchase_price),
       "Sorry, the taco you are trying to purchase has a different price");
 
   // Decrease the stock by 1n, because we have just sold one
@@ -423,12 +423,12 @@ let buy_taco = ([taco_kind_index, taco_shop_storage] : [nat, taco_shop_storage])
   let taco_shop_storage = Map.update (taco_kind_index, Some(taco_kind_), taco_shop_storage);
 
   let receiver : contract<unit> =
-    match ((Tezos.get_contract_opt (ownerAddress) as option<contract<unit>>), {
+    match ((Mavryk.get_contract_opt (ownerAddress) as option<contract<unit>>), {
       Some: (contract : contract<unit>) => contract,
       None: () => (failwith ("Not a contract") as contract<unit>)
   });
 
-  let payoutOperation : operation = Tezos.transaction (unit, Tezos.get_amount (), receiver);
+  let payoutOperation : operation = Mavryk.transaction (unit, Mavryk.get_amount (), receiver);
   let operations : list<operation> = list([payoutOperation]);
 
   return [operations, taco_shop_storage];
@@ -449,11 +449,11 @@ executed subsequently.
 ligo run dry-run taco-shop.ligo --syntax pascaligo --amount 1 --entry-point buy_taco 1n "map [
    1n -> record [
            current_stock = 50n;
-           max_price = 50tez
+           max_price = 50mav
          ];
    2n -> record [
            current_stock = 20n;
-           max_price = 75tez
+           max_price = 75mav
          ];
 ]"
 ```
@@ -463,8 +463,8 @@ ligo run dry-run taco-shop.ligo --syntax pascaligo --amount 1 --entry-point buy_
 
 ```cameligo skip
 ligo run dry-run taco-shop.mligo --syntax cameligo --amount 1 --entry-point buy_taco 1n "Map.literal [
-    (1n, {  current_stock = 50n;  max_price = 50tez }) ;
-    (2n, {  current_stock = 20n;  max_price = 75tez }) ;
+    (1n, {  current_stock = 50n;  max_price = 50mav }) ;
+    (2n, {  current_stock = 20n;  max_price = 75mav }) ;
 ]"
 ```
 
@@ -474,8 +474,8 @@ ligo run dry-run taco-shop.mligo --syntax cameligo --amount 1 --entry-point buy_
 
 ```jsligo skip
 ligo run dry-run taco-shop.jsligo --syntax jsligo --amount 1 --entry-point buy_taco '1 as n' "Map.literal (list([
-    [(1 as nat), { current_stock : (50 as nat), max_price : (50 as tez) }] ,
-    [(2 as nat), { current_stock : (20 as nat), max_price : (75 as tez) }]
+    [(1 as nat), { current_stock : (50 as nat), max_price : (50 as mav) }] ,
+    [(2 as nat), { current_stock : (20 as nat), max_price : (75 as mav) }]
 ]));"
 ```
 
@@ -504,29 +504,29 @@ sum from each taco purchase.
 
 ```pascaligo group=bonus
 const ownerAddress : address = ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV" : address);
-const donationAddress : address = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address);
+const donationAddress : address = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address);
 
 const receiver : contract (unit) =
-  case (Tezos.get_contract_opt (ownerAddress) : option(contract(unit))) of [
+  case (Mavryk.get_contract_opt (ownerAddress) : option(contract(unit))) of [
     Some (contract) -> contract
   | None -> (failwith ("Not a contract") : contract (unit))
   ];
 
 const donationReceiver : contract (unit) =
-  case (Tezos.get_contract_opt (donationAddress) : option(contract(unit))) of [
+  case (Mavryk.get_contract_opt (donationAddress) : option(contract(unit))) of [
     Some (contract) -> contract
   | None  -> (failwith ("Not a contract") : contract (unit))
   ];
 
-const donationAmount : tez = (Tezos.get_amount ()) / 10n;
+const donationAmount : mav = (Mavryk.get_amount ()) / 10n;
 
 const operations : list (operation) = {
     // Pedro will get 90% of the amount
-    const op = case ((Tezos.get_amount ()) - donationAmount) of [
-      | Some (x) -> Tezos.transaction (unit, x, receiver)
+    const op = case ((Mavryk.get_amount ()) - donationAmount) of [
+      | Some (x) -> Mavryk.transaction (unit, x, receiver)
       | None -> (failwith ("Insufficient balance") )
     ] ;
-  } with list [ op; Tezos.transaction (unit, donationAmount, donationReceiver) ];
+  } with list [ op; Mavryk.transaction (unit, donationAmount, donationReceiver) ];
 ```
 
 </Syntax>
@@ -534,27 +534,27 @@ const operations : list (operation) = {
 
 ```cameligo group=bonus
 let ownerAddress : address = ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV" : address)
-let donationAddress : address = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
+let donationAddress : address = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
 
 let receiver : unit contract =
-  match ((Tezos.get_contract_opt ownerAddress) : unit contract option) with
+  match ((Mavryk.get_contract_opt ownerAddress) : unit contract option) with
     Some contract -> contract
   | None -> ((failwith "Not a contract") : unit contract)
 
 let donationReceiver : unit contract  =
-  match ((Tezos.get_contract_opt donationAddress) : unit contract option) with
+  match ((Mavryk.get_contract_opt donationAddress) : unit contract option) with
     Some contract -> contract
   | None -> ((failwith "Not a contract") : unit contract)
 
-let donationAmount : tez = (Tezos.get_amount ()) / 10n
+let donationAmount : mav = (Mavryk.get_amount ()) / 10n
 
 let operations : operation list =
     // Pedro will get 90% of the amount
-    let op = match ((Tezos.get_amount ()) - donationAmount) with
-      | Some x -> Tezos.transaction () x receiver
+    let op = match ((Mavryk.get_amount ()) - donationAmount) with
+      | Some x -> Mavryk.transaction () x receiver
       | None -> (failwith "Insufficient balance")
     in
-    [ op ; Tezos.transaction () donationAmount donationReceiver ]
+    [ op ; Mavryk.transaction () donationAmount donationReceiver ]
 ```
 
 </Syntax>
@@ -563,28 +563,28 @@ let operations : operation list =
 
 ```jsligo group=bonus
 let ownerAddress = ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV" as address)
-let donationAddress = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address)
+let donationAddress = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address)
 
 let receiver : contract<unit> =
-  match (((Tezos.get_contract_opt (ownerAddress)) as option<contract<unit>>), {
+  match (((Mavryk.get_contract_opt (ownerAddress)) as option<contract<unit>>), {
     Some: (contract : contract<unit>) => contract,
     None: () => ((failwith ("Not a contract")) as contract<unit>)
   });
 
 let donationReceiver : contract<unit>  =
-  match (((Tezos.get_contract_opt (donationAddress)) as option<contract<unit>>), {
+  match (((Mavryk.get_contract_opt (donationAddress)) as option<contract<unit>>), {
     Some: (contract : contract<unit>) => contract,
     None: () => ((failwith ("Not a contract")) as contract<unit>)
   })
 
-let donationAmount = ((Tezos.get_amount ()) / (10 as nat)) as tez;
+let donationAmount = ((Mavryk.get_amount ()) / (10 as nat)) as mav;
 
 // Pedro will get 90% of the amount
-let op1 = match (((Tezos.get_amount ()) - donationAmount), {
-  Some: (x : tez) => Tezos.transaction (unit, x, receiver),
+let op1 = match (((Mavryk.get_amount ()) - donationAmount), {
+  Some: (x : mav) => Mavryk.transaction (unit, x, receiver),
   None: () => failwith ("Insufficient balance")
 });
-let op2 = Tezos.transaction (unit, donationAmount, donationReceiver)
+let op2 = Mavryk.transaction (unit, donationAmount, donationReceiver)
 let operations : list<operation> = list([ op1 , op2 ])
 ```
 

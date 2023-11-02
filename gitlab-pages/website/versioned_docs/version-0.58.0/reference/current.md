@@ -9,16 +9,16 @@ import Syntax from '@theme/Syntax';
 import SyntaxTitle from '@theme/SyntaxTitle';
 
 <SyntaxTitle syntax="pascaligo">
-val get_balance : unit -> tez
+val get_balance : unit -> mav
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-val get_balance : unit -> tez
+val get_balance : unit -> mav
 </SyntaxTitle>
 <SyntaxTitle syntax="reasonligo">
-let get_balance: unit => tez
+let get_balance: unit => mav
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let get_balance: (_u: unit) => tez
+let get_balance: (_u: unit) => mav
 </SyntaxTitle>
 
 Get the balance for the contract.
@@ -26,31 +26,31 @@ Get the balance for the contract.
 <Syntax syntax="pascaligo">
 
 ```pascaligo
-function main (const p : unit; const s : tez) : list (operation) * tez is
-  (nil, Tezos.get_balance ())
+function main (const p : unit; const s : mav) : list (operation) * mav is
+  (nil, Mavryk.get_balance ())
 ```
 
 </Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo
-let main (p,s : unit * tez) = [], Tezos.get_balance()
+let main (p,s : unit * mav) = [], Mavryk.get_balance()
 ```
 
 </Syntax>
 <Syntax syntax="reasonligo">
 
 ```reasonligo
-let main = ((p,s) : (unit, tez)) =>
-  ([], Tezos.get_balance());
+let main = ((p,s) : (unit, mav)) =>
+  ([], Mavryk.get_balance());
 ```
 
 </Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo
-let main = (p: unit, s: tez):[list<operation>, tez] =>
-  [list([]), Tezos.get_balance()];
+let main = (p: unit, s: mav):[list<operation>, mav] =>
+  [list([]), Mavryk.get_balance()];
 ```
 
 </Syntax>
@@ -82,7 +82,7 @@ smart contracts like this:
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=b
-const today         = Tezos.get_now();
+const today         = Mavryk.get_now();
 const one_day       = 86_400;
 const in_24_hrs     = today + one_day;
 const some_date     = ("2000-01-01T10:10:10Z" : timestamp);
@@ -93,7 +93,7 @@ const one_day_later = some_date + one_day;
 <Syntax syntax="cameligo">
 
 ```cameligo group=b
-let today         = Tezos.get_now ()
+let today         = Mavryk.get_now ()
 let one_day       = 86_400
 let in_24_hrs     = today + one_day
 let some_date     = ("2000-01-01t10:10:10Z" : timestamp)
@@ -104,7 +104,7 @@ let one_day_later = some_date + one_day
 <Syntax syntax="reasonligo">
 
 ```reasonligo group=b
-let today         = Tezos.get_now();
+let today         = Mavryk.get_now();
 let one_day       = 86_400;
 let in_24_hrs     = today + one_day;
 let some_date     = ("2000-01-01t10:10:10Z" : timestamp);
@@ -115,7 +115,7 @@ let one_day_later = some_date + one_day;
 <Syntax syntax="jsligo">
 
 ```jsligo group=b
-let today         = Tezos.get_now();
+let today         = Mavryk.get_now();
 let one_day       = 86_400;
 let in_24_hrs     = today + one_day;
 let some_date     = ("2000-01-01t10:10:10Z" as timestamp);
@@ -131,7 +131,7 @@ let one_day_later = some_date + one_day;
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=c
-const today     = Tezos.get_now()
+const today     = Mavryk.get_now()
 const one_day   = 86_400
 const in_24_hrs = today - one_day
 ```
@@ -140,7 +140,7 @@ const in_24_hrs = today - one_day
 <Syntax syntax="cameligo">
 
 ```cameligo group=c
-let today     = Tezos.get_now ()
+let today     = Mavryk.get_now ()
 let one_day   = 86_400
 let in_24_hrs = today - one_day
 ```
@@ -149,7 +149,7 @@ let in_24_hrs = today - one_day
 <Syntax syntax="reasonligo">
 
 ```reasonligo group=c
-let today     = Tezos.get_now();
+let today     = Mavryk.get_now();
 let one_day   = 86_400;
 let in_24_hrs = today - one_day;
 ```
@@ -158,7 +158,7 @@ let in_24_hrs = today - one_day;
 <Syntax syntax="jsligo">
 
 ```jsligo group=c
-let today     = Tezos.get_now();
+let today     = Mavryk.get_now();
 let one_day   = 86_400;
 let in_24_hrs = today - one_day;
 ```
@@ -175,47 +175,47 @@ for numbers
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=c
-const not_tommorow = (Tezos.get_now() = in_24_hrs)
+const not_tommorow = (Mavryk.get_now() = in_24_hrs)
 ```
 
 </Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo group=c
-let not_tomorrow = (Tezos.get_now () = in_24_hrs)
+let not_tomorrow = (Mavryk.get_now () = in_24_hrs)
 ```
 
 </Syntax>
 <Syntax syntax="reasonligo">
 
 ```reasonligo group=c
-let not_tomorrow = (Tezos.get_now() == in_24_hrs);
+let not_tomorrow = (Mavryk.get_now() == in_24_hrs);
 ```
 
 </Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=c
-let not_tomorrow = (Tezos.get_now() == in_24_hrs);
+let not_tomorrow = (Mavryk.get_now() == in_24_hrs);
 ```
 
 </Syntax>
 
 
 <SyntaxTitle syntax="pascaligo">
-val get_amount : unit -> tez
+val get_amount : unit -> mav
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-val get_amount : unit -> tez
+val get_amount : unit -> mav
 </SyntaxTitle>
 <SyntaxTitle syntax="reasonligo">
-let get_amount: unit => tez
+let get_amount: unit => mav
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let get_amount: (_u : unit) => tez
+let get_amount: (_u : unit) => mav
 </SyntaxTitle>
 
-Get the amount of tez provided by the sender to complete this
+Get the amount of mav provided by the sender to complete this
 transaction.
 
 
@@ -224,14 +224,14 @@ transaction.
 
 ```pascaligo
 function threshold (const p : unit) is
-  if Tezos.get_amount() = 100tz then 42 else 0
+  if Mavryk.get_amount() = 100tz then 42 else 0
 ```
 
 </Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo
-let threshold (p : unit) = if Tezos.get_amount () = 100tz then 42 else 0
+let threshold (p : unit) = if Mavryk.get_amount () = 100tz then 42 else 0
 ```
 
 </Syntax>
@@ -239,7 +239,7 @@ let threshold (p : unit) = if Tezos.get_amount () = 100tz then 42 else 0
 
 ```reasonligo
 let threshold = (p : unit) =>
-  if (Tezos.get_amount() == 100tz) { 42; } else { 0; };
+  if (Mavryk.get_amount() == 100tz) { 42; } else { 0; };
 ```
 
 </Syntax>
@@ -247,7 +247,7 @@ let threshold = (p : unit) =>
 
 ```jsligo
 let threshold = (p : unit) => {
-  if (Tezos.get_amount() == (100 as tez)) { return 42; } else { return 0; };
+  if (Mavryk.get_amount() == (100 as mav)) { return 42; } else { return 0; };
 };
 ```
 
@@ -273,28 +273,28 @@ Get the address that initiated the current transaction.
 <Syntax syntax="pascaligo">
 
 ```pascaligo
-function main (const p : unit) is Tezos.get_sender()
+function main (const p : unit) is Mavryk.get_sender()
 ```
 
 </Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo
-let main (p : unit) = Tezos.get_sender ()
+let main (p : unit) = Mavryk.get_sender ()
 ```
 
 </Syntax>
 <Syntax syntax="reasonligo">
 
 ```reasonligo
-let main = (p : unit) => Tezos.get_sender ();
+let main = (p : unit) => Mavryk.get_sender ();
 ```
 
 </Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=e
-let main = (p : unit) => Tezos.get_sender ();
+let main = (p : unit) => Mavryk.get_sender ();
 ```
 
 </Syntax>
@@ -320,8 +320,8 @@ Get the address associated with a value of type `contract`.
 
 ```pascaligo
 function main (const p : key_hash) is {
-  const c = Tezos.implicit_account (p)
-} with Tezos.address (c)
+  const c = Mavryk.implicit_account (p)
+} with Mavryk.address (c)
 ```
 
 </Syntax>
@@ -329,8 +329,8 @@ function main (const p : key_hash) is {
 
 ```cameligo
 let main (p : key_hash) =
-  let c = Tezos.implicit_account p
-  in Tezos.address c
+  let c = Mavryk.implicit_account p
+  in Mavryk.address c
 ```
 
 </Syntax>
@@ -338,8 +338,8 @@ let main (p : key_hash) =
 
 ```reasonligo
 let main = (p : key_hash) => {
-  let c = Tezos.implicit_account (p);
-  Tezos.address (c);
+  let c = Mavryk.implicit_account (p);
+  Mavryk.address (c);
 };
 ```
 
@@ -348,8 +348,8 @@ let main = (p : key_hash) => {
 
 ```jsligo group=f
 let main = (p : key_hash) => {
-  let c = Tezos.implicit_account(p);
-  return Tezos.address(c);
+  let c = Mavryk.implicit_account(p);
+  return Mavryk.address(c);
 };
 ```
 
@@ -376,28 +376,28 @@ Get the address of the currently running contract.
 <Syntax syntax="pascaligo">
 
 ```pascaligo
-function main (const p : unit) is Tezos.get_self_address()
+function main (const p : unit) is Mavryk.get_self_address()
 ```
 
 </Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo
-let main (p : unit) = Tezos.get_self_address ()
+let main (p : unit) = Mavryk.get_self_address ()
 ```
 
 </Syntax>
 <Syntax syntax="reasonligo">
 
 ```reasonligo
-let main = (p : unit) => Tezos.get_self_address ();
+let main = (p : unit) => Mavryk.get_self_address ();
 ```
 
 </Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=g
-let main = (p : unit) => Tezos.get_self_address();
+let main = (p : unit) => Mavryk.get_self_address();
 ```
 
 </Syntax>
@@ -422,7 +422,7 @@ If you are not using entrypoints: use "%default"
 
 ```pascaligo
 function main (const p : unit) is {
-  const c = Tezos.self ("%default");
+  const c = Mavryk.self ("%default");
 } with c
 ```
 
@@ -430,21 +430,21 @@ function main (const p : unit) is {
 <Syntax syntax="cameligo">
 
 ```cameligo
-let main (p : unit) = Tezos.self("%default")
+let main (p : unit) = Mavryk.self("%default")
 ```
 
 </Syntax>
 <Syntax syntax="reasonligo">
 
 ```reasonligo
-let main = (p: unit) => Tezos.self("%default");
+let main = (p: unit) => Mavryk.self("%default");
 ```
 
 </Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=h
-let main = (p: unit) => Tezos.self("%default");
+let main = (p: unit) => Mavryk.self("%default");
 ```
 
 </Syntax>
@@ -472,28 +472,28 @@ See also: http://tezos.gitlab.io/user/glossary.html#implicit-account
 
 ```pascaligo
 function main (const kh : key_hash) is
-  Tezos.implicit_account (kh)
+  Mavryk.implicit_account (kh)
 ```
 
 </Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo
-let main (kh : key_hash) = Tezos.implicit_account kh
+let main (kh : key_hash) = Mavryk.implicit_account kh
 ```
 
 </Syntax>
 <Syntax syntax="reasonligo">
 
 ```reasonligo
-let main = (kh : key_hash) => Tezos.implicit_account (kh);
+let main = (kh : key_hash) => Mavryk.implicit_account (kh);
 ```
 
 </Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=i
-let main = (kh: key_hash) => Tezos.implicit_account(kh);
+let main = (kh: key_hash) => Mavryk.implicit_account(kh);
 ```
 
 </Syntax>
@@ -514,23 +514,23 @@ let get_source: (_u : unit) => address
 
 Get the _originator_ (address) of the current transaction. That is, if
 a chain of transactions led to the current execution get the address
-that began the chain. Not to be confused with `Tezos.get_sender`, which
+that began the chain. Not to be confused with `Mavryk.get_sender`, which
 gives the address of the contract or user which directly caused the
 current transaction.
 
 > ⚠️ There are a few caveats you should keep in mind before using
-> `Tezos.get_source` over `Tezos.get_sender`:
+> `Mavryk.get_source` over `Mavryk.get_sender`:
 >
-> 1. `Tezos.get_source` will never be a contract, so if you want to allow
+> 1. `Mavryk.get_source` will never be a contract, so if you want to allow
 >    contracts (multisigs etc) to operate your contract, you need to
->    use `Tezos.get_sender`
+>    use `Mavryk.get_sender`
 > 2. https://vessenes.com/tx-origin-and-ethereum-oh-my/ -- in general
->    it is somewhat unsafe to assume that `Tezos.get_source` understands
+>    it is somewhat unsafe to assume that `Mavryk.get_source` understands
 >    everything that is going to happen in a transaction. If
->    `Tezos.get_source` transfers to a malicious (or sufficiently
+>    `Mavryk.get_source` transfers to a malicious (or sufficiently
 >    attackable) contract, that contract might potentially transfer to
->    yours, without `Tezos.get_source`'s consent. So if you are using
->    `Tezos.get_source` for authentication, you risk being confused. A
+>    yours, without `Mavryk.get_source`'s consent. So if you are using
+>    `Mavryk.get_source` for authentication, you risk being confused. A
 >    good historical example of this is bakers paying out delegation
 >    rewards. Naive bakers did (and probably still do) just use
 >    tezos-client to transfer to whatever KT1 delegates they had, even
@@ -541,28 +541,28 @@ current transaction.
 <Syntax syntax="pascaligo">
 
 ```pascaligo
-function main (const p : unit) is Tezos.get_source()
+function main (const p : unit) is Mavryk.get_source()
 ```
 
 </Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo
-let main (p : unit) = Tezos.get_source ()
+let main (p : unit) = Mavryk.get_source ()
 ```
 
 </Syntax>
 <Syntax syntax="reasonligo">
 
 ```reasonligo
-let main = (p : unit) => Tezos.get_source ();
+let main = (p : unit) => Mavryk.get_source ();
 ```
 
 </Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=j
-let main = (p : unit) => Tezos.get_source();
+let main = (p : unit) => Mavryk.get_source();
 ```
 
 </Syntax>
@@ -608,7 +608,7 @@ only be used together with `Bytes.pack` and `Bytes.unpack`.
 type storage is bytes
 
 function main (const ignore : unit; const storage: storage) : list (operation) * storage is {
-  const packed = Bytes.pack (Tezos.get_chain_id());
+  const packed = Bytes.pack (Mavryk.get_chain_id());
   if storage =/= packed then failwith ("wrong chain");
 } with (nil, packed)
 ```
@@ -620,7 +620,7 @@ function main (const ignore : unit; const storage: storage) : list (operation) *
 type storage = bytes
 
 let main ((ignore, storage): (unit * storage)) =
-  let packed = Bytes.pack (Tezos.get_chain_id ()) in
+  let packed = Bytes.pack (Mavryk.get_chain_id ()) in
   if (storage <> packed) then
     (failwith "wrong chain" : (operation list * storage))
   else
@@ -634,7 +634,7 @@ let main ((ignore, storage): (unit * storage)) =
 type storage = bytes;
 
 let main = ((ignore, storage): (unit, storage)) => {
-  let packed = Bytes.pack(Tezos.get_chain_id());
+  let packed = Bytes.pack(Mavryk.get_chain_id());
   if (storage != packed) {
     (failwith("wrong chain"): (list(operation), storage));
   } else {
@@ -650,7 +650,7 @@ let main = ((ignore, storage): (unit, storage)) => {
 type storage = bytes;
 
 let main = (ignore: unit, storage: storage):[list<operation>, storage] => {
-  let packed = Bytes.pack(Tezos.get_chain_id());
+  let packed = Bytes.pack(Mavryk.get_chain_id());
   if (storage != packed) {
     return failwith("wrong chain") as [list<operation>, storage];
   } else {
@@ -662,33 +662,33 @@ let main = (ignore: unit, storage: storage):[list<operation>, storage] => {
 </Syntax>
 
 <SyntaxTitle syntax="pascaligo">
-val transaction&lt;param&gt; : param -> mutez -> contract (param) -> operation
+val transaction&lt;param&gt; : param -> mumav -> contract (param) -> operation
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-val transaction : 'param -> mutez -> 'param contract -> operation
+val transaction : 'param -> mumav -> 'param contract -> operation
 </SyntaxTitle>
 <SyntaxTitle syntax="reasonligo">
-let transaction: ('param, mutez , contract('param)) => operation
+let transaction: ('param, mumav , contract('param)) => operation
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let transaction: (action: &apos;param, amount: mutez, contract: contract&lt;&apos;param&gt;) => operation
+let transaction: (action: &apos;param, amount: mumav, contract: contract&lt;&apos;param&gt;) => operation
 </SyntaxTitle>
 
-Transfer `tez` to an account, or run code of another smart contract.
+Transfer `mav` to an account, or run code of another smart contract.
 
 To indicate an account, use `unit` as `param`.
 
 <SyntaxTitle syntax="pascaligo">
-val create_contract &lt;param, storage&gt; : (param * storage -> list (operation) * storage) -> key_hash option -> tez -> storage -> (operation * address)
+val create_contract &lt;param, storage&gt; : (param * storage -> list (operation) * storage) -> key_hash option -> mav -> storage -> (operation * address)
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-val create_contract : ('param * 'storage -> operation list * 'storage) -> key_hash option -> tez -> 'storage -> (operation * address)
+val create_contract : ('param * 'storage -> operation list * 'storage) -> key_hash option -> mav -> 'storage -> (operation * address)
 </SyntaxTitle>
 <SyntaxTitle syntax="reasonligo">
-let create_contract : (('param, 'storage) -> (list(operation), 'storage)) => option(key_hash) => tez => 'storage => (operation, address)
+let create_contract : (('param, 'storage) -> (list(operation), 'storage)) => option(key_hash) => mav => 'storage => (operation, address)
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let create_contract = (contract: ('param, 'storage) => (list &lt;operation&gt;, &apos;storage), delegate: option&lt;key_hash&gt;, balance: tez, init: 'storage) => [operation, address]
+let create_contract = (contract: ('param, 'storage) => (list &lt;operation&gt;, &apos;storage), delegate: option&lt;key_hash&gt;, balance: mav, init: 'storage) => [operation, address]
 </SyntaxTitle>
 
 Construct an operation that originates a contract from a function. The
@@ -864,7 +864,7 @@ let voting_power: key_hash =>nat
 let voting_power: (key_hash:key_hash) => nat
 </SyntaxTitle>
 
-Return the voting power of a given contract. The voting power value is the full staking power of the delegate, currently expressed in mutez. Though, developers should not rely on `Tezos.voting_power` to query the staking power of a contract in mutez: the value returned by `Tezos.voting_power` is still of type` nat and it should only be considered relative to `Tezos.total_voting_power`.  
+Return the voting power of a given contract. The voting power value is the full staking power of the delegate, currently expressed in mumav. Though, developers should not rely on `Mavryk.voting_power` to query the staking power of a contract in mumav: the value returned by `Mavryk.voting_power` is still of type` nat and it should only be considered relative to `Mavryk.total_voting_power`.  
 
 ## Sapling
 
@@ -919,28 +919,28 @@ let sapling_empty_state: sapling_state&lt;n&gt;
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=sap_t
-const x = Tezos.sapling_empty_state
+const x = Mavryk.sapling_empty_state
 ```
 
 </Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo group=sap_t
-let x = Tezos.sapling_empty_state
+let x = Mavryk.sapling_empty_state
 ```
 
 </Syntax>
 <Syntax syntax="reasonligo">
 
 ```reasonligo group=sap_t
-let x = Tezos.sapling_empty_state ;
+let x = Mavryk.sapling_empty_state ;
 ```
 
 </Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=sap_t
-let x = Tezos.sapling_empty_state ;
+let x = Mavryk.sapling_empty_state ;
 ```
 
 </Syntax>
@@ -967,7 +967,7 @@ Verify sapling update
 
 ```pascaligo group=sap_t
 function f (const tr : tr) is
-  case Tezos.sapling_verify_update (tr, x) of [
+  case Mavryk.sapling_verify_update (tr, x) of [
     Some (_, x) -> x
   | None -> failwith ("failed")
   ]
@@ -978,7 +978,7 @@ function f (const tr : tr) is
 
 ```cameligo group=sap_t
 let f (tr : tr) =
-  match Tezos.sapling_verify_update tr x with
+  match Mavryk.sapling_verify_update tr x with
     Some (_, x) -> x
   | None -> (failwith "failed" : int * st)
 ```
@@ -988,7 +988,7 @@ let f (tr : tr) =
 
 ```reasonligo group=sap_t
 let f = (tr : tr) =>
-  switch (Tezos.sapling_verify_update (tr, x)) {
+  switch (Mavryk.sapling_verify_update (tr, x)) {
     | Some (_, x) => x
     | None => failwith ("failed")
   }
@@ -999,7 +999,7 @@ let f = (tr : tr) =>
 
 ```jsligo group=sap_t
 let f = (tr : tr) =>
-  match (Tezos.sapling_verify_update(tr, x), {
+  match (Mavryk.sapling_verify_update(tr, x), {
     Some: p => p[1],
     None: () => failwith ("failed")
   });
@@ -1024,14 +1024,14 @@ let create_ticket: 'value => nat => option&lt;ticket&lt;'value&gt;&gt;
 
 
 To create a ticket, the value and the amount of tickets to be created needs to be provided.
-The ticket will also contain the contract address it originated from (which corresponds to `Tezos.self`).
+The ticket will also contain the contract address it originated from (which corresponds to `Mavryk.self`).
 The resulting value is `None` if the amount is zero.
 
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=manip_ticket
-const my_ticket1 = Option.unopt (Tezos.create_ticket (1, 10n))
-const my_ticket2 = Option.unopt (Tezos.create_ticket ("one", 10n))
+const my_ticket1 = Option.unopt (Mavryk.create_ticket (1, 10n))
+const my_ticket2 = Option.unopt (Mavryk.create_ticket ("one", 10n))
 ```
 
 </Syntax>
@@ -1039,8 +1039,8 @@ const my_ticket2 = Option.unopt (Tezos.create_ticket ("one", 10n))
 <Syntax syntax="cameligo">
 
 ```cameligo group=manip_ticket
-let my_ticket1 = Option.unopt (Tezos.create_ticket 1 10n)
-let my_ticket2 = Option.unopt (Tezos.create_ticket "one" 10n)
+let my_ticket1 = Option.unopt (Mavryk.create_ticket 1 10n)
+let my_ticket2 = Option.unopt (Mavryk.create_ticket "one" 10n)
 ```
 
 </Syntax>
@@ -1048,16 +1048,16 @@ let my_ticket2 = Option.unopt (Tezos.create_ticket "one" 10n)
 <Syntax syntax="reasonligo">
 
 ```reasonligo group=manip_ticket
-let my_ticket1 = Option.unopt(Tezos.create_ticket(1, 10n));
-let my_ticket2 = Option.unopt(Tezos.create_ticket("one", 10n));
+let my_ticket1 = Option.unopt(Mavryk.create_ticket(1, 10n));
+let my_ticket2 = Option.unopt(Mavryk.create_ticket("one", 10n));
 ```
 
 </Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=manip_ticket
-let my_ticket1 = Option.unopt(Tezos.create_ticket(1, 10 as nat));
-let my_ticket2 = Option.unopt(Tezos.create_ticket("one", 10 as nat));
+let my_ticket1 = Option.unopt(Mavryk.create_ticket(1, 10 as nat));
+let my_ticket2 = Option.unopt(Mavryk.create_ticket("one", 10 as nat));
 ```
 
 </Syntax>
@@ -1086,7 +1086,7 @@ To read the content of a ticket, you need to use pattern matching
 
 ```pascaligo group=manip_ticket
 const v =
-  case Tezos.read_ticket (my_ticket1) of [
+  case Mavryk.read_ticket (my_ticket1) of [
     ((_addr, (payload, _amt)), _ticket) -> payload
   ]
 ```
@@ -1100,7 +1100,7 @@ destructuring or pattern matching:
 
 ```cameligo group=manip_ticket
 let v =
-  let (_addr, (payload, _amt)), _ticket = Tezos.read_ticket my_ticket1
+  let (_addr, (payload, _amt)), _ticket = Mavryk.read_ticket my_ticket1
   in payload
 ```
 
@@ -1111,7 +1111,7 @@ To read the content of a ticket, you need to use tuple destructuring:
 
 ```reasonligo group=manip_ticket
 let v2 =
-  let ((_addr, (v, _amt)), _ticket) = Tezos.read_ticket (my_ticket2);
+  let ((_addr, (v, _amt)), _ticket) = Mavryk.read_ticket (my_ticket2);
   v;
 ```
 
@@ -1122,7 +1122,7 @@ To read the content of a ticket, you need to use tuple destructuring:
 
 ```jsligo group=manip_ticket
 let v2 = (_: unit) => {
-  let [[addr, [v, amt]], ticket] = Tezos.read_ticket (my_ticket2);
+  let [[addr, [v, amt]], ticket] = Mavryk.read_ticket (my_ticket2);
   return v;
 }
 ```
@@ -1152,7 +1152,7 @@ Provided a ticket and two amounts, two new tickets will be returned to you if, a
 
 ```pascaligo group=manip_ticket
 const x =
-  case Tezos.split_ticket (my_ticket1, (6n, 4n)) of [
+  case Mavryk.split_ticket (my_ticket1, (6n, 4n)) of [
     None -> failwith ("amt_a + amt_v =/= amt")
   | Some (split_tickets) -> split_tickets
   ]
@@ -1164,7 +1164,7 @@ const x =
 
 ```cameligo group=manip_ticket
 let ta, tb =
-  match Tezos.split_ticket my_ticket1 (6n, 4n) with
+  match Mavryk.split_ticket my_ticket1 (6n, 4n) with
     None -> failwith "amt_a + amt_v <> amt"
   | Some split_tickets -> split_tickets
 ```
@@ -1175,7 +1175,7 @@ let ta, tb =
 
 ```reasonligo group=manip_ticket
 let (ta,tb) =
-  switch (Tezos.split_ticket(my_ticket1, (6n, 4n))) {
+  switch (Mavryk.split_ticket(my_ticket1, (6n, 4n))) {
   | None => failwith("amt_a + amt_v != amt")
   | Some split_tickets => split_tickets
   } ;
@@ -1186,7 +1186,7 @@ let (ta,tb) =
 
 ```jsligo group=manip_ticket
 let [ta, tb] =
-  match(Tezos.split_ticket(my_ticket1, [6 as nat, 4 as nat]), {
+  match(Mavryk.split_ticket(my_ticket1, [6 as nat, 4 as nat]), {
     None: () => failwith("amt_a + amt_v != amt"),
     Some: split_tickets => split_tickets
   });
@@ -1210,7 +1210,7 @@ let join_tickets = &lt;ticket&lt;'value&gt;, ticket&lt;'value&gt;&gt; => option 
 </SyntaxTitle>
 
 To add two tickets, you have to join them. This works as the inverse
-of `Tezos.split_ticket`.  Provided two tickets with the same ticketer
+of `Mavryk.split_ticket`.  Provided two tickets with the same ticketer
 and content, they are deleted and a new ticket will be returned with
 an amount equal to the sum of the amounts of the input tickets.
 
@@ -1218,9 +1218,9 @@ an amount equal to the sum of the amounts of the input tickets.
 
 ```pascaligo group=manip_ticket
 const tc = {
-  const ta = Option.unopt (Tezos.create_ticket (1, 10n));
-  const tb = Option.unopt (Tezos.create_ticket (1, 5n))
-} with Tezos.join_tickets ((ta, tb))
+  const ta = Option.unopt (Mavryk.create_ticket (1, 10n));
+  const tb = Option.unopt (Mavryk.create_ticket (1, 5n))
+} with Mavryk.join_tickets ((ta, tb))
 ```
 
 </Syntax>
@@ -1229,9 +1229,9 @@ const tc = {
 
 ```cameligo group=manip_ticket
 let tc : int ticket option =
-  let ta = Option.unopt (Tezos.create_ticket 1 10n) in
-  let tb = Option.unopt (Tezos.create_ticket 1 5n) in
-  Tezos.join_tickets (ta, tb)
+  let ta = Option.unopt (Mavryk.create_ticket 1 10n) in
+  let tb = Option.unopt (Mavryk.create_ticket 1 5n) in
+  Mavryk.join_tickets (ta, tb)
 ```
 
 </Syntax>
@@ -1240,18 +1240,18 @@ let tc : int ticket option =
 
 ```reasonligo group=manip_ticket
 let tc =
-  let ta = Option.unopt(Tezos.create_ticket(1, 10n));
-  let tb = Option.unopt(Tezos.create_ticket(1, 5n));
-  Tezos.join_tickets((ta, tb));
+  let ta = Option.unopt(Mavryk.create_ticket(1, 10n));
+  let tb = Option.unopt(Mavryk.create_ticket(1, 5n));
+  Mavryk.join_tickets((ta, tb));
 ```
 
 </Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=manip_ticket2
-let ta = Option.unopt(Tezos.create_ticket(1, 10 as nat));
-let tb = Option.unopt(Tezos.create_ticket(1, 5 as nat));
-let tc = Tezos.join_tickets([ta, tb]);
+let ta = Option.unopt(Mavryk.create_ticket(1, 10 as nat));
+let tb = Option.unopt(Mavryk.create_ticket(1, 5 as nat));
+let tc = Mavryk.join_tickets([ta, tb]);
 ```
 
 </Syntax>
@@ -1269,7 +1269,7 @@ type parameter is int
 type return is list (operation) * storage
 
 function main (const i : parameter ; const store : storage) : return is {
-  const my_ticket1 = Option.unopt (Tezos.create_ticket (i, 10n));
+  const my_ticket1 = Option.unopt (Mavryk.create_ticket (i, 10n));
   const res = Big_map.get_and_update ("hello", (Some (my_ticket1)), store);
   var res := (nil, store);
   case res of [(t,x) -> res := (nil, x)]
@@ -1287,7 +1287,7 @@ type return = operation list * storage
 
 let main (x : parameter * storage) : return =
   let i, store = x in
-  let my_ticket1 = Option.unopt (Tezos.create_ticket i 10n) in
+  let my_ticket1 = Option.unopt (Mavryk.create_ticket i 10n) in
   let _, x = Big_map.get_and_update "hello" (Some my_ticket1) store
   in [], x
 ```
@@ -1304,7 +1304,7 @@ type return = (list (operation), storage);
 
 let main = (x : (parameter , storage)) : return => {
   let (i,store) = x ;
-  let my_ticket1 = Option.unopt (Tezos.create_ticket (i, 10n)) ;
+  let my_ticket1 = Option.unopt (Mavryk.create_ticket (i, 10n)) ;
   let (_,x) = Big_map.get_and_update ("hello", Some(my_ticket1), store) ;
   ([], x)
 };
@@ -1322,7 +1322,7 @@ type return_ = [list<operation>, storage];
 
 let main = (x: [parameter, storage]): return_ => {
   let [i, store] = x ;
-  let my_ticket1 = Option.unopt (Tezos.create_ticket (i, 10 as nat));
+  let my_ticket1 = Option.unopt (Mavryk.create_ticket (i, 10 as nat));
   let [_, x] = Big_map.get_and_update ("hello", Some(my_ticket1), store);
   return [list([]), x]
 };
@@ -1346,8 +1346,8 @@ let call_view : string => 'arg => address => option ('ret)
 let call_view : string => 'arg => address => option &lt;&apos;ret&gt;
 </SyntaxTitle>
 
-The primitive `Tezos.call_view` will allow you to call another contract view and get its result by providing the view name; the contract address and the parameter of the view. If the address is nonexistent; the name does not match of of the contract
-view or the parameter type do not match, `Tezos.call_view` will return `None`.
+The primitive `Mavryk.call_view` will allow you to call another contract view and get its result by providing the view name; the contract address and the parameter of the view. If the address is nonexistent; the name does not match of of the contract
+view or the parameter type do not match, `Mavryk.call_view` will return `None`.
 
 ## Global Constants
 
@@ -1364,7 +1364,7 @@ let constant : string => 'a
 let constant : string => 'a
 </SyntaxTitle>
 
-The new primitive `Tezos.constant` allows you to use a predefined constant already registered on chain.
+The new primitive `Mavryk.constant` allows you to use a predefined constant already registered on chain.
 It accepts a hash in the form of a string and will require a type annotation.
 
 ## Events

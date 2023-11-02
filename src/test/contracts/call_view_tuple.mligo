@@ -6,7 +6,7 @@ type store = {
 }
 
 let foo ((s,_) : store * int) : store =
-  let v : unit option= Mavryk.call_view "foo" (Tezos.get_sender (), s.a) s.d in
+  let v : unit option= Mavryk.call_view "foo" (Mavryk.get_sender (), s.a) s.d in
   let () = match v with
     Some _ -> ()
   | None -> () in

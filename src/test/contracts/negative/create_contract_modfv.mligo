@@ -4,7 +4,7 @@ let main (action, store : string * string) : return =
   module Foo = struct
     let store = store
   end in
-  let toto : operation * address = Tezos.create_contract
+  let toto : operation * address = Mavryk.create_contract
     (fun (p, s : nat * string) -> (([] : operation list), Foo.store)) 
     (None: key_hash option) 
     300tz 

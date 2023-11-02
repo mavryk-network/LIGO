@@ -38,7 +38,7 @@
  failwith ( "Counters does not match" )
  else {
  const packed_payload : bytes =
- Bytes . pack ( ( message , param . counter , s . id , Tezos . chain_id ) ) ;
+ Bytes . pack ( ( message , param . counter , s . id , Mavryk . chain_id ) ) ;
  var valid : nat := 0n ;
 
  var keys : authorized_keys := s . auth ;

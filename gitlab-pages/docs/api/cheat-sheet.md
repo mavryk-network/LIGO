@@ -84,12 +84,12 @@ const booleanLogic : bool =
 
 </div>
 <div className="primitive">
-Mutez (micro tez)
+Mutez (micro mav)
 </div>
 <div className="example">
 
 ```pascaligo
-const tez : tez = 42tez
+const mav : mav = 42mav
 ```
 
 </div>
@@ -100,7 +100,7 @@ Address
 
 ```pascaligo
 const tz1address : address =
-  ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
+  ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
 const kt1address : address =
   ("KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD" : address)
 ```
@@ -255,7 +255,7 @@ Type Annotations
 
 ```pascaligo
 const someAddress : address =
-  ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
+  ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
 ```
 
 </div>
@@ -314,18 +314,18 @@ Maps
 <div className="example">
 
 ```pascaligo
-type prices is map (nat, tez)
+type prices is map (nat, mav)
 
 const prices : prices =
   map [
-    10n  -> 60mutez;
-    50n  -> 30mutez;
-    100n -> 10mutez
+    10n  -> 60mumav;
+    50n  -> 30mumav;
+    100n -> 10mumav
   ]
 
-const price : option (tez) = prices[50n]
+const price : option (mav) = prices[50n]
 
-function mutate (var prices : prices) : prices is { prices[200n] := 10mutez } with prices
+function mutate (var prices : prices) : prices is { prices[200n] := 10mumav } with prices
 ```
 
 </div>
@@ -336,10 +336,10 @@ Contracts & Accounts
 
 ```pascaligo group=tezos_specific
 const destinationAddress : address =
-  ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
+  ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
 
 const contract : contract (unit) =
-  case (Tezos.get_contract_opt (Tezos.get_sender()) : option (contract (unit))) of [
+  case (Mavryk.get_contract_opt (Mavryk.get_sender()) : option (contract (unit))) of [
      Some (contract) -> contract
    | None -> (failwith ("No contract.") : contract (unit))
   ]
@@ -354,7 +354,7 @@ Transactions
 ```pascaligo group=tezos_specific
 
 const payment : operation =
-  Tezos.transaction (unit, 100mutez, contract)
+  Mavryk.transaction (unit, 100mumav, contract)
 
 ```
 
@@ -450,13 +450,13 @@ let booleanLogic : bool =
 
 </div>
 <div className="primitive">
-Mutez (micro tez)
+Mutez (micro mav)
 </div>
 <div className="example">
 
 ```cameligo
-let tez : tez = 42tez
-let tez : tez = 7mutez
+let mav : mav = 42mav
+let mav : mav = 7mumav
 ```
 
 </div>
@@ -467,7 +467,7 @@ Address
 
 ```cameligo
 let tz1address : address =
-  ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
+  ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
 let kt1address : address =
   ("KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD" : address)
 ```
@@ -594,7 +594,7 @@ Type Annotations
 
 ```cameligo
 let someAddress : address =
-  ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
+  ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
 ```
 
 </div>
@@ -651,18 +651,18 @@ Maps
 <div className="example">
 
 ```cameligo
-type prices = (nat, tez) map
+type prices = (nat, mav) map
 
 let prices : prices =
   Map.literal [
-    (10n, 60mutez);
-    (50n, 30mutez);
-    (100n, 10mutez);
+    (10n, 60mumav);
+    (50n, 30mumav);
+    (100n, 10mumav);
   ]
 
-let price : tez option = Map.find_opt 50n prices
+let price : mav option = Map.find_opt 50n prices
 
-let prices : prices = Map.update 200n (Some 5mutez) prices
+let prices : prices = Map.update 200n (Some 5mumav) prices
 ```
 
 </div>
@@ -673,10 +673,10 @@ Contracts & Accounts
 
 ```cameligo group=tezos_specific
 let destinationAddress : address =
-  ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
+  ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
 
 let contract : unit contract =
-  match (Tezos.get_contract_opt (Tezos.get_sender ()) : unit contract option) with
+  match (Mavryk.get_contract_opt (Mavryk.get_sender ()) : unit contract option) with
     Some contract -> contract
     | None -> (failwith "no contract" : unit contract)
 ```
@@ -690,7 +690,7 @@ Transactions
 ```cameligo group=tezos_specific
 
 let payment : operation =
-  Tezos.transaction unit 100mutez contract
+  Mavryk.transaction unit 100mumav contract
 
 ```
 
@@ -787,13 +787,13 @@ let booleanLogic: bool =
 
 </div>
 <div className="primitive">
-Mutez (micro tez)
+Mutez (micro mav)
 </div>
 <div className="example">
 
 ```jsligo
-let tez: tez = 42 as tez
-let tez2: tez = 7 as mutez
+let mav: mav = 42 as mav
+let tez2: mav = 7 as mumav
 ```
 
 </div>
@@ -804,7 +804,7 @@ Address
 
 ```jsligo
 let tz1address: address =
-  "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address;
+  "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address;
 let kt1address: address =
   "KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD" as address;
 ```
@@ -945,7 +945,7 @@ Type Annotations
 
 ```jsligo
 let someAddress: address =
-  "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address;
+  "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address;
 ```
 
 </div>
@@ -1001,17 +1001,17 @@ Maps
 <div className="example">
 
 ```jsligo
-type prices = map<nat, tez>;
+type prices = map<nat, mav>;
 
 let prices: prices = Map.literal(list([
-  [10 as nat, 60 as mutez],
-  [50 as nat, 30 as mutez],
-  [100 as nat, 10 as mutez]
+  [10 as nat, 60 as mumav],
+  [50 as nat, 30 as mumav],
+  [100 as nat, 10 as mumav]
 ]));
 
-let price: option<tez> = Map.find_opt(50 as nat, prices)
+let price: option<mav> = Map.find_opt(50 as nat, prices)
 
-let prices2: prices = Map.update(200 as nat, (Some (5 as mutez)), prices)
+let prices2: prices = Map.update(200 as nat, (Some (5 as mumav)), prices)
 ```
 
 </div>
@@ -1022,10 +1022,10 @@ Contracts & Accounts
 
 ```jsligo group=tezos_specific
 let destinationAddress: address =
-  "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address;
+  "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address;
 
 let contract : contract<unit> =
-  match (Tezos.get_contract_opt(Tezos.get_sender()) as option<contract<unit>>, {
+  match (Mavryk.get_contract_opt(Mavryk.get_sender()) as option<contract<unit>>, {
     Some: (contract: contract<unit>) => contract,
     None: () => (failwith("no contract") as contract<unit>)
   })
@@ -1040,7 +1040,7 @@ Transactions
 ```jsligo group=tezos_specific
 
 let payment: operation =
-  Tezos.transaction(unit, 100 as mutez, contract);
+  Mavryk.transaction(unit, 100 as mumav, contract);
 
 ```
 

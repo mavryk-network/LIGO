@@ -23,9 +23,9 @@ let main = ([action, store] : [parameter, storage]) : return_ => {
 
 let _test = () : test_exec_error_balance_too_low => {
   let initial_storage = 42 as int;
-  let [taddr, _, _] = Test.originate(main, initial_storage, 0 as tez);
+  let [taddr, _, _] = Test.originate(main, initial_storage, 0 as mav);
   let contr = Test.to_contract(taddr);
-  let r = Test.transfer_to_contract(contr, (Increment (1)), 100000000 as tez);
+  let r = Test.transfer_to_contract(contr, (Increment (1)), 100000000 as mav);
   return match(r, {
     Success: (n : nat) => failwith("Success"),
     Fail: (e : test_exec_error) => 

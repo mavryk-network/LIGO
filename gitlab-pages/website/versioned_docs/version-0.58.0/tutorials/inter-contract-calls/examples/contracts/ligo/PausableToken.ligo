@@ -39,7 +39,7 @@ function main (const p : parameter; const s : storage) is {
             const amount_ = arg.2
           } with (nop, transfer (src, dst, amount_, s))
     | SetPaused (paused) ->
-        if (Tezos.get_sender() =/= s.owner)
+        if (Mavryk.get_sender() =/= s.owner)
         then (failwith ("Access denied") : (list (operation) * storage))
         else (nop, s with record [paused = paused])
     ]

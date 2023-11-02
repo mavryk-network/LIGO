@@ -73,7 +73,7 @@ Here is an example of a Michelson contract.
 ```text
 { parameter (or (or (nat %add) (nat %sub)) (unit %default)) ;
   storage int ;
-  code { AMOUNT ; PUSH mutez 0 ; ASSERT_CMPEQ ; UNPAIR ;
+  code { AMOUNT ; PUSH mumav 0 ; ASSERT_CMPEQ ; UNPAIR ;
          IF_LEFT
            { IF_LEFT { ADD } { SWAP ; SUB } }
            { DROP ; DROP ; PUSH int 0 } ;

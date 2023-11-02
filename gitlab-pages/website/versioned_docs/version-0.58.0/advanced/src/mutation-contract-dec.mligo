@@ -21,10 +21,10 @@ let main (action, store : parameter * storage) : return =
 
 let originate_and_test (mainf : parameter * storage -> return) =
   let initial_storage = 7 in
-  let (taddr, _, _) = Test.originate mainf initial_storage 0tez in
+  let (taddr, _, _) = Test.originate mainf initial_storage 0mav in
   let contr = Test.to_contract taddr in
-  let _ = Test.transfer_to_contract_exn contr (Increment (7)) 1mutez in
-  let _ = Test.transfer_to_contract_exn contr (Decrement (3)) 1mutez in
+  let _ = Test.transfer_to_contract_exn contr (Increment (7)) 1mumav in
+  let _ = Test.transfer_to_contract_exn contr (Decrement (3)) 1mumav in
   assert (Test.get_storage taddr = initial_storage + 4)
 
 // let test = originate_and_test main

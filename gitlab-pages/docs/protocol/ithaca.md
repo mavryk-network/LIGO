@@ -13,17 +13,17 @@ import SyntaxTitle from '@theme/SyntaxTitle';
 
 #### Subtraction operator `-`
 
-The behaviour of the subtraction operator `-` on values of type `tez` has been changed in protocol Ithaca.
+The behaviour of the subtraction operator `-` on values of type `mav` has been changed in protocol Ithaca.
 
-Subtracting values of type `tez` yeilds on optional value. (This emmits the `SUB_MUTEZ` michelson instruction)
+Subtracting values of type `mav` yeilds on optional value. (This emmits the `SUB_MUMAV` michelson instruction)
 
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=b
 
-const d : option (tez) = 5mutez - 1mutez (* Some (4mutez) *)
+const d : option (mav) = 5mumav - 1mumav (* Some (4mumav) *)
 
-const e : option (tez) = 1mutez - 5mutez (* None *)
+const e : option (mav) = 1mumav - 5mumav (* None *)
 
 ```
 
@@ -32,9 +32,9 @@ const e : option (tez) = 1mutez - 5mutez (* None *)
 
 ```cameligo group=b
 
-let d : tez option = 5mutez - 1mutez (* Some (4mutez) *)
+let d : mav option = 5mumav - 1mumav (* Some (4mumav) *)
 
-let e : tez option = 1mutez - 5mutez (* None *)
+let e : mav option = 1mumav - 5mumav (* None *)
 
 ```
 
@@ -44,9 +44,9 @@ let e : tez option = 1mutez - 5mutez (* None *)
 
 ```jsligo group=b
 
-let d : option<tez> = (5 as mutez) - (1 as mutez); /* Some (4mutez) */
+let d : option<mav> = (5 as mumav) - (1 as mumav); /* Some (4mumav) */
 
-let e : option<tez> = (1 as mutez) - (5 as mutez); /* None */
+let e : option<mav> = (1 as mumav) - (5 as mumav); /* None */
 
 ```
 

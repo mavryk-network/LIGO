@@ -42,17 +42,17 @@ type action is
 
 function transfer (const p : transfer; const s: storage) : list (operation) * storage is {
    var new_allowances : allowances := Big_map.empty;
-  if Tezos.get_sender() = p.address_from
+  if Mavryk.get_sender() = p.address_from
   then { new_allowances := s.allowances; }
   else {
     var authorized_value : nat :=
-    case (Big_map.find_opt ((Tezos.get_sender(),p.address_from), s.allowances)) of [
+    case (Big_map.find_opt ((Mavryk.get_sender(),p.address_from), s.allowances)) of [
         Some (value) -> value
       |  None       -> 0n
     ];
     if (authorized_value < p.value)
     then { failwith("Not Enough Allowance")}
-    else { new_allowances := Big_map.update ((Tezos.get_sender(),p.address_from), (Some (abs(authorized_value - p.value))), s.allowances) }
+    else { new_allowances := Big_map.update ((Mavryk.get_sender(),p.address_from), (Some (abs(authorized_value - p.value))), s.allowances) }
   };
   var sender_balance : nat :=
      case (Big_map.find_opt (p.address_from, s.tokens)) of [
@@ -75,7 +75,7 @@ function transfer (const p : transfer; const s: storage) : list (operation) * st
 
 function approve (const p : approve; const s : storage) : list (operation) * storage is {
   var previous_value : nat :=
-    case Big_map.find_opt ((p.spender, Tezos.get_sender()), s.allowances) of [
+    case Big_map.find_opt ((p.spender, Mavryk.get_sender()), s.allowances) of [
       Some (value) -> value
     | None -> 0n
     ];
@@ -83,7 +83,7 @@ function approve (const p : approve; const s : storage) : list (operation) * sto
   if previous_value > 0n and p.value > 0n
   then failwith ("Unsafe Allowance Change")
   else {
-    new_allowances := Big_map.update ((p.spender, Tezos.get_sender()), (Some (p.value)), s.allowances);
+    new_allowances := Big_map.update ((p.spender, Mavryk.get_sender()), (Some (p.value)), s.allowances);
   }
 } with ((nil: list (operation)), s with record [allowances = new_allowances])
 
@@ -92,7 +92,7 @@ function getAllowance (const p : getAllowance; const s : storage) : list (operat
     Some (value) -> value
   |  None -> 0n
   ];
-  var op : operation := Tezos.transaction (value, 0mutez, p.callback);
+  var op : operation := Mavryk.transaction (value, 0mumav, p.callback);
 } with (list [op],s)
 
 function getBalance (const p : getBalance; const s : storage) : list (operation) * storage is {
@@ -100,12 +100,12 @@ function getBalance (const p : getBalance; const s : storage) : list (operation)
     Some (value) -> value
   |  None -> 0n
   ];
-  var op : operation := Tezos.transaction (value, 0mutez, p.callback);
+  var op : operation := Mavryk.transaction (value, 0mumav, p.callback);
 } with (list [op],s)
 
 function getTotalSupply (const p : getTotalSupply; const s : storage) : list (operation) * storage is {
   var total : nat := s.total_amount;
-  var op : operation := Tezos.transaction (total, 0mutez, p.callback);
+  var op : operation := Mavryk.transaction (total, 0mumav, p.callback);
 } with (list [op],s)
 
 
@@ -119,19 +119,19 @@ function main (const a : action; const s : storage) : list (operation) * storage
   ];
 
 function main (const p : key_hash) : address is {
-  const c : contract (unit) = Tezos.implicit_account (p);
-} with Tezos.address (c)
+  const c : contract (unit) = Mavryk.implicit_account (p);
+} with Mavryk.address (c)
 function check (const p : unit) : int is
   {
     var result : int := 0;
-    if amount = 100tez then result := 42 else result := 0
+    if amount = 100mav then result := 42 else result := 0
   } with result
 (* Test that a string is cast to an address given a type annotation *)
 
 const lst : list (int) = list []
 
 const my_address : address =
-  ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
+  ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
 // Test different ways of calling functions in PascaLIGO
 
 type foo is record [bar : int -> int]
@@ -188,11 +188,11 @@ It is meant to detect the regression detailled in the following issue: https://g
 *)
 
 type parameter is unit
-type storage is tez
+type storage is mav
 type return is list (operation) * storage
 
 function main (const param : parameter; const store: storage) : return is
-  ((nil : list (operation)), Tezos.get_balance())
+  ((nil : list (operation)), Mavryk.get_balance())
 type parameter is unit
 type storage is big_map (int, int) * unit
 type return is list (operation) * storage
@@ -255,7 +255,7 @@ function id_int (const p : int) : option (int) is {
 function id_address (const p : address) : option (address) is {
   const packed : bytes = Bytes.pack (p)
 } with (Bytes.unpack (packed) : option (address))
-function chain_id (const tt : chain_id) : chain_id is Tezos.get_chain_id()
+function chain_id (const tt : chain_id) : chain_id is Mavryk.get_chain_id()
 function check_signature (const pk     : key;
                           const signed : signature;
                           const msg    : bytes) : bool
@@ -289,7 +289,7 @@ function toto (const i : int) : int is
 type card_pattern_id is nat
 
 type card_pattern is record [
-  coefficient : tez;
+  coefficient : mav;
   quantity    : nat
 ]
 
@@ -368,13 +368,13 @@ function sell_single (const action : action_sell_single;
     var cards : cards := s.cards;
     remove action.card_to_sell from map cards;
     s.cards := cards;
-    const price : tez = card_pattern.coefficient * card_pattern.quantity;
+    const price : mav = card_pattern.coefficient * card_pattern.quantity;
     const receiver : contract (unit) =
-      case (Tezos.get_contract_opt (Tezos.get_sender()) : option (contract (unit))) of [
+      case (Mavryk.get_contract_opt (Mavryk.get_sender()) : option (contract (unit))) of [
         Some (contract) -> contract
       | None -> (failwith ("sell_single: No contract.") : contract (unit))
       ];
-    const op : operation = Tezos.transaction (unit, price, receiver);
+    const op : operation = Mavryk.transaction (unit, price, receiver);
     const operations : list (operation) = list [op]
   } with (operations, s)
 
@@ -387,7 +387,7 @@ function buy_single (const action : action_buy_single;
         Some (pattern) -> pattern
       | None -> (failwith ("buy_single: No card pattern.") : card_pattern)
       ];
-    const price : tez =
+    const price : mav =
       card_pattern.coefficient * (card_pattern.quantity + 1n);
     if price > amount then failwith ("Not enough money");
     // Increase quantity
@@ -526,7 +526,7 @@ type return is list (operation) * storage
 function cb (const a : address; const s : storage) : return is
   {
     const c : contract (unit) = get_entrypoint ("%cb", a)
-  } with (list [Tezos.transaction (unit, 0tez, c)], s)
+  } with (list [Mavryk.transaction (unit, 0mav, c)], s)
 
 
 function cbo (const a : address; const s : storage) : return is
@@ -536,7 +536,7 @@ function cbo (const a : address; const s : storage) : return is
         Some (c) -> c
       | None -> (failwith ("cbo: Entrypoint not found.") : contract (unit))
       ]
-  } with (list [Tezos.transaction (unit, 0tez, c)], s)
+  } with (list [Mavryk.transaction (unit, 0mav, c)], s)
 function main (const a : bool; const b : bool) : int is
   {
     var result : int := 27;
@@ -615,18 +615,18 @@ type storage is unit
 type return is list (operation) * storage
 
 function cb (const s : storage) : return is {
-  const c : contract (unit) = get_contract (Tezos.get_sender())
-} with (list [Tezos.transaction (unit, 0tez, c)], s)
+  const c : contract (unit) = get_contract (Mavryk.get_sender())
+} with (list [Mavryk.transaction (unit, 0mav, c)], s)
 
 
 function cbo (const s : unit) : return is
   {
     const c : contract (unit) =
-      case (Tezos.get_contract_opt (Tezos.get_sender()) : option (contract (unit))) of [
+      case (Mavryk.get_contract_opt (Mavryk.get_sender()) : option (contract (unit))) of [
         Some (contract) -> contract
       | None -> (failwith ("contract not found") : contract (unit))
       ]
-  } with (list [Tezos.transaction (unit, 0tez, c)], s)
+  } with (list [Mavryk.transaction (unit, 0mav, c)], s)
 type heap_elt is int * string
 
 function heap_elt_lt (const x : heap_elt;
@@ -817,8 +817,8 @@ type storage is
   record [
     identities: big_map (id, id_details);
     next_id: int;
-    name_price: tez;
-    skip_price: tez;
+    name_price: mav;
+    skip_price: mav;
   ]
 
 (** Preliminary thoughts on ids:
@@ -864,7 +864,7 @@ function buy (const parameter : buy; const storage : storage) : list(operation) 
 function update_owner (const parameter : update_owner; const storage : storage) :
          list(operation) * storage is
   begin
-    if (amount =/= 0mutez)
+    if (amount =/= 0mumav)
     then
       begin
         failwith("Updating owner doesn't cost anything.");
@@ -886,7 +886,7 @@ function update_owner (const parameter : update_owner; const storage : storage) 
 function update_details (const parameter : update_details; const storage : storage ) :
          list(operation) * storage is
   begin
-    if amount =/= 0mutez
+    if amount =/= 0mumav
     then failwith("Updating details doesn't cost anything.");
     const id : int = parameter.id;
     const new_profile : option(bytes) = parameter.new_profile;
@@ -933,7 +933,7 @@ function main (const action : action; const storage : storage) : list(operation)
   | Skip(s) -> skip_ (unit, storage)
   ];
 function main (const kh: key_hash) : contract (unit) is
-  Tezos.implicit_account (kh)
+  Mavryk.implicit_account (kh)
 // Test PascaLIGO inclusion statements, see includer.ligo
 
 const foo : int = 144
@@ -1396,7 +1396,7 @@ function send (const param : send_pt; var s : storage) : return is
   {
     // check sender against the authorized addresses
 
-    if not Set.mem (Tezos.get_sender(), s.authorized_addresses)
+    if not Set.mem (Mavryk.get_sender(), s.authorized_addresses)
     then failwith("Unauthorized address");
 
     // check message size against the stored limit
@@ -1417,24 +1417,24 @@ function send (const param : send_pt; var s : storage) : return is
           (* The message is already stored.
              Increment the counter only if the sender is not already
              associated with the message. *)
-          if not Set.mem (Tezos.get_sender(), voters)
-          then s.proposal_counters[Tezos.get_sender()] :=
-                 get_force (Tezos.get_sender(), s.proposal_counters) + 1n;
-                 new_store := Set.add (Tezos.get_sender(),voters)
+          if not Set.mem (Mavryk.get_sender(), voters)
+          then s.proposal_counters[Mavryk.get_sender()] :=
+                 get_force (Mavryk.get_sender(), s.proposal_counters) + 1n;
+                 new_store := Set.add (Mavryk.get_sender(),voters)
         }
     | None ->
         {
           // the message has never been received before
           s.proposal_counters[sender] :=
-             get_force (Tezos.get_sender(), s.proposal_counters) + 1n;
-             new_store := set [Tezos.get_sender()]
+             get_force (Mavryk.get_sender(), s.proposal_counters) + 1n;
+             new_store := set [Mavryk.get_sender()]
         }
     ];
 
     // check sender counters against the maximum number of proposal
 
     var sender_proposal_counter : nat :=
-      get_force (Tezos.get_sender(), s.proposal_counters);
+      get_force (Mavryk.get_sender(), s.proposal_counters);
 
     if sender_proposal_counter > s.max_proposal
     then failwith ("Maximum number of proposal reached");
@@ -1465,14 +1465,14 @@ function withdraw (const param : withdraw_pt; var s : storage) : return is
       Some (voters) ->
         {
           // The message is stored
-          const new_set : addr_set = Set.remove (Tezos.get_sender(), voters);
+          const new_set : addr_set = Set.remove (Mavryk.get_sender(), voters);
 
           (* Decrement the counter only if the sender was already
              associated with the message *)
 
           if Set.cardinal (voters) =/= Set.cardinal (new_set)
-          then s.proposal_counters[Tezos.get_sender()] :=
-                 abs (get_force (Tezos.get_sender(), s.proposal_counters) - 1n);
+          then s.proposal_counters[Mavryk.get_sender()] :=
+                 abs (get_force (Mavryk.get_sender(), s.proposal_counters) - 1n);
 
           (* If the message is left without any associated addresses,
              remove the corresponding message_store field *)
@@ -1497,7 +1497,7 @@ function main (const param : parameter; const s : storage) : return  is
     (* Withraw vote for message p *)
     | Withdraw (p) -> withdraw (p, s)
 
-    (* Use this action to transfer tez to the contract *)
+    (* Use this action to transfer mav to the contract *)
     | Default (p) -> default (p, s)
   ]
 // storage type
@@ -1540,7 +1540,7 @@ function check_message (const param : check_message_pt;
     failwith ("Counters does not match")
   else {
     const packed_payload : bytes =
-      Bytes.pack ((message, param.counter, s.id, Tezos.get_chain_id()));
+      Bytes.pack ((message, param.counter, s.id, Mavryk.get_chain_id()));
     var valid : nat := 0n;
 
     var keys : authorized_keys := s.auth;
@@ -1671,7 +1671,7 @@ function main (const param : entry_point_t; const s : storage_t) :
     Change_address (p) -> change_address (p,s)
   | Pass_message (p)   -> pass_message (p,s)
   ]
-function main (const p : unit) : address is Tezos.get_self_address()
+function main (const p : unit) : address is Mavryk.get_self_address()
 type parameter is nat
 type storage is int
 type return is list (operation) * storage
@@ -1679,7 +1679,7 @@ type return is list (operation) * storage
 
 function main (const p : parameter; const s : storage) : return is
   {
-    const self_contract: contract(parameter) = Tezos.self("%default") ;
+    const self_contract: contract(parameter) = Mavryk.self("%default") ;
   }
   with ((nil: list(operation)), s)
 
@@ -1691,8 +1691,8 @@ type return is list (operation) * storage
 function main (const p : parameter; const s : storage) : return is
   {
     // const v : string = "%toto" ;
-    const self_contract: contract(int) = Tezos.self("%toto") ;
-    const op : operation = Tezos.transaction (2, 300tz, self_contract) ;
+    const self_contract: contract(int) = Mavryk.self("%toto") ;
+    const op : operation = Mavryk.transaction (2, 300tz, self_contract) ;
   }
   with (list [op], s)type parameter is int
 type storage is nat
@@ -1701,8 +1701,8 @@ type return is list (operation) * storage
 
 function main (const p : parameter; const s : storage) : return is
   {
-    const self_contract: contract(int) = Tezos.self("%default") ;
-    const op : operation = Tezos.transaction (2, 300tz, self_contract) ;
+    const self_contract: contract(int) = Mavryk.self("%default") ;
+    const op : operation = Mavryk.transaction (2, 300tz, self_contract) ;
   }
   with (list [op], s)// Test set iteration in PascaLIGO
 
@@ -1801,24 +1801,24 @@ function main (const p : action; const s : int) : return is
      Increment (n) -> s + n
    | Decrement (n) -> s - n
    ])
-const add_tez : tez = 21mutez + 0.000_021tez
+const add_mav : mav = 21mumav + 0.000_021mav
 
-const sub_tez : tez = 21mutez - 20mutez
+const sub_mav : mav = 21mumav - 20mumav
 
 (* This is not enough. *)
 
-const not_enough_tez : tez = 461_168_601_842_738_7903mutez
+const not_enough_mav : mav = 461_168_601_842_738_7903mumav
 
-const nat_mul_tez : tez = 1n * 100mutez
-const tez_mul_nat : tez = 100mutez * 10n
+const nat_mul_mav : mav = 1n * 100mumav
+const tez_mul_nat : mav = 100mumav * 10n
 
-const tez_div_tez1 : nat = 100mutez / 1mutez
-const tez_div_tez2 : nat = 100mutez / 90mutez
-const tez_div_tez3 : nat = 100mutez / 110mutez
+const tez_div_mav1 : nat = 100mumav / 1mumav
+const tez_div_mav2 : nat = 100mumav / 90mumav
+const tez_div_mav3 : nat = 100mumav / 110mumav
 
-const tez_mod_tez1 : tez = 100mutez mod 1mutez
-const tez_mod_tez2 : tez = 100mutez mod 90mutez
-const tez_mod_tez3 : tez = 100mutez mod 110mutez
+const tez_mod_mav1 : mav = 100mumav mod 1mumav
+const tez_mod_mav2 : mav = 100mumav mod 90mumav
+const tez_mod_mav3 : mav = 100mumav mod 110mumav
 type storage_t is timestamp
 
 type message_t is unit -> list (operation)

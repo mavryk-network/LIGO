@@ -6,7 +6,7 @@ type return is list (operation) * storage
 function main (const p : parameter; const s : storage) : return is
   {
     // const v : string = "%toto" ;
-    const self_contract: contract(int) = Tezos.self("%toto") ;
-    const op : operation = Tezos.transaction (2, 300tz, self_contract) ;
+    const self_contract: contract(int) = Mavryk.self("%toto") ;
+    const op : operation = Mavryk.transaction (2, 300tz, self_contract) ;
   }
   with (list [op], s)

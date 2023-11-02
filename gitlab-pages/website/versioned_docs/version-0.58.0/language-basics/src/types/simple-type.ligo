@@ -1,7 +1,7 @@
-// The type accountBalances denotes maps from addresses to tez
+// The type accountBalances denotes maps from addresses to mav
 
-type account_balances is map (address, tez)
+type account_balances is map (address, mav)
 
 const ledger : account_balances =
   map
-   [("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address) -> 10mutez]
+   [("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address) -> 10mumav]

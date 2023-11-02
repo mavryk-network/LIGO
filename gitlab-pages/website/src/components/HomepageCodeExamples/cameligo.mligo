@@ -25,11 +25,11 @@ let main (action, store : parameter * storage) : operation list * storage =
 let initial_storage = 42
 
 let test_initial_storage =
- let (taddr, _, _) = Test.originate main initial_storage 0tez in
+ let (taddr, _, _) = Test.originate main initial_storage 0mav in
  assert (Test.get_storage taddr = initial_storage)
 
 let test_increment =
- let (taddr, _, _) = Test.originate main initial_storage 0tez in
+ let (taddr, _, _) = Test.originate main initial_storage 0mav in
  let contr = Test.to_contract taddr in
- let _ = Test.transfer_to_contract_exn contr (Increment 1) 1mutez in
+ let _ = Test.transfer_to_contract_exn contr (Increment 1) 1mumav in
  assert (Test.get_storage taddr = initial_storage + 1)

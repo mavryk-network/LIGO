@@ -13,10 +13,10 @@ let balances: michelson_program =
     [ ("a1", bs_addr(1)), ("a2", bs_addr(2)), ("a3", bs_addr(3)) ] );
 
 // PART 2
-let to_tez: nat => michelson_program = (i: nat): michelson_program =>
+let to_mav: nat => michelson_program = (i: nat): michelson_program =>
   Test.compile_expression_subst (
     None : option(string),
-    [%reasonligo ({| ($i * 1tez) |} : ligo_program)],
+    [%reasonligo ({| ($i * 1mav) |} : ligo_program)],
     [ ("i", Test.compile_value(i)) ] );
 
 let test =
@@ -26,7 +26,7 @@ let test =
       let size = Test.compile_expression_subst (
         under_test,
         [%reasonligo ({| Map.size (balances_under ( $b , $threshold )) |} : ligo_program) ],
-        [("b", balances), ("threshold", to_tez(threshold))] );
+        [("b", balances), ("threshold", to_mav(threshold))] );
       let _u = Test.log (("expected", expected_size)) ;
       let _u = Test.log (("actual", size)) ;
       assert ( Test.michelson_equal (size, expected_size) )),

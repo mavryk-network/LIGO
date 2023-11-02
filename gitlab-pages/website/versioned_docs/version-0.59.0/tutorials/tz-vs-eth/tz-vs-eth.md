@@ -685,14 +685,14 @@ In Tezos, the execution model is quite different. Contracts communicate via mess
 <Syntax syntax="pascaligo">
 
 ```pascaligo
-type storage is record [rewardsLeft : tez; beneficiaryAddress : address]
+type storage is record [rewardsLeft : mav; beneficiaryAddress : address]
 
 function treasury (const _ : unit; const s : storage) is {
   // We do our computations first
-  const newStorage = s with record [rewardsLeft = 0mutez];
+  const newStorage = s with record [rewardsLeft = 0mumav];
 
   // Then we find our beneficiary's `handleRewards` entrypoint:
-  const beneficiaryOpt = Tezos.get_entrypoint_opt ("%handleTransfer", s.beneficiaryAddress);
+  const beneficiaryOpt = Mavryk.get_entrypoint_opt ("%handleTransfer", s.beneficiaryAddress);
   const beneficiary
   = case beneficiaryOpt of [
       Some (contract) -> contract
@@ -700,7 +700,7 @@ function treasury (const _ : unit; const s : storage) is {
     ];
 
   // Then we prepare the internal operation we want to perform
-  const operation = Tezos.transaction (Unit, s.rewardsLeft, beneficiary)
+  const operation = Mavryk.transaction (Unit, s.rewardsLeft, beneficiary)
 
   // ...and return both the operations and the updated storage
 } with  (list [operation], newStorage)
@@ -710,21 +710,21 @@ function treasury (const _ : unit; const s : storage) is {
 <Syntax syntax="cameligo">
 
 ```cameligo
-type storage = {rewardsLeft : tez; beneficiaryAddress : address}
+type storage = {rewardsLeft : mav; beneficiaryAddress : address}
 
 let treasury (p, s : unit * storage) =
   // We do our computations first
-  let newStorage = {s with rewardsLeft = 0mutez} in
+  let newStorage = {s with rewardsLeft = 0mumav} in
 
   // Then we find our beneficiary's `handleRewards` entrypoint:
-  let beneficiaryOpt = Tezos.get_entrypoint_opt "%handleTransfer" s.beneficiaryAddress in
+  let beneficiaryOpt = Mavryk.get_entrypoint_opt "%handleTransfer" s.beneficiaryAddress in
   let beneficiary =
     match beneficiaryOpt with
       Some contract -> contract
     | None -> failwith "Beneficiary does not exist" in
 
   // Then we prepare the internal operation we want to perform
-  let operation = Tezos.transaction () s.rewardsLeft beneficiary in
+  let operation = Mavryk.transaction () s.rewardsLeft beneficiary in
 
   // ...and return both the operations and the updated storage
   ([operation], newStorage)
@@ -735,14 +735,14 @@ let treasury (p, s : unit * storage) =
 <Syntax syntax="jsligo">
 
 ```jsligo group=b1
-type storage = {rewardsLeft: tez, beneficiaryAddress: address };
+type storage = {rewardsLeft: mav, beneficiaryAddress: address };
 
 let treasury = (p : unit, s : storage) => {
   // We do our computations first
-  let newStorage = {...s, rewardsLeft: (0 as mutez)};
+  let newStorage = {...s, rewardsLeft: (0 as mumav)};
 
   // Then we find our beneficiary's `handleRewards` entrypoint:
-  let beneficiaryOpt = Tezos.get_entrypoint_opt("%handleTransfer", s.beneficiaryAddress);
+  let beneficiaryOpt = Mavryk.get_entrypoint_opt("%handleTransfer", s.beneficiaryAddress);
   let beneficiary =
     match(beneficiaryOpt, {
      Some: contract => contract,
@@ -750,7 +750,7 @@ let treasury = (p : unit, s : storage) => {
     });
 
   // Then we prepare the internal operation we want to perform
-  let operation = Tezos.transaction(unit, s.rewardsLeft, beneficiary);
+  let operation = Mavryk.transaction(unit, s.rewardsLeft, beneficiary);
   
   // ...and return both the operations and the updated storage
   return [list([operation]), newStorage];
@@ -770,7 +770,7 @@ type parameter is DoSomething | DoSomethingCont of int
 
 function doSomething (const p : unit; const s : int) is {
   (* The callee should call `%doSomethingCont` with the value we want *)
-  const op = Tezos.transaction ...
+  const op = Mavryk.transaction ...
 } with (ops, s)
 
 function doSomethingCont (const p : int; const s : int) is
@@ -785,7 +785,7 @@ type parameter = DoSomething | DoSomethingCont of int
 
 let doSomething (p, s : unit * int) =
   (* The callee should call `%doSomethingCont` with the value we want *)
-  let op = Tezos.transaction ... in
+  let op = Mavryk.transaction ... in
   ([op], s)
 
 let doSomethingCont (p, s : int * int) = ([] : operation list), p + s
@@ -800,7 +800,7 @@ type parameter = ["DoSomething"] | ["DoSomethingCont", int];
 
 let doSomething = ([p, s]: [unit, int]) => {
   /* The callee should call `%doSomethingCont` with the value we want */
-  let op = Tezos.transaction ...;
+  let op = Mavryk.transaction ...;
   return [list([op]), s]
 }
 
@@ -820,7 +820,7 @@ You can find more details on how Tezos contracts interact with each other in our
 Fee model in Tezos is more complicated than the Ethereum one. The most important bits you should know about are:
 1. In Tezos, you _burn_ a certain amount of Tez for increasing the size of the stored data. For example, if you add a new entry to a map or replace a string with a longer one, you must burn your Tez tokens.
 2. When you call a contract, the transaction spends gas for reading, deserialising and type-checking the storage. Also, a certain amount of gas gets spent for serialising and writing the storage back to the context. In practice, it means that **the larger your code and storage are, the more expensive it is to call your contract,** regardless of the number of computations performed. If you have big or unbounded containers in storage, you should most probably use `big_map`.
-3. Emitting internal operations is very expensive in terms of gas: there is a fixed cost of 10000 gas for `Tezos.get_{contract, entrypoint}_opt` plus the cost of reading, deserialising, and type-checking the parameter of the callee.
+3. Emitting internal operations is very expensive in terms of gas: there is a fixed cost of 10000 gas for `Mavryk.get_{contract, entrypoint}_opt` plus the cost of reading, deserialising, and type-checking the parameter of the callee.
 
 Always test for gas consumption and strive to minimise the size of the data stored on chain and the number of internal operations emitted. You can read more on fees in our [Optimisation guide](../optimisation/optimisation.md) or in the [Serokell blog post](https://medium.com/tqtezos/how-to-minimize-transaction-costs-of-tezos-smart-contracts-9962347faf64).
 

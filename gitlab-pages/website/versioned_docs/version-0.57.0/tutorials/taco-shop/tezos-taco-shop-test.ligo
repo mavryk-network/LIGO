@@ -13,13 +13,13 @@ const test = {
   // Originate the contract with a initial storage
   const init_storage =
     map [
-      1n -> record [ current_stock = 50n ; max_price = 50tez ] ;
-      2n -> record [ current_stock = 20n ; max_price = 75tez ] ; ];
-  const (pedro_taco_shop_ta, _code, _size) = Test.originate(buy_taco, init_storage, 0tez) ;
+      1n -> record [ current_stock = 50n ; max_price = 50mav ] ;
+      2n -> record [ current_stock = 20n ; max_price = 75mav ] ; ];
+  const (pedro_taco_shop_ta, _code, _size) = Test.originate(buy_taco, init_storage, 0mav) ;
   // Convert typed_address to contract
   const pedro_taco_shop_ctr = Test.to_contract (pedro_taco_shop_ta);
   // Convert contract to address
-  const pedro_taco_shop = Tezos.address (pedro_taco_shop_ctr);
+  const pedro_taco_shop = Mavryk.address (pedro_taco_shop_ctr);
 
   // Test inputs
   const classico_kind = 1n ;
@@ -33,22 +33,22 @@ const test = {
     ]
   } with b;
 
-  // Purchasing a Taco with 1tez and checking that the stock has been updated
-  const ok_case : test_exec_result = Test.transfer_to_contract (pedro_taco_shop_ctr, classico_kind, 1tez) ;
+  // Purchasing a Taco with 1mav and checking that the stock has been updated
+  const ok_case : test_exec_result = Test.transfer_to_contract (pedro_taco_shop_ctr, classico_kind, 1mav) ;
   const _unit =
      case ok_case of [
     | Success  -> {
       const storage = Test.get_storage (pedro_taco_shop_ta) ;
-    } with (assert (eq_in_map (record [ current_stock = 49n ; max_price = 50tez ], storage, 1n) and
-                    eq_in_map (record [ current_stock = 20n ; max_price = 75tez ], storage, 2n)))
+    } with (assert (eq_in_map (record [ current_stock = 49n ; max_price = 50mav ], storage, 1n) and
+                    eq_in_map (record [ current_stock = 20n ; max_price = 75mav ], storage, 2n)))
     | Fail (x) -> failwith ("ok test case failed")
   ];
 
   // Purchasing an unregistred Taco
-  const nok_unknown_kind = Test.transfer_to_contract (pedro_taco_shop_ctr, unknown_kind, 1tez) ;
+  const nok_unknown_kind = Test.transfer_to_contract (pedro_taco_shop_ctr, unknown_kind, 1mav) ;
   const _u = assert_string_failure (nok_unknown_kind, "Unknown kind of taco") ;
 
-  // Attempting to Purchase a Taco with 2tez
-  const nok_wrong_price = Test.transfer_to_contract (pedro_taco_shop_ctr, classico_kind, 2tez) ;
+  // Attempting to Purchase a Taco with 2mav
+  const nok_wrong_price = Test.transfer_to_contract (pedro_taco_shop_ctr, classico_kind, 2mav) ;
   const _u = assert_string_failure (nok_wrong_price, "Sorry, the taco you are trying to purchase has a different price") ;
   } with unit

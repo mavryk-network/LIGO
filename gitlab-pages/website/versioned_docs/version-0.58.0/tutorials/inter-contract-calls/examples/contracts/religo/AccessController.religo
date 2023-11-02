@@ -17,7 +17,7 @@ let main = ((p, s): (parameter, storage)) => {
     switch(p){
     | Call op =>
         {
-          if (Set.mem(Tezos.get_sender (), s.senders_whitelist)) {
+          if (Set.mem(Mavryk.get_sender (), s.senders_whitelist)) {
             op()
           } else {
             (failwith("Sender is not whitelisted") : operation)
@@ -28,7 +28,7 @@ let main = ((p, s): (parameter, storage)) => {
           let addr = addr_and_callback[0];
           let callback_contract = addr_and_callback[1];
           let whitelisted = Set.mem(addr, s.senders_whitelist);
-          Tezos.transaction(whitelisted, 0mutez, callback_contract)
+          Mavryk.transaction(whitelisted, 0mumav, callback_contract)
         }
     };
   ([op], s)

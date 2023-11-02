@@ -1,7 +1,7 @@
 type taco_supply is
   record [
     current_stock : nat;
-    max_price     : tez
+    max_price     : mav
   ]
 
 type taco_shop_storage is map (nat, taco_supply)
@@ -16,10 +16,10 @@ function buy_taco (const taco_kind_index : nat ; var taco_shop_storage : taco_sh
       | None -> (failwith ("Unknown kind of taco") : taco_supply)
       ];
 
-     const current_purchase_price : tez =
+     const current_purchase_price : mav =
        taco_kind.max_price / taco_kind.current_stock;
 
-    if Tezos.get_amount() =/= current_purchase_price then
+    if Mavryk.get_amount() =/= current_purchase_price then
       // We won't sell tacos if the amount is not correct
       failwith ("Sorry, the taco you are trying to purchase has a different price");
 

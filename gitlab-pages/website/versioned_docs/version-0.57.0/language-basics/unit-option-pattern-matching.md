@@ -297,7 +297,7 @@ module MyModule is {
   type t4 is A of int | D of int
 
   module MySubModule is {
-    type t6 is A of int | E of tez
+    type t6 is A of int | E of mav
   }
 }
 
@@ -305,7 +305,7 @@ module MySecondModule is {
   type t3 is A of int | F of int
 }
 
-type t1 is A of int | G of tez
+type t1 is A of int | G of mav
 
 // The compiler will search above for sum types with an 'A' constructor
 const x = A(42)
@@ -321,7 +321,7 @@ module MyModule = struct
   type t4 = A of int | D of int
 
   module MySubModule = struct
-    type t6 = A of int | E of tez
+    type t6 = A of int | E of mav
   end
 end
 
@@ -329,7 +329,7 @@ module MySecondModule = struct
   type t3 = A of int | F of int
 end
 
-type t1 = A of int | G of tez
+type t1 = A of int | G of mav
 
 // The compiler will search above for sum types with an 'A' constructor
 let x = A 42
@@ -343,7 +343,7 @@ module MyModule = {
   type t4 = A (int) | D (int)
 
   module MySubModule = {
-    type t6 = A (int) | E (tez)
+    type t6 = A (int) | E (mav)
   }
 }
 
@@ -351,7 +351,7 @@ module MySecondModule = {
   type t3 = A (int) | F (int)
 }
 
-type t1 = A (int) | G (tez)
+type t1 = A (int) | G (mav)
 
 // The compiler will search above for sum types with an 'A' constructor
 let x = A(42)
@@ -367,7 +367,7 @@ namespace MyModule {
   type t4 = ["A", int] | ["D", int];
 
   namespace MySubModule {
-    type t6 = ["A", int] | ["E", tez];
+    type t6 = ["A", int] | ["E", mav];
   }
 }
 
@@ -375,7 +375,7 @@ namespace MySecondModule {
   type t3 = ["A", int] | ["F", int];
 }
 
-type t1 = ["A", int] | ["G", tez];
+type t1 = ["A", int] | ["G", mav];
 
 // The compiler will search above for sum types with an 'A' constructor
 const x = A(42);

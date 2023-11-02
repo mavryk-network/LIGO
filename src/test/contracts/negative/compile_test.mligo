@@ -17,8 +17,8 @@ let main (action, store : parameter * storage) : return =
  | Reset         -> 0)
 let _test () =
   let initial_storage = 10 in
-  let (taddr, _, _) = Test.originate main  initial_storage 0tez in
+  let (taddr, _, _) = Test.originate main  initial_storage 0mav in
   let contr = Test.to_contract(taddr) in
-  let _r = Test.transfer_to_contract_exn contr (Increment (32)) 1tez  in
+  let _r = Test.transfer_to_contract_exn contr (Increment (32)) 1mav  in
   (Test.get_storage(taddr) = initial_storage + 32)
 let test = _test ()

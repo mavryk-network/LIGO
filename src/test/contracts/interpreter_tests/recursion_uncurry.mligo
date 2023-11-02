@@ -4,5 +4,5 @@ let main ((n, s) : int * string) : operation list * string =
   ([] : operation list), foo n s
 
 let test =
-  let (_, _, n) = Test.originate main "" 1tez in
+  let (_, _, n) = Test.originate main "" 1mav in
   n

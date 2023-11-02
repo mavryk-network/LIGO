@@ -57,10 +57,10 @@ let transfer (param, storage : transfer * storage) : result =
   let allowances = storage.allowances in
   let tokens = storage.tokens in
   let allowances =
-    if Tezos.get_sender () = param.address_from
+    if Mavryk.get_sender () = param.address_from
     then allowances
     else
-      let allowance_key = { owner = param.address_from ; spender = Tezos.get_sender () } in
+      let allowance_key = { owner = param.address_from ; spender = Mavryk.get_sender () } in
       let authorized_value =
         match Big_map.find_opt allowance_key allowances with
         | Some value -> value
@@ -91,7 +91,7 @@ let transfer (param, storage : transfer * storage) : result =
 
 let approve (param, storage : approve * storage) : result =
   let allowances = storage.allowances in
-  let allowance_key = { owner = Tezos.get_sender () ; spender = param.spender } in
+  let allowance_key = { owner = Mavryk.get_sender () ; spender = param.spender } in
   let previous_value =
     match Big_map.find_opt allowance_key allowances with
     | Some value -> value
@@ -109,22 +109,22 @@ let getAllowance (param, storage : getAllowance * storage) : operation list =
     match Big_map.find_opt param.request storage.allowances with
     | Some value -> value
     | None -> 0n in
-  [Tezos.transaction value 0mutez param.callback]
+  [Mavryk.transaction value 0mumav param.callback]
 
 let getBalance (param, storage : getBalance * storage) : operation list =
   let value =
     match Big_map.find_opt param.owner storage.tokens with
     | Some value -> value
     | None -> 0n in
-  [Tezos.transaction value 0mutez param.callback]
+  [Mavryk.transaction value 0mumav param.callback]
 
 let getTotalSupply (param, storage : getTotalSupply * storage) : operation list =
   let total = storage.total_supply in
-  [Tezos.transaction total 0mutez param.callback]
+  [Mavryk.transaction total 0mumav param.callback]
 
 let main (param, storage : parameter * storage) : result =
   begin
-    if Tezos.get_amount () <> 0mutez
+    if Mavryk.get_amount () <> 0mumav
     then failwith "DontSendTez"
     else ();
     match param with

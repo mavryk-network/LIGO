@@ -1,14 +1,14 @@
 ---
-id: math-numbers-tez
+id: math-numbers-mav
 title: Math, Numbers & Tez
 ---
 
 import Syntax from '@theme/Syntax';
 
 LIGO offers three built-in numerical types: `int`, `nat` and
-`tez`. Values of type `int` are integers; values of type `nat` are
+`mav`. Values of type `int` are integers; values of type `nat` are
 natural numbers (integral numbers greater than or equal to zero);
-values of type `tez` are units of measure of Tezos tokens.
+values of type `mav` are units of measure of Tezos tokens.
 
   * Integer literals are the same found in mainstream programming
     languages, for example, `10`, `-6` and `0`, but there is only one
@@ -21,14 +21,14 @@ values of type `tez` are units of measure of Tezos tokens.
     applies: `0n` is the only way to specify the natural zero.
 
   * Tezos tokens can be specified using literals of three kinds:
-      * units of millionth of `tez`, using the suffix `mutez` after a
-        natural literal, like `10000mutez` or `0mutez`;
-      * units of `tez`, using the suffix `tz` or `tez`, like `3tz` or
-        `3tez`;
-      * decimal amounts of `tz` or `tez`, like `12.3tz` or `12.4tez`.
+      * units of millionth of `mav`, using the suffix `mumav` after a
+        natural literal, like `10000mumav` or `0mumav`;
+      * units of `mav`, using the suffix `tz` or `mav`, like `3tz` or
+        `3mav`;
+      * decimal amounts of `tz` or `mav`, like `12.3tz` or `12.4mav`.
 
 Note that large integral values can be expressed using underscores to
-separate groups of digits, like `1_000mutez` or `0.000_004tez`.
+separate groups of digits, like `1_000mumav` or `0.000_004mav`.
 
 </Syntax>
 <Syntax syntax="cameligo">
@@ -38,14 +38,14 @@ separate groups of digits, like `1_000mutez` or `0.000_004tez`.
     applies: `0n` is the only way to specify the natural zero.
 
   * Tezos tokens can be specified using literals of three kinds:
-      * units of millionth of `tez`, using the suffix `mutez` after a
-        natural literal, like `10000mutez` or `0mutez`;
-      * units of `tez`, using the suffix `tz` or `tez`, like `3tz` or
-        `3tez`;
-      * decimal amounts of `tz` or `tez`, like `12.3tz` or `12.4tez`.
+      * units of millionth of `mav`, using the suffix `mumav` after a
+        natural literal, like `10000mumav` or `0mumav`;
+      * units of `mav`, using the suffix `tz` or `mav`, like `3tz` or
+        `3mav`;
+      * decimal amounts of `tz` or `mav`, like `12.3tz` or `12.4mav`.
 
 Note that large integral values can be expressed using underscores to
-separate groups of digits, like `1_000mutez` or `0.000_004tez`.
+separate groups of digits, like `1_000mumav` or `0.000_004mav`.
 
 </Syntax>
 <Syntax syntax="jsligo">
@@ -55,15 +55,15 @@ separate groups of digits, like `1_000mutez` or `0.000_004tez`.
     integers applies: `0 as nat` is the only way to specify the natural zero.
 
   * Tezos tokens can be specified using literals of three kinds:
-      * units of millionth of `tez`, using the annotation `as mutez` after a
-        natural literal, like `10000 as mutez` or `0 as mutez`;
-      * units of `tez`, using the annotation `as tez`, like `3 as tez`;
-      * decimal amounts of `tez` are not supported by JsLIGO, instead the
-        amount should be written as `mutez`.
+      * units of millionth of `mav`, using the annotation `as mumav` after a
+        natural literal, like `10000 as mumav` or `0 as mumav`;
+      * units of `mav`, using the annotation `as mav`, like `3 as mav`;
+      * decimal amounts of `mav` are not supported by JsLIGO, instead the
+        amount should be written as `mumav`.
 
 
 Note that large integral values can be expressed using underscores to
-separate groups of digits, like `1_000 as mutez`.
+separate groups of digits, like `1_000 as mumav`.
 
 </Syntax>
 
@@ -71,12 +71,12 @@ separate groups of digits, like `1_000 as mutez`.
 
 Addition in LIGO is accomplished by means of the `+` infix
 operator. Some type constraints apply, for example you cannot add a
-value of type `tez` to a value of type `nat`.
+value of type `mav` to a value of type `nat`.
 
 In the following example you can find a series of arithmetic
 operations, including various numerical types. However, some bits
 remain in comments as they would otherwise not compile, for example,
-adding a value of type `int` to a value of type `tez` is invalid. Note
+adding a value of type `int` to a value of type `mav` is invalid. Note
 that adding an integer to a natural number produces an integer.
 
 
@@ -89,11 +89,11 @@ const a : int = 5 + 10
 // nat + int yields int
 const b : int = 5n + 10
 
-// tez + tez yields tez
-const c : tez = 5mutez + 0.000_010tez
+// mav + mav yields mav
+const c : mav = 5mumav + 0.000_010mav
 
-//tez + int or tez + nat is invalid
-// const d : tez = 5mutez + 10n
+//mav + int or mav + nat is invalid
+// const d : mav = 5mumav + 10n
 
 // two nats yield a nat
 const e : nat = 5n + 10n
@@ -108,7 +108,7 @@ const g : int = 1_000_000
 > numbers:
 >
 >```pascaligo
-> const sum : tez = 100_000mutez
+> const sum : mav = 100_000mumav
 >```
 
 </Syntax>
@@ -121,11 +121,11 @@ let a : int = 5 + 10
 // nat + int yields int
 let b : int = 5n + 10
 
-// tez + tez yields tez
-let c : tez = 5mutez + 0.000_010tez
+// mav + mav yields mav
+let c : mav = 5mumav + 0.000_010mav
 
-// tez + int or tez + nat is invalid
-// let d : tez = 5mutez + 10n
+// mav + int or mav + nat is invalid
+// let d : mav = 5mumav + 10n
 
 // two nats yield a nat
 let e : nat = 5n + 10n
@@ -140,7 +140,7 @@ let g : int = 1_000_000
 > numbers:
 >
 >```cameligo
->let sum : tez = 100_000mutez
+>let sum : mav = 100_000mumav
 >```
 
 </Syntax>
@@ -153,11 +153,11 @@ let a : int = 5 + 10;
 // nat + int yields int
 let b : int = 5n + 10;
 
-// tez + tez yields tez
-let c : tez = 5mutez + 0.000_010tez;
+// mav + mav yields mav
+let c : mav = 5mumav + 0.000_010mav;
 
-// tez + int or tez + nat is invalid:
-// let d : tez = 5mutez + 10n;
+// mav + int or mav + nat is invalid:
+// let d : mav = 5mumav + 10n;
 
 // two nats yield a nat
 let e : nat = 5n + 10n;
@@ -171,7 +171,7 @@ let g : int = 1_000_000;
 > Pro tip: you can use underscores for readability when defining large
 > numbers:
 >```reasonligo
->let sum : tez = 100_000mutez;
+>let sum : mav = 100_000mumav;
 >```
 
 </Syntax>
@@ -184,11 +184,11 @@ let a = 5 + 10;
 // nat + int yields int
 let b = (5 as nat) + 10;
 
-// tez + tez yields tez
-let c: tez = (5 as mutez) + (1 as tez);
+// mav + mav yields mav
+let c: mav = (5 as mumav) + (1 as mav);
 
-// tez + int or tez + nat is invalid:
-// let d : tez = (5 as mutez) + (10 as nat);
+// mav + int or mav + nat is invalid:
+// let d : mav = (5 as mumav) + (10 as nat);
 
 // two nats yield a nat
 let e: nat = (5 as nat) + (10 as nat);
@@ -202,7 +202,7 @@ let g = 1_000_000;
 > Pro tip: you can use underscores for readability when defining large
 > numbers:
 >```jsligo
->let sum : tez = 100_000 as mutez;
+>let sum : mav = 100_000 as mumav;
 >```
 
 </Syntax>
@@ -267,16 +267,16 @@ let b: int = (5 as nat) - (2 as nat);
 
 </Syntax>
 
-From protocol *`Ithaca`* onwards subtracting values of type `tez` yeilds on optional value (due to the michelson instruction `SUB_MUTEZ`)
+From protocol *`Ithaca`* onwards subtracting values of type `mav` yeilds on optional value (due to the michelson instruction `SUB_MUMAV`)
 
 
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=b
 
-const d : option (tez) = 5mutez - 1mutez (* Some (4mutez) *)
+const d : option (mav) = 5mumav - 1mumav (* Some (4mumav) *)
 
-const e : option (tez) = 1mutez - 5mutez (* None *)
+const e : option (mav) = 1mumav - 5mumav (* None *)
 
 ```
 
@@ -285,9 +285,9 @@ const e : option (tez) = 1mutez - 5mutez (* None *)
 
 ```cameligo group=b
 
-let d : tez option = 5mutez - 1mutez (* Some (4mutez) *)
+let d : mav option = 5mumav - 1mumav (* Some (4mumav) *)
 
-let e : tez option = 1mutez - 5mutez (* None *)
+let e : mav option = 1mumav - 5mumav (* None *)
 
 ```
 
@@ -296,9 +296,9 @@ let e : tez option = 1mutez - 5mutez (* None *)
 
 ```reasonligo group=b
 
-let d : option(tez) = 5mutez - 1mutez /* Some (4mutez) */
+let d : option(mav) = 5mumav - 1mumav /* Some (4mumav) */
 
-let e : option(tez) = 1mutez - 5mutez /* None */
+let e : option(mav) = 1mumav - 5mumav /* None */
 
 ```
 
@@ -307,9 +307,9 @@ let e : option(tez) = 1mutez - 5mutez /* None */
 
 ```jsligo group=b
 
-let d : option<tez> = (5 as mutez) - (1 as mutez); /* Some (4mutez) */
+let d : option<mav> = (5 as mumav) - (1 as mumav); /* Some (4mumav) */
 
-let e : option<tez> = (1 as mutez) - (5 as mutez); /* None */
+let e : option<mav> = (1 as mumav) - (5 as mumav); /* None */
 
 ```
 
@@ -325,8 +325,8 @@ You can multiply values of the same type, such as:
 const a : int = 5 * 5
 const b : nat = 5n * 5n
 
-// You can also multiply `nat` and `tez`
-const c : tez = 5n * 5mutez
+// You can also multiply `nat` and `mav`
+const c : mav = 5n * 5mumav
 ```
 
 </Syntax>
@@ -336,8 +336,8 @@ const c : tez = 5n * 5mutez
 let a : int = 5 * 5
 let b : nat = 5n * 5n
 
-// You can also multiply `nat` and `tez`
-let c : tez = 5n * 5mutez
+// You can also multiply `nat` and `mav`
+let c : mav = 5n * 5mumav
 ```
 
 </Syntax>
@@ -347,8 +347,8 @@ let c : tez = 5n * 5mutez
 let a : int = 5 * 5;
 let b : nat = 5n * 5n;
 
-// You can also multiply `nat` and `tez`
-let c : tez = 5n * 5mutez;
+// You can also multiply `nat` and `mav`
+let c : mav = 5n * 5mumav;
 ```
 
 </Syntax>
@@ -358,8 +358,8 @@ let c : tez = 5n * 5mutez;
 let a = 5 * 5;
 let b: nat = (5 as nat) * (5 as nat);
 
-// You can also multiply `nat` and `tez`
-let c: tez = (5 as nat) * (5 as mutez);
+// You can also multiply `nat` and `mav`
+let c: mav = (5 as nat) * (5 as mumav);
 ```
 
 </Syntax>
@@ -367,9 +367,9 @@ let c: tez = (5 as nat) * (5 as mutez);
 
 ## Euclidean Division
 
-In LIGO you can divide `int`, `nat`, and `tez`. Here is how:
+In LIGO you can divide `int`, `nat`, and `mav`. Here is how:
 
-> ⚠️ Division of two `tez` values results into a `nat`
+> ⚠️ Division of two `mav` values results into a `nat`
 
 
 <Syntax syntax="pascaligo">
@@ -377,7 +377,7 @@ In LIGO you can divide `int`, `nat`, and `tez`. Here is how:
 ```pascaligo group=d
 const a : int = 10 / 3
 const b : nat = 10n / 3n
-const c : nat = 10mutez / 3mutez
+const c : nat = 10mumav / 3mumav
 ```
 
 </Syntax>
@@ -386,7 +386,7 @@ const c : nat = 10mutez / 3mutez
 ```cameligo group=d
 let a : int = 10 / 3
 let b : nat = 10n / 3n
-let c : nat = 10mutez / 3mutez
+let c : nat = 10mumav / 3mumav
 ```
 
 </Syntax>
@@ -395,7 +395,7 @@ let c : nat = 10mutez / 3mutez
 ```reasonligo group=d
 let a : int = 10 / 3;
 let b : nat = 10n / 3n;
-let c : nat = 10mutez / 3mutez;
+let c : nat = 10mumav / 3mumav;
 ```
 
 </Syntax>
@@ -404,7 +404,7 @@ let c : nat = 10mutez / 3mutez;
 ```jsligo group=d
 let a: int = 10 / 3;
 let b: nat = (10 as nat) / (3 as nat);
-let c: nat = (10 as mutez) / (3 as mutez);
+let c: nat = (10 as mumav) / (3 as mumav);
 ```
 
 </Syntax>

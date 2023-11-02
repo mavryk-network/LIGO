@@ -1,5 +1,5 @@
 (*
-Tezos primitive OPEN_CHEST native return type in michelson is:
+Mavryk.primitive OPEN_CHEST native return type in michelson is:
 ```
 or (bytes, bool)
 ```
@@ -13,7 +13,7 @@ IF_LEFT
       { PUSH unit Unit ; RIGHT unit ; LEFT bytes } } ;
 . . .
 ```
-This way, Tezos.open_chest returns the following type:
+This way, Mavryk.open_chest returns the following type:
 ```
 | Ok_opening of bytes
 | Fail_decrypt

@@ -9,5 +9,5 @@ function main(const action : parameter; const store : storage) : list (operation
   ((nil : list (operation)),
    case action of [
      Increment (n) -> store + n
-   | Extend (k) -> (Tezos.never(k) : storage)
+   | Extend (k) -> (Mavryk.never(k) : storage)
    ])

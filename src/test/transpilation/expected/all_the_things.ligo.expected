@@ -40,14 +40,14 @@ function transfer (const p : transfer; const s : storage)
 {
   var new_allowances : allowances := Big_map.empty;
 
-  if Tezos.get_sender () = p.address_from
+  if Mavryk.get_sender () = p.address_from
   then {
     new_allowances := s.allowances;
   }
   else {
     var authorized_value : nat
     := case (Big_map.find_opt
-              ((Tezos.get_sender (), p.address_from),
+              ((Mavryk.get_sender (), p.address_from),
                s.allowances))
       of [
         Some (value) -> value | None -> 0n
@@ -60,7 +60,7 @@ function transfer (const p : transfer; const s : storage)
     else {
       new_allowances :=
         Big_map.update
-          ((Tezos.get_sender (), p.address_from),
+          ((Mavryk.get_sender (), p.address_from),
            (Some (abs (authorized_value - p.value))),
            s.allowances);
     };
@@ -106,7 +106,7 @@ function approve (const p : approve; const s : storage)
 {
   var previous_value : nat
   := case Big_map.find_opt
-           ((p.spender, Tezos.get_sender ()),
+           ((p.spender, Mavryk.get_sender ()),
             s.allowances)
     of [
       Some (value) -> value | None -> 0n
@@ -119,7 +119,7 @@ function approve (const p : approve; const s : storage)
   else {
     new_allowances :=
       Big_map.update
-        ((p.spender, Tezos.get_sender ()),
+        ((p.spender, Mavryk.get_sender ()),
          (Some (p.value)),
          s.allowances);
   };
@@ -140,7 +140,7 @@ function getAllowance
     ];
 
   var op : operation
-  := Tezos.transaction (value, 0mutez, p.callback);
+  := Mavryk.transaction (value, 0mumav, p.callback);
 } with (list [op], s)
 
 function getBalance
@@ -153,7 +153,7 @@ function getBalance
     ];
 
   var op : operation
-  := Tezos.transaction (value, 0mutez, p.callback);
+  := Mavryk.transaction (value, 0mumav, p.callback);
 } with (list [op], s)
 
 function getTotalSupply
@@ -163,7 +163,7 @@ function getTotalSupply
   var total : nat := s.total_amount;
 
   var op : operation
-  := Tezos.transaction (total, 0mutez, p.callback);
+  := Mavryk.transaction (total, 0mumav, p.callback);
 } with (list [op], s)
 
 function main (const a : action; const s : storage)
@@ -178,14 +178,14 @@ function main (const a : action; const s : storage)
 
 function main (const p : key_hash) : address is
 {
-  const c : contract (unit) = Tezos.implicit_account (p);
-} with Tezos.address (c)
+  const c : contract (unit) = Mavryk.implicit_account (p);
+} with Mavryk.address (c)
 
 function check (const p : unit) : int is
 {
   var result : int := 0;
 
-  if amount = 100000000mutez
+  if amount = 100000000mumav
   then result := 42
   else result := 0;
 } with result
@@ -193,7 +193,7 @@ function check (const p : unit) : int is
 const lst : list (int) = list []
 
 const my_address : address
-= ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
+= ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
 
 type foo is record [bar : int -> int]
 
@@ -267,14 +267,14 @@ function main
 
 type parameter is unit
 
-type storage is tez
+type storage is mav
 
 type return is list (operation) * storage
 
 function main
   (const param : parameter;
    const store : storage) : return is
-  ((nil : list (operation)), Tezos.get_balance ())
+  ((nil : list (operation)), Mavryk.get_balance ())
 
 type parameter is unit
 
@@ -372,7 +372,7 @@ function id_address (const p : address)
 } with (Bytes.unpack (packed) : option (address))
 
 function chain_id (const tt : chain_id) : chain_id is
-  Tezos.get_chain_id ()
+  Mavryk.get_chain_id ()
 
 function check_signature
   (const pk : key;
@@ -411,7 +411,7 @@ function toto (const i : int) : int is
 type card_pattern_id is nat
 
 type card_pattern is
-  record [coefficient : tez; quantity : nat]
+  record [coefficient : mav; quantity : nat]
 
 type card_patterns is map (card_pattern_id, card_pattern)
 
@@ -505,11 +505,11 @@ function sell_single
 
   s.cards := cards;
 
-  const price : tez
+  const price : mav
   = card_pattern.coefficient * card_pattern.quantity;
 
   const receiver : contract (unit)
-  = case (Tezos.get_contract_opt (Tezos.get_sender ())
+  = case (Mavryk.get_contract_opt (Mavryk.get_sender ())
           : option (contract (unit)))
     of [
       Some (contract) -> contract
@@ -519,7 +519,7 @@ function sell_single
     ];
 
   const op : operation
-  = Tezos.transaction (unit, price, receiver);
+  = Mavryk.transaction (unit, price, receiver);
 
   const operations : list (operation) = list [op];
 } with (operations, s)
@@ -536,7 +536,7 @@ function buy_single
          : card_pattern)
     ];
 
-  const price : tez
+  const price : mav
   = card_pattern.coefficient * (card_pattern.quantity + 1n);
 
   if price > amount then failwith ("Not enough money");
@@ -707,7 +707,7 @@ function cb (const a : address; const s : storage)
   : return is
 {
   const c : contract (unit) = get_entrypoint ("%cb", a);
-} with (list [Tezos.transaction (unit, 0mutez, c)], s)
+} with (list [Mavryk.transaction (unit, 0mumav, c)], s)
 
 function cbo (const a : address; const s : storage)
   : return is
@@ -721,7 +721,7 @@ function cbo (const a : address; const s : storage)
         (failwith ("cbo: Entrypoint not found.")
          : contract (unit))
     ];
-} with (list [Tezos.transaction (unit, 0mutez, c)], s)
+} with (list [Mavryk.transaction (unit, 0mumav, c)], s)
 
 function main (const a : bool; const b : bool) : int is
 {
@@ -821,20 +821,20 @@ type return is list (operation) * storage
 function cb (const s : storage) : return is
 {
   const c : contract (unit)
-  = get_contract (Tezos.get_sender ());
-} with (list [Tezos.transaction (unit, 0mutez, c)], s)
+  = get_contract (Mavryk.get_sender ());
+} with (list [Mavryk.transaction (unit, 0mumav, c)], s)
 
 function cbo (const s : unit) : return is
 {
   const c : contract (unit)
-  = case (Tezos.get_contract_opt (Tezos.get_sender ())
+  = case (Mavryk.get_contract_opt (Mavryk.get_sender ())
           : option (contract (unit)))
     of [
       Some (contract) -> contract
     | None ->
         (failwith ("contract not found") : contract (unit))
     ];
-} with (list [Tezos.transaction (unit, 0mutez, c)], s)
+} with (list [Mavryk.transaction (unit, 0mumav, c)], s)
 
 type heap_elt is int * string
 
@@ -1076,8 +1076,8 @@ type storage is
   record [
     identities : big_map (id, id_details);
     next_id : int;
-    name_price : tez;
-    skip_price : tez
+    name_price : mav;
+    skip_price : mav
   ]
 
 function buy
@@ -1122,7 +1122,7 @@ function update_owner
   (const parameter : update_owner;
    const storage : storage) : list (operation) * storage is
 {
-  if (amount =/= 0mutez)
+  if (amount =/= 0mumav)
   then {
     failwith ("Updating owner doesn't cost anything.");
   };
@@ -1155,7 +1155,7 @@ function update_details
   (const parameter : update_details;
    const storage : storage) : list (operation) * storage is
 {
-  if amount =/= 0mutez
+  if amount =/= 0mumav
   then failwith ("Updating details doesn't cost anything.");
 
   const id : int = parameter.id;
@@ -1228,7 +1228,7 @@ function main
   ]
 
 function main (const kh : key_hash) : contract (unit) is
-  Tezos.implicit_account (kh)
+  Mavryk.implicit_account (kh)
 
 const foo : int = 144
 
@@ -1837,7 +1837,7 @@ function send (const param : send_pt; var s : storage)
   : return is
 {
   if not Set.mem
-       (Tezos.get_sender (),
+       (Mavryk.get_sender (),
         s.authorized_addresses)
   then failwith ("Unauthorized address");
 
@@ -1853,30 +1853,30 @@ function send (const param : send_pt; var s : storage)
   case map_get (packed_msg, s.message_store) of [
     Some (voters) ->
       {
-        if not Set.mem (Tezos.get_sender (), voters)
+        if not Set.mem (Mavryk.get_sender (), voters)
         then
-          s.proposal_counters [Tezos.get_sender ()]  :=
+          s.proposal_counters [Mavryk.get_sender ()]  :=
             get_force
-              (Tezos.get_sender (),
+              (Mavryk.get_sender (),
                s.proposal_counters)
             + 1n;
 
-        new_store := Set.add (Tezos.get_sender (), voters);
+        new_store := Set.add (Mavryk.get_sender (), voters);
       }
   | None ->
       {
         s.proposal_counters [sender]  :=
           get_force
-            (Tezos.get_sender (),
+            (Mavryk.get_sender (),
              s.proposal_counters)
           + 1n;
 
-        new_store := set [Tezos.get_sender ()];
+        new_store := set [Mavryk.get_sender ()];
       }
   ];
 
   var sender_proposal_counter : nat
-  := get_force (Tezos.get_sender (), s.proposal_counters);
+  := get_force (Mavryk.get_sender (), s.proposal_counters);
 
   if sender_proposal_counter > s.max_proposal
   then failwith ("Maximum number of proposal reached");
@@ -1914,14 +1914,14 @@ function withdraw
     Some (voters) ->
       {
         const new_set : addr_set
-        = Set.remove (Tezos.get_sender (), voters);
+        = Set.remove (Mavryk.get_sender (), voters);
 
         if Set.cardinal (voters) =/= Set.cardinal (new_set)
         then
-          s.proposal_counters [Tezos.get_sender ()]  :=
+          s.proposal_counters [Mavryk.get_sender ()]  :=
             abs
               (get_force
-                 (Tezos.get_sender (),
+                 (Mavryk.get_sender (),
                   s.proposal_counters)
                - 1n);
 
@@ -1987,7 +1987,7 @@ function check_message
     const packed_payload : bytes
     = Bytes.pack
         ((message, param.counter, s.id,
-          Tezos.get_chain_id ()));
+          Mavryk.get_chain_id ()));
 
     var valid : nat := 0n;
 
@@ -2149,7 +2149,7 @@ function main
   ]
 
 function main (const p : unit) : address is
-  Tezos.get_self_address ()
+  Mavryk.get_self_address ()
 
 type parameter is nat
 
@@ -2161,7 +2161,7 @@ function main (const p : parameter; const s : storage)
   : return is
 {
   const self_contract : contract (parameter)
-  = Tezos.self ("%default");
+  = Mavryk.self ("%default");
 } with ((nil : list (operation)), s)
 
 type parameter is Default | Toto of int
@@ -2174,10 +2174,10 @@ function main (const p : parameter; const s : storage)
   : return is
 {
   const self_contract : contract (int)
-  = Tezos.self ("%toto");
+  = Mavryk.self ("%toto");
 
   const op : operation
-  = Tezos.transaction (2, 300000000mutez, self_contract);
+  = Mavryk.transaction (2, 300000000mumav, self_contract);
 } with (list [op], s)
 
 type parameter is int
@@ -2190,10 +2190,10 @@ function main (const p : parameter; const s : storage)
   : return is
 {
   const self_contract : contract (int)
-  = Tezos.self ("%default");
+  = Mavryk.self ("%default");
 
   const op : operation
-  = Tezos.transaction (2, 300000000mutez, self_contract);
+  = Mavryk.transaction (2, 300000000mumav, self_contract);
 } with (list [op], s)
 
 function iter_op (const s : set (int)) : int is
@@ -2312,27 +2312,27 @@ function main (const p : action; const s : int) : return is
      Increment (n) -> s + n | Decrement (n) -> s - n
    ])
 
-const add_tez : tez = 21mutez + 21mutez
+const add_mav : mav = 21mumav + 21mumav
 
-const sub_tez : tez = 21mutez - 20mutez
+const sub_mav : mav = 21mumav - 20mumav
 
-const not_enough_tez : tez = 4611686018427387903mutez
+const not_enough_mav : mav = 4611686018427387903mumav
 
-const nat_mul_tez : tez = 1n * 100mutez
+const nat_mul_mav : mav = 1n * 100mumav
 
-const tez_mul_nat : tez = 100mutez * 10n
+const tez_mul_nat : mav = 100mumav * 10n
 
-const tez_div_tez1 : nat = 100mutez / 1mutez
+const tez_div_mav1 : nat = 100mumav / 1mumav
 
-const tez_div_tez2 : nat = 100mutez / 90mutez
+const tez_div_mav2 : nat = 100mumav / 90mumav
 
-const tez_div_tez3 : nat = 100mutez / 110mutez
+const tez_div_mav3 : nat = 100mumav / 110mumav
 
-const tez_mod_tez1 : tez = 100mutez mod 1mutez
+const tez_mod_mav1 : mav = 100mumav mod 1mumav
 
-const tez_mod_tez2 : tez = 100mutez mod 90mutez
+const tez_mod_mav2 : mav = 100mumav mod 90mumav
 
-const tez_mod_tez3 : tez = 100mutez mod 110mutez
+const tez_mod_mav3 : mav = 100mumav mod 110mumav
 
 type storage_t is timestamp
 

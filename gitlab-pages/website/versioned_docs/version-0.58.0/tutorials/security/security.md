@@ -22,33 +22,33 @@ Let us look at a seemingly innocent wallet contract that stores an event log:
 ```pascaligo
 type parameter is
   Fund
-| Send of address * tez
+| Send of address * mav
 
 type tx is
-  Incoming of address * tez
-| Outgoing of address * tez
+  Incoming of address * mav
+| Outgoing of address * mav
 
 type storage is record [owner : address; transactionLog : list (tx)]
 
-function send (const dst : address; const @amount : tez) is {
-  const callee = Tezos.get_contract_opt (dst)
+function send (const dst : address; const @amount : mav) is {
+  const callee = Mavryk.get_contract_opt (dst)
 } with
     case callee of [
       Some (contract) -> {
-        const op = Tezos.transaction (Unit, @amount, contract)
+        const op = Mavryk.transaction (Unit, @amount, contract)
       } with (Outgoing (dst, @amount), list [op])
     | None -> (failwith ("Could not send tokens") : tx * list (operation))
     ]
 
-function receive (const src : address; const @amount : tez) is
+function receive (const src : address; const @amount : mav) is
   (Incoming (src, @amount), (list [] : list (operation)))
 
 function main (const p : parameter; const s : storage) is {
   const result
   = case p of [
-      Fund -> receive (Tezos.get_sender (), Tezos.get_amount ())
+      Fund -> receive (Mavryk.get_sender (), Mavryk.get_amount ())
     | Send (args) -> {
-        assert ((Tezos.get_sender ()) = s.owner and (Tezos.get_amount ()) = 0mutez)
+        assert ((Mavryk.get_sender ()) = s.owner and (Mavryk.get_amount ()) = 0mumav)
       } with send (args)
     ];
   const tx = result.0;
@@ -60,29 +60,29 @@ function main (const p : parameter; const s : storage) is {
 <Syntax syntax="cameligo">
 
 ```cameligo
-type parameter = Fund | Send of address * tez
+type parameter = Fund | Send of address * mav
 
-type transaction = Incoming of address * tez | Outgoing of address * tez
+type transaction = Incoming of address * mav | Outgoing of address * mav
 
 type storage = {owner : address; transactionLog : transaction list}
 
-let send (dst, @amount : address * tez) =
-  let callee = Tezos.get_contract_opt dst in
+let send (dst, @amount : address * mav) =
+  let callee = Mavryk.get_contract_opt dst in
   match callee with
     Some contract ->
-      let op = Tezos.transaction () @amount contract in
+      let op = Mavryk.transaction () @amount contract in
       Outgoing (dst, @amount), [op]
   | None -> (failwith "Could not send tokens" : transaction * operation list)
 
-let receive (from, @amount : address * tez) =
+let receive (from, @amount : address * mav) =
   Incoming (from, @amount), ([] : operation list)
 
 let main (p, s : parameter * storage) =
   let tx, ops =
     match p with
-      Fund -> receive (Tezos.get_sender (), Tezos.get_amount ())
+      Fund -> receive (Mavryk.get_sender (), Mavryk.get_amount ())
     | Send args ->
-        let u = assert ((Tezos.get_sender ()) = s.owner && (Tezos.get_amount ()) = 0mutez) in
+        let u = assert ((Mavryk.get_sender ()) = s.owner && (Mavryk.get_amount ()) = 0mumav) in
         send args in
   ops, {s with transactionLog = tx :: s.transactionLog}
 ```
@@ -91,34 +91,34 @@ let main (p, s : parameter * storage) =
 <Syntax syntax="reasonligo">
 
 ```reasonligo
-type parameter = Fund | Send((address, tez));
+type parameter = Fund | Send((address, mav));
 
-type transaction = Incoming((address, tez)) | Outgoing((address, tez));
+type transaction = Incoming((address, mav)) | Outgoing((address, mav));
 
 type storage = {owner: address, transactionLog: list(transaction) };
 
-let send = ((dst, @amount): (address, tez)) => {
-  let callee = Tezos.get_contract_opt(dst);
+let send = ((dst, @amount): (address, mav)) => {
+  let callee = Mavryk.get_contract_opt(dst);
   switch(callee){
   | Some (contract) =>
       {
-        let op = Tezos.transaction((), @amount, contract);
+        let op = Mavryk.transaction((), @amount, contract);
         (Outgoing (dst, @amount), [op])
       }
   | None => (failwith("Could not send tokens") : (transaction, list(operation)))
   }
 };
 
-let receive = ((from, @amount): (address, tez)) =>
+let receive = ((from, @amount): (address, mav)) =>
   (Incoming (from, @amount), ([] : list(operation)));
 
 let main = ((p, s): (parameter, storage)) => {
   let tx, ops =
     switch(p){
-    | Fund => receive(Tezos.get_sender (), Tezos.get_amount ())
+    | Fund => receive(Mavryk.get_sender (), Mavryk.get_amount ())
     | Send(args) =>
         {
-          assert((Tezos.get_sender ()) == s.owner && (Tezos.get_amount ()) == 0mutez);
+          assert((Mavryk.get_sender ()) == s.owner && (Mavryk.get_amount ()) == 0mumav);
           send(args)
         }
     };
@@ -131,7 +131,7 @@ let main = ((p, s): (parameter, storage)) => {
 
 This contract:
 1. Can receive funds sent to it via the `Fund` entrypoint.
-2. Can send some tez via the `Send` entrypoint callable by the owner.
+2. Can send some mav via the `Send` entrypoint callable by the owner.
 3. Stores a log of all the operations.
 
 What can go wrong? To answer this question, we will need to dive a bit into how Tezos processes transactions and what limits it places on them.
@@ -212,9 +212,9 @@ In fact, if the front-runner is a baker, the so-called _miner extracted value_ [
 
 ## Timestamps
 
-Aside from transaction ordering, bakers can manipulate other variables you might want to rely on. A classic example of such a value is `Tezos.get_now`. Previously, it used to be equal to the current block timestamp. This behaviour has been changed to eliminate straightforward manipulations. Since Tezos is a distributed system, there is no way to make sure the block was produced _exactly_ at the specified time. Thus, bakers could slightly adjust the timestamp to make a transaction produce a different result.
+Aside from transaction ordering, bakers can manipulate other variables you might want to rely on. A classic example of such a value is `Mavryk.get_now`. Previously, it used to be equal to the current block timestamp. This behaviour has been changed to eliminate straightforward manipulations. Since Tezos is a distributed system, there is no way to make sure the block was produced _exactly_ at the specified time. Thus, bakers could slightly adjust the timestamp to make a transaction produce a different result.
 
-In the current protocol, `Tezos.get_now` is equal to the _previous_ block timestamp plus a fixed value. Although `Tezos.get_now` becomes less manipulable with this new behaviour, the only assumption you can make is that the operation goes through _roughly about_ the specified timestamp. And, of course, you should never use `Tezos.get_now` as a source of randomness.
+In the current protocol, `Mavryk.get_now` is equal to the _previous_ block timestamp plus a fixed value. Although `Mavryk.get_now` becomes less manipulable with this new behaviour, the only assumption you can make is that the operation goes through _roughly about_ the specified timestamp. And, of course, you should never use `Mavryk.get_now` as a source of randomness.
 
 ## Reentrancy and call injection
 
@@ -243,24 +243,24 @@ It is quite hard to repeat this attack on Tezos, where the contract storage is a
 <Syntax syntax="pascaligo">
 
 ```pascaligo
-type storage is record [beneficiary : address; balances : map (address, tez)]
+type storage is record [beneficiary : address; balances : map (address, mav)]
 
-type parameter is tez * contract (unit)
+type parameter is mav * contract (unit)
 
 function withdraw (const param : parameter; var s : storage) is {
   const @amount = param.0;
   const beneficiary = param.1;
-  const beneficiary_addr = Tezos.address (beneficiary);
+  const beneficiary_addr = Mavryk.address (beneficiary);
   const @balance = 
     case Map.find_opt (beneficiary_addr, s.balances) of [
       Some (v) -> v
-    | None -> 0mutez
+    | None -> 0mumav
     ];
   if @balance < @amount then failwith ("Insufficient balance");
   const new_balance = case (@balance - @amount) of [
     | Some (x) -> x
-    | None -> (failwith ("Insufficient balance") : tez) ] ;
-  const op = Tezos.transaction (Unit, @amount, beneficiary);
+    | None -> (failwith ("Insufficient balance") : mav) ] ;
+  const op = Mavryk.transaction (Unit, @amount, beneficiary);
   s.balances [beneficiary_addr] := new_balance
 } with (list [op], s)
 ```
@@ -269,22 +269,22 @@ function withdraw (const param : parameter; var s : storage) is {
 <Syntax syntax="cameligo">
 
 ```cameligo
-type storage = {beneficiary : address; balances : (address, tez) map}
+type storage = {beneficiary : address; balances : (address, mav) map}
 
-type parameter = tez * (unit contract)
+type parameter = mav * (unit contract)
 
 let withdraw (param, s : parameter * storage) =
   let @amount, beneficiary = param in
-  let beneficiary_addr = Tezos.address beneficiary in
+  let beneficiary_addr = Mavryk.address beneficiary in
   let @balance =
     match (Map.find_opt beneficiary_addr s.balances) with
       Some v -> v
-    | None -> 0mutez in
+    | None -> 0mumav in
   let new_balance = match @balance - @amount with
     | Some x -> x
-    | None -> (failwith "Insufficient balance" : tez)
+    | None -> (failwith "Insufficient balance" : mav)
   in
-  let op = Tezos.transaction () @amount beneficiary in
+  let op = Mavryk.transaction () @amount beneficiary in
   let new_balances =
     Map.update beneficiary_addr (Some new_balance) s.balances in
   [op], {s with balances = new_balances}
@@ -294,22 +294,22 @@ let withdraw (param, s : parameter * storage) =
 <Syntax syntax="reasonligo">
 
 ```reasonligo
-type storage = {beneficiary: address, balances: map(address, tez) };
+type storage = {beneficiary: address, balances: map(address, mav) };
 
-type parameter = (tez, contract(unit));
+type parameter = (mav, contract(unit));
 
 let withdraw = ((param, s): (parameter, storage)) => {
   let @amount, beneficiary = param;
-  let beneficiary_addr = Tezos.address(beneficiary);
+  let beneficiary_addr = Mavryk.address(beneficiary);
   let @balance =
     switch(Map.find_opt(beneficiary_addr, s.balances)){
     | Some (v) => v
-    | None => 0mutez
+    | None => 0mumav
     };
   let new_balance = switch (@balance - @amount) {
     | Some (x) => x
-    | None => (failwith ("Insufficient balance") : tez) } ;
-  let op = Tezos.transaction((), @amount, beneficiary);
+    | None => (failwith ("Insufficient balance") : mav) } ;
+  let op = Mavryk.transaction((), @amount, beneficiary);
   let new_balances =
     Map.update(beneficiary_addr, (Some new_balance), s.balances);
   ([op], {...s, balances: new_balances})
@@ -326,8 +326,8 @@ However, in some cases reentrancy attacks are still possible, especially if cont
 |--------------|----------------------|-------------------|
 | `Treasury %withdraw`   | Waiting for balances | [`Balances %getBalance`] |
 | `Balances %getBalance` | Waiting for balances | [`Treasury %withdrawContinuation`] |
-| `Treasury %withdrawContinuation` | Sent | [Send tez to `Beneficiary`, `Balances %setNewBalance`] |
-| Send tez to `Beneficiary` | Sent | [`Balances %setNewBalance`] |
+| `Treasury %withdrawContinuation` | Sent | [Send mav to `Beneficiary`, `Balances %setNewBalance`] |
+| Send mav to `Beneficiary` | Sent | [`Balances %setNewBalance`] |
 | `Balances %setNewBalance` | Sent | |
 
 In this example, the Treasury contract uses a callback mechanism to get the sender balance. In an intermediate state between `%withdraw` and `%withdrawContinuation`, the balances request has already been sent but the funds have not been withdrawn yet, and the balances have not been updated. This opens up a possibility for a call injection attack.
@@ -341,11 +341,11 @@ For example, here is what happens if an attacker tries to call `%withdraw` twice
 | 3 | `Treasury %withdraw`  | [`Balances %getBalance`, `Balances %getBalance`] |
 | 4 | `Balances %getBalance`| [`Balances %getBalance`, `Treasury %withdrawContinuation`] |
 | 5 | `Balances %getBalance`| [`Treasury %withdrawContinuation`, `Treasury %withdrawContinuation`] |
-| 6 | `Treasury %withdrawContinuation` | [`Treasury %withdrawContinuation`, Send tez to `Beneficiary`, `Balances %setNewBalance`] |
-| 7 | `Treasury %withdrawContinuation` | [Send tez to `Beneficiary`, `Balances %setNewBalance`, Send tez to `Beneficiary`, `Balances %setNewBalance`] |
-| 8 | Send tez to `Beneficiary` | [`Balances %setNewBalance`, Send tez to `Beneficiary`, `Balances %setNewBalance`] |
-| 9 | `Balances %setNewBalance` | [Send tez to `Beneficiary`, `Balances %setNewBalance`] |
-| 10 | Send tez to `Beneficiary` | [`Balances %setNewBalance`] |
+| 6 | `Treasury %withdrawContinuation` | [`Treasury %withdrawContinuation`, Send mav to `Beneficiary`, `Balances %setNewBalance`] |
+| 7 | `Treasury %withdrawContinuation` | [Send mav to `Beneficiary`, `Balances %setNewBalance`, Send mav to `Beneficiary`, `Balances %setNewBalance`] |
+| 8 | Send mav to `Beneficiary` | [`Balances %setNewBalance`, Send mav to `Beneficiary`, `Balances %setNewBalance`] |
+| 9 | `Balances %setNewBalance` | [Send mav to `Beneficiary`, `Balances %setNewBalance`] |
+| 10 | Send mav to `Beneficiary` | [`Balances %setNewBalance`] |
 | 11 | `Balances %setNewBalance` | |
 
 The attacker successfully withdraws money twice using the fact that by the time the second `%withdraw` is called, the balance has not been updated yet.
@@ -363,16 +363,16 @@ type storage is record [owner : address; beneficiaries : list (address)]
 
 function send_rewards (const beneficiary_addr : address) is {
   const maybe_contract = 
-    Tezos.get_contract_opt (beneficiary_addr);
+    Mavryk.get_contract_opt (beneficiary_addr);
   const beneficiary = 
     case maybe_contract of [
       Some (contract) -> contract
     | None -> (failwith ("CONTRACT_NOT_FOUND") : contract (unit))
     ]
-} with Tezos.transaction (Unit, 5000000mutez, beneficiary)
+} with Mavryk.transaction (Unit, 5000000mumav, beneficiary)
 
 function main (const p : unit; const s : storage) is
-  if (Tezos.get_sender ()) =/= s.owner
+  if (Mavryk.get_sender ()) =/= s.owner
   then (failwith ("ACCESS_DENIED") : list (operation) * storage)
   else {
     const ops = List.map (send_rewards, s.beneficiaries)
@@ -387,15 +387,15 @@ type storage = {owner : address; beneficiaries : address list}
 
 let send_rewards (beneficiary_addr : address) =
   let maybe_contract =
-    Tezos.get_contract_opt beneficiary_addr in
+    Mavryk.get_contract_opt beneficiary_addr in
   let beneficiary =
     match maybe_contract with
       Some contract -> contract
     | None -> (failwith "CONTRACT_NOT_FOUND" : unit contract) in
-  Tezos.transaction () 5000000mutez beneficiary
+  Mavryk.transaction () 5000000mumav beneficiary
 
 let main (p, s : unit * storage) =
-  if (Tezos.get_sender ()) <> s.owner
+  if (Mavryk.get_sender ()) <> s.owner
   then (failwith "ACCESS_DENIED" : operation list * storage)
   else
     let ops = List.map send_rewards s.beneficiaries in
@@ -410,17 +410,17 @@ type storage = {owner: address, beneficiaries: list(address) };
 
 let send_rewards = (beneficiary_addr: address) => {
   let maybe_contract =
-    Tezos.get_contract_opt(beneficiary_addr);
+    Mavryk.get_contract_opt(beneficiary_addr);
   let beneficiary =
     switch(maybe_contract){
     | Some contract => contract
     | None => (failwith("CONTRACT_NOT_FOUND") : contract(unit))
     };
-  Tezos.transaction((), 5000000mutez, beneficiary)
+  Mavryk.transaction((), 5000000mumav, beneficiary)
 };
 
 let main = ((p, s): (unit, storage)) =>
-  if ((Tezos.get_sender ()) != s.owner) {
+  if ((Mavryk.get_sender ()) != s.owner) {
     (failwith("ACCESS_DENIED") : (list(operation), storage))
   } else {
 
@@ -431,7 +431,7 @@ let main = ((p, s): (unit, storage)) =>
 
 </Syntax>
 
-The contract emits a bunch of operations that transfer 5 tez to each of the beneficiaries listed in storage. The flaw here is that one of the receiver contracts may fail, preventing others from receiving the reward. This may be intentional censorship or a bug in the receiver contract – in either case, the contract gets stuck.
+The contract emits a bunch of operations that transfer 5 mav to each of the beneficiaries listed in storage. The flaw here is that one of the receiver contracts may fail, preventing others from receiving the reward. This may be intentional censorship or a bug in the receiver contract – in either case, the contract gets stuck.
 
 Instead of making a batch transfer, it is better to let beneficiaries withdraw their funds individually. This way, if the receiver contract fails, it would not affect other withdrawals.
 
@@ -441,9 +441,9 @@ When developing a contract, you may often want to restrict access to certain ent
 1. The request comes from an authorised entity
 2. This entity cannot be tricked into sending this request.
 
-You may be tempted to use `Tezos.get_source` instruction – it returns the address of an implicit account who injected the operation – but this violates our second requirement. It is easy to ask the owner of this implicit account to make a seemingly innocent transfer to a malicious contract that, in turn, emits an operation to a restricted entrypoint. The attacker contract may disguise itself as some blockchain game or a DAO, but neither the caller would be aware of its side-effects nor the callee would notice the presence of the intermediary. You should **never** use `Tezos.get_source` for authorisation purposes.
+You may be tempted to use `Mavryk.get_source` instruction – it returns the address of an implicit account who injected the operation – but this violates our second requirement. It is easy to ask the owner of this implicit account to make a seemingly innocent transfer to a malicious contract that, in turn, emits an operation to a restricted entrypoint. The attacker contract may disguise itself as some blockchain game or a DAO, but neither the caller would be aware of its side-effects nor the callee would notice the presence of the intermediary. You should **never** use `Mavryk.get_source` for authorisation purposes.
 
-Checking whether `Tezos.get_sender` – the address of the immediate caller – is authorised to perform an operation is better: since the request comes directly from the authorised entity, we can be more certain this call is intended. Such an approach is a decent default choice if both conditions hold true:
+Checking whether `Mavryk.get_sender` – the address of the immediate caller – is authorised to perform an operation is better: since the request comes directly from the authorised entity, we can be more certain this call is intended. Such an approach is a decent default choice if both conditions hold true:
 1. The sender contract is well secured against emitting arbitrary operations. For instance, it must not contain ["view" entrypoints](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-4/tzip-4.md#view-entrypoints) as defined in [TZIP-4](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-4/tzip-4.md).
 2. You only need to authorise an immediate caller and not the contracts somewhere up in the call chain.
 

@@ -1,7 +1,7 @@
-type balances = map <address, tez>
+type balances = map <address, mav>
 
-const balances_under = (b : balances, threshold:tez) : balances => {
-  let f = (acc : balances, kv :[address , tez] ) : balances => {
+const balances_under = (b : balances, threshold:mav) : balances => {
+  let f = (acc : balances, kv :[address , mav] ) : balances => {
     let [k,v] = kv ;
     if (v < threshold) { return Map.remove (k,acc) } else {return acc}
   };

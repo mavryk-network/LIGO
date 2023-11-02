@@ -3,7 +3,7 @@ type parameter is int
 type storage is address
 
 function get_add_entrypoint (const addr : address) is {
-  const maybe_contract : option (contract (int)) = Tezos.get_contract_opt (addr)
+  const maybe_contract : option (contract (int)) = Mavryk.get_contract_opt (addr)
 } with
     case maybe_contract of [
       Some (contract) -> contract
@@ -12,5 +12,5 @@ function get_add_entrypoint (const addr : address) is {
 
 function main (const param : parameter; const callee_addr : storage) is {
   const callee : contract (int) = get_contract (callee_addr);
-  const op = Tezos.transaction (param, 0mutez, callee)
+  const op = Mavryk.transaction (param, 0mumav, callee)
 } with (list [op], callee_addr)

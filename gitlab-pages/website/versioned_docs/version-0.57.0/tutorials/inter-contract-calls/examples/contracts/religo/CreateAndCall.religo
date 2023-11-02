@@ -1,31 +1,31 @@
 let create_and_call =  (st: list(address)) => {
     let (create_op, addr) =
-        Tezos.create_contract(
+        Mavryk.create_contract(
             ((p, s): (int, int)) => ([] : list(operation), (p + s)),
             (None : option(key_hash)),
-            0mutez,
+            0mumav,
             1
         );
     let call_op =
-        Tezos.transaction(
+        Mavryk.transaction(
             (addr, 41),
-            0mutez,
-            Tezos.self("%callback") : contract((address, int))
+            0mumav,
+            Mavryk.self("%callback") : contract((address, int))
         );
     ([create_op, call_op], [addr, ...st]);
 };
 
 let call_counter = ((addr, n): (address, int)) => {
-    let u = assert(Tezos.get_sender () == Tezos.get_self_address ());
+    let u = assert(Mavryk.get_sender () == Mavryk.get_self_address ());
     let callee_opt: option(contract(int)) = 
-        Tezos.get_contract_opt(addr);
+        Mavryk.get_contract_opt(addr);
     let callee = 
         switch(callee_opt) {
         | Some(contract) => contract
         | None =>
             (failwith("Could not find contract") : contract(int))
         };
-    Tezos.transaction(n, 0mutez, callee);
+    Mavryk.transaction(n, 0mumav, callee);
 };
 
 type parameter = 

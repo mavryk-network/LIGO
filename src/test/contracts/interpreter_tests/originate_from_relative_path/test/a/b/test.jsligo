@@ -5,7 +5,7 @@ const _test_originate_from_file_relative_path = () : address => {
     ("../../../src/contract/unit.mligo",
     "main",
     list([]),
-    Test.eval(unit), 0 as mutez);
+    Test.eval(unit), 0 as mumav);
     return c_addr
 };
 
@@ -15,9 +15,9 @@ const test_originate_from_file_relative_path = _test_originate_from_file_relativ
 const _test_originate_from_file_relative_path_w_r_t_imported_file = () : bool => {
   let addr = Foo.originate();
   let bef  = Test.get_balance(addr);
-  ignore(Test.transfer (addr, Test.eval(unit), 10 as mutez));
+  ignore(Test.transfer (addr, Test.eval(unit), 10 as mumav));
   let aft  = Test.get_balance(addr);
-  return aft == (bef + (10 as mutez))
+  return aft == (bef + (10 as mumav))
 }
 
 const test_originate_from_file_relative_path_w_r_t_imported_file =

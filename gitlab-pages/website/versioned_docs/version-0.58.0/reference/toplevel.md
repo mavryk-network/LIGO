@@ -341,16 +341,16 @@ type string
 A sequence of characters.
 
 <SyntaxTitle syntax="pascaligo">
-type tez
+type mav
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-type tez
+type mav
 </SyntaxTitle>
 <SyntaxTitle syntax="reasonligo">
-type tez
+type mav
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-type tez
+type mav
 </SyntaxTitle>
 
 A specific type for tokens.
@@ -517,10 +517,10 @@ Check if a certain condition has been met. If not the contract will fail.
 val ediv : int -> int -> option (int * nat)
 </SyntaxTitle>
 <SyntaxTitle syntax="pascaligo">
-val ediv : mutez -> nat -> option (mutez * mutez)
+val ediv : mumav -> nat -> option (mumav * mumav)
 </SyntaxTitle>
 <SyntaxTitle syntax="pascaligo">
-val ediv : mutez -> mutez -> option (nat * mutez)
+val ediv : mumav -> mumav -> option (nat * mumav)
 </SyntaxTitle>
 <SyntaxTitle syntax="pascaligo">
 val ediv : nat -> nat -> option (nat * nat)
@@ -530,10 +530,10 @@ val ediv : nat -> nat -> option (nat * nat)
 val ediv : int -> int -> (int * nat) option
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-val ediv : mutez -> nat -> (mutez * mutez) option
+val ediv : mumav -> nat -> (mumav * mumav) option
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-val ediv : mutez -> mutez -> (nat * mutez) option
+val ediv : mumav -> mumav -> (nat * mumav) option
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val ediv : nat -> nat -> (nat * nat) option
@@ -543,10 +543,10 @@ val ediv : nat -> nat -> (nat * nat) option
 let ediv: (int, int) => option((int, nat))
 </SyntaxTitle>
 <SyntaxTitle syntax="reasonligo">
-let ediv: (mutez, nat) => option((mutez, mutez))
+let ediv: (mumav, nat) => option((mumav, mumav))
 </SyntaxTitle>
 <SyntaxTitle syntax="reasonligo">
-let ediv: (mutez, mutez) => option((nat, mutez))
+let ediv: (mumav, mumav) => option((nat, mumav))
 </SyntaxTitle>
 <SyntaxTitle syntax="reasonligo">
 let ediv: (nat, nat) => option((nat, nat))
@@ -556,10 +556,10 @@ let ediv: (nat, nat) => option((nat, nat))
 let ediv: (value: int, divided_by: int) => option&lt;[int, nat]&gt;
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let ediv: (value: mutez, divided_by: nat) => option&lt;[mutez, mutez]&gt;
+let ediv: (value: mumav, divided_by: nat) => option&lt;[mumav, mumav]&gt;
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let ediv: (value: mutez, divided_by: mutez) => option&lt;[nat, mutez]&gt;
+let ediv: (value: mumav, divided_by: mumav) => option&lt;[nat, mumav]&gt;
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let ediv: (value: nat, divided_by: nat) => option&lt;[nat, nat]&gt;

@@ -25,10 +25,10 @@ let make_cards assoc_lst =
 let card_pattern (coeff, qtt) = e_record_ez ~loc [ "coefficient", coeff; "quantity", qtt ]
 
 let card_pattern_ty =
-  t_record_ez ~loc [ "coefficient", t_tez ~loc (); "quantity", t_nat ~loc () ]
+  t_record_ez ~loc [ "coefficient", t_mav ~loc (); "quantity", t_nat ~loc () ]
 
 
-let card_pattern_ez (coeff, qtt) = card_pattern (e_mutez ~loc coeff, e_nat ~loc qtt)
+let card_pattern_ez (coeff, qtt) = card_pattern (e_mumav ~loc coeff, e_nat ~loc qtt)
 
 let make_card_patterns lst =
   let card_pattern_id_ty = t_nat ~loc () in
@@ -92,7 +92,7 @@ let buy ~raise () =
     let () =
       let amount =
         trace_option ~raise (test_internal "getting amount for run")
-        @@ Memory_proto_alpha.Protocol.Alpha_context.Tez.of_mutez
+        @@ Memory_proto_alpha.Protocol.Alpha_context.Tez.of_mumav
         @@ Int64.of_int 10000000000
       in
       let options =
@@ -104,7 +104,7 @@ let buy ~raise () =
     let () =
       let amount =
         trace_option ~raise (test_internal "getting amount for run")
-        @@ Memory_proto_alpha.Protocol.Alpha_context.Tez.of_mutez
+        @@ Memory_proto_alpha.Protocol.Alpha_context.Tez.of_mumav
         @@ Int64.of_int 0
       in
       let options =
@@ -142,7 +142,7 @@ let dispatch_buy ~raise () =
     let () =
       let amount =
         trace_option ~raise (test_internal "getting amount for run")
-        @@ Memory_proto_alpha.Protocol.Alpha_context.Tez.of_mutez
+        @@ Memory_proto_alpha.Protocol.Alpha_context.Tez.of_mumav
         @@ Int64.of_int 10000000000
       in
       let options =
@@ -154,7 +154,7 @@ let dispatch_buy ~raise () =
     let () =
       let amount =
         trace_option ~raise (test_internal "getting amount for run")
-        @@ Memory_proto_alpha.Protocol.Alpha_context.Tez.of_mutez
+        @@ Memory_proto_alpha.Protocol.Alpha_context.Tez.of_mumav
         @@ Int64.of_int 0
       in
       let options =

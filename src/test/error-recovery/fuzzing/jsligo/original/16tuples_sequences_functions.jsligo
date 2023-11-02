@@ -1,8 +1,8 @@
 let a = 1;
 let b = (1 as nat);
-let c = (2 as mutez);
+let c = (2 as mumav);
 let d = (1 as nat) + (2 as nat);
-let e = (1 as mutez) + (3 as mutez);
+let e = (1 as mumav) + (3 as mumav);
 let f = [a, c];
 let g = [a + 1, c];
 /* let h = ["a" + "2", d]; */

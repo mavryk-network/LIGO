@@ -925,7 +925,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                ; t_mumav ~loc () ^-> t_mumav ~loc () ^~> t_mumav ~loc ()
                ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
                ]) )
-    ; ( C_SUB_MUTEZ
+    ; ( C_SUB_MUMAV
       , of_type
           (create
              ~mode_annot:[ Checked; Checked ]

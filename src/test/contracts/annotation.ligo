@@ -3,4 +3,4 @@
 const lst : list (int) = list []
 
 const my_address : address =
-  ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
+  ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)

@@ -43,7 +43,7 @@ let annotation ~raise () : unit =
       ~raise
       program
       "my_address"
-      (e_address ~loc "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx")
+      (e_address ~loc "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe")
   in
   ()
 
@@ -331,7 +331,7 @@ let comparable_mligo ~raise () : unit =
       ~raise
       program
       "address_"
-      (e_address ~loc "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx")
+      (e_address ~loc "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe")
       (e_bool ~loc false)
   in
   let () = expect_eq ~raise program "bool_" (e_bool ~loc true) (e_bool ~loc false) in
@@ -339,7 +339,7 @@ let comparable_mligo ~raise () : unit =
     expect_eq ~raise program "bytes_" (e_bytes_string ~loc "deadbeaf") (e_bool ~loc false)
   in
   let () = expect_eq ~raise program "int_" (e_int ~loc 1) (e_bool ~loc false) in
-  let () = expect_eq ~raise program "mutez_" (e_mutez ~loc 1) (e_bool ~loc false) in
+  let () = expect_eq ~raise program "mumav_" (e_mumav ~loc 1) (e_bool ~loc false) in
   let () = expect_eq ~raise program "nat_" (e_nat ~loc 1) (e_bool ~loc false) in
   let () =
     expect_eq ~raise program "option_" (e_some ~loc (e_int ~loc 1)) (e_bool ~loc false)
@@ -2027,32 +2027,32 @@ let website2_ligo ~raise f : unit =
 
 let tez_ligo ~raise () : unit =
   let program = type_file ~raise "./contracts/tez.ligo" in
-  let _ = expect_eq_evaluate ~raise program "add_tez" (e_mutez ~loc 42) in
-  let _ = expect_eq_evaluate ~raise program "sub_tez" (e_some ~loc (e_mutez ~loc 1)) in
-  let _ = expect_eq_evaluate ~raise program "sub_tez_none" (e_none ~loc ()) in
+  let _ = expect_eq_evaluate ~raise program "add_mav" (e_mumav ~loc 42) in
+  let _ = expect_eq_evaluate ~raise program "sub_mav" (e_some ~loc (e_mumav ~loc 1)) in
+  let _ = expect_eq_evaluate ~raise program "sub_mav_none" (e_none ~loc ()) in
   let _ =
-    expect_eq_evaluate ~raise program "not_enough_tez" (e_mutez ~loc 4611686018427387903)
+    expect_eq_evaluate ~raise program "not_enough_mav" (e_mumav ~loc 4611686018427387903)
   in
-  let _ = expect_eq_evaluate ~raise program "nat_mul_tez" (e_mutez ~loc 100) in
-  let _ = expect_eq_evaluate ~raise program "tez_mul_nat" (e_mutez ~loc 1000) in
-  let _ = expect_eq_evaluate ~raise program "tez_div_tez1" (e_nat ~loc 100) in
-  let _ = expect_eq_evaluate ~raise program "tez_div_tez2" (e_nat ~loc 1) in
-  let _ = expect_eq_evaluate ~raise program "tez_div_tez3" (e_nat ~loc 0) in
-  let _ = expect_eq_evaluate ~raise program "tez_mod_tez1" (e_mutez ~loc 0) in
-  let _ = expect_eq_evaluate ~raise program "tez_mod_tez2" (e_mutez ~loc 10) in
-  let _ = expect_eq_evaluate ~raise program "tez_mod_tez3" (e_mutez ~loc 100) in
+  let _ = expect_eq_evaluate ~raise program "nat_mul_mav" (e_mumav ~loc 100) in
+  let _ = expect_eq_evaluate ~raise program "tez_mul_nat" (e_mumav ~loc 1000) in
+  let _ = expect_eq_evaluate ~raise program "tez_div_mav1" (e_nat ~loc 100) in
+  let _ = expect_eq_evaluate ~raise program "tez_div_mav2" (e_nat ~loc 1) in
+  let _ = expect_eq_evaluate ~raise program "tez_div_mav3" (e_nat ~loc 0) in
+  let _ = expect_eq_evaluate ~raise program "tez_mod_mav1" (e_mumav ~loc 0) in
+  let _ = expect_eq_evaluate ~raise program "tez_mod_mav2" (e_mumav ~loc 10) in
+  let _ = expect_eq_evaluate ~raise program "tez_mod_mav3" (e_mumav ~loc 100) in
   ()
 
 
 let tez_mligo ~raise () : unit =
   let program = type_file ~raise "./contracts/tez.mligo" in
-  let _ = expect_eq_evaluate ~raise program "add_tez" (e_mutez ~loc 42) in
-  let _ = expect_eq_evaluate ~raise program "sub_tez" (e_some ~loc (e_mutez ~loc 1)) in
-  let _ = expect_eq_evaluate ~raise program "sub_tez_none" (e_none ~loc ()) in
+  let _ = expect_eq_evaluate ~raise program "add_mav" (e_mumav ~loc 42) in
+  let _ = expect_eq_evaluate ~raise program "sub_mav" (e_some ~loc (e_mumav ~loc 1)) in
+  let _ = expect_eq_evaluate ~raise program "sub_mav_none" (e_none ~loc ()) in
   let _ =
-    expect_eq_evaluate ~raise program "not_enough_tez" (e_mutez ~loc 4611686018427387903)
+    expect_eq_evaluate ~raise program "not_enough_mav" (e_mumav ~loc 4611686018427387903)
   in
-  let _ = expect_eq_evaluate ~raise program "add_more_tez" (e_mutez ~loc 111111000) in
+  let _ = expect_eq_evaluate ~raise program "add_more_mav" (e_mumav ~loc 111111000) in
   ()
 
 
@@ -2126,8 +2126,8 @@ let balance_test_options ~raise () =
 
 let balance_constant ~raise f : unit =
   let program = type_file ~raise f in
-  let input = e_tuple ~loc [ e_unit ~loc (); e_mutez ~loc 0 ] in
-  let expected = e_tuple ~loc [ e_list ~loc []; e_mutez ~loc 0 ] in
+  let input = e_tuple ~loc [ e_unit ~loc (); e_mumav ~loc 0 ] in
+  let expected = e_tuple ~loc [ e_list ~loc []; e_mumav ~loc 0 ] in
   let options = balance_test_options ~raise () in
   expect_eq ~raise ~options program "main" input expected
 

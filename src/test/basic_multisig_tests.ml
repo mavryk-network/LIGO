@@ -38,7 +38,7 @@ let op_list ~raise =
   in
   let destination =
     Trace.trace_tzresult ~raise (fun _ -> Main_errors.test_internal __LOC__)
-    @@ Signature.Public_key_hash.of_b58check "tz1PpDGHRXFQq3sYDuH8EpLWzPm5PFpe1sLE"
+    @@ Signature.Public_key_hash.of_b58check "mv1UwjPM9u74pWbnefsvi8kz7cUkhNdwF5YP"
   in
   let operation
       : _ Memory_proto_alpha.Protocol.Script_typed_ir.internal_operation_contents

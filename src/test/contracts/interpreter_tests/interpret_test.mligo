@@ -316,17 +316,17 @@ let test_big_map_get_and_update =
   assert (xs = ys && old = Some "World")
 
 let test_add_mutez =
-  let m = 10tez in
-  let n = 1tez in
-  assert (m + n = 11tez)
+  let m = 10mav in
+  let n = 1mav in
+  assert (m + n = 11mav)
 
 let test_sub_mutez =
-  let m = 10tez in
-  let n = 1tez in
-  assert (m - n = Some 9tez)
+  let m = 10mav in
+  let n = 1mav in
+  assert (m - n = Some 9mav)
 
 let test_div_mutez =
-  let a = 1tez/2tez in
+  let a = 1mav/2mav in
   assert (a = 0n)
 
 let test_sub_timestamp =
@@ -407,7 +407,7 @@ let test_sha3 =
 
 let test_key_hash =
   let key = ("edpkuBknW28nW72KG6RoHtYW7p12T6GKc7nAbwYX5m8Wd9sDVC9yav" : key) in
-  let key_hash = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : key_hash) in
+  let key_hash = ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : key_hash) in
   let () = assert (Test.eval (Crypto.hash_key key) = Test.run (fun (k : key) -> Crypto.hash_key k) key) in
   assert (Crypto.hash_key key = key_hash)
 
@@ -431,7 +431,7 @@ let test_not =
 
 let test_chain_id = 
   let chain_id = Test.eval ("NetXH12Aer3be93" : chain_id) in
-  assert (chain_id = Test.eval (Tezos.get_chain_id ()))
+  assert (chain_id = Test.eval (Mavryk.get_chain_id ()))
 
 let test_concats =
   let ss = ["aa"; "bb"; ""; "cc"] in

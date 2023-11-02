@@ -1,4 +1,4 @@
-type taco_supply = { current_stock : nat ; max_price : tez }
+type taco_supply = { current_stock : nat ; max_price : mav }
 
 type taco_shop_storage = (nat, taco_supply) map
 type return = operation list * taco_shop_storage
@@ -10,9 +10,9 @@ let buy_taco (taco_kind_index, taco_shop_storage : nat * taco_shop_storage) : re
     | Some k -> k
     | None -> (failwith "Unknown kind of taco" : taco_supply)
   in
-  let current_purchase_price : tez = taco_kind.max_price / taco_kind.current_stock in
+  let current_purchase_price : mav = taco_kind.max_price / taco_kind.current_stock in
   (* We won't sell tacos if the amount is not correct *)
-  let () = if Tezos.get_amount () <> current_purchase_price then
+  let () = if Mavryk.get_amount () <> current_purchase_price then
     failwith "Sorry, the taco you are trying to purchase has a different price"
   in
   (* Update the storage decreasing the stock by 1n *)

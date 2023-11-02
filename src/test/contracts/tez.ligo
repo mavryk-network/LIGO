@@ -1,19 +1,19 @@
-const add_tez : tez = 21mutez + 0.000_021tez
+const add_mav : mav = 21mumav + 0.000_021mav
 
-const sub_tez : option(tez) = 21mutez - 20mutez
-const sub_tez_none : option(tez) = 20mutez - 21mutez
+const sub_mav : option(mav) = 21mumav - 20mumav
+const sub_mav_none : option(mav) = 20mumav - 21mumav
 
 (* This is not enough. *)
 
-const not_enough_tez : tez = 461_168_601_842_738_7903mutez
+const not_enough_mav : mav = 461_168_601_842_738_7903mumav
 
-const nat_mul_tez : tez = 1n * 100mutez
-const tez_mul_nat : tez = 100mutez * 10n
+const nat_mul_mav : mav = 1n * 100mumav
+const tez_mul_nat : mav = 100mumav * 10n
 
-const tez_div_tez1 : nat = 100mutez / 1mutez
-const tez_div_tez2 : nat = 100mutez / 90mutez
-const tez_div_tez3 : nat = 100mutez / 110mutez
+const tez_div_mav1 : nat = 100mumav / 1mumav
+const tez_div_mav2 : nat = 100mumav / 90mumav
+const tez_div_mav3 : nat = 100mumav / 110mumav
 
-const tez_mod_tez1 : tez = 100mutez mod 1mutez
-const tez_mod_tez2 : tez = 100mutez mod 90mutez
-const tez_mod_tez3 : tez = 100mutez mod 110mutez
+const tez_mod_mav1 : mav = 100mumav mod 1mumav
+const tez_mod_mav2 : mav = 100mumav mod 90mumav
+const tez_mod_mav3 : mav = 100mumav mod 110mumav

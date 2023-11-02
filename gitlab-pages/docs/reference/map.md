@@ -77,7 +77,7 @@ Create a non-empty map.
 ```pascaligo group=maps
 const moves : register =
   Map.literal (list [
-    (("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address), (1,2));
+    (("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address), (1,2));
     (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address), (0,3))]);
 ```
 
@@ -86,7 +86,7 @@ Alternative way of creating an empty map:
 ```pascaligo group=maps
 const moves_alternative : register =
   map [
-    ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address) -> (1,2);
+    ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address) -> (1,2);
     ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) -> (0,3)];
 ```
 
@@ -96,7 +96,7 @@ const moves_alternative : register =
 ```cameligo group=maps
 let moves : register =
   Map.literal [
-    (("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address), (1,2));
+    (("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address), (1,2));
     (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address), (0,3))]
 ```
 
@@ -107,7 +107,7 @@ let moves : register =
 ```jsligo group=maps
 let moves: register =
   Map.literal(list([
-    [("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address), [1, 2]],
+    [("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address), [1, 2]],
     [("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), [0, 3]]]));
 ```
 
@@ -200,7 +200,7 @@ instruction* for maps, similar to that for records.
 function assignments (var m : register) : register is {
   patch m with map [
     ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) -> (4,9);
-    ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address) -> (1,2)
+    ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address) -> (1,2)
   ]
 } with m
 ```
@@ -544,7 +544,7 @@ Checks if a key exists in the map.
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=maps
-const found : bool = Map.mem (("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address), moves);
+const found : bool = Map.mem (("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address), moves);
 ```
 
 </Syntax>
@@ -559,7 +559,7 @@ let found : bool = Map.mem ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address)  m
 <Syntax syntax="jsligo">
 
 ```jsligo group=maps
-let found : bool = Map.mem (("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address),  moves);
+let found : bool = Map.mem (("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address),  moves);
 ```
 
 </Syntax>

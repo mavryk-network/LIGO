@@ -1,7 +1,7 @@
 // Example from https://ligolang.org/docs/advanced/entrypoints-contracts/#access-control
 
-const owner : address = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx": address);
+const owner : address = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE": address);
 
 function main (const action : parameter; const store : storage) : return is
-  if Tezos.source =/= owner then (failwith ("Access denied.") : return)
+  if Mavryk.source =/= owner then (failwith ("Access denied.") : return)
   else ((nil : list (operation)), store)

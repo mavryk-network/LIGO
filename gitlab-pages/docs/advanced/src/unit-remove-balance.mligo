@@ -13,9 +13,9 @@ let balances : michelson_program =
 
 
 (*PART 2*)
-let to_tez (i:nat) : michelson_program =
+let to_mav (i:nat) : michelson_program =
   Test.compile_expression_subst (None: string option)
-    [%cameligo ({| $i * 1tez |} : ligo_program)]
+    [%cameligo ({| $i * 1mav |} : ligo_program)]
     [("i", Test.compile_value (i) )]
 
 let test =
@@ -25,7 +25,7 @@ let test =
       let size = 
         Test.compile_expression_subst under_test
           [%cameligo ({| Map.size (balances_under $b $threshold) |} : ligo_program)]
-          [ ("b", balances) ; ("threshold", to_tez threshold)]
+          [ ("b", balances) ; ("threshold", to_mav threshold)]
       in
       let () = Test.log ("expected", expected_size) in
       let () = Test.log ("actual",size) in

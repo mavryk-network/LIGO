@@ -5,8 +5,8 @@ It is meant to detect the regression detailled in the following issue: https://g
 *)
 
 type parameter is unit
-type storage is tez
+type storage is mav
 type return is list (operation) * storage
 
 function main (const _ : parameter; const _ : storage) : return is
-  ((nil : list (operation)), Tezos.get_balance())
+  ((nil : list (operation)), Mavryk.get_balance())

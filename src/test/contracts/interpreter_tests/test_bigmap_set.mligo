@@ -6,10 +6,10 @@ let main ((k,v), s : (int * (nat -> nat)) * storage) : operation list * storage 
 
 let test =
   let init = (Big_map.empty : storage) in
-  let (taddr, _, _) = Test.originate main init 0tez in
+  let (taddr, _, _) = Test.originate main init 0mav in
   let ctr = Test.to_contract taddr in
   let y : nat = 1n in
-  let _ = Test.transfer_to_contract_exn ctr (21, (fun (x : nat) -> x * 2n + y)) 0tez in
+  let _ = Test.transfer_to_contract_exn ctr (21, (fun (x : nat) -> x * 2n + y)) 0mav in
   let _y : nat = 100n in
   let init = Big_map.add 21 (fun (_ : nat) -> 0n) (Big_map.empty : (int, nat -> nat) big_map) in
   let () = Test.set_big_map 5 init in

@@ -513,9 +513,9 @@ the entrypoint `Increment(7)` works as intended on an initial storage
 
 function originate_and_test (const mainf : parameter * storage -> return) is {
   const initial_storage = 5;
-  const (taddr, _, _) = Test.originate (mainf, initial_storage, 0tez);
+  const (taddr, _, _) = Test.originate (mainf, initial_storage, 0mav);
   const contr = Test.to_contract (taddr);
-  const _ = Test.transfer_to_contract_exn (contr, Increment (7), 1mutez);
+  const _ = Test.transfer_to_contract_exn (contr, Increment (7), 1mumav);
   const storage = Test.get_storage (taddr);
   assert (storage = initial_storage + 7);
 } with unit;
@@ -531,9 +531,9 @@ const test = originate_and_test (main);
 
 let originate_and_test (mainf : parameter * storage -> return) =
   let initial_storage = 7 in
-  let (taddr, _, _) = Test.originate mainf initial_storage 0tez in
+  let (taddr, _, _) = Test.originate mainf initial_storage 0mav in
   let contr = Test.to_contract taddr in
-  let _ = Test.transfer_to_contract_exn contr (Increment 7) 1mutez in
+  let _ = Test.transfer_to_contract_exn contr (Increment 7) 1mumav in
   assert (Test.get_storage taddr = initial_storage + 7)
 
 let test = originate_and_test main
@@ -548,9 +548,9 @@ let test = originate_and_test main
 
 const originate_and_test = (mainf : ((p: parameter, s: storage) => return_)) : unit => {
   let initial_storage = 5 as int;
-  let [taddr, _, _] = Test.originate(mainf, initial_storage, 0 as tez);
+  let [taddr, _, _] = Test.originate(mainf, initial_storage, 0 as mav);
   let contr = Test.to_contract(taddr);
-  let _ = Test.transfer_to_contract_exn(contr, (Increment (7)), 1 as mutez);
+  let _ = Test.transfer_to_contract_exn(contr, (Increment (7)), 1 as mumav);
   assert (Test.get_storage(taddr) == initial_storage + 7);
 };
 
@@ -677,10 +677,10 @@ to the `Decrement` entrypoint in the test above:
 ```pascaligo skip
 function originate_and_test(const mainf : parameter * storage -> return) is{
   const initial_storage = 5;
-  const (taddr, _, _) = Test.originate(mainf, initial_storage, 0tez);
+  const (taddr, _, _) = Test.originate(mainf, initial_storage, 0mav);
   const contr = Test.to_contract(taddr);
-  const _ = Test.transfer_to_contract_exn(contr, Increment(7), 1mutez);
-  const _ = Test.transfer_to_contract_exn(contr, Decrement(3), 1mutez);
+  const _ = Test.transfer_to_contract_exn(contr, Increment(7), 1mumav);
+  const _ = Test.transfer_to_contract_exn(contr, Decrement(3), 1mumav);
   const storage = Test.get_storage(taddr);
   assert (storage = initial_storage + 4);
 } with unit;
@@ -692,10 +692,10 @@ function originate_and_test(const mainf : parameter * storage -> return) is{
 ```cameligo skip
 let originate_and_test (mainf : parameter * storage -> return) =
   let initial_storage = 7 in
-  let (taddr, _, _) = Test.originate mainf initial_storage 0tez in
+  let (taddr, _, _) = Test.originate mainf initial_storage 0mav in
   let contr = Test.to_contract taddr in
-  let _ = Test.transfer_to_contract_exn contr (Increment (7)) 1mutez in
-  let _ = Test.transfer_to_contract_exn contr (Decrement (3)) 1mutez in
+  let _ = Test.transfer_to_contract_exn contr (Increment (7)) 1mumav in
+  let _ = Test.transfer_to_contract_exn contr (Decrement (3)) 1mumav in
   assert (Test.get_storage taddr = initial_storage + 4)
 ```
 
@@ -706,10 +706,10 @@ let originate_and_test (mainf : parameter * storage -> return) =
 ```jsligo skip
 const originate_and_test = (mainf : ((p: parameter, s: storage) => return_)) : unit => {
   let initial_storage = 5 as int;
-  let [taddr, _, _] = Test.originate(mainf, initial_storage, 0 as tez);
+  let [taddr, _, _] = Test.originate(mainf, initial_storage, 0 as mav);
   let contr = Test.to_contract(taddr);
-  let _ = Test.transfer_to_contract_exn(contr, (Increment (7)), 1 as mutez);
-  let _ = Test.transfer_to_contract_exn(contr, (Decrement (3)), 1 as mutez);
+  let _ = Test.transfer_to_contract_exn(contr, (Increment (7)), 1 as mumav);
+  let _ = Test.transfer_to_contract_exn(contr, (Decrement (3)), 1 as mumav);
   assert (Test.get_storage(taddr) == initial_storage + 4);
 };
 ```

@@ -1,11 +1,11 @@
 #include "./contract_under_test/fail_contract.mligo"
 
 let test =
-  let (typed_addr,_code,_) = Test.originate main () 0tez in
+  let (typed_addr,_code,_) = Test.originate main () 0mav in
   let contr = Test.to_contract typed_addr in
-  let addr = Tezos.address contr in
+  let addr = Mavryk.address contr in
 
-  match Test.transfer_to_contract contr () 10tez with
+  match Test.transfer_to_contract contr () 10mav with
   | Success _ -> (failwith "Should fail !" : michelson_program )
   | Fail e -> (
     match e with

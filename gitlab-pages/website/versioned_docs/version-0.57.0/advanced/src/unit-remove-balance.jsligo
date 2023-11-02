@@ -10,16 +10,16 @@ let bs_addr = (i : int) : michelson_program => {
 let balances : michelson_program =
   Test.compile_expression_subst (
     under_test,
-    jsligo` Map.literal (list ([[ $a1 as address , 10 as mutez ] , [ $a2 as address , 100 as mutez ] , [ $a3 as address , 1000 as mutez ]])) ` as ligo_program,
+    jsligo` Map.literal (list ([[ $a1 as address , 10 as mumav ] , [ $a2 as address , 100 as mumav ] , [ $a3 as address , 1000 as mumav ]])) ` as ligo_program,
     list ([ ["a1", bs_addr (1)] , ["a2", bs_addr (2)] , ["a3", bs_addr (3)] ])
   );
 
 //PART2
-let to_tez = (i:nat) : michelson_program => {
+let to_mav = (i:nat) : michelson_program => {
   return (
     Test.compile_expression_subst (
       (None () as option<string>),
-      jsligo` $i * (1 as mutez) ` as ligo_program,
+      jsligo` $i * (1 as mumav) ` as ligo_program,
       list ([ ["i", Test.compile_value (i)] ])
   )) } ;
 
@@ -31,7 +31,7 @@ let test =
         Test.compile_expression_subst (
           under_test,
           jsligo` Map.size (balances_under ($b, $threshold)) ` as ligo_program,
-          list ([ ["b", balances] , ["threshold", to_tez (threshold)]]) );
+          list ([ ["b", balances] , ["threshold", to_mav (threshold)]]) );
       let unit = Test.log (["expected", expected_size]) ;
       let unit = Test.log (["actual",size]) ;
       return (assert (Test.michelson_equal (size,expected_size)))

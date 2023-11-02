@@ -14,7 +14,7 @@ contracts that (after expansion) surpass size limit for contracts.
 
 ## Using global constants
 
-Global constants are introduced using `Tezos.constant`. This function
+Global constants are introduced using `Mavryk.constant`. This function
 expects a _constant hash_, i.e. a hash that corresponds to a
 particular constant that was registered on network.
 
@@ -27,33 +27,33 @@ to the Michelson code
 ```
 
 In a contract, we can make reference to a global constant by using the
-`Tezos.constant` operation:
+`Mavryk.constant` operation:
 
 <Syntax syntax="pascaligo">
 
 ```
-(Tezos.constant("expruCKsgmUZjC7k8NRcwbcGbFSuLHv5rUyApNd972MwArLuxEZQm2") : int -> int)
+(Mavryk.constant("expruCKsgmUZjC7k8NRcwbcGbFSuLHv5rUyApNd972MwArLuxEZQm2") : int -> int)
 ```
 
 </Syntax>
 <Syntax syntax="cameligo">
 
 ```
-(Tezos.constant "expruCKsgmUZjC7k8NRcwbcGbFSuLHv5rUyApNd972MwArLuxEZQm2" : int -> int)
+(Mavryk.constant "expruCKsgmUZjC7k8NRcwbcGbFSuLHv5rUyApNd972MwArLuxEZQm2" : int -> int)
 ```
 
 </Syntax>
 <Syntax syntax="reasonligo">
 
 ```
-(Tezos.constant(("expruCKsgmUZjC7k8NRcwbcGbFSuLHv5rUyApNd972MwArLuxEZQm2")) : int => int))
+(Mavryk.constant(("expruCKsgmUZjC7k8NRcwbcGbFSuLHv5rUyApNd972MwArLuxEZQm2")) : int => int))
 ```
 
 </Syntax>
 <Syntax syntax="jsligo">
 
 ```
-(Tezos.constant("expruCKsgmUZjC7k8NRcwbcGbFSuLHv5rUyApNd972MwArLuxEZQm2") as ((_p : int) => int))
+(Mavryk.constant("expruCKsgmUZjC7k8NRcwbcGbFSuLHv5rUyApNd972MwArLuxEZQm2") as ((_p : int) => int))
 ```
 
 </Syntax>
@@ -112,7 +112,7 @@ In general, we can compile a constant doing the following steps:
 
 - Register the output of `compile expression` using `tezos-client`.
 
-- Capture the constant hash given by `tezos-client` and use it in the code with `Tezos.constant`.
+- Capture the constant hash given by `tezos-client` and use it in the code with `Mavryk.constant`.
 
 - Compile the contract that uses the hash constant by passing the argument `--constants`.
 
@@ -320,28 +320,28 @@ references to `helper` by
 <Syntax syntax="pascaligo">
 
 ```
-(Tezos.constant("exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf") : string * int -> int)
+(Mavryk.constant("exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf") : string * int -> int)
 ```
 
 </Syntax>
 <Syntax syntax="cameligo">
 
 ```
-(Tezos.constant "exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf" : (string * int) -> int)
+(Mavryk.constant "exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf" : (string * int) -> int)
 ```
 
 </Syntax>
 <Syntax syntax="reasonligo">
 
 ```
-(Tezos.constant(("exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf")) : ((string, int) => int))
+(Mavryk.constant(("exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf")) : ((string, int) => int))
 ```
 
 </Syntax>
 <Syntax syntax="jsligo">
 
 ```
-(Tezos.constant("expru4G4gV3ppCneKsDec8s5oTHE1ukSVD6vKb13hBEsqD1xQUvib8") as ((_ps : [string, int]) => int))
+(Mavryk.constant("expru4G4gV3ppCneKsDec8s5oTHE1ukSVD6vKb13hBEsqD1xQUvib8") as ((_ps : [string, int]) => int))
 ```
 
 </Syntax>
@@ -352,7 +352,7 @@ The new version of `global_call` looks as follows:
 
 ```pascaligo skip
 function main(const p : string; const s : int) : list(operation) * int is
-  ((nil : list(operation)), ((Tezos.constant("exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf") : string * int -> int))(p, s))
+  ((nil : list(operation)), ((Mavryk.constant("exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf") : string * int -> int))(p, s))
 ```
 
 </Syntax>
@@ -360,7 +360,7 @@ function main(const p : string; const s : int) : list(operation) * int is
 
 ```cameligo skip
 let main ((p, s) : string * int) : operation list * int =
-  ([], (Tezos.constant "exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf")(p, s))
+  ([], (Mavryk.constant "exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf")(p, s))
 ```
 
 </Syntax>
@@ -368,7 +368,7 @@ let main ((p, s) : string * int) : operation list * int =
 
 ```reasonligo skip
 let main = ((p, s) : (string, int)) : (list (operation), int) =>
-  (([] : list (operation)), (((Tezos.constant(("exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf")) : ((string, int) => int)))(p, s)));
+  (([] : list (operation)), (((Mavryk.constant(("exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf")) : ((string, int) => int)))(p, s)));
 ```
 
 </Syntax>
@@ -376,7 +376,7 @@ let main = ((p, s) : (string, int)) : (list (operation), int) =>
 
 ```jsligo skip
 const main = (p: string, s: int) : [list<operation>, int] =>
-  [ list([]), Tezos.constant("expru4G4gV3ppCneKsDec8s5oTHE1ukSVD6vKb13hBEsqD1xQUvib8")(p, s) ];
+  [ list([]), Mavryk.constant("expru4G4gV3ppCneKsDec8s5oTHE1ukSVD6vKb13hBEsqD1xQUvib8")(p, s) ];
 ```
 
 </Syntax>
@@ -484,7 +484,7 @@ returns an string that is the constant hash corresponding to the
 constant registered.
 
 The string returned by `Test.register_constant` can be used via
-`Tezos.constant`, as in the examples above.
+`Mavryk.constant`, as in the examples above.
 
 A simple usage case is the following, in which we obtain a
 `michelson_program` by using `Test.eval`:
@@ -500,12 +500,12 @@ function f(const x : int) : int is x * 3 + 2;
 const ct : string = Test.register_constant(Test.eval(f));
 
 function main(const p : parameter; const s : storage) is
-  ((nil : list(operation)), (((Tezos.constant(ct) : int -> int))(s)));
+  ((nil : list(operation)), (((Mavryk.constant(ct) : int -> int))(s)));
 
 const test = {
-  const (taddr, _, _) = Test.originate(main, 1, 0tez);
+  const (taddr, _, _) = Test.originate(main, 1, 0mav);
   const ctr = Test.to_contract(taddr);
-  const _ = Test.transfer_to_contract_exn(ctr, Unit, 0tez);
+  const _ = Test.transfer_to_contract_exn(ctr, Unit, 0mav);
 } with assert(Test.get_storage(taddr) = 5);
 ```
 
@@ -522,12 +522,12 @@ let f (x : int) = x * 3 + 2
 let ct = Test.register_constant (Test.eval f)
 
 let main ((), store : parameter * storage) : return =
- [], (Tezos.constant ct store)
+ [], (Mavryk.constant ct store)
 
 let test =
-  let (taddr, _, _) = Test.originate main 1 0tez in
+  let (taddr, _, _) = Test.originate main 1 0mav in
   let ctr = Test.to_contract taddr in
-  let _ = Test.transfer_to_contract_exn ctr () 0tez in
+  let _ = Test.transfer_to_contract_exn ctr () 0mav in
   assert (Test.get_storage taddr = 5)
 ```
 
@@ -543,12 +543,12 @@ let f = (x : int) => x * 3 + 2;
 let ct : string = Test.register_constant(Test.eval(f));
 
 let main = ((p, s) : (parameter, storage)) : (list (operation), storage) =>
-  (([] : list (operation)), (((Tezos.constant(ct) : (int => int)))(s)));
+  (([] : list (operation)), (((Mavryk.constant(ct) : (int => int)))(s)));
 
 let test =
-  let (taddr, _, _) = Test.originate(main, 1, 0tez);
+  let (taddr, _, _) = Test.originate(main, 1, 0mav);
   let ctr = Test.to_contract(taddr);
-  let _ = Test.transfer_to_contract_exn(ctr, (), 0tez);
+  let _ = Test.transfer_to_contract_exn(ctr, (), 0mav);
   assert (Test.get_storage(taddr) == 5);
 ```
 
@@ -564,12 +564,12 @@ const f = (x : int) => x * 3 + 2;
 const ct = Test.register_constant(Test.eval(f));
 
 const main = (p: parameter, s: storage) : [list<operation>, storage] =>
-  [list([]), Tezos.constant(ct)(s)];
+  [list([]), Mavryk.constant(ct)(s)];
 
 const _test = () => {
-  let [taddr, _, _] = Test.originate(main, 1, (0 as tez));
+  let [taddr, _, _] = Test.originate(main, 1, (0 as mav));
   let ctr = Test.to_contract(taddr);
-  let _ = Test.transfer_to_contract_exn(ctr, unit, (0 as tez));
+  let _ = Test.transfer_to_contract_exn(ctr, unit, (0 as mav));
   assert (Test.get_storage(taddr) == 5);
 };
 

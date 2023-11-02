@@ -6,8 +6,8 @@ title: Is there a way to advance time in Ligo tests ?
 import Syntax from '@theme/Syntax';
 import SyntaxTitle from '@theme/SyntaxTitle';
 
-The `Tezos.get_now` function can be used to get the current time, but in the tests,
-we may want to setup a situation where the contracts thinks `Tezos.get_now()` is in the future.
+The `Mavryk.get_now` function can be used to get the current time, but in the tests,
+we may want to setup a situation where the contracts thinks `Mavryk.get_now()` is in the future.
 
 Time advances by baking (protocol checks and enforces the timestamp makes sense)
 
@@ -29,22 +29,22 @@ and you'll have to change the expected signature everywhere it's mentioned in th
 
 ```pascaligo test-ligo group=log
 const _dummy : nat -> unit = Test.bake_until_n_cycle_end
-const _dummy : timestamp * nat * list (tez) -> unit = Test.reset_state_at
+const _dummy : timestamp * nat * list (mav) -> unit = Test.reset_state_at
 ```
 
 ```cameligo test-ligo group=log
 let _dummy : nat -> unit = Test.bake_until_n_cycle_end
-let _dummy : timestamp -> nat -> tez list -> unit = Test.reset_state_at
+let _dummy : timestamp -> nat -> mav list -> unit = Test.reset_state_at
 ```
 
 ```reasonligo test-ligo group=log
 let _dummy : nat => unit = Test.bake_until_n_cycle_end
-let _dummy : (timestamp, nat, list(tez)) => unit = Test.reset_state_at
+let _dummy : (timestamp, nat, list(mav)) => unit = Test.reset_state_at
 ```
 
 ```jsligo test-ligo group=log
 let _dummy : (cycles : nat) => unit = Test.bake_until_n_cycle_end
-let _dummy_2 : (initial_timestamp : timestamp, no_of_accounts: nat, amount: list<tez>) => unit = Test.reset_state_at
+let _dummy_2 : (initial_timestamp : timestamp, no_of_accounts: nat, amount: list<mav>) => unit = Test.reset_state_at
 ```
 
 -->
@@ -69,19 +69,19 @@ let Test.bake_until_n_cycle_end = (cycles : nat) => unit
 
 Depending on the situation, the following can be useful as well :
 <SyntaxTitle syntax="pascaligo">
-val Test.reset_state_at : timestamp * nat * list (tez) -> unit
+val Test.reset_state_at : timestamp * nat * list (mav) -> unit
 </SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
-val Test.reset_state_at : timestamp -> nat -> tez list -> unit
+val Test.reset_state_at : timestamp -> nat -> mav list -> unit
 </SyntaxTitle>
 
 <SyntaxTitle syntax="reasonligo">
-let Test.reset_state_at: (timestamp, nat, list(tez)) => unit
+let Test.reset_state_at: (timestamp, nat, list(mav)) => unit
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let Test.reset_state_at = (initial_timestamp : timestamp, no_of_accounts: nat, amount: list&lt;tez&gt;) => unit
+let Test.reset_state_at = (initial_timestamp : timestamp, no_of_accounts: nat, amount: list&lt;mav&gt;) => unit
 </SyntaxTitle>
 
 

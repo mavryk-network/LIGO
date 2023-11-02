@@ -560,7 +560,7 @@ let%expect_test _ =
     0mutez
     123mutez
     Everything at the top-level was executed.
-    - test_addresses exited with value [tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx]. |}]
+    - test_addresses exited with value [mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE]. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_accounts.mligo" ];
@@ -661,7 +661,7 @@ let%expect_test _ =
     100000000000000mutez
     3799997904750mutez
     Everything at the top-level was executed.
-    - test exited with value {contract_balance = 3799997904750mutez ; contract_too_low = tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ ; spend_request = 100000000000000mutez}. |}]
+    - test exited with value {contract_balance = 3799997904750mutez ; contract_too_low = mv1Kft5rQoxA7vMpdcndHmzwwu6ZCUxNyYM9 ; spend_request = 100000000000000mutez}. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_inline.mligo" ];
@@ -853,12 +853,12 @@ let%expect_test _ =
   [%expect
     {xxx|
     Everything at the top-level was executed.
-    - test_address_set exited with value { "tz1KeYsjjSCLEELMuiq1oXzVZmuJrZ15W4mv" ;
-      "tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ" }.
+    - test_address_set exited with value { "mv1QjrcwtyB2WbWRMgtPTK4iLHPhgTDuyDxx" ;
+      "mv1Kft5rQoxA7vMpdcndHmzwwu6ZCUxNyYM9" }.
     - test_int_set exited with value { 3 ; 4 }.
-    - test_map exited with value { Elt "tz1KeYsjjSCLEELMuiq1oXzVZmuJrZ15W4mv" 900 ;
+    - test_map exited with value { Elt "mv1QjrcwtyB2WbWRMgtPTK4iLHPhgTDuyDxx" 900 ;
       Elt "KT1WoTZUkky48v3QqZWzkeJCYfhWhNaVFYuC" 100 }.
-    - test_big_map exited with value { Elt "tz1KeYsjjSCLEELMuiq1oXzVZmuJrZ15W4mv" 900 ;
+    - test_big_map exited with value { Elt "mv1QjrcwtyB2WbWRMgtPTK4iLHPhgTDuyDxx" 900 ;
       Elt "KT1WoTZUkky48v3QqZWzkeJCYfhWhNaVFYuC" 100 }. |xxx}]
 
 let%expect_test _ =

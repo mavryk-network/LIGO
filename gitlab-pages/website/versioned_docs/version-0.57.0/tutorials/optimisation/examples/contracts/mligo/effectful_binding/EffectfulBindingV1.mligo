@@ -10,7 +10,7 @@ let some_contract = ("KT1WhG8rMaC1azBJApBHW2JJdhWuhvemw4Zf" : address)
 (* The inline attribute will be ignored! *)
 [@inline]
 let target_exists =
-  let c : int contract option = Tezos.get_contract_opt some_contract in
+  let c : int contract option = Mavryk.get_contract_opt some_contract in
   match c with
     Some contract -> true
   | None -> false

@@ -102,7 +102,7 @@ Create a non-empty big_map.
 ```pascaligo group=big_map
 const moves : register =
   Big_map.literal (list [
-    (("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address), (1,2));
+    (("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address), (1,2));
     (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address), (0,3))])
 ```
 
@@ -111,7 +111,7 @@ Alternative way of creating an empty big_map:
 ```pascaligo group=big_map
 const moves_alternative : register =
   big_map [
-    ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address) -> (1,2);
+    ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address) -> (1,2);
     ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) -> (0,3)];
 ```
 
@@ -121,7 +121,7 @@ const moves_alternative : register =
 ```cameligo group=big_map
 let moves : register =
   Big_map.literal [
-    (("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address), (1,2));
+    (("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address), (1,2));
     (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address), (0,3))]
 ```
 
@@ -131,7 +131,7 @@ let moves : register =
 ```reasonligo group=big_map
 let moves: register =
   Big_map.literal ([
-    ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address, (1,2)),
+    ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address, (1,2)),
     ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address, (0,3))]);
 ```
 
@@ -141,7 +141,7 @@ let moves: register =
 ```jsligo group=big_map
 let moves: register =
   Big_map.literal (list([
-    [("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address), [1, 2]],
+    [("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address), [1, 2]],
     [("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), [0, 3]]]));
 ```
 
@@ -294,7 +294,7 @@ instruction* for maps, similar to that for records.
 function assignments (var m : register) : register is {
   patch m with map [
     ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) -> (4,9);
-    ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address) -> (1,2)
+    ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address) -> (1,2)
   ]
 } with m
 ```

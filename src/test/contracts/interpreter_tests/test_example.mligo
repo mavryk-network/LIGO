@@ -15,20 +15,20 @@ let test =
   let _baker = Test.nth_bootstrap_account 0 in
   let src = Test.nth_bootstrap_account 1 in
 
-  let (typed_addr, _code, size) = Test.originate main (None : storage) 0tez in
+  let (typed_addr, _code, size) = Test.originate main (None : storage) 0mav in
   let () = assert ((None : storage) = (Test.get_storage typed_addr : storage)) in
   let () = assert (size < 300) in
   let new_account1 = check_new_origination src in
 
   let contr = Test.to_contract typed_addr in
-  let _ = Test.transfer_to_contract_exn contr Two 10tez in
+  let _ = Test.transfer_to_contract_exn contr Two 10mav in
   let new_account2 = check_new_origination new_account1 in
   let new_storage = Test.get_storage typed_addr in
   let expected_new_storage = Some new_account2 in
   let () = assert (new_storage = expected_new_storage) in
 
 
-  match (Test.transfer_to_contract contr One 10tez : test_exec_result) with
+  match (Test.transfer_to_contract contr One 10mav : test_exec_result) with
   | Success _ -> (failwith "contract did not fail" : michelson_program)
   | Fail x -> (
     let x = (fun (x : test_exec_error) -> x) x in 
@@ -44,12 +44,12 @@ let test =
 
 let test2 =
   // By default:
-  //  - only 2 bootstrap accounts are created with a default amount of 4000000000000 mutez
+  //  - only 2 bootstrap accounts are created with a default amount of 4000000000000 mumav
   //  - the 1st and 2nd bootstrap accounts are used as baker and source respectively
   
   // You can change the default behavior by reseting the state:
   let number_of_account = 4n in
-  let overide_default_amounts = [ 8000tez ; 2mutez ] in // the [i]th element of the list overwrite default balance of the [i]th account 
+  let overide_default_amounts = [ 8000mav ; 2mumav ] in // the [i]th element of the list overwrite default balance of the [i]th account 
   let () = Test.reset_state number_of_account overide_default_amounts in
   // And by setting the source in between calls to `Test.transfer_to_contract` or `Test.originate`
   let bsa0 = (Test.nth_bootstrap_account 0) in
@@ -60,11 +60,11 @@ let test2 =
   let () = Test.set_baker bsa2 in
   // some balance tests:
   let tz = fun (n:nat) ->
-    Test.run (fun (x : unit -> nat) -> x () * 1mutez) (fun (_ : unit) -> n)
+    Test.run (fun (x : unit -> nat) -> x () * 1mumav) (fun (_ : unit) -> n)
   in
-  let () = assert ((Test.get_balance bsa0) = 7600tez) in
-  let () = assert ((Test.get_balance bsa1) = 2mutez) in
+  let () = assert ((Test.get_balance bsa0) = 7600mav) in
+  let () = assert ((Test.get_balance bsa1) = 2mumav) in
   let () = assert (Test.michelson_equal (Test.eval (Test.get_balance bsa1)) (tz 2n)) in
-  let () = assert ((Test.get_balance bsa2) = 3800000tez) in
-  let () = assert ((Test.get_balance bsa3) = 3800000000000mutez) in
+  let () = assert ((Test.get_balance bsa2) = 3800000mav) in
+  let () = assert ((Test.get_balance bsa3) = 3800000000000mumav) in
   ()

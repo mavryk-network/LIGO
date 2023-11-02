@@ -1,7 +1,7 @@
 let main ((_, _) : (unit * unit)) : operation list * unit =
-  let v = (Tezos.get_entrypoint_opt
+  let v = (Mavryk.get_entrypoint_opt
            "foo"
-           ("tz1fakefakefakefakefakefakefakcphLA5" : address) : unit contract option) in
+           ("mv198hRfuJgRidm2CGP9UqehFCneSz3a2TZm" : address) : unit contract option) in
   let u : unit = match v with
           | None -> failwith "None"
           | Some _ -> failwith "Some" in

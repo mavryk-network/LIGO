@@ -1,6 +1,6 @@
 //PART 0
 #include "remove-balance.religo"
-let _u = Test.reset_state (5n, ([] : list(tez)));
+let _u = Test.reset_state (5n, ([] : list(mav)));
 
 //PART 1
 let balances : balances =
@@ -10,11 +10,11 @@ let balances : balances =
 //PART 2
 let test =
   List.iter (
-    (((threshold , expected_size) : (tez, nat)) =>
-      let tester = ((balances, threshold) : (balances, tez)) => Map.size (balances_under (balances, threshold));
+    (((threshold , expected_size) : (mav, nat)) =>
+      let tester = ((balances, threshold) : (balances, mav)) => Map.size (balances_under (balances, threshold));
       let size = Test.run(tester, (balances, threshold));
       let expected_size = Test.eval(expected_size) ;
       let _u = Test.log (("expected", expected_size)) ;
       let _u = Test.log (("actual", size)) ;
       assert ( Test.michelson_equal (size, expected_size) )),
-    [ (15tez, 2n), (130tez, 1n), (1200tez, 0n)] );
+    [ (15mav, 2n), (130mav, 1n), (1200mav, 0n)] );

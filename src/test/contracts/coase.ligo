@@ -3,7 +3,7 @@
 type card_pattern_id is nat
 
 type card_pattern is record [
-  coefficient : tez;
+  coefficient : mav;
   quantity    : nat
 ]
 
@@ -53,7 +53,7 @@ function transfer_single (const action : action_transfer_single;
         Some (card) -> card
       | None -> (failwith ("transfer_single: No card.") : card)
       ];
-    if card.card_owner =/= Tezos.get_sender() then
+    if card.card_owner =/= Mavryk.get_sender() then
       failwith ("This card doesn't belong to you");
     card.card_owner := action.destination;
     cards[action.card_to_transfer] := card;
@@ -68,7 +68,7 @@ function sell_single (const action : action_sell_single;
         Some (card) -> card
       | None -> (failwith ("sell_single: No card.") : card)
       ];
-    if card.card_owner =/= Tezos.get_sender()
+    if card.card_owner =/= Mavryk.get_sender()
     then failwith ("This card doesn't belong to you");
     var card_pattern : card_pattern :=
       case s.card_patterns[card.card_pattern] of [
@@ -82,13 +82,13 @@ function sell_single (const action : action_sell_single;
     var cards : cards := s.cards;
     remove action.card_to_sell from map cards;
     s.cards := cards;
-    const price : tez = card_pattern.coefficient * card_pattern.quantity;
+    const price : mav = card_pattern.coefficient * card_pattern.quantity;
     const receiver : contract (unit) =
-      case (Tezos.get_contract_opt (Tezos.get_sender()) : option (contract (unit))) of [
+      case (Mavryk.get_contract_opt (Mavryk.get_sender()) : option (contract (unit))) of [
         Some (contract) -> contract
       | None -> (failwith ("sell_single: No contract.") : contract (unit))
       ];
-    const op : operation = Tezos.transaction (unit, price, receiver);
+    const op : operation = Mavryk.transaction (unit, price, receiver);
     const operations : list (operation) = list [op]
   } with (operations, s)
 
@@ -101,9 +101,9 @@ function buy_single (const action : action_buy_single;
         Some (pattern) -> pattern
       | None -> (failwith ("buy_single: No card pattern.") : card_pattern)
       ];
-    const price : tez =
+    const price : mav =
       card_pattern.coefficient * (card_pattern.quantity + 1n);
-    if price > Tezos.get_amount() then failwith ("Not enough money");
+    if price > Mavryk.get_amount() then failwith ("Not enough money");
     // Increase quantity
     card_pattern.quantity := card_pattern.quantity + 1n;
     var card_patterns : card_patterns := s.card_patterns;
@@ -112,7 +112,7 @@ function buy_single (const action : action_buy_single;
     // Add card
     var cards : cards := s.cards;
     cards[s.next_id] := record [
-      card_owner   = Tezos.get_sender();
+      card_owner   = Mavryk.get_sender();
       card_pattern = action.card_to_buy
     ];
     s.cards := cards;

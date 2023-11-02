@@ -254,4 +254,4 @@ ligo compile contract --protocol edo --disable-michelson-typechecking gitlab-pag
 </Syntax>
 
 > ⚠️ Just for reference, there is support now for generating the
-> instruction `NEVER` directly from LIGO, using `Tezos.never`.
+> instruction `NEVER` directly from LIGO, using `Mavryk.never`.

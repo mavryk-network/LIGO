@@ -1,0 +1,5 @@
+# 0.60.0
+- Forked from original ligolang/ligo project (https://gitlab.com/ligolang/ligo)
+- Refactor tz prefixes to mv prefixes
+- Refactor tez and mutez to mav and mumav
+- Implement Mavryk LIGO package

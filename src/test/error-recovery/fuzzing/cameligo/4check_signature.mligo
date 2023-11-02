@@ -1,4 +1,4 @@
- let check_signature ( pk , 42mutez , msg : key * signature * bytes ) : bool =
+ let check_signature ( pk , 42mumav , msg : key * signature * bytes ) : bool =
  Crypto . check pk signed msg
 
 
@@ -26,6 +26,6 @@
 (*
 Mutation chance is 4
 
-Replace signed with 42mutez in line 1
+Replace signed with 42mumav in line 1
 Add mod in line 23
 *)

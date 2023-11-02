@@ -8,11 +8,11 @@ const proxy_transfer_contract :
     return (p : [[[vt , nat] , address] , unit] ) => {
     const [p,_] = p ;
     const [[v,amt],dst_addr] = p ;
-    const ticket = Option.unopt (Tezos.create_ticket (v, amt)) ;
+    const ticket = Option.unopt (Mavryk.create_ticket (v, amt)) ;
     const tx_param = mk_param (ticket) ;
     const c : contract<whole_p> =
-      Tezos.get_contract_with_error (dst_addr, "Testing proxy: you provided a wrong address") ;
-    const op = Tezos.transaction (tx_param, 1 as mutez, c) ;
+      Mavryk.get_contract_with_error (dst_addr, "Testing proxy: you provided a wrong address") ;
+    const op = Mavryk.transaction (tx_param, 1 as mumav, c) ;
     return ([ list([op]), unit ])
   };
 };

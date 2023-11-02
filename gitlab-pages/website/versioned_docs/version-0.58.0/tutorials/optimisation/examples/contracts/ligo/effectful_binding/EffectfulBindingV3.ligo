@@ -12,7 +12,7 @@ const some_contract = ("KT1WhG8rMaC1azBJApBHW2JJdhWuhvemw4Zf" : address)
 
 (* Calls to the function are not inlined anymore *)
 function target_exists (const u : unit) is {
-  const c : option (contract (int)) = Tezos.get_contract_opt (some_contract)
+  const c : option (contract (int)) = Mavryk.get_contract_opt (some_contract)
 } with
     case c of [
       Some (contract) -> True

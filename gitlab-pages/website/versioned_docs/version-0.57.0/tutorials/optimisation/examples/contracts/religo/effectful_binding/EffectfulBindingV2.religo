@@ -9,7 +9,7 @@ let some_contract = ("KT1WhG8rMaC1azBJApBHW2JJdhWuhvemw4Zf" : address);
 /* Calls to a function can be inlined */
 [@inline]
 let target_exists = (_: unit) => {
-  let c: option(contract(int)) = Tezos.get_contract_opt(some_contract);
+  let c: option(contract(int)) = Mavryk.get_contract_opt(some_contract);
   switch(c){
   | Some (contract) => true
   | None => false

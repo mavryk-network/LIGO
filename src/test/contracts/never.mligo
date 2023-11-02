@@ -9,5 +9,5 @@ let main(action, store : parameter * storage) : operation list * storage =
   (([] : operation list),
    (match action with
       Increment (n) -> store + n
-    | Extend (k) -> (Tezos.never k : storage))
+    | Extend (k) -> (Mavryk.never k : storage))
   )

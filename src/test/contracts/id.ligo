@@ -38,8 +38,8 @@ type storage is
   record [
     identities: big_map (id, id_details);
     next_id: int;
-    name_price: tez;
-    skip_price: tez;
+    name_price: mav;
+    skip_price: mav;
   ]
 
 (** Preliminary thoughts on ids:
@@ -59,7 +59,7 @@ be to deter people from doing it just to chew up address space.
 
 function buy (const parameter : buy; const storage : storage) : list(operation) * storage is
   begin
-    if Tezos.get_amount() =/= storage.name_price
+    if Mavryk.get_amount() =/= storage.name_price
     then failwith("Incorrect amount paid.");
     const profile : bytes = parameter.profile;
     const initial_controller : option(address) = parameter.initial_controller;
@@ -68,11 +68,11 @@ function buy (const parameter : buy; const storage : storage) : list(operation) 
     const controller : address =
       case initial_controller of [
         Some(addr) -> addr
-      | None -> Tezos.get_sender()
+      | None -> Mavryk.get_sender()
       ];
     const new_id_details: id_details =
       record [
-              owner = Tezos.get_sender() ;
+              owner = Mavryk.get_sender() ;
               controller = controller ;
               profile = profile ;
       ];
@@ -85,7 +85,7 @@ function buy (const parameter : buy; const storage : storage) : list(operation) 
 function update_owner (const parameter : update_owner; const storage : storage) :
          list(operation) * storage is
   begin
-    if (Tezos.get_amount() =/= 0mutez)
+    if (Mavryk.get_amount() =/= 0mumav)
     then
       begin
         failwith("Updating owner doesn't cost anything.");
@@ -98,7 +98,7 @@ function update_owner (const parameter : update_owner; const storage : storage) 
         Some(id_details) -> id_details
       | None -> (failwith("This ID does not exist."): id_details)
       ];
-    if Tezos.get_sender() =/= id_details.owner then failwith("You are not the owner of this ID.");
+    if Mavryk.get_sender() =/= id_details.owner then failwith("You are not the owner of this ID.");
     id_details.owner := new_owner;
     identities[id] := id_details;
   end with ((nil: list(operation)), storage with record [ identities = identities; ])
@@ -106,7 +106,7 @@ function update_owner (const parameter : update_owner; const storage : storage) 
 function update_details (const parameter : update_details; const storage : storage ) :
          list(operation) * storage is
   begin
-    if (Tezos.get_amount() =/= 0mutez) then failwith("Updating details doesn't cost anything.") ;
+    if (Mavryk.get_amount() =/= 0mumav) then failwith("Updating details doesn't cost anything.") ;
     const id : int = parameter.id;
     const new_profile : option(bytes) = parameter.new_profile;
     const new_controller : option(address) = parameter.new_controller;
@@ -116,7 +116,7 @@ function update_details (const parameter : update_details; const storage : stora
         Some(id_details) -> id_details
       | None -> (failwith("This ID does not exist."): id_details)
       ];
-    if not ((Tezos.get_sender() = id_details.controller) or (Tezos.get_sender() = id_details.owner)) then failwith("You are not the owner or controller of this ID.");
+    if not ((Mavryk.get_sender() = id_details.controller) or (Mavryk.get_sender() = id_details.owner)) then failwith("You are not the owner or controller of this ID.");
     const owner: address = id_details.owner;
     const profile: bytes =
       case new_profile of [
@@ -137,7 +137,7 @@ function update_details (const parameter : update_details; const storage : stora
 (* Let someone skip the next identity so nobody has to take one that's undesirable *)
 function skip_ (const _ : unit; const storage: storage) : list(operation) * storage is
   begin
-    if Tezos.get_amount() =/= storage.skip_price then failwith("Incorrect amount paid.");
+    if Mavryk.get_amount() =/= storage.skip_price then failwith("Incorrect amount paid.");
   end with ((nil: list(operation)), storage with record [ next_id = storage.next_id + 1; ])
 
 function main (const action : action; const storage : storage) : list(operation) * storage is

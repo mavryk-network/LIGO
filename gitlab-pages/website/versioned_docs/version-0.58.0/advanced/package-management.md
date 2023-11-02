@@ -185,10 +185,10 @@ and we write some tests for our smart contract in `main.test.mligo`
 
 const test = {
     const storage = Test.compile_value(list [1; 2; 3]);
-    const (addr, _, _) = Test.originate_from_file("./main.ligo", "main", (nil : list(string)), storage, 0tez);
+    const (addr, _, _) = Test.originate_from_file("./main.ligo", "main", (nil : list(string)), storage, 0mav);
     const taddr : typed_address(parameter, storage) = Test.cast_address(addr);
     const contr : contract(parameter) = Test.to_contract(taddr);
-    const _ = Test.transfer_to_contract_exn(contr, Reverse, 1mutez);
+    const _ = Test.transfer_to_contract_exn(contr, Reverse, 1mumav);
 } with assert (Test.get_storage(taddr) = list [3; 2; 1])
 
 ```
@@ -201,10 +201,10 @@ const test = {
 
 let test =
     let storage = Test.compile_value [1; 2; 3] in
-    let (addr, _, _) = Test.originate_from_file "./main.mligo" "main" ([] : string list) storage 0tez in
+    let (addr, _, _) = Test.originate_from_file "./main.mligo" "main" ([] : string list) storage 0mav in
     let taddr : (parameter, storage) typed_address = Test.cast_address addr in
     let contr : parameter contract = Test.to_contract taddr in
-    let _ = Test.transfer_to_contract_exn contr Reverse 1mutez in
+    let _ = Test.transfer_to_contract_exn contr Reverse 1mumav in
     assert (Test.get_storage taddr = [3; 2; 1])
                                          
 ```
@@ -217,10 +217,10 @@ let test =
 
 let test = {
     let storage = Test.compile_value([1, 2, 3]);
-    let (addr, _, _) = Test.originate_from_file("./main.religo", "main", ([] : list(string)), storage, 0tez);
+    let (addr, _, _) = Test.originate_from_file("./main.religo", "main", ([] : list(string)), storage, 0mav);
     let taddr : typed_address(parameter, storage) = Test.cast_address(addr);
     let contr : contract(parameter) = Test.to_contract(taddr);
-    let _ = Test.transfer_to_contract_exn(contr, Reverse, 1mutez);
+    let _ = Test.transfer_to_contract_exn(contr, Reverse, 1mumav);
     assert (Test.get_storage(taddr) == [3, 2, 1])
 }
 
@@ -234,9 +234,9 @@ let test = {
 
 const test = (() => {
     let storage = Test.compile_value(list([1, 2, 3]));
-    let [addr, _, _] = Test.originate_from_file("./main.jsligo", "main", (list([]) as list<string>), storage, 0 as tez);    let taddr : typed_address<parameter, storage> = Test.cast_address(addr);
+    let [addr, _, _] = Test.originate_from_file("./main.jsligo", "main", (list([]) as list<string>), storage, 0 as mav);    let taddr : typed_address<parameter, storage> = Test.cast_address(addr);
     let contr : contract<parameter> = Test.to_contract(taddr);
-    let _ = Test.transfer_to_contract_exn(contr, Reverse(), 1 as mutez);
+    let _ = Test.transfer_to_contract_exn(contr, Reverse(), 1 as mumav);
     assert (Test.get_storage(taddr) == list([3, 2, 1]))
 })();
 

@@ -26,8 +26,8 @@
 
  function commit ( const p : * bytes ; var s : storage ) : return is
  begin
- const commit : commit = record [ = Tezos . now + 86_400 ; salted_hash = p ] ;
- const updated_map : commit_set = Big_map . update ( Tezos . sender , Some ( commit ) , s . commits ) ;
+ const commit : commit = record [ = Mavryk . now + 86_400 ; salted_hash = p ] ;
+ const updated_map : commit_set = Big_map . update ( Mavryk . sender , Some ( commit ) , s . commits ) ;
  s := s with record [ commits = updated_map ] ;
  end with ( ( nil : list ( operation ) ) , s )
 
@@ -41,7 +41,7 @@
  | Some ( c ) -> commit := c
  | None -> failwith ( "You have not made a commitment to hash against yet." )
  ] ;
- if Tezos . now < commit . date then
+ if Mavryk . now < commit . date then
  failwith ( "It has not been 24 hours since your commit yet." ) ;
  const salted : bytes =
  Crypto . sha256 (

@@ -39,8 +39,8 @@ finite supply for the current sales life-cycle.
 
 |**kind** |id |**available_stock**| **max_price**|
 |---|---|---|---|
-|Clásico | `1n` | `50n` | `50tez` |
-|Especial del Chef | `2n` | `20n` | `75tez` |
+|Clásico | `1n` | `50n` | `50mav` |
+|Especial del Chef | `2n` | `20n` | `75mav` |
 
 ### Calculating the Current Purchase Price
 
@@ -53,16 +53,16 @@ current_purchase_price = max_price / available_stock
 #### El Clásico
 |**available_stock**|**max_price**|**current_purchase_price**|
 |---|---|---|
-| `50n` | `50tez` | `1tez`|
-| `20n` | `50tez` | `2.5tez` |
-| `5n` | `50tez` | `10tez` |
+| `50n` | `50mav` | `1mav`|
+| `20n` | `50mav` | `2.5mav` |
+| `5n` | `50mav` | `10mav` |
 
 #### Especial del chef
 |**available_stock**|**max_price**|**current_purchase_price**|
 |---|---|---|
-| `20n` | `75tez` | `3.75tez` |
-| `10n` | `75tez` | `7.5tez`|
-| `5n` | `75tez` | `15tez` |
+| `20n` | `75mav` | `3.75mav` |
+| `10n` | `75mav` | `7.5mav`|
+| `5n` | `75mav` | `15mav` |
 
 ---
 
@@ -203,7 +203,7 @@ into a map, consisting of the entire offer of Pedro's shop.
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=b
-type taco_supply is record [current_stock : nat; max_price : tez]
+type taco_supply is record [current_stock : nat; max_price : mav]
 
 type taco_shop_storage is map (nat, taco_supply)
 ```
@@ -212,7 +212,7 @@ type taco_shop_storage is map (nat, taco_supply)
 <Syntax syntax="cameligo">
 
 ```cameligo group=b
-type taco_supply = { current_stock : nat ; max_price : tez }
+type taco_supply = { current_stock : nat ; max_price : mav }
 
 type taco_shop_storage = (nat, taco_supply) map
 ```
@@ -222,7 +222,7 @@ type taco_shop_storage = (nat, taco_supply) map
 <Syntax syntax="jsligo">
 
 ```jsligo group=b
-type taco_supply = { current_stock : nat , max_price : tez } ;
+type taco_supply = { current_stock : nat , max_price : mav } ;
 
 type taco_shop_storage = map <nat, taco_supply> ;
 ```
@@ -282,8 +282,8 @@ our storage's value will be defined as follows:
 
 ```pascaligo group=b
 const init_storage = map [
-  1n -> record [ current_stock = 50n ; max_price = 50tez ] ;
-  2n -> record [ current_stock = 20n ; max_price = 75tez ] ;
+  1n -> record [ current_stock = 50n ; max_price = 50mav ] ;
+  2n -> record [ current_stock = 20n ; max_price = 75mav ] ;
 ]
 ```
 
@@ -292,8 +292,8 @@ const init_storage = map [
 
 ```cameligo group=b
 let init_storage = Map.literal [
-  (1n, { current_stock = 50n ; max_price = 50tez }) ;
-  (2n, { current_stock = 20n ; max_price = 75tez }) ;
+  (1n, { current_stock = 50n ; max_price = 50mav }) ;
+  (2n, { current_stock = 20n ; max_price = 75mav }) ;
 ]
 ```
 
@@ -303,8 +303,8 @@ let init_storage = Map.literal [
 
 ```jsligo group=b
 let init_storage = Map.literal (list([
-  [1 as nat, { current_stock : 50 as nat, max_price : 50 as tez }],
-  [2 as nat, { current_stock : 20 as nat, max_price : 75 as tez }]
+  [1 as nat, { current_stock : 50 as nat, max_price : 50 as mav }],
+  [2 as nat, { current_stock : 20 as nat, max_price : 75 as mav }]
 ]));
 ```
 
@@ -476,7 +476,7 @@ let buy_taco2 = ([taco_kind_index, taco_shop_storage] : [nat, taco_shop_storage]
 In order to make Pedro's taco shop profitable, he needs to stop giving
 away tacos for free. When a contract is invoked via a transaction, an
 amount of tezzies to be sent can be specified as well. This amount is
-accessible within LIGO as `Tezos.get_amount`.
+accessible within LIGO as `Mavryk.get_amount`.
 
 To make sure we get paid, we will:
 
@@ -501,7 +501,7 @@ function buy_taco (const taco_kind_index : nat ; var taco_shop_storage : taco_sh
   const current_purchase_price =
     taco_kind.max_price / taco_kind.current_stock;
 
-  if (Tezos.get_amount ()) =/= current_purchase_price then
+  if (Mavryk.get_amount ()) =/= current_purchase_price then
     // We won't sell tacos if the amount is not correct
     failwith ("Sorry, the taco you are trying to purchase has a different price");
 
@@ -524,9 +524,9 @@ let buy_taco (taco_kind_index, taco_shop_storage : nat * taco_shop_storage) =
     | Some k -> k
     | None -> failwith "Unknown kind of taco"
   in
-  let current_purchase_price : tez = taco_kind.max_price / taco_kind.current_stock in
+  let current_purchase_price : mav = taco_kind.max_price / taco_kind.current_stock in
   (* We won't sell tacos if the amount is not correct *)
-  let () = if (Tezos.get_amount ()) <> current_purchase_price then
+  let () = if (Mavryk.get_amount ()) <> current_purchase_price then
     failwith "Sorry, the taco you are trying to purchase has a different price"
   in
   (* Update the storage decreasing the stock by 1n *)
@@ -550,9 +550,9 @@ let buy_taco3 = ([taco_kind_index, taco_shop_storage] : [nat, taco_shop_storage]
       Some: k => k,
       None: _x => failwith ("Unknown kind of taco")
     }) ;
-  let current_purchase_price : tez = taco_kind.max_price / taco_kind.current_stock ;
+  let current_purchase_price : mav = taco_kind.max_price / taco_kind.current_stock ;
   /* We won't sell tacos if the amount is not correct */
-  if ((Tezos.get_amount ()) != current_purchase_price) {
+  if ((Mavryk.get_amount ()) != current_purchase_price) {
     return failwith ("Sorry, the taco you are trying to purchase has a different price")
   } else {
     /* Update the storage decreasing the stock by 1n */
@@ -588,13 +588,13 @@ const test = {
   // Originate the contract with a initial storage
   const init_storage =
     map [
-      1n -> record [ current_stock = 50n ; max_price = 50tez ] ;
-      2n -> record [ current_stock = 20n ; max_price = 75tez ] ; ];
-  const (pedro_taco_shop_ta, _code, _size) = Test.originate(buy_taco, init_storage, 0tez) ;
+      1n -> record [ current_stock = 50n ; max_price = 50mav ] ;
+      2n -> record [ current_stock = 20n ; max_price = 75mav ] ; ];
+  const (pedro_taco_shop_ta, _code, _size) = Test.originate(buy_taco, init_storage, 0mav) ;
   // Convert typed_address to contract
   const pedro_taco_shop_ctr = Test.to_contract (pedro_taco_shop_ta);
   // Convert contract to address
-  const pedro_taco_shop = Tezos.address (pedro_taco_shop_ctr);
+  const pedro_taco_shop = Mavryk.address (pedro_taco_shop_ctr);
 
   // Test inputs
   const clasico_kind = 1n ;
@@ -608,22 +608,22 @@ const test = {
     ]
   } with b;
 
-  // Purchasing a Taco with 1tez and checking that the stock has been updated
-  const ok_case : test_exec_result = Test.transfer_to_contract (pedro_taco_shop_ctr, clasico_kind, 1tez) ;
+  // Purchasing a Taco with 1mav and checking that the stock has been updated
+  const ok_case : test_exec_result = Test.transfer_to_contract (pedro_taco_shop_ctr, clasico_kind, 1mav) ;
   const _unit = case ok_case of [
     | Success (_) -> {
       const storage = Test.get_storage (pedro_taco_shop_ta) ;
-    } with (assert (eq_in_map (record [ current_stock = 49n ; max_price = 50tez ], storage, 1n) and
-                    eq_in_map (record [ current_stock = 20n ; max_price = 75tez ], storage, 2n)))
+    } with (assert (eq_in_map (record [ current_stock = 49n ; max_price = 50mav ], storage, 1n) and
+                    eq_in_map (record [ current_stock = 20n ; max_price = 75mav ], storage, 2n)))
     | Fail (x) -> failwith ("ok test case failed")
     ];
 
   // Purchasing an unregistred Taco
-  const nok_unknown_kind = Test.transfer_to_contract (pedro_taco_shop_ctr, unknown_kind, 1tez) ;
+  const nok_unknown_kind = Test.transfer_to_contract (pedro_taco_shop_ctr, unknown_kind, 1mav) ;
   const _u = assert_string_failure (nok_unknown_kind, "Unknown kind of taco") ;
 
-  // Attempting to Purchase a Taco with 2tez
-  const nok_wrong_price = Test.transfer_to_contract (pedro_taco_shop_ctr, clasico_kind, 2tez) ;
+  // Attempting to Purchase a Taco with 2mav
+  const nok_wrong_price = Test.transfer_to_contract (pedro_taco_shop_ctr, clasico_kind, 2mav) ;
   const _u = assert_string_failure (nok_wrong_price, "Sorry, the taco you are trying to purchase has a different price") ;
   } with unit
 ```
@@ -644,14 +644,14 @@ let assert_string_failure (res : test_exec_result) (expected : string) =
 let test =
   (* originate the contract with a initial storage *)
   let init_storage = Map.literal [
-      (1n, { current_stock = 50n ; max_price = 50tez }) ;
-      (2n, { current_stock = 20n ; max_price = 75tez }) ; ]
+      (1n, { current_stock = 50n ; max_price = 50mav }) ;
+      (2n, { current_stock = 20n ; max_price = 75mav }) ; ]
   in
-  let (pedro_taco_shop_ta, _code, _size) = Test.originate buy_taco init_storage 0tez in
+  let (pedro_taco_shop_ta, _code, _size) = Test.originate buy_taco init_storage 0mav in
   (* Convert typed_address to contract *)
   let pedro_taco_shop_ctr = Test.to_contract pedro_taco_shop_ta in
   (* Convert contract to address *)
-  let pedro_taco_shop = Tezos.address (pedro_taco_shop_ctr) in
+  let pedro_taco_shop = Mavryk.address (pedro_taco_shop_ctr) in
 
   (* Test inputs *)
   let clasico_kind = 1n in
@@ -663,22 +663,22 @@ let test =
     | None -> false
     | Some v -> v.current_stock = r.current_stock && v.max_price = r.max_price in
 
-  (* Purchasing a Taco with 1tez and checking that the stock has been updated *)
-  let ok_case : test_exec_result = Test.transfer_to_contract pedro_taco_shop_ctr clasico_kind 1tez in
+  (* Purchasing a Taco with 1mav and checking that the stock has been updated *)
+  let ok_case : test_exec_result = Test.transfer_to_contract pedro_taco_shop_ctr clasico_kind 1mav in
   let () = match ok_case with
     | Success _ ->
       let storage = Test.get_storage pedro_taco_shop_ta in
-      assert ((eq_in_map { current_stock = 49n ; max_price = 50tez } storage 1n) &&
-              (eq_in_map { current_stock = 20n ; max_price = 75tez } storage 2n))
+      assert ((eq_in_map { current_stock = 49n ; max_price = 50mav } storage 1n) &&
+              (eq_in_map { current_stock = 20n ; max_price = 75mav } storage 2n))
     | Fail x -> failwith ("ok test case failed")
   in
 
   (* Purchasing an unregistred Taco *)
-  let nok_unknown_kind = Test.transfer_to_contract pedro_taco_shop_ctr unknown_kind 1tez in
+  let nok_unknown_kind = Test.transfer_to_contract pedro_taco_shop_ctr unknown_kind 1mav in
   let () = assert_string_failure nok_unknown_kind "Unknown kind of taco" in
 
-  (* Attempting to Purchase a Taco with 2tez *)
-  let nok_wrong_price = Test.transfer_to_contract pedro_taco_shop_ctr clasico_kind 2tez in
+  (* Attempting to Purchase a Taco with 2mav *)
+  let nok_wrong_price = Test.transfer_to_contract pedro_taco_shop_ctr clasico_kind 2mav in
   let () = assert_string_failure nok_wrong_price "Sorry, the taco you are trying to purchase has a different price" in
   ()
 ```
@@ -696,7 +696,7 @@ let assert_string_failure = ([res,expected] : [test_exec_result, string]) => {
     Fail: (x: test_exec_error) => (
       match (x, {
         Rejected: (x:[michelson_code,address]) => assert (Test.michelson_equal (x[0], expected_bis)),
-        Balance_too_low: (_: { contract_too_low : address , contract_balance : tez , spend_request : tez }) => failwith ("contract failed for an unknown reason"),
+        Balance_too_low: (_: { contract_too_low : address , contract_balance : mav , spend_request : mav }) => failwith ("contract failed for an unknown reason"),
         Other: (_:string) => failwith ("contract failed for an unknown reason")
       })),
     Success: (_:nat) => failwith ("bad price check")
@@ -706,13 +706,13 @@ let assert_string_failure = ([res,expected] : [test_exec_result, string]) => {
 let test = ((_: unit): unit => {
   /* Originate the contract with a initial storage */
   let init_storage = Map.literal (list([
-      [1 as nat, { current_stock : 50 as nat, max_price : 50 as tez }],
-      [2 as nat, { current_stock : 20 as nat, max_price : 75 as tez }] ])) ;
-  let [pedro_taco_shop_ta, _code, _size] = Test.originate (buy_taco, init_storage, 0 as tez) ;
+      [1 as nat, { current_stock : 50 as nat, max_price : 50 as mav }],
+      [2 as nat, { current_stock : 20 as nat, max_price : 75 as mav }] ])) ;
+  let [pedro_taco_shop_ta, _code, _size] = Test.originate (buy_taco, init_storage, 0 as mav) ;
   /* Convert typed_address to contract */
   let pedro_taco_shop_ctr = Test.to_contract (pedro_taco_shop_ta);
   /* Convert contract to address */
-  let pedro_taco_shop = Tezos.address (pedro_taco_shop_ctr);
+  let pedro_taco_shop = Mavryk.address (pedro_taco_shop_ctr);
 
   /* Test inputs */
   let clasico_kind = (1 as nat) ;
@@ -724,22 +724,22 @@ let test = ((_: unit): unit => {
      None: () => false,
      Some: (v : taco_supply) => v.current_stock == r.current_stock && v.max_price == r.max_price }) ;
 
-  /* Purchasing a Taco with 1tez and checking that the stock has been updated */
-  let ok_case : test_exec_result = Test.transfer_to_contract (pedro_taco_shop_ctr, clasico_kind, 1 as tez) ;
+  /* Purchasing a Taco with 1mav and checking that the stock has been updated */
+  let ok_case : test_exec_result = Test.transfer_to_contract (pedro_taco_shop_ctr, clasico_kind, 1 as mav) ;
   let _u = match (ok_case, {
     Success: (_:nat) => {
       let storage = Test.get_storage (pedro_taco_shop_ta) ;
-      assert (eq_in_map({ current_stock : 49 as nat, max_price : 50 as tez }, storage, 1 as nat) &&
-              eq_in_map({ current_stock : 20 as nat, max_price : 75 as tez }, storage, 2 as nat)); },
+      assert (eq_in_map({ current_stock : 49 as nat, max_price : 50 as mav }, storage, 1 as nat) &&
+              eq_in_map({ current_stock : 20 as nat, max_price : 75 as mav }, storage, 2 as nat)); },
     Fail: (_: test_exec_error) => failwith ("ok test case failed")
   }) ;
 
   /* Purchasing an unregistred Taco */
-  let nok_unknown_kind = Test.transfer_to_contract (pedro_taco_shop_ctr, unknown_kind, 1 as tez) ;
+  let nok_unknown_kind = Test.transfer_to_contract (pedro_taco_shop_ctr, unknown_kind, 1 as mav) ;
   let _u2 = assert_string_failure (nok_unknown_kind, "Unknown kind of taco") ;
 
-  /* Attempting to Purchase a Taco with 2tez */
-  let nok_wrong_price = Test.transfer_to_contract (pedro_taco_shop_ctr, clasico_kind, 2 as tez) ;
+  /* Attempting to Purchase a Taco with 2mav */
+  let nok_wrong_price = Test.transfer_to_contract (pedro_taco_shop_ctr, clasico_kind, 2 as mav) ;
   let _u3 = assert_string_failure (nok_wrong_price, "Sorry, the taco you are trying to purchase has a different price") ;
   return unit
 }) ();
@@ -754,8 +754,8 @@ Let's break it down a little bit:
   result and testing against a failure. It also compares the failing
   data - here, a string - to what we expect it to be;
 - `test` is actually performing the tests: Originates the taco-shop
-  contract; purchasing a Taco with 1tez and checking that the stock
-  has been updated ; attempting to purchase a Taco with 2tez and
+  contract; purchasing a Taco with 1mav and checking that the stock
+  has been updated ; attempting to purchase a Taco with 2mav and
   trying to purchase an unregistered Taco. An auxiliary function to
   check equality of values on maps is defined.
 
@@ -815,14 +815,14 @@ following line, depending on your preference.
 <Syntax syntax="pascaligo">
 
 ```pascaligo skip
-if (Tezos.get_amount ()) =/= current_purchase_price then
+if (Mavryk.get_amount ()) =/= current_purchase_price then
 ```
 
 </Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo skip
-if (Tezos.get_amount ()) <> current_purchase_price then
+if (Mavryk.get_amount ()) <> current_purchase_price then
 ```
 
 </Syntax>
@@ -830,7 +830,7 @@ if (Tezos.get_amount ()) <> current_purchase_price then
 <Syntax syntax="jsligo">
 
 ```jsligo skip
-if ((Tezos.get_amount ()) != current_purchase_price)
+if ((Mavryk.get_amount ()) != current_purchase_price)
 ```
 
 </Syntax>
@@ -840,14 +840,14 @@ if ((Tezos.get_amount ()) != current_purchase_price)
 <Syntax syntax="pascaligo">
 
 ```pascaligo skip
-if (Tezos.get_amount ()) < current_purchase_price then
+if (Mavryk.get_amount ()) < current_purchase_price then
 ```
 
 </Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo skip
-if (Tezos.get_amount ()) >= current_purchase_price then
+if (Mavryk.get_amount ()) >= current_purchase_price then
 ```
 
 </Syntax>
@@ -855,7 +855,7 @@ if (Tezos.get_amount ()) >= current_purchase_price then
 <Syntax syntax="jsligo">
 
 ```jsligo skip
-if ((Tezos.get_amount ()) >= current_purchase_price)
+if ((Mavryk.get_amount ()) >= current_purchase_price)
 ```
 
 </Syntax>

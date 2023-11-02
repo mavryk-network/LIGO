@@ -1,11 +1,11 @@
 const initAccount = ([accList, k]: [list<address>, key]) : list<address> => {
     let hk : key_hash = Crypto.hash_key(k);
-    let c : contract<unit> = Tezos.implicit_account(hk);
-    let a : address = Tezos.address(c);
+    let c : contract<unit> = Mavryk.implicit_account(hk);
+    let a : address = Mavryk.address(c);
     Test.log(Test.get_balance(a));
-    let _n = Test.transfer_to_contract_exn(c, unit, (123 as mutez));
+    let _n = Test.transfer_to_contract_exn(c, unit, (123 as mumav));
     Test.log(Test.get_balance(a));
-    return list([Tezos.address(c) , ...accList]); 
+    return list([Mavryk.address(c) , ...accList]); 
 };
   
 const keys : list<key> = list([("edpkuBknW28nW72KG6RoHtYW7p12T6GKc7nAbwYX5m8Wd9sDVC9yav" as key)]);

@@ -10,4 +10,4 @@ let b = [%Michelson ({|
 
 
 let main (p, s : bls_l * bool) : operation list * bool =
- (([] : operation list), Tezos.pairing_check p)
+ (([] : operation list), Mavryk.pairing_check p)

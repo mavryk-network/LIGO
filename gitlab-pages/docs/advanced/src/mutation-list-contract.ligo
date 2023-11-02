@@ -28,9 +28,9 @@ function main (const action : parameter; const store : storage) : return is
 
 function originate_and_test (const mainf : parameter * storage -> return) is {
   const initial_storage = 5;
-  const (taddr, _, _) = Test.originate( mainf, initial_storage, 0tez);
+  const (taddr, _, _) = Test.originate( mainf, initial_storage, 0mav);
   const contr = Test.to_contract (taddr);
-  const _ = Test.transfer_to_contract_exn (contr, Increment (7), 1mutez);
+  const _ = Test.transfer_to_contract_exn (contr, Increment (7), 1mumav);
   const storage = Test.get_storage (taddr);
   assert (storage = initial_storage + 7);
 } with unit;

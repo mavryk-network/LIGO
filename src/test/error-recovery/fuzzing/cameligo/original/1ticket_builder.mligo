@@ -21,20 +21,20 @@ type storage =
 
 let main (arg : parameter * storage) : operation list * storage =
   begin
-    assert (Tezos.get_amount () = 0mutez);
+    assert (Mavryk.get_amount () = 0mumav);
     let (p,s) = arg in
     match p with
     | Burn ticket ->
       begin
-        let ((ticketer, _), ticket) = (Tezos.read_ticket ticket : (address * (unit * nat)) * unit ticket) in
-        assert (ticketer = Tezos.get_self_address ());
+        let ((ticketer, _), ticket) = (Mavryk.read_ticket ticket : (address * (unit * nat)) * unit ticket) in
+        assert (ticketer = Mavryk.get_self_address ());
         (([] : operation list), s)
       end
     | Mint mint ->
       begin
-        assert (Tezos.get_sender () = s.admin);
-        let ticket = Tezos.create_ticket () mint.amount in
-        let op = Tezos.transaction ticket 0mutez mint.destination in
+        assert (Mavryk.get_sender () = s.admin);
+        let ticket = Mavryk.create_ticket () mint.amount in
+        let op = Mavryk.transaction ticket 0mumav mint.destination in
         ([op], s)
       end
   end

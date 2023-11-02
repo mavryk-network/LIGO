@@ -10,7 +10,7 @@
  ( list ( [ ] ) as list < operation > ) ,
  ( match ( action , {
  Increment : ( n : int ) => store + n ,
- Extend : ( k : never ) => ( Tezos . never ( k ) as storage ) } ) )
+ Extend : ( k : never ) => ( Mavryk . never ( k ) as storage ) } ) )
  ]
  } ;
 

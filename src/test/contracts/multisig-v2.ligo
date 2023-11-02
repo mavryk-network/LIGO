@@ -37,7 +37,7 @@ function send (const param : send_pt; var s : storage) : return is
   {
     // check sender against the authorized addresses
 
-    if not Set.mem (Tezos.get_sender(), s.authorized_addresses)
+    if not Set.mem (Mavryk.get_sender(), s.authorized_addresses)
     then failwith("Unauthorized address");
 
     // check message size against the stored limit
@@ -58,25 +58,25 @@ function send (const param : send_pt; var s : storage) : return is
           (* The message is already stored.
              Increment the counter only if the sender is not already
              associated with the message. *)
-          if Set.mem (Tezos.get_sender(), voters)
+          if Set.mem (Mavryk.get_sender(), voters)
           then skip
-          else s.proposal_counters[Tezos.get_sender()] :=
-                 Map.find (Tezos.get_sender(), s.proposal_counters) + 1n;
-                 new_store := Set.add (Tezos.get_sender(),voters)
+          else s.proposal_counters[Mavryk.get_sender()] :=
+                 Map.find (Mavryk.get_sender(), s.proposal_counters) + 1n;
+                 new_store := Set.add (Mavryk.get_sender(),voters)
         }
     | None ->
         {
           // the message has never been received before
-          s.proposal_counters[Tezos.get_sender()] :=
-             Map.find (Tezos.get_sender(), s.proposal_counters) + 1n;
-             new_store := set [Tezos.get_sender()]
+          s.proposal_counters[Mavryk.get_sender()] :=
+             Map.find (Mavryk.get_sender(), s.proposal_counters) + 1n;
+             new_store := set [Mavryk.get_sender()]
         }
     ];
 
     // check sender counters against the maximum number of proposal
 
     var sender_proposal_counter : nat :=
-      Map.find (Tezos.get_sender(), s.proposal_counters);
+      Map.find (Mavryk.get_sender(), s.proposal_counters);
 
     if sender_proposal_counter > s.max_proposal
     then failwith ("Maximum number of proposal reached");
@@ -107,14 +107,14 @@ function withdraw (const param : withdraw_pt; var s : storage) : return is
       Some (voters) ->
         {
           // The message is stored
-          const new_set : addr_set = Set.remove (Tezos.get_sender(), voters);
+          const new_set : addr_set = Set.remove (Mavryk.get_sender(), voters);
 
           (* Decrement the counter only if the sender was already
              associated with the message *)
 
           if Set.cardinal (voters) =/= Set.cardinal (new_set)
-          then s.proposal_counters[Tezos.get_sender()] :=
-                 abs (Map.find (Tezos.get_sender(), s.proposal_counters) - 1n);
+          then s.proposal_counters[Mavryk.get_sender()] :=
+                 abs (Map.find (Mavryk.get_sender(), s.proposal_counters) - 1n);
 
           (* If the message is left without any associated addresses,
              remove the corresponding message_store field *)
@@ -139,6 +139,6 @@ function main (const param : parameter; const s : storage) : return  is
     (* Withraw vote for message p *)
     | Withdraw (p) -> withdraw (p, s)
 
-    (* Use this action to transfer tez to the contract *)
+    (* Use this action to transfer mav to the contract *)
     | Default (p) -> default (p, s)
   ]

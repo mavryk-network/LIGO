@@ -23,9 +23,9 @@ let main = ((action, store) : (parameter, storage)) : return => {
 
 let originate_and_test = (mainf : (parameter, storage) => return) => {
   let initial_storage = 5;
-  let (taddr, _, _) = Test.originate(mainf, initial_storage, 0tez);
+  let (taddr, _, _) = Test.originate(mainf, initial_storage, 0mav);
   let contr = Test.to_contract(taddr);
-  let _ = Test.transfer_to_contract_exn(contr, (Increment (7)), 1mutez);
+  let _ = Test.transfer_to_contract_exn(contr, (Increment (7)), 1mumav);
   assert (Test.get_storage(taddr) == initial_storage + 7)
 };
 
