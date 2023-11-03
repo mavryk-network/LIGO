@@ -51,7 +51,7 @@ import Morley.Michelson.Typed
   SomeContract (..))
 import Morley.Michelson.Typed qualified as T
 import Morley.Michelson.Untyped qualified as U
-import Morley.Tezos.Core (tz)
+import Morley.Mavryk.Core (tz)
 
 import Language.LIGO.DAP.Variables
 import Language.LIGO.Debugger.CLI.Call

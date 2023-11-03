@@ -87,7 +87,7 @@ let%expect_test _ =
     [ "compile"
     ; "storage"
     ; contract "timestamp.ligo"
-    ; "(Tezos.get_now ())"
+    ; "(Mavryk.get_now ())"
     ; "--now"
     ; "2042-01-01T00:00:00Z"
     ];
@@ -96,7 +96,7 @@ let%expect_test _ =
     File "../../test/contracts/timestamp.ligo", line 3, characters 21-22:
       2 |
       3 | function main (const p : unit; const s : storage_) :
-      4 |   list (operation) * storage_ is ((nil: list (operation)), Tezos.get_now())
+      4 |   list (operation) * storage_ is ((nil: list (operation)), Mavryk.get_now())
     :
     Warning: unused variable "p".
     Hint: replace it by "_p" to prevent this warning.
@@ -104,7 +104,7 @@ let%expect_test _ =
     File "../../test/contracts/timestamp.ligo", line 3, characters 37-38:
       2 |
       3 | function main (const p : unit; const s : storage_) :
-      4 |   list (operation) * storage_ is ((nil: list (operation)), Tezos.get_now())
+      4 |   list (operation) * storage_ is ((nil: list (operation)), Mavryk.get_now())
     :
     Warning: unused variable "s".
     Hint: replace it by "_s" to prevent this warning.
@@ -967,8 +967,8 @@ let%expect_test _ =
     {|
 File "../../test/contracts/ticket_builder.mligo", line 29, characters 28-34:
  28 |       begin
- 29 |         let ((ticketer, _), ticket) = (Tezos.read_ticket ticket : (address * (unit * nat)) * unit ticket) in
- 30 |         assert (ticketer = Tezos.get_self_address ());
+ 29 |         let ((ticketer, _), ticket) = (Mavryk.read_ticket ticket : (address * (unit * nat)) * unit ticket) in
+ 30 |         assert (ticketer = Mavryk.get_self_address ());
 :
 Warning: unused variable "ticket".
 Hint: replace it by "_ticket" to prevent this warning.
@@ -1021,7 +1021,7 @@ let%expect_test _ =
     {|
       File "../../test/contracts/implicit.mligo", line 2, characters 6-7:
         1 | let main2 (p : key_hash) (s : unit) =
-        2 |   let c : unit contract = Tezos.implicit_account p
+        2 |   let c : unit contract = Mavryk.implicit_account p
         3 |   in ([] : operation list), unit
       :
       Warning: unused variable "c".
@@ -1029,7 +1029,7 @@ let%expect_test _ =
 
       File "../../test/contracts/implicit.mligo", line 1, characters 26-27:
         1 | let main2 (p : key_hash) (s : unit) =
-        2 |   let c : unit contract = Tezos.implicit_account p
+        2 |   let c : unit contract = Mavryk.implicit_account p
       :
       Warning: unused variable "s".
       Hint: replace it by "_s" to prevent this warning.
@@ -1095,7 +1095,7 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts/amount_lambda.mligo", line 4, characters 7-8:
-      3 |   let amt : mav = Tezos.get_amount () in
+      3 |   let amt : mav = Mavryk.get_amount () in
       4 |   fun (x : unit) -> amt
       5 |
     :
@@ -1105,14 +1105,14 @@ let%expect_test _ =
     File "../../test/contracts/amount_lambda.mligo", line 2, characters 8-9:
       1 | (* should return a constant function *)
       2 | let f1 (x : unit) : unit -> mav =
-      3 |   let amt : mav = Tezos.get_amount () in
+      3 |   let amt : mav = Mavryk.get_amount () in
     :
     Warning: unused variable "x".
     Hint: replace it by "_x" to prevent this warning.
 
     File "../../test/contracts/amount_lambda.mligo", line 8, characters 7-8:
       7 | let f2 (x : unit) : unit -> mav =
-      8 |   fun (x : unit) -> Tezos.get_amount ()
+      8 |   fun (x : unit) -> Mavryk.get_amount ()
       9 |
     :
     Warning: unused variable "x".
@@ -1121,7 +1121,7 @@ let%expect_test _ =
     File "../../test/contracts/amount_lambda.mligo", line 7, characters 8-9:
       6 | (* should return an impure function *)
       7 | let f2 (x : unit) : unit -> mav =
-      8 |   fun (x : unit) -> Tezos.get_amount ()
+      8 |   fun (x : unit) -> Mavryk.get_amount ()
     :
     Warning: unused variable "x".
     Hint: replace it by "_x" to prevent this warning.
@@ -1239,7 +1239,7 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; bad_contract "self_in_lambda.mligo" ];
   [%expect
-    {| "Tezos.self" must be used directly and cannot be used via another function. |}]
+    {| "Mavryk.self" must be used directly and cannot be used via another function. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; bad_contract "not_comparable.mligo" ];
@@ -1295,7 +1295,7 @@ let%expect_test _ =
       5 |
 
     Ill-formed data constructor "Incrementttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt".
-    Data constructors have a maximum length of 32 characters, which is a limitation imposed by annotations in Tezos. |}]
+    Data constructors have a maximum length of 32 characters, which is a limitation imposed by annotations in Mavryk. |}]
 
 let%expect_test _ =
   run_ligo_good
@@ -1331,19 +1331,19 @@ let%expect_test _ =
     {|
 File "../../test/contracts/negative/create_contract_toplevel.mligo", line 4, character 35 to line 8, character 8:
   3 | let main (_, store : string * string) : return =
-  4 |   let toto : operation * address = Tezos.create_contract
+  4 |   let toto : operation * address = Mavryk.create_contract
   5 |     (fun (_p, _s : nat * string) -> (([] : operation list), store))
   6 |     (None: key_hash option)
   7 |     300tz
   8 |     "un"
   9 |   in
 
-Not all free variables could be inlined in Tezos.create_contract usage: gen#175. |}];
+Not all free variables could be inlined in Mavryk.create_contract usage: gen#175. |}];
   run_ligo_good [ "compile"; "contract"; contract "create_contract_var.mligo" ];
   [%expect
     {|
     File "../../test/contracts/create_contract_var.mligo", line 7, characters 10-11:
-      6 |   let toto : operation * address = Tezos.create_contract
+      6 |   let toto : operation * address = Mavryk.create_contract
       7 |     (fun (p, s : nat * int) -> (([] : operation list), a))
       8 |     (None: key_hash option)
     :
@@ -1351,7 +1351,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#175.
     Hint: replace it by "_p" to prevent this warning.
 
     File "../../test/contracts/create_contract_var.mligo", line 7, characters 13-14:
-      6 |   let toto : operation * address = Tezos.create_contract
+      6 |   let toto : operation * address = Mavryk.create_contract
       7 |     (fun (p, s : nat * int) -> (([] : operation list), a))
       8 |     (None: key_hash option)
     :
@@ -1361,7 +1361,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#175.
     File "../../test/contracts/create_contract_var.mligo", line 5, characters 10-16:
       4 |
       5 | let main (action, store : string * string) : return =
-      6 |   let toto : operation * address = Tezos.create_contract
+      6 |   let toto : operation * address = Mavryk.create_contract
     :
     Warning: unused variable "action".
     Hint: replace it by "_action" to prevent this warning.
@@ -1387,7 +1387,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#175.
   [%expect
     {|
     File "../../test/contracts/negative/create_contract_modfv.mligo", line 8, characters 10-11:
-      7 |   let toto : operation * address = Tezos.create_contract
+      7 |   let toto : operation * address = Mavryk.create_contract
       8 |     (fun (p, s : nat * string) -> (([] : operation list), Foo.store))
       9 |     (None: key_hash option)
     :
@@ -1395,7 +1395,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#175.
     Hint: replace it by "_p" to prevent this warning.
 
     File "../../test/contracts/negative/create_contract_modfv.mligo", line 8, characters 13-14:
-      7 |   let toto : operation * address = Tezos.create_contract
+      7 |   let toto : operation * address = Mavryk.create_contract
       8 |     (fun (p, s : nat * string) -> (([] : operation list), Foo.store))
       9 |     (None: key_hash option)
     :
@@ -1412,14 +1412,14 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#175.
 
     File "../../test/contracts/negative/create_contract_modfv.mligo", line 7, character 35 to line 11, character 8:
       6 |   end in
-      7 |   let toto : operation * address = Tezos.create_contract
+      7 |   let toto : operation * address = Mavryk.create_contract
       8 |     (fun (p, s : nat * string) -> (([] : operation list), Foo.store))
       9 |     (None: key_hash option)
      10 |     300tz
      11 |     "un"
      12 |   in
 
-    Not all free variables could be inlined in Tezos.create_contract usage: gen#176. |}];
+    Not all free variables could be inlined in Mavryk.create_contract usage: gen#176. |}];
   run_ligo_bad [ "compile"; "contract"; bad_contract "create_contract_no_inline.mligo" ];
   [%expect
     {|
@@ -1441,7 +1441,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#175.
 
     File "../../test/contracts/negative/create_contract_no_inline.mligo", line 9, characters 11-15:
       8 | let main (action, store : int * int) : return =
-      9 |   let (op, addr) = Tezos.create_contract dummy_contract ((None: key_hash option)) 300tz 1 in
+      9 |   let (op, addr) = Mavryk.create_contract dummy_contract ((None: key_hash option)) 300tz 1 in
      10 |   let toto : operation list = [ op ] in
     :
     Warning: unused variable "addr".
@@ -1450,7 +1450,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#175.
     File "../../test/contracts/negative/create_contract_no_inline.mligo", line 8, characters 10-16:
       7 |
       8 | let main (action, store : int * int) : return =
-      9 |   let (op, addr) = Tezos.create_contract dummy_contract ((None: key_hash option)) 300tz 1 in
+      9 |   let (op, addr) = Mavryk.create_contract dummy_contract ((None: key_hash option)) 300tz 1 in
     :
     Warning: unused variable "action".
     Hint: replace it by "_action" to prevent this warning.
@@ -1458,22 +1458,22 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#175.
     File "../../test/contracts/negative/create_contract_no_inline.mligo", line 8, characters 18-23:
       7 |
       8 | let main (action, store : int * int) : return =
-      9 |   let (op, addr) = Tezos.create_contract dummy_contract ((None: key_hash option)) 300tz 1 in
+      9 |   let (op, addr) = Mavryk.create_contract dummy_contract ((None: key_hash option)) 300tz 1 in
     :
     Warning: unused variable "store".
     Hint: replace it by "_store" to prevent this warning.
 
-    File "../../test/contracts/negative/create_contract_no_inline.mligo", line 9, characters 19-89:
+    File "../../test/contracts/negative/create_contract_no_inline.mligo", line 9, characters 19-90:
       8 | let main (action, store : int * int) : return =
-      9 |   let (op, addr) = Tezos.create_contract dummy_contract ((None: key_hash option)) 300tz 1 in
+      9 |   let (op, addr) = Mavryk.create_contract dummy_contract ((None: key_hash option)) 300tz 1 in
      10 |   let toto : operation list = [ op ] in
 
-    Not all free variables could be inlined in Tezos.create_contract usage: foo#186. |}];
+    Not all free variables could be inlined in Mavryk.create_contract usage: foo#186. |}];
   run_ligo_good [ "compile"; "contract"; contract "create_contract.mligo" ];
   [%expect
     {|
     File "../../test/contracts/create_contract.mligo", line 5, characters 10-11:
-      4 |   let toto : operation * address = Tezos.create_contract
+      4 |   let toto : operation * address = Mavryk.create_contract
       5 |     (fun (p, s : nat * string) -> (([] : operation list), "one"))
       6 |     (None: key_hash option)
     :
@@ -1481,7 +1481,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#175.
     Hint: replace it by "_p" to prevent this warning.
 
     File "../../test/contracts/create_contract.mligo", line 5, characters 13-14:
-      4 |   let toto : operation * address = Tezos.create_contract
+      4 |   let toto : operation * address = Mavryk.create_contract
       5 |     (fun (p, s : nat * string) -> (([] : operation list), "one"))
       6 |     (None: key_hash option)
     :
@@ -1491,7 +1491,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#175.
     File "../../test/contracts/create_contract.mligo", line 3, characters 10-16:
       2 |
       3 | let main (action, store : string * string) : return =
-      4 |   let toto : operation * address = Tezos.create_contract
+      4 |   let toto : operation * address = Mavryk.create_contract
     :
     Warning: unused variable "action".
     Hint: replace it by "_action" to prevent this warning.
@@ -1520,7 +1520,7 @@ let%expect_test _ =
     {|
     File "../../test/contracts/self_type_annotation_warn.ligo", line 8, characters 10-23:
       7 |   {
-      8 |     const self_contract: contract(int) = Tezos.self ("%default");
+      8 |     const self_contract: contract(int) = Mavryk.self ("%default");
       9 |   }
     :
     Warning: unused variable "self_contract".
@@ -1534,14 +1534,14 @@ let%expect_test _ =
     Warning: unused variable "p".
     Hint: replace it by "_p" to prevent this warning.
 
-    File "../../test/contracts/self_type_annotation_warn.ligo", line 8, characters 41-64:
+    File "../../test/contracts/self_type_annotation_warn.ligo", line 8, characters 41-65:
       7 |   {
-      8 |     const self_contract: contract(int) = Tezos.self ("%default");
+      8 |     const self_contract: contract(int) = Mavryk.self ("%default");
       9 |   }
 
-    Warning: Tezos.self type annotation.
+    Warning: Mavryk.self type annotation.
     Annotation "contract (int)" was given, but contract being compiled would expect "contract (nat)".
-    Note that "Tezos.self" refers to the current contract, so the parameters should be generally the same.
+    Note that "Mavryk.self" refers to the current contract, so the parameters should be generally the same.
     { parameter nat ; storage int ; code { CDR ; NIL operation ; PAIR } } |}];
   run_ligo_good [ "compile"; "contract"; contract "self_type_annotation.ligo" ];
   [%expect
@@ -1680,10 +1680,10 @@ File "../../test/contracts/negative/self_bad_entrypoint_format.ligo", line 6, ch
 Warning: unused variable "p".
 Hint: replace it by "_p" to prevent this warning.
 
-File "../../test/contracts/negative/self_bad_entrypoint_format.ligo", line 8, characters 41-59:
+File "../../test/contracts/negative/self_bad_entrypoint_format.ligo", line 8, characters 41-60:
   7 |   {
-  8 |     const self_contract: contract(int) = Tezos.self("Toto") ;
-  9 |     const op : operation = Tezos.transaction (2, 300tz, self_contract) ;
+  8 |     const self_contract: contract(int) = Mavryk.self("Toto") ;
+  9 |     const op : operation = Mavryk.transaction (2, 300tz, self_contract) ;
 
 Invalid entrypoint "Toto". One of the following patterns is expected:
 * "%bar" is expected for entrypoint "Bar"
@@ -1851,7 +1851,7 @@ let%expect_test _ =
      10 |    (list([]) as list <operation>),
      11 |    (match (action, {
      12 |     Increment: (n : int) => store + n,
-     13 |     Extend: (k : never) => (Tezos.never(k) as storage)}))
+     13 |     Extend: (k : never) => (Mavryk.never(k) as storage)}))
      14 |   ]
      15 | };
 
@@ -1886,10 +1886,10 @@ let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; bad_contract "error_self_annotations.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative/error_self_annotations.mligo", line 6, characters 10-44:
+    File "../../test/contracts/negative/error_self_annotations.mligo", line 6, characters 10-45:
       5 | let main (_,_ : param * unit) : operation list * unit =
-      6 |   let c = (Tezos.self("%a") : unit contract) in
-      7 |   let op = Tezos.transaction () 0mutez c in
+      6 |   let c = (Mavryk.self("%a") : unit contract) in
+      7 |   let op = Mavryk.transaction () 0mumav c in
 
     Invalid entrypoint value.
     The entrypoint value does not match a constructor of the contract parameter. |}]
@@ -1901,9 +1901,9 @@ let%expect_test _ =
     {|
     File "../../test/contracts/negative/bad_get_entrypoint.mligo", line 2, character 10 to line 4, character 85:
       1 | let main ((_, _) : (unit * unit)) : operation list * unit =
-      2 |   let v = (Tezos.get_entrypoint_opt
+      2 |   let v = (Mavryk.get_entrypoint_opt
       3 |            "foo"
-      4 |            ("tz1fakefakefakefakefakefakefakcphLA5" : address) : unit contract option) in
+      4 |            ("mv198hRfuJgRidm2CGP9UqehFCneSz3a2TZm" : address) : unit contract option) in
       5 |   let u : unit = match v with
 
     Invalid entrypoint "foo". One of the following patterns is expected:
@@ -3618,14 +3618,14 @@ let%expect_test _ =
     ];
   [%expect
     {|
-File "../../test/contracts/extend_builtin.jsligo", line 6, characters 0-24:
+File "../../test/contracts/extend_builtin.jsligo", line 6, characters 0-26:
   5 |
-  6 | let y = Tezos.f(Tezos.x);
+  6 | let y = Mavryk.f(Mavryk.x);
 
 Toplevel let declaration are silently change to const declaration.
 
 File "../../test/contracts/extend_builtin.jsligo", line 2, characters 9-19:
-  1 | namespace Tezos {
+  1 | namespace Mavryk {
   2 |   export let x = 42;
   3 |   export let f = (x  : int) : int => x + 2;
 
@@ -3689,7 +3689,7 @@ let%expect_test _ =
     { parameter unit ;
       storage unit ;
       code { DROP ;
-             PUSH address "tz1fakefakefakefakefakefakefakcphLA5" ;
+             PUSH address "mv198hRfuJgRidm2CGP9UqehFCneSz3a2TZm" ;
              SENDER ;
              VIEW "foo" unit ;
              IF_NONE { UNIT } {} ;
@@ -3799,14 +3799,14 @@ let%expect_test _ =
   run_ligo_good [ "compile"; "storage"; contract "self_annotations.mligo"; "()" ];
   [%expect {| Unit |}]
 
-(* check tag in Tezos.emit *)
+(* check tag in Mavryk.emit *)
 let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; bad_contract "emit_bad_tag.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative/emit_bad_tag.mligo", line 2, characters 3-31:
+    File "../../test/contracts/negative/emit_bad_tag.mligo", line 2, characters 3-32:
       1 | let main (_,_ : unit * string ) : operation list * string =
-      2 |   [Tezos.emit "%hello world" 12], "bye"
+      2 |   [Mavryk.emit "%hello world" 12], "bye"
 
     Invalid entrypoint "%hello world". One of the following patterns is expected:
     * "%bar" is expected for entrypoint "Bar"

@@ -1,4 +1,4 @@
-namespace Mavryk.{
+namespace Mavryk {
   export let x = 42;
   export let f = (x  : int) : int => x + 2;
 }

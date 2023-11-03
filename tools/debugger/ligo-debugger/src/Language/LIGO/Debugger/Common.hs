@@ -41,8 +41,8 @@ import Morley.Michelson.Typed
   (Constrained (SomeValue), EpAddress (..), Instr (LAMBDA, PUSH), SomeValue, Value, Value' (..),
   withValueTypeSanity)
 import Morley.Michelson.Untyped qualified as U
-import Morley.Tezos.Address (KindedAddress (ImplicitAddress), ta)
-import Morley.Tezos.Address.Kinds (AddressKind (AddressKindImplicit))
+import Morley.Mavryk.Address (KindedAddress (ImplicitAddress), ta)
+import Morley.Mavryk.Address.Kinds (AddressKind (AddressKindImplicit))
 
 import Language.LIGO.Debugger.CLI.Types
 import Language.LIGO.Debugger.Error

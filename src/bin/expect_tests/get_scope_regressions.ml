@@ -57,27 +57,27 @@ let%expect_test _ =
   [%expect
     {|
     Scopes:
-    [ p#0  ] File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.ligo", line 2, characters 30-55
-    [ c#1 p#0  ] File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.ligo", line 3, characters 7-23
+    [ p#0  ] File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.ligo", line 2, characters 30-56
+    [ c#1 p#0  ] File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.ligo", line 3, characters 7-24
 
     Variable definitions:
     (c#1 -> c)
     Range: File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.ligo", line 2, characters 8-9
-    Body Range: File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.ligo", line 2, characters 30-56
+    Body Range: File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.ligo", line 2, characters 30-57
     Content: |core: contract (unit)|
     references:
-      File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.ligo", line 3, characters 22-23
+      File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.ligo", line 3, characters 23-24
     (main#2 -> main)
     Range: File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.ligo", line 1, characters 9-13
-    Body Range: File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.ligo", line 1, character 0 to line 3, character 24
+    Body Range: File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.ligo", line 1, character 0 to line 3, character 25
     Content: |core: key_hash -> address|
     references: []
     (p#0 -> p)
     Range: File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.ligo", line 1, characters 21-22
-    Body Range: File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.ligo", line 1, character 48 to line 3, character 24
+    Body Range: File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.ligo", line 1, character 48 to line 3, character 25
     Content: |core: key_hash|
     references:
-      File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.ligo", line 2, characters 54-55
+      File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.ligo", line 2, characters 55-56
     Type definitions:
     Module definitions: |}]
 

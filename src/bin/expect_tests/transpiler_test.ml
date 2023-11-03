@@ -64,7 +64,7 @@ let%expect_test _ =
 
             if Operator.neq
                  (card.card_owner,
-                  Tezos.get_sender (Unit))
+                  Mavryk.get_sender (Unit))
             then failwith ("This card doesn't belong to you")
             else skip;
 
@@ -94,7 +94,7 @@ let%expect_test _ =
 
             if Operator.neq
                  (card.card_owner,
-                  Tezos.get_sender (Unit))
+                  Mavryk.get_sender (Unit))
             then failwith ("This card doesn't belong to you")
             else skip;
 
@@ -135,8 +135,8 @@ let%expect_test _ =
                : mav);
 
             const receiver
-            = (case (Tezos.get_contract_opt
-                       (Tezos.get_sender (Unit))
+            = (case (Mavryk.get_contract_opt
+                       (Mavryk.get_sender (Unit))
                      : option (contract (unit)))
                of [
                  Some (contract) -> contract
@@ -147,7 +147,7 @@ let%expect_test _ =
                : contract (unit));
 
             const op
-            = (Tezos.transaction (unit, price, receiver)
+            = (Mavryk.transaction (unit, price, receiver)
                : operation);
 
             const operations = (list [op] : list (operation));
@@ -176,7 +176,7 @@ let%expect_test _ =
                   Operator.add (card_pattern.quantity, 1n))
                : mav);
 
-            if Operator.gt (price, Tezos.get_amount (Unit))
+            if Operator.gt (price, Mavryk.get_amount (Unit))
             then failwith ("Not enough money")
             else skip;
 
@@ -201,7 +201,7 @@ let%expect_test _ =
               Map.add
                 (s.next_id,
                  record [
-                   card_owner = Tezos.get_sender (Unit);
+                   card_owner = Mavryk.get_sender (Unit);
                    card_pattern = action.card_to_buy
                  ],
                  cards);

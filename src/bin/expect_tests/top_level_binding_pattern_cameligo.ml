@@ -213,14 +213,14 @@ let%expect_test _ =
     {|
     File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_record.mligo", line 3, characters 6-7:
       2 |
-      3 | let { b } = { b = Option.unopt (Tezos.create_ticket "one" 10n) }
+      3 | let { b } = { b = Option.unopt (Mavryk.create_ticket "one" 10n) }
       4 |
     :
     Warning: variable "b" cannot be used more than once.
 
     File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_record.mligo", line 3, characters 6-7:
       2 |
-      3 | let { b } = { b = Option.unopt (Tezos.create_ticket "one" 10n) }
+      3 | let { b } = { b = Option.unopt (Mavryk.create_ticket "one" 10n) }
       4 |
     :
     Warning: variable "b" cannot be used more than once.
@@ -249,13 +249,13 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_tuple.mligo", line 1, characters 5-6:
-      1 | let (b, _) = (Option.unopt (Tezos.create_ticket "one" 10n), 1)
+      1 | let (b, _) = (Option.unopt (Mavryk.create_ticket "one" 10n), 1)
       2 |
     :
     Warning: variable "b" cannot be used more than once.
 
     File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_tuple.mligo", line 1, characters 5-6:
-      1 | let (b, _) = (Option.unopt (Tezos.create_ticket "one" 10n), 1)
+      1 | let (b, _) = (Option.unopt (Mavryk.create_ticket "one" 10n), 1)
       2 |
     :
     Warning: variable "b" cannot be used more than once.

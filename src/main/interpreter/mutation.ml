@@ -76,7 +76,7 @@ let rec value_gen
   let open Ast_aggregated in
   let open LC in
   let addresses =
-    [ Michelson_to_value.contract_of_string ~raise "tz1fakefakefakefakefakefakefakcphLA5"
+    [ Michelson_to_value.contract_of_string ~raise "mv198hRfuJgRidm2CGP9UqehFCneSz3a2TZm"
     ]
     @
     match known_addresses with

@@ -557,31 +557,31 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_implicit_account.jsligo" ];
   [%expect
     {|
-    0mutez
-    123mutez
+    0mumav
+    123mumav
     Everything at the top-level was executed.
-    - test_addresses exited with value [mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE]. |}]
+    - test_addresses exited with value [mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe]. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_accounts.mligo" ];
   [%expect
     {|
     Everything at the top-level was executed.
-    - test_new exited with value 110000000mutez.
-    - test_add exited with value 110000000mutez. |}]
+    - test_new exited with value 110000000mumav.
+    - test_add exited with value 110000000mumav. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_baker_account.mligo" ];
   [%expect
     {|
     "STARTING BALANCE AND VOTING POWER"
-    3800000000000mutez
+    3800000000000mumav
     4000000000000n
     "BALANCE AND VOTING POWER AFTER ORIGINATE"
-    3800011000000mutez
+    3800011000000mumav
     4000000000000n
     "BALANCE AND VOTING POWER AFTER TRANSFER"
-    3800022000000mutez
+    3800022000000mumav
     4000000000000n
     Everything at the top-level was executed.
     - test exited with value (). |}]
@@ -591,13 +591,13 @@ let%expect_test _ =
   [%expect
     {|
     "STARTING BALANCE AND VOTING POWER"
-    950000000000mutez
+    950000000000mumav
     0n
     "BALANCE AND VOTING POWER AFTER ORIGINATE"
-    950011000000mutez
+    950011000000mumav
     0n
     "BALANCE AND VOTING POWER AFTER TRANSFER"
-    950022000000mutez
+    950022000000mumav
     0n
     Everything at the top-level was executed.
     - test exited with value (). |}]
@@ -642,13 +642,13 @@ let%expect_test _ =
     0
     0
     "test_move:"
-    3800000000000mutez
-    3800100000000mutez
-    3800000000000mutez
+    3800000000000mumav
+    3800100000000mumav
+    3800000000000mumav
     "test_drop:"
-    3800000000000mutez
-    3800100000000mutez
-    3800100000000mutez
+    3800000000000mumav
+    3800100000000mumav
+    3800100000000mumav
     Everything at the top-level was executed.
     - test_contract exited with value ().
     - test_move exited with value ().
@@ -658,10 +658,10 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_error_balance.jsligo"; "--no-warn" ];
   [%expect
     {|
-    100000000000000mutez
-    3799997904750mutez
+    100000000000000mumav
+    3799997904750mumav
     Everything at the top-level was executed.
-    - test exited with value {contract_balance = 3799997904750mutez ; contract_too_low = mv1Kft5rQoxA7vMpdcndHmzwwu6ZCUxNyYM9 ; spend_request = 100000000000000mutez}. |}]
+    - test exited with value {contract_balance = 3799997904750mumav ; contract_too_low = mv1Fb2ZfEd6WcEh7hg7S9JUTDJMtBAgnzLSt ; spend_request = 100000000000000mumav}. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_inline.mligo" ];
@@ -725,8 +725,8 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_get_account.mligo" ];
   [%expect
     {|
-    (tz1MBWU1WkszFfkEER2pgn4ATKXE9ng7x1sR , edpkusHqa6fxkGPPL9YpgbcakvSTvcTBcwnLAmCdcevmws4Mh2MdHB , "edsk41aRaPPBpidY7w5xu54edk76uJJtJ6myTwYDEWhAwNHce9gKNo")
-    3800000000000mutez
+    (mv19Yymbq8BLpwXTNjbfvbkBcLPCiBCyY397 , edpkusHqa6fxkGPPL9YpgbcakvSTvcTBcwnLAmCdcevmws4Mh2MdHB , "edsk41aRaPPBpidY7w5xu54edk76uJJtJ6myTwYDEWhAwNHce9gKNo")
+    3800000000000mumav
     Everything at the top-level was executed.
     - test exited with value (). |}]
 
@@ -853,12 +853,12 @@ let%expect_test _ =
   [%expect
     {xxx|
     Everything at the top-level was executed.
-    - test_address_set exited with value { "mv1QjrcwtyB2WbWRMgtPTK4iLHPhgTDuyDxx" ;
+    - test_address_set exited with value { "mv1Fb2ZfEd6WcEh7hg7S9JUTDJMtBAgnzLSt" ;
       "mv1Kft5rQoxA7vMpdcndHmzwwu6ZCUxNyYM9" }.
     - test_int_set exited with value { 3 ; 4 }.
-    - test_map exited with value { Elt "mv1QjrcwtyB2WbWRMgtPTK4iLHPhgTDuyDxx" 900 ;
+    - test_map exited with value { Elt "mv1Fb2ZfEd6WcEh7hg7S9JUTDJMtBAgnzLSt" 900 ;
       Elt "KT1WoTZUkky48v3QqZWzkeJCYfhWhNaVFYuC" 100 }.
-    - test_big_map exited with value { Elt "mv1QjrcwtyB2WbWRMgtPTK4iLHPhgTDuyDxx" 900 ;
+    - test_big_map exited with value { Elt "mv1Fb2ZfEd6WcEh7hg7S9JUTDJMtBAgnzLSt" 900 ;
       Elt "KT1WoTZUkky48v3QqZWzkeJCYfhWhNaVFYuC" 100 }. |xxx}]
 
 let%expect_test _ =
@@ -1148,7 +1148,7 @@ let%expect_test _ =
 
     Baker cannot bake. Enough rolls? Enough cycles passed?
     "STARTING BALANCE AND VOTING POWER"
-    95000000000mutez
+    95000000000mumav
     100000000000n |}]
 
 let pwd = Caml.Sys.getcwd ()
@@ -1162,8 +1162,8 @@ let%expect_test _ =
   File "typed_addr_in_bytes_pack.mligo", line 14, character 17 to line 18, character 5:
    13 |     let r = originate_record () in
    14 |     let packed = Bytes.pack (fun() ->
-   15 |         match (Tezos.get_entrypoint_opt "%transfer" r.addr : unit contract option) with
-   16 |           Some(c) -> let op = Tezos.transaction () 0mutez c in [op]
+   15 |         match (Mavryk.get_entrypoint_opt "%transfer" r.addr : unit contract option) with
+   16 |           Some(c) -> let op = Mavryk.transaction () 0mumav c in [op]
    17 |         | None ->  ([] : operation list)
    18 |     ) in
    19 |     let () = Test.log(packed) in
@@ -1188,21 +1188,21 @@ let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "get_contract.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66:
-     14 |   let _ = (Tezos.get_contract a : (parameter contract)) in
-     15 |   let _ = (Tezos.get_contract_with_error a "foo" : (int contract)) in
+    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-67:
+     14 |   let _ = (Mavryk.get_contract a : (parameter contract)) in
+     15 |   let _ = (Mavryk.get_contract_with_error a "foo" : (int contract)) in
      16 |   ()
 
     You are using Michelson failwith primitive (loaded from standard library).
     Consider using `Test.failwith` for throwing a testing framework failure.
 
-    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66:
-     14 |   let _ = (Tezos.get_contract a : (parameter contract)) in
-     15 |   let _ = (Tezos.get_contract_with_error a "foo" : (int contract)) in
+    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-67:
+     14 |   let _ = (Mavryk.get_contract a : (parameter contract)) in
+     15 |   let _ = (Mavryk.get_contract_with_error a "foo" : (int contract)) in
      16 |   ()
 
     An uncaught error occured:
     Failwith: "foo"
     Trace:
-    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66 ,
-    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66 |}]
+    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-67 ,
+    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-67 |}]

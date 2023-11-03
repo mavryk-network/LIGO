@@ -10,7 +10,7 @@ let%expect_test _ =
     File "../../test/contracts/protocol_dalphanet.mligo", line 12, characters 13-14:
      11 |
      12 | let main (p, s : bls_l * bool) : operation list * bool =
-     13 |  (([] : operation list), Tezos.pairing_check p)
+     13 |  (([] : operation list), Mavryk.pairing_check p)
     :
     Warning: unused variable "s".
     Hint: replace it by "_s" to prevent this warning.
@@ -82,9 +82,9 @@ let%expect_test _ =
     [ "compile"; "contract"; bad_contract "emit.mligo"; "--protocol"; "kathmandu" ];
   [%expect
     {|
-    File "../../test/contracts/negative/emit.mligo", line 3, characters 3-18:
+    File "../../test/contracts/negative/emit.mligo", line 3, characters 3-19:
       2 |   let x = "%lol" in
-      3 |   [Tezos.emit x 12],x
+      3 |   [Mavryk.emit x 12],x
 
     Invalid event tag.
     The tag must be a string literal. |}]

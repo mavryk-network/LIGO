@@ -43,8 +43,8 @@ import Morley.Michelson.Typed
   pattern ConcreteMeta)
 import Morley.Michelson.Typed qualified as T
 import Morley.Michelson.Untyped qualified as U
-import Morley.Tezos.Address (mformatAddress)
-import Morley.Tezos.Crypto (encodeBase58Check)
+import Morley.Mavryk.Address (mformatAddress)
+import Morley.Mavryk.Crypto (encodeBase58Check)
 
 import Language.LIGO.Debugger.CLI.Types
 import Language.LIGO.Debugger.Common

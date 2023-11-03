@@ -262,7 +262,7 @@ Example: "12334 as nat".
   [%expect
     {test|
 File "../../test/lexer/Lexing/wrong_mutez_syntax.jsligo", line 1, characters 14-20:
-  1 | let x : mav = 5mutez;
+  1 | let x : mav = 5mumav;
 Wrong mumav syntax.
 Example: "1234 as mumav".
 |test}];
@@ -298,7 +298,7 @@ Hint: Close with "|}".
   [%expect
     {test|
 File "../../test/lexer/Lexing/overflow_mutez.ligo", line 1, characters 16-40:
-  1 | const m : mav = 9223372036854775808mutez (* 2^63 *)
+  1 | const m : mav = 9223372036854775808mumav (* 2^63 *)
 Mumav amount too large.
 Note: From 0 to 2^63-1=9_223_372_036_854_775_807.
 |test}];

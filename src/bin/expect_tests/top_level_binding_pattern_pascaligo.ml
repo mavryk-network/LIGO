@@ -147,14 +147,14 @@ let%expect_test _ =
     {|
     File "../../test/contracts/top_level_patterns/negative/pascaligo/ticket_record.ligo", line 3, characters 14-15:
       2 |
-      3 | const record[ b ] = record[ b = Option.unopt (Tezos.create_ticket ("one", 10n)) ]
+      3 | const record[ b ] = record[ b = Option.unopt (Mavryk.create_ticket ("one", 10n)) ]
       4 |
     :
     Warning: variable "b" cannot be used more than once.
 
     File "../../test/contracts/top_level_patterns/negative/pascaligo/ticket_record.ligo", line 3, characters 14-15:
       2 |
-      3 | const record[ b ] = record[ b = Option.unopt (Tezos.create_ticket ("one", 10n)) ]
+      3 | const record[ b ] = record[ b = Option.unopt (Mavryk.create_ticket ("one", 10n)) ]
       4 |
     :
     Warning: variable "b" cannot be used more than once.
@@ -183,13 +183,13 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts/top_level_patterns/negative/pascaligo/ticket_tuple.ligo", line 1, characters 7-8:
-      1 | const (b, _) = (Option.unopt (Tezos.create_ticket ("one", 10n)), 1)
+      1 | const (b, _) = (Option.unopt (Mavryk.create_ticket ("one", 10n)), 1)
       2 |
     :
     Warning: variable "b" cannot be used more than once.
 
     File "../../test/contracts/top_level_patterns/negative/pascaligo/ticket_tuple.ligo", line 1, characters 7-8:
-      1 | const (b, _) = (Option.unopt (Tezos.create_ticket ("one", 10n)), 1)
+      1 | const (b, _) = (Option.unopt (Mavryk.create_ticket ("one", 10n)), 1)
       2 |
     :
     Warning: variable "b" cannot be used more than once.

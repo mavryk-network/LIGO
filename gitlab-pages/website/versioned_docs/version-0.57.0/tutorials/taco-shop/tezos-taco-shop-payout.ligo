@@ -9,7 +9,7 @@ type taco_shop_storage is map (nat, taco_supply)
 type return is list (operation) * taco_shop_storage
 
 const ownerAddress : address = ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV" : address)
-const donationAddress : address = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
+const donationAddress : address = ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
 
 function buy_taco (const taco_kind_index : nat; var taco_shop_storage : taco_shop_storage) : return is {
     // Retrieve the taco_kind from the contract's storage or fail

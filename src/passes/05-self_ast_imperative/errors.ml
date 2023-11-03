@@ -91,7 +91,7 @@ let error_ppformat
       Format.fprintf
         f
         "@[<hv>%a@ Ill-formed literal \"%a\".@.In the case of an address, a string is \
-         expected prefixed by either tz1, tz2, tz3 or KT1 and followed by a Base58 \
+         expected prefixed by either mv1, mv2, mv3 or KT1 and followed by a Base58 \
          encoded hash and terminated by a 4-byte checksum.@.In the case of a key_hash, \
          signature, or key a Base58 encoded hash is expected. @]"
         snippet_pp
@@ -198,7 +198,7 @@ let error_json : self_ast_imperative_error -> Simple_utils.Error.t =
     let message =
       Format.asprintf
         "Ill-formed literal \"%a\".@.In the case of an address, a string is expected \
-         prefixed by either tz1, tz2, tz3 or KT1 and followed by a Base58 encoded hash \
+         prefixed by either mv1, mv2, mv3 or KT1 and followed by a Base58 encoded hash \
          and terminated by a 4-byte checksum.@.In the case of a key_hash, signature, or \
          key a Base58 encoded hash is expected."
         Ast_imperative.PP.expression

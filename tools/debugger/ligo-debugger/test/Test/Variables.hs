@@ -13,7 +13,7 @@ import Morley.Michelson.Typed
   Value' (VAddress, VContract, VList, VOption, VUnit), mkEntrypointCall, sepcPrimitive,
   tyImplicitAccountParam)
 import Morley.Michelson.Untyped (Annotation (UnsafeAnnotation), pattern DefEpName)
-import Morley.Tezos.Address (parseAddress)
+import Morley.Mavryk.Address (parseAddress)
 
 import Test.HUnit ((@?=))
 import Test.Tasty (TestTree, testGroup)

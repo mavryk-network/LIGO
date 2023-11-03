@@ -453,13 +453,13 @@ let%expect_test _ =
     [ "compile"
     ; "expression"
     ; "cameligo"
-    ; "try_transfer (\"mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE\" : address) 0 (Build_state \
+    ; "try_transfer (\"mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe\" : address) 0 (Build_state \
        (Map.empty :(address, tokenValue) map))"
     ; "--init-file"
     ; test "map_or_big_map.mligo"
     ];
   [%expect {|
-    (Some { Elt "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" 0 }) |}]
+    (Some { Elt "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" 0 }) |}]
 
 let%expect_test _ =
   run_ligo_good

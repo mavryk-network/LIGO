@@ -229,16 +229,16 @@ let rec error_ppformat
       Format.fprintf
         f
         "@[<hv>Invalid command line option \"--source\". @.The provided source address \
-         \"%s\" is invalid. A valid Mavryk address is a string prefixed by either tz1, \
-         tz2, tz3 or KT1 and followed by a Base58 encoded hash and terminated by a \
+         \"%s\" is invalid. A valid Mavryk address is a string prefixed by either mv1, \
+         mv2, mv3 or KT1 and followed by a Base58 encoded hash and terminated by a \
          4-byte checksum.@]"
         a
     | `Main_invalid_sender a ->
       Format.fprintf
         f
         "@[<hv>Invalid command line option \"--sender\". @.The provided sender address \
-         \"%s\" is invalid. A valid Mavryk address is a string prefixed by either tz1, \
-         tz2, tz3 or KT1 and followed by a Base58 encoded hash and terminated by a \
+         \"%s\" is invalid. A valid Mavryk address is a string prefixed by either mv1, \
+         mv2, mv3 or KT1 and followed by a Base58 encoded hash and terminated by a \
          4-byte checksum.@]"
         a
     | `Main_invalid_timestamp t ->
