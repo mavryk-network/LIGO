@@ -1,12 +1,12 @@
 class LIGO_CLASS_PLACEHOLDER < Formula
   desc "Friendly Smart Contract Language for Tezos"
-  homepage "https://ligolang.org/"
+  homepage "https://ligo.mavryk.org/"
   license "MIT"
 
   # We clone repo explicitely to preserve the information about git submodules
-  url "https://gitlab.com/ligolang/ligo.git", tag: "LIGO_VERSION_PLACEHOLDER", revision: "LIGO_HEAD_REF_HASH_PLACEHOLDER"
+  url "https://gitlab.com/mavryk-network/ligo.git", tag: "LIGO_VERSION_PLACEHOLDER", revision: "LIGO_HEAD_REF_HASH_PLACEHOLDER"
   version "LIGO_VERSION_PLACEHOLDER"
-  head "https://gitlab.com/ligolang/ligo.git", branch: "dev"
+  head "https://gitlab.com/mavryk-network/ligo.git", branch: "0.60.0-mavryk"
 
 
   bottle do

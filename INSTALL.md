@@ -2,7 +2,7 @@
 
 These are instructions on how to build Ligo from source in Ubuntu. For
 ordinary user installs, see the [doc
-website](https://ligolang.org/docs/intro/installation/).
+website](https://ligo.mavryk.org/docs/intro/installation/).
 
 In order to build Ligo, you may need to install:
 

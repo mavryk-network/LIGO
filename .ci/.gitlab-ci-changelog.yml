@@ -14,7 +14,7 @@ add-changelog-entry:
       if [[ ! -f "changelog/${CI_MERGE_REQUEST_IID}" ]]; then
         exit 0
       fi
-    - git remote rm origin && git remote add origin "git@gitlab.com:ligolang/ligo.git" 
+    - git remote rm origin && git remote add origin "git@gitlab.com:mavryk-network/ligo.git" 
     - git add changelog/${CI_MERGE_REQUEST_IID}
     - git commit -m "[Bot] add changelog entry"
     - git push origin HEAD:$CI_COMMIT_REF_NAME

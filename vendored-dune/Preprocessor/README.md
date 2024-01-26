@@ -514,7 +514,7 @@ into a correct one.
 
 The `#import` directive is specific to the LIGO compiler. It provides
 the support for a
-[minimal module system](https://ligolang.org/docs/language-basics/modules#modules-and-imports-build-system).
+[minimal module system](https://ligo.mavryk.org/docs/language-basics/modules#modules-and-imports-build-system).
 
 ## Preprocessing Strings and Comments
 

@@ -17,7 +17,7 @@ The server source code is located under `packages/server/`. Please see README un
 
 You may use the static binary of Ligo by setting the LIGO_CMD environment variable. Otherwise this project assumes that docker is available, and will use the Ligo docker image to run Ligo.
 
-[install-ligo]: https://ligolang.org/docs/intro/installation/
+[install-ligo]: https://ligo.mavryk.org/docs/intro/installation/
 
 ## Client
 

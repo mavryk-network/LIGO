@@ -33,19 +33,19 @@ class User extends Component {
     const links = [
       {
         name: "Install",
-        link: "https://ligolang.org/docs/intro/installation/",
+        link: "https://ligo.mavryk.org/docs/intro/installation/",
         icon: "fa-tools",
         key: "install",
       },
       {
         name: "Docs",
-        link: "https://ligolang.org/docs/intro/introduction/",
+        link: "https://ligo.mavryk.org/docs/intro/introduction/",
         icon: "fa-book",
         key: "docs",
       },
       {
         name: "Tutorials",
-        link: "https://ligolang.org/docs/tutorials/getting-started/getting-started/",
+        link: "https://ligo.mavryk.org/docs/tutorials/getting-started/getting-started/",
         icon: "fa-graduation-cap",
         key: "tutorials",
       },
@@ -57,19 +57,19 @@ class User extends Component {
       },
       {
         name: "Ask Questions",
-        link: "https://ligolang.org/contact/",
+        link: "https://ligo.mavryk.org/contact/",
         icon: "fa-question",
         key: "ask-questions",
       },
       {
         name: "Changelog",
-        link: "https://ligolang.org/docs/next/intro/changelog/",
+        link: "https://ligo.mavryk.org/docs/next/intro/changelog/",
         icon: "fa-list-ul",
         key: "changelog",
       },
       {
         name: "Cheat Sheet",
-        link: "https://ligolang.org/docs/api/cheat-sheet",
+        link: "https://ligo.mavryk.org/docs/api/cheat-sheet",
         icon: "fa-hand-holding",
         key: "cheat-sheet",
       },

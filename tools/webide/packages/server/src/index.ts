@@ -27,7 +27,7 @@ const METRICS_PORT = 8081;
 
 const corsOptions: CorsOptions  = {
   origin: [
-    'https://ligolang.org',
+    'https://ligo.mavryk.org',
     'http://localhost:3000',
     'http://localhost:1234',
   ],

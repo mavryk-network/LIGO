@@ -55,24 +55,24 @@ export const HeaderComponent = () => {
   return (
     <Container className="navbar navbar-default navbar-fixed-top">
       <Group className="navbar-header">
-        <a href="https://ligolang.org" style={{margin: "1em"}}>
+        <a href="https://ligo.mavryk.org" style={{margin: "1em"}}>
           <Logo src="/logo.svg" />
         </a>
         
-        <Link href="https://ligolang.org/docs/intro/installation">Install</Link>
-        <Link href="https://ligolang.org/docs/intro/introduction">Docs</Link>
-        <Link href="https://ligolang.org/docs/tutorials/getting-started/getting-started">
+        <Link href="https://ligo.mavryk.org/docs/intro/installation">Install</Link>
+        <Link href="https://ligo.mavryk.org/docs/intro/introduction">Docs</Link>
+        <Link href="https://ligo.mavryk.org/docs/tutorials/getting-started/getting-started">
           Tutorials
         </Link>
         <Link href="https://forum.tezosagora.org/tag/ligo" target="_blank">Blog</Link>
-        <Link href="https://ligolang.org/contact">
+        <Link href="https://ligo.mavryk.org/contact">
           Ask Questions
         </Link>
-        <Link href="https://ligolang.org/docs/next/intro/changelog/">
+        <Link href="https://ligo.mavryk.org/docs/next/intro/changelog/">
           Changelog
         </Link>
       </Group>
-      <Link cheatSheetStyle href="https://ligolang.org/docs/api/cheat-sheet" target="_blank">
+      <Link cheatSheetStyle href="https://ligo.mavryk.org/docs/api/cheat-sheet" target="_blank">
           Cheat Sheet
         </Link>
     </Container>

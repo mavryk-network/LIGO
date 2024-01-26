@@ -5,7 +5,7 @@
 [[ $HOST =~ ^https?://[^/]+ ]] && HOST="${BASH_REMATCH[0]}/api/v4/projects/"
 
 # Look which is the default branch
-TARGET_BRANCH="dev"
+TARGET_BRANCH="0.60.0-mavryk"
 
 # The description of our new MR, we want to remove the branch after the MR has
 # been closed

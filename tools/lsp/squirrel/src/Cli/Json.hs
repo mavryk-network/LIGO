@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
--- | ligo version: 0.59.0
+-- | ligo version: 0.60.0
 -- | The definition of type as is represented in ligo JSON output
 
 module Cli.Json

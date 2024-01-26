@@ -6,16 +6,16 @@ CURRENT_VERSION=$2
 
 ROOT_FOLDER="../.."
 
-DISTRIBUTION_URL_PATTERN_DEB_NEXT="https://ligolang.org/deb/ligo.deb"
-DISTRIBUTION_URL_PATTERN_BINARY_NEXT="https://ligolang.org/bin/linux/ligo"
+DISTRIBUTION_URL_PATTERN_DEB_NEXT="https://ligo.mavryk.org/deb/ligo.deb"
+DISTRIBUTION_URL_PATTERN_BINARY_NEXT="https://ligo.mavryk.org/bin/linux/ligo"
 
-DISTRIBUTION_URL_GITLAB_ARTIFACT_REGEX_PATTERN_RELEASE="(.*https://gitlab\.com/ligolang/ligo/-/jobs/)[0-9]{10}(/artifacts/raw\/(ligo\.deb|ligo))"
+DISTRIBUTION_URL_GITLAB_ARTIFACT_REGEX_PATTERN_RELEASE="(.*https://gitlab\.com/mavryk-network/ligo/-/jobs/)[0-9]{10}(/artifacts/raw\/(ligo\.deb|ligo))"
 
 VERSION_REGEX_PATTERN="[0-9]+\.[0-9]+\.[0-9]+"
 NIX_SHA256_SRI_REGEX_PATTERN='(sha256 = ").*(";)'
 
-DEB_GITLAB_ARTIFACT_URL="https://gitlab.com/ligolang/ligo/-/jobs/$1/artifacts/raw/ligo.deb"
-BINARY_GITLAB_ARTIFACT_URL="https://gitlab.com/ligolang/ligo/-/jobs/$1/artifacts/raw/ligo"
+DEB_GITLAB_ARTIFACT_URL="https://gitlab.com/mavryk-network/ligo/-/jobs/$1/artifacts/raw/ligo.deb"
+BINARY_GITLAB_ARTIFACT_URL="https://gitlab.com/mavryk-network/ligo/-/jobs/$1/artifacts/raw/ligo"
 
 FILES_PATH_TO_EDIT=(
     "$ROOT_FOLDER/tools/webide/Dockerfile"
@@ -49,7 +49,7 @@ do
 done
 
 # Replace SRI for nix 
-# SRI_LIGO_BINARY_HASH=$(nix --extra-experimental-features nix-command hash to-sri --type sha256 $(nix-prefetch-url --type sha256 --executable https://gitlab.com/ligolang/ligo/-/jobs/$1/artifacts/raw/ligo))
+# SRI_LIGO_BINARY_HASH=$(nix --extra-experimental-features nix-command hash to-sri --type sha256 $(nix-prefetch-url --type sha256 --executable https://gitlab.com/mavryk-network/ligo/-/jobs/$1/artifacts/raw/ligo))
 # echo "update distribution reference SRI_LIGO_BINARY_HASH = $SRI_LIGO_BINARY_HASH"
 # "${SED_IN_PLACE_COMMAND[@]}" -E "s#$NIX_SHA256_SRI_REGEX_PATTERN#\1$SRI_LIGO_BINARY_HASH\2#" "$ROOT_FOLDER/nix/get_ligo.nix"
 

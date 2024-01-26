@@ -4,9 +4,9 @@ esy-windows:
     - windows
   stage: build
   rules:
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_REF_NAME == "0.60.0-mavryk" && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
   script:
     - git config http.postBuffer 1048576000
@@ -34,9 +34,9 @@ publish_npm_windows_x86:
     - job: esy-windows
       artifacts: true
   rules:
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_REF_NAME == "0.60.0-mavryk" && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
   script:
     - npm config set max_body_size 500mb
@@ -53,9 +53,9 @@ esy-macos-darwin:
     - i7
   stage: build
   rules:
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_REF_NAME == "0.60.0-mavryk" && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.0/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.0/ && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
   script:
     - mkdir -p ~/.npm
@@ -78,9 +78,9 @@ publish_npm_darwin:
     - job: esy-macos-darwin
       artifacts: true
   rules:
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_REF_NAME == "0.60.0-mavryk" && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
   script:
     - cd platform-darwin
@@ -96,9 +96,9 @@ esy-macos-m1:
     - m1
   stage: build
   rules:
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_REF_NAME == "0.60.0-mavryk" && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
   script:
     - mkdir -p ~/.npm
@@ -122,9 +122,9 @@ publish_npm_darwin_arm64:
     - job: esy-macos-m1
       artifacts: true
   rules:
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_REF_NAME == "0.60.0-mavryk" && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
   script:
     - cd platform-darwin-arm64

@@ -1,4 +1,4 @@
-// Example from https://ligolang.org/docs/advanced/entrypoints-contracts/#access-control
+// Example from https://ligo.mavryk.org/docs/advanced/entrypoints-contracts/#access-control
 
 const owner : address = ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe": address);
 
