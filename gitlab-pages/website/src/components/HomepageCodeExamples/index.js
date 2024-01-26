@@ -100,7 +100,7 @@ function CodeExamples(props) {
 export default function HomepageCodeExamples() {
   return (
     <div id="preview">
-      <h1>A friendly Smart Contract Language for Tezos</h1>
+      <h1>A friendly Smart Contract Language for Mavryk</h1>
       <p>Smart contracts were never so easy</p>
       <CodeExamples />
     </div>

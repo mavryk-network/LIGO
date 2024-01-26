@@ -3,12 +3,12 @@ id: getting-started
 title: Getting started
 ---
 
-This section is aimed at newcomers to Ligo and Tezos smart-contracts.
+This section is aimed at newcomers to Ligo and Mavryk smart-contracts.
 In this tutorial, we will go through the following step :
 -	Setting up the development environment,
 -	Writing a simple contract in Cameligo
 -	Testing the contract
--	Deploying the contract to Tezos
+-	Deploying the contract to Mavryk
 
 # Setting up the development environment.
 At the present moment, we recommend the user to develop on a UNIX system, GNU/Linux or MacOSX as the windows native binary is still in preparation. You can still use Ligo on windows through our docker image
@@ -23,14 +23,14 @@ Alternatively, you can decide to use our [webide](https://ide.ligolang.org/). Th
 
 The `ligo` executable is statically linked. It should run on most modern Linux distributions.
 
-You can get the rolling release [here](https://gitlab.com/ligolang/ligo/-/jobs/3553205311/artifacts/raw/ligo), make it executable, and you are done!
+You can get the rolling release [here](https://gitlab.com/mavryk-network/ligo/-/jobs/3553205311/artifacts/raw/ligo), make it executable, and you are done!
 
 ```zsh
-wget https://gitlab.com/ligolang/ligo/-/jobs/3553205311/artifacts/raw/ligo
+wget https://gitlab.com/mavryk-network/ligo/-/jobs/3553205311/artifacts/raw/ligo
 chmod +x ./ligo
 ```
 
-For a specific version, you can visit our [release page](https://gitlab.com/ligolang/ligo/-/releases/).  
+For a specific version, you can visit our [release page](https://gitlab.com/mavryk-network/ligo/-/releases/).  
 Optionally, you can put it somewhere in your `PATH` for easy access:
 
 ```zsh
@@ -42,40 +42,40 @@ sudo cp ./ligo /usr/local/bin
 Try our tap,
 
 ```
-brew tap ligolang/ligo https://gitlab.com/ligolang/ligo.git
+brew tap ligolang/ligo https://gitlab.com/mavryk-network/ligo.git
 brew install ligolang/ligo/ligo
 ```
 
 ### Debian Linux package installation
 
 A `.deb` package containing the static `ligo` executable is also available.
-First, download [the package](https://gitlab.com/ligolang/ligo/-/jobs/3553205311/artifacts/raw/ligo.deb), and then install using: 
+First, download [the package](https://gitlab.com/mavryk-network/ligo/-/jobs/3553205311/artifacts/raw/ligo.deb), and then install using: 
 
 ```zsh
 sudo apt install ./ligo.deb
 ```
 
 ### Dockerised installation
-If you've [installed 🐳 Docker](https://docs.docker.com/install/), you can run the latest [LIGO release 0.59.0](https://ligolang.org/docs/next/intro/changelog):
+If you've [installed 🐳 Docker](https://docs.docker.com/install/), you can run the latest [LIGO release 0.60.0](https://ligo.mavryk.org/docs/next/intro/changelog):
 
 Linux or OSX:
 > ```sh
-> docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.59.0
+> docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.60.0
 > ```
 > For convenience you can alias the above command
 > ```sh
-> alias ligo="docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.59.0"
+> alias ligo="docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.60.0"
 > ```
 > To make this `alias` persistent across terminal sessions you need to configure your shell.     
 > Here is a [good link](https://www.tecmint.com/create-alias-in-linux/) with the steps on how to do that.
 
 Windows:
 > ```dos
-> docker run --rm -v "%CD%":/cd -w /cd ligolang/ligo:0.59.0`
+> docker run --rm -v "%CD%":/cd -w /cd ligolang/ligo:0.60.0`
 > ```
 > For convenience you can alias the above command
 > ```dos
-> doskey ligo=docker run --rm -v "%CD%":/cd -w /cd ligolang/ligo:0.59.0 $*
+> doskey ligo=docker run --rm -v "%CD%":/cd -w /cd ligolang/ligo:0.60.0 $*
 > ```
 > To make the alias persistent across terminal sessions you need to add the `doskey` to the Windows Registry.  
 > Follow [this stackoverflow answer](https://stackoverflow.com/a/21040825) for the steps on how to do that.
@@ -94,15 +94,15 @@ Or run one of the older versions found on [DockerHub](https://hub.docker.com/r/l
 
   * For vs-code, simply go to the extension menu in the left bar (Ctrl + Shift + X) and search for the `ligo-vscode` extension and install it.
 
-  * For emacs, follow the instruction [here](https://gitlab.com/ligolang/ligo/-/blob/dev/tools/emacs/README.md)
+  * For emacs, follow the instruction [here](https://gitlab.com/mavryk-network/ligo/-/blob/dev/tools/emacs/README.md)
 
-  * For vim, follow the instruction [here](https://gitlab.com/ligolang/ligo/-/blob/dev/tools/vim/ligo/start/ligo/README.md)
+  * For vim, follow the instruction [here](https://gitlab.com/mavryk-network/ligo/-/blob/dev/tools/vim/ligo/start/ligo/README.md)
 
   Once, you've done it, you are ready to make your first smart-contract
 
-## Install the Tezos tools
+## Install the Mavryk tools
 
-  To deploy your smart-contract on the network and to test it, you will need to use a Tezos client.
+  To deploy your smart-contract on the network and to test it, you will need to use a Mavryk client.
 
   * On GNU/Linux, the simplest way to get tezos-client is through opam using `opam install tezos`. alternatives are available [here](https://tezos.gitlab.io/introduction/howtoget.html)
 
@@ -112,7 +112,7 @@ Or run one of the older versions found on [DockerHub](https://hub.docker.com/r/l
 
 In this section and the following one we will use a simple smart-contract that is present as example on our webide. We will cover the ligo language and smart-contract development in the following tutorials.
 
-First, create a `ligo_tutorial` folder on your computer. Then download and put the contract in this folder. It is available in [Pascaligo](https://gitlab.com/ligolang/ligo/-/raw/dev/src/test/contracts/increment.ligo), [Cameligo](https://gitlab.com/ligolang/ligo/-/raw/dev/src/test/contracts/increment.mligo) and [Jsligo](https://gitlab.com/ligolang/ligo/-/raw/dev/src/test/contracts/increment.jsligo)
+First, create a `ligo_tutorial` folder on your computer. Then download and put the contract in this folder. It is available in [Pascaligo](https://gitlab.com/mavryk-network/ligo/-/raw/dev/src/test/contracts/increment.ligo), [Cameligo](https://gitlab.com/mavryk-network/ligo/-/raw/dev/src/test/contracts/increment.mligo) and [Jsligo](https://gitlab.com/mavryk-network/ligo/-/raw/dev/src/test/contracts/increment.jsligo)
 
 <Syntax syntax="pascaligo">
 
@@ -401,16 +401,16 @@ const test_increment = (() : unit => {
 
   The command will run every function starting with `test` and return their values.
 
-  More on the syntax for the test framework [here](https://ligolang.org/docs/advanced/testing#testing-with-test).
+  More on the syntax for the test framework [here](https://ligo.mavryk.org/docs/advanced/testing#testing-with-test).
 
 
 ## Testing the Michelson contract
 
   The ligo compiler is made so the produced Michelson program types and correspond to the initial ligo program. However until we have tools for formal verification, we advise testing that the Michelson code will behave as the ligo one. For this purpose, you should also write a test for the Michelson code.
 
-  There is different methods for testing Michelson code. In this tutorial we will focus on `tezos-client` mockup. More information [here](https://ligolang.org/docs/advanced/michelson_testing)
+  There is different methods for testing Michelson code. In this tutorial we will focus on `tezos-client` mockup. More information [here](https://ligo.mavryk.org/docs/advanced/michelson_testing)
 
-  This method consist in running a "mockup" Tezos chain on our computer, push the contract on the chain and send transaction to the chain to test the contract behaviour.
+  This method consist in running a "mockup" Mavryk chain on our computer, push the contract on the chain and send transaction to the chain to test the contract behaviour.
 
   First, create a temporary folder for the mockup chain by running
   ```zsh
@@ -500,16 +500,16 @@ const test_increment = (() : unit => {
 
 # Publishing the contract
 
-For deploying the contract on Tezos, we will use the `tezos-client` interface like we did on the previous section.
+For deploying the contract on Mavryk, we will use the `tezos-client` interface like we did on the previous section.
 
 First, you will need an account address. You can get one for testing at the [faucet](https://teztnets.xyz/ghostnet-faucet).
 Download the json file and place it in the `ligo_tutorial` folder. $!$ The account that you get from the faucet are only temporary
 
-Then we are going to point the client on a Tezos node
+Then we are going to point the client on a Mavryk node
 ```zsh
 tezos-client --endpoint https://rpc.ghostnet.teztnets.xyz config update
 ```
-This is the testnet, which is a separate network from Tezos, use for testing.
+This is the testnet, which is a separate network from Mavryk, use for testing.
 
 
 Once done, activate your account

@@ -59,7 +59,7 @@ const COMMUNICATION_CHANNELS = [
     description: "We're also on Telegram. Ask us anything!"
   },
   {
-    link: 'https://gitlab.com/ligolang/ligo/issues',
+    link: 'https://gitlab.com/mavryk-network/ligo/issues',
     icon: 'img/communication_channels/gitlab.svg',
     description: 'Need a fix? Create an issue on GitLab.'
   },

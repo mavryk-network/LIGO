@@ -6,13 +6,13 @@ title: Migrating from Ethereum
 import Syntax from '@theme/Syntax';
 
 
-This article is aimed at those who have some experience with developing smart contracts for Ethereum in Solidity. We will cover the key differences between Solidity and LIGO, compare the execution model of Ethereum and Tezos blockchains, and list the features you should be aware of while developing smart contracts for Tezos.
+This article is aimed at those who have some experience with developing smart contracts for Ethereum in Solidity. We will cover the key differences between Solidity and LIGO, compare the execution model of Ethereum and Mavryk blockchains, and list the features you should be aware of while developing smart contracts for Mavryk.
 
 ## Languages and libraries
 
-Tezos is an upgradeable blockchain that focuses on decentralisation. It offers a wide variety of languages, frameworks, and tools you can use to develop your contracts. In this article, we mainly focus on the LIGO language, and the provided examples use the Truffle framework for testing. However, many of the points here cover the inherent differences in the blockchain architectures, so they should be valid for other languages and frameworks in the Tezos ecosystem.
+Mavryk is an upgradeable blockchain that focuses on decentralisation. It offers a wide variety of languages, frameworks, and tools you can use to develop your contracts. In this article, we mainly focus on the LIGO language, and the provided examples use the Truffle framework for testing. However, many of the points here cover the inherent differences in the blockchain architectures, so they should be valid for other languages and frameworks in the Mavryk ecosystem.
 
-The current Tezos protocol uses the Michelson language under the hood. Michelson is much like EVM in Ethereum, inasmuch as its programs are low-level code executed by an embedded virtual machine. Nevertheless, contrary to EVM byte-code, Michelson is a strongly-typed stack-based language designed to be human-readable.
+The current Mavryk protocol uses the Michelson language under the hood. Michelson is much like EVM in Ethereum, inasmuch as its programs are low-level code executed by an embedded virtual machine. Nevertheless, contrary to EVM byte-code, Michelson is a strongly-typed stack-based language designed to be human-readable.
 
 Having a human-readable representation of compiled contracts makes it harder for compiler bugs to pass unnoticed: everyone can review the Michelson code of the contract and even formally prove its correctness.
 
@@ -20,23 +20,23 @@ LIGO is a family of high-level languages. There are several _flavours_ or _synta
 
 ## Terminology
 
-For those who come from the Ethereum world, the terminology used in Tezos may be misleading. Tezos developers chose to _not_ reuse the same terms for similar concepts for a reason: a false sense of similarity would be a bad friend for those migrating to a different blockchain architecture.
+For those who come from the Ethereum world, the terminology used in Mavryk may be misleading. Mavryk developers chose to _not_ reuse the same terms for similar concepts for a reason: a false sense of similarity would be a bad friend for those migrating to a different blockchain architecture.
 
-We will, however, try to associate the terms known to you with the terms used in Tezos. Note that this is just an _association,_ and not the exact equivalence.
+We will, however, try to associate the terms known to you with the terms used in Mavryk. Note that this is just an _association,_ and not the exact equivalence.
 
-| Ethereum term            | Tezos term           | Notes |
+| Ethereum term            | Mavryk term           | Notes |
 |--------------------------|----------------------|-------|
 | World state              | Context              | |
-| Account                  | Contract or Account  | In Tezos, both smart contracts and accounts controlled by private keys are referred to as "contracts" |
+| Account                  | Contract or Account  | In Mavryk, both smart contracts and accounts controlled by private keys are referred to as "contracts" |
 | Externally-owned account | Implicit account     | |
 | Contract                 | Smart contract or Originated contract  | |
 | Contract deployment      | Contract origination | |
-| Transaction              | Operation            | In Tezos, there is a distinction between transactions that transfer value, contract originations, and other kinds of operations |
+| Transaction              | Operation            | In Mavryk, there is a distinction between transactions that transfer value, contract originations, and other kinds of operations |
 | –                        | Transaction          | One possible type of operation (value transfer or contract invocation) |
-| Miner                    | Baker                | Tezos uses proof-of-stake, so bakers do not solve proof-of-work puzzles. They do produce new blocks and receive rewards, though |
+| Miner                    | Baker                | Mavryk uses proof-of-stake, so bakers do not solve proof-of-work puzzles. They do produce new blocks and receive rewards, though |
 | Contract state           | Contract storage     | |
 | Contract method          | Entrypoint           | |
-| View method              | – | Currently, Tezos does not provide view functions. You can inspect the storage of the contract, though |
+| View method              | – | Currently, Mavryk does not provide view functions. You can inspect the storage of the contract, though |
 
 ## Types and why they matter
 
@@ -271,7 +271,7 @@ contract Counter {
 
 When the contract is compiled, the Solidity compiler automatically adds dispatching logic into the resulting EVM byte-code. The contract inspects the data passed to it and chooses a method based on the first four bytes of the method's signature hash: `0xbc1ecb8e` means `increment()` and `0x36e44653` means `decrement()`.
 
-In Tezos, a contract must define a default entrypoint that does the dispatching. It is much like a `main` function in C-like languages. It accepts a typed _parameter_ (some data that comes with a transaction) and the current value of the contract _storage_ (the internal state of the contract). The default entrypoint returns a list of internal operations and the new value of the storage.
+In Mavryk, a contract must define a default entrypoint that does the dispatching. It is much like a `main` function in C-like languages. It accepts a typed _parameter_ (some data that comes with a transaction) and the current value of the contract _storage_ (the internal state of the contract). The default entrypoint returns a list of internal operations and the new value of the storage.
 
 For example, we can simulate Ethereum dispatching behaviour:
 <Syntax syntax="pascaligo">
@@ -420,11 +420,11 @@ let main = (p : parameter, s : storage): [list<operation>, int] => {
 </Syntax>
 
 
-Tezos has special support for parameters encoded with variant types. If the parameter is a variant type, Tezos will treat each constructor as a separate entrypoint (with the first letter lowercased). It is important when we want to call a contract but do not know the full type of its parameter. For example, we can call our counter contract with the following CLI command:
+Mavryk has special support for parameters encoded with variant types. If the parameter is a variant type, Mavryk will treat each constructor as a separate entrypoint (with the first letter lowercased). It is important when we want to call a contract but do not know the full type of its parameter. For example, we can call our counter contract with the following CLI command:
 
 `tezos-client call contract counter from alice --entrypoint '%subtract' --arg 100`
 
-Truffle (and Taquito library, which Truffle for Tezos uses under the hood), also treats entrypoints specially. We can call our `add` entrypoint as follows:
+Truffle (and Taquito library, which Truffle for Mavryk uses under the hood), also treats entrypoints specially. We can call our `add` entrypoint as follows:
 ```solidity
 const Counter = artifacts.require('Counter')
 let counterInstance = await Counter.deployed()
@@ -435,9 +435,9 @@ await counterInstance.add(100)
 
 Solidity has visibility modifiers like `private` and `public` for storage entries and contract methods. LIGO has none of these, and you may be wondering why. To answer this, we will first consider storage modifiers and then discuss methods (entrypoints).
 
-It is a popular misconception in the Ethereum world that by marking a storage field `private` you can make this field visible only from inside the contract. Both in Tezos and Ethereum, the contract storage is public. This is due to how blockchains work: nodes need to read contracts' storage to execute and validate the transactions. Tezos allows anyone to inspect storage of any contract with one CLI command. In Ethereum, it is harder but still feasible.
+It is a popular misconception in the Ethereum world that by marking a storage field `private` you can make this field visible only from inside the contract. Both in Mavryk and Ethereum, the contract storage is public. This is due to how blockchains work: nodes need to read contracts' storage to execute and validate the transactions. Mavryk allows anyone to inspect storage of any contract with one CLI command. In Ethereum, it is harder but still feasible.
 
-Making a storage field `public` in Solidity instructs the compiler to generate a `view` method that returns the value of this field. In Tezos, it is possible to inspect the storage directly, and it is not possible to return values from contract calls. Thus, public and private storage fields are equivalent in Tezos.
+Making a storage field `public` in Solidity instructs the compiler to generate a `view` method that returns the value of this field. In Mavryk, it is possible to inspect the storage directly, and it is not possible to return values from contract calls. Thus, public and private storage fields are equivalent in Mavryk.
 
 For contract methods, the dispatching logic defines which functions within the contract are accessible from the outside world. Consider the following snippet:
 
@@ -508,7 +508,7 @@ There is no analogue of `internal` methods in LIGO because LIGO contracts do not
 
 ## Lambdas
 
-In Tezos, you can accept _code_ as a parameter. Such functions that you can pass around are called _lambdas_ in functional languages. Let us say that we want to support arbitrary mathematical operations with the counter value. We can just accept the intended formula as the parameter:
+In Mavryk, you can accept _code_ as a parameter. Such functions that you can pass around are called _lambdas_ in functional languages. Let us say that we want to support arbitrary mathematical operations with the counter value. We can just accept the intended formula as the parameter:
 
 <Syntax syntax="pascaligo">
 
@@ -680,7 +680,7 @@ contract Beneficiary {
 }
 ```
 
-In Tezos, the execution model is quite different. Contracts communicate via message passing. Messages are called _internal operations._ If you want to pass a message to another contract, you need to finish the computation first, and then put an operation into the _operations queue._ Here is how it looks like:
+In Mavryk, the execution model is quite different. Contracts communicate via message passing. Messages are called _internal operations._ If you want to pass a message to another contract, you need to finish the computation first, and then put an operation into the _operations queue._ Here is how it looks like:
 
 <Syntax syntax="pascaligo">
 
@@ -759,9 +759,9 @@ let treasury = (p : unit, s : storage) => {
 
 </Syntax>
 
-Note that all the state changes occur _before_ the internal operation gets executed. This way, Tezos protects us from unintended reentrancy attacks. However, with complex interactions chain, reentrancy attacks may still be possible.
+Note that all the state changes occur _before_ the internal operation gets executed. This way, Mavryk protects us from unintended reentrancy attacks. However, with complex interactions chain, reentrancy attacks may still be possible.
 
-It is a common idiom in Ethereum to make read-only calls to other contracts. Tezos does not offer a straightforward way to do it but you might think of using something like a callback mechanism:
+It is a common idiom in Ethereum to make read-only calls to other contracts. Mavryk does not offer a straightforward way to do it but you might think of using something like a callback mechanism:
 
 <Syntax syntax="pascaligo">
 
@@ -811,14 +811,14 @@ let doSomethingCont = ([p, s]: [int, int]) => [(list([]) as list<operation>), p 
 
 However, here you leave your contract in an _intermediate_ state before making an external call. You would need additional precautions to make such callback-style calls secure. In most cases, you should avoid this pattern.
 
-By making contract interactions harder, Tezos incentives you to simplify your architecture. Think about whether you can use lambdas or merge your contracts to avoid complex inter-contract dependencies. If it is possible to _not_ split your logic into multiple contracts, then avoid the split.
+By making contract interactions harder, Mavryk incentives you to simplify your architecture. Think about whether you can use lambdas or merge your contracts to avoid complex inter-contract dependencies. If it is possible to _not_ split your logic into multiple contracts, then avoid the split.
 
-You can find more details on how Tezos contracts interact with each other in our [inter-contract calls](../inter-contract-calls/inter-contract-calls.md) article.
+You can find more details on how Mavryk contracts interact with each other in our [inter-contract calls](../inter-contract-calls/inter-contract-calls.md) article.
 
 ## Fees
 
-Fee model in Tezos is more complicated than the Ethereum one. The most important bits you should know about are:
-1. In Tezos, you _burn_ a certain amount of Tez for increasing the size of the stored data. For example, if you add a new entry to a map or replace a string with a longer one, you must burn your Tez tokens.
+Fee model in Mavryk is more complicated than the Ethereum one. The most important bits you should know about are:
+1. In Mavryk, you _burn_ a certain amount of Tez for increasing the size of the stored data. For example, if you add a new entry to a map or replace a string with a longer one, you must burn your Tez tokens.
 2. When you call a contract, the transaction spends gas for reading, deserialising and type-checking the storage. Also, a certain amount of gas gets spent for serialising and writing the storage back to the context. In practice, it means that **the larger your code and storage are, the more expensive it is to call your contract,** regardless of the number of computations performed. If you have big or unbounded containers in storage, you should most probably use `big_map`.
 3. Emitting internal operations is very expensive in terms of gas: there is a fixed cost of 10000 gas for `Mavryk.get_{contract, entrypoint}_opt` plus the cost of reading, deserialising, and type-checking the parameter of the callee.
 
@@ -826,7 +826,7 @@ Always test for gas consumption and strive to minimise the size of the data stor
 
 ## Conclusion
 
-In this article, we discussed some Solidity patterns and their LIGO counterparts. We also covered the most important aspects of the Tezos execution model and fees. Here is a quick reference table comparing Solidity and LIGO patterns:
+In this article, we discussed some Solidity patterns and their LIGO counterparts. We also covered the most important aspects of the Mavryk execution model and fees. Here is a quick reference table comparing Solidity and LIGO patterns:
 
 | Solidity pattern | LIGO pattern |
 |------------------|--------------|
@@ -834,7 +834,7 @@ In this article, we discussed some Solidity patterns and their LIGO counterparts
 | `private` field  | N/A: all fields are public |
 | `private` method | A regular function, e.g., <Syntax syntax="pascaligo">`function func (const a : int) is ...`</Syntax><Syntax syntax="cameligo">`let func (a : int) = ...`</Syntax><Syntax syntax="jsligo">`let func = (a : int) => ...`</Syntax> |
 | `public` /  `external` method  | A separate entrypoint in the parameter: <Syntax syntax="pascaligo">`type parameter = F of int`</Syntax><Syntax syntax="cameligo">`type parameter = F of int`</Syntax><Syntax syntax="jsligo">`type parameter = ["F", int]`</Syntax>. `main` entrypoint should dispatch and forward this call to the corresponding function using a match expression |
-| `internal` method | There is no concept of inheritance in Tezos |
+| `internal` method | There is no concept of inheritance in Mavryk |
 | Constructor      | Set the initial storage upon origination |
 | Method that returns a value | Inspect the contract storage directly |
 | `contract.doX(...)` | Emit an internal operation |

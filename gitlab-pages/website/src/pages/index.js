@@ -74,7 +74,7 @@ export default function Home() {
   return (
     <Layout
       title={`${siteConfig.title}`}
-      description="A friendly Smart Contract Language for Tezos"
+      description="A friendly Smart Contract Language for Mavryk"
     >
       <main>
         <div

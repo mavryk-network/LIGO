@@ -8,14 +8,14 @@ const singleTheme = require('prism-react-renderer/themes/duotoneLight');
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'LIGO',
-  tagline: 'LIGO is a friendly smart contract language for Tezos',
-  url: 'https://ligolang.org',
+  tagline: 'LIGO is a friendly smart contract language for Mavryk',
+  url: 'https://ligo.mavryk.org',
   baseUrl: '/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.svg',
   projectName: 'ligo',
-  organizationName: 'Marigold',
+  organizationName: 'MavrykDynamics',
 
   // Even if you don't use internalization, you can use this field to set useful
   // metadata like html lang. For example, if your site is Chinese, you may want
@@ -103,25 +103,25 @@ const config = {
           {
             title: 'Community',
             items: [
-              {
-                label: 'Tezos Stack Exchange',
-                href: 'https://tezos.stackexchange.com/questions/tagged/ligo',
-              },
+              // {
+              //   label: 'Tezos Stack Exchange',
+              //   href: 'https://tezos.stackexchange.com/questions/tagged/ligo',
+              // },
               {
                 label: 'Discord',
-                href: 'https://discord.gg/9rhYaEt',
+                href: 'https://discord.gg/BDBYA4ASf2',
               },
               {
                 label: 'Telegram',
-                href: 'https://t.me/LigoLang',
+                href: 'https://t.me/+skFJjewPdRU5ZGQ0',
               },
+              // {
+              //   label: 'Riot',
+              //   href: 'https://riot.im/app/#/room/#ligo-public:matrix.org',
+              // },
               {
-                label: 'Riot',
-                href: 'https://riot.im/app/#/room/#ligo-public:matrix.org',
-              },
-              {
-                label: 'Twitter',
-                href: 'https://twitter.com/LigoLang',
+                label: 'X',
+                href: 'https://X.com/MavrykDynamics',
               },
             ],
           },
@@ -138,7 +138,7 @@ const config = {
               },
               {
                 label: 'GitLab',
-                href: 'https://gitlab.com/ligolang/ligo',
+                href: 'https://gitlab.com/mavryk-network/ligo',
               },
               {
                 label: 'Contribute',

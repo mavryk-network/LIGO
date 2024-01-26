@@ -18,7 +18,7 @@ const sidebars = {
     "Language Basics": [
       "language-basics/types",
       "language-basics/constants-and-variables",
-      "language-basics/math-numbers-tez",
+      "language-basics/math-numbers-mav",
       "language-basics/strings-bytes",
       "language-basics/functions",
       "language-basics/boolean-if-else",
@@ -134,8 +134,8 @@ const sidebars = {
       "tutorials/getting-started/getting-started"
     ],
     "First-contract": [
-      "tutorials/taco-shop/tezos-taco-shop-smart-contract",
-      "tutorials/taco-shop/tezos-taco-shop-payout"
+      "tutorials/taco-shop/mavryk-taco-shop-smart-contract",
+      "tutorials/taco-shop/mavryk-taco-shop-payout"
     ],
     "Migrating from Ethereum": [
       "tutorials/tz-vs-eth/tz-vs-eth"
