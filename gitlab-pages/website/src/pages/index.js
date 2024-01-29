@@ -91,32 +91,32 @@ export default function Home() {
             <div id="callToAction">
               <ul>
                 <li className="primary">
-                  <a href="https://ide.ligolang.org">Try Online</a>
+                  <a href="https://ide.ligolang.org">Try Ligo Online</a>
                 </li>
-                <li className="primary">
+                {/* <li className="primary">
                   <a
                     href="https://ide-v2-beta.ligolang.org/"
                     target="_blank"
                   >
                     WebIde V2 beta
                   </a>
-                </li>
-                <li className="primary">
+                </li> */}
+                {/* <li className="primary">
                   <a
                     href="https://gitpod.io/#https://gitlab.com/ligolang/template-ligo"
                     target="_blank"
                   >
                     Try on Gitpod
                   </a>
-                </li>
+                </li> */}
                 <li className="secondary">
-                  <a href={useBaseUrl("/docs/intro/installation")}>Install</a>
+                  <a href={useBaseUrl("/docs/intro/introduction")}>Get Started</a>
                 </li>
-                <li className="secondary">
+                {/* <li className="secondary">
                   <a href={useBaseUrl("https://academy.ligolang.org/")}>
                     Learn on Academy
                   </a>
-                </li>
+                </li> */}
               </ul>
             </div>
             <HomepageCodeExamples />

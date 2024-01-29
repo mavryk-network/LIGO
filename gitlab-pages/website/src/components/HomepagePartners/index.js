@@ -44,7 +44,7 @@ export default function HomepagePartners() {
   return (
     <div id="partners">
       <div className="centered wrapper">
-        <span id="heading">Our Partners</span>
+        {/* <span id="heading">Our Partners</span> */}
         <div id="list">
           {PARTNERS.filter(entry => entry.pinned).map(entry =>
             <Partner key={entry.name} name={entry.name} image={entry.image} link={entry.link} />
