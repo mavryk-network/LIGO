@@ -106,7 +106,7 @@ data LigoTypeLiteralValue
   | LTLVInt Int
   | LTLVNat Int
   | LTLVTimestamp Int
-  | LTLVMutez Int
+  | LTLVMumav Int
   | LTLVString LigoString
   | LTLVBytes Text
   | LTLVAddress Text
@@ -830,7 +830,7 @@ instance MessagePack LigoTypeLiteralValue where
     , LTLVInt       . unTextualNumber <$> (guardMsg (name == "Literal_int"         ) >> fromObjectWith cfg arg)
     , LTLVNat       . unTextualNumber <$> (guardMsg (name == "Literal_nat"         ) >> fromObjectWith cfg arg)
     , LTLVTimestamp . unTextualNumber <$> (guardMsg (name == "Literal_timestamp"   ) >> fromObjectWith cfg arg)
-    , LTLVMutez     . unTextualNumber <$> (guardMsg (name == "Literal_mutez"       ) >> fromObjectWith cfg arg)
+    , LTLVMumav     . unTextualNumber <$> (guardMsg (name == "Literal_mumav"       ) >> fromObjectWith cfg arg)
     , LTLVString                      <$> (guardMsg (name == "Literal_string"      ) >> fromObjectWith cfg arg)
     , LTLVBytes                       <$> (guardMsg (name == "Literal_bytes"       ) >> fromObjectWith cfg arg)
     , LTLVAddress                     <$> (guardMsg (name == "Literal_address"     ) >> fromObjectWith cfg arg)
@@ -1041,7 +1041,7 @@ fromLigoType st = \case
       LTLVInt n -> make' (st, CInt $ show n)
       LTLVNat n -> make' (st, CNat $ show n)
       LTLVTimestamp n -> make' (st, CInt $ show n)
-      LTLVMutez n -> make' (st, CTez $ show n)
+      LTLVMumav n -> make' (st, CTez $ show n)
       LTLVString str -> fromLigoString str
       LTLVBytes str -> make' (st, CBytes str)
       LTLVAddress str -> make' (st, CString str)

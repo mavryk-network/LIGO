@@ -36,7 +36,7 @@ export default class LigoTxManager {
     balance,
     gasLimit,
     storageLimit,
-    suggestedFeeMutez
+    suggestedFeeMumav
   ) {
     if (isWallet) {
       return await this.provider.wallet
@@ -45,7 +45,7 @@ export default class LigoTxManager {
           init: storage,
           balance: balance || undefined,
           delegate: delegateAddress || undefined,
-          fee: suggestedFeeMutez || undefined,
+          fee: suggestedFeeMumav || undefined,
           gasLimit: gasLimit || undefined,
           storageLimit: storageLimit || undefined,
         })
@@ -62,7 +62,7 @@ export default class LigoTxManager {
         init: storage,
         balance: balance || undefined,
         delegate: delegateAddress || undefined,
-        fee: suggestedFeeMutez || undefined,
+        fee: suggestedFeeMumav || undefined,
         gasLimit: gasLimit || undefined,
         storageLimit: storageLimit || undefined,
       })

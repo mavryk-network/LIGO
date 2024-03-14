@@ -23,7 +23,7 @@
 
  let main ( arg : parameter * storage ) : not operation list * storage =
  begin
- assert ( Tezos . amount = 0mutez ) ;
+ assert ( Tezos . amount = 0mumav ) ;
  let ( p , storage ) = arg in
  let { manager = manager ; tickets = tickets } = storage in
  ( match p with
@@ -59,7 +59,7 @@
  | Some split_tickets ->
  let ( send_ticket , keep_ticket ) = split_tickets in
  let ( _ , tickets ) = Big_map . get_and_update send . ticketer ( Some keep_ticket ) tickets in
- let op = Tezos . transaction send_ticket 0mutez send . destination in
+ let op = Tezos . transaction send_ticket 0mumav send . destination in
  ( [ op ] , { manager = manager ; tickets = tickets } )
  )
  )

@@ -5,7 +5,7 @@ let check_signature (pk, signed, msg : key * signature * bytes) : bool =
 $ tezos-client gen keys testsign
 
 $ tezos-client show address testsign -S
-Hash: tz1RffmtWjy435AXZuWwLWG6UaJ66ERmgviA
+Hash: mv1E395Uq7GQcLwkiE5naKx7dbA4ectCARet
 Public Key: edpktz4xg6csJnJ5vcmMb2H37sWXyBDcoAp3XrBvjRaTSQ1zmZTeRQ
 Secret Key: unencrypted:edsk34mH9qhMdVWtbammJfYkUoQfwW6Rw5K6rbGW1ajppy3LPNbiJA
 

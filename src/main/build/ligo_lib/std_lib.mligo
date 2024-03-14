@@ -524,13 +524,13 @@ module Tezos = struct
 
   (** display-only-for-cameligo
     The call `transaction param amount contract_addr` evaluates in
-    an operation that will send the amount `amount` in mutez to the
+    an operation that will send the amount `amount` in mumav to the
     contract at the valid address `contract_addr`, with parameter
     `param`. If the contract is an implicit account, the parameter
     must be `unit`. *)
   (** display-only-for-jsligo
     The call `transaction(param, amount, contract_addr)` evaluates in
-    an operation that will send the amount `amount` in mutez to the
+    an operation that will send the amount `amount` in mumav to the
     contract at the valid address `contract_addr`, with parameter
     `param`. If the contract is an implicit account, the parameter
     must be `unit`. *)
@@ -685,21 +685,21 @@ module Tezos = struct
   (* Miscellanea *)
 
   (** display-only-for-cameligo
-    The call `get_balance ()` returns the balance in mutez of the
+    The call `get_balance ()` returns the balance in mumav of the
     account associated to the currently executed smart contract,
-    including any mutez added by the calling transaction. *)
+    including any mumav added by the calling transaction. *)
   (** display-only-for-jsligo
-    The call `get_balance()` returns the balance in mutez of the
+    The call `get_balance()` returns the balance in mumav of the
     account associated to the currently executed smart contract,
-    including any mutez added by the calling transaction. *)
+    including any mumav added by the calling transaction. *)
   let get_balance () : tez =
     [%michelson ({| {BALANCE} |} : tez)]
 
   (** display-only-for-cameligo
-    The call `get_amount ()` returns the amount in mutez of the
+    The call `get_amount ()` returns the amount in mumav of the
     current transaction. *)
   (** display-only-for-jsligo
-    The call `get_amount()` returns the amount in mutez of the
+    The call `get_amount()` returns the amount in mumav of the
     current transaction. *)
   let get_amount () : tez =
     [%michelson ({| {AMOUNT} |} : tez)]
@@ -2954,7 +2954,7 @@ module Test = struct
       let ticket = Option.unopt (Tezos.create_ticket v amt) in
       let tx_param = mk_param ticket in
       let c : whole_p contract = Tezos.get_contract_with_error dst_addr "Testing proxy: you provided a wrong address" in
-      let op = Tezos.transaction tx_param 1mutez c
+      let op = Tezos.transaction tx_param 1mumav c
       in [op], ()
 
     [@private]
@@ -2969,7 +2969,7 @@ module Test = struct
       let ticket = Option.unopt (Tezos.create_ticket v amt) in
       let init_storage : whole_s = mk_storage ticket in
       let op,addr =
-        Tezos.create_contract main (None: key_hash option) 0mutez init_storage
+        Tezos.create_contract main (None: key_hash option) 0mumav init_storage
       in [op], Some addr
 
     [@private]
@@ -3002,7 +3002,7 @@ module Test = struct
       transfer_to_contract
         (to_contract taddr_proxy)
         (ticket_info , dst_addr)
-        1mutez
+        1mumav
 
     let originate
       (type vt whole_s vp)

@@ -21,5 +21,5 @@ let main (p, s : parameter * storage) =
     | IsWhitelisted arg ->
         let addr, callback_contract = arg in
         let whitelisted = Set.mem addr s.senders_whitelist in
-        Tezos.transaction whitelisted 0mutez callback_contract in
+        Tezos.transaction whitelisted 0mumav callback_contract in
   [op], s

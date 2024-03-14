@@ -7,7 +7,7 @@ open Errors
 This pass handles the special cases of type annotation in JsLIGO.
 These are the cases where a E_annot remain a E_annot
 
-1. The first such case is nat and tez/mutez annotations.
+1. The first such case is nat and tez/mumav annotations.
 
 2. The second case is type annotation of code injection.
   
@@ -30,10 +30,10 @@ let compile ~raise:_ =
         then e_nat_z ~loc i
         else if Ty_variable.is_name tv "tez"
         then (
-          let mutez = Z.mul (Z.of_int 1_000_000) i in
-          e_mutez_z ~loc mutez)
-        else if Ty_variable.is_name tv "mutez"
-        then e_mutez_z ~loc i
+          let mumav = Z.mul (Z.of_int 1_000_000) i in
+          e_mumav_z ~loc mumav)
+        else if Ty_variable.is_name tv "mumav"
+        then e_mumav_z ~loc i
         else unchanged ()
       (* Type-annotated code injection *)
       | E_raw_code { language; code }, _ ->
@@ -53,7 +53,7 @@ let reduction ~raise =
       | E_literal (Literal_int _), T_var tv ->
         if Ty_variable.is_name tv "nat"
            || Ty_variable.is_name tv "tez"
-           || Ty_variable.is_name tv "mutez"
+           || Ty_variable.is_name tv "mumav"
         then raise.error (wrong_reduction __MODULE__)
         else ()
       | _ -> ())
@@ -71,13 +71,13 @@ let%expect_test "number_42_as_nat" =
   {| (E_annot ((E_literal (Literal_int 42)) (T_var nat))) |} |-> compile;
   [%expect {| (E_literal (Literal_nat 42)) |}]
 
-let%expect_test "number_42_as_mutez" =
-  {| (E_annot ((E_literal (Literal_int 42)) (T_var mutez))) |} |-> compile;
-  [%expect {| (E_literal (Literal_mutez 42))  |}]
+let%expect_test "number_42_as_mumav" =
+  {| (E_annot ((E_literal (Literal_int 42)) (T_var mumav))) |} |-> compile;
+  [%expect {| (E_literal (Literal_mumav 42))  |}]
 
 let%expect_test "number_42_as_tez" =
   {| ( E_annot ((E_literal (Literal_int 42)) (T_var tez))) |} |-> compile;
-  [%expect {|(E_literal (Literal_mutez 42000000)) |}]
+  [%expect {|(E_literal (Literal_mumav 42000000)) |}]
 
 let%expect_test "code_inj" =
   {|

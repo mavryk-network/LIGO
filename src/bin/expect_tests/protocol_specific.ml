@@ -107,7 +107,7 @@ let%expect_test _ =
              UNIT ;
              NIL operation ;
              DIG 2 ;
-             PUSH mutez 0 ;
+             PUSH mumav 0 ;
              UNIT ;
              TRANSFER_TOKENS ;
              CONS ;

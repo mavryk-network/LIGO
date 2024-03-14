@@ -10,7 +10,7 @@ let main (action : int) (store : int) : return =
     Tezos.create_contract
       dummy_contract
       ((None : key_hash option))
-      300000000mutez
+      300000000mumav
       1 in
   let toto : operation list = [op] in
   (toto, foo)

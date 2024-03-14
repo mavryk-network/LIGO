@@ -1,5 +1,5 @@
 const destinationAddress: address =
-  "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address;
+  "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address;
 
 const contract : contract<unit> =
   match(Tezos.get_contract_opt(Tezos.get_sender()) as option<contract<unit>>) {
@@ -7,4 +7,4 @@ const contract : contract<unit> =
     when(None()): failwith("no contract or wrong contract type")
   }
 const payment: operation =
-  Tezos.transaction(unit, 100mutez, contract);
+  Tezos.transaction(unit, 100mumav, contract);

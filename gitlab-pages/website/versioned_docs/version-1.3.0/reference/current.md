@@ -400,11 +400,11 @@ let main = (_ignore: unit, storage: storage) : [list<operation>, storage] => {
 </Syntax>
 
 <SyntaxTitle syntax="cameligo">
-val transaction : 'param -> mutez -> 'param contract -> operation
+val transaction : 'param -> mumav -> 'param contract -> operation
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let transaction: (action: &apos;param, amount: mutez, contract: contract&lt;&apos;param&gt;) => operation
+let transaction: (action: &apos;param, amount: mumav, contract: contract&lt;&apos;param&gt;) => operation
 </SyntaxTitle>
 
 Transfer `tez` to an account, or run code of another smart contract.
@@ -552,7 +552,7 @@ val voting_power : key_hash -> nat
 let voting_power: (key_hash:key_hash) => nat
 </SyntaxTitle>
 
-Return the voting power of a given contract. The voting power value is the full staking power of the delegate, currently expressed in mutez. Though, developers should not rely on `Tezos.voting_power` to query the staking power of a contract in mutez: the value returned by `Tezos.voting_power` is still of type` nat and it should only be considered relative to `Tezos.total_voting_power`.
+Return the voting power of a given contract. The voting power value is the full staking power of the delegate, currently expressed in mumav. Though, developers should not rely on `Tezos.voting_power` to query the staking power of a contract in mumav: the value returned by `Tezos.voting_power` is still of type` nat and it should only be considered relative to `Tezos.total_voting_power`.
 
 ## Sapling
 

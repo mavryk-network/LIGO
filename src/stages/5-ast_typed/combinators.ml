@@ -89,7 +89,7 @@ let t__type_ ~loc t1 t2 : type_expression = t_constant ~loc _type_ [ t1; t2 ]
   [@@map _type_, ("big_map", "michelson_contract")]
 
 
-let t_mutez = t_tez
+let t_mumav = t_tez
 
 let t_abstraction1 ~loc name kind : type_expression =
   let ty_binder = Type_var.fresh ~loc ~name:"_a" () in
@@ -368,7 +368,7 @@ let e__type_ p : expression_content = E_literal (Literal__type_ p)
     _type_
     , ( "int"
       , "nat"
-      , "mutez"
+      , "mumav"
       , "string"
       , "bytes"
       , "timestamp"
@@ -392,7 +392,7 @@ let e_a__type_ ~loc p = make_e ~loc (e__type_ p) (t__type_ ~loc ())
     , ( "unit"
       , "int"
       , "nat"
-      , "mutez"
+      , "mumav"
       , "timestamp"
       , "key_hash"
       , "string"

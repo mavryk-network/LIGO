@@ -1,3 +1,3 @@
 const a: int = 10 / 3;
 const b: nat = 10n / 3n;
-const c: nat = 10mutez / 3mutez;
+const c: nat = 10mumav / 3mumav;

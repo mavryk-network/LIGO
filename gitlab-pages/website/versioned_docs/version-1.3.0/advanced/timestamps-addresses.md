@@ -145,7 +145,7 @@ const not_tomorrow: bool = (Tezos.get_now() == in_24_hrs);
 
 ## Addresses
 
-The `address` type in LIGO denotes Tezos addresses (tz1, tz2, tz3,
+The `address` type in LIGO denotes Tezos addresses (mv1, mv2, mv3,
 KT1, ...). Currently, addresses are created by casting a string to the
 `address` type. Beware of failures if the address is invalid. Consider
 the following examples.
@@ -155,7 +155,7 @@ the following examples.
 
 ```cameligo group=d
 let my_account : address =
-  ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
+  ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
 ```
 
 </Syntax>
@@ -164,7 +164,7 @@ let my_account : address =
 
 ```jsligo group=d
 const my_account: address =
-  "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address;
+  "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address;
 ```
 
 </Syntax>

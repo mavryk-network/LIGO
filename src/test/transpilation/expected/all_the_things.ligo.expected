@@ -140,7 +140,7 @@ function getAllowance
     ];
 
   var op : operation
-  := Tezos.transaction (value, 0mutez, p.callback);
+  := Tezos.transaction (value, 0mumav, p.callback);
 } with (list [op], s)
 
 function getBalance
@@ -153,7 +153,7 @@ function getBalance
     ];
 
   var op : operation
-  := Tezos.transaction (value, 0mutez, p.callback);
+  := Tezos.transaction (value, 0mumav, p.callback);
 } with (list [op], s)
 
 function getTotalSupply
@@ -163,7 +163,7 @@ function getTotalSupply
   var total : nat := s.total_amount;
 
   var op : operation
-  := Tezos.transaction (total, 0mutez, p.callback);
+  := Tezos.transaction (total, 0mumav, p.callback);
 } with (list [op], s)
 
 function main (const a : action; const s : storage)
@@ -185,7 +185,7 @@ function check (const p : unit) : int is
 {
   var result : int := 0;
 
-  if amount = 100000000mutez
+  if amount = 100000000mumav
   then result := 42
   else result := 0;
 } with result
@@ -193,7 +193,7 @@ function check (const p : unit) : int is
 const lst : list (int) = list []
 
 const my_address : address
-= ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
+= ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
 
 type foo is record [bar : int -> int]
 
@@ -707,7 +707,7 @@ function cb (const a : address; const s : storage)
   : return is
 {
   const c : contract (unit) = get_entrypoint ("%cb", a);
-} with (list [Tezos.transaction (unit, 0mutez, c)], s)
+} with (list [Tezos.transaction (unit, 0mumav, c)], s)
 
 function cbo (const a : address; const s : storage)
   : return is
@@ -721,7 +721,7 @@ function cbo (const a : address; const s : storage)
         (failwith ("cbo: Entrypoint not found.")
          : contract (unit))
     ];
-} with (list [Tezos.transaction (unit, 0mutez, c)], s)
+} with (list [Tezos.transaction (unit, 0mumav, c)], s)
 
 function main (const a : bool; const b : bool) : int is
 {
@@ -822,7 +822,7 @@ function cb (const s : storage) : return is
 {
   const c : contract (unit)
   = get_contract (Tezos.get_sender ());
-} with (list [Tezos.transaction (unit, 0mutez, c)], s)
+} with (list [Tezos.transaction (unit, 0mumav, c)], s)
 
 function cbo (const s : unit) : return is
 {
@@ -834,7 +834,7 @@ function cbo (const s : unit) : return is
     | None ->
         (failwith ("contract not found") : contract (unit))
     ];
-} with (list [Tezos.transaction (unit, 0mutez, c)], s)
+} with (list [Tezos.transaction (unit, 0mumav, c)], s)
 
 type heap_elt is int * string
 
@@ -1122,7 +1122,7 @@ function update_owner
   (const parameter : update_owner;
    const storage : storage) : list (operation) * storage is
 {
-  if (amount =/= 0mutez)
+  if (amount =/= 0mumav)
   then {
     failwith ("Updating owner doesn't cost anything.");
   };
@@ -1155,7 +1155,7 @@ function update_details
   (const parameter : update_details;
    const storage : storage) : list (operation) * storage is
 {
-  if amount =/= 0mutez
+  if amount =/= 0mumav
   then failwith ("Updating details doesn't cost anything.");
 
   const id : int = parameter.id;
@@ -2177,7 +2177,7 @@ function main (const p : parameter; const s : storage)
   = Tezos.self ("%toto");
 
   const op : operation
-  = Tezos.transaction (2, 300000000mutez, self_contract);
+  = Tezos.transaction (2, 300000000mumav, self_contract);
 } with (list [op], s)
 
 type parameter is int
@@ -2193,7 +2193,7 @@ function main (const p : parameter; const s : storage)
   = Tezos.self ("%default");
 
   const op : operation
-  = Tezos.transaction (2, 300000000mutez, self_contract);
+  = Tezos.transaction (2, 300000000mumav, self_contract);
 } with (list [op], s)
 
 function iter_op (const s : set (int)) : int is
@@ -2312,27 +2312,27 @@ function main (const p : action; const s : int) : return is
      Increment (n) -> s + n | Decrement (n) -> s - n
    ])
 
-const add_tez : tez = 21mutez + 21mutez
+const add_tez : tez = 21mumav + 21mumav
 
-const sub_tez : tez = 21mutez - 20mutez
+const sub_tez : tez = 21mumav - 20mumav
 
-const not_enough_tez : tez = 4611686018427387903mutez
+const not_enough_tez : tez = 4611686018427387903mumav
 
-const nat_mul_tez : tez = 1n * 100mutez
+const nat_mul_tez : tez = 1n * 100mumav
 
-const tez_mul_nat : tez = 100mutez * 10n
+const tez_mul_nat : tez = 100mumav * 10n
 
-const tez_div_tez1 : nat = 100mutez / 1mutez
+const tez_div_tez1 : nat = 100mumav / 1mumav
 
-const tez_div_tez2 : nat = 100mutez / 90mutez
+const tez_div_tez2 : nat = 100mumav / 90mumav
 
-const tez_div_tez3 : nat = 100mutez / 110mutez
+const tez_div_tez3 : nat = 100mumav / 110mumav
 
-const tez_mod_tez1 : tez = 100mutez mod 1mutez
+const tez_mod_tez1 : tez = 100mumav mod 1mumav
 
-const tez_mod_tez2 : tez = 100mutez mod 90mutez
+const tez_mod_tez2 : tez = 100mumav mod 90mumav
 
-const tez_mod_tez3 : tez = 100mutez mod 110mutez
+const tez_mod_tez3 : tez = 100mumav mod 110mumav
 
 type storage_t is timestamp
 

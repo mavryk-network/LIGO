@@ -148,7 +148,7 @@ type _ sing =
   | S_match_expr : match_expr sing
   | S_minus : minus sing
   | S_minus_eq : minus_eq sing
-  | S_mutez_literal : mutez_literal sing
+  | S_mumav_literal : mumav_literal sing
   | S_namespace_decl : namespace_decl sing
   | S_namespace_name : namespace_name sing
   | S_namespace_path : 'a sing -> 'a namespace_path sing
@@ -420,7 +420,7 @@ let fold'
     | E_Match node -> node -| S_reg S_match_expr
     | E_Mult node -> node -| S_reg (S_bin_op S_times)
     | E_MultEq node -> node -| S_reg (S_bin_op S_times_eq)
-    | E_Mutez node -> node -| S_mutez_literal
+    | E_Mumav node -> node -| S_mumav_literal
     | E_NamePath node -> node -| S_reg (S_namespace_path S_expr)
     | E_Nat node -> node -| S_nat_literal
     | E_Neg node -> node -| S_reg (S_un_op S_minus)
@@ -636,7 +636,7 @@ let fold'
     ; default_expr -| S_expr]
   | S_minus -> process @@ node -| S_wrap S_lexeme
   | S_minus_eq -> process @@ node -| S_wrap S_lexeme
-  | S_mutez_literal -> process @@ node -| S_wrap (S_array_2 (S_lexeme, S_int64))
+  | S_mumav_literal -> process @@ node -| S_wrap (S_array_2 (S_lexeme, S_int64))
   | S_namespace_decl -> let { kwd_namespace; namespace_name; namespace_type; namespace_body } = node in
     process_list
     [ kwd_namespace -| S_kwd_namespace
@@ -705,7 +705,7 @@ let fold'
     | P_CtorApp node -> node -| S_variant_kind S_pattern
     | P_False node -> node -| S_kwd_false
     | P_Int node -> node -| S_int_literal
-    | P_Mutez node -> node -| S_mutez_literal
+    | P_Mumav node -> node -| S_mumav_literal
     | P_NamePath node -> node -| S_reg (S_namespace_path S_pattern)
     | P_Nat node -> node -| S_nat_literal
     | P_Object node -> node -| S_object S_pattern

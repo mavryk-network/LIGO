@@ -28,7 +28,7 @@ type storage =
 [@entry]
 let main (p : parameter) (storage : storage) : operation list * storage =
   begin
-    assert (Tezos.get_amount () = 0mutez);
+    assert (Tezos.get_amount () = 0mumav);
     let {
      manager = manager;
      tickets = tickets
@@ -79,7 +79,7 @@ let main (p : parameter) (storage : storage) : operation list * storage =
                          (Some keep_ticket)
                          tickets in
                      let op =
-                       Tezos.transaction send_ticket 0mutez send.destination in
+                       Tezos.transaction send_ticket 0mumav send.destination in
                      ([op],
                       {
                        manager = manager;

@@ -1,6 +1,6 @@
  const a = 1 ;
  const b = ( 1 [ ; of
- const c - 2 as mutez break ) ; {
+ const c - 2 as mumav break ) ; {
  d = ( 1 as nat ) + ( 2 as nat ) ;
  const e = ( 1 ) + ( type as ) if !=
  = [ a , c ] ;
@@ -46,9 +46,9 @@ Replace ( with - in line 3
 Add break in line 3
 Replace let with { in line 4
 Delete as in line 5
-Delete mutez in line 5
+Delete mumav in line 5
 Replace 3 with type in line 5
-Delete mutez in line 5
+Delete mumav in line 5
 Replace ; with if in line 5
 Delete let in line 6
 Replace f with != in line 6

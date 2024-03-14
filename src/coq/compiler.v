@@ -101,7 +101,7 @@ Inductive ty : Set :=
 | T_bool : meta -> ty
 | T_int : meta -> ty
 | T_nat : meta -> ty
-| T_mutez : meta -> ty
+| T_mumav : meta -> ty
 | T_string : meta -> ty
 | T_bytes : meta -> ty
 (* these only exist for CREATE_CONTRACT *)
@@ -377,7 +377,7 @@ Inductive expr_typed : list ty -> expr -> ty -> Prop :=
    and didn't work well with the current choices here. *)
 | E_create_contract_typed {p s script args} :
     `{binds_typed [] script [T_pair l1 n1 n2 p s] (T_pair l2 n3 n4 (T_operation l3) s) ->
-      args_typed g args [T_option l4 (T_key_hash l5); T_mutez l6; s] ->
+      args_typed g args [T_option l4 (T_key_hash l5); T_mumav l6; s] ->
       expr_typed g (E_create_contract l7 p s script args) (T_pair l8 n5 n6 (T_operation l9) (T_address l10))}
 with binds_typed : list ty -> binds -> list ty -> ty -> Prop :=
 | Binds_typed {a e ts} :
@@ -474,8 +474,8 @@ Inductive packable : ty -> Prop :=
   `{packable (T_int l)}
 | Packable_nat :
   `{packable (T_nat l)}
-| Packable_mutez :
-  `{packable (T_mutez l)}
+| Packable_mumav :
+  `{packable (T_mumav l)}
 | Packable_bool :
   `{packable (T_bool l)}
 | Packable_bytes :
@@ -488,7 +488,7 @@ Hint Constructors packable : michelson.
 Inductive comparable : ty -> Prop :=
 | Comparable_int : `{comparable (T_int l)}
 | Comparable_nat : `{comparable (T_nat l)}
-| Comparable_mutez : `{comparable (T_mutez l)}
+| Comparable_mumav : `{comparable (T_mumav l)}
 (* TODO *)
 .
 
@@ -528,7 +528,7 @@ Inductive comb_update_ty : ty -> ty -> nat -> ty -> Prop :=
     comb_update_ty (T_pair l1 n1 n2 a b1) c (S (S n)) (T_pair l2 n3 n4 a b2)}
 .
 
-Definition mutez_bound : Z.t := Z.pow 2 63.
+Definition mumav_bound : Z.t := Z.pow 2 63.
 
 Inductive instr_typed : instr -> list ty -> list ty -> Prop :=
 (* I_RAW allows embedding raw Michelson. It's like an instruction [RAW n { code }] which means to apply the code *)
@@ -671,7 +671,7 @@ Inductive instr_typed : instr -> list ty -> list ty -> Prop :=
 (* CREATE_CONTRACT *)
 | Create_contract_typed_list {p' s' code s1} :
     `{prog_typed code [T_pair l1 n1 n2 p' s'] [T_pair l2 n3 n4 (T_list l3 (T_operation l4)) s'] ->
-      instr_typed (I_CREATE_CONTRACT l5 p' s' code) (T_option l6 (T_key_hash l7) :: T_mutez l8 :: s' :: s1) (T_operation l9 :: T_address l10 :: s1)}
+      instr_typed (I_CREATE_CONTRACT l5 p' s' code) (T_option l6 (T_key_hash l7) :: T_mumav l8 :: s' :: s1) (T_operation l9 :: T_address l10 :: s1)}
 
 with prog_typed : prog -> list ty -> list ty -> Prop :=
 | Nil_typed {s} :

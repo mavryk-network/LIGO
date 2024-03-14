@@ -319,7 +319,7 @@ let fold'
     | E_ModIn node -> node -| S_reg S_module_in
     | E_ModPath node -> node -| S_reg (S_module_path S_expr)
     | E_Mult node -> node -| S_reg (S_bin_op S_times)
-    | E_Mutez node -> node -| S_wrap (S_tuple_2 (S_lexeme, S_int64))
+    | E_Mumav node -> node -| S_wrap (S_tuple_2 (S_lexeme, S_int64))
     | E_Nat node -> node -| S_wrap (S_tuple_2 (S_lexeme, S_z))
     | E_Neg node -> node -| S_reg (S_un_op S_minus)
     | E_Neq node -> node -| S_reg (S_bin_op S_neq)
@@ -560,7 +560,7 @@ let fold'
     | P_Int node -> node -| S_wrap (S_tuple_2 (S_lexeme, S_z))
     | P_List node -> node -| S_list_ S_pattern
     | P_ModPath node -> node -| S_reg (S_module_path S_pattern)
-    | P_Mutez node -> node -| S_wrap (S_tuple_2 (S_lexeme, S_int64))
+    | P_Mumav node -> node -| S_wrap (S_tuple_2 (S_lexeme, S_int64))
     | P_Nat node -> node -| S_wrap (S_tuple_2 (S_lexeme, S_z))
     | P_Par node -> node -| S_par S_pattern
     | P_Record node -> node -| S_record_pattern

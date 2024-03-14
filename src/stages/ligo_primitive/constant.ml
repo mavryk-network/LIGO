@@ -176,7 +176,7 @@ type constant' =
   (* JsLIGO *)
   | C_POLYMORPHIC_ADD [@print "C_POLYMORPHIC_ADD"]
   | C_POLYMORPHIC_SUB [@print "C_POLYMORPHIC_SUB"]
-  | C_SUB_MUTEZ [@pure]
+  | C_SUB_MUMAV [@pure]
   | C_OPTION_MAP
   | C_OPT_OUT_ENTRY
 [@@deriving

@@ -235,7 +235,7 @@ and expr : (CST.expr, CST.type_expr, CST.pattern, unit, unit) AST.expression_ ->
   | E_literal (Literal_nat x) -> CST.E_Nat (ghost_nat x)
   | E_literal (Literal_string (Standard s)) -> CST.E_String (ghost_string s)
   | E_literal (Literal_string (Verbatim v)) -> CST.E_Verbatim (ghost_verbatim v)
-  | E_literal (Literal_mutez x) -> CST.E_Mutez (ghost_mutez @@ Z.to_int64 x)
+  | E_literal (Literal_mumav x) -> CST.E_Mumav (ghost_mumav @@ Z.to_int64 x)
   | E_module_open_in m -> E_NamePath (w @@ decompile_namespace_path m)
   | E_application { lamb; args } ->
     CST.E_App

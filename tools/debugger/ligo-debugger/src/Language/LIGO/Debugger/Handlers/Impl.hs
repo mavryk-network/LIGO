@@ -963,17 +963,17 @@ initContractEnv selfState env ceMaxSteps = do
         ?: [ta|KT1XQcegsEtio9oGbLUHA8SKX4iZ2rpEXY9b|]
   let ceSource =
         env.source
-        ?: Constrained [ta|tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY|]
+        ?: Constrained [ta|mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq|]
   let ceSender =
         env.sender
-        ?: Constrained [ta|tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY|]
+        ?: Constrained [ta|mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq|]
 
   let ceChainId = maybe dummyChainId unMichelsonJson env.chainId
   let ceLevel = maybe 10000 unMichelsonJson env.level
 
   ceVotingPowers <- case env.votingPowers of
     Nothing -> pure $ mkVotingPowers
-      [ (unsafe $ parseHash "tz1aZcxeRT4DDZZkYcU3vuBaaBRtnxyTmQRr", 100)
+      [ (unsafe $ parseHash "mv1E97cthY1QUw8D1LuWNDiYzG8EGacuVt2K", 100)
       ]
     Just spec -> case spec of
       SimpleVotingPowers (SimpleVotingPowersInfo vps) ->

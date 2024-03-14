@@ -1,5 +1,5 @@
 export type xtzOp =
   @layout("comb")
-  { amountToTransfer: nat, //in mutez
+  { amountToTransfer: nat, //in mumav
     rollupAddress: address,
     l2Type };

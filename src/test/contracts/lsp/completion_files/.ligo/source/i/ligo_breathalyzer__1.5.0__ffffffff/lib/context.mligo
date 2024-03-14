@@ -100,7 +100,7 @@ let rec wait_for_blocks (n_blocks: nat) : unit =
     let source : (unit, unit) typed_address = Test.cast_address source in
     (* We transfer a valid amount from the source to itself to bake a block
     and change the time *)
-    let _ = Test.transfer source () 1mutez in
+    let _ = Test.transfer source () 1mumav in
     wait_for_blocks (abs (n_blocks - 1))
 
 (** [wait_for_with_blocks_per_cycle seconds blocks_per_cycle] bakes enough

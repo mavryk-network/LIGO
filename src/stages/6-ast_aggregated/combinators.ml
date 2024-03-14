@@ -80,7 +80,7 @@ let t__type_ ~loc t t' : type_expression = t_constant ~loc _type_ [ t; t' ]
   [@@map _type_, ("map", "big_map", "typed_address")]
 
 
-let t_mutez = t_tez
+let t_mumav = t_tez
 let default_layout = Layout.default
 
 let fields_with_no_annot fields =
@@ -215,7 +215,7 @@ let get_t__type_ (t : type_expression) : type_expression option = get_t_unary_in
     , ("contract", "list", "set", "ticket", "sapling_state", "sapling_transaction", "gen")]
 
 
-let get_t_mutez (t : type_expression) : unit option = get_t_tez t
+let get_t_mumav (t : type_expression) : unit option = get_t_tez t
 
 let tuple_of_record (m : _ Record.t) =
   let aux i =
@@ -297,7 +297,7 @@ let is_t__type_ t = Option.is_some (get_t__type_ t)
       , "typed_address" )]
 
 
-let is_t_mutez t = is_t_tez t
+let is_t_mumav t = is_t_tez t
 
 let ez_e_record (lst : (Label.t * expression) list) : expression_content =
   E_record (Record.of_list lst)
@@ -321,7 +321,7 @@ let e__type_ p : expression_content = E_literal (Literal__type_ p)
     _type_
     , ( "int"
       , "nat"
-      , "mutez"
+      , "mumav"
       , "string"
       , "bytes"
       , "timestamp"
@@ -360,7 +360,7 @@ let e_a__type_ ~loc p = make_e ~loc (e__type_ p) (t__type_ ~loc ())
     , ( "unit"
       , "int"
       , "nat"
-      , "mutez"
+      , "mumav"
       , "timestamp"
       , "key_hash"
       , "string"

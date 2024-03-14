@@ -245,7 +245,7 @@ let%expect_test _ =
 
     File "../../test/contracts/interfaces.include.jsligo", line 70, characters 2-19:
      69 |   let p : parameter_of ImplAll = Other4();
-     70 |   Test.transfer_exn(orig.addr, p, 1mutez);
+     70 |   Test.transfer_exn(orig.addr, p, 1mumav);
             ^^^^^^^^^^^^^^^^^
      71 | }
     :
@@ -394,7 +394,7 @@ let%expect_test _ =
                  NIL operation ;
                  DIG 2 ;
                  CDR ;
-                 PUSH mutez 0 ;
+                 PUSH mumav 0 ;
                  DIG 4 ;
                  GET 4 ;
                  TRANSFER_TOKENS ;
@@ -404,7 +404,7 @@ let%expect_test _ =
                      NIL operation ;
                      DUP 3 ;
                      CDR ;
-                     PUSH mutez 0 ;
+                     PUSH mumav 0 ;
                      DIG 5 ;
                      CAR ;
                      DIG 5 ;
@@ -418,7 +418,7 @@ let%expect_test _ =
                          NIL operation ;
                          DUP 3 ;
                          CDR ;
-                         PUSH mutez 0 ;
+                         PUSH mumav 0 ;
                          DIG 5 ;
                          GET 3 ;
                          DIG 5 ;
@@ -574,7 +574,7 @@ let%expect_test _ =
       storage unit ;
       code { DROP ;
              UNIT ;
-             PUSH mutez 300000000 ;
+             PUSH mumav 300000000 ;
              NONE key_hash ;
              CREATE_CONTRACT
                { parameter unit ;
@@ -595,7 +595,7 @@ let%expect_test _ =
     { parameter unit ;
       storage unit ;
       code { CAR ;
-             PUSH mutez 1000000 ;
+             PUSH mumav 1000000 ;
              NONE key_hash ;
              CREATE_CONTRACT
                { parameter unit ;
@@ -616,7 +616,7 @@ let%expect_test _ =
     { parameter unit ;
       storage unit ;
       code { CAR ;
-             PUSH mutez 1000000 ;
+             PUSH mumav 1000000 ;
              NONE key_hash ;
              CREATE_CONTRACT
                { parameter unit ;
@@ -635,7 +635,7 @@ let%expect_test _ =
   [%expect
     {xxx|
     File "../../test/contracts/negative/of_file.mligo", line 4, characters 5-30:
-      3 |   ({| { PUSH unit Unit ; PUSH mutez 300000000 ; NONE key_hash ; CREATE_CONTRACT (codestr $0) ; PAIR } |}
+      3 |   ({| { PUSH unit Unit ; PUSH mumav 300000000 ; NONE key_hash ; CREATE_CONTRACT (codestr $0) ; PAIR } |}
       4 |      [%of_file "./removed.tz"]
                ^^^^^^^^^^^^^^^^^^^^^^^^^
       5 |    : operation * address)]
@@ -659,7 +659,7 @@ let%expect_test _ =
     [ "compile"; "expression"; "cameligo"; "s"; "--init-file"; contract "of_file.mligo" ];
   [%expect
     {xxx|
-    "let s = [%of_file \"./of_file.mligo\"]\n\nlet m () =\n  [%michelson\n  ({| { PUSH unit Unit ; PUSH mutez 300000000 ; NONE key_hash ; CREATE_CONTRACT (codestr $0) ; PAIR } |}\n     [%of_file \"./interpreter_tests/contract_under_test/compiled.tz\"]\n   : operation * address)]\n\n[@entry]\nlet main (_ : unit) (_ : unit) : operation list * unit =\n  let op, _ = m () in\n  [op], ()\n" |xxx}]
+    "let s = [%of_file \"./of_file.mligo\"]\n\nlet m () =\n  [%michelson\n  ({| { PUSH unit Unit ; PUSH mumav 300000000 ; NONE key_hash ; CREATE_CONTRACT (codestr $0) ; PAIR } |}\n     [%of_file \"./interpreter_tests/contract_under_test/compiled.tz\"]\n   : operation * address)]\n\n[@entry]\nlet main (_ : unit) (_ : unit) : operation list * unit =\n  let op, _ = m () in\n  [op], ()\n" |xxx}]
 
 let%expect_test _ =
   run_ligo_good
@@ -756,7 +756,7 @@ let%expect_test _ =
             (pair %send (contract %destination (ticket unit)) (nat %amount) (address %ticketer))) ;
       storage (pair (address %manager) (big_map %tickets address (ticket unit))) ;
       code { UNPAIR ;
-             PUSH mutez 0 ;
+             PUSH mumav 0 ;
              AMOUNT ;
              COMPARE ;
              EQ ;
@@ -820,7 +820,7 @@ let%expect_test _ =
                          UPDATE ;
                          DIG 2 ;
                          CAR ;
-                         PUSH mutez 0 ;
+                         PUSH mumav 0 ;
                          DIG 3 ;
                          TRANSFER_TOKENS ;
                          SWAP ;
@@ -849,7 +849,7 @@ let%expect_test _ =
             (pair %mint (contract %destination (ticket unit)) (nat %amount))) ;
       storage address ;
       code { UNPAIR ;
-             PUSH mutez 0 ;
+             PUSH mumav 0 ;
              AMOUNT ;
              COMPARE ;
              EQ ;
@@ -879,7 +879,7 @@ let%expect_test _ =
                  IF_NONE { FAILWITH } { SWAP ; DROP } ;
                  SWAP ;
                  CAR ;
-                 PUSH mutez 0 ;
+                 PUSH mumav 0 ;
                  DIG 2 ;
                  TRANSFER_TOKENS ;
                  SWAP ;
@@ -1017,15 +1017,15 @@ let%expect_test _ =
     Hint: replace it by "_s" to prevent this warning.
 
     { parameter bool ;
-      storage (lambda unit mutez) ;
+      storage (lambda unit mumav) ;
       code { CAR ;
              IF { AMOUNT ;
-                  LAMBDA (pair mutez unit) mutez { CAR } ;
+                  LAMBDA (pair mumav unit) mumav { CAR } ;
                   DUP 2 ;
                   APPLY ;
                   SWAP ;
                   DROP }
-                { LAMBDA unit mutez { DROP ; AMOUNT } } ;
+                { LAMBDA unit mumav { DROP ; AMOUNT } } ;
              NIL operation ;
              PAIR } } |}]
 
@@ -1185,7 +1185,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#385.
       storage string ;
       code { CDR ;
              PUSH int 1 ;
-             PUSH mutez 300000000 ;
+             PUSH mumav 300000000 ;
              NONE key_hash ;
              CREATE_CONTRACT
                { parameter nat ;
@@ -1236,7 +1236,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#385.
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      12 |       (None : key_hash option)
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     13 |       300000000mutez
+     13 |       300000000mumav
           ^^^^^^^^^^^^^^^^^^^^
      14 |       "un" in
           ^^^^^^^^^^
@@ -1299,7 +1299,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#385.
           ^^^^^^^^^^^^^^^^^^^^
      12 |       ((None : key_hash option))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     13 |       300000000mutez
+     13 |       300000000mumav
           ^^^^^^^^^^^^^^^^^^^^
      14 |       1 in
           ^^^^^^^
@@ -1340,7 +1340,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#385.
       storage string ;
       code { CDR ;
              PUSH string "un" ;
-             PUSH mutez 300000000 ;
+             PUSH mumav 300000000 ;
              NONE key_hash ;
              CREATE_CONTRACT
                { parameter nat ;
@@ -1521,7 +1521,7 @@ let%expect_test _ =
       storage unit ;
       code { DROP ;
              SELF %foo ;
-             PUSH mutez 0 ;
+             PUSH mumav 0 ;
              UNIT ;
              TRANSFER_TOKENS ;
              UNIT ;
@@ -1538,7 +1538,7 @@ let%expect_test _ =
       6 | let main (_ : param) (_ : unit) : operation list * unit =
       7 |   let c = (Tezos.self ("%a") : unit contract) in
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      8 |   let op = Tezos.transaction () 0mutez c in
+      8 |   let op = Tezos.transaction () 0mumav c in
 
     Invalid entrypoint value.
     The entrypoint value does not match a constructor of the contract parameter. |}]
@@ -1554,7 +1554,7 @@ let%expect_test _ =
               ^^^^^^^^^^^^^^^^^^^^^^^^^
       5 |        "foo"
           ^^^^^^^^^^^^
-      6 |        ("tz1fakefakefakefakefakefakefakcphLA5" : address)
+      6 |        ("mv2fakefakefakefakefakefakefak82z7t2" : address)
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       7 |      : unit contract option) in
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1761,7 +1761,7 @@ let%expect_test _ =
             (pair %send (contract %destination (ticket unit)) (nat %amount) (address %ticketer))) ;
       storage (pair (address %manager) (big_map %tickets address (ticket unit))) ;
       code { UNPAIR ;
-             PUSH mutez 0 ;
+             PUSH mumav 0 ;
              AMOUNT ;
              COMPARE ;
              EQ ;
@@ -1825,7 +1825,7 @@ let%expect_test _ =
                          UPDATE ;
                          DIG 2 ;
                          CAR ;
-                         PUSH mutez 0 ;
+                         PUSH mumav 0 ;
                          DIG 3 ;
                          TRANSFER_TOKENS ;
                          SWAP ;
@@ -2176,7 +2176,7 @@ let%expect_test _ =
              CONTRACT %Upper unit ;
              IF_NONE
                { PUSH string "lol" ; FAILWITH }
-               { PUSH mutez 0 ;
+               { PUSH mumav 0 ;
                  UNIT ;
                  TRANSFER_TOKENS ;
                  UNIT ;
@@ -2501,7 +2501,7 @@ let%expect_test _ =
       storage string ;
       code { CDR ;
              SENDER ;
-             PUSH mutez 1000000 ;
+             PUSH mumav 1000000 ;
              NONE key_hash ;
              CREATE_CONTRACT
                { parameter nat ;
@@ -2531,7 +2531,7 @@ let%expect_test _ =
     { parameter unit ;
       storage unit ;
       code { DROP ;
-             PUSH address "tz1fakefakefakefakefakefakefakcphLA5" ;
+             PUSH address "mv2fakefakefakefakefakefakefak82z7t2" ;
              SENDER ;
              VIEW "foo" unit ;
              IF_NONE { UNIT } {} ;
@@ -2551,7 +2551,7 @@ let%expect_test _ =
           ^^^^^^^^^^
       6 |          (Tezos.get_sender ())
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      7 |          ("tz1fakefakefakefakefakefakefakcphLA5" : address)
+      7 |          ("mv2fakefakefakefakefakefakefak82z7t2" : address)
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       8 |        : unit option)
           ^^^^^^^^^^^^^^^^^^^^^
@@ -2990,7 +2990,7 @@ let%expect_test _ =
                  NIL operation ;
                  DIG 2 ;
                  CDR ;
-                 PUSH mutez 0 ;
+                 PUSH mumav 0 ;
                  DIG 4 ;
                  GET 4 ;
                  TRANSFER_TOKENS ;
@@ -3000,7 +3000,7 @@ let%expect_test _ =
                      NIL operation ;
                      DUP 3 ;
                      CDR ;
-                     PUSH mutez 0 ;
+                     PUSH mumav 0 ;
                      DIG 5 ;
                      CAR ;
                      DIG 5 ;
@@ -3014,7 +3014,7 @@ let%expect_test _ =
                          NIL operation ;
                          DUP 3 ;
                          CDR ;
-                         PUSH mutez 0 ;
+                         PUSH mumav 0 ;
                          DIG 5 ;
                          GET 3 ;
                          DIG 5 ;
@@ -3135,11 +3135,11 @@ let%expect_test _ =
     [ "compile"
     ; "parameter"
     ; contract "FA1.2.entries.mligo"
-    ; "Approve { spender = (\"tz1fakefakefakefakefakefakefakcphLA5\" : address) ; value \
+    ; "Approve { spender = (\"mv2fakefakefakefakefakefakefak82z7t2\" : address) ; value \
        = 3n }"
     ];
   [%expect
-    {| (Right (Right (Right (Left (Pair "tz1fakefakefakefakefakefakefakcphLA5" 3))))) |}]
+    {| (Right (Right (Right (Left (Pair "mv2fakefakefakefakefakefakefak82z7t2" 3))))) |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "pokeGame.jsligo" ];
@@ -3392,14 +3392,14 @@ let%expect_test _ =
      23 |   let initial_storage = 42;
      24 |   let orig = Test.originate(contract_of(IncDec), initial_storage, 0tez);
                        ^^^^^^^^^^^^^^
-     25 |   Test.transfer_exn(orig.addr, Increment(), 1mutez);
+     25 |   Test.transfer_exn(orig.addr, Increment(), 1mumav);
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "../../test/contracts/increment_prefix.jsligo", line 25, characters 2-19:
      24 |   let orig = Test.originate(contract_of(IncDec), initial_storage, 0tez);
-     25 |   Test.transfer_exn(orig.addr, Increment(), 1mutez);
+     25 |   Test.transfer_exn(orig.addr, Increment(), 1mumav);
             ^^^^^^^^^^^^^^^^^
      26 |   return assert(Test.get_storage(orig.addr) == initial_storage + 1);
     :
@@ -3407,7 +3407,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.transfer_exn` from `Test.Next` is encouraged for a smoother migration.
 
     File "../../test/contracts/increment_prefix.jsligo", line 26, characters 16-32:
-     25 |   Test.transfer_exn(orig.addr, Increment(), 1mutez);
+     25 |   Test.transfer_exn(orig.addr, Increment(), 1mumav);
      26 |   return assert(Test.get_storage(orig.addr) == initial_storage + 1);
                           ^^^^^^^^^^^^^^^^
      27 | }) ();
@@ -3515,14 +3515,14 @@ let%expect_test _ =
      18 |       let initial_storage = "esrever";
      19 |       let orig = Test.originate(contract_of(C), initial_storage, 0 as tez);
                            ^^^^^^^^^^^^^^
-     20 |       Test.transfer_exn(orig.addr, Main(unit), 1 as mutez);
+     20 |       Test.transfer_exn(orig.addr, Main(unit), 1 as mumav);
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "../../test/contracts/reverse_string_for_loop.jsligo", line 20, characters 6-23:
      19 |       let orig = Test.originate(contract_of(C), initial_storage, 0 as tez);
-     20 |       Test.transfer_exn(orig.addr, Main(unit), 1 as mutez);
+     20 |       Test.transfer_exn(orig.addr, Main(unit), 1 as mumav);
                 ^^^^^^^^^^^^^^^^^
      21 |       Test.log(Test.get_storage(orig.addr));
     :
@@ -3530,7 +3530,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.transfer_exn` from `Test.Next` is encouraged for a smoother migration.
 
     File "../../test/contracts/reverse_string_for_loop.jsligo", line 21, characters 6-14:
-     20 |       Test.transfer_exn(orig.addr, Main(unit), 1 as mutez);
+     20 |       Test.transfer_exn(orig.addr, Main(unit), 1 as mumav);
      21 |       Test.log(Test.get_storage(orig.addr));
                 ^^^^^^^^
      22 |       return assert(Test.get_storage(orig.addr) == "reverse")
@@ -3539,7 +3539,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `IO.log` from `Test.Next` is encouraged for a smoother migration.
 
     File "../../test/contracts/reverse_string_for_loop.jsligo", line 21, characters 15-31:
-     20 |       Test.transfer_exn(orig.addr, Main(unit), 1 as mutez);
+     20 |       Test.transfer_exn(orig.addr, Main(unit), 1 as mumav);
      21 |       Test.log(Test.get_storage(orig.addr));
                          ^^^^^^^^^^^^^^^^
      22 |       return assert(Test.get_storage(orig.addr) == "reverse")

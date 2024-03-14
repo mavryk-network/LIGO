@@ -8,6 +8,6 @@ let main (_ : string) (store : string) : return =
     Tezos.create_contract
       (fun (_ : nat) (_ : address) -> (([] : operation list), sender))
       (None : key_hash option)
-      1000000mutez
+      1000000mumav
       sender in
   ([toto.0], store)

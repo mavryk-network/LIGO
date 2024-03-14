@@ -10,7 +10,7 @@ module.exports = async deployer => {
         PausableToken,
         {
             ledger: MichelsonMap.fromLiteral({
-                "tz1aGaUhwbYDrwwBZobdgBEbCSG3HTPjH2ZJ": 100
+                "mv19hGkQPN277aqUikmFUz4fXSzYKa2P58Fd": 100
             }),
             owner: controller.address,
             paused: false

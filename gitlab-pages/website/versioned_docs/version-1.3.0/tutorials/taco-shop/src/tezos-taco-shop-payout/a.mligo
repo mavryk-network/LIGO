@@ -43,11 +43,11 @@ let default_storage : TacoShop.taco_shop_storage =
       (1n,
        {
         current_stock = 50n;
-        max_price = 50000000mutez
+        max_price = 50000000mumav
        });
       (2n,
        {
         current_stock = 20n;
-        max_price = 75000000mutez
+        max_price = 75000000mumav
        })
     ]

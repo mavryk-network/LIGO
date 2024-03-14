@@ -21,5 +21,5 @@ let testC =
     let initial_storage = 42 in
     let originated = Test.originate (contract_of C) initial_storage 0tez in
     let p : C parameter_of = Increment 1 in
-    let _ = Test.transfer_exn originated.addr p 1mutez in
+    let _ = Test.transfer_exn originated.addr p 1mumav in
     assert (Test.get_storage originated.addr = initial_storage + 1)

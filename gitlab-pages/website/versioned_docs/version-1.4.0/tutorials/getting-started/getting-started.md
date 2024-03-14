@@ -222,7 +222,7 @@ Add the following line at the end of `main.mligo`
 let test_increment =
   let initial_storage = 10 in
   let orig = Test.originate (contract_of Counter) initial_storage 0tez in
-  let _ = Test.transfer_exn orig.addr (Increment (32)) 1mutez in
+  let _ = Test.transfer_exn orig.addr (Increment (32)) 1mumav in
   assert (Test.get_storage(orig.addr) = initial_storage + 32)
 ```
 
@@ -236,7 +236,7 @@ Add the following line at the end of `main.jsligo`
 const test_increment = (() : unit => {
   let initial_storage = 10 as int;
   let orig = Test.originate(contract_of(Counter), initial_storage, 0tez);
-  Test.transfer_exn(orig.addr, (Increment (1)), 1mutez);
+  Test.transfer_exn(orig.addr, (Increment (1)), 1mumav);
   return assert(Test.get_storage(orig.addr) == initial_storage + 1);
 }) ()
 ```
@@ -292,7 +292,7 @@ octez-client import keys from mnemonic myWallet
 
 Paste the mnemonic when prompt appears
 
-You are now ready to originate your contract with your user. On your wallet, copy your public hash key address `tz1...` or `tz2...` and replace the placeholder `<my_tz_address...>` on the command you need to run :
+You are now ready to originate your contract with your user. On your wallet, copy your public hash key address `mv1...` or `mv2...` and replace the placeholder `<my_tz_address...>` on the command you need to run :
 
 ```zsh
 octez-client originate contract counter \

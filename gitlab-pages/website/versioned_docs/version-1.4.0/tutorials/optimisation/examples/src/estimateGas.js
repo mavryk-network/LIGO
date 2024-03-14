@@ -4,13 +4,13 @@ const { initializeTezos, Artifacts } = require("./tezos")
 
 function printEstimate(description, est) {
     console.log(description)
-    console.log(`  burnFeeMutez: ${est.burnFeeMutez}`)
+    console.log(`  burnFeeMumav: ${est.burnFeeMumav}`)
     console.log(`  gasLimit: ${est.gasLimit}`)
-    console.log(`  minimalFeeMutez: ${est.minimalFeeMutez}`)
+    console.log(`  minimalFeeMumav: ${est.minimalFeeMumav}`)
     console.log(`  storageLimit: ${est.storageLimit}`)
-    console.log(`  suggestedFeeMutez: ${est.suggestedFeeMutez}`)
+    console.log(`  suggestedFeeMumav: ${est.suggestedFeeMumav}`)
     console.log(`  totalCost: ${est.totalCost}`)
-    console.log(`  usingBaseFeeMutez: ${est.usingBaseFeeMutez}`)
+    console.log(`  usingBaseFeeMumav: ${est.usingBaseFeeMumav}`)
     console.log()
 }
 

@@ -16,14 +16,14 @@ let test =
 
     let test_addr_implicit : address list =
       [
-        ("tz1hxxVY5jc6bsfCTzv27FLhVBZfKFaB164R" : address);
-        ("tz1RyejUffjfnHzWoRp1vYyZwGnfPuHsD5F5" : address);
-        ("tz1hHfjC5wX3gdQBZ6LyBWTrBczWQjktEu5E" : address);
-        ("tz1fujCnFL1wQa7rtWKcvBvRk1uWoiDTQ5CX" : address);
-        ("tz1Ytm4W7j6W4jj4EhnB854JfwEkTMUpRQQ2" : address);
-        ("tz1MtU1ZH9cLSRjyrZXstEGxJcbRfvX4E9Ga" : address);
-        ("tz1UbRzhYjQKTtWYvGUWcRtVT4fN3NESDVYT" : address);
-        ("tz1Rka4HepbaCwH8K1fCn2Hq2GCjVLuRv4AL" : address)
+        ("mv1W651wngPyYygDNgQd4M6ZeUXmrfDn2wgz" : address);
+        ("mv1RXMHSsFGkAYkHprJyLfV6i9dAZ9x1qZnA" : address);
+        ("mv1KRj5dtioCGv9ELV7ZixzyTPiTZAKoyAgW" : address);
+        ("mv1DCHc5cMiHYy8CxcG4shuFQxz4o8wCDED7" : address);
+        ("mv1X9EDHtbSatMSeoBUoir2Qmow8idZdSzcq" : address);
+        ("mv18DcU5EEV6NgGAFu57peBnzfpN9XWhQe8y" : address);
+        ("mv1V9PHVsxpdaENM4zU5LFbJ742U8MEyhLQu" : address);
+        ("mv1C1AKL7mjj9mrWED575anpQ8Q3pZM3hz6G" : address)
       ] in
     let test_addr_non_implicit : address list =
       [
@@ -74,7 +74,7 @@ let test =
 
     let all_tests =
       add_negative_tests_from_inputs test_addr_non_implicit all_tests in
-    // for tz1... is_implicit() should answer false
+    // for mv1... is_implicit() should answer false
 
     let all_tests = add_positive_tests_from_inputs test_addr_implicit all_tests in
     // Run tests

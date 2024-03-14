@@ -16,15 +16,15 @@ import SyntaxTitle from '@theme/SyntaxTitle';
 The behaviour of the subtraction operator `-` on values of type `tez` has been changed in protocol Ithaca.
 
 Subtracting values of type `tez` yeilds on optional value. (This emits
-the `SUB_MUTEZ` Michelson instruction)
+the `SUB_MUMAV` Michelson instruction)
 
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=b
 
-const d : option (tez) = 5mutez - 1mutez (* Some (4mutez) *)
+const d : option (tez) = 5mumav - 1mumav (* Some (4mumav) *)
 
-const e : option (tez) = 1mutez - 5mutez (* None *)
+const e : option (tez) = 1mumav - 5mumav (* None *)
 
 ```
 
@@ -33,8 +33,8 @@ const e : option (tez) = 1mutez - 5mutez (* None *)
 <Syntax syntax="cameligo">
 
 ```cameligo group=b
-let d : tez option = 5mutez - 1mutez (* Some (4mutez) *)
-let e : tez option = 1mutez - 5mutez (* None *)
+let d : tez option = 5mumav - 1mumav (* Some (4mumav) *)
+let e : tez option = 1mumav - 5mumav (* None *)
 
 ```
 
@@ -43,8 +43,8 @@ let e : tez option = 1mutez - 5mutez (* None *)
 <Syntax syntax="jsligo">
 
 ```jsligo group=b
-let d : option<tez> = (5 as mutez) - (1 as mutez); /* Some (4mutez) */
-let e : option<tez> = (1 as mutez) - (5 as mutez); /* None */
+let d : option<tez> = (5 as mumav) - (1 as mumav); /* Some (4mumav) */
+let e : option<tez> = (1 as mumav) - (5 as mumav); /* None */
 
 ```
 

@@ -601,7 +601,7 @@ literal_pattern:
 | "<bytes>"    { P_Bytes    $1 }
 | "<string>"   { P_String   $1 }
 | "<verbatim>" { P_Verbatim $1 }
-| "<mutez>"    { P_Mutez    $1 }
+| "<mumav>"    { P_Mumav    $1 }
 | class_name   { P_Var (Var $1) } (* None, False, True or custom *)
 | wildcard
 | variable     { P_Var      $1 }
@@ -845,7 +845,7 @@ variant_expr:
 literal_expr:
   "<int>"      { E_Int      $1 }
 | "<nat>"      { E_Nat      $1 }
-| "<mutez>"    { E_Mutez    $1 }
+| "<mumav>"    { E_Mumav    $1 }
 | "<string>"   { E_String   $1 }
 | "<verbatim>" { E_Verbatim $1 }
 | "<bytes>"    { E_Bytes    $1 }

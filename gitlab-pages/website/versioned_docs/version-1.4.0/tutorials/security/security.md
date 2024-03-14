@@ -46,7 +46,7 @@ let fund (_ : unit) (s : storage) : result =
 
 [@entry]
 let send (args : address * tez) (s : storage) =
-  let u = assert ((Tezos.get_sender ()) = s.owner && (Tezos.get_amount ()) = 0mutez) in
+  let u = assert ((Tezos.get_sender ()) = s.owner && (Tezos.get_amount ()) = 0mumav) in
   let tx, ops = do_send args in
   ops, { s with transactionLog = tx :: s.transactionLog }
 ```
@@ -149,7 +149,7 @@ let withdraw (param, s : parameter * storage) =
   let @balance =
     match (Map.find_opt beneficiary_addr s.balances) with
       Some v -> v
-    | None -> 0mutez in
+    | None -> 0mumav in
   let new_balance = match @balance - @amount with
     | Some x -> x
     | None -> (failwith "Insufficient balance" : tez)
@@ -213,7 +213,7 @@ let send_rewards (beneficiary_addr : address) =
     match maybe_contract with
       Some contract -> contract
     | None -> (failwith "CONTRACT_NOT_FOUND" : unit contract) in
-  Tezos.transaction () 5000000mutez beneficiary
+  Tezos.transaction () 5000000mumav beneficiary
 
 let main (p, s : unit * storage) =
   if (Tezos.get_sender ()) <> s.owner

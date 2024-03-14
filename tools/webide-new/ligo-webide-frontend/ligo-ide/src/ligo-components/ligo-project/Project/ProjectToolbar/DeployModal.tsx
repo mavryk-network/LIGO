@@ -106,7 +106,7 @@ const DeployModal: React.FC<DeployModalProps> = ({
       balance,
       gasLimit: txOptions?.gasLimit,
       storageLimit: txOptions?.storageLimit,
-      suggestedFeeMutez: txOptions?.fee,
+      suggestedFeeMumav: txOptions?.fee,
     });
 
     setResult(contractAddress);
@@ -182,7 +182,7 @@ const DeployModal: React.FC<DeployModalProps> = ({
       setTxOptions({
         gasLimit: `${estimation.gasLimit}`,
         storageLimit: `${estimation.storageLimit}`,
-        fee: `${estimation.suggestedFeeMutez}`,
+        fee: `${estimation.suggestedFeeMumav}`,
       });
       /* eslint-enable */
     }

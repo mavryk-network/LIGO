@@ -88,7 +88,7 @@ and scan_parameters state = function
     scan_parameters (pop @@ shift current state) tokens
 | (COLON _ | ELLIPSIS _ | SEMI _ | COMMA _
   | Ident _ | WILD _ | Verbatim _ | Bytes _
-  | Int _ | Nat _ | Mutez _ as current)
+  | Int _ | Nat _ | Mumav _ as current)
   :: tokens ->
     scan_parameters (shift current state) tokens
 

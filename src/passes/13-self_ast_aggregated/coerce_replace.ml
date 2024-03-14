@@ -25,7 +25,7 @@ let expression ~raise : expression -> expression =
     when is_t_bool expr.type_expression && is_t_tez value.type_expression ->
     let constant =
       { cons_name = C_LT
-      ; arguments = [ e_a_mutez ~loc:value.location Z.(of_int 0); value ]
+      ; arguments = [ e_a_mumav ~loc:value.location Z.(of_int 0); value ]
       }
     in
     e_constant ~loc:expr.location constant expr.type_expression

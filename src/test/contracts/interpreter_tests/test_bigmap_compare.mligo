@@ -10,11 +10,11 @@ let test =
     let initial_storage = Big_map.literal [((a1, 0n), 42n)] in
     let orig = Test.originate (contract_of C) initial_storage 0tez in
     let () = Test.set_source a1 in
-    let _ = Test.transfer_exn orig.addr (Main (a1, 1234n)) 1mutez in
+    let _ = Test.transfer_exn orig.addr (Main (a1, 1234n)) 1mumav in
     let ns = Test.get_storage orig.addr in
     let () = assert (ns = Big_map.literal [((a1, 0n), 42n); ((a1, 1n), 1234n)]) in
     let () = assert (Big_map.find_opt (a1, 1n) ns = Some 1234n) in
-    let _ = Test.transfer_exn orig.addr (Main (a1, 4321n)) 1mutez in
+    let _ = Test.transfer_exn orig.addr (Main (a1, 4321n)) 1mumav in
     let () = assert (ns = Big_map.literal [((a1, 0n), 42n); ((a1, 1n), 1234n)]) in
     let ns = Test.get_storage orig.addr in
     let () = assert (ns = Big_map.literal [((a1, 0n), 42n); ((a1, 1n), 4321n)]) in

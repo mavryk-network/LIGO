@@ -6,7 +6,7 @@ type param = parameter_of MutationContract.C;
 const initial_storage = 7;
 
 const tester = (taddr : typed_address<param, storage>, _c : michelson_contract<param, storage> , _ : int) : unit => {
-  let _xfer = Test.transfer_exn(taddr, Add(7), 1mutez);
+  let _xfer = Test.transfer_exn(taddr, Add(7), 1mumav);
   assert(Test.get_storage(taddr) == initial_storage + 7);
 }
 
@@ -26,9 +26,9 @@ const test_mutation =
     }
   };
 const tester_add_and_sub = (taddr : typed_address<param, storage>, _c : michelson_contract<param, storage>, _i : int) : unit => {
-  let _xfer1 = Test.transfer_exn(taddr, Add(7), 1mutez);
+  let _xfer1 = Test.transfer_exn(taddr, Add(7), 1mumav);
   assert(Test.get_storage(taddr) == initial_storage + 7);
-  let _xfer2 = Test.transfer_exn(taddr, Sub(3), 1mutez);
+  let _xfer2 = Test.transfer_exn(taddr, Sub(3), 1mumav);
   assert(Test.get_storage(taddr) == initial_storage + 4);
 }
 const test_mutation_all =

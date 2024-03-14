@@ -38,8 +38,8 @@ let buy_id ~raise () =
       ~loc
       [ "identities", e_big_map ~loc [ e_int ~loc 0, id_details_1 ]
       ; "next_id", e_int ~loc 1
-      ; "name_price", e_mutez ~loc 1000000
-      ; "skip_price", e_mutez ~loc 1000000
+      ; "name_price", e_mumav ~loc 1000000
+      ; "skip_price", e_mumav ~loc 1000000
       ]
   in
   let new_addr = first_owner in
@@ -74,8 +74,8 @@ let buy_id ~raise () =
       [ ( "identities"
         , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
-      ; "name_price", e_mutez ~loc 1000000
-      ; "skip_price", e_mutez ~loc 1000000
+      ; "name_price", e_mumav ~loc 1000000
+      ; "skip_price", e_mumav ~loc 1000000
       ]
   in
   let () =
@@ -111,8 +111,8 @@ let buy_id_sender_addr ~raise () =
       ~loc
       [ "identities", e_big_map ~loc [ e_int ~loc 0, id_details_1 ]
       ; "next_id", e_int ~loc 1
-      ; "name_price", e_mutez ~loc 1000000
-      ; "skip_price", e_mutez ~loc 1000000
+      ; "name_price", e_mumav ~loc 1000000
+      ; "skip_price", e_mumav ~loc 1000000
       ]
   in
   let new_addr = first_owner in
@@ -143,8 +143,8 @@ let buy_id_sender_addr ~raise () =
       [ ( "identities"
         , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
-      ; "name_price", e_mutez ~loc 1000000
-      ; "skip_price", e_mutez ~loc 1000000
+      ; "name_price", e_mumav ~loc 1000000
+      ; "skip_price", e_mumav ~loc 1000000
       ]
   in
   let () =
@@ -182,8 +182,8 @@ let buy_id_wrong_amount ~raise () =
       ~loc
       [ "identities", e_big_map ~loc [ e_int ~loc 0, id_details_1 ]
       ; "next_id", e_int ~loc 1
-      ; "name_price", e_mutez ~loc 1000000
-      ; "skip_price", e_mutez ~loc 1000000
+      ; "name_price", e_mumav ~loc 1000000
+      ; "skip_price", e_mumav ~loc 1000000
       ]
   in
   let new_addr = first_owner in
@@ -263,8 +263,8 @@ let update_details_owner ~raise () =
       [ ( "identities"
         , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
-      ; "name_price", e_mutez ~loc 1000000
-      ; "skip_price", e_mutez ~loc 1000000
+      ; "name_price", e_mumav ~loc 1000000
+      ; "skip_price", e_mumav ~loc 1000000
       ]
   in
   let new_storage =
@@ -273,8 +273,8 @@ let update_details_owner ~raise () =
       [ ( "identities"
         , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2_diff ] )
       ; "next_id", e_int ~loc 2
-      ; "name_price", e_mutez ~loc 1000000
-      ; "skip_price", e_mutez ~loc 1000000
+      ; "name_price", e_mumav ~loc 1000000
+      ; "skip_price", e_mumav ~loc 1000000
       ]
   in
   let details = e_bytes_string ~loc "ligolang.org" in
@@ -347,8 +347,8 @@ let update_details_controller ~raise () =
       [ ( "identities"
         , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
-      ; "name_price", e_mutez ~loc 1000000
-      ; "skip_price", e_mutez ~loc 1000000
+      ; "name_price", e_mumav ~loc 1000000
+      ; "skip_price", e_mumav ~loc 1000000
       ]
   in
   let new_storage =
@@ -357,8 +357,8 @@ let update_details_controller ~raise () =
       [ ( "identities"
         , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2_diff ] )
       ; "next_id", e_int ~loc 2
-      ; "name_price", e_mutez ~loc 1000000
-      ; "skip_price", e_mutez ~loc 1000000
+      ; "name_price", e_mumav ~loc 1000000
+      ; "skip_price", e_mumav ~loc 1000000
       ]
   in
   let details = e_bytes_string ~loc "ligolang.org" in
@@ -424,8 +424,8 @@ let update_details_nonexistent ~raise () =
       [ ( "identities"
         , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
-      ; "name_price", e_mutez ~loc 1000000
-      ; "skip_price", e_mutez ~loc 1000000
+      ; "name_price", e_mumav ~loc 1000000
+      ; "skip_price", e_mumav ~loc 1000000
       ]
   in
   let details = e_bytes_string ~loc "ligolang.org" in
@@ -487,8 +487,8 @@ let update_details_wrong_addr ~raise () =
       [ ( "identities"
         , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
-      ; "name_price", e_mutez ~loc 1000000
-      ; "skip_price", e_mutez ~loc 1000000
+      ; "name_price", e_mumav ~loc 1000000
+      ; "skip_price", e_mumav ~loc 1000000
       ]
   in
   let details = e_bytes_string ~loc "ligolang.org" in
@@ -554,8 +554,8 @@ let update_details_unchanged ~raise () =
       [ ( "identities"
         , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
-      ; "name_price", e_mutez ~loc 1000000
-      ; "skip_price", e_mutez ~loc 1000000
+      ; "name_price", e_mumav ~loc 1000000
+      ; "skip_price", e_mumav ~loc 1000000
       ]
   in
   let param =
@@ -624,8 +624,8 @@ let update_owner ~raise () =
       [ ( "identities"
         , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
-      ; "name_price", e_mutez ~loc 1000000
-      ; "skip_price", e_mutez ~loc 1000000
+      ; "name_price", e_mumav ~loc 1000000
+      ; "skip_price", e_mumav ~loc 1000000
       ]
   in
   let new_storage =
@@ -634,8 +634,8 @@ let update_owner ~raise () =
       [ ( "identities"
         , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2_diff ] )
       ; "next_id", e_int ~loc 2
-      ; "name_price", e_mutez ~loc 1000000
-      ; "skip_price", e_mutez ~loc 1000000
+      ; "name_price", e_mumav ~loc 1000000
+      ; "skip_price", e_mumav ~loc 1000000
       ]
   in
   let param =
@@ -695,8 +695,8 @@ let update_owner_nonexistent ~raise () =
       [ ( "identities"
         , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
-      ; "name_price", e_mutez ~loc 1000000
-      ; "skip_price", e_mutez ~loc 1000000
+      ; "name_price", e_mumav ~loc 1000000
+      ; "skip_price", e_mumav ~loc 1000000
       ]
   in
   let param =
@@ -756,8 +756,8 @@ let update_owner_wrong_addr ~raise () =
       [ ( "identities"
         , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
-      ; "name_price", e_mutez ~loc 1000000
-      ; "skip_price", e_mutez ~loc 1000000
+      ; "name_price", e_mumav ~loc 1000000
+      ; "skip_price", e_mumav ~loc 1000000
       ]
   in
   let param =
@@ -816,8 +816,8 @@ let skip ~raise () =
       [ ( "identities"
         , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
-      ; "name_price", e_mutez ~loc 1000000
-      ; "skip_price", e_mutez ~loc 1000000
+      ; "name_price", e_mumav ~loc 1000000
+      ; "skip_price", e_mumav ~loc 1000000
       ]
   in
   let new_storage =
@@ -826,8 +826,8 @@ let skip ~raise () =
       [ ( "identities"
         , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 3
-      ; "name_price", e_mutez ~loc 1000000
-      ; "skip_price", e_mutez ~loc 1000000
+      ; "name_price", e_mumav ~loc 1000000
+      ; "skip_price", e_mumav ~loc 1000000
       ]
   in
   let () =
@@ -884,8 +884,8 @@ let skip_wrong_amount ~raise () =
       [ ( "identities"
         , e_big_map ~loc [ e_int ~loc 0, id_details_1; e_int ~loc 1, id_details_2 ] )
       ; "next_id", e_int ~loc 2
-      ; "name_price", e_mutez ~loc 1000000
-      ; "skip_price", e_mutez ~loc 1000000
+      ; "name_price", e_mumav ~loc 1000000
+      ; "skip_price", e_mumav ~loc 1000000
       ]
   in
   let () =

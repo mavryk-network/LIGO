@@ -30,7 +30,7 @@ export default class LigoClient {
 
   async getAccount(address) {
     const balance = await this.provider.rpc.getBalance(address);
-    const regtry = this.provider.format("mutez", "tz", balance).toString();
+    const regtry = this.provider.format("mumav", "tz", balance).toString();
     return {
       address,
       balance: regtry,

@@ -40,7 +40,7 @@ let rec check_comparable ~raise (error : type_expression -> _) : type_expression
   | T_base TB_nat
   | T_base TB_string
   | T_base TB_timestamp
-  | T_base TB_mutez
+  | T_base TB_mumav
   | T_base TB_chain_id
   | T_base TB_bytes
   | T_base TB_key_hash

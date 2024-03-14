@@ -341,17 +341,17 @@ let test_big_map_get_and_update =
   let ys = Big_map.literal [(1n,"Hello");(2n,"Foo")] in
   assert (xs = ys && old = Some "World")
 
-let test_add_mutez =
+let test_add_mumav =
   let m = 10tez in
   let n = 1tez in
   assert (m + n = 11tez)
 
-let test_sub_mutez =
+let test_sub_mumav =
   let m = 10tez in
   let n = 1tez in
   assert (m - n = Some 9tez)
 
-let test_div_mutez =
+let test_div_mumav =
   let a = 1tez/2tez in
   assert (a = 0n)
 
@@ -433,7 +433,7 @@ let test_sha3 =
 
 let test_key_hash =
   let key = ("edpkuBknW28nW72KG6RoHtYW7p12T6GKc7nAbwYX5m8Wd9sDVC9yav" : key) in
-  let key_hash = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : key_hash) in
+  let key_hash = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : key_hash) in
   let () = assert (Test.eval (Crypto.hash_key key) = Test.run (fun (k : key) -> Crypto.hash_key k) key) in
   assert (Crypto.hash_key key = key_hash)
 

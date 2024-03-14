@@ -9,5 +9,5 @@ let get_contract (addr : address) =
 
 let main (param, callee_addr : parameter * storage) =
   let callee : int contract = get_contract (callee_addr) in
-  let op = Tezos.transaction param 0mutez callee in
+  let op = Tezos.transaction param 0mumav callee in
   [op], callee_addr

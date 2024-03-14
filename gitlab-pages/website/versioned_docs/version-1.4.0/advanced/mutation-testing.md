@@ -359,7 +359,7 @@ type param = MutationContract.C parameter_of
 let initial_storage = 7
 
 let tester (taddr : (param, storage) typed_address) (_: (param ,storage) michelson_contract) (_:int) : unit =
-  let _ = Test.transfer_exn taddr (Add 7) 1mutez in
+  let _ = Test.transfer_exn taddr (Add 7) 1mumav in
   assert (Test.get_storage taddr = initial_storage + 7)
 
 let test_original =
@@ -380,7 +380,7 @@ type param = parameter_of MutationContract.C;
 const initial_storage = 7;
 
 const tester = (taddr : typed_address<param, storage>, _c : michelson_contract<param, storage> , _ : int) : unit => {
-  let _xfer = Test.transfer_exn(taddr, Add(7), 1mutez);
+  let _xfer = Test.transfer_exn(taddr, Add(7), 1mumav);
   assert(Test.get_storage(taddr) == initial_storage + 7);
 }
 
@@ -486,9 +486,9 @@ to the `Sub` entrypoint in the test above:
 
 ```cameligo test-ligo group=mutation-contract-test
 let tester_add_and_sub (taddr : (param, storage) typed_address) (_ : (param, storage) michelson_contract) (_ : int) : unit =
-  let _ = Test.transfer_exn taddr (Add 7) 1mutez in
+  let _ = Test.transfer_exn taddr (Add 7) 1mumav in
   let () = assert (Test.get_storage taddr = initial_storage + 7) in
-  let _ = Test.transfer_exn taddr (Sub 3) 1mutez in
+  let _ = Test.transfer_exn taddr (Sub 3) 1mumav in
   assert (Test.get_storage taddr = initial_storage + 4)
 ```
 
@@ -498,9 +498,9 @@ let tester_add_and_sub (taddr : (param, storage) typed_address) (_ : (param, sto
 
 ```jsligo test-ligo group=mutation-contract-test
 const tester_add_and_sub = (taddr : typed_address<param, storage>, _c : michelson_contract<param, storage>, _i : int) : unit => {
-  let _xfer1 = Test.transfer_exn(taddr, Add(7), 1mutez);
+  let _xfer1 = Test.transfer_exn(taddr, Add(7), 1mumav);
   assert(Test.get_storage(taddr) == initial_storage + 7);
-  let _xfer2 = Test.transfer_exn(taddr, Sub(3), 1mutez);
+  let _xfer2 = Test.transfer_exn(taddr, Sub(3), 1mumav);
   assert(Test.get_storage(taddr) == initial_storage + 4);
 }
 ```

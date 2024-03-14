@@ -66,8 +66,8 @@ Create a non-empty big_map.
 ```cameligo group=big_map
 let moves : register =
   Big_map.literal [
-    (("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address), (1,2));
-    (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address), (0,3))]
+    (("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address), (1,2));
+    (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address), (0,3))]
 ```
 
 </Syntax>
@@ -77,8 +77,8 @@ let moves : register =
 ```jsligo group=big_map
 let moves: register =
   Big_map.literal (list([
-    [("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address), [1, 2]],
-    [("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), [0, 3]]]));
+    [("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address), [1, 2]],
+    [("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address), [0, 3]]]));
 ```
 
 </Syntax>
@@ -100,7 +100,7 @@ Because the key may be missing in the big map, the result is an
 
 ```cameligo group=big_map
 let my_balance : move option =
-  Big_map.find_opt ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) moves
+  Big_map.find_opt ("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address) moves
 ```
 
 </Syntax>
@@ -109,7 +109,7 @@ let my_balance : move option =
 
 ```jsligo group=big_map
 let my_balance: option <move> =
-  Big_map.find_opt(("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), moves);
+  Big_map.find_opt(("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address), moves);
 ```
 
 </Syntax>
@@ -128,7 +128,7 @@ Test whether a given key exists within a big map.
 
 ```cameligo group=big_map
 let has_balance : bool =
-  Big_map.mem ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) moves
+  Big_map.mem ("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address) moves
 ```
 
 </Syntax>
@@ -137,7 +137,7 @@ let has_balance : bool =
 
 ```jsligo group=big_map
 let has_balance: bool =
-  Big_map.mem(("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), moves);
+  Big_map.mem(("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address), moves);
 ```
 
 </Syntax>
@@ -157,7 +157,7 @@ Note: when `None` is used as a value, the value is removed from the big_map.
 ```cameligo group=big_map
 let updated_map : register =
   Big_map.update
-    ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) (Some (4,9)) moves
+    ("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address) (Some (4,9)) moves
 ```
 
 </Syntax>
@@ -167,7 +167,7 @@ let updated_map : register =
 ```jsligo group=big_map
 let updated_map: register =
   Big_map.update
-    (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), Some([4,9]), moves);
+    (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address), Some([4,9]), moves);
 ```
 
 </Syntax>
@@ -195,7 +195,7 @@ let add: (key: &apos;key, value: &apos;value, big_map: big_map&lt;&apos;key, &ap
 ```cameligo group=big_map
 let add (m : register) : register =
   Big_map.add
-    ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) (4,9) m
+    ("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address) (4,9) m
 ```
 
 </Syntax>
@@ -205,7 +205,7 @@ let add (m : register) : register =
 ```jsligo group=big_map
 let add = (m: register): register =>
   Big_map.add
-    (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), [4,9], m);
+    (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address), [4,9], m);
 ```
 
 </Syntax>
@@ -222,7 +222,7 @@ let remove: (key: &apos;key, big_map: big_map&lt;&apos;key, &apos;value&gt;) => 
 
 ```cameligo group=big_map
 let updated_map : register =
-  Big_map.remove ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN": address) moves
+  Big_map.remove ("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k": address) moves
 ```
 
 </Syntax>
@@ -231,7 +231,7 @@ let updated_map : register =
 
 ```jsligo group=big_map
 let updated_map_: register =
-  Big_map.remove(("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), moves);
+  Big_map.remove(("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address), moves);
 ```
 
 </Syntax>

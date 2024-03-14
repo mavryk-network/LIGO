@@ -35,7 +35,7 @@ module Operators = struct
    let assert_update_permission (owner : owner) : unit =
       assert_with_error (owner = Tezos.get_sender ()) "The sender can only manage operators for his own token"
    (** For an administator
-      let admin = tz1.... in
+      let admin = mv1.... in
       assert_with_error (Tezos.get_sender () = admiin) "Only administrator can manage operators"
    *)
 

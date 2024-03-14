@@ -252,8 +252,8 @@ The debugger supports providing a custom environment for your contracts. You can
 "contractEnv": {
   "now": "2020-01-01T00:00:00Z",
   "level": "10000",
-  "sender": "tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY",
-  "source": "tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY",
+  "sender": "mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq",
+  "source": "mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq",
   "self": "KT1XQcegsEtio9oGbLUHA8SKX4iZ2rpEXY9b",
   "amount": "0",
   "balance": "1000000",
@@ -261,7 +261,7 @@ The debugger supports providing a custom environment for your contracts. You can
   "votingPowers": {
     "kind": "simple",
     "contents": {
-      "tz1aZcxeRT4DDZZkYcU3vuBaaBRtnxyTmQRr": "100"
+      "mv1E97cthY1QUw8D1LuWNDiYzG8EGacuVt2K": "100"
     }
   }
 }
@@ -270,13 +270,13 @@ The debugger supports providing a custom environment for your contracts. You can
 All these fields are optional. Let's describe what they mean:
 1. `now`. The value returned by `Tezos.get_now()`. Default: current system time.
 2. `level`. The value returned by `Tezos.get_level()`. Default: `"10000"`.
-3. `sender`. The value returned by `Tezos.get_sender()`. Default: `"tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY"`.
-4. `source`. The value returned by `Tezos.get_source()`. Default: `"tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY"`.
+3. `sender`. The value returned by `Tezos.get_sender()`. Default: `"mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq"`.
+4. `source`. The value returned by `Tezos.get_source()`. Default: `"mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq"`.
 5. `self`. The value returned by `Tezos.get_self_address()`. Default: `"KT1XQcegsEtio9oGbLUHA8SKX4iZ2rpEXY9b"`.
 6. `amount`. The value returned by `Tezos.get_amount()`. Default: `"0"`.
 7. `balance`. The value returned by `Tezos.get_balance()`. Default: `"1000000"`.
 8. `chainId`. The value returned by `Tezos.get_chain_id()`. Default: `"NetXH12Aer3be93"`.
-9. `votingPowers`. At this moment only the `simple` kind is supported. In the `contents` field you should specify key hashes and their voting powers. Default: `{ "kind": "simple", "contents": { "tz1aZcxeRT4DDZZkYcU3vuBaaBRtnxyTmQRr": "100" } }`.
+9. `votingPowers`. At this moment only the `simple` kind is supported. In the `contents` field you should specify key hashes and their voting powers. Default: `{ "kind": "simple", "contents": { "mv1E97cthY1QUw8D1LuWNDiYzG8EGacuVt2K": "100" } }`.
 
 ### Providing configuration in LIGO
 You can also provide a configuration using one of the LIGO dialects. It could be done by using `Debug: Create configuration in LIGO for the debugger` command (`Ctrl + Shift + P` shortcut for opening the command palette). It will ask you for a directory where the config would be created and for a config name. Note, that it will **overwrite** the file with the same name.
@@ -288,13 +288,13 @@ let contract_env =
   ; balance       = 1tez
   ; amount        = 2tez
   ; self          = "KT1XQcegsEtio9oGbLUHA8SKX4iZ2rpEXY9b"
-  ; source        = "tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY"
-  ; sender        = "tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY"
+  ; source        = "mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq"
+  ; sender        = "mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq"
   ; chain_id      = "NetXH12Aer3be93"
   ; level         = 10000
   ; voting_powers = Map.literal
-      [ "tz1aZcxeRT4DDZZkYcU3vuBaaBRtnxyTmQRr", 40
-      ; "tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY", 60
+      [ "mv1E97cthY1QUw8D1LuWNDiYzG8EGacuVt2K", 40
+      ; "mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq", 60
       ]
   }
 

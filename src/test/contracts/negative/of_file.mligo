@@ -1,6 +1,6 @@
 let m () =
   [%michelson
-  ({| { PUSH unit Unit ; PUSH mutez 300000000 ; NONE key_hash ; CREATE_CONTRACT (codestr $0) ; PAIR } |}
+  ({| { PUSH unit Unit ; PUSH mumav 300000000 ; NONE key_hash ; CREATE_CONTRACT (codestr $0) ; PAIR } |}
      [%of_file "./removed.tz"]
    : operation * address)]
 

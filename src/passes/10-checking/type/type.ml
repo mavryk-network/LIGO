@@ -256,7 +256,7 @@ let t_arrow param result ~loc ?(param_names = []) () : t =
   t_arrow ~loc { type1 = param; type2 = result; param_names } ()
 
 
-let t_mutez = t_tez
+let t_mumav = t_tez
 
 let t_test_baker_policy ~loc () =
   t_sum_ez
@@ -274,9 +274,9 @@ let t_test_exec_error ~loc () =
     [ ( "Balance_too_low"
       , t_record_ez
           ~loc
-          [ "contract_balance", t_mutez ~loc ()
+          [ "contract_balance", t_mumav ~loc ()
           ; "contract_too_low", t_address ~loc ()
-          ; "spend_request", t_mutez ~loc ()
+          ; "spend_request", t_mumav ~loc ()
           ]
           () )
     ; "Other", t_string ~loc ()

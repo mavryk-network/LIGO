@@ -789,7 +789,7 @@ and expr_of_expr = function
 | E_Mod       e -> expr_of_E_Mod       e
 | E_ModPath   e -> expr_of_E_ModPath   e
 | E_Mult      e -> expr_of_E_Mult      e
-| E_Mutez     e -> expr_of_E_Mutez     e
+| E_Mumav     e -> expr_of_E_Mumav     e
 | E_Nat       e -> expr_of_E_Nat       e
 | E_Neg       e -> expr_of_E_Neg       e
 | E_Neq       e -> expr_of_E_Neq       e
@@ -1175,15 +1175,15 @@ and expr_of_E_ModPath (node: expr module_path reg) =
 and expr_of_E_Mult (node: times bin_op reg) =
   Js.(EArith (Mult (expr_of_bin_op node)))
 
-(* Mutez literals as expressions (e.g. "5mutez") *)
+(* Mumav literals as expressions (e.g. "5mumav") *)
 
-and expr_of_E_Mutez (node: (lexeme * Int64.t) wrap) =
+and expr_of_E_Mumav (node: (lexeme * Int64.t) wrap) =
   let lexeme, int64 = node#payload in
   let int           = Z.of_int64 int64 in
   let int           = Wrap.ghost (lexeme, int) in
   let expr          = Js.(EArith (Int int))
   and kwd_as        = Token.ghost_as
-  and type_expr     = Js.TVar (Wrap.ghost "mutez") in
+  and type_expr     = Js.TVar (Wrap.ghost "mumav") in
   let e_annot       = expr, kwd_as, type_expr in
   let e_annot       = Js.EAnnot (reg_of e_annot)
   in Js.EPar (reg_of (par_of e_annot))

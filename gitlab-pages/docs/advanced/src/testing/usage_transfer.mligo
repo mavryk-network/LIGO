@@ -9,7 +9,7 @@ module C = struct
     [] , (v, Tezos.get_sender ())
 end
 let test_transfer_to_contract =
-  let {addr = main_taddr; code = _ ; size = _} = Test.originate (contract_of C) ("bye",Test.nth_bootstrap_account 1) 1mutez in
+  let {addr = main_taddr; code = _ ; size = _} = Test.originate (contract_of C) ("bye",Test.nth_bootstrap_account 1) 1mumav in
   let main_addr = Test.to_address main_taddr in
 
   (* Use this address everytime you want to send tickets from the same proxy-contract *)

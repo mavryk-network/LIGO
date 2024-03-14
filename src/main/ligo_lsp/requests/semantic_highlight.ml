@@ -672,7 +672,7 @@ let semantic_tokens (cst : Dialect_cst.t) (range : Range.t) : int array =
         (* Other literals *)
         | S_bytes_literal -> terminal String node
         | S_int_literal -> terminal Number node
-        | S_mutez_literal -> terminal Number node
+        | S_mumav_literal -> terminal Number node
         | S_nat_literal -> terminal Number node
         | S_string_literal -> terminal String node
         | S_verbatim_literal -> terminal String node

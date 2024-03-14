@@ -56,7 +56,7 @@ let rec translate_type ?var : I.type_expression -> oty =
   | I.T_base I.TB_bytes -> T_base (nil, Prim (nil, "bytes", [], []))
   | I.T_base I.TB_nat -> T_base (nil, Prim (nil, "nat", [], []))
   | I.T_base I.TB_int -> T_base (nil, Prim (nil, "int", [], []))
-  | I.T_base I.TB_mutez -> T_base (nil, Prim (nil, "mutez", [], []))
+  | I.T_base I.TB_mumav -> T_base (nil, Prim (nil, "mumav", [], []))
   | I.T_base I.TB_operation -> T_base (nil, Prim (nil, "operation", [], []))
   | I.T_base I.TB_address -> T_base (nil, Prim (nil, "address", [], []))
   | I.T_base I.TB_key -> T_base (nil, Prim (nil, "key", [], []))

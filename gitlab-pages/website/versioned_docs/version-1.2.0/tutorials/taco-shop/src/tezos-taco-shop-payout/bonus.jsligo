@@ -1,5 +1,5 @@
-const ownerAddress = ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV" as address);
-const donationAddress = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address);
+const ownerAddress = ("mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ" as address);
+const donationAddress = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address);
 
 const receiver : contract<unit> =
   match ((Tezos.get_contract_opt (ownerAddress)) as option<contract<unit>>) {

@@ -338,14 +338,14 @@ In the testing framework, you can use to 'Test.storage_with_dynamic_entrypoints'
 ```cameligo skip
 let test_dyn =
   let init_storage = Test.storage_with_dynamic_entrypoints (contract_of C) 42 in
-  let (addr, _, _) = Test.originate (contract_of  C) init_storage 0mutez in
+  let (addr, _, _) = Test.originate (contract_of  C) init_storage 0mumav in
   (* Call initial one *)
-  let _ = Test.transfer_to_contract (Test.to_contract addr) (Call_one ()) 1mutez in
+  let _ = Test.transfer_to_contract (Test.to_contract addr) (Call_one ()) 1mumav in
   let () = assert ((Test.get_storage addr).storage = 1) in
   (* Change initial one and call it *)
   let f = fun () (i : int) : operation list * int -> [], i + 1 in
-  let _ = Test.transfer_to_contract (Test.to_contract addr) (Set_one f) 1mutez in
-  let _ = Test.transfer_to_contract (Test.to_contract addr) (Call_one ()) 1mutez in
+  let _ = Test.transfer_to_contract (Test.to_contract addr) (Set_one f) 1mumav in
+  let _ = Test.transfer_to_contract (Test.to_contract addr) (Call_one ()) 1mumav in
   let () = assert ((Test.get_storage addr).storage = 2) in
   ()
 ```
@@ -357,14 +357,14 @@ let test_dyn =
 ```jsligo skip
 const test_dyn = do {
   const init_storage = Test.storage_with_dynamic_entrypoints(contract_of(C), 42);
-  const [addr, _init, _balance] = Test.originate (contract_of(C), init_storage, 0mutez);
+  const [addr, _init, _balance] = Test.originate (contract_of(C), init_storage, 0mumav);
   /* Call initial one */
-  Test.transfer_to_contract (Test.to_contract(addr), Call_one(), 1mutez);
+  Test.transfer_to_contract (Test.to_contract(addr), Call_one(), 1mumav);
   assert ((Test.get_storage(addr)).storage == 1);
   /* Change initial one and call it */
   const f = (_unit : unit, i : int) : [list<operation>, int] => [list([]), i + 1];
-  Test.transfer_to_contract (Test.to_contract(addr), (Set_one(f)), 1mutez);
-  Test.transfer_to_contract (Test.to_contract(addr), (Call_one()), 1mutez);
+  Test.transfer_to_contract (Test.to_contract(addr), (Set_one(f)), 1mumav);
+  Test.transfer_to_contract (Test.to_contract(addr), (Call_one()), 1mumav);
   assert ((Test.get_storage(addr)).storage == 2);
   return []
 }

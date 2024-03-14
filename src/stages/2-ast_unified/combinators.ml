@@ -186,11 +186,11 @@ let e__type_ ~loc p : expr = make_e ~loc @@ E_literal (Literal__type_ p)
 
 
 let e__type__z ~loc n : expr = make_e ~loc @@ E_literal (Literal__type_ n)
-  [@@map _type_, ("int", "nat", "timestamp", "mutez")]
+  [@@map _type_, ("int", "nat", "timestamp", "mumav")]
 
 
 let e__type_ ~loc n : expr = e__type__z ~loc @@ Z.of_int n
-  [@@map _type_, ("int", "nat", "timestamp", "mutez")]
+  [@@map _type_, ("int", "nat", "timestamp", "mumav")]
 
 
 let e_false ~loc = e_constant ~loc { cons_name = C_FALSE; arguments = [] }

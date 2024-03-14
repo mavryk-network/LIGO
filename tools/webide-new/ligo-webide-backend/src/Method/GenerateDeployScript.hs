@@ -19,7 +19,7 @@ import Morley.Client
 import Morley.Client.Action.Common (computeStorageLimit)
 import Morley.Client.RPC (AppliedResult, ProtocolParameters(ppCostPerByte))
 import Morley.Client.TezosClient.Impl as TezosClient (importKey)
-import Morley.Micheline (StringEncode(..), TezosMutez(..))
+import Morley.Micheline (StringEncode(..), TezosMumav(..))
 import Morley.Michelson.Macro (expandContract)
 import Morley.Michelson.Parser
   (MichelsonSource(MSUnspecified), ParserException(..), parseExpandValue, parseNoEnv, program)
@@ -31,7 +31,7 @@ import Morley.Michelson.Untyped (Contract, Value)
 import Morley.Tezos.Address (KindedAddress(ImplicitAddress))
 import Morley.Tezos.Address.Alias
   (AddressOrAlias(AddressAlias), Alias(ContractAlias, ImplicitAlias))
-import Morley.Tezos.Core (Mutez(UnsafeMutez, unMutez))
+import Morley.Tezos.Core (Mumav(UnsafeMumav, unMumav))
 import Morley.Tezos.Crypto (KeyHash, PublicKey, SecretKey, detSecretKey, hashKey, toPublic)
 
 import Common (WebIDEM)
@@ -127,7 +127,7 @@ generateDeployScript request = do
   protocolParams <- liftIO $ runMorleyClientM env getProtocolParameters
 
   let storageLimit = unStringEncode $ computeStorageLimit appliedResults protocolParams
-  let costPerByte = unMutez $ unTezosMutez $ ppCostPerByte protocolParams
+  let costPerByte = unMumav $ unTezosMumav $ ppCostPerByte protocolParams
   let burnFee = fromIntegral costPerByte * storageLimit
 
   let script = Text.pack $
@@ -160,7 +160,7 @@ mkOriginationData (SomeContractAndStorage con val) =
   OriginationData
     { odAliasBehavior = DontSaveAlias
     , odName = ContractAlias "contract"
-    , odBalance = UnsafeMutez 0
+    , odBalance = UnsafeMumav 0
     , odContract = con
     , odStorage = val
     , odDelegate = Nothing
@@ -190,7 +190,7 @@ keyHash = hashKey publicKey
 
 dryRunOperations
   :: OriginationData
-  -> MorleyClientM (NonEmpty (AppliedResult, TezosMutez))
+  -> MorleyClientM (NonEmpty (AppliedResult, TezosMumav))
 dryRunOperations originationData = do
   alias <- importKey True (ImplicitAlias "sender") secretKey
   revealKeyUnlessRevealed (ImplicitAddress keyHash) Nothing

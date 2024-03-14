@@ -33,7 +33,7 @@ let get_ty_meta : oty -> meta =
   | T_bool meta -> meta
   | T_int meta -> meta
   | T_nat meta -> meta
-  | T_mutez meta -> meta
+  | T_mumav meta -> meta
   | T_string meta -> meta
   | T_bytes meta -> meta
   | T_address meta -> meta

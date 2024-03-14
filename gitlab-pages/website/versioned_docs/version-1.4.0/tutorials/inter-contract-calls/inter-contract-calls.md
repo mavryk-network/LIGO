@@ -76,7 +76,7 @@ let get_contract (addr : address) =
 [@entry]
 let main (param : parameter) (callee_addr : storage) =
   let callee = get_contract (callee_addr) in
-  let op = Tezos.transaction param 0mutez callee in
+  let op = Tezos.transaction param 0mumav callee in
   [op], callee_addr
 ```
 
@@ -152,7 +152,7 @@ let get_add_entrypoint (addr : address) =
 [@entry]
 let main (param : parameter) (callee_addr : storage) =
   let add : int contract = get_add_entrypoint (callee_addr) in
-  let op = Tezos.transaction param 0mutez add in
+  let op = Tezos.transaction param 0mumav add in
   [op], callee_addr
 ```
 
@@ -271,7 +271,7 @@ let call (op : unit -> operation) (s : storage) : operation list * storage =
 let iswhitelisted (arg : address * (bool contract)) (s : storage) : operation list * storage =
   let addr, callback_contract = arg in
   let whitelisted = Set.mem addr s.senders_whitelist in
-  let op = Tezos.transaction whitelisted 0mutez callback_contract in
+  let op = Tezos.transaction whitelisted 0mumav callback_contract in
   [op], s
 ```
 
@@ -329,7 +329,7 @@ For example, we can create a new counter contract with
 let op = Tezos.create_contract
   (fun (p : int) (s : int) -> [], p + s)
   None
-  0mutez
+  0mumav
   1
 ```
 

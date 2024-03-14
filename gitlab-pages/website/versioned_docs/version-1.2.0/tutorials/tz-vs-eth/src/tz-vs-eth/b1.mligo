@@ -2,7 +2,7 @@ type storage = {rewardsLeft : tez; beneficiaryAddress : address}
 
 let treasury (p, s : unit * storage) =
   // We do our computations first
-  let newStorage = {s with rewardsLeft = 0mutez} in
+  let newStorage = {s with rewardsLeft = 0mumav} in
 
   // Then we find our beneficiary's `handleRewards` entrypoint:
   let beneficiaryOpt = Tezos.get_entrypoint_opt "%handleTransfer" s.beneficiaryAddress in

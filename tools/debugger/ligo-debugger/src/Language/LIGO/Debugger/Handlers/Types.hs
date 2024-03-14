@@ -38,7 +38,7 @@ import Morley.Debugger.DAP.Types (MichelsonJson (..))
 import Morley.Debugger.DAP.Types.Morley (SimpleVotingPowersInfo (..), VotingPowersConfig (..))
 import Morley.Michelson.Untyped qualified as U
 import Morley.Tezos.Address (ContractAddress, L1Address)
-import Morley.Tezos.Core (ChainId, Mutez, Timestamp)
+import Morley.Tezos.Core (ChainId, Mumav, Timestamp)
 
 data LigoLaunchRequest = LigoLaunchRequest
   { noDebug             :: Maybe Bool
@@ -67,8 +67,8 @@ data LigoLaunchRequest = LigoLaunchRequest
 
 data LigoContractEnv = LigoContractEnv
   { now          :: Maybe $ MichelsonJson Timestamp
-  , balance      :: Maybe $ MichelsonJson Mutez
-  , amount       :: Maybe $ MichelsonJson Mutez
+  , balance      :: Maybe $ MichelsonJson Mumav
+  , amount       :: Maybe $ MichelsonJson Mumav
   , self         :: Maybe ContractAddress
   , source       :: Maybe L1Address
   , sender       :: Maybe L1Address

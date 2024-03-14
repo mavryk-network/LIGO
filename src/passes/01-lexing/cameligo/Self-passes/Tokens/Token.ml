@@ -49,7 +49,7 @@ module T =
     | Bytes    of (lexeme * Hex.t) Wrap.t
     | Int      of (lexeme * Z.t) Wrap.t
     | Nat      of (lexeme * Z.t) Wrap.t
-    | Mutez    of (lexeme * Int64.t) Wrap.t
+    | Mumav    of (lexeme * Int64.t) Wrap.t
     | Ident    of lexeme Wrap.t              (* foo  *)
     | UIdent   of lexeme Wrap.t              (* Foo  *)
     | EIdent   of lexeme Wrap.t              (* @foo *)
@@ -165,7 +165,7 @@ module T =
     | Bytes    t -> [fst t#payload]
     | Int      t
     | Nat      t -> [fst t#payload]
-    | Mutez    t -> [fst t#payload]
+    | Mumav    t -> [fst t#payload]
     | Ident    t
     | UIdent   t
     | EIdent   t -> [t#payload]
@@ -677,7 +677,7 @@ module T =
     let wrap_bytes    b = wrap ("0x" ^ Hex.show b, b)
     let wrap_int      z = wrap (Z.to_string z, z)
     let wrap_nat      z = wrap (Z.to_string z ^ "n", z)
-    let wrap_mutez    m = wrap (Int64.to_string m ^ "mutez", m)
+    let wrap_mumav    m = wrap (Int64.to_string m ^ "mumav", m)
     let wrap_ident    i = wrap i
     let wrap_uident   i = wrap i
     let wrap_eident   i = wrap i
@@ -694,7 +694,7 @@ module T =
     let ghost_bytes    b = wrap_bytes    b   Region.ghost
     let ghost_int      z = wrap_int      z   Region.ghost
     let ghost_nat      z = wrap_nat      z   Region.ghost
-    let ghost_mutez    m = wrap_mutez    m   Region.ghost
+    let ghost_mumav    m = wrap_mumav    m   Region.ghost
     let ghost_ident    i = wrap_ident    i   Region.ghost
     let ghost_uident   i = wrap_uident   i   Region.ghost
     let ghost_eident   i = wrap_eident   i   Region.ghost
@@ -706,7 +706,7 @@ module T =
     let ghost_Bytes    b = Bytes    (ghost_bytes b)
     let ghost_Int      z = Int      (ghost_int z)
     let ghost_Nat      z = Nat      (ghost_nat z)
-    let ghost_Mutez    m = Mutez    (ghost_mutez m)
+    let ghost_Mumav    m = Mumav    (ghost_mumav m)
     let ghost_Ident    i = Ident    (ghost_ident i)
     let ghost_UIdent   i = UIdent   (ghost_uident i)
     let ghost_EIdent   i = EIdent   (ghost_eident i)
@@ -748,7 +748,7 @@ module T =
     | "EIdent"   -> "@x"
     | "Int"      -> "1"
     | "Nat"      -> "1n"
-    | "Mutez"    -> "1mutez"
+    | "Mumav"    -> "1mumav"
     | "String"   -> "\"a string\""
     | "Verbatim" -> "{|verbatim|}"
     | "Bytes"    -> "0xAA"
@@ -878,9 +878,9 @@ module T =
     | Nat t ->
         let s, n = t#payload in
         t#region, sprintf "Nat (%S, %s)" s (Z.to_string n)
-    | Mutez t ->
+    | Mumav t ->
         let s, n = t#payload in
-        t#region, sprintf "Mutez (%S, %s)" s (Int64.to_string n)
+        t#region, sprintf "Mumav (%S, %s)" s (Int64.to_string n)
     | Ident t ->
         t#region, sprintf "Ident %S%s" t#payload (comments t)
     | UIdent t ->
@@ -1001,7 +1001,7 @@ module T =
     | Bytes    w -> w#comments
     | Int      w
     | Nat      w -> w#comments
-    | Mutez    w -> w#comments
+    | Mumav    w -> w#comments
     | Ident    w
     | UIdent   w
     | EIdent   w -> w#comments
@@ -1144,12 +1144,12 @@ module T =
 
     let mk_nat nat z region = Ok (Nat (wrap (nat ^ "n", z) region))
 
-    (* Mutez *)
+    (* Mumav *)
 
-    type mutez_err = Wrong_mutez_syntax of string (* Not CameLIGO *)
+    type mumav_err = Wrong_mumav_syntax of string (* Not CameLIGO *)
 
-    let mk_mutez nat ~suffix int64 region =
-      Ok (Mutez (wrap (nat ^ suffix, int64) region))
+    let mk_mumav nat ~suffix int64 region =
+      Ok (Mumav (wrap (nat ^ suffix, int64) region))
 
     (* End-Of-File *)
 

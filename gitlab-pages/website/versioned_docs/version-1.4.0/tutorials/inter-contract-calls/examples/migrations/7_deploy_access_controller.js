@@ -2,6 +2,6 @@ const AccessController = artifacts.require("AccessController")
 
 module.exports = async deployer => {
     await deployer.deploy(AccessController, [
-        "tz1aGaUhwbYDrwwBZobdgBEbCSG3HTPjH2ZJ"
+        "mv19hGkQPN277aqUikmFUz4fXSzYKa2P58Fd"
     ])
 }

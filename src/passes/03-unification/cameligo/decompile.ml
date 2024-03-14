@@ -194,7 +194,7 @@ and expr : (CST.expr, CST.type_expr, CST.pattern, unit, unit) AST.expression_ ->
   | E_literal Literal_unit -> CST.E_Unit (w (ghost_lpar, ghost_rpar))
   | E_literal (Literal_int x) -> CST.E_Int (ghost_int x)
   | E_literal (Literal_nat x) -> CST.E_Nat (ghost_nat x)
-  | E_literal (Literal_mutez x) -> CST.E_Mutez (ghost_mutez @@ Z.to_int64 x)
+  | E_literal (Literal_mumav x) -> CST.E_Mumav (ghost_mumav @@ Z.to_int64 x)
   | E_module_open_in m -> E_ModPath (w @@ decompile_mod_path m)
   | E_application { lamb; args } -> CST.E_App (w @@ (lamb, (args, [])))
   | expr when AST.expr_is_not_initial expr ->

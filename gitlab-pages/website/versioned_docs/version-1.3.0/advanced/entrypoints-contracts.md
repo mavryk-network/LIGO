@@ -461,7 +461,7 @@ entrypoint.
 <Syntax syntax="cameligo">
 
 ```cameligo group=c
-let owner = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx": address)
+let owner = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE": address)
 
 [@entry]
 let owner_only (action : parameter) (store: storage) : result =
@@ -474,7 +474,7 @@ let owner_only (action : parameter) (store: storage) : result =
 <Syntax syntax="jsligo">
 
 ```jsligo group=c
-const owner = "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address;
+const owner = "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address;
 
 const owner_only = (action: parameter, store: storage): result => {
   if (Tezos.get_sender() != owner) { return failwith("Access denied."); }
@@ -510,7 +510,7 @@ The following example shows how a contract can invoke another by
 emitting a transaction operation at the end of an entrypoint.
 
 > The same technique can be used to transfer tokens to an implicit
-> account (tz1, ...): all you have to do is use a unit value as the
+> account (mv1, ...): all you have to do is use a unit value as the
 > parameter of the smart contract.
 
 In our case, we have a `counter` contract that accepts an action of

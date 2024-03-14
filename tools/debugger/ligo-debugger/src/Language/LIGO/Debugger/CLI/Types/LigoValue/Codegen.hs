@@ -88,7 +88,7 @@ replaceOpSing = \case
   STNat -> STNat
   STString -> STString
   STBytes -> STBytes
-  STMutez -> STMutez
+  STMumav -> STMumav
   STBool -> STBool
   STKeyHash -> STKeyHash
   STBls12381Fr -> STBls12381Fr
@@ -130,7 +130,7 @@ replaceOps sng val = case (val, sng) of
   (T.VNat n, _) -> T.VNat n
   (T.VString str, _) -> T.VString str
   (T.VBytes bts, _) -> T.VBytes bts
-  (T.VMutez mutez, _) -> T.VMutez mutez
+  (T.VMumav mumav, _) -> T.VMumav mumav
   (T.VBool bl, _) -> T.VBool bl
   (T.VKeyHash keyHash, _) -> T.VKeyHash keyHash
   (T.VTimestamp time, _) -> T.VTimestamp time

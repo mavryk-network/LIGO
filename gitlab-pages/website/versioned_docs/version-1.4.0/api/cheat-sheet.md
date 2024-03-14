@@ -39,7 +39,7 @@ let testC =
     let initial_storage = 42 in
     let originated = Test.originate (contract_of C) initial_storage 0tez in
     let p : C parameter_of = Increment 1 in
-    let _ = Test.transfer_exn originated.addr p 1mutez in
+    let _ = Test.transfer_exn originated.addr p 1mumav in
     assert (Test.get_storage originated.addr = initial_storage + 1)
 ```
 
@@ -118,13 +118,13 @@ let booleanLogic : bool =
 
 </div>
 <div className="primitive">
-Mutez (micro tez)
+Mumav (micro tez)
 </div>
 <div className="example">
 
 ```cameligo
 let tez : tez = 42tez
-let tez : tez = 7mutez
+let tez : tez = 7mumav
 ```
 
 </div>
@@ -134,8 +134,8 @@ Address
 <div className="example">
 
 ```cameligo
-let tz1address : address =
-  ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
+let mv1address : address =
+  ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
 let kt1address : address =
   ("KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD" : address)
 ```
@@ -295,7 +295,7 @@ Type Annotations
 
 ```cameligo
 let someAddress : address =
-  ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
+  ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
 ```
 
 </div>
@@ -356,14 +356,14 @@ type prices = (nat, tez) map
 
 let prices : prices =
   Map.literal [
-    (10n, 60mutez);
-    (50n, 30mutez);
-    (100n, 10mutez);
+    (10n, 60mumav);
+    (50n, 30mumav);
+    (100n, 10mumav);
   ]
 
 let price : tez option = Map.find_opt 50n prices
 
-let prices : prices = Map.update 200n (Some 5mutez) prices
+let prices : prices = Map.update 200n (Some 5mumav) prices
 ```
 
 </div>
@@ -374,7 +374,7 @@ Contracts & Accounts
 
 ```cameligo group=tezos_specific
 let destinationAddress : address =
-  ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
+  ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
 
 let contract : unit contract =
   match (Tezos.get_contract_opt (Tezos.get_sender ()) : unit contract option) with
@@ -391,7 +391,7 @@ Transactions
 ```cameligo group=tezos_specific
 
 let payment : operation =
-  Tezos.transaction unit 100mutez contract
+  Tezos.transaction unit 100mumav contract
 
 ```
 
@@ -536,7 +536,7 @@ const testC = do {
     let initial_storage = 42;
     let originated = Test.originate(contract_of(C), initial_storage, 0tez);
     let p : parameter_of C = Increment(1);
-    Test.transfer_exn(originated.addr, p, 1mutez);
+    Test.transfer_exn(originated.addr, p, 1mumav);
     return assert(Test.get_storage(originated.addr) == initial_storage + 1);
 }
 ```
@@ -616,13 +616,13 @@ const booleanLogic: bool =
 
 </div>
 <div className="primitive">
-Mutez (micro tez)
+Mumav (micro tez)
 </div>
 <div className="example">
 
 ```jsligo
 const tez_amount: tez = 42tez
-const tez_amount2: tez = tez_amount + 7mutez // == 42000007mutez
+const tez_amount2: tez = tez_amount + 7mumav // == 42000007mumav
 ```
 
 </div>
@@ -632,8 +632,8 @@ Address
 <div className="example">
 
 ```jsligo
-const tz1address: address =
-  "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address;
+const mv1address: address =
+  "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address;
 const kt1address: address =
   "KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD" as address;
 ```
@@ -807,7 +807,7 @@ Type Annotations
 
 ```jsligo
 const someAddress: address =
-  "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address;
+  "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address;
 ```
 
 </div>
@@ -868,14 +868,14 @@ Maps
 type prices = map<nat, tez>;
 
 const prices: prices = Map.literal(list([
-  [10n, 60mutez],
-  [50n, 30mutez],
-  [100n, 10mutez]
+  [10n, 60mumav],
+  [50n, 30mumav],
+  [100n, 10mumav]
 ]));
 
 const price: option<tez> = Map.find_opt(50n, prices)
 
-const prices2: prices = Map.update(200n, Some (5mutez), prices)
+const prices2: prices = Map.update(200n, Some (5mumav), prices)
 ```
 
 </div>
@@ -886,7 +886,7 @@ Contracts & Accounts
 
 ```jsligo group=tezos_specific
 const destinationAddress: address =
-  "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address;
+  "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address;
 
 const contract : contract<unit> =
   match(Tezos.get_contract_opt(Tezos.get_sender()) as option<contract<unit>>) {
@@ -903,7 +903,7 @@ Transactions
 
 ```jsligo group=tezos_specific
 const payment: operation =
-  Tezos.transaction(unit, 100mutez, contract);
+  Tezos.transaction(unit, 100mumav, contract);
 ```
 
 </div>

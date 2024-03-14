@@ -125,7 +125,7 @@ data Expr
   | EMatch (Reg MatchExpr)
   | EMult SomeBinOp
   | EMultEq SomeBinOp
-  | EMutez WrappedTupleLexeme
+  | EMumav WrappedTupleLexeme
   | ENamePath (Reg (NamespacePath Expr))
   | ENat WrappedTupleLexeme
   | ENeg SomeUnOp
@@ -335,7 +335,7 @@ data Pattern
   | PCtorApp (VariantKind Pattern)
   | PFalse WrappedLexeme
   | PInt WrappedTupleLexeme
-  | PMutez WrappedTupleLexeme
+  | PMumav WrappedTupleLexeme
   | PNamePath (Reg (NamespacePath Pattern))
   | PNat WrappedTupleLexeme
   | PObject (Object Pattern)
@@ -688,7 +688,7 @@ instance MessagePack Expr where
     , EMatch      <$> (guardMsg (name == "E_Match"     ) >> fromObjectWith cfg arg)
     , EMult       <$> (guardMsg (name == "E_Mult"      ) >> fromObjectWith cfg arg)
     , EMultEq     <$> (guardMsg (name == "E_MultEq"    ) >> fromObjectWith cfg arg)
-    , EMutez      <$> (guardMsg (name == "E_Mutez"     ) >> fromObjectWith cfg arg)
+    , EMumav      <$> (guardMsg (name == "E_Mumav"     ) >> fromObjectWith cfg arg)
     , ENamePath   <$> (guardMsg (name == "E_NamePath"  ) >> fromObjectWith cfg arg)
     , ENat        <$> (guardMsg (name == "E_Nat"       ) >> fromObjectWith cfg arg)
     , ENeg        <$> (guardMsg (name == "E_Neg"       ) >> fromObjectWith cfg arg)
@@ -958,7 +958,7 @@ instance MessagePack Pattern where
     , PCtorApp  <$> (guardMsg (name == "P_CtorApp" ) >> fromObjectWith cfg arg)
     , PFalse    <$> (guardMsg (name == "P_False"   ) >> fromObjectWith cfg arg)
     , PInt      <$> (guardMsg (name == "P_Int"     ) >> fromObjectWith cfg arg)
-    , PMutez    <$> (guardMsg (name == "P_Mutez"   ) >> fromObjectWith cfg arg)
+    , PMumav    <$> (guardMsg (name == "P_Mumav"   ) >> fromObjectWith cfg arg)
     , PNamePath <$> (guardMsg (name == "P_NamePath") >> fromObjectWith cfg arg)
     , PNat      <$> (guardMsg (name == "P_Nat"     ) >> fromObjectWith cfg arg)
     , PObject   <$> (guardMsg (name == "P_Object"  ) >> fromObjectWith cfg arg)
@@ -1412,7 +1412,7 @@ toAST CST{..} =
         in fastMake r (AST.Case subjectExpr clauseBranches)
       EMult mult -> makeBinOp mult
       EMultEq multEq -> makeBinOp multEq
-      EMutez (unpackWrap -> (r, Tuple1 mutez)) -> makeConstantExpr r (AST.CTez mutez)
+      EMumav (unpackWrap -> (r, Tuple1 mumav)) -> makeConstantExpr r (AST.CTez mumav)
       ENamePath (unpackReg -> (r, path)) ->
         let
           moduleAccess = namespacePathConv $ exprConv <$> path
@@ -1534,7 +1534,7 @@ toAST CST{..} =
         in fastMake r (AST.IsConstr ctor (patternConv <$> args))
       PFalse (unpackWrap -> (r, _)) -> fastMake r AST.IsFalse
       PInt (unpackWrap -> (r, Tuple1 n)) -> makeConstantPattern r (AST.CInt n)
-      PMutez (unpackWrap -> (r, Tuple1 mutez)) -> makeConstantPattern r (AST.CTez mutez)
+      PMumav (unpackWrap -> (r, Tuple1 mumav)) -> makeConstantPattern r (AST.CTez mumav)
       PNamePath (unpackReg -> (r, path)) ->
         fastMake r (namespacePathConv $ patternConv <$> path)
       PNat (unpackWrap -> (r, Tuple1 n)) -> makeConstantPattern r (AST.CNat n)

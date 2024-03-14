@@ -1,7 +1,7 @@
 # Ticket Factory
 
 This small project offers two smart-contracts that allow to exchange tickets
-(with a fixed `payload`). For a `mutez` you get a ticket. The code is not very
+(with a fixed `payload`). For a `mumav` you get a ticket. The code is not very
 interesting, it will only serve to illustrate the use of the test framework.
 
 ## Global Workflow
@@ -9,7 +9,7 @@ interesting, it will only serve to illustrate the use of the test framework.
 There are two contracts: 
 - `oven_sc`: that acts as a bit of a client. A user can originate his oven and it
   is this contract that will interact with the ticket creation contract.
-- `mint_sc`: whose role is to receive `mutez` and convert them into tickets, and
+- `mint_sc`: whose role is to receive `mumav` and convert them into tickets, and
   then return them to the `oven` that requested the ticket forge.
   
 ### Mint

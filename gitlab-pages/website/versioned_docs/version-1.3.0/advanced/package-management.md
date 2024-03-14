@@ -120,7 +120,7 @@ let test =
     let (addr, _, _) = Test.originate_from_file "./main.mligo" "main" ([] : string list) storage 0tez in
     let taddr : (parameter, storage) typed_address = Test.cast_address addr in
     let contr : parameter contract = Test.to_contract taddr in
-    let _ = Test.transfer_to_contract_exn contr Reverse 1mutez in
+    let _ = Test.transfer_to_contract_exn contr Reverse 1mumav in
     assert (Test.get_storage taddr = [3; 2; 1])
 ```
 
@@ -137,7 +137,7 @@ const test = (() => {
     "main", (list([]) as list<string>), storage, 0tez);
     let taddr : typed_address<parameter, storage> = Test.cast_address(addr);
     let contr : contract<parameter> = Test.to_contract(taddr);
-    Test.transfer_to_contract_exn(contr, Reverse(), 1mutez);
+    Test.transfer_to_contract_exn(contr, Reverse(), 1mumav);
     assert (Test.get_storage(taddr) == list([3, 2, 1]))
 })();
 

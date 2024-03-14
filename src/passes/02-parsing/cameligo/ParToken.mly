@@ -33,7 +33,7 @@
   let mk_bytes     = Token.wrap_bytes     (Hex.of_string "Ghost bytes")
   let mk_int       = Token.wrap_int       Z.zero
   let mk_nat       = Token.wrap_nat       Z.zero
-  let mk_mutez     = Token.wrap_mutez     Int64.zero
+  let mk_mumav     = Token.wrap_mumav     Int64.zero
   let mk_ident     = Token.wrap_ident     @@ ErrorWrapper.wrap "ghost_ident"
   let mk_uident    = Token.wrap_uident    @@ ErrorWrapper.wrap "Ghost_uident"
   let mk_eident    = Token.wrap_eident    @@ ErrorWrapper.wrap "@ghost_eident"
@@ -61,7 +61,7 @@
 %token   <(string * Hex.t) Wrap.t> Bytes     "<bytes>"     [@recover.expr mk_bytes    $loc]
 %token     <(string * Z.t) Wrap.t> Int       "<int>"       [@recover.expr mk_int      $loc]
 %token     <(string * Z.t) Wrap.t> Nat       "<nat>"       [@recover.expr mk_nat      $loc]
-%token <(string * Int64.t) Wrap.t> Mutez     "<mutez>"     [@recover.expr mk_mutez    $loc]
+%token <(string * Int64.t) Wrap.t> Mumav     "<mumav>"     [@recover.expr mk_mumav    $loc]
 %token             <string Wrap.t> Ident     "<ident>"     [@recover.expr mk_ident    $loc] [@recover.cost 900]
 %token             <string Wrap.t> UIdent    "<uident>"    [@recover.expr mk_uident   $loc]
 %token             <string Wrap.t> EIdent    "<eident>"    [@recover.expr mk_eident   $loc]

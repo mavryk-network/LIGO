@@ -134,7 +134,7 @@ data LigoConstant
   | LCChainId Text
   | LCInt Text
   | LCInt64 Integer
-  | LCMutez Text
+  | LCMumav Text
   | LCBool Bool
   | LCUnit
   deriving stock (Generic, Show, Eq, Data)
@@ -198,7 +198,7 @@ tryDecompilePrimitive (SomeValue val) = case val of
   T.VNat n -> mkConstant (LCNat $ pretty n)
   T.VString str -> mkConstant (LCString $ pretty str)
   T.VBytes bts -> mkConstant (LCBytes [int||0x#{hexF bts}|])
-  T.VMutez mu -> mkConstant (LCMutez $ show $ T.unMutez mu)
+  T.VMumav mu -> mkConstant (LCMumav $ show $ T.unMumav mu)
   T.VBool bVal -> mkConstant (LCBool bVal)
   T.VKeyHash ha -> mkConstant (LCKeyHash $ pretty ha)
   T.VTimestamp (T.Timestamp (nominalDiffTimeToSeconds -> (MkFixed time))) ->
@@ -429,7 +429,7 @@ buildConstant' lang mode = \case
   LCChainId chainId -> build chainId
   LCInt n -> build n
   LCInt64 n -> build n
-  LCMutez n ->  [int||#{n}mutez|]
+  LCMumav n ->  [int||#{n}mumav|]
   LCBool bl -> build bl
   LCUnit -> case (mode, lang) of
     (DpmNormal, _) -> "()"

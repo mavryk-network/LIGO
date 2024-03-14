@@ -173,7 +173,7 @@ increments the storage after deployment, we also print the gas consumption:
 let test2 =
   let initial_storage = 42 in
   let orig = Test.originate (contract_of MyContract.C) initial_storage 0tez in
-  let gas_cons = Test.transfer_exn orig.addr (Increment (1)) 1mutez in
+  let gas_cons = Test.transfer_exn orig.addr (Increment (1)) 1mumav in
   let () = Test.log ("gas consumption",gas_cons) in
   assert (Test.get_storage orig.addr = initial_storage + 1)
 ```
@@ -191,7 +191,7 @@ it is a block expression which can contain statements and local declarations.
 const test2 = do {
   let initial_storage = 42 as int;
   let orig = Test.originate(contract_of (MyContract.C), initial_storage, 0tez);
-  let gas_cons = Test.transfer_exn(orig.addr, (Increment (1)), 1mutez);
+  let gas_cons = Test.transfer_exn(orig.addr, (Increment (1)), 1mumav);
   Test.log(["gas consumption", gas_cons]);
   return (Test.get_storage(orig.addr) == initial_storage + 1);
 }
@@ -293,7 +293,7 @@ module C = struct
     [] , (v, Tezos.get_sender ())
 end
 let test_transfer_to_contract =
-  let {addr = main_taddr; code = _ ; size = _} = Test.originate (contract_of C) ("bye",Test.nth_bootstrap_account 1) 1mutez in
+  let {addr = main_taddr; code = _ ; size = _} = Test.originate (contract_of C) ("bye",Test.nth_bootstrap_account 1) 1mumav in
   let main_addr = Test.to_address main_taddr in
 
   (* Use this address everytime you want to send tickets from the same proxy-contract *)
@@ -338,7 +338,7 @@ namespace C {
 }
 
 const test_transfer_to_contract = do {
-  let {addr : main_taddr, code , size } = Test.originate (contract_of(C), ["bye",Test.nth_bootstrap_account (1)], 1mutez) ;
+  let {addr : main_taddr, code , size } = Test.originate (contract_of(C), ["bye",Test.nth_bootstrap_account (1)], 1mumav) ;
   let main_addr = Test.to_address (main_taddr) ;
 
   /* mk_param is executed __by the proxy contract__ */
@@ -808,7 +808,7 @@ const testC = do {
     let initial_storage = 42;
     let orig = Test.originate(contract_of(C), initial_storage, 0tez);
     let p : parameter_of C = Increment(1);
-    Test.transfer_exn(orig.addr, p, 1mutez);
+    Test.transfer_exn(orig.addr, p, 1mumav);
     return assert(Test.get_storage(orig.addr) == initial_storage + 1);
 };
 ```

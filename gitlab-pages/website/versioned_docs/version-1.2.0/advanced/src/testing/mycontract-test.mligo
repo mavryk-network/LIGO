@@ -12,6 +12,6 @@ let test1 =
 let test2 =
   let initial_storage = 42 in
   let orig = Test.originate (contract_of MyContract.C) initial_storage 0tez in
-  let gas_cons = Test.transfer_exn orig.addr (Increment (1)) 1mutez in
+  let gas_cons = Test.transfer_exn orig.addr (Increment (1)) 1mumav in
   let () = Test.log ("gas consumption",gas_cons) in
   assert (Test.get_storage orig.addr = initial_storage + 1)

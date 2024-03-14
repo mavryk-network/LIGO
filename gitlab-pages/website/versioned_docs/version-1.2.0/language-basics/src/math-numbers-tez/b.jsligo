@@ -5,5 +5,5 @@ const b: int = 5n - 2n;
 
 // Therefore the following is invalid
 // const c : nat = 5n - 2n;
-const d : option<tez> = 5mutez - 1mutez; /* Some (4mutez) */
-const e : option<tez> = 1mutez - 5mutez; /* None */
+const d : option<tez> = 5mumav - 1mumav; /* Some (4mumav) */
+const e : option<tez> = 1mumav - 5mumav; /* None */

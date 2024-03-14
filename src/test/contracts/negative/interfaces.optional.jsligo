@@ -51,5 +51,5 @@ namespace ImplAll implements FAAll {
 const test = do {
   let orig = Test.originate(contract_of(ImplAll), ImplAll.foo(42), 0tez);
   let p : parameter_of ImplAll = Other4();
-  Test.transfer_exn(orig.addr, p, 1mutez);
+  Test.transfer_exn(orig.addr, p, 1mumav);
 }

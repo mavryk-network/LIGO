@@ -203,7 +203,7 @@ export async function executeGenerateDeployScript(context: LigoContext, client: 
         '--init',
         storage.result,
         '--burn-cap',
-        estimate.burnFeeMutez / 1_000_000,
+        estimate.burnFeeMumav / 1_000_000,
       ]
 
       ligoOutput.appendLine(res.join(' '))

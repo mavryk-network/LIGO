@@ -14,6 +14,6 @@ end
 
 let test =
   let (_, pub_key, _) = Test.get_bootstrap_account 1n in
-  let orig = Test.originate (contract_of C) {registry = Big_map.empty; next_id = 1n} 0mutez in
+  let orig = Test.originate (contract_of C) {registry = Big_map.empty; next_id = 1n} 0mumav in
   let () = Test.log pub_key in
-  Test.transfer orig.addr (Main pub_key) 0mutez
+  Test.transfer orig.addr (Main pub_key) 0mumav

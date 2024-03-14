@@ -41,11 +41,11 @@ module C = Bar.C
 let initial_storage = 42
 
 let test_initial_storage =
-  let orig = Test.originate (contract_of C) initial_storage 0mutez in
+  let orig = Test.originate (contract_of C) initial_storage 0mumav in
   assert (Test.get_storage orig.addr = initial_storage)
 
 let test_increment =
-  let orig = Test.originate (contract_of C) initial_storage 0mutez in
+  let orig = Test.originate (contract_of C) initial_storage 0mumav in
   let contr = Test.to_contract orig.addr in
-  let _ = Test.transfer_to_contract_exn contr (Increment 1) 1mutez in
+  let _ = Test.transfer_to_contract_exn contr (Increment 1) 1mumav in
   assert (Test.get_storage orig.addr = initial_storage + 1)

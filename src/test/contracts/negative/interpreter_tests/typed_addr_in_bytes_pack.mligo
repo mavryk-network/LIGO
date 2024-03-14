@@ -12,7 +12,7 @@ let test =
     let r = originate_record () in
     let packed = Bytes.pack (fun() -> 
         match (Tezos.get_entrypoint_opt "%transfer" r.addr : unit contract option) with
-          Some(c) -> let op = Tezos.transaction () 0mutez c in [op]
+          Some(c) -> let op = Tezos.transaction () 0mumav c in [op]
         | None ->  ([] : operation list)
     ) in
     let () = Test.log(packed) in

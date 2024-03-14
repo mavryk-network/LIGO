@@ -128,7 +128,7 @@ syntax match operators "\<\(-\|+\|%\|&&\||\||==\|!=\|<=\|>=\|<\|>\|\*\|/\|=\|!\|
 highlight link operators Operator 
 
 " numericliterals
-syntax match numericliterals "\<[0-9]+\(n\|tz\|tez\|mutez\|\)\>" 
+syntax match numericliterals "\<[0-9]+\(n\|tz\|tez\|mumav\|\)\>" 
 highlight link numericliterals Number 
 
 " controlkeywords

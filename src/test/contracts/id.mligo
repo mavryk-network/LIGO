@@ -83,7 +83,7 @@ let buy (parameter : buy) (storage: storage) =
                         }
 
 let update_owner (parameter : update_owner) (storage : storage) =
-  if (Tezos.get_amount () <> 0mutez)
+  if (Tezos.get_amount () <> 0mumav)
   then (failwith "Updating owner doesn't cost anything.": (operation list) * storage)
   else
   let id = parameter.id in
@@ -109,7 +109,7 @@ let update_owner (parameter : update_owner) (storage : storage) =
   ([]: operation list), {storage with identities = updated_identities}
 
 let update_details (parameter : update_details) (storage : storage) =
-  if (Tezos.get_amount () <> 0mutez)
+  if (Tezos.get_amount () <> 0mumav)
   then (failwith "Updating details doesn't cost anything.": (operation list) * storage)
   else
   let id = parameter.id in

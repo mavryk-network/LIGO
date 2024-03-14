@@ -210,4 +210,4 @@ let make_num to_string root state (wrap : 'a Wrap.t) =
 let make_int   = make_num Z.to_string
 let make_nat   = make_int
 let make_bytes = make_num Hex.show
-let make_mutez = make_num Int64.to_string
+let make_mumav = make_num Int64.to_string

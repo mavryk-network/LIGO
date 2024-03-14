@@ -83,7 +83,7 @@ let getAllowance (p,s : getAllowance * storage) : operation list * storage =
     Some value -> value
   |  None -> 0n
   in
-  let op = Tezos.transaction value 0mutez p.callback in
+  let op = Tezos.transaction value 0mumav p.callback in
   ([op],s)
 
 let getBalance (p,s : getBalance * storage) : operation list * storage =
@@ -91,12 +91,12 @@ let getBalance (p,s : getBalance * storage) : operation list * storage =
     Some value -> value
   |  None -> 0n
   in
-  let op = Tezos.transaction value 0mutez p.callback in
+  let op = Tezos.transaction value 0mumav p.callback in
   ([op],s)
 
 let getTotalSupply (p,s : getTotalSupply * storage) : operation list * storage =
   let total = s.total_amount in
-  let op    = Tezos.transaction total 0mutez p.callback in
+  let op    = Tezos.transaction total 0mumav p.callback in
   ([op],s)
 
 
@@ -392,7 +392,7 @@ let check_signature (pk, signed, msg : key * signature * bytes) : bool =
 $ tezos-client gen keys testsign
 
 $ tezos-client show address testsign -S
-Hash: tz1RffmtWjy435AXZuWwLWG6UaJ66ERmgviA
+Hash: mv1E395Uq7GQcLwkiE5naKx7dbA4ectCARet
 Public Key: edpktz4xg6csJnJ5vcmMb2H37sWXyBDcoAp3XrBvjRaTSQ1zmZTeRQ
 Secret Key: unencrypted:edsk34mH9qhMdVWtbammJfYkUoQfwW6Rw5K6rbGW1ajppy3LPNbiJA
 
@@ -421,7 +421,7 @@ let test (k : int) : int =
 let int_ (a: int) = a < a
 let nat_ (a: nat) = a < a
 let bool_ (a: bool) = a < a
-let mutez_ (a: tez) = a < a
+let mumav_ (a: tez) = a < a
 let string_ (a: string) = a < a
 let bytes_ (a: bytes) = a < a
 let address_ (a: address) = a < a
@@ -750,7 +750,7 @@ let buy (parameter, storage: buy * storage) =
                         }
 
 let update_owner (parameter, storage: update_owner * storage) =
-  if (amount <> 0mutez)
+  if (amount <> 0mumav)
   then (failwith "Updating owner doesn't cost anything.": (operation list) * storage)
   else
   let id = parameter.id in
@@ -776,7 +776,7 @@ let update_owner (parameter, storage: update_owner * storage) =
   ([]: operation list), {storage with identities = updated_identities}
 
 let update_details (parameter, storage: update_details * storage) =
-  if (amount <> 0mutez)
+  if (amount <> 0mumav)
   then (failwith "Updating details doesn't cost anything.": (operation list) * storage)
   else
   let id = parameter.id in
@@ -1634,9 +1634,9 @@ let main (action, store : parameter * storage) : return =
     | Increment n -> store + n
     | Decrement n -> store - n
   in ([] : operation list), store
-let add_tez : tez = 21mutez + 0.000_021tez
+let add_tez : tez = 21mumav + 0.000_021tez
 let sub_tez : tez = 0.000021tez - 0.000_020tez
-let not_enough_tez : tez = 461_168_601_842_738_7903mutez
+let not_enough_tez : tez = 461_168_601_842_738_7903mumav
 
 let add_more_tez : tez =
   100tez + 10tez + 1tez + 0.1tez + 0.01tez + 0.001tez
@@ -1663,7 +1663,7 @@ type storage =
 
 let main (arg : parameter * storage) : operation list * storage =
   begin
-    assert (Tezos.get_amount () = 0mutez);
+    assert (Tezos.get_amount () = 0mumav);
     let (p,s) = arg in
     match p with
     | Burn ticket ->
@@ -1676,7 +1676,7 @@ let main (arg : parameter * storage) : operation list * storage =
       begin
         assert (Tezos.get_sender () = s.admin);
         let ticket = Tezos.create_ticket () mint.amount in
-        let op = Tezos.transaction ticket 0mutez mint.destination in
+        let op = Tezos.transaction ticket 0mumav mint.destination in
         ([op], s)
       end
   end
@@ -1705,7 +1705,7 @@ type storage =
 
 let main (arg : parameter * storage) : operation list * storage =
   begin
-    assert (Tezos.get_amount () = 0mutez);
+    assert (Tezos.get_amount () = 0mumav);
     let (p,storage) = arg in
     let {manager = manager ; tickets = tickets } = storage in
     ( match p with
@@ -1741,7 +1741,7 @@ let main (arg : parameter * storage) : operation list * storage =
               | Some split_tickets ->
                 let (send_ticket,keep_ticket) = split_tickets in
                 let (_, tickets) = Big_map.get_and_update send.ticketer (Some keep_ticket) tickets in
-                let op = Tezos.transaction send_ticket 0mutez send.destination in
+                let op = Tezos.transaction send_ticket 0mumav send.destination in
                 ([op], {manager = manager; tickets = tickets})
             )
         )

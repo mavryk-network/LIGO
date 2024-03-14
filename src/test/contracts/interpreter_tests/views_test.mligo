@@ -3,8 +3,8 @@ let test =
   let _baker = Test.nth_bootstrap_account 0 in
   let _src = Test.nth_bootstrap_account 1 in
   let init_storage = 0 in
-  let {addr = addr_v ; code = _ ; size = _} = Test.originate (contract_of CUT.Main_with_view) init_storage 0mutez in
-  let {addr = addr_c ; code = _ ; size = _} = Test.originate (contract_of CUT.Caller) init_storage 0mutez in
+  let {addr = addr_v ; code = _ ; size = _} = Test.originate (contract_of CUT.Main_with_view) init_storage 0mumav in
+  let {addr = addr_c ; code = _ ; size = _} = Test.originate (contract_of CUT.Caller) init_storage 0mumav in
   let tx =
     Test.transfer
       addr_c

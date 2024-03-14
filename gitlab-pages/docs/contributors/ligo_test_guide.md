@@ -108,26 +108,26 @@ We can see in more complex tests that we are able to pull the values of arbitrar
         expect_eq_evaluate program "lst" (e_list [])
       in
       let%bind () =
-        expect_eq_evaluate program "address" (e_address "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx")
+        expect_eq_evaluate program "address" (e_address "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE")
       in
       let%bind () =
-        expect_eq_evaluate program "address_2" (e_address "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx")
+        expect_eq_evaluate program "address_2" (e_address "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE")
       in
       ok ()
 
 #### annotation.ligo
     const lst : list(int) = list [] ;
 
-    const address : address = "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" ;
+    const address : address = "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" ;
 
-    const address_2 : address = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address) ;
+    const address_2 : address = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address) ;
 
 What is going on is similar to the last program: `expect_eq_evaluate`
 runs a program and then pulls a particular named value from the final
 program state.
 
 For example, once the program stops running the value of `address` is
-`"tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx"`. The *comparison*, however,
+`"mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE"`. The *comparison*, however,
 is made to a constructed expression.
 
 Remember that we are testing from OCaml, but the program is written

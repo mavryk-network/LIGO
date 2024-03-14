@@ -125,7 +125,7 @@ let e__type_ ~loc p : expression = make_e ~loc @@ E_literal (Literal__type_ p)
     _type_
     , ( "int"
       , "nat"
-      , "mutez"
+      , "mumav"
       , "string"
       , "bytes"
       , "timestamp"

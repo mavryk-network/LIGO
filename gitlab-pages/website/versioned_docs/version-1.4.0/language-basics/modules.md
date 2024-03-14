@@ -425,7 +425,7 @@ let test =
 ```jsligo group=contract
 const test = do {
   let orig = Test.originate(contract_of(C), 0, 0tez);
-  Test.transfer_exn(orig.addr, (Increment (42)), 1mutez);
+  Test.transfer_exn(orig.addr, (Increment (42)), 1mumav);
   return assert(Test.get_storage(orig.addr) == 42);
 };
 ```

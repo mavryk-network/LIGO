@@ -55,8 +55,8 @@ Create a non-empty map.
 ```cameligo group=maps
 let moves : register =
   Map.literal [
-    (("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address), (1,2));
-    (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address), (0,3))]
+    (("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address), (1,2));
+    (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address), (0,3))]
 ```
 
 </Syntax>
@@ -66,8 +66,8 @@ let moves : register =
 ```jsligo group=maps
 let moves: register =
   Map.literal(list([
-    [("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address), [1, 2]],
-    [("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), [0, 3]]]));
+    [("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address), [1, 2]],
+    [("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address), [0, 3]]]));
 ```
 
 </Syntax>
@@ -87,7 +87,7 @@ Retrieve a (option) value from a map with the given key. Returns
 
 ```cameligo group=maps
 let my_balance : move option =
-  Map.find_opt ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) moves
+  Map.find_opt ("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address) moves
 ```
 
 </Syntax>
@@ -96,7 +96,7 @@ let my_balance : move option =
 
 ```jsligo group=maps
 let my_balance: option<move> =
-  Map.find_opt(("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), moves);
+  Map.find_opt(("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address), moves);
 ```
 
 </Syntax>
@@ -117,7 +117,7 @@ removed from the map.
 ```cameligo group=maps
 let updated_map : register =
   Map.update
-    ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) (Some (4,9)) moves
+    ("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address) (Some (4,9)) moves
 ```
 
 </Syntax>
@@ -127,7 +127,7 @@ let updated_map : register =
 ```jsligo group=maps
 let updated_map : register =
   Map.update
-    (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), Some ([4, 9]), moves);
+    (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address), Some ([4, 9]), moves);
 ```
 
 </Syntax>
@@ -147,7 +147,7 @@ stored in the map.
 
 ```cameligo group=maps
 let (old_move_opt, updated_map) : move option * register =
-  Map.get_and_update ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) (Some (4, 9)) moves
+  Map.get_and_update ("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address) (Some (4, 9)) moves
 ```
 
 </Syntax>
@@ -156,7 +156,7 @@ let (old_move_opt, updated_map) : move option * register =
 
 ```jsligo group=maps
 let [old_move, updated_map2] : [option<move>, register] =
-  Map.get_and_update (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), (Some([24, 48] as move)), moves);
+  Map.get_and_update (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address), (Some([24, 48] as move)), moves);
 ```
 
 </Syntax>
@@ -176,7 +176,7 @@ Returns a new map with key-value pair added to the input map.
 ```cameligo group=maps
 let add (m : register) : register =
   Map.add
-    ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) (4,9) m
+    ("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address) (4,9) m
 ```
 
 </Syntax>
@@ -186,7 +186,7 @@ let add (m : register) : register =
 ```jsligo group=maps
 let add = (m: register): register =>
   Map.add
-    (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), [4, 9], m);
+    (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address), [4, 9], m);
 ```
 
 </Syntax>
@@ -205,7 +205,7 @@ Returns a new map with key-value pair removed from the input map.
 
 ```cameligo group=maps
 let updated_map : register =
-  Map.remove ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN": address) moves
+  Map.remove ("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k": address) moves
 ```
 
 </Syntax>
@@ -214,7 +214,7 @@ let updated_map : register =
 
 ```jsligo group=maps
 let updated_map3 : register =
-  Map.remove (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), moves);
+  Map.remove (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address), moves);
 ```
 
 </Syntax>
@@ -351,7 +351,7 @@ Checks if a key exists in the map:
 <Syntax syntax="cameligo">
 
 ```cameligo group=maps
-let found : bool = Map.mem ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address)  moves
+let found : bool = Map.mem ("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address)  moves
 ```
 
 </Syntax>
@@ -359,7 +359,7 @@ let found : bool = Map.mem ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address)  m
 <Syntax syntax="jsligo">
 
 ```jsligo group=maps
-let found : bool = Map.mem (("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address),  moves);
+let found : bool = Map.mem (("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address),  moves);
 ```
 
 </Syntax>

@@ -63,7 +63,7 @@ let rec value_gen
   let open Ast_aggregated in
   let open LC in
   let addresses =
-    [ Michelson_to_value.contract_of_string ~raise "tz1fakefakefakefakefakefakefakcphLA5"
+    [ Michelson_to_value.contract_of_string ~raise "mv2fakefakefakefakefakefakefak82z7t2"
     ]
     @
     match known_addresses with
@@ -95,7 +95,7 @@ let rec value_gen
   else if is_t_tez type_expr
   then
     QCheck.Gen.(
-      (if small then small_nat else nat) >>= fun n -> return (v_mutez (Z.of_int n)))
+      (if small then small_nat else nat) >>= fun n -> return (v_mumav (Z.of_int n)))
   else if is_t_list type_expr
   then (
     match get_t_list type_expr with

@@ -162,7 +162,7 @@ type string_literal   = lexeme wrap
 type int_literal      = (lexeme * Z.t) wrap
 type nat_literal      = int_literal
 type bytes_literal    = (lexeme * Hex.t) wrap
-type mutez_literal    = (lexeme * Int64.t) wrap
+type mumav_literal    = (lexeme * Int64.t) wrap
 type verbatim_literal = lexeme wrap
 
 (* Parentheses *)
@@ -490,7 +490,7 @@ and pattern =
 | P_Ctor     of pattern ctor_call reg    (*   C(x,y=_) *)
 | P_Int      of int_literal              (*         42 *)
 | P_ModPath  of pattern module_path reg  (*      m.n.x *)
-| P_Mutez    of mutez_literal            (*     5mutez *)
+| P_Mumav    of mumav_literal            (*     5mumav *)
 | P_Nat      of nat_literal              (*         4n *)
 | P_Par      of pattern par reg          (*    (`C, 4) *)
 | P_String   of string_literal           (*   "string" *)
@@ -612,7 +612,7 @@ and expr =
 | E_Mod        of percent bin_op reg    (* x % n                *)
 | E_ModPath    of expr module_path reg  (* m.n.x                *)
 | E_Mult       of times bin_op reg      (* x * y                *)
-| E_Mutez      of mutez_literal         (* 5mutez               *)
+| E_Mumav      of mumav_literal         (* 5mumav               *)
 | E_Nat        of nat_literal           (* 4n                   *)
 | E_Neg        of minus un_op reg       (* -a                   *)
 | E_Neq        of ne bin_op reg         (* x != y               *)
@@ -862,7 +862,7 @@ let rec expr_to_region = function
 | E_Mod        {region; _}
 | E_ModPath    {region; _}
 | E_Mult       {region; _} -> region
-| E_Mutez      t -> t#region
+| E_Mumav      t -> t#region
 | E_Nat        t -> t#region
 | E_Neg        {region; _}
 | E_Neq        {region; _}
@@ -892,7 +892,7 @@ let rec pattern_to_region = function
 | P_Ctor     {region; _} -> region
 | P_Int      t -> t#region
 | P_ModPath  {region; _} -> region
-| P_Mutez    t -> t#region
+| P_Mumav    t -> t#region
 | P_Nat      t -> t#region
 | P_Par      {region; _} -> region
 | P_String   t -> t#region

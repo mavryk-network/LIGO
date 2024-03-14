@@ -8,4 +8,4 @@ type return = operation list * storage
 let main (_ : parameter) (store : storage) : return = [], store
 
 [@view]
-let v (_ : int) (_ : storage) : tez = 1000000mutez
+let v (_ : int) (_ : storage) : tez = 1000000mumav

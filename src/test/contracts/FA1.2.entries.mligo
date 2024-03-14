@@ -105,7 +105,7 @@ let getAllowance (param : getAllowance) (storage : storage) : operation list * s
     match Big_map.find_opt param.request storage.allowances with
     | Some value -> value
     | None -> 0n in
-  [Tezos.transaction value 0mutez param.callback], storage
+  [Tezos.transaction value 0mumav param.callback], storage
 
 [@entry]
 let getBalance (param : getBalance) (storage : storage) : operation list * storage =
@@ -113,12 +113,12 @@ let getBalance (param : getBalance) (storage : storage) : operation list * stora
     match Big_map.find_opt param.owner storage.tokens with
     | Some value -> value
     | None -> 0n in
-  [Tezos.transaction value 0mutez param.callback], storage
+  [Tezos.transaction value 0mumav param.callback], storage
 
 [@entry]
 let getTotalSupply (param : getTotalSupply) (storage : storage) : operation list * storage =
   let total = storage.total_supply in
-  [Tezos.transaction total 0mutez param.callback],storage
+  [Tezos.transaction total 0mumav param.callback],storage
 
 (* These are helpers written for testing *)
 

@@ -7,7 +7,7 @@ module TacoShop = struct
 
   type taco_shop_storage = (nat, taco_supply) map
 
-  let ownerAddress : address = ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV" : address)
+  let ownerAddress : address = ("mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ" : address)
 
   [@entry]
   let buy_taco (taco_kind_index : nat) (taco_shop_storage : taco_shop_storage)
@@ -53,11 +53,11 @@ let default_storage : TacoShop.taco_shop_storage =
       (1n,
        {
         current_stock = 50n;
-        max_price = 50000000mutez
+        max_price = 50000000mumav
        });
       (2n,
        {
         current_stock = 20n;
-        max_price = 75000000mutez
+        max_price = 75000000mumav
        })
     ]

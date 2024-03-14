@@ -64,8 +64,8 @@ let print_variable = function
 let print_bytes (node : (lexeme * Hex.t) wrap) =
   string ("0x" ^ Hex.show (snd node#payload))
 
-let print_mutez (node : (lexeme * Int64.t) wrap) =
-  Int64.to_string (snd node#payload) ^ "mutez" |> string
+let print_mumav (node : (lexeme * Int64.t) wrap) =
+  Int64.to_string (snd node#payload) ^ "mumav" |> string
 
 let print_string (node : lexeme wrap) = dquotes (token node)
 
@@ -712,7 +712,7 @@ and print_pattern (node : pattern) =
   | P_Int      p -> print_P_Int     p
   | P_List     p -> print_P_List    p
   | P_ModPath  p -> print_P_ModPath p
-  | P_Mutez    p -> print_P_Mutez   p
+  | P_Mumav    p -> print_P_Mumav   p
   | P_Nat      p -> print_P_Nat     p
   | P_Nil      p -> print_P_Nil     p
   | P_Par      p -> print_P_Par     p
@@ -781,9 +781,9 @@ and print_P_List (node : pattern compound reg) =
 and print_P_ModPath (node : pattern module_path reg) =
   print_module_path print_pattern node
 
-(* Mutez in patterns *)
+(* Mumav in patterns *)
 
-and print_P_Mutez (node : (lexeme * Int64.t) wrap) = print_mutez node
+and print_P_Mumav (node : (lexeme * Int64.t) wrap) = print_mumav node
 
 (* Natural numbers in patterns *)
 
@@ -879,7 +879,7 @@ and print_expr (node : expr) =
   | E_MapLookup e -> print_E_MapLookup e
   | E_Mod       e -> print_E_Mod       e
   | E_Mult      e -> print_E_Mult      e
-  | E_Mutez     e -> print_E_Mutez     e
+  | E_Mumav     e -> print_E_Mumav     e
   | E_Nat       e -> print_E_Nat       e
   | E_Neg       e -> print_E_Neg       e
   | E_Nil       e -> print_E_Nil       e
@@ -1074,9 +1074,9 @@ and print_E_ModPath (node : expr module_path reg) =
 
 and print_E_Mult (node : times bin_op reg) = print_bin_op node
 
-(* Mutez as an expression *)
+(* Mumav as an expression *)
 
-and print_E_Mutez (node : (lexeme * Int64.t) wrap) = print_mutez node
+and print_E_Mumav (node : (lexeme * Int64.t) wrap) = print_mumav node
 
 (* Natural numbers in expressions *)
 

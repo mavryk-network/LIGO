@@ -12,5 +12,5 @@ let get_add_entrypoint (addr : address) =
 [@entry]
 let main (param : parameter) (callee_addr : storage) =
   let add : int contract = get_add_entrypoint (callee_addr) in
-  let op = Tezos.transaction param 0mutez add in
+  let op = Tezos.transaction param 0mumav add in
   [op], callee_addr

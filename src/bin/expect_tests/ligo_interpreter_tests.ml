@@ -818,7 +818,7 @@ let%expect_test _ =
 
     File "./test_timestamp_contract.mligo", line 14, characters 13-27:
      13 |
-     14 |   let orig = Test.originate (contract_of C) init_storage 0mutez in
+     14 |   let orig = Test.originate (contract_of C) init_storage 0mumav in
                        ^^^^^^^^^^^^^^
      15 |   let contr = Test.to_contract orig.addr in
     :
@@ -826,7 +826,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_timestamp_contract.mligo", line 15, characters 14-30:
-     14 |   let orig = Test.originate (contract_of C) init_storage 0mutez in
+     14 |   let orig = Test.originate (contract_of C) init_storage 0mumav in
      15 |   let contr = Test.to_contract orig.addr in
                         ^^^^^^^^^^^^^^^^
      16 |   let addr = Tezos.address contr in
@@ -951,7 +951,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.run` from `Test.Next` is encouraged for a smoother migration.
 
     File "./interpret_test.mligo", line 437, characters 19-28:
-    436 |   let key_hash = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : key_hash) in
+    436 |   let key_hash = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : key_hash) in
     437 |   let () = assert (Test.eval (Crypto.hash_key key) = Test.run (fun (k : key) -> Crypto.hash_key k) key) in
                              ^^^^^^^^^
     438 |   assert (Crypto.hash_key key = key_hash)
@@ -960,7 +960,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.eval` from `Test.Next` is encouraged for a smoother migration.
 
     File "./interpret_test.mligo", line 437, characters 53-61:
-    436 |   let key_hash = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : key_hash) in
+    436 |   let key_hash = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : key_hash) in
     437 |   let () = assert (Test.eval (Crypto.hash_key key) = Test.run (fun (k : key) -> Crypto.hash_key k) key) in
                                                                ^^^^^^^^
     438 |   assert (Crypto.hash_key key = key_hash)
@@ -1112,9 +1112,9 @@ let%expect_test _ =
     - test_set_update exited with value ().
     - test_map_get_and_update exited with value ().
     - test_big_map_get_and_update exited with value ().
-    - test_add_mutez exited with value ().
-    - test_sub_mutez exited with value ().
-    - test_div_mutez exited with value ().
+    - test_add_mumav exited with value ().
+    - test_sub_mumav exited with value ().
+    - test_div_mumav exited with value ().
     - test_sub_timestamp exited with value ().
     - test_list_fold_left_sum exited with value ().
     - test_bytes_sub exited with value ().
@@ -1179,16 +1179,16 @@ let%expect_test _ =
 
     File "./views_test.mligo", line 6, characters 46-60:
       5 |   let init_storage = 0 in
-      6 |   let {addr = addr_v ; code = _ ; size = _} = Test.originate (contract_of CUT.Main_with_view) init_storage 0mutez in
+      6 |   let {addr = addr_v ; code = _ ; size = _} = Test.originate (contract_of CUT.Main_with_view) init_storage 0mumav in
                                                         ^^^^^^^^^^^^^^
-      7 |   let {addr = addr_c ; code = _ ; size = _} = Test.originate (contract_of CUT.Caller) init_storage 0mutez in
+      7 |   let {addr = addr_c ; code = _ ; size = _} = Test.originate (contract_of CUT.Caller) init_storage 0mumav in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "./views_test.mligo", line 7, characters 46-60:
-      6 |   let {addr = addr_v ; code = _ ; size = _} = Test.originate (contract_of CUT.Main_with_view) init_storage 0mutez in
-      7 |   let {addr = addr_c ; code = _ ; size = _} = Test.originate (contract_of CUT.Caller) init_storage 0mutez in
+      6 |   let {addr = addr_v ; code = _ ; size = _} = Test.originate (contract_of CUT.Main_with_view) init_storage 0mumav in
+      7 |   let {addr = addr_c ; code = _ ; size = _} = Test.originate (contract_of CUT.Caller) init_storage 0mumav in
                                                         ^^^^^^^^^^^^^^
       8 |   let tx =
     :
@@ -1720,7 +1720,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.eval` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_example.mligo", line 51, characters 11-27:
-     50 |   let overide_default_amounts = [ 8000tez ; 2mutez ] in // the [i]th element of the list overwrite default balance of the [i]th account
+     50 |   let overide_default_amounts = [ 8000tez ; 2mumav ] in // the [i]th element of the list overwrite default balance of the [i]th account
      51 |   let () = Test.reset_state number_of_account overide_default_amounts in
                      ^^^^^^^^^^^^^^^^
      52 |   // And by setting the source in between calls to `Test.transfer_to_contract` or `Test.originate`
@@ -1784,7 +1784,7 @@ let%expect_test _ =
 
     File "./test_example.mligo", line 61, characters 4-12:
      60 |   let tz = fun (n:nat) ->
-     61 |     Test.run (fun (x : unit -> nat) -> x () * 1mutez) (fun (_ : unit) -> n)
+     61 |     Test.run (fun (x : unit -> nat) -> x () * 1mumav) (fun (_ : unit) -> n)
               ^^^^^^^^
      62 |   in
     :
@@ -1795,7 +1795,7 @@ let%expect_test _ =
      62 |   in
      63 |   let () = Test.assert ((Test.get_balance_of_address bsa0) = 2000tez) in
                      ^^^^^^^^^^^
-     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mutez) in
+     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Assert.assert` from `Test.Next` is encouraged for a smoother migration.
@@ -1804,14 +1804,14 @@ let%expect_test _ =
      62 |   in
      63 |   let () = Test.assert ((Test.get_balance_of_address bsa0) = 2000tez) in
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mutez) in
+     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Address.get_balance` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_example.mligo", line 64, characters 11-22:
      63 |   let () = Test.assert ((Test.get_balance_of_address bsa0) = 2000tez) in
-     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mutez) in
+     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
                      ^^^^^^^^^^^
      65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
     :
@@ -1820,7 +1820,7 @@ let%expect_test _ =
 
     File "./test_example.mligo", line 64, characters 25-52:
      63 |   let () = Test.assert ((Test.get_balance_of_address bsa0) = 2000tez) in
-     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mutez) in
+     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
      65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
     :
@@ -1828,7 +1828,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Address.get_balance` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_example.mligo", line 65, characters 11-22:
-     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mutez) in
+     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
      65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
                      ^^^^^^^^^^^
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000tez) in
@@ -1837,7 +1837,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Assert.assert` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_example.mligo", line 65, characters 24-44:
-     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mutez) in
+     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
      65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
                                   ^^^^^^^^^^^^^^^^^^^^
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000tez) in
@@ -1846,7 +1846,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Compare.eq` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_example.mligo", line 65, characters 46-55:
-     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mutez) in
+     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
      65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
                                                         ^^^^^^^^^
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000tez) in
@@ -1855,7 +1855,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.eval` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_example.mligo", line 65, characters 57-84:
-     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mutez) in
+     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
      65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000tez) in
@@ -1867,7 +1867,7 @@ let%expect_test _ =
      65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000tez) in
                      ^^^^^^^^^^^
-     67 |   let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mutez) in
+     67 |   let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mumav) in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Assert.assert` from `Test.Next` is encouraged for a smoother migration.
@@ -1876,14 +1876,14 @@ let%expect_test _ =
      65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000tez) in
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     67 |   let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mutez) in
+     67 |   let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mumav) in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Address.get_balance` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_example.mligo", line 67, characters 11-22:
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000tez) in
-     67 |   let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mutez) in
+     67 |   let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mumav) in
                      ^^^^^^^^^^^
      68 |   ()
     :
@@ -1892,7 +1892,7 @@ let%expect_test _ =
 
     File "./test_example.mligo", line 67, characters 25-52:
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000tez) in
-     67 |   let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mutez) in
+     67 |   let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mumav) in
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
      68 |   ()
     :
@@ -2061,7 +2061,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.eval` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_example.mligo", line 51, characters 11-27:
-     50 |   let overide_default_amounts = [ 8000tez ; 2mutez ] in // the [i]th element of the list overwrite default balance of the [i]th account
+     50 |   let overide_default_amounts = [ 8000tez ; 2mumav ] in // the [i]th element of the list overwrite default balance of the [i]th account
      51 |   let () = Test.reset_state number_of_account overide_default_amounts in
                      ^^^^^^^^^^^^^^^^
      52 |   // And by setting the source in between calls to `Test.transfer_to_contract` or `Test.originate`
@@ -2125,7 +2125,7 @@ let%expect_test _ =
 
     File "./test_example.mligo", line 61, characters 4-12:
      60 |   let tz = fun (n:nat) ->
-     61 |     Test.run (fun (x : unit -> nat) -> x () * 1mutez) (fun (_ : unit) -> n)
+     61 |     Test.run (fun (x : unit -> nat) -> x () * 1mumav) (fun (_ : unit) -> n)
               ^^^^^^^^
      62 |   in
     :
@@ -2136,7 +2136,7 @@ let%expect_test _ =
      62 |   in
      63 |   let () = Test.assert ((Test.get_balance_of_address bsa0) = 2000tez) in
                      ^^^^^^^^^^^
-     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mutez) in
+     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Assert.assert` from `Test.Next` is encouraged for a smoother migration.
@@ -2145,14 +2145,14 @@ let%expect_test _ =
      62 |   in
      63 |   let () = Test.assert ((Test.get_balance_of_address bsa0) = 2000tez) in
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mutez) in
+     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Address.get_balance` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_example.mligo", line 64, characters 11-22:
      63 |   let () = Test.assert ((Test.get_balance_of_address bsa0) = 2000tez) in
-     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mutez) in
+     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
                      ^^^^^^^^^^^
      65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
     :
@@ -2161,7 +2161,7 @@ let%expect_test _ =
 
     File "./test_example.mligo", line 64, characters 25-52:
      63 |   let () = Test.assert ((Test.get_balance_of_address bsa0) = 2000tez) in
-     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mutez) in
+     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
      65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
     :
@@ -2169,7 +2169,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Address.get_balance` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_example.mligo", line 65, characters 11-22:
-     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mutez) in
+     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
      65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
                      ^^^^^^^^^^^
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000tez) in
@@ -2178,7 +2178,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Assert.assert` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_example.mligo", line 65, characters 24-44:
-     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mutez) in
+     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
      65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
                                   ^^^^^^^^^^^^^^^^^^^^
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000tez) in
@@ -2187,7 +2187,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Compare.eq` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_example.mligo", line 65, characters 46-55:
-     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mutez) in
+     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
      65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
                                                         ^^^^^^^^^
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000tez) in
@@ -2196,7 +2196,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.eval` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_example.mligo", line 65, characters 57-84:
-     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mutez) in
+     64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
      65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000tez) in
@@ -2208,7 +2208,7 @@ let%expect_test _ =
      65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000tez) in
                      ^^^^^^^^^^^
-     67 |   let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mutez) in
+     67 |   let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mumav) in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Assert.assert` from `Test.Next` is encouraged for a smoother migration.
@@ -2217,14 +2217,14 @@ let%expect_test _ =
      65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000tez) in
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     67 |   let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mutez) in
+     67 |   let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mumav) in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Address.get_balance` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_example.mligo", line 67, characters 11-22:
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000tez) in
-     67 |   let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mutez) in
+     67 |   let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mumav) in
                      ^^^^^^^^^^^
      68 |   ()
     :
@@ -2233,7 +2233,7 @@ let%expect_test _ =
 
     File "./test_example.mligo", line 67, characters 25-52:
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000tez) in
-     67 |   let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mutez) in
+     67 |   let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mumav) in
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
      68 |   ()
     :
@@ -2261,14 +2261,14 @@ let%expect_test _ =
       4 |   let orig = Test.originate (contract_of C) None 0tez in
       5 |   let contr = Test.to_contract orig.addr in
                         ^^^^^^^^^^^^^^^^
-      6 |   match Test.transfer_to_contract contr (Main Two) 1mutez with
+      6 |   match Test.transfer_to_contract contr (Main Two) 1mumav with
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.to_contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "./catch_balance_too_low.mligo", line 6, characters 8-33:
       5 |   let contr = Test.to_contract orig.addr in
-      6 |   match Test.transfer_to_contract contr (Main Two) 1mutez with
+      6 |   match Test.transfer_to_contract contr (Main Two) 1mumav with
                   ^^^^^^^^^^^^^^^^^^^^^^^^^
       7 |   (* TODO this is a bug :( *)
     :
@@ -2670,14 +2670,14 @@ let%expect_test _ =
      11 |     let orig = Test.originate (contract_of C) initial_storage 0tez in
      12 |     let () = Test.set_source a1 in
                        ^^^^^^^^^^^^^^^
-     13 |     let _ = Test.transfer_exn orig.addr (Main (a1, 1234n)) 1mutez in
+     13 |     let _ = Test.transfer_exn orig.addr (Main (a1, 1234n)) 1mumav in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `State.set_source` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_bigmap_compare.mligo", line 13, characters 12-29:
      12 |     let () = Test.set_source a1 in
-     13 |     let _ = Test.transfer_exn orig.addr (Main (a1, 1234n)) 1mutez in
+     13 |     let _ = Test.transfer_exn orig.addr (Main (a1, 1234n)) 1mumav in
                       ^^^^^^^^^^^^^^^^^
      14 |     let ns = Test.get_storage orig.addr in
     :
@@ -2685,7 +2685,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.transfer_exn` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_bigmap_compare.mligo", line 14, characters 13-29:
-     13 |     let _ = Test.transfer_exn orig.addr (Main (a1, 1234n)) 1mutez in
+     13 |     let _ = Test.transfer_exn orig.addr (Main (a1, 1234n)) 1mumav in
      14 |     let ns = Test.get_storage orig.addr in
                        ^^^^^^^^^^^^^^^^
      15 |     let () = assert (ns = Big_map.literal [((a1, 0n), 42n); ((a1, 1n), 1234n)]) in
@@ -2695,7 +2695,7 @@ let%expect_test _ =
 
     File "./test_bigmap_compare.mligo", line 17, characters 12-29:
      16 |     let () = assert (Big_map.find_opt (a1, 1n) ns = Some 1234n) in
-     17 |     let _ = Test.transfer_exn orig.addr (Main (a1, 4321n)) 1mutez in
+     17 |     let _ = Test.transfer_exn orig.addr (Main (a1, 4321n)) 1mumav in
                       ^^^^^^^^^^^^^^^^^
      18 |     let () = assert (ns = Big_map.literal [((a1, 0n), 42n); ((a1, 1n), 1234n)]) in
     :
@@ -2862,14 +2862,14 @@ let%expect_test _ =
      27 |   let initial_storage = 7 in
      28 |   let orig = Test.originate contract initial_storage 0tez in
                        ^^^^^^^^^^^^^^
-     29 |   let _ = Test.transfer_exn orig.addr (Main (Increment (7)) : C parameter_of) 1mutez in
+     29 |   let _ = Test.transfer_exn orig.addr (Main (Increment (7)) : C parameter_of) 1mumav in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_no_mutation.mligo", line 29, characters 10-27:
      28 |   let orig = Test.originate contract initial_storage 0tez in
-     29 |   let _ = Test.transfer_exn orig.addr (Main (Increment (7)) : C parameter_of) 1mutez in
+     29 |   let _ = Test.transfer_exn orig.addr (Main (Increment (7)) : C parameter_of) 1mumav in
                     ^^^^^^^^^^^^^^^^^
      30 |   Test.assert (Test.get_storage orig.addr = initial_storage + 7)
     :
@@ -2877,7 +2877,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.transfer_exn` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_no_mutation.mligo", line 30, characters 2-13:
-     29 |   let _ = Test.transfer_exn orig.addr (Main (Increment (7)) : C parameter_of) 1mutez in
+     29 |   let _ = Test.transfer_exn orig.addr (Main (Increment (7)) : C parameter_of) 1mumav in
      30 |   Test.assert (Test.get_storage orig.addr = initial_storage + 7)
             ^^^^^^^^^^^
      31 |
@@ -2886,7 +2886,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Assert.assert` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_no_mutation.mligo", line 30, characters 15-31:
-     29 |   let _ = Test.transfer_exn orig.addr (Main (Increment (7)) : C parameter_of) 1mutez in
+     29 |   let _ = Test.transfer_exn orig.addr (Main (Increment (7)) : C parameter_of) 1mumav in
      30 |   Test.assert (Test.get_storage orig.addr = initial_storage + 7)
                          ^^^^^^^^^^^^^^^^
      31 |
@@ -4282,7 +4282,7 @@ let%expect_test _ =
       4 |     let a : address = Tezos.address(c);
       5 |     Test.log(Test.get_balance_of_address(a));
               ^^^^^^^^
-      6 |     Test.transfer_to_contract_exn(c, unit, (123 as mutez));
+      6 |     Test.transfer_to_contract_exn(c, unit, (123 as mumav));
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `IO.log` from `Test.Next` is encouraged for a smoother migration.
@@ -4291,14 +4291,14 @@ let%expect_test _ =
       4 |     let a : address = Tezos.address(c);
       5 |     Test.log(Test.get_balance_of_address(a));
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      6 |     Test.transfer_to_contract_exn(c, unit, (123 as mutez));
+      6 |     Test.transfer_to_contract_exn(c, unit, (123 as mumav));
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Address.get_balance` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_implicit_account.jsligo", line 6, characters 4-33:
       5 |     Test.log(Test.get_balance_of_address(a));
-      6 |     Test.transfer_to_contract_exn(c, unit, (123 as mutez));
+      6 |     Test.transfer_to_contract_exn(c, unit, (123 as mumav));
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       7 |     Test.log(Test.get_balance_of_address(a));
     :
@@ -4306,7 +4306,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Contract.transfer_exn` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_implicit_account.jsligo", line 7, characters 4-12:
-      6 |     Test.transfer_to_contract_exn(c, unit, (123 as mutez));
+      6 |     Test.transfer_to_contract_exn(c, unit, (123 as mumav));
       7 |     Test.log(Test.get_balance_of_address(a));
               ^^^^^^^^
       8 |     return list([Tezos.address(c) , ...accList]);
@@ -4315,7 +4315,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `IO.log` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_implicit_account.jsligo", line 7, characters 13-40:
-      6 |     Test.transfer_to_contract_exn(c, unit, (123 as mutez));
+      6 |     Test.transfer_to_contract_exn(c, unit, (123 as mumav));
       7 |     Test.log(Test.get_balance_of_address(a));
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
       8 |     return list([Tezos.address(c) , ...accList]);
@@ -4323,10 +4323,10 @@ let%expect_test _ =
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Address.get_balance` from `Test.Next` is encouraged for a smoother migration.
 
-    0mutez
-    123mutez
+    0mumav
+    123mumav
     Everything at the top-level was executed.
-    - test_addresses exited with value [tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx]. |}]
+    - test_addresses exited with value [mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE]. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_accounts.mligo" ];
@@ -4457,8 +4457,8 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Address.get_balance` from `Test.Next` is encouraged for a smoother migration.
 
     Everything at the top-level was executed.
-    - test_new exited with value 110000000mutez.
-    - test_add exited with value 110000000mutez. |}]
+    - test_new exited with value 110000000mumav.
+    - test_add exited with value 110000000mumav. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_baker_account.mligo" ];
@@ -4663,13 +4663,13 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `State.get_voting_power` from `Test.Next` is encouraged for a smoother migration.
 
     "STARTING BALANCE AND VOTING POWER"
-    3800000000000mutez
+    3800000000000mumav
     4000000000000n
     "BALANCE AND VOTING POWER AFTER ORIGINATE"
-    3800005749999mutez
+    3800005749999mumav
     4000000000000n
     "BALANCE AND VOTING POWER AFTER TRANSFER"
-    3800011499998mutez
+    3800011499998mumav
     4000000000000n
     Everything at the top-level was executed.
     - test exited with value (). |}]
@@ -4877,13 +4877,13 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `State.get_voting_power` from `Test.Next` is encouraged for a smoother migration.
 
     "STARTING BALANCE AND VOTING POWER"
-    950000000000mutez
+    950000000000mumav
     0n
     "BALANCE AND VOTING POWER AFTER ORIGINATE"
-    950005749999mutez
+    950005749999mumav
     0n
     "BALANCE AND VOTING POWER AFTER TRANSFER"
-    950011499998mutez
+    950011499998mumav
     0n
     Everything at the top-level was executed.
     - test exited with value (). |}]
@@ -5509,13 +5509,13 @@ let%expect_test _ =
     0
     0
     "test_move:"
-    3800000000000mutez
-    3800100000000mutez
-    3800000000000mutez
+    3800000000000mumav
+    3800100000000mumav
+    3800000000000mumav
     "test_drop:"
-    3800000000000mutez
-    3800100000000mutez
-    3800100000000mutez
+    3800000000000mumav
+    3800100000000mumav
+    3800100000000mumav
     Everything at the top-level was executed.
     - test_contract exited with value ().
     - test_move exited with value ().
@@ -5525,10 +5525,10 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_error_balance.jsligo"; "--no-warn" ];
   [%expect
     {|
-    100000000000000mutez
-    3799997904750mutez
+    100000000000000mumav
+    3799997904750mumav
     Everything at the top-level was executed.
-    - test exited with value {contract_balance = 3799997904750mutez ; contract_too_low = tz1hkMbkLPkvhxyqsQoBoLPqb1mruSzZx3zy ; spend_request = 100000000000000mutez}. |}]
+    - test exited with value {contract_balance = 3799997904750mumav ; contract_too_low = mv18ErsJdrj7kfYfo39Qtt8Bf84vCzn5dvTh ; spend_request = 100000000000000mumav}. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_inline.mligo" ];
@@ -5536,7 +5536,7 @@ let%expect_test _ =
     {|
     File "./test_inline.mligo", line 32, characters 13-27:
      31 |
-     32 | let test_x = Test.originate (contract_of C) C.init_storage 0mutez
+     32 | let test_x = Test.originate (contract_of C) C.init_storage 0mumav
                        ^^^^^^^^^^^^^^
     :
     Warning: deprecated value.
@@ -5743,8 +5743,8 @@ let%expect_test _ =
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Address.get_balance` from `Test.Next` is encouraged for a smoother migration.
 
-    (tz1MBWU1WkszFfkEER2pgn4ATKXE9ng7x1sR , edpkusHqa6fxkGPPL9YpgbcakvSTvcTBcwnLAmCdcevmws4Mh2MdHB , "edsk41aRaPPBpidY7w5xu54edk76uJJtJ6myTwYDEWhAwNHce9gKNo")
-    3800000000000mutez
+    (mv1Kg6sCV1QG3ciBrnpzTD8UiMqznANkrc52 , edpkusHqa6fxkGPPL9YpgbcakvSTvcTBcwnLAmCdcevmws4Mh2MdHB , "edsk41aRaPPBpidY7w5xu54edk76uJJtJ6myTwYDEWhAwNHce9gKNo")
+    3800000000000mumav
     Everything at the top-level was executed.
     - test exited with value (). |}]
 
@@ -6170,14 +6170,14 @@ let%expect_test _ =
      15 | let test =
      16 |   let (_, pub_key, _) = Test.get_bootstrap_account 1n in
                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
-     17 |   let orig = Test.originate (contract_of C) {registry = Big_map.empty; next_id = 1n} 0mutez in
+     17 |   let orig = Test.originate (contract_of C) {registry = Big_map.empty; next_id = 1n} 0mumav in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Account.info` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_key.mligo", line 17, characters 13-27:
      16 |   let (_, pub_key, _) = Test.get_bootstrap_account 1n in
-     17 |   let orig = Test.originate (contract_of C) {registry = Big_map.empty; next_id = 1n} 0mutez in
+     17 |   let orig = Test.originate (contract_of C) {registry = Big_map.empty; next_id = 1n} 0mumav in
                        ^^^^^^^^^^^^^^
      18 |   let () = Test.log pub_key in
     :
@@ -6185,17 +6185,17 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_key.mligo", line 18, characters 11-19:
-     17 |   let orig = Test.originate (contract_of C) {registry = Big_map.empty; next_id = 1n} 0mutez in
+     17 |   let orig = Test.originate (contract_of C) {registry = Big_map.empty; next_id = 1n} 0mumav in
      18 |   let () = Test.log pub_key in
                      ^^^^^^^^
-     19 |   Test.transfer orig.addr (Main pub_key) 0mutez
+     19 |   Test.transfer orig.addr (Main pub_key) 0mumav
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `IO.log` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_key.mligo", line 19, characters 2-15:
      18 |   let () = Test.log pub_key in
-     19 |   Test.transfer orig.addr (Main pub_key) 0mutez
+     19 |   Test.transfer orig.addr (Main pub_key) 0mumav
             ^^^^^^^^^^^^^
     :
     Warning: deprecated value.
@@ -6238,7 +6238,7 @@ let%expect_test _ =
 
     File "./test_tickets_and_bigmaps.mligo", line 52, characters 13-27:
      51 |
-     52 |   let orig = Test.originate (contract_of C) init_storage 0mutez in
+     52 |   let orig = Test.originate (contract_of C) init_storage 0mumav in
                        ^^^^^^^^^^^^^^
      53 |   let r = Test.transfer orig.addr (Main ()) 1tez in
     :
@@ -6246,7 +6246,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_tickets_and_bigmaps.mligo", line 53, characters 10-23:
-     52 |   let orig = Test.originate (contract_of C) init_storage 0mutez in
+     52 |   let orig = Test.originate (contract_of C) init_storage 0mumav in
      53 |   let r = Test.transfer orig.addr (Main ()) 1tez in
                     ^^^^^^^^^^^^^
      54 |   Test.log (r)
@@ -6402,7 +6402,7 @@ let%expect_test _ =
   [%expect
     {test|
     File "./test_compare_setmap.mligo", line 6, characters 23-37:
-      5 |  let s = Set.add ("tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ" : address) s in
+      5 |  let s = Set.add ("mv1Kft5rQoxA7vMpdcndHmzwwu6ZCUxNyYM9" : address) s in
       6 |  let s : address set = Test.decompile (Test.eval s) in
                                  ^^^^^^^^^^^^^^
       7 |  Test.eval s
@@ -6411,7 +6411,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.decompile` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_compare_setmap.mligo", line 6, characters 39-48:
-      5 |  let s = Set.add ("tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ" : address) s in
+      5 |  let s = Set.add ("mv1Kft5rQoxA7vMpdcndHmzwwu6ZCUxNyYM9" : address) s in
       6 |  let s : address set = Test.decompile (Test.eval s) in
                                                  ^^^^^^^^^
       7 |  Test.eval s
@@ -6456,7 +6456,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.eval` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_compare_setmap.mligo", line 20, characters 30-44:
-     19 |  let s = Map.add ("tz1KeYsjjSCLEELMuiq1oXzVZmuJrZ15W4mv" : address) 900 s in
+     19 |  let s = Map.add ("mv1Fb2ZfEd6WcEh7hg7S9JUTDJMtBAgnzLSt" : address) 900 s in
      20 |  let s : (address, int) map = Test.decompile (Test.eval s) in
                                         ^^^^^^^^^^^^^^
      21 |  Test.eval s
@@ -6465,7 +6465,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.decompile` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_compare_setmap.mligo", line 20, characters 46-55:
-     19 |  let s = Map.add ("tz1KeYsjjSCLEELMuiq1oXzVZmuJrZ15W4mv" : address) 900 s in
+     19 |  let s = Map.add ("mv1Fb2ZfEd6WcEh7hg7S9JUTDJMtBAgnzLSt" : address) 900 s in
      20 |  let s : (address, int) map = Test.decompile (Test.eval s) in
                                                         ^^^^^^^^^
      21 |  Test.eval s
@@ -6483,7 +6483,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.eval` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_compare_setmap.mligo", line 27, characters 34-48:
-     26 |  let s = Big_map.add ("tz1KeYsjjSCLEELMuiq1oXzVZmuJrZ15W4mv" : address) 900 s in
+     26 |  let s = Big_map.add ("mv1Fb2ZfEd6WcEh7hg7S9JUTDJMtBAgnzLSt" : address) 900 s in
      27 |  let s : (address, int) big_map = Test.decompile (Test.eval s) in
                                             ^^^^^^^^^^^^^^
      28 |  Test.eval s
@@ -6492,7 +6492,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.decompile` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_compare_setmap.mligo", line 27, characters 50-59:
-     26 |  let s = Big_map.add ("tz1KeYsjjSCLEELMuiq1oXzVZmuJrZ15W4mv" : address) 900 s in
+     26 |  let s = Big_map.add ("mv1Fb2ZfEd6WcEh7hg7S9JUTDJMtBAgnzLSt" : address) 900 s in
      27 |  let s : (address, int) big_map = Test.decompile (Test.eval s) in
                                                             ^^^^^^^^^
      28 |  Test.eval s
@@ -6509,12 +6509,12 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.eval` from `Test.Next` is encouraged for a smoother migration.
 
     Everything at the top-level was executed.
-    - test_address_set exited with value { "tz1KeYsjjSCLEELMuiq1oXzVZmuJrZ15W4mv" ;
-      "tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ" }.
+    - test_address_set exited with value { "mv1Fb2ZfEd6WcEh7hg7S9JUTDJMtBAgnzLSt" ;
+      "mv1Kft5rQoxA7vMpdcndHmzwwu6ZCUxNyYM9" }.
     - test_int_set exited with value { 3 ; 4 }.
-    - test_map exited with value { Elt "tz1KeYsjjSCLEELMuiq1oXzVZmuJrZ15W4mv" 900 ;
+    - test_map exited with value { Elt "mv1Fb2ZfEd6WcEh7hg7S9JUTDJMtBAgnzLSt" 900 ;
       Elt "KT1WoTZUkky48v3QqZWzkeJCYfhWhNaVFYuC" 100 }.
-    - test_big_map exited with value { Elt "tz1KeYsjjSCLEELMuiq1oXzVZmuJrZ15W4mv" 900 ;
+    - test_big_map exited with value { Elt "mv1Fb2ZfEd6WcEh7hg7S9JUTDJMtBAgnzLSt" 900 ;
       Elt "KT1WoTZUkky48v3QqZWzkeJCYfhWhNaVFYuC" 100 }. |test}]
 
 let%expect_test _ =
@@ -6717,7 +6717,7 @@ let%expect_test _ =
 
     File "./test_originate_module.jsligo", line 16, characters 2-31:
      15 |   let p : parameter_of C = Increment(1);
-     16 |   Test.transfer_to_contract_exn(contr, p, 1 as mutez);
+     16 |   Test.transfer_to_contract_exn(contr, p, 1 as mumav);
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      17 |   return assert(Test.get_storage(orig.addr) == initial_storage + 1);
     :
@@ -6725,7 +6725,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Contract.transfer_exn` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_originate_module.jsligo", line 17, characters 16-32:
-     16 |   Test.transfer_to_contract_exn(contr, p, 1 as mutez);
+     16 |   Test.transfer_to_contract_exn(contr, p, 1 as mumav);
      17 |   return assert(Test.get_storage(orig.addr) == initial_storage + 1);
                           ^^^^^^^^^^^^^^^^
      18 | }) ();
@@ -6787,7 +6787,7 @@ let%expect_test _ =
     {|
     File "./contract_with_ticket_param.mligo", line 12, characters 13-27:
      11 | let test_transfer_to_contract =
-     12 |   let orig = Test.originate (contract_of C) ("bye",Test.nth_bootstrap_account 1) 1mutez in
+     12 |   let orig = Test.originate (contract_of C) ("bye",Test.nth_bootstrap_account 1) 1mumav in
                        ^^^^^^^^^^^^^^
      13 |   let main_addr = Tezos.address (Test.to_contract orig.addr) in
     :
@@ -6796,7 +6796,7 @@ let%expect_test _ =
 
     File "./contract_with_ticket_param.mligo", line 12, characters 51-77:
      11 | let test_transfer_to_contract =
-     12 |   let orig = Test.originate (contract_of C) ("bye",Test.nth_bootstrap_account 1) 1mutez in
+     12 |   let orig = Test.originate (contract_of C) ("bye",Test.nth_bootstrap_account 1) 1mumav in
                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^
      13 |   let main_addr = Tezos.address (Test.to_contract orig.addr) in
     :
@@ -6804,7 +6804,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Account.address` from `Test.Next` is encouraged for a smoother migration.
 
     File "./contract_with_ticket_param.mligo", line 13, characters 33-49:
-     12 |   let orig = Test.originate (contract_of C) ("bye",Test.nth_bootstrap_account 1) 1mutez in
+     12 |   let orig = Test.originate (contract_of C) ("bye",Test.nth_bootstrap_account 1) 1mumav in
      13 |   let main_addr = Tezos.address (Test.to_contract orig.addr) in
                                            ^^^^^^^^^^^^^^^^
      14 |
@@ -7239,7 +7239,7 @@ let%expect_test _ =
     {|
     File "../../c/e/g/h/bar.jsligo", line 4, characters 45-69:
       3 | export const originate = () => {
-      4 |   const x : origination_result<unit, unit> = Test.originate_from_file(f, unit, 0mutez);
+      4 |   const x : origination_result<unit, unit> = Test.originate_from_file(f, unit, 0mumav);
                                                        ^^^^^^^^^^^^^^^^^^^^^^^^
       5 |   return x.addr
     :
@@ -7248,7 +7248,7 @@ let%expect_test _ =
 
     File "./test.jsligo", line 4, characters 10-34:
       3 | const _test_originate_from_file_relative_path = () : typed_address<unit, unit> => {
-      4 |   let x = Test.originate_from_file ("../../../src/contract/unit.mligo", unit, 0 as mutez);
+      4 |   let x = Test.originate_from_file ("../../../src/contract/unit.mligo", unit, 0 as mumav);
                     ^^^^^^^^^^^^^^^^^^^^^^^^
       5 |   return x.addr
     :
@@ -7259,14 +7259,14 @@ let%expect_test _ =
      12 |   let addr = Foo.originate();
      13 |   let bef  = Test.get_balance(addr);
                        ^^^^^^^^^^^^^^^^
-     14 |   ignore(Test.transfer (addr, unit, 10 as mutez));
+     14 |   ignore(Test.transfer (addr, unit, 10 as mumav));
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.get_balance` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test.jsligo", line 14, characters 9-22:
      13 |   let bef  = Test.get_balance(addr);
-     14 |   ignore(Test.transfer (addr, unit, 10 as mutez));
+     14 |   ignore(Test.transfer (addr, unit, 10 as mumav));
                    ^^^^^^^^^^^^^
      15 |   let aft  = Test.get_balance(addr);
     :
@@ -7274,10 +7274,10 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.transfer` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test.jsligo", line 15, characters 13-29:
-     14 |   ignore(Test.transfer (addr, unit, 10 as mutez));
+     14 |   ignore(Test.transfer (addr, unit, 10 as mumav));
      15 |   let aft  = Test.get_balance(addr);
                        ^^^^^^^^^^^^^^^^
-     16 |   return aft == (bef + (10 as mutez))
+     16 |   return aft == (bef + (10 as mumav))
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.get_balance` from `Test.Next` is encouraged for a smoother migration.
@@ -7349,7 +7349,7 @@ let%expect_test _ =
     {|
     File "test/c/e/g/h/bar.jsligo", line 4, characters 45-69:
       3 | export const originate = () => {
-      4 |   const x : origination_result<unit, unit> = Test.originate_from_file(f, unit, 0mutez);
+      4 |   const x : origination_result<unit, unit> = Test.originate_from_file(f, unit, 0mumav);
                                                        ^^^^^^^^^^^^^^^^^^^^^^^^
       5 |   return x.addr
     :
@@ -7358,7 +7358,7 @@ let%expect_test _ =
 
     File "./test/a/b/test.jsligo", line 4, characters 10-34:
       3 | const _test_originate_from_file_relative_path = () : typed_address<unit, unit> => {
-      4 |   let x = Test.originate_from_file ("../../../src/contract/unit.mligo", unit, 0 as mutez);
+      4 |   let x = Test.originate_from_file ("../../../src/contract/unit.mligo", unit, 0 as mumav);
                     ^^^^^^^^^^^^^^^^^^^^^^^^
       5 |   return x.addr
     :
@@ -7369,14 +7369,14 @@ let%expect_test _ =
      12 |   let addr = Foo.originate();
      13 |   let bef  = Test.get_balance(addr);
                        ^^^^^^^^^^^^^^^^
-     14 |   ignore(Test.transfer (addr, unit, 10 as mutez));
+     14 |   ignore(Test.transfer (addr, unit, 10 as mumav));
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.get_balance` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test/a/b/test.jsligo", line 14, characters 9-22:
      13 |   let bef  = Test.get_balance(addr);
-     14 |   ignore(Test.transfer (addr, unit, 10 as mutez));
+     14 |   ignore(Test.transfer (addr, unit, 10 as mumav));
                    ^^^^^^^^^^^^^
      15 |   let aft  = Test.get_balance(addr);
     :
@@ -7384,10 +7384,10 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.transfer` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test/a/b/test.jsligo", line 15, characters 13-29:
-     14 |   ignore(Test.transfer (addr, unit, 10 as mutez));
+     14 |   ignore(Test.transfer (addr, unit, 10 as mumav));
      15 |   let aft  = Test.get_balance(addr);
                        ^^^^^^^^^^^^^^^^
-     16 |   return aft == (bef + (10 as mutez))
+     16 |   return aft == (bef + (10 as mumav))
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.get_balance` from `Test.Next` is encouraged for a smoother migration.
@@ -8014,7 +8014,7 @@ let%expect_test _ =
 
     Baker cannot bake. Enough rolls? Enough cycles passed?
     "STARTING BALANCE AND VOTING POWER"
-    95000000000mutez
+    95000000000mumav
     100000000000n |}];
   run_ligo_bad [ "run"; "test"; bad_test "test_register_delegate_stake.mligo" ];
   [%expect
@@ -8119,7 +8119,7 @@ let%expect_test _ =
                          ^^^^^^^^^^^^^^^^^^^^^
    14 |         match (Tezos.get_entrypoint_opt "%transfer" r.addr : unit contract option) with
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   15 |           Some(c) -> let op = Tezos.transaction () 0mutez c in [op]
+   15 |           Some(c) -> let op = Tezos.transaction () 0mumav c in [op]
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    16 |         | None ->  ([] : operation list)
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

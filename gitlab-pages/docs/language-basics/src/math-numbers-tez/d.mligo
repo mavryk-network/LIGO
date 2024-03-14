@@ -1,6 +1,6 @@
 let a : int = 10 / 3
 let b : nat = 10n / 3n
-let c : nat = 10mutez / 3mutez
+let c : nat = 10mumav / 3mumav
 let a : int = 120
 let b : int = 9
 let rem1 : nat = a mod b  // 3

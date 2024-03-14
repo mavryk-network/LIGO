@@ -16,7 +16,7 @@ module Tree_abstraction = struct
     | C_NEG -> "Operator.neg"
     | C_ADD -> "Operator.add"
     | C_SUB -> "Operator.sub"
-    | C_SUB_MUTEZ -> "Operator.sub_mutez"
+    | C_SUB_MUMAV -> "Operator.sub_mumav"
     | C_POLYMORPHIC_SUB -> "Operator.sub"
     | C_MUL -> "Operator.times"
     | C_DIV -> "Operator.div"
@@ -67,7 +67,7 @@ module Michelson = struct
     match c, protocol_version with
     | C_ADD, _ -> Some (simple_binary @@ prim "ADD")
     | C_SUB, _ -> Some (simple_binary @@ prim "SUB")
-    | C_SUB_MUTEZ, _ -> Some (simple_binary @@ prim "SUB_MUTEZ")
+    | C_SUB_MUMAV, _ -> Some (simple_binary @@ prim "SUB_MUMAV")
     | C_MUL, _ -> Some (simple_binary @@ prim "MUL")
     | C_DIV, _ ->
       Some

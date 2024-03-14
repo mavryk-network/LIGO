@@ -9,21 +9,21 @@
       Buy (  
         {
           profile=0x0501000000026869;
-          initial_controller=Some(("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx": address))
+          initial_controller=Some(("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE": address))
         }
       )
     storage: |
       {
         identities=Big_map.literal[
           (1, 
-          {owner=("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address);
-          controller=("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address);
+          {owner=("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address);
+          controller=("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address);
           profile=0x0501000000026869}
           );
         ]; 
         next_id=2; 
         name_price=0tez; 
-        skip_price=333mutez 
+        skip_price=333mumav 
       }
   deploy:
     entrypoint: main
@@ -31,14 +31,14 @@
       {
         identities=Big_map.literal[
           (1,
-          {owner=("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address);
-           controller=("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address);
+          {owner=("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address);
+           controller=("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address);
            profile=0x0501000000026869}
           );
          ]; 
         next_id=2; 
         name_price=10tez; 
-        skip_price=333mutez
+        skip_price=333mumav
       }
   evaluateValue:
     entrypoint: ""
@@ -47,20 +47,20 @@
     parameters: |
       { 
         profile=0x0501000000026869; 
-        initial_controller=Some(("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx": address))
+        initial_controller=Some(("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE": address))
       }, 
   
       { 
         identities=Big_map.literal[
           (1,
-           {owner=("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address); 
-            controller=("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address); 
+           {owner=("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address); 
+            controller=("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address); 
             profile=0x0501000000026869}
           );
         ]; 
         next_id=2; 
         name_price=0tez; 
-        skip_price=333mutez
+        skip_price=333mumav
       }
   generateDeployScript:
     tool: tezos-client
@@ -69,14 +69,14 @@
       {
         identities=Big_map.literal[
           (1,
-          {owner=("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address);
-           controller=("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address);
+          {owner=("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address);
+           controller=("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address);
            profile=0x0501000000026869}
           );
          ]; 
         next_id=2; 
         name_price=10tez; 
-        skip_price=333mutez
+        skip_price=333mumav
       }
 *_*)
 
@@ -166,7 +166,7 @@ let buy (parameter, storage: buy * storage) =
                         }
 
 let update_owner (parameter, storage: update_owner * storage) =
-  if (Tezos.get_amount () <> 0mutez)
+  if (Tezos.get_amount () <> 0mumav)
   then (failwith "Updating owner doesn't cost anything.": (operation list) * storage)
   else
   let id = parameter.id in
@@ -196,7 +196,7 @@ let update_owner (parameter, storage: update_owner * storage) =
                         }
 
 let update_details (parameter, storage: update_details * storage) =
-  if (Tezos.get_amount () <> 0mutez)
+  if (Tezos.get_amount () <> 0mumav)
   then (failwith "Updating details doesn't cost anything.": (operation list) * storage)
   else
   let id = parameter.id in

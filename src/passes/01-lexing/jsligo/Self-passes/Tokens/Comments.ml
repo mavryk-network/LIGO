@@ -44,7 +44,7 @@ let add_comment (comment : Wrap.comment) : Token.t -> Token.t = function
 | Bytes    w -> Bytes (w#add_comment comment)
 | Int      w -> Int (w#add_comment comment)
 | Nat      w -> Nat (w#add_comment comment)
-| Mutez    w -> Mutez (w#add_comment comment)
+| Mumav    w -> Mumav (w#add_comment comment)
 | Ident    w -> Ident (w#add_comment comment)
 | UIdent   w -> UIdent (w#add_comment comment)
 | EIdent   w -> EIdent (w#add_comment comment)

@@ -15,5 +15,5 @@ type account_data = {
 type ledger = (account, account_data) map
 
 let my_ledger : ledger = Map.literal
-  [(("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address),
-    {balance = 10mutez; transactions = 5n})]
+  [(("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address),
+    {balance = 10mumav; transactions = 5n})]

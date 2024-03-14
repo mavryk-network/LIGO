@@ -334,10 +334,10 @@ Check if a certain condition has been met. If not the contract will fail.
 val ediv : int -> int -> (int * nat) option
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-val ediv : mutez -> nat -> (mutez * mutez) option
+val ediv : mumav -> nat -> (mumav * mumav) option
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-val ediv : mutez -> mutez -> (nat * mutez) option
+val ediv : mumav -> mumav -> (nat * mumav) option
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val ediv : nat -> nat -> (nat * nat) option
@@ -348,10 +348,10 @@ val ediv : nat -> nat -> (nat * nat) option
 let ediv: (value: int, divided_by: int) => option&lt;[int, nat]&gt;
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let ediv: (value: mutez, divided_by: nat) => option&lt;[mutez, mutez]&gt;
+let ediv: (value: mumav, divided_by: nat) => option&lt;[mumav, mumav]&gt;
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let ediv: (value: mutez, divided_by: mutez) => option&lt;[nat, mutez]&gt;
+let ediv: (value: mumav, divided_by: mumav) => option&lt;[nat, mumav]&gt;
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let ediv: (value: nat, divided_by: nat) => option&lt;[nat, nat]&gt;

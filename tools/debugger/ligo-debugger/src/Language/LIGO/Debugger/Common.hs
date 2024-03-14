@@ -301,7 +301,7 @@ errorValueType :: U.Ty
 errorValueType = [utypeQ|pair address string|]
 
 errorAddress :: KindedAddress 'AddressKindImplicit
-errorAddress = [ta|tz1fakefakefakefakefakefakefakcphLA5|]
+errorAddress = [ta|mv2fakefakefakefakefakefakefak82z7t2|]
 
 -- | Something was found to be wrong after replacing Michelson code
 -- in 'preprocessContract'.

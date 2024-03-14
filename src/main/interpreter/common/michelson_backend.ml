@@ -84,7 +84,7 @@ module Tezos_eq = struct
     sub_delta t (Memory_proto_alpha.Protocol.Script_int.of_zint n) |> to_zint
 
 
-  let mutez_add : Z.t -> Z.t -> Z.t option =
+  let mumav_add : Z.t -> Z.t -> Z.t option =
    fun x y ->
     let open Memory_proto_alpha.Protocol.Alpha_context.Tez in
     let open Option in
@@ -100,7 +100,7 @@ module Tezos_eq = struct
     | Z.Overflow -> None
 
 
-  let mutez_sub : Z.t -> Z.t -> Z.t option =
+  let mumav_sub : Z.t -> Z.t -> Z.t option =
    fun x y ->
     let open Memory_proto_alpha.Protocol.Alpha_context.Tez in
     let open Option in
@@ -512,19 +512,19 @@ let rec val_to_ast ~raise ~loc
         (get_t_nat ty)
     in
     e_a_nat ~loc x
-  | V_Ct (C_mutez x) ->
+  | V_Ct (C_mumav x) ->
     let () =
       trace_option
         ~raise
         (Errors.generic_error
            loc
            (Format.asprintf
-              "Expected mutez but got %a"
+              "Expected mumav but got %a"
               Ast_aggregated.PP.type_expression
               ty))
-        (get_t_mutez ty)
+        (get_t_mumav ty)
     in
-    e_a_mutez ~loc x
+    e_a_mumav ~loc x
   | V_Ct (C_timestamp t) ->
     let () =
       trace_option
@@ -1073,17 +1073,17 @@ let rec compile_value ~raise ~options ~loc
         (get_t_nat ty)
     in
     Lwt.return @@ Tezos_micheline.Micheline.Int ((), x)
-  | V_Ct (C_mutez x) ->
+  | V_Ct (C_mumav x) ->
     let () =
       trace_option
         ~raise
         (Errors.generic_error
            loc
            (Format.asprintf
-              "Expected mutez but got %a"
+              "Expected mumav but got %a"
               Ast_aggregated.PP.type_expression
               ty))
-        (get_t_mutez ty)
+        (get_t_mumav ty)
     in
     Lwt.return @@ Tezos_micheline.Micheline.Int ((), x)
   | V_Ct C_unit ->

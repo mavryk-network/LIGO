@@ -49,6 +49,6 @@ let test_one =
       tickets = (Big_map.empty: (address, unit ticket) big_map);
   } in
 
-  let orig = Test.originate (contract_of C) init_storage 0mutez in
+  let orig = Test.originate (contract_of C) init_storage 0mumav in
   let r = Test.transfer orig.addr (Main ()) 1tez in
   Test.log (r)

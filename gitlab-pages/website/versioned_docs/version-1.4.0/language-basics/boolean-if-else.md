@@ -396,8 +396,8 @@ const h = (a != b);
 <Syntax syntax="cameligo">
 
 ```cameligo group=e
-let a : tez  = 5mutez
-let b : tez  = 10mutez
+let a : tez  = 5mumav
+let b : tez  = 10mumav
 let c : bool = (a = b) // false
 ```
 
@@ -406,8 +406,8 @@ let c : bool = (a = b) // false
 <Syntax syntax="jsligo">
 
 ```jsligo group=e
-const a: tez  = 5mutez;
-const b: tez  = 10mutez;
+const a: tez  = 5mumav;
+const b: tez  = 10mumav;
 const c = (a == b); // false
 ```
 

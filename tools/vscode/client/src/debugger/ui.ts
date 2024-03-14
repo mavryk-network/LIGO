@@ -194,7 +194,7 @@ const suggestTypeValue = (mitype: string): { value: string, selection?: [number,
   if (mitype === "string") {
     return { value: "\"\"", selection: [1, 1] }
   }
-  else if (mitype === "int" || mitype === "nat" || mitype === "mutez") {
+  else if (mitype === "int" || mitype === "nat" || mitype === "mumav") {
     return { value: "0" }
   }
   else if (mitype === "bytes") {

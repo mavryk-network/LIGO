@@ -395,8 +395,8 @@ And here is how to create a non-empty map value:
 ```cameligo group=maps
 let moves : register =
   Map.literal [
-    (("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address), (1,2));
-    (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address), (0,3))]
+    (("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address), (1,2));
+    (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address), (0,3))]
 ```
 
 The `Map.literal` predefined function builds a map from a list of
@@ -411,8 +411,8 @@ that we type-cast a string into an address.
 ```jsligo group=maps
 const moves : register =
   Map.literal (list([
-    ["tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address, [1,2]],
-    ["tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address, [0,3]]]));
+    ["mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address, [1,2]],
+    ["mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address, [0,3]]]));
 ```
 
 The `Map.literal` predefined function builds a map from a list of
@@ -429,7 +429,7 @@ that we type-cast a string into an address.
 
 ```cameligo group=maps
 let my_balance : move option =
-  Map.find_opt ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) moves
+  Map.find_opt ("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address) moves
 ```
 
 </Syntax>
@@ -438,7 +438,7 @@ let my_balance : move option =
 
 ```jsligo group=maps
 const my_balance: option<move> =
-  Map.find_opt("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address, moves);
+  Map.find_opt("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address, moves);
 ```
 
 </Syntax>
@@ -487,7 +487,7 @@ We can update a binding in a map in CameLIGO by means of the
 ```cameligo group=maps
 let assign (m : register) : register =
   Map.update
-    ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) (Some (4,9)) m
+    ("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address) (Some (4,9)) m
 ```
 
 Notice the optional value `Some (4,9)` instead of `(4,9)`. If we had
@@ -498,7 +498,7 @@ As a particular case, we can only add a key and its associated value.
 ```cameligo group=maps
 let add (m : register) : register =
   Map.add
-    ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) (4,9) m
+    ("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address) (4,9) m
 ```
 
 </Syntax>
@@ -511,7 +511,7 @@ We can update a binding in a map in JsLIGO by means of the
 ```jsligo group=maps
 const assign = (m: register) =>
   Map.update
-    ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address, Some ([4, 9]), m);
+    ("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address, Some ([4, 9]), m);
 ```
 
 Notice the optional value `Some ([4,9])` instead of `[4, 9]`. If we used
@@ -522,7 +522,7 @@ As a particular case, we can only add a key and its associated value.
 ```jsligo group=maps
 const add = (m: register) =>
   Map.add
-    ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address, [4, 9], m);
+    ("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address, [4, 9], m);
 ```
 
 </Syntax>
@@ -725,8 +725,8 @@ And here is how to create a non-empty map value:
 ```cameligo group=big_maps
 let moves : register =
   Big_map.literal [
-    (("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address), (1,2));
-    (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address), (0,3))]
+    (("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address), (1,2));
+    (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address), (0,3))]
 ```
 
 The predefined function `Big_map.literal` constructs a big map from a
@@ -741,8 +741,8 @@ value>" : address)` means that we cast a string into an address.
 ```jsligo group=big_maps
 const moves : register =
   Big_map.literal (list([
-    ["tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address, [1, 2]],
-    ["tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address, [0, 3]]]));
+    ["mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address, [1, 2]],
+    ["mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address, [0, 3]]]));
 ```
 
 The predefined function `Big_map.literal` constructs a big map from a
@@ -764,7 +764,7 @@ the value we read is an optional value (in our case, of type `option
 
 ```cameligo group=big_maps
 let my_balance : move option =
-  Big_map.find_opt ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) moves
+  Big_map.find_opt ("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address) moves
 ```
 
 </Syntax>
@@ -773,7 +773,7 @@ let my_balance : move option =
 
 ```jsligo group=big_maps
 const my_balance: option<move> =
-  Big_map.find_opt("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address, moves);
+  Big_map.find_opt("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address, moves);
 ```
 
 </Syntax>
@@ -790,7 +790,7 @@ built-in:
 ```cameligo group=big_maps
 let updated_map : register =
   Big_map.update
-    ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) (Some (4,9)) moves
+    ("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address) (Some (4,9)) moves
 ```
 
 </Syntax>
@@ -803,7 +803,7 @@ built-in:
 ```jsligo group=big_maps
 const updated_map: register =
   Big_map.update
-    ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address, Some([4, 9]), moves);
+    ("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address, Some([4, 9]), moves);
 ```
 
 </Syntax>
@@ -821,7 +821,7 @@ is called `Map.remove` and is used as follows:
 
 ```cameligo group=big_maps
 let updated_map : register =
-  Big_map.remove ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN": address) moves
+  Big_map.remove ("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k": address) moves
 ```
 
 </Syntax>
@@ -833,7 +833,7 @@ is called `Map.remove` and is used as follows:
 
 ```jsligo group=big_maps
 const updated_map_: register =
-  Big_map.remove("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address, moves);
+  Big_map.remove("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address, moves);
 ```
 
 </Syntax>

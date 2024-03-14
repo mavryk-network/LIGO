@@ -22,7 +22,7 @@ type storage = [@layout comb] {admin : address}
 [@entry]
 let main (p : parameter) (s : storage) : operation list * storage =
   begin
-    assert (Tezos.get_amount () = 0mutez);
+    assert (Tezos.get_amount () = 0mumav);
     match p with
       Burn ticket ->
         begin
@@ -37,7 +37,7 @@ let main (p : parameter) (s : storage) : operation list * storage =
           let ticket =
             Option.value_with_error
               "option is None" (Tezos.create_ticket () mint.amount) in
-          let op = Tezos.transaction ticket 0mutez mint.destination in
+          let op = Tezos.transaction ticket 0mumav mint.destination in
           ([op], s)
         end
   end

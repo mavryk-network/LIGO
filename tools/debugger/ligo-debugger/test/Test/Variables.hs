@@ -56,7 +56,7 @@ testAddresses = testGroup "addresses"
           [ (DAP.VariableId 1,
               [ DAP.mk @DAP.Variable
                   ! #name "address"
-                  ! #value "tz1faswCTDciRzE4oJ9jn2Vm2dvjeyA9fUzU"
+                  ! #value "mv1MLj377UstLn5gzHBr6FQtjM812NbB3RXe"
                   ! defaults
               , DAP.mk @DAP.Variable
                   ! #name "entrypoint"
@@ -66,8 +66,8 @@ testAddresses = testGroup "addresses"
           , (DAP.VariableId 2,
               [ DAP.mk @DAP.Variable
                   ! #name "addr"
-                  ! #value "tz1faswCTDciRzE4oJ9jn2Vm2dvjeyA9fUzU%foo"
-                  ! #evaluateName "tz1faswCTDciRzE4oJ9jn2Vm2dvjeyA9fUzU%foo"
+                  ! #value "mv1MLj377UstLn5gzHBr6FQtjM812NbB3RXe%foo"
+                  ! #evaluateName "mv1MLj377UstLn5gzHBr6FQtjM812NbB3RXe%foo"
                   ! #variablesReference (DAP.VariableId 1)
                   ! #__vscodeVariableMenuContext "address"
                   ! defaults
@@ -81,8 +81,8 @@ testAddresses = testGroup "addresses"
           [ (DAP.VariableId 1,
               [ DAP.mk @DAP.Variable
                 ! #name "addr"
-                ! #value "tz1faswCTDciRzE4oJ9jn2Vm2dvjeyA9fUzU"
-                ! #evaluateName "tz1faswCTDciRzE4oJ9jn2Vm2dvjeyA9fUzU"
+                ! #value "mv1MLj377UstLn5gzHBr6FQtjM812NbB3RXe"
+                ! #evaluateName "mv1MLj377UstLn5gzHBr6FQtjM812NbB3RXe"
                 ! #__vscodeVariableMenuContext "address"
                 ! defaults
               ])
@@ -90,7 +90,7 @@ testAddresses = testGroup "addresses"
   ]
   where
     address = fromRight (error "address parse error")
-      $ parseAddress "tz1faswCTDciRzE4oJ9jn2Vm2dvjeyA9fUzU"
+      $ parseAddress "mv1MLj377UstLn5gzHBr6FQtjM812NbB3RXe"
 
 testContracts :: TestTree
 testContracts = testGroup "contracts"
@@ -108,7 +108,7 @@ testContracts = testGroup "contracts"
               [ (DAP.VariableId 1,
                   [ DAP.mk @DAP.Variable
                       ! #name "address"
-                      ! #value "tz1faswCTDciRzE4oJ9jn2Vm2dvjeyA9fUzU"
+                      ! #value "mv1MLj377UstLn5gzHBr6FQtjM812NbB3RXe"
                   ! defaults
                   , DAP.mk @DAP.Variable
                       ! #name "entrypoint"
@@ -118,8 +118,8 @@ testContracts = testGroup "contracts"
               , (DAP.VariableId 2,
                   [ DAP.mk @DAP.Variable
                       ! #name "contract"
-                      ! #value "tz1faswCTDciRzE4oJ9jn2Vm2dvjeyA9fUzU%foo"
-                      ! #evaluateName "tz1faswCTDciRzE4oJ9jn2Vm2dvjeyA9fUzU%foo"
+                      ! #value "mv1MLj377UstLn5gzHBr6FQtjM812NbB3RXe%foo"
+                      ! #evaluateName "mv1MLj377UstLn5gzHBr6FQtjM812NbB3RXe%foo"
                       ! #variablesReference (DAP.VariableId 1)
                       ! #__vscodeVariableMenuContext "contract"
                       ! defaults
@@ -132,21 +132,21 @@ testContracts = testGroup "contracts"
           [ (DAP.VariableId 1,
               [ DAP.mk @DAP.Variable
                   ! #name "contract"
-                  ! #value "tz1faswCTDciRzE4oJ9jn2Vm2dvjeyA9fUzU"
-                  ! #evaluateName "tz1faswCTDciRzE4oJ9jn2Vm2dvjeyA9fUzU"
+                  ! #value "mv1MLj377UstLn5gzHBr6FQtjM812NbB3RXe"
+                  ! #evaluateName "mv1MLj377UstLn5gzHBr6FQtjM812NbB3RXe"
                   ! #__vscodeVariableMenuContext "contract"
                   ! defaults
               ])
           ]
   , testCase "LIGO contract" do
-      let contract = LigoContract "tz1faswCTDciRzE4oJ9jn2Vm2dvjeyA9fUzU" (Just "foo")
+      let contract = LigoContract "mv1MLj377UstLn5gzHBr6FQtjM812NbB3RXe" (Just "foo")
       let contractItem = mkDummyLigoValue (LVCt $ LCContract contract) (Just "addr")
       snd (runBuilder $ createVariables Caml [contractItem]) @?=
         M.fromList
           [ (DAP.VariableId 1,
               [ DAP.mk @DAP.Variable
                   ! #name "address"
-                  ! #value "tz1faswCTDciRzE4oJ9jn2Vm2dvjeyA9fUzU"
+                  ! #value "mv1MLj377UstLn5gzHBr6FQtjM812NbB3RXe"
                   ! defaults
               , DAP.mk @DAP.Variable
                   ! #name "entrypoint"
@@ -156,8 +156,8 @@ testContracts = testGroup "contracts"
           , (DAP.VariableId 2,
               [ DAP.mk @DAP.Variable
                   ! #name "addr"
-                  ! #value "tz1faswCTDciRzE4oJ9jn2Vm2dvjeyA9fUzU(foo)"
-                  ! #evaluateName "tz1faswCTDciRzE4oJ9jn2Vm2dvjeyA9fUzU(foo)"
+                  ! #value "mv1MLj377UstLn5gzHBr6FQtjM812NbB3RXe(foo)"
+                  ! #evaluateName "mv1MLj377UstLn5gzHBr6FQtjM812NbB3RXe(foo)"
                   ! #variablesReference (DAP.VariableId 1)
                   ! #__vscodeVariableMenuContext "contract"
                   ! defaults
@@ -166,7 +166,7 @@ testContracts = testGroup "contracts"
   ]
   where
     address = fromRight (error "address parse error")
-      $ parseAddress "tz1faswCTDciRzE4oJ9jn2Vm2dvjeyA9fUzU"
+      $ parseAddress "mv1MLj377UstLn5gzHBr6FQtjM812NbB3RXe"
 
 testOption :: TestTree
 testOption = testGroup "option"

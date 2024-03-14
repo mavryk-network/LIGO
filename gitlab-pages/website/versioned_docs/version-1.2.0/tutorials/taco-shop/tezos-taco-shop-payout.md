@@ -74,12 +74,12 @@ let default_storage : TacoShop.taco_shop_storage =
       (1n,
        {
         current_stock = 50n;
-        max_price = 50000000mutez
+        max_price = 50000000mumav
        });
       (2n,
        {
         current_stock = 20n;
-        max_price = 75000000mutez
+        max_price = 75000000mumav
        })
     ]
 ```
@@ -125,8 +125,8 @@ const default_storage: TacoShop.taco_shop_storage =
   Map.literal(
     list(
       [
-        [1n, { current_stock: 50n, max_price: 50000000mutez }],
-        [2n, { current_stock: 20n, max_price: 75000000mutez }]
+        [1n, { current_stock: 50n, max_price: 50000000mumav }],
+        [2n, { current_stock: 20n, max_price: 75000000mumav }]
       ]
     )
   );
@@ -185,7 +185,7 @@ contract with no parameters, or an implicit account.
 <Syntax syntax="cameligo">
 
 ```cameligo group=ex1
-let ownerAddress : address = ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV" : address)
+let ownerAddress : address = ("mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ" : address)
 let receiver : unit contract =
   match (Tezos.get_contract_opt ownerAddress : unit contract option) with
     Some (contract) -> contract
@@ -197,7 +197,7 @@ let receiver : unit contract =
 <Syntax syntax="jsligo">
 
 ```jsligo group=ex1
-const ownerAddress = ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV" as address)
+const ownerAddress = ("mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ" as address)
 const receiver : contract<unit> =
   match (Tezos.get_contract_opt(ownerAddress) as option<contract<unit>>) {
     when(Some(contract)): contract;
@@ -254,7 +254,7 @@ module TacoShop = struct
 
   type taco_shop_storage = (nat, taco_supply) map
 
-  let ownerAddress : address = ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV" : address)
+  let ownerAddress : address = ("mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ" : address)
 
   [@entry]
   let buy_taco (taco_kind_index : nat) (taco_shop_storage : taco_shop_storage)
@@ -300,12 +300,12 @@ let default_storage : TacoShop.taco_shop_storage =
       (1n,
        {
         current_stock = 50n;
-        max_price = 50000000mutez
+        max_price = 50000000mumav
        });
       (2n,
        {
         current_stock = 20n;
-        max_price = 75000000mutez
+        max_price = 75000000mumav
        })
     ]
 ```
@@ -321,9 +321,9 @@ namespace TacoShop {
   export type taco_supply = { current_stock: nat, max_price: tez };
   export type taco_shop_storage = map<nat, taco_supply>;
 
-  const ownerAddress = ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV" as address);
+  const ownerAddress = ("mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ" as address);
 
-  const donationAddress = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address);
+  const donationAddress = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address);
 
   @entry
   function buy_taco(taco_kind_index: nat, taco_shop_storage: taco_shop_storage): [
@@ -391,8 +391,8 @@ const default_storage: TacoShop.taco_shop_storage =
   Map.literal(
     list(
       [
-        [1n, { current_stock: 50n, max_price: 50000000mutez }],
-        [2n, { current_stock: 20n, max_price: 75000000mutez }]
+        [1n, { current_stock: 50n, max_price: 50000000mumav }],
+        [2n, { current_stock: 20n, max_price: 75000000mumav }]
       ]
     )
   );
@@ -448,8 +448,8 @@ sum from each taco purchase.
 <Syntax syntax="cameligo">
 
 ```cameligo group=bonus
-let ownerAddress : address = ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV" : address)
-let donationAddress : address = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
+let ownerAddress : address = ("mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ" : address)
+let donationAddress : address = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
 
 let receiver : unit contract =
   match ((Tezos.get_contract_opt ownerAddress) : unit contract option) with
@@ -477,8 +477,8 @@ let operations : operation list =
 <Syntax syntax="jsligo">
 
 ```jsligo group=bonus
-const ownerAddress = ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV" as address);
-const donationAddress = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address);
+const ownerAddress = ("mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ" as address);
+const donationAddress = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address);
 
 const receiver : contract<unit> =
   match ((Tezos.get_contract_opt (ownerAddress)) as option<contract<unit>>) {

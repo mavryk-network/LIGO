@@ -197,7 +197,7 @@ let rec decompile_to_untyped_value ~raise ~bigmaps
     let open Tezos_base.TzPervasives.Time.Protocol in
     let n = Z.of_int64 (to_seconds (of_notation_exn n)) in
     V_Ct (C_timestamp n)
-  | Prim (_, "mutez", [], _), Int (_, n) -> V_Ct (C_mutez n)
+  | Prim (_, "mumav", [], _), Int (_, n) -> V_Ct (C_mumav n)
   | Prim (_, "bool", [], _), Prim (_, "True", [], _) -> V_Ct (C_bool true)
   | Prim (_, "bool", [], _), Prim (_, "False", [], _) -> V_Ct (C_bool false)
   | Prim (_, "string", [], _), String (_, s) -> V_Ct (C_string s)

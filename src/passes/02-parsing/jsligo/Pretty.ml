@@ -223,10 +223,10 @@ let print_bytes (node : (lexeme * Hex.t) wrap) =
                ^/^ string ("0x" ^ Hex.show (snd node#payload))
   in print_line_comment_opt prefix node#line_comment
 
-let print_mutez (node : (lexeme * Int64.t) wrap) =
+let print_mumav (node : (lexeme * Int64.t) wrap) =
   let prefix =
     print_comments node#comments
-    ^/^ (Int64.to_string (snd node#payload) ^ "mutez" |> string)
+    ^/^ (Int64.to_string (snd node#payload) ^ "mumav" |> string)
   in print_line_comment_opt prefix node#line_comment
 
 let print_ctor (node : ctor) = token node
@@ -713,7 +713,7 @@ and print_expr state = function
 | E_Match      e -> print_E_Match      state e
 | E_Mult       e -> print_E_Mult       state e
 | E_MultEq     e -> print_E_MultEq     state e
-| E_Mutez      e -> print_E_Mutez            e
+| E_Mumav      e -> print_E_Mumav            e
 | E_NamePath   e -> print_E_NamePath   state e
 | E_Nat        e -> print_E_Nat              e
 | E_Neg        e -> print_E_Neg        state e
@@ -1008,9 +1008,9 @@ and print_E_Mult state (node : times bin_op reg) = print_bin_op state node
 and print_E_MultEq state (node : times_eq bin_op reg) =
   print_bin_op state node
 
-(* Mutez as an expression *)
+(* Mumav as an expression *)
 
-and print_E_Mutez (node : (lexeme * Int64.t) wrap) = print_mutez node
+and print_E_Mumav (node : (lexeme * Int64.t) wrap) = print_mumav node
 
 (* Selection through nested namespaces *)
 
@@ -1195,7 +1195,7 @@ and print_pattern state = function
 | P_CtorApp  p -> print_P_CtorApp  state p
 | P_False    p -> print_P_False          p
 | P_Int      p -> print_P_Int            p
-| P_Mutez    p -> print_P_Mutez          p
+| P_Mumav    p -> print_P_Mumav          p
 | P_NamePath p -> print_P_NamePath state p
 | P_Nat      p -> print_P_Nat            p
 | P_Object   p -> print_P_Object   state p
@@ -1237,9 +1237,9 @@ and print_P_False (node : kwd_false) = print_false node
 
 and print_P_Int (node : (lexeme * Z.t) wrap) = print_int node
 
-(* Mutez in patterns *)
+(* Mumav in patterns *)
 
-and print_P_Mutez (node : (lexeme * Int64.t) wrap) = print_mutez node
+and print_P_Mumav (node : (lexeme * Int64.t) wrap) = print_mumav node
 
 (* Selected pattern *)
 

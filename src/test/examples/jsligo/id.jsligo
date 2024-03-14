@@ -6,18 +6,18 @@
   dryRun:
     entrypoint: main
     parameters: |
-      Buy ({ profile: 0x0501000000026869, initial_controller: Some(("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address)) })
+      Buy ({ profile: 0x0501000000026869, initial_controller: Some(("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address)) })
     storage: |
       {
         identities:Big_map.literal(list([
           [1,
-           {owner:("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address),
-           controller:("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address), profile:0x0501000000026869}
+           {owner:("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address),
+           controller:("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address), profile:0x0501000000026869}
           ]
         ])),
         next_id:2,
         name_price:(0 as tez),
-        skip_price:(333 as mutez)
+        skip_price:(333 as mumav)
       }
   deploy:
     entrypoint: main
@@ -25,12 +25,12 @@
       {
         identities:Big_map.literal(list([
           [1,
-           {owner:("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address), controller:("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address), profile:0x0501000000026869}
+           {owner:("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address), controller:("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address), profile:0x0501000000026869}
           ]
         ])),
         next_id:2,
         name_price:(10 as tez),
-        skip_price:(333 as mutez)
+        skip_price:(333 as mumav)
       }
   evaluateValue:
     entrypoint: ""
@@ -40,19 +40,19 @@
       [
         {
           profile: 0x0501000000026869,
-          initial_controller: Some(("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address))
+          initial_controller: Some(("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address))
         },
         {
           identities:Big_map.literal(list([
             [1,
-             {owner:("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address),
-              controller:("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address),
+             {owner:("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address),
+              controller:("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address),
               profile:0x0501000000026869}
             ]
           ])),
           next_id:2,
           name_price:(0 as tez),
-          skip_price:(333 as mutez)
+          skip_price:(333 as mumav)
         }
       ]
   generateDeployScript:
@@ -62,12 +62,12 @@
       {
         identities:Big_map.literal(list([
           [1,
-           {owner:("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address), controller:("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address), profile:0x0501000000026869}
+           {owner:("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address), controller:("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address), profile:0x0501000000026869}
           ]
         ])),
         next_id:2,
         name_price:(10 as tez),
-        skip_price:(333 as mutez)
+        skip_price:(333 as mumav)
       }
 *_*) */
 
@@ -153,7 +153,7 @@ let buy = ([parameter, storage]: [buy, storage]) : [list<operation>, storage] =>
   };
 
 let update_owner = ([parameter, storage]: [update_owner, storage]) : [list<operation>, storage] => {
-  if (Tezos.get_amount() != (0 as mutez)) {
+  if (Tezos.get_amount() != (0 as mumav)) {
     failwith("Updating owner doesn't cost anything.");
   }
   let id : int = parameter.id;
@@ -184,7 +184,7 @@ let update_owner = ([parameter, storage]: [update_owner, storage]) : [list<opera
 
 let update_details = ([parameter, storage]: [update_details, storage]) :
                    [list<operation>, storage] => {
-  if (Tezos.get_amount() != (0 as mutez)) {
+  if (Tezos.get_amount() != (0 as mumav)) {
     failwith("Updating details doesn't cost anything.");
   }
   let id = parameter.id;

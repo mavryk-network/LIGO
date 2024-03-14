@@ -10,7 +10,7 @@ namespace C {
 }
 
 const test_transfer_to_contract = do {
-  let {addr : main_taddr, code , size } = Test.originate (contract_of(C), ["bye",Test.nth_bootstrap_account (1)], 1mutez) ;
+  let {addr : main_taddr, code , size } = Test.originate (contract_of(C), ["bye",Test.nth_bootstrap_account (1)], 1mumav) ;
   let main_addr = Test.to_address (main_taddr) ;
 
   /* mk_param is executed __by the proxy contract__ */

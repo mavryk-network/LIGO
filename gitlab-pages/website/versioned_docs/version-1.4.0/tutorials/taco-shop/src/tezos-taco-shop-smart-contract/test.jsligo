@@ -25,13 +25,13 @@ const test = (
         Map.literal(
           list(
             [
-              [1n, { current_stock: 50n, max_price: 50000000mutez }],
-              [2n, { current_stock: 20n, max_price: 75000000mutez }]
+              [1n, { current_stock: 50n, max_price: 50000000mumav }],
+              [2n, { current_stock: 20n, max_price: 75000000mumav }]
             ]
           )
         );
       const { addr , code , size } =
-        Test.originate(contract_of(TacoShop), init_storage, 0mutez);
+        Test.originate(contract_of(TacoShop), init_storage, 0mumav);
 
       /* Test inputs */
 
@@ -52,7 +52,7 @@ const test = (
         Test.transfer(
           addr,
           clasico_kind,
-          1000000mutez
+          1000000mumav
         );
       
         match(ok_case) {
@@ -61,12 +61,12 @@ const test = (
               let storage = Test.get_storage(addr);
               assert(
                 eq_in_map(
-                  { current_stock: 49n, max_price: 50000000mutez },
+                  { current_stock: 49n, max_price: 50000000mumav },
                   storage,
                   1n
                 )
                 && eq_in_map(
-                     { current_stock: 20n, max_price: 75000000mutez },
+                     { current_stock: 20n, max_price: 75000000mumav },
                      storage,
                      2n
                    )
@@ -81,7 +81,7 @@ const test = (
         Test.transfer(
           addr,
           unknown_kind,
-          1000000mutez
+          1000000mumav
         );
       assert_string_failure(nok_unknown_kind, "Unknown kind of taco");
       /* Attempting to Purchase a Taco with 2tez */
@@ -90,7 +90,7 @@ const test = (
         Test.transfer(
           addr,
           clasico_kind,
-          2000000mutez
+          2000000mumav
         );
       
         assert_string_failure(

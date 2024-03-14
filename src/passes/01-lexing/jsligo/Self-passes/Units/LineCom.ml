@@ -33,7 +33,7 @@ let add_comment (comment : string Region.reg) : Token.t -> Token.t = function
 | Bytes    w -> Bytes (w#add_line_comment comment)
 | Int      w -> Int (w#add_line_comment comment)
 | Nat      w -> Nat (w#add_line_comment comment)
-| Mutez    w -> Mutez (w#add_line_comment comment)
+| Mumav    w -> Mumav (w#add_line_comment comment)
 | Ident    w -> Ident (w#add_line_comment comment)
 | UIdent   w -> UIdent (w#add_line_comment comment)
 | EIdent   w -> EIdent (w#add_line_comment comment)

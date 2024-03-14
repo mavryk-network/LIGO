@@ -403,7 +403,7 @@ let rec expr : Eq.expr -> Folding.expr =
     let post_op = Location.wrap ~loc O.Prefix_postfix.Decrement in
     return @@ E_postfix { post_op; expr }
   | E_Nat n -> return @@ E_literal (Literal_nat (snd n#payload))
-  | E_Mutez m -> return @@ E_literal (Literal_mutez (Z.of_int64 (snd m#payload)))
+  | E_Mumav m -> return @@ E_literal (Literal_mumav (Z.of_int64 (snd m#payload)))
   | E_BitAnd bitand -> return @@ compile_bin_op WORD_LAND bitand
   | E_BitNeg bitneg -> return @@ compile_unary_op WORD_NOT bitneg
   | E_BitOr bitor -> return @@ compile_bin_op WORD_LOR bitor
@@ -653,7 +653,7 @@ let pattern : Eq.pattern -> Folding.pattern =
   | P_Var (Esc p) -> return @@ P_var_esc (Esc (TODO_do_in_parsing.var p))
   | P_Int v -> return @@ P_literal (Literal_int (snd (w_fst v)))
   | P_Nat v -> return @@ P_literal (Literal_nat (snd (w_fst v)))
-  | P_Mutez v -> return @@ P_literal (Literal_mutez (Z.of_int64 (snd (w_fst v))))
+  | P_Mumav v -> return @@ P_literal (Literal_mumav (Z.of_int64 (snd (w_fst v))))
   | P_Bytes v -> return @@ P_literal (Literal_bytes (Hex.to_bytes (snd (w_fst v))))
   | P_String v ->
     return @@ P_literal (Literal_string (Simple_utils.Ligo_string.standard (w_fst v)))

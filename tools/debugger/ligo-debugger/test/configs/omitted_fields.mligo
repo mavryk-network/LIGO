@@ -3,7 +3,7 @@ let contract_env =
   ; balance       = 1tez
   ; amount        = 2tez
   ; self          = "KT1XQcegsEtio9oGbLUHA8SKX4iZ2rpEXY9b"
-  ; source        = "tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY"
+  ; source        = "mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq"
   }
 
 let config =

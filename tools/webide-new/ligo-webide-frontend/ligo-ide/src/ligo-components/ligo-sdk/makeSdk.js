@@ -50,7 +50,7 @@ export default function makeSdk({ kp, networks, customNetworks = [], Client, TxM
       balance,
       gasLimit,
       storageLimit,
-      suggestedFeeMutez,
+      suggestedFeeMumav,
     }) {
       if (type === "origination") {
         return await this.txManager.originate(
@@ -62,7 +62,7 @@ export default function makeSdk({ kp, networks, customNetworks = [], Client, TxM
           balance,
           gasLimit,
           storageLimit,
-          suggestedFeeMutez
+          suggestedFeeMumav
         );
       }
     }

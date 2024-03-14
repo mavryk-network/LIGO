@@ -410,7 +410,7 @@ let transaction: &lt;param&gt;(&#95;: param) =&gt; (&#95;: tez) =&gt; (&#95;: co
 <Syntax syntax="cameligo">
 
 The call `transaction param amount contract_addr` evaluates in
-    an operation that will send the amount `amount` in mutez to the
+    an operation that will send the amount `amount` in mumav to the
     contract at the valid address `contract_addr`, with parameter
     `param`. If the contract is an implicit account, the parameter
     must be `unit`.
@@ -420,7 +420,7 @@ The call `transaction param amount contract_addr` evaluates in
 <Syntax syntax="jsligo">
 
 The call `transaction(param, amount, contract_addr)` evaluates in
-    an operation that will send the amount `amount` in mutez to the
+    an operation that will send the amount `amount` in mumav to the
     contract at the valid address `contract_addr`, with parameter
     `param`. If the contract is an implicit account, the parameter
     must be `unit`.
@@ -642,17 +642,17 @@ let get&#95;balance: (&#95;: unit) =&gt; tez
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
-The call `get_balance ()` returns the balance in mutez of the
+The call `get_balance ()` returns the balance in mumav of the
     account associated to the currently executed smart contract,
-    including any mutez added by the calling transaction.
+    including any mumav added by the calling transaction.
 
 </Syntax>
 
 <Syntax syntax="jsligo">
 
-The call `get_balance()` returns the balance in mutez of the
+The call `get_balance()` returns the balance in mumav of the
     account associated to the currently executed smart contract,
-    including any mutez added by the calling transaction.
+    including any mumav added by the calling transaction.
 
 </Syntax>
 
@@ -665,14 +665,14 @@ let get&#95;amount: (&#95;: unit) =&gt; tez
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
-The call `get_amount ()` returns the amount in mutez of the
+The call `get_amount ()` returns the amount in mumav of the
     current transaction.
 
 </Syntax>
 
 <Syntax syntax="jsligo">
 
-The call `get_amount()` returns the amount in mutez of the
+The call `get_amount()` returns the amount in mumav of the
     current transaction.
 
 </Syntax>

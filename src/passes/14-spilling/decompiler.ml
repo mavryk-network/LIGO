@@ -37,8 +37,8 @@ let rec decompile ~raise (v : value) (t : AST.type_expression) : AST.expression 
       let n = trace_option ~raise (wrong_mini_c_value t v) @@ get_timestamp v in
       return (E_literal (Literal_timestamp n))
     | Tez, [] ->
-      let n = trace_option ~raise (wrong_mini_c_value t v) @@ get_mutez v in
-      return (E_literal (Literal_mutez n))
+      let n = trace_option ~raise (wrong_mini_c_value t v) @@ get_mumav v in
+      return (E_literal (Literal_mumav n))
     | String, [] ->
       let n = trace_option ~raise (wrong_mini_c_value t v) @@ get_string v in
       let n = Ligo_string.Standard n in

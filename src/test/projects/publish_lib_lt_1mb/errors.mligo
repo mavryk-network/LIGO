@@ -15,9 +15,9 @@ let only_sender_manage_operators = "The sender can only manage operators for his
 
 let not_authorized : string = "Not authorized"
 let missing_chest : string = "Missing some chest"
-let commit_expects_10_mutez_lock : string = "You must lock 10mutez"
-let reveal_expects_0_mutez_lock : string = "You must not send tez (reveal entrypoint)"
-let reset_expects_0_mutez_lock : string = "You must not send tez (reset entrypoint)"
+let commit_expects_10_mumav_lock : string = "You must lock 10mumav"
+let reveal_expects_0_mumav_lock : string = "You must not send tez (reveal entrypoint)"
+let reset_expects_0_mumav_lock : string = "You must not send tez (reset entrypoint)"
 
 let fail_open_chest_timelock : string = "Could not open chest: Fail_timelock"
 let fail_open_chest_decrypt : string = "Could not open chest: Fail_decrypt"

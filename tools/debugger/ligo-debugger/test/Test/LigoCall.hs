@@ -406,13 +406,13 @@ test_config_resolution = testGroup "LIGO config resolution"
                 , balance = Just $ MichelsonJson [tz|1|]
                 , amount = Just $ MichelsonJson [tz|2|]
                 , self = Just [ta|KT1XQcegsEtio9oGbLUHA8SKX4iZ2rpEXY9b|]
-                , source = Just $ Constrained [ta|tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY|]
-                , sender = Just $ Constrained [ta|tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY|]
+                , source = Just $ Constrained [ta|mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq|]
+                , sender = Just $ Constrained [ta|mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq|]
                 , chainId = Just $ MichelsonJson $ unsafe $ parseChainId "NetXH12Aer3be93"
                 , level = Just $ MichelsonJson 10000
                 , votingPowers = Just $ mkVotingPowers
-                        [ ([ta|tz1aZcxeRT4DDZZkYcU3vuBaaBRtnxyTmQRr|], 40)
-                        , ([ta|tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY|], 60)
+                        [ ([ta|mv1E97cthY1QUw8D1LuWNDiYzG8EGacuVt2K|], 40)
+                        , ([ta|mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq|], 60)
                         ]
                 }
             }
@@ -434,7 +434,7 @@ test_config_resolution = testGroup "LIGO config resolution"
                 , balance = Just $ MichelsonJson [tz|1|]
                 , amount = Just $ MichelsonJson [tz|2|]
                 , self = Just [ta|KT1XQcegsEtio9oGbLUHA8SKX4iZ2rpEXY9b|]
-                , source = Just $ Constrained [ta|tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY|]
+                , source = Just $ Constrained [ta|mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq|]
                 , sender = Nothing
                 , chainId = Nothing
                 , level = Nothing

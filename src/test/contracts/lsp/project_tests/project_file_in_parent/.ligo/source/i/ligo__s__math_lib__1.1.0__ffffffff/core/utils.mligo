@@ -2,7 +2,7 @@
 
 module Address = struct 
 
-    (** Check if the given address is an implicit account (i.e tz1...) *)
+    (** Check if the given address is an implicit account (i.e mv1...) *)
     let is_implicit(elt: address) : bool = 
         let pack_elt : bytes = Bytes.pack elt in
         let is_imp : bytes = Bytes.sub 6n 1n pack_elt in

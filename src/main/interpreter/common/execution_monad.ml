@@ -260,7 +260,7 @@ module Command = struct
       in
       let contract = Tezos_state.get_bootstrapped_contract ~raise n in
       Lwt.return ((contract, parameter_ty, storage_ty), ctxt)
-    | Bootstrap_contract (mutez, contract, storage, contract_ty) ->
+    | Bootstrap_contract (mumav, contract, storage, contract_ty) ->
       let contract =
         trace_option ~raise (corner_case ()) @@ LC.get_michelson_contract contract
       in
@@ -276,7 +276,7 @@ module Command = struct
         trace_option ~raise (corner_case ()) @@ LC.get_michelson_expr storage
       in
       let next_bootstrapped_contracts =
-        (mutez, contract, storage, parameter_ty, storage_ty)
+        (mumav, contract, storage, parameter_ty, storage_ty)
         :: ctxt.internals.next_bootstrapped_contracts
       in
       let ctxt =
@@ -292,7 +292,7 @@ module Command = struct
       let amts =
         List.map
           ~f:(fun x ->
-            let x = trace_option ~raise (corner_case ()) @@ LC.get_mutez x in
+            let x = trace_option ~raise (corner_case ()) @@ LC.get_mumav x in
             Z.to_int64 x)
           amts
       in
@@ -369,7 +369,7 @@ module Command = struct
         let contract_balance, spend_request =
           let contract_balance = Michelson_backend.tez_to_z contract_balance in
           let spend_request = Michelson_backend.tez_to_z spend_request in
-          LT.V_Ct (C_mutez contract_balance), LT.V_Ct (C_mutez spend_request)
+          LT.V_Ct (C_mumav contract_balance), LT.V_Ct (C_mumav spend_request)
         in
         let rej_data =
           LC.v_record
@@ -384,8 +384,8 @@ module Command = struct
     | Get_balance (loc, calltrace, addr) ->
       let addr = trace_option ~raise (corner_case ()) @@ LC.get_address addr in
       let%map balance = Tezos_state.get_balance ~raise ~loc ~calltrace ctxt addr in
-      let mutez = Michelson_backend.int_of_mumav balance in
-      let balance = LT.V_Ct (C_mutez mutez) in
+      let mumav = Michelson_backend.int_of_mumav balance in
+      let balance = LT.V_Ct (C_mumav mumav) in
       balance, ctxt
     | Get_storage (loc, calltrace, addr) ->
       let addr = trace_option ~raise (corner_case ()) @@ LC.get_typed_address addr in
@@ -765,7 +765,7 @@ module Command = struct
       let tez = trace_option ~raise (corner_case ()) @@ LC.get_option opt in
       let tez =
         Option.map
-          ~f:(fun v -> trace_option ~raise (corner_case ()) @@ LC.get_mutez v)
+          ~f:(fun v -> trace_option ~raise (corner_case ()) @@ LC.get_mumav v)
           tez
       in
       let tez = Option.map ~f:(fun t -> Z.to_int64 t) tez in

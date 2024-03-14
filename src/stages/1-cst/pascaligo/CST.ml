@@ -136,7 +136,7 @@ type string_literal   = lexeme wrap
 type int_literal      = (lexeme * Z.t) wrap
 type nat_literal      = int_literal
 type bytes_literal    = (lexeme * Hex.t) wrap
-type mutez_literal    = (lexeme * Int64.t) wrap
+type mumav_literal    = (lexeme * Int64.t) wrap
 type verbatim_literal = lexeme wrap
 
 type keyword = lexeme wrap
@@ -507,7 +507,7 @@ and pattern =
 | P_Int      of int_literal                          (*         42 *)
 | P_List     of pattern compound reg                 (* list [4;x] *)
 | P_ModPath  of pattern module_path reg              (*      M.N.x *)
-| P_Mutez    of mutez_literal                        (*     5mutez *)
+| P_Mumav    of mumav_literal                        (*     5mumav *)
 | P_Nat      of nat_literal                          (*         4n *)
 | P_Nil      of kwd_nil                              (*        nil *)
 | P_Par      of pattern par reg                      (*     (C, 4) *)
@@ -590,7 +590,7 @@ and expr =
 | E_Mod       of kwd_mod bin_op reg             (* x mod n         *)
 | E_ModPath   of expr module_path reg           (* M.N.x           *)
 | E_Mult      of times bin_op reg               (* x * y           *)
-| E_Mutez     of mutez_literal                  (* 5mutez          *)
+| E_Mumav     of mumav_literal                  (* 5mumav          *)
 | E_Nat       of nat_literal                    (* 4n              *)
 | E_Neg       of minus un_op reg                (* -a              *)
 | E_Neq       of neq bin_op reg                 (* x =/= y         *)
@@ -757,7 +757,7 @@ let rec expr_to_region = function
 | E_Mod       {region; _}
 | E_ModPath   {region; _}
 | E_Mult      {region; _} -> region
-| E_Mutez     t -> t#region
+| E_Mumav     t -> t#region
 | E_Nat       t -> t#region
 | E_Neg       {region; _}
 | E_Neq       {region; _} -> region
@@ -828,7 +828,7 @@ let rec pattern_to_region = function
 | P_Int      t -> t#region
 | P_List     {region; _}
 | P_ModPath  {region; _} -> region
-| P_Mutez    t -> t#region
+| P_Mumav    t -> t#region
 | P_Nat      t -> t#region
 | P_Nil      t -> t#region
 | P_Par      {region; _}

@@ -4,17 +4,17 @@ type register = big_map<address, move>;
 let empty: register = Big_map.empty;
 let moves: register =
   Big_map.literal (list([
-    [("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address), [1, 2]],
-    [("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), [0, 3]]]));
+    [("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address), [1, 2]],
+    [("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address), [0, 3]]]));
 let my_balance: option <move> =
-  Big_map.find_opt(("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), moves);
+  Big_map.find_opt(("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address), moves);
 let has_balance: bool =
-  Big_map.mem(("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), moves);
+  Big_map.mem(("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address), moves);
 let updated_map: register =
   Big_map.update
-    (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), Some([4,9]), moves);
+    (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address), Some([4,9]), moves);
 let add = (m: register): register =>
   Big_map.add
-    (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), [4,9], m);
+    (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address), [4,9], m);
 let updated_map_: register =
-  Big_map.remove(("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), moves);
+  Big_map.remove(("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address), moves);

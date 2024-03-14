@@ -42,12 +42,12 @@ let test =
 
 let test2 =
   // By default:
-  //  - only 2 bootstrap accounts are created with a default amount of 4000000000000 mutez
+  //  - only 2 bootstrap accounts are created with a default amount of 4000000000000 mumav
   //  - the 1st and 2nd bootstrap accounts are used as baker and source respectively
   
   // You can change the default behavior by reseting the state:
   let number_of_account = 4n in
-  let overide_default_amounts = [ 8000tez ; 2mutez ] in // the [i]th element of the list overwrite default balance of the [i]th account 
+  let overide_default_amounts = [ 8000tez ; 2mumav ] in // the [i]th element of the list overwrite default balance of the [i]th account 
   let () = Test.reset_state number_of_account overide_default_amounts in
   // And by setting the source in between calls to `Test.transfer_to_contract` or `Test.originate`
   let bsa0 = (Test.nth_bootstrap_account 0) in
@@ -58,11 +58,11 @@ let test2 =
   let () = Test.set_baker bsa2 in
   // some balance tests:
   let tz = fun (n:nat) ->
-    Test.run (fun (x : unit -> nat) -> x () * 1mutez) (fun (_ : unit) -> n)
+    Test.run (fun (x : unit -> nat) -> x () * 1mumav) (fun (_ : unit) -> n)
   in
   let () = Test.assert ((Test.get_balance_of_address bsa0) = 2000tez) in
-  let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mutez) in
+  let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000tez) in
-  let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mutez) in
+  let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mumav) in
   ()

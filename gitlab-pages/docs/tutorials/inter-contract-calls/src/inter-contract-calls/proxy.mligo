@@ -12,5 +12,5 @@ let get_contract (addr : address) =
 [@entry]
 let main (param : parameter) (callee_addr : storage) =
   let callee = get_contract (callee_addr) in
-  let op = Tezos.transaction param 0mutez callee in
+  let op = Tezos.transaction param 0mumav callee in
   [op], callee_addr

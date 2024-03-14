@@ -14,10 +14,10 @@ let initial_storage =
     cashPool = 204n ;
     lqtTotal = 10n ;
     pendingPoolUpdates = 0n ;
-    tokenAddress = ("tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" : address) ;
+    tokenAddress = ("mv1WU59eqkSNUX9mWMVzMXC19ia5F8oGiAek" : address) ;
     tokenId = 0n ;
-    cashAddress = ("tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" : address) ;
-    lqtAddress = ("tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" : address) ;
+    cashAddress = ("mv1WU59eqkSNUX9mWMVzMXC19ia5F8oGiAek" : address) ;
+    lqtAddress = ("mv1WU59eqkSNUX9mWMVzMXC19ia5F8oGiAek" : address) ;
   }
 
 let test =
@@ -25,8 +25,8 @@ let test =
 
 // Nested values::
 let hello: string = "Hello"
-let addr1 = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
-let addr2 = ("tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" : address)
+let addr1 = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
+let addr2 = ("mv1WU59eqkSNUX9mWMVzMXC19ia5F8oGiAek" : address)
 let ts1 = ("2000-01-01t10:10:10Z" : timestamp)
 let ts2 = ("2000-01-02t10:10:10Z" : timestamp)
 // list

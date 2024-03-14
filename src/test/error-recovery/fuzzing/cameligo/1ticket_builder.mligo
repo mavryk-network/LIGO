@@ -21,9 +21,9 @@
 
  let main ( arg : parameter * storage ) : operation list * storage =
  begin
- assert ( Tezos . amount = 0mutez ) ;
+ assert ( Tezos . amount = 0mumav ) ;
  let ( p , s ) = arg in
- match p with 42mutez
+ match p with 42mumav
  Burn ticket ->
  begin
  let ( ( ticketer , _ ) , ticket ) = ( Tezos . read_ticket ticket : ( address * ( unit * nat ) ) * unit ticket ) in
@@ -34,7 +34,7 @@
  begin
  assert ( Tezos . sender = s . admin ) ;
  let ticket = Tezos . create_ticket ( ) mint . amount in
- let op = Tezos . transaction ticket 0mutez mint . destination in
+ let op = Tezos . transaction ticket 0mumav mint . destination in
  ( [ op ] , s )
  end
  end
@@ -43,5 +43,5 @@
 Mutation chance is 1
 
 Replace = with let in line 14
-Replace | with 42mutez in line 27
+Replace | with 42mumav in line 27
 *)

@@ -7,7 +7,7 @@ type param = MutationContract.C parameter_of
 let initial_storage = 7
 
 let tester (taddr : (param, storage) typed_address) (_: (param ,storage) michelson_contract) (_:int) : unit =
-  let _ = Test.transfer_exn taddr (Add 7) 1mutez in
+  let _ = Test.transfer_exn taddr (Add 7) 1mumav in
   assert (Test.get_storage taddr = initial_storage + 7)
 
 let test_original =
@@ -23,9 +23,9 @@ let test_mutation =
        a milder println is used in this document. *)
     Test.println "A mutation of the contract still passes the tests!"
 let tester_add_and_sub (taddr : (param, storage) typed_address) (_ : (param, storage) michelson_contract) (_ : int) : unit =
-  let _ = Test.transfer_exn taddr (Add 7) 1mutez in
+  let _ = Test.transfer_exn taddr (Add 7) 1mumav in
   let () = assert (Test.get_storage taddr = initial_storage + 7) in
-  let _ = Test.transfer_exn taddr (Sub 3) 1mutez in
+  let _ = Test.transfer_exn taddr (Sub 3) 1mumav in
   assert (Test.get_storage taddr = initial_storage + 4)
 let test_mutation_all =
   match Test.originate_and_mutate_all (contract_of MutationContract.C) initial_storage 0tez tester_add_and_sub with

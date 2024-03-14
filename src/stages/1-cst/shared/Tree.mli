@@ -205,4 +205,4 @@ val make_verbatim : root -> string Wrap.t printer
 val make_int      : root -> (lexeme *     Z.t) Wrap.t printer
 val make_nat      : root -> (lexeme *     Z.t) Wrap.t printer
 val make_bytes    : root -> (lexeme *   Hex.t) Wrap.t printer
-val make_mutez    : root -> (lexeme * Int64.t) Wrap.t printer
+val make_mumav    : root -> (lexeme * Int64.t) Wrap.t printer

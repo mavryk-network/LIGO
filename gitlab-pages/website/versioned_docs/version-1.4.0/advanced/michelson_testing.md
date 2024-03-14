@@ -138,11 +138,11 @@ We can list the addresses returned above by running:
 ```shell skip
 mockup-client list known addresses
 # Outputs:
-# bootstrap5: tz1ddb9NMYHZi5UzPdzTZMYQQZoMub195zgv (unencrypted sk known)
-# bootstrap4: tz1b7tUupMgCNw2cCLpKTkSD1NZzB5TkP2sv (unencrypted sk known)
-# bootstrap3: tz1faswCTDciRzE4oJ9jn2Vm2dvjeyA9fUzU (unencrypted sk known)
-# bootstrap2: tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN (unencrypted sk known)
-# bootstrap1: tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx (unencrypted sk known)
+# bootstrap5: mv1GvL4GYjch8gDBcnAejHBfNqNWVHoenSVS (unencrypted sk known)
+# bootstrap4: mv1SHJm7osyS2G9ge4kjbmUMS3xr36VQWRKe (unencrypted sk known)
+# bootstrap3: mv1MLj377UstLn5gzHBr6FQtjM812NbB3RXe (unencrypted sk known)
+# bootstrap2: mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k (unencrypted sk known)
+# bootstrap1: mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE (unencrypted sk known)
 ```
 
 We are now ready to originate (or "deploy") the contract on our mockup

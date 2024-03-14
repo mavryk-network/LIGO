@@ -26,8 +26,8 @@ type storage = {
 }
 type applied = operation list * storage
 
-let tez_to_nat (xtz: tez) : nat = xtz / 1mutez
-let nat_to_tez (x: nat) : tez = x * 1mutez
+let tez_to_nat (xtz: tez) : nat = xtz / 1mumav
+let nat_to_tez (x: nat) : tez = x * 1mumav
 
 let create_new_ticket (storage: storage) (qty: tez) : bytes ticket option =
   if qty < storage.minimal_amount then failwith "mint_sc: amount too low"

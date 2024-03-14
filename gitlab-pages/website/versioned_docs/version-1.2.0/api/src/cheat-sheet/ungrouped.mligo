@@ -11,9 +11,9 @@ let booleanLogic : bool =
     (false && true) =
     (false || false)
 let tez : tez = 42tez
-let tez : tez = 7mutez
-let tz1address : address =
-  ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
+let tez : tez = 7mumav
+let mv1address : address =
+  ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
 let kt1address : address =
   ("KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD" : address)
 let my_str : string = "Hello World!"
@@ -43,7 +43,7 @@ let middle_name : middle_name = Some "Foo"
 let middle_name : middle_name = None
 let age : int = 5
 let someAddress : address =
-  ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
+  ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
 type person = {
   age  : int;
   name : string
@@ -59,14 +59,14 @@ type prices = (nat, tez) map
 
 let prices : prices =
   Map.literal [
-    (10n, 60mutez);
-    (50n, 30mutez);
-    (100n, 10mutez);
+    (10n, 60mumav);
+    (50n, 30mumav);
+    (100n, 10mumav);
   ]
 
 let price : tez option = Map.find_opt 50n prices
 
-let prices : prices = Map.update 200n (Some 5mutez) prices
+let prices : prices = Map.update 200n (Some 5mumav) prices
 let fail (u : unit) : unit =
   failwith "a failure message"
 type animal =
