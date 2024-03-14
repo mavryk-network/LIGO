@@ -8,7 +8,7 @@ type id_details = {
 
 (* The prices kept in storage can be changed by bakers, though they should only be
    adjusted down over time, not up. *)
-type storage = (id, id_details) big_map * int * (tez * tez)
+type storage = (id, id_details) big_map * int * (mav * mav)
 
 (** Preliminary thoughts on ids:
 

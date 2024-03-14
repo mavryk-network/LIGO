@@ -51,10 +51,10 @@ type operation
 </SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
-type tez
+type mav
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-type tez
+type mav
 </SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
@@ -795,13 +795,12 @@ type views
 
 <SyntaxTitle syntax="cameligo">
 type test&#95;exec&#95;error&#95;balance&#95;too&#95;low = &#123;
- contract&#95;balance : tez;
+ contract&#95;balance : mav;
  contract&#95;too&#95;low : address;
- spend&#95;request : tez
-&#125;
+ spend&#95;request : mav&#125;
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-type test&#95;exec&#95;error&#95;balance&#95;too&#95;low = &#123; contract&#95;balance: tez; contract&#95;too&#95;low: address; spend&#95;request: tez &#125;
+type test&#95;exec&#95;error&#95;balance&#95;too&#95;low = &#123; contract&#95;balance: mav; contract&#95;too&#95;low: address; spend&#95;request: mav &#125;
 </SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">

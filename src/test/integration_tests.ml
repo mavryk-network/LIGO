@@ -37,7 +37,7 @@ let annotation ~raise () : unit =
       ~raise
       program
       "my_address"
-      (e_address ~loc "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE")
+      (e_address ~loc "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe")
   in
   ()
 
@@ -322,7 +322,7 @@ let comparable_mligo ~raise () : unit =
       ~raise
       program
       "address_"
-      (e_address ~loc "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE")
+      (e_address ~loc "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe")
       (e_bool ~loc false)
   in
   let () = expect_eq ~raise program "bool_" (e_bool ~loc true) (e_bool ~loc false) in
@@ -2609,7 +2609,7 @@ let main =
   @ test_w_all "address" address
   @ test_w_all "self address" self_address
   @ test_w_all "implicit account" implicit_account
-  @ [ test_w "tez (mligo)" tez_mligo ]
+  @ [ test_w "mav (mligo)" tez_mligo ]
   @ test_w_all "lambda" lambda
   @ test_w_all "lambda2" lambda2
   @ test_w_all "tuple" tuple

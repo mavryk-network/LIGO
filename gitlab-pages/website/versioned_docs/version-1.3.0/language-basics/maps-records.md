@@ -395,7 +395,7 @@ And here is how to create a non-empty map value:
 ```cameligo group=maps
 let moves : register =
   Map.literal [
-    (("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address), (1,2));
+    (("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address), (1,2));
     (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address), (0,3))]
 ```
 
@@ -411,7 +411,7 @@ that we type-cast a string into an address.
 ```jsligo group=maps
 const moves : register =
   Map.literal (list([
-    ["mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address, [1,2]],
+    ["mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address, [1,2]],
     ["mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address, [0,3]]]));
 ```
 
@@ -725,7 +725,7 @@ And here is how to create a non-empty map value:
 ```cameligo group=big_maps
 let moves : register =
   Big_map.literal [
-    (("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address), (1,2));
+    (("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address), (1,2));
     (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address), (0,3))]
 ```
 
@@ -741,7 +741,7 @@ value>" : address)` means that we cast a string into an address.
 ```jsligo group=big_maps
 const moves : register =
   Big_map.literal (list([
-    ["mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address, [1, 2]],
+    ["mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address, [1, 2]],
     ["mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address, [0, 3]]]));
 ```
 

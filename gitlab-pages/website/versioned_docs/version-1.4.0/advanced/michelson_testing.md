@@ -142,7 +142,7 @@ mockup-client list known addresses
 # bootstrap4: mv1SHJm7osyS2G9ge4kjbmUMS3xr36VQWRKe (unencrypted sk known)
 # bootstrap3: mv1MLj377UstLn5gzHBr6FQtjM812NbB3RXe (unencrypted sk known)
 # bootstrap2: mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k (unencrypted sk known)
-# bootstrap1: mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE (unencrypted sk known)
+# bootstrap1: mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe (unencrypted sk known)
 ```
 
 We are now ready to originate (or "deploy") the contract on our mockup

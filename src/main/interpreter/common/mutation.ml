@@ -173,7 +173,7 @@ let rec value_gen
       (Errors.generic_error type_expr.location
       @@ Format.asprintf
            "Generator for type %a is not implemented. For now, only unit, string, bytes, \
-            address, int, nat, tez, records, sums, lists, sets, maps and big_maps can be \
+            address, int, nat, mav, records, sums, lists, sets, maps and big_maps can be \
             generated."
            Ast_aggregated.PP.type_expression
            type_expr)

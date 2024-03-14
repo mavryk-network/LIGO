@@ -1,3 +1,3 @@
-let a : tez  = 5mumav
-let b : tez  = 10mumav
+let a : mav  = 5mumav
+let b : mav  = 10mumav
 let c : bool = (a = b) // false

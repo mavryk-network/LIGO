@@ -16,7 +16,7 @@ Then convert `typed_address` to `contract` using
 
 ```cameligo test-ligo group=addr2contract
 let test =
-  let addr = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address) in
+  let addr = ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address) in
   let taddr : (unit, unit) typed_address = Test.cast_address addr in
   let contract : (unit) contract = Test.to_contract taddr in
   contract
@@ -28,7 +28,7 @@ let test =
 
 ```jsligo test-ligo group=addr2contract
 const test = do {
-  const addr = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address);
+  const addr = ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address);
   const taddr : typed_address<unit,unit> = Test.cast_address(addr);
   const contract : contract<unit> = Test.to_contract(taddr);
   return contract;

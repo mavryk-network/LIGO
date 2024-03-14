@@ -1,1 +1,1 @@
-let test = Test.reset_state 2n [4000tez;4000tez]
+let test = Test.reset_state 2n [4000mav;4000mav]

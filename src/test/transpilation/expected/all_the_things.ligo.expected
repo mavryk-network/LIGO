@@ -193,7 +193,7 @@ function check (const p : unit) : int is
 const lst : list (int) = list []
 
 const my_address : address
-= ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
+= ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
 
 type foo is record [bar : int -> int]
 
@@ -267,7 +267,7 @@ function main
 
 type parameter is unit
 
-type storage is tez
+type storage is mav
 
 type return is list (operation) * storage
 
@@ -411,7 +411,7 @@ function toto (const i : int) : int is
 type card_pattern_id is nat
 
 type card_pattern is
-  record [coefficient : tez; quantity : nat]
+  record [coefficient : mav; quantity : nat]
 
 type card_patterns is map (card_pattern_id, card_pattern)
 
@@ -505,8 +505,7 @@ function sell_single
 
   s.cards := cards;
 
-  const price : tez
-  = card_pattern.coefficient * card_pattern.quantity;
+  const price : mav  = card_pattern.coefficient * card_pattern.quantity;
 
   const receiver : contract (unit)
   = case (Tezos.get_contract_opt (Tezos.get_sender ())
@@ -536,8 +535,7 @@ function buy_single
          : card_pattern)
     ];
 
-  const price : tez
-  = card_pattern.coefficient * (card_pattern.quantity + 1n);
+  const price : mav  = card_pattern.coefficient * (card_pattern.quantity + 1n);
 
   if price > amount then failwith ("Not enough money");
 
@@ -1076,9 +1074,8 @@ type storage is
   record [
     identities : big_map (id, id_details);
     next_id : int;
-    name_price : tez;
-    skip_price : tez
-  ]
+    name_price : mav;
+    skip_price : mav  ]
 
 function buy
   (const parameter : buy;
@@ -2312,15 +2309,15 @@ function main (const p : action; const s : int) : return is
      Increment (n) -> s + n | Decrement (n) -> s - n
    ])
 
-const add_tez : tez = 21mumav + 21mumav
+const add_tez : mav = 21mumav + 21mumav
 
-const sub_tez : tez = 21mumav - 20mumav
+const sub_tez : mav = 21mumav - 20mumav
 
-const not_enough_tez : tez = 4611686018427387903mumav
+const not_enough_tez : mav = 4611686018427387903mumav
 
-const nat_mul_tez : tez = 1n * 100mumav
+const nat_mul_tez : mav = 1n * 100mumav
 
-const tez_mul_nat : tez = 100mumav * 10n
+const tez_mul_nat : mav = 100mumav * 10n
 
 const tez_div_tez1 : nat = 100mumav / 1mumav
 
@@ -2328,11 +2325,11 @@ const tez_div_tez2 : nat = 100mumav / 90mumav
 
 const tez_div_tez3 : nat = 100mumav / 110mumav
 
-const tez_mod_tez1 : tez = 100mumav mod 1mumav
+const tez_mod_tez1 : mav = 100mumav mod 1mumav
 
-const tez_mod_tez2 : tez = 100mumav mod 90mumav
+const tez_mod_tez2 : mav = 100mumav mod 90mumav
 
-const tez_mod_tez3 : tez = 100mumav mod 110mumav
+const tez_mod_tez3 : mav = 100mumav mod 110mumav
 
 type storage_t is timestamp
 

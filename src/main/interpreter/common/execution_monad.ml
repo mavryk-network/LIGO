@@ -762,17 +762,17 @@ module Command = struct
       let value = LC.v_pair (V_Ct (C_string sk), V_Ct (C_key pk)) in
       Lwt.return (value, ctxt)
     | Baker_account (acc, opt) ->
-      let tez = trace_option ~raise (corner_case ()) @@ LC.get_option opt in
-      let tez =
+      let mav = trace_option ~raise (corner_case ()) @@ LC.get_option opt in
+      let mav =
         Option.map
           ~f:(fun v -> trace_option ~raise (corner_case ()) @@ LC.get_mumav v)
-          tez
+          mav
       in
-      let tez = Option.map ~f:(fun t -> Z.to_int64 t) tez in
+      let mav = Option.map ~f:(fun t -> Z.to_int64 t) mav in
       let sk, pk = trace_option ~raise (corner_case ()) @@ LC.get_pair acc in
       let sk = trace_option ~raise (corner_case ()) @@ LC.get_string sk in
       let pk = trace_option ~raise (corner_case ()) @@ LC.get_key pk in
-      let next_baker_accounts = (sk, pk, tez) :: ctxt.internals.next_baker_accounts in
+      let next_baker_accounts = (sk, pk, mav) :: ctxt.internals.next_baker_accounts in
       let ctxt = { ctxt with internals = { ctxt.internals with next_baker_accounts } } in
       Lwt.return ((), ctxt)
     | Register_delegate (loc, calltrace, pkh) ->

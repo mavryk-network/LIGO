@@ -55,8 +55,8 @@ function main ( const x : (int*int) * unit ) is
   (list [Tezos.emit ("%foo", x.0) ; Tezos.emit ("%foo", x.0.0)], Unit)
 
 const test_foo = {
-  const orig = Test.originate (main, Unit, 0tez) ;
-  Test.transfer_exn (orig.addr, (1,2), 0tez) ;
+  const orig = Test.originate (main, Unit, 0mav) ;
+  Test.transfer_exn (orig.addr, (1,2), 0mav) ;
   const x = (Test.get_last_events_from (orig.addr, "foo") : list (int*int)) ;
   const y = (Test.get_last_events_from (orig.addr, "foo") : list (int)) ;
 } with (x,y)
@@ -72,8 +72,8 @@ module C = struct
 end
 
 let test_foo =
-  let orig = Test.originate (contract_of C) () 0tez in
-  let _ = Test.transfer_exn orig.addr (Main (1,2)) 0tez in
+  let orig = Test.originate (contract_of C) () 0mav in
+  let _ = Test.transfer_exn orig.addr (Main (1,2)) 0mav in
   (Test.get_last_events_from orig.addr "foo" : (int*int) list),(Test.get_last_events_from orig.addr "foo" : int list)
 ```
 
@@ -91,8 +91,8 @@ namespace C {
 }
 
 let test = (() : [list<[int,int]>, list<int>] => {
-  let orig = Test.originate(contract_of(C), unit, 0 as tez);
-  Test.transfer_exn(orig.addr, Main([1,2]), 0 as tez);
+  let orig = Test.originate(contract_of(C), unit, 0 as mav);
+  Test.transfer_exn(orig.addr, Main([1,2]), 0 as mav);
   return [Test.get_last_events_from(orig.addr, "foo") as list<[int, int]>, Test.get_last_events_from(orig.addr, "foo") as list<int>];
 }) ();
 ```

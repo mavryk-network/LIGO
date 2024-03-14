@@ -59,10 +59,10 @@ module PBT = [Test.PBT](Test.PBT.md)
 
 
 <SyntaxTitle syntax="cameligo">
-val originate : &#39;p &#39;s.(&#39;p, &#39;s) module&#95;contract -&gt; &#39;s -&gt; tez -&gt; (&#39;p, &#39;s) origination&#95;result
+val originate : &#39;p &#39;s.(&#39;p, &#39;s) module&#95;contract -&gt; &#39;s -&gt; mav -&gt; (&#39;p, &#39;s) origination&#95;result
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let originate: &lt;p, s&gt;(&#95;: module&#95;contract&lt;p, s&gt;) =&gt; (&#95;: s) =&gt; (&#95;: tez) =&gt; origination&#95;result&lt;p, s&gt;
+let originate: &lt;p, s&gt;(&#95;: module&#95;contract&lt;p, s&gt;) =&gt; (&#95;: s) =&gt; (&#95;: mav) =&gt; origination&#95;result&lt;p, s&gt;
 </SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">

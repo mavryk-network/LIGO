@@ -11,7 +11,7 @@ generated. unrecognized constant: {"constant":"BALANCE","location":"generated"}
 *)
 
 type parameter = unit
-type storage = tez
+type storage = mav
 type return = operation list * storage
 
 let main (_ : parameter) (_ : storage) : return =

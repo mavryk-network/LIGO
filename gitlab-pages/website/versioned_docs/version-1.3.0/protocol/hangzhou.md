@@ -98,14 +98,14 @@ let constant : string => 'a
 New signature for originate_from_file:
 
 <SyntaxTitle syntax="pascaligo">
-val originate_from_file : string -> string -> list (string) -> michelson_program -> tez -> (address * michelson_program * int)
+val originate_from_file : string -> string -> list (string) -> michelson_program -> mav -> (address * michelson_program * int)
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-val originate_from_file : string -> string -> string list -> michelson_program -> tez -> (address * michelson_program * int)
+val originate_from_file : string -> string -> string list -> michelson_program -> mav -> (address * michelson_program * int)
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let originate_from_file = (filepath: string, entrypoint: string , views : list &lt;&apos;string&gt; , init: michelson_program, balance: tez) => [address, michelson_program, int]
+let originate_from_file = (filepath: string, entrypoint: string , views : list &lt;&apos;string&gt; , init: michelson_program, balance: mav) => [address, michelson_program, int]
 </SyntaxTitle>
 
 Originate a contract with a path to the contract file, an entrypoint, a list of views, an initial storage and an initial balance.
@@ -164,12 +164,12 @@ let main (p, _ : parameter * storage) : return =
 
 let test =
   let init_storage : bytes = 0x00 in
-  let addr, _, _ = Test.originate main init_storage 0tez in
+  let addr, _, _ = Test.originate main init_storage 0mav in
   let payload = 0x0101
   in
   let test_open (cc : chest_key * chest) (expected : bytes) : unit =
     let x : parameter contract = Test.to_contract addr in
-    let _ = Test.transfer_to_contract_exn x cc 0tez in
+    let _ = Test.transfer_to_contract_exn x cc 0mav in
     let s = Test.get_storage addr in
     assert (s = expected)
   in

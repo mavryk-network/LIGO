@@ -355,7 +355,7 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expr_ =
 
 and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_attr of (Attribute.t * 'self) (* [@a] (x,y)      *)
-  | E_literal of Literal_value.t (* 42, 10tez *)
+  | E_literal of Literal_value.t (* 42, 10mav *)
   | E_binary_op of 'self Operators.binary_op
   | E_unary_op of 'self Operators.unary_op
   | E_variable of Variable.t [@not_initial] (* x *)

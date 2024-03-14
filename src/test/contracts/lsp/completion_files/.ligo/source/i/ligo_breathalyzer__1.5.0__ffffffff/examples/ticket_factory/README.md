@@ -17,7 +17,7 @@ There are two contracts:
 - An user can originate an `oven_sc` with a fixed address (as an owner of the `oven`).
 - He can interact with the `oven_sc` to request the `mint` of a ticket that will be sent
   to the `mint_sc` contract.
-- The `mint_sc` contract keep the amount of `tez` sent, produce a quantity of the ticket
+- The `mint_sc` contract keep the amount of `mav` sent, produce a quantity of the ticket
   and give it back to the `oven_sc`.
   
 ```mermaid
@@ -35,8 +35,8 @@ is what gives a ticket a concrete value. `Redeem` is the opposite of `Mint`.
 - An user can ask for a `Redeem` to `mint_sc`.
 - He can interact with the `oven_sc` to request the `redeem` of a quantity of ticket
   that will be sent to the `mint_sc` contract.
-- The `mint_sc` contract burn the ticket and send `tez` back to the `oven_sc` that will
-  send the `tez` back to the user.
+- The `mint_sc` contract burn the ticket and send `mav` back to the `oven_sc` that will
+  send the `mav` back to the user.
   
 ```mermaid
 flowchart LR

@@ -6,12 +6,12 @@ let create_and_call (st : address list) =
     Tezos.create_contract
       (fun (p, s : int * int) -> ([] : operation list), p + s)
       (None : key_hash option)
-      0tez
+      0mav
       1 in
   let call_op =
     Tezos.transaction
       (addr, 41)
-      0tez
+      0mav
       (Tezos.self "%callback" : (address * int) contract)
   in [create_op; call_op], addr :: st
 
@@ -28,7 +28,7 @@ let call_counter (addr, n : address * int) =
     match callee_opt with
     | Some contract -> contract
     | None -> (failwith "Could not find contract" : int contract)
-  in Tezos.transaction n 0tez callee
+  in Tezos.transaction n 0mav callee
 
 type parameter =
   CreateAndCall

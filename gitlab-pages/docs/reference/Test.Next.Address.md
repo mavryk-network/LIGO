@@ -9,10 +9,10 @@ import SyntaxTitle from '@theme/SyntaxTitle';
 
 
 <SyntaxTitle syntax="cameligo">
-val get&#95;balance : address -&gt; tez
+val get&#95;balance : address -&gt; mav
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let get&#95;balance: (&#95;: address) =&gt; tez
+let get&#95;balance: (&#95;: address) =&gt; mav
 </SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">

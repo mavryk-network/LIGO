@@ -10,10 +10,10 @@ let booleanLogic : bool =
     false =
     (false && true) =
     (false || false)
-let tez : tez = 42tez
-let tez : tez = 7mumav
+let mav : mav = 42mav
+let mav : mav = 7mumav
 let mv1address : address =
-  ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
+  ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
 let kt1address : address =
   ("KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD" : address)
 let my_str : string = "Hello World!"
@@ -43,7 +43,7 @@ let middle_name : middle_name = Some "Foo"
 let middle_name : middle_name = None
 let age : int = 5
 let someAddress : address =
-  ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
+  ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
 type person = {
   age  : int;
   name : string
@@ -55,7 +55,7 @@ let john : person = {
 }
 
 let name : string = john.name
-type prices = (nat, tez) map
+type prices = (nat, mav) map
 
 let prices : prices =
   Map.literal [
@@ -64,7 +64,7 @@ let prices : prices =
     (100n, 10mumav);
   ]
 
-let price : tez option = Map.find_opt 50n prices
+let price : mav option = Map.find_opt 50n prices
 
 let prices : prices = Map.update 200n (Some 5mumav) prices
 let fail (u : unit) : unit =

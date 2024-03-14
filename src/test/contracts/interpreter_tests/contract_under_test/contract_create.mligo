@@ -12,7 +12,7 @@ let main (action : parameter) (store : storage) : return =
       in
       let c : nat contract option = Tezos.get_contract_opt a in
       let ops = match c with
-          Some (c) -> [ Tezos.transaction 1n 10tez c ]
+          Some (c) -> [ Tezos.transaction 1n 10mav c ]
         | None     -> (failwith 2 : operation list)
       in
       (ops, (None: storage))

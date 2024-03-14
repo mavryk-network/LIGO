@@ -36,8 +36,8 @@ type action =
 type storage = {
   identities: (id, id_details) big_map;
   next_id: int;
-  name_price: tez;
-  skip_price: tez;
+  name_price: mav;
+  skip_price: mav;
 }
 
 type return = operation list * storage

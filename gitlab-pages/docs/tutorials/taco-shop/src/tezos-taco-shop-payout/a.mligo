@@ -2,8 +2,7 @@ module TacoShop = struct
   type taco_supply =
     {
      current_stock : nat;
-     max_price : tez
-    }
+     max_price : mav    }
 
   type taco_shop_storage = (nat, taco_supply) map
 
@@ -16,7 +15,7 @@ module TacoShop = struct
       match Map.find_opt (taco_kind_index) taco_shop_storage with
         Some k -> k
       | None -> failwith "Unknown kind of taco" in
-    let current_purchase_price : tez =
+    let current_purchase_price : mav =
       taco_kind.max_price / taco_kind.current_stock in
     (* We won't sell tacos if the amount is not correct *)
 

@@ -160,7 +160,7 @@ let origination : operation * address = Tezos.create_contract
 const origination = Tezos.create_contract(
   (p: nat, s: string) => [list([]), s],
   None(),
-  3tez,
+  3mav,
   "initial_storage"
 );
 ```

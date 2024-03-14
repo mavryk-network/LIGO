@@ -36,11 +36,11 @@ Former `Test.mutation_test`.
 
 
 <SyntaxTitle syntax="cameligo">
-val from_file : string -> string -> string list -> michelson_program -> tez -> (address * michelson_contract * int -> 'b) -> ('b * mutation) option
+val from_file : string -> string -> string list -> michelson_program -> mav -> (address * michelson_contract * int -> 'b) -> ('b * mutation) option
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-const from_file&lt;b&gt; : (filepath: string, entrypoint: string, views: list&lt;string&gt;, init: michelson_program, balance: tez, (tester: (originated_address: address, code: michelson_contract, size: int) => b)) => option&lt;[b, mutation]&gt;
+const from_file&lt;b&gt; : (filepath: string, entrypoint: string, views: list&lt;string&gt;, init: michelson_program, balance: mav, (tester: (originated_address: address, code: michelson_contract, size: int) => b)) => option&lt;[b, mutation]&gt;
 </SyntaxTitle>
 
 Given a contract from a file (passed by filepath, entrypoint and
@@ -53,11 +53,11 @@ Former `Test.originate_from_file_and_mutate`.
 
 
 <SyntaxTitle syntax="cameligo">
-val contract : (('param, 'storage) module_contract) -> 'storage -> tez -> (('param, 'storage) typed_address -> michelson_contract -> int -> b) -> ('b * mutation) option
+val contract : (('param, 'storage) module_contract) -> 'storage -> mav -> (('param, 'storage) typed_address -> michelson_contract -> int -> b) -> ('b * mutation) option
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-const contract&lt;p, s, b&gt; : (contract: module_contract&lt;p, s&gt;, init: s, balance: tez, (tester: (originated_address: typed_address&lt;p, s&gt;, code: michelson_contract, size: int) => b)) => option&lt;[b, mutation]&gt;
+const contract&lt;p, s, b&gt; : (contract: module_contract&lt;p, s&gt;, init: s, balance: mav, (tester: (originated_address: typed_address&lt;p, s&gt;, code: michelson_contract, size: int) => b)) => option&lt;[b, mutation]&gt;
 </SyntaxTitle>
 
 Given a contract as a module/namespace, an initial storage and
@@ -119,11 +119,11 @@ Former `Test.mutation_test_all`.
 
 
 <SyntaxTitle syntax="cameligo">
-val from_file : string -> string -> string list -> michelson_program -> tez -> (address * michelson_contract * int -> 'b) -> ('b * mutation) list
+val from_file : string -> string -> string list -> michelson_program -> mav -> (address * michelson_contract * int -> 'b) -> ('b * mutation) list
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let from_file&lt;b&gt; : (filepath: string, entrypoint: string, views: list&lt;string&gt;, init: michelson_program, balance: tez, (tester: (originated_address: address, code: michelson_contract, size: int) => b)) => list&lt;[b, mutation]&gt;
+let from_file&lt;b&gt; : (filepath: string, entrypoint: string, views: list&lt;string&gt;, init: michelson_program, balance: mav, (tester: (originated_address: address, code: michelson_contract, size: int) => b)) => list&lt;[b, mutation]&gt;
 </SyntaxTitle>
 
 Given a contract from a file (passed by filepath, entrypoint and
@@ -137,11 +137,11 @@ Former `Test.originate_from_file_and_mutate_all`.
 
 
 <SyntaxTitle syntax="cameligo">
-val contract : (('param, 'storage) module_contract) -> 'storage -> tez -> (('param, 'storage) typed_address -> michelson_contract -> int -> b) -> ('b * mutation) list
+val contract : (('param, 'storage) module_contract) -> 'storage -> mav -> (('param, 'storage) typed_address -> michelson_contract -> int -> b) -> ('b * mutation) list
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let contract&lt;s, p, b&gt; : (contract: module_contract&lt;p, s&gt;, init: s, balance: tez, (tester: (originated_address: typed_address&lt;p, s&gt;, code: michelson_contract, size: int) => b)) => list&lt;[b, mutation]&gt;
+let contract&lt;s, p, b&gt; : (contract: module_contract&lt;p, s&gt;, init: s, balance: mav, (tester: (originated_address: typed_address&lt;p, s&gt;, code: michelson_contract, size: int) => b)) => list&lt;[b, mutation]&gt;
 </SyntaxTitle>
 
 Given a contract as a module/namespace, an initial storage and
@@ -199,14 +199,14 @@ Former `Test.drop_context`.
 
 
 <SyntaxTitle syntax="cameligo">
-val reset : nat -> tez list -> unit
+val reset : nat -> mav list -> unit
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let reset = (no_of_accounts: nat, amount: list&lt;tez&gt;) => unit
+let reset = (no_of_accounts: nat, amount: list&lt;mav&gt;) => unit
 </SyntaxTitle>
 Generate a number of random bootstrapped accounts with a default
-amount of 4000000 tez. The passed list can be used to overwrite the
+amount of 4000000 mav. The passed list can be used to overwrite the
 amount. By default, the state only has two bootstrapped accounts.
 
 Notice that since Ithaca, a percentage of an account's balance is
@@ -220,11 +220,11 @@ Former `Test.reset_state`.
 
 
 <SyntaxTitle syntax="cameligo">
-val reset_at : timestamp -> nat -> tez list -> unit
+val reset_at : timestamp -> nat -> mav list -> unit
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let reset_at = (initial_timestamp : timestamp, no_of_accounts: nat, amount: list&lt;tez&gt;) => unit
+let reset_at = (initial_timestamp : timestamp, no_of_accounts: nat, amount: list&lt;mav&gt;) => unit
 </SyntaxTitle>
 
 Same as `reset` but accepts a timestamp which is set as the initial timestamp of the genesis block.
@@ -761,11 +761,11 @@ A type representing the data corresponding to the origination of a contract.
 
 
 <SyntaxTitle syntax="cameligo">
-val contract : (('param, 'storage) module_contract) -> 'storage -> tez -> ('param, 'storage) origination_result
+val contract : (('param, 'storage) module_contract) -> 'storage -> mav -> ('param, 'storage) origination_result
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-const contract&lt;p, s&gt; : (contract: module_contract&lt;p, s&gt;, init: s, balance: tez) => origination_result&lt;p, s&gt;
+const contract&lt;p, s&gt; : (contract: module_contract&lt;p, s&gt;, init: s, balance: mav) => origination_result&lt;p, s&gt;
 </SyntaxTitle>
 
 Originate a contract from a module/namespace. To obtain a `module_contract` from a module, use the `contract_of` keyword.
@@ -774,11 +774,11 @@ Former `Test.originate_module`.
 
 
 <SyntaxTitle syntax="cameligo">
-val from_file : string -> 'storage -> tez -> ('param, 'storage) origination_result
+val from_file : string -> 'storage -> mav -> ('param, 'storage) origination_result
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-const from_file&lt;p, s&gt; : (filepath: string, init: s, balance: tez) => origination_result&lt;p, s&gt;
+const from_file&lt;p, s&gt; : (filepath: string, init: s, balance: mav) => origination_result&lt;p, s&gt;
 </SyntaxTitle>
 
 Originate a contract with a path to the contract file, together with an initial storage and an initial balance.
@@ -789,14 +789,14 @@ Former `Test.originate_from_file`.
 ## Module `Contract`
 
 <SyntaxTitle syntax="cameligo">
-val transfer : 'param contract -> 'param -> tez -> test_exec_result
+val transfer : 'param contract -> 'param -> mav -> test_exec_result
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-const transfer&lt;p&gt; : (addr: contract&lt;p&gt;, param: p, amount: tez) => test_exec_result
+const transfer&lt;p&gt; : (addr: contract&lt;p&gt;, param: p, amount: mav) => test_exec_result
 </SyntaxTitle>
 
-Bake a transaction by sending an amount of tez with a parameter from
+Bake a transaction by sending an amount of mav with a parameter from
 the current source to a contract.  Returns the amount of gas consumed
 by the execution of the contract.
 
@@ -804,11 +804,11 @@ Former `Test.transfer_to_contract`.
 
 
 <SyntaxTitle syntax="cameligo">
-val transfer_exn : 'p contract -> 'p -> tez -> nat
+val transfer_exn : 'p contract -> 'p -> mav -> nat
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-const transfer_exn&lt;p&gt; : (addr: contract&lt;p&gt;, parameter: p, amount: tez) => nat
+const transfer_exn&lt;p&gt; : (addr: contract&lt;p&gt;, parameter: p, amount: mav) => nat
 </SyntaxTitle>
 
 Similar as `transfer`, but fails when anything goes wrong.
@@ -819,14 +819,14 @@ Former `Test.transfer_to_contract_exn`.
 ## Module `Typed_address`
 
 <SyntaxTitle syntax="cameligo">
-val transfer : ('param, 'storage) typed_address -> 'param -> tez -> test_exec_result
+val transfer : ('param, 'storage) typed_address -> 'param -> mav -> test_exec_result
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-const transfer&lt;p, s&gt; : (addr: typed_address&lt;p, s&gt;, param: p, amount: tez) => test_exec_result
+const transfer&lt;p, s&gt; : (addr: typed_address&lt;p, s&gt;, param: p, amount: mav) => test_exec_result
 </SyntaxTitle>
 
-Bake a transaction by sending an amount of tez with a parameter from
+Bake a transaction by sending an amount of mav with a parameter from
 the current source to a contract given as `typed_address`.  Returns the amount of gas consumed
 by the execution of the contract.
 
@@ -834,11 +834,11 @@ Former `Test.transfer`.
 
 
 <SyntaxTitle syntax="cameligo">
-val transfer_exn : ('p, 's) typed_address -> 'p -> tez -> nat
+val transfer_exn : ('p, 's) typed_address -> 'p -> mav -> nat
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-const transfer_exn&lt;p, s&gt; : (addr: typed_address&lt;p, s&gt;, parameter: p, amount: tez) => nat
+const transfer_exn&lt;p, s&gt; : (addr: typed_address&lt;p, s&gt;, parameter: p, amount: mav) => nat
 </SyntaxTitle>
 
 Similar as `transfer`, but fails when anything goes wrong.
@@ -862,14 +862,14 @@ Former `Test.get_storage`.
 ## Module `Address`
 
 <SyntaxTitle syntax="cameligo">
-val get_balance : address -> tez
+val get_balance : address -> mav
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-const get_balance : (account: address) => tez
+const get_balance : (account: address) => mav
 </SyntaxTitle>
 
-Get the balance of an account in tez.
+Get the balance of an account in mav.
 
 Former `Test.get_balance`.
 

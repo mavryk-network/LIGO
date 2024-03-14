@@ -1,6 +1,6 @@
 
 namespace TacoShop {
-  type taco_supply = { current_stock: nat, max_price: tez };
+  type taco_supply = { current_stock: nat, max_price: mav };
   export type taco_shop_storage = map<nat, taco_supply>;
   
   @entry

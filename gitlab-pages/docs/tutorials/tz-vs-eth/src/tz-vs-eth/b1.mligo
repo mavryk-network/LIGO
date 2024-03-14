@@ -1,4 +1,4 @@
-type storage = {rewardsLeft : tez; beneficiaryAddress : address}
+type storage = {rewardsLeft : mav; beneficiaryAddress : address}
 
 let treasury (p, s : unit * storage) =
   // We do our computations first

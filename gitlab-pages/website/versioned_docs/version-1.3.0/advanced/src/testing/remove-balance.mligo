@@ -1,9 +1,9 @@
 (* This is remove-balance.mligo *)
 
-type balances = (address, tez) map
+type balances = (address, mav) map
 
-let remove_balances_under (b:balances) (threshold:tez) : balances =
+let remove_balances_under (b:balances) (threshold:mav) : balances =
   Map.fold
-    (fun ((acc, (k, v)) : balances * (address * tez)) ->
+    (fun ((acc, (k, v)) : balances * (address * mav)) ->
        if v < threshold then Map.remove k acc else acc)
     b b

@@ -32,16 +32,16 @@ let originate (level: Breath.Logger.level) =
     "auction_sc"
     (contract_of Auction)
     (None: Auction.storage)
-    (0tez)
+    (0mav)
 
-let bid (contract : (Auction parameter_of, Auction.storage) originated) (qty: tez) () =
+let bid (contract : (Auction parameter_of, Auction.storage) originated) (qty: mav) () =
   Breath.Contract.transfer_to contract Bid qty
 
 let expect_storage
     (storage : Auction.storage)
     (actor: Breath.Context.actor)
     (time: timestamp)
-    (expected_amount: tez) : Breath.Result.result =
+    (expected_amount: mav) : Breath.Result.result =
   Breath.Assert.is_some_and
     "The storage should be filled"
     (fun ({ current_leader_address; current_leader_amount; start_time } : Auction.current_leader) ->

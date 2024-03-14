@@ -33,10 +33,10 @@ let bid_happy_path =
       let (_, (alice, bob, carol)) = Breath.Context.init_default () in
       let contract = Util.originate level in
 
-      let alice_action = Breath.Context.act_as alice (Util.bid contract 1tez) in
+      let alice_action = Breath.Context.act_as alice (Util.bid contract 1mav) in
       let start_time = Tezos.get_now () in
-      let bob_action = Breath.Context.act_as bob (Util.bid contract 2tez) in
-      let carol_action = Breath.Context.act_as carol (Util.bid contract 3tez) in
+      let bob_action = Breath.Context.act_as bob (Util.bid contract 2mav) in
+      let carol_action = Breath.Context.act_as carol (Util.bid contract 3mav) in
 
       let storage = Breath.Contract.storage_of contract in
       let balance = Breath.Contract.balance_of contract in
@@ -45,8 +45,8 @@ let bid_happy_path =
         alice_action
       ; bob_action
       ; carol_action
-      ; Breath.Assert.is_equal "balance" balance 6tez
-      ; Util.expect_storage storage carol start_time 3tez
+      ; Breath.Assert.is_equal "balance" balance 6mav
+      ; Util.expect_storage storage carol start_time 3mav
       ])
 
 let bid_leader_try_to_be_upgraded_twice =
@@ -57,9 +57,9 @@ let bid_leader_try_to_be_upgraded_twice =
       let (_, (alice, _, _)) = Breath.Context.init_default () in
       let contract = Util.originate level in
 
-      let alice_fst_action = Breath.Context.act_as alice (Util.bid contract 1tez) in
+      let alice_fst_action = Breath.Context.act_as alice (Util.bid contract 1mav) in
       let start_time = Tezos.get_now () in
-      let alice_snd_action = Breath.Context.act_as alice (Util.bid contract 2tez) in
+      let alice_snd_action = Breath.Context.act_as alice (Util.bid contract 2mav) in
 
       let storage = Breath.Contract.storage_of contract in
       let balance = Breath.Contract.balance_of contract in
@@ -67,8 +67,8 @@ let bid_leader_try_to_be_upgraded_twice =
       Breath.Result.reduce [
         alice_fst_action
       ; Breath.Expect.fail_with_message "Same leader" alice_snd_action
-      ; Breath.Assert.is_equal "balance" balance 1tez
-      ; Util.expect_storage storage alice start_time 1tez
+      ; Breath.Assert.is_equal "balance" balance 1mav
+      ; Util.expect_storage storage alice start_time 1mav
       ])
 
 let bid_try_to_upgrade_with_a_lower_amount =
@@ -79,9 +79,9 @@ let bid_try_to_upgrade_with_a_lower_amount =
       let (_, (alice, bob, _)) = Breath.Context.init_default () in
       let contract = Util.originate level in
 
-      let alice_action = Breath.Context.act_as alice (Util.bid contract 2tez) in
+      let alice_action = Breath.Context.act_as alice (Util.bid contract 2mav) in
       let start_time = Tezos.get_now () in
-      let bob_action = Breath.Context.act_as bob (Util.bid contract 1tez) in
+      let bob_action = Breath.Context.act_as bob (Util.bid contract 1mav) in
 
       let storage = Breath.Contract.storage_of contract in
       let balance = Breath.Contract.balance_of contract in
@@ -89,25 +89,25 @@ let bid_try_to_upgrade_with_a_lower_amount =
       Breath.Result.reduce [
         alice_action
       ; Breath.Expect.fail_with_message "Amount should be greater" bob_action
-      ; Breath.Assert.is_equal "balance" balance 2tez
-      ; Util.expect_storage storage alice start_time 2tez
+      ; Breath.Assert.is_equal "balance" balance 2mav
+      ; Util.expect_storage storage alice start_time 2mav
       ])
 
 let bid_try_to_upgrade_with_a_null_amount =
   Breath.Model.case
     "bid"
-    "when a challenger try to upgrade the storage without tez, it should raise an error"
+    "when a challenger try to upgrade the storage without mav, it should raise an error"
     (fun (level: Breath.Logger.level) ->
       let (_, (alice, _, _)) = Breath.Context.init_default () in
       let contract = Util.originate level in
 
-      let alice_action = Breath.Context.act_as alice (Util.bid contract 0tez) in
+      let alice_action = Breath.Context.act_as alice (Util.bid contract 0mav) in
       let storage = Breath.Contract.storage_of contract in
       let balance = Breath.Contract.balance_of contract in
 
       Breath.Result.reduce [
         Breath.Expect.fail_with_message "Amount cannot be null" alice_action
-      ; Breath.Assert.is_equal "balance" balance 0tez
+      ; Breath.Assert.is_equal "balance" balance 0mav
       ; Breath.Assert.is_none "The storage should be empty" storage
       ])
 
@@ -119,8 +119,8 @@ let claim_leader_can_claim =
       let (_, (alice, bob, _)) = Breath.Context.init_default () in
       let contract = Util.originate level in
 
-      let alice_bid = Breath.Context.act_as alice (Util.bid contract 1tez) in
-      let bob_bid = Breath.Context.act_as bob (Util.bid contract 2tez) in
+      let alice_bid = Breath.Context.act_as alice (Util.bid contract 1mav) in
+      let bob_bid = Breath.Context.act_as bob (Util.bid contract 2mav) in
 
       Breath.Result.reduce [
         alice_bid

@@ -43,13 +43,13 @@ Drops a testing framework context from the stack of contexts. In
 
 
 <SyntaxTitle syntax="cameligo">
-val reset : nat -&gt; tez list -&gt; unit
+val reset : nat -&gt; mav list -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let reset: (&#95;: nat) =&gt; (&#95;: list&lt;tez&gt;) =&gt; unit
+let reset: (&#95;: nat) =&gt; (&#95;: list&lt;mav&gt;) =&gt; unit
 </SyntaxTitle>
 Generates a number of random bootstrapped accounts with a
-        default amount of `4000000` tez. The passed list can be used to
+        default amount of `4000000` mav. The passed list can be used to
         overwrite the amount. By default, the state only has two
         bootstrapped accounts. Notice that since Ithaca, a percentage of
         an account's balance is frozen (5% in testing mode) in case the
@@ -59,13 +59,13 @@ Generates a number of random bootstrapped accounts with a
 
 
 <SyntaxTitle syntax="cameligo">
-val reset&#95;at : timestamp -&gt; nat -&gt; tez list -&gt; unit
+val reset&#95;at : timestamp -&gt; nat -&gt; mav list -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let reset&#95;at: (&#95;: timestamp) =&gt; (&#95;: nat) =&gt; (&#95;: list&lt;tez&gt;) =&gt; unit
+let reset&#95;at: (&#95;: timestamp) =&gt; (&#95;: nat) =&gt; (&#95;: list&lt;mav&gt;) =&gt; unit
 </SyntaxTitle>
 Generates a number of random bootstrapped accounts with a
-        default amount of `4000000` tez. The passed list can be used to
+        default amount of `4000000` mav. The passed list can be used to
         overwrite the amount. By default, the state only has two
         bootstrapped accounts. Notice that since Ithaca, a percentage of
         an account's balance is frozen (5% in testing mode) in case the
@@ -196,8 +196,8 @@ Returns the list of all the event payloads emited with a given
 
 
 <SyntaxTitle syntax="cameligo">
-val stake : key&#95;hash -&gt; tez -&gt; unit
+val stake : key&#95;hash -&gt; mav -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let stake: (&#95;: key&#95;hash) =&gt; (&#95;: tez) =&gt; unit
+let stake: (&#95;: key&#95;hash) =&gt; (&#95;: mav) =&gt; unit
 </SyntaxTitle>

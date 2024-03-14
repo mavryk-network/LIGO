@@ -15,18 +15,18 @@ let test =
   let _baker = Test.nth_bootstrap_account 0 in
   let src = Test.nth_bootstrap_account 1 in
 
-  let {addr = typed_addr; code = _; size} = Test.originate (contract_of C) None 0tez in
+  let {addr = typed_addr; code = _; size} = Test.originate (contract_of C) None 0mav in
   let () = Test.assert ((None : C.storage) = (Test.get_storage typed_addr)) in
   let () = Test.assert (size < 300) in
   let new_account1 = check_new_origination src in
 
-  let _ = Test.transfer_exn typed_addr (Main Two) 10tez in
+  let _ = Test.transfer_exn typed_addr (Main Two) 10mav in
   let new_account2 = check_new_origination new_account1 in
   let new_storage = Test.get_storage typed_addr in
   let expected_new_storage = Some new_account2 in
   let () = Test.assert (new_storage = expected_new_storage) in
 
-  match (Test.transfer typed_addr (Main One) 10tez : test_exec_result) with
+  match (Test.transfer typed_addr (Main One) 10mav : test_exec_result) with
   | Success _ -> (failwith "contract did not fail" : michelson_program)
   | Fail x -> (
     let x = (fun (x : test_exec_error) -> x) x in 
@@ -47,7 +47,7 @@ let test2 =
   
   // You can change the default behavior by reseting the state:
   let number_of_account = 4n in
-  let overide_default_amounts = [ 8000tez ; 2mumav ] in // the [i]th element of the list overwrite default balance of the [i]th account 
+  let overide_default_amounts = [ 8000mav ; 2mumav ] in // the [i]th element of the list overwrite default balance of the [i]th account 
   let () = Test.reset_state number_of_account overide_default_amounts in
   // And by setting the source in between calls to `Test.transfer_to_contract` or `Test.originate`
   let bsa0 = (Test.nth_bootstrap_account 0) in
@@ -60,9 +60,9 @@ let test2 =
   let tz = fun (n:nat) ->
     Test.run (fun (x : unit -> nat) -> x () * 1mumav) (fun (_ : unit) -> n)
   in
-  let () = Test.assert ((Test.get_balance_of_address bsa0) = 2000tez) in
+  let () = Test.assert ((Test.get_balance_of_address bsa0) = 2000mav) in
   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
-  let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000tez) in
+  let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000mav) in
   let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mumav) in
   ()

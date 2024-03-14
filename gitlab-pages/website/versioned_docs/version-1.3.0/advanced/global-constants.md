@@ -360,8 +360,8 @@ module C = struct
 end
 
 let test =
-  let orig = Test.originate (contract_of C) 1 0tez in
-  let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
+  let orig = Test.originate (contract_of C) 1 0mav in
+  let _ = Test.transfer_exn orig.addr (Main ()) 0mav in
   assert (Test.get_storage orig.addr = 5)
 ```
 
@@ -384,8 +384,8 @@ namespace C {
 }
 
 const _test = () => {
-  let orig = Test.originate(contract_of(C), 1, 0tez);
-  Test.transfer_exn(orig.addr, Main(unit), 0tez);
+  let orig = Test.originate(contract_of(C), 1, 0mav);
+  Test.transfer_exn(orig.addr, Main(unit), 0mav);
   assert (Test.get_storage(orig.addr) == 5);
 };
 

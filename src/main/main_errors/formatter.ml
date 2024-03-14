@@ -397,7 +397,7 @@ let rec error_ppformat
     | `Main_interpret_not_enough_initial_accounts (loc, max) ->
       Format.fprintf
         f
-        "@[<hv>%a@. baker account initial balance must at least reach %a tez @]"
+        "@[<hv>%a@. baker account initial balance must at least reach %a mav @]"
         snippet_pp
         loc
         Memory_proto_alpha.Protocol.Alpha_context.Tez.pp

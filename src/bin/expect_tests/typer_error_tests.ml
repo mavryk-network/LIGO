@@ -452,19 +452,19 @@ let%expect_test _ =
   TODO NP :
   Instead of display - + - +... :
     - string
-    + tez
+    + mav
     - int
     + nat
     - int
-    + tez
+    + mav
     - string
   we want to display instead :
     - string
     - int
     - int
-    + tez
+    + mav
     + nat
-    + tez
+    + mav
     - string
   i.e., consecutive changes
     CHANGE A1 TO B1; CHANGE A2 TO B2
@@ -485,28 +485,28 @@ let%expect_test _ =
     {|
     File "../../test/contracts/negative/typer_unify_error_diff/tuple_vs_tuple_1.mligo", line 4, characters 40-41:
       3 |   let y : string * int * int * string = "foo", 42, 24, "bar" in
-      4 |   let x : tez    * nat * tez          = y in
+      4 |   let x : mav    * nat * mav          = y in
                                                   ^
       5 |   ([] : operation list), s
 
     This expression has type "( string * int * int * string )", but an expression was expected of type
-    "( tez * nat * tez )".
-    Type "( string * int * int * string )" is not compatible with type "( tez *
+    "( mav * nat * mav )".
+    Type "( string * int * int * string )" is not compatible with type "( mav *
                                                                         nat *
-                                                                        tez )".
+                                                                        mav )".
     Difference between the types:
     - string
-    + tez
+    + mav
     - int
     + nat
     - int
-    + tez
+    + mav
     - string |}]
 
 (*
   Here, the two tuples have some changes (1 change, 1 addition, 1 deletion)
   but they have the *same size*, so the typer will only display an error
-  on the first difference only (here, [string] vs. [tez])
+  on the first difference only (here, [string] vs. [mav])
 *)
 let%expect_test _ =
   run_ligo_bad
@@ -541,21 +541,21 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts/negative/typer_unify_error_diff/tuple_vs_tuple_3.mligo", line 4, characters 59-60:
-      3 |   let  x : string * int * nat * tez *       string * int =  "foo" , 42  , 24n , 42tez ,        "bar",  42 in
-      4 |   let _y : tez    * int       * tez * nat * string       = x in
+      3 |   let  x : string * int * nat * mav *       string * int =  "foo" , 42  , 24n , 42mav ,        "bar",  42 in
+      4 |   let _y : mav    * int       * mav * nat * string       = x in
                                                                      ^
       5 |   //       ^^^^^^         ^^^         ^^^            ^^^
 
-    This expression has type "( string * int * nat * tez * string * int )", but an expression was expected of type
-    "( tez * int * tez * nat * string )".
-    Type "( string * int * nat * tez * string * int )" is not compatible with type
-    "( tez * int * tez * nat * string )".
+    This expression has type "( string * int * nat * mav * string * int )", but an expression was expected of type
+    "( mav * int * mav * nat * string )".
+    Type "( string * int * nat * mav * string * int )" is not compatible with type
+    "( mav * int * mav * nat * string )".
     Difference between the types:
     - string
-    + tez
+    + mav
       int
     - nat
-      tez
+      mav
     + nat
       string
     - int |}]
@@ -572,24 +572,24 @@ let%expect_test _ =
     {|
     File "../../test/contracts/negative/typer_unify_error_diff/tuple_vs_tuple_4.mligo", line 4, characters 72-73:
       3 |   let x  : int *                nat * int * nat     * int *       nat = 42 , 4n , 42 , 24n , 42 , 24n in
-      4 |   let _y : int * tez * string * nat * int * address * int * tez * nat = x in
+      4 |   let _y : int * mav * string * nat * int * address * int * mav * nat = x in
                                                                                   ^
       5 | //               ^^^   ^^^^^^               ^^^^^^^         ^^^
 
     This expression has type "( int * nat * int * nat * int * nat )", but an expression was expected of type
-    "( int * tez * string * nat * int * address * int * tez * nat )".
+    "( int * mav * string * nat * int * address * int * mav * nat )".
     Type "( int * nat * int * nat * int * nat )" is not compatible with type
-    "( int * tez * string * nat * int * address * int * tez * nat )".
+    "( int * mav * string * nat * int * address * int * mav * nat )".
     Difference between the types:
       int
-    + tez
+    + mav
     + string
       nat
       int
     - nat
     + address
       int
-    + tez
+    + mav
       nat |}]
 
 (*
@@ -597,32 +597,32 @@ let%expect_test _ =
   The diff should suggest a [REPLACE subtuple_a BY subtuple_b]
 
   For example :
-    int * string * (nat * tez * nat) *          tez
+    int * string * (nat * mav * nat) *          mav
   vs.
-    int *          (nat * tez * int) * string * tez * address
+    int *          (nat * mav * int) * string * mav * address
           ^^^^^^                ^^^
   Here, we suppose the probable desired diff is :
     DELETE string
-    CHANGE (nat * tez * nat) TO (nat * tez * int) (TODO NP : Ideally have diff of subtuples somehow)
+    CHANGE (nat * mav * nat) TO (nat * mav * int) (TODO NP : Ideally have diff of subtuples somehow)
     ADD    string
-    keep   tez
+    keep   mav
     ADD    address
   But if all changes were considered equal, we would have :
-    CHANGE string            TO (nat * tez * int)
-    CHANGE (nat * tez * nat) TO string
-    keep   tez
+    CHANGE string            TO (nat * mav * int)
+    CHANGE (nat * mav * nat) TO string
+    keep   mav
     ADD    address
 
   But weights are computed accordingly to the size of the types involved,
   so the first diff should be chosen over the second.
   In the first diff,
     weight DELETE string = 1
-    weight CHANGE (nat * tez * nat) TO (nat * tez * int) = 0 + 0 + 1 = 1
+    weight CHANGE (nat * mav * nat) TO (nat * mav * int) = 0 + 0 + 1 = 1
     weight ADD string = 1
     total weight = 1 + 1 + 1 = 3
   In the second diff, however
-    weight CHANGE string            TO (nat * tez * int) = 3
-    weight CHANGE (nat * tez * nat) TO string = 3
+    weight CHANGE string            TO (nat * mav * int) = 3
+    weight CHANGE (nat * mav * nat) TO string = 3
     total weight = 3 + 3 = 6
 
   Because both subtuples are similar, the weight to change subtuple_a
@@ -638,22 +638,22 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts/negative/typer_unify_error_diff/subtuples_1.mligo", line 4, characters 71-72:
-      3 |   let  x : int * string * (nat * tez * nat) *          tez           = 1, "a", (1n, 1tez, 1n), 1tez in
-      4 |   let _y : int *          (nat * tez * int) * string * tez * address = x in
+      3 |   let  x : int * string * (nat * mav * nat) *          mav           = 1, "a", (1n, 1mav, 1n), 1mav in
+      4 |   let _y : int *          (nat * mav * int) * string * mav * address = x in
                                                                                  ^
       5 |   //             ^^^^^^                ^^^    ^^^^^^         ^^^^^^^
 
-    This expression has type "( int * string * ( nat * tez * nat ) * tez )", but an expression was expected of type
-    "( int * ( nat * tez * int ) * string * tez * address )".
-    Type "( int * string * ( nat * tez * nat ) * tez )" is not compatible with type
-    "( int * ( nat * tez * int ) * string * tez * address )".
+    This expression has type "( int * string * ( nat * mav * nat ) * mav )", but an expression was expected of type
+    "( int * ( nat * mav * int ) * string * mav * address )".
+    Type "( int * string * ( nat * mav * nat ) * mav )" is not compatible with type
+    "( int * ( nat * mav * int ) * string * mav * address )".
     Difference between the types:
       int
     - string
-    - ( nat * tez * nat )
-    + ( nat * tez * int )
+    - ( nat * mav * nat )
+    + ( nat * mav * int )
     + string
-      tez
+      mav
     + address |}]
 
 (*
@@ -679,7 +679,7 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts/negative/typer_unify_error_diff/subtuples_2.mligo", line 9, characters 48-49:
-      8 |   let  x : int *           s       *      nat = 42, (1n, 1tez, 1tez, 1n), 1n in
+      8 |   let  x : int *           s       *      nat = 42, (1n, 1mav, 1mav, 1n), 1n in
       9 |   let _y : int * s1 * s2 * s_close * s2 * nat = x in
                                                           ^
      10 |   ([] : operation list), s
@@ -720,19 +720,19 @@ let%expect_test _ =
     {|
     File "../../test/contracts/negative/typer_unify_error_diff/tuple_lists.mligo", line 4, characters 65-66:
       3 |   let x : (string * int *       nat * int * string * int) list = [ "foo" , 42  , 24n , 42 ,        "bar",  42 ] in
-      4 |   let y : (tez    * int * tez * nat *       string)       list = x in
+      4 |   let y : (mav    * int * mav * nat *       string)       list = x in
                                                                            ^
       5 |   //       ^^^^^^         ^^^         ^^^            ^^^
 
     This expression has type "list (( string * int * nat * int * string * int ))", but an expression was expected of type
-    "list (( tez * int * tez * nat * string ))".
+    "list (( mav * int * mav * nat * string ))".
     Type "( string * int * nat * int * string * int )" is not compatible with type
-    "( tez * int * tez * nat * string )".
+    "( mav * int * mav * nat * string )".
     Difference between the types:
     - string
-    + tez
+    + mav
       int
-    + tez
+    + mav
       nat
     - int
       string
@@ -785,16 +785,16 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts/negative/typer_unify_error_diff/record_vs_record_2.mligo", line 4, characters 67-68:
-      3 |   let y : {foo : int ; bar : (nat * string) ; third_field : tez} = {foo = 1 ; bar = (2n, "lol") ; third_field = 42tez } in
+      3 |   let y : {foo : int ; bar : (nat * string) ; third_field : mav} = {foo = 1 ; bar = (2n, "lol") ; third_field = 42mav } in
       4 |   let x : {foo : int ; bar : (nat * nat   )}                     = y in
                                                                              ^
       5 |   //                                ^^^^^^    ^^^^^^^^^^^^^^^^^
 
     This expression has type "record[bar -> ( nat * string ) ,
                                      foo -> int ,
-                                     third_field -> tez]", but an expression was expected of type
+                                     third_field -> mav]", but an expression was expected of type
     "record[bar -> ( nat * nat ) , foo -> int]".
-    Type "record[bar -> ( nat * string ) , foo -> int , third_field -> tez]" is not compatible with type
+    Type "record[bar -> ( nat * string ) , foo -> int , third_field -> mav]" is not compatible with type
     "record[bar -> ( nat * nat ) , foo -> int]". |}]
 
 (*
@@ -815,12 +815,12 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts/negative/typer_unify_error_diff/arrow_vs_arrow.mligo", line 4, characters 45-46:
-      3 |   let  x : int -> nat -> nat -> tez        = (fun _x _y _z -> 1tez) in
+      3 |   let  x : int -> nat -> nat -> mav        = (fun _x _y _z -> 1mav) in
       4 |   let _y : int -> int -> int -> int -> nat = x in
                                                        ^
       5 |   //              ^^^    ^^^    ^^^    ^^^
 
-    This expression has type "int -> nat -> nat -> tez", but an expression was expected of type
+    This expression has type "int -> nat -> nat -> mav", but an expression was expected of type
     "int -> int -> int -> int -> nat".
     Type "int" is not compatible with type "nat". |}]
 

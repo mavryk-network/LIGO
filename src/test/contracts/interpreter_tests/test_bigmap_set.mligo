@@ -6,9 +6,9 @@ module C = struct
 end
 
 let test =
-  let {addr = taddr; code = _; size = _} = Test.originate (contract_of C) Big_map.empty 0tez in
+  let {addr = taddr; code = _; size = _} = Test.originate (contract_of C) Big_map.empty 0mav in
   let y : nat = 1n in
-  let _ = Test.transfer_exn taddr (Main (21, (fun (x : nat) -> x * 2n + y))) 0tez in
+  let _ = Test.transfer_exn taddr (Main (21, (fun (x : nat) -> x * 2n + y))) 0mav in
   let _y : nat = 100n in
   let init = Big_map.add 21 (fun (_ : nat) -> 0n) (Big_map.empty : (int, nat -> nat) big_map) in
   let () = Test.set_big_map 5 init in

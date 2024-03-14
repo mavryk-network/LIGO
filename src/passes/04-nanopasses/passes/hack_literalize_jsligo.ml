@@ -7,7 +7,7 @@ open Errors
 This pass handles the special cases of type annotation in JsLIGO.
 These are the cases where a E_annot remain a E_annot
 
-1. The first such case is nat and tez/mumav annotations.
+1. The first such case is nat and mav/mumav annotations.
 
 2. The second case is type annotation of code injection.
   
@@ -76,7 +76,7 @@ let%expect_test "number_42_as_mumav" =
   [%expect {| (E_literal (Literal_mumav 42))  |}]
 
 let%expect_test "number_42_as_tez" =
-  {| ( E_annot ((E_literal (Literal_int 42)) (T_var tez))) |} |-> compile;
+  {| ( E_annot ((E_literal (Literal_int 42)) (T_var mav))) |} |-> compile;
   [%expect {|(E_literal (Literal_mumav 42000000)) |}]
 
 let%expect_test "code_inj" =

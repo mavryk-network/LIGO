@@ -3,7 +3,7 @@ type register = (address, move) map
 let empty : register = Map.empty
 let moves : register =
   Map.literal [
-    (("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address), (1,2));
+    (("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address), (1,2));
     (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address), (0,3))]
 let my_balance : move option =
   Map.find_opt ("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address) moves

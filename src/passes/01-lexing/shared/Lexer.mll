@@ -263,7 +263,7 @@ let blank     = ' ' | '\t'
 let digit     = ['0'-'9']
 let natural   = digit | digit (digit | '_')* digit
 let nat       = natural as nat
-let tz_or_tez = "tz" | "mav" as tez
+let tz_or_tez = "tz" | "mav" as mav
 let decimal   = (natural as integral) '.' (natural as fractional)
 let small     = ['a'-'z']
 let capital   = ['A'-'Z']
@@ -331,13 +331,13 @@ rule scan state = parse
 | bytes             { mk_bytes    bytes      state lexbuf }
 | nat "n"           { mk_nat      nat        state lexbuf }
 | nat "mumav"       { mk_mumav    nat        state lexbuf }
-| nat tz_or_tez     { mk_tez      nat tez    state lexbuf }
+| nat tz_or_tez     { mk_tez      nat mav    state lexbuf }
 | natural           { mk_int                 state lexbuf }
 | symbol            { mk_sym                 state lexbuf }
 | eof               { mk_eof                 state lexbuf }
 | code_inj          { mk_lang     start lang state lexbuf }
 | decimal tz_or_tez { mk_tez_dec integral
-                              fractional tez state lexbuf }
+                              fractional mav state lexbuf }
 
 | _ as c { let _, Region.{region; _} = state#sync lexbuf
            in fail region (Unexpected_character c) }

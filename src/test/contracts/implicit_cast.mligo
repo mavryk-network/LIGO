@@ -6,7 +6,7 @@ let bnat = not 0n && 1n
 
 let bint = not 0 && 1 && (0 - 1)
 
-let btez = not 0tez && 1tez
+let btez = not 0mav && 1mav
 
 let bstring = not "" && "foo"
 

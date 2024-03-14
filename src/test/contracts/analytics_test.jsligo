@@ -19,7 +19,7 @@ const test_initial_storage =
   (
     () => {
       let initial_storage = 42;
-      let orig = Test.originate(contract_of (C), initial_storage, 0tez);
+      let orig = Test.originate(contract_of (C), initial_storage, 0mav);
       return assert(Test.get_storage(orig.addr) == initial_storage)
     }
   )();
@@ -28,7 +28,7 @@ const test_increment =
   (
     () => {
       let initial_storage = 42;
-      let orig = Test.originate(contract_of (C), initial_storage, 0tez);
+      let orig = Test.originate(contract_of (C), initial_storage, 0mav);
       let contr = Test.to_contract(orig.addr);
       Test.transfer_to_contract_exn(contr, (Increment(1)), 1mumav);
       return assert(Test.get_storage(orig.addr) == initial_storage + 1)

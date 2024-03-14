@@ -43,7 +43,7 @@ end
 let (_, (alice, _, _)) = B.Context.init_default ()
 
 let originated level =
-  B.Contract.originate level "Simple" (contract_of Simple) 0 0tez
+  B.Contract.originate level "Simple" (contract_of Simple) 0 0mav
 
 let case_views_1 =
   B.Model.case
@@ -70,7 +70,7 @@ let case_views_2 =
       let contract = originated level in
       let initial_storage = { simple = contract.originated_address; x = 0 } in
       let other =
-        B.Contract.originate level "Other" (contract_of Other) initial_storage 0tez
+        B.Contract.originate level "Other" (contract_of Other) initial_storage 0mav
       in
       B.Result.reduce [
         B.Context.call_as alice

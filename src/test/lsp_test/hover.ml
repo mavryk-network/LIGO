@@ -208,7 +208,7 @@ let%expect_test "hovers.mligo" =
      {
        "contents": [
          {
-           "value": "z : key_hash option -> tez -> int -> (operation * address)",
+           "value": "z : key_hash option -> mav -> int -> (operation * address)",
            "language": "cameligo"
          }
        ]
@@ -216,7 +216,7 @@ let%expect_test "hovers.mligo" =
      {
        "contents": [
          {
-           "value": "create_contract :\n  'param\n  'storage.('param, 'storage) entrypoint ->\n  key_hash option ->\n  tez -> 'storage -> (operation * address)",
+           "value": "create_contract :\n  'param\n  'storage.('param, 'storage) entrypoint ->\n  key_hash option ->\n  mav -> 'storage -> (operation * address)",
            "language": "cameligo"
          },
          "The call `create_contract c e a s` returns a contract creation\n    operation (origination) for the entrypoint `e` (as a function)\n    with optional delegate `d`, initial amount `a` and initial\n    storage `s`, together with the address of the created\n    contract. Note that the created contract cannot be called\n    immediately afterwards (that is, `get_contract_opt` on that\n    address would return `None`), as the origination must be\n    performed successfully first, for example by calling a proxy\n    contract or itself."
@@ -396,7 +396,7 @@ let%expect_test "hover_module.mligo" =
      {
        "contents": [
          {
-           "value": "module C : sig\n  val another : int\n\n  val foo : tez\n  end",
+           "value": "module C : sig\n  val another : int\n\n  val foo : mav\n  end",
            "language": "cameligo"
          }
        ]
@@ -610,7 +610,7 @@ let%expect_test "hover_module.jsligo" =
      {
        "contents": [
          {
-           "value": "namespace C implements {\n  const foo: tez;\n  const another: int\n}",
+           "value": "namespace C implements {\n  const foo: mav;\n  const another: int\n}",
            "language": "jsligo"
          }
        ]

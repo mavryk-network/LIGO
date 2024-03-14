@@ -6,7 +6,7 @@ end
 type t = { x : int ; y : (C parameter_of, unit) typed_address }
 
 let orig =
-  Test.originate (contract_of C) () 0tez
+  Test.originate (contract_of C) () 0mav
 
 let v : t = { x = 42 ; y = orig.addr }
 

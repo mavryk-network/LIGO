@@ -33,8 +33,7 @@ module TacoShop = struct
   type taco_supply =
     {
      current_stock : nat;
-     max_price : tez
-    }
+     max_price : mav    }
 
   type taco_shop_storage = (nat, taco_supply) map
 
@@ -47,7 +46,7 @@ module TacoShop = struct
       match Map.find_opt (taco_kind_index) taco_shop_storage with
         Some k -> k
       | None -> failwith "Unknown kind of taco" in
-    let current_purchase_price : tez =
+    let current_purchase_price : mav =
       taco_kind.max_price / taco_kind.current_stock in
     (* We won't sell tacos if the amount is not correct *)
 
@@ -92,7 +91,7 @@ let default_storage : TacoShop.taco_shop_storage =
 
 ```jsligo group=a
 namespace TacoShop {
-  export type taco_supply = { current_stock: nat, max_price: tez };
+  export type taco_supply = { current_stock: nat, max_price: mav };
   export type taco_shop_storage = map<nat, taco_supply>;
 
   @entry
@@ -106,7 +105,7 @@ namespace TacoShop {
       when(Some(kind)): kind;
       when(None()): failwith ("Unknown kind of taco")
     };
-  const current_purchase_price : tez = taco_kind.max_price / taco_kind.current_stock ;
+  const current_purchase_price : mav = taco_kind.max_price / taco_kind.current_stock ;
   /* We won't sell tacos if the amount is not correct */
   if ((Tezos.get_amount ()) != current_purchase_price) {
     return failwith ("Sorry, the taco you are trying to purchase has a different price")
@@ -143,7 +142,7 @@ at a price based on a simple formula.
 <Syntax syntax="cameligo">
 
 ```cameligo skip
-let current_purchase_price : tez =
+let current_purchase_price : mav =
   taco_kind.max_price / taco_kind.current_stock
 ```
 
@@ -152,7 +151,7 @@ let current_purchase_price : tez =
 <Syntax syntax="jsligo">
 
 ```jsligo skip
-const current_purchase_price : tez =
+const current_purchase_price : mav =
   taco_kind.max_price / taco_kind.current_stock
 ```
 
@@ -249,8 +248,7 @@ module TacoShop = struct
   type taco_supply =
     {
      current_stock : nat;
-     max_price : tez
-    }
+     max_price : mav    }
 
   type taco_shop_storage = (nat, taco_supply) map
 
@@ -265,7 +263,7 @@ module TacoShop = struct
       match Map.find_opt (taco_kind_index) taco_shop_storage with
         Some k -> k
       | None -> failwith "Unknown kind of taco" in
-    let current_purchase_price : tez =
+    let current_purchase_price : mav =
       taco_kind.max_price / taco_kind.current_stock in
     (* We won't sell tacos if the amount is not correct *)
 
@@ -318,12 +316,12 @@ let default_storage : TacoShop.taco_shop_storage =
 
 ```jsligo group=b
 namespace TacoShop {
-  export type taco_supply = { current_stock: nat, max_price: tez };
+  export type taco_supply = { current_stock: nat, max_price: mav };
   export type taco_shop_storage = map<nat, taco_supply>;
 
   const ownerAddress = ("mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ" as address);
 
-  const donationAddress = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address);
+  const donationAddress = ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address);
 
   @entry
   function buy_taco(taco_kind_index: nat, taco_shop_storage: taco_shop_storage): [
@@ -339,7 +337,7 @@ namespace TacoShop {
         when (None):
           failwith("Unknown kind of taco")
       };
-    const current_purchase_price: tez =
+    const current_purchase_price: mav =
       taco_kind.max_price / taco_kind.current_stock;
     /* We won't sell tacos if the amount is not correct */
 
@@ -373,7 +371,7 @@ namespace TacoShop {
           when(None()): ((failwith ("Not a contract")))
         };
 
-      const donationAmount = ((Tezos.get_amount ()) / 10n) as tez;
+      const donationAmount = ((Tezos.get_amount ()) / 10n) as mav;
 
       // Pedro will get 90% of the amount
       const op1 = match ((Tezos.get_amount ()) - donationAmount) {
@@ -411,8 +409,8 @@ executed subsequently.
 
 ```cameligo skip
 ligo run dry-run taco-shop.mligo --syntax cameligo --amount 1 --entry-point buy_taco 1n "Map.literal [
-    (1n, {  current_stock = 50n;  max_price = 50tez }) ;
-    (2n, {  current_stock = 20n;  max_price = 75tez }) ;
+    (1n, {  current_stock = 50n;  max_price = 50mav }) ;
+    (2n, {  current_stock = 20n;  max_price = 75mav }) ;
 ]"
 ```
 
@@ -449,7 +447,7 @@ sum from each taco purchase.
 
 ```cameligo group=bonus
 let ownerAddress : address = ("mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ" : address)
-let donationAddress : address = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
+let donationAddress : address = ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
 
 let receiver : unit contract =
   match ((Tezos.get_contract_opt ownerAddress) : unit contract option) with
@@ -461,7 +459,7 @@ let donationReceiver : unit contract  =
     Some contract -> contract
   | None -> ((failwith "Not a contract") : unit contract)
 
-let donationAmount : tez = (Tezos.get_amount ()) / 10n
+let donationAmount : mav = (Tezos.get_amount ()) / 10n
 
 let operations : operation list =
     // Pedro will get 90% of the amount
@@ -478,7 +476,7 @@ let operations : operation list =
 
 ```jsligo group=bonus
 const ownerAddress = ("mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ" as address);
-const donationAddress = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address);
+const donationAddress = ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address);
 
 const receiver : contract<unit> =
   match ((Tezos.get_contract_opt (ownerAddress)) as option<contract<unit>>) {
@@ -492,7 +490,7 @@ const donationReceiver : contract<unit>  =
     when(None()): ((failwith ("Not a contract")) as contract<unit>)
   };
 
-const donationAmount = ((Tezos.get_amount ()) / 10n) as tez;
+const donationAmount = ((Tezos.get_amount ()) / 10n) as mav;
 
 // Pedro will get 90% of the amount
 const op1 = match ((Tezos.get_amount ()) - donationAmount) {

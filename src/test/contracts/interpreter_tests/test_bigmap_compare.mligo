@@ -5,10 +5,10 @@ module C = struct
 end
 
 let test =
-    let () = Test.reset_state 10n ([] : tez list) in
+    let () = Test.reset_state 10n ([] : mav list) in
     let a1 = Test.nth_bootstrap_account 1 in
     let initial_storage = Big_map.literal [((a1, 0n), 42n)] in
-    let orig = Test.originate (contract_of C) initial_storage 0tez in
+    let orig = Test.originate (contract_of C) initial_storage 0mav in
     let () = Test.set_source a1 in
     let _ = Test.transfer_exn orig.addr (Main (a1, 1234n)) 1mumav in
     let ns = Test.get_storage orig.addr in

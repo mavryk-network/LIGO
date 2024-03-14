@@ -236,7 +236,7 @@ let%expect_test _ =
     {|
     File "../../test/contracts/interfaces.include.jsligo", line 68, characters 13-27:
      67 | const test = do {
-     68 |   let orig = Test.originate(contract_of(ImplAll), ImplAll.foo(42), 0tez);
+     68 |   let orig = Test.originate(contract_of(ImplAll), ImplAll.foo(42), 0mav);
                        ^^^^^^^^^^^^^^
      69 |   let p : parameter_of ImplAll = Other4();
     :
@@ -648,7 +648,7 @@ let%expect_test _ =
     {|
     File "../../test/contracts/negative/create_contract_of_file.jsligo", line 3, characters 21-59:
       2 | const main = (u : unit, _ : unit) : [list<operation>, unit] => {
-      3 |   let [op, _addr] = (create_contract_of_file `./removed.tz`)(None(), 1tez, u);
+      3 |   let [op, _addr] = (create_contract_of_file `./removed.tz`)(None(), 1mav, u);
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       4 |   return [list([op]), []]
 
@@ -972,7 +972,7 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts/amount_lambda.mligo", line 5, characters 7-8:
-      4 |   let amt : tez = Tezos.get_amount () in
+      4 |   let amt : mav = Tezos.get_amount () in
       5 |   fun (x : unit) -> amt
                  ^
       6 |
@@ -982,16 +982,16 @@ let%expect_test _ =
 
     File "../../test/contracts/amount_lambda.mligo", line 3, characters 8-9:
       2 |
-      3 | let f1 (x : unit) : unit -> tez =
+      3 | let f1 (x : unit) : unit -> mav =
                   ^
-      4 |   let amt : tez = Tezos.get_amount () in
+      4 |   let amt : mav = Tezos.get_amount () in
     :
     Warning: unused variable "x".
     Hint: replace it by "_x" to prevent this warning.
 
     File "../../test/contracts/amount_lambda.mligo", line 9, characters 39-40:
       8 |
-      9 | let f2 (x : unit) : unit -> tez = fun (x : unit) -> Tezos.get_amount ()
+      9 | let f2 (x : unit) : unit -> mav = fun (x : unit) -> Tezos.get_amount ()
                                                  ^
      10 |
     :
@@ -1000,7 +1000,7 @@ let%expect_test _ =
 
     File "../../test/contracts/amount_lambda.mligo", line 9, characters 8-9:
       8 |
-      9 | let f2 (x : unit) : unit -> tez = fun (x : unit) -> Tezos.get_amount ()
+      9 | let f2 (x : unit) : unit -> mav = fun (x : unit) -> Tezos.get_amount ()
                   ^
      10 |
     :
@@ -1009,7 +1009,7 @@ let%expect_test _ =
 
     File "../../test/contracts/amount_lambda.mligo", line 12, characters 21-22:
      11 | [@entry]
-     12 | let main (b : bool) (s : (unit -> tez)) : operation list * (unit -> tez) =
+     12 | let main (b : bool) (s : (unit -> mav)) : operation list * (unit -> mav) =
                                ^
      13 |   (([] : operation list), (if b then f1 () else f2 ()))
     :
@@ -2581,7 +2581,7 @@ let%expect_test _ =
       4 |
       5 | let main (_ : parameter) (s : storage) : _return =
                         ^^^^^^^^^
-      6 |     [], s, 1tez
+      6 |     [], s, 1mav
 
     Type "parameter" not found.
   |}]
@@ -3390,7 +3390,7 @@ let%expect_test _ =
     {|
     File "../../test/contracts/increment_prefix.jsligo", line 24, characters 13-27:
      23 |   let initial_storage = 42;
-     24 |   let orig = Test.originate(contract_of(IncDec), initial_storage, 0tez);
+     24 |   let orig = Test.originate(contract_of(IncDec), initial_storage, 0mav);
                        ^^^^^^^^^^^^^^
      25 |   Test.transfer_exn(orig.addr, Increment(), 1mumav);
     :
@@ -3398,7 +3398,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "../../test/contracts/increment_prefix.jsligo", line 25, characters 2-19:
-     24 |   let orig = Test.originate(contract_of(IncDec), initial_storage, 0tez);
+     24 |   let orig = Test.originate(contract_of(IncDec), initial_storage, 0mav);
      25 |   Test.transfer_exn(orig.addr, Increment(), 1mumav);
             ^^^^^^^^^^^^^^^^^
      26 |   return assert(Test.get_storage(orig.addr) == initial_storage + 1);
@@ -3513,7 +3513,7 @@ let%expect_test _ =
     {|
     File "../../test/contracts/reverse_string_for_loop.jsligo", line 19, characters 17-31:
      18 |       let initial_storage = "esrever";
-     19 |       let orig = Test.originate(contract_of(C), initial_storage, 0 as tez);
+     19 |       let orig = Test.originate(contract_of(C), initial_storage, 0 as mav);
                            ^^^^^^^^^^^^^^
      20 |       Test.transfer_exn(orig.addr, Main(unit), 1 as mumav);
     :
@@ -3521,7 +3521,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "../../test/contracts/reverse_string_for_loop.jsligo", line 20, characters 6-23:
-     19 |       let orig = Test.originate(contract_of(C), initial_storage, 0 as tez);
+     19 |       let orig = Test.originate(contract_of(C), initial_storage, 0 as mav);
      20 |       Test.transfer_exn(orig.addr, Main(unit), 1 as mumav);
                 ^^^^^^^^^^^^^^^^^
      21 |       Test.log(Test.get_storage(orig.addr));

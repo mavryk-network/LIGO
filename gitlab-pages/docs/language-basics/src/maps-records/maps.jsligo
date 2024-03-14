@@ -3,7 +3,7 @@ type register = map<address, move>;
 const empty: register = Map.empty;
 const moves : register =
   Map.literal (list([
-    ["mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address, [1,2]],
+    ["mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address, [1,2]],
     ["mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address, [0,3]]]));
 const my_balance: option<move> =
   Map.find_opt("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address, moves);

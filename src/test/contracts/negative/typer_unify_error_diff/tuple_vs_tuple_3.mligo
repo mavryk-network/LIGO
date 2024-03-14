@@ -1,7 +1,7 @@
 
 let main (_p : int) (s : int) : operation list * int =
-  let  x : string * int * nat * tez *       string * int =  "foo" , 42  , 24n , 42tez ,        "bar",  42 in
-  let _y : tez    * int       * tez * nat * string       = x in
+  let  x : string * int * nat * mav *       string * int =  "foo" , 42  , 24n , 42mav ,        "bar",  42 in
+  let _y : mav    * int       * mav * nat * string       = x in
   //       ^^^^^^         ^^^         ^^^            ^^^
   //       changed        removed     added          removed 
   ([] : operation list), s

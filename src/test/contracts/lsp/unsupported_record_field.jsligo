@@ -1,4 +1,4 @@
-type storage = { sponsee: address, ledger: big_map<address, tez> }
+type storage = { sponsee: address, ledger: big_map<address, mav> }
 
 type ret = [list<operation>, storage]
 

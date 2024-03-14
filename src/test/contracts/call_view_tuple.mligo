@@ -2,7 +2,7 @@ type store =
   {
    a : int;
    b : nat;
-   c : tez;
+   c : mav;
    d : address
   }
 

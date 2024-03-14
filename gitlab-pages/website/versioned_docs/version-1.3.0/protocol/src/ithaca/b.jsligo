@@ -1,2 +1,2 @@
-let d : option<tez> = (5 as mumav) - (1 as mumav); /* Some (4mumav) */
-let e : option<tez> = (1 as mumav) - (5 as mumav); /* None */
+let d : option<mav> = (5 as mumav) - (1 as mumav); /* Some (4mumav) */
+let e : option<mav> = (1 as mumav) - (5 as mumav); /* None */

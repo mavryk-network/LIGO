@@ -126,16 +126,16 @@ let%expect_test _ =
     {|
     File "./test.mligo", line 9, characters 13-27:
       8 | let test =
-      9 |   let orig = Test.originate (contract_of C) 0 0tez in
+      9 |   let orig = Test.originate (contract_of C) 0 0mav in
                        ^^^^^^^^^^^^^^
-     10 |   let _ = Test.transfer_exn orig.addr (Main 42) 0tez in
+     10 |   let _ = Test.transfer_exn orig.addr (Main 42) 0mav in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test.mligo", line 10, characters 10-27:
-      9 |   let orig = Test.originate (contract_of C) 0 0tez in
-     10 |   let _ = Test.transfer_exn orig.addr (Main 42) 0tez in
+      9 |   let orig = Test.originate (contract_of C) 0 0mav in
+     10 |   let _ = Test.transfer_exn orig.addr (Main 42) 0mav in
                     ^^^^^^^^^^^^^^^^^
      11 |   assert (Test.get_storage orig.addr = 42)
     :
@@ -143,7 +143,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.transfer_exn` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test.mligo", line 11, characters 10-26:
-     10 |   let _ = Test.transfer_exn orig.addr (Main 42) 0tez in
+     10 |   let _ = Test.transfer_exn orig.addr (Main 42) 0mav in
      11 |   assert (Test.get_storage orig.addr = 42)
                     ^^^^^^^^^^^^^^^^
     :
@@ -277,7 +277,7 @@ let%expect_test _ =
     {|
     File "./use_rec.jsligo", line 4, characters 14-28:
       3 | const _test = (_t : unit) : int => {
-      4 |    let orig = Test.originate(contract_of (Contract), 0, 0 as tez);
+      4 |    let orig = Test.originate(contract_of (Contract), 0, 0 as mav);
                         ^^^^^^^^^^^^^^
       5 |    return orig.size;
     :
@@ -306,13 +306,13 @@ let%expect_test _ =
     [ "compile"
     ; "expression"
     ; "cameligo"
-    ; "try_transfer (\"mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE\" : address) 0 (Build_state \
+    ; "try_transfer (\"mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe\" : address) 0 (Build_state \
        (Map.empty :(address, tokenValue) map))"
     ; "--init-file"
     ; test "map_or_big_map.mligo"
     ];
   [%expect {|
-    (Some { Elt "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" 0 }) |}]
+    (Some { Elt "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" 0 }) |}]
 
 let%expect_test _ =
   run_ligo_good

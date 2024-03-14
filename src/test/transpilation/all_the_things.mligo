@@ -110,17 +110,17 @@ let main (a,s:action * storage) =
 let main (p : key_hash) =
   let c : unit contract = Tezos.implicit_account p
   in Tezos.address c
-let check_ (p : unit) : int = if Tezos.get_amount () = 100tez then 42 else 0
+let check_ (p : unit) : int = if Tezos.get_amount () = 100mav then 42 else 0
 (* should return a constant function *)
-let f1 (x : unit) : unit -> tez =
-  let amt : tez = Current.amount in
+let f1 (x : unit) : unit -> mav =
+  let amt : mav = Current.amount in
   fun (x : unit) -> amt
 
 (* should return an impure function *)
-let f2 (x : unit) : unit -> tez =
+let f2 (x : unit) : unit -> mav =
   fun (x : unit) -> Current.amount
 
-let main (b,s : bool * (unit -> tez)) : operation list * (unit -> tez) =
+let main (b,s : bool * (unit -> mav)) : operation list * (unit -> mav) =
   (([] : operation list), (if b then f1 () else f2 ()))
 type comb_two = [@layout comb] {
   [@annot anbfoo]
@@ -324,7 +324,7 @@ generated. unrecognized constant: {"constant":"BALANCE","location":"generated"}
 *)
 
 type parameter = unit
-type storage = tez
+type storage = mav
 type return = operation list * storage
 
 let main (p, s : parameter * storage) : return =
@@ -421,7 +421,7 @@ let test (k : int) : int =
 let int_ (a: int) = a < a
 let nat_ (a: nat) = a < a
 let bool_ (a: bool) = a < a
-let mumav_ (a: tez) = a < a
+let mumav_ (a: mav) = a < a
 let string_ (a: string) = a < a
 let bytes_ (a: bytes) = a < a
 let address_ (a: address) = a < a
@@ -559,7 +559,7 @@ let attempt (p, store : param * storage) : return =
     | None ->  (failwith "No contract" : unit contract)
   in
   let transfer : operation =
-    Tezos.transaction (unit, contract, 10.00tez) in
+    Tezos.transaction (unit, contract, 10.00mav) in
   let store : storage = {challenge = p.new_challenge}
   in ([] : operation list), store
 type commit = {
@@ -703,8 +703,8 @@ type action =
 type storage = {
   identities: (id, id_details) big_map;
   next_id: int;
-  name_price: tez;
-  skip_price: tez;
+  name_price: mav;
+  skip_price: mav;
 }
 
 type return = operation list * storage
@@ -1634,12 +1634,12 @@ let main (action, store : parameter * storage) : return =
     | Increment n -> store + n
     | Decrement n -> store - n
   in ([] : operation list), store
-let add_tez : tez = 21mumav + 0.000_021tez
-let sub_tez : tez = 0.000021tez - 0.000_020tez
-let not_enough_tez : tez = 461_168_601_842_738_7903mumav
+let add_tez : mav = 21mumav + 0.000_021mav
+let sub_tez : mav = 0.000021mav - 0.000_020mav
+let not_enough_tez : mav = 461_168_601_842_738_7903mumav
 
-let add_more_tez : tez =
-  100tez + 10tez + 1tez + 0.1tez + 0.01tez + 0.001tez
+let add_more_tez : mav =
+  100mav + 10mav + 1mav + 0.1mav + 0.01mav + 0.001mav
 (*
 Modelled after:
 

@@ -30,19 +30,18 @@ let blocks_per_cycle = 12n
 
 type actor = {
   name : string
-; initial_amount: tez
-; address: address
+; initial_amount: mav; address: address
 }
 
 (** [init actors] initializes bootstrap accounts. *)
-let init_with (actors: (string * tez) list) : actor list =
+let init_with (actors: (string * mav) list) : actor list =
   let number_of_accounts = List.size actors in
   let default_amounts =
-    List.map (fun (_, value: string * tez) -> value) actors
+    List.map (fun (_, value: string * mav) -> value) actors
   in
   let () = Test.reset_state number_of_accounts default_amounts in
   let (_counter, actors) =
-    List.fold_left (fun ((i, actors), (name, value) : (nat * actor list) * (string * tez)) ->
+    List.fold_left (fun ((i, actors), (name, value) : (nat * actor list) * (string * mav)) ->
       let address = Test.nth_bootstrap_account (int i) in
       let actor = {
         name = name
@@ -59,10 +58,10 @@ let init_with (actors: (string * tez) list) : actor list =
     being the baker and the others regular accounts. *)
 let init_default () : actor * (actor * actor * actor) =
   let actors = init_with [
-    ("Baker", 10000000000tez)
-  ; ("Alice", 4000000tez)
-  ; ("Bob", 2000000tez)
-  ; ("Carol", 8000000tez)
+    ("Baker", 10000000000mav)
+  ; ("Alice", 4000000mav)
+  ; ("Bob", 2000000mav)
+  ; ("Carol", 8000000mav)
   ]
   in
   match actors with
@@ -91,7 +90,7 @@ let call_as
 
 (** [wait_for_blocks n_blocks] bakes n blocks with a single transaction from
     the current source to itself.
-    This function currently does not check if the current source has any tez.
+    This function currently does not check if the current source has any mav.
     For a large number of blocks, prefer the [wait_for] function. *)
 let rec wait_for_blocks (n_blocks: nat) : unit =
   if n_blocks = 0n then ()

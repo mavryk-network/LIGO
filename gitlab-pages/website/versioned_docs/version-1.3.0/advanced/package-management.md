@@ -117,7 +117,7 @@ and we write some tests for our smart contract in `main.test.mligo`
 
 let test =
     let storage = Test.compile_value [1; 2; 3] in
-    let (addr, _, _) = Test.originate_from_file "./main.mligo" "main" ([] : string list) storage 0tez in
+    let (addr, _, _) = Test.originate_from_file "./main.mligo" "main" ([] : string list) storage 0mav in
     let taddr : (parameter, storage) typed_address = Test.cast_address addr in
     let contr : parameter contract = Test.to_contract taddr in
     let _ = Test.transfer_to_contract_exn contr Reverse 1mumav in
@@ -134,7 +134,7 @@ let test =
 const test = (() => {
     let storage = Test.compile_value(list([1, 2, 3]));
     let [addr, _, _] = Test.originate_from_file("./main.jsligo",
-    "main", (list([]) as list<string>), storage, 0tez);
+    "main", (list([]) as list<string>), storage, 0mav);
     let taddr : typed_address<parameter, storage> = Test.cast_address(addr);
     let contr : contract<parameter> = Test.to_contract(taddr);
     Test.transfer_to_contract_exn(contr, Reverse(), 1mumav);

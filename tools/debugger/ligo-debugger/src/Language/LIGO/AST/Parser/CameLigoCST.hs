@@ -993,7 +993,7 @@ toAST CST{..} =
       PInt (unpackWrap -> (r, Tuple1 n)) -> makeConstantPat r (AST.CInt n)
       PList (unpackReg -> (r, Par' pats)) -> fastMake r (AST.IsList (patConv <$> pats))
       PModPath (unpackReg -> (r, modPath)) -> fastMake r (modPathConv $ patConv <$> modPath)
-      PMumav (unpackWrap -> (r, Tuple1 tez)) -> makeConstantPat r (AST.CTez tez)
+      PMumav (unpackWrap -> (r, Tuple1 mav)) -> makeConstantPat r (AST.CTez mav)
       PNat (unpackWrap -> (r, Tuple1 n)) -> makeConstantPat r (AST.CNat n)
       PPar (unpackReg -> (r, Par' pat)) -> fastMake r (AST.IsParen (patConv pat))
       PRecord (unpackReg -> (r, Par' recFields)) -> fastMake r (AST.IsRecord (fieldPatConv <$> recFields))
@@ -1124,7 +1124,7 @@ toAST CST{..} =
         in fastMake r (AST.Let moduleDecl body)
       EModPath (unpackReg -> (r, modPath)) -> fastMake r (modPathConv $ exprConv <$> modPath)
       EMult op -> makeBinOp op
-      EMumav (unpackWrap -> (r, Tuple1 tez)) -> makeConstantExpr r (AST.CTez tez)
+      EMumav (unpackWrap -> (r, Tuple1 mav)) -> makeConstantExpr r (AST.CTez mav)
       ENat (unpackWrap -> (r, Tuple1 nat)) -> makeConstantExpr r (AST.CNat nat)
       ENeg op -> makeUnOp op
       ENeq op -> makeBinOp op

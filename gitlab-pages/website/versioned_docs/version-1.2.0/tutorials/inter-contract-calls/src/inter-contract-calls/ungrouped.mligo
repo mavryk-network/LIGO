@@ -23,8 +23,8 @@ let create_and_call (storage : address list) =
     Tezos.create_contract
       (fun (p : int) (s : int) -> [], p + s)
       None
-      0tez
+      0mav
       1 in
   let call_op =
-    Tezos.transaction (addr, 41) 0tez (Tezos.self "%callback") in
+    Tezos.transaction (addr, 41) 0mav (Tezos.self "%callback") in
   [create_op; call_op], addr :: storage

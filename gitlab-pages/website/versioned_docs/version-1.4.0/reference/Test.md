@@ -165,25 +165,25 @@ Gets the storage of an account in `michelson_program`.
 
 
 <SyntaxTitle syntax="cameligo">
-val get&#95;balance&#95;of&#95;address : address -&gt; tez
+val get&#95;balance&#95;of&#95;address : address -&gt; mav
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let get&#95;balance&#95;of&#95;address: (&#95;: address) =&gt; tez
+let get&#95;balance&#95;of&#95;address: (&#95;: address) =&gt; mav
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Address.get_balance` from `Test.Next` is encouraged for a smoother migration.
 
-Gets the balance of an account (given as an address) in tez.
+Gets the balance of an account (given as an address) in mav.
 
 
 <SyntaxTitle syntax="cameligo">
-val get&#95;balance : &#39;p &#39;s.(&#39;p, &#39;s) typed&#95;address -&gt; tez
+val get&#95;balance : &#39;p &#39;s.(&#39;p, &#39;s) typed&#95;address -&gt; mav
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let get&#95;balance: &lt;p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; tez
+let get&#95;balance: &lt;p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; mav
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.get_balance` from `Test.Next` is encouraged for a smoother migration.
 
-Gets the balance of an account in tez.
+Gets the balance of an account in mav.
 
 
 <SyntaxTitle syntax="cameligo">
@@ -336,10 +336,10 @@ Registers a `key_hash` corresponding to an account as a delegate.
 
 
 <SyntaxTitle syntax="cameligo">
-val stake : key&#95;hash -&gt; tez -&gt; unit
+val stake : key&#95;hash -&gt; mav -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let stake: (&#95;: key&#95;hash) =&gt; (&#95;: tez) =&gt; unit
+let stake: (&#95;: key&#95;hash) =&gt; (&#95;: mav) =&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.stake` from `Test.Next` is encouraged for a smoother migration.
 
@@ -587,27 +587,27 @@ Returns the list of all the event payloads emited with a given
 
 
 <SyntaxTitle syntax="cameligo">
-val transfer : &#39;p &#39;s.(&#39;p, &#39;s) typed&#95;address -&gt; &#39;p -&gt; tez -&gt; test&#95;exec&#95;result
+val transfer : &#39;p &#39;s.(&#39;p, &#39;s) typed&#95;address -&gt; &#39;p -&gt; mav -&gt; test&#95;exec&#95;result
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let transfer: &lt;p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; (&#95;: p) =&gt; (&#95;: tez) =&gt; test&#95;exec&#95;result
+let transfer: &lt;p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; (&#95;: p) =&gt; (&#95;: mav) =&gt; test&#95;exec&#95;result
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.transfer` from `Test.Next` is encouraged for a smoother migration.
 
-Bakes a transaction by sending an amount of tez with a parameter
+Bakes a transaction by sending an amount of mav with a parameter
     from the current source to another account. Returns the amount of
     gas consumed by the execution of the contract.
 
 
 <SyntaxTitle syntax="cameligo">
-val transfer&#95;exn : &#39;p &#39;s.(&#39;p, &#39;s) typed&#95;address -&gt; &#39;p -&gt; tez -&gt; nat
+val transfer&#95;exn : &#39;p &#39;s.(&#39;p, &#39;s) typed&#95;address -&gt; &#39;p -&gt; mav -&gt; nat
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let transfer&#95;exn: &lt;p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; (&#95;: p) =&gt; (&#95;: tez) =&gt; nat
+let transfer&#95;exn: &lt;p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; (&#95;: p) =&gt; (&#95;: mav) =&gt; nat
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.transfer_exn` from `Test.Next` is encouraged for a smoother migration.
 
-Bakes a transaction by sending an amount of tez with a parameter
+Bakes a transaction by sending an amount of mav with a parameter
     from the current source to another account. Returns the amount of
     gas consumed by the execution of the contract. Similar as
     `Test.transfer`, but fails when anything goes wrong.
@@ -625,15 +625,15 @@ Logs a value.
 
 
 <SyntaxTitle syntax="cameligo">
-val reset&#95;state : nat -&gt; tez list -&gt; unit
+val reset&#95;state : nat -&gt; mav list -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let reset&#95;state: (&#95;: nat) =&gt; (&#95;: list&lt;tez&gt;) =&gt; unit
+let reset&#95;state: (&#95;: nat) =&gt; (&#95;: list&lt;mav&gt;) =&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.reset` from `Test.Next` is encouraged for a smoother migration.
 
 Generates a number of random bootstrapped accounts with a
-    default amount of `4000000` tez. The passed list can be used to
+    default amount of `4000000` mav. The passed list can be used to
     overwrite the amount. By default, the state only has two
     bootstrapped accounts. Notice that since Ithaca, a percentage of
     an account's balance is frozen (5% in testing mode) in case the
@@ -643,15 +643,15 @@ Generates a number of random bootstrapped accounts with a
 
 
 <SyntaxTitle syntax="cameligo">
-val reset&#95;state&#95;at : timestamp -&gt; nat -&gt; tez list -&gt; unit
+val reset&#95;state&#95;at : timestamp -&gt; nat -&gt; mav list -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let reset&#95;state&#95;at: (&#95;: timestamp) =&gt; (&#95;: nat) =&gt; (&#95;: list&lt;tez&gt;) =&gt; unit
+let reset&#95;state&#95;at: (&#95;: timestamp) =&gt; (&#95;: nat) =&gt; (&#95;: list&lt;mav&gt;) =&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.reset_at` from `Test.Next` is encouraged for a smoother migration.
 
 Generates a number of random bootstrapped accounts with a
-    default amount of `4000000` tez. The passed list can be used to
+    default amount of `4000000` mav. The passed list can be used to
     overwrite the amount. By default, the state only has two
     bootstrapped accounts. Notice that since Ithaca, a percentage of
     an account's balance is frozen (5% in testing mode) in case the
@@ -662,10 +662,10 @@ Generates a number of random bootstrapped accounts with a
 
 
 <SyntaxTitle syntax="cameligo">
-val bootstrap&#95;contract : &#39;p &#39;s.((&#39;p * &#39;s) -&gt; (operation list * &#39;s)) -&gt; &#39;s -&gt; tez -&gt; unit
+val bootstrap&#95;contract : &#39;p &#39;s.((&#39;p * &#39;s) -&gt; (operation list * &#39;s)) -&gt; &#39;s -&gt; mav -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let bootstrap&#95;contract: &lt;p, s&gt;(&#95;: (&#95;: [p, s]) =&gt; [list&lt;operation&gt;, s]) =&gt; (&#95;: s) =&gt; (&#95;: tez) =&gt; unit
+let bootstrap&#95;contract: &lt;p, s&gt;(&#95;: (&#95;: [p, s]) =&gt; [list&lt;operation&gt;, s]) =&gt; (&#95;: s) =&gt; (&#95;: mav) =&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.Reset.add_func_contract` from `Test.Next` is encouraged for a smoother migration.
 
@@ -726,10 +726,10 @@ Adds an account specfied by secret key & public key to the test
 
 
 <SyntaxTitle syntax="cameligo">
-val baker&#95;account : (string * key) -&gt; tez option -&gt; unit
+val baker&#95;account : (string * key) -&gt; mav option -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let baker&#95;account: (&#95;: [string, key]) =&gt; (&#95;: option&lt;tez&gt;) =&gt; unit
+let baker&#95;account: (&#95;: [string, key]) =&gt; (&#95;: option&lt;mav&gt;) =&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.Reset.add_baker` from `Test.Next` is encouraged for a smoother migration.
 
@@ -753,27 +753,27 @@ The testing framework keeps an internal reference to the values
 
 
 <SyntaxTitle syntax="cameligo">
-val transfer&#95;to&#95;contract : &#39;p.&#39;p contract -&gt; &#39;p -&gt; tez -&gt; test&#95;exec&#95;result
+val transfer&#95;to&#95;contract : &#39;p.&#39;p contract -&gt; &#39;p -&gt; mav -&gt; test&#95;exec&#95;result
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let transfer&#95;to&#95;contract: &lt;p&gt;(&#95;: contract&lt;p&gt;) =&gt; (&#95;: p) =&gt; (&#95;: tez) =&gt; test&#95;exec&#95;result
+let transfer&#95;to&#95;contract: &lt;p&gt;(&#95;: contract&lt;p&gt;) =&gt; (&#95;: p) =&gt; (&#95;: mav) =&gt; test&#95;exec&#95;result
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Contract.transfer` from `Test.Next` is encouraged for a smoother migration.
 
-Bake a transaction by sending an amount of tez with a parameter
+Bake a transaction by sending an amount of mav with a parameter
     from the current source to a contract. Returns the amount of gas
     consumed by the execution of the contract.
 
 
 <SyntaxTitle syntax="cameligo">
-val transfer&#95;to&#95;contract&#95;exn : &#39;p.&#39;p contract -&gt; &#39;p -&gt; tez -&gt; nat
+val transfer&#95;to&#95;contract&#95;exn : &#39;p.&#39;p contract -&gt; &#39;p -&gt; mav -&gt; nat
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let transfer&#95;to&#95;contract&#95;exn: &lt;p&gt;(&#95;: contract&lt;p&gt;) =&gt; (&#95;: p) =&gt; (&#95;: tez) =&gt; nat
+let transfer&#95;to&#95;contract&#95;exn: &lt;p&gt;(&#95;: contract&lt;p&gt;) =&gt; (&#95;: p) =&gt; (&#95;: mav) =&gt; nat
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Contract.transfer_exn` from `Test.Next` is encouraged for a smoother migration.
 
-Bakes a transaction by sending an amount of tez with a parameter
+Bakes a transaction by sending an amount of mav with a parameter
     from the current source to a contract. Returns the amount of gas
     consumed by the execution of the contract. Similar as
     `Test.transfer_to_contract`, but fails when anything goes
@@ -825,10 +825,10 @@ let storage&#95;with&#95;dynamic&#95;entrypoints:
 
 
 <SyntaxTitle syntax="cameligo">
-val originate&#95;contract : &#39;p &#39;s.(&#39;p, &#39;s) michelson&#95;contract -&gt; &#39;s -&gt; tez -&gt; (&#39;p, &#39;s) typed&#95;address
+val originate&#95;contract : &#39;p &#39;s.(&#39;p, &#39;s) michelson&#95;contract -&gt; &#39;s -&gt; mav -&gt; (&#39;p, &#39;s) typed&#95;address
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let originate&#95;contract: &lt;p, s&gt;(&#95;: michelson&#95;contract&lt;p, s&gt;) =&gt; (&#95;: s) =&gt; (&#95;: tez) =&gt; typed&#95;address&lt;p, s&gt;
+let originate&#95;contract: &lt;p, s&gt;(&#95;: michelson&#95;contract&lt;p, s&gt;) =&gt; (&#95;: s) =&gt; (&#95;: mav) =&gt; typed&#95;address&lt;p, s&gt;
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.michelson` from `Test.Next` is encouraged for a smoother migration.
 
@@ -847,10 +847,10 @@ let compile&#95;contract&#95;with&#95;views:
 
 
 <SyntaxTitle syntax="cameligo">
-val originate : &#39;p &#39;s.(&#39;p, &#39;s) module&#95;contract -&gt; &#39;s -&gt; tez -&gt; (&#39;p, &#39;s) origination&#95;result
+val originate : &#39;p &#39;s.(&#39;p, &#39;s) module&#95;contract -&gt; &#39;s -&gt; mav -&gt; (&#39;p, &#39;s) origination&#95;result
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let originate: &lt;p, s&gt;(&#95;: module&#95;contract&lt;p, s&gt;) =&gt; (&#95;: s) =&gt; (&#95;: tez) =&gt; origination&#95;result&lt;p, s&gt;
+let originate: &lt;p, s&gt;(&#95;: module&#95;contract&lt;p, s&gt;) =&gt; (&#95;: s) =&gt; (&#95;: mav) =&gt; origination&#95;result&lt;p, s&gt;
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
@@ -871,10 +871,10 @@ Compiles a contract with a path to the contract file, an
 
 
 <SyntaxTitle syntax="cameligo">
-val originate&#95;from&#95;file : &#39;p &#39;s.string -&gt; &#39;s -&gt; tez -&gt; (&#39;p, &#39;s) origination&#95;result
+val originate&#95;from&#95;file : &#39;p &#39;s.string -&gt; &#39;s -&gt; mav -&gt; (&#39;p, &#39;s) origination&#95;result
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let originate&#95;from&#95;file: &lt;p, s&gt;(&#95;: string) =&gt; (&#95;: s) =&gt; (&#95;: tez) =&gt; origination&#95;result&lt;p, s&gt;
+let originate&#95;from&#95;file: &lt;p, s&gt;(&#95;: string) =&gt; (&#95;: s) =&gt; (&#95;: mav) =&gt; origination&#95;result&lt;p, s&gt;
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.from_file` from `Test.Next` is encouraged for a smoother migration.
 
@@ -918,11 +918,11 @@ val originate&#95;from&#95;file&#95;and&#95;mutate :
   &#39;b
   &#39;p
   &#39;s.string -&gt;
-  &#39;s -&gt; tez -&gt; (((&#39;p, &#39;s) typed&#95;address * (&#39;p, &#39;s) michelson&#95;contract * int) -&gt; &#39;b) -&gt; (&#39;b * mutation) option
+  &#39;s -&gt; mav -&gt; (((&#39;p, &#39;s) typed&#95;address * (&#39;p, &#39;s) michelson&#95;contract * int) -&gt; &#39;b) -&gt; (&#39;b * mutation) option
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let originate&#95;from&#95;file&#95;and&#95;mutate:
-  &lt;b, p, s&gt;(&#95;: string) =&gt; (&#95;: s) =&gt; (&#95;: tez) =&gt; (&#95;: (&#95;: [typed&#95;address&lt;p, s&gt;, michelson&#95;contract&lt;p, s&gt;, int]) =&gt; b) =&gt; option&lt;
+  &lt;b, p, s&gt;(&#95;: string) =&gt; (&#95;: s) =&gt; (&#95;: mav) =&gt; (&#95;: (&#95;: [typed&#95;address&lt;p, s&gt;, michelson&#95;contract&lt;p, s&gt;, int]) =&gt; b) =&gt; option&lt;
     [b, mutation]
   &gt;
 </SyntaxTitle>
@@ -940,11 +940,11 @@ Given a contract from a file (passed by filepath, entrypoint and
 val originate&#95;from&#95;file&#95;and&#95;mutate&#95;all :
   &#39;b
   &#39;p
-  &#39;s.string -&gt; &#39;s -&gt; tez -&gt; (((&#39;p, &#39;s) typed&#95;address * (&#39;p, &#39;s) michelson&#95;contract * int) -&gt; &#39;b) -&gt; (&#39;b * mutation) list
+  &#39;s.string -&gt; &#39;s -&gt; mav -&gt; (((&#39;p, &#39;s) typed&#95;address * (&#39;p, &#39;s) michelson&#95;contract * int) -&gt; &#39;b) -&gt; (&#39;b * mutation) list
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let originate&#95;from&#95;file&#95;and&#95;mutate&#95;all:
-  &lt;b, p, s&gt;(&#95;: string) =&gt; (&#95;: s) =&gt; (&#95;: tez) =&gt; (&#95;: (&#95;: [typed&#95;address&lt;p, s&gt;, michelson&#95;contract&lt;p, s&gt;, int]) =&gt; b) =&gt; list&lt;
+  &lt;b, p, s&gt;(&#95;: string) =&gt; (&#95;: s) =&gt; (&#95;: mav) =&gt; (&#95;: (&#95;: [typed&#95;address&lt;p, s&gt;, michelson&#95;contract&lt;p, s&gt;, int]) =&gt; b) =&gt; list&lt;
     [b, mutation]
   &gt;
 </SyntaxTitle>
@@ -963,11 +963,11 @@ val originate&#95;module&#95;and&#95;mutate :
   &#39;p
   &#39;s
   &#39;b.(&#39;p, &#39;s) module&#95;contract -&gt;
-  &#39;s -&gt; tez -&gt; ((&#39;p, &#39;s) typed&#95;address -&gt; (&#39;p, &#39;s) michelson&#95;contract -&gt; int -&gt; &#39;b) -&gt; (&#39;b * mutation) option
+  &#39;s -&gt; mav -&gt; ((&#39;p, &#39;s) typed&#95;address -&gt; (&#39;p, &#39;s) michelson&#95;contract -&gt; int -&gt; &#39;b) -&gt; (&#39;b * mutation) option
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let originate&#95;module&#95;and&#95;mutate:
-  &lt;p, s, b&gt;(&#95;: module&#95;contract&lt;p, s&gt;) =&gt; (&#95;: s) =&gt; (&#95;: tez) =&gt; (
+  &lt;p, s, b&gt;(&#95;: module&#95;contract&lt;p, s&gt;) =&gt; (&#95;: s) =&gt; (&#95;: mav) =&gt; (
     &#95;: (&#95;: typed&#95;address&lt;p, s&gt;) =&gt; (&#95;: michelson&#95;contract&lt;p, s&gt;) =&gt; (&#95;: int) =&gt; b
   ) =&gt; option&lt;[b, mutation]&gt;
 </SyntaxTitle>
@@ -985,11 +985,11 @@ val originate&#95;and&#95;mutate&#95;all :
   &#39;p
   &#39;s
   &#39;b.(&#39;p, &#39;s) module&#95;contract -&gt;
-  &#39;s -&gt; tez -&gt; ((&#39;p, &#39;s) typed&#95;address -&gt; (&#39;p, &#39;s) michelson&#95;contract -&gt; int -&gt; &#39;b) -&gt; (&#39;b * mutation) list
+  &#39;s -&gt; mav -&gt; ((&#39;p, &#39;s) typed&#95;address -&gt; (&#39;p, &#39;s) michelson&#95;contract -&gt; int -&gt; &#39;b) -&gt; (&#39;b * mutation) list
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let originate&#95;and&#95;mutate&#95;all:
-  &lt;p, s, b&gt;(&#95;: module&#95;contract&lt;p, s&gt;) =&gt; (&#95;: s) =&gt; (&#95;: tez) =&gt; (
+  &lt;p, s, b&gt;(&#95;: module&#95;contract&lt;p, s&gt;) =&gt; (&#95;: s) =&gt; (&#95;: mav) =&gt; (
     &#95;: (&#95;: typed&#95;address&lt;p, s&gt;) =&gt; (&#95;: michelson&#95;contract&lt;p, s&gt;) =&gt; (&#95;: int) =&gt; b
   ) =&gt; list&lt;[b, mutation]&gt;
 </SyntaxTitle>

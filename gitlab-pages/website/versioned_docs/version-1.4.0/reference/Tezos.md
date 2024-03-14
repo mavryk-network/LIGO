@@ -324,11 +324,11 @@ The call `get_entrypoint(entrypoint, addr)` casts the address
 <SyntaxTitle syntax="cameligo">
 val create&#95;contract :
   &#39;param
-  &#39;storage.(&#39;param, &#39;storage) entrypoint -&gt; key&#95;hash option -&gt; tez -&gt; &#39;storage -&gt; (operation * address)
+  &#39;storage.(&#39;param, &#39;storage) entrypoint -&gt; key&#95;hash option -&gt; mav -&gt; &#39;storage -&gt; (operation * address)
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let create&#95;contract:
-  &lt;param, storage&gt;(&#95;: entrypoint&lt;param, storage&gt;) =&gt; (&#95;: option&lt;key&#95;hash&gt;) =&gt; (&#95;: tez) =&gt; (&#95;: storage) =&gt; [
+  &lt;param, storage&gt;(&#95;: entrypoint&lt;param, storage&gt;) =&gt; (&#95;: option&lt;key&#95;hash&gt;) =&gt; (&#95;: mav) =&gt; (&#95;: storage) =&gt; [
     operation,
     address
   ]
@@ -402,10 +402,10 @@ The call `set_delegate(d)` evaluates in an operation that sets
 
 
 <SyntaxTitle syntax="cameligo">
-val transaction : &#39;param.&#39;param -&gt; tez -&gt; &#39;param contract -&gt; operation
+val transaction : &#39;param.&#39;param -&gt; mav -&gt; &#39;param contract -&gt; operation
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let transaction: &lt;param&gt;(&#95;: param) =&gt; (&#95;: tez) =&gt; (&#95;: contract&lt;param&gt;) =&gt; operation
+let transaction: &lt;param&gt;(&#95;: param) =&gt; (&#95;: mav) =&gt; (&#95;: contract&lt;param&gt;) =&gt; operation
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -635,10 +635,10 @@ The function [open_chest] opens a timelocked chest given its key
 
 
 <SyntaxTitle syntax="cameligo">
-val get&#95;balance : unit -&gt; tez
+val get&#95;balance : unit -&gt; mav
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let get&#95;balance: (&#95;: unit) =&gt; tez
+let get&#95;balance: (&#95;: unit) =&gt; mav
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -658,10 +658,10 @@ The call `get_balance()` returns the balance in mumav of the
 
 
 <SyntaxTitle syntax="cameligo">
-val get&#95;amount : unit -&gt; tez
+val get&#95;amount : unit -&gt; mav
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let get&#95;amount: (&#95;: unit) =&gt; tez
+let get&#95;amount: (&#95;: unit) =&gt; mav
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 

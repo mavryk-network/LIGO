@@ -1,5 +1,5 @@
 let originate_record () =
-    let orig = Test.originate_from_file "./unit_contract.mligo" () 0tez in
+    let orig = Test.originate_from_file "./unit_contract.mligo" () 0mav in
     let addr = Test.to_address orig.addr in
     let contr = Test.to_contract orig.addr in
     {

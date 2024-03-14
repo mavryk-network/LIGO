@@ -25,8 +25,8 @@ namespace C {
 
 const _test = () : test_exec_error_balance_too_low => {
   let initial_storage = 42 as int;
-  let orig = Test.originate(contract_of(C), initial_storage, 0 as tez);
-  let r = Test.transfer(orig.addr, Main((Increment (1))), 100000000 as tez);
+  let orig = Test.originate(contract_of(C), initial_storage, 0 as mav);
+  let r = Test.transfer(orig.addr, Main((Increment (1))), 100000000 as mav);
   return match(r) {
     when(Success(_n)): failwith("Success");
     when(Fail(e)): match (e) {

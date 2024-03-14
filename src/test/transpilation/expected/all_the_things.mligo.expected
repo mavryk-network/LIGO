@@ -159,16 +159,16 @@ let check_ (p : unit) : int =
   else 0
 
 (* should return a constant function *)
-let f1 (x : unit) : unit -> tez =
-  let amt : tez = Current.amount in
+let f1 (x : unit) : unit -> mav =
+  let amt : mav = Current.amount in
   fun (x : unit) -> amt
 
 (* should return an impure function *)
-let f2 (x : unit) : unit -> tez =
+let f2 (x : unit) : unit -> mav =
   fun (x : unit) -> Current.amount
 
-let main (b, s : bool * (unit -> tez))
-: operation list * (unit -> tez) =
+let main (b, s : bool * (unit -> mav))
+: operation list * (unit -> mav) =
   (([] : operation list), (if b then f1 () else f2 ()))
 
 type comb_two =
@@ -487,7 +487,7 @@ generated. unrecognized constant: {"constant":"BALANCE","location":"generated"}
 *)
 type parameter = unit
 
-type storage = tez
+type storage = mav
 
 type return = operation list * storage
 
@@ -613,7 +613,7 @@ let nat_ (a : nat) = a < a
 
 let bool_ (a : bool) = a < a
 
-let mumav_ (a : tez) = a < a
+let mumav_ (a : mav) = a < a
 
 let string_ (a : string) = a < a
 
@@ -965,8 +965,8 @@ type storage =
   {
    identities : (id, id_details) big_map;
    next_id : int;
-   name_price : tez;
-   skip_price : tez
+   name_price : mav;
+   skip_price : mav
   }
 
 type return = operation list * storage
@@ -2113,13 +2113,13 @@ let main (action, store : parameter * storage) : return =
     | Decrement n -> store - n in
   ([] : operation list), store
 
-let add_tez : tez = 21mumav + 21mumav
+let add_tez : mav = 21mumav + 21mumav
 
-let sub_tez : tez = 21mumav - 20mumav
+let sub_tez : mav = 21mumav - 20mumav
 
-let not_enough_tez : tez = 4611686018427387903mumav
+let not_enough_tez : mav = 4611686018427387903mumav
 
-let add_more_tez : tez =
+let add_more_tez : mav =
   100000000mumav + 10000000mumav + 1000000mumav
   + 100000mumav
   + 10000mumav

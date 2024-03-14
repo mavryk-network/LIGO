@@ -20,15 +20,15 @@ Let us look at a seemingly innocent wallet contract that stores an event log:
 <Syntax syntax="cameligo">
 
 ```cameligo
-type parameter = Fund | Send of address * tez
+type parameter = Fund | Send of address * mav
 
-type transaction = Incoming of address * tez | Outgoing of address * tez
+type transaction = Incoming of address * mav | Outgoing of address * mav
 
 type storage = {owner : address; transactionLog : transaction list}
 
 type result = operation list * storage
 
-let do_send (dst, @amount : address * tez) =
+let do_send (dst, @amount : address * mav) =
   let callee = Tezos.get_contract_opt dst in
   match callee with
     Some contract ->
@@ -36,7 +36,7 @@ let do_send (dst, @amount : address * tez) =
       Outgoing (dst, @amount), [op]
   | None -> (failwith "Could not send tokens" : transaction * operation list)
 
-let do_fund (from, @amount : address * tez) =
+let do_fund (from, @amount : address * mav) =
   Incoming (from, @amount), ([] : operation list)
 
 [@entry]
@@ -45,7 +45,7 @@ let fund (_ : unit) (s : storage) : result =
   ops, { s with transactionLog = tx :: s.transactionLog }
 
 [@entry]
-let send (args : address * tez) (s : storage) =
+let send (args : address * mav) (s : storage) =
   let u = assert ((Tezos.get_sender ()) = s.owner && (Tezos.get_amount ()) = 0mumav) in
   let tx, ops = do_send args in
   ops, { s with transactionLog = tx :: s.transactionLog }
@@ -56,7 +56,7 @@ let send (args : address * tez) (s : storage) =
 
 This contract:
 1. Can receive funds sent to it via the `Fund` entrypoint.
-2. Can send some tez via the `Send` entrypoint callable by the owner.
+2. Can send some mav via the `Send` entrypoint callable by the owner.
 3. Stores a log of all the operations.
 
 What can go wrong? To answer this question, we will need to dive a bit into how Tezos processes transactions and what limits it places on them.
@@ -139,9 +139,9 @@ It is quite hard to repeat this attack on Tezos, where the contract storage is a
 <Syntax syntax="cameligo">
 
 ```cameligo
-type storage = {beneficiary : address; balances : (address, tez) map}
+type storage = {beneficiary : address; balances : (address, mav) map}
 
-type parameter = tez * (unit contract)
+type parameter = mav * (unit contract)
 
 let withdraw (param, s : parameter * storage) =
   let @amount, beneficiary = param in
@@ -152,7 +152,7 @@ let withdraw (param, s : parameter * storage) =
     | None -> 0mumav in
   let new_balance = match @balance - @amount with
     | Some x -> x
-    | None -> (failwith "Insufficient balance" : tez)
+    | None -> (failwith "Insufficient balance" : mav)
   in
   let op = Tezos.transaction () @amount beneficiary in
   let new_balances =
@@ -171,8 +171,8 @@ However, in some cases reentrancy attacks are still possible, especially if cont
 |--------------|----------------------|-------------------|
 | `Treasury %withdraw`   | Waiting for balances | [`Balances %getBalance`] |
 | `Balances %getBalance` | Waiting for balances | [`Treasury %withdrawContinuation`] |
-| `Treasury %withdrawContinuation` | Sent | [Send tez to `Beneficiary`, `Balances %setNewBalance`] |
-| Send tez to `Beneficiary` | Sent | [`Balances %setNewBalance`] |
+| `Treasury %withdrawContinuation` | Sent | [Send mav to `Beneficiary`, `Balances %setNewBalance`] |
+| Send mav to `Beneficiary` | Sent | [`Balances %setNewBalance`] |
 | `Balances %setNewBalance` | Sent | |
 
 In this example, the Treasury contract uses a callback mechanism to get the sender balance. In an intermediate state between `%withdraw` and `%withdrawContinuation`, the balances request has already been sent but the funds have not been withdrawn yet, and the balances have not been updated. This opens up a possibility for a call injection attack.
@@ -186,11 +186,11 @@ For example, here is what happens if an attacker tries to call `%withdraw` twice
 | 3 | `Treasury %withdraw`  | [`Balances %getBalance`, `Balances %getBalance`] |
 | 4 | `Balances %getBalance`| [`Balances %getBalance`, `Treasury %withdrawContinuation`] |
 | 5 | `Balances %getBalance`| [`Treasury %withdrawContinuation`, `Treasury %withdrawContinuation`] |
-| 6 | `Treasury %withdrawContinuation` | [`Treasury %withdrawContinuation`, Send tez to `Beneficiary`, `Balances %setNewBalance`] |
-| 7 | `Treasury %withdrawContinuation` | [Send tez to `Beneficiary`, `Balances %setNewBalance`, Send tez to `Beneficiary`, `Balances %setNewBalance`] |
-| 8 | Send tez to `Beneficiary` | [`Balances %setNewBalance`, Send tez to `Beneficiary`, `Balances %setNewBalance`] |
-| 9 | `Balances %setNewBalance` | [Send tez to `Beneficiary`, `Balances %setNewBalance`] |
-| 10 | Send tez to `Beneficiary` | [`Balances %setNewBalance`] |
+| 6 | `Treasury %withdrawContinuation` | [`Treasury %withdrawContinuation`, Send mav to `Beneficiary`, `Balances %setNewBalance`] |
+| 7 | `Treasury %withdrawContinuation` | [Send mav to `Beneficiary`, `Balances %setNewBalance`, Send mav to `Beneficiary`, `Balances %setNewBalance`] |
+| 8 | Send mav to `Beneficiary` | [`Balances %setNewBalance`, Send mav to `Beneficiary`, `Balances %setNewBalance`] |
+| 9 | `Balances %setNewBalance` | [Send mav to `Beneficiary`, `Balances %setNewBalance`] |
+| 10 | Send mav to `Beneficiary` | [`Balances %setNewBalance`] |
 | 11 | `Balances %setNewBalance` | |
 
 The attacker successfully withdraws money twice using the fact that by the time the second `%withdraw` is called, the balance has not been updated yet.
@@ -226,7 +226,7 @@ let main (p, s : unit * storage) =
 </Syntax>
 
 
-The contract emits a bunch of operations that transfer 5 tez to each of the beneficiaries listed in storage. The flaw here is that one of the receiver contracts may fail, preventing others from receiving the reward. This may be intentional censorship or a bug in the receiver contract – in either case, the contract gets stuck.
+The contract emits a bunch of operations that transfer 5 mav to each of the beneficiaries listed in storage. The flaw here is that one of the receiver contracts may fail, preventing others from receiving the reward. This may be intentional censorship or a bug in the receiver contract – in either case, the contract gets stuck.
 
 Instead of making a batch transfer, it is better to let beneficiaries withdraw their funds individually. This way, if the receiver contract fails, it would not affect other withdrawals.
 

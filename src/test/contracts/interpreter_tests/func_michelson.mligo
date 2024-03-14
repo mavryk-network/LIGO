@@ -8,6 +8,6 @@ module C = struct
 end
 
 let test =
-  let orig = Test.originate (contract_of C) 1 0tez in
-  let _ = Test.transfer_exn orig.addr (Main 41) 0tez in
+  let orig = Test.originate (contract_of C) 1 0mav in
+  let _ = Test.transfer_exn orig.addr (Main 41) 0mav in
   Test.log (Test.get_storage orig.addr)

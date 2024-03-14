@@ -18,9 +18,9 @@ type parameter = Back | Claim | Withdraw
 
 type storage = {
   owner    : address;
-  goal     : tez;
+  goal     : mav;
   deadline : timestamp;
-  backers  : (address, tez) map;
+  backers  : (address, mav) map;
   funded   : bool
 }
 
@@ -47,9 +47,9 @@ type parameter =
 
 type storage = {
   owner    : address,
-  goal     : tez,
+  goal     : mav,
   deadline : timestamp,
-  backers  : map<address, tez>,
+  backers  : map<address, mav>,
   funded   : bool
 };
 

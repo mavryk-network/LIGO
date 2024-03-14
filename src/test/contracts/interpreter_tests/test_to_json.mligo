@@ -5,7 +5,7 @@ module C = struct
   let main (() : unit) (s : storage) : operation list * storage = [], s
 end
 let test_to_json =
-  let orig = Test.originate (contract_of C) { foo = 42 ; bar = ["hello"; "world"] } 0tez in
+  let orig = Test.originate (contract_of C) { foo = 42 ; bar = ["hello"; "world"] } 0mav in
   let () = Test.println (Test.to_json orig.addr) in
   let () = Test.println (Test.to_json (Test.get_storage orig.addr)) in
   ()

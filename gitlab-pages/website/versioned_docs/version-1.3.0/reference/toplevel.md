@@ -218,11 +218,11 @@ type string
 A sequence of characters.
 
 <SyntaxTitle syntax="cameligo">
-type tez
+type mav
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-type tez
+type mav
 </SyntaxTitle>
 
 A specific type for tokens.

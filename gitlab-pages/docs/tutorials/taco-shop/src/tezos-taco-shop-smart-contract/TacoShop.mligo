@@ -1,9 +1,9 @@
-type taco_supply = { current_stock : nat ; max_price : tez }
+type taco_supply = { current_stock : nat ; max_price : mav }
 
 type taco_shop_storage = (nat, taco_supply) map
 let default_storage: taco_shop_storage  = Map.literal [
-  (1n, { current_stock = 50n ; max_price = 50tez }) ;
-  (2n, { current_stock = 20n ; max_price = 75tez }) ;
+  (1n, { current_stock = 50n ; max_price = 50mav }) ;
+  (2n, { current_stock = 20n ; max_price = 75mav }) ;
 ]
 [@entry]
 let buy_taco (taco_kind_index : nat) (taco_shop_storage : taco_shop_storage)
@@ -14,7 +14,7 @@ let buy_taco (taco_kind_index : nat) (taco_shop_storage : taco_shop_storage)
       match Map.find_opt (taco_kind_index) taco_shop_storage with
         Some k -> k
       | None -> failwith "Unknown kind of taco" in
-    let current_purchase_price : tez =
+    let current_purchase_price : mav =
       taco_kind.max_price / taco_kind.current_stock in
     (* We won't sell tacos if the amount is not correct *)
 

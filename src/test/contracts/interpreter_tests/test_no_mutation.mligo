@@ -25,7 +25,7 @@ end
 
 let originate_and_test contract =
   let initial_storage = 7 in
-  let orig = Test.originate contract initial_storage 0tez in
+  let orig = Test.originate contract initial_storage 0mav in
   let _ = Test.transfer_exn orig.addr (Main (Increment (7)) : C parameter_of) 1mumav in
   Test.assert (Test.get_storage orig.addr = initial_storage + 7)
 

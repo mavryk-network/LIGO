@@ -9,23 +9,23 @@ import SyntaxTitle from '@theme/SyntaxTitle';
 
 
 <SyntaxTitle syntax="cameligo">
-val transfer : &#39;p &#39;s.(&#39;p, &#39;s) typed&#95;address -&gt; &#39;p -&gt; tez -&gt; test&#95;exec&#95;result
+val transfer : &#39;p &#39;s.(&#39;p, &#39;s) typed&#95;address -&gt; &#39;p -&gt; mav -&gt; test&#95;exec&#95;result
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let transfer: &lt;p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; (&#95;: p) =&gt; (&#95;: tez) =&gt; test&#95;exec&#95;result
+let transfer: &lt;p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; (&#95;: p) =&gt; (&#95;: mav) =&gt; test&#95;exec&#95;result
 </SyntaxTitle>
-Bakes a transaction by sending an amount of tez with a parameter
+Bakes a transaction by sending an amount of mav with a parameter
          from the current source to another account. Returns the amount of
          gas consumed by the execution of the contract.
 
 
 <SyntaxTitle syntax="cameligo">
-val transfer&#95;exn : &#39;p &#39;s.(&#39;p, &#39;s) typed&#95;address -&gt; &#39;p -&gt; tez -&gt; nat
+val transfer&#95;exn : &#39;p &#39;s.(&#39;p, &#39;s) typed&#95;address -&gt; &#39;p -&gt; mav -&gt; nat
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let transfer&#95;exn: &lt;p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; (&#95;: p) =&gt; (&#95;: tez) =&gt; nat
+let transfer&#95;exn: &lt;p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; (&#95;: p) =&gt; (&#95;: mav) =&gt; nat
 </SyntaxTitle>
-Bakes a transaction by sending an amount of tez with a parameter
+Bakes a transaction by sending an amount of mav with a parameter
         from the current source to another account. Returns the amount of
         gas consumed by the execution of the contract. Similar as
         `Test.transfer`, but fails when anything goes wrong.
@@ -41,12 +41,12 @@ Gets the storage of a typed account.
 
 
 <SyntaxTitle syntax="cameligo">
-val get&#95;balance : &#39;p &#39;s.(&#39;p, &#39;s) typed&#95;address -&gt; tez
+val get&#95;balance : &#39;p &#39;s.(&#39;p, &#39;s) typed&#95;address -&gt; mav
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let get&#95;balance: &lt;p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; tez
+let get&#95;balance: &lt;p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; mav
 </SyntaxTitle>
-Gets the balance of an account in tez.
+Gets the balance of an account in mav.
 
 
 <SyntaxTitle syntax="cameligo">

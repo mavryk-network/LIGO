@@ -87,7 +87,7 @@
     },
     "numericliterals": {
       "name": "constant.numeric.jsligo",
-      "match": "\\b(\\+|\\-)?[0-9]+(n|tz|tez|mumav|)\\b",
+      "match": "\\b(\\+|\\-)?[0-9]+(n|tz|mav|mumav|)\\b",
       "captures": {}
     },
     "operators": {

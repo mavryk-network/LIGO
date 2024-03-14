@@ -559,7 +559,7 @@ instance LPP1 'Js Constant where
     CString        z   -> lpp z
     CFloat         z   -> lpp z
     CBytes         z   -> lpp z
-    CTez           z   -> lpp z <+> "as tez"
+    CTez           z   -> lpp z <+> "as mav"
 
 instance LPP1 'Js Pattern where
   lpp1 = \case

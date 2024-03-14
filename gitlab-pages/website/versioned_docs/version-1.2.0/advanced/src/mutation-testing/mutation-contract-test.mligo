@@ -11,10 +11,10 @@ let tester (taddr : (param, storage) typed_address) (_: (param ,storage) michels
   assert (Test.get_storage taddr = initial_storage + 7)
 
 let test_original =
-  let orig = Test.originate (contract_of MutationContract.C) initial_storage 0tez in
+  let orig = Test.originate (contract_of MutationContract.C) initial_storage 0mav in
   tester orig.addr
 let test_mutation =
-  match Test.originate_module_and_mutate (contract_of MutationContract.C) initial_storage 0tez tester with
+  match Test.originate_module_and_mutate (contract_of MutationContract.C) initial_storage 0mav tester with
     None -> ()
   | Some (_, mutation) ->
     let () = Test.log(mutation) in
@@ -28,7 +28,7 @@ let tester_add_and_sub (taddr : (param, storage) typed_address) (_ : (param, sto
   let _ = Test.transfer_exn taddr (Sub 3) 1mumav in
   assert (Test.get_storage taddr = initial_storage + 4)
 let test_mutation_all =
-  match Test.originate_and_mutate_all (contract_of MutationContract.C) initial_storage 0tez tester_add_and_sub with
+  match Test.originate_and_mutate_all (contract_of MutationContract.C) initial_storage 0mav tester_add_and_sub with
     [] -> ()
   | ms -> let () = List.iter (fun ((_, mutation) : unit * mutation) ->
                               let path = Test.save_mutation "." mutation in

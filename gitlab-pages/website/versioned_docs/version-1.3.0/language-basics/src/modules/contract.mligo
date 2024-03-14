@@ -3,8 +3,8 @@ module C = struct
   [@entry] let decrement (p : int) (s : int) : operation list * int = [], s - p
 end
 let test =
-  let orig = Test.originate (contract_of C) 0 0tez in
-  let _ = Test.transfer_exn orig.addr (Increment 42) 0tez
+  let orig = Test.originate (contract_of C) 0 0mav in
+  let _ = Test.transfer_exn orig.addr (Increment 42) 0mav
   in assert (42 = Test.get_storage orig.addr)
 module FA0 = struct
   type t = unit

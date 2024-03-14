@@ -1,12 +1,12 @@
-type parameter = Fund | Send of address * tez
+type parameter = Fund | Send of address * mav
 
-type transaction = Incoming of address * tez | Outgoing of address * tez
+type transaction = Incoming of address * mav | Outgoing of address * mav
 
 type storage = {owner : address; transactionLog : transaction list}
 
 type result = operation list * storage
 
-let do_send (dst, @amount : address * tez) =
+let do_send (dst, @amount : address * mav) =
   let callee = Tezos.get_contract_opt dst in
   match callee with
     Some contract ->
@@ -14,7 +14,7 @@ let do_send (dst, @amount : address * tez) =
       Outgoing (dst, @amount), [op]
   | None -> (failwith "Could not send tokens" : transaction * operation list)
 
-let do_fund (from, @amount : address * tez) =
+let do_fund (from, @amount : address * mav) =
   Incoming (from, @amount), ([] : operation list)
 
 [@entry]
@@ -23,13 +23,13 @@ let fund (_ : unit) (s : storage) : result =
   ops, { s with transactionLog = tx :: s.transactionLog }
 
 [@entry]
-let send (args : address * tez) (s : storage) =
+let send (args : address * mav) (s : storage) =
   let u = assert ((Tezos.get_sender ()) = s.owner && (Tezos.get_amount ()) = 0mumav) in
   let tx, ops = do_send args in
   ops, { s with transactionLog = tx :: s.transactionLog }
-type storage = {beneficiary : address; balances : (address, tez) map}
+type storage = {beneficiary : address; balances : (address, mav) map}
 
-type parameter = tez * (unit contract)
+type parameter = mav * (unit contract)
 
 let withdraw (param, s : parameter * storage) =
   let @amount, beneficiary = param in
@@ -40,7 +40,7 @@ let withdraw (param, s : parameter * storage) =
     | None -> 0mumav in
   let new_balance = match @balance - @amount with
     | Some x -> x
-    | None -> (failwith "Insufficient balance" : tez)
+    | None -> (failwith "Insufficient balance" : mav)
   in
   let op = Tezos.transaction () @amount beneficiary in
   let new_balances =

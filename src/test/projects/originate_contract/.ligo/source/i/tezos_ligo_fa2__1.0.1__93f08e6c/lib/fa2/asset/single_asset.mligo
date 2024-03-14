@@ -179,7 +179,7 @@ let balance_of : balance_of -> storage -> operation list * storage =
       {request=request;balance=balance_}
    in
    let callback_param = Main (List.map get_balance_info requests) in
-   let operation = Tezos.transaction callback_param 0tez callback in
+   let operation = Tezos.transaction callback_param 0mav callback in
    ([operation]: operation list),s
 
 (** update operators entrypoint *)

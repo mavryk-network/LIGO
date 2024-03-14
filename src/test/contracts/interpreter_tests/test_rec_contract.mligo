@@ -5,6 +5,6 @@ module C = struct
 end
 
 let test =
-  let {addr = taddr; code = _; size = _} = Test.originate (contract_of C) () 0tez in
+  let {addr = taddr; code = _; size = _} = Test.originate (contract_of C) () 0mav in
   let _contr = Test.to_contract taddr in
   ()

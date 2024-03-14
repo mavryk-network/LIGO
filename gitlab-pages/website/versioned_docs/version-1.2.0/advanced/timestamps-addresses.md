@@ -155,7 +155,7 @@ the following examples.
 
 ```cameligo group=d
 let my_account : address =
-  ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
+  ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
 ```
 
 </Syntax>
@@ -164,7 +164,7 @@ let my_account : address =
 
 ```jsligo group=d
 const my_account: address =
-  "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address;
+  "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address;
 ```
 
 </Syntax>

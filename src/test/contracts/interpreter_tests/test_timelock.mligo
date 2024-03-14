@@ -16,12 +16,12 @@ end
 
 let test =
   let init_storage : bytes = 0x41414141 in
-  let orig = Test.originate (contract_of C) init_storage 0tez in
+  let orig = Test.originate (contract_of C) init_storage 0mav in
   let payload = 0x4141
   in
   let test_open (cc : chest_key * chest) (expected : bytes) : unit =
     let x : C parameter_of contract = Test.to_contract orig.addr in
-    let _ = Test.transfer_to_contract_exn x (Check cc) 0tez in
+    let _ = Test.transfer_to_contract_exn x (Check cc) 0mav in
     let s = Test.get_storage orig.addr in
     let _ = Test.log (s, expected) in
     assert (s = expected)

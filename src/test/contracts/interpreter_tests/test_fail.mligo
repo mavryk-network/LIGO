@@ -1,10 +1,10 @@
 #import "./contract_under_test/fail_contract.mligo" "C"
 
 let test =
-  let orig = Test.originate (contract_of C) () 0tez in
+  let orig = Test.originate (contract_of C) () 0mav in
   let contr = Test.to_contract orig.addr in
   let addr = Tezos.address contr in
-  match Test.transfer_to_contract contr (Main ()) 10tez with
+  match Test.transfer_to_contract contr (Main ()) 10mav with
   | Success _ -> (failwith "Should fail !" : michelson_program )
   | Fail e -> (
     match e with

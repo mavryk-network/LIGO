@@ -11,11 +11,11 @@ const tester = (taddr : typed_address<param, storage>, _c : michelson_contract<p
 }
 
 const test_original = (() => {
-  let orig = Test.originate(contract_of(MutationContract.C), initial_storage, 0tez);
+  let orig = Test.originate(contract_of(MutationContract.C), initial_storage, 0mav);
   return tester(orig.addr);
 })();
 const test_mutation =
-  match(Test.originate_module_and_mutate(contract_of(MutationContract.C), initial_storage, 0tez, tester)) {
+  match(Test.originate_module_and_mutate(contract_of(MutationContract.C), initial_storage, 0mav, tester)) {
     when(None()): unit;
     when(Some(pmutation)): do {
       let _l = Test.log(pmutation[1]);
@@ -32,7 +32,7 @@ const tester_add_and_sub = (taddr : typed_address<param, storage>, _c : michelso
   assert(Test.get_storage(taddr) == initial_storage + 4);
 }
 const test_mutation_all =
-  match(Test.originate_and_mutate_all(contract_of(MutationContract.C), initial_storage, 0tez, tester_add_and_sub)) {
+  match(Test.originate_and_mutate_all(contract_of(MutationContract.C), initial_storage, 0mav, tester_add_and_sub)) {
     when([]): unit;
     when([hd,...tl]): do {
       let ms = list([hd,...tl]);

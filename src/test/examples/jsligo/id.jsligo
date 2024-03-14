@@ -11,12 +11,12 @@
       {
         identities:Big_map.literal(list([
           [1,
-           {owner:("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address),
-           controller:("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address), profile:0x0501000000026869}
+           {owner:("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address),
+           controller:("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address), profile:0x0501000000026869}
           ]
         ])),
         next_id:2,
-        name_price:(0 as tez),
+        name_price:(0 as mav),
         skip_price:(333 as mumav)
       }
   deploy:
@@ -25,11 +25,11 @@
       {
         identities:Big_map.literal(list([
           [1,
-           {owner:("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address), controller:("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address), profile:0x0501000000026869}
+           {owner:("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address), controller:("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address), profile:0x0501000000026869}
           ]
         ])),
         next_id:2,
-        name_price:(10 as tez),
+        name_price:(10 as mav),
         skip_price:(333 as mumav)
       }
   evaluateValue:
@@ -45,13 +45,13 @@
         {
           identities:Big_map.literal(list([
             [1,
-             {owner:("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address),
-              controller:("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address),
+             {owner:("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address),
+              controller:("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address),
               profile:0x0501000000026869}
             ]
           ])),
           next_id:2,
-          name_price:(0 as tez),
+          name_price:(0 as mav),
           skip_price:(333 as mumav)
         }
       ]
@@ -62,11 +62,11 @@
       {
         identities:Big_map.literal(list([
           [1,
-           {owner:("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address), controller:("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address), profile:0x0501000000026869}
+           {owner:("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address), controller:("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address), profile:0x0501000000026869}
           ]
         ])),
         next_id:2,
-        name_price:(10 as tez),
+        name_price:(10 as mav),
         skip_price:(333 as mumav)
       }
 *_*) */
@@ -106,8 +106,8 @@ type action =
 type storage = {
   identities: big_map<id, id_details>,
   next_id: int,
-  name_price: tez,
-  skip_price: tez,
+  name_price: mav,
+  skip_price: mav,
 };
 
 /** Preliminary thoughts on ids:

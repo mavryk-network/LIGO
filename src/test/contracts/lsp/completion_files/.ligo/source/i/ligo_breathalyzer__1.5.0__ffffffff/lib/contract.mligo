@@ -40,7 +40,7 @@ let originate
   (name: string)
   (contract: (a, b) module_contract)
   (storage: b)
-  (quantity: tez) : (a, b) originated =
+  (quantity: mav) : (a, b) originated =
   let {addr=typed_address; code=_; size=_} = Test.originate contract storage quantity in
   let contract = Test.to_contract typed_address in
   let address = Tezos.address contract in
@@ -58,7 +58,7 @@ let transfer_to
     (type a b)
     (originated: (a, b) originated)
     (parameter: a)
-    (fund: tez) : Result.result =
+    (fund: mav) : Result.result =
   let contract = originated.originated_contract in
   Result.try_with
     (fun () -> Test.transfer_to_contract contract parameter fund)
@@ -70,18 +70,18 @@ let transfer_with_entrypoint_to
     (originated: (a, b) originated)
     (entrypoint: string)
     (parameter: c)
-    (fund: tez) : Result.result =
+    (fund: mav) : Result.result =
   let contract = Test.to_entrypoint entrypoint originated.originated_typed_address in
   Result.try_with
     (fun () -> Test.transfer_to_contract contract parameter fund)
 
 (** [call contract parameter] calls [contract] with [parameter] without
-    transferring any tez. *)
+    transferring any mav. *)
 let call
   (type a b)
   (originated: (a, b) originated)
   (parameter: a) : Result.result =
-  transfer_to originated parameter 0tez
+  transfer_to originated parameter 0mav
 
 (** [storage_of originated_contract] retreives the storage of an originated
     smart-contract. *)
@@ -95,6 +95,6 @@ let storage_of
     smart-contract. *)
 let balance_of
     (type a b)
-    (originated: (a, b) originated) : tez =
+    (originated: (a, b) originated) : mav =
   let addr = originated.originated_typed_address in
   Test.get_balance addr

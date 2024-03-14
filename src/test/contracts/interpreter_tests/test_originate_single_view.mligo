@@ -9,6 +9,6 @@ module Bar = struct
 end
 
 let test =
-  let orig = Test.originate (contract_of Bar.Foo) 0 0tez in
-  let _ = Test.transfer_exn orig.addr (Add 42) 0tez in
+  let orig = Test.originate (contract_of Bar.Foo) 0 0mav in
+  let _ = Test.transfer_exn orig.addr (Add 42) 0mav in
   ()

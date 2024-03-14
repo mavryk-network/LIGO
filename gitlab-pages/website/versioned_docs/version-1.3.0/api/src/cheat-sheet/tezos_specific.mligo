@@ -1,5 +1,5 @@
 let destinationAddress : address =
-  ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
+  ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
 
 let contract : unit contract =
   match (Tezos.get_contract_opt (Tezos.get_sender ()) : unit contract option) with

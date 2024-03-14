@@ -5,7 +5,7 @@ end
 
 
 let boot () = 
-  let () = Test.reset_state 2n ([] : tez list) in
+  let () = Test.reset_state 2n ([] : mav list) in
   let sender_ = Test.nth_bootstrap_account 1 in
   let () = Test.set_source sender_ in
 
@@ -18,6 +18,6 @@ let boot () =
 
 let test_timestamp = 
   let c = boot() in
-  let r = Test.transfer_to_contract c.contr (Main ("2022-01-01t10:10:10Z" : timestamp)) 0tez in
+  let r = Test.transfer_to_contract c.contr (Main ("2022-01-01t10:10:10Z" : timestamp)) 0mav in
   Test.log r
 

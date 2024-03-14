@@ -25,7 +25,7 @@ let test =
 
 // Nested values::
 let hello: string = "Hello"
-let addr1 = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
+let addr1 = ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
 let addr2 = ("mv1WU59eqkSNUX9mWMVzMXC19ia5F8oGiAek" : address)
 let ts1 = ("2000-01-01t10:10:10Z" : timestamp)
 let ts2 = ("2000-01-02t10:10:10Z" : timestamp)
@@ -36,7 +36,7 @@ type r = {
     i: int;
     s: string;
     n: nat;
-    t: tez;
+    t: mav;
     a: address;
     ts: timestamp;
 }
@@ -44,7 +44,7 @@ let r = {
     i= 1;
     s= "hello";
     n= 2n;
-    t= 1tez;
+    t= 1mav;
     a= addr1;
     ts= ts1;
 }
@@ -52,7 +52,7 @@ let r2 = {
     i= 2;
     s= "hell0";
     n= 3n;
-    t= 1tez;
+    t= 1mav;
     a= addr1;
     ts= ts1;
 }

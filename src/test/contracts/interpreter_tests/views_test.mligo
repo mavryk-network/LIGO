@@ -9,7 +9,7 @@ let test =
     Test.transfer
       addr_c
       (Main (Test.to_address addr_v))
-      1tez in
+      1mav in
   match tx with
     Success _ ->
       let x = Test.get_storage addr_c in

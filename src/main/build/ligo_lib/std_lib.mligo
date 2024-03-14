@@ -11,7 +11,7 @@ type unit = "%constant:unit"
 (* Michelson types lifted into LIGO *)
 
 type operation = "%constant:operation"
-type tez = "%constant:tez"
+type mav = "%constant:mav"
 type address = "%constant:address"
 type signature = "%constant:signature"
 type key = "%constant:key"
@@ -489,7 +489,7 @@ module Tezos = struct
     (type param storage)
     (entrypoint: (param, storage) entrypoint)
     (delegate: key_hash option)
-    (amount: tez)
+    (amount: mav)
     (storage: storage)
     : operation * address =
     [%external ("CREATE_CONTRACT",
@@ -535,7 +535,7 @@ module Tezos = struct
     `param`. If the contract is an implicit account, the parameter
     must be `unit`. *)
   let transaction
-    (type param) (param: param) (amount: tez) (contract_addr: param contract)
+    (type param) (param: param) (amount: mav) (contract_addr: param contract)
     : operation =
     [%michelson
       ({| {TRANSFER_TOKENS} |} param amount contract_addr : operation)]
@@ -692,8 +692,8 @@ module Tezos = struct
     The call `get_balance()` returns the balance in mumav of the
     account associated to the currently executed smart contract,
     including any mumav added by the calling transaction. *)
-  let get_balance () : tez =
-    [%michelson ({| {BALANCE} |} : tez)]
+  let get_balance () : mav =
+    [%michelson ({| {BALANCE} |} : mav)]
 
   (** display-only-for-cameligo
     The call `get_amount ()` returns the amount in mumav of the
@@ -701,8 +701,8 @@ module Tezos = struct
   (** display-only-for-jsligo
     The call `get_amount()` returns the amount in mumav of the
     current transaction. *)
-  let get_amount () : tez =
-    [%michelson ({| {AMOUNT} |} : tez)]
+  let get_amount () : mav =
+    [%michelson ({| {AMOUNT} |} : mav)]
 
   (** display-only-for-cameligo
     The call `get_now ()` returns the minimal injection time for the
@@ -2129,10 +2129,9 @@ type int64 = "%constant:int64"
 type views = "%constant:views"
 
 type test_exec_error_balance_too_low = {
-  contract_balance : tez;
+  contract_balance : mav;
   contract_too_low : address;
-  spend_request : tez
-}
+  spend_request : mav}
 
 type test_exec_error =
   | Balance_too_low of test_exec_error_balance_too_low
@@ -2244,13 +2243,13 @@ module Test = struct
     let a : (unit, b) typed_address = cast_address a in
     get_storage a
 
-  (** Gets the balance of an account (given as an address) in tez. *)
+  (** Gets the balance of an account (given as an address) in mav. *)
   [@deprecated "In a future version, `Test` will be replaced by `Test.Next`, and using `Address.get_balance` from `Test.Next` is encouraged for a smoother migration."]
-  let get_balance_of_address (a : address) : tez = [%external ("TEST_GET_BALANCE", a)]
+  let get_balance_of_address (a : address) : mav = [%external ("TEST_GET_BALANCE", a)]
 
-  (** Gets the balance of an account in tez. *)
+  (** Gets the balance of an account in mav. *)
   [@deprecated "In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.get_balance` from `Test.Next` is encouraged for a smoother migration."]
-  let get_balance (type p s) (a : (p, s) typed_address) : tez =
+  let get_balance (type p s) (a : (p, s) typed_address) : mav =
     [%external ("TEST_GET_BALANCE", to_address a)]
 
   (** Prints an string to stdout. *)
@@ -2319,7 +2318,7 @@ module Test = struct
   let register_delegate (kh : key_hash) : unit = [%external ("TEST_REGISTER_DELEGATE", kh)]
 
   [@deprecated "In a future version, `Test` will be replaced by `Test.Next`, and using `State.stake` from `Test.Next` is encouraged for a smoother migration."]
-  let stake (kh : key_hash) (t : tez) : unit = [%external ("TEST_STAKE", kh, t)]
+  let stake (kh : key_hash) (t : mav) : unit = [%external ("TEST_STAKE", kh, t)]
 
   (** Registers a global constant, returns its hash as a string. See
     the documentation for global constants for an example of usage. *)
@@ -2457,21 +2456,21 @@ module Test = struct
     in
     List.fold f event_map ([]: a list)
 
-  (** Bakes a transaction by sending an amount of tez with a parameter
+  (** Bakes a transaction by sending an amount of mav with a parameter
     from the current source to another account. Returns the amount of
     gas consumed by the execution of the contract. *)
   [@deprecated "In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.transfer` from `Test.Next` is encouraged for a smoother migration."]
-  let transfer (type p s) (a : (p,s) typed_address) (s : p) (t : tez) : test_exec_result =
+  let transfer (type p s) (a : (p,s) typed_address) (s : p) (t : mav) : test_exec_result =
     let a = to_contract a in
     let s : michelson_program = eval s in
     [%external ("TEST_EXTERNAL_CALL_TO_ADDRESS", a, (None : string option), s, t)]
 
-  (** Bakes a transaction by sending an amount of tez with a parameter
+  (** Bakes a transaction by sending an amount of mav with a parameter
     from the current source to another account. Returns the amount of
     gas consumed by the execution of the contract. Similar as
     `Test.transfer`, but fails when anything goes wrong. *)
   [@deprecated "In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.transfer_exn` from `Test.Next` is encouraged for a smoother migration."]
-  let transfer_exn (type p s) (a : (p,s) typed_address) (s : p) (t : tez) : nat =
+  let transfer_exn (type p s) (a : (p,s) typed_address) (s : p) (t : mav) : nat =
     let a = to_contract a in
     let s : michelson_program = eval s in
     [%external ("TEST_EXTERNAL_CALL_TO_ADDRESS_EXN", a, (None : string option), s, t)]
@@ -2484,7 +2483,7 @@ module Test = struct
     print s
 
   (** Generates a number of random bootstrapped accounts with a
-    default amount of `4000000` tez. The passed list can be used to
+    default amount of `4000000` mav. The passed list can be used to
     overwrite the amount. By default, the state only has two
     bootstrapped accounts. Notice that since Ithaca, a percentage of
     an account's balance is frozen (5% in testing mode) in case the
@@ -2492,10 +2491,10 @@ module Test = struct
     `Test.get_balance` can show a different amount to the one being
     set with `Test.reset_state`. *)
   [@deprecated "In a future version, `Test` will be replaced by `Test.Next`, and using `State.reset` from `Test.Next` is encouraged for a smoother migration."]
-  let reset_state (n : nat) (l : tez list) : unit = [%external ("TEST_STATE_RESET", (None : timestamp option), n, l)]
+  let reset_state (n : nat) (l : mav list) : unit = [%external ("TEST_STATE_RESET", (None : timestamp option), n, l)]
 
   (** Generates a number of random bootstrapped accounts with a
-    default amount of `4000000` tez. The passed list can be used to
+    default amount of `4000000` mav. The passed list can be used to
     overwrite the amount. By default, the state only has two
     bootstrapped accounts. Notice that since Ithaca, a percentage of
     an account's balance is frozen (5% in testing mode) in case the
@@ -2504,13 +2503,13 @@ module Test = struct
     set with `Test.reset_state`. It also takes a starting timestamp
     for the genesis block. *)
   [@deprecated "In a future version, `Test` will be replaced by `Test.Next`, and using `State.reset_at` from `Test.Next` is encouraged for a smoother migration."]
-  let reset_state_at (t:timestamp) (n : nat) (l : tez list) : unit = [%external ("TEST_STATE_RESET", (Some t), n, l)]
+  let reset_state_at (t:timestamp) (n : nat) (l : mav list) : unit = [%external ("TEST_STATE_RESET", (Some t), n, l)]
 
   (** Setup a bootstrap contract with an entrypoint function, initial
     storage and initial balance. Bootstrap contracts will be loaded in
     order, and they will be available only after reset. *)
   [@deprecated "In a future version, `Test` will be replaced by `Test.Next`, and using `State.Reset.add_func_contract` from `Test.Next` is encouraged for a smoother migration."]
-  let bootstrap_contract (type p s) (f : p * s -> operation list * s) (s : s) (t : tez) : unit = [%external ("TEST_BOOTSTRAP_CONTRACT", f, s, t)]
+  let bootstrap_contract (type p s) (f : p * s -> operation list * s) (s : s) (t : mav) : unit = [%external ("TEST_BOOTSTRAP_CONTRACT", f, s, t)]
 
   (** Mutates a value using a natural number as an index for the
     available mutations, returns an option for indicating whether
@@ -2538,7 +2537,7 @@ module Test = struct
   (** Adds an account `(sk, pk)` as a baker. The change is only
     effective after `Test.reset_state`. *)
   [@deprecated "In a future version, `Test` will be replaced by `Test.Next`, and using `State.Reset.add_baker` from `Test.Next` is encouraged for a smoother migration."]
-  let baker_account (p : string * key) (o : tez option) : unit = [%external ("TEST_BAKER_ACCOUNT", p, o)]
+  let baker_account (p : string * key) (o : mav option) : unit = [%external ("TEST_BAKER_ACCOUNT", p, o)]
 
   (** The testing framework keeps an internal reference to the values
     corresponding to big map identifiers. This function allows to
@@ -2548,22 +2547,22 @@ module Test = struct
   [@deprecated "In a future version, `Test` will be replaced by `Test.Next`, and using `State.set_big_map` from `Test.Next` is encouraged for a smoother migration."]
   let set_big_map (type a b) (i : int) (m : (a, b) big_map) : unit = [%external ("TEST_SET_BIG_MAP", i, m)]
 
-  (** Bake a transaction by sending an amount of tez with a parameter
+  (** Bake a transaction by sending an amount of mav with a parameter
     from the current source to a contract. Returns the amount of gas
     consumed by the execution of the contract. *)
   [@deprecated "In a future version, `Test` will be replaced by `Test.Next`, and using `Contract.transfer` from `Test.Next` is encouraged for a smoother migration."]
-  let transfer_to_contract (type p) (c : p contract) (s : p) (t : tez) : test_exec_result =
+  let transfer_to_contract (type p) (c : p contract) (s : p) (t : mav) : test_exec_result =
     let e : string option = [%external ("TEST_GET_ENTRYPOINT", c)] in
     let s : michelson_program = eval s in
     [%external ("TEST_EXTERNAL_CALL_TO_ADDRESS", c, e, s, t)]
 
-  (** Bakes a transaction by sending an amount of tez with a parameter
+  (** Bakes a transaction by sending an amount of mav with a parameter
     from the current source to a contract. Returns the amount of gas
     consumed by the execution of the contract. Similar as
     `Test.transfer_to_contract`, but fails when anything goes
     wrong. *)
   [@deprecated "In a future version, `Test` will be replaced by `Test.Next`, and using `Contract.transfer_exn` from `Test.Next` is encouraged for a smoother migration."]
-  let transfer_to_contract_exn (type p) (c : p contract) (s : p) (t : tez) : nat =
+  let transfer_to_contract_exn (type p) (c : p contract) (s : p) (t : mav) : nat =
       let e : string option = [%external ("TEST_GET_ENTRYPOINT", c)] in
       let s : michelson_program = eval s in
       [%external ("TEST_EXTERNAL_CALL_TO_ADDRESS_EXN", c, e, s, t)]
@@ -2598,7 +2597,7 @@ module Test = struct
   (** Originate a contract with initial storage and initial
     balance. *)
   [@deprecated "In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.michelson` from `Test.Next` is encouraged for a smoother migration."]
-  let originate_contract (type p s) (c : (p,s) michelson_contract) (s : s) (t : tez) : (p,s) typed_address =
+  let originate_contract (type p s) (c : (p,s) michelson_contract) (s : s) (t : mav) : (p,s) typed_address =
     let s = eval s in
     [%external ("TEST_ORIGINATE", c, s, t)]
 
@@ -2610,7 +2609,7 @@ module Test = struct
   (** Originate a contract with an entrypoint function in curried
     form, initial storage and initial balance. *)
   [@deprecated "In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration."]
-  let originate (type p s) ((f, vs, _) : (p, s) module_contract) (s : s) (t : tez) : (p, s) origination_result =
+  let originate (type p s) ((f, vs, _) : (p, s) module_contract) (s : s) (t : mav) : (p, s) origination_result =
     let code = compile_contract_with_views f vs in
     let addr = originate_contract code s t in
     let size = size code in
@@ -2627,7 +2626,7 @@ module Test = struct
     entrypoint, and a list of views, together with an initial storage
     and an initial balance. *)
   [@deprecated "In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.from_file` from `Test.Next` is encouraged for a smoother migration."]
-  let originate_from_file (type p s) (fn : string) (s : s)  (t : tez) : (p, s) origination_result =
+  let originate_from_file (type p s) (fn : string) (s : s)  (t : mav) : (p, s) origination_result =
     let code = compile_contract_from_file fn in
     let addr = originate_contract code s t in
     let size = size code in
@@ -2680,7 +2679,7 @@ module Test = struct
     function on a mutation, the value and mutation involved will be
     returned. *)
   [@deprecated "In a future version, `Test` will be replaced by `Test.Next`, and using `Mutation.from_file` from `Test.Next` is encouraged for a smoother migration."]
-  let originate_from_file_and_mutate (type b p s) (fn : string) (s : s) (t : tez)
+  let originate_from_file_and_mutate (type b p s) (fn : string) (s : s) (t : mav)
                                      (tester : (p,s) typed_address * (p,s) michelson_contract * int -> b) : (b * mutation) option =
     let wrap_tester (v : (p,s) michelson_contract) : b =
       let f = [%external ("TEST_COMPILE_AST_CONTRACT", v)] in
@@ -2708,7 +2707,7 @@ module Test = struct
     a mutation, the failure and mutation involved will be added to the
     list to be returned. *)
   [@deprecated "In a future version, `Test` will be replaced by `Test.Next`, and using `Mutation.All.from_file` from `Test.Next` is encouraged for a smoother migration."]
-  let originate_from_file_and_mutate_all (type b p s) (fn : string) (s : s) (t : tez)
+  let originate_from_file_and_mutate_all (type b p s) (fn : string) (s : s) (t : mav)
                                          (tester : (p,s) typed_address * (p,s) michelson_contract * int -> b) : (b * mutation) list =
     let wrap_tester (v : (p,s) michelson_contract) : b =
       let f = [%external ("TEST_COMPILE_AST_CONTRACT", v)] in
@@ -2735,7 +2734,7 @@ module Test = struct
     failure when running the function on a mutation, the value and
     mutation involved will be returned. *)
   [@deprecated "In a future version, `Test` will be replaced by `Test.Next`, and using `Mutation.contract` from `Test.Next` is encouraged for a smoother migration."]
-  let originate_module_and_mutate (type p s b) ((f, vs, _) : (p, s) module_contract) (s : s) (t : tez)
+  let originate_module_and_mutate (type p s b) ((f, vs, _) : (p, s) module_contract) (s : s) (t : mav)
                                   (tester : (p, s) typed_address -> (p,s) michelson_contract -> int -> b) : (b * mutation) option =
     let wrap_tester (v : (p,s) michelson_contract) : b =
       let f = [%external ("TEST_COMPILE_AST_CONTRACT", v)] in
@@ -2762,7 +2761,7 @@ module Test = struct
     when running the function on a mutation, the failure and mutation
     involved will be added to the list to be returned. *)
   [@deprecated "In a future version, `Test` will be replaced by `Test.Next`, and using `Mutation.All.contract` from `Test.Next` is encouraged for a smoother migration."]
-  let originate_and_mutate_all (type p s b) ((f, vs, _) : (p, s) module_contract) (s : s) (t : tez)
+  let originate_and_mutate_all (type p s b) ((f, vs, _) : (p, s) module_contract) (s : s) (t : mav)
                                       (tester : (p, s) typed_address -> (p,s) michelson_contract -> int -> b) : (b * mutation) list =
     let wrap_tester (v : (p,s) michelson_contract) : b =
       let f = [%external ("TEST_COMPILE_AST_CONTRACT", v)] in
@@ -2977,7 +2976,7 @@ module Test = struct
       (type p s)
       (f : p -> s -> operation list * s)
       (s : s)
-      (t : tez)
+      (t : mav)
       : (p, s) typed_address =
       let code = compile_contract (uncurry f)
       in originate_contract code s t
@@ -2991,7 +2990,7 @@ module Test = struct
       let proxy_transfer
         : (vt * nat) * address -> unit -> operation list * unit =
         proxy_transfer_contract mk_param
-      in originate_from_function proxy_transfer () 1tez
+      in originate_from_function proxy_transfer () 1mav
 
     let transfer
       (type vt)
@@ -3016,8 +3015,8 @@ module Test = struct
       in
       let taddr =
         originate_from_function
-          proxy_origination (None : address option) 1tez in
-      let _ = transfer_exn taddr ticket_info 0tez in
+          proxy_origination (None : address option) 1mav in
+      let _ = transfer_exn taddr ticket_info 0mav in
       match get_storage taddr with
       | Some addr -> (cast_address addr : (vp,whole_s) typed_address)
       | None -> failwith "internal error"
@@ -3103,7 +3102,7 @@ module Test = struct
       let drop = drop_context
 
       (** Generates a number of random bootstrapped accounts with a
-        default amount of `4000000` tez. The passed list can be used to
+        default amount of `4000000` mav. The passed list can be used to
         overwrite the amount. By default, the state only has two
         bootstrapped accounts. Notice that since Ithaca, a percentage of
         an account's balance is frozen (5% in testing mode) in case the
@@ -3113,7 +3112,7 @@ module Test = struct
       let reset = reset_state
 
       (** Generates a number of random bootstrapped accounts with a
-        default amount of `4000000` tez. The passed list can be used to
+        default amount of `4000000` mav. The passed list can be used to
         overwrite the amount. By default, the state only has two
         bootstrapped accounts. Notice that since Ithaca, a percentage of
         an account's balance is frozen (5% in testing mode) in case the
@@ -3196,13 +3195,13 @@ module Test = struct
         in
         List.fold f event_map ([]: a list)
 
-      let stake (kh : key_hash) (t : tez) : unit =
+      let stake (kh : key_hash) (t : mav) : unit =
         [%external ("TEST_STAKE", kh, t)]
 
       module Reset = struct
         (** Adds an account `(sk, pk)` as a baker. The change is only
           effective after `Test.reset_state`. *)
-        let add_baker (p : string * key) (o : tez option) : unit =
+        let add_baker (p : string * key) (o : mav option) : unit =
           [%external ("TEST_BAKER_ACCOUNT", p, o)]
 
         (** Setup a bootstrap contract with an entrypoint function, initial
@@ -3211,7 +3210,7 @@ module Test = struct
         let add_func_contract (type p s)
           (f : p * s -> operation list * s)
           (s : s)
-          (t : tez)
+          (t : mav)
         : unit =
           [%external ("TEST_BOOTSTRAP_CONTRACT", f, s, t)]
       end
@@ -3508,7 +3507,7 @@ module Test = struct
 
       (** Originate a contract with an entrypoint function in curried
         form, initial storage and initial balance. *)
-      let contract (type p s) (c : (p, s) module_contract) (s : s) (t : tez) : (p, s) origination_result =
+      let contract (type p s) (c : (p, s) module_contract) (s : s) (t : mav) : (p, s) origination_result =
         let { addr; code ; size } = originate c s t in
         let taddr = addr in
         { taddr ; code ; size }
@@ -3516,7 +3515,7 @@ module Test = struct
       (** Originate a contract with a path to the contract file, an
         entrypoint, and a list of views, together with an initial storage
         and an initial balance. *)
-      let from_file (type p s) (fn : string) (s : s)  (t : tez) : (p, s) origination_result =
+      let from_file (type p s) (fn : string) (s : s)  (t : mav) : (p, s) origination_result =
         let { addr ; code ; size } = originate_from_file fn s t in
         let taddr = addr in
         { taddr ; code ; size }
@@ -3526,7 +3525,7 @@ module Test = struct
       let michelson (type p s)
         (c : (p,s) michelson_contract)
         (s : s)
-        (t : tez)
+        (t : mav)
       : (p,s) typed_address =
         let s = eval s in
         [%external ("TEST_ORIGINATE", c, s, t)]
@@ -3538,12 +3537,12 @@ module Test = struct
         [%external ("TEST_TO_TYPED_ADDRESS", c)]
     end
     module Typed_address = struct
-       (** Bakes a transaction by sending an amount of tez with a parameter
+       (** Bakes a transaction by sending an amount of mav with a parameter
          from the current source to another account. Returns the amount of
          gas consumed by the execution of the contract. *)
       let transfer = transfer
 
-      (** Bakes a transaction by sending an amount of tez with a parameter
+      (** Bakes a transaction by sending an amount of mav with a parameter
         from the current source to another account. Returns the amount of
         gas consumed by the execution of the contract. Similar as
         `Test.transfer`, but fails when anything goes wrong. *)
@@ -3552,8 +3551,8 @@ module Test = struct
       (** Gets the storage of a typed account. *)
       let get_storage = get_storage
 
-      (** Gets the balance of an account in tez. *)
-      let get_balance (type p s) (a : (p, s) typed_address) : tez =
+      (** Gets the balance of an account in mav. *)
+      let get_balance (type p s) (a : (p, s) typed_address) : mav =
         [%external ("TEST_GET_BALANCE", to_address a)]
       let to_address (type p s) (c : (p, s) typed_address) : address =
         [%external ("TEST_TO_ADDRESS", c)]

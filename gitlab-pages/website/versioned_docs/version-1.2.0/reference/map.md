@@ -55,7 +55,7 @@ Create a non-empty map.
 ```cameligo group=maps
 let moves : register =
   Map.literal [
-    (("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address), (1,2));
+    (("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address), (1,2));
     (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address), (0,3))]
 ```
 
@@ -66,7 +66,7 @@ let moves : register =
 ```jsligo group=maps
 let moves: register =
   Map.literal(list([
-    [("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address), [1, 2]],
+    [("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address), [1, 2]],
     [("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address), [0, 3]]]));
 ```
 
@@ -359,7 +359,7 @@ let found : bool = Map.mem ("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address)  m
 <Syntax syntax="jsligo">
 
 ```jsligo group=maps
-let found : bool = Map.mem (("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address),  moves);
+let found : bool = Map.mem (("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address),  moves);
 ```
 
 </Syntax>

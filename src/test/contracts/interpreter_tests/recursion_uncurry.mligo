@@ -6,5 +6,5 @@ module C = struct
 end
 
 let test =
-  let orig = Test.originate (contract_of C) "" 1tez in
+  let orig = Test.originate (contract_of C) "" 1mav in
   orig.size

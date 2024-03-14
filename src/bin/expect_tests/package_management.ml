@@ -15,7 +15,7 @@ let%expect_test _ =
   [%expect
     {|
     Everything at the top-level was executed.
-    - test exited with value KT1XjHdmyZQ5eqEfZV5RyxNm7cBmJkJC2dvY(None). |}]
+    - test exited with value KT1UQSCK2oRsjQ8BgmLh5KktqSuKfXtCRyig(None). |}]
 
 let%expect_test _ =
   run_ligo_good [ "install"; "--project-root"; "complex_project_with_one_dependency" ];
@@ -55,16 +55,16 @@ let%expect_test _ =
     {|
     File "src/a/b/c/contract.test.mligo", line 5, characters 13-27:
       4 |   let initial_storage = [1 ; 2 ; 3] in
-      5 |   let orig = Test.originate (contract_of C) initial_storage 0tez in
+      5 |   let orig = Test.originate (contract_of C) initial_storage 0mav in
                        ^^^^^^^^^^^^^^
-      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
+      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0mav in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "src/a/b/c/contract.test.mligo", line 6, characters 10-27:
-      5 |   let orig = Test.originate (contract_of C) initial_storage 0tez in
-      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
+      5 |   let orig = Test.originate (contract_of C) initial_storage 0mav in
+      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0mav in
                     ^^^^^^^^^^^^^^^^^
       7 |   let storage = Test.get_storage orig.addr in
     :
@@ -72,7 +72,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.transfer_exn` from `Test.Next` is encouraged for a smoother migration.
 
     File "src/a/b/c/contract.test.mligo", line 7, characters 16-32:
-      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
+      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0mav in
       7 |   let storage = Test.get_storage orig.addr in
                           ^^^^^^^^^^^^^^^^
       8 |   assert (storage = [3 ; 2 ; 1])
@@ -89,16 +89,16 @@ let%expect_test _ =
     {|
     File "src/a/b/c/contract.test.mligo", line 5, characters 13-27:
       4 |   let initial_storage = [1 ; 2 ; 3] in
-      5 |   let orig = Test.originate (contract_of C) initial_storage 0tez in
+      5 |   let orig = Test.originate (contract_of C) initial_storage 0mav in
                        ^^^^^^^^^^^^^^
-      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
+      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0mav in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "src/a/b/c/contract.test.mligo", line 6, characters 10-27:
-      5 |   let orig = Test.originate (contract_of C) initial_storage 0tez in
-      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
+      5 |   let orig = Test.originate (contract_of C) initial_storage 0mav in
+      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0mav in
                     ^^^^^^^^^^^^^^^^^
       7 |   let storage = Test.get_storage orig.addr in
     :
@@ -106,7 +106,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.transfer_exn` from `Test.Next` is encouraged for a smoother migration.
 
     File "src/a/b/c/contract.test.mligo", line 7, characters 16-32:
-      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
+      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0mav in
       7 |   let storage = Test.get_storage orig.addr in
                           ^^^^^^^^^^^^^^^^
       8 |   assert (storage = [3 ; 2 ; 1])
@@ -126,16 +126,16 @@ let%expect_test _ =
     {|
     File "contract.test.mligo", line 5, characters 13-27:
       4 |   let initial_storage = [1 ; 2 ; 3] in
-      5 |   let orig = Test.originate (contract_of C) initial_storage 0tez in
+      5 |   let orig = Test.originate (contract_of C) initial_storage 0mav in
                        ^^^^^^^^^^^^^^
-      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
+      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0mav in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "contract.test.mligo", line 6, characters 10-27:
-      5 |   let orig = Test.originate (contract_of C) initial_storage 0tez in
-      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
+      5 |   let orig = Test.originate (contract_of C) initial_storage 0mav in
+      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0mav in
                     ^^^^^^^^^^^^^^^^^
       7 |   let storage = Test.get_storage orig.addr in
     :
@@ -143,7 +143,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.transfer_exn` from `Test.Next` is encouraged for a smoother migration.
 
     File "contract.test.mligo", line 7, characters 16-32:
-      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
+      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0mav in
       7 |   let storage = Test.get_storage orig.addr in
                           ^^^^^^^^^^^^^^^^
       8 |   assert (storage = [3 ; 2 ; 1])
@@ -163,16 +163,16 @@ let%expect_test _ =
     {|
     File "c/contract.test.mligo", line 5, characters 13-27:
       4 |   let initial_storage = [1 ; 2 ; 3] in
-      5 |   let orig = Test.originate (contract_of C) initial_storage 0tez in
+      5 |   let orig = Test.originate (contract_of C) initial_storage 0mav in
                        ^^^^^^^^^^^^^^
-      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
+      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0mav in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "c/contract.test.mligo", line 6, characters 10-27:
-      5 |   let orig = Test.originate (contract_of C) initial_storage 0tez in
-      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
+      5 |   let orig = Test.originate (contract_of C) initial_storage 0mav in
+      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0mav in
                     ^^^^^^^^^^^^^^^^^
       7 |   let storage = Test.get_storage orig.addr in
     :
@@ -180,7 +180,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.transfer_exn` from `Test.Next` is encouraged for a smoother migration.
 
     File "c/contract.test.mligo", line 7, characters 16-32:
-      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
+      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0mav in
       7 |   let storage = Test.get_storage orig.addr in
                           ^^^^^^^^^^^^^^^^
       8 |   assert (storage = [3 ; 2 ; 1])
@@ -200,16 +200,16 @@ let%expect_test _ =
     {|
     File "b/c/contract.test.mligo", line 5, characters 13-27:
       4 |   let initial_storage = [1 ; 2 ; 3] in
-      5 |   let orig = Test.originate (contract_of C) initial_storage 0tez in
+      5 |   let orig = Test.originate (contract_of C) initial_storage 0mav in
                        ^^^^^^^^^^^^^^
-      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
+      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0mav in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "b/c/contract.test.mligo", line 6, characters 10-27:
-      5 |   let orig = Test.originate (contract_of C) initial_storage 0tez in
-      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
+      5 |   let orig = Test.originate (contract_of C) initial_storage 0mav in
+      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0mav in
                     ^^^^^^^^^^^^^^^^^
       7 |   let storage = Test.get_storage orig.addr in
     :
@@ -217,7 +217,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.transfer_exn` from `Test.Next` is encouraged for a smoother migration.
 
     File "b/c/contract.test.mligo", line 7, characters 16-32:
-      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
+      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0mav in
       7 |   let storage = Test.get_storage orig.addr in
                           ^^^^^^^^^^^^^^^^
       8 |   assert (storage = [3 ; 2 ; 1])
@@ -237,16 +237,16 @@ let%expect_test _ =
     {|
     File "a/b/c/contract.test.mligo", line 5, characters 13-27:
       4 |   let initial_storage = [1 ; 2 ; 3] in
-      5 |   let orig = Test.originate (contract_of C) initial_storage 0tez in
+      5 |   let orig = Test.originate (contract_of C) initial_storage 0mav in
                        ^^^^^^^^^^^^^^
-      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
+      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0mav in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "a/b/c/contract.test.mligo", line 6, characters 10-27:
-      5 |   let orig = Test.originate (contract_of C) initial_storage 0tez in
-      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
+      5 |   let orig = Test.originate (contract_of C) initial_storage 0mav in
+      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0mav in
                     ^^^^^^^^^^^^^^^^^
       7 |   let storage = Test.get_storage orig.addr in
     :
@@ -254,7 +254,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.transfer_exn` from `Test.Next` is encouraged for a smoother migration.
 
     File "a/b/c/contract.test.mligo", line 7, characters 16-32:
-      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
+      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0mav in
       7 |   let storage = Test.get_storage orig.addr in
                           ^^^^^^^^^^^^^^^^
       8 |   assert (storage = [3 ; 2 ; 1])
@@ -279,16 +279,16 @@ let%expect_test _ =
     {|
     File "using_scope_pkg_project/src/a/b/c/contract.test.mligo", line 5, characters 13-27:
       4 |   let initial_storage = [1 ; 2 ; 3] in
-      5 |   let orig = Test.originate (contract_of C) initial_storage 0tez in
+      5 |   let orig = Test.originate (contract_of C) initial_storage 0mav in
                        ^^^^^^^^^^^^^^
-      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
+      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0mav in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "using_scope_pkg_project/src/a/b/c/contract.test.mligo", line 6, characters 10-27:
-      5 |   let orig = Test.originate (contract_of C) initial_storage 0tez in
-      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
+      5 |   let orig = Test.originate (contract_of C) initial_storage 0mav in
+      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0mav in
                     ^^^^^^^^^^^^^^^^^
       7 |   let storage = Test.get_storage orig.addr in
     :
@@ -296,7 +296,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.transfer_exn` from `Test.Next` is encouraged for a smoother migration.
 
     File "using_scope_pkg_project/src/a/b/c/contract.test.mligo", line 7, characters 16-32:
-      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
+      6 |   let _ = Test.transfer_exn orig.addr (Main ()) 0mav in
       7 |   let storage = Test.get_storage orig.addr in
                           ^^^^^^^^^^^^^^^^
       8 |   assert (storage = [3 ; 2 ; 1])

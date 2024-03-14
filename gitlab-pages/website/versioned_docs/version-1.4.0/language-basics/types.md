@@ -52,13 +52,13 @@ const dog_breed: breed = "Saluki";
 <Syntax syntax="cameligo">
 
 ```cameligo group=b
-// The type account_balances denotes maps from addresses to tez
+// The type account_balances denotes maps from addresses to mav
 
-type account_balances = (address, tez) map
+type account_balances = (address, mav) map
 
 let ledger : account_balances =
   Map.literal
-    [(("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address), 10mumav)]
+    [(("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address), 10mumav)]
 ```
 
 </Syntax>
@@ -66,13 +66,13 @@ let ledger : account_balances =
 <Syntax syntax="jsligo">
 
 ```jsligo group=b
-// The type account_balances denotes maps from addresses to tez
+// The type account_balances denotes maps from addresses to mav
 
-type account_balances = map<address, tez>;
+type account_balances = map<address, mav>;
 
 const ledger: account_balances =
   Map.literal
-    (list([["mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address, 10mumav]]));
+    (list([["mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address, 10mumav]]));
 ```
 
 </Syntax>

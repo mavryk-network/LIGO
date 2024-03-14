@@ -3,7 +3,7 @@ module C = struct
     struct
       type tickets = (address, unit ticket) big_map
       type storage_data = {
-          price : tez;
+          price : mav;
       }
       type t = {data : storage_data; tickets : tickets}
     end
@@ -38,7 +38,7 @@ module C = struct
 end
 
 let test_one =
-  let () = Test.reset_state 2n ([] : tez list) in
+  let () = Test.reset_state 2n ([] : mav list) in
   let sender_ = Test.nth_bootstrap_account 1 in
   let () = Test.set_source sender_ in
 
@@ -50,5 +50,5 @@ let test_one =
   } in
 
   let orig = Test.originate (contract_of C) init_storage 0mumav in
-  let r = Test.transfer orig.addr (Main ()) 1tez in
+  let r = Test.transfer orig.addr (Main ()) 1mav in
   Test.log (r)

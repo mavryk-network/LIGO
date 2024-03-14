@@ -64,8 +64,8 @@ end = struct
     In above example, the weight of a INSERT/DELETE/CHANGE was assumed to always be 1,
     but all changes are not created equal.
     In below example, there is a [string] added, and a [nat->int] change in the big tuple.
-      from :          tuple1=(int * tez * int * nat)
-      to   : string * tuple2=(int * tez * nat * nat) 
+      from :          tuple1=(int * mav * int * nat)
+      to   : string * tuple2=(int * mav * nat * nat) 
              ^^^^^^                       ^^^
     Here, if all changes are weighted 1, then the diff would be :
       patch 1 : (CHANGE tuple1 to STRING), (ADD tuple2)
@@ -75,15 +75,15 @@ end = struct
     More generally, in those cases when two big tuples t1 and t2 are similar, we prefer a (CHANGE t1 to t2).
     To do this, we account for the type_expression in the computation of the weight. For example :
       1. weight of (INSERT  int)                     = 1
-      2. weight of (INSERT  nat * int * tez)         = 3
+      2. weight of (INSERT  nat * int * mav)         = 3
       3. weight of (CHANGE  string TO int)           = 1
-      4. weight of (CHANGE  int    * int * tez
+      4. weight of (CHANGE  int    * int * mav
                         TO  string * nat * string)   = 3
                             ^^^^^^   ^^^   ^^^^^^
-      5. weight of (CHANGE  int * int * tez
+      5. weight of (CHANGE  int * int * mav
                         TO  int * int * nat)         = 1
                                         ^^^
-    In this last example (5.), the only real change is [tez] -> [nat], so its weight is 1.
+    In this last example (5.), the only real change is [mav] -> [nat], so its weight is 1.
     More generally :
       * For singleton types, weights of changes is 1
       * For tuples, weight of INSERT / DELETE is the length of the tuple

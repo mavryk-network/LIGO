@@ -7,8 +7,8 @@ module Factory = struct
 end
 
 let test =
-  let orig = Test.originate (contract_of Factory) ([] : address list) 10tez in
-  let _ = Test.transfer_exn orig.addr (Main 42) 0tez in
+  let orig = Test.originate (contract_of Factory) ([] : address list) 10mav in
+  let _ = Test.transfer_exn orig.addr (Main 42) 0mav in
   let addr : address =
     Option.value_with_error "option is None"
       (List.head (Test.get_storage orig.addr)) in

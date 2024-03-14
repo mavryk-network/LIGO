@@ -50,10 +50,10 @@ end
 let (_, (alice, _, _)) = B.Context.init_default ()
 
 let ping_contract level initial_time =
-  B.Contract.originate level "ping" (contract_of Ping) initial_time 0tez
+  B.Contract.originate level "ping" (contract_of Ping) initial_time 0mav
 
 let exact_contract level initial_time =
-  B.Contract.originate level "exact" (contract_of Exact) initial_time 0tez
+  B.Contract.originate level "exact" (contract_of Exact) initial_time 0mav
 
 let suite =
   B.Model.suite

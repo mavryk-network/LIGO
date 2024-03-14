@@ -189,9 +189,9 @@ const part : bool = stuff.y["universe"][2];
 
 ## JsLIGO
 
-### Short notation for `tez` and `mumav`
+### Short notation for `mav` and `mumav`
 
-You can now write `3tez` or `3mumav` instead of `3 as tez` or `3 as mumav`. This convenient feature was already present in CameLIGO and is now available in JsLIGO too!
+You can now write `3mav` or `3mumav` instead of `3 as mav` or `3 as mumav`. This convenient feature was already present in CameLIGO and is now available in JsLIGO too!
 
 MRs:
 * https://gitlab.com/ligolang/ligo/-/merge_requests/2853

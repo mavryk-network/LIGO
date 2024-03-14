@@ -30,13 +30,13 @@ and you'll have to change the expected signature everywhere it's mentioned in th
 
 ```cameligo test-ligo group=log
 let _dummy : nat -> unit = Test.bake_until_n_cycle_end
-let _dummy : timestamp -> nat -> tez list -> unit = Test.reset_state_at
+let _dummy : timestamp -> nat -> mav list -> unit = Test.reset_state_at
 ```
 
 
 ```jsligo test-ligo group=log
 let _dummy : (cycles : nat) => unit = Test.bake_until_n_cycle_end
-let _dummy_2 : (initial_timestamp : timestamp, no_of_accounts: nat, amount: list<tez>) => unit = Test.reset_state_at
+let _dummy_2 : (initial_timestamp : timestamp, no_of_accounts: nat, amount: list<mav>) => unit = Test.reset_state_at
 ```
 
 -->
@@ -52,11 +52,11 @@ const Test.bake_until_n_cycle_end = (cycles : nat) => unit
 
 Depending on the situation, the following can be useful as well:
 <SyntaxTitle syntax="cameligo">
-val Test.reset_state_at : timestamp -> nat -> tez list -> unit
+val Test.reset_state_at : timestamp -> nat -> mav list -> unit
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-const Test.reset_state_at = (initial_timestamp : timestamp, no_of_accounts: nat, amount: list&lt;tez&gt;) => unit
+const Test.reset_state_at = (initial_timestamp : timestamp, no_of_accounts: nat, amount: list&lt;mav&gt;) => unit
 </SyntaxTitle>
 
 

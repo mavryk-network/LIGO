@@ -521,7 +521,7 @@ In Tezos, the execution model is quite different. Contracts communicate via mess
 <Syntax syntax="cameligo">
 
 ```cameligo group=b1
-type storage = {rewardsLeft : tez; beneficiaryAddress : address}
+type storage = {rewardsLeft : mav; beneficiaryAddress : address}
 
 let treasury (p, s : unit * storage) =
   // We do our computations first
@@ -546,7 +546,7 @@ let treasury (p, s : unit * storage) =
 <Syntax syntax="jsligo">
 
 ```jsligo group=b1
-type storage = {rewardsLeft: tez, beneficiaryAddress: address };
+type storage = {rewardsLeft: mav, beneficiaryAddress: address };
 
 let treasury = (p : unit, s : storage) => {
   // We do our computations first

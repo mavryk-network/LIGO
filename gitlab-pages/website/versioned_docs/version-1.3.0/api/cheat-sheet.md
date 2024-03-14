@@ -37,7 +37,7 @@ end
 
 let testC =
     let initial_storage = 42 in
-    let originated = Test.originate (contract_of C) initial_storage 0tez in
+    let originated = Test.originate (contract_of C) initial_storage 0mav in
     let p : C parameter_of = Increment 1 in
     let _ = Test.transfer_exn originated.addr p 1mumav in
     assert (Test.get_storage originated.addr = initial_storage + 1)
@@ -118,13 +118,13 @@ let booleanLogic : bool =
 
 </div>
 <div className="primitive">
-Mumav (micro tez)
+Mumav (micro mav)
 </div>
 <div className="example">
 
 ```cameligo
-let tez : tez = 42tez
-let tez : tez = 7mumav
+let mav : mav = 42mav
+let mav : mav = 7mumav
 ```
 
 </div>
@@ -135,7 +135,7 @@ Address
 
 ```cameligo
 let mv1address : address =
-  ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
+  ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
 let kt1address : address =
   ("KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD" : address)
 ```
@@ -295,7 +295,7 @@ Type Annotations
 
 ```cameligo
 let someAddress : address =
-  ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
+  ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
 ```
 
 </div>
@@ -352,7 +352,7 @@ Maps
 <div className="example">
 
 ```cameligo
-type prices = (nat, tez) map
+type prices = (nat, mav) map
 
 let prices : prices =
   Map.literal [
@@ -361,7 +361,7 @@ let prices : prices =
     (100n, 10mumav);
   ]
 
-let price : tez option = Map.find_opt 50n prices
+let price : mav option = Map.find_opt 50n prices
 
 let prices : prices = Map.update 200n (Some 5mumav) prices
 ```
@@ -374,7 +374,7 @@ Contracts & Accounts
 
 ```cameligo group=tezos_specific
 let destinationAddress : address =
-  ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address)
+  ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
 
 let contract : unit contract =
   match (Tezos.get_contract_opt (Tezos.get_sender ()) : unit contract option) with
@@ -534,7 +534,7 @@ namespace C {
 
 const testC = do {
     let initial_storage = 42;
-    let originated = Test.originate(contract_of(C), initial_storage, 0tez);
+    let originated = Test.originate(contract_of(C), initial_storage, 0mav);
     let p : parameter_of C = Increment(1);
     Test.transfer_exn(originated.addr, p, 1mumav);
     return assert(Test.get_storage(originated.addr) == initial_storage + 1);
@@ -616,13 +616,13 @@ const booleanLogic: bool =
 
 </div>
 <div className="primitive">
-Mumav (micro tez)
+Mumav (micro mav)
 </div>
 <div className="example">
 
 ```jsligo
-const tez_amount: tez = 42tez
-const tez_amount2: tez = tez_amount + 7mumav // == 42000007mumav
+const tez_amount: mav = 42mav
+const tez_amount2: mav = tez_amount + 7mumav // == 42000007mumav
 ```
 
 </div>
@@ -633,7 +633,7 @@ Address
 
 ```jsligo
 const mv1address: address =
-  "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address;
+  "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address;
 const kt1address: address =
   "KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD" as address;
 ```
@@ -807,7 +807,7 @@ Type Annotations
 
 ```jsligo
 const someAddress: address =
-  "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address;
+  "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address;
 ```
 
 </div>
@@ -865,7 +865,7 @@ Maps
 <div className="example">
 
 ```jsligo
-type prices = map<nat, tez>;
+type prices = map<nat, mav>;
 
 const prices: prices = Map.literal(list([
   [10n, 60mumav],
@@ -873,7 +873,7 @@ const prices: prices = Map.literal(list([
   [100n, 10mumav]
 ]));
 
-const price: option<tez> = Map.find_opt(50n, prices)
+const price: option<mav> = Map.find_opt(50n, prices)
 
 const prices2: prices = Map.update(200n, Some (5mumav), prices)
 ```
@@ -886,7 +886,7 @@ Contracts & Accounts
 
 ```jsligo group=tezos_specific
 const destinationAddress: address =
-  "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address;
+  "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address;
 
 const contract : contract<unit> =
   match(Tezos.get_contract_opt(Tezos.get_sender()) as option<contract<unit>>) {

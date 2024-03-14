@@ -3,14 +3,14 @@
 const _tester = (a : typed_address<parameter_of Adder, int>, _c : michelson_contract<parameter_of Adder, int>, _i : int) : unit => {
   let c : contract<parameter_of Adder> = Test.to_contract(a);
   /* Test 1 */
-  Test.transfer_to_contract_exn(c, Add(0), 0tez);
+  Test.transfer_to_contract_exn(c, Add(0), 0mav);
   Test.assert(Test.get_storage(a) == 0);
   /* Test 2 */
-  Test.transfer_to_contract_exn(c, Add(1), 0tez);
+  Test.transfer_to_contract_exn(c, Add(1), 0mav);
   Test.assert(Test.get_storage(a) == 1);
 };
 
 const test = (() : unit => {
-    let l = Test.originate_and_mutate_all(contract_of(Adder), 0, (0 as tez), _tester);
+    let l = Test.originate_and_mutate_all(contract_of(Adder), 0, (0 as mav), _tester);
     Test.log(l);
 })();

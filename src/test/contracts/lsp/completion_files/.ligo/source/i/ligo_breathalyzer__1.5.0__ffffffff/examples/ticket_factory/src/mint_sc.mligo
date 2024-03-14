@@ -22,14 +22,13 @@
 
 type storage = {
     fixed_payload : bytes
-  ; minimal_amount : tez
-}
+  ; minimal_amount : mav}
 type applied = operation list * storage
 
-let tez_to_nat (xtz: tez) : nat = xtz / 1mumav
-let nat_to_tez (x: nat) : tez = x * 1mumav
+let tez_to_nat (xtz: mav) : nat = xtz / 1mumav
+let nat_to_tez (x: nat) : mav = x * 1mumav
 
-let create_new_ticket (storage: storage) (qty: tez) : bytes ticket option =
+let create_new_ticket (storage: storage) (qty: mav) : bytes ticket option =
   if qty < storage.minimal_amount then failwith "mint_sc: amount too low"
   else
     let qty_nat = tez_to_nat qty in
@@ -39,9 +38,9 @@ let create_new_ticket (storage: storage) (qty: tez) : bytes ticket option =
 let process_mint
     (storage: storage)
     (callback: bytes ticket contract)
-    (qty: tez) : operation =
+    (qty: mav) : operation =
   match create_new_ticket storage qty with
-  | Some fresh_ticket -> Tezos.transaction fresh_ticket 0tez callback
+  | Some fresh_ticket -> Tezos.transaction fresh_ticket 0mav callback
   | None -> failwith "Ticket creation failure"
 
 let process_redeem

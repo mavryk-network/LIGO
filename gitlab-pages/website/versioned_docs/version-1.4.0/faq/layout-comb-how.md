@@ -73,7 +73,7 @@ module Bar = struct
   [@entry]
   let bar (addr : address) (s : unit) : operation list * unit =
     let arg : foo = {foo = 1n; bar = 2; baz = "three"} in
-    let amt : tez = 0tz in
+    let amt : mav = 0tz in
     let dst : foo contract = Tezos.get_entrypoint "%foo" addr in
     let tx = Tezos.transaction arg amt dst in
     ([tx], s)
@@ -115,7 +115,7 @@ namespace Bar {
   @entry
   const bar = (addr: address, s: unit) : [list<operation>, unit] => {
     const arg : foo = {foo: 1n, bar: 2, baz: "three"};
-    const amt : tez = 0tz;
+    const amt : mav = 0tz;
     const dst : contract<foo> = Tezos.get_entrypoint("%foo", addr);
     const tx = Tezos.transaction(arg, amt, dst);
     return [list([tx]), s];

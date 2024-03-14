@@ -9,17 +9,17 @@ import SyntaxTitle from '@theme/SyntaxTitle';
 
 
 <SyntaxTitle syntax="cameligo">
-val transfer : &#39;p.&#39;p contract -&gt; &#39;p -&gt; tez -&gt; test&#95;exec&#95;result
+val transfer : &#39;p.&#39;p contract -&gt; &#39;p -&gt; mav -&gt; test&#95;exec&#95;result
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let transfer: &lt;p&gt;(&#95;: contract&lt;p&gt;) =&gt; (&#95;: p) =&gt; (&#95;: tez) =&gt; test&#95;exec&#95;result
+let transfer: &lt;p&gt;(&#95;: contract&lt;p&gt;) =&gt; (&#95;: p) =&gt; (&#95;: mav) =&gt; test&#95;exec&#95;result
 </SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
-val transfer&#95;exn : &#39;p.&#39;p contract -&gt; &#39;p -&gt; tez -&gt; nat
+val transfer&#95;exn : &#39;p.&#39;p contract -&gt; &#39;p -&gt; mav -&gt; nat
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let transfer&#95;exn: &lt;p&gt;(&#95;: contract&lt;p&gt;) =&gt; (&#95;: p) =&gt; (&#95;: tez) =&gt; nat
+let transfer&#95;exn: &lt;p&gt;(&#95;: contract&lt;p&gt;) =&gt; (&#95;: p) =&gt; (&#95;: mav) =&gt; nat
 </SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">

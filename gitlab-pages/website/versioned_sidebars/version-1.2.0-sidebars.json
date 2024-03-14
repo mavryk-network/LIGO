@@ -29,7 +29,7 @@
       "language-basics/maps-records",
       "language-basics/sets-lists-tuples",
       "language-basics/exceptions",
-      "language-basics/math-numbers-tez",
+      "language-basics/math-numbers-mav",
       "language-basics/loops",
       "language-basics/unit-option-pattern-matching",
       "advanced/decorators",

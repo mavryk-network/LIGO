@@ -527,7 +527,7 @@ type x = Left of int
 [@entry]
 let main (p : parameter) (s : storage): operation list * storage =
   let contract =
-    match Tezos.get_entrypoint_opt "%left" ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE": address) with
+    match Tezos.get_entrypoint_opt "%left" ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe": address) with
     | Some c -> c
     | None -> failwith "contract does not match"
   in
@@ -548,7 +548,7 @@ type x = | ["Left", int];
 @entry
 const main = (p: parameter, s: storage): [list<operation>, storage] => {
   let contract =
-    match (Tezos.get_entrypoint_opt("%left", "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address)) {
+    match (Tezos.get_entrypoint_opt("%left", "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address)) {
       when(Some(c)): c;
       when(None()): failwith ("contract does not match")
     };

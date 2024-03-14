@@ -400,8 +400,8 @@ function `Test.originate`:
 
 ```cameligo group=contract
 let test =
-  let orig = Test.originate (contract_of C) 0 0tez in
-  let _ = Test.transfer_exn orig.addr (Increment 42) 0tez
+  let orig = Test.originate (contract_of C) 0 0mav in
+  let _ = Test.transfer_exn orig.addr (Increment 42) 0mav
   in assert (42 = Test.get_storage orig.addr)
 ```
 
@@ -411,7 +411,7 @@ let test =
 
 ```jsligo group=contract
 const test = do {
-  let orig = Test.originate(contract_of(C), 0, 0tez);
+  let orig = Test.originate(contract_of(C), 0, 0mav);
   Test.transfer_exn(orig.addr, (Increment (42)), 1mumav);
   return assert(Test.get_storage(orig.addr) == 42);
 };

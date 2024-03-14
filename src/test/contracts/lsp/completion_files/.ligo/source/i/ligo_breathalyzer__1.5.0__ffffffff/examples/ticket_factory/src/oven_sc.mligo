@@ -30,8 +30,8 @@ type storage = {
 }
 type applied = operation list * storage
 
-let request_mint (mint_address: address) (qty: tez) : operation =
-  if qty <= 0tez then failwith "oven_sc: amount should not null"
+let request_mint (mint_address: address) (qty: mav) : operation =
+  if qty <= 0mav then failwith "oven_sc: amount should not null"
   else
     let callback : bytes ticket contract = Tezos.self "%oven_retrieve_ticket" in
     let mint_sc : (Mint parameter_of) contract =
@@ -66,9 +66,9 @@ let request_redeem (mint_address: address) (stored_ticket : bytes ticket option)
         mint_address
         "oven_sc: unable to find mint contract"
       in
-      Tezos.transaction ((Mint_process_redeem (ticket, callback)): Mint parameter_of) 0tez mint_sc
+      Tezos.transaction ((Mint_process_redeem (ticket, callback)): Mint parameter_of) 0mav mint_sc
 
-let retrieve_tez (owner_address : address) (retribution: tez) : operation =
+let retrieve_tez (owner_address : address) (retribution: mav) : operation =
   let beneficiary : unit contract =
      Tezos.get_contract_with_error owner_address "oven_sc: unable to find owner"
   in

@@ -9,20 +9,20 @@
       Buy (  
         {
           profile=0x0501000000026869;
-          initial_controller=Some(("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE": address))
+          initial_controller=Some(("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe": address))
         }
       )
     storage: |
       {
         identities=Big_map.literal[
           (1, 
-          {owner=("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address);
+          {owner=("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address);
           controller=("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address);
           profile=0x0501000000026869}
           );
         ]; 
         next_id=2; 
-        name_price=0tez; 
+        name_price=0mav; 
         skip_price=333mumav 
       }
   deploy:
@@ -31,13 +31,13 @@
       {
         identities=Big_map.literal[
           (1,
-          {owner=("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address);
+          {owner=("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address);
            controller=("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address);
            profile=0x0501000000026869}
           );
          ]; 
         next_id=2; 
-        name_price=10tez; 
+        name_price=10mav; 
         skip_price=333mumav
       }
   evaluateValue:
@@ -47,19 +47,19 @@
     parameters: |
       { 
         profile=0x0501000000026869; 
-        initial_controller=Some(("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE": address))
+        initial_controller=Some(("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe": address))
       }, 
   
       { 
         identities=Big_map.literal[
           (1,
-           {owner=("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address); 
+           {owner=("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address); 
             controller=("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address); 
             profile=0x0501000000026869}
           );
         ]; 
         next_id=2; 
-        name_price=0tez; 
+        name_price=0mav; 
         skip_price=333mumav
       }
   generateDeployScript:
@@ -69,13 +69,13 @@
       {
         identities=Big_map.literal[
           (1,
-          {owner=("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address);
+          {owner=("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address);
            controller=("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address);
            profile=0x0501000000026869}
           );
          ]; 
         next_id=2; 
-        name_price=10tez; 
+        name_price=10mav; 
         skip_price=333mumav
       }
 *_*)
@@ -115,8 +115,8 @@ type action =
 type storage = {
   identities: (id, id_details) big_map;
   next_id: int;
-  name_price: tez;
-  skip_price: tez;
+  name_price: mav;
+  skip_price: mav;
 }
 
 (** Preliminary thoughts on ids:

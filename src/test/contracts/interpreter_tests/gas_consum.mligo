@@ -14,14 +14,14 @@ let test =
       if p = 0 then acc else aux (p::acc) (p-1)
     in aux ([]:int list) 2000
   in
-  let orig =  Test.originate (contract_of C) big_list 0tez in
+  let orig =  Test.originate (contract_of C) big_list 0mav in
   let _caching =
     (* some caching is happening on the first transaction *)
-    Test.transfer orig.addr (Main true) 0tez
+    Test.transfer orig.addr (Main true) 0mav
   in
-  let tx1 = Test.transfer orig.addr (Main false) 0tez in
-  let tx2 = Test.transfer orig.addr (Main true) 0tez in
-  let tx3 = Test.transfer orig.addr (Main true) 0tez in
+  let tx1 = Test.transfer orig.addr (Main false) 0mav in
+  let tx2 = Test.transfer orig.addr (Main true) 0mav in
+  let tx3 = Test.transfer orig.addr (Main true) 0mav in
   match (tx1 , tx2, tx3) with
   | Success cons1 , Success cons2, Success cons3 ->
     let () = assert ((cons1 < cons2) && (cons2 = cons3)) in

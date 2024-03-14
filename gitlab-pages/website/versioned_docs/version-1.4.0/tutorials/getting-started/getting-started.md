@@ -221,7 +221,7 @@ Add the following line at the end of `main.mligo`
 ```cameligo test-ligo group=a
 let test_increment =
   let initial_storage = 10 in
-  let orig = Test.originate (contract_of Counter) initial_storage 0tez in
+  let orig = Test.originate (contract_of Counter) initial_storage 0mav in
   let _ = Test.transfer_exn orig.addr (Increment (32)) 1mumav in
   assert (Test.get_storage(orig.addr) = initial_storage + 32)
 ```
@@ -235,7 +235,7 @@ Add the following line at the end of `main.jsligo`
 ```jsligo test-ligo group=a
 const test_increment = (() : unit => {
   let initial_storage = 10 as int;
-  let orig = Test.originate(contract_of(Counter), initial_storage, 0tez);
+  let orig = Test.originate(contract_of(Counter), initial_storage, 0mav);
   Test.transfer_exn(orig.addr, (Increment (1)), 1mumav);
   return assert(Test.get_storage(orig.addr) == initial_storage + 1);
 }) ()

@@ -1,5 +1,5 @@
-let used = 1tez
-let unused = 2tez
+let used = 1mav
+let unused = 2mav
 
 module Tezo = struct
   let used = used
@@ -21,7 +21,7 @@ type parameter =
   Increment
 | Decrement
 
-type storage = tez
+type storage = mav
 
 type return = (operation) list * storage
 
@@ -29,4 +29,4 @@ let main (action : parameter) (_ : storage) : operation list * storage =
   (([]: operation list),
    (match action with
       Increment -> used
-    | Decrement -> 1tez))                                 
+    | Decrement -> 1mav))                                 

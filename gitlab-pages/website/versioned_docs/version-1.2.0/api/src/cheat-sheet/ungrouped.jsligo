@@ -10,10 +10,10 @@ const booleanLogic: bool =
     false ==
     (false && true) ==
     (false || false)
-const tez_amount: tez = 42tez
-const tez_amount2: tez = tez_amount + 7mumav // == 42000007mumav
+const tez_amount: mav = 42mav
+const tez_amount2: mav = tez_amount + 7mumav // == 42000007mumav
 const mv1address: address =
-  "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address;
+  "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address;
 const kt1address: address =
   "KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD" as address;
 const my_str : string = "Hello World!";
@@ -42,7 +42,7 @@ const a_middle_name : middle_name = Some("Foo");
 const no_middle_name : middle_name = None();
 const age: int = 5
 const someAddress: address =
-  "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address;
+  "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address;
 type person = {
   age: int,
   name: string
@@ -54,7 +54,7 @@ const john : person = {
 }
 
 const name_: string = john.name
-type prices = map<nat, tez>;
+type prices = map<nat, mav>;
 
 const prices: prices = Map.literal(list([
   [10n, 60mumav],
@@ -62,7 +62,7 @@ const prices: prices = Map.literal(list([
   [100n, 10mumav]
 ]));
 
-const price: option<tez> = Map.find_opt(50n, prices)
+const price: option<mav> = Map.find_opt(50n, prices)
 
 const prices2: prices = Map.update(200n, Some (5mumav), prices)
 const fail = (u: unit) : unit =>

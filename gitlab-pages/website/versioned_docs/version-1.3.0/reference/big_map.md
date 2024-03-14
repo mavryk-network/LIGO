@@ -66,7 +66,7 @@ Create a non-empty big_map.
 ```cameligo group=big_map
 let moves : register =
   Big_map.literal [
-    (("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" : address), (1,2));
+    (("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address), (1,2));
     (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address), (0,3))]
 ```
 
@@ -77,7 +77,7 @@ let moves : register =
 ```jsligo group=big_map
 let moves: register =
   Big_map.literal (list([
-    [("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address), [1, 2]],
+    [("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address), [1, 2]],
     [("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address), [0, 3]]]));
 ```
 

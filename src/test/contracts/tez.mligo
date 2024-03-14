@@ -1,7 +1,7 @@
-let add_tez : tez = 21mumav + 0.000_021tez
-let sub_tez : tez option = 0.000021tez - 0.000_020tez
-let sub_tez_none : tez option = 0.000_020tez - 0.000021tez
-let not_enough_tez : tez = 461_168_601_842_738_7903mumav
+let add_tez : mav = 21mumav + 0.000_021mav
+let sub_tez : mav option = 0.000021mav - 0.000_020mav
+let sub_tez_none : mav option = 0.000_020mav - 0.000021mav
+let not_enough_tez : mav = 461_168_601_842_738_7903mumav
 
-let add_more_tez : tez =
-  100tez + 10tez + 1tez + 0.1tez + 0.01tez + 0.001tez
+let add_more_tez : mav =
+  100mav + 10mav + 1mav + 0.1mav + 0.01mav + 0.001mav

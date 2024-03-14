@@ -9,11 +9,11 @@ import Syntax from '@theme/Syntax';
 import SyntaxTitle from '@theme/SyntaxTitle';
 
 <SyntaxTitle syntax="cameligo">
-val get_balance : unit -> tez
+val get_balance : unit -> mav
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let get_balance: (_u: unit) => tez
+let get_balance: (_u: unit) => mav
 </SyntaxTitle>
 
 Get the balance for the contract.
@@ -21,7 +21,7 @@ Get the balance for the contract.
 <Syntax syntax="cameligo">
 
 ```cameligo
-let check (p,s : unit * tez) = [], Tezos.get_balance()
+let check (p,s : unit * mav) = [], Tezos.get_balance()
 ```
 
 </Syntax>
@@ -29,7 +29,7 @@ let check (p,s : unit * tez) = [], Tezos.get_balance()
 <Syntax syntax="jsligo">
 
 ```jsligo
-let check = (p: unit, s: tez):[list<operation>, tez] =>
+let check = (p: unit, s: mav):[list<operation>, mav] =>
   [list([]), Tezos.get_balance()];
 ```
 
@@ -123,14 +123,14 @@ let not_tomorrow = (Tezos.get_now() == in_24_hrs);
 </Syntax>
 
 <SyntaxTitle syntax="cameligo">
-val get_amount : unit -> tez
+val get_amount : unit -> mav
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let get_amount: (_u : unit) => tez
+let get_amount: (_u : unit) => mav
 </SyntaxTitle>
 
-Get the amount of tez provided by the sender to complete this
+Get the amount of mav provided by the sender to complete this
 transaction.
 
 <Syntax syntax="cameligo">
@@ -145,7 +145,7 @@ let threshold (p : unit) = if Tezos.get_amount () = 100tz then 42 else 0
 
 ```jsligo
 function threshold (p : unit) {
-  if (Tezos.get_amount() == 100tez) return 42 else return 0;
+  if (Tezos.get_amount() == 100mav) return 42 else return 0;
 };
 ```
 
@@ -407,27 +407,27 @@ val transaction : 'param -> mumav -> 'param contract -> operation
 let transaction: (action: &apos;param, amount: mumav, contract: contract&lt;&apos;param&gt;) => operation
 </SyntaxTitle>
 
-Transfer `tez` to an account, or run code of another smart contract.
+Transfer `mav` to an account, or run code of another smart contract.
 
 To indicate an account, use `unit` as `param`.
 
 <SyntaxTitle syntax="cameligo">
-val create_contract : ('param -> 'storage -> operation list * 'storage) -> key_hash option -> tez -> 'storage -> (operation * address)
+val create_contract : ('param -> 'storage -> operation list * 'storage) -> key_hash option -> mav -> 'storage -> (operation * address)
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let create_contract = (contract: ('param, 'storage) => (list &lt;operation&gt;, &apos;storage), delegate: option&lt;key_hash&gt;, balance: tez, init: 'storage) => [operation, address]
+let create_contract = (contract: ('param, 'storage) => (list &lt;operation&gt;, &apos;storage), delegate: option&lt;key_hash&gt;, balance: mav, init: 'storage) => [operation, address]
 </SyntaxTitle>
 
 Construct an operation that originates a contract from a function. The
 optional argument of type `key_hash` represents a delegate.
 
 <SyntaxTitle syntax="cameligo">
-val create_contract_uncurried : ('param * 'storage -> operation list * 'storage) -> key_hash option -> tez -> 'storage -> (operation * address)
+val create_contract_uncurried : ('param * 'storage -> operation list * 'storage) -> key_hash option -> mav -> 'storage -> (operation * address)
 </SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
-let create_contract_uncurried = (contract: ['param, 'storage] => (list &lt;operation&gt;, &apos;storage), delegate: option&lt;key_hash&gt;, balance: tez, init: 'storage) => [operation, address]
+let create_contract_uncurried = (contract: ['param, 'storage] => (list &lt;operation&gt;, &apos;storage), delegate: option&lt;key_hash&gt;, balance: mav, init: 'storage) => [operation, address]
 </SyntaxTitle>
 
 Construct an operation that originates a contract from an uncurried function. The

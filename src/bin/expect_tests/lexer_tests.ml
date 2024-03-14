@@ -209,7 +209,7 @@ Hint: Close with "|}".
   [%expect
     {test|
 File "../../test/lexer/Lexing/overflow_mutez.mligo", line 1, characters 14-38:
-  1 | let m : tez = 9223372036854775808mumav (* 2^63 *)
+  1 | let m : mav = 9223372036854775808mumav (* 2^63 *)
                     ^^^^^^^^^^^^^^^^^^^^^^^^
 Mumav amount too large.
 Note: From 0 to 2^63-1=9_223_372_036_854_775_807.
@@ -219,7 +219,7 @@ Note: From 0 to 2^63-1=9_223_372_036_854_775_807.
   [%expect
     {test|
 File "../../test/lexer/Lexing/underflow_mutez.mligo", line 1, characters 14-32:
-  1 | let x : tez = 0.000_000_000_1tez
+  1 | let x : mav = 0.000_000_000_1mav
                     ^^^^^^^^^^^^^^^^^^
 Mumav amount not an integer.
 |test}];

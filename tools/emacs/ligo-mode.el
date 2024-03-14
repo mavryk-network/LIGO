@@ -288,7 +288,7 @@
 		(,"\\b\\(switch\\|if\\|else\\|for\\|of\\|while\\|return\\|break\\|continue\\|match\\)\\b"
 			. ligo-font-lock-conditional-face
 		)
-		(,"\\b[-+]?\\([0-9]+\\)\\(n\\|\\tz\\|tez\\|mumav\\|\\)\\b"
+		(,"\\b[-+]?\\([0-9]+\\)\\(n\\|\\tz\\|mav\\|mumav\\|\\)\\b"
 			. ligo-font-lock-number-face
 		)
 		(,"\\b\\(-\\|+\\|%\\|&&\\||\\||==\\|!=\\|<=\\|>=\\|<\\|>\\|\\*\\|/\\|=\\|!\\|\\*=\\|/=\\|%=\\|+=\\|-=\\)\\b"
@@ -395,7 +395,7 @@
 		(,"\\b\\(struct\\|end\\|let\\|in\\|mut\\|rec\\contract_of|parameter_of\\|module\\|sig\\|val\\|include\\|false\\|true\\)\\b"
 			. font-lock-keyword-face
 		)
-		(,"\\b[-+]?\\([0-9]+\\)\\(n\\|\\tz\\|tez\\|mumav\\|\\)\\b"
+		(,"\\b[-+]?\\([0-9]+\\)\\(n\\|\\tz\\|mav\\|mumav\\|\\)\\b"
 			. ligo-font-lock-number-face
 		)
 		(,"::\\|-\\|+\\|/\\|\\b\\(mod\\|land\\|lor\\|lxor\\|lsl\\|lsr\\)\\b\\|&&\\|||\\|<\\|>\\|<>\\|<=\\|>=\\||>\\|->\\|:=\\|\\^\\|*\\|+=\\|-=\\|*=\\|/=\\||="

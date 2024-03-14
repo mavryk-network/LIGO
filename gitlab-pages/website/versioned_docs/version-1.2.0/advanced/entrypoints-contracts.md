@@ -185,8 +185,8 @@ and call one of its entry points by passing e.g. the parameter `Increment(5)`.
 #import "gitlab-pages/docs/advanced/src/entrypoints-contracts/incdec.mligo" "C"
 
 let test =
-  let {addr ; code = _ ; size = _} = Test.originate (contract_of C.IncDec) 0 (0tez) in
-  let _ = Test.transfer_exn addr (Increment 42) (0tez) in
+  let {addr ; code = _ ; size = _} = Test.originate (contract_of C.IncDec) 0 (0mav) in
+  let _ = Test.transfer_exn addr (Increment 42) (0mav) in
   assert (42 = Test.get_storage(addr))
 ```
 
@@ -198,8 +198,8 @@ let test =
 #import "gitlab-pages/docs/advanced/src/entrypoints-contracts/incdec.jsligo" "C"
 
 const test = do {
-  let {addr , code , size} = Test.originate(contract_of(C.IncDec), 0, 0tez);
-  Test.transfer_exn(addr, Increment(42), 0tez);
+  let {addr , code , size} = Test.originate(contract_of(C.IncDec), 0, 0mav);
+  Test.transfer_exn(addr, Increment(42), 0mav);
   assert(42 == Test.get_storage(addr));
 };
 ```
@@ -415,7 +415,7 @@ how those built-ins can be utilised.
 ### Accepting or Declining Tokens in a Smart Contract
 
 This example shows how `Tezos.get_amount` and `failwith` can be used to
-decline any transaction that sends more tez than `0tez`, that is, no
+decline any transaction that sends more mav than `0mav`, that is, no
 incoming tokens are accepted.
 
 <Syntax syntax="cameligo">
@@ -427,7 +427,7 @@ type result = operation list * storage
 
 [@entry]
 let no_tokens (action : parameter) (store : storage) : result =
-  if Tezos.get_amount () > 0tez then
+  if Tezos.get_amount () > 0mav then
     failwith "This contract does not accept tokens."
   else ([], store)
 ```
@@ -443,7 +443,7 @@ type result = [list<operation>, storage];
 
 @entry
 const no_tokens = (action: parameter, store: storage): result => {
-  if (Tezos.get_amount() > 0tez) {
+  if (Tezos.get_amount() > 0mav) {
     return failwith("This contract does not accept tokens.");
   } else {
     return [list([]), store];
@@ -461,7 +461,7 @@ entrypoint.
 <Syntax syntax="cameligo">
 
 ```cameligo group=c
-let owner = ("mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE": address)
+let owner = ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe": address)
 
 [@entry]
 let owner_only (action : parameter) (store: storage) : result =
@@ -474,7 +474,7 @@ let owner_only (action : parameter) (store: storage) : result =
 <Syntax syntax="jsligo">
 
 ```jsligo group=c
-const owner = "mv1XJ6kbMgDvXvvtw8KBG2Ne2ngNHxLfuUvE" as address;
+const owner = "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address;
 
 const owner_only = (action: parameter, store: storage): result => {
   if (Tezos.get_sender() != owner) { return failwith("Access denied."); }
@@ -551,7 +551,7 @@ let dest = ("KT19wgxcuXG9VH4Af5Tpm1vqEKdaMFpznXT3" : address)
 [@entry]
 let proxy (action : parameter) (store : storage) : result =
   let counter : parameter contract = Tezos.get_contract_with_error dest "not found" in
-  let op = Tezos.transaction (Increment 5) 0tez counter
+  let op = Tezos.transaction (Increment 5) 0mav counter
   in [op], store
 ```
 
@@ -590,7 +590,7 @@ const dest = "KT19wgxcuXG9VH4Af5Tpm1vqEKdaMFpznXT3" as address;
 
 const proxy = (action: parameter, store: storage): result => {
   let counter : contract<parameter> = Tezos.get_contract_with_error(dest, "not found");
-  let op = Tezos.transaction(Increment(5), 0tez, counter);
+  let op = Tezos.transaction(Increment(5), 0mav, counter);
   return [list([op]), store];
 };
 ```

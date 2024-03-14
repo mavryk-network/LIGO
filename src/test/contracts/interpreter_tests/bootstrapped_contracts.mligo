@@ -24,7 +24,7 @@ let u = Test.bootstrap_contract 100mumav main { fellow = addr1; state = 12; }
 (* Init contract in addr1 pointing to addr0 *)
 let u = Test.bootstrap_contract 100mumav main { fellow = addr0; state = 9; }
 
-let u = Test.reset_state 4n ([] : tez list)
+let u = Test.reset_state 4n ([] : mav list)
 
 let test_transfer =
   let () = Test.log "Initial states:" in
@@ -32,7 +32,7 @@ let test_transfer =
   let () = Test.log storage in
   let storage = Test.get_storage_of_address addr1 in
   let () = Test.log storage in
-  let _ = Test.transfer_exn addr1 (Test.eval ()) 1tez in
+  let _ = Test.transfer_exn addr1 (Test.eval ()) 1mav in
   let () = Test.log "Final states:" in
   let storage = Test.get_storage_of_address addr0 in
   let () = Test.log storage in

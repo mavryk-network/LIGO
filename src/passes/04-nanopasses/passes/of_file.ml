@@ -83,8 +83,8 @@ let compile ~raise =
         let code = e_raw_code ~loc { language = "Michelson"; code } in
         let storage = Variable.fresh ~loc ~name:"storage" () in
         let expr_storage = e_variable ~loc storage in
-        let tez = Variable.fresh ~loc ~name:"mav" () in
-        let expr_tez = e_variable ~loc tez in
+        let mav = Variable.fresh ~loc ~name:"mav" () in
+        let expr_tez = e_variable ~loc mav in
         let key_hash = Variable.fresh ~loc ~name:"key_hash" () in
         let expr_key_hash = make_e ~loc (E_variable key_hash) in
         let args = e_tuple ~loc (expr_key_hash, [ expr_tez; expr_storage ]) in
@@ -100,7 +100,7 @@ let compile ~raise =
         let code =
           e_lambda
             ~loc
-            { binder = Ligo_prim.Param.make tez None; output_type = None; result = code }
+            { binder = Ligo_prim.Param.make mav None; output_type = None; result = code }
         in
         let code =
           e_lambda

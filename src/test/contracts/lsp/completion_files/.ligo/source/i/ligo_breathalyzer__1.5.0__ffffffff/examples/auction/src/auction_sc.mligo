@@ -22,14 +22,14 @@
 
 type current_leader = {
   current_leader_address: address;
-  current_leader_amount: tez;
+  current_leader_amount: mav;
   start_time: timestamp
 }
 
 type storage = current_leader option
 
-let bid (storage: storage) (quantity: tez) (user_address: address) (time: timestamp) : storage =
-  if quantity = 0tez then failwith "Amount cannot be null"
+let bid (storage: storage) (quantity: mav) (user_address: address) (time: timestamp) : storage =
+  if quantity = 0mav then failwith "Amount cannot be null"
   else match storage with
   | None ->
     Some {
