@@ -318,7 +318,7 @@ let tv__type_ ~loc () : ty_expr =
       , "int"
       , "operation"
       , "nat"
-      , "tez"
+      , "mav"
       , "unit"
       , "address"
       , "signature"

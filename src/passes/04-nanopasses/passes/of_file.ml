@@ -73,7 +73,7 @@ let compile ~raise =
           t_prod
             ~loc
             ( t_option ~loc (t_constant ~loc "key_hash")
-            , [ t_constant ~loc "tez"; t_var ~loc ty_storage ] )
+            , [ t_constant ~loc "mav"; t_var ~loc ty_storage ] )
         in
         let ty_tgt =
           t_prod ~loc (t_constant ~loc "operation", [ t_constant ~loc "address" ])
@@ -83,7 +83,7 @@ let compile ~raise =
         let code = e_raw_code ~loc { language = "Michelson"; code } in
         let storage = Variable.fresh ~loc ~name:"storage" () in
         let expr_storage = e_variable ~loc storage in
-        let tez = Variable.fresh ~loc ~name:"tez" () in
+        let tez = Variable.fresh ~loc ~name:"mav" () in
         let expr_tez = e_variable ~loc tez in
         let key_hash = Variable.fresh ~loc ~name:"key_hash" () in
         let expr_key_hash = make_e ~loc (E_variable key_hash) in

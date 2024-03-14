@@ -193,7 +193,7 @@ let t__type_ ~loc () : t = t_construct Literal_types._type_ [] ~loc ()
       , "address"
       , "operation"
       , "nat"
-      , "tez"
+      , "mav"
       , "timestamp"
       , "unit"
       , "bls12_381_g1"
@@ -256,7 +256,7 @@ let t_arrow param result ~loc ?(param_names = []) () : t =
   t_arrow ~loc { type1 = param; type2 = result; param_names } ()
 
 
-let t_mumav = t_tez
+let t_mumav = t_mav
 
 let t_test_baker_policy ~loc () =
   t_sum_ez

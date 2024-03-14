@@ -62,9 +62,9 @@ let nat_to_string (x: nat) : string =
 let nat_to_string_without_suffix (x: nat) : string =
   int_to_string (int x)
 
-(* Convert a tez to a string. *)
-let tez_to_string (x: tez) : string =
-  nat_to_string (x / 1tez) ^ "tez"
+(* Convert a mav to a string. *)
+let tez_to_string (x: mav) : string =
+  nat_to_string (x / mav) ^ "mav"
 
 (** [concat a b] concat [a] and [b]. *)
 let concat (type a) (left: a list) (right: a list) : a list =

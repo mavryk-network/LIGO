@@ -65,7 +65,7 @@ let typeof lit =
   | Literal_int _ -> Literal_types.int
   | Literal_nat _ -> Literal_types.nat
   | Literal_timestamp _ -> Literal_types.timestamp
-  | Literal_mumav _ -> Literal_types.tez
+  | Literal_mumav _ -> Literal_types.mav
   | Literal_address _ -> Literal_types.address
   | Literal_operation _ -> Literal_types.operation
   | Literal_bls12_381_g1 _ -> Literal_types.bls12_381_g1

@@ -59,7 +59,7 @@ let t__type_ ~loc () : type_expression = t_constant ~loc _type_ []
       , "address"
       , "operation"
       , "nat"
-      , "tez"
+      , "mav"
       , "timestamp"
       , "unit"
       , "bls12_381_g1"

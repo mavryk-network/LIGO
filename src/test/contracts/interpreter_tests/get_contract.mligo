@@ -8,7 +8,7 @@ module C = struct
 end
 
 let test =
-  let orig = Test.originate (contract_of C) 0 0tez in
+  let orig = Test.originate (contract_of C) 0 0mav in
   let ta = orig.addr in
   let c = Test.to_contract ta in
   let a = Tezos.address c in

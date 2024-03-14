@@ -83,7 +83,7 @@ let to_string = function
   | Int -> "int"
   | Operation -> "operation"
   | Nat -> "nat"
-  | Tez -> "tez"
+  | Tez -> "mav"
   | Unit -> "unit"
   | Address -> "address"
   | Signature -> "signature"
@@ -128,7 +128,7 @@ let of_string_opt = function
   | "int" -> Some Int
   | "operation" -> Some Operation
   | "nat" -> Some Nat
-  | "tez" -> Some Tez
+  | "mav" -> Some Tez
   | "unit" -> Some Unit
   | "address" -> Some Address
   | "signature" -> Some Signature
@@ -241,7 +241,7 @@ let bytes = Bytes
 let int = Int
 let operation = Operation
 let nat = Nat
-let tez = Tez
+let mav = Tez
 let unit = Unit
 let address = Address
 let signature = Signature
@@ -284,7 +284,7 @@ let v_bytes = Type_var.of_input_var (to_string Bytes)
 let v_int = Type_var.of_input_var (to_string Int)
 let v_operation = Type_var.of_input_var (to_string Operation)
 let v_nat = Type_var.of_input_var (to_string Nat)
-let v_tez = Type_var.of_input_var (to_string Tez)
+let v_mav = Type_var.of_input_var (to_string Tez)
 let v_unit = Type_var.of_input_var (to_string Unit)
 let v_address = Type_var.of_input_var (to_string Address)
 let v_signature = Type_var.of_input_var (to_string Signature)

@@ -2342,7 +2342,7 @@ let%expect_test _ =
     {|
     File "./nesting_modules.mligo", line 34, characters 13-27:
      33 | let test =
-     34 |   let orig = Test.originate (contract_of C) 0 0tez in
+     34 |   let orig = Test.originate (contract_of C) 0 0mav in
                        ^^^^^^^^^^^^^^
      35 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
     :
@@ -2350,7 +2350,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "./nesting_modules.mligo", line 35, characters 10-27:
-     34 |   let orig = Test.originate (contract_of C) 0 0tez in
+     34 |   let orig = Test.originate (contract_of C) 0 0mav in
      35 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
                     ^^^^^^^^^^^^^^^^^
      36 |   Test.log (Test.get_storage orig.addr)
@@ -2818,7 +2818,7 @@ let%expect_test _ =
     {|
     File "./test_module.mligo", line 13, characters 13-27:
      12 | let test =
-     13 |   let orig = Test.originate (contract_of C) 0 0tez in
+     13 |   let orig = Test.originate (contract_of C) 0 0mav in
                        ^^^^^^^^^^^^^^
      14 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
     :
@@ -2826,7 +2826,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_module.mligo", line 14, characters 10-27:
-     13 |   let orig = Test.originate (contract_of C) 0 0tez in
+     13 |   let orig = Test.originate (contract_of C) 0 0mav in
      14 |   let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
                     ^^^^^^^^^^^^^^^^^
      15 |   Test.get_storage orig.addr
@@ -5101,14 +5101,14 @@ let%expect_test _ =
       7 | let test_contract =
       8 |   let () = Test.log "test_contract:" in
                      ^^^^^^^^
-      9 |   let orig = Test.originate (contract_of C) 0 0tez in
+      9 |   let orig = Test.originate (contract_of C) 0 0mav in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `IO.log` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_context.mligo", line 9, characters 13-27:
       8 |   let () = Test.log "test_contract:" in
-      9 |   let orig = Test.originate (contract_of C) 0 0tez in
+      9 |   let orig = Test.originate (contract_of C) 0 0mav in
                        ^^^^^^^^^^^^^^
      10 |   let () = Test.log (Test.get_storage orig.addr) in
     :
@@ -5116,7 +5116,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_context.mligo", line 10, characters 11-19:
-      9 |   let orig = Test.originate (contract_of C) 0 0tez in
+      9 |   let orig = Test.originate (contract_of C) 0 0mav in
      10 |   let () = Test.log (Test.get_storage orig.addr) in
                      ^^^^^^^^
      11 |   let () = Test.save_context () in
@@ -5125,7 +5125,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `IO.log` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_context.mligo", line 10, characters 21-37:
-      9 |   let orig = Test.originate (contract_of C) 0 0tez in
+      9 |   let orig = Test.originate (contract_of C) 0 0mav in
      10 |   let () = Test.log (Test.get_storage orig.addr) in
                                ^^^^^^^^^^^^^^^^
      11 |   let () = Test.save_context () in
@@ -6143,7 +6143,7 @@ let%expect_test _ =
     {|
     File "./get_contract.mligo", line 11, characters 13-27:
      10 | let test =
-     11 |   let orig = Test.originate (contract_of C) 0 0tez in
+     11 |   let orig = Test.originate (contract_of C) 0 0mav in
                        ^^^^^^^^^^^^^^
      12 |   let ta = orig.addr in
     :
@@ -8159,7 +8159,7 @@ let%expect_test _ =
     {|
     File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 11, characters 42-56:
      10 | let test =
-     11 |   let {addr = ta ; code = _ ; size = _} = Test.originate (contract_of C) 0 0tez in
+     11 |   let {addr = ta ; code = _ ; size = _} = Test.originate (contract_of C) 0 0mav in
                                                     ^^^^^^^^^^^^^^
      12 |   let c = Test.to_contract ta in
     :
@@ -8167,7 +8167,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 12, characters 10-26:
-     11 |   let {addr = ta ; code = _ ; size = _} = Test.originate (contract_of C) 0 0tez in
+     11 |   let {addr = ta ; code = _ ; size = _} = Test.originate (contract_of C) 0 0mav in
      12 |   let c = Test.to_contract ta in
                     ^^^^^^^^^^^^^^^^
      13 |   let a = Tezos.address c in

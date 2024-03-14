@@ -22,7 +22,7 @@ let expression ~raise : expression -> expression =
     in
     e_constant ~loc:expr.location constant expr.type_expression
   | E_coerce { anno_expr = value; _ }
-    when is_t_bool expr.type_expression && is_t_tez value.type_expression ->
+    when is_t_bool expr.type_expression && is_t_mav value.type_expression ->
     let constant =
       { cons_name = C_LT
       ; arguments = [ e_a_mumav ~loc:value.location Z.(of_int 0); value ]

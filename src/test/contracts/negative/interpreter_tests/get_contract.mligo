@@ -8,7 +8,7 @@ module C = struct
 end
 
 let test =
-  let {addr = ta ; code = _ ; size = _} = Test.originate (contract_of C) 0 0tez in
+  let {addr = ta ; code = _ ; size = _} = Test.originate (contract_of C) 0 0mav in
   let c = Test.to_contract ta in
   let a = Tezos.address c in
   let () = assert_some (Tezos.get_entrypoint_opt "%foo" a : (int contract) option) in

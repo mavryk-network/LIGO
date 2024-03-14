@@ -132,8 +132,8 @@ let rec compile_type ~raise (t : AST.type_expression) : type_expression =
       | T_base TB_int, T_base TB_int -> return (t_int ~loc ()) (t_nat ~loc ())
       | T_base TB_nat, T_base TB_int -> return (t_int ~loc ()) (t_nat ~loc ())
       | T_base TB_int, T_base TB_nat -> return (t_int ~loc ()) (t_nat ~loc ())
-      | T_base TB_mumav, T_base TB_mumav -> return (t_nat ~loc ()) (t_tez ~loc ())
-      | T_base TB_mumav, T_base TB_nat -> return (t_tez ~loc ()) (t_tez ~loc ())
+      | T_base TB_mumav, T_base TB_mumav -> return (t_nat ~loc ()) (t_mav ~loc ())
+      | T_base TB_mumav, T_base TB_nat -> return (t_mav ~loc ()) (t_mav ~loc ())
       | _ -> raise.error (corner_case ~loc:__LOC__ "invalid external_ediv application"))
     | External And, [ param1; param2 ] ->
       (match (compile_type param1).type_content, (compile_type param2).type_content with

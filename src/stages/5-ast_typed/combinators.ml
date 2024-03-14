@@ -58,7 +58,7 @@ let t__type_ ~loc () : type_expression = t_constant ~loc _type_ []
       , "address"
       , "operation"
       , "nat"
-      , "tez"
+      , "mav"
       , "timestamp"
       , "unit"
       , "bls12_381_g1"
@@ -89,7 +89,7 @@ let t__type_ ~loc t1 t2 : type_expression = t_constant ~loc _type_ [ t1; t2 ]
   [@@map _type_, ("big_map", "michelson_contract")]
 
 
-let t_mumav = t_tez
+let t_mumav = t_mav
 
 let t_abstraction1 ~loc name kind : type_expression =
   let ty_binder = Type_var.fresh ~loc ~name:"_a" () in
@@ -254,7 +254,7 @@ let get_t__type_ (t : type_expression) : unit option = get_t_base_inj t _type_
     , ( "int"
       , "nat"
       , "unit"
-      , "tez"
+      , "mav"
       , "timestamp"
       , "address"
       , "bytes"
@@ -330,7 +330,7 @@ let is_t__type_ t = Option.is_some (get_t__type_ t)
       , "int"
       , "unit"
       , "address"
-      , "tez"
+      , "mav"
       , "contract"
       , "map"
       , "big_map" )]

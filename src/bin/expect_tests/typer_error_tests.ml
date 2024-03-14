@@ -519,13 +519,13 @@ let%expect_test _ =
     {|
     File "../../test/contracts/negative/typer_unify_error_diff/tuple_vs_tuple_2.mligo", line 4, characters 53-54:
       3 |   let  x : string * int * nat * int *       string = "foo" , 42  , 24n , 42 ,        "bar" in
-      4 |   let _y : tez    * int       * tez * nat * string = x in
+      4 |   let _y : mav    * int       * mav * nat * string = x in
                                                                ^
       5 |   //       ^^^^^^         ^^^         ^^^
 
     This expression has type "( string * int * nat * int * string )", but an expression was expected of type
-    "( tez * int * tez * nat * string )".
-    Type "string" is not compatible with type "tez". |}]
+    "( mav * int * mav * nat * string )".
+    Type "string" is not compatible with type "mav". |}]
 
 (*
   Here, the two tuples have 4 changes and different sizes.

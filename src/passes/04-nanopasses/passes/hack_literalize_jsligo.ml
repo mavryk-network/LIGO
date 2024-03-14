@@ -28,7 +28,7 @@ let compile ~raise:_ =
       | E_literal (Literal_int i), T_var tv ->
         if Ty_variable.is_name tv "nat"
         then e_nat_z ~loc i
-        else if Ty_variable.is_name tv "tez"
+        else if Ty_variable.is_name tv "mav"
         then (
           let mumav = Z.mul (Z.of_int 1_000_000) i in
           e_mumav_z ~loc mumav)
@@ -52,7 +52,7 @@ let reduction ~raise =
       (match get_e e, get_t t with
       | E_literal (Literal_int _), T_var tv ->
         if Ty_variable.is_name tv "nat"
-           || Ty_variable.is_name tv "tez"
+           || Ty_variable.is_name tv "mav"
            || Ty_variable.is_name tv "mumav"
         then raise.error (wrong_reduction __MODULE__)
         else ()

@@ -92,7 +92,7 @@ let rec value_gen
   then
     QCheck.Gen.(
       (if small then small_nat else nat) >>= fun n -> return (v_nat (Z.of_int n)))
-  else if is_t_tez type_expr
+  else if is_t_mav type_expr
   then
     QCheck.Gen.(
       (if small then small_nat else nat) >>= fun n -> return (v_mumav (Z.of_int n)))

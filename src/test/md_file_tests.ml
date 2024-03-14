@@ -401,5 +401,5 @@ let main =
   let all_md_files = get_all_md_files () in
   test "Update files" (write_all_to_files all_md_files)
   :: List.map
-       ~f:(fun md_file -> test ("File : " ^ md_file ^ "\"") (compile md_file))
+       ~f:(fun md_file -> test (md_file) (compile md_file))
        all_md_files

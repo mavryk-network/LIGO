@@ -205,20 +205,20 @@ Unterminated verbatim.
 Hint: Close with "|}".
 |test}];
   (* Overflow mumav *)
-  run_ligo_bad [ "compile"; "contract"; "../../test/lexer/Lexing/overflow_mumav.mligo" ];
+  run_ligo_bad [ "compile"; "contract"; "../../test/lexer/Lexing/overflow_mutez.mligo" ];
   [%expect
     {test|
-File "../../test/lexer/Lexing/overflow_mumav.mligo", line 1, characters 14-38:
+File "../../test/lexer/Lexing/overflow_mutez.mligo", line 1, characters 14-38:
   1 | let m : tez = 9223372036854775808mumav (* 2^63 *)
                     ^^^^^^^^^^^^^^^^^^^^^^^^
 Mumav amount too large.
 Note: From 0 to 2^63-1=9_223_372_036_854_775_807.
 |test}];
   (* Underflow mumav *)
-  run_ligo_bad [ "compile"; "contract"; "../../test/lexer/Lexing/underflow_mumav.mligo" ];
+  run_ligo_bad [ "compile"; "contract"; "../../test/lexer/Lexing/underflow_mutez.mligo" ];
   [%expect
     {test|
-File "../../test/lexer/Lexing/underflow_mumav.mligo", line 1, characters 14-32:
+File "../../test/lexer/Lexing/underflow_mutez.mligo", line 1, characters 14-32:
   1 | let x : tez = 0.000_000_000_1tez
                     ^^^^^^^^^^^^^^^^^^
 Mumav amount not an integer.
