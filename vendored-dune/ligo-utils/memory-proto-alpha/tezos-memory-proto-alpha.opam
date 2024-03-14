@@ -13,7 +13,7 @@ bug-reports: "https://gitlab.com/ligolang/tezos/issues"
 depends: [
   "dune"
   "tpe"
-  "tezos-protocol-018-Proxford"
+  "tezos-protocol-001-PtAtLas"
 ]
 build: [
   ["dune" "build" "-p" name]

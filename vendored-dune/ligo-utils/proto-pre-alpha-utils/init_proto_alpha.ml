@@ -4,7 +4,7 @@ module Signature = Tezos_base.TzPervasives.Signature
 module Data_encoding = Alpha_environment.Data_encoding
 module MBytes = Bytes
 module Error_monad = X_error_monad
-module Proto_env = Tezos_protocol_environment_018_Proxford
+module Proto_env = Tezos_protocol_environment_001_PtAtLas
 open Error_monad
 open Protocol
 
@@ -16,7 +16,7 @@ module Context_init = struct
     }
 
   let generate_accounts n : (account * Alpha_context.Tez.t) list =
-    let amount = Alpha_context.Tez.of_mutez_exn 4_000_000_000_000L in
+    let amount = Alpha_context.Tez.of_mumav_exn 4_000_000_000_000L in
     List.map
       ~f:(fun _ ->
         let pkh, pk, sk = Signature.generate_key () in
@@ -128,7 +128,7 @@ module Context_init = struct
     then Stdlib.failwith "Must have one account with a roll to bake";
     (* Check there is at least one roll *)
     let constants : Alpha_context.Constants.Parametric.t =
-      Tezos_protocol_018_Proxford_parameters.Default_parameters.constants_test
+      Tezos_protocol_001_PtAtLas_parameters.Default_parameters.constants_test
     in
     let* () = check_constants_consistency constants in
     let hash =

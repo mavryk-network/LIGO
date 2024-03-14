@@ -3,15 +3,15 @@ module Var = Simple_utils.Var
 open Simple_utils.Trace
 open Simple_utils.Option
 
-let int_of_mutez t =
-  Z.of_int64 @@ Memory_proto_alpha.Protocol.Alpha_context.Tez.to_mutez t
+let int_of_mumav t =
+  Z.of_int64 @@ Memory_proto_alpha.Protocol.Alpha_context.Tez.to_mumav t
 
 
 let tez_to_z : Memory_proto_alpha.Protocol.Tez_repr.t -> Z.t =
  fun t ->
   let enc = Memory_proto_alpha.Protocol.Tez_repr.encoding in
   let c = Data_encoding.Binary.to_bytes_exn enc t in
-  int_of_mutez
+  int_of_mumav
   @@ Data_encoding.Binary.of_bytes_exn
        Memory_proto_alpha.Protocol.Alpha_context.Tez.encoding
        c
@@ -91,10 +91,10 @@ module Tezos_eq = struct
     try
       let x = Z.to_int64 x in
       let y = Z.to_int64 y in
-      let* x = of_mutez x in
-      let* y = of_mutez y in
+      let* x = of_mumav x in
+      let* y = of_mumav y in
       match x +? y with
-      | Ok t -> some @@ Z.of_int64 (to_mutez t)
+      | Ok t -> some @@ Z.of_int64 (to_mumav t)
       | _ -> None
     with
     | Z.Overflow -> None
@@ -107,10 +107,10 @@ module Tezos_eq = struct
     try
       let x = Z.to_int64 x in
       let y = Z.to_int64 y in
-      let* x = of_mutez x in
-      let* y = of_mutez y in
+      let* x = of_mumav x in
+      let* y = of_mumav y in
       match x -? y with
-      | Ok t -> some @@ Z.of_int64 (to_mutez t)
+      | Ok t -> some @@ Z.of_int64 (to_mumav t)
       | _ -> None
     with
     | Z.Overflow -> None
@@ -213,7 +213,7 @@ let make_options ~raise ?param ctxt =
       ; source
       ; payer = source
       ; self = source
-      ; amount = Memory_proto_alpha.Protocol.Alpha_context.Tez.of_mutez_exn 100000000L
+      ; amount = Memory_proto_alpha.Protocol.Alpha_context.Tez.of_mumav_exn 100000000L
       ; chain_id = Memory_proto_alpha.Alpha_environment.Chain_id.zero
       ; balance = Memory_proto_alpha.Protocol.Alpha_context.Tez.zero
       ; now = timestamp

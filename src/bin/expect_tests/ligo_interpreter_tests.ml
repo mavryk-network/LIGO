@@ -8062,7 +8062,7 @@ let%expect_test _ =
      13 |   ()
 
     An uncaught error occured:
-    { "id": "proto.018-Proxford.operation.manual_staking_forbidden",
+    { "id": "proto.001-PtAtLas.operation.manual_staking_forbidden",
       "description":
         "Manual staking operations are forbidden because staking is currently automated.",
       "data": {} }

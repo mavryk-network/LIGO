@@ -698,7 +698,7 @@ let stake ~raise ~loc ~calltrace (ctxt : context) pkh amt =
       (B ctxt.raw)
       source
       contract
-      (Test_tez.of_mutez_exn amt)
+      (Test_tez.of_mumav_exn amt)
   in
   match%map bake_op ~raise ~loc ~calltrace ctxt operation with
   | Success (ctxt, _) -> ctxt
@@ -844,7 +844,7 @@ let transfer ~raise ~loc ~calltrace (ctxt : context) ?entrypoint dst parameter a
       (B ctxt.raw)
       source
       dst
-      (Test_tez.of_mutez_exn amt)
+      (Test_tez.of_mumav_exn amt)
   in
   bake_op ~raise ~loc ~calltrace ctxt operation
 
@@ -864,7 +864,7 @@ let originate_contract
   let open Tezos_alpha_test_helpers in
   let source = unwrap_source ~raise ~loc ~calltrace ctxt.internals.source in
   let amt =
-    try Some (Test_tez.of_mutez_exn (Int64.of_int (Z.to_int amt))) with
+    try Some (Test_tez.of_mumav_exn (Int64.of_int (Z.to_int amt))) with
     | _ -> None
   in
   let script = script_of_compiled_code ~raise ~loc ~calltrace contract storage in
@@ -954,7 +954,7 @@ let init
   in
   let accounts =
     List.map2_exn accounts initial_balances ~f:(fun account balance ->
-        let balance = Option.map ~f:Tez.of_mutez_exn balance in
+        let balance = Option.map ~f:Tez.of_mumav_exn balance in
         Account.make_bootstrap_account ?balance account)
   in
   let baker_accounts =
@@ -962,8 +962,8 @@ let init
         let pkh = Tezos_crypto.Signature.Public_key.hash pk in
         let balance =
           match amt with
-          | None -> Tez.of_mutez_exn 4_000_000_000_000L
-          | Some v -> Tez.of_mutez_exn v
+          | None -> Tez.of_mumav_exn 4_000_000_000_000L
+          | Some v -> Tez.of_mumav_exn v
         in
         let account = Account.{ sk; pk; pkh } in
         let () = Account.add_account account in
@@ -981,7 +981,7 @@ let init
       ?cost_per_byte
       ?origination_size
       ?blocks_per_cycle
-      ?initial_timestamp
+      (* ?initial_timestamp *)
       accounts
   in
   raw, contracts
@@ -1009,7 +1009,7 @@ let init_ctxt
       let max =
         Tezos_protocol_parameters.Default_parameters.constants_test.minimal_stake
       in
-      if Tez.( < ) (Alpha_context.Tez.of_mutez_exn baker) max
+      if Tez.( < ) (Alpha_context.Tez.of_mumav_exn baker) max
       then raise.error (Errors.not_enough_initial_accounts loc max)
       else ()
   in

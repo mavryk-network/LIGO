@@ -384,7 +384,7 @@ module Command = struct
     | Get_balance (loc, calltrace, addr) ->
       let addr = trace_option ~raise (corner_case ()) @@ LC.get_address addr in
       let%map balance = Tezos_state.get_balance ~raise ~loc ~calltrace ctxt addr in
-      let mutez = Michelson_backend.int_of_mutez balance in
+      let mutez = Michelson_backend.int_of_mumav balance in
       let balance = LT.V_Ct (C_mutez mutez) in
       balance, ctxt
     | Get_storage (loc, calltrace, addr) ->
