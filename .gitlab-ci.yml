@@ -46,13 +46,13 @@ changelog:
     - FORCE_GENERATION=$([ -n "$CI_COMMIT_TAG" ] && echo "false" || echo "true")
     - ./scripts/changelog-generation.sh ${FORCE_GENERATION}
   rules:
-    - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "ligolang/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
+    - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "mavryk-network/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
       when: always
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
   artifacts:
     paths:
@@ -65,13 +65,13 @@ changelog:
 docker_build:
   stage: build
   rules:
-    - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "ligolang/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
+    - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "mavryk-network/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
       when: always
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
   needs:
     - job: changelog
@@ -105,13 +105,13 @@ docker_build:
 docker_extract:
   stage: docker-extract
   rules:
-    - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "ligolang/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
+    - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "mavryk-network/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
       when: always
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
   needs:
     - job: docker_build
@@ -170,15 +170,15 @@ docker_push_ligo:
   needs:
     - docker_build
   rules:
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
   script:
     - echo ${LIGO_REGISTRY_PASSWORD} | docker login -u ${LIGO_REGISTRY_USER} --password-stdin
     - docker load -i=./ligo.tar.gz
     - if test "$CI_COMMIT_REF_NAME" = "dev"; then export LIGO_TAG=next; else if echo "$CI_COMMIT_TAG" | grep -E "[0-9]+\.[0-9]+\.[0-9]+"; then export LIGO_TAG="$CI_COMMIT_TAG"; else export LIGO_TAG=next-attempt; fi; fi
-    - export LIGO_REGISTRY_FULL_NAME="ligolang/ligo:$LIGO_TAG"
+    - export LIGO_REGISTRY_FULL_NAME="mavryk-network/ligo:$LIGO_TAG"
     - docker tag "${LIGO_IMAGE_TAG}" "${LIGO_REGISTRY_FULL_NAME}"
     - docker push "${LIGO_REGISTRY_FULL_NAME}"
 
@@ -193,15 +193,15 @@ docker_push_ligo_ci:
   needs:
     - docker_build
   rules:
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
   script:
     - echo ${LIGO_REGISTRY_PASSWORD} | docker login -u ${LIGO_REGISTRY_USER} --password-stdin
     - docker load -i=./ligo_ci.tar.gz
     - if test "$CI_COMMIT_REF_NAME" = "dev"; then export LIGO_TAG=next; else if echo "$CI_COMMIT_TAG" | grep -E "[0-9]+\.[0-9]+\.[0-9]+"; then export LIGO_TAG="$CI_COMMIT_TAG"; else export LIGO_TAG=next-attempt; fi; fi
-    - export LIGO_REGISTRY_FULL_NAME="ligolang/ligo_ci:$LIGO_TAG"
+    - export LIGO_REGISTRY_FULL_NAME="mavryk-network/ligo_ci:$LIGO_TAG"
     - docker tag "${LIGO_CI_IMAGE_TAG}" "${LIGO_REGISTRY_FULL_NAME}"
     - docker push "${LIGO_REGISTRY_FULL_NAME}"
   after_script:
@@ -217,7 +217,7 @@ xrefcheck:
     - chmod 777 ./xrefcheck
     - ./xrefcheck
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
   allow_failure: true
 
@@ -248,7 +248,7 @@ xrefcheck:
 pages:
   extends: .website
   rules:
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       changes:
         - gitlab-pages/**/*
         - changelog/*
@@ -275,7 +275,7 @@ algolia-crawl:
       sleep 20
       curl -X POST  -H "Content-Type: application/json" --user ${ALGOLIA_CRAWLER_ID}:${ALGOLIA_CRAWLER_TOKEN} https://crawler.algolia.com/api/1/crawlers/bb0597ba-5abc-45ba-bdf9-99f8152e87b0/reindex
   rules:
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       changes:
         - gitlab-pages/**/*
       when: on_success
