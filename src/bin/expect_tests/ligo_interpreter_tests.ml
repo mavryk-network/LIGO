@@ -852,7 +852,7 @@ let%expect_test _ =
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `IO.log` from `Test.Next` is encouraged for a smoother migration.
 
-    Success (1279n)
+    Success (1278n)
     Everything at the top-level was executed.
     - test_timestamp exited with value (). |}]
 
@@ -4272,7 +4272,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.transfer` from `Test.Next` is encouraged for a smoother migration.
 
     Everything at the top-level was executed.
-    - test exited with value (1305n , 1510n , 1510n). |}]
+    - test exited with value (1304n , 1510n , 1510n). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_implicit_account.jsligo" ];
@@ -6203,7 +6203,7 @@ let%expect_test _ =
 
     edpktom5rsehpEY6Kp2NShwsnpaaEjWxKFMJ3Rjp99VMJuHS93wxD6
     Everything at the top-level was executed.
-    - test exited with value Success (1719n). |}]
+    - test exited with value Success (1718n). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_tickets_and_bigmaps.mligo" ];
@@ -6262,7 +6262,7 @@ let%expect_test _ =
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `IO.log` from `Test.Next` is encouraged for a smoother migration.
 
-    Success (2672n)
+    Success (2671n)
     Everything at the top-level was executed.
     - test_one exited with value (). |}]
 

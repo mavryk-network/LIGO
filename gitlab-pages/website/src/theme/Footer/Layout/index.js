@@ -27,7 +27,7 @@ const COMMUNICATION_CHANNELS = [
     description: "See Ligo latest videos on YouTube",
   },
   {
-    link: "https://gitlab.com/ligolang/ligo/issues",
+    link: "https://gitlab.com/mavryk-network/ligo/issues",
     icon: {
       src: "img/communication_channels/gitlab.svg",
       width: "30",

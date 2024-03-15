@@ -478,7 +478,7 @@ let bar (b : int) : int =
 This test makes sure that the balance is accessible in CameLIGO.
 
 It is there to detect a regression of:
-https://gitlab.com/ligolang/ligo/issues/61
+https://gitlab.com/mavryk-network/ligo/issues/61
 
 which results in this error when you attempt to compile this contract:
 
@@ -1480,12 +1480,12 @@ let foobar : (int * int) = (23, 42)
 
 let (foo : int), (bar : int) = foobar
 
-(* Here to prevent a regression of https://gitlab.com/ligolang/ligo/issues/63#note_254106580 *)
+(* Here to prevent a regression of https://gitlab.com/mavryk-network/ligo/issues/63#note_254106580 *)
 let correct_values_bound (p : unit) : int * int = foo, bar
 
 let non_tuple_rhs (p : unit) : int = bar - foo
 
-(* Here to prevent a regression of https://gitlab.com/ligolang/ligo/issues/63#note_254106580 *)
+(* Here to prevent a regression of https://gitlab.com/mavryk-network/ligo/issues/63#note_254106580 *)
 let big_tuple : int * int * int * int * int =
   10, 20, 30, 40, 50
 
@@ -1495,7 +1495,7 @@ let (a : int), (b : int), (c : int), (d : int), (e : int) =
 let correct_values_big_tuple (p : unit)
 : int * int * int * int * int = a, b, c, d, e
 
-(* Here to prevent a regression of https://gitlab.com/ligolang/ligo/issues/63#note_254106580 *)
+(* Here to prevent a regression of https://gitlab.com/mavryk-network/ligo/issues/63#note_254106580 *)
 let different_types : int * string = 10, "hello"
 
 let (greet_num : int), (greeting : string) = different_types

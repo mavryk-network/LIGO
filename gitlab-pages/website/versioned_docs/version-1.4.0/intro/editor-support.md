@@ -7,8 +7,8 @@ Painters need a brush and a canvas. Developers need a good IDE experience. LIGO 
 
 - **[Install the LIGO extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=ligolang-publish.ligo-vscode)**
 
-- **[Install the LIGO extension for VIM](https://gitlab.com/ligolang/ligo/-/blob/dev/tools/vim/ligo/start/ligo/README.md)**
+- **[Install the LIGO extension for VIM](https://gitlab.com/mavryk-network/ligo/-/blob/dev/tools/vim/ligo/start/ligo/README.md)**
 
-- **[Install the LIGO extension for Emacs](https://gitlab.com/ligolang/ligo/-/blob/dev/tools/emacs/README.md)**
+- **[Install the LIGO extension for Emacs](https://gitlab.com/mavryk-network/ligo/-/blob/dev/tools/emacs/README.md)**
 
 <!-- updated use of entry -->

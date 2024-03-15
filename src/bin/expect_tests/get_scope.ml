@@ -2524,7 +2524,7 @@ let%expect_test _ =
 
 (* Unresponsive "go-to-definition" VSCode extension command
    cause by [Location.compare] behaviour w.r.t. LSet / LMap
-   (https://gitlab.com/ligolang/ligo/-/merge_requests/2532)
+   (https://gitlab.com/mavryk-network/ligo/-/merge_requests/2532)
 *)
 let%expect_test _ =
   run_ligo_good

@@ -7,8 +7,8 @@ synopsis: "LIGO Proto Pre-Alpha-specific Utilities, to be used by other librarie
 maintainer: "Galfour <contact@ligolang.org>"
 authors: "Galfour <contact@ligolang.org>"
 license: "MIT"
-homepage: "https://gitlab.com/ligolang/ligo-utils"
-bug-reports: "https://gitlab.com/ligolang/ligo-utils/issues"
+homepage: "https://gitlab.com/mavryk-network/ligo-utils"
+bug-reports: "https://gitlab.com/mavryk-network/ligo-utils/issues"
 # If you change the dependencies, run `opam lock` in the root
 depends: [
   "dune"

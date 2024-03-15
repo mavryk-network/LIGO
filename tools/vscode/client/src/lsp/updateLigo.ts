@@ -155,7 +155,7 @@ async function getLatestLigoRelease(): Promise<Release> {
 }
 
 function openLigoReleases(): Thenable<boolean> {
-  return vscode.env.openExternal(vscode.Uri.parse('https://gitlab.com/ligolang/ligo/-/releases'))
+  return vscode.env.openExternal(vscode.Uri.parse('https://gitlab.com/mavryk-network/ligo/-/releases'))
     .then((result) => {
       if (!result) {
         vscode.window.showErrorMessage('Failed to open LIGO releases page.')
@@ -175,15 +175,15 @@ const ligoTempDownloadTemplate: string = path.join(os.tmpdir(), 'ligo-bin-')
 
 async function runBrewInstaller(client: LanguageClient): Promise<null> {
   const terminal = mkTerminal()
-  terminal.sendText(`brew tap ligolang/ligo https://gitlab.com/ligolang/ligo.git`)
-  await withClientRestart(client, () => terminal.sendText(`brew install ligolang/ligo/ligo`))
+  terminal.sendText(`brew tap mavryk-network/ligo https://gitlab.com/mavryk-network/ligo.git`)
+  await withClientRestart(client, () => terminal.sendText(`brew install mavryk-network/ligo/ligo`))
   return null
 }
 
 async function runBrewUpgrade(client: LanguageClient): Promise<null> {
   const terminal = mkTerminal()
   terminal.sendText(`brew update`)
-  await withClientRestart(client, () => terminal.sendText(`brew upgrade ligolang/ligo/ligo`))
+  await withClientRestart(client, () => terminal.sendText(`brew upgrade mavryk-network/ligo/ligo`))
   return null
 }
 

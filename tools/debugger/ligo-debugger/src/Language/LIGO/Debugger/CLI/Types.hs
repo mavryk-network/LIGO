@@ -982,7 +982,7 @@ fromLigoType
   -> LIGO Info
 fromLigoType st = \case
   LTCConstant LigoTypeConstant {..} ->
-    -- See: https://gitlab.com/ligolang/ligo/-/issues/1478
+    -- See: https://gitlab.com/mavryk-network/ligo/-/issues/1478
     fromLigoConstant (_ltcInjection & over _head toLower) _ltcParameters
 
   LTCVariable variable -> fromLigoVariable variable

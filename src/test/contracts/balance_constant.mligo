@@ -2,7 +2,7 @@
 This test makes sure that the balance is accessible in CameLIGO.
 
 It is there to detect a regression of:
-https://gitlab.com/ligolang/ligo/issues/61
+https://gitlab.com/mavryk-network/ligo/issues/61
 
 which results in this error when you attempt to compile this contract:
 

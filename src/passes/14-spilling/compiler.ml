@@ -1,6 +1,6 @@
 (* The compiler is a function that takes as input the Typed AST, and outputs expressions in a language that is basically a Michelson with named variables and first-class-environments.
 
-   For more info, see back-end.md: https://gitlab.com/ligolang/ligo/blob/dev/gitlab-pages/docs/contributors/big-picture/back-end.md *)
+   For more info, see back-end.md: https://gitlab.com/mavryk-network/ligo/blob/dev/gitlab-pages/docs/contributors/big-picture/back-end.md *)
 
 module Layout_t = Layout
 open Ligo_prim

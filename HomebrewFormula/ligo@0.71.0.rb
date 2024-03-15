@@ -4,9 +4,9 @@ class LigoAT0710 < Formula
   license "MIT"
 
   # We clone repo explicitely to preserve the information about git submodules
-  url "https://gitlab.com/ligolang/ligo.git", tag: "0.71.0", revision: "bdd69fa7cd9adc8756ca9e688ede0335672e29cf"
+  url "https://gitlab.com/mavryk-network/ligo.git", tag: "0.71.0", revision: "bdd69fa7cd9adc8756ca9e688ede0335672e29cf"
   version "0.71.0"
-  head "https://gitlab.com/ligolang/ligo.git", branch: "dev"
+  head "https://gitlab.com/mavryk-network/ligo.git", branch: "dev"
 
 
   bottle do

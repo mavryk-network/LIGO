@@ -8,7 +8,7 @@ features of GNU getopt and getopt_long. The module Getopt is an alternative; it 
 maintainer   : "Christian Rinderknecht <rinderknecht@free.fr>"
 authors      : "Alain Frisch"
 homepage     : "https://github.com/gildor478/ocaml-getopt"
-bug-reports  : "https://gitlab.com/ligolang/ligo/-/issues"
+bug-reports  : "https://gitlab.com/mavryk-network/ligo/-/issues"
 license      : "MIT"
 
 # If you change the dependencies, run `opam lock` in the root

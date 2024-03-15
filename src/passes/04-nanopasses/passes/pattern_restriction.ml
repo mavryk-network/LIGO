@@ -11,7 +11,7 @@ let compile ~raise =
   let pattern : _ pattern_ -> pattern = function
     | { wrap_content = P_unit; location = loc } ->
       (* For some reason we need to annotate unit pattern with unit type.
-        see https://gitlab.com/ligolang/ligo/-/issues/1700
+        see https://gitlab.com/mavryk-network/ligo/-/issues/1700
       *)
       p_typed ~loc (tv_unit ~loc ()) (p_unit ~loc)
     | { wrap_content = P_literal _; _ } as p -> raise.error (unsupported_pattern_type p)

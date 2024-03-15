@@ -1,1 +1,1 @@
-docker run -i -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:next "$@"
+docker run -i -v "$PWD":"$PWD" -w "$PWD" mavrykdynamics/ligo:next "$@"

@@ -46,4 +46,4 @@ Development releases of LIGO are tagged `next` and are built with each commit to
 
 ### Stable releases
 
-Stable releases are tags of form `x.x.x`, generally sticking to semver conventions. Such tags are automatically built on CI, producing a release in https://gitlab.com/ligolang/ligo/-/releases and pushing images to docker.
+Stable releases are tags of form `x.x.x`, generally sticking to semver conventions. Such tags are automatically built on CI, producing a release in https://gitlab.com/mavryk-network/ligo/-/releases and pushing images to docker.

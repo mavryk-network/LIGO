@@ -1,4 +1,4 @@
-(* example from https://gitlab.com/ligolang/ligo/-/issues/1066 *)
+(* example from https://gitlab.com/mavryk-network/ligo/-/issues/1066 *)
 
 let rec ref_join
   (_params: int * (int -> int -> int))

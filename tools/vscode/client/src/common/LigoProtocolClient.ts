@@ -145,7 +145,7 @@ export function processErrorResponse(response: DebugProtocol.ErrorResponse): voi
               latestSupported = "";
             }
 
-            vscode.env.openExternal(vscode.Uri.parse("https://gitlab.com/ligolang/ligo/-/releases/" + latestSupported))
+            vscode.env.openExternal(vscode.Uri.parse("https://gitlab.com/mavryk-network/ligo/-/releases/" + latestSupported))
               .then(result => {
                 if (!result) {
                   vscode.window.showErrorMessage("Failed to open LIGO releases page.");

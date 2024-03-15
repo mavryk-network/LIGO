@@ -55,7 +55,7 @@ const News = () => {
       description:
         "Ligo sources are available on our GitLab. Feel free to open an issue or contribute.",
       size: "small",
-      href: "https://gitlab.com/ligolang/ligo",
+      href: "https://gitlab.com/mavryk-network/ligo",
 
       cta: "Contribute to Ligo",
     },

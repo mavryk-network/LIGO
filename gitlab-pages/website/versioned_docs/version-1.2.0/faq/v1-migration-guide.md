@@ -26,12 +26,12 @@ Another consequence of this change is that, when originating a contract for test
 We are also rolling out a new feature allowing the addition, removal and update of dynamic entry points for a contract after deployment. This could be a useful feature for example when building a DAO which allows on-chain vote to upgrade its code (or a DAO which controls the code of another separate contract). For more information, see [the documentation](../advanced/dynamic-entrypoints.md) and [the reference](../reference/dynamic_entrypoints.md) for this feature.
 
 MRs:
-* https://gitlab.com/ligolang/ligo/-/merge_requests/2818
-* https://gitlab.com/ligolang/ligo/-/merge_requests/2814
-* https://gitlab.com/ligolang/ligo/-/merge_requests/2810
-* https://gitlab.com/ligolang/ligo/-/merge_requests/2805
-* https://gitlab.com/ligolang/ligo/-/merge_requests/2831
-* https://gitlab.com/ligolang/ligo/-/merge_requests/2885
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/2818
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/2814
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/2810
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/2805
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/2831
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/2885
 
 #### Uniform calling convention for views and entry points.
 
@@ -84,11 +84,11 @@ const get_storage = (_: unit, storage: int): int => storage
 
 #### `contract_of` and `parameter_of`
 
-The aforementioned changes to `@entry` and the `main` function have affected how contracts are tested, starting from [v0.64.2](https://gitlab.com/ligolang/ligo/-/releases/0.64.2) ([changelog](../intro/changelog.md#0642)). See [the documentation on testing](../advanced/testing.md#testing-a-contract-declared-as-a-module-or-namespace) for examples on how to use `contract_of` and `parameter_of`.
+The aforementioned changes to `@entry` and the `main` function have affected how contracts are tested, starting from [v0.64.2](https://gitlab.com/mavryk-network/ligo/-/releases/0.64.2) ([changelog](../intro/changelog.md#0642)). See [the documentation on testing](../advanced/testing.md#testing-a-contract-declared-as-a-module-or-namespace) for examples on how to use `contract_of` and `parameter_of`.
 
 MRs:
-* https://gitlab.com/ligolang/ligo/-/merge_requests/2476
-* https://gitlab.com/ligolang/ligo/-/merge_requests/2685
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/2476
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/2685
 
 ### `export` and `@private` now have the expected effect
 
@@ -109,8 +109,8 @@ const y = Foo.Bar.x
 ```
 
 MRs:
-* https://gitlab.com/ligolang/ligo/-/merge_requests/2796
-* https://gitlab.com/ligolang/ligo/-/merge_requests/2684 in [v0.69.0](https://gitlab.com/ligolang/ligo/-/releases/0.69.0) ([changelog](../intro/changelog.md#0690))
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/2796
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/2684 in [v0.69.0](https://gitlab.com/mavryk-network/ligo/-/releases/0.69.0) ([changelog](../intro/changelog.md#0690))
 
 ### The comb layout is now used by default
 
@@ -125,7 +125,7 @@ If your project has a stable ABI that other tools rely on, you might need to man
 Once reaching the optimization phase of your development process, youu may wish to try annotating large variants (which contain many cases) with `@layout("tree")` / `[@layout tree]` and comparing the size and gas consumption of the compiled contracts.
 
 MRs:
-* https://gitlab.com/ligolang/ligo/-/merge_requests/1816.
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/1816.
 
 ### A small set of annotations / decorators are now supported
 
@@ -159,11 +159,11 @@ There are also two internal annotations / decorators, which should not appear in
 * `@hidden`
 
 MRs:
-* https://gitlab.com/ligolang/ligo/-/merge_requests/2619 in [v0.67.0](https://gitlab.com/ligolang/ligo/-/releases/0.67.0) ([changelog](../intro/changelog.md#0670))
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/2619 in [v0.67.0](https://gitlab.com/mavryk-network/ligo/-/releases/0.67.0) ([changelog](../intro/changelog.md#0670))
 
 
 MRs:
-* https://gitlab.com/ligolang/ligo/-/merge_requests/2476
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/2476
 
 ### Field and tuple component access
 
@@ -178,14 +178,14 @@ const stuff = {
 const part : bool = stuff.y["universe"][2];
 ```
 
-* https://gitlab.com/ligolang/ligo/-/merge_requests/2661
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/2661
 
 ### Miscellaneous
 
-* The internal command `ligo daemon` has been removed in [v0.69.0](https://gitlab.com/ligolang/ligo/-/releases/0.69.0) ([changelog](../intro/changelog.md#0690)). It was previously used by the old language server to create a persistent LIGO process, but it was hacky and offered no performance improvements. There should be no noticeable change for the user, as the new language server (used e.g. by the VsCode plug-in) does not make use of this command anymore. MR: https://gitlab.com/ligolang/ligo/-/merge_requests/2690.
-* The support for CST mutation testing has been dropped in [v0.66.0](https://gitlab.com/ligolang/ligo/-/releases/0.66.0) ([changelog](../intro/changelog.md#0660)). Unfortunately, that feature was incomplete and broken. With the disappearance of this feature, the command `ligo mutate` has been removed. However, AST mutation testing is still supported and part of the [testing framework](../advanced/mutation-testing.md). MRs: https://gitlab.com/ligolang/ligo/-/merge_requests/2455 and https://gitlab.com/ligolang/ligo/-/merge_requests/2607.
-* Starting from [v0.64.2](https://gitlab.com/ligolang/ligo/-/releases/0.64.2) ([changelog](../intro/changelog.md#0642)), the transpilation commands now take `--from-syntax` and `--to-syntax`, instead of the former, less clear use of `--syntax` for the source syntax and an unnamed parameter for the destination syntax. The destination syntax can still be inferred from the filename given to `-o`, e.g. `-o dest.jsligo`. MR: https://gitlab.com/ligolang/ligo/-/merge_requests/2501
-* Starting from [v0.64.2](https://gitlab.com/ligolang/ligo/-/releases/0.64.2) ([changelog](../intro/changelog.md#0642)), the Kathmandu protocol is deprecated. If you need to recompile an old LIGO contract for an outdated protocol version, you may use the compiler version that the project was developed with. MR: https://gitlab.com/ligolang/ligo/-/merge_requests/2500
+* The internal command `ligo daemon` has been removed in [v0.69.0](https://gitlab.com/mavryk-network/ligo/-/releases/0.69.0) ([changelog](../intro/changelog.md#0690)). It was previously used by the old language server to create a persistent LIGO process, but it was hacky and offered no performance improvements. There should be no noticeable change for the user, as the new language server (used e.g. by the VsCode plug-in) does not make use of this command anymore. MR: https://gitlab.com/mavryk-network/ligo/-/merge_requests/2690.
+* The support for CST mutation testing has been dropped in [v0.66.0](https://gitlab.com/mavryk-network/ligo/-/releases/0.66.0) ([changelog](../intro/changelog.md#0660)). Unfortunately, that feature was incomplete and broken. With the disappearance of this feature, the command `ligo mutate` has been removed. However, AST mutation testing is still supported and part of the [testing framework](../advanced/mutation-testing.md). MRs: https://gitlab.com/mavryk-network/ligo/-/merge_requests/2455 and https://gitlab.com/mavryk-network/ligo/-/merge_requests/2607.
+* Starting from [v0.64.2](https://gitlab.com/mavryk-network/ligo/-/releases/0.64.2) ([changelog](../intro/changelog.md#0642)), the transpilation commands now take `--from-syntax` and `--to-syntax`, instead of the former, less clear use of `--syntax` for the source syntax and an unnamed parameter for the destination syntax. The destination syntax can still be inferred from the filename given to `-o`, e.g. `-o dest.jsligo`. MR: https://gitlab.com/mavryk-network/ligo/-/merge_requests/2501
+* Starting from [v0.64.2](https://gitlab.com/mavryk-network/ligo/-/releases/0.64.2) ([changelog](../intro/changelog.md#0642)), the Kathmandu protocol is deprecated. If you need to recompile an old LIGO contract for an outdated protocol version, you may use the compiler version that the project was developed with. MR: https://gitlab.com/mavryk-network/ligo/-/merge_requests/2500
 
 ## JsLIGO
 
@@ -194,8 +194,8 @@ const part : bool = stuff.y["universe"][2];
 You can now write `3mav` or `3mumav` instead of `3 as mav` or `3 as mumav`. This convenient feature was already present in CameLIGO and is now available in JsLIGO too!
 
 MRs:
-* https://gitlab.com/ligolang/ligo/-/merge_requests/2853
-* https://gitlab.com/ligolang/ligo/-/merge_requests/2661
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/2853
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/2661
 
 ### New bitwise operators
 
@@ -227,7 +227,7 @@ const zero_bytes : bytes = 0x01 >> 1n
 ```
 
 MRs:
-* https://gitlab.com/ligolang/ligo/-/merge_requests/2661
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/2661
 
 ### Changes to pattern matching
 
@@ -296,7 +296,7 @@ Furthermore, there are a few changes to how patterns are written:
 * Patterns with one variable per parameter are written as expected: `Foo: (a, b) => a + b` becomes `when(Foo(a, b)): a + b`
 
 MRs:
-* https://gitlab.com/ligolang/ligo/-/merge_requests/2661
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/2661
 
 
 ### `_` is now a valid variable name and can't be used for its former throw-away semantics
@@ -331,7 +331,7 @@ const f = () => {
 If multiple _ variable are bound in the same scope, it will result in an error (duplicate block-scoped variable) just as in TypeScript. However, it is still possible to shadow a `_` within a smaller scope, e.g. if `_` is globally defined as an alias for another module, a function can still specify `_` as an argument name and shadow the global definition, which could cause issues. It is wise to skim over existing code for such cases.
 
 MRs:
-* https://gitlab.com/ligolang/ligo/-/merge_requests/2674
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/2674
 
 ### Imports are now automatically re-exported
 
@@ -340,11 +340,11 @@ When a module is imported e.g. with `#import "foo.jsligo" "Foo"` inside the file
 For example, a third file importing `bar.jsligo` as `Bar` can write `Bar.Foo.x` to access the `x` defined in `foo.jsligo`
 
 MRs:
-* https://gitlab.com/ligolang/ligo/-/merge_requests/2815
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/2815
 
 ### Miscellaneous
 
-* `true` and `false` are now keywords (not variables), and cannot be shadowed by a local variable declaration. https://gitlab.com/ligolang/ligo/-/merge_requests/2661
+* `true` and `false` are now keywords (not variables), and cannot be shadowed by a local variable declaration. https://gitlab.com/mavryk-network/ligo/-/merge_requests/2661
 
 ## CameLIGO
 
@@ -362,7 +362,7 @@ let part : bool = stuff.y.2.universe
 ```
 
 MRs:
-* https://gitlab.com/ligolang/ligo/-/merge_requests/2661
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/2661
 
 ### Package management: use ligo.json instead of package.json or esy.json
 
@@ -371,8 +371,8 @@ Users often work with JaveScript toolchain alongside ours. Using package.json to
 As part of this change, we are no longer using the `esy` tool for package management, and the `installation.json` file, formerly located at `_esy/ligo/installation.json`, should now be moved to `_ligo/ligo/installation.json`.
 
 MRs:
-* https://gitlab.com/ligolang/ligo/-/merge_requests/2817
-* https://gitlab.com/ligolang/ligo/-/merge_requests/2785
-* https://gitlab.com/ligolang/ligo/-/merge_requests/2883
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/2817
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/2785
+* https://gitlab.com/mavryk-network/ligo/-/merge_requests/2883
 
 <!-- updated use of entry -->

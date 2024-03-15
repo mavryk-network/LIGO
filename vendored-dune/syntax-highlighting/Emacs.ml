@@ -340,7 +340,7 @@ For debugging.
     fprintf fmt ";;; ligo-mode.el --- A major mode for editing LIGO source code\n\n";
     fprintf fmt ";; Version: 0.2.0\n";
     fprintf fmt ";; Author: LigoLang SASU\n";
-    fprintf fmt ";; Url: https://gitlab.com/ligolang/ligo/-/tree/dev/tools/emacs\n";
+    fprintf fmt ";; Url: https://gitlab.com/mavryk-network/ligo/-/tree/dev/tools/emacs\n";
     fprintf fmt ";; Keywords: languages\n";
     fprintf fmt ";; Package-Requires: ((emacs \"27.1\"))\n\n";
     fprintf fmt ";; This file is distributed under the terms of the MIT license.\n\n";

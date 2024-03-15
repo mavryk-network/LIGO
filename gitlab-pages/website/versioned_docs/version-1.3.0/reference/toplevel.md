@@ -402,8 +402,8 @@ type 'v ticket
 </SyntaxTitle>
 
 Edo protocol introduced the following ticket type.
-Follow this [wallet example](https://gitlab.com/ligolang/ligo/-/blob/dev/src/test/contracts/ticket_wallet.mligo) for an example of
-correct usage (it goes with its [builder](https://gitlab.com/ligolang/ligo/-/blob/dev/src/test/contracts/ticket_builder.mligo)).
+Follow this [wallet example](https://gitlab.com/mavryk-network/ligo/-/blob/dev/src/test/contracts/ticket_wallet.mligo) for an example of
+correct usage (it goes with its [builder](https://gitlab.com/mavryk-network/ligo/-/blob/dev/src/test/contracts/ticket_builder.mligo)).
 This [article](https://medium.com/tezos-israel/tickets-on-edo-simply-explained-c5a411cc27f9) might also be useful.
 
 Note that a variable containing a ticket can only be used once (they are not `DUP`-able).

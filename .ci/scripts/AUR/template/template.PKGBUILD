@@ -3,7 +3,7 @@ pkgname=ligo-bin
 pkgver=LIGO_VERSION_PLACEHOLDER
 pkgrel=1
 pkgdesc="High Level Smart Contract Language for Tezos (binary)"
-url="https://gitlab.com/ligolang/ligo"
+url="https://gitlab.com/mavryk-network/ligo"
 
 arch=('x86_64')
 license=('MIT')

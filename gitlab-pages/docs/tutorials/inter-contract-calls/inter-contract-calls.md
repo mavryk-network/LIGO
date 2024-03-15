@@ -278,7 +278,7 @@ let iswhitelisted (arg : address * (bool contract)) (s : storage) : operation li
 </Syntax>
 
 
-Now imagine we want to control a contract with the following interface (we omit the full code of the contract for clarity; you can find it in the [examples folder](https://gitlab.com/ligolang/ligo/-/tree/dev/gitlab-pages/docs/tutorials/inter-contract-calls/examples)):
+Now imagine we want to control a contract with the following interface (we omit the full code of the contract for clarity; you can find it in the [examples folder](https://gitlab.com/mavryk-network/ligo/-/tree/dev/gitlab-pages/docs/tutorials/inter-contract-calls/examples)):
 
 <Syntax syntax="cameligo">
 

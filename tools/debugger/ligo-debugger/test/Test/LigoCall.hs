@@ -87,7 +87,7 @@ test_ExpressionCompilation = testGroup "Compiling expression"
 
   , testGroup "Expressions starting from `-`"
     -- At the moment of writing, `ligo` does not accept negative numbers easily
-    -- See https://gitlab.com/ligolang/ligo/-/issues/1495
+    -- See https://gitlab.com/mavryk-network/ligo/-/issues/1495
     [ testCase "Negative numbers" do
         res <- evalExprOverContract1 "-3"
         res @?= U.ValueInt (-3)

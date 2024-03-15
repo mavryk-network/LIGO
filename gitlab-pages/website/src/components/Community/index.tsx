@@ -18,7 +18,7 @@ const Community = ({ discordMembers, contributors = 78, packages }: CommunityPro
         "Ligo is open-source and open for contributions. Join the Ligo team on GitLab and start contributing!",
       cta: {
         label: "contribute on gitlab",
-        href: "https://gitlab.com/ligolang/ligo",
+        href: "https://gitlab.com/mavryk-network/ligo",
         rel: "noopener noreferrer nofollow",
       },
     },

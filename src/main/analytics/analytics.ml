@@ -128,7 +128,7 @@ let acceptance_condition =
     ^ line_separator
     ^ " To avoid seeing this message during CI, use the --skip-analytics flag. \
        Alternatively, set the LIGO_SKIP_ANALYTICS environment variable to true. If your \
-       CI uses a Docker image, we recommend using the ligolang/ligo_ci image"
+       CI uses a Docker image, we recommend using the mavryk-network/ligo_ci image"
     ^ line_separator
     ^ " . If your change your mind, use the command `ligo analytics accept` or `ligo \
        analytics deny`."

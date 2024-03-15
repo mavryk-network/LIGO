@@ -84,7 +84,7 @@ For critical code, LIGO also keeps its compiled output unbloated making **possib
   [VS Code extension](https://marketplace.visualstudio.com/items?itemName=ligolang-publish.ligo-vscode)
 - Understand and troubleshoot your code with the debugger available in [vscode extension](https://marketplace.visualstudio.com/items?itemName=ligolang-publish.ligo-vscode)
 - Integrate LIGO to your pipeline with [ligo github action](https://github.com/marigold-dev/ligo-action)
-- Test your documentation with [ligo-mdx](https://github.com/ligolang/ligo-mdx)
+- Test your documentation with [ligo-mdx](https://github.com/mavryk-network/ligo-mdx)
 
 ---
 

@@ -24,7 +24,7 @@ runLigo dirPath commands = do
         , dirPath ++ ":" ++ dirPath
         , "-w"
         , dirPath
-        , "ligolang/ligo_ci:" ++ version
+        , "mavryk-network/ligo_ci:" ++ version
         ]
         ++ commands
     Nothing -> do

@@ -6,7 +6,7 @@ title: LIGO snippets Demo
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-“ligo-snippets” (https://www.npmjs.com/package/@ligolang/ligo-snippets) is a React component that can be included on any webpage to display LIGO source code to users.
+“ligo-snippets” (https://www.npmjs.com/package/@mavryk-network/ligo-snippets) is a React component that can be included on any webpage to display LIGO source code to users.
 
 The user will see LIGO code with syntax highlighting, and an action button allowing the user to open the source code in the LIGO Web IDE (https://ide.ligolang.org).
 

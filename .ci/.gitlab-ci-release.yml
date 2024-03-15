@@ -63,7 +63,7 @@ build_release_env_vars:
 create-tag:
   stage: release    
   script:
-    - git remote rm origin && git remote add origin "git@gitlab.com:ligolang/ligo.git"
+    - git remote rm origin && git remote add origin "git@gitlab.com:mavryk-network/ligo.git"
     # Don't want to tag for testing
     - echo $DRY_RUN_RELEASE
     - |
@@ -136,7 +136,7 @@ docker-m1:
     - docker image rm -f "${LIGO_IMAGE_TAG}-builder" >/dev/null 2>&1 || true
     - docker image rm -f "${LIGO_IMAGE_TAG}" >/dev/null 2>&1 || true
   rules:
-    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "ligolang/ligo"'
+    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
   artifacts:
     paths:
@@ -192,11 +192,11 @@ create_docker_stable_version:
     - job: determine_new_stable_version
       artifacts: true
   script:
-    - docker pull ligolang/ligo:$STABLE_VERSION
+    - docker pull mavrykdynamics/ligo:$STABLE_VERSION
     - |
       if [[ $DRY_RUN_RELEASE == "" ]]; then
-        docker tag ligolang/ligo:$STABLE_VERSION ligolang/ligo:stable
-        docker push ligolang/ligo:stable
+        docker tag mavrykdynamics/ligo:$STABLE_VERSION mavrykdynamics/ligo:stable
+        docker push mavrykdynamics/ligo:stable
       fi
 
 update_release_metadata:
@@ -234,7 +234,7 @@ update_release_metadata:
       if [[ $DRY_RUN_RELEASE != "" ]]; then
         CI_COMMIT_TAG=${CI_COMMIT_BRANCH#"release/"}
       fi
-    - git remote rm origin && git remote add origin "git@gitlab.com:ligolang/ligo.git"
+    - git remote rm origin && git remote add origin "git@gitlab.com:mavryk-network/ligo.git"
     - git fetch
     - git checkout release/$CI_COMMIT_TAG
     - ./.ci/scripts/release_metadata/edit_release_metadata.sh LAST_RELEASE_VERSION $CI_COMMIT_TAG
@@ -372,7 +372,7 @@ update-ligo-bin-PKGBUILD:
   stage: pretooling
   script:
     - LAST_TAG_JOB_ID=`./.ci/scripts/release_metadata/read_release_metadata.sh LAST_TAG_JOB_ID`
-    - ./.ci/scripts/AUR/create_new_pkgbuild_version.sh https://gitlab.com/ligolang/ligo/-/jobs/$LAST_TAG_JOB_ID/artifacts/raw/ligo.deb $RELEASE_VERSION
+    - ./.ci/scripts/AUR/create_new_pkgbuild_version.sh https://gitlab.com/mavryk-network/ligo/-/jobs/$LAST_TAG_JOB_ID/artifacts/raw/ligo.deb $RELEASE_VERSION
     - cp ./.ci/scripts/AUR/ligo.PKGBUILD ./ligo-bin/PKGBUILD
   needs:
     - job: initialize-aur-repo
@@ -417,7 +417,7 @@ calculate_nix_SRI:
       when: always
   script: 
     - LAST_TAG_JOB_ID=`./.ci/scripts/release_metadata/read_release_metadata.sh LAST_TAG_JOB_ID`
-    - BINARY_GITLAB_ARTIFACT_URL="https://gitlab.com/ligolang/ligo/-/jobs/$LAST_TAG_JOB_ID/artifacts/raw/ligo"
+    - BINARY_GITLAB_ARTIFACT_URL="https://gitlab.com/mavryk-network/ligo/-/jobs/$LAST_TAG_JOB_ID/artifacts/raw/ligo"
     - SRI_LIGO_BINARY_HASH=$(nix --extra-experimental-features nix-command hash to-sri --type sha256 $(nix-prefetch-url --type sha256 --quiet $BINARY_GITLAB_ARTIFACT_URL))
     - echo "SRI_LIGO_BINARY_HASH=${SRI_LIGO_BINARY_HASH}" >> nixSriLigoBinary.env
   artifacts:
@@ -446,7 +446,7 @@ update-repository-status:
   script:
     - git submodule sync --recursive                       
     - git submodule update --init --recursive --remote --force
-    - git remote rm origin && git remote add origin "git@gitlab.com:ligolang/ligo.git"
+    - git remote rm origin && git remote add origin "git@gitlab.com:mavryk-network/ligo.git"
     - node scripts/manpages/manpages.js ./ligo
     - ./.ci/scripts/build_website_references_from_stdlib/main.sh ligo
     - ./.ci/scripts/versioning_website.sh $RELEASE_VERSION

@@ -1,4 +1,4 @@
-ligo_compiler?=docker run --rm -v "$$PWD":"$$PWD" -w "$$PWD" ligolang/ligo:1.0.0
+ligo_compiler?=docker run --rm -v "$$PWD":"$$PWD" -w "$$PWD" mavrykdynamics/ligo:1.0.0
 
 PROTOCOL_OPT?=
 

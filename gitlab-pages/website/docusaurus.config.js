@@ -160,12 +160,12 @@ const config = {
             items: [
               {
                 label: "Sources",
-                href: "https://gitlab.com/ligolang/ligo",
+                href: "https://gitlab.com/mavryk-network/ligo",
                 rel: "noopener noreferrer nofollow",
               },
               {
                 label: "Issues",
-                href: "https://gitlab.com/ligolang/ligo/-/issues",
+                href: "https://gitlab.com/mavryk-network/ligo/-/issues",
                 rel: "noopener noreferrer nofollow",
               },
               {

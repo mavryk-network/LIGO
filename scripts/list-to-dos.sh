@@ -49,7 +49,7 @@ ignorecase() {
 }
 
 rea='s%^/(/(x3[0-9]/)*/)/(x3a.*/)/('"$(ignorecase 'to''do')"'/|'"$(ignorecase 'fix''me')"'/)/(.*/)$'
-rea="$rea"'%'"$(printf '<a href="https://gitlab.com/ligolang/ligo/-/blob/dev/' | to_hex)"
+rea="$rea"'%'"$(printf '<a href="https://gitlab.com/mavryk-network/ligo/-/blob/dev/' | to_hex)"
 reb="$(printf '#L' | to_hex)"'/1'"$(printf '">' | to_hex)"'/1/3'"$(printf '<strong>' | to_hex)"'/4'"$(printf '</strong>' | to_hex)"'/5'"$(printf '</a>' | to_hex)"
 reb="$reb"'%g'
 rea="$(printf '%s' "$rea" | tr '/' \\\\)"
@@ -63,7 +63,7 @@ for filehex in $(git ls-files -z | delimited_to_hex x00); do
   title_printed=false
   for matcheshex in $(grep -C 5 -i -n \\'(to''do'\\'|fix''me'\\')' -- "$file" | tr \\0 ' ' | to_hex | sed -e s/x0ax2dx2dx0a/\\n/g); do
     if test "$title_printed" = "false"; then
-      printf '%s' '<li><a href="https://gitlab.com/ligolang/ligo/-/blob/dev/'
+      printf '%s' '<li><a href="https://gitlab.com/mavryk-network/ligo/-/blob/dev/'
       printf '%s' "$file" | escapehtml
       printf '%s' '"><code>'
       printf '%s' "$file" | escapehtml

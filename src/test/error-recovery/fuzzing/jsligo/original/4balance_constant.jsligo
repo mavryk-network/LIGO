@@ -1,7 +1,7 @@
 /**
 
 This test makes sure that the balance is accessible in JsLIGO.
-It's there to detect a regression of: https://gitlab.com/ligolang/ligo/issues/61
+It's there to detect a regression of: https://gitlab.com/mavryk-network/ligo/issues/61
 
 Which results in this error when you attempt to compile this contract:
 

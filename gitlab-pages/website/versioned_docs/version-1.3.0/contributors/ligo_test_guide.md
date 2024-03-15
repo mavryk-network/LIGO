@@ -7,9 +7,9 @@ Bonus: you will become more familiar with LIGO in the process!
 Tests are written in OCaml, as LIGO doesn't (yet) have a good way to do automated testing. Thankfully the test code is typically less demanding than the features being tested.
 
 Tests are currently contained in
-[src/test](https://gitlab.com/ligolang/ligo/tree/dev/src/test), but
+[src/test](https://gitlab.com/mavryk-network/ligo/tree/dev/src/test), but
 most are integration tests which rely on test contracts kept in
-[src/test/contracts](https://gitlab.com/ligolang/ligo/tree/dev/src/test/contracts). If
+[src/test/contracts](https://gitlab.com/mavryk-network/ligo/tree/dev/src/test/contracts). If
 you are new to LIGO, reading these contracts can be a useful
 introduction to a particular LIGO syntax.
 
@@ -34,7 +34,7 @@ LIGO is divided into two parts
 - the **front end** handles syntax
 - the **backend** optimises and compiles a core language shared between syntaxes
 
-You can find basic test cases for a particular LIGO syntax by studying its parser. You will find the parser under [src/passes/1-parser](https://gitlab.com/ligolang/ligo/tree/dev/src/passes/01-parsing).
+You can find basic test cases for a particular LIGO syntax by studying its parser. You will find the parser under [src/passes/1-parser](https://gitlab.com/mavryk-network/ligo/tree/dev/src/passes/01-parsing).
 
 ### Two Useful Test Cases Using LIGO
 
@@ -65,9 +65,9 @@ a useful supplement to human testing.
 LIGO's OCaml-based tests are written in
 [alcotest](https://github.com/mirage/alcotest/). However, the tests
 you encounter in
-[src/test/integration_tests.ml](https://gitlab.com/ligolang/ligo/blob/dev/src/test/integration_tests.ml)
+[src/test/integration_tests.ml](https://gitlab.com/mavryk-network/ligo/blob/dev/src/test/integration_tests.ml)
 are built on top of some abstractions, currently defined in
-[src/test/test_helpers.ml](https://gitlab.com/ligolang/ligo/blob/dev/src/test/test_helpers.ml). The
+[src/test/test_helpers.ml](https://gitlab.com/mavryk-network/ligo/blob/dev/src/test/test_helpers.ml). The
 use of these can be inferred fairly well from looking at existing
 tests, but let us break a few of them down for analysis.
 
@@ -136,7 +136,7 @@ convert our expected test values into LIGO expressions and
 data. Constructors such as `e_list` and `e_address` provide a bridge
 between LIGO and OCaml. Their definitions can be found in files such
 as
-[src/stages/ast_core/combinators.ml](https://gitlab.com/ligolang/ligo/blob/dev/src/stages/ast_core/combinators.ml),
+[src/stages/ast_core/combinators.ml](https://gitlab.com/mavryk-network/ligo/blob/dev/src/stages/ast_core/combinators.ml),
 or using
 [Merlin's definition point finder](https://github.com/ocaml/merlin/wiki). These
 same functions are used during the simplification stage of LIGO
@@ -149,8 +149,8 @@ What if we want to write a test of our own? If the test is in the
 integration test vein (which it probably is if you are testing new
 syntax or features), then the process looks something like:
 
-1. Write a test contract which uses the new syntax or feature in [src/test/contracts](https://gitlab.com/ligolang/ligo/tree/dev/src/test/contracts).
-2. Write an integration test in [src/test/integration_tests.ml](https://gitlab.com/ligolang/ligo/blob/dev/src/test/integration_tests.ml) in the vein of existing tests, make sure you add it to the test runner that is currently located at the bottom of the file.
+1. Write a test contract which uses the new syntax or feature in [src/test/contracts](https://gitlab.com/mavryk-network/ligo/tree/dev/src/test/contracts).
+2. Write an integration test in [src/test/integration_tests.ml](https://gitlab.com/mavryk-network/ligo/blob/dev/src/test/integration_tests.ml) in the vein of existing tests, make sure you add it to the test runner that is currently located at the bottom of the file.
 3. Write the feature, assuming it does not already exist. Build the
    resulting version of LIGO without errors.
 4. Run the test suite, see if your test(s) pass. If they do, you are
