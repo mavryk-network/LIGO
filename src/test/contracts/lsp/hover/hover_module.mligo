@@ -16,7 +16,8 @@ module B : T = struct
 end
 
 module C : sig
-  val foo : mav  val another : int
+  val foo : mav
+  val another : int
 end = struct
   let foo = 1mav
   let another = 100

@@ -981,7 +981,7 @@ let init
       ?cost_per_byte
       ?origination_size
       ?blocks_per_cycle
-      (* ?initial_timestamp *)
+      ?initial_timestamp
       accounts
   in
   raw, contracts

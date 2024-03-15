@@ -4666,10 +4666,10 @@ let%expect_test _ =
     3800000000000mumav
     4000000000000n
     "BALANCE AND VOTING POWER AFTER ORIGINATE"
-    3800005749999mumav
+    3800004999999mumav
     4000000000000n
     "BALANCE AND VOTING POWER AFTER TRANSFER"
-    3800011499998mumav
+    3800009999998mumav
     4000000000000n
     Everything at the top-level was executed.
     - test exited with value (). |}]
@@ -4880,10 +4880,10 @@ let%expect_test _ =
     950000000000mumav
     0n
     "BALANCE AND VOTING POWER AFTER ORIGINATE"
-    950005749999mumav
+    950004999999mumav
     0n
     "BALANCE AND VOTING POWER AFTER TRANSFER"
-    950011499998mumav
+    950009999998mumav
     0n
     Everything at the top-level was executed.
     - test exited with value (). |}]

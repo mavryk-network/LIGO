@@ -1,7 +1,7 @@
 [submodule "vendors/tezos-ligo"]
 	path = vendors/tezos-ligo
 	url = https://gitlab.com/mavryk-network/mavryk-protocol.git
-	branch = fees-management-update
+	branch = atlas-ligo
 [submodule "tools/lsp/squirrel/bench/submodules/baseDAO"]
 	path = tools/lsp/squirrel/bench/submodules/baseDAO
 	url = https://github.com/Sorokin-Anton/baseDAO
